@@ -1,0 +1,9 @@
+{
+    "name": "app-web",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "start": "bunx --bun vite",
+        "dev": "bun run start"
+    }
+}
