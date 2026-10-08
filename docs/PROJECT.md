@@ -5,7 +5,7 @@ Procrastimate is a personal task manager for Stefan, loosely modeled on Todoist.
 ## Design goals
 
 - **One user.** Stefan is the only user. Build for him, not for teams, sharing, or onboarding.
-- **Many clients.** Web and iOS now, Apple Watch later. Each client should feel native to its platform.
+- **Many clients.** Web and iOS now, Apple Watch later.
 - **Local first, synced.** Every client works from local data and syncs with the server in the background. The app never waits on the network to respond to input.
 - **Snappy.** Every interaction responds instantly. Treat any visible lag as a bug.
 - **Satisfying motion.** Animations are subtle, quick, and polished. They confirm what happened without slowing the user down.
