@@ -1,3 +1,11 @@
+# Highlights
+
+Procrastimate is Stefan's personal task manager, a rough Todoist clone that will grow. It has one user and runs on web and iOS, with Apple Watch later. It is local first and synced, extremely snappy, and has subtle, satisfying animations. Features change often, so never keep backwards compatibility.
+
+- Keep these goals in mind for every change.
+- Before you build a feature, read `docs/PROJECT.md` and the feature files it links.
+- When you add or change a feature or interaction, update `docs/PROJECT.md` and the matching feature file in the same change.
+
 # Stack
 
 - Tooling: Bun + TypeScript
