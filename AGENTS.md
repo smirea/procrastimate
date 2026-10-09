@@ -1,3 +1,9 @@
+# Product
+
+- Procrastimate is Stefan's personal task manager, a rough Todoist clone that will grow. One user. Web and iOS now, Apple Watch later.
+- Local first and synced, extremely snappy, with subtle, satisfying animations. Never keep backwards compatibility.
+- `.cursor/skills/verify-procrastimate/features/` maps every user-facing feature. Read it before you build a feature, and update it in the same change.
+
 # Stack
 
 - Tooling: Bun + TypeScript
@@ -18,6 +24,7 @@
 - `local:true` keeps generation offline and disables automatic Git updates. Use `env-manager --help` for target selection, schema types, and remote storage.
 - Read application settings through generated `src/env.ts` in each TypeScript target. The client's reader runs only in Vite's Node context; browser code must not import it.
 - Keep schema and readers tracked, values files ignored, and secrets scoped to the server target. Native and browser settings are public.
+
 # Native app
 
 - SwiftUI lives in `app-ios/`; read its `AGENTS.md` for native development. The root `start:ios` script delegates to `app-ios/scripts/run` and forwards launcher arguments.
