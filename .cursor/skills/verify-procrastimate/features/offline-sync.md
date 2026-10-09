@@ -14,7 +14,7 @@ Procrastimate works fully without a network. Every change applies locally at onc
 - Sync has no screen. Stefan uses any feature on either client and expects the other client to match.
 - Planned: a quiet indicator shows when a client is offline or has changes waiting to sync.
 
-## Driving it with control-ui and simctl
+## Driving it with control-ui and XCUITest
 
 Preconditions:
 

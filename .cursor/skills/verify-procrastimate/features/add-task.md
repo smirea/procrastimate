@@ -16,7 +16,7 @@ Add a task lets Stefan capture a task in one motion from anywhere in the app, wi
 - Web: press `q` while focus is outside a text field.
 - iOS: tap the add button in any task list.
 
-## Driving it with control-ui and simctl
+## Driving it with control-ui and XCUITest
 
 Preconditions:
 

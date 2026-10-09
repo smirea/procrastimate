@@ -15,7 +15,7 @@ Complete a task lets Stefan check off a task with a short, satisfying animation,
 - iOS: tap the checkbox next to a task.
 - iOS: swipe a task to complete it.
 
-## Driving it with control-ui and simctl
+## Driving it with control-ui and XCUITest
 
 Preconditions:
 

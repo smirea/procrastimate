@@ -14,7 +14,7 @@ Edit a task lets Stefan open a task and change its title, notes, due date, or pr
 - Web: press Enter with a task selected.
 - iOS: tap a task in any list.
 
-## Driving it with control-ui and simctl
+## Driving it with control-ui and XCUITest
 
 Preconditions:
 

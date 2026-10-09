@@ -16,7 +16,7 @@ Projects let Stefan group tasks, open a project to see its tasks, and move a tas
 - Web: pick a project in quick add or in task details.
 - iOS: use the projects section of the main navigation.
 
-## Driving it with control-ui and simctl
+## Driving it with control-ui and XCUITest
 
 Preconditions:
 
@@ -25,8 +25,8 @@ Preconditions:
 - **Create.** Planned: create the project `Home` on the web. `Home` appears in the sidebar and opens empty.
 - **Move.** Planned: move `Buy milk` to `Home` from its details. It leaves Inbox and appears in `Home`.
 - **Rename.** Planned: rename `Home` to `House`. The sidebar and task details show `House`.
+- **iOS.** Planned: open `House` in the simulator. It lists `Buy milk`.
 - **Delete.** Planned: delete `House` and confirm. The project and `Buy milk` are gone from every view.
-- **iOS.** Planned: open `House` in the simulator before the delete step. It lists `Buy milk`.
 
 ## Gotchas
 

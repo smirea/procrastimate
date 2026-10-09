@@ -15,7 +15,7 @@ Task views let Stefan see his tasks three ways: Inbox for everything without a p
 - Web: open each view by keyboard shortcut. Planned: shortcuts are not chosen yet.
 - iOS: tap Inbox, Today, or Upcoming in the main navigation.
 
-## Driving it with control-ui and simctl
+## Driving it with control-ui and XCUITest
 
 Preconditions:
 

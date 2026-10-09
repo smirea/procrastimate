@@ -7,8 +7,8 @@ Today the app is a hello screen, so every feature below is planned. A `Planned:`
 ## Baseline preconditions
 
 - Generate env values with `env-manager gen --local`, then start the web client and server with `bun run start` from the repo root.
-- The web client answers at `http://127.0.0.1:6120` or `http://procrastimate.localhost:6120`. The API answers `GET /api/status` through the client proxy with `{"ok":true}`.
-- Start the iOS client with `bun run start:ios`. It needs macOS with Xcode, so a Linux agent skips iOS steps.
+- The web client answers at `http://127.0.0.1:6120` or `http://procrastimate.localhost:6120`. The API answers `GET /api/status` through the client proxy with `{"ok":true}`. Until the first feature ships, the page shows the starter heading `Example Page`.
+- Start the iOS client in a simulator with `bun run start:ios -t simulator`. Until the first feature ships, it shows `Hello!`. It needs macOS with Xcode, so a Linux agent skips iOS steps.
 - Planned: start each run against a disposable local store and a disposable server store, seeded with the fixtures that each feature file names.
 - Planned: a `verify-procrastimate` skill owns launch, doctor, and cleanup. Until it exists, never drive an instance this run did not start.
 - The ports are fixed (`strictPort`), so two web instances cannot run side by side.
@@ -16,7 +16,7 @@ Today the app is a hello screen, so every feature below is planned. A `Planned:`
 ## Driving conventions
 
 - Start every recipe from the baseline state unless its preconditions say otherwise.
-- Drive the web client through a browser with the `control-ui` skill. Drive the iOS client in the simulator with `xcrun simctl`.
+- Drive the web client through a browser with the `control-ui` skill. Planned: drive the iOS client with XCUITest. Use `xcrun simctl` only for simulator lifecycle, screenshots, and recordings.
 - Prefer accessible roles and names over CSS selectors, coordinates, or tab order.
 - Exercise the real user path. Do not call internal setters, test-only endpoints, or the sync API directly.
 - Restore seeded data after a mutation. Do not remove proof artifacts during cleanup.
