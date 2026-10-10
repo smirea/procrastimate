@@ -22,6 +22,30 @@ test('completing a recurring task moves it and its reminder to the next occurren
 	await expect(app.row('Standup')).toContainText('Today 9am');
 });
 
+test('a repeating task notifies at each next occurrence’s due time with no reminder set', async ({ app, page }) => {
+	const toast = page.getByRole('status').filter({ hasText: 'Reminder: Call mom' });
+	await app.add('Call mom every day 10:30am');
+	const row = app.row('Call mom');
+	await expect(row).toContainText('Today 10:30am');
+
+	await row.getByRole('checkbox', { name: 'Complete Call mom' }).click();
+	await expect(row).toContainText('Tomorrow 10:30am');
+	await app.setNow(new Date('2026-10-14T10:31:00Z'));
+	await page.reload();
+	await expect(app.row('Call mom')).toContainText('Tomorrow 10:30am');
+	await expect(toast).toHaveCount(0);
+
+	await app.setNow(new Date('2026-10-15T10:31:00Z'));
+	await page.reload();
+	await expect(toast).toBeVisible();
+	await app.row('Call mom').getByRole('checkbox', { name: 'Complete Call mom' }).click();
+	await expect(app.row('Call mom')).toContainText('Tomorrow 10:30am');
+
+	await app.setNow(new Date('2026-10-16T10:31:00Z'));
+	await page.reload();
+	await expect(toast).toBeVisible();
+});
+
 test('task details set, change, and clear a repeat', async ({ app, page }) => {
 	await app.add('Water plants');
 	await app

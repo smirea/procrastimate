@@ -122,3 +122,18 @@ describe('nextOccurrence', () => {
 		expect(next(null, { interval: 1, unit: 'day' })?.due).toEqual({ date: '2026-10-15', time: null });
 	});
 });
+
+describe('a repeating task notifies at its next occurrence', () => {
+	test('the next due time notifies with no reminder set', () => {
+		const rolled = next({ date: '2026-10-14', time: '10:30' }, { interval: 1, unit: 'day' })!;
+		expect(times(rolled.due, rolled.reminders)).toEqual([local('2026-10-15', '10:30')]);
+	});
+
+	test('reminders roll with it and still notify once at the due time', () => {
+		const rolled = next({ date: '2026-10-14', time: '17:00' }, { interval: 1, unit: 'week' }, [
+			{ kind: 'before', minutes: 30 },
+			{ kind: 'at', date: '2026-10-14', time: '17:00' },
+		])!;
+		expect(times(rolled.due, rolled.reminders)).toEqual([local('2026-10-21', '16:30'), local('2026-10-21', '17:00')]);
+	});
+});
