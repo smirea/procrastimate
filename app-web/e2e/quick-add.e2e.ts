@@ -26,6 +26,30 @@ test('q opens quick add, parses the brief example inline, and saves it', async (
 	await expect(app.row('call mom')).toContainText('Tomorrow 5pm');
 });
 
+test('shorthands parse inline while names and ordinary words stay text', async ({ app, page }) => {
+	await app.openQuickAdd();
+	const quickAdd = app.quickAdd();
+	await app.taskInput().pressSequentially('Call Tom about the sun hat tom 5p r30m');
+	await expect(quickAdd.locator('[data-token="due"]')).toHaveText('tom 5p');
+	await expect(quickAdd.locator('[data-token="reminder"]')).toHaveText('r30m');
+	await expect(quickAdd.getByRole('button', { name: 'Due Tomorrow 5pm' })).toBeVisible();
+	await expect(quickAdd.getByText('30m before', { exact: true })).toBeVisible();
+	await app.taskInput().press('Enter');
+
+	await app.taskInput().fill('Standup every mon 9:30a');
+	await expect(quickAdd.locator('[data-token="recurrence"]')).toHaveText('every mon');
+	await expect(quickAdd.locator('[data-token="due"]')).toHaveText('9:30a');
+	await expect(quickAdd.getByText('Every Mon', { exact: true })).toBeVisible();
+	await expect(quickAdd.getByRole('button', { name: 'Due Monday 9:30am' })).toBeVisible();
+	await app.taskInput().press('Enter');
+	await app.taskInput().press('Escape');
+
+	await expect(app.row('Call Tom about the sun hat')).toContainText('Tomorrow 5pm');
+	await expect(app.row('Standup')).toContainText('Monday 9:30am');
+	await page.reload();
+	await expect(app.row('Standup')).toContainText('Monday 9:30am');
+});
+
 test('saving lands the task in Inbox and keeps quick add open for the next one', async ({ app }) => {
 	await app.openQuickAdd();
 	await app.taskInput().fill('Buy milk');

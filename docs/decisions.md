@@ -32,7 +32,8 @@ This is the single source for Procrastimate's concepts, goals, paradigms, and hi
 
 ## Domain
 
-- **Task.** A title, optional notes, an optional project, an optional due date with an optional time, a priority, a list of reminders, and an optional completion time.
+- **Task.** A title, optional notes, an optional project, an optional due date with an optional time, an optional recurrence, a priority, a list of reminders, and an optional completion time.
+- **Recurrence.** Repeats every interval of days, weeks, months, or years, counted from the due date.
 - **Inbox.** Tasks without a project. Inbox is a view, not a project.
 - **Today.** Incomplete tasks due today or earlier. Overdue tasks are marked.
 - **Upcoming.** Incomplete tasks due after today, grouped by day.
@@ -44,11 +45,25 @@ This is the single source for Procrastimate's concepts, goals, paradigms, and hi
 
 - **Todoist quick add is the reference.** One input captures the title and its attributes. Recognized phrases are highlighted inline as you type and removed from the saved title. Clicking a highlighted phrase keeps it as plain text.
 - **The same parser runs in quick add and in the task details title field.**
-- **Repeated phrases.** Date, priority, and project take the last matching phrase, because attributes usually trail the title. `Today task today` saves `Today task` due today. Reminders keep every match.
+- **Repeated phrases.** Date, recurrence, priority, and project take the last matching phrase, because attributes usually trail the title. `Today task today` saves `Today task` due today. Reminders keep every match.
 - **Pickers win over text.** Choosing a date, priority, or project with a picker removes the matching phrase from the input. Pickers close on selection.
-- **Dates.** `today`, `tonight`, `tomorrow`, weekdays (`fri`, `next monday`), `next week`, `in 3 days`, and month dates (`oct 12`, `12 october`). Times are `5pm`, `5:30pm`, `17:00`, `noon`, optionally after `at`. A time with no date means today.
+- **Days.** `today`, `tomorrow`, and `tom`, `tmr`, `tmrw`. `tonight` is today at 8pm. `eod` is today at 5pm. `eow` is the coming Friday at 5pm, today on a Friday. A typed time replaces these default times, as in `tonight 9pm`.
+- **Weekdays.** `mon` to `sun` and the full names mean the next one, counting today, so `wed` on a Wednesday is today. `next fri` and `nxt fri` mean the Friday of next week, which starts on Monday. `next week` is next Monday.
+- **Offsets.** `2d`, `1w`, `2wk`, `3mo`, and `in 3 days`, `in 2 weeks`, `in 3 months`, `in 1 year` set a date with no time. `5m`, `5min`, `5 mins`, `2h`, `2hr`, `2hrs`, `2 hrs`, `in 2 hours`, and a bare `in 30` set the date and time that many minutes or hours from now. `mo` always means months and `m` always means minutes. Spelled-out units such as `2 hours` or `3 days` need `in`, because a bare length such as `study 2 hours` is not a due date. Months clamp to the end of a shorter month, so Jan 31 plus `1mo` is Feb 28.
+- **Dates.** `oct 15`, `15 oct`, `15th october`, `the 15th`, and `10/15` or `10/15/2027`. A date without a year is the next one, counting today. `the 15th` is the next 15th. Slash dates are month first, unless the first number cannot be a month, so `15/10` is October 15. When neither number can be a month, as in `15/14`, it stays text.
+- **Times.** `5pm`, `5 pm`, `5p`, `11a`, `5:30p`, `17:30`, `1730`, `noon`, and `midnight`, optionally after `at`. A time can sit before or after a day, as in `fri 5p` or `9am fri`.
+- **A time with no day.** It lands on the next time that clock time comes around. That is today, or tomorrow once the time has passed, so `9am` typed at 10am is tomorrow at 9am and `midnight` is the coming midnight. A time equal to the current minute stays today. A typed day always wins, even if that leaves the time in the past, as with `wed 9am` typed on Wednesday at 10am. A time with no day uses the date set outside the text when there is one, such as the task's existing date in task details or the Today default in quick add. This matches Todoist as far as we remember it. We have not checked it against live Todoist.
+- **Recurrence.** `every day`, `daily`, `weekly`, `monthly`, `yearly`, `every week`, `every mon`, `every 2d`, `every 2 weeks`, `every 3mo`, and `every other week`. A task stores it as an interval and a unit (day, week, month, or year). A weekday repeat is weekly and starts on that weekday. Any other repeat with no typed date starts on the date set outside the text, such as a picked date, or else today. If its typed time has already passed today, it starts one interval later. A typed date such as `every fri oct 30` sets the first occurrence. Quick add stores the repeat. Rolling a recurring task forward on completion is not built yet.
 - **Priority.** `p1` to `p4`. `!!!` and `urgent` mean `p1`. `!!` and `important` mean `p2`. A single `!` is never parsed, because it is common in titles.
-- **Reminders.** `remind me 30m before`, `remind me 1 hour before`, `remind me at 4pm`, and `remind me tomorrow 9am`. Todoist uses a leading `!` for reminders. Procrastimate does not, because `!!` is a priority shortcut.
+- **Reminders.** `remind me 30m before`, `remind 5m before`, `remind me 1 hour before`, `r5m`, `r1h`, `r2d`, `r1w`, `remind me at 4pm`, and `remind me tomorrow 9am`. A reminder at a time with no date lands on the due date. With no due date it lands today, or tomorrow once that time has passed. Todoist uses a leading `!` for reminders. Procrastimate does not, because `!!` is a priority shortcut.
+- **Words stay words.** Phrases only match whole words, so `mon` in `lemon` or `5m` in `2.5m` never parse. Before matching, the parser masks text that only looks like a phrase:
+  - `Tom` or `TOM` is a name. Only lowercase `tom` means tomorrow, and not after a word that takes a person, such as `call`, `email`, `with`, `to`, or `for`.
+  - `tom`, `sun`, `sat`, `wed`, `daily`, `weekly`, `monthly`, and `yearly` stay text when an ordinary word follows them, as in `sun hat`, `sat on`, or `Daily standup`. At the end of the text, or before a time, `at`, or another phrase, they parse.
+  - A number after an address word (`apt`, `unit`, `suite`, `room`, `floor`, and similar) or before a street word (`st`, `ave`, `rd`, `blvd`, and similar) is part of an address, so `Apt 5p` and `5p Baker St` stay text.
+  - A bare `19xx` or `20xx` is a year. Write `at 2030` for 8:30pm.
+  - A number after `$`, `€`, or `£`, or after a decimal point, is not a time or an offset.
+  - `1/2` still reads as January 2. Keep it as text when it means a half.
+- **Parsing order.** Reminders claim their text first, then recurrence, project, priority, and the due date. A later rule never reads text an earlier rule recognized, so `every wed 9am` is one repeat and one time. That includes a phrase kept as text and an earlier copy of a repeated phrase, so keeping `every mon` as text never turns `mon` into a due date.
 - **Projects.** `#Name` assigns an existing project, matched case-insensitively. It is highlighted only when the project exists.
 - **Not yet compared against live Todoist.** Todoist's login captcha blocked automated access, so the repeated-phrase rule and the `!!` mapping are our own calls.
 
@@ -86,7 +101,7 @@ This is the single source for Procrastimate's concepts, goals, paradigms, and hi
 
 ## Persistence and sync
 
-- **Web persistence.** The whole store is one JSON document in `localStorage`, validated on load and written synchronously on every change. Invalid stored data is discarded, since there is no backwards compatibility.
+- **Web persistence.** The whole store is one JSON document in `localStorage`, validated on load and written synchronously on every change. Invalid stored data is discarded, since there is no backwards compatibility. A newly added optional field gets a default during validation instead, so adding it does not wipe the tasks already stored in production.
 - **Sync.** Not built yet. The store's mutations are discrete commands so they can become a sync log later.
 
 ## Testing

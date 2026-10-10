@@ -12,6 +12,11 @@ const taskSchema = z.object({
 	notes: z.string(),
 	projectId: z.string().nullable(),
 	due: z.object({ date: dateKey, time: timeOfDay.nullable() }).nullable(),
+	// Defaults instead of failing validation, so tasks stored before the field existed are kept.
+	recurrence: z
+		.object({ interval: z.number().int().positive(), unit: z.enum(['day', 'week', 'month', 'year']) })
+		.nullable()
+		.default(null),
 	priority: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]),
 	reminders: z.array(
 		z.discriminatedUnion('kind', [

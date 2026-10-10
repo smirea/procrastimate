@@ -2,6 +2,7 @@
 	import { fade, fly, scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import Bell from 'phosphor-svelte/lib/Bell';
+	import Repeat from 'phosphor-svelte/lib/Repeat';
 	import { parseQuickAdd, type QuickAddToken, type TokenKind } from 'shared/quick-add.ts';
 	import { DEFAULT_PRIORITY, type Due, type Priority, type Reminder } from 'shared/task.ts';
 	import SmartInput from './SmartInput.svelte';
@@ -12,7 +13,7 @@
 	import KeepAsText from './KeepAsText.svelte';
 	import { store } from '../store.svelte.ts';
 	import { clock, mobile, sheets, type QuickAddDefaults } from '../ui.svelte.ts';
-	import { formatReminder } from '../format.ts';
+	import { formatRecurrence, formatReminder } from '../format.ts';
 	import { requestNotificationPermission } from '../reminders.ts';
 
 	let { defaults }: { defaults: QuickAddDefaults } = $props();
@@ -52,7 +53,7 @@
 	function submit() {
 		if (!parsed.title) return;
 		const reminders = [...parsed.reminders, ...picked.reminders];
-		store.addTask({ title: parsed.title, due, priority, projectId, reminders });
+		store.addTask({ title: parsed.title, due, recurrence: parsed.recurrence, priority, projectId, reminders });
 		requestNotificationPermission(reminders);
 		text = '';
 		disabled = [];
@@ -109,6 +110,15 @@
 				clearToken('priority');
 				picked.priority = value;
 			}} onkeepastext={tokenOf('priority') ? () => keepAsText(tokenOf('priority')) : undefined} />
+		{#if parsed.recurrence}
+			<div class="flex items-center" transition:scale={{ start: 0.9, duration: 160 }}>
+				<span class="chip" data-active="true" style="color: var(--tone-tomorrow)">
+					<Repeat size={15} weight="bold" />
+					{formatRecurrence(parsed.recurrence, due)}
+				</span>
+				<KeepAsText onclick={() => keepAsText(tokenOf('recurrence'))} />
+			</div>
+		{/if}
 		<ReminderPicker {due} reminders={picked.reminders} onchange={(value) => (picked.reminders = value)} />
 		{#each reminderTokens as token, i (token.text + token.start)}
 			<div class="flex items-center" transition:scale={{ start: 0.9, duration: 160 }}>
