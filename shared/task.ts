@@ -102,8 +102,9 @@ const daysBetween = (from: DateKey, to: DateKey) =>
 	Math.round((fromDateKey(to).getTime() - fromDateKey(from).getTime()) / 86_400_000);
 
 /**
- * Where a recurring task moves when it is completed: the first occurrence after today, counted in whole
- * intervals from the due date, or from today when it has none. Absolute reminders shift by the same
+ * Where a recurring task moves when it is completed: the first occurrence after today, stepping one
+ * interval at a time from the due date, or from today when it has none. Each step counts from the last,
+ * so a month clamped to its last day carries that day forward. Absolute reminders shift by the same
  * number of days, and relative reminders follow the due time.
  */
 export function nextOccurrence(
@@ -113,9 +114,8 @@ export function nextOccurrence(
 	if (!task.recurrence) return null;
 	const { interval, unit } = task.recurrence;
 	const from = task.due?.date ?? today;
-	let step = 1;
 	let date = addInterval(from, interval, unit);
-	while (date <= today) date = addInterval(from, interval * ++step, unit);
+	while (date <= today) date = addInterval(date, interval, unit);
 	const shift = daysBetween(from, date);
 	return {
 		due: { date, time: task.due?.time ?? null },

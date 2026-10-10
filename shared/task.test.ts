@@ -86,15 +86,29 @@ describe('nextOccurrence', () => {
 			'2026-10-19',
 		],
 		[
-			'monthly on the 31st keeps the 31st',
+			'monthly on the 31st, overdue, carries the clamped 28th',
 			{ date: '2026-01-31', time: null },
 			{ interval: 1, unit: 'month' },
-			'2026-10-31',
+			'2026-10-28',
 		],
 		['yearly', { date: '2026-03-01', time: null }, { interval: 1, unit: 'year' }, '2027-03-01'],
 	] as const)('%s', (_, due, recurrence, expected) => {
 		expect(next(due, recurrence)).toEqual({ due: { date: expected, time: due.time }, reminders: [] });
 	});
+
+	test.each([
+		['2026-01-31', 'month', '2026-01-31', '2026-02-28'],
+		['2026-02-28', 'month', '2026-02-28', '2026-03-28'],
+		['2026-01-31', 'month', '2026-03-01', '2026-03-28'],
+		['2028-02-29', 'year', '2028-02-29', '2029-02-28'],
+		['2028-02-29', 'year', '2029-03-01', '2030-02-28'],
+	] as const)(
+		'due %s every %s, completed %s, lands on %s from the clamped date',
+		(date, unit, completedOn, expected) => {
+			const task = { due: { date, time: null }, recurrence: { interval: 1, unit }, reminders: [] };
+			expect(nextOccurrence(task, completedOn)?.due.date).toBe(expected);
+		},
+	);
 
 	test('a recurring task with no due date counts from today', () => {
 		expect(next(null, { interval: 1, unit: 'week' })).toEqual({
