@@ -6,9 +6,10 @@
 	import CalendarBlank from 'phosphor-svelte/lib/CalendarBlank';
 	import Repeat from 'phosphor-svelte/lib/Repeat';
 	import type { QuickAddToken } from 'shared/quick-add.ts';
-	import { hashFragment, suggestProjects, type ProjectSuggestion } from 'shared/project-search.ts';
-	import ProjectSuggestions from './ProjectSuggestions.svelte';
+	import { lastUsed, sigilFragment, suggest, type Named, type SigilFragment, type Suggestion } from 'shared/name-search.ts';
+	import NameSuggestions from './NameSuggestions.svelte';
 	import { store } from '../store.svelte.ts';
+	import { NAME_SOURCES, type NameKind } from '../names.ts';
 	import type { TimingSegment } from '../format.ts';
 
 	let {
@@ -49,9 +50,9 @@
 	let focused = $state(false);
 	let caret = $state(0);
 	let active = $state(0);
-	/** Arrow keys were used, so Enter picks even when the typed name already matches a project. */
+	/** Arrow keys were used, so Enter picks even when the typed name already matches. */
 	let navigated = $state(false);
-	/** The `#` position the user dismissed with Escape. */
+	/** The sigil position the user dismissed with Escape. */
 	let dismissed = $state<number | null>(null);
 
 	type Segment = { text: string; kind: QuickAddToken['kind'] | null };
@@ -68,12 +69,24 @@
 		return out;
 	});
 
-	const fragment = $derived(focused ? hashFragment(value, caret, store.projects) : null);
+	/** The `#` or `@` fragment closest before the caret. */
+	const fragment = $derived.by(() => {
+		if (!focused) return null;
+		let closest: (SigilFragment & { kind: NameKind }) | null = null;
+		for (const kind of ['project', 'label'] as const) {
+			const found = sigilFragment(value, caret, NAME_SOURCES[kind].sigil, NAME_SOURCES[kind].items());
+			if (found && (!closest || found.start > closest.start)) closest = { ...found, kind };
+		}
+		return closest;
+	});
+	const source = $derived(fragment && NAME_SOURCES[fragment.kind]);
 	const suggestions = $derived(
-		fragment && fragment.start !== dismissed ? suggestProjects(store.projects, store.tasks, fragment.query) : [],
+		fragment && source && fragment.start !== dismissed
+			? suggest(source.items(), lastUsed(store.tasks, source.idsOf), fragment.query)
+			: [],
 	);
 	const named = $derived(
-		!!fragment && store.projects.some((p) => p.name.toLowerCase() === fragment.query.trim().toLowerCase()),
+		!!fragment && !!source?.items().some((item) => item.name.toLowerCase() === fragment.query.trim().toLowerCase()),
 	);
 
 	const syncScroll = () => {
@@ -88,10 +101,10 @@
 		input.focus();
 	}
 
-	async function pick(suggestion: ProjectSuggestion) {
-		if (!fragment) return;
-		const project = suggestion.kind === 'create' ? store.addProject(suggestion.name) : suggestion.project;
-		const inserted = `#${project.name} `;
+	async function pick(suggestion: Suggestion<Named>) {
+		if (!fragment || !source) return;
+		const item = suggestion.kind === 'create' ? source.create(suggestion.name) : suggestion.item;
+		const inserted = `${source.sigil}${item.name} `;
 		const at = fragment.start + inserted.length;
 		value = value.slice(0, fragment.start) + inserted + value.slice(fragment.end).trimStart();
 		await tick();
@@ -142,6 +155,7 @@
 
 	$effect(() => {
 		void fragment?.start;
+		void fragment?.kind;
 		void fragment?.query;
 		active = 0;
 		navigated = false;
@@ -180,8 +194,8 @@
 		bind:value
 		aria-label={label}
 		aria-autocomplete="list"
-		aria-controls={suggestions.length ? `${uid}-projects` : undefined}
-		aria-activedescendant={suggestions.length ? `${uid}-projects-${active}` : undefined}
+		aria-controls={suggestions.length ? `${uid}-names` : undefined}
+		aria-activedescendant={suggestions.length ? `${uid}-names-${active}` : undefined}
 		{placeholder}
 		class="smart-layer relative w-full bg-transparent outline-none placeholder:text-faint"
 		autocomplete="off"
@@ -205,7 +219,7 @@
 			onblur?.();
 		}}
 	/>
-	{#if fragment && suggestions.length}
+	{#if fragment && source && suggestions.length}
 		<div
 			bind:this={overlay}
 			class="glass-strong absolute left-0 z-20 w-[min(100%,20rem)] rounded-xl text-base font-normal"
@@ -216,7 +230,7 @@
 			style:transform-origin={placement.above ? 'bottom left' : 'top left'}
 			transition:scale={{ start: 0.96, duration: 160, easing: cubicOut, opacity: 0 }}
 		>
-			<ProjectSuggestions id="{uid}-projects" {suggestions} query={fragment.query} {active} onpick={pick} />
+			<NameSuggestions id="{uid}-names" {source} {suggestions} query={fragment.query} {active} onpick={pick} />
 		</div>
 	{:else if focused && timing.length}
 		<div
@@ -274,6 +288,9 @@
 	}
 	.token-recurrence {
 		--tint: var(--token-recurrence);
+	}
+	.token-label {
+		--tint: var(--token-label);
 	}
 
 	.timing-due :global(svg) {

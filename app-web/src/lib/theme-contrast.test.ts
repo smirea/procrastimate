@@ -89,6 +89,11 @@ function pairs(tokens: Tokens) {
 			texts.map(text => ({ text, surface, ratio: Math.min(...backdrops.map(bg => contrast(c(text), bg))) })),
 		),
 		{ text: '--color-accent', surface: 'active nav', ratio: Math.min(...activeNav.map(bg => contrast(accent, bg))) },
+		{
+			text: '--color-muted',
+			surface: 'label chip',
+			ratio: Math.min(...canvases.map(bg => contrast(c('--color-muted'), over(c('--token-label'), bg)))),
+		},
 		{ text: '--color-on-accent', surface: '--color-accent', ratio: contrast(c('--color-on-accent'), accent) },
 		{
 			text: '--color-on-accent',

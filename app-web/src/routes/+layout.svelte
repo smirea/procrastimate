@@ -25,6 +25,7 @@
 		menuOpen = false;
 		sheets.openQuickAdd({
 			projectId: page.route.id === '/projects/[id]' ? (page.params.id ?? null) : null,
+			labelId: page.route.id === '/labels/[id]' ? (page.params.id ?? null) : null,
 			today: page.route.id === '/today',
 		});
 	}

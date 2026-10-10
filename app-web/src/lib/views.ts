@@ -23,6 +23,12 @@ export function projectTasks(tasks: readonly Task[], projectId: string) {
 		.toSorted(compareTasks);
 }
 
+export function labelTasks(tasks: readonly Task[], labelId: string) {
+	return open(tasks)
+		.filter(t => t.labelIds.includes(labelId))
+		.toSorted(compareTasks);
+}
+
 export function todayTasks(tasks: readonly Task[], today: DateKey) {
 	const due = open(tasks)
 		.filter(t => t.due && t.due.date <= today)

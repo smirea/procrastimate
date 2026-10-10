@@ -49,12 +49,14 @@
 	--tone-tomorrow: #9e4b06;
 	--tone-week: #6a48e8;
 	--tone-later: var(--color-muted);
+	--tone-label: #0f766e;
 	--token-due: rgb(31 157 85 / 0.16);
 	--token-priority: rgb(229 72 77 / 0.15);
 	--token-reminder: rgb(124 92 255 / 0.16);
 	--token-project: rgb(62 123 250 / 0.15);
 	--token-recurrence: rgb(217 119 6 / 0.16);
 	--token-match: rgb(250 204 21 / 0.4);
+	--token-label: rgb(13 148 136 / 0.15);
 	font-optical-sizing: auto;
 	color: var(--color-ink);
 	-webkit-font-smoothing: antialiased;
@@ -89,12 +91,14 @@
 	--tone-today: #3fcf7c;
 	--tone-tomorrow: #f5a524;
 	--tone-week: #a78bfa;
+	--tone-label: #2dd4bf;
 	--token-due: rgb(63 207 124 / 0.22);
 	--token-priority: rgb(255 99 105 / 0.22);
 	--token-reminder: rgb(167 139 250 / 0.24);
 	--token-project: rgb(107 155 255 / 0.22);
 	--token-recurrence: rgb(245 165 36 / 0.22);
 	--token-match: rgb(250 204 21 / 0.3);
+	--token-label: rgb(45 212 191 / 0.2);
 }
 
 @layer base {

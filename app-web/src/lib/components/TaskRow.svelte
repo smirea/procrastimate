@@ -5,6 +5,9 @@
 	import Hash from 'phosphor-svelte/lib/Hash';
 	import Tray from 'phosphor-svelte/lib/Tray';
 	import Repeat from 'phosphor-svelte/lib/Repeat';
+	import Tag from 'phosphor-svelte/lib/Tag';
+	import { scale } from 'svelte/transition';
+	import { cubicOut } from 'svelte/easing';
 	import type { Task } from 'shared/task.ts';
 	import { store } from '../store.svelte.ts';
 	import { clock, sheets } from '../ui.svelte.ts';
@@ -15,6 +18,7 @@
 
 	let checking = $state(false);
 	const project = $derived(store.project(task.projectId));
+	const labels = $derived(store.labelsOf(task));
 	const tone = $derived(PRIORITIES[task.priority].tone);
 
 	function complete() {
@@ -45,8 +49,8 @@
 		{#if task.notes}
 			<div class="truncate text-[12px] leading-4 text-muted">{task.notes}</div>
 		{/if}
-		{#if task.due || task.recurrence || task.reminders.length || (showProject && project)}
-			<div class="mt-0.5 flex items-center gap-3 text-[12px] leading-4 text-muted">
+		{#if task.due || task.recurrence || task.reminders.length || labels.length || (showProject && project)}
+			<div class="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] leading-4 text-muted">
 				{#if task.due && !(timeOnly && !task.due.time)}
 					<span class="flex items-center gap-1" style={`color: var(--tone-${dueTone(task.due, clock.today)})`}>
 						<CalendarBlank size={12} />
@@ -61,6 +65,16 @@
 				{#if task.reminders.length}
 					<span class="flex items-center gap-1" aria-label={`${task.reminders.length} reminders`}>
 						<Bell size={12} />{task.reminders.length}
+					</span>
+				{/if}
+				{#if labels.length}
+					<span class="flex min-w-0 flex-wrap items-center gap-1">
+						{#each labels as label (label.id)}
+							<span class="label-chip" data-label={label.name} transition:scale={{ start: 0.6, duration: 180, easing: cubicOut }}>
+								<Tag size={10} weight="fill" class="shrink-0 text-[var(--tone-label)]" />
+								<span class="truncate">{label.name}</span>
+							</span>
+						{/each}
 					</span>
 				{/if}
 				{#if showProject}
@@ -116,6 +130,19 @@
 		opacity: 1;
 		transform: scale(1);
 		color: white;
+	}
+
+	.label-chip {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+		max-width: 10rem;
+		height: 1.125rem;
+		padding: 0 0.4375rem 0 0.375rem;
+		border-radius: 9999px;
+		background: var(--token-label);
+		font-size: 0.6875rem;
+		line-height: 1;
 	}
 
 	.done {

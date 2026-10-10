@@ -8,12 +8,13 @@
 	import CalendarDots from 'phosphor-svelte/lib/CalendarDots';
 	import Hash from 'phosphor-svelte/lib/Hash';
 	import Plus from 'phosphor-svelte/lib/Plus';
+	import Tag from 'phosphor-svelte/lib/Tag';
 	import PlusCircle from 'phosphor-svelte/lib/PlusCircle';
 	import MagnifyingGlass from 'phosphor-svelte/lib/MagnifyingGlass';
 	import ThemeSwitcher from './ThemeSwitcher.svelte';
 	import { store } from '../store.svelte.ts';
 	import { clock } from '../ui.svelte.ts';
-	import { inboxTasks, projectTasks, todayTasks, upcomingGroups } from '../views.ts';
+	import { inboxTasks, labelTasks, projectTasks, todayTasks, upcomingGroups } from '../views.ts';
 
 	let { onquickadd, onsearch }: { onquickadd: () => void; onsearch: () => void } = $props();
 
@@ -28,6 +29,12 @@
 			count: upcomingGroups(store.tasks, clock.today).reduce((n, g) => n + g.tasks.length, 0),
 		},
 	]);
+
+	const labels = $derived(
+		store.labels
+			.map((label) => ({ label, count: labelTasks(store.tasks, label.id).length }))
+			.toSorted((a, b) => a.label.name.localeCompare(b.label.name, undefined, { sensitivity: 'base' })),
+	);
 
 	let adding = $state(false);
 	let name = $state('');
@@ -119,6 +126,25 @@
 			{/if}
 		</ul>
 	</section>
+
+	{#if labels.length}
+		<section aria-label="Labels" transition:slide={{ duration: 180, easing: cubicOut }}>
+			<h2 class="px-2 pb-1 text-[12px] font-medium tracking-wide text-faint uppercase">Labels</h2>
+			<ul class="space-y-0.5">
+				{#each labels as { label, count } (label.id)}
+					{@const href = `/labels/${label.id}`}
+					{@const active = page.url.pathname === href}
+					<li transition:slide={{ duration: 180, easing: cubicOut }}>
+						<a {href} class="nav-link" class:active aria-current={active ? 'page' : undefined}>
+							<Tag size={18} weight={active ? 'fill' : 'regular'} class={active ? '' : 'text-[var(--tone-label)]'} />
+							<span class="flex-1 truncate">{label.name}</span>
+							{#if count}<span class="text-[12px] text-faint">{count}</span>{/if}
+						</a>
+					</li>
+				{/each}
+			</ul>
+		</section>
+	{/if}
 
 	<div class="mt-auto">
 		<ThemeSwitcher />

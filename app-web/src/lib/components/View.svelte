@@ -3,7 +3,7 @@
 	import { fade, fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import Plus from 'phosphor-svelte/lib/Plus';
-	import { sheets } from '../ui.svelte.ts';
+	import { sheets, type QuickAddDefaults } from '../ui.svelte.ts';
 
 	let {
 		title,
@@ -20,7 +20,7 @@
 		empty: boolean;
 		emptyTitle: string;
 		emptyHint: string;
-		quickAdd: { projectId: string | null; today: boolean };
+		quickAdd: QuickAddDefaults;
 		actions?: Snippet;
 		children: Snippet;
 	} = $props();

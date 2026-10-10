@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { DateKey, Project, Task, TimeOfDay } from 'shared/task.ts';
+import type { DateKey, Label, Project, Task, TimeOfDay } from 'shared/task.ts';
 
 const STORAGE_KEY = 'procrastimate';
 
@@ -11,8 +11,9 @@ const taskSchema = z.object({
 	title: z.string(),
 	notes: z.string(),
 	projectId: z.string().nullable(),
+	// Fields added after launch default instead of failing validation, so tasks stored before them are kept.
+	labelIds: z.array(z.string()).default([]),
 	due: z.object({ date: dateKey, time: timeOfDay.nullable() }).nullable(),
-	// Defaults instead of failing validation, so tasks stored before the field existed are kept.
 	recurrence: z
 		.object({ interval: z.number().int().positive(), unit: z.enum(['day', 'weekday', 'week', 'month', 'year']) })
 		.nullable()
@@ -34,6 +35,8 @@ const projectSchema = z.object({
 	createdAt: z.number(),
 }) satisfies z.ZodType<Project>;
 
+const labelSchema = projectSchema satisfies z.ZodType<Label>;
+
 /** Drops a task that fails validation instead of failing the whole snapshot, so one bad task never wipes the rest. */
 const tasksSchema = z.array(z.unknown()).transform(items =>
 	items.flatMap(item => {
@@ -45,13 +48,14 @@ const tasksSchema = z.array(z.unknown()).transform(items =>
 const snapshotSchema = z.object({
 	tasks: tasksSchema,
 	projects: z.array(projectSchema),
+	labels: z.array(labelSchema).default([]),
 	remindersCheckedAt: z.number(),
 });
 
 export type Snapshot = z.infer<typeof snapshotSchema>;
 
 export function loadSnapshot(now: number): Snapshot {
-	const empty: Snapshot = { tasks: [], projects: [], remindersCheckedAt: now };
+	const empty: Snapshot = { tasks: [], projects: [], labels: [], remindersCheckedAt: now };
 	const raw = localStorage.getItem(STORAGE_KEY);
 	if (!raw) return empty;
 	try {
