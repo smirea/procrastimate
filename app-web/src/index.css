@@ -54,6 +54,7 @@
 	--token-reminder: rgb(124 92 255 / 0.16);
 	--token-project: rgb(62 123 250 / 0.15);
 	--token-recurrence: rgb(217 119 6 / 0.16);
+	--token-match: rgb(250 204 21 / 0.4);
 	font-optical-sizing: auto;
 	color: var(--color-ink);
 	-webkit-font-smoothing: antialiased;
@@ -93,6 +94,7 @@
 	--token-reminder: rgb(167 139 250 / 0.24);
 	--token-project: rgb(107 155 255 / 0.22);
 	--token-recurrence: rgb(245 165 36 / 0.22);
+	--token-match: rgb(250 204 21 / 0.3);
 }
 
 @layer base {

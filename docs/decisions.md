@@ -92,6 +92,18 @@ This is the single source for Procrastimate's concepts, goals, paradigms, and hi
 - **Editing.** The repeat chip in task details sets a preset (every day, weekday, week on the due weekday, month, or year), a custom interval, or `Don't repeat`. Setting a repeat on a task without a date dates it today, and removing the date removes the repeat, because a repeat needs a date to count from. Typing a repeat into the title replaces the current one.
 - **Display.** Rows show a repeat icon next to the due date. Upcoming shows only the next occurrence.
 
+## Search
+
+- **One field for everything.** Search matches task titles, notes, and project names. A field list in `shared/search.ts` defines what is searchable and how much each field weighs, so a new field, such as labels, is one entry. A field can hold several values, which fits multi-valued fields like labels.
+- **Matching.** Case- and accent-insensitive, so `resume` finds `Résumé`. The query splits on spaces and every word must match somewhere in the task, in any field and any order, so `sink home` finds `Fix sink` in `Home`. A word matches anywhere in a field, but a single letter matches only at the start of a word, so typing one letter does not list every task. No fuzzy or typo matching. Exact substrings keep results predictable and highlights honest.
+- **Ranking.** Each word counts its best match, weighted by field: title 4, project 2, notes 1. Within a field, the start of the text beats the start of a word, which beats the middle of a word. Open tasks break ties by priority, then newest first. Projects break ties alphabetically.
+- **Completed tasks are included, apart.** Results group into Projects, Tasks, and Completed, in that order. Completed tasks match like open ones but sit in their own group below, struck through with their completion date and ranked most recently completed on a tie, so they never crowd out open work but stay findable. Search is the only way to reach a completed task until a completed view exists. Task details offer `Reopen` instead of `Complete` for a completed task.
+- **Limits.** Each group shows its best 5 projects, 30 open tasks, or 15 completed tasks, and its header shows the full count. Scoring is synchronous on every keystroke with no index. 5,000 tasks take about 1.5 ms when nothing matches and about 10 ms when a single letter matches 3,000 of them, measured in Bun. A cached index waits until a real list makes that matter.
+- **Opening it.** `/` or Cmd-K or Ctrl-K, outside text fields only, so typing a `/` or using Ctrl-K to delete to the end of a line in a field is never hijacked. Cmd-K or Ctrl-K inside search closes it. The `Search` button sits under `Add task` in the sidebar, which is also the phone drawer. Search is a sheet like quick add and task details, and the three never stack.
+- **Keyboard.** The field keeps focus. Up and Down move the selection and wrap. Enter opens it. Escape closes. Results follow the combobox and listbox pattern so screen readers announce the selection.
+- **Opening a result.** A task opens task details in place of search. A project navigates to the project.
+- **Layout.** On desktop it is a centered glass dialog like quick add, with results under the field. On a phone it is a bottom sheet with the field at the bottom and results above it, like the iOS 26 bottom search field, docked above the keyboard. Scrolling results dismisses the keyboard. Matches use the `--token-match` highlight, which the contrast test checks in both themes.
+
 ## Stack
 
 - **Tooling.** Bun and TypeScript. Oxlint, oxfmt, and Lefthook for linting and hooks.

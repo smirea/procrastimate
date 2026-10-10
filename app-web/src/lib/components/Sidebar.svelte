@@ -9,12 +9,13 @@
 	import Hash from 'phosphor-svelte/lib/Hash';
 	import Plus from 'phosphor-svelte/lib/Plus';
 	import PlusCircle from 'phosphor-svelte/lib/PlusCircle';
+	import MagnifyingGlass from 'phosphor-svelte/lib/MagnifyingGlass';
 	import ThemeSwitcher from './ThemeSwitcher.svelte';
 	import { store } from '../store.svelte.ts';
 	import { clock } from '../ui.svelte.ts';
 	import { inboxTasks, projectTasks, todayTasks, upcomingGroups } from '../views.ts';
 
-	let { onquickadd }: { onquickadd: () => void } = $props();
+	let { onquickadd, onsearch }: { onquickadd: () => void; onsearch: () => void } = $props();
 
 	const today = $derived(todayTasks(store.tasks, clock.today));
 	const views = $derived([
@@ -49,11 +50,18 @@
 		<span class="text-[15px] font-semibold tracking-tight">Procrastimate</span>
 	</div>
 
-	<button type="button" class="menu-item h-9 font-medium text-accent touch:h-11" onclick={onquickadd}>
-		<PlusCircle size={20} weight="fill" />
-		Add task
-		<kbd class="ml-auto rounded-md touch:hidden border border-ink/10 px-1.5 text-[11px] font-normal text-faint">Q</kbd>
-	</button>
+	<div class="space-y-0.5">
+		<button type="button" class="menu-item h-9 font-medium text-accent touch:h-11" onclick={onquickadd}>
+			<PlusCircle size={20} weight="fill" />
+			Add task
+			<kbd class="ml-auto rounded-md touch:hidden border border-ink/10 px-1.5 text-[11px] font-normal text-faint">Q</kbd>
+		</button>
+		<button type="button" class="menu-item h-9 touch:h-11" onclick={onsearch}>
+			<MagnifyingGlass size={20} class="text-muted" />
+			Search
+			<kbd class="ml-auto rounded-md touch:hidden border border-ink/10 px-1.5 text-[11px] font-normal text-faint">/</kbd>
+		</button>
+	</div>
 
 	<ul class="space-y-0.5">
 		{#each views as view (view.href)}
