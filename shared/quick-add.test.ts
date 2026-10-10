@@ -300,6 +300,23 @@ describe('recurrence', () => {
 		expect<unknown>(parsed.due).toEqual({ date, time });
 	});
 
+	test('an earlier repeat stays in the title and the last one sets the first date', () => {
+		const parsed = parse('Water every mon every fri');
+		expect(parsed.title).toBe('Water every mon');
+		expect(parsed.recurrence).toEqual({ interval: 1, unit: 'week' });
+		expect(parsed.due).toEqual({ date: '2026-10-16', time: null });
+	});
+
+	test('a repeat without a weekday starts on the date set outside the text', () => {
+		const parsed = parse('Water plants every week', { due: { date: '2026-10-20', time: '08:00' } });
+		expect(parsed.due).toEqual({ date: '2026-10-20', time: '08:00' });
+	});
+
+	test('a weekday repeat keeps its weekday over the date set outside the text', () => {
+		const parsed = parse('Water plants every mon', { due: { date: '2026-10-14', time: null } });
+		expect(parsed.due).toEqual({ date: '2026-10-19', time: null });
+	});
+
 	test('the recurrence phrase is its own token', () => {
 		expect(parse('Water plants every day 9am').tokens).toEqual([
 			{ kind: 'recurrence', start: 13, end: 22, text: 'every day' },
@@ -349,6 +366,7 @@ describe('ordinary words stay in the title', () => {
 		'Monopoly night',
 		'Read 2.5h audiobook',
 		'Momentum check',
+		'Try ratio 15/14',
 	])('%s', input => {
 		const parsed = parse(input);
 		expect(parsed.title).toBe(input);
@@ -381,6 +399,13 @@ describe('disabled tokens', () => {
 		expect(parsed.title).toBe('Water plants every day');
 		expect(parsed.recurrence).toBe(null);
 		expect(parsed.due).toBe(null);
+	});
+
+	test('a disabled weekday repeat does not leak its weekday into the due date', () => {
+		const parsed = parse('Water every mon', { disabled: ['every mon'] });
+		expect(parsed.title).toBe('Water every mon');
+		expect(parsed.due).toBe(null);
+		expect(parsed.tokens).toEqual([]);
 	});
 
 	test('a disabled phrase stays in the title while other phrases still parse', () => {

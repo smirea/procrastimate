@@ -217,7 +217,9 @@ const DATE_READERS: Array<[RegExp, (m: RegExpExecArray, today: DateKey) => DateK
 			const first = Number(m[1]);
 			const second = Number(m[2]);
 			const dayFirst = first > 12 && second <= 12;
-			return monthDay(today, (dayFirst ? second : first) - 1, dayFirst ? first : second, m[3]);
+			const month = dayFirst ? second : first;
+			if (month < 1 || month > 12) return null;
+			return monthDay(today, month - 1, dayFirst ? first : second, m[3]);
 		},
 	],
 	[/^([a-z]+) (\d{1,2})(?:st|nd|rd|th)?$/, (m, today) => monthDay(today, monthIndex(m[1]!), Number(m[2]))],
@@ -353,7 +355,8 @@ function projectRule(projects: readonly Project[]): Rule | null {
 /**
  * A typed date wins. A time alone lands on the date set outside the text, or else on the first
  * future occurrence: today, or tomorrow once that time has passed. A repeat without a typed date
- * starts on its weekday or today, and moves one interval on when its time has passed today.
+ * starts on its weekday, the date set outside the text, or today, and moves one interval on when
+ * its time has passed today.
  */
 function resolveDue(
 	phrase: DuePhrase | null,
@@ -365,6 +368,7 @@ function resolveDue(
 	const time = phrase?.time ?? null;
 	const passed = (date: DateKey) => time !== null && date === ctx.today && time < ctx.time;
 	if (repeat) {
+		if (!repeat.anchor && outside) return { date: outside.date, time: time ?? outside.time };
 		const date = repeat.anchor ?? ctx.today;
 		const { interval, unit } = repeat.recurrence;
 		return { date: passed(date) ? addInterval(date, interval, unit) : date, time };
@@ -387,30 +391,35 @@ export function parseQuickAdd(input: string, options: ParseOptions): ParsedQuick
 	const disabled = new Set(options.disabled?.map(d => d.toLowerCase()));
 	const project = projectRule(options.projects ?? []);
 	const rules = project ? [...RULES.slice(0, 2), project, ...RULES.slice(2)] : RULES;
-	// Claimed text is masked out of both views, so a later rule never matches across an earlier token.
+	// Every phrase a rule recognizes is masked out of both views, including kept-as-text and
+	// superseded ones, so a later rule never reads part of it as something else.
 	let raw = input;
 	let guarded = maskGuarded(input);
-	const claim = (text: string, { start, end }: QuickAddToken) =>
+	const claim = (text: string, start: number, end: number) =>
 		text.slice(0, start) + '_'.repeat(end - start) + text.slice(end);
 
 	const tokens: QuickAddToken[] = [];
 	const matches: Match[] = [];
 	for (const rule of rules) {
 		const found: Array<{ token: QuickAddToken; match: Match }> = [];
+		const spans: Array<[number, number]> = [];
 		for (const m of (rule.guarded ? guarded : raw).matchAll(rule.pattern)) {
 			const start = m.index;
 			const end = start + m[0].length;
 			const text = input.slice(start, end);
-			if (disabled.has(text.toLowerCase())) continue;
 			const match = rule.read(m, ctx);
-			if (match) found.push({ token: { kind: rule.kind, start, end, text }, match });
+			if (!match) continue;
+			spans.push([start, end]);
+			if (!disabled.has(text.toLowerCase())) found.push({ token: { kind: rule.kind, start, end, text }, match });
 		}
 		// Attributes usually trail the title, so a single-valued attribute takes its last phrase.
 		for (const { token, match } of rule.repeatable ? found : found.slice(-1)) {
 			tokens.push(token);
 			matches.push(match);
-			raw = claim(raw, token);
-			guarded = claim(guarded, token);
+		}
+		for (const [start, end] of spans) {
+			raw = claim(raw, start, end);
+			guarded = claim(guarded, start, end);
 		}
 	}
 	tokens.sort((a, b) => a.start - b.start);
