@@ -192,8 +192,9 @@ The web's Web Push rows map to native local notifications. XCUITests check the p
 
 | Feature | Web | iOS | Slice | XCUITest | Playwright | Screenshot |
 | --- | --- | --- | --- | --- | --- | --- |
-| `sync-offline`: everything works with no network | ✓ | Planned | S5 | true by construction: the iOS app makes no network calls | — | — |
-| `sync-propagate`, `sync-reconnect`, `sync-conflict` | Planned | not planned | needs a decision on sync | — | — | — |
+| `sync-offline`: everything works with no network | ✓ | Planned | S5 | true by construction: unpaired, the app makes no network calls | — | — |
+| `sync-pair`: set up, pair with a code, and remove a device in Settings | Planned | Planned | Y4, S9 | `SyncParityTests.test_sync_pair` | `sync › sync-pair` | `sync-pair.png` |
+| `sync-propagate`, `sync-reconnect`, `sync-conflict`: changes reach the other client, offline changes upload, concurrent edits converge per [Sync](decisions/sync.md#conflicts) | Planned | Planned | Y4, S9 | `Core` sync tests against vectors | `sync.e2e.ts` (two browser contexts) | — |
 
 ## Thread split
 
@@ -209,8 +210,9 @@ One PR per slice, each off `master`, never stacked. A slice starts once the slic
 | S6 | Task details, subtasks, recurrence | S5 | S7, S8 |
 | S7 | Projects, labels, and search UI | S4, S5 | S6, S8 |
 | S8 | Settings, theme, import, notifications | S4, S5 (S6 for `push-open`) | S6, S7 |
+| S9 | iOS sync client | S8, Y3, Y4 | Y5, Y6 |
 
-Critical path: S1 → S2 → S3 → S5 → S6, S7, and S8 together.
+Critical path: S1 → S2 → S3 → S5 → S6, S7, and S8 together, then S9. The sync slices `Y1` to `Y6` interleave with these as listed in [Sync build slices](sync-slices.md): Y1 and Y2 run alongside S1 and S2, and the web client Y4 waits for S2.
 
 **Conflict rules.** S1 creates every shared seam up front: the `Core`, `CoreTests`, `App`, and `AppUITests` targets, `RootView` with every tab, a `Route` enum for every destination, a `Sheet` enum for quick add, details, search, and settings, and one placeholder file per screen. Later slices replace the placeholder files they own and add files under their own folders, so no two parallel slices edit the same file. `project.pbxproj` only changes in S1, because every target is a synchronized folder. Each slice edits only its own rows here and its own feature map files. Workflows change only in S1 and S2, which run one after the other.
 
@@ -228,7 +230,7 @@ Critical path: S1 → S2 → S3 → S5 → S6, S7, and S8 together.
 - **S3: Parser port.** The quick add parser and name search (`#` and `@` suggestion order) in `Core`, with `recorded` wrappers in `quick-add.test.ts` and `name-search.test.ts` and their vector files. This is the largest logic port, at about 650 lines of TS tests.
 - **S4: Search and import logic port.** `search`, `excerpt`, the CSV reader, and the Todoist reader and merge in `Core`, with vectors from `search.test.ts`, `csv.test.ts`, and `todoist.test.ts`, including the synthetic backup. The zip reader goes in `App` under S8, because it needs Apple's `Compression` framework.
 - **S5: Lists and quick add.**
-  - The JSON file store.
+  - The JSON file store, in the sync document shape with an empty `sync` section, tasks sorted by `createdAt` then `id`, and every command through one `commit(next)` (see [iOS app](decisions/ios.md#data)).
   - The Inbox, Today, Upcoming, and project or label list rendering, task rows with chips and the repeat icon, checkbox and swipe completion, swipe delete, the undo toast, and tab badges.
   - The quick add sheet with the shared smart input (highlighting, chip row, `Keep as text`, `#` and `@` suggestions), quick add's date, priority, and project chips, and haptics for all of these.
 - **S6: Task details, subtasks, recurrence.** The details sheet and its `NavigationStack`, title parsing, notes, and the date, priority, project, labels, repeat, and reminder pickers, plus delete. Subtasks: add, check, drag reorder, nest, and the parent cascade.
@@ -236,3 +238,4 @@ Critical path: S1 → S2 → S3 → S5 → S6, S7, and S8 together.
 - **S8: Settings, theme, import, notifications.**
   - The Settings screen with the theme control and accessibility fallbacks, and Todoist import (the `Compression`-based zip reader plus the picker), using the fixture CI copies in.
   - Local notifications: the scheduler with a 60-request window, background refresh, the foreground toast, the permission screen, the nudge, a test notification, and opening a task from its notification.
+- **S9: iOS sync client.** The client half of [Sync](decisions/sync.md) on top of S5's store, as scoped in [Sync build slices](sync-slices.md).

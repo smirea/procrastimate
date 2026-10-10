@@ -31,4 +31,4 @@ Preconditions:
 
 - Stopping the server is the offline test for the web client. Browser offline mode can also block the dev server and break the page.
 - A change that shows only on the client that made it proves local state, not sync.
-- The conflict rule is not designed yet. Record which title wins instead of asserting one.
+- Each field keeps the write with the later hybrid logical clock, so the title renamed last wins. See `docs/decisions/sync.md`.
