@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import type { Due, Recurrence, Reminder } from 'shared/task.ts';
-import { describeTiming } from './format.ts';
+import { describeTiming, formatRecurrence } from './format.ts';
 
 const today = '2026-10-14';
 const texts = (due: Due | null, recurrence: Recurrence | null, reminders: Reminder[] = []) =>
@@ -60,5 +60,31 @@ describe('describeTiming', () => {
 	test('repeats without a weekday read as an interval', () => {
 		expect(texts(null, { interval: 1, unit: 'day' })).toEqual(['Repeats every day']);
 		expect(texts(null, { interval: 2, unit: 'month' })).toEqual(['Repeats every 2 months']);
+	});
+
+	test('a weekday set lists its days Monday first, with the due time notifying', () => {
+		expect(
+			texts({ date: '2026-10-16', time: '07:00' }, { interval: 1, unit: 'week', days: [1, 3, 5] }, [
+				{ kind: 'before', minutes: 10 },
+			]),
+		).toEqual([
+			'Fri Oct 16 at 7:00 AM',
+			'Repeats every Mon, Wed, Fri',
+			'Notifies at 7:00 AM',
+			'Remind 10 min before (6:50 AM)',
+		]);
+	});
+});
+
+describe('formatRecurrence', () => {
+	test.each([
+		[{ interval: 1, unit: 'week', days: [1, 3, 5] }, 'Every Mon, Wed, Fri'],
+		[{ interval: 1, unit: 'week', days: [6, 0] }, 'Every Sat, Sun'],
+		[{ interval: 2, unit: 'week', days: [2, 4] }, 'Every 2 weeks on Tue, Thu'],
+		[{ interval: 2, unit: 'week' }, 'Every 2 weeks'],
+		[{ interval: 1, unit: 'week' }, 'Every Wed'],
+		[{ interval: 1, unit: 'weekday' }, 'Every weekday'],
+	] as const)('%p reads %p', (recurrence, expected) => {
+		expect(formatRecurrence(recurrence, { date: today, time: null })).toBe(expected);
 	});
 });

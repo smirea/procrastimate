@@ -136,7 +136,7 @@
 			<RecurrencePicker
 				recurrence={task.recurrence}
 				due={task.due}
-				onchange={(recurrence) => update({ recurrence, due: task.due ?? (recurrence && { date: clock.today, time: null }) })}
+				onchange={(recurrence, due) => update({ recurrence, due })}
 			/>
 			<PriorityPicker priority={task.priority} onchange={(priority) => update({ priority })} />
 			<ReminderPicker

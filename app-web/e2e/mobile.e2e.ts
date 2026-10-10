@@ -275,6 +275,42 @@ test('task details set a repeat by touch and completing rolls the task forward',
 	await expect(row).toContainText('Tomorrow');
 });
 
+test('a slashed weekday list repeats and the repeat menu adds a day by touch', async ({ app, page }) => {
+	await add(app, 'Yoga tue/thu 6pm');
+	const row = app.row('Yoga');
+	await expect(row).toContainText('Tomorrow 6pm');
+	await expect(row.getByRole('img', { name: 'Repeats every Tue, Thu' })).toBeVisible();
+
+	await row.getByRole('button', { name: /Yoga/ }).tap();
+	const details = app.details();
+	await details.getByRole('button', { name: 'Repeats every Tue, Thu' }).tap();
+	const menu = page.getByRole('dialog', { name: 'Repeat' });
+	const day = (name: string) => menu.getByRole('button', { name, exact: true });
+	await expect.poll(async () => (await day('Mon').boundingBox())?.height).toBeGreaterThanOrEqual(44);
+	const viewport = page.viewportSize()!;
+	for (const name of ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']) {
+		const box = (await day(name).boundingBox())!;
+		expect(box.width).toBeGreaterThanOrEqual(44);
+		expect(box.height).toBeGreaterThanOrEqual(44);
+		expect(box.x).toBeGreaterThanOrEqual(0);
+		expect(box.y).toBeGreaterThanOrEqual(0);
+		expect(box.x + box.width).toBeLessThanOrEqual(viewport.width);
+		expect(box.y + box.height).toBeLessThanOrEqual(viewport.height);
+	}
+	await day('Sat').tap();
+	await expect(details.getByRole('button', { name: 'Repeats every Tue, Thu, Sat' })).toBeVisible();
+	await expect(day('Sat')).toHaveAttribute('aria-pressed', 'true');
+	await shot(app, 'recurrence-weekdays');
+	const header = (await details.locator('header').boundingBox())!;
+	expect((await menu.boundingBox())!.y).toBeGreaterThanOrEqual(header.y + header.height);
+	await details.getByRole('button', { name: 'Close' }).tap();
+	await expect(details).toBeHidden();
+
+	await row.getByRole('checkbox', { name: 'Complete Yoga' }).tap();
+	await expect(page.getByRole('status').filter({ hasText: 'Completed “Yoga”, next due Saturday 6pm' })).toBeVisible();
+	await expect(row).toContainText('Saturday 6pm');
+});
+
 test('a tap just outside the checkbox completes the task and undo restores it', async ({ app, page }) => {
 	await add(app, 'Buy milk', 'Pay rent');
 	const checkbox = app.row('Buy milk').getByRole('checkbox', { name: 'Complete Buy milk' });

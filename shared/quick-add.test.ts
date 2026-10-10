@@ -405,6 +405,86 @@ describe('recurrence', () => {
 		});
 	});
 
+	test.each([
+		['gym mon wed fri 7am', [1, 3, 5], '2026-10-16', '07:00'],
+		['gym 7am mon wed fri', [1, 3, 5], '2026-10-16', '07:00'],
+		['gym mon wed fri at 11am', [1, 3, 5], '2026-10-14', '11:00'],
+		['gym every mon, wed', [1, 3], '2026-10-14', null],
+		['gym every mon and fri', [1, 5], '2026-10-16', null],
+		['gym every mon, wed, and fri', [1, 3, 5], '2026-10-14', null],
+		['gym every Mon & Thu', [1, 4], '2026-10-15', null],
+		['gym every monday, wednesday, friday 7am', [1, 3, 5], '2026-10-16', '07:00'],
+		['gym every fri mon', [1, 5], '2026-10-16', null],
+		['gym tue/thu', [2, 4], '2026-10-15', null],
+		['gym tue / thu 6pm', [2, 4], '2026-10-15', '18:00'],
+		['gym sat sun 9am', [6, 0], '2026-10-17', '09:00'],
+		['gym every sat and sun', [6, 0], '2026-10-17', null],
+		['gym mon, wed and fri at 6pm', [1, 3, 5], '2026-10-14', '18:00'],
+	] as const)('%s repeats on a weekday set', (input, days, date, time) => {
+		const parsed = parse(input);
+		expect(parsed.title).toBe('gym');
+		expect<unknown>(parsed.recurrence).toEqual({ interval: 1, unit: 'week', days });
+		expect<unknown>(parsed.due).toEqual({ date, time });
+	});
+
+	test.each([
+		['every mon wed workout', [1, 3]],
+		['7am mon wed workout', [1, 3]],
+		['tue/wed workout', [2, 3]],
+		['every fri, sat workout', [5, 6]],
+	] as const)('%s keeps its last weekday before an ordinary word', (input, days) => {
+		const parsed = parse(input);
+		expect(parsed.title).toBe('workout');
+		expect<unknown>(parsed.recurrence).toEqual({ interval: 1, unit: 'week', days });
+	});
+
+	test('a weekday list that names one day is a plain weekly repeat', () => {
+		expect(parse('gym every mon, monday').recurrence).toEqual({ interval: 1, unit: 'week' });
+	});
+
+	test('a typed date moves to the first listed weekday on or after it', () => {
+		expect(parse('gym every mon, wed oct 20').due).toEqual({ date: '2026-10-21', time: null });
+	});
+
+	test('a weekday set keeps its first day over the date set outside the text', () => {
+		const parsed = parse('gym tue/thu', { due: { date: '2026-10-14', time: '08:00' } });
+		expect(parsed.due).toEqual({ date: '2026-10-15', time: null });
+	});
+
+	test('a weekday set and its time are separate tokens', () => {
+		expect(parse('gym mon wed fri 7am').tokens).toEqual([
+			{ kind: 'recurrence', start: 4, end: 15, text: 'mon wed fri' },
+			{ kind: 'due', start: 16, end: 19, text: '7am' },
+		]);
+	});
+
+	test.each([
+		'Discuss mon wed plan',
+		'Discuss mon wed',
+		'mon wed fri',
+		'Compare sat, sun options',
+		'Swap tue and thu shifts',
+	])('a bare weekday list without a time, every, or a slash stays text: %s', input => {
+		const parsed = parse(input);
+		expect(parsed.title).toBe(input);
+		expect(parsed.due).toBe(null);
+		expect(parsed.recurrence).toBe(null);
+		expect(parsed.tokens).toEqual([]);
+	});
+
+	test('a single weekday next to a time is still a due date, not a repeat', () => {
+		const parsed = parse('Lunch fri 12pm');
+		expect(parsed.due).toEqual({ date: '2026-10-16', time: '12:00' });
+		expect(parsed.recurrence).toBe(null);
+	});
+
+	test('a weekday set kept as text does not leak a weekday into the due date', () => {
+		const parsed = parse('gym mon wed fri 7am', { disabled: ['mon wed fri'] });
+		expect(parsed.title).toBe('gym mon wed fri');
+		expect(parsed.recurrence).toBe(null);
+		expect(parsed.due).toEqual({ date: '2026-10-15', time: '07:00' });
+	});
+
 	test('the recurrence phrase is its own token', () => {
 		expect(parse('Water plants every day 9am').tokens).toEqual([
 			{ kind: 'recurrence', start: 13, end: 22, text: 'every day' },
@@ -456,6 +536,9 @@ describe('ordinary words stay in the title', () => {
 		'Read 2.5h audiobook',
 		'Momentum check',
 		'Try ratio 15/14',
+		'I sat and waited',
+		'Sat and sun bathed',
+		'Plan mon wed fri rota',
 	])('%s', input => {
 		const parsed = parse(input);
 		expect(parsed.title).toBe(input);
