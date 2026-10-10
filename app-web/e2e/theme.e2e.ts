@@ -60,3 +60,22 @@ test('the saved theme applies before the app loads, so it never flashes', async 
 	await app.themeOption('System').click();
 	await app.expectFirstPaintTheme('dark');
 });
+
+test('glass turns solid when the device asks for more contrast', async ({ app, page }) => {
+	const sidebar = page.getByRole('navigation', { name: 'Main' });
+	await expect(sidebar).not.toHaveCSS('backdrop-filter', 'none');
+	await page.emulateMedia({ contrast: 'more' });
+	await expect(sidebar).toHaveCSS('backdrop-filter', 'none');
+	await expect(sidebar).toHaveCSS('background-color', 'rgb(251, 251, 252)');
+	await app.themeOption('Dark').click();
+	await expect(sidebar).toHaveCSS('background-color', 'rgb(38, 38, 43)');
+});
+
+test('popovers open without motion under reduced motion', async ({ app, page }) => {
+	await page.emulateMedia({ reducedMotion: 'reduce' });
+	await app.openQuickAdd();
+	await app.quickAdd().getByRole('button', { name: 'Set due date' }).click();
+	const popover = page.getByRole('dialog', { name: 'Due date' });
+	await expect(popover).toBeVisible();
+	expect(await popover.evaluate(el => el.getAnimations().filter(a => a.playState === 'running').length)).toBe(0);
+});
