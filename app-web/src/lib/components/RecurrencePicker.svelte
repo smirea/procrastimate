@@ -1,16 +1,21 @@
 <script lang="ts">
 	import Repeat from 'phosphor-svelte/lib/Repeat';
 	import Check from 'phosphor-svelte/lib/Check';
-	import type { Due, Recurrence, RecurrenceUnit } from 'shared/task.ts';
+	import { alignToRecurrence, sortWeekdays, weekdayOf, weeklyOn, type Due, type Recurrence, type RecurrenceUnit, type Weekday } from 'shared/task.ts';
 	import Popover from './Popover.svelte';
-	import { formatRecurrence, repeatLabel } from '../format.ts';
+	import { WEEKDAY_NAMES, formatRecurrence, repeatLabel } from '../format.ts';
 	import { clock } from '../ui.svelte.ts';
 
 	let {
 		recurrence,
 		due,
 		onchange,
-	}: { recurrence: Recurrence | null; due: Due | null; onchange: (recurrence: Recurrence | null) => void } = $props();
+	}: {
+		recurrence: Recurrence | null;
+		due: Due | null;
+		/** A repeat comes with the due date it starts on: the first occurrence on or after the current one, or today. */
+		onchange: (recurrence: Recurrence | null, due: Due | null) => void;
+	} = $props();
 
 	const PRESETS: Recurrence[] = [
 		{ interval: 1, unit: 'day' },
@@ -20,6 +25,7 @@
 		{ interval: 1, unit: 'year' },
 	];
 	const UNITS: RecurrenceUnit[] = ['day', 'weekday', 'week', 'month', 'year'];
+	const WEEK: Weekday[] = [1, 2, 3, 4, 5, 6, 0];
 
 	let customInterval = $state<number | null>(2);
 	let customUnit = $state<RecurrenceUnit>('day');
@@ -28,8 +34,26 @@
 
 	/** Setting a repeat on an undated task dates it today, so presets read as they will apply. */
 	const anchor = $derived(due ?? { date: clock.today, time: null });
+	let opened = $state<Due | null>(null);
 
-	const same = (a: Recurrence | null, b: Recurrence) => a?.interval === b.interval && a.unit === b.unit;
+	/** Aligns from the due date the menu opened with, so toggle order never changes the result. A one-day set is stored as a plain weekly repeat. */
+	function set(next: Recurrence | null) {
+		if (!next) return onchange(null, due);
+		const from = opened ?? anchor;
+		const stored = next.unit === 'week' && next.days ? weeklyOn(next.interval, next.days) : next;
+		onchange(stored, { ...from, date: alignToRecurrence(from.date, next) });
+	}
+
+	/** A plain weekly repeat already repeats on its due weekday. Any other repeat starts with no days. */
+	const weekdays = $derived<readonly Weekday[]>(recurrence?.unit === 'week' ? (recurrence.days ?? [weekdayOf(anchor.date)]) : []);
+
+	function toggleDay(day: Weekday) {
+		const days = sortWeekdays(weekdays.includes(day) ? weekdays.filter(d => d !== day) : [...weekdays, day]);
+		set({ interval: recurrence?.unit === 'week' ? recurrence.interval : 1, unit: 'week', days });
+	}
+
+	const same = (a: Recurrence | null, b: Recurrence) =>
+		a?.interval === b.interval && a.unit === b.unit && !(a.unit === 'week' && a.days);
 </script>
 
 <Popover label="Repeat">
@@ -39,7 +63,10 @@
 			class="chip"
 			data-active={!!recurrence}
 			aria-label={recurrence ? repeatLabel(recurrence, due) : 'Set repeat'}
-			onclick={toggle}
+			onclick={() => {
+				opened = anchor;
+				toggle();
+			}}
 			style={recurrence ? 'color: var(--tone-tomorrow)' : ''}
 		>
 			<Repeat size={15} weight={recurrence ? 'bold' : 'regular'} />
@@ -47,13 +74,31 @@
 		</button>
 	{/snippet}
 	{#snippet children({ close })}
-		<div class="w-60 touch:w-72">
+		<div class="w-60 touch:w-80">
+			<div class="mb-1 grid grid-cols-7 border-b border-ink/5 pb-1">
+				{#each WEEK as day (day)}
+					<button
+						type="button"
+						class="grid h-8 place-items-center touch:h-11"
+						aria-label={WEEKDAY_NAMES[day]}
+						aria-pressed={weekdays.includes(day)}
+						disabled={weekdays.length === 1 && weekdays[0] === day}
+						onclick={() => toggleDay(day)}
+					>
+						<span
+							class={['btn size-7 p-0 touch:size-9', weekdays.includes(day) ? 'btn-primary' : 'btn-quiet']}
+						>
+							{WEEKDAY_NAMES[day][0]}
+						</span>
+					</button>
+				{/each}
+			</div>
 			{#each PRESETS as preset (preset.unit)}
 				<button
 					type="button"
 					class="menu-item"
 					onclick={() => {
-						onchange(preset);
+						set(preset);
 						close();
 					}}
 				>
@@ -66,7 +111,7 @@
 					type="button"
 					class="menu-item text-muted"
 					onclick={() => {
-						onchange(null);
+						set(null);
 						close();
 					}}
 				>
@@ -78,7 +123,8 @@
 				onsubmit={(e) => {
 					e.preventDefault();
 					if (!customValid) return;
-					onchange({ interval: customInterval!, unit: customUnit });
+					const days = customUnit === 'week' && recurrence?.unit === 'week' ? recurrence.days : undefined;
+					set(days ? { interval: customInterval!, unit: 'week', days } : { interval: customInterval!, unit: customUnit });
 					close();
 				}}
 			>

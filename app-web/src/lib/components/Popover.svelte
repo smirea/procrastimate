@@ -26,16 +26,20 @@
 	const close = () => (open = false);
 	const toggle = () => (open = !open);
 
-	/** Keeps the panel inside the visible viewport, which matters most in bottom sheets on phones and above the on-screen keyboard. */
+	/**
+	 * Keeps the panel inside the visible viewport, which matters most in bottom sheets on phones and above the
+	 * on-screen keyboard. Inside a sheet it also stays below the sheet's header, so it never covers Close.
+	 */
 	function place(panel: HTMLDivElement) {
 		const anchor = root.getBoundingClientRect();
 		const viewportWidth = document.documentElement.clientWidth;
 		const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+		const top = root.closest('.sheet')?.querySelector(':scope > header')?.getBoundingClientRect().bottom ?? 0;
 		const width = panel.offsetWidth;
 		const left = align === 'end' ? anchor.right - width : anchor.left;
 		const shift = Math.max(MARGIN - left, Math.min(0, viewportWidth - MARGIN - (left + width)));
 		const below = viewportHeight - anchor.bottom - GAP - MARGIN;
-		const above = anchor.top - GAP - MARGIN;
+		const above = anchor.top - top - GAP - MARGIN;
 		const flip = panel.scrollHeight > below && above > below;
 		placement = { above: flip, shift, maxHeight: flip ? above : below };
 	}

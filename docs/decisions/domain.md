@@ -1,7 +1,7 @@
 # Domain
 
 - **Task.** A title, optional notes, an optional project, any number of labels, an optional due date with an optional time, an optional recurrence, a priority, a list of reminders, and an optional completion time.
-- **Recurrence.** Repeats every interval of days, weekdays (Monday to Friday), weeks, months, or years, counted from the due date. A recurring task is one task whose due date moves forward. It has no separate history of past occurrences.
+- **Recurrence.** Repeats every interval of days, weekdays (Monday to Friday), weeks, months, or years, counted from the due date. A weekly repeat can carry a set of weekdays, such as Monday, Wednesday, and Friday, and then repeats on each of them. Without a set it repeats on the due date's weekday. A recurring task is one task whose due date moves forward. It has no separate history of past occurrences.
 - **Inbox.** Tasks without a project. Inbox is a view, not a project.
 - **Today.** Incomplete tasks due today or earlier. Overdue tasks are marked.
 - **Upcoming.** Incomplete tasks due after today, grouped by day.
