@@ -1,14 +1,13 @@
 import Foundation
 
-/// Where the app keeps its data: one JSON snapshot in Application Support, plus `UserDefaults` for device preferences.
+/// The folder in Application Support that holds all local task data, whatever its format, plus `UserDefaults` for
+/// device preferences.
 enum StoreLocation {
     static var directory: URL {
         URL.applicationSupportDirectory.appending(path: "procrastimate", directoryHint: .isDirectory)
     }
 
-    static var snapshot: URL { directory.appending(path: "store.json") }
-
-    /// Deletes every task and preference, so the app starts like a fresh install.
+    /// Deletes all local data and preferences, so the app starts like a fresh install.
     static func reset() {
         do {
             try FileManager.default.removeItem(at: directory)
