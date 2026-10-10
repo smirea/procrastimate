@@ -17,7 +17,7 @@ export default defineConfig({
 		port: env.CLIENT_PORT,
 		strictPort: true,
 		proxy: {
-			'/api': {
+			'^/api/': {
 				target: env.API_URL,
 				changeOrigin: true,
 				secure: false,
