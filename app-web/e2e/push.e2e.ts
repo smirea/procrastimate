@@ -59,6 +59,8 @@ async function openSheet(app: App, heading: string) {
 }
 
 test('the sidebar opens the Notifications sheet, which says when the server cannot push', async ({ app, page }) => {
+	await page.route('/api/push/key', route => route.fulfill({ status: 503, json: { ok: false } }));
+	await page.reload();
 	await expect(notificationsRow(app)).toHaveText(status('Off'));
 	await openSheet(app, 'Notifications aren’t available on this server');
 	await page.keyboard.press('Escape');
