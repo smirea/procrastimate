@@ -1,37 +1,42 @@
 {
-    "name": "procrastimate",
-    "private": true,
-    "workspaces": [
-        "server",
-        "app-web"
-    ],
-    "scripts": {
-        "lint": "oxlint --fix && oxfmt",
-        "test": "bun test",
-        "test:e2e": "bun run --cwd app-web test:e2e",
-        "check": "bunx --bun tsc --noEmit && bun run --cwd app-web check",
-        "start": "concurrently --raw -k -s first \"bun run start:server\" \"bun run start:client\"",
-        "start:client": "bun run --cwd app-web start",
-        "start:server": "bun run --cwd server start",
-        "start:ios": "bun app-ios/scripts/run",
-        "dev": "bun run start",
-        "client:dev": "bun run start:client",
-        "server:dev": "bun run start:server",
-        "env:generate": "env-manager gen --local"
-    },
-    "dependencies": {
-        "@tailwindcss/vite": "^4.3.3",
-        "@types/bun": "^1.4.2",
-        "concurrently": "^10.0.6",
-        "es-toolkit": "^1.52.0",
-        "kill-port-process": "^5.0.0",
-        "lefthook": "^2.2.1",
-        "lodash": "^4.18.1",
-        "oxfmt": "^0.72.0",
-        "oxlint": "^1.87.0",
-        "tailwindcss": "^4.3.3",
-        "typescript": "^7.0.2",
-        "vite": "^8.3.4",
-        "zod": "^4.6.5"
-    }
+	"name": "procrastimate",
+	"private": true,
+	"workspaces": [
+		"server",
+		"app-web"
+	],
+	"scripts": {
+		"lint": "oxlint --fix && oxfmt",
+		"test": "bun test",
+		"test:e2e": "bun run --cwd app-web test:e2e",
+		"check": "bunx --bun tsc --noEmit && bun run --cwd app-web check",
+		"start": "concurrently --raw -k -s first \"bun run start:server\" \"bun run start:client\"",
+		"start:client": "bun run --cwd app-web start",
+		"start:server": "bun run --cwd server start",
+		"start:ios": "bun app-ios/scripts/run",
+		"build": "bun run --cwd app-web build",
+		"preview": "bun run build && wrangler dev",
+		"dev": "bun run start",
+		"client:dev": "bun run start:client",
+		"server:dev": "bun run start:server",
+		"env:generate": "env-manager gen --local"
+	},
+	"dependencies": {
+		"@tailwindcss/vite": "^4.3.3",
+		"@types/bun": "^1.4.2",
+		"concurrently": "^10.0.6",
+		"es-toolkit": "^1.52.0",
+		"kill-port-process": "^5.0.0",
+		"lefthook": "^2.2.1",
+		"lodash": "^4.18.1",
+		"oxfmt": "^0.72.0",
+		"oxlint": "^1.87.0",
+		"tailwindcss": "^4.3.3",
+		"typescript": "^7.0.2",
+		"vite": "^8.3.4",
+		"zod": "^4.6.5"
+	},
+	"devDependencies": {
+		"wrangler": "^4.149.0"
+	}
 }

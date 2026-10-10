@@ -20,10 +20,19 @@ export default defineConfig({
 		},
 		{ name: 'mobile', testMatch: '**/mobile.e2e.ts', use: devices['iPhone 15 Pro'] },
 	],
-	webServer: {
-		command: 'bun --bun run vite',
-		url: `http://127.0.0.1:${PORT}/inbox`,
-		reuseExistingServer: false,
-		env: { API_URL: 'http://127.0.0.1:6121', CLIENT_PORT: String(PORT) },
-	},
+	// E2E_WORKER=1 tests the deployable Worker against an existing `bun run build` instead of the dev server.
+	webServer:
+		process.env.E2E_WORKER === '1'
+			? {
+					command: `bunx wrangler dev --port ${PORT}`,
+					cwd: '..',
+					url: `http://127.0.0.1:${PORT}/api/status`,
+					reuseExistingServer: false,
+				}
+			: {
+					command: 'bun --bun run vite',
+					url: `http://127.0.0.1:${PORT}/inbox`,
+					reuseExistingServer: false,
+					env: { API_URL: 'http://127.0.0.1:6121', CLIENT_PORT: String(PORT) },
+				},
 });

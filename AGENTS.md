@@ -21,7 +21,8 @@
 
 - `app-web/` owns Svelte, routes, styles, and Vite. `server/` owns the Bun API. `shared/` holds environment-independent types and contracts. Read each folder's `AGENTS.md` before changing it.
 - `bun run start` runs client and server; `start:client` and `start:server` run them separately. Browser API calls use the client-relative `/api` proxy.
-- `bun test` runs unit tests. `bun run check` typechecks the root and `app-web`. `bun run test:e2e` runs the Playwright suite against its own dev server on port 6130.
+- `bun test` runs unit tests. `bun run check` typechecks the root and `app-web`. `bun run test:e2e` runs the Playwright suite against its own dev server on port 6130. With `E2E_WORKER=1` it runs against `wrangler dev` serving an existing `bun run build`.
+- Production is one Cloudflare Worker configured by `wrangler.jsonc`. `bun run preview` builds and serves it locally with `wrangler dev`. CI in `.github/workflows/ci.yml` deploys every push to `master`; never deploy by hand.
 - A `monorepo-swift` scaffold also has `app-ios/` with native instructions and its own launcher. See that folder's docs.
 
 # Environment
