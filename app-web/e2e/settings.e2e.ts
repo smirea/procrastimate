@@ -13,7 +13,6 @@ test('the settings gear opens a popover that holds the theme switch', async ({ a
 
 	await app.themeOption('Dark').click();
 	await app.expectTheme('dark');
-	await shoot(app, 'desktop-popover-dark');
 
 	await page.keyboard.press('Escape');
 	await expect(app.settings()).toHaveCount(0);
@@ -33,7 +32,6 @@ test('importing a Todoist backup twice adds each project and task once', async (
 		'Long Term: 2 subtasks were imported as top-level tasks',
 		'Job: could not read the date "jeden Montag" on "Email Sam", kept it in notes',
 	]);
-	await shoot(app, 'desktop-summary-light');
 	await page.emulateMedia({ colorScheme: 'dark' });
 	await app.expectTheme('dark');
 	await shoot(app, 'desktop-summary-dark');
