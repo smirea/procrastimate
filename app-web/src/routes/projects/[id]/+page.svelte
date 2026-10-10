@@ -79,7 +79,7 @@
 							renaming = true;
 							close();
 						}}><PencilSimple size={15} />Rename</button>
-						<button type="button" class="menu-item text-[var(--p1)]" onclick={() => (confirmingDelete = true)}><Trash size={15} />Delete project</button>
+						<button type="button" class="menu-item text-[var(--tone-overdue)]" onclick={() => (confirmingDelete = true)}><Trash size={15} />Delete project</button>
 					{/if}
 				{/snippet}
 			</Popover>

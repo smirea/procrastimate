@@ -24,9 +24,8 @@
 				data-active={priority !== 4}
 				aria-label={`Priority ${priority}`}
 				onclick={toggle}
-				style={priority !== 4 ? `color: ${PRIORITIES[priority].tone}` : ''}
 			>
-				<Flag size={15} weight={priority !== 4 ? 'fill' : 'regular'} />
+				<Flag size={15} weight={priority !== 4 ? 'fill' : 'regular'} color={priority !== 4 ? PRIORITIES[priority].tone : undefined} />
 				{priority !== 4 ? `P${priority}` : 'Priority'}
 			</button>
 		{/snippet}
