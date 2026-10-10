@@ -8,42 +8,42 @@
 	import TaskList from '#lib/components/TaskList.svelte';
 	import Popover from '#lib/components/Popover.svelte';
 	import { store } from '#lib/store.svelte.ts';
-	import { projectTasks } from '#lib/views.ts';
+	import { labelTasks } from '#lib/views.ts';
 
-	const project = $derived(store.project(page.params.id ?? null));
-	const tasks = $derived(project ? projectTasks(store.tasks, project.id) : []);
+	const label = $derived(store.label(page.params.id ?? ''));
+	const tasks = $derived(label ? labelTasks(store.tasks, label.id) : []);
 
 	let renaming = $state(false);
 	let confirmingDelete = $state(false);
 
 	function rename(name: string) {
-		if (project && name.trim()) store.renameProject(project.id, name.trim());
+		if (label && name.trim()) store.renameLabel(label.id, name.trim());
 		renaming = false;
 	}
 
 	function remove() {
-		if (!project) return;
-		store.deleteProject(project.id);
+		if (!label) return;
+		store.deleteLabel(label.id);
 		void goto('/inbox');
 	}
 </script>
 
-<svelte:head><title>{project?.name ?? 'Project'} · Procrastimate</title></svelte:head>
+<svelte:head><title>{label?.name ?? 'Label'} · Procrastimate</title></svelte:head>
 
-{#if project}
+{#if label}
 	<View
 		empty={tasks.length === 0}
-		emptyTitle="No tasks yet"
-		emptyHint={`Add one here, or type #${project.name} in quick add.`}
-		quickAdd={{ projectId: project.id, labelId: null, today: false }}
+		emptyTitle="No tasks with this label"
+		emptyHint={`Type @${label.name} in quick add, or pick it in a task's details.`}
+		quickAdd={{ projectId: null, labelId: label.id, today: false }}
 	>
 		{#snippet title()}
 			{#if renaming}
 				<!-- svelte-ignore a11y_autofocus -->
 				<input
 					class="w-full rounded-lg bg-surface/70 px-1 text-[26px] font-semibold tracking-tight outline-none"
-					aria-label="Project name"
-					value={project.name}
+					aria-label="Label name"
+					value={label.name}
 					autofocus
 					onblur={(e) => rename(e.currentTarget.value)}
 					onkeydown={(e) => {
@@ -52,13 +52,13 @@
 					}}
 				/>
 			{:else}
-				<h1 class="truncate text-[26px] font-semibold tracking-tight">{project.name}</h1>
+				<h1 class="truncate text-[26px] font-semibold tracking-tight">{label.name}</h1>
 			{/if}
 		{/snippet}
 		{#snippet actions()}
-			<Popover label="Project actions" align="end">
+			<Popover label="Label actions" align="end">
 				{#snippet trigger({ toggle })}
-					<button type="button" class="grid size-9 place-items-center rounded-xl text-muted transition-colors hover:bg-ink/5 hover:text-ink touch:size-11" aria-label="Project actions" onclick={() => {
+					<button type="button" class="grid size-9 place-items-center rounded-xl text-muted transition-colors hover:bg-ink/5 hover:text-ink touch:size-11" aria-label="Label actions" onclick={() => {
 						confirmingDelete = false;
 						toggle();
 					}}>
@@ -68,7 +68,7 @@
 				{#snippet children({ close })}
 					{#if confirmingDelete}
 						<div class="w-60 p-1.5 text-[13px]">
-							<p>Delete <strong>{project.name}</strong> and its {tasks.length} task{tasks.length === 1 ? '' : 's'}?</p>
+							<p>Delete <strong>{label.name}</strong>? Its tasks stay, without the label.</p>
 							<div class="mt-2 flex justify-end gap-1.5">
 								<button type="button" class="btn btn-quiet" onclick={close}>Cancel</button>
 								<button type="button" class="btn bg-[var(--tone-overdue)] text-on-accent" onclick={remove}>Delete</button>
@@ -79,13 +79,13 @@
 							renaming = true;
 							close();
 						}}><PencilSimple size={15} />Rename</button>
-						<button type="button" class="menu-item text-[var(--tone-overdue)]" onclick={() => (confirmingDelete = true)}><Trash size={15} />Delete project</button>
+						<button type="button" class="menu-item text-[var(--tone-overdue)]" onclick={() => (confirmingDelete = true)}><Trash size={15} />Delete label</button>
 					{/if}
 				{/snippet}
 			</Popover>
 		{/snippet}
-		<TaskList {tasks} label={`${project.name} tasks`} />
+		<TaskList {tasks} showProject label={`${label.name} tasks`} />
 	</View>
 {:else}
-	<p class="mt-16 text-center text-muted">This project no longer exists.</p>
+	<p class="mt-16 text-center text-muted">This label no longer exists.</p>
 {/if}

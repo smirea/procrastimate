@@ -19,7 +19,7 @@
 	empty={groups.length === 0}
 	emptyTitle="Nothing scheduled"
 	emptyHint="Tasks due after today show up here, grouped by day."
-	quickAdd={{ projectId: null, today: false }}
+	quickAdd={{ projectId: null, labelId: null, today: false }}
 >
 	{#each groups as group (group.date)}
 		<section class="mb-6" aria-label={dayHeading(group.date, clock.today)} animate:flip={{ duration: 240, easing: cubicOut }} transition:fade={{ duration: 160 }}>

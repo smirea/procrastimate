@@ -349,3 +349,55 @@ test('the saved theme applies before the app loads on a phone', async ({ app }) 
 	await app.expectFirstPaintTheme('dark');
 	await app.expectTheme('dark');
 });
+
+test('@ suggests labels above the keyboard, rows show chips, and the drawer opens a label', async ({ app, page }) => {
+	await openQuickAdd(app);
+	await openKeyboard(app);
+	await app.taskInput().pressSequentially('Call plumber @calls');
+	const list = page.getByRole('listbox', { name: 'Labels' });
+	await expect(list.getByRole('option')).toHaveText(['Create label “calls”']);
+	await settle(app);
+	const box = (await list.boundingBox())!;
+	expect(box.y).toBeGreaterThanOrEqual(0);
+	expect(box.y + box.height).toBeLessThanOrEqual((await app.taskInput().boundingBox())!.y);
+	await shot(app, 'label-autocomplete');
+	await list.getByRole('option', { name: 'Create label “calls”' }).tap();
+	await expect(app.taskInput()).toHaveValue('Call plumber @calls ');
+	await expect(app.taskInput()).toBeFocused();
+	await app.quickAdd().getByRole('button', { name: 'Add task' }).tap();
+	await app.quickAdd().getByRole('button', { name: 'Cancel' }).tap();
+
+	const row = app.row('Call plumber');
+	await expect(row.locator('.label-chip')).toHaveText(['calls']);
+	await shot(app, 'label-chips');
+
+	await row.getByRole('button', { name: /Call plumber/ }).tap();
+	await app.details().getByRole('button', { name: 'Labels calls' }).tap();
+	const picker = page.getByRole('dialog', { name: 'Labels' });
+	const filter = picker.getByRole('textbox', { name: 'Find or create a label' });
+	await expect(filter).not.toBeFocused();
+	await filter.fill('waiting');
+	await picker.getByRole('menuitemcheckbox', { name: 'Create label “waiting”' }).tap();
+	await expect(picker.getByRole('menuitemcheckbox', { name: 'waiting' })).toHaveAttribute('aria-checked', 'true');
+	await settle(app);
+	const menu = (await picker.boundingBox())!;
+	expect(menu.y).toBeGreaterThanOrEqual(0);
+	expect(menu.y + menu.height).toBeLessThanOrEqual(page.viewportSize()!.height);
+	await shot(app, 'label-picker');
+	await app.details().getByRole('button', { name: 'Close' }).tap();
+	await expect(app.details()).toBeHidden();
+	await expect(row.locator('.label-chip')).toHaveText(['calls', 'waiting']);
+
+	await go(app, 'waiting');
+	await expect(app.list('waiting tasks').getByRole('listitem')).toHaveText([/Call plumber.*Inbox/]);
+	await shot(app, 'label-view');
+
+	await openNav(app);
+	await nav(app).getByRole('button', { name: 'Search' }).tap();
+	await page.getByRole('combobox', { name: 'Search' }).fill('cal');
+	const results = page.getByRole('listbox', { name: 'Search results' });
+	await expect(results.getByRole('group', { name: /^Labels/ }).getByRole('option')).toHaveText(['calls']);
+	await results.getByRole('option', { name: 'calls', exact: true }).tap();
+	await expect(page.getByRole('heading', { level: 1, name: 'calls' })).toBeVisible();
+	await expect(app.list('calls tasks').getByRole('listitem')).toHaveText([/Call plumber/]);
+});

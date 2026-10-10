@@ -7,6 +7,7 @@ import {
 	toTimeOfDay,
 	type DateKey,
 	type Due,
+	type Label,
 	type Priority,
 	type Project,
 	type Recurrence,
@@ -15,7 +16,7 @@ import {
 	type TimeOfDay,
 } from './task.ts';
 
-export type TokenKind = 'due' | 'recurrence' | 'priority' | 'reminder' | 'project';
+export type TokenKind = 'due' | 'recurrence' | 'priority' | 'reminder' | 'project' | 'label';
 
 export type QuickAddToken = { kind: TokenKind; start: number; end: number; text: string };
 
@@ -26,12 +27,14 @@ export type ParsedQuickAdd = {
 	priority: Priority | null;
 	reminders: Reminder[];
 	projectId: string | null;
+	labelIds: string[];
 	tokens: QuickAddToken[];
 };
 
 export type ParseOptions = {
 	now: Date;
 	projects?: readonly Project[];
+	labels?: readonly Label[];
 	/** Token texts the user chose to keep as plain title text, compared case-insensitively. */
 	disabled?: readonly string[];
 	/** The due date set outside the text, such as by a picker or on an existing task. */
@@ -66,7 +69,8 @@ const TIME = String.raw`noon|midnight|\d{1,2}(?::\d{2})?(?:\s*[ap]m|[ap])|\d{1,2
 const MOMENT = String.raw`in\s+\d+(?:\s*${CLOCK_UNIT})?|\d+${CLOCK_UNIT}|\d+\s+(?:mins?|hrs?)`;
 const DATE_TIME = String.raw`(?:(?:on\s+)?(?<date1>${DATE})(?:\s+(?:at\s+)?(?<time1>${TIME}))?|(?:at\s+)?(?<time2>${TIME})(?:\s+(?:on\s+)?(?<date2>${DATE}))?|(?<moment>${MOMENT}))`;
 
-const BEFORE = String.raw`(?<![\w#!$€£]|\d[/:.])`;
+/** `#` and `@` start a name or a handle, so `@5pm` and `@tom` stay text. */
+const BEFORE = String.raw`(?<![\w#@!$€£]|\d[/:.])`;
 const AFTER = String.raw`(?![\w!]|[/:]\d)`;
 
 const NAME_CONTEXT = 'call|text|email|ping|ask|tell|meet|see|visit|thank|invite|message|dm|cc|with|and|to|for|from';
@@ -110,6 +114,7 @@ type Match =
 	| { kind: 'recurrence'; recurrence: RecurrencePhrase }
 	| { kind: 'priority'; priority: Priority }
 	| { kind: 'project'; projectId: string }
+	| { kind: 'label'; labelId: string }
 	| { kind: 'reminder'; reminder: ReminderDraft };
 
 type Rule = {
@@ -323,7 +328,10 @@ const RULES: Rule[] = [
 		kind: 'priority',
 		repeatable: false,
 		guarded: true,
-		pattern: new RegExp(String.raw`(?<![\w#])p([1-4])(?!\w)|(?<!\S)(!!!?)(?!\S)|\b(urgent|important)\b`, 'gi'),
+		pattern: new RegExp(
+			String.raw`(?<![\w#@])p([1-4])(?!\w)|(?<!\S)(!!!?)(?!\S)|(?<![\w#@])(urgent|important)\b`,
+			'gi',
+		),
 		read: m => {
 			const [, level, bangs, word] = m;
 			const priority = level ? (Number(level) as Priority) : PRIORITY_WORDS[(bangs ?? word)!.toLowerCase()];
@@ -344,19 +352,25 @@ const RULES: Rule[] = [
 
 const escapeRegExp = (text: string) => text.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 
-function projectRule(projects: readonly Project[]): Rule | null {
-	if (projects.length === 0) return null;
-	const byName = new Map(projects.map(p => [p.name.toLowerCase(), p.id]));
+/**
+ * `#Name` or `@Name` for a name that exists, at the start of the text or after whitespace, so `a@b.com`
+ * never matches. The name must end the word, so `@home.com` and `@homework` do not read as `@home`.
+ */
+function namedRule(
+	kind: 'project' | 'label',
+	sigil: '#' | '@',
+	items: readonly { id: string; name: string }[],
+	read: (id: string) => Match,
+): Rule | null {
+	if (items.length === 0) return null;
+	const byName = new Map(items.map(item => [item.name.toLowerCase(), item.id]));
 	const names = [...byName.keys()].toSorted((a, b) => b.length - a.length).map(escapeRegExp);
 	return {
-		kind: 'project',
-		repeatable: false,
+		kind,
+		repeatable: kind === 'label',
 		guarded: false,
-		pattern: new RegExp(String.raw`(?<!\S)#(${names.join('|')})(?!\w)`, 'gi'),
-		read: m => {
-			const projectId = byName.get(m[1]!.toLowerCase());
-			return projectId ? { kind: 'project', projectId } : null;
-		},
+		pattern: new RegExp(String.raw`(?<!\S)${sigil}(${names.join('|')})(?![\w#@]|[./:]\w)`, 'gi'),
+		read: m => read(byName.get(m[1]!.toLowerCase())!),
 	};
 }
 
@@ -397,8 +411,11 @@ export function parseQuickAdd(input: string, options: ParseOptions): ParsedQuick
 	const now = options.now;
 	const ctx: Context = { now, today: toDateKey(now), time: toTimeOfDay(now.getHours(), now.getMinutes()) };
 	const disabled = new Set(options.disabled?.map(d => d.toLowerCase()));
-	const project = projectRule(options.projects ?? []);
-	const rules = project ? [...RULES.slice(0, 2), project, ...RULES.slice(2)] : RULES;
+	const named = [
+		namedRule('project', '#', options.projects ?? [], projectId => ({ kind: 'project', projectId })),
+		namedRule('label', '@', options.labels ?? [], labelId => ({ kind: 'label', labelId })),
+	].filter(rule => rule !== null);
+	const rules = [...RULES.slice(0, 2), ...named, ...RULES.slice(2)];
 	// Every phrase a rule recognizes is masked out of both views, including kept-as-text and
 	// superseded ones, so a later rule never reads part of it as something else.
 	let raw = input;
@@ -436,6 +453,7 @@ export function parseQuickAdd(input: string, options: ParseOptions): ParsedQuick
 	let repeat: RecurrencePhrase | null = null;
 	let priority: Priority | null = null;
 	let projectId: string | null = null;
+	const labelIds = new Set<string>();
 	const reminderDrafts: ReminderDraft[] = [];
 	for (const match of matches) {
 		switch (match.kind) {
@@ -450,6 +468,9 @@ export function parseQuickAdd(input: string, options: ParseOptions): ParsedQuick
 				break;
 			case 'project':
 				projectId = match.projectId;
+				break;
+			case 'label':
+				labelIds.add(match.labelId);
 				break;
 			case 'reminder':
 				reminderDrafts.push(match.reminder);
@@ -478,6 +499,7 @@ export function parseQuickAdd(input: string, options: ParseOptions): ParsedQuick
 		priority,
 		reminders: reminderDrafts.map(draft => resolveReminder(draft, due ?? outside, ctx)),
 		projectId,
+		labelIds: [...labelIds],
 		tokens,
 	};
 }

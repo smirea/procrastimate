@@ -3,6 +3,7 @@
 	import { cubicOut } from 'svelte/easing';
 	import Bell from 'phosphor-svelte/lib/Bell';
 	import Repeat from 'phosphor-svelte/lib/Repeat';
+	import Tag from 'phosphor-svelte/lib/Tag';
 	import { parseQuickAdd, type QuickAddToken, type TokenKind } from 'shared/quick-add.ts';
 	import { DEFAULT_PRIORITY, type Due, type Priority, type Reminder } from 'shared/task.ts';
 	import SmartInput from './SmartInput.svelte';
@@ -18,11 +19,18 @@
 
 	let { defaults }: { defaults: QuickAddDefaults } = $props();
 
-	type Picked = { due: Due | null; priority: Priority | null; projectId: string | null; reminders: Reminder[] };
+	type Picked = {
+		due: Due | null;
+		priority: Priority | null;
+		projectId: string | null;
+		labelIds: string[];
+		reminders: Reminder[];
+	};
 	const initialPicked = (): Picked => ({
 		due: defaults.today ? { date: clock.today, time: null } : null,
 		priority: null,
 		projectId: defaults.projectId,
+		labelIds: defaults.labelId ? [defaults.labelId] : [],
 		reminders: [],
 	});
 
@@ -31,12 +39,20 @@
 	let picked = $state<Picked>(initialPicked());
 	let input: SmartInput;
 
-	const parsed = $derived(parseQuickAdd(text, { now: new Date(clock.now), projects: store.projects, disabled, due: picked.due }));
+	const parsed = $derived(
+		parseQuickAdd(text, { now: new Date(clock.now), projects: store.projects, labels: store.labels, disabled, due: picked.due }),
+	);
 	const tokenOf = (kind: TokenKind) => parsed.tokens.find((t) => t.kind === kind);
 	const due = $derived(parsed.due ?? picked.due);
 	const priority = $derived(parsed.priority ?? picked.priority ?? DEFAULT_PRIORITY);
 	const projectId = $derived(parsed.projectId ?? picked.projectId);
 	const reminderTokens = $derived(parsed.tokens.filter((t) => t.kind === 'reminder'));
+	const labelTokens = $derived(
+		parsed.tokens
+			.filter((t) => t.kind === 'label')
+			.map((token) => ({ token, name: store.labels.find((l) => `@${l.name}`.toLowerCase() === token.text.toLowerCase())?.name })),
+	);
+	const labelIds = $derived([...new Set([...picked.labelIds, ...parsed.labelIds])]);
 	const timing = $derived(
 		parsed.due || parsed.recurrence || parsed.reminders.length
 			? describeTiming({ due, recurrence: parsed.recurrence, reminders: [...parsed.reminders, ...picked.reminders] }, clock.today)
@@ -58,7 +74,7 @@
 	function submit() {
 		if (!parsed.title) return;
 		const reminders = [...parsed.reminders, ...picked.reminders];
-		store.addTask({ title: parsed.title, due, recurrence: parsed.recurrence, priority, projectId, reminders });
+		store.addTask({ title: parsed.title, due, recurrence: parsed.recurrence, priority, projectId, labelIds, reminders });
 		requestNotificationPermission(due, reminders);
 		text = '';
 		disabled = [];
@@ -131,6 +147,21 @@
 				<span class="chip" data-active="true" style="color: var(--tone-week)">
 					<Bell size={15} weight="fill" />
 					{formatReminder(parsed.reminders[i]!, clock.today)}
+				</span>
+				<KeepAsText onclick={() => keepAsText(token)} />
+			</div>
+		{/each}
+		{#each store.labelsOf({ labelIds: picked.labelIds.filter((id) => !parsed.labelIds.includes(id)) }) as label (label.id)}
+			<span class="chip" data-active="true" transition:scale={{ start: 0.9, duration: 160 }}>
+				<Tag size={15} weight="fill" class="text-[var(--tone-label)]" />
+				{label.name}
+			</span>
+		{/each}
+		{#each labelTokens as { token, name } (token.start)}
+			<div class="flex items-center" transition:scale={{ start: 0.9, duration: 160 }}>
+				<span class="chip" data-active="true">
+					<Tag size={15} weight="fill" class="text-[var(--tone-label)]" />
+					{name}
 				</span>
 				<KeepAsText onclick={() => keepAsText(token)} />
 			</div>

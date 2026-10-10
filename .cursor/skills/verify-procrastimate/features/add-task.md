@@ -1,6 +1,6 @@
 # Add a task
 
-Add a task lets Stefan capture a task in one motion from anywhere in the app. Recognized phrases for due date, priority, reminders, and project are highlighted inline as he types, removed from the title, and applied to the task, which lands in the right list at once.
+Add a task lets Stefan capture a task in one motion from anywhere in the app. Recognized phrases for due date, priority, reminders, project, and labels are highlighted inline as he types, removed from the title, and applied to the task, which lands in the right list at once.
 
 ## Sub-features
 
@@ -55,5 +55,5 @@ Preconditions:
 - `docs/decisions.md` lists every phrase, default, and guard. `bun test shared/quick-add.test.ts` proves each one with the clock pinned. Use those tests for a phrase-by-phrase check instead of the UI.
 - A time with no day lands tomorrow once it has passed. At the pinned 10:00, `9am` reads `Tomorrow 9am`.
 - A date, recurrence, priority, or project phrase that appears twice uses the last one. `Today task today` saves `Today task` due today.
-- The highlight layer sits behind the input and is `aria-hidden`. Find tokens with the `[data-token="due"]`, `recurrence`, `priority`, `reminder`, and `project` selectors, and read values from the chips.
+- The highlight layer sits behind the input and is `aria-hidden`. Find tokens with the `[data-token="due"]`, `recurrence`, `priority`, `reminder`, `project`, and `label` selectors, and read values from the chips.
 - A task that appears before a reload proves only local state. Reload or relaunch for persistence.

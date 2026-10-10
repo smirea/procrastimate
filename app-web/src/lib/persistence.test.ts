@@ -37,4 +37,26 @@ describe('loadSnapshot', () => {
 		expect(snapshot.projects.map(p => p.name)).toEqual(['Home']);
 		expect(snapshot.remindersCheckedAt).toBe(5);
 	});
+
+	test('a store saved before labels existed loads every task with no labels', () => {
+		storage.set('procrastimate', JSON.stringify({ tasks: [task('Old', null)], projects: [], remindersCheckedAt: 5 }));
+		const snapshot = loadSnapshot(10);
+		expect(snapshot.tasks.map(t => [t.title, t.labelIds])).toEqual([['Old', []]]);
+		expect(snapshot.labels).toEqual([]);
+	});
+
+	test('labels and the labels on each task round-trip', () => {
+		storage.set(
+			'procrastimate',
+			JSON.stringify({
+				tasks: [{ ...task('Call', null), labelIds: ['l'] }],
+				projects: [],
+				labels: [{ id: 'l', name: 'calls', createdAt: 1 }],
+				remindersCheckedAt: 5,
+			}),
+		);
+		const snapshot = loadSnapshot(10);
+		expect(snapshot.tasks[0]!.labelIds).toEqual(['l']);
+		expect(snapshot.labels).toEqual([{ id: 'l', name: 'calls', createdAt: 1 }]);
+	});
 });

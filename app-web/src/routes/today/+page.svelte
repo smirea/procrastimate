@@ -18,7 +18,7 @@
 	empty={tasks.overdue.length + tasks.today.length === 0}
 	emptyTitle="All clear for today"
 	emptyHint={mobile.current ? 'Enjoy it, or tap + to add something.' : 'Enjoy it, or add something with Q.'}
-	quickAdd={{ projectId: null, today: true }}
+	quickAdd={{ projectId: null, labelId: null, today: true }}
 >
 	{#if tasks.overdue.length}
 		<h2 class="section-heading text-[var(--tone-overdue)]">Overdue</h2>

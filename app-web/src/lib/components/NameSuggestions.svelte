@@ -1,20 +1,22 @@
 <script lang="ts">
-	import Hash from 'phosphor-svelte/lib/Hash';
 	import Plus from 'phosphor-svelte/lib/Plus';
-	import type { ProjectSuggestion } from 'shared/project-search.ts';
+	import type { Named, Suggestion } from 'shared/name-search.ts';
+	import type { NameSource } from '../names.ts';
 
 	let {
 		id,
+		source,
 		suggestions,
 		query,
 		active,
 		onpick,
 	}: {
 		id: string;
-		suggestions: ProjectSuggestion[];
+		source: NameSource;
+		suggestions: Suggestion<Named>[];
 		query: string;
 		active: number;
-		onpick: (suggestion: ProjectSuggestion) => void;
+		onpick: (suggestion: Suggestion<Named>) => void;
 	} = $props();
 
 	let list: HTMLDivElement;
@@ -31,8 +33,8 @@
 	});
 </script>
 
-<div bind:this={list} {id} role="listbox" aria-label="Projects" class="max-h-[inherit] overflow-y-auto overscroll-contain p-1.5">
-	{#each suggestions as suggestion, i (suggestion.kind === 'project' ? suggestion.project.id : 'create')}
+<div bind:this={list} {id} role="listbox" aria-label={source.list} class="max-h-[inherit] overflow-y-auto overscroll-contain p-1.5">
+	{#each suggestions as suggestion, i (suggestion.kind === 'existing' ? suggestion.item.id : 'create')}
 		<button
 			type="button"
 			id="{id}-{i}"
@@ -43,13 +45,13 @@
 			onmousedown={(e) => e.preventDefault()}
 			onclick={() => onpick(suggestion)}
 		>
-			{#if suggestion.kind === 'project'}
-				{@const parts = split(suggestion.project.name)}
-				<Hash size={15} class="shrink-0 text-muted" />
+			{#if suggestion.kind === 'existing'}
+				{@const parts = split(suggestion.item.name)}
+				<source.icon size={15} class="shrink-0 text-muted" />
 				<span class="truncate">{parts.head}<strong class="font-semibold">{parts.match}</strong>{parts.tail}</span>
 			{:else}
 				<Plus size={15} class="shrink-0 text-accent" />
-				<span class="truncate">Create project “{suggestion.name}”</span>
+				<span class="truncate">Create {source.noun} “{suggestion.name}”</span>
 			{/if}
 		</button>
 	{/each}

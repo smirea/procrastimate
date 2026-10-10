@@ -1,11 +1,15 @@
 import { describe, expect, test } from 'bun:test';
 import { excerpt, search, searchTerms } from './search.ts';
-import type { Priority, Project, Task } from './task.ts';
+import type { Label, Priority, Project, Task } from './task.ts';
 
 const projects: Project[] = [
 	{ id: 'home', name: 'Home', createdAt: 0 },
 	{ id: 'garden', name: 'Garden', createdAt: 0 },
 	{ id: 'cafe', name: 'Café Ideas', createdAt: 0 },
+];
+const labels: Label[] = [
+	{ id: 'calls', name: 'calls', createdAt: 0 },
+	{ id: 'waiting', name: 'Waiting on', createdAt: 0 },
 ];
 
 let nextId = 0;
@@ -14,12 +18,14 @@ const task = (
 	{
 		notes = '',
 		projectId = null,
+		labelIds = [],
 		priority = 4,
 		createdAt = 0,
 		completedAt = null,
 	}: {
 		notes?: string;
 		projectId?: string | null;
+		labelIds?: string[];
 		priority?: Priority;
 		createdAt?: number;
 		completedAt?: number | null;
@@ -29,6 +35,7 @@ const task = (
 	title,
 	notes,
 	projectId,
+	labelIds,
 	due: null,
 	recurrence: null,
 	priority,
@@ -38,7 +45,7 @@ const task = (
 });
 
 const titles = (query: string, tasks: Task[]) => {
-	const results = search(query, tasks, projects);
+	const results = search(query, tasks, { projects, labels });
 	return { open: results.open.map(h => h.task.title), completed: results.completed.map(h => h.task.title) };
 };
 
@@ -58,7 +65,7 @@ describe('search matching', () => {
 	];
 
 	test('an empty query matches nothing', () => {
-		expect(search('   ', tasks, projects)).toEqual({ projects: [], open: [], completed: [] });
+		expect(search('   ', tasks, { projects, labels })).toEqual({ projects: [], labels: [], open: [], completed: [] });
 	});
 
 	test('matches titles, notes, and project names case-insensitively', () => {
@@ -69,8 +76,8 @@ describe('search matching', () => {
 
 	test('ignores accents on either side', () => {
 		expect(titles('resume', tasks).open).toEqual(['Résumé update']);
-		expect(search('cafe', [], projects).projects.map(h => h.project.name)).toEqual(['Café Ideas']);
-		expect(search('café', [], projects).projects.map(h => h.project.name)).toEqual(['Café Ideas']);
+		expect(search('cafe', [], { projects, labels }).projects.map(h => h.item.name)).toEqual(['Café Ideas']);
+		expect(search('café', [], { projects, labels }).projects.map(h => h.item.name)).toEqual(['Café Ideas']);
 	});
 
 	test('every term must match, in any field and any order', () => {
@@ -129,7 +136,7 @@ describe('search ranking', () => {
 			{ id: 'b', name: 'Garden', createdAt: 0 },
 			{ id: 'c', name: 'Allotment garden', createdAt: 0 },
 		];
-		expect(search('garden', [], list).projects.map(h => h.project.name)).toEqual([
+		expect(search('garden', [], { projects: list, labels: [] }).projects.map(h => h.item.name)).toEqual([
 			'Garden',
 			'Allotment garden',
 			'Side gardening',
@@ -139,7 +146,7 @@ describe('search ranking', () => {
 
 describe('search highlights', () => {
 	test('highlights every occurrence of every term in the original text', () => {
-		const [hit] = search('pa re', [task('Pay rent, pay Rex')], projects).open;
+		const [hit] = search('pa re', [task('Pay rent, pay Rex')], { projects, labels }).open;
 		expect(hit!.matches.title).toEqual([
 			{
 				text: 'Pay rent, pay Rex',
@@ -154,12 +161,15 @@ describe('search highlights', () => {
 	});
 
 	test('maps folded matches back to accented characters', () => {
-		const [hit] = search('resume', [task('My Résumé')], projects).open;
+		const [hit] = search('resume', [task('My Résumé')], { projects, labels }).open;
 		expect(hit!.matches.title).toEqual([{ text: 'My Résumé', ranges: [[3, 9]] }]);
 	});
 
 	test('reports the project and notes it matched, and skips fields it did not', () => {
-		const [hit] = search('home', [task('Fix sink', { projectId: 'home', notes: 'Call home first' })], projects).open;
+		const [hit] = search('home', [task('Fix sink', { projectId: 'home', notes: 'Call home first' })], {
+			projects,
+			labels,
+		}).open;
 		expect(hit!.matches).toEqual({
 			project: [{ text: 'Home', ranges: [[0, 4]] }],
 			notes: [{ text: 'Call home first', ranges: [[5, 9]] }],
@@ -167,8 +177,42 @@ describe('search highlights', () => {
 	});
 
 	test('merges overlapping matches', () => {
-		const [hit] = search('milk ilk', [task('Buy milk')], projects).open;
+		const [hit] = search('milk ilk', [task('Buy milk')], { projects, labels }).open;
 		expect(hit!.matches.title).toEqual([{ text: 'Buy milk', ranges: [[4, 8]] }]);
+	});
+});
+
+describe('labels', () => {
+	test('a label name matches its tasks and the label itself', () => {
+		const tasks = [
+			task('Plumber', { labelIds: ['calls'] }),
+			task('Dentist', { labelIds: ['waiting', 'calls'] }),
+			task('Read'),
+		];
+		const results = search('call', tasks, { projects, labels });
+		expect(results.labels.map(h => [h.item.name, h.name.ranges])).toEqual([['calls', [[0, 4]]]]);
+		expect(results.open.map(h => h.task.title)).toEqual(['Plumber', 'Dentist']);
+		expect(results.open[1]!.matches).toEqual({ labels: [{ text: 'calls', ranges: [[0, 4]] }] });
+	});
+
+	test('a word can match a label while another matches the title', () => {
+		const tasks = [task('Dentist', { labelIds: ['waiting'] }), task('Dentist appointment')];
+		expect(titles('dentist waiting', tasks).open).toEqual(['Dentist']);
+	});
+
+	test('a label match outweighs a notes match and loses to a title match', () => {
+		const tasks = [
+			task('Plan', { notes: 'calls to make' }),
+			task('Plan', { labelIds: ['calls'], createdAt: -1 }),
+			task('Calls list'),
+		];
+		expect(
+			search('calls', tasks, { projects, labels }).open.map(h => h.task.notes || h.task.labelIds[0] || h.task.title),
+		).toEqual(['Calls list', 'calls', 'calls to make']);
+	});
+
+	test('a deleted label no longer matches', () => {
+		expect(titles('calls', [task('Plumber', { labelIds: ['gone'] })]).open).toEqual([]);
 	});
 });
 

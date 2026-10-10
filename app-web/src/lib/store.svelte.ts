@@ -3,6 +3,7 @@ import {
 	nextOccurrence,
 	type DateKey,
 	type Due,
+	type Label,
 	type Priority,
 	type Project,
 	type Recurrence,
@@ -15,6 +16,7 @@ import { loadSnapshot, saveSnapshot, type Snapshot } from './persistence.ts';
 export type NewTask = {
 	title: string;
 	projectId: string | null;
+	labelIds: string[];
 	due: Due | null;
 	recurrence: Recurrence | null;
 	priority: Priority | null;
@@ -22,7 +24,7 @@ export type NewTask = {
 };
 
 export type TaskPatch = Partial<
-	Pick<Task, 'title' | 'notes' | 'projectId' | 'due' | 'recurrence' | 'priority' | 'reminders'>
+	Pick<Task, 'title' | 'notes' | 'projectId' | 'labelIds' | 'due' | 'recurrence' | 'priority' | 'reminders'>
 >;
 
 export type Completion = { kind: 'done' } | { kind: 'rolled'; next: Due; previous: Pick<Task, 'due' | 'reminders'> };
@@ -31,6 +33,7 @@ export type Completion = { kind: 'done' } | { kind: 'rolled'; next: Due; previou
 class Store {
 	tasks = $state<Task[]>([]);
 	projects = $state<Project[]>([]);
+	labels = $state<Label[]>([]);
 	remindersCheckedAt = $state(0);
 
 	constructor() {
@@ -38,6 +41,7 @@ class Store {
 		const snapshot = loadSnapshot(Date.now());
 		this.tasks = snapshot.tasks;
 		this.projects = snapshot.projects;
+		this.labels = snapshot.labels;
 		this.remindersCheckedAt = snapshot.remindersCheckedAt;
 	}
 
@@ -45,6 +49,7 @@ class Store {
 		const snapshot: Snapshot = $state.snapshot({
 			tasks: this.tasks,
 			projects: this.projects,
+			labels: this.labels,
 			remindersCheckedAt: this.remindersCheckedAt,
 		});
 		saveSnapshot(snapshot);
@@ -58,12 +63,22 @@ class Store {
 		return id ? this.projects.find(p => p.id === id) : undefined;
 	}
 
+	label(id: string) {
+		return this.labels.find(l => l.id === id);
+	}
+
+	/** A task's labels in the order they were added, skipping any that were deleted. */
+	labelsOf(task: Pick<Task, 'labelIds'>) {
+		return task.labelIds.map(id => this.label(id)).filter(label => label !== undefined);
+	}
+
 	addTask(input: NewTask): Task {
 		const task: Task = {
 			id: newId(),
 			title: input.title,
 			notes: '',
 			projectId: input.projectId,
+			labelIds: input.labelIds,
 			due: input.due,
 			recurrence: input.recurrence,
 			priority: input.priority ?? DEFAULT_PRIORITY,
@@ -134,6 +149,30 @@ class Store {
 	deleteProject(id: string) {
 		this.projects = this.projects.filter(p => p.id !== id);
 		this.tasks = this.tasks.filter(t => t.projectId !== id);
+		this.#commit();
+	}
+
+	addLabel(name: string): Label {
+		const label: Label = { id: newId(), name, createdAt: Date.now() };
+		this.labels.push(label);
+		this.#commit();
+		return label;
+	}
+
+	/** Names stay unique ignoring case, since `@name` must resolve to one label. */
+	renameLabel(id: string, name: string) {
+		const label = this.label(id);
+		if (!label || this.labels.some(l => l.id !== id && l.name.toLowerCase() === name.toLowerCase())) return;
+		label.name = name;
+		this.#commit();
+	}
+
+	/** Unlike a project, a label owns no tasks, so deleting it only takes it off them. */
+	deleteLabel(id: string) {
+		this.labels = this.labels.filter(l => l.id !== id);
+		for (const task of this.tasks) {
+			if (task.labelIds.includes(id)) task.labelIds = task.labelIds.filter(l => l !== id);
+		}
 		this.#commit();
 	}
 

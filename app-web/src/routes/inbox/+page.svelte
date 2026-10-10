@@ -15,7 +15,7 @@
 	empty={tasks.length === 0}
 	emptyTitle="Inbox zero"
 	emptyHint={mobile.current ? 'Tap + to capture a task.' : 'Press Q to capture a task.'}
-	quickAdd={{ projectId: null, today: false }}
+	quickAdd={{ projectId: null, labelId: null, today: false }}
 >
 	<TaskList {tasks} label="Inbox tasks" />
 </View>

@@ -7,8 +7,14 @@ const projects = [
 	{ id: 'p-home', name: 'Home', createdAt: 0 },
 	{ id: 'p-side', name: 'Side Project', createdAt: 0 },
 ];
+const labels = [
+	{ id: 'l-calls', name: 'calls', createdAt: 0 },
+	{ id: 'l-waiting', name: 'Waiting', createdAt: 0 },
+	{ id: 'l-deep', name: 'deep work', createdAt: 0 },
+	{ id: 'l-tom', name: 'tom', createdAt: 0 },
+];
 const parse = (input: string, options: Partial<ParseOptions> = {}) =>
-	parseQuickAdd(input, { now, projects, ...options });
+	parseQuickAdd(input, { now, projects, labels, ...options });
 
 describe('the example from the brief', () => {
 	test('call mom tomorrow 5pm remind me 30m before', () => {
@@ -183,6 +189,71 @@ describe('projects', () => {
 		const parsed = parse('Fix sink #garage');
 		expect(parsed.title).toBe('Fix sink #garage');
 		expect(parsed.projectId).toBe(null);
+	});
+});
+
+describe('labels', () => {
+	test('every known label is assigned, case-insensitively and in any project', () => {
+		const parsed = parse('Call plumber @Calls #home @waiting');
+		expect(parsed.title).toBe('Call plumber');
+		expect(parsed.labelIds).toEqual(['l-calls', 'l-waiting']);
+		expect(parsed.projectId).toBe('p-home');
+		expect(parsed.tokens).toEqual([
+			{ kind: 'label', start: 13, end: 19, text: '@Calls' },
+			{ kind: 'project', start: 20, end: 25, text: '#home' },
+			{ kind: 'label', start: 26, end: 34, text: '@waiting' },
+		]);
+	});
+
+	test('a label at the start, a multi-word label, and a repeated label', () => {
+		const parsed = parse('@deep work Write spec @calls fri @CALLS');
+		expect(parsed.title).toBe('Write spec');
+		expect(parsed.labelIds).toEqual(['l-deep', 'l-calls']);
+		expect(parsed.due).toEqual({ date: '2026-10-16', time: null });
+	});
+
+	test('a label named like a date word is a label, not a date', () => {
+		const parsed = parse('Lunch @tom');
+		expect(parsed.labelIds).toEqual(['l-tom']);
+		expect(parsed.due).toBe(null);
+	});
+
+	test.each([
+		['Email bob@calls.com', 'Email bob@calls.com'],
+		['Ask x@calls', 'Ask x@calls'],
+		['Reply @calls.com', 'Reply @calls.com'],
+		['Reply to @callsign', 'Reply to @callsign'],
+		['Ping @garage', 'Ping @garage'],
+		['Thank you@calls', 'Thank you@calls'],
+	])('%p stays text', (input, title) => {
+		const parsed = parse(input);
+		expect(parsed.title).toBe(title);
+		expect(parsed.labelIds).toEqual([]);
+		expect(parsed.tokens).toEqual([]);
+	});
+
+	test.each(['Ask @tomorrow', 'Ping @5pm', 'DM @p1', 'Ping @urgent', 'Meet @fri'])(
+		'a handle in %p never reads as a date or priority',
+		input => {
+			const parsed = parse(input);
+			expect(parsed.title).toBe(input);
+			expect(parsed.tokens).toEqual([]);
+		},
+	);
+
+	test('a trailing comma or period still ends the label', () => {
+		expect(parse('Call mom @calls, then dad').labelIds).toEqual(['l-calls']);
+		expect(parse('Call mom @calls.').labelIds).toEqual(['l-calls']);
+	});
+
+	test('a label kept as text stays in the title while the others still parse', () => {
+		const parsed = parse('Plan @calls @waiting', { disabled: ['@calls'] });
+		expect(parsed.title).toBe('Plan @calls');
+		expect(parsed.labelIds).toEqual(['l-waiting']);
+	});
+
+	test('with no labels, @words stay text', () => {
+		expect(parse('Call @calls', { labels: [] }).title).toBe('Call @calls');
 	});
 });
 
@@ -449,6 +520,7 @@ test('everything at once', () => {
 		priority: 1,
 		reminders: [{ kind: 'before', minutes: 60 }],
 		projectId: 'p-home',
+		labelIds: [],
 		tokens: [
 			{ kind: 'project', start: 14, end: 19, text: '#Home' },
 			{ kind: 'due', start: 20, end: 27, text: 'fri 4pm' },

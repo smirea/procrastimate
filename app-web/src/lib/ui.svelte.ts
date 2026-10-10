@@ -57,7 +57,7 @@ class Toasts {
 
 export const toasts = new Toasts();
 
-export type QuickAddDefaults = { projectId: string | null; today: boolean };
+export type QuickAddDefaults = { projectId: string | null; labelId: string | null; today: boolean };
 
 /** Which floating layer is open. Quick add, search, and task details never stack. */
 export type Sheet =

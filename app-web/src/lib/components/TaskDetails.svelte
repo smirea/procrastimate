@@ -14,6 +14,7 @@
 	import ReminderPicker from './ReminderPicker.svelte';
 	import RecurrencePicker from './RecurrencePicker.svelte';
 	import ProjectPicker from './ProjectPicker.svelte';
+	import LabelPicker from './LabelPicker.svelte';
 	import { store, type TaskPatch } from '../store.svelte.ts';
 	import { clock, mobile, sheets, toasts } from '../ui.svelte.ts';
 	import { requestNotificationPermission } from '../reminders.ts';
@@ -23,7 +24,9 @@
 	let { task }: { task: Task } = $props();
 
 	let title = $state(untrack(() => task.title));
-	const parsed = $derived(parseQuickAdd(title, { now: new Date(clock.now), projects: store.projects, due: task.due }));
+	const parsed = $derived(
+		parseQuickAdd(title, { now: new Date(clock.now), projects: store.projects, labels: store.labels, due: task.due }),
+	);
 
 	const timing = $derived(
 		parsed.due || parsed.recurrence || parsed.reminders.length
@@ -50,6 +53,7 @@
 			recurrence: parsed.recurrence ?? task.recurrence,
 			priority: parsed.priority ?? task.priority,
 			projectId: parsed.projectId ?? task.projectId,
+			labelIds: [...new Set([...task.labelIds, ...parsed.labelIds])],
 			reminders,
 		});
 		requestNotificationPermission(due, reminders);
@@ -107,6 +111,10 @@
 	</header>
 	<div class="px-4 pt-4">
 		<SmartInput bind:value={title} tokens={parsed.tokens} {timing} label="Title" enterkeyhint="done" class="text-[19px] font-semibold" {onkeydown} onblur={commitTitle} />
+	</div>
+	<!-- Outside the scroll area, which clips popovers while the keyboard is up and the picker's field raises it. -->
+	<div class="px-4 pt-3">
+		<LabelPicker labelIds={task.labelIds} onchange={(labelIds) => update({ labelIds })} />
 	</div>
 	<div class="sheet-scroll flex-1 space-y-4 px-4 pt-4 pb-4 md:min-h-0 md:overflow-y-auto">
 		<textarea
