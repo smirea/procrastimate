@@ -89,9 +89,15 @@ describe('tasks', () => {
 		expect(find(next, 'trip').completedAt).toBeNull();
 	});
 
-	test('tasks stay sorted by creation time, then id', () => {
-		const { data: next } = addTask(data(), newTask, null, { id: 'a-early', now: 3 });
-		expect(ids(next.tasks)).toEqual(['trip', 'passport', 'a-early', 'charger', 'standup', 'call']);
+	test('a new task is created after the newest one, so tasks added under one clock reading keep their order', () => {
+		const first = addTask(data(), newTask, null, { id: 'b-first', now: 3 });
+		const second = addTask(first.data, newTask, null, { id: 'a-second', now: 3 });
+		expect([first.task.createdAt, second.task.createdAt]).toEqual([6, 7]);
+		expect(ids(second.data.tasks)).toEqual(['trip', 'passport', 'charger', 'standup', 'call', 'b-first', 'a-second']);
+		expect(addTask({ ...data(), tasks: [] }, newTask, null, { id: 'new', now: NOW }).task.createdAt).toBe(NOW);
+	});
+
+	test('tasks sort by creation time, then id', () => {
 		expect(ids(sortTasks([task('b', 2), task('c', 1), task('a', 2)]))).toEqual(['c', 'a', 'b']);
 	});
 

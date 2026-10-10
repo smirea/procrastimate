@@ -57,7 +57,9 @@ function put(tasks: readonly Task[], changed: readonly (Partial<Task> & Pick<Tas
 
 /**
  * With a `parentId`, adds the task as that parent's last subtask, in its project, and reopens the parent if it is done.
- * Adding rows in their source order with each row's parent reproduces an outline's nesting and order.
+ * Adding rows in their source order with each row's parent reproduces an outline's nesting and order. `createdAt` is
+ * at least one past the newest task's, so tasks added within one millisecond, or under a frozen clock, keep the order
+ * they were added in instead of falling back to their random ids.
  */
 export function addTask(
 	data: StoreData,
@@ -78,10 +80,10 @@ export function addTask(
 		recurrence: input.recurrence,
 		priority: input.priority ?? DEFAULT_PRIORITY,
 		reminders: input.reminders,
-		createdAt: now,
+		createdAt: Math.max(now, (data.tasks.at(-1)?.createdAt ?? -Infinity) + 1),
 		completedAt: null,
 	};
-	let tasks = sortTasks([...data.tasks, task]);
+	let tasks = [...data.tasks, task];
 	if (parent) tasks = put(tasks, subtasks.reopenTask(tasks, parent.id));
 	return { data: { ...data, tasks }, task };
 }

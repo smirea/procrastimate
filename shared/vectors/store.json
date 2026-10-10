@@ -580,7 +580,7 @@
 		},
 		{
 			"fn": "addTask",
-			"test": "tasks › tasks stay sorted by creation time, then id",
+			"test": "tasks › a new task is created after the newest one, so tasks added under one clock reading keep their order",
 			"input": [
 				{
 					"labels": [
@@ -711,7 +711,7 @@
 				},
 				null,
 				{
-					"id": "a-early",
+					"id": "b-first",
 					"now": 3
 				}
 			],
@@ -773,10 +773,70 @@
 							"title": "passport"
 						},
 						{
-							"completedAt": null,
+							"completedAt": 50,
 							"createdAt": 3,
 							"due": null,
-							"id": "a-early",
+							"id": "charger",
+							"labelIds": [],
+							"notes": "",
+							"order": 1,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "charger"
+						},
+						{
+							"completedAt": null,
+							"createdAt": 4,
+							"due": {
+								"date": "2026-10-14",
+								"time": "09:00"
+							},
+							"id": "standup",
+							"labelIds": [],
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": {
+								"interval": 1,
+								"unit": "day"
+							},
+							"reminders": [
+								{
+									"date": "2026-10-14",
+									"kind": "at",
+									"time": "08:00"
+								}
+							],
+							"title": "standup"
+						},
+						{
+							"completedAt": null,
+							"createdAt": 5,
+							"due": null,
+							"id": "call",
+							"labelIds": [
+								"calls",
+								"phone"
+							],
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "call"
+						},
+						{
+							"completedAt": null,
+							"createdAt": 6,
+							"due": null,
+							"id": "b-first",
 							"labelIds": [],
 							"notes": "",
 							"order": 0,
@@ -786,6 +846,85 @@
 							"recurrence": null,
 							"reminders": [],
 							"title": "New"
+						}
+					]
+				},
+				"task": {
+					"completedAt": null,
+					"createdAt": 6,
+					"due": null,
+					"id": "b-first",
+					"labelIds": [],
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": "work",
+					"recurrence": null,
+					"reminders": [],
+					"title": "New"
+				}
+			}
+		},
+		{
+			"fn": "addTask",
+			"test": "tasks › a new task is created after the newest one, so tasks added under one clock reading keep their order",
+			"input": [
+				{
+					"labels": [
+						{
+							"createdAt": 1,
+							"id": "calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 2,
+							"id": "phone",
+							"name": "Phone"
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 1,
+							"id": "home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 2,
+							"id": "work",
+							"name": "Work"
+						}
+					],
+					"tasks": [
+						{
+							"completedAt": null,
+							"createdAt": 1,
+							"due": null,
+							"id": "trip",
+							"labelIds": [],
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "trip"
+						},
+						{
+							"completedAt": null,
+							"createdAt": 2,
+							"due": null,
+							"id": "passport",
+							"labelIds": [],
+							"notes": "",
+							"order": 0,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "passport"
 						},
 						{
 							"completedAt": 50,
@@ -846,14 +985,300 @@
 							"recurrence": null,
 							"reminders": [],
 							"title": "call"
+						},
+						{
+							"completedAt": null,
+							"createdAt": 6,
+							"due": null,
+							"id": "b-first",
+							"labelIds": [],
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "work",
+							"recurrence": null,
+							"reminders": [],
+							"title": "New"
+						}
+					]
+				},
+				{
+					"due": null,
+					"labelIds": [],
+					"priority": null,
+					"projectId": "work",
+					"recurrence": null,
+					"reminders": [],
+					"title": "New"
+				},
+				null,
+				{
+					"id": "a-second",
+					"now": 3
+				}
+			],
+			"output": {
+				"data": {
+					"labels": [
+						{
+							"createdAt": 1,
+							"id": "calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 2,
+							"id": "phone",
+							"name": "Phone"
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 1,
+							"id": "home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 2,
+							"id": "work",
+							"name": "Work"
+						}
+					],
+					"tasks": [
+						{
+							"completedAt": null,
+							"createdAt": 1,
+							"due": null,
+							"id": "trip",
+							"labelIds": [],
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "trip"
+						},
+						{
+							"completedAt": null,
+							"createdAt": 2,
+							"due": null,
+							"id": "passport",
+							"labelIds": [],
+							"notes": "",
+							"order": 0,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "passport"
+						},
+						{
+							"completedAt": 50,
+							"createdAt": 3,
+							"due": null,
+							"id": "charger",
+							"labelIds": [],
+							"notes": "",
+							"order": 1,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "charger"
+						},
+						{
+							"completedAt": null,
+							"createdAt": 4,
+							"due": {
+								"date": "2026-10-14",
+								"time": "09:00"
+							},
+							"id": "standup",
+							"labelIds": [],
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": {
+								"interval": 1,
+								"unit": "day"
+							},
+							"reminders": [
+								{
+									"date": "2026-10-14",
+									"kind": "at",
+									"time": "08:00"
+								}
+							],
+							"title": "standup"
+						},
+						{
+							"completedAt": null,
+							"createdAt": 5,
+							"due": null,
+							"id": "call",
+							"labelIds": [
+								"calls",
+								"phone"
+							],
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "call"
+						},
+						{
+							"completedAt": null,
+							"createdAt": 6,
+							"due": null,
+							"id": "b-first",
+							"labelIds": [],
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "work",
+							"recurrence": null,
+							"reminders": [],
+							"title": "New"
+						},
+						{
+							"completedAt": null,
+							"createdAt": 7,
+							"due": null,
+							"id": "a-second",
+							"labelIds": [],
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "work",
+							"recurrence": null,
+							"reminders": [],
+							"title": "New"
 						}
 					]
 				},
 				"task": {
 					"completedAt": null,
-					"createdAt": 3,
+					"createdAt": 7,
 					"due": null,
-					"id": "a-early",
+					"id": "a-second",
+					"labelIds": [],
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": "work",
+					"recurrence": null,
+					"reminders": [],
+					"title": "New"
+				}
+			}
+		},
+		{
+			"fn": "addTask",
+			"test": "tasks › a new task is created after the newest one, so tasks added under one clock reading keep their order",
+			"input": [
+				{
+					"labels": [
+						{
+							"createdAt": 1,
+							"id": "calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 2,
+							"id": "phone",
+							"name": "Phone"
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 1,
+							"id": "home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 2,
+							"id": "work",
+							"name": "Work"
+						}
+					],
+					"tasks": []
+				},
+				{
+					"due": null,
+					"labelIds": [],
+					"priority": null,
+					"projectId": "work",
+					"recurrence": null,
+					"reminders": [],
+					"title": "New"
+				},
+				null,
+				{
+					"id": "new",
+					"now": 1000
+				}
+			],
+			"output": {
+				"data": {
+					"labels": [
+						{
+							"createdAt": 1,
+							"id": "calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 2,
+							"id": "phone",
+							"name": "Phone"
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 1,
+							"id": "home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 2,
+							"id": "work",
+							"name": "Work"
+						}
+					],
+					"tasks": [
+						{
+							"completedAt": null,
+							"createdAt": 1000,
+							"due": null,
+							"id": "new",
+							"labelIds": [],
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "work",
+							"recurrence": null,
+							"reminders": [],
+							"title": "New"
+						}
+					]
+				},
+				"task": {
+					"completedAt": null,
+					"createdAt": 1000,
+					"due": null,
+					"id": "new",
 					"labelIds": [],
 					"notes": "",
 					"order": 0,
@@ -868,7 +1293,7 @@
 		},
 		{
 			"fn": "sortTasks",
-			"test": "tasks › tasks stay sorted by creation time, then id",
+			"test": "tasks › tasks sort by creation time, then id",
 			"input": [
 				[
 					{

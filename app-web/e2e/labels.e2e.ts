@@ -43,9 +43,9 @@ test('@ creates and suggests labels, and saved labels show as chips on the row',
 	await app.taskInput().press('Enter');
 
 	await app.taskInput().pressSequentially('Ping @');
-	await expect(suggestions(app).getByRole('option')).toHaveText(['calls', 'waiting']);
+	await expect(suggestions(app).getByRole('option')).toHaveText(['waiting', 'calls']);
 	await app.taskInput().press('ArrowDown');
-	await expect(suggestions(app).getByRole('option', { name: 'waiting' })).toHaveAttribute('aria-selected', 'true');
+	await expect(suggestions(app).getByRole('option', { name: 'calls' })).toHaveAttribute('aria-selected', 'true');
 	await app.taskInput().press('Escape');
 	await expect(suggestions(app)).toBeHidden();
 	await expect(app.quickAdd()).toBeVisible();
