@@ -1,0 +1,55 @@
+name: Push preview (temporary)
+
+on:
+  pull_request:
+
+jobs:
+  push-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: bun install --frozen-lockfile
+      - run: |
+          bun add -g github:smirea/env-manager#60f8b982a945291f9df2e3c4a77830fdd228ae27
+          env-manager gen --local
+      - run: bun run build
+      - name: Preview config without the custom domain
+        run: |
+          bun -e "
+            const config = Bun.JSONC.parse(await Bun.file('wrangler.jsonc').text());
+            delete config.routes;
+            config.name = 'procrastimate-push-preview';
+            config.\$schema = undefined;
+            await Bun.write('wrangler.preview.json', JSON.stringify(config, null, 2));
+          "
+          cat wrangler.preview.json
+      - name: Deploy preview
+        id: deploy
+        run: |
+          bunx wrangler deploy -c wrangler.preview.json | tee deploy.log
+          echo "url=$(grep -oE 'https://procrastimate-push-preview\.[a-z0-9-]+\.workers\.dev' deploy.log | head -1)" >> "$GITHUB_OUTPUT"
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      - name: Provision VAPID keys (twice, the second run must be a no-op)
+        run: |
+          bun server/scripts/vapid.ts ensure -c wrangler.preview.json
+          bun server/scripts/vapid.ts ensure -c wrangler.preview.json
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      - name: Real push end to end
+        run: |
+          for i in $(seq 1 30); do curl -fs "${{ steps.deploy.outputs.url }}/api/push/key" && break; sleep 2; done
+          echo
+          CHROME=$(which google-chrome) bun app-web/scripts/verify-push.ts "${{ steps.deploy.outputs.url }}"
+      - name: Delete preview
+        if: always() && steps.deploy.outcome != 'skipped'
+        run: bunx wrangler delete -c wrangler.preview.json --force
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
