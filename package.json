@@ -15,7 +15,7 @@
 		"start:server": "bun run --cwd server start",
 		"start:ios": "bun app-ios/scripts/run",
 		"build": "bun run --cwd app-web build",
-		"preview": "bun run build && wrangler dev",
+		"preview": "bun run build && bun server/scripts/vapid.ts dev-vars && wrangler dev",
 		"dev": "bun run start",
 		"client:dev": "bun run start:client",
 		"server:dev": "bun run start:server",

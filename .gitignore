@@ -25,3 +25,4 @@ playwright-report
 
 # wrangler
 .wrangler
+.dev.vars
