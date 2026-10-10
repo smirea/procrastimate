@@ -2,7 +2,7 @@
 
 This directory is the maintained source for verifying the user-facing behavior of Procrastimate. Procrastimate is Stefan's personal task manager, a rough Todoist clone with one user, a web client, an iOS client, and an Apple Watch client later. It is local first and synced, every interaction responds instantly, and motion is subtle but satisfying. Features change often, so update the map with the feature and never keep entries for removed behavior.
 
-The web client covers adding, viewing, editing, completing, subtasks, repeating, prioritizing, reminding, push notifications, labeling, searching, and theming, and every web step not marked `Planned:` is proven by a Playwright test named in its bullet. iOS, sync, completed-task history, and keyboard selection are still planned. A `Planned:` step describes the intended user path and the observable result, with no harness commands or stable handles. Replace it with exact commands when its feature and harness ship.
+The web client covers adding, viewing, editing, completing, subtasks, repeating, prioritizing, reminding, push notifications, labeling, searching, theming, settings, and importing from Todoist, and every web step not marked `Planned:` is proven by a Playwright test named in its bullet. iOS, sync, completed-task history, and keyboard selection are still planned. A `Planned:` step describes the intended user path and the observable result, with no harness commands or stable handles. Replace it with exact commands when its feature and harness ship.
 
 ## Baseline preconditions
 
@@ -63,4 +63,6 @@ Keep implementation details out of the map. Name only user paths, stable handles
 - [Labels](./labels.md) covers `@` labels with autocomplete, row chips, the details picker, and label views.
 - [Offline and sync](./offline-sync.md) covers offline use and convergence across clients.
 - [Search](./search.md) covers the `/` and Cmd-K shortcuts, matching and ranking across titles, notes, and projects, highlights, keyboard navigation, and completed tasks in results.
+- [Settings](./settings.md) covers the settings popover on desktop and the settings sheet on a phone.
+- [Todoist import](./todoist-import.md) covers importing a Todoist backup zip, the summary and warnings, and safe re-imports.
 - [Theme](./theme.md) covers the System, Light, and Dark themes, persistence, first paint, and contrast.
