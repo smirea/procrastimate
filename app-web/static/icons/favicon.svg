@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+	<rect id="tile" width="512" height="512" rx="116" fill="#bf3820" />
+	<g id="glyph" fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round">
+		<circle cx="256" cy="256" r="148" stroke-width="26" opacity="0.38" />
+		<path d="M184 262l50 50 98-104" stroke-width="40" />
+	</g>
+</svg>
