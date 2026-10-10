@@ -13,6 +13,7 @@ Task views let Stefan see his tasks three ways: Inbox for everything without a p
 ## How to get to it (user POV)
 
 - Web: choose Inbox, Today, or Upcoming in the sidebar.
+- Web on a phone: tap `Open navigation`, then a view. The drawer closes as the view opens. Tapping outside the drawer closes it.
 - Web: open each view by keyboard shortcut. Planned: shortcuts are not chosen yet.
 - iOS: tap Inbox, Today, or Upcoming in the main navigation.
 
@@ -27,8 +28,9 @@ Preconditions:
 - **Today.** Open Today. The subtitle reads `Wednesday, October 14`. The `Overdue tasks` list has `Overdue task` marked `Yesterday`, and the `Today tasks` list has `Today task`.
 - **Upcoming.** Open Upcoming. `Later task` is under the `Oct 17 · Saturday` group. `Someday task` and `Today task` are absent.
 - **Empty.** Complete `Today task` and `Overdue task` from Today. `All clear for today` appears. On a fresh store, Inbox shows `Inbox zero` and Upcoming shows `Nothing scheduled`. Test: `each view has an empty state`.
+- **Phone.** Seed `Standup today 10:30am p2`, `Review PR today 3pm p1 remind me 30m before`, `Call mom tomorrow 5pm`, `Dentist in 3 days 2pm`, and `Buy milk`. Tap `Open navigation`; the `Main` navigation slides in. Tap outside it; it closes. Open Today; `Today tasks` lists `Standup` then `Review PR`. Open Upcoming; `Dentist` is under `Oct 17 · Saturday`. The empty Inbox hint reads `Tap + to capture a task.` Test: `the navigation drawer switches views and projects` in `bun run test:e2e -- e2e/mobile.e2e.ts`.
 - **iOS.** Planned: repeat the Today step in the simulator. It shows the same tasks.
-- **Proof.** The suite saves `app-web/test-results/view-inbox.png`, `view-today.png`, and `view-upcoming.png`.
+- **Proof.** The suite saves `app-web/test-results/view-inbox.png`, `view-today.png`, and `view-upcoming.png`, and the phone screens as `app-web/test-results/mobile/inbox.png`, `navigation-open.png`, `today.png`, and `upcoming.png`.
 
 ## Gotchas
 

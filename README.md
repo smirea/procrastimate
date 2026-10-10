@@ -10,7 +10,7 @@ bun run start:client
 bun run start:server
 bun test                       # unit tests
 bun run check                  # typecheck root and app-web
-bun run test:e2e               # Playwright end to end (bunx playwright install chromium once)
+bun run test:e2e               # Playwright desktop and iPhone suites (bunx playwright install --with-deps chromium webkit once)
 ```
 
 The client proxies `/api/*` to the API and removes the `/api` prefix. For example, `/api/status` reaches the server's `/status`. The local web hostname and ports are configured during scaffolding; inspect the root `.env` for defaults.
@@ -22,6 +22,7 @@ The client proxies `/api/*` to the API and removes the `/api` prefix. For exampl
 The scaffold runs `env-manager init --local` and `env-manager gen --local`. Persistent `local:true` keeps setup offline and avoids automatic Git commits. See `env-manager --help` for schema types, target selection, and opting into remote storage with `--no-local`.
 
 Keep `.env` and generated TypeScript readers tracked. Ignore all `.env.local` files and generated Swift values. Read server configuration through `server/src/env.ts`; the client's reader is for Vite's Node-side configuration, not browser code. Browser requests use `/api` and must never import server secrets or the environment reader.
+
 ## iOS app
 
 `app-ios/` contains the SwiftUI app, Xcode project, Swift package, and executable `scripts/run` launcher. It uses the same Swift template as the standalone scaffold.

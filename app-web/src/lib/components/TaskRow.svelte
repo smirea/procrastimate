@@ -25,20 +25,20 @@
 	}
 </script>
 
-<div class="group flex items-start gap-3 rounded-xl px-2 py-2.5 transition-colors hover:bg-white/60" data-task={task.title}>
+<div class="group flex items-start gap-3 rounded-xl px-2 transition-colors hover:bg-white/60" data-task={task.title}>
 	<button
 		type="button"
 		role="checkbox"
 		aria-checked={checking}
 		aria-label={`Complete ${task.title}`}
-		class="checkbox mt-0.5 grid size-[18px] shrink-0 place-items-center rounded-full border-[1.5px]"
+		class="checkbox hit-area relative mt-3 grid size-[18px] shrink-0 place-items-center rounded-full border-[1.5px] touch:mt-3.5 touch:size-5"
 		class:checked={checking}
 		style={`--tone: ${tone}`}
 		onclick={complete}
 	>
 		<Check size={10} weight="bold" class="check-icon" />
 	</button>
-	<button type="button" class="min-w-0 flex-1 text-left" onclick={() => sheets.openTask(task.id)}>
+	<button type="button" class="min-w-0 flex-1 py-2.5 text-left touch:min-h-11 touch:py-3" onclick={() => sheets.openTask(task.id)}>
 		<div class="truncate text-[14px] leading-5 text-ink transition-colors" class:done={checking}>{task.title}</div>
 		{#if task.notes}
 			<div class="truncate text-[12px] leading-4 text-muted">{task.notes}</div>
@@ -76,8 +76,16 @@
 			transform 180ms var(--ease-spring);
 	}
 
-	.checkbox:hover {
-		background: color-mix(in srgb, var(--tone) 18%, transparent);
+	@media (hover: hover) {
+		.checkbox:hover {
+			background: color-mix(in srgb, var(--tone) 18%, transparent);
+		}
+
+		.checkbox:hover :global(.check-icon) {
+			opacity: 0.6;
+			transform: scale(1);
+			color: var(--tone);
+		}
 	}
 
 	.checkbox:active {
@@ -90,12 +98,6 @@
 		transition:
 			opacity 160ms var(--ease-spring),
 			transform 220ms var(--ease-spring);
-	}
-
-	.checkbox:hover :global(.check-icon) {
-		opacity: 0.6;
-		transform: scale(1);
-		color: var(--tone);
 	}
 
 	.checkbox.checked {

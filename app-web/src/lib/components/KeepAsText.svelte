@@ -7,7 +7,7 @@
 
 <button
 	type="button"
-	class="-ml-1 grid size-6 place-items-center rounded-full text-faint transition-colors hover:bg-black/5 hover:text-ink"
+	class="hit-area relative -ml-1 grid size-6 place-items-center rounded-full text-faint transition-colors hover:bg-black/5 hover:text-ink"
 	title="Keep as text"
 	aria-label="Keep as text"
 	{onclick}

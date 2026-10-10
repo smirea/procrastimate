@@ -273,7 +273,7 @@ export function parseQuickAdd(input: string, options: ParseOptions): ParsedQuick
 		title,
 		due,
 		priority,
-		reminders: reminderDrafts.map(draft => resolveReminder(draft, due, ctx.today)),
+		reminders: reminderDrafts.map(draft => resolveReminder(draft, due ?? options.due ?? null, ctx.today)),
 		projectId,
 		tokens,
 	};

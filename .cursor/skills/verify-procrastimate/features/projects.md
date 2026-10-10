@@ -14,6 +14,7 @@ Projects let Stefan group tasks, open a project to see its tasks, and move a tas
 ## How to get to it (user POV)
 
 - Web: use the projects section of the sidebar. `Add project` creates one.
+- Web on a phone: tap `Open navigation` to reach the projects section.
 - Web: pick a project in quick add or in task details, or type `#Name` in quick add.
 - Web: use `Project actions` in a project's header to rename or delete it.
 - iOS: use the projects section of the main navigation.
@@ -30,6 +31,7 @@ Preconditions:
 - **Move.** Add `Buy milk` in Inbox, open it, and pick `Home` from the project chip. It leaves Inbox and `Home` has three tasks.
 - **Rename.** Choose `Project actions`, then `Rename`, and enter `House`. The heading and sidebar show `House`.
 - **Delete.** Choose `Project actions`, then `Delete project`. The prompt reads `Delete House and its 3 tasks?`. Confirm. The app returns to Inbox, `House` is gone from the sidebar, and `Buy milk` is in no view.
+- **Phone.** Tap `Open navigation`, `Add project`, type `Home`, and press return. `Home` opens and the drawer closes. Add `Fix sink #home p3` and `Paint fence fri`. Open Inbox, then `Home` from the drawer; `Home tasks` lists `Paint fence` then `Fix sink`. Test: `the navigation drawer switches views and projects` in `bun run test:e2e -- e2e/mobile.e2e.ts`. The suite saves `app-web/test-results/mobile/project.png`.
 - **iOS.** Planned: open `House` in the simulator. It lists `Buy milk`.
 - **Proof.** The suite saves `app-web/test-results/view-project.png`.
 

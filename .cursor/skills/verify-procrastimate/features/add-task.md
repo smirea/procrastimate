@@ -17,6 +17,7 @@ Add a task lets Stefan capture a task in one motion from anywhere in the app. Re
 
 - Web: choose `Add task` in the sidebar or at the bottom of any task list.
 - Web: press `q` while focus is outside a text field.
+- Web on a phone: tap the floating `Quick add` button. Quick add opens as a bottom sheet docked above the on-screen keyboard.
 - iOS: tap the add button in any task list.
 
 ## Driving it with control-ui and XCUITest
@@ -33,12 +34,14 @@ Preconditions:
 - **Keep as text.** Type `Read Monday Night Club`. `Monday` is highlighted. Choose `Keep as text` next to the date chip. The highlight disappears and the saved title is `Read Monday Night Club` with no date. Test: `keep as text un-parses a highlighted phrase`.
 - **Defaults.** Open quick add from Today; the date chip reads `Today`. Open it inside project `Errands`; the project chip reads `Errands`. Tests: `adding from Today defaults the due date to today` in `e2e/views.e2e.ts` and `quick add inside a project defaults to that project` in `e2e/projects.e2e.ts`.
 - **Cancel.** Open quick add, type `Discard me`, and press Escape. Inbox has no `Discard me`. Test: `Escape discards the draft`.
+- **Phone.** Tap `Quick add`. The sheet spans the screen width and sits at the bottom with focus in `Task name`. Type `Call mom tomorrow 5pm remind me 30m before p1`; the same three phrases are highlighted and the chips read `Tomorrow 5pm`, `P1`, and `30m before`. When the visual viewport shrinks by 300 px, as it does when the iOS keyboard opens, the sheet moves up to stay above it. Tap `Add task`; the field clears. Tap `Cancel`. `Call mom` shows `Tomorrow 5pm`, one reminder, and a `P1` checkbox. Test: `quick add docks above the keyboard and parses a reminder and priority` in `bun run test:e2e -- e2e/mobile.e2e.ts`.
 - **iOS entry.** Planned: tap the add button in the simulator and save `iOS task`. It appears in Inbox.
-- **Proof.** Reload the web client. `call mom` is still in Inbox with `Tomorrow 5pm`. The suite saves `app-web/test-results/quick-add-parsed.png`.
+- **Proof.** Reload the web client. `call mom` is still in Inbox with `Tomorrow 5pm`. The suite saves `app-web/test-results/quick-add-parsed.png` and the phone sheet as `app-web/test-results/mobile/quick-add.png`.
 
 ## Gotchas
 
 - Pressing `q` inside a text field types the letter instead of opening quick add.
+- Playwright cannot open a real on-screen keyboard. The phone test simulates one by overriding `visualViewport.height` and firing `resize`. Confirm keyboard docking on a real iPhone.
 - Date words parse relative to the device clock and time zone. Assert the date the app shows, not one you computed. Run the suite with its pinned clock rather than the wall clock.
 - A date, priority, or project phrase that appears twice uses the last one. `Today task today` saves `Today task` due today.
 - The highlight layer sits behind the input and is `aria-hidden`. Find tokens with the `[data-token="due"]`, `priority`, `reminder`, and `project` selectors, and read values from the chips.

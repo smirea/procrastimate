@@ -3,6 +3,7 @@
 	import TaskList from '#lib/components/TaskList.svelte';
 	import { store } from '#lib/store.svelte.ts';
 	import { inboxTasks } from '#lib/views.ts';
+	import { mobile } from '#lib/ui.svelte.ts';
 
 	const tasks = $derived(inboxTasks(store.tasks));
 </script>
@@ -13,7 +14,7 @@
 	title="Inbox"
 	empty={tasks.length === 0}
 	emptyTitle="Inbox zero"
-	emptyHint="Press Q to capture a task."
+	emptyHint={mobile.current ? 'Tap + to capture a task.' : 'Press Q to capture a task.'}
 	quickAdd={{ projectId: null, today: false }}
 >
 	<TaskList {tasks} label="Inbox tasks" />

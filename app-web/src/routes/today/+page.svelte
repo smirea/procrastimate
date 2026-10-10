@@ -2,7 +2,7 @@
 	import View from '#lib/components/View.svelte';
 	import TaskList from '#lib/components/TaskList.svelte';
 	import { store } from '#lib/store.svelte.ts';
-	import { clock } from '#lib/ui.svelte.ts';
+	import { clock, mobile } from '#lib/ui.svelte.ts';
 	import { todayTasks } from '#lib/views.ts';
 	import { fromDateKey } from 'shared/task.ts';
 
@@ -17,7 +17,7 @@
 	{subtitle}
 	empty={tasks.overdue.length + tasks.today.length === 0}
 	emptyTitle="All clear for today"
-	emptyHint="Enjoy it, or add something with Q."
+	emptyHint={mobile.current ? 'Enjoy it, or tap + to add something.' : 'Enjoy it, or add something with Q.'}
 	quickAdd={{ projectId: null, today: true }}
 >
 	{#if tasks.overdue.length}

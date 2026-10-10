@@ -7,6 +7,7 @@
 		label,
 		placeholder = '',
 		autofocus = false,
+		enterkeyhint,
 		class: className = '',
 		onkeydown,
 		onblur,
@@ -16,6 +17,7 @@
 		label: string;
 		placeholder?: string;
 		autofocus?: boolean;
+		enterkeyhint?: 'enter' | 'done' | 'send';
 		class?: string;
 		onkeydown?: (event: KeyboardEvent) => void;
 		onblur?: () => void;
@@ -71,6 +73,8 @@
 		{placeholder}
 		class="smart-layer relative w-full bg-transparent outline-none placeholder:text-faint"
 		autocomplete="off"
+		autocapitalize="sentences"
+		{enterkeyhint}
 		spellcheck="false"
 		onscroll={syncScroll}
 		oninput={syncScroll}
