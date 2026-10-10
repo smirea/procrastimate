@@ -102,6 +102,30 @@ test('turning on subscribes, then every change replaces the schedule and turning
 	await expect(notificationsRow(app)).toHaveText(status('Off'));
 });
 
+test('undoing a change while its upload is in flight uploads the restored schedule last', async ({ app, page }) => {
+	const server = await mockPush(page, 'grant');
+	await openSheet(app, 'Get notified when tasks are due');
+	await sheet(app).getByRole('button', { name: 'Turn on notifications' }).click();
+	await expect.poll(() => server.schedules.length).toBe(1);
+	await page.keyboard.press('Escape');
+	await app.add('Call mom today 10:30am');
+	await expect.poll(() => server.schedules.at(-1)?.notifications.length).toBe(1);
+
+	let release = () => {};
+	const held = new Promise<void>(resolve => (release = resolve));
+	await page.route('/api/push/schedule', async route => {
+		server.schedules.push(route.request().postDataJSON());
+		await held;
+		await route.fulfill({ status: 204 });
+	});
+	await app.row('Call mom').getByRole('checkbox', { name: 'Complete Call mom' }).click();
+	await expect.poll(() => server.schedules.at(-1)?.notifications.length).toBe(0);
+	await page.getByRole('status').getByRole('button', { name: 'Undo' }).click();
+	await expect(app.row('Call mom')).toBeVisible();
+	release();
+	await expect.poll(() => server.schedules.at(-1)?.notifications.map(n => n.title)).toEqual(['Call mom']);
+});
+
 test('a denied permission explains how to unblock notifications', async ({ app, page }) => {
 	await mockPush(page, 'deny');
 	await openSheet(app, 'Get notified when tasks are due');

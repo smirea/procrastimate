@@ -43,6 +43,8 @@ class Push {
 	#key: Uint8Array<ArrayBuffer> | null = null;
 	#nudged = false;
 	#lastSent: string | null = null;
+	/** Compared before `#lastSent`, so returning to the last sent schedule while another uploads still resends it. */
+	#inFlight: string | null = null;
 	#pending: string | null = null;
 	#failed = false;
 	#timer: ReturnType<typeof setTimeout> | undefined;
@@ -169,7 +171,7 @@ class Push {
 			notifications: pushSchedule(store.tasks, Date.now()),
 		};
 		const body = JSON.stringify(request);
-		if (body === this.#lastSent) {
+		if (body === (this.#inFlight ?? this.#lastSent)) {
 			this.#pending = null;
 			return;
 		}
@@ -189,12 +191,14 @@ class Push {
 		const body = this.#pending;
 		if (body === null) return;
 		this.#pending = null;
+		this.#inFlight = body;
 		const response = await fetch('/api/push/schedule', {
 			method: 'PUT',
 			headers: JSON_HEADERS,
 			body,
 			keepalive: body.length < KEEPALIVE_LIMIT,
 		}).catch(() => null);
+		this.#inFlight = null;
 		if (response?.status === 410) return this.#expire();
 		if (response?.ok) {
 			this.#lastSent = body;
