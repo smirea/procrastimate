@@ -1,4 +1,6 @@
 import { expect, test as base, type Page } from '@playwright/test';
+import { strToU8, zipSync } from 'fflate';
+import { todoistBackupFiles } from '../../shared/fixtures/todoist-backup.mts';
 
 /** Wednesday, October 14 2026, 10:00 UTC. The suite runs in the UTC time zone. */
 export const NOW = new Date('2026-10-14T10:00:00Z');
@@ -66,8 +68,23 @@ export class App {
 		await this.page.clock.setFixedTime(date);
 	}
 
+	settings = () => this.page.getByRole('dialog', { name: 'Settings' });
+	importSummary = () => this.settings().getByRole('status', { name: 'Import summary' });
+
+	async openSettings() {
+		await this.page.getByRole('navigation', { name: 'Main' }).getByRole('button', { name: 'Settings' }).click();
+		await expect(this.settings()).toBeVisible();
+	}
+
 	themeOption = (name: 'System' | 'Light' | 'Dark') =>
-		this.page.getByRole('radiogroup', { name: 'Theme' }).getByRole('radio', { name });
+		this.settings().getByRole('radiogroup', { name: 'Theme' }).getByRole('radio', { name });
+
+	/** Picks the synthetic Todoist backup through the file chooser that `Import from Todoist` opens. */
+	async importBackup(press: 'click' | 'tap' = 'click') {
+		const chooser = this.page.waitForEvent('filechooser');
+		await this.settings().getByRole('button', { name: 'Import from Todoist' })[press]();
+		await (await chooser).setFiles(todoistBackupZip());
+	}
 
 	/** The theme the user sees: `<html>`'s theme, the canvas the page paints, and the browser chrome around it. */
 	async expectTheme(theme: 'light' | 'dark') {
@@ -116,3 +133,10 @@ export class App {
 		});
 	}
 }
+
+/** The synthetic backup zipped like Todoist zips one, plus the macOS metadata a re-zipped folder picks up. */
+export const todoistBackupZip = () => ({
+	name: 'todoist-backup-2026-10-14.zip',
+	mimeType: 'application/zip',
+	buffer: Buffer.from(zipSync(Object.fromEntries(todoistBackupFiles.map(file => [file.name, strToU8(file.text)])))),
+});

@@ -344,6 +344,36 @@ describe('a time with no day', () => {
 	});
 });
 
+describe('dates with a year', () => {
+	test.each([
+		['Jun 21 2027', '2027-06-21'],
+		['May 23, 2027', '2027-05-23'],
+		['21 june 2027', '2027-06-21'],
+		['15th october, 2028', '2028-10-15'],
+		['Dec 4', '2026-12-04'],
+		['Oct 22', '2026-10-22'],
+		['Oct 13', '2027-10-13'],
+	])('Renew passport %s', (phrase, date) => {
+		const parsed = parse(`Renew passport ${phrase}`);
+		expect(parsed.title).toBe('Renew passport');
+		expect<unknown>(parsed.due).toEqual({ date, time: null });
+	});
+
+	test('a year and a time both apply', () => {
+		expect(parse('Flight Jun 21 2027 11am').due).toEqual({ date: '2027-06-21', time: '11:00' });
+	});
+
+	test('a time after at still reads as a time, not a year', () => {
+		expect(parse('Dinner oct 15 at 2030').due).toEqual({ date: '2026-10-15', time: '20:30' });
+	});
+
+	test('a year without a month and day stays text', () => {
+		const parsed = parse('Order 2027 calendars');
+		expect(parsed.due).toBeNull();
+		expect(parsed.title).toBe('Order 2027 calendars');
+	});
+});
+
 describe('recurrence', () => {
 	test.each([
 		['every day', 1, 'day', '2026-10-14', null],
@@ -368,6 +398,12 @@ describe('recurrence', () => {
 		['every workday', 1, 'weekday', '2026-10-14', null],
 		['weekdays', 1, 'weekday', '2026-10-14', null],
 		['every weekday 9am', 1, 'weekday', '2026-10-15', '09:00'],
+		['every March 2nd 11 am', 1, 'year', '2027-03-02', '11:00'],
+		['every May 13 11 am', 1, 'year', '2027-05-13', '11:00'],
+		['every 2nd march', 1, 'year', '2027-03-02', null],
+		['every oct 14', 1, 'year', '2026-10-14', null],
+		['every oct 14 9am', 1, 'year', '2027-10-14', '09:00'],
+		['every dec 25', 1, 'year', '2026-12-25', null],
 	])('Water plants %s', (phrase, interval, unit, date, time) => {
 		const parsed = parse(`Water plants ${phrase}`);
 		expect(parsed.title).toBe('Water plants');
@@ -483,6 +519,12 @@ describe('recurrence', () => {
 		expect(parsed.title).toBe('gym mon wed fri');
 		expect(parsed.recurrence).toBe(null);
 		expect(parsed.due).toEqual({ date: '2026-10-15', time: '07:00' });
+	});
+
+	test('a yearly repeat on a day that does not exist stays text', () => {
+		const parsed = parse('Party every feb 30');
+		expect(parsed.recurrence).toBeNull();
+		expect(parsed.title).toBe('Party every feb 30');
 	});
 
 	test('the recurrence phrase is its own token', () => {

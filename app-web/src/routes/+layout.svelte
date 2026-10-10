@@ -9,6 +9,7 @@
 	import Sidebar from '#lib/components/Sidebar.svelte';
 	import QuickAdd from '#lib/components/QuickAdd.svelte';
 	import Search from '#lib/components/Search.svelte';
+	import SettingsSheet from '#lib/components/SettingsSheet.svelte';
 	import TaskSheet from '#lib/components/TaskSheet.svelte';
 	import NotificationsSheet from '#lib/components/NotificationsSheet.svelte';
 	import Toasts from '#lib/components/Toasts.svelte';
@@ -40,6 +41,11 @@
 	function openNotifications() {
 		menuOpen = false;
 		sheets.openNotifications();
+	}
+
+	function openSettings() {
+		menuOpen = false;
+		sheets.openSettings();
 	}
 
 	const isTyping = (target: EventTarget | null) =>
@@ -91,12 +97,12 @@
 
 <div class="app flex min-h-dvh gap-3">
 	<div class="sticky top-3 hidden h-[calc(100dvh-1.5rem)] w-64 shrink-0 md:block">
-		<Sidebar onquickadd={openQuickAdd} onsearch={openSearch} onnotifications={openNotifications} />
+		<Sidebar onquickadd={openQuickAdd} onsearch={openSearch} onnotifications={openNotifications} onsettings={openSettings} />
 	</div>
 	{#if menuOpen}
 		<div class="fixed inset-0 z-30 bg-scrim backdrop-blur-[2px] md:hidden" transition:fade={{ duration: 180 }} onclick={() => (menuOpen = false)} aria-hidden="true"></div>
 		<div class="drawer fixed z-30 md:hidden" transition:fly={{ x: -320, duration: 280, easing: cubicOut, opacity: 1 }}>
-			<Sidebar onquickadd={openQuickAdd} onsearch={openSearch} onnotifications={openNotifications} />
+			<Sidebar onquickadd={openQuickAdd} onsearch={openSearch} onnotifications={openNotifications} onsettings={openSettings} />
 		</div>
 	{/if}
 	<main class="min-w-0 flex-1">
@@ -133,6 +139,8 @@
 	<QuickAdd defaults={sheets.current.defaults} />
 {:else if sheets.current.kind === 'search'}
 	<Search />
+{:else if sheets.current.kind === 'settings'}
+	<SettingsSheet />
 {:else if openTask && sheets.current.kind === 'task'}
 	<TaskSheet task={openTask} arrival={sheets.current.arrival} />
 {:else if sheets.current.kind === 'notifications'}

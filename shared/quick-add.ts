@@ -68,8 +68,8 @@ const DATE = [
 	WEEKDAY,
 	String.raw`in\s+\d+\s*${DAY_UNIT}`,
 	String.raw`\d+(?:d|wks?|w|mos?)`,
-	String.raw`${MONTH}\s+${ORDINAL}`,
-	String.raw`${ORDINAL}\s+${MONTH}`,
+	String.raw`${MONTH}\s+${ORDINAL}(?:,?\s+(?:19|20)\d\d)?`,
+	String.raw`${ORDINAL}\s+${MONTH}(?:,?\s+(?:19|20)\d\d)?`,
 	String.raw`the\s+\d{1,2}(?:st|nd|rd|th)`,
 	String.raw`\d{1,2}/\d{1,2}(?:/(?:\d{4}|\d{2}))?`,
 ].join('|');
@@ -254,8 +254,14 @@ const DATE_READERS: Array<[RegExp, (m: RegExpExecArray, today: DateKey) => DateK
 			return monthDay(today, month - 1, dayFirst ? first : second, m[3]);
 		},
 	],
-	[/^([a-z]+) (\d{1,2})(?:st|nd|rd|th)?$/, (m, today) => monthDay(today, monthIndex(m[1]!), Number(m[2]))],
-	[/^(\d{1,2})(?:st|nd|rd|th)? ([a-z]+)$/, (m, today) => monthDay(today, monthIndex(m[2]!), Number(m[1]))],
+	[
+		/^([a-z]+) (\d{1,2})(?:st|nd|rd|th)?(?:,? (\d{4}))?$/,
+		(m, today) => monthDay(today, monthIndex(m[1]!), Number(m[2]), m[3]),
+	],
+	[
+		/^(\d{1,2})(?:st|nd|rd|th)? ([a-z]+)(?:,? (\d{4}))?$/,
+		(m, today) => monthDay(today, monthIndex(m[2]!), Number(m[1]), m[3]),
+	],
 ];
 
 function resolveDate(text: string, today: DateKey): Day | null {
@@ -326,11 +332,17 @@ const RULES: Rule[] = [
 		repeatable: false,
 		guarded: true,
 		pattern: new RegExp(
-			String.raw`${BEFORE}(?:(?:every|each)\s+(?:(?<other>other)\s+(?<otherUnit>day|week|month|year)|(?<interval>\d+)\s*(?<intervalUnit>${DAY_UNIT})|(?<unit>day|week|month|year)|(?<workday>weekday|workday)|(?<weekdays>${WEEKDAY_LIST}|${WEEKDAY}))|(?<listed>${WEEKDAY_LIST})|(?<adverb>daily|weekdays|weekly|monthly|yearly|annually))${AFTER}`,
+			String.raw`${BEFORE}(?:(?:every|each)\s+(?:(?<yearDay>${MONTH}\s+${ORDINAL}|${ORDINAL}\s+${MONTH})|(?<other>other)\s+(?<otherUnit>day|week|month|year)|(?<interval>\d+)\s*(?<intervalUnit>${DAY_UNIT})|(?<unit>day|week|month|year)|(?<workday>weekday|workday)|(?<weekdays>${WEEKDAY_LIST}|${WEEKDAY}))|(?<listed>${WEEKDAY_LIST})|(?<adverb>daily|weekdays|weekly|monthly|yearly|annually))${AFTER}`,
 			'gi',
 		),
 		read: (m, ctx) => {
-			const { other, otherUnit, interval, intervalUnit, unit, workday, weekdays, listed, adverb } = m.groups ?? {};
+			const { yearDay, other, otherUnit, interval, intervalUnit, unit, workday, weekdays, listed, adverb } = m.groups ?? {};
+			if (yearDay) {
+				const day = resolveDate(yearDay, ctx.today);
+				return (
+					day && { kind: 'recurrence', recurrence: { recurrence: { interval: 1, unit: 'year' }, anchor: day.date } }
+				);
+			}
 			const unitText = otherUnit ?? intervalUnit ?? unit;
 			const days = sortWeekdays(
 				[...(weekdays ?? listed ?? '').matchAll(WEEKDAY_WORD)].map(w => weekdayIndex(w[0].toLowerCase()) as Weekday),

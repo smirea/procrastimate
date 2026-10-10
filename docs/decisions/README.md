@@ -9,6 +9,8 @@ Procrastimate's concepts, goals, paradigms, and high-level system decisions, one
 - [Domain](domain.md): tasks, views, projects, labels, priorities, and reminders.
 - [Quick add and natural language](quick-add.md): the quick add parser, its phrases, guards, and autocomplete.
 - [Labels UI](labels.md): how labels show and are edited in rows, the sidebar, and pickers.
+- [Settings](settings.md): the sidebar Settings row, its popover or sheet, and what it holds.
+- [Todoist import](todoist-import.md): importing a Todoist backup zip, field mapping, nesting, and re-runs.
 - [Recurring tasks](recurrence.md): completing, next occurrences, and editing repeats.
 - [Search](search.md): matching, ranking, grouping, and the search sheet.
 - [Subtasks](subtasks.md): nested child tasks, where they show, completion, reorder, and delete rules.
