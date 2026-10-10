@@ -234,6 +234,6 @@ test('the drawer theme switcher overrides the color scheme and persists across r
 test('the saved theme applies before the app loads on a phone', async ({ app }) => {
 	await openNav(app);
 	await app.themeOption('Dark').tap();
-	await app.expectShellTheme('dark');
+	await app.expectFirstPaintTheme('dark');
 	await app.expectTheme('dark');
 });

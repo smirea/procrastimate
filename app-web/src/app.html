@@ -11,11 +11,13 @@
 		<meta name="apple-mobile-web-app-status-bar-style" content="default" />
 		<title>Procrastimate</title>
 		<script>
-			// Runs before first paint so the page never flashes the other theme. `src/lib/theme.svelte.ts` owns the key and the choice.
+			// Runs before first paint so the page never flashes the other theme. `src/lib/theme.svelte.ts` owns the key, the choice,
+			// and the theme-color values.
 			try {
 				const choice = localStorage.getItem('procrastimate-theme');
 				const dark = choice === 'dark' || (choice !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
 				document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+				document.querySelector('meta[name="theme-color"]').content = dark ? '#0e0e10' : '#f6f6f7';
 			} catch {}
 		</script>
 		<style>

@@ -62,26 +62,50 @@ export class App {
 	themeOption = (name: 'System' | 'Light' | 'Dark') =>
 		this.page.getByRole('radiogroup', { name: 'Theme' }).getByRole('radio', { name });
 
-	/** The theme the user sees: `<html>`'s theme and the canvas the page paints. */
+	/** The theme the user sees: `<html>`'s theme, the canvas the page paints, and the browser chrome around it. */
 	async expectTheme(theme: 'light' | 'dark') {
 		await expect(this.page.locator('html')).toHaveAttribute('data-theme', theme);
 		await expect(this.page.locator('body')).toHaveCSS(
 			'background-color',
 			theme === 'dark' ? 'rgb(14, 14, 16)' : 'rgb(246, 246, 247)',
 		);
+		await this.expectChrome(theme);
 	}
 
-	/** Reloads only the HTML shell, so nothing from the app bundle can set the theme, and checks what the first paint uses. */
-	async expectShellTheme(theme: 'light' | 'dark') {
-		await this.page.route(
-			url => url.pathname !== new URL(this.page.url()).pathname,
-			route => route.abort(),
+	async expectChrome(theme: 'light' | 'dark') {
+		await expect(this.page.locator('meta[name="theme-color"]')).toHaveAttribute(
+			'content',
+			theme === 'dark' ? '#0e0e10' : '#f6f6f7',
 		);
-		await this.page.reload();
-		await expect(this.page.locator('html')).toHaveAttribute('data-theme', theme);
-		await expect(this.page.locator('html')).toHaveCSS('color-scheme', theme);
-		await this.page.unrouteAll();
+	}
+
+	/**
+	 * Reloads and snapshots the page the moment `<body>` is parsed. Nothing can paint before that,
+	 * and the app's deferred module scripts have not run yet, so this is what the first frame uses.
+	 */
+	async expectFirstPaintTheme(theme: 'light' | 'dark') {
+		await this.page.addInitScript(() => {
+			new MutationObserver((_, observer) => {
+				if (!document.body) return;
+				observer.disconnect();
+				const root = document.documentElement;
+				sessionStorage.setItem(
+					'first-paint',
+					JSON.stringify({
+						theme: root.dataset.theme,
+						colorScheme: getComputedStyle(root).colorScheme,
+						chrome: document.querySelector('meta[name="theme-color"]')?.getAttribute('content'),
+					}),
+				);
+			}).observe(document, { childList: true, subtree: true });
+		});
+		await this.page.evaluate(() => sessionStorage.removeItem('first-paint'));
 		await this.page.reload();
 		await expect(this.page.getByRole('heading', { level: 1 })).toBeVisible();
+		expect(JSON.parse((await this.page.evaluate(() => sessionStorage.getItem('first-paint')))!)).toEqual({
+			theme,
+			colorScheme: theme,
+			chrome: theme === 'dark' ? '#0e0e10' : '#f6f6f7',
+		});
 	}
 }

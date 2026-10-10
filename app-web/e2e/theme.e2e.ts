@@ -42,12 +42,12 @@ test('arrow keys move the theme selection', async ({ app, page }) => {
 
 test('the saved theme applies before the app loads, so it never flashes', async ({ app, page }) => {
 	await app.themeOption('Dark').click();
-	await app.expectShellTheme('dark');
+	await app.expectFirstPaintTheme('dark');
 
 	await page.emulateMedia({ colorScheme: 'dark' });
 	await app.themeOption('Light').click();
-	await app.expectShellTheme('light');
+	await app.expectFirstPaintTheme('light');
 
 	await app.themeOption('System').click();
-	await app.expectShellTheme('dark');
+	await app.expectFirstPaintTheme('dark');
 });

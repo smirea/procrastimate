@@ -27,7 +27,7 @@ Preconditions:
 - **System.** Emulate a dark color scheme, then a light one. `<html data-theme>` and the page canvas follow each change while `System` stays checked. Test: `System is the default and follows the color scheme`.
 - **Override and persist.** With a dark device appearance, choose `Light`, then reload. The page stays light and `Light` is still checked. Repeat with `Dark` under a light appearance, then choose `System` and reload. Test: `Light and Dark override the color scheme and persist across reloads`.
 - **Keyboard.** Focus the checked option and press the arrow keys. Selection and focus move together. Test: `arrow keys move the theme selection`.
-- **No flash.** Choose `Dark`, block every request except the page itself, and reload. The bare HTML shell already has `data-theme="dark"` and a dark `color-scheme`. Test: `the saved theme applies before the app loads, so it never flashes`.
+- **No flash.** Choose `Dark` and reload. When `<body>` is first parsed, before anything can paint or the app runs, `<html>` already has `data-theme="dark"`, a dark `color-scheme`, and a dark `theme-color` for the browser chrome. Test: `the saved theme applies before the app loads, so it never flashes`.
 - **Phone.** Open the drawer, choose `Light` under a dark appearance, and reload. The drawer still shows `Light` checked and each option is at least 44 px tall. Tests: `the drawer theme switcher overrides the color scheme and persists across reloads` and `the saved theme applies before the app loads on a phone`.
 - **Contrast.** The unit test composites each text token over every surface it can sit on, including the warm and cool canvas glows, and fails below 4.5:1. Test: `light theme text meets WCAG AA contrast` and its dark sibling.
 - **iOS.** Planned: switch the simulator appearance and compare.
@@ -36,4 +36,5 @@ Preconditions:
 
 - Playwright starts in a light color scheme. Call `page.emulateMedia({ colorScheme })` before checking `System`.
 - The theme lives under the `procrastimate-theme` key in `localStorage`, apart from the `procrastimate` task store. Clearing only the task store keeps the theme.
-- Switching runs a view transition, so take screenshots after `document.getAnimations()` settle.
+- Switching runs a view transition, so take screenshots after `document.getAnimations()` settle. View transition animations can reject when they end, so wait with `Promise.allSettled`.
+- Blocking the app bundle with `page.route` does not isolate the HTML shell in WebKit, which can still serve the cached bundle. Snapshot at body parse instead.
