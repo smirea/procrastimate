@@ -1,5 +1,6 @@
 # Testing
 
 - **Unit tests.** `bun test`, colocated as `*.test.ts`. The natural-language parser and the Todoist import are tested with a fixed clock. Theme contrast is tested against the real tokens in `index.css`.
-- **End to end.** Playwright drives the real web UI against an isolated dev server, from `app-web/e2e/*.e2e.ts`. The `desktop` project runs in Chromium at 1280×800. The `mobile` project runs `e2e/mobile.e2e.ts` in WebKit with the iPhone 15 Pro profile and covers the main flows by touch.
+- **End to end.** Playwright drives the real web UI against an isolated dev server, from `app-web/e2e/*.e2e.ts`. The `desktop` project runs in Chromium at 1280×800. The `mobile` project runs `e2e/mobile.e2e.ts` in WebKit with the iPhone 15 Pro profile and covers the main flows by touch. The `parity` project runs `e2e/parity/*.e2e.ts` in the same WebKit iPhone 15 Pro profile, as the web half of the iOS parity pairs; only the iOS workflow runs it.
+- **iOS.** `swift test` in `app-ios/` runs the `Core` unit tests on macOS and Linux. XCUITests in `app-ios/Tests/AppUITests` drive the app on an iPhone 16 simulator in the iOS workflow, each paired with a `parity` Playwright test. See [iOS app](ios.md).
 - **Feature map.** `.cursor/skills/verify-procrastimate/features/` describes each user-facing feature and how to drive it. Keep it in sync with every change.

@@ -1,16 +1,31 @@
-# procrastimate
+# procrastimate for iOS
 
-SwiftUI app for iOS 17+ and macOS 14+. Requires Bun and Xcode 16 or newer.
+SwiftUI app for iOS 26+, iPhone first. The app needs Bun and Xcode 26 or newer; the `Core` logic also builds and tests on Linux.
 
-## Run
+## Test
 
 From this folder:
+
+```sh
+swift test                      # Core unit tests, on macOS or Linux
+bun scripts/tokens.ts --check   # generated colors match app-web/src/index.css
+```
+
+UI tests run from Xcode's `App` scheme or with:
+
+```sh
+xcodebuild test -project App.xcodeproj -scheme App -destination 'platform=iOS Simulator,name=iPhone 16'
+```
+
+CI runs all of these in `.github/workflows/ios.yml`, plus the paired web tests, and uploads a side-by-side `parity-report`.
+
+## Run
 
 ```sh
 ./scripts/run
 ```
 
-The launcher selects a target and watches for changes. Edit `Sources/App` to rebuild and relaunch. Stop with Ctrl-C; use `--no-watch` for a single launch. Build errors leave the watcher running.
+The launcher selects a target and watches for changes. Edit `Sources` to rebuild and relaunch. Stop with Ctrl-C; use `--no-watch` for a single launch. Build errors leave the watcher running.
 
 ## Choose a target
 
@@ -18,10 +33,9 @@ The launcher selects a target and watches for changes. Edit `Sources/App` to reb
 ./scripts/run --targets
 ./scripts/run -t simulator
 ./scripts/run -t "iPhone 17"
-./scripts/run -t mac
 ```
 
-`--targets` lists names and identifiers; `*` marks the default. Selection prefers a connected iOS device, then a booted simulator, an available simulator, or My Mac.
+`--targets` lists names and identifiers; `*` marks the default. Selection prefers a connected iOS device, then a booted simulator, then an available iOS 26 simulator.
 
 Set `SWIFT_RUN_DEFAULT_TARGET` to choose a default; `-t` overrides it. For duplicate simulator names, use an identifier to select exactly. Install simulator runtimes in Xcode's settings.
 
@@ -37,9 +51,8 @@ You can also set `SWIFT_RUN_DEVELOPMENT_TEAM`.
 
 ## Debug and build
 
-Open `App.xcodeproj` and select the shared `App` scheme to debug. `swift build` checks the package on macOS; use the launcher for simulator builds and bundled resources.
+Open `App.xcodeproj` and select the shared `App` scheme to debug. Build logs are in `DerivedData/<target>/build.log`, where `<target>` is `device` or `simulator`.
 
-Build logs are in `DerivedData/<target>/build.log`, where `<target>` is `device`, `simulator`, or `mac`. Temporary app state resets after relaunch.
 ## Environment
 
 The parent `.env` declares this folder as an env-manager target. Edit local values in the parent `.env.local`, then regenerate from here or the repo root:

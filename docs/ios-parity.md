@@ -115,7 +115,7 @@ The web's Web Push rows map to native local notifications. XCUITests check the p
 
 | Feature | Web | iOS | Slice | XCUITest | Playwright | Screenshot |
 | --- | --- | --- | --- | --- | --- | --- |
-| `shell-launch`: the app opens on an empty Inbox (pipeline smoke pair) | ✓ | Planned | S1 | `ShellParityTests.test_shell_launch` | `shell › shell-launch` | `shell-launch.png` |
+| `shell-launch`: the app opens on an empty Inbox (pipeline smoke pair) | ✓ | Built | S1 | `ShellParityTests.test_shell_launch` | `shell › shell-launch` | `shell-launch.png` |
 | `views-inbox`: top-level tasks without a project | ✓ | Planned | S5 | `ViewsParityTests.test_views_inbox` | `views › views-inbox` | `views-inbox.png` |
 | `views-today`: due today, overdue in its own section | ✓ | Planned | S5 | `ViewsParityTests.test_views_today` | `views › views-today` | `views-today.png` |
 | `views-upcoming`: grouped by day | ✓ | Planned | S5 | `ViewsParityTests.test_views_upcoming` | `views › views-upcoming` | `views-upcoming.png` |
@@ -173,7 +173,7 @@ The web's Web Push rows map to native local notifications. XCUITests check the p
 | `theme-override`: `Light` and `Dark` | ✓ | Planned | S8 | `ThemeParityTests.test_theme_override` | `theme › theme-override` | `theme-override.png` |
 | `theme-persist`: kept across relaunch, outside task data | ✓ | Planned | S8 | `ThemeParityTests.test_theme_persist` | `theme › theme-persist` | `theme-persist.png` |
 | `theme-first-paint`: no flash of the other theme at launch | ✓ | Planned | S8 | `ThemeParityTests.test_theme_first_paint` | `theme › theme-first-paint` | — |
-| `theme-contrast`: tokens generated from `index.css`, which the web contrast test checks | ✓ | Planned | S1 | n/a (`Tokens.swift` freshness check in CI) | n/a | — |
+| `theme-contrast`: tokens generated from `index.css`, which the web contrast test checks | ✓ | Built | S1 | n/a (`Tokens.swift` freshness check in CI) | n/a | — |
 | `theme-glass-fallback`: solid glass under Increase Contrast or Reduce Transparency | ✓ | Planned | S8 | `ThemeParityTests.test_theme_glass_fallback` | `theme › theme-glass-fallback` | `theme-glass-fallback.png` |
 | `theme-reduced-motion`: instant motion under Reduce Motion | ✓ | Planned | S8 | `ThemeParityTests.test_theme_reduced_motion` | `theme › theme-reduced-motion` | — |
 

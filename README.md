@@ -37,12 +37,12 @@ Keep `.env` and generated TypeScript readers tracked. Ignore all `.env.local` fi
 
 ## iOS app
 
-`app-ios/` contains the SwiftUI app, Xcode project, Swift package, and executable `scripts/run` launcher. It uses the same Swift template as the standalone scaffold.
+`app-ios/` contains the iOS 26 SwiftUI app, its Xcode project, the `Core` Swift package, and the executable `scripts/run` launcher. `swift test` in `app-ios/` runs the `Core` tests on macOS or Linux. The iOS workflow (`.github/workflows/ios.yml`) builds the app and runs its UI tests on a simulator.
 
 ```sh
 bun run start:ios --targets
 bun run start:ios -t simulator
-bun run start:ios -t mac --no-watch
+bun run start:ios -t "iPhone 17" --no-watch
 ```
 
 `app-web/` contains the web client. `start:client` runs it; `start` runs the web client and API; launch iOS separately with `start:ios`. Arguments pass through to `app-ios/scripts/run`. See `app-ios/README.md` and `app-ios/AGENTS.md` for native development and signing.
