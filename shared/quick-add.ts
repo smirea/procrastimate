@@ -188,7 +188,6 @@ const DAY_WORDS: Record<string, (today: DateKey) => Day> = {
 	eow: today => ({ date: nextWeekday(today, 5), time: toTimeOfDay(17, 0) }),
 };
 
-/** Each reader gets the whole normalized date phrase. */
 const DATE_READERS: Array<[RegExp, (m: RegExpExecArray, today: DateKey) => DateKey | null]> = [
 	[/^(?:next|nxt) week$/, (_, today) => addDays(today, daysToNextMonday(today))],
 	[/^(?:next|nxt) ([a-z]+)$/, (m, today) => addDays(today, daysToNextMonday(today) + ((weekdayIndex(m[1]!) + 6) % 7))],
