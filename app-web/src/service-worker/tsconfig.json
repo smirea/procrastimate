@@ -1,0 +1,11 @@
+{
+	"extends": "$app/tsconfig/service-worker",
+	"include": ["."],
+	"compilerOptions": {
+		"strict": true,
+		"types": ["$app/types"],
+		"paths": {
+			"shared/*": ["../../../shared/*"]
+		}
+	}
+}
