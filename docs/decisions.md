@@ -54,6 +54,13 @@ This is the single source for Procrastimate's concepts, goals, paradigms, and hi
 - **Server.** Bun.serve API. It holds no task data yet.
 - **Shared domain code.** Environment-independent types and logic, including the natural-language parser, live in `shared/` so the server can reuse them.
 
+## Dev hosting
+
+- **Stefan's dev web client runs on potatoey's box.** It is reachable on Stefan's tailnet at host `stf-box`. Procrastimate owns ports 6120 (web) and 6121 (API) there.
+- **The box tracks `master`.** Its checkout auto-pulls about every 3 minutes, so every merge is live within minutes.
+- **The box starts the client with `--host 0.0.0.0 --port $PORT` and `__VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS=.ts.net`.** Keep the web client compatible with that launch. Vite CLI flags must keep overriding the config's host and port, so never hardcode a bind address or port that flags cannot change. `server.allowedHosts` must stay an array, because Vite only appends the extra hosts to an array. The `/api` proxy must keep working through any allowed host.
+- **Use the full tailnet name.** `.ts.net` admits `stf-box.<tailnet>.ts.net` and the tailnet IP. Vite blocks the bare `stf-box` short name unless the box adds it to the extra allowed hosts.
+
 ## Persistence and sync
 
 - **Web persistence.** The whole store is one JSON document in `localStorage`, validated on load and written synchronously on every change. Invalid stored data is discarded, since there is no backwards compatibility.
