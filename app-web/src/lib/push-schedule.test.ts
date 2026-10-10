@@ -11,6 +11,7 @@ const task = (id: string, patch: Partial<Task>): Task => ({
 	title: id,
 	notes: '',
 	projectId: null,
+	labelIds: [],
 	due: null,
 	recurrence: null,
 	priority: 4,
