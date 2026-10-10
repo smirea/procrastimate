@@ -11,7 +11,6 @@
 	import PriorityPicker from './PriorityPicker.svelte';
 	import ReminderPicker from './ReminderPicker.svelte';
 	import ProjectPicker from './ProjectPicker.svelte';
-	import LabelPicker from './LabelPicker.svelte';
 	import KeepAsText from './KeepAsText.svelte';
 	import { store } from '../store.svelte.ts';
 	import { clock, mobile, sheets, type QuickAddDefaults } from '../ui.svelte.ts';
@@ -152,7 +151,12 @@
 				<KeepAsText onclick={() => keepAsText(token)} />
 			</div>
 		{/each}
-		<LabelPicker labelIds={picked.labelIds} onchange={(value) => (picked.labelIds = value)} />
+		{#each store.labelsOf({ labelIds: picked.labelIds.filter((id) => !parsed.labelIds.includes(id)) }) as label (label.id)}
+			<span class="chip" data-active="true" transition:scale={{ start: 0.9, duration: 160 }}>
+				<Tag size={15} weight="fill" class="text-[var(--tone-label)]" />
+				{label.name}
+			</span>
+		{/each}
 		{#each labelTokens as { token, name } (token.start)}
 			<div class="flex items-center" transition:scale={{ start: 0.9, duration: 160 }}>
 				<span class="chip" data-active="true">

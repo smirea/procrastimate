@@ -112,6 +112,10 @@
 	<div class="px-4 pt-4">
 		<SmartInput bind:value={title} tokens={parsed.tokens} {timing} label="Title" enterkeyhint="done" class="text-[19px] font-semibold" {onkeydown} onblur={commitTitle} />
 	</div>
+	<!-- Outside the scroll area, which clips popovers while the keyboard is up and the picker's field raises it. -->
+	<div class="px-4 pt-3">
+		<LabelPicker labelIds={task.labelIds} onchange={(labelIds) => update({ labelIds })} />
+	</div>
 	<div class="sheet-scroll flex-1 space-y-4 px-4 pt-4 pb-4 md:min-h-0 md:overflow-y-auto">
 		<textarea
 			aria-label="Notes"
@@ -143,7 +147,6 @@
 					requestNotificationPermission(task.due, reminders);
 				}}
 			/>
-			<LabelPicker labelIds={task.labelIds} onchange={(labelIds) => update({ labelIds })} />
 		</div>
 	</div>
 	<footer class="border-t border-ink/5 px-4 py-3 touch:py-2">
