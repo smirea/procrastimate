@@ -15,10 +15,12 @@ export default defineConfig({
 	projects: [
 		{
 			name: 'desktop',
-			testIgnore: '**/mobile.e2e.ts',
+			testIgnore: ['**/mobile.e2e.ts', '**/parity/**'],
 			use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } },
 		},
 		{ name: 'mobile', testMatch: '**/mobile.e2e.ts', use: devices['iPhone 15 Pro'] },
+		// The web half of each iOS parity pair, at the width of the iPhone simulator the XCUITests run on.
+		{ name: 'parity', testMatch: '**/parity/*.e2e.ts', use: devices['iPhone 15 Pro'] },
 	],
 	// E2E_WORKER=1 tests the deployable Worker against an existing `bun run build` instead of the dev server.
 	webServer:

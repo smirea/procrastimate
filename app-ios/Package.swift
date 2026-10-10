@@ -1,9 +1,13 @@
-// swift-tools-version: 6.0
+// swift-tools-version: 6.2
 import PackageDescription
 
+// The SwiftUI app builds from App.xcodeproj. This package covers `Core`, so `swift test` runs on macOS and Linux.
 let package = Package(
     name: "procrastimate",
-    platforms: [.iOS(.v17), .macOS(.v14)],
-    products: [.executable(name: "procrastimate", targets: ["App"])],
-    targets: [.executableTarget(name: "App")]
+    platforms: [.iOS(.v26), .macOS(.v26)],
+    products: [.library(name: "Core", targets: ["Core"])],
+    targets: [
+        .target(name: "Core"),
+        .testTarget(name: "CoreTests", dependencies: ["Core"]),
+    ]
 )

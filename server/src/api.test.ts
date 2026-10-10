@@ -1,7 +1,8 @@
 import type { DurableObjectNamespace, DurableObjectState } from '@cloudflare/workers-types';
 import { afterEach, beforeEach, describe, expect, mock, setSystemTime, spyOn, test } from 'bun:test';
 import api from './api';
-import { PushSchedule, type Env } from './push';
+import type { Env } from './bindings';
+import { PushSchedule } from './push';
 import { createReceiverKeys, decryptPush, type PushReceiver } from './push-receiver';
 import { generateVapidKeys } from './web-push';
 

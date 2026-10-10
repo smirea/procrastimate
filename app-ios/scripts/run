@@ -19,7 +19,7 @@ const { values } = parseArgs({
 });
 
 type Target = {
-    kind: "device" | "simulator" | "mac";
+    kind: "device" | "simulator";
     name: string;
     id: string;
     destination: string;
@@ -67,7 +67,7 @@ async function targets(): Promise<Target[]> {
     }
     for (const [runtime, devices] of Object.entries(JSON.parse(simulators).devices) as [string, any[]][]) {
         const version = runtime.match(/\.iOS-(\d+.*)$/)?.[1];
-        if (!version || Number(version.split("-")[0]) < 17) continue;
+        if (!version || Number(version.split("-")[0]) < 26) continue;
         for (const device of devices) {
             result.push({
                 kind: "simulator", name: device.name, id: device.udid,
@@ -76,7 +76,6 @@ async function targets(): Promise<Target[]> {
             });
         }
     }
-    result.push({ kind: "mac", name: "My Mac", id: "mac", destination: "platform=macOS", state: "connected" });
     return result;
 }
 
@@ -84,9 +83,10 @@ function selectTarget(all: Target[]): Target {
     const requested = values.target ?? (process.env.SWIFT_RUN_DEFAULT_TARGET?.trim() || undefined);
     const ranked = [...all].sort((a, b) => {
         const score = (target: Target) => target.kind === "device" ? (target.state === "connected" ? 0 : 4)
-            : target.kind === "simulator" ? (target.state === "booted" ? 1 : 2) : 3;
+            : target.state === "booted" ? 1 : 2;
         return score(a) - score(b) || (b.runtime ?? "").localeCompare(a.runtime ?? "", undefined, { numeric: true });
     });
+    if (!ranked.length) throw new Error("No iOS 26 device or simulator. Add an iOS 26 simulator runtime in Xcode's settings.");
     if (!requested) return ranked[0];
     const matches = ranked.filter(target => requested === "simulator" ? target.kind === "simulator"
         : target.id.toLowerCase() === requested.toLowerCase() || target.name.toLowerCase() === requested.toLowerCase());
@@ -131,11 +131,11 @@ async function deploy(target: Target, project: string) {
         console.error(readFileSync(log, "utf8"));
         throw new Error(`Build failed. See ${log}. For a physical device, check signing in Xcode or use --team.`);
     } finally { closeSync(fd); }
-    const products = join(build, "Build/Products", { device: "Debug-iphoneos", simulator: "Debug-iphonesimulator", mac: "Debug" }[target.kind]);
+    const products = join(build, "Build/Products", { device: "Debug-iphoneos", simulator: "Debug-iphonesimulator" }[target.kind]);
     const apps = readdirSync(products).filter(file => file.endsWith(".app"));
     if (apps.length !== 1) throw new Error(`Expected one app in ${products}; found ${apps.length}.`);
     const app = join(products, apps[0]);
-    const plist = join(app, target.kind === "mac" ? "Contents/Info.plist" : "Info.plist");
+    const plist = join(app, "Info.plist");
     const bundle = (await command(["plutil", "-extract", "CFBundleIdentifier", "raw", plist], true)).trim();
     if (target.kind === "simulator") {
         await command(["xcrun", "simctl", "bootstatus", target.id, "-b"]);
@@ -146,21 +146,18 @@ async function deploy(target: Target, project: string) {
             : ["open", "-a", join(dirname(developer), "Applications/DeviceHub.app"), `devices://device/open?id=${target.id}`]);
         await command(["xcrun", "simctl", "install", target.id, app]);
         await command(["xcrun", "simctl", "launch", "--terminate-running-process", target.id, bundle]);
-    } else if (target.kind === "device") {
+    } else {
         await command(["xcrun", "devicectl", "device", "install", "app", "--device", target.id, app]);
         await command(["xcrun", "devicectl", "device", "process", "launch", "--device", target.id, "--terminate-existing", bundle]);
-    } else {
-        await command(["osascript", "-e", `if application ${JSON.stringify(app)} is running then tell application ${JSON.stringify(app)} to quit`]);
-        await command(["open", "-n", app]);
     }
     console.log(`App is running on ${target.name}.`);
 }
 
 async function main() {
     if (values.help) {
-        console.log(`Usage: ${runCommand} [-t simulator|mac|<target-name-or-id>] [--targets] [--watch|-w] [--no-watch] [--team TEAM_ID]
+        console.log(`Usage: ${runCommand} [-t simulator|<target-name-or-id>] [--targets] [--watch|-w] [--no-watch] [--team TEAM_ID]
 
-Defaults to a connected iOS device, then a booted simulator, then an available simulator, then My Mac.
+Defaults to a connected iOS device, then a booted simulator, then an available iOS 26 simulator.
 SWIFT_RUN_DEFAULT_TARGET overrides this choice when -t/--target is omitted. --targets marks the effective default with *.
 Watching is enabled by default. Saves rebuild and restart the app. Ctrl-C stops watching.`);
         return;
