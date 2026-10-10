@@ -70,9 +70,7 @@ jobs:
           udid=$(xcrun simctl create "Parity iPhone 16" com.apple.CoreSimulator.SimDeviceType.iPhone-16 "$runtime")
           xcrun simctl boot "$udid"
           xcrun simctl bootstatus "$udid" -b
-          for time in 2026-10-14T10:00:00+00:00 2026-10-14T10:00:00.000Z; do
-            xcrun simctl status_bar "$udid" override --time "$time" --batteryState charged --batteryLevel 100 && break
-          done || echo "::warning::Could not pin the simulator status bar time."
+          xcrun simctl status_bar "$udid" override --time 2026-10-14T10:00:00.000Z --batteryState charged --batteryLevel 100
           echo "udid=$udid" >> "$GITHUB_OUTPUT"
 
       - name: Build
