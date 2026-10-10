@@ -328,7 +328,10 @@ const RULES: Rule[] = [
 		kind: 'priority',
 		repeatable: false,
 		guarded: true,
-		pattern: new RegExp(String.raw`(?<![\w#@])p([1-4])(?!\w)|(?<!\S)(!!!?)(?!\S)|(?<![\w#@])(urgent|important)\b`, 'gi'),
+		pattern: new RegExp(
+			String.raw`(?<![\w#@])p([1-4])(?!\w)|(?<!\S)(!!!?)(?!\S)|(?<![\w#@])(urgent|important)\b`,
+			'gi',
+		),
 		read: m => {
 			const [, level, bangs, word] = m;
 			const priority = level ? (Number(level) as Priority) : PRIORITY_WORDS[(bangs ?? word)!.toLowerCase()];

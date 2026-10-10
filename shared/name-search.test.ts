@@ -1,5 +1,13 @@
 import { describe, expect, test } from 'bun:test';
-import { labelIdsOf, lastUsed, projectIdsOf, sigilFragment, suggest, type Named, type Suggestion } from './name-search.ts';
+import {
+	labelIdsOf,
+	lastUsed,
+	projectIdsOf,
+	sigilFragment,
+	suggest,
+	type Named,
+	type Suggestion,
+} from './name-search.ts';
 import type { Project, Task } from './task.ts';
 
 const project = (id: string, name: string): Project => ({ id, name, createdAt: 0 });
