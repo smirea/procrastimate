@@ -13,6 +13,7 @@
 		"test:e2e": "playwright test"
 	},
 	"devDependencies": {
+		"@fontsource-variable/google-sans-flex": "^5.3.1",
 		"@playwright/test": "^1.64.0",
 		"@sveltejs/adapter-static": "^4.0.0",
 		"@sveltejs/kit": "^3.0.1",
