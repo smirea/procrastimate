@@ -42,9 +42,11 @@ export type Task = {
 	reminders: Reminder[];
 	createdAt: number;
 	completedAt: number | null;
+	/** Where an imported task came from, such as `todoist:task:…`, so importing the same backup again skips it. */
+	sourceKey?: string;
 };
 
-export type Project = { id: string; name: string; createdAt: number };
+export type Project = { id: string; name: string; createdAt: number; sourceKey?: string };
 
 /** A tag that crosses projects. A task carries any number of them. */
 export type Label = { id: string; name: string; createdAt: number };
