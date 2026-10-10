@@ -150,10 +150,14 @@ test('the quick add configuration row shows parsed timing above the keyboard', a
 
 	const keep = quickAdd.getByRole('button', { name: 'Keep as text' });
 	await expect(keep).toHaveCount(3);
-	for (const box of await Promise.all((await keep.all()).map(button => button.boundingBox()))) {
-		expect(box!.width).toBeGreaterThanOrEqual(44);
-		expect(box!.height).toBeGreaterThanOrEqual(44);
-	}
+	const sizes = await keep.evaluateAll(buttons =>
+		buttons.map(b => [(b as HTMLElement).offsetWidth, (b as HTMLElement).offsetHeight]),
+	);
+	expect(sizes).toEqual([
+		[44, 44],
+		[44, 44],
+		[44, 44],
+	]);
 	await shot(app, 'quick-add-timing-row');
 });
 

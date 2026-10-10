@@ -146,13 +146,13 @@
 			</div>
 		{/each}
 		{#each store.labelsOf({ labelIds: picked.labelIds.filter((id) => !parsed.labelIds.includes(id)) }) as label (label.id)}
-			<span class="chip" data-active="true" transition:scale={{ start: 0.9, duration: 160 }}>
+			<span class="chip" data-active="true" transition:scale={motion({ start: 0.9, duration: 160 })}>
 				<Tag size={15} weight="fill" class="text-[var(--tone-label)]" />
 				{label.name}
 			</span>
 		{/each}
 		{#each labelTokens as { token, name } (token.start)}
-			<div class="flex items-center" transition:scale={{ start: 0.9, duration: 160 }}>
+			<div class="flex items-center" transition:scale={motion({ start: 0.9, duration: 160 })}>
 				<span class="chip" data-active="true">
 					<Tag size={15} weight="fill" class="text-[var(--tone-label)]" />
 					{name}

@@ -8,7 +8,7 @@
 	import type { Label } from 'shared/task.ts';
 	import Popover from './Popover.svelte';
 	import { store } from '../store.svelte.ts';
-	import { mobile } from '../ui.svelte.ts';
+	import { mobile, motion } from '../ui.svelte.ts';
 
 	let { labelIds, onchange }: { labelIds: string[]; onchange: (labelIds: string[]) => void } = $props();
 
@@ -95,7 +95,7 @@
 					{#if option.kind === 'existing'}
 						<Tag size={15} weight={checked ? 'fill' : 'regular'} class="shrink-0 text-[var(--tone-label)]" />
 						<span class="flex-1 truncate">{option.item.name}</span>
-						{#if checked}<span class="grid" transition:scale={{ start: 0.5, duration: 160, easing: cubicOut }}><Check size={14} class="text-accent" /></span>{/if}
+						{#if checked}<span class="grid" transition:scale={motion({ start: 0.5, duration: 160, easing: cubicOut })}><Check size={14} class="text-accent" /></span>{/if}
 					{:else}
 						<Plus size={15} class="shrink-0 text-accent" />
 						<span class="flex-1 truncate">Create label “{option.name}”</span>

@@ -12,7 +12,7 @@
 	import Checkbox from './Checkbox.svelte';
 	import SubtaskProgress from './SubtaskProgress.svelte';
 	import { store } from '../store.svelte.ts';
-	import { clock, sheets } from '../ui.svelte.ts';
+	import { clock, sheets, motion } from '../ui.svelte.ts';
 	import { PRIORITIES, dueTone, formatDue, formatTime, repeatLabel } from '../format.ts';
 	import { completeTask } from '../completion.ts';
 
@@ -65,7 +65,7 @@
 				{#if labels.length}
 					<span class="flex min-w-0 flex-wrap items-center gap-1">
 						{#each labels as label (label.id)}
-							<span class="label-chip" data-label={label.name} transition:scale={{ start: 0.6, duration: 180, easing: cubicOut }}>
+							<span class="label-chip" data-label={label.name} transition:scale={motion({ start: 0.6, duration: 180, easing: cubicOut })}>
 								<Tag size={10} weight="fill" class="shrink-0 text-[var(--tone-label)]" />
 								<span class="truncate">{label.name}</span>
 							</span>
