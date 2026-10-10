@@ -1,0 +1,2321 @@
+{
+	"module": "views",
+	"timeZone": "America/New_York",
+	"cases": [
+		{
+			"fn": "inboxTasks",
+			"test": "task views › Inbox lists open top-level tasks without a project, by date, then priority, then creation",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "no date",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "no date"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 2,
+						"due": null,
+						"id": "urgent, no date",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 1,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "urgent, no date"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 3,
+						"due": {
+							"date": "2026-10-14",
+							"time": "17:00"
+						},
+						"id": "today 5pm",
+						"labelIds": [
+							"calls"
+						],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "today 5pm"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 4,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "today, no time",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "today, no time"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 5,
+						"due": {
+							"date": "2026-10-14",
+							"time": "09:00"
+						},
+						"id": "today 9am",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 3,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "today 9am"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 6,
+						"due": {
+							"date": "2026-10-14",
+							"time": "09:00"
+						},
+						"id": "today 9am urgent",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 1,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "today 9am urgent"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 7,
+						"due": {
+							"date": "2026-10-12",
+							"time": null
+						},
+						"id": "overdue",
+						"labelIds": [
+							"calls"
+						],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "overdue"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 8,
+						"due": {
+							"date": "2026-09-30",
+							"time": "08:00"
+						},
+						"id": "long overdue",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "long overdue"
+					},
+					{
+						"completedAt": 5,
+						"createdAt": 9,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "done today",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "done today"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 10,
+						"due": {
+							"date": "2026-10-15",
+							"time": null
+						},
+						"id": "tomorrow",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "tomorrow"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 11,
+						"due": {
+							"date": "2026-10-15",
+							"time": "08:00"
+						},
+						"id": "tomorrow 8am",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "tomorrow 8am"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 12,
+						"due": {
+							"date": "2026-11-02",
+							"time": "09:00"
+						},
+						"id": "after DST",
+						"labelIds": [
+							"calls"
+						],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "after DST"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 13,
+						"due": null,
+						"id": "home chore",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "home chore"
+					},
+					{
+						"completedAt": 5,
+						"createdAt": 14,
+						"due": null,
+						"id": "done chore",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "done chore"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 15,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "subtask",
+						"labelIds": [
+							"calls"
+						],
+						"notes": "",
+						"order": 0,
+						"parentId": "home chore",
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "subtask"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 16,
+						"due": {
+							"date": "2026-10-16",
+							"time": null
+						},
+						"id": "inbox subtask",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "no date",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "inbox subtask"
+					}
+				]
+			],
+			"output": [
+				{
+					"completedAt": null,
+					"createdAt": 8,
+					"due": {
+						"date": "2026-09-30",
+						"time": "08:00"
+					},
+					"id": "long overdue",
+					"labelIds": [],
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "long overdue"
+				},
+				{
+					"completedAt": null,
+					"createdAt": 7,
+					"due": {
+						"date": "2026-10-12",
+						"time": null
+					},
+					"id": "overdue",
+					"labelIds": [
+						"calls"
+					],
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "overdue"
+				},
+				{
+					"completedAt": null,
+					"createdAt": 6,
+					"due": {
+						"date": "2026-10-14",
+						"time": "09:00"
+					},
+					"id": "today 9am urgent",
+					"labelIds": [],
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 1,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "today 9am urgent"
+				},
+				{
+					"completedAt": null,
+					"createdAt": 5,
+					"due": {
+						"date": "2026-10-14",
+						"time": "09:00"
+					},
+					"id": "today 9am",
+					"labelIds": [],
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 3,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "today 9am"
+				},
+				{
+					"completedAt": null,
+					"createdAt": 3,
+					"due": {
+						"date": "2026-10-14",
+						"time": "17:00"
+					},
+					"id": "today 5pm",
+					"labelIds": [
+						"calls"
+					],
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "today 5pm"
+				},
+				{
+					"completedAt": null,
+					"createdAt": 4,
+					"due": {
+						"date": "2026-10-14",
+						"time": null
+					},
+					"id": "today, no time",
+					"labelIds": [],
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "today, no time"
+				},
+				{
+					"completedAt": null,
+					"createdAt": 11,
+					"due": {
+						"date": "2026-10-15",
+						"time": "08:00"
+					},
+					"id": "tomorrow 8am",
+					"labelIds": [],
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "tomorrow 8am"
+				},
+				{
+					"completedAt": null,
+					"createdAt": 2,
+					"due": null,
+					"id": "urgent, no date",
+					"labelIds": [],
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 1,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "urgent, no date"
+				},
+				{
+					"completedAt": null,
+					"createdAt": 1,
+					"due": null,
+					"id": "no date",
+					"labelIds": [],
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "no date"
+				}
+			]
+		},
+		{
+			"fn": "projectTasks",
+			"test": "task views › a project lists its open top-level tasks",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "no date",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "no date"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 2,
+						"due": null,
+						"id": "urgent, no date",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 1,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "urgent, no date"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 3,
+						"due": {
+							"date": "2026-10-14",
+							"time": "17:00"
+						},
+						"id": "today 5pm",
+						"labelIds": [
+							"calls"
+						],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "today 5pm"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 4,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "today, no time",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "today, no time"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 5,
+						"due": {
+							"date": "2026-10-14",
+							"time": "09:00"
+						},
+						"id": "today 9am",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 3,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "today 9am"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 6,
+						"due": {
+							"date": "2026-10-14",
+							"time": "09:00"
+						},
+						"id": "today 9am urgent",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 1,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "today 9am urgent"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 7,
+						"due": {
+							"date": "2026-10-12",
+							"time": null
+						},
+						"id": "overdue",
+						"labelIds": [
+							"calls"
+						],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "overdue"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 8,
+						"due": {
+							"date": "2026-09-30",
+							"time": "08:00"
+						},
+						"id": "long overdue",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "long overdue"
+					},
+					{
+						"completedAt": 5,
+						"createdAt": 9,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "done today",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "done today"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 10,
+						"due": {
+							"date": "2026-10-15",
+							"time": null
+						},
+						"id": "tomorrow",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "tomorrow"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 11,
+						"due": {
+							"date": "2026-10-15",
+							"time": "08:00"
+						},
+						"id": "tomorrow 8am",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "tomorrow 8am"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 12,
+						"due": {
+							"date": "2026-11-02",
+							"time": "09:00"
+						},
+						"id": "after DST",
+						"labelIds": [
+							"calls"
+						],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "after DST"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 13,
+						"due": null,
+						"id": "home chore",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "home chore"
+					},
+					{
+						"completedAt": 5,
+						"createdAt": 14,
+						"due": null,
+						"id": "done chore",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "done chore"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 15,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "subtask",
+						"labelIds": [
+							"calls"
+						],
+						"notes": "",
+						"order": 0,
+						"parentId": "home chore",
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "subtask"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 16,
+						"due": {
+							"date": "2026-10-16",
+							"time": null
+						},
+						"id": "inbox subtask",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "no date",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "inbox subtask"
+					}
+				],
+				"home"
+			],
+			"output": [
+				{
+					"completedAt": null,
+					"createdAt": 10,
+					"due": {
+						"date": "2026-10-15",
+						"time": null
+					},
+					"id": "tomorrow",
+					"labelIds": [],
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": "home",
+					"recurrence": null,
+					"reminders": [],
+					"title": "tomorrow"
+				},
+				{
+					"completedAt": null,
+					"createdAt": 12,
+					"due": {
+						"date": "2026-11-02",
+						"time": "09:00"
+					},
+					"id": "after DST",
+					"labelIds": [
+						"calls"
+					],
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": "home",
+					"recurrence": null,
+					"reminders": [],
+					"title": "after DST"
+				},
+				{
+					"completedAt": null,
+					"createdAt": 13,
+					"due": null,
+					"id": "home chore",
+					"labelIds": [],
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": "home",
+					"recurrence": null,
+					"reminders": [],
+					"title": "home chore"
+				}
+			]
+		},
+		{
+			"fn": "projectTasks",
+			"test": "task views › a project lists its open top-level tasks",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "no date",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "no date"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 2,
+						"due": null,
+						"id": "urgent, no date",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 1,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "urgent, no date"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 3,
+						"due": {
+							"date": "2026-10-14",
+							"time": "17:00"
+						},
+						"id": "today 5pm",
+						"labelIds": [
+							"calls"
+						],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "today 5pm"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 4,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "today, no time",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "today, no time"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 5,
+						"due": {
+							"date": "2026-10-14",
+							"time": "09:00"
+						},
+						"id": "today 9am",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 3,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "today 9am"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 6,
+						"due": {
+							"date": "2026-10-14",
+							"time": "09:00"
+						},
+						"id": "today 9am urgent",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 1,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "today 9am urgent"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 7,
+						"due": {
+							"date": "2026-10-12",
+							"time": null
+						},
+						"id": "overdue",
+						"labelIds": [
+							"calls"
+						],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "overdue"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 8,
+						"due": {
+							"date": "2026-09-30",
+							"time": "08:00"
+						},
+						"id": "long overdue",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "long overdue"
+					},
+					{
+						"completedAt": 5,
+						"createdAt": 9,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "done today",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "done today"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 10,
+						"due": {
+							"date": "2026-10-15",
+							"time": null
+						},
+						"id": "tomorrow",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "tomorrow"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 11,
+						"due": {
+							"date": "2026-10-15",
+							"time": "08:00"
+						},
+						"id": "tomorrow 8am",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "tomorrow 8am"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 12,
+						"due": {
+							"date": "2026-11-02",
+							"time": "09:00"
+						},
+						"id": "after DST",
+						"labelIds": [
+							"calls"
+						],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "after DST"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 13,
+						"due": null,
+						"id": "home chore",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "home chore"
+					},
+					{
+						"completedAt": 5,
+						"createdAt": 14,
+						"due": null,
+						"id": "done chore",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "done chore"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 15,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "subtask",
+						"labelIds": [
+							"calls"
+						],
+						"notes": "",
+						"order": 0,
+						"parentId": "home chore",
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "subtask"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 16,
+						"due": {
+							"date": "2026-10-16",
+							"time": null
+						},
+						"id": "inbox subtask",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "no date",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "inbox subtask"
+					}
+				],
+				"missing"
+			],
+			"output": []
+		},
+		{
+			"fn": "labelTasks",
+			"test": "task views › a label lists every open task with it, subtasks included",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "no date",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "no date"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 2,
+						"due": null,
+						"id": "urgent, no date",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 1,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "urgent, no date"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 3,
+						"due": {
+							"date": "2026-10-14",
+							"time": "17:00"
+						},
+						"id": "today 5pm",
+						"labelIds": [
+							"calls"
+						],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "today 5pm"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 4,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "today, no time",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "today, no time"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 5,
+						"due": {
+							"date": "2026-10-14",
+							"time": "09:00"
+						},
+						"id": "today 9am",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 3,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "today 9am"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 6,
+						"due": {
+							"date": "2026-10-14",
+							"time": "09:00"
+						},
+						"id": "today 9am urgent",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 1,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "today 9am urgent"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 7,
+						"due": {
+							"date": "2026-10-12",
+							"time": null
+						},
+						"id": "overdue",
+						"labelIds": [
+							"calls"
+						],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "overdue"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 8,
+						"due": {
+							"date": "2026-09-30",
+							"time": "08:00"
+						},
+						"id": "long overdue",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "long overdue"
+					},
+					{
+						"completedAt": 5,
+						"createdAt": 9,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "done today",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "done today"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 10,
+						"due": {
+							"date": "2026-10-15",
+							"time": null
+						},
+						"id": "tomorrow",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "tomorrow"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 11,
+						"due": {
+							"date": "2026-10-15",
+							"time": "08:00"
+						},
+						"id": "tomorrow 8am",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "tomorrow 8am"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 12,
+						"due": {
+							"date": "2026-11-02",
+							"time": "09:00"
+						},
+						"id": "after DST",
+						"labelIds": [
+							"calls"
+						],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "after DST"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 13,
+						"due": null,
+						"id": "home chore",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "home chore"
+					},
+					{
+						"completedAt": 5,
+						"createdAt": 14,
+						"due": null,
+						"id": "done chore",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "done chore"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 15,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "subtask",
+						"labelIds": [
+							"calls"
+						],
+						"notes": "",
+						"order": 0,
+						"parentId": "home chore",
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "subtask"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 16,
+						"due": {
+							"date": "2026-10-16",
+							"time": null
+						},
+						"id": "inbox subtask",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "no date",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "inbox subtask"
+					}
+				],
+				"calls"
+			],
+			"output": [
+				{
+					"completedAt": null,
+					"createdAt": 7,
+					"due": {
+						"date": "2026-10-12",
+						"time": null
+					},
+					"id": "overdue",
+					"labelIds": [
+						"calls"
+					],
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "overdue"
+				},
+				{
+					"completedAt": null,
+					"createdAt": 3,
+					"due": {
+						"date": "2026-10-14",
+						"time": "17:00"
+					},
+					"id": "today 5pm",
+					"labelIds": [
+						"calls"
+					],
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "today 5pm"
+				},
+				{
+					"completedAt": null,
+					"createdAt": 15,
+					"due": {
+						"date": "2026-10-14",
+						"time": null
+					},
+					"id": "subtask",
+					"labelIds": [
+						"calls"
+					],
+					"notes": "",
+					"order": 0,
+					"parentId": "home chore",
+					"priority": 4,
+					"projectId": "home",
+					"recurrence": null,
+					"reminders": [],
+					"title": "subtask"
+				},
+				{
+					"completedAt": null,
+					"createdAt": 12,
+					"due": {
+						"date": "2026-11-02",
+						"time": "09:00"
+					},
+					"id": "after DST",
+					"labelIds": [
+						"calls"
+					],
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": "home",
+					"recurrence": null,
+					"reminders": [],
+					"title": "after DST"
+				}
+			]
+		},
+		{
+			"fn": "todayTasks",
+			"test": "task views › Today splits overdue from today and includes dated subtasks",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "no date",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "no date"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 2,
+						"due": null,
+						"id": "urgent, no date",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 1,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "urgent, no date"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 3,
+						"due": {
+							"date": "2026-10-14",
+							"time": "17:00"
+						},
+						"id": "today 5pm",
+						"labelIds": [
+							"calls"
+						],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "today 5pm"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 4,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "today, no time",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "today, no time"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 5,
+						"due": {
+							"date": "2026-10-14",
+							"time": "09:00"
+						},
+						"id": "today 9am",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 3,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "today 9am"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 6,
+						"due": {
+							"date": "2026-10-14",
+							"time": "09:00"
+						},
+						"id": "today 9am urgent",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 1,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "today 9am urgent"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 7,
+						"due": {
+							"date": "2026-10-12",
+							"time": null
+						},
+						"id": "overdue",
+						"labelIds": [
+							"calls"
+						],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "overdue"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 8,
+						"due": {
+							"date": "2026-09-30",
+							"time": "08:00"
+						},
+						"id": "long overdue",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "long overdue"
+					},
+					{
+						"completedAt": 5,
+						"createdAt": 9,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "done today",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "done today"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 10,
+						"due": {
+							"date": "2026-10-15",
+							"time": null
+						},
+						"id": "tomorrow",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "tomorrow"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 11,
+						"due": {
+							"date": "2026-10-15",
+							"time": "08:00"
+						},
+						"id": "tomorrow 8am",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "tomorrow 8am"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 12,
+						"due": {
+							"date": "2026-11-02",
+							"time": "09:00"
+						},
+						"id": "after DST",
+						"labelIds": [
+							"calls"
+						],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "after DST"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 13,
+						"due": null,
+						"id": "home chore",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "home chore"
+					},
+					{
+						"completedAt": 5,
+						"createdAt": 14,
+						"due": null,
+						"id": "done chore",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "done chore"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 15,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "subtask",
+						"labelIds": [
+							"calls"
+						],
+						"notes": "",
+						"order": 0,
+						"parentId": "home chore",
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "subtask"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 16,
+						"due": {
+							"date": "2026-10-16",
+							"time": null
+						},
+						"id": "inbox subtask",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "no date",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "inbox subtask"
+					}
+				],
+				"2026-10-14"
+			],
+			"output": {
+				"overdue": [
+					{
+						"completedAt": null,
+						"createdAt": 8,
+						"due": {
+							"date": "2026-09-30",
+							"time": "08:00"
+						},
+						"id": "long overdue",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "long overdue"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 7,
+						"due": {
+							"date": "2026-10-12",
+							"time": null
+						},
+						"id": "overdue",
+						"labelIds": [
+							"calls"
+						],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "overdue"
+					}
+				],
+				"today": [
+					{
+						"completedAt": null,
+						"createdAt": 6,
+						"due": {
+							"date": "2026-10-14",
+							"time": "09:00"
+						},
+						"id": "today 9am urgent",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 1,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "today 9am urgent"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 5,
+						"due": {
+							"date": "2026-10-14",
+							"time": "09:00"
+						},
+						"id": "today 9am",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 3,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "today 9am"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 3,
+						"due": {
+							"date": "2026-10-14",
+							"time": "17:00"
+						},
+						"id": "today 5pm",
+						"labelIds": [
+							"calls"
+						],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "today 5pm"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 4,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "today, no time",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "today, no time"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 15,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "subtask",
+						"labelIds": [
+							"calls"
+						],
+						"notes": "",
+						"order": 0,
+						"parentId": "home chore",
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "subtask"
+					}
+				]
+			}
+		},
+		{
+			"fn": "upcomingGroups",
+			"test": "task views › Upcoming groups later tasks by day in date order",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "no date",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "no date"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 2,
+						"due": null,
+						"id": "urgent, no date",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 1,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "urgent, no date"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 3,
+						"due": {
+							"date": "2026-10-14",
+							"time": "17:00"
+						},
+						"id": "today 5pm",
+						"labelIds": [
+							"calls"
+						],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "today 5pm"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 4,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "today, no time",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "today, no time"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 5,
+						"due": {
+							"date": "2026-10-14",
+							"time": "09:00"
+						},
+						"id": "today 9am",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 3,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "today 9am"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 6,
+						"due": {
+							"date": "2026-10-14",
+							"time": "09:00"
+						},
+						"id": "today 9am urgent",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 1,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "today 9am urgent"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 7,
+						"due": {
+							"date": "2026-10-12",
+							"time": null
+						},
+						"id": "overdue",
+						"labelIds": [
+							"calls"
+						],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "overdue"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 8,
+						"due": {
+							"date": "2026-09-30",
+							"time": "08:00"
+						},
+						"id": "long overdue",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "long overdue"
+					},
+					{
+						"completedAt": 5,
+						"createdAt": 9,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "done today",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "done today"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 10,
+						"due": {
+							"date": "2026-10-15",
+							"time": null
+						},
+						"id": "tomorrow",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "tomorrow"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 11,
+						"due": {
+							"date": "2026-10-15",
+							"time": "08:00"
+						},
+						"id": "tomorrow 8am",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "tomorrow 8am"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 12,
+						"due": {
+							"date": "2026-11-02",
+							"time": "09:00"
+						},
+						"id": "after DST",
+						"labelIds": [
+							"calls"
+						],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "after DST"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 13,
+						"due": null,
+						"id": "home chore",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "home chore"
+					},
+					{
+						"completedAt": 5,
+						"createdAt": 14,
+						"due": null,
+						"id": "done chore",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "done chore"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 15,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "subtask",
+						"labelIds": [
+							"calls"
+						],
+						"notes": "",
+						"order": 0,
+						"parentId": "home chore",
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "subtask"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 16,
+						"due": {
+							"date": "2026-10-16",
+							"time": null
+						},
+						"id": "inbox subtask",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "no date",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "inbox subtask"
+					}
+				],
+				"2026-10-14"
+			],
+			"output": [
+				{
+					"date": "2026-10-15",
+					"tasks": [
+						{
+							"completedAt": null,
+							"createdAt": 11,
+							"due": {
+								"date": "2026-10-15",
+								"time": "08:00"
+							},
+							"id": "tomorrow 8am",
+							"labelIds": [],
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "tomorrow 8am"
+						},
+						{
+							"completedAt": null,
+							"createdAt": 10,
+							"due": {
+								"date": "2026-10-15",
+								"time": null
+							},
+							"id": "tomorrow",
+							"labelIds": [],
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "tomorrow"
+						}
+					]
+				},
+				{
+					"date": "2026-10-16",
+					"tasks": [
+						{
+							"completedAt": null,
+							"createdAt": 16,
+							"due": {
+								"date": "2026-10-16",
+								"time": null
+							},
+							"id": "inbox subtask",
+							"labelIds": [],
+							"notes": "",
+							"order": 0,
+							"parentId": "no date",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "inbox subtask"
+						}
+					]
+				},
+				{
+					"date": "2026-11-02",
+					"tasks": [
+						{
+							"completedAt": null,
+							"createdAt": 12,
+							"due": {
+								"date": "2026-11-02",
+								"time": "09:00"
+							},
+							"id": "after DST",
+							"labelIds": [
+								"calls"
+							],
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "after DST"
+						}
+					]
+				}
+			]
+		},
+		{
+			"fn": "inboxTasks",
+			"test": "task views › empty lists stay empty",
+			"input": [
+				[]
+			],
+			"output": []
+		},
+		{
+			"fn": "todayTasks",
+			"test": "task views › empty lists stay empty",
+			"input": [
+				[],
+				"2026-10-14"
+			],
+			"output": {
+				"overdue": [],
+				"today": []
+			}
+		},
+		{
+			"fn": "upcomingGroups",
+			"test": "task views › empty lists stay empty",
+			"input": [
+				[],
+				"2026-10-14"
+			],
+			"output": []
+		}
+	]
+}

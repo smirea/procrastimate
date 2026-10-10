@@ -1,0 +1,729 @@
+{
+	"module": "notifications",
+	"timeZone": "America/New_York",
+	"cases": [
+		{
+			"fn": "upcomingNotifications",
+			"test": "upcomingNotifications › due times and reminders, soonest first, with bodies relative to the moment they show",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": {
+							"date": "2026-10-15",
+							"time": "17:00"
+						},
+						"id": "Gym",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [
+							{
+								"kind": "before",
+								"minutes": 1440
+							},
+							{
+								"kind": "before",
+								"minutes": 30
+							}
+						],
+						"title": "Gym"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": {
+							"date": "2026-10-14",
+							"time": "10:30"
+						},
+						"id": "Call mom",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Call mom"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "Passport",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [
+							{
+								"date": "2026-10-14",
+								"kind": "at",
+								"time": "12:00"
+							}
+						],
+						"title": "Passport"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": {
+							"date": "2026-10-17",
+							"time": null
+						},
+						"id": "Taxes",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [
+							{
+								"date": "2026-10-15",
+								"kind": "at",
+								"time": "09:00"
+							}
+						],
+						"title": "Taxes"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": {
+							"date": "2026-10-15",
+							"time": null
+						},
+						"id": "Rent",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [
+							{
+								"date": "2026-10-15",
+								"kind": "at",
+								"time": "08:00"
+							}
+						],
+						"title": "Rent"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": {
+							"date": "2026-10-21",
+							"time": "12:00"
+						},
+						"id": "Lunch",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [
+							{
+								"date": "2026-10-20",
+								"kind": "at",
+								"time": "12:00"
+							}
+						],
+						"title": "Lunch"
+					}
+				],
+				1791986400000,
+				500
+			],
+			"output": [
+				{
+					"at": 1791988200000,
+					"body": "Due now",
+					"taskId": "Call mom",
+					"title": "Call mom"
+				},
+				{
+					"at": 1791993600000,
+					"body": "Reminder",
+					"taskId": "Passport",
+					"title": "Passport"
+				},
+				{
+					"at": 1792011600000,
+					"body": "Due Tomorrow at 5:00 PM",
+					"taskId": "Gym",
+					"title": "Gym"
+				},
+				{
+					"at": 1792065600000,
+					"body": "Due today",
+					"taskId": "Rent",
+					"title": "Rent"
+				},
+				{
+					"at": 1792069200000,
+					"body": "Due Sat Oct 17",
+					"taskId": "Taxes",
+					"title": "Taxes"
+				},
+				{
+					"at": 1792096200000,
+					"body": "Due at 5:00 PM",
+					"taskId": "Gym",
+					"title": "Gym"
+				},
+				{
+					"at": 1792098000000,
+					"body": "Due now",
+					"taskId": "Gym",
+					"title": "Gym"
+				},
+				{
+					"at": 1792512000000,
+					"body": "Due Tomorrow at 12:00 PM",
+					"taskId": "Lunch",
+					"title": "Lunch"
+				},
+				{
+					"at": 1792598400000,
+					"body": "Due now",
+					"taskId": "Lunch",
+					"title": "Lunch"
+				}
+			]
+		},
+		{
+			"fn": "upcomingNotifications",
+			"test": "upcomingNotifications › completed tasks, dates without a time, and past moments never notify",
+			"input": [
+				[
+					{
+						"completedAt": 1791986399999,
+						"createdAt": 0,
+						"due": {
+							"date": "2026-10-14",
+							"time": "11:00"
+						},
+						"id": "Done",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Done"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "Taxes",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Taxes"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": {
+							"date": "2026-10-14",
+							"time": "10:15"
+						},
+						"id": "Standup",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [
+							{
+								"kind": "before",
+								"minutes": 30
+							}
+						],
+						"title": "Standup"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": {
+							"date": "2026-10-14",
+							"time": "10:00"
+						},
+						"id": "Earlier",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Earlier"
+					}
+				],
+				1791986400000,
+				500
+			],
+			"output": [
+				{
+					"at": 1791987300000,
+					"body": "Due now",
+					"taskId": "Standup",
+					"title": "Standup"
+				}
+			]
+		},
+		{
+			"fn": "upcomingNotifications",
+			"test": "upcomingNotifications › a reminder at the due time notifies once",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": {
+							"date": "2026-10-14",
+							"time": "10:45"
+						},
+						"id": "Standup",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [
+							{
+								"date": "2026-10-14",
+								"kind": "at",
+								"time": "10:45"
+							},
+							{
+								"kind": "before",
+								"minutes": 0
+							}
+						],
+						"title": "Standup"
+					}
+				],
+				1791986400000,
+				500
+			],
+			"output": [
+				{
+					"at": 1791989100000,
+					"body": "Due now",
+					"taskId": "Standup",
+					"title": "Standup"
+				}
+			]
+		},
+		{
+			"fn": "upcomingNotifications",
+			"test": "upcomingNotifications › a recurring task notifies at its next occurrence once completing moves its due date",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": {
+							"date": "2026-10-14",
+							"time": "09:00"
+						},
+						"id": "Water plants",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": {
+							"interval": 2,
+							"unit": "day"
+						},
+						"reminders": [
+							{
+								"kind": "before",
+								"minutes": 60
+							}
+						],
+						"title": "Water plants"
+					}
+				],
+				1791986400000,
+				500
+			],
+			"output": []
+		},
+		{
+			"fn": "upcomingNotifications",
+			"test": "upcomingNotifications › a recurring task notifies at its next occurrence once completing moves its due date",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": {
+							"date": "2026-10-16",
+							"time": "09:00"
+						},
+						"id": "Water plants",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": {
+							"interval": 2,
+							"unit": "day"
+						},
+						"reminders": [
+							{
+								"kind": "before",
+								"minutes": 60
+							}
+						],
+						"title": "Water plants"
+					}
+				],
+				1791986400000,
+				500
+			],
+			"output": [
+				{
+					"at": 1792152000000,
+					"body": "Due at 9:00 AM",
+					"taskId": "Water plants",
+					"title": "Water plants"
+				},
+				{
+					"at": 1792155600000,
+					"body": "Due now",
+					"taskId": "Water plants",
+					"title": "Water plants"
+				}
+			]
+		},
+		{
+			"fn": "upcomingNotifications",
+			"test": "upcomingNotifications › keeps only the soonest notifications up to the limit",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "latest",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [
+							{
+								"date": "2026-10-16",
+								"kind": "at",
+								"time": "09:00"
+							}
+						],
+						"title": "latest"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "a",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [
+							{
+								"date": "2026-10-15",
+								"kind": "at",
+								"time": "09:00"
+							}
+						],
+						"title": "a"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "b",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [
+							{
+								"date": "2026-10-15",
+								"kind": "at",
+								"time": "09:00"
+							}
+						],
+						"title": "b"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "c",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [
+							{
+								"date": "2026-10-15",
+								"kind": "at",
+								"time": "09:00"
+							}
+						],
+						"title": "c"
+					}
+				],
+				1791986400000,
+				3
+			],
+			"output": [
+				{
+					"at": 1792069200000,
+					"body": "Reminder",
+					"taskId": "a",
+					"title": "a"
+				},
+				{
+					"at": 1792069200000,
+					"body": "Reminder",
+					"taskId": "b",
+					"title": "b"
+				},
+				{
+					"at": 1792069200000,
+					"body": "Reminder",
+					"taskId": "c",
+					"title": "c"
+				}
+			]
+		},
+		{
+			"fn": "upcomingNotifications",
+			"test": "upcomingNotifications › titles are cut to 300 characters",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": {
+							"date": "2026-10-14",
+							"time": "11:00"
+						},
+						"id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+					}
+				],
+				1791986400000,
+				500
+			],
+			"output": [
+				{
+					"at": 1791990000000,
+					"body": "Due now",
+					"taskId": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+					"title": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+				}
+			]
+		},
+		{
+			"fn": "notificationBody",
+			"test": "notificationBody › a task with no due date",
+			"input": [
+				null,
+				1791993600000
+			],
+			"output": "Reminder"
+		},
+		{
+			"fn": "notificationBody",
+			"test": "notificationBody › the due moment",
+			"input": [
+				{
+					"date": "2026-10-14",
+					"time": "17:00"
+				},
+				1792011600000
+			],
+			"output": "Due now"
+		},
+		{
+			"fn": "notificationBody",
+			"test": "notificationBody › earlier the same day",
+			"input": [
+				{
+					"date": "2026-10-14",
+					"time": "17:00"
+				},
+				1792009800000
+			],
+			"output": "Due at 5:00 PM"
+		},
+		{
+			"fn": "notificationBody",
+			"test": "notificationBody › the day before",
+			"input": [
+				{
+					"date": "2026-10-15",
+					"time": "09:00"
+				},
+				1791982800000
+			],
+			"output": "Due Tomorrow at 9:00 AM"
+		},
+		{
+			"fn": "notificationBody",
+			"test": "notificationBody › days before",
+			"input": [
+				{
+					"date": "2026-10-20",
+					"time": "09:00"
+				},
+				1791982800000
+			],
+			"output": "Due Tue Oct 20 at 9:00 AM"
+		},
+		{
+			"fn": "notificationBody",
+			"test": "notificationBody › after the due time",
+			"input": [
+				{
+					"date": "2026-10-14",
+					"time": "09:00"
+				},
+				1791984600000
+			],
+			"output": "Due at 9:00 AM"
+		},
+		{
+			"fn": "notificationBody",
+			"test": "notificationBody › a date with no time, that day",
+			"input": [
+				{
+					"date": "2026-10-15",
+					"time": null
+				},
+				1792065600000
+			],
+			"output": "Due today"
+		},
+		{
+			"fn": "notificationBody",
+			"test": "notificationBody › a date with no time, the day before",
+			"input": [
+				{
+					"date": "2026-10-15",
+					"time": null
+				},
+				1792022400000
+			],
+			"output": "Due tomorrow"
+		},
+		{
+			"fn": "notificationBody",
+			"test": "notificationBody › a date with no time, the day after",
+			"input": [
+				{
+					"date": "2026-10-14",
+					"time": null
+				},
+				1792065600000
+			],
+			"output": "Due yesterday"
+		},
+		{
+			"fn": "notificationBody",
+			"test": "notificationBody › a date with no time, days before",
+			"input": [
+				{
+					"date": "2026-10-17",
+					"time": null
+				},
+				1792069200000
+			],
+			"output": "Due Sat Oct 17"
+		},
+		{
+			"fn": "notificationBody",
+			"test": "notificationBody › across the DST change",
+			"input": [
+				{
+					"date": "2026-11-02",
+					"time": "09:00"
+				},
+				1793538000000
+			],
+			"output": "Due Tomorrow at 9:00 AM"
+		},
+		{
+			"fn": "notificationBody",
+			"test": "notificationBody › next year",
+			"input": [
+				{
+					"date": "2027-01-05",
+					"time": null
+				},
+				1798639200000
+			],
+			"output": "Due Tue Jan 5, 2027"
+		}
+	]
+}

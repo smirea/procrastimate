@@ -1,0 +1,2399 @@
+{
+	"module": "snapshot",
+	"timeZone": "America/New_York",
+	"cases": [
+		{
+			"fn": "parseSnapshot",
+			"test": "parseSnapshot › a document the web wrote reads back unchanged",
+			"input": [
+				{
+					"labels": [
+						{
+							"createdAt": 1791800000002,
+							"id": "l-health",
+							"name": "health"
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 1791800000000,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 1791800000001,
+							"id": "p-work",
+							"name": "Work",
+							"sourceKey": "todoist:project:7"
+						}
+					],
+					"remindersCheckedAt": 1791972000000,
+					"sync": {
+						"cursor": 12,
+						"deviceId": "d-phone",
+						"outbox": [
+							{
+								"fields": {
+									"due": {
+										"date": "2026-10-16",
+										"time": "07:00"
+									},
+									"labelIds": [
+										"l-health"
+									],
+									"title": "Gym"
+								},
+								"hlc": "1791972000000:0:d-phone",
+								"id": "a0d6b1e2-0001-4c1e-9b1e-000000000001",
+								"kind": "task",
+								"opId": "op-1"
+							},
+							{
+								"fields": {
+									"deleted": true
+								},
+								"hlc": "1791972000001:0:d-phone",
+								"id": "l-old",
+								"kind": "label",
+								"opId": "op-2"
+							}
+						]
+					},
+					"tasks": [
+						{
+							"completedAt": null,
+							"createdAt": 1791900000000,
+							"due": {
+								"date": "2026-10-16",
+								"time": "07:00"
+							},
+							"id": "a0d6b1e2-0001-4c1e-9b1e-000000000001",
+							"labelIds": [
+								"l-health"
+							],
+							"notes": "Leg day",
+							"order": 0,
+							"parentId": null,
+							"priority": 2,
+							"projectId": "p-home",
+							"recurrence": {
+								"days": [
+									1,
+									3,
+									5
+								],
+								"interval": 1,
+								"unit": "week"
+							},
+							"reminders": [
+								{
+									"kind": "before",
+									"minutes": 30
+								},
+								{
+									"date": "2026-10-15",
+									"kind": "at",
+									"time": "21:00"
+								}
+							],
+							"title": "Gym"
+						},
+						{
+							"completedAt": 1791950000000,
+							"createdAt": 1791900000001,
+							"due": null,
+							"id": "a0d6b1e2-0002-4c1e-9b1e-000000000002",
+							"labelIds": [],
+							"notes": "",
+							"order": 1.5,
+							"parentId": "a0d6b1e2-0001-4c1e-9b1e-000000000001",
+							"priority": 4,
+							"projectId": "p-home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "Stretch"
+						},
+						{
+							"completedAt": null,
+							"createdAt": 1791900000002,
+							"due": {
+								"date": "2026-11-01",
+								"time": null
+							},
+							"id": "a0d6b1e2-0003-4c1e-9b1e-000000000003",
+							"labelIds": [],
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 1,
+							"projectId": null,
+							"recurrence": {
+								"interval": 1,
+								"unit": "year"
+							},
+							"reminders": [],
+							"sourceKey": "todoist:task:42",
+							"title": "Taxes"
+						}
+					]
+				},
+				10
+			],
+			"output": {
+				"labels": [
+					{
+						"createdAt": 1791800000002,
+						"id": "l-health",
+						"name": "health"
+					}
+				],
+				"projects": [
+					{
+						"createdAt": 1791800000000,
+						"id": "p-home",
+						"name": "Home"
+					},
+					{
+						"createdAt": 1791800000001,
+						"id": "p-work",
+						"name": "Work",
+						"sourceKey": "todoist:project:7"
+					}
+				],
+				"remindersCheckedAt": 1791972000000,
+				"sync": {
+					"cursor": 12,
+					"deviceId": "d-phone",
+					"outbox": [
+						{
+							"fields": {
+								"due": {
+									"date": "2026-10-16",
+									"time": "07:00"
+								},
+								"labelIds": [
+									"l-health"
+								],
+								"title": "Gym"
+							},
+							"hlc": "1791972000000:0:d-phone",
+							"id": "a0d6b1e2-0001-4c1e-9b1e-000000000001",
+							"kind": "task",
+							"opId": "op-1"
+						},
+						{
+							"fields": {
+								"deleted": true
+							},
+							"hlc": "1791972000001:0:d-phone",
+							"id": "l-old",
+							"kind": "label",
+							"opId": "op-2"
+						}
+					]
+				},
+				"tasks": [
+					{
+						"completedAt": null,
+						"createdAt": 1791900000000,
+						"due": {
+							"date": "2026-10-16",
+							"time": "07:00"
+						},
+						"id": "a0d6b1e2-0001-4c1e-9b1e-000000000001",
+						"labelIds": [
+							"l-health"
+						],
+						"notes": "Leg day",
+						"order": 0,
+						"parentId": null,
+						"priority": 2,
+						"projectId": "p-home",
+						"recurrence": {
+							"days": [
+								1,
+								3,
+								5
+							],
+							"interval": 1,
+							"unit": "week"
+						},
+						"reminders": [
+							{
+								"kind": "before",
+								"minutes": 30
+							},
+							{
+								"date": "2026-10-15",
+								"kind": "at",
+								"time": "21:00"
+							}
+						],
+						"title": "Gym"
+					},
+					{
+						"completedAt": 1791950000000,
+						"createdAt": 1791900000001,
+						"due": null,
+						"id": "a0d6b1e2-0002-4c1e-9b1e-000000000002",
+						"labelIds": [],
+						"notes": "",
+						"order": 1.5,
+						"parentId": "a0d6b1e2-0001-4c1e-9b1e-000000000001",
+						"priority": 4,
+						"projectId": "p-home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "Stretch"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1791900000002,
+						"due": {
+							"date": "2026-11-01",
+							"time": null
+						},
+						"id": "a0d6b1e2-0003-4c1e-9b1e-000000000003",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 1,
+						"projectId": null,
+						"recurrence": {
+							"interval": 1,
+							"unit": "year"
+						},
+						"reminders": [],
+						"sourceKey": "todoist:task:42",
+						"title": "Taxes"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseSnapshot",
+			"test": "parseSnapshot › a document without a sync section is an unpaired device",
+			"input": [
+				{
+					"labels": [
+						{
+							"createdAt": 1791800000002,
+							"id": "l-health",
+							"name": "health"
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 1791800000000,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 1791800000001,
+							"id": "p-work",
+							"name": "Work",
+							"sourceKey": "todoist:project:7"
+						}
+					],
+					"remindersCheckedAt": 1791972000000,
+					"tasks": [
+						{
+							"completedAt": null,
+							"createdAt": 1791900000000,
+							"due": {
+								"date": "2026-10-16",
+								"time": "07:00"
+							},
+							"id": "a0d6b1e2-0001-4c1e-9b1e-000000000001",
+							"labelIds": [
+								"l-health"
+							],
+							"notes": "Leg day",
+							"order": 0,
+							"parentId": null,
+							"priority": 2,
+							"projectId": "p-home",
+							"recurrence": {
+								"days": [
+									1,
+									3,
+									5
+								],
+								"interval": 1,
+								"unit": "week"
+							},
+							"reminders": [
+								{
+									"kind": "before",
+									"minutes": 30
+								},
+								{
+									"date": "2026-10-15",
+									"kind": "at",
+									"time": "21:00"
+								}
+							],
+							"title": "Gym"
+						},
+						{
+							"completedAt": 1791950000000,
+							"createdAt": 1791900000001,
+							"due": null,
+							"id": "a0d6b1e2-0002-4c1e-9b1e-000000000002",
+							"labelIds": [],
+							"notes": "",
+							"order": 1.5,
+							"parentId": "a0d6b1e2-0001-4c1e-9b1e-000000000001",
+							"priority": 4,
+							"projectId": "p-home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "Stretch"
+						},
+						{
+							"completedAt": null,
+							"createdAt": 1791900000002,
+							"due": {
+								"date": "2026-11-01",
+								"time": null
+							},
+							"id": "a0d6b1e2-0003-4c1e-9b1e-000000000003",
+							"labelIds": [],
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 1,
+							"projectId": null,
+							"recurrence": {
+								"interval": 1,
+								"unit": "year"
+							},
+							"reminders": [],
+							"sourceKey": "todoist:task:42",
+							"title": "Taxes"
+						}
+					]
+				},
+				10
+			],
+			"output": {
+				"labels": [
+					{
+						"createdAt": 1791800000002,
+						"id": "l-health",
+						"name": "health"
+					}
+				],
+				"projects": [
+					{
+						"createdAt": 1791800000000,
+						"id": "p-home",
+						"name": "Home"
+					},
+					{
+						"createdAt": 1791800000001,
+						"id": "p-work",
+						"name": "Work",
+						"sourceKey": "todoist:project:7"
+					}
+				],
+				"remindersCheckedAt": 1791972000000,
+				"tasks": [
+					{
+						"completedAt": null,
+						"createdAt": 1791900000000,
+						"due": {
+							"date": "2026-10-16",
+							"time": "07:00"
+						},
+						"id": "a0d6b1e2-0001-4c1e-9b1e-000000000001",
+						"labelIds": [
+							"l-health"
+						],
+						"notes": "Leg day",
+						"order": 0,
+						"parentId": null,
+						"priority": 2,
+						"projectId": "p-home",
+						"recurrence": {
+							"days": [
+								1,
+								3,
+								5
+							],
+							"interval": 1,
+							"unit": "week"
+						},
+						"reminders": [
+							{
+								"kind": "before",
+								"minutes": 30
+							},
+							{
+								"date": "2026-10-15",
+								"kind": "at",
+								"time": "21:00"
+							}
+						],
+						"title": "Gym"
+					},
+					{
+						"completedAt": 1791950000000,
+						"createdAt": 1791900000001,
+						"due": null,
+						"id": "a0d6b1e2-0002-4c1e-9b1e-000000000002",
+						"labelIds": [],
+						"notes": "",
+						"order": 1.5,
+						"parentId": "a0d6b1e2-0001-4c1e-9b1e-000000000001",
+						"priority": 4,
+						"projectId": "p-home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "Stretch"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1791900000002,
+						"due": {
+							"date": "2026-11-01",
+							"time": null
+						},
+						"id": "a0d6b1e2-0003-4c1e-9b1e-000000000003",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 1,
+						"projectId": null,
+						"recurrence": {
+							"interval": 1,
+							"unit": "year"
+						},
+						"reminders": [],
+						"sourceKey": "todoist:task:42",
+						"title": "Taxes"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseSnapshot",
+			"test": "parseSnapshot › tasks come back sorted by when they were created, then by id",
+			"input": [
+				{
+					"projects": [],
+					"remindersCheckedAt": 5,
+					"tasks": [
+						{
+							"completedAt": null,
+							"createdAt": 5,
+							"due": {
+								"date": "2026-10-14",
+								"time": null
+							},
+							"id": "c",
+							"notes": "",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "c"
+						},
+						{
+							"completedAt": null,
+							"createdAt": 5,
+							"due": {
+								"date": "2026-10-14",
+								"time": null
+							},
+							"id": "b",
+							"notes": "",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "b"
+						},
+						{
+							"completedAt": null,
+							"createdAt": 9,
+							"due": {
+								"date": "2026-10-14",
+								"time": null
+							},
+							"id": "a",
+							"notes": "",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "a"
+						}
+					]
+				},
+				10
+			],
+			"output": {
+				"labels": [],
+				"projects": [],
+				"remindersCheckedAt": 5,
+				"tasks": [
+					{
+						"completedAt": null,
+						"createdAt": 5,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "b",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "b"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 5,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "c",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "c"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 9,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "a",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "a"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseSnapshot",
+			"test": "parseSnapshot › a task with an empty repeat interval is dropped and every other task is kept",
+			"input": [
+				{
+					"projects": [
+						{
+							"createdAt": 1,
+							"id": "p",
+							"name": "Home"
+						}
+					],
+					"remindersCheckedAt": 5,
+					"tasks": [
+						{
+							"completedAt": null,
+							"createdAt": 4,
+							"due": {
+								"date": "2026-10-14",
+								"time": null
+							},
+							"id": "Good",
+							"notes": "",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": {
+								"interval": 2,
+								"unit": "day"
+							},
+							"reminders": [],
+							"title": "Good"
+						},
+						{
+							"completedAt": null,
+							"createdAt": 5,
+							"due": {
+								"date": "2026-10-14",
+								"time": null
+							},
+							"id": "Bad",
+							"notes": "",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": {
+								"interval": null,
+								"unit": "day"
+							},
+							"reminders": [],
+							"title": "Bad"
+						}
+					]
+				},
+				10
+			],
+			"output": {
+				"labels": [],
+				"projects": [
+					{
+						"createdAt": 1,
+						"id": "p",
+						"name": "Home"
+					}
+				],
+				"remindersCheckedAt": 5,
+				"tasks": [
+					{
+						"completedAt": null,
+						"createdAt": 4,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "Good",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": {
+							"interval": 2,
+							"unit": "day"
+						},
+						"reminders": [],
+						"title": "Good"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseSnapshot",
+			"test": "parseSnapshot › a task with a missing title is dropped",
+			"input": [
+				{
+					"projects": [],
+					"remindersCheckedAt": 5,
+					"tasks": [
+						{
+							"completedAt": null,
+							"createdAt": 6,
+							"due": {
+								"date": "2026-10-14",
+								"time": null
+							},
+							"id": "Kept",
+							"notes": "",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Kept"
+						},
+						{
+							"completedAt": null,
+							"createdAt": 7,
+							"due": {
+								"date": "2026-10-14",
+								"time": null
+							},
+							"id": "Bad",
+							"notes": "",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": []
+						}
+					]
+				},
+				10
+			],
+			"output": {
+				"labels": [],
+				"projects": [],
+				"remindersCheckedAt": 5,
+				"tasks": [
+					{
+						"completedAt": null,
+						"createdAt": 6,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "Kept",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Kept"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseSnapshot",
+			"test": "parseSnapshot › a task with a numeric title is dropped",
+			"input": [
+				{
+					"projects": [],
+					"remindersCheckedAt": 5,
+					"tasks": [
+						{
+							"completedAt": null,
+							"createdAt": 8,
+							"due": {
+								"date": "2026-10-14",
+								"time": null
+							},
+							"id": "Kept",
+							"notes": "",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Kept"
+						},
+						{
+							"completedAt": null,
+							"createdAt": 9,
+							"due": {
+								"date": "2026-10-14",
+								"time": null
+							},
+							"id": "Bad",
+							"notes": "",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": 7
+						}
+					]
+				},
+				10
+			],
+			"output": {
+				"labels": [],
+				"projects": [],
+				"remindersCheckedAt": 5,
+				"tasks": [
+					{
+						"completedAt": null,
+						"createdAt": 8,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "Kept",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Kept"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseSnapshot",
+			"test": "parseSnapshot › a task with a missing due field is dropped",
+			"input": [
+				{
+					"projects": [],
+					"remindersCheckedAt": 5,
+					"tasks": [
+						{
+							"completedAt": null,
+							"createdAt": 10,
+							"due": {
+								"date": "2026-10-14",
+								"time": null
+							},
+							"id": "Kept",
+							"notes": "",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Kept"
+						},
+						{
+							"completedAt": null,
+							"createdAt": 11,
+							"id": "Bad",
+							"notes": "",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Bad"
+						}
+					]
+				},
+				10
+			],
+			"output": {
+				"labels": [],
+				"projects": [],
+				"remindersCheckedAt": 5,
+				"tasks": [
+					{
+						"completedAt": null,
+						"createdAt": 10,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "Kept",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Kept"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseSnapshot",
+			"test": "parseSnapshot › a task with a malformed date is dropped",
+			"input": [
+				{
+					"projects": [],
+					"remindersCheckedAt": 5,
+					"tasks": [
+						{
+							"completedAt": null,
+							"createdAt": 12,
+							"due": {
+								"date": "2026-10-14",
+								"time": null
+							},
+							"id": "Kept",
+							"notes": "",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Kept"
+						},
+						{
+							"completedAt": null,
+							"createdAt": 13,
+							"due": {
+								"date": "2026-1-4",
+								"time": null
+							},
+							"id": "Bad",
+							"notes": "",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Bad"
+						}
+					]
+				},
+				10
+			],
+			"output": {
+				"labels": [],
+				"projects": [],
+				"remindersCheckedAt": 5,
+				"tasks": [
+					{
+						"completedAt": null,
+						"createdAt": 12,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "Kept",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Kept"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseSnapshot",
+			"test": "parseSnapshot › a task with a malformed time is dropped",
+			"input": [
+				{
+					"projects": [],
+					"remindersCheckedAt": 5,
+					"tasks": [
+						{
+							"completedAt": null,
+							"createdAt": 14,
+							"due": {
+								"date": "2026-10-14",
+								"time": null
+							},
+							"id": "Kept",
+							"notes": "",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Kept"
+						},
+						{
+							"completedAt": null,
+							"createdAt": 15,
+							"due": {
+								"date": "2026-10-14",
+								"time": "7:00"
+							},
+							"id": "Bad",
+							"notes": "",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Bad"
+						}
+					]
+				},
+				10
+			],
+			"output": {
+				"labels": [],
+				"projects": [],
+				"remindersCheckedAt": 5,
+				"tasks": [
+					{
+						"completedAt": null,
+						"createdAt": 14,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "Kept",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Kept"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseSnapshot",
+			"test": "parseSnapshot › a task with priority 5 is dropped",
+			"input": [
+				{
+					"projects": [],
+					"remindersCheckedAt": 5,
+					"tasks": [
+						{
+							"completedAt": null,
+							"createdAt": 16,
+							"due": {
+								"date": "2026-10-14",
+								"time": null
+							},
+							"id": "Kept",
+							"notes": "",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Kept"
+						},
+						{
+							"completedAt": null,
+							"createdAt": 17,
+							"due": {
+								"date": "2026-10-14",
+								"time": null
+							},
+							"id": "Bad",
+							"notes": "",
+							"priority": 5,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Bad"
+						}
+					]
+				},
+				10
+			],
+			"output": {
+				"labels": [],
+				"projects": [],
+				"remindersCheckedAt": 5,
+				"tasks": [
+					{
+						"completedAt": null,
+						"createdAt": 16,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "Kept",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Kept"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseSnapshot",
+			"test": "parseSnapshot › a task with a fractional reminder offset is dropped",
+			"input": [
+				{
+					"projects": [],
+					"remindersCheckedAt": 5,
+					"tasks": [
+						{
+							"completedAt": null,
+							"createdAt": 18,
+							"due": {
+								"date": "2026-10-14",
+								"time": null
+							},
+							"id": "Kept",
+							"notes": "",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Kept"
+						},
+						{
+							"completedAt": null,
+							"createdAt": 19,
+							"due": {
+								"date": "2026-10-14",
+								"time": null
+							},
+							"id": "Bad",
+							"notes": "",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [
+								{
+									"kind": "before",
+									"minutes": 1.5
+								}
+							],
+							"title": "Bad"
+						}
+					]
+				},
+				10
+			],
+			"output": {
+				"labels": [],
+				"projects": [],
+				"remindersCheckedAt": 5,
+				"tasks": [
+					{
+						"completedAt": null,
+						"createdAt": 18,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "Kept",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Kept"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseSnapshot",
+			"test": "parseSnapshot › a task with a negative reminder offset is dropped",
+			"input": [
+				{
+					"projects": [],
+					"remindersCheckedAt": 5,
+					"tasks": [
+						{
+							"completedAt": null,
+							"createdAt": 20,
+							"due": {
+								"date": "2026-10-14",
+								"time": null
+							},
+							"id": "Kept",
+							"notes": "",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Kept"
+						},
+						{
+							"completedAt": null,
+							"createdAt": 21,
+							"due": {
+								"date": "2026-10-14",
+								"time": null
+							},
+							"id": "Bad",
+							"notes": "",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [
+								{
+									"kind": "before",
+									"minutes": -5
+								}
+							],
+							"title": "Bad"
+						}
+					]
+				},
+				10
+			],
+			"output": {
+				"labels": [],
+				"projects": [],
+				"remindersCheckedAt": 5,
+				"tasks": [
+					{
+						"completedAt": null,
+						"createdAt": 20,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "Kept",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Kept"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseSnapshot",
+			"test": "parseSnapshot › a task with an unknown reminder kind is dropped",
+			"input": [
+				{
+					"projects": [],
+					"remindersCheckedAt": 5,
+					"tasks": [
+						{
+							"completedAt": null,
+							"createdAt": 22,
+							"due": {
+								"date": "2026-10-14",
+								"time": null
+							},
+							"id": "Kept",
+							"notes": "",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Kept"
+						},
+						{
+							"completedAt": null,
+							"createdAt": 23,
+							"due": {
+								"date": "2026-10-14",
+								"time": null
+							},
+							"id": "Bad",
+							"notes": "",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [
+								{
+									"kind": "after",
+									"minutes": 5
+								}
+							],
+							"title": "Bad"
+						}
+					]
+				},
+				10
+			],
+			"output": {
+				"labels": [],
+				"projects": [],
+				"remindersCheckedAt": 5,
+				"tasks": [
+					{
+						"completedAt": null,
+						"createdAt": 22,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "Kept",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Kept"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseSnapshot",
+			"test": "parseSnapshot › a task with an unknown repeat unit is dropped",
+			"input": [
+				{
+					"projects": [],
+					"remindersCheckedAt": 5,
+					"tasks": [
+						{
+							"completedAt": null,
+							"createdAt": 24,
+							"due": {
+								"date": "2026-10-14",
+								"time": null
+							},
+							"id": "Kept",
+							"notes": "",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Kept"
+						},
+						{
+							"completedAt": null,
+							"createdAt": 25,
+							"due": {
+								"date": "2026-10-14",
+								"time": null
+							},
+							"id": "Bad",
+							"notes": "",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": {
+								"interval": 1,
+								"unit": "hour"
+							},
+							"reminders": [],
+							"title": "Bad"
+						}
+					]
+				},
+				10
+			],
+			"output": {
+				"labels": [],
+				"projects": [],
+				"remindersCheckedAt": 5,
+				"tasks": [
+					{
+						"completedAt": null,
+						"createdAt": 24,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "Kept",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Kept"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseSnapshot",
+			"test": "parseSnapshot › a task with a fractional repeat interval is dropped",
+			"input": [
+				{
+					"projects": [],
+					"remindersCheckedAt": 5,
+					"tasks": [
+						{
+							"completedAt": null,
+							"createdAt": 26,
+							"due": {
+								"date": "2026-10-14",
+								"time": null
+							},
+							"id": "Kept",
+							"notes": "",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Kept"
+						},
+						{
+							"completedAt": null,
+							"createdAt": 27,
+							"due": {
+								"date": "2026-10-14",
+								"time": null
+							},
+							"id": "Bad",
+							"notes": "",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": {
+								"interval": 1.5,
+								"unit": "day"
+							},
+							"reminders": [],
+							"title": "Bad"
+						}
+					]
+				},
+				10
+			],
+			"output": {
+				"labels": [],
+				"projects": [],
+				"remindersCheckedAt": 5,
+				"tasks": [
+					{
+						"completedAt": null,
+						"createdAt": 26,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "Kept",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Kept"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseSnapshot",
+			"test": "parseSnapshot › a task with a weekday out of range is dropped",
+			"input": [
+				{
+					"projects": [],
+					"remindersCheckedAt": 5,
+					"tasks": [
+						{
+							"completedAt": null,
+							"createdAt": 28,
+							"due": {
+								"date": "2026-10-14",
+								"time": null
+							},
+							"id": "Kept",
+							"notes": "",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Kept"
+						},
+						{
+							"completedAt": null,
+							"createdAt": 29,
+							"due": {
+								"date": "2026-10-14",
+								"time": null
+							},
+							"id": "Bad",
+							"notes": "",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": {
+								"days": [
+									1,
+									7
+								],
+								"interval": 1,
+								"unit": "week"
+							},
+							"reminders": [],
+							"title": "Bad"
+						}
+					]
+				},
+				10
+			],
+			"output": {
+				"labels": [],
+				"projects": [],
+				"remindersCheckedAt": 5,
+				"tasks": [
+					{
+						"completedAt": null,
+						"createdAt": 28,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "Kept",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Kept"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseSnapshot",
+			"test": "parseSnapshot › a task with a missing completion field is dropped",
+			"input": [
+				{
+					"projects": [],
+					"remindersCheckedAt": 5,
+					"tasks": [
+						{
+							"completedAt": null,
+							"createdAt": 30,
+							"due": {
+								"date": "2026-10-14",
+								"time": null
+							},
+							"id": "Kept",
+							"notes": "",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Kept"
+						},
+						{
+							"createdAt": 31,
+							"due": {
+								"date": "2026-10-14",
+								"time": null
+							},
+							"id": "Bad",
+							"notes": "",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Bad"
+						}
+					]
+				},
+				10
+			],
+			"output": {
+				"labels": [],
+				"projects": [],
+				"remindersCheckedAt": 5,
+				"tasks": [
+					{
+						"completedAt": null,
+						"createdAt": 30,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "Kept",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Kept"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseSnapshot",
+			"test": "parseSnapshot › a task with a string createdAt is dropped",
+			"input": [
+				{
+					"projects": [],
+					"remindersCheckedAt": 5,
+					"tasks": [
+						{
+							"completedAt": null,
+							"createdAt": 32,
+							"due": {
+								"date": "2026-10-14",
+								"time": null
+							},
+							"id": "Kept",
+							"notes": "",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Kept"
+						},
+						{
+							"completedAt": null,
+							"createdAt": "yesterday",
+							"due": {
+								"date": "2026-10-14",
+								"time": null
+							},
+							"id": "Bad",
+							"notes": "",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Bad"
+						}
+					]
+				},
+				10
+			],
+			"output": {
+				"labels": [],
+				"projects": [],
+				"remindersCheckedAt": 5,
+				"tasks": [
+					{
+						"completedAt": null,
+						"createdAt": 32,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "Kept",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Kept"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseSnapshot",
+			"test": "parseSnapshot › a document with missing tasks starts empty",
+			"input": [
+				{
+					"projects": [],
+					"remindersCheckedAt": 5
+				},
+				10
+			],
+			"output": {
+				"labels": [],
+				"projects": [],
+				"remindersCheckedAt": 10,
+				"tasks": []
+			}
+		},
+		{
+			"fn": "parseSnapshot",
+			"test": "parseSnapshot › a document with an invalid project starts empty",
+			"input": [
+				{
+					"projects": [
+						{
+							"createdAt": 1,
+							"id": "p",
+							"name": 3
+						}
+					],
+					"remindersCheckedAt": 5,
+					"tasks": []
+				},
+				10
+			],
+			"output": {
+				"labels": [],
+				"projects": [],
+				"remindersCheckedAt": 10,
+				"tasks": []
+			}
+		},
+		{
+			"fn": "parseSnapshot",
+			"test": "parseSnapshot › a document with an invalid label starts empty",
+			"input": [
+				{
+					"labels": [
+						{
+							"id": "l"
+						}
+					],
+					"projects": [],
+					"remindersCheckedAt": 5,
+					"tasks": []
+				},
+				10
+			],
+			"output": {
+				"labels": [],
+				"projects": [],
+				"remindersCheckedAt": 10,
+				"tasks": []
+			}
+		},
+		{
+			"fn": "parseSnapshot",
+			"test": "parseSnapshot › a document with no reminder check time starts empty",
+			"input": [
+				{
+					"projects": [],
+					"tasks": []
+				},
+				10
+			],
+			"output": {
+				"labels": [],
+				"projects": [],
+				"remindersCheckedAt": 10,
+				"tasks": []
+			}
+		},
+		{
+			"fn": "parseSnapshot",
+			"test": "parseSnapshot › a document with an invalid sync section starts empty",
+			"input": [
+				{
+					"projects": [],
+					"remindersCheckedAt": 5,
+					"sync": {
+						"cursor": -1,
+						"deviceId": "d",
+						"outbox": []
+					},
+					"tasks": []
+				},
+				10
+			],
+			"output": {
+				"labels": [],
+				"projects": [],
+				"remindersCheckedAt": 10,
+				"tasks": []
+			}
+		},
+		{
+			"fn": "parseSnapshot",
+			"test": "parseSnapshot › a document with not an object starts empty",
+			"input": [
+				[
+					"tasks"
+				],
+				10
+			],
+			"output": {
+				"labels": [],
+				"projects": [],
+				"remindersCheckedAt": 10,
+				"tasks": []
+			}
+		},
+		{
+			"fn": "parseSnapshot",
+			"test": "parseSnapshot › a document with null starts empty",
+			"input": [
+				null,
+				10
+			],
+			"output": {
+				"labels": [],
+				"projects": [],
+				"remindersCheckedAt": 10,
+				"tasks": []
+			}
+		},
+		{
+			"fn": "parseSnapshot",
+			"test": "parseSnapshot › a store saved before labels existed loads every task with no labels",
+			"input": [
+				{
+					"projects": [],
+					"remindersCheckedAt": 5,
+					"tasks": [
+						{
+							"completedAt": null,
+							"createdAt": 34,
+							"due": {
+								"date": "2026-10-14",
+								"time": null
+							},
+							"id": "Old",
+							"notes": "",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Old"
+						}
+					]
+				},
+				10
+			],
+			"output": {
+				"labels": [],
+				"projects": [],
+				"remindersCheckedAt": 5,
+				"tasks": [
+					{
+						"completedAt": null,
+						"createdAt": 34,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "Old",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Old"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseSnapshot",
+			"test": "parseSnapshot › labels and the labels on each task round-trip",
+			"input": [
+				{
+					"labels": [
+						{
+							"createdAt": 1,
+							"id": "l",
+							"name": "calls"
+						}
+					],
+					"projects": [],
+					"remindersCheckedAt": 5,
+					"tasks": [
+						{
+							"completedAt": null,
+							"createdAt": 35,
+							"due": {
+								"date": "2026-10-14",
+								"time": null
+							},
+							"id": "Call",
+							"labelIds": [
+								"l"
+							],
+							"notes": "",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Call"
+						}
+					]
+				},
+				10
+			],
+			"output": {
+				"labels": [
+					{
+						"createdAt": 1,
+						"id": "l",
+						"name": "calls"
+					}
+				],
+				"projects": [],
+				"remindersCheckedAt": 5,
+				"tasks": [
+					{
+						"completedAt": null,
+						"createdAt": 35,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "Call",
+						"labelIds": [
+							"l"
+						],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Call"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseSnapshot",
+			"test": "parseSnapshot › a weekday set survives a reload, a one-day set loads as a plain weekly repeat, and stored repeats without one still load",
+			"input": [
+				{
+					"projects": [],
+					"remindersCheckedAt": 5,
+					"tasks": [
+						{
+							"completedAt": null,
+							"createdAt": 36,
+							"due": {
+								"date": "2026-10-14",
+								"time": null
+							},
+							"id": "Gym",
+							"notes": "",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": {
+								"days": [
+									5,
+									1,
+									3
+								],
+								"interval": 1,
+								"unit": "week"
+							},
+							"reminders": [],
+							"title": "Gym"
+						},
+						{
+							"completedAt": null,
+							"createdAt": 37,
+							"due": {
+								"date": "2026-10-14",
+								"time": null
+							},
+							"id": "Review",
+							"notes": "",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": {
+								"interval": 1,
+								"unit": "week"
+							},
+							"reminders": [],
+							"title": "Review"
+						},
+						{
+							"completedAt": null,
+							"createdAt": 38,
+							"due": {
+								"date": "2026-10-14",
+								"time": null
+							},
+							"id": "One day",
+							"notes": "",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": {
+								"days": [
+									5,
+									5
+								],
+								"interval": 2,
+								"unit": "week"
+							},
+							"reminders": [],
+							"title": "One day"
+						},
+						{
+							"completedAt": null,
+							"createdAt": 39,
+							"due": {
+								"date": "2026-10-14",
+								"time": null
+							},
+							"id": "Water",
+							"notes": "",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": {
+								"interval": 2,
+								"unit": "day"
+							},
+							"reminders": [],
+							"title": "Water"
+						},
+						{
+							"completedAt": null,
+							"createdAt": 40,
+							"due": {
+								"date": "2026-10-14",
+								"time": null
+							},
+							"id": "Old",
+							"notes": "",
+							"priority": 4,
+							"projectId": null,
+							"reminders": [],
+							"title": "Old"
+						},
+						{
+							"completedAt": null,
+							"createdAt": 41,
+							"due": {
+								"date": "2026-10-14",
+								"time": null
+							},
+							"id": "Empty set",
+							"notes": "",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": {
+								"days": [],
+								"interval": 1,
+								"unit": "week"
+							},
+							"reminders": [],
+							"title": "Empty set"
+						},
+						{
+							"completedAt": null,
+							"createdAt": 42,
+							"due": {
+								"date": "2026-10-14",
+								"time": null
+							},
+							"id": "Days on a daily repeat",
+							"notes": "",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": {
+								"days": [
+									1
+								],
+								"interval": 1,
+								"unit": "day"
+							},
+							"reminders": [],
+							"title": "Days on a daily repeat"
+						}
+					]
+				},
+				10
+			],
+			"output": {
+				"labels": [],
+				"projects": [],
+				"remindersCheckedAt": 5,
+				"tasks": [
+					{
+						"completedAt": null,
+						"createdAt": 36,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "Gym",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": {
+							"days": [
+								1,
+								3,
+								5
+							],
+							"interval": 1,
+							"unit": "week"
+						},
+						"reminders": [],
+						"title": "Gym"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 37,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "Review",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": {
+							"interval": 1,
+							"unit": "week"
+						},
+						"reminders": [],
+						"title": "Review"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 38,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "One day",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": {
+							"interval": 2,
+							"unit": "week"
+						},
+						"reminders": [],
+						"title": "One day"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 39,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "Water",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": {
+							"interval": 2,
+							"unit": "day"
+						},
+						"reminders": [],
+						"title": "Water"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 40,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "Old",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Old"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 42,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "Days on a daily repeat",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": {
+							"interval": 1,
+							"unit": "day"
+						},
+						"reminders": [],
+						"title": "Days on a daily repeat"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseSnapshot",
+			"test": "parseSnapshot › a task stored before subtasks existed loads as a top-level task",
+			"input": [
+				{
+					"projects": [],
+					"remindersCheckedAt": 5,
+					"tasks": [
+						{
+							"completedAt": null,
+							"createdAt": 43,
+							"due": {
+								"date": "2026-10-14",
+								"time": null
+							},
+							"id": "Old",
+							"notes": "",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Old"
+						}
+					]
+				},
+				10
+			],
+			"output": {
+				"labels": [],
+				"projects": [],
+				"remindersCheckedAt": 5,
+				"tasks": [
+					{
+						"completedAt": null,
+						"createdAt": 43,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "Old",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Old"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseSnapshot",
+			"test": "parseSnapshot › a subtask whose parent did not load becomes a top-level task",
+			"input": [
+				{
+					"projects": [],
+					"remindersCheckedAt": 5,
+					"tasks": [
+						{
+							"completedAt": null,
+							"createdAt": 44,
+							"due": {
+								"date": "2026-10-14",
+								"time": null
+							},
+							"id": "Parent",
+							"notes": "",
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Parent"
+						},
+						{
+							"completedAt": null,
+							"createdAt": 45,
+							"due": {
+								"date": "2026-10-14",
+								"time": null
+							},
+							"id": "Kept",
+							"notes": "",
+							"order": 1,
+							"parentId": "Parent",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Kept"
+						},
+						{
+							"completedAt": null,
+							"createdAt": 46,
+							"due": {
+								"date": "2026-10-14",
+								"time": null
+							},
+							"id": "Orphan",
+							"notes": "",
+							"parentId": "Bad",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Orphan"
+						},
+						{
+							"completedAt": null,
+							"createdAt": 47,
+							"due": {
+								"date": "2026-10-14",
+								"time": null
+							},
+							"id": "Bad",
+							"notes": "",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": {
+								"interval": null,
+								"unit": "day"
+							},
+							"reminders": [],
+							"title": "Bad"
+						}
+					]
+				},
+				10
+			],
+			"output": {
+				"labels": [],
+				"projects": [],
+				"remindersCheckedAt": 5,
+				"tasks": [
+					{
+						"completedAt": null,
+						"createdAt": 44,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "Parent",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Parent"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 45,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "Kept",
+						"labelIds": [],
+						"notes": "",
+						"order": 1,
+						"parentId": "Parent",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Kept"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 46,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"id": "Orphan",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Orphan"
+					}
+				]
+			}
+		}
+	]
+}

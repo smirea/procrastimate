@@ -8,6 +8,7 @@
 	"scripts": {
 		"lint": "oxlint --fix && oxfmt",
 		"test": "bun test",
+		"vectors": "VECTORS=record TZ=America/New_York bun test shared",
 		"test:e2e": "bun run --cwd app-web test:e2e",
 		"check": "bunx --bun tsc --noEmit && bun run --cwd app-web check",
 		"start": "concurrently --raw -k -s first \"bun run start:server\" \"bun run start:client\"",

@@ -23,6 +23,17 @@ jobs:
       - name: Unit tests
         run: bun test
 
+      # porcelain also lists new, untracked vector files, which git diff would miss.
+      - name: Test vectors are up to date
+        run: |
+          bun run vectors
+          stale=$(git status --porcelain shared/vectors)
+          if [ -n "$stale" ]; then
+            echo "$stale"
+            echo "::error::shared/vectors is stale. Run 'bun run vectors' and commit the result."
+            exit 1
+          fi
+
       - name: Build
         run: bun run build
 
