@@ -5,7 +5,7 @@ const server = Bun.serve({
 	development: true,
 	idleTimeout: 120,
 	port: env.API_PORT,
-	fetch: api.fetch,
+	fetch: request => api.fetch(request, {}),
 });
 
 console.log('Server running at:', server.url);

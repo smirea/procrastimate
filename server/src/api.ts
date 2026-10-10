@@ -1,12 +1,15 @@
-type Handler = (request: Request) => Response | Promise<Response>;
+import { pushRoutes, type Env, type Handler } from './push';
+
+export { PushSchedule } from './push';
 
 const routes: Record<string, Handler> = {
-	'/api/status': () => Response.json({ ok: true }),
+	'GET /api/status': () => Response.json({ ok: true }),
+	...pushRoutes,
 };
 
 export default {
-	fetch(request) {
-		const route = routes[new URL(request.url).pathname];
-		return route ? route(request) : Response.json({ ok: false, error: 'Not found' }, { status: 404 });
+	fetch(request, env) {
+		const route = routes[`${request.method} ${new URL(request.url).pathname}`];
+		return route ? route(request, env) : Response.json({ ok: false, error: 'Not found' }, { status: 404 });
 	},
-} satisfies { fetch: Handler };
+} satisfies { fetch: (request: Request, env: Env) => Response | Promise<Response> };
