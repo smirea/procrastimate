@@ -64,6 +64,12 @@ export function formatRecurrence({ interval, unit }: Recurrence, due: Due | null
 	return interval === 1 ? `Every ${unit}` : `Every ${interval} ${unit}s`;
 }
 
+/** `Repeats every Mon`. */
+export function repeatLabel(recurrence: Recurrence, due: Due | null): string {
+	const repeat = formatRecurrence(recurrence, due);
+	return `Repeats ${repeat[0]!.toLowerCase()}${repeat.slice(1)}`;
+}
+
 export type TimingSegment = { kind: 'due' | 'recurrence' | 'notify' | 'reminder'; text: string };
 
 /** `5:00 PM`, spelled out because `toLocaleTimeString` inserts a narrow no-break space on newer ICU. */
@@ -128,10 +134,7 @@ export function describeTiming(
 ): TimingSegment[] {
 	const segments: TimingSegment[] = [];
 	if (timing.due) segments.push({ kind: 'due', text: longDue(timing.due, today) });
-	if (timing.recurrence) {
-		const repeat = formatRecurrence(timing.recurrence, timing.due);
-		segments.push({ kind: 'recurrence', text: `Repeats ${repeat[0]!.toLowerCase()}${repeat.slice(1)}` });
-	}
+	if (timing.recurrence) segments.push({ kind: 'recurrence', text: repeatLabel(timing.recurrence, timing.due) });
 	const dueAt = timing.due?.time ? fromDateKey(timing.due.date, timing.due.time).getTime() : null;
 	if (timing.due?.time) segments.push({ kind: 'notify', text: `Notifies at ${clockTime(timing.due.time)}` });
 	for (const reminder of timing.reminders) {

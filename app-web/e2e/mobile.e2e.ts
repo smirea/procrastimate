@@ -250,6 +250,31 @@ test('task details open as a sheet and edit fields', async ({ app, page }) => {
 	await expect(details.getByRole('button', { name: 'Priority 1' })).toBeVisible();
 });
 
+test('task details set a repeat by touch and completing rolls the task forward', async ({ app, page }) => {
+	await add(app, 'Water plants every 2d');
+	const row = app.row('Water plants');
+	await expect(row).toContainText('Today');
+	await expect(row.getByRole('img', { name: 'Repeats every 2 days' })).toBeVisible();
+
+	await row.getByRole('button', { name: /Water plants/ }).tap();
+	const details = app.details();
+	await details.getByRole('button', { name: 'Repeats every 2 days' }).tap();
+	const menu = page.getByRole('dialog', { name: 'Repeat' });
+	await settle(app);
+	const box = (await menu.boundingBox())!;
+	expect(box.y).toBeGreaterThanOrEqual(0);
+	expect(box.y + box.height).toBeLessThanOrEqual(page.viewportSize()!.height);
+	await shot(app, 'recurrence-menu');
+	await menu.getByRole('button', { name: 'Every weekday' }).tap();
+	await expect(details.getByRole('button', { name: 'Repeats every weekday' })).toBeVisible();
+	await shot(app, 'recurrence-details');
+	await details.getByRole('button', { name: 'Close' }).tap();
+
+	await row.getByRole('checkbox', { name: 'Complete Water plants' }).tap();
+	await expect(page.getByRole('status').filter({ hasText: 'next due Tomorrow' })).toBeVisible();
+	await expect(row).toContainText('Tomorrow');
+});
+
 test('a tap just outside the checkbox completes the task and undo restores it', async ({ app, page }) => {
 	await add(app, 'Buy milk', 'Pay rent');
 	const checkbox = app.row('Buy milk').getByRole('checkbox', { name: 'Complete Buy milk' });

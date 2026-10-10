@@ -4,10 +4,12 @@
 	import CalendarBlank from 'phosphor-svelte/lib/CalendarBlank';
 	import Hash from 'phosphor-svelte/lib/Hash';
 	import Tray from 'phosphor-svelte/lib/Tray';
+	import Repeat from 'phosphor-svelte/lib/Repeat';
 	import type { Task } from 'shared/task.ts';
 	import { store } from '../store.svelte.ts';
-	import { clock, sheets, toasts } from '../ui.svelte.ts';
-	import { PRIORITIES, dueTone, formatDue, formatTime } from '../format.ts';
+	import { clock, sheets } from '../ui.svelte.ts';
+	import { PRIORITIES, dueTone, formatDue, formatTime, repeatLabel } from '../format.ts';
+	import { completeTask } from '../completion.ts';
 
 	let { task, showProject = false, timeOnly = false }: { task: Task; showProject?: boolean; timeOnly?: boolean } = $props();
 
@@ -19,8 +21,8 @@
 		if (checking) return;
 		checking = true;
 		setTimeout(() => {
-			store.setCompleted(task.id, true);
-			toasts.show(`Completed “${task.title}”`, { label: 'Undo', run: () => store.setCompleted(task.id, false) });
+			completeTask(task);
+			checking = false;
 		}, 260);
 	}
 </script>
@@ -43,12 +45,17 @@
 		{#if task.notes}
 			<div class="truncate text-[12px] leading-4 text-muted">{task.notes}</div>
 		{/if}
-		{#if task.due || task.reminders.length || (showProject && project)}
+		{#if task.due || task.recurrence || task.reminders.length || (showProject && project)}
 			<div class="mt-0.5 flex items-center gap-3 text-[12px] leading-4 text-muted">
 				{#if task.due && !(timeOnly && !task.due.time)}
 					<span class="flex items-center gap-1" style={`color: var(--tone-${dueTone(task.due, clock.today)})`}>
 						<CalendarBlank size={12} />
 						{timeOnly && task.due.time ? formatTime(task.due.time) : formatDue(task.due, clock.today)}
+					</span>
+				{/if}
+				{#if task.recurrence}
+					<span class="flex items-center text-[var(--tone-tomorrow)]" role="img" aria-label={repeatLabel(task.recurrence, task.due)}>
+						<Repeat size={12} weight="bold" />
 					</span>
 				{/if}
 				{#if task.reminders.length}

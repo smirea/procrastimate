@@ -44,13 +44,13 @@ This is the single source for Procrastimate's concepts, goals, paradigms, and hi
 ## Domain
 
 - **Task.** A title, optional notes, an optional project, an optional due date with an optional time, an optional recurrence, a priority, a list of reminders, and an optional completion time.
-- **Recurrence.** Repeats every interval of days, weeks, months, or years, counted from the due date.
+- **Recurrence.** Repeats every interval of days, weekdays (Monday to Friday), weeks, months, or years, counted from the due date. A recurring task is one task whose due date moves forward. It has no separate history of past occurrences.
 - **Inbox.** Tasks without a project. Inbox is a view, not a project.
 - **Today.** Incomplete tasks due today or earlier. Overdue tasks are marked.
 - **Upcoming.** Incomplete tasks due after today, grouped by day.
 - **Project.** A named group of tasks. Deleting a project deletes its tasks.
 - **Priority.** Todoist's four levels. `p1` is the most urgent and `p4` is the default with no marking.
-- **Reminder.** Either relative to the due time (for example 30 minutes before) or at an absolute date and time. A relative reminder needs a due time to fire. A due time is itself a reminder. Any task with a due time notifies at that time with no reminder set, and reminders add to it, such as 30 minutes before. A date with no time never notifies. A task notifies once per moment, so a reminder at the due time does not notify twice. Reminders fire as an in-app toast and, when the browser allows it, a system notification, while the app is open.
+- **Reminder.** Either relative to the due time (for example 30 minutes before) or at an absolute date and time. A relative reminder needs a due time to fire. A due time is itself a reminder. Any task with a due time notifies at that time with no reminder set, and reminders add to it, such as 30 minutes before. A date with no time never notifies. A task notifies once per moment, so a reminder at the due time does not notify twice. A repeating task notifies at each occurrence's due time, because completing it moves the due date. Reminders fire as an in-app toast and, when the browser allows it, a system notification, while the app is open.
 
 ## Quick add and natural language
 
@@ -65,7 +65,7 @@ This is the single source for Procrastimate's concepts, goals, paradigms, and hi
 - **Dates.** `oct 15`, `15 oct`, `15th october`, `the 15th`, and `10/15` or `10/15/2027`. A date without a year is the next one, counting today. `the 15th` is the next 15th. Slash dates are month first, unless the first number cannot be a month, so `15/10` is October 15. When neither number can be a month, as in `15/14`, it stays text.
 - **Times.** `5pm`, `5 pm`, `5p`, `11a`, `5:30p`, `17:30`, `1730`, `noon`, and `midnight`, optionally after `at`. A time can sit before or after a day, as in `fri 5p` or `9am fri`.
 - **A time with no day.** It lands on the next time that clock time comes around. That is today, or tomorrow once the time has passed, so `9am` typed at 10am is tomorrow at 9am and `midnight` is the coming midnight. A time equal to the current minute stays today. A typed day always wins, even if that leaves the time in the past, as with `wed 9am` typed on Wednesday at 10am. A time with no day uses the date set outside the text when there is one, such as the task's existing date in task details or the Today default in quick add. This matches Todoist as far as we remember it. We have not checked it against live Todoist.
-- **Recurrence.** `every day`, `daily`, `weekly`, `monthly`, `yearly`, `every week`, `every mon`, `every 2d`, `every 2 weeks`, `every 3mo`, and `every other week`. A task stores it as an interval and a unit (day, week, month, or year). A weekday repeat is weekly and starts on that weekday. Any other repeat with no typed date starts on the date set outside the text, such as a picked date, or else today. If its typed time has already passed today, it starts one interval later. A typed date such as `every fri oct 30` sets the first occurrence. Quick add stores the repeat. Rolling a recurring task forward on completion is not built yet.
+- **Recurrence.** `every day`, `daily`, `weekly`, `monthly`, `yearly`, `every week`, `every mon`, `every 2d`, `every 2 weeks`, `every 3mo`, `every other week`, and `every weekday`, `every workday`, or `weekdays`. A task stores it as an interval and a unit (day, weekday, week, month, or year). A repeat on a named day such as `every mon` is weekly and starts on that day. A weekday repeat typed on a weekend starts on Monday. Any other repeat with no typed date starts on the date set outside the text, such as a picked date, or else today. If its typed time has already passed today, it starts one interval later. A typed date such as `every fri oct 30` sets the first occurrence. Quick add and the task title store the repeat. See Recurring tasks for what completing one does.
 - **Priority.** `p1` to `p4`. `!!!` and `urgent` mean `p1`. `!!` and `important` mean `p2`. A single `!` is never parsed, because it is common in titles.
 - **Reminders.** `remind me 30m before`, `remind 5m before`, `remind me 1 hour before`, `r5m`, `r1h`, `r2d`, `r1w`, `remind me at 4pm`, and `remind me tomorrow 9am`. A reminder at a time with no date lands on the due date. With no due date it lands today, or tomorrow once that time has passed. Todoist uses a leading `!` for reminders. Procrastimate does not, because `!!` is a priority shortcut.
 - **Words stay words.** Phrases only match whole words, so `mon` in `lemon` or `5m` in `2.5m` never parse. Before matching, the parser masks text that only looks like a phrase:
@@ -82,6 +82,15 @@ This is the single source for Procrastimate's concepts, goals, paradigms, and hi
   - **Create.** When no project name equals the filter, the last row offers `Create project "<filter>"`, which creates the project and inserts it.
   - **Keys.** Up and down move the selection, Tab picks, and Enter picks unless the filter already names a project exactly and the selection was not moved, so `Fix sink #home` plus Enter still saves. Escape closes the list for that `#` without closing the sheet. Tapping a row picks it.
 - **Not yet compared against live Todoist.** Todoist's login captcha blocked automated access, so the repeated-phrase rule and the `!!` mapping are our own calls.
+
+## Recurring tasks
+
+- **Completing moves the task.** Checking off a recurring task moves its due date to the next occurrence instead of closing it. It stays in its list with the new date, and an undo toast reads `Completed "<title>", next due <date>`. Undo restores the previous date and reminders.
+- **Next occurrence.** The next date is the first one after today, stepping whole intervals from the current due date. Completing early moves one interval. Completing an overdue task skips the missed occurrences instead of leaving it overdue. A recurring task with no due date counts from today. This matches Todoist's `every`. Todoist's `every!`, which counts from the completion date, is not supported.
+- **Months clamp.** A monthly repeat on the 29th to 31st lands on the last day of a shorter month, and every later occurrence counts from that clamped date, so a repeat on the 31st becomes a repeat on the 28th after February. That holds whether the task is completed on time or overdue: Jan 31 completed on Mar 1 skips Feb 28 and lands on Mar 28, the same date on-time completions reach. A yearly repeat on Feb 29 becomes Feb 28 the same way. Keeping the original day, as Todoist does, would need a stored anchor that every due date edit keeps in sync, which is not worth a field yet.
+- **Reminders follow.** Relative reminders follow the new due time on their own. Absolute reminders shift by the same number of days as the due date. Each one fires once when its new time comes, like any reminder. The new due time notifies on its own too, because a due time is a reminder.
+- **Editing.** The repeat chip in task details sets a preset (every day, weekday, week on the due weekday, month, or year), a custom interval, or `Don't repeat`. Setting a repeat on a task without a date dates it today, and removing the date removes the repeat, because a repeat needs a date to count from. Typing a repeat into the title replaces the current one.
+- **Display.** Rows show a repeat icon next to the due date. Upcoming shows only the next occurrence.
 
 ## Stack
 
@@ -117,7 +126,7 @@ This is the single source for Procrastimate's concepts, goals, paradigms, and hi
 
 ## Persistence and sync
 
-- **Web persistence.** The whole store is one JSON document in `localStorage`, validated on load and written synchronously on every change. Invalid stored data is discarded, since there is no backwards compatibility. A newly added optional field gets a default during validation instead, so adding it does not wipe the tasks already stored in production.
+- **Web persistence.** The whole store is one JSON document in `localStorage`, validated on load and written synchronously on every change. Invalid stored data is discarded, since there is no backwards compatibility. A task that fails validation is dropped on its own, so one bad task never wipes the rest of the store. A newly added optional field gets a default during validation instead, so adding it does not wipe the tasks already stored in production.
 - **Sync.** Not built yet. The store's mutations are discrete commands so they can become a sync log later.
 
 ## Testing

@@ -14,7 +14,7 @@ const taskSchema = z.object({
 	due: z.object({ date: dateKey, time: timeOfDay.nullable() }).nullable(),
 	// Defaults instead of failing validation, so tasks stored before the field existed are kept.
 	recurrence: z
-		.object({ interval: z.number().int().positive(), unit: z.enum(['day', 'week', 'month', 'year']) })
+		.object({ interval: z.number().int().positive(), unit: z.enum(['day', 'weekday', 'week', 'month', 'year']) })
 		.nullable()
 		.default(null),
 	priority: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]),
@@ -34,8 +34,16 @@ const projectSchema = z.object({
 	createdAt: z.number(),
 }) satisfies z.ZodType<Project>;
 
+/** Drops a task that fails validation instead of failing the whole snapshot, so one bad task never wipes the rest. */
+const tasksSchema = z.array(z.unknown()).transform(items =>
+	items.flatMap(item => {
+		const task = taskSchema.safeParse(item);
+		return task.success ? [task.data] : [];
+	}),
+);
+
 const snapshotSchema = z.object({
-	tasks: z.array(taskSchema),
+	tasks: tasksSchema,
 	projects: z.array(projectSchema),
 	remindersCheckedAt: z.number(),
 });

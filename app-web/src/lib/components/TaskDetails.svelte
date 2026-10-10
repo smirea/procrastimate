@@ -11,11 +11,13 @@
 	import DuePicker from './DuePicker.svelte';
 	import PriorityPicker from './PriorityPicker.svelte';
 	import ReminderPicker from './ReminderPicker.svelte';
+	import RecurrencePicker from './RecurrencePicker.svelte';
 	import ProjectPicker from './ProjectPicker.svelte';
 	import { store, type TaskPatch } from '../store.svelte.ts';
 	import { clock, mobile, sheets, toasts } from '../ui.svelte.ts';
 	import { requestNotificationPermission } from '../reminders.ts';
 	import { describeTiming } from '../format.ts';
+	import { completeTask } from '../completion.ts';
 
 	let { task }: { task: Task } = $props();
 
@@ -72,9 +74,8 @@
 	}
 
 	function complete() {
-		store.setCompleted(task.id, true);
+		completeTask(task);
 		sheets.close();
-		toasts.show(`Completed “${task.title}”`, { label: 'Undo', run: () => store.setCompleted(task.id, false) });
 	}
 
 	const enter = (node: Element) =>
@@ -115,9 +116,14 @@
 			<DuePicker
 				due={task.due}
 				onchange={(due) => {
-					update({ due });
+					update({ due, recurrence: due ? task.recurrence : null });
 					requestNotificationPermission(due, task.reminders);
 				}}
+			/>
+			<RecurrencePicker
+				recurrence={task.recurrence}
+				due={task.due}
+				onchange={(recurrence) => update({ recurrence, due: task.due ?? (recurrence && { date: clock.today, time: null }) })}
 			/>
 			<PriorityPicker priority={task.priority} onchange={(priority) => update({ priority })} />
 			<ReminderPicker

@@ -1,6 +1,7 @@
 import {
 	addDays,
 	addInterval,
+	isWeekday,
 	fromDateKey,
 	toDateKey,
 	toTimeOfDay,
@@ -82,7 +83,7 @@ const GUARDS: RegExp[] = [
 	/\b(?!tom\b)[Tt][Oo][Mm]\b/g,
 	new RegExp(String.raw`(?<=\b(?:${NAME_CONTEXT})\s+)tom\b`, 'gi'),
 	new RegExp(
-		String.raw`\b(?:tom|sun|sat|wed|daily|weekly|monthly|yearly)\b(?=\s+(?!(?:${PHRASE_WORDS})\b)[a-z]+(?![\w'’]))`,
+		String.raw`\b(?:tom|sun|sat|wed|daily|weekdays|weekly|monthly|yearly)\b(?=\s+(?!(?:${PHRASE_WORDS})\b)[a-z]+(?![\w'’]))`,
 		'gi',
 	),
 	new RegExp(String.raw`(?<=\b(?:${ADDRESS})\.?\s+)\d[\w:/]*`, 'gi'),
@@ -260,6 +261,7 @@ function readDateTime(groups: Record<string, string | undefined>, ctx: Context):
 const PRIORITY_WORDS: Record<string, Priority> = { '!!!': 1, urgent: 1, '!!': 2, important: 2 };
 const RECURRENCE_ADVERBS: Record<string, RecurrenceUnit> = {
 	daily: 'day',
+	weekdays: 'weekday',
 	weekly: 'week',
 	monthly: 'month',
 	yearly: 'year',
@@ -293,21 +295,27 @@ const RULES: Rule[] = [
 		repeatable: false,
 		guarded: true,
 		pattern: new RegExp(
-			String.raw`${BEFORE}(?:(?:every|each)\s+(?:(?<other>other)\s+(?<otherUnit>day|week|month|year)|(?<interval>\d+)\s*(?<intervalUnit>${DAY_UNIT})|(?<unit>day|week|month|year)|(?<weekday>${WEEKDAY}))|(?<adverb>daily|weekly|monthly|yearly|annually))${AFTER}`,
+			String.raw`${BEFORE}(?:(?:every|each)\s+(?:(?<other>other)\s+(?<otherUnit>day|week|month|year)|(?<interval>\d+)\s*(?<intervalUnit>${DAY_UNIT})|(?<unit>day|week|month|year)|(?<workday>weekday|workday)|(?<weekday>${WEEKDAY}))|(?<adverb>daily|weekdays|weekly|monthly|yearly|annually))${AFTER}`,
 			'gi',
 		),
 		read: (m, ctx) => {
-			const { other, otherUnit, interval, intervalUnit, unit, weekday, adverb } = m.groups ?? {};
+			const { other, otherUnit, interval, intervalUnit, unit, workday, weekday, adverb } = m.groups ?? {};
 			const unitText = otherUnit ?? intervalUnit ?? unit;
-			const recurrence: Recurrence | null = weekday
-				? { interval: 1, unit: 'week' }
-				: adverb
-					? { interval: 1, unit: RECURRENCE_ADVERBS[adverb.toLowerCase()]! }
-					: unitText
-						? { interval: other ? 2 : Number(interval ?? 1), unit: unitOf(unitText) as RecurrenceUnit }
-						: null;
+			const recurrence: Recurrence | null = workday
+				? { interval: 1, unit: 'weekday' }
+				: weekday
+					? { interval: 1, unit: 'week' }
+					: adverb
+						? { interval: 1, unit: RECURRENCE_ADVERBS[adverb.toLowerCase()]! }
+						: unitText
+							? { interval: other ? 2 : Number(interval ?? 1), unit: unitOf(unitText) as RecurrenceUnit }
+							: null;
 			if (!recurrence || recurrence.interval < 1) return null;
-			const anchor = weekday ? nextWeekday(ctx.today, weekdayIndex(weekday.toLowerCase())) : null;
+			const anchor = weekday
+				? nextWeekday(ctx.today, weekdayIndex(weekday.toLowerCase()))
+				: recurrence.unit === 'weekday' && !isWeekday(ctx.today)
+					? nextWeekday(ctx.today, 1)
+					: null;
 			return { kind: 'recurrence', recurrence: { recurrence, anchor } };
 		},
 	},

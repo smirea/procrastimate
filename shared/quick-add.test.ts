@@ -293,6 +293,10 @@ describe('recurrence', () => {
 		['every wed 9am', 1, 'week', '2026-10-21', '09:00'],
 		['9am every mon', 1, 'week', '2026-10-19', '09:00'],
 		['every fri oct 30', 1, 'week', '2026-10-30', null],
+		['every weekday', 1, 'weekday', '2026-10-14', null],
+		['every workday', 1, 'weekday', '2026-10-14', null],
+		['weekdays', 1, 'weekday', '2026-10-14', null],
+		['every weekday 9am', 1, 'weekday', '2026-10-15', '09:00'],
 	])('Water plants %s', (phrase, interval, unit, date, time) => {
 		const parsed = parse(`Water plants ${phrase}`);
 		expect(parsed.title).toBe('Water plants');
@@ -315,6 +319,19 @@ describe('recurrence', () => {
 	test('a weekday repeat keeps its weekday over the date set outside the text', () => {
 		const parsed = parse('Water plants every mon', { due: { date: '2026-10-14', time: null } });
 		expect(parsed.due).toEqual({ date: '2026-10-19', time: null });
+	});
+
+	test('a weekday repeat typed on a weekend starts on Monday', () => {
+		const parsed = parse('Standup every weekday 9am', { now: new Date(2026, 9, 17, 8, 0) });
+		expect(parsed.recurrence).toEqual({ interval: 1, unit: 'weekday' });
+		expect(parsed.due).toEqual({ date: '2026-10-19', time: '09:00' });
+	});
+
+	test('a weekday repeat at a passed time on a Friday moves to Monday', () => {
+		expect(parse('Standup every weekday 9am', { now: new Date(2026, 9, 16, 10, 0) }).due).toEqual({
+			date: '2026-10-19',
+			time: '09:00',
+		});
 	});
 
 	test('the recurrence phrase is its own token', () => {
@@ -363,6 +380,7 @@ describe('ordinary words stay in the title', () => {
 		'Buy 50p coins',
 		'Daily standup notes',
 		'Weekly review',
+		'Weekdays only gym',
 		'Monopoly night',
 		'Read 2.5h audiobook',
 		'Momentum check',

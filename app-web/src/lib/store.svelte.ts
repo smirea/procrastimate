@@ -1,5 +1,7 @@
 import {
 	DEFAULT_PRIORITY,
+	nextOccurrence,
+	type DateKey,
 	type Due,
 	type Priority,
 	type Project,
@@ -22,6 +24,8 @@ export type NewTask = {
 export type TaskPatch = Partial<
 	Pick<Task, 'title' | 'notes' | 'projectId' | 'due' | 'recurrence' | 'priority' | 'reminders'>
 >;
+
+export type Completion = { kind: 'done' } | { kind: 'rolled'; next: Due; previous: Pick<Task, 'due' | 'reminders'> };
 
 /** Every mutation is a discrete command that persists synchronously, so it can become a sync log later. */
 class Store {
@@ -79,10 +83,26 @@ class Store {
 		this.#commit();
 	}
 
-	setCompleted(id: string, completed: boolean) {
+	/** A recurring task moves to its next occurrence instead of closing. */
+	completeTask(id: string, today: DateKey): Completion | undefined {
 		const task = this.task(id);
 		if (!task) return;
-		task.completedAt = completed ? Date.now() : null;
+		const next = nextOccurrence(task, today);
+		if (!next) {
+			task.completedAt = Date.now();
+			this.#commit();
+			return { kind: 'done' };
+		}
+		const previous = $state.snapshot({ due: task.due, reminders: task.reminders });
+		Object.assign(task, next);
+		this.#commit();
+		return { kind: 'rolled', next: next.due, previous };
+	}
+
+	reopenTask(id: string) {
+		const task = this.task(id);
+		if (!task) return;
+		task.completedAt = null;
 		this.#commit();
 	}
 
