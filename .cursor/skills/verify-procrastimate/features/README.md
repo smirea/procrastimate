@@ -56,6 +56,6 @@ Keep implementation details out of the map. Name only user paths, stable handles
 - [Priority](./priority.md) covers priority shortcuts, the priority picker, and priority colors.
 - [Reminders](./reminders.md) covers typed and picked reminders and reminders firing while the app is open.
 - [Task views](./task-views.md) covers Inbox, Today, Upcoming, and their empty states.
-- [Projects](./projects.md) covers creating projects and moving tasks between them.
+- [Projects](./projects.md) covers creating projects, `#` autocomplete, and moving tasks between them.
 - [Offline and sync](./offline-sync.md) covers offline use and convergence across clients.
 - [Theme](./theme.md) covers the System, Light, and Dark themes, persistence, first paint, and contrast.

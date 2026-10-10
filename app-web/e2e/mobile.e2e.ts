@@ -48,8 +48,11 @@ const bottom = async (locator: Locator) => {
 	return box.y + box.height;
 };
 
+const settle = (app: App) =>
+	app.page.evaluate(() => Promise.all(document.getAnimations().map(animation => animation.finished)));
+
 async function shot(app: App, name: string) {
-	await app.page.evaluate(() => Promise.all(document.getAnimations().map(animation => animation.finished)));
+	await settle(app);
 	await app.page.screenshot({ path: `test-results/mobile/${name}.png` });
 }
 
@@ -93,6 +96,39 @@ test('the navigation drawer creates a project and switches to it', async ({ app,
 	await go(app, 'Home');
 	await expect(app.list('Home tasks').getByRole('listitem')).toHaveText([/Paint fence/, /Fix sink/]);
 	await shot(app, 'project');
+});
+
+test('# suggests projects above the keyboard and a tap picks or creates one', async ({ app, page }) => {
+	for (const name of ['Home', 'Errands']) {
+		await openNav(app);
+		await page.getByRole('button', { name: 'Add project' }).tap();
+		await page.getByRole('textbox', { name: 'Project name' }).fill(name);
+		await page.getByRole('textbox', { name: 'Project name' }).press('Enter');
+		await expect(page.getByRole('heading', { level: 1, name })).toBeVisible();
+	}
+	await openQuickAdd(app);
+	await openKeyboard(app);
+	await app.taskInput().pressSequentially('Fix sink #h');
+
+	const suggestions = page.getByRole('listbox', { name: 'Projects' });
+	await expect(suggestions.getByRole('option')).toHaveText(['Home', 'Create project “h”']);
+	await settle(app);
+	const list = (await suggestions.boundingBox())!;
+	expect(list.y).toBeGreaterThanOrEqual(0);
+	expect(list.y + list.height).toBeLessThanOrEqual((await app.taskInput().boundingBox())!.y);
+	await shot(app, 'project-autocomplete');
+
+	await suggestions.getByRole('option', { name: 'Home' }).tap();
+	await expect(app.taskInput()).toHaveValue('Fix sink #Home ');
+	await expect(app.taskInput()).toBeFocused();
+	await expect(suggestions).toBeHidden();
+
+	await app.taskInput().pressSequentially('#Garden');
+	await expect(suggestions.getByRole('option')).toHaveText(['Create project “Garden”']);
+	await shot(app, 'project-autocomplete-create');
+	await suggestions.getByRole('option').tap();
+	await expect(app.taskInput()).toHaveValue('Fix sink #Home #Garden ');
+	await expect(app.quickAdd().getByRole('button', { name: 'Project Garden' })).toBeVisible();
 });
 
 test('quick add docks above the keyboard and parses a reminder and priority', async ({ app, page }) => {
