@@ -113,6 +113,9 @@ test('the configuration row spells out parsed timing with no preview above the i
 	await title.pressSequentially(' fri 6pm');
 	await expect(app.details().locator('[data-token="due"]')).toHaveText('fri 6pm');
 	await expect(page.getByRole('status', { name: 'Timing preview' })).toHaveCount(0);
+	await expect(app.details().getByRole('button', { name: 'Due Friday 6pm' })).toBeVisible();
+	await expect(app.row('Standup')).not.toContainText('Fri');
 	await title.press('Enter');
 	await expect(app.details().getByRole('button', { name: 'Due Friday 6pm' })).toBeVisible();
+	await expect(app.row('Standup')).toContainText('Fri');
 });

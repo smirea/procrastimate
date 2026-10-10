@@ -30,7 +30,20 @@
 	const parsed = $derived(
 		parseQuickAdd(title, { now: new Date(clock.now), projects: parent ? [] : store.projects, labels: store.labels, due: task.due }),
 	);
-
+	// The chips below show what the title will apply, so the edit can be checked before Enter or blur commits it.
+	const draft = $derived(
+		title !== task.title && parsed.title
+			? {
+					title: parsed.title,
+					due: parsed.due ?? task.due,
+					recurrence: parsed.recurrence ?? task.recurrence,
+					priority: parsed.priority ?? task.priority,
+					projectId: parsed.projectId ?? task.projectId,
+					labelIds: [...new Set([...task.labelIds, ...parsed.labelIds])],
+					reminders: [...task.reminders, ...parsed.reminders],
+				}
+			: task,
+	);
 
 	const update = (patch: TaskPatch) => store.updateTask(task.id, patch);
 
@@ -40,19 +53,10 @@
 			title = task.title;
 			return;
 		}
-		const reminders = [...task.reminders, ...parsed.reminders];
-		const due = parsed.due ?? task.due;
-		update({
-			title: parsed.title,
-			due,
-			recurrence: parsed.recurrence ?? task.recurrence,
-			priority: parsed.priority ?? task.priority,
-			projectId: parsed.projectId ?? task.projectId,
-			labelIds: [...new Set([...task.labelIds, ...parsed.labelIds])],
-			reminders,
-		});
+		const { title: next, due, recurrence, priority, projectId, labelIds, reminders } = draft;
+		update({ title: next, due, recurrence, priority, projectId, labelIds, reminders });
 		push.nudge(due, reminders);
-		title = parsed.title;
+		title = next;
 	}
 
 	function onkeydown(event: KeyboardEvent) {
@@ -100,7 +104,7 @@
 				<CaretLeft size={14} class="shrink-0" /><span class="truncate">{parent.title}</span>
 			</button>
 		{:else}
-			<ProjectPicker projectId={task.projectId} onchange={(projectId) => update({ projectId })} />
+			<ProjectPicker projectId={draft.projectId} onchange={(projectId) => update({ projectId })} />
 		{/if}
 		<div class="flex shrink-0 items-center gap-1">
 			{#if task.completedAt === null}
@@ -119,21 +123,21 @@
 	<!-- Outside the scroll area, which would clip the pickers' popovers. -->
 	<div class="flex flex-wrap gap-1.5 px-4 pt-3">
 		<DuePicker
-			due={task.due}
+			due={draft.due}
 			onchange={(due) => {
 				update({ due, recurrence: due ? task.recurrence : null });
 				push.nudge(due, task.reminders);
 			}}
 		/>
 		<RecurrencePicker
-			recurrence={task.recurrence}
-			due={task.due}
+			recurrence={draft.recurrence}
+			due={draft.due}
 			onchange={(recurrence, due) => update({ recurrence, due })}
 		/>
-		<PriorityPicker priority={task.priority} onchange={(priority) => update({ priority })} />
+		<PriorityPicker priority={draft.priority} onchange={(priority) => update({ priority })} />
 		<ReminderPicker
-			due={task.due}
-			reminders={task.reminders}
+			due={draft.due}
+			reminders={draft.reminders}
 			onchange={(reminders) => {
 				update({ reminders });
 				push.nudge(task.due, reminders);
@@ -141,7 +145,7 @@
 		/>
 	</div>
 	<div class="px-4 pt-3">
-		<LabelPicker labelIds={task.labelIds} onchange={(labelIds) => update({ labelIds })} />
+		<LabelPicker labelIds={draft.labelIds} onchange={(labelIds) => update({ labelIds })} />
 	</div>
 	<div class="flex-1 space-y-4 overflow-y-auto overscroll-contain px-4 pt-4 pb-4 min-h-0">
 		<textarea

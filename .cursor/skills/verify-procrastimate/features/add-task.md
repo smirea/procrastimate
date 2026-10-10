@@ -10,7 +10,7 @@ Add a task lets Stefan capture a task in one motion from anywhere in the app. Re
 - `add-shorthand` parses compact phrases such as `tom 5p`, `eow`, `2d`, `5m`, `1730`, `10/15`, and `the 15th`, and leaves names and ordinary words such as `Tom` and `sun hat` as text.
 - `add-recurrence` parses a repeat such as `every mon`, `daily`, yearly `every march 2nd`, or a weekday list such as `mon wed fri 7am` or `tue/thu`, shows it as a chip, and stores it on the task. A weekday list in prose, such as `Discuss mon wed plan`, stays text.
 - `add-highlight` highlights each parsed phrase inline and shows its value as a chip.
-- `add-preview` spells out the resolved due date, repeat, due-time notification, and reminders in a panel above the field while the text carries them.
+- `add-config-row` spells out the resolved due date, repeat, and reminders in the configuration row below the field while the text carries them.
 - `add-keep-text` un-parses a highlighted phrase so it stays in the title.
 - `add-defaults` defaults the project inside a project view and the due date inside Today.
 - `add-cancel` discards an unsaved draft.
