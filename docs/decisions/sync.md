@@ -4,8 +4,8 @@ Web and iOS share one set of tasks, projects, and labels through the Worker. The
 
 ## What syncs
 
-- **Synced:** tasks, projects, labels, and one `settings` record. The only setting today is `timeZone` (IANA name, written by the client whenever the device's zone differs), which the server needs to compute notification times.
-- **Device-local:** the theme (see [Theming](theming.md)), `remindersCheckedAt` (each open app toasts its own reminders), the push subscription, the device token, and the sync cursor.
+- **Synced:** tasks, projects, labels, and one `settings` record. The only setting today is `timeZone` (IANA name), which the server needs to compute notification times. A device writes it only when its own zone changes from the last one it saw, such as after travel, never because the synced value differs. So two devices in different zones do not overwrite each other, and the device that moved last wins.
+- **Device-local:** the theme (see [Theming](theming.md)), `remindersCheckedAt` (each open app toasts its own reminders), the push subscription, the sync section, and the device token. The token never sits in the snapshot document: the web keeps it under its own `localStorage` key, `procrastimate-device`, and iOS keeps it in the Keychain.
 - **Entities keep their shape.** `Task`, `Project`, and `Label` stay as they are in `shared/task.ts`. Ids are client-made UUIDs, so creating offline never collides. The one model change is ordering (see Conflicts).
 
 ## Server
@@ -24,7 +24,7 @@ Web and iOS share one set of tasks, projects, and labels through the Worker. The
 - **Ops come from diffs.** The store's commands stay as they are. Each command's commit compares the snapshot before and after, entity by entity and field by field, and appends one op per changed entity to the outbox. A missing entity becomes a tombstone, and one that comes back (undo of delete) is sent with `deleted: false` and all its fields. Undo of a completion writes only the fields it restores, as it does now.
 - **Hybrid logical clock.** `<wall ms>:<counter>:<deviceId>`, compared as a tuple. A client never issues a clock lower than the highest one it has seen from the server. The server clamps a wall time more than a minute ahead of its own clock, so a device with a wrong clock cannot win every conflict.
 - **One round trip.** `POST /api/sync { cursor, ops }` applies the ops in order, skipping any `opId` already in the log, so a retry never applies twice. It then runs `fixups` and returns `{ acked: opId[], changes: log rows after cursor, cursor, hlc }`. With `cursor: 0` it returns `{ snapshot, cursor, hlc }` instead of `changes`.
-- **Local state.** The client stores its snapshot, its outbox, its cursor, and its device id: in `localStorage` on the web next to the snapshot, and in the same JSON file on iOS. After a response, the client drops the acked ops, applies `changes` in order, then reapplies what is still in the outbox, so edits made while the request was in flight stay visible. The server reports what actually won on the next sync.
+- **Local state.** The client stores its snapshot plus a `sync` section with its device id, cursor, and outbox: in the `procrastimate` `localStorage` document on the web, and in the same JSON document on iOS. After a response, the client drops the acked ops, applies `changes` in order, then reapplies what is still in the outbox, so edits made while the request was in flight stay visible. The server reports what actually won on the next sync.
 - **When to sync.** On launch, on focus or foreground, when the network returns, one second after a commit, and every minute while visible. On iOS also from the `BGAppRefreshTask` that refills notifications. A failed sync keeps the outbox and retries on the next trigger. A WebSocket nudge from the Durable Object (hibernation API, so idle sockets cost nothing) comes later and only triggers a sync.
 - **Deterministic order everywhere.** Top-level task lists use the store's array order today, and sync must not depend on arrival order. Clients keep tasks sorted by `createdAt` then `id`, which matches the current insertion order.
 
@@ -56,13 +56,13 @@ Every field is last-writer-wins by HLC. Different fields from different devices 
   - The first device sends the `SYNC_SETUP_CODE` Worker secret, which Stefan sets once with `wrangler secret put`, and receives a device token.
   - A paired device's Settings shows `Pair a device`: an eight-character code valid for ten minutes and five attempts. The new device enters it and receives its own token.
   - A token is 32 random bytes, sent as `Authorization: Bearer`, stored only as a SHA-256 hash. Settings lists devices with their last sync and `Remove`, which revokes the token at once.
-  - The web keeps the token in `localStorage`, since the app loads no third-party scripts. iOS keeps it in the Keychain.
+  - The web keeps the token in `localStorage` under `procrastimate-device`, since the app loads no third-party scripts. iOS keeps it in the Keychain.
 - **Isolated.** `server/src/auth.ts` exposes `authenticate(request) → deviceId | null` and the pairing routes. Nothing else reads tokens, so passkeys (WebAuthn) can replace the setup code later by changing that file and the pairing screen.
-- **Sync is opt in.** An unpaired client works exactly as today, so the existing unit and end-to-end tests need no server.
+- **Sync is opt in.** An unpaired client works as today, except Web Push once the server computes the schedule, so the existing unit and end-to-end tests need no server.
 
 ## Notifications
 
-- **The server computes the Web Push schedule.** Once sync is on, the `Account` object knows every task, so after each push it recomputes all pending notifications from `notificationTimes` in the account's `timeZone` and arms one alarm for the earliest. It sends to every subscribed web device. A change made on iOS or on a closed laptop then reaches the phone's Web Push right away, without each device uploading its own schedule. `PushSchedule` and `PUT /api/push/schedule` are removed, and subscriptions register under the device token.
+- **The server computes the Web Push schedule.** Once sync is on, the `Account` object knows every task, so after each push it recomputes all pending notifications from `notificationTimes` in the account's `timeZone` and arms one alarm for the earliest. It sends to every subscribed web device. A change made on iOS or on a closed laptop then reaches the phone's Web Push right away, without each device uploading its own schedule. `PushSchedule` and `PUT /api/push/schedule` are removed, and subscriptions register under the device token. Web Push therefore needs a paired device: the Notifications panel offers `Turn on sync` first when the device is unpaired. Keeping the old per-device path for unpaired browsers would mean two schedulers for one user.
 - **iOS keeps local notifications.** They are recomputed from the synced state after every pull, so iOS needs no APNs.
 - **Time zones.** The server cannot use the process zone, so `shared/` gains a helper that turns a `DateKey` and `TimeOfDay` into epoch milliseconds in a named zone with `Intl`. The client's `notificationTimes` keeps the device zone.
 
