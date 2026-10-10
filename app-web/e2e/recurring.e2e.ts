@@ -90,10 +90,10 @@ test('the repeat menu toggles weekdays and keeps the last one on', async ({ app,
 
 	await details.getByRole('button', { name: 'Set repeat' }).click();
 	await expect(day('Wed')).toHaveAttribute('aria-pressed', 'false');
-	await day('Fri').click();
-	await expect(details.getByRole('button', { name: 'Repeats every Fri' })).toBeVisible();
-	await expect(details.getByRole('button', { name: 'Due Friday' })).toBeVisible();
 	await day('Mon').click();
+	await expect(details.getByRole('button', { name: 'Repeats every Mon' })).toBeVisible();
+	await expect(details.getByRole('button', { name: 'Due Monday' })).toBeVisible();
+	await day('Fri').click();
 	await expect(menu).toBeVisible();
 	await expect(day('Mon')).toHaveAttribute('aria-pressed', 'true');
 	await expect(day('Fri')).toHaveAttribute('aria-pressed', 'true');

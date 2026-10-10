@@ -136,10 +136,8 @@
 			<RecurrencePicker
 				recurrence={task.recurrence}
 				due={task.due}
-				onchange={(recurrence) => {
-					const base = task.due ?? { date: clock.today, time: null };
-					update({ recurrence, due: recurrence ? { ...base, date: alignToRecurrence(base.date, recurrence) } : task.due });
-				}}
+				onchange={(recurrence, from) =>
+					update({ recurrence, due: recurrence ? { ...from, date: alignToRecurrence(from.date, recurrence) } : task.due })}
 			/>
 			<PriorityPicker priority={task.priority} onchange={(priority) => update({ priority })} />
 			<ReminderPicker

@@ -10,7 +10,12 @@
 		recurrence,
 		due,
 		onchange,
-	}: { recurrence: Recurrence | null; due: Due | null; onchange: (recurrence: Recurrence | null) => void } = $props();
+	}: {
+		recurrence: Recurrence | null;
+		due: Due | null;
+		/** `from` is the due date the menu opened with, so the result never depends on toggle order. */
+		onchange: (recurrence: Recurrence | null, from: Due) => void;
+	} = $props();
 
 	const PRESETS: Recurrence[] = [
 		{ interval: 1, unit: 'day' },
@@ -29,13 +34,15 @@
 
 	/** Setting a repeat on an undated task dates it today, so presets read as they will apply. */
 	const anchor = $derived(due ?? { date: clock.today, time: null });
+	let opened = $state<Due | null>(null);
+	const set = (next: Recurrence | null) => onchange(next, opened ?? anchor);
 
 	/** A plain weekly repeat already repeats on its due weekday. Any other repeat starts with no days. */
 	const weekdays = $derived<readonly Weekday[]>(recurrence?.unit === 'week' ? (recurrence.days ?? [weekdayOf(anchor.date)]) : []);
 
 	function toggleDay(day: Weekday) {
 		const days = sortWeekdays(weekdays.includes(day) ? weekdays.filter(d => d !== day) : [...weekdays, day]);
-		onchange({ interval: recurrence?.unit === 'week' ? recurrence.interval : 1, unit: 'week', days });
+		set({ interval: recurrence?.unit === 'week' ? recurrence.interval : 1, unit: 'week', days });
 	}
 
 	const same = (a: Recurrence | null, b: Recurrence) =>
@@ -49,7 +56,10 @@
 			class="chip"
 			data-active={!!recurrence}
 			aria-label={recurrence ? repeatLabel(recurrence, due) : 'Set repeat'}
-			onclick={toggle}
+			onclick={() => {
+				opened = anchor;
+				toggle();
+			}}
 			style={recurrence ? 'color: var(--tone-tomorrow)' : ''}
 		>
 			<Repeat size={15} weight={recurrence ? 'bold' : 'regular'} />
@@ -63,7 +73,7 @@
 					type="button"
 					class="menu-item"
 					onclick={() => {
-						onchange(preset);
+						set(preset);
 						close();
 					}}
 				>
@@ -76,7 +86,7 @@
 					type="button"
 					class="menu-item text-muted"
 					onclick={() => {
-						onchange(null);
+						set(null);
 						close();
 					}}
 				>
@@ -87,14 +97,14 @@
 				{#each WEEK as day (day)}
 					<button
 						type="button"
-						class="group grid h-8 place-items-center disabled:cursor-default touch:h-11"
+						class="grid h-8 place-items-center touch:h-11"
 						aria-label={WEEKDAY_NAMES[day]}
 						aria-pressed={weekdays.includes(day)}
 						disabled={weekdays.length === 1 && weekdays[0] === day}
 						onclick={() => toggleDay(day)}
 					>
 						<span
-							class="grid size-7 place-items-center rounded-full text-[12px] font-medium text-muted transition-colors group-hover:bg-ink/5 group-active:scale-95 group-aria-pressed:bg-accent group-aria-pressed:text-on-accent touch:size-9 touch:text-[14px]"
+							class={['btn size-7 p-0 touch:size-9', weekdays.includes(day) ? 'btn-primary' : 'btn-quiet']}
 						>
 							{WEEKDAY_NAMES[day][0]}
 						</span>
@@ -107,7 +117,7 @@
 					e.preventDefault();
 					if (!customValid) return;
 					const days = customUnit === 'week' && recurrence?.unit === 'week' ? recurrence.days : undefined;
-					onchange(days ? { interval: customInterval!, unit: 'week', days } : { interval: customInterval!, unit: customUnit });
+					set(days ? { interval: customInterval!, unit: 'week', days } : { interval: customInterval!, unit: customUnit });
 					close();
 				}}
 			>
