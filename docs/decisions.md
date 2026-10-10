@@ -76,6 +76,10 @@ This is the single source for Procrastimate's concepts, goals, paradigms, and hi
   - `1/2` still reads as January 2. Keep it as text when it means a half.
 - **Parsing order.** Reminders claim their text first, then recurrence, project, priority, and the due date. A later rule never reads text an earlier rule recognized, so `every wed 9am` is one repeat and one time. That includes a phrase kept as text and an earlier copy of a repeated phrase, so keeping `every mon` as text never turns `mon` into a due date.
 - **Projects.** `#Name` assigns an existing project, matched case-insensitively. It is highlighted only when the project exists.
+- **`#` autocomplete.** Typing `#` at the start of the text or after a space opens a project list above the input, filtered by the text after `#`. The filter may contain spaces only while it still starts a project name, so multi-word names stay searchable. Picking replaces the fragment with `#Name ` and keeps focus in the input.
+  - **Order.** Best match first: exact name, then name prefix, then word prefix, then substring, all case-insensitive. Within a tier, the project that most recently received a new task comes first, then alphabetical. Recency is derived from task creation times, so it needs no stored field.
+  - **Create.** When no project name equals the filter, the last row offers `Create project "<filter>"`, which creates the project and inserts it.
+  - **Keys.** Up and down move the selection, Tab picks, and Enter picks unless the filter already names a project exactly and the selection was not moved, so `Fix sink #home` plus Enter still saves. Escape closes the list for that `#` without closing the sheet. Tapping a row picks it.
 - **Not yet compared against live Todoist.** Todoist's login captcha blocked automated access, so the repeated-phrase rule and the `!!` mapping are our own calls.
 
 ## Stack
