@@ -13,6 +13,7 @@ export type Suggestion<T extends Named> = { kind: 'existing'; item: T } | { kind
 /**
  * A sigil starts a fragment at the start of the text or after whitespace, so `a@b.com` and `Issue#12`
  * never do. The query may contain spaces only while it still prefixes a name, so multi-word names stay searchable.
+ * Trailing sentence punctuation ends it, as it ends a parsed name, so `@calls,` never offers to create `calls,`.
  */
 export function sigilFragment(
 	value: string,
@@ -24,6 +25,7 @@ export function sigilFragment(
 	const start = before.lastIndexOf(sigil);
 	if (start === -1 || (start > 0 && !/\s/.test(before[start - 1]!))) return null;
 	const query = before.slice(start + 1);
+	if (/[,.;:!?)]$/.test(query)) return null;
 	if (/\s/.test(query)) {
 		const lower = query.toLowerCase();
 		if (!items.some(item => item.name.toLowerCase().startsWith(lower))) return null;

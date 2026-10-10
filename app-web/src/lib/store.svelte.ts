@@ -159,9 +159,10 @@ class Store {
 		return label;
 	}
 
+	/** Names stay unique ignoring case, since `@name` must resolve to one label. */
 	renameLabel(id: string, name: string) {
 		const label = this.label(id);
-		if (!label) return;
+		if (!label || this.labels.some(l => l.id !== id && l.name.toLowerCase() === name.toLowerCase())) return;
 		label.name = name;
 		this.#commit();
 	}

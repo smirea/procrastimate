@@ -77,7 +77,7 @@ test('keep as text leaves an @label in the title', async ({ app }) => {
 });
 
 test('the Labels section opens every task with a label across projects', async ({ app, page }) => {
-	await createLabels(app, 'calls');
+	await createLabels(app, 'calls', 'Errands');
 	await app.createProject('Home');
 	await app.add('Fix sink @calls', 'Paint fence');
 	await app.go('Inbox');
@@ -93,9 +93,15 @@ test('the Labels section opens every task with a label across projects', async (
 	await app.add('Call dentist');
 	await expect(list.getByRole('listitem')).toHaveText([/Fix sink/, /Call bank/, /Call dentist/]);
 
+	const name = page.getByRole('textbox', { name: 'Label name' });
 	await page.getByRole('button', { name: 'Label actions' }).click();
 	await page.getByRole('button', { name: 'Rename' }).click();
-	const name = page.getByRole('textbox', { name: 'Label name' });
+	await name.fill('errands');
+	await name.press('Enter');
+	await expect(page.getByRole('heading', { level: 1, name: 'calls' })).toBeVisible();
+
+	await page.getByRole('button', { name: 'Label actions' }).click();
+	await page.getByRole('button', { name: 'Rename' }).click();
 	await name.fill('phone');
 	await name.press('Enter');
 	await expect(page.getByRole('heading', { level: 1, name: 'phone' })).toBeVisible();
@@ -105,7 +111,7 @@ test('the Labels section opens every task with a label across projects', async (
 	await page.getByRole('button', { name: 'Delete label' }).click();
 	await page.getByRole('button', { name: 'Delete', exact: true }).click();
 	await expect(page.getByRole('heading', { level: 1, name: 'Inbox' })).toBeVisible();
-	await expect(page.getByRole('region', { name: 'Labels' })).toHaveCount(0);
+	await expect(labelLink(app, 'phone')).toHaveCount(0);
 	await expect(app.row('Call bank')).toBeVisible();
 	await expect(chips(app, 'Call bank')).toHaveCount(0);
 });

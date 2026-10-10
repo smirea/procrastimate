@@ -75,6 +75,9 @@ describe('sigilFragment', () => {
 		['ping foo@bar', 12],
 		['Fix sink #ca', 12],
 		['@calls now', 10],
+		['Call @calls,', 12],
+		['Call @calls.', 12],
+		['Fix sink #Home!', 15],
 	])('@ in %p with the caret at %p has no fragment', (value, caret) => {
 		expect(sigilFragment(value, caret, '@', labels)).toBeNull();
 	});
