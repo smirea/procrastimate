@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import '@fontsource-variable/google-sans-flex';
 
 /* Phones and touch screens: larger targets, no hover-only affordances. */
 @custom-variant touch {
@@ -9,7 +10,8 @@
 
 @theme {
 	--font-sans:
-		'Google Sans Flex', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+		'Google Sans Flex Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial,
+		sans-serif;
 	--color-accent: #e8492f;
 	--color-ink: #18181b;
 	--color-muted: #71717a;
