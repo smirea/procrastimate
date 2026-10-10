@@ -25,7 +25,10 @@ async function devVars() {
 async function ensure() {
 	const list = Bun.spawnSync(['bunx', 'wrangler', 'secret', 'list', '--format', 'json'], { stderr: 'inherit' });
 	if (list.exitCode !== 0) throw new Error('wrangler secret list failed');
-	const names = new Set((JSON.parse(list.stdout.toString()) as { name: string }[]).map(secret => secret.name));
+	const output = list.stdout.toString();
+	// Wrangler can print a banner before the JSON.
+	const secrets = JSON.parse(output.slice(output.indexOf('['))) as { name: string }[];
+	const names = new Set(secrets.map(secret => secret.name));
 	if (SECRET_NAMES.every(name => names.has(name))) {
 		console.log('VAPID secrets already exist');
 		return;

@@ -7,11 +7,21 @@ export const RETRY_DELAY_MS = 60_000;
 /** How a push service response settles one scheduled push. */
 export type Delivery = 'sent' | 'gone' | 'retry';
 
-/** The schedule a device should hold after it uploads `incoming`. */
-export function planSchedule(incoming: ScheduledPush[], deliveredThrough: number, now: number): ScheduledPush[] {
+/**
+ * The schedule a device should hold after it uploads `incoming`. A push still in `stored` is undelivered even when it
+ * is at or before `deliveredThrough`, because a failed send keeps it for a retry.
+ */
+export function planSchedule(
+	incoming: ScheduledPush[],
+	stored: ScheduledPush[],
+	deliveredThrough: number,
+	now: number,
+): ScheduledPush[] {
+	const undelivered = new Set(stored.map(pushTag));
 	const byTag = new Map<string, ScheduledPush>();
 	for (const push of incoming) {
-		if (push.at > deliveredThrough && push.at >= now - STALE_AFTER_MS) byTag.set(pushTag(push), push);
+		const tag = pushTag(push);
+		if ((push.at > deliveredThrough || undelivered.has(tag)) && push.at >= now - STALE_AFTER_MS) byTag.set(tag, push);
 	}
 	return [...byTag.values()].sort((a, b) => a.at - b.at).slice(0, MAX_SCHEDULED);
 }

@@ -36,7 +36,8 @@ export class PushSchedule {
 			case 'PUT': {
 				const { subscription, notifications: incoming } = (await request.json()) as ScheduleRequest;
 				const deliveredThrough = (await storage.get<number>('deliveredThrough')) ?? 0;
-				const notifications = planSchedule(incoming, deliveredThrough, Date.now());
+				const stored = (await storage.get<ScheduledPush[]>('notifications')) ?? [];
+				const notifications = planSchedule(incoming, stored, deliveredThrough, Date.now());
 				await storage.put({ subscription, notifications });
 				await this.syncAlarm(notifications);
 				return Response.json({ scheduled: notifications.length });
