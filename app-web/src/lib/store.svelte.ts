@@ -19,6 +19,7 @@ import {
 	reopenTask,
 } from 'shared/subtasks.ts';
 import { newId } from 'shared/id.ts';
+import { mergeBackup, type ImportSummary, type TodoistBackup } from 'shared/todoist.ts';
 import { loadSnapshot, saveSnapshot, type Snapshot } from './persistence.ts';
 
 export type NewTask = {
@@ -224,6 +225,17 @@ class Store {
 			if (task.labelIds.includes(id)) task.labelIds = task.labelIds.filter(l => l !== id);
 		}
 		this.#commit();
+	}
+
+	/** One command and one write for the whole backup, however many tasks it holds. */
+	importBackup(backup: TodoistBackup): ImportSummary {
+		const current = $state.snapshot({ tasks: this.tasks, projects: this.projects, labels: this.labels });
+		const { state, summary } = mergeBackup(current, backup, { newId, now: Date.now() });
+		this.tasks = state.tasks;
+		this.projects = state.projects;
+		this.labels = state.labels;
+		this.#commit();
+		return summary;
 	}
 
 	markRemindersChecked(at: number) {
