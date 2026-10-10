@@ -12,8 +12,8 @@
 	import SmartInput from './SmartInput.svelte';
 	import SubtaskProgress from './SubtaskProgress.svelte';
 	import { store } from '../store.svelte.ts';
-	import { clock, sheets } from '../ui.svelte.ts';
-	import { PRIORITIES, describeTiming, dueTone, formatDue } from '../format.ts';
+	import { clock, sheets, motion } from '../ui.svelte.ts';
+	import { PRIORITIES, dueTone, formatDue } from '../format.ts';
 	import { push } from '../push.svelte.ts';
 
 	let { task }: { task: Task } = $props();
@@ -23,11 +23,6 @@
 
 	let draft = $state('');
 	const parsed = $derived(parseQuickAdd(draft, { now: new Date(clock.now), projects: [], labels: store.labels, due: null }));
-	const timing = $derived(
-		parsed.due || parsed.recurrence || parsed.reminders.length
-			? describeTiming({ due: parsed.due, recurrence: parsed.recurrence, reminders: parsed.reminders }, clock.today)
-			: [],
-	);
 
 	function add() {
 		if (!parsed.title) return;
@@ -123,14 +118,14 @@
 			<li
 				data-subtask={child.title}
 				data-subtask-id={child.id}
-				class="row relative flex items-center gap-3 rounded-xl px-2"
+				class="row relative flex items-center gap-3 rounded-2xl px-2"
 				class:glass-strong={drag?.id === child.id}
 				class:lifted={drag?.id === child.id}
 				class:shifting={!!drag && drag.id !== child.id}
 				style:transform={drag ? `translateY(${offset(index, child.id)}px)` : undefined}
-				animate:flip={{ duration: settling ? 0 : 220, easing: cubicOut }}
-				in:fly={{ y: -6, duration: 200, easing: cubicOut }}
-				out:slide={{ duration: 180, easing: cubicOut }}
+				animate:flip={motion({ duration: settling ? 0 : 220, easing: cubicOut })}
+				in:fly={motion({ y: -6, duration: 200, easing: cubicOut })}
+				out:slide={motion({ duration: 180, easing: cubicOut })}
 			>
 				<Checkbox checked={done} tone={PRIORITIES[child.priority].tone} label={`Complete ${child.title}`} onclick={() => toggle(child)} />
 				<button type="button" class="min-w-0 flex-1 py-2 text-left touch:min-h-11 touch:py-2.5" onclick={() => sheets.openTask(child.id, 'forward')}>
@@ -152,7 +147,7 @@
 						data-handle
 						aria-label={`Reorder ${child.title}`}
 						title="Drag, or use the arrow keys, to reorder"
-						class="handle hit-area relative grid size-7 shrink-0 cursor-grab touch-none place-items-center rounded-lg text-faint transition-colors hover:text-muted"
+						class="handle hit-area relative grid size-7 shrink-0 cursor-grab touch-none place-items-center rounded-full text-faint transition-colors hover:text-muted"
 						onpointerdown={(e) => startDrag(e, child.id, index)}
 						onpointermove={moveDrag}
 						onpointerup={(e) => endDrag(e, true)}
@@ -170,7 +165,6 @@
 		<SmartInput
 			bind:value={draft}
 			tokens={parsed.tokens}
-			{timing}
 			label="Add subtask"
 			placeholder="Add subtask"
 			enterkeyhint="enter"
