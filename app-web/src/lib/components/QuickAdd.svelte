@@ -13,7 +13,7 @@
 	import KeepAsText from './KeepAsText.svelte';
 	import { store } from '../store.svelte.ts';
 	import { clock, mobile, sheets, type QuickAddDefaults } from '../ui.svelte.ts';
-	import { formatRecurrence, formatReminder } from '../format.ts';
+	import { describeTiming, formatRecurrence, formatReminder } from '../format.ts';
 	import { requestNotificationPermission } from '../reminders.ts';
 
 	let { defaults }: { defaults: QuickAddDefaults } = $props();
@@ -37,6 +37,11 @@
 	const priority = $derived(parsed.priority ?? picked.priority ?? DEFAULT_PRIORITY);
 	const projectId = $derived(parsed.projectId ?? picked.projectId);
 	const reminderTokens = $derived(parsed.tokens.filter((t) => t.kind === 'reminder'));
+	const timing = $derived(
+		parsed.due || parsed.recurrence || parsed.reminders.length
+			? describeTiming({ due, recurrence: parsed.recurrence, reminders: [...parsed.reminders, ...picked.reminders] }, clock.today)
+			: [],
+	);
 
 	function keepAsText(token: QuickAddToken | undefined) {
 		if (token) disabled = [...disabled, token.text];
@@ -54,7 +59,7 @@
 		if (!parsed.title) return;
 		const reminders = [...parsed.reminders, ...picked.reminders];
 		store.addTask({ title: parsed.title, due, recurrence: parsed.recurrence, priority, projectId, reminders });
-		requestNotificationPermission(reminders);
+		requestNotificationPermission(due, reminders);
 		text = '';
 		disabled = [];
 		picked = initialPicked();
@@ -93,6 +98,7 @@
 			bind:this={input}
 			bind:value={text}
 			tokens={parsed.tokens}
+			{timing}
 			label="Task name"
 			placeholder="Call mom tomorrow 5pm p1 remind me 30m before"
 			autofocus

@@ -15,11 +15,21 @@
 	import { store, type TaskPatch } from '../store.svelte.ts';
 	import { clock, mobile, sheets, toasts } from '../ui.svelte.ts';
 	import { requestNotificationPermission } from '../reminders.ts';
+	import { describeTiming } from '../format.ts';
 
 	let { task }: { task: Task } = $props();
 
 	let title = $state(untrack(() => task.title));
 	const parsed = $derived(parseQuickAdd(title, { now: new Date(clock.now), projects: store.projects, due: task.due }));
+
+	const timing = $derived(
+		parsed.due || parsed.recurrence || parsed.reminders.length
+			? describeTiming(
+					{ due: parsed.due ?? task.due, recurrence: parsed.recurrence ?? task.recurrence, reminders: [...task.reminders, ...parsed.reminders] },
+					clock.today,
+				)
+			: [],
+	);
 
 	const update = (patch: TaskPatch) => store.updateTask(task.id, patch);
 
@@ -30,15 +40,16 @@
 			return;
 		}
 		const reminders = [...task.reminders, ...parsed.reminders];
+		const due = parsed.due ?? task.due;
 		update({
 			title: parsed.title,
-			due: parsed.due ?? task.due,
+			due,
 			recurrence: parsed.recurrence ?? task.recurrence,
 			priority: parsed.priority ?? task.priority,
 			projectId: parsed.projectId ?? task.projectId,
 			reminders,
 		});
-		requestNotificationPermission(parsed.reminders);
+		requestNotificationPermission(due, reminders);
 		title = parsed.title;
 	}
 
@@ -89,7 +100,7 @@
 		</div>
 	</header>
 	<div class="px-4 pt-4">
-		<SmartInput bind:value={title} tokens={parsed.tokens} label="Title" enterkeyhint="done" class="text-[19px] font-semibold" {onkeydown} onblur={commitTitle} />
+		<SmartInput bind:value={title} tokens={parsed.tokens} {timing} label="Title" enterkeyhint="done" class="text-[19px] font-semibold" {onkeydown} onblur={commitTitle} />
 	</div>
 	<div class="sheet-scroll flex-1 space-y-4 px-4 pt-4 pb-4 md:min-h-0 md:overflow-y-auto">
 		<textarea
@@ -101,14 +112,20 @@
 			oninput={(e) => update({ notes: e.currentTarget.value })}
 		></textarea>
 		<div class="flex flex-wrap gap-1.5">
-			<DuePicker due={task.due} onchange={(due) => update({ due })} />
+			<DuePicker
+				due={task.due}
+				onchange={(due) => {
+					update({ due });
+					requestNotificationPermission(due, task.reminders);
+				}}
+			/>
 			<PriorityPicker priority={task.priority} onchange={(priority) => update({ priority })} />
 			<ReminderPicker
 				due={task.due}
 				reminders={task.reminders}
 				onchange={(reminders) => {
 					update({ reminders });
-					requestNotificationPermission(reminders);
+					requestNotificationPermission(task.due, reminders);
 				}}
 			/>
 		</div>

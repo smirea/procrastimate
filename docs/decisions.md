@@ -50,13 +50,14 @@ This is the single source for Procrastimate's concepts, goals, paradigms, and hi
 - **Upcoming.** Incomplete tasks due after today, grouped by day.
 - **Project.** A named group of tasks. Deleting a project deletes its tasks.
 - **Priority.** Todoist's four levels. `p1` is the most urgent and `p4` is the default with no marking.
-- **Reminder.** Either relative to the due time (for example 30 minutes before) or at an absolute date and time. A relative reminder needs a due time to fire. Reminders fire as an in-app toast and, when the browser allows it, a system notification, while the app is open.
+- **Reminder.** Either relative to the due time (for example 30 minutes before) or at an absolute date and time. A relative reminder needs a due time to fire. A due time is itself a reminder. Any task with a due time notifies at that time with no reminder set, and reminders add to it, such as 30 minutes before. A date with no time never notifies. A task notifies once per moment, so a reminder at the due time does not notify twice. Reminders fire as an in-app toast and, when the browser allows it, a system notification, while the app is open.
 
 ## Quick add and natural language
 
 - **Todoist quick add is the reference.** One input captures the title and its attributes. Recognized phrases are highlighted inline as you type and removed from the saved title. Clicking a highlighted phrase keeps it as plain text.
 - **The same parser runs in quick add and in the task details title field.**
 - **Repeated phrases.** Date, recurrence, priority, and project take the last matching phrase, because attributes usually trail the title. `Today task today` saves `Today task` due today. Reminders keep every match.
+- **Timing preview.** While the focused title text carries a date, repeat, or reminder, a small glass panel above the input spells out what will be saved, such as `Mon Oct 19 at 9:00 AM`, `Repeats every Mon`, and `Remind 10 min before (8:50 AM)`. A due time adds `Notifies at 5:00 PM`, and a reminder at the due time folds into it instead of showing twice. It shows the due date and repeat in effect, including ones set by a picker or already on the task, and every reminder the save would keep, with relative reminders resolved to a clock time. It updates on every keystroke, hides when the text carries no timing, and gives way to `#` suggestions while they are open. It sits above the input because on a phone that is the only space left above the keyboard, and it flips below only when there is more room there.
 - **Pickers win over text.** Choosing a date, priority, or project with a picker removes the matching phrase from the input. Pickers close on selection.
 - **Days.** `today`, `tomorrow`, and `tom`, `tmr`, `tmrw`. `tonight` is today at 8pm. `eod` is today at 5pm. `eow` is the coming Friday at 5pm, today on a Friday. A typed time replaces these default times, as in `tonight 9pm`.
 - **Weekdays.** `mon` to `sun` and the full names mean the next one, counting today, so `wed` on a Wednesday is today. `next fri` and `nxt fri` mean the Friday of next week, which starts on Monday. `next week` is next Monday.

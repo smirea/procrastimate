@@ -77,6 +77,13 @@ export function addInterval(key: DateKey, interval: number, unit: RecurrenceUnit
 	}
 }
 
+/** When a task notifies, in order: at its due time when it has one, and at every reminder, each moment once. */
+export function notificationTimes(due: Due | null, reminders: readonly Reminder[]): Date[] {
+	const times = [due?.time ? fromDateKey(due.date, due.time) : null, ...reminders.map(r => reminderFiresAt(r, due))];
+	const unique = new Map(times.filter(t => t !== null).map(t => [t.getTime(), t]));
+	return [...unique.values()].sort((a, b) => a.getTime() - b.getTime());
+}
+
 /** When a reminder fires, or null for a relative reminder on a task without a due time. */
 export function reminderFiresAt(reminder: Reminder, due: Due | null): Date | null {
 	switch (reminder.kind) {
