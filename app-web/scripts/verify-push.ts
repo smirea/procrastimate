@@ -60,15 +60,24 @@ const endpoint = await page.evaluate(async () => {
 	const registration = await navigator.serviceWorker.ready;
 	return (await registration.pushManager.getSubscription())?.endpoint ?? '';
 });
-check(endpoint.startsWith('https://fcm.googleapis.com/'), 'subscribed through a real push service', endpoint.slice(0, 48));
+check(
+	endpoint.startsWith('https://fcm.googleapis.com/'),
+	'subscribed through a real push service',
+	endpoint.slice(0, 48),
+);
 
 await sheet.getByRole('button', { name: 'Send a test notification' }).click();
 await sheet.getByRole('button', { name: 'Sent' }).waitFor();
 const testShown = Date.now();
-while (!(await shown(page)).some(n => n.tag === 'test') && Date.now() - testShown < 20_000) await page.waitForTimeout(250);
-check((await shown(page)).some(n => n.tag === 'test'), 'test push arrived through FCM and the service worker showed it', {
-	ms: Date.now() - testShown,
-});
+while (!(await shown(page)).some(n => n.tag === 'test') && Date.now() - testShown < 20_000)
+	await page.waitForTimeout(250);
+check(
+	(await shown(page)).some(n => n.tag === 'test'),
+	'test push arrived through FCM and the service worker showed it',
+	{
+		ms: Date.now() - testShown,
+	},
+);
 await page.keyboard.press('Escape');
 
 async function add(title: string) {
@@ -82,7 +91,10 @@ async function add(title: string) {
 }
 
 async function openTask(title: string) {
-	await page.locator(`[data-task="${title}"]`).getByRole('button', { name: new RegExp(title) }).click();
+	await page
+		.locator(`[data-task="${title}"]`)
+		.getByRole('button', { name: new RegExp(title) })
+		.click();
 	return page.getByRole('dialog', { name: 'Task details' });
 }
 
@@ -109,7 +121,11 @@ for (const start = Date.now(); Date.now() - start < 10_000; await page.waitForTi
 	pending = (await schedule(page, endpoint)).filter(entry => entry.endsWith(at)).sort();
 	if (JSON.stringify(pending) === JSON.stringify(expected)) break;
 }
-check(JSON.stringify(pending) === JSON.stringify(expected), 'server holds one push per moment, without deleted, completed, edited, or date-only tasks', await schedule(page, endpoint));
+check(
+	JSON.stringify(pending) === JSON.stringify(expected),
+	'server holds one push per moment, without deleted, completed, edited, or date-only tasks',
+	await schedule(page, endpoint),
+);
 
 await page.close();
 log('app closed; waiting for the due time');
@@ -124,7 +140,10 @@ check(
 	'only the two live tasks notified while the app was closed',
 	delivered,
 );
-check((await schedule(reopened, endpoint)).every(entry => !entry.endsWith(at)), 'delivered pushes left the schedule');
+check(
+	(await schedule(reopened, endpoint)).every(entry => !entry.endsWith(at)),
+	'delivered pushes left the schedule',
+);
 
 await reopened.locator('[data-task="Daily repeat"]').getByRole('checkbox', { name: 'Complete Daily repeat' }).click();
 const next = new Date(target.getTime() + 86_400_000).toISOString();
@@ -133,7 +152,11 @@ for (const start = Date.now(); Date.now() - start < 10_000; await reopened.waitF
 	afterRepeat = await schedule(reopened, endpoint);
 	if (afterRepeat.includes(`Daily repeat@${next}`)) break;
 }
-check(afterRepeat.includes(`Daily repeat@${next}`), 'completing the repeating task scheduled its next occurrence', afterRepeat);
+check(
+	afterRepeat.includes(`Daily repeat@${next}`),
+	'completing the repeating task scheduled its next occurrence',
+	afterRepeat,
+);
 
 await context.close();
 log('all checks passed');

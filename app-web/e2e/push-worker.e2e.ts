@@ -29,7 +29,10 @@ async function startPushService() {
 }
 
 /** Playwright's Chromium cannot subscribe for real, so the browser hands out the loopback service's subscription. */
-async function grantSubscription(page: Page, subscription: { endpoint: string; keys: { p256dh: string; auth: string } }) {
+async function grantSubscription(
+	page: Page,
+	subscription: { endpoint: string; keys: { p256dh: string; auth: string } },
+) {
 	await page.addInitScript(json => {
 		let current: PushSubscription | null = null;
 		PushManager.prototype.getSubscription = async () => current;
@@ -72,7 +75,10 @@ test('the Worker keeps the schedule in sync with every change and pushes an encr
 		return notifications.map(push => `${push.title}@${push.at}: ${push.body}`);
 	};
 
-	await page.getByRole('navigation', { name: 'Main' }).getByRole('button', { name: /^Notifications/ }).click();
+	await page
+		.getByRole('navigation', { name: 'Main' })
+		.getByRole('button', { name: /^Notifications/ })
+		.click();
 	await sheet(app).getByRole('button', { name: 'Turn on notifications' }).click();
 	await expect(sheet(app).getByRole('heading', { name: 'Notifications are on' })).toBeVisible();
 	await sheet(app).getByRole('button', { name: 'Send a test notification' }).click();
@@ -90,7 +96,12 @@ test('the Worker keeps the schedule in sync with every change and pushes an encr
 	]);
 	await page.keyboard.press('Escape');
 
-	await app.add('Call mom tomorrow 9am remind me at 9am', 'Gym tomorrow 6pm r30m', 'Taxes tomorrow', 'Pills every day 8am');
+	await app.add(
+		'Call mom tomorrow 9am remind me at 9am',
+		'Gym tomorrow 6pm r30m',
+		'Taxes tomorrow',
+		'Pills every day 8am',
+	);
 	await expect
 		.poll(schedule)
 		.toEqual([
@@ -107,7 +118,10 @@ test('the Worker keeps the schedule in sync with every change and pushes an encr
 	await title.fill('Gym tomorrow 7pm');
 	await title.press('Enter');
 	await app.details().getByRole('button', { name: 'Close' }).click();
-	await app.row('Call mom').getByRole('button', { name: /Call mom/ }).click();
+	await app
+		.row('Call mom')
+		.getByRole('button', { name: /Call mom/ })
+		.click();
 	await app.details().getByRole('button', { name: 'Delete task' }).click();
 	await expect
 		.poll(schedule)
@@ -126,9 +140,9 @@ test('the Worker delivers a scheduled push at its time once, even when the devic
 		page.request.put('/api/push/schedule', { data: { subscription: service.subscription, notifications: [due] } });
 	expect(await (await put()).json()).toEqual({ ok: true, scheduled: 1 });
 
-	await expect.poll(() => service.received.map(r => r.message), { timeout: 10_000 }).toEqual([
-		{ title: 'Water plants', body: 'Due now', tag: `task-1:${due.at}`, taskId: 'task-1' },
-	]);
+	await expect
+		.poll(() => service.received.map(r => r.message), { timeout: 10_000 })
+		.toEqual([{ title: 'Water plants', body: 'Due now', tag: `task-1:${due.at}`, taskId: 'task-1' }]);
 	expect(service.received[0]?.vapid).toBe(true);
 	expect(await (await put()).json()).toEqual({ ok: true, scheduled: 0 });
 	await page.waitForTimeout(1500);

@@ -7,7 +7,12 @@ const push = (taskId: string, at: number) => ({ taskId, at, title: taskId, body:
 
 describe('planSchedule', () => {
 	test('sorts by time and dedupes by task and time', () => {
-		const plan = planSchedule([push('b', NOW + 2), push('a', NOW + 1), push('b', NOW + 2), push('b', NOW + 3)], [], 0, NOW);
+		const plan = planSchedule(
+			[push('b', NOW + 2), push('a', NOW + 1), push('b', NOW + 2), push('b', NOW + 3)],
+			[],
+			0,
+			NOW,
+		);
 		expect(plan.map(p => `${p.taskId}@${p.at - NOW}`)).toEqual(['a@1', 'b@2', 'b@3']);
 	});
 
