@@ -22,6 +22,8 @@ test('quick add previews the resolved timing above the input as you type', async
 	await expect(preview).toHaveText(
 		'Tomorrow, Thu Oct 15 at 5:00 PM · Notifies at 5:00 PM · Remind 30 min before (4:30 PM)',
 	);
+	await expect(app.quickAdd().getByText('Every Mon')).toHaveCount(0);
+	await expect(app.quickAdd().getByText('10m before')).toHaveCount(0);
 	await page.evaluate(() => Promise.all(document.getAnimations().map(animation => animation.finished)));
 	await page.screenshot({ path: 'test-results/timing-preview-notifies.png' });
 	await app.taskInput().fill('Call mom tomorrow');
