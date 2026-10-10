@@ -8,6 +8,7 @@
 	import Plus from 'phosphor-svelte/lib/Plus';
 	import Sidebar from '#lib/components/Sidebar.svelte';
 	import QuickAdd from '#lib/components/QuickAdd.svelte';
+	import Search from '#lib/components/Search.svelte';
 	import TaskDetails from '#lib/components/TaskDetails.svelte';
 	import Toasts from '#lib/components/Toasts.svelte';
 	import { store } from '#lib/store.svelte.ts';
@@ -28,11 +29,28 @@
 		});
 	}
 
+	function openSearch() {
+		menuOpen = false;
+		sheets.openSearch();
+	}
+
 	const isTyping = (target: EventTarget | null) =>
 		target instanceof HTMLElement && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName));
 
+	/** Some layouts need Shift for `/`, so only Cmd-K and Ctrl-K check the other modifiers. */
+	const isSearchShortcut = (event: KeyboardEvent) =>
+		event.metaKey || event.ctrlKey
+			? !event.altKey && !event.shiftKey && event.key.toLowerCase() === 'k'
+			: event.key === '/';
+
 	function onkeydown(event: KeyboardEvent) {
-		if (event.metaKey || event.ctrlKey || event.altKey || isTyping(event.target)) return;
+		if (isTyping(event.target)) return;
+		if (isSearchShortcut(event) && sheets.current.kind !== 'search') {
+			event.preventDefault();
+			openSearch();
+			return;
+		}
+		if (event.metaKey || event.ctrlKey || event.altKey) return;
 		if (event.key === 'q' && sheets.current.kind === 'none') {
 			event.preventDefault();
 			openQuickAdd();
@@ -62,12 +80,12 @@
 
 <div class="app flex min-h-dvh gap-3">
 	<div class="sticky top-3 hidden h-[calc(100dvh-1.5rem)] w-64 shrink-0 md:block">
-		<Sidebar onquickadd={openQuickAdd} />
+		<Sidebar onquickadd={openQuickAdd} onsearch={openSearch} />
 	</div>
 	{#if menuOpen}
 		<div class="fixed inset-0 z-30 bg-scrim backdrop-blur-[2px] md:hidden" transition:fade={{ duration: 180 }} onclick={() => (menuOpen = false)} aria-hidden="true"></div>
 		<div class="drawer fixed z-30 md:hidden" transition:fly={{ x: -320, duration: 280, easing: cubicOut, opacity: 1 }}>
-			<Sidebar onquickadd={openQuickAdd} />
+			<Sidebar onquickadd={openQuickAdd} onsearch={openSearch} />
 		</div>
 	{/if}
 	<main class="min-w-0 flex-1">
@@ -102,6 +120,8 @@
 
 {#if sheets.current.kind === 'quick-add'}
 	<QuickAdd defaults={sheets.current.defaults} />
+{:else if sheets.current.kind === 'search'}
+	<Search />
 {:else if openTask}
 	{#key openTask.id}
 		<TaskDetails task={openTask} />

@@ -5,6 +5,7 @@
 	import X from 'phosphor-svelte/lib/X';
 	import Trash from 'phosphor-svelte/lib/Trash';
 	import Check from 'phosphor-svelte/lib/Check';
+	import ArrowCounterClockwise from 'phosphor-svelte/lib/ArrowCounterClockwise';
 	import { parseQuickAdd } from 'shared/quick-add.ts';
 	import type { Task } from 'shared/task.ts';
 	import SmartInput from './SmartInput.svelte';
@@ -94,7 +95,11 @@
 	<header class="flex items-center justify-between px-4 pt-3">
 		<ProjectPicker projectId={task.projectId} onchange={(projectId) => update({ projectId })} />
 		<div class="flex items-center gap-1">
-			<button type="button" class="btn btn-quiet" onclick={complete}><Check size={14} />Complete</button>
+			{#if task.completedAt === null}
+				<button type="button" class="btn btn-quiet" onclick={complete}><Check size={14} />Complete</button>
+			{:else}
+				<button type="button" class="btn btn-quiet" onclick={() => store.reopenTask(task.id)}><ArrowCounterClockwise size={14} />Reopen</button>
+			{/if}
 			<button type="button" class="grid size-8 place-items-center rounded-full text-muted transition-colors hover:bg-ink/5 hover:text-ink touch:size-11" aria-label="Close" onclick={() => sheets.close()}>
 				<X size={16} />
 			</button>

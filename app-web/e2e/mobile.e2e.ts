@@ -290,6 +290,39 @@ test('a tap just outside the checkbox completes the task and undo restores it', 
 	await expect(app.list('Inbox tasks').getByRole('listitem')).toHaveText([/Buy milk/, /Pay rent/]);
 });
 
+test('search opens from the drawer, docks above the keyboard, and a tap opens a task', async ({ app, page }) => {
+	await add(app, 'Fix sink p2', 'Water plants tomorrow', 'Call plumber');
+	await openNav(app);
+	await nav(app).getByRole('button', { name: 'Search' }).tap();
+	await expect(nav(app)).toHaveCount(0);
+	const sheet = page.getByRole('dialog', { name: 'Search' });
+	const field = sheet.getByRole('combobox', { name: 'Search' });
+	await expect(field).toBeFocused();
+
+	await openKeyboard(app);
+	await field.pressSequentially('pl');
+	const results = page.getByRole('listbox', { name: 'Search results' });
+	await expect(results.getByRole('option')).toHaveText([/Water plants\s+Tomorrow/, /Call plumber/]);
+	await expect(results.locator('mark')).toHaveText(['pl', 'pl']);
+	expect((await results.getByRole('option', { name: /Call plumber/ }).boundingBox())!.height).toBeGreaterThanOrEqual(
+		44,
+	);
+	await settle(app);
+	const box = (await sheet.boundingBox())!;
+	expect(box.y).toBeGreaterThanOrEqual(0);
+	expect(box.y + box.height).toBeLessThanOrEqual(page.viewportSize()!.height - KEYBOARD);
+	expect(await bottom(results)).toBeLessThanOrEqual((await field.boundingBox())!.y);
+	await page.screenshot({ path: 'test-results/search/mobile-light.png' });
+	await page.emulateMedia({ colorScheme: 'dark' });
+	await app.expectTheme('dark');
+	await page.evaluate(() => Promise.allSettled(document.getAnimations().map(animation => animation.finished)));
+	await page.screenshot({ path: 'test-results/search/mobile-dark.png' });
+
+	await results.getByRole('option', { name: /Water plants/ }).tap();
+	await expect(sheet).toHaveCount(0);
+	await expect(app.details().getByRole('textbox', { name: 'Title' })).toHaveValue('Water plants');
+});
+
 test('the drawer theme switcher overrides the color scheme and persists across reloads', async ({ app, page }) => {
 	await openNav(app);
 	await expect(app.themeOption('System')).toHaveAttribute('aria-checked', 'true');
