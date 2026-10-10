@@ -80,6 +80,13 @@ test('the navigation drawer opens, closes, and switches views', async ({ app, pa
 	await shot(app, 'upcoming');
 });
 
+test('the navigation drawer turns solid when the device asks for more contrast', async ({ app, page }) => {
+	await page.emulateMedia({ contrast: 'more' });
+	await openNav(app);
+	await expect(nav(app)).toHaveCSS('backdrop-filter', 'none');
+	await expect(nav(app)).toHaveCSS('background-color', 'rgb(251, 251, 252)');
+});
+
 test('the navigation drawer creates a project and switches to it', async ({ app, page }) => {
 	await openNav(app);
 	await page.getByRole('button', { name: 'Add project' }).tap();
