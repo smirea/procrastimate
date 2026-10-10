@@ -1,4 +1,5 @@
 import { DEFAULT_PRIORITY, type Due, type Priority, type Project, type Reminder, type Task } from 'shared/task.ts';
+import { newId } from 'shared/id.ts';
 import { loadSnapshot, saveSnapshot, type Snapshot } from './persistence.ts';
 
 export type NewTask = {
@@ -44,7 +45,7 @@ class Store {
 
 	addTask(input: NewTask): Task {
 		const task: Task = {
-			id: crypto.randomUUID(),
+			id: newId(),
 			title: input.title,
 			notes: '',
 			projectId: input.projectId,
@@ -85,7 +86,7 @@ class Store {
 	}
 
 	addProject(name: string): Project {
-		const project: Project = { id: crypto.randomUUID(), name, createdAt: Date.now() };
+		const project: Project = { id: newId(), name, createdAt: Date.now() };
 		this.projects.push(project);
 		this.#commit();
 		return project;
