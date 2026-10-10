@@ -34,8 +34,16 @@ const projectSchema = z.object({
 	createdAt: z.number(),
 }) satisfies z.ZodType<Project>;
 
+/** Drops a task that fails validation instead of failing the whole snapshot, so one bad task never wipes the rest. */
+const tasksSchema = z.array(z.unknown()).transform(items =>
+	items.flatMap(item => {
+		const task = taskSchema.safeParse(item);
+		return task.success ? [task.data] : [];
+	}),
+);
+
 const snapshotSchema = z.object({
-	tasks: z.array(taskSchema),
+	tasks: tasksSchema,
 	projects: z.array(projectSchema),
 	remindersCheckedAt: z.number(),
 });

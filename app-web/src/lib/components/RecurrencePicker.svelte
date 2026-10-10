@@ -21,8 +21,10 @@
 	];
 	const UNITS: RecurrenceUnit[] = ['day', 'weekday', 'week', 'month', 'year'];
 
-	let customInterval = $state(2);
+	let customInterval = $state<number | null>(2);
 	let customUnit = $state<RecurrenceUnit>('day');
+	/** An emptied number field binds `null`, which must never reach the task. */
+	const customValid = $derived(Number.isInteger(customInterval) && customInterval! >= 1 && customInterval! <= 365);
 
 	/** Setting a repeat on an undated task dates it today, so presets read as they will apply. */
 	const anchor = $derived(due ?? { date: clock.today, time: null });
@@ -75,7 +77,8 @@
 				class="mt-1 flex items-center gap-1.5 border-t border-ink/5 px-1 pt-2 pb-1 text-[13px] touch:text-[15px]"
 				onsubmit={(e) => {
 					e.preventDefault();
-					onchange({ interval: Math.max(1, Math.round(customInterval)), unit: customUnit });
+					if (!customValid) return;
+					onchange({ interval: customInterval!, unit: customUnit });
 					close();
 				}}
 			>
@@ -84,7 +87,7 @@
 				<select aria-label="Repeat unit" class="field min-w-0 flex-1" bind:value={customUnit}>
 					{#each UNITS as unit (unit)}<option value={unit}>{unit}s</option>{/each}
 				</select>
-				<button type="submit" class="btn btn-quiet px-2.5">Set</button>
+				<button type="submit" class="btn btn-quiet px-2.5 disabled:opacity-40" disabled={!customValid}>Set</button>
 			</form>
 		</div>
 	{/snippet}

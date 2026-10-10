@@ -61,7 +61,13 @@ test('task details set, change, and clear a repeat', async ({ app, page }) => {
 	await expect(details.getByRole('button', { name: 'Due Today' })).toBeVisible();
 
 	await details.getByRole('button', { name: 'Repeats every Wed' }).click();
-	await menu.getByRole('spinbutton', { name: 'Repeat interval' }).fill('3');
+	const interval = menu.getByRole('spinbutton', { name: 'Repeat interval' });
+	await interval.fill('');
+	await expect(menu.getByRole('button', { name: 'Set' })).toBeDisabled();
+	await interval.press('Enter');
+	await expect(menu).toBeVisible();
+	await expect(details.getByRole('button', { name: 'Repeats every Wed' })).toBeVisible();
+	await interval.fill('3');
 	await menu.getByRole('combobox', { name: 'Repeat unit' }).selectOption('day');
 	await menu.getByRole('button', { name: 'Set' }).click();
 	await expect(details.getByRole('button', { name: 'Repeats every 3 days' })).toBeVisible();
