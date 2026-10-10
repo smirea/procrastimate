@@ -172,7 +172,7 @@
 							tabindex="-1"
 							aria-selected={i === active}
 							data-active={i === active}
-							class="result flex w-full cursor-pointer items-start gap-3 rounded-xl px-2.5 py-2 text-left touch:py-2.5"
+							class="result flex w-full cursor-pointer items-start gap-3 rounded-xl px-2.5 py-2 text-left touch:min-h-11 touch:py-2.5"
 							animate:flip={{ duration: 180, easing: cubicOut }}
 							in:fade={{ duration: 120 }}
 							onmousedown={(e) => e.preventDefault()}

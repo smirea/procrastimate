@@ -304,6 +304,9 @@ test('search opens from the drawer, docks above the keyboard, and a tap opens a 
 	const results = page.getByRole('listbox', { name: 'Search results' });
 	await expect(results.getByRole('option')).toHaveText([/Water plants\s+Tomorrow/, /Call plumber/]);
 	await expect(results.locator('mark')).toHaveText(['pl', 'pl']);
+	expect((await results.getByRole('option', { name: /Call plumber/ }).boundingBox())!.height).toBeGreaterThanOrEqual(
+		44,
+	);
 	await settle(app);
 	const box = (await sheet.boundingBox())!;
 	expect(box.y).toBeGreaterThanOrEqual(0);
