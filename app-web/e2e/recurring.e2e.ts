@@ -46,6 +46,71 @@ test('a repeating task notifies at each next occurrence’s due time with no rem
 	await expect(toast).toBeVisible();
 });
 
+test('a weekday list with a time repeats on each listed day and notifies at each', async ({ app, page }) => {
+	await app.openQuickAdd();
+	await app.taskInput().pressSequentially('Gym mon wed fri 7am');
+	await expect(page.getByRole('status', { name: 'Timing preview' })).toHaveText(
+		'Fri Oct 16 at 7:00 AM · Repeats every Mon, Wed, Fri · Notifies at 7:00 AM',
+	);
+	await expect(app.quickAdd().getByText('Every Mon, Wed, Fri', { exact: true })).toBeVisible();
+	await app.taskInput().press('Enter');
+	await expect(app.taskInput()).toHaveValue('');
+	await app.taskInput().press('Escape');
+
+	const row = app.row('Gym');
+	await expect(row).toContainText('Friday 7am');
+	await expect(row.getByRole('img', { name: 'Repeats every Mon, Wed, Fri' })).toBeVisible();
+	await row.getByRole('checkbox', { name: 'Complete Gym' }).click();
+	await expect(page.getByRole('status').filter({ hasText: 'Completed “Gym”, next due Monday 7am' })).toBeVisible();
+	await expect(row).toContainText('Monday 7am');
+
+	await app.setNow(new Date('2026-10-19T07:01:00Z'));
+	await page.reload();
+	await expect(page.getByRole('status').filter({ hasText: 'Reminder: Gym' })).toBeVisible();
+});
+
+test('a weekday list in prose stays text while a slashed list repeats', async ({ app }) => {
+	await app.add('Discuss mon wed plan', 'Yoga tue/thu');
+	await expect(app.row('Discuss mon wed plan')).toHaveText('Discuss mon wed plan');
+	await expect(app.row('Yoga')).toContainText('Tomorrow');
+	await expect(app.row('Yoga').getByRole('img', { name: 'Repeats every Tue, Thu' })).toBeVisible();
+});
+
+test('the repeat menu toggles weekdays and keeps the last one on', async ({ app, page }) => {
+	await app.add('Water plants');
+	const open = () =>
+		app
+			.row('Water plants')
+			.getByRole('button', { name: /Water plants/ })
+			.click();
+	await open();
+	const details = app.details();
+	const menu = page.getByRole('dialog', { name: 'Repeat' });
+	const day = (name: string) => menu.getByRole('button', { name, exact: true });
+
+	await details.getByRole('button', { name: 'Set repeat' }).click();
+	await expect(day('Wed')).toHaveAttribute('aria-pressed', 'false');
+	await day('Fri').click();
+	await expect(details.getByRole('button', { name: 'Repeats every Fri' })).toBeVisible();
+	await expect(details.getByRole('button', { name: 'Due Friday' })).toBeVisible();
+	await day('Mon').click();
+	await expect(menu).toBeVisible();
+	await expect(day('Mon')).toHaveAttribute('aria-pressed', 'true');
+	await expect(day('Fri')).toHaveAttribute('aria-pressed', 'true');
+	await expect(day('Wed')).toHaveAttribute('aria-pressed', 'false');
+	await expect(details.getByRole('button', { name: 'Repeats every Mon, Fri' })).toBeVisible();
+	await expect(details.getByRole('button', { name: 'Due Friday' })).toBeVisible();
+
+	await page.reload();
+	await open();
+	await expect(details.getByRole('button', { name: 'Due Friday' })).toBeVisible();
+	await details.getByRole('button', { name: 'Repeats every Mon, Fri' }).click();
+	await day('Mon').click();
+	await expect(details.getByRole('button', { name: 'Repeats every Fri' })).toBeVisible();
+	await expect(day('Mon')).toHaveAttribute('aria-pressed', 'false');
+	await expect(day('Fri')).toBeDisabled();
+});
+
 test('task details set, change, and clear a repeat', async ({ app, page }) => {
 	await app.add('Water plants');
 	await app
