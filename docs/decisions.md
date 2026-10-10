@@ -63,10 +63,12 @@ This is the single source for Procrastimate's concepts, goals, paradigms, and hi
 
 ## Dev hosting
 
-- **Stefan's dev web client runs on potatoey's box.** It is reachable on Stefan's tailnet at host `stf-box`. Procrastimate owns ports 6120 (web) and 6121 (API) there.
+- **Stefan's dev web client runs on potatoey's box.** Stefan opens it over HTTPS at `https://stf-box.tailff2195.ts.net:6120`. Procrastimate owns ports 6120 (web) and 6121 (API) there.
+- **HTTPS through `tailscale serve`.** `tailscale serve` terminates TLS on port 6120 and proxies to the Vite dev server on box-local port 16120 (the public port plus 10000). The API stays on 6121 and the browser reaches it only through `/api`. Plain HTTP on the tailnet is gone, so the app always runs in a secure context there.
 - **The box tracks `master`.** Its checkout auto-pulls about every 3 minutes, so every merge is live within minutes.
-- **The box starts the client with `--host 0.0.0.0 --port $PORT` and `__VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS=.ts.net`.** Keep the web client compatible with that launch. Vite CLI flags must keep overriding the config's host and port, so never hardcode a bind address or port that flags cannot change. `server.allowedHosts` must stay an array, because Vite only appends the extra hosts to an array. The `/api` proxy must keep working through any allowed host.
-- **Use the full tailnet name.** `.ts.net` admits `stf-box.<tailnet>.ts.net` and the tailnet IP. Vite blocks the bare `stf-box` short name unless the box adds it to the extra allowed hosts.
+- **The box starts the client with `--host $HOST --port $PORT` and `__VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS=.ts.net`.** Keep the web client compatible with that launch. Vite CLI flags must keep overriding the config's host and port, so never hardcode a bind address or port that flags cannot change. `server.allowedHosts` must stay an array, because Vite only appends the extra hosts to an array. The `/api` proxy must keep working through any allowed host.
+- **Use the full tailnet name.** `.ts.net` admits `stf-box.<tailnet>.ts.net`. Vite blocks the bare `stf-box` short name unless the box adds it to the extra allowed hosts.
+- **Don't depend on a secure context.** Local runs and tests still use plain HTTP, so browser APIs limited to secure contexts, such as `crypto.randomUUID`, need a fallback.
 
 ## Persistence and sync
 
