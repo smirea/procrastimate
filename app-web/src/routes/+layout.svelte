@@ -171,7 +171,8 @@
 	/* The drawer floats over a full task list, so it takes the dense material instead of the desktop sidebar's. */
 	.drawer :global(nav) {
 		--glass-fill: var(--glass-strong-bg);
-		--glass-blur: 30px;
+		-webkit-backdrop-filter: blur(30px) saturate(190%);
+		backdrop-filter: blur(30px) saturate(190%);
 	}
 
 	.fab {
