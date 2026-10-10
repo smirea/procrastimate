@@ -43,11 +43,12 @@ This is the single source for Procrastimate's concepts, goals, paradigms, and hi
 
 ## Domain
 
-- **Task.** A title, optional notes, an optional project, any number of labels, an optional due date with an optional time, an optional recurrence, a priority, a list of reminders, and an optional completion time.
+- **Task.** A title, optional notes, an optional project, any number of labels, an optional due date with an optional time, an optional recurrence, a priority, a list of reminders, an optional completion time, and an optional parent task with a position among its siblings.
+- **Subtask.** A task with a parent task. It is a full task with its own date, repeat, priority, and reminders, and it nests to any depth. See Subtasks.
 - **Recurrence.** Repeats every interval of days, weekdays (Monday to Friday), weeks, months, or years, counted from the due date. A weekly repeat can carry a set of weekdays, such as Monday, Wednesday, and Friday, and then repeats on each of them. Without a set it repeats on the due date's weekday. A recurring task is one task whose due date moves forward. It has no separate history of past occurrences.
-- **Inbox.** Tasks without a project. Inbox is a view, not a project.
-- **Today.** Incomplete tasks due today or earlier. Overdue tasks are marked.
-- **Upcoming.** Incomplete tasks due after today, grouped by day.
+- **Inbox.** Top-level tasks without a project. Inbox is a view, not a project.
+- **Today.** Incomplete tasks due today or earlier, subtasks included. Overdue tasks are marked.
+- **Upcoming.** Incomplete tasks due after today, subtasks included, grouped by day.
 - **Project.** A named group of tasks. Deleting a project deletes its tasks.
 - **Label.** A named tag that crosses projects. A task carries any number of labels, stored as label ids in the order they were added. A label owns no tasks, so deleting a label only takes it off its tasks. Labels with no tasks still exist and still show in the sidebar.
 - **Label view.** Every open task carrying a label, across all projects and Inbox, with each row naming its project. Quick add from a label view starts with that label.
@@ -134,6 +135,22 @@ This is the single source for Procrastimate's concepts, goals, paradigms, and hi
 - **Keyboard.** The field keeps focus. Up and Down move the selection and wrap. Enter opens it. Escape closes. Results follow the combobox and listbox pattern so screen readers announce the selection.
 - **Opening a result.** A task opens task details in place of search. A project navigates to the project, and a label navigates to its label view. A task result shows the labels that matched as highlighted chips, so it is clear why it is listed.
 - **Layout.** On desktop it is a centered glass dialog like quick add, with results under the field. On a phone it is a bottom sheet with the field at the bottom and results above it, like the iOS 26 bottom search field, docked above the keyboard. Scrolling results dismisses the keyboard. Matches use the `--token-match` highlight, which the contrast test checks in both themes.
+
+## Subtasks
+
+- **Subtasks are tasks.** A subtask is a `Task` with a `parentId` and an `order` among its siblings, not a checklist item. It has its own date, repeat, priority, reminders, notes, and subtasks, so nesting has no depth limit. This matches Todoist, and it keeps one shape for reminders, search, and sync.
+- **Where they show.** Inbox and project lists show top-level tasks only, and a parent row shows a progress ring with `done/total` for its direct subtasks. Today and Upcoming list a dated subtask as its own row, marked with its parent's title, because a date is a commitment on its own.
+- **Editing.** Task details lists the subtasks under the notes, with a field that adds one on Enter and keeps focus for the next. The field parses dates, repeats, priority, reminders, and `@` labels like quick add. It has no `#` project, and a `#Name` in a subtask's title stays text, because a subtask always shares its root task's project, and moving a parent moves every task under it. Tapping a subtask opens its details in the same sheet, sliding in like a navigation push, and a back chip with the parent's title replaces the project picker.
+- **Task details scroll.** The date, repeat, priority, and reminder chips sit under the title, outside the scrolling body, so their menus never clip. The notes and subtasks scroll on every screen size, so a long checklist never pushes `Add subtask` or `Delete task` off a phone screen.
+- **Reorder.** Drag the handle on a subtask row, by mouse or touch, or focus it and press the up and down arrows. The rows it passes slide out of its way, and it settles into place on release. Order persists.
+- **Completing a parent completes everything under it.** Checking off a task completes every open subtask under it, at every depth. Undo puts back exactly the tasks the completion changed, and only their completion, date, and reminders, so subtasks that were already done stay done and edits made since survive. An open task never sits under a completed one, so reopening a subtask, or adding one, reopens its completed parents.
+- **Checking a subtask in task details toggles it.** The checkbox is its own undo, so there is no toast. Completing a subtask with `Complete` in its own details returns to the parent.
+- **Recurring parents reset their subtasks.** Completing a recurring task moves it to its next occurrence and reopens every subtask under it, so each occurrence starts with a fresh checklist. Subtask dates do not move with the parent. Undo restores the parent's date and every subtask's state.
+- **Reminders stay per task.** A subtask notifies at its own due time and reminders, like any task, while it is open. Completing a parent completes its subtasks, which silences theirs. Subtasks do not inherit the parent's reminders.
+- **Search finds subtasks by their own text.** A subtask is a result like any task, matched on its own title and notes, never its parent's. Its row names its parent under the title, and opening it shows the back chip to the parent.
+- **Labels are per task.** A new subtask starts with only the labels typed into it and never inherits or follows its parent's, unlike the project. A label marks the task it is on, so a label view lists only the tasks that carry it. This matches Todoist.
+- **Delete takes the subtree.** Deleting a task deletes every subtask under it, and undo restores all of them. Deleting a project deletes its tasks, subtasks included.
+- **Stored data.** Tasks stored before subtasks existed load as top-level tasks. A subtask whose parent is missing, or whose parents loop, loads as a top-level task so it never goes unreachable.
 
 ## Stack
 

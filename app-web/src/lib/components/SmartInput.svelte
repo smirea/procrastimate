@@ -19,6 +19,7 @@
 		label,
 		placeholder = '',
 		autofocus = false,
+		suggestProjects: projectSuggestions = true,
 		enterkeyhint,
 		class: className = '',
 		onkeydown,
@@ -31,6 +32,7 @@
 		label: string;
 		placeholder?: string;
 		autofocus?: boolean;
+		suggestProjects?: boolean;
 		enterkeyhint?: 'enter' | 'done' | 'send';
 		class?: string;
 		onkeydown?: (event: KeyboardEvent) => void;
@@ -74,6 +76,7 @@
 		if (!focused) return null;
 		let closest: (SigilFragment & { kind: NameKind }) | null = null;
 		for (const kind of ['project', 'label'] as const) {
+			if (kind === 'project' && !projectSuggestions) continue;
 			const found = sigilFragment(value, caret, NAME_SOURCES[kind].sigil, NAME_SOURCES[kind].items());
 			if (found && (!closest || found.start > closest.start)) closest = { ...found, kind };
 		}

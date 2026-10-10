@@ -9,7 +9,7 @@
 	import Sidebar from '#lib/components/Sidebar.svelte';
 	import QuickAdd from '#lib/components/QuickAdd.svelte';
 	import Search from '#lib/components/Search.svelte';
-	import TaskDetails from '#lib/components/TaskDetails.svelte';
+	import TaskSheet from '#lib/components/TaskSheet.svelte';
 	import NotificationsSheet from '#lib/components/NotificationsSheet.svelte';
 	import Toasts from '#lib/components/Toasts.svelte';
 	import { store } from '#lib/store.svelte.ts';
@@ -133,10 +133,8 @@
 	<QuickAdd defaults={sheets.current.defaults} />
 {:else if sheets.current.kind === 'search'}
 	<Search />
-{:else if openTask}
-	{#key openTask.id}
-		<TaskDetails task={openTask} />
-	{/key}
+{:else if openTask && sheets.current.kind === 'task'}
+	<TaskSheet task={openTask} arrival={sheets.current.arrival} />
 {:else if sheets.current.kind === 'notifications'}
 	<NotificationsSheet />
 {/if}

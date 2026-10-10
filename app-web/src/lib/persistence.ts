@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { detachOrphans } from 'shared/subtasks.ts';
 import {
 	weeklyOn,
 	type DateKey,
@@ -20,6 +21,8 @@ const weekdays = z
 
 const taskSchema = z.object({
 	id: z.string(),
+	parentId: z.string().nullable().default(null),
+	order: z.number().default(0),
 	title: z.string(),
 	notes: z.string(),
 	projectId: z.string().nullable(),
@@ -56,10 +59,12 @@ const labelSchema = projectSchema satisfies z.ZodType<Label>;
 
 /** Drops a task that fails validation instead of failing the whole snapshot, so one bad task never wipes the rest. */
 const tasksSchema = z.array(z.unknown()).transform(items =>
-	items.flatMap(item => {
-		const task = taskSchema.safeParse(item);
-		return task.success ? [task.data] : [];
-	}),
+	detachOrphans(
+		items.flatMap(item => {
+			const task = taskSchema.safeParse(item);
+			return task.success ? [task.data] : [];
+		}),
+	),
 );
 
 const snapshotSchema = z.object({
