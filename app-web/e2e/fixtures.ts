@@ -58,4 +58,30 @@ export class App {
 	async setNow(date: Date) {
 		await this.page.clock.setFixedTime(date);
 	}
+
+	themeOption = (name: 'System' | 'Light' | 'Dark') =>
+		this.page.getByRole('radiogroup', { name: 'Theme' }).getByRole('radio', { name });
+
+	/** The theme the user sees: `<html>`'s theme and the canvas the page paints. */
+	async expectTheme(theme: 'light' | 'dark') {
+		await expect(this.page.locator('html')).toHaveAttribute('data-theme', theme);
+		await expect(this.page.locator('body')).toHaveCSS(
+			'background-color',
+			theme === 'dark' ? 'rgb(14, 14, 16)' : 'rgb(246, 246, 247)',
+		);
+	}
+
+	/** Reloads only the HTML shell, so nothing from the app bundle can set the theme, and checks what the first paint uses. */
+	async expectShellTheme(theme: 'light' | 'dark') {
+		await this.page.route(
+			url => url.pathname !== new URL(this.page.url()).pathname,
+			route => route.abort(),
+		);
+		await this.page.reload();
+		await expect(this.page.locator('html')).toHaveAttribute('data-theme', theme);
+		await expect(this.page.locator('html')).toHaveCSS('color-scheme', theme);
+		await this.page.unrouteAll();
+		await this.page.reload();
+		await expect(this.page.getByRole('heading', { level: 1 })).toBeVisible();
+	}
 }
