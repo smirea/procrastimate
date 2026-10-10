@@ -50,7 +50,7 @@ This is the single source for Procrastimate's concepts, goals, paradigms, and hi
 - **Upcoming.** Incomplete tasks due after today, grouped by day.
 - **Project.** A named group of tasks. Deleting a project deletes its tasks.
 - **Priority.** Todoist's four levels. `p1` is the most urgent and `p4` is the default with no marking.
-- **Reminder.** Either relative to the due time (for example 30 minutes before) or at an absolute date and time. A relative reminder needs a due time to fire. A due time is itself a reminder. Any task with a due time notifies at that time with no reminder set, and reminders add to it, such as 30 minutes before. A date with no time never notifies. A task notifies once per moment, so a reminder at the due time does not notify twice. Reminders fire as an in-app toast and, when the browser allows it, a system notification, while the app is open.
+- **Reminder.** Either relative to the due time (for example 30 minutes before) or at an absolute date and time. A relative reminder needs a due time to fire. A due time is itself a reminder. Any task with a due time notifies at that time with no reminder set, and reminders add to it, such as 30 minutes before. A date with no time never notifies. A task notifies once per moment, so a reminder at the due time does not notify twice. A repeating task notifies at each occurrence's due time, because completing it moves the due date. Reminders fire as an in-app toast and, when the browser allows it, a system notification, while the app is open.
 
 ## Quick add and natural language
 
