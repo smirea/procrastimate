@@ -17,6 +17,7 @@ const task = (projectId: string | null, createdAt: number): Task => ({
 	notes: '',
 	projectId,
 	due: null,
+	recurrence: null,
 	priority: 4,
 	reminders: [],
 	createdAt,
