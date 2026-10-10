@@ -1,6 +1,6 @@
 # Reminders
 
-Reminders let Stefan get nudged about a task, either a set time before it is due or at a specific date and time. He adds them from the bell chip or by typing phrases like `remind me 30m before`. A due time is a reminder too, so a task with a due time notifies at that time without one. While the app is open, a reminder shows a toast and, if the browser allows, a system notification.
+Reminders let Stefan get nudged about a task, either a set time before it is due or at a specific date and time. He adds them from the bell chip or by typing phrases like `remind me 30m before`. A due time is a reminder too, so a task with a due time notifies at that time without one. While the app is open, a reminder shows a toast. With notifications turned on, Web Push also delivers a system notification, even while the app is closed (see [Push notifications](./push-notifications.md)).
 
 ## Sub-features
 
@@ -8,7 +8,7 @@ Reminders let Stefan get nudged about a task, either a set time before it is due
 - `reminders-picker` adds a relative reminder (at due time, 10m, 30m, 1h, or 1d before) or a custom date and time, and removes reminders.
 - `reminders-fire` shows a `Reminder: <title>` toast with `Open` when a reminder comes due.
 - `reminders-due-time` notifies at a task's due time with no reminder set. Reminders add to it, a date with no time never notifies, and a reminder at the due time notifies once.
-- `reminders-notify` asks for notification permission when a task first gets a due time or reminder and sends a system notification when allowed.
+- `reminders-notify` delivers each moment as a system notification through Web Push once notifications are on. See [Push notifications](./push-notifications.md).
 
 ## How to get to it (user POV)
 
@@ -36,6 +36,6 @@ Preconditions:
 - A due time notifies by itself, so the reminder chip can read `Remind` on a task that will still notify. A date with no time never notifies.
 - A relative reminder needs a due time. The picker disables relative presets until the task has one.
 - An absolute reminder without a date uses the due date typed in the same text, then the date already picked or set on the task, then today. One without a time uses 9am. One with a time but no date and no due date lands today, or tomorrow once that time has passed.
-- Reminders fire only while the web app is open. There is no background delivery yet.
+- In-app toasts fire only while the web app is open. Background delivery needs push turned on, and on iPhone the app added to the Home Screen.
 - The app checks for due reminders every 15 seconds and fires each one once, so a reminder time that already passed before the app opened does not fire.
-- Headless browsers deny notification permission. Verify the toast, not the system notification.
+- Headless browsers deny notification permission. Verify the toast here, and system notifications with [Push notifications](./push-notifications.md).

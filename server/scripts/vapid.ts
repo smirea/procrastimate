@@ -21,9 +21,15 @@ async function devVars() {
 	console.log('Wrote a new VAPID key pair to .dev.vars');
 }
 
-/** Uploads a VAPID pair as Worker secrets unless both already exist. Rotate by deleting them and redeploying. */
+/**
+ * Uploads a VAPID pair as Worker secrets unless both already exist. Rotate by deleting them and redeploying.
+ * Extra arguments go to wrangler, such as `--config` for another Worker.
+ */
 async function ensure() {
-	const list = Bun.spawnSync(['bunx', 'wrangler', 'secret', 'list', '--format', 'json'], { stderr: 'inherit' });
+	const wranglerArgs = process.argv.slice(3);
+	const list = Bun.spawnSync(['bunx', 'wrangler', 'secret', 'list', '--format', 'json', ...wranglerArgs], {
+		stderr: 'inherit',
+	});
 	if (list.exitCode !== 0) throw new Error('wrangler secret list failed');
 	const output = list.stdout.toString();
 	// Wrangler can print a banner before the JSON.
@@ -34,7 +40,7 @@ async function ensure() {
 		return;
 	}
 	const keys = await generateVapidKeys();
-	const upload = Bun.spawnSync(['bunx', 'wrangler', 'secret', 'bulk'], {
+	const upload = Bun.spawnSync(['bunx', 'wrangler', 'secret', 'bulk', ...wranglerArgs], {
 		stdin: new TextEncoder().encode(
 			JSON.stringify({ VAPID_PUBLIC_KEY: keys.publicKey, VAPID_PRIVATE_KEY: keys.privateKey }),
 		),
