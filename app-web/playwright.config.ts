@@ -12,7 +12,14 @@ export default defineConfig({
 		timezoneId: 'UTC',
 		trace: 'retain-on-failure',
 	},
-	projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } } }],
+	projects: [
+		{
+			name: 'desktop',
+			testIgnore: '**/mobile.e2e.ts',
+			use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } },
+		},
+		{ name: 'mobile', testMatch: '**/mobile.e2e.ts', use: devices['iPhone 15 Pro'] },
+	],
 	webServer: {
 		command: 'bun --bun run vite',
 		url: `http://127.0.0.1:${PORT}/inbox`,

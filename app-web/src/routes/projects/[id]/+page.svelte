@@ -58,7 +58,7 @@
 		{#snippet actions()}
 			<Popover label="Project actions" align="end">
 				{#snippet trigger({ toggle })}
-					<button type="button" class="grid size-9 place-items-center rounded-xl text-muted transition-colors hover:bg-black/5 hover:text-ink" aria-label="Project actions" onclick={() => {
+					<button type="button" class="grid size-9 place-items-center rounded-xl text-muted transition-colors hover:bg-black/5 hover:text-ink touch:size-11" aria-label="Project actions" onclick={() => {
 						confirmingDelete = false;
 						toggle();
 					}}>

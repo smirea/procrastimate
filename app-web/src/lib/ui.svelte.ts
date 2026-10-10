@@ -1,4 +1,28 @@
+import { MediaQuery } from 'svelte/reactivity';
 import { toDateKey } from 'shared/task.ts';
+
+/** Matches Tailwind's `md` breakpoint, below which the sidebar becomes a drawer and sheets dock to the bottom. */
+export const mobile = new MediaQuery('max-width: 767px');
+
+/**
+ * Publishes the on-screen keyboard's height as `--keyboard-inset` so bottom sheets sit above it.
+ * iOS Safari overlays the keyboard instead of resizing the layout viewport, so only the visual viewport shrinks.
+ */
+export function trackKeyboardInset() {
+	const viewport = window.visualViewport;
+	if (!viewport) return;
+	const update = () => {
+		const inset = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop);
+		document.documentElement.style.setProperty('--keyboard-inset', `${Math.round(inset)}px`);
+	};
+	update();
+	viewport.addEventListener('resize', update);
+	viewport.addEventListener('scroll', update);
+	return () => {
+		viewport.removeEventListener('resize', update);
+		viewport.removeEventListener('scroll', update);
+	};
+}
 
 /** Minute-resolution clock, so Today rolls over at midnight and reminders fire while the app is open. */
 class Clock {

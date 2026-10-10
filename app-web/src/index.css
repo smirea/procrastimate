@@ -1,5 +1,12 @@
 @import 'tailwindcss';
 
+/* Phones and touch screens: larger targets, no hover-only affordances. */
+@custom-variant touch {
+	@media (max-width: 767px), (pointer: coarse) {
+		@slot;
+	}
+}
+
 @theme {
 	--font-sans:
 		'Google Sans Flex', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -102,9 +109,11 @@
 			transform 150ms var(--ease-spring);
 	}
 
-	.chip:hover {
-		background: rgb(255 255 255 / 0.95);
-		border-color: rgb(24 24 27 / 0.18);
+	@media (hover: hover) {
+		.chip:hover {
+			background: rgb(255 255 255 / 0.95);
+			border-color: rgb(24 24 27 / 0.18);
+		}
 	}
 
 	.chip:active {
@@ -151,8 +160,10 @@
 		color: var(--color-ink);
 	}
 
-	.btn-quiet:hover {
-		background: rgb(24 24 27 / 0.09);
+	@media (hover: hover) {
+		.btn-quiet:hover {
+			background: rgb(24 24 27 / 0.09);
+		}
 	}
 
 	.menu-item {
@@ -169,8 +180,8 @@
 		transition: background 120ms var(--ease-spring);
 	}
 
-	.menu-item:hover,
-	.menu-item:focus-visible {
+	.menu-item:focus-visible,
+	.menu-item:active {
 		background: rgb(24 24 27 / 0.06);
 		outline: none;
 	}
@@ -188,5 +199,60 @@
 
 	.field:focus {
 		border-color: var(--color-accent);
+	}
+
+	/* Grows a small control's tap target to 44px without changing its layout. */
+	.hit-area::before {
+		content: '';
+		position: absolute;
+		left: 50%;
+		top: 50%;
+		width: max(100%, 2.75rem);
+		height: max(100%, 2.75rem);
+		translate: -50% -50%;
+	}
+
+	@media (hover: hover) {
+		.menu-item:hover {
+			background: rgb(24 24 27 / 0.06);
+		}
+	}
+
+	@media (max-width: 767px), (pointer: coarse) {
+		.chip,
+		.btn,
+		.field {
+			height: 2.75rem;
+		}
+
+		.chip,
+		.btn {
+			border-radius: 0.875rem;
+			font-size: 0.875rem;
+		}
+
+		.menu-item {
+			height: 2.75rem;
+			font-size: 0.9375rem;
+		}
+
+		/* iOS zooms the page when a focused field's text is under 16px. */
+		.field,
+		input,
+		textarea {
+			font-size: max(1rem, 1em);
+		}
+	}
+
+	/* Below md, sheets float inset from the screen edges, docked above the home indicator or the on-screen keyboard. */
+	@media (max-width: 767px) {
+		.sheet {
+			left: max(0.5rem, env(safe-area-inset-left));
+			right: max(0.5rem, env(safe-area-inset-right));
+			bottom: max(0.5rem, env(safe-area-inset-bottom), calc(var(--keyboard-inset, 0px) + 0.5rem));
+			max-height: calc(100dvh - var(--keyboard-inset, 0px) - max(3rem, env(safe-area-inset-top) + 1rem) - 0.5rem);
+			border-radius: 1.75rem;
+			transition: bottom 240ms var(--ease-spring);
+		}
 	}
 }

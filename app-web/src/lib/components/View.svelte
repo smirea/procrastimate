@@ -43,7 +43,7 @@
 
 	<button
 		type="button"
-		class="group mt-1 flex h-10 w-full items-center gap-3 rounded-xl px-2 text-[14px] text-muted transition-colors hover:text-accent"
+		class="group mt-1 flex h-10 w-full items-center gap-3 rounded-xl px-2 text-[14px] text-muted transition-colors hover:text-accent touch:h-12 touch:text-[15px]"
 		onclick={() => sheets.openQuickAdd(quickAdd)}
 	>
 		<span class="grid size-[18px] place-items-center rounded-full text-accent transition-colors group-hover:bg-accent group-hover:text-white">

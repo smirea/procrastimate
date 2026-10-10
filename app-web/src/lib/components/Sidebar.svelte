@@ -43,15 +43,15 @@
 	}
 </script>
 
-<nav class="glass flex h-full flex-col gap-5 rounded-2xl p-3" aria-label="Main">
+<nav class="glass flex h-full flex-col gap-5 overflow-y-auto overscroll-contain rounded-2xl p-3" aria-label="Main">
 	<div class="flex items-center justify-between px-2 pt-1">
 		<span class="text-[15px] font-semibold tracking-tight">Procrastimate</span>
 	</div>
 
-	<button type="button" class="menu-item h-9 font-medium text-accent" onclick={onquickadd}>
+	<button type="button" class="menu-item h-9 font-medium text-accent touch:h-11" onclick={onquickadd}>
 		<PlusCircle size={20} weight="fill" />
 		Add task
-		<kbd class="ml-auto rounded-md border border-black/10 px-1.5 text-[11px] font-normal text-faint">Q</kbd>
+		<kbd class="ml-auto rounded-md touch:hidden border border-black/10 px-1.5 text-[11px] font-normal text-faint">Q</kbd>
 	</button>
 
 	<ul class="space-y-0.5">
@@ -70,7 +70,7 @@
 	<section aria-label="Projects">
 		<div class="flex items-center justify-between px-2 pb-1">
 			<h2 class="text-[12px] font-medium tracking-wide text-faint uppercase">Projects</h2>
-			<button type="button" class="grid size-7 place-items-center rounded-lg text-muted transition-colors hover:bg-black/5 hover:text-ink" aria-label="Add project" onclick={() => (adding = true)}>
+			<button type="button" class="grid size-7 place-items-center rounded-lg text-muted transition-colors hover:bg-black/5 hover:text-ink touch:size-11" aria-label="Add project" onclick={() => (adding = true)}>
 				<Plus size={14} weight="bold" />
 			</button>
 		</div>
@@ -92,7 +92,7 @@
 				<li transition:slide={{ duration: 180, easing: cubicOut }}>
 					<!-- svelte-ignore a11y_autofocus -->
 					<input
-						class="field h-9 w-full"
+						class="field h-9 w-full touch:h-11"
 						aria-label="Project name"
 						placeholder="Project name"
 						autofocus
@@ -127,8 +127,17 @@
 			color 160ms var(--ease-spring);
 	}
 
-	.nav-link:hover {
-		background: rgb(24 24 27 / 0.05);
+	@media (hover: hover) {
+		.nav-link:hover {
+			background: rgb(24 24 27 / 0.05);
+		}
+	}
+
+	@media (max-width: 767px), (pointer: coarse) {
+		.nav-link {
+			height: 2.75rem;
+			font-size: 0.9375rem;
+		}
 	}
 
 	.nav-link.active {

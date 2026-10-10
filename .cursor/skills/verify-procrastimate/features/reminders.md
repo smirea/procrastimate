@@ -31,7 +31,7 @@ Preconditions:
 ## Gotchas
 
 - A relative reminder needs a due time. The picker disables relative presets until the task has one.
-- An absolute reminder without a date uses the task's due date, or today. One without a time uses 9am.
+- An absolute reminder without a date uses the due date typed in the same text, then the date already picked or set on the task, then today. One without a time uses 9am.
 - Reminders fire only while the web app is open. There is no background delivery yet.
 - The app checks for due reminders every 15 seconds and fires each one once, so a reminder time that already passed before the app opened does not fire.
 - Headless browsers deny notification permission. Verify the toast, not the system notification.

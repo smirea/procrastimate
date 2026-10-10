@@ -9,7 +9,8 @@ The web client covers adding, viewing, editing, completing, prioritizing, and re
 - Generate env values with `env-manager gen --local`, then start the web client and server with `bun run start` from the repo root.
 - The web client answers at `http://127.0.0.1:6120` or `http://procrastimate.localhost:6120` and opens on Inbox. The API answers `GET /api/status` through the client proxy with `{"ok":true}`.
 - Web data lives in the browser's `localStorage` under the `procrastimate` key. A fresh browser profile is the baseline state with no tasks or projects.
-- Run the automated web suite with `bun run test:e2e` from the repo root, after `bunx playwright install chromium` once in `app-web/`. It starts its own client on port 6130 with a fresh profile per test and a clock pinned to Wednesday, October 14 2026, 10:00 UTC, so it can run while the dev server is up. Filter with `bun run test:e2e -- <file> -g "<test name>"`.
+- Run the automated web suite with `bun run test:e2e` from the repo root, after `bunx playwright install --with-deps chromium webkit` once in `app-web/`. It starts its own client on port 6130 with a fresh profile per test and a clock pinned to Wednesday, October 14 2026, 10:00 UTC, so it can run while the dev server is up. Filter with `bun run test:e2e -- <file> -g "<test name>"`.
+- The suite has two Playwright projects. `desktop` runs every file except `e2e/mobile.e2e.ts` in Chromium at 1280×800. `mobile` runs only `e2e/mobile.e2e.ts` in WebKit with the `iPhone 15 Pro` profile (393×659, touch). Pick one with `--project desktop` or `--project mobile`.
 - Start the iOS client in a simulator with `bun run start:ios -t simulator`. Until the first feature ships, it shows `Hello!`. It needs macOS with Xcode, so a Linux agent skips iOS steps.
 - Seed fixtures through quick add, the real user path. Planned: a disposable server store once sync exists.
 - Planned: a `verify-procrastimate` skill owns launch, doctor, and cleanup. Until it exists, never drive an instance this run did not start.
@@ -20,6 +21,7 @@ The web client covers adding, viewing, editing, completing, prioritizing, and re
 - Start every recipe from the baseline state unless its preconditions say otherwise.
 - Drive the web client through a browser with the `control-ui` skill, or run its Playwright test. Planned: drive the iOS client with XCUITest. Use `xcrun simctl` only for simulator lifecycle, screenshots, and recordings.
 - Prefer accessible roles and names over CSS selectors, coordinates, or tab order.
+- Below 768 px wide the web client is in its phone layout. The sidebar is hidden behind `Open navigation`, a floating `Quick add` button replaces the `q` shortcut, and quick add and task details open as bottom sheets. Drive phone steps with taps, not keyboard shortcuts.
 - Exercise the real user path. Do not call internal setters, test-only endpoints, or the sync API directly.
 - Restore seeded data after a mutation. Do not remove proof artifacts during cleanup.
 
