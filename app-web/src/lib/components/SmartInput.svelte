@@ -114,6 +114,9 @@
 	.token-project {
 		--tint: var(--token-project);
 	}
+	.token-recurrence {
+		--tint: var(--token-recurrence);
+	}
 
 	@keyframes token-in {
 		from {

@@ -33,6 +33,7 @@
 		update({
 			title: parsed.title,
 			due: parsed.due ?? task.due,
+			recurrence: parsed.recurrence ?? task.recurrence,
 			priority: parsed.priority ?? task.priority,
 			projectId: parsed.projectId ?? task.projectId,
 			reminders,

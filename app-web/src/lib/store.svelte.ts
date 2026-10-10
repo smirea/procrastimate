@@ -1,4 +1,12 @@
-import { DEFAULT_PRIORITY, type Due, type Priority, type Project, type Reminder, type Task } from 'shared/task.ts';
+import {
+	DEFAULT_PRIORITY,
+	type Due,
+	type Priority,
+	type Project,
+	type Recurrence,
+	type Reminder,
+	type Task,
+} from 'shared/task.ts';
 import { newId } from 'shared/id.ts';
 import { loadSnapshot, saveSnapshot, type Snapshot } from './persistence.ts';
 
@@ -6,11 +14,14 @@ export type NewTask = {
 	title: string;
 	projectId: string | null;
 	due: Due | null;
+	recurrence: Recurrence | null;
 	priority: Priority | null;
 	reminders: Reminder[];
 };
 
-export type TaskPatch = Partial<Pick<Task, 'title' | 'notes' | 'projectId' | 'due' | 'priority' | 'reminders'>>;
+export type TaskPatch = Partial<
+	Pick<Task, 'title' | 'notes' | 'projectId' | 'due' | 'recurrence' | 'priority' | 'reminders'>
+>;
 
 /** Every mutation is a discrete command that persists synchronously, so it can become a sync log later. */
 class Store {
@@ -50,6 +61,7 @@ class Store {
 			notes: '',
 			projectId: input.projectId,
 			due: input.due,
+			recurrence: input.recurrence,
 			priority: input.priority ?? DEFAULT_PRIORITY,
 			reminders: input.reminders,
 			createdAt: Date.now(),

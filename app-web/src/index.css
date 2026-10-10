@@ -33,6 +33,7 @@
 	--token-priority: rgb(229 72 77 / 0.15);
 	--token-reminder: rgb(124 92 255 / 0.16);
 	--token-project: rgb(62 123 250 / 0.15);
+	--token-recurrence: rgb(217 119 6 / 0.16);
 	font-optical-sizing: auto;
 	color: var(--color-ink);
 	-webkit-font-smoothing: antialiased;

@@ -4,6 +4,7 @@ import {
 	type DateKey,
 	type Due,
 	type Priority,
+	type Recurrence,
 	type Reminder,
 	type TimeOfDay,
 } from 'shared/task.ts';
@@ -51,6 +52,13 @@ export function formatMinutes(minutes: number): string {
 	if (minutes % 1440 === 0) return `${minutes / 1440}d`;
 	if (minutes % 60 === 0) return `${minutes / 60}h`;
 	return `${minutes}m`;
+}
+
+export function formatRecurrence({ interval, unit }: Recurrence, due: Due | null): string {
+	if (unit === 'week' && interval === 1 && due) {
+		return `Every ${fromDateKey(due.date).toLocaleDateString('en-US', { weekday: 'short' })}`;
+	}
+	return interval === 1 ? `Every ${unit}` : `Every ${interval} ${unit}s`;
 }
 
 export function formatReminder(reminder: Reminder, today: DateKey): string {
