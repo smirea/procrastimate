@@ -2,21 +2,23 @@
 
 This directory is the maintained source for verifying the user-facing behavior of Procrastimate. Procrastimate is Stefan's personal task manager, a rough Todoist clone with one user, a web client, an iOS client, and an Apple Watch client later. It is local first and synced, every interaction responds instantly, and motion is subtle but satisfying. Features change often, so update the map with the feature and never keep entries for removed behavior.
 
-Today the app is a hello screen, so every feature below is planned. A `Planned:` step describes the intended user path and the observable result, with no harness commands or stable handles. Replace it with exact commands when its feature and harness ship.
+The web client covers adding, viewing, editing, completing, prioritizing, and reminding, and every web step not marked `Planned:` is proven by a Playwright test named in its bullet. iOS, sync, completed-task history, and keyboard selection are still planned. A `Planned:` step describes the intended user path and the observable result, with no harness commands or stable handles. Replace it with exact commands when its feature and harness ship.
 
 ## Baseline preconditions
 
 - Generate env values with `env-manager gen --local`, then start the web client and server with `bun run start` from the repo root.
-- The web client answers at `http://127.0.0.1:6120` or `http://procrastimate.localhost:6120`. The API answers `GET /api/status` through the client proxy with `{"ok":true}`. Until the first feature ships, the page shows the starter heading `Example Page`.
+- The web client answers at `http://127.0.0.1:6120` or `http://procrastimate.localhost:6120` and opens on Inbox. The API answers `GET /api/status` through the client proxy with `{"ok":true}`.
+- Web data lives in the browser's `localStorage` under the `procrastimate` key. A fresh browser profile is the baseline state with no tasks or projects.
+- Run the automated web suite with `bun run test:e2e` from the repo root, after `bunx playwright install chromium` once in `app-web/`. It starts its own client on port 6130 with a fresh profile per test and a clock pinned to Wednesday, October 14 2026, 10:00 UTC, so it can run while the dev server is up. Filter with `bun run test:e2e -- <file> -g "<test name>"`.
 - Start the iOS client in a simulator with `bun run start:ios -t simulator`. Until the first feature ships, it shows `Hello!`. It needs macOS with Xcode, so a Linux agent skips iOS steps.
-- Planned: start each run against a disposable local store and a disposable server store, seeded with the fixtures that each feature file names.
+- Seed fixtures through quick add, the real user path. Planned: a disposable server store once sync exists.
 - Planned: a `verify-procrastimate` skill owns launch, doctor, and cleanup. Until it exists, never drive an instance this run did not start.
 - The ports are fixed (`strictPort`), so two web instances cannot run side by side.
 
 ## Driving conventions
 
 - Start every recipe from the baseline state unless its preconditions say otherwise.
-- Drive the web client through a browser with the `control-ui` skill. Planned: drive the iOS client with XCUITest. Use `xcrun simctl` only for simulator lifecycle, screenshots, and recordings.
+- Drive the web client through a browser with the `control-ui` skill, or run its Playwright test. Planned: drive the iOS client with XCUITest. Use `xcrun simctl` only for simulator lifecycle, screenshots, and recordings.
 - Prefer accessible roles and names over CSS selectors, coordinates, or tab order.
 - Exercise the real user path. Do not call internal setters, test-only endpoints, or the sync API directly.
 - Restore seeded data after a mutation. Do not remove proof artifacts during cleanup.
@@ -44,9 +46,11 @@ Keep implementation details out of the map. Name only user paths, stable handles
 
 ## Features
 
-- [Add a task](./add-task.md) covers quick add from each client, due dates, and cancel.
+- [Add a task](./add-task.md) covers quick add from each client, inline natural-language parsing, keep as text, defaults, and cancel.
 - [Complete a task](./complete-task.md) covers completion, undo, and the completion animation.
-- [Edit a task](./edit-task.md) covers title, notes, due date, priority, and delete.
+- [Edit a task](./edit-task.md) covers title, notes, due date, priority, natural language in the title, and delete.
+- [Priority](./priority.md) covers priority shortcuts, the priority picker, and priority colors.
+- [Reminders](./reminders.md) covers typed and picked reminders and reminders firing while the app is open.
 - [Task views](./task-views.md) covers Inbox, Today, Upcoming, and their empty states.
 - [Projects](./projects.md) covers creating projects and moving tasks between them.
 - [Offline and sync](./offline-sync.md) covers offline use and convergence across clients.
