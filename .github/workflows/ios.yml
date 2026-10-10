@@ -70,6 +70,7 @@ jobs:
           udid=$(xcrun simctl create "Parity iPhone 16" com.apple.CoreSimulator.SimDeviceType.iPhone-16 "$runtime")
           xcrun simctl boot "$udid"
           xcrun simctl bootstatus "$udid" -b
+          xcrun simctl status_bar "$udid" override --time 10:00 --batteryState charged --batteryLevel 100 --wifiBars 3
           echo "udid=$udid" >> "$GITHUB_OUTPUT"
 
       - name: Build
@@ -91,7 +92,7 @@ jobs:
 
       - name: Upload screenshots
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ios-parity
           path: ios-parity/
@@ -99,7 +100,7 @@ jobs:
 
       - name: Upload test results
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ios-xcresult
           path: ios-results/App.xcresult
@@ -139,7 +140,7 @@ jobs:
 
       - name: Upload screenshots
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: web-parity
           path: app-web/test-results/parity/
@@ -157,13 +158,13 @@ jobs:
         with:
           bun-version: 1.4.3
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         continue-on-error: true
         with:
           name: web-parity
           path: parity/web
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         continue-on-error: true
         with:
           name: ios-parity
@@ -172,7 +173,7 @@ jobs:
       - name: Build the report
         run: bun app-ios/scripts/parity-report.ts parity/web parity/ios parity-report
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: parity-report
           path: parity-report/

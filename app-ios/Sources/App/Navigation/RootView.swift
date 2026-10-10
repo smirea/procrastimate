@@ -24,8 +24,8 @@ struct RootView: View {
         }
         .tabViewStyle(.sidebarAdaptable)
         .tabBarMinimizeBehavior(.onScrollDown)
-        .tint(Palette.accent)
         .sheet(item: $navigator.sheet) { SheetView(sheet: $0) }
+        .tint(Palette.accent)
     }
 }
 
