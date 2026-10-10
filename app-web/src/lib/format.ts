@@ -64,7 +64,7 @@ export function formatRecurrence({ interval, unit }: Recurrence, due: Due | null
 	return interval === 1 ? `Every ${unit}` : `Every ${interval} ${unit}s`;
 }
 
-export type TimingSegment = { kind: 'due' | 'recurrence' | 'reminder'; text: string };
+export type TimingSegment = { kind: 'due' | 'recurrence' | 'notify' | 'reminder'; text: string };
 
 /** `5:00 PM`, spelled out because `toLocaleTimeString` inserts a narrow no-break space on newer ICU. */
 function clockTime(time: TimeOfDay): string {
@@ -121,7 +121,7 @@ function describeReminder(reminder: Reminder, due: Due | null, today: DateKey): 
 	}
 }
 
-/** The full resolved timing, shown above the title input while the text carries a date, repeat, or reminder. */
+/** The full resolved timing, shown above the title input while the text carries a date, repeat, or reminder. A reminder at the due time folds into `Notifies at`, since it notifies once. */
 export function describeTiming(
 	timing: { due: Due | null; recurrence: Recurrence | null; reminders: readonly Reminder[] },
 	today: DateKey,
@@ -132,7 +132,10 @@ export function describeTiming(
 		const repeat = formatRecurrence(timing.recurrence, timing.due);
 		segments.push({ kind: 'recurrence', text: `Repeats ${repeat[0]!.toLowerCase()}${repeat.slice(1)}` });
 	}
+	const dueAt = timing.due?.time ? fromDateKey(timing.due.date, timing.due.time).getTime() : null;
+	if (timing.due?.time) segments.push({ kind: 'notify', text: `Notifies at ${clockTime(timing.due.time)}` });
 	for (const reminder of timing.reminders) {
+		if (dueAt !== null && reminderFiresAt(reminder, timing.due)?.getTime() === dueAt) continue;
 		segments.push({ kind: 'reminder', text: describeReminder(reminder, timing.due, today) });
 	}
 	return segments;

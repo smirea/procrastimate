@@ -10,20 +10,32 @@ describe('describeTiming', () => {
 	test('a due date with a time, a relative reminder, and a weekly repeat', () => {
 		expect(
 			texts({ date: '2026-10-19', time: '17:00' }, { interval: 1, unit: 'week' }, [{ kind: 'before', minutes: 30 }]),
-		).toEqual(['Mon Oct 19 at 5:00 PM', 'Repeats every Mon', 'Remind 30 min before (4:30 PM)']);
+		).toEqual(['Mon Oct 19 at 5:00 PM', 'Repeats every Mon', 'Notifies at 5:00 PM', 'Remind 30 min before (4:30 PM)']);
 	});
 
 	test.each([
-		[{ date: '2026-10-14', time: null }, 'Today, Wed Oct 14'],
-		[{ date: '2026-10-15', time: '09:05' }, 'Tomorrow, Thu Oct 15 at 9:05 AM'],
-		[{ date: '2026-10-13', time: '00:00' }, 'Yesterday, Tue Oct 13 at 12:00 AM'],
-		[{ date: '2027-01-08', time: '12:30' }, 'Fri Jan 8, 2027 at 12:30 PM'],
-	] as const)('due %p reads %p', (due, expected) => {
-		expect(texts(due, null)).toEqual([expected]);
+		[{ date: '2026-10-15', time: '09:05' }, 'Tomorrow, Thu Oct 15 at 9:05 AM', '9:05 AM'],
+		[{ date: '2026-10-13', time: '00:00' }, 'Yesterday, Tue Oct 13 at 12:00 AM', '12:00 AM'],
+		[{ date: '2027-01-08', time: '12:30' }, 'Fri Jan 8, 2027 at 12:30 PM', '12:30 PM'],
+	] as const)('due %p reads %p and notifies at %p', (due, expected, at) => {
+		expect(texts(due, null)).toEqual([expected, `Notifies at ${at}`]);
 	});
 
+	test('a date with no time does not notify', () => {
+		expect(texts({ date: '2026-10-14', time: null }, null)).toEqual(['Today, Wed Oct 14']);
+	});
+
+	test.each([[{ kind: 'before', minutes: 0 }], [{ kind: 'at', date: '2026-10-15', time: '17:00' }]] as const)(
+		'a reminder %p at the due time folds into the due-time notification',
+		reminder => {
+			expect(texts({ date: '2026-10-15', time: '17:00' }, null, [reminder])).toEqual([
+				'Tomorrow, Thu Oct 15 at 5:00 PM',
+				'Notifies at 5:00 PM',
+			]);
+		},
+	);
+
 	test.each([
-		[{ kind: 'before', minutes: 0 }, 'Remind at due time (5:00 PM)'],
 		[{ kind: 'before', minutes: 60 }, 'Remind 1 hr before (4:00 PM)'],
 		[{ kind: 'before', minutes: 1440 }, 'Remind 1 day before (Wed Oct 14, 5:00 PM)'],
 		[{ kind: 'before', minutes: 2880 }, 'Remind 2 days before (Tue Oct 13, 5:00 PM)'],
@@ -33,6 +45,7 @@ describe('describeTiming', () => {
 	] as const)('reminder %p reads %p', (reminder, expected) => {
 		expect(texts({ date: '2026-10-15', time: '17:00' }, null, [reminder])).toEqual([
 			'Tomorrow, Thu Oct 15 at 5:00 PM',
+			'Notifies at 5:00 PM',
 			expected,
 		]);
 	});

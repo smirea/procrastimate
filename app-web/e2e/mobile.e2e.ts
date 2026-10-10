@@ -136,7 +136,9 @@ test('quick add previews timing above the input with the keyboard open', async (
 	await openKeyboard(app);
 	await app.taskInput().pressSequentially('Standup every mon 9am remind me 10m before');
 	const preview = page.getByRole('status', { name: 'Timing preview' });
-	await expect(preview).toHaveText('Mon Oct 19 at 9:00 AM · Repeats every Mon · Remind 10 min before (8:50 AM)');
+	await expect(preview).toHaveText(
+		'Mon Oct 19 at 9:00 AM · Repeats every Mon · Notifies at 9:00 AM · Remind 10 min before (8:50 AM)',
+	);
 	await settle(app);
 	const box = (await preview.boundingBox())!;
 	expect(box.y).toBeGreaterThanOrEqual(0);

@@ -282,6 +282,7 @@
 	.timing-recurrence :global(svg) {
 		color: var(--tone-tomorrow);
 	}
+	.timing-notify :global(svg),
 	.timing-reminder :global(svg) {
 		color: var(--tone-week);
 	}

@@ -59,7 +59,7 @@
 		if (!parsed.title) return;
 		const reminders = [...parsed.reminders, ...picked.reminders];
 		store.addTask({ title: parsed.title, due, recurrence: parsed.recurrence, priority, projectId, reminders });
-		requestNotificationPermission(reminders);
+		requestNotificationPermission(due, reminders);
 		text = '';
 		disabled = [];
 		picked = initialPicked();

@@ -40,15 +40,16 @@
 			return;
 		}
 		const reminders = [...task.reminders, ...parsed.reminders];
+		const due = parsed.due ?? task.due;
 		update({
 			title: parsed.title,
-			due: parsed.due ?? task.due,
+			due,
 			recurrence: parsed.recurrence ?? task.recurrence,
 			priority: parsed.priority ?? task.priority,
 			projectId: parsed.projectId ?? task.projectId,
 			reminders,
 		});
-		requestNotificationPermission(parsed.reminders);
+		requestNotificationPermission(due, reminders);
 		title = parsed.title;
 	}
 
@@ -111,14 +112,20 @@
 			oninput={(e) => update({ notes: e.currentTarget.value })}
 		></textarea>
 		<div class="flex flex-wrap gap-1.5">
-			<DuePicker due={task.due} onchange={(due) => update({ due })} />
+			<DuePicker
+				due={task.due}
+				onchange={(due) => {
+					update({ due });
+					requestNotificationPermission(due, task.reminders);
+				}}
+			/>
 			<PriorityPicker priority={task.priority} onchange={(priority) => update({ priority })} />
 			<ReminderPicker
 				due={task.due}
 				reminders={task.reminders}
 				onchange={(reminders) => {
 					update({ reminders });
-					requestNotificationPermission(reminders);
+					requestNotificationPermission(task.due, reminders);
 				}}
 			/>
 		</div>

@@ -54,7 +54,7 @@ Keep implementation details out of the map. Name only user paths, stable handles
 - [Complete a task](./complete-task.md) covers completion, undo, and the completion animation.
 - [Edit a task](./edit-task.md) covers title, notes, due date, priority, natural language in the title, and delete.
 - [Priority](./priority.md) covers priority shortcuts, the priority picker, and priority colors.
-- [Reminders](./reminders.md) covers typed and picked reminders and reminders firing while the app is open.
+- [Reminders](./reminders.md) covers typed and picked reminders, due times that notify on their own, and reminders firing while the app is open.
 - [Task views](./task-views.md) covers Inbox, Today, Upcoming, and their empty states.
 - [Projects](./projects.md) covers creating projects, `#` autocomplete, and moving tasks between them.
 - [Offline and sync](./offline-sync.md) covers offline use and convergence across clients.
