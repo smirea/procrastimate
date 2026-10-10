@@ -323,6 +323,26 @@ test('search opens from the drawer, docks above the keyboard, and a tap opens a 
 	await expect(app.details().getByRole('textbox', { name: 'Title' })).toHaveValue('Water plants');
 });
 
+test('in a Safari tab the Notifications sheet explains Add to Home Screen first', async ({ app, page }) => {
+	await openNav(app);
+	const row = nav(app).getByRole('button', { name: /^Notifications/ });
+	await expect(row).toHaveText(/^\s*Notifications\s*Set up\s*$/);
+	expect((await row.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+	await row.tap();
+	await expect(nav(app)).toHaveCount(0);
+
+	const sheet = page.getByRole('dialog', { name: 'Notifications' });
+	await expect(sheet.getByRole('heading', { name: 'Add Procrastimate to your Home Screen' })).toBeVisible();
+	await expect(sheet.getByRole('list', { name: 'Steps' }).getByRole('listitem')).toHaveText([
+		/^\s*1\s*Tap Share in Safari’s toolbar\.\s*$/,
+		/^\s*2\s*Choose Add to Home Screen\.\s*$/,
+		/^\s*3\s*Open Procrastimate from your Home Screen and turn on notifications here\.\s*$/,
+	]);
+	await shot(app, 'notifications-install');
+	await sheet.getByRole('button', { name: 'Got it' }).tap();
+	await expect(sheet).toBeHidden();
+});
+
 test('the drawer theme switcher overrides the color scheme and persists across reloads', async ({ app, page }) => {
 	await openNav(app);
 	await expect(app.themeOption('System')).toHaveAttribute('aria-checked', 'true');

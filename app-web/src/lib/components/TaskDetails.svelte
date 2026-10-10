@@ -17,7 +17,7 @@
 	import LabelPicker from './LabelPicker.svelte';
 	import { store, type TaskPatch } from '../store.svelte.ts';
 	import { clock, mobile, sheets, toasts } from '../ui.svelte.ts';
-	import { requestNotificationPermission } from '../reminders.ts';
+	import { push } from '../push.svelte.ts';
 	import { describeTiming } from '../format.ts';
 	import { completeTask } from '../completion.ts';
 
@@ -56,7 +56,7 @@
 			labelIds: [...new Set([...task.labelIds, ...parsed.labelIds])],
 			reminders,
 		});
-		requestNotificationPermission(due, reminders);
+		push.nudge(due, reminders);
 		title = parsed.title;
 	}
 
@@ -130,7 +130,7 @@
 				due={task.due}
 				onchange={(due) => {
 					update({ due, recurrence: due ? task.recurrence : null });
-					requestNotificationPermission(due, task.reminders);
+					push.nudge(due, task.reminders);
 				}}
 			/>
 			<RecurrencePicker
@@ -144,7 +144,7 @@
 				reminders={task.reminders}
 				onchange={(reminders) => {
 					update({ reminders });
-					requestNotificationPermission(task.due, reminders);
+					push.nudge(task.due, reminders);
 				}}
 			/>
 		</div>

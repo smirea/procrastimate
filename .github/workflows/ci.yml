@@ -47,6 +47,9 @@ jobs:
         run: bunx playwright install --with-deps chromium webkit
         working-directory: app-web
 
+      - name: VAPID keys for wrangler dev
+        run: bun server/scripts/vapid.ts dev-vars
+
       - name: End to end against the Worker
         run: bun run test:e2e
         env:
@@ -55,6 +58,13 @@ jobs:
       - name: Deploy
         if: github.event_name == 'push' && env.HAS_CLOUDFLARE == 'true'
         run: bunx wrangler deploy
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      - name: Provision VAPID keys
+        if: github.event_name == 'push' && env.HAS_CLOUDFLARE == 'true'
+        run: bun server/scripts/vapid.ts ensure
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

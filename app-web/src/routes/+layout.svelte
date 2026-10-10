@@ -10,10 +10,12 @@
 	import QuickAdd from '#lib/components/QuickAdd.svelte';
 	import Search from '#lib/components/Search.svelte';
 	import TaskDetails from '#lib/components/TaskDetails.svelte';
+	import NotificationsSheet from '#lib/components/NotificationsSheet.svelte';
 	import Toasts from '#lib/components/Toasts.svelte';
 	import { store } from '#lib/store.svelte.ts';
 	import { clock, sheets, trackKeyboardInset } from '#lib/ui.svelte.ts';
 	import { fireDueReminders } from '#lib/reminders.ts';
+	import { openTaskFromUrl, push } from '#lib/push.svelte.ts';
 	import { applyTheme, theme } from '#lib/theme.svelte.ts';
 
 	let { children }: { children: Snippet } = $props();
@@ -33,6 +35,11 @@
 	function openSearch() {
 		menuOpen = false;
 		sheets.openSearch();
+	}
+
+	function openNotifications() {
+		menuOpen = false;
+		sheets.openNotifications();
 	}
 
 	const isTyping = (target: EventTarget | null) =>
@@ -65,6 +72,9 @@
 	$effect(() => applyTheme(theme.resolved));
 	$effect(() => clock.start());
 	$effect(() => trackKeyboardInset());
+	$effect(() => push.start());
+	$effect(() => push.sync());
+	$effect(() => untrack(openTaskFromUrl));
 
 	$effect(() => {
 		const now = clock.now;
@@ -81,12 +91,12 @@
 
 <div class="app flex min-h-dvh gap-3">
 	<div class="sticky top-3 hidden h-[calc(100dvh-1.5rem)] w-64 shrink-0 md:block">
-		<Sidebar onquickadd={openQuickAdd} onsearch={openSearch} />
+		<Sidebar onquickadd={openQuickAdd} onsearch={openSearch} onnotifications={openNotifications} />
 	</div>
 	{#if menuOpen}
 		<div class="fixed inset-0 z-30 bg-scrim backdrop-blur-[2px] md:hidden" transition:fade={{ duration: 180 }} onclick={() => (menuOpen = false)} aria-hidden="true"></div>
 		<div class="drawer fixed z-30 md:hidden" transition:fly={{ x: -320, duration: 280, easing: cubicOut, opacity: 1 }}>
-			<Sidebar onquickadd={openQuickAdd} onsearch={openSearch} />
+			<Sidebar onquickadd={openQuickAdd} onsearch={openSearch} onnotifications={openNotifications} />
 		</div>
 	{/if}
 	<main class="min-w-0 flex-1">
@@ -127,6 +137,8 @@
 	{#key openTask.id}
 		<TaskDetails task={openTask} />
 	{/key}
+{:else if sheets.current.kind === 'notifications'}
+	<NotificationsSheet />
 {/if}
 
 <Toasts />

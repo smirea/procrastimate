@@ -59,12 +59,13 @@ export const toasts = new Toasts();
 
 export type QuickAddDefaults = { projectId: string | null; labelId: string | null; today: boolean };
 
-/** Which floating layer is open. Quick add, search, and task details never stack. */
+/** Which floating layer is open. Sheets never stack. */
 export type Sheet =
 	| { kind: 'none' }
 	| { kind: 'quick-add'; defaults: QuickAddDefaults }
 	| { kind: 'search' }
-	| { kind: 'task'; id: string };
+	| { kind: 'task'; id: string }
+	| { kind: 'notifications' };
 
 class Sheets {
 	current = $state<Sheet>({ kind: 'none' });
@@ -79,6 +80,10 @@ class Sheets {
 
 	openTask(id: string) {
 		this.current = { kind: 'task', id };
+	}
+
+	openNotifications() {
+		this.current = { kind: 'notifications' };
 	}
 
 	close() {
