@@ -32,7 +32,7 @@
 	.section-heading {
 		margin-bottom: 0.25rem;
 		padding: 0 0.5rem 0.375rem;
-		border-bottom: 1px solid rgb(24 24 27 / 0.06);
+		border-bottom: 1px solid color-mix(in srgb, var(--color-ink) 7%, transparent);
 		font-size: 0.8125rem;
 		font-weight: 600;
 	}

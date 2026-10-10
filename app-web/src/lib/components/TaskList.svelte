@@ -8,7 +8,7 @@
 	let { tasks, showProject = false, timeOnly = false, label }: { tasks: Task[]; showProject?: boolean; timeOnly?: boolean; label: string } = $props();
 </script>
 
-<ul class="divide-y divide-black/[0.05]" aria-label={label}>
+<ul class="divide-y divide-ink/[0.06]" aria-label={label}>
 	{#each tasks as task (task.id)}
 		<li
 			animate:flip={{ duration: 240, easing: cubicOut }}

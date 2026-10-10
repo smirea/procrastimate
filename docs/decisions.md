@@ -30,6 +30,17 @@ This is the single source for Procrastimate's concepts, goals, paradigms, and hi
   - **Spacing.** Use a 4 pt grid, rounded continuous corners, and touch-sized hit targets (at least 32 px with a mouse, 44 px on touch, 44 pt on iOS).
   - **Controls.** Use controls with direct native counterparts: list rows with leading checkboxes, a sidebar that maps to a tab bar or split view, sheets for creation and details, menus for pickers, and toasts for undo. Avoid web-only patterns such as hover-only actions and multi-level dropdowns.
 
+## Theming
+
+- **System, Light, and Dark.** `System` is the default and follows `prefers-color-scheme` live. `Light` and `Dark` override it. These are the same three choices iOS offers, so the native app maps one to one.
+- **A device preference, not task data.** The choice lives in its own `localStorage` key (`procrastimate-theme`), outside the task store, so it never syncs. `System` stores nothing.
+- **One set of semantic tokens.** `app-web/src/index.css` defines every color once per theme as a named role: `ink`, `muted`, `faint`, `accent`, `on-accent`, `surface`, `scrim`, the canvas, the glass materials, the toast, priority colors, and date tones. Components use only these tokens, never raw colors, so they never branch on the theme. Hairlines and quiet fills are `ink` at low opacity, so they flip with the theme for free. The roles mirror iOS semantic colors (label, secondary label, tint, materials) for the Liquid Glass port.
+- **Dark glass stays glass.** Dark floating layers are translucent, blurred charcoal with a faint light edge, not opaque gray, so layering reads the same in both themes.
+- **WCAG AA for all text.** Every text token meets 4.5:1 against every surface it sits on, in both themes, including the warm and cool canvas glows, chips, and the tinted highlights behind parsed quick add phrases. A unit test reads the tokens from `index.css` and enforces this, so a color tweak that breaks contrast fails CI. Priority colors are for graphics only (flags and checkboxes, held to 3:1), so priority labels are `ink` next to a colored flag, and destructive text uses the red date tone. The same test fails when a color has a light value but no dark one, so a new token, such as a parser highlight, cannot ship in one theme only. Meeting it darkened the light accent and date tones slightly. Dark mode uses a brighter accent with dark text on accent fills, because no single accent passes against both white text and a dark canvas.
+- **No flash of the wrong theme.** An inline script in `app.html` sets `<html data-theme>` and the `theme-color` meta for the browser chrome from the saved choice before first paint, and an inline style sets the matching `color-scheme`. The Svelte app then owns the theme and keeps it in sync.
+- **Switching crossfades.** A theme change runs a short view transition (about 220 ms) over the whole page, and skips it under reduced motion.
+- **Where it lives.** A segmented control at the bottom of the sidebar, which is also the phone drawer. There is no settings page yet. When one exists, the control moves there.
+
 ## Domain
 
 - **Task.** A title, optional notes, an optional project, an optional due date with an optional time, an optional recurrence, a priority, a list of reminders, and an optional completion time.
@@ -106,6 +117,6 @@ This is the single source for Procrastimate's concepts, goals, paradigms, and hi
 
 ## Testing
 
-- **Unit tests.** `bun test`, colocated as `*.test.ts`. The natural-language parser is tested with a fixed clock.
+- **Unit tests.** `bun test`, colocated as `*.test.ts`. The natural-language parser is tested with a fixed clock. Theme contrast is tested against the real tokens in `index.css`.
 - **End to end.** Playwright drives the real web UI against an isolated dev server, from `app-web/e2e/*.e2e.ts`. The `desktop` project runs in Chromium at 1280×800. The `mobile` project runs `e2e/mobile.e2e.ts` in WebKit with the iPhone 15 Pro profile and covers the main flows by touch.
 - **Feature map.** `.cursor/skills/verify-procrastimate/features/` describes each user-facing feature and how to drive it. Keep it in sync with every change.

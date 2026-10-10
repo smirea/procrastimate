@@ -71,7 +71,7 @@
 					No date
 				</button>
 			{/if}
-			<div class="mt-1 flex gap-1.5 border-t border-black/5 px-1 pt-2 pb-1">
+			<div class="mt-1 flex gap-1.5 border-t border-ink/5 px-1 pt-2 pb-1">
 				<input
 					type="date"
 					aria-label="Due date"

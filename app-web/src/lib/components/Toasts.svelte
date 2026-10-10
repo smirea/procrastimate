@@ -9,7 +9,7 @@
 	{#each toasts.items as toast (toast.id)}
 		<div
 			role="status"
-			class="pointer-events-auto flex items-center gap-3 rounded-full bg-zinc-900/85 py-2 pr-2 pl-4 text-[13px] text-white shadow-lg backdrop-blur-xl"
+			class="pointer-events-auto flex items-center gap-3 rounded-full bg-[var(--toast-bg)] py-2 pr-2 pl-4 text-[13px] text-white shadow-lg backdrop-blur-xl"
 			animate:flip={{ duration: 200 }}
 			in:fly={{ y: 16, duration: 220, easing: cubicOut }}
 			out:fly={{ y: 8, duration: 160, opacity: 0 }}
@@ -18,7 +18,7 @@
 			{#if toast.action}
 				<button
 					type="button"
-					class="hit-area relative rounded-full px-3 py-1 font-medium text-[#ff9f8a] transition-colors hover:bg-white/10"
+					class="hit-area relative rounded-full px-3 py-1 font-medium text-[var(--toast-action)] transition-colors hover:bg-white/10"
 					onclick={() => {
 						toast.action?.run();
 						toasts.dismiss(toast.id);

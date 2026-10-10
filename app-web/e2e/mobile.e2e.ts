@@ -210,3 +210,30 @@ test('a tap just outside the checkbox completes the task and undo restores it', 
 	await undo.tap();
 	await expect(app.list('Inbox tasks').getByRole('listitem')).toHaveText([/Buy milk/, /Pay rent/]);
 });
+
+test('the drawer theme switcher overrides the color scheme and persists across reloads', async ({ app, page }) => {
+	await openNav(app);
+	await expect(app.themeOption('System')).toHaveAttribute('aria-checked', 'true');
+	expect((await app.themeOption('Dark').boundingBox())!.height).toBeGreaterThanOrEqual(44);
+	await page.emulateMedia({ colorScheme: 'dark' });
+	await app.expectTheme('dark');
+
+	await app.themeOption('Light').tap();
+	await app.expectTheme('light');
+	await page.reload();
+	await openNav(app);
+	await expect(app.themeOption('Light')).toHaveAttribute('aria-checked', 'true');
+	await app.expectTheme('light');
+
+	await app.themeOption('System').tap();
+	await app.expectTheme('dark');
+	await page.emulateMedia({ colorScheme: 'light' });
+	await app.expectTheme('light');
+});
+
+test('the saved theme applies before the app loads on a phone', async ({ app }) => {
+	await openNav(app);
+	await app.themeOption('Dark').tap();
+	await app.expectFirstPaintTheme('dark');
+	await app.expectTheme('dark');
+});

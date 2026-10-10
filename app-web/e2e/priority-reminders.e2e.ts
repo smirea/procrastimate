@@ -36,6 +36,7 @@ test('reminders can be added from the UI and fire while the app is open', async 
 	await expect(app.quickAdd().getByRole('button', { name: '1 reminder' })).toBeVisible();
 	await app.taskInput().press('Enter');
 	await app.taskInput().press('Escape');
+	await expect(app.quickAdd()).toBeHidden();
 
 	await app
 		.row('Standup')

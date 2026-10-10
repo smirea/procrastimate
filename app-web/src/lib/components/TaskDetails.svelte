@@ -72,7 +72,7 @@
 			: fly(node, { x: 40, duration: 240, easing: cubicOut, opacity: 0 });
 </script>
 
-<div class="fixed inset-0 z-40 bg-zinc-900/10 backdrop-blur-[2px]" transition:fade={{ duration: 160 }} onclick={() => sheets.close()} aria-hidden="true"></div>
+<div class="fixed inset-0 z-40 bg-scrim backdrop-blur-[2px]" transition:fade={{ duration: 160 }} onclick={() => sheets.close()} aria-hidden="true"></div>
 <div
 	role="dialog"
 	aria-label="Task details"
@@ -83,7 +83,7 @@
 		<ProjectPicker projectId={task.projectId} onchange={(projectId) => update({ projectId })} />
 		<div class="flex items-center gap-1">
 			<button type="button" class="btn btn-quiet" onclick={complete}><Check size={14} />Complete</button>
-			<button type="button" class="grid size-8 place-items-center rounded-full text-muted transition-colors hover:bg-black/5 hover:text-ink touch:size-11" aria-label="Close" onclick={() => sheets.close()}>
+			<button type="button" class="grid size-8 place-items-center rounded-full text-muted transition-colors hover:bg-ink/5 hover:text-ink touch:size-11" aria-label="Close" onclick={() => sheets.close()}>
 				<X size={16} />
 			</button>
 		</div>
@@ -94,7 +94,7 @@
 			aria-label="Notes"
 			placeholder="Notes"
 			rows="4"
-			class="w-full resize-none rounded-xl border border-black/5 bg-white/50 px-3 py-2 text-[14px] outline-none touch:text-base transition-colors placeholder:text-faint focus:border-black/15"
+			class="w-full resize-none rounded-xl border border-ink/5 bg-surface/50 px-3 py-2 text-[14px] outline-none touch:text-base transition-colors placeholder:text-faint focus:border-ink/15"
 			value={task.notes}
 			oninput={(e) => update({ notes: e.currentTarget.value })}
 		></textarea>
@@ -111,7 +111,7 @@
 			/>
 		</div>
 	</div>
-	<footer class="border-t border-black/5 px-4 py-3 touch:py-2">
-		<button type="button" class="btn text-[var(--p1)] hover:bg-red-500/10" onclick={remove}><Trash size={14} />Delete task</button>
+	<footer class="border-t border-ink/5 px-4 py-3 touch:py-2">
+		<button type="button" class="btn text-[var(--tone-overdue)] hover:bg-[var(--token-priority)]" onclick={remove}><Trash size={14} />Delete task</button>
 	</footer>
 </div>

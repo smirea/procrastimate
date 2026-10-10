@@ -50,12 +50,12 @@
 				<div class="flex h-8 items-center gap-2 rounded-lg px-2 text-[13px] touch:h-11 touch:text-[15px]">
 					<Bell size={14} class="text-[var(--tone-week)]" weight="fill" />
 					<span class="flex-1">{formatReminder(reminder, clock.today)}</span>
-					<button type="button" class="hit-area relative grid size-6 place-items-center rounded-full text-faint hover:bg-black/5 hover:text-ink" aria-label="Remove reminder" onclick={() => remove(i)}>
+					<button type="button" class="hit-area relative grid size-6 place-items-center rounded-full text-faint hover:bg-ink/5 hover:text-ink" aria-label="Remove reminder" onclick={() => remove(i)}>
 						<X size={12} weight="bold" />
 					</button>
 				</div>
 			{/each}
-			{#if reminders.length}<div class="my-1 border-t border-black/5"></div>{/if}
+			{#if reminders.length}<div class="my-1 border-t border-ink/5"></div>{/if}
 			<div class="px-2 pt-1 pb-0.5 text-[11px] font-medium tracking-wide text-faint uppercase">
 				{due?.time ? 'Before due time' : 'Before due time · needs a time'}
 			</div>
@@ -67,7 +67,7 @@
 					{presetLabel(minutes)}
 				</button>
 			{/each}
-			<div class="mt-1 border-t border-black/5 px-1 pt-2 pb-1">
+			<div class="mt-1 border-t border-ink/5 px-1 pt-2 pb-1">
 				<div class="flex gap-1.5">
 					<input type="date" aria-label="Reminder date" class="field flex-1" bind:value={customDate} />
 					<input type="time" aria-label="Reminder time" class="field w-24" bind:value={customTime} />

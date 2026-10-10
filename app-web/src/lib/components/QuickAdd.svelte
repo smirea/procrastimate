@@ -81,7 +81,7 @@
 			: scale(node, { start: 0.96, duration: 200, easing: cubicOut, opacity: 0 });
 </script>
 
-<div class="fixed inset-0 z-40 bg-zinc-900/10 backdrop-blur-[2px]" transition:fade={{ duration: 160 }} onclick={() => sheets.close()} aria-hidden="true"></div>
+<div class="fixed inset-0 z-40 bg-scrim backdrop-blur-[2px]" transition:fade={{ duration: 160 }} onclick={() => sheets.close()} aria-hidden="true"></div>
 <div
 	role="dialog"
 	aria-label="Quick add"
@@ -130,7 +130,7 @@
 			</div>
 		{/each}
 	</div>
-	<div class="flex items-center justify-between gap-2 border-t border-black/5 px-3 py-2.5">
+	<div class="flex items-center justify-between gap-2 border-t border-ink/5 px-3 py-2.5">
 		<ProjectPicker {projectId} onchange={(value) => {
 				clearToken('project');
 				picked.projectId = value;

@@ -9,6 +9,7 @@
 	import Hash from 'phosphor-svelte/lib/Hash';
 	import Plus from 'phosphor-svelte/lib/Plus';
 	import PlusCircle from 'phosphor-svelte/lib/PlusCircle';
+	import ThemeSwitcher from './ThemeSwitcher.svelte';
 	import { store } from '../store.svelte.ts';
 	import { clock } from '../ui.svelte.ts';
 	import { inboxTasks, projectTasks, todayTasks, upcomingGroups } from '../views.ts';
@@ -51,7 +52,7 @@
 	<button type="button" class="menu-item h-9 font-medium text-accent touch:h-11" onclick={onquickadd}>
 		<PlusCircle size={20} weight="fill" />
 		Add task
-		<kbd class="ml-auto rounded-md touch:hidden border border-black/10 px-1.5 text-[11px] font-normal text-faint">Q</kbd>
+		<kbd class="ml-auto rounded-md touch:hidden border border-ink/10 px-1.5 text-[11px] font-normal text-faint">Q</kbd>
 	</button>
 
 	<ul class="space-y-0.5">
@@ -70,7 +71,7 @@
 	<section aria-label="Projects">
 		<div class="flex items-center justify-between px-2 pb-1">
 			<h2 class="text-[12px] font-medium tracking-wide text-faint uppercase">Projects</h2>
-			<button type="button" class="grid size-7 place-items-center rounded-lg text-muted transition-colors hover:bg-black/5 hover:text-ink touch:size-11" aria-label="Add project" onclick={() => (adding = true)}>
+			<button type="button" class="grid size-7 place-items-center rounded-lg text-muted transition-colors hover:bg-ink/5 hover:text-ink touch:size-11" aria-label="Add project" onclick={() => (adding = true)}>
 				<Plus size={14} weight="bold" />
 			</button>
 		</div>
@@ -110,6 +111,10 @@
 			{/if}
 		</ul>
 	</section>
+
+	<div class="mt-auto">
+		<ThemeSwitcher />
+	</div>
 </nav>
 
 <style>
@@ -129,7 +134,7 @@
 
 	@media (hover: hover) {
 		.nav-link:hover {
-			background: rgb(24 24 27 / 0.05);
+			background: color-mix(in srgb, var(--color-ink) 6%, transparent);
 		}
 	}
 
@@ -141,7 +146,7 @@
 	}
 
 	.nav-link.active {
-		background: rgb(232 73 47 / 0.1);
+		background: color-mix(in srgb, var(--color-accent) 8%, transparent);
 		color: var(--color-accent);
 		font-weight: 500;
 	}
