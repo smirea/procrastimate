@@ -35,8 +35,10 @@ test('importing a Todoist backup twice adds each project and task once', async (
 	]);
 	await shoot(app, 'desktop-summary-light');
 	await page.emulateMedia({ colorScheme: 'dark' });
+	await app.expectTheme('dark');
 	await shoot(app, 'desktop-summary-dark');
 	await page.emulateMedia({ colorScheme: 'light' });
+	await app.expectTheme('light');
 
 	await app.importBackup();
 	await expect(app.importSummary()).toContainText('0 projects');

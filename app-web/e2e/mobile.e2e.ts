@@ -425,6 +425,10 @@ test('importing a Todoist backup twice from the settings sheet adds each task on
 	await expect(app.importSummary()).toContainText('0 skipped');
 	await settle(app);
 	await page.screenshot({ path: 'test-results/settings-import/mobile-summary-light.png' });
+	await page.emulateMedia({ colorScheme: 'dark' });
+	await app.expectTheme('dark');
+	await settle(app);
+	await page.screenshot({ path: 'test-results/settings-import/mobile-summary-dark.png' });
 
 	await app.importBackup('tap');
 	await expect(app.importSummary()).toContainText('12 skipped');
