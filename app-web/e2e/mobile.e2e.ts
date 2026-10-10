@@ -135,22 +135,26 @@ test('# suggests projects above the keyboard and a tap picks or creates one', as
 	await expect(app.quickAdd().getByRole('button', { name: 'Project Garden' })).toBeVisible();
 });
 
-test('quick add previews timing above the input with the keyboard open', async ({ app, page }) => {
+test('the quick add configuration row shows parsed timing above the keyboard', async ({ app, page }) => {
 	await openQuickAdd(app);
 	await openKeyboard(app);
 	await app.taskInput().pressSequentially('Standup every mon 9am remind me 10m before');
-	const preview = page.getByRole('status', { name: 'Timing preview' });
-	await expect(preview).toHaveText(
-		'Mon Oct 19 at 9:00 AM · Repeats every Mon · Notifies at 9:00 AM · Remind 10 min before (8:50 AM)',
-	);
+	const quickAdd = app.quickAdd();
+	await expect(page.getByRole('status', { name: 'Timing preview' })).toHaveCount(0);
+	await expect(quickAdd.getByRole('button', { name: 'Due Monday 9am' })).toBeVisible();
+	await expect(quickAdd.getByText('Every Mon', { exact: true })).toBeVisible();
+	await expect(quickAdd.getByText('10m before', { exact: true })).toBeVisible();
 	await app.settle();
-	const box = (await preview.boundingBox())!;
-	expect(box.y).toBeGreaterThanOrEqual(0);
-	expect(box.y + box.height).toBeLessThanOrEqual((await app.taskInput().boundingBox())!.y);
-	await shot(app, 'timing-preview');
+	const viewport = await page.evaluate(() => window.visualViewport!.height);
+	expect(await bottom(quickAdd)).toBeLessThanOrEqual(viewport);
 
-	await app.taskInput().fill('Standup');
-	await expect(preview).toHaveCount(0);
+	const keep = quickAdd.getByRole('button', { name: 'Keep as text' });
+	await expect(keep).toHaveCount(3);
+	for (const box of await Promise.all((await keep.all()).map(button => button.boundingBox()))) {
+		expect(box!.width).toBeGreaterThanOrEqual(44);
+		expect(box!.height).toBeGreaterThanOrEqual(44);
+	}
+	await shot(app, 'quick-add-timing-row');
 });
 
 test('quick add docks above the keyboard and parses a reminder and priority', async ({ app, page }) => {

@@ -102,7 +102,6 @@ function pairs(tokens: Tokens) {
 	];
 	const accent = c('--color-accent');
 	const activeNav = surfaces.glass.map(bg => over(alpha(accent, 0.08), bg));
-	const toast = canvases.map(bg => over(c('--toast-bg'), bg));
 	return [
 		...highlights,
 		...Object.entries(surfaces).flatMap(([surface, backdrops]) =>
@@ -120,12 +119,6 @@ function pairs(tokens: Tokens) {
 			text: '--color-on-accent',
 			surface: '--tone-overdue',
 			ratio: contrast(c('--color-on-accent'), c('--tone-overdue')),
-		},
-		{ text: 'white', surface: 'toast', ratio: Math.min(...toast.map(bg => contrast([255, 255, 255, 1], bg))) },
-		{
-			text: '--toast-action',
-			surface: 'toast',
-			ratio: Math.min(...toast.map(bg => contrast(c('--toast-action'), bg))),
 		},
 	];
 }

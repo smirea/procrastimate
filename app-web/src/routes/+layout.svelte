@@ -14,7 +14,7 @@
 	import NotificationsSheet from '#lib/components/NotificationsSheet.svelte';
 	import Toasts from '#lib/components/Toasts.svelte';
 	import { store } from '#lib/store.svelte.ts';
-	import { clock, sheets, trackKeyboardInset } from '#lib/ui.svelte.ts';
+	import { clock, sheets, trackKeyboardInset, motion } from '#lib/ui.svelte.ts';
 	import { fireDueReminders } from '#lib/reminders.ts';
 	import { openTaskFromUrl, push } from '#lib/push.svelte.ts';
 	import { applyTheme, theme } from '#lib/theme.svelte.ts';
@@ -100,8 +100,8 @@
 		<Sidebar onquickadd={openQuickAdd} onsearch={openSearch} onnotifications={openNotifications} onsettings={openSettings} />
 	</div>
 	{#if menuOpen}
-		<div class="fixed inset-0 z-30 bg-scrim backdrop-blur-[2px] md:hidden" transition:fade={{ duration: 180 }} onclick={() => (menuOpen = false)} aria-hidden="true"></div>
-		<div class="drawer fixed z-30 md:hidden" transition:fly={{ x: -320, duration: 280, easing: cubicOut, opacity: 1 }}>
+		<div class="fixed inset-0 z-30 bg-scrim backdrop-blur-[2px] md:hidden" transition:fade={motion({ duration: 180 })} onclick={() => (menuOpen = false)} aria-hidden="true"></div>
+		<div class="drawer fixed z-30 md:hidden" transition:fly={motion({ x: -320, duration: 280, easing: cubicOut, opacity: 1 })}>
 			<Sidebar onquickadd={openQuickAdd} onsearch={openSearch} onnotifications={openNotifications} onsettings={openSettings} />
 		</div>
 	{/if}
@@ -109,7 +109,7 @@
 		<header class="scroll-edge sticky top-0 z-20 flex items-center md:hidden">
 			<button
 				type="button"
-				class="glass grid size-11 place-items-center rounded-full"
+				class="glass press grid size-11 place-items-center rounded-full"
 				aria-label="Open navigation"
 				aria-expanded={menuOpen}
 				onclick={() => (menuOpen = true)}
@@ -129,7 +129,7 @@
 		class="fab fixed z-20 grid size-14 place-items-center rounded-full bg-accent text-on-accent md:hidden"
 		aria-label="Quick add"
 		onclick={openQuickAdd}
-		transition:scale={{ start: 0.6, duration: 200, easing: cubicOut }}
+		transition:scale={motion({ start: 0.6, duration: 200, easing: cubicOut })}
 	>
 		<Plus size={24} weight="bold" />
 	</button>
@@ -195,12 +195,14 @@
 		right: max(1.25rem, calc(env(safe-area-inset-right) + 0.75rem));
 		bottom: max(1.25rem, calc(env(safe-area-inset-bottom) + 0.5rem));
 		box-shadow:
+			inset 0 1px 0 0 rgb(255 255 255 / 0.3),
+			inset 0 -1px 0 0 rgb(0 0 0 / 0.08),
 			0 10px 28px -8px color-mix(in srgb, var(--color-accent) 60%, transparent),
 			0 2px 6px -2px var(--glass-shadow);
-		transition: transform 160ms var(--ease-spring);
+		transition: scale 220ms var(--ease-spring);
 	}
 
 	.fab:active {
-		transform: scale(0.92);
+		scale: 0.9;
 	}
 </style>

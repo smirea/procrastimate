@@ -34,7 +34,7 @@
 	}
 </script>
 
-<div class="group flex items-start gap-3 rounded-xl px-2 transition-colors hover:bg-surface/60" data-task={task.title}>
+<div class="group flex items-start gap-3 rounded-2xl px-2 transition-colors hover:bg-surface/60" data-task={task.title}>
 	<Checkbox checked={checking} tone={PRIORITIES[task.priority].tone} label={`Complete ${task.title}`} class="mt-3 touch:mt-3.5" onclick={complete} />
 	<button type="button" class="min-w-0 flex-1 py-2.5 text-left touch:min-h-11 touch:py-3" onclick={() => sheets.openTask(task.id)}>
 		<div class="truncate text-[14px] leading-5 text-ink transition-colors" class:done={checking}>{task.title}</div>
