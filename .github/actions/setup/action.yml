@@ -1,0 +1,19 @@
+name: Setup
+description: Install Bun, dependencies, and generated env files.
+
+runs:
+  using: composite
+  steps:
+    - uses: oven-sh/setup-bun@v2
+      with:
+        bun-version: 1.4.3
+
+    - name: Install dependencies
+      shell: bash
+      run: bun install --frozen-lockfile
+
+    - name: Generate env
+      shell: bash
+      run: |
+        bun add -g github:smirea/env-manager#60f8b982a945291f9df2e3c4a77830fdd228ae27
+        env-manager gen --local
