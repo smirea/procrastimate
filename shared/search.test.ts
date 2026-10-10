@@ -32,6 +32,8 @@ const task = (
 	} = {},
 ): Task => ({
 	id: `t${++nextId}`,
+	parentId: null,
+	order: 0,
 	title,
 	notes,
 	projectId,

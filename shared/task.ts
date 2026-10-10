@@ -28,6 +28,10 @@ export type Recurrence =
 
 export type Task = {
 	id: string;
+	/** The task this one is a subtask of. A subtask shares its root task's project. */
+	parentId: string | null;
+	/** Position among its siblings, ascending. */
+	order: number;
 	title: string;
 	notes: string;
 	projectId: string | null;

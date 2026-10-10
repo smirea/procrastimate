@@ -15,7 +15,7 @@ test('quick add previews the resolved timing above the input as you type', async
 
 	const box = (await preview.boundingBox())!;
 	expect(box.y + box.height).toBeLessThanOrEqual((await app.taskInput().boundingBox())!.y);
-	await page.evaluate(() => Promise.all(document.getAnimations().map(animation => animation.finished)));
+	await app.settle();
 	await page.screenshot({ path: 'test-results/timing-preview.png' });
 
 	await app.taskInput().fill('Call mom tomorrow 5pm remind me 30m before');
@@ -24,7 +24,7 @@ test('quick add previews the resolved timing above the input as you type', async
 	);
 	await expect(app.quickAdd().getByText('Every Mon')).toHaveCount(0);
 	await expect(app.quickAdd().getByText('10m before')).toHaveCount(0);
-	await page.evaluate(() => Promise.all(document.getAnimations().map(animation => animation.finished)));
+	await app.settle();
 	await page.screenshot({ path: 'test-results/timing-preview-notifies.png' });
 	await app.taskInput().fill('Call mom tomorrow');
 	await expect(preview).toHaveText('Tomorrow, Thu Oct 15');

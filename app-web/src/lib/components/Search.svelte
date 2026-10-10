@@ -10,6 +10,7 @@
 	import Check from 'phosphor-svelte/lib/Check';
 	import X from 'phosphor-svelte/lib/X';
 	import CalendarBlank from 'phosphor-svelte/lib/CalendarBlank';
+	import ArrowElbowDownRight from 'phosphor-svelte/lib/ArrowElbowDownRight';
 	import { excerpt, search, type NameHit, type TaskHit } from 'shared/search.ts';
 	import { toDateKey, type Label, type Project } from 'shared/task.ts';
 	import Highlighted from './Highlighted.svelte';
@@ -208,6 +209,7 @@
 								{@const project = projectOf(row.hit)}
 								{@const notes = row.hit.matches.notes?.[0]}
 								{@const done = task.completedAt !== null}
+								{@const parent = task.parentId ? store.task(task.parentId) : undefined}
 								<span
 									class="status mt-0.5 grid size-[18px] shrink-0 place-items-center rounded-full border-[1.5px]"
 									class:done
@@ -222,6 +224,11 @@
 									</span>
 									{#if notes}
 										<span class="block truncate text-[12px] leading-4 text-muted"><Highlighted highlight={excerpt(notes)} /></span>
+									{/if}
+									{#if parent}
+										<span class="flex min-w-0 items-center gap-1 text-[12px] leading-4 text-muted" aria-label={`Subtask of ${parent.title}`}>
+											<ArrowElbowDownRight size={12} class="shrink-0" /><span class="truncate">{parent.title}</span>
+										</span>
 									{/if}
 									{#if row.hit.matches.labels}
 										<span class="mt-0.5 flex flex-wrap gap-1">

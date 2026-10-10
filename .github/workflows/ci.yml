@@ -10,26 +10,12 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  ci:
+  checks:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    env:
-      HAS_CLOUDFLARE: ${{ secrets.CLOUDFLARE_API_TOKEN != '' && secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
-
     steps:
       - uses: actions/checkout@v6
-
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.4.3
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Generate env
-        run: |
-          bun add -g github:smirea/env-manager#60f8b982a945291f9df2e3c4a77830fdd228ae27
-          env-manager gen --local
+      - uses: ./.github/actions/setup
 
       - name: Typecheck
         run: bun run check
@@ -43,32 +29,83 @@ jobs:
       - name: Validate Worker bundle
         run: bunx wrangler deploy --dry-run
 
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - project: desktop
+            browser: chromium
+          - project: mobile
+            browser: webkit
+    name: e2e (${{ matrix.project }})
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup
+
+      - name: Build
+        run: bun run build
+
+      - name: Playwright version
+        id: playwright
+        run: echo "version=$(bunx playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+        working-directory: app-web
+
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ matrix.browser }}-${{ steps.playwright.outputs.version }}
+
       - name: Install Playwright browsers
-        run: bunx playwright install --with-deps chromium webkit
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: bunx playwright install --with-deps ${{ matrix.browser }}
+        working-directory: app-web
+
+      - name: Install Playwright system dependencies
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: bunx playwright install-deps ${{ matrix.browser }}
         working-directory: app-web
 
       - name: VAPID keys for wrangler dev
         run: bun server/scripts/vapid.ts dev-vars
 
       - name: End to end against the Worker
-        run: bun run test:e2e
+        run: bun run test:e2e --project=${{ matrix.project }}
         env:
           E2E_WORKER: '1'
 
+  deploy:
+    needs: [checks, e2e]
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      HAS_CLOUDFLARE: ${{ secrets.CLOUDFLARE_API_TOKEN != '' && secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup
+
+      - name: Build
+        run: bun run build
+
       - name: Deploy
-        if: github.event_name == 'push' && env.HAS_CLOUDFLARE == 'true'
+        if: env.HAS_CLOUDFLARE == 'true'
         run: bunx wrangler deploy
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
       - name: Provision VAPID keys
-        if: github.event_name == 'push' && env.HAS_CLOUDFLARE == 'true'
+        if: env.HAS_CLOUDFLARE == 'true'
         run: bun server/scripts/vapid.ts ensure
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
       - name: Deploy skipped
-        if: github.event_name == 'push' && env.HAS_CLOUDFLARE != 'true'
+        if: env.HAS_CLOUDFLARE != 'true'
         run: echo "::warning::Not deployed. Add the CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID repository secrets."

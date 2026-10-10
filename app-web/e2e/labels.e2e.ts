@@ -20,9 +20,6 @@ async function createLabels(app: App, ...names: string[]) {
 	await expect(app.quickAdd()).toBeHidden();
 }
 
-const settle = (app: App) =>
-	app.page.evaluate(() => Promise.all(document.getAnimations().map(animation => animation.finished)));
-
 test('@ creates and suggests labels, and saved labels show as chips on the row', async ({ app, page }) => {
 	await app.openQuickAdd();
 	await app.taskInput().pressSequentially('Call plumber @calls');
@@ -39,7 +36,7 @@ test('@ creates and suggests labels, and saved labels show as chips on the row',
 	await expect(suggestions(app).getByRole('option')).toHaveText(['waiting', 'Create label “wa”']);
 	const listBox = (await suggestions(app).boundingBox())!;
 	expect(listBox.y + listBox.height).toBeLessThanOrEqual((await app.taskInput().boundingBox())!.y);
-	await settle(app);
+	await app.settle();
 	await page.screenshot({ path: 'test-results/label-autocomplete.png' });
 	await app.taskInput().press('Enter');
 	await expect(app.taskInput()).toHaveValue('Email bob@site.com @waiting ');
@@ -133,7 +130,7 @@ test('the details picker toggles and creates labels, and @ works in the title', 
 	await filter.press('Enter');
 	await expect(filter).toHaveValue('');
 	await expect(picker.getByRole('menuitemcheckbox', { name: 'groceries' })).toHaveAttribute('aria-checked', 'true');
-	await settle(app);
+	await app.settle();
 	await page.screenshot({ path: 'test-results/label-picker.png' });
 	await picker.getByRole('menuitemcheckbox', { name: 'errands' }).click();
 	await expect(picker.getByRole('menuitemcheckbox', { name: 'errands' })).toHaveAttribute('aria-checked', 'false');

@@ -48,11 +48,8 @@ const bottom = async (locator: Locator) => {
 	return box.y + box.height;
 };
 
-const settle = (app: App) =>
-	app.page.evaluate(() => Promise.all(document.getAnimations().map(animation => animation.finished)));
-
 async function shot(app: App, name: string) {
-	await settle(app);
+	await app.settle();
 	await app.page.screenshot({ path: `test-results/mobile/${name}.png` });
 }
 
@@ -112,7 +109,7 @@ test('# suggests projects above the keyboard and a tap picks or creates one', as
 
 	const suggestions = page.getByRole('listbox', { name: 'Projects' });
 	await expect(suggestions.getByRole('option')).toHaveText(['Home', 'Create project “h”']);
-	await settle(app);
+	await app.settle();
 	const list = (await suggestions.boundingBox())!;
 	expect(list.y).toBeGreaterThanOrEqual(0);
 	expect(list.y + list.height).toBeLessThanOrEqual((await app.taskInput().boundingBox())!.y);
@@ -139,7 +136,7 @@ test('quick add previews timing above the input with the keyboard open', async (
 	await expect(preview).toHaveText(
 		'Mon Oct 19 at 9:00 AM · Repeats every Mon · Notifies at 9:00 AM · Remind 10 min before (8:50 AM)',
 	);
-	await settle(app);
+	await app.settle();
 	const box = (await preview.boundingBox())!;
 	expect(box.y).toBeGreaterThanOrEqual(0);
 	expect(box.y + box.height).toBeLessThanOrEqual((await app.taskInput().boundingBox())!.y);
@@ -260,7 +257,7 @@ test('task details set a repeat by touch and completing rolls the task forward',
 	const details = app.details();
 	await details.getByRole('button', { name: 'Repeats every 2 days' }).tap();
 	const menu = page.getByRole('dialog', { name: 'Repeat' });
-	await settle(app);
+	await app.settle();
 	const box = (await menu.boundingBox())!;
 	expect(box.y).toBeGreaterThanOrEqual(0);
 	expect(box.y + box.height).toBeLessThanOrEqual(page.viewportSize()!.height);
@@ -343,7 +340,7 @@ test('search opens from the drawer, docks above the keyboard, and a tap opens a 
 	expect((await results.getByRole('option', { name: /Call plumber/ }).boundingBox())!.height).toBeGreaterThanOrEqual(
 		44,
 	);
-	await settle(app);
+	await app.settle();
 	const box = (await sheet.boundingBox())!;
 	expect(box.y).toBeGreaterThanOrEqual(0);
 	expect(box.y + box.height).toBeLessThanOrEqual(page.viewportSize()!.height - KEYBOARD);
@@ -412,7 +409,7 @@ test('@ suggests labels above the keyboard, rows show chips, and the drawer open
 	await app.taskInput().pressSequentially('Call plumber @calls');
 	const list = page.getByRole('listbox', { name: 'Labels' });
 	await expect(list.getByRole('option')).toHaveText(['Create label “calls”']);
-	await settle(app);
+	await app.settle();
 	const box = (await list.boundingBox())!;
 	expect(box.y).toBeGreaterThanOrEqual(0);
 	expect(box.y + box.height).toBeLessThanOrEqual((await app.taskInput().boundingBox())!.y);
@@ -435,7 +432,7 @@ test('@ suggests labels above the keyboard, rows show chips, and the drawer open
 	await filter.fill('waiting');
 	await picker.getByRole('menuitemcheckbox', { name: 'Create label “waiting”' }).tap();
 	await expect(picker.getByRole('menuitemcheckbox', { name: 'waiting' })).toHaveAttribute('aria-checked', 'true');
-	await settle(app);
+	await app.settle();
 	const menu = (await picker.boundingBox())!;
 	expect(menu.y).toBeGreaterThanOrEqual(0);
 	expect(menu.y + menu.height).toBeLessThanOrEqual(page.viewportSize()!.height);
@@ -456,4 +453,41 @@ test('@ suggests labels above the keyboard, rows show chips, and the drawer open
 	await results.getByRole('option', { name: 'calls', exact: true }).tap();
 	await expect(page.getByRole('heading', { level: 1, name: 'calls' })).toBeVisible();
 	await expect(app.list('calls tasks').getByRole('listitem')).toHaveText([/Call plumber/]);
+});
+
+test('subtasks are added, checked, and dragged into order by touch in the task sheet', async ({ app, page }) => {
+	await add(app, 'Pack for trip');
+	await app
+		.row('Pack for trip')
+		.getByRole('button', { name: /Pack for trip/ })
+		.tap();
+	const input = app.details().getByRole('textbox', { name: 'Add subtask' });
+	for (const title of ['Passport', 'Charger', 'Socks']) {
+		await input.fill(title);
+		await input.press('Enter');
+		await expect(input).toHaveValue('');
+	}
+	await app.details().getByRole('checkbox', { name: 'Complete Passport' }).tap();
+	await expect(app.details().getByRole('checkbox', { name: 'Complete Passport' })).toBeChecked();
+
+	const handle = app.details().getByRole('button', { name: 'Reorder Socks' });
+	const hit = await handle.evaluate(node => {
+		const area = getComputedStyle(node, '::before');
+		return [parseFloat(area.width), parseFloat(area.height)];
+	});
+	expect(Math.min(...hit)).toBeGreaterThanOrEqual(44);
+	await app.details().locator('[data-subtask="Socks"]').scrollIntoViewIfNeeded();
+	await expect(app.details().locator('[data-subtask="Passport"]')).toBeInViewport();
+	const from = (await handle.boundingBox())!;
+	const target = (await app.details().locator('[data-subtask="Passport"]').boundingBox())!;
+	await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+	await page.mouse.down();
+	await page.mouse.move(from.x + from.width / 2, target.y + 4, { steps: 8 });
+	await page.mouse.up();
+	const rows = app.details().getByRole('list', { name: 'Subtasks of Pack for trip' }).getByRole('listitem');
+	await expect(rows).toHaveText([/Socks/, /Passport/, /Charger/]);
+	await shot(app, 'subtasks-details');
+
+	await app.details().getByRole('button', { name: 'Close' }).tap();
+	await expect(app.row('Pack for trip').getByRole('img', { name: '1 of 3 subtasks done' })).toBeVisible();
 });

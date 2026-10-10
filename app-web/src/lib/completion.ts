@@ -11,16 +11,14 @@ export function completeTask(task: Task) {
 		case undefined:
 			return;
 		case 'done':
-			toasts.show(`Completed “${title}”`, { label: 'Undo', run: () => store.reopenTask(id) });
+			toasts.show(`Completed “${title}”`, { label: 'Undo', run: () => store.restoreCompletion(completion.previous) });
 			return;
-		case 'rolled': {
-			const { next, previous } = completion;
-			toasts.show(`Completed “${title}”, next due ${formatDue(next, clock.today)}`, {
+		case 'rolled':
+			toasts.show(`Completed “${title}”, next due ${formatDue(completion.next, clock.today)}`, {
 				label: 'Undo',
-				run: () => store.updateTask(id, previous),
+				run: () => store.restoreCompletion(completion.previous),
 			});
 			return;
-		}
 		default: {
 			const never: never = completion;
 			return never;

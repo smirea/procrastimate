@@ -11,6 +11,7 @@ Procrastimate's concepts, goals, paradigms, and high-level system decisions, one
 - [Labels UI](labels.md): how labels show and are edited in rows, the sidebar, and pickers.
 - [Recurring tasks](recurrence.md): completing, next occurrences, and editing repeats.
 - [Search](search.md): matching, ranking, grouping, and the search sheet.
+- [Subtasks](subtasks.md): nested child tasks, where they show, completion, reorder, and delete rules.
 - [Push notifications](push-notifications.md): Web Push scheduling, delivery, keys, and permission.
 - [Stack](stack.md): tooling, client and server frameworks, and shared code.
 - [Dev hosting](dev-hosting.md): the dev box, `tailscale serve`, and the single-origin rule.
