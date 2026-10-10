@@ -73,20 +73,20 @@ export function repeatLabel(recurrence: Recurrence, due: Due | null): string {
 export type TimingSegment = { kind: 'due' | 'recurrence' | 'notify' | 'reminder'; text: string };
 
 /** `5:00 PM`, spelled out because `toLocaleTimeString` inserts a narrow no-break space on newer ICU. */
-function clockTime(time: TimeOfDay): string {
+export function clockTime(time: TimeOfDay): string {
 	const [h, m] = time.split(':').map(Number) as [number, number];
 	return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`;
 }
 
 /** `Sat Oct 17`, with the year only when it is not this year. */
-function calendarDay(date: DateKey, today: DateKey): string {
+export function calendarDay(date: DateKey, today: DateKey): string {
 	const d = fromDateKey(date);
 	const weekday = d.toLocaleDateString('en-US', { weekday: 'short' });
 	const day = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 	return date.slice(0, 4) === today.slice(0, 4) ? `${weekday} ${day}` : `${weekday} ${day}, ${date.slice(0, 4)}`;
 }
 
-function relativeDay(date: DateKey, today: DateKey): string | null {
+export function relativeDay(date: DateKey, today: DateKey): string | null {
 	if (date === today) return 'Today';
 	if (date === addDays(today, 1)) return 'Tomorrow';
 	return date === addDays(today, -1) ? 'Yesterday' : null;
