@@ -1,7 +1,17 @@
 # Decisions
 
-- Read [`docs/decisions.md`](docs/decisions.md) before starting work. It holds the product's concepts, goals, paradigms, and high-level system decisions.
-- Whenever a new concept, goal, paradigm, or high-level system decision comes up, record it in `docs/decisions.md` in the same PR as the work.
+- Read [`docs/decisions/README.md`](docs/decisions/README.md) and the area files your work touches before starting. They hold the product's concepts, goals, paradigms, and high-level system decisions, one file per area.
+- Whenever a new concept, goal, paradigm, or high-level system decision comes up, record it in the matching area file under `docs/decisions/` in the same PR as the work. Add a new file and list it in the index when no area fits.
+
+# Workflow
+
+Full rules in [`docs/decisions/workflow.md`](docs/decisions/workflow.md).
+
+- One PR per thread, never stacked. Fold small same-area follow-ups into an open PR instead of starting a new thread.
+- Rebase only when GitHub reports a real conflict; PR CI already tests the merge with `master`.
+- Build features yourself; never hand the whole build to a helper sub-agent that can't receive messages.
+- Run only the relevant unit and e2e specs locally; CI runs the full suite.
+- Screenshots: 2 to 4, only for UI changes.
 
 # Product
 

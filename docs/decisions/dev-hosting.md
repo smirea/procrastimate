@@ -1,0 +1,10 @@
+# Dev hosting
+
+- **Stefan's dev web client runs on potatoey's box.** Stefan opens it over HTTPS at `https://stf-box.tailff2195.ts.net:6120`. Procrastimate owns ports 6120 (web) and 6121 (API) there.
+- **HTTPS through `tailscale serve`.** `tailscale serve` terminates TLS on port 6120 and proxies to the Vite dev server on box-local port 16120 (the public port plus 10000). The API stays on 6121 and the browser reaches it only through `/api`. Plain HTTP on the tailnet is gone, so the app always runs in a secure context there.
+- **One origin for the browser.** The web client's server always proxies the backend, so the browser talks to exactly one origin. Browser code calls relative `/api` paths. `API_URL` and any other API host or port stay in Vite's Node-side proxy config and never reach the client through `import.meta.env`, a `PUBLIC_` variable, or the bundle. This holds everywhere, including local dev, the e2e suite, and the box.
+- **No third-party origins.** The browser fetches nothing cross-origin. Fonts and other assets ship from the app's own origin, so Google Sans Flex (SIL OFL 1.1) is self-hosted from `@fontsource-variable/google-sans-flex`. The `single-origin` e2e test fails on any request that leaves the page's origin.
+- **The box tracks `master`.** Its checkout auto-pulls about every 3 minutes, so every merge is live within minutes.
+- **The box starts the client with `--host $HOST --port $PORT` and `__VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS=.ts.net`.** Keep the web client compatible with that launch. Vite CLI flags must keep overriding the config's host and port, so never hardcode a bind address or port that flags cannot change. `server.allowedHosts` must stay an array, because Vite only appends the extra hosts to an array. The `/api` proxy must keep working through any allowed host.
+- **Use the full tailnet name.** `.ts.net` admits `stf-box.<tailnet>.ts.net`. Vite blocks the bare `stf-box` short name unless the box adds it to the extra allowed hosts.
+- **Don't depend on a secure context.** Local runs and tests still use plain HTTP, so browser APIs limited to secure contexts, such as `crypto.randomUUID`, need a fallback.
