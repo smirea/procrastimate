@@ -18,12 +18,12 @@ The client proxies `/api/*` to the API unchanged, so `/api/status` reaches the s
 
 ## Deploys
 
-Production is one Cloudflare Worker (`wrangler.jsonc`) on the free plan. It serves `app-web/build` as static assets and runs `server/src/api.ts` for `/api/*`. `.github/workflows/ci.yml` checks every pull request and deploys every push to `master` with `wrangler deploy`.
+Production is one Cloudflare Worker (`wrangler.jsonc`) on the free plan at `https://procrastimate.stf.lol`, a Workers Custom Domain. It serves `app-web/build` as static assets and runs `server/src/api.ts` for `/api/*`. `.github/workflows/ci.yml` checks every pull request and deploys every push to `master` with `wrangler deploy`.
 
 Deploys need two repository secrets in GitHub (Settings > Secrets and variables > Actions):
 
 - `CLOUDFLARE_ACCOUNT_ID`, the Cloudflare account ID.
-- `CLOUDFLARE_API_TOKEN`, an API token made from the "Edit Cloudflare Workers" template.
+- `CLOUDFLARE_API_TOKEN`, an API token made from the "Edit Cloudflare Workers" template, with the `stf.lol` zone included so `wrangler deploy` can attach the custom domain.
 
 Without them CI still passes and skips the deploy with a warning.
 
