@@ -427,6 +427,17 @@ describe('recurrence', () => {
 		expect<unknown>(parsed.due).toEqual({ date, time });
 	});
 
+	test.each([
+		['every mon wed workout', [1, 3]],
+		['7am mon wed workout', [1, 3]],
+		['tue/wed workout', [2, 3]],
+		['every fri, sat workout', [5, 6]],
+	] as const)('%s keeps its last weekday before an ordinary word', (input, days) => {
+		const parsed = parse(input);
+		expect(parsed.title).toBe('workout');
+		expect<unknown>(parsed.recurrence).toEqual({ interval: 1, unit: 'week', days });
+	});
+
 	test('a weekday list that names one day is a plain weekly repeat', () => {
 		expect(parse('gym every mon, monday').recurrence).toEqual({ interval: 1, unit: 'week' });
 	});

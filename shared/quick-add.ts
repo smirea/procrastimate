@@ -50,7 +50,8 @@ const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', '
 
 const WEEKDAY = String.raw`(?:mon(?:day)?|tue(?:s(?:day)?)?|wed(?:nesday)?|thu(?:r(?:s(?:day)?)?)?|fri(?:day)?|sat(?:urday)?|sun(?:day)?)`;
 /** Two or more weekdays joined by spaces, commas, slashes, `and`, or `&`, as in `mon, wed and fri`. */
-const WEEKDAY_LIST = String.raw`${WEEKDAY}\b(?:(?:\s*[,/&]\s*(?:and\s+)?|\s+(?:and\s+)?)${WEEKDAY}\b)+`;
+const WEEKDAY_SEPARATOR = String.raw`(?:\s*[,/&]\s*(?:and\s+)?|\s+(?:and\s+)?)`;
+const WEEKDAY_LIST = String.raw`${WEEKDAY}\b(?:${WEEKDAY_SEPARATOR}${WEEKDAY}\b)+`;
 const SLASHED_WEEKDAYS = new RegExp(String.raw`^${WEEKDAY}(?:\s*/\s*${WEEKDAY})+$`, 'i');
 const WEEKDAY_WORD = new RegExp(WEEKDAY, 'gi');
 const MONTH = String.raw`(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)`;
@@ -95,7 +96,7 @@ const GUARDS: RegExp[] = [
 	/\b(?!tom\b)[Tt][Oo][Mm]\b/g,
 	new RegExp(String.raw`(?<=\b(?:${NAME_CONTEXT})\s+)tom\b`, 'gi'),
 	new RegExp(
-		String.raw`\b(?:tom|sun|sat|wed|daily|weekdays|weekly|monthly|yearly)\b(?=\s+(?!(?:${PHRASE_WORDS}|and\s+${WEEKDAY})\b)[a-z]+(?![\w'’]))`,
+		String.raw`(?<!${WEEKDAY}\b${WEEKDAY_SEPARATOR})\b(?:tom|sun|sat|wed|daily|weekdays|weekly|monthly|yearly)\b(?=\s+(?!(?:${PHRASE_WORDS}|and\s+${WEEKDAY})\b)[a-z]+(?![\w'’]))`,
 		'gi',
 	),
 	new RegExp(String.raw`(?<=\b(?:${ADDRESS})\.?\s+)\d[\w:/]*`, 'gi'),

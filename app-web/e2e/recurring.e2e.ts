@@ -49,10 +49,8 @@ test('a repeating task notifies at each next occurrence’s due time with no rem
 test('a weekday list with a time repeats on each listed day and notifies at each', async ({ app, page }) => {
 	await app.openQuickAdd();
 	await app.taskInput().pressSequentially('Gym mon wed fri 7am');
-	await expect(page.getByRole('status', { name: 'Timing preview' })).toHaveText(
-		'Fri Oct 16 at 7:00 AM · Repeats every Mon, Wed, Fri · Notifies at 7:00 AM',
-	);
 	await expect(app.quickAdd().getByText('Every Mon, Wed, Fri', { exact: true })).toBeVisible();
+	await expect(app.quickAdd().getByText('Friday 7am', { exact: true })).toBeVisible();
 	await app.taskInput().press('Enter');
 	await expect(app.taskInput()).toHaveValue('');
 	await app.taskInput().press('Escape');
@@ -60,6 +58,12 @@ test('a weekday list with a time repeats on each listed day and notifies at each
 	const row = app.row('Gym');
 	await expect(row).toContainText('Friday 7am');
 	await expect(row.getByRole('img', { name: 'Repeats every Mon, Wed, Fri' })).toBeVisible();
+	await row.getByRole('button', { name: /Gym/ }).click();
+	await expect(app.details().getByRole('button', { name: 'Repeats every Mon, Wed, Fri' })).toHaveText(
+		'Every Mon, Wed, Fri',
+	);
+	await page.keyboard.press('Escape');
+	await expect(app.details()).toBeHidden();
 	await row.getByRole('checkbox', { name: 'Complete Gym' }).click();
 	await expect(page.getByRole('status').filter({ hasText: 'Completed “Gym”, next due Monday 7am' })).toBeVisible();
 	await expect(row).toContainText('Monday 7am');
