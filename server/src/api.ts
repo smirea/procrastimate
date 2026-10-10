@@ -1,10 +1,14 @@
-import { pushRoutes, type Env, type Handler } from './push';
+import { accountApiRoutes } from './account/account';
+import type { Env, Handler } from './bindings';
+import { pushRoutes } from './push';
 
+export { Account } from './account/account';
 export { PushSchedule } from './push';
 
 const routes: Record<string, Handler> = {
 	'GET /api/status': () => Response.json({ ok: true }),
 	...pushRoutes,
+	...accountApiRoutes,
 };
 
 export default {

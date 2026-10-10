@@ -1,4 +1,4 @@
-// env-manager: procrastimate | 2026-10-08T13:16:37.298Z
+// env-manager: procrastimate | 2026-10-10T23:21:06.269Z
 // env-manager target: server
 // env-manager root: ../..
 // env-manager env: local
@@ -7,6 +7,7 @@ import { z } from 'zod';
 
 const env = z.object({
   API_PORT: z.coerce.number().int().min(1).max(65535),
+  SYNC_SETUP_CODE: z.string().optional(),
 }).parse(process.env);
 
 export default env;

@@ -9,12 +9,8 @@ import {
 	type ScheduleRequest,
 } from '../../shared/push';
 import { classifyDelivery, isRetryable, nextAlarm, planSchedule, splitDue, type Delivery } from './push-schedule';
+import type { Env, Handler } from './bindings';
 import { sendPush, VAPID_SUBJECT, type Vapid } from './web-push';
-
-/** Worker bindings. Every field is optional because Bun serves the same handler in development with none of them. */
-export type Env = { PUSH?: DurableObjectNamespace; VAPID_PUBLIC_KEY?: string; VAPID_PRIVATE_KEY?: string };
-
-export type Handler = (request: Request, env: Env) => Response | Promise<Response>;
 
 type Push = { schedules: DurableObjectNamespace; vapid: Vapid };
 
