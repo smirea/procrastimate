@@ -53,7 +53,7 @@ async function shot(app: App, name: string) {
 	await app.page.screenshot({ path: `test-results/mobile/${name}.png` });
 }
 
-test('the navigation drawer switches views and projects', async ({ app, page }) => {
+test('the navigation drawer opens, closes, and switches views', async ({ app, page }) => {
 	await expect(page.getByText('Tap + to capture a task.')).toBeVisible();
 	await add(
 		app,
@@ -78,7 +78,9 @@ test('the navigation drawer switches views and projects', async ({ app, page }) 
 	await go(app, 'Upcoming');
 	await expect(page.getByRole('region', { name: 'Oct 17 · Saturday' }).getByRole('listitem')).toHaveText([/Dentist/]);
 	await shot(app, 'upcoming');
+});
 
+test('the navigation drawer creates a project and switches to it', async ({ app, page }) => {
 	await openNav(app);
 	await page.getByRole('button', { name: 'Add project' }).tap();
 	await page.getByRole('textbox', { name: 'Project name' }).fill('Home');
