@@ -11,12 +11,16 @@
 	import Tag from 'phosphor-svelte/lib/Tag';
 	import PlusCircle from 'phosphor-svelte/lib/PlusCircle';
 	import MagnifyingGlass from 'phosphor-svelte/lib/MagnifyingGlass';
+	import Bell from 'phosphor-svelte/lib/Bell';
 	import ThemeSwitcher from './ThemeSwitcher.svelte';
 	import { store } from '../store.svelte.ts';
 	import { clock } from '../ui.svelte.ts';
+	import { push, pushStatus } from '../push.svelte.ts';
 	import { inboxTasks, labelTasks, projectTasks, todayTasks, upcomingGroups } from '../views.ts';
 
-	let { onquickadd, onsearch }: { onquickadd: () => void; onsearch: () => void } = $props();
+	let { onquickadd, onsearch, onnotifications }: { onquickadd: () => void; onsearch: () => void; onnotifications: () => void } = $props();
+
+	const status = $derived(pushStatus(push.state));
 
 	const today = $derived(todayTasks(store.tasks, clock.today));
 	const views = $derived([
@@ -146,7 +150,12 @@
 		</section>
 	{/if}
 
-	<div class="mt-auto">
+	<div class="mt-auto space-y-2">
+		<button type="button" class="nav-link w-full" onclick={onnotifications}>
+			<Bell size={18} weight={push.state.kind === 'on' ? 'fill' : 'regular'} />
+			<span class="flex-1 text-left">Notifications</span>
+			{#if status}<span class="text-[12px] text-faint">{status}</span>{/if}
+		</button>
 		<ThemeSwitcher />
 	</div>
 </nav>
