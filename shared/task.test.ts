@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { notificationTimes, type Due, type Reminder } from './task.ts';
+import { addInterval, nextOccurrence, notificationTimes, type Due, type Recurrence, type Reminder } from './task.ts';
 
 const at = (date: Date) => date.toISOString();
 const times = (due: Due | null, reminders: Reminder[] = []) => notificationTimes(due, reminders).map(at);
@@ -40,5 +40,85 @@ describe('notificationTimes', () => {
 				{ kind: 'at', date: '2026-10-15', time: '09:00' },
 			]),
 		).toEqual([local('2026-10-15', '09:00')]);
+	});
+});
+
+// Wednesday, October 14 2026.
+const today = '2026-10-14';
+
+const next = (due: Due | null, recurrence: Recurrence | null, reminders: Reminder[] = []) =>
+	nextOccurrence({ due, recurrence, reminders }, today);
+
+describe('addInterval', () => {
+	test.each([
+		['2026-10-14', 1, 'weekday', '2026-10-15'],
+		['2026-10-16', 1, 'weekday', '2026-10-19'],
+		['2026-10-17', 1, 'weekday', '2026-10-19'],
+		['2026-10-15', 3, 'weekday', '2026-10-20'],
+		['2026-01-31', 1, 'month', '2026-02-28'],
+		['2028-02-29', 1, 'year', '2029-02-28'],
+	] as const)('%s plus %d %s is %s', (from, interval, unit, expected) => {
+		expect(addInterval(from, interval, unit)).toBe(expected);
+	});
+});
+
+describe('nextOccurrence', () => {
+	test.each([
+		['daily from today', { date: '2026-10-14', time: '09:00' }, { interval: 1, unit: 'day' }, '2026-10-15'],
+		[
+			'daily, overdue, skips to tomorrow',
+			{ date: '2026-10-10', time: null },
+			{ interval: 1, unit: 'day' },
+			'2026-10-15',
+		],
+		[
+			'every 3 days, overdue, stays on its cadence',
+			{ date: '2026-10-10', time: null },
+			{ interval: 3, unit: 'day' },
+			'2026-10-16',
+		],
+		['weekly from Monday', { date: '2026-10-12', time: null }, { interval: 1, unit: 'week' }, '2026-10-19'],
+		['every 2 weeks', { date: '2026-10-14', time: null }, { interval: 2, unit: 'week' }, '2026-10-28'],
+		[
+			'weekdays, completed early on Friday',
+			{ date: '2026-10-16', time: null },
+			{ interval: 1, unit: 'weekday' },
+			'2026-10-19',
+		],
+		[
+			'monthly on the 31st keeps the 31st',
+			{ date: '2026-01-31', time: null },
+			{ interval: 1, unit: 'month' },
+			'2026-10-31',
+		],
+		['yearly', { date: '2026-03-01', time: null }, { interval: 1, unit: 'year' }, '2027-03-01'],
+	] as const)('%s', (_, due, recurrence, expected) => {
+		expect(next(due, recurrence)).toEqual({ due: { date: expected, time: due.time }, reminders: [] });
+	});
+
+	test('a recurring task with no due date counts from today', () => {
+		expect(next(null, { interval: 1, unit: 'week' })).toEqual({
+			due: { date: '2026-10-21', time: null },
+			reminders: [],
+		});
+	});
+
+	test('absolute reminders shift with the due date and relative ones stay', () => {
+		const reminders: Reminder[] = [
+			{ kind: 'before', minutes: 30 },
+			{ kind: 'at', date: '2026-10-13', time: '20:00' },
+		];
+		expect(next({ date: '2026-10-14', time: '09:00' }, { interval: 1, unit: 'week' }, reminders)).toEqual({
+			due: { date: '2026-10-21', time: '09:00' },
+			reminders: [
+				{ kind: 'before', minutes: 30 },
+				{ kind: 'at', date: '2026-10-20', time: '20:00' },
+			],
+		});
+	});
+
+	test('a task without a repeat has no next occurrence', () => {
+		expect(next({ date: '2026-10-14', time: null }, null)).toBe(null);
+		expect(next(null, { interval: 1, unit: 'day' })?.due).toEqual({ date: '2026-10-15', time: null });
 	});
 });

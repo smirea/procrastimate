@@ -6,6 +6,7 @@ Complete a task lets Stefan check off a task with a short, satisfying animation,
 
 - `complete-check` marks a task done and animates it out of the list.
 - `complete-undo` restores the task to its place.
+- `complete-recurring` moves a recurring task to its next occurrence instead of closing it. [Recurring tasks](./recurring-tasks.md) covers it.
 - `complete-history` lists completed tasks. Planned: not built yet.
 
 ## How to get to it (user POV)

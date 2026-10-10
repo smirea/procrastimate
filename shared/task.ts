@@ -11,7 +11,8 @@ export type Due = { date: DateKey; time: TimeOfDay | null };
 
 export type Reminder = { kind: 'before'; minutes: number } | { kind: 'at'; date: DateKey; time: TimeOfDay };
 
-export type RecurrenceUnit = 'day' | 'week' | 'month' | 'year';
+/** `weekday` counts Monday to Friday only. */
+export type RecurrenceUnit = 'day' | 'weekday' | 'week' | 'month' | 'year';
 
 /** Repeats every `interval` units, counted from the due date. A weekly repeat keeps the due date's weekday. */
 export type Recurrence = { interval: number; unit: RecurrenceUnit };
@@ -64,6 +65,14 @@ export function addInterval(key: DateKey, interval: number, unit: RecurrenceUnit
 	switch (unit) {
 		case 'day':
 			return addDays(key, interval);
+		case 'weekday': {
+			let date = key;
+			for (let left = interval; left > 0;) {
+				date = addDays(date, 1);
+				if (isWeekday(date)) left--;
+			}
+			return date;
+		}
 		case 'week':
 			return addDays(key, interval * 7);
 		case 'month':
@@ -82,6 +91,36 @@ export function notificationTimes(due: Due | null, reminders: readonly Reminder[
 	const times = [due?.time ? fromDateKey(due.date, due.time) : null, ...reminders.map(r => reminderFiresAt(r, due))];
 	const unique = new Map(times.filter(t => t !== null).map(t => [t.getTime(), t]));
 	return [...unique.values()].sort((a, b) => a.getTime() - b.getTime());
+}
+
+export function isWeekday(key: DateKey): boolean {
+	const day = fromDateKey(key).getDay();
+	return day !== 0 && day !== 6;
+}
+
+const daysBetween = (from: DateKey, to: DateKey) =>
+	Math.round((fromDateKey(to).getTime() - fromDateKey(from).getTime()) / 86_400_000);
+
+/**
+ * Where a recurring task moves when it is completed: the first occurrence after today, counted in whole
+ * intervals from the due date, or from today when it has none. Absolute reminders shift by the same
+ * number of days, and relative reminders follow the due time.
+ */
+export function nextOccurrence(
+	task: Pick<Task, 'due' | 'recurrence' | 'reminders'>,
+	today: DateKey,
+): { due: Due; reminders: Reminder[] } | null {
+	if (!task.recurrence) return null;
+	const { interval, unit } = task.recurrence;
+	const from = task.due?.date ?? today;
+	let step = 1;
+	let date = addInterval(from, interval, unit);
+	while (date <= today) date = addInterval(from, interval * ++step, unit);
+	const shift = daysBetween(from, date);
+	return {
+		due: { date, time: task.due?.time ?? null },
+		reminders: task.reminders.map(r => (r.kind === 'at' ? { ...r, date: addDays(r.date, shift) } : r)),
+	};
 }
 
 /** When a reminder fires, or null for a relative reminder on a task without a due time. */
