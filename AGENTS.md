@@ -1,3 +1,8 @@
+# Decisions
+
+- Read [`docs/decisions.md`](docs/decisions.md) before starting work. It holds the product's concepts, goals, paradigms, and high-level system decisions.
+- Whenever a new concept, goal, paradigm, or high-level system decision comes up, record it in `docs/decisions.md` in the same PR as the work.
+
 # Product
 
 - Procrastimate is Stefan's personal task manager, a rough Todoist clone that will grow. One user. Web and iOS now, Apple Watch later.
