@@ -29,7 +29,8 @@ Preconditions:
 - **Keyboard.** Focus the checked option and press the arrow keys. Selection and focus move together. Test: `arrow keys move the theme selection`.
 - **No flash.** Choose `Dark` and reload. When `<body>` is first parsed, before anything can paint or the app runs, `<html>` already has `data-theme="dark"`, a dark `color-scheme`, and a dark `theme-color` for the browser chrome. Test: `the saved theme applies before the app loads, so it never flashes`.
 - **Phone.** Open the drawer, choose `Light` under a dark appearance, and reload. The drawer still shows `Light` checked and each option is at least 44 px tall. Tests: `the drawer theme switcher overrides the color scheme and persists across reloads` and `the saved theme applies before the app loads on a phone`.
-- **Contrast.** The unit test composites each text token over every surface it can sit on, including the warm and cool canvas glows, and fails below 4.5:1. Test: `light theme text meets WCAG AA contrast` and its dark sibling.
+- **Contrast.** The unit test composites each text token over every surface it can sit on, including the warm and cool canvas glows, quick add chips such as the recurrence chip, and parsed phrase highlights, and fails below 4.5:1. Tests: `light theme text meets WCAG AA contrast` and its dark sibling.
+- **Both themes.** Every color with a light value also has a dark value. Test: `every literal light color has a dark value`.
 - **iOS.** Planned: switch the simulator appearance and compare.
 
 ## Gotchas

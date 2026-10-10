@@ -65,7 +65,7 @@
 	--color-on-accent: #1c0a06;
 	--color-ink: #ececef;
 	--color-muted: #a8a8b1;
-	--color-faint: #898992;
+	--color-faint: #96969f;
 	--color-surface: #3a3a41;
 	--color-scrim: rgb(0 0 0 / 0.45);
 	--canvas: #0e0e10;
@@ -79,6 +79,7 @@
 	--glass-shadow: rgb(0 0 0 / 0.55);
 	--glass-shadow-strong: rgb(0 0 0 / 0.7);
 	--toast-bg: rgb(54 54 61 / 0.92);
+	--toast-action: #ff9f8a;
 	--p1: #ff6369;
 	--p2: #ffa04d;
 	--p3: #6b9bff;
@@ -91,6 +92,7 @@
 	--token-priority: rgb(255 99 105 / 0.22);
 	--token-reminder: rgb(167 139 250 / 0.24);
 	--token-project: rgb(107 155 255 / 0.22);
+	--token-recurrence: rgb(245 165 36 / 0.22);
 }
 
 @layer base {

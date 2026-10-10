@@ -35,6 +35,8 @@ const over = ([r, g, b, a]: Rgba, [br, bg, bb]: Rgba): Rgba => [
 	1,
 ];
 
+const alpha = ([r, g, b]: Rgba, a: number): Rgba => [r, g, b, a];
+
 function luminance([r, g, b]: Rgba) {
 	const [lr, lg, lb] = [r, g, b].map(c => {
 		const s = c / 255;
@@ -58,7 +60,15 @@ function pairs(tokens: Tokens) {
 		glass: canvases.map(bg => over(c('--glass-bg'), bg)),
 		'glass-strong': canvases.map(bg => over(c('--glass-strong-bg'), bg)),
 		drawer: canvases.map(bg => over(c('--drawer-bg'), bg)),
+		chip: canvases.map(bg => over(alpha(c('--color-surface'), 0.6), over(c('--glass-strong-bg'), bg))),
 	};
+	const highlights = Object.keys(tokens)
+		.filter(name => name.startsWith('--token-'))
+		.map(name => ({
+			text: '--color-ink',
+			surface: name,
+			ratio: Math.min(...surfaces['glass-strong'].map(bg => contrast(c('--color-ink'), over(c(name), bg)))),
+		}));
 	const texts = [
 		'--color-ink',
 		'--color-muted',
@@ -71,9 +81,10 @@ function pairs(tokens: Tokens) {
 		'--tone-later',
 	];
 	const accent = c('--color-accent');
-	const activeNav = surfaces.glass.map(bg => over([accent[0], accent[1], accent[2], 0.08], bg));
+	const activeNav = surfaces.glass.map(bg => over(alpha(accent, 0.08), bg));
 	const toast = canvases.map(bg => over(c('--toast-bg'), bg));
 	return [
+		...highlights,
 		...Object.entries(surfaces).flatMap(([surface, backdrops]) =>
 			texts.map(text => ({ text, surface, ratio: Math.min(...backdrops.map(bg => contrast(c(text), bg))) })),
 		),
@@ -92,6 +103,15 @@ function pairs(tokens: Tokens) {
 		},
 	];
 }
+
+test('every literal light color has a dark value', () => {
+	const dark = block(":root[data-theme='dark']");
+	const lightColors = { ...block('@theme'), ...block(':root') };
+	const missing = Object.entries(lightColors)
+		.filter(([name, value]) => /^(#|rgb\()/.test(value) && !(name in dark))
+		.map(([name]) => name);
+	expect(missing).toEqual([]);
+});
 
 for (const [name, tokens] of Object.entries(themes)) {
 	test(`${name} theme text meets WCAG AA contrast`, () => {
