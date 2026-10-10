@@ -22,3 +22,4 @@ Procrastimate's concepts, goals, paradigms, and high-level system decisions, one
 - [Persistence and sync](persistence.md): local storage and the future sync log.
 - [Testing](testing.md): unit tests, end-to-end tests, and the feature map.
 - [iOS app](ios.md): the native SwiftUI app, its architecture, the Swift port and shared test vectors, local notifications, macOS CI, and paired parity tests. Its checklist and thread split are in [iOS parity](../ios-parity.md).
+- [Sync account and auth](sync-auth.md): the `Account` Durable Object, its stores, the setup code, pairing codes, device tokens, and revoke.
