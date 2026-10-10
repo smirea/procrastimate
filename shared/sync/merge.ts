@@ -31,10 +31,7 @@ export type LogEntry = Patch & { opId: string };
 
 export type MergeContext = {
 	now: number;
-	/**
-	 * Whether an op was applied before, so a retried push never applies twice. The caller records every
-	 * acked id, including ops that won no field, or a retried clamped op would get a newer clock and win.
-	 */
+	/** Whether an op id is already in the log, so a retried push never applies twice. */
 	isApplied: (opId: string) => boolean;
 	nextOpId?: () => string;
 };
@@ -52,10 +49,10 @@ export const serverHlc = (state: ServerState) => formatHlc(state.clock);
 const isLive = (kind: Kind, data: Fields | undefined) => kind === 'settings' || data?.deleted === false;
 
 /**
- * Writes the fields that beat their stored clocks. While an entity is not live only `deleted` can change,
+ * Writes the fields that beat their stored clocks and returns them as the op's log entry. While an entity is not live only `deleted` can change,
  * so edits to a tombstone are dropped. When it turns live, the row carries all its fields, so a client that never had it can build it.
  */
-function write(entities: Map<string, ServerEntity>, { kind, id, fields, opId }: LogEntry, hlc: Hlc): LogEntry | null {
+function write(entities: Map<string, ServerEntity>, { kind, id, fields, opId }: LogEntry, hlc: Hlc): LogEntry {
 	const key = entityKey(kind, id);
 	const current = entities.get(key);
 	const data: Fields = { ...current?.data };
@@ -71,7 +68,7 @@ function write(entities: Map<string, ServerEntity>, { kind, id, fields, opId }: 
 	const { deleted, ...values } = fields as Fields;
 	if (kind !== 'settings') take('deleted', deleted);
 	if (isLive(kind, data)) for (const [name, value] of Object.entries(values)) take(name, value);
-	if (!Object.keys(won).length) return null;
+	if (!Object.keys(won).length) return { kind, id, opId, fields: {} };
 	entities.set(key, { kind, id, data, clocks });
 	const appeared = !isLive(kind, current?.data) && isLive(kind, data);
 	return { kind, id, opId, fields: appeared ? { ...data } : won } as LogEntry;
@@ -79,8 +76,9 @@ function write(entities: Map<string, ServerEntity>, { kind, id, fields, opId }: 
 
 /**
  * Applies a device's ops in order and returns the ids to acknowledge, including ones already applied,
- * and a log entry per op that won any field. A clock more than a minute ahead of `now` is replaced by
- * the server's, keeping the device as the tie-break.
+ * and one log entry per newly applied op, with no fields when it won none. Logging every op is what lets
+ * a retry be skipped: a retried op with a clamped clock would otherwise get a newer clock and could win.
+ * A clock more than a minute ahead of `now` is replaced by the server's, keeping the device as the tie-break.
  */
 export function applyOps(
 	state: ServerState,
@@ -105,8 +103,7 @@ export function applyOps(
 			clock = observe(clock, hlc);
 		}
 		const { hlc: _, ...entry } = op;
-		const written = write(entities, entry as LogEntry, hlc);
-		if (written) log.push(written);
+		log.push(write(entities, entry as LogEntry, hlc));
 	}
 	return { state: { entities, clock }, acked, log };
 }
@@ -131,8 +128,7 @@ export function applyFixups(state: ServerState, ctx: MergeContext): { state: Ser
 	const log: LogEntry[] = [];
 	for (const patch of diff(before, fixups(before))) {
 		clock = tick(clock, ctx.now);
-		const written = write(entities, { ...patch, opId: (ctx.nextOpId ?? newId)() }, formatHlc(clock));
-		if (written) log.push(written);
+		log.push(write(entities, { ...patch, opId: (ctx.nextOpId ?? newId)() }, formatHlc(clock)));
 	}
 	return { state: { entities, clock }, log };
 }

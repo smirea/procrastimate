@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { isHlc } from './hlc.ts';
 import type { DateKey, Label, Project, Task, TimeOfDay, Weekday } from '../task.ts';
 
 /**
@@ -110,7 +111,7 @@ export const patchSchema = z.discriminatedUnion('kind', [
 ]);
 export type Patch = z.infer<typeof patchSchema>;
 
-const hlc = z.string().regex(/^\d+:\d+:.+$/);
+const hlc = z.string().refine(isHlc, 'Invalid HLC');
 
 export const opSchema = z.intersection(patchSchema, z.object({ opId: z.string(), hlc }));
 export type Op = z.infer<typeof opSchema>;

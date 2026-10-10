@@ -22,6 +22,12 @@ export function parseHlc(hlc: Hlc): Clock {
 	};
 }
 
+/** Rejects a wall time or counter past `Number.MAX_SAFE_INTEGER`, which would round and stop ticking. */
+export function isHlc(value: string): boolean {
+	const match = /^(\d+):(\d+):(.+)$/.exec(value);
+	return !!match && Number.isSafeInteger(Number(match[1])) && Number.isSafeInteger(Number(match[2]));
+}
+
 export function compareClocks(a: Clock, b: Clock): number {
 	return a.wall - b.wall || a.counter - b.counter || (a.node < b.node ? -1 : a.node > b.node ? 1 : 0);
 }

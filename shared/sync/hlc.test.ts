@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { compareHlc, createClock, formatHlc, observe, parseHlc, tick } from './hlc.ts';
+import { compareHlc, createClock, formatHlc, isHlc, observe, parseHlc, tick } from './hlc.ts';
 
 describe('hlc', () => {
 	test('formats and parses wall time, counter, and node', () => {
@@ -33,5 +33,13 @@ describe('hlc', () => {
 		expect(compareHlc(formatHlc(next), '500:4:server')).toBeGreaterThan(0);
 		expect(next.node).toBe('a');
 		expect(observe(next, '50:0:b')).toBe(next);
+	});
+
+	test('rejects malformed clocks and components past the safe integer range', () => {
+		expect(isHlc('1:0:a')).toBe(true);
+		expect(isHlc('1:0:')).toBe(false);
+		expect(isHlc('x:0:a')).toBe(false);
+		expect(isHlc(`1:${Number.MAX_SAFE_INTEGER + 2}:a`)).toBe(false);
+		expect(isHlc(`${'9'.repeat(20)}:0:a`)).toBe(false);
 	});
 });

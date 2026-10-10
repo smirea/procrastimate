@@ -58,7 +58,10 @@ describe('applyOps', () => {
 		const second = apply(seeded(), [older, newer]);
 		expect(titleOf(first.state)).toBe('Newer');
 		expect(titleOf(second.state)).toBe('Newer');
-		expect(first.log.map(e => e.opId)).toEqual(['newer']);
+		expect(first.log.map(e => [e.opId, e.fields])).toEqual([
+			['newer', { title: 'Newer' }],
+			['older', {}],
+		]);
 	});
 
 	test('breaks a tie on wall time and counter by device', () => {
@@ -77,7 +80,7 @@ describe('applyOps', () => {
 		expect(retry.log).toEqual([]);
 		const twice = apply(seeded(), [rename, rename]);
 		expect(twice.acked).toEqual(['rename', 'rename']);
-		expect(twice.log).toHaveLength(1);
+		expect(twice.log.map(e => e.opId)).toEqual(['rename']);
 	});
 
 	test('never lets a retried op with a clamped clock win again', () => {
@@ -111,7 +114,7 @@ describe('applyOps', () => {
 				edit('late', '30:0:b', 't', { title: 'Late edit' }),
 			]);
 			expect(serverSnapshot(state).tasks).toEqual([]);
-			expect(log.map(e => e.opId)).toEqual(['delete']);
+			expect(log.map(e => e.fields)).toEqual([{ deleted: true }, {}]);
 		});
 
 		test('keeps the delete when the edit arrives first', () => {
@@ -134,13 +137,13 @@ describe('applyOps', () => {
 			const deleted = apply(seeded(), [edit('delete', '20:0:a', 't', { deleted: true })]).state;
 			const { state, log } = apply(deleted, [{ ...createTask('t', '15:0:b'), opId: 'stale' }]);
 			expect(serverSnapshot(state).tasks).toEqual([]);
-			expect(log).toEqual([]);
+			expect(log.map(e => e.fields)).toEqual([{}]);
 		});
 
 		test('a partial edit of an entity the server never had is dropped', () => {
 			const { state, log } = apply(createServerState(), [edit('e', '20:0:a', 'ghost', { title: 'Ghost' })]);
 			expect(serverSnapshot(state).tasks).toEqual([]);
-			expect(log).toEqual([]);
+			expect(log.map(e => e.fields)).toEqual([{}]);
 		});
 
 		test('an edit made while deleted stays dropped after an undelete', () => {

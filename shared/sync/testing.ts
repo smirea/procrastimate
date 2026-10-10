@@ -42,13 +42,15 @@ export const counter = (prefix: string) => {
 export class MemoryServer {
 	state: ServerState = createServerState();
 	log: Change[] = [];
-	readonly applied = new Set<string>();
 	private readonly nextOpId = counter('server-op-');
 
 	sync(cursor: number, ops: ClientSync['outbox'], now: number): SyncResponse {
-		const pushed = applyPush(this.state, ops, { now, isApplied: id => this.applied.has(id), nextOpId: this.nextOpId });
+		const pushed = applyPush(this.state, ops, {
+			now,
+			isApplied: id => this.log.some(change => change.opId === id),
+			nextOpId: this.nextOpId,
+		});
 		this.state = pushed.state;
-		for (const id of pushed.acked) this.applied.add(id);
 		for (const entry of pushed.log) this.log.push({ ...entry, seq: this.log.length + 1 });
 		const base = { acked: pushed.acked, cursor: this.log.length, hlc: serverHlc(this.state) };
 		if (cursor === 0) return { ...base, snapshot: serverSnapshot(this.state) };
