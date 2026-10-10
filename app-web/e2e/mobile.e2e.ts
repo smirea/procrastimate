@@ -131,6 +131,22 @@ test('# suggests projects above the keyboard and a tap picks or creates one', as
 	await expect(app.quickAdd().getByRole('button', { name: 'Project Garden' })).toBeVisible();
 });
 
+test('quick add previews timing above the input with the keyboard open', async ({ app, page }) => {
+	await openQuickAdd(app);
+	await openKeyboard(app);
+	await app.taskInput().pressSequentially('Standup every mon 9am remind me 10m before');
+	const preview = page.getByRole('status', { name: 'Timing preview' });
+	await expect(preview).toHaveText('Mon Oct 19 at 9:00 AM · Repeats every Mon · Remind 10 min before (8:50 AM)');
+	await settle(app);
+	const box = (await preview.boundingBox())!;
+	expect(box.y).toBeGreaterThanOrEqual(0);
+	expect(box.y + box.height).toBeLessThanOrEqual((await app.taskInput().boundingBox())!.y);
+	await shot(app, 'timing-preview');
+
+	await app.taskInput().fill('Standup');
+	await expect(preview).toHaveCount(0);
+});
+
 test('quick add docks above the keyboard and parses a reminder and priority', async ({ app, page }) => {
 	await openQuickAdd(app);
 	const viewport = page.viewportSize()!;
