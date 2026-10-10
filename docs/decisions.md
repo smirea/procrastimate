@@ -58,3 +58,9 @@ This is the single source for Procrastimate's concepts, goals, paradigms, and hi
 
 - **Web persistence.** The whole store is one JSON document in `localStorage`, validated on load and written synchronously on every change. Invalid stored data is discarded, since there is no backwards compatibility.
 - **Sync.** Not built yet. The store's mutations are discrete commands so they can become a sync log later.
+
+## Testing
+
+- **Unit tests.** `bun test`, colocated as `*.test.ts`. The natural-language parser is tested with a fixed clock.
+- **End to end.** Playwright drives the real web UI in Chromium against an isolated dev server, from `app-web/e2e/*.e2e.ts`.
+- **Feature map.** `.cursor/skills/verify-procrastimate/features/` describes each user-facing feature and how to drive it. Keep it in sync with every change.
