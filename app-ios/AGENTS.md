@@ -14,7 +14,7 @@
 # Development
 
 - Linux or any machine without Xcode: `swift test` here runs the `Core` tests. Install a toolchain with [swiftly](https://www.swift.org/install/linux/) if `swift` is missing. The app and UI tests need macOS; on Linux rely on the iOS workflow (`.github/workflows/ios.yml`).
-- Colors come from `app-web/src/index.css`. After changing it, run `bun scripts/tokens.ts` here and commit `Sources/App/Theme/Tokens.swift`; CI runs `--check`.
+- Colors come from `app-web/src/index.css`. After changing it, run `bun scripts/tokens.ts` here and commit `Sources/App/Theme/Tokens.swift` and `Sources/App/Assets.xcassets/AccentColor.colorset`; CI runs `--check`. The accent comes from the asset, so views need no `.tint`.
 - Run `./scripts/run` to build, install, and launch the app, with automatic rebuild and relaunch after saving. Requires Bun and Xcode 26. Stop with Ctrl-C, or use `--no-watch` for one launch.
 - Use `./scripts/run --targets` to list devices and iOS 26 simulators; `*` marks the effective default. Select with `-t simulator` or `-t "iPhone 17"` (also accepts an identifier). It opens Device Hub on Xcode 27 or Simulator.app on earlier Xcode versions.
 - Selection precedence is `-t` / `--target`, then `SWIFT_RUN_DEFAULT_TARGET`, then a connected iOS device, booted simulator, or available simulator. Duplicate simulator names prefer a booted instance, then the newest runtime; use an identifier to select exactly.

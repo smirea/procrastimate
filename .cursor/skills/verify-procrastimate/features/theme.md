@@ -35,7 +35,7 @@ Preconditions:
 - **Solid glass.** Emulate `contrast: 'more'`. The sidebar loses its backdrop blur and paints the opaque `--glass-solid` color, in light and in dark. Test: `glass turns solid when the device asks for more contrast`.
 - **Reduced motion.** Emulate `reducedMotion: 'reduce'`, open quick add, and open the date picker. The `Due date` popover has no running animation. Test: `popovers open without motion under reduced motion`.
 - **Both themes.** Every color with a light value also has a dark value. Test: `every literal light color has a dark value`.
-- **iOS tokens.** The iOS colors are generated from `app-web/src/index.css`, so the contrast checked here holds on iOS too. `bun scripts/tokens.ts --check` in `app-ios/` prints `Tokens.swift is fresh.`; the iOS workflow fails when it is stale.
+- **iOS tokens.** The iOS colors are generated from `app-web/src/index.css`, so the contrast checked here holds on iOS too. `bun scripts/tokens.ts --check` in `app-ios/` prints `Generated colors are fresh.`; the iOS workflow fails when it is stale.
 - **iOS.** Planned: switch the simulator appearance and compare.
 
 ## Gotchas

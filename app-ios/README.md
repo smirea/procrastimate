@@ -8,7 +8,7 @@ From this folder:
 
 ```sh
 swift test                      # Core unit tests, on macOS or Linux
-bun scripts/tokens.ts --check   # Tokens.swift matches app-web/src/index.css
+bun scripts/tokens.ts --check   # generated colors match app-web/src/index.css
 ```
 
 UI tests run from Xcode's `App` scheme or with:
