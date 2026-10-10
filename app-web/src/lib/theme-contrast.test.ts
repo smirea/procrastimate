@@ -55,19 +55,39 @@ function pairs(tokens: Tokens) {
 	const c = (name: string) => color(tokens, `var(${name})`);
 	const canvas = c('--canvas');
 	const canvases = [canvas, over(c('--canvas-glow-warm'), canvas), over(c('--canvas-glow-cool'), canvas)];
+	/**
+	 * What dense glass can float over: sheets, popovers, and the drawer cover the task list, where blur averages
+	 * text into a darker wash, and the accent of a primary button or the add button sliding underneath.
+	 */
+	const content = [
+		...canvases,
+		...canvases.map(bg => over(alpha(c('--color-ink'), 0.25), bg)),
+		over(c('--color-accent'), canvas),
+	];
+	const strong = content.map(bg => over(c('--glass-strong-bg'), bg));
+	const solid = c('--glass-solid');
 	const surfaces = {
 		canvas: canvases,
 		glass: canvases.map(bg => over(c('--glass-bg'), bg)),
-		'glass-strong': canvases.map(bg => over(c('--glass-strong-bg'), bg)),
-		drawer: canvases.map(bg => over(c('--drawer-bg'), bg)),
-		chip: canvases.map(bg => over(alpha(c('--color-surface'), 0.6), over(c('--glass-strong-bg'), bg))),
+		'glass-strong': strong,
+		'solid glass': [solid],
 	};
+	const chip = strong.map(bg => over(c('--fill-control'), bg));
+	const chipTexts = [
+		'--color-ink',
+		'--color-muted',
+		'--tone-overdue',
+		'--tone-today',
+		'--tone-tomorrow',
+		'--tone-week',
+		'--tone-later',
+	];
 	const highlights = Object.keys(tokens)
 		.filter(name => name.startsWith('--token-'))
 		.map(name => ({
 			text: '--color-ink',
 			surface: name,
-			ratio: Math.min(...surfaces['glass-strong'].map(bg => contrast(c('--color-ink'), over(c(name), bg)))),
+			ratio: Math.min(...strong.map(bg => contrast(c('--color-ink'), over(c(name), bg)))),
 		}));
 	const texts = [
 		'--color-ink',
@@ -88,6 +108,7 @@ function pairs(tokens: Tokens) {
 		...Object.entries(surfaces).flatMap(([surface, backdrops]) =>
 			texts.map(text => ({ text, surface, ratio: Math.min(...backdrops.map(bg => contrast(c(text), bg))) })),
 		),
+		...chipTexts.map(text => ({ text, surface: 'chip', ratio: Math.min(...chip.map(bg => contrast(c(text), bg))) })),
 		{ text: '--color-accent', surface: 'active nav', ratio: Math.min(...activeNav.map(bg => contrast(accent, bg))) },
 		{
 			text: '--color-muted',

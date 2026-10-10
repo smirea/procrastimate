@@ -168,9 +168,10 @@
 		width: min(18rem, calc(100vw - 4.5rem));
 	}
 
-	/* The drawer floats over a full task list, so it needs a denser material than the desktop sidebar to stay legible. */
+	/* The drawer floats over a full task list, so it takes the dense material instead of the desktop sidebar's. */
 	.drawer :global(nav) {
-		background: var(--drawer-bg);
+		--glass-fill: var(--glass-strong-bg);
+		--glass-blur: 30px;
 	}
 
 	.fab {

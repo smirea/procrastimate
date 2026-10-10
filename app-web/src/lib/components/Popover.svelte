@@ -2,6 +2,7 @@
 	import type { Snippet } from 'svelte';
 	import { scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
+	import { motion } from '../ui.svelte.ts';
 
 	let {
 		trigger,
@@ -70,7 +71,7 @@
 			bind:this={panel}
 			role="dialog"
 			aria-label={label}
-			class="glass-strong absolute z-50 min-w-56 overflow-y-auto overscroll-contain rounded-xl p-1.5"
+			class="glass-strong absolute z-50 min-w-56 overflow-y-auto overscroll-contain rounded-popover p-1.5"
 			class:right-0={align === 'end'}
 			class:left-0={align === 'start'}
 			class:top-full={!placement.above}
@@ -79,7 +80,7 @@
 			style:translate={`${placement.shift}px 0`}
 			style:max-height={placement.maxHeight ? `${placement.maxHeight}px` : undefined}
 			style:transform-origin={`${placement.above ? 'bottom' : 'top'} ${align === 'end' ? 'right' : 'left'}`}
-			transition:scale={{ start: 0.94, duration: 160, easing: cubicOut, opacity: 0 }}
+			transition:scale={motion({ start: 0.94, duration: 180, easing: cubicOut, opacity: 0 })}
 		>
 			{@render children({ close })}
 		</div>

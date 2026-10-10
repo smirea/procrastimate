@@ -9,6 +9,8 @@ The web client has a light and a dark theme. Stefan picks `System`, `Light`, or 
 - `theme-persist` keeps the choice across reloads on the same device. It is not part of the task data.
 - `theme-first-paint` applies the saved theme before the app loads, so the page never shows the wrong theme.
 - `theme-contrast` keeps every text color at WCAG AA contrast in both themes.
+- `theme-glass-fallback` turns Liquid Glass layers solid when the device asks for more contrast or less transparency.
+- `theme-reduced-motion` makes popovers and other motion instant when the device asks for reduced motion.
 
 ## How to get to it (user POV)
 
@@ -29,7 +31,9 @@ Preconditions:
 - **Keyboard.** Focus the checked option and press the arrow keys. Selection and focus move together. Test: `arrow keys move the theme selection`.
 - **No flash.** Choose `Dark` and reload. When `<body>` is first parsed, before anything can paint or the app runs, `<html>` already has `data-theme="dark"`, a dark `color-scheme`, and a dark `theme-color` for the browser chrome. Test: `the saved theme applies before the app loads, so it never flashes`.
 - **Phone.** Open the drawer, choose `Light` under a dark appearance, and reload. The drawer still shows `Light` checked and each option is at least 44 px tall. Tests: `the drawer theme switcher overrides the color scheme and persists across reloads` and `the saved theme applies before the app loads on a phone`.
-- **Contrast.** The unit test composites each text token over every surface it can sit on, including the warm and cool canvas glows, quick add chips such as the recurrence chip, and parsed phrase highlights, and fails below 4.5:1. Tests: `light theme text meets WCAG AA contrast` and its dark sibling.
+- **Contrast.** The unit test composites each text token over every surface it can sit on, including the warm and cool canvas glows, dense glass over blurred list text and the accent fill, the solid glass fallback, quick add chips such as the recurrence chip, and parsed phrase highlights, and fails below 4.5:1. Tests: `light theme text meets WCAG AA contrast` and its dark sibling.
+- **Solid glass.** Emulate `contrast: 'more'`. The sidebar loses its backdrop blur and paints the opaque `--glass-solid` color, in light and in dark. Test: `glass turns solid when the device asks for more contrast`.
+- **Reduced motion.** Emulate `reducedMotion: 'reduce'`, open quick add, and open the date picker. The `Due date` popover has no running animation. Test: `popovers open without motion under reduced motion`.
 - **Both themes.** Every color with a light value also has a dark value. Test: `every literal light color has a dark value`.
 - **iOS.** Planned: switch the simulator appearance and compare.
 
