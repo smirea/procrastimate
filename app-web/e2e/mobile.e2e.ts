@@ -125,6 +125,29 @@ test('quick add docks above the keyboard and parses a reminder and priority', as
 	await expect(row.getByRole('checkbox', { name: 'Complete Call mom' })).toHaveAttribute('style', /--p1/);
 });
 
+test('quick add parses shorthands and keeps a name as text', async ({ app }) => {
+	await openQuickAdd(app);
+	const sheet = app.quickAdd();
+	await app.taskInput().pressSequentially('Pay Tom back eow r1h');
+	await expect(sheet.locator('[data-token="due"]')).toHaveText('eow');
+	await expect(sheet.locator('[data-token="reminder"]')).toHaveText('r1h');
+	await expect(sheet.getByRole('button', { name: 'Due Friday 5pm' })).toBeVisible();
+	await expect(sheet.getByText('1h before', { exact: true })).toBeVisible();
+	await sheet.getByRole('button', { name: 'Add task' }).tap();
+	await expect(app.taskInput()).toHaveValue('');
+
+	await app.taskInput().pressSequentially('Water plants every day 9am');
+	await expect(sheet.locator('[data-token="recurrence"]')).toHaveText('every day');
+	await expect(sheet.getByText('Every day', { exact: true })).toBeVisible();
+	await expect(sheet.getByRole('button', { name: 'Due Tomorrow 9am' })).toBeVisible();
+	await sheet.getByRole('button', { name: 'Add task' }).tap();
+	await sheet.getByRole('button', { name: 'Cancel' }).tap();
+
+	await expect(app.row('Pay Tom back')).toContainText('Friday 5pm');
+	await expect(app.row('Pay Tom back').getByLabel('1 reminders')).toBeVisible();
+	await expect(app.row('Water plants')).toContainText('Tomorrow 9am');
+});
+
 test('task details open as a sheet and edit fields', async ({ app, page }) => {
 	await add(app, 'Water plants');
 	await app
