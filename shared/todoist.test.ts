@@ -50,6 +50,7 @@ describe('reading a backup', () => {
 		expect(backup.tasks.slice(0, 3)).toEqual([
 			{
 				sourceKey: 'todoist:task:6Xmpl1Fq:Call the dentist',
+				parentKey: null,
 				projectKey: 'todoist:project:6Xmpl1Fq',
 				title: 'Call the dentist',
 				notes: '',
@@ -61,6 +62,7 @@ describe('reading a backup', () => {
 			},
 			{
 				sourceKey: 'todoist:task:6Xmpl1Fq:cancel [meetup.com](https://meetup.com)',
+				parentKey: null,
 				projectKey: 'todoist:project:6Xmpl1Fq',
 				title: 'cancel [meetup.com](https://meetup.com)',
 				notes: '',
@@ -72,6 +74,7 @@ describe('reading a backup', () => {
 			},
 			{
 				sourceKey: 'todoist:task:6Xmpl1Fq:Renew passport #Travel',
+				parentKey: null,
 				projectKey: 'todoist:project:6Xmpl1Fq',
 				title: 'Renew passport #Travel',
 				notes: '',
@@ -118,11 +121,21 @@ describe('reading a backup', () => {
 		]);
 	});
 
+	test('a nested task points at the task one indent up', () => {
+		const parents = backup.tasks.filter(t => t.projectKey === 'todoist:project:8Xmpl2Wq').map(t => t.parentKey);
+		expect(parents).toEqual([
+			null,
+			'todoist:task:8Xmpl2Wq:Visit Japan',
+			'todoist:task:8Xmpl2Wq:Visit Japan › Book flights',
+			null,
+			null,
+		]);
+	});
+
 	test('warns about what it could not carry over, and ignores macOS metadata', () => {
 		expect(backup.warnings).toEqual([
 			'Inbox: could not read the date "every! 3 days" on "Fix bike", kept it in notes',
 			'Long Term: sections are not imported: Someday, Reading',
-			'Long Term: 2 subtasks were imported as top-level tasks',
 			'Job: could not read the date "jeden Montag" on "Email Sam", kept it in notes',
 		]);
 	});
@@ -201,6 +214,34 @@ describe('merging into the store', () => {
 		expect(second.state.tasks).toHaveLength(12);
 		expect(second.state.projects).toHaveLength(2);
 		expect(second.state.labels).toHaveLength(3);
+	});
+
+	test("indents become subtasks in Todoist order, in their parent's project", () => {
+		const nested = read(`${HEADER}\ntask,A,,4,1,,\ntask,B,,4,2,,\ntask,C,,4,3,,\ntask,D,,4,2,,\ntask,E,,4,1,,\n`);
+		const { state } = mergeBackup(empty(), nested, { newId: counter(), now: 1000 });
+		const byTitle = (title: string) => state.tasks.find(t => t.title === title)!;
+		const project = state.projects[0]!.id;
+		expect(state.tasks.map(t => [t.title, t.parentId, t.order, t.projectId])).toEqual([
+			['A', null, 0, project],
+			['B', byTitle('A').id, 0, project],
+			['C', byTitle('B').id, 0, project],
+			['D', byTitle('A').id, 1, project],
+			['E', null, 0, project],
+		]);
+	});
+
+	test('a new subtask under a task imported earlier joins it as the last subtask', () => {
+		const first = mergeBackup(empty(), read(`${HEADER}\ntask,A,,4,1,,\ntask,B,,4,2,,\n`), {
+			newId: counter(),
+			now: 1000,
+		});
+		const second = mergeBackup(first.state, read(`${HEADER}\ntask,A,,4,1,,\ntask,B,,4,2,,\ntask,C,,4,2,,\n`), {
+			newId: () => 'new',
+			now: 2000,
+		});
+		expect(second.summary).toMatchObject({ tasks: 1, skipped: 2 });
+		const a = second.state.tasks.find(t => t.title === 'A')!;
+		expect(second.state.tasks.find(t => t.title === 'C')).toMatchObject({ parentId: a.id, order: 1 });
 	});
 
 	test('an existing project and label with the same name are reused', () => {

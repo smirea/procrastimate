@@ -29,7 +29,6 @@ test('importing a Todoist backup twice adds each project and task once', async (
 	await expect(app.importSummary().getByRole('list', { name: 'Import warnings' }).getByRole('listitem')).toHaveText([
 		'Inbox: could not read the date "every! 3 days" on "Fix bike", kept it in notes',
 		'Long Term: sections are not imported: Someday, Reading',
-		'Long Term: 2 subtasks were imported as top-level tasks',
 		'Job: could not read the date "jeden Montag" on "Email Sam", kept it in notes',
 	]);
 	await page.emulateMedia({ colorScheme: 'dark' });
@@ -53,7 +52,20 @@ test('importing a Todoist backup twice adds each project and task once', async (
 		/Fix bike/,
 	]);
 	await expect(app.row('Call the dentist')).toContainText('Oct 22');
-	await expect(app.nav('Long Term')).toBeVisible();
+	await app.go('Long Term');
+	await expect(app.page.locator('[data-task]')).toHaveText([/Visit Japan/, /Read Dune/, /Read Dune/]);
+	await expect(app.row('Visit Japan').getByRole('img', { name: '0 of 1 subtasks done' })).toBeVisible();
+	await app
+		.row('Visit Japan')
+		.getByRole('button', { name: /Visit Japan/ })
+		.click();
+	await expect(
+		app
+			.details()
+			.getByRole('list', { name: /^Subtasks of / })
+			.getByRole('listitem'),
+	).toHaveText([/Book flights/]);
+	await app.details().getByRole('button', { name: 'Close' }).click();
 	await app.go('Job');
 	await expect(app.row('Quarterly review')).toContainText('work');
 	await expect(app.row('Quarterly review')).toContainText('deep-work');

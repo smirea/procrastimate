@@ -1,5 +1,6 @@
 import { parseCsv } from './csv.ts';
 import { parseQuickAdd } from './quick-add.ts';
+import { nextSiblingOrder } from './subtasks.ts';
 import {
 	DEFAULT_PRIORITY,
 	toDateKey,
@@ -21,6 +22,8 @@ export type BackupProject = { sourceKey: string; name: string; inbox: boolean };
 
 export type BackupTask = Pick<Task, 'title' | 'notes' | 'due' | 'recurrence' | 'priority' | 'reminders'> & {
 	sourceKey: string;
+	/** The source key of the task one indent up, for a subtask. */
+	parentKey: string | null;
 	projectKey: string;
 	labels: string[];
 };
@@ -90,18 +93,18 @@ function readProject(file: BackupFile, now: Date, backup: TodoistBackup) {
 
 	const drafts: Draft[] = [];
 	const sections: string[] = [];
-	const ancestors: Array<{ indent: number; content: string }> = [];
+	const ancestors: Array<{ indent: number; content: string; sourceKey: string }> = [];
 	const seen = new Map<string, number>();
-	let subtasks = 0;
 
 	const readTask = (row: string[], content: string): Draft => {
 		const indent = Math.max(1, Number.parseInt(get(row, 'INDENT'), 10) || 1);
 		while (ancestors.length > 0 && ancestors.at(-1)!.indent >= indent) ancestors.pop();
-		if (ancestors.length > 0) subtasks++;
+		const parentKey = ancestors.at(-1)?.sourceKey ?? null;
 		const path = [...ancestors.map(a => a.content), content].join(' › ');
-		ancestors.push({ indent, content });
 		const occurrence = (seen.get(path) ?? 0) + 1;
 		seen.set(path, occurrence);
+		const sourceKey = `todoist:task:${id}:${path}${occurrence > 1 ? `#${occurrence}` : ''}`;
+		ancestors.push({ indent, content, sourceKey });
 
 		const { title, labels } = splitLabels(content);
 		const extras: string[] = [];
@@ -122,7 +125,8 @@ function readProject(file: BackupFile, now: Date, backup: TodoistBackup) {
 		if (deadline) extras.push(`Deadline: ${deadline}`);
 		return {
 			task: {
-				sourceKey: `todoist:task:${id}:${path}${occurrence > 1 ? `#${occurrence}` : ''}`,
+				sourceKey,
+				parentKey,
 				projectKey,
 				title,
 				labels,
@@ -185,7 +189,6 @@ function readProject(file: BackupFile, now: Date, backup: TodoistBackup) {
 	}
 
 	if (sections.length > 0) warn(`sections are not imported: ${sections.join(', ')}`);
-	if (subtasks > 0) warn(`${subtasks} ${subtasks === 1 ? 'subtask was' : 'subtasks were'} imported as top-level tasks`);
 	for (const { task, notes, extras } of drafts) {
 		backup.tasks.push({ ...task, notes: [...notes, ...extras].filter(Boolean).join('\n\n') });
 	}
@@ -205,7 +208,8 @@ export function readTodoistBackup(files: readonly BackupFile[], now: Date): Todo
 /**
  * Adds a backup's projects, labels, and tasks to the store's state. A task whose source key is already
  * stored is skipped, so importing the same backup twice changes nothing. A project matches by source key,
- * then by name, and Inbox maps to our Inbox. Labels match by name, ignoring case.
+ * then by name, and Inbox maps to our Inbox. Labels match by name, ignoring case. A subtask lands as its
+ * parent's last subtask, in the parent's project, so adding rows in source order reproduces Todoist's outline.
  */
 export function mergeBackup(
 	state: ImportState,
@@ -246,17 +250,20 @@ export function mergeBackup(
 		return label.id;
 	};
 
-	const imported = new Set(tasks.map(t => t.sourceKey));
+	const imported = new Map(tasks.flatMap(t => (t.sourceKey ? [[t.sourceKey, t] as const] : [])));
 	for (const [i, source] of backup.tasks.entries()) {
 		if (imported.has(source.sourceKey)) {
 			summary.skipped++;
 			continue;
 		}
-		tasks.push({
+		const parent = source.parentKey ? imported.get(source.parentKey) : undefined;
+		const task: Task = {
 			id: newId(),
+			parentId: parent?.id ?? null,
+			order: parent ? nextSiblingOrder(tasks, parent.id) : 0,
 			title: source.title,
 			notes: source.notes,
-			projectId: projectIds.get(source.projectKey) ?? null,
+			projectId: parent ? parent.projectId : (projectIds.get(source.projectKey) ?? null),
 			labelIds: source.labels.map(labelId),
 			due: source.due,
 			recurrence: source.recurrence,
@@ -266,7 +273,9 @@ export function mergeBackup(
 			createdAt: now + i,
 			completedAt: null,
 			sourceKey: source.sourceKey,
-		});
+		};
+		tasks.push(task);
+		imported.set(task.sourceKey!, task);
 		summary.tasks++;
 	}
 	return { state: { tasks, projects, labels }, summary };
