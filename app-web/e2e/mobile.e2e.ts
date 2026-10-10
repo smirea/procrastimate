@@ -385,13 +385,13 @@ async function openSettings(app: App) {
 
 test('the settings sheet switches the theme and keeps it across reloads', async ({ app, page }) => {
 	await openSettings(app);
-	await settle(app);
+	await app.settle();
 	expect(await bottom(app.settings())).toBeGreaterThan(page.viewportSize()!.height - 40);
 	await expect(app.themeOption('System')).toHaveAttribute('aria-checked', 'true');
 	expect((await app.themeOption('Dark').boundingBox())!.height).toBeGreaterThanOrEqual(44);
 	await page.emulateMedia({ colorScheme: 'dark' });
 	await app.expectTheme('dark');
-	await settle(app);
+	await app.settle();
 	await page.screenshot({ path: 'test-results/settings-import/mobile-sheet-dark.png' });
 
 	await app.themeOption('Light').tap();
@@ -422,7 +422,7 @@ test('importing a Todoist backup twice from the settings sheet adds each task on
 	await expect(app.importSummary()).toContainText('2 projects');
 	await expect(app.importSummary()).toContainText('12 tasks');
 	await expect(app.importSummary()).toContainText('0 skipped');
-	await settle(app);
+	await app.settle();
 	await page.screenshot({ path: 'test-results/settings-import/mobile-summary-light.png' });
 
 	await app.importBackup('tap');
