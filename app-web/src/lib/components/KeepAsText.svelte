@@ -8,7 +8,7 @@
 
 <button
 	type="button"
-	class="icon-btn hit-area -ml-0.5 size-8 touch:-ml-1 touch:size-11"
+	class="icon-btn hit-area -ml-0.5 size-7 bg-ink/[0.05] touch:-ml-1 touch:size-11"
 	aria-label="Keep as text"
 	{onclick}
 	transition:scale={motion({ start: 0.6, duration: 160 })}
