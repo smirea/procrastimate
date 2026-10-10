@@ -47,15 +47,16 @@ const taskSchema = z.object({
 	),
 	createdAt: z.number(),
 	completedAt: z.number().nullable(),
+	sourceKey: z.string().optional(),
 }) satisfies z.ZodType<Task>;
 
-const projectSchema = z.object({
+const labelSchema = z.object({
 	id: z.string(),
 	name: z.string(),
 	createdAt: z.number(),
-}) satisfies z.ZodType<Project>;
+}) satisfies z.ZodType<Label>;
 
-const labelSchema = projectSchema satisfies z.ZodType<Label>;
+const projectSchema = labelSchema.extend({ sourceKey: z.string().optional() }) satisfies z.ZodType<Project>;
 
 /** Drops a task that fails validation instead of failing the whole snapshot, so one bad task never wipes the rest. */
 const tasksSchema = z.array(z.unknown()).transform(items =>

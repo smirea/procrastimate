@@ -376,31 +376,61 @@ test('in a Safari tab the Notifications sheet explains Add to Home Screen first'
 	await expect(sheet).toBeHidden();
 });
 
-test('the drawer theme switcher overrides the color scheme and persists across reloads', async ({ app, page }) => {
+async function openSettings(app: App) {
 	await openNav(app);
+	await nav(app).getByRole('button', { name: 'Settings' }).tap();
+	await expect(app.settings()).toBeVisible();
+	await expect(nav(app)).toHaveCount(0);
+}
+
+test('the settings sheet switches the theme and keeps it across reloads', async ({ app, page }) => {
+	await openSettings(app);
+	await app.settle();
+	expect(await bottom(app.settings())).toBeGreaterThan(page.viewportSize()!.height - 40);
 	await expect(app.themeOption('System')).toHaveAttribute('aria-checked', 'true');
 	expect((await app.themeOption('Dark').boundingBox())!.height).toBeGreaterThanOrEqual(44);
 	await page.emulateMedia({ colorScheme: 'dark' });
 	await app.expectTheme('dark');
+	await app.settle();
+	await page.screenshot({ path: 'test-results/settings-import/mobile-sheet-dark.png' });
 
 	await app.themeOption('Light').tap();
 	await app.expectTheme('light');
 	await page.reload();
-	await openNav(app);
+	await openSettings(app);
 	await expect(app.themeOption('Light')).toHaveAttribute('aria-checked', 'true');
 	await app.expectTheme('light');
 
 	await app.themeOption('System').tap();
 	await app.expectTheme('dark');
-	await page.emulateMedia({ colorScheme: 'light' });
-	await app.expectTheme('light');
+	await app.settings().getByRole('button', { name: 'Close settings' }).tap();
+	await expect(app.settings()).toHaveCount(0);
 });
 
 test('the saved theme applies before the app loads on a phone', async ({ app }) => {
-	await openNav(app);
+	await openSettings(app);
 	await app.themeOption('Dark').tap();
 	await app.expectFirstPaintTheme('dark');
 	await app.expectTheme('dark');
+});
+
+test('importing a Todoist backup twice from the settings sheet adds each task once', async ({ app, page }) => {
+	await openSettings(app);
+	const button = app.settings().getByRole('button', { name: 'Import from Todoist' });
+	expect((await button.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+	await app.importBackup('tap');
+	await expect(app.importSummary()).toContainText('2 projects');
+	await expect(app.importSummary()).toContainText('12 tasks');
+	await expect(app.importSummary()).toContainText('0 skipped');
+	await app.settle();
+	await page.screenshot({ path: 'test-results/settings-import/mobile-summary-light.png' });
+
+	await app.importBackup('tap');
+	await expect(app.importSummary()).toContainText('12 skipped');
+	await expect(app.importSummary()).toContainText('0 tasks');
+	await app.settings().getByRole('button', { name: 'Close settings' }).tap();
+	await expect(app.page.locator('[data-task]')).toHaveCount(5);
+	await expect(app.row('Call the dentist')).toHaveCount(1);
 });
 
 test('@ suggests labels above the keyboard, rows show chips, and the drawer opens a label', async ({ app, page }) => {

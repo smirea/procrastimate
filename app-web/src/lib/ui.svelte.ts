@@ -67,6 +67,7 @@ export type Sheet =
 	| { kind: 'none' }
 	| { kind: 'quick-add'; defaults: QuickAddDefaults }
 	| { kind: 'search' }
+	| { kind: 'settings' }
 	| { kind: 'task'; id: string; arrival: Arrival }
 	| { kind: 'notifications' };
 
@@ -79,6 +80,10 @@ class Sheets {
 
 	openSearch() {
 		this.current = { kind: 'search' };
+	}
+
+	openSettings() {
+		this.current = { kind: 'settings' };
 	}
 
 	openTask(id: string, arrival: Arrival = 'none') {
