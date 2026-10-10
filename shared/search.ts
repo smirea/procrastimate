@@ -1,4 +1,4 @@
-import type { Project, Task } from './task.ts';
+import type { Label, Project, Task } from './task.ts';
 
 /** A half-open `[start, end)` span of the original text. */
 export type Range = readonly [start: number, end: number];
@@ -6,7 +6,7 @@ export type Range = readonly [start: number, end: number];
 /** One matched text and the spans to highlight in it. */
 export type Highlight = { text: string; ranges: Range[] };
 
-type FieldContext = { projects: ReadonlyMap<string, Project> };
+type FieldContext = { projects: ReadonlyMap<string, Project>; labels: ReadonlyMap<string, Label> };
 
 /**
  * Every searchable text on a task, with how much a match in it counts. A field returns a list so that
@@ -21,14 +21,24 @@ const TASK_FIELDS = {
 			return project ? [project.name] : [];
 		},
 	},
+	labels: {
+		weight: 2,
+		values: (task: Task, { labels }: FieldContext) => task.labelIds.flatMap(id => labels.get(id)?.name ?? []),
+	},
 	notes: { weight: 1, values: (task: Task) => [task.notes] },
 } satisfies Record<string, { weight: number; values: (task: Task, context: FieldContext) => string[] }>;
 
 export type TaskField = keyof typeof TASK_FIELDS;
 
 export type TaskHit = { task: Task; score: number; matches: Partial<Record<TaskField, Highlight[]>> };
-export type ProjectHit = { project: Project; score: number; name: Highlight };
-export type SearchResults = { projects: ProjectHit[]; open: TaskHit[]; completed: TaskHit[] };
+/** A project or label whose name matched. */
+export type NameHit<T extends { name: string }> = { item: T; score: number; name: Highlight };
+export type SearchResults = {
+	projects: NameHit<Project>[];
+	labels: NameHit<Label>[];
+	open: TaskHit[];
+	completed: TaskHit[];
+};
 
 /** `map` points each folded character back to its original offset, and is null when they line up. */
 type Folded = { text: string; map: number[] | null };
@@ -118,30 +128,40 @@ function scoreTask(task: Task, terms: readonly string[], context: FieldContext):
 	return { task, score: best.reduce((a, b) => a + b, 0), matches };
 }
 
-function scoreProject(project: Project, terms: readonly string[]): ProjectHit | null {
-	const { best, highlights } = scoreTexts([project.name], terms);
-	if (best.some(quality => quality === 0)) return null;
-	return { project, score: best.reduce((a, b) => a + b, 0), name: highlights[0]! };
+/** Best score first, then alphabetical. */
+function searchNames<T extends { name: string }>(items: readonly T[], terms: readonly string[]): NameHit<T>[] {
+	return items
+		.flatMap(item => {
+			const { best, highlights } = scoreTexts([item.name], terms);
+			if (best.some(quality => quality === 0)) return [];
+			return [{ item, score: best.reduce((a, b) => a + b, 0), name: highlights[0]! }];
+		})
+		.toSorted(
+			(a, b) => b.score - a.score || a.item.name.localeCompare(b.item.name, undefined, { sensitivity: 'base' }),
+		);
 }
 
 /**
- * Matches tasks and projects against every term of the query, case- and accent-insensitively.
- * A title match outweighs a project match, which outweighs a notes match, and a match at the start of
+ * Matches tasks, projects, and labels against every term of the query, case- and accent-insensitively.
+ * A title match outweighs a project or label match, which outweighs a notes match, and a match at the start of
  * a word outweighs one inside a word. Open tasks break ties by priority, then newest first. Completed
  * tasks come back separately, most recently completed first on a tie.
  */
-export function search(query: string, tasks: readonly Task[], projects: readonly Project[]): SearchResults {
+export function search(
+	query: string,
+	tasks: readonly Task[],
+	{ projects, labels }: { projects: readonly Project[]; labels: readonly Label[] },
+): SearchResults {
 	const terms = searchTerms(query);
-	if (!terms.length) return { projects: [], open: [], completed: [] };
-	const context: FieldContext = { projects: new Map(projects.map(p => [p.id, p])) };
+	if (!terms.length) return { projects: [], labels: [], open: [], completed: [] };
+	const context: FieldContext = {
+		projects: new Map(projects.map(p => [p.id, p])),
+		labels: new Map(labels.map(l => [l.id, l])),
+	};
 	const hits = tasks.map(task => scoreTask(task, terms, context)).filter(hit => hit !== null);
 	return {
-		projects: projects
-			.map(project => scoreProject(project, terms))
-			.filter(hit => hit !== null)
-			.toSorted(
-				(a, b) => b.score - a.score || a.project.name.localeCompare(b.project.name, undefined, { sensitivity: 'base' }),
-			),
+		projects: searchNames(projects, terms),
+		labels: searchNames(labels, terms),
 		open: hits
 			.filter(hit => hit.task.completedAt === null)
 			.toSorted(

@@ -6,20 +6,25 @@
 	import MagnifyingGlass from 'phosphor-svelte/lib/MagnifyingGlass';
 	import Hash from 'phosphor-svelte/lib/Hash';
 	import Tray from 'phosphor-svelte/lib/Tray';
+	import Tag from 'phosphor-svelte/lib/Tag';
 	import Check from 'phosphor-svelte/lib/Check';
 	import X from 'phosphor-svelte/lib/X';
 	import CalendarBlank from 'phosphor-svelte/lib/CalendarBlank';
-	import { excerpt, search, type ProjectHit, type TaskHit } from 'shared/search.ts';
-	import { toDateKey } from 'shared/task.ts';
+	import { excerpt, search, type NameHit, type TaskHit } from 'shared/search.ts';
+	import { toDateKey, type Label, type Project } from 'shared/task.ts';
 	import Highlighted from './Highlighted.svelte';
 	import { store } from '../store.svelte.ts';
 	import { clock, mobile, sheets } from '../ui.svelte.ts';
 	import { PRIORITIES, dueTone, formatDate, formatDue } from '../format.ts';
 
 	/** Rendering is the cost that grows with matches, so each section shows only its best rows. */
-	const LIMIT = { projects: 5, open: 30, completed: 15 };
+	const LIMIT = { projects: 5, labels: 5, open: 30, completed: 15 };
 
-	type Row = { key: string } & ({ kind: 'project'; hit: ProjectHit } | { kind: 'task'; hit: TaskHit });
+	type Row = { key: string } & (
+		| { kind: 'project'; hit: NameHit<Project> }
+		| { kind: 'label'; hit: NameHit<Label> }
+		| { kind: 'task'; hit: TaskHit }
+	);
 
 	const uid = $props.id();
 	let query = $state('');
@@ -27,13 +32,18 @@
 	let input: HTMLInputElement;
 	let list = $state<HTMLDivElement>();
 
-	const results = $derived(search(query, store.tasks, store.projects));
+	const results = $derived(search(query, store.tasks, { projects: store.projects, labels: store.labels }));
 	const sections = $derived(
 		[
 			{
 				label: 'Projects',
 				total: results.projects.length,
-				rows: results.projects.slice(0, LIMIT.projects).map((hit): Row => ({ key: `p-${hit.project.id}`, kind: 'project', hit })),
+				rows: results.projects.slice(0, LIMIT.projects).map((hit): Row => ({ key: `p-${hit.item.id}`, kind: 'project', hit })),
+			},
+			{
+				label: 'Labels',
+				total: results.labels.length,
+				rows: results.labels.slice(0, LIMIT.labels).map((hit): Row => ({ key: `l-${hit.item.id}`, kind: 'label', hit })),
 			},
 			{
 				label: 'Tasks',
@@ -68,7 +78,11 @@
 		switch (row.kind) {
 			case 'project':
 				sheets.close();
-				void goto(`/projects/${row.hit.project.id}`);
+				void goto(`/projects/${row.hit.item.id}`);
+				return;
+			case 'label':
+				sheets.close();
+				void goto(`/labels/${row.hit.item.id}`);
 				return;
 			case 'task':
 				sheets.openTask(row.hit.task.id);
@@ -121,7 +135,7 @@
 			aria-controls="{uid}-results"
 			aria-autocomplete="list"
 			aria-activedescendant={rows[active] ? optionId(rows[active]) : undefined}
-			placeholder="Search tasks, notes, and projects"
+			placeholder="Search tasks, notes, projects, and labels"
 			autocomplete="off"
 			autocapitalize="off"
 			spellcheck="false"
@@ -184,6 +198,11 @@
 								<span class="min-w-0 flex-1 truncate text-[14px] leading-5 touch:text-[15px]">
 									<Highlighted highlight={row.hit.name} />
 								</span>
+							{:else if row.kind === 'label'}
+								<Tag size={18} class="mt-px shrink-0 text-[var(--tone-label)]" />
+								<span class="min-w-0 flex-1 truncate text-[14px] leading-5 touch:text-[15px]">
+									<Highlighted highlight={row.hit.name} />
+								</span>
 							{:else}
 								{@const task = row.hit.task}
 								{@const project = projectOf(row.hit)}
@@ -203,6 +222,13 @@
 									</span>
 									{#if notes}
 										<span class="block truncate text-[12px] leading-4 text-muted"><Highlighted highlight={excerpt(notes)} /></span>
+									{/if}
+									{#if row.hit.matches.labels}
+										<span class="mt-0.5 flex flex-wrap gap-1">
+											{#each row.hit.matches.labels as label (label.text)}
+												<span class="label-chip"><Tag size={10} weight="fill" class="shrink-0 text-[var(--tone-label)]" /><Highlighted highlight={label} /></span>
+											{/each}
+										</span>
 									{/if}
 									{#if done}
 										<span class="mt-0.5 block text-[12px] leading-4 text-muted">

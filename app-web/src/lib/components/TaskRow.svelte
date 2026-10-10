@@ -132,19 +132,6 @@
 		color: white;
 	}
 
-	.label-chip {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.25rem;
-		max-width: 10rem;
-		height: 1.125rem;
-		padding: 0 0.4375rem 0 0.375rem;
-		border-radius: 9999px;
-		background: var(--token-label);
-		font-size: 0.6875rem;
-		line-height: 1;
-	}
-
 	.done {
 		color: var(--color-faint);
 		text-decoration: line-through;

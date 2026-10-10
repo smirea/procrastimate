@@ -391,4 +391,13 @@ test('@ suggests labels above the keyboard, rows show chips, and the drawer open
 	await go(app, 'waiting');
 	await expect(app.list('waiting tasks').getByRole('listitem')).toHaveText([/Call plumber.*Inbox/]);
 	await shot(app, 'label-view');
+
+	await openNav(app);
+	await nav(app).getByRole('button', { name: 'Search' }).tap();
+	await page.getByRole('combobox', { name: 'Search' }).fill('cal');
+	const results = page.getByRole('listbox', { name: 'Search results' });
+	await expect(results.getByRole('group', { name: /^Labels/ }).getByRole('option')).toHaveText(['calls']);
+	await results.getByRole('option', { name: 'calls', exact: true }).tap();
+	await expect(page.getByRole('heading', { level: 1, name: 'calls' })).toBeVisible();
+	await expect(app.list('calls tasks').getByRole('listitem')).toHaveText([/Call plumber/]);
 });

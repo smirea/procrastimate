@@ -113,3 +113,37 @@ test('completed tasks list after open ones and reopen from details', async ({ ap
 	await app.details().getByRole('button', { name: 'Close' }).click();
 	await expect(app.list('Inbox tasks').getByRole('listitem')).toHaveText([/Renew passport/, /Passport photos/]);
 });
+
+test('a label matches its tasks and opens the label view', async ({ app, page }) => {
+	await app.openQuickAdd();
+	for (const name of ['calls', 'waiting']) {
+		await app.taskInput().pressSequentially(`@${name}`);
+		await app.taskInput().press('Enter');
+	}
+	for (const title of ['Plumber @calls', 'Dentist @waiting @calls', 'Read a book']) {
+		await app.taskInput().fill(title);
+		await app.taskInput().press('Enter');
+		await expect(app.taskInput()).toHaveValue('');
+	}
+	await app.taskInput().press('Escape');
+	await expect(app.quickAdd()).toBeHidden();
+
+	await page.locator('body').click({ position: { x: 1200, y: 700 } });
+	await openSearch(app);
+	await field(app).fill('call');
+	await expect(group(app, 'Labels').getByRole('option')).toHaveText(['calls']);
+	await expect(group(app, 'Tasks').getByRole('option')).toHaveText([/Plumber.*calls/, /Dentist.*calls/]);
+	await expect(group(app, 'Tasks').locator('mark')).toHaveText(['call', 'call']);
+	await expect(group(app, 'Labels').getByRole('option')).toHaveAttribute('aria-selected', 'true');
+	await settle(app);
+	await page.screenshot({ path: 'test-results/search/labels.png' });
+
+	await field(app).fill('dentist waiting');
+	await expect(group(app, 'Tasks').getByRole('option')).toHaveText([/Dentist/]);
+
+	await field(app).fill('wait');
+	await field(app).press('Enter');
+	await expect(dialog(app)).toBeHidden();
+	await expect(page.getByRole('heading', { level: 1, name: 'waiting' })).toBeVisible();
+	await expect(app.list('waiting tasks').getByRole('listitem')).toHaveText([/Dentist/]);
+});
