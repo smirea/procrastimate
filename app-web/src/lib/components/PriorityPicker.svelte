@@ -4,7 +4,7 @@
 	import type { Priority } from 'shared/task.ts';
 	import Popover from './Popover.svelte';
 	import KeepAsText from './KeepAsText.svelte';
-	import { PRIORITIES } from '../format.ts';
+	import { PRIORITIES } from '../priorities.ts';
 
 	let {
 		priority,

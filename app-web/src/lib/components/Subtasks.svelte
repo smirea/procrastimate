@@ -13,7 +13,8 @@
 	import SubtaskProgress from './SubtaskProgress.svelte';
 	import { store } from '../store.svelte.ts';
 	import { clock, sheets, motion } from '../ui.svelte.ts';
-	import { PRIORITIES, dueTone, formatDue } from '../format.ts';
+	import { dueTone, formatDue } from 'shared/format.ts';
+	import { PRIORITIES } from '../priorities.ts';
 	import { push } from '../push.svelte.ts';
 
 	let { task }: { task: Task } = $props();

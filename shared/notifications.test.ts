@@ -1,6 +1,11 @@
-import { describe, expect, test } from 'bun:test';
-import { nextOccurrence, type Task } from 'shared/task.ts';
-import { pushSchedule } from './push-schedule.ts';
+import { expect } from 'bun:test';
+import * as notifications from './notifications.ts';
+import { nextOccurrence, type Task } from './task.ts';
+import { describe, recorded, test } from './vectors/record.ts';
+
+const notificationBody = recorded('notifications', notifications.notificationBody);
+const upcomingNotifications = recorded('notifications', notifications.upcomingNotifications);
+const pushSchedule = (tasks: readonly Task[], now: number) => upcomingNotifications(tasks, now, 500);
 
 /** Local wall-clock time in epoch milliseconds, matching how tasks resolve their times. */
 const local = (y: number, month: number, d: number, h: number, min = 0) => new Date(y, month - 1, d, h, min).getTime();
@@ -23,7 +28,7 @@ const task = (id: string, patch: Partial<Task>): Task => ({
 	...patch,
 });
 
-describe('pushSchedule', () => {
+describe('upcomingNotifications', () => {
 	test('due times and reminders, soonest first, with bodies relative to the moment they show', () => {
 		const tasks = [
 			task('Gym', {
@@ -102,14 +107,40 @@ describe('pushSchedule', () => {
 		]);
 	});
 
-	test('keeps only the soonest 500 notifications', () => {
+	test('keeps only the soonest notifications up to the limit', () => {
 		const latest = task('latest', { reminders: [{ kind: 'at', date: '2026-10-16', time: '09:00' }] });
-		const sooner = Array.from({ length: 500 }, (_, i) =>
-			task(`t${i}`, { reminders: [{ kind: 'at', date: '2026-10-15', time: '09:00' }] }),
+		const sooner = ['a', 'b', 'c'].map(id =>
+			task(id, { reminders: [{ kind: 'at', date: '2026-10-15', time: '09:00' }] }),
 		);
-		const schedule = pushSchedule([latest, ...sooner], NOW);
-		expect(schedule.length).toBe(500);
-		expect(schedule.filter(push => push.taskId === 'latest')).toEqual([]);
-		expect(schedule[499]).toEqual({ at: local(2026, 10, 15, 9), taskId: 't499', title: 't499', body: 'Reminder' });
+		expect(upcomingNotifications([latest, ...sooner], NOW, 3).map(n => n.taskId)).toEqual(['a', 'b', 'c']);
+	});
+
+	test('titles are cut to 300 characters', () => {
+		const long = task('x'.repeat(320), { due: { date: '2026-10-14', time: '11:00' } });
+		expect(upcomingNotifications([long], NOW, 500)[0]!.title).toBe('x'.repeat(300));
+	});
+});
+
+describe('notificationBody', () => {
+	test.each([
+		['a task with no due date', null, local(2026, 10, 14, 12), 'Reminder'],
+		['the due moment', { date: '2026-10-14', time: '17:00' }, local(2026, 10, 14, 17), 'Due now'],
+		['earlier the same day', { date: '2026-10-14', time: '17:00' }, local(2026, 10, 14, 16, 30), 'Due at 5:00 PM'],
+		['the day before', { date: '2026-10-15', time: '09:00' }, local(2026, 10, 14, 9), 'Due Tomorrow at 9:00 AM'],
+		['days before', { date: '2026-10-20', time: '09:00' }, local(2026, 10, 14, 9), 'Due Tue Oct 20 at 9:00 AM'],
+		['after the due time', { date: '2026-10-14', time: '09:00' }, local(2026, 10, 14, 9, 30), 'Due at 9:00 AM'],
+		['a date with no time, that day', { date: '2026-10-15', time: null }, local(2026, 10, 15, 8), 'Due today'],
+		[
+			'a date with no time, the day before',
+			{ date: '2026-10-15', time: null },
+			local(2026, 10, 14, 20),
+			'Due tomorrow',
+		],
+		['a date with no time, the day after', { date: '2026-10-14', time: null }, local(2026, 10, 15, 8), 'Due yesterday'],
+		['a date with no time, days before', { date: '2026-10-17', time: null }, local(2026, 10, 15, 9), 'Due Sat Oct 17'],
+		['across the DST change', { date: '2026-11-02', time: '09:00' }, local(2026, 11, 1, 8), 'Due Tomorrow at 9:00 AM'],
+		['next year', { date: '2027-01-05', time: null }, local(2026, 12, 30, 9), 'Due Tue Jan 5, 2027'],
+	] as const)('%s', (_, due, at, expected) => {
+		expect(notificationBody(due, at)).toBe(expected);
 	});
 });

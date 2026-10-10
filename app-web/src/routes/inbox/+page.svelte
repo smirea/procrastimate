@@ -2,7 +2,7 @@
 	import View from '#lib/components/View.svelte';
 	import TaskList from '#lib/components/TaskList.svelte';
 	import { store } from '#lib/store.svelte.ts';
-	import { inboxTasks } from '#lib/views.ts';
+	import { inboxTasks } from 'shared/views.ts';
 	import { mobile } from '#lib/ui.svelte.ts';
 
 	const tasks = $derived(inboxTasks(store.tasks));

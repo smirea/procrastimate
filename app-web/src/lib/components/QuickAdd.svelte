@@ -14,7 +14,7 @@
 	import KeepAsText from './KeepAsText.svelte';
 	import { store } from '../store.svelte.ts';
 	import { clock, mobile, sheets, type QuickAddDefaults, motion } from '../ui.svelte.ts';
-	import { formatRecurrence, formatReminder } from '../format.ts';
+	import { formatRecurrence, formatReminder } from 'shared/format.ts';
 	import { push } from '../push.svelte.ts';
 
 	let { defaults }: { defaults: QuickAddDefaults } = $props();

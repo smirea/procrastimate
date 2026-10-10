@@ -1,16 +1,17 @@
-import { describe, expect, test } from 'bun:test';
-import {
-	ancestorsOf,
-	completeTask,
-	descendantsOf,
-	detachOrphans,
-	groupChildren,
-	moveSubtask,
-	nextSiblingOrder,
-	progressOf,
-	reopenTask,
-} from './subtasks.ts';
+import { expect } from 'bun:test';
+import * as subtasks from './subtasks.ts';
 import type { Task } from './task.ts';
+import { describe, recorded, test } from './vectors/record.ts';
+
+const ancestorsOf = recorded('subtasks', subtasks.ancestorsOf);
+const completeTask = recorded('subtasks', subtasks.completeTask);
+const descendantsOf = recorded('subtasks', subtasks.descendantsOf);
+const detachOrphans = recorded('subtasks', subtasks.detachOrphans);
+const groupChildren = recorded('subtasks', subtasks.groupChildren);
+const moveSubtask = recorded('subtasks', subtasks.moveSubtask);
+const nextSiblingOrder = recorded('subtasks', subtasks.nextSiblingOrder);
+const progressOf = recorded('subtasks', subtasks.progressOf);
+const reopenTask = recorded('subtasks', subtasks.reopenTask);
 
 const task = (id: string, fields: Partial<Task> = {}): Task => ({
 	id,

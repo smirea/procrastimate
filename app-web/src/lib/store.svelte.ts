@@ -1,53 +1,23 @@
-import {
-	DEFAULT_PRIORITY,
-	type DateKey,
-	type Due,
-	type Label,
-	type Priority,
-	type Project,
-	type Recurrence,
-	type Reminder,
-	type Task,
-} from 'shared/task.ts';
-import {
-	completeTask,
-	descendantsOf,
-	groupChildren,
-	moveSubtask,
-	nextSiblingOrder,
-	progressOf,
-	reopenTask,
-} from 'shared/subtasks.ts';
+import type { DateKey, Label, Project, Task } from 'shared/task.ts';
+import { groupChildren, progressOf } from 'shared/subtasks.ts';
 import { newId } from 'shared/id.ts';
+import type { SyncSection } from 'shared/snapshot.ts';
+import * as rules from 'shared/store.ts';
 import { mergeBackup, type ImportSummary, type TodoistBackup } from 'shared/todoist.ts';
-import { loadSnapshot, saveSnapshot, type Snapshot } from './persistence.ts';
+import { loadSnapshot, saveSnapshot } from './persistence.ts';
 
-export type NewTask = {
-	title: string;
-	projectId: string | null;
-	labelIds: string[];
-	due: Due | null;
-	recurrence: Recurrence | null;
-	priority: Priority | null;
-	reminders: Reminder[];
-};
+export type { Completion, CompletionState, NewTask, TaskPatch } from 'shared/store.ts';
 
-export type TaskPatch = Partial<
-	Pick<Task, 'title' | 'notes' | 'projectId' | 'labelIds' | 'due' | 'recurrence' | 'priority' | 'reminders'>
->;
-
-/** The fields a completion changes. Undo writes back only these, so edits made since then survive it. */
-export type CompletionState = Pick<Task, 'id' | 'completedAt' | 'due' | 'reminders'>;
-
-/** `previous` holds every task the completion changed, as it was, so undo can put them back. */
-export type Completion = ({ kind: 'done' } | { kind: 'rolled'; next: Due }) & { previous: CompletionState[] };
-
-/** Every mutation is a discrete command that persists synchronously, so it can become a sync log later. */
+/**
+ * Every mutation is a discrete command from `shared/store.ts` that persists synchronously. The rules return new
+ * arrays and objects for what they change, so the arrays are raw state that each command replaces.
+ */
 class Store {
-	tasks = $state<Task[]>([]);
-	projects = $state<Project[]>([]);
-	labels = $state<Label[]>([]);
+	tasks = $state.raw<Task[]>([]);
+	projects = $state.raw<Project[]>([]);
+	labels = $state.raw<Label[]>([]);
 	remindersCheckedAt = $state(0);
+	#sync: SyncSection | undefined;
 	#children = $derived(groupChildren(this.tasks));
 
 	constructor() {
@@ -57,26 +27,25 @@ class Store {
 		this.projects = snapshot.projects;
 		this.labels = snapshot.labels;
 		this.remindersCheckedAt = snapshot.remindersCheckedAt;
+		this.#sync = snapshot.sync;
+	}
+
+	get #data(): rules.StoreData {
+		return { tasks: this.tasks, projects: this.projects, labels: this.labels };
+	}
+
+	#apply(data: rules.StoreData) {
+		this.tasks = data.tasks;
+		this.projects = data.projects;
+		this.labels = data.labels;
+		this.#commit();
 	}
 
 	#commit() {
-		const snapshot: Snapshot = $state.snapshot({
-			tasks: this.tasks,
-			projects: this.projects,
-			labels: this.labels,
-			remindersCheckedAt: this.remindersCheckedAt,
-		});
-		saveSnapshot(snapshot);
+		saveSnapshot({ ...this.#data, remindersCheckedAt: this.remindersCheckedAt, sync: this.#sync });
 	}
 
-	/** Writes each value over the fields of the stored task with its id. */
-	#put(changed: readonly (Partial<Task> & Pick<Task, 'id'>)[]) {
-		for (const next of changed) {
-			const task = this.task(next.id);
-			if (task) Object.assign(task, next);
-		}
-		this.#commit();
-	}
+	#creation = (): rules.Creation => ({ id: newId(), now: Date.now() });
 
 	task(id: string) {
 		return this.tasks.find(t => t.id === id);
@@ -103,138 +72,78 @@ class Store {
 		return task.labelIds.map(id => this.label(id)).filter(label => label !== undefined);
 	}
 
-	/**
-	 * With a `parentId`, adds the task as that parent's last subtask, in its project, and reopens the parent if it is done.
-	 * Adding rows in their source order with each row's parent reproduces an outline's nesting and order.
-	 */
-	addTask(input: NewTask, parentId: string | null = null): Task {
-		const parent = parentId ? this.task(parentId) : undefined;
-		const task: Task = {
-			id: newId(),
-			parentId: parent?.id ?? null,
-			order: parent ? nextSiblingOrder(this.tasks, parent.id) : 0,
-			title: input.title,
-			notes: '',
-			projectId: parent ? parent.projectId : input.projectId,
-			labelIds: input.labelIds,
-			due: input.due,
-			recurrence: input.recurrence,
-			priority: input.priority ?? DEFAULT_PRIORITY,
-			reminders: input.reminders,
-			createdAt: Date.now(),
-			completedAt: null,
-		};
-		this.tasks.push(task);
-		if (parent) this.#put(reopenTask(this.tasks, parent.id));
-		this.#commit();
+	addTask(input: rules.NewTask, parentId: string | null = null): Task {
+		const { data, task } = rules.addTask(this.#data, input, parentId, this.#creation());
+		this.#apply(data);
 		return task;
 	}
 
-	/** A new project applies to every subtask under the task too. */
-	updateTask(id: string, patch: TaskPatch) {
-		const task = this.task(id);
-		if (!task) return;
-		Object.assign(task, patch);
-		if (patch.projectId !== undefined) {
-			for (const t of descendantsOf(this.tasks, id)) this.task(t.id)!.projectId = patch.projectId;
-		}
-		this.#commit();
+	updateTask(id: string, patch: rules.TaskPatch) {
+		this.#apply(rules.updateTask(this.#data, id, patch));
 	}
 
-	completeTask(id: string, today: DateKey): Completion | undefined {
-		const completion = completeTask(this.tasks, id, today, Date.now());
-		if (!completion) return;
-		const previous = completion.changed.map(({ id }) => {
-			const { completedAt, due, reminders } = $state.snapshot(this.task(id)!);
-			return { id, completedAt, due, reminders };
-		});
-		this.#put(completion.changed);
-		return completion.kind === 'done'
-			? { kind: 'done', previous }
-			: { kind: 'rolled', next: completion.next, previous };
+	completeTask(id: string, today: DateKey): rules.Completion | undefined {
+		const result = rules.completeTask(this.#data, id, today, Date.now());
+		if (!result) return;
+		this.#apply(result.data);
+		return result.completion;
 	}
 
 	reopenTask(id: string) {
-		this.#put(reopenTask(this.tasks, id));
+		this.#apply(rules.reopenTask(this.#data, id));
 	}
 
-	/** Puts back what a completion changed, as its undo captured it. */
-	restoreCompletion(previous: readonly CompletionState[]) {
-		this.#put(previous);
+	restoreCompletion(previous: readonly rules.CompletionState[]) {
+		this.#apply(rules.restoreCompletion(this.#data, previous));
 	}
 
 	moveSubtask(id: string, index: number) {
-		this.#put(moveSubtask(this.tasks, id, index));
+		this.#apply(rules.moveSubtask(this.#data, id, index));
 	}
 
 	/** Deletes the task with every subtask under it, and returns them for undo. */
 	deleteTask(id: string): Task[] {
-		const task = this.task(id);
-		if (!task) return [];
-		const removed = $state.snapshot([task, ...descendantsOf(this.tasks, id)]);
-		const ids = new Set(removed.map(t => t.id));
-		this.tasks = this.tasks.filter(t => !ids.has(t.id));
-		this.#commit();
+		const { data, removed } = rules.deleteTask(this.#data, id);
+		this.#apply(data);
 		return removed;
 	}
 
 	undeleteTasks(removed: readonly Task[]) {
-		this.tasks.push(...removed.filter(t => !this.task(t.id)));
-		this.#commit();
+		this.#apply(rules.undeleteTasks(this.#data, removed));
 	}
 
 	addProject(name: string): Project {
-		const project: Project = { id: newId(), name, createdAt: Date.now() };
-		this.projects.push(project);
-		this.#commit();
+		const { data, project } = rules.addProject(this.#data, name, this.#creation());
+		this.#apply(data);
 		return project;
 	}
 
 	renameProject(id: string, name: string) {
-		const project = this.project(id);
-		if (!project) return;
-		project.name = name;
-		this.#commit();
+		this.#apply(rules.renameProject(this.#data, id, name));
 	}
 
 	deleteProject(id: string) {
-		this.projects = this.projects.filter(p => p.id !== id);
-		this.tasks = this.tasks.filter(t => t.projectId !== id);
-		this.#commit();
+		this.#apply(rules.deleteProject(this.#data, id));
 	}
 
 	addLabel(name: string): Label {
-		const label: Label = { id: newId(), name, createdAt: Date.now() };
-		this.labels.push(label);
-		this.#commit();
+		const { data, label } = rules.addLabel(this.#data, name, this.#creation());
+		this.#apply(data);
 		return label;
 	}
 
-	/** Names stay unique ignoring case, since `@name` must resolve to one label. */
 	renameLabel(id: string, name: string) {
-		const label = this.label(id);
-		if (!label || this.labels.some(l => l.id !== id && l.name.toLowerCase() === name.toLowerCase())) return;
-		label.name = name;
-		this.#commit();
+		this.#apply(rules.renameLabel(this.#data, id, name));
 	}
 
-	/** Unlike a project, a label owns no tasks, so deleting it only takes it off them. */
 	deleteLabel(id: string) {
-		this.labels = this.labels.filter(l => l.id !== id);
-		for (const task of this.tasks) {
-			if (task.labelIds.includes(id)) task.labelIds = task.labelIds.filter(l => l !== id);
-		}
-		this.#commit();
+		this.#apply(rules.deleteLabel(this.#data, id));
 	}
 
 	/** One command and one write for the whole backup, however many tasks it holds. */
 	importBackup(backup: TodoistBackup): ImportSummary {
-		const current = $state.snapshot({ tasks: this.tasks, projects: this.projects, labels: this.labels });
-		const { state, summary } = mergeBackup(current, backup, { newId, now: Date.now() });
-		this.tasks = state.tasks;
-		this.projects = state.projects;
-		this.labels = state.labels;
-		this.#commit();
+		const { state, summary } = mergeBackup(this.#data, backup, { newId, now: Date.now() });
+		this.#apply({ ...state, tasks: rules.sortTasks(state.tasks) });
 		return summary;
 	}
 

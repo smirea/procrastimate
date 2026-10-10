@@ -8,7 +8,7 @@
 	import TaskList from '#lib/components/TaskList.svelte';
 	import Popover from '#lib/components/Popover.svelte';
 	import { store } from '#lib/store.svelte.ts';
-	import { projectTasks } from '#lib/views.ts';
+	import { projectTasks } from 'shared/views.ts';
 
 	const project = $derived(store.project(page.params.id ?? null));
 	const tasks = $derived(project ? projectTasks(store.tasks, project.id) : []);

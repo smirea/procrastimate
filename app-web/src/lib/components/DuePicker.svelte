@@ -3,7 +3,7 @@
 	import { addDays, fromDateKey, toTimeOfDay, type DateKey, type Due, type TimeOfDay } from 'shared/task.ts';
 	import Popover from './Popover.svelte';
 	import KeepAsText from './KeepAsText.svelte';
-	import { dueTone, formatDue } from '../format.ts';
+	import { dueTone, formatDue } from 'shared/format.ts';
 	import { clock } from '../ui.svelte.ts';
 
 	let {

@@ -18,7 +18,7 @@
 	import { store } from '../store.svelte.ts';
 	import { clock, mobile, motion } from '../ui.svelte.ts';
 	import { push, pushStatus } from '../push.svelte.ts';
-	import { inboxTasks, labelTasks, projectTasks, todayTasks, upcomingGroups } from '../views.ts';
+	import { inboxTasks, labelTasks, projectTasks, todayTasks, upcomingGroups } from 'shared/views.ts';
 
 	let {
 		onquickadd,

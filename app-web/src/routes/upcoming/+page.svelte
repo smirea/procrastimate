@@ -6,8 +6,8 @@
 	import TaskList from '#lib/components/TaskList.svelte';
 	import { store } from '#lib/store.svelte.ts';
 	import { clock, motion } from '#lib/ui.svelte.ts';
-	import { upcomingGroups } from '#lib/views.ts';
-	import { dayHeading } from '#lib/format.ts';
+	import { upcomingGroups } from 'shared/views.ts';
+	import { dayHeading } from 'shared/format.ts';
 
 	const groups = $derived(upcomingGroups(store.tasks, clock.today));
 </script>

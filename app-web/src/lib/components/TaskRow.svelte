@@ -13,7 +13,8 @@
 	import SubtaskProgress from './SubtaskProgress.svelte';
 	import { store } from '../store.svelte.ts';
 	import { clock, sheets, motion } from '../ui.svelte.ts';
-	import { PRIORITIES, dueTone, formatDue, formatTime, repeatLabel } from '../format.ts';
+	import { dueTone, formatDue, formatTime, repeatLabel } from 'shared/format.ts';
+	import { PRIORITIES } from '../priorities.ts';
 	import { completeTask } from '../completion.ts';
 
 	let { task, showProject = false, timeOnly = false }: { task: Task; showProject?: boolean; timeOnly?: boolean } = $props();
