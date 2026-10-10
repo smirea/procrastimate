@@ -175,6 +175,14 @@
 		backdrop-filter: blur(30px) saturate(190%);
 	}
 
+	@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+		.drawer :global(nav) {
+			--glass-fill: var(--glass-solid);
+			-webkit-backdrop-filter: none;
+			backdrop-filter: none;
+		}
+	}
+
 	.fab {
 		right: max(1.25rem, calc(env(safe-area-inset-right) + 0.75rem));
 		bottom: max(1.25rem, calc(env(safe-area-inset-bottom) + 0.5rem));
