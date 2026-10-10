@@ -10,6 +10,23 @@
 		<meta name="apple-mobile-web-app-capable" content="yes" />
 		<meta name="apple-mobile-web-app-status-bar-style" content="default" />
 		<title>Procrastimate</title>
+		<script>
+			// Runs before first paint so the page never flashes the other theme. `src/lib/theme.svelte.ts` owns the key and the choice.
+			try {
+				const choice = localStorage.getItem('procrastimate-theme');
+				const dark = choice === 'dark' || (choice !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
+				document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+			} catch {}
+		</script>
+		<style>
+			html {
+				color-scheme: light;
+			}
+
+			html[data-theme='dark'] {
+				color-scheme: dark;
+			}
+		</style>
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover">

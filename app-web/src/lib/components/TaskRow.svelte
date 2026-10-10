@@ -25,7 +25,7 @@
 	}
 </script>
 
-<div class="group flex items-start gap-3 rounded-xl px-2 transition-colors hover:bg-white/60" data-task={task.title}>
+<div class="group flex items-start gap-3 rounded-xl px-2 transition-colors hover:bg-surface/60" data-task={task.title}>
 	<button
 		type="button"
 		role="checkbox"

@@ -23,7 +23,7 @@
 >
 	{#each groups as group (group.date)}
 		<section class="mb-6" aria-label={dayHeading(group.date, clock.today)} animate:flip={{ duration: 240, easing: cubicOut }} transition:fade={{ duration: 160 }}>
-			<h2 class="mb-1 border-b border-black/[0.06] px-2 pb-1.5 text-[13px] font-semibold">{dayHeading(group.date, clock.today)}</h2>
+			<h2 class="mb-1 border-b border-ink/[0.07] px-2 pb-1.5 text-[13px] font-semibold">{dayHeading(group.date, clock.today)}</h2>
 			<TaskList tasks={group.tasks} showProject timeOnly label={`Tasks on ${group.date}`} />
 		</section>
 	{/each}

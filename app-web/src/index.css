@@ -12,23 +12,43 @@
 	--font-sans:
 		'Google Sans Flex Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial,
 		sans-serif;
-	--color-accent: #e8492f;
+	--color-accent: #bf3820;
+	--color-on-accent: #ffffff;
 	--color-ink: #18181b;
-	--color-muted: #71717a;
-	--color-faint: #a1a1aa;
+	--color-muted: #56565f;
+	--color-faint: #67676f;
+	--color-surface: #ffffff;
+	--color-scrim: rgb(24 24 27 / 0.12);
 	--ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
+/*
+ * Every color is a semantic token with one value per theme, so components never branch on the theme.
+ * `theme-contrast.test.ts` checks text tokens against these surfaces for WCAG AA in both themes.
+ */
 :root {
+	color-scheme: light;
+	--canvas: #f6f6f7;
+	--canvas-glow-warm: rgb(255 228 214 / 0.6);
+	--canvas-glow-cool: rgb(220 228 255 / 0.7);
+	--glass-bg: rgb(255 255 255 / 0.62);
+	--glass-strong-bg: rgb(255 255 255 / 0.82);
+	--drawer-bg: rgb(255 255 255 / 0.88);
+	--glass-edge: rgb(255 255 255 / 0.7);
+	--glass-highlight: rgb(255 255 255 / 0.8);
+	--glass-shadow: rgb(24 24 27 / 0.18);
+	--glass-shadow-strong: rgb(24 24 27 / 0.28);
+	--toast-bg: rgb(24 24 27 / 0.88);
+	--toast-action: #ff9f8a;
 	--p1: #e5484d;
 	--p2: #f2994a;
 	--p3: #3e7bfa;
 	--p4: #a1a1aa;
-	--tone-overdue: #e5484d;
-	--tone-today: #1f9d55;
-	--tone-tomorrow: #d97706;
-	--tone-week: #7c5cff;
-	--tone-later: #71717a;
+	--tone-overdue: #c4262b;
+	--tone-today: #127238;
+	--tone-tomorrow: #9e4b06;
+	--tone-week: #6a48e8;
+	--tone-later: var(--color-muted);
 	--token-due: rgb(31 157 85 / 0.16);
 	--token-priority: rgb(229 72 77 / 0.15);
 	--token-reminder: rgb(124 92 255 / 0.16);
@@ -37,6 +57,40 @@
 	font-optical-sizing: auto;
 	color: var(--color-ink);
 	-webkit-font-smoothing: antialiased;
+}
+
+:root[data-theme='dark'] {
+	color-scheme: dark;
+	--color-accent: #ff7a61;
+	--color-on-accent: #1c0a06;
+	--color-ink: #ececef;
+	--color-muted: #a8a8b1;
+	--color-faint: #898992;
+	--color-surface: #3a3a41;
+	--color-scrim: rgb(0 0 0 / 0.45);
+	--canvas: #0e0e10;
+	--canvas-glow-warm: rgb(232 73 47 / 0.11);
+	--canvas-glow-cool: rgb(80 110 255 / 0.11);
+	--glass-bg: rgb(36 36 41 / 0.6);
+	--glass-strong-bg: rgb(32 32 37 / 0.86);
+	--drawer-bg: rgb(30 30 35 / 0.92);
+	--glass-edge: rgb(255 255 255 / 0.09);
+	--glass-highlight: rgb(255 255 255 / 0.07);
+	--glass-shadow: rgb(0 0 0 / 0.55);
+	--glass-shadow-strong: rgb(0 0 0 / 0.7);
+	--toast-bg: rgb(54 54 61 / 0.92);
+	--p1: #ff6369;
+	--p2: #ffa04d;
+	--p3: #6b9bff;
+	--p4: #8b8b94;
+	--tone-overdue: #ff6b6e;
+	--tone-today: #3fcf7c;
+	--tone-tomorrow: #f5a524;
+	--tone-week: #a78bfa;
+	--token-due: rgb(63 207 124 / 0.22);
+	--token-priority: rgb(255 99 105 / 0.22);
+	--token-reminder: rgb(167 139 250 / 0.24);
+	--token-project: rgb(107 155 255 / 0.22);
 }
 
 @layer base {
@@ -53,8 +107,8 @@
 
 	body {
 		background:
-			radial-gradient(1200px 600px at 10% -10%, rgb(255 228 214 / 0.7), transparent 60%),
-			radial-gradient(900px 500px at 100% 0%, rgb(220 228 255 / 0.7), transparent 60%), #f6f6f7;
+			radial-gradient(1200px 600px at 10% -10%, var(--canvas-glow-warm), transparent 60%),
+			radial-gradient(900px 500px at 100% 0%, var(--canvas-glow-cool), transparent 60%), var(--canvas);
 		background-attachment: fixed;
 	}
 
@@ -74,25 +128,25 @@
 @layer components {
 	/* Translucent floating material, the web stand-in for Liquid Glass. */
 	.glass {
-		background: rgb(255 255 255 / 0.62);
+		background: var(--glass-bg);
 		backdrop-filter: blur(28px) saturate(180%);
 		-webkit-backdrop-filter: blur(28px) saturate(180%);
-		border: 1px solid rgb(255 255 255 / 0.7);
+		border: 1px solid var(--glass-edge);
 		box-shadow:
-			0 1px 0 rgb(255 255 255 / 0.8) inset,
-			0 12px 40px -12px rgb(24 24 27 / 0.18),
-			0 2px 6px -2px rgb(24 24 27 / 0.06);
+			0 1px 0 var(--glass-highlight) inset,
+			0 12px 40px -12px var(--glass-shadow),
+			0 2px 6px -2px color-mix(in srgb, var(--glass-shadow) 35%, transparent);
 	}
 
 	.glass-strong {
-		background: rgb(255 255 255 / 0.82);
+		background: var(--glass-strong-bg);
 		backdrop-filter: blur(36px) saturate(190%);
 		-webkit-backdrop-filter: blur(36px) saturate(190%);
-		border: 1px solid rgb(255 255 255 / 0.8);
+		border: 1px solid var(--glass-edge);
 		box-shadow:
-			0 1px 0 rgb(255 255 255 / 0.9) inset,
-			0 24px 64px -16px rgb(24 24 27 / 0.28),
-			0 4px 12px -4px rgb(24 24 27 / 0.08);
+			0 1px 0 var(--glass-highlight) inset,
+			0 24px 64px -16px var(--glass-shadow-strong),
+			0 4px 12px -4px color-mix(in srgb, var(--glass-shadow) 45%, transparent);
 	}
 
 	.chip {
@@ -102,8 +156,8 @@
 		height: 2rem;
 		padding: 0 0.625rem;
 		border-radius: 0.625rem;
-		border: 1px solid rgb(24 24 27 / 0.1);
-		background: rgb(255 255 255 / 0.6);
+		border: 1px solid color-mix(in srgb, var(--color-ink) 10%, transparent);
+		background: color-mix(in srgb, var(--color-surface) 60%, transparent);
 		font-size: 0.8125rem;
 		color: var(--color-muted);
 		transition:
@@ -114,8 +168,8 @@
 
 	@media (hover: hover) {
 		.chip:hover {
-			background: rgb(255 255 255 / 0.95);
-			border-color: rgb(24 24 27 / 0.18);
+			background: color-mix(in srgb, var(--color-surface) 95%, transparent);
+			border-color: color-mix(in srgb, var(--color-ink) 18%, transparent);
 		}
 	}
 
@@ -125,7 +179,7 @@
 
 	.chip[data-active='true'] {
 		color: var(--color-ink);
-		border-color: rgb(24 24 27 / 0.16);
+		border-color: color-mix(in srgb, var(--color-ink) 16%, transparent);
 	}
 
 	.btn {
@@ -150,7 +204,7 @@
 
 	.btn-primary {
 		background: var(--color-accent);
-		color: white;
+		color: var(--color-on-accent);
 	}
 
 	.btn-primary:disabled {
@@ -159,13 +213,13 @@
 	}
 
 	.btn-quiet {
-		background: rgb(24 24 27 / 0.05);
+		background: color-mix(in srgb, var(--color-ink) 6%, transparent);
 		color: var(--color-ink);
 	}
 
 	@media (hover: hover) {
 		.btn-quiet:hover {
-			background: rgb(24 24 27 / 0.09);
+			background: color-mix(in srgb, var(--color-ink) 10%, transparent);
 		}
 	}
 
@@ -185,15 +239,15 @@
 
 	.menu-item:focus-visible,
 	.menu-item:active {
-		background: rgb(24 24 27 / 0.06);
+		background: color-mix(in srgb, var(--color-ink) 7%, transparent);
 		outline: none;
 	}
 
 	.field {
 		height: 2rem;
 		border-radius: 0.5rem;
-		border: 1px solid rgb(24 24 27 / 0.12);
-		background: rgb(255 255 255 / 0.8);
+		border: 1px solid color-mix(in srgb, var(--color-ink) 12%, transparent);
+		background: color-mix(in srgb, var(--color-surface) 80%, transparent);
 		padding: 0 0.5rem;
 		font-size: 0.8125rem;
 		outline: none;
@@ -217,7 +271,7 @@
 
 	@media (hover: hover) {
 		.menu-item:hover {
-			background: rgb(24 24 27 / 0.06);
+			background: color-mix(in srgb, var(--color-ink) 7%, transparent);
 		}
 	}
 
@@ -264,4 +318,11 @@
 			overflow-y: auto;
 		}
 	}
+}
+
+/* Switching themes crossfades the whole page instead of transitioning every color separately. */
+::view-transition-old(root),
+::view-transition-new(root) {
+	animation-duration: 220ms;
+	animation-timing-function: var(--ease-spring);
 }

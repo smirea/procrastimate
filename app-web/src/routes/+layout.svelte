@@ -13,6 +13,7 @@
 	import { store } from '#lib/store.svelte.ts';
 	import { clock, sheets, trackKeyboardInset } from '#lib/ui.svelte.ts';
 	import { fireDueReminders } from '#lib/reminders.ts';
+	import { applyTheme, theme } from '#lib/theme.svelte.ts';
 
 	let { children }: { children: Snippet } = $props();
 	let menuOpen = $state(false);
@@ -42,6 +43,7 @@
 		}
 	}
 
+	$effect(() => applyTheme(theme.resolved));
 	$effect(() => clock.start());
 	$effect(() => trackKeyboardInset());
 
@@ -63,7 +65,7 @@
 		<Sidebar onquickadd={openQuickAdd} />
 	</div>
 	{#if menuOpen}
-		<div class="fixed inset-0 z-30 bg-zinc-900/15 backdrop-blur-[2px] md:hidden" transition:fade={{ duration: 180 }} onclick={() => (menuOpen = false)} aria-hidden="true"></div>
+		<div class="fixed inset-0 z-30 bg-scrim backdrop-blur-[2px] md:hidden" transition:fade={{ duration: 180 }} onclick={() => (menuOpen = false)} aria-hidden="true"></div>
 		<div class="drawer fixed z-30 md:hidden" transition:fly={{ x: -320, duration: 280, easing: cubicOut, opacity: 1 }}>
 			<Sidebar onquickadd={openQuickAdd} />
 		</div>
@@ -89,7 +91,7 @@
 {#if sheets.current.kind === 'none'}
 	<button
 		type="button"
-		class="fab fixed z-20 grid size-14 place-items-center rounded-full bg-accent text-white md:hidden"
+		class="fab fixed z-20 grid size-14 place-items-center rounded-full bg-accent text-on-accent md:hidden"
 		aria-label="Quick add"
 		onclick={openQuickAdd}
 		transition:scale={{ start: 0.6, duration: 200, easing: cubicOut }}
@@ -137,15 +139,15 @@
 
 	/* The drawer floats over a full task list, so it needs a denser material than the desktop sidebar to stay legible. */
 	.drawer :global(nav) {
-		background: rgb(255 255 255 / 0.88);
+		background: var(--drawer-bg);
 	}
 
 	.fab {
 		right: max(1.25rem, calc(env(safe-area-inset-right) + 0.75rem));
 		bottom: max(1.25rem, calc(env(safe-area-inset-bottom) + 0.5rem));
 		box-shadow:
-			0 10px 28px -8px rgb(232 73 47 / 0.6),
-			0 2px 6px -2px rgb(24 24 27 / 0.2);
+			0 10px 28px -8px color-mix(in srgb, var(--color-accent) 60%, transparent),
+			0 2px 6px -2px var(--glass-shadow);
 		transition: transform 160ms var(--ease-spring);
 	}
 
