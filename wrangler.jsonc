@@ -3,6 +3,7 @@
 	"name": "procrastimate",
 	"main": "server/src/api.ts",
 	"compatibility_date": "2026-10-01",
+	"routes": [{ "pattern": "procrastimate.stf.lol", "custom_domain": true }],
 	"workers_dev": true,
 	"preview_urls": false,
 	"assets": {
