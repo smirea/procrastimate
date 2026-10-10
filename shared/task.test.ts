@@ -5,6 +5,7 @@ import {
 	nextOccurrence,
 	notificationTimes,
 	stepRecurrence,
+	weeklyOn,
 	type Due,
 	type Recurrence,
 	type Reminder,
@@ -179,6 +180,16 @@ describe('stepRecurrence on a weekday set', () => {
 	] as const)('alignToRecurrence: %s', (_, from, recurrence, expected) => {
 		expect(alignToRecurrence(from, recurrence)).toBe(expected);
 	});
+});
+
+test.each([
+	[[5, 1, 3, 1], { interval: 1, unit: 'week', days: [1, 3, 5] }],
+	[[0, 6], { interval: 1, unit: 'week', days: [6, 0] }],
+	[[5], { interval: 1, unit: 'week' }],
+	[[5, 5], { interval: 1, unit: 'week' }],
+	[[], { interval: 1, unit: 'week' }],
+] as const)('weeklyOn %p is %p', (days, expected) => {
+	expect<unknown>(weeklyOn(1, days)).toEqual(expected);
 });
 
 describe('nextOccurrence on a weekday set', () => {

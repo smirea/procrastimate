@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import {
-	sortWeekdays,
+	weeklyOn,
 	type DateKey,
 	type Label,
 	type Project,
@@ -16,8 +16,7 @@ const timeOfDay = z.custom<TimeOfDay>(v => typeof v === 'string' && /^\d{2}:\d{2
 const interval = z.number().int().positive();
 const weekdays = z
 	.array(z.custom<Weekday>(v => Number.isInteger(v) && (v as number) >= 0 && (v as number) <= 6))
-	.min(1)
-	.transform(sortWeekdays);
+	.min(1);
 
 const taskSchema = z.object({
 	id: z.string(),
@@ -30,7 +29,9 @@ const taskSchema = z.object({
 	recurrence: z
 		.discriminatedUnion('unit', [
 			z.object({ interval, unit: z.enum(['day', 'weekday', 'month', 'year']) }),
-			z.object({ interval, unit: z.literal('week'), days: weekdays.optional() }),
+			z
+				.object({ interval, unit: z.literal('week'), days: weekdays.optional() })
+				.transform(({ interval, days }) => weeklyOn(interval, days ?? [])),
 		])
 		.nullable()
 		.default(null),

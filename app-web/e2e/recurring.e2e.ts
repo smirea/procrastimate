@@ -113,6 +113,11 @@ test('the repeat menu toggles weekdays and keeps the last one on', async ({ app,
 	await expect(details.getByRole('button', { name: 'Repeats every Fri' })).toBeVisible();
 	await expect(day('Mon')).toHaveAttribute('aria-pressed', 'false');
 	await expect(day('Fri')).toBeDisabled();
+	await expect(menu.getByRole('button', { name: 'Every Fri' }).locator('svg')).toBeVisible();
+	expect(await page.evaluate(() => JSON.parse(localStorage.getItem('procrastimate')!).tasks[0].recurrence)).toEqual({
+		interval: 1,
+		unit: 'week',
+	});
 });
 
 test('task details set, change, and clear a repeat', async ({ app, page }) => {

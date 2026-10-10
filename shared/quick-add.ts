@@ -6,6 +6,7 @@ import {
 	fromDateKey,
 	sortWeekdays,
 	stepRecurrence,
+	weeklyOn,
 	toDateKey,
 	toTimeOfDay,
 	type DateKey,
@@ -337,9 +338,7 @@ const RULES: Rule[] = [
 			const recurrence: Recurrence | null = workday
 				? { interval: 1, unit: 'weekday' }
 				: days.length
-					? days.length > 1
-						? { interval: 1, unit: 'week', days }
-						: { interval: 1, unit: 'week' }
+					? weeklyOn(1, days)
 					: adverb
 						? { interval: 1, unit: RECURRENCE_ADVERBS[adverb.toLowerCase()]! }
 						: unitText

@@ -19,8 +19,8 @@ export type Weekday = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
 /**
  * Repeats every `interval` units, counted from the due date. A weekly repeat keeps the due date's
- * weekday, or, with `days`, repeats on each listed weekday of every `interval`-th week. `days` is
- * never empty and is sorted Monday first.
+ * weekday, or, with `days`, repeats on each listed weekday of every `interval`-th week. `days` holds
+ * two or more weekdays sorted Monday first. Build it with `weeklyOn`, so one day is a plain weekly repeat.
  */
 export type Recurrence =
 	| { interval: number; unit: Exclude<RecurrenceUnit, 'week'> }
@@ -119,6 +119,12 @@ export const mondayIndex = (day: Weekday) => (day + 6) % 7;
 /** Dedupes and sorts Monday first, the stored order of `days`. */
 export function sortWeekdays(days: Iterable<Weekday>): readonly Weekday[] {
 	return [...new Set(days)].toSorted((a, b) => mondayIndex(a) - mondayIndex(b));
+}
+
+/** A weekly repeat on `days`. One day is a plain weekly repeat, which follows the due date's weekday. */
+export function weeklyOn(interval: number, days: Iterable<Weekday>): Recurrence {
+	const sorted = sortWeekdays(days);
+	return sorted.length > 1 ? { interval, unit: 'week', days: sorted } : { interval, unit: 'week' };
 }
 
 /**

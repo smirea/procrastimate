@@ -301,8 +301,8 @@ test('a slashed weekday list repeats and the repeat menu adds a day by touch', a
 	await expect(details.getByRole('button', { name: 'Repeats every Tue, Thu, Sat' })).toBeVisible();
 	await expect(day('Sat')).toHaveAttribute('aria-pressed', 'true');
 	await shot(app, 'recurrence-weekdays');
-	await details.getByRole('button', { name: 'Repeats every Tue, Thu, Sat' }).tap();
-	await expect(menu).toBeHidden();
+	const header = (await details.locator('header').boundingBox())!;
+	expect((await menu.boundingBox())!.y).toBeGreaterThanOrEqual(header.y + header.height);
 	await details.getByRole('button', { name: 'Close' }).tap();
 	await expect(details).toBeHidden();
 

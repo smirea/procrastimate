@@ -7,7 +7,7 @@
 	import Check from 'phosphor-svelte/lib/Check';
 	import ArrowCounterClockwise from 'phosphor-svelte/lib/ArrowCounterClockwise';
 	import { parseQuickAdd } from 'shared/quick-add.ts';
-	import { alignToRecurrence, type Task } from 'shared/task.ts';
+	import type { Task } from 'shared/task.ts';
 	import SmartInput from './SmartInput.svelte';
 	import DuePicker from './DuePicker.svelte';
 	import PriorityPicker from './PriorityPicker.svelte';
@@ -136,8 +136,7 @@
 			<RecurrencePicker
 				recurrence={task.recurrence}
 				due={task.due}
-				onchange={(recurrence, from) =>
-					update({ recurrence, due: recurrence ? { ...from, date: alignToRecurrence(from.date, recurrence) } : task.due })}
+				onchange={(recurrence, due) => update({ recurrence, due })}
 			/>
 			<PriorityPicker priority={task.priority} onchange={(priority) => update({ priority })} />
 			<ReminderPicker
