@@ -132,6 +132,17 @@ describe('reminders', () => {
 		expect(parsed.reminders).toEqual([{ kind: 'at', date: '2026-10-14', time: '18:00' }]);
 	});
 
+	test('an absolute reminder time lands on a due date set outside the text', () => {
+		const parsed = parse('Call mom remind me at 9am', { due: { date: '2026-10-15', time: null } });
+		expect(parsed.due).toBe(null);
+		expect(parsed.reminders).toEqual([{ kind: 'at', date: '2026-10-15', time: '09:00' }]);
+	});
+
+	test('a due date in the text beats the one set outside it', () => {
+		const parsed = parse('Call mom fri remind me at 9am', { due: { date: '2026-10-15', time: null } });
+		expect(parsed.reminders).toEqual([{ kind: 'at', date: '2026-10-16', time: '09:00' }]);
+	});
+
 	test('a reminder date without a time defaults to 9am', () => {
 		const parsed = parse('Renew passport remind me next monday');
 		expect(parsed.reminders).toEqual([{ kind: 'at', date: '2026-10-19', time: '09:00' }]);

@@ -58,3 +58,14 @@ test('a reminder typed without a due time stays and defaults to the due date', a
 	await app.taskInput().press('Escape');
 	await expect(app.row('Renew passport').getByLabel('1 reminders')).toBeVisible();
 });
+
+test('an at-due-time reminder survives a reload', async ({ app, page }) => {
+	await app.openQuickAdd();
+	await app.taskInput().fill('Call mom tomorrow 5pm');
+	await app.quickAdd().getByRole('button', { name: 'Add reminder' }).click();
+	await page.getByRole('dialog', { name: 'Reminders' }).getByRole('button', { name: 'At due time' }).click();
+	await app.taskInput().press('Enter');
+	await app.taskInput().press('Escape');
+	await page.reload();
+	await expect(app.row('Call mom').getByLabel('1 reminders')).toBeVisible();
+});

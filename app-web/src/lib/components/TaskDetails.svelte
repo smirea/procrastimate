@@ -19,7 +19,7 @@
 	let { task }: { task: Task } = $props();
 
 	let title = $state(untrack(() => task.title));
-	const parsed = $derived(parseQuickAdd(title, { now: new Date(clock.now), projects: store.projects }));
+	const parsed = $derived(parseQuickAdd(title, { now: new Date(clock.now), projects: store.projects, due: task.due }));
 
 	const update = (patch: TaskPatch) => store.updateTask(task.id, patch);
 

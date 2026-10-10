@@ -30,7 +30,7 @@
 	let picked = $state<Picked>(initialPicked());
 	let input: SmartInput;
 
-	const parsed = $derived(parseQuickAdd(text, { now: new Date(clock.now), projects: store.projects, disabled }));
+	const parsed = $derived(parseQuickAdd(text, { now: new Date(clock.now), projects: store.projects, disabled, due: picked.due }));
 	const tokenOf = (kind: TokenKind) => parsed.tokens.find((t) => t.kind === kind);
 	const due = $derived(parsed.due ?? picked.due);
 	const priority = $derived(parsed.priority ?? picked.priority ?? DEFAULT_PRIORITY);

@@ -15,7 +15,7 @@ const taskSchema = z.object({
 	priority: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]),
 	reminders: z.array(
 		z.discriminatedUnion('kind', [
-			z.object({ kind: z.literal('before'), minutes: z.number().int().positive() }),
+			z.object({ kind: z.literal('before'), minutes: z.number().int().nonnegative() }),
 			z.object({ kind: z.literal('at'), date: dateKey, time: timeOfDay }),
 		]),
 	),

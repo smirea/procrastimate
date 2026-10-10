@@ -29,6 +29,8 @@ export type ParseOptions = {
 	projects?: readonly Project[];
 	/** Token texts the user chose to keep as plain title text, compared case-insensitively. */
 	disabled?: readonly string[];
+	/** The due date set outside the text, such as by a picker or on an existing task. */
+	due?: Due | null;
 };
 
 const WEEKDAYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
