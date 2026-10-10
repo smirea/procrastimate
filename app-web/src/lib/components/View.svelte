@@ -3,7 +3,7 @@
 	import { fade, fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import Plus from 'phosphor-svelte/lib/Plus';
-	import { sheets, type QuickAddDefaults } from '../ui.svelte.ts';
+	import { sheets, motion, type QuickAddDefaults } from '../ui.svelte.ts';
 
 	let {
 		title,
@@ -26,7 +26,7 @@
 	} = $props();
 </script>
 
-<section in:fly={{ y: 6, duration: 220, easing: cubicOut }}>
+<section in:fly={motion({ y: 6, duration: 220, easing: cubicOut })}>
 	<header class="mb-5 flex items-end justify-between gap-4">
 		<div class="min-w-0">
 			{#if typeof title === 'string'}
@@ -43,7 +43,7 @@
 
 	<button
 		type="button"
-		class="group mt-1 flex h-10 w-full items-center gap-3 rounded-xl px-2 text-[14px] text-muted transition-colors hover:text-accent touch:h-12 touch:text-[15px]"
+		class="press group mt-1 flex h-10 w-full items-center gap-3 rounded-full px-2 text-[14px] text-muted transition-colors hover:text-accent touch:h-12 touch:text-[15px]"
 		onclick={() => sheets.openQuickAdd(quickAdd)}
 	>
 		<span class="grid size-[18px] place-items-center rounded-full text-accent transition-colors group-hover:bg-accent group-hover:text-on-accent">
@@ -53,7 +53,7 @@
 	</button>
 
 	{#if empty}
-		<div class="mt-16 text-center" in:fade={{ duration: 240, delay: 120 }}>
+		<div class="mt-16 text-center" in:fade={motion({ duration: 240, delay: 120 })}>
 			<p class="text-[15px] font-medium">{emptyTitle}</p>
 			<p class="mt-1 text-[13px] text-muted">{emptyHint}</p>
 		</div>

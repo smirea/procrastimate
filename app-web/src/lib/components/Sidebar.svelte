@@ -16,7 +16,7 @@
 	import Popover from './Popover.svelte';
 	import Settings from './Settings.svelte';
 	import { store } from '../store.svelte.ts';
-	import { clock, mobile } from '../ui.svelte.ts';
+	import { clock, mobile, motion } from '../ui.svelte.ts';
 	import { push, pushStatus } from '../push.svelte.ts';
 	import { inboxTasks, labelTasks, projectTasks, todayTasks, upcomingGroups } from '../views.ts';
 
@@ -63,22 +63,22 @@
 	}
 </script>
 
-<nav class="glass flex h-full flex-col rounded-2xl p-3" aria-label="Main">
+<nav class="glass flex h-full flex-col rounded-panel p-3" aria-label="Main">
 	<div class="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto overscroll-contain">
 		<div class="flex items-center justify-between px-2 pt-1">
 			<span class="text-[15px] font-semibold tracking-tight">Procrastimate</span>
 		</div>
 
 		<div class="space-y-0.5">
-			<button type="button" class="menu-item h-9 font-medium text-accent touch:h-11" onclick={onquickadd}>
+			<button type="button" class="menu-item h-9 rounded-full font-medium text-accent touch:h-11" onclick={onquickadd}>
 				<PlusCircle size={20} weight="fill" />
 				Add task
-				<kbd class="ml-auto rounded-md touch:hidden border border-ink/10 px-1.5 text-[11px] font-normal text-faint">Q</kbd>
+				<kbd class="ml-auto rounded-full bg-ink/[0.06] px-2 text-[11px] font-normal text-faint touch:hidden">Q</kbd>
 			</button>
 			<button type="button" class="menu-item h-9 touch:h-11" onclick={onsearch}>
 				<MagnifyingGlass size={20} class="text-muted" />
 				Search
-				<kbd class="ml-auto rounded-md touch:hidden border border-ink/10 px-1.5 text-[11px] font-normal text-faint">/</kbd>
+				<kbd class="ml-auto rounded-full bg-ink/[0.06] px-2 text-[11px] font-normal text-faint touch:hidden">/</kbd>
 			</button>
 		</div>
 
@@ -98,7 +98,7 @@
 		<section aria-label="Projects">
 			<div class="flex items-center justify-between px-2 pb-1">
 				<h2 class="text-[12px] font-medium tracking-wide text-faint uppercase">Projects</h2>
-				<button type="button" class="grid size-7 place-items-center rounded-lg text-muted transition-colors hover:bg-ink/5 hover:text-ink touch:size-11" aria-label="Add project" onclick={() => (adding = true)}>
+				<button type="button" class="icon-btn size-7 touch:size-11" aria-label="Add project" onclick={() => (adding = true)}>
 					<Plus size={14} weight="bold" />
 				</button>
 			</div>
@@ -106,7 +106,7 @@
 				{#each store.projects as project (project.id)}
 					{@const href = `/projects/${project.id}`}
 					{@const active = page.url.pathname === href}
-					<li transition:slide={{ duration: 180, easing: cubicOut }}>
+					<li transition:slide={motion({ duration: 180, easing: cubicOut })}>
 						<a {href} class="nav-link" class:active aria-current={active ? 'page' : undefined}>
 							<Hash size={18} />
 							<span class="flex-1 truncate">{project.name}</span>
@@ -117,10 +117,10 @@
 					</li>
 				{/each}
 				{#if adding}
-					<li transition:slide={{ duration: 180, easing: cubicOut }}>
+					<li transition:slide={motion({ duration: 180, easing: cubicOut })}>
 						<!-- svelte-ignore a11y_autofocus -->
 						<input
-							class="field h-9 w-full touch:h-11"
+							class="field h-9 w-full rounded-full px-3 touch:h-11"
 							aria-label="Project name"
 							placeholder="Project name"
 							autofocus
@@ -140,13 +140,13 @@
 		</section>
 
 		{#if labels.length}
-			<section aria-label="Labels" transition:slide={{ duration: 180, easing: cubicOut }}>
+			<section aria-label="Labels" transition:slide={motion({ duration: 180, easing: cubicOut })}>
 				<h2 class="px-2 pb-1 text-[12px] font-medium tracking-wide text-faint uppercase">Labels</h2>
 				<ul class="space-y-0.5">
 					{#each labels as { label, count } (label.id)}
 						{@const href = `/labels/${label.id}`}
 						{@const active = page.url.pathname === href}
-						<li transition:slide={{ duration: 180, easing: cubicOut }}>
+						<li transition:slide={motion({ duration: 180, easing: cubicOut })}>
 							<a {href} class="nav-link" class:active aria-current={active ? 'page' : undefined}>
 								<Tag size={18} weight={active ? 'fill' : 'regular'} class={active ? '' : 'text-[var(--tone-label)]'} />
 								<span class="flex-1 truncate">{label.name}</span>
@@ -191,13 +191,18 @@
 		align-items: center;
 		gap: 0.625rem;
 		height: 2.25rem;
-		padding: 0 0.5rem;
-		border-radius: 0.625rem;
+		padding: 0 0.75rem;
+		border-radius: 9999px;
 		font-size: 0.875rem;
 		color: var(--color-ink);
 		transition:
 			background 160ms var(--ease-spring),
-			color 160ms var(--ease-spring);
+			color 160ms var(--ease-spring),
+			scale 220ms var(--ease-spring);
+	}
+
+	.nav-link:active {
+		scale: 0.97;
 	}
 
 	@media (hover: hover) {
@@ -215,6 +220,7 @@
 
 	.nav-link.active {
 		background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+		box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 10%, transparent);
 		color: var(--color-accent);
 		font-weight: 500;
 	}

@@ -41,7 +41,7 @@
 			{#if renaming}
 				<!-- svelte-ignore a11y_autofocus -->
 				<input
-					class="w-full rounded-lg bg-surface/70 px-1 text-[26px] font-semibold tracking-tight outline-none"
+					class="w-full rounded-xl bg-ink/[0.05] px-1.5 text-[26px] font-semibold tracking-tight outline-none"
 					aria-label="Project name"
 					value={project.name}
 					autofocus
@@ -58,7 +58,7 @@
 		{#snippet actions()}
 			<Popover label="Project actions" align="end">
 				{#snippet trigger({ toggle })}
-					<button type="button" class="grid size-9 place-items-center rounded-xl text-muted transition-colors hover:bg-ink/5 hover:text-ink touch:size-11" aria-label="Project actions" onclick={() => {
+					<button type="button" class="icon-btn touch:size-11" aria-label="Project actions" onclick={() => {
 						confirmingDelete = false;
 						toggle();
 					}}>
@@ -71,7 +71,7 @@
 							<p>Delete <strong>{project.name}</strong> and its {tasks.length} task{tasks.length === 1 ? '' : 's'}?</p>
 							<div class="mt-2 flex justify-end gap-1.5">
 								<button type="button" class="btn btn-quiet" onclick={close}>Cancel</button>
-								<button type="button" class="btn bg-[var(--tone-overdue)] text-on-accent" onclick={remove}>Delete</button>
+								<button type="button" class="btn press bg-[var(--tone-overdue)] text-on-accent" onclick={remove}>Delete</button>
 							</div>
 						</div>
 					{:else}

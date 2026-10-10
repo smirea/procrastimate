@@ -95,3 +95,27 @@ test('q typed inside a text field is just a letter', async ({ app }) => {
 	await app.taskInput().press('q');
 	await expect(app.taskInput()).toHaveValue('q');
 });
+
+test('the configuration row spells out parsed timing with no preview above the input', async ({ app, page }) => {
+	await app.openQuickAdd();
+	await app.taskInput().pressSequentially('Standup every mon 9am remind me 10m before');
+	const quickAdd = app.quickAdd();
+	await expect(quickAdd.getByRole('button', { name: 'Due Monday 9am' })).toBeVisible();
+	await expect(quickAdd.getByText('Every Mon', { exact: true })).toBeVisible();
+	await expect(quickAdd.getByText('10m before', { exact: true })).toBeVisible();
+	await expect(page.getByRole('status', { name: 'Timing preview' })).toHaveCount(0);
+	await app.taskInput().press('Enter');
+	await app.taskInput().press('Escape');
+
+	await app.row('Standup').getByRole('button', { name: 'Standup' }).click();
+	const title = app.details().getByRole('textbox', { name: 'Title' });
+	await title.press('End');
+	await title.pressSequentially(' fri 6pm');
+	await expect(app.details().locator('[data-token="due"]')).toHaveText('fri 6pm');
+	await expect(page.getByRole('status', { name: 'Timing preview' })).toHaveCount(0);
+	await expect(app.details().getByRole('button', { name: 'Due Friday 6pm' })).toBeVisible();
+	await expect(app.row('Standup')).not.toContainText('Fri');
+	await title.press('Enter');
+	await expect(app.details().getByRole('button', { name: 'Due Friday 6pm' })).toBeVisible();
+	await expect(app.row('Standup')).toContainText('Fri');
+});

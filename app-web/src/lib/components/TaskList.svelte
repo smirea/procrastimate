@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { motion } from '../ui.svelte.ts';
 	import { flip } from 'svelte/animate';
 	import { fly, slide } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
@@ -11,9 +12,9 @@
 <ul class="divide-y divide-ink/[0.06]" aria-label={label}>
 	{#each tasks as task (task.id)}
 		<li
-			animate:flip={{ duration: 240, easing: cubicOut }}
-			in:fly={{ y: -8, duration: 220, easing: cubicOut }}
-			out:slide={{ duration: 200, easing: cubicOut }}
+			animate:flip={motion({ duration: 240, easing: cubicOut })}
+			in:fly={motion({ y: -8, duration: 220, easing: cubicOut })}
+			out:slide={motion({ duration: 200, easing: cubicOut })}
 		>
 			<TaskRow {task} {showProject} {timeOnly} />
 		</li>

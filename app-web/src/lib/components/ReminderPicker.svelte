@@ -47,10 +47,10 @@
 	{#snippet children({ close })}
 		<div class="w-64">
 			{#each reminders as reminder, i (JSON.stringify(reminder))}
-				<div class="flex h-8 items-center gap-2 rounded-lg px-2 text-[13px] touch:h-11 touch:text-[15px]">
+				<div class="flex h-8 items-center gap-2 rounded-xl px-2 text-[13px] touch:h-11 touch:text-[15px]">
 					<Bell size={14} class="text-[var(--tone-week)]" weight="fill" />
 					<span class="flex-1">{formatReminder(reminder, clock.today)}</span>
-					<button type="button" class="hit-area relative grid size-6 place-items-center rounded-full text-faint hover:bg-ink/5 hover:text-ink" aria-label="Remove reminder" onclick={() => remove(i)}>
+					<button type="button" class="icon-btn hit-area size-7 touch:size-9" aria-label="Remove reminder" onclick={() => remove(i)}>
 						<X size={12} weight="bold" />
 					</button>
 				</div>

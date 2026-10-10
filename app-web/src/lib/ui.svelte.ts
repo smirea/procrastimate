@@ -4,6 +4,12 @@ import { toDateKey } from 'shared/task.ts';
 /** Matches Tailwind's `md` breakpoint, below which the sidebar becomes a drawer and sheets dock to the bottom. */
 export const mobile = new MediaQuery('max-width: 767px');
 
+const reducedMotion = new MediaQuery('prefers-reduced-motion: reduce');
+
+/** Svelte transition params that become instant under reduced motion, which CSS cannot reach because Svelte animates from script. */
+export const motion = <T extends { duration?: number }>(params: T): T =>
+	reducedMotion.current ? { ...params, duration: 0 } : params;
+
 /**
  * Publishes the on-screen keyboard's height as `--keyboard-inset` so bottom sheets sit above it.
  * iOS Safari overlays the keyboard instead of resizing the layout viewport, so only the visual viewport shrinks.

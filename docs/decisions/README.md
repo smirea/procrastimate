@@ -5,6 +5,7 @@ Procrastimate's concepts, goals, paradigms, and high-level system decisions, one
 - [Product goals](product.md): what Procrastimate is, who it is for, and the snappy local-first bar.
 - [Workflow](workflow.md): how threads, PRs, rebases, tests, and screenshots work.
 - [UX principles](ux-principles.md): mobile-first layout, touch, motion, and Liquid Glass parity.
+- [Visual language](visual-language.md): the Liquid Glass materials, shapes, motion, accessibility fallbacks, and rendering pick.
 - [Theming](theming.md): System, Light, and Dark themes, semantic tokens, and contrast.
 - [Domain](domain.md): tasks, views, projects, labels, priorities, and reminders.
 - [Quick add and natural language](quick-add.md): the quick add parser, its phrases, guards, and autocomplete.

@@ -1,17 +1,17 @@
 <script lang="ts">
 	import X from 'phosphor-svelte/lib/X';
 	import { scale } from 'svelte/transition';
+	import { motion } from '../ui.svelte.ts';
 
 	let { onclick }: { onclick: () => void } = $props();
 </script>
 
 <button
 	type="button"
-	class="hit-area relative -ml-1 grid size-6 place-items-center rounded-full text-faint transition-colors hover:bg-ink/5 hover:text-ink"
-	title="Keep as text"
+	class="icon-btn hit-area -ml-0.5 size-7 bg-ink/[0.05] touch:-ml-1 touch:size-11"
 	aria-label="Keep as text"
 	{onclick}
-	transition:scale={{ start: 0.6, duration: 140 }}
+	transition:scale={motion({ start: 0.6, duration: 160 })}
 >
-	<X size={12} weight="bold" />
+	<X size={14} weight="bold" />
 </button>

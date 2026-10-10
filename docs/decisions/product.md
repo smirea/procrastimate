@@ -1,6 +1,7 @@
 # Product goals
 
-- **Personal Todoist.** Procrastimate is Stefan's personal task manager, modeled on Todoist. Todoist is the reference for behavior and interaction unless these decisions say otherwise.
+- **Personal task manager.** Procrastimate is Stefan's personal task manager. Todoist is a rough functional reference for behavior where these decisions are silent. It is never a visual reference.
+- **Its own visual language, based on Liquid Glass.** Procrastimate designs its own look on Apple's Liquid Glass, so the web app and the eventual iOS app look alike and modern. See [Visual language](visual-language.md).
 - **One user.** There is exactly one user. No accounts, sharing, roles, or multi-tenant concerns.
 - **Platforms.** Web now, iOS later, Apple Watch after iOS.
 - **Features are in flux.** Never keep backwards compatibility. Change data shapes, routes, and storage freely, and delete old behavior instead of migrating it.

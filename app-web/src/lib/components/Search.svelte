@@ -15,7 +15,7 @@
 	import { toDateKey, type Label, type Project } from 'shared/task.ts';
 	import Highlighted from './Highlighted.svelte';
 	import { store } from '../store.svelte.ts';
-	import { clock, mobile, sheets } from '../ui.svelte.ts';
+	import { clock, mobile, sheets, motion } from '../ui.svelte.ts';
 	import { PRIORITIES, dueTone, formatDate, formatDue } from '../format.ts';
 
 	/** Rendering is the cost that grows with matches, so each section shows only its best rows. */
@@ -111,17 +111,17 @@
 
 	const enter = (node: Element) =>
 		mobile.current
-			? fly(node, { y: '100%', duration: 300, easing: cubicOut, opacity: 1 })
-			: scale(node, { start: 0.96, duration: 200, easing: cubicOut, opacity: 0 });
+			? fly(node, motion({ y: '100%', duration: 300, easing: cubicOut, opacity: 1 }))
+			: scale(node, motion({ start: 0.96, duration: 200, easing: cubicOut, opacity: 0 }));
 
 	const projectOf = (hit: TaskHit) => store.project(hit.task.projectId);
 </script>
 
-<div class="fixed inset-0 z-40 bg-scrim backdrop-blur-[2px]" transition:fade={{ duration: 160 }} onclick={() => sheets.close()} aria-hidden="true"></div>
+<div class="fixed inset-0 z-40 bg-scrim backdrop-blur-[2px]" transition:fade={motion({ duration: 160 })} onclick={() => sheets.close()} aria-hidden="true"></div>
 <div
 	role="dialog"
 	aria-label="Search"
-	class="glass-strong sheet fixed z-50 flex flex-col-reverse overflow-hidden md:top-[14vh] md:left-1/2 md:max-h-[min(560px,72vh)] md:w-[min(640px,calc(100vw-2rem))] md:-translate-x-1/2 md:flex-col md:rounded-2xl"
+	class="glass-strong sheet fixed z-50 flex flex-col-reverse overflow-hidden md:top-[14vh] md:left-1/2 md:max-h-[min(560px,72vh)] md:w-[min(640px,calc(100vw-2rem))] md:-translate-x-1/2 md:flex-col md:rounded-panel"
 	transition:enter
 >
 	<div class="flex shrink-0 items-center gap-2.5 px-4 py-3 touch:py-2">
@@ -147,19 +147,19 @@
 		{#if query}
 			<button
 				type="button"
-				class="hit-area relative grid size-6 shrink-0 place-items-center rounded-full bg-ink/10 text-muted transition-colors hover:bg-ink/15 hover:text-ink"
+				class="icon-btn hit-area size-7 bg-ink/10 touch:size-8"
 				aria-label="Clear search"
 				onmousedown={(e) => e.preventDefault()}
 				onclick={() => {
 					query = '';
 					input.focus();
 				}}
-				transition:scale={{ start: 0.6, duration: 140, easing: cubicOut }}
+				transition:scale={motion({ start: 0.6, duration: 140, easing: cubicOut })}
 			>
 				<X size={12} weight="bold" />
 			</button>
 		{/if}
-		<kbd class="rounded-md border border-ink/10 px-1.5 text-[11px] text-faint touch:hidden">Esc</kbd>
+		<kbd class="rounded-full bg-ink/[0.06] px-2 py-0.5 text-[11px] text-faint touch:hidden">Esc</kbd>
 	</div>
 	{#if query.trim()}
 		<div
@@ -187,9 +187,9 @@
 							tabindex="-1"
 							aria-selected={i === active}
 							data-active={i === active}
-							class="result flex w-full cursor-pointer items-start gap-3 rounded-xl px-2.5 py-2 text-left touch:min-h-11 touch:py-2.5"
-							animate:flip={{ duration: 180, easing: cubicOut }}
-							in:fade={{ duration: 120 }}
+							class="result flex w-full cursor-pointer items-start gap-3 rounded-2xl px-2.5 py-2 text-left touch:min-h-11 touch:py-2.5"
+							animate:flip={motion({ duration: 180, easing: cubicOut })}
+							in:fade={motion({ duration: 120 })}
 							onmousedown={(e) => e.preventDefault()}
 							onpointermove={(e) => e.pointerType === 'mouse' && (active = i)}
 							onclick={() => open(row)}
@@ -263,7 +263,7 @@
 					{/each}
 				</div>
 			{:else}
-				<p class="px-3 py-6 text-center text-[14px] text-muted" in:fade={{ duration: 120 }}>No results for “{query.trim()}”</p>
+				<p class="px-3 py-6 text-center text-[14px] text-muted" in:fade={motion({ duration: 120 })}>No results for “{query.trim()}”</p>
 			{/each}
 		</div>
 	{/if}
@@ -271,7 +271,9 @@
 
 <style>
 	.result {
-		transition: background 120ms var(--ease-spring);
+		transition:
+			background 120ms var(--ease-spring),
+			scale 220ms var(--ease-spring);
 	}
 
 	.result[data-active='true'] {
@@ -280,6 +282,7 @@
 
 	.result:active {
 		background: color-mix(in srgb, var(--color-ink) 10%, transparent);
+		scale: 0.98;
 	}
 
 	.status {

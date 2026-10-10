@@ -13,8 +13,8 @@
 	import ProjectPicker from './ProjectPicker.svelte';
 	import KeepAsText from './KeepAsText.svelte';
 	import { store } from '../store.svelte.ts';
-	import { clock, mobile, sheets, type QuickAddDefaults } from '../ui.svelte.ts';
-	import { describeTiming, formatRecurrence, formatReminder } from '../format.ts';
+	import { clock, mobile, sheets, type QuickAddDefaults, motion } from '../ui.svelte.ts';
+	import { formatRecurrence, formatReminder } from '../format.ts';
 	import { push } from '../push.svelte.ts';
 
 	let { defaults }: { defaults: QuickAddDefaults } = $props();
@@ -53,11 +53,6 @@
 			.map((token) => ({ token, name: store.labels.find((l) => `@${l.name}`.toLowerCase() === token.text.toLowerCase())?.name })),
 	);
 	const labelIds = $derived([...new Set([...picked.labelIds, ...parsed.labelIds])]);
-	const timing = $derived(
-		parsed.due || parsed.recurrence || parsed.reminders.length
-			? describeTiming({ due, recurrence: parsed.recurrence, reminders: [...parsed.reminders, ...picked.reminders] }, clock.today)
-			: [],
-	);
 
 	function keepAsText(token: QuickAddToken | undefined) {
 		if (token) disabled = [...disabled, token.text];
@@ -98,15 +93,15 @@
 
 	const enter = (node: Element) =>
 		mobile.current
-			? fly(node, { y: '100%', duration: 300, easing: cubicOut, opacity: 1 })
-			: scale(node, { start: 0.96, duration: 200, easing: cubicOut, opacity: 0 });
+			? fly(node, motion({ y: '100%', duration: 300, easing: cubicOut, opacity: 1 }))
+			: scale(node, motion({ start: 0.96, duration: 200, easing: cubicOut, opacity: 0 }));
 </script>
 
-<div class="fixed inset-0 z-40 bg-scrim backdrop-blur-[2px]" transition:fade={{ duration: 160 }} onclick={() => sheets.close()} aria-hidden="true"></div>
+<div class="fixed inset-0 z-40 bg-scrim backdrop-blur-[2px]" transition:fade={motion({ duration: 160 })} onclick={() => sheets.close()} aria-hidden="true"></div>
 <div
 	role="dialog"
 	aria-label="Quick add"
-	class="glass-strong sheet fixed z-50 flex flex-col md:top-[14vh] md:left-1/2 md:w-[min(640px,calc(100vw-2rem))] md:-translate-x-1/2 md:rounded-2xl"
+	class="glass-strong sheet fixed z-50 flex flex-col md:top-[14vh] md:left-1/2 md:w-[min(640px,calc(100vw-2rem))] md:-translate-x-1/2 md:rounded-panel"
 	transition:enter
 >
 	<div class="px-4 pt-4 pb-2">
@@ -114,7 +109,6 @@
 			bind:this={input}
 			bind:value={text}
 			tokens={parsed.tokens}
-			{timing}
 			label="Task name"
 			placeholder="Call mom tomorrow 5pm p1 remind me 30m before"
 			autofocus
@@ -133,7 +127,7 @@
 				picked.priority = value;
 			}} onkeepastext={tokenOf('priority') ? () => keepAsText(tokenOf('priority')) : undefined} />
 		{#if parsed.recurrence}
-			<div class="flex items-center" transition:scale={{ start: 0.9, duration: 160 }}>
+			<div class="flex items-center" transition:scale={motion({ start: 0.9, duration: 160 })}>
 				<span class="chip" data-active="true" style="color: var(--tone-tomorrow)">
 					<Repeat size={15} weight="bold" />
 					{formatRecurrence(parsed.recurrence, due)}
@@ -143,7 +137,7 @@
 		{/if}
 		<ReminderPicker {due} reminders={picked.reminders} onchange={(value) => (picked.reminders = value)} />
 		{#each reminderTokens as token, i (token.text + token.start)}
-			<div class="flex items-center" transition:scale={{ start: 0.9, duration: 160 }}>
+			<div class="flex items-center" transition:scale={motion({ start: 0.9, duration: 160 })}>
 				<span class="chip" data-active="true" style="color: var(--tone-week)">
 					<Bell size={15} weight="fill" />
 					{formatReminder(parsed.reminders[i]!, clock.today)}
@@ -152,13 +146,13 @@
 			</div>
 		{/each}
 		{#each store.labelsOf({ labelIds: picked.labelIds.filter((id) => !parsed.labelIds.includes(id)) }) as label (label.id)}
-			<span class="chip" data-active="true" transition:scale={{ start: 0.9, duration: 160 }}>
+			<span class="chip" data-active="true" transition:scale={motion({ start: 0.9, duration: 160 })}>
 				<Tag size={15} weight="fill" class="text-[var(--tone-label)]" />
 				{label.name}
 			</span>
 		{/each}
 		{#each labelTokens as { token, name } (token.start)}
-			<div class="flex items-center" transition:scale={{ start: 0.9, duration: 160 }}>
+			<div class="flex items-center" transition:scale={motion({ start: 0.9, duration: 160 })}>
 				<span class="chip" data-active="true">
 					<Tag size={15} weight="fill" class="text-[var(--tone-label)]" />
 					{name}

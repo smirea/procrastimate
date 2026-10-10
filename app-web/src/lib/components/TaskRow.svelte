@@ -12,7 +12,7 @@
 	import Checkbox from './Checkbox.svelte';
 	import SubtaskProgress from './SubtaskProgress.svelte';
 	import { store } from '../store.svelte.ts';
-	import { clock, sheets } from '../ui.svelte.ts';
+	import { clock, sheets, motion } from '../ui.svelte.ts';
 	import { PRIORITIES, dueTone, formatDue, formatTime, repeatLabel } from '../format.ts';
 	import { completeTask } from '../completion.ts';
 
@@ -34,7 +34,7 @@
 	}
 </script>
 
-<div class="group flex items-start gap-3 rounded-xl px-2 transition-colors hover:bg-surface/60" data-task={task.title}>
+<div class="group flex items-start gap-3 rounded-2xl px-2 transition-colors hover:bg-surface/60" data-task={task.title}>
 	<Checkbox checked={checking} tone={PRIORITIES[task.priority].tone} label={`Complete ${task.title}`} class="mt-3 touch:mt-3.5" onclick={complete} />
 	<button type="button" class="min-w-0 flex-1 py-2.5 text-left touch:min-h-11 touch:py-3" onclick={() => sheets.openTask(task.id)}>
 		<div class="truncate text-[14px] leading-5 text-ink transition-colors" class:done={checking}>{task.title}</div>
@@ -65,7 +65,7 @@
 				{#if labels.length}
 					<span class="flex min-w-0 flex-wrap items-center gap-1">
 						{#each labels as label (label.id)}
-							<span class="label-chip" data-label={label.name} transition:scale={{ start: 0.6, duration: 180, easing: cubicOut }}>
+							<span class="label-chip" data-label={label.name} transition:scale={motion({ start: 0.6, duration: 180, easing: cubicOut })}>
 								<Tag size={10} weight="fill" class="shrink-0 text-[var(--tone-label)]" />
 								<span class="truncate">{label.name}</span>
 							</span>

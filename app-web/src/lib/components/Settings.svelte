@@ -6,6 +6,7 @@
 	import type { ImportSummary } from 'shared/todoist.ts';
 	import ThemeSwitcher from './ThemeSwitcher.svelte';
 	import { store } from '../store.svelte.ts';
+	import { motion } from '../ui.svelte.ts';
 	import { readBackupZip } from '../todoist-import.ts';
 
 	type Status = { kind: 'idle' } | { kind: 'done'; summary: ImportSummary } | { kind: 'failed'; message: string };
@@ -48,7 +49,7 @@
 		{#if status.kind === 'done'}
 			{@const { summary } = status}
 			{#key summary}
-				<div role="status" aria-label="Import summary" class="flex flex-col gap-2" in:fly={{ y: 6, duration: 220, easing: cubicOut }}>
+				<div role="status" aria-label="Import summary" class="flex flex-col gap-2" in:fly={motion({ y: 6, duration: 220, easing: cubicOut })}>
 					<div class="grid grid-cols-3 gap-1.5">
 						{#each [plural(summary.projects, 'project'), plural(summary.tasks, 'task'), `${summary.skipped} skipped`] as stat (stat)}
 							{@const [count, ...words] = stat.split(' ')}
@@ -59,14 +60,14 @@
 						<p class="text-[12px] text-muted">{plural(summary.labels, 'label')} added</p>
 					{/if}
 					{#if summary.warnings.length}
-						<div class="flex flex-col gap-1" transition:slide={{ duration: 200, easing: cubicOut }}>
+						<div class="flex flex-col gap-1" transition:slide={motion({ duration: 200, easing: cubicOut })}>
 							<p class="flex items-center gap-1.5 text-[12px] font-medium text-muted">
 								<Warning size={14} />
 								{plural(summary.warnings.length, 'warning')}
 							</p>
 							<ul class="max-h-36 space-y-1 overflow-y-auto overscroll-contain text-[12px] text-muted" aria-label="Import warnings">
 								{#each summary.warnings as warning, i (i)}
-									<li class="rounded-md bg-ink/4 px-2 py-1">{warning}</li>
+									<li class="rounded-lg bg-ink/4 px-2 py-1">{warning}</li>
 								{/each}
 							</ul>
 						</div>
@@ -74,7 +75,7 @@
 				</div>
 			{/key}
 		{:else if status.kind === 'failed'}
-			<p role="alert" class="text-[13px] text-[var(--tone-overdue)]" in:fly={{ y: 6, duration: 220, easing: cubicOut }}>{status.message}</p>
+			<p role="alert" class="text-[13px] text-[var(--tone-overdue)]" in:fly={motion({ y: 6, duration: 220, easing: cubicOut })}>{status.message}</p>
 		{/if}
 	</section>
 </div>

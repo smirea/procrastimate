@@ -13,7 +13,7 @@
 	import { push, type PushState } from '../push.svelte.ts';
 	import { pushSchedule } from '../push-schedule.ts';
 	import { store } from '../store.svelte.ts';
-	import { clock, mobile, sheets } from '../ui.svelte.ts';
+	import { clock, mobile, sheets, motion } from '../ui.svelte.ts';
 
 	type Icon = Component<{ size?: number; weight?: 'regular' | 'fill' | 'bold'; class?: string }>;
 	type Action = { label: string; run: () => void; primary?: boolean; disabled?: boolean };
@@ -129,23 +129,23 @@
 
 	const enter = (node: Element) =>
 		mobile.current
-			? fly(node, { y: '100%', duration: 300, easing: cubicOut, opacity: 1 })
-			: scale(node, { start: 0.96, duration: 200, easing: cubicOut, opacity: 0 });
+			? fly(node, motion({ y: '100%', duration: 300, easing: cubicOut, opacity: 1 }))
+			: scale(node, motion({ start: 0.96, duration: 200, easing: cubicOut, opacity: 0 }));
 </script>
 
-<div class="fixed inset-0 z-40 bg-scrim backdrop-blur-[2px]" transition:fade={{ duration: 160 }} onclick={close} aria-hidden="true"></div>
+<div class="fixed inset-0 z-40 bg-scrim backdrop-blur-[2px]" transition:fade={motion({ duration: 160 })} onclick={close} aria-hidden="true"></div>
 <div
 	bind:this={dialog}
 	role="dialog"
 	aria-label="Notifications"
 	tabindex="-1"
-	class="glass-strong sheet fixed z-50 flex flex-col outline-none md:top-1/2 md:left-1/2 md:w-[min(420px,calc(100vw-2rem))] md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-2xl"
+	class="glass-strong sheet fixed z-50 flex flex-col outline-none md:top-1/2 md:left-1/2 md:w-[min(420px,calc(100vw-2rem))] md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-panel"
 	transition:enter
 >
 	<header class="flex justify-end px-3 pt-3">
 		<button
 			type="button"
-			class="grid size-8 place-items-center rounded-full text-muted transition-colors hover:bg-ink/5 hover:text-ink touch:size-11"
+			class="icon-btn"
 			aria-label="Close"
 			onclick={close}
 		>
@@ -153,7 +153,7 @@
 		</button>
 	</header>
 	{#key view.heading}
-		<div class="-mt-5 px-5 md:px-6" in:fade={{ duration: 180 }}>
+		<div class="-mt-5 px-5 md:px-6" in:fade={motion({ duration: 180 })}>
 			<div class="grid size-12 place-items-center rounded-2xl bg-accent/10 text-accent">
 				<view.icon size={26} weight="fill" />
 			</div>
@@ -164,7 +164,7 @@
 			{#if view.steps}
 				<ol class="mt-4 space-y-1.5" aria-label="Steps">
 					{#each view.steps as step, i (i)}
-						<li class="flex items-center gap-3 rounded-xl bg-ink/[0.04] px-3 py-2.5 text-[14px] touch:text-[15px]">
+						<li class="flex items-center gap-3 rounded-2xl bg-ink/[0.04] px-3.5 py-2.5 text-[14px] touch:text-[15px]">
 							<span class="grid size-6 shrink-0 place-items-center rounded-full bg-accent text-[12px] font-semibold text-on-accent">{i + 1}</span>
 							<span class="flex-1"
 								>{#each step.parts as part, j (j)}{#if typeof part === 'string'}{part}{:else}<strong class="font-semibold">{part.strong}</strong>{/if}{/each}</span

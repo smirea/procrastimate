@@ -1,21 +1,17 @@
 <script lang="ts">
+	import { motion } from '../ui.svelte.ts';
 	import { tick } from 'svelte';
 	import { scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
-	import Bell from 'phosphor-svelte/lib/Bell';
-	import CalendarBlank from 'phosphor-svelte/lib/CalendarBlank';
-	import Repeat from 'phosphor-svelte/lib/Repeat';
 	import type { QuickAddToken } from 'shared/quick-add.ts';
 	import { lastUsed, sigilFragment, suggest, type Named, type SigilFragment, type Suggestion } from 'shared/name-search.ts';
 	import NameSuggestions from './NameSuggestions.svelte';
 	import { store } from '../store.svelte.ts';
 	import { NAME_SOURCES, type NameKind } from '../names.ts';
-	import type { TimingSegment } from '../format.ts';
 
 	let {
 		value = $bindable(),
 		tokens,
-		timing = [],
 		label,
 		placeholder = '',
 		autofocus = false,
@@ -27,8 +23,6 @@
 	}: {
 		value: string;
 		tokens: QuickAddToken[];
-		/** Resolved timing shown above the input while it is focused and no suggestions are open. */
-		timing?: TimingSegment[];
 		label: string;
 		placeholder?: string;
 		autofocus?: boolean;
@@ -170,7 +164,6 @@
 
 	$effect(() => {
 		void suggestions.length;
-		void timing;
 		if (overlay) place(overlay);
 	});
 
@@ -225,35 +218,15 @@
 	{#if fragment && source && suggestions.length}
 		<div
 			bind:this={overlay}
-			class="glass-strong absolute left-0 z-20 w-[min(100%,20rem)] rounded-xl text-base font-normal"
+			class="glass-strong absolute left-0 z-20 w-[min(100%,20rem)] rounded-popover text-base font-normal"
 			class:bottom-full={placement.above}
 			class:top-full={!placement.above}
 			style:margin-block={`${GAP}px`}
 			style:max-height={placement.maxHeight ? `${placement.maxHeight}px` : undefined}
 			style:transform-origin={placement.above ? 'bottom left' : 'top left'}
-			transition:scale={{ start: 0.96, duration: 160, easing: cubicOut, opacity: 0 }}
+			transition:scale={motion({ start: 0.96, duration: 160, easing: cubicOut, opacity: 0 })}
 		>
 			<NameSuggestions id="{uid}-names" {source} {suggestions} query={fragment.query} {active} onpick={pick} />
-		</div>
-	{:else if focused && timing.length}
-		<div
-			bind:this={overlay}
-			role="status"
-			aria-label="Timing preview"
-			class="glass-strong pointer-events-none absolute left-0 z-20 flex max-w-full flex-wrap items-center gap-x-3 gap-y-0.5 overflow-hidden rounded-xl px-2.5 py-1.5 text-[13px] leading-5 font-normal text-ink touch:text-[14px]"
-			class:bottom-full={placement.above}
-			class:top-full={!placement.above}
-			style:margin-block={`${GAP}px`}
-			style:max-height={placement.maxHeight ? `${placement.maxHeight}px` : undefined}
-			style:transform-origin={placement.above ? 'bottom left' : 'top left'}
-			transition:scale={{ start: 0.96, duration: 160, easing: cubicOut, opacity: 0 }}
-		>
-			{#each timing as segment, i (segment.kind + i)}
-				{#if i > 0}<span class="sr-only">{' · '}</span>{/if}
-				<span class="timing-{segment.kind} inline-flex items-center gap-1"
-					>{#if segment.kind === 'due'}<CalendarBlank size={13} weight="fill" />{:else if segment.kind === 'recurrence'}<Repeat size={13} weight="bold" />{:else}<Bell size={13} weight="fill" />{/if}{segment.text}</span
-				>
-			{/each}
 		</div>
 	{/if}
 </div>
@@ -294,17 +267,6 @@
 	}
 	.token-label {
 		--tint: var(--token-label);
-	}
-
-	.timing-due :global(svg) {
-		color: var(--tone-today);
-	}
-	.timing-recurrence :global(svg) {
-		color: var(--tone-tomorrow);
-	}
-	.timing-notify :global(svg),
-	.timing-reminder :global(svg) {
-		color: var(--tone-week);
 	}
 
 	@keyframes token-in {
