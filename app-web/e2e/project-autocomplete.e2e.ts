@@ -22,7 +22,7 @@ test('# suggests projects as you type and the keyboard picks one', async ({ app,
 	const listBox = (await suggestions(app).boundingBox())!;
 	const inputBox = (await app.taskInput().boundingBox())!;
 	expect(listBox.y + listBox.height).toBeLessThanOrEqual(inputBox.y);
-	await page.evaluate(() => Promise.all(document.getAnimations().map(animation => animation.finished)));
+	await app.settle();
 	await page.screenshot({ path: 'test-results/project-autocomplete.png' });
 
 	await app.taskInput().press('ArrowDown');

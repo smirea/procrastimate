@@ -55,6 +55,13 @@ export class App {
 		await expect(this.page.getByRole('heading', { level: 1, name })).toBeVisible();
 	}
 
+	/** Waits for running animations. One that is cancelled, as when a newer transition replaces it, counts as settled. */
+	settle() {
+		return this.page.evaluate(() =>
+			Promise.all(document.getAnimations().map(animation => animation.finished.catch(() => undefined))),
+		);
+	}
+
 	async setNow(date: Date) {
 		await this.page.clock.setFixedTime(date);
 	}

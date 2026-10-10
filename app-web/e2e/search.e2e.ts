@@ -5,9 +5,6 @@ const field = (app: App) => dialog(app).getByRole('combobox', { name: 'Search' }
 const results = (app: App) => app.page.getByRole('listbox', { name: 'Search results' });
 const group = (app: App, name: string) => results(app).getByRole('group', { name: new RegExp(`^${name}`) });
 
-const settle = (app: App) =>
-	app.page.evaluate(() => Promise.allSettled(document.getAnimations().map(animation => animation.finished)));
-
 async function seed(app: App) {
 	await app.createProject('Home');
 	await app.go('Inbox');
@@ -64,11 +61,11 @@ test('search matches titles, notes, and projects, highlights them, and the keybo
 		'aria-selected',
 		'true',
 	);
-	await settle(app);
+	await app.settle();
 	await page.screenshot({ path: 'test-results/search/desktop-light.png' });
 	await page.emulateMedia({ colorScheme: 'dark' });
 	await app.expectTheme('dark');
-	await settle(app);
+	await app.settle();
 	await page.screenshot({ path: 'test-results/search/desktop-dark.png' });
 
 	await field(app).press('ArrowDown');
@@ -135,7 +132,7 @@ test('a label matches its tasks and opens the label view', async ({ app, page })
 	await expect(group(app, 'Tasks').getByRole('option')).toHaveText([/Plumber.*calls/, /Dentist.*calls/]);
 	await expect(group(app, 'Tasks').locator('mark')).toHaveText(['call', 'call']);
 	await expect(group(app, 'Labels').getByRole('option')).toHaveAttribute('aria-selected', 'true');
-	await settle(app);
+	await app.settle();
 	await page.screenshot({ path: 'test-results/search/labels.png' });
 
 	await field(app).fill('dentist waiting');

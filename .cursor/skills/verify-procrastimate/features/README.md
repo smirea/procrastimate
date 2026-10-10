@@ -2,7 +2,7 @@
 
 This directory is the maintained source for verifying the user-facing behavior of Procrastimate. Procrastimate is Stefan's personal task manager, a rough Todoist clone with one user, a web client, an iOS client, and an Apple Watch client later. It is local first and synced, every interaction responds instantly, and motion is subtle but satisfying. Features change often, so update the map with the feature and never keep entries for removed behavior.
 
-The web client covers adding, viewing, editing, completing, repeating, prioritizing, reminding, push notifications, labeling, searching, and theming, and every web step not marked `Planned:` is proven by a Playwright test named in its bullet. iOS, sync, completed-task history, and keyboard selection are still planned. A `Planned:` step describes the intended user path and the observable result, with no harness commands or stable handles. Replace it with exact commands when its feature and harness ship.
+The web client covers adding, viewing, editing, completing, subtasks, repeating, prioritizing, reminding, push notifications, labeling, searching, and theming, and every web step not marked `Planned:` is proven by a Playwright test named in its bullet. iOS, sync, completed-task history, and keyboard selection are still planned. A `Planned:` step describes the intended user path and the observable result, with no harness commands or stable handles. Replace it with exact commands when its feature and harness ship.
 
 ## Baseline preconditions
 
@@ -53,6 +53,7 @@ Keep implementation details out of the map. Name only user paths, stable handles
 - [Add a task](./add-task.md) covers quick add from each client, inline natural-language parsing and shorthands, recurrence, keep as text, defaults, and cancel.
 - [Complete a task](./complete-task.md) covers completion, undo, and the completion animation.
 - [Edit a task](./edit-task.md) covers title, notes, due date, priority, natural language in the title, and delete.
+- [Subtasks](./subtasks.md) covers adding, checking, reordering, and nesting subtasks, parent progress, and how completing or repeating a parent treats them.
 - [Recurring tasks](./recurring-tasks.md) covers setting a repeat, the repeat icon, and completing a recurring task to move it to its next occurrence.
 - [Priority](./priority.md) covers priority shortcuts, the priority picker, and priority colors.
 - [Reminders](./reminders.md) covers typed and picked reminders, due times that notify on their own, and reminders firing while the app is open.

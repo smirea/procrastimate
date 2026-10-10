@@ -24,6 +24,8 @@ const task = (projectId: string | null, createdAt: number, labelIds: string[] = 
 	id: `${projectId}-${createdAt}`,
 	title: 't',
 	notes: '',
+	parentId: null,
+	order: 0,
 	projectId,
 	labelIds,
 	due: null,

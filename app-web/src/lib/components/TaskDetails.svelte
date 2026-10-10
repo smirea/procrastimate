@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
-	import { fade, fly } from 'svelte/transition';
+	import { fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import X from 'phosphor-svelte/lib/X';
 	import Trash from 'phosphor-svelte/lib/Trash';
 	import Check from 'phosphor-svelte/lib/Check';
 	import ArrowCounterClockwise from 'phosphor-svelte/lib/ArrowCounterClockwise';
+	import CaretLeft from 'phosphor-svelte/lib/CaretLeft';
 	import { parseQuickAdd } from 'shared/quick-add.ts';
 	import type { Task } from 'shared/task.ts';
 	import SmartInput from './SmartInput.svelte';
@@ -15,17 +16,20 @@
 	import RecurrencePicker from './RecurrencePicker.svelte';
 	import ProjectPicker from './ProjectPicker.svelte';
 	import LabelPicker from './LabelPicker.svelte';
+	import Subtasks from './Subtasks.svelte';
 	import { store, type TaskPatch } from '../store.svelte.ts';
-	import { clock, mobile, sheets, toasts } from '../ui.svelte.ts';
+	import { clock, sheets, toasts, type Arrival } from '../ui.svelte.ts';
 	import { push } from '../push.svelte.ts';
 	import { describeTiming } from '../format.ts';
 	import { completeTask } from '../completion.ts';
 
-	let { task }: { task: Task } = $props();
+	let { task, arrival }: { task: Task; arrival: Arrival } = $props();
+
+	const parent = $derived(task.parentId ? store.task(task.parentId) : undefined);
 
 	let title = $state(untrack(() => task.title));
 	const parsed = $derived(
-		parseQuickAdd(title, { now: new Date(clock.now), projects: store.projects, labels: store.labels, due: task.due }),
+		parseQuickAdd(title, { now: new Date(clock.now), projects: parent ? [] : store.projects, labels: store.labels, due: task.due }),
 	);
 
 	const timing = $derived(
@@ -71,34 +75,43 @@
 		}
 	}
 
+	/** A subtask's details return to its parent once the subtask is done or gone. */
+	function leave(parentId: string | null) {
+		if (parentId) sheets.openTask(parentId, 'back');
+		else sheets.close();
+	}
+
 	function remove() {
-		const snapshot = $state.snapshot(task);
-		store.deleteTask(task.id);
-		sheets.close();
-		toasts.show(`Deleted “${snapshot.title}”`, { label: 'Undo', run: () => store.restoreTask(snapshot) });
+		const { parentId } = task;
+		const removed = store.deleteTask(task.id);
+		leave(parentId);
+		toasts.show(`Deleted “${removed[0]!.title}”`, { label: 'Undo', run: () => store.undeleteTasks(removed) });
 	}
 
 	function complete() {
+		const { parentId } = task;
 		completeTask(task);
-		sheets.close();
+		leave(parentId);
 	}
 
-	const enter = (node: Element) =>
-		mobile.current
-			? fly(node, { y: '100%', duration: 300, easing: cubicOut, opacity: 1 })
-			: fly(node, { x: 40, duration: 240, easing: cubicOut, opacity: 0 });
+	const slideFrom = { forward: 28, back: -28, none: 0 } satisfies Record<Arrival, number>;
 </script>
 
-<div class="fixed inset-0 z-40 bg-scrim backdrop-blur-[2px]" transition:fade={{ duration: 160 }} onclick={() => sheets.close()} aria-hidden="true"></div>
-<div
-	role="dialog"
-	aria-label="Task details"
-	class="glass-strong sheet fixed z-50 flex flex-col md:top-3 md:right-3 md:bottom-3 md:w-[min(440px,calc(100vw-1.5rem))] md:rounded-2xl"
-	transition:enter
->
-	<header class="flex items-center justify-between px-4 pt-3">
-		<ProjectPicker projectId={task.projectId} onchange={(projectId) => update({ projectId })} />
-		<div class="flex items-center gap-1">
+<div class="flex min-h-0 flex-1 flex-col" in:fly={{ x: slideFrom[arrival], duration: arrival === 'none' ? 0 : 220, easing: cubicOut }}>
+	<header class="flex items-center justify-between gap-2 px-4 pt-3">
+		{#if parent}
+			<button
+				type="button"
+				class="chip min-w-0"
+				aria-label={`Back to ${parent.title}`}
+				onclick={() => sheets.openTask(parent.id, 'back')}
+			>
+				<CaretLeft size={14} class="shrink-0" /><span class="truncate">{parent.title}</span>
+			</button>
+		{:else}
+			<ProjectPicker projectId={task.projectId} onchange={(projectId) => update({ projectId })} />
+		{/if}
+		<div class="flex shrink-0 items-center gap-1">
 			{#if task.completedAt === null}
 				<button type="button" class="btn btn-quiet" onclick={complete}><Check size={14} />Complete</button>
 			{:else}
@@ -110,13 +123,36 @@
 		</div>
 	</header>
 	<div class="px-4 pt-4">
-		<SmartInput bind:value={title} tokens={parsed.tokens} {timing} label="Title" enterkeyhint="done" class="text-[19px] font-semibold" {onkeydown} onblur={commitTitle} />
+		<SmartInput bind:value={title} tokens={parsed.tokens} {timing} label="Title" enterkeyhint="done" suggestProjects={!parent} class="text-[19px] font-semibold" {onkeydown} onblur={commitTitle} />
 	</div>
-	<!-- Outside the scroll area, which clips popovers while the keyboard is up and the picker's field raises it. -->
+	<!-- Outside the scroll area, which would clip the pickers' popovers. -->
+	<div class="flex flex-wrap gap-1.5 px-4 pt-3">
+		<DuePicker
+			due={task.due}
+			onchange={(due) => {
+				update({ due, recurrence: due ? task.recurrence : null });
+				push.nudge(due, task.reminders);
+			}}
+		/>
+		<RecurrencePicker
+			recurrence={task.recurrence}
+			due={task.due}
+			onchange={(recurrence, due) => update({ recurrence, due })}
+		/>
+		<PriorityPicker priority={task.priority} onchange={(priority) => update({ priority })} />
+		<ReminderPicker
+			due={task.due}
+			reminders={task.reminders}
+			onchange={(reminders) => {
+				update({ reminders });
+				push.nudge(task.due, reminders);
+			}}
+		/>
+	</div>
 	<div class="px-4 pt-3">
 		<LabelPicker labelIds={task.labelIds} onchange={(labelIds) => update({ labelIds })} />
 	</div>
-	<div class="sheet-scroll flex-1 space-y-4 px-4 pt-4 pb-4 md:min-h-0 md:overflow-y-auto">
+	<div class="flex-1 space-y-4 overflow-y-auto overscroll-contain px-4 pt-4 pb-4 min-h-0">
 		<textarea
 			aria-label="Notes"
 			placeholder="Notes"
@@ -125,29 +161,7 @@
 			value={task.notes}
 			oninput={(e) => update({ notes: e.currentTarget.value })}
 		></textarea>
-		<div class="flex flex-wrap gap-1.5">
-			<DuePicker
-				due={task.due}
-				onchange={(due) => {
-					update({ due, recurrence: due ? task.recurrence : null });
-					push.nudge(due, task.reminders);
-				}}
-			/>
-			<RecurrencePicker
-				recurrence={task.recurrence}
-				due={task.due}
-				onchange={(recurrence, due) => update({ recurrence, due })}
-			/>
-			<PriorityPicker priority={task.priority} onchange={(priority) => update({ priority })} />
-			<ReminderPicker
-				due={task.due}
-				reminders={task.reminders}
-				onchange={(reminders) => {
-					update({ reminders });
-					push.nudge(task.due, reminders);
-				}}
-			/>
-		</div>
+		<Subtasks {task} />
 	</div>
 	<footer class="border-t border-ink/5 px-4 py-3 touch:py-2">
 		<button type="button" class="btn text-[var(--tone-overdue)] hover:bg-[var(--token-priority)]" onclick={remove}><Trash size={14} />Delete task</button>

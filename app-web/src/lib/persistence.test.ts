@@ -86,4 +86,30 @@ describe('loadSnapshot', () => {
 			['Days on a daily repeat', { interval: 1, unit: 'day' }],
 		]);
 	});
+
+	test('a task stored before subtasks existed loads as a top-level task', () => {
+		storage.set('procrastimate', JSON.stringify({ tasks: [task('Old', null)], projects: [], remindersCheckedAt: 5 }));
+		expect(loadSnapshot(10).tasks.map(t => [t.title, t.parentId, t.order])).toEqual([['Old', null, 0]]);
+	});
+
+	test('a subtask whose parent did not load becomes a top-level task', () => {
+		storage.set(
+			'procrastimate',
+			JSON.stringify({
+				tasks: [
+					{ ...task('Parent', null), parentId: null },
+					{ ...task('Kept', null), parentId: 'Parent', order: 1 },
+					{ ...task('Orphan', null), parentId: 'Bad' },
+					task('Bad', { interval: null, unit: 'day' }),
+				],
+				projects: [],
+				remindersCheckedAt: 5,
+			}),
+		);
+		expect(loadSnapshot(10).tasks.map(t => [t.title, t.parentId, t.order])).toEqual([
+			['Parent', null, 0],
+			['Kept', 'Parent', 1],
+			['Orphan', null, 0],
+		]);
+	});
 });

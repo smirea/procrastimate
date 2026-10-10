@@ -11,14 +11,17 @@ function compareTasks(a: Task, b: Task) {
 
 const open = (tasks: readonly Task[]) => tasks.filter(t => t.completedAt === null);
 
+/** Inbox and projects list top-level tasks, and a subtask shows as progress on its parent. Dated views list subtasks too. */
+const topLevel = (tasks: readonly Task[]) => open(tasks).filter(t => t.parentId === null);
+
 export function inboxTasks(tasks: readonly Task[]) {
-	return open(tasks)
+	return topLevel(tasks)
 		.filter(t => t.projectId === null)
 		.toSorted(compareTasks);
 }
 
 export function projectTasks(tasks: readonly Task[], projectId: string) {
-	return open(tasks)
+	return topLevel(tasks)
 		.filter(t => t.projectId === projectId)
 		.toSorted(compareTasks);
 }
