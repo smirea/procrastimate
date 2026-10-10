@@ -24,5 +24,17 @@
 			}
 		}
 	],
-	"ignorePatterns": ["node_modules", "dist", "build", "generated", "**/generated", "**/*.generated.ts", "**/*.gen.ts"]
+	"ignorePatterns": [
+		"node_modules",
+		"dist",
+		"build",
+		"generated",
+		"**/generated",
+		"**/*.generated.ts",
+		"**/*.gen.ts",
+		".svelte-kit",
+		"**/.svelte-kit",
+		"test-results",
+		"playwright-report"
+	]
 }

@@ -1,14 +1,15 @@
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
-import env from './src/env.ts';
-import react from '@vitejs/plugin-react';
-import { tanstackRouter } from '@tanstack/router-plugin/vite';
+import { sveltekit } from '@sveltejs/kit/vite';
+import adapter from '@sveltejs/adapter-static';
 import tailwindcss from '@tailwindcss/vite';
+import env from './env.ts';
 
 const allowedHosts = env.CLIENT_HOST ? [env.CLIENT_HOST] : undefined;
 
 export default defineConfig({
 	resolve: {
-		tsconfigPaths: true,
+		alias: { shared: fileURLToPath(new URL('../shared', import.meta.url)) },
 	},
 	server: {
 		host: '127.0.0.1',
@@ -25,11 +26,9 @@ export default defineConfig({
 		},
 	},
 	plugins: [
-		tanstackRouter({
-			target: 'react',
-			autoCodeSplitting: true,
-		}) as any,
-		react(),
-		tailwindcss() as any,
+		tailwindcss(),
+		sveltekit({
+			adapter: adapter({ fallback: '200.html' }),
+		}),
 	],
 });

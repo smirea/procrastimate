@@ -1,9 +1,25 @@
 {
-    "name": "app-web",
-    "private": true,
-    "type": "module",
-    "scripts": {
-        "start": "bunx --bun vite",
-        "dev": "bun run start"
-    }
+	"name": "app-web",
+	"private": true,
+	"type": "module",
+	"imports": {
+		"#lib/*": "./src/lib/*"
+	},
+	"scripts": {
+		"start": "bun --env-file=.env.local --bun run vite",
+		"dev": "bun run start",
+		"build": "bun --env-file=.env.local --bun run vite build",
+		"check": "bun --env-file=.env.local --bun run svelte-kit sync && bun --env-file=.env.local run svelte-check --tsconfig ./tsconfig.json",
+		"test:e2e": "playwright test"
+	},
+	"devDependencies": {
+		"@playwright/test": "^1.64.0",
+		"@sveltejs/adapter-static": "^4.0.0",
+		"@sveltejs/kit": "^3.0.1",
+		"@sveltejs/vite-plugin-svelte": "^7.3.1",
+		"phosphor-svelte": "^3.1.1",
+		"svelte": "^5.57.2",
+		"svelte-check": "^4.7.6",
+		"typescript": "^6"
+	}
 }

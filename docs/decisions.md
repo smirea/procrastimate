@@ -22,3 +22,39 @@ This is the single source for Procrastimate's concepts, goals, paradigms, and hi
   - **Motion.** Sheets and popovers grow from their source and settle with spring easing. Lists reflow with animated position changes.
   - **Spacing.** Use a 4 pt grid, rounded continuous corners, and touch-sized hit targets (at least 32 px on web, 44 pt on iOS).
   - **Controls.** Use controls with direct native counterparts: list rows with leading checkboxes, a sidebar that maps to a tab bar or split view, sheets for creation and details, menus for pickers, and toasts for undo. Avoid web-only patterns such as hover-only actions and multi-level dropdowns.
+
+## Domain
+
+- **Task.** A title, optional notes, an optional project, an optional due date with an optional time, a priority, a list of reminders, and an optional completion time.
+- **Inbox.** Tasks without a project. Inbox is a view, not a project.
+- **Today.** Incomplete tasks due today or earlier. Overdue tasks are marked.
+- **Upcoming.** Incomplete tasks due after today, grouped by day.
+- **Project.** A named group of tasks. Deleting a project deletes its tasks.
+- **Priority.** Todoist's four levels. `p1` is the most urgent and `p4` is the default with no marking.
+- **Reminder.** Either relative to the due time (for example 30 minutes before) or at an absolute date and time. A relative reminder needs a due time to fire. Reminders fire as an in-app toast and, when the browser allows it, a system notification, while the app is open.
+
+## Quick add and natural language
+
+- **Todoist quick add is the reference.** One input captures the title and its attributes. Recognized phrases are highlighted inline as you type and removed from the saved title. Clicking a highlighted phrase keeps it as plain text.
+- **The same parser runs in quick add and in the task details title field.**
+- **Repeated phrases.** Date, priority, and project take the last matching phrase, because attributes usually trail the title. `Today task today` saves `Today task` due today. Reminders keep every match.
+- **Pickers win over text.** Choosing a date, priority, or project with a picker removes the matching phrase from the input. Pickers close on selection.
+- **Dates.** `today`, `tonight`, `tomorrow`, weekdays (`fri`, `next monday`), `next week`, `in 3 days`, and month dates (`oct 12`, `12 october`). Times are `5pm`, `5:30pm`, `17:00`, `noon`, optionally after `at`. A time with no date means today.
+- **Priority.** `p1` to `p4`. `!!!` and `urgent` mean `p1`. `!!` and `important` mean `p2`. A single `!` is never parsed, because it is common in titles.
+- **Reminders.** `remind me 30m before`, `remind me 1 hour before`, `remind me at 4pm`, and `remind me tomorrow 9am`. Todoist uses a leading `!` for reminders. Procrastimate does not, because `!!` is a priority shortcut.
+- **Projects.** `#Name` assigns an existing project, matched case-insensitively. It is highlighted only when the project exists.
+- **Not yet compared against live Todoist.** Todoist's login captcha blocked automated access, so the repeated-phrase rule and the `!!` mapping are our own calls.
+
+## Stack
+
+- **Tooling.** Bun and TypeScript. Oxlint, oxfmt, and Lefthook for linting and hooks.
+- **Web client.** Svelte 5 (runes) with SvelteKit 3 as a client-only single-page app (`ssr = false`, static adapter with a `200.html` fallback), Vite, and Tailwind CSS. Chosen for a small runtime, fine-grained reactivity, and built-in transitions and FLIP animations that suit the snappy, animated UX. React and TanStack Router are gone.
+- **TypeScript versions.** The root uses TypeScript 7 (`tsc`) for `server/` and `shared/`. `app-web/` pins TypeScript 6 because SvelteKit and `svelte-check` need the TypeScript JS API, which TypeScript 7 does not ship. Bun's isolated linker keeps the two apart.
+- **Web env reader.** SvelteKit 3 reserves `src/env.ts`, so env-manager generates the web client's Node-only reader at `app-web/env.ts`. Scripts pass `--env-file=.env.local` because Bun does not auto-load env files when it runs Vite through its `node` shim.
+- **Server.** Bun.serve API. It holds no task data yet.
+- **Shared domain code.** Environment-independent types and logic, including the natural-language parser, live in `shared/` so the server can reuse them.
+
+## Persistence and sync
+
+- **Web persistence.** The whole store is one JSON document in `localStorage`, validated on load and written synchronously on every change. Invalid stored data is discarded, since there is no backwards compatibility.
+- **Sync.** Not built yet. The store's mutations are discrete commands so they can become a sync log later.

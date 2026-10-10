@@ -10,7 +10,11 @@
 		"generated",
 		"**/generated",
 		"**/*.generated.ts",
-		"**/*.gen.ts"
+		"**/*.gen.ts",
+		".svelte-kit",
+		"**/.svelte-kit",
+		"test-results",
+		"playwright-report"
 	],
 	"printWidth": 120,
 	"useTabs": true,

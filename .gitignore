@@ -3,6 +3,10 @@ node_modules
 # output
 out
 dist
+build
+.svelte-kit
+test-results
+playwright-report
 *.tgz
 
 # dotenv environment variable files

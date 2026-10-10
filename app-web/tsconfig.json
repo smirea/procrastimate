@@ -1,0 +1,12 @@
+{
+	"extends": "$app/tsconfig",
+	"include": ["src", "e2e", "*"],
+	"exclude": ["src/service-worker"],
+	"compilerOptions": {
+		"allowImportingTsExtensions": true,
+		"types": ["$app/types", "bun"],
+		"paths": {
+			"shared/*": ["../shared/*"]
+		}
+	}
+}
