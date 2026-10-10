@@ -57,6 +57,6 @@
 
 <style>
 	.menu-item[data-active='true'] {
-		background: rgb(24 24 27 / 0.06);
+		background: color-mix(in srgb, currentColor 7%, transparent);
 	}
 </style>

@@ -200,7 +200,7 @@
 	{#if fragment && suggestions.length}
 		<div
 			bind:this={overlay}
-			class="glass-strong absolute left-0 z-20 w-[min(100%,20rem)] rounded-xl bg-white/95 text-base font-normal"
+			class="glass-strong absolute left-0 z-20 w-[min(100%,20rem)] rounded-xl text-base font-normal"
 			class:bottom-full={placement.above}
 			class:top-full={!placement.above}
 			style:margin-block={`${GAP}px`}
