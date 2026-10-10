@@ -87,7 +87,7 @@
 			</button>
 		</div>
 	</header>
-	<div class="flex-1 space-y-4 px-4 pt-4 pb-4 md:overflow-y-auto">
+	<div class="sheet-scroll flex-1 space-y-4 px-4 pt-4 pb-4 md:min-h-0 md:overflow-y-auto">
 		<SmartInput bind:value={title} tokens={parsed.tokens} label="Title" enterkeyhint="done" class="text-[19px] font-semibold" {onkeydown} onblur={commitTitle} />
 		<textarea
 			aria-label="Notes"

@@ -1,3 +1,4 @@
+import type { Locator } from '@playwright/test';
 import { expect, test, type App } from './fixtures.ts';
 
 const nav = (app: App) => app.page.getByRole('navigation', { name: 'Main' });
@@ -30,6 +31,22 @@ async function add(app: App, ...titles: string[]) {
 	await app.quickAdd().getByRole('button', { name: 'Cancel' }).tap();
 	await expect(app.quickAdd()).toBeHidden();
 }
+
+const KEYBOARD = 300;
+
+/** Playwright cannot raise the iOS keyboard, so shrink the visual viewport the way it does. */
+async function openKeyboard(app: App) {
+	await app.page.evaluate(height => {
+		const visual = window.visualViewport!;
+		Object.defineProperty(visual, 'height', { configurable: true, get: () => window.innerHeight - height });
+		visual.dispatchEvent(new Event('resize'));
+	}, KEYBOARD);
+}
+
+const bottom = async (locator: Locator) => {
+	const box = (await locator.boundingBox())!;
+	return box.y + box.height;
+};
 
 async function shot(app: App, name: string) {
 	await app.page.evaluate(() => Promise.all(document.getAnimations().map(animation => animation.finished)));
@@ -93,18 +110,8 @@ test('quick add docks above the keyboard and parses a reminder and priority', as
 	await expect(sheet.getByText('30m before', { exact: true })).toBeVisible();
 	await shot(app, 'quick-add');
 
-	const keyboard = 300;
-	await page.evaluate(height => {
-		const visual = window.visualViewport!;
-		Object.defineProperty(visual, 'height', { configurable: true, get: () => window.innerHeight - height });
-		visual.dispatchEvent(new Event('resize'));
-	}, keyboard);
-	await expect
-		.poll(async () => {
-			const box = (await sheet.boundingBox())!;
-			return box.y + box.height;
-		})
-		.toBeLessThanOrEqual(viewport.height - keyboard);
+	await openKeyboard(app);
+	await expect.poll(async () => bottom(sheet)).toBeLessThanOrEqual(viewport.height - KEYBOARD);
 
 	await sheet.getByRole('button', { name: 'Add task' }).tap();
 	await expect(app.taskInput()).toHaveValue('');
@@ -142,6 +149,14 @@ test('task details open as a sheet and edit fields', async ({ app, page }) => {
 	await expect(menu).toBeHidden();
 	await expect(details.getByRole('button', { name: 'Priority 1' })).toBeVisible();
 	await shot(app, 'task-details');
+
+	await openKeyboard(app);
+	const limit = page.viewportSize()!.height - KEYBOARD;
+	await expect.poll(async () => bottom(details)).toBeLessThanOrEqual(limit);
+	expect(await bottom(details.getByRole('button', { name: 'Delete task' }))).toBeLessThanOrEqual(limit);
+	const chip = details.getByRole('button', { name: 'Due Friday 6pm' });
+	await chip.scrollIntoViewIfNeeded();
+	expect(await bottom(chip)).toBeLessThanOrEqual(limit);
 
 	await details.getByRole('button', { name: 'Close' }).tap();
 	await expect(details).toBeHidden();

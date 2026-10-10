@@ -14,6 +14,7 @@ export function trackKeyboardInset() {
 	const update = () => {
 		const inset = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop);
 		document.documentElement.style.setProperty('--keyboard-inset', `${Math.round(inset)}px`);
+		document.documentElement.toggleAttribute('data-keyboard', inset > 0);
 	};
 	update();
 	viewport.addEventListener('resize', update);

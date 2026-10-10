@@ -254,5 +254,11 @@
 			border-radius: 1.75rem;
 			transition: bottom 240ms var(--ease-spring);
 		}
+
+		/* A scroll container would clip picker popovers, so sheet bodies scroll only while the keyboard leaves them short. */
+		:root[data-keyboard] .sheet-scroll {
+			min-height: 0;
+			overflow-y: auto;
+		}
 	}
 }
