@@ -3,7 +3,10 @@ import { expect, test, type App } from './fixtures.ts';
 const suggestions = (app: App) => app.page.getByRole('listbox', { name: 'Labels' });
 const chips = (app: App, title: string) => app.row(title).locator('.label-chip');
 const labelLink = (app: App, name: string) =>
-	app.page.getByRole('navigation', { name: 'Main' }).getByRole('region', { name: 'Labels' }).getByRole('link', { name });
+	app.page
+		.getByRole('navigation', { name: 'Main' })
+		.getByRole('region', { name: 'Labels' })
+		.getByRole('link', { name });
 
 /** Creates each label from the `@` create row, then discards the draft. */
 async function createLabels(app: App, ...names: string[]) {

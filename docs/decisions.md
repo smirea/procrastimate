@@ -43,12 +43,14 @@ This is the single source for Procrastimate's concepts, goals, paradigms, and hi
 
 ## Domain
 
-- **Task.** A title, optional notes, an optional project, an optional due date with an optional time, an optional recurrence, a priority, a list of reminders, and an optional completion time.
+- **Task.** A title, optional notes, an optional project, any number of labels, an optional due date with an optional time, an optional recurrence, a priority, a list of reminders, and an optional completion time.
 - **Recurrence.** Repeats every interval of days, weekdays (Monday to Friday), weeks, months, or years, counted from the due date. A recurring task is one task whose due date moves forward. It has no separate history of past occurrences.
 - **Inbox.** Tasks without a project. Inbox is a view, not a project.
 - **Today.** Incomplete tasks due today or earlier. Overdue tasks are marked.
 - **Upcoming.** Incomplete tasks due after today, grouped by day.
 - **Project.** A named group of tasks. Deleting a project deletes its tasks.
+- **Label.** A named tag that crosses projects. A task carries any number of labels, stored as label ids in the order they were added. A label owns no tasks, so deleting a label only takes it off its tasks. Labels with no tasks still exist and still show in the sidebar.
+- **Label view.** Every open task carrying a label, across all projects and Inbox, with each row naming its project. Quick add from a label view starts with that label.
 - **Priority.** Todoist's four levels. `p1` is the most urgent and `p4` is the default with no marking.
 - **Reminder.** Either relative to the due time (for example 30 minutes before) or at an absolute date and time. A relative reminder needs a due time to fire. A due time is itself a reminder. Any task with a due time notifies at that time with no reminder set, and reminders add to it, such as 30 minutes before. A date with no time never notifies. A task notifies once per moment, so a reminder at the due time does not notify twice. A repeating task notifies at each occurrence's due time, because completing it moves the due date. Reminders fire as an in-app toast and, when the browser allows it, a system notification, while the app is open.
 
@@ -56,7 +58,7 @@ This is the single source for Procrastimate's concepts, goals, paradigms, and hi
 
 - **Todoist quick add is the reference.** One input captures the title and its attributes. Recognized phrases are highlighted inline as you type and removed from the saved title. Clicking a highlighted phrase keeps it as plain text.
 - **The same parser runs in quick add and in the task details title field.**
-- **Repeated phrases.** Date, recurrence, priority, and project take the last matching phrase, because attributes usually trail the title. `Today task today` saves `Today task` due today. Reminders keep every match.
+- **Repeated phrases.** Date, recurrence, priority, and project take the last matching phrase, because attributes usually trail the title. `Today task today` saves `Today task` due today. Reminders and labels keep every match.
 - **Timing preview.** While the focused title text carries a date, repeat, or reminder, a small glass panel above the input spells out what will be saved, such as `Mon Oct 19 at 9:00 AM`, `Repeats every Mon`, and `Remind 10 min before (8:50 AM)`. A due time adds `Notifies at 5:00 PM`, and a reminder at the due time folds into it instead of showing twice. It shows the due date and repeat in effect, including ones set by a picker or already on the task, and every reminder the save would keep, with relative reminders resolved to a clock time. It updates on every keystroke, hides when the text carries no timing, and gives way to `#` suggestions while they are open. It sits above the input because on a phone that is the only space left above the keyboard, and it flips below only when there is more room there.
 - **Pickers win over text.** Choosing a date, priority, or project with a picker removes the matching phrase from the input. Pickers close on selection.
 - **Days.** `today`, `tomorrow`, and `tom`, `tmr`, `tmrw`. `tonight` is today at 8pm. `eod` is today at 5pm. `eow` is the coming Friday at 5pm, today on a Friday. A typed time replaces these default times, as in `tonight 9pm`.
@@ -75,13 +77,25 @@ This is the single source for Procrastimate's concepts, goals, paradigms, and hi
   - A bare `19xx` or `20xx` is a year. Write `at 2030` for 8:30pm.
   - A number after `$`, `€`, or `£`, or after a decimal point, is not a time or an offset.
   - `1/2` still reads as January 2. Keep it as text when it means a half.
-- **Parsing order.** Reminders claim their text first, then recurrence, project, priority, and the due date. A later rule never reads text an earlier rule recognized, so `every wed 9am` is one repeat and one time. That includes a phrase kept as text and an earlier copy of a repeated phrase, so keeping `every mon` as text never turns `mon` into a due date.
+  - A word right after `#` or `@` is a name or a handle, so `@5pm`, `@tomorrow`, `@p1`, and `@urgent` stay text.
+- **Parsing order.** Reminders claim their text first, then recurrence, project, labels, priority, and the due date. A later rule never reads text an earlier rule recognized, so `every wed 9am` is one repeat and one time. That includes a phrase kept as text and an earlier copy of a repeated phrase, so keeping `every mon` as text never turns `mon` into a due date.
 - **Projects.** `#Name` assigns an existing project, matched case-insensitively. It is highlighted only when the project exists.
+- **Labels.** `@name` adds an existing label, matched case-insensitively, anywhere in the text. Every `@label` counts, and a label typed twice is added once. Like `#`, the `@` must start the text or follow a space, and the name must end the word, so `bob@site.com`, `you@calls`, `@calls.com`, and `@callsign` stay text. An `@word` that names no label stays in the title. Keep as text works per label, from the chip next to it. Typing labels in the task details title adds them to the task's labels and never removes any.
 - **`#` autocomplete.** Typing `#` at the start of the text or after a space opens a project list above the input, filtered by the text after `#`. The filter may contain spaces only while it still starts a project name, so multi-word names stay searchable. Picking replaces the fragment with `#Name ` and keeps focus in the input.
   - **Order.** Best match first: exact name, then name prefix, then word prefix, then substring, all case-insensitive. Within a tier, the project that most recently received a new task comes first, then alphabetical. Recency is derived from task creation times, so it needs no stored field.
   - **Create.** When no project name equals the filter, the last row offers `Create project "<filter>"`, which creates the project and inserts it.
   - **Keys.** Up and down move the selection, Tab picks, and Enter picks unless the filter already names a project exactly and the selection was not moved, so `Fix sink #home` plus Enter still saves. Escape closes the list for that `#` without closing the sheet. Tapping a row picks it.
+- **`@` autocomplete.** `@` opens a label list with the same rules as `#`: the same fragment rules, order, create row (`Create label "<filter>"`), keys, and taps. Recency is the newest task carrying the label. When the caret follows both a `#` and an `@`, the nearer one wins. One suggestion list serves both, driven by a table of the two kinds, so a fix to one applies to the other.
 - **Not yet compared against live Todoist.** Todoist's login captcha blocked automated access, so the repeated-phrase rule and the `!!` mapping are our own calls.
+
+## Labels UI
+
+- **Rows.** A row shows its labels as small tinted chips after its date, repeat, and reminders, wrapping onto a second line when space runs out.
+- **Sidebar.** A Labels section below Projects lists every label alphabetically with its open task count. It appears once a label exists, because labels are created inline, so an empty section would only add clutter.
+- **Details picker.** A `Labels` chip on its own row under the title opens a menu with a filter field and the labels in autocomplete order, each with a check. A tap toggles a label and keeps the menu open, unlike single-value pickers, since a task often takes several labels. Enter toggles the highlighted row or creates the typed label. The field takes focus on desktop only, so a phone keeps its keyboard down until the field is tapped. The row sits outside the details body because the body scrolls while the keyboard is up, and a scroll container clips popovers.
+- **Quick add.** No label picker, since `@` covers it and one more chip wraps the chip row on a phone. Typed labels and a label view's default label show as chips.
+- **Label actions.** A label view's header renames or deletes the label. Delete confirms and keeps the tasks.
+- **Search.** Matching tasks by label name belongs to search. Search had not landed when labels shipped, so the search PR wires it in.
 
 ## Recurring tasks
 
