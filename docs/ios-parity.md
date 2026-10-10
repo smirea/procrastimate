@@ -165,7 +165,8 @@ The web's Web Push rows map to native local notifications. XCUITests check the p
 
 | Feature | Web | iOS | Slice | XCUITest | Playwright | Screenshot |
 | --- | --- | --- | --- | --- | --- | --- |
-| `settings-sheet`: Settings in Browse (popover on desktop web, sheet on phone web) | ✓ | Planned | S8 | `SettingsParityTests.test_settings_sheet` | `settings › settings-sheet` | `settings-sheet.png` |
+| `settings-popover`: the desktop sidebar's settings popover (*web only*) | ✓ | n/a | — | — | — | — |
+| `settings-sheet`: Settings in Browse (the phone web's settings sheet) | ✓ | Planned | S8 | `SettingsParityTests.test_settings_sheet` | `settings › settings-sheet` | `settings-sheet.png` |
 | `settings-theme`: the `Theme` segmented control | ✓ | Planned | S8 | `SettingsParityTests.test_settings_theme` | `settings › settings-theme` | `settings-theme.png` |
 | `settings-import`: `Import from Todoist` | ✓ | Planned | S8 | see Todoist import | see Todoist import | — |
 | `theme-system`: follows the device appearance live | ✓ | Planned | S8 | `ThemeParityTests.test_theme_system` | `theme › theme-system` | `theme-system-light.png`, `theme-system-dark.png` |
@@ -225,7 +226,7 @@ Critical path: S1 → S2 → S3 → S5 → S6, S7, and S8 together.
   - Add `shared/vectors/record.ts`, `bun run vectors`, and the vectors staleness step in `ci.yml`'s `checks` job.
   - Port the model and the snapshot Codable (with the web snapshot vector), dates, recurrence, `notificationTimes`, subtasks, views, format, and the store rules to `Core`, plus `VectorTests`.
 - **S3: Parser port.** The quick add parser and name search (`#` and `@` suggestion order) in `Core`, with `recorded` wrappers in `quick-add.test.ts` and `name-search.test.ts` and their vector files. This is the largest logic port, at about 650 lines of TS tests.
-- **S4: Search and import logic port.** `search`, `excerpt`, the CSV reader, the Todoist reader and merge, and the zip reader in `Core`, with vectors from `search.test.ts`, `csv.test.ts`, and `todoist.test.ts`, including the synthetic backup.
+- **S4: Search and import logic port.** `search`, `excerpt`, the CSV reader, and the Todoist reader and merge in `Core`, with vectors from `search.test.ts`, `csv.test.ts`, and `todoist.test.ts`, including the synthetic backup. The zip reader goes in `App` under S8, because it needs Apple's `Compression` framework.
 - **S5: Lists and quick add.**
   - The JSON file store.
   - The Inbox, Today, Upcoming, and project or label list rendering, task rows with chips and the repeat icon, checkbox and swipe completion, swipe delete, the undo toast, and tab badges.
@@ -233,5 +234,5 @@ Critical path: S1 → S2 → S3 → S5 → S6, S7, and S8 together.
 - **S6: Task details, subtasks, recurrence.** The details sheet and its `NavigationStack`, title parsing, notes, and the date, priority, project, labels, repeat, and reminder pickers, plus delete. Subtasks: add, check, drag reorder, nest, and the parent cascade.
 - **S7: Projects, labels, and search UI.** The Browse tab's projects and labels with counts, project and label screens with rename and delete, and the search tab with groups, highlights, completed tasks, `Reopen`, and hardware keyboard shortcuts.
 - **S8: Settings, theme, import, notifications.**
-  - The Settings screen with the theme control and accessibility fallbacks, and Todoist import with the fixture copied in by CI.
+  - The Settings screen with the theme control and accessibility fallbacks, and Todoist import (the `Compression`-based zip reader plus the picker), using the fixture CI copies in.
   - Local notifications: the scheduler with a 60-request window, background refresh, the foreground toast, the permission screen, the nudge, a test notification, and opening a task from its notification.
