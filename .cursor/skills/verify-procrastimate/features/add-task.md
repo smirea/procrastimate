@@ -52,7 +52,7 @@ Preconditions:
 - Pressing `q` inside a text field types the letter instead of opening quick add.
 - Playwright cannot open a real on-screen keyboard. The phone test simulates one by overriding `visualViewport.height` and firing `resize`. Confirm keyboard docking on a real iPhone.
 - Date words parse relative to the device clock and time zone. Assert the date the app shows, not one you computed. Run the suite with its pinned clock rather than the wall clock.
-- `docs/decisions.md` lists every phrase, default, and guard. `bun test shared/quick-add.test.ts` proves each one with the clock pinned. Use those tests for a phrase-by-phrase check instead of the UI.
+- `docs/decisions/quick-add.md` lists every phrase, default, and guard. `bun test shared/quick-add.test.ts` proves each one with the clock pinned. Use those tests for a phrase-by-phrase check instead of the UI.
 - A time with no day lands tomorrow once it has passed. At the pinned 10:00, `9am` reads `Tomorrow 9am`.
 - A date, recurrence, priority, or project phrase that appears twice uses the last one. `Today task today` saves `Today task` due today.
 - The highlight layer sits behind the input and is `aria-hidden`. Find tokens with the `[data-token="due"]`, `recurrence`, `priority`, `reminder`, `project`, and `label` selectors, and read values from the chips.
