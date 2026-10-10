@@ -24,8 +24,8 @@ struct RootView: View {
         }
         .tabViewStyle(.sidebarAdaptable)
         .tabBarMinimizeBehavior(.onScrollDown)
-        .sheet(item: $navigator.sheet) { SheetView(sheet: $0) }
         .tint(Palette.accent)
+        .sheet(item: $navigator.sheet) { SheetView(sheet: $0) }
     }
 }
 
@@ -58,11 +58,15 @@ private struct SheetView: View {
     let sheet: Sheet
 
     var body: some View {
-        switch sheet {
-        case let .quickAdd(defaults): QuickAddSheet(defaults: defaults)
-        case let .details(taskID): TaskDetailsSheet(taskID: taskID)
-        case .search: NavigationStack { SearchScreen() }
-        case .settings: SettingsSheet()
+        // Sheets are separate presentations and do not inherit the tab view's tint.
+        Group {
+            switch sheet {
+            case let .quickAdd(defaults): QuickAddSheet(defaults: defaults)
+            case let .details(taskID): TaskDetailsSheet(taskID: taskID)
+            case .search: NavigationStack { SearchScreen() }
+            case .settings: SettingsSheet()
+            }
         }
+        .tint(Palette.accent)
     }
 }
