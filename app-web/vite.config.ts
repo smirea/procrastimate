@@ -21,14 +21,13 @@ export default defineConfig({
 				target: env.API_URL,
 				changeOrigin: true,
 				secure: false,
-				rewrite: (path: string) => path.replace(/^\/api/, ''),
 			},
 		},
 	},
 	plugins: [
 		tailwindcss(),
 		sveltekit({
-			adapter: adapter({ fallback: '200.html' }),
+			adapter: adapter({ fallback: 'index.html' }),
 		}),
 	],
 });

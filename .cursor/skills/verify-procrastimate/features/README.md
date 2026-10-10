@@ -8,6 +8,7 @@ The web client covers adding, viewing, editing, completing, prioritizing, and re
 
 - Generate env values with `env-manager gen --local`, then start the web client and server with `bun run start` from the repo root.
 - The web client answers at `http://127.0.0.1:6120` or `http://procrastimate.localhost:6120` and opens on Inbox. The API answers `GET /api/status` through the client proxy with `{"ok":true}`. Every request the page makes stays on the client's origin, proven by `e2e/single-origin.e2e.ts`.
+- The production build runs locally with `bun run preview` at `http://127.0.0.1:8787`, serving the client and `/api` on one origin like the deployed Worker. `E2E_WORKER=1 bun run test:e2e` runs the web suite against it after `bun run build`.
 - Web data lives in the browser's `localStorage` under the `procrastimate` key. A fresh browser profile is the baseline state with no tasks or projects.
 - Run the automated web suite with `bun run test:e2e` from the repo root, after `bunx playwright install --with-deps chromium webkit` once in `app-web/`. It starts its own client on port 6130 with a fresh profile per test and a clock pinned to Wednesday, October 14 2026, 10:00 UTC, so it can run while the dev server is up. Filter with `bun run test:e2e -- <file> -g "<test name>"`.
 - The suite has two Playwright projects. `desktop` runs every file except `e2e/mobile.e2e.ts` in Chromium at 1280×800. `mobile` runs only `e2e/mobile.e2e.ts` in WebKit with the `iPhone 15 Pro` profile (393×659, touch). Pick one with `--project desktop` or `--project mobile`.

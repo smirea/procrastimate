@@ -55,10 +55,10 @@ This is the single source for Procrastimate's concepts, goals, paradigms, and hi
 ## Stack
 
 - **Tooling.** Bun and TypeScript. Oxlint, oxfmt, and Lefthook for linting and hooks.
-- **Web client.** Svelte 5 (runes) with SvelteKit 3 as a client-only single-page app (`ssr = false`, static adapter with a `200.html` fallback), Vite, and Tailwind CSS. Chosen for a small runtime, fine-grained reactivity, and built-in transitions and FLIP animations that suit the snappy, animated UX. React and TanStack Router are gone.
+- **Web client.** Svelte 5 (runes) with SvelteKit 3 as a client-only single-page app (`ssr = false`, static adapter with an `index.html` fallback), Vite, and Tailwind CSS. Chosen for a small runtime, fine-grained reactivity, and built-in transitions and FLIP animations that suit the snappy, animated UX. React and TanStack Router are gone.
 - **TypeScript versions.** The root uses TypeScript 7 (`tsc`) for `server/` and `shared/`. `app-web/` pins TypeScript 6 because SvelteKit and `svelte-check` need the TypeScript JS API, which TypeScript 7 does not ship. Bun's isolated linker keeps the two apart.
 - **Web env reader.** SvelteKit 3 reserves `src/env.ts`, so env-manager generates the web client's Node-only reader at `app-web/env.ts`. Scripts pass `--env-file=.env.local` because Bun does not auto-load env files when it runs Vite through its `node` shim.
-- **Server.** Bun.serve API. It holds no task data yet.
+- **Server.** One fetch handler in `server/src/api.ts` that owns every `/api/*` route. Bun.serve runs it in development, and the Cloudflare Worker runs the same module in production. It holds no task data yet.
 - **Shared domain code.** Environment-independent types and logic, including the natural-language parser, live in `shared/` so the server can reuse them.
 
 ## Dev hosting
@@ -71,6 +71,17 @@ This is the single source for Procrastimate's concepts, goals, paradigms, and hi
 - **The box starts the client with `--host $HOST --port $PORT` and `__VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS=.ts.net`.** Keep the web client compatible with that launch. Vite CLI flags must keep overriding the config's host and port, so never hardcode a bind address or port that flags cannot change. `server.allowedHosts` must stay an array, because Vite only appends the extra hosts to an array. The `/api` proxy must keep working through any allowed host.
 - **Use the full tailnet name.** `.ts.net` admits `stf-box.<tailnet>.ts.net`. Vite blocks the bare `stf-box` short name unless the box adds it to the extra allowed hosts.
 - **Don't depend on a secure context.** Local runs and tests still use plain HTTP, so browser APIs limited to secure contexts, such as `crypto.randomUUID`, need a fallback.
+
+## Production hosting
+
+- **One Cloudflare Worker on the free plan.** It serves the built client as static assets and runs `server/src/api.ts` for `/api/*`, so the browser talks to one origin in production too. It lives at the `procrastimate` Worker's `workers.dev` URL until a custom domain is worth it. `wrangler.jsonc` at the repo root configures it.
+- **Static SPA plus a Worker API, not `adapter-cloudflare`.** The client has no server rendering, so `adapter-cloudflare` would only add a SvelteKit server runtime in front of every page and move the API into SvelteKit routes. With `adapter-static`, `not_found_handling: "single-page-application"`, and `run_worker_first: ["/api/*"]`, pages and assets are served without invoking the Worker. Only API calls run code.
+- **Free-tier fit.** Static asset requests are free and unlimited. Only `/api/*` counts against the 100,000 requests a day, and today the client makes none. The Worker bundle is under 1 KiB against a 64 MiB limit and does no work worth measuring against the 10 ms CPU limit. The client build is 29 files and 325 KB, with the largest file at 114 KB, against 20,000 files and 25 MiB per file.
+- **No server storage yet.** Tasks stay in `localStorage`. D1, KV, and Durable Objects wait for sync, which is when the server first needs state.
+- **API paths are the same everywhere.** Routes are mounted at `/api/*` in the handler itself. The Vite proxy forwards `/api` unchanged, and native clients call `API_URL` plus `/api/...`.
+- **Deploys run from GitHub Actions.** `.github/workflows/ci.yml` runs on every pull request and every push to `master`. It typechecks, runs unit tests, builds, validates the Worker bundle with `wrangler deploy --dry-run`, and runs the end-to-end suite against `wrangler dev` serving the build. On `master` it then runs `wrangler deploy`. Actions won over Workers Builds because the pipeline stays in the repo, one workflow covers the pull request check and the deploy, and it reuses the setup of Stefan's `email-save` Worker.
+- **Deploy credentials.** The workflow reads the `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` repository secrets, the same names `email-save` uses. Without them the deploy step is skipped with a warning, so `master` stays green.
+- **Hashed assets are cached forever.** `app-web/static/_headers` marks `/_app/immutable/*` as immutable, so repeat visits load from the browser cache.
 
 ## Persistence and sync
 

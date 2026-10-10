@@ -11,9 +11,21 @@ bun run start:server
 bun test                       # unit tests
 bun run check                  # typecheck root and app-web
 bun run test:e2e               # Playwright desktop and iPhone suites (bunx playwright install --with-deps chromium webkit once)
+bun run preview                # build and serve the production Worker locally with wrangler dev
 ```
 
-The client proxies `/api/*` to the API and removes the `/api` prefix. For example, `/api/status` reaches the server's `/status`. The local web hostname and ports are configured during scaffolding; inspect the root `.env` for defaults.
+The client proxies `/api/*` to the API unchanged, so `/api/status` reaches the server's `/api/status`. The local web hostname and ports are configured during scaffolding; inspect the root `.env` for defaults.
+
+## Deploys
+
+Production is one Cloudflare Worker (`wrangler.jsonc`) on the free plan. It serves `app-web/build` as static assets and runs `server/src/api.ts` for `/api/*`. `.github/workflows/ci.yml` checks every pull request and deploys every push to `master` with `wrangler deploy`.
+
+Deploys need two repository secrets in GitHub (Settings > Secrets and variables > Actions):
+
+- `CLOUDFLARE_ACCOUNT_ID`, the Cloudflare account ID.
+- `CLOUDFLARE_API_TOKEN`, an API token made from the "Edit Cloudflare Workers" template.
+
+Without them CI still passes and skips the deploy with a warning.
 
 ## Environment
 
