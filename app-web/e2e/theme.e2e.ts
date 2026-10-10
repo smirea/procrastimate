@@ -67,7 +67,7 @@ test('glass turns solid when the device asks for more contrast', async ({ app, p
 	await page.emulateMedia({ contrast: 'more' });
 	await expect(sidebar).toHaveCSS('backdrop-filter', 'none');
 	await expect(sidebar).toHaveCSS('background-color', 'rgb(251, 251, 252)');
-	await app.themeOption('Dark').click();
+	await page.emulateMedia({ colorScheme: 'dark' });
 	await expect(sidebar).toHaveCSS('background-color', 'rgb(38, 38, 43)');
 });
 
