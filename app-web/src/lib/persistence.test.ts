@@ -59,4 +59,29 @@ describe('loadSnapshot', () => {
 		expect(snapshot.tasks[0]!.labelIds).toEqual(['l']);
 		expect(snapshot.labels).toEqual([{ id: 'l', name: 'calls', createdAt: 1 }]);
 	});
+
+	test('a weekday set survives a reload, and stored repeats without one still load', () => {
+		storage.set(
+			'procrastimate',
+			JSON.stringify({
+				tasks: [
+					task('Gym', { interval: 1, unit: 'week', days: [5, 1, 3] }),
+					task('Review', { interval: 1, unit: 'week' }),
+					task('Water', { interval: 2, unit: 'day' }),
+					task('Old', undefined),
+					task('Empty set', { interval: 1, unit: 'week', days: [] }),
+					task('Days on a daily repeat', { interval: 1, unit: 'day', days: [1] }),
+				],
+				projects: [],
+				remindersCheckedAt: 5,
+			}),
+		);
+		expect(loadSnapshot(10).tasks.map(t => [t.title, t.recurrence])).toEqual([
+			['Gym', { interval: 1, unit: 'week', days: [1, 3, 5] }],
+			['Review', { interval: 1, unit: 'week' }],
+			['Water', { interval: 2, unit: 'day' }],
+			['Old', null],
+			['Days on a daily repeat', { interval: 1, unit: 'day' }],
+		]);
+	});
 });

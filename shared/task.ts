@@ -14,8 +14,17 @@ export type Reminder = { kind: 'before'; minutes: number } | { kind: 'at'; date:
 /** `weekday` counts Monday to Friday only. */
 export type RecurrenceUnit = 'day' | 'weekday' | 'week' | 'month' | 'year';
 
-/** Repeats every `interval` units, counted from the due date. A weekly repeat keeps the due date's weekday. */
-export type Recurrence = { interval: number; unit: RecurrenceUnit };
+/** Sunday is 0, as in `Date#getDay`. */
+export type Weekday = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+
+/**
+ * Repeats every `interval` units, counted from the due date. A weekly repeat keeps the due date's
+ * weekday, or, with `days`, repeats on each listed weekday of every `interval`-th week. `days` is
+ * never empty and is sorted Monday first.
+ */
+export type Recurrence =
+	| { interval: number; unit: Exclude<RecurrenceUnit, 'week'> }
+	| { interval: number; unit: 'week'; days?: readonly Weekday[] };
 
 export type Task = {
 	id: string;
@@ -102,6 +111,34 @@ export function isWeekday(key: DateKey): boolean {
 	return day !== 0 && day !== 6;
 }
 
+export const weekdayOf = (key: DateKey) => fromDateKey(key).getDay() as Weekday;
+
+/** Monday is 0 and Sunday is 6, since weeks start on Monday. */
+export const mondayIndex = (day: Weekday) => (day + 6) % 7;
+
+/** Dedupes and sorts Monday first, the stored order of `days`. */
+export function sortWeekdays(days: Iterable<Weekday>): readonly Weekday[] {
+	return [...new Set(days)].toSorted((a, b) => mondayIndex(a) - mondayIndex(b));
+}
+
+/**
+ * The occurrence after `date`. A weekday set moves to the next listed day of the same week, or past
+ * Sunday to the first listed day `interval` weeks after this week's Monday.
+ */
+export function stepRecurrence(date: DateKey, recurrence: Recurrence): DateKey {
+	if (recurrence.unit !== 'week' || !recurrence.days) return addInterval(date, recurrence.interval, recurrence.unit);
+	const position = mondayIndex(weekdayOf(date));
+	const later = recurrence.days.find(day => mondayIndex(day) > position);
+	if (later !== undefined) return addDays(date, mondayIndex(later) - position);
+	return addDays(date, recurrence.interval * 7 - position + mondayIndex(recurrence.days[0]!));
+}
+
+/** The first occurrence on or after `date`: `date` itself unless a weekday set leaves it out. */
+export function alignToRecurrence(date: DateKey, recurrence: Recurrence): DateKey {
+	const off = recurrence.unit === 'week' && recurrence.days && !recurrence.days.includes(weekdayOf(date));
+	return off ? stepRecurrence(date, { ...recurrence, interval: 1 }) : date;
+}
+
 const daysBetween = (from: DateKey, to: DateKey) =>
 	Math.round((fromDateKey(to).getTime() - fromDateKey(from).getTime()) / 86_400_000);
 
@@ -115,11 +152,11 @@ export function nextOccurrence(
 	task: Pick<Task, 'due' | 'recurrence' | 'reminders'>,
 	today: DateKey,
 ): { due: Due; reminders: Reminder[] } | null {
-	if (!task.recurrence) return null;
-	const { interval, unit } = task.recurrence;
+	const recurrence = task.recurrence;
+	if (!recurrence) return null;
 	const from = task.due?.date ?? today;
-	let date = addInterval(from, interval, unit);
-	while (date <= today) date = addInterval(date, interval, unit);
+	let date = stepRecurrence(from, recurrence);
+	while (date <= today) date = stepRecurrence(date, recurrence);
 	const shift = daysBetween(from, date);
 	return {
 		due: { date, time: task.due?.time ?? null },

@@ -1,5 +1,14 @@
 import { describe, expect, test } from 'bun:test';
-import { addInterval, nextOccurrence, notificationTimes, type Due, type Recurrence, type Reminder } from './task.ts';
+import {
+	addInterval,
+	alignToRecurrence,
+	nextOccurrence,
+	notificationTimes,
+	stepRecurrence,
+	type Due,
+	type Recurrence,
+	type Reminder,
+} from './task.ts';
 
 const at = (date: Date) => date.toISOString();
 const times = (due: Due | null, reminders: Reminder[] = []) => notificationTimes(due, reminders).map(at);
@@ -134,6 +143,64 @@ describe('nextOccurrence', () => {
 	test('a task without a repeat has no next occurrence', () => {
 		expect(next({ date: '2026-10-14', time: null }, null)).toBe(null);
 		expect(next(null, { interval: 1, unit: 'day' })?.due).toEqual({ date: '2026-10-15', time: null });
+	});
+});
+
+const MWF: Recurrence = { interval: 1, unit: 'week', days: [1, 3, 5] };
+
+describe('stepRecurrence on a weekday set', () => {
+	test.each([
+		['Mon to Wed', '2026-10-12', MWF, '2026-10-14'],
+		['Wed to Fri', '2026-10-14', MWF, '2026-10-16'],
+		['Fri wraps to next Mon', '2026-10-16', MWF, '2026-10-19'],
+		['an unlisted Tue goes to Wed', '2026-10-13', MWF, '2026-10-14'],
+		['an unlisted Sat wraps to Mon', '2026-10-17', MWF, '2026-10-19'],
+		['Sat to Sun stays in the week', '2026-10-17', { interval: 1, unit: 'week', days: [6, 0] }, '2026-10-18'],
+		['Sun wraps to Sat', '2026-10-18', { interval: 1, unit: 'week', days: [6, 0] }, '2026-10-24'],
+		['every 2 weeks, Thu wraps two weeks', '2026-10-15', { interval: 2, unit: 'week', days: [2, 4] }, '2026-10-27'],
+		['every 2 weeks, Tue to Thu', '2026-10-13', { interval: 2, unit: 'week', days: [2, 4] }, '2026-10-15'],
+		['a single listed day steps a week', '2026-10-14', { interval: 1, unit: 'week', days: [3] }, '2026-10-21'],
+		['no set keeps the interval', '2026-10-14', { interval: 3, unit: 'day' }, '2026-10-17'],
+	] as const)('%s', (_, from, recurrence, expected) => {
+		expect(stepRecurrence(from, recurrence)).toBe(expected);
+	});
+
+	test.each([
+		['a listed day stays', '2026-10-14', MWF, '2026-10-14'],
+		['an unlisted day moves to the next listed one', '2026-10-15', MWF, '2026-10-16'],
+		['every 2 weeks still starts this week', '2026-10-13', { interval: 2, unit: 'week', days: [5] }, '2026-10-16'],
+		[
+			'every 2 weeks past the last day starts next week',
+			'2026-10-17',
+			{ interval: 2, unit: 'week', days: [1] },
+			'2026-10-19',
+		],
+		['no set leaves the date alone', '2026-10-15', { interval: 1, unit: 'week' }, '2026-10-15'],
+	] as const)('alignToRecurrence: %s', (_, from, recurrence, expected) => {
+		expect(alignToRecurrence(from, recurrence)).toBe(expected);
+	});
+});
+
+describe('nextOccurrence on a weekday set', () => {
+	test.each([
+		['completed on time Wed moves to Fri', '2026-10-14', '2026-10-16'],
+		['overdue from Mon skips today, a listed Wed, to Fri', '2026-10-12', '2026-10-16'],
+		['overdue from last Fri skips to Fri', '2026-10-09', '2026-10-16'],
+		['a future Fri moves to next Mon', '2026-10-16', '2026-10-19'],
+	] as const)('%s', (_, date, expected) => {
+		expect(next({ date, time: '07:00' }, MWF)?.due).toEqual({ date: expected, time: '07:00' });
+	});
+
+	test('the due time and a relative reminder notify at the next listed day', () => {
+		const rolled = next({ date: '2026-10-14', time: '07:00' }, MWF, [{ kind: 'before', minutes: 10 }])!;
+		expect(times(rolled.due, rolled.reminders)).toEqual([local('2026-10-16', '06:50'), local('2026-10-16', '07:00')]);
+	});
+
+	test('an absolute reminder shifts by the days between occurrences', () => {
+		const rolled = next({ date: '2026-10-16', time: '07:00' }, MWF, [
+			{ kind: 'at', date: '2026-10-15', time: '20:00' },
+		])!;
+		expect(rolled.reminders).toEqual([{ kind: 'at', date: '2026-10-18', time: '20:00' }]);
 	});
 });
 

@@ -1,10 +1,23 @@
 import { z } from 'zod';
-import type { DateKey, Label, Project, Task, TimeOfDay } from 'shared/task.ts';
+import {
+	sortWeekdays,
+	type DateKey,
+	type Label,
+	type Project,
+	type Task,
+	type TimeOfDay,
+	type Weekday,
+} from 'shared/task.ts';
 
 const STORAGE_KEY = 'procrastimate';
 
 const dateKey = z.custom<DateKey>(v => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v));
 const timeOfDay = z.custom<TimeOfDay>(v => typeof v === 'string' && /^\d{2}:\d{2}$/.test(v));
+const interval = z.number().int().positive();
+const weekdays = z
+	.array(z.custom<Weekday>(v => Number.isInteger(v) && (v as number) >= 0 && (v as number) <= 6))
+	.min(1)
+	.transform(sortWeekdays);
 
 const taskSchema = z.object({
 	id: z.string(),
@@ -15,7 +28,10 @@ const taskSchema = z.object({
 	labelIds: z.array(z.string()).default([]),
 	due: z.object({ date: dateKey, time: timeOfDay.nullable() }).nullable(),
 	recurrence: z
-		.object({ interval: z.number().int().positive(), unit: z.enum(['day', 'weekday', 'week', 'month', 'year']) })
+		.discriminatedUnion('unit', [
+			z.object({ interval, unit: z.enum(['day', 'weekday', 'month', 'year']) }),
+			z.object({ interval, unit: z.literal('week'), days: weekdays.optional() }),
+		])
 		.nullable()
 		.default(null),
 	priority: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]),

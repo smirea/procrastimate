@@ -4,6 +4,7 @@ import {
 	reminderFiresAt,
 	toDateKey,
 	toTimeOfDay,
+	weekdayOf,
 	type DateKey,
 	type Due,
 	type Priority,
@@ -57,9 +58,15 @@ export function formatMinutes(minutes: number): string {
 	return `${minutes}m`;
 }
 
-export function formatRecurrence({ interval, unit }: Recurrence, due: Due | null): string {
-	if (unit === 'week' && interval === 1 && due) {
-		return `Every ${fromDateKey(due.date).toLocaleDateString('en-US', { weekday: 'short' })}`;
+export const WEEKDAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
+
+/** `Every Mon`, `Every Mon, Wed, Fri`, `Every 2 weeks on Tue, Thu`, `Every 3 days`. */
+export function formatRecurrence(recurrence: Recurrence, due: Due | null): string {
+	const { interval, unit } = recurrence;
+	const days = unit === 'week' ? (recurrence.days ?? (due && interval === 1 ? [weekdayOf(due.date)] : null)) : null;
+	if (days) {
+		const names = days.map(day => WEEKDAY_NAMES[day]).join(', ');
+		return interval === 1 ? `Every ${names}` : `Every ${interval} weeks on ${names}`;
 	}
 	return interval === 1 ? `Every ${unit}` : `Every ${interval} ${unit}s`;
 }
