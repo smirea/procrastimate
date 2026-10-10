@@ -1,0 +1,80 @@
+# iOS app
+
+- **A native SwiftUI app at feature parity with the web app.** It does everything the web client does, as listed row by row in [iOS parity](../ios-parity.md), and looks like the web app per [Visual language](visual-language.md), with native iOS 26 Liquid Glass chrome, sheets, lists, swipe actions, menus, date pickers, search, and haptics instead of web lookalikes. Apple Watch and distribution come later.
+
+## Project and architecture
+
+- **Build on the existing `app-ios/` scaffold.** It already has `Package.swift`, `App.xcodeproj` with a file-system-synchronized `Sources/App` group and the shared `App` scheme, the bundle id `com.stefan.procrastimate`, the env-manager `Config/` bridge, and the `scripts/run` launcher behind `bun run start:ios`. Nothing gets a second project or launcher.
+- **iOS 26 is the minimum, iPhone first.** Liquid Glass (`glassEffect`, `GlassEffectContainer`, `.buttonStyle(.glass)` and `.glassProminent`), the bottom search tab (`Tab(role: .search)`), and `TextEditor` bound to an `AttributedString` all need iOS 26. Stefan is the only user and runs current iOS, so there is no reason to support older versions. The macOS 14 app target is dropped. iPad runs the same app with `.sidebarAdaptable` tabs and no extra design work.
+- **Two targets: `Core` and `App`.**
+  - `Sources/Core` is a SwiftPM library with Foundation only, no SwiftUI or UIKit. It holds the model, the store and its commands, and the Swift port of the shared logic. `swift test` runs `Tests/CoreTests` on macOS and on Linux, so cloud agents without Xcode can build and test the logic.
+  - `Sources/App` is the SwiftUI app, which depends on `Core`. `Tests/AppUITests` holds the XCUITests. Both are synchronized folders in `App.xcodeproj`, so later work adds files without editing `project.pbxproj`.
+- **Logic stays out of views.** Every rule that decides what a task is, where it shows, or what a chip says lives in `Core` and is covered by the test vectors. Views only render `Core` values and send store commands.
+- **Inject the clock and time zone.** `Core` never reads `Date()`, `TimeZone.current`, or `Calendar.current` itself. The app passes a clock and calendar in, so tests and vectors pin them. A DEBUG-only launch environment (`PROCRASTIMATE_NOW`, `PROCRASTIMATE_TZ`, `PROCRASTIMATE_RESET`) lets XCUITests start from an empty store at the web suite's pinned moment, Wednesday, October 14 2026, 10:00 UTC.
+- **Dependencies stay at zero.** Unzipping uses a small in-house zip reader on top of Apple's `Compression` framework (raw DEFLATE), mirroring the web's 30-line CSV reader. ZIPFoundation is the fallback if Todoist zips use features the reader does not handle.
+
+## UI mapping
+
+- **Navigation.** A `TabView` with Inbox, Today, Upcoming, Browse, and a search tab (`role: .search`), opening on Inbox like the web. Browse lists projects and labels with their open counts, then Notifications and Settings, like the web sidebar. Inbox and Today show their open counts as tab badges. The tab bar minimizes on scroll. This maps to the web drawer's contents with native chrome.
+- **Add button.** A floating `.glassProminent` plus button above the tab bar on every task list, like the web's floating `Quick add`. On iPad with a hardware keyboard, `q` opens quick add, and `/` and Cmd-K open search.
+- **Lists.** Plain `List`s on the solid base layer with a leading priority-tinted checkbox, the date, repeat icon, reminders, and label chips. Each row has a leading swipe that completes it, a trailing swipe that deletes it with undo, and a context menu. Rows animate in and out with list animations, and the checkbox fills on the first frame.
+- **Sheets.** Quick add is a short sheet docked above the keyboard. Task details is a sheet with a `NavigationStack`, so opening a subtask pushes it with a back button named after the parent. Search and settings never stack with another sheet, as on the web.
+- **Pickers.** The date, priority, reminder, and project chips open `Menu`s, and the date chip offers presets plus a graphical `DatePicker`. Pickers that must stay open across taps (the repeat menu's weekday toggles and the labels picker) are popovers with `presentationCompactAdaptation(.popover)`, because a `Menu` closes on every tap.
+- **Smart input.** Quick add, the details title, and the add-subtask field share one input: a `TextEditor` on an `AttributedString` that tints parsed phrases with the same token colors as the web, the chip row below it with `Keep as text`, and the `#` and `@` suggestion list above it, driven by one table of the two kinds like the web.
+- **Undo.** A glass toast at the bottom with `Undo`, five seconds, matching the web's text such as `Completed "Standup", next due Friday 9am`.
+- **Haptics.** `.sensoryFeedback`: success on complete, selection on picker changes and weekday toggles, and a light impact when a subtask drag picks up and drops. Nothing buzzes on typing.
+- **Colors.** A script generates `Sources/App/Theme/Tokens.swift` from the semantic tokens in `app-web/src/index.css`, with light and dark values for `ink`, `muted`, `accent`, priorities, date tones, and parser highlights, and CI fails when the generated file is stale. Materials are the system's: glass for floating chrome and solid backgrounds for content.
+- **Accessibility.** System glass and materials already turn solid under Reduce Transparency and Increase Contrast. Custom motion reads `accessibilityReduceMotion` and becomes instant, like the web's `motion()`. Every control has an accessibility label that matches the web's accessible name, so XCUITests and Playwright find the same handles.
+- **Theme.** `System`, `Light`, and `Dark` live in Settings, stored in `UserDefaults` under `procrastimate-theme` and applied with `preferredColorScheme` before the first frame. `System` stores nothing.
+
+## Shared logic and test vectors
+
+- **Swift ports of `shared/`.** `Core` ports the quick add parser, dates and recurrence (`nextOccurrence`, `alignToRecurrence`, `stepRecurrence`, month clamping), `notificationTimes` and `reminderFiresAt`, subtasks (complete, reopen, move, orphans, progress), name search for `#` and `@`, search with ranking and highlights, the CSV reader, and the Todoist reader and merge.
+- **Move app-side pure logic into `shared/` first.** `app-web/src/lib/views.ts` (list membership and order), `format.ts` (chip, row, and toast strings), and the notification body text in `push-schedule.ts` decide what both clients show, so they move to `shared/` with their tests and get vectors too. The store's commands (`addTask`, `updateTask`, completion and undo, delete and undelete, project and label rename and delete, import) become pure functions over the snapshot in `shared/store.ts`, so the Svelte store and the Swift store both call the same rules.
+- **One JSON corpus, recorded from the TS unit tests.** `shared/vectors/<module>.json` holds `{ fn, test, input, output }` cases. The TS tests wrap each ported function with `recorded('<module>', fn)` from `shared/vectors/record.ts`. With `VECTORS=record`, every call during `bun test shared` writes its input and the real TS output. Outside record mode the wrapper does nothing. The test assertions prove the TS output is the intended behavior, and the corpus carries it to Swift, so there is one source of cases and no hand-written expectations to drift.
+- **Generating it.** `bun run vectors` runs the shared tests in record mode with `TZ=America/New_York`, which has a DST change inside the corpus window (November 1, 2026), so time zone bugs show up instead of hiding behind UTC. Files are pretty-printed with sorted keys and cases in test order, so a diff reads as a behavior change. Dates are recorded as epoch milliseconds plus the zone in each file's header, and `DateKey` and `TimeOfDay` stay strings.
+- **Checking both sides.** The web `checks` job runs `bun run vectors` and `git diff --exit-code shared/vectors`, which fails when TS behavior changed without regenerating the corpus. The iOS workflow's `core` job runs `swift test`, where `VectorTests` decodes every file and asserts that the Swift port returns the recorded output for each case. A TS change that alters behavior therefore turns iOS CI red until the Swift port matches.
+- **One data shape.** `Core`'s Codable snapshot is the same JSON document as the web's `procrastimate` localStorage value. A vector holds a web-written snapshot, which Swift must decode and re-encode unchanged. Loading follows the web's rules: an invalid task is dropped on its own, new optional fields default, and an invalid document is discarded, with no migrations.
+
+## Data
+
+- **Standalone local store.** The store is one JSON snapshot in Application Support, held in an `@Observable` store on the main actor. Every command applies in memory at once and writes atomically off the main actor, coalesced so a burst of edits is one write. Several thousand tasks encode in a few milliseconds, which fits the snappy bar without an index.
+- **Not SwiftData.** The ported logic works on value arrays of tasks, exactly like the TS. SwiftData would force a mapping between `@Model` objects and those values on every command, add migrations the product does not want, and move the document away from the web's shape, which a future sync or a manual transfer can use as is.
+- **Todoist import on iOS.** `Import from Todoist` in Settings opens `.fileImporter` for a `.zip`, and the app also accepts a zip shared or opened into it. The same reader and merge as the web run on the device, nothing uploads, and the summary and warnings read the same. The XCUITest uses the same synthetic backup as the web suite: CI zips `shared/fixtures/todoist-backup.mts` with Bun and copies the zip into the app's Documents folder on the simulator, and the test picks it under On My iPhone in the document picker, so it goes through the real file picker.
+- **No sync.** Each client keeps its own store, as each web browser does now. Sync stays the separate project described in [Persistence and sync](persistence.md). Feature parity does not need it, but using both clients day to day does, which is Stefan's call.
+
+## Notifications
+
+- **Local notifications, no server.** The app schedules `UNNotificationRequest`s with `UNCalendarNotificationTrigger` for each future moment from `notificationTimes`. A due time is a reminder, a date with no time never notifies, and a moment notifies once, exactly as [Domain](domain.md) says. Titles and bodies come from the shared notification text, such as `Due now` or `Due at 6:00 PM`. Notifications need no APNs, no push entitlement, and no Worker.
+- **Replace the whole schedule after every change.** Like the web's `PUT /api/push/schedule`, the app computes the full schedule after each command, debounced, and diffs it against the pending requests. Each identifier is the shared `pushTag` (`<taskId>:<epoch ms>`), so a re-add replaces the request instead of duplicating it, and completing, editing, deleting, and restoring need no cancel path. A repeating task schedules its next occurrence once completing moves its date.
+- **iOS keeps at most 64 pending requests.** The app schedules the soonest 60 and refills when it opens, comes to the foreground, after each change, and from a `BGAppRefreshTask`. Moments past the window still fire if Stefan opens the app within the gap. Each delivered notification is a reminder to open the app, which then refills the window.
+- **In the foreground, toast only.** The notification center delegate's `willPresent` returns no banner and the app shows the `Reminder: <title>` toast with `Open`, matching the web rule that the open app shows the toast and leaves the system notification to the background.
+- **Asking for permission.** The app never prompts on its own. The Notifications screen in Browse explains what will notify and asks only from `Turn on notifications`. The first timed task saved while notifications are off shows a once-per-launch `Get notified when it's due?` toast that opens that screen. A denied permission links to the app's page in Settings. Web-only states (Add to Home Screen, server unavailable, unsupported) do not exist on iOS.
+- **Tapping a notification opens its task** in task details from the `taskId` in its payload. `Send a test notification` schedules one five seconds out.
+
+## Build and verification
+
+- **Cloud agents have no Xcode.** They write Swift on Linux, run `swift test` for `Core` locally with a Swift toolchain, and rely on macOS CI for the app, simulator, and screenshots.
+- **A separate iOS workflow.** `.github/workflows/ios.yml` runs on every pull request and push to `master`, apart from `ci.yml`, so it never slows the web checks or blocks the Worker deploy. It has no path filter, because a required check behind a path filter stays pending forever, and macOS runners are free for public repositories. Its jobs run in parallel:
+  - `core` (`macos-26`): `swift test` for `Core`, including `VectorTests`.
+  - `core-linux` (`ubuntu-latest`, `swift` container): the same `swift test`, so what agents run locally matches CI.
+  - `app` (`macos-26`, Xcode 26): checks `Tokens.swift` is fresh, builds the app, then runs `xcodebuild test` with the XCUITests on an iPhone 16 simulator (393 points wide, the same width as Playwright's iPhone 15 Pro profile) on the iOS 26 runtime with `TZ=UTC`. Screenshots are `XCTAttachment`s named after their parity id, exported with `xcrun xcresulttool export attachments` and uploaded as the `ios-parity` artifact with the `.xcresult` bundle.
+  - `web-parity` (`ubuntu-latest`): runs the Playwright `parity` project and uploads `app-web/test-results/parity/` as the `web-parity` artifact.
+  - `parity-report`: after `app` and `web-parity`, it downloads both artifacts and uploads `parity-report`, a static HTML page that shows each parity id's web and iOS screenshots side by side.
+- **Paired parity tests.** Each row of the parity checklist has one XCUITest and one Playwright test that run the same scenario: the same seed through quick add, the same pinned clock, the same taps, and equivalent assertions on the same accessible names and visible strings.
+  - XCUITests live in `app-ios/Tests/AppUITests/<Area>ParityTests.swift` as `test_<parity_id>`.
+  - Playwright tests live in `app-web/e2e/parity/<area>.e2e.ts`, titled `<parity-id>: <scenario>`, in a `parity` project that runs WebKit with the iPhone 15 Pro profile. The existing `desktop` and `mobile` projects and their tests stay unchanged.
+  - Both sides save `<parity-id>.png`: web under `app-web/test-results/parity/`, iOS in the `ios-parity` artifact.
+  - Rules that do not need UI, such as every parser phrase and guard, are proven by the vectors. The UI test covers one representative scenario.
+- **Feature map.** Each slice replaces the `iOS: Planned` entries of the features it ships in `.cursor/skills/verify-procrastimate/features/` with the XCUITest command and names, and updates its rows in [iOS parity](../ios-parity.md).
+
+## Distribution (not planned yet)
+
+- **TestFlight and the App Store need:**
+  - An Apple Developer Program membership ($99 a year) and its team id.
+  - The App ID `com.stefan.procrastimate` registered, plus an App Store Connect app record.
+  - An Apple Distribution certificate and an App Store provisioning profile. For CI, an App Store Connect API key in repository secrets with `xcodebuild -allowProvisioningUpdates` or fastlane `match`.
+  - A 1024-point app icon and launch screen, a privacy manifest (`PrivacyInfo.xcprivacy`) and privacy label (no data collected), and `ITSAppUsesNonExemptEncryption = NO`.
+  - Incrementing build numbers.
+  - Internal TestFlight testers need no App Review. The App Store does.
+- **Without a membership,** a free personal team can install on Stefan's own iPhone from Xcode, but the profile expires every 7 days.
