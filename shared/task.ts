@@ -22,6 +22,7 @@ export type Task = {
 	title: string;
 	notes: string;
 	projectId: string | null;
+	labelIds: string[];
 	due: Due | null;
 	recurrence: Recurrence | null;
 	priority: Priority;
@@ -31,6 +32,9 @@ export type Task = {
 };
 
 export type Project = { id: string; name: string; createdAt: number };
+
+/** A tag that crosses projects. A task carries any number of them. */
+export type Label = { id: string; name: string; createdAt: number };
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
