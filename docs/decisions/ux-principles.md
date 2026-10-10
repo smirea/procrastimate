@@ -9,9 +9,5 @@
   - **On-screen keyboard.** Quick add stays usable while the keyboard is open. Sheets dock above the keyboard by tracking the visual viewport, and the return key submits.
   - **Same shapes as iOS.** The drawer, floating add button, and inset bottom sheets map directly to the Liquid Glass port.
 - **Motion on every interaction.** Opening, closing, adding, completing, and switching views all animate. Motion is short (about 150 to 250 ms), eased like a spring, and never gates input.
-- **Liquid Glass parity.** The web UI is designed to port to iOS with Liquid Glass. Keep these consistent with native iOS:
-  - **Layering.** Content sits on a base layer. Navigation and transient surfaces (sidebar, quick add, task details, toasts) float above it as distinct layers.
-  - **Translucency.** Floating layers use translucent, blurred materials over the content beneath, not opaque fills.
-  - **Motion.** Sheets and popovers grow from their source and settle with spring easing. Lists reflow with animated position changes.
-  - **Spacing.** Use a 4 pt grid, rounded continuous corners, and touch-sized hit targets (at least 32 px with a mouse, 44 px on touch, 44 pt on iOS).
-  - **Controls.** Use controls with direct native counterparts: list rows with leading checkboxes, a sidebar that maps to a tab bar or split view, sheets for creation and details, menus for pickers, and toasts for undo. Avoid web-only patterns such as hover-only actions and multi-level dropdowns.
+- **Reduced motion.** Under `prefers-reduced-motion`, CSS transitions and animations collapse to instant, and Svelte transitions pass their params through `motion()` in `ui.svelte.ts`, which zeroes the duration. CSS cannot reach Svelte transitions because they animate from script.
+- **Liquid Glass parity.** The web UI ports to iOS with Liquid Glass. See [Visual language](visual-language.md) for layering, materials, shapes, motion, spacing, and controls.
