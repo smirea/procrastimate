@@ -51,13 +51,23 @@ public enum QuickAdd {
         public var disabled: [String]
         /// The due date set outside the text, such as by a picker or on an existing task.
         public var due: Due?
+        /// Transcribed speech rather than typing, so typing shorthands that speech never means do not apply.
+        public var spoken: Bool
 
-        public init(now: Date, projects: [Project] = [], labels: [Label] = [], disabled: [String] = [], due: Due? = nil) {
+        public init(
+            now: Date,
+            projects: [Project] = [],
+            labels: [Label] = [],
+            disabled: [String] = [],
+            due: Due? = nil,
+            spoken: Bool = false
+        ) {
             self.now = now
             self.projects = projects
             self.labels = labels
             self.disabled = disabled
             self.due = due
+            self.spoken = spoken
         }
     }
 
@@ -123,6 +133,37 @@ public enum QuickAdd {
         Pattern(#"(?<!\w)\d[\w:/]*(?=\s+(?:[\w.]+\s+)?(?:\#(street))\b)"#, ignoreCase: true),
     ]
 
+    /// Extra guards for speech. A bare four-digit number is not a time without `at`, compact units such as `5m` or
+    /// `2d` are typing shorthands, `Tuesday's` and `today's` name something rather than set a date, `the 5th chapter`
+    /// is an ordinal, not a date, and a weekday inside a name or before an event stays text. A 12-hour clock time
+    /// without am or pm, such as `3:30`, is ambiguous in speech and stays text.
+    static let spokenGuards: [Pattern] = [
+        Pattern(
+            #"(?<![\w#@!$€£:/.])(?<!\bat\s+)(?<!\#(month)\s+\#(ordinal),?\s)\d{4}(?![\w:/])"#,
+            ignoreCase: true
+        ),
+        Pattern(
+            #"(?<![\w#@!$€£.])r?\d+(?:mos?|m(?:ins?)?|h(?:rs?)?|d|w(?:ks?)?|y(?:rs?)?)(?![\w!])"#,
+            ignoreCase: true
+        ),
+        Pattern(#"(?<!\bin\s+)(?<![\w.])\d+\s+(?:mins?|hrs?)\b(?!\s+before)"#, ignoreCase: true),
+        Pattern(#"\b(?:\#(weekday)|today|tonight|tomorrow|tom)(?=['’]s\b)"#, ignoreCase: true),
+        Pattern(
+            #"(?<=\bthe\s+)\d{1,2}(?:st|nd|rd|th)(?=\s+(?!(?:at|of|\#(month))\b)[a-z]+)"#,
+            ignoreCase: true
+        ),
+        Pattern(#"\b(?:Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)day(?=\s+[A-Z][a-z])"#),
+        Pattern(
+            #"\b\#(weekday)(?=\s+(?:lunch|dinner|breakfast|brunch|drinks|meeting|meetings|standup|stand-up|service|game|match|party|class|shift|market|plans|practice|session|show)\b)"#,
+            ignoreCase: true
+        ),
+        Pattern(#"(?<![\w:/.$€£])(?:0?\d|1[0-2]):\d{2}(?![\w:]|\s*[ap]m?\b)"#, ignoreCase: true),
+        Pattern(
+            #"(?<=\b(?:black|good|cyber|ash|easter|holy|casual|fat|super)\s+)(?:mon|tues|wednes|thurs|fri|satur|sun)day\b"#,
+            ignoreCase: true
+        ),
+    ]
+
     /// A weekday list repeats after `every`, next to a time, or when slashed, as in `tue/thu`. Anywhere else, as in
     /// `discuss mon wed plan`, the whole list stays text, since no single day is meant.
     static let weekdayListContext = Pattern(
@@ -142,8 +183,11 @@ public enum QuickAdd {
         }
     }
 
-    static func maskGuarded(_ input: String) -> String {
-        guards.reduce(maskProseWeekdayLists(input)) { text, guardPattern in guardPattern.replace(text) { mask($0.value) } }
+    static func maskGuarded(_ input: String, spoken: Bool = false) -> String {
+        let patterns = spoken ? guards + spokenGuards : guards
+        return patterns.reduce(maskProseWeekdayLists(input)) { text, guardPattern in
+            guardPattern.replace(text) { mask($0.value) }
+        }
     }
 
     // MARK: Phrases
@@ -153,6 +197,7 @@ public enum QuickAdd {
         let zone: TimeZone
         let today: DateKey
         let time: TimeOfDay
+        let spoken: Bool
     }
 
     /// A due phrase. A nil date means only a time was typed.
@@ -360,6 +405,8 @@ public enum QuickAdd {
     static func resolveMoment(_ text: String, _ ctx: Context) -> DuePhrase? {
         guard let m = momentShape.first(in: text), let amount = number(m[1]) else { return nil }
         let unitText = m[2] ?? ""
+        // A bare `in 2` is a typing shorthand; spoken, it is usually prose such as `split in 2 groups`.
+        if ctx.spoken && unitText.isEmpty { return nil }
         let unit = unitText.isEmpty ? .minute : unitOf(unitText)
         guard let unit, unit.recurrenceUnit == nil, let minutes = unit.minutes else { return nil }
         let at = ctx.now.addingTimeInterval(Double(amount) * Double(minutes) * 60)
@@ -453,7 +500,9 @@ public enum QuickAdd {
         ),
         repeatable: false,
         guarded: true,
-        read: { m, _ in
+        read: { m, ctx in
+            // People say `important` in passing, so speech sets priority only by its level.
+            if ctx.spoken && m[1] == nil { return nil }
             let priority = number(m[1]).flatMap(Priority.init(rawValue:))
                 ?? (m[2] ?? m[3]).flatMap { priorityWords[$0.lowercased()] }
             return priority.map(Match.priority)
@@ -539,7 +588,13 @@ public enum QuickAdd {
 
     public static func parse(_ input: String, _ options: Options, in zone: TimeZone) -> Parsed {
         let now = options.now
-        let ctx = Context(now: now, zone: zone, today: Dates.toDateKey(now, in: zone), time: clock(now, in: zone))
+        let ctx = Context(
+            now: now,
+            zone: zone,
+            today: Dates.toDateKey(now, in: zone),
+            time: clock(now, in: zone),
+            spoken: options.spoken
+        )
         let disabled = Set(options.disabled.map { $0.lowercased() })
         let named = [
             namedRule(.project, "#", options.projects.map { ($0.id, $0.name) }) { .project($0) },
@@ -550,7 +605,7 @@ public enum QuickAdd {
         // Every phrase a rule recognizes is masked out of both views, including kept-as-text and superseded ones, so a
         // later rule never reads part of it as something else.
         var raw = input
-        var guarded = maskGuarded(input)
+        var guarded = maskGuarded(input, spoken: options.spoken)
         let claim = { (text: String, range: NSRange) in
             NSString(string: text).replacingCharacters(in: range, with: String(repeating: "_", count: range.length))
         }

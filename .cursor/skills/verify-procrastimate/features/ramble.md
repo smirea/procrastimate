@@ -29,7 +29,7 @@ Ramble lets Stefan talk instead of type: a live transcript and a preview card pe
 
 ## Parser
 
-`parseRamble` in `shared/ramble.ts` turns a transcript into tasks locally, on every partial. It reuses quick add's parser in `spoken` mode. The corpus, provenance gate, and score are in `shared/ramble.test.ts`; locked cases are recorded in `shared/vectors/ramble.json` for the Swift port.
+`parseRamble` in `shared/ramble.ts` turns a transcript into tasks locally, on every partial. It reuses quick add's parser in `spoken` mode. The corpus, provenance gate, and score are in `shared/ramble.test.ts`; locked cases are recorded in `shared/vectors/ramble.json` for the Swift port. Linux `VectorTests` leaves that module pending until R3. Spoken mode is already in the Swift quick add parser.
 
 ## Gotchas
 
