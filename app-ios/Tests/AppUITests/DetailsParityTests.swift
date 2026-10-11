@@ -53,7 +53,7 @@ final class DetailsParityTests: ParityTestCase {
         add("Standup")
         openDetails("Standup")
         focusTitleEnd()
-        titleInput.typeText(" fri 6pm")
+        type(" fri 6pm", into: titleInput)
         wait(for: titleInput, "identifier CONTAINS 'due: fri 6pm'")
         XCTAssertTrue(chip("Due Friday 6pm").waitForExistence(timeout: 5))
         snap("edit-config-row")

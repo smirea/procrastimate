@@ -52,7 +52,8 @@ extension ParityTestCase {
     func retitle(_ title: String) {
         focusTitleEnd()
         let current = titleInput.value as? String ?? ""
-        titleInput.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: current.count) + title + "\n")
+        titleInput.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: current.count))
+        type(title + "\n", into: titleInput)
     }
 
     func addSubtasks(_ titles: String...) { addSubtasks(titles) }
@@ -61,7 +62,7 @@ extension ParityTestCase {
         subtaskInput.tap()
         wait(for: subtaskInput, "hasKeyboardFocus == true")
         for title in titles {
-            subtaskInput.typeText(title + "\n")
+            type(title + "\n", into: subtaskInput)
             wait(for: subtaskInput, "value == ''")
         }
     }

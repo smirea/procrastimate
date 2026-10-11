@@ -35,7 +35,21 @@ extension ParityTestCase {
     }
 
     func type(_ text: String) {
-        taskInput.typeText(text)
+        type(text, into: taskInput)
+    }
+
+    /// Types a word at a time. The smart input restyles as phrases parse, and keystrokes synthesized during that
+    /// update can reach the text view without reaching its binding; each `typeText` waits for the app to idle first.
+    func type(_ text: String, into element: XCUIElement) {
+        var chunk = ""
+        for character in text {
+            chunk.append(character)
+            if character == " " || character == "\n" {
+                element.typeText(chunk)
+                chunk = ""
+            }
+        }
+        if !chunk.isEmpty { element.typeText(chunk) }
     }
 
     func cancelQuickAdd() {

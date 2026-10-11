@@ -31,7 +31,7 @@ final class RecurringParityTests: ParityTestCase {
         snap("recurring-picker")
 
         let interval = app.textFields["Repeat interval"]
-        interval.tap()
+        interval.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()
         interval.typeText(XCUIKeyboardKey.delete.rawValue + "3")
         app.buttons["Set"].tap()
         XCTAssertTrue(chip("Repeats every 3 days").waitForExistence(timeout: 5))
