@@ -35,6 +35,8 @@ private struct SearchNames: Decodable {
     case "sigilFragment":
         return try json(NameSearch.sigilFragment(a(0), a(1), a(2), a(3, as: [Project].self)))
     case "suggest": return try json(NameSearch.suggest(a(0, as: [Project].self), a(1), a(2)))
+    case "unknownNames":
+        return try json(NameSearch.unknownNames(a(0), a(1), a(2, as: [Project].self), a(3, as: [Project].self)))
     case "lastUsedProjects": return try json(NameSearch.lastUsed(a(0), NameSearch.projectIdsOf))
     case "lastUsedLabels": return try json(NameSearch.lastUsed(a(0), NameSearch.labelIdsOf))
     default: throw unknown(fn)
