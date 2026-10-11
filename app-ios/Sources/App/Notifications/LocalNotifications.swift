@@ -158,6 +158,58 @@ final class LocalNotifications: NSObject {
         )
     }
 
+    /// Writes the device schedule from a store, without the open app's status. An intent uses this when it changes
+    /// tasks before the view is subscribed, or while the app is not showing. It does not ask for permission.
+    static func applySchedule(store: Store, clock: AppClock) async {
+        let center = UNUserNotificationCenter.current()
+        guard await notificationsAllowed() else {
+            if await notificationsBlocked() { center.removeAllPendingNotificationRequests() }
+            return
+        }
+        let now = clock.now
+        let schedule = Notifications.upcomingNotifications(
+            store.tasks, now: now, limit: Notifications.maxScheduled, in: clock.timeZone
+        )
+        let held = await center.pendingNotificationRequests().map {
+            Notifications.Pending(id: $0.identifier, title: $0.content.title, body: $0.content.body)
+        }
+        let change = Notifications.scheduleChange(schedule, pending: held)
+        center.removePendingNotificationRequests(withIdentifiers: change.remove)
+        for item in change.add {
+            try? await center.add(makeRequest(item, now: now))
+        }
+        guard schedule.count == Notifications.maxScheduled else { return }
+        let refresh = BGAppRefreshTaskRequest(identifier: refreshTaskID)
+        refresh.earliestBeginDate = schedule[schedule.count / 2].at
+        try? BGTaskScheduler.shared.submit(refresh)
+    }
+
+    private static func notificationsAllowed() async -> Bool {
+        guard UserDefaults.standard.bool(forKey: enabledKey) else { return false }
+        switch await UNUserNotificationCenter.current().notificationSettings().authorizationStatus {
+        case .authorized, .provisional, .ephemeral: return true
+        case .notDetermined, .denied: return false
+        @unknown default: return false
+        }
+    }
+
+    /// Off, or the system said no. Not-yet-asked stays as it is.
+    private static func notificationsBlocked() async -> Bool {
+        if !UserDefaults.standard.bool(forKey: enabledKey) { return true }
+        return await UNUserNotificationCenter.current().notificationSettings().authorizationStatus == .denied
+    }
+
+    private static func makeRequest(_ item: Notifications.Scheduled, now: Date) -> UNNotificationRequest {
+        let content = UNMutableNotificationContent()
+        content.title = item.title
+        content.body = item.body
+        content.sound = .default
+        content.threadIdentifier = item.taskId
+        content.userInfo = ["taskId": item.taskId]
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: max(1, item.at.timeIntervalSince(now)), repeats: false)
+        return UNNotificationRequest(identifier: item.tag, content: content, trigger: trigger)
+    }
+
     /// Replaces the pending requests with the soonest moments of open tasks, or clears them while notifications are
     /// off. Re-adding an identifier replaces its request, so edits, completions, and undos need no cancel path.
     func sync() async {
@@ -190,14 +242,7 @@ final class LocalNotifications: NSObject {
     /// A moment is an instant, so the trigger counts down from the app's clock. That also keeps a pinned test clock
     /// meaningful, where a calendar date would already be in the past.
     private func request(_ item: Notifications.Scheduled, now: Date) -> UNNotificationRequest {
-        let content = UNMutableNotificationContent()
-        content.title = item.title
-        content.body = item.body
-        content.sound = .default
-        content.threadIdentifier = item.taskId
-        content.userInfo = ["taskId": item.taskId]
-        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: max(1, item.at.timeIntervalSince(now)), repeats: false)
-        return UNNotificationRequest(identifier: item.tag, content: content, trigger: trigger)
+        Self.makeRequest(item, now: now)
     }
 
     private func readPending() async {

@@ -4,6 +4,8 @@ This directory is the maintained source for verifying the user-facing behavior o
 
 The web client covers adding, viewing, editing, completing, subtasks, repeating, prioritizing, reminding, push notifications, labeling, searching, theming, settings, syncing between paired clients, and importing from Todoist, and every web step not marked `Planned:` is proven by a Playwright test named in its bullet. iOS, Ramble voice capture, completed-task history, and keyboard selection are still planned. A `Planned:` step describes the intended user path and the observable result, with no harness commands or stable handles. Replace it with exact commands when its feature and harness ship.
 
+The iOS app works with Siri, Shortcuts, and Spotlight. Every new feature that someone can do from outside the app ships with App Intents in the same change. The web client is excluded: those are iOS system features, so they have no web steps.
+
 ## Baseline preconditions
 
 - Generate env values with `env-manager gen --local`, then start the web client and server with `bun run start` from the repo root.
@@ -67,3 +69,4 @@ Keep implementation details out of the map. Name only user paths, stable handles
 - [Settings](./settings.md) covers the settings popover on desktop and the settings sheet on a phone.
 - [Todoist import](./todoist-import.md) covers importing a Todoist backup zip, the summary and warnings, and safe re-imports.
 - [Theme](./theme.md) covers the System, Light, and Dark themes, persistence, first paint, and contrast.
+- [Siri, Shortcuts, and Spotlight](./app-intents.md) covers the iOS App Intents: adding and completing tasks, opening lists and projects, search, today's and overdue tasks, and Spotlight. Web is excluded.
