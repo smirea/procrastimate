@@ -9,9 +9,12 @@ struct SettingsSheet: View {
     @Environment(TodoistImport.self) private var importer
     @Environment(Store.self) private var store
     @Environment(LocalNotifications.self) private var notifications
+    @Environment(Session.self) private var session
+    @Environment(AccountSync.self) private var accountSync
 
     @State private var picking = false
     @State private var confirmingDelete = false
+    @State private var confirmingAccount = false
 
     var body: some View {
         NavigationStack {
@@ -43,6 +46,14 @@ struct SettingsSheet: View {
                     ImportOutcome(status: importer.status)
                     Button("Delete all data", role: .destructive) { confirmingDelete = true }
                 }
+
+                Section("Account") {
+                    Button("Sign out") { accountSync.signOut() }
+                    Button("Delete account", role: .destructive) { confirmingAccount = true }
+                    if let error = session.error {
+                        Text(error).foregroundStyle(.toneOverdue)
+                    }
+                }
             }
             .animation(.snappy, value: importer.status)
             .fileImporter(isPresented: $picking, allowedContentTypes: [.zip]) { result in
@@ -57,6 +68,14 @@ struct SettingsSheet: View {
                 titleVisibility: .visible
             ) {
                 Button("Delete all data", role: .destructive) { store.deleteAll() }
+                Button("Cancel", role: .cancel) {}
+            }
+            .confirmationDialog(
+                "Delete this account and every task, project, and label?",
+                isPresented: $confirmingAccount,
+                titleVisibility: .visible
+            ) {
+                Button("Delete account", role: .destructive) { Task { await accountSync.deleteAccount() } }
                 Button("Cancel", role: .cancel) {}
             }
             .navigationTitle("Settings")

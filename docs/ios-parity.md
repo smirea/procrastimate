@@ -1,6 +1,6 @@
 # iOS parity
 
-What the native iOS app must do to match the web app, row by row from the feature map in `.cursor/skills/verify-procrastimate/features/`, and the threads that build it. The architecture and the reasons behind it are in [iOS app](decisions/ios.md).
+Sign-in is the first screen until there is a session. UI tests set PROCRASTINATE_SIGNED_IN so they open the app. What the native iOS app must do to match the web app, row by row from the feature map in `.cursor/skills/verify-procrastimate/features/`, and the threads that build it. The architecture and the reasons behind it are in [iOS app](decisions/ios.md).
 
 ## Known item before iOS tests are re-enabled
 

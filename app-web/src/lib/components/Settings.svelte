@@ -6,6 +6,7 @@
 	import type { ImportSummary } from 'shared/todoist.ts';
 	import ThemeSwitcher from './ThemeSwitcher.svelte';
 	import { push } from '../push.svelte.ts';
+	import { session } from '../session.svelte.ts';
 	import { store } from '../store.svelte.ts';
 	import { sync } from '../sync.svelte.ts';
 	import { motion } from '../ui.svelte.ts';
@@ -15,6 +16,7 @@
 
 	let status = $state<Status>({ kind: 'idle' });
 	let confirmingDelete = $state(false);
+	let confirmingAccount = $state(false);
 	let input: HTMLInputElement;
 
 	const notificationLine = $derived(
@@ -109,6 +111,27 @@
 			<button type="button" class="menu-item -mx-1.5 w-auto text-[var(--tone-overdue)] touch:h-11 touch:text-[15px]" onclick={() => (confirmingDelete = true)}>
 				Delete all data
 			</button>
+		{/if}
+	</section>
+
+	<section class="flex flex-col gap-1.5">
+		<h3 class="heading">Account</h3>
+		<button type="button" class="menu-item -mx-1.5 w-auto touch:h-11 touch:text-[15px]" onclick={() => session.signOut()}>
+			Sign out
+		</button>
+		{#if confirmingAccount}
+			<p class="px-1.5 text-[13px] text-ink">Delete this account and every task, project, and label?</p>
+			<div class="flex gap-2">
+				<button type="button" class="btn press bg-[var(--tone-overdue)] text-on-accent" onclick={() => session.deleteAccount()}>Delete account</button>
+				<button type="button" class="btn press" onclick={() => (confirmingAccount = false)}>Cancel</button>
+			</div>
+		{:else}
+			<button type="button" class="menu-item -mx-1.5 w-auto text-[var(--tone-overdue)] touch:h-11 touch:text-[15px]" onclick={() => (confirmingAccount = true)}>
+				Delete account
+			</button>
+		{/if}
+		{#if session.error}
+			<p role="alert" class="text-[13px] text-[var(--tone-overdue)]">{session.error}</p>
 		{/if}
 	</section>
 </div>

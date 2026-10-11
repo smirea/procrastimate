@@ -7,6 +7,7 @@ import { upstreamUrl, type ConnectUpstream, type RambleConfig } from './account/
 import { acceptedProtocol, type Socket, type SocketHost, type StreamEvents } from './account/realtime';
 import api from './api';
 import type { Env } from './bindings';
+import { originalRequest } from './request-user';
 
 /** A nudge socket carries its device; a streaming socket carries the `start` its route passed, then its handlers. */
 type SocketData =
@@ -35,15 +36,33 @@ export function bunUpstream(apiKey: string): ConnectUpstream {
  * WebSocket server. Bun upgrades through `server.upgrade` and needs the fetch handler to answer nothing, so an
  * accepted upgrade returns a marker response that `fetch` swaps for `undefined`.
  */
+const AUTH_ENV = [
+	'BETTER_AUTH_SECRET',
+	'GOOGLE_CLIENT_ID',
+	'GOOGLE_CLIENT_SECRET',
+	'GOOGLE_IOS_CLIENT_ID',
+	'APPLE_CLIENT_ID',
+	'APPLE_CLIENT_SECRET',
+	'APPLE_TEAM_ID',
+	'APPLE_KEY_ID',
+	'APPLE_PRIVATE_KEY',
+	'TURSO_DATABASE_URL',
+	'TURSO_AUTH_TOKEN',
+	'E2E_SHARD',
+] as const;
+
 export function serveDev({
 	port,
 	turso,
 	ramble = { connect: null },
+	env: extra = {},
 }: {
 	port: number;
 	/** When both Turso secrets are set, task data lives there. Otherwise the account stays in memory. */
 	turso?: { url: string; authToken: string };
 	ramble?: RambleConfig;
+	/** Auth and Turso bindings. Unset keys fall through to the process environment. */
+	env?: Partial<Env>;
 }) {
 	const open = new Set<ServerWebSocket<SocketData>>();
 	const upgraded = new WeakSet<Response>();
@@ -58,10 +77,10 @@ export function serveDev({
 	};
 	const sockets: SocketHost = {
 		accept: (request, deviceId) =>
-			upgrade(request, { kind: 'nudge', deviceId }, acceptedProtocol['Sec-WebSocket-Protocol']),
+			upgrade(originalRequest(request), { kind: 'nudge', deviceId }, acceptedProtocol['Sec-WebSocket-Protocol']),
 		sockets: deviceId =>
 			[...open].filter(socket => socket.data.kind === 'nudge' && (!deviceId || socket.data.deviceId === deviceId)),
-		stream: (request, protocol, start) => upgrade(request, { kind: 'stream', start }, protocol),
+		stream: (request, protocol, start) => upgrade(originalRequest(request), { kind: 'stream', start }, protocol),
 	};
 	const memories = new Map<string, ReturnType<typeof memoryStore>>();
 	const memoryFor = (id: string) => {
@@ -73,26 +92,37 @@ export function serveDev({
 	};
 	const handle = accountHandler(async () => {}, sockets, ramble);
 	// End-to-end sharding stays in memory even when the shell has Turso credentials.
-	const database = turso && !process.env.E2E_SHARD ? turso : undefined;
-	let tail = Promise.resolve();
+	const sharded = extra.E2E_SHARD ?? process.env.E2E_SHARD;
+	const database = turso && !sharded ? turso : undefined;
+	const tails = new Map<string, Promise<unknown>>();
 	const accountFetch = (id: string, request: Request) => {
 		if (!database) return handle(request, memoryFor(id));
-		const run = tail.then(async () => {
-			const session = await tursoSession(database.url, database.authToken);
+		const previous = tails.get(id) ?? Promise.resolve();
+		const run = previous.then(async () => {
+			const session = await tursoSession(database.url, database.authToken, id);
 			try {
 				return await handle(request, session.store);
 			} finally {
 				await session.flush();
 			}
 		});
-		tail = run.then(
-			() => undefined,
-			() => undefined,
+		tails.set(
+			id,
+			run.then(
+				() => undefined,
+				() => undefined,
+			),
 		);
 		return run;
 	};
+	const fromProcess = Object.fromEntries(
+		AUTH_ENV.flatMap(key => {
+			const value = extra[key] ?? process.env[key];
+			return value ? [[key, value]] : [];
+		}),
+	);
 	const bindings = {
-		E2E_SHARD: process.env.E2E_SHARD,
+		...fromProcess,
 		ACCOUNT: {
 			idFromName: (name: string) => name,
 			get: (id: string) => ({ fetch: (request: Request) => accountFetch(id, request) }),

@@ -105,6 +105,21 @@ class Store {
 		this.#commit();
 	}
 
+	/**
+	 * Drops this document for a different signed-in user. The device id stays. Cursor 0 and an empty outbox make the
+	 * next sync a snapshot pull, so the previous user's tasks are not uploaded.
+	 */
+	switchUser() {
+		const deviceId = this.#sync?.deviceId ?? crypto.randomUUID();
+		const timeZone = this.#sync?.timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
+		const clock = this.#sync?.clock ?? `0:0:${deviceId}`;
+		this.tasks = [];
+		this.projects = [];
+		this.labels = [];
+		this.#sync = { deviceId, cursor: 0, outbox: [], clock, timeZone, epoch: 0, reset: false };
+		this.#commit();
+	}
+
 	/** Empties tasks, projects, and labels here, and asks the next sync to wipe them on the server too. */
 	deleteAll() {
 		this.tasks = [];

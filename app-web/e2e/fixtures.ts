@@ -5,33 +5,46 @@ import { todoistBackupFiles } from '../../shared/fixtures/todoist-backup.mts';
 /** Wednesday, October 14 2026, 10:00 UTC. The suite runs in the UTC time zone. */
 export const NOW = new Date('2026-10-14T10:00:00Z');
 
-const accounts = new Map<string, string>();
+export const E2E_PASSWORD = 'e2e-password-1';
 
-/** One account per test. The dev server reads it from this cookie only while `E2E_SHARD` is set. */
-export function e2eAccount(): string {
-	const id = test.info().testId;
-	const existing = accounts.get(id);
-	if (existing) return existing;
-	const created = crypto.randomUUID();
-	accounts.set(id, created);
-	return created;
+/** One user per test. A second context signs in as the same email, so the two devices share an account. */
+export function e2eEmail(): string {
+	const id = test.info().testId.replace(/[^A-Za-z0-9]/g, '').slice(0, 48);
+	return `e2e-${id}@procrastinate.test`;
 }
 
-/** Puts this test's account cookie on a context, including ones a test opens itself. */
-export async function stampAccount(context: BrowserContext, baseURL = test.info().project.use.baseURL) {
-	if (!baseURL) return;
-	await context.addCookies([{ name: 'e2e-account', value: e2eAccount(), url: baseURL }]);
+/** Signs this context in. The first call creates the user; a later context in the same test signs in. */
+export async function signInAccount(context: BrowserContext) {
+	const email = e2eEmail();
+	const signUp = await context.request.post('/api/auth/sign-up/email', {
+		data: { email, password: E2E_PASSWORD, name: 'E2E' },
+	});
+	if (signUp.ok()) return;
+	const signIn = await context.request.post('/api/auth/sign-in/email', {
+		data: { email, password: E2E_PASSWORD },
+	});
+	if (!signIn.ok()) throw new Error(`sign-in failed: ${signIn.status()} ${await signIn.text()}`);
+}
+
+/** The install id the page will send. The session cookie is already on the request. */
+export async function deviceHeader(page: Page): Promise<Record<string, string>> {
+	const deviceId = await page.evaluate(() => {
+		const raw = localStorage.getItem('procrastinate');
+		const sync = raw ? (JSON.parse(raw) as { sync?: { deviceId?: string } }).sync : undefined;
+		return sync?.deviceId ?? '';
+	});
+	return { 'x-procrastinate-device': deviceId };
 }
 
 export const test = base.extend<{ app: App }>({
-	context: async ({ context, baseURL }, use) => {
-		await stampAccount(context, baseURL);
+	context: async ({ context }, use) => {
+		await signInAccount(context);
 		await use(context);
 	},
 	app: async ({ page }, use) => {
 		await page.clock.setFixedTime(NOW);
 		await page.goto('/inbox');
-		await expect(page.getByRole('heading', { name: 'Inbox' })).toBeVisible();
+		await expect(page.getByRole('heading', { name: 'Inbox' })).toBeVisible({ timeout: 30_000 });
 		await use(new App(page));
 	},
 });

@@ -1,8 +1,9 @@
 import { replaceState } from '$app/navigation';
 import { page } from '$app/state';
 import { pushSubscriptionSchema, type PushSubscriptionInfo } from 'shared/push.ts';
+import { session } from './session.svelte.ts';
 import { store } from './store.svelte.ts';
-import { deviceToken, sync } from './sync.svelte.ts';
+import { deviceHeaders } from './sync.svelte.ts';
 import { sheets } from './ui.svelte.ts';
 
 /** Where this device stands with Web Push. Settings shows one line from it, and nothing else. */
@@ -27,7 +28,6 @@ class Push {
 	state = $state<PushState>({ kind: 'checking' });
 
 	#key: Uint8Array<ArrayBuffer> | null = null;
-	#signedIn: boolean | null = null;
 	#asked = false;
 	/** The subscription the server has for this device's token, or null until it confirms one. */
 	#registered: string | null = null;
@@ -67,7 +67,7 @@ class Push {
 		const key = await fetchKey();
 		if (!key) return { kind: 'unavailable' };
 		this.#key = key;
-		if (!deviceToken()) return { kind: 'off' };
+		if (session.state !== 'in' || !store.deviceId()) return { kind: 'off' };
 		if (Notification.permission === 'denied') return { kind: 'denied' };
 		if (Notification.permission === 'default') {
 			this.#askOnFirstGesture(key);
@@ -92,13 +92,6 @@ class Push {
 		const info = pushSubscriptionSchema.parse(current.toJSON());
 		await this.#register(info);
 		return { kind: 'on', subscription: info };
-	}
-
-	/** Detects again once this install has a token, which the subscription is stored under. */
-	follow(signedIn: boolean) {
-		const changed = this.#signedIn !== null && this.#signedIn !== signedIn;
-		this.#signedIn = signedIn;
-		if (changed && signedIn) void this.detect();
 	}
 
 	/**
@@ -155,23 +148,23 @@ class Push {
 		}
 	}
 
-	/** Registers the subscription under this device's token. The server then pushes whatever the synced tasks call for. */
+	/** Registers the subscription for this signed-in device. The server then pushes whatever the synced tasks call for. */
 	async #register(subscription: PushSubscriptionInfo) {
 		if (this.#registered === subscription.endpoint) return;
 		const response = await this.#call('PUT', { subscription });
 		if (response?.ok) this.#registered = subscription.endpoint;
 	}
 
-	/** Calls the subscription route as this device. A `401` mints a new token and tries again on the next sync. */
+	/** Calls the subscription route as this device. A `401` ends the session. */
 	async #call(method: 'PUT', body?: unknown): Promise<Response | null> {
-		const token = deviceToken();
-		if (!token) return null;
+		if (session.state !== 'in' || !store.deviceId()) return null;
 		const response = await fetch('/api/push/subscription', {
 			method,
-			headers: { ...JSON_HEADERS, Authorization: `Bearer ${token}` },
+			credentials: 'include',
+			headers: { ...JSON_HEADERS, ...deviceHeaders() },
 			body: body === undefined ? undefined : JSON.stringify(body),
 		}).catch(() => null);
-		if (response?.status === 401) void sync.reregister();
+		if (response?.status === 401) session.clear();
 		return response;
 	}
 

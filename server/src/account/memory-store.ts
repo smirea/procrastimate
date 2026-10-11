@@ -81,6 +81,15 @@ export function memoryStore(seed?: AccountTables): AccountStore & { tables(): Ac
 			log.length = 0;
 			nextSeq = 0;
 		},
+		clearAccount: () => {
+			devices.clear();
+			entities.clear();
+			log.length = 0;
+			nextSeq = 0;
+			pushTargets.clear();
+			rambleUsage.clear();
+			epoch = 0;
+		},
 		epoch: () => epoch,
 		setEpoch: next => {
 			epoch = next;

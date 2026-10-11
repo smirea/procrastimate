@@ -17,6 +17,7 @@ class ParityTestCase: XCTestCase {
             "PROCRASTIMATE_NOW": now,
             "PROCRASTIMATE_TZ": "UTC",
             "PROCRASTIMATE_RESET": reset ? "1" : "0",
+            "PROCRASTINATE_SIGNED_IN": "1",
         ].merging(environment) { _, extra in extra }
         app.launch()
     }

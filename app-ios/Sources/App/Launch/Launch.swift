@@ -3,6 +3,9 @@ import Foundation
 import SwiftUI
 
 enum Launch {
+    /// DEBUG UI tests set this so the app opens without a Keychain session. Release never reads it.
+    static var signedIn = false
+
     /// Applies the DEBUG launch environment before the first frame and returns the clock the app runs on.
     static func prepare() -> AppClock {
         #if DEBUG
@@ -12,6 +15,7 @@ enum Launch {
         } catch {
             fatalError(error.description)
         }
+        signedIn = options.signedIn
         if options.reset { StoreLocation.reset() }
         return options.clock(system: .system)
         #else

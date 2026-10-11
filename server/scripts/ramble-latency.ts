@@ -1,5 +1,5 @@
 import { parseArgs } from 'node:util';
-import { INSTALL_GATE } from '../../shared/auth';
+import { DEVICE_HEADER } from '../../shared/auth';
 import {
 	RAMBLE_BYTES_PER_SECOND,
 	RAMBLE_FRAME_BYTES,
@@ -14,7 +14,7 @@ import { KEYTERM_TRIGGERS, upstreamUrl } from '../src/account/ramble';
  * frames each sent once its audio would have been captured, and times the session start, the first partial after
  * speech begins, the voice activity commit after the first pause, and the final commit after stop.
  *
- * Through the proxy (the default) it needs a device: `RAMBLE_TOKEN`, or it registers one with the install gate.
+ * Through the proxy (the default) it needs a session: `RAMBLE_TOKEN`, or it signs up an email account.
  * `--direct` skips the proxy and talks to ElevenLabs with `ELEVENLABS_API_KEY`, as a baseline. Bun loads both
  * from the root `.env.local`; nothing is printed but timings and transcripts.
  */
@@ -126,12 +126,15 @@ function directLink(apiKey: string): Link {
 	};
 }
 
-function proxyLink(origin: string, token: string): Link {
+function proxyLink(origin: string, cred: { token: string; deviceId: string }): Link {
 	const url = new URL(RAMBLE_SOCKET_PATH, origin);
 	url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
 	return {
 		url: url.toString(),
-		init: { protocols: [RAMBLE_SOCKET_PROTOCOL], headers: { Authorization: `Bearer ${token}` } },
+		init: {
+			protocols: [RAMBLE_SOCKET_PROTOCOL],
+			headers: { Authorization: `Bearer ${cred.token}`, [DEVICE_HEADER]: cred.deviceId },
+		},
 		audio: frame => frame,
 		stop: () => JSON.stringify({ type: 'stop' }),
 		read(data) {
@@ -219,19 +222,20 @@ async function session(link: Link, frames: Uint8Array<ArrayBuffer>[]): Promise<R
 	};
 }
 
-async function register(origin: string): Promise<string> {
-	const token = `ramble-${crypto.randomUUID()}`;
-	const response = await fetch(new URL('/api/auth/register', origin), {
+async function register(origin: string): Promise<{ token: string; deviceId: string }> {
+	const response = await fetch(new URL('/api/auth/sign-up/email', origin), {
 		method: 'POST',
+		headers: { 'content-type': 'application/json', origin },
 		body: JSON.stringify({
-			gate: INSTALL_GATE,
-			deviceId: crypto.randomUUID(),
-			token,
-			name: 'Ramble latency script',
+			email: `ramble-${crypto.randomUUID()}@procrastinate.test`,
+			password: 'test-password-1',
+			name: 'Ramble',
 		}),
 	});
-	if (!response.ok) throw new Error(`Register failed with ${response.status}`);
-	return token;
+	if (!response.ok) throw new Error(`Sign-up failed with ${response.status}`);
+	const token = response.headers.get('set-auth-token');
+	if (!token) throw new Error('Sign-up did not return a session token');
+	return { token, deviceId: crypto.randomUUID() };
 }
 
 const median = (numbers: (number | null)[]) => {
@@ -253,7 +257,8 @@ if (values.direct) {
 	if (!key) throw new Error('--direct needs ELEVENLABS_API_KEY');
 	link = directLink(key);
 } else {
-	link = proxyLink(values.url, process.env.RAMBLE_TOKEN ?? (await register(values.url)));
+	const token = process.env.RAMBLE_TOKEN;
+	link = proxyLink(values.url, token ? { token, deviceId: crypto.randomUUID() } : await register(values.url));
 }
 
 const target = values.direct ? 'ElevenLabs directly' : `${values.url}${RAMBLE_SOCKET_PATH}`;

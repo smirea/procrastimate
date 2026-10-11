@@ -1,13 +1,12 @@
-import type { z } from 'zod';
-import { INSTALL_GATE, registerRequestSchema, type RegisteredDevice } from '../../shared/auth';
-import { SOCKET_TOKEN_PREFIX } from '../../shared/sync/protocol';
+import { DEVICE_HEADER, DEVICE_NAME_HEADER, USER_HEADER } from '../../shared/auth';
+import { DEVICE_PROTOCOL_PREFIX } from '../../shared/sync/protocol';
 import type { Ramble } from './account/ramble';
 import type { Realtime } from './account/realtime';
 import type { AccountStore } from './account/store';
 
 /**
- * Device auth for sync. Nothing else reads tokens. An install registers its own secret; there is no setup code
- * and no pairing.
+ * Sync auth. The Worker has already checked the Better Auth session and set `x-procrastinate-user`. The device id
+ * is the install's own id, not a secret. The stored hash only satisfies the column; it is not a credential.
  */
 
 /** What an account route sees. `setAlarm` arms the object's one alarm, or clears it with null. */
@@ -22,60 +21,56 @@ export type AccountContext = {
 export type AccountRoute = (request: Request, context: AccountContext) => Promise<Response>;
 
 const encoder = new TextEncoder();
+const DEVICE_ID = /^[A-Za-z0-9_-]{8,80}$/;
 
 export async function sha256(value: string): Promise<string> {
 	const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', encoder.encode(value)));
 	return Array.from(digest, byte => byte.toString(16).padStart(2, '0')).join('');
 }
 
-/** The `Authorization: Bearer` token, or on a WebSocket upgrade from a browser, the `bearer.<token>` subprotocol. */
-function bearerToken(request: Request): string | null {
-	const match = /^Bearer\s+(\S+)$/i.exec(request.headers.get('Authorization') ?? '');
-	if (match) return match[1]!;
+/** The install id from the header, or on a browser WebSocket from the `device.<id>` subprotocol. */
+export function deviceIdFrom(request: Request): string | null {
+	const header = request.headers.get(DEVICE_HEADER);
+	if (header && DEVICE_ID.test(header)) return header;
 	const protocols = (request.headers.get('Sec-WebSocket-Protocol') ?? '').split(',').map(value => value.trim());
-	const protocol = protocols.find(value => value.startsWith(SOCKET_TOKEN_PREFIX));
-	return protocol ? protocol.slice(SOCKET_TOKEN_PREFIX.length) || null : null;
+	const protocol = protocols.find(value => value.startsWith(DEVICE_PROTOCOL_PREFIX));
+	const id = protocol ? protocol.slice(DEVICE_PROTOCOL_PREFIX.length) : '';
+	return DEVICE_ID.test(id) ? id : null;
 }
 
-/** The id of the device whose live token the request carries, or null. Marks the device as seen. */
+/**
+ * The id of the signed-in user's device, creating the row on first use. A revoked device stays revoked.
+ * Returns null when the Worker did not attach a user, or the request names no device.
+ */
 export async function authenticate(request: Request, { store, now }: AccountContext): Promise<string | null> {
-	const token = bearerToken(request);
-	if (!token) return null;
-	const device = store.deviceByTokenHash(await sha256(token));
-	if (!device || device.revokedAt !== null) return null;
-	store.touchDevice(device.id, now);
-	return device.id;
+	const userId = request.headers.get(USER_HEADER);
+	const deviceId = deviceIdFrom(request);
+	if (!userId || !deviceId) return null;
+	const live = store.liveDevices().find(device => device.id === deviceId);
+	if (live) {
+		store.touchDevice(deviceId, now);
+		return deviceId;
+	}
+	if (store.hasDevice(deviceId)) return null;
+	const name = (request.headers.get(DEVICE_NAME_HEADER) ?? 'Device').slice(0, 80);
+	store.addDevice({
+		id: deviceId,
+		name,
+		tokenHash: await sha256(`${userId}:${deviceId}`),
+		createdAt: now,
+		lastSeenAt: now,
+		revokedAt: null,
+	});
+	return deviceId;
 }
 
 const fail = (status: number, error: string) => Response.json({ ok: false, error }, { status });
 
-async function parseBody<T>(request: Request, schema: z.ZodType<T>): Promise<T | null> {
-	const parsed = schema.safeParse(await request.json().catch(() => undefined));
-	return parsed.success ? parsed.data : null;
-}
-
 export const authRoutes: Record<string, AccountRoute> = {
-	'POST /api/auth/register': async (request, { store, now }) => {
-		const body = await parseBody(request, registerRequestSchema);
-		if (!body) return fail(400, 'Invalid register request');
-		// Comparing digests keeps the comparison time independent of how much of the gate matched.
-		if ((await sha256(body.gate)) !== (await sha256(INSTALL_GATE))) return fail(401, 'Not signed in');
-		const tokenHash = await sha256(body.token);
-		const existing = store.deviceByTokenHash(tokenHash);
-		if (existing) {
-			if (existing.revokedAt !== null) return fail(401, 'Not signed in');
-			store.touchDevice(existing.id, now);
-			return Response.json({ ok: true, deviceId: existing.id } satisfies RegisteredDevice);
-		}
-		const deviceId = store.hasDevice(body.deviceId) ? crypto.randomUUID() : body.deviceId;
-		store.addDevice({
-			id: deviceId,
-			name: body.name,
-			tokenHash,
-			createdAt: now,
-			lastSeenAt: now,
-			revokedAt: null,
-		});
-		return Response.json({ ok: true, deviceId } satisfies RegisteredDevice);
+	/** The Worker calls this after the session check. It is not mounted on the public route map. */
+	'POST /api/account/wipe': async (request, { store }) => {
+		if (!request.headers.get(USER_HEADER)) return fail(401, 'Not signed in');
+		store.clearAccount();
+		return Response.json({ ok: true });
 	},
 };

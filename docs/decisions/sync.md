@@ -5,7 +5,7 @@ Web and iOS share one set of tasks, projects, and labels through the Worker. The
 ## What syncs
 
 - **Synced:** tasks, projects, labels, and one `settings` record with the id `settings`, which exists without a create and cannot be deleted. The only setting today is `timeZone` (IANA name), which the server needs to compute notification times. A device writes it only when its own zone changes from the last one it saw, such as after travel, never because the synced value differs. So two devices in different zones do not overwrite each other, and the device that moved last wins.
-- **Device-local:** the theme (see [Theming](theming.md)), `remindersCheckedAt` (each open app toasts its own reminders), the push subscription, the sync section, and the device token. The token never sits in the snapshot document: the web keeps it under its own `localStorage` key, `procrastimate-device`, and iOS keeps it in the Keychain.
+- **Device-local:** the theme (see [Theming](theming.md)), `remindersCheckedAt` (each open app toasts its own reminders), the push subscription, the sync section, and the session. The session never sits in the snapshot document. See [Auth](auth.md).
 - **Entities keep their shape.** `Task`, `Project`, and `Label` stay as they are in `shared/task.ts`. Ids are client-made UUIDs, so creating offline never collides. The one model change is ordering (see Conflicts).
 
 ## Server
@@ -34,7 +34,7 @@ Web and iOS share one set of tasks, projects, and labels through the Worker. The
 
 - **The socket only says "sync now".** `GET /api/sync/socket` upgrades to a WebSocket on the `Account` object. After any request that moved the log, the object sends `{ cursor }`, the new head, to every open socket, the sender's included. It never carries changes, so the protocol, paging, and outbox stay in `POST /api/sync`, and a lost nudge only delays a sync until the next trigger. Contracts are in `shared/sync/protocol.ts`; `server/src/account/realtime.ts` holds the route and the nudge and revoke logic.
 - **Hibernation keeps it free.** On the Worker the object accepts sockets through the hibernation API, tagged with the device id, so it can be evicted while they stay open and idle sockets cost no duration. The runtime answers the client's `ping` with `pong` itself (`setWebSocketAutoResponse`) without waking the object. Only nudges and new connections count as Durable Object requests, which is far below the free plan's daily limit for one user.
-- **Authenticated by the device token.** Browsers cannot set headers on a WebSocket, so the web sends `procrastimate.sync` and `bearer.<token>` as subprotocols, and the server echoes `procrastimate.sync`. `auth.ts` reads the token from either `Authorization: Bearer` or that subprotocol, so iOS can use the header. A query string would put the token in logs.
+- **Authenticated by the session.** The web upgrade sends the cookie and `device.<id>` as a subprotocol next to `procrastimate.sync`, which the server echoes. iOS sends `Authorization: Bearer` and `x-procrastinate-device`. A query string would put the credential in logs.
 - **A rejected token registers again.** A `401` drops the token and registers a new one, with no notice. There is no device list and no revoke screen.
 - **One handler, two hosts.** The nudge hook sits in `accountHandler`, which compares the log head before and after each route. A `SocketHost` accepts upgrades and lists sockets: the hibernation API on the Worker, and Bun's WebSocket server in `server/src/dev-server.ts` for local dev and Playwright. Vite proxies `/api` with `ws: true`.
 - **The web client.** `sync.svelte.ts` opens the socket while visible, closes it when hidden, and opens it again on focus and `online`. On a nudge it waits for any sync already in flight, then syncs only when the cursor is past its own. It pings every 30 seconds and drops a socket that answered nothing since the last ping. A dropped socket reconnects after 1 second, doubling to a minute. Every open syncs once, since a nudge sent before the handshake is lost.
@@ -64,21 +64,18 @@ Every field is last-writer-wins by HLC. Different fields from different devices 
 
 ## The web client
 
-- **One loop, one module.** `app-web/src/lib/sync.svelte.ts` owns the triggers and the token. Only one sync runs at a time, and a trigger during one queues one more right after it. A response with a full page of changes syncs again at once. A `401` mints a new token and registers again, with no notice. A network failure keeps the outbox for the next trigger. There is no sync status in the UI.
+- **One loop, one module.** `app-web/src/lib/sync.svelte.ts` owns the triggers. Only one sync runs at a time, and a trigger during one queues one more right after it. A response with a full page of changes syncs again at once. A `401` clears the session and shows sign-in. A network failure keeps the outbox for the next trigger. There is no sync status in the UI.
 - **The store records, the loop sends.** Every store command diffs its before and after into the outbox and tells the loop, which syncs one second later. The loop sends the whole outbox and hands the response back to the store, which runs `applyResponse`.
 - **The device's own zone.** The client's settings record holds only the zone this device last wrote, kept in its `sync` section, so ordinary diffs never touch `timeZone`. The first sync writes the device's zone, and a later sync that finds the zone changed writes the new one first.
 - **The clock persists.** The `sync` section keeps the last clock the device issued or saw, so a reload never issues a clock below one it has seen. It also keeps `epoch` and `reset`.
 
 ## Auth
 
-- **A per-install token, gated by a constant the UI never shows.** There is no login and no pairing code. On first launch the client `POST`s `/api/auth/register` with `INSTALL_GATE` (`procrastimate-install-v1` in `shared/auth.ts`), a device id, a random token, and a name. The server compares SHA-256 digests of the gate and stores only the SHA-256 of the token. Later requests send `Authorization: Bearer`. A `401` drops the token and registers again, with no notice.
-- **Where the token lives.** The web keeps it in `localStorage` under `procrastimate-device`, since the app loads no third-party scripts. iOS keeps it in the Keychain under the service `procrastimate-device`. The device id lives in the snapshot's `sync` section.
-- **What the gate is.** It keeps a stranger who only knows the public URL from registering. It is compiled into both clients, so anyone who reads the bundle can register a device; the unguessable bearer then gates writes. That is the lock for one user who types nothing. `SYNC_SETUP_CODE` stays in the env schema so secrets do not churn, and no route reads it.
-- **Isolated.** `server/src/auth.ts` exposes `authenticate(request) → deviceId | null` and the register route. Nothing else reads tokens.
+Sign-in, sessions, and per-user data are in [Auth](auth.md). `SYNC_SETUP_CODE` stays in the env schema so secrets do not churn, and no route reads it. `server/src/auth.ts` turns a checked session plus a device id into the device row.
 
 ## Notifications
 
-- **The server computes the Web Push schedule.** The account knows every task, so after each push it recomputes pending notifications from `notificationTimes` in the account's `timeZone` and arms one alarm for the earliest. It sends to every subscribed web device. Subscriptions register under the device token, which exists because every install registers on its own.
+- **The server computes the Web Push schedule.** The account knows every task, so after each push it recomputes pending notifications from `notificationTimes` in the account's `timeZone` and arms one alarm for the earliest. It sends to every subscribed web device. Subscriptions register for the signed-in device.
 - **iOS keeps local notifications.** They are recomputed from the synced state after every pull, so iOS needs no APNs.
 - **Time zones.** The server cannot use the process zone, so `shared/zoned-time.ts` turns a `DateKey` and `TimeOfDay` into epoch milliseconds in a named zone with `Intl`, and `notificationTimes` and `upcomingNotifications` take an optional zone. Clients pass none and keep the device zone. The details are in [Push notifications](push-notifications.md).
 

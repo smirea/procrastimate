@@ -1,5 +1,5 @@
 import type { PushScheduleResponse } from 'shared/push.ts';
-import { App, expect, NOW, test as base } from '../fixtures.ts';
+import { App, deviceHeader, expect, NOW, test as base } from '../fixtures.ts';
 
 export { NOW };
 export const YESTERDAY = new Date(NOW.getTime() - 86_400_000);
@@ -122,10 +122,10 @@ export class PhoneApp extends App {
 		await expect
 			.poll(async () =>
 				this.page.evaluate(() => {
-					const token = localStorage.getItem('procrastimate-device');
+					const user = localStorage.getItem('procrastimate-user');
 					const raw = localStorage.getItem('procrastimate');
 					const sync = raw ? (JSON.parse(raw) as { sync?: { outbox: unknown[]; reset?: boolean } }).sync : undefined;
-					return Boolean(token && sync && !sync.reset && sync.outbox.length === 0);
+					return Boolean(user && sync && !sync.reset && sync.outbox.length === 0);
 				}),
 			)
 			.toBe(true);
@@ -133,9 +133,8 @@ export class PhoneApp extends App {
 
 	/** What the server will push to this device for `title`, as `title@<ISO time>: body`, like the iOS readout. */
 	async serverSchedule(title: string) {
-		const token = await this.page.evaluate(() => localStorage.getItem('procrastimate-device'));
-		const response = await this.page.request.get('/api/push/schedule', {
-			headers: { Authorization: `Bearer ${token}` },
+				const response = await this.page.request.get('/api/push/schedule', {
+			headers: await deviceHeader(this.page),
 		});
 		const { notifications } = (await response.json()) as PushScheduleResponse;
 		return notifications

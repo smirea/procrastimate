@@ -1,19 +1,74 @@
-import { INSTALL_GATE } from '../../../shared/auth';
+import { DEVICE_HEADER, DEVICE_NAME_HEADER } from '../../../shared/auth';
 import api from '../api';
 import type { Env } from '../bindings';
 
-/** Registers an install the way a client does, and returns the token the client keeps. */
-export async function registerDevice(env: Env, name = 'Device'): Promise<{ deviceId: string; token: string }> {
-	const token = `token-${crypto.randomUUID()}`;
-	const deviceId = crypto.randomUUID();
+/** Shared by unit tests. Production never uses it; an unset secret keeps sign-in off. */
+export const TEST_AUTH_SECRET = 'test-better-auth-secret-0123456789';
+
+export type DeviceCredentials = { deviceId: string; token: string; cookie: string };
+
+const sessions = new WeakMap<Env, Promise<{ token: string; cookie: string }>>();
+
+/** Puts the test secret on `env` when the caller did not, so later requests on the same object stay signed in. */
+export function withAuth(env: Env): Env {
+	if (!env.BETTER_AUTH_SECRET && !env.E2E_SHARD) env.BETTER_AUTH_SECRET = TEST_AUTH_SECRET;
+	return env;
+}
+
+async function signUp(env: Env): Promise<{ token: string; cookie: string }> {
 	const response = await api.fetch(
-		new Request('https://procrastimate.test/api/auth/register', {
+		new Request('https://procrastinate.test/api/auth/sign-up/email', {
 			method: 'POST',
-			body: JSON.stringify({ gate: INSTALL_GATE, deviceId, token, name }),
+			headers: { 'content-type': 'application/json', origin: 'https://procrastinate.test' },
+			body: JSON.stringify({
+				email: `user-${crypto.randomUUID()}@procrastinate.test`,
+				password: 'test-password-1',
+				name: 'Test',
+			}),
 		}),
 		env,
 	);
-	if (!response.ok) throw new Error(await response.text());
-	const body = (await response.json()) as { deviceId: string };
-	return { deviceId: body.deviceId, token };
+	if (!response.ok) throw new Error(`sign-up failed: ${response.status} ${await response.text()}`);
+	const token = response.headers.get('set-auth-token');
+	if (!token) throw new Error('sign-up did not return a session token');
+	const cookie = response.headers
+		.getSetCookie()
+		.map(value => value.split(';')[0])
+		.join('; ');
+	return { token, cookie };
+}
+
+function sessionFor(env: Env) {
+	const existing = sessions.get(env);
+	if (existing) return existing;
+	const created = signUp(env);
+	sessions.set(env, created);
+	return created;
+}
+
+/** Signs this env's user in once, then registers another device on that session. */
+export async function registerDevice(env: Env, name = 'Device'): Promise<DeviceCredentials> {
+	withAuth(env);
+	const session = await sessionFor(env);
+	const deviceId = crypto.randomUUID();
+	const response = await api.fetch(
+		new Request('https://procrastinate.test/api/sync', {
+			method: 'POST',
+			headers: {
+				'content-type': 'application/json',
+				origin: 'https://procrastinate.test',
+				Authorization: `Bearer ${session.token}`,
+				[DEVICE_HEADER]: deviceId,
+				[DEVICE_NAME_HEADER]: name,
+			},
+			body: JSON.stringify({ cursor: 0, ops: [] }),
+		}),
+		env,
+	);
+	if (!response.ok) throw new Error(`device sync failed: ${response.status} ${await response.text()}`);
+	return { deviceId, token: session.token, cookie: session.cookie };
+}
+
+export function authHeaders(credentials: Pick<DeviceCredentials, 'token' | 'deviceId'>): Record<string, string> {
+	return { Authorization: `Bearer ${credentials.token}`, [DEVICE_HEADER]: credentials.deviceId };
 }

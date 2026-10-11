@@ -1,17 +1,18 @@
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import type { Server } from 'bun';
-import { INSTALL_GATE } from '../../../shared/auth';
+import { DEVICE_HEADER } from '../../../shared/auth';
 import { formatHlc } from '../../../shared/sync/hlc';
 import {
+	DEVICE_PROTOCOL_PREFIX,
 	SOCKET_PING,
 	SOCKET_PONG,
 	SOCKET_REVOKED,
-	SOCKET_TOKEN_PREFIX,
 	SYNC_SOCKET_PATH,
 	SYNC_SOCKET_PROTOCOL,
 	type Op,
 	type SyncResponse,
 } from '../../../shared/sync/protocol';
+import { TEST_AUTH_SECRET } from './test-device';
 import { serveDev } from '../dev-server';
 import { durableSockets, realtime } from './realtime';
 
@@ -47,8 +48,9 @@ describe('the realtime nudge on the dev server', () => {
 	const clients: WebSocket[] = [];
 
 	beforeEach(() => {
-		server = serveDev({ port: 0 }) as Server<unknown>;
+		server = serveDev({ port: 0, env: { BETTER_AUTH_SECRET: TEST_AUTH_SECRET } }) as Server<unknown>;
 		base = `http://127.0.0.1:${server.port}`;
+		session = null;
 	});
 
 	afterEach(async () => {
@@ -56,55 +58,84 @@ describe('the realtime nudge on the dev server', () => {
 		await server.stop(true);
 	});
 
-	const call = (method: string, path: string, token: string | null, body?: unknown) =>
+	let session: { token: string; cookie: string } | null = null;
+
+	const call = (method: string, path: string, cred: { token: string; deviceId: string } | null, body?: unknown) =>
 		fetch(`${base}${path}`, {
 			method,
-			headers: token ? { Authorization: `Bearer ${token}` } : {},
+			headers: cred
+				? { Authorization: `Bearer ${cred.token}`, [DEVICE_HEADER]: cred.deviceId, origin: base }
+				: { origin: base },
 			body: body === undefined ? undefined : JSON.stringify(body),
 		});
 
 	async function setup(name: string) {
-		const token = `token-${crypto.randomUUID()}`;
-		const response = await call('POST', '/api/auth/register', null, {
-			gate: INSTALL_GATE,
-			deviceId: crypto.randomUUID(),
-			token,
-			name,
-		});
-		const body = (await response.json()) as { deviceId: string };
-		return { deviceId: body.deviceId, token };
+		if (!session) {
+			const response = await fetch(`${base}/api/auth/sign-up/email`, {
+				method: 'POST',
+				headers: { 'content-type': 'application/json', origin: base },
+				body: JSON.stringify({
+					email: `user-${crypto.randomUUID()}@procrastinate.test`,
+					password: 'test-password-1',
+					name,
+				}),
+			});
+			if (!response.ok) throw new Error(await response.text());
+			const token = response.headers.get('set-auth-token');
+			if (!token) throw new Error('missing session token');
+			session = {
+				token,
+				cookie: response.headers
+					.getSetCookie()
+					.map(value => value.split(';')[0])
+					.join('; '),
+			};
+		}
+		const deviceId = crypto.randomUUID();
+		const cred = { ...session, deviceId };
+		const synced = await call('POST', '/api/sync', cred, { cursor: 0, ops: [] });
+		if (!synced.ok) throw new Error(await synced.text());
+		return cred;
 	}
 
 	let ops = 0;
-	async function push(token: string, cursor: number, title?: string) {
+	async function push(cred: { token: string; deviceId: string }, cursor: number, title?: string) {
 		const op = { opId: `op-${++ops}`, hlc: formatHlc({ wall: Date.now(), counter: ops, node: 'dev' }) };
 		const body = { cursor, ops: title ? [{ ...op, kind: 'task', id: `t${ops}`, fields: { title } } as Op] : [] };
-		return (await (await call('POST', '/api/sync', token, body)).json()) as SyncResponse;
+		return (await (await call('POST', '/api/sync', cred, body)).json()) as SyncResponse;
 	}
 
-	/** Opens a socket the way the browser does, with the token as a subprotocol. */
-	function connect(token: string, init?: { headers: Record<string, string> }) {
+	/** Opens a socket the way the browser does, with the session cookie and the device id as a subprotocol. */
+	function connect(cred: { token: string; deviceId: string; cookie: string } | null, header = false) {
 		const url = `ws://127.0.0.1:${server.port}${SYNC_SOCKET_PATH}`;
-		const socket = init
-			? // Bun's client takes headers, as the iOS one can; the DOM typing the root config loads does not know them.
-				new WebSocket(url, { protocols: [SYNC_SOCKET_PROTOCOL], ...init } as never)
-			: new WebSocket(url, [SYNC_SOCKET_PROTOCOL, `${SOCKET_TOKEN_PREFIX}${token}`]);
+		const protocols = cred
+			? [SYNC_SOCKET_PROTOCOL, `${DEVICE_PROTOCOL_PREFIX}${cred.deviceId}`]
+			: [SYNC_SOCKET_PROTOCOL];
+		const socket = header
+			? new WebSocket(url, {
+					protocols: [SYNC_SOCKET_PROTOCOL],
+					headers: cred ? { Authorization: `Bearer ${cred.token}`, [DEVICE_HEADER]: cred.deviceId } : {},
+				} as never)
+			: new WebSocket(url, {
+					protocols,
+					headers: cred?.cookie ? { cookie: cred.cookie } : {},
+				} as never);
 		clients.push(socket);
 		return listen(socket);
 	}
 
-	test('refuses a socket without a live token and a plain request', async () => {
-		expect(await connect('not-a-token').opened).toBe(false);
-		expect(await connect('').opened).toBe(false);
-		expect((await call('GET', SYNC_SOCKET_PATH, (await setup('Mac')).token)).status).toBe(426);
+	test('refuses a socket without a session and a plain request', async () => {
+		expect(await connect(null).opened).toBe(false);
+		const cred = await setup('Mac');
+		expect((await call('GET', SYNC_SOCKET_PATH, cred)).status).toBe(426);
 	});
 
-	test('accepts the token as a subprotocol or a header, and answers the keepalive', async () => {
-		const { token } = await setup('Mac');
-		const browser = connect(token);
+	test('accepts the session as a cookie or a bearer header, and answers the keepalive', async () => {
+		const cred = await setup('Mac');
+		const browser = connect(cred);
 		expect(await browser.opened).toBe(true);
 		expect(browser.socket.protocol).toBe(SYNC_SOCKET_PROTOCOL);
-		const native = connect('', { headers: { Authorization: `Bearer ${token}` } });
+		const native = connect(cred, true);
 		expect(await native.opened).toBe(true);
 		browser.socket.send(SOCKET_PING);
 		expect(await browser.message(0)).toBe(SOCKET_PONG);
@@ -113,17 +144,17 @@ describe('the realtime nudge on the dev server', () => {
 	test('sends the new head to every socket after a push that moved the log, and nothing otherwise', async () => {
 		const mac = await setup('Mac');
 		const phone = await setup('Phone');
-		const macSocket = connect(mac.token);
-		const phoneSocket = connect(phone.token);
+		const macSocket = connect(mac);
+		const phoneSocket = connect(phone);
 		expect(await macSocket.opened).toBe(true);
 		expect(await phoneSocket.opened).toBe(true);
 
-		const first = await push(mac.token, 0, 'Buy milk');
+		const first = await push(mac, 0, 'Buy milk');
 		expect(JSON.parse(await phoneSocket.message(0))).toEqual({ cursor: first.cursor });
 		expect(JSON.parse(await macSocket.message(0))).toEqual({ cursor: first.cursor });
 
-		await push(phone.token, first.cursor);
-		const second = await push(phone.token, first.cursor, 'Call mom');
+		await push(phone, first.cursor);
+		const second = await push(phone, first.cursor, 'Call mom');
 		expect(second.cursor).toBeGreaterThan(first.cursor);
 		expect(JSON.parse(await macSocket.message(1))).toEqual({ cursor: second.cursor });
 	});

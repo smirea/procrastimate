@@ -148,13 +148,13 @@ export type SyncResponse = z.infer<typeof syncResponseSchema>;
 
 /**
  * The realtime nudge: a WebSocket on which the server sends `{ cursor }` after every push that moved the log. It
- * only says "sync now"; the changes still come through `POST /api/sync`. Browsers cannot set headers on a
- * WebSocket, so the web sends its token as the `bearer.<token>` subprotocol next to `SYNC_SOCKET_PROTOCOL`, which
- * the server echoes. A client that can set headers may send `Authorization: Bearer` instead.
+ * only says "sync now"; the changes still come through `POST /api/sync`. The session travels as a cookie in the
+ * browser and as `Authorization: Bearer` from iOS. Browsers cannot set headers on a WebSocket, so the web also
+ * sends `device.<id>` as a subprotocol next to `SYNC_SOCKET_PROTOCOL`, which the server echoes.
  */
 export const SYNC_SOCKET_PATH = '/api/sync/socket';
 export const SYNC_SOCKET_PROTOCOL = 'procrastimate.sync';
-export const SOCKET_TOKEN_PREFIX = 'bearer.';
+export const DEVICE_PROTOCOL_PREFIX = 'device.';
 /** Answered by the server without waking the Durable Object, so a keepalive costs nothing. */
 export const SOCKET_PING = 'ping';
 export const SOCKET_PONG = 'pong';

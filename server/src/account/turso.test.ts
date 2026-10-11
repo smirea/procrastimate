@@ -28,7 +28,7 @@ function sqliteClient(): Client {
 describe('a Turso session', () => {
 	test('loads what the last flush wrote, including a wiped epoch', async () => {
 		const client = sqliteClient();
-		const first = await accountSession(client);
+		const first = await accountSession(client, 'user-1');
 		first.store.addDevice({
 			id: 'mac',
 			name: 'Mac',
@@ -42,7 +42,7 @@ describe('a Turso session', () => {
 		first.store.setEpoch(2);
 		await first.flush();
 
-		const second = await accountSession(client);
+		const second = await accountSession(client, 'user-1');
 		expect(second.store.liveDevices().map(device => device.id)).toEqual(['mac']);
 		expect(second.store.entities()).toEqual([
 			{ kind: 'task', id: 't1', data: { title: 'Buy milk' }, clocks: { title: '1:0:mac' } },
@@ -56,10 +56,30 @@ describe('a Turso session', () => {
 		second.store.setEpoch(3);
 		await second.flush();
 
-		const third = await accountSession(client);
+		const third = await accountSession(client, 'user-1');
 		expect(third.store.entities()).toEqual([]);
 		expect(third.store.lastSeq()).toBe(0);
 		expect(third.store.liveDevices()).toHaveLength(1);
 		expect(third.store.epoch()).toBe(3);
+	});
+
+	test('a flush leaves another user alone, and a table without user_id is replaced', async () => {
+		const client = sqliteClient();
+		await client.executeMultiple(
+			'CREATE TABLE entities (kind TEXT NOT NULL, id TEXT NOT NULL, data TEXT NOT NULL, clocks TEXT NOT NULL, PRIMARY KEY (kind, id))',
+		);
+		await client.execute({
+			sql: 'INSERT INTO entities (kind, id, data, clocks) VALUES (?, ?, ?, ?)',
+			args: ['task', 'old', '{}', '{}'],
+		});
+		const mine = await accountSession(client, 'user-1');
+		mine.store.putEntity({ kind: 'task', id: 't1', data: { title: 'Mine' }, clocks: {} });
+		await mine.flush();
+		const other = await accountSession(client, 'user-2');
+		expect(other.store.entities()).toEqual([]);
+		other.store.putEntity({ kind: 'task', id: 't2', data: { title: 'Other' }, clocks: {} });
+		await other.flush();
+		const again = await accountSession(client, 'user-1');
+		expect(again.store.entities()).toEqual([{ kind: 'task', id: 't1', data: { title: 'Mine' }, clocks: {} }]);
 	});
 });

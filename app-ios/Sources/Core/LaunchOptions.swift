@@ -6,6 +6,7 @@ public struct LaunchOptions: Equatable, Sendable {
     public static let timeZoneKey = "PROCRASTIMATE_TZ"
     public static let resetKey = "PROCRASTIMATE_RESET"
     public static let notificationsDeniedKey = "PROCRASTIMATE_NOTIFICATIONS_DENIED"
+    public static let signedInKey = "PROCRASTINATE_SIGNED_IN"
 
     /// Freezes the clock at this moment.
     public var now: Date?
@@ -15,12 +16,21 @@ public struct LaunchOptions: Equatable, Sendable {
     /// Answers the notification permission prompt with Don't Allow, without asking the system. The simulator keeps a
     /// real answer until the app is reinstalled, so a test that denies would block every later test.
     public var notificationsDenied: Bool
+    /// DEBUG only. UI tests set this so the app opens without a Keychain session.
+    public var signedIn: Bool
 
-    public init(now: Date? = nil, timeZone: TimeZone? = nil, reset: Bool = false, notificationsDenied: Bool = false) {
+    public init(
+        now: Date? = nil,
+        timeZone: TimeZone? = nil,
+        reset: Bool = false,
+        notificationsDenied: Bool = false,
+        signedIn: Bool = false
+    ) {
         self.now = now
         self.timeZone = timeZone
         self.reset = reset
         self.notificationsDenied = notificationsDenied
+        self.signedIn = signedIn
     }
 
     public enum Failure: Error, Equatable, CustomStringConvertible {
@@ -46,6 +56,7 @@ public struct LaunchOptions: Equatable, Sendable {
         }
         options.reset = try flag(environment, resetKey)
         options.notificationsDenied = try flag(environment, notificationsDeniedKey)
+        options.signedIn = try flag(environment, signedInKey)
         return options
     }
 

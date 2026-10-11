@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, setSystemTime, test } from 'bun:test';
 import type { Server } from 'bun';
-import { INSTALL_GATE } from '../../../shared/auth';
+import { DEVICE_HEADER } from '../../../shared/auth';
 import { CASSETTES } from '../../../shared/fixtures/ramble-audio/cassettes';
 import {
 	RAMBLE_FRAME_BYTES,
@@ -10,10 +10,11 @@ import {
 	type RambleServerMessage,
 } from '../../../shared/ramble/protocol';
 import { startSync } from '../../../shared/sync/apply';
-import { SOCKET_TOKEN_PREFIX, SYNC_SOCKET_PATH, type Snapshot } from '../../../shared/sync/protocol';
+import { DEVICE_PROTOCOL_PREFIX, SYNC_SOCKET_PATH, type Snapshot } from '../../../shared/sync/protocol';
 import { counter, label, project, snapshotOf, task } from '../../../shared/sync/testing';
 import { addDays } from '../../../shared/task';
 import { zonedDateKey, zonedTime } from '../../../shared/zoned-time';
+import { TEST_AUTH_SECRET } from './test-device';
 import { serveDev } from '../dev-server';
 import {
 	KEYTERM_TRIGGERS,
@@ -105,62 +106,88 @@ describe('the Ramble socket on the dev server', () => {
 		await server.stop(true);
 	});
 
+	let session: { token: string; cookie: string } | null = null;
+
 	function start(ramble: RambleConfig) {
-		server = serveDev({ port: 0, ramble }) as Server<unknown>;
+		session = null;
+		server = serveDev({ port: 0, ramble, env: { BETTER_AUTH_SECRET: TEST_AUTH_SECRET } }) as Server<unknown>;
 	}
 
 	const call = (method: string, path: string, init: RequestInit = {}) =>
 		fetch(`http://127.0.0.1:${server.port}${path}`, { method, ...init });
 
 	async function setup(name = 'Mac') {
-		const token = `token-${crypto.randomUUID()}`;
-		const response = await call('POST', '/api/auth/register', {
-			body: JSON.stringify({ gate: INSTALL_GATE, deviceId: crypto.randomUUID(), token, name }),
-		});
-		const body = (await response.json()) as { deviceId: string };
-		return { deviceId: body.deviceId, token };
+		const origin = `http://127.0.0.1:${server.port}`;
+		if (!session) {
+			const response = await call('POST', '/api/auth/sign-up/email', {
+				headers: { 'content-type': 'application/json', origin },
+				body: JSON.stringify({
+					email: `user-${crypto.randomUUID()}@procrastinate.test`,
+					password: 'test-password-1',
+					name,
+				}),
+			});
+			if (!response.ok) throw new Error(await response.text());
+			const token = response.headers.get('set-auth-token');
+			if (!token) throw new Error('missing session token');
+			session = {
+				token,
+				cookie: response.headers
+					.getSetCookie()
+					.map(value => value.split(';')[0])
+					.join('; '),
+			};
+		}
+		return { ...session, deviceId: crypto.randomUUID() };
 	}
 
 	async function upload(credentials: { deviceId: string; token: string }, snapshot: Snapshot) {
 		const { outbox } = startSync(snapshot, credentials.deviceId, Date.now(), counter('op-'));
 		const response = await call('POST', '/api/sync', {
-			headers: { Authorization: `Bearer ${credentials.token}` },
+			headers: { Authorization: `Bearer ${credentials.token}`, [DEVICE_HEADER]: credentials.deviceId },
 			body: JSON.stringify({ cursor: 0, ops: outbox }),
 		});
 		expect(response.status).toBe(200);
 	}
 
-	/** Opens a socket the way the browser does, with the token as a subprotocol, or with a header like iOS. */
-	function connect(token: string, { header = false, query = '' } = {}) {
+	/** Opens a socket the way the browser does, with the session cookie and device id, or with headers like iOS. */
+	function connect(cred: { token: string; deviceId: string; cookie: string }, { header = false, query = '' } = {}) {
 		const url = `ws://127.0.0.1:${server.port}${RAMBLE_SOCKET_PATH}${query}`;
 		const socket = header
 			? new WebSocket(url, {
 					protocols: [RAMBLE_SOCKET_PROTOCOL],
-					headers: { Authorization: `Bearer ${token}` },
+					headers: { Authorization: `Bearer ${cred.token}`, [DEVICE_HEADER]: cred.deviceId },
 				} as never)
-			: new WebSocket(url, [RAMBLE_SOCKET_PROTOCOL, `${SOCKET_TOKEN_PREFIX}${token}`]);
+			: new WebSocket(url, {
+					protocols: [RAMBLE_SOCKET_PROTOCOL, `${DEVICE_PROTOCOL_PREFIX}${cred.deviceId}`],
+					headers: { cookie: cred.cookie },
+				} as never);
 		clients.push(socket);
 		return listen(socket);
 	}
 
 	test('refuses plain requests and missing tokens, and answers 503 without an upstream', async () => {
 		start({ connect: fakeElevenLabs().connect });
-		const { token } = await setup();
-		expect((await call('GET', RAMBLE_SOCKET_PATH, { headers: { Authorization: `Bearer ${token}` } })).status).toBe(426);
-		expect(await connect('not-a-token').opened).toBe(false);
+		const cred = await setup();
+		expect((await call('GET', RAMBLE_SOCKET_PATH, { headers: { Authorization: `Bearer ${cred.token}` } })).status).toBe(426);
+		{
+			const refused = new WebSocket(`ws://127.0.0.1:${server.port}${RAMBLE_SOCKET_PATH}`, [RAMBLE_SOCKET_PROTOCOL]);
+			clients.push(refused);
+			expect(await listen(refused).opened).toBe(false);
+		}
 		await server.stop(true);
 
 		start({ connect: null });
 		const paired = await setup();
-		expect(await connect(paired.token).opened).toBe(false);
-		const upgrade = { Upgrade: 'websocket', Authorization: `Bearer ${paired.token}` };
+		expect(await connect(paired).opened).toBe(false);
+		const upgrade = { Upgrade: 'websocket', Authorization: `Bearer ${paired.token}`, [DEVICE_HEADER]: paired.deviceId };
 		expect((await call('GET', RAMBLE_SOCKET_PATH, { headers: upgrade })).status).toBe(503);
 	});
 
 	test('relays audio and transcripts, and ends with a final commit on stop', async () => {
 		const upstream = fakeElevenLabs({ finalText: 'Call mom' });
 		start({ connect: upstream.connect });
-		const client = connect((await setup()).token);
+		const client = connect(await setup());
 		expect(await client.opened).toBe(true);
 		expect(client.socket.protocol).toBe(RAMBLE_SOCKET_PROTOCOL);
 		expect(await client.message(0)).toEqual({ type: 'started' });
@@ -195,7 +222,7 @@ describe('the Ramble socket on the dev server', () => {
 	test('accepts the token as a header, buffers audio until the session starts, and skips an empty commit', async () => {
 		const upstream = fakeElevenLabs({ manualStart: true });
 		start({ connect: upstream.connect });
-		const client = connect((await setup()).token, { header: true });
+		const client = connect(await setup(), { header: true });
 		expect(await client.opened).toBe(true);
 		client.audio(RAMBLE_FRAME_BYTES);
 		client.audio(RAMBLE_FRAME_BYTES);
@@ -230,7 +257,7 @@ describe('the Ramble socket on the dev server', () => {
 				tasks: [task('t1', { projectId: 'p2', createdAt: 5 }), task('t2', { labelIds: ['l1'], createdAt: 9 })],
 			}),
 		);
-		const client = connect(mac.token);
+		const client = connect(mac);
 		await client.message(0);
 		expect(upstream.sessions[0]!.settings.keyterms).toEqual([...KEYTERM_TRIGGERS, 'calls', 'Work', 'Home']);
 	});
@@ -238,7 +265,7 @@ describe('the Ramble socket on the dev server', () => {
 	test('cuts the frame that reaches the session cap and ends the session', async () => {
 		const upstream = fakeElevenLabs();
 		start({ connect: upstream.connect, limits: { sessionSeconds: 0.15, dailySeconds: 100 } });
-		const client = connect((await setup()).token);
+		const client = connect(await setup());
 		await client.message(0);
 		client.audio(RAMBLE_FRAME_BYTES);
 		client.audio(RAMBLE_FRAME_BYTES);
@@ -251,9 +278,9 @@ describe('the Ramble socket on the dev server', () => {
 	test('counts seconds per day, cuts at the daily cap, and refuses sessions once it is used up', async () => {
 		const upstream = fakeElevenLabs();
 		start({ connect: upstream.connect, limits: { sessionSeconds: 100, dailySeconds: 0.3 } });
-		const { token } = await setup();
+		const cred = await setup();
 
-		const first = connect(token);
+		const first = connect(cred);
 		await first.message(0);
 		first.audio(RAMBLE_FRAME_BYTES);
 		first.audio(RAMBLE_FRAME_BYTES);
@@ -262,7 +289,7 @@ describe('the Ramble socket on the dev server', () => {
 		await first.closed;
 		expect(first.messages.at(-1)).toEqual({ type: 'ended', seconds: 0.2, reason: 'stopped' });
 
-		const second = connect(token);
+		const second = connect(cred);
 		await second.message(0);
 		second.audio(RAMBLE_FRAME_BYTES);
 		second.audio(RAMBLE_FRAME_BYTES);
@@ -270,7 +297,7 @@ describe('the Ramble socket on the dev server', () => {
 		expect(sentBytes(upstream.sessions[1]!)).toBe(RAMBLE_FRAME_BYTES);
 		expect(second.messages.at(-1)).toEqual({ type: 'ended', seconds: 0.1, reason: 'daily-limit' });
 
-		const third = connect(token);
+		const third = connect(cred);
 		expect(await third.opened).toBe(true);
 		await third.closed;
 		const midnight = zonedTime(addDays(zonedDateKey(Date.now(), 'UTC'), 1), '00:00', 'UTC');
@@ -284,8 +311,8 @@ describe('the Ramble socket on the dev server', () => {
 		const upstream = fakeElevenLabs();
 		setSystemTime(Date.UTC(2026, 9, 14, 23, 59, 30));
 		start({ connect: upstream.connect, limits: { sessionSeconds: 100, dailySeconds: 0.2 } });
-		const { token } = await setup();
-		const client = connect(token);
+		const cred = await setup();
+		const client = connect(cred);
 		await client.message(0);
 		client.audio(RAMBLE_FRAME_BYTES);
 		await until(() => upstream.sessions[0]!.sent.length === 1);
@@ -297,7 +324,7 @@ describe('the Ramble socket on the dev server', () => {
 		expect(sentBytes(upstream.sessions[0]!)).toBe(RAMBLE_FRAME_BYTES * 3);
 		expect(client.messages.at(-1)).toEqual({ type: 'ended', seconds: 0.3, reason: 'daily-limit' });
 
-		const next = connect(token);
+		const next = connect(cred);
 		expect(await next.message(0)).toMatchObject({ type: 'error', code: 'daily-limit' });
 		expect(upstream.sessions).toHaveLength(1);
 	});
@@ -305,7 +332,7 @@ describe('the Ramble socket on the dev server', () => {
 	test('ends a quiet socket on its own, and audio restarts that wait', async () => {
 		const upstream = fakeElevenLabs();
 		start({ connect: upstream.connect, limits: { sessionSeconds: 100, dailySeconds: 100, idleMs: 300 } });
-		const client = connect((await setup()).token);
+		const client = connect(await setup());
 		await client.message(0);
 		for (let i = 0; i < 5; i++) {
 			client.audio(RAMBLE_FRAME_BYTES);
@@ -320,8 +347,8 @@ describe('the Ramble socket on the dev server', () => {
 	test('counts a session the client leaves, and closes its upstream', async () => {
 		const upstream = fakeElevenLabs();
 		start({ connect: upstream.connect, limits: { sessionSeconds: 100, dailySeconds: 0.3 } });
-		const { token } = await setup();
-		const client = connect(token);
+		const cred = await setup();
+		const client = connect(cred);
 		await client.message(0);
 		client.audio(RAMBLE_FRAME_BYTES);
 		client.audio(RAMBLE_FRAME_BYTES);
@@ -329,7 +356,7 @@ describe('the Ramble socket on the dev server', () => {
 		client.socket.close();
 		await until(() => upstream.sessions[0]!.closed);
 
-		const next = connect(token);
+		const next = connect(cred);
 		await next.message(0);
 		next.audio(RAMBLE_FRAME_BYTES);
 		next.audio(RAMBLE_FRAME_BYTES);
@@ -344,9 +371,9 @@ describe('the Ramble socket on the dev server', () => {
 		start({
 			connect: (settings, events) => (refuse ? Promise.reject(new Error('down')) : upstream.connect(settings, events)),
 		});
-		const { token } = await setup();
+		const cred = await setup();
 
-		const quota = connect(token);
+		const quota = connect(cred);
 		await quota.message(0);
 		upstream.sessions[0]!.emit({ message_type: 'quota_exceeded', error: 'Out of credits' });
 		await quota.closed;
@@ -355,7 +382,7 @@ describe('the Ramble socket on the dev server', () => {
 			{ type: 'ended', seconds: 0, reason: 'error' },
 		]);
 
-		const large = connect(token);
+		const large = connect(cred);
 		await large.message(0);
 		large.audio(RAMBLE_MAX_FRAME_BYTES + 2);
 		await large.closed;
@@ -363,7 +390,7 @@ describe('the Ramble socket on the dev server', () => {
 		expect(large.messages[1]).toMatchObject({ code: 'invalid-audio' });
 
 		refuse = true;
-		const down = connect(token);
+		const down = connect(cred);
 		await down.closed;
 		expect(down.messages).toEqual([
 			{ type: 'error', code: 'upstream', message: 'Could not reach the transcription service' },
@@ -374,13 +401,13 @@ describe('the Ramble socket on the dev server', () => {
 	test('keeps Ramble sockets out of the sync nudge', async () => {
 		start({ connect: fakeElevenLabs().connect });
 		const mac = await setup();
-		const client = connect(mac.token);
+		const client = connect(mac);
 		await client.message(0);
 		await upload(mac, snapshotOf({ projects: [project('p1', { name: 'Home' })] }));
-		const nudge = new WebSocket(`ws://127.0.0.1:${server.port}${SYNC_SOCKET_PATH}`, [
-			'procrastimate.sync',
-			`${SOCKET_TOKEN_PREFIX}${mac.token}`,
-		]);
+		const nudge = new WebSocket(`ws://127.0.0.1:${server.port}${SYNC_SOCKET_PATH}`, {
+			protocols: ['procrastinate.sync', `${DEVICE_PROTOCOL_PREFIX}${mac.deviceId}`],
+			headers: { cookie: mac.cookie },
+		} as never);
 		clients.push(nudge);
 		await Bun.sleep(20);
 		expect(client.messages).toEqual([{ type: 'started' }]);
@@ -388,7 +415,7 @@ describe('the Ramble socket on the dev server', () => {
 
 	test('replays the default cassette, flushing what is left on stop', async () => {
 		start({ connect: cassetteUpstream() });
-		const client = connect((await setup()).token);
+		const client = connect(await setup());
 		expect(await client.message(0)).toEqual({ type: 'started' });
 		client.audio(RAMBLE_FRAME_BYTES);
 		await Bun.sleep(10);
@@ -401,7 +428,7 @@ describe('the Ramble socket on the dev server', () => {
 
 	test('refuses an unknown cassette', async () => {
 		start({ connect: cassetteUpstream() });
-		const client = connect((await setup()).token, { query: '?cassette=missing' });
+		const client = connect(await setup(), { query: '?cassette=missing' });
 		await client.closed;
 		expect(client.messages[0]).toMatchObject({ type: 'error', code: 'upstream' });
 	});

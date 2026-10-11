@@ -1,7 +1,6 @@
 import { createServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import type { APIRequestContext, Page } from '@playwright/test';
-import { INSTALL_GATE } from '../../shared/install-gate.mjs';
 import type { PushMessage, PushScheduleResponse } from 'shared/push.ts';
 import { createReceiverKeys, decryptPush, verifyVapid } from '../../server/src/push-receiver.ts';
 import { expect, test, type App } from './fixtures.ts';
@@ -67,17 +66,19 @@ async function setUpSync(app: App) {
 	await expect
 		.poll(async () =>
 			app.page.evaluate(() => {
-				const token = localStorage.getItem('procrastimate-device');
+				const user = localStorage.getItem('procrastimate-user');
 				const raw = localStorage.getItem('procrastimate');
 				const sync = raw ? (JSON.parse(raw) as { sync?: { outbox: unknown[]; reset?: boolean } }).sync : undefined;
-				return Boolean(token && sync && !sync.reset && sync.outbox.length === 0);
+				return Boolean(user && sync && !sync.reset && sync.outbox.length === 0);
 			}),
 		)
 		.toBe(true);
 }
 
-async function schedule(request: APIRequestContext, token: string, tag: string) {
-	const response = await request.get('/api/push/schedule', { headers: { Authorization: `Bearer ${token}` } });
+async function schedule(request: APIRequestContext, deviceId: string, tag: string, token?: string) {
+	const headers: Record<string, string> = { 'x-procrastinate-device': deviceId };
+	if (token) headers.Authorization = `Bearer ${token}`;
+	const response = await request.get('/api/push/schedule', { headers });
 	const { notifications } = (await response.json()) as PushScheduleResponse;
 	return notifications
 		.filter(push => push.title.endsWith(tag))
@@ -93,7 +94,11 @@ test('the Worker computes the schedule from synced tasks and pushes an encrypted
 	await app.setNow(new Date(TODAY + 10 * 3_600_000));
 	await page.reload();
 	await setUpSync(app);
-	const token = (await page.evaluate(() => localStorage.getItem('procrastimate-device')))!;
+	const deviceId = await page.evaluate(() => {
+		const raw = localStorage.getItem('procrastinate');
+		const sync = raw ? (JSON.parse(raw) as { sync?: { deviceId?: string } }).sync : undefined;
+		return sync?.deviceId ?? '';
+	});
 	const tag = suffix();
 
 	await app.openSettings();
@@ -122,7 +127,7 @@ test('the Worker computes the schedule from synced tasks and pushes an encrypted
 		`Pills ${tag} every day 8am`,
 	);
 	await expect
-		.poll(() => schedule(page.request, token, tag))
+		.poll(() => schedule(page.request, deviceId, tag))
 		.toEqual([
 			`Pills@${tomorrowAt(8)}: Due now`,
 			`Call mom@${tomorrowAt(9)}: Due now`,
@@ -146,7 +151,7 @@ test('the Worker computes the schedule from synced tasks and pushes an encrypted
 		.click();
 	await app.details().getByRole('button', { name: 'Delete task' }).click();
 	await expect
-		.poll(() => schedule(page.request, token, tag))
+		.poll(() => schedule(page.request, deviceId, tag))
 		.toEqual([
 			`Gym@${tomorrowAt(18, 30)}: Due at 7:00 PM`,
 			`Gym@${tomorrowAt(19)}: Due now`,
@@ -159,18 +164,16 @@ test('the Worker computes the schedule from synced tasks and pushes an encrypted
 test('the alarm pushes a task synced from another device once, at its time', async ({ request }) => {
 	test.setTimeout(120_000);
 	const service = await startPushService();
-	const setup = async (name: string) => {
-		const token = `token-${crypto.randomUUID()}`;
-		const response = await request.post('/api/auth/register', {
-			data: { gate: INSTALL_GATE, deviceId: crypto.randomUUID(), token, name },
-		});
-		const body = (await response.json()) as { deviceId: string };
-		return { deviceId: body.deviceId, token };
-	};
-	const phone = await setup('Phone');
-	const mac = await setup('Mac');
+	const email = `e2e-${crypto.randomUUID().replaceAll('-', '')}@procrastinate.test`;
+	const signed = await request.post('/api/auth/sign-up/email', {
+		data: { email, password: 'e2e-password-1', name: 'E2E' },
+	});
+	expect(signed.ok()).toBeTruthy();
+	const token = signed.headers()['set-auth-token'];
+	const phone = { deviceId: crypto.randomUUID(), token };
+	const mac = { deviceId: crypto.randomUUID(), token };
 	const subscribed = await request.put('/api/push/subscription', {
-		headers: { Authorization: `Bearer ${phone.token}` },
+		headers: { Authorization: `Bearer ${phone.token}`, 'x-procrastinate-device': phone.deviceId },
 		data: { subscription: service.subscription },
 	});
 	expect(await subscribed.json()).toEqual({ ok: true });
@@ -183,7 +186,7 @@ test('the alarm pushes a task synced from another device once, at its time', asy
 	const push = async (kind: string, entityId: string, fields: object) => {
 		const op = { opId: crypto.randomUUID(), hlc: `${Date.now()}:0:${mac.deviceId}`, kind, id: entityId, fields };
 		const response = await request.post('/api/sync', {
-			headers: { Authorization: `Bearer ${mac.token}` },
+			headers: { Authorization: `Bearer ${mac.token}`, 'x-procrastinate-device': mac.deviceId },
 			data: { cursor: 0, ops: [op] },
 		});
 		expect(response.status()).toBe(200);

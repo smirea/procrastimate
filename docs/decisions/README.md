@@ -24,4 +24,5 @@ Procrastimate's concepts, goals, paradigms, and high-level system decisions, one
 - [Sync](sync.md): the server as source of truth, ops and cursors, field-level conflicts, always-on sync, and server-computed push. Its build slices are in [Sync build slices](../sync-slices.md).
 - [Testing](testing.md): unit tests, end-to-end tests, and the feature map.
 - [iOS app](ios.md): the native SwiftUI app, its architecture, the Swift port and shared test vectors, local notifications, macOS CI, and paired parity tests. Its checklist and thread split are in [iOS parity](../ios-parity.md).
-- [Sync account and auth](sync-auth.md): the `Account` Durable Object, Turso for task data, the install gate, and device tokens.
+- [Auth](auth.md): Better Auth sessions, Google and Apple, and per-user data.
+- [Sync account and auth](sync-auth.md): the `Account` Durable Object, Turso for task data, and the device id.
