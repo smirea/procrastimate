@@ -15,7 +15,7 @@ Recurring tasks let Stefan keep a task that comes back, such as a daily standup 
 - Web: type a repeat such as `every mon`, `weekdays`, or `mon wed fri 7am` in quick add or the task details title.
 - Web: open a task and choose the repeat chip, labeled `Repeat` or with the current repeat. The weekday toggles sit at the top of the menu.
 - Web: check off a recurring task from any list or with `Complete` in task details.
-- iOS: type a repeat in quick add.
+- iOS: type a repeat in quick add, or use the repeat chip in task details.
 
 ## Driving it with control-ui and XCUITest
 
@@ -35,7 +35,7 @@ Preconditions:
 - **Clear.** Choose `Don’t repeat`; the chip reads `Repeat`. Set `Every day`, then pick `No date` from the date chip; the repeat is cleared too. Same test.
 - **Phone.** Add `Water plants every 2d`. The row reads `Today` with a `Repeats every 2 days` icon. Tap it, tap the `Every 2 days` chip; the `Repeat` menu opens fully on screen. Tap `Every weekday`; the chip reads `Every weekday`. Close the sheet and tap the checkbox; the toast ends `next due Tomorrow` and the row reads `Tomorrow`. Test: `task details set a repeat by touch and completing rolls the task forward` in `bun run test:e2e -- e2e/mobile.e2e.ts`. The suite saves `app-web/test-results/mobile/recurrence-menu.png` and `recurrence-details.png`.
 - **Phone weekdays.** Add `Yoga tue/thu 6pm`. The row reads `Tomorrow 6pm` with a `Repeats every Tue, Thu` icon. Tap it, then tap the `Every Tue, Thu` chip. All seven weekday toggles are 44 px targets fully on screen. Tap `Sat`. The chip reads `Every Tue, Thu, Sat`. The menu sits below the sheet's header. Tap `Close` while the menu is open; the sheet closes. Tap the checkbox. The toast ends `next due Saturday 6pm` and the row reads `Saturday 6pm`. Test: `a slashed weekday list repeats and the repeat menu adds a day by touch` in `bun run test:e2e -- e2e/mobile.e2e.ts`. The suite saves `app-web/test-results/mobile/recurrence-weekdays.png`.
-- **iOS.** A repeating row shows the repeat icon named after it, such as `Repeats every Mon`, and completing it moves it to its next date. Tests: `RecurringParityTests.test_recurring_display` and `CompleteParityTests.test_complete_recurring`, paired with `e2e/parity/recurring.e2e.ts` and `e2e/parity/complete.e2e.ts`. Run each pair with the iOS workflow (`xcodebuild test` on an iPhone 16 simulator) and `bun run test:e2e --project=parity`; both sides save `<parity-id>.png`. Planned: the repeat picker in task details (S6).
+- **iOS.** A repeating row shows the repeat icon named after it, such as `Repeats every Mon`, and completing it moves it to its next date. Tests: `RecurringParityTests.test_recurring_display` and `CompleteParityTests.test_complete_recurring`, paired with `e2e/parity/recurring.e2e.ts` and `e2e/parity/complete.e2e.ts`. Run each pair with the iOS workflow (`xcodebuild test` on an iPhone 16 simulator) and `bun run test:e2e --project=parity`; both sides save `<parity-id>.png`. The repeat chip in task details lists `Every day`, `Every weekday`, `Every Fri`, `Every month`, and `Every year`, toggles `Mon` and `Wed` onto `Every Fri` while the popover stays open (`Repeats every Mon, Wed, Fri`), sets a custom `3` days, and clears with `Don’t repeat`. Test: `RecurringParityTests.test_recurring_picker`, paired with `recurring-picker` in `e2e/parity/recurring.e2e.ts`.
 
 ## Gotchas
 
