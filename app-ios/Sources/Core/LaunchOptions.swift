@@ -5,17 +5,22 @@ public struct LaunchOptions: Equatable, Sendable {
     public static let nowKey = "PROCRASTIMATE_NOW"
     public static let timeZoneKey = "PROCRASTIMATE_TZ"
     public static let resetKey = "PROCRASTIMATE_RESET"
+    public static let notificationsDeniedKey = "PROCRASTIMATE_NOTIFICATIONS_DENIED"
 
     /// Freezes the clock at this moment.
     public var now: Date?
     public var timeZone: TimeZone?
     /// Wipes the store and preferences before the first frame.
     public var reset: Bool
+    /// Answers the notification permission prompt with Don't Allow, without asking the system. The simulator keeps a
+    /// real answer until the app is reinstalled, so a test that denies would block every later test.
+    public var notificationsDenied: Bool
 
-    public init(now: Date? = nil, timeZone: TimeZone? = nil, reset: Bool = false) {
+    public init(now: Date? = nil, timeZone: TimeZone? = nil, reset: Bool = false, notificationsDenied: Bool = false) {
         self.now = now
         self.timeZone = timeZone
         self.reset = reset
+        self.notificationsDenied = notificationsDenied
     }
 
     public enum Failure: Error, Equatable, CustomStringConvertible {
@@ -39,14 +44,17 @@ public struct LaunchOptions: Equatable, Sendable {
             guard let zone = TimeZone(identifier: value) else { throw .invalid(key: timeZoneKey, value: value) }
             options.timeZone = zone
         }
-        if let value = environment[resetKey] {
-            switch value {
-            case "1", "true": options.reset = true
-            case "0", "false": options.reset = false
-            default: throw .invalid(key: resetKey, value: value)
-            }
-        }
+        options.reset = try flag(environment, resetKey)
+        options.notificationsDenied = try flag(environment, notificationsDeniedKey)
         return options
+    }
+
+    private static func flag(_ environment: [String: String], _ key: String) throws(Failure) -> Bool {
+        switch environment[key] {
+        case nil, "0", "false": false
+        case "1", "true": true
+        case let value?: throw .invalid(key: key, value: value)
+        }
     }
 
     /// The clock these options pin, falling back to `system` for whatever they leave unset.

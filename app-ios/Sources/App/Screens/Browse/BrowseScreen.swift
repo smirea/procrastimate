@@ -62,9 +62,7 @@ struct BrowseScreen: View {
             }
 
             Section {
-                NavigationLink(value: Route.notifications) {
-                    SwiftUI.Label("Notifications", systemImage: "bell")
-                }
+                NotificationsRow()
                 Button {
                     navigator.sheet = .settings
                 } label: {

@@ -136,6 +136,13 @@ public final class Store {
         commit(StoreRules.deleteLabel(snapshot.data, id))
     }
 
+    /// Adds a Todoist backup in one command and one write, skipping tasks an earlier import already added.
+    public func importTodoist(_ backup: Todoist.Backup) -> Todoist.Summary {
+        let (data, summary) = Todoist.mergeBackup(snapshot.data, backup, newId: newId, now: clock.now.epochMilliseconds)
+        commit(data)
+        return summary
+    }
+
     /// Device-local, so it changes the document without being a synced change.
     public func markRemindersChecked(at time: Int) {
         snapshot.remindersCheckedAt = time
