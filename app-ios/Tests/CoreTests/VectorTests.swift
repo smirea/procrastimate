@@ -4,12 +4,16 @@ import Testing
 
 /// Checks the Swift port against `shared/vectors/*.json`, which `bun run vectors` records from the TypeScript tests.
 /// Every case must produce the recorded output, and a module or function without a Swift handler fails, so a TS
-/// change that alters behavior turns this red until the port matches.
+/// change that alters behavior turns this red until the port matches. `pendingPorts` is the exception: those
+/// modules are recorded ahead of their port, and their cases start running as soon as a handler exists.
 @Suite struct VectorTests {
     @Test(arguments: VectorFile.all)
     func matchesTypeScript(_ file: VectorFile) throws {
         let zone = try #require(TimeZone(identifier: file.timeZone))
-        let handler = try #require(handlers[file.module], "No Swift port for shared/\(file.module).ts")
+        guard let handler = handlers[file.module] else {
+            try #require(pendingPorts.contains(file.module), "No Swift port for shared/\(file.module).ts")
+            return
+        }
         for vector in file.cases {
             let args = Args(values: vector.input, zone: zone)
             let output = try handler(vector.fn, args)
@@ -25,6 +29,13 @@ import Testing
 
     @Test func everyPortedModuleHasVectors() {
         #expect(Set(VectorFile.all.map(\.module)).isSuperset(of: handlers.keys))
+    }
+
+    /// A module stays pending only until its handler lands. Adding the handler without removing the name fails here,
+    /// and a new vector file without a port fails `matchesTypeScript`.
+    @Test func onlyPendingModulesLackAPort() {
+        let missing = Set(VectorFile.all.map(\.module)).subtracting(handlers.keys)
+        #expect(missing == pendingPorts)
     }
 }
 
@@ -93,6 +104,9 @@ func object(_ fields: [String: JSONValue]) -> JSONValue { .object(fields) }
 func unknown(_ fn: String) -> VectorError { VectorError(description: "No Swift handler for \(fn)") }
 
 typealias Handler = @Sendable (String, Args) throws -> JSONValue
+
+/// `ramble` is recorded for R3. Until `Core` has a handler, its cases are not a failure.
+private let pendingPorts: Set<String> = ["ramble"]
 
 let handlers: [String: Handler] = [
     "task": taskVector,
@@ -318,6 +332,7 @@ private struct ParseInput: Decodable {
     let labels: [Label]?
     let disabled: [String]?
     let due: Due?
+    let spoken: Bool?
 
     var options: QuickAdd.Options {
         QuickAdd.Options(
@@ -325,7 +340,8 @@ private struct ParseInput: Decodable {
             projects: projects ?? [],
             labels: labels ?? [],
             disabled: disabled ?? [],
-            due: due
+            due: due,
+            spoken: spoken ?? false
         )
     }
 }

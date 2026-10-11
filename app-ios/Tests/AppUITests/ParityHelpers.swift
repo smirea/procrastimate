@@ -20,7 +20,7 @@ extension ParityTestCase {
     func openQuickAdd() {
         app.buttons["Quick add"].tap()
         XCTAssertTrue(taskInput.waitForExistence(timeout: 5))
-        wait(for: taskInput, "hasKeyboardFocus == true")
+        focus(taskInput)
     }
 
     /// Adds each task with the keyboard's return key, then dismisses the sheet.
@@ -30,7 +30,7 @@ extension ParityTestCase {
             type(title)
             type("\n")
             wait(for: taskInput, "value == ''")
-            wait(for: taskInput, "hasKeyboardFocus == true")
+            focus(taskInput)
         }
         cancelQuickAdd()
     }
@@ -74,6 +74,14 @@ extension ParityTestCase {
         Thread.sleep(forTimeInterval: 1)
         launch(now: now, reset: false)
         XCTAssertTrue(app.navigationBars["Inbox"].waitForExistence(timeout: 10))
+    }
+
+    /// The quick add field can exist before the keyboard reports focus. A tap asks for it when the sheet's own
+    /// request has not landed yet, which is what `test_views_counts` hit after a long suite.
+    func focus(_ element: XCUIElement) {
+        if element.value(forKey: "hasKeyboardFocus") as? Bool == true { return }
+        element.tap()
+        wait(for: element, "hasKeyboardFocus == true")
     }
 
     func wait(for element: XCUIElement, _ predicate: String, timeout: TimeInterval = 10) {

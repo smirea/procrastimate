@@ -44,6 +44,8 @@ export type ParseOptions = {
 	disabled?: readonly string[];
 	/** The due date set outside the text, such as by a picker or on an existing task. */
 	due?: Due | null;
+	/** Transcribed speech rather than typing, so typing shorthands that speech never means do not apply. */
+	spoken?: boolean;
 };
 
 const WEEKDAYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
@@ -120,11 +122,34 @@ function maskProseWeekdayLists(text: string): string {
 	});
 }
 
-function maskGuarded(input: string): string {
-	return GUARDS.reduce((text, guard) => text.replace(guard, m => '_'.repeat(m.length)), maskProseWeekdayLists(input));
+/**
+ * Extra guards for speech. A bare four-digit number is not a time without `at`, compact units such as
+ * `5m` or `2d` are typing shorthands (Scribe writes `5M` for millions), `Tuesday's` and `today's` name
+ * something rather than set a date, `the 5th chapter` is an ordinal, not a date, and a weekday inside
+ * a name or before an event, as in `Monday Night Football`, `Black Friday`, or `Sunday lunch`, stays
+ * text. A 12-hour clock time without am or pm, such as `3:30`, is ambiguous in speech and stays text.
+ */
+const SPOKEN_GUARDS: RegExp[] = [
+	new RegExp(String.raw`(?<![\w#@!$€£:/.])(?<!\bat\s+)(?<!${MONTH}\s+${ORDINAL},?\s)\d{4}(?![\w:/])`, 'gi'),
+	/(?<![\w#@!$€£.])r?\d+(?:mos?|m(?:ins?)?|h(?:rs?)?|d|w(?:ks?)?|y(?:rs?)?)(?![\w!])/gi,
+	/(?<!\bin\s+)(?<![\w.])\d+\s+(?:mins?|hrs?)\b(?!\s+before)/gi,
+	new RegExp(String.raw`\b(?:${WEEKDAY}|today|tonight|tomorrow|tom)(?=['’]s\b)`, 'gi'),
+	new RegExp(String.raw`(?<=\bthe\s+)\d{1,2}(?:st|nd|rd|th)(?=\s+(?!(?:at|of|${MONTH})\b)[a-z]+)`, 'gi'),
+	/\b(?:Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)day(?=\s+[A-Z][a-z])/g,
+	new RegExp(
+		String.raw`\b${WEEKDAY}(?=\s+(?:lunch|dinner|breakfast|brunch|drinks|meeting|meetings|standup|stand-up|service|game|match|party|class|shift|market|plans|practice|session|show)\b)`,
+		'gi',
+	),
+	/(?<![\w:/.$€£])(?:0?\d|1[0-2]):\d{2}(?![\w:]|\s*[ap]m?\b)/gi,
+	/(?<=\b(?:black|good|cyber|ash|easter|holy|casual|fat|super)\s+)(?:mon|tues|wednes|thurs|fri|satur|sun)day\b/gi,
+];
+
+function maskGuarded(input: string, spoken: boolean): string {
+	const guards = spoken ? [...GUARDS, ...SPOKEN_GUARDS] : GUARDS;
+	return guards.reduce((text, guard) => text.replace(guard, m => '_'.repeat(m.length)), maskProseWeekdayLists(input));
 }
 
-type Context = { now: Date; today: DateKey; time: TimeOfDay };
+type Context = { now: Date; today: DateKey; time: TimeOfDay; spoken: boolean };
 
 /** A due phrase. A null date means only a time was typed. */
 type DuePhrase = { date: DateKey | null; time: TimeOfDay | null };
@@ -276,9 +301,12 @@ function resolveDate(text: string, today: DateKey): Day | null {
 	return null;
 }
 
-function resolveMoment(text: string, now: Date): DuePhrase | null {
+function resolveMoment(text: string, ctx: Context): DuePhrase | null {
 	const m = /^(?:in\s+)?(\d+)\s*([a-z]*)$/i.exec(text);
 	if (!m) return null;
+	// A bare `in 2` is a typing shorthand; spoken, it is usually prose such as `split in 2 groups`.
+	if (ctx.spoken && !m[2]) return null;
+	const now = ctx.now;
 	const unit = m[2] ? unitOf(m[2]) : 'minute';
 	if (unit !== 'minute' && unit !== 'hour') return null;
 	const at = new Date(now.getTime() + Number(m[1]) * UNIT_MINUTES[unit]! * 60_000);
@@ -286,7 +314,7 @@ function resolveMoment(text: string, now: Date): DuePhrase | null {
 }
 
 function readDateTime(groups: Record<string, string | undefined>, ctx: Context): DuePhrase | null {
-	if (groups.moment) return resolveMoment(groups.moment, ctx.now);
+	if (groups.moment) return resolveMoment(groups.moment, ctx);
 	const dateText = groups.date1 ?? groups.date2;
 	const timeText = groups.time1 ?? groups.time2;
 	const day = dateText ? resolveDate(dateText, ctx.today) : null;
@@ -336,7 +364,8 @@ const RULES: Rule[] = [
 			'gi',
 		),
 		read: (m, ctx) => {
-			const { yearDay, other, otherUnit, interval, intervalUnit, unit, workday, weekdays, listed, adverb } = m.groups ?? {};
+			const { yearDay, other, otherUnit, interval, intervalUnit, unit, workday, weekdays, listed, adverb } =
+				m.groups ?? {};
 			if (yearDay) {
 				const day = resolveDate(yearDay, ctx.today);
 				return (
@@ -373,8 +402,10 @@ const RULES: Rule[] = [
 			String.raw`(?<![\w#@])p([1-4])(?!\w)|(?<!\S)(!!!?)(?!\S)|(?<![\w#@])(urgent|important)\b`,
 			'gi',
 		),
-		read: m => {
+		read: (m, ctx) => {
 			const [, level, bangs, word] = m;
+			// People say `important` in passing, so speech sets priority only by its level.
+			if (ctx.spoken && !level) return null;
 			const priority = level ? (Number(level) as Priority) : PRIORITY_WORDS[(bangs ?? word)!.toLowerCase()];
 			return priority ? { kind: 'priority', priority } : null;
 		},
@@ -451,7 +482,8 @@ function resolveReminder(draft: ReminderDraft, due: Due | null, ctx: Context): R
 
 export function parseQuickAdd(input: string, options: ParseOptions): ParsedQuickAdd {
 	const now = options.now;
-	const ctx: Context = { now, today: toDateKey(now), time: toTimeOfDay(now.getHours(), now.getMinutes()) };
+	const spoken = options.spoken ?? false;
+	const ctx: Context = { now, today: toDateKey(now), time: toTimeOfDay(now.getHours(), now.getMinutes()), spoken };
 	const disabled = new Set(options.disabled?.map(d => d.toLowerCase()));
 	const named = [
 		namedRule('project', '#', options.projects ?? [], projectId => ({ kind: 'project', projectId })),
@@ -461,7 +493,7 @@ export function parseQuickAdd(input: string, options: ParseOptions): ParsedQuick
 	// Every phrase a rule recognizes is masked out of both views, including kept-as-text and
 	// superseded ones, so a later rule never reads part of it as something else.
 	let raw = input;
-	let guarded = maskGuarded(input);
+	let guarded = maskGuarded(input, spoken);
 	const claim = (text: string, start: number, end: number) =>
 		text.slice(0, start) + '_'.repeat(end - start) + text.slice(end);
 

@@ -16198,6 +16198,1889 @@
 					}
 				]
 			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "spoken › priority words stay text: This is urgent call the bank",
+			"input": [
+				"This is urgent call the bank",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						}
+					],
+					"spoken": true
+				}
+			],
+			"output": {
+				"due": null,
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"title": "This is urgent call the bank",
+				"tokens": []
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "spoken › priority words stay text: Important call the bank",
+			"input": [
+				"Important call the bank",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						}
+					],
+					"spoken": true
+				}
+			],
+			"output": {
+				"due": null,
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"title": "Important call the bank",
+				"tokens": []
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "spoken › priority words stay text: Call the bank !!!",
+			"input": [
+				"Call the bank !!!",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						}
+					],
+					"spoken": true
+				}
+			],
+			"output": {
+				"due": null,
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"title": "Call the bank !!!",
+				"tokens": []
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "spoken › priority words stay text: Call the bank !!",
+			"input": [
+				"Call the bank !!",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						}
+					],
+					"spoken": true
+				}
+			],
+			"output": {
+				"due": null,
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"title": "Call the bank !!",
+				"tokens": []
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "spoken › a priority level still counts",
+			"input": [
+				"Call the bank p2",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						}
+					],
+					"spoken": true
+				}
+			],
+			"output": {
+				"due": null,
+				"labelIds": [],
+				"priority": 2,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"title": "Call the bank",
+				"tokens": [
+					{
+						"end": 16,
+						"kind": "priority",
+						"start": 14,
+						"text": "p2"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "spoken › a bare four-digit number is not a time: Call 1800 flowers",
+			"input": [
+				"Call 1800 flowers",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						}
+					],
+					"spoken": true
+				}
+			],
+			"output": {
+				"due": null,
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"title": "Call 1800 flowers",
+				"tokens": []
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "spoken › a bare four-digit number is not a time: Order 1730 widgets",
+			"input": [
+				"Order 1730 widgets",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						}
+					],
+					"spoken": true
+				}
+			],
+			"output": {
+				"due": null,
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"title": "Order 1730 widgets",
+				"tokens": []
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "spoken › a bare four-digit number is not a time: Call 1800 flowers tomorrow",
+			"input": [
+				"Call 1800 flowers tomorrow",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						}
+					],
+					"spoken": true
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-15",
+					"time": null
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"title": "Call 1800 flowers",
+				"tokens": [
+					{
+						"end": 26,
+						"kind": "due",
+						"start": 18,
+						"text": "tomorrow"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "spoken › a four-digit time after at still counts",
+			"input": [
+				"Leave at 1730",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						}
+					],
+					"spoken": true
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-14",
+					"time": "17:30"
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"title": "Leave",
+				"tokens": [
+					{
+						"end": 13,
+						"kind": "due",
+						"start": 6,
+						"text": "at 1730"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "spoken › a year after a date still counts",
+			"input": [
+				"Meet June 21, 2027",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						}
+					],
+					"spoken": true
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2027-06-21",
+					"time": null
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"title": "Meet",
+				"tokens": [
+					{
+						"end": 18,
+						"kind": "due",
+						"start": 5,
+						"text": "June 21, 2027"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "spoken › compact units do not apply: Order 5M screws",
+			"input": [
+				"Order 5M screws",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						}
+					],
+					"spoken": true
+				}
+			],
+			"output": {
+				"due": null,
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"title": "Order 5M screws",
+				"tokens": []
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "spoken › compact units do not apply: Run 5m",
+			"input": [
+				"Run 5m",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						}
+					],
+					"spoken": true
+				}
+			],
+			"output": {
+				"due": null,
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"title": "Run 5m",
+				"tokens": []
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "spoken › compact units do not apply: Plank 2h",
+			"input": [
+				"Plank 2h",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						}
+					],
+					"spoken": true
+				}
+			],
+			"output": {
+				"due": null,
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"title": "Plank 2h",
+				"tokens": []
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "spoken › compact units do not apply: Rest 2d",
+			"input": [
+				"Rest 2d",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						}
+					],
+					"spoken": true
+				}
+			],
+			"output": {
+				"due": null,
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"title": "Rest 2d",
+				"tokens": []
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "spoken › compact units do not apply: Wait 1w",
+			"input": [
+				"Wait 1w",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						}
+					],
+					"spoken": true
+				}
+			],
+			"output": {
+				"due": null,
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"title": "Wait 1w",
+				"tokens": []
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "spoken › compact units do not apply: Plan 3mo",
+			"input": [
+				"Plan 3mo",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						}
+					],
+					"spoken": true
+				}
+			],
+			"output": {
+				"due": null,
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"title": "Plan 3mo",
+				"tokens": []
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "spoken › compact units do not apply: Study 5 mins",
+			"input": [
+				"Study 5 mins",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						}
+					],
+					"spoken": true
+				}
+			],
+			"output": {
+				"due": null,
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"title": "Study 5 mins",
+				"tokens": []
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "spoken › compact units do not apply: Split in 2 groups",
+			"input": [
+				"Split in 2 groups",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						}
+					],
+					"spoken": true
+				}
+			],
+			"output": {
+				"due": null,
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"title": "Split in 2 groups",
+				"tokens": []
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "spoken › compact units do not apply: Call mom r5m",
+			"input": [
+				"Call mom r5m",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						}
+					],
+					"spoken": true
+				}
+			],
+			"output": {
+				"due": null,
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"title": "Call mom r5m",
+				"tokens": []
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "spoken › compact units do not apply: Call mom remind me 30m before",
+			"input": [
+				"Call mom remind me 30m before",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						}
+					],
+					"spoken": true
+				}
+			],
+			"output": {
+				"due": null,
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"title": "Call mom remind me 30m before",
+				"tokens": []
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "spoken › spelled-out units still count: in 10 minutes",
+			"input": [
+				"Call mom in 10 minutes",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						}
+					],
+					"spoken": true
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-14",
+					"time": "10:10"
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"title": "Call mom",
+				"tokens": [
+					{
+						"end": 22,
+						"kind": "due",
+						"start": 9,
+						"text": "in 10 minutes"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "spoken › spelled-out units still count: in 2 hours",
+			"input": [
+				"Call mom in 2 hours",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						}
+					],
+					"spoken": true
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-14",
+					"time": "12:00"
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"title": "Call mom",
+				"tokens": [
+					{
+						"end": 19,
+						"kind": "due",
+						"start": 9,
+						"text": "in 2 hours"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "spoken › spelled-out units still count: in 5 mins",
+			"input": [
+				"Call mom in 5 mins",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						}
+					],
+					"spoken": true
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-14",
+					"time": "10:05"
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"title": "Call mom",
+				"tokens": [
+					{
+						"end": 18,
+						"kind": "due",
+						"start": 9,
+						"text": "in 5 mins"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "spoken › spelled-out units still count: in 2 weeks",
+			"input": [
+				"Call mom in 2 weeks",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						}
+					],
+					"spoken": true
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-28",
+					"time": null
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"title": "Call mom",
+				"tokens": [
+					{
+						"end": 19,
+						"kind": "due",
+						"start": 9,
+						"text": "in 2 weeks"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "spoken › reminders with spelled-out units still count",
+			"input": [
+				"Call mom tomorrow 5pm remind me 30 minutes before",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						}
+					],
+					"spoken": true
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-15",
+					"time": "17:00"
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [
+					{
+						"kind": "before",
+						"minutes": 30
+					}
+				],
+				"title": "Call mom",
+				"tokens": [
+					{
+						"end": 21,
+						"kind": "due",
+						"start": 9,
+						"text": "tomorrow 5pm"
+					},
+					{
+						"end": 49,
+						"kind": "reminder",
+						"start": 22,
+						"text": "remind me 30 minutes before"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "spoken › a day with apostrophe s stays text: Review Tuesday's notes",
+			"input": [
+				"Review Tuesday's notes",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						}
+					],
+					"spoken": true
+				}
+			],
+			"output": {
+				"due": null,
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"title": "Review Tuesday's notes",
+				"tokens": []
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "spoken › a day with apostrophe s stays text: Review Tuesday’s notes",
+			"input": [
+				"Review Tuesday’s notes",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						}
+					],
+					"spoken": true
+				}
+			],
+			"output": {
+				"due": null,
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"title": "Review Tuesday’s notes",
+				"tokens": []
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "spoken › a day with apostrophe s stays text: Prep today's agenda",
+			"input": [
+				"Prep today's agenda",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						}
+					],
+					"spoken": true
+				}
+			],
+			"output": {
+				"due": null,
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"title": "Prep today's agenda",
+				"tokens": []
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "spoken › a day with apostrophe s stays text: Read tomorrow's brief",
+			"input": [
+				"Read tomorrow's brief",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						}
+					],
+					"spoken": true
+				}
+			],
+			"output": {
+				"due": null,
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"title": "Read tomorrow's brief",
+				"tokens": []
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "spoken › an ordinal before a word is not a date",
+			"input": [
+				"Read the 5th chapter",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						}
+					],
+					"spoken": true
+				}
+			],
+			"output": {
+				"due": null,
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"title": "Read the 5th chapter",
+				"tokens": []
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "spoken › an ordinal at the end is still a date",
+			"input": [
+				"Pay rent on the 15th",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						}
+					],
+					"spoken": true
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-15",
+					"time": null
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"title": "Pay rent",
+				"tokens": [
+					{
+						"end": 20,
+						"kind": "due",
+						"start": 9,
+						"text": "on the 15th"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "spoken › typed quick add keeps its shorthands",
+			"input": [
+				"Review Tuesday's notes urgent 5m",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-14",
+					"time": "10:05"
+				},
+				"labelIds": [],
+				"priority": 1,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"title": "Review Tuesday's notes",
+				"tokens": [
+					{
+						"end": 29,
+						"kind": "priority",
+						"start": 23,
+						"text": "urgent"
+					},
+					{
+						"end": 32,
+						"kind": "due",
+						"start": 30,
+						"text": "5m"
+					}
+				]
+			}
 		}
 	]
 }

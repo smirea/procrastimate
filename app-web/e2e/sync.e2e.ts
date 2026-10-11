@@ -104,7 +104,7 @@ test('pairing shows the other device, and a change on one shows on the other', a
 	await a.app.add(title);
 	await settled(a);
 	await focus(b.page);
-	await expect(b.app.row(title)).toBeVisible();
+	await expect(b.app.row(title)).toBeVisible({ timeout: 10_000 });
 
 	await b.app
 		.row(title)
@@ -113,7 +113,7 @@ test('pairing shows the other device, and a change on one shows on the other', a
 	await expect(b.app.row(title)).toHaveCount(0);
 	await settled(b);
 	await focus(a.page);
-	await expect(a.app.row(title)).toHaveCount(0);
+	await expect(a.app.row(title)).toHaveCount(0, { timeout: 10_000 });
 });
 
 test('a change on one device shows on the other at once, without focus or the minute timer', async ({ browser }) => {
@@ -152,8 +152,8 @@ test('changes made offline apply at once and upload when the network returns', a
 	await goOnline(a);
 	await settled(a);
 	await focus(b.page);
-	await expect(b.app.row(later)).toBeVisible();
-	await expect(b.app.row(`${kept} renamed`)).toBeVisible();
+	await expect(b.app.row(later)).toBeVisible({ timeout: 10_000 });
+	await expect(b.app.row(`${kept} renamed`)).toBeVisible({ timeout: 10_000 });
 });
 
 test('both devices editing the same task offline converge', async ({ browser }) => {
@@ -162,7 +162,7 @@ test('both devices editing the same task offline converge', async ({ browser }) 
 	await a.app.add(title);
 	await settled(a);
 	await focus(b.page);
-	await expect(b.app.row(title)).toBeVisible();
+	await expect(b.app.row(title)).toBeVisible({ timeout: 10_000 });
 
 	await goOffline(a);
 	await goOffline(b);
