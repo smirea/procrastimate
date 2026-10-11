@@ -55,7 +55,7 @@ On a new machine, `env-manager env set dev && env-manager down` fetches `dev` an
 
 ## Environment
 
-`env-manager` manages one root `.env` schema with directory targets. The root `.env.local` is the only place to edit local values. Run `env-manager gen --local` after editing either file; it generates `app-web/.env.local`, `server/.env.local`, `server/src/env.ts`, and `app-web/env.ts` (SvelteKit reserves `src/env.ts`). Commands from child directories find the owning root. There are no independent child schemas.
+`env-manager` manages one root `.env` schema with directory targets. The root `.env.local` is the only place to edit values for the selected environment. `env-manager up` stores them and regenerates `app-web/.env.local`, `server/.env.local`, `server/src/env.ts`, and `app-web/env.ts` (SvelteKit reserves `src/env.ts`). Commands from child directories find the owning root. There are no independent child schemas.
 
 The schema is stored in AWS. `env-manager down` fetches the selected environment and regenerates the child files; `env-manager up` writes the current one back. See `env-manager --help` for schema types and target selection. `gen --local` is only for a machine with no AWS credentials.
 
