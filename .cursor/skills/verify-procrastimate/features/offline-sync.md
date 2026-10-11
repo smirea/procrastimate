@@ -7,6 +7,7 @@ Procrastimate works fully without a network. Every change applies locally at onc
 - `sync-pair` turns sync on: the first device with the setup code, every other with a pairing code from a paired one. See [Settings](./settings.md).
 - `sync-offline` keeps every feature working with no network, and counts the changes waiting.
 - `sync-propagate` shows a change from one client on the other.
+- `sync-realtime` brings that change over at once while the other client is open and visible, through the server's nudge socket, with no focus or timer.
 - `sync-reconnect` uploads offline changes after the network returns.
 - `sync-conflict` converges when both clients change the same task offline.
 - `sync-remove` revokes a device from the device list, which turns sync off on it and keeps its tasks.
@@ -14,7 +15,7 @@ Procrastimate works fully without a network. Every change applies locally at onc
 ## How to get to it (user POV)
 
 - `Settings`, then the `Sync` section: `Set up sync`, `Enter a pairing code`, or, once paired, the `Sync status` line, `Pair a device`, and the `Devices` list.
-- After that sync has no screen. Stefan uses any feature on either client and expects the other client to match. A client syncs on launch, on focus, when the network returns, one second after each change, and every minute while visible.
+- After that sync has no screen. Stefan uses any feature on either client and expects the other client to match. A client syncs on launch, on focus, when the network returns, one second after each change, every minute while visible, and as soon as the server's realtime socket says another device changed something.
 
 ## Driving it with control-ui and XCUITest
 
@@ -26,6 +27,7 @@ Preconditions:
 
 - **Pair.** On client A, `Set up sync`, enter the setup code, `Turn on sync`. `Sync status` reads `Up to date`. `Pair a device` shows an eight-character `Pairing code`. On client B, `Enter a pairing code`, type it in any case, `Pair`. B reads `Up to date`, A hides the code once B joins, and A's `Devices` list shows both, with `This device` on A. Test: `pairing shows the other device, and a change on one shows on the other`.
 - **Propagate.** Add a task on A. It appears on B after B regains focus or within a minute. Completing it on B removes it from A's Inbox. Same test.
+- **Realtime.** With A and B both open and nothing focusing B, add a task on A. B shows it within a couple of seconds. Completing it on B removes it from A the same way. In devtools, B's Network tab shows one WebSocket to `/api/sync/socket` with a `{"cursor":N}` frame per change. Test: `a change on one device shows on the other at once, without focus or the minute timer`.
 - **Offline.** Block A's `/api/sync` requests. Add and rename tasks on A. Each change applies at once, survives a reload, and `Sync status` reads `Offline · N changes waiting`. Test: `changes made offline apply at once and upload when the network returns`.
 - **Reconnect.** Let A's requests through again. A reads `Up to date`, and B shows the new and renamed tasks. Same test.
 - **Conflict.** Block both clients, rename the same task differently on each, and add notes on B. After both reconnect, both show the same title (the later write wins) and B's notes, since different fields merge. Test: `both devices editing the same task offline converge`.
@@ -34,7 +36,8 @@ Preconditions:
 
 ## Gotchas
 
-- The e2e tests block only `/api/sync` to go offline. Browser offline mode also cuts the page off from the dev server.
+- The e2e tests block only `/api/sync` to go offline. Browser offline mode also cuts the page off from the dev server. The `**/api/sync` route does not match `/api/sync/socket`, so an "offline" device still hears nudges and its syncs fail, which reads as `Offline`.
+- The socket goes through Vite's `/api` proxy with `ws: true` in dev. The socket only triggers syncs, so a change that shows only after focus means the socket is down, not that sync is broken.
 - Only one pairing code is live at a time and a new one replaces it, so tests that pair run one at a time (`test.describe.configure({ mode: 'default' })`). `--repeat-each` needs `--workers=1`.
 - The pinned e2e clock is days ahead of the server, which then replaces the clients' clocks with its own, so the write that reaches the server last wins a conflict. The test only asserts that both clients agree.
 - Completing a task commits 260 ms after the click, after the check animation. Wait for the row to leave before expecting `Up to date`.

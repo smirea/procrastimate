@@ -4,12 +4,13 @@ import type { Env, Handler } from '../bindings';
 import { pushSender } from '../push';
 import { memoryStore } from './memory-store';
 import { deliverDue, pushRoutes } from './push';
+import { durableSockets, noSockets, realtime, realtimeRoutes, type SocketHost } from './realtime';
 import { sqliteStore } from './sqlite-store';
 import type { AccountStore } from './store';
 import { syncRoutes } from './sync';
 
 /** Every route the `Account` object answers. The Worker forwards each of them to the one account. */
-const accountRoutes: Record<string, AccountRoute> = { ...authRoutes, ...syncRoutes, ...pushRoutes };
+const accountRoutes: Record<string, AccountRoute> = { ...authRoutes, ...syncRoutes, ...pushRoutes, ...realtimeRoutes };
 
 type SetAlarm = (at: number | null) => Promise<void>;
 
@@ -17,13 +18,29 @@ const fail = (status: number, error: string) => Response.json({ ok: false, error
 
 /**
  * The object's request handler over any store, shared by the Worker and the Bun dev server. The dev server has no
- * alarms, so its `setAlarm` does nothing.
+ * alarms, so its `setAlarm` does nothing. Whenever a request moves the log, every open socket hears the new head.
  */
-export function accountHandler(store: AccountStore, setupCode: string | undefined, setAlarm: SetAlarm) {
-	return (request: Request): Promise<Response> => {
+export function accountHandler(
+	store: AccountStore,
+	setupCode: string | undefined,
+	setAlarm: SetAlarm,
+	sockets: SocketHost = noSockets,
+) {
+	const live = realtime(sockets);
+	return async (request: Request): Promise<Response> => {
 		const route = accountRoutes[`${request.method} ${new URL(request.url).pathname}`];
-		if (!route) return Promise.resolve(fail(404, 'Not found'));
-		return route(request, { store, setupCode: setupCode || undefined, now: Date.now(), setAlarm });
+		if (!route) return fail(404, 'Not found');
+		const head = store.lastSeq();
+		const response = await route(request, {
+			store,
+			setupCode: setupCode || undefined,
+			now: Date.now(),
+			setAlarm,
+			realtime: live,
+		});
+		const next = store.lastSeq();
+		if (next > head) live.nudge(next);
+		return response;
 	};
 }
 
@@ -37,7 +54,7 @@ export class Account {
 		private readonly env: Env,
 	) {
 		this.store = sqliteStore(ctx.storage.sql, run => ctx.storage.transactionSync(run));
-		this.handle = accountHandler(this.store, env.SYNC_SETUP_CODE, at => this.setAlarm(at));
+		this.handle = accountHandler(this.store, env.SYNC_SETUP_CODE, at => this.setAlarm(at), durableSockets(ctx));
 	}
 
 	fetch(request: Request): Promise<Response> {
@@ -47,6 +64,15 @@ export class Account {
 	/** Delivers due Web Push notifications, then re-arms for the next. */
 	async alarm(): Promise<void> {
 		await this.setAlarm(await deliverDue(this.store, Date.now(), pushSender(this.env)));
+	}
+
+	/** Clients only send the keepalive, which the runtime answers without waking the object. */
+	webSocketMessage(): void {}
+
+	webSocketClose(socket: WebSocket, code: number, reason: string): void {
+		try {
+			socket.close(code, reason);
+		} catch {}
 	}
 
 	private async setAlarm(at: number | null) {
@@ -73,8 +99,9 @@ export function memoryAccount(
 	setupCode: string | undefined,
 	store = memoryStore(),
 	setAlarm: SetAlarm = async () => {},
+	sockets: SocketHost = noSockets,
 ): DurableObjectNamespace {
-	const handle = accountHandler(store, setupCode, setAlarm);
+	const handle = accountHandler(store, setupCode, setAlarm, sockets);
 	const namespace = { idFromName: (name: string) => name, get: () => ({ fetch: handle }) };
 	return namespace as unknown as DurableObjectNamespace;
 }

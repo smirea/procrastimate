@@ -136,3 +136,21 @@ export const syncResponseSchema = z.union([
 	z.object({ acked: z.array(z.string()), snapshot: snapshotSchema, cursor, hlc }),
 ]);
 export type SyncResponse = z.infer<typeof syncResponseSchema>;
+
+/**
+ * The realtime nudge: a WebSocket on which the server sends `{ cursor }` after every push that moved the log. It
+ * only says "sync now"; the changes still come through `POST /api/sync`. Browsers cannot set headers on a
+ * WebSocket, so the web sends its token as the `bearer.<token>` subprotocol next to `SYNC_SOCKET_PROTOCOL`, which
+ * the server echoes. A client that can set headers may send `Authorization: Bearer` instead.
+ */
+export const SYNC_SOCKET_PATH = '/api/sync/socket';
+export const SYNC_SOCKET_PROTOCOL = 'procrastimate.sync';
+export const SOCKET_TOKEN_PREFIX = 'bearer.';
+/** Answered by the server without waking the Durable Object, so a keepalive costs nothing. */
+export const SOCKET_PING = 'ping';
+export const SOCKET_PONG = 'pong';
+/** The close code the server uses when the socket's device is removed. */
+export const SOCKET_REVOKED = 4401;
+
+export const nudgeSchema = z.object({ cursor });
+export type Nudge = z.infer<typeof nudgeSchema>;

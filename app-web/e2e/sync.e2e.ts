@@ -116,6 +116,20 @@ test('pairing shows the other device, and a change on one shows on the other', a
 	await expect(a.app.row(title)).toHaveCount(0);
 });
 
+test('a change on one device shows on the other at once, without focus or the minute timer', async ({ browser }) => {
+	const [a, b] = await pairedDevices(browser);
+	const title = unique('Nudged task');
+	await a.app.add(title);
+	// The minute timer is far off, and nothing here focuses B, so only the realtime nudge can bring the task over.
+	await expect(b.app.row(title)).toBeVisible({ timeout: 10_000 });
+
+	await b.app
+		.row(title)
+		.getByRole('checkbox', { name: `Complete ${title}` })
+		.click();
+	await expect(a.app.row(title)).toHaveCount(0, { timeout: 10_000 });
+});
+
 test('changes made offline apply at once and upload when the network returns', async ({ browser }) => {
 	const [a, b] = await pairedDevices(browser);
 	const kept = unique('Kept offline');
