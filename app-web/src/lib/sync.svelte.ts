@@ -1,11 +1,21 @@
 import type { DeviceCredentials, DeviceInfo, DeviceList, PairingCode } from 'shared/auth.ts';
-import { SYNC_PAGE_SIZE, syncResponseSchema } from 'shared/sync/protocol.ts';
+import {
+	nudgeSchema,
+	SOCKET_PING,
+	SOCKET_PONG,
+	SOCKET_REVOKED,
+	SOCKET_TOKEN_PREFIX,
+	SYNC_PAGE_SIZE,
+	SYNC_SOCKET_PATH,
+	SYNC_SOCKET_PROTOCOL,
+	syncResponseSchema,
+} from 'shared/sync/protocol.ts';
 import { store } from './store.svelte.ts';
 
 /**
  * Syncs a paired device with the server: on launch, on focus, when the network returns, one second after a
- * commit, and every minute while visible. A failed sync keeps the outbox and retries on the next trigger. An
- * unpaired device never talks to the server.
+ * commit, every minute while visible, and whenever the realtime socket reports a cursor past this device's. A
+ * failed sync keeps the outbox and retries on the next trigger. An unpaired device never talks to the server.
  */
 
 export type SyncStatus =
@@ -19,6 +29,10 @@ export type SyncStatus =
 const TOKEN_KEY = 'procrastimate-device';
 const COMMIT_DELAY = 1000;
 const INTERVAL = 60_000;
+/** A keepalive that also finds a dead socket: one that answers nothing between two pings is dropped. */
+const PING_INTERVAL = 30_000;
+const RECONNECT_MIN = 1000;
+const RECONNECT_MAX = 60_000;
 
 const readToken = () => localStorage.getItem(TOKEN_KEY);
 
@@ -74,19 +88,31 @@ class Sync {
 	#running: Promise<void> | null = null;
 	#again = false;
 	#timer: ReturnType<typeof setTimeout> | undefined;
+	#socket: WebSocket | null = null;
+	#keepalive: ReturnType<typeof setInterval> | undefined;
+	#reconnect: ReturnType<typeof setTimeout> | undefined;
+	#failures = 0;
 
-	/** Registers the triggers and syncs once. Returns the cleanup. */
+	/** Registers the triggers, opens the realtime socket, and syncs once. Returns the cleanup. */
 	start() {
 		if (store.paired && readToken()) this.status = { kind: 'synced' };
 		else if (store.paired) store.unpair();
-		const onVisible = () => document.visibilityState === 'visible' && void this.syncNow();
-		const onTrigger = () => void this.syncNow();
+		const onVisible = () => {
+			if (document.visibilityState !== 'visible') return this.#disconnect();
+			void this.syncNow();
+			this.#connect();
+		};
+		const onTrigger = () => {
+			void this.syncNow();
+			this.#connect();
+		};
 		const stopCommits = store.onCommit(() => this.#schedule());
 		window.addEventListener('focus', onTrigger);
 		window.addEventListener('online', onTrigger);
 		document.addEventListener('visibilitychange', onVisible);
 		const interval = setInterval(() => document.visibilityState === 'visible' && void this.syncNow(), INTERVAL);
 		void this.syncNow();
+		this.#connect();
 		return () => {
 			stopCommits();
 			window.removeEventListener('focus', onTrigger);
@@ -94,7 +120,74 @@ class Sync {
 			document.removeEventListener('visibilitychange', onVisible);
 			clearInterval(interval);
 			clearTimeout(this.#timer);
+			this.#disconnect();
 		};
+	}
+
+	/**
+	 * Opens the realtime socket while paired and visible, unless one is already open or opening. The server sends
+	 * the account's new cursor after every change, and the socket only ever triggers a sync.
+	 */
+	#connect() {
+		const token = readToken();
+		if (this.#socket || !token || !store.paired || document.visibilityState !== 'visible') return;
+		clearTimeout(this.#reconnect);
+		const url = new URL(SYNC_SOCKET_PATH, location.href);
+		url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
+		const socket = new WebSocket(url, [SYNC_SOCKET_PROTOCOL, `${SOCKET_TOKEN_PREFIX}${token}`]);
+		this.#socket = socket;
+		let heard = true;
+		socket.onopen = () => {
+			// Nudges sent while the socket was down are lost, so a reconnect catches up once.
+			if (this.#failures > 0) void this.syncNow();
+			this.#failures = 0;
+			this.#keepalive = setInterval(() => {
+				if (!heard) return this.#retry();
+				heard = false;
+				socket.send(SOCKET_PING);
+			}, PING_INTERVAL);
+		};
+		socket.onmessage = ({ data }) => {
+			heard = true;
+			if (data === SOCKET_PONG) return;
+			let message: unknown;
+			try {
+				message = JSON.parse(String(data));
+			} catch {
+				return;
+			}
+			const nudge = nudgeSchema.safeParse(message);
+			if (nudge.success) void this.#hear(nudge.data.cursor);
+		};
+		socket.onclose = ({ code }) => {
+			if (code === SOCKET_REVOKED) this.forget('This device was removed from sync.');
+			else this.#retry();
+		};
+	}
+
+	/** Syncs when the account is past this device's cursor, after the sync already running, which may cover it. */
+	async #hear(cursor: number) {
+		await this.#running;
+		const own = store.syncRequest()?.cursor;
+		if (own !== undefined && cursor > own) void this.syncNow();
+	}
+
+	#disconnect() {
+		const socket = this.#socket;
+		this.#socket = null;
+		clearInterval(this.#keepalive);
+		clearTimeout(this.#reconnect);
+		if (!socket) return;
+		socket.onopen = socket.onmessage = socket.onclose = null;
+		socket.close();
+	}
+
+	/** Drops a failed socket and opens another after a delay that doubles up to a minute. */
+	#retry() {
+		this.#disconnect();
+		const delay = Math.min(RECONNECT_MIN * 2 ** this.#failures, RECONNECT_MAX);
+		this.#failures++;
+		this.#reconnect = setTimeout(() => this.#connect(), delay);
 	}
 
 	#schedule() {
@@ -176,6 +269,7 @@ class Sync {
 		localStorage.setItem(TOKEN_KEY, token);
 		store.pair(deviceId, zone());
 		void this.syncNow();
+		this.#connect();
 	}
 
 	/** The first device: proves it knows the server's setup code. */
@@ -228,6 +322,8 @@ class Sync {
 
 	/** Turns sync off on this device and keeps its data. */
 	forget(notice?: string) {
+		this.#disconnect();
+		this.#failures = 0;
 		localStorage.removeItem(TOKEN_KEY);
 		store.unpair();
 		this.status = { kind: 'off', notice };

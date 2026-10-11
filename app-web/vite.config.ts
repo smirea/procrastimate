@@ -21,6 +21,7 @@ export default defineConfig({
 				target: env.API_URL,
 				changeOrigin: true,
 				secure: false,
+				ws: true,
 			},
 		},
 	},
