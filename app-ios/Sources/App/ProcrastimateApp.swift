@@ -23,8 +23,16 @@ struct ProcrastimateApp: App {
         let store = Store(file: SnapshotFile(url: StoreLocation.file), clock: clock)
         let actions = TaskActions(store: store, toasts: toasts, clock: clock)
         let router = IntentRouter()
+        // The delegate must be set before launch finishes, so tapping a notification can cold-start into its task.
+        let notifications = LocalNotifications(store: store, toasts: toasts, navigator: navigator, clock: clock)
         let session = IntentSession(
-            store: store, navigator: navigator, actions: actions, toasts: toasts, clock: clock, router: router
+            store: store,
+            navigator: navigator,
+            actions: actions,
+            toasts: toasts,
+            clock: clock,
+            router: router,
+            notifications: notifications
         )
         session.install()
         ProcrastimateShortcuts.updateAppShortcutParameters()
@@ -37,8 +45,7 @@ struct ProcrastimateApp: App {
         _store = State(initialValue: store)
         _actions = State(initialValue: actions)
         _router = State(initialValue: router)
-        // The delegate must be set before launch finishes, so tapping a notification can cold-start into its task.
-        _notifications = State(initialValue: LocalNotifications(store: store, toasts: toasts, navigator: navigator, clock: clock))
+        _notifications = State(initialValue: notifications)
         _importer = State(initialValue: TodoistImport(store: store, clock: clock))
     }
 
@@ -60,6 +67,8 @@ struct ProcrastimateApp: App {
                 .task { await notifications.run() }
                 .onChange(of: store.tasks) { old, new in notifications.tasksChanged(from: old, to: new) }
                 .onChange(of: store.tasks) { _, _ in SpotlightIndex.schedule(session) }
+                .onChange(of: store.projects) { _, _ in SpotlightIndex.schedule(session) }
+                .onChange(of: store.labels) { _, _ in SpotlightIndex.schedule(session) }
                 .task { SpotlightIndex.schedule(session) }
                 .task { await IntentHarness.run() }
                 .overlay(alignment: .top) { IntentReadout() }

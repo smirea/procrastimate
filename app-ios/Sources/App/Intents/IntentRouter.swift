@@ -19,9 +19,8 @@ final class IntentRouter {
     }
 }
 
-/// Hidden labels so an XCUITest can read what an intent did and which tasks were indexed. The text sits in the
-/// accessibility identifier, the same way the notification schedule does, because a clipped view's label is easy to
-/// miss. Release builds omit it.
+/// Hidden identifiers so an XCUITest can read what an intent did and which tasks were indexed. The text sits in the
+/// accessibility identifier, the same way the notification schedule does. Release builds omit it.
 struct IntentReadout: View {
     @Environment(IntentRouter.self) private var router
 

@@ -248,16 +248,32 @@ enum IntentEffects {
 
     private static func withStore<T>(_ body: (Store, AppClock, IntentSession?) -> T) async -> T {
         if let session = IntentSession.current {
+            let before = session.store.tasks
             let result = body(session.store, session.clock, session)
             SpotlightIndex.schedule(session)
+            await followUp(session.store, session.clock, notifications: session.notifications, before: before)
             return result
         }
         let clock = fallbackClock()
         let store = Store(file: SnapshotFile(url: StoreLocation.file), clock: clock)
+        let before = store.tasks
         let result = body(store, clock, nil)
         await store.flush()
         SpotlightIndex.schedule(store: store, clock: clock, router: nil)
+        await followUp(store, clock, notifications: nil, before: before)
         return result
+    }
+
+    /// Notifications and the "turn on notifications" nudge. The open app's view does this on the next frame, which is
+    /// too late when the intent ran first, and absent when the app was not showing.
+    private static func followUp(
+        _ store: Store,
+        _ clock: AppClock,
+        notifications: LocalNotifications?,
+        before: [TaskItem]
+    ) async {
+        await LocalNotifications.applySchedule(store: store, clock: clock)
+        notifications?.tasksChanged(from: before, to: store.tasks)
     }
 
     private static func fallbackClock() -> AppClock {

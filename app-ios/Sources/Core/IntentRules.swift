@@ -50,8 +50,10 @@ public enum IntentRules {
         draft.picked.labelIds = request.labelIds
         draft.picked.priority = request.priority
         draft.picked.due = request.due
-        draft.picked.reminders = request.reminders
-        return draft.resolve(draft.parse(now: now, projects: projects, labels: labels, in: zone))
+        let parsed = draft.parse(now: now, projects: projects, labels: labels, in: zone)
+        // The quick-add draft keeps a typed reminder and a picked one. A shortcut field fills the gap only.
+        if parsed.reminders.isEmpty { draft.picked.reminders = request.reminders }
+        return draft.resolve(parsed)
     }
 
     /// A Shortcuts date becomes a due date in the clock's zone, time included.

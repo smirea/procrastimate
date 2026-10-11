@@ -11,14 +11,24 @@ final class IntentSession {
     let toasts: Toasts
     let clock: AppClock
     let router: IntentRouter
+    let notifications: LocalNotifications
 
-    init(store: Store, navigator: Navigator, actions: TaskActions, toasts: Toasts, clock: AppClock, router: IntentRouter) {
+    init(
+        store: Store,
+        navigator: Navigator,
+        actions: TaskActions,
+        toasts: Toasts,
+        clock: AppClock,
+        router: IntentRouter,
+        notifications: LocalNotifications
+    ) {
         self.store = store
         self.navigator = navigator
         self.actions = actions
         self.toasts = toasts
         self.clock = clock
         self.router = router
+        self.notifications = notifications
     }
 
     func install() { Self.current = self }

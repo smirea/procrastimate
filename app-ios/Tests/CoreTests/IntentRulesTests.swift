@@ -71,6 +71,16 @@ import Testing
         #expect(task.reminders == [.before(minutes: 5)])
     }
 
+    @Test func aSpokenReminderReplacesTheShortcutReminder() throws {
+        let task = try #require(
+            added(.init(
+                text: "Call mom tomorrow 5pm remind me 30m before",
+                reminders: [.at(date: "2026-10-15", time: "16:45")]
+            ))
+        )
+        #expect(task.reminders == [.before(minutes: 30)])
+    }
+
     @Test func aTimeWithNoDayUsesTheExplicitDate() throws {
         let task = try #require(
             added(.init(text: "Submit report 5pm", due: Due(date: "2026-10-20", time: nil)))
