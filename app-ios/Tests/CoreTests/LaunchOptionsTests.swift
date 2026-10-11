@@ -15,8 +15,14 @@ let pinned = Date(timeIntervalSince1970: 1_791_972_000)
             "PROCRASTIMATE_NOW": "2026-10-14T10:00:00Z",
             "PROCRASTIMATE_TZ": "America/New_York",
             "PROCRASTIMATE_RESET": "1",
+            "PROCRASTIMATE_NOTIFICATIONS_DENIED": "1",
         ])
-        #expect(options == LaunchOptions(now: pinned, timeZone: TimeZone(identifier: "America/New_York"), reset: true))
+        #expect(options == LaunchOptions(
+            now: pinned,
+            timeZone: TimeZone(identifier: "America/New_York"),
+            reset: true,
+            notificationsDenied: true
+        ))
     }
 
     @Test func acceptsFractionalSeconds() throws {
@@ -27,6 +33,7 @@ let pinned = Date(timeIntervalSince1970: 1_791_972_000)
         ("PROCRASTIMATE_NOW", "tomorrow"),
         ("PROCRASTIMATE_TZ", "Mars/Olympus"),
         ("PROCRASTIMATE_RESET", "yes"),
+        ("PROCRASTIMATE_NOTIFICATIONS_DENIED", "no"),
     ])
     func rejectsMalformedValues(key: String, value: String) {
         #expect(throws: LaunchOptions.Failure.invalid(key: key, value: value)) {
