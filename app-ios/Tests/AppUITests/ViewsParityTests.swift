@@ -54,12 +54,14 @@ final class ViewsParityTests: ParityTestCase {
     func test_views_counts() {
         start()
         add("Buy milk", "Pay rent today", "Standup today 9am", "Gym tomorrow")
-        expectBadge(4, on: "Inbox")
-        expectBadge(2, on: "Today")
+        expectRows(4)
         snap("views-counts")
+        go("Today")
+        expectRows(2)
         checkbox("Pay rent").tap()
-        expectBadge(3, on: "Inbox")
-        expectBadge(1, on: "Today")
+        expectRows(1)
+        go("Inbox")
+        expectRows(3)
     }
 
     func test_labels_chips() {

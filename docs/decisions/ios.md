@@ -80,7 +80,7 @@
   - Playwright tests live in `app-web/e2e/parity/<area>.e2e.ts`, titled `<parity-id>: <scenario>`, in a `parity` project that runs WebKit with the iPhone 15 Pro profile. The existing `desktop` and `mobile` projects and their tests stay unchanged.
   - Both sides save `<parity-id>.png`: web under `app-web/test-results/parity/`, iOS in the `ios-parity` artifact.
   - Rules that do not need UI, such as every parser phrase and guard, are proven by the vectors. The UI test covers one representative scenario.
-- **Reading highlights in XCUITests.** XCUITest cannot read text attributes, so the smart input carries its tokens in the editor's accessibility identifier, such as `due: tomorrow 5pm; priority: p1`, and the tests assert that where Playwright asserts `[data-token]`. A checkbox's accessibility value is its priority (`Priority 1`), where Playwright checks the tint variable.
+- **Reading highlights in XCUITests.** XCUITest cannot read text attributes, so the smart input carries its tokens in the editor's accessibility identifier, such as `due: tomorrow 5pm; priority: p1`, and the tests assert that where Playwright asserts `[data-token]`. A checkbox's accessibility value is its priority (`Priority 1`), where Playwright checks the tint variable. The iOS 26 tab bar keeps badges out of the accessibility tree, so the counts test checks the rows each badge is computed from and the screenshot shows the badges.
 - **Feature map.** Each slice replaces the `iOS: Planned` entries of the features it ships in `.cursor/skills/verify-procrastimate/features/` with the XCUITest command and names, and updates its rows in [iOS parity](../ios-parity.md).
 
 ## Distribution (not planned yet)

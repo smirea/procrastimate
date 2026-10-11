@@ -68,18 +68,18 @@ extension ParityTestCase {
         XCTAssertTrue(row.label.contains(detail), "\(row.label) lacks \(detail)", file: file, line: line)
     }
 
-    /// The iOS 26 tab bar draws a badge as its own element over the tab rather than as the tab's value.
-    func expectBadge(_ count: Int, on name: String, file: StaticString = #filePath, line: UInt = #line) {
-        let bar = app.tabBars.firstMatch
+    /// The iOS 26 tab bar keeps badges out of the accessibility tree, so tests count the rows a badge is computed from
+    /// and leave the badge itself to the screenshot.
+    func expectRows(_ count: Int, file: StaticString = #filePath, line: UInt = #line) {
+        let rows = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH 'task-'"))
+        var titles = Set<String>()
         let deadline = Date().addingTimeInterval(5)
         repeat {
-            let tab = tab(name)
-            let badges = bar.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "\(count)"))
-            let overlaps = badges.allElementsBoundByIndex.contains { $0.frame.intersects(tab.frame) }
-            if overlaps || (tab.value as? String)?.contains("\(count)") == true { return }
+            titles = Set(rows.allElementsBoundByIndex.map(\.identifier))
+            if titles.count == count { return }
             Thread.sleep(forTimeInterval: 0.25)
         } while Date() < deadline
-        XCTFail("No \(count) badge on \(name) in \(bar.debugDescription)", file: file, line: line)
+        XCTFail("Expected \(count) rows, found \(titles.sorted())", file: file, line: line)
     }
 
     func expectHighlight(_ kind: String, _ text: String) {
