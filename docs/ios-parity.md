@@ -84,7 +84,7 @@ What the native iOS app must do to match the web app, row by row from the featur
 | `recurring-picker`: presets, custom interval, weekday toggles that keep the popover open, `Don't repeat` | ✓ | Planned | S6 | `RecurringParityTests.test_recurring_picker` | `recurring › recurring-picker` | `recurring-picker.png` |
 | `recurring-display`: repeat icon named after the repeat | ✓ | Built | S5 | `RecurringParityTests.test_recurring_display` | `recurring › recurring-display` | `recurring-display.png` |
 | `recurring-complete`: see `complete-recurring` | ✓ | Built | S5 | see Complete | see Complete | — |
-| `recurring-reminders`: reminders and the due time notify at the next occurrence | ✓ | Planned | S8 | `RemindersParityTests.test_recurring_reminders` | `reminders › recurring-reminders` | `recurring-reminders.png` |
+| `recurring-reminders`: reminders and the due time notify at the next occurrence | ✓ | Built | S8 | `RemindersParityTests.test_recurring_reminders` | `reminders › recurring-reminders` | `recurring-reminders.png` |
 
 ### Reminders
 
@@ -92,24 +92,24 @@ What the native iOS app must do to match the web app, row by row from the featur
 | --- | --- | --- | --- | --- | --- | --- |
 | `reminders-nl`: `remind me 30m before`, `r5m`, `remind me at 4pm`, … | ✓ | Built | S3→S5 | `QuickAddParityTests.test_reminders_nl` | `quick-add › reminders-nl` | `reminders-nl.png` |
 | `reminders-picker`: presets, custom date and time, remove | ✓ | Planned | S6 | `DetailsParityTests.test_reminders_picker` | `details › reminders-picker` | `reminders-picker.png` |
-| `reminders-fire`: `Reminder: <title>` toast with `Open` while the app is open | ✓ | Planned | S8 | `RemindersParityTests.test_reminders_fire` | `reminders › reminders-fire` | `reminders-fire.png` |
-| `reminders-due-time`: the due time notifies alone, a date alone never does, one notification per moment | ✓ | Planned | S2→S8 | `RemindersParityTests.test_reminders_due_time` | `reminders › reminders-due-time` | `reminders-due-time.png` |
-| `reminders-notify`: system notifications while closed (Web Push on web, local notifications on iOS) | ✓ | Planned | S8 | see Notifications | see Notifications | — |
+| `reminders-fire`: `Reminder: <title>` toast with `Open` while the app is open | ✓ | Built (`Open` shows the details placeholder until S6) | S8 | `RemindersParityTests.test_reminders_fire` | `reminders › reminders-fire` | `reminders-fire.png` |
+| `reminders-due-time`: the due time notifies alone, a date alone never does, one notification per moment | ✓ | Built | S2→S8 | `RemindersParityTests.test_reminders_due_time` | `reminders › reminders-due-time` | `reminders-due-time.png` |
+| `reminders-notify`: system notifications while closed (Web Push on web, local notifications on iOS) | ✓ | Built | S8 | see Notifications | see Notifications | — |
 
 ### Notifications
 
-The web's Web Push rows map to native local notifications. XCUITests check the pending requests through a DEBUG-only accessibility readout on the Notifications screen, since XCUITest cannot read `UNUserNotificationCenter` directly. The web side keeps its existing push tests, so these rows pair against the web's notifications panel.
+The web's Web Push rows map to native local notifications. XCUITests check the pending requests through a DEBUG-only accessibility readout on the Notifications screen, since XCUITest cannot read `UNUserNotificationCenter` directly. The web halves pair against the web's notifications panel: they pair the page with sync, stand in for the push service, and read the server's schedule as the same `title@<ISO time>: body` lines.
 
 | Feature | Web | iOS | Slice | XCUITest | Playwright | Screenshot |
 | --- | --- | --- | --- | --- | --- | --- |
-| `push-sheet`: Notifications screen in Browse showing `On`, `Off`, or `Blocked` | ✓ | Planned | S8 | `NotificationsParityTests.test_push_sheet` | `notifications › push-sheet` | `push-sheet.png` |
-| `push-permission`: asks only from `Turn on notifications`; a denial links to Settings | ✓ | Planned | S8 | `NotificationsParityTests.test_push_permission` | `notifications › push-permission` | `push-permission.png` |
+| `push-sheet`: Notifications screen in Browse showing `On`, `Off`, or `Blocked` | ✓ | Built | S8 | `NotificationsParityTests.test_push_sheet` | `notifications › push-sheet` | `push-sheet.png` |
+| `push-permission`: asks only from `Turn on notifications`; a denial links to Settings | ✓ | Built | S8 | `NotificationsParityTests.test_push_permission` | `notifications › push-permission` | `push-permission.png` |
 | `push-install`: Add to Home Screen guidance (*web only*) | ✓ | n/a | — | — | — | — |
-| `push-schedule`: the device schedule equals future due times and reminders of open tasks, at most 60 pending on iOS | ✓ | Planned | S8 | `NotificationsParityTests.test_push_schedule` | `notifications › push-schedule` | `push-schedule.png` |
-| `push-deliver`: one notification per moment, titled with the task, body such as `Due now` | ✓ | Planned | S8 | `NotificationsParityTests.test_push_deliver` | `notifications › push-deliver` | `push-deliver.png` |
-| `push-test`: `Send a test notification` and `Turn off` | ✓ | Planned | S8 | `NotificationsParityTests.test_push_test` | `notifications › push-test` | `push-test.png` |
-| `push-nudge`: one `Get notified when it's due?` toast per session | ✓ | Planned | S8 | `NotificationsParityTests.test_push_nudge` | `notifications › push-nudge` | `push-nudge.png` |
-| `push-open`: tapping a notification opens its task | ✓ | Planned | S8 | `NotificationsParityTests.test_push_open` | `notifications › push-open` | `push-open.png` |
+| `push-schedule`: the device schedule equals future due times and reminders of open tasks, at most 60 pending on iOS | ✓ | Built | S8 | `NotificationsParityTests.test_push_schedule` | `notifications › push-schedule` | `push-schedule.png` |
+| `push-deliver`: one notification per moment, titled with the task, body such as `Due now` | ✓ | Built | S8 | `NotificationsParityTests.test_push_deliver` | `notifications › push-deliver` | `push-deliver.png` |
+| `push-test`: `Send a test notification` and `Turn off` | ✓ | Built | S8 | `NotificationsParityTests.test_push_test` | `notifications › push-test` | `push-test.png` |
+| `push-nudge`: one `Get notified when it's due?` toast per session | ✓ | Built | S8 | `NotificationsParityTests.test_push_nudge` | `notifications › push-nudge` | `push-nudge.png` |
+| `push-open`: tapping a notification opens its task | ✓ | Built (opens the details sheet; S6 fills it in) | S8 | `NotificationsParityTests.test_push_open` | `notifications › push-open` | `push-open.png` |
 
 ### Task views
 
@@ -166,27 +166,27 @@ The web's Web Push rows map to native local notifications. XCUITests check the p
 | Feature | Web | iOS | Slice | XCUITest | Playwright | Screenshot |
 | --- | --- | --- | --- | --- | --- | --- |
 | `settings-popover`: the desktop sidebar's settings popover (*web only*) | ✓ | n/a | — | — | — | — |
-| `settings-sheet`: Settings in Browse (the phone web's settings sheet) | ✓ | Planned | S8 | `SettingsParityTests.test_settings_sheet` | `settings › settings-sheet` | `settings-sheet.png` |
-| `settings-theme`: the `Theme` segmented control | ✓ | Planned | S8 | `SettingsParityTests.test_settings_theme` | `settings › settings-theme` | `settings-theme.png` |
-| `settings-import`: `Import from Todoist` | ✓ | Planned | S8 | see Todoist import | see Todoist import | — |
-| `theme-system`: follows the device appearance live | ✓ | Planned | S8 | `ThemeParityTests.test_theme_system` | `theme › theme-system` | `theme-system-light.png`, `theme-system-dark.png` |
-| `theme-override`: `Light` and `Dark` | ✓ | Planned | S8 | `ThemeParityTests.test_theme_override` | `theme › theme-override` | `theme-override.png` |
-| `theme-persist`: kept across relaunch, outside task data | ✓ | Planned | S8 | `ThemeParityTests.test_theme_persist` | `theme › theme-persist` | `theme-persist.png` |
-| `theme-first-paint`: no flash of the other theme at launch | ✓ | Planned | S8 | `ThemeParityTests.test_theme_first_paint` | `theme › theme-first-paint` | — |
+| `settings-sheet`: Settings in Browse (the phone web's settings sheet) | ✓ | Built | S8 | `SettingsParityTests.test_settings_sheet` | `settings › settings-sheet` | `settings-sheet.png` |
+| `settings-theme`: the `Theme` segmented control | ✓ | Built | S8 | `SettingsParityTests.test_settings_theme` | `settings › settings-theme` | `settings-theme.png` |
+| `settings-import`: `Import from Todoist` | ✓ | Built | S8 | see Todoist import | see Todoist import | — |
+| `theme-system`: follows the device appearance live | ✓ | Built | S8 | `ThemeParityTests.test_theme_system` | `theme › theme-system` | `theme-system-light.png`, `theme-system-dark.png` |
+| `theme-override`: `Light` and `Dark` | ✓ | Built | S8 | `ThemeParityTests.test_theme_override` | `theme › theme-override` | `theme-override.png` |
+| `theme-persist`: kept across relaunch, outside task data | ✓ | Built | S8 | `ThemeParityTests.test_theme_persist` | `theme › theme-persist` | `theme-persist.png` |
+| `theme-first-paint`: no flash of the other theme at launch | ✓ | Built | S8 | `ThemeParityTests.test_theme_first_paint` | `theme › theme-first-paint` | — |
 | `theme-contrast`: tokens generated from `index.css`, which the web contrast test checks | ✓ | Built | S1 | n/a (`Tokens.swift` freshness check in CI) | n/a | — |
-| `theme-glass-fallback`: solid glass under Increase Contrast or Reduce Transparency | ✓ | Planned | S8 | `ThemeParityTests.test_theme_glass_fallback` | `theme › theme-glass-fallback` | `theme-glass-fallback.png` |
-| `theme-reduced-motion`: instant motion under Reduce Motion | ✓ | Planned | S8 | `ThemeParityTests.test_theme_reduced_motion` | `theme › theme-reduced-motion` | — |
+| `theme-glass-fallback`: solid glass under Increase Contrast or Reduce Transparency | ✓ | Built (system glass) | S8 | n/a: a UI test cannot change the setting | n/a (`theme.e2e.ts` in `desktop`) | — |
+| `theme-reduced-motion`: instant motion under Reduce Motion | ✓ | Built | S8 | n/a: a UI test cannot change the setting | n/a (`theme.e2e.ts` in `desktop`) | — |
 
 ### Todoist import
 
 | Feature | Web | iOS | Slice | XCUITest | Playwright | Screenshot |
 | --- | --- | --- | --- | --- | --- | --- |
-| `import-pick`: file picker limited to `.zip` (plus "Open in Procrastimate" on iOS) | ✓ | Planned | S8 | `ImportParityTests.test_import_pick` | `import › import-pick` | `import-pick.png` |
-| `import-read`: projects, Inbox, labels, nesting, notes, reminders | ✓ | Planned | S4→S8 | `ImportParityTests.test_import_read` | `import › import-read` | `import-read.png` |
-| `import-dates`: Todoist dates through the parser, unreadable ones in notes | ✓ | Planned | S4→S8 | covered by `import-read` | covered by `import-read` | — |
-| `import-summary`: counts and warnings | ✓ | Planned | S8 | `ImportParityTests.test_import_summary` | `import › import-summary` | `import-summary.png` |
-| `import-dedupe`: a second import adds nothing | ✓ | Planned | S8 | `ImportParityTests.test_import_dedupe` | `import › import-dedupe` | `import-dedupe.png` |
-| `import-error`: a non-backup file changes nothing | ✓ | Planned | S8 | `ImportParityTests.test_import_error` | `import › import-error` | `import-error.png` |
+| `import-pick`: file picker limited to `.zip` (plus "Open in Procrastimate" on iOS) | ✓ | Built (no XCUITest for opening a zip into the app) | S8 | `ImportParityTests.test_import_pick` | `import › import-pick` | `import-pick.png` |
+| `import-read`: projects, Inbox, labels, nesting, notes, reminders | ✓ | Built | S4→S8 | `ImportParityTests.test_import_read` | `import › import-read` | `import-read.png` |
+| `import-dates`: Todoist dates through the parser, unreadable ones in notes | ✓ | Built | S4→S8 | covered by `import-read` | covered by `import-read` | — |
+| `import-summary`: counts and warnings | ✓ | Built | S8 | `ImportParityTests.test_import_summary` | `import › import-summary` | `import-summary.png` |
+| `import-dedupe`: a second import adds nothing | ✓ | Built | S8 | `ImportParityTests.test_import_dedupe` | `import › import-dedupe` | `import-dedupe.png` |
+| `import-error`: a non-backup file changes nothing | ✓ | Built | S8 | `ImportParityTests.test_import_error` | `import › import-error` | `import-error.png` |
 
 ### Offline and sync
 

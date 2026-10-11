@@ -19,7 +19,7 @@ Stefan gets a system notification at each task's due time and at each reminder, 
 - Web: open the sidebar (on a phone, `Open navigation`) and choose `Notifications`.
 - Web: save a timed task while push is off, then choose `Turn on` in the toast.
 - iPhone: in Safari, Share, then Add to Home Screen. Open the Home Screen app and choose `Notifications`.
-- iOS native: Planned: not built yet.
+- iOS native: `Notifications` in the Browse tab; the app schedules local notifications, with no server.
 
 ## Driving it with control-ui and Playwright
 
@@ -34,6 +34,7 @@ Preconditions:
 - **iPhone install guidance.** `in a Safari tab the Notifications sheet explains Add to Home Screen first` in `e2e/mobile.e2e.ts` shows the three steps in WebKit at iPhone size.
 - **Worker schedule, alarm, and delivery.** `bun run build && E2E_WORKER=1 bun run test:e2e -- e2e/push-worker.e2e.ts` runs against `wrangler dev`. A loopback push service decrypts what the Worker sends and checks its VAPID signature. The suite proves the test push, one entry per moment, no date-only entries, cancellation on complete, edit, and delete, the next occurrence of a repeating task, and that a task synced from another device is pushed once at its time by the account's alarm, even after a resync. The alarm test waits for the next whole minute.
 - **Server rules.** `bun test server/src/account/push.test.ts server/src/push-schedule.test.ts shared/zoned-time.test.ts` covers several devices, the synced time zone, completion, repeating tasks, retries, staleness, gone subscriptions, revoke, and daylight saving edges.
+- **iOS.** Browse shows `Notifications` with `Off`, `On`, or `Blocked`. The screen asks for permission only from `Turn on notifications`, a denial shows `Notifications are blocked` with `Open Settings`, and once on it reads `3 scheduled on this device` for `Call mom today 10:30am r20m`, `Taxes today`, `Gym tomorrow 6pm`, and a completed timed task. Each request is titled with its task, with a body such as `Due now`, under the identifier `<taskId>:<epoch ms>`. `Send a test notification` turns to `Sent`, `Turn off` clears the schedule, the first timed task saved while off shows `Get notified when it’s due?` once per launch, and tapping a delivered notification opens its task. DEBUG builds carry the pending requests as `title@<ISO time>: body` in the accessibility identifier of the scheduled count. Tests: `NotificationsParityTests` (`test_push_sheet`, `test_push_permission`, `test_push_schedule`, `test_push_deliver`, `test_push_test`, `test_push_nudge`, `test_push_open`), paired with `e2e/parity/notifications.e2e.ts`, which pairs the page with sync and stands in for the push service. Run each pair with the iOS workflow (`xcodebuild test` on an iPhone 16 simulator) and `bun run test:e2e --project=parity`; both sides save `<parity-id>.png`.
 - **Physical iPhone.** Planned: no automated path. Add to Home Screen on iOS 16.4 or later, turn notifications on, and send a test notification.
 
 ## Gotchas

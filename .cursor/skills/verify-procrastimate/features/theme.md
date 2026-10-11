@@ -16,7 +16,7 @@ The web client has a light and a dark theme. Stefan picks `System`, `Light`, or 
 
 - Web desktop: `Settings` at the bottom of the sidebar, then the `Theme` control.
 - Web phone: tap `Open navigation`, then `Settings`, then the `Theme` control in the sheet.
-- iOS: Planned: follow the system appearance with the same semantic colors.
+- iOS: pick a theme in Settings, or change the simulator's appearance.
 
 ## Driving it with control-ui and XCUITest
 
@@ -36,7 +36,7 @@ Preconditions:
 - **Reduced motion.** Emulate `reducedMotion: 'reduce'`, open quick add, and open the date picker. The `Due date` popover has no running animation. Test: `popovers open without motion under reduced motion`.
 - **Both themes.** Every color with a light value also has a dark value. Test: `every literal light color has a dark value`.
 - **iOS tokens.** The iOS colors are generated from `app-web/src/index.css`, so the contrast checked here holds on iOS too. `bun scripts/tokens.ts --check` in `app-ios/` prints `Generated colors are fresh.`; the iOS workflow fails when it is stale.
-- **iOS.** Planned: switch the simulator appearance and compare.
+- **iOS.** `System` follows the simulator's appearance live, `Light` and `Dark` override it, the choice survives a relaunch under `procrastimate-theme` in `UserDefaults`, and a relaunch paints its first frame in the saved theme. The tests read the theme from a background pixel and switch the appearance with `XCUIDevice.shared.appearance`. Tests: `ThemeParityTests` (`test_theme_system`, `test_theme_override`, `test_theme_persist`, `test_theme_first_paint`), paired with `e2e/parity/theme.e2e.ts`. Run each pair with the iOS workflow (`xcodebuild test` on an iPhone 16 simulator) and `bun run test:e2e --project=parity`; both sides save `<parity-id>.png`. Glass turning solid under Increase Contrast or Reduce Transparency, and instant motion under Reduce Motion, come from the system and have no XCUITest, since a UI test cannot change those settings.
 
 ## Gotchas
 
