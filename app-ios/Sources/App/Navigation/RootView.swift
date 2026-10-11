@@ -85,7 +85,6 @@ private struct RouteView: View {
         switch route {
         case let .project(id): ProjectScreen(projectID: id)
         case let .label(id): LabelScreen(labelID: id)
-        case .notifications: NotificationsScreen()
         }
     }
 }

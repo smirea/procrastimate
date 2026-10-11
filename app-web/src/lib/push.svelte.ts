@@ -1,21 +1,16 @@
 import { replaceState } from '$app/navigation';
 import { page } from '$app/state';
 import { pushSubscriptionSchema, type PushSubscriptionInfo } from 'shared/push.ts';
-import { notificationTimes, type Due, type Reminder } from 'shared/task.ts';
 import { store } from './store.svelte.ts';
 import { deviceToken, sync } from './sync.svelte.ts';
-import { sheets, toasts } from './ui.svelte.ts';
+import { sheets } from './ui.svelte.ts';
 
-/** Where this device stands with Web Push. Each kind is one view in the Notifications sheet. */
+/** Where this device stands with Web Push. Settings shows one line from it, and nothing else. */
 export type PushState =
 	| { kind: 'checking' }
 	| { kind: 'unsupported' }
-	/** An iPhone or iPad Safari tab: Push exists only after Add to Home Screen. */
-	| { kind: 'install' }
 	/** The server has no push key, as with the local Bun dev server. */
 	| { kind: 'unavailable' }
-	/** The server computes notifications from synced tasks, so push needs this device paired first. */
-	| { kind: 'unpaired' }
 	/** Permission not asked yet, or granted without a subscription. */
 	| { kind: 'off' }
 	| { kind: 'enabling' }
@@ -23,40 +18,31 @@ export type PushState =
 	| { kind: 'on'; subscription: PushSubscriptionInfo }
 	| { kind: 'error'; message: string };
 
-/** Chromium's install prompt, which lib.dom does not type. */
-type InstallPromptEvent = Event & { prompt: () => Promise<unknown> };
+/** The one settings line. `needs-permission` is the only one that does anything when tapped. */
+export type NotificationLine = 'on' | 'off' | 'needs-permission';
 
-const isIos = () =>
-	/iPhone|iPad|iPod/.test(navigator.userAgent) ||
-	(navigator.userAgent.includes('Macintosh') && navigator.maxTouchPoints > 1);
-const isStandalone = () =>
-	matchMedia('(display-mode: standalone)').matches ||
-	('standalone' in navigator && (navigator as { standalone?: boolean }).standalone === true);
 const pushSupported = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
 
 class Push {
 	state = $state<PushState>({ kind: 'checking' });
-	installPrompt = $state.raw<InstallPromptEvent | null>(null);
 
 	#key: Uint8Array<ArrayBuffer> | null = null;
-	#nudged = false;
-	#paired: boolean | null = null;
+	#signedIn: boolean | null = null;
+	#asked = false;
 	/** The subscription the server has for this device's token, or null until it confirms one. */
 	#registered: string | null = null;
+
+	/** `On` when subscribed, `Notifications need permission` when blocked, otherwise `Off`. */
+	get line(): NotificationLine {
+		if (this.state.kind === 'on') return 'on';
+		if (this.state.kind === 'denied') return 'needs-permission';
+		return 'off';
+	}
 
 	/** Detects the state and listens for what can change it. Returns the cleanup. */
 	start() {
 		void this.detect();
 		const listeners: [EventTarget, string, (event: Event) => void][] = [
-			[
-				window,
-				'beforeinstallprompt',
-				event => {
-					event.preventDefault();
-					this.installPrompt = event as InstallPromptEvent;
-				},
-			],
-			[window, 'appinstalled', () => (this.installPrompt = null)],
 			[window, 'online', () => this.#retry()],
 			[document, 'visibilitychange', () => document.visibilityState === 'visible' && this.#retry()],
 		];
@@ -77,17 +63,23 @@ class Push {
 	}
 
 	async #detect(): Promise<PushState> {
-		if (isIos() && !isStandalone()) return { kind: 'install' };
 		if (!pushSupported()) return { kind: 'unsupported' };
 		const key = await fetchKey();
 		if (!key) return { kind: 'unavailable' };
 		this.#key = key;
-		if (!store.paired) return { kind: 'unpaired' };
+		if (!deviceToken()) return { kind: 'off' };
 		if (Notification.permission === 'denied') return { kind: 'denied' };
+		if (Notification.permission === 'default') {
+			this.#askOnFirstGesture(key);
+			return { kind: 'off' };
+		}
 		const registration = await navigator.serviceWorker.getRegistration();
 		const subscription = await registration?.pushManager.getSubscription();
 		const rekeying = localStorage.getItem(REKEY_KEY) !== null;
-		if (!registration || (!subscription && !rekeying)) return { kind: 'off' };
+		if (!registration || (!subscription && !rekeying)) {
+			await this.#subscribe(Promise.resolve('granted' as NotificationPermission), key);
+			return this.state;
+		}
 		if (Notification.permission !== 'granted') {
 			localStorage.removeItem(REKEY_KEY);
 			await subscription?.unsubscribe();
@@ -102,20 +94,43 @@ class Push {
 		return { kind: 'on', subscription: info };
 	}
 
-	/** Detects again when this device pairs or unpairs, since push needs a paired device. */
-	follow(paired: boolean) {
-		const changed = this.#paired !== null && this.#paired !== paired;
-		this.#paired = paired;
-		if (!changed) return;
-		if (!paired) localStorage.removeItem(REKEY_KEY);
-		this.#registered = null;
-		void this.detect();
+	/** Detects again once this install has a token, which the subscription is stored under. */
+	follow(signedIn: boolean) {
+		const changed = this.#signedIn !== null && this.#signedIn !== signedIn;
+		this.#signedIn = signedIn;
+		if (changed && signedIn) void this.detect();
 	}
 
-	/** Call straight from a click handler: iOS only shows the permission prompt during a user gesture. */
-	enable() {
+	/**
+	 * Asks on first load. A browser that will not prompt without a gesture stays quiet until the first click or
+	 * keypress, which asks with no copy of its own.
+	 */
+	#askOnFirstGesture(key: Uint8Array<ArrayBuffer>) {
+		if (this.#asked) return;
+		this.#asked = true;
+		void Notification.requestPermission().then(permission => {
+			if (permission === 'granted') {
+				void this.#subscribe(Promise.resolve(permission), key);
+				return;
+			}
+			if (permission === 'denied') {
+				this.state = { kind: 'denied' };
+				return;
+			}
+			const once = () => {
+				window.removeEventListener('pointerdown', once, true);
+				window.removeEventListener('keydown', once, true);
+				void this.#subscribe(Notification.requestPermission(), key);
+			};
+			window.addEventListener('pointerdown', once, true);
+			window.addEventListener('keydown', once, true);
+		});
+	}
+
+	/** The settings line, when permission was blocked. Asks again; the browser may only offer its own settings. */
+	request() {
 		const key = this.#key;
-		if (this.state.kind !== 'off' || !key) return;
+		if (!key || this.state.kind === 'on' || this.state.kind === 'enabling') return;
 		this.state = { kind: 'enabling' };
 		void this.#subscribe(Notification.requestPermission(), key);
 	}
@@ -140,38 +155,6 @@ class Push {
 		}
 	}
 
-	async disable() {
-		if (this.state.kind !== 'on') return;
-		this.#registered = null;
-		this.state = { kind: 'off' };
-		await this.#call('DELETE');
-		await this.#unsubscribe();
-	}
-
-	/** Sends a push now. `false` means it could not be sent. */
-	async sendTest(): Promise<boolean> {
-		if (this.state.kind !== 'on') return false;
-		const body = JSON.stringify({ subscription: this.state.subscription });
-		const response = await fetch('/api/push/test', { method: 'POST', headers: JSON_HEADERS, body }).catch(() => null);
-		if (response?.status === 410) await this.#expire();
-		return response?.ok ?? false;
-	}
-
-	async promptInstall() {
-		const event = this.installPrompt;
-		this.installPrompt = null;
-		await event?.prompt();
-	}
-
-	/** Offers the Notifications sheet once per session, when a save first gives a task a time to notify. */
-	nudge(due: Due | null, reminders: readonly Reminder[]) {
-		const offerable = this.state.kind === 'off' || this.state.kind === 'install' || this.state.kind === 'unpaired';
-		if (this.#nudged || !offerable) return;
-		if (!notificationTimes(due, reminders).length) return;
-		this.#nudged = true;
-		toasts.show('Get notified when it’s due?', { label: 'Turn on', run: () => sheets.openNotifications() }, 8000);
-	}
-
 	/** Registers the subscription under this device's token. The server then pushes whatever the synced tasks call for. */
 	async #register(subscription: PushSubscriptionInfo) {
 		if (this.#registered === subscription.endpoint) return;
@@ -179,8 +162,8 @@ class Push {
 		if (response?.ok) this.#registered = subscription.endpoint;
 	}
 
-	/** Calls the subscription route as this device. A `401` means the device was removed, so sync turns off. */
-	async #call(method: 'PUT' | 'DELETE', body?: unknown): Promise<Response | null> {
+	/** Calls the subscription route as this device. A `401` mints a new token and tries again on the next sync. */
+	async #call(method: 'PUT', body?: unknown): Promise<Response | null> {
 		const token = deviceToken();
 		if (!token) return null;
 		const response = await fetch('/api/push/subscription', {
@@ -188,54 +171,18 @@ class Push {
 			headers: { ...JSON_HEADERS, Authorization: `Bearer ${token}` },
 			body: body === undefined ? undefined : JSON.stringify(body),
 		}).catch(() => null);
-		if (response?.status === 401) sync.forget('This device was removed from sync.');
+		if (response?.status === 401) void sync.reregister();
 		return response;
 	}
 
 	#retry() {
-		if (this.state.kind === 'unavailable' || this.state.kind === 'error') void this.detect();
+		if (this.state.kind === 'unavailable' || this.state.kind === 'error' || this.state.kind === 'off')
+			void this.detect();
 		else if (this.state.kind === 'on') void this.#register(this.state.subscription);
-	}
-
-	async #expire() {
-		this.#registered = null;
-		this.state = { kind: 'off' };
-		await this.#call('DELETE');
-		await this.#unsubscribe();
-	}
-
-	async #unsubscribe() {
-		const registration = await navigator.serviceWorker.getRegistration();
-		await (await registration?.pushManager.getSubscription())?.unsubscribe();
 	}
 }
 
 export const push = new Push();
-
-/** The short status the sidebar shows next to Notifications. */
-export function pushStatus(state: PushState): string | null {
-	switch (state.kind) {
-		case 'checking':
-			return null;
-		case 'on':
-			return 'On';
-		case 'denied':
-			return 'Blocked';
-		case 'install':
-			return 'Set up';
-		case 'off':
-		case 'enabling':
-		case 'unpaired':
-		case 'unsupported':
-		case 'unavailable':
-		case 'error':
-			return 'Off';
-		default: {
-			const never: never = state;
-			return never;
-		}
-	}
-}
 
 /** Opens the task a notification was for: from `?task=` when the click launched the app, or from the service worker when it was already open. */
 export function openTaskFromUrl() {

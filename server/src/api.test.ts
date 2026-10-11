@@ -10,7 +10,7 @@ const ENDPOINT = 'https://push.example.com/device-1';
 
 async function vapidEnv(): Promise<Env> {
 	const keys = await generateVapidKeys();
-	return { ACCOUNT: memoryAccount(undefined), VAPID_PUBLIC_KEY: keys.publicKey, VAPID_PRIVATE_KEY: keys.privateKey };
+	return { ACCOUNT: memoryAccount(), VAPID_PUBLIC_KEY: keys.publicKey, VAPID_PRIVATE_KEY: keys.privateKey };
 }
 
 let pushService: { status: number; received: string[]; receiver: PushReceiver };

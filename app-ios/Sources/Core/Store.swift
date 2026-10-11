@@ -7,6 +7,8 @@ import Observation
 @MainActor @Observable
 public final class Store {
     public private(set) var snapshot: Snapshot
+    /// Bumps when a local command changes the document, so sync can wait a moment and ignore server applies.
+    public private(set) var revision = 0
 
     @ObservationIgnored private let file: SnapshotFile?
     @ObservationIgnored private let clock: AppClock
@@ -20,6 +22,15 @@ public final class Store {
         self.newId = newId
         let now = clock.now.epochMilliseconds
         snapshot = file?.read().map { Snapshot.load($0, now: now) } ?? .empty(now: now)
+        let hadSync = snapshot.sync != nil
+        SyncEngine.ensure(
+            &snapshot,
+            deviceId: UUID().uuidString.lowercased(),
+            now: now,
+            timeZone: clock.timeZone.identifier,
+            nextOpId: newId
+        )
+        if !hadSync { scheduleWrite() }
     }
 
     public var tasks: [TaskItem] { snapshot.tasks }
@@ -35,9 +46,44 @@ public final class Store {
 
     /// The single path every change takes.
     public func commit(_ next: StoreData) {
+        let before = snapshot.data
         var data = next
         data.tasks = StoreRules.sortTasks(next.tasks)
         snapshot.data = data
+        SyncEngine.record(&snapshot, before: before, after: snapshot.data, now: clock.now.epochMilliseconds, nextOpId: newId)
+        revision += 1
+        scheduleWrite()
+    }
+
+    /// Empties tasks, projects, and labels here, and asks the next sync to wipe them on the server.
+    public func deleteAll() {
+        SyncEngine.deleteAll(&snapshot)
+        revision += 1
+        scheduleWrite()
+    }
+
+    /// The body of `POST /api/sync`.
+    public func syncRequest() -> Data? { SyncEngine.requestJSON(snapshot) }
+
+    /// Applies one sync response onto the document.
+    public func takeSyncResponse(_ json: Data) -> Bool {
+        let applied = SyncEngine.apply(&snapshot, response: json)
+        if applied { scheduleWrite() }
+        return applied
+    }
+
+    /// Keeps the outbox when the server stores this install under a different id.
+    public func adoptDevice(_ deviceId: String) {
+        guard var sync = snapshot.sync, sync.deviceId != deviceId else { return }
+        sync.deviceId = deviceId
+        snapshot.sync = sync
+        scheduleWrite()
+    }
+
+    /// Writes this device's zone when it has moved since the last sync.
+    public func noteTimeZone(_ timeZone: String) {
+        guard snapshot.sync?.timeZone != timeZone else { return }
+        SyncEngine.noteTimeZone(&snapshot, timeZone, now: clock.now.epochMilliseconds, nextOpId: newId)
         scheduleWrite()
     }
 

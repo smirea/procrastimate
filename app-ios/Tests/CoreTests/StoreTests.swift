@@ -19,10 +19,14 @@ import Testing
         }
     }
 
-    @Test func aFreshStoreIsEmptyAndUnpaired() {
+    @Test func aFreshStoreIsEmptyAndReadyToSync() {
         let store = Store(file: tempFile(), clock: clock)
         #expect(store.tasks.isEmpty)
-        #expect(store.snapshot.sync == nil)
+        let sync = try! #require(store.snapshot.sync)
+        #expect(sync.cursor == 0)
+        #expect(sync.reset == false)
+        #expect(sync.epoch == 0)
+        #expect(sync.outbox.contains { $0.kind == .settings })
         #expect(store.snapshot.remindersCheckedAt == pinned.epochMilliseconds)
     }
 
@@ -41,7 +45,7 @@ import Testing
 
         let json = try #require(file.read())
         let object = try #require(try JSONSerialization.jsonObject(with: json) as? [String: Any])
-        #expect(Set(object.keys) == ["tasks", "projects", "labels", "remindersCheckedAt"])
+        #expect(Set(object.keys) == ["tasks", "projects", "labels", "remindersCheckedAt", "sync"])
     }
 
     @Test func commitKeepsTasksInSyncOrder() {

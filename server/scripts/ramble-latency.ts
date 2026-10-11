@@ -1,5 +1,5 @@
 import { parseArgs } from 'node:util';
-import type { DeviceCredentials } from '../../shared/auth';
+import { INSTALL_GATE } from '../../shared/auth';
 import {
 	RAMBLE_BYTES_PER_SECOND,
 	RAMBLE_FRAME_BYTES,
@@ -14,9 +14,9 @@ import { KEYTERM_TRIGGERS, upstreamUrl } from '../src/account/ramble';
  * frames each sent once its audio would have been captured, and times the session start, the first partial after
  * speech begins, the voice activity commit after the first pause, and the final commit after stop.
  *
- * Through the proxy (the default) it needs a device: `RAMBLE_TOKEN`, or `SYNC_SETUP_CODE` to pair a temporary
- * device that is removed afterwards. `--direct` skips the proxy and talks to ElevenLabs with `ELEVENLABS_API_KEY`,
- * as a baseline. Bun loads both from the root `.env.local`; nothing is printed but timings and transcripts.
+ * Through the proxy (the default) it needs a device: `RAMBLE_TOKEN`, or it registers one with the install gate.
+ * `--direct` skips the proxy and talks to ElevenLabs with `ELEVENLABS_API_KEY`, as a baseline. Bun loads both
+ * from the root `.env.local`; nothing is printed but timings and transcripts.
  */
 
 const USAGE = `Usage: bun server/scripts/ramble-latency.ts [--url <origin>] [--direct] [--runs <n>] [--wav <file>]
@@ -219,21 +219,19 @@ async function session(link: Link, frames: Uint8Array<ArrayBuffer>[]): Promise<R
 	};
 }
 
-async function pair(origin: string, code: string): Promise<DeviceCredentials> {
-	const response = await fetch(new URL('/api/auth/setup', origin), {
+async function register(origin: string): Promise<string> {
+	const token = `ramble-${crypto.randomUUID()}`;
+	const response = await fetch(new URL('/api/auth/register', origin), {
 		method: 'POST',
-		body: JSON.stringify({ code, name: 'Ramble latency script' }),
+		body: JSON.stringify({
+			gate: INSTALL_GATE,
+			deviceId: crypto.randomUUID(),
+			token,
+			name: 'Ramble latency script',
+		}),
 	});
-	if (!response.ok) throw new Error(`Pairing failed with ${response.status}`);
-	return (await response.json()) as DeviceCredentials;
-}
-
-async function unpair(origin: string, device: DeviceCredentials) {
-	await fetch(new URL('/api/auth/devices', origin), {
-		method: 'DELETE',
-		headers: { Authorization: `Bearer ${device.token}` },
-		body: JSON.stringify({ id: device.deviceId }),
-	});
+	if (!response.ok) throw new Error(`Register failed with ${response.status}`);
+	return token;
 }
 
 const median = (numbers: (number | null)[]) => {
@@ -249,18 +247,13 @@ const spoken = utterances(frames);
 if (spoken.length < 2)
 	console.warn('The clip should hold two utterances split by a pause, or no voice commit is timed.');
 
-let device: DeviceCredentials | null = null;
 let link: Link;
 if (values.direct) {
 	const key = process.env.ELEVENLABS_API_KEY;
 	if (!key) throw new Error('--direct needs ELEVENLABS_API_KEY');
 	link = directLink(key);
 } else {
-	const token = process.env.RAMBLE_TOKEN;
-	const code = process.env.SYNC_SETUP_CODE;
-	if (!token && !code) throw new Error('The proxy needs RAMBLE_TOKEN or SYNC_SETUP_CODE for the target server');
-	if (!token) device = await pair(values.url, code!);
-	link = proxyLink(values.url, token ?? device!.token);
+	link = proxyLink(values.url, process.env.RAMBLE_TOKEN ?? (await register(values.url)));
 }
 
 const target = values.direct ? 'ElevenLabs directly' : `${values.url}${RAMBLE_SOCKET_PATH}`;
@@ -268,14 +261,10 @@ console.log(
 	`Ramble latency via ${target}: ${(pcm.length / RAMBLE_BYTES_PER_SECOND).toFixed(1)} s clip, ${spoken.length} utterances`,
 );
 const results: Result[] = [];
-try {
-	for (let run = 1; run <= Number(values.runs); run++) {
-		const result = await session(link, frames);
-		results.push(result);
-		console.log(`run ${run}:`, JSON.stringify(result));
-	}
-} finally {
-	if (device) await unpair(values.url, device);
+for (let run = 1; run <= Number(values.runs); run++) {
+	const result = await session(link, frames);
+	results.push(result);
+	console.log(`run ${run}:`, JSON.stringify(result));
 }
 
 const metrics: [string, keyof Result][] = [

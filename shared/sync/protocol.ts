@@ -127,13 +127,22 @@ const cursor = z.number().int().nonnegative();
 /** The most log rows one response carries. A client that gets a full page syncs again right away. */
 export const SYNC_PAGE_SIZE = 1000;
 
-export const syncRequestSchema = z.object({ cursor, ops: z.array(opSchema) });
+export const syncRequestSchema = z.object({
+	cursor,
+	ops: z.array(opSchema),
+	/** The wipe generation this client last applied. A lower one means its copy was cleared on another device. */
+	epoch: z.number().int().nonnegative().default(0),
+	/** Wipe task data before applying `ops`, then bump the epoch. */
+	reset: z.boolean().optional(),
+});
 export type SyncRequest = z.infer<typeof syncRequestSchema>;
 
-/** Cursor `0` gets the whole snapshot instead of the log. */
+const epoch = z.number().int().nonnegative();
+
+/** Cursor `0`, a cursor past the log, a reset, or a stale epoch gets the whole snapshot instead of the log. */
 export const syncResponseSchema = z.union([
-	z.object({ acked: z.array(z.string()), changes: z.array(changeSchema), cursor, hlc }),
-	z.object({ acked: z.array(z.string()), snapshot: snapshotSchema, cursor, hlc }),
+	z.object({ acked: z.array(z.string()), changes: z.array(changeSchema), cursor, hlc, epoch }),
+	z.object({ acked: z.array(z.string()), snapshot: snapshotSchema, cursor, hlc, epoch }),
 ]);
 export type SyncResponse = z.infer<typeof syncResponseSchema>;
 

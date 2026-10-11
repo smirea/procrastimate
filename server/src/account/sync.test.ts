@@ -1,5 +1,4 @@
 import { afterEach, beforeEach, describe, expect, setSystemTime, test } from 'bun:test';
-import type { DeviceCredentials } from '../../../shared/auth';
 import { todoistBackupFiles } from '../../../shared/fixtures/todoist-backup.mts';
 import { applyResponse, startSync, type ClientSync } from '../../../shared/sync/apply';
 import { formatHlc } from '../../../shared/sync/hlc';
@@ -10,10 +9,10 @@ import api from '../api';
 import type { Env } from '../bindings';
 import { memoryAccount } from './account';
 import type { AccountStore } from './store';
+import { registerDevice } from './test-device';
 import { storeFactories } from './test-stores';
 
 const NOW = Date.UTC(2026, 9, 10, 12);
-const SETUP_CODE = 'correct-horse-battery-staple';
 
 beforeEach(() => setSystemTime(NOW));
 afterEach(() => setSystemTime());
@@ -27,7 +26,7 @@ describe.each(storeFactories)('POST /api/sync on the %s store', (_name, createSt
 
 	beforeEach(() => {
 		store = createStore();
-		env = { ACCOUNT: memoryAccount(SETUP_CODE, store) };
+		env = { ACCOUNT: memoryAccount(store) };
 	});
 
 	const post = (body: unknown, token?: string) =>
@@ -40,16 +39,7 @@ describe.each(storeFactories)('POST /api/sync on the %s store', (_name, createSt
 			env,
 		);
 
-	async function setup(name = 'Mac') {
-		const response = await api.fetch(
-			new Request('https://procrastimate.test/api/auth/setup', {
-				method: 'POST',
-				body: JSON.stringify({ code: SETUP_CODE, name }),
-			}),
-			env,
-		);
-		return (await response.json()) as DeviceCredentials;
-	}
+	const setup = (name = 'Mac') => registerDevice(env, name);
 
 	async function sync(token: string, cursor: number, ops: readonly Op[]) {
 		const response = await post({ cursor, ops }, token);
@@ -212,5 +202,41 @@ describe.each(storeFactories)('POST /api/sync on the %s store', (_name, createSt
 		]);
 		const ids = new Set(server!.tasks.map(t => t.id));
 		expect(server!.tasks.every(t => t.parentId === null || ids.has(t.parentId))).toBe(true);
+	});
+
+	test('reset wipes tasks and a stale epoch cannot bring them back', async () => {
+		const { token } = await setup('mac');
+		const created = await sync(
+			token,
+			0,
+			startSync(snapshotOf({ tasks: [task('t1', { createdAt: NOW, title: 'Keep' })] }), 'mac', NOW, counter('op-'))
+				.outbox,
+		);
+		expect(created.epoch).toBe(0);
+		expect('snapshot' in created && created.snapshot.tasks.map(t => t.title)).toEqual(['Keep']);
+
+		const wipe = await post({ cursor: store.lastSeq(), ops: [], epoch: 0, reset: true }, token);
+		expect(wipe.status).toBe(200);
+		const wiped = (await wipe.json()) as SyncResponse;
+		expect(wiped.epoch).toBe(1);
+		expect('snapshot' in wiped && wiped.snapshot.tasks).toEqual([]);
+		expect(store.liveDevices()).toHaveLength(1);
+		expect(store.lastSeq()).toBe(0);
+
+		const stale = await post({ cursor: 0, epoch: 0, ops: [op('back', `${NOW + 5}:0:mac`, { title: 'Back' })] }, token);
+		const rejected = (await stale.json()) as SyncResponse;
+		expect(rejected).toMatchObject({ acked: [], epoch: 1 });
+		expect('snapshot' in rejected && rejected.snapshot.tasks).toEqual([]);
+
+		const ops = startSync(
+			snapshotOf({ tasks: [task('t2', { createdAt: NOW, title: 'Next' })] }),
+			'mac',
+			NOW + 6,
+			counter('next-'),
+		).outbox;
+		const added = await post({ cursor: 0, epoch: 1, ops }, token);
+		const next = (await added.json()) as SyncResponse;
+		expect(next.epoch).toBe(1);
+		expect('snapshot' in next && next.snapshot.tasks.map(t => t.title)).toEqual(['Next']);
 	});
 });

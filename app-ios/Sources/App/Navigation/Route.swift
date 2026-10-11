@@ -11,5 +11,4 @@ enum AppTab: Hashable {
 enum Route: Hashable {
     case project(id: String)
     case label(id: String)
-    case notifications
 }

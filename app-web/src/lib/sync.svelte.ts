@@ -1,9 +1,8 @@
-import type { DeviceCredentials, DeviceInfo, DeviceList, PairingCode } from 'shared/auth.ts';
+import { INSTALL_GATE, type RegisteredDevice } from 'shared/auth.ts';
 import {
 	nudgeSchema,
 	SOCKET_PING,
 	SOCKET_PONG,
-	SOCKET_REVOKED,
 	SOCKET_TOKEN_PREFIX,
 	SYNC_PAGE_SIZE,
 	SYNC_SOCKET_PATH,
@@ -13,20 +12,13 @@ import {
 import { store } from './store.svelte.ts';
 
 /**
- * Syncs a paired device with the server: on launch, on focus, when the network returns, one second after a
- * commit, every minute while visible, and whenever the realtime socket reports a cursor past this device's. A
- * failed sync keeps the outbox and retries on the next trigger. An unpaired device never talks to the server.
+ * Syncs this install with the server: on launch, on focus, when the network returns, one second after a commit,
+ * every minute while visible, and whenever the realtime socket reports a cursor past this device's. A failed sync
+ * keeps the outbox and retries on the next trigger. Nothing about it is shown.
  */
 
-export type SyncStatus =
-	| { kind: 'off'; notice?: string }
-	| { kind: 'syncing' }
-	| { kind: 'synced' }
-	| { kind: 'offline' }
-	| { kind: 'error'; message: string };
-
 /** The bearer token sits under its own key, outside the snapshot document. */
-const TOKEN_KEY = 'procrastimate-device';
+const TOKEN_KEY = 'procrastinate-device';
 const COMMIT_DELAY = 1000;
 const INTERVAL = 60_000;
 /** A keepalive that also finds a dead socket: one that answers nothing between two pings is dropped. */
@@ -40,7 +32,7 @@ const readToken = () => localStorage.getItem(TOKEN_KEY);
 export const deviceToken = readToken;
 const zone = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-/** A name for the device list, such as `Chrome on macOS`. */
+/** A name stored with the device, such as `Chrome on macOS`. It is never shown. */
 function deviceName(): string {
 	const ua = navigator.userAgent;
 	const browser = /Edg\//.test(ua)
@@ -68,22 +60,9 @@ function deviceName(): string {
 	return os ? `${browser} on ${os}` : browser;
 }
 
-class ApiError extends Error {
-	constructor(
-		readonly status: number,
-		message: string,
-	) {
-		super(message);
-	}
-}
-
-async function errorOf(response: Response, fallback: string): Promise<ApiError> {
-	const body = (await response.json().catch(() => null)) as { error?: string } | null;
-	return new ApiError(response.status, body?.error ?? fallback);
-}
-
 class Sync {
-	status = $state<SyncStatus>({ kind: 'off' });
+	/** True once this install has a token. Push waits on it. */
+	signedIn = $state(false);
 
 	#running: Promise<void> | null = null;
 	#again = false;
@@ -92,11 +71,12 @@ class Sync {
 	#keepalive: ReturnType<typeof setInterval> | undefined;
 	#reconnect: ReturnType<typeof setTimeout> | undefined;
 	#failures = 0;
+	/** Stops a rejected token from registering and syncing forever in one loop. */
+	#replaced = false;
 
 	/** Registers the triggers, opens the realtime socket, and syncs once. Returns the cleanup. */
 	start() {
-		if (store.paired && readToken()) this.status = { kind: 'synced' };
-		else if (store.paired) store.unpair();
+		this.signedIn = readToken() !== null;
 		const onVisible = () => {
 			if (document.visibilityState !== 'visible') return this.#disconnect();
 			void this.syncNow();
@@ -125,12 +105,12 @@ class Sync {
 	}
 
 	/**
-	 * Opens the realtime socket while paired and visible, unless one is already open or opening. The server sends
-	 * the account's new cursor after every change, and the socket only ever triggers a sync.
+	 * Opens the realtime socket while visible, unless one is already open or opening. The server sends the
+	 * account's new cursor after every change, and the socket only ever triggers a sync.
 	 */
 	#connect() {
 		const token = readToken();
-		if (this.#socket || !token || !store.paired || document.visibilityState !== 'visible') return;
+		if (this.#socket || !token || !store.ready || document.visibilityState !== 'visible') return;
 		clearTimeout(this.#reconnect);
 		const url = new URL(SYNC_SOCKET_PATH, location.href);
 		url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -138,7 +118,6 @@ class Sync {
 		this.#socket = socket;
 		let heard = true;
 		socket.onopen = () => {
-			// Nudges sent before the handshake, even since the sync that came with this connect, are lost.
 			void this.syncNow();
 			this.#failures = 0;
 			this.#keepalive = setInterval(() => {
@@ -159,10 +138,7 @@ class Sync {
 			const nudge = nudgeSchema.safeParse(message);
 			if (nudge.success) void this.#hear(nudge.data.cursor);
 		};
-		socket.onclose = ({ code }) => {
-			if (code === SOCKET_REVOKED) this.forget('This device was removed from sync.');
-			else this.#retry();
-		};
+		socket.onclose = () => this.#retry();
 	}
 
 	/** Syncs when the account is past this device's cursor, after the sync already running, which may cover it. */
@@ -209,16 +185,17 @@ class Sync {
 		do {
 			this.#again = false;
 			if (await this.#once()) this.#again = true;
-		} while (this.#again && store.paired);
+		} while (this.#again && store.ready);
 	}
 
-	/** One round trip. True when the response was a full page, so more changes are waiting. */
+	/** One round trip. True when the response was a full page, or the token was just replaced, so another round is due. */
 	async #once(): Promise<boolean> {
-		const token = readToken();
-		if (!token || !store.paired) return false;
+		if (!store.ready) return false;
+		if (!readToken() && !(await this.#register())) return false;
 		store.noteTimeZone(zone());
-		const request = store.syncRequest()!;
-		this.status = { kind: 'syncing' };
+		const token = readToken();
+		const request = store.syncRequest();
+		if (!token || !request) return false;
 		let response: Response;
 		try {
 			response = await fetch('/api/sync', {
@@ -227,106 +204,55 @@ class Sync {
 				body: JSON.stringify(request),
 			});
 		} catch {
-			this.status = { kind: 'offline' };
 			return false;
 		}
 		if (response.status === 401) {
-			this.forget('This device was removed from sync.');
-			return false;
+			if (this.#replaced) return false;
+			this.#replaced = true;
+			localStorage.removeItem(TOKEN_KEY);
+			this.signedIn = false;
+			this.#disconnect();
+			return this.#register();
 		}
-		if (!response.ok) {
-			this.status = response.status >= 500 ? { kind: 'offline' } : { kind: 'error', message: 'Sync failed.' };
-			return false;
-		}
+		if (!response.ok) return false;
 		const parsed = syncResponseSchema.safeParse(await response.json().catch(() => undefined));
-		if (!parsed.success) {
-			this.status = { kind: 'error', message: 'The server sent an unreadable answer.' };
-			return false;
-		}
+		if (!parsed.success) return false;
+		this.#replaced = false;
 		store.takeResponse(parsed.data);
-		this.status = { kind: 'synced' };
 		return 'changes' in parsed.data && parsed.data.changes.length >= SYNC_PAGE_SIZE;
 	}
 
-	async #call<T>(path: string, init: RequestInit, fallback: string): Promise<T> {
-		const token = readToken();
-		const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-		if (token) headers.Authorization = `Bearer ${token}`;
+	/** Mints a new token after a rejected one, then syncs again. Callers never hear about it. */
+	async reregister() {
+		localStorage.removeItem(TOKEN_KEY);
+		this.signedIn = false;
+		this.#disconnect();
+		this.#replaced = false;
+		if (await this.#register()) void this.syncNow();
+	}
+
+	/** Presents this install's own token. The gate only checks that the caller is this app. */
+	async #register(): Promise<boolean> {
+		const deviceId = store.deviceId() ?? crypto.randomUUID();
+		const token = crypto.randomUUID().replaceAll('-', '') + crypto.randomUUID().replaceAll('-', '');
 		let response: Response;
 		try {
-			response = await fetch(path, { ...init, headers });
+			response = await fetch('/api/auth/register', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ gate: INSTALL_GATE, deviceId, token, name: deviceName() }),
+			});
 		} catch {
-			throw new ApiError(0, 'Can’t reach the server.');
+			return false;
 		}
-		if (response.status === 401 && token && path !== '/api/auth/setup' && path !== '/api/auth/redeem') {
-			this.forget('This device was removed from sync.');
-		}
-		if (!response.ok) throw await errorOf(response, fallback);
-		return (await response.json()) as T;
-	}
-
-	#adopt({ deviceId, token }: DeviceCredentials) {
+		if (!response.ok) return false;
+		const body = (await response.json().catch(() => null)) as RegisteredDevice | null;
+		if (!body?.deviceId) return false;
 		localStorage.setItem(TOKEN_KEY, token);
-		store.pair(deviceId, zone());
-		void this.syncNow();
+		store.adoptDevice(body.deviceId);
+		this.signedIn = true;
 		this.#connect();
-	}
-
-	/** The first device: proves it knows the server's setup code. */
-	async setUp(code: string) {
-		const body = JSON.stringify({ code: code.trim(), name: deviceName() });
-		const credentials = await this.#call<DeviceCredentials>(
-			'/api/auth/setup',
-			{ method: 'POST', body },
-			'Wrong setup code.',
-		).catch(error => {
-			if (error instanceof ApiError && error.status === 503)
-				throw new ApiError(503, 'Sync isn’t set up on the server.');
-			if (error instanceof ApiError && error.status === 401) throw new ApiError(401, 'That setup code is wrong.');
-			throw error;
-		});
-		this.#adopt(credentials);
-	}
-
-	/** A new device: enters the code a paired one shows. */
-	async redeem(code: string) {
-		const body = JSON.stringify({ code, name: deviceName() });
-		const credentials = await this.#call<DeviceCredentials>(
-			'/api/auth/redeem',
-			{ method: 'POST', body },
-			'Invalid code.',
-		).catch(error => {
-			if (error instanceof ApiError && error.status === 401) throw new ApiError(401, 'That code is wrong or expired.');
-			throw error;
-		});
-		this.#adopt(credentials);
-	}
-
-	pairingCode() {
-		return this.#call<PairingCode>('/api/auth/pair', { method: 'POST' }, 'Couldn’t make a code.');
-	}
-
-	async devices(): Promise<DeviceInfo[]> {
-		return (await this.#call<DeviceList>('/api/auth/devices', { method: 'GET' }, 'Couldn’t load devices.')).devices;
-	}
-
-	/** Revokes a device's token at once. Removing this device turns sync off here. */
-	async remove(device: DeviceInfo) {
-		await this.#call(
-			'/api/auth/devices',
-			{ method: 'DELETE', body: JSON.stringify({ id: device.id }) },
-			'Couldn’t remove it.',
-		);
-		if (device.current) this.forget();
-	}
-
-	/** Turns sync off on this device and keeps its data. */
-	forget(notice?: string) {
-		this.#disconnect();
-		this.#failures = 0;
-		localStorage.removeItem(TOKEN_KEY);
-		store.unpair();
-		this.status = { kind: 'off', notice };
+		return true;
 	}
 }
 

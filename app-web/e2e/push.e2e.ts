@@ -1,6 +1,5 @@
 import type { Page } from '@playwright/test';
 import type { PushScheduleResponse } from 'shared/push.ts';
-import { SYNC_SETUP_CODE } from '../playwright.config.ts';
 import { expect, test, type App } from './fixtures.ts';
 
 const serverKey = (seed: number) => Buffer.from(Array.from({ length: 65 }, (_, i) => i + seed)).toString('base64url');
@@ -55,23 +54,23 @@ async function mockPush(page: Page, permission: 'grant' | 'deny') {
 	return (seed: number) => (key = serverKey(seed));
 }
 
-const sheet = (app: App) => app.page.getByRole('dialog', { name: 'Notifications' });
-const notificationsRow = (app: App) =>
-	app.page.getByRole('navigation', { name: 'Main' }).getByRole('button', { name: /^Notifications/ });
-
-const status = (label: string) => new RegExp(`^\\s*Notifications\\s*${label}\\s*$`);
-
-async function openSheet(app: App, heading: string) {
-	await notificationsRow(app).click();
-	await expect(sheet(app).getByRole('heading', { name: heading })).toBeVisible();
+/** Waits until this install has registered, which happens on its own. */
+async function setUpSync(app: App) {
+	await expect
+		.poll(async () =>
+			app.page.evaluate(() => {
+				const token = localStorage.getItem('procrastinate-device');
+				const raw = localStorage.getItem('procrastinate');
+				const sync = raw ? (JSON.parse(raw) as { sync?: { outbox: unknown[]; reset?: boolean } }).sync : undefined;
+				return Boolean(token && sync && !sync.reset && sync.outbox.length === 0);
+			}),
+		)
+		.toBe(true);
 }
 
-/** Sets this device up as a sync device from the open Settings sheet, then closes it. */
-async function setUpSync(app: App) {
-	await app.settings().getByRole('button', { name: 'Set up sync' }).click();
-	await app.settings().getByRole('textbox', { name: 'Setup code' }).fill(SYNC_SETUP_CODE);
-	await app.settings().getByRole('button', { name: 'Turn on sync' }).click();
-	await expect(app.settings().getByRole('status', { name: 'Sync status' })).toHaveText('Up to date');
+async function expectLine(app: App, text: string) {
+	await app.openSettings();
+	await expect(app.settings().getByText(text, { exact: true })).toBeVisible();
 	await app.page.keyboard.press('Escape');
 	await expect(app.settings()).toBeHidden();
 }
@@ -94,32 +93,21 @@ const todayAt = (hh: number, mm = 0) => new Date(TODAY + (hh * 60 + mm) * 60_000
 /** Every test that syncs shares the server's one account, so titles carry a random suffix. */
 const unique = (name: string) => `${name} ${crypto.randomUUID().slice(0, 8)}`;
 
-test('the sidebar opens the Notifications sheet, which says when the server cannot push', async ({ app, page }) => {
+test('settings says notifications are off when the server cannot push', async ({ app, page }) => {
 	await page.route('/api/push/key', route => route.fulfill({ status: 503, json: { ok: false } }));
 	await page.reload();
-	await expect(notificationsRow(app)).toHaveText(status('Off'));
-	await openSheet(app, 'Notifications aren’t available on this server');
-	await page.keyboard.press('Escape');
-	await expect(sheet(app)).toBeHidden();
+	await expectLine(app, 'Notifications: Off');
+	await expect(page.getByRole('dialog', { name: 'Notifications' })).toHaveCount(0);
+	await expect(
+		page.getByRole('navigation', { name: 'Main' }).getByRole('button', { name: /^Notifications/ }),
+	).toHaveCount(0);
 });
 
-test('push needs sync first, then the server schedules from synced tasks until push is turned off', async ({
-	app,
-	page,
-}) => {
+test('the server schedules from synced tasks once permission is granted', async ({ app, page }) => {
 	await app.setNow(new Date(TODAY + 10 * 3_600_000));
 	await mockPush(page, 'grant');
-	await openSheet(app, 'Turn on sync first');
-	await expect(notificationsRow(app)).toHaveText(status('Off'));
-	await sheet(app).getByRole('button', { name: 'Turn on sync' }).click();
-	await expect(sheet(app)).toBeHidden();
 	await setUpSync(app);
-
-	await openSheet(app, 'Get notified when tasks are due');
-	await sheet(app).getByRole('button', { name: 'Turn on notifications' }).click();
-	await expect(sheet(app).getByRole('heading', { name: 'Notifications are on' })).toBeVisible();
-	await expect(notificationsRow(app)).toHaveText(status('On'));
-	await page.keyboard.press('Escape');
+	await expectLine(app, 'Notifications: On');
 
 	const title = unique('Call mom');
 	await app.add(`${title} today 11:30am r30m`);
@@ -135,21 +123,12 @@ test('push needs sync first, then the server schedules from synced tasks until p
 	await expect.poll(() => serverSchedule(page, title)).toEqual([]);
 	await page.getByRole('status').getByRole('button', { name: 'Undo' }).click();
 	await expect.poll(() => serverSchedule(page, title)).toHaveLength(2);
-
-	await openSheet(app, 'Notifications are on');
-	await sheet(app).getByRole('button', { name: 'Turn off' }).click();
-	await expect(sheet(app).getByRole('heading', { name: 'Get notified when tasks are due' })).toBeVisible();
-	await expect.poll(() => serverSchedule(page, title)).toEqual([]);
-	await expect(notificationsRow(app)).toHaveText(status('Off'));
 });
 
 test('a rotated server key resubscribes this device on the next launch without asking again', async ({ app, page }) => {
 	const rotate = await mockPush(page, 'grant');
-	await app.openSettings();
 	await setUpSync(app);
-	await openSheet(app, 'Get notified when tasks are due');
-	await sheet(app).getByRole('button', { name: 'Turn on notifications' }).click();
-	await expect(notificationsRow(app)).toHaveText(status('On'));
+	await expectLine(app, 'Notifications: On');
 	const first = await page.evaluate(() => JSON.parse(sessionStorage.getItem('mock-push')!).endpoint as string);
 
 	rotate(1);
@@ -164,24 +143,20 @@ test('a rotated server key resubscribes this device on the next launch without a
 	expect(saved.endpoint).not.toBe(first);
 	expect(body.subscription.endpoint).toBe(saved.endpoint);
 	expect(Buffer.from(saved.key).toString('base64url')).toBe(serverKey(1));
-	await expect(notificationsRow(app)).toHaveText(status('On'));
+	await expectLine(app, 'Notifications: On');
 });
 
 test('a rekey that cannot reach the push service retries when the device comes back online', async ({ app, page }) => {
 	const rotate = await mockPush(page, 'grant');
-	await app.openSettings();
 	await setUpSync(app);
-	await openSheet(app, 'Get notified when tasks are due');
-	await sheet(app).getByRole('button', { name: 'Turn on notifications' }).click();
-	await expect(notificationsRow(app)).toHaveText(status('On'));
-	await page.keyboard.press('Escape');
+	await expectLine(app, 'Notifications: On');
 
 	rotate(2);
 	await page.evaluate(() => sessionStorage.setItem('mock-push-down', '1'));
 	await page.reload();
-	await expect(notificationsRow(app)).toHaveText(status('Off'));
+	await expectLine(app, 'Notifications: Off');
 	await page.reload();
-	await expect(notificationsRow(app)).toHaveText(status('Off'));
+	await expectLine(app, 'Notifications: Off');
 
 	const registered = page.waitForRequest(
 		request => request.url().endsWith('/api/push/subscription') && request.method() === 'PUT',
@@ -191,58 +166,28 @@ test('a rekey that cannot reach the push service retries when the device comes b
 		window.dispatchEvent(new Event('online'));
 	});
 	await registered;
-	await expect(notificationsRow(app)).toHaveText(status('On'));
+	await expectLine(app, 'Notifications: On');
 	const saved = await page.evaluate(() => JSON.parse(sessionStorage.getItem('mock-push')!) as { key: number[] });
 	expect(Buffer.from(saved.key).toString('base64url')).toBe(serverKey(2));
 });
 
-test('removing this device from sync takes push back to turning on sync first', async ({ app, page }) => {
-	await mockPush(page, 'grant');
-	await app.openSettings();
-	await setUpSync(app);
-	await openSheet(app, 'Get notified when tasks are due');
-	await sheet(app).getByRole('button', { name: 'Turn on notifications' }).click();
-	await expect(notificationsRow(app)).toHaveText(status('On'));
-	await page.keyboard.press('Escape');
-
-	await app.openSettings();
-	await app
-		.settings()
-		.getByRole('button', { name: /\(this device\)$/ })
-		.click();
-	await expect(app.settings().getByRole('button', { name: 'Set up sync' })).toBeVisible();
-	await page.keyboard.press('Escape');
-	await openSheet(app, 'Turn on sync first');
-});
-
-test('a denied permission explains how to unblock notifications', async ({ app, page }) => {
+test('a denied permission is one tappable settings line', async ({ app, page }) => {
 	await mockPush(page, 'deny');
-	await app.openSettings();
 	await setUpSync(app);
-	await openSheet(app, 'Get notified when tasks are due');
-	await sheet(app).getByRole('button', { name: 'Turn on notifications' }).click();
-	await expect(sheet(app).getByRole('heading', { name: 'Notifications are blocked' })).toBeVisible();
-	await expect(sheet(app)).toContainText('Settings › Notifications › Procrastimate');
-	await sheet(app).getByRole('button', { name: 'Check again' }).click();
-	await expect(sheet(app).getByRole('heading', { name: 'Notifications are blocked' })).toBeVisible();
-	await expect(notificationsRow(app)).toHaveText(status('Blocked'));
+	await app.openSettings();
+	const line = app.settings().getByRole('button', { name: 'Notifications need permission' });
+	await expect(line).toBeVisible();
+	await line.click();
+	await expect(line).toBeVisible();
+	await expect(page.getByText('Settings › Notifications')).toHaveCount(0);
 });
 
-test('saving the first timed task while push is off offers to turn it on, once', async ({ app, page }) => {
+test('a timed task does not offer to turn notifications on', async ({ app, page }) => {
 	await mockPush(page, 'grant');
 	const nudge = page.getByRole('status').filter({ hasText: 'Get notified when it’s due?' });
 	await app.add('Buy milk');
-	await expect(page.getByRole('status')).toHaveCount(0);
-
 	await app.add('Call mom today 10:30am');
-	await nudge.getByRole('button', { name: 'Turn on' }).click();
-	await expect(sheet(app).getByRole('heading', { name: 'Turn on sync first' })).toBeVisible();
-	await sheet(app).getByRole('button', { name: 'Not now' }).click();
-	await expect(sheet(app)).toBeHidden();
-	await expect(nudge).toHaveCount(0);
-
-	await app.add('Gym today 6pm');
-	await expect(app.row('Gym')).toBeVisible();
+	await expect(app.row('Call mom')).toBeVisible();
 	await expect(nudge).toHaveCount(0);
 });
 

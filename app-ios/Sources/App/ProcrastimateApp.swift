@@ -10,6 +10,7 @@ struct ProcrastimateApp: App {
     @State private var theme: ThemeSettings
     @State private var notifications: LocalNotifications
     @State private var importer: TodoistImport
+    @State private var accountSync: AccountSync
     @State private var router: IntentRouter
     @State private var today: DateKey
     @Environment(\.scenePhase) private var scenePhase
@@ -25,6 +26,7 @@ struct ProcrastimateApp: App {
         let router = IntentRouter()
         // The delegate must be set before launch finishes, so tapping a notification can cold-start into its task.
         let notifications = LocalNotifications(store: store, toasts: toasts, navigator: navigator, clock: clock)
+        let accountSync = AccountSync(store: store, clock: clock)
         let session = IntentSession(
             store: store,
             navigator: navigator,
@@ -47,6 +49,7 @@ struct ProcrastimateApp: App {
         _router = State(initialValue: router)
         _notifications = State(initialValue: notifications)
         _importer = State(initialValue: TodoistImport(store: store, clock: clock))
+        _accountSync = State(initialValue: accountSync)
     }
 
     var body: some Scene {
@@ -68,6 +71,8 @@ struct ProcrastimateApp: App {
                 .tint(.accent)
                 .motionFollowsAccessibility()
                 .task { await notifications.run() }
+                .task { accountSync.start() }
+                .onChange(of: store.revision) { _, _ in accountSync.syncSoon() }
                 .onChange(of: store.tasks) { old, new in notifications.tasksChanged(from: old, to: new) }
                 .onChange(of: store.tasks) { _, _ in SpotlightIndex.schedule(session) }
                 .onChange(of: store.projects) { _, _ in SpotlightIndex.schedule(session) }
@@ -90,6 +95,7 @@ struct ProcrastimateApp: App {
                     guard scenePhase == .active else { return }
                     today = clock.today
                     notifications.fireDueReminders()
+                    accountSync.syncNow()
                     Task { await notifications.detect() }
                 }
         }

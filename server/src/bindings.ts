@@ -9,6 +9,9 @@ export type Env = {
 	VAPID_PUBLIC_KEY?: string;
 	VAPID_PRIVATE_KEY?: string;
 	SYNC_SETUP_CODE?: string;
+	/** Task storage. Both are Worker secrets. `TURSO_API_TOKEN` is not a Worker binding. */
+	TURSO_DATABASE_URL?: string;
+	TURSO_AUTH_TOKEN?: string;
 	ELEVENLABS_API_KEY?: string;
 	/** `cassette` replays recorded transcripts instead of calling ElevenLabs, for `wrangler dev` in tests. */
 	RAMBLE_UPSTREAM?: string;

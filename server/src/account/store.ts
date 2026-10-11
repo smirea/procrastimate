@@ -1,4 +1,4 @@
-/** A paired device. `revokedAt` is set once its token is removed; the row stays so the id is never reused. */
+/** A registered install. `revokedAt` is set once its token is removed; the row stays so the id is never reused. */
 export type Device = {
 	id: string;
 	name: string;
@@ -7,9 +7,6 @@ export type Device = {
 	lastSeenAt: number;
 	revokedAt: number | null;
 };
-
-/** The one live pairing code, stored as a hash. A new code replaces it. */
-export type Pairing = { codeHash: string; expiresAt: number; attempts: number };
 
 /** The current value of one synced entity, with its per-field clocks. Both are JSON the sync core defines. */
 export type Entity = { kind: string; id: string; data: unknown; clocks: unknown };
@@ -33,14 +30,12 @@ export interface AccountStore {
 
 	addDevice(device: Device): void;
 	deviceByTokenHash(tokenHash: string): Device | null;
+	hasDevice(id: string): boolean;
 	/** Devices that are not revoked, oldest first. */
 	liveDevices(): Device[];
 	touchDevice(id: string, at: number): void;
 	/** Returns false when the device is unknown or already revoked. Revoking also drops its push target. */
 	revokeDevice(id: string, at: number): boolean;
-
-	pairing(): Pairing | null;
-	setPairing(pairing: Pairing | null): void;
 
 	entity(kind: string, id: string): Entity | null;
 	entities(): Entity[];
@@ -53,6 +48,11 @@ export interface AccountStore {
 	hasOp(opId: string): boolean;
 	/** The highest `seq`, or 0 when the log is empty. */
 	lastSeq(): number;
+	/** Drops every task, project, label, and the log. Devices and push subscriptions stay. */
+	clearTaskData(): void;
+	/** Bumped when task data is wiped, so a client still holding the old copy drops it. */
+	epoch(): number;
+	setEpoch(epoch: number): void;
 
 	/** Every device with a push subscription. */
 	pushTargets(): PushTarget[];

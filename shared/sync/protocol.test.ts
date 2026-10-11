@@ -10,7 +10,7 @@ describe('protocol', () => {
 	});
 
 	test('a request built from a diff parses as itself', () => {
-		const request = { cursor: 0, ops: startSync(local, 'dev', 1, counter('op-')).outbox };
+		const request = { cursor: 0, epoch: 0, ops: startSync(local, 'dev', 1, counter('op-')).outbox };
 		expect(syncRequestSchema.parse(JSON.parse(JSON.stringify(request)))).toEqual(request);
 	});
 

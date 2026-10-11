@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import type { Server } from 'bun';
-import type { DeviceCredentials } from '../../../shared/auth';
+import { INSTALL_GATE } from '../../../shared/auth';
 import { formatHlc } from '../../../shared/sync/hlc';
 import {
 	SOCKET_PING,
@@ -14,8 +14,6 @@ import {
 } from '../../../shared/sync/protocol';
 import { serveDev } from '../dev-server';
 import { durableSockets, realtime } from './realtime';
-
-const SETUP_CODE = 'correct-horse-battery-staple';
 
 /** A client socket that records what it hears. `opened` settles false when the server refuses the upgrade. */
 function listen(socket: WebSocket) {
@@ -49,7 +47,7 @@ describe('the realtime nudge on the dev server', () => {
 	const clients: WebSocket[] = [];
 
 	beforeEach(() => {
-		server = serveDev({ port: 0, setupCode: SETUP_CODE }) as Server<unknown>;
+		server = serveDev({ port: 0 }) as Server<unknown>;
 		base = `http://127.0.0.1:${server.port}`;
 	});
 
@@ -66,9 +64,15 @@ describe('the realtime nudge on the dev server', () => {
 		});
 
 	async function setup(name: string) {
-		return (await (
-			await call('POST', '/api/auth/setup', null, { code: SETUP_CODE, name })
-		).json()) as DeviceCredentials;
+		const token = `token-${crypto.randomUUID()}`;
+		const response = await call('POST', '/api/auth/register', null, {
+			gate: INSTALL_GATE,
+			deviceId: crypto.randomUUID(),
+			token,
+			name,
+		});
+		const body = (await response.json()) as { deviceId: string };
+		return { deviceId: body.deviceId, token };
 	}
 
 	let ops = 0;
@@ -119,26 +123,9 @@ describe('the realtime nudge on the dev server', () => {
 		expect(JSON.parse(await macSocket.message(0))).toEqual({ cursor: first.cursor });
 
 		await push(phone.token, first.cursor);
-		await call('POST', '/api/auth/pair', mac.token);
 		const second = await push(phone.token, first.cursor, 'Call mom');
 		expect(second.cursor).toBeGreaterThan(first.cursor);
 		expect(JSON.parse(await macSocket.message(1))).toEqual({ cursor: second.cursor });
-	});
-
-	test('removing a device closes its sockets and keeps the others', async () => {
-		const mac = await setup('Mac');
-		const phone = await setup('Phone');
-		const macSocket = connect(mac.token);
-		const phoneSocket = connect(phone.token);
-		expect(await macSocket.opened).toBe(true);
-		expect(await phoneSocket.opened).toBe(true);
-
-		expect((await call('DELETE', '/api/auth/devices', mac.token, { id: phone.deviceId })).status).toBe(200);
-		expect((await phoneSocket.closed).code).toBe(SOCKET_REVOKED);
-		expect(await connect(phone.token).opened).toBe(false);
-
-		const pushed = await push(mac.token, 0, 'Still here');
-		expect(JSON.parse(await macSocket.message(0))).toEqual({ cursor: pushed.cursor });
 	});
 });
 

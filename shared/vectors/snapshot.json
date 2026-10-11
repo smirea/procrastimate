@@ -32,6 +32,7 @@
 						"clock": "1791972000001:0:d-phone",
 						"cursor": 12,
 						"deviceId": "d-phone",
+						"epoch": 0,
 						"outbox": [
 							{
 								"fields": {
@@ -59,6 +60,7 @@
 								"opId": "op-2"
 							}
 						],
+						"reset": false,
 						"timeZone": "Europe/Berlin"
 					},
 					"tasks": [
@@ -167,6 +169,7 @@
 					"clock": "1791972000001:0:d-phone",
 					"cursor": 12,
 					"deviceId": "d-phone",
+					"epoch": 0,
 					"outbox": [
 						{
 							"fields": {
@@ -194,6 +197,7 @@
 							"opId": "op-2"
 						}
 					],
+					"reset": false,
 					"timeZone": "Europe/Berlin"
 				},
 				"tasks": [
@@ -277,7 +281,7 @@
 		},
 		{
 			"fn": "parseSnapshot",
-			"test": "parseSnapshot › a document without a sync section is an unpaired device",
+			"test": "parseSnapshot › a document without a sync section has not synced yet",
 			"input": [
 				{
 					"labels": [

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, setSystemTime, test } from 'bun:test';
 import type { Server } from 'bun';
-import type { DeviceCredentials } from '../../../shared/auth';
+import { INSTALL_GATE } from '../../../shared/auth';
 import { CASSETTES } from '../../../shared/fixtures/ramble-audio/cassettes';
 import {
 	RAMBLE_FRAME_BYTES,
@@ -26,8 +26,6 @@ import {
 } from './ramble';
 import { cassetteUpstream } from './ramble-cassette';
 import { durableSockets } from './realtime';
-
-const SETUP_CODE = 'correct-horse-battery-staple';
 
 type Chunk = { message_type: string; audio_base_64: string; commit: boolean; sample_rate: number };
 
@@ -108,18 +106,22 @@ describe('the Ramble socket on the dev server', () => {
 	});
 
 	function start(ramble: RambleConfig) {
-		server = serveDev({ port: 0, setupCode: SETUP_CODE, ramble }) as Server<unknown>;
+		server = serveDev({ port: 0, ramble }) as Server<unknown>;
 	}
 
 	const call = (method: string, path: string, init: RequestInit = {}) =>
 		fetch(`http://127.0.0.1:${server.port}${path}`, { method, ...init });
 
 	async function setup(name = 'Mac') {
-		const response = await call('POST', '/api/auth/setup', { body: JSON.stringify({ code: SETUP_CODE, name }) });
-		return (await response.json()) as DeviceCredentials;
+		const token = `token-${crypto.randomUUID()}`;
+		const response = await call('POST', '/api/auth/register', {
+			body: JSON.stringify({ gate: INSTALL_GATE, deviceId: crypto.randomUUID(), token, name }),
+		});
+		const body = (await response.json()) as { deviceId: string };
+		return { deviceId: body.deviceId, token };
 	}
 
-	async function upload(credentials: DeviceCredentials, snapshot: Snapshot) {
+	async function upload(credentials: { deviceId: string; token: string }, snapshot: Snapshot) {
 		const { outbox } = startSync(snapshot, credentials.deviceId, Date.now(), counter('op-'));
 		const response = await call('POST', '/api/sync', {
 			headers: { Authorization: `Bearer ${credentials.token}` },

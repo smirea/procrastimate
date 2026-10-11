@@ -92,11 +92,11 @@ client (web or iOS)                 Worker              Account Durable Object  
 
 - **Why the Durable Object and not the plain Worker.** On the Workers Free plan a WebSocket upgrade is one request with 10 ms of CPU for its whole life, and forwarding about ten frames a second for a minute (base64 encoding included) would likely exceed it. A Durable Object's CPU budget resets with every incoming WebSocket message, so a long ramble is safe. The `Account` object already authenticates devices and holds the names for keyterms, so it needs no new binding. ([Workers limits](https://developers.cloudflare.com/workers/platform/limits/), [Durable Object limits](https://developers.cloudflare.com/durable-objects/platform/limits/))
 - **No hibernation for this socket.** An open upstream socket keeps the object awake, which is billed duration. A 60 second ramble is 7.5 GB-s against 13,000 GB-s free a day, so even an hour of rambling a day is about 450 GB-s.
-- **Auth.** Ramble costs money per minute, so it needs a paired device, authenticated exactly like the realtime nudge socket ([Sync](decisions/sync.md#realtime-nudge)): the web sends `procrastimate.ramble` and `bearer.<token>` as subprotocols, iOS sends `Authorization: Bearer`. An unpaired device shows the mic button with `Turn on sync to use Ramble`.
+- **Auth.** Ramble costs money per minute, so it needs a registered device, authenticated exactly like the realtime nudge socket ([Sync](decisions/sync.md#realtime-nudge)): the web sends `procrastimate.ramble` and `bearer.<token>` as subprotocols, iOS sends `Authorization: Bearer`. Every install registers on its own, so the mic is not gated on a setup screen.
 - **Caps.** A session stops itself after 5 minutes. The object counts seconds per day in its storage and refuses new sessions past 60 minutes a day with a clear message. Both are constants Stefan can change. They bound the damage of a leaked device token to well under a dollar a day.
 - **Thin client protocol.** Clients send binary PCM frames and one `stop` message, and receive `partial`, `committed`, `ended`, and `error` messages. The contracts live in `shared/ramble/protocol.ts` with zod, like `shared/sync/protocol.ts`. Keyterms, language, and VAD settings are server-side, so tuning them never needs a client release.
 - **Dev and tests.** The Bun dev server hosts the same handler through the existing `SocketHost`. With `ELEVENLABS_API_KEY` set it talks to ElevenLabs. Without it, or with `RAMBLE_UPSTREAM=cassette`, a fake upstream replays a recorded cassette (see [Testing](#testing)), so Playwright and XCUITest never need the key.
-- **Secret.** `ELEVENLABS_API_KEY` is already a Worker secret on `procrastimate`. It is never a `vars` entry, never in CI, never in the repo. Locally the Bun server reads it from root `.env.local` through env-manager (an optional server-target entry, like `SYNC_SETUP_CODE`) and `wrangler dev` from `.dev.vars`. Without it, `/api/ramble/socket` answers `503` and the mic button says Ramble is unavailable.
+- **Secret.** `ELEVENLABS_API_KEY` is already a Worker secret on `procrastimate`. It is never a `vars` entry, never in CI, never in the repo. Locally the Bun server reads it from root `.env.local` through env-manager (an optional server-target entry) and `wrangler dev` from `.dev.vars`. Without it, `/api/ramble/socket` answers `503` and the mic button says Ramble is unavailable.
 
 ### Audio capture
 
@@ -234,7 +234,7 @@ Per task:
 
 ### States and errors
 
-- **Unpaired device:** the mic shows `Turn on sync to use Ramble`, linking to Settings.
+- **No network:** the mic says Ramble needs a connection. There is no sync setup state.
 - **Offline or server unavailable:** `Ramble needs a connection`. Transcription is the one online-only step in a local-first app; a session that loses the connection keeps its transcript and preview, and Stefan can still edit and add those tasks.
 - **Mic permission denied:** an inline explanation and, on iOS, a link to the app's Settings page.
 - **Daily cap reached:** `Ramble's daily limit is used up` with the reset time.
@@ -314,7 +314,7 @@ Each UI row has one Playwright test in `app-web/e2e/parity/ramble.e2e.ts` and on
 | `ramble-discard`     | Discarding a card removes it, and `Undo` brings it back                                |
 | `ramble-save-undo`   | `Add 3 tasks` saves into the list; the toast's `Undo` removes all three                |
 | `ramble-hold`        | Hold to talk listens while held and stops on release                                   |
-| `ramble-unavailable` | Unpaired shows `Turn on sync to use Ramble`; offline shows `Ramble needs a connection` |
+| `ramble-unavailable` | Offline shows `Ramble needs a connection`. There is no unpaired state. |
 
 ## Cost and free-tier fit
 
@@ -362,7 +362,7 @@ R1 and R2 start at once and share no files. R4 and R5 are the web and iOS twins 
 
 Stefan accepted all eight recommendations; they are recorded in [Ramble](decisions/ramble.md).
 
-1. **Ramble requires a paired device.** Recommended, because each minute costs money and the sync token is the only device credential. The alternative is an open endpoint protected only by caps.
+1. **Ramble requires a registered device.** Recommended, because each minute costs money and the device token is the only credential. The alternative is an open endpoint protected only by caps.
 2. **LLM at all, and which.** Recommended: no LLM until the corpus proves it is needed (R7), then Workers AI Llama 3.3 70B, which needs no new key. Say if you would rather allow Gemini Flash-Lite (needs a `GEMINI_API_KEY` secret) or never use an LLM.
 3. **English only.** Recommended: pin `language_code=en`. Auto-detect is a one-line change if you ramble in other languages; the grammar would then still find no metadata in them.
 4. **"That's all" stops but does not save.** Todoist saves on it. Recommended: stop only, so a stray phrase never adds tasks.

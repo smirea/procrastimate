@@ -1,5 +1,4 @@
 import type { PushScheduleResponse } from 'shared/push.ts';
-import { SYNC_SETUP_CODE } from '../../playwright.config.ts';
 import { App, expect, NOW, test as base } from '../fixtures.ts';
 
 export { NOW };
@@ -50,8 +49,6 @@ export class PhoneApp extends App {
 	}
 
 	drawer = () => this.page.getByRole('navigation', { name: 'Main' });
-	notificationsRow = () => this.drawer().getByRole('button', { name: /^Notifications/ });
-	notifications = () => this.page.getByRole('dialog', { name: 'Notifications' });
 
 	/** The phone sidebar is the drawer, so Settings opens as a sheet from it. */
 	override async openSettings() {
@@ -65,22 +62,10 @@ export class PhoneApp extends App {
 		await expect(this.settings()).toBeHidden();
 	}
 
-	async openNotifications(heading: string) {
-		await this.page.getByRole('button', { name: 'Open navigation' }).tap();
-		await this.notificationsRow().tap();
-		await expect(this.notifications().getByRole('heading', { name: heading })).toBeVisible();
-	}
-
-	async closeNotifications() {
-		await this.notifications().getByRole('button', { name: 'Close' }).tap();
-		await expect(this.notifications()).toBeHidden();
-	}
-
-	/** The status next to Notifications in the drawer, which the Browse row shows on iOS. */
-	async expectNotificationsStatus(status: string) {
-		await this.page.getByRole('button', { name: 'Open navigation' }).tap();
-		await expect(this.notificationsRow()).toHaveText(new RegExp(`^\\s*Notifications\\s*${status}\\s*$`));
-		await this.page.keyboard.press('Escape');
+	/** The one notifications line in Settings. */
+	async expectNotificationLine(text: string) {
+		await this.openSettings();
+		await expect(this.settings().getByText(text, { exact: true })).toBeVisible();
 	}
 
 	/**
@@ -132,14 +117,18 @@ export class PhoneApp extends App {
 		await expect(this.page.getByRole('heading', { level: 1 })).toBeVisible();
 	}
 
-	/** Web Push comes from the server, so the web needs this device paired before it can turn notifications on. */
+	/** Waits until this install has registered and uploaded, which happens on its own. */
 	async setUpSync() {
-		await this.openSettings();
-		await this.settings().getByRole('button', { name: 'Set up sync' }).tap();
-		await this.settings().getByRole('textbox', { name: 'Setup code' }).fill(SYNC_SETUP_CODE);
-		await this.settings().getByRole('button', { name: 'Turn on sync' }).tap();
-		await expect(this.settings().getByRole('status', { name: 'Sync status' })).toHaveText('Up to date');
-		await this.closeSettings();
+		await expect
+			.poll(async () =>
+				this.page.evaluate(() => {
+					const token = localStorage.getItem('procrastinate-device');
+					const raw = localStorage.getItem('procrastinate');
+					const sync = raw ? (JSON.parse(raw) as { sync?: { outbox: unknown[]; reset?: boolean } }).sync : undefined;
+					return Boolean(token && sync && !sync.reset && sync.outbox.length === 0);
+				}),
+			)
+			.toBe(true);
 	}
 
 	/** What the server will push to this device for `title`, as `title@<ISO time>: body`, like the iOS readout. */

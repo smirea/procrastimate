@@ -30,14 +30,19 @@ describe.each(storeFactories)('%s store', (_name, createStore) => {
 		expect(store.deviceByTokenHash('hash-a')?.revokedAt).toBe(60);
 	});
 
-	test('keeps one pairing code, replaced or cleared', () => {
+	test('wipes task data and bumps the epoch without dropping devices', () => {
 		const store = createStore();
-		expect(store.pairing()).toBeNull();
-		store.setPairing({ codeHash: 'one', expiresAt: 10, attempts: 0 });
-		store.setPairing({ codeHash: 'two', expiresAt: 20, attempts: 1 });
-		expect(store.pairing()).toEqual({ codeHash: 'two', expiresAt: 20, attempts: 1 });
-		store.setPairing(null);
-		expect(store.pairing()).toBeNull();
+		store.addDevice(device('a', 1));
+		store.putEntity({ kind: 'task', id: '1', data: { title: 'A' }, clocks: {} });
+		store.appendLog({ opId: 'op', kind: 'task', id: '1', fields: { title: 'A' } });
+		expect(store.epoch()).toBe(0);
+		store.clearTaskData();
+		store.setEpoch(store.epoch() + 1);
+		expect(store.entities()).toEqual([]);
+		expect(store.lastSeq()).toBe(0);
+		expect(store.hasOp('op')).toBe(false);
+		expect(store.epoch()).toBe(1);
+		expect(store.liveDevices().map(d => d.id)).toEqual(['a']);
 	});
 
 	test('stores entities as JSON and replaces them by kind and id', () => {

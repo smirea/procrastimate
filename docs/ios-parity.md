@@ -108,17 +108,15 @@ macOS `core` and `app` stay off until a release ([Workflow](decisions/workflow.m
 
 ### Notifications
 
-The web's Web Push rows map to native local notifications. XCUITests check the pending requests through a DEBUG-only accessibility readout on the Notifications screen, since XCUITest cannot read `UNUserNotificationCenter` directly. The web halves pair against the web's notifications panel: they pair the page with sync, stand in for the push service, and read the server's schedule as the same `title@<ISO time>: body` lines.
+The web's Web Push rows map to native local notifications. Permission is asked on first launch. Settings has one line, and there is no Notifications screen. The web halves stand in for the push service and read the server's schedule as `title@<ISO time>: body` lines.
 
-| Feature | Web | iOS | Slice | XCUITest | Playwright | Screenshot |
-| --- | --- | --- | --- | --- | --- | --- |
-| `push-sheet`: Notifications screen in Browse showing `On`, `Off`, or `Blocked` | ✓ | Built | S8 | `NotificationsParityTests.test_push_sheet` | `notifications › push-sheet` | `push-sheet.png` |
-| `push-permission`: asks only from `Turn on notifications`; a denial links to Settings | ✓ | Built | S8 | `NotificationsParityTests.test_push_permission` | `notifications › push-permission` | `push-permission.png` |
-| `push-install`: Add to Home Screen guidance (*web only*) | ✓ | n/a | — | — | — | — |
+| `push-sheet`: Settings shows `Notifications: On`, `Notifications: Off`, or `Notifications need permission` | ✓ | Built | S8 | `NotificationsParityTests.test_push_sheet` | `notifications › push-sheet` | `push-sheet.png` |
+| `push-permission`: the app asks on first launch; a denial is the tappable settings line | ✓ | Built | S8 | `NotificationsParityTests.test_push_permission` | `notifications › push-permission` | `push-permission.png` |
+| `push-install`: no Add to Home Screen prompt | — | n/a | — | — | — | — |
 | `push-schedule`: the device schedule equals future due times and reminders of open tasks, at most 60 pending on iOS | ✓ | Built | S8 | `NotificationsParityTests.test_push_schedule` | `notifications › push-schedule` | `push-schedule.png` |
 | `push-deliver`: one notification per moment, titled with the task, body such as `Due now` | ✓ | Built | S8 | `NotificationsParityTests.test_push_deliver` | `notifications › push-deliver` | `push-deliver.png` |
-| `push-test`: `Send a test notification` and `Turn off` | ✓ | Built | S8 | `NotificationsParityTests.test_push_test` | `notifications › push-test` | `push-test.png` |
-| `push-nudge`: one `Get notified when it's due?` toast per session | ✓ | Built | S8 | `NotificationsParityTests.test_push_nudge` | `notifications › push-nudge` | `push-nudge.png` |
+| `push-test`: settings has the notifications line and no turn-on prompt | ✓ | Built | S8 | — | `notifications › push-test` | `push-test.png` |
+| `push-nudge`: saving a timed task shows no turn-on toast | ✓ | Built | S8 | `NotificationsParityTests.test_push_nudge` | `notifications › push-nudge` | — |
 | `push-open`: tapping a notification opens its task | ✓ | Built (opens the details sheet; S6 fills it in) | S8 | `NotificationsParityTests.test_push_open` | `notifications › push-open` | `push-open.png` |
 
 ### Task views
@@ -203,9 +201,9 @@ The web's Web Push rows map to native local notifications. XCUITests check the p
 
 | Feature | Web | iOS | Slice | XCUITest | Playwright | Screenshot |
 | --- | --- | --- | --- | --- | --- | --- |
-| `sync-offline`: everything works with no network | ✓ | Built | S5 | true by construction: unpaired, the app makes no network calls | — | — |
-| `sync-pair`: set up, pair with a code, and remove a device in Settings | Planned | Planned | Y4, S9 | `SyncParityTests.test_sync_pair` | `sync › sync-pair` | `sync-pair.png` |
-| `sync-propagate`, `sync-reconnect`, `sync-conflict`: changes reach the other client, offline changes upload, concurrent edits converge per [Sync](decisions/sync.md#conflicts) | Planned | Planned | Y4, S9 | `Core` sync tests against vectors | `sync.e2e.ts` (two browser contexts) | — |
+| `sync-offline`: everything works with no network; the local store is the UI | ✓ | Built | S5 | true by construction | — | — |
+| `sync-propagate`, `sync-realtime`, `sync-reconnect`, `sync-conflict`: changes reach the other client, offline changes upload, concurrent edits converge per [Sync](decisions/sync.md#conflicts) | ✓ | Built (Core client; no XCUITest of two devices) | Y4, S9 | `swift test` (`SyncEngine`, `StoreTests`) | `sync.e2e.ts` | — |
+| `sync-delete`: Settings `Delete all data` wipes tasks, projects, and labels on this device and the server | ✓ | Built | — | `SettingsParityTests` shows the button | `sync.e2e.ts` | — |
 
 ### Ramble
 
@@ -223,7 +221,7 @@ Planned on both clients together. The design and its slices `R1` to `R7` are in 
 | `ramble-discard`: a card is discarded and restored with `Undo` | Planned | Planned | R4, R5 | `RambleParityTests.test_ramble_discard` | `ramble › ramble-discard` | `ramble-discard.png` |
 | `ramble-save-undo`: `Add <n> tasks` saves them all, and one `Undo` removes them | Planned | Planned | R4, R5 | `RambleParityTests.test_ramble_save_undo` | `ramble › ramble-save-undo` | `ramble-save-undo.png` |
 | `ramble-hold`: hold to talk listens while held | Planned | Planned | R4, R5 | `RambleParityTests.test_ramble_hold` | `ramble › ramble-hold` | `ramble-hold.png` |
-| `ramble-unavailable`: unpaired and offline states explain why Ramble is off | Planned | Planned | R4, R5 | `RambleParityTests.test_ramble_unavailable` | `ramble › ramble-unavailable` | `ramble-unavailable.png` |
+| `ramble-unavailable`: offline and a missing key explain why Ramble is off | Planned | Planned | R4, R5 | `RambleParityTests.test_ramble_unavailable` | `ramble › ramble-unavailable` | `ramble-unavailable.png` |
 
 ### Siri, Shortcuts, and Spotlight
 
@@ -241,6 +239,7 @@ iOS only. The web client has no App Intents. New features that can be done from 
 | `intent-today`: lists tasks due today | n/a | Built | Intents | `AppIntentsParityTests.test_intent_today_and_overdue` | n/a | — |
 | `intent-overdue`: lists overdue tasks | n/a | Built | Intents | `AppIntentsParityTests.test_intent_today_and_overdue` | n/a | — |
 | `intent-spotlight`: Spotlight indexes open tasks and drops them once completed | n/a | Built | Intents | `AppIntentsParityTests.test_intent_complete_and_spotlight` | n/a | — |
+| `intent-delete-all`: deletes every task, project, and label | n/a | Built | Intents | — | n/a | — |
 
 ## Thread split
 

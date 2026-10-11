@@ -78,6 +78,15 @@ struct ProcrastimateShortcuts: AppShortcutsProvider {
             systemImageName: "sun.max"
         )
         AppShortcut(
+            intent: DeleteAllDataIntent(),
+            phrases: [
+                "Delete all data in \(.applicationName)",
+                "Erase everything in \(.applicationName)",
+            ],
+            shortTitle: "Delete All Data",
+            systemImageName: "trash"
+        )
+        AppShortcut(
             intent: ListOverdueIntent(),
             phrases: [
                 "What is overdue in \(.applicationName)",

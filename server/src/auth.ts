@@ -1,35 +1,18 @@
 import type { z } from 'zod';
-import {
-	normalizePairingCode,
-	PAIRING_ALPHABET,
-	PAIRING_ATTEMPTS,
-	PAIRING_CODE_LENGTH,
-	PAIRING_TTL_MS,
-	redeemRequestSchema,
-	revokeRequestSchema,
-	setupRequestSchema,
-	type DeviceCredentials,
-	type DeviceList,
-	type PairingCode,
-} from '../../shared/auth';
+import { INSTALL_GATE, registerRequestSchema, type RegisteredDevice } from '../../shared/auth';
 import { SOCKET_TOKEN_PREFIX } from '../../shared/sync/protocol';
 import type { Ramble } from './account/ramble';
 import type { Realtime } from './account/realtime';
 import type { AccountStore } from './account/store';
 
 /**
- * Device auth for sync. Nothing else reads tokens, so passkeys can replace the setup code by changing this file and
- * the pairing screen. Everything here runs inside the `Account` object, against its store.
+ * Device auth for sync. Nothing else reads tokens. An install registers its own secret; there is no setup code
+ * and no pairing.
  */
 
-/**
- * What an account route sees. `setupCode` is undefined when the `SYNC_SETUP_CODE` secret is not set. `setAlarm`
- * arms the object's one alarm, or clears it with null. `realtime` holds the nudge sockets, `ramble` the
- * transcription proxy.
- */
+/** What an account route sees. `setAlarm` arms the object's one alarm, or clears it with null. */
 export type AccountContext = {
 	store: AccountStore;
-	setupCode: string | undefined;
 	now: number;
 	setAlarm: (at: number | null) => Promise<void>;
 	realtime: Realtime;
@@ -38,27 +21,11 @@ export type AccountContext = {
 
 export type AccountRoute = (request: Request, context: AccountContext) => Promise<Response>;
 
-const TOKEN_BYTES = 32;
-
 const encoder = new TextEncoder();
 
 export async function sha256(value: string): Promise<string> {
 	const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', encoder.encode(value)));
 	return Array.from(digest, byte => byte.toString(16).padStart(2, '0')).join('');
-}
-
-function newToken(): string {
-	const bytes = crypto.getRandomValues(new Uint8Array(TOKEN_BYTES));
-	return btoa(String.fromCharCode(...bytes))
-		.replaceAll('+', '-')
-		.replaceAll('/', '_')
-		.replace(/=+$/, '');
-}
-
-function newPairingCode(): string {
-	// 32 symbols divide 256 evenly, so masking a byte keeps every symbol equally likely.
-	const bytes = crypto.getRandomValues(new Uint8Array(PAIRING_CODE_LENGTH));
-	return Array.from(bytes, byte => PAIRING_ALPHABET[byte & 31]).join('');
 }
 
 /** The `Authorization: Bearer` token, or on a WebSocket upgrade from a browser, the `bearer.<token>` subprotocol. */
@@ -87,82 +54,28 @@ async function parseBody<T>(request: Request, schema: z.ZodType<T>): Promise<T |
 	return parsed.success ? parsed.data : null;
 }
 
-/** Hashing happens before any store access, so issuing is synchronous and can sit inside a transaction. */
-async function prepareDevice(name: string, now: number) {
-	const token = newToken();
-	const device = { id: crypto.randomUUID(), name, tokenHash: await sha256(token), createdAt: now, lastSeenAt: now };
-	return {
-		issue(store: AccountStore): DeviceCredentials {
-			store.addDevice({ ...device, revokedAt: null });
-			return { ok: true, deviceId: device.id, token };
-		},
-	};
-}
-
-function authenticated(route: (request: Request, context: AccountContext, deviceId: string) => Promise<Response>) {
-	return async (request: Request, context: AccountContext) => {
-		const deviceId = await authenticate(request, context);
-		return deviceId ? route(request, context, deviceId) : fail(401, 'Not signed in');
-	};
-}
-
 export const authRoutes: Record<string, AccountRoute> = {
-	'POST /api/auth/setup': async (request, { store, setupCode, now }) => {
-		if (!setupCode) return fail(503, 'Sync is not configured');
-		const body = await parseBody(request, setupRequestSchema);
-		if (!body) return fail(400, 'Invalid setup request');
-		// Comparing digests keeps the comparison time independent of how much of the code matched.
-		if ((await sha256(body.code)) !== (await sha256(setupCode))) return fail(401, 'Wrong setup code');
-		const device = await prepareDevice(body.name, now);
-		return Response.json(device.issue(store));
-	},
-
-	'POST /api/auth/pair': authenticated(async (_request, { store, now }) => {
-		const code = newPairingCode();
-		const expiresAt = now + PAIRING_TTL_MS;
-		store.setPairing({ codeHash: await sha256(code), expiresAt, attempts: 0 });
-		return Response.json({ ok: true, code, expiresAt } satisfies PairingCode);
-	}),
-
-	'POST /api/auth/redeem': async (request, { store, now }) => {
-		const body = await parseBody(request, redeemRequestSchema);
-		if (!body) return fail(400, 'Invalid pairing request');
-		const codeHash = await sha256(normalizePairingCode(body.code));
-		const device = await prepareDevice(body.name, now);
-		const credentials = store.transaction(() => {
-			const pairing = store.pairing();
-			if (!pairing) return null;
-			if (pairing.expiresAt <= now) {
-				store.setPairing(null);
-				return null;
-			}
-			if (pairing.codeHash !== codeHash) {
-				const attempts = pairing.attempts + 1;
-				store.setPairing(attempts >= PAIRING_ATTEMPTS ? null : { ...pairing, attempts });
-				return null;
-			}
-			store.setPairing(null);
-			return device.issue(store);
+	'POST /api/auth/register': async (request, { store, now }) => {
+		const body = await parseBody(request, registerRequestSchema);
+		if (!body) return fail(400, 'Invalid register request');
+		// Comparing digests keeps the comparison time independent of how much of the gate matched.
+		if ((await sha256(body.gate)) !== (await sha256(INSTALL_GATE))) return fail(401, 'Not signed in');
+		const tokenHash = await sha256(body.token);
+		const existing = store.deviceByTokenHash(tokenHash);
+		if (existing) {
+			if (existing.revokedAt !== null) return fail(401, 'Not signed in');
+			store.touchDevice(existing.id, now);
+			return Response.json({ ok: true, deviceId: existing.id } satisfies RegisteredDevice);
+		}
+		const deviceId = store.hasDevice(body.deviceId) ? crypto.randomUUID() : body.deviceId;
+		store.addDevice({
+			id: deviceId,
+			name: body.name,
+			tokenHash,
+			createdAt: now,
+			lastSeenAt: now,
+			revokedAt: null,
 		});
-		return credentials ? Response.json(credentials) : fail(401, 'Invalid or expired code');
+		return Response.json({ ok: true, deviceId } satisfies RegisteredDevice);
 	},
-
-	'GET /api/auth/devices': authenticated(async (_request, { store }, deviceId) => {
-		const devices = store.liveDevices().map(device => ({
-			id: device.id,
-			name: device.name,
-			createdAt: device.createdAt,
-			lastSeenAt: device.lastSeenAt,
-			current: device.id === deviceId,
-		}));
-		return Response.json({ ok: true, devices } satisfies DeviceList);
-	}),
-
-	'DELETE /api/auth/devices': authenticated(async (request, { store, now, realtime }) => {
-		const body = await parseBody(request, revokeRequestSchema);
-		if (!body) return fail(400, 'Invalid device');
-		if (!store.revokeDevice(body.id, now)) return fail(404, 'No such device');
-		realtime.revoke(body.id);
-		return Response.json({ ok: true });
-	}),
 };

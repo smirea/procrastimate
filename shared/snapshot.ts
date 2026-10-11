@@ -69,8 +69,9 @@ const tasksSchema = z.array(z.unknown()).transform(items =>
 );
 
 /**
- * Device-local sync state. A device without it is unpaired and keeps no outbox. `clock` is the last clock the device
- * issued or saw, and `timeZone` the zone it last wrote to the synced settings, so it writes again only after it moves.
+ * Device-local sync state. `clock` is the last clock the device issued or saw, and `timeZone` the zone it last wrote
+ * to the synced settings, so it writes again only after it moves. `epoch` is the wipe generation it last applied.
+ * `reset` is set until the server has wiped task data for a local delete-all.
  */
 const syncSchema = z.object({
 	deviceId: z.string(),
@@ -78,6 +79,8 @@ const syncSchema = z.object({
 	outbox: z.array(opSchema),
 	clock: z.string().refine(isHlc),
 	timeZone: z.string(),
+	epoch: z.number().int().nonnegative().default(0),
+	reset: z.boolean().default(false),
 });
 
 const snapshotSchema = z.object({

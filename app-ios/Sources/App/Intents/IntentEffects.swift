@@ -264,8 +264,8 @@ enum IntentEffects {
         return result
     }
 
-    /// Notifications and the "turn on notifications" nudge. The open app's view does this on the next frame, which is
-    /// too late when the intent ran first, and absent when the app was not showing.
+    /// Recomputes the notification schedule. The open app's view does this on the next frame, which is too late when
+    /// the intent ran first, and absent when the app was not showing.
     private static func followUp(
         _ store: Store,
         _ clock: AppClock,
