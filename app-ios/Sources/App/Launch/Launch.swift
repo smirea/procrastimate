@@ -4,7 +4,8 @@ import SwiftUI
 
 enum Launch {
     /// DEBUG UI tests set this so the app opens without a Keychain session. Release never reads it.
-    static var signedIn = false
+    /// Written once in `prepare()` before the first frame, then only read.
+    nonisolated(unsafe) static var signedIn = false
 
     /// Applies the DEBUG launch environment before the first frame and returns the clock the app runs on.
     static func prepare() -> AppClock {

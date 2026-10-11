@@ -19,7 +19,7 @@ struct RootView: View {
     private var signedIn: some View {
         @Bindable var navigator = navigator
         let today = Views.todayTasks(store.tasks, todayKey)
-        TabView(selection: $navigator.tab) {
+        return TabView(selection: $navigator.tab) {
             Tab("Inbox", systemImage: "tray", value: .inbox) {
                 TabStack(tab: .inbox) { InboxScreen() }
             }
