@@ -6,9 +6,7 @@ struct BrowseScreen: View {
     var body: some View {
         List {
             Section {
-                NavigationLink(value: Route.notifications) {
-                    Label("Notifications", systemImage: "bell")
-                }
+                NotificationsRow()
                 Button {
                     navigator.sheet = .settings
                 } label: {
