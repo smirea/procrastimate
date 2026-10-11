@@ -71,7 +71,9 @@ struct ProcrastimateApp: App {
                 .onChange(of: store.labels) { _, _ in SpotlightIndex.schedule(session) }
                 .task { SpotlightIndex.schedule(session) }
                 .task { await IntentHarness.run() }
-                .overlay(alignment: .top) { IntentReadout() }
+                // An overlay sits outside the `.environment` calls above, so it gets the router itself; without it every
+                // launch traps on the missing `IntentRouter`.
+                .overlay(alignment: .top) { IntentReadout().environment(router) }
                 .onOpenURL { url in
                     guard url.pathExtension.lowercased() == "zip" else { return }
                     importer.run(url)
