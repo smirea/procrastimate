@@ -63,7 +63,7 @@ export ASC_KEY_ID=<key id> ASC_ISSUER_ID=<issuer id> ASC_KEY_PATH=~/.appstorecon
 ./scripts/archive --export-only  # write build/archive/export/App.ipa without uploading
 ```
 
-Release builds always call `https://procrastimate.stf.lol`; Debug uses `API_URL` from the environment below. The build number defaults to the current UTC time (`BUILD_NUMBER` overrides it), so each upload is higher than the last. Nothing here runs in CI, and the key values never go in the repo.
+Release builds always call `https://procrastimate.stf.lol`; Debug uses `API_URL` from the environment below. The build number defaults to the current UTC time as `year.MMdd.HHmmss` (`BUILD_NUMBER` overrides it), so each upload is higher than the last. Nothing here runs in CI, and the key values never go in the repo.
 
 ## Environment
 

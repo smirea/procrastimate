@@ -2,7 +2,8 @@
 # Archives the Release app and uploads it to App Store Connect (TestFlight) with an App Store Connect API key.
 # Usage: ./scripts/archive [--export-only]
 # Needs ASC_KEY_ID, ASC_ISSUER_ID, and ASC_KEY_PATH (the AuthKey_<id>.p8 file, kept outside the repo).
-# BUILD_NUMBER overrides the build number, which defaults to the current UTC time so every upload is higher.
+# BUILD_NUMBER overrides the build number, which defaults to the current UTC time as year.MMdd.HHmmss: always higher,
+# and within CFBundleVersion's three period-separated integers with a first integer of at most four digits.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -23,7 +24,8 @@ case "$key_path" in
     "$repo"/*) echo "Keep the API key outside the repository: $key_path" >&2; exit 1 ;;
 esac
 
-build_number=${BUILD_NUMBER:-$(date -u +%Y%m%d%H%M)}
+read -r year monthday time < <(date -u '+%Y %m%d %H%M%S')
+build_number=${BUILD_NUMBER:-$year.$((10#$monthday)).$((10#$time))}
 out=build/archive
 archive=$out/App.xcarchive
 options=$out/ExportOptions.plist
