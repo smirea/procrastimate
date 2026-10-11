@@ -3,8 +3,8 @@ import Core
 import CoreSpotlight
 
 struct TaskEntity: AppEntity, IndexedEntity {
-    static var typeDisplayRepresentation = TypeDisplayRepresentation(name: "Task")
-    static var defaultQuery = TaskEntityQuery()
+    static let typeDisplayRepresentation = TypeDisplayRepresentation(name: "Task")
+    static let defaultQuery = TaskEntityQuery()
 
     var id: String
 
@@ -51,8 +51,8 @@ struct TaskEntity: AppEntity, IndexedEntity {
 }
 
 struct ProjectEntity: AppEntity {
-    static var typeDisplayRepresentation = TypeDisplayRepresentation(name: "Project")
-    static var defaultQuery = ProjectEntityQuery()
+    static let typeDisplayRepresentation = TypeDisplayRepresentation(name: "Project")
+    static let defaultQuery = ProjectEntityQuery()
 
     var id: String
     var name: String
@@ -68,8 +68,8 @@ struct ProjectEntity: AppEntity {
 }
 
 struct LabelEntity: AppEntity {
-    static var typeDisplayRepresentation = TypeDisplayRepresentation(name: "Label")
-    static var defaultQuery = LabelEntityQuery()
+    static let typeDisplayRepresentation = TypeDisplayRepresentation(name: "Label")
+    static let defaultQuery = LabelEntityQuery()
 
     var id: String
     var name: String
@@ -97,11 +97,13 @@ struct TaskEntityQuery: EntityStringQuery, IndexedEntityQuery {
         await IntentEffects.suggestedTasks()
     }
 
+    @available(iOS 27.0, *)
     func reindexEntities(for identifiers: [TaskEntity.ID], indexDescription _: CSSearchableIndexDescription) async throws {
         let (keep, drop) = await IntentEffects.spotlightEntities(ids: identifiers)
         try await SpotlightIndex.replace(keep, removing: drop)
     }
 
+    @available(iOS 27.0, *)
     func reindexAllEntities(indexDescription _: CSSearchableIndexDescription) async throws {
         try await SpotlightIndex.replaceAll(await IntentEffects.spotlightEntities())
     }

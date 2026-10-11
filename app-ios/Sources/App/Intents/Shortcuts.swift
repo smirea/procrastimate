@@ -1,14 +1,14 @@
 import AppIntents
 
 /// The phrases Siri and the Shortcuts app offer without Stefan setting them up. Each one names the app, which App
-/// Shortcuts require. Ten is the most the system keeps; this list stays under that.
+/// Shortcuts require. Ten is the most the system keeps; this list stays under that. Phrases can only interpolate
+/// `AppEntity` and `AppEnum` parameters, so the String ones (a task title, a search query) are asked for after the phrase.
 struct ProcrastimateShortcuts: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
         AppShortcut(
             intent: AddTaskIntent(),
             phrases: [
                 "Add a task in \(.applicationName)",
-                "Add \(\.$title) in \(.applicationName)",
                 "Create a task in \(.applicationName)",
             ],
             shortTitle: "Add Task",
@@ -62,8 +62,8 @@ struct ProcrastimateShortcuts: AppShortcutsProvider {
         AppShortcut(
             intent: SearchTasksIntent(),
             phrases: [
-                "Search \(\.$query) in \(.applicationName)",
-                "Find \(\.$query) in \(.applicationName)",
+                "Search tasks in \(.applicationName)",
+                "Find a task in \(.applicationName)",
                 "Search \(.applicationName)",
             ],
             shortTitle: "Search Tasks",

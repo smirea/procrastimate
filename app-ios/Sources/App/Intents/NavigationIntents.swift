@@ -4,7 +4,7 @@ import AppIntents
 enum TaskListKind: String, AppEnum {
     case inbox, today, upcoming
 
-    static var typeDisplayRepresentation = TypeDisplayRepresentation(name: "List")
+    static let typeDisplayRepresentation = TypeDisplayRepresentation(name: "List")
 
     static var caseDisplayRepresentations: [TaskListKind: DisplayRepresentation] {
         [
