@@ -1,0 +1,3764 @@
+{
+	"module": "search",
+	"timeZone": "America/New_York",
+	"cases": [
+		{
+			"fn": "searchTerms",
+			"test": "searchTerms › splits on whitespace and folds case and accents",
+			"input": [
+				"  Café   CRÈME "
+			],
+			"output": [
+				"cafe",
+				"creme"
+			]
+		},
+		{
+			"fn": "search",
+			"test": "search matching › an empty query matches nothing",
+			"input": [
+				"   ",
+				[
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t1",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Buy milk"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t2",
+						"labelIds": [],
+						"notes": "The ferns by the window",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Water plants"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t3",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "Fix sink"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t4",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Résumé update"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t5",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Pay rent"
+					}
+				],
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "waiting",
+							"name": "Waiting on"
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "garden",
+							"name": "Garden"
+						},
+						{
+							"createdAt": 0,
+							"id": "cafe",
+							"name": "Café Ideas"
+						}
+					]
+				}
+			],
+			"output": {
+				"completed": [],
+				"labels": [],
+				"open": [],
+				"projects": []
+			}
+		},
+		{
+			"fn": "search",
+			"test": "search matching › matches titles, notes, and project names case-insensitively",
+			"input": [
+				"MILK",
+				[
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t1",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Buy milk"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t2",
+						"labelIds": [],
+						"notes": "The ferns by the window",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Water plants"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t3",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "Fix sink"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t4",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Résumé update"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t5",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Pay rent"
+					}
+				],
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "waiting",
+							"name": "Waiting on"
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "garden",
+							"name": "Garden"
+						},
+						{
+							"createdAt": 0,
+							"id": "cafe",
+							"name": "Café Ideas"
+						}
+					]
+				}
+			],
+			"output": {
+				"completed": [],
+				"labels": [],
+				"open": [
+					{
+						"matches": {
+							"title": [
+								{
+									"ranges": [
+										[
+											4,
+											8
+										]
+									],
+									"text": "Buy milk"
+								}
+							]
+						},
+						"score": 8,
+						"task": {
+							"completedAt": null,
+							"createdAt": 0,
+							"due": null,
+							"id": "t1",
+							"labelIds": [],
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Buy milk"
+						}
+					}
+				],
+				"projects": []
+			}
+		},
+		{
+			"fn": "search",
+			"test": "search matching › matches titles, notes, and project names case-insensitively",
+			"input": [
+				"ferns",
+				[
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t1",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Buy milk"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t2",
+						"labelIds": [],
+						"notes": "The ferns by the window",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Water plants"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t3",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "Fix sink"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t4",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Résumé update"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t5",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Pay rent"
+					}
+				],
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "waiting",
+							"name": "Waiting on"
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "garden",
+							"name": "Garden"
+						},
+						{
+							"createdAt": 0,
+							"id": "cafe",
+							"name": "Café Ideas"
+						}
+					]
+				}
+			],
+			"output": {
+				"completed": [],
+				"labels": [],
+				"open": [
+					{
+						"matches": {
+							"notes": [
+								{
+									"ranges": [
+										[
+											4,
+											9
+										]
+									],
+									"text": "The ferns by the window"
+								}
+							]
+						},
+						"score": 2,
+						"task": {
+							"completedAt": null,
+							"createdAt": 0,
+							"due": null,
+							"id": "t2",
+							"labelIds": [],
+							"notes": "The ferns by the window",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Water plants"
+						}
+					}
+				],
+				"projects": []
+			}
+		},
+		{
+			"fn": "search",
+			"test": "search matching › matches titles, notes, and project names case-insensitively",
+			"input": [
+				"home",
+				[
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t1",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Buy milk"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t2",
+						"labelIds": [],
+						"notes": "The ferns by the window",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Water plants"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t3",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "Fix sink"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t4",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Résumé update"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t5",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Pay rent"
+					}
+				],
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "waiting",
+							"name": "Waiting on"
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "garden",
+							"name": "Garden"
+						},
+						{
+							"createdAt": 0,
+							"id": "cafe",
+							"name": "Café Ideas"
+						}
+					]
+				}
+			],
+			"output": {
+				"completed": [],
+				"labels": [],
+				"open": [
+					{
+						"matches": {
+							"project": [
+								{
+									"ranges": [
+										[
+											0,
+											4
+										]
+									],
+									"text": "Home"
+								}
+							]
+						},
+						"score": 6,
+						"task": {
+							"completedAt": null,
+							"createdAt": 0,
+							"due": null,
+							"id": "t3",
+							"labelIds": [],
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "Fix sink"
+						}
+					}
+				],
+				"projects": [
+					{
+						"item": {
+							"createdAt": 0,
+							"id": "home",
+							"name": "Home"
+						},
+						"name": {
+							"ranges": [
+								[
+									0,
+									4
+								]
+							],
+							"text": "Home"
+						},
+						"score": 3
+					}
+				]
+			}
+		},
+		{
+			"fn": "search",
+			"test": "search matching › ignores accents on either side",
+			"input": [
+				"resume",
+				[
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t1",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Buy milk"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t2",
+						"labelIds": [],
+						"notes": "The ferns by the window",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Water plants"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t3",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "Fix sink"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t4",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Résumé update"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t5",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Pay rent"
+					}
+				],
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "waiting",
+							"name": "Waiting on"
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "garden",
+							"name": "Garden"
+						},
+						{
+							"createdAt": 0,
+							"id": "cafe",
+							"name": "Café Ideas"
+						}
+					]
+				}
+			],
+			"output": {
+				"completed": [],
+				"labels": [],
+				"open": [
+					{
+						"matches": {
+							"title": [
+								{
+									"ranges": [
+										[
+											0,
+											6
+										]
+									],
+									"text": "Résumé update"
+								}
+							]
+						},
+						"score": 12,
+						"task": {
+							"completedAt": null,
+							"createdAt": 0,
+							"due": null,
+							"id": "t4",
+							"labelIds": [],
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Résumé update"
+						}
+					}
+				],
+				"projects": []
+			}
+		},
+		{
+			"fn": "search",
+			"test": "search matching › ignores accents on either side",
+			"input": [
+				"cafe",
+				[],
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "waiting",
+							"name": "Waiting on"
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "garden",
+							"name": "Garden"
+						},
+						{
+							"createdAt": 0,
+							"id": "cafe",
+							"name": "Café Ideas"
+						}
+					]
+				}
+			],
+			"output": {
+				"completed": [],
+				"labels": [],
+				"open": [],
+				"projects": [
+					{
+						"item": {
+							"createdAt": 0,
+							"id": "cafe",
+							"name": "Café Ideas"
+						},
+						"name": {
+							"ranges": [
+								[
+									0,
+									4
+								]
+							],
+							"text": "Café Ideas"
+						},
+						"score": 3
+					}
+				]
+			}
+		},
+		{
+			"fn": "search",
+			"test": "search matching › ignores accents on either side",
+			"input": [
+				"café",
+				[],
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "waiting",
+							"name": "Waiting on"
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "garden",
+							"name": "Garden"
+						},
+						{
+							"createdAt": 0,
+							"id": "cafe",
+							"name": "Café Ideas"
+						}
+					]
+				}
+			],
+			"output": {
+				"completed": [],
+				"labels": [],
+				"open": [],
+				"projects": [
+					{
+						"item": {
+							"createdAt": 0,
+							"id": "cafe",
+							"name": "Café Ideas"
+						},
+						"name": {
+							"ranges": [
+								[
+									0,
+									4
+								]
+							],
+							"text": "Café Ideas"
+						},
+						"score": 3
+					}
+				]
+			}
+		},
+		{
+			"fn": "search",
+			"test": "search matching › every term must match, in any field and any order",
+			"input": [
+				"sink home",
+				[
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t1",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Buy milk"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t2",
+						"labelIds": [],
+						"notes": "The ferns by the window",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Water plants"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t3",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "Fix sink"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t4",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Résumé update"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t5",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Pay rent"
+					}
+				],
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "waiting",
+							"name": "Waiting on"
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "garden",
+							"name": "Garden"
+						},
+						{
+							"createdAt": 0,
+							"id": "cafe",
+							"name": "Café Ideas"
+						}
+					]
+				}
+			],
+			"output": {
+				"completed": [],
+				"labels": [],
+				"open": [
+					{
+						"matches": {
+							"project": [
+								{
+									"ranges": [
+										[
+											0,
+											4
+										]
+									],
+									"text": "Home"
+								}
+							],
+							"title": [
+								{
+									"ranges": [
+										[
+											4,
+											8
+										]
+									],
+									"text": "Fix sink"
+								}
+							]
+						},
+						"score": 14,
+						"task": {
+							"completedAt": null,
+							"createdAt": 0,
+							"due": null,
+							"id": "t3",
+							"labelIds": [],
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "Fix sink"
+						}
+					}
+				],
+				"projects": []
+			}
+		},
+		{
+			"fn": "search",
+			"test": "search matching › every term must match, in any field and any order",
+			"input": [
+				"window water",
+				[
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t1",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Buy milk"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t2",
+						"labelIds": [],
+						"notes": "The ferns by the window",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Water plants"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t3",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "Fix sink"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t4",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Résumé update"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t5",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Pay rent"
+					}
+				],
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "waiting",
+							"name": "Waiting on"
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "garden",
+							"name": "Garden"
+						},
+						{
+							"createdAt": 0,
+							"id": "cafe",
+							"name": "Café Ideas"
+						}
+					]
+				}
+			],
+			"output": {
+				"completed": [],
+				"labels": [],
+				"open": [
+					{
+						"matches": {
+							"notes": [
+								{
+									"ranges": [
+										[
+											17,
+											23
+										]
+									],
+									"text": "The ferns by the window"
+								}
+							],
+							"title": [
+								{
+									"ranges": [
+										[
+											0,
+											5
+										]
+									],
+									"text": "Water plants"
+								}
+							]
+						},
+						"score": 14,
+						"task": {
+							"completedAt": null,
+							"createdAt": 0,
+							"due": null,
+							"id": "t2",
+							"labelIds": [],
+							"notes": "The ferns by the window",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Water plants"
+						}
+					}
+				],
+				"projects": []
+			}
+		},
+		{
+			"fn": "search",
+			"test": "search matching › every term must match, in any field and any order",
+			"input": [
+				"sink garden",
+				[
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t1",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Buy milk"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t2",
+						"labelIds": [],
+						"notes": "The ferns by the window",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Water plants"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t3",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "Fix sink"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t4",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Résumé update"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t5",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Pay rent"
+					}
+				],
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "waiting",
+							"name": "Waiting on"
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "garden",
+							"name": "Garden"
+						},
+						{
+							"createdAt": 0,
+							"id": "cafe",
+							"name": "Café Ideas"
+						}
+					]
+				}
+			],
+			"output": {
+				"completed": [],
+				"labels": [],
+				"open": [],
+				"projects": []
+			}
+		},
+		{
+			"fn": "search",
+			"test": "search matching › matches inside a word, but a single letter only at a word start",
+			"input": [
+				"ilk",
+				[
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t1",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Buy milk"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t2",
+						"labelIds": [],
+						"notes": "The ferns by the window",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Water plants"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t3",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "Fix sink"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t4",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Résumé update"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t5",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Pay rent"
+					}
+				],
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "waiting",
+							"name": "Waiting on"
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "garden",
+							"name": "Garden"
+						},
+						{
+							"createdAt": 0,
+							"id": "cafe",
+							"name": "Café Ideas"
+						}
+					]
+				}
+			],
+			"output": {
+				"completed": [],
+				"labels": [],
+				"open": [
+					{
+						"matches": {
+							"title": [
+								{
+									"ranges": [
+										[
+											5,
+											8
+										]
+									],
+									"text": "Buy milk"
+								}
+							]
+						},
+						"score": 4,
+						"task": {
+							"completedAt": null,
+							"createdAt": 0,
+							"due": null,
+							"id": "t1",
+							"labelIds": [],
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Buy milk"
+						}
+					}
+				],
+				"projects": []
+			}
+		},
+		{
+			"fn": "search",
+			"test": "search matching › matches inside a word, but a single letter only at a word start",
+			"input": [
+				"i",
+				[
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t1",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Buy milk"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t2",
+						"labelIds": [],
+						"notes": "The ferns by the window",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Water plants"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t3",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "Fix sink"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t4",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Résumé update"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t5",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Pay rent"
+					}
+				],
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "waiting",
+							"name": "Waiting on"
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "garden",
+							"name": "Garden"
+						},
+						{
+							"createdAt": 0,
+							"id": "cafe",
+							"name": "Café Ideas"
+						}
+					]
+				}
+			],
+			"output": {
+				"completed": [],
+				"labels": [],
+				"open": [],
+				"projects": [
+					{
+						"item": {
+							"createdAt": 0,
+							"id": "cafe",
+							"name": "Café Ideas"
+						},
+						"name": {
+							"ranges": [
+								[
+									5,
+									6
+								]
+							],
+							"text": "Café Ideas"
+						},
+						"score": 2
+					}
+				]
+			}
+		},
+		{
+			"fn": "search",
+			"test": "search matching › matches inside a word, but a single letter only at a word start",
+			"input": [
+				"p",
+				[
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t1",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Buy milk"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t2",
+						"labelIds": [],
+						"notes": "The ferns by the window",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Water plants"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t3",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "Fix sink"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t4",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Résumé update"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t5",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Pay rent"
+					}
+				],
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "waiting",
+							"name": "Waiting on"
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "garden",
+							"name": "Garden"
+						},
+						{
+							"createdAt": 0,
+							"id": "cafe",
+							"name": "Café Ideas"
+						}
+					]
+				}
+			],
+			"output": {
+				"completed": [],
+				"labels": [],
+				"open": [
+					{
+						"matches": {
+							"title": [
+								{
+									"ranges": [
+										[
+											0,
+											1
+										]
+									],
+									"text": "Pay rent"
+								}
+							]
+						},
+						"score": 12,
+						"task": {
+							"completedAt": null,
+							"createdAt": 0,
+							"due": null,
+							"id": "t5",
+							"labelIds": [],
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Pay rent"
+						}
+					},
+					{
+						"matches": {
+							"title": [
+								{
+									"ranges": [
+										[
+											6,
+											7
+										]
+									],
+									"text": "Water plants"
+								}
+							]
+						},
+						"score": 8,
+						"task": {
+							"completedAt": null,
+							"createdAt": 0,
+							"due": null,
+							"id": "t2",
+							"labelIds": [],
+							"notes": "The ferns by the window",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Water plants"
+						}
+					}
+				],
+				"projects": []
+			}
+		},
+		{
+			"fn": "search",
+			"test": "search ranking › a title match outranks a project match, which outranks a notes match",
+			"input": [
+				"home",
+				[
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t6",
+						"labelIds": [],
+						"notes": "about the home warranty",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Call plumber"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t7",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "Fix sink"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t8",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Home insurance"
+					}
+				],
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "waiting",
+							"name": "Waiting on"
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "garden",
+							"name": "Garden"
+						},
+						{
+							"createdAt": 0,
+							"id": "cafe",
+							"name": "Café Ideas"
+						}
+					]
+				}
+			],
+			"output": {
+				"completed": [],
+				"labels": [],
+				"open": [
+					{
+						"matches": {
+							"title": [
+								{
+									"ranges": [
+										[
+											0,
+											4
+										]
+									],
+									"text": "Home insurance"
+								}
+							]
+						},
+						"score": 12,
+						"task": {
+							"completedAt": null,
+							"createdAt": 0,
+							"due": null,
+							"id": "t8",
+							"labelIds": [],
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Home insurance"
+						}
+					},
+					{
+						"matches": {
+							"project": [
+								{
+									"ranges": [
+										[
+											0,
+											4
+										]
+									],
+									"text": "Home"
+								}
+							]
+						},
+						"score": 6,
+						"task": {
+							"completedAt": null,
+							"createdAt": 0,
+							"due": null,
+							"id": "t7",
+							"labelIds": [],
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "Fix sink"
+						}
+					},
+					{
+						"matches": {
+							"notes": [
+								{
+									"ranges": [
+										[
+											10,
+											14
+										]
+									],
+									"text": "about the home warranty"
+								}
+							]
+						},
+						"score": 2,
+						"task": {
+							"completedAt": null,
+							"createdAt": 0,
+							"due": null,
+							"id": "t6",
+							"labelIds": [],
+							"notes": "about the home warranty",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Call plumber"
+						}
+					}
+				],
+				"projects": [
+					{
+						"item": {
+							"createdAt": 0,
+							"id": "home",
+							"name": "Home"
+						},
+						"name": {
+							"ranges": [
+								[
+									0,
+									4
+								]
+							],
+							"text": "Home"
+						},
+						"score": 3
+					}
+				]
+			}
+		},
+		{
+			"fn": "search",
+			"test": "search ranking › a match at the start beats a word start, which beats the middle of a word",
+			"input": [
+				"print",
+				[
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t9",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Reprint tickets"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t10",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Order prints"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t11",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Print boarding pass"
+					}
+				],
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "waiting",
+							"name": "Waiting on"
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "garden",
+							"name": "Garden"
+						},
+						{
+							"createdAt": 0,
+							"id": "cafe",
+							"name": "Café Ideas"
+						}
+					]
+				}
+			],
+			"output": {
+				"completed": [],
+				"labels": [],
+				"open": [
+					{
+						"matches": {
+							"title": [
+								{
+									"ranges": [
+										[
+											0,
+											5
+										]
+									],
+									"text": "Print boarding pass"
+								}
+							]
+						},
+						"score": 12,
+						"task": {
+							"completedAt": null,
+							"createdAt": 0,
+							"due": null,
+							"id": "t11",
+							"labelIds": [],
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Print boarding pass"
+						}
+					},
+					{
+						"matches": {
+							"title": [
+								{
+									"ranges": [
+										[
+											6,
+											11
+										]
+									],
+									"text": "Order prints"
+								}
+							]
+						},
+						"score": 8,
+						"task": {
+							"completedAt": null,
+							"createdAt": 0,
+							"due": null,
+							"id": "t10",
+							"labelIds": [],
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Order prints"
+						}
+					},
+					{
+						"matches": {
+							"title": [
+								{
+									"ranges": [
+										[
+											2,
+											7
+										]
+									],
+									"text": "Reprint tickets"
+								}
+							]
+						},
+						"score": 4,
+						"task": {
+							"completedAt": null,
+							"createdAt": 0,
+							"due": null,
+							"id": "t9",
+							"labelIds": [],
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Reprint tickets"
+						}
+					}
+				],
+				"projects": []
+			}
+		},
+		{
+			"fn": "search",
+			"test": "search ranking › ties go to higher priority, then the newest task",
+			"input": [
+				"email",
+				[
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "t12",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Email Sam"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 3,
+						"due": null,
+						"id": "t13",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Email Alex"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 2,
+						"due": null,
+						"id": "t14",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 1,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Email Jo"
+					}
+				],
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "waiting",
+							"name": "Waiting on"
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "garden",
+							"name": "Garden"
+						},
+						{
+							"createdAt": 0,
+							"id": "cafe",
+							"name": "Café Ideas"
+						}
+					]
+				}
+			],
+			"output": {
+				"completed": [],
+				"labels": [],
+				"open": [
+					{
+						"matches": {
+							"title": [
+								{
+									"ranges": [
+										[
+											0,
+											5
+										]
+									],
+									"text": "Email Jo"
+								}
+							]
+						},
+						"score": 12,
+						"task": {
+							"completedAt": null,
+							"createdAt": 2,
+							"due": null,
+							"id": "t14",
+							"labelIds": [],
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 1,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Email Jo"
+						}
+					},
+					{
+						"matches": {
+							"title": [
+								{
+									"ranges": [
+										[
+											0,
+											5
+										]
+									],
+									"text": "Email Alex"
+								}
+							]
+						},
+						"score": 12,
+						"task": {
+							"completedAt": null,
+							"createdAt": 3,
+							"due": null,
+							"id": "t13",
+							"labelIds": [],
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Email Alex"
+						}
+					},
+					{
+						"matches": {
+							"title": [
+								{
+									"ranges": [
+										[
+											0,
+											5
+										]
+									],
+									"text": "Email Sam"
+								}
+							]
+						},
+						"score": 12,
+						"task": {
+							"completedAt": null,
+							"createdAt": 1,
+							"due": null,
+							"id": "t12",
+							"labelIds": [],
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Email Sam"
+						}
+					}
+				],
+				"projects": []
+			}
+		},
+		{
+			"fn": "search",
+			"test": "search ranking › completed tasks come back separately, most recently completed first",
+			"input": [
+				"passport",
+				[
+					{
+						"completedAt": 100,
+						"createdAt": 0,
+						"due": null,
+						"id": "t15",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Renew passport"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t16",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Passport photos"
+					},
+					{
+						"completedAt": 300,
+						"createdAt": 0,
+						"due": null,
+						"id": "t17",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Mail passport form"
+					},
+					{
+						"completedAt": 200,
+						"createdAt": 0,
+						"due": null,
+						"id": "t18",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Book passport appointment"
+					}
+				],
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "waiting",
+							"name": "Waiting on"
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "garden",
+							"name": "Garden"
+						},
+						{
+							"createdAt": 0,
+							"id": "cafe",
+							"name": "Café Ideas"
+						}
+					]
+				}
+			],
+			"output": {
+				"completed": [
+					{
+						"matches": {
+							"title": [
+								{
+									"ranges": [
+										[
+											5,
+											13
+										]
+									],
+									"text": "Mail passport form"
+								}
+							]
+						},
+						"score": 8,
+						"task": {
+							"completedAt": 300,
+							"createdAt": 0,
+							"due": null,
+							"id": "t17",
+							"labelIds": [],
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Mail passport form"
+						}
+					},
+					{
+						"matches": {
+							"title": [
+								{
+									"ranges": [
+										[
+											5,
+											13
+										]
+									],
+									"text": "Book passport appointment"
+								}
+							]
+						},
+						"score": 8,
+						"task": {
+							"completedAt": 200,
+							"createdAt": 0,
+							"due": null,
+							"id": "t18",
+							"labelIds": [],
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Book passport appointment"
+						}
+					},
+					{
+						"matches": {
+							"title": [
+								{
+									"ranges": [
+										[
+											6,
+											14
+										]
+									],
+									"text": "Renew passport"
+								}
+							]
+						},
+						"score": 8,
+						"task": {
+							"completedAt": 100,
+							"createdAt": 0,
+							"due": null,
+							"id": "t15",
+							"labelIds": [],
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Renew passport"
+						}
+					}
+				],
+				"labels": [],
+				"open": [
+					{
+						"matches": {
+							"title": [
+								{
+									"ranges": [
+										[
+											0,
+											8
+										]
+									],
+									"text": "Passport photos"
+								}
+							]
+						},
+						"score": 12,
+						"task": {
+							"completedAt": null,
+							"createdAt": 0,
+							"due": null,
+							"id": "t16",
+							"labelIds": [],
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Passport photos"
+						}
+					}
+				],
+				"projects": []
+			}
+		},
+		{
+			"fn": "search",
+			"test": "search ranking › projects rank by match quality, then name",
+			"input": [
+				"garden",
+				[],
+				{
+					"labels": [],
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "a",
+							"name": "Side gardening"
+						},
+						{
+							"createdAt": 0,
+							"id": "b",
+							"name": "Garden"
+						},
+						{
+							"createdAt": 0,
+							"id": "c",
+							"name": "Allotment garden"
+						}
+					]
+				}
+			],
+			"output": {
+				"completed": [],
+				"labels": [],
+				"open": [],
+				"projects": [
+					{
+						"item": {
+							"createdAt": 0,
+							"id": "b",
+							"name": "Garden"
+						},
+						"name": {
+							"ranges": [
+								[
+									0,
+									6
+								]
+							],
+							"text": "Garden"
+						},
+						"score": 3
+					},
+					{
+						"item": {
+							"createdAt": 0,
+							"id": "c",
+							"name": "Allotment garden"
+						},
+						"name": {
+							"ranges": [
+								[
+									10,
+									16
+								]
+							],
+							"text": "Allotment garden"
+						},
+						"score": 2
+					},
+					{
+						"item": {
+							"createdAt": 0,
+							"id": "a",
+							"name": "Side gardening"
+						},
+						"name": {
+							"ranges": [
+								[
+									5,
+									11
+								]
+							],
+							"text": "Side gardening"
+						},
+						"score": 2
+					}
+				]
+			}
+		},
+		{
+			"fn": "search",
+			"test": "search highlights › highlights every occurrence of every term in the original text",
+			"input": [
+				"pa re",
+				[
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t19",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Pay rent, pay Rex"
+					}
+				],
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "waiting",
+							"name": "Waiting on"
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "garden",
+							"name": "Garden"
+						},
+						{
+							"createdAt": 0,
+							"id": "cafe",
+							"name": "Café Ideas"
+						}
+					]
+				}
+			],
+			"output": {
+				"completed": [],
+				"labels": [],
+				"open": [
+					{
+						"matches": {
+							"title": [
+								{
+									"ranges": [
+										[
+											0,
+											2
+										],
+										[
+											4,
+											6
+										],
+										[
+											10,
+											12
+										],
+										[
+											14,
+											16
+										]
+									],
+									"text": "Pay rent, pay Rex"
+								}
+							]
+						},
+						"score": 20,
+						"task": {
+							"completedAt": null,
+							"createdAt": 0,
+							"due": null,
+							"id": "t19",
+							"labelIds": [],
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Pay rent, pay Rex"
+						}
+					}
+				],
+				"projects": []
+			}
+		},
+		{
+			"fn": "search",
+			"test": "search highlights › maps folded matches back to accented characters",
+			"input": [
+				"resume",
+				[
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t20",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "My Résumé"
+					}
+				],
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "waiting",
+							"name": "Waiting on"
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "garden",
+							"name": "Garden"
+						},
+						{
+							"createdAt": 0,
+							"id": "cafe",
+							"name": "Café Ideas"
+						}
+					]
+				}
+			],
+			"output": {
+				"completed": [],
+				"labels": [],
+				"open": [
+					{
+						"matches": {
+							"title": [
+								{
+									"ranges": [
+										[
+											3,
+											9
+										]
+									],
+									"text": "My Résumé"
+								}
+							]
+						},
+						"score": 8,
+						"task": {
+							"completedAt": null,
+							"createdAt": 0,
+							"due": null,
+							"id": "t20",
+							"labelIds": [],
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "My Résumé"
+						}
+					}
+				],
+				"projects": []
+			}
+		},
+		{
+			"fn": "search",
+			"test": "search highlights › reports the project and notes it matched, and skips fields it did not",
+			"input": [
+				"home",
+				[
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t21",
+						"labelIds": [],
+						"notes": "Call home first",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "Fix sink"
+					}
+				],
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "waiting",
+							"name": "Waiting on"
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "garden",
+							"name": "Garden"
+						},
+						{
+							"createdAt": 0,
+							"id": "cafe",
+							"name": "Café Ideas"
+						}
+					]
+				}
+			],
+			"output": {
+				"completed": [],
+				"labels": [],
+				"open": [
+					{
+						"matches": {
+							"notes": [
+								{
+									"ranges": [
+										[
+											5,
+											9
+										]
+									],
+									"text": "Call home first"
+								}
+							],
+							"project": [
+								{
+									"ranges": [
+										[
+											0,
+											4
+										]
+									],
+									"text": "Home"
+								}
+							]
+						},
+						"score": 6,
+						"task": {
+							"completedAt": null,
+							"createdAt": 0,
+							"due": null,
+							"id": "t21",
+							"labelIds": [],
+							"notes": "Call home first",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "Fix sink"
+						}
+					}
+				],
+				"projects": [
+					{
+						"item": {
+							"createdAt": 0,
+							"id": "home",
+							"name": "Home"
+						},
+						"name": {
+							"ranges": [
+								[
+									0,
+									4
+								]
+							],
+							"text": "Home"
+						},
+						"score": 3
+					}
+				]
+			}
+		},
+		{
+			"fn": "search",
+			"test": "search highlights › merges overlapping matches",
+			"input": [
+				"milk ilk",
+				[
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t22",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Buy milk"
+					}
+				],
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "waiting",
+							"name": "Waiting on"
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "garden",
+							"name": "Garden"
+						},
+						{
+							"createdAt": 0,
+							"id": "cafe",
+							"name": "Café Ideas"
+						}
+					]
+				}
+			],
+			"output": {
+				"completed": [],
+				"labels": [],
+				"open": [
+					{
+						"matches": {
+							"title": [
+								{
+									"ranges": [
+										[
+											4,
+											8
+										]
+									],
+									"text": "Buy milk"
+								}
+							]
+						},
+						"score": 12,
+						"task": {
+							"completedAt": null,
+							"createdAt": 0,
+							"due": null,
+							"id": "t22",
+							"labelIds": [],
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Buy milk"
+						}
+					}
+				],
+				"projects": []
+			}
+		},
+		{
+			"fn": "search",
+			"test": "labels › a label name matches its tasks and the label itself",
+			"input": [
+				"call",
+				[
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t23",
+						"labelIds": [
+							"calls"
+						],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Plumber"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t24",
+						"labelIds": [
+							"waiting",
+							"calls"
+						],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Dentist"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t25",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Read"
+					}
+				],
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "waiting",
+							"name": "Waiting on"
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "garden",
+							"name": "Garden"
+						},
+						{
+							"createdAt": 0,
+							"id": "cafe",
+							"name": "Café Ideas"
+						}
+					]
+				}
+			],
+			"output": {
+				"completed": [],
+				"labels": [
+					{
+						"item": {
+							"createdAt": 0,
+							"id": "calls",
+							"name": "calls"
+						},
+						"name": {
+							"ranges": [
+								[
+									0,
+									4
+								]
+							],
+							"text": "calls"
+						},
+						"score": 3
+					}
+				],
+				"open": [
+					{
+						"matches": {
+							"labels": [
+								{
+									"ranges": [
+										[
+											0,
+											4
+										]
+									],
+									"text": "calls"
+								}
+							]
+						},
+						"score": 6,
+						"task": {
+							"completedAt": null,
+							"createdAt": 0,
+							"due": null,
+							"id": "t23",
+							"labelIds": [
+								"calls"
+							],
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Plumber"
+						}
+					},
+					{
+						"matches": {
+							"labels": [
+								{
+									"ranges": [
+										[
+											0,
+											4
+										]
+									],
+									"text": "calls"
+								}
+							]
+						},
+						"score": 6,
+						"task": {
+							"completedAt": null,
+							"createdAt": 0,
+							"due": null,
+							"id": "t24",
+							"labelIds": [
+								"waiting",
+								"calls"
+							],
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Dentist"
+						}
+					}
+				],
+				"projects": []
+			}
+		},
+		{
+			"fn": "search",
+			"test": "labels › a word can match a label while another matches the title",
+			"input": [
+				"dentist waiting",
+				[
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t26",
+						"labelIds": [
+							"waiting"
+						],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Dentist"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t27",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Dentist appointment"
+					}
+				],
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "waiting",
+							"name": "Waiting on"
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "garden",
+							"name": "Garden"
+						},
+						{
+							"createdAt": 0,
+							"id": "cafe",
+							"name": "Café Ideas"
+						}
+					]
+				}
+			],
+			"output": {
+				"completed": [],
+				"labels": [],
+				"open": [
+					{
+						"matches": {
+							"labels": [
+								{
+									"ranges": [
+										[
+											0,
+											7
+										]
+									],
+									"text": "Waiting on"
+								}
+							],
+							"title": [
+								{
+									"ranges": [
+										[
+											0,
+											7
+										]
+									],
+									"text": "Dentist"
+								}
+							]
+						},
+						"score": 18,
+						"task": {
+							"completedAt": null,
+							"createdAt": 0,
+							"due": null,
+							"id": "t26",
+							"labelIds": [
+								"waiting"
+							],
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Dentist"
+						}
+					}
+				],
+				"projects": []
+			}
+		},
+		{
+			"fn": "search",
+			"test": "labels › a label match outweighs a notes match and loses to a title match",
+			"input": [
+				"calls",
+				[
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t28",
+						"labelIds": [],
+						"notes": "calls to make",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Plan"
+					},
+					{
+						"completedAt": null,
+						"createdAt": -1,
+						"due": null,
+						"id": "t29",
+						"labelIds": [
+							"calls"
+						],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Plan"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t30",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Calls list"
+					}
+				],
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "waiting",
+							"name": "Waiting on"
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "garden",
+							"name": "Garden"
+						},
+						{
+							"createdAt": 0,
+							"id": "cafe",
+							"name": "Café Ideas"
+						}
+					]
+				}
+			],
+			"output": {
+				"completed": [],
+				"labels": [
+					{
+						"item": {
+							"createdAt": 0,
+							"id": "calls",
+							"name": "calls"
+						},
+						"name": {
+							"ranges": [
+								[
+									0,
+									5
+								]
+							],
+							"text": "calls"
+						},
+						"score": 3
+					}
+				],
+				"open": [
+					{
+						"matches": {
+							"title": [
+								{
+									"ranges": [
+										[
+											0,
+											5
+										]
+									],
+									"text": "Calls list"
+								}
+							]
+						},
+						"score": 12,
+						"task": {
+							"completedAt": null,
+							"createdAt": 0,
+							"due": null,
+							"id": "t30",
+							"labelIds": [],
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Calls list"
+						}
+					},
+					{
+						"matches": {
+							"labels": [
+								{
+									"ranges": [
+										[
+											0,
+											5
+										]
+									],
+									"text": "calls"
+								}
+							]
+						},
+						"score": 6,
+						"task": {
+							"completedAt": null,
+							"createdAt": -1,
+							"due": null,
+							"id": "t29",
+							"labelIds": [
+								"calls"
+							],
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Plan"
+						}
+					},
+					{
+						"matches": {
+							"notes": [
+								{
+									"ranges": [
+										[
+											0,
+											5
+										]
+									],
+									"text": "calls to make"
+								}
+							]
+						},
+						"score": 3,
+						"task": {
+							"completedAt": null,
+							"createdAt": 0,
+							"due": null,
+							"id": "t28",
+							"labelIds": [],
+							"notes": "calls to make",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Plan"
+						}
+					}
+				],
+				"projects": []
+			}
+		},
+		{
+			"fn": "search",
+			"test": "labels › a deleted label no longer matches",
+			"input": [
+				"calls",
+				[
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"id": "t31",
+						"labelIds": [
+							"gone"
+						],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Plumber"
+					}
+				],
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "waiting",
+							"name": "Waiting on"
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "garden",
+							"name": "Garden"
+						},
+						{
+							"createdAt": 0,
+							"id": "cafe",
+							"name": "Café Ideas"
+						}
+					]
+				}
+			],
+			"output": {
+				"completed": [],
+				"labels": [
+					{
+						"item": {
+							"createdAt": 0,
+							"id": "calls",
+							"name": "calls"
+						},
+						"name": {
+							"ranges": [
+								[
+									0,
+									5
+								]
+							],
+							"text": "calls"
+						},
+						"score": 3
+					}
+				],
+				"open": [],
+				"projects": []
+			}
+		},
+		{
+			"fn": "excerpt",
+			"test": "excerpt › keeps a short lead as is",
+			"input": [
+				{
+					"ranges": [
+						[
+							9,
+							14
+						]
+					],
+					"text": "Call the ferns"
+				}
+			],
+			"output": {
+				"ranges": [
+					[
+						9,
+						14
+					]
+				],
+				"text": "Call the ferns"
+			}
+		},
+		{
+			"fn": "excerpt",
+			"test": "excerpt › starts a long text at a word boundary before the first match and shifts the ranges",
+			"input": [
+				{
+					"ranges": [
+						[
+							58,
+							63
+						]
+					],
+					"text": "Remember to bring the big watering can and then water the ferns by the window"
+				}
+			],
+			"output": {
+				"ranges": [
+					[
+						24,
+						29
+					]
+				],
+				"text": "…can and then water the ferns by the window"
+			}
+		}
+	]
+}

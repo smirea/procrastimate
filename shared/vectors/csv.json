@@ -1,0 +1,73 @@
+{
+	"module": "csv",
+	"timeZone": "America/New_York",
+	"cases": [
+		{
+			"fn": "parseCsv",
+			"test": "drops a byte order mark before the header",
+			"input": [
+				"﻿TYPE,CONTENT\ntask,Milk\n"
+			],
+			"output": [
+				[
+					"TYPE",
+					"CONTENT"
+				],
+				[
+					"task",
+					"Milk"
+				]
+			]
+		},
+		{
+			"fn": "parseCsv",
+			"test": "keeps commas, doubled quotes, and line breaks inside quoted fields",
+			"input": [
+				"task,\"Buy eggs, milk\",\"Say \"\"hi\"\"\nthen leave\"\n"
+			],
+			"output": [
+				[
+					"task",
+					"Buy eggs, milk",
+					"Say \"hi\"\nthen leave"
+				]
+			]
+		},
+		{
+			"fn": "parseCsv",
+			"test": "reads CRLF line endings, empty fields, and a last row without a newline",
+			"input": [
+				"a,,c\r\n,,\r\n\"x\r\ny\",z"
+			],
+			"output": [
+				[
+					"a",
+					"",
+					"c"
+				],
+				[
+					"",
+					"",
+					""
+				],
+				[
+					"x\ny",
+					"z"
+				]
+			]
+		},
+		{
+			"fn": "parseCsv",
+			"test": "a quote inside an unquoted field is literal",
+			"input": [
+				"say 5\" nails,ok"
+			],
+			"output": [
+				[
+					"say 5\" nails",
+					"ok"
+				]
+			]
+		}
+	]
+}

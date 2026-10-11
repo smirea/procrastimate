@@ -103,6 +103,10 @@ let handlers: [String: Handler] = [
     "store": storeVector,
     "snapshot": snapshotVector,
     "quick-add": quickAddVector,
+    "csv": csvVector,
+    "search": searchVector,
+    "name-search": nameSearchVector,
+    "todoist": todoistVector,
 ]
 
 // MARK: task.ts

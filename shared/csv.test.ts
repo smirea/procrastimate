@@ -1,5 +1,8 @@
-import { expect, test } from 'bun:test';
-import { parseCsv } from './csv.ts';
+import { expect } from 'bun:test';
+import * as csv from './csv.ts';
+import { recorded, test } from './vectors/record.ts';
+
+const parseCsv = recorded('csv', csv.parseCsv);
 
 test('drops a byte order mark before the header', () => {
 	expect(parseCsv('\uFEFFTYPE,CONTENT\ntask,Milk\n')).toEqual([

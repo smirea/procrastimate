@@ -1,0 +1,1580 @@
+{
+	"module": "name-search",
+	"timeZone": "America/New_York",
+	"cases": [
+		{
+			"fn": "sigilFragment",
+			"test": "sigilFragment › # in \"Fix sink #ho\" with the caret at 12",
+			"input": [
+				"Fix sink #ho",
+				12,
+				"#",
+				[
+					{
+						"createdAt": 0,
+						"id": "home",
+						"name": "Home"
+					},
+					{
+						"createdAt": 0,
+						"id": "homework",
+						"name": "Homework"
+					},
+					{
+						"createdAt": 0,
+						"id": "side",
+						"name": "Side Project"
+					},
+					{
+						"createdAt": 0,
+						"id": "errands",
+						"name": "Errands"
+					},
+					{
+						"createdAt": 0,
+						"id": "work",
+						"name": "Work"
+					}
+				]
+			],
+			"output": {
+				"end": 12,
+				"query": "ho",
+				"start": 9
+			}
+		},
+		{
+			"fn": "sigilFragment",
+			"test": "sigilFragment › # in \"#\" with the caret at 1",
+			"input": [
+				"#",
+				1,
+				"#",
+				[
+					{
+						"createdAt": 0,
+						"id": "home",
+						"name": "Home"
+					},
+					{
+						"createdAt": 0,
+						"id": "homework",
+						"name": "Homework"
+					},
+					{
+						"createdAt": 0,
+						"id": "side",
+						"name": "Side Project"
+					},
+					{
+						"createdAt": 0,
+						"id": "errands",
+						"name": "Errands"
+					},
+					{
+						"createdAt": 0,
+						"id": "work",
+						"name": "Work"
+					}
+				]
+			],
+			"output": {
+				"end": 1,
+				"query": "",
+				"start": 0
+			}
+		},
+		{
+			"fn": "sigilFragment",
+			"test": "sigilFragment › # in \"Fix #ho sink\" with the caret at 7",
+			"input": [
+				"Fix #ho sink",
+				7,
+				"#",
+				[
+					{
+						"createdAt": 0,
+						"id": "home",
+						"name": "Home"
+					},
+					{
+						"createdAt": 0,
+						"id": "homework",
+						"name": "Homework"
+					},
+					{
+						"createdAt": 0,
+						"id": "side",
+						"name": "Side Project"
+					},
+					{
+						"createdAt": 0,
+						"id": "errands",
+						"name": "Errands"
+					},
+					{
+						"createdAt": 0,
+						"id": "work",
+						"name": "Work"
+					}
+				]
+			],
+			"output": {
+				"end": 7,
+				"query": "ho",
+				"start": 4
+			}
+		},
+		{
+			"fn": "sigilFragment",
+			"test": "sigilFragment › # in \"Fix #home sink\" with the caret at 6",
+			"input": [
+				"Fix #home sink",
+				6,
+				"#",
+				[
+					{
+						"createdAt": 0,
+						"id": "home",
+						"name": "Home"
+					},
+					{
+						"createdAt": 0,
+						"id": "homework",
+						"name": "Homework"
+					},
+					{
+						"createdAt": 0,
+						"id": "side",
+						"name": "Side Project"
+					},
+					{
+						"createdAt": 0,
+						"id": "errands",
+						"name": "Errands"
+					},
+					{
+						"createdAt": 0,
+						"id": "work",
+						"name": "Work"
+					}
+				]
+			],
+			"output": {
+				"end": 9,
+				"query": "h",
+				"start": 4
+			}
+		},
+		{
+			"fn": "sigilFragment",
+			"test": "sigilFragment › # in \"Fix sink #Side Pr\" with the caret at 17",
+			"input": [
+				"Fix sink #Side Pr",
+				17,
+				"#",
+				[
+					{
+						"createdAt": 0,
+						"id": "home",
+						"name": "Home"
+					},
+					{
+						"createdAt": 0,
+						"id": "homework",
+						"name": "Homework"
+					},
+					{
+						"createdAt": 0,
+						"id": "side",
+						"name": "Side Project"
+					},
+					{
+						"createdAt": 0,
+						"id": "errands",
+						"name": "Errands"
+					},
+					{
+						"createdAt": 0,
+						"id": "work",
+						"name": "Work"
+					}
+				]
+			],
+			"output": {
+				"end": 17,
+				"query": "Side Pr",
+				"start": 9
+			}
+		},
+		{
+			"fn": "sigilFragment",
+			"test": "sigilFragment › # in \"Fix sink\" with the caret at 8 has no fragment",
+			"input": [
+				"Fix sink",
+				8,
+				"#",
+				[
+					{
+						"createdAt": 0,
+						"id": "home",
+						"name": "Home"
+					},
+					{
+						"createdAt": 0,
+						"id": "homework",
+						"name": "Homework"
+					},
+					{
+						"createdAt": 0,
+						"id": "side",
+						"name": "Side Project"
+					},
+					{
+						"createdAt": 0,
+						"id": "errands",
+						"name": "Errands"
+					},
+					{
+						"createdAt": 0,
+						"id": "work",
+						"name": "Work"
+					}
+				]
+			],
+			"output": null
+		},
+		{
+			"fn": "sigilFragment",
+			"test": "sigilFragment › # in \"Issue#12\" with the caret at 8 has no fragment",
+			"input": [
+				"Issue#12",
+				8,
+				"#",
+				[
+					{
+						"createdAt": 0,
+						"id": "home",
+						"name": "Home"
+					},
+					{
+						"createdAt": 0,
+						"id": "homework",
+						"name": "Homework"
+					},
+					{
+						"createdAt": 0,
+						"id": "side",
+						"name": "Side Project"
+					},
+					{
+						"createdAt": 0,
+						"id": "errands",
+						"name": "Errands"
+					},
+					{
+						"createdAt": 0,
+						"id": "work",
+						"name": "Work"
+					}
+				]
+			],
+			"output": null
+		},
+		{
+			"fn": "sigilFragment",
+			"test": "sigilFragment › # in \"Fix #home sink\" with the caret at 14 has no fragment",
+			"input": [
+				"Fix #home sink",
+				14,
+				"#",
+				[
+					{
+						"createdAt": 0,
+						"id": "home",
+						"name": "Home"
+					},
+					{
+						"createdAt": 0,
+						"id": "homework",
+						"name": "Homework"
+					},
+					{
+						"createdAt": 0,
+						"id": "side",
+						"name": "Side Project"
+					},
+					{
+						"createdAt": 0,
+						"id": "errands",
+						"name": "Errands"
+					},
+					{
+						"createdAt": 0,
+						"id": "work",
+						"name": "Work"
+					}
+				]
+			],
+			"output": null
+		},
+		{
+			"fn": "sigilFragment",
+			"test": "sigilFragment › # in \"#Home \" with the caret at 6 has no fragment",
+			"input": [
+				"#Home ",
+				6,
+				"#",
+				[
+					{
+						"createdAt": 0,
+						"id": "home",
+						"name": "Home"
+					},
+					{
+						"createdAt": 0,
+						"id": "homework",
+						"name": "Homework"
+					},
+					{
+						"createdAt": 0,
+						"id": "side",
+						"name": "Side Project"
+					},
+					{
+						"createdAt": 0,
+						"id": "errands",
+						"name": "Errands"
+					},
+					{
+						"createdAt": 0,
+						"id": "work",
+						"name": "Work"
+					}
+				]
+			],
+			"output": null
+		},
+		{
+			"fn": "sigilFragment",
+			"test": "sigilFragment › # in \"#zz top\" with the caret at 7 has no fragment",
+			"input": [
+				"#zz top",
+				7,
+				"#",
+				[
+					{
+						"createdAt": 0,
+						"id": "home",
+						"name": "Home"
+					},
+					{
+						"createdAt": 0,
+						"id": "homework",
+						"name": "Homework"
+					},
+					{
+						"createdAt": 0,
+						"id": "side",
+						"name": "Side Project"
+					},
+					{
+						"createdAt": 0,
+						"id": "errands",
+						"name": "Errands"
+					},
+					{
+						"createdAt": 0,
+						"id": "work",
+						"name": "Work"
+					}
+				]
+			],
+			"output": null
+		},
+		{
+			"fn": "sigilFragment",
+			"test": "sigilFragment › @ in \"Call bob @ca\" with the caret at 12",
+			"input": [
+				"Call bob @ca",
+				12,
+				"@",
+				[
+					{
+						"createdAt": 0,
+						"id": "waiting",
+						"name": "waiting"
+					},
+					{
+						"createdAt": 0,
+						"id": "calls",
+						"name": "calls"
+					},
+					{
+						"createdAt": 0,
+						"id": "deep",
+						"name": "deep work"
+					}
+				]
+			],
+			"output": {
+				"end": 12,
+				"query": "ca",
+				"start": 9
+			}
+		},
+		{
+			"fn": "sigilFragment",
+			"test": "sigilFragment › @ in \"@\" with the caret at 1",
+			"input": [
+				"@",
+				1,
+				"@",
+				[
+					{
+						"createdAt": 0,
+						"id": "waiting",
+						"name": "waiting"
+					},
+					{
+						"createdAt": 0,
+						"id": "calls",
+						"name": "calls"
+					},
+					{
+						"createdAt": 0,
+						"id": "deep",
+						"name": "deep work"
+					}
+				]
+			],
+			"output": {
+				"end": 1,
+				"query": "",
+				"start": 0
+			}
+		},
+		{
+			"fn": "sigilFragment",
+			"test": "sigilFragment › @ in \"Plan @deep wo\" with the caret at 13",
+			"input": [
+				"Plan @deep wo",
+				13,
+				"@",
+				[
+					{
+						"createdAt": 0,
+						"id": "waiting",
+						"name": "waiting"
+					},
+					{
+						"createdAt": 0,
+						"id": "calls",
+						"name": "calls"
+					},
+					{
+						"createdAt": 0,
+						"id": "deep",
+						"name": "deep work"
+					}
+				]
+			],
+			"output": {
+				"end": 13,
+				"query": "deep wo",
+				"start": 5
+			}
+		},
+		{
+			"fn": "sigilFragment",
+			"test": "sigilFragment › @ in \"Email a@b.com\" with the caret at 13 has no fragment",
+			"input": [
+				"Email a@b.com",
+				13,
+				"@",
+				[
+					{
+						"createdAt": 0,
+						"id": "waiting",
+						"name": "waiting"
+					},
+					{
+						"createdAt": 0,
+						"id": "calls",
+						"name": "calls"
+					},
+					{
+						"createdAt": 0,
+						"id": "deep",
+						"name": "deep work"
+					}
+				]
+			],
+			"output": null
+		},
+		{
+			"fn": "sigilFragment",
+			"test": "sigilFragment › @ in \"ping foo@bar\" with the caret at 12 has no fragment",
+			"input": [
+				"ping foo@bar",
+				12,
+				"@",
+				[
+					{
+						"createdAt": 0,
+						"id": "waiting",
+						"name": "waiting"
+					},
+					{
+						"createdAt": 0,
+						"id": "calls",
+						"name": "calls"
+					},
+					{
+						"createdAt": 0,
+						"id": "deep",
+						"name": "deep work"
+					}
+				]
+			],
+			"output": null
+		},
+		{
+			"fn": "sigilFragment",
+			"test": "sigilFragment › @ in \"Fix sink #ca\" with the caret at 12 has no fragment",
+			"input": [
+				"Fix sink #ca",
+				12,
+				"@",
+				[
+					{
+						"createdAt": 0,
+						"id": "waiting",
+						"name": "waiting"
+					},
+					{
+						"createdAt": 0,
+						"id": "calls",
+						"name": "calls"
+					},
+					{
+						"createdAt": 0,
+						"id": "deep",
+						"name": "deep work"
+					}
+				]
+			],
+			"output": null
+		},
+		{
+			"fn": "sigilFragment",
+			"test": "sigilFragment › @ in \"@calls now\" with the caret at 10 has no fragment",
+			"input": [
+				"@calls now",
+				10,
+				"@",
+				[
+					{
+						"createdAt": 0,
+						"id": "waiting",
+						"name": "waiting"
+					},
+					{
+						"createdAt": 0,
+						"id": "calls",
+						"name": "calls"
+					},
+					{
+						"createdAt": 0,
+						"id": "deep",
+						"name": "deep work"
+					}
+				]
+			],
+			"output": null
+		},
+		{
+			"fn": "sigilFragment",
+			"test": "sigilFragment › @ in \"Call @calls,\" with the caret at 12 has no fragment",
+			"input": [
+				"Call @calls,",
+				12,
+				"@",
+				[
+					{
+						"createdAt": 0,
+						"id": "waiting",
+						"name": "waiting"
+					},
+					{
+						"createdAt": 0,
+						"id": "calls",
+						"name": "calls"
+					},
+					{
+						"createdAt": 0,
+						"id": "deep",
+						"name": "deep work"
+					}
+				]
+			],
+			"output": null
+		},
+		{
+			"fn": "sigilFragment",
+			"test": "sigilFragment › @ in \"Call @calls.\" with the caret at 12 has no fragment",
+			"input": [
+				"Call @calls.",
+				12,
+				"@",
+				[
+					{
+						"createdAt": 0,
+						"id": "waiting",
+						"name": "waiting"
+					},
+					{
+						"createdAt": 0,
+						"id": "calls",
+						"name": "calls"
+					},
+					{
+						"createdAt": 0,
+						"id": "deep",
+						"name": "deep work"
+					}
+				]
+			],
+			"output": null
+		},
+		{
+			"fn": "sigilFragment",
+			"test": "sigilFragment › @ in \"Fix sink #Home!\" with the caret at 15 has no fragment",
+			"input": [
+				"Fix sink #Home!",
+				15,
+				"@",
+				[
+					{
+						"createdAt": 0,
+						"id": "waiting",
+						"name": "waiting"
+					},
+					{
+						"createdAt": 0,
+						"id": "calls",
+						"name": "calls"
+					},
+					{
+						"createdAt": 0,
+						"id": "deep",
+						"name": "deep work"
+					}
+				]
+			],
+			"output": null
+		},
+		{
+			"fn": "lastUsedProjects",
+			"test": "suggest › an empty query lists everything, most recently used first, then alphabetical",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"createdAt": 5,
+						"due": null,
+						"id": "work-5",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "work",
+						"recurrence": null,
+						"reminders": [],
+						"title": "t"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 9,
+						"due": null,
+						"id": "errands-9",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "errands",
+						"recurrence": null,
+						"reminders": [],
+						"title": "t"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 2,
+						"due": null,
+						"id": "work-2",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "work",
+						"recurrence": null,
+						"reminders": [],
+						"title": "t"
+					}
+				]
+			],
+			"output": {
+				"errands": 9,
+				"work": 5
+			}
+		},
+		{
+			"fn": "suggest",
+			"test": "suggest › an empty query lists everything, most recently used first, then alphabetical",
+			"input": [
+				[
+					{
+						"createdAt": 0,
+						"id": "home",
+						"name": "Home"
+					},
+					{
+						"createdAt": 0,
+						"id": "homework",
+						"name": "Homework"
+					},
+					{
+						"createdAt": 0,
+						"id": "side",
+						"name": "Side Project"
+					},
+					{
+						"createdAt": 0,
+						"id": "errands",
+						"name": "Errands"
+					},
+					{
+						"createdAt": 0,
+						"id": "work",
+						"name": "Work"
+					}
+				],
+				{
+					"errands": 9,
+					"work": 5
+				},
+				""
+			],
+			"output": [
+				{
+					"item": {
+						"createdAt": 0,
+						"id": "errands",
+						"name": "Errands"
+					},
+					"kind": "existing"
+				},
+				{
+					"item": {
+						"createdAt": 0,
+						"id": "work",
+						"name": "Work"
+					},
+					"kind": "existing"
+				},
+				{
+					"item": {
+						"createdAt": 0,
+						"id": "home",
+						"name": "Home"
+					},
+					"kind": "existing"
+				},
+				{
+					"item": {
+						"createdAt": 0,
+						"id": "homework",
+						"name": "Homework"
+					},
+					"kind": "existing"
+				},
+				{
+					"item": {
+						"createdAt": 0,
+						"id": "side",
+						"name": "Side Project"
+					},
+					"kind": "existing"
+				}
+			]
+		},
+		{
+			"fn": "lastUsedProjects",
+			"test": "suggest › an exact match beats a prefix, a prefix beats a word prefix, and a word prefix beats a substring",
+			"input": [
+				[]
+			],
+			"output": {}
+		},
+		{
+			"fn": "suggest",
+			"test": "suggest › an exact match beats a prefix, a prefix beats a word prefix, and a word prefix beats a substring",
+			"input": [
+				[
+					{
+						"createdAt": 0,
+						"id": "home",
+						"name": "Home"
+					},
+					{
+						"createdAt": 0,
+						"id": "homework",
+						"name": "Homework"
+					},
+					{
+						"createdAt": 0,
+						"id": "side",
+						"name": "Side Project"
+					},
+					{
+						"createdAt": 0,
+						"id": "errands",
+						"name": "Errands"
+					},
+					{
+						"createdAt": 0,
+						"id": "work",
+						"name": "Work"
+					},
+					{
+						"createdAt": 0,
+						"id": "chores",
+						"name": "Chores at home"
+					},
+					{
+						"createdAt": 0,
+						"id": "ohm",
+						"name": "Ohms"
+					}
+				],
+				{},
+				"home"
+			],
+			"output": [
+				{
+					"item": {
+						"createdAt": 0,
+						"id": "home",
+						"name": "Home"
+					},
+					"kind": "existing"
+				},
+				{
+					"item": {
+						"createdAt": 0,
+						"id": "homework",
+						"name": "Homework"
+					},
+					"kind": "existing"
+				},
+				{
+					"item": {
+						"createdAt": 0,
+						"id": "chores",
+						"name": "Chores at home"
+					},
+					"kind": "existing"
+				}
+			]
+		},
+		{
+			"fn": "lastUsedProjects",
+			"test": "suggest › an exact match beats a prefix, a prefix beats a word prefix, and a word prefix beats a substring",
+			"input": [
+				[]
+			],
+			"output": {}
+		},
+		{
+			"fn": "suggest",
+			"test": "suggest › an exact match beats a prefix, a prefix beats a word prefix, and a word prefix beats a substring",
+			"input": [
+				[
+					{
+						"createdAt": 0,
+						"id": "home",
+						"name": "Home"
+					},
+					{
+						"createdAt": 0,
+						"id": "homework",
+						"name": "Homework"
+					},
+					{
+						"createdAt": 0,
+						"id": "side",
+						"name": "Side Project"
+					},
+					{
+						"createdAt": 0,
+						"id": "errands",
+						"name": "Errands"
+					},
+					{
+						"createdAt": 0,
+						"id": "work",
+						"name": "Work"
+					},
+					{
+						"createdAt": 0,
+						"id": "chores",
+						"name": "Chores at home"
+					},
+					{
+						"createdAt": 0,
+						"id": "ohm",
+						"name": "Ohms"
+					}
+				],
+				{},
+				"pro"
+			],
+			"output": [
+				{
+					"item": {
+						"createdAt": 0,
+						"id": "side",
+						"name": "Side Project"
+					},
+					"kind": "existing"
+				},
+				{
+					"kind": "create",
+					"name": "pro"
+				}
+			]
+		},
+		{
+			"fn": "lastUsedProjects",
+			"test": "suggest › an exact match beats a prefix, a prefix beats a word prefix, and a word prefix beats a substring",
+			"input": [
+				[]
+			],
+			"output": {}
+		},
+		{
+			"fn": "suggest",
+			"test": "suggest › an exact match beats a prefix, a prefix beats a word prefix, and a word prefix beats a substring",
+			"input": [
+				[
+					{
+						"createdAt": 0,
+						"id": "home",
+						"name": "Home"
+					},
+					{
+						"createdAt": 0,
+						"id": "homework",
+						"name": "Homework"
+					},
+					{
+						"createdAt": 0,
+						"id": "side",
+						"name": "Side Project"
+					},
+					{
+						"createdAt": 0,
+						"id": "errands",
+						"name": "Errands"
+					},
+					{
+						"createdAt": 0,
+						"id": "work",
+						"name": "Work"
+					},
+					{
+						"createdAt": 0,
+						"id": "chores",
+						"name": "Chores at home"
+					},
+					{
+						"createdAt": 0,
+						"id": "ohm",
+						"name": "Ohms"
+					}
+				],
+				{},
+				"o"
+			],
+			"output": [
+				{
+					"item": {
+						"createdAt": 0,
+						"id": "ohm",
+						"name": "Ohms"
+					},
+					"kind": "existing"
+				},
+				{
+					"item": {
+						"createdAt": 0,
+						"id": "chores",
+						"name": "Chores at home"
+					},
+					"kind": "existing"
+				},
+				{
+					"item": {
+						"createdAt": 0,
+						"id": "home",
+						"name": "Home"
+					},
+					"kind": "existing"
+				},
+				{
+					"item": {
+						"createdAt": 0,
+						"id": "homework",
+						"name": "Homework"
+					},
+					"kind": "existing"
+				},
+				{
+					"item": {
+						"createdAt": 0,
+						"id": "side",
+						"name": "Side Project"
+					},
+					"kind": "existing"
+				},
+				{
+					"item": {
+						"createdAt": 0,
+						"id": "work",
+						"name": "Work"
+					},
+					"kind": "existing"
+				},
+				{
+					"kind": "create",
+					"name": "o"
+				}
+			]
+		},
+		{
+			"fn": "lastUsedProjects",
+			"test": "suggest › recency breaks ties within a match tier",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "homework-1",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "homework",
+						"recurrence": null,
+						"reminders": [],
+						"title": "t"
+					}
+				]
+			],
+			"output": {
+				"homework": 1
+			}
+		},
+		{
+			"fn": "suggest",
+			"test": "suggest › recency breaks ties within a match tier",
+			"input": [
+				[
+					{
+						"createdAt": 0,
+						"id": "home",
+						"name": "Home"
+					},
+					{
+						"createdAt": 0,
+						"id": "homework",
+						"name": "Homework"
+					},
+					{
+						"createdAt": 0,
+						"id": "side",
+						"name": "Side Project"
+					},
+					{
+						"createdAt": 0,
+						"id": "errands",
+						"name": "Errands"
+					},
+					{
+						"createdAt": 0,
+						"id": "work",
+						"name": "Work"
+					}
+				],
+				{
+					"homework": 1
+				},
+				"ho"
+			],
+			"output": [
+				{
+					"item": {
+						"createdAt": 0,
+						"id": "homework",
+						"name": "Homework"
+					},
+					"kind": "existing"
+				},
+				{
+					"item": {
+						"createdAt": 0,
+						"id": "home",
+						"name": "Home"
+					},
+					"kind": "existing"
+				},
+				{
+					"kind": "create",
+					"name": "ho"
+				}
+			]
+		},
+		{
+			"fn": "lastUsedProjects",
+			"test": "suggest › matching is case-insensitive and an exact match hides the create option",
+			"input": [
+				[]
+			],
+			"output": {}
+		},
+		{
+			"fn": "suggest",
+			"test": "suggest › matching is case-insensitive and an exact match hides the create option",
+			"input": [
+				[
+					{
+						"createdAt": 0,
+						"id": "home",
+						"name": "Home"
+					},
+					{
+						"createdAt": 0,
+						"id": "homework",
+						"name": "Homework"
+					},
+					{
+						"createdAt": 0,
+						"id": "side",
+						"name": "Side Project"
+					},
+					{
+						"createdAt": 0,
+						"id": "errands",
+						"name": "Errands"
+					},
+					{
+						"createdAt": 0,
+						"id": "work",
+						"name": "Work"
+					}
+				],
+				{},
+				"WORK"
+			],
+			"output": [
+				{
+					"item": {
+						"createdAt": 0,
+						"id": "work",
+						"name": "Work"
+					},
+					"kind": "existing"
+				},
+				{
+					"item": {
+						"createdAt": 0,
+						"id": "homework",
+						"name": "Homework"
+					},
+					"kind": "existing"
+				}
+			]
+		},
+		{
+			"fn": "lastUsedProjects",
+			"test": "suggest › a query with no match offers only to create it, keeping its casing",
+			"input": [
+				[]
+			],
+			"output": {}
+		},
+		{
+			"fn": "suggest",
+			"test": "suggest › a query with no match offers only to create it, keeping its casing",
+			"input": [
+				[
+					{
+						"createdAt": 0,
+						"id": "home",
+						"name": "Home"
+					},
+					{
+						"createdAt": 0,
+						"id": "homework",
+						"name": "Homework"
+					},
+					{
+						"createdAt": 0,
+						"id": "side",
+						"name": "Side Project"
+					},
+					{
+						"createdAt": 0,
+						"id": "errands",
+						"name": "Errands"
+					},
+					{
+						"createdAt": 0,
+						"id": "work",
+						"name": "Work"
+					}
+				],
+				{},
+				"Garden "
+			],
+			"output": [
+				{
+					"kind": "create",
+					"name": "Garden"
+				}
+			]
+		},
+		{
+			"fn": "lastUsedLabels",
+			"test": "suggest › a label counts as used by every task that carries it, whatever its project",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"createdAt": 3,
+						"due": null,
+						"id": "home-3",
+						"labelIds": [
+							"calls"
+						],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "t"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 7,
+						"due": null,
+						"id": "null-7",
+						"labelIds": [
+							"waiting",
+							"deep"
+						],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "t"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 5,
+						"due": null,
+						"id": "work-5",
+						"labelIds": [
+							"calls"
+						],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "work",
+						"recurrence": null,
+						"reminders": [],
+						"title": "t"
+					}
+				]
+			],
+			"output": {
+				"calls": 5,
+				"deep": 7,
+				"waiting": 7
+			}
+		},
+		{
+			"fn": "suggest",
+			"test": "suggest › a label counts as used by every task that carries it, whatever its project",
+			"input": [
+				[
+					{
+						"createdAt": 0,
+						"id": "waiting",
+						"name": "waiting"
+					},
+					{
+						"createdAt": 0,
+						"id": "calls",
+						"name": "calls"
+					},
+					{
+						"createdAt": 0,
+						"id": "deep",
+						"name": "deep work"
+					}
+				],
+				{
+					"calls": 5,
+					"deep": 7,
+					"waiting": 7
+				},
+				""
+			],
+			"output": [
+				{
+					"item": {
+						"createdAt": 0,
+						"id": "deep",
+						"name": "deep work"
+					},
+					"kind": "existing"
+				},
+				{
+					"item": {
+						"createdAt": 0,
+						"id": "waiting",
+						"name": "waiting"
+					},
+					"kind": "existing"
+				},
+				{
+					"item": {
+						"createdAt": 0,
+						"id": "calls",
+						"name": "calls"
+					},
+					"kind": "existing"
+				}
+			]
+		},
+		{
+			"fn": "lastUsedLabels",
+			"test": "suggest › a label counts as used by every task that carries it, whatever its project",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "null-1",
+						"labelIds": [
+							"calls"
+						],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "t"
+					}
+				]
+			],
+			"output": {
+				"calls": 1
+			}
+		},
+		{
+			"fn": "suggest",
+			"test": "suggest › a label counts as used by every task that carries it, whatever its project",
+			"input": [
+				[
+					{
+						"createdAt": 0,
+						"id": "waiting",
+						"name": "waiting"
+					},
+					{
+						"createdAt": 0,
+						"id": "calls",
+						"name": "calls"
+					},
+					{
+						"createdAt": 0,
+						"id": "deep",
+						"name": "deep work"
+					}
+				],
+				{
+					"calls": 1
+				},
+				""
+			],
+			"output": [
+				{
+					"item": {
+						"createdAt": 0,
+						"id": "calls",
+						"name": "calls"
+					},
+					"kind": "existing"
+				},
+				{
+					"item": {
+						"createdAt": 0,
+						"id": "deep",
+						"name": "deep work"
+					},
+					"kind": "existing"
+				},
+				{
+					"item": {
+						"createdAt": 0,
+						"id": "waiting",
+						"name": "waiting"
+					},
+					"kind": "existing"
+				}
+			]
+		},
+		{
+			"fn": "lastUsedLabels",
+			"test": "suggest › a label counts as used by every task that carries it, whatever its project",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"createdAt": 3,
+						"due": null,
+						"id": "home-3",
+						"labelIds": [
+							"calls"
+						],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "t"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 7,
+						"due": null,
+						"id": "null-7",
+						"labelIds": [
+							"waiting",
+							"deep"
+						],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "t"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 5,
+						"due": null,
+						"id": "work-5",
+						"labelIds": [
+							"calls"
+						],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "work",
+						"recurrence": null,
+						"reminders": [],
+						"title": "t"
+					}
+				]
+			],
+			"output": {
+				"calls": 5,
+				"deep": 7,
+				"waiting": 7
+			}
+		},
+		{
+			"fn": "suggest",
+			"test": "suggest › a label counts as used by every task that carries it, whatever its project",
+			"input": [
+				[
+					{
+						"createdAt": 0,
+						"id": "waiting",
+						"name": "waiting"
+					},
+					{
+						"createdAt": 0,
+						"id": "calls",
+						"name": "calls"
+					},
+					{
+						"createdAt": 0,
+						"id": "deep",
+						"name": "deep work"
+					}
+				],
+				{
+					"calls": 5,
+					"deep": 7,
+					"waiting": 7
+				},
+				"w"
+			],
+			"output": [
+				{
+					"item": {
+						"createdAt": 0,
+						"id": "waiting",
+						"name": "waiting"
+					},
+					"kind": "existing"
+				},
+				{
+					"item": {
+						"createdAt": 0,
+						"id": "deep",
+						"name": "deep work"
+					},
+					"kind": "existing"
+				},
+				{
+					"kind": "create",
+					"name": "w"
+				}
+			]
+		}
+	]
+}

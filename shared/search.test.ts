@@ -1,6 +1,11 @@
-import { describe, expect, test } from 'bun:test';
-import { excerpt, search, searchTerms } from './search.ts';
+import { expect } from 'bun:test';
+import * as searching from './search.ts';
 import type { Label, Priority, Project, Task } from './task.ts';
+import { describe, recorded, test } from './vectors/record.ts';
+
+const excerpt = recorded('search', searching.excerpt);
+const search = recorded('search', searching.search);
+const searchTerms = recorded('search', searching.searchTerms);
 
 const projects: Project[] = [
 	{ id: 'home', name: 'Home', createdAt: 0 },

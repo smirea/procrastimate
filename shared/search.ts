@@ -136,9 +136,7 @@ function searchNames<T extends { name: string }>(items: readonly T[], terms: rea
 			if (best.some(quality => quality === 0)) return [];
 			return [{ item, score: best.reduce((a, b) => a + b, 0), name: highlights[0]! }];
 		})
-		.toSorted(
-			(a, b) => b.score - a.score || a.item.name.localeCompare(b.item.name, undefined, { sensitivity: 'base' }),
-		);
+		.toSorted((a, b) => b.score - a.score || a.item.name.localeCompare(b.item.name, 'en-US', { sensitivity: 'base' }));
 }
 
 /**
