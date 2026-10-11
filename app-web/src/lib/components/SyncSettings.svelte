@@ -75,8 +75,14 @@
 		devices = await sync.devices().catch(() => devices);
 	}
 
+	/** The devices that were paired before the code showed. Not reactive, so polling never moves it. */
+	let known = new Set<string>();
+
 	const showCode = () =>
 		run(async () => {
+			const current = await sync.devices();
+			devices = current;
+			known = new Set(current.map(d => d.id));
 			pairing = await sync.pairingCode();
 		});
 
@@ -89,7 +95,6 @@
 	/** While a code is showing, watches for the new device and hides the code once it has joined. */
 	$effect(() => {
 		if (!pairing) return;
-		const known = new Set(devices?.map(d => d.id));
 		const timer = setInterval(async () => {
 			await loadDevices();
 			if (devices?.some(d => !known.has(d.id))) pairing = null;
