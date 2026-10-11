@@ -29,6 +29,7 @@ extension ParityTestCase {
         for title in titles {
             type(title + "\n")
             wait(for: taskInput, "value == ''")
+            wait(for: taskInput, "hasKeyboardFocus == true")
         }
         cancelQuickAdd()
     }

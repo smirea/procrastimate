@@ -131,6 +131,8 @@ struct SmartInput: View {
             onSubmit()
             // Saving can clear the text in the same burst, which `onChange(of: text)` never sees.
             replace(with: text, caret: text.utf16.count)
+            // Replacing the text mid-keystroke can resign the editor after the save already asked for focus.
+            Task { focused.wrappedValue = true }
         } else if plain != text {
             write(plain)
         }
