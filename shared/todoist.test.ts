@@ -1,17 +1,27 @@
-import { describe, expect, test } from 'bun:test';
-import { mergeBackup, readTodoistBackup, readTodoistDate, type ImportState } from './todoist.ts';
+import { expect } from 'bun:test';
+import * as todoist from './todoist.ts';
+import type { ImportState, TodoistBackup } from './todoist.ts';
 import { todoistBackupFiles } from './fixtures/todoist-backup.mts';
+import { describe, recorded, test } from './vectors/record.ts';
+
+const mergeBackup = recorded('todoist', todoist.mergeBackup);
+const readTodoistBackup = recorded('todoist', todoist.readTodoistBackup);
+const readTodoistDate = recorded('todoist', todoist.readTodoistDate);
 
 // Wednesday, October 14 2026, 10:00 local time.
 const now = new Date(2026, 9, 14, 10, 0);
 const HEADER = 'TYPE,CONTENT,DESCRIPTION,PRIORITY,INDENT,DATE,DATE_LANG';
 
+/** Every merge takes ids from a fresh counter, which the Swift vector tests replay, since a vector cannot hold a function. */
 const counter = () => {
 	let n = 0;
 	return () => `id-${++n}`;
 };
 const empty = (): ImportState => ({ tasks: [], projects: [], labels: [] });
 const read = (text: string, name = 'Errands [42].csv') => readTodoistBackup([{ name, text }], now);
+/** Read inside the first test that needs it, so its vector is recorded once and named after that test. */
+let fixture: TodoistBackup | undefined;
+const readFixture = () => (fixture ??= readTodoistBackup(todoistBackupFiles, now));
 
 describe('Todoist dates', () => {
 	test.each([
@@ -30,15 +40,14 @@ describe('Todoist dates', () => {
 		expect<unknown>(readTodoistDate(text, now)).toEqual({ due: { date, time }, recurrence });
 	});
 
-	test.each(['every! 3 days', 'every 3rd friday', 'after work', 'p1'])('%s is not read', text => {
+	test.each([['every! 3 days'], ['every 3rd friday'], ['after work'], ['p1']])('%s is not read', text => {
 		expect(readTodoistDate(text, now)).toBeNull();
 	});
 });
 
 describe('reading a backup', () => {
-	const backup = readTodoistBackup(todoistBackupFiles, now);
-
 	test('one project per CSV, named from the file, with Inbox marked', () => {
+		const backup = readFixture();
 		expect(backup.projects).toEqual([
 			{ sourceKey: 'todoist:project:6Xmpl1Fq', name: 'Inbox', inbox: true },
 			{ sourceKey: 'todoist:project:8Xmpl2Wq', name: 'Long Term', inbox: false },
@@ -47,6 +56,7 @@ describe('reading a backup', () => {
 	});
 
 	test('tasks keep their order, content, priority, dates, and reminders', () => {
+		const backup = readFixture();
 		expect(backup.tasks.slice(0, 3)).toEqual([
 			{
 				sourceKey: 'todoist:task:6Xmpl1Fq:Call the dentist',
@@ -88,6 +98,7 @@ describe('reading a backup', () => {
 	});
 
 	test('labels leave the title, and comments join the description in notes', () => {
+		const backup = readFixture();
 		const water = backup.tasks[3]!;
 		expect(water.title).toBe('Water plants');
 		expect(water.labels).toEqual(['home']);
@@ -96,6 +107,7 @@ describe('reading a backup', () => {
 	});
 
 	test('an unreadable date keeps the task, moves the text to notes, and warns', () => {
+		const backup = readFixture();
 		const bike = backup.tasks.find(t => t.title === 'Fix bike')!;
 		expect(bike.due).toBeNull();
 		expect(bike.notes).toBe('Todoist date: every! 3 days');
@@ -104,6 +116,7 @@ describe('reading a backup', () => {
 	});
 
 	test('duration, deadline, and absolute reminders', () => {
+		const backup = readFixture();
 		const japan = backup.tasks.find(t => t.title === 'Visit Japan')!;
 		expect(japan.notes).toBe('Duration: 90 minutes\n\nDeadline: 2027-06-01');
 		const flights = backup.tasks.find(t => t.title === 'Book flights')!;
@@ -112,6 +125,7 @@ describe('reading a backup', () => {
 	});
 
 	test('nested tasks key by their parents, and repeated content keys by occurrence', () => {
+		const backup = readFixture();
 		expect(backup.tasks.filter(t => t.projectKey === 'todoist:project:8Xmpl2Wq').map(t => t.sourceKey)).toEqual([
 			'todoist:task:8Xmpl2Wq:Visit Japan',
 			'todoist:task:8Xmpl2Wq:Visit Japan › Book flights',
@@ -122,6 +136,7 @@ describe('reading a backup', () => {
 	});
 
 	test('a nested task points at the task one indent up', () => {
+		const backup = readFixture();
 		const parents = backup.tasks.filter(t => t.projectKey === 'todoist:project:8Xmpl2Wq').map(t => t.parentKey);
 		expect(parents).toEqual([
 			null,
@@ -133,6 +148,7 @@ describe('reading a backup', () => {
 	});
 
 	test('warns about what it could not carry over, and ignores macOS metadata', () => {
+		const backup = readFixture();
 		expect(backup.warnings).toEqual([
 			'Inbox: could not read the date "every! 3 days" on "Fix bike", kept it in notes',
 			'Long Term: sections are not imported: Someday, Reading',
@@ -192,9 +208,8 @@ describe('CSV edge cases', () => {
 });
 
 describe('merging into the store', () => {
-	const backup = readTodoistBackup(todoistBackupFiles, now);
-
 	test('adds projects, labels, and tasks, with Inbox tasks in our Inbox', () => {
+		const backup = readFixture();
 		const { state, summary } = mergeBackup(empty(), backup, { newId: counter(), now: 1000 });
 		expect(summary).toEqual({ projects: 2, labels: 3, tasks: 12, skipped: 0, warnings: backup.warnings });
 		expect(state.projects.map(p => p.name)).toEqual(['Long Term', 'Job']);
@@ -208,6 +223,7 @@ describe('merging into the store', () => {
 	});
 
 	test('importing the same backup again adds nothing', () => {
+		const backup = readFixture();
 		const first = mergeBackup(empty(), backup, { newId: counter(), now: 1000 });
 		const second = mergeBackup(first.state, backup, { newId: counter(), now: 2000 });
 		expect(second.summary).toEqual({ projects: 0, labels: 0, tasks: 0, skipped: 12, warnings: backup.warnings });
@@ -236,7 +252,7 @@ describe('merging into the store', () => {
 			now: 1000,
 		});
 		const second = mergeBackup(first.state, read(`${HEADER}\ntask,A,,4,1,,\ntask,B,,4,2,,\ntask,C,,4,2,,\n`), {
-			newId: () => 'new',
+			newId: counter(),
 			now: 2000,
 		});
 		expect(second.summary).toMatchObject({ tasks: 1, skipped: 2 });
@@ -245,6 +261,7 @@ describe('merging into the store', () => {
 	});
 
 	test('an existing project and label with the same name are reused', () => {
+		const backup = readFixture();
 		const state: ImportState = {
 			tasks: [],
 			projects: [{ id: 'mine', name: 'job', createdAt: 0 }],
