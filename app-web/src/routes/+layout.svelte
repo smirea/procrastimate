@@ -17,6 +17,7 @@
 	import { clock, sheets, trackKeyboardInset, motion } from '#lib/ui.svelte.ts';
 	import { fireDueReminders } from '#lib/reminders.ts';
 	import { openTaskFromUrl, push } from '#lib/push.svelte.ts';
+	import { sync } from '#lib/sync.svelte.ts';
 	import { applyTheme, theme } from '#lib/theme.svelte.ts';
 
 	let { children }: { children: Snippet } = $props();
@@ -80,6 +81,7 @@
 	$effect(() => trackKeyboardInset());
 	$effect(() => push.start());
 	$effect(() => push.sync());
+	$effect(() => untrack(() => sync.start()));
 	$effect(() => untrack(openTaskFromUrl));
 
 	$effect(() => {

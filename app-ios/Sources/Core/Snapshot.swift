@@ -11,21 +11,54 @@ public struct SyncOp: Hashable, Codable, Sendable {
     public var kind: Kind
     public var id: String
     public var fields: [String: JSONValue]
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        opId = try c.decode(String.self, forKey: .opId)
+        hlc = try c.decode(String.self, forKey: .hlc)
+        kind = try c.decode(Kind.self, forKey: .kind)
+        id = try c.decode(String.self, forKey: .id)
+        fields = try c.decode([String: JSONValue].self, forKey: .fields)
+        guard isHlc(hlc) else {
+            throw DecodingError.dataCorruptedError(forKey: .hlc, in: c, debugDescription: "Invalid HLC")
+        }
+    }
 }
 
-/// Device-local sync state. A device without it is unpaired and keeps no outbox.
+/// `<wall ms>:<counter>:<node>` with a wall time and counter no larger than `Number.MAX_SAFE_INTEGER`.
+func isHlc(_ value: String) -> Bool {
+    let parts = value.split(separator: ":", maxSplits: 2, omittingEmptySubsequences: false)
+    guard parts.count == 3, !parts[2].isEmpty else { return false }
+    return parts[..<2].allSatisfy { part in
+        !part.isEmpty && part.allSatisfy(\.isASCIIDigit) && (Double(part).map { $0 <= 9_007_199_254_740_991 } ?? false)
+    }
+}
+
+private extension Character {
+    var isASCIIDigit: Bool { isASCII && isNumber }
+}
+
+/// Device-local sync state. A device without it is unpaired and keeps no outbox. `clock` is the last clock the device
+/// issued or saw, and `timeZone` the zone it last wrote to the synced settings, so it writes again only after it moves.
 public struct SyncSection: Hashable, Codable, Sendable {
     public var deviceId: String
     public var cursor: Int
     public var outbox: [SyncOp]
+    public var clock: String
+    public var timeZone: String
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         deviceId = try c.decode(String.self, forKey: .deviceId)
         cursor = try c.decode(Int.self, forKey: .cursor)
         outbox = try c.decode([SyncOp].self, forKey: .outbox)
+        clock = try c.decode(String.self, forKey: .clock)
+        timeZone = try c.decode(String.self, forKey: .timeZone)
         guard cursor >= 0 else {
             throw DecodingError.dataCorruptedError(forKey: .cursor, in: c, debugDescription: "Negative cursor")
+        }
+        guard isHlc(clock) else {
+            throw DecodingError.dataCorruptedError(forKey: .clock, in: c, debugDescription: "Invalid HLC")
         }
     }
 }

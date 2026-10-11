@@ -124,6 +124,9 @@ export type Change = z.infer<typeof changeSchema>;
 
 const cursor = z.number().int().nonnegative();
 
+/** The most log rows one response carries. A client that gets a full page syncs again right away. */
+export const SYNC_PAGE_SIZE = 1000;
+
 export const syncRequestSchema = z.object({ cursor, ops: z.array(opSchema) });
 export type SyncRequest = z.infer<typeof syncRequestSchema>;
 

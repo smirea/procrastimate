@@ -4,6 +4,7 @@
 	import ArrowSquareIn from 'phosphor-svelte/lib/ArrowSquareIn';
 	import Warning from 'phosphor-svelte/lib/Warning';
 	import type { ImportSummary } from 'shared/todoist.ts';
+	import SyncSettings from './SyncSettings.svelte';
 	import ThemeSwitcher from './ThemeSwitcher.svelte';
 	import { store } from '../store.svelte.ts';
 	import { motion } from '../ui.svelte.ts';
@@ -37,6 +38,8 @@
 		<h3 class="heading">Theme</h3>
 		<ThemeSwitcher />
 	</section>
+
+	<SyncSettings />
 
 	<section class="flex flex-col gap-1.5">
 		<h3 class="heading">Data</h3>

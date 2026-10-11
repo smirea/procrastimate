@@ -23,6 +23,7 @@ public enum Subtasks {
     static func siblingOrder(_ a: TaskItem, _ b: TaskItem) -> Bool? {
         if a.order != b.order { return a.order < b.order }
         if a.createdAt != b.createdAt { return a.createdAt < b.createdAt }
+        if a.id != b.id { return a.id < b.id }
         return nil
     }
 
@@ -108,17 +109,37 @@ public enum Subtasks {
         }
     }
 
-    /// Moves a subtask to `index` among its siblings and renumbers them.
+    /// Below this gap a move renumbers its siblings instead of splitting it further.
+    static let minOrderGap = 1e-9
+
+    /// Moves a subtask to `index` among its siblings by writing only its own `order`: the midpoint of its new
+    /// neighbors, or one past the only one. Below `minOrderGap` it renumbers the siblings instead.
     public static func moveSubtask(_ tasks: [TaskItem], _ id: String, _ index: Int) -> [TaskItem] {
         guard let task = tasks.first(where: { $0.id == id }), let parentId = task.parentId else { return [] }
-        var siblings = (groupChildren(tasks)[parentId] ?? []).filter { $0.id != id }
-        siblings.insert(task, at: max(0, min(index, siblings.count)))
-        return siblings.enumerated().compactMap { order, t in
-            guard t.order != Double(order) else { return nil }
-            var t = t
-            t.order = Double(order)
-            return t
+        let siblings = groupChildren(tasks)[parentId] ?? []
+        let others = siblings.filter { $0.id != id }
+        let at = max(0, min(index, others.count))
+        let previous = at > 0 ? others[at - 1].order : nil
+        let next = at < others.count ? others[at].order : nil
+        if let previous, let next, next - previous < minOrderGap {
+            var placed = others
+            placed.insert(task, at: at)
+            return placed.enumerated().compactMap { order, t in
+                guard t.order != Double(order) else { return nil }
+                var t = t
+                t.order = Double(order)
+                return t
+            }
         }
+        if siblings.firstIndex(where: { $0.id == id }) == at { return [] }
+        var moved = task
+        switch (previous, next) {
+        case (nil, nil): moved.order = 0
+        case let (nil, next?): moved.order = next - 1
+        case let (previous?, nil): moved.order = previous + 1
+        case let (previous?, next?): moved.order = (previous + next) / 2
+        }
+        return [moved]
     }
 
     /// Makes a task whose parent is missing, or whose parents loop back to it, a top-level task, so it never goes

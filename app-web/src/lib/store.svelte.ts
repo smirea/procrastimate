@@ -3,6 +3,9 @@ import { groupChildren, progressOf } from 'shared/subtasks.ts';
 import { newId } from 'shared/id.ts';
 import type { SyncSection } from 'shared/snapshot.ts';
 import * as rules from 'shared/store.ts';
+import { applyResponse, commit, startSync, type ClientSync } from 'shared/sync/apply.ts';
+import { formatHlc, parseHlc } from 'shared/sync/hlc.ts';
+import type { Snapshot as SyncedData, SyncRequest, SyncResponse } from 'shared/sync/protocol.ts';
 import { mergeBackup, type ImportSummary, type TodoistBackup } from 'shared/todoist.ts';
 import { loadSnapshot, saveSnapshot } from './persistence.ts';
 
@@ -10,14 +13,16 @@ export type { Completion, CompletionState, NewTask, TaskPatch } from 'shared/sto
 
 /**
  * Every mutation is a discrete command from `shared/store.ts` that persists synchronously. The rules return new
- * arrays and objects for what they change, so the arrays are raw state that each command replaces.
+ * arrays and objects for what they change, so the arrays are raw state that each command replaces. While the device
+ * is paired, each command also diffs the data before and after it into the outbox. An unpaired device keeps none.
  */
 class Store {
 	tasks = $state.raw<Task[]>([]);
 	projects = $state.raw<Project[]>([]);
 	labels = $state.raw<Label[]>([]);
 	remindersCheckedAt = $state(0);
-	#sync: SyncSection | undefined;
+	#sync = $state.raw<SyncSection | undefined>();
+	#onCommit: (() => void) | undefined;
 	#children = $derived(groupChildren(this.tasks));
 
 	constructor() {
@@ -34,15 +39,79 @@ class Store {
 		return { tasks: this.tasks, projects: this.projects, labels: this.labels };
 	}
 
+	/** The settings record holds only the zone this device last wrote, so a commit never rewrites another's. */
+	#synced(sync: SyncSection): SyncedData {
+		return { ...this.#data, settings: { timeZone: sync.timeZone } };
+	}
+
 	#apply(data: rules.StoreData) {
+		const before = this.#sync && this.#synced(this.#sync);
 		this.tasks = data.tasks;
 		this.projects = data.projects;
 		this.labels = data.labels;
+		if (this.#sync && before) this.#record(this.#sync, before, this.#synced(this.#sync));
 		this.#commit();
+	}
+
+	#record(sync: SyncSection, before: SyncedData, after: SyncedData) {
+		const next = commit(clientSync(sync), before, after, Date.now());
+		if (next.outbox.length === sync.outbox.length) return;
+		this.#sync = { ...sectionOf(next, sync.deviceId), timeZone: after.settings.timeZone ?? sync.timeZone };
+		this.#onCommit?.();
 	}
 
 	#commit() {
 		saveSnapshot({ ...this.#data, remindersCheckedAt: this.remindersCheckedAt, sync: this.#sync });
+	}
+
+	get paired() {
+		return this.#sync !== undefined;
+	}
+
+	/** Ops waiting for the server to acknowledge them. */
+	get pending() {
+		return this.#sync?.outbox.length ?? 0;
+	}
+
+	/** Calls `listener` after each command that added ops to the outbox. */
+	onCommit(listener: () => void) {
+		this.#onCommit = listener;
+		return () => (this.#onCommit = undefined);
+	}
+
+	/** Starts syncing with the whole local snapshot as the first upload, so this device's data joins the account's. */
+	pair(deviceId: string, timeZone: string) {
+		const data = { ...this.#data, settings: { timeZone } };
+		this.#sync = { ...sectionOf(startSync(data, deviceId, Date.now()), deviceId), timeZone };
+		this.#commit();
+	}
+
+	/** Stops syncing and drops the outbox. The local data stays as it is. */
+	unpair() {
+		this.#sync = undefined;
+		this.#commit();
+	}
+
+	/** Writes the synced time zone only when this device's own zone changed since it last wrote it. */
+	noteTimeZone(timeZone: string) {
+		if (!this.#sync || this.#sync.timeZone === timeZone) return;
+		this.#record(this.#sync, this.#synced(this.#sync), { ...this.#data, settings: { timeZone } });
+		this.#commit();
+	}
+
+	syncRequest(): SyncRequest | undefined {
+		return this.#sync && { cursor: this.#sync.cursor, ops: this.#sync.outbox };
+	}
+
+	/** Drops the acknowledged ops, applies the server's changes, and replays the rest of the outbox on top. */
+	takeResponse(response: SyncResponse) {
+		if (!this.#sync) return;
+		const { snapshot, sync } = applyResponse(this.#synced(this.#sync), clientSync(this.#sync), response);
+		this.tasks = snapshot.tasks;
+		this.projects = snapshot.projects;
+		this.labels = snapshot.labels;
+		this.#sync = { ...sectionOf(sync, this.#sync.deviceId), timeZone: this.#sync.timeZone };
+		this.#commit();
 	}
 
 	#creation = (): rules.Creation => ({ id: newId(), now: Date.now() });
@@ -152,5 +221,14 @@ class Store {
 		this.#commit();
 	}
 }
+
+const clientSync = ({ cursor, outbox, clock }: SyncSection): ClientSync => ({ cursor, outbox, clock: parseHlc(clock) });
+
+const sectionOf = ({ cursor, outbox, clock }: ClientSync, deviceId: string): Omit<SyncSection, 'timeZone'> => ({
+	deviceId,
+	cursor,
+	outbox,
+	clock: formatHlc(clock),
+});
 
 export const store = new Store();

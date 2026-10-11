@@ -2,7 +2,7 @@
 
 This directory is the maintained source for verifying the user-facing behavior of Procrastimate. Procrastimate is Stefan's personal task manager, a rough Todoist clone with one user, a web client, an iOS client, and an Apple Watch client later. It is local first and synced, every interaction responds instantly, and motion is subtle but satisfying. Features change often, so update the map with the feature and never keep entries for removed behavior.
 
-The web client covers adding, viewing, editing, completing, subtasks, repeating, prioritizing, reminding, push notifications, labeling, searching, theming, settings, and importing from Todoist, and every web step not marked `Planned:` is proven by a Playwright test named in its bullet. iOS, sync, completed-task history, and keyboard selection are still planned. A `Planned:` step describes the intended user path and the observable result, with no harness commands or stable handles. Replace it with exact commands when its feature and harness ship.
+The web client covers adding, viewing, editing, completing, subtasks, repeating, prioritizing, reminding, push notifications, labeling, searching, theming, settings, syncing between paired clients, and importing from Todoist, and every web step not marked `Planned:` is proven by a Playwright test named in its bullet. iOS, completed-task history, and keyboard selection are still planned. A `Planned:` step describes the intended user path and the observable result, with no harness commands or stable handles. Replace it with exact commands when its feature and harness ship.
 
 ## Baseline preconditions
 
@@ -15,7 +15,7 @@ The web client covers adding, viewing, editing, completing, subtasks, repeating,
 - The suite has three Playwright projects. `desktop` runs every file except `e2e/mobile.e2e.ts` and `e2e/parity/` in Chromium at 1280×800. `mobile` runs only `e2e/mobile.e2e.ts` in WebKit with the `iPhone 15 Pro` profile (393×659, touch). `parity` runs `e2e/parity/*.e2e.ts` in the same WebKit profile, paired with iOS XCUITests, and saves `app-web/test-results/parity/<parity-id>.png`. Pick one with `--project desktop`, `--project mobile`, or `--project parity`.
 - Start the iOS client in a simulator with `bun run start:ios -t simulator`. It opens on an empty Inbox with Inbox, Today, Upcoming, Browse, and Search tabs; the screens are placeholders until their slices ship (see `docs/ios-parity.md`). It needs macOS with Xcode, so a Linux agent runs only `swift test` in `app-ios/` and leaves the app to the iOS workflow.
 - iOS UI tests launch with `PROCRASTIMATE_NOW=2026-10-14T10:00:00Z`, `PROCRASTIMATE_TZ=UTC`, and `PROCRASTIMATE_RESET=1` (Debug builds only): the web suite's pinned moment and an empty store. Run them with `xcodebuild test -project app-ios/App.xcodeproj -scheme App -destination 'platform=iOS Simulator,name=iPhone 16'`. The web half of each pair runs with `bun run test:e2e --project=parity`.
-- Seed fixtures through quick add, the real user path. Planned: a disposable server store once sync exists.
+- Seed fixtures through quick add, the real user path. The dev server's sync account lives in memory, so restarting `bun run start` gives a disposable one.
 - Planned: a `verify-procrastimate` skill owns launch, doctor, and cleanup. Until it exists, never drive an instance this run did not start.
 - The ports are fixed (`strictPort`), so two web instances cannot run side by side.
 

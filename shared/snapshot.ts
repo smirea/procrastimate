@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { sortTasks, type StoreData } from './store.ts';
 import { detachOrphans } from './subtasks.ts';
+import { isHlc } from './sync/hlc.ts';
+import { opSchema } from './sync/protocol.ts';
 import { weeklyOn, type DateKey, type Label, type Project, type Task, type TimeOfDay, type Weekday } from './task.ts';
 
 /**
@@ -66,20 +68,16 @@ const tasksSchema = z.array(z.unknown()).transform(items =>
 	),
 );
 
-/** A change waiting to sync, as `docs/decisions/sync.md` describes it. `fields` holds the changed fields' new values. */
-const opSchema = z.object({
-	opId: z.string(),
-	hlc: z.string(),
-	kind: z.enum(['task', 'project', 'label', 'settings']),
-	id: z.string(),
-	fields: z.record(z.string(), z.unknown()),
-});
-
-/** Device-local sync state. A device without it is unpaired and keeps no outbox. */
+/**
+ * Device-local sync state. A device without it is unpaired and keeps no outbox. `clock` is the last clock the device
+ * issued or saw, and `timeZone` the zone it last wrote to the synced settings, so it writes again only after it moves.
+ */
 const syncSchema = z.object({
 	deviceId: z.string(),
 	cursor: z.number().int().nonnegative(),
 	outbox: z.array(opSchema),
+	clock: z.string().refine(isHlc),
+	timeZone: z.string(),
 });
 
 const snapshotSchema = z.object({
@@ -90,7 +88,6 @@ const snapshotSchema = z.object({
 	sync: syncSchema.optional(),
 });
 
-export type SyncOp = z.infer<typeof opSchema>;
 export type SyncSection = z.infer<typeof syncSchema>;
 export type Snapshot = StoreData & { remindersCheckedAt: number; sync?: SyncSection };
 

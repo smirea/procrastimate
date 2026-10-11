@@ -1,12 +1,13 @@
 # Settings
 
-A `Settings` row with a gear sits at the bottom of the sidebar, which is also the bottom of the phone drawer. On desktop it opens a small glass popover above the row. On a phone it closes the drawer and opens a bottom sheet. Both hold the `Theme` switch and `Import from Todoist`.
+A `Settings` row with a gear sits at the bottom of the sidebar, which is also the bottom of the phone drawer. On desktop it opens a small glass popover above the row. On a phone it closes the drawer and opens a bottom sheet. Both hold the `Theme` switch, the `Sync` section, and `Import from Todoist`.
 
 ## Sub-features
 
 - `settings-popover` opens the settings popover from the desktop sidebar and closes it with Escape or a click outside.
 - `settings-sheet` opens the settings bottom sheet from the phone drawer and closes it with `Close settings` or a tap on the scrim.
 - `settings-theme` holds the `Theme` switch. See [Theme](./theme.md).
+- `settings-sync` holds the `Sync` section. Unpaired it offers `Set up sync` (the setup code) and `Enter a pairing code`. Paired it shows the `Sync status` line (`Up to date`, `Syncing`, `Offline`, and how many changes wait), `Pair a device` with its `Pairing code`, and the `Devices` list with a `Remove` button per device. See [Offline and sync](./offline-sync.md).
 - `settings-import` holds `Import from Todoist`. See [Todoist import](./todoist-import.md).
 
 ## How to get to it (user POV)
@@ -24,6 +25,7 @@ Preconditions:
 
 - **Desktop popover.** Before opening, the page has no `Theme` radio group. Click `Settings`. The `Settings` dialog shows `Theme` and `Import from Todoist`. Choose `Dark`, then press Escape. The dialog closes and the page stays dark. Test: `the settings gear opens a popover that holds the theme switch`.
 - **Phone sheet.** Open the drawer and tap `Settings`. The drawer closes and the `Settings` sheet docks to the bottom of the screen, with each theme option at least 44 px tall. `Close settings` dismisses it. Test: `the settings sheet switches the theme and keeps it across reloads`.
+- **Sync.** Open `Settings`. The `Sync` section offers `Set up sync` and `Enter a pairing code`. Each opens one field (`Setup code` or `Pairing code`) with `Cancel` and `Turn on sync` or `Pair`. A wrong code shows an alert and keeps the field. Pairing and the device list are driven in [Offline and sync](./offline-sync.md). Tests: `e2e/sync.e2e.ts`.
 - **iOS.** Planned: open the settings screen and compare.
 
 ## Gotchas

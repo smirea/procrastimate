@@ -1320,7 +1320,7 @@
 		},
 		{
 			"fn": "moveSubtask",
-			"test": "moveSubtask › moving renumbers the siblings and returns only the ones whose order changed",
+			"test": "moveSubtask › moving writes only the moved subtask, between its new neighbors",
 			"input": [
 				[
 					{
@@ -1410,49 +1410,19 @@
 					"id": "socks",
 					"labelIds": [],
 					"notes": "",
-					"order": 0,
+					"order": -1,
 					"parentId": "trip",
 					"priority": 4,
 					"projectId": null,
 					"recurrence": null,
 					"reminders": [],
 					"title": "socks"
-				},
-				{
-					"completedAt": null,
-					"createdAt": 1,
-					"due": null,
-					"id": "passport",
-					"labelIds": [],
-					"notes": "",
-					"order": 1,
-					"parentId": "trip",
-					"priority": 4,
-					"projectId": null,
-					"recurrence": null,
-					"reminders": [],
-					"title": "passport"
-				},
-				{
-					"completedAt": null,
-					"createdAt": 1,
-					"due": null,
-					"id": "charger",
-					"labelIds": [],
-					"notes": "",
-					"order": 2,
-					"parentId": "trip",
-					"priority": 4,
-					"projectId": null,
-					"recurrence": null,
-					"reminders": [],
-					"title": "charger"
 				}
 			]
 		},
 		{
 			"fn": "moveSubtask",
-			"test": "moveSubtask › moving renumbers the siblings and returns only the ones whose order changed",
+			"test": "moveSubtask › moving writes only the moved subtask, between its new neighbors",
 			"input": [
 				[
 					{
@@ -1539,25 +1509,10 @@
 					"completedAt": null,
 					"createdAt": 1,
 					"due": null,
-					"id": "charger",
-					"labelIds": [],
-					"notes": "",
-					"order": 0,
-					"parentId": "trip",
-					"priority": 4,
-					"projectId": null,
-					"recurrence": null,
-					"reminders": [],
-					"title": "charger"
-				},
-				{
-					"completedAt": null,
-					"createdAt": 1,
-					"due": null,
 					"id": "passport",
 					"labelIds": [],
 					"notes": "",
-					"order": 1,
+					"order": 1.5,
 					"parentId": "trip",
 					"priority": 4,
 					"projectId": null,
@@ -1569,7 +1524,7 @@
 		},
 		{
 			"fn": "moveSubtask",
-			"test": "moveSubtask › moving renumbers the siblings and returns only the ones whose order changed",
+			"test": "moveSubtask › moving writes only the moved subtask, between its new neighbors",
 			"input": [
 				[
 					{
@@ -1656,17 +1611,339 @@
 					"completedAt": null,
 					"createdAt": 1,
 					"due": null,
-					"id": "charger",
+					"id": "passport",
 					"labelIds": [],
 					"notes": "",
-					"order": 0,
+					"order": 3,
 					"parentId": "trip",
 					"priority": 4,
 					"projectId": null,
 					"recurrence": null,
 					"reminders": [],
-					"title": "charger"
-				},
+					"title": "passport"
+				}
+			]
+		},
+		{
+			"fn": "moveSubtask",
+			"test": "moveSubtask › moving writes only the moved subtask, between its new neighbors",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "trip",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "trip"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "socks",
+						"labelIds": [],
+						"notes": "",
+						"order": 2,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "socks"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "passport",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "passport"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "charger",
+						"labelIds": [],
+						"notes": "",
+						"order": 1,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "charger"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "cable",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "charger",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "cable"
+					}
+				],
+				"charger",
+				1
+			],
+			"output": []
+		},
+		{
+			"fn": "groupChildren",
+			"test": "moveSubtask › a tie from two concurrent moves settles by id",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "trip",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "trip"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "socks",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "socks"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "passport",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "passport"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "charger",
+						"labelIds": [],
+						"notes": "",
+						"order": 1,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "charger"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "cable",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "charger",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "cable"
+					}
+				]
+			],
+			"output": {
+				"charger": [
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "cable",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "charger",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "cable"
+					}
+				],
+				"trip": [
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "passport",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "passport"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "socks",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "socks"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "charger",
+						"labelIds": [],
+						"notes": "",
+						"order": 1,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "charger"
+					}
+				]
+			}
+		},
+		{
+			"fn": "moveSubtask",
+			"test": "moveSubtask › a gap too small to split renumbers the siblings",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "trip",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "trip"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "socks",
+						"labelIds": [],
+						"notes": "",
+						"order": 2,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "socks"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "passport",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "passport"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "charger",
+						"labelIds": [],
+						"notes": "",
+						"order": 1e-10,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "charger"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "cable",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "charger",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "cable"
+					}
+				],
+				"socks",
+				1
+			],
+			"output": [
 				{
 					"completedAt": null,
 					"createdAt": 1,
@@ -1686,7 +1963,7 @@
 					"completedAt": null,
 					"createdAt": 1,
 					"due": null,
-					"id": "passport",
+					"id": "charger",
 					"labelIds": [],
 					"notes": "",
 					"order": 2,
@@ -1695,7 +1972,7 @@
 					"projectId": null,
 					"recurrence": null,
 					"reminders": [],
-					"title": "passport"
+					"title": "charger"
 				}
 			]
 		},

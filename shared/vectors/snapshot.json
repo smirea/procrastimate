@@ -29,6 +29,7 @@
 					],
 					"remindersCheckedAt": 1791972000000,
 					"sync": {
+						"clock": "1791972000001:0:d-phone",
 						"cursor": 12,
 						"deviceId": "d-phone",
 						"outbox": [
@@ -57,7 +58,8 @@
 								"kind": "label",
 								"opId": "op-2"
 							}
-						]
+						],
+						"timeZone": "Europe/Berlin"
 					},
 					"tasks": [
 						{
@@ -162,6 +164,7 @@
 				],
 				"remindersCheckedAt": 1791972000000,
 				"sync": {
+					"clock": "1791972000001:0:d-phone",
 					"cursor": 12,
 					"deviceId": "d-phone",
 					"outbox": [
@@ -190,7 +193,8 @@
 							"kind": "label",
 							"opId": "op-2"
 						}
-					]
+					],
+					"timeZone": "Europe/Berlin"
 				},
 				"tasks": [
 					{
@@ -1749,9 +1753,44 @@
 					"projects": [],
 					"remindersCheckedAt": 5,
 					"sync": {
+						"clock": "0:0:d",
 						"cursor": -1,
 						"deviceId": "d",
-						"outbox": []
+						"outbox": [],
+						"timeZone": "UTC"
+					},
+					"tasks": []
+				},
+				10
+			],
+			"output": {
+				"labels": [],
+				"projects": [],
+				"remindersCheckedAt": 10,
+				"tasks": []
+			}
+		},
+		{
+			"fn": "parseSnapshot",
+			"test": "parseSnapshot › a document with an invalid outbox op starts empty",
+			"input": [
+				{
+					"projects": [],
+					"remindersCheckedAt": 5,
+					"sync": {
+						"clock": "0:0:d",
+						"cursor": 0,
+						"deviceId": "d",
+						"outbox": [
+							{
+								"fields": {},
+								"hlc": "later",
+								"id": "t",
+								"kind": "task",
+								"opId": "o"
+							}
+						],
+						"timeZone": "UTC"
 					},
 					"tasks": []
 				},

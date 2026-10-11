@@ -154,9 +154,9 @@ describe('tasks', () => {
 		expect(ids(next.tasks.filter(t => t.completedAt === null))).toEqual(['trip', 'passport', 'standup', 'call']);
 	});
 
-	test('moving a subtask renumbers its siblings', () => {
+	test('moving a subtask writes only its own order', () => {
 		const next = moveSubtask(data(), 'charger', 0);
-		expect([find(next, 'charger').order, find(next, 'passport').order]).toEqual([0, 1]);
+		expect([find(next, 'charger').order, find(next, 'passport').order]).toEqual([-1, 0]);
 	});
 
 	test('deleting a task removes its subtasks, and undo puts them back in order', () => {
