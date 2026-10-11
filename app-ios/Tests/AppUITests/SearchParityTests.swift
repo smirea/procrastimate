@@ -12,7 +12,9 @@ final class SearchParityTests: ParityTestCase {
 
     private func seedLabels() {
         createLabels("calls", "waiting")
-        add("@calls Plumber", "@waiting @calls Dentist", "Read a book")
+        addLabeled("Plumber", "calls")
+        addLabeled("Dentist", "waiting", "calls")
+        add("Read a book")
     }
 
     func test_search_open() {

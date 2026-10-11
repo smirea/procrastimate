@@ -10,15 +10,39 @@ extension ParityTestCase {
     /// A search result: `project-<name>`, `label-<name>`, or a task's title.
     func result(_ name: String) -> XCUIElement { app.buttons["result-\(name)"] }
 
-    /// Taps a tab, first expanding the tab bar if scrolling minimized it to the selected tab.
+    /// Taps a tab. While search has the keyboard, the tab bar sits under it, so the keyboard goes first; and when
+    /// scrolling minimized the bar to one collapsed tab, tapping that tab expands it.
     func openTab(_ name: String) {
         let target = tab(name)
-        if !target.waitForExistence(timeout: 1) {
-            let collapsed = app.tabBars.buttons.matching(NSPredicate(format: "value == 'Collapsed'")).firstMatch
-            if collapsed.exists { collapsed.tap() }
+        for _ in 0..<4 {
+            if target.waitForExistence(timeout: 1), target.isHittable {
+                target.tap()
+                return
+            }
+            if app.keyboards.firstMatch.exists {
+                app.swipeDown()
+            } else {
+                let collapsed = app.tabBars.buttons.matching(NSPredicate(format: "value == 'Collapsed'")).firstMatch
+                if collapsed.exists, collapsed.isHittable { collapsed.tap() }
+            }
         }
-        XCTAssertTrue(target.waitForExistence(timeout: 5), "No \(name) tab")
-        target.tap()
+        XCTFail("No \(name) tab")
+    }
+
+    /// Adds a task with labels by tapping each `@` suggestion, then typing the title, so no keystroke races the
+    /// suggestion list.
+    func addLabeled(_ title: String, _ labels: String...) {
+        openQuickAdd()
+        for label in labels {
+            type("@\(label)")
+            let option = app.otherElements["Labels"].buttons[label]
+            XCTAssertTrue(option.waitForExistence(timeout: 5))
+            option.tap()
+            wait(for: taskInput, "value ENDSWITH '@\(label) '")
+        }
+        type(title + "\n")
+        wait(for: taskInput, "value == ''")
+        cancelQuickAdd()
     }
 
     /// Shows the Browse tab at its root, going back from any project or label screen left open on it.
@@ -57,7 +81,7 @@ extension ParityTestCase {
 
     /// Opens the search tab, clears any earlier query, and types `query`.
     func search(_ query: String) {
-        openTab("Search")
+        if !(searchField.exists && searchField.isHittable) { openTab("Search") }
         XCTAssertTrue(searchField.waitForExistence(timeout: 5))
         if !(searchField.value(forKey: "hasKeyboardFocus") as? Bool ?? false) { searchField.tap() }
         let clear = searchField.buttons["Clear text"]

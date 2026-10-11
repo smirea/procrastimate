@@ -11,7 +11,7 @@ final class LabelsParityTests: ParityTestCase {
         wait(for: taskInput, "value == ''")
         cancelQuickAdd()
         openTab("Inbox")
-        add("@calls Call bank")
+        addLabeled("Call bank", "calls")
     }
 
     func test_labels_view() {
@@ -36,7 +36,7 @@ final class LabelsParityTests: ParityTestCase {
     func test_labels_rename() {
         start()
         createLabels("calls", "Errands")
-        add("@calls Call bank")
+        addLabeled("Call bank", "calls")
         openBrowse()
         browseLabel("calls").tap()
         XCTAssertTrue(app.navigationBars["calls"].waitForExistence(timeout: 5))
@@ -51,7 +51,7 @@ final class LabelsParityTests: ParityTestCase {
     func test_labels_delete() {
         start()
         createLabels("phone")
-        add("@phone Call bank")
+        addLabeled("Call bank", "phone")
         openBrowse()
         browseLabel("phone").tap()
         app.buttons["Label actions"].tap()

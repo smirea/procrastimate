@@ -63,7 +63,10 @@ struct SearchScreen: View {
         .onKeyPress(.downArrow) { move(1, in: rows) }
         .onKeyPress(.upArrow) { move(-1, in: rows) }
         .sensoryFeedback(.selection, trigger: active)
-        .onAppear { focused = true }
+        // The search tab can be built before it is shown, so focus follows the selected tab instead of `onAppear`,
+        // which would pull the keyboard away from quick add.
+        .onAppear { if navigator.tab == .search { focused = true } }
+        .onChange(of: navigator.tab) { focused = navigator.tab == .search }
     }
 
     private func move(_ step: Int, in rows: [SearchSections.Row]) -> KeyPress.Result {
