@@ -1,7 +1,7 @@
 import { createClient, type Client } from '@libsql/client/web';
 import { LibsqlDialect } from '@libsql/kysely-libsql';
 import { betterAuth } from 'better-auth';
-import { memoryAdapter, type MemoryDB } from 'better-auth/adapters/memory';
+import { memoryAdapter, type MemoryDB } from '@better-auth/memory-adapter';
 import { getMigrations } from 'better-auth/db/migration';
 import { bearer } from 'better-auth/plugins';
 import { USER_HEADER } from '../../shared/auth';

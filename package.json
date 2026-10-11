@@ -28,6 +28,7 @@
 		"secrets:check": "bun server/scripts/secrets.ts check"
 	},
 	"dependencies": {
+		"@better-auth/memory-adapter": "1.7.7",
 		"@libsql/client": "^0.18.0",
 		"@libsql/kysely-libsql": "^0.4.1",
 		"@tailwindcss/vite": "^4.3.3",
