@@ -167,9 +167,9 @@
 			</ul>
 		{/if}
 	{:else}
-		<p class="px-1 text-[12px] text-muted">Keep your tasks the same on every device.</p>
+		<p class="text-[12px] text-muted">Keep your tasks the same on every device.</p>
 		{#if sync.status.kind === 'off' && sync.status.notice}
-			<p role="status" class="px-1 text-[12px] text-muted">{sync.status.notice}</p>
+			<p role="status" class="text-[12px] text-muted">{sync.status.notice}</p>
 		{/if}
 
 		{#if entry}
