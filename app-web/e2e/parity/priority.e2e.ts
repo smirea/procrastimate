@@ -47,7 +47,12 @@ test('priority-replace: a picked level removes the typed one', async ({ app, sna
 
 test('priority-display: the checkbox is tinted by priority', async ({ app, snap }) => {
 	await app.add('Urgent p1', 'High p2', 'Medium p3', 'Plain');
-	for (const [title, level] of [['Urgent', 1], ['High', 2], ['Medium', 3], ['Plain', 4]] as const) {
+	for (const [title, level] of [
+		['Urgent', 1],
+		['High', 2],
+		['Medium', 3],
+		['Plain', 4],
+	] as const) {
 		await expect(app.checkbox(title)).toHaveAttribute('style', new RegExp(`--p${level}`));
 	}
 	await snap('priority-display');

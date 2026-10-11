@@ -18,35 +18,35 @@ What the native iOS app must do to match the web app, row by row from the featur
 
 | Feature | Web | iOS | Slice | XCUITest | Playwright | Screenshot |
 | --- | --- | --- | --- | --- | --- | --- |
-| `add-open`: quick add from the add button (and `q` on a hardware keyboard), docked above the keyboard | ✓ | Planned | S5 | `QuickAddParityTests.test_add_open` | `quick-add › add-open` | `add-open.png` |
-| `add-save`: saves into the current list | ✓ | Planned | S5 | `QuickAddParityTests.test_add_save` | `quick-add › add-save` | `add-save.png` |
-| `add-due`: a typed due date leaves the title | ✓ | Planned | S3→S5 | `QuickAddParityTests.test_add_due` | `quick-add › add-due` | `add-due.png` |
-| `add-shorthand`: `tom 5p`, `eow`, `2d`, `5m`, `1730`, `10/15`, `the 15th`, with `Tom` and `sun hat` left as text | ✓ | Planned | S3→S5 | `QuickAddParityTests.test_add_shorthand` | `quick-add › add-shorthand` | `add-shorthand.png` |
-| `add-recurrence`: `every mon`, `daily`, `every march 2nd`, `mon wed fri 7am`, `tue/thu`, with prose lists left as text | ✓ | Planned | S3→S5 | `QuickAddParityTests.test_add_recurrence` | `quick-add › add-recurrence` | `add-recurrence.png` |
-| `add-highlight`: inline highlight per parsed phrase | ✓ | Planned | S5 | `QuickAddParityTests.test_add_highlight` | `quick-add › add-highlight` | `add-highlight.png` |
-| `add-config-row`: the chip row spells out due, repeat, and reminders | ✓ | Planned | S5 | `QuickAddParityTests.test_add_config_row` | `quick-add › add-config-row` | `add-config-row.png` |
-| `add-keep-text`: `Keep as text` un-parses a phrase | ✓ | Planned | S5 | `QuickAddParityTests.test_add_keep_text` | `quick-add › add-keep-text` | `add-keep-text.png` |
-| `add-defaults`: project inside a project, today inside Today, label inside a label view | ✓ | Planned | S5 | `QuickAddParityTests.test_add_defaults` | `quick-add › add-defaults` | `add-defaults.png` |
-| `add-cancel`: dismissing discards the draft | ✓ | Planned | S5 | `QuickAddParityTests.test_add_cancel` | `quick-add › add-cancel` | `add-cancel.png` |
-| `add-repeat`: stays open for the next task | ✓ | Planned | S5 | `QuickAddParityTests.test_add_repeat` | `quick-add › add-repeat` | `add-repeat.png` |
+| `add-open`: quick add from the add button (and `q` on a hardware keyboard), docked above the keyboard | ✓ | Built (no `q` shortcut yet) | S5 | `QuickAddParityTests.test_add_open` | `quick-add › add-open` | `add-open.png` |
+| `add-save`: saves into the current list | ✓ | Built | S5 | `QuickAddParityTests.test_add_save` | `quick-add › add-save` | `add-save.png` |
+| `add-due`: a typed due date leaves the title | ✓ | Built | S3→S5 | `QuickAddParityTests.test_add_due` | `quick-add › add-due` | `add-due.png` |
+| `add-shorthand`: `tom 5p`, `eow`, `2d`, `5m`, `1730`, `10/15`, `the 15th`, with `Tom` and `sun hat` left as text | ✓ | Built | S3→S5 | `QuickAddParityTests.test_add_shorthand` | `quick-add › add-shorthand` | `add-shorthand.png` |
+| `add-recurrence`: `every mon`, `daily`, `every march 2nd`, `mon wed fri 7am`, `tue/thu`, with prose lists left as text | ✓ | Built | S3→S5 | `QuickAddParityTests.test_add_recurrence` | `quick-add › add-recurrence` | `add-recurrence.png` |
+| `add-highlight`: inline highlight per parsed phrase | ✓ | Built | S5 | `QuickAddParityTests.test_add_highlight` | `quick-add › add-highlight` | `add-highlight.png` |
+| `add-config-row`: the chip row spells out due, repeat, and reminders | ✓ | Built | S5 | `QuickAddParityTests.test_add_config_row` | `quick-add › add-config-row` | `add-config-row.png` |
+| `add-keep-text`: `Keep as text` un-parses a phrase | ✓ | Built | S5 | `QuickAddParityTests.test_add_keep_text` | `quick-add › add-keep-text` | `add-keep-text.png` |
+| `add-defaults`: project inside a project, today inside Today, label inside a label view | ✓ | Built for Today; project and label defaults with S7 | S5 | `QuickAddParityTests.test_add_defaults` | `quick-add › add-defaults` | `add-defaults.png` |
+| `add-cancel`: dismissing discards the draft | ✓ | Built | S5 | `QuickAddParityTests.test_add_cancel` | `quick-add › add-cancel` | `add-cancel.png` |
+| `add-repeat`: stays open for the next task | ✓ | Built | S5 | `QuickAddParityTests.test_add_repeat` | `quick-add › add-repeat` | `add-repeat.png` |
 
 ### Priority
 
 | Feature | Web | iOS | Slice | XCUITest | Playwright | Screenshot |
 | --- | --- | --- | --- | --- | --- | --- |
-| `priority-nl`: `p1`–`p4`, `!!!`, `urgent`, `!!`, `important` | ✓ | Planned | S3→S5 | `PriorityParityTests.test_priority_nl` | `priority › priority-nl` | `priority-nl.png` |
-| `priority-picker`: the flag menu in quick add and task details | ✓ | Planned | S5, S6 | `PriorityParityTests.test_priority_picker` | `priority › priority-picker` | `priority-picker.png` |
-| `priority-replace`: a picked level removes the typed one | ✓ | Planned | S5 | `PriorityParityTests.test_priority_replace` | `priority › priority-replace` | `priority-replace.png` |
-| `priority-display`: checkbox tinted by priority | ✓ | Planned | S5 | `PriorityParityTests.test_priority_display` | `priority › priority-display` | `priority-display.png` |
+| `priority-nl`: `p1`–`p4`, `!!!`, `urgent`, `!!`, `important` | ✓ | Built | S3→S5 | `PriorityParityTests.test_priority_nl` | `priority › priority-nl` | `priority-nl.png` |
+| `priority-picker`: the flag menu in quick add and task details | ✓ | Built in quick add; details in S6 | S5, S6 | `PriorityParityTests.test_priority_picker` | `priority › priority-picker` | `priority-picker.png` |
+| `priority-replace`: a picked level removes the typed one | ✓ | Built | S5 | `PriorityParityTests.test_priority_replace` | `priority › priority-replace` | `priority-replace.png` |
+| `priority-display`: checkbox tinted by priority | ✓ | Built | S5 | `PriorityParityTests.test_priority_display` | `priority › priority-display` | `priority-display.png` |
 
 ### Complete a task
 
 | Feature | Web | iOS | Slice | XCUITest | Playwright | Screenshot |
 | --- | --- | --- | --- | --- | --- | --- |
-| `complete-check`: checkbox completes and animates out, with a success haptic on iOS | ✓ | Planned | S5 | `CompleteParityTests.test_complete_check` | `complete › complete-check` | `complete-check.png` |
-| `complete-undo`: the toast's `Undo` restores the row | ✓ | Planned | S5 | `CompleteParityTests.test_complete_undo` | `complete › complete-undo` | `complete-undo.png` |
-| `complete-swipe`: leading swipe completes (*iOS only*) | n/a | Planned | S5 | `CompleteParityTests.test_complete_swipe` | n/a | `complete-swipe.png` |
-| `complete-recurring`: moves to the next occurrence with `next due …` toast | ✓ | Planned | S5 | `CompleteParityTests.test_complete_recurring` | `complete › complete-recurring` | `complete-recurring.png` |
+| `complete-check`: checkbox completes and animates out, with a success haptic on iOS | ✓ | Built | S5 | `CompleteParityTests.test_complete_check` | `complete › complete-check` | `complete-check.png` |
+| `complete-undo`: the toast's `Undo` restores the row | ✓ | Built | S5 | `CompleteParityTests.test_complete_undo` | `complete › complete-undo` | `complete-undo.png` |
+| `complete-swipe`: leading swipe completes (*iOS only*) | n/a | Built | S5 | `CompleteParityTests.test_complete_swipe` | n/a | `complete-swipe.png` |
+| `complete-recurring`: moves to the next occurrence with `next due …` toast | ✓ | Built | S5 | `CompleteParityTests.test_complete_recurring` | `complete › complete-recurring` | `complete-recurring.png` |
 | `complete-subtasks`: see `subtasks-complete-parent` | ✓ | Planned | S6 | see Subtasks | see Subtasks | — |
 | `complete-reopen`: `Reopen` in details of a completed task, reached through search | ✓ | Planned | S7 | `SearchParityTests.test_search_completed` | `search › search-completed` | `search-completed.png` |
 | `complete-history`: a completed tasks list | Planned | Planned | not scheduled | — | — | — |
@@ -60,7 +60,7 @@ What the native iOS app must do to match the web app, row by row from the featur
 | `edit-nl`: phrases in the title apply on return | ✓ | Planned | S6 | `DetailsParityTests.test_edit_nl` | `details › edit-nl` | `edit-nl.png` |
 | `edit-config-row`: chips show the parsed values before commit | ✓ | Planned | S6 | `DetailsParityTests.test_edit_config_row` | `details › edit-config-row` | `edit-config-row.png` |
 | `edit-delete`: `Delete task` with undo | ✓ | Planned | S6 | `DetailsParityTests.test_edit_delete` | `details › edit-delete` | `edit-delete.png` |
-| `edit-swipe-delete`: trailing swipe deletes with undo (*iOS only*) | n/a | Planned | S5 | `CompleteParityTests.test_edit_swipe_delete` | n/a | `edit-swipe-delete.png` |
+| `edit-swipe-delete`: trailing swipe deletes with undo (*iOS only*) | n/a | Built | S5 | `CompleteParityTests.test_edit_swipe_delete` | n/a | `edit-swipe-delete.png` |
 
 ### Subtasks
 
@@ -80,17 +80,17 @@ What the native iOS app must do to match the web app, row by row from the featur
 
 | Feature | Web | iOS | Slice | XCUITest | Playwright | Screenshot |
 | --- | --- | --- | --- | --- | --- | --- |
-| `recurring-nl`: repeats typed in quick add or the title, including weekday lists and yearly dates | ✓ | Planned | S3→S5 | covered by `add-recurrence` | covered by `add-recurrence` | — |
+| `recurring-nl`: repeats typed in quick add or the title, including weekday lists and yearly dates | ✓ | Built | S3→S5 | covered by `add-recurrence` | covered by `add-recurrence` | — |
 | `recurring-picker`: presets, custom interval, weekday toggles that keep the popover open, `Don't repeat` | ✓ | Planned | S6 | `RecurringParityTests.test_recurring_picker` | `recurring › recurring-picker` | `recurring-picker.png` |
-| `recurring-display`: repeat icon named after the repeat | ✓ | Planned | S5 | `RecurringParityTests.test_recurring_display` | `recurring › recurring-display` | `recurring-display.png` |
-| `recurring-complete`: see `complete-recurring` | ✓ | Planned | S5 | see Complete | see Complete | — |
+| `recurring-display`: repeat icon named after the repeat | ✓ | Built | S5 | `RecurringParityTests.test_recurring_display` | `recurring › recurring-display` | `recurring-display.png` |
+| `recurring-complete`: see `complete-recurring` | ✓ | Built | S5 | see Complete | see Complete | — |
 | `recurring-reminders`: reminders and the due time notify at the next occurrence | ✓ | Planned | S8 | `RemindersParityTests.test_recurring_reminders` | `reminders › recurring-reminders` | `recurring-reminders.png` |
 
 ### Reminders
 
 | Feature | Web | iOS | Slice | XCUITest | Playwright | Screenshot |
 | --- | --- | --- | --- | --- | --- | --- |
-| `reminders-nl`: `remind me 30m before`, `r5m`, `remind me at 4pm`, … | ✓ | Planned | S3→S5 | `QuickAddParityTests.test_reminders_nl` | `quick-add › reminders-nl` | `reminders-nl.png` |
+| `reminders-nl`: `remind me 30m before`, `r5m`, `remind me at 4pm`, … | ✓ | Built | S3→S5 | `QuickAddParityTests.test_reminders_nl` | `quick-add › reminders-nl` | `reminders-nl.png` |
 | `reminders-picker`: presets, custom date and time, remove | ✓ | Planned | S6 | `DetailsParityTests.test_reminders_picker` | `details › reminders-picker` | `reminders-picker.png` |
 | `reminders-fire`: `Reminder: <title>` toast with `Open` while the app is open | ✓ | Planned | S8 | `RemindersParityTests.test_reminders_fire` | `reminders › reminders-fire` | `reminders-fire.png` |
 | `reminders-due-time`: the due time notifies alone, a date alone never does, one notification per moment | ✓ | Planned | S2→S8 | `RemindersParityTests.test_reminders_due_time` | `reminders › reminders-due-time` | `reminders-due-time.png` |
@@ -116,11 +116,11 @@ The web's Web Push rows map to native local notifications. XCUITests check the p
 | Feature | Web | iOS | Slice | XCUITest | Playwright | Screenshot |
 | --- | --- | --- | --- | --- | --- | --- |
 | `shell-launch`: the app opens on an empty Inbox (pipeline smoke pair) | ✓ | Built | S1 | `ShellParityTests.test_shell_launch` | `shell › shell-launch` | `shell-launch.png` |
-| `views-inbox`: top-level tasks without a project | ✓ | Planned | S5 | `ViewsParityTests.test_views_inbox` | `views › views-inbox` | `views-inbox.png` |
-| `views-today`: due today, overdue in its own section | ✓ | Planned | S5 | `ViewsParityTests.test_views_today` | `views › views-today` | `views-today.png` |
-| `views-upcoming`: grouped by day | ✓ | Planned | S5 | `ViewsParityTests.test_views_upcoming` | `views › views-upcoming` | `views-upcoming.png` |
-| `views-empty`: `Inbox zero`, `All clear for today`, `Nothing scheduled` | ✓ | Planned | S5 | `ViewsParityTests.test_views_empty` | `views › views-empty` | `views-empty.png` |
-| `views-counts`: open counts (sidebar on web, tab badges and Browse on iOS) | ✓ | Planned | S5 | `ViewsParityTests.test_views_counts` | `views › views-counts` | `views-counts.png` |
+| `views-inbox`: top-level tasks without a project | ✓ | Built | S5 | `ViewsParityTests.test_views_inbox` | `views › views-inbox` | `views-inbox.png` |
+| `views-today`: due today, overdue in its own section | ✓ | Built | S5 | `ViewsParityTests.test_views_today` | `views › views-today` | `views-today.png` |
+| `views-upcoming`: grouped by day | ✓ | Built | S5 | `ViewsParityTests.test_views_upcoming` | `views › views-upcoming` | `views-upcoming.png` |
+| `views-empty`: `Inbox zero`, `All clear for today`, `Nothing scheduled` | ✓ | Built | S5 | `ViewsParityTests.test_views_empty` | `views › views-empty` | `views-empty.png` |
+| `views-counts`: open counts (sidebar on web, tab badges and Browse on iOS) | ✓ | Built | S5 | `ViewsParityTests.test_views_counts` | `views › views-counts` | `views-counts.png` |
 
 ### Projects
 
@@ -128,8 +128,8 @@ The web's Web Push rows map to native local notifications. XCUITests check the p
 | --- | --- | --- | --- | --- | --- | --- |
 | `projects-create`: `Add project` in Browse | ✓ | Planned | S7 | `ProjectsParityTests.test_projects_create` | `projects › projects-create` | `projects-create.png` |
 | `projects-open`: a project lists its tasks | ✓ | Planned | S7 | `ProjectsParityTests.test_projects_open` | `projects › projects-open` | `projects-open.png` |
-| `projects-assign`: `#Name` in quick add | ✓ | Planned | S3→S5 | `QuickAddParityTests.test_projects_assign` | `quick-add › projects-assign` | `projects-assign.png` |
-| `projects-autocomplete`: `#` suggestions with order, create row, and keys | ✓ | Planned | S5 | `QuickAddParityTests.test_projects_autocomplete` | `quick-add › projects-autocomplete` | `projects-autocomplete.png` |
+| `projects-assign`: `#Name` in quick add | ✓ | Built | S3→S5 | `QuickAddParityTests.test_projects_assign` | `quick-add › projects-assign` | `projects-assign.png` |
+| `projects-autocomplete`: `#` suggestions with order, create row, and keys | ✓ | Built | S5 | `QuickAddParityTests.test_projects_autocomplete` | `quick-add › projects-autocomplete` | `projects-autocomplete.png` |
 | `projects-move`: project menu in task details | ✓ | Planned | S6 | `DetailsParityTests.test_projects_move` | `details › projects-move` | `projects-move.png` |
 | `projects-rename`: from the project's toolbar menu | ✓ | Planned | S7 | `ProjectsParityTests.test_projects_rename` | `projects › projects-rename` | `projects-rename.png` |
 | `projects-delete`: confirms with the task count and deletes the tasks | ✓ | Planned | S7 | `ProjectsParityTests.test_projects_delete` | `projects › projects-delete` | `projects-delete.png` |
@@ -138,10 +138,10 @@ The web's Web Push rows map to native local notifications. XCUITests check the p
 
 | Feature | Web | iOS | Slice | XCUITest | Playwright | Screenshot |
 | --- | --- | --- | --- | --- | --- | --- |
-| `labels-type`: `@name` adds labels, emails and handles stay text | ✓ | Planned | S3→S5 | `QuickAddParityTests.test_labels_type` | `quick-add › labels-type` | `labels-type.png` |
-| `labels-autocomplete`: `@` suggestions and create row | ✓ | Planned | S5 | `QuickAddParityTests.test_labels_autocomplete` | `quick-add › labels-autocomplete` | `labels-autocomplete.png` |
-| `labels-keep-text`: `Keep as text` on a label chip | ✓ | Planned | S5 | `QuickAddParityTests.test_labels_keep_text` | `quick-add › labels-keep-text` | `labels-keep-text.png` |
-| `labels-chips`: chips on rows | ✓ | Planned | S5 | `ViewsParityTests.test_labels_chips` | `views › labels-chips` | `labels-chips.png` |
+| `labels-type`: `@name` adds labels, emails and handles stay text | ✓ | Built | S3→S5 | `QuickAddParityTests.test_labels_type` | `quick-add › labels-type` | `labels-type.png` |
+| `labels-autocomplete`: `@` suggestions and create row | ✓ | Built | S5 | `QuickAddParityTests.test_labels_autocomplete` | `quick-add › labels-autocomplete` | `labels-autocomplete.png` |
+| `labels-keep-text`: `Keep as text` on a label chip | ✓ | Built | S5 | `QuickAddParityTests.test_labels_keep_text` | `quick-add › labels-keep-text` | `labels-keep-text.png` |
+| `labels-chips`: chips on rows | ✓ | Built | S5 | `ViewsParityTests.test_labels_chips` | `views › labels-chips` | `labels-chips.png` |
 | `labels-picker`: toggle and create in a popover that stays open | ✓ | Planned | S6 | `DetailsParityTests.test_labels_picker` | `details › labels-picker` | `labels-picker.png` |
 | `labels-view`: every open task with the label, naming its project | ✓ | Planned | S7 | `LabelsParityTests.test_labels_view` | `labels › labels-view` | `labels-view.png` |
 | `labels-rename`: unique ignoring case | ✓ | Planned | S7 | `LabelsParityTests.test_labels_rename` | `labels › labels-rename` | `labels-rename.png` |
@@ -192,7 +192,7 @@ The web's Web Push rows map to native local notifications. XCUITests check the p
 
 | Feature | Web | iOS | Slice | XCUITest | Playwright | Screenshot |
 | --- | --- | --- | --- | --- | --- | --- |
-| `sync-offline`: everything works with no network | ✓ | Planned | S5 | true by construction: unpaired, the app makes no network calls | — | — |
+| `sync-offline`: everything works with no network | ✓ | Built | S5 | true by construction: unpaired, the app makes no network calls | — | — |
 | `sync-pair`: set up, pair with a code, and remove a device in Settings | Planned | Planned | Y4, S9 | `SyncParityTests.test_sync_pair` | `sync › sync-pair` | `sync-pair.png` |
 | `sync-propagate`, `sync-reconnect`, `sync-conflict`: changes reach the other client, offline changes upload, concurrent edits converge per [Sync](decisions/sync.md#conflicts) | Planned | Planned | Y4, S9 | `Core` sync tests against vectors | `sync.e2e.ts` (two browser contexts) | — |
 

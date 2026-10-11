@@ -13,7 +13,7 @@ Priority lets Stefan mark how urgent a task is with Todoist's four levels, from 
 
 - Web: type a shortcut in quick add or the task details title.
 - Web: choose the flag chip in quick add or task details and pick a level.
-- iOS: Planned: not built yet.
+- iOS: type a priority or use the flag chip in quick add.
 
 ## Driving it with control-ui and XCUITest
 
@@ -25,7 +25,7 @@ Preconditions:
 - **Shortcuts.** In quick add, type `File taxes p2`, then repeat with `!!`, `!!!`, `urgent`, and `p3`. Each shortcut is highlighted, the chip reads the matching `Priority N`, and the saved task's checkbox takes that level's color. Tests: `"p2" in quick add sets priority 2` and its siblings.
 - **Picker replaces text.** Type `File taxes p1`, open the `Priority 1` chip, and pick `Priority 3`. `p1` is removed from the input and the chip reads `Priority 3`. Test: `picking a priority in quick add replaces the typed one`.
 - **Details.** Open a task and pick `Priority 1` from its flag chip. After a reload the chip still reads `Priority 1`. Test: `details edit fields as they change and persist across reload` in `e2e/tasks.e2e.ts`.
-- **iOS.** Planned: set priority in the simulator.
+- **iOS.** `p1`, `!!`, and `urgent` set the level, the flag menu picks one and removes the typed phrase, and each checkbox reports its level as its accessibility value. Tests: `PriorityParityTests` (`test_priority_nl`, `test_priority_picker`, `test_priority_replace`, `test_priority_display`), paired with `e2e/parity/priority.e2e.ts`. Run each pair with the iOS workflow (`xcodebuild test` on an iPhone 16 simulator) and `bun run test:e2e --project=parity`; both sides save `<parity-id>.png`. Planned: the priority menu in task details (S6).
 
 ## Gotchas
 

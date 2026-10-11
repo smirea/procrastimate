@@ -22,7 +22,7 @@ Labels let Stefan tag a task with any number of names that cross projects, such 
 - Web on a phone: tap `Open navigation` to reach the Labels section.
 - Web: use `Label actions` in a label view's header to rename or delete it.
 - Web: search a label's name and open it from the `Labels` group.
-- iOS: Planned.
+- iOS: type `@name` in quick add.
 
 ## Driving it with control-ui and XCUITest
 
@@ -41,7 +41,7 @@ Preconditions:
 - **Details picker.** Add `Buy milk @errands`, open it, and choose `Labels errands`. The `Labels` menu opens with focus in `Find or create a label`. Type `groceries` and press Enter; `groceries` is created and checked. Tap `errands` to uncheck it, and press Escape; the chip reads `Labels groceries`. Type ` @err` at the end of the title, click `errands`, and press Enter; the title reads `Buy milk` and the chip reads `Labels groceries, errands`. Test: `the details picker toggles and creates labels, and @ works in the title`. The suite saves `app-web/test-results/label-picker.png`.
 - **Phone.** Tap `Quick add`, raise the keyboard, and type `Call plumber @calls`. The `Labels` list sits above the field, fully on screen. Tap `Create label “calls”`; the field keeps focus. Tap `Add task` and `Cancel`; the row shows `calls`. Open it, tap `Labels calls`, type `waiting` in the menu's field, and tap `Create label “waiting”`. The menu stays on screen. Close the sheet; the row shows `calls` and `waiting`. Open `waiting` from the drawer; it lists `Call plumber` with `Inbox`. Test: `@ suggests labels above the keyboard, rows show chips, and the drawer opens a label` in `e2e/mobile.e2e.ts`. The suite saves `label-autocomplete.png`, `label-chips.png`, `label-picker.png`, and `label-view.png` under `app-web/test-results/mobile/`.
 - **Search.** Searching `call` lists the `calls` label and every task labeled `calls`; Enter on the label opens its view. On a phone, the same test then opens search from the drawer, types `cal`, and taps `calls`; the `calls` view lists `Call plumber`. Tests: `a label matches its tasks and opens the label view` in `e2e/search.e2e.ts`, and the phone test above.
-- **iOS.** Planned.
+- **iOS.** `@` suggests labels and offers `Create label “…”`, `@calls` adds the label while `ana@example.com` stays text, `Keep as text` keeps `@calls` in the title, and rows show label chips. Tests: `QuickAddParityTests` (`test_labels_type`, `test_labels_autocomplete`, `test_labels_keep_text`) and `ViewsParityTests.test_labels_chips`, paired with `e2e/parity/quick-add.e2e.ts` and `e2e/parity/views.e2e.ts`. Run each pair with the iOS workflow (`xcodebuild test` on an iPhone 16 simulator) and `bun run test:e2e --project=parity`; both sides save `<parity-id>.png`. Planned: the labels picker (S6) and label screens (S7).
 
 ## Gotchas
 
