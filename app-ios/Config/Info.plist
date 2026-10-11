@@ -4,6 +4,17 @@
 <dict>
     <key>API_URL</key>
     <string>$(API_URL)</string>
+    <key>GOOGLE_URL_SCHEME</key>
+    <string>$(GOOGLE_URL_SCHEME)</string>
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>$(GOOGLE_URL_SCHEME)</string>
+            </array>
+        </dict>
+    </array>
     <key>ITSAppUsesNonExemptEncryption</key>
     <false/>
     <key>NSAppTransportSecurity</key>

@@ -133,6 +133,14 @@ export function sqliteStore(sql: Sql, transactionSync: <T>(run: () => T) => T): 
 			all('DELETE FROM entities');
 			all('DELETE FROM log');
 		},
+		clearAccount: () => {
+			all('DELETE FROM devices');
+			all('DELETE FROM entities');
+			all('DELETE FROM log');
+			all('DELETE FROM push');
+			all('DELETE FROM ramble_usage');
+			all('DELETE FROM meta');
+		},
 		epoch: () => Number(first<{ value: string }>('SELECT value FROM meta WHERE key = ?', 'epoch')?.value ?? 0),
 		setEpoch: epoch => {
 			all('INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)', 'epoch', String(epoch));

@@ -1,5 +1,5 @@
 import type { Browser, BrowserContext, Page } from '@playwright/test';
-import { App, expect, NOW, stampAccount, test } from './fixtures.ts';
+import { App, expect, NOW, signInAccount, test } from './fixtures.ts';
 
 /**
  * Two browser contexts are two devices on this test's account. Sync starts on its own. Each test has its own
@@ -17,11 +17,11 @@ test.describe.configure({ mode: 'serial' });
 async function device(browser: Browser): Promise<Device> {
 	const { baseURL, timezoneId, viewport } = test.info().project.use;
 	const context = await browser.newContext({ baseURL, timezoneId, viewport });
-	await stampAccount(context, baseURL);
+	await signInAccount(context);
 	const page = await context.newPage();
 	await page.clock.setFixedTime(NOW);
 	await page.goto('/inbox');
-	await expect(page.getByRole('heading', { name: 'Inbox' })).toBeVisible();
+	await expect(page.getByRole('heading', { name: 'Inbox' })).toBeVisible({ timeout: 30_000 });
 	return { app: new App(page), page, context };
 }
 
@@ -45,7 +45,7 @@ async function settled(device: Device) {
 	await focus(device.page);
 	await expect
 		.poll(async () => {
-			const token = await device.page.evaluate(() => localStorage.getItem('procrastimate-device'));
+			const token = await device.page.evaluate(() => localStorage.getItem('procrastimate-user'));
 			if (!token) return false;
 			return (await outbox(device.page)) === 0;
 		})
@@ -180,5 +180,5 @@ test('delete all data clears this device and the other', async ({ browser }) => 
 	await settled(a);
 	await focus(b.page);
 	await expect(b.app.row(title)).toHaveCount(0, { timeout: 10_000 });
-	expect(await a.page.evaluate(() => localStorage.getItem('procrastimate-device'))).toBeTruthy();
+	expect(await a.page.evaluate(() => localStorage.getItem('procrastimate-user'))).toBeTruthy();
 });

@@ -4,10 +4,19 @@ import SwiftUI
 struct RootView: View {
     @Environment(Navigator.self) private var navigator
     @Environment(Store.self) private var store
+    @Environment(Session.self) private var session
     @Environment(TaskActions.self) private var actions
     @Environment(\.today) private var todayKey
 
     var body: some View {
+        if session.signedIn {
+            signedIn
+        } else {
+            SignInView()
+        }
+    }
+
+    private var signedIn: some View {
         @Bindable var navigator = navigator
         let today = Views.todayTasks(store.tasks, todayKey)
         TabView(selection: $navigator.tab) {

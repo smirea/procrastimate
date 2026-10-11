@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import type { PushScheduleResponse } from 'shared/push.ts';
-import { expect, test, type App } from './fixtures.ts';
+import { deviceHeader, expect, test, type App } from './fixtures.ts';
 
 const serverKey = (seed: number) => Buffer.from(Array.from({ length: 65 }, (_, i) => i + seed)).toString('base64url');
 
@@ -59,10 +59,10 @@ async function setUpSync(app: App) {
 	await expect
 		.poll(async () =>
 			app.page.evaluate(() => {
-				const token = localStorage.getItem('procrastimate-device');
+				const user = localStorage.getItem('procrastimate-user');
 				const raw = localStorage.getItem('procrastimate');
 				const sync = raw ? (JSON.parse(raw) as { sync?: { outbox: unknown[]; reset?: boolean } }).sync : undefined;
-				return Boolean(token && sync && !sync.reset && sync.outbox.length === 0);
+				return Boolean(user && sync && !sync.reset && sync.outbox.length === 0);
 			}),
 		)
 		.toBe(true);
@@ -77,8 +77,8 @@ async function expectLine(app: App, text: string) {
 
 /** What the server will push to this device for tasks titled `title`, as `title@<ISO time>: body`. */
 async function serverSchedule(page: Page, title: string) {
-	const token = await page.evaluate(() => localStorage.getItem('procrastimate-device'));
-	const response = await page.request.get('/api/push/schedule', { headers: { Authorization: `Bearer ${token}` } });
+	const token = await page.evaluate(() => localStorage.getItem('procrastimate-user'));
+	const response = await page.request.get('/api/push/schedule', { headers: await deviceHeader(page) });
 	const { notifications } = (await response.json()) as PushScheduleResponse;
 	return notifications
 		.filter(push => push.title === title)

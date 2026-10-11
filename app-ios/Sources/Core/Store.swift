@@ -55,6 +55,13 @@ public final class Store {
         scheduleWrite()
     }
 
+    /// Drops local tasks for a different user without recording deletes, so they are not uploaded.
+    public func switchUser() {
+        SyncEngine.replaceForNewUser(&snapshot)
+        revision += 1
+        scheduleWrite()
+    }
+
     /// Empties tasks, projects, and labels here, and asks the next sync to wipe them on the server.
     public func deleteAll() {
         SyncEngine.deleteAll(&snapshot)

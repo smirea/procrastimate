@@ -50,6 +50,8 @@ export interface AccountStore {
 	lastSeq(): number;
 	/** Drops every task, project, label, and the log. Devices and push subscriptions stay. */
 	clearTaskData(): void;
+	/** Drops the whole account: tasks, devices, push, and Ramble usage. */
+	clearAccount(): void;
 	/** Bumped when task data is wiped, so a client still holding the old copy drops it. */
 	epoch(): number;
 	setEpoch(epoch: number): void;

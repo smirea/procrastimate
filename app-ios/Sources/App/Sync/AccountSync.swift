@@ -1,23 +1,27 @@
 import Core
 import Foundation
+import Observation
 import UIKit
 
-/// Registers this install and keeps the local document in sync. Nothing about it is shown.
-@MainActor
+/// Keeps the local document in sync for the signed-in user. Nothing about it is shown.
+@MainActor @Observable
 final class AccountSync {
     private let store: Store
     private let clock: AppClock
+    private let session: Session
     private var task: Task<Void, Never>?
     private var soon: Task<Void, Never>?
     private var socket: URLSessionWebSocketTask?
-    private var replaced = false
 
-    init(store: Store, clock: AppClock) {
+    init(store: Store, clock: AppClock, session: Session) {
         self.store = store
         self.clock = clock
+        self.session = session
     }
 
+    /// Syncs while a real session token is in the Keychain. The DEBUG launch flag is not a token.
     func start() {
+        guard SessionToken.read() != nil else { return }
         task?.cancel()
         task = Task {
             await sync()
@@ -27,6 +31,14 @@ final class AccountSync {
                 await sync()
             }
         }
+    }
+
+    func stop() {
+        task?.cancel()
+        task = nil
+        soon?.cancel()
+        soon = nil
+        disconnect()
     }
 
     /// Syncs at once. Foreground and launch use this.
@@ -45,14 +57,45 @@ final class AccountSync {
         }
     }
 
+    func signOut() {
+        stop()
+        if let token = SessionToken.read() {
+            var request = URLRequest(url: AppEnvironment.apiURL.appending(path: "api/auth/sign-out"))
+            request.httpMethod = "POST"
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            Task { _ = try? await URLSession.shared.data(for: request) }
+        }
+        SessionToken.clear()
+        session.signedIn = Launch.signedIn
+    }
+
+    func deleteAccount() async {
+        stop()
+        guard let token = SessionToken.read() else { return }
+        var request = URLRequest(url: AppEnvironment.apiURL.appending(path: "api/account/delete"))
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        guard let (_, response) = try? await URLSession.shared.data(for: request),
+              let http = response as? HTTPURLResponse, http.statusCode == 200 else {
+            session.error = "Could not delete the account"
+            start()
+            return
+        }
+        store.switchUser()
+        UserDefaults.standard.removeObject(forKey: Session.ownerKey)
+        SessionToken.clear()
+        session.signedIn = Launch.signedIn
+    }
+
     private func sync() async {
+        guard let token = SessionToken.read() else { return }
         store.noteTimeZone(clock.timeZone.identifier)
-        if DeviceToken.read() == nil { guard await register() else { return } }
-        guard let token = DeviceToken.read(), let body = store.syncRequest() else { return }
+        guard let body = store.syncRequest() else { return }
         var request = URLRequest(url: AppEnvironment.apiURL.appending(path: "api/sync"))
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        applyDevice(&request)
         request.httpBody = body
         let data: Data
         let response: URLResponse
@@ -63,15 +106,10 @@ final class AccountSync {
         }
         guard let http = response as? HTTPURLResponse else { return }
         if http.statusCode == 401 {
-            guard !replaced else { return }
-            replaced = true
-            DeviceToken.clear()
-            disconnect()
-            if await register() { await sync() }
+            reject()
             return
         }
         guard http.statusCode == 200 else { return }
-        replaced = false
         if store.takeSyncResponse(data),
            let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
            let changes = object["changes"] as? [Any], changes.count >= 1000 {
@@ -79,36 +117,14 @@ final class AccountSync {
         }
     }
 
-    private func register() async -> Bool {
-        let deviceId = store.snapshot.sync?.deviceId ?? UUID().uuidString.lowercased()
-        let token = UUID().uuidString.replacingOccurrences(of: "-", with: "") + UUID().uuidString.replacingOccurrences(of: "-", with: "")
-        var request = URLRequest(url: AppEnvironment.apiURL.appending(path: "api/auth/register"))
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        let body: [String: String] = [
-            "gate": InstallGate.value,
-            "deviceId": deviceId,
-            "token": token,
-            "name": deviceName(),
-        ]
-        request.httpBody = try? JSONSerialization.data(withJSONObject: body)
-        guard let (data, response) = try? await URLSession.shared.data(for: request),
-              let http = response as? HTTPURLResponse, http.statusCode == 200,
-              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let stored = object["deviceId"] as? String else { return false }
-        DeviceToken.write(token)
-        store.adoptDevice(stored)
-        connect()
-        return true
-    }
-
     private func connect() {
-        guard socket == nil, let token = DeviceToken.read() else { return }
+        guard socket == nil, let token = SessionToken.read() else { return }
         var components = URLComponents(url: AppEnvironment.apiURL.appending(path: "api/sync/socket"), resolvingAgainstBaseURL: false)
         components?.scheme = AppEnvironment.apiURL.scheme == "https" ? "wss" : "ws"
         guard let url = components?.url else { return }
         var request = URLRequest(url: url)
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        applyDevice(&request)
         let task = URLSession.shared.webSocketTask(with: request)
         socket = task
         task.resume()
@@ -140,6 +156,18 @@ final class AccountSync {
         socket = nil
     }
 
+    private func reject() {
+        stop()
+        SessionToken.clear()
+        session.signedIn = Launch.signedIn
+    }
+
+    private func applyDevice(_ request: inout URLRequest) {
+        guard let id = store.snapshot.sync?.deviceId else { return }
+        request.setValue(id, forHTTPHeaderField: "x-procrastimate-device")
+        request.setValue(deviceName(), forHTTPHeaderField: "x-procrastimate-device-name")
+    }
+
     private func deviceName() -> String {
         #if os(iOS)
         UIDevice.current.userInterfaceIdiom == .pad ? "iPad" : "iPhone"
@@ -149,9 +177,9 @@ final class AccountSync {
     }
 }
 
-/// The bearer token, outside the snapshot document.
-enum DeviceToken {
-    private static let service = "procrastimate-device"
+/// The Better Auth bearer token. It is the credential; the device id in the snapshot is not.
+enum SessionToken {
+    private static let service = "procrastimate-session"
 
     static func read() -> String? {
         let query: [String: Any] = [

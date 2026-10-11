@@ -1,6 +1,6 @@
 # Sync build slices
 
-The pairing steps in these slices were replaced. Sync is always on: an install registers with `INSTALL_GATE`, task data lives in Turso, and Settings has no Sync section. See [Sync](decisions/sync.md).
+The pairing steps in these slices were replaced. Sync is always on for the signed-in user, task data lives in Turso, and Settings has no Sync section. See [Auth](decisions/auth.md) and [Sync](decisions/sync.md).
 
 
 How sync gets built, one PR per slice, each off `master`, never stacked. The design is in [Sync](decisions/sync.md). iOS slices `S1` to `S8` are in [iOS parity](ios-parity.md#thread-split). A slice starts once the slices it depends on have merged. Each slice edits only the files it owns, plus its own rows in the feature map and docs.

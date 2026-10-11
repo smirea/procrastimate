@@ -16,6 +16,8 @@
 	import { clock, sheets, trackKeyboardInset, motion } from '#lib/ui.svelte.ts';
 	import { fireDueReminders } from '#lib/reminders.ts';
 	import { openTaskFromUrl, push } from '#lib/push.svelte.ts';
+	import { session } from '#lib/session.svelte.ts';
+	import SignIn from '#lib/components/SignIn.svelte';
 	import { sync } from '#lib/sync.svelte.ts';
 	import { applyTheme, theme } from '#lib/theme.svelte.ts';
 
@@ -73,10 +75,17 @@
 	$effect(() => applyTheme(theme.resolved));
 	$effect(() => clock.start());
 	$effect(() => trackKeyboardInset());
-	$effect(() => push.start());
-	$effect(() => push.follow(sync.signedIn));
-	$effect(() => untrack(() => sync.start()));
-	$effect(() => untrack(openTaskFromUrl));
+	$effect(() => untrack(() => void session.start()));
+	$effect(() => {
+		if (session.state !== 'in' || !session.confirmed) return;
+		const stopPush = untrack(() => push.start());
+		const stopSync = untrack(() => sync.start());
+		untrack(openTaskFromUrl);
+		return () => {
+			stopPush();
+			stopSync();
+		};
+	});
 
 	$effect(() => {
 		const now = clock.now;
@@ -91,6 +100,9 @@
 
 <svelte:window {onkeydown} />
 
+{#if session.state === 'out'}
+	<SignIn />
+{:else if session.state === 'in'}
 <div class="app flex min-h-dvh gap-3">
 	<div class="sticky top-3 hidden h-[calc(100dvh-1.5rem)] w-64 shrink-0 md:block">
 		<Sidebar onquickadd={openQuickAdd} onsearch={openSearch} onsettings={openSettings} />
@@ -142,6 +154,7 @@
 {/if}
 
 <Toasts />
+{/if}
 
 <style>
 	.app {

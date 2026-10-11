@@ -1,19 +1,8 @@
-import { z } from 'zod';
-import { INSTALL_GATE } from './install-gate.mjs';
+/** The Worker sets this after it has checked the session. Account objects trust it and ignore a client-supplied value. */
+export const USER_HEADER = 'x-procrastimate-user';
 
-export { INSTALL_GATE };
+/** This install's id. It is not a secret: the session is the credential. */
+export const DEVICE_HEADER = 'x-procrastimate-device';
 
-const deviceName = z.string().trim().min(1).max(60);
-
-/** `POST /api/auth/register`: an install presents its own token. The server stores only the hash. */
-export const registerRequestSchema = z.object({
-	gate: z.string(),
-	deviceId: z.string().trim().min(1).max(80),
-	token: z.string().trim().min(16).max(200),
-	name: deviceName,
-});
-
-export type RegisterRequest = z.infer<typeof registerRequestSchema>;
-
-/** The server confirms the device id it stored, which is the one the install sent unless that id was taken. */
-export type RegisteredDevice = { ok: true; deviceId: string };
+/** A display name stored with the device. It is never shown. */
+export const DEVICE_NAME_HEADER = 'x-procrastimate-device-name';

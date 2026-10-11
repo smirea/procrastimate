@@ -15,7 +15,7 @@ import type { Env } from '../bindings';
 import { memoryAccount } from './account';
 import { deliverDue } from './push';
 import type { AccountStore } from './store';
-import { registerDevice } from './test-device';
+import { authHeaders, registerDevice, withAuth, type DeviceCredentials } from './test-device';
 import { storeFactories } from './test-stores';
 
 /** Saturday, October 10 2026, 12:00 UTC. */
@@ -42,14 +42,15 @@ describe.each(storeFactories)('server-computed push on the %s store', (_name, cr
 		alarm = null;
 		sent = [];
 		status = () => 201;
-		env = { ACCOUNT: memoryAccount(store, async at => void (alarm = at)) };
+		env = withAuth({ ACCOUNT: memoryAccount(store, async at => void (alarm = at)) });
 	});
 
-	const call = async (method: string, path: string, token: string | null, body?: unknown) =>
+	const call = async (method: string, path: string, cred: DeviceCredentials | string | null, body?: unknown) =>
 		api.fetch(
 			new Request(`https://procrastimate.test${path}`, {
 				method,
-				headers: token ? { Authorization: `Bearer ${token}` } : {},
+				headers:
+					typeof cred === 'string' ? { Authorization: `Bearer ${cred}` } : cred ? authHeaders(cred) : {},
 				body: body === undefined ? undefined : JSON.stringify(body),
 			}),
 			env,
@@ -75,7 +76,7 @@ describe.each(storeFactories)('server-computed push on the %s store', (_name, cr
 		let snapshot = initial;
 		let sync: ClientSync = startSync(snapshot, credentials.deviceId, Date.now(), nextOpId);
 		const pull = async () => {
-			const response = await call('POST', '/api/sync', credentials.token, { cursor: sync.cursor, ops: sync.outbox });
+			const response = await call('POST', '/api/sync', credentials, { cursor: sync.cursor, ops: sync.outbox });
 			expect(response.status).toBe(200);
 			({ snapshot, sync } = applyResponse(snapshot, sync, (await response.json()) as SyncResponse));
 		};
@@ -93,13 +94,13 @@ describe.each(storeFactories)('server-computed push on the %s store', (_name, cr
 				await pull();
 			},
 			async subscribe() {
-				const response = await call('PUT', '/api/push/subscription', credentials.token, {
+				const response = await call('PUT', '/api/push/subscription', credentials, {
 					subscription: subscriptionFor(name),
 				});
 				expect(await response.json()).toEqual({ ok: true });
 			},
 			async schedule() {
-				const response = await call('GET', '/api/push/schedule', credentials.token);
+				const response = await call('GET', '/api/push/schedule', credentials);
 				const { notifications } = (await response.json()) as PushScheduleResponse;
 				return notifications.map(push => `${push.title}@${(push.at - NOW) / 60_000}m: ${push.body}`);
 			},
@@ -280,7 +281,7 @@ describe.each(storeFactories)('server-computed push on the %s store', (_name, cr
 		await mac.edit(addTask(task('gym', { title: 'Gym', due: { date: '2026-10-10', time: '14:00' } })));
 		status = endpoint => (endpoint === subscriptionFor('mac').endpoint ? 410 : 201);
 
-		expect(await (await call('DELETE', '/api/push/subscription', phone.token)).json()).toEqual({ ok: true });
+		expect(await (await call('DELETE', '/api/push/subscription', phone)).json()).toEqual({ ok: true });
 		expect(store.revokeDevice(ipad.deviceId, NOW)).toBe(true);
 		await fireAlarm();
 		expect(received('mac').length).toBe(1);
@@ -306,11 +307,11 @@ describe.each(storeFactories)('server-computed push on the %s store', (_name, cr
 		expect((await call('DELETE', '/api/push/subscription', null)).status).toBe(401);
 		expect((await call('GET', '/api/push/schedule', null)).status).toBe(401);
 		const insecure = { subscription: { ...subscription, endpoint: 'http://evil.example/push' } };
-		expect((await call('PUT', '/api/push/subscription', mac.token, insecure)).status).toBe(400);
+		expect((await call('PUT', '/api/push/subscription', mac, insecure)).status).toBe(400);
 		const missingKeys = { subscription: { endpoint: subscription.endpoint } };
-		expect((await call('PUT', '/api/push/subscription', mac.token, missingKeys)).status).toBe(400);
-		expect((await call('PUT', '/api/push/subscription', mac.token, 'not json')).status).toBe(400);
+		expect((await call('PUT', '/api/push/subscription', mac, missingKeys)).status).toBe(400);
+		expect((await call('PUT', '/api/push/subscription', mac, 'not json')).status).toBe(400);
 		const loopback = { subscription: { ...subscription, endpoint: 'http://127.0.0.1:9000/push' } };
-		expect((await call('PUT', '/api/push/subscription', mac.token, loopback)).status).toBe(200);
+		expect((await call('PUT', '/api/push/subscription', mac, loopback)).status).toBe(200);
 	});
 });

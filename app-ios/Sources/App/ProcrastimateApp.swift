@@ -11,6 +11,7 @@ struct ProcrastimateApp: App {
     @State private var notifications: LocalNotifications
     @State private var importer: TodoistImport
     @State private var accountSync: AccountSync
+    @State private var auth: Session
     @State private var router: IntentRouter
     @State private var today: DateKey
     @Environment(\.scenePhase) private var scenePhase
@@ -26,7 +27,8 @@ struct ProcrastimateApp: App {
         let router = IntentRouter()
         // The delegate must be set before launch finishes, so tapping a notification can cold-start into its task.
         let notifications = LocalNotifications(store: store, toasts: toasts, navigator: navigator, clock: clock)
-        let accountSync = AccountSync(store: store, clock: clock)
+        let auth = Session(store: store)
+        let accountSync = AccountSync(store: store, clock: clock, session: auth)
         let session = IntentSession(
             store: store,
             navigator: navigator,
@@ -49,6 +51,7 @@ struct ProcrastimateApp: App {
         _router = State(initialValue: router)
         _notifications = State(initialValue: notifications)
         _importer = State(initialValue: TodoistImport(store: store, clock: clock))
+        _auth = State(initialValue: auth)
         _accountSync = State(initialValue: accountSync)
     }
 
@@ -62,6 +65,8 @@ struct ProcrastimateApp: App {
                 .environment(theme)
                 .environment(notifications)
                 .environment(importer)
+                .environment(auth)
+                .environment(accountSync)
                 .environment(router)
                 .environment(\.clock, clock)
                 .environment(\.today, today)
@@ -71,7 +76,10 @@ struct ProcrastimateApp: App {
                 .tint(.accent)
                 .motionFollowsAccessibility()
                 .task { await notifications.run() }
-                .task { accountSync.start() }
+                .task {
+                    await auth.start()
+                    accountSync.start()
+                }
                 .onChange(of: store.revision) { _, _ in accountSync.syncSoon() }
                 .onChange(of: store.tasks) { old, new in notifications.tasksChanged(from: old, to: new) }
                 .onChange(of: store.tasks) { _, _ in SpotlightIndex.schedule(session) }

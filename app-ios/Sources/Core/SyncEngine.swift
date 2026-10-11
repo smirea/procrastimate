@@ -1,11 +1,6 @@
 import CoreFoundation
 import Foundation
 
-/// The install gate every client sends when it registers. It is not a setup code and it never appears in the UI.
-public enum InstallGate {
-    public static let value = "procrastimate-install-v1"
-}
-
 /// Field-level sync for the local document: diff a commit into the outbox, and apply the server's answer.
 public enum SyncEngine {
     /// Gives a document its sync section, and queues whatever is already stored so the first sync uploads it.
@@ -67,6 +62,25 @@ public enum SyncEngine {
         sync.outbox.append(SyncOp(opId: nextOpId(), hlc: format(clock), kind: kind, id: id, fields: fields))
         sync.clock = format(clock)
         snapshot.sync = sync
+    }
+
+    /// Replaces the document for a different signed-in user. The device id stays. The next sync pulls a snapshot.
+    public static func replaceForNewUser(_ snapshot: inout Snapshot) {
+        let deviceId = snapshot.sync?.deviceId ?? UUID().uuidString.lowercased()
+        let timeZone = snapshot.sync?.timeZone ?? "UTC"
+        let clock = snapshot.sync?.clock ?? "0:0:\(deviceId)"
+        snapshot.tasks = []
+        snapshot.projects = []
+        snapshot.labels = []
+        snapshot.sync = SyncSection(
+            deviceId: deviceId,
+            cursor: 0,
+            outbox: [],
+            clock: clock,
+            timeZone: timeZone,
+            epoch: 0,
+            reset: false
+        )
     }
 
     /// Empties tasks, projects, and labels, and asks the next sync to wipe them on the server.

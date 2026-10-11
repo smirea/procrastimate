@@ -48,20 +48,29 @@ const shown = (page: Page) =>
 
 /** What the server will push to this device for this run's tasks. */
 const schedule = async (page: Page) => {
-	const token = await page.evaluate(() => localStorage.getItem('procrastimate-device'));
-	const response = await page.request.get('/api/push/schedule', { headers: { Authorization: `Bearer ${token}` } });
+	const deviceId = await page.evaluate(() => {
+		const raw = localStorage.getItem('procrastimate');
+		const sync = raw ? (JSON.parse(raw) as { sync?: { deviceId?: string } }).sync : undefined;
+		return sync?.deviceId ?? '';
+	});
+	const response = await page.request.get('/api/push/schedule', { headers: { 'x-procrastimate-device': deviceId } });
 	const { notifications } = (await response.json()) as { notifications: { title: string; at: number }[] };
 	return notifications
 		.filter(n => n.title.endsWith(` ${RUN}`))
 		.map(n => `${n.title.replace(` ${RUN}`, '')}@${new Date(n.at).toISOString()}`);
 };
 
+const signed = await context.request.post('/api/auth/sign-up/email', {
+	data: { email: `push-${RUN}@example.com`, password: 'e2e-password-1', name: 'Push' },
+});
+if (!signed.ok()) throw new Error(await signed.text());
+
 const page = await context.newPage();
 await page.goto('/inbox');
 const nav = page.getByRole('navigation', { name: 'Main' });
 const settings = page.getByRole('dialog', { name: 'Settings' });
 await expect
-	.poll(() => page.evaluate(() => localStorage.getItem('procrastimate-device')), { timeout: 15_000 })
+	.poll(() => page.evaluate(() => localStorage.getItem('procrastimate-user')), { timeout: 15_000 })
 	.toBeTruthy();
 log('PASS sync is on');
 await nav.getByRole('button', { name: 'Settings' }).click();

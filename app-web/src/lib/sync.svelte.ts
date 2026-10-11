@@ -1,24 +1,23 @@
-import { INSTALL_GATE, type RegisteredDevice } from 'shared/auth.ts';
+import { DEVICE_HEADER, DEVICE_NAME_HEADER } from 'shared/auth.ts';
 import {
+	DEVICE_PROTOCOL_PREFIX,
 	nudgeSchema,
 	SOCKET_PING,
 	SOCKET_PONG,
-	SOCKET_TOKEN_PREFIX,
 	SYNC_PAGE_SIZE,
 	SYNC_SOCKET_PATH,
 	SYNC_SOCKET_PROTOCOL,
 	syncResponseSchema,
 } from 'shared/sync/protocol.ts';
+import { session } from './session.svelte.ts';
 import { store } from './store.svelte.ts';
 
 /**
- * Syncs this install with the server: on launch, on focus, when the network returns, one second after a commit,
- * every minute while visible, and whenever the realtime socket reports a cursor past this device's. A failed sync
- * keeps the outbox and retries on the next trigger. Nothing about it is shown.
+ * Syncs this install with the signed-in user's account: on launch, on focus, when the network returns, one second
+ * after a commit, every minute while visible, and whenever the realtime socket reports a cursor past this device's.
+ * A failed sync keeps the outbox and retries on the next trigger. Nothing about it is shown.
  */
 
-/** The bearer token sits under its own key, outside the snapshot document. */
-const TOKEN_KEY = 'procrastimate-device';
 const COMMIT_DELAY = 1000;
 const INTERVAL = 60_000;
 /** A keepalive that also finds a dead socket: one that answers nothing between two pings is dropped. */
@@ -26,10 +25,6 @@ const PING_INTERVAL = 30_000;
 const RECONNECT_MIN = 1000;
 const RECONNECT_MAX = 60_000;
 
-const readToken = () => localStorage.getItem(TOKEN_KEY);
-
-/** This device's sync token, which other API calls that act for the device carry too. */
-export const deviceToken = readToken;
 const zone = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 /** A name stored with the device, such as `Chrome on macOS`. It is never shown. */
@@ -60,10 +55,14 @@ function deviceName(): string {
 	return os ? `${browser} on ${os}` : browser;
 }
 
-class Sync {
-	/** True once this install has a token. Push waits on it. */
-	signedIn = $state(false);
+/** The install id and name. The session cookie is the credential; these are not. */
+export function deviceHeaders(): Record<string, string> {
+	const id = store.deviceId();
+	if (!id) return {};
+	return { [DEVICE_HEADER]: id, [DEVICE_NAME_HEADER]: deviceName() };
+}
 
+class Sync {
 	#running: Promise<void> | null = null;
 	#again = false;
 	#timer: ReturnType<typeof setTimeout> | undefined;
@@ -71,12 +70,9 @@ class Sync {
 	#keepalive: ReturnType<typeof setInterval> | undefined;
 	#reconnect: ReturnType<typeof setTimeout> | undefined;
 	#failures = 0;
-	/** Stops a rejected token from registering and syncing forever in one loop. */
-	#replaced = false;
 
 	/** Registers the triggers, opens the realtime socket, and syncs once. Returns the cleanup. */
 	start() {
-		this.signedIn = readToken() !== null;
 		const onVisible = () => {
 			if (document.visibilityState !== 'visible') return this.#disconnect();
 			void this.syncNow();
@@ -106,15 +102,16 @@ class Sync {
 
 	/**
 	 * Opens the realtime socket while visible, unless one is already open or opening. The server sends the
-	 * account's new cursor after every change, and the socket only ever triggers a sync.
+	 * account's new cursor after every change, and the socket only ever triggers a sync. The session cookie
+	 * goes with the upgrade; the subprotocol carries the device id because a browser cannot set headers.
 	 */
 	#connect() {
-		const token = readToken();
-		if (this.#socket || !token || !store.ready || document.visibilityState !== 'visible') return;
+		const id = store.deviceId();
+		if (this.#socket || session.state !== 'in' || !id || !store.ready || document.visibilityState !== 'visible') return;
 		clearTimeout(this.#reconnect);
 		const url = new URL(SYNC_SOCKET_PATH, location.href);
 		url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
-		const socket = new WebSocket(url, [SYNC_SOCKET_PROTOCOL, `${SOCKET_TOKEN_PREFIX}${token}`]);
+		const socket = new WebSocket(url, [SYNC_SOCKET_PROTOCOL, `${DEVICE_PROTOCOL_PREFIX}${id}`]);
 		this.#socket = socket;
 		let heard = true;
 		socket.onopen = () => {
@@ -188,71 +185,33 @@ class Sync {
 		} while (this.#again && store.ready);
 	}
 
-	/** One round trip. True when the response was a full page, or the token was just replaced, so another round is due. */
+	/** One round trip. True when the response was a full page, so another round is due. */
 	async #once(): Promise<boolean> {
-		if (!store.ready) return false;
-		if (!readToken() && !(await this.#register())) return false;
+		if (session.state !== 'in' || !store.ready || !store.deviceId()) return false;
 		store.noteTimeZone(zone());
-		const token = readToken();
 		const request = store.syncRequest();
-		if (!token || !request) return false;
+		if (!request) return false;
 		let response: Response;
 		try {
 			response = await fetch('/api/sync', {
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+				credentials: 'include',
+				headers: { 'Content-Type': 'application/json', ...deviceHeaders() },
 				body: JSON.stringify(request),
 			});
 		} catch {
 			return false;
 		}
 		if (response.status === 401) {
-			if (this.#replaced) return false;
-			this.#replaced = true;
-			localStorage.removeItem(TOKEN_KEY);
-			this.signedIn = false;
+			session.clear();
 			this.#disconnect();
-			return this.#register();
+			return false;
 		}
 		if (!response.ok) return false;
 		const parsed = syncResponseSchema.safeParse(await response.json().catch(() => undefined));
 		if (!parsed.success) return false;
-		this.#replaced = false;
 		store.takeResponse(parsed.data);
 		return 'changes' in parsed.data && parsed.data.changes.length >= SYNC_PAGE_SIZE;
-	}
-
-	/** Mints a new token after a rejected one, then syncs again. Callers never hear about it. */
-	async reregister() {
-		localStorage.removeItem(TOKEN_KEY);
-		this.signedIn = false;
-		this.#disconnect();
-		this.#replaced = false;
-		if (await this.#register()) void this.syncNow();
-	}
-
-	/** Presents this install's own token. The gate only checks that the caller is this app. */
-	async #register(): Promise<boolean> {
-		const deviceId = store.deviceId() ?? crypto.randomUUID();
-		const token = crypto.randomUUID().replaceAll('-', '') + crypto.randomUUID().replaceAll('-', '');
-		let response: Response;
-		try {
-			response = await fetch('/api/auth/register', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ gate: INSTALL_GATE, deviceId, token, name: deviceName() }),
-			});
-		} catch {
-			return false;
-		}
-		if (!response.ok) return false;
-		const body = (await response.json().catch(() => null)) as RegisteredDevice | null;
-		if (!body?.deviceId) return false;
-		localStorage.setItem(TOKEN_KEY, token);
-		store.adoptDevice(body.deviceId);
-		this.signedIn = true;
-		this.#connect();
-		return true;
 	}
 }
 

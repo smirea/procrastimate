@@ -9,7 +9,7 @@ import api from '../api';
 import type { Env } from '../bindings';
 import { memoryAccount } from './account';
 import type { AccountStore } from './store';
-import { registerDevice } from './test-device';
+import { authHeaders, registerDevice, withAuth, type DeviceCredentials } from './test-device';
 import { storeFactories } from './test-stores';
 
 const NOW = Date.UTC(2026, 9, 10, 12);
@@ -26,14 +26,14 @@ describe.each(storeFactories)('POST /api/sync on the %s store', (_name, createSt
 
 	beforeEach(() => {
 		store = createStore();
-		env = { ACCOUNT: memoryAccount(store) };
+		env = withAuth({ ACCOUNT: memoryAccount(store) });
 	});
 
-	const post = (body: unknown, token?: string) =>
+	const post = (body: unknown, cred?: DeviceCredentials) =>
 		api.fetch(
 			new Request('https://procrastimate.test/api/sync', {
 				method: 'POST',
-				headers: token ? { Authorization: `Bearer ${token}` } : {},
+				headers: { 'content-type': 'application/json', ...(cred ? authHeaders(cred) : {}) },
 				body: JSON.stringify(body),
 			}),
 			env,
@@ -41,23 +41,23 @@ describe.each(storeFactories)('POST /api/sync on the %s store', (_name, createSt
 
 	const setup = (name = 'Mac') => registerDevice(env, name);
 
-	async function sync(token: string, cursor: number, ops: readonly Op[]) {
-		const response = await post({ cursor, ops }, token);
+	async function sync(cred: DeviceCredentials, cursor: number, ops: readonly Op[]) {
+		const response = await post({ cursor, ops }, cred);
 		expect(response.status).toBe(200);
 		return (await response.json()) as SyncResponse;
 	}
 
-	/** A paired device that uploads its whole snapshot on its first sync, as the web and iOS clients do. */
+	/** A signed-in device that uploads its whole snapshot on its first sync, as the web and iOS clients do. */
 	async function device(name: string, snapshot: Snapshot) {
-		const { deviceId, token } = await setup(name);
+		const cred = await setup(name);
 		const client: { snapshot: Snapshot; sync: ClientSync } = {
 			snapshot,
-			sync: startSync(snapshot, deviceId, Date.now(), counter(`${name}-op-`)),
+			sync: startSync(snapshot, cred.deviceId, Date.now(), counter(`${name}-op-`)),
 		};
 		return {
 			client,
 			async pull() {
-				const response = await sync(token, client.sync.cursor, client.sync.outbox);
+				const response = await sync(cred, client.sync.cursor, client.sync.outbox);
 				({ snapshot: client.snapshot, sync: client.sync } = applyResponse(client.snapshot, client.sync, response));
 				return response;
 			},
@@ -65,44 +65,44 @@ describe.each(storeFactories)('POST /api/sync on the %s store', (_name, createSt
 	}
 
 	const serverSnapshot = async (): Promise<Snapshot | null> => {
-		const response = await sync((await setup('Observer')).token, 0, []);
+		const response = await sync(await setup('Observer'), 0, []);
 		return 'snapshot' in response ? (response.snapshot as Snapshot) : null;
 	};
 
 	test('rejects a missing, unknown, or revoked token, and an invalid body', async () => {
 		expect((await post({ cursor: 0, ops: [] })).status).toBe(401);
-		expect((await post({ cursor: 0, ops: [] }, 'made-up')).status).toBe(401);
+		expect((await post({ cursor: 0, ops: [] }, { token: 'made-up', deviceId: 'device-made-up', cookie: '' })).status).toBe(401);
 
-		const { deviceId, token } = await setup();
-		expect((await post({ cursor: -1, ops: [] }, token)).status).toBe(400);
-		expect((await post({ cursor: 0, ops: [op('o1', 'nope', {})] }, token)).status).toBe(400);
+		const cred = await setup();
+		expect((await post({ cursor: -1, ops: [] }, cred)).status).toBe(400);
+		expect((await post({ cursor: 0, ops: [op('o1', 'nope', {})] }, cred)).status).toBe(400);
 
-		store.revokeDevice(deviceId, NOW);
-		expect((await post({ cursor: 0, ops: [op('o1', `${NOW}:0:x`, { title: 'A' })] }, token)).status).toBe(401);
+		store.revokeDevice(cred.deviceId, NOW);
+		expect((await post({ cursor: 0, ops: [op('o1', `${NOW}:0:x`, { title: 'A' })] }, cred)).status).toBe(401);
 		expect(store.lastSeq()).toBe(0);
 	});
 
 	test('a retried push applies once and answers the same', async () => {
-		const { token } = await setup();
+		const cred = await setup();
 		const created = task('t1', { createdAt: NOW, title: 'A' });
 		const ops = startSync(snapshotOf({ tasks: [created] }), 'mac', NOW, counter('op-')).outbox;
-		const first = await sync(token, 0, ops);
+		const first = await sync(cred, 0, ops);
 		const head = store.lastSeq();
-		const retry = await sync(token, 0, ops);
+		const retry = await sync(cred, 0, ops);
 		expect(retry).toEqual(first);
 		expect(store.lastSeq()).toBe(head);
-		expect(await sync(token, head, ops)).toMatchObject({ acked: first.acked, changes: [], cursor: head });
+		expect(await sync(cred, head, ops)).toMatchObject({ acked: first.acked, changes: [], cursor: head });
 	});
 
 	test('logs every op, even one that won nothing, so a retry with a clamped clock cannot win again', async () => {
 		const mac = await setup('mac');
 		const phone = await setup('phone');
-		await sync(mac.token, 0, startSync(snapshotOf({ tasks: [task('t1')] }), 'mac', NOW, counter('op-')).outbox);
+		await sync(mac, 0, startSync(snapshotOf({ tasks: [task('t1')] }), 'mac', NOW, counter('op-')).outbox);
 		const head = store.lastSeq();
 		const future = op('future', formatHlc({ wall: NOW + 3_600_000, counter: 0, node: 'mac' }), { title: 'Ahead' });
 		const stale = op('stale', formatHlc({ wall: 1, counter: 0, node: 'mac' }), { notes: 'Stale' });
 
-		const pushed = await sync(mac.token, head, [future, stale]);
+		const pushed = await sync(mac, head, [future, stale]);
 		expect('changes' in pushed && pushed.changes.map(change => [change.opId, change.fields])).toEqual([
 			['future', { title: 'Ahead' }],
 			['stale', {}],
@@ -110,21 +110,21 @@ describe.each(storeFactories)('POST /api/sync on the %s store', (_name, createSt
 
 		setSystemTime(NOW + 5);
 		const later = op('later', formatHlc({ wall: NOW + 5, counter: 0, node: 'phone' }), { title: 'Later' });
-		await sync(phone.token, store.lastSeq(), [later]);
+		await sync(phone, store.lastSeq(), [later]);
 		const before = store.lastSeq();
 		setSystemTime(NOW + 10);
-		const retry = await sync(mac.token, before, [future, stale]);
+		const retry = await sync(mac, before, [future, stale]);
 		expect(retry).toMatchObject({ acked: ['future', 'stale'], changes: [], cursor: before });
 		expect((await serverSnapshot())?.tasks.map(t => [t.title, t.notes])).toEqual([['Later', '']]);
 	});
 
 	test('pages changes after the cursor', async () => {
-		const { token } = await setup();
-		await sync(token, 0, [op('seed', `${NOW}:0:mac`, { ...task('seed'), deleted: false }, 'seed')]);
+		const cred = await setup();
+		await sync(cred, 0, [op('seed', `${NOW}:0:mac`, { ...task('seed'), deleted: false }, 'seed')]);
 		const head = store.lastSeq();
 		const tasks = Array.from({ length: SYNC_PAGE_SIZE + 5 }, (_, i) => task(`t${i}`, { createdAt: NOW + i }));
 		const ops = startSync(snapshotOf({ tasks }), 'mac', NOW, counter('op-')).outbox;
-		const first = await sync(token, head, ops);
+		const first = await sync(cred, head, ops);
 		if (!('changes' in first)) throw new Error('expected changes');
 		expect(first.changes.map(change => change.seq)).toEqual(tasks.slice(0, SYNC_PAGE_SIZE).map((_, i) => head + i + 1));
 		expect(first.cursor).toBe(head + SYNC_PAGE_SIZE);
@@ -132,14 +132,14 @@ describe.each(storeFactories)('POST /api/sync on the %s store', (_name, createSt
 
 		const unacked = ops.slice(SYNC_PAGE_SIZE);
 		const end = store.lastSeq();
-		const rest = await sync(token, first.cursor, unacked);
+		const rest = await sync(cred, first.cursor, unacked);
 		expect('changes' in rest && rest.changes.map(change => change.id)).toEqual(
 			tasks.slice(SYNC_PAGE_SIZE).map(t => t.id),
 		);
 		expect(rest.acked).toEqual(unacked.map(o => o.opId));
 		expect(rest.cursor).toBe(end);
 		expect(store.lastSeq()).toBe(end);
-		expect(await sync(token, rest.cursor, [])).toMatchObject({ changes: [], cursor: rest.cursor });
+		expect(await sync(cred, rest.cursor, [])).toMatchObject({ changes: [], cursor: rest.cursor });
 	});
 
 	test('cursor 0, or one past the end of the log, gets the snapshot and the head of the log', async () => {
@@ -147,15 +147,15 @@ describe.each(storeFactories)('POST /api/sync on the %s store', (_name, createSt
 		await mac.pull();
 		const phone = await setup('phone');
 
-		const fresh = await sync(phone.token, 0, []);
+		const fresh = await sync(phone, 0, []);
 		expect(fresh).toMatchObject({ snapshot: mac.client.snapshot, cursor: store.lastSeq() });
 		expect(fresh.hlc).toMatch(/:server$/);
 
-		const reset = await sync(phone.token, store.lastSeq() + 50, []);
+		const reset = await sync(phone, store.lastSeq() + 50, []);
 		expect(reset).toMatchObject({ snapshot: mac.client.snapshot, cursor: store.lastSeq() });
 
 		const edit = op('edit', `${NOW + 1}:0:phone`, { title: 'Edited' });
-		const refilled = await sync(phone.token, store.lastSeq() + 1, [edit]);
+		const refilled = await sync(phone, store.lastSeq() + 1, [edit]);
 		expect(refilled).toMatchObject({ acked: ['edit'], cursor: store.lastSeq() });
 		expect('snapshot' in refilled && refilled.snapshot.tasks.map(t => t.title)).toEqual(['Edited']);
 	});
@@ -205,9 +205,9 @@ describe.each(storeFactories)('POST /api/sync on the %s store', (_name, createSt
 	});
 
 	test('reset wipes tasks and a stale epoch cannot bring them back', async () => {
-		const { token } = await setup('mac');
+		const cred = await setup('mac');
 		const created = await sync(
-			token,
+			cred,
 			0,
 			startSync(snapshotOf({ tasks: [task('t1', { createdAt: NOW, title: 'Keep' })] }), 'mac', NOW, counter('op-'))
 				.outbox,
@@ -215,7 +215,7 @@ describe.each(storeFactories)('POST /api/sync on the %s store', (_name, createSt
 		expect(created.epoch).toBe(0);
 		expect('snapshot' in created && created.snapshot.tasks.map(t => t.title)).toEqual(['Keep']);
 
-		const wipe = await post({ cursor: store.lastSeq(), ops: [], epoch: 0, reset: true }, token);
+		const wipe = await post({ cursor: store.lastSeq(), ops: [], epoch: 0, reset: true }, cred);
 		expect(wipe.status).toBe(200);
 		const wiped = (await wipe.json()) as SyncResponse;
 		expect(wiped.epoch).toBe(1);
@@ -223,7 +223,7 @@ describe.each(storeFactories)('POST /api/sync on the %s store', (_name, createSt
 		expect(store.liveDevices()).toHaveLength(1);
 		expect(store.lastSeq()).toBe(0);
 
-		const stale = await post({ cursor: 0, epoch: 0, ops: [op('back', `${NOW + 5}:0:mac`, { title: 'Back' })] }, token);
+		const stale = await post({ cursor: 0, epoch: 0, ops: [op('back', `${NOW + 5}:0:mac`, { title: 'Back' })] }, cred);
 		const rejected = (await stale.json()) as SyncResponse;
 		expect(rejected).toMatchObject({ acked: [], epoch: 1 });
 		expect('snapshot' in rejected && rejected.snapshot.tasks).toEqual([]);
@@ -234,7 +234,7 @@ describe.each(storeFactories)('POST /api/sync on the %s store', (_name, createSt
 			NOW + 6,
 			counter('next-'),
 		).outbox;
-		const added = await post({ cursor: 0, epoch: 1, ops }, token);
+		const added = await post({ cursor: 0, epoch: 1, ops }, cred);
 		const next = (await added.json()) as SyncResponse;
 		expect(next.epoch).toBe(1);
 		expect('snapshot' in next && next.snapshot.tasks.map(t => t.title)).toEqual(['Next']);

@@ -1,11 +1,11 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures.ts';
 
 test('every request the page makes stays on its own origin', async ({ page, baseURL }) => {
 	const urls: string[] = [];
 	page.on('request', request => urls.push(request.url()));
 
 	await page.goto('/inbox');
-	await expect(page.getByRole('heading', { name: 'Inbox' })).toBeVisible();
+	await expect(page.getByRole('heading', { name: 'Inbox' })).toBeVisible({ timeout: 30_000 });
 	await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Today' }).click();
 	await expect(page.getByRole('heading', { name: 'Today' })).toBeVisible();
 	await page.evaluate(() => document.fonts.ready);

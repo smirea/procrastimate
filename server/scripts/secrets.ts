@@ -19,6 +19,15 @@ export const WORKER_SECRETS = [
 	'ELEVENLABS_API_KEY',
 	'TURSO_DATABASE_URL',
 	'TURSO_AUTH_TOKEN',
+	'BETTER_AUTH_SECRET',
+	'GOOGLE_CLIENT_ID',
+	'GOOGLE_CLIENT_SECRET',
+	'GOOGLE_IOS_CLIENT_ID',
+	'APPLE_CLIENT_ID',
+	'APPLE_CLIENT_SECRET',
+	'APPLE_TEAM_ID',
+	'APPLE_KEY_ID',
+	'APPLE_PRIVATE_KEY',
 ] as const;
 export const GITHUB_SECRETS = ['CLOUDFLARE_API_TOKEN', 'CLOUDFLARE_ACCOUNT_ID'] as const;
 const REPO = 'smirea/procrastimate';
@@ -55,6 +64,12 @@ export function appIosKeys(schema: string): IosKey[] {
 	return keys;
 }
 
+/** `123-abc.apps.googleusercontent.com` becomes the reversed scheme Google redirects to. Anything else keeps the placeholder. */
+export function googleUrlScheme(clientId: string | undefined): string {
+	const match = /^([A-Za-z0-9-]+)\.apps\.googleusercontent\.com$/.exec(clientId?.trim() ?? '');
+	return match ? `com.googleusercontent.apps.${match[1]}` : 'com.stefan.procrastimate';
+}
+
 /** Debug takes `dev`, Release takes `prod`. A missing prod `API_URL` uses the pinned production URL. */
 export function iosXcconfig(schema: string, dev: Values, prod: Values): string {
 	const lines = ['// Generated from env-manager dev and prod. Do not edit.'];
@@ -66,6 +81,9 @@ export function iosXcconfig(schema: string, dev: Values, prod: Values): string {
 			`${key.name}[config=${config}] = ${value.replaceAll('//', '/$()/')}`;
 		lines.push(setting('Debug', devValue), setting('Release', prodValue));
 	}
+	const scheme = (config: 'Debug' | 'Release', clientId: string | undefined) =>
+		`GOOGLE_URL_SCHEME[config=${config}] = ${googleUrlScheme(clientId)}`;
+	lines.push(scheme('Debug', dev.GOOGLE_IOS_CLIENT_ID), scheme('Release', prod.GOOGLE_IOS_CLIENT_ID));
 	return `${lines.join('\n')}\n`;
 }
 
