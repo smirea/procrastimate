@@ -53,6 +53,18 @@ You can also set `SWIFT_RUN_DEVELOPMENT_TEAM`.
 
 Open `App.xcodeproj` and select the shared `App` scheme to debug. Build logs are in `DerivedData/<target>/build.log`, where `<target>` is `device` or `simulator`.
 
+## Archive and upload to TestFlight
+
+Create an App Store Connect API key (Users and Access, Integrations, Team Keys) with the Admin role, so Xcode can create the distribution certificate and profile. Download its `AuthKey_<id>.p8` somewhere outside the repo, then:
+
+```sh
+export ASC_KEY_ID=<key id> ASC_ISSUER_ID=<issuer id> ASC_KEY_PATH=~/.appstoreconnect/AuthKey_<id>.p8
+./scripts/archive                # archive Release and upload to App Store Connect
+./scripts/archive --export-only  # write build/archive/export/App.ipa without uploading
+```
+
+Release builds always call `https://procrastimate.stf.lol`; Debug uses `API_URL` from the environment below. The build number defaults to the current UTC time (`BUILD_NUMBER` overrides it), so each upload is higher than the last. Nothing here runs in CI, and the key values never go in the repo.
+
 ## Environment
 
 The parent `.env` declares this folder as an env-manager target. Edit local values in the parent `.env.local`, then regenerate from here or the repo root:
