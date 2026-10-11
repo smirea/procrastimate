@@ -21,20 +21,18 @@ final class TaskActions {
     func complete(_ task: TaskItem) {
         guard let completion = withAnimation(.snappy, { store.completeTask(task.id) }) else { return }
         completions += 1
-        let store = store
         toasts.show(
             Format.completedToast(task.title, completion.next, clock.today),
-            action: .init(label: "Undo") { withAnimation(.snappy) { store.restoreCompletion(completion.previous) } }
+            action: .init(label: "Undo") { [store] in withAnimation(.snappy) { store.restoreCompletion(completion.previous) } }
         )
     }
 
     func delete(_ task: TaskItem) {
         let removed = withAnimation(.snappy) { store.deleteTask(task.id) }
         guard !removed.isEmpty else { return }
-        let store = store
         toasts.show(
             "Deleted “\(task.title)”",
-            action: .init(label: "Undo") { withAnimation(.snappy) { store.undeleteTasks(removed) } }
+            action: .init(label: "Undo") { [store] in withAnimation(.snappy) { store.undeleteTasks(removed) } }
         )
     }
 }
