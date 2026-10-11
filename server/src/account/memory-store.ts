@@ -1,4 +1,4 @@
-import type { AccountStore, Device, Entity, LogEntry, Pairing } from './store';
+import type { AccountStore, Device, Entity, LogEntry, Pairing, PushTarget } from './store';
 
 /**
  * The Bun dev server's account, kept in memory and lost on restart. Values are cloned in and out so callers never
@@ -8,6 +8,7 @@ export function memoryStore(): AccountStore {
 	const devices = new Map<string, Device>();
 	const entities = new Map<string, Entity>();
 	const log: LogEntry[] = [];
+	const pushTargets = new Map<string, PushTarget>();
 	let pairing: Pairing | null = null;
 	const entityKey = (kind: string, id: string) => `${kind}\u0000${id}`;
 
@@ -34,6 +35,7 @@ export function memoryStore(): AccountStore {
 			const device = devices.get(id);
 			if (!device || device.revokedAt !== null) return false;
 			device.revokedAt = at;
+			pushTargets.delete(id);
 			return true;
 		},
 
@@ -59,5 +61,13 @@ export function memoryStore(): AccountStore {
 		logAfter: (after, limit) => log.slice(after, after + limit).map(entry => structuredClone(entry)),
 		hasOp: opId => log.some(entry => entry.opId === opId),
 		lastSeq: () => log.length,
+
+		pushTargets: () => [...pushTargets.values()].map(target => structuredClone(target)),
+		putPushTarget: target => {
+			pushTargets.set(target.deviceId, structuredClone(target));
+		},
+		deletePushTarget: deviceId => {
+			pushTargets.delete(deviceId);
+		},
 	};
 }

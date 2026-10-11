@@ -80,7 +80,7 @@
 	$effect(() => clock.start());
 	$effect(() => trackKeyboardInset());
 	$effect(() => push.start());
-	$effect(() => push.sync());
+	$effect(() => push.follow(store.paired));
 	$effect(() => untrack(() => sync.start()));
 	$effect(() => untrack(openTaskFromUrl));
 

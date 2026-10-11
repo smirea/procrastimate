@@ -18,6 +18,12 @@ export type Entity = { kind: string; id: string; data: unknown; clocks: unknown 
 export type LogEntry = { seq: number; opId: string; kind: string; id: string; fields: unknown };
 
 /**
+ * A device's Web Push subscription and what the alarm still owes it. `deliveredThrough` is when the alarm last ran
+ * for it, or when it subscribed. Both JSON fields are the push module's.
+ */
+export type PushTarget = { deviceId: string; subscription: unknown; notifications: unknown; deliveredThrough: number };
+
+/**
  * Everything the `Account` object keeps. Methods are synchronous, like Durable Object SQLite, so a request that
  * finishes its async work (hashing) first can then read and write without another request interleaving.
  */
@@ -30,7 +36,7 @@ export interface AccountStore {
 	/** Devices that are not revoked, oldest first. */
 	liveDevices(): Device[];
 	touchDevice(id: string, at: number): void;
-	/** Returns false when the device is unknown or already revoked. */
+	/** Returns false when the device is unknown or already revoked. Revoking also drops its push target. */
 	revokeDevice(id: string, at: number): boolean;
 
 	pairing(): Pairing | null;
@@ -47,4 +53,10 @@ export interface AccountStore {
 	hasOp(opId: string): boolean;
 	/** The highest `seq`, or 0 when the log is empty. */
 	lastSeq(): number;
+
+	/** Every device with a push subscription. */
+	pushTargets(): PushTarget[];
+	/** Adds or replaces the device's target. */
+	putPushTarget(target: PushTarget): void;
+	deletePushTarget(deviceId: string): void;
 }

@@ -5,7 +5,6 @@ import type { DurableObjectNamespace } from '@cloudflare/workers-types';
  * Cloudflare ones, and a deploy without a secret must still work with that feature off.
  */
 export type Env = {
-	PUSH?: DurableObjectNamespace;
 	ACCOUNT?: DurableObjectNamespace;
 	VAPID_PUBLIC_KEY?: string;
 	VAPID_PRIVATE_KEY?: string;

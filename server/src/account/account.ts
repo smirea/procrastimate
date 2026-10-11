@@ -1,36 +1,56 @@
 import type { DurableObjectNamespace, DurableObjectState } from '@cloudflare/workers-types';
 import { authRoutes, type AccountRoute } from '../auth';
 import type { Env, Handler } from '../bindings';
+import { pushSender } from '../push';
 import { memoryStore } from './memory-store';
+import { deliverDue, pushRoutes } from './push';
 import { sqliteStore } from './sqlite-store';
 import type { AccountStore } from './store';
 import { syncRoutes } from './sync';
 
 /** Every route the `Account` object answers. The Worker forwards each of them to the one account. */
-const accountRoutes: Record<string, AccountRoute> = { ...authRoutes, ...syncRoutes };
+const accountRoutes: Record<string, AccountRoute> = { ...authRoutes, ...syncRoutes, ...pushRoutes };
+
+type SetAlarm = (at: number | null) => Promise<void>;
 
 const fail = (status: number, error: string) => Response.json({ ok: false, error }, { status });
 
-/** The object's request handler over any store, shared by the Worker and the Bun dev server. */
-export function accountHandler(store: AccountStore, setupCode: string | undefined) {
+/**
+ * The object's request handler over any store, shared by the Worker and the Bun dev server. The dev server has no
+ * alarms, so its `setAlarm` does nothing.
+ */
+export function accountHandler(store: AccountStore, setupCode: string | undefined, setAlarm: SetAlarm) {
 	return (request: Request): Promise<Response> => {
 		const route = accountRoutes[`${request.method} ${new URL(request.url).pathname}`];
 		if (!route) return Promise.resolve(fail(404, 'Not found'));
-		return route(request, { store, setupCode: setupCode || undefined, now: Date.now() });
+		return route(request, { store, setupCode: setupCode || undefined, now: Date.now(), setAlarm });
 	};
 }
 
 /** The single account, one SQLite-backed Durable Object that runs one request at a time. */
 export class Account {
+	private readonly store: AccountStore;
 	private readonly handle: (request: Request) => Promise<Response>;
 
-	constructor(ctx: DurableObjectState, env: Env) {
-		const store = sqliteStore(ctx.storage.sql, run => ctx.storage.transactionSync(run));
-		this.handle = accountHandler(store, env.SYNC_SETUP_CODE);
+	constructor(
+		private readonly ctx: DurableObjectState,
+		private readonly env: Env,
+	) {
+		this.store = sqliteStore(ctx.storage.sql, run => ctx.storage.transactionSync(run));
+		this.handle = accountHandler(this.store, env.SYNC_SETUP_CODE, at => this.setAlarm(at));
 	}
 
 	fetch(request: Request): Promise<Response> {
 		return this.handle(request);
+	}
+
+	/** Delivers due Web Push notifications, then re-arms for the next. */
+	async alarm(): Promise<void> {
+		await this.setAlarm(await deliverDue(this.store, Date.now(), pushSender(this.env)));
+	}
+
+	private async setAlarm(at: number | null) {
+		await (at === null ? this.ctx.storage.deleteAlarm() : this.ctx.storage.setAlarm(at));
 	}
 }
 
@@ -49,8 +69,12 @@ export const accountApiRoutes: Record<string, Handler> = Object.fromEntries(
 );
 
 /** An `ACCOUNT` binding for the Bun dev server: one in-memory account, lost on restart. */
-export function memoryAccount(setupCode: string | undefined, store = memoryStore()): DurableObjectNamespace {
-	const handle = accountHandler(store, setupCode);
+export function memoryAccount(
+	setupCode: string | undefined,
+	store = memoryStore(),
+	setAlarm: SetAlarm = async () => {},
+): DurableObjectNamespace {
+	const handle = accountHandler(store, setupCode, setAlarm);
 	const namespace = { idFromName: (name: string) => name, get: () => ({ fetch: handle }) };
 	return namespace as unknown as DurableObjectNamespace;
 }

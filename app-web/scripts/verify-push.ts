@@ -1,9 +1,11 @@
 /**
- * Proves Web Push end to end with a real push service: headless Google Chrome subscribes through FCM, the Worker at
- * BASE_URL schedules and sends, and the service worker shows the notifications while no app page is open.
+ * Proves Web Push end to end with a real push service: headless Google Chrome turns on sync and subscribes through
+ * FCM, the Worker at BASE_URL computes the schedule from the synced tasks and sends, and the service worker shows the
+ * notifications while no app page is open.
  *
- *   bun app-web/scripts/verify-push.ts [BASE_URL]   (default http://localhost:8787, from `bun run preview`)
+ *   SYNC_SETUP_CODE=<code> bun app-web/scripts/verify-push.ts [BASE_URL]   (default http://localhost:8787)
  *
+ * For `bun run preview`, put `SYNC_SETUP_CODE=<code>` in `.dev.vars` too, so `wrangler dev` accepts it.
  * Needs Google Chrome (CHROME, default /usr/local/bin/google-chrome). Playwright's Chromium has no FCM keys, and
  * incognito contexts cannot subscribe, so this uses a persistent profile.
  */
@@ -14,6 +16,10 @@ import { chromium, expect, type Page } from '@playwright/test';
 
 const BASE_URL = process.argv[2] ?? 'http://localhost:8787';
 const CHROME = process.env.CHROME ?? '/usr/local/bin/google-chrome';
+const SETUP_CODE = process.env.SYNC_SETUP_CODE;
+if (!SETUP_CODE) throw new Error('Set SYNC_SETUP_CODE to the Worker’s setup code.');
+/** The account outlives a run, so this run's titles carry a suffix. */
+const RUN = crypto.randomUUID().slice(0, 4);
 
 const log = (step: string, detail?: unknown) =>
 	console.log(`${new Date().toISOString()} ${step}${detail === undefined ? '' : ` ${JSON.stringify(detail)}`}`);
@@ -43,16 +49,28 @@ const shown = (page: Page) =>
 		return (await registration.getNotifications()).map(n => ({ title: n.title, body: n.body, tag: n.tag }));
 	});
 
-const schedule = async (page: Page, endpoint: string) => {
-	const response = await page.request.get(`/api/push/schedule?endpoint=${encodeURIComponent(endpoint)}`);
+/** What the server will push to this device for this run's tasks. */
+const schedule = async (page: Page) => {
+	const token = await page.evaluate(() => localStorage.getItem('procrastimate-device'));
+	const response = await page.request.get('/api/push/schedule', { headers: { Authorization: `Bearer ${token}` } });
 	const { notifications } = (await response.json()) as { notifications: { title: string; at: number }[] };
-	return notifications.map(n => `${n.title}@${new Date(n.at).toISOString()}`);
+	return notifications
+		.filter(n => n.title.endsWith(` ${RUN}`))
+		.map(n => `${n.title.replace(` ${RUN}`, '')}@${new Date(n.at).toISOString()}`);
 };
 
 const page = await context.newPage();
 await page.goto('/inbox');
 const sheet = page.getByRole('dialog', { name: 'Notifications' });
 const nav = page.getByRole('navigation', { name: 'Main' });
+const settings = page.getByRole('dialog', { name: 'Settings' });
+await nav.getByRole('button', { name: 'Settings' }).click();
+await settings.getByRole('button', { name: 'Set up sync' }).click();
+await settings.getByRole('textbox', { name: 'Setup code' }).fill(SETUP_CODE);
+await settings.getByRole('button', { name: 'Turn on sync' }).click();
+await expect(settings.getByRole('status', { name: 'Sync status' })).toHaveText('Up to date');
+await page.keyboard.press('Escape');
+log('PASS sync is on');
 await nav.getByRole('button', { name: /^Notifications/ }).click();
 await sheet.getByRole('button', { name: 'Turn on notifications' }).click();
 await sheet.getByRole('heading', { name: 'Notifications are on' }).waitFor();
@@ -92,25 +110,28 @@ async function add(title: string) {
 
 async function openTask(title: string) {
 	await page
-		.locator(`[data-task="${title}"]`)
+		.locator(`[data-task="${title} ${RUN}"]`)
 		.getByRole('button', { name: new RegExp(title) })
 		.click();
 	return page.getByRole('dialog', { name: 'Task details' });
 }
 
 log('scheduling for', { clock, target: target.toISOString() });
-await add(`Due and reminded ${clock} remind me at ${clock}`);
-await add(`Daily repeat every day ${clock}`);
-await add(`Deleted ${clock}`);
-await add(`Completed ${clock}`);
-await add(`Edited ${clock}`);
-await add('Date only today');
+await add(`Due and reminded ${RUN} ${clock} remind me at ${clock}`);
+await add(`Daily repeat ${RUN} every day ${clock}`);
+await add(`Deleted ${RUN} ${clock}`);
+await add(`Completed ${RUN} ${clock}`);
+await add(`Edited ${RUN} ${clock}`);
+await add(`Date only ${RUN} today`);
 await nav.getByRole('link', { name: 'Today' }).click();
 
 await (await openTask('Deleted')).getByRole('button', { name: 'Delete task' }).click();
-await page.locator('[data-task="Completed"]').getByRole('checkbox', { name: 'Complete Completed' }).click();
+await page
+	.locator(`[data-task="Completed ${RUN}"]`)
+	.getByRole('checkbox', { name: `Complete Completed ${RUN}` })
+	.click();
 const edited = (await openTask('Edited')).getByRole('textbox', { name: 'Title' });
-await edited.fill(`Edited ${later}`);
+await edited.fill(`Edited ${RUN} ${later}`);
 await edited.press('Enter');
 await page.keyboard.press('Escape');
 
@@ -118,13 +139,13 @@ const at = target.toISOString();
 const expected = [`Due and reminded@${at}`, `Daily repeat@${at}`].sort();
 let pending: string[] = [];
 for (const start = Date.now(); Date.now() - start < 10_000; await page.waitForTimeout(250)) {
-	pending = (await schedule(page, endpoint)).filter(entry => entry.endsWith(at)).sort();
+	pending = (await schedule(page)).filter(entry => entry.endsWith(at)).sort();
 	if (JSON.stringify(pending) === JSON.stringify(expected)) break;
 }
 check(
 	JSON.stringify(pending) === JSON.stringify(expected),
 	'server holds one push per moment, without deleted, completed, edited, or date-only tasks',
-	await schedule(page, endpoint),
+	await schedule(page),
 );
 
 await page.close();
@@ -136,20 +157,24 @@ const reopened = await context.newPage();
 await reopened.goto('/today');
 const delivered = (await shown(reopened)).filter(n => n.tag !== 'test');
 check(
-	JSON.stringify(delivered.map(n => n.title).sort()) === JSON.stringify(['Daily repeat', 'Due and reminded']),
+	JSON.stringify(delivered.map(n => n.title).sort()) ===
+		JSON.stringify([`Daily repeat ${RUN}`, `Due and reminded ${RUN}`]),
 	'only the two live tasks notified while the app was closed',
 	delivered,
 );
 check(
-	(await schedule(reopened, endpoint)).every(entry => !entry.endsWith(at)),
+	(await schedule(reopened)).every(entry => !entry.endsWith(at)),
 	'delivered pushes left the schedule',
 );
 
-await reopened.locator('[data-task="Daily repeat"]').getByRole('checkbox', { name: 'Complete Daily repeat' }).click();
+await reopened
+	.locator(`[data-task="Daily repeat ${RUN}"]`)
+	.getByRole('checkbox', { name: `Complete Daily repeat ${RUN}` })
+	.click();
 const next = new Date(target.getTime() + 86_400_000).toISOString();
 let afterRepeat: string[] = [];
 for (const start = Date.now(); Date.now() - start < 10_000; await reopened.waitForTimeout(250)) {
-	afterRepeat = await schedule(reopened, endpoint);
+	afterRepeat = await schedule(reopened);
 	if (afterRepeat.includes(`Daily repeat@${next}`)) break;
 }
 check(

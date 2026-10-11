@@ -1,3 +1,5 @@
+import { zonedTime } from './zoned-time.ts';
+
 /** Local calendar date, `YYYY-MM-DD`. */
 export type DateKey = `${number}-${number}-${number}`;
 /** Local wall-clock time, `HH:mm`. */
@@ -105,9 +107,15 @@ export function addInterval(key: DateKey, interval: number, unit: RecurrenceUnit
 	}
 }
 
-/** When a task notifies, in order: at its due time when it has one, and at every reminder, each moment once. */
-export function notificationTimes(due: Due | null, reminders: readonly Reminder[]): Date[] {
-	const times = [due?.time ? fromDateKey(due.date, due.time) : null, ...reminders.map(r => reminderFiresAt(r, due))];
+/**
+ * When a task notifies, in order: at its due time when it has one, and at every reminder, each moment once. Times
+ * are wall-clock times in `zone`, or in the process zone without one.
+ */
+export function notificationTimes(due: Due | null, reminders: readonly Reminder[], zone?: string): Date[] {
+	const times = [
+		due?.time ? new Date(zonedTime(due.date, due.time, zone)) : null,
+		...reminders.map(r => reminderFiresAt(r, due, zone)),
+	];
 	const unique = new Map(times.filter(t => t !== null).map(t => [t.getTime(), t]));
 	return [...unique.values()].sort((a, b) => a.getTime() - b.getTime());
 }
@@ -177,13 +185,13 @@ export function nextOccurrence(
 }
 
 /** When a reminder fires, or null for a relative reminder on a task without a due time. */
-export function reminderFiresAt(reminder: Reminder, due: Due | null): Date | null {
+export function reminderFiresAt(reminder: Reminder, due: Due | null, zone?: string): Date | null {
 	switch (reminder.kind) {
 		case 'at':
-			return fromDateKey(reminder.date, reminder.time);
+			return new Date(zonedTime(reminder.date, reminder.time, zone));
 		case 'before': {
 			if (!due?.time) return null;
-			return new Date(fromDateKey(due.date, due.time).getTime() - reminder.minutes * 60_000);
+			return new Date(zonedTime(due.date, due.time, zone) - reminder.minutes * 60_000);
 		}
 		default: {
 			const never: never = reminder;
