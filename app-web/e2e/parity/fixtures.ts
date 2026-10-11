@@ -56,7 +56,8 @@ export const test = base.extend<{ app: PhoneApp; snap: (id: string) => Promise<v
 	app: async ({ page }, use) => {
 		await page.clock.setFixedTime(NOW);
 		await page.goto('/');
-		await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+		// The first specs of a run wait on the dev server's cold compile.
+		await expect(page.getByRole('heading', { level: 1 })).toBeVisible({ timeout: 30_000 });
 		await use(new PhoneApp(page));
 	},
 	snap: async ({ page }, use) => {

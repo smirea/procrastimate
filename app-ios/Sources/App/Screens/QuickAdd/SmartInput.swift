@@ -74,10 +74,10 @@ struct SmartInput: View {
     private func typed() {
         let plain = String(attributed.characters)
         if plain.contains("\n") {
-            let joined = plain.replacingOccurrences(of: "\n", with: "")
-            text = joined
-            replace(with: joined, caret: joined.utf16.count)
+            text = plain.replacingOccurrences(of: "\n", with: "")
             onSubmit()
+            // Saving can clear the text in the same burst, which `onChange(of: text)` never sees.
+            replace(with: text, caret: text.utf16.count)
         } else if plain != text {
             text = plain
         }
