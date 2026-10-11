@@ -1,10 +1,9 @@
 name: iOS
 
 # Separate from ci.yml so it never slows the web checks or blocks the Worker deploy.
-# macOS `core` and `app` are off on pull requests and on master until they are turned back on
-# before a release. A manual workflow_dispatch runs them. Skipping those jobs with `if` still
-# reports the check (a skip counts as success), so a required check of that name does not stay
-# pending the way a workflow-level path filter would. `core-linux` still runs every time.
+# macOS `core` and `app` run on pull requests and on master. `workflow_dispatch` can still start
+# the workflow by hand. Path filters, sharding, and concurrency are unchanged. `core-linux` runs
+# every time.
 on:
   pull_request:
   push:
@@ -20,7 +19,6 @@ env:
 
 jobs:
   core:
-    if: github.event_name == 'workflow_dispatch'
     runs-on: macos-26
     timeout-minutes: 20
     defaults:
@@ -49,7 +47,6 @@ jobs:
         run: swift test
 
   app:
-    if: github.event_name == 'workflow_dispatch'
     runs-on: macos-26
     timeout-minutes: 75
     defaults:
