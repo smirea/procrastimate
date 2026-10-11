@@ -1,5 +1,6 @@
 import Observation
 import SwiftUI
+import UIKit
 
 /// System, Light, or Dark, the same three choices as the web.
 enum ThemeChoice: String, CaseIterable, Identifiable {
@@ -52,6 +53,22 @@ final class ThemeSettings {
             UserDefaults.standard.removeObject(forKey: Self.key)
         } else {
             UserDefaults.standard.set(next.rawValue, forKey: Self.key)
+        }
+        if next == .system { Task { clearForcedStyle() } }
+    }
+
+    /// A `nil` `preferredColorScheme` leaves the last forced style on the window and the presented sheets, so going
+    /// back to `System` clears it.
+    private func clearForcedStyle() {
+        for scene in UIApplication.shared.connectedScenes {
+            for window in (scene as? UIWindowScene)?.windows ?? [] {
+                window.overrideUserInterfaceStyle = .unspecified
+                var controller = window.rootViewController
+                while let current = controller {
+                    current.overrideUserInterfaceStyle = .unspecified
+                    controller = current.presentedViewController
+                }
+            }
         }
     }
 }
