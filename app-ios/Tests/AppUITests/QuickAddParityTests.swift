@@ -258,14 +258,18 @@ final class QuickAddParityTests: ParityTestCase {
         waitGone(app.buttons["Quick add"])
         let keyboard = app.keyboards.firstMatch
         XCTAssertTrue(keyboard.waitForExistence(timeout: 5))
+        // The keyboard's frame starts below its suggestion bar, so the card meets the keyboard's visible top edge
+        // when it ends at most one bar height above that frame.
         var gap = CGFloat.infinity
         let deadline = Date().addingTimeInterval(3)
         repeat {
             gap = keyboard.frame.minY - quickAdd.frame.maxY
-            if abs(gap) <= 10 { break }
+            if (0...56).contains(gap) { break }
             Thread.sleep(forTimeInterval: 0.2)
         } while Date() < deadline
-        XCTAssertLessThanOrEqual(abs(gap), 10, "Quick add ends \(gap) pt above the keyboard")
+        XCTAssertTrue((0...56).contains(gap), "Quick add ends \(gap) pt above the keyboard")
+        XCTAssertEqual(quickAdd.frame.minX, app.frame.minX, accuracy: 1, "Quick add is inset from the screen edge")
+        XCTAssertEqual(quickAdd.frame.width, app.frame.width, accuracy: 1, "Quick add does not span the screen")
         snap("add-dock")
         cancelQuickAdd()
         XCTAssertTrue(app.buttons["Quick add"].waitForExistence(timeout: 5))
