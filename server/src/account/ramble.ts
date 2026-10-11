@@ -109,7 +109,7 @@ export function workerUpstream(apiKey: string): ConnectUpstream {
 	};
 }
 
-export type RambleLimits = { sessionSeconds: number; dailySeconds: number };
+export type RambleLimits = { sessionSeconds: number; dailySeconds: number; idleMs?: number };
 
 export const DEFAULT_LIMITS: RambleLimits = {
 	sessionSeconds: RAMBLE_SESSION_SECONDS,
@@ -124,7 +124,8 @@ export type Ramble = {
 	stream: SocketHost['stream'];
 	connect: ConnectUpstream | null;
 	limits: RambleLimits;
-	live: Set<{ seconds: number }>;
+	/** Open sessions, with the audio seconds each has streamed on its current day and not yet stored. */
+	live: Set<{ day: string; seconds: number }>;
 };
 
 export function ramble(sockets: SocketHost, config: RambleConfig): Ramble {
@@ -140,8 +141,8 @@ export function ramble(sockets: SocketHost, config: RambleConfig): Ramble {
 const FINAL_COMMIT_MS = 3000;
 /** How long ElevenLabs has to start a session. */
 const CONNECT_MS = 10_000;
-/** A session that stops sending audio still ends this long after its audio cap would. */
-const IDLE_GRACE_MS = 30_000;
+/** A socket that stops sending anything ends after this, so a dropped client does not hold the object open. */
+const IDLE_MS = 60_000;
 
 const UPSTREAM_ERRORS = new Set([
 	'error',
@@ -176,8 +177,9 @@ const audioChunk = (bytes: Uint8Array, commit: boolean) =>
 		sample_rate: RAMBLE_SAMPLE_RATE,
 	});
 
-/** Seconds streamed by the sessions still open, which the store does not count until each ends. */
-const liveSeconds = (live: Ramble['live']) => [...live].reduce((sum, tally) => sum + tally.seconds, 0);
+/** Seconds streamed so far today by sessions still open, which the store does not count until each day rolls or ends. */
+const liveSeconds = (live: Ramble['live'], day: string) =>
+	[...live].reduce((sum, tally) => (tally.day === day ? sum + tally.seconds : sum), 0);
 
 type SessionOptions = {
 	client: Socket;
@@ -185,19 +187,22 @@ type SessionOptions = {
 	ramble: Ramble;
 	store: AccountStore;
 	day: DateKey;
+	zone: string;
 	keyterms: string[];
 	cassette: string | null;
 };
 
 /**
  * One session. Audio that arrives before ElevenLabs starts is buffered. Every frame counts toward the session and
- * daily caps, and the frame that reaches one is cut at the cap and ends the session. Ending sends a final commit
- * when audio went out since the last committed text, waits for that text, then records the seconds, sends `ended`,
- * and closes both sockets.
+ * daily caps, and the frame that reaches one is cut at the cap and ends the session. A frame after midnight in the
+ * account's time zone is charged to the new day, and the seconds before it are stored on the old one. Ending sends
+ * a final commit when audio went out since the last committed text, waits for that text, then records the seconds,
+ * sends `ended`, and closes both sockets. A socket that sends nothing for a minute ends on its own.
  */
-function session({ client, connect, ramble, store, day, keyterms, cassette }: SessionOptions): StreamEvents {
+function session({ client, connect, ramble, store, day, zone, keyterms, cassette }: SessionOptions): StreamEvents {
 	const { limits, live } = ramble;
-	const tally = { seconds: 0 };
+	const tally = { day, seconds: 0 };
+	let sessionSeconds = 0;
 	live.add(tally);
 	const buffered: Uint8Array[] = [];
 	let upstream: Upstream | null = null;
@@ -213,14 +218,14 @@ function session({ client, connect, ramble, store, day, keyterms, cassette }: Se
 		ended = true;
 		for (const timer of timers) clearTimeout(timer);
 		live.delete(tally);
-		if (tally.seconds > 0) store.addRambleSeconds(day, tally.seconds);
+		if (tally.seconds > 0) store.addRambleSeconds(tally.day, tally.seconds);
 		attempt(() => upstream?.close());
 	}
 
 	function end(reason: RambleEndReason) {
 		if (ended) return;
 		close();
-		send({ type: 'ended', seconds: Math.round(tally.seconds * 10) / 10, reason });
+		send({ type: 'ended', seconds: Math.round(sessionSeconds * 10) / 10, reason });
 		attempt(() => client.close(1000, 'Ramble ended'));
 	}
 
@@ -287,14 +292,17 @@ function session({ client, connect, ramble, store, day, keyterms, cassette }: Se
 			send({ type: 'error', code: 'invalid-audio', message: 'Audio frames must be at most one second long' });
 			return end('error');
 		}
-		const sessionLeft = limits.sessionSeconds - tally.seconds;
-		const dailyLeft = limits.dailySeconds - store.rambleSeconds(day) - liveSeconds(live);
+		roll();
+		const sessionLeft = limits.sessionSeconds - sessionSeconds;
+		const dailyLeft = limits.dailySeconds - store.rambleSeconds(tally.day) - liveSeconds(live, tally.day);
 		const allowed = Math.max(
 			0,
 			Math.floor(Math.round(Math.min(sessionLeft, dailyLeft) * RAMBLE_BYTES_PER_SECOND) / 2) * 2,
 		);
 		const chunk = bytes.byteLength > allowed ? bytes.subarray(0, allowed) : bytes;
-		tally.seconds += chunk.byteLength / RAMBLE_BYTES_PER_SECOND;
+		const streamed = chunk.byteLength / RAMBLE_BYTES_PER_SECOND;
+		sessionSeconds += streamed;
+		tally.seconds += streamed;
 		if (chunk.byteLength) {
 			if (started && upstream) forward(chunk);
 			else buffered.push(chunk.slice());
@@ -302,7 +310,26 @@ function session({ client, connect, ramble, store, day, keyterms, cassette }: Se
 		if (chunk.byteLength === allowed) finish(dailyLeft < sessionLeft ? 'daily-limit' : 'session-limit');
 	}
 
-	later(limits.sessionSeconds * 1000 + IDLE_GRACE_MS, () => finish('session-limit'));
+	const idleMs = limits.idleMs ?? IDLE_MS;
+	let idleTimer: ReturnType<typeof setTimeout> | undefined;
+	function armIdle() {
+		if (idleTimer) {
+			clearTimeout(idleTimer);
+			timers.delete(idleTimer);
+		}
+		idleTimer = setTimeout(() => finish('idle'), idleMs);
+		timers.add(idleTimer);
+	}
+	/** Stores the seconds streamed before midnight on that day, so later frames count against the new one. */
+	function roll() {
+		const today = zonedDateKey(Date.now(), zone);
+		if (today === tally.day) return;
+		if (tally.seconds > 0) store.addRambleSeconds(tally.day, tally.seconds);
+		tally.day = today;
+		tally.seconds = 0;
+	}
+
+	armIdle();
 	later(CONNECT_MS, () => !started && fail('Transcription did not start'));
 	connect({ keyterms, cassette }, { message: onUpstream, close: () => fail('Transcription closed unexpectedly') }).then(
 		socket => {
@@ -315,6 +342,7 @@ function session({ client, connect, ramble, store, day, keyterms, cassette }: Se
 
 	return {
 		message(data) {
+			if (!ended && !ending) armIdle();
 			if (typeof data !== 'string') return audio(data);
 			let parsed: unknown;
 			try {
@@ -347,7 +375,7 @@ export const rambleRoutes: Record<string, AccountRoute> = {
 		const snapshot = accountSnapshot(store);
 		const zone = accountZone(snapshot.settings.timeZone);
 		const day = zonedDateKey(now, zone);
-		if (store.rambleSeconds(day) + liveSeconds(ramble.live) >= ramble.limits.dailySeconds) {
+		if (store.rambleSeconds(day) + liveSeconds(ramble.live, day) >= ramble.limits.dailySeconds) {
 			const resetsAt = zonedTime(addDays(day, 1), '00:00', zone);
 			return ramble.stream(request, RAMBLE_SOCKET_PROTOCOL, client => {
 				const refusal: RambleServerMessage = {
@@ -364,7 +392,7 @@ export const rambleRoutes: Record<string, AccountRoute> = {
 		const keyterms = rambleKeyterms(snapshot);
 		const cassette = new URL(request.url).searchParams.get('cassette');
 		return ramble.stream(request, RAMBLE_SOCKET_PROTOCOL, client =>
-			session({ client, connect, ramble, store, day, keyterms, cassette }),
+			session({ client, connect, ramble, store, day, zone, keyterms, cassette }),
 		);
 	},
 };

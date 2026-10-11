@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test } from 'bun:test';
+import { afterEach, describe, expect, setSystemTime, test } from 'bun:test';
 import type { Server } from 'bun';
 import type { DeviceCredentials } from '../../../shared/auth';
 import { CASSETTES } from '../../../shared/fixtures/ramble-audio/cassettes';
@@ -102,6 +102,7 @@ describe('the Ramble socket on the dev server', () => {
 	const clients: WebSocket[] = [];
 
 	afterEach(async () => {
+		setSystemTime();
 		for (const client of clients.splice(0)) client.close();
 		await server.stop(true);
 	});
@@ -275,6 +276,43 @@ describe('the Ramble socket on the dev server', () => {
 			{ type: 'error', code: 'daily-limit', message: "Ramble's daily limit is used up", resetsAt: midnight },
 		]);
 		expect(upstream.sessions).toHaveLength(2);
+	});
+
+	test('charges audio after midnight to the new day', async () => {
+		const upstream = fakeElevenLabs();
+		setSystemTime(Date.UTC(2026, 9, 14, 23, 59, 30));
+		start({ connect: upstream.connect, limits: { sessionSeconds: 100, dailySeconds: 0.2 } });
+		const { token } = await setup();
+		const client = connect(token);
+		await client.message(0);
+		client.audio(RAMBLE_FRAME_BYTES);
+		await until(() => upstream.sessions[0]!.sent.length === 1);
+
+		setSystemTime(Date.UTC(2026, 9, 15, 0, 0, 30));
+		client.audio(RAMBLE_FRAME_BYTES);
+		client.audio(RAMBLE_FRAME_BYTES);
+		await client.closed;
+		expect(sentBytes(upstream.sessions[0]!)).toBe(RAMBLE_FRAME_BYTES * 3);
+		expect(client.messages.at(-1)).toEqual({ type: 'ended', seconds: 0.3, reason: 'daily-limit' });
+
+		const next = connect(token);
+		expect(await next.message(0)).toMatchObject({ type: 'error', code: 'daily-limit' });
+		expect(upstream.sessions).toHaveLength(1);
+	});
+
+	test('ends a quiet socket on its own, and audio restarts that wait', async () => {
+		const upstream = fakeElevenLabs();
+		start({ connect: upstream.connect, limits: { sessionSeconds: 100, dailySeconds: 100, idleMs: 300 } });
+		const client = connect((await setup()).token);
+		await client.message(0);
+		for (let i = 0; i < 5; i++) {
+			client.audio(RAMBLE_FRAME_BYTES);
+			await Bun.sleep(100);
+		}
+		await until(() => upstream.sessions[0]!.sent.length === 5);
+		await client.closed;
+		expect(client.messages.at(-1)).toEqual({ type: 'ended', seconds: 0.5, reason: 'idle' });
+		expect(upstream.sessions[0]!.closed).toBe(true);
 	});
 
 	test('counts a session the client leaves, and closes its upstream', async () => {

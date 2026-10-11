@@ -28,8 +28,8 @@ export const RAMBLE_DAILY_SECONDS = 60 * 60;
 export const rambleClientMessageSchema = z.object({ type: z.literal('stop') });
 export type RambleClientMessage = z.infer<typeof rambleClientMessageSchema>;
 
-/** Why a session ended: the client stopped, a cap was reached, or transcription failed. */
-export const RAMBLE_END_REASONS = ['stopped', 'session-limit', 'daily-limit', 'error'] as const;
+/** Why a session ended: the client stopped, a cap was reached, the socket went quiet, or transcription failed. */
+export const RAMBLE_END_REASONS = ['stopped', 'session-limit', 'daily-limit', 'idle', 'error'] as const;
 export type RambleEndReason = (typeof RAMBLE_END_REASONS)[number];
 
 /**
