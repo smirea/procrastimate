@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { pushSubscriptionSchema, type PushMessage, type PushSubscriptionInfo } from '../../shared/push';
 import type { SendPush } from './account/push';
+import { readSession } from './better-auth';
 import type { Env, Handler } from './bindings';
 import { classifyDelivery } from './push-schedule';
 import { sendPush, VAPID_SUBJECT, type Vapid } from './web-push';
@@ -40,11 +41,11 @@ const testSchema = z.object({
 
 const fail = (status: number, error: string) => Response.json({ ok: false, error }, { status });
 
-function withVapid(handler: (request: Request, vapid: Vapid) => Promise<Response>): Handler {
+function withVapid(handler: (request: Request, vapid: Vapid, env: Env) => Promise<Response>): Handler {
 	return (request, env) => {
 		const vapid = vapidKeys(env);
 		if (!env.ACCOUNT || !vapid) return fail(503, 'Push notifications are not configured');
-		return handler(request, vapid);
+		return handler(request, vapid, env);
 	};
 }
 
@@ -59,7 +60,8 @@ const TEST_MESSAGE = {
 export const pushRoutes: Record<string, Handler> = {
 	'GET /api/push/key': withVapid(async (_request, vapid) => Response.json({ publicKey: vapid.publicKey })),
 
-	'POST /api/push/test': withVapid(async (request, vapid) => {
+	'POST /api/push/test': withVapid(async (request, vapid, env) => {
+		if (!(await readSession(request, env))) return fail(401, 'Not signed in');
 		const body = testSchema.safeParse(await request.json().catch(() => undefined));
 		if (!body.success) return fail(400, 'Invalid subscription');
 		const status = await send(body.data.subscription, TEST_MESSAGE, vapid, 300);

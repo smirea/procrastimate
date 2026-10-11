@@ -63,6 +63,19 @@ const signUp = (auth: { handler: (request: Request) => Promise<Response> }) =>
 		}),
 	);
 
+const attempt = (
+	auth: { handler: (request: Request) => Promise<Response> },
+	path: string,
+	body: Record<string, string>,
+) =>
+	auth.handler(
+		new Request(`https://procrastimate.test${path}`, {
+			method: 'POST',
+			headers: { 'content-type': 'application/json', origin: 'https://procrastinate.test' },
+			body: JSON.stringify(body),
+		}),
+	);
+
 test('sign-up runs inside a libsql transaction', async () => {
 	const db = new Database(':memory:');
 	const client = countingClient(db);
@@ -73,6 +86,25 @@ test('sign-up runs inside a libsql transaction', async () => {
 	expect(began).toBeGreaterThan(0);
 	expect(committed).toBe(began);
 	expect(db.query('select email from user').all()).toEqual([{ email: 'tx@procrastimate.test' }]);
+});
+
+test('rate limits stay in the database across auth instances', async () => {
+	const db = new Database(':memory:');
+	const client = countingClient(db);
+	const secret = 'rate-limit-test-secret-0123456789';
+	const body = { email: 'limit@procrastimate.test', password: 'test-password-1', name: 'Limit' };
+	const first = await authOnClient(secret, client as unknown as Client);
+	expect((await attempt(first, '/api/auth/sign-up/email', body)).status).toBe(200);
+	const signIn = (auth: { handler: (request: Request) => Promise<Response> }) =>
+		attempt(auth, '/api/auth/sign-in/email', body);
+	expect((await signIn(first)).status).toBe(200);
+	expect((await signIn(first)).status).toBe(200);
+	expect((await signIn(first)).status).toBe(200);
+	expect((await signIn(first)).status).toBe(429);
+	const second = await authOnClient(secret, client as unknown as Client);
+	expect((await signIn(second)).status).toBe(429);
+	const row = db.query('select count(*) as n from rateLimit').get() as { n: number };
+	expect(row.n).toBeGreaterThan(0);
 });
 
 const tursoUrl = process.env.TURSO_DATABASE_URL?.trim();

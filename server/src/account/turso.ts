@@ -1,5 +1,6 @@
 import { createClient, type Client, type InStatement } from '@libsql/client/web';
 import { memoryStore, type AccountTables } from './memory-store';
+import type { RambleLedger, RambleUsage } from './ramble-ledger';
 import type { AccountStore, Device, Entity, LogEntry, PushTarget } from './store';
 
 /**
@@ -27,6 +28,7 @@ const SCHEMA = [
 		delivered_through INTEGER NOT NULL, PRIMARY KEY (user_id, device_id))`,
 	`CREATE TABLE IF NOT EXISTS ramble_usage (
 		user_id TEXT NOT NULL, day TEXT NOT NULL, seconds REAL NOT NULL, PRIMARY KEY (user_id, day))`,
+	`CREATE TABLE IF NOT EXISTS ramble_budget (day TEXT PRIMARY KEY, seconds REAL NOT NULL)`,
 ].join(';\n');
 
 const DROP_UNSCOPED = [
@@ -154,10 +156,52 @@ async function readTables(client: Client, userId: string): Promise<AccountTables
 	};
 }
 
+/**
+ * Ramble seconds stay on `ledger` when one is passed, including the copy `tables()` flushes. The per-request
+ * memory would otherwise forget seconds recorded after this request returned.
+ */
+function withRambleLedger(
+	store: AccountStore & { tables(): AccountTables },
+	ledger: RambleLedger,
+): AccountStore & { tables(): AccountTables } {
+	return {
+		...store,
+		rambleSeconds: day => ledger.seconds(day),
+		addRambleSeconds: (day, seconds) => {
+			ledger.add(day, seconds);
+		},
+		clearAccount: () => {
+			store.clearAccount();
+			ledger.clear();
+		},
+		tables: () => ({ ...store.tables(), ramble: ledger.snapshot() }),
+	};
+}
+
+/** Replaces one user's Ramble rows. The global budget table is left alone. */
+export async function writeRambleUsage(client: Client, userId: string, rows: RambleUsage[]) {
+	await client.batch(
+		[
+			{ sql: 'DELETE FROM ramble_usage WHERE user_id = ?', args: [userId] },
+			...rows.map((row): InStatement => ({
+				sql: 'INSERT INTO ramble_usage (user_id, day, seconds) VALUES (?, ?, ?)',
+				args: [userId, row.day, row.seconds],
+			})),
+		],
+		'write',
+	);
+}
+
+export function writeUserRamble(url: string, authToken: string, userId: string, rows: RambleUsage[]) {
+	return writeRambleUsage(createClient({ url, authToken }), userId, rows);
+}
+
 /** Loads one user's rows into memory. `flush` replaces that user's rows and leaves everyone else. */
-export async function accountSession(client: Client, userId: string): Promise<AccountSession> {
+export async function accountSession(client: Client, userId: string, ledger?: RambleLedger): Promise<AccountSession> {
 	await ensureSchema(client);
-	const store = memoryStore(await readTables(client, userId));
+	const loaded = await readTables(client, userId);
+	ledger?.seed(loaded.ramble);
+	const store = ledger ? withRambleLedger(memoryStore(loaded), ledger) : memoryStore(loaded);
 	return {
 		store,
 		flush: async () => {
@@ -166,6 +210,11 @@ export async function accountSession(client: Client, userId: string): Promise<Ac
 	};
 }
 
-export function tursoSession(url: string, authToken: string, userId: string): Promise<AccountSession> {
-	return accountSession(createClient({ url, authToken }), userId);
+export function tursoSession(
+	url: string,
+	authToken: string,
+	userId: string,
+	ledger?: RambleLedger,
+): Promise<AccountSession> {
+	return accountSession(createClient({ url, authToken }), userId, ledger);
 }

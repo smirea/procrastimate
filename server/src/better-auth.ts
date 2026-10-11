@@ -116,7 +116,10 @@ export async function appleClientSecret(env: Env): Promise<string | null> {
 	const pem = trim(env.APPLE_PRIVATE_KEY).replaceAll('\\n', '\n');
 	const subject = trim(env.APPLE_CLIENT_ID) || APPLE_BUNDLE_ID;
 	if (!teamId || !keyId || !pem.includes('PRIVATE KEY')) return null;
-	const body = pem.replace(/-----BEGIN PRIVATE KEY-----/, '').replace(/-----END PRIVATE KEY-----/, '').replace(/\s/g, '');
+	const body = pem
+		.replace(/-----BEGIN PRIVATE KEY-----/, '')
+		.replace(/-----END PRIVATE KEY-----/, '')
+		.replace(/\s/g, '');
 	const der = Uint8Array.from(atob(body), char => char.charCodeAt(0));
 	const key = await crypto.subtle.importKey('pkcs8', der, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign']);
 	const now = Math.floor(Date.now() / 1000);
@@ -165,7 +168,13 @@ async function socialProviders(env: Env) {
 	return providers;
 }
 
-function authOptions(secret: string, env: Env, database: unknown, providers: Record<string, unknown>) {
+function authOptions(
+	secret: string,
+	_env: Env,
+	database: unknown,
+	providers: Record<string, unknown>,
+	durableLimits: boolean,
+) {
 	return {
 		appName: 'procrastimate',
 		secret,
@@ -181,7 +190,8 @@ function authOptions(secret: string, env: Env, database: unknown, providers: Rec
 		session: { expiresIn: SESSION_SECONDS, updateAge: SESSION_UPDATE_SECONDS },
 		plugins: [bearer()],
 		advanced: { trustedProxyHeaders: true, cookiePrefix: 'procrastimate' },
-		rateLimit: { enabled: Boolean(tursoTarget(env)) },
+		// Memory counters reset with each isolate. The Turso table survives, which is what production has.
+		rateLimit: durableLimits ? { enabled: true, storage: 'database' as const } : { enabled: false },
 		telemetry: { enabled: false },
 	};
 }
@@ -191,7 +201,7 @@ async function buildAuth(env: Env, secret: string, client: Client | null): Promi
 	const database = client
 		? { dialect: new LibsqlDialect({ client: client as never }), type: 'sqlite' as const, transaction: true }
 		: memoryAdapter(memoryDb(secret));
-	const auth = betterAuth(authOptions(secret, env, database, providers) as never) as Auth;
+	const auth = betterAuth(authOptions(secret, env, database, providers, Boolean(client)) as never) as Auth;
 	if (client) await getMigrations(auth.options).then(plan => plan.runMigrations());
 	return auth;
 }
@@ -231,7 +241,13 @@ export function getAuth(env: Env): Promise<Auth | null> {
 /** Signs up against a caller-supplied libSQL client. The transaction test uses this with `transaction: true`. */
 export async function authOnClient(secret: string, client: Client): Promise<Auth> {
 	const auth = betterAuth(
-		authOptions(secret, {}, { dialect: new LibsqlDialect({ client: client as never }), type: 'sqlite', transaction: true }, {}) as never,
+		authOptions(
+			secret,
+			{},
+			{ dialect: new LibsqlDialect({ client: client as never }), type: 'sqlite', transaction: true },
+			{},
+			true,
+		) as never,
 	) as Auth;
 	await getMigrations(auth.options).then(plan => plan.runMigrations());
 	return auth;
@@ -258,7 +274,9 @@ export async function readSession(request: Request, env: Env): Promise<SessionUs
 	const url = new URL('/api/auth/get-session', request.url);
 	const response = await auth.handler(new Request(url, { method: 'GET', headers: request.headers }));
 	if (!response.ok) return null;
-	const body = (await response.json().catch(() => null)) as { user?: { id?: string; email?: string; name?: string } } | null;
+	const body = (await response.json().catch(() => null)) as {
+		user?: { id?: string; email?: string; name?: string };
+	} | null;
 	if (!body?.user?.id) return null;
 	return { id: body.user.id, email: body.user.email ?? '', name: body.user.name ?? '' };
 }

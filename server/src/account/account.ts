@@ -1,4 +1,5 @@
 import type { DurableObjectNamespace, DurableObjectState } from '@cloudflare/workers-types';
+import { USER_HEADER } from '../../../shared/auth';
 import { authRoutes, type AccountRoute } from '../auth';
 import { getAuth, readSession } from '../better-auth';
 import type { Env, Handler } from '../bindings';
@@ -7,12 +8,15 @@ import { pushSender } from '../push';
 import { memoryStore } from './memory-store';
 import { deliverDue, pushRoutes } from './push';
 import { ramble, rambleRoutes, workerUpstream, type RambleConfig } from './ramble';
+import { openRambleBudget } from './ramble-budget';
 import { cassetteUpstream } from './ramble-cassette';
+import { queuedRambleLedger, type RambleLedger, type RambleUsage } from './ramble-ledger';
 import { durableSockets, noSockets, realtime, realtimeRoutes, type SocketHost } from './realtime';
+import { serialQueue } from './serial';
 import { sqliteStore } from './sqlite-store';
 import type { AccountStore } from './store';
 import { syncRoutes } from './sync';
-import { tursoSession, type AccountSession } from './turso';
+import { tursoSession, writeUserRamble, type AccountSession } from './turso';
 
 /** Every route the `Account` object answers. The Worker forwards each of them to the one account. */
 const accountRoutes: Record<string, AccountRoute> = {
@@ -59,17 +63,39 @@ export function accountHandler(
  * Turso when both secrets are set, otherwise the store the host already has (SQLite on the Worker, memory in dev).
  * An end-to-end shard stays on that local store, so the run cannot write the dev database.
  */
-export async function openAccount(env: Env, fallback: AccountStore, userId: string): Promise<AccountSession> {
+export async function openAccount(
+	env: Env,
+	fallback: AccountStore,
+	userId: string,
+	ledger?: RambleLedger,
+): Promise<AccountSession> {
 	if (!env.E2E_SHARD && env.TURSO_DATABASE_URL && env.TURSO_AUTH_TOKEN) {
-		return tursoSession(env.TURSO_DATABASE_URL, env.TURSO_AUTH_TOKEN, userId);
+		return tursoSession(env.TURSO_DATABASE_URL, env.TURSO_AUTH_TOKEN, userId, ledger);
 	}
 	return { store: fallback, flush: async () => {} };
 }
 
-/** The single account, one SQLite-backed Durable Object that runs one request at a time. */
+/**
+ * The user id the Worker put on the request after checking the session. A missing header is rejected. So is a
+ * header that names someone other than the object, which is created with `idFromName(userId)`.
+ */
+export function accountUserId(request: Request, name: string | undefined): string | null {
+	const userId = request.headers.get(USER_HEADER)?.trim() ?? '';
+	if (!userId) return null;
+	if (name && name !== userId) return null;
+	return userId;
+}
+
+/**
+ * The single account, one SQLite-backed Durable Object. Turso I/O yields, so requests for this user run through
+ * `run`: load, handle, and flush finish before the next one starts.
+ */
 export class Account {
 	private readonly sqlite: AccountStore;
 	private readonly handle: (request: Request, store: AccountStore) => Promise<Response>;
+	private readonly run = serialQueue();
+	private readonly ledger: RambleLedger;
+	private userId = '';
 
 	constructor(
 		private readonly ctx: DurableObjectState,
@@ -77,25 +103,33 @@ export class Account {
 	) {
 		this.sqlite = sqliteStore(ctx.storage.sql, run => ctx.storage.transactionSync(run));
 		this.handle = accountHandler(at => this.setAlarm(at), durableSockets(ctx), workerRamble(env));
+		this.ledger = queuedRambleLedger(
+			task => {
+				const pending = this.run(task);
+				this.ctx.waitUntil(pending);
+				return pending;
+			},
+			rows => this.writeLedger(rows),
+		);
 	}
 
 	async fetch(request: Request): Promise<Response> {
-		const session = await openAccount(this.env, this.sqlite, this.userId());
-		try {
-			return await this.handle(request, session.store);
-		} finally {
-			await session.flush();
-		}
+		const userId = accountUserId(request, this.ctx.id.name);
+		if (!userId) return fail(401, 'Not signed in');
+		this.userId = userId;
+		return this.run(() => this.withStore(userId, store => this.handle(request, store)));
 	}
 
 	/** Delivers due Web Push notifications, then re-arms for the next. */
 	async alarm(): Promise<void> {
-		const session = await openAccount(this.env, this.sqlite, this.userId());
-		try {
-			await this.setAlarm(await deliverDue(session.store, Date.now(), pushSender(this.env)));
-		} finally {
-			await session.flush();
-		}
+		const userId = this.ctx.id.name ?? '';
+		if (!userId) return;
+		this.userId = userId;
+		await this.run(() =>
+			this.withStore(userId, async store => {
+				await this.setAlarm(await deliverDue(store, Date.now(), pushSender(this.env)));
+			}),
+		);
 	}
 
 	/** Clients only send the keepalive, which the runtime answers without waking the object. */
@@ -111,16 +145,36 @@ export class Account {
 		await (at === null ? this.ctx.storage.deleteAlarm() : this.ctx.storage.setAlarm(at));
 	}
 
-	/** The name passed to `idFromName` is the user id. */
-	private userId() {
-		return this.ctx.id.name ?? 'account';
+	private async withStore<T>(userId: string, use: (store: AccountStore) => Promise<T>): Promise<T> {
+		const session = await openAccount(this.env, this.sqlite, userId, this.ledger);
+		try {
+			return await use(session.store);
+		} finally {
+			await session.flush();
+		}
+	}
+
+	/** Writes the ledger's seconds. A no-op until Turso is configured and a request has named the user. */
+	private writeLedger(rows: RambleUsage[]): Promise<void> {
+		const url = this.env.TURSO_DATABASE_URL;
+		const token = this.env.TURSO_AUTH_TOKEN;
+		if (!url || !token || !this.userId || this.env.E2E_SHARD) return Promise.resolve();
+		return writeUserRamble(url, token, this.userId, rows);
 	}
 }
 
-/** ElevenLabs with the key, a cassette when `wrangler dev` runs the end-to-end tests, or Ramble off. */
+/**
+ * ElevenLabs with the key, a cassette when `wrangler dev` runs the end-to-end tests, or Ramble off. The global
+ * budget is on only for the real upstream, where the seconds are billed.
+ */
 function workerRamble(env: Env): RambleConfig {
 	if (env.RAMBLE_UPSTREAM === 'cassette') return { connect: cassetteUpstream() };
-	return { connect: env.ELEVENLABS_API_KEY ? workerUpstream(env.ELEVENLABS_API_KEY) : null };
+	if (!env.ELEVENLABS_API_KEY) return { connect: null };
+	const budget =
+		env.TURSO_DATABASE_URL && env.TURSO_AUTH_TOKEN && !env.E2E_SHARD
+			? openRambleBudget(env.TURSO_DATABASE_URL, env.TURSO_AUTH_TOKEN)
+			: null;
+	return { connect: workerUpstream(env.ELEVENLABS_API_KEY), budget };
 }
 
 const forward: Handler = async (request, env) => {

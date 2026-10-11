@@ -1,3 +1,4 @@
+import { openRambleBudget } from './account/ramble-budget';
 import { cassetteUpstream } from './account/ramble-cassette';
 import { bunUpstream, serveDev } from './dev-server';
 import env from './env';
@@ -10,7 +11,10 @@ const turso =
 const server = serveDev({
 	port: env.API_PORT,
 	turso,
-	ramble: { connect: elevenLabs ? bunUpstream(elevenLabs) : cassetteUpstream() },
+	ramble: {
+		connect: elevenLabs ? bunUpstream(elevenLabs) : cassetteUpstream(),
+		budget: elevenLabs && turso ? openRambleBudget(turso.url, turso.authToken) : null,
+	},
 });
 
 console.log('Server running at:', server.url);

@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, expect, mock, setSystemTime, spyOn, test } from 'bun:test';
 import { memoryAccount } from './account/account';
+import { withAuth } from './account/test-device';
 import api from './api';
 import type { Env } from './bindings';
 import { createReceiverKeys, decryptPush, type PushReceiver } from './push-receiver';
@@ -59,9 +60,33 @@ test('the push key needs the account binding and both VAPID secrets', async () =
 	expect(await configured.json()).toEqual({ publicKey: env.VAPID_PUBLIC_KEY });
 });
 
-test('the test push is sent immediately and reports a gone subscription as 410', async () => {
-	const env = await vapidEnv();
-	const sent = await call(env, 'POST', '/api/push/test', { subscription: { endpoint: ENDPOINT, keys } });
+test('the test push requires a session, is sent immediately, and reports a gone subscription as 410', async () => {
+	const env = withAuth(await vapidEnv());
+	expect((await call(env, 'POST', '/api/push/test', { subscription: { endpoint: ENDPOINT, keys } })).status).toBe(401);
+	const signedUp = await api.fetch(
+		new Request('https://procrastinate.test/api/auth/sign-up/email', {
+			method: 'POST',
+			headers: { 'content-type': 'application/json', origin: 'https://procrastinate.test' },
+			body: JSON.stringify({
+				email: `push-${crypto.randomUUID()}@procrastinate.test`,
+				password: 'test-password-1',
+				name: 'Push',
+			}),
+		}),
+		env,
+	);
+	expect(signedUp.status).toBe(200);
+	const token = signedUp.headers.get('set-auth-token');
+	const authed = (path: string, body: unknown) =>
+		api.fetch(
+			new Request(`https://procrastinate.test${path}`, {
+				method: 'POST',
+				headers: { 'content-type': 'application/json', Authorization: `Bearer ${token}` },
+				body: JSON.stringify(body),
+			}),
+			env,
+		);
+	const sent = await authed('/api/push/test', { subscription: { endpoint: ENDPOINT, keys } });
 	expect(await sent.json()).toEqual({ ok: true });
 	expect(JSON.parse(pushService.received[0]!)).toEqual({
 		title: 'Notifications are on',
@@ -71,10 +96,10 @@ test('the test push is sent immediately and reports a gone subscription as 410',
 	});
 
 	pushService.status = 410;
-	const gone = await call(env, 'POST', '/api/push/test', { subscription: { endpoint: ENDPOINT, keys } });
+	const gone = await authed('/api/push/test', { subscription: { endpoint: ENDPOINT, keys } });
 	expect(gone.status).toBe(410);
 	expect(await gone.json()).toEqual({ ok: false, status: 410 });
 
 	pushService.status = 503;
-	expect((await call(env, 'POST', '/api/push/test', { subscription: { endpoint: ENDPOINT, keys } })).status).toBe(502);
+	expect((await authed('/api/push/test', { subscription: { endpoint: ENDPOINT, keys } })).status).toBe(502);
 });

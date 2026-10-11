@@ -2,9 +2,11 @@ import type { Server, ServerWebSocket } from 'bun';
 import { SOCKET_PING, SOCKET_PONG } from '../../shared/sync/protocol';
 import { accountHandler } from './account/account';
 import { memoryStore } from './account/memory-store';
-import { tursoSession } from './account/turso';
 import { upstreamUrl, type ConnectUpstream, type RambleConfig } from './account/ramble';
+import { queuedRambleLedger, type RambleLedger } from './account/ramble-ledger';
 import { acceptedProtocol, type Socket, type SocketHost, type StreamEvents } from './account/realtime';
+import { serialQueue } from './account/serial';
+import { tursoSession, writeUserRamble } from './account/turso';
 import api from './api';
 import type { Env } from './bindings';
 import { originalRequest } from './request-user';
@@ -94,26 +96,39 @@ export function serveDev({
 	// End-to-end sharding stays in memory even when the shell has Turso credentials.
 	const sharded = extra.E2E_SHARD ?? process.env.E2E_SHARD;
 	const database = turso && !sharded ? turso : undefined;
-	const tails = new Map<string, Promise<unknown>>();
+	const queues = new Map<string, ReturnType<typeof serialQueue>>();
+	const ledgers = new Map<string, RambleLedger>();
+	const queueFor = (id: string) => {
+		const existing = queues.get(id);
+		if (existing) return existing;
+		const created = serialQueue();
+		queues.set(id, created);
+		return created;
+	};
+	const ledgerFor = (id: string) => {
+		const existing = ledgers.get(id);
+		if (existing) return existing;
+		const created = queuedRambleLedger(
+			task => queueFor(id)(task),
+			rows => {
+				if (!database) return Promise.resolve();
+				return writeUserRamble(database.url, database.authToken, id, rows);
+			},
+		);
+		ledgers.set(id, created);
+		return created;
+	};
 	const accountFetch = (id: string, request: Request) => {
 		if (!database) return handle(request, memoryFor(id));
-		const previous = tails.get(id) ?? Promise.resolve();
-		const run = previous.then(async () => {
-			const session = await tursoSession(database.url, database.authToken, id);
+		const ledger = ledgerFor(id);
+		return queueFor(id)(async () => {
+			const session = await tursoSession(database.url, database.authToken, id, ledger);
 			try {
 				return await handle(request, session.store);
 			} finally {
 				await session.flush();
 			}
 		});
-		tails.set(
-			id,
-			run.then(
-				() => undefined,
-				() => undefined,
-			),
-		);
-		return run;
 	};
 	const fromProcess = Object.fromEntries(
 		AUTH_ENV.flatMap(key => {

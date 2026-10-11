@@ -1,10 +1,12 @@
 import { Database, type SQLQueryBindings } from 'bun:sqlite';
 import { describe, expect, test } from 'bun:test';
 import type { Client, InStatement, ResultSet } from '@libsql/client/web';
-import { accountSession } from './turso';
+import { queuedRambleLedger } from './ramble-ledger';
+import { serialQueue } from './serial';
+import { accountSession, writeRambleUsage } from './turso';
 
 /** A libSQL client over `bun:sqlite`, so a session can round-trip without Turso. */
-function sqliteClient(): Client {
+function sqliteClient(hooks?: { beforeBatch?: () => Promise<void> }): Client {
 	const db = new Database(':memory:', { strict: true });
 	const run = (statement: InStatement) => {
 		const sql = typeof statement === 'string' ? statement : statement.sql;
@@ -20,7 +22,10 @@ function sqliteClient(): Client {
 		executeMultiple: async sql => {
 			db.exec(sql);
 		},
-		batch: async statements => statements.map(statement => run(statement as InStatement)),
+		batch: async statements => {
+			await hooks?.beforeBatch?.();
+			return statements.map(statement => run(statement as InStatement));
+		},
 	};
 	return client as Client;
 }
@@ -81,5 +86,90 @@ describe('a Turso session', () => {
 		await other.flush();
 		const again = await accountSession(client, 'user-1');
 		expect(again.store.entities()).toEqual([{ kind: 'task', id: 't1', data: { title: 'Mine' }, clocks: {} }]);
+	});
+
+	test('queued flushes keep both writes when the first flush yields', async () => {
+		let release = () => {};
+		let batches = 0;
+		const client = sqliteClient({
+			beforeBatch: () => {
+				batches += 1;
+				if (batches > 1) return Promise.resolve();
+				return new Promise<void>(resolve => {
+					release = resolve;
+				});
+			},
+		});
+		const run = serialQueue();
+		const first = run(async () => {
+			const session = await accountSession(client, 'user-1');
+			session.store.putEntity({ kind: 'task', id: 'a', data: { title: 'A' }, clocks: {} });
+			await session.flush();
+		});
+		for (let i = 0; i < 50 && batches < 1; i++) await Bun.sleep(5);
+		expect(batches).toBe(1);
+		const second = run(async () => {
+			const session = await accountSession(client, 'user-1');
+			session.store.putEntity({ kind: 'task', id: 'b', data: { title: 'B' }, clocks: {} });
+			await session.flush();
+		});
+		release();
+		await Promise.all([first, second]);
+		const third = await accountSession(client, 'user-1');
+		expect(
+			third.store
+				.entities()
+				.map(entity => entity.id)
+				.sort(),
+		).toEqual(['a', 'b']);
+	});
+
+	test('ramble seconds recorded after the flush are loaded by the next session', async () => {
+		const client = sqliteClient();
+		const run = serialQueue();
+		const attach = () => queuedRambleLedger(run, rows => writeRambleUsage(client, 'user-1', rows));
+		let ledger = attach();
+		const first = await accountSession(client, 'user-1', ledger);
+		first.store.putEntity({ kind: 'task', id: 't1', data: { title: 'Buy milk' }, clocks: {} });
+		await first.flush();
+		first.store.addRambleSeconds('2026-10-14', 12.5);
+		await ledger.settled();
+
+		ledger = attach();
+		const second = await accountSession(client, 'user-1', ledger);
+		expect(second.store.rambleSeconds('2026-10-14')).toBe(12.5);
+		expect(second.store.entities()).toEqual([{ kind: 'task', id: 't1', data: { title: 'Buy milk' }, clocks: {} }]);
+		const other = await accountSession(client, 'user-2');
+		expect(other.store.rambleSeconds('2026-10-14')).toBe(0);
+	});
+
+	test('a flush that snapshotted ramble before new seconds does not drop them', async () => {
+		let release = () => {};
+		let batches = 0;
+		const client = sqliteClient({
+			beforeBatch: () => {
+				batches += 1;
+				if (batches > 1) return Promise.resolve();
+				return new Promise<void>(resolve => {
+					release = resolve;
+				});
+			},
+		});
+		const run = serialQueue();
+		const ledger = queuedRambleLedger(run, rows => writeRambleUsage(client, 'user-1', rows));
+		const request = run(async () => {
+			const session = await accountSession(client, 'user-1', ledger);
+			await session.flush();
+		});
+		for (let i = 0; i < 50 && batches < 1; i++) await Bun.sleep(5);
+		expect(batches).toBe(1);
+		const side = await accountSession(client, 'user-1', ledger);
+		side.store.addRambleSeconds('2026-10-14', 9);
+		release();
+		await request;
+		await ledger.settled();
+		const fresh = queuedRambleLedger(serialQueue(), rows => writeRambleUsage(client, 'user-1', rows));
+		const again = await accountSession(client, 'user-1', fresh);
+		expect(again.store.rambleSeconds('2026-10-14')).toBe(9);
 	});
 });

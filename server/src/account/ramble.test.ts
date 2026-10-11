@@ -25,6 +25,7 @@ import {
 	type RambleConfig,
 	type UpstreamEvents,
 } from './ramble';
+import { memoryRambleBudget } from './ramble-budget';
 import { cassetteUpstream } from './ramble-cassette';
 import { durableSockets } from './realtime';
 
@@ -169,7 +170,9 @@ describe('the Ramble socket on the dev server', () => {
 	test('refuses plain requests and missing tokens, and answers 503 without an upstream', async () => {
 		start({ connect: fakeElevenLabs().connect });
 		const cred = await setup();
-		expect((await call('GET', RAMBLE_SOCKET_PATH, { headers: { Authorization: `Bearer ${cred.token}` } })).status).toBe(426);
+		expect((await call('GET', RAMBLE_SOCKET_PATH, { headers: { Authorization: `Bearer ${cred.token}` } })).status).toBe(
+			426,
+		);
 		{
 			const refused = new WebSocket(`ws://127.0.0.1:${server.port}${RAMBLE_SOCKET_PATH}`, [RAMBLE_SOCKET_PROTOCOL]);
 			clients.push(refused);
@@ -260,6 +263,53 @@ describe('the Ramble socket on the dev server', () => {
 		const client = connect(mac);
 		await client.message(0);
 		expect(upstream.sessions[0]!.settings.keyterms).toEqual([...KEYTERM_TRIGGERS, 'calls', 'Work', 'Home']);
+	});
+
+	test('stops every account at the global daily budget and returns unused time', async () => {
+		const upstream = fakeElevenLabs();
+		setSystemTime(Date.UTC(2026, 9, 14, 12));
+		start({
+			connect: upstream.connect,
+			limits: { sessionSeconds: 100, dailySeconds: 100 },
+			budget: memoryRambleBudget(0.3),
+		});
+		const cred = await setup();
+
+		const first = connect(cred);
+		await first.message(0);
+		first.audio(RAMBLE_FRAME_BYTES);
+		first.audio(RAMBLE_FRAME_BYTES);
+		first.stop();
+		await first.closed;
+		expect(first.messages.at(-1)).toEqual({ type: 'ended', seconds: 0.2, reason: 'stopped' });
+
+		const second = connect(cred);
+		await second.message(0);
+		second.audio(RAMBLE_FRAME_BYTES);
+		second.audio(RAMBLE_FRAME_BYTES);
+		await second.closed;
+		expect(sentBytes(upstream.sessions[1]!)).toBe(RAMBLE_FRAME_BYTES);
+		expect(second.messages.at(-1)).toEqual({ type: 'ended', seconds: 0.1, reason: 'daily-limit' });
+
+		const third = connect(cred);
+		const midnight = zonedTime(addDays(zonedDateKey(Date.now(), 'UTC'), 1), '00:00', 'UTC');
+		expect(await third.message(0)).toEqual({
+			type: 'error',
+			code: 'daily-limit',
+			message: "Ramble's daily limit is used up",
+			resetsAt: midnight,
+		});
+		expect(upstream.sessions).toHaveLength(2);
+	});
+
+	test('refuses Ramble when the global budget cannot be reserved', async () => {
+		start({
+			connect: fakeElevenLabs().connect,
+			budget: { reserve: () => Promise.reject(new Error('turso down')), release: async () => {} },
+		});
+		const cred = await setup();
+		const upgrade = { Upgrade: 'websocket', Authorization: `Bearer ${cred.token}`, [DEVICE_HEADER]: cred.deviceId };
+		expect((await call('GET', RAMBLE_SOCKET_PATH, { headers: upgrade })).status).toBe(503);
 	});
 
 	test('cuts the frame that reaches the session cap and ends the session', async () => {
