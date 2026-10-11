@@ -31,7 +31,7 @@ What the native iOS app must do to match the web app, row by row from the featur
 | `add-repeat`: stays open for the next task | ✓ | Built | S5 | `QuickAddParityTests.test_add_repeat` | `quick-add › add-repeat` | `add-repeat.png` |
 | `add-create`: an unknown `#name` or `@name` offers `Create #name` or `Create @name` and creates only when picked | ✓ | Built | Polish | `QuickAddParityTests.test_add_create` | `quick-add › add-create` | `add-create.png` |
 | `add-dock`: the card sits flush on the keyboard and the add button hides while it is open | ✓ | Built | Polish | `QuickAddParityTests.test_add_dock` | `quick-add › add-dock` | `add-dock.png` |
-| `add-toast`: on phones a toast moves above an open quick add, keeps its action on one line, and hides no chips | ✓ | Built (toasts move to the top; the XCUITest arrives with the nudge in S8) | Polish, S8 | covered by `NotificationsParityTests.test_push_nudge` | `quick-add › add-toast` | `add-toast.png` |
+| `add-toast`: on phones a toast moves above an open quick add, keeps its action on one line, and hides no chips | ✓ | Built (toasts move to the top while quick add is open) | Polish, S8 | covered by `NotificationsParityTests.test_push_nudge` | `quick-add › add-toast` | `add-toast.png` |
 
 ### Priority
 
