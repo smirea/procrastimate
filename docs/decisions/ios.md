@@ -1,6 +1,6 @@
 # iOS app
 
-- **A native SwiftUI app at feature parity with the web app.** It does everything the web client does, as listed row by row in [iOS parity](../ios-parity.md), and looks like the web app per [Visual language](visual-language.md), with native iOS 26 Liquid Glass chrome, sheets, lists, swipe actions, menus, date pickers, search, and haptics instead of web lookalikes. Apple Watch and distribution come later.
+- **A native SwiftUI app at feature parity with the web app.** It does everything the web client does, as listed row by row in [iOS parity](../ios-parity.md), and looks like the web app per [Visual language](visual-language.md), with native iOS 26 Liquid Glass chrome, sheets, lists, swipe actions, menus, date pickers, search, and haptics instead of web lookalikes. Apple Watch comes later; distribution is TestFlight first, per [Distribution](#distribution).
 
 ## Project and architecture
 
@@ -90,13 +90,11 @@
 - **Reading highlights in XCUITests.** XCUITest cannot read text attributes, so the smart input carries its tokens in the editor's accessibility identifier, such as `due: tomorrow 5pm; priority: p1`, and the tests assert that where Playwright asserts `[data-token]`. A checkbox's accessibility value is its priority (`Priority 1`), where Playwright checks the tint variable. The iOS 26 tab bar keeps badges out of the accessibility tree, so the counts test checks the rows each badge is computed from and the screenshot shows the badges. Simulator XCUITests cannot reach `onKeyPress` with synthesized hardware keys, so the smart input's arrow, Tab, Return, and Escape handling for `#` and `@` mirrors the web's `handleKeydown` without a paired test.
 - **Feature map.** Each slice replaces the `iOS: Planned` entries of the features it ships in `.cursor/skills/verify-procrastimate/features/` with the XCUITest command and names, and updates its rows in [iOS parity](../ios-parity.md).
 
-## Distribution (not planned yet)
+## Distribution
 
-- **TestFlight and the App Store need:**
-  - An Apple Developer Program membership ($99 a year) and its team id.
-  - The App ID `com.stefan.procrastimate` registered, plus an App Store Connect app record.
-  - An Apple Distribution certificate and an App Store provisioning profile. For CI, an App Store Connect API key in repository secrets with `xcodebuild -allowProvisioningUpdates` or fastlane `match`.
-  - A 1024-point app icon and launch screen, a privacy manifest (`PrivacyInfo.xcprivacy`) and privacy label (no data collected), and `ITSAppUsesNonExemptEncryption = NO`.
-  - Incrementing build numbers.
-  - Internal TestFlight testers need no App Review. The App Store does.
-- **Without a membership,** a free personal team can install on Stefan's own iPhone from Xcode, but the profile expires every 7 days.
+- **TestFlight first, from Stefan's Mac.** The app ships as `ProcrastiMate` (display name) under bundle id `com.stefan.procrastimate` and team `FNYFHG5SV7`, which the app and UI test targets both set with automatic signing. Internal TestFlight testers need no App Review; the App Store does.
+- **App Store metadata lives in the project.** Category `public.app-category.productivity`. iPhone allows portrait and both landscapes; iPad allows all four orientations, which iPad multitasking requires. `Config/Info.plist` sets `ITSAppUsesNonExemptEncryption` to `false`, since the app only uses HTTPS, so uploads skip the export compliance question. The launch screen stays the generated one.
+- **One icon source.** The 1024-pixel `AppIcon` is a single universal image rendered from `app-web/static/icons/favicon.svg` with the tile color filling the corners, because iOS applies its own mask and rejects icons with transparency. `app-web/scripts/icons.ts` renders it with the web icons, so editing the SVG and rerunning that script updates both clients.
+- **Release builds call production.** `Config/Base.xcconfig` sets `API_URL[config=Release]` to `https://procrastimate.stf.lol` after including the env-manager `LocalSecrets.xcconfig`, so an archive never ships a local URL and needs no command-line override. Debug keeps the env-manager value, the localhost API by default. The iOS workflow's `app` job checks the Release value.
+- **Archive and upload with an API key, no CI.** `app-ios/scripts/archive` archives Release, exports with `method = app-store-connect`, and uploads with `destination = upload`, signing through `-allowProvisioningUpdates` and an App Store Connect API key. The key id, issuer id, and `.p8` path come from `ASC_KEY_ID`, `ASC_ISSUER_ID`, and `ASC_KEY_PATH`, the script refuses a key inside the repo, and nothing is committed or stored in repository secrets. `--export-only` writes the `.ipa` instead. The build number is the UTC time (`yyyyMMddHHmm`) unless `BUILD_NUMBER` overrides it, so uploads always increase without committing a bump; `MARKETING_VERSION` stays in the project.
+- **Still needed before the App Store:** an App Store Connect app record for the bundle id, a privacy manifest (`PrivacyInfo.xcprivacy`) and privacy label (no data collected), screenshots, and a description.
