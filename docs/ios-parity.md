@@ -6,7 +6,7 @@ What the native iOS app must do to match the web app, row by row from the featur
 
 macOS `core` and `app` stay off until a release ([Workflow](decisions/workflow.md)). When they are turned back on, check this first:
 
-- **#47 App Intents** failed its macOS `app` job on `cursor/ios-app-intents-e717` ([run 38145812810](https://github.com/smirea/procrastinate/actions/runs/38145812810)). The log has no failing XCUITest: the job died in **Build** before tests started. Swift reported that `typeDisplayRepresentation` and `defaultQuery` are not concurrency-safe (`Entities.swift`, `NavigationIntents.swift`, `TaskIntents.swift`), and that `IndexedEntityQuery` and `CSSearchableIndexDescription` are not in scope (`Entities.swift`).
+- **#47 App Intents** failed its macOS `app` job on `cursor/ios-app-intents-e717` ([run 38145812810](https://github.com/smirea/procrastimate/actions/runs/38145812810)). The log has no failing XCUITest: the job died in **Build** before tests started. Swift reported that `typeDisplayRepresentation` and `defaultQuery` are not concurrency-safe (`Entities.swift`, `NavigationIntents.swift`, `TaskIntents.swift`), and that `IndexedEntityQuery` and `CSSearchableIndexDescription` are not in scope (`Entities.swift`).
 
 ## How to read the checklist
 

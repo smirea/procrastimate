@@ -88,7 +88,7 @@ test('push-nudge: a timed task does not offer to turn notifications on', async (
 
 test('push-open: a notification opens its task', async ({ app, page, snap }) => {
 	await app.add('Call mom today 10:30am');
-	const id = await page.evaluate(() => JSON.parse(localStorage.getItem('procrastinate')!).tasks[0].id as string);
+	const id = await page.evaluate(() => JSON.parse(localStorage.getItem('procrastimate')!).tasks[0].id as string);
 	await page.goto(`/today?task=${id}`);
 	await expect(app.details().getByRole('textbox', { name: 'Title' })).toHaveValue('Call mom');
 	await snap('push-open');

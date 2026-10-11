@@ -18,7 +18,7 @@ import { store } from './store.svelte.ts';
  */
 
 /** The bearer token sits under its own key, outside the snapshot document. */
-const TOKEN_KEY = 'procrastinate-device';
+const TOKEN_KEY = 'procrastimate-device';
 const COMMIT_DELAY = 1000;
 const INTERVAL = 60_000;
 /** A keepalive that also finds a dead socket: one that answers nothing between two pings is dropped. */

@@ -1,12 +1,7 @@
 import { z } from 'zod';
+import { INSTALL_GATE } from './install-gate.mjs';
 
-/**
- * Every install sends this when it registers. It is not a setup code and it never appears in the UI. It only
- * rejects a client that is not this app. The value ships in the client, so someone who reads the bundle can
- * register a device; the device token then gates every later request. That is the whole lock for one user
- * with nothing to type.
- */
-export const INSTALL_GATE = 'procrastinate-install-v1';
+export { INSTALL_GATE };
 
 const deviceName = z.string().trim().min(1).max(60);
 

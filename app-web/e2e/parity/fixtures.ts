@@ -122,8 +122,8 @@ export class PhoneApp extends App {
 		await expect
 			.poll(async () =>
 				this.page.evaluate(() => {
-					const token = localStorage.getItem('procrastinate-device');
-					const raw = localStorage.getItem('procrastinate');
+					const token = localStorage.getItem('procrastimate-device');
+					const raw = localStorage.getItem('procrastimate');
 					const sync = raw ? (JSON.parse(raw) as { sync?: { outbox: unknown[]; reset?: boolean } }).sync : undefined;
 					return Boolean(token && sync && !sync.reset && sync.outbox.length === 0);
 				}),

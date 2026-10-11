@@ -3,7 +3,7 @@ import Foundation
 
 /// The install gate every client sends when it registers. It is not a setup code and it never appears in the UI.
 public enum InstallGate {
-    public static let value = "procrastinate-install-v1"
+    public static let value = "procrastimate-install-v1"
 }
 
 /// Field-level sync for the local document: diff a commit into the outbox, and apply the server's answer.

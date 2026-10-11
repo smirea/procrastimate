@@ -7,7 +7,7 @@ export async function registerDevice(env: Env, name = 'Device'): Promise<{ devic
 	const token = `token-${crypto.randomUUID()}`;
 	const deviceId = crypto.randomUUID();
 	const response = await api.fetch(
-		new Request('https://procrastinate.test/api/auth/register', {
+		new Request('https://procrastimate.test/api/auth/register', {
 			method: 'POST',
 			body: JSON.stringify({ gate: INSTALL_GATE, deviceId, token, name }),
 		}),

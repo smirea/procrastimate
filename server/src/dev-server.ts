@@ -63,13 +63,22 @@ export function serveDev({
 			[...open].filter(socket => socket.data.kind === 'nudge' && (!deviceId || socket.data.deviceId === deviceId)),
 		stream: (request, protocol, start) => upgrade(request, { kind: 'stream', start }, protocol),
 	};
-	const memory = memoryStore();
+	const memories = new Map<string, ReturnType<typeof memoryStore>>();
+	const memoryFor = (id: string) => {
+		const existing = memories.get(id);
+		if (existing) return existing;
+		const created = memoryStore();
+		memories.set(id, created);
+		return created;
+	};
 	const handle = accountHandler(async () => {}, sockets, ramble);
+	// End-to-end sharding stays in memory even when the shell has Turso credentials.
+	const database = turso && !process.env.E2E_SHARD ? turso : undefined;
 	let tail = Promise.resolve();
-	const accountFetch = (request: Request) => {
-		if (!turso) return handle(request, memory);
+	const accountFetch = (id: string, request: Request) => {
+		if (!database) return handle(request, memoryFor(id));
 		const run = tail.then(async () => {
-			const session = await tursoSession(turso.url, turso.authToken);
+			const session = await tursoSession(database.url, database.authToken);
 			try {
 				return await handle(request, session.store);
 			} finally {
@@ -83,7 +92,11 @@ export function serveDev({
 		return run;
 	};
 	const bindings = {
-		ACCOUNT: { idFromName: (name: string) => name, get: () => ({ fetch: accountFetch }) },
+		E2E_SHARD: process.env.E2E_SHARD,
+		ACCOUNT: {
+			idFromName: (name: string) => name,
+			get: (id: string) => ({ fetch: (request: Request) => accountFetch(id, request) }),
+		},
 	};
 
 	server = Bun.serve<SocketData>({

@@ -1,9 +1,9 @@
 import type { Browser, BrowserContext, Page } from '@playwright/test';
-import { App, expect, NOW, test } from './fixtures.ts';
+import { App, expect, NOW, stampAccount, test } from './fixtures.ts';
 
 /**
- * Two browser contexts are two devices on the one dev account. Sync starts on its own. The account is shared by
- * every test in the run, so each test uses its own task titles. "Offline" fails the device's sync requests instead
+ * Two browser contexts are two devices on this test's account. Sync starts on its own. Each test has its own
+ * account, so titles only need to be unique inside the test. "Offline" fails the device's sync requests instead
  * of taking the whole browser offline, which would also cut it off from the dev server.
  */
 
@@ -17,6 +17,7 @@ test.describe.configure({ mode: 'serial' });
 async function device(browser: Browser): Promise<Device> {
 	const { baseURL, timezoneId, viewport } = test.info().project.use;
 	const context = await browser.newContext({ baseURL, timezoneId, viewport });
+	await stampAccount(context, baseURL);
 	const page = await context.newPage();
 	await page.clock.setFixedTime(NOW);
 	await page.goto('/inbox');
@@ -32,7 +33,7 @@ const goOnline = ({ context }: Device) => context.unroute('**/api/sync');
 
 const outbox = (page: Page) =>
 	page.evaluate(() => {
-		const raw = localStorage.getItem('procrastinate');
+		const raw = localStorage.getItem('procrastimate');
 		const sync = raw ? (JSON.parse(raw) as { sync?: { outbox: unknown[]; reset?: boolean } }).sync : undefined;
 		if (!sync) return -1;
 		if (sync.reset) return -2;
@@ -44,7 +45,7 @@ async function settled(device: Device) {
 	await focus(device.page);
 	await expect
 		.poll(async () => {
-			const token = await device.page.evaluate(() => localStorage.getItem('procrastinate-device'));
+			const token = await device.page.evaluate(() => localStorage.getItem('procrastimate-device'));
 			if (!token) return false;
 			return (await outbox(device.page)) === 0;
 		})
@@ -179,5 +180,5 @@ test('delete all data clears this device and the other', async ({ browser }) => 
 	await settled(a);
 	await focus(b.page);
 	await expect(b.app.row(title)).toHaveCount(0, { timeout: 10_000 });
-	expect(await a.page.evaluate(() => localStorage.getItem('procrastinate-device'))).toBeTruthy();
+	expect(await a.page.evaluate(() => localStorage.getItem('procrastimate-device'))).toBeTruthy();
 });

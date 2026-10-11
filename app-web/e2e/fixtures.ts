@@ -1,11 +1,33 @@
-import { expect, test as base, type Page } from '@playwright/test';
+import { expect, test as base, type BrowserContext, type Page } from '@playwright/test';
 import { strToU8, zipSync } from 'fflate';
 import { todoistBackupFiles } from '../../shared/fixtures/todoist-backup.mts';
 
 /** Wednesday, October 14 2026, 10:00 UTC. The suite runs in the UTC time zone. */
 export const NOW = new Date('2026-10-14T10:00:00Z');
 
+const accounts = new Map<string, string>();
+
+/** One account per test. The dev server reads it from this cookie only while `E2E_SHARD` is set. */
+export function e2eAccount(): string {
+	const id = test.info().testId;
+	const existing = accounts.get(id);
+	if (existing) return existing;
+	const created = crypto.randomUUID();
+	accounts.set(id, created);
+	return created;
+}
+
+/** Puts this test's account cookie on a context, including ones a test opens itself. */
+export async function stampAccount(context: BrowserContext, baseURL = test.info().project.use.baseURL) {
+	if (!baseURL) return;
+	await context.addCookies([{ name: 'e2e-account', value: e2eAccount(), url: baseURL }]);
+}
+
 export const test = base.extend<{ app: App }>({
+	context: async ({ context, baseURL }, use) => {
+		await stampAccount(context, baseURL);
+		await use(context);
+	},
 	app: async ({ page }, use) => {
 		await page.clock.setFixedTime(NOW);
 		await page.goto('/inbox');

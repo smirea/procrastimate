@@ -53,9 +53,14 @@ export function accountHandler(
 	};
 }
 
-/** Turso when both secrets are set, otherwise the store the host already has (SQLite on the Worker, memory in dev). */
+/**
+ * Turso when both secrets are set, otherwise the store the host already has (SQLite on the Worker, memory in dev).
+ * An end-to-end shard stays on that local store, so the run cannot write the dev database.
+ */
 export async function openAccount(env: Env, fallback: AccountStore): Promise<AccountSession> {
-	if (env.TURSO_DATABASE_URL && env.TURSO_AUTH_TOKEN) return tursoSession(env.TURSO_DATABASE_URL, env.TURSO_AUTH_TOKEN);
+	if (!env.E2E_SHARD && env.TURSO_DATABASE_URL && env.TURSO_AUTH_TOKEN) {
+		return tursoSession(env.TURSO_DATABASE_URL, env.TURSO_AUTH_TOKEN);
+	}
 	return { store: fallback, flush: async () => {} };
 }
 
@@ -114,9 +119,19 @@ function workerRamble(env: Env): RambleConfig {
 /** There is one account, so every request goes to the object with this name. */
 const ACCOUNT_NAME = 'account';
 
+/**
+ * The end-to-end run sets `E2E_SHARD` and sends a different `e2e-account` cookie per test, so parallel tests do not
+ * share tasks. Any other process uses the one account and ignores the cookie.
+ */
+export function accountName(request: Request, env: Env): string {
+	if (!env.E2E_SHARD) return ACCOUNT_NAME;
+	const match = /(?:^|;\s*)e2e-account=([A-Za-z0-9-]{8,80})/.exec(request.headers.get('cookie') ?? '');
+	return match ? `${ACCOUNT_NAME}:${match[1]}` : ACCOUNT_NAME;
+}
+
 const forward: Handler = (request, env) => {
 	if (!env.ACCOUNT) return fail(503, 'Sync is not configured');
-	const stub = env.ACCOUNT.get(env.ACCOUNT.idFromName(ACCOUNT_NAME));
+	const stub = env.ACCOUNT.get(env.ACCOUNT.idFromName(accountName(request, env)));
 	return stub.fetch(request as never) as unknown as Promise<Response>;
 };
 

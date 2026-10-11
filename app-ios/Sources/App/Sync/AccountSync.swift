@@ -151,7 +151,7 @@ final class AccountSync {
 
 /// The bearer token, outside the snapshot document.
 enum DeviceToken {
-    private static let service = "procrastinate-device"
+    private static let service = "procrastimate-device"
 
     static func read() -> String? {
         let query: [String: Any] = [

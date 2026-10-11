@@ -15,6 +15,11 @@ export type Env = {
 	ELEVENLABS_API_KEY?: string;
 	/** `cassette` replays recorded transcripts instead of calling ElevenLabs, for `wrangler dev` in tests. */
 	RAMBLE_UPSTREAM?: string;
+	/**
+	 * Set only by the end-to-end run. Requests then pick an account from the `e2e-account` cookie, and Turso is
+	 * left untouched. Production never sets it, so the cookie does nothing there.
+	 */
+	E2E_SHARD?: string;
 };
 
 export type Handler = (request: Request, env: Env) => Response | Promise<Response>;

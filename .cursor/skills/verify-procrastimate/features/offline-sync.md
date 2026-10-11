@@ -39,4 +39,4 @@ Preconditions:
 - The pinned e2e clock is days ahead of the server, which then replaces the clients' clocks with its own, so the write that reaches the server last wins a conflict. The test only asserts that both clients agree.
 - Completing a task commits 260 ms after the click, after the check animation.
 - A change that shows only on the client that made it proves local state, not sync.
-- The token lives under the `procrastinate-device` `localStorage` key, outside the `procrastinate` document. The document always has a `sync` section.
+- The token lives under the `procrastimate-device` `localStorage` key, outside the `procrastimate` document. The document always has a `sync` section.

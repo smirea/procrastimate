@@ -14,7 +14,7 @@ afterEach(() => setSystemTime());
 
 const call = (env: Env, body?: unknown, token?: string) =>
 	api.fetch(
-		new Request('https://procrastinate.test/api/auth/register', {
+		new Request('https://procrastimate.test/api/auth/register', {
 			method: 'POST',
 			headers: token ? { Authorization: `Bearer ${token}` } : {},
 			body: body === undefined ? undefined : JSON.stringify(body),

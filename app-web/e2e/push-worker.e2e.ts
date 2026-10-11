@@ -1,7 +1,7 @@
 import { createServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import type { APIRequestContext, Page } from '@playwright/test';
-import { INSTALL_GATE } from 'shared/auth.ts';
+import { INSTALL_GATE } from '../../shared/install-gate.mjs';
 import type { PushMessage, PushScheduleResponse } from 'shared/push.ts';
 import { createReceiverKeys, decryptPush, verifyVapid } from '../../server/src/push-receiver.ts';
 import { expect, test, type App } from './fixtures.ts';
@@ -67,8 +67,8 @@ async function setUpSync(app: App) {
 	await expect
 		.poll(async () =>
 			app.page.evaluate(() => {
-				const token = localStorage.getItem('procrastinate-device');
-				const raw = localStorage.getItem('procrastinate');
+				const token = localStorage.getItem('procrastimate-device');
+				const raw = localStorage.getItem('procrastimate');
 				const sync = raw ? (JSON.parse(raw) as { sync?: { outbox: unknown[]; reset?: boolean } }).sync : undefined;
 				return Boolean(token && sync && !sync.reset && sync.outbox.length === 0);
 			}),

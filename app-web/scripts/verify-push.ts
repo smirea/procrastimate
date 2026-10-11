@@ -61,7 +61,7 @@ await page.goto('/inbox');
 const nav = page.getByRole('navigation', { name: 'Main' });
 const settings = page.getByRole('dialog', { name: 'Settings' });
 await expect
-	.poll(() => page.evaluate(() => localStorage.getItem('procrastinate-device')), { timeout: 15_000 })
+	.poll(() => page.evaluate(() => localStorage.getItem('procrastimate-device')), { timeout: 15_000 })
 	.toBeTruthy();
 log('PASS sync is on');
 await nav.getByRole('button', { name: 'Settings' }).click();
