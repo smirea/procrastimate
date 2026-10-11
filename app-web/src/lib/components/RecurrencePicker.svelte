@@ -3,7 +3,7 @@
 	import Check from 'phosphor-svelte/lib/Check';
 	import { alignToRecurrence, sortWeekdays, weekdayOf, weeklyOn, type Due, type Recurrence, type RecurrenceUnit, type Weekday } from 'shared/task.ts';
 	import Popover from './Popover.svelte';
-	import { WEEKDAY_NAMES, formatRecurrence, repeatLabel } from '../format.ts';
+	import { WEEKDAY_NAMES, formatRecurrence, repeatLabel } from 'shared/format.ts';
 	import { clock } from '../ui.svelte.ts';
 
 	let {

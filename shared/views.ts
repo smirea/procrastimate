@@ -1,4 +1,4 @@
-import type { DateKey, Task } from 'shared/task.ts';
+import type { DateKey, Task } from './task.ts';
 
 export type DayGroup = { date: DateKey; tasks: Task[] };
 

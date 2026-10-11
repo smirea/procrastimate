@@ -3,7 +3,7 @@
 	import TaskList from '#lib/components/TaskList.svelte';
 	import { store } from '#lib/store.svelte.ts';
 	import { clock, mobile } from '#lib/ui.svelte.ts';
-	import { todayTasks } from '#lib/views.ts';
+	import { todayTasks } from 'shared/views.ts';
 	import { fromDateKey } from 'shared/task.ts';
 
 	const tasks = $derived(todayTasks(store.tasks, clock.today));

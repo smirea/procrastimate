@@ -350,7 +350,7 @@ test('search opens from the drawer, docks above the keyboard, and a tap opens a 
 	await openKeyboard(app);
 	await field.pressSequentially('pl');
 	const results = page.getByRole('listbox', { name: 'Search results' });
-	await expect(results.getByRole('option')).toHaveText([/Water plants\s+Tomorrow/, /Call plumber/]);
+	await expect(results.getByRole('option')).toHaveText([/Call plumber/, /Water plants\s+Tomorrow/]);
 	await expect(results.locator('mark')).toHaveText(['pl', 'pl']);
 	expect((await results.getByRole('option', { name: /Call plumber/ }).boundingBox())!.height).toBeGreaterThanOrEqual(
 		44,

@@ -3,7 +3,7 @@
 	import X from 'phosphor-svelte/lib/X';
 	import type { DateKey, Due, Reminder, TimeOfDay } from 'shared/task.ts';
 	import Popover from './Popover.svelte';
-	import { formatReminder } from '../format.ts';
+	import { formatReminder } from 'shared/format.ts';
 	import { clock } from '../ui.svelte.ts';
 
 	let {

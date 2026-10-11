@@ -14,7 +14,8 @@
 		".svelte-kit",
 		"**/.svelte-kit",
 		"test-results",
-		"playwright-report"
+		"playwright-report",
+		"shared/vectors/*.json"
 	],
 	"printWidth": 120,
 	"useTabs": true,

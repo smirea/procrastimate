@@ -1,15 +1,22 @@
-import { describe, expect, test } from 'bun:test';
-import {
-	addInterval,
-	alignToRecurrence,
-	nextOccurrence,
-	notificationTimes,
-	stepRecurrence,
-	weeklyOn,
-	type Due,
-	type Recurrence,
-	type Reminder,
-} from './task.ts';
+import { expect } from 'bun:test';
+import * as dates from './task.ts';
+import type { Due, Recurrence, Reminder } from './task.ts';
+import { describe, recorded, test } from './vectors/record.ts';
+
+const addDays = recorded('task', dates.addDays);
+const addInterval = recorded('task', dates.addInterval);
+const addMonths = recorded('task', dates.addMonths);
+const alignToRecurrence = recorded('task', dates.alignToRecurrence);
+const fromDateKey = recorded('task', dates.fromDateKey);
+const isWeekday = recorded('task', dates.isWeekday);
+const nextOccurrence = recorded('task', dates.nextOccurrence);
+const notificationTimes = recorded('task', dates.notificationTimes);
+const reminderFiresAt = recorded('task', dates.reminderFiresAt);
+const sortWeekdays = recorded('task', dates.sortWeekdays);
+const stepRecurrence = recorded('task', dates.stepRecurrence);
+const toDateKey = recorded('task', dates.toDateKey);
+const weekdayOf = recorded('task', dates.weekdayOf);
+const weeklyOn = recorded('task', dates.weeklyOn);
 
 const at = (date: Date) => date.toISOString();
 const times = (due: Due | null, reminders: Reminder[] = []) => notificationTimes(due, reminders).map(at);
@@ -227,5 +234,76 @@ describe('a repeating task notifies at its next occurrence', () => {
 			{ kind: 'at', date: '2026-10-14', time: '17:00' },
 		])!;
 		expect(times(rolled.due, rolled.reminders)).toEqual([local('2026-10-21', '16:30'), local('2026-10-21', '17:00')]);
+	});
+});
+
+describe('calendar dates', () => {
+	test.each([
+		['2026-10-14', 1, '2026-10-15'],
+		['2026-10-31', 2, '2026-11-02'],
+		['2026-12-31', 1, '2027-01-01'],
+		['2026-03-01', -1, '2026-02-28'],
+		['2028-02-28', 1, '2028-02-29'],
+	] as const)('addDays %s %d is %s', (from, days, expected) => {
+		expect(addDays(from, days)).toBe(expected);
+	});
+
+	test.each([
+		['2026-01-31', 1, '2026-02-28'],
+		['2026-03-31', -1, '2026-02-28'],
+		['2026-12-15', 2, '2027-02-15'],
+		['2028-01-30', 1, '2028-02-29'],
+		['2026-10-14', -12, '2025-10-14'],
+	] as const)('addMonths %s %d is %s', (from, months, expected) => {
+		expect(addMonths(from, months)).toBe(expected);
+	});
+
+	test.each([
+		['2026-10-14', 3, true],
+		['2026-10-17', 6, false],
+		['2026-10-18', 0, false],
+		['2026-11-01', 0, false],
+		['2026-11-02', 1, true],
+	] as const)('%s is weekday %d, a working day: %p', (date, weekday, working) => {
+		expect(weekdayOf(date)).toBe(weekday);
+		expect(isWeekday(date)).toBe(working);
+	});
+
+	test('weekdays sort Monday first without repeats', () => {
+		expect(sortWeekdays([0, 3, 1, 3])).toEqual([1, 3, 0]);
+	});
+
+	test('a moment reads as the local day it falls on', () => {
+		expect(toDateKey(new Date(2026, 10, 1, 23, 30))).toBe('2026-11-01');
+		expect(toDateKey(new Date(2026, 10, 2, 0, 15))).toBe('2026-11-02');
+	});
+});
+
+describe('times across the DST change', () => {
+	test('a local time keeps its wall clock on either side of the change', () => {
+		expect(fromDateKey('2026-10-31', '09:00')).toEqual(new Date(2026, 9, 31, 9, 0));
+		expect(fromDateKey('2026-11-01', '09:00')).toEqual(new Date(2026, 10, 1, 9, 0));
+		expect(fromDateKey('2026-11-01')).toEqual(new Date(2026, 10, 1));
+	});
+
+	test('a repeated hour resolves to its first occurrence and a skipped hour moves forward', () => {
+		expect(fromDateKey('2026-11-01', '01:30')).toEqual(new Date(2026, 10, 1, 1, 30));
+		expect(fromDateKey('2027-03-14', '02:30')).toEqual(new Date(2027, 2, 14, 2, 30));
+	});
+
+	test('a relative reminder counts elapsed minutes across the change', () => {
+		const due: Due = { date: '2026-11-02', time: '09:00' };
+		const dueAt = dates.fromDateKey(due.date, due.time);
+		expect(reminderFiresAt({ kind: 'before', minutes: 1440 }, due)?.getTime()).toBe(dueAt.getTime() - 86_400_000);
+		expect(reminderFiresAt({ kind: 'before', minutes: 30 }, { date: '2026-11-02', time: null })).toBeNull();
+		expect(reminderFiresAt({ kind: 'at', date: '2026-11-01', time: '08:00' }, null)).toEqual(new Date(2026, 10, 1, 8));
+	});
+
+	test('a daily repeat keeps its wall-clock time across the change', () => {
+		const rolled = nextOccurrence(
+			{ due: { date: '2026-10-31', time: '09:00' }, recurrence: { interval: 1, unit: 'day' }, reminders: [] },
+			'2026-10-31',
+		)!;
+		expect(times(rolled.due, rolled.reminders)).toEqual([local('2026-11-01', '09:00')]);
 	});
 });

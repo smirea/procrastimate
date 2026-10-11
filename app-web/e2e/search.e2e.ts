@@ -129,7 +129,7 @@ test('a label matches its tasks and opens the label view', async ({ app, page })
 	await openSearch(app);
 	await field(app).fill('call');
 	await expect(group(app, 'Labels').getByRole('option')).toHaveText(['calls']);
-	await expect(group(app, 'Tasks').getByRole('option')).toHaveText([/Plumber.*calls/, /Dentist.*calls/]);
+	await expect(group(app, 'Tasks').getByRole('option')).toHaveText([/Dentist.*calls/, /Plumber.*calls/]);
 	await expect(group(app, 'Tasks').locator('mark')).toHaveText(['call', 'call']);
 	await expect(group(app, 'Labels').getByRole('option')).toHaveAttribute('aria-selected', 'true');
 	await app.settle();

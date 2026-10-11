@@ -8,16 +8,11 @@ import {
 	type Recurrence,
 	type Reminder,
 	type TimeOfDay,
-} from 'shared/task.ts';
+} from './task.ts';
 
 export type DueTone = 'overdue' | 'today' | 'tomorrow' | 'week' | 'later';
 
-export const PRIORITIES: Record<Priority, { label: string; tone: string }> = {
-	1: { label: 'Priority 1', tone: 'var(--p1)' },
-	2: { label: 'Priority 2', tone: 'var(--p2)' },
-	3: { label: 'Priority 3', tone: 'var(--p3)' },
-	4: { label: 'Priority 4', tone: 'var(--p4)' },
-};
+export const priorityLabel = (priority: Priority) => `Priority ${priority}`;
 
 export function formatTime(time: TimeOfDay): string {
 	const [h, m] = time.split(':').map(Number) as [number, number];
@@ -113,3 +108,11 @@ export function dayHeading(date: DateKey, today: DateKey): string {
 	const weekday = d.toLocaleDateString('en-US', { weekday: 'long' });
 	return date === addDays(today, 1) ? `${label} · Tomorrow · ${weekday}` : `${label} · ${weekday}`;
 }
+
+/** The undo toast after completing a task: `Completed “Standup”`, or `…, next due Friday 9am` when it repeats. */
+export function completedToast(title: string, next: Due | null, today: DateKey): string {
+	return next ? `Completed “${title}”, next due ${formatDue(next, today)}` : `Completed “${title}”`;
+}
+
+/** The toast an open app shows when a task's due time or reminder comes up. */
+export const reminderToast = (title: string) => `Reminder: ${title}`;

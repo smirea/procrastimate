@@ -6,9 +6,9 @@
 
 # Layout
 
-- `Sources/Core`: Foundation-only logic (no SwiftUI, no UIKit), so it builds and tests on Linux. It never reads `Date()`, `TimeZone.current`, or `Calendar.current`; take an `AppClock`.
+- `Sources/Core`: Foundation-only logic (no SwiftUI, no UIKit), so it builds and tests on Linux. It never reads `Date()`, `TimeZone.current`, or `Calendar.current`; take an `AppClock`. Ports of `shared/` modules keep the TS names, one namespace per module (`Dates`, `Notifications`, `Subtasks`, `Views`, `Format`, `StoreRules`, `Snapshot`); the task type is `TaskItem`.
 - `Sources/App`: the SwiftUI app. `Navigation/` holds `RootView`, `Route`, `Sheet`, and `Navigator`; `Screens/<Area>/` holds one file per screen; `Theme/Tokens.swift` is generated.
-- `Tests/CoreTests`: Swift Testing for `Core`. `Tests/AppUITests`: XCUITests, `<Area>ParityTests.swift` with `test_<parity_id>`, built on `ParityTestCase`.
+- `Tests/CoreTests`: Swift Testing for `Core`. `VectorTests` replays every case in `shared/vectors/*.json`; a ported function needs a handler there, and a module or function without one fails. `Tests/AppUITests`: XCUITests, `<Area>ParityTests.swift` with `test_<parity_id>`, built on `ParityTestCase`.
 - `Package.swift` declares only `Core` and `CoreTests`. `App.xcodeproj` builds `Core` as a static library, the app, and the UI tests from synchronized folders, so adding files never edits `project.pbxproj`.
 
 # Development

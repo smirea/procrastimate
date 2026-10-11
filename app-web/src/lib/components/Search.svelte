@@ -16,7 +16,8 @@
 	import Highlighted from './Highlighted.svelte';
 	import { store } from '../store.svelte.ts';
 	import { clock, mobile, sheets, motion } from '../ui.svelte.ts';
-	import { PRIORITIES, dueTone, formatDate, formatDue } from '../format.ts';
+	import { dueTone, formatDate, formatDue } from 'shared/format.ts';
+	import { PRIORITIES } from '../priorities.ts';
 
 	/** Rendering is the cost that grows with matches, so each section shows only its best rows. */
 	const LIMIT = { projects: 5, labels: 5, open: 30, completed: 15 };

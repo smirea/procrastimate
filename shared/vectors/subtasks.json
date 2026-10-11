@@ -1,0 +1,1953 @@
+{
+	"module": "subtasks",
+	"timeZone": "America/New_York",
+	"cases": [
+		{
+			"fn": "groupChildren",
+			"test": "subtask tree › children come in sibling order and descendants reach every level",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "trip",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "trip"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "socks",
+						"labelIds": [],
+						"notes": "",
+						"order": 2,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "socks"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "passport",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "passport"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "charger",
+						"labelIds": [],
+						"notes": "",
+						"order": 1,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "charger"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "cable",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "charger",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "cable"
+					}
+				]
+			],
+			"output": {
+				"charger": [
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "cable",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "charger",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "cable"
+					}
+				],
+				"trip": [
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "passport",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "passport"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "charger",
+						"labelIds": [],
+						"notes": "",
+						"order": 1,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "charger"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "socks",
+						"labelIds": [],
+						"notes": "",
+						"order": 2,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "socks"
+					}
+				]
+			}
+		},
+		{
+			"fn": "descendantsOf",
+			"test": "subtask tree › children come in sibling order and descendants reach every level",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "trip",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "trip"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "socks",
+						"labelIds": [],
+						"notes": "",
+						"order": 2,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "socks"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "passport",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "passport"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "charger",
+						"labelIds": [],
+						"notes": "",
+						"order": 1,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "charger"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "cable",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "charger",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "cable"
+					}
+				],
+				"trip"
+			],
+			"output": [
+				{
+					"completedAt": null,
+					"createdAt": 1,
+					"due": null,
+					"id": "passport",
+					"labelIds": [],
+					"notes": "",
+					"order": 0,
+					"parentId": "trip",
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "passport"
+				},
+				{
+					"completedAt": null,
+					"createdAt": 1,
+					"due": null,
+					"id": "charger",
+					"labelIds": [],
+					"notes": "",
+					"order": 1,
+					"parentId": "trip",
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "charger"
+				},
+				{
+					"completedAt": null,
+					"createdAt": 1,
+					"due": null,
+					"id": "socks",
+					"labelIds": [],
+					"notes": "",
+					"order": 2,
+					"parentId": "trip",
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "socks"
+				},
+				{
+					"completedAt": null,
+					"createdAt": 1,
+					"due": null,
+					"id": "cable",
+					"labelIds": [],
+					"notes": "",
+					"order": 0,
+					"parentId": "charger",
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "cable"
+				}
+			]
+		},
+		{
+			"fn": "ancestorsOf",
+			"test": "subtask tree › children come in sibling order and descendants reach every level",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "trip",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "trip"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "socks",
+						"labelIds": [],
+						"notes": "",
+						"order": 2,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "socks"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "passport",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "passport"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "charger",
+						"labelIds": [],
+						"notes": "",
+						"order": 1,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "charger"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "cable",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "charger",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "cable"
+					}
+				],
+				"cable"
+			],
+			"output": [
+				{
+					"completedAt": null,
+					"createdAt": 1,
+					"due": null,
+					"id": "trip",
+					"labelIds": [],
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "trip"
+				},
+				{
+					"completedAt": null,
+					"createdAt": 1,
+					"due": null,
+					"id": "charger",
+					"labelIds": [],
+					"notes": "",
+					"order": 1,
+					"parentId": "trip",
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "charger"
+				}
+			]
+		},
+		{
+			"fn": "nextSiblingOrder",
+			"test": "subtask tree › children come in sibling order and descendants reach every level",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "trip",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "trip"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "socks",
+						"labelIds": [],
+						"notes": "",
+						"order": 2,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "socks"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "passport",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "passport"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "charger",
+						"labelIds": [],
+						"notes": "",
+						"order": 1,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "charger"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "cable",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "charger",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "cable"
+					}
+				],
+				"trip"
+			],
+			"output": 3
+		},
+		{
+			"fn": "nextSiblingOrder",
+			"test": "subtask tree › children come in sibling order and descendants reach every level",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "trip",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "trip"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "socks",
+						"labelIds": [],
+						"notes": "",
+						"order": 2,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "socks"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "passport",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "passport"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "charger",
+						"labelIds": [],
+						"notes": "",
+						"order": 1,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "charger"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "cable",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "charger",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "cable"
+					}
+				],
+				"socks"
+			],
+			"output": 0
+		},
+		{
+			"fn": "groupChildren",
+			"test": "subtask tree › progress counts done direct children and is null without any",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "trip",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "trip"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "socks",
+						"labelIds": [],
+						"notes": "",
+						"order": 2,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "socks"
+					},
+					{
+						"completedAt": 5,
+						"createdAt": 1,
+						"due": null,
+						"id": "passport",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "passport"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "charger",
+						"labelIds": [],
+						"notes": "",
+						"order": 1,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "charger"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "cable",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "charger",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "cable"
+					}
+				]
+			],
+			"output": {
+				"charger": [
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "cable",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "charger",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "cable"
+					}
+				],
+				"trip": [
+					{
+						"completedAt": 5,
+						"createdAt": 1,
+						"due": null,
+						"id": "passport",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "passport"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "charger",
+						"labelIds": [],
+						"notes": "",
+						"order": 1,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "charger"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "socks",
+						"labelIds": [],
+						"notes": "",
+						"order": 2,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "socks"
+					}
+				]
+			}
+		},
+		{
+			"fn": "progressOf",
+			"test": "subtask tree › progress counts done direct children and is null without any",
+			"input": [
+				[
+					{
+						"completedAt": 5,
+						"createdAt": 1,
+						"due": null,
+						"id": "passport",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "passport"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "charger",
+						"labelIds": [],
+						"notes": "",
+						"order": 1,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "charger"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "socks",
+						"labelIds": [],
+						"notes": "",
+						"order": 2,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "socks"
+					}
+				]
+			],
+			"output": {
+				"done": 1,
+				"total": 3
+			}
+		},
+		{
+			"fn": "progressOf",
+			"test": "subtask tree › progress counts done direct children and is null without any",
+			"input": [
+				[]
+			],
+			"output": null
+		},
+		{
+			"fn": "completeTask",
+			"test": "completeTask › completing a parent completes every open task under it and leaves done ones alone",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "trip",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "trip"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "socks",
+						"labelIds": [],
+						"notes": "",
+						"order": 2,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "socks"
+					},
+					{
+						"completedAt": 5,
+						"createdAt": 1,
+						"due": null,
+						"id": "passport",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "passport"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "charger",
+						"labelIds": [],
+						"notes": "",
+						"order": 1,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "charger"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "cable",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "charger",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "cable"
+					}
+				],
+				"trip",
+				"2026-10-14",
+				1000
+			],
+			"output": {
+				"changed": [
+					{
+						"completedAt": 1000,
+						"createdAt": 1,
+						"due": null,
+						"id": "trip",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "trip"
+					},
+					{
+						"completedAt": 1000,
+						"createdAt": 1,
+						"due": null,
+						"id": "charger",
+						"labelIds": [],
+						"notes": "",
+						"order": 1,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "charger"
+					},
+					{
+						"completedAt": 1000,
+						"createdAt": 1,
+						"due": null,
+						"id": "socks",
+						"labelIds": [],
+						"notes": "",
+						"order": 2,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "socks"
+					},
+					{
+						"completedAt": 1000,
+						"createdAt": 1,
+						"due": null,
+						"id": "cable",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "charger",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "cable"
+					}
+				],
+				"kind": "done"
+			}
+		},
+		{
+			"fn": "completeTask",
+			"test": "completeTask › completing a recurring parent moves it to the next occurrence and reopens every task under it",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": {
+							"date": "2026-10-16",
+							"time": null
+						},
+						"id": "review",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": {
+							"interval": 1,
+							"unit": "week"
+						},
+						"reminders": [],
+						"title": "review"
+					},
+					{
+						"completedAt": 5,
+						"createdAt": 1,
+						"due": null,
+						"id": "inbox zero",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "review",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "inbox zero"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "plan",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "review",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "plan"
+					},
+					{
+						"completedAt": 6,
+						"createdAt": 1,
+						"due": null,
+						"id": "calendar",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "plan",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "calendar"
+					}
+				],
+				"review",
+				"2026-10-14",
+				1000
+			],
+			"output": {
+				"changed": [
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": {
+							"date": "2026-10-23",
+							"time": null
+						},
+						"id": "review",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": {
+							"interval": 1,
+							"unit": "week"
+						},
+						"reminders": [],
+						"title": "review"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "inbox zero",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "review",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "inbox zero"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "calendar",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "plan",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "calendar"
+					}
+				],
+				"kind": "rolled",
+				"next": {
+					"date": "2026-10-23",
+					"time": null
+				}
+			}
+		},
+		{
+			"fn": "completeTask",
+			"test": "completeTask › a parent repeating on a weekday set rolls to its next listed weekday and reopens its subtasks",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": {
+							"date": "2026-10-16",
+							"time": null
+						},
+						"id": "gym",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": {
+							"days": [
+								1,
+								3,
+								5
+							],
+							"interval": 1,
+							"unit": "week"
+						},
+						"reminders": [],
+						"title": "gym"
+					},
+					{
+						"completedAt": 5,
+						"createdAt": 1,
+						"due": null,
+						"id": "stretch",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "gym",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "stretch"
+					}
+				],
+				"gym",
+				"2026-10-16",
+				1000
+			],
+			"output": {
+				"changed": [
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": {
+							"date": "2026-10-19",
+							"time": null
+						},
+						"id": "gym",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": {
+							"days": [
+								1,
+								3,
+								5
+							],
+							"interval": 1,
+							"unit": "week"
+						},
+						"reminders": [],
+						"title": "gym"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "stretch",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "gym",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "stretch"
+					}
+				],
+				"kind": "rolled",
+				"next": {
+					"date": "2026-10-19",
+					"time": null
+				}
+			}
+		},
+		{
+			"fn": "reopenTask",
+			"test": "completeTask › reopening a subtask reopens the completed tasks above it",
+			"input": [
+				[
+					{
+						"completedAt": 5,
+						"createdAt": 1,
+						"due": null,
+						"id": "trip",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "trip"
+					},
+					{
+						"completedAt": 5,
+						"createdAt": 1,
+						"due": null,
+						"id": "socks",
+						"labelIds": [],
+						"notes": "",
+						"order": 2,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "socks"
+					},
+					{
+						"completedAt": 5,
+						"createdAt": 1,
+						"due": null,
+						"id": "passport",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "passport"
+					},
+					{
+						"completedAt": 5,
+						"createdAt": 1,
+						"due": null,
+						"id": "charger",
+						"labelIds": [],
+						"notes": "",
+						"order": 1,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "charger"
+					},
+					{
+						"completedAt": 5,
+						"createdAt": 1,
+						"due": null,
+						"id": "cable",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "charger",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "cable"
+					}
+				],
+				"cable"
+			],
+			"output": [
+				{
+					"completedAt": null,
+					"createdAt": 1,
+					"due": null,
+					"id": "trip",
+					"labelIds": [],
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "trip"
+				},
+				{
+					"completedAt": null,
+					"createdAt": 1,
+					"due": null,
+					"id": "charger",
+					"labelIds": [],
+					"notes": "",
+					"order": 1,
+					"parentId": "trip",
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "charger"
+				},
+				{
+					"completedAt": null,
+					"createdAt": 1,
+					"due": null,
+					"id": "cable",
+					"labelIds": [],
+					"notes": "",
+					"order": 0,
+					"parentId": "charger",
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "cable"
+				}
+			]
+		},
+		{
+			"fn": "moveSubtask",
+			"test": "moveSubtask › moving renumbers the siblings and returns only the ones whose order changed",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "trip",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "trip"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "socks",
+						"labelIds": [],
+						"notes": "",
+						"order": 2,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "socks"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "passport",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "passport"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "charger",
+						"labelIds": [],
+						"notes": "",
+						"order": 1,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "charger"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "cable",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "charger",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "cable"
+					}
+				],
+				"socks",
+				0
+			],
+			"output": [
+				{
+					"completedAt": null,
+					"createdAt": 1,
+					"due": null,
+					"id": "socks",
+					"labelIds": [],
+					"notes": "",
+					"order": 0,
+					"parentId": "trip",
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "socks"
+				},
+				{
+					"completedAt": null,
+					"createdAt": 1,
+					"due": null,
+					"id": "passport",
+					"labelIds": [],
+					"notes": "",
+					"order": 1,
+					"parentId": "trip",
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "passport"
+				},
+				{
+					"completedAt": null,
+					"createdAt": 1,
+					"due": null,
+					"id": "charger",
+					"labelIds": [],
+					"notes": "",
+					"order": 2,
+					"parentId": "trip",
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "charger"
+				}
+			]
+		},
+		{
+			"fn": "moveSubtask",
+			"test": "moveSubtask › moving renumbers the siblings and returns only the ones whose order changed",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "trip",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "trip"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "socks",
+						"labelIds": [],
+						"notes": "",
+						"order": 2,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "socks"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "passport",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "passport"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "charger",
+						"labelIds": [],
+						"notes": "",
+						"order": 1,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "charger"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "cable",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "charger",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "cable"
+					}
+				],
+				"passport",
+				1
+			],
+			"output": [
+				{
+					"completedAt": null,
+					"createdAt": 1,
+					"due": null,
+					"id": "charger",
+					"labelIds": [],
+					"notes": "",
+					"order": 0,
+					"parentId": "trip",
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "charger"
+				},
+				{
+					"completedAt": null,
+					"createdAt": 1,
+					"due": null,
+					"id": "passport",
+					"labelIds": [],
+					"notes": "",
+					"order": 1,
+					"parentId": "trip",
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "passport"
+				}
+			]
+		},
+		{
+			"fn": "moveSubtask",
+			"test": "moveSubtask › moving renumbers the siblings and returns only the ones whose order changed",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "trip",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "trip"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "socks",
+						"labelIds": [],
+						"notes": "",
+						"order": 2,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "socks"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "passport",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "passport"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "charger",
+						"labelIds": [],
+						"notes": "",
+						"order": 1,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "charger"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "cable",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "charger",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "cable"
+					}
+				],
+				"passport",
+				99
+			],
+			"output": [
+				{
+					"completedAt": null,
+					"createdAt": 1,
+					"due": null,
+					"id": "charger",
+					"labelIds": [],
+					"notes": "",
+					"order": 0,
+					"parentId": "trip",
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "charger"
+				},
+				{
+					"completedAt": null,
+					"createdAt": 1,
+					"due": null,
+					"id": "socks",
+					"labelIds": [],
+					"notes": "",
+					"order": 1,
+					"parentId": "trip",
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "socks"
+				},
+				{
+					"completedAt": null,
+					"createdAt": 1,
+					"due": null,
+					"id": "passport",
+					"labelIds": [],
+					"notes": "",
+					"order": 2,
+					"parentId": "trip",
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "passport"
+				}
+			]
+		},
+		{
+			"fn": "detachOrphans",
+			"test": "detachOrphans › a task under a missing parent or in a parent loop becomes top level and the rest keep their parent",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "a",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "b",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "a"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "b",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "a",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "b"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "lost",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "gone",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "lost"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "trip",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "trip"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "socks",
+						"labelIds": [],
+						"notes": "",
+						"order": 2,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "socks"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "passport",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "passport"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "charger",
+						"labelIds": [],
+						"notes": "",
+						"order": 1,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "charger"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1,
+						"due": null,
+						"id": "cable",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": "charger",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "cable"
+					}
+				]
+			],
+			"output": [
+				{
+					"completedAt": null,
+					"createdAt": 1,
+					"due": null,
+					"id": "a",
+					"labelIds": [],
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "a"
+				},
+				{
+					"completedAt": null,
+					"createdAt": 1,
+					"due": null,
+					"id": "b",
+					"labelIds": [],
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "b"
+				},
+				{
+					"completedAt": null,
+					"createdAt": 1,
+					"due": null,
+					"id": "lost",
+					"labelIds": [],
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "lost"
+				},
+				{
+					"completedAt": null,
+					"createdAt": 1,
+					"due": null,
+					"id": "trip",
+					"labelIds": [],
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "trip"
+				},
+				{
+					"completedAt": null,
+					"createdAt": 1,
+					"due": null,
+					"id": "socks",
+					"labelIds": [],
+					"notes": "",
+					"order": 2,
+					"parentId": "trip",
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "socks"
+				},
+				{
+					"completedAt": null,
+					"createdAt": 1,
+					"due": null,
+					"id": "passport",
+					"labelIds": [],
+					"notes": "",
+					"order": 0,
+					"parentId": "trip",
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "passport"
+				},
+				{
+					"completedAt": null,
+					"createdAt": 1,
+					"due": null,
+					"id": "charger",
+					"labelIds": [],
+					"notes": "",
+					"order": 1,
+					"parentId": "trip",
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "charger"
+				},
+				{
+					"completedAt": null,
+					"createdAt": 1,
+					"due": null,
+					"id": "cable",
+					"labelIds": [],
+					"notes": "",
+					"order": 0,
+					"parentId": "charger",
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "cable"
+				}
+			]
+		}
+	]
+}
