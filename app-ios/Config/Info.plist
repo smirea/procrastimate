@@ -9,5 +9,32 @@
         <key>NSAllowsLocalNetworking</key>
         <true/>
     </dict>
+    <key>BGTaskSchedulerPermittedIdentifiers</key>
+    <array>
+        <string>com.stefan.procrastimate.refresh</string>
+    </array>
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>fetch</string>
+    </array>
+    <key>CFBundleDocumentTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleTypeName</key>
+            <string>Todoist backup</string>
+            <key>CFBundleTypeRole</key>
+            <string>Viewer</string>
+            <key>LSHandlerRank</key>
+            <string>Alternate</string>
+            <key>LSItemContentTypes</key>
+            <array>
+                <string>public.zip-archive</string>
+            </array>
+        </dict>
+    </array>
+    <key>UIFileSharingEnabled</key>
+    <true/>
+    <key>LSSupportsOpeningDocumentsInPlace</key>
+    <true/>
 </dict>
 </plist>

@@ -9,7 +9,7 @@ class ParityTestCase: XCTestCase {
     private(set) var app: XCUIApplication!
 
     /// `reset: false` relaunches on the stored data, like a reload after the web's `setNow`.
-    func launch(now: String = ParityTestCase.now, reset: Bool = true) {
+    func launch(now: String = ParityTestCase.now, reset: Bool = true, environment: [String: String] = [:]) {
         continueAfterFailure = false
         app?.terminate()
         app = XCUIApplication()
@@ -17,7 +17,7 @@ class ParityTestCase: XCTestCase {
             "PROCRASTIMATE_NOW": now,
             "PROCRASTIMATE_TZ": "UTC",
             "PROCRASTIMATE_RESET": reset ? "1" : "0",
-        ]
+        ].merging(environment) { _, extra in extra }
         app.launch()
     }
 

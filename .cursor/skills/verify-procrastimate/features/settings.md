@@ -14,7 +14,7 @@ A `Settings` row with a gear sits at the bottom of the sidebar, which is also th
 
 - Web desktop: `Settings` at the bottom of the sidebar.
 - Web phone: tap `Open navigation`, then `Settings` at the bottom of the drawer.
-- iOS: Planned: a settings screen with the same controls.
+- iOS: tap `Settings` in the Browse tab.
 
 ## Driving it with control-ui and XCUITest
 
@@ -26,7 +26,7 @@ Preconditions:
 - **Desktop popover.** Before opening, the page has no `Theme` radio group. Click `Settings`. The `Settings` dialog shows `Theme` and `Import from Todoist`. Choose `Dark`, then press Escape. The dialog closes and the page stays dark. Test: `the settings gear opens a popover that holds the theme switch`.
 - **Phone sheet.** Open the drawer and tap `Settings`. The drawer closes and the `Settings` sheet docks to the bottom of the screen, with each theme option at least 44 px tall. `Close settings` dismisses it. Test: `the settings sheet switches the theme and keeps it across reloads`.
 - **Sync.** Open `Settings`. The `Sync` section offers `Set up sync` and `Enter a pairing code`. Each opens one field (`Setup code` or `Pairing code`) with `Cancel` and `Turn on sync` or `Pair`. A wrong code shows an alert and keeps the field. Pairing and the device list are driven in [Offline and sync](./offline-sync.md). Tests: `e2e/sync.e2e.ts`.
-- **iOS.** Planned: open the settings screen and compare.
+- **iOS.** `Settings` in Browse opens a sheet with the `Theme` segmented control (`System`, `Light`, `Dark`), a placeholder `Sync` section whose `Set up sync` stays disabled until the iOS sync client ships, and `Import from Todoist`. `Done` closes it. Tests: `SettingsParityTests` (`test_settings_sheet`, `test_settings_theme`), paired with `e2e/parity/settings.e2e.ts`. Run each pair with the iOS workflow (`xcodebuild test` on an iPhone 16 simulator) and `bun run test:e2e --project=parity`; both sides save `<parity-id>.png`.
 
 ## Gotchas
 

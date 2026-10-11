@@ -12,6 +12,7 @@ Full rules in [`docs/decisions/workflow.md`](docs/decisions/workflow.md).
 - Build features yourself; never hand the whole build to a helper sub-agent that can't receive messages.
 - Run only the relevant unit and e2e specs locally; CI runs the full suite.
 - Screenshots: 2 to 4, only for UI changes.
+- Build every feature for all clients at once (web and iOS today); each plan names its target clients and why any are excluded.
 
 # Product
 
