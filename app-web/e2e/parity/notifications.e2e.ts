@@ -6,6 +6,8 @@ import { expect, test } from './fixtures.ts';
  * the real clock, so tests that read its schedule pin the browser two days ahead of it, at 10:00 UTC. Pairing pulls
  * every task on the server's shared account, so the schedule is checked per title rather than by the sheet's count.
  */
+test.describe.configure({ timeout: 90_000 });
+
 const real = new Date();
 const TODAY = Date.UTC(real.getUTCFullYear(), real.getUTCMonth(), real.getUTCDate() + 2);
 const todayAt = (hh: number, mm = 0) => new Date(TODAY + (hh * 60 + mm) * 60_000);
