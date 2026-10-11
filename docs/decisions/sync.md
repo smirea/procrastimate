@@ -72,7 +72,7 @@ Every field is last-writer-wins by HLC. Different fields from different devices 
 ## Auth
 
 - **Device tokens bootstrapped by a pairing code.** The default, picked so Stefan can change it later:
-  - The first device sends the `SYNC_SETUP_CODE` Worker secret, which Stefan sets once with `wrangler secret put`, and receives a device token.
+  - The first device sends the `SYNC_SETUP_CODE` Worker secret, kept in env-manager and pushed with `bun run secrets:push`, and receives a device token.
   - A paired device's Settings shows `Pair a device`: an eight-character code valid for ten minutes and five attempts. The new device enters it and receives its own token.
   - A token is 32 random bytes, sent as `Authorization: Bearer`, stored only as a SHA-256 hash. Settings lists devices with their last sync and `Remove`, which revokes the token at once.
   - The web keeps the token in `localStorage` under `procrastimate-device`, since the app loads no third-party scripts. iOS keeps it in the Keychain.

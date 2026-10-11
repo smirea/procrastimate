@@ -1,4 +1,4 @@
-// env-manager: procrastimate | 2026-10-10T23:21:06.269Z
+// env-manager: procrastimate | 2026-10-11T08:36:07.501Z
 // env-manager target: server
 // env-manager root: ../..
 // env-manager env: local
@@ -8,8 +8,12 @@ import { z } from 'zod';
 const env = z.object({
   API_PORT: z.coerce.number().int().min(1).max(65535),
   SYNC_SETUP_CODE: z.string().optional(),
+  VAPID_PUBLIC_KEY: z.string().optional(),
+  VAPID_PRIVATE_KEY: z.string().optional(),
   ELEVENLABS_API_KEY: z.string().optional(),
   RAMBLE_UPSTREAM: z.string().optional(),
+  CLOUDFLARE_ACCOUNT_ID: z.string().optional(),
+  CLOUDFLARE_API_TOKEN: z.string().optional(),
 }).parse(process.env);
 
 export default env;

@@ -42,6 +42,7 @@ Full rules in [`docs/decisions/workflow.md`](docs/decisions/workflow.md).
 - `local:true` keeps generation offline and disables automatic Git updates. Use `env-manager --help` for target selection, schema types, and remote storage.
 - Read application settings through each TypeScript target's generated reader: `server/src/env.ts`, and `app-web/env.ts` because SvelteKit reserves `src/env.ts`. The client's reader runs only in Vite's Node context; browser code must not import it.
 - Keep schema and readers tracked, values files ignored, and secrets scoped to the server target. Native and browser settings are public.
+- All secrets live in env-manager project `procrastimate` (env `production` for the Worker and deploy, `local` for dev). Never run `wrangler secret put` or `gh secret set` directly. Change the value in env-manager, then run `bun run secrets:push` / `secrets:github` from a machine with AWS access (Stefan's MacBook). Cloud agents and the box have no AWS access: they use `env-manager gen --local` and the hard-coded e2e setup code.
 
 # Native app
 

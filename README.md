@@ -20,12 +20,36 @@ The client proxies `/api/*` to the API unchanged, so `/api/status` reaches the s
 
 Production is one Cloudflare Worker (`wrangler.jsonc`) on the free plan at `https://procrastimate.stf.lol`, a Workers Custom Domain. It serves `app-web/build` as static assets and runs `server/src/api.ts` for `/api/*`. `.github/workflows/ci.yml` checks every pull request and deploys every push to `master` with `wrangler deploy`.
 
-Deploys need two repository secrets in GitHub (Settings > Secrets and variables > Actions):
+Deploys need two repository secrets in GitHub, mirrored from env-manager (see Secrets):
 
 - `CLOUDFLARE_ACCOUNT_ID`, the Cloudflare account ID.
 - `CLOUDFLARE_API_TOKEN`, an API token made from the "Edit Cloudflare Workers" template, with the `stf.lol` zone included so `wrangler deploy` can attach the custom domain.
 
-Without them CI still passes and skips the deploy with a warning.
+Without them CI still passes and skips the deploy with a warning. Deploys never write or delete Worker secrets.
+
+## Secrets
+
+Every secret lives in env-manager project `procrastimate` in AWS Secrets Manager: env `production` for the Worker (`SYNC_SETUP_CODE`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `ELEVENLABS_API_KEY`) and the deploy credentials, env `local` for dev. They are optional fields in the root `.env` schema's `server` scope, so `env-manager gen --local` works without them. Never run `wrangler secret put` or `gh secret set` by hand; `server/scripts/secrets.ts` is the one bridge, and it prints key names only.
+
+```sh
+bun run secrets:push     # set production Worker secrets with wrangler secret bulk; unset keys are left alone
+bun run secrets:github   # mirror CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID to GitHub
+bun run secrets:check    # compare names in env-manager, on the Worker, and in GitHub; exits 1 on drift
+bun run env:pull         # env-manager down --no-local: fetch the current env into root .env.local
+```
+
+To change a production secret, on a machine with AWS access (Stefan's MacBook):
+
+```sh
+env-manager env set production
+env-manager down --no-local      # root .env.local now holds production values
+$EDITOR .env.local
+env-manager up --no-local
+bun run secrets:push             # and/or: bun run secrets:github
+env-manager env set local && env-manager down --no-local   # back to dev values
+```
+
+On a new machine, `env-manager down --no-local` fetches the local env and regenerates the child files. Cloud agents and the dev box have no AWS access; they run `env-manager gen --local`, and end to end tests use the hard-coded `e2e-setup-code`.
 
 ## Environment
 
