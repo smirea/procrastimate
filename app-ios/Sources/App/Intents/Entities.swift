@@ -84,7 +84,7 @@ struct LabelEntity: AppEntity {
     }
 }
 
-struct TaskEntityQuery: EntityStringQuery {
+struct TaskEntityQuery: EntityStringQuery, IndexedEntityQuery {
     func entities(for identifiers: [TaskEntity.ID]) async throws -> [TaskEntity] {
         await IntentEffects.tasks(ids: identifiers)
     }
@@ -95,6 +95,15 @@ struct TaskEntityQuery: EntityStringQuery {
 
     func suggestedEntities() async throws -> [TaskEntity] {
         await IntentEffects.suggestedTasks()
+    }
+
+    func reindexEntities(for identifiers: [TaskEntity.ID], indexDescription _: CSSearchableIndexDescription) async throws {
+        let (keep, drop) = await IntentEffects.spotlightEntities(ids: identifiers)
+        try await SpotlightIndex.replace(keep, removing: drop)
+    }
+
+    func reindexAllEntities(indexDescription _: CSSearchableIndexDescription) async throws {
+        try await SpotlightIndex.replaceAll(await IntentEffects.spotlightEntities())
     }
 }
 

@@ -224,12 +224,39 @@ enum IntentEffects {
         }
     }
 
+    /// Open tasks for a full Spotlight rebuild.
+    static func spotlightEntities() -> [TaskEntity] {
+        let (snapshot, clock) = snapshot()
+        return IntentRules.indexedTasks(snapshot.tasks).map { entity($0, snapshot, clock) }
+    }
+
+    /// The requested tasks that are still open, and the ids Spotlight should drop.
+    static func spotlightEntities(ids: [String]) -> (keep: [TaskEntity], drop: [String]) {
+        let (snapshot, clock) = snapshot()
+        let open = Dictionary(uniqueKeysWithValues: IntentRules.indexedTasks(snapshot.tasks).map { ($0.id, $0) })
+        var keep: [TaskEntity] = []
+        var drop: [String] = []
+        for id in ids {
+            if let task = open[id] {
+                keep.append(entity(task, snapshot, clock))
+            } else {
+                drop.append(id)
+            }
+        }
+        return (keep, drop)
+    }
+
     private static func withStore<T>(_ body: (Store, AppClock, IntentSession?) -> T) async -> T {
-        if let session = IntentSession.current { return body(session.store, session.clock, session) }
+        if let session = IntentSession.current {
+            let result = body(session.store, session.clock, session)
+            SpotlightIndex.schedule(session)
+            return result
+        }
         let clock = fallbackClock()
         let store = Store(file: SnapshotFile(url: StoreLocation.file), clock: clock)
         let result = body(store, clock, nil)
         await store.flush()
+        SpotlightIndex.schedule(store: store, clock: clock, router: nil)
         return result
     }
 

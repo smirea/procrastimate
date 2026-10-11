@@ -8,7 +8,7 @@ final class IntentRouter {
     var searchQuery: String?
     /// Machine-readable lines from intents, present only while the UI test script is set.
     var harnessLog = ""
-    /// Titles of the open tasks the app is indexing in Spotlight, one per line, sorted.
+    /// Titles of the open tasks the app is indexing in Spotlight, sorted and comma-separated.
     var spotlight = ""
 
     func note(_ line: String) {
@@ -27,21 +27,21 @@ struct IntentReadout: View {
 
     var body: some View {
         #if DEBUG
-        VStack(alignment: .leading, spacing: 0) {
-            Text(results)
-                .font(.system(size: 1))
+        // Clear points, not drawn text: a clipped label drops out of the accessibility tree, and drawn text would land
+        // in every other test's screenshot.
+        HStack(spacing: 0) {
+            Color.clear
+                .frame(width: 1, height: 1)
+                .accessibilityElement(children: .ignore)
                 .accessibilityIdentifier("Intent results: \(results)")
                 .accessibilityLabel(results)
-            Text(indexed)
-                .font(.system(size: 1))
+            Color.clear
+                .frame(width: 1, height: 1)
+                .accessibilityElement(children: .ignore)
                 .accessibilityIdentifier("Spotlight index: \(indexed)")
                 .accessibilityLabel(indexed)
         }
-        .frame(maxWidth: .infinity, maxHeight: 1, alignment: .topLeading)
-        .clipped()
-        .opacity(0.02)
         .allowsHitTesting(false)
-        .accessibilityElement(children: .contain)
         #else
         Color.clear.frame(width: 0, height: 0).accessibilityHidden(true)
         #endif

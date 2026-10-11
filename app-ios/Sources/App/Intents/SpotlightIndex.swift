@@ -8,27 +8,43 @@ enum SpotlightIndex {
     private static var pending: Task<Void, Never>?
 
     static func schedule(_ session: IntentSession) {
-        let open = IntentRules.indexedTasks(session.store.tasks)
-        session.router.spotlight = open.map(\.title).sorted().joined(separator: ", ")
-        let entities = open.map {
-            TaskEntity.make($0, projects: session.store.projects, labels: session.store.labels, today: session.clock.today)
-        }
+        schedule(store: session.store, clock: session.clock, router: session.router)
+    }
+
+    /// Indexes the store's open tasks. `router` receives the titles the UI test reads back; a background intent has none.
+    static func schedule(store: Store, clock: AppClock, router: IntentRouter?) {
+        let entities = listed(in: store, today: clock.today, router: router)
         pending?.cancel()
         pending = Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(300))
             guard !Task.isCancelled else { return }
-            await index(entities)
+            try? await replaceAll(entities)
         }
     }
 
-    private static func index(_ entities: [TaskEntity]) async {
+    /// Replaces every indexed task. Spotlight calls this, through the task query, when it rebuilds the index.
+    static func replaceAll(_ entities: [TaskEntity]) async throws {
         let spotlight = CSSearchableIndex.default()
-        do {
-            try await spotlight.deleteAppEntities(ofType: TaskEntity.self)
-            guard !entities.isEmpty, !Task.isCancelled else { return }
-            try await spotlight.indexAppEntities(entities)
-        } catch {
-            // The simulator can refuse an index while it is busy. The next edit tries again.
+        try await spotlight.deleteAppEntities(ofType: TaskEntity.self)
+        guard !entities.isEmpty else { return }
+        try await spotlight.indexAppEntities(entities, priority: 0)
+    }
+
+    /// Puts `entities` into the index and removes `ids` that are completed or gone.
+    static func replace(_ entities: [TaskEntity], removing ids: [String]) async throws {
+        let spotlight = CSSearchableIndex.default()
+        if !ids.isEmpty {
+            try await spotlight.deleteAppEntities(identifiedBy: ids, ofType: TaskEntity.self)
+        }
+        guard !entities.isEmpty else { return }
+        try await spotlight.indexAppEntities(entities, priority: 0)
+    }
+
+    private static func listed(in store: Store, today: DateKey, router: IntentRouter?) -> [TaskEntity] {
+        let open = IntentRules.indexedTasks(store.tasks)
+        router?.spotlight = open.map(\.title).sorted().joined(separator: ", ")
+        return open.map {
+            TaskEntity.make($0, projects: store.projects, labels: store.labels, today: today)
         }
     }
 }
