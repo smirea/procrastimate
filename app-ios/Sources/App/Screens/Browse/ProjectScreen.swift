@@ -1,10 +1,32 @@
+import Core
 import SwiftUI
 
+/// A project's top-level open tasks. Quick add here files new tasks into the project.
 struct ProjectScreen: View {
+    @Environment(Store.self) private var store
     let projectID: String
 
     var body: some View {
-        ContentUnavailableView("Project", systemImage: "number")
-            .navigationTitle("Project")
+        if let project = store.project(projectID) {
+            let tasks = Views.projectTasks(store.tasks, project.id)
+            TaskListScreen(
+                title: project.name,
+                isEmpty: tasks.isEmpty,
+                emptyTitle: "No tasks yet",
+                emptyHint: Browse.projectEmptyHint(project.name),
+                quickAdd: QuickAddDefaults(projectId: project.id)
+            ) {
+                ForEach(tasks) { TaskRow(task: $0) }
+            }
+            .nameActions(
+                noun: "project",
+                name: project.name,
+                deletePrompt: Browse.deleteProjectPrompt(project.name, taskCount: tasks.count),
+                rename: { store.renameProject(project.id, $0) },
+                delete: { store.deleteProject(project.id) }
+            )
+        } else {
+            ContentUnavailableView("This project no longer exists.", systemImage: "number")
+        }
     }
 }
