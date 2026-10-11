@@ -72,3 +72,11 @@ test('labels-chips: a task shows its labels as chips', async ({ app, snap }) => 
 	await expect(app.row('Ping Ana').locator('[data-label="errands"]')).toBeVisible();
 	await snap('labels-chips');
 });
+
+test('views-canvas: lists sit on the tinted canvas with clear rows', async ({ app, page, snap }) => {
+	await app.add('Buy milk');
+	const background = await page.evaluate(() => getComputedStyle(document.body).backgroundImage);
+	expect(background.match(/radial-gradient/g)).toHaveLength(2);
+	expect(await app.row('Buy milk').evaluate(node => getComputedStyle(node).backgroundColor)).toBe('rgba(0, 0, 0, 0)');
+	await snap('views-canvas');
+});
