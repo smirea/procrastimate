@@ -86,15 +86,18 @@ class Push {
 		if (Notification.permission === 'denied') return { kind: 'denied' };
 		const registration = await navigator.serviceWorker.getRegistration();
 		const subscription = await registration?.pushManager.getSubscription();
-		if (!subscription) return { kind: 'off' };
-		if (Notification.permission === 'granted' && sameKey(subscription.options.applicationServerKey, key)) {
-			const info = pushSubscriptionSchema.parse(subscription.toJSON());
-			await this.#register(info);
-			return { kind: 'on', subscription: info };
+		if (!registration || !subscription) return { kind: 'off' };
+		if (Notification.permission !== 'granted') {
+			await subscription.unsubscribe();
+			return { kind: 'off' };
 		}
-		// A rotated server key or a reset permission leaves a subscription the server can no longer use.
-		await subscription.unsubscribe();
-		return { kind: 'off' };
+		const current = sameKey(subscription.options.applicationServerKey, key)
+			? subscription
+			: await resubscribe(registration, subscription, key);
+		if (!current) return { kind: 'off' };
+		const info = pushSubscriptionSchema.parse(current.toJSON());
+		await this.#register(info);
+		return { kind: 'on', subscription: info };
 	}
 
 	/** Detects again when this device pairs or unpairs, since push needs a paired device. */
@@ -260,6 +263,19 @@ async function fetchKey(): Promise<Uint8Array<ArrayBuffer> | null> {
 	} catch {
 		return null;
 	}
+}
+
+/**
+ * Moves a subscription made for a rotated server key to the current one. Permission is already granted, so this
+ * needs no prompt. Browsers refuse a second key on a live subscription, so the old one goes first.
+ */
+async function resubscribe(
+	registration: ServiceWorkerRegistration,
+	stale: PushSubscription,
+	key: Uint8Array<ArrayBuffer>,
+): Promise<PushSubscription | null> {
+	await stale.unsubscribe();
+	return registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key }).catch(() => null);
 }
 
 function sameKey(current: ArrayBuffer | null, key: Uint8Array) {
