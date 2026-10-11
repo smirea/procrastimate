@@ -1,9 +1,11 @@
 import Core
 import SwiftUI
+import UIKit
 
 /// The shared smart input of quick add, the details title, and the add-subtask field: a `TextEditor` on an
 /// `AttributedString` that tints each parsed phrase, with `#` and `@` suggestions above it. Return submits instead of
-/// adding a line. Token offsets are UTF-16, so they are mapped through `String.Index(utf16Offset:in:)`.
+/// adding a line. Token offsets are UTF-16, so they are mapped through `String.Index(utf16Offset:in:)`. While the editor
+/// has focus, tints go straight to its text storage through `EditorTints` instead of through the binding.
 struct SmartInput: View {
     @Environment(Store.self) private var store
 
@@ -12,6 +14,8 @@ struct SmartInput: View {
     let label: String
     var placeholder = ""
     var suggestProjects = true
+    /// Where the open suggestion list's `#` or `@` sits, or nil while no list shows.
+    var listAt: Binding<Int?> = .constant(nil)
     var focused: FocusState<Bool>.Binding
     let onSubmit: () -> Void
 
@@ -25,6 +29,10 @@ struct SmartInput: View {
     /// The text this editor last wrote or showed. Typing can run ahead of rendering, so `onChange(of: text)` may
     /// still report an older keystroke, which must not overwrite the newer editor contents.
     @State private var written = ""
+    #if DEBUG
+    /// What the focused editor renders tinted, read back from its text storage for UI tests.
+    @State private var rendered = ""
+    #endif
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -51,11 +59,21 @@ struct SmartInput: View {
                 }
                 .accessibilityLabel(label)
                 .accessibilityIdentifier(highlightReadout)
+                #if DEBUG
+                .background(alignment: .bottomTrailing) {
+                    Color.clear
+                        .frame(width: 1, height: 1)
+                        .accessibilityElement()
+                        .accessibilityLabel(rendered)
+                        .accessibilityIdentifier("Rendered highlights")
+                }
+                #endif
         }
         .animation(.snappy(duration: 0.16), value: match)
-        .onChange(of: match?.fragment) {
+        .onChange(of: match?.fragment, initial: true) {
             active = 0
             navigated = false
+            listAt.wrappedValue = match?.fragment.start
         }
         .onAppear {
             attributed = AttributedString(text)
@@ -64,6 +82,11 @@ struct SmartInput: View {
         .onChange(of: attributed) { typed() }
         .onChange(of: text) { replaceIfNeeded() }
         .onChange(of: Styled(text: text, tokens: tokens), initial: true) { restyle() }
+        .task(id: Styled(text: text, tokens: tokens)) {
+            // A keystroke can land between a change and its tinting, so tint again once typing pauses.
+            try? await Task.sleep(for: .milliseconds(150))
+            if !Task.isCancelled, focused.wrappedValue { tintEditor() }
+        }
     }
 
     private var caret: Int {
@@ -160,7 +183,23 @@ struct SmartInput: View {
     private func restyle() {
         let value = text
         guard String(attributed.characters) == value else { return }
-        attributed.transform(updating: &selection) { style(&$0, value) }
+        if focused.wrappedValue {
+            // After SwiftUI hands the keystroke's update to the text view.
+            Task { tintEditor() }
+        } else {
+            attributed.transform(updating: &selection) { style(&$0, value) }
+        }
+    }
+
+    private func tintEditor() {
+        let value = text
+        let tints = tokens.filter { $0.end <= value.utf16.count }.map {
+            EditorTints.Tint(range: NSRange(location: $0.start, length: $0.end - $0.start), color: UIColor($0.kind.tint))
+        }
+        EditorTints.apply(tints, to: value)
+        #if DEBUG
+        rendered = EditorTints.rendered()
+        #endif
     }
 
     private func style(_ string: inout AttributedString, _ value: String) {
