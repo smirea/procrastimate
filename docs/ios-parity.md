@@ -18,17 +18,20 @@ What the native iOS app must do to match the web app, row by row from the featur
 
 | Feature | Web | iOS | Slice | XCUITest | Playwright | Screenshot |
 | --- | --- | --- | --- | --- | --- | --- |
-| `add-open`: quick add from the add button (and `q` on a hardware keyboard), docked above the keyboard | ✓ | Built (no `q` shortcut yet) | S5 | `QuickAddParityTests.test_add_open` | `quick-add › add-open` | `add-open.png` |
+| `add-open`: quick add from the add button (and `q` on a hardware keyboard), attached to the keyboard | ✓ | Built (no `q` shortcut yet) | S5 | `QuickAddParityTests.test_add_open` | `quick-add › add-open` | `add-open.png` |
 | `add-save`: saves into the current list | ✓ | Built | S5 | `QuickAddParityTests.test_add_save` | `quick-add › add-save` | `add-save.png` |
 | `add-due`: a typed due date leaves the title | ✓ | Built | S3→S5 | `QuickAddParityTests.test_add_due` | `quick-add › add-due` | `add-due.png` |
 | `add-shorthand`: `tom 5p`, `eow`, `2d`, `5m`, `1730`, `10/15`, `the 15th`, with `Tom` and `sun hat` left as text | ✓ | Built | S3→S5 | `QuickAddParityTests.test_add_shorthand` | `quick-add › add-shorthand` | `add-shorthand.png` |
 | `add-recurrence`: `every mon`, `daily`, `every march 2nd`, `mon wed fri 7am`, `tue/thu`, with prose lists left as text | ✓ | Built | S3→S5 | `QuickAddParityTests.test_add_recurrence` | `quick-add › add-recurrence` | `add-recurrence.png` |
-| `add-highlight`: inline highlight per parsed phrase | ✓ | Built | S5 | `QuickAddParityTests.test_add_highlight` | `quick-add › add-highlight` | `add-highlight.png` |
+| `add-highlight`: inline highlight per parsed phrase, checked on the rendered text while typing | ✓ | Built | S5, Polish | `QuickAddParityTests.test_add_highlight` | `quick-add › add-highlight` | `add-highlight.png` |
 | `add-config-row`: the chip row spells out due, repeat, and reminders | ✓ | Built | S5 | `QuickAddParityTests.test_add_config_row` | `quick-add › add-config-row` | `add-config-row.png` |
 | `add-keep-text`: `Keep as text` un-parses a phrase | ✓ | Built | S5 | `QuickAddParityTests.test_add_keep_text` | `quick-add › add-keep-text` | `add-keep-text.png` |
 | `add-defaults`: project inside a project, today inside Today, label inside a label view | ✓ | Built | S5, S7 | `QuickAddParityTests.test_add_defaults`, with the project and label defaults in `ProjectsParityTests.test_projects_open` and `LabelsParityTests.test_labels_view` | `quick-add › add-defaults` | `add-defaults.png` |
 | `add-cancel`: dismissing discards the draft | ✓ | Built | S5 | `QuickAddParityTests.test_add_cancel` | `quick-add › add-cancel` | `add-cancel.png` |
 | `add-repeat`: stays open for the next task | ✓ | Built | S5 | `QuickAddParityTests.test_add_repeat` | `quick-add › add-repeat` | `add-repeat.png` |
+| `add-create`: an unknown `#name` or `@name` offers `Create #name` or `Create @name` and creates only when picked | ✓ | Built | Polish | `QuickAddParityTests.test_add_create` | `quick-add › add-create` | `add-create.png` |
+| `add-dock`: the card sits flush on the keyboard and the add button hides while it is open | ✓ | Built | Polish | `QuickAddParityTests.test_add_dock` | `quick-add › add-dock` | `add-dock.png` |
+| `add-toast`: on phones a toast moves above an open quick add, keeps its action on one line, and hides no chips | ✓ | Built (toasts move to the top while quick add is open) | Polish, S8 | covered by `NotificationsParityTests.test_push_nudge` | `quick-add › add-toast` | `add-toast.png` |
 
 ### Priority
 
@@ -121,6 +124,7 @@ The web's Web Push rows map to native local notifications. XCUITests check the p
 | `views-upcoming`: grouped by day | ✓ | Built | S5 | `ViewsParityTests.test_views_upcoming` | `views › views-upcoming` | `views-upcoming.png` |
 | `views-empty`: `Inbox zero`, `All clear for today`, `Nothing scheduled` | ✓ | Built | S5 | `ViewsParityTests.test_views_empty` | `views › views-empty` | `views-empty.png` |
 | `views-counts`: open counts (sidebar on web, tab badges and Browse on iOS) | ✓ | Built | S5 | `ViewsParityTests.test_views_counts` | `views › views-counts` | `views-counts.png` |
+| `views-canvas`: lists sit on the tinted canvas, rows stay transparent | ✓ | Built | Polish | `ViewsParityTests.test_views_canvas` | `views › views-canvas` | `views-canvas.png` |
 
 ### Projects
 
@@ -229,6 +233,7 @@ One PR per slice, each off `master`, never stacked. A slice starts once the slic
 | S7 | Projects, labels, and search UI | S4, S5 | S6, S8 |
 | S8 | Settings, theme, import, notifications | S4, S5 (S6 for `push-open`) | S6, S7 |
 | S9 | iOS sync client | S8, Y3, Y4 | Y5, Y6 |
+| Polish | Quick add and list polish from the side-by-side run | S5 | S6, S8 |
 
 Critical path: S1 → S2 → S3 → S5 → S6, S7, and S8 together, then S9. The sync slices `Y1` to `Y6` interleave with these as listed in [Sync build slices](sync-slices.md): Y1 and Y2 run alongside S1 and S2, and the web client Y4 waits for S2.
 
@@ -257,3 +262,4 @@ Critical path: S1 → S2 → S3 → S5 → S6, S7, and S8 together, then S9. The
   - The Settings screen with the theme control and accessibility fallbacks, and Todoist import (the `Compression`-based zip reader plus the picker), using the fixture CI copies in.
   - Local notifications: the scheduler with a 60-request window, background refresh, the foreground toast, the permission screen, the nudge, a test notification, and opening a task from its notification.
 - **S9: iOS sync client.** The client half of [Sync](decisions/sync.md) on top of S5's store, as scoped in [Sync build slices](sync-slices.md).
+- **Polish: Quick add and list polish.** Fixes from the side-by-side run: the typed-token tint on iOS, `Create #name` and `Create @name` chips on both clients, the iOS card attached to the keyboard with the add button hidden, the tinted list canvas on iOS, and phone toasts that no longer cover the quick add chips.

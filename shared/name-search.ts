@@ -33,6 +33,42 @@ export function sigilFragment(
 	return { start, end: caret + /^\S*/.exec(value.slice(caret))![0].length, query };
 }
 
+/** A `#name` or `@name` in the text that names no project or label yet. */
+export type UnknownName = { sigil: Sigil; name: string; start: number; end: number };
+
+const SIGIL_WORD = /(?<!\S)([#@])([\p{L}\p{N}_-]+)(?=[,.;:!?)]*(?:\s|$))/gu;
+
+/**
+ * Every `#name` and `@name` that quick add could offer to create: a sigil at the start of the text or after
+ * whitespace, then a word of letters, digits, `_`, or `-` that ends at whitespace or the end, after any sentence punctuation,
+ * so `@calls,` offers `calls` and `@site.com` offers nothing.
+ * Text the parser already claimed is skipped, so `#Side Project` never offers `#Side`, and so is a name that exists
+ * ignoring case, including one kept as text. Each name is offered once, at its first mention.
+ */
+export function unknownNames(
+	value: string,
+	tokens: readonly { start: number; end: number }[],
+	projects: readonly Named[],
+	labels: readonly Named[],
+): UnknownName[] {
+	const found: UnknownName[] = [];
+	const seen = new Set<string>();
+	for (const match of value.matchAll(SIGIL_WORD)) {
+		const sigil = match[1] as Sigil;
+		const name = match[2]!;
+		const start = match.index;
+		if (tokens.some(token => start >= token.start && start < token.end)) continue;
+		const lower = name.toLowerCase();
+		const items = sigil === '#' ? projects : labels;
+		if (items.some(item => item.name.toLowerCase() === lower)) continue;
+		const key = sigil + lower;
+		if (seen.has(key)) continue;
+		seen.add(key);
+		found.push({ sigil, name, start, end: start + 1 + name.length });
+	}
+	return found;
+}
+
 /** When each id last appeared on a newly created task, the store's only record of use. */
 export function lastUsed(tasks: readonly Task[], idsOf: (task: Task) => readonly string[]): Map<string, number> {
 	const used = new Map<string, number>();

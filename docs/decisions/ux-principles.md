@@ -6,7 +6,7 @@
   - **Touch.** Every tap target is at least 44 px on phones and touch screens, using an invisible hit area where the visible control is smaller. Fields use at least 16 px text so iOS does not zoom on focus.
   - **No hover-only interactions.** Hover only adds polish. Every action is reachable by tap, and hover styles apply only on devices that can hover.
   - **Safe areas.** The layout respects `env(safe-area-inset-*)` for the notch, the Dynamic Island, and the home indicator.
-  - **On-screen keyboard.** Quick add stays usable while the keyboard is open. Sheets dock above the keyboard by tracking the visual viewport, and the return key submits.
+  - **On-screen keyboard.** Quick add stays usable while the keyboard is open. Sheets dock above the keyboard by tracking the visual viewport, and the return key submits. Below 768 px a toast shown while a sheet is open moves to the top of the screen, because the sheet covers the bottom where toasts normally sit, and a toast keeps its action on one line, truncating only its message.
   - **Same shapes as iOS.** The drawer, floating add button, and inset bottom sheets map directly to the Liquid Glass port.
 - **Motion on every interaction.** Opening, closing, adding, completing, and switching views all animate. Motion is short (about 150 to 250 ms), eased like a spring, and never gates input.
 - **Reduced motion.** Under `prefers-reduced-motion`, CSS transitions and animations collapse to instant, and Svelte transitions pass their params through `motion()` in `ui.svelte.ts`, which zeroes the duration. CSS cannot reach Svelte transitions because they animate from script.

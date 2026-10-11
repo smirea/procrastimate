@@ -48,6 +48,57 @@ public enum NameSearch {
         return Fragment(start: start, end: end, query: UTF16Text.string(query))
     }
 
+    /// A `#name` or `@name` in the text that names no project or label yet.
+    public struct UnknownName: Hashable, Codable, Sendable {
+        public var sigil: Sigil
+        public var name: String
+        public var start: Int
+        public var end: Int
+    }
+
+    /// `SIGIL_WORD` from `name-search.ts`, written for ICU: `\s` is JavaScript's whitespace set and `$` is the end of
+    /// the input. `QuickAdd.Pattern` would escape the braces of `\p{L}` inside a class, so this is ICU syntax directly.
+    private static let sigilWord: NSRegularExpression = {
+        let space = #"\t\n\u000B\f\r \u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF"#
+        let source = #"(?<![^\#(space)])([#@])([\p{L}\p{N}_\-]+)(?=[,.;:!?)]*(?:[\#(space)]|\z))"#
+        do {
+            return try NSRegularExpression(pattern: source)
+        } catch {
+            preconditionFailure("Invalid pattern \(source): \(error)")
+        }
+    }()
+
+    /// Every `#name` and `@name` that quick add could offer to create: a sigil at the start of the text or after
+    /// whitespace, then a word of letters, digits, `_`, or `-` that ends at whitespace or the end, after any sentence
+    /// punctuation, so `@calls,` offers `calls` and `@site.com` offers nothing. Text the parser already claimed is
+    /// skipped, so `#Side Project` never offers `#Side`, and so is a name that exists ignoring case, including one kept
+    /// as text. Each name is offered once, at its first mention.
+    public static func unknownNames(
+        _ value: String,
+        _ tokens: [QuickAdd.Token],
+        _ projects: [some NamedItem],
+        _ labels: [some NamedItem]
+    ) -> [UnknownName] {
+        let ns = NSString(string: value)
+        var found: [UnknownName] = []
+        var seen = Set<String>()
+        for match in sigilWord.matches(in: value, range: NSRange(location: 0, length: ns.length)) {
+            let sigil: Sigil = ns.substring(with: match.range(at: 1)) == "#" ? .project : .label
+            let nameRange = match.range(at: 2)
+            let name = ns.substring(with: nameRange)
+            let start = match.range.location
+            if tokens.contains(where: { start >= $0.start && start < $0.end }) { continue }
+            let lower = name.lowercased()
+            let exists = switch sigil {
+            case .project: projects.contains { $0.name.lowercased() == lower }
+            case .label: labels.contains { $0.name.lowercased() == lower }
+            }
+            if exists || !seen.insert(sigil.rawValue + lower).inserted { continue }
+            found.append(UnknownName(sigil: sigil, name: name, start: start, end: nameRange.location + nameRange.length))
+        }
+        return found
+    }
+
     /// When each id last appeared on a newly created task, the store's only record of use.
     public static func lastUsed(_ tasks: [TaskItem], _ idsOf: (TaskItem) -> [String]) -> [String: Int] {
         var used: [String: Int] = [:]

@@ -62,6 +62,7 @@ final class QuickAddParityTests: ParityTestCase {
         expectHighlight("due", "tomorrow 5pm")
         expectHighlight("reminder", "remind me 30m before")
         expectHighlight("priority", "p1")
+        expectRendered("tomorrow 5pm; remind me 30m before; p1")
         snap("add-highlight")
     }
 
@@ -222,5 +223,55 @@ final class QuickAddParityTests: ParityTestCase {
         type("\n")
         cancelQuickAdd()
         XCTAssertTrue(row("Ping @calls").waitForExistence(timeout: 5))
+    }
+
+    func test_add_create() {
+        start()
+        openQuickAdd()
+        type("Call @dentist now")
+        XCTAssertTrue(app.buttons["Create @dentist"].waitForExistence(timeout: 5))
+        type("\n")
+        wait(for: taskInput, "value == ''")
+        type("Buy milk #Personal @phone today")
+        let project = app.buttons["Create #Personal"], label = app.buttons["Create @phone"]
+        XCTAssertTrue(project.waitForExistence(timeout: 5))
+        XCTAssertTrue(label.exists)
+        project.tap()
+        expectHighlight("project", "#Personal")
+        waitGone(project)
+        label.tap()
+        expectHighlight("label", "@phone")
+        waitGone(label)
+        snap("add-create")
+        type("\n")
+        wait(for: taskInput, "value == ''")
+        cancelQuickAdd()
+        XCTAssertTrue(row("Call @dentist now").waitForExistence(timeout: 5))
+        go("Today")
+        expectRow("Buy milk", contains: "Personal")
+        expectRow("Buy milk", contains: "phone")
+    }
+
+    func test_add_dock() {
+        start()
+        openQuickAdd()
+        waitGone(app.buttons["Quick add"])
+        let keyboard = app.keyboards.firstMatch
+        XCTAssertTrue(keyboard.waitForExistence(timeout: 5))
+        // The keyboard's frame starts below its suggestion bar, so the card meets the keyboard's visible top edge
+        // when it ends at most one bar height above that frame.
+        var gap = CGFloat.infinity
+        let deadline = Date().addingTimeInterval(3)
+        repeat {
+            gap = keyboard.frame.minY - quickAdd.frame.maxY
+            if (0...56).contains(gap) { break }
+            Thread.sleep(forTimeInterval: 0.2)
+        } while Date() < deadline
+        XCTAssertTrue((0...56).contains(gap), "Quick add ends \(gap) pt above the keyboard")
+        XCTAssertEqual(quickAdd.frame.minX, app.frame.minX, accuracy: 1, "Quick add is inset from the screen edge")
+        XCTAssertEqual(quickAdd.frame.width, app.frame.width, accuracy: 1, "Quick add does not span the screen")
+        snap("add-dock")
+        cancelQuickAdd()
+        XCTAssertTrue(app.buttons["Quick add"].waitForExistence(timeout: 5))
     }
 }

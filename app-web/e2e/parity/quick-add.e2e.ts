@@ -204,3 +204,67 @@ test('labels-keep-text: Keep as text on a label chip keeps @name in the title', 
 	await app.cancelQuickAdd();
 	await expect(app.row('Ping @calls')).toBeVisible();
 });
+
+test('add-create: an unknown #project or @label offers to create it and never creates it silently', async ({
+	app,
+	snap,
+}) => {
+	await app.openQuickAdd();
+	await app.type('Call @dentist now');
+	await expect(app.quickAdd().getByRole('button', { name: 'Create @dentist' })).toBeVisible();
+	await app.taskInput().press('Enter');
+	await expect(app.taskInput()).toHaveValue('');
+	await app.type('Buy milk #Personal @phone today');
+	const createProject = app.quickAdd().getByRole('button', { name: 'Create #Personal' });
+	const createLabel = app.quickAdd().getByRole('button', { name: 'Create @phone' });
+	await expect(createProject).toBeVisible();
+	await expect(createLabel).toBeVisible();
+	await createProject.tap();
+	await expect(app.highlight('project')).toHaveText('#Personal');
+	await expect(createProject).toHaveCount(0);
+	await createLabel.tap();
+	await expect(app.highlight('label')).toHaveText('@phone');
+	await expect(createLabel).toHaveCount(0);
+	await snap('add-create');
+	await app.taskInput().press('Enter');
+	await expect(app.taskInput()).toHaveValue('');
+	await app.cancelQuickAdd();
+	await expect(app.row('Call @dentist now')).toBeVisible();
+	await app.go('Today');
+	await expect(app.row('Buy milk')).toContainText('Personal');
+	await expect(app.row('Buy milk')).toContainText('phone');
+});
+
+test('add-dock: quick add docks to the bottom edge and hides the add button', async ({ app, page, snap }) => {
+	await app.openQuickAdd();
+	await expect(page.getByRole('button', { name: 'Quick add' })).toHaveCount(0);
+	await app.settle();
+	const box = (await app.quickAdd().boundingBox())!;
+	expect(page.viewportSize()!.height - (box.y + box.height)).toBeLessThanOrEqual(12);
+	await snap('add-dock');
+	await app.cancelQuickAdd();
+	await expect(page.getByRole('button', { name: 'Quick add' })).toBeVisible();
+});
+
+test('add-toast: a toast over quick add sits clear of its chips with its text in full', async ({ app, page, snap }) => {
+	await app.openQuickAdd();
+	await app.type('Call mom tomorrow 5pm every mon r30m');
+	await app.taskInput().press('Enter');
+	await app.type('Call mom tomorrow 5pm every mon r30m');
+	const toast = page.getByRole('status').filter({ hasText: 'Get notified when it’s due?' });
+	await expect(toast).toBeVisible();
+	await app.settle();
+	const message = toast.getByText('Get notified when it’s due?');
+	expect(await message.evaluate(node => node.scrollWidth <= node.clientWidth)).toBe(true);
+	const button = (await toast.getByRole('button', { name: 'Turn on' }).boundingBox())!;
+	expect(button.height).toBeLessThanOrEqual(44);
+	const toastBox = (await toast.boundingBox())!;
+	for (const chip of [
+		app.quickAdd().getByRole('button', { name: 'Add reminder' }),
+		app.quickAdd().getByText('Every').first(),
+	]) {
+		const box = (await chip.boundingBox())!;
+		expect(toastBox.y + toastBox.height <= box.y || box.y + box.height <= toastBox.y).toBe(true);
+	}
+	await snap('add-toast');
+});

@@ -1,10 +1,12 @@
 import { expect } from 'bun:test';
 import * as names from './name-search.ts';
 import type { Named, Suggestion } from './name-search.ts';
+import type { QuickAddToken } from './quick-add.ts';
 import type { Project, Task } from './task.ts';
 import { describe, recorded, test } from './vectors/record.ts';
 
 const sigilFragment = recorded('name-search', names.sigilFragment);
+const unknownNames = recorded('name-search', names.unknownNames);
 const suggest = recorded('name-search', names.suggest);
 // `lastUsed` takes a function, which a vector cannot hold, so each kind of id records under its own name.
 const lastUsedProjects = recorded('name-search', function lastUsedProjects(tasks: readonly Task[]) {
@@ -127,5 +129,41 @@ describe('suggest', () => {
 		expect(suggestLabels(tasks, '')).toEqual(['deep work', 'waiting', 'calls']);
 		expect(suggestLabels([task(null, 1, ['calls'])], '')).toEqual(['calls', 'deep work', 'waiting']);
 		expect(suggestLabels(tasks, 'w')).toEqual(['waiting', 'deep work', '+w']);
+	});
+});
+
+describe('unknownNames', () => {
+	const offered = (value: string, tokens: QuickAddToken[] = []) =>
+		unknownNames(value, tokens, projects, labels).map(u => `${u.sigil}${u.name}@${u.start}-${u.end}`);
+
+	test('a # or @ word that names nothing is offered with its range', () => {
+		expect(offered('Buy milk #Personal @phone tomorrow')).toEqual(['#Personal@9-18', '@phone@19-25']);
+	});
+
+	test('existing names are never offered, ignoring case, even when kept as text', () => {
+		expect(offered('Fix sink #home @CALLS')).toEqual([]);
+	});
+
+	test('text the parser claimed is skipped, so a multi-word name never offers its first word', () => {
+		const tokens: QuickAddToken[] = [
+			{ kind: 'project', text: '#Side Project', start: 5, end: 18 },
+			{ kind: 'label', text: '@deep work', start: 19, end: 29 },
+		];
+		expect(offered('Plan #Side Project @deep work', tokens)).toEqual([]);
+	});
+
+	test('emails, handles inside words, and punctuated words follow the parser', () => {
+		expect(offered('Email a@b.com and Issue#12')).toEqual([]);
+		expect(offered('Call @dentist, then #Garden.')).toEqual(['@dentist@5-13', '#Garden@20-27']);
+		expect(offered('Read @site.com')).toEqual([]);
+	});
+
+	test('a bare sigil offers nothing and a repeated name is offered once', () => {
+		expect(offered('# and @ alone')).toEqual([]);
+		expect(offered('@phone call @Phone back')).toEqual(['@phone@0-6']);
+	});
+
+	test('names may use letters beyond ASCII, digits, dashes, and underscores', () => {
+		expect(offered('Bake #Café @follow-up_2')).toEqual(['#Café@5-10', '@follow-up_2@11-23']);
 	});
 });

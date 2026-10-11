@@ -1,8 +1,9 @@
 import Core
 import SwiftUI
 
-/// Quick add: a short sheet docked above the keyboard with the smart input, the chips that spell out what the text
-/// set, and the project picker. Saving keeps the sheet open for the next task; dismissing discards the draft.
+/// Quick add: a glass card attached to the top of the keyboard with the smart input, the chips that spell out what
+/// the text set, and the project picker. It is an overlay rather than a sheet, because a sheet floats above the
+/// keyboard with a gap. Saving keeps it open for the next task; dismissing discards the draft.
 struct QuickAddSheet: View {
     @Environment(\.clock) private var clock
     let defaults: QuickAddDefaults
@@ -14,11 +15,11 @@ struct QuickAddSheet: View {
 
 private struct QuickAddForm: View {
     @Environment(Store.self) private var store
+    @Environment(Navigator.self) private var navigator
     @Environment(\.clock) private var clock
-    @Environment(\.dismiss) private var dismiss
 
     @State private var draft: QuickAddDraft
-    @State private var height: CGFloat = 220
+    @State private var listAt: Int?
     @FocusState private var focused: Bool
 
     init(defaults: QuickAddDefaults, today: DateKey) {
@@ -34,6 +35,7 @@ private struct QuickAddForm: View {
                 tokens: parsed.tokens,
                 label: "Task name",
                 placeholder: "Call mom tomorrow 5pm p1 remind me 30m before",
+                listAt: $listAt,
                 focused: $focused,
                 onSubmit: { submit() }
             )
@@ -50,7 +52,7 @@ private struct QuickAddForm: View {
                     draft.picked.projectId = id
                 }
                 Spacer(minLength: 0)
-                Button("Cancel") { dismiss() }
+                Button("Cancel") { navigator.sheet = nil }
                     .buttonStyle(.plain)
                     .foregroundStyle(.muted)
                     .padding(.horizontal, 12)
@@ -64,11 +66,13 @@ private struct QuickAddForm: View {
         .padding(.horizontal, 16)
         .padding(.top, 20)
         .padding(.bottom, 8)
-        .fixedSize(horizontal: false, vertical: true)
-        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height = $0 }
-        .frame(maxHeight: .infinity, alignment: .top)
-        .presentationDetents([.height(height)])
-        .presentationDragIndicator(.hidden)
+        .frame(maxWidth: .infinity)
+        .background {
+            // Runs under the home indicator when the keyboard is down, and meets the keyboard's top edge when it is up.
+            Color.clear
+                .glassEffect(.regular, in: UnevenRoundedRectangle(topLeadingRadius: 32, topTrailingRadius: 32, style: .continuous))
+                .ignoresSafeArea(.container, edges: .bottom)
+        }
         .sensoryFeedback(.selection, trigger: draft.picked)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("Quick add")
@@ -105,6 +109,26 @@ private struct QuickAddForm: View {
             Chip(systemImage: "tag.fill", text: QuickAddDraft.labelName(token, store.labels) ?? "", tone: .ink, iconTone: .toneLabel)
                 .keepAsText { keep(token) }
         }
+        // The name the suggestion list is open on already offers to create it there.
+        ForEach(NameSearch.unknownNames(draft.text, parsed.tokens, store.projects, store.labels).filter { $0.start != listAt }, id: \.self) { name in
+            let title = "Create \(name.sigil.rawValue)\(name.name)"
+            Button { create(name) } label: {
+                Chip(systemImage: "plus", text: title, tone: .accent)
+                    .frame(minHeight: 44)
+                    .contentShape(.rect)
+            }
+                .buttonStyle(.plain)
+                .accessibilityLabel(title)
+        }
+    }
+
+    /// Creates a typed name only when its chip is tapped, so the parser then reads it like any other.
+    private func create(_ name: NameSearch.UnknownName) {
+        switch name.sigil {
+        case .project: _ = store.addProject(name.name)
+        case .label: _ = store.addLabel(name.name)
+        }
+        focused = true
     }
 
     private func keepAsText(_ parsed: QuickAdd.Parsed, _ kind: QuickAdd.TokenKind) -> (() -> Void)? {

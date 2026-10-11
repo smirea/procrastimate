@@ -1575,6 +1575,542 @@
 					"name": "w"
 				}
 			]
+		},
+		{
+			"fn": "unknownNames",
+			"test": "unknownNames › a # or @ word that names nothing is offered with its range",
+			"input": [
+				"Buy milk #Personal @phone tomorrow",
+				[],
+				[
+					{
+						"createdAt": 0,
+						"id": "home",
+						"name": "Home"
+					},
+					{
+						"createdAt": 0,
+						"id": "homework",
+						"name": "Homework"
+					},
+					{
+						"createdAt": 0,
+						"id": "side",
+						"name": "Side Project"
+					},
+					{
+						"createdAt": 0,
+						"id": "errands",
+						"name": "Errands"
+					},
+					{
+						"createdAt": 0,
+						"id": "work",
+						"name": "Work"
+					}
+				],
+				[
+					{
+						"createdAt": 0,
+						"id": "waiting",
+						"name": "waiting"
+					},
+					{
+						"createdAt": 0,
+						"id": "calls",
+						"name": "calls"
+					},
+					{
+						"createdAt": 0,
+						"id": "deep",
+						"name": "deep work"
+					}
+				]
+			],
+			"output": [
+				{
+					"end": 18,
+					"name": "Personal",
+					"sigil": "#",
+					"start": 9
+				},
+				{
+					"end": 25,
+					"name": "phone",
+					"sigil": "@",
+					"start": 19
+				}
+			]
+		},
+		{
+			"fn": "unknownNames",
+			"test": "unknownNames › existing names are never offered, ignoring case, even when kept as text",
+			"input": [
+				"Fix sink #home @CALLS",
+				[],
+				[
+					{
+						"createdAt": 0,
+						"id": "home",
+						"name": "Home"
+					},
+					{
+						"createdAt": 0,
+						"id": "homework",
+						"name": "Homework"
+					},
+					{
+						"createdAt": 0,
+						"id": "side",
+						"name": "Side Project"
+					},
+					{
+						"createdAt": 0,
+						"id": "errands",
+						"name": "Errands"
+					},
+					{
+						"createdAt": 0,
+						"id": "work",
+						"name": "Work"
+					}
+				],
+				[
+					{
+						"createdAt": 0,
+						"id": "waiting",
+						"name": "waiting"
+					},
+					{
+						"createdAt": 0,
+						"id": "calls",
+						"name": "calls"
+					},
+					{
+						"createdAt": 0,
+						"id": "deep",
+						"name": "deep work"
+					}
+				]
+			],
+			"output": []
+		},
+		{
+			"fn": "unknownNames",
+			"test": "unknownNames › text the parser claimed is skipped, so a multi-word name never offers its first word",
+			"input": [
+				"Plan #Side Project @deep work",
+				[
+					{
+						"end": 18,
+						"kind": "project",
+						"start": 5,
+						"text": "#Side Project"
+					},
+					{
+						"end": 29,
+						"kind": "label",
+						"start": 19,
+						"text": "@deep work"
+					}
+				],
+				[
+					{
+						"createdAt": 0,
+						"id": "home",
+						"name": "Home"
+					},
+					{
+						"createdAt": 0,
+						"id": "homework",
+						"name": "Homework"
+					},
+					{
+						"createdAt": 0,
+						"id": "side",
+						"name": "Side Project"
+					},
+					{
+						"createdAt": 0,
+						"id": "errands",
+						"name": "Errands"
+					},
+					{
+						"createdAt": 0,
+						"id": "work",
+						"name": "Work"
+					}
+				],
+				[
+					{
+						"createdAt": 0,
+						"id": "waiting",
+						"name": "waiting"
+					},
+					{
+						"createdAt": 0,
+						"id": "calls",
+						"name": "calls"
+					},
+					{
+						"createdAt": 0,
+						"id": "deep",
+						"name": "deep work"
+					}
+				]
+			],
+			"output": []
+		},
+		{
+			"fn": "unknownNames",
+			"test": "unknownNames › emails, handles inside words, and punctuated words follow the parser",
+			"input": [
+				"Email a@b.com and Issue#12",
+				[],
+				[
+					{
+						"createdAt": 0,
+						"id": "home",
+						"name": "Home"
+					},
+					{
+						"createdAt": 0,
+						"id": "homework",
+						"name": "Homework"
+					},
+					{
+						"createdAt": 0,
+						"id": "side",
+						"name": "Side Project"
+					},
+					{
+						"createdAt": 0,
+						"id": "errands",
+						"name": "Errands"
+					},
+					{
+						"createdAt": 0,
+						"id": "work",
+						"name": "Work"
+					}
+				],
+				[
+					{
+						"createdAt": 0,
+						"id": "waiting",
+						"name": "waiting"
+					},
+					{
+						"createdAt": 0,
+						"id": "calls",
+						"name": "calls"
+					},
+					{
+						"createdAt": 0,
+						"id": "deep",
+						"name": "deep work"
+					}
+				]
+			],
+			"output": []
+		},
+		{
+			"fn": "unknownNames",
+			"test": "unknownNames › emails, handles inside words, and punctuated words follow the parser",
+			"input": [
+				"Call @dentist, then #Garden.",
+				[],
+				[
+					{
+						"createdAt": 0,
+						"id": "home",
+						"name": "Home"
+					},
+					{
+						"createdAt": 0,
+						"id": "homework",
+						"name": "Homework"
+					},
+					{
+						"createdAt": 0,
+						"id": "side",
+						"name": "Side Project"
+					},
+					{
+						"createdAt": 0,
+						"id": "errands",
+						"name": "Errands"
+					},
+					{
+						"createdAt": 0,
+						"id": "work",
+						"name": "Work"
+					}
+				],
+				[
+					{
+						"createdAt": 0,
+						"id": "waiting",
+						"name": "waiting"
+					},
+					{
+						"createdAt": 0,
+						"id": "calls",
+						"name": "calls"
+					},
+					{
+						"createdAt": 0,
+						"id": "deep",
+						"name": "deep work"
+					}
+				]
+			],
+			"output": [
+				{
+					"end": 13,
+					"name": "dentist",
+					"sigil": "@",
+					"start": 5
+				},
+				{
+					"end": 27,
+					"name": "Garden",
+					"sigil": "#",
+					"start": 20
+				}
+			]
+		},
+		{
+			"fn": "unknownNames",
+			"test": "unknownNames › emails, handles inside words, and punctuated words follow the parser",
+			"input": [
+				"Read @site.com",
+				[],
+				[
+					{
+						"createdAt": 0,
+						"id": "home",
+						"name": "Home"
+					},
+					{
+						"createdAt": 0,
+						"id": "homework",
+						"name": "Homework"
+					},
+					{
+						"createdAt": 0,
+						"id": "side",
+						"name": "Side Project"
+					},
+					{
+						"createdAt": 0,
+						"id": "errands",
+						"name": "Errands"
+					},
+					{
+						"createdAt": 0,
+						"id": "work",
+						"name": "Work"
+					}
+				],
+				[
+					{
+						"createdAt": 0,
+						"id": "waiting",
+						"name": "waiting"
+					},
+					{
+						"createdAt": 0,
+						"id": "calls",
+						"name": "calls"
+					},
+					{
+						"createdAt": 0,
+						"id": "deep",
+						"name": "deep work"
+					}
+				]
+			],
+			"output": []
+		},
+		{
+			"fn": "unknownNames",
+			"test": "unknownNames › a bare sigil offers nothing and a repeated name is offered once",
+			"input": [
+				"# and @ alone",
+				[],
+				[
+					{
+						"createdAt": 0,
+						"id": "home",
+						"name": "Home"
+					},
+					{
+						"createdAt": 0,
+						"id": "homework",
+						"name": "Homework"
+					},
+					{
+						"createdAt": 0,
+						"id": "side",
+						"name": "Side Project"
+					},
+					{
+						"createdAt": 0,
+						"id": "errands",
+						"name": "Errands"
+					},
+					{
+						"createdAt": 0,
+						"id": "work",
+						"name": "Work"
+					}
+				],
+				[
+					{
+						"createdAt": 0,
+						"id": "waiting",
+						"name": "waiting"
+					},
+					{
+						"createdAt": 0,
+						"id": "calls",
+						"name": "calls"
+					},
+					{
+						"createdAt": 0,
+						"id": "deep",
+						"name": "deep work"
+					}
+				]
+			],
+			"output": []
+		},
+		{
+			"fn": "unknownNames",
+			"test": "unknownNames › a bare sigil offers nothing and a repeated name is offered once",
+			"input": [
+				"@phone call @Phone back",
+				[],
+				[
+					{
+						"createdAt": 0,
+						"id": "home",
+						"name": "Home"
+					},
+					{
+						"createdAt": 0,
+						"id": "homework",
+						"name": "Homework"
+					},
+					{
+						"createdAt": 0,
+						"id": "side",
+						"name": "Side Project"
+					},
+					{
+						"createdAt": 0,
+						"id": "errands",
+						"name": "Errands"
+					},
+					{
+						"createdAt": 0,
+						"id": "work",
+						"name": "Work"
+					}
+				],
+				[
+					{
+						"createdAt": 0,
+						"id": "waiting",
+						"name": "waiting"
+					},
+					{
+						"createdAt": 0,
+						"id": "calls",
+						"name": "calls"
+					},
+					{
+						"createdAt": 0,
+						"id": "deep",
+						"name": "deep work"
+					}
+				]
+			],
+			"output": [
+				{
+					"end": 6,
+					"name": "phone",
+					"sigil": "@",
+					"start": 0
+				}
+			]
+		},
+		{
+			"fn": "unknownNames",
+			"test": "unknownNames › names may use letters beyond ASCII, digits, dashes, and underscores",
+			"input": [
+				"Bake #Café @follow-up_2",
+				[],
+				[
+					{
+						"createdAt": 0,
+						"id": "home",
+						"name": "Home"
+					},
+					{
+						"createdAt": 0,
+						"id": "homework",
+						"name": "Homework"
+					},
+					{
+						"createdAt": 0,
+						"id": "side",
+						"name": "Side Project"
+					},
+					{
+						"createdAt": 0,
+						"id": "errands",
+						"name": "Errands"
+					},
+					{
+						"createdAt": 0,
+						"id": "work",
+						"name": "Work"
+					}
+				],
+				[
+					{
+						"createdAt": 0,
+						"id": "waiting",
+						"name": "waiting"
+					},
+					{
+						"createdAt": 0,
+						"id": "calls",
+						"name": "calls"
+					},
+					{
+						"createdAt": 0,
+						"id": "deep",
+						"name": "deep work"
+					}
+				]
+			],
+			"output": [
+				{
+					"end": 10,
+					"name": "Café",
+					"sigil": "#",
+					"start": 5
+				},
+				{
+					"end": 23,
+					"name": "follow-up_2",
+					"sigil": "@",
+					"start": 11
+				}
+			]
 		}
 	]
 }
