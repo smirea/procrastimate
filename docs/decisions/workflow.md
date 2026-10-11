@@ -7,3 +7,9 @@
 - **Workers build features themselves.** Never hand the whole build to a helper sub-agent that can't receive messages.
 - **Run only the relevant tests locally.** Run the unit and e2e specs that cover the change. The full suite runs in CI.
 - **Screenshots only for UI changes.** Attach 2 to 4.
+
+## Clients
+
+- **Every feature is built for all clients at once.** Web and iOS today. A feature request is planned and built for every client where it makes sense, not for one client with the others catching up later.
+- **Each feature plan names its clients.** It lists the target clients and says why any are excluded. Some clients get a subset; a future Apple Watch app, for example, gets only what suits a watch.
+- **Web and iOS slices are planned together.** Shared logic lands once in `shared/` with its Swift port through the test vectors. Each UI slice has a twin on the other client, written against the same parity ids, and every UI scenario gets a paired Playwright and XCUITest test (see [iOS app](ios.md#build-and-verification)). The twins may run as parallel PRs.

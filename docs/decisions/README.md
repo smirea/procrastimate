@@ -3,12 +3,13 @@
 Procrastimate's concepts, goals, paradigms, and high-level system decisions, one file per area. Read the areas your work touches before starting. When a change introduces or revises one of these, record it in the matching area file in the same PR as the work, or add a new file and list it here when no area fits. Replace stale entries instead of keeping history; git keeps the history.
 
 - [Product goals](product.md): what Procrastimate is, who it is for, and the snappy local-first bar.
-- [Workflow](workflow.md): how threads, PRs, rebases, tests, and screenshots work.
+- [Workflow](workflow.md): how threads, PRs, rebases, tests, and screenshots work, and building every feature for all clients.
 - [UX principles](ux-principles.md): mobile-first layout, touch, motion, and Liquid Glass parity.
 - [Visual language](visual-language.md): the Liquid Glass materials, shapes, motion, accessibility fallbacks, and rendering pick.
 - [Theming](theming.md): System, Light, and Dark themes, semantic tokens, and contrast.
 - [Domain](domain.md): tasks, views, projects, labels, priorities, and reminders.
 - [Quick add and natural language](quick-add.md): the quick add parser, its phrases, guards, and autocomplete.
+- [Ramble](ramble.md): voice capture with ElevenLabs Scribe, the spoken grammar, precision rules, and the proxy. Its research, test plan, cost, and build slices are in [Ramble design](../ramble-design.md).
 - [Labels UI](labels.md): how labels show and are edited in rows, the sidebar, and pickers.
 - [Settings](settings.md): the sidebar Settings row, its popover or sheet, and what it holds.
 - [Todoist import](todoist-import.md): importing a Todoist backup zip, field mapping, nesting, and re-runs.
