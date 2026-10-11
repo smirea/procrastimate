@@ -478,7 +478,7 @@ public enum QuickAdd {
         _ kind: TokenKind,
         _ sigil: String,
         _ items: [(id: String, name: String)],
-        _ read: @escaping @Sendable (String) -> Match
+        _ read: @escaping @Sendable (String) -> Match?
     ) -> Rule? {
         if items.isEmpty { return nil }
         var order: [String] = []
@@ -499,7 +499,8 @@ public enum QuickAdd {
             pattern: Pattern(#"(?<!\S)\#(sigil)(\#(names.joined(separator: "|")))(?![\w#@]|[./:]\w)"#, ignoreCase: true),
             repeatable: kind == .label,
             guarded: false,
-            read: { m, _ in read(ids[m[1]!.lowercased()]!) }
+            // ICU folds case more widely than JavaScript, as with `ſ` for `s`, so a match may name nothing.
+            read: { m, _ in m[1].flatMap { ids[$0.lowercased()] }.flatMap(read) }
         )
     }
 
