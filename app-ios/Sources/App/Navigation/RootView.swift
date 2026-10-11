@@ -31,12 +31,37 @@ struct RootView: View {
         }
         .tabViewStyle(.sidebarAdaptable)
         .tabBarMinimizeBehavior(.onScrollDown)
-        .overlay(alignment: .bottom) {
-            ToastStack().padding(.bottom, 124)
+        .overlay(alignment: .bottom) { QuickAddOverlay() }
+        .overlay(alignment: navigator.quickAdd == nil ? .bottom : .top) {
+            // Quick add covers the bottom of the screen, so toasts move to the top while it is open, as on the web.
+            ToastStack().padding(navigator.quickAdd == nil ? .bottom : .top, navigator.quickAdd == nil ? 124 : 8)
         }
         .sensoryFeedback(.success, trigger: actions.completions)
         .searchShortcuts()
-        .sheet(item: $navigator.sheet) { SheetView(sheet: $0) }
+        .sheet(item: Binding(
+            get: { navigator.quickAdd == nil ? navigator.sheet : nil },
+            set: { if $0 != nil || navigator.quickAdd == nil { navigator.sheet = $0 } }
+        )) { SheetView(sheet: $0) }
+    }
+}
+
+/// Quick add over a scrim, attached to the top of the keyboard. Tapping the scrim discards the draft.
+private struct QuickAddOverlay: View {
+    @Environment(Navigator.self) private var navigator
+
+    var body: some View {
+        ZStack(alignment: .bottom) {
+            if let defaults = navigator.quickAdd {
+                Color.scrim
+                    .ignoresSafeArea()
+                    .onTapGesture { navigator.sheet = nil }
+                    .accessibilityHidden(true)
+                    .transition(.opacity)
+                QuickAddSheet(defaults: defaults)
+                    .transition(.move(edge: .bottom))
+            }
+        }
+        .animation(.snappy(duration: 0.3), value: navigator.quickAdd)
     }
 }
 
