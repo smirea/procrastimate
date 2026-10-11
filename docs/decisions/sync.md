@@ -74,7 +74,7 @@ Every field is last-writer-wins by HLC. Different fields from different devices 
 
 - **The server computes the Web Push schedule.** Once sync is on, the `Account` object knows every task, so after each push it recomputes all pending notifications from `notificationTimes` in the account's `timeZone` and arms one alarm for the earliest. It sends to every subscribed web device. A change made on iOS or on a closed laptop then reaches the phone's Web Push right away, without each device uploading its own schedule. `PushSchedule` and `PUT /api/push/schedule` are removed, and subscriptions register under the device token. Web Push therefore needs a paired device: the Notifications panel offers `Turn on sync` first when the device is unpaired. Keeping the old per-device path for unpaired browsers would mean two schedulers for one user.
 - **iOS keeps local notifications.** They are recomputed from the synced state after every pull, so iOS needs no APNs.
-- **Time zones.** The server cannot use the process zone, so `shared/` gains a helper that turns a `DateKey` and `TimeOfDay` into epoch milliseconds in a named zone with `Intl`. The client's `notificationTimes` keeps the device zone.
+- **Time zones.** The server cannot use the process zone, so `shared/zoned-time.ts` turns a `DateKey` and `TimeOfDay` into epoch milliseconds in a named zone with `Intl`, and `notificationTimes` and `upcomingNotifications` take an optional zone. Clients pass none and keep the device zone. The details are in [Push notifications](push-notifications.md).
 
 ## Testing
 
