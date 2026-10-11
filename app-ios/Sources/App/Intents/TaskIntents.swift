@@ -5,7 +5,7 @@ import Core
 enum IntentPriority: String, AppEnum {
     case p1, p2, p3, p4
 
-    static var typeDisplayRepresentation = TypeDisplayRepresentation(name: "Priority")
+    static let typeDisplayRepresentation = TypeDisplayRepresentation(name: "Priority")
 
     static var caseDisplayRepresentations: [IntentPriority: DisplayRepresentation] {
         [
