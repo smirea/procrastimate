@@ -13,6 +13,7 @@ Stefan gets a system notification at each task's due time and at each reminder, 
 - `push-test` sends a test notification from `Send a test notification`, and `Turn off` stops push on this device.
 - `push-nudge` offers `Get notified when it’s due?` with `Turn on` once per session, when saving a task first gives it a time to notify while push is off.
 - `push-open` opens a task's details when its notification is tapped.
+- `push-rekey` moves a subscription made for an old server key to the current one on launch, with no prompt, so a VAPID rotation leaves push `On`.
 
 ## How to get to it (user POV)
 
@@ -25,7 +26,7 @@ Stefan gets a system notification at each task's due time and at each reminder, 
 
 Preconditions:
 
-- Push needs the Worker. Run `bun run preview` (it writes VAPID keys to `.dev.vars` once; add `SYNC_SETUP_CODE=<code>` there too), or use production. The Bun dev server from `bun run start` has no VAPID keys or alarms, so the panel says push is not available, though its account still registers subscriptions and computes the schedule.
+- Push needs the Worker. Run `bun run preview` (it writes `.dev.vars` from env-manager `dev`, or generates a VAPID pair once without AWS; add `SYNC_SETUP_CODE=<code>` there by hand when `dev` has none), or use production. The Bun dev server from `bun run start` has no VAPID keys or alarms, so the panel says push is not available, though its account still registers subscriptions and computes the schedule.
 - The device must have sync on (Settings, `Set up sync` or `Enter a pairing code`) before `Turn on notifications` shows.
 - Real delivery needs a browser that can subscribe. Playwright's Chromium cannot (no push service keys, and incognito contexts are refused). Google Chrome with a persistent profile can.
 
@@ -44,4 +45,4 @@ Preconditions:
 - `GET /api/push/schedule` with the device's `Authorization: Bearer <token>` (from `localStorage` key `procrastimate-device`) shows what the server will push to that device. Use it to inspect a run, not as a user path.
 - Every test that syncs shares the server's one account, so specs filter the schedule by a unique title suffix.
 - A notification more than ten minutes late is dropped instead of delivered.
-- Turning the server's VAPID keys over makes every device show `Off` until it turns notifications on again.
+- Turning the server's VAPID keys over resubscribes each device with the new key on its next launch, without a prompt, and it stays `On`. A device whose permission was reset goes `Off` instead.

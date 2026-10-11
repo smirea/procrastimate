@@ -38,16 +38,17 @@ Full rules in [`docs/decisions/workflow.md`](docs/decisions/workflow.md).
 
 # Environment
 
-- Use env-manager's root `.env` schema and named directory targets. Edit values only in the root `.env.local`, then run `env-manager gen --local`. Child values and readers are generated projections, not independent configs.
+- Use env-manager's root `.env` schema and named directory targets. Values live in AWS, in environments `dev` and `prod`. Edit them in the root `.env.local` after `env-manager down`, then `env-manager up`. Child values and readers are generated projections, not independent configs.
 - `local:true` keeps generation offline and disables automatic Git updates. Use `env-manager --help` for target selection, schema types, and remote storage.
 - Read application settings through each TypeScript target's generated reader: `server/src/env.ts`, and `app-web/env.ts` because SvelteKit reserves `src/env.ts`. The client's reader runs only in Vite's Node context; browser code must not import it.
 - Keep schema and readers tracked, values files ignored, and secrets scoped to the server target. Native and browser settings are public.
+- All secrets live in env-manager project `procrastinate` on AWS. Two environments, and no `local` environment or local mode: `prod` for the Worker, deploys, and Release or TestFlight iOS, and `dev` for local development and Debug iOS. Never run `wrangler secret put` or `gh secret set` directly. Change the value in env-manager, then run `bun run secrets:push` / `secrets:github` from a machine with AWS access (Stefan's MacBook). `bun run env:ios` writes the Debug and Release `API_URL`s. Cloud agents and the box have no AWS access: they run `env-manager gen --local` against the schema defaults for `dev`, and end to end tests use the hard-coded e2e setup code.
 
 # Native app
 
 - SwiftUI lives in `app-ios/`; read its `AGENTS.md` for native development. The root `start:ios` script delegates to `app-ios/scripts/run` and forwards launcher arguments.
 - The web client lives in `app-web/`. Root `start` runs it and the server together. `start:client` and `start:server` run each individually; iOS runs separately.
-- The root env-manager schema declares each directory target with explicit output paths: TypeScript values at `.env.local` and readers at `src/env.ts` (`env.ts` for `app-web`), native values at `Config/LocalSecrets.xcconfig`. Regenerate the nested xcconfig with `env-manager gen --local`; never hand-edit `app-ios/Config/LocalSecrets.xcconfig`.
+- The root env-manager schema declares each directory target with explicit output paths: TypeScript values at `.env.local` and readers at `src/env.ts` (`env.ts` for `app-web`), native values at `Config/LocalSecrets.xcconfig`. Debug and Release iOS builds read `Config/Env.xcconfig`, written by `bun run env:ios` from `dev` and `prod`. Never hand-edit either xcconfig.
 - `Config/Base.xcconfig` and `Config/Info.plist` bridge selected settings into `AppEnvironment.apiURL`. Native settings are bundled; server credentials belong exclusively to the server target.
 
 - Local web host: procrastimate.localhost -> 6120; browser API calls use the /api proxy.

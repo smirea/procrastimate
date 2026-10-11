@@ -16,11 +16,16 @@
 		"start:server": "bun run --cwd server start",
 		"start:ios": "bun app-ios/scripts/run",
 		"build": "bun run --cwd app-web build",
-		"preview": "bun run build && bun server/scripts/vapid.ts dev-vars && wrangler dev",
+		"preview": "bun run build && bun server/scripts/secrets.ts dev-vars && wrangler dev",
 		"dev": "bun run start",
 		"client:dev": "bun run start:client",
 		"server:dev": "bun run start:server",
-		"env:generate": "env-manager gen --local"
+		"env:generate": "env-manager gen --local",
+		"env:pull": "env-manager down",
+		"env:ios": "bun server/scripts/secrets.ts ios",
+		"secrets:push": "bun server/scripts/secrets.ts push",
+		"secrets:github": "bun server/scripts/secrets.ts github",
+		"secrets:check": "bun server/scripts/secrets.ts check"
 	},
 	"dependencies": {
 		"@tailwindcss/vite": "^4.3.3",

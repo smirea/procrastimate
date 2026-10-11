@@ -16,4 +16,7 @@ runs:
       shell: bash
       run: |
         bun add -g github:smirea/env-manager#60f8b982a945291f9df2e3c4a77830fdd228ae27
+        # CI has no AWS credentials. `--local` means schema defaults, not an environment named local.
+        # Only the env marker: a project header here makes env-manager treat the values file as another root.
+        printf '# env-manager env: dev\n' > .env.local
         env-manager gen --local
