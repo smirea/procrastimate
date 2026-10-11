@@ -64,7 +64,6 @@ struct ProcrastimateShortcuts: AppShortcutsProvider {
             phrases: [
                 "Search tasks in \(.applicationName)",
                 "Find a task in \(.applicationName)",
-                "Search \(.applicationName)",
             ],
             shortTitle: "Search Tasks",
             systemImageName: "magnifyingglass"
