@@ -1,3 +1,5 @@
+import Core
+
 /// Every sheet. Only one shows at a time: presenting another replaces it, as on the web.
 enum Sheet: Identifiable, Hashable {
     case quickAdd(QuickAddDefaults)
@@ -9,8 +11,4 @@ enum Sheet: Identifiable, Hashable {
 }
 
 /// What a new task starts with, from the list quick add opened in.
-struct QuickAddDefaults: Hashable {
-    var projectID: String?
-    var labelID: String?
-    var today = false
-}
+typealias QuickAddDefaults = QuickAddDraft.Defaults

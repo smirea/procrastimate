@@ -1,8 +1,19 @@
+import Core
 import SwiftUI
 
 struct InboxScreen: View {
+    @Environment(Store.self) private var store
+
     var body: some View {
-        ListEmptyState(title: "Inbox zero", hint: "Tap + to capture a task.")
-            .navigationTitle("Inbox")
+        let tasks = Views.inboxTasks(store.tasks)
+        TaskListScreen(
+            title: "Inbox",
+            isEmpty: tasks.isEmpty,
+            emptyTitle: "Inbox zero",
+            emptyHint: "Tap + to capture a task.",
+            quickAdd: QuickAddDefaults()
+        ) {
+            ForEach(tasks) { TaskRow(task: $0) }
+        }
     }
 }
