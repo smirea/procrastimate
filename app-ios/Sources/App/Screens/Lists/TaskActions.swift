@@ -17,14 +17,17 @@ final class TaskActions {
         self.clock = clock
     }
 
-    /// Completes a task, or moves a repeating one to its next occurrence.
-    func complete(_ task: TaskItem) {
-        guard let completion = withAnimation(.snappy, { store.completeTask(task.id) }) else { return }
+    /// Completes a task, or moves a repeating one to its next occurrence. The spoken text matches the undo toast.
+    @discardableResult
+    func complete(_ task: TaskItem) -> String? {
+        guard let completion = withAnimation(.snappy, { store.completeTask(task.id) }) else { return nil }
         completions += 1
+        let message = Format.completedToast(task.title, completion.next, clock.today)
         toasts.show(
-            Format.completedToast(task.title, completion.next, clock.today),
+            message,
             action: .init(label: "Undo") { [store] in withAnimation(.snappy) { store.restoreCompletion(completion.previous) } }
         )
+        return message
     }
 
     func delete(_ task: TaskItem) {

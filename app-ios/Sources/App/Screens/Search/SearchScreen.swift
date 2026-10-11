@@ -7,6 +7,7 @@ import SwiftUI
 struct SearchScreen: View {
     @Environment(Store.self) private var store
     @Environment(Navigator.self) private var navigator
+    @Environment(IntentRouter.self) private var router
 
     @State private var query = ""
     @State private var active = 0
@@ -65,8 +66,20 @@ struct SearchScreen: View {
         .sensoryFeedback(.selection, trigger: active)
         // The search tab can be built before it is shown, so focus follows the selected tab instead of `onAppear`,
         // which would pull the keyboard away from quick add.
-        .onAppear { if navigator.tab == .search { focused = true } }
+        .onAppear {
+            applyRoutedQuery()
+            if navigator.tab == .search { focused = true }
+        }
         .onChange(of: navigator.tab) { focused = navigator.tab == .search }
+        .onChange(of: router.searchQuery) { applyRoutedQuery() }
+    }
+
+    /// Search Tasks sets the query before this tab is shown, or while it is already on screen.
+    private func applyRoutedQuery() {
+        guard let routed = router.searchQuery else { return }
+        router.searchQuery = nil
+        if query != routed { query = routed }
+        if navigator.tab == .search { focused = true }
     }
 
     private func move(_ step: Int, in rows: [SearchSections.Row]) -> KeyPress.Result {

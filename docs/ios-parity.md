@@ -11,6 +11,7 @@ What the native iOS app must do to match the web app, row by row from the featur
 - **Playwright** is `<file> › <id>`: the test titled `<id>: …` in `app-web/e2e/parity/<file>.e2e.ts`, run by the `parity` project (WebKit, iPhone 15 Pro). The web column only tracks whether the feature exists on the web; its existing proof stays in the feature map.
 - **Screenshot** is the file both sides save: `app-web/test-results/parity/<file>` on the web and `<file>` in the `ios-parity` CI artifact on iOS. The `parity-report` artifact shows each pair side by side.
 - Both tests in a row seed the same data through quick add, pin the clock to Wednesday, October 14 2026, 10:00 UTC, perform the same steps, and assert the same accessible names and visible strings. Parser phrases, guards, recurrence math, ranking, and import mapping are proven case by case by the shared test vectors, so their UI rows run one representative scenario.
+- **App Intents ship with the feature.** A new iOS feature that someone can do from outside the app includes its App Intents, shortcut phrases, and entities in the same change. The web column stays `n/a`: Siri, Shortcuts, and Spotlight are iOS. See [iOS app](decisions/ios.md#siri-shortcuts-and-spotlight).
 
 ## Checklist
 
@@ -213,6 +214,23 @@ Planned on both clients together. The design and its slices `R1` to `R7` are in 
 | `ramble-save-undo`: `Add <n> tasks` saves them all, and one `Undo` removes them | Planned | Planned | R4, R5 | `RambleParityTests.test_ramble_save_undo` | `ramble › ramble-save-undo` | `ramble-save-undo.png` |
 | `ramble-hold`: hold to talk listens while held | Planned | Planned | R4, R5 | `RambleParityTests.test_ramble_hold` | `ramble › ramble-hold` | `ramble-hold.png` |
 | `ramble-unavailable`: unpaired and offline states explain why Ramble is off | Planned | Planned | R4, R5 | `RambleParityTests.test_ramble_unavailable` | `ramble › ramble-unavailable` | `ramble-unavailable.png` |
+
+### Siri, Shortcuts, and Spotlight
+
+iOS only. The web client has no App Intents. New features that can be done from outside the app add their rows here in the same change. See [iOS app](decisions/ios.md#siri-shortcuts-and-spotlight).
+
+| Feature | Web | iOS | Slice | XCUITest | Playwright | Screenshot |
+| --- | --- | --- | --- | --- | --- | --- |
+| `intent-add`: Add Task parses the quick-add grammar, and Shortcuts fields fill only what the title left unset | n/a | Built | Intents | `AppIntentsParityTests.test_intent_add`, `test_intent_project_labels_and_parameters` | n/a | — |
+| `intent-complete`: completes the open task with that title | n/a | Built | Intents | `AppIntentsParityTests.test_intent_complete_and_spotlight` | n/a | — |
+| `intent-reopen`: reopens a completed task | n/a | Built | Intents | `AppIntentsParityTests.test_intent_reopen` | n/a | — |
+| `intent-open-view`: opens Inbox, Today, or Upcoming | n/a | Built | Intents | `AppIntentsParityTests.test_intent_open_views` | n/a | — |
+| `intent-open-project`: opens a project | n/a | Built | Intents | `AppIntentsParityTests.test_intent_project_labels_and_parameters` | n/a | — |
+| `intent-open-task`: opens a task | n/a | Built | Intents | `AppIntentsParityTests.test_intent_open_task` | n/a | — |
+| `intent-search`: searches tasks and shows the matches | n/a | Built | Intents | `AppIntentsParityTests.test_intent_search` | n/a | — |
+| `intent-today`: lists tasks due today | n/a | Built | Intents | `AppIntentsParityTests.test_intent_today_and_overdue` | n/a | — |
+| `intent-overdue`: lists overdue tasks | n/a | Built | Intents | `AppIntentsParityTests.test_intent_today_and_overdue` | n/a | — |
+| `intent-spotlight`: Spotlight indexes open tasks and drops them once completed | n/a | Built | Intents | `AppIntentsParityTests.test_intent_complete_and_spotlight` | n/a | — |
 
 ## Thread split
 
