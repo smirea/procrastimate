@@ -29,7 +29,7 @@ Preconditions:
 - **Re-import.** Import the same backup again. The summary reads `0 projects`, `0 tasks`, and `12 skipped`, and every list keeps one copy of each task. Same test, and on a phone `importing a Todoist backup twice from the settings sheet adds each task once`.
 - **Wrong file.** Pick a file that is not a zip. An alert reads `This is not a Todoist backup zip.` and no task is added. Test: `a file that is not a Todoist backup shows an error and imports nothing`.
 - **Reader.** CSV edge cases (byte order mark, quoted commas and newlines, CRLF), priority, indent, reminders, labels, and every date example. Tests in `shared/todoist.test.ts` and `shared/csv.test.ts`.
-- **iOS.** Planned.
+- **iOS.** Planned: the picker, zip reader, and summary. The CSV reader, Todoist reader, and merge are already in `Core`: `swift test` in `app-ios/` replays `shared/vectors/csv.json` and `todoist.json` in `VectorTests`, with Todoist date phrases waiting for the quick add parser port.
 
 ## Gotchas
 
