@@ -11,16 +11,16 @@ import { withUser } from './request-user';
 /** A year. Days offline must not sign the account out; a day online extends the session. */
 const SESSION_SECONDS = 60 * 60 * 24 * 365;
 const SESSION_UPDATE_SECONDS = 60 * 60 * 24;
-const APPLE_BUNDLE_ID = 'com.stefan.procrastinate';
+const APPLE_BUNDLE_ID = 'com.stefan.procrastimate';
 /** Used when `E2E_SHARD` is set, so the suite never needs the real secret and never touches Turso. */
-export const E2E_AUTH_SECRET = 'e2e-better-auth-secret';
+export const E2E_AUTH_SECRET = 'e2e-better-auth-secret-0123456789';
 
 const ALLOWED_HOSTS = [
 	'procrastimate.stf.lol',
 	'procrastimate.localhost:6120',
 	'127.0.0.1:*',
 	'localhost:*',
-	'procrastinate.test',
+	'procrastimate.test',
 ];
 
 const TRUSTED_ORIGINS = [
@@ -31,8 +31,8 @@ const TRUSTED_ORIGINS = [
 	'http://127.0.0.1:6121',
 	'http://localhost:6130',
 	'http://localhost:6120',
-	'https://procrastinate.test',
-	'http://procrastinate.test',
+	'https://procrastimate.test',
+	'http://procrastimate.test',
 ];
 
 /** Loopback ports are chosen by the dev server and the test suite, so they cannot be listed one by one. */
@@ -167,7 +167,7 @@ async function socialProviders(env: Env) {
 
 function authOptions(secret: string, env: Env, database: unknown, providers: Record<string, unknown>) {
 	return {
-		appName: 'procrastinate',
+		appName: 'procrastimate',
 		secret,
 		baseURL: {
 			allowedHosts: ALLOWED_HOSTS,
@@ -180,7 +180,7 @@ function authOptions(secret: string, env: Env, database: unknown, providers: Rec
 		socialProviders: providers,
 		session: { expiresIn: SESSION_SECONDS, updateAge: SESSION_UPDATE_SECONDS },
 		plugins: [bearer()],
-		advanced: { trustedProxyHeaders: true, cookiePrefix: 'procrastinate' },
+		advanced: { trustedProxyHeaders: true, cookiePrefix: 'procrastimate' },
 		rateLimit: { enabled: Boolean(tursoTarget(env)) },
 		telemetry: { enabled: false },
 	};

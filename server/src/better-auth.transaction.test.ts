@@ -56,10 +56,10 @@ function countingClient(db: Database) {
 
 const signUp = (auth: { handler: (request: Request) => Promise<Response> }) =>
 	auth.handler(
-		new Request('https://procrastinate.test/api/auth/sign-up/email', {
+		new Request('https://procrastimate.test/api/auth/sign-up/email', {
 			method: 'POST',
-			headers: { 'content-type': 'application/json', origin: 'https://procrastinate.test' },
-			body: JSON.stringify({ email: 'tx@procrastinate.test', password: 'test-password-1', name: 'Tx' }),
+			headers: { 'content-type': 'application/json', origin: 'https://procrastimate.test' },
+			body: JSON.stringify({ email: 'tx@procrastimate.test', password: 'test-password-1', name: 'Tx' }),
 		}),
 	);
 
@@ -72,7 +72,7 @@ test('sign-up runs inside a libsql transaction', async () => {
 	const { began, committed } = client.counts();
 	expect(began).toBeGreaterThan(0);
 	expect(committed).toBe(began);
-	expect(db.query('select email from user').all()).toEqual([{ email: 'tx@procrastinate.test' }]);
+	expect(db.query('select email from user').all()).toEqual([{ email: 'tx@procrastimate.test' }]);
 });
 
 const tursoUrl = process.env.TURSO_DATABASE_URL?.trim();
@@ -80,12 +80,12 @@ const tursoToken = process.env.TURSO_AUTH_TOKEN?.trim();
 
 test.skipIf(!tursoUrl || !tursoToken)('sign-up commits on the configured Turso database', async () => {
 	const client = createClient({ url: tursoUrl!, authToken: tursoToken! });
-	const email = `tx-${crypto.randomUUID()}@procrastinate.test`;
+	const email = `tx-${crypto.randomUUID()}@procrastimate.test`;
 	const auth = await authOnClient('transaction-test-secret-0123456789', client);
 	const response = await auth.handler(
-		new Request('https://procrastinate.test/api/auth/sign-up/email', {
+		new Request('https://procrastimate.test/api/auth/sign-up/email', {
 			method: 'POST',
-			headers: { 'content-type': 'application/json', origin: 'https://procrastinate.test' },
+			headers: { 'content-type': 'application/json', origin: 'https://procrastimate.test' },
 			body: JSON.stringify({ email, password: 'test-password-1', name: 'Tx' }),
 		}),
 	);

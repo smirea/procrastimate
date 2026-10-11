@@ -5,7 +5,7 @@ import type { Realtime } from './account/realtime';
 import type { AccountStore } from './account/store';
 
 /**
- * Sync auth. The Worker has already checked the Better Auth session and set `x-procrastinate-user`. The device id
+ * Sync auth. The Worker has already checked the Better Auth session and set `x-procrastimate-user`. The device id
  * is the install's own id, not a secret. The stored hash only satisfies the column; it is not a credential.
  */
 

@@ -122,7 +122,7 @@ describe('the Ramble socket on the dev server', () => {
 			const response = await call('POST', '/api/auth/sign-up/email', {
 				headers: { 'content-type': 'application/json', origin },
 				body: JSON.stringify({
-					email: `user-${crypto.randomUUID()}@procrastinate.test`,
+					email: `user-${crypto.randomUUID()}@procrastimate.test`,
 					password: 'test-password-1',
 					name,
 				}),
@@ -405,7 +405,7 @@ describe('the Ramble socket on the dev server', () => {
 		await client.message(0);
 		await upload(mac, snapshotOf({ projects: [project('p1', { name: 'Home' })] }));
 		const nudge = new WebSocket(`ws://127.0.0.1:${server.port}${SYNC_SOCKET_PATH}`, {
-			protocols: ['procrastinate.sync', `${DEVICE_PROTOCOL_PREFIX}${mac.deviceId}`],
+			protocols: ['procrastimate.sync', `${DEVICE_PROTOCOL_PREFIX}${mac.deviceId}`],
 			headers: { cookie: mac.cookie },
 		} as never);
 		clients.push(nudge);

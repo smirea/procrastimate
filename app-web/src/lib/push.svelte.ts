@@ -59,7 +59,9 @@ class Push {
 		const next = await this.#detect().catch(
 			(error: unknown) => ({ kind: 'error', message: messageOf(error) }) as const,
 		);
-		if (this.state.kind !== 'enabling') this.state = next;
+		// A prompt that resolved while detection was in flight already recorded a newer outcome.
+		if (this.state.kind === 'enabling' || this.state.kind === 'on' || this.state.kind === 'denied') return;
+		this.state = next;
 	}
 
 	async #detect(): Promise<PushState> {

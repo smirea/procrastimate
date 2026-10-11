@@ -75,7 +75,7 @@ describe('the realtime nudge on the dev server', () => {
 				method: 'POST',
 				headers: { 'content-type': 'application/json', origin: base },
 				body: JSON.stringify({
-					email: `user-${crypto.randomUUID()}@procrastinate.test`,
+					email: `user-${crypto.randomUUID()}@procrastimate.test`,
 					password: 'test-password-1',
 					name,
 				}),

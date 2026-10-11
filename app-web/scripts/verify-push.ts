@@ -53,7 +53,7 @@ const schedule = async (page: Page) => {
 		const sync = raw ? (JSON.parse(raw) as { sync?: { deviceId?: string } }).sync : undefined;
 		return sync?.deviceId ?? '';
 	});
-	const response = await page.request.get('/api/push/schedule', { headers: { 'x-procrastinate-device': deviceId } });
+	const response = await page.request.get('/api/push/schedule', { headers: { 'x-procrastimate-device': deviceId } });
 	const { notifications } = (await response.json()) as { notifications: { title: string; at: number }[] };
 	return notifications
 		.filter(n => n.title.endsWith(` ${RUN}`))

@@ -13,11 +13,11 @@ const NOW = Date.UTC(2026, 9, 10, 12);
 beforeEach(() => setSystemTime(NOW));
 afterEach(() => setSystemTime());
 
-const signUp = (env: Env, email = `user-${crypto.randomUUID()}@procrastinate.test`) =>
+const signUp = (env: Env, email = `user-${crypto.randomUUID()}@procrastimate.test`) =>
 	api.fetch(
-		new Request('https://procrastinate.test/api/auth/sign-up/email', {
+		new Request('https://procrastimate.test/api/auth/sign-up/email', {
 			method: 'POST',
-			headers: { 'content-type': 'application/json', origin: 'https://procrastinate.test' },
+			headers: { 'content-type': 'application/json', origin: 'https://procrastimate.test' },
 			body: JSON.stringify({ email, password: 'test-password-1', name: 'Test' }),
 		}),
 		env,
@@ -32,7 +32,7 @@ test('sign-in is off without a secret, and sync is off without the account', asy
 	expect(
 		(
 			await api.fetch(
-				new Request('https://procrastinate.test/api/sync', {
+				new Request('https://procrastimate.test/api/sync', {
 					method: 'POST',
 					headers: { Authorization: `Bearer ${token}`, [DEVICE_HEADER]: crypto.randomUUID() },
 					body: JSON.stringify({ cursor: 0, ops: [] }),
@@ -56,7 +56,7 @@ describe.each(storeFactories)('a session on the %s store', (_name, createStore) 
 		const first = await registerDevice(env, 'Mac');
 		expect(store.liveDevices().map(device => device.name)).toEqual(['Mac']);
 		const again = await api.fetch(
-			new Request('https://procrastinate.test/api/sync', {
+			new Request('https://procrastimate.test/api/sync', {
 				method: 'POST',
 				headers: {
 					'content-type': 'application/json',
@@ -73,7 +73,7 @@ describe.each(storeFactories)('a session on the %s store', (_name, createStore) 
 		store.revokeDevice(first.deviceId, NOW);
 		expect(again.ok).toBe(true);
 		const rejected = await api.fetch(
-			new Request('https://procrastinate.test/api/sync', {
+			new Request('https://procrastimate.test/api/sync', {
 				method: 'POST',
 				headers: {
 					'content-type': 'application/json',
@@ -98,7 +98,7 @@ describe.each(storeFactories)('a session on the %s store', (_name, createStore) 
 	test('delete account removes the user and their tasks', async () => {
 		const credentials = await registerDevice(env, 'Mac');
 		const response = await api.fetch(
-			new Request('https://procrastinate.test/api/account/delete', {
+			new Request('https://procrastimate.test/api/account/delete', {
 				method: 'POST',
 				headers: { Authorization: `Bearer ${credentials.token}`, [DEVICE_HEADER]: credentials.deviceId },
 			}),
@@ -108,7 +108,7 @@ describe.each(storeFactories)('a session on the %s store', (_name, createStore) 
 		expect(store.liveDevices()).toEqual([]);
 		expect(store.entities()).toEqual([]);
 		const again = await api.fetch(
-			new Request('https://procrastinate.test/api/sync', {
+			new Request('https://procrastimate.test/api/sync', {
 				method: 'POST',
 				headers: {
 					Authorization: `Bearer ${credentials.token}`,
@@ -124,7 +124,7 @@ describe.each(storeFactories)('a session on the %s store', (_name, createStore) 
 });
 
 test('methods hides providers that have no credentials', async () => {
-	const response = await api.fetch(new Request('https://procrastinate.test/api/auth/methods'), {
+	const response = await api.fetch(new Request('https://procrastimate.test/api/auth/methods'), {
 		BETTER_AUTH_SECRET: TEST_AUTH_SECRET,
 	});
 	expect(await response.json()).toEqual({

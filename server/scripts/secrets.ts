@@ -67,7 +67,7 @@ export function appIosKeys(schema: string): IosKey[] {
 /** `123-abc.apps.googleusercontent.com` becomes the reversed scheme Google redirects to. Anything else keeps the placeholder. */
 export function googleUrlScheme(clientId: string | undefined): string {
 	const match = /^([A-Za-z0-9-]+)\.apps\.googleusercontent\.com$/.exec(clientId?.trim() ?? '');
-	return match ? `com.googleusercontent.apps.${match[1]}` : 'com.stefan.procrastinate';
+	return match ? `com.googleusercontent.apps.${match[1]}` : 'com.stefan.procrastimate';
 }
 
 /** Debug takes `dev`, Release takes `prod`. A missing prod `API_URL` uses the pinned production URL. */

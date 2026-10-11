@@ -2,12 +2,12 @@ import { store } from './store.svelte.ts';
 
 /**
  * The signed-in user. The session cookie is httpOnly, so a cached user id is what lets the app open offline.
- * `procrastinate-owner` is who the local document belongs to, and it stays after sign-out so the next account
+ * `procrastimate-owner` is who the local document belongs to, and it stays after sign-out so the next account
  * does not upload the previous one's tasks.
  */
 
-const USER_KEY = 'procrastinate-user';
-const OWNER_KEY = 'procrastinate-owner';
+const USER_KEY = 'procrastimate-user';
+const OWNER_KEY = 'procrastimate-owner';
 
 export type AuthMethods = {
 	email: boolean;

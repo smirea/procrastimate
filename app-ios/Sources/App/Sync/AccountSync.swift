@@ -164,8 +164,8 @@ final class AccountSync {
 
     private func applyDevice(_ request: inout URLRequest) {
         guard let id = store.snapshot.sync?.deviceId else { return }
-        request.setValue(id, forHTTPHeaderField: "x-procrastinate-device")
-        request.setValue(deviceName(), forHTTPHeaderField: "x-procrastinate-device-name")
+        request.setValue(id, forHTTPHeaderField: "x-procrastimate-device")
+        request.setValue(deviceName(), forHTTPHeaderField: "x-procrastimate-device-name")
     }
 
     private func deviceName() -> String {
@@ -179,7 +179,7 @@ final class AccountSync {
 
 /// The Better Auth bearer token. It is the credential; the device id in the snapshot is not.
 enum SessionToken {
-    private static let service = "procrastinate-session"
+    private static let service = "procrastimate-session"
 
     static func read() -> String? {
         let query: [String: Any] = [

@@ -1,7 +1,7 @@
 import { USER_HEADER } from '../../shared/auth';
 
 /**
- * The Durable Object trusts `x-procrastinate-user` only after the Worker has checked the session. Cloning the
+ * The Durable Object trusts `x-procrastimate-user` only after the Worker has checked the session. Cloning the
  * request sets that header. Bun's WebSocket upgrade still needs the request the server received, so the clone
  * remembers it.
  */

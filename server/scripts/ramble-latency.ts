@@ -227,7 +227,7 @@ async function register(origin: string): Promise<{ token: string; deviceId: stri
 		method: 'POST',
 		headers: { 'content-type': 'application/json', origin },
 		body: JSON.stringify({
-			email: `ramble-${crypto.randomUUID()}@procrastinate.test`,
+			email: `ramble-${crypto.randomUUID()}@procrastimate.test`,
 			password: 'test-password-1',
 			name: 'Ramble',
 		}),

@@ -14,7 +14,7 @@ struct AuthMethods: Equatable {
 /// The signed-in user. A Keychain token means the app opens offline; a rejected token returns to sign-in.
 @MainActor @Observable
 final class Session {
-    static let ownerKey = "procrastinate-owner"
+    static let ownerKey = "procrastimate-owner"
 
     private let store: Store
     var signedIn: Bool

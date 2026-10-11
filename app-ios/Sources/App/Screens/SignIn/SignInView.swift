@@ -123,7 +123,7 @@ enum GoogleNativeSignIn {
     /// `123-abc.apps.googleusercontent.com` becomes `com.googleusercontent.apps.123-abc`.
     static func reversedScheme(_ clientId: String) -> String {
         let suffix = ".apps.googleusercontent.com"
-        guard clientId.hasSuffix(suffix) else { return "com.stefan.procrastinate" }
+        guard clientId.hasSuffix(suffix) else { return "com.stefan.procrastimate" }
         return "com.googleusercontent.apps.\(clientId.dropLast(suffix.count))"
     }
 

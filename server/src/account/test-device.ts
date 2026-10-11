@@ -17,11 +17,11 @@ export function withAuth(env: Env): Env {
 
 async function signUp(env: Env): Promise<{ token: string; cookie: string }> {
 	const response = await api.fetch(
-		new Request('https://procrastinate.test/api/auth/sign-up/email', {
+		new Request('https://procrastimate.test/api/auth/sign-up/email', {
 			method: 'POST',
-			headers: { 'content-type': 'application/json', origin: 'https://procrastinate.test' },
+			headers: { 'content-type': 'application/json', origin: 'https://procrastimate.test' },
 			body: JSON.stringify({
-				email: `user-${crypto.randomUUID()}@procrastinate.test`,
+				email: `user-${crypto.randomUUID()}@procrastimate.test`,
 				password: 'test-password-1',
 				name: 'Test',
 			}),
@@ -52,11 +52,11 @@ export async function registerDevice(env: Env, name = 'Device'): Promise<DeviceC
 	const session = await sessionFor(env);
 	const deviceId = crypto.randomUUID();
 	const response = await api.fetch(
-		new Request('https://procrastinate.test/api/sync', {
+		new Request('https://procrastimate.test/api/sync', {
 			method: 'POST',
 			headers: {
 				'content-type': 'application/json',
-				origin: 'https://procrastinate.test',
+				origin: 'https://procrastimate.test',
 				Authorization: `Bearer ${session.token}`,
 				[DEVICE_HEADER]: deviceId,
 				[DEVICE_NAME_HEADER]: name,

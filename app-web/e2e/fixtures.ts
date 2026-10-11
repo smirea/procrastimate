@@ -10,7 +10,7 @@ export const E2E_PASSWORD = 'e2e-password-1';
 /** One user per test. A second context signs in as the same email, so the two devices share an account. */
 export function e2eEmail(): string {
 	const id = test.info().testId.replace(/[^A-Za-z0-9]/g, '').slice(0, 48);
-	return `e2e-${id}@procrastinate.test`;
+	return `e2e-${id}@procrastimate.test`;
 }
 
 /** Signs this context in. The first call creates the user; a later context in the same test signs in. */
@@ -29,11 +29,11 @@ export async function signInAccount(context: BrowserContext) {
 /** The install id the page will send. The session cookie is already on the request. */
 export async function deviceHeader(page: Page): Promise<Record<string, string>> {
 	const deviceId = await page.evaluate(() => {
-		const raw = localStorage.getItem('procrastinate');
+		const raw = localStorage.getItem('procrastimate');
 		const sync = raw ? (JSON.parse(raw) as { sync?: { deviceId?: string } }).sync : undefined;
 		return sync?.deviceId ?? '';
 	});
-	return { 'x-procrastinate-device': deviceId };
+	return { 'x-procrastimate-device': deviceId };
 }
 
 export const test = base.extend<{ app: App }>({

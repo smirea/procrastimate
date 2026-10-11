@@ -76,7 +76,7 @@ async function setUpSync(app: App) {
 }
 
 async function schedule(request: APIRequestContext, deviceId: string, tag: string, token?: string) {
-	const headers: Record<string, string> = { 'x-procrastinate-device': deviceId };
+	const headers: Record<string, string> = { 'x-procrastimate-device': deviceId };
 	if (token) headers.Authorization = `Bearer ${token}`;
 	const response = await request.get('/api/push/schedule', { headers });
 	const { notifications } = (await response.json()) as PushScheduleResponse;
@@ -95,7 +95,7 @@ test('the Worker computes the schedule from synced tasks and pushes an encrypted
 	await page.reload();
 	await setUpSync(app);
 	const deviceId = await page.evaluate(() => {
-		const raw = localStorage.getItem('procrastinate');
+		const raw = localStorage.getItem('procrastimate');
 		const sync = raw ? (JSON.parse(raw) as { sync?: { deviceId?: string } }).sync : undefined;
 		return sync?.deviceId ?? '';
 	});
@@ -164,7 +164,7 @@ test('the Worker computes the schedule from synced tasks and pushes an encrypted
 test('the alarm pushes a task synced from another device once, at its time', async ({ request }) => {
 	test.setTimeout(120_000);
 	const service = await startPushService();
-	const email = `e2e-${crypto.randomUUID().replaceAll('-', '')}@procrastinate.test`;
+	const email = `e2e-${crypto.randomUUID().replaceAll('-', '')}@procrastimate.test`;
 	const signed = await request.post('/api/auth/sign-up/email', {
 		data: { email, password: 'e2e-password-1', name: 'E2E' },
 	});
@@ -173,7 +173,7 @@ test('the alarm pushes a task synced from another device once, at its time', asy
 	const phone = { deviceId: crypto.randomUUID(), token };
 	const mac = { deviceId: crypto.randomUUID(), token };
 	const subscribed = await request.put('/api/push/subscription', {
-		headers: { Authorization: `Bearer ${phone.token}`, 'x-procrastinate-device': phone.deviceId },
+		headers: { Authorization: `Bearer ${phone.token}`, 'x-procrastimate-device': phone.deviceId },
 		data: { subscription: service.subscription },
 	});
 	expect(await subscribed.json()).toEqual({ ok: true });
@@ -186,7 +186,7 @@ test('the alarm pushes a task synced from another device once, at its time', asy
 	const push = async (kind: string, entityId: string, fields: object) => {
 		const op = { opId: crypto.randomUUID(), hlc: `${Date.now()}:0:${mac.deviceId}`, kind, id: entityId, fields };
 		const response = await request.post('/api/sync', {
-			headers: { Authorization: `Bearer ${mac.token}`, 'x-procrastinate-device': mac.deviceId },
+			headers: { Authorization: `Bearer ${mac.token}`, 'x-procrastimate-device': mac.deviceId },
 			data: { cursor: 0, ops: [op] },
 		});
 		expect(response.status()).toBe(200);
