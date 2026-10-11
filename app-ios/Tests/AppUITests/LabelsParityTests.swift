@@ -10,7 +10,7 @@ final class LabelsParityTests: ParityTestCase {
         type("Fix sink\n")
         wait(for: taskInput, "value == ''")
         cancelQuickAdd()
-        tab("Inbox").tap()
+        openTab("Inbox")
         add("@calls Call bank")
     }
 
@@ -62,7 +62,7 @@ final class LabelsParityTests: ParityTestCase {
         app.buttons["Delete"].tap()
         XCTAssertTrue(app.navigationBars["Browse"].waitForExistence(timeout: 5))
         waitGone(browseLabel("phone"))
-        tab("Inbox").tap()
+        openTab("Inbox")
         XCTAssertTrue(row("Call bank").waitForExistence(timeout: 5))
         XCTAssertFalse(row("Call bank").label.contains("phone"))
     }

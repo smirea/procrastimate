@@ -6,6 +6,8 @@ import SwiftUI
 struct SearchResultRow: View {
     @Environment(Store.self) private var store
     @Environment(TaskActions.self) private var actions
+    @Environment(\.clock) private var clock
+    @Environment(\.today) private var today
 
     let row: SearchSections.Row
     let selected: Bool
@@ -20,8 +22,30 @@ struct SearchResultRow: View {
         .listRowBackground(selected ? Color.ink.opacity(0.07) : Color.clear)
         .swipeActions(edge: .leading, allowsFullSwipe: true) { taskAction }
         .contextMenu { taskAction }
+        .accessibilityLabel(spokenLabel)
         .accessibilityIdentifier(identifier)
         .accessibilityValue(matchReadout)
+    }
+
+    /// The row's visible strings in reading order, so VoiceOver and XCUITests read what the row shows.
+    private var spokenLabel: String {
+        switch row {
+        case let .project(hit): return hit.item.name
+        case let .label(hit): return hit.item.name
+        case let .task(hit):
+            let task = hit.task
+            var parts = [task.title]
+            if let notes = hit.matches[.notes]?.first { parts.append(Search.excerpt(notes).text) }
+            if let parent = task.parentId.flatMap(store.task) { parts.append("Subtask of \(parent.title)") }
+            parts += (hit.matches[.labels] ?? []).map(\.text)
+            if let completedAt = task.completedAt {
+                parts.append(Browse.completedLine(completedAt, today: today, in: clock.timeZone))
+            } else if let due = task.due {
+                parts.append(Format.formatDue(due, today))
+            }
+            parts.append(store.project(task.projectId)?.name ?? "Inbox")
+            return parts.joined(separator: ", ")
+        }
     }
 
     @ViewBuilder private var content: some View {

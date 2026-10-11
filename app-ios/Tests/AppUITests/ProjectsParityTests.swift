@@ -26,7 +26,7 @@ final class ProjectsParityTests: ParityTestCase {
         openBrowse()
         wait(for: browseProject("Home"), "value == '2'")
         snap("projects-open")
-        tab("Inbox").tap()
+        openTab("Inbox")
         XCTAssertTrue(app.staticTexts["Inbox zero"].waitForExistence(timeout: 5))
         openBrowse()
         browseProject("Home").tap()

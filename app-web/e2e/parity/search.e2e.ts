@@ -33,15 +33,22 @@ async function createLabels(app: PhoneApp, ...names: string[]) {
 	await app.cancelQuickAdd();
 }
 
-/** The search feature map's seed, minus the notes, which only task details can set on iOS until S6. */
+/** The search feature map's seed, minus the notes, which only task details can set on iOS until S6. `Fix sink` is
+ * added inside `Home`, matching the XCUITest. */
 async function seedHome(app: PhoneApp) {
 	await openNav(app);
 	await app.page.getByRole('button', { name: 'Add project' }).tap();
 	await app.page.getByRole('textbox', { name: 'Project name' }).fill('Home');
 	await app.page.getByRole('textbox', { name: 'Project name' }).press('Enter');
 	await expect(app.page.getByRole('heading', { level: 1, name: 'Home' })).toBeVisible();
+	await app.add('Fix sink p2');
 	await app.go('Inbox');
-	await app.add('Fix sink #Home p2', 'Water plants tomorrow', 'Call plumber', 'Buy milk', 'Update résumé');
+	await app.add('Water plants tomorrow', 'Call plumber', 'Buy milk', 'Update résumé');
+}
+
+async function seedLabels(app: PhoneApp) {
+	await createLabels(app, 'calls', 'waiting');
+	await app.add('@calls Plumber', '@waiting @calls Dentist', 'Read a book');
 }
 
 test('search-open: search opens with its field focused', async ({ app, snap }) => {
@@ -64,8 +71,7 @@ test('search-match: titles and projects match, every word must, and accents are 
 });
 
 test('search-highlight: matched spans highlight in names, titles, and label chips', async ({ app, snap }) => {
-	await createLabels(app, 'calls', 'waiting');
-	await app.add('Plumber @calls', 'Dentist @waiting @calls', 'Read a book');
+	await seedLabels(app);
 	await search(app, 'call');
 	await expect(group(app, 'Labels').locator('mark')).toHaveText(['call']);
 	await expect(group(app, 'Tasks').getByRole('option')).toHaveText([/Dentist.*calls/, /Plumber.*calls/]);
@@ -120,8 +126,7 @@ test('search-empty: a miss says so', async ({ app, snap }) => {
 });
 
 test('labels-search: a label result opens the label view', async ({ app, page, snap }) => {
-	await createLabels(app, 'calls', 'waiting');
-	await app.add('Plumber @calls', 'Dentist @waiting @calls', 'Read a book');
+	await seedLabels(app);
 	await search(app, 'wait');
 	await option(app, 'waiting').tap();
 	await expect(page.getByRole('heading', { level: 1, name: 'waiting' })).toBeVisible();

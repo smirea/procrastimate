@@ -1,16 +1,23 @@
 import XCTest
 
 final class SearchParityTests: ParityTestCase {
-    /// The search feature map's seed, minus the notes, which only task details can set.
+    /// The search feature map's seed, minus the notes, which only task details can set. `Fix sink` is added inside
+    /// `Home`, since Return after a trailing `#Home` picks the suggestion instead of saving.
     private func seedHome() {
         createProject("Home")
-        tab("Inbox").tap()
-        add("Fix sink #Home p2", "Water plants tomorrow", "Call plumber", "Buy milk", "Update résumé")
+        add("Fix sink p2")
+        openTab("Inbox")
+        add("Water plants tomorrow", "Call plumber", "Buy milk", "Update résumé")
+    }
+
+    private func seedLabels() {
+        createLabels("calls", "waiting")
+        add("@calls Plumber", "@waiting @calls Dentist", "Read a book")
     }
 
     func test_search_open() {
         start()
-        tab("Search").tap()
+        openTab("Search")
         XCTAssertTrue(searchField.waitForExistence(timeout: 5))
         wait(for: searchField, "hasKeyboardFocus == true")
         snap("search-open")
@@ -34,8 +41,7 @@ final class SearchParityTests: ParityTestCase {
 
     func test_search_highlight() {
         start()
-        createLabels("calls", "waiting")
-        add("Plumber @calls", "Dentist @waiting @calls", "Read a book")
+        seedLabels()
         search("call")
         XCTAssertTrue(result("label-calls").waitForExistence(timeout: 5))
         wait(for: result("label-calls"), "value == 'Matches call'")
@@ -88,7 +94,7 @@ final class SearchParityTests: ParityTestCase {
         let reopen = app.buttons["Reopen"]
         if reopen.waitForExistence(timeout: 1) { reopen.tap() }
         wait(for: result("Renew passport"), "NOT (label CONTAINS 'Completed')")
-        tab("Inbox").tap()
+        openTab("Inbox")
         XCTAssertTrue(row("Renew passport").waitForExistence(timeout: 5))
         XCTAssertTrue(row("Passport photos").exists)
     }
@@ -103,8 +109,7 @@ final class SearchParityTests: ParityTestCase {
 
     func test_labels_search() {
         start()
-        createLabels("calls", "waiting")
-        add("Plumber @calls", "Dentist @waiting @calls", "Read a book")
+        seedLabels()
         search("wait")
         result("label-waiting").tap()
         XCTAssertTrue(app.navigationBars["waiting"].waitForExistence(timeout: 5))

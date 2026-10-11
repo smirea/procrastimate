@@ -10,9 +10,20 @@ extension ParityTestCase {
     /// A search result: `project-<name>`, `label-<name>`, or a task's title.
     func result(_ name: String) -> XCUIElement { app.buttons["result-\(name)"] }
 
+    /// Taps a tab, first expanding the tab bar if scrolling minimized it to the selected tab.
+    func openTab(_ name: String) {
+        let target = tab(name)
+        if !target.waitForExistence(timeout: 1) {
+            let collapsed = app.tabBars.buttons.matching(NSPredicate(format: "value == 'Collapsed'")).firstMatch
+            if collapsed.exists { collapsed.tap() }
+        }
+        XCTAssertTrue(target.waitForExistence(timeout: 5), "No \(name) tab")
+        target.tap()
+    }
+
     /// Shows the Browse tab at its root, going back from any project or label screen left open on it.
     func openBrowse() {
-        tab("Browse").tap()
+        openTab("Browse")
         for _ in 0..<3 where !app.navigationBars["Browse"].waitForExistence(timeout: 1) {
             back()
         }
@@ -46,7 +57,7 @@ extension ParityTestCase {
 
     /// Opens the search tab, clears any earlier query, and types `query`.
     func search(_ query: String) {
-        tab("Search").tap()
+        openTab("Search")
         XCTAssertTrue(searchField.waitForExistence(timeout: 5))
         if !(searchField.value(forKey: "hasKeyboardFocus") as? Bool ?? false) { searchField.tap() }
         let clear = searchField.buttons["Clear text"]
