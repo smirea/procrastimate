@@ -27,7 +27,8 @@ extension ParityTestCase {
     func add(_ titles: String...) {
         openQuickAdd()
         for title in titles {
-            type(title + "\n")
+            type(title)
+            type("\n")
             wait(for: taskInput, "value == ''")
             wait(for: taskInput, "hasKeyboardFocus == true")
         }
