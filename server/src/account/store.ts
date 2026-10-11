@@ -59,4 +59,8 @@ export interface AccountStore {
 	/** Adds or replaces the device's target. */
 	putPushTarget(target: PushTarget): void;
 	deletePushTarget(deviceId: string): void;
+
+	/** Ramble audio seconds streamed on `day`, a date key in the account's time zone. */
+	rambleSeconds(day: string): number;
+	addRambleSeconds(day: string, seconds: number): void;
 }

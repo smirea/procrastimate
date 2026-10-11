@@ -4,13 +4,21 @@ import type { Env, Handler } from '../bindings';
 import { pushSender } from '../push';
 import { memoryStore } from './memory-store';
 import { deliverDue, pushRoutes } from './push';
+import { ramble, rambleRoutes, workerUpstream, type RambleConfig } from './ramble';
+import { cassetteUpstream } from './ramble-cassette';
 import { durableSockets, noSockets, realtime, realtimeRoutes, type SocketHost } from './realtime';
 import { sqliteStore } from './sqlite-store';
 import type { AccountStore } from './store';
 import { syncRoutes } from './sync';
 
 /** Every route the `Account` object answers. The Worker forwards each of them to the one account. */
-const accountRoutes: Record<string, AccountRoute> = { ...authRoutes, ...syncRoutes, ...pushRoutes, ...realtimeRoutes };
+const accountRoutes: Record<string, AccountRoute> = {
+	...authRoutes,
+	...syncRoutes,
+	...pushRoutes,
+	...realtimeRoutes,
+	...rambleRoutes,
+};
 
 type SetAlarm = (at: number | null) => Promise<void>;
 
@@ -25,8 +33,10 @@ export function accountHandler(
 	setupCode: string | undefined,
 	setAlarm: SetAlarm,
 	sockets: SocketHost = noSockets,
+	rambleConfig: RambleConfig = { connect: null },
 ) {
 	const live = realtime(sockets);
+	const transcription = ramble(sockets, rambleConfig);
 	return async (request: Request): Promise<Response> => {
 		const route = accountRoutes[`${request.method} ${new URL(request.url).pathname}`];
 		if (!route) return fail(404, 'Not found');
@@ -37,6 +47,7 @@ export function accountHandler(
 			now: Date.now(),
 			setAlarm,
 			realtime: live,
+			ramble: transcription,
 		});
 		const next = store.lastSeq();
 		if (next > head) live.nudge(next);
@@ -54,7 +65,13 @@ export class Account {
 		private readonly env: Env,
 	) {
 		this.store = sqliteStore(ctx.storage.sql, run => ctx.storage.transactionSync(run));
-		this.handle = accountHandler(this.store, env.SYNC_SETUP_CODE, at => this.setAlarm(at), durableSockets(ctx));
+		this.handle = accountHandler(
+			this.store,
+			env.SYNC_SETUP_CODE,
+			at => this.setAlarm(at),
+			durableSockets(ctx),
+			workerRamble(env),
+		);
 	}
 
 	fetch(request: Request): Promise<Response> {
@@ -80,6 +97,12 @@ export class Account {
 	}
 }
 
+/** ElevenLabs with the key, a cassette when `wrangler dev` runs the end-to-end tests, or Ramble off. */
+function workerRamble(env: Env): RambleConfig {
+	if (env.RAMBLE_UPSTREAM === 'cassette') return { connect: cassetteUpstream() };
+	return { connect: env.ELEVENLABS_API_KEY ? workerUpstream(env.ELEVENLABS_API_KEY) : null };
+}
+
 /** There is one account, so every request goes to the object with this name. */
 const ACCOUNT_NAME = 'account';
 
@@ -100,8 +123,9 @@ export function memoryAccount(
 	store = memoryStore(),
 	setAlarm: SetAlarm = async () => {},
 	sockets: SocketHost = noSockets,
+	rambleConfig: RambleConfig = { connect: null },
 ): DurableObjectNamespace {
-	const handle = accountHandler(store, setupCode, setAlarm, sockets);
+	const handle = accountHandler(store, setupCode, setAlarm, sockets, rambleConfig);
 	const namespace = { idFromName: (name: string) => name, get: () => ({ fetch: handle }) };
 	return namespace as unknown as DurableObjectNamespace;
 }

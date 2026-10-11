@@ -74,4 +74,14 @@ describe.each(storeFactories)('%s store', (_name, createStore) => {
 		data.title = 'changed';
 		expect(store.entity('task', '1')?.data).toEqual({ title: 'A' });
 	});
+
+	test('adds up Ramble seconds per day', () => {
+		const store = createStore();
+		expect(store.rambleSeconds('2026-10-14')).toBe(0);
+		store.addRambleSeconds('2026-10-14', 12.5);
+		store.addRambleSeconds('2026-10-14', 30);
+		store.addRambleSeconds('2026-10-15', 1);
+		expect(store.rambleSeconds('2026-10-14')).toBe(42.5);
+		expect(store.rambleSeconds('2026-10-15')).toBe(1);
+	});
 });

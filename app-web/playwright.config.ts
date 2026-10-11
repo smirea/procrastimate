@@ -29,7 +29,7 @@ export default defineConfig({
 	webServer:
 		process.env.E2E_WORKER === '1'
 			? {
-					command: `bunx wrangler dev --port ${PORT} --var SYNC_SETUP_CODE:${SYNC_SETUP_CODE}`,
+					command: `bunx wrangler dev --port ${PORT} --var SYNC_SETUP_CODE:${SYNC_SETUP_CODE} --var RAMBLE_UPSTREAM:cassette`,
 					cwd: '..',
 					url: `http://127.0.0.1:${PORT}/api/status`,
 					reuseExistingServer: false,
@@ -40,7 +40,7 @@ export default defineConfig({
 						cwd: '../server',
 						url: `http://127.0.0.1:${API_PORT}/api/status`,
 						reuseExistingServer: false,
-						env: { API_PORT: String(API_PORT), SYNC_SETUP_CODE },
+						env: { API_PORT: String(API_PORT), SYNC_SETUP_CODE, RAMBLE_UPSTREAM: 'cassette' },
 					},
 					{
 						command: 'bun --bun run vite',

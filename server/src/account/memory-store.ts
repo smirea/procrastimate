@@ -9,6 +9,7 @@ export function memoryStore(): AccountStore {
 	const entities = new Map<string, Entity>();
 	const log: LogEntry[] = [];
 	const pushTargets = new Map<string, PushTarget>();
+	const rambleUsage = new Map<string, number>();
 	let pairing: Pairing | null = null;
 	const entityKey = (kind: string, id: string) => `${kind}\u0000${id}`;
 
@@ -68,6 +69,11 @@ export function memoryStore(): AccountStore {
 		},
 		deletePushTarget: deviceId => {
 			pushTargets.delete(deviceId);
+		},
+
+		rambleSeconds: day => rambleUsage.get(day) ?? 0,
+		addRambleSeconds: (day, seconds) => {
+			rambleUsage.set(day, (rambleUsage.get(day) ?? 0) + seconds);
 		},
 	};
 }

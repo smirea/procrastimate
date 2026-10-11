@@ -9,6 +9,9 @@ export type Env = {
 	VAPID_PUBLIC_KEY?: string;
 	VAPID_PRIVATE_KEY?: string;
 	SYNC_SETUP_CODE?: string;
+	ELEVENLABS_API_KEY?: string;
+	/** `cassette` replays recorded transcripts instead of calling ElevenLabs, for `wrangler dev` in tests. */
+	RAMBLE_UPSTREAM?: string;
 };
 
 export type Handler = (request: Request, env: Env) => Response | Promise<Response>;
