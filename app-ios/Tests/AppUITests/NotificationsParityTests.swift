@@ -28,7 +28,7 @@ final class NotificationsParityTests: ParityTestCase {
         openNotifications()
         app.buttons["Turn on notifications"].tap()
         XCTAssertTrue(heading("Notifications are blocked").waitForExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts["Open Settings › Notifications › Procrastimate and turn on Allow Notifications."].exists)
+        XCTAssertTrue(app.staticTexts["Open Settings › Notifications › ProcrastiMate and turn on Allow Notifications."].exists)
         XCTAssertTrue(app.buttons["Open Settings"].exists)
         snap("push-permission")
         app.navigationBars.buttons["Browse"].tap()

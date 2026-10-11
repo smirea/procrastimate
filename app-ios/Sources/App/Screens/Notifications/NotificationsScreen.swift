@@ -120,7 +120,7 @@ struct NotificationsScreen: View {
             return Content(
                 icon: "bell.slash.fill",
                 heading: "Notifications are blocked",
-                body: ["Open Settings › Notifications › Procrastimate and turn on Allow Notifications."],
+                body: ["Open Settings › Notifications › ProcrastiMate and turn on Allow Notifications."],
                 actions: [
                     Action(label: "Open Settings", primary: true) {
                         if let url = URL(string: UIApplication.openNotificationSettingsURLString) { openURL(url) }

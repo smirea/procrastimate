@@ -84,7 +84,7 @@ jobs:
           xcodebuild build-for-testing -quiet -project App.xcodeproj -scheme App
           -destination "id=${{ steps.simulator.outputs.udid }}" -derivedDataPath DerivedData CODE_SIGNING_ALLOWED=NO
 
-      # The import tests pick these in the document picker, under On My iPhone › Procrastimate. Reinstalling the app
+      # The import tests pick these in the document picker, under On My iPhone › ProcrastiMate. Reinstalling the app
       # for the tests keeps its Documents folder.
       - name: Todoist fixtures in the app's Documents
         run: |
