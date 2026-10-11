@@ -1,4 +1,4 @@
-// env-manager: procrastimate | 2026-10-11T19:56:27.421Z
+// env-manager: procrastimate | 2026-10-11T23:24:19.216Z
 // env-manager target: server
 // env-manager root: ../..
 // env-manager env: local
@@ -14,6 +14,9 @@ const env = z.object({
   RAMBLE_UPSTREAM: z.string().optional(),
   CLOUDFLARE_ACCOUNT_ID: z.string().optional(),
   CLOUDFLARE_API_TOKEN: z.string().optional(),
+  ASC_KEY_ID: z.string().optional(),
+  ASC_ISSUER_ID: z.string().optional(),
+  ASC_PRIVATE_KEY_B64: z.string().optional(),
   TURSO_DATABASE_URL: z.string().optional(),
   TURSO_AUTH_TOKEN: z.string().optional(),
   TURSO_API_TOKEN: z.string().optional(),

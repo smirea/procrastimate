@@ -29,7 +29,10 @@ export const WORKER_SECRETS = [
 	'APPLE_KEY_ID',
 	'APPLE_PRIVATE_KEY',
 ] as const;
-export const GITHUB_SECRETS = ['CLOUDFLARE_API_TOKEN', 'CLOUDFLARE_ACCOUNT_ID'] as const;
+const CLOUDFLARE_SECRETS = ['CLOUDFLARE_API_TOKEN', 'CLOUDFLARE_ACCOUNT_ID'] as const;
+/** The App Store Connect API key the `testflight` workflow archives and uploads with. The `.p8` is stored base64 on one line. */
+const ASC_SECRETS = ['ASC_KEY_ID', 'ASC_ISSUER_ID', 'ASC_PRIVATE_KEY_B64'] as const;
+export const GITHUB_SECRETS = [...CLOUDFLARE_SECRETS, ...ASC_SECRETS] as const;
 const REPO = 'smirea/procrastimate';
 const PROJECT = 'procrastimate';
 
@@ -132,7 +135,7 @@ async function readEnv(env: string): Promise<Values> {
 		});
 		if (down.exitCode !== 0) {
 			throw new Error(
-				`env-manager down failed for env "${env}". It needs AWS credentials, so run it on Stefan's MacBook.\n${down.stderr.toString()}`,
+				`env-manager down failed for env "${env}". It needs AWS credentials (the agent box's grok-bot user or Stefan's MacBook).\n${down.stderr.toString()}`,
 			);
 		}
 		return parseDotenv(await Bun.file(join(dir, '.env.local')).text());
@@ -154,7 +157,7 @@ function run(command: string[], options: { stdin?: string; env?: Values } = {}) 
 
 function cloudflareEnv(values: Values): Values {
 	const env: Values = {};
-	for (const name of GITHUB_SECRETS) {
+	for (const name of CLOUDFLARE_SECRETS) {
 		const value = values[name];
 		if (!value) throw new Error(`${name} is not set in env-manager`);
 		env[name] = value;
