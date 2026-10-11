@@ -35,6 +35,8 @@ function loadState(store: AccountStore): ServerState {
 /** One push, all in one transaction: apply, log every op, then answer from the log or with the snapshot. */
 export function sync(store: AccountStore, request: z.infer<typeof syncRequestSchema>, now: number): SyncResponse {
 	return store.transaction(() => {
+		// A cursor past the end means the log was reset, as on a restarted dev server, so the client starts over.
+		const reset = request.cursor > store.lastSeq();
 		const before = loadState(store);
 		const pushed = applyPush(before, request.ops, { now, isApplied: opId => store.hasOp(opId) });
 		for (const [key, entity] of pushed.state.entities) {
@@ -43,13 +45,17 @@ export function sync(store: AccountStore, request: z.infer<typeof syncRequestSch
 		for (const entry of pushed.log) store.appendLog(entry);
 
 		const head = store.lastSeq();
-		const base = { acked: pushed.acked, hlc: serverHlc(pushed.state) };
-		// A cursor past the end means the log was reset, as on a restarted dev server, so the client starts over.
-		if (request.cursor === 0 || request.cursor > head) {
-			return { ...base, snapshot: serverSnapshot(pushed.state), cursor: head };
+		const hlc = serverHlc(pushed.state);
+		if (request.cursor === 0 || reset) {
+			return { acked: pushed.acked, snapshot: serverSnapshot(pushed.state), cursor: head, hlc };
 		}
 		const changes = store.logAfter(request.cursor, SYNC_PAGE_SIZE) as Change[];
-		return { ...base, changes, cursor: changes.at(-1)?.seq ?? request.cursor };
+		const cursor = changes.at(-1)?.seq ?? request.cursor;
+		// Before the last page, an op is acked only with its row, or the client would drop it from its outbox and
+		// apply older rows without it. The retry dedupes, and the last page acks everything.
+		const paged = new Set(changes.map(change => change.opId));
+		const acked = cursor === head ? pushed.acked : pushed.acked.filter(opId => paged.has(opId));
+		return { acked, changes, cursor, hlc };
 	});
 }
 

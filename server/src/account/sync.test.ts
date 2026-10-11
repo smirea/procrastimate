@@ -139,12 +139,17 @@ describe.each(storeFactories)('POST /api/sync on the %s store', (_name, createSt
 		if (!('changes' in first)) throw new Error('expected changes');
 		expect(first.changes.map(change => change.seq)).toEqual(tasks.slice(0, SYNC_PAGE_SIZE).map((_, i) => head + i + 1));
 		expect(first.cursor).toBe(head + SYNC_PAGE_SIZE);
+		expect(first.acked).toEqual(ops.slice(0, SYNC_PAGE_SIZE).map(o => o.opId));
 
-		const rest = await sync(token, first.cursor, []);
+		const unacked = ops.slice(SYNC_PAGE_SIZE);
+		const end = store.lastSeq();
+		const rest = await sync(token, first.cursor, unacked);
 		expect('changes' in rest && rest.changes.map(change => change.id)).toEqual(
 			tasks.slice(SYNC_PAGE_SIZE).map(t => t.id),
 		);
-		expect(rest.cursor).toBe(store.lastSeq());
+		expect(rest.acked).toEqual(unacked.map(o => o.opId));
+		expect(rest.cursor).toBe(end);
+		expect(store.lastSeq()).toBe(end);
 		expect(await sync(token, rest.cursor, [])).toMatchObject({ changes: [], cursor: rest.cursor });
 	});
 
@@ -159,6 +164,11 @@ describe.each(storeFactories)('POST /api/sync on the %s store', (_name, createSt
 
 		const reset = await sync(phone.token, store.lastSeq() + 50, []);
 		expect(reset).toMatchObject({ snapshot: mac.client.snapshot, cursor: store.lastSeq() });
+
+		const edit = op('edit', `${NOW + 1}:0:phone`, { title: 'Edited' });
+		const refilled = await sync(phone.token, store.lastSeq() + 1, [edit]);
+		expect(refilled).toMatchObject({ acked: ['edit'], cursor: store.lastSeq() });
+		expect('snapshot' in refilled && refilled.snapshot.tasks.map(t => t.title)).toEqual(['Edited']);
 	});
 
 	test('two devices that imported the same Todoist backup and typed the same names converge on one copy', async () => {
