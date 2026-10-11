@@ -196,6 +196,24 @@ The web's Web Push rows map to native local notifications. XCUITests check the p
 | `sync-pair`: set up, pair with a code, and remove a device in Settings | Planned | Planned | Y4, S9 | `SyncParityTests.test_sync_pair` | `sync › sync-pair` | `sync-pair.png` |
 | `sync-propagate`, `sync-reconnect`, `sync-conflict`: changes reach the other client, offline changes upload, concurrent edits converge per [Sync](decisions/sync.md#conflicts) | Planned | Planned | Y4, S9 | `Core` sync tests against vectors | `sync.e2e.ts` (two browser contexts) | — |
 
+### Ramble
+
+Planned on both clients together. The design and its slices `R1` to `R7` are in [Ramble design](ramble-design.md#plan-and-slices); `R4` builds the web half of each pair and `R5` the iOS half.
+
+| Feature | Web | iOS | Slice | XCUITest | Playwright | Screenshot |
+| --- | --- | --- | --- | --- | --- | --- |
+| `ramble-open`: the quick add mic and a long-press on the add button open Ramble | Planned | Planned | R4, R5 | `RambleParityTests.test_ramble_open` | `ramble › ramble-open` | `ramble-open.png` |
+| `ramble-live`: the transcript and task cards appear while talking | Planned | Planned | R4, R5 | `RambleParityTests.test_ramble_live` | `ramble › ramble-live` | `ramble-live.png` |
+| `ramble-chips`: spoken project, label, date, repeat, priority, and reminder show as chips | Planned | Planned | R4, R5 | `RambleParityTests.test_ramble_chips` | `ramble › ramble-chips` | `ramble-chips.png` |
+| `ramble-subtasks`: spoken subtasks nest under their parent | Planned | Planned | R4, R5 | `RambleParityTests.test_ramble_subtasks` | `ramble › ramble-subtasks` | `ramble-subtasks.png` |
+| `ramble-notes`: a spoken note goes under the title | Planned | Planned | R4, R5 | `RambleParityTests.test_ramble_notes` | `ramble › ramble-notes` | `ramble-notes.png` |
+| `ramble-plain`: a ramble with no metadata yields chip-free cards | Planned | Planned | R4, R5 | `RambleParityTests.test_ramble_plain` | `ramble › ramble-plain` | `ramble-plain.png` |
+| `ramble-edit`: a card's title and date are edited before saving | Planned | Planned | R4, R5 | `RambleParityTests.test_ramble_edit` | `ramble › ramble-edit` | `ramble-edit.png` |
+| `ramble-discard`: a card is discarded and restored with `Undo` | Planned | Planned | R4, R5 | `RambleParityTests.test_ramble_discard` | `ramble › ramble-discard` | `ramble-discard.png` |
+| `ramble-save-undo`: `Add <n> tasks` saves them all, and one `Undo` removes them | Planned | Planned | R4, R5 | `RambleParityTests.test_ramble_save_undo` | `ramble › ramble-save-undo` | `ramble-save-undo.png` |
+| `ramble-hold`: hold to talk listens while held | Planned | Planned | R4, R5 | `RambleParityTests.test_ramble_hold` | `ramble › ramble-hold` | `ramble-hold.png` |
+| `ramble-unavailable`: unpaired and offline states explain why Ramble is off | Planned | Planned | R4, R5 | `RambleParityTests.test_ramble_unavailable` | `ramble › ramble-unavailable` | `ramble-unavailable.png` |
+
 ## Thread split
 
 One PR per slice, each off `master`, never stacked. A slice starts once the slices it depends on have merged.
