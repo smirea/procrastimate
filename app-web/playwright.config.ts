@@ -1,6 +1,9 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const PORT = 6130;
+const API_PORT = 6131;
+/** The sync setup code both e2e servers accept. The dev server's account lives in memory, so every run starts empty. */
+export const SYNC_SETUP_CODE = 'e2e-setup-code';
 
 export default defineConfig({
 	testDir: './e2e',
@@ -26,15 +29,24 @@ export default defineConfig({
 	webServer:
 		process.env.E2E_WORKER === '1'
 			? {
-					command: `bunx wrangler dev --port ${PORT}`,
+					command: `bunx wrangler dev --port ${PORT} --var SYNC_SETUP_CODE:${SYNC_SETUP_CODE}`,
 					cwd: '..',
 					url: `http://127.0.0.1:${PORT}/api/status`,
 					reuseExistingServer: false,
 				}
-			: {
-					command: 'bun --bun run vite',
-					url: `http://127.0.0.1:${PORT}/inbox`,
-					reuseExistingServer: false,
-					env: { API_URL: 'http://127.0.0.1:6121', CLIENT_PORT: String(PORT) },
-				},
+			: [
+					{
+						command: 'bun src/index.ts',
+						cwd: '../server',
+						url: `http://127.0.0.1:${API_PORT}/api/status`,
+						reuseExistingServer: false,
+						env: { API_PORT: String(API_PORT), SYNC_SETUP_CODE },
+					},
+					{
+						command: 'bun --bun run vite',
+						url: `http://127.0.0.1:${PORT}/inbox`,
+						reuseExistingServer: false,
+						env: { API_URL: `http://127.0.0.1:${API_PORT}`, CLIENT_PORT: String(PORT) },
+					},
+				],
 });

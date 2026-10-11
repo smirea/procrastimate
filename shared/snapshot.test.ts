@@ -91,6 +91,8 @@ const webDocument: snapshot.Snapshot = {
 			},
 			{ opId: 'op-2', hlc: '1791972000001:0:d-phone', kind: 'label', id: 'l-old', fields: { deleted: true } },
 		],
+		clock: '1791972000001:0:d-phone',
+		timeZone: 'Europe/Berlin',
 	},
 };
 
@@ -161,7 +163,27 @@ describe('parseSnapshot', () => {
 		['no reminder check time', { tasks: [], projects: [] }],
 		[
 			'an invalid sync section',
-			{ tasks: [], projects: [], remindersCheckedAt: 5, sync: { deviceId: 'd', cursor: -1, outbox: [] } },
+			{
+				tasks: [],
+				projects: [],
+				remindersCheckedAt: 5,
+				sync: { deviceId: 'd', cursor: -1, outbox: [], clock: '0:0:d', timeZone: 'UTC' },
+			},
+		],
+		[
+			'an invalid outbox op',
+			{
+				tasks: [],
+				projects: [],
+				remindersCheckedAt: 5,
+				sync: {
+					deviceId: 'd',
+					cursor: 0,
+					outbox: [{ opId: 'o', hlc: 'later', kind: 'task', id: 't', fields: {} }],
+					clock: '0:0:d',
+					timeZone: 'UTC',
+				},
+			},
 		],
 		['not an object', ['tasks']],
 		['null', null],

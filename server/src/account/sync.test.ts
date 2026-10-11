@@ -3,14 +3,13 @@ import type { DeviceCredentials } from '../../../shared/auth';
 import { todoistBackupFiles } from '../../../shared/fixtures/todoist-backup.mts';
 import { applyResponse, startSync, type ClientSync } from '../../../shared/sync/apply';
 import { formatHlc } from '../../../shared/sync/hlc';
-import type { Op, Snapshot, SyncResponse } from '../../../shared/sync/protocol';
+import { SYNC_PAGE_SIZE, type Op, type Snapshot, type SyncResponse } from '../../../shared/sync/protocol';
 import { counter, label, project, snapshotOf, task } from '../../../shared/sync/testing';
 import { mergeBackup, readTodoistBackup } from '../../../shared/todoist';
 import api from '../api';
 import type { Env } from '../bindings';
 import { memoryAccount } from './account';
 import type { AccountStore } from './store';
-import { SYNC_PAGE_SIZE } from './sync';
 import { storeFactories } from './test-stores';
 
 const NOW = Date.UTC(2026, 9, 10, 12);
