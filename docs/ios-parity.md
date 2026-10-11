@@ -2,6 +2,12 @@
 
 What the native iOS app must do to match the web app, row by row from the feature map in `.cursor/skills/verify-procrastimate/features/`, and the threads that build it. The architecture and the reasons behind it are in [iOS app](decisions/ios.md).
 
+## Known item before iOS tests are re-enabled
+
+macOS `core` and `app` stay off until a release ([Workflow](decisions/workflow.md)). When they are turned back on, check this first:
+
+- **#47 App Intents** failed its macOS `app` job on `cursor/ios-app-intents-e717` ([run 38145812810](https://github.com/smirea/procrastinate/actions/runs/38145812810)). The log has no failing XCUITest: the job died in **Build** before tests started. Swift reported that `typeDisplayRepresentation` and `defaultQuery` are not concurrency-safe (`Entities.swift`, `NavigationIntents.swift`, `TaskIntents.swift`), and that `IndexedEntityQuery` and `CSSearchableIndexDescription` are not in scope (`Entities.swift`).
+
 ## How to read the checklist
 
 - **Feature** is the feature map's sub-feature id. A row marked *iOS only* is a native affordance with no web counterpart. A row marked *web only* has no iOS equivalent.
