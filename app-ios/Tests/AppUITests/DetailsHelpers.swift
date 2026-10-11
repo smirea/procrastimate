@@ -15,7 +15,15 @@ extension ParityTestCase {
         )).firstMatch
     }
 
-    func chip(_ name: String) -> XCUIElement { app.buttons[name].firstMatch }
+    /// A toolbar `Menu` surfaces as a pop-up button rather than a button.
+    func chip(_ name: String) -> XCUIElement {
+        app.descendants(matching: .any).matching(NSPredicate(
+            format: "label == %@ AND (elementType == %d OR elementType == %d)",
+            name,
+            XCUIElement.ElementType.button.rawValue,
+            XCUIElement.ElementType.popUpButton.rawValue
+        )).firstMatch
+    }
 
     func subtask(_ title: String) -> XCUIElement {
         app.descendants(matching: .any).matching(identifier: "subtask-\(title)").firstMatch

@@ -45,8 +45,11 @@ private struct RepeatPopover: View {
     let set: (Recurrence?) -> Void
     let close: () -> Void
 
-    @State private var interval = 2
+    @State private var intervalText = "2"
     @State private var unit: RecurrenceUnit = .day
+
+    /// Text rather than a formatted number, which would only commit on submit and miss a tap on Set.
+    private var interval: Int? { Int(intervalText).flatMap { RepeatMenu.intervals.contains($0) ? $0 : nil } }
 
     var body: some View {
         let weekdays = RepeatMenu.weekdays(recurrence, anchor: anchor)
@@ -95,7 +98,7 @@ private struct RepeatPopover: View {
 
             HStack(spacing: 8) {
                 Text("Every").foregroundStyle(.muted)
-                TextField("Repeat interval", value: $interval, format: .number)
+                TextField("Repeat interval", text: $intervalText)
                     .keyboardType(.numberPad)
                     .multilineTextAlignment(.center)
                     .frame(width: 52, height: 36)
@@ -108,13 +111,13 @@ private struct RepeatPopover: View {
                 .accessibilityLabel("Repeat unit")
                 Spacer(minLength: 0)
                 Button("Set") {
-                    guard RepeatMenu.intervals.contains(interval) else { return }
+                    guard let interval else { return }
                     set(RepeatMenu.custom(interval, unit, recurrence))
                     close()
                 }
                 .buttonStyle(.bordered)
                 .buttonBorderShape(.capsule)
-                .disabled(!RepeatMenu.intervals.contains(interval))
+                .disabled(interval == nil)
             }
             .font(.subheadline)
             .padding(.horizontal, 8)
