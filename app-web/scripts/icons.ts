@@ -11,25 +11,32 @@ if (!tile) throw new Error('favicon.svg needs a #tile rect with a hex fill');
 
 /**
  * `bleed` fills the corners with the tile color, for launchers and iOS that apply their own mask.
- * The glyph sits inside the maskable safe zone (a circle of 40% radius), so one drawing serves every variant.
+ * `inset` shrinks the glyph so it fits inside the maskable safe zone (a circle of 40% radius).
  * `glyph` drops the tile, because Android draws notification badges from the alpha channel only.
  */
 const variants = [
 	{ file: 'icon-192.png', size: 192, look: 'tile' },
 	{ file: 'icon-512.png', size: 512, look: 'tile' },
-	{ file: 'maskable-512.png', size: 512, look: 'bleed' },
+	{ file: 'maskable-512.png', size: 512, look: 'bleed', inset: 0.8 },
 	{ file: 'apple-touch-icon.png', size: 180, look: 'bleed' },
 	{ file: 'badge-96.png', size: 96, look: 'glyph' },
-	{ file: '../../../app-ios/Sources/App/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png', size: 1024, look: 'bleed' },
+	{
+		file: '../../../app-ios/Sources/App/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png',
+		size: 1024,
+		look: 'bleed',
+	},
 ] as const;
 
 const browser = await chromium.launch();
 const page = await browser.newPage({ deviceScaleFactor: 1 });
-for (const { file, size, look } of variants) {
+for (const variant of variants) {
+	const { file, size, look } = variant;
+	const inset = 'inset' in variant ? variant.inset : 1;
 	await page.setViewportSize({ width: size, height: size });
 	await page.setContent(`<style>
 		html, body { margin: 0; background: ${look === 'bleed' ? tile : 'transparent'}; }
 		svg { display: block; width: 100vw; height: 100vh; }
+		#glyph { transform: scale(${inset}); transform-box: view-box; transform-origin: center; }
 		${look === 'glyph' ? '#tile { display: none; } #glyph * { opacity: 1; }' : ''}
 	</style>${svg}`);
 	await page.screenshot({ path: new URL(file, dir).pathname, omitBackground: look !== 'bleed' });
