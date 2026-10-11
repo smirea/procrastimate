@@ -63,6 +63,9 @@ struct ProcrastimateApp: App {
                 .environment(\.clock, clock)
                 .environment(\.today, today)
                 .onAppear { theme.apply() }
+                // The scene's `.backgroundTask` below stops SwiftUI from applying the asset's global accent (everything
+                // went system blue), so the root sets it explicitly.
+                .tint(.accent)
                 .motionFollowsAccessibility()
                 .task { await notifications.run() }
                 .onChange(of: store.tasks) { old, new in notifications.tasksChanged(from: old, to: new) }
