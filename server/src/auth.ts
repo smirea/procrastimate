@@ -13,6 +13,7 @@ import {
 	type PairingCode,
 } from '../../shared/auth';
 import { SOCKET_TOKEN_PREFIX } from '../../shared/sync/protocol';
+import type { Ramble } from './account/ramble';
 import type { Realtime } from './account/realtime';
 import type { AccountStore } from './account/store';
 
@@ -23,7 +24,8 @@ import type { AccountStore } from './account/store';
 
 /**
  * What an account route sees. `setupCode` is undefined when the `SYNC_SETUP_CODE` secret is not set. `setAlarm`
- * arms the object's one alarm, or clears it with null. `realtime` holds the nudge sockets.
+ * arms the object's one alarm, or clears it with null. `realtime` holds the nudge sockets, `ramble` the
+ * transcription proxy.
  */
 export type AccountContext = {
 	store: AccountStore;
@@ -31,6 +33,7 @@ export type AccountContext = {
 	now: number;
 	setAlarm: (at: number | null) => Promise<void>;
 	realtime: Realtime;
+	ramble: Ramble;
 };
 
 export type AccountRoute = (request: Request, context: AccountContext) => Promise<Response>;

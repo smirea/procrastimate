@@ -1,0 +1,22 @@
+{
+	"id": "three-tasks",
+	"transcript": "Buy paint. Call mom tomorrow at 5pm. Renew the passport.",
+	"events": [
+		{ "afterAudioMs": 600, "message": { "message_type": "partial_transcript", "text": "Buy" } },
+		{ "afterAudioMs": 900, "message": { "message_type": "partial_transcript", "text": "Buy paint" } },
+		{ "afterAudioMs": 2000, "message": { "message_type": "committed_transcript", "text": "Buy paint." } },
+		{ "afterAudioMs": 2600, "message": { "message_type": "partial_transcript", "text": "Call" } },
+		{ "afterAudioMs": 2900, "message": { "message_type": "partial_transcript", "text": "Call mom" } },
+		{ "afterAudioMs": 3300, "message": { "message_type": "partial_transcript", "text": "Call mom tomorrow" } },
+		{ "afterAudioMs": 3700, "message": { "message_type": "partial_transcript", "text": "Call mom tomorrow at 5" } },
+		{ "afterAudioMs": 4000, "message": { "message_type": "partial_transcript", "text": "Call mom tomorrow at 5pm" } },
+		{
+			"afterAudioMs": 5100,
+			"message": { "message_type": "committed_transcript", "text": "Call mom tomorrow at 5pm." }
+		},
+		{ "afterAudioMs": 5700, "message": { "message_type": "partial_transcript", "text": "Renew" } },
+		{ "afterAudioMs": 6000, "message": { "message_type": "partial_transcript", "text": "Renew the" } },
+		{ "afterAudioMs": 6300, "message": { "message_type": "partial_transcript", "text": "Renew the passport" } },
+		{ "afterAudioMs": 7400, "message": { "message_type": "committed_transcript", "text": "Renew the passport." } }
+	]
+}

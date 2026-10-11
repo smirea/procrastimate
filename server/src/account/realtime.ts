@@ -15,15 +15,21 @@ import { authenticate, type AccountRoute } from '../auth';
  * cursor past its own syncs over `POST /api/sync`, so polling stays the fallback and a missed nudge costs nothing.
  */
 
-type Socket = { send(message: string): void; close(code: number, reason: string): void };
+export type Socket = { send(message: string): void; close(code: number, reason: string): void };
+
+/** What a streaming socket hears: text or binary messages, then one close. */
+export type StreamEvents = { message(data: string | Uint8Array): void; close(): void };
 
 /**
  * Where the sockets live: the Durable Object's hibernation API on the Worker, Bun's server in development.
  * `accept` answers an upgrade the route already authenticated, and `sockets` lists the open ones, or one device's.
+ * `stream` answers an upgrade with a socket outside hibernation and outside `sockets`, driven by the handlers
+ * `start` returns, for Ramble's audio stream, which keeps the object awake anyway.
  */
 export type SocketHost = {
 	accept(request: Request, deviceId: string): Response;
 	sockets(deviceId?: string): Iterable<Socket>;
+	stream(request: Request, protocol: string, start: (socket: Socket) => StreamEvents): Response;
 };
 
 export type Realtime = {
@@ -60,16 +66,33 @@ const fail = (status: number, error: string) => Response.json({ ok: false, error
 export const noSockets: SocketHost = {
 	accept: () => fail(501, 'Realtime is not available'),
 	sockets: () => [],
+	stream: () => fail(501, 'Realtime is not available'),
 };
 
 /** The `Sec-WebSocket-Protocol` a successful upgrade answers with. Browsers drop a socket without it. */
 export const acceptedProtocol = { 'Sec-WebSocket-Protocol': SYNC_SOCKET_PROTOCOL };
 
+/** A Workers runtime socket, which must be accepted before it carries messages unless it hibernates. */
+export type WorkerSocket = WebSocket & { accept(): void };
+
 /** Globals of the Workers runtime, absent from Bun. */
 type WorkersRuntime = {
-	WebSocketPair: new () => Record<0 | 1, WebSocket>;
+	WebSocketPair: new () => Record<0 | 1, WorkerSocket>;
 	WebSocketRequestResponsePair: new (request: string, response: string) => unknown;
 };
+
+/**
+ * Feeds an accepted Workers socket's messages and its close or error to `events`, binary as bytes. Since the
+ * standard binary type compatibility flag, binary messages arrive as `Blob` unless asked for as `ArrayBuffer`.
+ */
+export function listenWorkerSocket(socket: WorkerSocket, events: StreamEvents) {
+	socket.binaryType = 'arraybuffer';
+	socket.addEventListener('message', ({ data }) =>
+		events.message(typeof data === 'string' ? data : new Uint8Array(data as ArrayBuffer)),
+	);
+	socket.addEventListener('close', () => events.close());
+	socket.addEventListener('error', () => events.close());
+}
 
 /**
  * Sockets on the Durable Object's hibernation API: the object can be evicted while they stay open, so idle sockets
@@ -86,6 +109,13 @@ export function durableSockets(ctx: DurableObjectState): SocketHost {
 			return new Response(null, { status: 101, webSocket: client, headers: acceptedProtocol } as ResponseInit);
 		},
 		sockets: deviceId => ctx.getWebSockets(deviceId),
+		stream(_request, protocol, start) {
+			const { 0: client, 1: server } = new runtime.WebSocketPair();
+			server.accept();
+			listenWorkerSocket(server, start(server));
+			const headers = { 'Sec-WebSocket-Protocol': protocol };
+			return new Response(null, { status: 101, webSocket: client, headers } as ResponseInit);
+		},
 	};
 }
 

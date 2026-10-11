@@ -30,6 +30,9 @@ function loadState(store: AccountStore): ServerState {
 	return { entities, clock };
 }
 
+/** The live synced state, as a client would see it. */
+export const accountSnapshot = (store: AccountStore) => serverSnapshot(loadState(store));
+
 /** One push, all in one transaction: apply, log every op, then answer from the log or with the snapshot. */
 export function sync(store: AccountStore, request: z.infer<typeof syncRequestSchema>, now: number): SyncResponse {
 	return store.transaction(() => {

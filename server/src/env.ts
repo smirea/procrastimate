@@ -8,6 +8,8 @@ import { z } from 'zod';
 const env = z.object({
   API_PORT: z.coerce.number().int().min(1).max(65535),
   SYNC_SETUP_CODE: z.string().optional(),
+  ELEVENLABS_API_KEY: z.string().optional(),
+  RAMBLE_UPSTREAM: z.string().optional(),
 }).parse(process.env);
 
 export default env;

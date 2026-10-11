@@ -21,6 +21,7 @@ const SCHEMA = [
 	`CREATE TABLE IF NOT EXISTS push (
 		device_id TEXT PRIMARY KEY, subscription TEXT NOT NULL, notifications TEXT NOT NULL,
 		delivered_through INTEGER NOT NULL)`,
+	`CREATE TABLE IF NOT EXISTS ramble_usage (day TEXT PRIMARY KEY, seconds REAL NOT NULL)`,
 ];
 
 type DeviceRow = {
@@ -164,6 +165,16 @@ export function sqliteStore(sql: Sql, transactionSync: <T>(run: () => T) => T): 
 		},
 		deletePushTarget: deviceId => {
 			all('DELETE FROM push WHERE device_id = ?', deviceId);
+		},
+
+		rambleSeconds: day =>
+			first<{ seconds: number }>('SELECT seconds FROM ramble_usage WHERE day = ?', day)?.seconds ?? 0,
+		addRambleSeconds: (day, seconds) => {
+			all(
+				'INSERT INTO ramble_usage (day, seconds) VALUES (?, ?) ON CONFLICT (day) DO UPDATE SET seconds = seconds + excluded.seconds',
+				day,
+				seconds,
+			);
 		},
 	};
 }
