@@ -53,26 +53,29 @@ extension ParityTestCase {
 
     /// Opens `Import from Todoist` and walks the document picker from its Browse tab to the app's folder under
     /// On My iPhone, where CI copies the fixtures, then picks the file whose name starts with `file`. Each step is
-    /// tapped once, because tapping Browse again pops back to its root.
+    /// tapped once, because tapping Browse again pops back to its root. The picker's glass tab bar never reports
+    /// itself hittable, so steps are tapped by coordinate on the last match, which is the picker's, above the app.
     func pick(_ file: String, snapping id: String? = nil) {
         app.buttons["Import from Todoist"].tap()
+        let picker = app.otherElements.matching(NSPredicate(format: "identifier BEGINSWITH 'DOC.browsingRoot'")).firstMatch
+        XCTAssertTrue(picker.waitForExistence(timeout: 10), "The document picker never opened")
         let target = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", file)).firstMatch
         var steps = ["Browse", "On My iPhone", "Procrastimate"]
         let deadline = Date().addingTimeInterval(45)
         while Date() < deadline {
-            if target.exists, target.isHittable {
+            if target.exists, !target.frame.isEmpty {
                 if let id { snap(id) }
-                target.tap()
+                target.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
                 return
             }
             if let step = steps.first {
                 let candidates = app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", step))
-                if let hit = candidates.allElementsBoundByIndex.last(where: { $0.isHittable }) {
-                    hit.tap()
+                if let hit = candidates.allElementsBoundByIndex.last(where: { $0.exists && !$0.frame.isEmpty }) {
+                    hit.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
                     steps.removeFirst()
                 }
             }
-            Thread.sleep(forTimeInterval: 0.5)
+            Thread.sleep(forTimeInterval: 1)
         }
         print(app.debugDescription)
         XCTFail("Never reached \(file) in the document picker, still to open: \(steps)")
