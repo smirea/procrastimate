@@ -2,15 +2,15 @@
 
 How sync gets built, one PR per slice, each off `master`, never stacked. The design is in [Sync](decisions/sync.md). iOS slices `S1` to `S8` are in [iOS parity](ios-parity.md#thread-split). A slice starts once the slices it depends on have merged. Each slice edits only the files it owns, plus its own rows in the feature map and docs.
 
-| Slice | Thread                            | Depends on | Runs in parallel with |
-| ----- | --------------------------------- | ---------- | --------------------- |
-| Y1    | Sync core in `shared/sync/`       | —          | Y2, S1, S2            |
-| Y2    | `Account` Durable Object and auth | —          | Y1, S1, S2            |
-| Y3    | `POST /api/sync`                  | Y1, Y2     | S2 to S8              |
-| Y4    | Web sync client                   | Y3, S2     | S3 to S8              |
-| Y5    | Server-computed Web Push          | Y4         | S3 to S8              |
-| Y6    | Realtime nudge                    | Y5         | S3 to S9              |
-| S9    | iOS sync client                   | Y3, Y4, S8 | Y5, Y6                |
+| Slice | Thread | Depends on | Runs in parallel with |
+| --- | --- | --- | --- |
+| Y1 | Sync core in `shared/sync/` | — | Y2, S1, S2 |
+| Y2 | `Account` Durable Object and auth | — | Y1, S1, S2 |
+| Y3 | `POST /api/sync` | Y1, Y2 | S2 to S8 |
+| Y4 | Web sync client | Y3, S2 | S3 to S8 |
+| Y5 | Server-computed Web Push | Y4 | S3 to S8 |
+| Y6 | Realtime nudge | Y5 | S3 to S9 |
+| S9 | iOS sync client | Y3, Y4, S8 | Y5, Y6 |
 
 Y1 and Y2 can start as soon as the sync design merges. They share no files with each other or with S1 and S2.
 
