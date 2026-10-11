@@ -2,6 +2,7 @@ import { expect } from 'bun:test';
 import * as todoist from './todoist.ts';
 import type { ImportState, TodoistBackup } from './todoist.ts';
 import { todoistBackupFiles } from './fixtures/todoist-backup.mts';
+import { toDateKey, toTimeOfDay } from './task.ts';
 import { describe, recorded, test } from './vectors/record.ts';
 
 const mergeBackup = recorded('todoist', todoist.mergeBackup);
@@ -40,8 +41,20 @@ describe('Todoist dates', () => {
 		expect<unknown>(readTodoistDate(text, now)).toEqual({ due: { date, time }, recurrence });
 	});
 
-	test.each([['every! 3 days'], ['every 3rd friday'], ['after work'], ['p1']])('%s is not read', text => {
-		expect(readTodoistDate(text, now)).toBeNull();
+	test.each([['every! 3 days'], ['every 3rd friday'], ['after work'], ['p1'], ['2027-01-01T09:00:00+24:00']])(
+		'%s is not read',
+		text => {
+			expect(readTodoistDate(text, now)).toBeNull();
+		},
+	);
+
+	test('an ISO date with an offset lands on the local date and time', () => {
+		const text = '2027-05-20T23:30:00+02:00';
+		const at = new Date(text);
+		expect(readTodoistDate(text, now)).toEqual({
+			due: { date: toDateKey(at), time: toTimeOfDay(at.getHours(), at.getMinutes()) },
+			recurrence: null,
+		});
 	});
 });
 

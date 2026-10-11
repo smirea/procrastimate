@@ -108,9 +108,10 @@ public enum Todoist {
               hour < 24 || (hour == 24 && minute == 0 && second == 0)
         else { return nil }
         let at: Date
-        if let offset = match.7 {
+        if let offsetText = match.7 {
+            guard let offset = offsetSeconds(offsetText) else { return nil }
             let seconds = Double(Dates.days(year: Int(match.1)!, month: month, day: day) * 86400
-                + hour * 3600 + minute * 60 + second - offsetSeconds(offset))
+                + hour * 3600 + minute * 60 + second - offset)
             at = Date(timeIntervalSince1970: seconds)
         } else {
             at = Dates.fromDateKey(date, "\(hourText):\(minuteText)", in: zone)
@@ -123,10 +124,13 @@ public enum Todoist {
         )
     }
 
-    private static func offsetSeconds(_ offset: Substring) -> Int {
+    /// `Z`, `+02:00`, or `-0530`, or nil past `23:59`, which JavaScript's `Date` rejects.
+    private static func offsetSeconds(_ offset: Substring) -> Int? {
         if offset == "Z" { return 0 }
         let digits = offset.dropFirst().filter(\.isNumber)
-        let total = Int(digits.prefix(2))! * 3600 + Int(digits.suffix(2))! * 60
+        let (hours, minutes) = (Int(digits.prefix(2))!, Int(digits.suffix(2))!)
+        guard hours < 24, minutes < 60 else { return nil }
+        let total = hours * 3600 + minutes * 60
         return offset.first == "-" ? -total : total
     }
 

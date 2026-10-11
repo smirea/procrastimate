@@ -216,6 +216,30 @@
 			"output": null
 		},
 		{
+			"fn": "readTodoistDate",
+			"test": "Todoist dates › 2027-01-01T09:00:00+24:00 is not read",
+			"input": [
+				"2027-01-01T09:00:00+24:00",
+				1791986400000
+			],
+			"output": null
+		},
+		{
+			"fn": "readTodoistDate",
+			"test": "Todoist dates › an ISO date with an offset lands on the local date and time",
+			"input": [
+				"2027-05-20T23:30:00+02:00",
+				1791986400000
+			],
+			"output": {
+				"due": {
+					"date": "2027-05-20",
+					"time": "17:30"
+				},
+				"recurrence": null
+			}
+		},
+		{
 			"fn": "readTodoistBackup",
 			"test": "reading a backup › one project per CSV, named from the file, with Inbox marked",
 			"input": [
