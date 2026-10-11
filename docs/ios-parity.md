@@ -35,7 +35,7 @@ What the native iOS app must do to match the web app, row by row from the featur
 | Feature | Web | iOS | Slice | XCUITest | Playwright | Screenshot |
 | --- | --- | --- | --- | --- | --- | --- |
 | `priority-nl`: `p1`–`p4`, `!!!`, `urgent`, `!!`, `important` | ✓ | Built | S3→S5 | `PriorityParityTests.test_priority_nl` | `priority › priority-nl` | `priority-nl.png` |
-| `priority-picker`: the flag menu in quick add and task details | ✓ | Built in quick add; details in S6 | S5, S6 | `PriorityParityTests.test_priority_picker` | `priority › priority-picker` | `priority-picker.png` |
+| `priority-picker`: the flag menu in quick add and task details | ✓ | Built | S5, S6 | `PriorityParityTests.test_priority_picker` | `priority › priority-picker` | `priority-picker.png` |
 | `priority-replace`: a picked level removes the typed one | ✓ | Built | S5 | `PriorityParityTests.test_priority_replace` | `priority › priority-replace` | `priority-replace.png` |
 | `priority-display`: checkbox tinted by priority | ✓ | Built | S5 | `PriorityParityTests.test_priority_display` | `priority › priority-display` | `priority-display.png` |
 
@@ -47,41 +47,41 @@ What the native iOS app must do to match the web app, row by row from the featur
 | `complete-undo`: the toast's `Undo` restores the row | ✓ | Built | S5 | `CompleteParityTests.test_complete_undo` | `complete › complete-undo` | `complete-undo.png` |
 | `complete-swipe`: leading swipe completes (*iOS only*) | n/a | Built | S5 | `CompleteParityTests.test_complete_swipe` | n/a | `complete-swipe.png` |
 | `complete-recurring`: moves to the next occurrence with `next due …` toast | ✓ | Built | S5 | `CompleteParityTests.test_complete_recurring` | `complete › complete-recurring` | `complete-recurring.png` |
-| `complete-subtasks`: see `subtasks-complete-parent` | ✓ | Planned | S6 | see Subtasks | see Subtasks | — |
-| `complete-reopen`: `Reopen` in details of a completed task, reached through search | ✓ | Built (`Reopen` from the result's swipe and context menu; details' `Reopen` with S6) | S7 | `SearchParityTests.test_search_completed` | `search › search-completed` | `search-completed.png` |
+| `complete-subtasks`: see `subtasks-complete-parent` | ✓ | Built | S6 | see Subtasks | see Subtasks | — |
+| `complete-reopen`: `Reopen` in details of a completed task, reached through search | ✓ | Built | S7 | `SearchParityTests.test_search_completed` | `search › search-completed` | `search-completed.png` |
 | `complete-history`: a completed tasks list | Planned | Planned | not scheduled | — | — | — |
 
 ### Edit a task
 
 | Feature | Web | iOS | Slice | XCUITest | Playwright | Screenshot |
 | --- | --- | --- | --- | --- | --- | --- |
-| `edit-open`: tapping a row opens the details sheet | ✓ | Planned | S6 | `DetailsParityTests.test_edit_open` | `details › edit-open` | `edit-open.png` |
-| `edit-fields`: title, notes, date (presets and graphical picker), priority; saved as changed and after relaunch | ✓ | Planned | S6 | `DetailsParityTests.test_edit_fields` | `details › edit-fields` | `edit-fields.png` |
-| `edit-nl`: phrases in the title apply on return | ✓ | Planned | S6 | `DetailsParityTests.test_edit_nl` | `details › edit-nl` | `edit-nl.png` |
-| `edit-config-row`: chips show the parsed values before commit | ✓ | Planned | S6 | `DetailsParityTests.test_edit_config_row` | `details › edit-config-row` | `edit-config-row.png` |
-| `edit-delete`: `Delete task` with undo | ✓ | Planned | S6 | `DetailsParityTests.test_edit_delete` | `details › edit-delete` | `edit-delete.png` |
+| `edit-open`: tapping a row opens the details sheet | ✓ | Built | S6 | `DetailsParityTests.test_edit_open` | `details › edit-open` | `edit-open.png` |
+| `edit-fields`: title, notes, date (presets and graphical picker), priority; saved as changed and after relaunch | ✓ | Built | S6 | `DetailsParityTests.test_edit_fields` | `details › edit-fields` | `edit-fields.png` |
+| `edit-nl`: phrases in the title apply on return | ✓ | Built | S6 | `DetailsParityTests.test_edit_nl` | `details › edit-nl` | `edit-nl.png` |
+| `edit-config-row`: chips show the parsed values before commit | ✓ | Built | S6 | `DetailsParityTests.test_edit_config_row` | `details › edit-config-row` | `edit-config-row.png` |
+| `edit-delete`: `Delete task` with undo | ✓ | Built | S6 | `DetailsParityTests.test_edit_delete` | `details › edit-delete` | `edit-delete.png` |
 | `edit-swipe-delete`: trailing swipe deletes with undo (*iOS only*) | n/a | Built | S5 | `CompleteParityTests.test_edit_swipe_delete` | n/a | `edit-swipe-delete.png` |
 
 ### Subtasks
 
 | Feature | Web | iOS | Slice | XCUITest | Playwright | Screenshot |
 | --- | --- | --- | --- | --- | --- | --- |
-| `subtasks-add`: `Add subtask` parses like quick add, keeps focus | ✓ | Planned | S6 | `SubtasksParityTests.test_subtasks_add` | `subtasks › subtasks-add` | `subtasks-add.png` |
-| `subtasks-progress`: ring and `done/total` on parent rows | ✓ | Planned | S6 | `SubtasksParityTests.test_subtasks_progress` | `subtasks › subtasks-progress` | `subtasks-progress.png` |
-| `subtasks-check`: toggles in the parent's details, no toast | ✓ | Planned | S6 | `SubtasksParityTests.test_subtasks_check` | `subtasks › subtasks-check` | `subtasks-check.png` |
-| `subtasks-reorder`: drag by handle, with impact haptics on iOS | ✓ | Planned | S6 | `SubtasksParityTests.test_subtasks_reorder` | `subtasks › subtasks-reorder` | `subtasks-reorder.png` |
-| `subtasks-nest`: pushes the subtask's details with a back button to the parent | ✓ | Planned | S6 | `SubtasksParityTests.test_subtasks_nest` | `subtasks › subtasks-nest` | `subtasks-nest.png` |
-| `subtasks-complete-parent`: cascades, undo restores each | ✓ | Planned | S6 | `SubtasksParityTests.test_subtasks_complete_parent` | `subtasks › subtasks-complete-parent` | `subtasks-complete-parent.png` |
-| `subtasks-recurring`: a recurring parent reopens its subtasks | ✓ | Planned | S6 | `SubtasksParityTests.test_subtasks_recurring` | `subtasks › subtasks-recurring` | `subtasks-recurring.png` |
-| `subtasks-search`: found by its own text, names its parent | ✓ | Planned (result rows name the parent; the XCUITest needs S6's `Add subtask`) | S7 | `SearchParityTests.test_subtasks_search` | `search › subtasks-search` | `subtasks-search.png` |
-| `subtasks-dated`: dated subtasks in Today and Upcoming under their parent | ✓ | Planned | S6 | `SubtasksParityTests.test_subtasks_dated` | `subtasks › subtasks-dated` | `subtasks-dated.png` |
+| `subtasks-add`: `Add subtask` parses like quick add, keeps focus | ✓ | Built | S6 | `SubtasksParityTests.test_subtasks_add` | `subtasks › subtasks-add` | `subtasks-add.png` |
+| `subtasks-progress`: ring and `done/total` on parent rows | ✓ | Built | S6 | `SubtasksParityTests.test_subtasks_progress` | `subtasks › subtasks-progress` | `subtasks-progress.png` |
+| `subtasks-check`: toggles in the parent's details, no toast | ✓ | Built | S6 | `SubtasksParityTests.test_subtasks_check` | `subtasks › subtasks-check` | `subtasks-check.png` |
+| `subtasks-reorder`: drag by handle, with impact haptics on iOS | ✓ | Built | S6 | `SubtasksParityTests.test_subtasks_reorder` | `subtasks › subtasks-reorder` | `subtasks-reorder.png` |
+| `subtasks-nest`: pushes the subtask's details with a back button to the parent | ✓ | Built | S6 | `SubtasksParityTests.test_subtasks_nest` | `subtasks › subtasks-nest` | `subtasks-nest.png` |
+| `subtasks-complete-parent`: cascades, undo restores each | ✓ | Built | S6 | `SubtasksParityTests.test_subtasks_complete_parent` | `subtasks › subtasks-complete-parent` | `subtasks-complete-parent.png` |
+| `subtasks-recurring`: a recurring parent reopens its subtasks | ✓ | Built | S6 | `SubtasksParityTests.test_subtasks_recurring` | `subtasks › subtasks-recurring` | `subtasks-recurring.png` |
+| `subtasks-search`: found by its own text, names its parent | ✓ | Built | S7 | `SearchParityTests.test_subtasks_search` | `search › subtasks-search` | `subtasks-search.png` |
+| `subtasks-dated`: dated subtasks in Today and Upcoming under their parent | ✓ | Built | S6 | `SubtasksParityTests.test_subtasks_dated` | `subtasks › subtasks-dated` | `subtasks-dated.png` |
 
 ### Recurring tasks
 
 | Feature | Web | iOS | Slice | XCUITest | Playwright | Screenshot |
 | --- | --- | --- | --- | --- | --- | --- |
 | `recurring-nl`: repeats typed in quick add or the title, including weekday lists and yearly dates | ✓ | Built | S3→S5 | covered by `add-recurrence` | covered by `add-recurrence` | — |
-| `recurring-picker`: presets, custom interval, weekday toggles that keep the popover open, `Don't repeat` | ✓ | Planned | S6 | `RecurringParityTests.test_recurring_picker` | `recurring › recurring-picker` | `recurring-picker.png` |
+| `recurring-picker`: presets, custom interval, weekday toggles that keep the popover open, `Don't repeat` | ✓ | Built | S6 | `RecurringParityTests.test_recurring_picker` | `recurring › recurring-picker` | `recurring-picker.png` |
 | `recurring-display`: repeat icon named after the repeat | ✓ | Built | S5 | `RecurringParityTests.test_recurring_display` | `recurring › recurring-display` | `recurring-display.png` |
 | `recurring-complete`: see `complete-recurring` | ✓ | Built | S5 | see Complete | see Complete | — |
 | `recurring-reminders`: reminders and the due time notify at the next occurrence | ✓ | Built | S8 | `RemindersParityTests.test_recurring_reminders` | `reminders › recurring-reminders` | `recurring-reminders.png` |
@@ -91,8 +91,8 @@ What the native iOS app must do to match the web app, row by row from the featur
 | Feature | Web | iOS | Slice | XCUITest | Playwright | Screenshot |
 | --- | --- | --- | --- | --- | --- | --- |
 | `reminders-nl`: `remind me 30m before`, `r5m`, `remind me at 4pm`, … | ✓ | Built | S3→S5 | `QuickAddParityTests.test_reminders_nl` | `quick-add › reminders-nl` | `reminders-nl.png` |
-| `reminders-picker`: presets, custom date and time, remove | ✓ | Planned | S6 | `DetailsParityTests.test_reminders_picker` | `details › reminders-picker` | `reminders-picker.png` |
-| `reminders-fire`: `Reminder: <title>` toast with `Open` while the app is open | ✓ | Built (`Open` shows the details placeholder until S6) | S8 | `RemindersParityTests.test_reminders_fire` | `reminders › reminders-fire` | `reminders-fire.png` |
+| `reminders-picker`: presets, custom date and time, remove | ✓ | Built | S6 | `DetailsParityTests.test_reminders_picker` | `details › reminders-picker` | `reminders-picker.png` |
+| `reminders-fire`: `Reminder: <title>` toast with `Open` while the app is open | ✓ | Built | S8 | `RemindersParityTests.test_reminders_fire` | `reminders › reminders-fire` | `reminders-fire.png` |
 | `reminders-due-time`: the due time notifies alone, a date alone never does, one notification per moment | ✓ | Built | S2→S8 | `RemindersParityTests.test_reminders_due_time` | `reminders › reminders-due-time` | `reminders-due-time.png` |
 | `reminders-notify`: system notifications while closed (Web Push on web, local notifications on iOS) | ✓ | Built | S8 | see Notifications | see Notifications | — |
 
@@ -130,7 +130,7 @@ The web's Web Push rows map to native local notifications. XCUITests check the p
 | `projects-open`: a project lists its tasks | ✓ | Built | S7 | `ProjectsParityTests.test_projects_open` | `projects › projects-open` | `projects-open.png` |
 | `projects-assign`: `#Name` in quick add | ✓ | Built | S3→S5 | `QuickAddParityTests.test_projects_assign` | `quick-add › projects-assign` | `projects-assign.png` |
 | `projects-autocomplete`: `#` suggestions with order, create row, and keys | ✓ | Built (keys not covered by XCUITest) | S5 | `QuickAddParityTests.test_projects_autocomplete` | `quick-add › projects-autocomplete` | `projects-autocomplete.png` |
-| `projects-move`: project menu in task details | ✓ | Planned | S6 | `DetailsParityTests.test_projects_move` | `details › projects-move` | `projects-move.png` |
+| `projects-move`: project menu in task details | ✓ | Built | S6 | `DetailsParityTests.test_projects_move` | `details › projects-move` | `projects-move.png` |
 | `projects-rename`: from the project's toolbar menu | ✓ | Built | S7 | `ProjectsParityTests.test_projects_rename` | `projects › projects-rename` | `projects-rename.png` |
 | `projects-delete`: confirms with the task count and deletes the tasks | ✓ | Built | S7 | `ProjectsParityTests.test_projects_delete` | `projects › projects-delete` | `projects-delete.png` |
 
@@ -142,7 +142,7 @@ The web's Web Push rows map to native local notifications. XCUITests check the p
 | `labels-autocomplete`: `@` suggestions and create row | ✓ | Built | S5 | `QuickAddParityTests.test_labels_autocomplete` | `quick-add › labels-autocomplete` | `labels-autocomplete.png` |
 | `labels-keep-text`: `Keep as text` on a label chip | ✓ | Built | S5 | `QuickAddParityTests.test_labels_keep_text` | `quick-add › labels-keep-text` | `labels-keep-text.png` |
 | `labels-chips`: chips on rows | ✓ | Built | S5 | `ViewsParityTests.test_labels_chips` | `views › labels-chips` | `labels-chips.png` |
-| `labels-picker`: toggle and create in a popover that stays open | ✓ | Planned | S6 | `DetailsParityTests.test_labels_picker` | `details › labels-picker` | `labels-picker.png` |
+| `labels-picker`: toggle and create in a popover that stays open | ✓ | Built | S6 | `DetailsParityTests.test_labels_picker` | `details › labels-picker` | `labels-picker.png` |
 | `labels-view`: every open task with the label, naming its project | ✓ | Built | S7 | `LabelsParityTests.test_labels_view` | `labels › labels-view` | `labels-view.png` |
 | `labels-rename`: unique ignoring case | ✓ | Built | S7 | `LabelsParityTests.test_labels_rename` | `labels › labels-rename` | `labels-rename.png` |
 | `labels-delete`: keeps the tasks | ✓ | Built | S7 | `LabelsParityTests.test_labels_delete` | `labels › labels-delete` | `labels-delete.png` |
@@ -158,7 +158,7 @@ The web's Web Push rows map to native local notifications. XCUITests check the p
 | `search-highlight`: matched spans in titles, excerpts, names, chips | ✓ | Built | S7 | `SearchParityTests.test_search_highlight` | `search › search-highlight` | `search-highlight.png` |
 | `search-keyboard`: Up, Down, Enter, Escape (iPad hardware keyboard on iOS) | ✓ | Built (Return; iPad Up and Down not covered by XCUITest) | S7 | `SearchParityTests.test_search_keyboard` | `search › search-keyboard` | `search-keyboard.png` |
 | `search-open-result`: task opens details, project or label navigates | ✓ | Built | S7 | `SearchParityTests.test_search_open_result` | `search › search-open-result` | `search-open-result.png` |
-| `search-completed`: `Completed` group and `Reopen` | ✓ | Built (`Reopen` from the result's swipe and context menu; details' `Reopen` with S6) | S7 | `SearchParityTests.test_search_completed` | `search › search-completed` | `search-completed.png` |
+| `search-completed`: `Completed` group and `Reopen` | ✓ | Built | S7 | `SearchParityTests.test_search_completed` | `search › search-completed` | `search-completed.png` |
 | `search-empty`: `No results for "<query>"` | ✓ | Built | S7 | `SearchParityTests.test_search_empty` | `search › search-empty` | `search-empty.png` |
 
 ### Settings and theme

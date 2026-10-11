@@ -14,7 +14,7 @@ Reminders let Stefan get nudged about a task, either a set time before it is due
 
 - Web: type a reminder phrase in quick add or the task details title.
 - Web: choose the bell chip in quick add or task details.
-- iOS: type a reminder in quick add, then relaunch the app after it comes up.
+- iOS: type a reminder in quick add or use the reminders chip in task details, then relaunch the app after it comes up.
 
 ## Driving it with control-ui and XCUITest
 
@@ -29,7 +29,7 @@ Preconditions:
 - **Picker.** Type `Standup today 10:30am`, open `Add reminder`, and choose `10m before`. The menu closes and the chip reads `1 reminder`. Save, open the task, and open its reminder chip. It lists `10m before`. Test: `reminders can be added from the UI and fire while the app is open`.
 - **Fire.** Move the clock to 10:21 with the app open. Within 15 seconds a `Reminder: Standup` toast appears. Same test.
 - **Due time notifies.** Add `Call mom today 10:30am`, `Taxes today`, `Standup today 10:45am remind me at 10:45am`, and `Gym today 11am remind me 30m before`. Move the clock to 10:31 and reload. `Reminder: Call mom` and `Reminder: Gym` toasts show and no `Taxes` or `Standup` toast does. At 10:46 after a reload, exactly one `Reminder: Standup` toast shows. At 11:01 after a reload, `Reminder: Gym` shows again for its due time and `Taxes` never does. Test: `a due time notifies on its own, reminders add to it, and a date alone never notifies` in `bun run test:e2e -- e2e/notifications.e2e.ts`.
-- **iOS.** `remind me 30m before` highlights, shows a `30m before` chip, and the saved row reads `1 reminders`. Test: `QuickAddParityTests.test_reminders_nl`, paired with `reminders-nl` in `e2e/parity/quick-add.e2e.ts`. Run each pair with the iOS workflow (`xcodebuild test` on an iPhone 16 simulator) and `bun run test:e2e --project=parity`; both sides save `<parity-id>.png`. While the app is open, each due time and reminder shows `Reminder: <title>` with `Open`, a date alone never does, and a moment shows once: relaunching at 10:31 shows `Call mom` and `Gym`, at 10:46 `Standup` once. Tests: `RemindersParityTests` (`test_reminders_fire`, `test_reminders_due_time`), paired with `e2e/parity/reminders.e2e.ts`. System notifications while closed are in Push notifications. Planned: the reminder picker (S6).
+- **iOS.** `remind me 30m before` highlights, shows a `30m before` chip, and the saved row reads `1 reminders`. Test: `QuickAddParityTests.test_reminders_nl`, paired with `reminders-nl` in `e2e/parity/quick-add.e2e.ts`. Run each pair with the iOS workflow (`xcodebuild test` on an iPhone 16 simulator) and `bun run test:e2e --project=parity`; both sides save `<parity-id>.png`. While the app is open, each due time and reminder shows `Reminder: <title>` with `Open`, a date alone never does, and a moment shows once: relaunching at 10:31 shows `Call mom` and `Gym`, at 10:46 `Standup` once. Tests: `RemindersParityTests` (`test_reminders_fire`, `test_reminders_due_time`), paired with `e2e/parity/reminders.e2e.ts`. System notifications while closed are in Push notifications. In task details the reminders chip adds `30m before` and a custom date and time, which defaults to the due date at 9am, and `Remove reminder` takes one off. Test: `DetailsParityTests.test_reminders_picker`, paired with `reminders-picker` in `e2e/parity/details.e2e.ts`.
 
 ## Gotchas
 

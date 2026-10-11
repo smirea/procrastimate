@@ -1,3 +1,4 @@
+import { addWithSubtasks, closeDetails, details, titleInput } from './details-fixtures.ts';
 import { expect, test, type PhoneApp } from './fixtures.ts';
 
 const nav = (app: PhoneApp) => app.page.getByRole('navigation', { name: 'Main' });
@@ -33,7 +34,7 @@ async function createLabels(app: PhoneApp, ...names: string[]) {
 	await app.cancelQuickAdd();
 }
 
-/** The search feature map's seed, minus the notes, which only task details can set on iOS until S6. `Fix sink` is
+/** The search feature map's seed, minus the notes, which quick add cannot set. `Fix sink` is
  * added inside `Home`, matching the XCUITest. */
 async function seedHome(app: PhoneApp) {
 	await openNav(app);
@@ -116,6 +117,19 @@ test('search-completed: completed tasks list apart and reopen', async ({ app, sn
 	await app.details().getByRole('button', { name: 'Reopen' }).tap();
 	await app.details().getByRole('button', { name: 'Close' }).tap();
 	await expect(app.list('Inbox tasks').getByRole('listitem')).toHaveText([/Renew passport/, /Passport photos/]);
+});
+
+test('subtasks-search: a subtask is found by its own text and names its parent', async ({ app, snap }) => {
+	await addWithSubtasks(app, 'Pack for trip', 'Passport');
+	await closeDetails(app);
+	await search(app, 'passport');
+	await expect(option(app, /^Passport/)).toContainText('Pack for trip');
+	await expect(option(app, /^Passport/).getByLabel('Subtask of Pack for trip')).toBeVisible();
+	await snap('subtasks-search');
+	await option(app, /^Passport/).tap();
+	await expect(titleInput(app)).toHaveValue('Passport');
+	await details(app).getByRole('button', { name: 'Back to Pack for trip' }).tap();
+	await expect(titleInput(app)).toHaveValue('Pack for trip');
 });
 
 test('search-empty: a miss says so', async ({ app, snap }) => {

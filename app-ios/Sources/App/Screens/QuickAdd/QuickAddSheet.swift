@@ -133,7 +133,7 @@ private struct ParsedReminder: Hashable {
 }
 
 /// A capsule with a quiet fill, since quick add is already glass.
-private struct Chip: View {
+struct Chip: View {
     let systemImage: String
     let text: String
     var tone: Color = .muted
@@ -157,7 +157,7 @@ private struct Chip: View {
 extension View {
     /// Adds `Keep as text` after a chip whose value came from the text.
     @ViewBuilder
-    fileprivate func keepAsText(_ action: (() -> Void)?) -> some View {
+    func keepAsText(_ action: (() -> Void)?) -> some View {
         if let action {
             HStack(spacing: 2) {
                 self
@@ -180,13 +180,14 @@ extension View {
     }
 }
 
-private struct DueChip: View {
+struct DueChip: View {
     @Environment(\.clock) private var clock
     let due: Due?
     let onKeepAsText: (() -> Void)?
     let onChange: (Due?) -> Void
 
     @State private var picking = false
+    @State private var pickingTime = false
 
     var body: some View {
         let today = clock.today
@@ -199,7 +200,10 @@ private struct DueChip: View {
             }
             Divider()
             Button("Pick a date", systemImage: "calendar") { picking = true }
-            if due?.time == nil {
+            if let due, due.time != nil {
+                Button("Change time", systemImage: "clock") { pickingTime = true }
+                Button("No time", systemImage: "clock.badge.xmark") { onChange(Due(date: due.date, time: nil)) }
+            } else {
                 Button("Add time", systemImage: "clock") { onChange(Due(date: due?.date ?? today, time: "09:00")) }
             }
         } label: {
@@ -229,11 +233,32 @@ private struct DueChip: View {
             .frame(width: 340)
             .presentationCompactAdaptation(.popover)
         }
+        .popover(isPresented: $pickingTime) {
+            DatePicker(
+                "Due time",
+                selection: Binding(
+                    get: { Dates.fromDateKey(due?.date ?? today, due?.time, in: clock.timeZone) },
+                    set: { date in
+                        let parts = clock.calendar.dateComponents([.hour, .minute], from: date)
+                        onChange(Due(
+                            date: due?.date ?? today,
+                            time: Dates.toTimeOfDay(hours: parts.hour ?? 9, minutes: parts.minute ?? 0)
+                        ))
+                    }
+                ),
+                displayedComponents: .hourAndMinute
+            )
+            .datePickerStyle(.wheel)
+            .labelsHidden()
+            .environment(\.timeZone, clock.timeZone)
+            .padding()
+            .presentationCompactAdaptation(.popover)
+        }
         .keepAsText(onKeepAsText)
     }
 }
 
-private struct PriorityChip: View {
+struct PriorityChip: View {
     let priority: Priority
     let onKeepAsText: (() -> Void)?
     let onChange: (Priority) -> Void
@@ -259,7 +284,7 @@ private struct PriorityChip: View {
     }
 }
 
-private struct ProjectChip: View {
+struct ProjectChip: View {
     @Environment(Store.self) private var store
     let projectId: String?
     let onKeepAsText: (() -> Void)?
@@ -284,7 +309,7 @@ private struct ProjectChip: View {
 }
 
 /// Lays chips out in rows, wrapping like the web's chip row.
-private struct FlowLayout: Layout {
+struct FlowLayout: Layout {
     var spacing: CGFloat
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {

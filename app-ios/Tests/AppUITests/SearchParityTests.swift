@@ -92,13 +92,29 @@ final class SearchParityTests: ParityTestCase {
         XCTAssertTrue(result("Renew passport").label.contains("Completed Today"))
         XCTAssertLessThan(result("Passport photos").frame.minY, result("Renew passport").frame.minY)
         snap("search-completed")
-        result("Renew passport").swipeRight()
-        let reopen = app.buttons["Reopen"]
-        if reopen.waitForExistence(timeout: 1) { reopen.tap() }
+        result("Renew passport").tap()
+        wait(for: titleInput, "value == 'Renew passport'")
+        app.buttons["Reopen"].firstMatch.tap()
+        XCTAssertTrue(app.buttons["Complete"].firstMatch.waitForExistence(timeout: 5))
+        closeDetails()
         wait(for: result("Renew passport"), "NOT (label CONTAINS 'Completed')")
         openTab("Inbox")
         XCTAssertTrue(row("Renew passport").waitForExistence(timeout: 5))
         XCTAssertTrue(row("Passport photos").exists)
+    }
+
+    func test_subtasks_search() {
+        start()
+        addWithSubtasks("Pack for trip", "Passport")
+        closeDetails()
+        search("passport")
+        XCTAssertTrue(result("Passport").waitForExistence(timeout: 5))
+        XCTAssertTrue(result("Passport").label.contains("Subtask of Pack for trip"), result("Passport").label)
+        snap("subtasks-search")
+        result("Passport").tap()
+        wait(for: titleInput, "value == 'Passport'")
+        app.buttons["Back to Pack for trip"].tap()
+        wait(for: titleInput, "value == 'Pack for trip'")
     }
 
     func test_search_empty() {

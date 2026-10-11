@@ -20,7 +20,7 @@ Subtasks let Stefan break a task into steps, such as `Pack for trip` with `Passp
 - Web: in task details, tap a subtask's title to open it, and tap the back chip to return.
 - Web: drag the six-dot handle at the end of a subtask row, or focus it and press up or down.
 - Web: check off the parent from any list or with `Complete` in its details.
-- iOS: Planned: not built yet.
+- iOS: open a task and type in `Add subtask`, then press return. Tap a subtask to push its details, and drag the three-line handle to reorder.
 
 ## Driving it with control-ui and XCUITest
 
@@ -37,7 +37,7 @@ Preconditions:
 - **Nest and dated subtasks.** In `Pack for trip`, add `Charger` and `Buy adapter today`, and check `Charger`. Tap `Charger`; its details slide in with a `Back to Pack for trip` chip. Add `Cable`, then go back. `Charger` is unchecked again, because an open subtask cannot sit under a done one, and its row shows `0 of 1 subtasks done`. Inbox lists only `Pack for trip`. Today lists `Buy adapter` marked `Subtask of Pack for trip`. Test: `subtasks nest, open in place, and a dated subtask shows in Today under its parent`.
 - **Search.** Add `Pack for trip` with subtask `Passport`, close it, press `/`, and type `passport`. The one result reads `Passport` marked `Subtask of Pack for trip`. Choose it; its details open with `Back to Pack for trip`. Test: `search finds a subtask, shows its parent, and opens it with a way back`.
 - **Phone.** Add `Pack for trip`, tap it, add three subtasks with the return key, and tap `Complete Passport`. The `Reorder Socks` handle has a 44 px hit area. Drag it above `Passport`; the order reads `Socks`, `Passport`, `Charger`. Close the sheet; the row shows `1 of 3 subtasks done`. Test: `subtasks are added, checked, and dragged into order by touch in the task sheet` in `bun run test:e2e -- e2e/mobile.e2e.ts`. The suite saves `app-web/test-results/mobile/subtasks-details.png`.
-- **iOS.** Planned: add and check a subtask in the simulator. The parent row shows its progress.
+- **iOS.** The same scenarios run in the simulator: `Add subtask` parses `Charger tomorrow p1` and keeps focus, checking `Passport` selects it with no toast and the parent row reads `1 of 3 subtasks done`, dragging `Reorder Socks` onto `Passport` reads `Socks`, `Passport`, `Charger` with an impact haptic at pickup and drop, tapping `Charger` pushes its details with `Back to Pack for trip`, completing the parent cascades and `Undo` restores each subtask, a recurring parent reopens its subtasks, and Today lists `Buy adapter` marked `Subtask of Pack for trip`. Tests: `SubtasksParityTests` (`test_subtasks_add`, `test_subtasks_progress`, `test_subtasks_check`, `test_subtasks_reorder`, `test_subtasks_nest`, `test_subtasks_complete_parent`, `test_subtasks_recurring`, `test_subtasks_dated`), paired with `e2e/parity/subtasks.e2e.ts`. Run each pair with the iOS workflow (`xcodebuild test` on an iPhone 16 simulator) and `bun run test:e2e --project=parity`; both sides save `<parity-id>.png`.
 
 ## Gotchas
 

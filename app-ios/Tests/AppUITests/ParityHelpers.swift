@@ -36,7 +36,27 @@ extension ParityTestCase {
     }
 
     func type(_ text: String) {
-        taskInput.typeText(text)
+        type(text, into: taskInput)
+    }
+
+    /// Types a word at a time. The smart input restyles as phrases parse, and keystrokes synthesized during that
+    /// update can reach the text view without reaching its binding; each `typeText` waits for the app to idle first.
+    func type(_ text: String, into element: XCUIElement) {
+        var chunk = ""
+        for character in text {
+            if character == "\n" {
+                if !chunk.isEmpty { element.typeText(chunk) }
+                element.typeText("\n")
+                chunk = ""
+                continue
+            }
+            chunk.append(character)
+            if character == " " {
+                element.typeText(chunk)
+                chunk = ""
+            }
+        }
+        if !chunk.isEmpty { element.typeText(chunk) }
     }
 
     func cancelQuickAdd() {
@@ -56,7 +76,7 @@ extension ParityTestCase {
         XCTAssertTrue(app.navigationBars["Inbox"].waitForExistence(timeout: 10))
     }
 
-    func wait(for element: XCUIElement, _ predicate: String, timeout: TimeInterval = 5) {
+    func wait(for element: XCUIElement, _ predicate: String, timeout: TimeInterval = 10) {
         let expectation = XCTNSPredicateExpectation(predicate: NSPredicate(format: predicate), object: element)
         let result = XCTWaiter.wait(for: [expectation], timeout: timeout)
         XCTAssertEqual(result, .completed, "\(predicate) never held for \(element.debugDescription)")
