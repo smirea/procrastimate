@@ -4,7 +4,7 @@ final class SubtasksParityTests: ParityTestCase {
     func test_subtasks_add() {
         start()
         addWithSubtasks("Pack for trip", "Passport", "Charger tomorrow p1")
-        XCTAssertTrue(subtaskInput.hasKeyboardFocus)
+        wait(for: subtaskInput, "hasKeyboardFocus == true")
         XCTAssertTrue(subtask("Passport").exists)
         XCTAssertTrue(subtask("Charger").label.contains("Tomorrow"), subtask("Charger").label)
         XCTAssertEqual(subtaskOrder(["Charger", "Passport"]), ["Passport", "Charger"])
