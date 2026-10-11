@@ -227,7 +227,7 @@ Critical path: S1 → S2 → S3 → S5 → S6, S7, and S8 together, then S9. The
   - Move `views.ts`, `format.ts`, the notification text from `push-schedule.ts`, and the store's domain rules into `shared/`, with the web importing them and its behavior unchanged.
   - Add `shared/vectors/record.ts`, `bun run vectors`, and the vectors staleness step in `ci.yml`'s `checks` job.
   - Port the model and the snapshot Codable (with the web snapshot vector), dates, recurrence, `notificationTimes`, subtasks, views, format, and the store rules to `Core`, plus `VectorTests`.
-- **S3: Parser port.** The quick add parser and name search (`#` and `@` suggestion order) in `Core`, with `recorded` wrappers in `quick-add.test.ts` and `name-search.test.ts` and their vector files. This is the largest logic port, at about 650 lines of TS tests.
+- **S3: Parser port.** The quick add parser in `Core` as `QuickAdd`, checked against `shared/vectors/quick-add.json`, recorded from `quick-add.test.ts`. Name search (`#` and `@` suggestion order) moved to S4. The parser rows marked `S3→S5` stay `Planned` until S5 adds their UI tests.
 - **S4: Search and import logic port.** `search`, `excerpt`, the CSV reader, and the Todoist reader and merge in `Core`, with vectors from `search.test.ts`, `csv.test.ts`, and `todoist.test.ts`, including the synthetic backup. The zip reader goes in `App` under S8, because it needs Apple's `Compression` framework.
 - **S5: Lists and quick add.**
   - The JSON file store, in the sync document shape with an empty `sync` section, tasks sorted by `createdAt` then `id`, and every command through one `commit(next)` (see [iOS app](decisions/ios.md#data)).
