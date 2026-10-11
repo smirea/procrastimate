@@ -92,6 +92,9 @@ jobs:
           xcrun simctl install "$udid" DerivedData/Build/Products/Debug-iphonesimulator/App.app
           bun scripts/todoist-fixtures.ts "$(xcrun simctl get_app_container "$udid" com.stefan.procrastimate data)/Documents"
 
+      - name: App bundles its privacy manifest
+        run: plutil -lint DerivedData/Build/Products/Debug-iphonesimulator/App.app/PrivacyInfo.xcprivacy
+
       - name: UI tests
         run: >
           xcodebuild test-without-building -project App.xcodeproj -scheme App
