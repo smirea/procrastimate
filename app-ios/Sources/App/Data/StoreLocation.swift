@@ -7,6 +7,9 @@ enum StoreLocation {
         URL.applicationSupportDirectory.appending(path: "procrastimate", directoryHint: .isDirectory)
     }
 
+    /// The stored document, the same JSON as the web's `procrastimate` localStorage value.
+    static var file: URL { directory.appending(path: "procrastimate.json") }
+
     /// Deletes all local data and preferences, so the app starts like a fresh install.
     static func reset() {
         do {

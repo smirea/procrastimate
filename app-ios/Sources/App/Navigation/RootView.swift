@@ -1,17 +1,24 @@
+import Core
 import SwiftUI
 
 struct RootView: View {
     @Environment(Navigator.self) private var navigator
+    @Environment(Store.self) private var store
+    @Environment(TaskActions.self) private var actions
+    @Environment(\.clock) private var clock
 
     var body: some View {
         @Bindable var navigator = navigator
+        let today = Views.todayTasks(store.tasks, clock.today)
         TabView(selection: $navigator.tab) {
             Tab("Inbox", systemImage: "tray", value: .inbox) {
                 TabStack(tab: .inbox) { InboxScreen() }
             }
+            .badge(Views.inboxTasks(store.tasks).count)
             Tab("Today", systemImage: "sun.max", value: .today) {
                 TabStack(tab: .today) { TodayScreen() }
             }
+            .badge(today.overdue.count + today.today.count)
             Tab("Upcoming", systemImage: "calendar", value: .upcoming) {
                 TabStack(tab: .upcoming) { UpcomingScreen() }
             }
@@ -24,6 +31,10 @@ struct RootView: View {
         }
         .tabViewStyle(.sidebarAdaptable)
         .tabBarMinimizeBehavior(.onScrollDown)
+        .overlay(alignment: .bottom) {
+            ToastStack().padding(.bottom, 124)
+        }
+        .sensoryFeedback(.success, trigger: actions.completions)
         .sheet(item: $navigator.sheet) { SheetView(sheet: $0) }
     }
 }
