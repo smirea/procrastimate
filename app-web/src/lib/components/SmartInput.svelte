@@ -17,6 +17,7 @@
 		autofocus = false,
 		suggestProjects: projectSuggestions = true,
 		enterkeyhint,
+		listAt = $bindable(null),
 		class: className = '',
 		onkeydown,
 		onblur,
@@ -28,6 +29,8 @@
 		autofocus?: boolean;
 		suggestProjects?: boolean;
 		enterkeyhint?: 'enter' | 'done' | 'send';
+		/** Where the open suggestion list's `#` or `@` sits, or null while no list shows. */
+		listAt?: number | null;
 		class?: string;
 		onkeydown?: (event: KeyboardEvent) => void;
 		onblur?: () => void;
@@ -160,6 +163,10 @@
 
 	$effect(() => {
 		if (!fragment) dismissed = null;
+	});
+
+	$effect(() => {
+		listAt = fragment && suggestions.length ? fragment.start : null;
 	});
 
 	$effect(() => {

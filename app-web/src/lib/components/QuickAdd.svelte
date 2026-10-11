@@ -2,9 +2,11 @@
 	import { fade, fly, scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import Bell from 'phosphor-svelte/lib/Bell';
+	import Plus from 'phosphor-svelte/lib/Plus';
 	import Repeat from 'phosphor-svelte/lib/Repeat';
 	import Tag from 'phosphor-svelte/lib/Tag';
 	import { parseQuickAdd, type QuickAddToken, type TokenKind } from 'shared/quick-add.ts';
+	import { unknownNames, type UnknownName } from 'shared/name-search.ts';
 	import { DEFAULT_PRIORITY, type Due, type Priority, type Reminder } from 'shared/task.ts';
 	import SmartInput from './SmartInput.svelte';
 	import DuePicker from './DuePicker.svelte';
@@ -16,6 +18,7 @@
 	import { clock, mobile, sheets, type QuickAddDefaults, motion } from '../ui.svelte.ts';
 	import { formatRecurrence, formatReminder } from 'shared/format.ts';
 	import { push } from '../push.svelte.ts';
+	import { NAME_SOURCES } from '../names.ts';
 
 	let { defaults }: { defaults: QuickAddDefaults } = $props();
 
@@ -38,6 +41,7 @@
 	let disabled = $state<string[]>([]);
 	let picked = $state<Picked>(initialPicked());
 	let input: SmartInput;
+	let listAt = $state<number | null>(null);
 
 	const parsed = $derived(
 		parseQuickAdd(text, { now: new Date(clock.now), projects: store.projects, labels: store.labels, disabled, due: picked.due }),
@@ -53,6 +57,15 @@
 			.map((token) => ({ token, name: store.labels.find((l) => `@${l.name}`.toLowerCase() === token.text.toLowerCase())?.name })),
 	);
 	const labelIds = $derived([...new Set([...picked.labelIds, ...parsed.labelIds])]);
+	/** Names to offer creating. The one the suggestion list is open on already offers it there. */
+	const unknown = $derived(
+		unknownNames(text, parsed.tokens, store.projects, store.labels).filter((name) => name.start !== listAt),
+	);
+
+	function create(name: UnknownName) {
+		NAME_SOURCES[name.sigil === '#' ? 'project' : 'label'].create(name.name);
+		input.focus();
+	}
 
 	function keepAsText(token: QuickAddToken | undefined) {
 		if (token) disabled = [...disabled, token.text];
@@ -108,6 +121,7 @@
 		<SmartInput
 			bind:this={input}
 			bind:value={text}
+			bind:listAt
 			tokens={parsed.tokens}
 			label="Task name"
 			placeholder="Call mom tomorrow 5pm p1 remind me 30m before"
@@ -159,6 +173,18 @@
 				</span>
 				<KeepAsText onclick={() => keepAsText(token)} />
 			</div>
+		{/each}
+		{#each unknown as name (name.sigil + name.name.toLowerCase())}
+			<button
+				type="button"
+				class="chip text-accent"
+				transition:scale={motion({ start: 0.9, duration: 160 })}
+				onmousedown={(e) => e.preventDefault()}
+				onclick={() => create(name)}
+			>
+				<Plus size={15} weight="bold" />
+				Create {name.sigil}{name.name}
+			</button>
 		{/each}
 	</div>
 	<div class="flex items-center justify-between gap-2 border-t border-ink/5 px-3 py-2.5">
