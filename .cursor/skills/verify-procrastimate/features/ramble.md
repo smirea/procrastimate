@@ -31,3 +31,5 @@ Ramble lets Stefan talk instead of type: a live transcript and a preview card pe
 
 - Transcription needs the network and a paired device; everything else about the preview is local.
 - Automated tests replay recorded transcription cassettes, so they never need the ElevenLabs key.
+- The transcription socket is built: `GET /api/ramble/socket` on a paired device. The Bun dev server without `ELEVENLABS_API_KEY`, and any server with `RAMBLE_UPSTREAM=cassette`, replays `shared/fixtures/ramble-audio/three-tasks.cassette.json` (or `?cassette=<id>`) from the first audio frame, and a `stop` plays the rest at once.
+- `bun server/scripts/ramble-latency.ts --url <origin>` streams real speech through the socket and prints latencies; with `SYNC_SETUP_CODE` it pairs a temporary device and removes it afterwards.

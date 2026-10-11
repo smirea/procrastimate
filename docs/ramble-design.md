@@ -19,11 +19,11 @@ Ramble turns a spoken brain dump into tasks. Stefan talks, a live transcript and
 
 Following the workflow rule in [Workflow](decisions/workflow.md#clients), every feature names its target clients and why any are left out.
 
-| Client | Target | Why |
-| --- | --- | --- |
-| Web (desktop and phone) | Yes | Stefan's daily client. Desktop Chromium and iPhone Safari both have `getUserMedia` and `AudioWorklet`. |
-| iOS app | Yes | Voice capture matters most on the phone. It uses the same `/api/ramble/socket` endpoint and the same parser through the Swift port. |
-| Apple Watch | Not now | The watch app does not exist yet. When it does, Ramble is a natural subset for it: hold to talk, a short preview, and save. It would reuse the same endpoint and `Core` parser, with no editing beyond discard. |
+| Client                  | Target  | Why                                                                                                                                                                                                             |
+| ----------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Web (desktop and phone) | Yes     | Stefan's daily client. Desktop Chromium and iPhone Safari both have `getUserMedia` and `AudioWorklet`.                                                                                                          |
+| iOS app                 | Yes     | Voice capture matters most on the phone. It uses the same `/api/ramble/socket` endpoint and the same parser through the Swift port.                                                                             |
+| Apple Watch             | Not now | The watch app does not exist yet. When it does, Ramble is a natural subset for it: hold to talk, a short preview, and save. It would reuse the same endpoint and `Core` parser, with no editing beyond discard. |
 
 Web and iOS are planned together: each UI slice has a twin on the other client, written against the same parity ids and scenarios listed under [Paired parity tests](#paired-parity-tests), and the shared logic lands once in `shared/` with its Swift port.
 
@@ -46,15 +46,15 @@ What we copy: the toggle session, the live preview, edit before save, existing p
 
 `scribe_v1` is deprecated in the ElevenLabs model list with removal scheduled for July 9, 2026 ([Models](https://elevenlabs.io/docs/overview/models.mdx), [changelog](https://releases.fru.dev/releases/elevenlabs-2026-06-08-speech-to-text)). Stefan's key check shows it still answers, but nothing should be built on it. The live choice is between Scribe v2 batch and Scribe v2 Realtime.
 
-| | Scribe v2 (batch) | Scribe v2 Realtime |
-| --- | --- | --- |
-| Model id | `scribe_v2` | `scribe_v2_realtime` |
-| API | `POST /v1/speech-to-text`, upload a file | WebSocket `/v1/speech-to-text/realtime`, stream PCM |
-| Latency | Whole clip after you stop; a 30 to 60 second clip is expected to take a few seconds | About 150 ms to partial text, committed segments after a VAD silence |
-| Price (API, per hour of audio) | $0.22, plus $0.05 for keyterms | $0.39, plus $0.08 for keyterms |
-| Keyterms | Up to 1000 terms, 50 characters each | Up to 50 terms, 20 characters each |
-| Language | Auto-detect with `language_code` and probability, or a pinned `language_code` | Pinned `language_code`, or auto with `include_language_detection` |
-| Other | Diarization, audio events | Partial and committed transcripts, `no_verbatim` to drop fillers and false starts, word timestamps |
+|                                | Scribe v2 (batch)                                                                   | Scribe v2 Realtime                                                                                 |
+| ------------------------------ | ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Model id                       | `scribe_v2`                                                                         | `scribe_v2_realtime`                                                                               |
+| API                            | `POST /v1/speech-to-text`, upload a file                                            | WebSocket `/v1/speech-to-text/realtime`, stream PCM                                                |
+| Latency                        | Whole clip after you stop; a 30 to 60 second clip is expected to take a few seconds | About 150 ms to partial text, committed segments after a VAD silence                               |
+| Price (API, per hour of audio) | $0.22, plus $0.05 for keyterms                                                      | $0.39, plus $0.08 for keyterms                                                                     |
+| Keyterms                       | Up to 1000 terms, 50 characters each                                                | Up to 50 terms, 20 characters each                                                                 |
+| Language                       | Auto-detect with `language_code` and probability, or a pinned `language_code`       | Pinned `language_code`, or auto with `include_language_detection`                                  |
+| Other                          | Diarization, audio events                                                           | Partial and committed transcripts, `no_verbatim` to drop fillers and false starts, word timestamps |
 
 Sources: [ElevenLabs API pricing](https://elevenlabs.io/pricing/api), [Speech to text overview](https://elevenlabs.io/docs/overview/capabilities/speech-to-text.md), [Keyterm prompting](https://elevenlabs.io/docs/eleven-api/guides/cookbooks/speech-to-text/batch/keyterm-prompting), [Realtime API reference](https://elevenlabs.io/docs/es/api-reference/speech-to-text/v-1-speech-to-text-realtime.md), [Single-use tokens](https://elevenlabs.io/docs/api-reference/tokens/create.mdx), [Commit strategies](https://elevenlabs.io/docs/eleven-api/guides/how-to/speech-to-text/realtime/transcripts-and-commit-strategies.mdx).
 
@@ -132,16 +132,16 @@ It is a pure function of the transcript text, `now`, the projects, and the label
 
 ### Three options
 
-| | (a) Explicit trigger grammar | (b) LLM extraction | (c) Hybrid (recommended) |
-| --- | --- | --- | --- |
-| How | Fixed spoken phrases set every attribute and split tasks | A model reads the transcript and returns tasks as JSON | (a) for metadata and explicit structure, the quick add parser for dates, an LLM only to regroup sentences if needed |
-| Precision | Highest. Nothing fires without its phrase | Lowest. Models infer ("sounds urgent", "probably the Work project") and paraphrase titles | Same as (a): every field traces to a phrase |
-| Segmentation of natural rambles | Weak without separators | Strong | Strong where needed |
-| Latency | Instant, local | 0.6 to 2.5 s per call, needs the network | Instant; the optional LLM step adds about a second, once |
-| Live preview | Every partial | Only by calling the model repeatedly | Every partial |
-| Cost | Free | Small (below) | Free unless the LLM step is on |
-| Testability | Exact, deterministic vectors on both clients | Fuzzy, semantic scoring, drifts with model versions | Exact for metadata, fuzzy only for the optional grouping |
-| Client parity | Shared code, ported once | Server-only, both clients get it | Shared code plus one server call |
+|                                 | (a) Explicit trigger grammar                             | (b) LLM extraction                                                                        | (c) Hybrid (recommended)                                                                                            |
+| ------------------------------- | -------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| How                             | Fixed spoken phrases set every attribute and split tasks | A model reads the transcript and returns tasks as JSON                                    | (a) for metadata and explicit structure, the quick add parser for dates, an LLM only to regroup sentences if needed |
+| Precision                       | Highest. Nothing fires without its phrase                | Lowest. Models infer ("sounds urgent", "probably the Work project") and paraphrase titles | Same as (a): every field traces to a phrase                                                                         |
+| Segmentation of natural rambles | Weak without separators                                  | Strong                                                                                    | Strong where needed                                                                                                 |
+| Latency                         | Instant, local                                           | 0.6 to 2.5 s per call, needs the network                                                  | Instant; the optional LLM step adds about a second, once                                                            |
+| Live preview                    | Every partial                                            | Only by calling the model repeatedly                                                      | Every partial                                                                                                       |
+| Cost                            | Free                                                     | Small (below)                                                                             | Free unless the LLM step is on                                                                                      |
+| Testability                     | Exact, deterministic vectors on both clients             | Fuzzy, semantic scoring, drifts with model versions                                       | Exact for metadata, fuzzy only for the optional grouping                                                            |
+| Client parity                   | Shared code, ported once                                 | Server-only, both clients get it                                                          | Shared code plus one server call                                                                                    |
 
 **(b) in detail.** Candidates: on Cloudflare, `@cf/meta/llama-3.3-70b-instruct-fp8-fast` supports JSON Schema output ([JSON mode](https://developers.cloudflare.com/workers-ai/features/json-mode/)) at $0.293 per million input and $2.253 per million output tokens, about 106 neurons per ramble call, so the free 10,000 neurons a day cover about 90 calls; `@cf/openai/gpt-oss-20b` is cheaper but is not on the JSON mode list ([Workers AI pricing](https://developers.cloudflare.com/workers-ai/platform/pricing/)). Externally, Gemini 2.5 Flash-Lite ($0.10 and $0.40 per million, with structured outputs, about 576 ms median in a recent benchmark) is the cheapest fast option, but Google now limits 2.5 models to existing users and points new projects to newer Flash-Lite models; Gemini 3.1 Flash-Lite is $0.25 and $1.50 ([Gemini 2.5 Flash-Lite](https://ai.google.dev/gemini-api/docs/models/gemini-2.5-flash-lite), [latency brief](https://cutoffreport.com/posts/cutoff-data-brief-2026-10-08)). GPT-5 nano is $0.05 and $0.40 but measured slower, about 2.5 s ([TokensWatch](https://tokenswatch.net/compare/gpt-5-nano-vs-gemini-2-5-flash-lite/)). Any of these is a fraction of a cent per ramble. The problem is not cost; it is that a model told to extract priority will find priority, and the "never invent metadata" target would rest on a prompt.
 
@@ -253,35 +253,35 @@ Testing is most of the risk and most of the work. Four layers:
 - **Where.** `shared/fixtures/ramble-corpus.ts` holds cases `{ id, category, transcript, projects?, labels?, expected }`, with one shared seed of projects (`Home`, `Work`, `Side Project`, `Indonesia`, `Finance`) and labels (`calls`, `errands`, `waiting`, `deep work`). `shared/ramble.test.ts` asserts each case's `parseRamble` output against `expected` with the pinned clock (Wednesday, October 14 2026, 10:00), wrapped in `recorded('ramble', parseRamble)`, so `bun run vectors` writes `shared/vectors/ramble.json` and the iOS `VectorTests` replay every case against the Swift port. One source of truth, as in [iOS app](decisions/ios.md#shared-logic-and-test-vectors).
 - **Size and categories.** At least 300 cases at first, growing with every bug:
 
-| Category | Cases | Examples |
-| --- | --- | --- |
-| No metadata at all | 40 | "Buy milk. Call the plumber about the leak." → two tasks, every field empty |
-| Single task, one attribute each | 40 | "Pay rent tomorrow", "Email Dana priority 2", "Water plants every Sunday", "Book flights, add it to the Indonesia project" |
-| Multi-task with explicit separators | 30 | "Buy paint next task call mom tonight new task renew passport" |
-| Multi-task natural (no separators) | 40 | "I need to buy milk, oh and call mom tomorrow, and the report's due Friday" |
-| Subtasks | 25 | "Plan the party with subtasks invitations, cake, and music"; "Clean garage. Subtask sort tools." |
-| Notes vs title | 20 | "Buy paint. Note: the blue one from Home Depot." |
-| Trigger words used as ordinary words | 40 | "Finish the project report", "Label the boxes in the garage", "Note to self buy stamps" (stays a title), "This is important, call the bank", "Review Tuesday's notes", "Priority to finish the deck" |
-| Numbers | 25 | "Call 1800 flowers", "Buy 2 tickets for May 3rd", "Read chapter 5", "Order 5M screws" (no 5 minutes), "Team of 4 dinner at 7pm" |
-| Homophones and ASR slips | 20 | "priority for" → p4, "priority won", "pee one", "remind me too" (stays text), "four tickets" vs "for tickets" |
-| Unknown names | 15 | "project Garden" with no such project → stays in the title; "label urgent" with no such label → stays |
-| Corrections and endings | 15 | "Buy eggs scratch that buy bread", "that's all" |
-| Dates and recurrence in speech | 30 | "every other week on Monday", "in two weeks", "at half past five pm", "next Friday at noon", "remind me 30 minutes before" |
+| Category                             | Cases | Examples                                                                                                                                                                                             |
+| ------------------------------------ | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| No metadata at all                   | 40    | "Buy milk. Call the plumber about the leak." → two tasks, every field empty                                                                                                                          |
+| Single task, one attribute each      | 40    | "Pay rent tomorrow", "Email Dana priority 2", "Water plants every Sunday", "Book flights, add it to the Indonesia project"                                                                           |
+| Multi-task with explicit separators  | 30    | "Buy paint next task call mom tonight new task renew passport"                                                                                                                                       |
+| Multi-task natural (no separators)   | 40    | "I need to buy milk, oh and call mom tomorrow, and the report's due Friday"                                                                                                                          |
+| Subtasks                             | 25    | "Plan the party with subtasks invitations, cake, and music"; "Clean garage. Subtask sort tools."                                                                                                     |
+| Notes vs title                       | 20    | "Buy paint. Note: the blue one from Home Depot."                                                                                                                                                     |
+| Trigger words used as ordinary words | 40    | "Finish the project report", "Label the boxes in the garage", "Note to self buy stamps" (stays a title), "This is important, call the bank", "Review Tuesday's notes", "Priority to finish the deck" |
+| Numbers                              | 25    | "Call 1800 flowers", "Buy 2 tickets for May 3rd", "Read chapter 5", "Order 5M screws" (no 5 minutes), "Team of 4 dinner at 7pm"                                                                      |
+| Homophones and ASR slips             | 20    | "priority for" → p4, "priority won", "pee one", "remind me too" (stays text), "four tickets" vs "for tickets"                                                                                        |
+| Unknown names                        | 15    | "project Garden" with no such project → stays in the title; "label urgent" with no such label → stays                                                                                                |
+| Corrections and endings              | 15    | "Buy eggs scratch that buy bread", "that's all"                                                                                                                                                      |
+| Dates and recurrence in speech       | 30    | "every other week on Monday", "in two weeks", "at half past five pm", "next Friday at noon", "remind me 30 minutes before"                                                                           |
 
 - **Precision is the hard gate.** For every case, every non-empty field (`projectId`, each label, `priority`, `due`, `recurrence`, each reminder) must have a token whose span lies in that task's segment. CI fails on any field without provenance. The "no metadata" and "trigger words used as ordinary words" categories must produce exactly zero metadata.
 - **Targets**, measured by a scorer in the test file and printed as a summary:
 
-| Metric | Target |
-| --- | --- |
-| Invented fields (metadata without a spoken phrase) | 0, hard gate |
-| Metadata precision on cases that state metadata | 100% |
-| Metadata recall on cases that state metadata | ≥ 95% |
-| Exact task count, explicit-separator cases | 100% |
-| Exact task count, natural cases | ≥ 90% (below this, R7 starts) |
-| Exact title after normalizing case and punctuation | ≥ 90% |
-| Subtask structure exact | ≥ 95% |
+| Metric                                             | Target                        |
+| -------------------------------------------------- | ----------------------------- |
+| Invented fields (metadata without a spoken phrase) | 0, hard gate                  |
+| Metadata precision on cases that state metadata    | 100%                          |
+| Metadata recall on cases that state metadata       | ≥ 95%                         |
+| Exact task count, explicit-separator cases         | 100%                          |
+| Exact task count, natural cases                    | ≥ 90% (below this, R7 starts) |
+| Exact title after normalizing case and punctuation | ≥ 90%                         |
+| Subtask structure exact                            | ≥ 95%                         |
 
-- **Locked cases and scored cases.** The corpus has two sets. *Locked* cases assert their exact expected output and are recorded as vectors, so any change in their behavior fails CI on both clients; every hand-written precision case (no metadata, trigger words used normally, numbers, homophones, unknown names) is locked from the start. *Scored* cases, mostly natural multi-task rambles, are not asserted one by one. The scorer runs them, prints the metrics above, and fails only when a metric falls below its target; the provenance gate still applies to every scored case. A scored case moves to the locked set once it passes, so wins stick. This lets R2 merge with natural segmentation at its target rather than perfect, and gives R7 a measured gap to close.
+- **Locked cases and scored cases.** The corpus has two sets. _Locked_ cases assert their exact expected output and are recorded as vectors, so any change in their behavior fails CI on both clients; every hand-written precision case (no metadata, trigger words used normally, numbers, homophones, unknown names) is locked from the start. _Scored_ cases, mostly natural multi-task rambles, are not asserted one by one. The scorer runs them, prints the metrics above, and fails only when a metric falls below its target; the provenance gate still applies to every scored case. A scored case moves to the locked set once it passes, so wins stick. This lets R2 merge with natural segmentation at its target rather than perfect, and gives R7 a measured gap to close.
 
 - **Synthetic generation.** A small generator (`shared/fixtures/ramble-generate.ts`) composes known titles, attribute phrases, and separators into transcripts whose expected output it knows by construction, seeded so the output is stable. Hand-written cases cover the tricky categories; generated ones cover combinations. Both live in the corpus file, regenerated deterministically.
 
@@ -302,31 +302,31 @@ Testing is most of the risk and most of the work. Four layers:
 
 Each UI row has one Playwright test in `app-web/e2e/parity/ramble.e2e.ts` and one XCUITest in `RambleParityTests.swift`, both from the same fixture and pinned clock, asserting the same names and strings. The ids are fixed now so the web and iOS slices build them in parallel:
 
-| Parity id | Scenario |
-| --- | --- |
-| `ramble-open` | Mic in quick add opens Ramble; long-press on the add button opens it listening |
-| `ramble-live` | Fixture `three-tasks` streams; the transcript and three cards appear before stop |
-| `ramble-chips` | Fixture `metadata` yields project, label, date, repeat, priority, and reminder chips |
-| `ramble-subtasks` | Fixture `party-subtasks` yields one parent with three indented subtasks |
-| `ramble-notes` | Fixture `paint-note` puts the note under the title |
-| `ramble-plain` | Fixture `no-metadata` yields chip-free cards |
-| `ramble-edit` | Tapping a card edits its title and changes its date with the picker |
-| `ramble-discard` | Discarding a card removes it, and `Undo` brings it back |
-| `ramble-save-undo` | `Add 3 tasks` saves into the list; the toast's `Undo` removes all three |
-| `ramble-hold` | Hold to talk listens while held and stops on release |
+| Parity id            | Scenario                                                                               |
+| -------------------- | -------------------------------------------------------------------------------------- |
+| `ramble-open`        | Mic in quick add opens Ramble; long-press on the add button opens it listening         |
+| `ramble-live`        | Fixture `three-tasks` streams; the transcript and three cards appear before stop       |
+| `ramble-chips`       | Fixture `metadata` yields project, label, date, repeat, priority, and reminder chips   |
+| `ramble-subtasks`    | Fixture `party-subtasks` yields one parent with three indented subtasks                |
+| `ramble-notes`       | Fixture `paint-note` puts the note under the title                                     |
+| `ramble-plain`       | Fixture `no-metadata` yields chip-free cards                                           |
+| `ramble-edit`        | Tapping a card edits its title and changes its date with the picker                    |
+| `ramble-discard`     | Discarding a card removes it, and `Undo` brings it back                                |
+| `ramble-save-undo`   | `Add 3 tasks` saves into the list; the toast's `Undo` removes all three                |
+| `ramble-hold`        | Hold to talk listens while held and stops on release                                   |
 | `ramble-unavailable` | Unpaired shows `Turn on sync to use Ramble`; offline shows `Ramble needs a connection` |
 
 ## Cost and free-tier fit
 
 Per minute of rambling:
 
-| Item | Cost per minute | Notes |
-| --- | --- | --- |
-| Scribe v2 Realtime | $0.0065 | $0.39 per hour |
-| Keyterms (realtime) | $0.0013 | $0.08 per hour in ElevenLabs' realtime table; the FAQ says $0.05 |
-| Worker and Durable Object | $0 | 1 upgrade request plus about 600 incoming frames, billed as 30 requests at 20:1; 7.5 GB-s of duration |
+| Item                                | Cost per minute    | Notes                                                                                                                   |
+| ----------------------------------- | ------------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| Scribe v2 Realtime                  | $0.0065            | $0.39 per hour                                                                                                          |
+| Keyterms (realtime)                 | $0.0013            | $0.08 per hour in ElevenLabs' realtime table; the FAQ says $0.05                                                        |
+| Worker and Durable Object           | $0                 | 1 upgrade request plus about 600 incoming frames, billed as 30 requests at 20:1; 7.5 GB-s of duration                   |
 | LLM segmentation (only if R7 ships) | about $0 to $0.001 | One call per session of about 1,700 input and 300 output tokens: about 106 Workers AI neurons, free within 10,000 a day |
-| **Total** | **about $0.008** | **under half a dollar an hour** |
+| **Total**                           | **about $0.008**   | **under half a dollar an hour**                                                                                         |
 
 Free-tier fit:
 
@@ -338,15 +338,15 @@ Free-tier fit:
 
 One PR per slice, each off `master`, never stacked. A slice starts once the slices it depends on have merged. Each slice owns its files, its rows in the feature map (`.cursor/skills/verify-procrastimate/features/ramble.md`) and in [iOS parity](ios-parity.md#ramble), and updates [Ramble](decisions/ramble.md) when it settles a decision.
 
-| Slice | Thread | Depends on | Runs in parallel with |
-| --- | --- | --- | --- |
-| R1 | Transcription proxy | — | R2 |
-| R2 | Spoken grammar and corpus (TS) | — | R1 |
-| R3 | Swift port of the grammar | R2 | R1, R4 |
-| R4 | Web Ramble (capture, sheet, Playwright) | R1, R2 | R3, R5, R6 |
-| R5 | iOS Ramble (capture, sheet, XCUITests) | R1, R3 | R4, R6 |
-| R6 | Audio fixtures, cassettes, live check | R1 | R3, R4, R5 |
-| R7 | LLM segmentation (conditional) | R2, R4, R5 | — |
+| Slice | Thread                                  | Depends on | Runs in parallel with |
+| ----- | --------------------------------------- | ---------- | --------------------- |
+| R1    | Transcription proxy                     | —          | R2                    |
+| R2    | Spoken grammar and corpus (TS)          | —          | R1                    |
+| R3    | Swift port of the grammar               | R2         | R1, R4                |
+| R4    | Web Ramble (capture, sheet, Playwright) | R1, R2     | R3, R5, R6            |
+| R5    | iOS Ramble (capture, sheet, XCUITests)  | R1, R3     | R4, R6                |
+| R6    | Audio fixtures, cassettes, live check   | R1         | R3, R4, R5            |
+| R7    | LLM segmentation (conditional)          | R2, R4, R5 | —                     |
 
 R1 and R2 start at once and share no files. R4 and R5 are the web and iOS twins and run side by side against the parity ids above; each lands its half of every pair, and a pair's iOS row reads `Built` once both halves are green. R4 and R5 start on a hand-made cassette from R1 and swap in R6's recorded ones when they land.
 
@@ -359,6 +359,8 @@ R1 and R2 start at once and share no files. R4 and R5 are the web and iOS twins 
 - **R7: LLM segmentation.** Only if R2's natural-ramble task-count score stays under 90% after tuning. The `AI` binding, `POST /api/ramble/segment` with the sentence-grouping schema and validation, the shared `applyGrouping` with vectors and its Swift port, and the settle animation on both clients. One slice for both clients, since the logic is server-side and shared.
 
 ## Decisions for Stefan
+
+Stefan accepted all eight recommendations; they are recorded in [Ramble](decisions/ramble.md).
 
 1. **Ramble requires a paired device.** Recommended, because each minute costs money and the sync token is the only device credential. The alternative is an open endpoint protected only by caps.
 2. **LLM at all, and which.** Recommended: no LLM until the corpus proves it is needed (R7), then Workers AI Llama 3.3 70B, which needs no new key. Say if you would rather allow Gemini Flash-Lite (needs a `GEMINI_API_KEY` secret) or never use an LLM.
