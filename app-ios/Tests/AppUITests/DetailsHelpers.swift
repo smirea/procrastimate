@@ -35,6 +35,7 @@ extension ParityTestCase {
         row(title).tap()
         XCTAssertTrue(titleInput.waitForExistence(timeout: 5))
         wait(for: titleInput, "value == '\(title)'")
+        XCTAssertTrue(app.navigationBars["Task details"].exists)
     }
 
     func closeDetails() {

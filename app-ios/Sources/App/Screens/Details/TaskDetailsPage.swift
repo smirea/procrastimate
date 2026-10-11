@@ -94,6 +94,7 @@ private struct TaskDetailsForm: View {
         }
         .scrollDismissesKeyboard(.interactively)
         .background(.canvas)
+        .navigationTitle("Task details")
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden()
         .toolbar { toolbar(draft) }
@@ -104,7 +105,8 @@ private struct TaskDetailsForm: View {
 
     @ToolbarContentBuilder
     private func toolbar(_ draft: TaskDetails.Draft) -> some ToolbarContent {
-        ToolbarItem(placement: .principal) { EmptyView() }
+        // The title field already names the task, so the bar shows no title; UI tests find the bar by it.
+        ToolbarItem(placement: .principal) { Color.clear.frame(width: 1, height: 1).accessibilityHidden(true) }
         ToolbarItem(placement: .topBarLeading) {
             if let parent {
                 Button { navigation.back(parent.id) } label: {
