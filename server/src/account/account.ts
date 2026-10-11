@@ -4,9 +4,10 @@ import type { Env, Handler } from '../bindings';
 import { memoryStore } from './memory-store';
 import { sqliteStore } from './sqlite-store';
 import type { AccountStore } from './store';
+import { syncRoutes } from './sync';
 
 /** Every route the `Account` object answers. The Worker forwards each of them to the one account. */
-const accountRoutes: Record<string, AccountRoute> = { ...authRoutes };
+const accountRoutes: Record<string, AccountRoute> = { ...authRoutes, ...syncRoutes };
 
 const fail = (status: number, error: string) => Response.json({ ok: false, error }, { status });
 
