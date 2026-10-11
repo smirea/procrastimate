@@ -57,7 +57,9 @@ test('subtasks-reorder: a subtask drags into place by its handle', async ({ app,
 
 test('subtasks-nest: a subtask opens its own details with a way back', async ({ app, snap }) => {
 	await addWithSubtasks(app, 'Pack for trip', 'Charger');
-	await subtask(app, 'Charger').getByRole('button', { name: /^Charger/ }).tap();
+	await subtask(app, 'Charger')
+		.getByRole('button', { name: /^Charger/ })
+		.tap();
 	await expect(titleInput(app)).toHaveValue('Charger');
 	await expect(details(app).getByRole('button', { name: 'Back to Pack for trip' })).toBeVisible();
 	await addSubtasks(app, 'Cable');
