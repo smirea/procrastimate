@@ -77,4 +77,16 @@ final class ViewsParityTests: ParityTestCase {
         expectRow("Ping Ana", contains: "errands")
         snap("labels-chips")
     }
+
+    func test_views_canvas() {
+        start()
+        add("Buy milk")
+        let cell = row("Buy milk")
+        XCTAssertTrue(cell.waitForExistence(timeout: 5))
+        let behindRow = pixel(at: CGPoint(x: app.frame.width - 6, y: cell.frame.midY))
+        XCTAssertFalse(behindRow.r > 250 && behindRow.g > 250 && behindRow.b > 250, "The row is white: \(behindRow)")
+        let topLeft = pixel(at: CGPoint(x: 12, y: 70))
+        XCTAssertGreaterThan(topLeft.r, topLeft.b, "No warm glow at the top left: \(topLeft)")
+        snap("views-canvas")
+    }
 }
