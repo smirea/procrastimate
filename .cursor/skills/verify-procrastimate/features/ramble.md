@@ -27,6 +27,10 @@ Ramble lets Stefan talk instead of type: a live transcript and a preview card pe
 - Planned: say "Finish the project report" with no project named `report`. One chip-free card titled `Finish the project report` appears.
 - Planned: on an unpaired device the mic reads `Turn on sync to use Ramble`.
 
+## Parser
+
+`parseRamble` in `shared/ramble.ts` turns a transcript into tasks locally, on every partial. It reuses quick add's parser in `spoken` mode. The corpus, provenance gate, and score are in `shared/ramble.test.ts`; locked cases are recorded in `shared/vectors/ramble.json` for the Swift port.
+
 ## Gotchas
 
 - Transcription needs the network and a paired device; everything else about the preview is local.

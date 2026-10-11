@@ -679,3 +679,98 @@ test('everything at once', () => {
 		],
 	});
 });
+
+describe('spoken', () => {
+	const spoken = (input: string) => parse(input, { spoken: true });
+
+	test.each([
+		['This is urgent call the bank', 'This is urgent call the bank'],
+		['Important call the bank', 'Important call the bank'],
+		['Call the bank !!!', 'Call the bank !!!'],
+		['Call the bank !!', 'Call the bank !!'],
+	])('priority words stay text: %s', (input, title) => {
+		const parsed = spoken(input);
+		expect(parsed.title).toBe(title);
+		expect(parsed.priority).toBe(null);
+	});
+
+	test('a priority level still counts', () => {
+		expect(spoken('Call the bank p2').priority).toBe(2);
+	});
+
+	test.each([['Call 1800 flowers'], ['Order 1730 widgets'], ['Call 1800 flowers tomorrow']])(
+		'a bare four-digit number is not a time: %s',
+		input => {
+			const parsed = spoken(input);
+			expect(parsed.due?.time ?? null).toBe(null);
+		},
+	);
+
+	test('a four-digit time after at still counts', () => {
+		expect(spoken('Leave at 1730').due).toEqual({ date: '2026-10-14', time: '17:30' });
+	});
+
+	test('a year after a date still counts', () => {
+		expect(spoken('Meet June 21, 2027').due).toEqual({ date: '2027-06-21', time: null });
+	});
+
+	test.each([
+		['Order 5M screws'],
+		['Run 5m'],
+		['Plank 2h'],
+		['Rest 2d'],
+		['Wait 1w'],
+		['Plan 3mo'],
+		['Study 5 mins'],
+		['Split in 2 groups'],
+		['Call mom r5m'],
+		['Call mom remind me 30m before'],
+	])('compact units do not apply: %s', input => {
+		const parsed = spoken(input);
+		expect(parsed.title).toBe(input);
+		expect(parsed.due).toBe(null);
+		expect(parsed.reminders).toEqual([]);
+	});
+
+	test.each([
+		['in 10 minutes', { date: '2026-10-14', time: '10:10' }],
+		['in 2 hours', { date: '2026-10-14', time: '12:00' }],
+		['in 5 mins', { date: '2026-10-14', time: '10:05' }],
+		['in 2 weeks', { date: '2026-10-28', time: null }],
+	])('spelled-out units still count: %s', (phrase, due) => {
+		expect(spoken(`Call mom ${phrase}`).due).toEqual(due);
+	});
+
+	test('reminders with spelled-out units still count', () => {
+		expect(spoken('Call mom tomorrow 5pm remind me 30 minutes before').reminders).toEqual([
+			{ kind: 'before', minutes: 30 },
+		]);
+	});
+
+	test.each([
+		["Review Tuesday's notes"],
+		['Review Tuesday’s notes'],
+		["Prep today's agenda"],
+		["Read tomorrow's brief"],
+	])('a day with apostrophe s stays text: %s', input => {
+		const parsed = spoken(input);
+		expect(parsed.title).toBe(input);
+		expect(parsed.due).toBe(null);
+	});
+
+	test('an ordinal before a word is not a date', () => {
+		const parsed = spoken('Read the 5th chapter');
+		expect(parsed.title).toBe('Read the 5th chapter');
+		expect(parsed.due).toBe(null);
+	});
+
+	test('an ordinal at the end is still a date', () => {
+		expect(spoken('Pay rent on the 15th').due).toEqual({ date: '2026-10-15', time: null });
+	});
+
+	test('typed quick add keeps its shorthands', () => {
+		const parsed = parse("Review Tuesday's notes urgent 5m");
+		expect(parsed.priority).toBe(1);
+		expect(parsed.due).toEqual({ date: '2026-10-14', time: '10:05' });
+	});
+});
