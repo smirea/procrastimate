@@ -112,7 +112,11 @@ private struct QuickAddForm: View {
         // The name the suggestion list is open on already offers to create it there.
         ForEach(NameSearch.unknownNames(draft.text, parsed.tokens, store.projects, store.labels).filter { $0.start != listAt }, id: \.self) { name in
             let title = "Create \(name.sigil.rawValue)\(name.name)"
-            Button { create(name) } label: { Chip(systemImage: "plus", text: title, tone: .accent) }
+            Button { create(name) } label: {
+                Chip(systemImage: "plus", text: title, tone: .accent)
+                    .frame(minHeight: 44)
+                    .contentShape(.rect)
+            }
                 .buttonStyle(.plain)
                 .accessibilityLabel(title)
         }
