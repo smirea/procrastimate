@@ -138,8 +138,8 @@ class Sync {
 		this.#socket = socket;
 		let heard = true;
 		socket.onopen = () => {
-			// Nudges sent while the socket was down are lost, so a reconnect catches up once.
-			if (this.#failures > 0) void this.syncNow();
+			// Nudges sent before the handshake, even since the sync that came with this connect, are lost.
+			void this.syncNow();
 			this.#failures = 0;
 			this.#keepalive = setInterval(() => {
 				if (!heard) return this.#retry();
