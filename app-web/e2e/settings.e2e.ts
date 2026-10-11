@@ -74,8 +74,9 @@ test('importing a Todoist backup twice adds each project and task once', async (
 test('delete all data asks, and cancel leaves the list', async ({ app, page }) => {
 	await app.add('Keep me');
 	await app.openSettings();
-	await expect(app.settings().getByText('Notifications: Off', { exact: true })).toBeVisible();
-	await shoot(app, 'notifications-off');
+	// The Worker under test has push keys, so the line can be On. The dev server often has none, so it stays Off.
+	await expect(app.settings().getByText(/^Notifications(?:: (?:On|Off)| need permission)$/)).toBeVisible();
+	await shoot(app, 'notifications-line');
 	await app.settings().getByRole('button', { name: 'Delete all data' }).click();
 	await expect(
 		app.settings().getByText('Delete every task, project, and label on this device and the server?'),
