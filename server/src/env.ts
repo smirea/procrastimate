@@ -1,4 +1,4 @@
-// env-manager: procrastimate | 2026-10-11T15:04:19.678Z
+// env-manager: procrastimate | 2026-10-11T17:02:48.495Z
 // env-manager target: server
 // env-manager root: ../..
 // env-manager env: dev
@@ -14,6 +14,9 @@ const env = z.object({
   RAMBLE_UPSTREAM: z.string().optional(),
   CLOUDFLARE_ACCOUNT_ID: z.string().optional(),
   CLOUDFLARE_API_TOKEN: z.string().optional(),
+  TURSO_DATABASE_URL: z.string().optional(),
+  TURSO_AUTH_TOKEN: z.string().optional(),
+  TURSO_API_TOKEN: z.string().optional(),
 }).parse(process.env);
 
 export default env;

@@ -17,6 +17,8 @@ export const WORKER_SECRETS = [
 	'VAPID_PUBLIC_KEY',
 	'VAPID_PRIVATE_KEY',
 	'ELEVENLABS_API_KEY',
+	'TURSO_DATABASE_URL',
+	'TURSO_AUTH_TOKEN',
 ] as const;
 export const GITHUB_SECRETS = ['CLOUDFLARE_API_TOKEN', 'CLOUDFLARE_ACCOUNT_ID'] as const;
 const REPO = 'smirea/procrastimate';
