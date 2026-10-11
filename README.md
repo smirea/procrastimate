@@ -29,33 +29,35 @@ Without them CI still passes and skips the deploy with a warning. Deploys never 
 
 ## Secrets
 
-Every secret lives in env-manager project `procrastimate` in AWS Secrets Manager: env `production` for the Worker (`SYNC_SETUP_CODE`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `ELEVENLABS_API_KEY`) and the deploy credentials, env `local` for dev. They are optional fields in the root `.env` schema's `server` scope, so `env-manager gen --local` works without them. Never run `wrangler secret put` or `gh secret set` by hand; `server/scripts/secrets.ts` is the one bridge, and it prints key names only.
+Every secret lives in env-manager project `procrastinate` in AWS Secrets Manager. Two environments, and no `local` environment or local mode: `prod` for the Worker (`SYNC_SETUP_CODE`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `ELEVENLABS_API_KEY`), the deploy credentials, and Release iOS; `dev` for local development and Debug iOS. They are optional fields in the root `.env` schema's `server` scope. Never run `wrangler secret put` or `gh secret set` by hand; `server/scripts/secrets.ts` is the one bridge, and it prints key names only.
 
 ```sh
-bun run secrets:push     # set production Worker secrets with wrangler secret bulk; unset keys are left alone
-bun run secrets:github   # mirror CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID to GitHub
-bun run secrets:check    # compare names in env-manager, on the Worker, and in GitHub; exits 1 on drift
-bun run env:pull         # env-manager down --no-local: fetch the current env into root .env.local
+bun run secrets:push     # set prod Worker secrets with wrangler secret bulk; unset keys are left alone
+bun run secrets:github   # mirror CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID from prod to GitHub
+bun run secrets:check    # compare names in env-manager prod, on the Worker, and in GitHub; exits 1 on drift
+bun run env:pull         # env-manager down: fetch the selected env into root .env.local
+bun run env:ios          # write Debug (dev) and Release (prod) API_URL into app-ios/Config/Env.xcconfig
 ```
 
-To change a production secret, on a machine with AWS access (Stefan's MacBook):
+To change a prod secret, on a machine with AWS access (Stefan's MacBook):
 
 ```sh
-env-manager env set production
-env-manager down --no-local      # root .env.local now holds production values
+env-manager env set prod
+env-manager down                 # root .env.local now holds prod values
 $EDITOR .env.local
-env-manager up --no-local
+env-manager up
 bun run secrets:push             # and/or: bun run secrets:github
-env-manager env set local && env-manager down --no-local   # back to dev values
+bun run env:ios                  # refresh Debug and Release after an API_URL change
+env-manager env set dev && env-manager down   # back to dev values
 ```
 
-On a new machine, `env-manager down --no-local` fetches the local env and regenerates the child files. Cloud agents and the dev box have no AWS access; they run `env-manager gen --local`, and end to end tests use the hard-coded `e2e-setup-code`.
+On a new machine, `env-manager env set dev && env-manager down` fetches `dev` and regenerates the child files. Cloud agents and the dev box have no AWS access; they run `env-manager gen --local` (schema defaults, not an environment named local), and end to end tests use the hard-coded `e2e-setup-code`.
 
 ## Environment
 
 `env-manager` manages one root `.env` schema with directory targets. The root `.env.local` is the only place to edit local values. Run `env-manager gen --local` after editing either file; it generates `app-web/.env.local`, `server/.env.local`, `server/src/env.ts`, and `app-web/env.ts` (SvelteKit reserves `src/env.ts`). Commands from child directories find the owning root. There are no independent child schemas.
 
-The scaffold runs `env-manager init --local` and `env-manager gen --local`. Persistent `local:true` keeps setup offline and avoids automatic Git commits. See `env-manager --help` for schema types, target selection, and opting into remote storage with `--no-local`.
+The schema is stored in AWS. `env-manager down` fetches the selected environment and regenerates the child files; `env-manager up` writes the current one back. See `env-manager --help` for schema types and target selection. `gen --local` is only for a machine with no AWS credentials.
 
 Keep `.env` and generated TypeScript readers tracked. Ignore all `.env.local` files and generated Swift values. Read server configuration through `server/src/env.ts`; the client's reader is for Vite's Node-side configuration, not browser code. Browser requests use `/api` and must never import server secrets or the environment reader.
 
@@ -71,4 +73,4 @@ bun run start:ios -t "iPhone 17" --no-watch
 
 `app-web/` contains the web client. `start:client` runs it; `start` runs the web client and API; launch iOS separately with `start:ios`. Arguments pass through to `app-ios/scripts/run`. See `app-ios/README.md` and `app-ios/AGENTS.md` for native development and signing.
 
-The root `.env` declares `app-web format=ts path=.env.local generate=env.ts`, `server format=ts path=.env.local generate=src/env.ts`, and `app-ios format=swift path=Config/LocalSecrets.xcconfig`. Paths are relative to each target directory. `env-manager gen --local` projects its selected values into `app-ios/Config/LocalSecrets.xcconfig`. `API_URL` is shared by Vite's proxy and the native app; read it in Swift with `AppEnvironment.apiURL`. Configure a reachable API host in the root `.env.local` for physical devices: `127.0.0.1` points at the device itself. Regenerate and rebuild after changing values. Client and native configuration ships to users, so keep credentials scoped to the server.
+The root `.env` declares `app-web format=ts path=.env.local generate=env.ts`, `server format=ts path=.env.local generate=src/env.ts`, and `app-ios format=swift path=Config/LocalSecrets.xcconfig`. Paths are relative to each target directory. Debug iOS reads `dev` and Release iOS reads `prod`, via `bun run env:ios` (`Config/Env.xcconfig`). Release is pinned to `https://procrastimate.stf.lol`. `API_URL` is shared by Vite's proxy and the native app; read it in Swift with `AppEnvironment.apiURL`. A physical device needs `dev`'s `API_URL` set to a reachable host, then `bun run env:ios`: `127.0.0.1` points at the device itself. Client and native configuration ships to users, so keep credentials scoped to the server.

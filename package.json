@@ -21,7 +21,8 @@
 		"client:dev": "bun run start:client",
 		"server:dev": "bun run start:server",
 		"env:generate": "env-manager gen --local",
-		"env:pull": "env-manager down --no-local",
+		"env:pull": "env-manager down",
+		"env:ios": "bun server/scripts/secrets.ts ios",
 		"secrets:push": "bun server/scripts/secrets.ts push",
 		"secrets:github": "bun server/scripts/secrets.ts github",
 		"secrets:check": "bun server/scripts/secrets.ts check"

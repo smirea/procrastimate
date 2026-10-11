@@ -26,7 +26,7 @@ Stefan gets a system notification at each task's due time and at each reminder, 
 
 Preconditions:
 
-- Push needs the Worker. Run `bun run preview` (it writes `.dev.vars` from env-manager `local`, or generates a VAPID pair once without AWS; add `SYNC_SETUP_CODE=<code>` there by hand when env-manager has none), or use production. The Bun dev server from `bun run start` has no VAPID keys or alarms, so the panel says push is not available, though its account still registers subscriptions and computes the schedule.
+- Push needs the Worker. Run `bun run preview` (it writes `.dev.vars` from env-manager `dev`, or generates a VAPID pair once without AWS; add `SYNC_SETUP_CODE=<code>` there by hand when `dev` has none), or use production. The Bun dev server from `bun run start` has no VAPID keys or alarms, so the panel says push is not available, though its account still registers subscriptions and computes the schedule.
 - The device must have sync on (Settings, `Set up sync` or `Enter a pairing code`) before `Turn on notifications` shows.
 - Real delivery needs a browser that can subscribe. Playwright's Chromium cannot (no push service keys, and incognito contexts are refused). Google Chrome with a persistent profile can.
 

@@ -67,12 +67,12 @@ Release builds always call `https://procrastimate.stf.lol`; Debug uses `API_URL`
 
 ## Environment
 
-The parent `.env` declares this folder as an env-manager target. Edit local values in the parent `.env.local`, then regenerate from here or the repo root:
+The parent `.env` declares this folder as an env-manager target. Debug builds use env `dev` and Release builds use env `prod`:
 
 ```sh
-env-manager gen --local
+bun run env:ios
 ```
 
-This creates `Config/LocalSecrets.xcconfig`. `Config/Base.xcconfig` includes it, and `Config/Info.plist` exposes `API_URL` through `AppEnvironment.apiURL`. Regeneration triggers a rebuild while the launcher is watching.
+That writes `Config/Env.xcconfig`. `Config/Base.xcconfig` includes it and pins Release to `https://procrastimate.stf.lol`. `Config/Info.plist` exposes `API_URL` through `AppEnvironment.apiURL`. Regeneration triggers a rebuild while the launcher is watching.
 
-Native configuration is bundled into the app. Keep credentials in the server target. For physical devices, set `API_URL` to a reachable API host; `127.0.0.1` refers to the device itself.
+Native configuration is bundled into the app. Keep credentials in the server target. For a physical device, set `dev`'s `API_URL` to a reachable host and run `bun run env:ios` again; `127.0.0.1` refers to the device itself.

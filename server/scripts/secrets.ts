@@ -2,7 +2,10 @@
  * The one bridge from env-manager project `procrastimate` to the Worker, GitHub, and `.dev.vars`.
  * Never prints a value: logs key names only and hands values to child processes on stdin.
  *
- * bun server/scripts/secrets.ts <push|github|dev-vars|check> [--env <name>] [--generate-only]
+ * bun server/scripts/secrets.ts <push|github|dev-vars|check|ios> [--env <name>] [--generate-only]
+ *
+ * Environments are `prod` (the Worker and Release iOS) and `dev` (local development and Debug iOS).
+ * There is no `local` environment. `--generate-only` skips AWS, for CI and any machine without credentials.
  */
 import { chmod, copyFile, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -24,6 +27,45 @@ type WorkerSecret = (typeof WORKER_SECRETS)[number];
 
 const rootPath = new URL('../../', import.meta.url).pathname;
 const devVarsPath = join(rootPath, '.dev.vars');
+const iosConfigPath = join(rootPath, 'app-ios/Config/Env.xcconfig');
+
+/** Release and TestFlight call this. `Config/Base.xcconfig` pins the same URL. */
+export const PROD_API_URL = 'https://procrastimate.stf.lol';
+
+export type IosKey = { name: string; fallback: string };
+
+/** Keys the root schema assigns to `app-ios`, with the schema's own fallback value. */
+export function appIosKeys(schema: string): IosKey[] {
+	let ios = false;
+	const keys: IosKey[] = [];
+	for (const raw of schema.split('\n')) {
+		const line = raw.trim();
+		const targets = /^#\s*env-manager targets:\s*(.*)$/.exec(line);
+		if (targets) {
+			ios = targets[1].split(',').some(target => target.trim() === 'app-ios');
+			continue;
+		}
+		if (!ios || !line || line.startsWith('#')) continue;
+		const match = /^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/.exec(line);
+		if (!match) continue;
+		keys.push({ name: match[1], fallback: match[2].replace(/\s+#.*$/, '').trim() });
+	}
+	return keys;
+}
+
+/** Debug takes `dev`, Release takes `prod`. A missing prod `API_URL` uses the pinned production URL. */
+export function iosXcconfig(schema: string, dev: Values, prod: Values): string {
+	const lines = ['// Generated from env-manager dev and prod. Do not edit.'];
+	for (const key of appIosKeys(schema)) {
+		const devValue = dev[key.name] || key.fallback;
+		const prodValue = prod[key.name] || (key.name === 'API_URL' ? PROD_API_URL : key.fallback);
+		if (!devValue || !prodValue) throw new Error(`${key.name} has no value for ${devValue ? 'prod' : 'dev'}`);
+		const setting = (config: 'Debug' | 'Release', value: string) =>
+			`${key.name}[config=${config}] = ${value.replaceAll('//', '/$()/')}`;
+		lines.push(setting('Debug', devValue), setting('Release', prodValue));
+	}
+	return `${lines.join('\n')}\n`;
+}
 
 /** Parses dotenv text. Empty values count as unset and are left out. */
 export function parseDotenv(text: string): Values {
@@ -149,6 +191,36 @@ async function devVars(env: string, generateOnly: boolean) {
 	console.log(`Wrote .dev.vars: ${Object.keys(secrets).join(', ')}`);
 }
 
+/** Writes `Config/Env.xcconfig` so Debug reads `dev` and Release reads `prod`, whatever `.env.local` is switched to. */
+async function ios(generateOnly: boolean) {
+	const schema = await Bun.file(join(rootPath, '.env')).text();
+	let dev: Values = {};
+	let prod: Values = {};
+	if (!generateOnly) {
+		try {
+			dev = await readEnv('dev');
+		} catch (error) {
+			console.warn(`${error instanceof Error ? error.message : error}\nDebug will use the schema defaults.`);
+		}
+		try {
+			prod = await readEnv('prod');
+		} catch (error) {
+			console.warn(`${error instanceof Error ? error.message : error}\nRelease will use ${PROD_API_URL}.`);
+		}
+	}
+	if (prod.API_URL && prod.API_URL !== PROD_API_URL) {
+		throw new Error(
+			`prod API_URL is ${prod.API_URL}, but Release is pinned to ${PROD_API_URL} in app-ios/Config/Base.xcconfig`,
+		);
+	}
+	await Bun.write(iosConfigPath, iosXcconfig(schema, dev, prod));
+	console.log(
+		`Wrote app-ios/Config/Env.xcconfig: ${appIosKeys(schema)
+			.map(key => key.name)
+			.join(', ')}`,
+	);
+}
+
 async function check(env: string) {
 	const values = await readEnv(env);
 	const stored = new Set(Object.keys(workerSecrets(values)));
@@ -189,20 +261,23 @@ if (import.meta.main) {
 	const env = (fallback: string) => flag('--env') ?? fallback;
 	switch (command) {
 		case 'push':
-			await push(env('production'));
+			await push(env('prod'));
 			break;
 		case 'github':
-			await github(env('production'));
+			await github(env('prod'));
 			break;
 		case 'dev-vars':
-			await devVars(env('local'), args.includes('--generate-only'));
+			await devVars(env('dev'), args.includes('--generate-only'));
+			break;
+		case 'ios':
+			await ios(args.includes('--generate-only'));
 			break;
 		case 'check':
-			await check(env('production'));
+			await check(env('prod'));
 			break;
 		default:
 			console.error(
-				'Usage: bun server/scripts/secrets.ts <push|github|dev-vars|check> [--env <name>] [--generate-only]',
+				'Usage: bun server/scripts/secrets.ts <push|github|dev-vars|check|ios> [--env <name>] [--generate-only]',
 			);
 			process.exit(1);
 	}
