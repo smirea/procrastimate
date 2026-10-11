@@ -7,6 +7,7 @@ struct DeleteAllDataIntent: AppIntent {
     static let description = IntentDescription("Deletes every task, project, and label.")
     static let openAppWhenRun = true
 
+    @MainActor
     func perform() async throws -> some IntentResult {
         guard let session = IntentSession.current else { return .result() }
         session.store.deleteAll()

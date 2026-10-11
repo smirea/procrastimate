@@ -20,7 +20,9 @@ env:
 
 jobs:
   upload:
-    runs-on: macos-26
+    # The app builds against the iOS 27 SDK (IndexedEntityQuery, Swift 6.3 rules), which macos-26 images lack.
+    # Xcode 27.0 (27A266a) is this image's default, the same build as Stefan's Mac.
+    runs-on: xcode-27
     timeout-minutes: 45
     defaults:
       run:
