@@ -26,7 +26,7 @@ What the native iOS app must do to match the web app, row by row from the featur
 | `add-highlight`: inline highlight per parsed phrase | ✓ | Built | S5 | `QuickAddParityTests.test_add_highlight` | `quick-add › add-highlight` | `add-highlight.png` |
 | `add-config-row`: the chip row spells out due, repeat, and reminders | ✓ | Built | S5 | `QuickAddParityTests.test_add_config_row` | `quick-add › add-config-row` | `add-config-row.png` |
 | `add-keep-text`: `Keep as text` un-parses a phrase | ✓ | Built | S5 | `QuickAddParityTests.test_add_keep_text` | `quick-add › add-keep-text` | `add-keep-text.png` |
-| `add-defaults`: project inside a project, today inside Today, label inside a label view | ✓ | Built for Today; project and label defaults with S7 | S5 | `QuickAddParityTests.test_add_defaults` | `quick-add › add-defaults` | `add-defaults.png` |
+| `add-defaults`: project inside a project, today inside Today, label inside a label view | ✓ | Built | S5, S7 | `QuickAddParityTests.test_add_defaults`, with the project and label defaults in `ProjectsParityTests.test_projects_open` and `LabelsParityTests.test_labels_view` | `quick-add › add-defaults` | `add-defaults.png` |
 | `add-cancel`: dismissing discards the draft | ✓ | Built | S5 | `QuickAddParityTests.test_add_cancel` | `quick-add › add-cancel` | `add-cancel.png` |
 | `add-repeat`: stays open for the next task | ✓ | Built | S5 | `QuickAddParityTests.test_add_repeat` | `quick-add › add-repeat` | `add-repeat.png` |
 
@@ -48,7 +48,7 @@ What the native iOS app must do to match the web app, row by row from the featur
 | `complete-swipe`: leading swipe completes (*iOS only*) | n/a | Built | S5 | `CompleteParityTests.test_complete_swipe` | n/a | `complete-swipe.png` |
 | `complete-recurring`: moves to the next occurrence with `next due …` toast | ✓ | Built | S5 | `CompleteParityTests.test_complete_recurring` | `complete › complete-recurring` | `complete-recurring.png` |
 | `complete-subtasks`: see `subtasks-complete-parent` | ✓ | Planned | S6 | see Subtasks | see Subtasks | — |
-| `complete-reopen`: `Reopen` in details of a completed task, reached through search | ✓ | Planned | S7 | `SearchParityTests.test_search_completed` | `search › search-completed` | `search-completed.png` |
+| `complete-reopen`: `Reopen` in details of a completed task, reached through search | ✓ | Built (`Reopen` from the result's swipe and context menu; details' `Reopen` with S6) | S7 | `SearchParityTests.test_search_completed` | `search › search-completed` | `search-completed.png` |
 | `complete-history`: a completed tasks list | Planned | Planned | not scheduled | — | — | — |
 
 ### Edit a task
@@ -73,7 +73,7 @@ What the native iOS app must do to match the web app, row by row from the featur
 | `subtasks-nest`: pushes the subtask's details with a back button to the parent | ✓ | Planned | S6 | `SubtasksParityTests.test_subtasks_nest` | `subtasks › subtasks-nest` | `subtasks-nest.png` |
 | `subtasks-complete-parent`: cascades, undo restores each | ✓ | Planned | S6 | `SubtasksParityTests.test_subtasks_complete_parent` | `subtasks › subtasks-complete-parent` | `subtasks-complete-parent.png` |
 | `subtasks-recurring`: a recurring parent reopens its subtasks | ✓ | Planned | S6 | `SubtasksParityTests.test_subtasks_recurring` | `subtasks › subtasks-recurring` | `subtasks-recurring.png` |
-| `subtasks-search`: found by its own text, names its parent | ✓ | Planned | S7 | `SearchParityTests.test_subtasks_search` | `search › subtasks-search` | `subtasks-search.png` |
+| `subtasks-search`: found by its own text, names its parent | ✓ | Planned (result rows name the parent; the XCUITest needs S6's `Add subtask`) | S7 | `SearchParityTests.test_subtasks_search` | `search › subtasks-search` | `subtasks-search.png` |
 | `subtasks-dated`: dated subtasks in Today and Upcoming under their parent | ✓ | Planned | S6 | `SubtasksParityTests.test_subtasks_dated` | `subtasks › subtasks-dated` | `subtasks-dated.png` |
 
 ### Recurring tasks
@@ -126,13 +126,13 @@ The web's Web Push rows map to native local notifications. XCUITests check the p
 
 | Feature | Web | iOS | Slice | XCUITest | Playwright | Screenshot |
 | --- | --- | --- | --- | --- | --- | --- |
-| `projects-create`: `Add project` in Browse | ✓ | Planned | S7 | `ProjectsParityTests.test_projects_create` | `projects › projects-create` | `projects-create.png` |
-| `projects-open`: a project lists its tasks | ✓ | Planned | S7 | `ProjectsParityTests.test_projects_open` | `projects › projects-open` | `projects-open.png` |
+| `projects-create`: `Add project` in Browse | ✓ | Built | S7 | `ProjectsParityTests.test_projects_create` | `projects › projects-create` | `projects-create.png` |
+| `projects-open`: a project lists its tasks | ✓ | Built | S7 | `ProjectsParityTests.test_projects_open` | `projects › projects-open` | `projects-open.png` |
 | `projects-assign`: `#Name` in quick add | ✓ | Built | S3→S5 | `QuickAddParityTests.test_projects_assign` | `quick-add › projects-assign` | `projects-assign.png` |
 | `projects-autocomplete`: `#` suggestions with order, create row, and keys | ✓ | Built (keys not covered by XCUITest) | S5 | `QuickAddParityTests.test_projects_autocomplete` | `quick-add › projects-autocomplete` | `projects-autocomplete.png` |
 | `projects-move`: project menu in task details | ✓ | Planned | S6 | `DetailsParityTests.test_projects_move` | `details › projects-move` | `projects-move.png` |
-| `projects-rename`: from the project's toolbar menu | ✓ | Planned | S7 | `ProjectsParityTests.test_projects_rename` | `projects › projects-rename` | `projects-rename.png` |
-| `projects-delete`: confirms with the task count and deletes the tasks | ✓ | Planned | S7 | `ProjectsParityTests.test_projects_delete` | `projects › projects-delete` | `projects-delete.png` |
+| `projects-rename`: from the project's toolbar menu | ✓ | Built | S7 | `ProjectsParityTests.test_projects_rename` | `projects › projects-rename` | `projects-rename.png` |
+| `projects-delete`: confirms with the task count and deletes the tasks | ✓ | Built | S7 | `ProjectsParityTests.test_projects_delete` | `projects › projects-delete` | `projects-delete.png` |
 
 ### Labels
 
@@ -143,23 +143,23 @@ The web's Web Push rows map to native local notifications. XCUITests check the p
 | `labels-keep-text`: `Keep as text` on a label chip | ✓ | Built | S5 | `QuickAddParityTests.test_labels_keep_text` | `quick-add › labels-keep-text` | `labels-keep-text.png` |
 | `labels-chips`: chips on rows | ✓ | Built | S5 | `ViewsParityTests.test_labels_chips` | `views › labels-chips` | `labels-chips.png` |
 | `labels-picker`: toggle and create in a popover that stays open | ✓ | Planned | S6 | `DetailsParityTests.test_labels_picker` | `details › labels-picker` | `labels-picker.png` |
-| `labels-view`: every open task with the label, naming its project | ✓ | Planned | S7 | `LabelsParityTests.test_labels_view` | `labels › labels-view` | `labels-view.png` |
-| `labels-rename`: unique ignoring case | ✓ | Planned | S7 | `LabelsParityTests.test_labels_rename` | `labels › labels-rename` | `labels-rename.png` |
-| `labels-delete`: keeps the tasks | ✓ | Planned | S7 | `LabelsParityTests.test_labels_delete` | `labels › labels-delete` | `labels-delete.png` |
-| `labels-search`: label results open the label view | ✓ | Planned | S7 | `SearchParityTests.test_labels_search` | `search › labels-search` | `labels-search.png` |
+| `labels-view`: every open task with the label, naming its project | ✓ | Built | S7 | `LabelsParityTests.test_labels_view` | `labels › labels-view` | `labels-view.png` |
+| `labels-rename`: unique ignoring case | ✓ | Built | S7 | `LabelsParityTests.test_labels_rename` | `labels › labels-rename` | `labels-rename.png` |
+| `labels-delete`: keeps the tasks | ✓ | Built | S7 | `LabelsParityTests.test_labels_delete` | `labels › labels-delete` | `labels-delete.png` |
+| `labels-search`: label results open the label view | ✓ | Built | S7 | `SearchParityTests.test_labels_search` | `search › labels-search` | `labels-search.png` |
 
 ### Search
 
 | Feature | Web | iOS | Slice | XCUITest | Playwright | Screenshot |
 | --- | --- | --- | --- | --- | --- | --- |
-| `search-open`: the search tab (and `/` or Cmd-K on a hardware keyboard) | ✓ | Planned | S7 | `SearchParityTests.test_search_open` | `search › search-open` | `search-open.png` |
-| `search-match`: titles, notes, projects, labels; every word; accents ignored | ✓ | Planned | S4→S7 | `SearchParityTests.test_search_match` | `search › search-match` | `search-match.png` |
-| `search-rank`: field weights and word-start bonus | ✓ | Planned | S4→S7 | covered by `search-match` | covered by `search-match` | — |
-| `search-highlight`: matched spans in titles, excerpts, names, chips | ✓ | Planned | S7 | `SearchParityTests.test_search_highlight` | `search › search-highlight` | `search-highlight.png` |
-| `search-keyboard`: Up, Down, Enter, Escape (iPad hardware keyboard on iOS) | ✓ | Planned | S7 | `SearchParityTests.test_search_keyboard` | `search › search-keyboard` | `search-keyboard.png` |
-| `search-open-result`: task opens details, project or label navigates | ✓ | Planned | S7 | `SearchParityTests.test_search_open_result` | `search › search-open-result` | `search-open-result.png` |
-| `search-completed`: `Completed` group and `Reopen` | ✓ | Planned | S7 | `SearchParityTests.test_search_completed` | `search › search-completed` | `search-completed.png` |
-| `search-empty`: `No results for "<query>"` | ✓ | Planned | S7 | `SearchParityTests.test_search_empty` | `search › search-empty` | `search-empty.png` |
+| `search-open`: the search tab (and `/` or Cmd-K on a hardware keyboard) | ✓ | Built (Cmd-K, not covered by XCUITest; `/` stays web only, see [iOS app](decisions/ios.md#ui-mapping)) | S7 | `SearchParityTests.test_search_open` | `search › search-open` | `search-open.png` |
+| `search-match`: titles, notes, projects, labels; every word; accents ignored | ✓ | Built | S4→S7 | `SearchParityTests.test_search_match` | `search › search-match` | `search-match.png` |
+| `search-rank`: field weights and word-start bonus | ✓ | Built | S4→S7 | covered by `search-match` | covered by `search-match` | — |
+| `search-highlight`: matched spans in titles, excerpts, names, chips | ✓ | Built | S7 | `SearchParityTests.test_search_highlight` | `search › search-highlight` | `search-highlight.png` |
+| `search-keyboard`: Up, Down, Enter, Escape (iPad hardware keyboard on iOS) | ✓ | Built (Return; iPad Up and Down not covered by XCUITest) | S7 | `SearchParityTests.test_search_keyboard` | `search › search-keyboard` | `search-keyboard.png` |
+| `search-open-result`: task opens details, project or label navigates | ✓ | Built | S7 | `SearchParityTests.test_search_open_result` | `search › search-open-result` | `search-open-result.png` |
+| `search-completed`: `Completed` group and `Reopen` | ✓ | Built (`Reopen` from the result's swipe and context menu; details' `Reopen` with S6) | S7 | `SearchParityTests.test_search_completed` | `search › search-completed` | `search-completed.png` |
+| `search-empty`: `No results for "<query>"` | ✓ | Built | S7 | `SearchParityTests.test_search_empty` | `search › search-empty` | `search-empty.png` |
 
 ### Settings and theme
 

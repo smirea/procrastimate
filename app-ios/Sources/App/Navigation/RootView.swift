@@ -35,6 +35,7 @@ struct RootView: View {
             ToastStack().padding(.bottom, 124)
         }
         .sensoryFeedback(.success, trigger: actions.completions)
+        .searchShortcuts()
         .sheet(item: $navigator.sheet) { SheetView(sheet: $0) }
     }
 }
