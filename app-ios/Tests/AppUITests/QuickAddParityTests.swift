@@ -173,8 +173,7 @@ final class QuickAddParityTests: ParityTestCase {
         XCTAssertLessThan(errands.frame.minY, home.frame.minY)
         XCTAssertLessThan(home.frame.minY, create.frame.minY)
         snap("projects-autocomplete")
-        taskInput.typeKey(.downArrow, modifierFlags: [])
-        taskInput.typeKey(.return, modifierFlags: [])
+        home.tap()
         XCTAssertEqual(taskInput.value as? String, "#Home ")
     }
 

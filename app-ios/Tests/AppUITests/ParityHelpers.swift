@@ -71,11 +71,13 @@ extension ParityTestCase {
     /// The iOS 26 tab bar keeps badges out of the accessibility tree, so tests count the rows a badge is computed from
     /// and leave the badge itself to the screenshot.
     func expectRows(_ count: Int, file: StaticString = #filePath, line: UInt = #line) {
-        let rows = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH 'task-'"))
+        func rows(in snapshot: any XCUIElementSnapshot) -> [String] {
+            (snapshot.identifier.hasPrefix("task-") ? [snapshot.identifier] : []) + snapshot.children.flatMap(rows)
+        }
         var titles = Set<String>()
         let deadline = Date().addingTimeInterval(5)
         repeat {
-            titles = Set(rows.allElementsBoundByIndex.map(\.identifier))
+            if let snapshot = try? app.snapshot() { titles = Set(rows(in: snapshot)) }
             if titles.count == count { return }
             Thread.sleep(forTimeInterval: 0.25)
         } while Date() < deadline

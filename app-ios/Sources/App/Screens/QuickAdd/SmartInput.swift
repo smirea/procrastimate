@@ -22,6 +22,9 @@ struct SmartInput: View {
     @State private var navigated = false
     /// The sigil position dismissed with Escape.
     @State private var dismissed: Int?
+    /// The text this editor last wrote or showed. Typing can run ahead of rendering, so `onChange(of: text)` may
+    /// still report an older keystroke, which must not overwrite the newer editor contents.
+    @State private var written = ""
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -54,7 +57,10 @@ struct SmartInput: View {
             active = 0
             navigated = false
         }
-        .onAppear { attributed = AttributedString(text) }
+        .onAppear {
+            attributed = AttributedString(text)
+            written = text
+        }
         .onChange(of: attributed) { typed() }
         .onChange(of: text) { replaceIfNeeded() }
         .onChange(of: Styled(text: text, tokens: tokens), initial: true) { restyle() }
@@ -121,18 +127,23 @@ struct SmartInput: View {
                 pick(suggestion, in: match)
                 return
             }
-            text = plain.replacingOccurrences(of: "\n", with: "")
+            write(plain.replacingOccurrences(of: "\n", with: ""))
             onSubmit()
             // Saving can clear the text in the same burst, which `onChange(of: text)` never sees.
             replace(with: text, caret: text.utf16.count)
         } else if plain != text {
-            text = plain
+            write(plain)
         }
+    }
+
+    private func write(_ value: String) {
+        written = value
+        text = value
     }
 
     /// The text changed from outside, as after saving, `Keep as text`, or a pick.
     private func replaceIfNeeded() {
-        guard text != String(attributed.characters) else { return }
+        guard text != written, text != String(attributed.characters) else { return }
         replace(with: text, caret: text.utf16.count)
     }
 
@@ -140,6 +151,7 @@ struct SmartInput: View {
         var next = AttributedString(value)
         style(&next, value)
         attributed = next
+        written = value
         selection = AttributedTextSelection(insertionPoint: index(caret, in: next, value))
     }
 
@@ -167,7 +179,7 @@ struct SmartInput: View {
         let inserted = QuickAddDraft.insertingName(
             name, sigil: match.kind.sigil.rawValue, into: text, from: match.fragment.start, to: match.fragment.end
         )
-        text = inserted.text
+        write(inserted.text)
         replace(with: inserted.text, caret: inserted.caret)
         focused.wrappedValue = true
     }

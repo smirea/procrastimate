@@ -129,7 +129,7 @@ The web's Web Push rows map to native local notifications. XCUITests check the p
 | `projects-create`: `Add project` in Browse | ✓ | Planned | S7 | `ProjectsParityTests.test_projects_create` | `projects › projects-create` | `projects-create.png` |
 | `projects-open`: a project lists its tasks | ✓ | Planned | S7 | `ProjectsParityTests.test_projects_open` | `projects › projects-open` | `projects-open.png` |
 | `projects-assign`: `#Name` in quick add | ✓ | Built | S3→S5 | `QuickAddParityTests.test_projects_assign` | `quick-add › projects-assign` | `projects-assign.png` |
-| `projects-autocomplete`: `#` suggestions with order, create row, and keys | ✓ | Built | S5 | `QuickAddParityTests.test_projects_autocomplete` | `quick-add › projects-autocomplete` | `projects-autocomplete.png` |
+| `projects-autocomplete`: `#` suggestions with order, create row, and keys | ✓ | Built (keys not covered by XCUITest) | S5 | `QuickAddParityTests.test_projects_autocomplete` | `quick-add › projects-autocomplete` | `projects-autocomplete.png` |
 | `projects-move`: project menu in task details | ✓ | Planned | S6 | `DetailsParityTests.test_projects_move` | `details › projects-move` | `projects-move.png` |
 | `projects-rename`: from the project's toolbar menu | ✓ | Planned | S7 | `ProjectsParityTests.test_projects_rename` | `projects › projects-rename` | `projects-rename.png` |
 | `projects-delete`: confirms with the task count and deletes the tasks | ✓ | Planned | S7 | `ProjectsParityTests.test_projects_delete` | `projects › projects-delete` | `projects-delete.png` |
