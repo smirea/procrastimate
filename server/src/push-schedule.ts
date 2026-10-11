@@ -8,36 +8,49 @@ export const RETRY_DELAY_MS = 60_000;
 export type Delivery = 'sent' | 'gone' | 'retry';
 
 /**
- * The schedule a device should hold after it uploads `incoming`. A push still in `stored` is undelivered even when it
- * is at or before `deliveredThrough`, because a failed send keeps it for a retry.
+ * What a device should have pending after the tasks change. `computed` is every notification the synced tasks make
+ * after `now - STALE_AFTER_MS`. A future one is pending unless it was delivered. A past one stays pending only while
+ * `stored` still holds it, as a retry or for an alarm that has not fired yet, so making a task due a minute ago never
+ * notifies, and completing or deleting a task drops its pushes even mid-retry.
  */
 export function planSchedule(
-	incoming: ScheduledPush[],
-	stored: ScheduledPush[],
+	computed: readonly ScheduledPush[],
+	stored: readonly ScheduledPush[],
 	deliveredThrough: number,
 	now: number,
 ): ScheduledPush[] {
-	const undelivered = new Set(stored.map(pushTag));
+	const pending = new Set(stored.map(pushTag));
 	const byTag = new Map<string, ScheduledPush>();
-	for (const push of incoming) {
+	for (const push of computed) {
 		const tag = pushTag(push);
-		if ((push.at > deliveredThrough || undelivered.has(tag)) && push.at >= now - STALE_AFTER_MS) byTag.set(tag, push);
+		if (push.at < now - STALE_AFTER_MS) continue;
+		if ((push.at > now && push.at > deliveredThrough) || pending.has(tag)) byTag.set(tag, push);
 	}
 	return [...byTag.values()].sort((a, b) => a.at - b.at).slice(0, MAX_SCHEDULED);
 }
 
-export function splitDue(notifications: ScheduledPush[], now: number) {
+export function splitDue(notifications: readonly ScheduledPush[], now: number) {
 	return {
 		due: notifications.filter(push => push.at <= now),
 		pending: notifications.filter(push => push.at > now),
 	};
 }
 
-/** When the alarm should next fire, or null when nothing is scheduled. Overdue pushes are retries. */
-export function nextAlarm(notifications: ScheduledPush[], now: number): number | null {
+/**
+ * When the alarm should next fire for one device, or null when nothing is pending. A due push the last alarm at
+ * `deliveredThrough` already tried is a retry a minute after that try. One it has not tried is due now.
+ */
+export function nextAlarm(
+	notifications: readonly ScheduledPush[],
+	deliveredThrough: number,
+	now: number,
+): number | null {
 	if (notifications.length === 0) return null;
-	const earliest = Math.min(...notifications.map(push => push.at));
-	return earliest <= now ? now + RETRY_DELAY_MS : earliest;
+	const times = notifications.map(push => {
+		if (push.at > now) return push.at;
+		return push.at > deliveredThrough ? now : Math.max(now, deliveredThrough + RETRY_DELAY_MS);
+	});
+	return Math.min(...times);
 }
 
 /** `status` is null when the request never got a response. */

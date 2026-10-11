@@ -16,15 +16,24 @@ describe('planSchedule', () => {
 		expect(plan.map(p => `${p.taskId}@${p.at - NOW}`)).toEqual(['a@1', 'b@2', 'b@3']);
 	});
 
-	test('drops what was already delivered and what is more than ten minutes stale', () => {
-		const plan = planSchedule(
-			[push('stale', NOW - 600_001), push('late', NOW - 600_000), push('delivered', NOW - 5), push('next', NOW + 5)],
-			[],
-			NOW - 5,
-			NOW,
-		);
-		expect(plan.map(p => p.taskId)).toEqual(['next']);
-		expect(planSchedule([push('late', NOW - 600_000)], [], 0, NOW).map(p => p.taskId)).toEqual(['late']);
+	test('keeps a past push only while it is still pending, and never one more than ten minutes stale', () => {
+		const computed = [
+			push('stale', NOW - 600_001),
+			push('late', NOW - 600_000),
+			push('new', NOW - 5),
+			push('next', NOW + 5),
+		];
+		expect(planSchedule(computed, [], 0, NOW).map(p => p.taskId)).toEqual(['next']);
+		const pending = [push('stale', NOW - 600_001), push('late', NOW - 600_000)];
+		expect(planSchedule(computed, pending, 0, NOW).map(p => p.taskId)).toEqual(['late', 'next']);
+	});
+
+	test('drops a pending push the tasks no longer make', () => {
+		expect(planSchedule([], [push('done', NOW - 5), push('later', NOW + 5)], 0, NOW)).toEqual([]);
+	});
+
+	test('never brings back a future push the alarm already delivered', () => {
+		expect(planSchedule([push('sent', NOW + 5)], [], NOW + 5, NOW)).toEqual([]);
 	});
 
 	test('keeps a push that is still stored for a retry even though it is before deliveredThrough', () => {
@@ -48,10 +57,12 @@ test('splitDue treats now as due', () => {
 	expect(pending.map(p => p.taskId)).toEqual(['later']);
 });
 
-test('nextAlarm wakes for the earliest push, retries overdue ones in a minute, and stops when empty', () => {
-	expect(nextAlarm([push('b', NOW + 9), push('a', NOW + 4)], NOW)).toBe(NOW + 4);
-	expect(nextAlarm([push('retry', NOW - 1), push('later', NOW + 9)], NOW)).toBe(NOW + 60_000);
-	expect(nextAlarm([], NOW)).toBe(null);
+test('nextAlarm wakes for the earliest push, fires an untried due one now, retries a minute after a try, and stops when empty', () => {
+	expect(nextAlarm([push('b', NOW + 9), push('a', NOW + 4)], 0, NOW)).toBe(NOW + 4);
+	expect(nextAlarm([push('untried', NOW - 10), push('later', NOW + 9)], NOW - 20, NOW)).toBe(NOW);
+	expect(nextAlarm([push('retry', NOW - 10), push('later', NOW + 120_000)], NOW - 5, NOW)).toBe(NOW - 5 + 60_000);
+	expect(nextAlarm([push('retry', NOW - 120_000)], NOW - 100_000, NOW)).toBe(NOW);
+	expect(nextAlarm([], 0, NOW)).toBe(null);
 });
 
 test('classifyDelivery maps push service responses', () => {

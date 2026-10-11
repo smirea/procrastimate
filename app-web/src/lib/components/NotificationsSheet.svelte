@@ -3,6 +3,7 @@
 	import { fade, fly, scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import X from 'phosphor-svelte/lib/X';
+	import ArrowsClockwise from 'phosphor-svelte/lib/ArrowsClockwise';
 	import Bell from 'phosphor-svelte/lib/Bell';
 	import BellRinging from 'phosphor-svelte/lib/BellRinging';
 	import BellSlash from 'phosphor-svelte/lib/BellSlash';
@@ -10,8 +11,9 @@
 	import Export from 'phosphor-svelte/lib/Export';
 	import PlusSquare from 'phosphor-svelte/lib/PlusSquare';
 	import WarningCircle from 'phosphor-svelte/lib/WarningCircle';
+	import { upcomingNotifications } from 'shared/notifications.ts';
+	import { MAX_SCHEDULED } from 'shared/push.ts';
 	import { push, type PushState } from '../push.svelte.ts';
-	import { pushSchedule } from '../push-schedule.ts';
 	import { store } from '../store.svelte.ts';
 	import { clock, mobile, sheets, motion } from '../ui.svelte.ts';
 
@@ -23,7 +25,9 @@
 	let test = $state<'idle' | 'sending' | 'sent' | 'failed'>('idle');
 	let dialog: HTMLDivElement;
 
-	const scheduled = $derived(push.state.kind === 'on' ? pushSchedule(store.tasks, clock.now).length : 0);
+	const scheduled = $derived(
+		push.state.kind === 'on' ? upcomingNotifications(store.tasks, clock.now, MAX_SCHEDULED).length : 0,
+	);
 	const close = () => sheets.close();
 
 	async function sendTest() {
@@ -70,6 +74,20 @@
 						{ icon: Bell, parts: ['Open Procrastimate from your Home Screen and turn on notifications here.'] },
 					],
 					actions: [{ label: 'Got it', run: close }],
+				};
+			case 'unpaired':
+				return {
+					icon: ArrowsClockwise,
+					heading: 'Turn on sync first',
+					body: [
+						'Notifications come from the server, which only knows your tasks once this device syncs. Turn on sync, then come back here.',
+						'Reminders still show while Procrastimate is open.',
+					],
+					actions: [
+						...install,
+						{ label: 'Not now', run: close },
+						{ label: 'Turn on sync', run: () => sheets.openSettings(), primary: true },
+					],
 				};
 			case 'denied':
 				return {

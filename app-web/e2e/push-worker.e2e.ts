@@ -1,11 +1,13 @@
 import { createServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
-import type { Page } from '@playwright/test';
-import type { PushMessage, ScheduledPush } from 'shared/push.ts';
+import type { APIRequestContext, Page } from '@playwright/test';
+import type { DeviceCredentials } from 'shared/auth.ts';
+import type { PushMessage, PushScheduleResponse } from 'shared/push.ts';
 import { createReceiverKeys, decryptPush, verifyVapid } from '../../server/src/push-receiver.ts';
+import { SYNC_SETUP_CODE } from '../playwright.config.ts';
 import { expect, test, type App } from './fixtures.ts';
 
-test.skip(process.env.E2E_WORKER !== '1', 'Needs the Worker, its Durable Objects, and VAPID keys');
+test.skip(process.env.E2E_WORKER !== '1', 'Needs the Worker, its Durable Object alarm, and VAPID keys');
 
 type Received = { message: PushMessage; vapid: boolean };
 
@@ -61,7 +63,27 @@ const now = new Date();
 const TODAY = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 2);
 const tomorrowAt = (hh: number, mm = 0) => TODAY + 86_400_000 + (hh * 60 + mm) * 60_000;
 
-test('the Worker keeps the schedule in sync with every change and pushes an encrypted test notification', async ({
+/** The Worker's account outlives a run and every test shares it, so titles carry a random suffix. */
+const suffix = () => crypto.randomUUID().slice(0, 8);
+
+async function setUpSync(app: App) {
+	await app.openSettings();
+	await app.settings().getByRole('button', { name: 'Set up sync' }).click();
+	await app.settings().getByRole('textbox', { name: 'Setup code' }).fill(SYNC_SETUP_CODE);
+	await app.settings().getByRole('button', { name: 'Turn on sync' }).click();
+	await expect(app.settings().getByRole('status', { name: 'Sync status' })).toHaveText('Up to date');
+	await app.page.keyboard.press('Escape');
+}
+
+async function schedule(request: APIRequestContext, token: string, tag: string) {
+	const response = await request.get('/api/push/schedule', { headers: { Authorization: `Bearer ${token}` } });
+	const { notifications } = (await response.json()) as PushScheduleResponse;
+	return notifications
+		.filter(push => push.title.endsWith(tag))
+		.map(push => `${push.title.replace(` ${tag}`, '')}@${push.at}: ${push.body}`);
+}
+
+test('the Worker computes the schedule from synced tasks and pushes an encrypted test notification', async ({
 	app,
 	page,
 }) => {
@@ -69,11 +91,9 @@ test('the Worker keeps the schedule in sync with every change and pushes an encr
 	await grantSubscription(page, service.subscription);
 	await app.setNow(new Date(TODAY + 10 * 3_600_000));
 	await page.reload();
-	const schedule = async () => {
-		const url = `/api/push/schedule?endpoint=${encodeURIComponent(service.subscription.endpoint)}`;
-		const { notifications } = (await (await page.request.get(url)).json()) as { notifications: ScheduledPush[] };
-		return notifications.map(push => `${push.title}@${push.at}: ${push.body}`);
-	};
+	await setUpSync(app);
+	const token = (await page.evaluate(() => localStorage.getItem('procrastimate-device')))!;
+	const tag = suffix();
 
 	await page
 		.getByRole('navigation', { name: 'Main' })
@@ -97,13 +117,13 @@ test('the Worker keeps the schedule in sync with every change and pushes an encr
 	await page.keyboard.press('Escape');
 
 	await app.add(
-		'Call mom tomorrow 9am remind me at 9am',
-		'Gym tomorrow 6pm r30m',
-		'Taxes tomorrow',
-		'Pills every day 8am',
+		`Call mom ${tag} tomorrow 9am remind me at 9am`,
+		`Gym ${tag} tomorrow 6pm r30m`,
+		`Taxes ${tag} tomorrow`,
+		`Pills ${tag} every day 8am`,
 	);
 	await expect
-		.poll(schedule)
+		.poll(() => schedule(page.request, token, tag))
 		.toEqual([
 			`Pills@${tomorrowAt(8)}: Due now`,
 			`Call mom@${tomorrowAt(9)}: Due now`,
@@ -112,40 +132,92 @@ test('the Worker keeps the schedule in sync with every change and pushes an encr
 		]);
 
 	await app.go('Upcoming');
-	await app.row('Pills').getByRole('checkbox', { name: 'Complete Pills' }).click();
-	await app.row('Gym').getByRole('button', { name: /Gym/ }).click();
+	await app
+		.row(`Pills ${tag}`)
+		.getByRole('checkbox', { name: `Complete Pills ${tag}` })
+		.click();
+	await app.row(`Gym ${tag}`).getByRole('button', { name: /Gym/ }).click();
 	const title = app.details().getByRole('textbox', { name: 'Title' });
-	await title.fill('Gym tomorrow 7pm');
+	await title.fill(`Gym ${tag} tomorrow 7pm`);
 	await title.press('Enter');
 	await app.details().getByRole('button', { name: 'Close' }).click();
 	await app
-		.row('Call mom')
+		.row(`Call mom ${tag}`)
 		.getByRole('button', { name: /Call mom/ })
 		.click();
 	await app.details().getByRole('button', { name: 'Delete task' }).click();
 	await expect
-		.poll(schedule)
+		.poll(() => schedule(page.request, token, tag))
 		.toEqual([
 			`Gym@${tomorrowAt(18, 30)}: Due at 7:00 PM`,
 			`Gym@${tomorrowAt(19)}: Due now`,
 			`Pills@${tomorrowAt(8) + 86_400_000}: Due now`,
 		]);
+
+	await page
+		.getByRole('navigation', { name: 'Main' })
+		.getByRole('button', { name: /^Notifications/ })
+		.click();
+	await sheet(app).getByRole('button', { name: 'Turn off' }).click();
+	await expect.poll(() => schedule(page.request, token, tag)).toEqual([]);
 	service.close();
 });
 
-test('the Worker delivers a scheduled push at its time once, even when the device resyncs it', async ({ page }) => {
+test('the alarm pushes a task synced from another device once, at its time', async ({ request }) => {
+	test.setTimeout(120_000);
 	const service = await startPushService();
-	const due = { at: Date.now() + 1500, taskId: 'task-1', title: 'Water plants', body: 'Due now' };
-	const put = () =>
-		page.request.put('/api/push/schedule', { data: { subscription: service.subscription, notifications: [due] } });
-	expect(await (await put()).json()).toEqual({ ok: true, scheduled: 1 });
+	const setup = async (name: string) =>
+		(await (
+			await request.post('/api/auth/setup', { data: { code: SYNC_SETUP_CODE, name } })
+		).json()) as DeviceCredentials;
+	const phone = await setup('Phone');
+	const mac = await setup('Mac');
+	const subscribed = await request.put('/api/push/subscription', {
+		headers: { Authorization: `Bearer ${phone.token}` },
+		data: { subscription: service.subscription },
+	});
+	expect(await subscribed.json()).toEqual({ ok: true });
 
-	await expect
-		.poll(() => service.received.map(r => r.message), { timeout: 10_000 })
-		.toEqual([{ title: 'Water plants', body: 'Due now', tag: `task-1:${due.at}`, taskId: 'task-1' }]);
-	expect(service.received[0]?.vapid).toBe(true);
-	expect(await (await put()).json()).toEqual({ ok: true, scheduled: 0 });
-	await page.waitForTimeout(1500);
-	expect(service.received.length).toBe(1);
+	// Due times are whole minutes, so the task is due at the next minute at least five seconds away.
+	const at = Math.ceil((Date.now() + 5000) / 60_000) * 60_000;
+	const iso = new Date(at).toISOString();
+	const id = crypto.randomUUID();
+	const title = `Water plants ${suffix()}`;
+	const push = async (kind: string, entityId: string, fields: object) => {
+		const op = { opId: crypto.randomUUID(), hlc: `${Date.now()}:0:${mac.deviceId}`, kind, id: entityId, fields };
+		const response = await request.post('/api/sync', {
+			headers: { Authorization: `Bearer ${mac.token}` },
+			data: { cursor: 0, ops: [op] },
+		});
+		expect(response.status()).toBe(200);
+	};
+	await push('settings', 'settings', { timeZone: 'UTC' });
+	await push('task', id, {
+		parentId: null,
+		order: 0,
+		title,
+		notes: '',
+		projectId: null,
+		labelIds: [],
+		due: { date: iso.slice(0, 10), time: iso.slice(11, 16) },
+		recurrence: null,
+		priority: 4,
+		reminders: [],
+		createdAt: Date.now(),
+		completedAt: null,
+		sourceKey: null,
+		deleted: false,
+	});
+
+	const deliveries = () => service.received.filter(r => r.message.title === title);
+	await expect.poll(() => deliveries().length, { timeout: 90_000 }).toBe(1);
+	expect(deliveries()[0]).toEqual({
+		message: { title, body: 'Due now', tag: `${id}:${at}`, taskId: id },
+		vapid: true,
+	});
+
+	await push('task', id, { notes: 'resynced' });
+	await new Promise(resolve => setTimeout(resolve, 2000));
+	expect(deliveries().length).toBe(1);
 	service.close();
 });

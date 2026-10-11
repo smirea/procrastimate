@@ -1,9 +1,9 @@
 import { replaceState } from '$app/navigation';
 import { page } from '$app/state';
-import { pushSubscriptionSchema, type PushSubscriptionInfo, type ScheduleRequest } from 'shared/push.ts';
+import { pushSubscriptionSchema, type PushSubscriptionInfo } from 'shared/push.ts';
 import { notificationTimes, type Due, type Reminder } from 'shared/task.ts';
-import { pushSchedule } from './push-schedule.ts';
 import { store } from './store.svelte.ts';
+import { deviceToken, sync } from './sync.svelte.ts';
 import { sheets, toasts } from './ui.svelte.ts';
 
 /** Where this device stands with Web Push. Each kind is one view in the Notifications sheet. */
@@ -14,6 +14,8 @@ export type PushState =
 	| { kind: 'install' }
 	/** The server has no push key, as with the local Bun dev server. */
 	| { kind: 'unavailable' }
+	/** The server computes notifications from synced tasks, so push needs this device paired first. */
+	| { kind: 'unpaired' }
 	/** Permission not asked yet, or granted without a subscription. */
 	| { kind: 'off' }
 	| { kind: 'enabling' }
@@ -23,10 +25,6 @@ export type PushState =
 
 /** Chromium's install prompt, which lib.dom does not type. */
 type InstallPromptEvent = Event & { prompt: () => Promise<unknown> };
-
-const SYNC_DELAY = 300;
-/** Browsers reject a `keepalive` request whose body exceeds 64 KiB, so a larger schedule syncs without it. */
-const KEEPALIVE_LIMIT = 60_000;
 
 const isIos = () =>
 	/iPhone|iPad|iPod/.test(navigator.userAgent) ||
@@ -42,13 +40,9 @@ class Push {
 
 	#key: Uint8Array<ArrayBuffer> | null = null;
 	#nudged = false;
-	#lastSent: string | null = null;
-	/** Compared before `#lastSent`, so returning to the last sent schedule while another uploads still resends it. */
-	#inFlight: string | null = null;
-	#pending: string | null = null;
-	#failed = false;
-	#timer: ReturnType<typeof setTimeout> | undefined;
-	#sending: Promise<void> = Promise.resolve();
+	#paired: boolean | null = null;
+	/** The subscription the server has for this device's token, or null until it confirms one. */
+	#registered: string | null = null;
 
 	/** Detects the state and listens for what can change it. Returns the cleanup. */
 	start() {
@@ -64,8 +58,7 @@ class Push {
 			],
 			[window, 'appinstalled', () => (this.installPrompt = null)],
 			[window, 'online', () => this.#retry()],
-			[document, 'visibilitychange', () => (document.visibilityState === 'visible' ? this.#retry() : this.#flush())],
-			[window, 'pagehide', () => this.#flush()],
+			[document, 'visibilitychange', () => document.visibilityState === 'visible' && this.#retry()],
 		];
 		if ('serviceWorker' in navigator) {
 			listeners.push([navigator.serviceWorker, 'message', event => openTask((event as MessageEvent).data)]);
@@ -89,16 +82,28 @@ class Push {
 		const key = await fetchKey();
 		if (!key) return { kind: 'unavailable' };
 		this.#key = key;
+		if (!store.paired) return { kind: 'unpaired' };
 		if (Notification.permission === 'denied') return { kind: 'denied' };
 		const registration = await navigator.serviceWorker.getRegistration();
 		const subscription = await registration?.pushManager.getSubscription();
 		if (!subscription) return { kind: 'off' };
 		if (Notification.permission === 'granted' && sameKey(subscription.options.applicationServerKey, key)) {
-			return { kind: 'on', subscription: pushSubscriptionSchema.parse(subscription.toJSON()) };
+			const info = pushSubscriptionSchema.parse(subscription.toJSON());
+			await this.#register(info);
+			return { kind: 'on', subscription: info };
 		}
 		// A rotated server key or a reset permission leaves a subscription the server can no longer use.
 		await subscription.unsubscribe();
 		return { kind: 'off' };
+	}
+
+	/** Detects again when this device pairs or unpairs, since push needs a paired device. */
+	follow(paired: boolean) {
+		const changed = this.#paired !== null && this.#paired !== paired;
+		this.#paired = paired;
+		if (!changed) return;
+		this.#registered = null;
+		void this.detect();
 	}
 
 	/** Call straight from a click handler: iOS only shows the permission prompt during a user gesture. */
@@ -121,7 +126,9 @@ class Push {
 				userVisibleOnly: true,
 				applicationServerKey: key,
 			});
-			this.state = { kind: 'on', subscription: pushSubscriptionSchema.parse(subscription.toJSON()) };
+			const info = pushSubscriptionSchema.parse(subscription.toJSON());
+			await this.#register(info);
+			this.state = { kind: 'on', subscription: info };
 		} catch (error) {
 			this.state = { kind: 'error', message: messageOf(error) };
 		}
@@ -129,14 +136,9 @@ class Push {
 
 	async disable() {
 		if (this.state.kind !== 'on') return;
-		const { endpoint } = this.state.subscription;
-		this.#stopSync();
+		this.#registered = null;
 		this.state = { kind: 'off' };
-		await fetch('/api/push/schedule', {
-			method: 'DELETE',
-			headers: JSON_HEADERS,
-			body: JSON.stringify({ endpoint }),
-		}).catch(() => {});
+		await this.#call('DELETE');
 		await this.#unsubscribe();
 	}
 
@@ -157,73 +159,42 @@ class Push {
 
 	/** Offers the Notifications sheet once per session, when a save first gives a task a time to notify. */
 	nudge(due: Due | null, reminders: readonly Reminder[]) {
-		if (this.#nudged || (this.state.kind !== 'off' && this.state.kind !== 'install')) return;
+		const offerable = this.state.kind === 'off' || this.state.kind === 'install' || this.state.kind === 'unpaired';
+		if (this.#nudged || !offerable) return;
 		if (!notificationTimes(due, reminders).length) return;
 		this.#nudged = true;
 		toasts.show('Get notified when it’s due?', { label: 'Turn on', run: () => sheets.openNotifications() }, 8000);
 	}
 
-	/** Replaces the server's schedule for this device. The first sync after turning on or starting goes out at once. */
-	sync() {
-		if (this.state.kind !== 'on') return;
-		const request: ScheduleRequest = {
-			subscription: this.state.subscription,
-			notifications: pushSchedule(store.tasks, Date.now()),
-		};
-		const body = JSON.stringify(request);
-		if (body === (this.#inFlight ?? this.#lastSent)) {
-			this.#pending = null;
-			return;
-		}
-		this.#pending = body;
-		clearTimeout(this.#timer);
-		this.#timer = setTimeout(() => this.#flush(), this.#lastSent === null ? 0 : SYNC_DELAY);
+	/** Registers the subscription under this device's token. The server then pushes whatever the synced tasks call for. */
+	async #register(subscription: PushSubscriptionInfo) {
+		if (this.#registered === subscription.endpoint) return;
+		const response = await this.#call('PUT', { subscription });
+		if (response?.ok) this.#registered = subscription.endpoint;
 	}
 
-	#flush() {
-		clearTimeout(this.#timer);
-		if (this.#pending === null) return;
-		this.#sending = this.#sending.then(() => this.#send());
-	}
-
-	/** Sends run one at a time and always send the latest schedule, so an older one never lands last. */
-	async #send() {
-		const body = this.#pending;
-		if (body === null) return;
-		this.#pending = null;
-		this.#inFlight = body;
-		const response = await fetch('/api/push/schedule', {
-			method: 'PUT',
-			headers: JSON_HEADERS,
-			body,
-			keepalive: body.length < KEEPALIVE_LIMIT,
+	/** Calls the subscription route as this device. A `401` means the device was removed, so sync turns off. */
+	async #call(method: 'PUT' | 'DELETE', body?: unknown): Promise<Response | null> {
+		const token = deviceToken();
+		if (!token) return null;
+		const response = await fetch('/api/push/subscription', {
+			method,
+			headers: { ...JSON_HEADERS, Authorization: `Bearer ${token}` },
+			body: body === undefined ? undefined : JSON.stringify(body),
 		}).catch(() => null);
-		this.#inFlight = null;
-		if (response?.status === 410) return this.#expire();
-		if (response?.ok) {
-			this.#lastSent = body;
-			this.#failed = false;
-			return;
-		}
-		this.#failed = true;
-		this.#pending ??= body;
+		if (response?.status === 401) sync.forget('This device was removed from sync.');
+		return response;
 	}
 
 	#retry() {
 		if (this.state.kind === 'unavailable' || this.state.kind === 'error') void this.detect();
-		else if (this.#failed) this.#flush();
-	}
-
-	#stopSync() {
-		clearTimeout(this.#timer);
-		this.#pending = null;
-		this.#lastSent = null;
-		this.#failed = false;
+		else if (this.state.kind === 'on') void this.#register(this.state.subscription);
 	}
 
 	async #expire() {
-		this.#stopSync();
+		this.#registered = null;
 		this.state = { kind: 'off' };
+		await this.#call('DELETE');
 		await this.#unsubscribe();
 	}
 
@@ -248,6 +219,7 @@ export function pushStatus(state: PushState): string | null {
 			return 'Set up';
 		case 'off':
 		case 'enabling':
+		case 'unpaired':
 		case 'unsupported':
 		case 'unavailable':
 		case 'error':

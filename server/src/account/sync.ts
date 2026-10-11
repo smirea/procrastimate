@@ -10,6 +10,7 @@ import {
 } from '../../../shared/sync/merge';
 import { SYNC_PAGE_SIZE, syncRequestSchema, type Change, type SyncResponse } from '../../../shared/sync/protocol';
 import { authenticate, type AccountRoute } from '../auth';
+import { refreshPush } from './push';
 import type { AccountStore } from './store';
 
 const fail = (status: number, error: string) => Response.json({ ok: false, error }, { status });
@@ -62,6 +63,8 @@ export const syncRoutes: Record<string, AccountRoute> = {
 		if (!deviceId) return fail(401, 'Not signed in');
 		const body = syncRequestSchema.safeParse(await request.json().catch(() => undefined));
 		if (!body.success) return fail(400, 'Invalid sync request');
-		return Response.json(sync(context.store, body.data, context.now));
+		const response = sync(context.store, body.data, context.now);
+		if (body.data.ops.length) await refreshPush(context);
+		return Response.json(response);
 	},
 };

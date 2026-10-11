@@ -1,6 +1,7 @@
 import { z } from 'zod';
+import type { ScheduledNotification } from './notifications.ts';
 
-/** The most notifications one device can have scheduled at once. */
+/** The most notifications the server keeps pending for one device at once. */
 export const MAX_SCHEDULED = 500;
 
 export const pushSubscriptionSchema = z.object({
@@ -11,23 +12,14 @@ export const pushSubscriptionSchema = z.object({
 /** A browser push subscription, as `PushSubscription.toJSON()` returns it. */
 export type PushSubscriptionInfo = z.infer<typeof pushSubscriptionSchema>;
 
-export const scheduledPushSchema = z.object({
-	at: z.number().int().nonnegative(),
-	taskId: z.string().min(1).max(100),
-	title: z.string().max(300),
-	body: z.string().max(200),
-});
-
 /** One system notification the server delivers at `at`, in epoch milliseconds. */
-export type ScheduledPush = z.infer<typeof scheduledPushSchema>;
+export type ScheduledPush = ScheduledNotification;
 
-/** `PUT /api/push/schedule` replaces everything scheduled for the device that owns `subscription`. */
-export const scheduleRequestSchema = z.object({
-	subscription: pushSubscriptionSchema,
-	notifications: z.array(scheduledPushSchema).max(MAX_SCHEDULED),
-});
+/** `PUT /api/push/subscription` registers the subscription of the device whose token the request carries. */
+export const subscribeRequestSchema = z.object({ subscription: pushSubscriptionSchema });
 
-export type ScheduleRequest = z.infer<typeof scheduleRequestSchema>;
+/** `GET /api/push/schedule`: what the server will deliver to the calling device, soonest first. */
+export type PushScheduleResponse = { notifications: ScheduledPush[] };
 
 /** The decrypted push payload the service worker shows. Notifications with the same `tag` replace each other. */
 export type PushMessage = { title: string; body: string; tag: string; taskId: string | null };

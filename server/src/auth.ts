@@ -19,8 +19,16 @@ import type { AccountStore } from './account/store';
  * the pairing screen. Everything here runs inside the `Account` object, against its store.
  */
 
-/** What an account route sees. `setupCode` is undefined when the `SYNC_SETUP_CODE` secret is not set. */
-export type AccountContext = { store: AccountStore; setupCode: string | undefined; now: number };
+/**
+ * What an account route sees. `setupCode` is undefined when the `SYNC_SETUP_CODE` secret is not set. `setAlarm`
+ * arms the object's one alarm, or clears it with null.
+ */
+export type AccountContext = {
+	store: AccountStore;
+	setupCode: string | undefined;
+	now: number;
+	setAlarm: (at: number | null) => Promise<void>;
+};
 
 export type AccountRoute = (request: Request, context: AccountContext) => Promise<Response>;
 

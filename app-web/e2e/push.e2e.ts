@@ -1,25 +1,17 @@
 import type { Page } from '@playwright/test';
-import type { ScheduleRequest } from 'shared/push.ts';
+import type { PushScheduleResponse } from 'shared/push.ts';
+import { SYNC_SETUP_CODE } from '../playwright.config.ts';
 import { expect, test, type App } from './fixtures.ts';
 
 const KEY = Buffer.from(Array.from({ length: 65 }, (_, i) => i)).toString('base64url');
-const ENDPOINT = 'https://push.example/device-1';
-
-type Server = { schedules: ScheduleRequest[]; deleted: unknown[] };
 
 /**
- * Stands in for the push server and the browser's push service. Playwright's Chromium contexts cannot
- * subscribe for real, so `PushManager` hands out a fake subscription bound to the served key.
+ * Stands in for the browser's push service. Playwright's Chromium contexts cannot subscribe for real, so
+ * `PushManager` hands out a fake subscription bound to the served key. Subscriptions still register with the real
+ * server, which computes the schedule from synced tasks.
  */
-async function mockPush(page: Page, permission: 'grant' | 'deny'): Promise<Server> {
-	const server: Server = { schedules: [], deleted: [] };
+async function mockPush(page: Page, permission: 'grant' | 'deny') {
 	await page.route('/api/push/key', route => route.fulfill({ json: { publicKey: KEY } }));
-	await page.route('/api/push/schedule', async route => {
-		const body = route.request().postDataJSON();
-		if (route.request().method() === 'PUT') server.schedules.push(body);
-		else server.deleted.push(body);
-		await route.fulfill({ status: 204 });
-	});
 	await page.addInitScript(
 		([key, endpoint, outcome]) => {
 			const bytes = Uint8Array.from(atob(key.replaceAll('-', '+').replaceAll('_', '/')), c => c.charCodeAt(0));
@@ -41,10 +33,10 @@ async function mockPush(page: Page, permission: 'grant' | 'deny'): Promise<Serve
 			Object.defineProperty(Notification, 'permission', { get: () => permission });
 			Notification.requestPermission = async () => (permission = outcome);
 		},
-		[KEY, ENDPOINT, permission === 'grant' ? 'granted' : 'denied'] as const,
+		// The server keeps one device per endpoint, so parallel tests each need their own.
+		[KEY, `https://push.example/${crypto.randomUUID()}`, permission === 'grant' ? 'granted' : 'denied'] as const,
 	);
 	await page.reload();
-	return server;
 }
 
 const sheet = (app: App) => app.page.getByRole('dialog', { name: 'Notifications' });
@@ -58,6 +50,34 @@ async function openSheet(app: App, heading: string) {
 	await expect(sheet(app).getByRole('heading', { name: heading })).toBeVisible();
 }
 
+/** Sets this device up as a sync device from the open Settings sheet, then closes it. */
+async function setUpSync(app: App) {
+	await app.settings().getByRole('button', { name: 'Set up sync' }).click();
+	await app.settings().getByRole('textbox', { name: 'Setup code' }).fill(SYNC_SETUP_CODE);
+	await app.settings().getByRole('button', { name: 'Turn on sync' }).click();
+	await expect(app.settings().getByRole('status', { name: 'Sync status' })).toHaveText('Up to date');
+	await app.page.keyboard.press('Escape');
+	await expect(app.settings()).toBeHidden();
+}
+
+/** What the server will push to this device for tasks titled `title`, as `title@<ISO time>: body`. */
+async function serverSchedule(page: Page, title: string) {
+	const token = await page.evaluate(() => localStorage.getItem('procrastimate-device'));
+	const response = await page.request.get('/api/push/schedule', { headers: { Authorization: `Bearer ${token}` } });
+	const { notifications } = (await response.json()) as PushScheduleResponse;
+	return notifications
+		.filter(push => push.title === title)
+		.map(push => `${push.title}@${new Date(push.at).toISOString()}: ${push.body}`);
+}
+
+/** The dev server runs on the real clock, so the browser's today is two days ahead of it, at 10:00 UTC. */
+const now = new Date();
+const TODAY = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 2);
+const todayAt = (hh: number, mm = 0) => new Date(TODAY + (hh * 60 + mm) * 60_000).toISOString();
+
+/** Every test that syncs shares the server's one account, so titles carry a random suffix. */
+const unique = (name: string) => `${name} ${crypto.randomUUID().slice(0, 8)}`;
+
 test('the sidebar opens the Notifications sheet, which says when the server cannot push', async ({ app, page }) => {
 	await page.route('/api/push/key', route => route.fulfill({ status: 503, json: { ok: false } }));
 	await page.reload();
@@ -67,67 +87,69 @@ test('the sidebar opens the Notifications sheet, which says when the server cann
 	await expect(sheet(app)).toBeHidden();
 });
 
-test('turning on subscribes, then every change replaces the schedule and turning off deletes it', async ({
+test('push needs sync first, then the server schedules from synced tasks until push is turned off', async ({
 	app,
 	page,
 }) => {
-	const server = await mockPush(page, 'grant');
+	await app.setNow(new Date(TODAY + 10 * 3_600_000));
+	await mockPush(page, 'grant');
+	await openSheet(app, 'Turn on sync first');
+	await expect(notificationsRow(app)).toHaveText(status('Off'));
+	await sheet(app).getByRole('button', { name: 'Turn on sync' }).click();
+	await expect(sheet(app)).toBeHidden();
+	await setUpSync(app);
+
 	await openSheet(app, 'Get notified when tasks are due');
 	await sheet(app).getByRole('button', { name: 'Turn on notifications' }).click();
 	await expect(sheet(app).getByRole('heading', { name: 'Notifications are on' })).toBeVisible();
-	await expect(sheet(app)).toContainText('Nothing scheduled yet');
 	await expect(notificationsRow(app)).toHaveText(status('On'));
-	const subscription = { endpoint: ENDPOINT, keys: { p256dh: 'p256dh-key', auth: 'auth-secret' } };
-	await expect.poll(() => server.schedules).toEqual([{ subscription, notifications: [] }]);
-
 	await page.keyboard.press('Escape');
-	await app.add('Call mom today 10:30am');
-	const callMom = {
-		at: Date.parse('2026-10-14T10:30:00Z'),
-		taskId: expect.any(String),
-		title: 'Call mom',
-		body: 'Due now',
-	};
-	await expect.poll(() => server.schedules.at(-1)).toEqual({ subscription, notifications: [callMom] });
+
+	const title = unique('Call mom');
+	await app.add(`${title} today 11:30am r30m`);
+	await expect
+		.poll(() => serverSchedule(page, title))
+		.toEqual([`${title}@${todayAt(11)}: Due at 11:30 AM`, `${title}@${todayAt(11, 30)}: Due now`]);
 
 	await app.go('Today');
-	await app.row('Call mom').getByRole('checkbox', { name: 'Complete Call mom' }).click();
-	await expect.poll(() => server.schedules.at(-1)).toEqual({ subscription, notifications: [] });
-	expect(server.schedules.length).toBe(3);
+	await app
+		.row(title)
+		.getByRole('checkbox', { name: `Complete ${title}` })
+		.click();
+	await expect.poll(() => serverSchedule(page, title)).toEqual([]);
+	await page.getByRole('status').getByRole('button', { name: 'Undo' }).click();
+	await expect.poll(() => serverSchedule(page, title)).toHaveLength(2);
 
 	await openSheet(app, 'Notifications are on');
 	await sheet(app).getByRole('button', { name: 'Turn off' }).click();
 	await expect(sheet(app).getByRole('heading', { name: 'Get notified when tasks are due' })).toBeVisible();
-	await expect.poll(() => server.deleted).toEqual([{ endpoint: ENDPOINT }]);
+	await expect.poll(() => serverSchedule(page, title)).toEqual([]);
 	await expect(notificationsRow(app)).toHaveText(status('Off'));
 });
 
-test('undoing a change while its upload is in flight uploads the restored schedule last', async ({ app, page }) => {
-	const server = await mockPush(page, 'grant');
+test('removing this device from sync takes push back to turning on sync first', async ({ app, page }) => {
+	await mockPush(page, 'grant');
+	await app.openSettings();
+	await setUpSync(app);
 	await openSheet(app, 'Get notified when tasks are due');
 	await sheet(app).getByRole('button', { name: 'Turn on notifications' }).click();
-	await expect.poll(() => server.schedules.length).toBe(1);
+	await expect(notificationsRow(app)).toHaveText(status('On'));
 	await page.keyboard.press('Escape');
-	await app.add('Call mom today 10:30am');
-	await expect.poll(() => server.schedules.at(-1)?.notifications.length).toBe(1);
 
-	let release = () => {};
-	const held = new Promise<void>(resolve => (release = resolve));
-	await page.route('/api/push/schedule', async route => {
-		server.schedules.push(route.request().postDataJSON());
-		await held;
-		await route.fulfill({ status: 204 });
-	});
-	await app.row('Call mom').getByRole('checkbox', { name: 'Complete Call mom' }).click();
-	await expect.poll(() => server.schedules.at(-1)?.notifications.length).toBe(0);
-	await page.getByRole('status').getByRole('button', { name: 'Undo' }).click();
-	await expect(app.row('Call mom')).toBeVisible();
-	release();
-	await expect.poll(() => server.schedules.at(-1)?.notifications.map(n => n.title)).toEqual(['Call mom']);
+	await app.openSettings();
+	await app
+		.settings()
+		.getByRole('button', { name: /\(this device\)$/ })
+		.click();
+	await expect(app.settings().getByRole('button', { name: 'Set up sync' })).toBeVisible();
+	await page.keyboard.press('Escape');
+	await openSheet(app, 'Turn on sync first');
 });
 
 test('a denied permission explains how to unblock notifications', async ({ app, page }) => {
 	await mockPush(page, 'deny');
+	await app.openSettings();
+	await setUpSync(app);
 	await openSheet(app, 'Get notified when tasks are due');
 	await sheet(app).getByRole('button', { name: 'Turn on notifications' }).click();
 	await expect(sheet(app).getByRole('heading', { name: 'Notifications are blocked' })).toBeVisible();
@@ -145,7 +167,7 @@ test('saving the first timed task while push is off offers to turn it on, once',
 
 	await app.add('Call mom today 10:30am');
 	await nudge.getByRole('button', { name: 'Turn on' }).click();
-	await expect(sheet(app).getByRole('heading', { name: 'Get notified when tasks are due' })).toBeVisible();
+	await expect(sheet(app).getByRole('heading', { name: 'Turn on sync first' })).toBeVisible();
 	await sheet(app).getByRole('button', { name: 'Not now' }).click();
 	await expect(sheet(app)).toBeHidden();
 	await expect(nudge).toHaveCount(0);

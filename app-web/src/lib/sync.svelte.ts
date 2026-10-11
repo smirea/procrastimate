@@ -21,6 +21,9 @@ const COMMIT_DELAY = 1000;
 const INTERVAL = 60_000;
 
 const readToken = () => localStorage.getItem(TOKEN_KEY);
+
+/** This device's sync token, which other API calls that act for the device carry too. */
+export const deviceToken = readToken;
 const zone = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 /** A name for the device list, such as `Chrome on macOS`. */

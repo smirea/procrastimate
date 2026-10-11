@@ -1,4 +1,4 @@
-import type { AccountStore, Device, Entity, LogEntry, Pairing } from './store';
+import type { AccountStore, Device, Entity, LogEntry, Pairing, PushTarget } from './store';
 
 type SqlValue = ArrayBuffer | string | number | null;
 type Row = Record<string, SqlValue>;
@@ -18,6 +18,9 @@ const SCHEMA = [
 		last_seen_at INTEGER NOT NULL, revoked_at INTEGER)`,
 	`CREATE TABLE IF NOT EXISTS pairing (
 		code_hash TEXT PRIMARY KEY, expires_at INTEGER NOT NULL, attempts INTEGER NOT NULL)`,
+	`CREATE TABLE IF NOT EXISTS push (
+		device_id TEXT PRIMARY KEY, subscription TEXT NOT NULL, notifications TEXT NOT NULL,
+		delivered_through INTEGER NOT NULL)`,
 ];
 
 type DeviceRow = {
@@ -31,6 +34,7 @@ type DeviceRow = {
 type PairingRow = { code_hash: string; expires_at: number; attempts: number };
 type EntityRow = { kind: string; id: string; data: string; clocks: string };
 type LogRow = { seq: number; op_id: string; kind: string; id: string; fields: string };
+type PushRow = { device_id: string; subscription: string; notifications: string; delivered_through: number };
 
 const toDevice = (row: DeviceRow): Device => ({
 	id: row.id,
@@ -88,9 +92,15 @@ export function sqliteStore(sql: Sql, transactionSync: <T>(run: () => T) => T): 
 		touchDevice: (id, at) => {
 			all('UPDATE devices SET last_seen_at = ? WHERE id = ?', at, id);
 		},
-		revokeDevice: (id, at) =>
-			all<{ id: string }>('UPDATE devices SET revoked_at = ? WHERE id = ? AND revoked_at IS NULL RETURNING id', at, id)
-				.length > 0,
+		revokeDevice: (id, at) => {
+			const revoked = all<{ id: string }>(
+				'UPDATE devices SET revoked_at = ? WHERE id = ? AND revoked_at IS NULL RETURNING id',
+				at,
+				id,
+			);
+			if (revoked.length) all('DELETE FROM push WHERE device_id = ?', id);
+			return revoked.length > 0;
+		},
 
 		pairing: () => {
 			const row = first<PairingRow>('SELECT * FROM pairing LIMIT 1');
@@ -135,5 +145,25 @@ export function sqliteStore(sql: Sql, transactionSync: <T>(run: () => T) => T): 
 			all<LogRow>('SELECT * FROM log WHERE seq > ? ORDER BY seq LIMIT ?', after, limit).map(toLogEntry),
 		hasOp: opId => first('SELECT 1 AS found FROM log WHERE op_id = ? LIMIT 1', opId) !== null,
 		lastSeq: () => first<{ seq: number | null }>('SELECT MAX(seq) AS seq FROM log')?.seq ?? 0,
+
+		pushTargets: () =>
+			all<PushRow>('SELECT * FROM push ORDER BY device_id').map((row): PushTarget => ({
+				deviceId: row.device_id,
+				subscription: JSON.parse(row.subscription),
+				notifications: JSON.parse(row.notifications),
+				deliveredThrough: row.delivered_through,
+			})),
+		putPushTarget: target => {
+			all(
+				'INSERT OR REPLACE INTO push (device_id, subscription, notifications, delivered_through) VALUES (?, ?, ?, ?)',
+				target.deviceId,
+				JSON.stringify(target.subscription),
+				JSON.stringify(target.notifications),
+				target.deliveredThrough,
+			);
+		},
+		deletePushTarget: deviceId => {
+			all('DELETE FROM push WHERE device_id = ?', deviceId);
+		},
 	};
 }
