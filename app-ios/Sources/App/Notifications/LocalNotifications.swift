@@ -257,12 +257,20 @@ extension LocalNotifications: UNUserNotificationCenterDelegate {
         return isTest ? [.banner, .sound] : []
     }
 
+    /// UIKit asserts when this completion runs off the main thread, which the `async` form of this method does.
     nonisolated func userNotificationCenter(
         _ center: UNUserNotificationCenter,
-        didReceive response: UNNotificationResponse
-    ) async {
-        guard let taskId = response.notification.request.content.userInfo["taskId"] as? String else { return }
-        await MainActor.run { self.open(taskId) }
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping () -> Void
+    ) {
+        let taskId = response.notification.request.content.userInfo["taskId"] as? String
+        nonisolated(unsafe) let done = completionHandler
+        DispatchQueue.main.async {
+            MainActor.assumeIsolated {
+                if let taskId { self.open(taskId) }
+            }
+            done()
+        }
     }
 }
 

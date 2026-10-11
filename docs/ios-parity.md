@@ -169,7 +169,7 @@ The web's Web Push rows map to native local notifications. XCUITests check the p
 | `settings-sheet`: Settings in Browse (the phone web's settings sheet) | ✓ | Built | S8 | `SettingsParityTests.test_settings_sheet` | `settings › settings-sheet` | `settings-sheet.png` |
 | `settings-theme`: the `Theme` segmented control | ✓ | Built | S8 | `SettingsParityTests.test_settings_theme` | `settings › settings-theme` | `settings-theme.png` |
 | `settings-import`: `Import from Todoist` | ✓ | Built | S8 | see Todoist import | see Todoist import | — |
-| `theme-system`: follows the device appearance live | ✓ | Built | S8 | `ThemeParityTests.test_theme_system` | `theme › theme-system` | `theme-system-light.png`, `theme-system-dark.png` |
+| `theme-system`: follows the device appearance live | ✓ | Built | S8 | `ThemeParityTests.test_theme_system` (light only: the CI simulator ignores `XCUIDevice.shared.appearance`) | `theme › theme-system` | `theme-system-light.png`, `theme-system-dark.png` (web) |
 | `theme-override`: `Light` and `Dark` | ✓ | Built | S8 | `ThemeParityTests.test_theme_override` | `theme › theme-override` | `theme-override.png` |
 | `theme-persist`: kept across relaunch, outside task data | ✓ | Built | S8 | `ThemeParityTests.test_theme_persist` | `theme › theme-persist` | `theme-persist.png` |
 | `theme-first-paint`: no flash of the other theme at launch | ✓ | Built | S8 | `ThemeParityTests.test_theme_first_paint` | `theme › theme-first-paint` | — |

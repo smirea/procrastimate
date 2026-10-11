@@ -31,10 +31,7 @@ extension ParityTestCase {
             if dark ? luminance < 0.35 : luminance > 0.75 { return }
             Thread.sleep(forTimeInterval: 0.2)
         } while Date() < deadline
-        XCTFail(
-            "Expected the \(theme) theme, the background's luminance is \(luminance), the device appearance is \(XCUIDevice.shared.appearance.rawValue)",
-            file: file, line: line
-        )
+        XCTFail("Expected the \(theme) theme, the background's luminance is \(luminance)", file: file, line: line)
     }
 
     private func backgroundLuminance() -> Double {
@@ -70,13 +67,14 @@ extension ParityTestCase {
             }
             if let step = steps.first {
                 let candidates = app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", step))
-                if let hit = candidates.allElementsBoundByIndex.first(where: { $0.isHittable }) {
+                if let hit = candidates.allElementsBoundByIndex.last(where: { $0.isHittable }) {
                     hit.tap()
                     steps.removeFirst()
                 }
             }
             Thread.sleep(forTimeInterval: 0.5)
         }
+        print(app.debugDescription)
         XCTFail("Never reached \(file) in the document picker, still to open: \(steps)")
     }
 

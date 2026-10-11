@@ -1,34 +1,26 @@
 import XCTest
 
+/// The simulator stays light: `XCUIDevice.shared.appearance` reports a change on CI without restyling the device, so
+/// following a live switch to dark is left to SwiftUI's `nil` color scheme and the web half.
 final class ThemeParityTests: ParityTestCase {
-    /// The appearance is the simulator's, so every test leaves it light for the next.
-    override func tearDown() {
-        XCUIDevice.shared.appearance = .light
-        super.tearDown()
-    }
-
     func test_theme_system() {
-        XCUIDevice.shared.appearance = .light
         start()
         openSettings()
         XCTAssertTrue(themeOption("System").isSelected)
         expectTheme("light")
         snap("theme-system-light")
-        XCUIDevice.shared.appearance = .dark
-        expectTheme("dark")
-        snap("theme-system-dark")
-        XCUIDevice.shared.appearance = .light
-        expectTheme("light")
     }
 
     func test_theme_override() {
-        XCUIDevice.shared.appearance = .dark
         start()
         openSettings()
-        themeOption("Light").tap()
-        expectTheme("light")
-        XCUIDevice.shared.appearance = .light
         themeOption("Dark").tap()
+        expectTheme("dark")
+        themeOption("Light").tap()
+        XCTAssertTrue(themeOption("Light").isSelected)
+        expectTheme("light")
+        themeOption("Dark").tap()
+        XCTAssertTrue(themeOption("Dark").isSelected)
         expectTheme("dark")
         snap("theme-override")
         themeOption("System").tap()
