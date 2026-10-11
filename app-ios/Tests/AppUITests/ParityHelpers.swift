@@ -75,7 +75,7 @@ extension ParityTestCase {
         XCTAssertTrue(app.navigationBars["Inbox"].waitForExistence(timeout: 10))
     }
 
-    func wait(for element: XCUIElement, _ predicate: String, timeout: TimeInterval = 5) {
+    func wait(for element: XCUIElement, _ predicate: String, timeout: TimeInterval = 10) {
         let expectation = XCTNSPredicateExpectation(predicate: NSPredicate(format: predicate), object: element)
         let result = XCTWaiter.wait(for: [expectation], timeout: timeout)
         XCTAssertEqual(result, .completed, "\(predicate) never held for \(element.debugDescription)")

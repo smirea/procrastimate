@@ -108,11 +108,12 @@ final class DetailsParityTests: ParityTestCase {
         wait(for: taskInput, "value == ''")
         cancelQuickAdd()
         openDetails("Buy milk")
-        // A toolbar menu's label is not reliably exposed, so the menu is found by identifier.
+        // In the toolbar, the menu reads as its visible label, the project name.
         let menu = app.descendants(matching: .any)["Project menu"].firstMatch
+        XCTAssertEqual(menu.label, "Inbox")
         menu.tap()
         app.buttons["Home"].firstMatch.tap()
-        waitGone(app.buttons["Home"].firstMatch)
+        wait(for: menu, "label == 'Home'")
         snap("projects-move")
         closeDetails()
         waitGone(row("Buy milk"))
