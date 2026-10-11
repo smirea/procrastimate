@@ -1,0 +1,53 @@
+name: TestFlight
+
+# Archives Release on a GitHub macOS runner and uploads it to App Store Connect, so TestFlight builds never need
+# Stefan's Mac. Internal group `me` has access to all builds, so every upload reaches it without an extra step.
+# Never runs on pull requests: macOS runners queue, and PR checks stay fast.
+on:
+  push:
+    branches: [master]
+    paths:
+      - app-ios/**
+      - .github/workflows/testflight.yml
+  workflow_dispatch:
+
+concurrency:
+  group: testflight
+  cancel-in-progress: false
+
+env:
+  TZ: UTC
+
+jobs:
+  upload:
+    runs-on: macos-26
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: app-ios
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Toolchain
+        run: xcodebuild -version
+
+      # The key comes from env-manager `prod` through `bun run secrets:github`. It lives outside the repo, as the
+      # archive script requires, and is deleted when the job ends.
+      - name: App Store Connect API key
+        env:
+          ASC_PRIVATE_KEY_B64: ${{ secrets.ASC_PRIVATE_KEY_B64 }}
+        run: |
+          test -n "$ASC_PRIVATE_KEY_B64" || { echo "ASC_PRIVATE_KEY_B64 is not set; run bun run secrets:github" >&2; exit 1; }
+          umask 077
+          echo "$ASC_PRIVATE_KEY_B64" | base64 --decode > "$RUNNER_TEMP/AuthKey.p8"
+
+      - name: Archive and upload
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_PATH: ${{ runner.temp }}/AuthKey.p8
+        run: ./scripts/archive
+
+      - name: Remove the key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/AuthKey.p8"
