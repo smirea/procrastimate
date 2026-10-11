@@ -18,7 +18,7 @@ Search lets Stefan find any task, project, or label from anywhere by typing a fe
 - Web: press `/` or Cmd-K or Ctrl-K anywhere outside a text field.
 - Web: choose `Search` under `Add task` in the sidebar.
 - Web on a phone: tap `Open navigation`, then `Search`. The sheet docks at the bottom with the field under the results, above the keyboard.
-- iOS: tap the search tab; its field is focused. On an iPad with a hardware keyboard, `/` or Cmd-K opens it and Cmd-K again goes back.
+- iOS: tap the search tab; its field is focused. On an iPad with a hardware keyboard, Cmd-K opens it and pressing it again goes back.
 
 ## Driving it with control-ui and XCUITest
 

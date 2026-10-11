@@ -152,7 +152,7 @@ The web's Web Push rows map to native local notifications. XCUITests check the p
 
 | Feature | Web | iOS | Slice | XCUITest | Playwright | Screenshot |
 | --- | --- | --- | --- | --- | --- | --- |
-| `search-open`: the search tab (and `/` or Cmd-K on a hardware keyboard) | ✓ | Built (`/` and Cmd-K not covered by XCUITest) | S7 | `SearchParityTests.test_search_open` | `search › search-open` | `search-open.png` |
+| `search-open`: the search tab (and `/` or Cmd-K on a hardware keyboard) | ✓ | Built (Cmd-K, not covered by XCUITest; `/` stays web only, see [iOS app](decisions/ios.md#ui-mapping)) | S7 | `SearchParityTests.test_search_open` | `search › search-open` | `search-open.png` |
 | `search-match`: titles, notes, projects, labels; every word; accents ignored | ✓ | Built | S4→S7 | `SearchParityTests.test_search_match` | `search › search-match` | `search-match.png` |
 | `search-rank`: field weights and word-start bonus | ✓ | Built | S4→S7 | covered by `search-match` | covered by `search-match` | — |
 | `search-highlight`: matched spans in titles, excerpts, names, chips | ✓ | Built | S7 | `SearchParityTests.test_search_highlight` | `search › search-highlight` | `search-highlight.png` |
