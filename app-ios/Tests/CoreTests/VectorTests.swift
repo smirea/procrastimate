@@ -12,12 +12,7 @@ import Testing
         let handler = try #require(handlers[file.module], "No Swift port for shared/\(file.module).ts")
         for vector in file.cases {
             let args = Args(values: vector.input, zone: zone)
-            let output: JSONValue
-            do {
-                output = try handler(vector.fn, args)
-            } catch is NeedsQuickAdd {
-                continue
-            }
+            let output = try handler(vector.fn, args)
             if output != vector.output {
                 Issue.record("""
                 \(file.module).\(vector.fn) in "\(vector.test)"
@@ -107,6 +102,7 @@ let handlers: [String: Handler] = [
     "notifications": notificationsVector,
     "store": storeVector,
     "snapshot": snapshotVector,
+    "quick-add": quickAddVector,
     "csv": csvVector,
     "search": searchVector,
     "name-search": nameSearchVector,
@@ -310,6 +306,33 @@ private func completion(_ completion: Completion) throws -> JSONValue {
     case "parseSnapshot":
         let document = try JSONEncoder().encode(a.values[0])
         return try json(Snapshot.load(document, now: a(1)))
+    default: throw unknown(fn)
+    }
+}
+
+// MARK: quick-add.ts
+
+private struct ParseInput: Decodable {
+    let now: Int
+    let projects: [Project]?
+    let labels: [Label]?
+    let disabled: [String]?
+    let due: Due?
+
+    var options: QuickAdd.Options {
+        QuickAdd.Options(
+            now: Date(epochMilliseconds: now),
+            projects: projects ?? [],
+            labels: labels ?? [],
+            disabled: disabled ?? [],
+            due: due
+        )
+    }
+}
+
+@Sendable func quickAddVector(_ fn: String, _ a: Args) throws -> JSONValue {
+    switch fn {
+    case "parseQuickAdd": return try json(QuickAdd.parse(a(0), a(1, as: ParseInput.self).options, in: a.zone))
     default: throw unknown(fn)
     }
 }

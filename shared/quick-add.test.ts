@@ -1,5 +1,9 @@
-import { describe, expect, test } from 'bun:test';
-import { parseQuickAdd, type ParseOptions } from './quick-add.ts';
+import { expect } from 'bun:test';
+import * as quickAdd from './quick-add.ts';
+import type { ParseOptions } from './quick-add.ts';
+import { describe, recorded, test } from './vectors/record.ts';
+
+const parseQuickAdd = recorded('quick-add', quickAdd.parseQuickAdd);
 
 // Wednesday, October 14 2026, 10:00 local time.
 const now = new Date(2026, 9, 14, 10, 0);
@@ -15,6 +19,15 @@ const labels = [
 ];
 const parse = (input: string, options: Partial<ParseOptions> = {}) =>
 	parseQuickAdd(input, { now, projects, labels, ...options });
+
+test('token ranges are UTF-16 offsets past accents and emoji', () => {
+	const parsed = parse('Café ☕ réunion tomorrow 9am 🎉 p1');
+	expect(parsed.title).toBe('Café ☕ réunion 🎉');
+	expect(parsed.tokens).toEqual([
+		{ kind: 'due', start: 15, end: 27, text: 'tomorrow 9am' },
+		{ kind: 'priority', start: 31, end: 33, text: 'p1' },
+	]);
+});
 
 describe('the example from the brief', () => {
 	test('call mom tomorrow 5pm remind me 30m before', () => {
@@ -185,6 +198,14 @@ describe('projects', () => {
 		expect(parsed.due).toEqual({ date: '2026-10-15', time: null });
 	});
 
+	test('a project name with regex characters matches literally', () => {
+		const car = { id: 'p-car', name: 'Car (2) [old]', createdAt: 0 };
+		const parsed = parse('Fix brakes #car (2) [old] fri', { projects: [...projects, car] });
+		expect(parsed.title).toBe('Fix brakes');
+		expect(parsed.projectId).toBe('p-car');
+		expect(parsed.tokens[0]).toEqual({ kind: 'project', start: 11, end: 25, text: '#car (2) [old]' });
+	});
+
 	test('an unknown project stays in the title', () => {
 		const parsed = parse('Fix sink #garage');
 		expect(parsed.title).toBe('Fix sink #garage');
@@ -232,7 +253,7 @@ describe('labels', () => {
 		expect(parsed.tokens).toEqual([]);
 	});
 
-	test.each(['Ask @tomorrow', 'Ping @5pm', 'DM @p1', 'Ping @urgent', 'Meet @fri'])(
+	test.each(['Ask @tomorrow', 'Ping @5pm', 'DM @p1', 'Ping @urgent', 'Meet @fri'].map(input => [input] as const))(
 		'a handle in %p never reads as a date or priority',
 		input => {
 			const parsed = parse(input);
@@ -494,13 +515,15 @@ describe('recurrence', () => {
 		]);
 	});
 
-	test.each([
-		'Discuss mon wed plan',
-		'Discuss mon wed',
-		'mon wed fri',
-		'Compare sat, sun options',
-		'Swap tue and thu shifts',
-	])('a bare weekday list without a time, every, or a slash stays text: %s', input => {
+	test.each(
+		[
+			'Discuss mon wed plan',
+			'Discuss mon wed',
+			'mon wed fri',
+			'Compare sat, sun options',
+			'Swap tue and thu shifts',
+		].map(input => [input] as const),
+	)('a bare weekday list without a time, every, or a slash stays text: %s', input => {
 		const parsed = parse(input);
 		expect(parsed.title).toBe(input);
 		expect(parsed.due).toBe(null);
@@ -553,35 +576,37 @@ describe('reminder shorthands', () => {
 });
 
 describe('ordinary words stay in the title', () => {
-	test.each([
-		'Call Tom',
-		'Call tom',
-		'Tom birthday gift',
-		'Email the report to tom',
-		'Watch tom hanks movie',
-		'Squeeze lemon',
-		'Buy lemons and salmon',
-		'Buy sun hat',
-		'Fix the chair I sat on',
-		'Get wed invitations printed',
-		'Apt 5p buzzer is broken',
-		'Deliver to 5p Baker St',
-		'Room 1730 projector',
-		'Pay $1730 deposit',
-		'File taxes 2026',
-		'2026 budget review',
-		'Buy 50p coins',
-		'Daily standup notes',
-		'Weekly review',
-		'Weekdays only gym',
-		'Monopoly night',
-		'Read 2.5h audiobook',
-		'Momentum check',
-		'Try ratio 15/14',
-		'I sat and waited',
-		'Sat and sun bathed',
-		'Plan mon wed fri rota',
-	])('%s', input => {
+	test.each(
+		[
+			'Call Tom',
+			'Call tom',
+			'Tom birthday gift',
+			'Email the report to tom',
+			'Watch tom hanks movie',
+			'Squeeze lemon',
+			'Buy lemons and salmon',
+			'Buy sun hat',
+			'Fix the chair I sat on',
+			'Get wed invitations printed',
+			'Apt 5p buzzer is broken',
+			'Deliver to 5p Baker St',
+			'Room 1730 projector',
+			'Pay $1730 deposit',
+			'File taxes 2026',
+			'2026 budget review',
+			'Buy 50p coins',
+			'Daily standup notes',
+			'Weekly review',
+			'Weekdays only gym',
+			'Monopoly night',
+			'Read 2.5h audiobook',
+			'Momentum check',
+			'Try ratio 15/14',
+			'I sat and waited',
+			'Sat and sun bathed',
+			'Plan mon wed fri rota',
+		].map(input => [input] as const),
+	)('%s', input => {
 		const parsed = parse(input);
 		expect(parsed.title).toBe(input);
 		expect(parsed.due).toBe(null);

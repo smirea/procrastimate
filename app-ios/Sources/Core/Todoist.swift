@@ -85,17 +85,18 @@ public enum Todoist {
         }
     }
 
-    /// Reads a Todoist date phrase such as `every March 2nd 11 am` with the quick add parser, returning nil unless the
-    /// parser accounts for the whole text and finds a date.
-    public typealias PhraseReader = (_ text: String, _ now: Date) throws -> Timing?
-
     /// `2027-05-20`, `2027-05-20T09:00:00`, or with an offset such as `Z` or `+02:00`.
     nonisolated(unsafe) private static let iso =
         /^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?(Z|[+-]\d{2}:?\d{2})?)?$/.asciiOnlyDigits()
 
-    /// A Todoist date string. ISO dates are read here, and anything else goes through the quick add parser.
-    public static func readTodoistDate(_ text: String, _ now: Date, in zone: TimeZone, phrase: PhraseReader) rethrows -> Timing? {
-        guard let match = text.wholeMatch(of: iso) else { return try phrase(text, now) }
+    /// A Todoist date string. ISO dates are read here, and anything else goes through the quick add parser, which must
+    /// account for all of it.
+    public static func readTodoistDate(_ text: String, _ now: Date, in zone: TimeZone) -> Timing? {
+        guard let match = text.wholeMatch(of: iso) else {
+            let parsed = QuickAdd.parse(text, QuickAdd.Options(now: now), in: zone)
+            guard parsed.title.isEmpty, parsed.priority == nil, parsed.reminders.isEmpty, let due = parsed.due else { return nil }
+            return Timing(due: due, recurrence: parsed.recurrence)
+        }
         let date = "\(match.1)-\(match.2)-\(match.3)"
         guard let hourText = match.4, let minuteText = match.5 else {
             return Timing(due: Due(date: date, time: nil), recurrence: nil)
@@ -232,9 +233,8 @@ public enum Todoist {
         _ file: BackupFile,
         _ now: Date,
         _ zone: TimeZone,
-        _ phrase: PhraseReader,
         into backup: inout Backup
-    ) rethrows {
+    ) {
         let base = baseName(file.name)
         let named = base.wholeMatch(of: fileName)
         let name = named.map { String($0.1) } ?? (isCSV(base) ? String(base.dropLast(4)) : base)
@@ -260,7 +260,7 @@ public enum Todoist {
         var ancestors: [(indent: Int, content: String, sourceKey: String)] = []
         var seen: [String: Int] = [:]
 
-        func readTask(_ row: [String], _ content: String) throws -> Draft {
+        func readTask(_ row: [String], _ content: String) -> Draft {
             let parsed = parseInt(get(row, "INDENT")) ?? 0
             let indent = max(1, parsed == 0 ? 1 : parsed)
             while let last = ancestors.last, last.indent >= indent { ancestors.removeLast() }
@@ -277,7 +277,7 @@ public enum Todoist {
             let dateText = get(row, "DATE")
             let lang = get(row, "DATE_LANG")
             if !dateText.isEmpty {
-                timing = lang.isEmpty || lang == "en" ? try readTodoistDate(dateText, now, in: zone, phrase: phrase) : nil
+                timing = lang.isEmpty || lang == "en" ? readTodoistDate(dateText, now, in: zone) : nil
                 if timing == nil {
                     extras.append("Todoist date: \(dateText)")
                     warn("could not read the date \"\(dateText)\" on \"\(title)\", kept it in notes")
@@ -305,14 +305,14 @@ public enum Todoist {
             return Draft(task: task, notes: [get(row, "DESCRIPTION")], extras: extras)
         }
 
-        func readReminder(_ row: [String]) throws -> Reminder? {
+        func readReminder(_ row: [String]) -> Reminder? {
             switch get(row, "REMINDER_TYPE") {
             case "relative":
                 guard let minutes = number(get(row, "REMINDER_OFFSET")), let whole = Int(exactly: minutes), whole >= 0
                 else { return nil }
                 return .before(minutes: whole)
             case "absolute":
-                let at = try readTodoistDate(get(row, "REMINDER_DATE"), now, in: zone, phrase: phrase)?.due
+                let at = readTodoistDate(get(row, "REMINDER_DATE"), now, in: zone)?.due
                 guard let at, let time = at.time else { return nil }
                 return .at(date: at.date, time: time)
             default:
@@ -329,11 +329,11 @@ public enum Todoist {
             case "section":
                 sections.append(content)
             case "task":
-                drafts.append(try readTask(row, content))
+                drafts.append(readTask(row, content))
             case "note":
                 if drafts.isEmpty { warn("skipped a comment with no task above it") } else { drafts[drafts.count - 1].notes.append(content) }
             case "reminder":
-                let reminder = try readReminder(row)
+                let reminder = readReminder(row)
                 if drafts.isEmpty {
                     warn("skipped a reminder with no task above it")
                 } else if let reminder {
@@ -363,14 +363,13 @@ public enum Todoist {
     public static func readTodoistBackup(
         _ files: [BackupFile],
         _ now: Date,
-        in zone: TimeZone,
-        phrase: PhraseReader
-    ) rethrows -> Backup {
+        in zone: TimeZone
+    ) -> Backup {
         var backup = Backup()
         for file in files {
             let base = baseName(file.name)
             if !isCSV(base) || base.hasPrefix(".") || file.name.contains("__MACOSX/") { continue }
-            try readProject(file, now, zone, phrase, into: &backup)
+            readProject(file, now, zone, into: &backup)
         }
         return backup
     }

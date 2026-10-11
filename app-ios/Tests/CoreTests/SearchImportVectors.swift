@@ -43,26 +43,6 @@ private struct SearchNames: Decodable {
 
 // MARK: todoist.ts
 
-/// A Todoist date phrase needs the quick add parser, which `Core` does not have yet, so cases that reach one are skipped.
-struct NeedsQuickAdd: Error {}
-
-private func noParser(_: String, _: Date) throws -> Todoist.Timing? { throw NeedsQuickAdd() }
-
-/// The parser's answers as `readTodoistDate` recorded them, so reading a backup checks everything around the dates.
-private let recordedPhrases: [String: JSONValue] = {
-    let cases = VectorFile.all.first { $0.module == "todoist" }?.cases ?? []
-    return Dictionary(
-        cases.filter { $0.fn == "readTodoistDate" }.map { (try! text(.array($0.input)), $0.output) },
-        uniquingKeysWith: { $1 }
-    )
-}()
-
-private func recordedParser(_ phrase: String, _ now: Date) throws -> Todoist.Timing? {
-    let input = try text(.array([.string(phrase), .number(Double(now.epochMilliseconds))]))
-    guard let output = recordedPhrases[input] else { throw NeedsQuickAdd() }
-    return try decode(output)
-}
-
 private struct MergeOptions: Decodable {
     let now: Int
 }
@@ -70,9 +50,9 @@ private struct MergeOptions: Decodable {
 @Sendable func todoistVector(_ fn: String, _ a: Args) throws -> JSONValue {
     switch fn {
     case "readTodoistDate":
-        return try json(Todoist.readTodoistDate(a(0), a.date(1), in: a.zone, phrase: noParser))
+        return try json(Todoist.readTodoistDate(a(0), a.date(1), in: a.zone))
     case "readTodoistBackup":
-        return try json(Todoist.readTodoistBackup(a(0), a.date(1), in: a.zone, phrase: recordedParser))
+        return try json(Todoist.readTodoistBackup(a(0), a.date(1), in: a.zone))
     case "mergeBackup":
         // Every merge in the TS tests takes ids from a fresh `id-1`, `id-2`, … counter.
         var count = 0
