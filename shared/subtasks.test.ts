@@ -117,17 +117,24 @@ describe('completeTask', () => {
 });
 
 describe('moveSubtask', () => {
-	test('moving renumbers the siblings and returns only the ones whose order changed', () => {
-		expect(moveSubtask(trip(), 'socks', 0).map(t => [t.id, t.order])).toEqual([
-			['socks', 0],
-			['passport', 1],
+	test('moving writes only the moved subtask, between its new neighbors', () => {
+		expect(moveSubtask(trip(), 'socks', 0).map(t => [t.id, t.order])).toEqual([['socks', -1]]);
+		expect(moveSubtask(trip(), 'passport', 1).map(t => [t.id, t.order])).toEqual([['passport', 1.5]]);
+		expect(moveSubtask(trip(), 'passport', 99).map(t => [t.id, t.order])).toEqual([['passport', 3]]);
+		expect(moveSubtask(trip(), 'charger', 1)).toEqual([]);
+	});
+
+	test('a tie from two concurrent moves settles by id', () => {
+		const tied = trip().map(t => (t.id === 'socks' ? { ...t, order: 0 } : t));
+		expect(ids(groupChildren(tied).get('trip')!)).toEqual(['passport', 'socks', 'charger']);
+	});
+
+	test('a gap too small to split renumbers the siblings', () => {
+		const tight = trip().map(t => (t.id === 'charger' ? { ...t, order: 1e-10 } : t));
+		expect(moveSubtask(tight, 'socks', 1).map(t => [t.id, t.order])).toEqual([
+			['socks', 1],
 			['charger', 2],
 		]);
-		expect(moveSubtask(trip(), 'passport', 1).map(t => [t.id, t.order])).toEqual([
-			['charger', 0],
-			['passport', 1],
-		]);
-		expect(moveSubtask(trip(), 'passport', 99).map(t => t.id)).toEqual(['charger', 'socks', 'passport']);
 	});
 });
 

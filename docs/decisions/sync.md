@@ -52,6 +52,14 @@ Every field is last-writer-wins by HLC. Different fields from different devices 
 - **Turning sync on uploads everything.** A device that is not paired keeps no outbox. When it pairs, it sends its whole local snapshot as ops with `cursor: 0` in one request, then takes the returned snapshot as its state. Ids are UUIDs, so two devices that each have local data simply add up. `fixups` then merges what they share: Todoist imports by source key, and labels and projects by name. Two hand-typed tasks with the same title on two devices stay two tasks, since nothing says they are one.
 - **No backwards compatibility.** The stored document gains a `sync` section. A device without it starts unpaired, which is today's behavior.
 
+## The web client
+
+- **One loop, one module.** `app-web/src/lib/sync.svelte.ts` owns the triggers, the token, the auth calls, and the status (`off`, `syncing`, `synced`, `offline`, `error`). Only one sync runs at a time, and a trigger during one queues one more right after it. A response with a full page of changes syncs again at once. A `401` means the device was removed, so the client drops its token and `sync` section, keeps its data, and says so in Settings. A network failure or a `5xx` reads as offline.
+- **The store records, the loop sends.** While paired, every store command diffs its before and after into the outbox and tells the loop, which syncs one second later. The loop sends the whole outbox and hands the response back to the store, which runs `applyResponse`. An unpaired store keeps no outbox and the loop sends nothing, so it behaves exactly as before sync.
+- **The device's own zone.** The client's settings record holds only the zone this device last wrote, kept in its `sync` section, so ordinary diffs never touch `timeZone`. Pairing writes the device's zone, and a sync that finds the browser's zone changed writes the new one first.
+- **The clock persists.** The `sync` section keeps the last clock the device issued or saw, so a reload never issues a clock below one it has seen.
+- **Settings is the only screen.** Its `Sync` section sets up the first device with the setup code, enters a pairing code, shows `Pair a device` with the live code, the status with the number of changes waiting, and the device list with `Remove`. While a code shows, it watches the device list and hides the code once the new device joins.
+
 ## Auth
 
 - **Device tokens bootstrapped by a pairing code.** The default, picked so Stefan can change it later:
@@ -73,7 +81,7 @@ Every field is last-writer-wins by HLC. Different fields from different devices 
 - **Unit tests** cover each rule in `shared/sync/` with the cases above.
 - **Convergence fuzz.** `shared/sync/converge.test.ts` simulates two or three clients and the server with a seeded random generator. Clients apply random commands (add, edit, complete, reopen, move, delete, undo, rename, label, import), go offline, and sync in random interleavings. After a final sync of everyone, every replica must equal the server, and the invariants must hold: no orphans, no open task under a completed one, subtasks in their root's project, unique label and project names, and unique source keys. CI runs a fixed set of seeds. `SYNC_SEEDS=<n>` runs more locally, and a failing seed prints a replayable log.
 - **Swift vectors.** iOS only runs the client half: the HLC, `diff`, and `applyChanges` with outbox replay. Their TS tests record `shared/vectors/sync.json` through `recorded('sync', …)`, the same as the other modules (see [iOS app](ios.md)), so the Swift port must produce identical ops and states. The merge and `fixups` run only on the server, so Swift never ports them.
-- **End to end.** One Playwright test opens two browser contexts against the dev server's in-memory account and covers propagate, offline, reconnect, and conflict from the [feature map](../../.cursor/skills/verify-procrastimate/features/offline-sync.md).
+- **End to end.** `app-web/e2e/sync.e2e.ts` opens two browser contexts as two devices and covers pairing, propagate, offline, reconnect, conflict, and remove from the [feature map](../../.cursor/skills/verify-procrastimate/features/offline-sync.md). The Playwright config starts the Bun API next to Vite with the setup code `e2e-setup-code`, or passes it to `wrangler dev` with `E2E_WORKER=1`, so it runs against the real `POST /api/sync`. Going offline blocks only that device's `/api/sync` requests. Only one pairing code is live at a time, so the file's tests run one after another.
 
 ## Build order
 

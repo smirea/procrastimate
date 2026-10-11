@@ -8,12 +8,9 @@ import {
 	type ServerEntity,
 	type ServerState,
 } from '../../../shared/sync/merge';
-import { syncRequestSchema, type Change, type SyncResponse } from '../../../shared/sync/protocol';
+import { SYNC_PAGE_SIZE, syncRequestSchema, type Change, type SyncResponse } from '../../../shared/sync/protocol';
 import { authenticate, type AccountRoute } from '../auth';
 import type { AccountStore } from './store';
-
-/** The most log rows one response carries. A client that gets a full page syncs again right away. */
-export const SYNC_PAGE_SIZE = 1000;
 
 const fail = (status: number, error: string) => Response.json({ ok: false, error }, { status });
 
