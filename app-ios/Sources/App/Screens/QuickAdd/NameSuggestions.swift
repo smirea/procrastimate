@@ -97,23 +97,28 @@ extension NameMatch.Suggestion {
 /// The suggestion list above the input, with the typed part of each name in bold.
 struct NameSuggestionList: View {
     let match: NameMatch
+    /// The row hardware keys move through and Return or Tab picks.
+    let active: Int
     let onPick: (NameMatch.Suggestion) -> Void
 
     var body: some View {
         VStack(spacing: 0) {
-            ForEach(match.suggestions, id: \.self) { suggestion in
+            ForEach(Array(match.suggestions.enumerated()), id: \.element) { index, suggestion in
                 Button {
                     onPick(suggestion)
                 } label: {
                     row(suggestion)
                         .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
                         .padding(.horizontal, 12)
+                        .background(.ink.opacity(index == active ? 0.06 : 0), in: .rect(cornerRadius: 12))
                         .contentShape(.rect)
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(label(suggestion))
+                .accessibilityAddTraits(index == active ? .isSelected : [])
             }
         }
+        .animation(.snappy(duration: 0.12), value: active)
         .padding(4)
         .background(.ink.opacity(0.04), in: .rect(cornerRadius: 16))
         .accessibilityElement(children: .contain)

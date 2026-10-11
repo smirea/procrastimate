@@ -7,7 +7,7 @@ struct TaskRow: View {
     @Environment(Store.self) private var store
     @Environment(TaskActions.self) private var actions
     @Environment(Navigator.self) private var navigator
-    @Environment(\.clock) private var clock
+    @Environment(\.today) private var today
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     let task: TaskItem
@@ -80,7 +80,6 @@ struct TaskRow: View {
 
     @ViewBuilder private var details: some View {
         if hasDetails {
-            let today = clock.today
             HStack(spacing: 10) {
                 if let due = task.due, !(timeOnly && due.time == nil) {
                     Detail(

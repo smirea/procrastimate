@@ -3,10 +3,9 @@ import SwiftUI
 
 struct UpcomingScreen: View {
     @Environment(Store.self) private var store
-    @Environment(\.clock) private var clock
+    @Environment(\.today) private var today
 
     var body: some View {
-        let today = clock.today
         let groups = Views.upcomingGroups(store.tasks, today)
         TaskListScreen(
             title: "Upcoming",

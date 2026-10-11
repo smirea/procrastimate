@@ -27,4 +27,6 @@ extension AppClock {
 
 extension EnvironmentValues {
     @Entry var clock: AppClock = .system
+    /// The clock's day, which the app re-reads at midnight so date-based lists recompute while it stays open.
+    @Entry var today: DateKey = AppClock.system.today
 }

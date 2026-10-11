@@ -4,9 +4,10 @@ import SwiftUI
 struct TodayScreen: View {
     @Environment(Store.self) private var store
     @Environment(\.clock) private var clock
+    @Environment(\.today) private var today
 
     var body: some View {
-        let tasks = Views.todayTasks(store.tasks, clock.today)
+        let tasks = Views.todayTasks(store.tasks, today)
         TaskListScreen(
             title: "Today",
             isEmpty: tasks.overdue.isEmpty && tasks.today.isEmpty,

@@ -5,11 +5,11 @@ struct RootView: View {
     @Environment(Navigator.self) private var navigator
     @Environment(Store.self) private var store
     @Environment(TaskActions.self) private var actions
-    @Environment(\.clock) private var clock
+    @Environment(\.today) private var todayKey
 
     var body: some View {
         @Bindable var navigator = navigator
-        let today = Views.todayTasks(store.tasks, clock.today)
+        let today = Views.todayTasks(store.tasks, todayKey)
         TabView(selection: $navigator.tab) {
             Tab("Inbox", systemImage: "tray", value: .inbox) {
                 TabStack(tab: .inbox) { InboxScreen() }

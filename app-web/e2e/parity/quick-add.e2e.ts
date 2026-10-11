@@ -157,7 +157,8 @@ test('projects-autocomplete: # suggests projects by match and use, then offers t
 	const list = app.quickAdd().getByRole('listbox', { name: 'Projects' });
 	await expect(list.getByRole('option')).toHaveText(['Errands', 'Home', 'Create project “e”']);
 	await snap('projects-autocomplete');
-	await list.getByRole('option', { name: 'Home' }).tap();
+	await app.taskInput().press('ArrowDown');
+	await app.taskInput().press('Enter');
 	await expect(app.taskInput()).toHaveValue('#Home ');
 });
 
