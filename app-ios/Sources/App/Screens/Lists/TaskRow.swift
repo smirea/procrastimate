@@ -150,7 +150,7 @@ struct LabelChip: View {
 }
 
 /// `done/total` with a ring, on a parent's row.
-private struct SubtaskProgress: View {
+struct SubtaskProgress: View {
     let progress: Subtasks.Progress
 
     var body: some View {

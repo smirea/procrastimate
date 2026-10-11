@@ -1,4 +1,5 @@
 import { expect, test } from './fixtures.ts';
+import { chip, closeDetails, openDetails } from './details-fixtures.ts';
 
 test('priority-nl: typed priorities set the level', async ({ app, snap }) => {
 	await app.openQuickAdd();
@@ -28,6 +29,14 @@ test('priority-picker: the flag menu sets the level', async ({ app, snap }) => {
 	await app.quickAdd().getByRole('button', { name: 'Add task' }).tap();
 	await app.cancelQuickAdd();
 	await expect(app.checkbox('Pay rent')).toHaveAttribute('style', /--p2/);
+
+	await openDetails(app, 'Pay rent');
+	await chip(app, 'Priority 2').tap();
+	await app.page.getByRole('dialog', { name: 'Priority' }).getByRole('button', { name: 'Priority 3' }).tap();
+	await expect(app.page.getByRole('dialog', { name: 'Priority' })).toBeHidden();
+	await expect(chip(app, 'Priority 3')).toBeVisible();
+	await closeDetails(app);
+	await expect(app.checkbox('Pay rent')).toHaveAttribute('style', /--p3/);
 });
 
 test('priority-replace: a picked level removes the typed one', async ({ app, snap }) => {

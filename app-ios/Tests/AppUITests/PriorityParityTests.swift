@@ -28,6 +28,13 @@ final class PriorityParityTests: ParityTestCase {
         app.buttons["Add task"].tap()
         cancelQuickAdd()
         XCTAssertEqual(checkbox("Pay rent").value as? String, "Priority 2")
+
+        openDetails("Pay rent")
+        chip("Priority 2").tap()
+        app.buttons["Priority 3"].firstMatch.tap()
+        XCTAssertTrue(chip("Priority 3").waitForExistence(timeout: 5))
+        closeDetails()
+        XCTAssertEqual(checkbox("Pay rent").value as? String, "Priority 3")
     }
 
     func test_priority_replace() {
