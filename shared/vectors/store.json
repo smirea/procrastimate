@@ -4337,7 +4337,7 @@
 		},
 		{
 			"fn": "moveSubtask",
-			"test": "tasks › moving a subtask renumbers its siblings",
+			"test": "tasks › moving a subtask writes only its own order",
 			"input": [
 				{
 					"labels": [
@@ -4508,7 +4508,7 @@
 						"id": "passport",
 						"labelIds": [],
 						"notes": "",
-						"order": 1,
+						"order": 0,
 						"parentId": "trip",
 						"priority": 4,
 						"projectId": "home",
@@ -4523,7 +4523,7 @@
 						"id": "charger",
 						"labelIds": [],
 						"notes": "",
-						"order": 0,
+						"order": -1,
 						"parentId": "trip",
 						"priority": 4,
 						"projectId": "home",

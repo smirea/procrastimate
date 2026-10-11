@@ -1,3 +1,4 @@
+import { bySiblingOrder, moveOrders } from './sync/order.ts';
 import { nextOccurrence, type DateKey, type Due, type Task } from './task.ts';
 
 /**
@@ -9,8 +10,6 @@ import { nextOccurrence, type DateKey, type Due, type Task } from './task.ts';
 export type Progress = { done: number; total: number };
 
 export type Completion = { kind: 'done'; changed: Task[] } | { kind: 'rolled'; next: Due; changed: Task[] };
-
-const bySiblingOrder = (a: Task, b: Task) => a.order - b.order || a.createdAt - b.createdAt;
 
 /** Each parent's children in sibling order. */
 export function groupChildren(tasks: readonly Task[]): Map<string, Task[]> {
@@ -82,13 +81,15 @@ export function reopenTask(tasks: readonly Task[], id: string): Task[] {
 	return [...ancestorsOf(tasks, id), task].filter(t => t.completedAt !== null).map(t => ({ ...t, completedAt: null }));
 }
 
-/** Moves a subtask to `index` among its siblings and renumbers them. */
+/**
+ * Moves a subtask to `index` among its siblings by writing only its own fractional `order`, so concurrent moves of
+ * different siblings never overwrite each other. It renumbers the siblings only when the gap gets too small.
+ */
 export function moveSubtask(tasks: readonly Task[], id: string, index: number): Task[] {
 	const task = tasks.find(t => t.id === id);
 	if (!task?.parentId) return [];
-	const siblings = (groupChildren(tasks).get(task.parentId) ?? []).filter(t => t.id !== id);
-	siblings.splice(Math.max(0, Math.min(index, siblings.length)), 0, task);
-	return siblings.flatMap((t, order) => (t.order === order ? [] : [{ ...t, order }]));
+	const siblings = new Map(tasks.filter(t => t.parentId === task.parentId).map(t => [t.id, t]));
+	return moveOrders([...siblings.values()], id, index).map(({ id, order }) => ({ ...siblings.get(id)!, order }));
 }
 
 /** Makes a task whose parent is missing, or whose parents loop back to it, a top-level task, so it never goes unreachable. */
