@@ -55,8 +55,6 @@ struct SettingsSheet: View {
             }
         }
         .sensoryFeedback(.selection, trigger: theme.choice)
-        // A presented sheet keeps the scheme it opened with when only the root's preference changes.
-        .preferredColorScheme(theme.choice.colorScheme)
     }
 }
 

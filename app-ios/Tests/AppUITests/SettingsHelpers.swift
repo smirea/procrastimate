@@ -51,28 +51,35 @@ extension ParityTestCase {
         return (0.299 * Double(pixel[0]) + 0.587 * Double(pixel[1]) + 0.114 * Double(pixel[2])) / 255
     }
 
-    /// Opens `Import from Todoist` and walks the document picker from its Browse tab to the app's folder under
-    /// On My iPhone, where CI copies the fixtures, then picks the file whose name starts with `file`. The picker's
-    /// glass tab bar never reports itself hittable, so every step is tapped by coordinate.
+    /// Opens `Import from Todoist` and walks the document picker to the app's folder under On My iPhone, where CI
+    /// copies the fixtures, then picks the file whose name starts with `file`. The picker reopens where it was last,
+    /// so each pass taps whichever step is on screen. Its glass tab bar never reports itself hittable, so every step is
+    /// tapped by coordinate.
     func pick(_ file: String, snapping id: String? = nil) {
         app.buttons["Import from Todoist"].tap()
-        let tabs = app.tabBars["DOC.browsingModeTabBar"]
-        XCTAssertTrue(tabs.waitForExistence(timeout: 10), "The document picker never opened")
         let target = pickerItem(BEGINSWITH: file)
-        if !target.waitForExistence(timeout: 2) {
-            tapCenter(tabs.buttons["Browse"])
-            for step in ["On My iPhone", "Procrastimate"] {
-                let item = pickerItem(equals: step)
-                guard item.waitForExistence(timeout: 10) else {
-                    print(app.debugDescription)
-                    return XCTFail("No \(step) in the document picker")
-                }
-                tapCenter(item)
+        let folder = app.otherElements.matching(NSPredicate(format: "identifier CONTAINS 'Title: Procrastimate'")).firstMatch
+        let tabs = app.tabBars["DOC.browsingModeTabBar"]
+        var browsed = Date.distantPast
+        let deadline = Date().addingTimeInterval(60)
+        while Date() < deadline {
+            if target.exists {
+                if let id { snap(id) }
+                tapCenter(target)
+                return
             }
+            if !folder.exists {
+                if let step = [pickerItem(equals: "Procrastimate"), pickerItem(equals: "On My iPhone")].first(where: { $0.exists }) {
+                    tapCenter(step)
+                } else if tabs.exists, Date().timeIntervalSince(browsed) > 5 {
+                    tapCenter(tabs.buttons["Browse"])
+                    browsed = Date()
+                }
+            }
+            Thread.sleep(forTimeInterval: 1)
         }
-        XCTAssertTrue(target.waitForExistence(timeout: 10), "No \(file) in the document picker")
-        if let id { snap(id) }
-        tapCenter(target)
+        print(app.debugDescription)
+        XCTFail("Never reached \(file) in the document picker")
     }
 
     /// A cell or text in the picker, never the app itself, whose label is also `Procrastimate`.

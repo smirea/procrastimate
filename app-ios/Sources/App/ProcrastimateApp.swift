@@ -43,7 +43,7 @@ struct ProcrastimateApp: App {
                 .environment(importer)
                 .environment(\.clock, clock)
                 .environment(\.today, today)
-                .preferredColorScheme(theme.choice.colorScheme)
+                .onAppear { theme.apply() }
                 .motionFollowsAccessibility()
                 .task { await notifications.run() }
                 .onChange(of: store.tasks) { old, new in notifications.tasksChanged(from: old, to: new) }

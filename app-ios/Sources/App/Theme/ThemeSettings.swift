@@ -26,9 +26,9 @@ enum ThemeChoice: String, CaseIterable, Identifiable {
         }
     }
 
-    var colorScheme: ColorScheme? {
+    var interfaceStyle: UIUserInterfaceStyle {
         switch self {
-        case .system: nil
+        case .system: .unspecified
         case .light: .light
         case .dark: .dark
         }
@@ -54,20 +54,16 @@ final class ThemeSettings {
         } else {
             UserDefaults.standard.set(next.rawValue, forKey: Self.key)
         }
-        if next == .system { Task { clearForcedStyle() } }
+        apply()
     }
 
-    /// A `nil` `preferredColorScheme` leaves the last forced style on the window and the presented sheets, so going
-    /// back to `System` clears it.
-    private func clearForcedStyle() {
+    /// Sets the style on the window rather than through `preferredColorScheme`, which keeps the last forced style when
+    /// it goes back to `nil` and does not restyle a sheet that is already open. Presented sheets and UIKit chrome
+    /// such as the document picker inherit the window's style.
+    func apply() {
         for scene in UIApplication.shared.connectedScenes {
             for window in (scene as? UIWindowScene)?.windows ?? [] {
-                window.overrideUserInterfaceStyle = .unspecified
-                var controller = window.rootViewController
-                while let current = controller {
-                    current.overrideUserInterfaceStyle = .unspecified
-                    controller = current.presentedViewController
-                }
+                window.overrideUserInterfaceStyle = choice.interfaceStyle
             }
         }
     }
