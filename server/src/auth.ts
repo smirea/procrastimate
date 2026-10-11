@@ -12,6 +12,8 @@ import {
 	type DeviceList,
 	type PairingCode,
 } from '../../shared/auth';
+import { SOCKET_TOKEN_PREFIX } from '../../shared/sync/protocol';
+import type { Realtime } from './account/realtime';
 import type { AccountStore } from './account/store';
 
 /**
@@ -21,13 +23,14 @@ import type { AccountStore } from './account/store';
 
 /**
  * What an account route sees. `setupCode` is undefined when the `SYNC_SETUP_CODE` secret is not set. `setAlarm`
- * arms the object's one alarm, or clears it with null.
+ * arms the object's one alarm, or clears it with null. `realtime` holds the nudge sockets.
  */
 export type AccountContext = {
 	store: AccountStore;
 	setupCode: string | undefined;
 	now: number;
 	setAlarm: (at: number | null) => Promise<void>;
+	realtime: Realtime;
 };
 
 export type AccountRoute = (request: Request, context: AccountContext) => Promise<Response>;
@@ -55,9 +58,13 @@ function newPairingCode(): string {
 	return Array.from(bytes, byte => PAIRING_ALPHABET[byte & 31]).join('');
 }
 
+/** The `Authorization: Bearer` token, or on a WebSocket upgrade from a browser, the `bearer.<token>` subprotocol. */
 function bearerToken(request: Request): string | null {
 	const match = /^Bearer\s+(\S+)$/i.exec(request.headers.get('Authorization') ?? '');
-	return match?.[1] ?? null;
+	if (match) return match[1]!;
+	const protocols = (request.headers.get('Sec-WebSocket-Protocol') ?? '').split(',').map(value => value.trim());
+	const protocol = protocols.find(value => value.startsWith(SOCKET_TOKEN_PREFIX));
+	return protocol ? protocol.slice(SOCKET_TOKEN_PREFIX.length) || null : null;
 }
 
 /** The id of the device whose live token the request carries, or null. Marks the device as seen. */
@@ -148,9 +155,11 @@ export const authRoutes: Record<string, AccountRoute> = {
 		return Response.json({ ok: true, devices } satisfies DeviceList);
 	}),
 
-	'DELETE /api/auth/devices': authenticated(async (request, { store, now }) => {
+	'DELETE /api/auth/devices': authenticated(async (request, { store, now, realtime }) => {
 		const body = await parseBody(request, revokeRequestSchema);
 		if (!body) return fail(400, 'Invalid device');
-		return store.revokeDevice(body.id, now) ? Response.json({ ok: true }) : fail(404, 'No such device');
+		if (!store.revokeDevice(body.id, now)) return fail(404, 'No such device');
+		realtime.revoke(body.id);
+		return Response.json({ ok: true });
 	}),
 };
