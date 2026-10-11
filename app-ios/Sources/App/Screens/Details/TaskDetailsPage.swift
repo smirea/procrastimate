@@ -208,5 +208,6 @@ private struct ProjectMenu: View {
                 .lineLimit(1)
         }
         .accessibilityLabel("Project \(project?.name ?? "Inbox")")
+        .accessibilityIdentifier("Project menu")
     }
 }

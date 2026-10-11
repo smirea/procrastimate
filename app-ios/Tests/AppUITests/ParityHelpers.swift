@@ -43,8 +43,14 @@ extension ParityTestCase {
     func type(_ text: String, into element: XCUIElement) {
         var chunk = ""
         for character in text {
+            if character == "\n" {
+                if !chunk.isEmpty { element.typeText(chunk) }
+                element.typeText("\n")
+                chunk = ""
+                continue
+            }
             chunk.append(character)
-            if character == " " || character == "\n" {
+            if character == " " {
                 element.typeText(chunk)
                 chunk = ""
             }

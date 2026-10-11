@@ -108,9 +108,11 @@ final class DetailsParityTests: ParityTestCase {
         wait(for: taskInput, "value == ''")
         cancelQuickAdd()
         openDetails("Buy milk")
-        chip("Project Inbox").tap()
+        // A toolbar menu's label is not reliably exposed, so the menu is found by identifier.
+        let menu = app.descendants(matching: .any)["Project menu"].firstMatch
+        menu.tap()
         app.buttons["Home"].firstMatch.tap()
-        XCTAssertTrue(chip("Project Home").waitForExistence(timeout: 5))
+        waitGone(app.buttons["Home"].firstMatch)
         snap("projects-move")
         closeDetails()
         waitGone(row("Buy milk"))

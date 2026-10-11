@@ -39,7 +39,7 @@ extension ParityTestCase {
     }
 
     func closeDetails() {
-        app.buttons["Close"].firstMatch.tap()
+        app.navigationBars["Task details"].buttons["Close"].tap()
         waitGone(titleInput)
     }
 
