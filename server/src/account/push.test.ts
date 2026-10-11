@@ -1,6 +1,11 @@
 import { afterEach, beforeEach, describe, expect, setSystemTime, test } from 'bun:test';
 import type { DeviceCredentials } from '../../../shared/auth';
-import type { PushMessage, PushScheduleResponse, PushSubscriptionInfo } from '../../../shared/push';
+import {
+	MAX_SCHEDULED,
+	type PushMessage,
+	type PushScheduleResponse,
+	type PushSubscriptionInfo,
+} from '../../../shared/push';
 import { completeTask } from '../../../shared/store';
 import { applyResponse, commit, startSync, type ClientSync } from '../../../shared/sync/apply';
 import type { Snapshot, SyncResponse } from '../../../shared/sync/protocol';
@@ -253,6 +258,20 @@ describe.each(storeFactories)('server-computed push on the %s store', (_name, cr
 		expect(alarm).toBe(NOW + 65_000);
 		await fireAlarm();
 		expect(received('mac').map(message => message.title)).toEqual(['Soon']);
+	});
+
+	test('a full batch of delivered pushes does not crowd out the next one', async () => {
+		const mac = await device('mac');
+		await mac.subscribe();
+		const batch = Array.from({ length: MAX_SCHEDULED }, (_, i) =>
+			task(`t${i}`, { title: `Task ${i}`, due: { date: '2026-10-10', time: '13:00' } }),
+		);
+		const later = task('later', { title: 'Later', due: { date: '2026-10-10', time: '14:00' } });
+		await mac.edit(snapshot => ({ ...snapshot, tasks: [...snapshot.tasks, ...batch, later] }));
+		await fireAlarm();
+		expect(sent.length).toBe(MAX_SCHEDULED);
+		expect(await mac.schedule()).toEqual(['Later@120m: Due now']);
+		expect(alarm).toBe(NOW + 2 * HOUR);
 	});
 
 	test('a gone subscription, unsubscribing, and removing the device each stop its pushes', async () => {

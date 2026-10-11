@@ -1,6 +1,5 @@
 import { upcomingNotifications } from '../../../shared/notifications';
 import {
-	MAX_SCHEDULED,
 	pushTag,
 	subscribeRequestSchema,
 	type PushMessage,
@@ -33,12 +32,15 @@ const targets = (store: AccountStore) => store.pushTargets() as Target[];
 /** Zones are validated where they are used, since any device can write the setting. */
 const FALLBACK_ZONE = 'UTC';
 
-/** Every notification the live tasks make from ten minutes ago on, in the account's time zone. */
+/**
+ * Every notification the live tasks make from ten minutes ago on, in the account's time zone. Uncapped, because
+ * `planSchedule` caps each device only after dropping what it already delivered.
+ */
 function computeNotifications(store: AccountStore, now: number): ScheduledPush[] {
 	const entities = new Map(store.entities().map(row => [entityKey(row.kind as Kind, row.id), row as ServerEntity]));
 	const { tasks, settings } = serverSnapshot({ entities, clock: createClock(SERVER_NODE) });
 	const zone = settings.timeZone && isTimeZone(settings.timeZone) ? settings.timeZone : FALLBACK_ZONE;
-	return upcomingNotifications(tasks, now - STALE_AFTER_MS - 1, MAX_SCHEDULED, zone);
+	return upcomingNotifications(tasks, now - STALE_AFTER_MS - 1, Number.POSITIVE_INFINITY, zone);
 }
 
 /** Replans every subscribed device against the synced tasks. Returns when the alarm should fire, or null. */
