@@ -108,6 +108,7 @@ private struct RepeatPopover: View {
                     ForEach(RepeatMenu.units, id: \.self) { Text("\($0.rawValue)s").tag($0) }
                 }
                 .pickerStyle(.menu)
+                .fixedSize()
                 .accessibilityLabel("Repeat unit")
                 Spacer(minLength: 0)
                 Button("Set") {

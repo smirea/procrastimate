@@ -94,7 +94,6 @@ private struct TaskDetailsForm: View {
         }
         .scrollDismissesKeyboard(.interactively)
         .background(.canvas)
-        .navigationTitle(task.title)
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden()
         .toolbar { toolbar(draft) }
