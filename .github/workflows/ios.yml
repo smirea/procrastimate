@@ -62,6 +62,12 @@ jobs:
       - name: Toolchain
         run: xcodebuild -version
 
+      - name: Release builds use the production API
+        run: |
+          url=$(xcodebuild -showBuildSettings -project App.xcodeproj -target App -configuration Release | awk '$1 == "API_URL" { print $3 }')
+          echo "API_URL=$url"
+          test "$url" = https://procrastimate.stf.lol
+
       - name: Boot an iPhone 16 simulator on iOS 26
         id: simulator
         run: |

@@ -1,1 +1,4 @@
 #include? "LocalSecrets.xcconfig"
+
+// After the include so archives ship the production API whatever the local value is. `$()` keeps `//` from starting a comment.
+API_URL[config=Release] = https:/$()/procrastimate.stf.lol
