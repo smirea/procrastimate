@@ -52,15 +52,14 @@ extension ParityTestCase {
     }
 
     /// Opens `Import from Todoist` and walks the document picker to the app's folder under On My iPhone, where CI
-    /// copies the fixtures, then picks the file whose name starts with `file`. The picker reopens where it was last,
-    /// so each pass taps whichever step is on screen. Its glass tab bar never reports itself hittable, so every step is
-    /// tapped by coordinate.
+    /// copies the fixtures, then picks the file whose name starts with `file`. The picker reopens where it was last
+    /// and keeps screens it left in its tree, so each pass taps whichever step is hittable. Its glass tab bar never
+    /// reports itself hittable, so Browse is tapped by coordinate, and only now and then, since it pops to its root.
     func pick(_ file: String, snapping id: String? = nil) {
         app.buttons["Import from Todoist"].tap()
         let target = pickerItem(BEGINSWITH: file)
-        let folder = app.otherElements.matching(NSPredicate(format: "identifier CONTAINS 'Title: Procrastimate'")).firstMatch
         let tabs = app.tabBars["DOC.browsingModeTabBar"]
-        var browsed = Date.distantPast
+        var browsed = Date()
         let deadline = Date().addingTimeInterval(60)
         while Date() < deadline {
             if target.exists {
@@ -68,13 +67,11 @@ extension ParityTestCase {
                 tapCenter(target)
                 return
             }
-            if !folder.exists {
-                if let step = [pickerItem(equals: "Procrastimate"), pickerItem(equals: "On My iPhone")].first(where: { $0.exists }) {
-                    tapCenter(step)
-                } else if tabs.exists, Date().timeIntervalSince(browsed) > 5 {
-                    tapCenter(tabs.buttons["Browse"])
-                    browsed = Date()
-                }
+            if let step = hittableStep() {
+                step.tap()
+            } else if tabs.exists, Date().timeIntervalSince(browsed) > 8 {
+                tapCenter(tabs.buttons["Browse"])
+                browsed = Date()
             }
             Thread.sleep(forTimeInterval: 1)
         }
@@ -83,10 +80,18 @@ extension ParityTestCase {
     }
 
     /// A cell or text in the picker, never the app itself, whose label is also `Procrastimate`.
-    private func pickerItem(equals label: String) -> XCUIElement {
+    private func hittableStep() -> XCUIElement? {
+        for label in ["Procrastimate", "On My iPhone"] {
+            for item in pickerItems(equals: label).allElementsBoundByIndex where item.isHittable {
+                return item
+            }
+        }
+        return nil
+    }
+
+    private func pickerItems(equals label: String) -> XCUIElementQuery {
         app.descendants(matching: .any)
             .matching(NSPredicate(format: "label == %@ AND elementType IN %@", label, [XCUIElement.ElementType.cell.rawValue, XCUIElement.ElementType.staticText.rawValue]))
-            .firstMatch
     }
 
     private func pickerItem(BEGINSWITH prefix: String) -> XCUIElement {
