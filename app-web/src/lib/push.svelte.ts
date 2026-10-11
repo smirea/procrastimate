@@ -86,15 +86,17 @@ class Push {
 		if (Notification.permission === 'denied') return { kind: 'denied' };
 		const registration = await navigator.serviceWorker.getRegistration();
 		const subscription = await registration?.pushManager.getSubscription();
-		if (!registration || !subscription) return { kind: 'off' };
+		const rekeying = localStorage.getItem(REKEY_KEY) !== null;
+		if (!registration || (!subscription && !rekeying)) return { kind: 'off' };
 		if (Notification.permission !== 'granted') {
-			await subscription.unsubscribe();
+			localStorage.removeItem(REKEY_KEY);
+			await subscription?.unsubscribe();
 			return { kind: 'off' };
 		}
-		const current = sameKey(subscription.options.applicationServerKey, key)
-			? subscription
-			: await resubscribe(registration, subscription, key);
-		if (!current) return { kind: 'off' };
+		const current =
+			subscription && sameKey(subscription.options.applicationServerKey, key)
+				? subscription
+				: await rekey(registration, subscription, key);
 		const info = pushSubscriptionSchema.parse(current.toJSON());
 		await this.#register(info);
 		return { kind: 'on', subscription: info };
@@ -105,6 +107,7 @@ class Push {
 		const changed = this.#paired !== null && this.#paired !== paired;
 		this.#paired = paired;
 		if (!changed) return;
+		if (!paired) localStorage.removeItem(REKEY_KEY);
 		this.#registered = null;
 		void this.detect();
 	}
@@ -265,17 +268,24 @@ async function fetchKey(): Promise<Uint8Array<ArrayBuffer> | null> {
 	}
 }
 
+/** Set while a rekey has dropped the old subscription but not made the new one, so a retry or relaunch finishes it. */
+const REKEY_KEY = 'procrastimate-push-rekey';
+
 /**
  * Moves a subscription made for a rotated server key to the current one. Permission is already granted, so this
- * needs no prompt. Browsers refuse a second key on a live subscription, so the old one goes first.
+ * needs no prompt. Browsers refuse a second key on a live subscription, so the old one goes first. A failed
+ * subscribe throws, which leaves push in the `error` state that retries when the device comes back online or visible.
  */
-async function resubscribe(
+async function rekey(
 	registration: ServiceWorkerRegistration,
-	stale: PushSubscription,
+	stale: PushSubscription | null | undefined,
 	key: Uint8Array<ArrayBuffer>,
-): Promise<PushSubscription | null> {
-	await stale.unsubscribe();
-	return registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key }).catch(() => null);
+): Promise<PushSubscription> {
+	localStorage.setItem(REKEY_KEY, '1');
+	await stale?.unsubscribe();
+	const fresh = await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key });
+	localStorage.removeItem(REKEY_KEY);
+	return fresh;
 }
 
 function sameKey(current: ArrayBuffer | null, key: Uint8Array) {

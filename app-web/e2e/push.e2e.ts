@@ -8,7 +8,7 @@ const serverKey = (seed: number) => Buffer.from(Array.from({ length: 65 }, (_, i
 /**
  * Stands in for the browser's push service. Playwright's Chromium contexts cannot subscribe for real, so
  * `PushManager` hands out a fake subscription bound to the key it was given, kept in `sessionStorage` so it survives
- * a reload. Each subscribe gets a new endpoint. Subscriptions still register with the real server, which computes the
+ * a reload. Each subscribe gets a new endpoint, and fails while `mock-push-down` is set. Subscriptions still register with the real server, which computes the
  * schedule from synced tasks. Returns a function that rotates the key the server serves.
  */
 async function mockPush(page: Page, permission: 'grant' | 'deny') {
@@ -33,6 +33,7 @@ async function mockPush(page: Page, permission: 'grant' | 'deny') {
 			};
 			PushManager.prototype.subscribe = async options => {
 				if (sessionStorage.getItem('mock-push')) throw new DOMException('Already subscribed', 'InvalidStateError');
+				if (sessionStorage.getItem('mock-push-down')) throw new DOMException('Push service unreachable', 'AbortError');
 				const count = Number(sessionStorage.getItem('mock-push-count') ?? 0) + 1;
 				sessionStorage.setItem('mock-push-count', String(count));
 				const bytes = new Uint8Array(options!.applicationServerKey as Uint8Array<ArrayBuffer>);
@@ -164,6 +165,35 @@ test('a rotated server key resubscribes this device on the next launch without a
 	expect(body.subscription.endpoint).toBe(saved.endpoint);
 	expect(Buffer.from(saved.key).toString('base64url')).toBe(serverKey(1));
 	await expect(notificationsRow(app)).toHaveText(status('On'));
+});
+
+test('a rekey that cannot reach the push service retries when the device comes back online', async ({ app, page }) => {
+	const rotate = await mockPush(page, 'grant');
+	await app.openSettings();
+	await setUpSync(app);
+	await openSheet(app, 'Get notified when tasks are due');
+	await sheet(app).getByRole('button', { name: 'Turn on notifications' }).click();
+	await expect(notificationsRow(app)).toHaveText(status('On'));
+	await page.keyboard.press('Escape');
+
+	rotate(2);
+	await page.evaluate(() => sessionStorage.setItem('mock-push-down', '1'));
+	await page.reload();
+	await expect(notificationsRow(app)).toHaveText(status('Off'));
+	await page.reload();
+	await expect(notificationsRow(app)).toHaveText(status('Off'));
+
+	const registered = page.waitForRequest(
+		request => request.url().endsWith('/api/push/subscription') && request.method() === 'PUT',
+	);
+	await page.evaluate(() => {
+		sessionStorage.removeItem('mock-push-down');
+		window.dispatchEvent(new Event('online'));
+	});
+	await registered;
+	await expect(notificationsRow(app)).toHaveText(status('On'));
+	const saved = await page.evaluate(() => JSON.parse(sessionStorage.getItem('mock-push')!) as { key: number[] });
+	expect(Buffer.from(saved.key).toString('base64url')).toBe(serverKey(2));
 });
 
 test('removing this device from sync takes push back to turning on sync first', async ({ app, page }) => {
