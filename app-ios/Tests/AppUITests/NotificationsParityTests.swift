@@ -108,6 +108,13 @@ final class NotificationsParityTests: ParityTestCase {
             .matching(NSPredicate(format: "label CONTAINS 'Call mom'")).firstMatch
         XCTAssertTrue(banner.waitForExistence(timeout: 30), "No notification for Call mom")
         banner.tap()
+        if !app.wait(for: .runningForeground, timeout: 5) {
+            // The banner can slide away under the tap. The notification then waits in Notification Center.
+            let top = springboard.coordinate(withNormalizedOffset: CGVector(dx: 0.3, dy: 0.005))
+            top.press(forDuration: 0.1, thenDragTo: springboard.coordinate(withNormalizedOffset: CGVector(dx: 0.3, dy: 0.7)))
+            XCTAssertTrue(banner.waitForExistence(timeout: 5), "Call mom is not in Notification Center")
+            banner.tap()
+        }
         XCTAssertTrue(app.wait(for: .runningForeground, timeout: 10))
         expectDetailsOpen()
         snap("push-open")

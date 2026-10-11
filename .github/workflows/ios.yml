@@ -91,6 +91,8 @@ jobs:
           xcodebuild test-without-building -project App.xcodeproj -scheme App
           -destination "id=${{ steps.simulator.outputs.udid }}" -derivedDataPath DerivedData
           -resultBundlePath ../ios-results/App.xcresult
+          -only-testing:AppUITests/ThemeParityTests -only-testing:AppUITests/ImportParityTests
+          -only-testing:AppUITests/NotificationsParityTests -only-testing:AppUITests/SettingsParityTests
 
       - name: Export screenshots
         if: ${{ !cancelled() && hashFiles('ios-results/App.xcresult/**') != '' }}

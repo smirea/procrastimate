@@ -31,7 +31,10 @@ extension ParityTestCase {
             if dark ? luminance < 0.35 : luminance > 0.75 { return }
             Thread.sleep(forTimeInterval: 0.2)
         } while Date() < deadline
-        XCTFail("Expected the \(theme) theme, the background's luminance is \(luminance)", file: file, line: line)
+        XCTFail(
+            "Expected the \(theme) theme, the background's luminance is \(luminance), the device appearance is \(XCUIDevice.shared.appearance.rawValue)",
+            file: file, line: line
+        )
     }
 
     private func backgroundLuminance() -> Double {
@@ -51,11 +54,13 @@ extension ParityTestCase {
         return (0.299 * Double(pixel[0]) + 0.587 * Double(pixel[1]) + 0.114 * Double(pixel[2])) / 255
     }
 
-    /// Opens `Import from Todoist` and walks the document picker to the app's folder under On My iPhone, where CI
-    /// copies the fixtures, then picks the file whose name starts with `file`.
+    /// Opens `Import from Todoist` and walks the document picker from its Browse tab to the app's folder under
+    /// On My iPhone, where CI copies the fixtures, then picks the file whose name starts with `file`. Each step is
+    /// tapped once, because tapping Browse again pops back to its root.
     func pick(_ file: String, snapping id: String? = nil) {
         app.buttons["Import from Todoist"].tap()
         let target = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", file)).firstMatch
+        var steps = ["Browse", "On My iPhone", "Procrastimate"]
         let deadline = Date().addingTimeInterval(45)
         while Date() < deadline {
             if target.exists, target.isHittable {
@@ -63,24 +68,29 @@ extension ParityTestCase {
                 target.tap()
                 return
             }
-            for step in ["Procrastimate", "On My iPhone", "Browse"] {
+            if let step = steps.first {
                 let candidates = app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", step))
-                if let hit = candidates.allElementsBoundByIndex.first(where: { $0.isHittable && $0.elementType != .tab }) {
+                if let hit = candidates.allElementsBoundByIndex.first(where: { $0.isHittable }) {
                     hit.tap()
-                    break
+                    steps.removeFirst()
                 }
             }
             Thread.sleep(forTimeInterval: 0.5)
         }
-        XCTFail("Never reached \(file) in the document picker")
+        XCTFail("Never reached \(file) in the document picker, still to open: \(steps)")
     }
 
     var importSummary: XCUIElement { element("Import summary") }
 
+    /// Browse keeps its stack, so the screen may still be open from an earlier visit.
     func openNotifications() {
-        go("Browse")
-        notificationsRow.tap()
-        XCTAssertTrue(app.navigationBars["Notifications"].waitForExistence(timeout: 5))
+        tab("Browse").tap()
+        let screen = app.navigationBars["Notifications"]
+        if !screen.waitForExistence(timeout: 1) {
+            XCTAssertTrue(app.navigationBars["Browse"].waitForExistence(timeout: 5))
+            notificationsRow.tap()
+        }
+        XCTAssertTrue(screen.waitForExistence(timeout: 5))
     }
 
     var notificationsRow: XCUIElement {

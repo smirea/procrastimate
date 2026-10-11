@@ -1,6 +1,5 @@
 import Observation
 import SwiftUI
-import UIKit
 
 /// System, Light, or Dark, the same three choices as the web.
 enum ThemeChoice: String, CaseIterable, Identifiable {
@@ -33,14 +32,6 @@ enum ThemeChoice: String, CaseIterable, Identifiable {
         case .dark: .dark
         }
     }
-
-    var interfaceStyle: UIUserInterfaceStyle {
-        switch self {
-        case .system: .unspecified
-        case .light: .light
-        case .dark: .dark
-        }
-    }
 }
 
 /// A device preference under the web's `procrastimate-theme` key, kept out of the task store so it never syncs.
@@ -61,17 +52,6 @@ final class ThemeSettings {
             UserDefaults.standard.removeObject(forKey: Self.key)
         } else {
             UserDefaults.standard.set(next.rawValue, forKey: Self.key)
-        }
-        applyToWindows()
-    }
-
-    /// `preferredColorScheme` paints the first frame in the saved theme. Going back to `System` also clears the
-    /// window's override, since a `nil` preference alone can leave the last forced style in place.
-    func applyToWindows() {
-        for scene in UIApplication.shared.connectedScenes {
-            for window in (scene as? UIWindowScene)?.windows ?? [] {
-                window.overrideUserInterfaceStyle = choice.interfaceStyle
-            }
         }
     }
 }

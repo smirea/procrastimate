@@ -64,7 +64,7 @@ struct ProcrastimateApp: App {
                 }
         }
         .backgroundTask(.appRefresh(LocalNotifications.refreshTaskID)) { [notifications] in
-            await notifications.sync()
+            await notifications.detect()
         }
     }
 }
