@@ -430,18 +430,23 @@ function buildTitle(
 	mapped: Mapped,
 	pieces: readonly Range[],
 	tokens: readonly FieldToken[],
+	omit: readonly Range[] = [],
 ): string {
 	const parts: string[] = [];
 	for (const piece of pieces) {
 		let cursor = piece.start;
-		const inside = tokens.filter(t => t.start >= piece.start && t.end <= piece.end);
+		const inside = [
+			...tokens
+				.filter(t => t.start >= piece.start && t.end <= piece.end)
+				.map(t => ({ start: t.start, end: t.end, beforeDate: ['due', 'recurrence', 'reminder'].includes(t.kind) })),
+			...omit
+				.filter(r => r.end > piece.start && r.start < piece.end)
+				.map(r => ({ start: r.start, end: r.end, beforeDate: false })),
+		].toSorted((a, b) => a.start - b.start || a.end - b.end);
 		const gaps: Array<Range & { beforeDate: boolean }> = [];
 		for (const token of inside) {
-			gaps.push({
-				start: cursor,
-				end: token.start,
-				beforeDate: ['due', 'recurrence', 'reminder'].includes(token.kind),
-			});
+			if (token.end <= cursor) continue;
+			gaps.push({ start: cursor, end: Math.max(cursor, token.start), beforeDate: token.beforeDate });
 			cursor = Math.max(cursor, token.end);
 		}
 		gaps.push({ start: cursor, end: piece.end, beforeDate: false });
@@ -711,7 +716,7 @@ const STRUCTURE = new RegExp(
 );
 const LIST_SPLIT = /\s*,\s*(?:and\s+)?|\s+and\s+/gi;
 const CUE =
-	/^(?:(?:and|also|oh)\s+)?(?:remind\s+me(?!\s+to\b)|priority|p[1-4]\b|project|in\s+(?:the\s+|my\s+)?project|labels?|tag(?:ged)?|it'?s\s+due|it\s+is\s+due|due|make\s+it|set\s+it|every|each|add\s+it|put\s+it|move\s+it|(?:for|in|to)\s+(?:the|my)\s)/i;
+	/^(?:(?:and|also|oh)\s+)?(?:remind\s+me(?!\s+to\b)|priority|p[1-4]\b|project|in\s+(?:the\s+|my\s+)?project|labels?|tag(?:ged)?|it'?s\s+due|it\s+is\s+due|due|make\s+it(?:\s+to)?|set\s+it(?:\s+to)?|every|each|add\s+it|put\s+it|move\s+it|(?:for|in|to)\s+(?:the|my)\s)/i;
 
 type Item = {
 	main: Range[];
@@ -789,14 +794,22 @@ export function parseRamble(transcript: string, options: RambleOptions): RambleD
 
 	const isAttributesOnly = (range: Range, item: Item) => !titleOf([range], item.parent === null).title;
 
+	/** A continuation cue at the start of a clause, such as `make it` in `Make it due tomorrow`. */
+	const leadingCue = (range: Range): Range | null => {
+		const clause = span(range);
+		const skip = clause.length - clause.replace(/^\s+/, '').length;
+		const cue = CUE.exec(clause.slice(skip));
+		if (!cue) return null;
+		const start = range.start + skip;
+		return { start, end: start + cue[0].length };
+	};
+
 	const shouldAttach = (range: Range, item: Item) => {
 		const { title, attributes } = titleOf([range], item.parent === null);
 		if (!title) return true;
-		const clause = span(range);
-		const cue = CUE.exec(clause.replace(/^\s+/, ''));
-		if (!cue) return false;
-		const cueEnd = range.start + (clause.length - clause.replace(/^\s+/, '').length) + cue[0].length;
-		return attributes.tokens.some(t => t.start <= cueEnd);
+		// The cue is structural text. It continues the task before it whenever the sentence sets a
+		// field, including when that field starts after the cue (`Make it due tomorrow`).
+		return leadingCue(range) !== null && attributes.tokens.length > 0;
 	};
 
 	const handleLead = (range: Range, forceNew: boolean) => {
@@ -804,8 +817,11 @@ export function parseRamble(transcript: string, options: RambleOptions): RambleD
 		clauses.forEach((clause, index) => {
 			const attach =
 				current && (index === 0 ? !forceNew && shouldAttach(clause, current) : isAttributesOnly(clause, current));
-			if (attach && current) current.main.push(clause);
-			else startTask(clause);
+			if (attach && current) {
+				current.main.push(clause);
+				const cue = leadingCue(clause);
+				if (cue) current.cues.push(cue);
+			} else startTask(clause);
 		});
 	};
 
@@ -925,7 +941,8 @@ export function parseRamble(transcript: string, options: RambleOptions): RambleD
 	const build = (item: Item, isRoot: boolean): RambleTask | null => {
 		const subtasks = isRoot ? item.subtasks.map(s => build(s, false)).filter(s => s !== null) : [];
 		const attributes = item.main.length ? sliceOf(item, isRoot).attributes : null;
-		const title = item.main.length && attributes ? buildTitle(transcript, mapped, item.main, attributes.tokens) : '';
+		const title =
+			item.main.length && attributes ? buildTitle(transcript, mapped, item.main, attributes.tokens, item.cues) : '';
 		if (!title) return null;
 		for (const token of attributes?.tokens ?? []) pushToken(token.kind, token);
 		const notes = item.notes

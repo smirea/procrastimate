@@ -136,6 +136,7 @@ const HAND_WRITTEN: Record<Category, Row[]> = {
 	],
 	single: [
 		['Pay rent tomorrow', [t('Pay rent', { due: '2026-10-15' })]],
+		['Buy milk. Make it priority one.', [t('Buy milk', { priority: 1 })]],
 		['Email Dana priority 2', [t('Email Dana', { priority: 2 })]],
 		['Water plants every Sunday', [t('Water plants', { due: '2026-10-18', recurrence: weekly })]],
 		['Book flights, add it to the Indonesia project', [t('Book flights', { project: 'Indonesia' })]],
@@ -718,6 +719,7 @@ const HAND_WRITTEN: Record<Category, Row[]> = {
 	dates: [
 		['Gym every other week on Monday', [t('Gym', { due: '2026-10-19', recurrence: { interval: 2, unit: 'week' } })]],
 		['Call mom in two weeks', [t('Call mom', { due: '2026-10-28' })]],
+		['Buy milk. Make it due tomorrow.', [t('Buy milk', { due: '2026-10-15' })]],
 		['Pick up Ava at half past five pm', [t('Pick up Ava', { due: '2026-10-14 17:30' })]],
 		['Lunch with Sara next Friday at noon', [t('Lunch with Sara', { due: '2026-10-23 12:00' })]],
 		[

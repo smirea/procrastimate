@@ -84,6 +84,18 @@ const SEPARATORS = [
 	'. Next one, ',
 ];
 
+/** Fisher–Yates. A sort comparator is not a shuffle: its call order depends on the runtime. */
+function shuffle<T>(items: readonly T[], random: () => number): T[] {
+	const copy = [...items];
+	for (let i = copy.length - 1; i > 0; i--) {
+		const j = Math.floor(random() * (i + 1));
+		const swap = copy[i]!;
+		copy[i] = copy[j]!;
+		copy[j] = swap;
+	}
+	return copy;
+}
+
 function mulberry32(seed: number) {
 	let a = seed;
 	return () => {
@@ -106,7 +118,7 @@ function generateTask(
 		if (!groups.includes(extra)) groups.push(extra);
 	}
 	const phrases: Phrase[][] = [];
-	for (const group of groups.toSorted(() => random() - 0.5)) {
+	for (const group of shuffle(groups, random)) {
 		const phrase = pick(group);
 		// A relative reminder only means something next to a due time, so it follows one.
 		phrases.push(phrase.timed && random() < 0.5 ? [phrase, pick(REMINDERS)] : [phrase]);
@@ -121,7 +133,7 @@ const lowerFirst = (text: string) => text.charAt(0).toLowerCase() + text.slice(1
 
 export function generateCases(): RambleCase[] {
 	const random = mulberry32(20261014);
-	const titles = () => TITLES.toSorted(() => random() - 0.5);
+	const titles = () => shuffle(TITLES, random);
 	const cases: RambleCase[] = [];
 
 	for (let i = 1; i <= 40; i++) {
