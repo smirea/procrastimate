@@ -62,6 +62,12 @@ jobs:
       - name: Toolchain
         run: xcodebuild -version
 
+      - name: Release builds use the production API
+        run: |
+          url=$(xcodebuild -showBuildSettings -project App.xcodeproj -target App -configuration Release | awk '$1 == "API_URL" { print $3 }')
+          echo "API_URL=$url"
+          test "$url" = https://procrastimate.stf.lol
+
       - name: Boot an iPhone 16 simulator on iOS 26
         id: simulator
         run: |
@@ -78,13 +84,16 @@ jobs:
           xcodebuild build-for-testing -quiet -project App.xcodeproj -scheme App
           -destination "id=${{ steps.simulator.outputs.udid }}" -derivedDataPath DerivedData CODE_SIGNING_ALLOWED=NO
 
-      # The import tests pick these in the document picker, under On My iPhone › Procrastimate. Reinstalling the app
+      # The import tests pick these in the document picker, under On My iPhone › ProcrastiMate. Reinstalling the app
       # for the tests keeps its Documents folder.
       - name: Todoist fixtures in the app's Documents
         run: |
           udid="${{ steps.simulator.outputs.udid }}"
           xcrun simctl install "$udid" DerivedData/Build/Products/Debug-iphonesimulator/App.app
           bun scripts/todoist-fixtures.ts "$(xcrun simctl get_app_container "$udid" com.stefan.procrastimate data)/Documents"
+
+      - name: App bundles its privacy manifest
+        run: plutil -lint DerivedData/Build/Products/Debug-iphonesimulator/App.app/PrivacyInfo.xcprivacy
 
       - name: UI tests
         run: >

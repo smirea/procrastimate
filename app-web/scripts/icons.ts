@@ -1,5 +1,5 @@
 /**
- * Renders the app icons in `static/icons/` from `static/icons/favicon.svg` with Playwright's Chromium.
+ * Renders the app icons in `static/icons/` and the iOS `AppIcon` from `static/icons/favicon.svg` with Playwright's Chromium.
  * Run `bun scripts/icons.ts` from `app-web/` after editing the SVG.
  */
 import { chromium } from '@playwright/test';
@@ -20,6 +20,7 @@ const variants = [
 	{ file: 'maskable-512.png', size: 512, look: 'bleed' },
 	{ file: 'apple-touch-icon.png', size: 180, look: 'bleed' },
 	{ file: 'badge-96.png', size: 96, look: 'glyph' },
+	{ file: '../../../app-ios/Sources/App/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png', size: 1024, look: 'bleed' },
 ] as const;
 
 const browser = await chromium.launch();

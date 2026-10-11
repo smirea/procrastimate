@@ -79,9 +79,9 @@ extension ParityTestCase {
         XCTFail("Never reached \(file) in the document picker")
     }
 
-    /// A cell or text in the picker, never the app itself, whose label is also `Procrastimate`.
+    /// A cell or text in the picker, never the app itself, whose label is the display name `ProcrastiMate`.
     private func hittableStep() -> XCUIElement? {
-        for label in ["Procrastimate", "On My iPhone"] {
+        for label in ["ProcrastiMate", "On My iPhone"] {
             for item in pickerItems(equals: label).allElementsBoundByIndex where item.isHittable {
                 return item
             }

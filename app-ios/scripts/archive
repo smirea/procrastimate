@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+# Archives the Release app and uploads it to App Store Connect (TestFlight) with an App Store Connect API key.
+# Usage: ./scripts/archive [--export-only]
+# Needs ASC_KEY_ID, ASC_ISSUER_ID, and ASC_KEY_PATH (the AuthKey_<id>.p8 file, kept outside the repo).
+# BUILD_NUMBER overrides the build number, which defaults to the current UTC time as year.MMdd.HHmmss: always higher,
+# and within CFBundleVersion's three period-separated integers with a first integer of at most four digits.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+destination=upload
+case "${1:-}" in
+    "") ;;
+    --export-only) destination=export ;;
+    *) echo "usage: $0 [--export-only]" >&2; exit 64 ;;
+esac
+
+: "${ASC_KEY_ID:?Set ASC_KEY_ID to the App Store Connect API key id}"
+: "${ASC_ISSUER_ID:?Set ASC_ISSUER_ID to the App Store Connect issuer id}"
+: "${ASC_KEY_PATH:?Set ASC_KEY_PATH to the AuthKey_<id>.p8 path}"
+test -f "$ASC_KEY_PATH" || { echo "No key at $ASC_KEY_PATH" >&2; exit 1; }
+key_path=$(cd "$(dirname "$ASC_KEY_PATH")" && pwd)/$(basename "$ASC_KEY_PATH")
+repo=$(git rev-parse --show-toplevel)
+case "$key_path" in
+    "$repo"/*) echo "Keep the API key outside the repository: $key_path" >&2; exit 1 ;;
+esac
+
+read -r year monthday time < <(date -u '+%Y %m%d %H%M%S')
+build_number=${BUILD_NUMBER:-$year.$((10#$monthday)).$((10#$time))}
+out=build/archive
+archive=$out/App.xcarchive
+options=$out/ExportOptions.plist
+auth=(
+    -allowProvisioningUpdates
+    -authenticationKeyPath "$key_path"
+    -authenticationKeyID "$ASC_KEY_ID"
+    -authenticationKeyIssuerID "$ASC_ISSUER_ID"
+)
+
+rm -rf "$out"
+mkdir -p "$out"
+cat > "$options" <<PLIST
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>method</key>
+    <string>app-store-connect</string>
+    <key>destination</key>
+    <string>$destination</string>
+    <key>teamID</key>
+    <string>FNYFHG5SV7</string>
+    <key>signingStyle</key>
+    <string>automatic</string>
+    <key>manageAppVersionAndBuildNumber</key>
+    <false/>
+</dict>
+</plist>
+PLIST
+
+echo "Archiving build $build_number"
+xcodebuild archive -project App.xcodeproj -scheme App -configuration Release \
+    -destination 'generic/platform=iOS' -archivePath "$archive" \
+    CURRENT_PROJECT_VERSION="$build_number" "${auth[@]}"
+
+xcodebuild -exportArchive -archivePath "$archive" -exportOptionsPlist "$options" \
+    -exportPath "$out/export" "${auth[@]}"
+
+if [ "$destination" = upload ]; then
+    echo "Uploaded build $build_number. It shows in TestFlight once App Store Connect finishes processing."
+else
+    echo "Exported $out/export/App.ipa (build $build_number)"
+fi
