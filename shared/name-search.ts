@@ -70,7 +70,7 @@ export function suggest<T extends Named>(
 			(a, b) =>
 				a.tier - b.tier ||
 				(used.get(b.item.id) ?? 0) - (used.get(a.item.id) ?? 0) ||
-				a.item.name.localeCompare(b.item.name, undefined, { sensitivity: 'base' }),
+				a.item.name.localeCompare(b.item.name, 'en-US', { sensitivity: 'base' }),
 		);
 	const suggestions: Suggestion<T>[] = ranked.map(r => ({ kind: 'existing', item: r.item }));
 	if (q && ranked[0]?.tier !== 0) suggestions.push({ kind: 'create', name: query.trim() });

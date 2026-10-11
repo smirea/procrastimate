@@ -1,14 +1,18 @@
-import { describe, expect, test } from 'bun:test';
-import {
-	labelIdsOf,
-	lastUsed,
-	projectIdsOf,
-	sigilFragment,
-	suggest,
-	type Named,
-	type Suggestion,
-} from './name-search.ts';
+import { expect } from 'bun:test';
+import * as names from './name-search.ts';
+import type { Named, Suggestion } from './name-search.ts';
 import type { Project, Task } from './task.ts';
+import { describe, recorded, test } from './vectors/record.ts';
+
+const sigilFragment = recorded('name-search', names.sigilFragment);
+const suggest = recorded('name-search', names.suggest);
+// `lastUsed` takes a function, which a vector cannot hold, so each kind of id records under its own name.
+const lastUsedProjects = recorded('name-search', function lastUsedProjects(tasks: readonly Task[]) {
+	return names.lastUsed(tasks, names.projectIdsOf);
+});
+const lastUsedLabels = recorded('name-search', function lastUsedLabels(tasks: readonly Task[]) {
+	return names.lastUsed(tasks, names.labelIdsOf);
+});
 
 const project = (id: string, name: string): Project => ({ id, name, createdAt: 0 });
 const projects = [
@@ -36,12 +40,12 @@ const task = (projectId: string | null, createdAt: number, labelIds: string[] = 
 	completedAt: null,
 });
 
-const names = (suggestions: Suggestion<Named>[]) =>
+const shown = (suggestions: Suggestion<Named>[]) =>
 	suggestions.map(s => (s.kind === 'existing' ? s.item.name : `+${s.name}`));
 
 const suggestProjects = (tasks: Task[], query: string, items = projects) =>
-	names(suggest(items, lastUsed(tasks, projectIdsOf), query));
-const suggestLabels = (tasks: Task[], query: string) => names(suggest(labels, lastUsed(tasks, labelIdsOf), query));
+	shown(suggest(items, lastUsedProjects(tasks), query));
+const suggestLabels = (tasks: Task[], query: string) => shown(suggest(labels, lastUsedLabels(tasks), query));
 
 describe('sigilFragment', () => {
 	test.each([
