@@ -1,4 +1,4 @@
-// env-manager: procrastimate | 2026-10-11T08:36:07.501Z
+// env-manager: procrastimate
 // env-manager target: server
 // env-manager root: ../..
 // env-manager env: dev
