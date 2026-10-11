@@ -42,6 +42,7 @@ export const counter = (prefix: string) => {
 export class MemoryServer {
 	state: ServerState = createServerState();
 	log: Change[] = [];
+	epoch = 0;
 	private readonly nextOpId = counter('server-op-');
 
 	sync(cursor: number, ops: ClientSync['outbox'], now: number): SyncResponse {
@@ -52,7 +53,7 @@ export class MemoryServer {
 		});
 		this.state = pushed.state;
 		for (const entry of pushed.log) this.log.push({ ...entry, seq: this.log.length + 1 });
-		const base = { acked: pushed.acked, cursor: this.log.length, hlc: serverHlc(this.state) };
+		const base = { acked: pushed.acked, cursor: this.log.length, hlc: serverHlc(this.state), epoch: this.epoch };
 		if (cursor === 0) return { ...base, snapshot: serverSnapshot(this.state) };
 		return { ...base, changes: this.log.filter(change => change.seq > cursor) };
 	}

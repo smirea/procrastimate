@@ -1,19 +1,33 @@
-import type { AccountStore, Device, Entity, LogEntry, Pairing, PushTarget } from './store';
+import type { AccountStore, Device, Entity, LogEntry, PushTarget } from './store';
+
+/** The rows a Turso session loads and writes back. `log` is in `seq` order. */
+export type AccountTables = {
+	devices: Device[];
+	entities: Entity[];
+	log: LogEntry[];
+	push: PushTarget[];
+	ramble: { day: string; seconds: number }[];
+	epoch: number;
+};
 
 /**
  * The Bun dev server's account, kept in memory and lost on restart. Values are cloned in and out so callers never
  * share references with the store, like rows read back from SQLite. Transactions do not roll back.
  */
-export function memoryStore(): AccountStore {
-	const devices = new Map<string, Device>();
+export function memoryStore(seed?: AccountTables): AccountStore & { tables(): AccountTables } {
+	const devices = new Map<string, Device>((seed?.devices ?? []).map(device => [device.id, { ...device }]));
 	const entities = new Map<string, Entity>();
-	const log: LogEntry[] = [];
-	const pushTargets = new Map<string, PushTarget>();
-	const rambleUsage = new Map<string, number>();
-	let pairing: Pairing | null = null;
+	const log: LogEntry[] = (seed?.log ?? []).map(entry => structuredClone(entry));
+	const pushTargets = new Map<string, PushTarget>(
+		(seed?.push ?? []).map(target => [target.deviceId, structuredClone(target)]),
+	);
+	const rambleUsage = new Map<string, number>((seed?.ramble ?? []).map(row => [row.day, row.seconds]));
+	let epoch = seed?.epoch ?? 0;
+	let nextSeq = log.at(-1)?.seq ?? 0;
 	const entityKey = (kind: string, id: string) => `${kind}\u0000${id}`;
+	for (const entity of seed?.entities ?? []) entities.set(entityKey(entity.kind, entity.id), structuredClone(entity));
 
-	return {
+	const store: AccountStore & { tables(): AccountTables } = {
 		transaction: run => run(),
 
 		addDevice: device => {
@@ -23,6 +37,7 @@ export function memoryStore(): AccountStore {
 			const device = [...devices.values()].find(device => device.tokenHash === tokenHash);
 			return device ? { ...device } : null;
 		},
+		hasDevice: id => devices.has(id),
 		liveDevices: () =>
 			[...devices.values()]
 				.filter(device => device.revokedAt === null)
@@ -40,11 +55,6 @@ export function memoryStore(): AccountStore {
 			return true;
 		},
 
-		pairing: () => (pairing ? { ...pairing } : null),
-		setPairing: next => {
-			pairing = next ? { ...next } : null;
-		},
-
 		entity: (kind, id) => {
 			const entity = entities.get(entityKey(kind, id));
 			return entity ? structuredClone(entity) : null;
@@ -55,13 +65,26 @@ export function memoryStore(): AccountStore {
 		},
 
 		appendLog: entry => {
-			const seq = log.length + 1;
-			log.push(structuredClone({ ...entry, seq }));
-			return seq;
+			nextSeq += 1;
+			log.push(structuredClone({ ...entry, seq: nextSeq }));
+			return nextSeq;
 		},
-		logAfter: (after, limit) => log.slice(after, after + limit).map(entry => structuredClone(entry)),
+		logAfter: (after, limit) =>
+			log
+				.filter(entry => entry.seq > after)
+				.slice(0, limit)
+				.map(entry => structuredClone(entry)),
 		hasOp: opId => log.some(entry => entry.opId === opId),
-		lastSeq: () => log.length,
+		lastSeq: () => nextSeq,
+		clearTaskData: () => {
+			entities.clear();
+			log.length = 0;
+			nextSeq = 0;
+		},
+		epoch: () => epoch,
+		setEpoch: next => {
+			epoch = next;
+		},
 
 		pushTargets: () => [...pushTargets.values()].map(target => structuredClone(target)),
 		putPushTarget: target => {
@@ -75,5 +98,15 @@ export function memoryStore(): AccountStore {
 		addRambleSeconds: (day, seconds) => {
 			rambleUsage.set(day, (rambleUsage.get(day) ?? 0) + seconds);
 		},
+
+		tables: () => ({
+			devices: [...devices.values()].map(device => ({ ...device })),
+			entities: [...entities.values()].map(entity => structuredClone(entity)),
+			log: log.map(entry => structuredClone(entry)),
+			push: [...pushTargets.values()].map(target => structuredClone(target)),
+			ramble: [...rambleUsage].map(([day, seconds]) => ({ day, seconds })),
+			epoch,
+		}),
 	};
+	return store;
 }

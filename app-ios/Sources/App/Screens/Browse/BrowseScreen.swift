@@ -62,7 +62,6 @@ struct BrowseScreen: View {
             }
 
             Section {
-                NotificationsRow()
                 Button {
                     navigator.sheet = .settings
                 } label: {

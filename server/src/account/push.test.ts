@@ -1,5 +1,4 @@
 import { afterEach, beforeEach, describe, expect, setSystemTime, test } from 'bun:test';
-import type { DeviceCredentials } from '../../../shared/auth';
 import {
 	MAX_SCHEDULED,
 	type PushMessage,
@@ -16,11 +15,11 @@ import type { Env } from '../bindings';
 import { memoryAccount } from './account';
 import { deliverDue } from './push';
 import type { AccountStore } from './store';
+import { registerDevice } from './test-device';
 import { storeFactories } from './test-stores';
 
 /** Saturday, October 10 2026, 12:00 UTC. */
 const NOW = Date.UTC(2026, 9, 10, 12);
-const SETUP_CODE = 'correct-horse-battery-staple';
 const HOUR = 3_600_000;
 
 const subscriptionFor = (name: string): PushSubscriptionInfo => ({
@@ -43,7 +42,7 @@ describe.each(storeFactories)('server-computed push on the %s store', (_name, cr
 		alarm = null;
 		sent = [];
 		status = () => 201;
-		env = { ACCOUNT: memoryAccount(SETUP_CODE, store, async at => void (alarm = at)) };
+		env = { ACCOUNT: memoryAccount(store, async at => void (alarm = at)) };
 	});
 
 	const call = async (method: string, path: string, token: string | null, body?: unknown) =>
@@ -71,9 +70,7 @@ describe.each(storeFactories)('server-computed push on the %s store', (_name, cr
 
 	/** A paired device with its own copy of the data, which syncs each edit the way the clients do. */
 	async function device(name: string, initial: Snapshot = snapshotOf()) {
-		const credentials = (await (
-			await call('POST', '/api/auth/setup', null, { code: SETUP_CODE, name })
-		).json()) as DeviceCredentials;
+		const credentials = await registerDevice(env, name);
 		const nextOpId = counter(`${name}-op-`);
 		let snapshot = initial;
 		let sync: ClientSync = startSync(snapshot, credentials.deviceId, Date.now(), nextOpId);
@@ -274,7 +271,7 @@ describe.each(storeFactories)('server-computed push on the %s store', (_name, cr
 		expect(alarm).toBe(NOW + 2 * HOUR);
 	});
 
-	test('a gone subscription, unsubscribing, and removing the device each stop its pushes', async () => {
+	test('a gone subscription, unsubscribing, and revoking the device each stop its pushes', async () => {
 		const mac = await device('mac');
 		const phone = await device('phone');
 		const ipad = await device('ipad');
@@ -284,9 +281,7 @@ describe.each(storeFactories)('server-computed push on the %s store', (_name, cr
 		status = endpoint => (endpoint === subscriptionFor('mac').endpoint ? 410 : 201);
 
 		expect(await (await call('DELETE', '/api/push/subscription', phone.token)).json()).toEqual({ ok: true });
-		expect(await (await call('DELETE', '/api/auth/devices', mac.token, { id: ipad.deviceId })).json()).toEqual({
-			ok: true,
-		});
+		expect(store.revokeDevice(ipad.deviceId, NOW)).toBe(true);
 		await fireAlarm();
 		expect(received('mac').length).toBe(1);
 		expect(received('phone')).toEqual([]);

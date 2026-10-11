@@ -1,10 +1,12 @@
 import type { Server, ServerWebSocket } from 'bun';
 import { SOCKET_PING, SOCKET_PONG } from '../../shared/sync/protocol';
-import { memoryAccount } from './account/account';
+import { accountHandler } from './account/account';
 import { memoryStore } from './account/memory-store';
+import { tursoSession } from './account/turso';
 import { upstreamUrl, type ConnectUpstream, type RambleConfig } from './account/ramble';
 import { acceptedProtocol, type Socket, type SocketHost, type StreamEvents } from './account/realtime';
 import api from './api';
+import type { Env } from './bindings';
 
 /** A nudge socket carries its device; a streaming socket carries the `start` its route passed, then its handlers. */
 type SocketData =
@@ -35,11 +37,12 @@ export function bunUpstream(apiKey: string): ConnectUpstream {
  */
 export function serveDev({
 	port,
-	setupCode,
+	turso,
 	ramble = { connect: null },
 }: {
 	port: number;
-	setupCode: string | undefined;
+	/** When both Turso secrets are set, task data lives there. Otherwise the account stays in memory. */
+	turso?: { url: string; authToken: string };
 	ramble?: RambleConfig;
 }) {
 	const open = new Set<ServerWebSocket<SocketData>>();
@@ -60,14 +63,48 @@ export function serveDev({
 			[...open].filter(socket => socket.data.kind === 'nudge' && (!deviceId || socket.data.deviceId === deviceId)),
 		stream: (request, protocol, start) => upgrade(request, { kind: 'stream', start }, protocol),
 	};
-	const bindings = { ACCOUNT: memoryAccount(setupCode, memoryStore(), undefined, sockets, ramble) };
+	const memories = new Map<string, ReturnType<typeof memoryStore>>();
+	const memoryFor = (id: string) => {
+		const existing = memories.get(id);
+		if (existing) return existing;
+		const created = memoryStore();
+		memories.set(id, created);
+		return created;
+	};
+	const handle = accountHandler(async () => {}, sockets, ramble);
+	// End-to-end sharding stays in memory even when the shell has Turso credentials.
+	const database = turso && !process.env.E2E_SHARD ? turso : undefined;
+	let tail = Promise.resolve();
+	const accountFetch = (id: string, request: Request) => {
+		if (!database) return handle(request, memoryFor(id));
+		const run = tail.then(async () => {
+			const session = await tursoSession(database.url, database.authToken);
+			try {
+				return await handle(request, session.store);
+			} finally {
+				await session.flush();
+			}
+		});
+		tail = run.then(
+			() => undefined,
+			() => undefined,
+		);
+		return run;
+	};
+	const bindings = {
+		E2E_SHARD: process.env.E2E_SHARD,
+		ACCOUNT: {
+			idFromName: (name: string) => name,
+			get: (id: string) => ({ fetch: (request: Request) => accountFetch(id, request) }),
+		},
+	};
 
 	server = Bun.serve<SocketData>({
 		development: true,
 		idleTimeout: 120,
 		port,
 		async fetch(request) {
-			const response = await api.fetch(request, bindings);
+			const response = await api.fetch(request, bindings as unknown as Env);
 			return upgraded.has(response) ? undefined : response;
 		},
 		websocket: {

@@ -31,7 +31,6 @@ enum NotificationStatus: Equatable {
 final class LocalNotifications: NSObject {
     nonisolated static let refreshTaskID = "com.stefan.procrastimate.refresh"
     nonisolated static let testID = "test"
-    private static let enabledKey = "procrastimate-notifications"
 
     private(set) var status: NotificationStatus = .checking
     /// The requests the device holds, soonest first, as `title@<ISO time>: body` like the web suite's server schedule.
@@ -44,7 +43,6 @@ final class LocalNotifications: NSObject {
     @ObservationIgnored private let center = UNUserNotificationCenter.current()
     @ObservationIgnored private let simulatesDenial: Bool
     @ObservationIgnored private var simulatedAnswer = false
-    @ObservationIgnored private var nudged = false
     @ObservationIgnored private var resync: Task<Void, Never>?
 
     init(store: Store, toasts: Toasts, navigator: Navigator, clock: AppClock) {
@@ -61,15 +59,16 @@ final class LocalNotifications: NSObject {
         center.delegate = self
     }
 
-    /// Turned on in this app. iOS has no way to give a permission back, so `Turn off` clears this instead.
-    private var enabled: Bool {
-        get { UserDefaults.standard.bool(forKey: Self.enabledKey) }
-        set { UserDefaults.standard.set(newValue, forKey: Self.enabledKey) }
-    }
-
-    /// Detects the status, refills the window, and shows reminders that came up while closed, then checks for due
+    /// Detects the status, asks on first launch, refills the window, and shows reminders that came up while closed.
     /// reminders every minute while the app runs.
     func run() async {
+        if await authorizationStatus() == .notDetermined {
+            if simulatesDenial {
+                simulatedAnswer = true
+            } else {
+                _ = try? await center.requestAuthorization(options: [.alert, .sound])
+            }
+        }
         await detect()
         fireDueReminders()
         while !Task.isCancelled {
@@ -84,7 +83,7 @@ final class LocalNotifications: NSObject {
         let authorization = await authorizationStatus()
         status = switch authorization {
         case .denied: .denied
-        case .authorized, .provisional, .ephemeral: enabled ? .on : .off
+        case .authorized, .provisional, .ephemeral: .on
         case .notDetermined: .off
         @unknown default: .off
         }
@@ -96,66 +95,20 @@ final class LocalNotifications: NSObject {
         return await center.notificationSettings().authorizationStatus
     }
 
-    /// The only place the app asks for permission: `Turn on notifications`.
-    func enable() async {
-        guard status == .off else { return }
-        let granted: Bool
-        if simulatesDenial {
-            simulatedAnswer = true
-            granted = false
-        } else {
-            granted = (try? await center.requestAuthorization(options: [.alert, .sound])) ?? false
-        }
-        enabled = granted
-        await detect()
+    /// The settings line, when permission was blocked. Opens the system Settings app.
+    func openSettings() async {
+        guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+        await UIApplication.shared.open(url)
     }
 
-    func disable() async {
-        enabled = false
-        await detect()
-    }
-
-    /// Schedules a notification five seconds out. `false` means it could not be scheduled.
-    func sendTest() async -> Bool {
-        guard status == .on else { return false }
-        let content = UNMutableNotificationContent()
-        content.title = "Notifications are on"
-        content.body = "Procrastimate will notify you here when tasks are due."
-        content.sound = .default
-        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 5, repeats: false)
-        do {
-            try await center.add(UNNotificationRequest(identifier: Self.testID, content: content, trigger: trigger))
-        } catch {
-            return false
-        }
-        await readPending()
-        return true
-    }
-
-    /// Call after every change to the tasks. Recomputes the schedule once a burst of changes settles, and offers the
-    /// Notifications screen once per launch when a change first gives a task a time to notify.
-    func tasksChanged(from old: [TaskItem], to new: [TaskItem]) {
+    /// Call after every change to the tasks. Recomputes the schedule once a burst of changes settles.
+    func tasksChanged(from _: [TaskItem], to _: [TaskItem]) {
         resync?.cancel()
         resync = Task {
             try? await Task.sleep(for: .milliseconds(250))
             guard !Task.isCancelled else { return }
             await sync()
         }
-        guard !nudged, status == .off else { return }
-        let before = Dictionary(old.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
-        let zone = clock.timeZone
-        let notifies = { (task: TaskItem) in !Notifications.notificationTimes(task.due, task.reminders, in: zone).isEmpty }
-        // Imported tasks carry a source key, and an import is not a save.
-        let saved = new.contains { task in
-            task.sourceKey == nil && task.completedAt == nil && notifies(task) && !(before[task.id].map(notifies) ?? false)
-        }
-        guard saved else { return }
-        nudged = true
-        toasts.show(
-            "Get notified when it’s due?",
-            action: .init(label: "Turn on") { [navigator] in navigator.openNotifications() },
-            for: .seconds(8)
-        )
     }
 
     /// Writes the device schedule from a store, without the open app's status. An intent uses this when it changes
@@ -185,7 +138,6 @@ final class LocalNotifications: NSObject {
     }
 
     private static func notificationsAllowed() async -> Bool {
-        guard UserDefaults.standard.bool(forKey: enabledKey) else { return false }
         switch await UNUserNotificationCenter.current().notificationSettings().authorizationStatus {
         case .authorized, .provisional, .ephemeral: return true
         case .notDetermined, .denied: return false
@@ -193,10 +145,9 @@ final class LocalNotifications: NSObject {
         }
     }
 
-    /// Off, or the system said no. Not-yet-asked stays as it is.
+    /// The system said no. Not-yet-asked stays as it is.
     private static func notificationsBlocked() async -> Bool {
-        if !UserDefaults.standard.bool(forKey: enabledKey) { return true }
-        return await UNUserNotificationCenter.current().notificationSettings().authorizationStatus == .denied
+        await UNUserNotificationCenter.current().notificationSettings().authorizationStatus == .denied
     }
 
     private static func makeRequest(_ item: Notifications.Scheduled, now: Date) -> UNNotificationRequest {
@@ -325,10 +276,4 @@ extension Navigator {
         sheet = .details(taskID: id)
     }
 
-    /// The Notifications screen inside Browse, closing any sheet first, like the web's nudge.
-    func openNotifications() {
-        sheet = nil
-        tab = .browse
-        paths[.browse] = [.notifications]
-    }
 }

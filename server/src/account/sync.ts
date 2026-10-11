@@ -36,8 +36,24 @@ export const accountSnapshot = (store: AccountStore) => serverSnapshot(loadState
 /** One push, all in one transaction: apply, log every op, then answer from the log or with the snapshot. */
 export function sync(store: AccountStore, request: z.infer<typeof syncRequestSchema>, now: number): SyncResponse {
 	return store.transaction(() => {
-		// A cursor past the end means the log was reset, as on a restarted dev server, so the client starts over.
-		const reset = request.cursor > store.lastSeq();
+		if (request.reset) {
+			store.clearTaskData();
+			store.setEpoch(store.epoch() + 1);
+		}
+		const epoch = store.epoch();
+		// A client that missed a wipe must not upload the copy that was deleted.
+		if (!request.reset && request.epoch !== epoch) {
+			const state = loadState(store);
+			return {
+				acked: [],
+				snapshot: serverSnapshot(state),
+				cursor: store.lastSeq(),
+				hlc: serverHlc(state),
+				epoch,
+			};
+		}
+		// A cursor past the end means the log was cleared, as after a wipe or a restarted dev server.
+		const restarted = request.cursor > store.lastSeq();
 		const before = loadState(store);
 		const pushed = applyPush(before, request.ops, { now, isApplied: opId => store.hasOp(opId) });
 		for (const [key, entity] of pushed.state.entities) {
@@ -47,8 +63,8 @@ export function sync(store: AccountStore, request: z.infer<typeof syncRequestSch
 
 		const head = store.lastSeq();
 		const hlc = serverHlc(pushed.state);
-		if (request.cursor === 0 || reset) {
-			return { acked: pushed.acked, snapshot: serverSnapshot(pushed.state), cursor: head, hlc };
+		if (request.reset || request.cursor === 0 || restarted) {
+			return { acked: pushed.acked, snapshot: serverSnapshot(pushed.state), cursor: head, hlc, epoch };
 		}
 		const changes = store.logAfter(request.cursor, SYNC_PAGE_SIZE) as Change[];
 		const cursor = changes.at(-1)?.seq ?? request.cursor;
@@ -56,7 +72,7 @@ export function sync(store: AccountStore, request: z.infer<typeof syncRequestSch
 		// apply older rows without it. The retry dedupes, and the last page acks everything.
 		const paged = new Set(changes.map(change => change.opId));
 		const acked = cursor === head ? pushed.acked : pushed.acked.filter(opId => paged.has(opId));
-		return { acked, changes, cursor, hlc };
+		return { acked, changes, cursor, hlc, epoch };
 	});
 }
 

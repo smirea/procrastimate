@@ -11,7 +11,6 @@
 	import Search from '#lib/components/Search.svelte';
 	import SettingsSheet from '#lib/components/SettingsSheet.svelte';
 	import TaskSheet from '#lib/components/TaskSheet.svelte';
-	import NotificationsSheet from '#lib/components/NotificationsSheet.svelte';
 	import Toasts from '#lib/components/Toasts.svelte';
 	import { store } from '#lib/store.svelte.ts';
 	import { clock, sheets, trackKeyboardInset, motion } from '#lib/ui.svelte.ts';
@@ -37,11 +36,6 @@
 	function openSearch() {
 		menuOpen = false;
 		sheets.openSearch();
-	}
-
-	function openNotifications() {
-		menuOpen = false;
-		sheets.openNotifications();
 	}
 
 	function openSettings() {
@@ -80,7 +74,7 @@
 	$effect(() => clock.start());
 	$effect(() => trackKeyboardInset());
 	$effect(() => push.start());
-	$effect(() => push.follow(store.paired));
+	$effect(() => push.follow(sync.signedIn));
 	$effect(() => untrack(() => sync.start()));
 	$effect(() => untrack(openTaskFromUrl));
 
@@ -99,12 +93,12 @@
 
 <div class="app flex min-h-dvh gap-3">
 	<div class="sticky top-3 hidden h-[calc(100dvh-1.5rem)] w-64 shrink-0 md:block">
-		<Sidebar onquickadd={openQuickAdd} onsearch={openSearch} onnotifications={openNotifications} onsettings={openSettings} />
+		<Sidebar onquickadd={openQuickAdd} onsearch={openSearch} onsettings={openSettings} />
 	</div>
 	{#if menuOpen}
 		<div class="fixed inset-0 z-30 bg-scrim backdrop-blur-[2px] md:hidden" transition:fade={motion({ duration: 180 })} onclick={() => (menuOpen = false)} aria-hidden="true"></div>
 		<div class="drawer fixed z-30 md:hidden" transition:fly={motion({ x: -320, duration: 280, easing: cubicOut, opacity: 1 })}>
-			<Sidebar onquickadd={openQuickAdd} onsearch={openSearch} onnotifications={openNotifications} onsettings={openSettings} />
+			<Sidebar onquickadd={openQuickAdd} onsearch={openSearch} onsettings={openSettings} />
 		</div>
 	{/if}
 	<main class="min-w-0 flex-1">
@@ -145,8 +139,6 @@
 	<SettingsSheet />
 {:else if openTask && sheets.current.kind === 'task'}
 	<TaskSheet task={openTask} arrival={sheets.current.arrival} />
-{:else if sheets.current.kind === 'notifications'}
-	<NotificationsSheet />
 {/if}
 
 <Toasts />

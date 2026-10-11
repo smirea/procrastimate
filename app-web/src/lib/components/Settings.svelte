@@ -4,16 +4,28 @@
 	import ArrowSquareIn from 'phosphor-svelte/lib/ArrowSquareIn';
 	import Warning from 'phosphor-svelte/lib/Warning';
 	import type { ImportSummary } from 'shared/todoist.ts';
-	import SyncSettings from './SyncSettings.svelte';
 	import ThemeSwitcher from './ThemeSwitcher.svelte';
+	import { push } from '../push.svelte.ts';
 	import { store } from '../store.svelte.ts';
+	import { sync } from '../sync.svelte.ts';
 	import { motion } from '../ui.svelte.ts';
 	import { readBackupZip } from '../todoist-import.ts';
 
 	type Status = { kind: 'idle' } | { kind: 'done'; summary: ImportSummary } | { kind: 'failed'; message: string };
 
 	let status = $state<Status>({ kind: 'idle' });
+	let confirmingDelete = $state(false);
 	let input: HTMLInputElement;
+
+	const notificationLine = $derived(
+		push.line === 'needs-permission' ? 'Notifications need permission' : `Notifications: ${push.line === 'on' ? 'On' : 'Off'}`,
+	);
+
+	function deleteAll() {
+		store.deleteAll();
+		void sync.syncNow();
+		confirmingDelete = false;
+	}
 
 	const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
@@ -39,7 +51,13 @@
 		<ThemeSwitcher />
 	</section>
 
-	<SyncSettings />
+	{#if push.line === 'needs-permission'}
+		<button type="button" class="menu-item -mx-1.5 w-auto touch:h-11 touch:text-[15px]" onclick={() => push.request()}>
+			{notificationLine}
+		</button>
+	{:else}
+		<p class="px-1.5 text-[13px] text-ink">{notificationLine}</p>
+	{/if}
 
 	<section class="flex flex-col gap-1.5">
 		<h3 class="heading">Data</h3>
@@ -79,6 +97,18 @@
 			{/key}
 		{:else if status.kind === 'failed'}
 			<p role="alert" class="text-[13px] text-[var(--tone-overdue)]" in:fly={motion({ y: 6, duration: 220, easing: cubicOut })}>{status.message}</p>
+		{/if}
+
+		{#if confirmingDelete}
+			<p class="px-1.5 text-[13px] text-ink">Delete every task, project, and label on this device and the server?</p>
+			<div class="flex gap-2">
+				<button type="button" class="btn press bg-[var(--tone-overdue)] text-on-accent" onclick={deleteAll}>Delete all data</button>
+				<button type="button" class="btn press" onclick={() => (confirmingDelete = false)}>Cancel</button>
+			</div>
+		{:else}
+			<button type="button" class="menu-item -mx-1.5 w-auto text-[var(--tone-overdue)] touch:h-11 touch:text-[15px]" onclick={() => (confirmingDelete = true)}>
+				Delete all data
+			</button>
 		{/if}
 	</section>
 </div>

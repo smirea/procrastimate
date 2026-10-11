@@ -74,8 +74,7 @@ export type Sheet =
 	| { kind: 'quick-add'; defaults: QuickAddDefaults }
 	| { kind: 'search' }
 	| { kind: 'settings' }
-	| { kind: 'task'; id: string; arrival: Arrival }
-	| { kind: 'notifications' };
+	| { kind: 'task'; id: string; arrival: Arrival };
 
 class Sheets {
 	current = $state<Sheet>({ kind: 'none' });
@@ -94,10 +93,6 @@ class Sheets {
 
 	openTask(id: string, arrival: Arrival = 'none') {
 		this.current = { kind: 'task', id, arrival };
-	}
-
-	openNotifications() {
-		this.current = { kind: 'notifications' };
 	}
 
 	close() {

@@ -12,6 +12,14 @@ public struct SyncOp: Hashable, Codable, Sendable {
     public var id: String
     public var fields: [String: JSONValue]
 
+    public init(opId: String, hlc: String, kind: Kind, id: String, fields: [String: JSONValue]) {
+        self.opId = opId
+        self.hlc = hlc
+        self.kind = kind
+        self.id = id
+        self.fields = fields
+    }
+
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         opId = try c.decode(String.self, forKey: .opId)
@@ -22,6 +30,17 @@ public struct SyncOp: Hashable, Codable, Sendable {
         guard isHlc(hlc) else {
             throw DecodingError.dataCorruptedError(forKey: .hlc, in: c, debugDescription: "Invalid HLC")
         }
+    }
+
+    private enum CodingKeys: String, CodingKey { case opId, hlc, kind, id, fields }
+
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(opId, forKey: .opId)
+        try c.encode(hlc, forKey: .hlc)
+        try c.encode(kind, forKey: .kind)
+        try c.encode(id, forKey: .id)
+        try c.encode(fields, forKey: .fields)
     }
 }
 
@@ -38,14 +57,35 @@ private extension Character {
     var isASCIIDigit: Bool { isASCII && isNumber }
 }
 
-/// Device-local sync state. A device without it is unpaired and keeps no outbox. `clock` is the last clock the device
-/// issued or saw, and `timeZone` the zone it last wrote to the synced settings, so it writes again only after it moves.
+/// Device-local sync state. Every document has one. `clock` is the last clock the device issued or saw, and
+/// `timeZone` the zone it last wrote to the synced settings. `epoch` is the wipe generation it last applied.
+/// `reset` stays set until the server has wiped task data for a local delete-all.
 public struct SyncSection: Hashable, Codable, Sendable {
     public var deviceId: String
     public var cursor: Int
     public var outbox: [SyncOp]
     public var clock: String
     public var timeZone: String
+    public var epoch: Int
+    public var reset: Bool
+
+    public init(
+        deviceId: String,
+        cursor: Int,
+        outbox: [SyncOp],
+        clock: String,
+        timeZone: String,
+        epoch: Int = 0,
+        reset: Bool = false
+    ) {
+        self.deviceId = deviceId
+        self.cursor = cursor
+        self.outbox = outbox
+        self.clock = clock
+        self.timeZone = timeZone
+        self.epoch = epoch
+        self.reset = reset
+    }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -54,12 +94,29 @@ public struct SyncSection: Hashable, Codable, Sendable {
         outbox = try c.decode([SyncOp].self, forKey: .outbox)
         clock = try c.decode(String.self, forKey: .clock)
         timeZone = try c.decode(String.self, forKey: .timeZone)
-        guard cursor >= 0 else {
-            throw DecodingError.dataCorruptedError(forKey: .cursor, in: c, debugDescription: "Negative cursor")
+        epoch = try c.decodeIfPresent(Int.self, forKey: .epoch) ?? 0
+        reset = try c.decodeIfPresent(Bool.self, forKey: .reset) ?? false
+        guard cursor >= 0, epoch >= 0 else {
+            throw DecodingError.dataCorruptedError(forKey: .cursor, in: c, debugDescription: "Negative cursor or epoch")
         }
         guard isHlc(clock) else {
             throw DecodingError.dataCorruptedError(forKey: .clock, in: c, debugDescription: "Invalid HLC")
         }
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case deviceId, cursor, outbox, clock, timeZone, epoch, reset
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(deviceId, forKey: .deviceId)
+        try c.encode(cursor, forKey: .cursor)
+        try c.encode(outbox, forKey: .outbox)
+        try c.encode(clock, forKey: .clock)
+        try c.encode(timeZone, forKey: .timeZone)
+        try c.encode(epoch, forKey: .epoch)
+        try c.encode(reset, forKey: .reset)
     }
 }
 

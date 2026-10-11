@@ -1,10 +1,9 @@
 import { createServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import type { APIRequestContext, Page } from '@playwright/test';
-import type { DeviceCredentials } from 'shared/auth.ts';
+import { INSTALL_GATE } from '../../shared/install-gate.mjs';
 import type { PushMessage, PushScheduleResponse } from 'shared/push.ts';
 import { createReceiverKeys, decryptPush, verifyVapid } from '../../server/src/push-receiver.ts';
-import { SYNC_SETUP_CODE } from '../playwright.config.ts';
 import { expect, test, type App } from './fixtures.ts';
 
 test.skip(process.env.E2E_WORKER !== '1', 'Needs the Worker, its Durable Object alarm, and VAPID keys');
@@ -56,8 +55,6 @@ async function grantSubscription(
 	}, subscription);
 }
 
-const sheet = (app: App) => app.page.getByRole('dialog', { name: 'Notifications' });
-
 /** 10:00 UTC two days from now, so every time the test schedules is still ahead of the Worker's real clock. */
 const now = new Date();
 const TODAY = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 2);
@@ -67,12 +64,16 @@ const tomorrowAt = (hh: number, mm = 0) => TODAY + 86_400_000 + (hh * 60 + mm) *
 const suffix = () => crypto.randomUUID().slice(0, 8);
 
 async function setUpSync(app: App) {
-	await app.openSettings();
-	await app.settings().getByRole('button', { name: 'Set up sync' }).click();
-	await app.settings().getByRole('textbox', { name: 'Setup code' }).fill(SYNC_SETUP_CODE);
-	await app.settings().getByRole('button', { name: 'Turn on sync' }).click();
-	await expect(app.settings().getByRole('status', { name: 'Sync status' })).toHaveText('Up to date');
-	await app.page.keyboard.press('Escape');
+	await expect
+		.poll(async () =>
+			app.page.evaluate(() => {
+				const token = localStorage.getItem('procrastimate-device');
+				const raw = localStorage.getItem('procrastimate');
+				const sync = raw ? (JSON.parse(raw) as { sync?: { outbox: unknown[]; reset?: boolean } }).sync : undefined;
+				return Boolean(token && sync && !sync.reset && sync.outbox.length === 0);
+			}),
+		)
+		.toBe(true);
 }
 
 async function schedule(request: APIRequestContext, token: string, tag: string) {
@@ -95,14 +96,14 @@ test('the Worker computes the schedule from synced tasks and pushes an encrypted
 	const token = (await page.evaluate(() => localStorage.getItem('procrastimate-device')))!;
 	const tag = suffix();
 
-	await page
-		.getByRole('navigation', { name: 'Main' })
-		.getByRole('button', { name: /^Notifications/ })
-		.click();
-	await sheet(app).getByRole('button', { name: 'Turn on notifications' }).click();
-	await expect(sheet(app).getByRole('heading', { name: 'Notifications are on' })).toBeVisible();
-	await sheet(app).getByRole('button', { name: 'Send a test notification' }).click();
-	await expect(sheet(app).getByRole('button', { name: 'Sent' })).toBeVisible();
+	await app.openSettings();
+	await expect(app.settings().getByText('Notifications: On', { exact: true })).toBeVisible();
+	await page.keyboard.press('Escape');
+	const subscription = await page.evaluate(async () => {
+		const registration = await navigator.serviceWorker.ready;
+		return (await registration.pushManager.getSubscription())?.toJSON();
+	});
+	expect((await page.request.post('/api/push/test', { data: { subscription } })).ok()).toBe(true);
 	expect(service.received).toEqual([
 		{
 			message: {
@@ -114,8 +115,6 @@ test('the Worker computes the schedule from synced tasks and pushes an encrypted
 			vapid: true,
 		},
 	]);
-	await page.keyboard.press('Escape');
-
 	await app.add(
 		`Call mom ${tag} tomorrow 9am remind me at 9am`,
 		`Gym ${tag} tomorrow 6pm r30m`,
@@ -154,22 +153,20 @@ test('the Worker computes the schedule from synced tasks and pushes an encrypted
 			`Pills@${tomorrowAt(8) + 86_400_000}: Due now`,
 		]);
 
-	await page
-		.getByRole('navigation', { name: 'Main' })
-		.getByRole('button', { name: /^Notifications/ })
-		.click();
-	await sheet(app).getByRole('button', { name: 'Turn off' }).click();
-	await expect.poll(() => schedule(page.request, token, tag)).toEqual([]);
 	service.close();
 });
 
 test('the alarm pushes a task synced from another device once, at its time', async ({ request }) => {
 	test.setTimeout(120_000);
 	const service = await startPushService();
-	const setup = async (name: string) =>
-		(await (
-			await request.post('/api/auth/setup', { data: { code: SYNC_SETUP_CODE, name } })
-		).json()) as DeviceCredentials;
+	const setup = async (name: string) => {
+		const token = `token-${crypto.randomUUID()}`;
+		const response = await request.post('/api/auth/register', {
+			data: { gate: INSTALL_GATE, deviceId: crypto.randomUUID(), token, name },
+		});
+		const body = (await response.json()) as { deviceId: string };
+		return { deviceId: body.deviceId, token };
+	};
 	const phone = await setup('Phone');
 	const mac = await setup('Mac');
 	const subscribed = await request.put('/api/push/subscription', {

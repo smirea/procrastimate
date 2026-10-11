@@ -19,7 +19,6 @@
 	import Subtasks from './Subtasks.svelte';
 	import { store, type TaskPatch } from '../store.svelte.ts';
 	import { clock, sheets, toasts, motion, type Arrival } from '../ui.svelte.ts';
-	import { push } from '../push.svelte.ts';
 	import { completeTask } from '../completion.ts';
 
 	let { task, arrival }: { task: Task; arrival: Arrival } = $props();
@@ -55,7 +54,6 @@
 		}
 		const { title: next, due, recurrence, priority, projectId, labelIds, reminders } = draft;
 		update({ title: next, due, recurrence, priority, projectId, labelIds, reminders });
-		push.nudge(due, reminders);
 		title = next;
 	}
 
@@ -124,10 +122,7 @@
 	<div class="flex flex-wrap gap-1.5 px-4 pt-3">
 		<DuePicker
 			due={draft.due}
-			onchange={(due) => {
-				update({ due, recurrence: due ? task.recurrence : null });
-				push.nudge(due, task.reminders);
-			}}
+			onchange={(due) => update({ due, recurrence: due ? task.recurrence : null })}
 		/>
 		<RecurrencePicker
 			recurrence={draft.recurrence}
@@ -138,10 +133,7 @@
 		<ReminderPicker
 			due={draft.due}
 			reminders={draft.reminders}
-			onchange={(reminders) => {
-				update({ reminders });
-				push.nudge(task.due, reminders);
-			}}
+			onchange={(reminders) => update({ reminders })}
 		/>
 	</div>
 	<div class="px-4 pt-3">

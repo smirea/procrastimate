@@ -93,6 +93,8 @@ const webDocument: snapshot.Snapshot = {
 		],
 		clock: '1791972000001:0:d-phone',
 		timeZone: 'Europe/Berlin',
+		epoch: 0,
+		reset: false,
 	},
 };
 
@@ -101,7 +103,7 @@ describe('parseSnapshot', () => {
 		expect(parseSnapshot(webDocument, 10)).toEqual(webDocument);
 	});
 
-	test('a document without a sync section is an unpaired device', () => {
+	test('a document without a sync section has not synced yet', () => {
 		const { sync: _, ...unpaired } = webDocument;
 		expect(parseSnapshot(unpaired, 10)).toEqual(unpaired);
 	});

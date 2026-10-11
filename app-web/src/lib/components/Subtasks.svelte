@@ -15,8 +15,6 @@
 	import { clock, sheets, motion } from '../ui.svelte.ts';
 	import { dueTone, formatDue } from 'shared/format.ts';
 	import { PRIORITIES } from '../priorities.ts';
-	import { push } from '../push.svelte.ts';
-
 	let { task }: { task: Task } = $props();
 
 	const children = $derived(store.children(task.id));
@@ -29,7 +27,6 @@
 		if (!parsed.title) return;
 		const { title, due, recurrence, priority, reminders, labelIds } = parsed;
 		store.addTask({ title, due, recurrence, priority, reminders, labelIds, projectId: null }, task.id);
-		push.nudge(due, reminders);
 		draft = '';
 	}
 

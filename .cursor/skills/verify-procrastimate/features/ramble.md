@@ -14,7 +14,7 @@ Ramble lets Stefan talk instead of type: a live transcript and a preview card pe
 - `ramble-discard` discards a card, with `Undo`.
 - `ramble-save-undo` adds every card in one step, undone by one `Undo`.
 - `ramble-hold` listens only while the mic is held.
-- `ramble-unavailable` explains why Ramble is off when unpaired or offline.
+- `ramble-unavailable` explains why Ramble is off when the network or the transcription key is missing.
 
 ## How to get to it (user POV)
 
@@ -25,7 +25,7 @@ Ramble lets Stefan talk instead of type: a live transcript and a preview card pe
 
 - Planned: on a paired device, open Ramble and say "Buy paint. Note the blue one. Next task call mom tomorrow at 5pm priority one." Two cards appear while talking: `Buy paint` with the note, and `Call mom` with `Tomorrow 5:00 PM` and `Priority 1` chips. `Add 2 tasks` saves both, and the toast's `Undo` removes both.
 - Planned: say "Finish the project report" with no project named `report`. One chip-free card titled `Finish the project report` appears.
-- Planned: on an unpaired device the mic reads `Turn on sync to use Ramble`.
+- Planned: without a network the mic says Ramble is unavailable.
 
 ## Parser
 
@@ -33,7 +33,7 @@ Ramble lets Stefan talk instead of type: a live transcript and a preview card pe
 
 ## Gotchas
 
-- Transcription needs the network and a paired device; everything else about the preview is local.
+- Transcription needs the network; everything else about the preview is local. Sync is already on.
 - Automated tests replay recorded transcription cassettes, so they never need the ElevenLabs key.
-- The transcription socket is built: `GET /api/ramble/socket` on a paired device. The Bun dev server without `ELEVENLABS_API_KEY`, and any server with `RAMBLE_UPSTREAM=cassette`, replays `shared/fixtures/ramble-audio/three-tasks.cassette.json` (or `?cassette=<id>`) from the first audio frame, and a `stop` plays the rest at once.
-- `bun server/scripts/ramble-latency.ts --url <origin>` streams real speech through the socket and prints latencies; with `SYNC_SETUP_CODE` it pairs a temporary device and removes it afterwards.
+- The transcription socket is built: `GET /api/ramble/socket` on a registered device. The Bun dev server without `ELEVENLABS_API_KEY`, and any server with `RAMBLE_UPSTREAM=cassette`, replays `shared/fixtures/ramble-audio/three-tasks.cassette.json` (or `?cassette=<id>`) from the first audio frame, and a `stop` plays the rest at once.
+- `bun server/scripts/ramble-latency.ts --url <origin>` streams real speech through the socket and prints latencies. Without `RAMBLE_TOKEN` it registers a temporary device.

@@ -3,9 +3,8 @@
  * FCM, the Worker at BASE_URL computes the schedule from the synced tasks and sends, and the service worker shows the
  * notifications while no app page is open.
  *
- *   SYNC_SETUP_CODE=<code> bun app-web/scripts/verify-push.ts [BASE_URL]   (default http://localhost:8787)
+ *   bun app-web/scripts/verify-push.ts [BASE_URL]   (default http://localhost:8787)
  *
- * For `bun run preview`, put `SYNC_SETUP_CODE=<code>` in `.dev.vars` too, so `wrangler dev` accepts it.
  * Needs Google Chrome (CHROME, default /usr/local/bin/google-chrome). Playwright's Chromium has no FCM keys, and
  * incognito contexts cannot subscribe, so this uses a persistent profile.
  */
@@ -16,8 +15,6 @@ import { chromium, expect, type Page } from '@playwright/test';
 
 const BASE_URL = process.argv[2] ?? 'http://localhost:8787';
 const CHROME = process.env.CHROME ?? '/usr/local/bin/google-chrome';
-const SETUP_CODE = process.env.SYNC_SETUP_CODE;
-if (!SETUP_CODE) throw new Error('Set SYNC_SETUP_CODE to the Worker’s setup code.');
 /** The account outlives a run, so this run's titles carry a suffix. */
 const RUN = crypto.randomUUID().slice(0, 4);
 
@@ -61,19 +58,15 @@ const schedule = async (page: Page) => {
 
 const page = await context.newPage();
 await page.goto('/inbox');
-const sheet = page.getByRole('dialog', { name: 'Notifications' });
 const nav = page.getByRole('navigation', { name: 'Main' });
 const settings = page.getByRole('dialog', { name: 'Settings' });
-await nav.getByRole('button', { name: 'Settings' }).click();
-await settings.getByRole('button', { name: 'Set up sync' }).click();
-await settings.getByRole('textbox', { name: 'Setup code' }).fill(SETUP_CODE);
-await settings.getByRole('button', { name: 'Turn on sync' }).click();
-await expect(settings.getByRole('status', { name: 'Sync status' })).toHaveText('Up to date');
-await page.keyboard.press('Escape');
+await expect
+	.poll(() => page.evaluate(() => localStorage.getItem('procrastimate-device')), { timeout: 15_000 })
+	.toBeTruthy();
 log('PASS sync is on');
-await nav.getByRole('button', { name: /^Notifications/ }).click();
-await sheet.getByRole('button', { name: 'Turn on notifications' }).click();
-await sheet.getByRole('heading', { name: 'Notifications are on' }).waitFor();
+await nav.getByRole('button', { name: 'Settings' }).click();
+await expect(settings.getByText('Notifications: On', { exact: true })).toBeVisible();
+await page.keyboard.press('Escape');
 const endpoint = await page.evaluate(async () => {
 	const registration = await navigator.serviceWorker.ready;
 	return (await registration.pushManager.getSubscription())?.endpoint ?? '';
@@ -84,8 +77,11 @@ check(
 	endpoint.slice(0, 48),
 );
 
-await sheet.getByRole('button', { name: 'Send a test notification' }).click();
-await sheet.getByRole('button', { name: 'Sent' }).waitFor();
+const subscription = await page.evaluate(async () => {
+	const registration = await navigator.serviceWorker.ready;
+	return (await registration.pushManager.getSubscription())?.toJSON();
+});
+check((await page.request.post('/api/push/test', { data: { subscription } })).ok(), 'test push accepted');
 const testShown = Date.now();
 while (!(await shown(page)).some(n => n.tag === 'test') && Date.now() - testShown < 20_000)
 	await page.waitForTimeout(250);

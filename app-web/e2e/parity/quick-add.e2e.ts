@@ -247,16 +247,16 @@ test('add-dock: quick add docks to the bottom edge and hides the add button', as
 });
 
 test('add-toast: a toast over quick add sits clear of its chips with its text in full', async ({ app, page, snap }) => {
+	await app.add('Call mom tomorrow 5pm');
+	await app.checkbox('Call mom').tap();
+	const toast = page.getByRole('status').filter({ hasText: 'Call mom' });
+	await expect(toast).toBeVisible();
 	await app.openQuickAdd();
 	await app.type('Call mom tomorrow 5pm every mon r30m');
-	await app.taskInput().press('Enter');
-	await app.type('Call mom tomorrow 5pm every mon r30m');
-	const toast = page.getByRole('status').filter({ hasText: 'Get notified when it’s due?' });
-	await expect(toast).toBeVisible();
 	await app.settle();
-	const message = toast.getByText('Get notified when it’s due?');
+	const message = toast.getByText('Call mom');
 	expect(await message.evaluate(node => node.scrollWidth <= node.clientWidth)).toBe(true);
-	const button = (await toast.getByRole('button', { name: 'Turn on' }).boundingBox())!;
+	const button = (await toast.getByRole('button', { name: 'Undo' }).boundingBox())!;
 	expect(button.height).toBeLessThanOrEqual(44);
 	const toastBox = (await toast.boundingBox())!;
 	for (const chip of [

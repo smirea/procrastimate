@@ -10,6 +10,7 @@ import { durableSockets, noSockets, realtime, realtimeRoutes, type SocketHost } 
 import { sqliteStore } from './sqlite-store';
 import type { AccountStore } from './store';
 import { syncRoutes } from './sync';
+import { tursoSession, type AccountSession } from './turso';
 
 /** Every route the `Account` object answers. The Worker forwards each of them to the one account. */
 const accountRoutes: Record<string, AccountRoute> = {
@@ -29,21 +30,18 @@ const fail = (status: number, error: string) => Response.json({ ok: false, error
  * alarms, so its `setAlarm` does nothing. Whenever a request moves the log, every open socket hears the new head.
  */
 export function accountHandler(
-	store: AccountStore,
-	setupCode: string | undefined,
 	setAlarm: SetAlarm,
 	sockets: SocketHost = noSockets,
 	rambleConfig: RambleConfig = { connect: null },
 ) {
 	const live = realtime(sockets);
 	const transcription = ramble(sockets, rambleConfig);
-	return async (request: Request): Promise<Response> => {
+	return async (request: Request, store: AccountStore): Promise<Response> => {
 		const route = accountRoutes[`${request.method} ${new URL(request.url).pathname}`];
 		if (!route) return fail(404, 'Not found');
 		const head = store.lastSeq();
 		const response = await route(request, {
 			store,
-			setupCode: setupCode || undefined,
 			now: Date.now(),
 			setAlarm,
 			realtime: live,
@@ -55,32 +53,47 @@ export function accountHandler(
 	};
 }
 
+/**
+ * Turso when both secrets are set, otherwise the store the host already has (SQLite on the Worker, memory in dev).
+ * An end-to-end shard stays on that local store, so the run cannot write the dev database.
+ */
+export async function openAccount(env: Env, fallback: AccountStore): Promise<AccountSession> {
+	if (!env.E2E_SHARD && env.TURSO_DATABASE_URL && env.TURSO_AUTH_TOKEN) {
+		return tursoSession(env.TURSO_DATABASE_URL, env.TURSO_AUTH_TOKEN);
+	}
+	return { store: fallback, flush: async () => {} };
+}
+
 /** The single account, one SQLite-backed Durable Object that runs one request at a time. */
 export class Account {
-	private readonly store: AccountStore;
-	private readonly handle: (request: Request) => Promise<Response>;
+	private readonly sqlite: AccountStore;
+	private readonly handle: (request: Request, store: AccountStore) => Promise<Response>;
 
 	constructor(
 		private readonly ctx: DurableObjectState,
 		private readonly env: Env,
 	) {
-		this.store = sqliteStore(ctx.storage.sql, run => ctx.storage.transactionSync(run));
-		this.handle = accountHandler(
-			this.store,
-			env.SYNC_SETUP_CODE,
-			at => this.setAlarm(at),
-			durableSockets(ctx),
-			workerRamble(env),
-		);
+		this.sqlite = sqliteStore(ctx.storage.sql, run => ctx.storage.transactionSync(run));
+		this.handle = accountHandler(at => this.setAlarm(at), durableSockets(ctx), workerRamble(env));
 	}
 
-	fetch(request: Request): Promise<Response> {
-		return this.handle(request);
+	async fetch(request: Request): Promise<Response> {
+		const session = await openAccount(this.env, this.sqlite);
+		try {
+			return await this.handle(request, session.store);
+		} finally {
+			await session.flush();
+		}
 	}
 
 	/** Delivers due Web Push notifications, then re-arms for the next. */
 	async alarm(): Promise<void> {
-		await this.setAlarm(await deliverDue(this.store, Date.now(), pushSender(this.env)));
+		const session = await openAccount(this.env, this.sqlite);
+		try {
+			await this.setAlarm(await deliverDue(session.store, Date.now(), pushSender(this.env)));
+		} finally {
+			await session.flush();
+		}
 	}
 
 	/** Clients only send the keepalive, which the runtime answers without waking the object. */
@@ -106,9 +119,19 @@ function workerRamble(env: Env): RambleConfig {
 /** There is one account, so every request goes to the object with this name. */
 const ACCOUNT_NAME = 'account';
 
+/**
+ * The end-to-end run sets `E2E_SHARD` and sends a different `e2e-account` cookie per test, so parallel tests do not
+ * share tasks. Any other process uses the one account and ignores the cookie.
+ */
+export function accountName(request: Request, env: Env): string {
+	if (!env.E2E_SHARD) return ACCOUNT_NAME;
+	const match = /(?:^|;\s*)e2e-account=([A-Za-z0-9-]{8,80})/.exec(request.headers.get('cookie') ?? '');
+	return match ? `${ACCOUNT_NAME}:${match[1]}` : ACCOUNT_NAME;
+}
+
 const forward: Handler = (request, env) => {
 	if (!env.ACCOUNT) return fail(503, 'Sync is not configured');
-	const stub = env.ACCOUNT.get(env.ACCOUNT.idFromName(ACCOUNT_NAME));
+	const stub = env.ACCOUNT.get(env.ACCOUNT.idFromName(accountName(request, env)));
 	return stub.fetch(request as never) as unknown as Promise<Response>;
 };
 
@@ -119,13 +142,15 @@ export const accountApiRoutes: Record<string, Handler> = Object.fromEntries(
 
 /** An `ACCOUNT` binding for the Bun dev server: one in-memory account, lost on restart. */
 export function memoryAccount(
-	setupCode: string | undefined,
-	store = memoryStore(),
+	store: AccountStore = memoryStore(),
 	setAlarm: SetAlarm = async () => {},
 	sockets: SocketHost = noSockets,
 	rambleConfig: RambleConfig = { connect: null },
 ): DurableObjectNamespace {
-	const handle = accountHandler(store, setupCode, setAlarm, sockets, rambleConfig);
-	const namespace = { idFromName: (name: string) => name, get: () => ({ fetch: handle }) };
+	const handle = accountHandler(setAlarm, sockets, rambleConfig);
+	const namespace = {
+		idFromName: (name: string) => name,
+		get: () => ({ fetch: (request: Request) => handle(request, store) }),
+	};
 	return namespace as unknown as DurableObjectNamespace;
 }

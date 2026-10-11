@@ -1,5 +1,5 @@
 # Settings
 
-- **One place for device and data settings.** A `Settings` row with a gear sits at the bottom of the sidebar, which is also the phone drawer, under the Notifications row. Both sit outside the sidebar's scrolling area, so they stay put and the settings popover is never clipped.
+- **One place for device and data settings.** A `Settings` row with a gear sits at the bottom of the sidebar, which is also the phone drawer. It stays outside the scrolling area, so it stays put and the settings popover is never clipped. There is no Notifications row.
 - **Popover on desktop, sheet on a phone.** On desktop it opens a small glass popover above the row. On a phone it closes the drawer and opens a bottom sheet with a close button, like search, and it never stacks with another sheet. Both show the same panel.
-- **Contents.** The `Theme` switch (see Theming), the `Sync` section (see [Sync](sync.md#the-web-client)), and `Import from Todoist`. There is no settings page, since three sections do not earn a route.
+- **Contents.** The `Theme` switch (see Theming), one notifications line, `Import from Todoist`, and `Delete all data`. The line reads `Notifications: On`, `Notifications: Off`, or `Notifications need permission`. The last one is a button: on the web it asks again, and on iOS it opens system Settings. `Delete all data` confirms, then wipes tasks, projects, and labels on this device and, on the next sync, on the server. There is no Sync section and no settings page.

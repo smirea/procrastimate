@@ -17,7 +17,6 @@
 	import { store } from '../store.svelte.ts';
 	import { clock, mobile, sheets, type QuickAddDefaults, motion } from '../ui.svelte.ts';
 	import { formatRecurrence, formatReminder } from 'shared/format.ts';
-	import { push } from '../push.svelte.ts';
 	import { NAME_SOURCES } from '../names.ts';
 
 	let { defaults }: { defaults: QuickAddDefaults } = $props();
@@ -83,7 +82,6 @@
 		if (!parsed.title) return;
 		const reminders = [...parsed.reminders, ...picked.reminders];
 		store.addTask({ title: parsed.title, due, recurrence: parsed.recurrence, priority, projectId, labelIds, reminders });
-		push.nudge(due, reminders);
 		text = '';
 		disabled = [];
 		picked = initialPicked();

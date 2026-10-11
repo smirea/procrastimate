@@ -71,6 +71,30 @@ test('importing a Todoist backup twice adds each project and task once', async (
 	await expect(app.row('Quarterly review')).toContainText('deep-work');
 });
 
+test('delete all data asks, and cancel leaves the list', async ({ app, page }) => {
+	await app.add('Keep me');
+	await app.openSettings();
+	// The Worker under test has push keys, so the line can be On. The dev server often has none, so it stays Off.
+	await expect(app.settings().getByText(/^Notifications(?:: (?:On|Off)| need permission)$/)).toBeVisible();
+	await shoot(app, 'notifications-line');
+	await app.settings().getByRole('button', { name: 'Delete all data' }).click();
+	await expect(
+		app.settings().getByText('Delete every task, project, and label on this device and the server?'),
+	).toBeVisible();
+	await shoot(app, 'delete-confirm');
+	await app.settings().getByRole('button', { name: 'Cancel' }).click();
+	await expect(
+		app.settings().getByText('Delete every task, project, and label on this device and the server?'),
+	).toHaveCount(0);
+	await page.keyboard.press('Escape');
+	await expect(app.row('Keep me')).toBeVisible();
+
+	await app.openSettings();
+	await app.settings().getByRole('button', { name: 'Delete all data' }).click();
+	await app.settings().getByRole('button', { name: 'Delete all data' }).click();
+	await expect(app.row('Keep me')).toHaveCount(0);
+});
+
 test('a file that is not a Todoist backup shows an error and imports nothing', async ({ app, page }) => {
 	await app.openSettings();
 	const chooser = page.waitForEvent('filechooser');

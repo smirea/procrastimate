@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { applyChanges, applyResponse, replayOutbox, startSync } from './apply.ts';
+import { applyChanges, applyResponse, commit, replayOutbox, startSync } from './apply.ts';
 import { diff, stamp } from './diff.ts';
 import { createClock } from './hlc.ts';
 import type { Change } from './protocol.ts';
@@ -71,6 +71,34 @@ describe('applyResponse', () => {
 		expect(snapshot.tasks[0]?.title).toBe('Typed meanwhile');
 		expect(sync.outbox.map(op => op.fields)).toEqual([{ title: 'Typed meanwhile' }]);
 		expect(sync.cursor).toBe(server.log.length);
+	});
+
+	test('a wipe on another device drops the outbox, and the device that reset keeps an in-flight edit', () => {
+		const clock = createClock('a');
+		const during = commit(
+			{ cursor: 0, outbox: [], clock, epoch: 0 },
+			snapshotOf(),
+			snapshotOf({ tasks: [task('n', { title: 'After' })] }),
+			30,
+			counter('new-'),
+		);
+		const response = {
+			acked: [] as string[],
+			snapshot: snapshotOf(),
+			cursor: 0,
+			hlc: '30:0:server',
+			epoch: 1,
+		};
+		const kept = applyResponse(snapshotOf({ tasks: [task('n', { title: 'After' })] }), during, response, {
+			sentReset: true,
+		});
+		expect(kept.snapshot.tasks.map(t => t.title)).toEqual(['After']);
+		expect(kept.sync.epoch).toBe(1);
+		expect(kept.sync.outbox.map(op => op.id)).toEqual(['n']);
+
+		const dropped = applyResponse(snapshotOf({ tasks: [task('t', { title: 'Local' })] }), during, response);
+		expect(dropped.sync.outbox).toEqual([]);
+		expect(dropped.snapshot.tasks).toEqual([]);
 	});
 
 	test('moves the client clock up to the server’s', () => {

@@ -1,4 +1,4 @@
-import type { AccountStore, Device, Entity, LogEntry, Pairing, PushTarget } from './store';
+import type { AccountStore, Device, Entity, LogEntry, PushTarget } from './store';
 
 type SqlValue = ArrayBuffer | string | number | null;
 type Row = Record<string, SqlValue>;
@@ -16,8 +16,7 @@ const SCHEMA = [
 	`CREATE TABLE IF NOT EXISTS devices (
 		id TEXT PRIMARY KEY, name TEXT NOT NULL, token_hash TEXT NOT NULL UNIQUE, created_at INTEGER NOT NULL,
 		last_seen_at INTEGER NOT NULL, revoked_at INTEGER)`,
-	`CREATE TABLE IF NOT EXISTS pairing (
-		code_hash TEXT PRIMARY KEY, expires_at INTEGER NOT NULL, attempts INTEGER NOT NULL)`,
+	`CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)`,
 	`CREATE TABLE IF NOT EXISTS push (
 		device_id TEXT PRIMARY KEY, subscription TEXT NOT NULL, notifications TEXT NOT NULL,
 		delivered_through INTEGER NOT NULL)`,
@@ -32,7 +31,6 @@ type DeviceRow = {
 	last_seen_at: number;
 	revoked_at: number | null;
 };
-type PairingRow = { code_hash: string; expires_at: number; attempts: number };
 type EntityRow = { kind: string; id: string; data: string; clocks: string };
 type LogRow = { seq: number; op_id: string; kind: string; id: string; fields: string };
 type PushRow = { device_id: string; subscription: string; notifications: string; delivered_through: number };
@@ -88,6 +86,7 @@ export function sqliteStore(sql: Sql, transactionSync: <T>(run: () => T) => T): 
 			const row = first<DeviceRow>('SELECT * FROM devices WHERE token_hash = ?', tokenHash);
 			return row ? toDevice(row) : null;
 		},
+		hasDevice: id => first('SELECT 1 AS found FROM devices WHERE id = ?', id) !== null,
 		liveDevices: () =>
 			all<DeviceRow>('SELECT * FROM devices WHERE revoked_at IS NULL ORDER BY created_at, id').map(toDevice),
 		touchDevice: (id, at) => {
@@ -101,22 +100,6 @@ export function sqliteStore(sql: Sql, transactionSync: <T>(run: () => T) => T): 
 			);
 			if (revoked.length) all('DELETE FROM push WHERE device_id = ?', id);
 			return revoked.length > 0;
-		},
-
-		pairing: () => {
-			const row = first<PairingRow>('SELECT * FROM pairing LIMIT 1');
-			return row ? { codeHash: row.code_hash, expiresAt: row.expires_at, attempts: row.attempts } : null;
-		},
-		setPairing: (pairing: Pairing | null) => {
-			all('DELETE FROM pairing');
-			if (pairing) {
-				all(
-					'INSERT INTO pairing (code_hash, expires_at, attempts) VALUES (?, ?, ?)',
-					pairing.codeHash,
-					pairing.expiresAt,
-					pairing.attempts,
-				);
-			}
 		},
 
 		entity: (kind, id) => {
@@ -146,6 +129,14 @@ export function sqliteStore(sql: Sql, transactionSync: <T>(run: () => T) => T): 
 			all<LogRow>('SELECT * FROM log WHERE seq > ? ORDER BY seq LIMIT ?', after, limit).map(toLogEntry),
 		hasOp: opId => first('SELECT 1 AS found FROM log WHERE op_id = ? LIMIT 1', opId) !== null,
 		lastSeq: () => first<{ seq: number | null }>('SELECT MAX(seq) AS seq FROM log')?.seq ?? 0,
+		clearTaskData: () => {
+			all('DELETE FROM entities');
+			all('DELETE FROM log');
+		},
+		epoch: () => Number(first<{ value: string }>('SELECT value FROM meta WHERE key = ?', 'epoch')?.value ?? 0),
+		setEpoch: epoch => {
+			all('INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)', 'epoch', String(epoch));
+		},
 
 		pushTargets: () =>
 			all<PushRow>('SELECT * FROM push ORDER BY device_id').map((row): PushTarget => ({

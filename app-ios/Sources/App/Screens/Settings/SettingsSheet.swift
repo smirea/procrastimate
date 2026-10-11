@@ -2,13 +2,16 @@ import Core
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// Settings: the theme, the sync section, and `Import from Todoist`, the same panel as the web's settings sheet.
+/// Settings: the theme, the notifications line, import, and delete all data. The same panel as the web.
 struct SettingsSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(ThemeSettings.self) private var theme
     @Environment(TodoistImport.self) private var importer
+    @Environment(Store.self) private var store
+    @Environment(LocalNotifications.self) private var notifications
 
     @State private var picking = false
+    @State private var confirmingDelete = false
 
     var body: some View {
         NavigationStack {
@@ -26,17 +29,19 @@ struct SettingsSheet: View {
                 }
 
                 Section {
-                    Button("Set up sync", systemImage: "arrow.triangle.2.circlepath") {}
-                        .disabled(true)
-                } header: {
-                    Text("Sync")
-                } footer: {
-                    Text("Syncing with your other devices is coming to the iPhone app.")
+                    if notifications.status == .denied {
+                        Button("Notifications need permission") {
+                            Task { await notifications.openSettings() }
+                        }
+                    } else {
+                        Text(notifications.status == .on ? "Notifications: On" : "Notifications: Off")
+                    }
                 }
 
                 Section("Data") {
                     Button("Import from Todoist", systemImage: "square.and.arrow.down") { picking = true }
                     ImportOutcome(status: importer.status)
+                    Button("Delete all data", role: .destructive) { confirmingDelete = true }
                 }
             }
             .animation(.snappy, value: importer.status)
@@ -45,6 +50,14 @@ struct SettingsSheet: View {
                 case let .success(url): importer.run(url)
                 case .failure: importer.failed("Couldn’t open this file.")
                 }
+            }
+            .confirmationDialog(
+                "Delete every task, project, and label on this device and the server?",
+                isPresented: $confirmingDelete,
+                titleVisibility: .visible
+            ) {
+                Button("Delete all data", role: .destructive) { store.deleteAll() }
+                Button("Cancel", role: .cancel) {}
             }
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)

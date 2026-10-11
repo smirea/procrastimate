@@ -2,8 +2,6 @@ import { defineConfig, devices } from '@playwright/test';
 
 const PORT = 6130;
 const API_PORT = 6131;
-/** The sync setup code both e2e servers accept. The dev server's account lives in memory, so every run starts empty. */
-export const SYNC_SETUP_CODE = 'e2e-setup-code';
 
 export default defineConfig({
 	testDir: './e2e',
@@ -29,7 +27,7 @@ export default defineConfig({
 	webServer:
 		process.env.E2E_WORKER === '1'
 			? {
-					command: `bunx wrangler dev --port ${PORT} --var SYNC_SETUP_CODE:${SYNC_SETUP_CODE} --var RAMBLE_UPSTREAM:cassette`,
+					command: `bunx wrangler dev --port ${PORT} --var RAMBLE_UPSTREAM:cassette --var E2E_SHARD:1`,
 					cwd: '..',
 					url: `http://127.0.0.1:${PORT}/api/status`,
 					reuseExistingServer: false,
@@ -40,7 +38,13 @@ export default defineConfig({
 						cwd: '../server',
 						url: `http://127.0.0.1:${API_PORT}/api/status`,
 						reuseExistingServer: false,
-						env: { API_PORT: String(API_PORT), SYNC_SETUP_CODE, RAMBLE_UPSTREAM: 'cassette' },
+						env: {
+							API_PORT: String(API_PORT),
+							RAMBLE_UPSTREAM: 'cassette',
+							E2E_SHARD: '1',
+							TURSO_DATABASE_URL: '',
+							TURSO_AUTH_TOKEN: '',
+						},
 					},
 					{
 						command: 'bun --bun run vite',
