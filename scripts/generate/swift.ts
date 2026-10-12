@@ -475,7 +475,43 @@ extension KeyedEncodingContainer {
 }
 `;
 
-export function swiftModule(document: Document): string {
+/**
+ * oRPC names an output schema `<Name>Output` when its JSON Schema differs from the input's. Zod marks output objects
+ * `additionalProperties: false`, which is the only difference here, so such a pair is one Swift type.
+ */
+function mergeOutputTwins(document: Document): Document {
+	const schemas = { ...document.components?.schemas };
+	const strip = (value: unknown, renames: Map<string, string>): unknown => {
+		if (Array.isArray(value)) return value.map(item => strip(item, renames));
+		if (!value || typeof value !== 'object') return value;
+		return Object.fromEntries(
+			Object.entries(value)
+				.filter(([key]) => key !== 'additionalProperties')
+				.map(([key, inner]) => {
+					if (key !== '$ref' || typeof inner !== 'string') return [key, strip(inner, renames)];
+					const name = inner.replace('#/components/schemas/', '');
+					return [key, `#/components/schemas/${renames.get(name) ?? name}`];
+				}),
+		);
+	};
+	const renames = new Map<string, string>();
+	for (let changed = true; changed;) {
+		changed = false;
+		for (const name of Object.keys(schemas)) {
+			const base = name.replace(/Output$/, '');
+			if (base === name || !schemas[base] || renames.has(name)) continue;
+			const twin = JSON.stringify(strip(schemas[name], new Map([...renames, [name, base]])));
+			if (twin !== JSON.stringify(strip(schemas[base], renames))) continue;
+			renames.set(name, base);
+			changed = true;
+		}
+	}
+	for (const name of renames.keys()) delete schemas[name];
+	return strip({ ...document, components: { ...document.components, schemas } }, renames) as Document;
+}
+
+export function swiftModule(input: Document): string {
+	const document = mergeOutputTwins(input);
 	const generator = new Generator(document);
 	for (const name of Object.keys(document.components?.schemas ?? {}).sort()) generator.component(name);
 	const endpoints: string[] = [];

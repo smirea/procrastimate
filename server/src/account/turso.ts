@@ -1,7 +1,9 @@
 import { and, asc, eq } from 'drizzle-orm';
 import type { BatchItem } from 'drizzle-orm/batch';
-import { devices, entities, log, meta, push, rambleUsage } from '../../../shared/db/schema';
-import { deviceColumns, entityColumns, logColumns, pushColumns, rambleColumns } from '../db/columns';
+import { devices, log, meta, push, rambleUsage } from '../../../shared/db/schema';
+import { KINDS } from '../../../shared/sync/kinds';
+import { ENTITY_TABLES, entityRow, rowEntity } from '../db/entities';
+import { deviceColumns, logColumns, pushColumns, rambleColumns } from '../db/columns';
 import { batch, tursoDatabase, type TursoDatabase, type TursoTarget } from '../db/turso';
 import { memoryStore, type AccountTables } from './memory-store';
 import type { RambleLedger, RambleUsage } from './ramble-ledger';
@@ -25,7 +27,7 @@ function chunks<T>(rows: T[]): T[][] {
 	return result;
 }
 
-const USER_TABLES = [devices, entities, log, push, rambleUsage, meta];
+const USER_TABLES = [...Object.values(ENTITY_TABLES), devices, log, push, rambleUsage, meta];
 
 function writes(db: TursoDatabase, userId: string, tables: AccountTables): BatchItem<'sqlite'>[] {
 	const scoped = <T extends object>(rows: T[]) => chunks(rows.map(row => ({ ...row, userId })));
@@ -33,7 +35,10 @@ function writes(db: TursoDatabase, userId: string, tables: AccountTables): Batch
 		...USER_TABLES.map(table => db.delete(table).where(eq(table.userId, userId))),
 		db.insert(meta).values({ userId, key: 'epoch', value: String(tables.epoch) }),
 		...scoped(tables.devices).map(rows => db.insert(devices).values(rows)),
-		...scoped(tables.entities).map(rows => db.insert(entities).values(rows)),
+		...KINDS.flatMap(kind => {
+			const rows = tables.entities.filter(entity => entity.kind === kind).map(entity => entityRow(userId, entity));
+			return chunks(rows).map(chunk => db.insert(ENTITY_TABLES[kind]).values(chunk));
+		}),
 		...scoped(tables.log).map(rows => db.insert(log).values(rows)),
 		...scoped(tables.push).map(rows => db.insert(push).values(rows)),
 		...scoped(tables.ramble).map(rows => db.insert(rambleUsage).values(rows)),
@@ -41,9 +46,16 @@ function writes(db: TursoDatabase, userId: string, tables: AccountTables): Batch
 }
 
 async function readTables(db: TursoDatabase, userId: string): Promise<AccountTables> {
-	const [deviceRows, entityRows, logRows, pushRows, rambleRows, epochRows] = await Promise.all([
+	const loadEntities = Promise.all(
+		KINDS.map(async kind => {
+			const table = ENTITY_TABLES[kind];
+			const rows = await db.select().from(table).where(eq(table.userId, userId));
+			return rows.map(row => rowEntity(kind, row));
+		}),
+	);
+	const [entityRows, deviceRows, logRows, pushRows, rambleRows, epochRows] = await Promise.all([
+		loadEntities,
 		db.select(deviceColumns).from(devices).where(eq(devices.userId, userId)),
-		db.select(entityColumns).from(entities).where(eq(entities.userId, userId)),
 		db.select(logColumns).from(log).where(eq(log.userId, userId)).orderBy(asc(log.seq)),
 		db.select(pushColumns).from(push).where(eq(push.userId, userId)),
 		db.select(rambleColumns).from(rambleUsage).where(eq(rambleUsage.userId, userId)),
@@ -54,7 +66,7 @@ async function readTables(db: TursoDatabase, userId: string): Promise<AccountTab
 	]);
 	return {
 		devices: deviceRows,
-		entities: entityRows,
+		entities: entityRows.flat(),
 		log: logRows,
 		push: pushRows,
 		ramble: rambleRows,

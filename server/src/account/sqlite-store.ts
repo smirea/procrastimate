@@ -1,7 +1,9 @@
 import { and, asc, eq, gt, isNull, max, sql } from 'drizzle-orm';
 import type { AnySQLiteColumn } from 'drizzle-orm/sqlite-core';
-import { devices, entities, log, meta, push, rambleUsage } from '../../../shared/db/schema';
-import { deviceColumns, entityColumns, logColumns, pushColumns } from '../db/columns';
+import { devices, log, meta, push, rambleUsage } from '../../../shared/db/schema';
+import { KINDS } from '../../../shared/sync/kinds';
+import { ENTITY_TABLES, entityRow, rowEntity } from '../db/entities';
+import { deviceColumns, logColumns, pushColumns } from '../db/columns';
 import { migrateSync, type SyncDatabase } from '../db/migrate';
 import type { AccountStore } from './store';
 
@@ -61,26 +63,27 @@ export function sqliteStore(db: SyncDatabase, userId: string): AccountStore {
 			return revoked.length > 0;
 		},
 
-		entity: (kind, id) =>
-			db
-				.select(entityColumns)
-				.from(entities)
-				.where(and(own(entities.userId), eq(entities.kind, kind), eq(entities.id, id)))
-				.get() ?? null,
+		entity: (kind, id) => {
+			const table = ENTITY_TABLES[kind];
+			const row = db
+				.select()
+				.from(table)
+				.where(and(own(table.userId), eq(table.id, id)))
+				.get();
+			return row ? rowEntity(kind, row) : null;
+		},
 		entities: () =>
-			db
-				.select(entityColumns)
-				.from(entities)
-				.where(own(entities.userId))
-				.orderBy(asc(entities.kind), asc(entities.id))
-				.all(),
+			KINDS.flatMap(kind => {
+				const table = ENTITY_TABLES[kind];
+				const rows = db.select().from(table).where(own(table.userId)).orderBy(asc(table.id)).all();
+				return rows.map(row => rowEntity(kind, row));
+			}),
 		putEntity: entity => {
-			db.insert(entities)
-				.values({ ...entity, userId })
-				.onConflictDoUpdate({
-					target: [entities.userId, entities.kind, entities.id],
-					set: { data: entity.data, clocks: entity.clocks },
-				})
+			const table = ENTITY_TABLES[entity.kind];
+			const { userId: _, id: __, ...set } = entityRow(userId, entity);
+			db.insert(table)
+				.values(entityRow(userId, entity))
+				.onConflictDoUpdate({ target: [table.userId, table.id], set })
 				.run();
 		},
 
@@ -108,12 +111,12 @@ export function sqliteStore(db: SyncDatabase, userId: string): AccountStore {
 				.get() !== undefined,
 		lastSeq: () => lastSeq(),
 		clearTaskData: () => {
-			db.delete(entities).where(own(entities.userId)).run();
-			db.delete(log).where(own(log.userId)).run();
+			for (const table of [...Object.values(ENTITY_TABLES), log]) db.delete(table).where(own(table.userId)).run();
 		},
 		clearAccount: () => {
-			for (const table of [devices, entities, log, push, rambleUsage, meta])
+			for (const table of [...Object.values(ENTITY_TABLES), devices, log, push, rambleUsage, meta]) {
 				db.delete(table).where(own(table.userId)).run();
+			}
 		},
 		epoch: () =>
 			Number(

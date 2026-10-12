@@ -1,31 +1,27 @@
 import { OpenAPIGenerator } from '@orpc/openapi';
 import { z } from 'zod';
-import { JSON_SCHEMA_REGISTRY, ZodToJsonSchemaConverter } from '@orpc/zod';
-import { authMethodsSchema, contract, okSchema, pushKeySchema } from '../../shared/api/contract';
-import { pushScheduleResponseSchema, pushSubscriptionSchema, scheduledPushSchema } from '../../shared/push';
+import { ZodToJsonSchemaConverter } from '@orpc/zod';
+import {
+	authMethodsSchema,
+	contract,
+	okSchema,
+	pushKeySchema,
+	pushScheduleResponseSchema,
+} from '../../shared/api/contract';
+import { pushSubscriptionSchema, scheduledPushSchema } from '../../shared/push';
 import {
 	changeSchema,
-	DATE_KEY_PATTERN,
-	dateKeySchema,
-	dueSchema,
 	labelSchema,
 	opSchema,
 	PATCH_SCHEMAS,
 	projectSchema,
-	recurrenceSchema,
-	reminderSchema,
 	settingsSchema,
 	snapshotSchema,
 	syncRequestSchema,
 	syncResponseSchema,
 	taskSchema,
-	TIME_OF_DAY_PATTERN,
-	timeOfDaySchema,
 } from '../../shared/sync/protocol';
-
-// The converter merges these into its `{ not: {} }` for a custom schema, so `not` has to be cleared.
-JSON_SCHEMA_REGISTRY.add(dateKeySchema, { not: undefined, type: 'string', pattern: DATE_KEY_PATTERN.source });
-JSON_SCHEMA_REGISTRY.add(timeOfDaySchema, { not: undefined, type: 'string', pattern: TIME_OF_DAY_PATTERN.source });
+import { dueSchema, recurrenceSchema, reminderSchema } from '../../shared/values';
 
 /** Component names. zod's JSON Schema output turns an `id` into a `$defs` entry, which oRPC hoists into components. */
 const COMPONENTS: [z.ZodType, string][] = [

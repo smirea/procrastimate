@@ -34,7 +34,6 @@
 	"dependencies": {
 		"@better-auth/memory-adapter": "1.7.7",
 		"@libsql/client": "^0.18.0",
-		"@libsql/kysely-libsql": "^0.4.1",
 		"@orpc/client": "2.0.0-beta.43",
 		"@orpc/contract": "2.0.0-beta.43",
 		"@orpc/openapi": "2.0.0-beta.43",
@@ -47,7 +46,6 @@
 		"drizzle-orm": "0.45.4",
 		"es-toolkit": "^1.52.0",
 		"kill-port-process": "^5.0.0",
-		"kysely": "^0.29.6",
 		"lefthook": "^2.2.1",
 		"lodash": "^4.18.1",
 		"oxfmt": "^0.72.0",

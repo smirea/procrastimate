@@ -1,7 +1,8 @@
 import { oc, type RouterContractClient } from '@orpc/contract';
 import { openapi, type JsonifiedClient } from '@orpc/openapi';
 import { z } from 'zod';
-import { pushScheduleResponseSchema, pushSubscriptionSchema, subscribeRequestSchema } from '../push.ts';
+import { pushRowSchema } from '../db/generated/zod.ts';
+import { pushSubscriptionSchema, subscribeRequestSchema } from '../push.ts';
 import { syncRequestSchema, syncResponseSchema } from '../sync/protocol.ts';
 
 /**
@@ -25,6 +26,10 @@ export const authMethodsSchema = z.object({
 	appleNative: z.boolean(),
 });
 export type AuthMethods = z.infer<typeof authMethodsSchema>;
+
+/** What the server will deliver to the calling device, soonest first: its push row's pending notifications. */
+export const pushScheduleResponseSchema = pushRowSchema.pick({ notifications: true });
+export type PushScheduleResponse = z.infer<typeof pushScheduleResponseSchema>;
 
 export const pushKeySchema = z.object({ publicKey: z.string() });
 

@@ -2,16 +2,15 @@ import { createORPCClient } from '@orpc/client';
 import type { RouterContractClient } from '@orpc/contract';
 import { OpenAPILink } from '@orpc/openapi/fetch';
 import { ORPCError } from '@orpc/server';
-import { createClient, type Client } from '@libsql/client/web';
-import { LibsqlDialect } from '@libsql/kysely-libsql';
 import { betterAuth } from 'better-auth';
 import { memoryAdapter, type MemoryDB } from '@better-auth/memory-adapter';
-import { getMigrations } from 'better-auth/db/migration';
+import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { bearer } from 'better-auth/plugins';
 import { internalContract, type AuthMethods } from '../../shared/api/contract';
 import { USER_HEADER } from '../../shared/auth';
 import type { Env } from './bindings';
-import { tursoTarget } from './db/turso';
+import { authSchema, type user } from './db/auth-schema';
+import { tursoDatabase, tursoTarget, type TursoDatabase } from './db/turso';
 import { withUser } from './request-user';
 
 /** A year. Days offline must not sign the account out; a day online extends the session. */
@@ -50,7 +49,6 @@ function trustedOrigins(request?: Request): string[] {
 
 type Auth = {
 	handler: (request: Request) => Promise<Response>;
-	options: Parameters<typeof getMigrations>[0];
 	$context: Promise<{
 		internalAdapter: {
 			deleteUser: (userId: string) => Promise<void>;
@@ -185,14 +183,14 @@ function authOptions(
 	};
 }
 
-async function buildAuth(env: Env, secret: string, client: Client | null): Promise<Auth> {
+/** Better Auth on the account database, whose migrations create its tables. */
+const drizzleDatabase = (db: TursoDatabase) =>
+	drizzleAdapter(db, { provider: 'sqlite', schema: authSchema, transaction: true });
+
+async function buildAuth(env: Env, secret: string, db: TursoDatabase | null): Promise<Auth> {
 	const providers = await socialProviders(env);
-	const database = client
-		? { dialect: new LibsqlDialect({ client: client as never }), type: 'sqlite' as const, transaction: true }
-		: memoryAdapter(memoryDb(secret));
-	const auth = betterAuth(authOptions(secret, env, database, providers, Boolean(client)) as never) as Auth;
-	if (client) await getMigrations(auth.options).then(plan => plan.runMigrations());
-	return auth;
+	const database = db ? drizzleDatabase(db) : memoryAdapter(memoryDb(secret));
+	return betterAuth(authOptions(secret, env, database, providers, Boolean(db)) as never) as Auth;
 }
 
 function memoryDb(secret: string): MemoryDB {
@@ -218,28 +216,20 @@ export function getAuth(env: Env): Promise<Auth | null> {
 	].join('|');
 	const existing = auths.get(key);
 	if (existing) return existing;
-	const client = turso ? createClient({ url: turso.url, authToken: turso.authToken }) : null;
-	const pending = buildAuth(env, secret, client).catch(error => {
-		auths.delete(key);
-		throw error;
-	});
+	const database = turso ? tursoDatabase(turso) : Promise.resolve(null);
+	const pending = database
+		.then(db => buildAuth(env, secret, db))
+		.catch(error => {
+			auths.delete(key);
+			throw error;
+		});
 	auths.set(key, pending);
 	return pending;
 }
 
-/** Signs up against a caller-supplied libSQL client. The transaction test uses this with `transaction: true`. */
-export async function authOnClient(secret: string, client: Client): Promise<Auth> {
-	const auth = betterAuth(
-		authOptions(
-			secret,
-			{},
-			{ dialect: new LibsqlDialect({ client: client as never }), type: 'sqlite', transaction: true },
-			{},
-			true,
-		) as never,
-	) as Auth;
-	await getMigrations(auth.options).then(plan => plan.runMigrations());
-	return auth;
+/** Auth on a caller-supplied database, as production has, for tests. */
+export function authOnDatabase(secret: string, db: TursoDatabase): Auth {
+	return betterAuth(authOptions(secret, {}, drizzleDatabase(db), {}, true) as never) as Auth;
 }
 
 const fail = (status: number, error: string) => Response.json({ ok: false, error }, { status });
@@ -250,7 +240,7 @@ export async function authHandler(request: Request, env: Env): Promise<Response>
 	return auth.handler(request);
 }
 
-export type SessionUser = { id: string; email: string; name: string };
+export type SessionUser = Pick<typeof user.$inferSelect, 'id' | 'email' | 'name'>;
 
 /** The signed-in user, from the session cookie or the bearer plugin's `Authorization` header. */
 export async function readSession(request: Request, env: Env): Promise<SessionUser | null> {
