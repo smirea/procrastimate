@@ -20,6 +20,11 @@ import { store } from './store.svelte.ts';
 
 const COMMIT_DELAY = 1000;
 const INTERVAL = 60_000;
+/**
+ * A request that never answers, as across a deploy or a dead connection, would hold `#running` forever, and every
+ * later trigger would wait on it, so the tab silently stopped syncing. The signal also bounds reading the body.
+ */
+const REQUEST_TIMEOUT = 20_000;
 /** A keepalive that also finds a dead socket: one that answers nothing between two pings is dropped. */
 const PING_INTERVAL = 30_000;
 const RECONNECT_MIN = 1000;
@@ -198,6 +203,7 @@ class Sync {
 				credentials: 'include',
 				headers: { 'Content-Type': 'application/json', ...deviceHeaders() },
 				body: JSON.stringify(request),
+				signal: AbortSignal.timeout(REQUEST_TIMEOUT),
 			});
 		} catch {
 			return false;
@@ -209,7 +215,10 @@ class Sync {
 		}
 		if (!response.ok) return false;
 		const parsed = syncResponseSchema.safeParse(await response.json().catch(() => undefined));
-		if (!parsed.success) return false;
+		if (!parsed.success) {
+			console.warn('sync: unreadable response', parsed.error.issues.slice(0, 5));
+			return false;
+		}
 		store.takeResponse(parsed.data);
 		return 'changes' in parsed.data && parsed.data.changes.length >= SYNC_PAGE_SIZE;
 	}
