@@ -8,7 +8,13 @@ import {
 	type ServerEntity,
 	type ServerState,
 } from '../../../shared/sync/merge';
-import { SYNC_PAGE_SIZE, syncRequestSchema, type Change, type SyncResponse } from '../../../shared/sync/protocol';
+import {
+	repairBooleanNumbers,
+	SYNC_PAGE_SIZE,
+	syncRequestSchema,
+	type Change,
+	type SyncResponse,
+} from '../../../shared/sync/protocol';
 import { authenticate, type AccountRoute } from '../auth';
 import { refreshPush } from './push';
 import type { AccountStore } from './store';
@@ -80,7 +86,9 @@ export const syncRoutes: Record<string, AccountRoute> = {
 	'POST /api/sync': async (request, context) => {
 		const deviceId = await authenticate(request, context);
 		if (!deviceId) return fail(401, 'Not signed in');
-		const body = syncRequestSchema.safeParse(await request.json().catch(() => undefined));
+		const json: unknown = await request.json().catch(() => undefined);
+		const body = syncRequestSchema.safeParse(repairBooleanNumbers(json));
+		if (!body.success) console.warn('sync: invalid request', JSON.stringify(body.error.issues).slice(0, 2000));
 		if (!body.success) return fail(400, 'Invalid sync request');
 		const response = sync(context.store, body.data, context.now);
 		if (body.data.ops.length) await refreshPush(context);
