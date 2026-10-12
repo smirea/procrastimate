@@ -41,4 +41,19 @@ import Testing
         guard case let .settings(op) = request.ops.first else { Issue.record("expected the settings op"); return }
         #expect(op.fields.timeZone == .value("UTC"))
     }
+
+    @Test func anOutboxFromTheBooleanBugStillSends() throws {
+        var snapshot = Snapshot.empty(now: 0)
+        SyncEngine.ensure(&snapshot, deviceId: "device-1234", now: 0, timeZone: "UTC") { "op-1" }
+        snapshot.sync?.outbox.append(SyncOp(opId: "op-2", hlc: "1:0:device-1234", kind: .task, id: "t1", fields: [
+            "order": .bool(false),
+            "priority": .bool(true),
+            "recurrence": .object(["interval": .bool(true), "unit": .string("week"), "days": .array([.bool(true), .number(3)])]),
+            "reminders": .array([.object(["kind": .string("before"), "minutes": .bool(false)])]),
+        ]))
+        let request = try #require(try SyncEngine.request(snapshot))
+        guard case let .task(op) = request.ops.last else { Issue.record("expected the task op"); return }
+        #expect(op.fields.order == 0)
+        #expect(op.fields.priority == 1)
+    }
 }

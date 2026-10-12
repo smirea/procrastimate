@@ -113,8 +113,38 @@ public enum SyncEngine {
     /// The body of `POST /api/sync` as the contract types it, or nil when this document has not started. Throws when
     /// the outbox holds an op the contract rejects, which the server would answer with a 400.
     public static func request(_ snapshot: Snapshot) throws -> API.SyncRequest? {
-        guard let json = requestJSON(snapshot) else { return nil }
+        var repaired = snapshot
+        repaired.sync?.outbox = snapshot.sync?.outbox.map(repairBooleanNumbers) ?? []
+        guard let json = requestJSON(repaired) else { return nil }
         return try JSONDecoder().decode(API.SyncRequest.self, from: json)
+    }
+
+    /// Builds up to 2026.1011.235500 stored `0` and `1` as booleans in numeric fields, and their outboxes still
+    /// hold those ops. Only 0 and 1 were turned into booleans, so turning them back is exact, as the server does.
+    static func repairBooleanNumbers(_ op: SyncOp) -> SyncOp {
+        guard op.kind != .settings else { return op }
+        func number(_ value: JSONValue) -> JSONValue {
+            if case let .bool(flag) = value { return .number(flag ? 1 : 0) }
+            return value
+        }
+        var next = op
+        for name in ["order", "createdAt", "completedAt", "priority"] {
+            if let value = next.fields[name] { next.fields[name] = number(value) }
+        }
+        guard op.kind == .task else { return next }
+        if case var .object(recurrence) = next.fields["recurrence"] {
+            if let interval = recurrence["interval"] { recurrence["interval"] = number(interval) }
+            if case let .array(days) = recurrence["days"] { recurrence["days"] = .array(days.map(number)) }
+            next.fields["recurrence"] = .object(recurrence)
+        }
+        if case let .array(reminders) = next.fields["reminders"] {
+            next.fields["reminders"] = .array(reminders.map { reminder in
+                guard case var .object(fields) = reminder, let minutes = fields["minutes"] else { return reminder }
+                fields["minutes"] = number(minutes)
+                return .object(fields)
+            })
+        }
+        return next
     }
 
     /// Applies a response the contract already decoded. `Nullable` keeps every `null`, so the JSON is the same.
