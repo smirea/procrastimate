@@ -69,7 +69,7 @@ export const snapshotSchema = z
 		labels: z.array(labelSchema),
 		settings: settingsSchema,
 	})
-	.meta({ id: 'Snapshot' });
+	.meta({ id: 'SyncSnapshot' });
 
 export type Snapshot = z.infer<typeof snapshotSchema>;
 

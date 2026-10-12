@@ -60,90 +60,13 @@ private extension Character {
 /// Device-local sync state. Every document has one. `clock` is the last clock the device issued or saw, and
 /// `timeZone` the zone it last wrote to the synced settings. `epoch` is the wipe generation it last applied.
 /// `reset` stays set until the server has wiped task data for a local delete-all.
-public struct SyncSection: Hashable, Codable, Sendable {
-    public var deviceId: String
-    public var cursor: Int
-    public var outbox: [SyncOp]
-    public var clock: String
-    public var timeZone: String
-    public var epoch: Int
-    public var reset: Bool
-
-    public init(
-        deviceId: String,
-        cursor: Int,
-        outbox: [SyncOp],
-        clock: String,
-        timeZone: String,
-        epoch: Int = 0,
-        reset: Bool = false
-    ) {
-        self.deviceId = deviceId
-        self.cursor = cursor
-        self.outbox = outbox
-        self.clock = clock
-        self.timeZone = timeZone
-        self.epoch = epoch
-        self.reset = reset
-    }
-
-    public init(from decoder: Decoder) throws {
-        let c = try decoder.container(keyedBy: CodingKeys.self)
-        deviceId = try c.decode(String.self, forKey: .deviceId)
-        cursor = try c.decode(Int.self, forKey: .cursor)
-        outbox = try c.decode([SyncOp].self, forKey: .outbox)
-        clock = try c.decode(String.self, forKey: .clock)
-        timeZone = try c.decode(String.self, forKey: .timeZone)
-        epoch = try c.decodeIfPresent(Int.self, forKey: .epoch) ?? 0
-        reset = try c.decodeIfPresent(Bool.self, forKey: .reset) ?? false
-        guard cursor >= 0, epoch >= 0 else {
-            throw DecodingError.dataCorruptedError(forKey: .cursor, in: c, debugDescription: "Negative cursor or epoch")
-        }
-        guard isHlc(clock) else {
-            throw DecodingError.dataCorruptedError(forKey: .clock, in: c, debugDescription: "Invalid HLC")
-        }
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case deviceId, cursor, outbox, clock, timeZone, epoch, reset
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var c = encoder.container(keyedBy: CodingKeys.self)
-        try c.encode(deviceId, forKey: .deviceId)
-        try c.encode(cursor, forKey: .cursor)
-        try c.encode(outbox, forKey: .outbox)
-        try c.encode(clock, forKey: .clock)
-        try c.encode(timeZone, forKey: .timeZone)
-        try c.encode(epoch, forKey: .epoch)
-        try c.encode(reset, forKey: .reset)
-    }
-}
+public typealias SyncSection = API.SyncSection
 
 /// The one stored document: the web's `procrastimate` localStorage value and the iOS app's JSON file. Loading drops an
 /// invalid task on its own, defaults fields added later, and discards an invalid document, with no migrations.
-public struct Snapshot: Hashable, Codable, Sendable {
-    public var tasks: [TaskItem]
-    public var projects: [Project]
-    public var labels: [Label]
-    /// Epoch milliseconds of the last check for due reminders.
-    public var remindersCheckedAt: Int
-    public var sync: SyncSection?
+public typealias Snapshot = API.Snapshot
 
-    public init(
-        tasks: [TaskItem] = [],
-        projects: [Project] = [],
-        labels: [Label] = [],
-        remindersCheckedAt: Int,
-        sync: SyncSection? = nil
-    ) {
-        self.tasks = tasks
-        self.projects = projects
-        self.labels = labels
-        self.remindersCheckedAt = remindersCheckedAt
-        self.sync = sync
-    }
-
+extension API.Snapshot {
     public static func empty(now: Int) -> Snapshot { Snapshot(remindersCheckedAt: now) }
 
     public var data: StoreData {
@@ -157,7 +80,7 @@ public struct Snapshot: Hashable, Codable, Sendable {
 
     /// Reads a stored document, or starts empty when it is invalid.
     public static func load(_ json: Data, now: Int) -> Snapshot {
-        (try? JSONDecoder().decode(Snapshot.self, from: json)) ?? .empty(now: now)
+        (try? JSONDecoder.validating().decode(Snapshot.self, from: json)) ?? .empty(now: now)
     }
 
     /// The stored JSON, with keys sorted so a write is stable.
@@ -166,8 +89,6 @@ public struct Snapshot: Hashable, Codable, Sendable {
         encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
         return try encoder.encode(self)
     }
-
-    private enum CodingKeys: String, CodingKey { case tasks, projects, labels, remindersCheckedAt, sync }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { sortTasks, type StoreData } from './store.ts';
 import { detachOrphans } from './subtasks.ts';
-import { isHlc } from './sync/hlc.ts';
+import { hlcSchema } from './db/json.ts';
 import { labelSchema, opSchema, projectSchema, taskSchema as syncedTaskSchema } from './sync/protocol.ts';
 import { weeklyOn } from './task.ts';
 import { recurrenceSchema, weekdaySchema } from './values.ts';
@@ -33,42 +33,52 @@ const taskSchema = syncedTaskSchema.extend({
 });
 
 /** Drops a task that fails validation instead of failing the whole snapshot, so one bad task never wipes the rest. */
-const tasksSchema = z.array(z.unknown()).transform(items =>
-	sortTasks(
-		detachOrphans(
-			items.flatMap(item => {
-				const task = taskSchema.safeParse(item);
-				return task.success ? [task.data] : [];
-			}),
+const tasksSchema = z
+	.array(z.unknown())
+	// Swift holds the loaded tasks, which Core's decoder of the document drops one by one the same way.
+	.meta({ 'x-swift-type': '[Task]' })
+	.transform(items =>
+		sortTasks(
+			detachOrphans(
+				items.flatMap(item => {
+					const task = taskSchema.safeParse(item);
+					return task.success ? [task.data] : [];
+				}),
+			),
 		),
-	),
-);
+	);
 
 /**
  * Device-local sync state. `clock` is the last clock the device issued or saw, and `timeZone` the zone it last wrote
  * to the synced settings, so it writes again only after it moves. `epoch` is the wipe generation it last applied.
  * `reset` is set until the server has wiped task data for a local delete-all.
  */
-const syncSchema = z.object({
-	deviceId: z.string(),
-	cursor: z.number().int().nonnegative(),
-	outbox: z.array(opSchema),
-	clock: z.string().refine(isHlc),
-	timeZone: z.string(),
-	epoch: z.number().int().nonnegative().default(0),
-	reset: z.boolean().default(false),
-});
+const syncSchema = z
+	.object({
+		deviceId: z.string(),
+		cursor: z.number().int().nonnegative(),
+		// Core diffs an op's fields as JSON values, so Swift keeps its own `SyncOp` for the outbox.
+		outbox: z.array(opSchema.meta({ 'x-swift-type': 'SyncOp' })),
+		clock: hlcSchema,
+		timeZone: z.string(),
+		epoch: z.number().int().nonnegative().default(0),
+		reset: z.boolean().default(false),
+	})
+	.meta({ id: 'SyncSection' });
 
-const snapshotSchema = z.object({
-	tasks: tasksSchema,
-	projects: z.array(projectSchema),
-	labels: z.array(labelSchema).default([]),
-	remindersCheckedAt: z.number(),
-	sync: syncSchema.optional(),
-});
+const snapshotSchema = z
+	.object({
+		tasks: tasksSchema,
+		projects: z.array(projectSchema),
+		labels: z.array(labelSchema).default([]),
+		remindersCheckedAt: z.number().int(),
+		sync: syncSchema.optional(),
+	})
+	// Core decodes tasks one by one with the loading rules above, so it writes its own decoder.
+	.meta({ id: 'Snapshot', 'x-decode': 'custom' });
 
 export type SyncSection = z.infer<typeof syncSchema>;
-export type Snapshot = StoreData & { remindersCheckedAt: number; sync?: SyncSection };
+export type Snapshot = z.infer<typeof snapshotSchema>;
 
 export const emptySnapshot = (now: number): Snapshot => ({
 	tasks: [],

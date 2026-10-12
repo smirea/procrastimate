@@ -258,7 +258,9 @@
 				"type": "object",
 				"properties": {
 					"at": {
-						"type": "number"
+						"type": "number",
+						"description": "When it shows, in epoch milliseconds.",
+						"x-epoch-ms": true
 					},
 					"taskId": {
 						"type": "string"
@@ -764,7 +766,7 @@
 								}
 							},
 							"snapshot": {
-								"$ref": "#/components/schemas/Snapshot"
+								"$ref": "#/components/schemas/SyncSnapshot"
 							},
 							"cursor": {
 								"type": "integer",
@@ -1170,7 +1172,7 @@
 				],
 				"additionalProperties": false
 			},
-			"Snapshot": {
+			"SyncSnapshot": {
 				"type": "object",
 				"properties": {
 					"tasks": {

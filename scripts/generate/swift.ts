@@ -19,6 +19,7 @@
  * - `x-validate`: a Core function `(T) -> Bool` the decoded value must pass, for a Zod `refine`.
  * - `x-swift-type`: a Core type to use as is, where Core keeps its own representation on purpose.
  * - `x-decode: custom`: no `init(from:)`, because Core decodes the type with rules of its own.
+ * - `x-epoch-ms`: epoch milliseconds in JSON, a `Date` in Swift.
  */
 
 export type Schema = {
@@ -48,6 +49,7 @@ export type Schema = {
 	'x-validate'?: string;
 	'x-swift-type'?: string;
 	'x-decode'?: 'custom';
+	'x-epoch-ms'?: boolean;
 };
 
 type Operation = {
@@ -82,6 +84,8 @@ type Prop = {
 	checks: Check[];
 	itemChecks: Check[];
 	doc?: string;
+	/** Epoch milliseconds in JSON, read and written through Core's `Date(epochMilliseconds:)`. */
+	epochMs?: boolean;
 	/** In a flattened union, the tag values whose branches have this property. Others ignore it, as Zod does. */
 	onlyWhen?: { tag: string; values: string[] };
 };
@@ -263,6 +267,20 @@ class Generator {
 			.map(([json, property]) => {
 				const { schema: inner, nullable } = this.nullable(property);
 				const resolved = this.resolve(inner);
+				if (inner['x-epoch-ms']) {
+					if (nullable || !required.has(json)) throw new Error(`${owner}.${json}: x-epoch-ms needs a required value`);
+					return {
+						json,
+						swift: identifier(camel(json)),
+						type: 'Date',
+						required: true,
+						nullable: false,
+						checks: [],
+						itemChecks: [],
+						doc: property.description,
+						epochMs: true,
+					};
+				}
 				const items = resolved.type === 'array' && resolved.items ? this.nullable(resolved.items).schema : null;
 				return {
 					json,
@@ -463,7 +481,8 @@ function initParam(prop: Prop, generator: Generator): string {
 	if (prop.defaultValue !== undefined && !(prop.nullable && !prop.required)) {
 		return `${prop.swift}: ${type} = ${generator.literal(prop.defaultValue, prop.type)}`;
 	}
-	return type.endsWith('?') ? `${prop.swift}: ${type} = nil` : `${prop.swift}: ${type}`;
+	if (type.endsWith('?')) return `${prop.swift}: ${type} = nil`;
+	return type.startsWith('[') && !type.includes(':') ? `${prop.swift}: ${type} = []` : `${prop.swift}: ${type}`;
 }
 
 /**
@@ -533,6 +552,7 @@ function validating(lines: string[], indent: string): string[] {
 }
 
 function decodeExpression(prop: Prop, generator: Generator): string {
+	if (prop.epochMs) return `Date(epochMilliseconds: try container.decode(Int.self, forKey: .${bare(prop.swift)}))`;
 	if (prop.onlyWhen) {
 		const { tag, values } = prop.onlyWhen;
 		return `${JSON.stringify(values)}.contains(${tag}.rawValue) ? ${decodeExpression({ ...prop, onlyWhen: undefined }, generator)} : nil`;
@@ -549,6 +569,7 @@ function decodeExpression(prop: Prop, generator: Generator): string {
 
 function encodeLine(prop: Prop, value: string): string {
 	const key = `.${bare(prop.swift)}`;
+	if (prop.epochMs) return `try container.encode(${value}.epochMilliseconds, forKey: ${key})`;
 	if (prop.nullable && !prop.required) return `try container.encodeNullable(${value}, forKey: ${key})`;
 	if (storedType(prop).endsWith('?') && !prop.nullable)
 		return `try container.encodeIfPresent(${value}, forKey: ${key})`;

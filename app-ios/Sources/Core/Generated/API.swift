@@ -868,7 +868,7 @@ extension API {
     public struct PushSchedule: Codable, Hashable, Sendable {
         public var notifications: [ScheduledNotification]
 
-        public init(notifications: [ScheduledNotification]) {
+        public init(notifications: [ScheduledNotification] = []) {
             self.notifications = notifications
         }
 
@@ -1092,12 +1092,13 @@ extension API {
     }
 
     public struct ScheduledNotification: Codable, Hashable, Sendable {
-        public var at: Double
+        /// When it shows, in epoch milliseconds.
+        public var at: Date
         public var taskId: String
         public var title: String
         public var body: String
 
-        public init(at: Double, taskId: String, title: String, body: String) {
+        public init(at: Date, taskId: String, title: String, body: String) {
             self.at = at
             self.taskId = taskId
             self.title = title
@@ -1113,7 +1114,7 @@ extension API {
 
         public init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
-            at = try container.decode(Double.self, forKey: .at)
+            at = Date(epochMilliseconds: try container.decode(Int.self, forKey: .at))
             taskId = try container.decode(String.self, forKey: .taskId)
             title = try container.decode(String.self, forKey: .title)
             body = try container.decode(String.self, forKey: .body)
@@ -1121,7 +1122,7 @@ extension API {
 
         public func encode(to encoder: Encoder) throws {
             var container = encoder.container(keyedBy: CodingKeys.self)
-            try container.encode(self.at, forKey: .at)
+            try container.encode(self.at.epochMilliseconds, forKey: .at)
             try container.encode(self.taskId, forKey: .taskId)
             try container.encode(self.title, forKey: .title)
             try container.encode(self.body, forKey: .body)
@@ -1217,28 +1218,23 @@ extension API {
         public var tasks: [Task]
         public var projects: [Project]
         public var labels: [Label]
-        public var settings: Settings
+        public var remindersCheckedAt: Int
+        public var sync: SyncSection?
 
-        public init(tasks: [Task], projects: [Project], labels: [Label], settings: Settings) {
+        public init(tasks: [Task] = [], projects: [Project] = [], labels: [Label] = [], remindersCheckedAt: Int, sync: SyncSection? = nil) {
             self.tasks = tasks
             self.projects = projects
             self.labels = labels
-            self.settings = settings
+            self.remindersCheckedAt = remindersCheckedAt
+            self.sync = sync
         }
 
         enum CodingKeys: String, CodingKey {
             case tasks = "tasks"
             case projects = "projects"
             case labels = "labels"
-            case settings = "settings"
-        }
-
-        public init(from decoder: Decoder) throws {
-            let container = try decoder.container(keyedBy: CodingKeys.self)
-            tasks = try container.decode([Task].self, forKey: .tasks)
-            projects = try container.decode([Project].self, forKey: .projects)
-            labels = try container.decode([Label].self, forKey: .labels)
-            settings = try container.decode(Settings.self, forKey: .settings)
+            case remindersCheckedAt = "remindersCheckedAt"
+            case sync = "sync"
         }
 
         public func encode(to encoder: Encoder) throws {
@@ -1246,7 +1242,8 @@ extension API {
             try container.encode(self.tasks, forKey: .tasks)
             try container.encode(self.projects, forKey: .projects)
             try container.encode(self.labels, forKey: .labels)
-            try container.encode(self.settings, forKey: .settings)
+            try container.encode(self.remindersCheckedAt, forKey: .remindersCheckedAt)
+            try container.encodeIfPresent(self.sync, forKey: .sync)
         }
     }
 
@@ -1256,7 +1253,7 @@ extension API {
         public var epoch: Int
         public var reset: Bool?
 
-        public init(cursor: Int, ops: [Op], epoch: Int = 0, reset: Bool? = nil) {
+        public init(cursor: Int, ops: [Op] = [], epoch: Int = 0, reset: Bool? = nil) {
             self.cursor = cursor
             self.ops = ops
             self.epoch = epoch
@@ -1328,7 +1325,7 @@ extension API {
         public var hlc: Hlc
         public var epoch: Int
 
-        public init(acked: [String], changes: [Change], cursor: Int, hlc: Hlc, epoch: Int) {
+        public init(acked: [String] = [], changes: [Change] = [], cursor: Int, hlc: Hlc, epoch: Int) {
             self.acked = acked
             self.changes = changes
             self.cursor = cursor
@@ -1379,12 +1376,12 @@ extension API {
 
     public struct SyncResponseSnapshot: Codable, Hashable, Sendable {
         public var acked: [String]
-        public var snapshot: Snapshot
+        public var snapshot: SyncSnapshot
         public var cursor: Int
         public var hlc: Hlc
         public var epoch: Int
 
-        public init(acked: [String], snapshot: Snapshot, cursor: Int, hlc: Hlc, epoch: Int) {
+        public init(acked: [String] = [], snapshot: SyncSnapshot, cursor: Int, hlc: Hlc, epoch: Int) {
             self.acked = acked
             self.snapshot = snapshot
             self.cursor = cursor
@@ -1403,7 +1400,7 @@ extension API {
         public init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             acked = try container.decode([String].self, forKey: .acked)
-            snapshot = try container.decode(Snapshot.self, forKey: .snapshot)
+            snapshot = try container.decode(SyncSnapshot.self, forKey: .snapshot)
             cursor = try container.decode(Int.self, forKey: .cursor)
             hlc = try container.decode(Hlc.self, forKey: .hlc)
             epoch = try container.decode(Int.self, forKey: .epoch)
@@ -1430,6 +1427,109 @@ extension API {
             try container.encode(self.cursor, forKey: .cursor)
             try container.encode(self.hlc, forKey: .hlc)
             try container.encode(self.epoch, forKey: .epoch)
+        }
+    }
+
+    public struct SyncSection: Codable, Hashable, Sendable {
+        public var deviceId: String
+        public var cursor: Int
+        public var outbox: [SyncOp]
+        public var clock: Hlc
+        public var timeZone: String
+        public var epoch: Int
+        public var reset: Bool
+
+        public init(deviceId: String, cursor: Int, outbox: [SyncOp] = [], clock: Hlc, timeZone: String, epoch: Int = 0, reset: Bool = false) {
+            self.deviceId = deviceId
+            self.cursor = cursor
+            self.outbox = outbox
+            self.clock = clock
+            self.timeZone = timeZone
+            self.epoch = epoch
+            self.reset = reset
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case deviceId = "deviceId"
+            case cursor = "cursor"
+            case outbox = "outbox"
+            case clock = "clock"
+            case timeZone = "timeZone"
+            case epoch = "epoch"
+            case reset = "reset"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            deviceId = try container.decode(String.self, forKey: .deviceId)
+            cursor = try container.decode(Int.self, forKey: .cursor)
+            outbox = try container.decode([SyncOp].self, forKey: .outbox)
+            clock = try container.decode(Hlc.self, forKey: .clock)
+            timeZone = try container.decode(String.self, forKey: .timeZone)
+            epoch = try container.decodeIfPresent(Int.self, forKey: .epoch) ?? 0
+            reset = try container.decodeIfPresent(Bool.self, forKey: .reset) ?? false
+            if decoder.validates {
+                do {
+                    let value = self.cursor
+                    try check(value >= 0, .cursor, in: container, "cursor at least 0")
+                }
+                do {
+                    let value = self.clock
+                    try check(isHlc(value), .clock, in: container, "clock passing isHlc")
+                }
+                do {
+                    let value = self.epoch
+                    try check(value >= 0, .epoch, in: container, "epoch at least 0")
+                }
+            }
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.deviceId, forKey: .deviceId)
+            try container.encode(self.cursor, forKey: .cursor)
+            try container.encode(self.outbox, forKey: .outbox)
+            try container.encode(self.clock, forKey: .clock)
+            try container.encode(self.timeZone, forKey: .timeZone)
+            try container.encode(self.epoch, forKey: .epoch)
+            try container.encode(self.reset, forKey: .reset)
+        }
+    }
+
+    public struct SyncSnapshot: Codable, Hashable, Sendable {
+        public var tasks: [Task]
+        public var projects: [Project]
+        public var labels: [Label]
+        public var settings: Settings
+
+        public init(tasks: [Task] = [], projects: [Project] = [], labels: [Label] = [], settings: Settings) {
+            self.tasks = tasks
+            self.projects = projects
+            self.labels = labels
+            self.settings = settings
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case tasks = "tasks"
+            case projects = "projects"
+            case labels = "labels"
+            case settings = "settings"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            tasks = try container.decode([Task].self, forKey: .tasks)
+            projects = try container.decode([Project].self, forKey: .projects)
+            labels = try container.decode([Label].self, forKey: .labels)
+            settings = try container.decode(Settings.self, forKey: .settings)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.tasks, forKey: .tasks)
+            try container.encode(self.projects, forKey: .projects)
+            try container.encode(self.labels, forKey: .labels)
+            try container.encode(self.settings, forKey: .settings)
         }
     }
 

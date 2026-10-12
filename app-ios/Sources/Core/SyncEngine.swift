@@ -165,7 +165,7 @@ public enum SyncEngine {
         let epochChanged = epoch != sync.epoch
         let sentReset = sync.reset
         if let raw = object["snapshot"] as? [String: Any], let data = try? JSONSerialization.data(withJSONObject: raw),
-           let decoded = try? JSONDecoder().decode(ProtocolSnapshot.self, from: data) {
+           let decoded = try? JSONDecoder().decode(API.SyncSnapshot.self, from: data) {
             snapshot.tasks = StoreRules.sortTasks(decoded.tasks)
             snapshot.projects = decoded.projects.sorted(by: byCreation)
             snapshot.labels = decoded.labels.sorted(by: byCreation)
@@ -229,17 +229,6 @@ private struct Patch {
     var kind: SyncOp.Kind
     var id: String
     var fields: [String: JSONValue]
-}
-
-private struct ProtocolSnapshot: Decodable {
-    var tasks: [TaskItem]
-    var projects: [Project]
-    var labels: [Label]
-    var settings: ProtocolSettings
-}
-
-private struct ProtocolSettings: Decodable {
-    var timeZone: String?
 }
 
 private func synced(_ data: StoreData, timeZone: String) -> SyncedData {
