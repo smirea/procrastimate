@@ -1,4 +1,5 @@
-import { oc, type ContractRouterClient } from '@orpc/contract';
+import { oc, type RouterContractClient } from '@orpc/contract';
+import { openapi, type JsonifiedClient } from '@orpc/openapi';
 import { z } from 'zod';
 import { pushScheduleResponseSchema, pushSubscriptionSchema, subscribeRequestSchema } from '../push.ts';
 import { syncRequestSchema, syncResponseSchema } from '../sync/protocol.ts';
@@ -34,23 +35,26 @@ const signedIn = oc.errors({ UNAUTHORIZED: {}, SERVICE_UNAVAILABLE: {} });
 
 /** Served by the Worker itself. */
 export const workerContract = {
-	status: oc.route({ method: 'GET', path: '/api/status' }).output(okSchema),
+	status: oc.meta(openapi({ method: 'GET', path: '/api/status' })).output(okSchema),
 	auth: {
-		methods: oc.route({ method: 'GET', path: '/api/auth/methods' }).output(authMethodsSchema),
+		methods: oc.meta(openapi({ method: 'GET', path: '/api/auth/methods' })).output(authMethodsSchema),
 	},
 	account: {
 		/** Deletes the signed-in user and their tasks. Social accounts have no password, so none is asked for. */
-		delete: signedIn.route({ method: 'POST', path: '/api/account/delete' }).output(okSchema),
+		delete: signedIn.meta(openapi({ method: 'POST', path: '/api/account/delete' })).output(okSchema),
 	},
 	push: {
-		key: oc.errors({ SERVICE_UNAVAILABLE: {} }).route({ method: 'GET', path: '/api/push/key' }).output(pushKeySchema),
+		key: oc
+			.errors({ SERVICE_UNAVAILABLE: {} })
+			.meta(openapi({ method: 'GET', path: '/api/push/key' }))
+			.output(pushKeySchema),
 		/** Sends one push to `subscription` right away, for the settings check. */
 		test: signedIn
 			.errors({
-				PUSH_GONE: { status: 410, data: pushStatusSchema },
-				PUSH_FAILED: { status: 502, data: pushStatusSchema },
+				GONE: { data: pushStatusSchema },
+				BAD_GATEWAY: { data: pushStatusSchema },
 			})
-			.route({ method: 'POST', path: '/api/push/test' })
+			.meta(openapi({ method: 'POST', path: '/api/push/test' }))
 			.input(z.object({ subscription: pushSubscriptionSchema }))
 			.output(okSchema),
 	},
@@ -58,22 +62,28 @@ export const workerContract = {
 
 /** Served by the signed-in user's `Account` Durable Object, as the device the request names. */
 export const accountContract = {
-	sync: signedIn.route({ method: 'POST', path: '/api/sync' }).input(syncRequestSchema).output(syncResponseSchema),
+	sync: signedIn
+		.meta(openapi({ method: 'POST', path: '/api/sync' }))
+		.input(syncRequestSchema)
+		.output(syncResponseSchema),
 	push: {
 		/** Registers this device's subscription. A browser that paired again as a new device replaces its old entry. */
 		subscribe: signedIn
-			.route({ method: 'PUT', path: '/api/push/subscription' })
+			.meta(openapi({ method: 'PUT', path: '/api/push/subscription' }))
 			.input(subscribeRequestSchema)
 			.output(okSchema),
-		unsubscribe: signedIn.route({ method: 'DELETE', path: '/api/push/subscription' }).output(okSchema),
+		unsubscribe: signedIn.meta(openapi({ method: 'DELETE', path: '/api/push/subscription' })).output(okSchema),
 		/** What the server will deliver to this device, soonest first. For inspecting a run, not a user path. */
-		schedule: signedIn.route({ method: 'GET', path: '/api/push/schedule' }).output(pushScheduleResponseSchema),
+		schedule: signedIn.meta(openapi({ method: 'GET', path: '/api/push/schedule' })).output(pushScheduleResponseSchema),
 	},
 };
 
 /** Worker to `Account` only. The Worker never forwards it, so no client can call it. */
 export const internalContract = {
-	wipe: oc.errors({ UNAUTHORIZED: {} }).route({ method: 'POST', path: '/api/account/wipe' }).output(okSchema),
+	wipe: oc
+		.errors({ UNAUTHORIZED: {} })
+		.meta(openapi({ method: 'POST', path: '/api/account/wipe' }))
+		.output(okSchema),
 };
 
 /** What clients call. */
@@ -83,4 +93,5 @@ export const contract = {
 	push: { ...workerContract.push, ...accountContract.push },
 };
 
-export type ApiClient = ContractRouterClient<typeof contract>;
+/** OpenAPI carries JSON, so the client's types are the contract's jsonified. */
+export type ApiClient = JsonifiedClient<RouterContractClient<typeof contract>>;

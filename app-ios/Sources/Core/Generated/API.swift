@@ -42,7 +42,6 @@ public struct NoInput: Codable, Equatable, Sendable {
 /// The body of every error response.
 public struct APIError: Codable, Equatable, Sendable, Error {
     public var code: String
-    public var status: Int
     public var message: String
 }
 
@@ -110,6 +109,69 @@ extension API {
         }
     }
 
+    public struct BadGateway: Codable, Equatable, Sendable {
+        public var defined: Bool
+        public var code: BadGatewayCode
+        public var message: String
+        public var data: BadGatewayData
+
+        public init(defined: Bool, code: BadGatewayCode, message: String, data: BadGatewayData) {
+            self.defined = defined
+            self.code = code
+            self.message = message
+            self.data = data
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case defined = "defined"
+            case code = "code"
+            case message = "message"
+            case data = "data"
+        }
+
+        public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+            defined = try container.decode(Bool.self, forKey: .defined)
+            code = try container.decode(BadGatewayCode.self, forKey: .code)
+            message = try container.decode(String.self, forKey: .message)
+            data = try container.decode(BadGatewayData.self, forKey: .data)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(defined, forKey: .defined)
+            try container.encode(code, forKey: .code)
+            try container.encode(message, forKey: .message)
+            try container.encode(data, forKey: .data)
+        }
+    }
+
+    public enum BadGatewayCode: String, Codable, Equatable, Sendable, CaseIterable {
+        case bADGATEWAY = "BAD_GATEWAY"
+    }
+
+    public struct BadGatewayData: Codable, Equatable, Sendable {
+        public var status: Int?
+
+        public init(status: Int? = nil) {
+            self.status = status
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case status = "status"
+        }
+
+        public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+            status = try container.decodeIfPresent(Int.self, forKey: .status)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(status, forKey: .status)
+        }
+    }
+
     public enum Change: Codable, Equatable, Sendable {
         case task(ChangeTask)
         case project(ChangeProject)
@@ -153,11 +215,11 @@ extension API {
 
     public struct ChangeLabel: Codable, Equatable, Sendable {
         public var id: String
-        public var fields: LabelPatchFields
+        public var fields: LabelPatchOutputFields
         public var seq: Int
         public var opId: String
 
-        public init(id: String, fields: LabelPatchFields, seq: Int, opId: String) {
+        public init(id: String, fields: LabelPatchOutputFields, seq: Int, opId: String) {
             self.id = id
             self.fields = fields
             self.seq = seq
@@ -174,7 +236,7 @@ extension API {
         public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
             id = try container.decode(String.self, forKey: .id)
-            fields = try container.decode(LabelPatchFields.self, forKey: .fields)
+            fields = try container.decode(LabelPatchOutputFields.self, forKey: .fields)
             seq = try container.decode(Int.self, forKey: .seq)
             opId = try container.decode(String.self, forKey: .opId)
         }
@@ -190,11 +252,11 @@ extension API {
 
     public struct ChangeProject: Codable, Equatable, Sendable {
         public var id: String
-        public var fields: ProjectPatchFields
+        public var fields: ProjectPatchOutputFields
         public var seq: Int
         public var opId: String
 
-        public init(id: String, fields: ProjectPatchFields, seq: Int, opId: String) {
+        public init(id: String, fields: ProjectPatchOutputFields, seq: Int, opId: String) {
             self.id = id
             self.fields = fields
             self.seq = seq
@@ -211,7 +273,7 @@ extension API {
         public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
             id = try container.decode(String.self, forKey: .id)
-            fields = try container.decode(ProjectPatchFields.self, forKey: .fields)
+            fields = try container.decode(ProjectPatchOutputFields.self, forKey: .fields)
             seq = try container.decode(Int.self, forKey: .seq)
             opId = try container.decode(String.self, forKey: .opId)
         }
@@ -227,11 +289,11 @@ extension API {
 
     public struct ChangeSettings: Codable, Equatable, Sendable {
         public var id: String
-        public var fields: SettingsPatchFields
+        public var fields: SettingsPatchOutputFields
         public var seq: Int
         public var opId: String
 
-        public init(id: String, fields: SettingsPatchFields, seq: Int, opId: String) {
+        public init(id: String, fields: SettingsPatchOutputFields, seq: Int, opId: String) {
             self.id = id
             self.fields = fields
             self.seq = seq
@@ -248,7 +310,7 @@ extension API {
         public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
             id = try container.decode(String.self, forKey: .id)
-            fields = try container.decode(SettingsPatchFields.self, forKey: .fields)
+            fields = try container.decode(SettingsPatchOutputFields.self, forKey: .fields)
             seq = try container.decode(Int.self, forKey: .seq)
             opId = try container.decode(String.self, forKey: .opId)
         }
@@ -264,11 +326,11 @@ extension API {
 
     public struct ChangeTask: Codable, Equatable, Sendable {
         public var id: String
-        public var fields: TaskPatchFields
+        public var fields: TaskPatchOutputFields
         public var seq: Int
         public var opId: String
 
-        public init(id: String, fields: TaskPatchFields, seq: Int, opId: String) {
+        public init(id: String, fields: TaskPatchOutputFields, seq: Int, opId: String) {
             self.id = id
             self.fields = fields
             self.seq = seq
@@ -285,7 +347,7 @@ extension API {
         public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
             id = try container.decode(String.self, forKey: .id)
-            fields = try container.decode(TaskPatchFields.self, forKey: .fields)
+            fields = try container.decode(TaskPatchOutputFields.self, forKey: .fields)
             seq = try container.decode(Int.self, forKey: .seq)
             opId = try container.decode(String.self, forKey: .opId)
         }
@@ -323,6 +385,96 @@ extension API {
         var container = encoder.container(keyedBy: CodingKeys.self)
             try container.encode(date, forKey: .date)
             try container.encode(time, forKey: .time)
+        }
+    }
+
+    public struct DueOutput: Codable, Equatable, Sendable {
+        public var date: String
+        public var time: String?
+
+        public init(date: String, time: String? = nil) {
+            self.date = date
+            self.time = time
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case date = "date"
+            case time = "time"
+        }
+
+        public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+            date = try container.decode(String.self, forKey: .date)
+            time = try container.decodeIfPresent(String.self, forKey: .time)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(date, forKey: .date)
+            try container.encode(time, forKey: .time)
+        }
+    }
+
+    public struct Gone: Codable, Equatable, Sendable {
+        public var defined: Bool
+        public var code: GoneCode
+        public var message: String
+        public var data: GoneData
+
+        public init(defined: Bool, code: GoneCode, message: String, data: GoneData) {
+            self.defined = defined
+            self.code = code
+            self.message = message
+            self.data = data
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case defined = "defined"
+            case code = "code"
+            case message = "message"
+            case data = "data"
+        }
+
+        public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+            defined = try container.decode(Bool.self, forKey: .defined)
+            code = try container.decode(GoneCode.self, forKey: .code)
+            message = try container.decode(String.self, forKey: .message)
+            data = try container.decode(GoneData.self, forKey: .data)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(defined, forKey: .defined)
+            try container.encode(code, forKey: .code)
+            try container.encode(message, forKey: .message)
+            try container.encode(data, forKey: .data)
+        }
+    }
+
+    public enum GoneCode: String, Codable, Equatable, Sendable, CaseIterable {
+        case gONE = "GONE"
+    }
+
+    public struct GoneData: Codable, Equatable, Sendable {
+        public var status: Int?
+
+        public init(status: Int? = nil) {
+            self.status = status
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case status = "status"
+        }
+
+        public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+            status = try container.decodeIfPresent(Int.self, forKey: .status)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(status, forKey: .status)
         }
     }
 
@@ -423,6 +575,74 @@ extension API {
     }
 
     public enum LabelPatchKind: String, Codable, Equatable, Sendable, CaseIterable {
+        case label = "label"
+    }
+
+    public struct LabelPatchOutput: Codable, Equatable, Sendable {
+        public var kind: LabelPatchOutputKind
+        public var id: String
+        public var fields: LabelPatchOutputFields
+
+        public init(kind: LabelPatchOutputKind, id: String, fields: LabelPatchOutputFields) {
+            self.kind = kind
+            self.id = id
+            self.fields = fields
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case kind = "kind"
+            case id = "id"
+            case fields = "fields"
+        }
+
+        public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+            kind = try container.decode(LabelPatchOutputKind.self, forKey: .kind)
+            id = try container.decode(String.self, forKey: .id)
+            fields = try container.decode(LabelPatchOutputFields.self, forKey: .fields)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(kind, forKey: .kind)
+            try container.encode(id, forKey: .id)
+            try container.encode(fields, forKey: .fields)
+        }
+    }
+
+    public struct LabelPatchOutputFields: Codable, Equatable, Sendable {
+        public var name: String?
+        public var createdAt: Double?
+        public var deleted: Bool?
+
+        public init(name: String? = nil, createdAt: Double? = nil, deleted: Bool? = nil) {
+            self.name = name
+            self.createdAt = createdAt
+            self.deleted = deleted
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case name = "name"
+            case createdAt = "createdAt"
+            case deleted = "deleted"
+        }
+
+        public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+            name = try container.decodeIfPresent(String.self, forKey: .name)
+            createdAt = try container.decodeIfPresent(Double.self, forKey: .createdAt)
+            deleted = try container.decodeIfPresent(Bool.self, forKey: .deleted)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encodeIfPresent(name, forKey: .name)
+            try container.encodeIfPresent(createdAt, forKey: .createdAt)
+            try container.encodeIfPresent(deleted, forKey: .deleted)
+        }
+    }
+
+    public enum LabelPatchOutputKind: String, Codable, Equatable, Sendable, CaseIterable {
         case label = "label"
     }
 
@@ -747,6 +967,79 @@ extension API {
         case project = "project"
     }
 
+    public struct ProjectPatchOutput: Codable, Equatable, Sendable {
+        public var kind: ProjectPatchOutputKind
+        public var id: String
+        public var fields: ProjectPatchOutputFields
+
+        public init(kind: ProjectPatchOutputKind, id: String, fields: ProjectPatchOutputFields) {
+            self.kind = kind
+            self.id = id
+            self.fields = fields
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case kind = "kind"
+            case id = "id"
+            case fields = "fields"
+        }
+
+        public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+            kind = try container.decode(ProjectPatchOutputKind.self, forKey: .kind)
+            id = try container.decode(String.self, forKey: .id)
+            fields = try container.decode(ProjectPatchOutputFields.self, forKey: .fields)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(kind, forKey: .kind)
+            try container.encode(id, forKey: .id)
+            try container.encode(fields, forKey: .fields)
+        }
+    }
+
+    public struct ProjectPatchOutputFields: Codable, Equatable, Sendable {
+        public var name: String?
+        public var createdAt: Double?
+        public var sourceKey: Nullable<String>?
+        public var deleted: Bool?
+
+        public init(name: String? = nil, createdAt: Double? = nil, sourceKey: Nullable<String>? = nil, deleted: Bool? = nil) {
+            self.name = name
+            self.createdAt = createdAt
+            self.sourceKey = sourceKey
+            self.deleted = deleted
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case name = "name"
+            case createdAt = "createdAt"
+            case sourceKey = "sourceKey"
+            case deleted = "deleted"
+        }
+
+        public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+            name = try container.decodeIfPresent(String.self, forKey: .name)
+            createdAt = try container.decodeIfPresent(Double.self, forKey: .createdAt)
+            sourceKey = try container.decodeNullable(String.self, forKey: .sourceKey)
+            deleted = try container.decodeIfPresent(Bool.self, forKey: .deleted)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encodeIfPresent(name, forKey: .name)
+            try container.encodeIfPresent(createdAt, forKey: .createdAt)
+            try container.encodeNullable(sourceKey, forKey: .sourceKey)
+            try container.encodeIfPresent(deleted, forKey: .deleted)
+        }
+    }
+
+    public enum ProjectPatchOutputKind: String, Codable, Equatable, Sendable, CaseIterable {
+        case project = "project"
+    }
+
     public struct PushKey: Codable, Equatable, Sendable {
         public var publicKey: String
 
@@ -947,6 +1240,100 @@ extension API {
         case year = "year"
     }
 
+    public enum RecurrenceOutput: Codable, Equatable, Sendable {
+        case day(RecurrenceOutputDay)
+        case week(RecurrenceOutputWeek)
+
+        public init(from decoder: Decoder) throws {
+            if let value = try? RecurrenceOutputDay(from: decoder) {
+                self = .day(value)
+                return
+            }
+            if let value = try? RecurrenceOutputWeek(from: decoder) {
+                self = .week(value)
+                return
+            }
+            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "No RecurrenceOutput case matched"))
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            switch self {
+            case let .day(value): try value.encode(to: encoder)
+            case let .week(value): try value.encode(to: encoder)
+            }
+        }
+    }
+
+    public struct RecurrenceOutputDay: Codable, Equatable, Sendable {
+        public var interval: Int
+        public var unit: RecurrenceOutputDayUnit
+
+        public init(interval: Int, unit: RecurrenceOutputDayUnit) {
+            self.interval = interval
+            self.unit = unit
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case interval = "interval"
+            case unit = "unit"
+        }
+
+        public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+            interval = try container.decode(Int.self, forKey: .interval)
+            unit = try container.decode(RecurrenceOutputDayUnit.self, forKey: .unit)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(interval, forKey: .interval)
+            try container.encode(unit, forKey: .unit)
+        }
+    }
+
+    public enum RecurrenceOutputDayUnit: String, Codable, Equatable, Sendable, CaseIterable {
+        case day = "day"
+        case weekday = "weekday"
+        case month = "month"
+        case year = "year"
+    }
+
+    public struct RecurrenceOutputWeek: Codable, Equatable, Sendable {
+        public var interval: Int
+        public var unit: RecurrenceOutputWeekUnit
+        public var days: [Int]?
+
+        public init(interval: Int, unit: RecurrenceOutputWeekUnit, days: [Int]? = nil) {
+            self.interval = interval
+            self.unit = unit
+            self.days = days
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case interval = "interval"
+            case unit = "unit"
+            case days = "days"
+        }
+
+        public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+            interval = try container.decode(Int.self, forKey: .interval)
+            unit = try container.decode(RecurrenceOutputWeekUnit.self, forKey: .unit)
+            days = try container.decodeIfPresent([Int].self, forKey: .days)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(interval, forKey: .interval)
+            try container.encode(unit, forKey: .unit)
+            try container.encodeIfPresent(days, forKey: .days)
+        }
+    }
+
+    public enum RecurrenceOutputWeekUnit: String, Codable, Equatable, Sendable, CaseIterable {
+        case week = "week"
+    }
+
     public struct RecurrenceWeek: Codable, Equatable, Sendable {
         public var interval: Int
         public var unit: RecurrenceWeekUnit
@@ -1063,6 +1450,86 @@ extension API {
         }
     }
 
+    public enum ReminderOutput: Codable, Equatable, Sendable {
+        case before(ReminderOutputBefore)
+        case at(ReminderOutputAt)
+
+        private enum TagKey: String, CodingKey {
+            case tag = "kind"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let tag = try decoder.container(keyedBy: TagKey.self).decode(String.self, forKey: .tag)
+            switch tag {
+            case "before": self = .before(try ReminderOutputBefore(from: decoder))
+            case "at": self = .at(try ReminderOutputAt(from: decoder))
+            default:
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unknown kind \(tag)"))
+            }
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: TagKey.self)
+            switch self {
+            case let .before(value):
+                try container.encode("before", forKey: .tag)
+                try value.encode(to: encoder)
+            case let .at(value):
+                try container.encode("at", forKey: .tag)
+                try value.encode(to: encoder)
+            }
+        }
+    }
+
+    public struct ReminderOutputAt: Codable, Equatable, Sendable {
+        public var date: String
+        public var time: String
+
+        public init(date: String, time: String) {
+            self.date = date
+            self.time = time
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case date = "date"
+            case time = "time"
+        }
+
+        public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+            date = try container.decode(String.self, forKey: .date)
+            time = try container.decode(String.self, forKey: .time)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(date, forKey: .date)
+            try container.encode(time, forKey: .time)
+        }
+    }
+
+    public struct ReminderOutputBefore: Codable, Equatable, Sendable {
+        public var minutes: Int
+
+        public init(minutes: Int) {
+            self.minutes = minutes
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case minutes = "minutes"
+        }
+
+        public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+            minutes = try container.decode(Int.self, forKey: .minutes)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(minutes, forKey: .minutes)
+        }
+    }
+
     public struct ScheduledPush: Codable, Equatable, Sendable {
         public var at: Double
         public var taskId: String
@@ -1098,6 +1565,47 @@ extension API {
             try container.encode(title, forKey: .title)
             try container.encode(body, forKey: .body)
         }
+    }
+
+    public struct ServiceUnavailable: Codable, Equatable, Sendable {
+        public var defined: Bool
+        public var code: ServiceUnavailableCode
+        public var message: String
+        public var data: JSONValue?
+
+        public init(defined: Bool, code: ServiceUnavailableCode, message: String, data: JSONValue? = nil) {
+            self.defined = defined
+            self.code = code
+            self.message = message
+            self.data = data
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case defined = "defined"
+            case code = "code"
+            case message = "message"
+            case data = "data"
+        }
+
+        public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+            defined = try container.decode(Bool.self, forKey: .defined)
+            code = try container.decode(ServiceUnavailableCode.self, forKey: .code)
+            message = try container.decode(String.self, forKey: .message)
+            data = try container.decodeIfPresent(JSONValue.self, forKey: .data)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(defined, forKey: .defined)
+            try container.encode(code, forKey: .code)
+            try container.encode(message, forKey: .message)
+            try container.encodeIfPresent(data, forKey: .data)
+        }
+    }
+
+    public enum ServiceUnavailableCode: String, Codable, Equatable, Sendable, CaseIterable {
+        case sERVICEUNAVAILABLE = "SERVICE_UNAVAILABLE"
     }
 
     public struct Settings: Codable, Equatable, Sendable {
@@ -1182,6 +1690,69 @@ extension API {
     }
 
     public enum SettingsPatchKind: String, Codable, Equatable, Sendable, CaseIterable {
+        case settings = "settings"
+    }
+
+    public struct SettingsPatchOutput: Codable, Equatable, Sendable {
+        public var kind: SettingsPatchOutputKind
+        public var id: String
+        public var fields: SettingsPatchOutputFields
+
+        public init(kind: SettingsPatchOutputKind, id: String, fields: SettingsPatchOutputFields) {
+            self.kind = kind
+            self.id = id
+            self.fields = fields
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case kind = "kind"
+            case id = "id"
+            case fields = "fields"
+        }
+
+        public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+            kind = try container.decode(SettingsPatchOutputKind.self, forKey: .kind)
+            id = try container.decode(String.self, forKey: .id)
+            fields = try container.decode(SettingsPatchOutputFields.self, forKey: .fields)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(kind, forKey: .kind)
+            try container.encode(id, forKey: .id)
+            try container.encode(fields, forKey: .fields)
+        }
+    }
+
+    public struct SettingsPatchOutputFields: Codable, Equatable, Sendable {
+        public var timeZone: Nullable<String>?
+        public var deleted: Bool?
+
+        public init(timeZone: Nullable<String>? = nil, deleted: Bool? = nil) {
+            self.timeZone = timeZone
+            self.deleted = deleted
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case timeZone = "timeZone"
+            case deleted = "deleted"
+        }
+
+        public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+            timeZone = try container.decodeNullable(String.self, forKey: .timeZone)
+            deleted = try container.decodeIfPresent(Bool.self, forKey: .deleted)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encodeNullable(timeZone, forKey: .timeZone)
+            try container.encodeIfPresent(deleted, forKey: .deleted)
+        }
+    }
+
+    public enum SettingsPatchOutputKind: String, Codable, Equatable, Sendable, CaseIterable {
         case settings = "settings"
     }
 
@@ -1374,16 +1945,16 @@ extension API {
         public var notes: String
         public var projectId: String?
         public var labelIds: [String]
-        public var due: Due?
-        public var recurrence: Recurrence?
+        public var due: DueOutput?
+        public var recurrence: RecurrenceOutput?
         public var priority: Int
-        public var reminders: [Reminder]
+        public var reminders: [ReminderOutput]
         public var createdAt: Double
         public var completedAt: Double?
         public var sourceKey: String?
         public var id: String
 
-        public init(parentId: String? = nil, order: Double, title: String, notes: String, projectId: String? = nil, labelIds: [String], due: Due? = nil, recurrence: Recurrence? = nil, priority: Int, reminders: [Reminder], createdAt: Double, completedAt: Double? = nil, sourceKey: String? = nil, id: String) {
+        public init(parentId: String? = nil, order: Double, title: String, notes: String, projectId: String? = nil, labelIds: [String], due: DueOutput? = nil, recurrence: RecurrenceOutput? = nil, priority: Int, reminders: [ReminderOutput], createdAt: Double, completedAt: Double? = nil, sourceKey: String? = nil, id: String) {
             self.parentId = parentId
             self.order = order
             self.title = title
@@ -1425,10 +1996,10 @@ extension API {
             notes = try container.decode(String.self, forKey: .notes)
             projectId = try container.decodeIfPresent(String.self, forKey: .projectId)
             labelIds = try container.decode([String].self, forKey: .labelIds)
-            due = try container.decodeIfPresent(Due.self, forKey: .due)
-            recurrence = try container.decodeIfPresent(Recurrence.self, forKey: .recurrence)
+            due = try container.decodeIfPresent(DueOutput.self, forKey: .due)
+            recurrence = try container.decodeIfPresent(RecurrenceOutput.self, forKey: .recurrence)
             priority = try container.decode(Int.self, forKey: .priority)
-            reminders = try container.decode([Reminder].self, forKey: .reminders)
+            reminders = try container.decode([ReminderOutput].self, forKey: .reminders)
             createdAt = try container.decode(Double.self, forKey: .createdAt)
             completedAt = try container.decodeIfPresent(Double.self, forKey: .completedAt)
             sourceKey = try container.decodeIfPresent(String.self, forKey: .sourceKey)
@@ -1575,6 +2146,207 @@ extension API {
 
     public enum TaskPatchKind: String, Codable, Equatable, Sendable, CaseIterable {
         case task = "task"
+    }
+
+    public struct TaskPatchOutput: Codable, Equatable, Sendable {
+        public var kind: TaskPatchOutputKind
+        public var id: String
+        public var fields: TaskPatchOutputFields
+
+        public init(kind: TaskPatchOutputKind, id: String, fields: TaskPatchOutputFields) {
+            self.kind = kind
+            self.id = id
+            self.fields = fields
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case kind = "kind"
+            case id = "id"
+            case fields = "fields"
+        }
+
+        public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+            kind = try container.decode(TaskPatchOutputKind.self, forKey: .kind)
+            id = try container.decode(String.self, forKey: .id)
+            fields = try container.decode(TaskPatchOutputFields.self, forKey: .fields)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(kind, forKey: .kind)
+            try container.encode(id, forKey: .id)
+            try container.encode(fields, forKey: .fields)
+        }
+    }
+
+    public struct TaskPatchOutputFields: Codable, Equatable, Sendable {
+        public var parentId: Nullable<String>?
+        public var order: Double?
+        public var title: String?
+        public var notes: String?
+        public var projectId: Nullable<String>?
+        public var labelIds: [String]?
+        public var due: Nullable<DueOutput>?
+        public var recurrence: Nullable<RecurrenceOutput>?
+        public var priority: Int?
+        public var reminders: [ReminderOutput]?
+        public var createdAt: Double?
+        public var completedAt: Nullable<Double>?
+        public var sourceKey: Nullable<String>?
+        public var deleted: Bool?
+
+        public init(parentId: Nullable<String>? = nil, order: Double? = nil, title: String? = nil, notes: String? = nil, projectId: Nullable<String>? = nil, labelIds: [String]? = nil, due: Nullable<DueOutput>? = nil, recurrence: Nullable<RecurrenceOutput>? = nil, priority: Int? = nil, reminders: [ReminderOutput]? = nil, createdAt: Double? = nil, completedAt: Nullable<Double>? = nil, sourceKey: Nullable<String>? = nil, deleted: Bool? = nil) {
+            self.parentId = parentId
+            self.order = order
+            self.title = title
+            self.notes = notes
+            self.projectId = projectId
+            self.labelIds = labelIds
+            self.due = due
+            self.recurrence = recurrence
+            self.priority = priority
+            self.reminders = reminders
+            self.createdAt = createdAt
+            self.completedAt = completedAt
+            self.sourceKey = sourceKey
+            self.deleted = deleted
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case parentId = "parentId"
+            case order = "order"
+            case title = "title"
+            case notes = "notes"
+            case projectId = "projectId"
+            case labelIds = "labelIds"
+            case due = "due"
+            case recurrence = "recurrence"
+            case priority = "priority"
+            case reminders = "reminders"
+            case createdAt = "createdAt"
+            case completedAt = "completedAt"
+            case sourceKey = "sourceKey"
+            case deleted = "deleted"
+        }
+
+        public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+            parentId = try container.decodeNullable(String.self, forKey: .parentId)
+            order = try container.decodeIfPresent(Double.self, forKey: .order)
+            title = try container.decodeIfPresent(String.self, forKey: .title)
+            notes = try container.decodeIfPresent(String.self, forKey: .notes)
+            projectId = try container.decodeNullable(String.self, forKey: .projectId)
+            labelIds = try container.decodeIfPresent([String].self, forKey: .labelIds)
+            due = try container.decodeNullable(DueOutput.self, forKey: .due)
+            recurrence = try container.decodeNullable(RecurrenceOutput.self, forKey: .recurrence)
+            priority = try container.decodeIfPresent(Int.self, forKey: .priority)
+            reminders = try container.decodeIfPresent([ReminderOutput].self, forKey: .reminders)
+            createdAt = try container.decodeIfPresent(Double.self, forKey: .createdAt)
+            completedAt = try container.decodeNullable(Double.self, forKey: .completedAt)
+            sourceKey = try container.decodeNullable(String.self, forKey: .sourceKey)
+            deleted = try container.decodeIfPresent(Bool.self, forKey: .deleted)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encodeNullable(parentId, forKey: .parentId)
+            try container.encodeIfPresent(order, forKey: .order)
+            try container.encodeIfPresent(title, forKey: .title)
+            try container.encodeIfPresent(notes, forKey: .notes)
+            try container.encodeNullable(projectId, forKey: .projectId)
+            try container.encodeIfPresent(labelIds, forKey: .labelIds)
+            try container.encodeNullable(due, forKey: .due)
+            try container.encodeNullable(recurrence, forKey: .recurrence)
+            try container.encodeIfPresent(priority, forKey: .priority)
+            try container.encodeIfPresent(reminders, forKey: .reminders)
+            try container.encodeIfPresent(createdAt, forKey: .createdAt)
+            try container.encodeNullable(completedAt, forKey: .completedAt)
+            try container.encodeNullable(sourceKey, forKey: .sourceKey)
+            try container.encodeIfPresent(deleted, forKey: .deleted)
+        }
+    }
+
+    public enum TaskPatchOutputKind: String, Codable, Equatable, Sendable, CaseIterable {
+        case task = "task"
+    }
+
+    public struct Unauthorized: Codable, Equatable, Sendable {
+        public var defined: Bool
+        public var code: UnauthorizedCode
+        public var message: String
+        public var data: JSONValue?
+
+        public init(defined: Bool, code: UnauthorizedCode, message: String, data: JSONValue? = nil) {
+            self.defined = defined
+            self.code = code
+            self.message = message
+            self.data = data
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case defined = "defined"
+            case code = "code"
+            case message = "message"
+            case data = "data"
+        }
+
+        public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+            defined = try container.decode(Bool.self, forKey: .defined)
+            code = try container.decode(UnauthorizedCode.self, forKey: .code)
+            message = try container.decode(String.self, forKey: .message)
+            data = try container.decodeIfPresent(JSONValue.self, forKey: .data)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(defined, forKey: .defined)
+            try container.encode(code, forKey: .code)
+            try container.encode(message, forKey: .message)
+            try container.encodeIfPresent(data, forKey: .data)
+        }
+    }
+
+    public enum UnauthorizedCode: String, Codable, Equatable, Sendable, CaseIterable {
+        case uNAUTHORIZED = "UNAUTHORIZED"
+    }
+
+    public struct UndefinedError: Codable, Equatable, Sendable {
+        public var defined: Bool
+        public var code: String
+        public var message: String
+        public var data: JSONValue?
+
+        public init(defined: Bool, code: String, message: String, data: JSONValue? = nil) {
+            self.defined = defined
+            self.code = code
+            self.message = message
+            self.data = data
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case defined = "defined"
+            case code = "code"
+            case message = "message"
+            case data = "data"
+        }
+
+        public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+            defined = try container.decode(Bool.self, forKey: .defined)
+            code = try container.decode(String.self, forKey: .code)
+            message = try container.decode(String.self, forKey: .message)
+            data = try container.decodeIfPresent(JSONValue.self, forKey: .data)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(defined, forKey: .defined)
+            try container.encode(code, forKey: .code)
+            try container.encode(message, forKey: .message)
+            try container.encodeIfPresent(data, forKey: .data)
+        }
     }
 }
 

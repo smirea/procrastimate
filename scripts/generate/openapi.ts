@@ -1,5 +1,6 @@
 import { OpenAPIGenerator } from '@orpc/openapi';
-import { JSON_SCHEMA_REGISTRY, ZodToJsonSchemaConverter } from '@orpc/zod/zod4';
+import { z } from 'zod';
+import { JSON_SCHEMA_REGISTRY, ZodToJsonSchemaConverter } from '@orpc/zod';
 import { authMethodsSchema, contract, okSchema, pushKeySchema } from '../../shared/api/contract';
 import { pushScheduleResponseSchema, pushSubscriptionSchema, scheduledPushSchema } from '../../shared/push';
 import {
@@ -26,33 +27,37 @@ import {
 JSON_SCHEMA_REGISTRY.add(dateKeySchema, { not: undefined, type: 'string', pattern: DATE_KEY_PATTERN.source });
 JSON_SCHEMA_REGISTRY.add(timeOfDaySchema, { not: undefined, type: 'string', pattern: TIME_OF_DAY_PATTERN.source });
 
+/** Component names. zod's JSON Schema output turns an `id` into a `$defs` entry, which oRPC hoists into components. */
+const COMPONENTS: [z.ZodType, string][] = [
+	[authMethodsSchema, 'AuthMethods'],
+	[changeSchema, 'Change'],
+	[dueSchema, 'Due'],
+	[labelSchema, 'Label'],
+	[PATCH_SCHEMAS.label, 'LabelPatch'],
+	[okSchema, 'Ok'],
+	[opSchema, 'Op'],
+	[projectSchema, 'Project'],
+	[PATCH_SCHEMAS.project, 'ProjectPatch'],
+	[pushKeySchema, 'PushKey'],
+	[pushScheduleResponseSchema, 'PushSchedule'],
+	[pushSubscriptionSchema, 'PushSubscription'],
+	[recurrenceSchema, 'Recurrence'],
+	[reminderSchema, 'Reminder'],
+	[scheduledPushSchema, 'ScheduledPush'],
+	[settingsSchema, 'Settings'],
+	[PATCH_SCHEMAS.settings, 'SettingsPatch'],
+	[snapshotSchema, 'Snapshot'],
+	[syncRequestSchema, 'SyncRequest'],
+	[syncResponseSchema, 'SyncResponse'],
+	[taskSchema, 'Task'],
+	[PATCH_SCHEMAS.task, 'TaskPatch'],
+];
+for (const [schema, id] of COMPONENTS) z.globalRegistry.add(schema, { id });
+
 export async function openApiDocument() {
-	const generator = new OpenAPIGenerator({ schemaConverters: [new ZodToJsonSchemaConverter()] });
+	const generator = new OpenAPIGenerator({ converters: [new ZodToJsonSchemaConverter()] });
 	return generator.generate(contract, {
-		info: { title: 'Procrastimate', version: '1' },
-		commonSchemas: {
-			AuthMethods: { schema: authMethodsSchema },
-			Change: { schema: changeSchema },
-			Due: { schema: dueSchema },
-			Label: { schema: labelSchema },
-			LabelPatch: { schema: PATCH_SCHEMAS.label },
-			Ok: { schema: okSchema },
-			Op: { schema: opSchema },
-			Project: { schema: projectSchema },
-			ProjectPatch: { schema: PATCH_SCHEMAS.project },
-			PushKey: { schema: pushKeySchema },
-			PushSchedule: { schema: pushScheduleResponseSchema },
-			PushSubscription: { schema: pushSubscriptionSchema },
-			Recurrence: { schema: recurrenceSchema },
-			Reminder: { schema: reminderSchema },
-			ScheduledPush: { schema: scheduledPushSchema },
-			Settings: { schema: settingsSchema },
-			SettingsPatch: { schema: PATCH_SCHEMAS.settings },
-			Snapshot: { schema: snapshotSchema },
-			SyncRequest: { schema: syncRequestSchema, strategy: 'input' },
-			SyncResponse: { schema: syncResponseSchema, strategy: 'output' },
-			Task: { schema: taskSchema },
-			TaskPatch: { schema: PATCH_SCHEMAS.task },
-		},
+		version: '3.1.1',
+		base: { info: { title: 'Procrastimate', version: '1' } },
 	});
 }

@@ -145,7 +145,11 @@ describe('the Ramble socket on the dev server', () => {
 	async function upload(credentials: { deviceId: string; token: string }, snapshot: Snapshot) {
 		const { outbox } = startSync(snapshot, credentials.deviceId, Date.now(), counter('op-'));
 		const response = await call('POST', '/api/sync', {
-			headers: { Authorization: `Bearer ${credentials.token}`, [DEVICE_HEADER]: credentials.deviceId },
+			headers: {
+				'content-type': 'application/json',
+				Authorization: `Bearer ${credentials.token}`,
+				[DEVICE_HEADER]: credentials.deviceId,
+			},
 			body: JSON.stringify({ cursor: 0, ops: outbox }),
 		});
 		expect(response.status).toBe(200);

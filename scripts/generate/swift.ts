@@ -10,7 +10,7 @@
 
 type Schema = {
 	$ref?: string;
-	type?: string;
+	type?: string | string[];
 	properties?: Record<string, Schema>;
 	required?: string[];
 	additionalProperties?: Schema | boolean;
@@ -71,6 +71,11 @@ class Generator {
 
 	/** The schema without its `null` branch, and whether it had one. */
 	private nullable(schema: Schema): { schema: Schema; nullable: boolean } {
+		if (Array.isArray(schema.type)) {
+			const rest = schema.type.filter(type => type !== 'null');
+			if (rest.length !== 1) throw new Error(`Unsupported type list ${JSON.stringify(schema.type)}`);
+			return { schema: { ...schema, type: rest[0] }, nullable: rest.length < schema.type.length };
+		}
 		const branches = schema.anyOf ?? schema.oneOf;
 		if (!branches?.some(branch => branch.type === 'null')) return { schema, nullable: false };
 		const rest = branches.filter(branch => branch.type !== 'null');
@@ -445,7 +450,6 @@ public struct NoInput: Codable, Equatable, Sendable {
 /// The body of every error response.
 public struct APIError: Codable, Equatable, Sendable, Error {
     public var code: String
-    public var status: Int
     public var message: String
 }
 

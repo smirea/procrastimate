@@ -49,7 +49,10 @@ describe.each(storeFactories)('server-computed push on the %s store', (_name, cr
 		api.fetch(
 			new Request(`https://procrastimate.test${path}`, {
 				method,
-				headers: typeof cred === 'string' ? { Authorization: `Bearer ${cred}` } : cred ? authHeaders(cred) : {},
+				headers: {
+					'content-type': 'application/json',
+					...(typeof cred === 'string' ? { Authorization: `Bearer ${cred}` } : cred ? authHeaders(cred) : {}),
+				},
 				body: body === undefined ? undefined : JSON.stringify(body),
 			}),
 			env,

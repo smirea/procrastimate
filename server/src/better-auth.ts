@@ -1,6 +1,6 @@
 import { createORPCClient } from '@orpc/client';
-import type { ContractRouterClient } from '@orpc/contract';
-import { OpenAPILink } from '@orpc/openapi-client/fetch';
+import type { RouterContractClient } from '@orpc/contract';
+import { OpenAPILink } from '@orpc/openapi/fetch';
 import { ORPCError } from '@orpc/server';
 import { createClient, type Client } from '@libsql/client/web';
 import { LibsqlDialect } from '@libsql/kysely-libsql';
@@ -283,10 +283,11 @@ export async function deleteAccount(request: Request, env: Env): Promise<void> {
 	if (!env.ACCOUNT) throw new ORPCError('SERVICE_UNAVAILABLE', { message: 'Sync is not configured' });
 	const { user, auth } = await requireUser(request, env);
 	const stub = env.ACCOUNT.get(env.ACCOUNT.idFromName(user.id));
-	const account: ContractRouterClient<typeof internalContract> = createORPCClient(
+	const account: RouterContractClient<typeof internalContract> = createORPCClient(
 		new OpenAPILink(internalContract, {
-			url: new URL(request.url).origin,
-			fetch: wipe => stub.fetch(withUser(wipe, user.id) as never) as unknown as Promise<Response>,
+			origin: new URL(request.url).origin,
+			fetch: (url, init) =>
+				stub.fetch(withUser(new Request(url, init), user.id) as never) as unknown as Promise<Response>,
 		}),
 	);
 	await account.wipe();

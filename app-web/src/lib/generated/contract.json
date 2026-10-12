@@ -2,10 +2,11 @@
 	"status": {
 		"~orpc": {
 			"errorMap": {},
-			"meta": {},
-			"route": {
-				"method": "GET",
-				"path": "/api/status"
+			"meta": {
+				"~openapi": {
+					"method": "GET",
+					"path": "/api/status"
+				}
 			}
 		}
 	},
@@ -13,10 +14,11 @@
 		"methods": {
 			"~orpc": {
 				"errorMap": {},
-				"meta": {},
-				"route": {
-					"method": "GET",
-					"path": "/api/auth/methods"
+				"meta": {
+					"~openapi": {
+						"method": "GET",
+						"path": "/api/auth/methods"
+					}
 				}
 			}
 		}
@@ -25,10 +27,11 @@
 		"delete": {
 			"~orpc": {
 				"errorMap": {},
-				"meta": {},
-				"route": {
-					"method": "POST",
-					"path": "/api/account/delete"
+				"meta": {
+					"~openapi": {
+						"method": "POST",
+						"path": "/api/account/delete"
+					}
 				}
 			}
 		}
@@ -37,50 +40,55 @@
 		"key": {
 			"~orpc": {
 				"errorMap": {},
-				"meta": {},
-				"route": {
-					"method": "GET",
-					"path": "/api/push/key"
+				"meta": {
+					"~openapi": {
+						"method": "GET",
+						"path": "/api/push/key"
+					}
 				}
 			}
 		},
 		"test": {
 			"~orpc": {
 				"errorMap": {},
-				"meta": {},
-				"route": {
-					"method": "POST",
-					"path": "/api/push/test"
+				"meta": {
+					"~openapi": {
+						"method": "POST",
+						"path": "/api/push/test"
+					}
 				}
 			}
 		},
 		"subscribe": {
 			"~orpc": {
 				"errorMap": {},
-				"meta": {},
-				"route": {
-					"method": "PUT",
-					"path": "/api/push/subscription"
+				"meta": {
+					"~openapi": {
+						"method": "PUT",
+						"path": "/api/push/subscription"
+					}
 				}
 			}
 		},
 		"unsubscribe": {
 			"~orpc": {
 				"errorMap": {},
-				"meta": {},
-				"route": {
-					"method": "DELETE",
-					"path": "/api/push/subscription"
+				"meta": {
+					"~openapi": {
+						"method": "DELETE",
+						"path": "/api/push/subscription"
+					}
 				}
 			}
 		},
 		"schedule": {
 			"~orpc": {
 				"errorMap": {},
-				"meta": {},
-				"route": {
-					"method": "GET",
-					"path": "/api/push/schedule"
+				"meta": {
+					"~openapi": {
+						"method": "GET",
+						"path": "/api/push/schedule"
+					}
 				}
 			}
 		}
@@ -88,10 +96,11 @@
 	"sync": {
 		"~orpc": {
 			"errorMap": {},
-			"meta": {},
-			"route": {
-				"method": "POST",
-				"path": "/api/sync"
+			"meta": {
+				"~openapi": {
+					"method": "POST",
+					"path": "/api/sync"
+				}
 			}
 		}
 	}
