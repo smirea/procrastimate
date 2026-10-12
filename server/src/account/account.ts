@@ -1,37 +1,56 @@
 import type { DurableObjectNamespace, DurableObjectState } from '@cloudflare/workers-types';
+import { onError, ORPCError, ValidationError } from '@orpc/server';
+import { OpenAPIHandler } from '@orpc/openapi/fetch';
+import { drizzle } from 'drizzle-orm/durable-sqlite';
 import { USER_HEADER } from '../../../shared/auth';
-import { authRoutes, type AccountRoute } from '../auth';
+import { accountContract } from '../../../shared/api/contract';
+import { repairBooleanNumbers } from '../../../shared/sync/protocol';
+import type { AccountContext, AccountRoute } from '../auth';
 import { getAuth, readSession } from '../better-auth';
 import type { Env, Handler } from '../bindings';
 import { withUser } from '../request-user';
 import { pushSender } from '../push';
 import { memoryStore } from './memory-store';
-import { deliverDue, pushRoutes } from './push';
+import { deliverDue } from './push';
 import { ramble, rambleRoutes, workerUpstream, type RambleConfig } from './ramble';
 import { openRambleBudget } from './ramble-budget';
 import { cassetteUpstream } from './ramble-cassette';
 import { queuedRambleLedger, type RambleLedger, type RambleUsage } from './ramble-ledger';
 import { durableSockets, noSockets, realtime, realtimeRoutes, type SocketHost } from './realtime';
 import { serialQueue } from './serial';
-import { drizzle } from 'drizzle-orm/durable-sqlite';
 import { tursoTarget } from '../db/turso';
+import { routeKeys } from '../routes';
+import { accountRouter } from './router';
 import { sqliteStore } from './sqlite-store';
 import type { AccountStore } from './store';
-import { syncRoutes } from './sync';
 import { tursoSession, writeUserRamble, type AccountSession } from './turso';
 
-/** Every route the `Account` object answers. The Worker forwards each of them to the one account. */
-const accountRoutes: Record<string, AccountRoute> = {
-	...authRoutes,
-	...syncRoutes,
-	...pushRoutes,
-	...realtimeRoutes,
-	...rambleRoutes,
-};
+/** The WebSocket upgrades, which the contract cannot describe. */
+const socketRoutes: Record<string, AccountRoute> = { ...realtimeRoutes, ...rambleRoutes };
 
 type SetAlarm = (at: number | null) => Promise<void>;
 
 const fail = (status: number, error: string) => Response.json({ ok: false, error }, { status });
+
+const rpc = new OpenAPIHandler(accountRouter, {
+	interceptors: [
+		onError(error => {
+			if (!(error instanceof ORPCError) || error.code !== 'BAD_REQUEST') return;
+			const issues = error.cause instanceof ValidationError ? error.cause.issues : error.message;
+			console.warn('account: invalid request', JSON.stringify(issues).slice(0, 2000));
+		}),
+	],
+});
+
+/**
+ * iOS builds up to 2026.1011.235500 sent some numbers as booleans, and their stored outboxes still hold those ops.
+ * The repair runs before the contract validates the body.
+ */
+async function repairSyncBody(request: Request): Promise<Request> {
+	const body: unknown = await request.json().catch(() => undefined);
+	const { method, headers } = request;
+	return new Request(request.url, { method, headers, body: JSON.stringify(repairBooleanNumbers(body)) });
+}
 
 /**
  * The object's request handler over any store, shared by the Worker and the Bun dev server. The dev server has no
@@ -45,20 +64,23 @@ export function accountHandler(
 	const live = realtime(sockets);
 	const transcription = ramble(sockets, rambleConfig);
 	return async (request: Request, store: AccountStore): Promise<Response> => {
-		const route = accountRoutes[`${request.method} ${new URL(request.url).pathname}`];
-		if (!route) return fail(404, 'Not found');
+		const key = `${request.method} ${new URL(request.url).pathname}`;
+		const context = { store, now: Date.now(), setAlarm, realtime: live, ramble: transcription };
 		const head = store.lastSeq();
-		const response = await route(request, {
-			store,
-			now: Date.now(),
-			setAlarm,
-			realtime: live,
-			ramble: transcription,
-		});
+		const socket = socketRoutes[key];
+		const response = socket ? await socket(request, context) : await call(request, key, context);
 		const next = store.lastSeq();
 		if (next > head) live.nudge(next);
 		return response;
 	};
+}
+
+const [SYNC_ROUTE] = routeKeys(accountContract.sync);
+
+async function call(request: Request, key: string, context: AccountContext): Promise<Response> {
+	const parsed = key === SYNC_ROUTE ? await repairSyncBody(request) : request;
+	const { response } = await rpc.handle(parsed, { context: { ...context, request: parsed } });
+	return response ?? fail(404, 'Not found');
 }
 
 /**
@@ -184,11 +206,9 @@ const forward: Handler = async (request, env) => {
 	return stub.fetch(withUser(request, user.id) as never) as unknown as Promise<Response>;
 };
 
-/** The Worker's routes for the account, mounted by `api.ts`. Wipe stays off this map; delete-account calls it. */
+/** The Worker's routes for the account, mounted by `api.ts`. The internal contract stays off this map. */
 export const accountApiRoutes: Record<string, Handler> = Object.fromEntries(
-	Object.keys(accountRoutes)
-		.filter(key => key !== 'POST /api/account/wipe')
-		.map(key => [key, forward]),
+	[...routeKeys(accountContract), ...Object.keys(socketRoutes)].map(key => [key, forward]),
 );
 
 /**

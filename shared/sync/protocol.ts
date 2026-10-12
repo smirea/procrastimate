@@ -17,10 +17,16 @@ export const SETTINGS_ID = 'settings';
 export type Settings = { timeZone: string | null };
 export const DEFAULT_SETTINGS: Settings = { timeZone: null };
 
-const dateKey = z.custom<DateKey>(v => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v));
-const timeOfDay = z.custom<TimeOfDay>(v => typeof v === 'string' && /^\d{2}:\d{2}$/.test(v));
+export const DATE_KEY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+export const TIME_OF_DAY_PATTERN = /^\d{2}:\d{2}$/;
+
+/** Custom so the parsed type is the template literal. The contract gives both their JSON Schema. */
+export const dateKeySchema = z.custom<DateKey>(v => typeof v === 'string' && DATE_KEY_PATTERN.test(v));
+export const timeOfDaySchema = z.custom<TimeOfDay>(v => typeof v === 'string' && TIME_OF_DAY_PATTERN.test(v));
+const dateKey = dateKeySchema;
+const timeOfDay = timeOfDaySchema;
 const interval = z.number().int().positive();
-const weekday = z.custom<Weekday>(v => Number.isInteger(v) && (v as number) >= 0 && (v as number) <= 6);
+const weekday = z.literal([0, 1, 2, 3, 4, 5, 6]) satisfies z.ZodType<Weekday>;
 
 const recurrence = z.discriminatedUnion('unit', [
 	z.object({ interval, unit: z.enum(['day', 'weekday', 'month', 'year']) }),
@@ -68,18 +74,16 @@ export const FIELDS_SCHEMAS = {
 
 export type FieldsByKind = { [K in Kind]: z.infer<(typeof FIELDS_SCHEMAS)[K]> };
 
-export const taskSchema = taskFieldsSchema
-	.extend({ id: z.string(), sourceKey: z.string().optional() })
-	.transform(({ sourceKey, ...task }) => (sourceKey === undefined ? task : { ...task, sourceKey })) satisfies z.ZodType<
-	Task,
-	unknown
->;
+/** A missing `sourceKey` stays missing in a whole entity, since JSON has no `undefined`. */
+export const taskSchema = taskFieldsSchema.extend({
+	id: z.string(),
+	sourceKey: z.string().optional(),
+}) satisfies z.ZodType<Task>;
 
-export const projectSchema = projectFieldsSchema
-	.extend({ id: z.string(), sourceKey: z.string().optional() })
-	.transform(({ sourceKey, ...project }) =>
-		sourceKey === undefined ? project : { ...project, sourceKey },
-	) satisfies z.ZodType<Project, unknown>;
+export const projectSchema = projectFieldsSchema.extend({
+	id: z.string(),
+	sourceKey: z.string().optional(),
+}) satisfies z.ZodType<Project>;
 
 export const labelSchema = labelFieldsSchema.extend({ id: z.string() }) satisfies z.ZodType<Label>;
 

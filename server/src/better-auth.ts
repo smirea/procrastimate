@@ -1,9 +1,14 @@
+import { createORPCClient } from '@orpc/client';
+import type { ContractRouterClient } from '@orpc/contract';
+import { OpenAPILink } from '@orpc/openapi-client/fetch';
+import { ORPCError } from '@orpc/server';
 import { createClient, type Client } from '@libsql/client/web';
 import { LibsqlDialect } from '@libsql/kysely-libsql';
 import { betterAuth } from 'better-auth';
 import { memoryAdapter, type MemoryDB } from '@better-auth/memory-adapter';
 import { getMigrations } from 'better-auth/db/migration';
 import { bearer } from 'better-auth/plugins';
+import { internalContract, type AuthMethods } from '../../shared/api/contract';
 import { USER_HEADER } from '../../shared/auth';
 import type { Env } from './bindings';
 import { tursoTarget } from './db/turso';
@@ -42,18 +47,6 @@ function trustedOrigins(request?: Request): string[] {
 	const loopback = /^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/.test(origin) ? [origin] : [];
 	return [...TRUSTED_ORIGINS, ...loopback];
 }
-
-export type AuthMethods = {
-	email: boolean;
-	/** Web redirect. The iOS client id alone does not turn this on. */
-	google: boolean;
-	/** Web redirect through the Services ID. */
-	apple: boolean;
-	/** Public iOS client id, or null when Google sign-in on the phone is off. */
-	googleIosClientId: string | null;
-	/** Native Sign in with Apple, whose audience is the bundle id. */
-	appleNative: boolean;
-};
 
 type Auth = {
 	handler: (request: Request) => Promise<Response>;
@@ -251,10 +244,6 @@ export async function authOnClient(secret: string, client: Client): Promise<Auth
 
 const fail = (status: number, error: string) => Response.json({ ok: false, error }, { status });
 
-export function methodsResponse(env: Env): Response {
-	return Response.json(authMethods(env));
-}
-
 export async function authHandler(request: Request, env: Env): Promise<Response> {
 	const auth = await getAuth(env);
 	if (!auth) return fail(503, 'Sign-in is not configured');
@@ -277,27 +266,34 @@ export async function readSession(request: Request, env: Env): Promise<SessionUs
 	return { id: body.user.id, email: body.user.email ?? '', name: body.user.name ?? '' };
 }
 
+/** The signed-in user, or the contract's error when sign-in is off or the request carries no session. */
+export async function requireUser(request: Request, env: Env): Promise<{ user: SessionUser; auth: Auth }> {
+	const auth = await getAuth(env);
+	if (!auth) throw new ORPCError('SERVICE_UNAVAILABLE', { message: 'Sign-in is not configured' });
+	const user = await readSession(request, env);
+	if (!user) throw new ORPCError('UNAUTHORIZED', { message: 'Not signed in' });
+	return { user, auth };
+}
+
 /**
  * Deletes the signed-in user and their tasks. The confirmation lives in Settings. Social accounts have no
- * password, so this route does not ask for one.
+ * password, so this does not ask for one.
  */
-export async function deleteAccount(request: Request, env: Env): Promise<Response> {
-	const auth = await getAuth(env);
-	if (!auth) return fail(503, 'Sign-in is not configured');
-	if (!env.ACCOUNT) return fail(503, 'Sync is not configured');
-	const user = await readSession(request, env);
-	if (!user) return fail(401, 'Not signed in');
-	const wipe = new Request(new URL('/api/account/wipe', request.url), {
-		method: 'POST',
-		headers: withUser(request, user.id).headers,
-	});
-	const wiped = await env.ACCOUNT.get(env.ACCOUNT.idFromName(user.id)).fetch(wipe as never);
-	if (!wiped.ok) return wiped as unknown as Response;
+export async function deleteAccount(request: Request, env: Env): Promise<void> {
+	if (!env.ACCOUNT) throw new ORPCError('SERVICE_UNAVAILABLE', { message: 'Sync is not configured' });
+	const { user, auth } = await requireUser(request, env);
+	const stub = env.ACCOUNT.get(env.ACCOUNT.idFromName(user.id));
+	const account: ContractRouterClient<typeof internalContract> = createORPCClient(
+		new OpenAPILink(internalContract, {
+			url: new URL(request.url).origin,
+			fetch: wipe => stub.fetch(withUser(wipe, user.id) as never) as unknown as Promise<Response>,
+		}),
+	);
+	await account.wipe();
 	const context = await auth.$context;
 	await context.internalAdapter.deleteUser(user.id);
 	await context.internalAdapter.deleteUserSessions(user.id);
 	await context.internalAdapter.deleteAccounts(user.id);
-	return Response.json({ ok: true });
 }
 
 export { USER_HEADER };

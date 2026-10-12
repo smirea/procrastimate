@@ -98,7 +98,7 @@ test('the test push requires a session, is sent immediately, and reports a gone 
 	pushService.status = 410;
 	const gone = await authed('/api/push/test', { subscription: { endpoint: ENDPOINT, keys } });
 	expect(gone.status).toBe(410);
-	expect(await gone.json()).toEqual({ ok: false, status: 410 });
+	expect(await gone.json()).toMatchObject({ code: 'PUSH_GONE', status: 410, data: { status: 410 } });
 
 	pushService.status = 503;
 	expect((await authed('/api/push/test', { subscription: { endpoint: ENDPOINT, keys } })).status).toBe(502);

@@ -18,6 +18,7 @@ export type AccountContext = {
 	ramble: Ramble;
 };
 
+/** A route outside the contract: a WebSocket upgrade. */
 export type AccountRoute = (request: Request, context: AccountContext) => Promise<Response>;
 
 const encoder = new TextEncoder();
@@ -63,14 +64,3 @@ export async function authenticate(request: Request, { store, now }: AccountCont
 	});
 	return deviceId;
 }
-
-const fail = (status: number, error: string) => Response.json({ ok: false, error }, { status });
-
-export const authRoutes: Record<string, AccountRoute> = {
-	/** The Worker calls this after the session check. It is not mounted on the public route map. */
-	'POST /api/account/wipe': async (request, { store }) => {
-		if (!request.headers.get(USER_HEADER)) return fail(401, 'Not signed in');
-		store.clearAccount();
-		return Response.json({ ok: true });
-	},
-};

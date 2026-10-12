@@ -1,9 +1,7 @@
-import { z } from 'zod';
-import { pushSubscriptionSchema, type PushMessage, type PushSubscriptionInfo } from '../../shared/push';
+import { ORPCError } from '@orpc/server';
+import type { PushMessage, PushSubscriptionInfo } from '../../shared/push';
 import type { SendPush } from './account/push';
-import { readSession } from './better-auth';
-import type { Env, Handler } from './bindings';
-import { classifyDelivery } from './push-schedule';
+import type { Env } from './bindings';
 import { sendPush, VAPID_SUBJECT, type Vapid } from './web-push';
 
 function vapidKeys(env: Env): Vapid | null {
@@ -35,20 +33,6 @@ export function pushSender(env: Env): SendPush {
 	};
 }
 
-const testSchema = z.object({
-	subscription: pushSubscriptionSchema.refine(subscription => isAllowedEndpoint(subscription.endpoint)),
-});
-
-const fail = (status: number, error: string) => Response.json({ ok: false, error }, { status });
-
-function withVapid(handler: (request: Request, vapid: Vapid, env: Env) => Promise<Response>): Handler {
-	return (request, env) => {
-		const vapid = vapidKeys(env);
-		if (!env.ACCOUNT || !vapid) return fail(503, 'Push notifications are not configured');
-		return handler(request, vapid, env);
-	};
-}
-
 const TEST_MESSAGE = {
 	title: 'Notifications are on',
 	body: 'Procrastimate will notify you here when tasks are due.',
@@ -56,16 +40,17 @@ const TEST_MESSAGE = {
 	taskId: null,
 };
 
-/** The Worker's push routes. Subscriptions and the schedule live in the `Account` object. */
-export const pushRoutes: Record<string, Handler> = {
-	'GET /api/push/key': withVapid(async (_request, vapid) => Response.json({ publicKey: vapid.publicKey })),
+/** The Worker's VAPID keys. Without them push is off. */
+export function requireVapid(env: Env): Vapid {
+	const vapid = vapidKeys(env);
+	if (!env.ACCOUNT || !vapid)
+		throw new ORPCError('SERVICE_UNAVAILABLE', { message: 'Push notifications are not configured' });
+	return vapid;
+}
 
-	'POST /api/push/test': withVapid(async (request, vapid, env) => {
-		if (!(await readSession(request, env))) return fail(401, 'Not signed in');
-		const body = testSchema.safeParse(await request.json().catch(() => undefined));
-		if (!body.success) return fail(400, 'Invalid subscription');
-		const status = await send(body.data.subscription, TEST_MESSAGE, vapid, 300);
-		if (status !== null && status >= 200 && status < 300) return Response.json({ ok: true });
-		return Response.json({ ok: false, status }, { status: classifyDelivery(status) === 'gone' ? 410 : 502 });
-	}),
-};
+/** Sends the settings check push and returns the push service's status, or null when it never answered. */
+export function sendTestPush(subscription: PushSubscriptionInfo, vapid: Vapid): Promise<number | null> {
+	if (!isAllowedEndpoint(subscription.endpoint))
+		throw new ORPCError('BAD_REQUEST', { message: 'Invalid subscription' });
+	return send(subscription, TEST_MESSAGE, vapid, 300);
+}

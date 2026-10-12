@@ -1,25 +1,27 @@
+import { OpenAPIHandler } from '@orpc/openapi/fetch';
 import { accountApiRoutes } from './account/account';
-import { authHandler, deleteAccount, methodsResponse } from './better-auth';
-import type { Env, Handler } from './bindings';
-import { pushRoutes } from './push';
+import { authHandler } from './better-auth';
+import type { Env } from './bindings';
+import { workerRouter } from './router';
 
 export { Account } from './account/account';
 
-const routes: Record<string, Handler> = {
-	'GET /api/status': () => Response.json({ ok: true }),
-	...pushRoutes,
-	...accountApiRoutes,
-};
+const rpc = new OpenAPIHandler(workerRouter);
 
 const notFound = () => Response.json({ ok: false, error: 'Not found' }, { status: 404 });
 
+/**
+ * The Worker's procedures first, then the user's `Account` object, whose bodies it forwards unread, then Better
+ * Auth for the rest of `/api/auth/*`.
+ */
 export default {
-	fetch(request, env) {
+	async fetch(request, env) {
 		const url = new URL(request.url);
-		if (request.method === 'GET' && url.pathname === '/api/auth/methods') return methodsResponse(env);
-		if (request.method === 'POST' && url.pathname === '/api/account/delete') return deleteAccount(request, env);
+		const forward = accountApiRoutes[`${request.method} ${url.pathname}`];
+		if (forward) return forward(request, env);
+		const { matched, response } = await rpc.handle(request, { context: { env, request } });
+		if (matched) return response;
 		if (url.pathname.startsWith('/api/auth/')) return authHandler(request, env);
-		const route = routes[`${request.method} ${url.pathname}`];
-		return route ? route(request, env) : notFound();
+		return notFound();
 	},
 } satisfies { fetch: (request: Request, env: Env) => Response | Promise<Response> };

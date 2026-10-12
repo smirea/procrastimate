@@ -1,7 +1,7 @@
 import { upcomingNotifications } from '../../../shared/notifications';
+import { ORPCError } from '@orpc/server';
 import {
 	pushTag,
-	subscribeRequestSchema,
 	type PushMessage,
 	type PushScheduleResponse,
 	type PushSubscriptionInfo,
@@ -11,7 +11,7 @@ import { createClock, SERVER_NODE } from '../../../shared/sync/hlc';
 import { entityKey, serverSnapshot, type ServerEntity } from '../../../shared/sync/merge';
 import type { Kind } from '../../../shared/sync/protocol';
 import { isTimeZone } from '../../../shared/zoned-time';
-import { authenticate, type AccountContext, type AccountRoute } from '../auth';
+import type { AccountContext } from '../auth';
 import { isAllowedEndpoint } from '../push';
 import { classifyDelivery, isRetryable, nextAlarm, planSchedule, splitDue, STALE_AFTER_MS } from '../push-schedule';
 import type { AccountStore, PushTarget } from './store';
@@ -22,12 +22,10 @@ import type { AccountStore, PushTarget } from './store';
  * delivers what is due to every device, then replans.
  */
 
-type Target = PushTarget & { subscription: PushSubscriptionInfo; notifications: ScheduledPush[] };
-
 /** Sends one push and returns the push service's status, or null when it never answered. */
 export type SendPush = (subscription: PushSubscriptionInfo, message: PushMessage) => Promise<number | null>;
 
-const targets = (store: AccountStore) => store.pushTargets() as Target[];
+const targets = (store: AccountStore) => store.pushTargets();
 
 /** Zones are validated where they are used, since any device can write the setting. */
 const FALLBACK_ZONE = 'UTC';
@@ -37,7 +35,7 @@ const FALLBACK_ZONE = 'UTC';
  * `planSchedule` caps each device only after dropping what it already delivered.
  */
 function computeNotifications(store: AccountStore, now: number): ScheduledPush[] {
-	const entities = new Map(store.entities().map(row => [entityKey(row.kind as Kind, row.id), row as ServerEntity]));
+	const entities = new Map(store.entities().map(row => [entityKey(row.kind, row.id), row]));
 	const { tasks, settings } = serverSnapshot({ entities, clock: createClock(SERVER_NODE) });
 	const zone = settings.timeZone && isTimeZone(settings.timeZone) ? settings.timeZone : FALLBACK_ZONE;
 	return upcomingNotifications(tasks, now - STALE_AFTER_MS - 1, Number.POSITIVE_INFINITY, zone);
@@ -106,50 +104,37 @@ export async function deliverDue(store: AccountStore, now: number, send: SendPus
 	return replan(store, now);
 }
 
-const fail = (status: number, error: string) => Response.json({ ok: false, error }, { status });
-
-const subscribeSchema = subscribeRequestSchema.refine(body => isAllowedEndpoint(body.subscription.endpoint));
-
-export const pushRoutes: Record<string, AccountRoute> = {
-	/** Registers this device's subscription. A browser that paired again as a new device replaces its old entry. */
-	'PUT /api/push/subscription': async (request, context) => {
-		const deviceId = await authenticate(request, context);
-		if (!deviceId) return fail(401, 'Not signed in');
-		const body = subscribeSchema.safeParse(await request.json().catch(() => undefined));
-		if (!body.success) return fail(400, 'Invalid subscription');
-		const { subscription } = body.data;
-		const { store, now } = context;
-		store.transaction(() => {
-			let current: Target | undefined;
-			for (const target of targets(store)) {
-				if (target.deviceId === deviceId) current = target;
-				else if (target.subscription.endpoint === subscription.endpoint) store.deletePushTarget(target.deviceId);
-			}
-			const kept = current?.subscription.endpoint === subscription.endpoint ? current : undefined;
-			store.putPushTarget({
-				deviceId,
-				subscription,
-				notifications: kept?.notifications ?? [],
-				deliveredThrough: kept?.deliveredThrough ?? now,
-			});
+/**
+ * Registers `deviceId`'s subscription. A browser that paired again as a new device replaces its old entry. The
+ * endpoint must be a push service, which the shared schema cannot check.
+ */
+export async function subscribePush(context: AccountContext, deviceId: string, subscription: PushSubscriptionInfo) {
+	if (!isAllowedEndpoint(subscription.endpoint))
+		throw new ORPCError('BAD_REQUEST', { message: 'Invalid subscription' });
+	const { store, now } = context;
+	store.transaction(() => {
+		let current: PushTarget | undefined;
+		for (const target of targets(store)) {
+			if (target.deviceId === deviceId) current = target;
+			else if (target.subscription.endpoint === subscription.endpoint) store.deletePushTarget(target.deviceId);
+		}
+		const kept = current?.subscription.endpoint === subscription.endpoint ? current : undefined;
+		store.putPushTarget({
+			deviceId,
+			subscription,
+			notifications: kept?.notifications ?? [],
+			deliveredThrough: kept?.deliveredThrough ?? now,
 		});
-		await refreshPush(context);
-		return Response.json({ ok: true });
-	},
+	});
+	await refreshPush(context);
+}
 
-	'DELETE /api/push/subscription': async (request, context) => {
-		const deviceId = await authenticate(request, context);
-		if (!deviceId) return fail(401, 'Not signed in');
-		context.store.deletePushTarget(deviceId);
-		await refreshPush(context);
-		return Response.json({ ok: true });
-	},
+export async function unsubscribePush(context: AccountContext, deviceId: string) {
+	context.store.deletePushTarget(deviceId);
+	await refreshPush(context);
+}
 
-	/** What the server will deliver to this device. For inspecting a run, not a user path. */
-	'GET /api/push/schedule': async (request, context) => {
-		const deviceId = await authenticate(request, context);
-		if (!deviceId) return fail(401, 'Not signed in');
-		const target = targets(context.store).find(target => target.deviceId === deviceId);
-		return Response.json({ notifications: target?.notifications ?? [] } satisfies PushScheduleResponse);
-	},
-};
+export function pushSchedule(store: AccountStore, deviceId: string): PushScheduleResponse {
+	const target = targets(store).find(target => target.deviceId === deviceId);
+	return { notifications: target?.notifications ?? [] };
+}
