@@ -114,6 +114,9 @@ export class App {
 	themeOption = (name: 'System' | 'Light' | 'Dark') =>
 		this.settings().getByRole('radiogroup', { name: 'Theme' }).getByRole('radio', { name });
 
+	dictationOption = (name: 'Native' | 'ElevenLabs') =>
+		this.settings().getByRole('radiogroup', { name: 'Dictation' }).getByRole('radio', { name });
+
 	/** Picks the synthetic Todoist backup through the file chooser that `Import from Todoist` opens. */
 	async importBackup(press: 'click' | 'tap' = 'click') {
 		const chooser = this.page.waitForEvent('filechooser');

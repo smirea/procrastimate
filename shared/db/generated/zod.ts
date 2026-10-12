@@ -78,6 +78,7 @@ export const settingsRowSchema = z.object({
 	userId: z.string(),
 	id: z.string(),
 	timeZone: z.string().nullable(),
+	dictation: COLUMN_VALUES.settings.dictation,
 	clocks: COLUMN_VALUES.settings.clocks,
 });
 

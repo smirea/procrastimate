@@ -46,7 +46,7 @@ describe('applyChanges', () => {
 		const result = applyChanges(snapshotOf(), [
 			{ seq: 1, opId: 's', kind: 'settings', id: 'settings', fields: { timeZone: 'Europe/Paris' } },
 		]);
-		expect(result.settings).toEqual({ timeZone: 'Europe/Paris' });
+		expect(result.settings).toEqual({ timeZone: 'Europe/Paris', dictation: 'native' });
 	});
 });
 

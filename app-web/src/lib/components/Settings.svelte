@@ -4,6 +4,7 @@
 	import ArrowSquareIn from 'phosphor-svelte/lib/ArrowSquareIn';
 	import Warning from 'phosphor-svelte/lib/Warning';
 	import type { ImportSummary } from 'shared/todoist.ts';
+	import DictationSwitcher from './DictationSwitcher.svelte';
 	import ThemeSwitcher from './ThemeSwitcher.svelte';
 	import { push } from '../push.svelte.ts';
 	import { session } from '../session.svelte.ts';
@@ -51,6 +52,11 @@
 	<section class="flex flex-col gap-2">
 		<h3 class="heading">Theme</h3>
 		<ThemeSwitcher />
+	</section>
+
+	<section class="flex flex-col gap-2">
+		<h3 class="heading">Dictation</h3>
+		<DictationSwitcher />
 	</section>
 
 	{#if push.line === 'needs-permission'}

@@ -605,6 +605,21 @@ extension API {
         }
     }
 
+    public enum DictationCapture: String, Codable, Hashable, Sendable, CaseIterable, Identifiable {
+        case speech = "speech"
+        case socket = "socket"
+        case typed = "typed"
+
+        public var id: String { rawValue }
+    }
+
+    public enum DictationChoice: String, Codable, Hashable, Sendable, CaseIterable, Identifiable {
+        case native = "native"
+        case elevenlabs = "elevenlabs"
+
+        public var id: String { rawValue }
+    }
+
     public struct Due: Codable, Hashable, Sendable {
         public var date: DateKey
         public var time: TimeOfDay?
@@ -1863,23 +1878,28 @@ extension API {
 
     public struct Settings: Codable, Hashable, Sendable {
         public var timeZone: String?
+        public var dictation: DictationChoice
 
-        public init(timeZone: String? = nil) {
+        public init(timeZone: String? = nil, dictation: DictationChoice = .native) {
             self.timeZone = timeZone
+            self.dictation = dictation
         }
 
         enum CodingKeys: String, CodingKey {
             case timeZone = "timeZone"
+            case dictation = "dictation"
         }
 
         public init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             timeZone = try container.decode(String?.self, forKey: .timeZone)
+            dictation = try container.decode(DictationChoice.self, forKey: .dictation)
         }
 
         public func encode(to encoder: Encoder) throws {
             var container = encoder.container(keyedBy: CodingKeys.self)
             try container.encode(self.timeZone, forKey: .timeZone)
+            try container.encode(self.dictation, forKey: .dictation)
         }
     }
 
@@ -1917,27 +1937,32 @@ extension API {
 
     public struct SettingsPatchFields: Codable, Hashable, Sendable {
         public var timeZone: String??
+        public var dictation: DictationChoice?
         public var deleted: Bool?
 
-        public init(timeZone: String?? = nil, deleted: Bool? = nil) {
+        public init(timeZone: String?? = nil, dictation: DictationChoice? = nil, deleted: Bool? = nil) {
             self.timeZone = timeZone
+            self.dictation = dictation
             self.deleted = deleted
         }
 
         enum CodingKeys: String, CodingKey {
             case timeZone = "timeZone"
+            case dictation = "dictation"
             case deleted = "deleted"
         }
 
         public init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             timeZone = try container.decodeNullable(String.self, forKey: .timeZone)
+            dictation = try container.decodeAbsent(DictationChoice.self, forKey: .dictation)
             deleted = try container.decodeAbsent(Bool.self, forKey: .deleted)
         }
 
         public func encode(to encoder: Encoder) throws {
             var container = encoder.container(keyedBy: CodingKeys.self)
             try container.encodeNullable(self.timeZone, forKey: .timeZone)
+            try container.encodeIfPresent(self.dictation, forKey: .dictation)
             try container.encodeIfPresent(self.deleted, forKey: .deleted)
         }
     }
@@ -2309,15 +2334,17 @@ extension API {
         public var outbox: [SyncOp]
         public var clock: Hlc
         public var timeZone: String
+        public var dictation: DictationChoice
         public var epoch: Int
         public var reset: Bool
 
-        public init(deviceId: String, cursor: Int, outbox: [SyncOp] = [], clock: Hlc, timeZone: String, epoch: Int = 0, reset: Bool = false) {
+        public init(deviceId: String, cursor: Int, outbox: [SyncOp] = [], clock: Hlc, timeZone: String, dictation: DictationChoice = .native, epoch: Int = 0, reset: Bool = false) {
             self.deviceId = deviceId
             self.cursor = cursor
             self.outbox = outbox
             self.clock = clock
             self.timeZone = timeZone
+            self.dictation = dictation
             self.epoch = epoch
             self.reset = reset
         }
@@ -2328,6 +2355,7 @@ extension API {
             case outbox = "outbox"
             case clock = "clock"
             case timeZone = "timeZone"
+            case dictation = "dictation"
             case epoch = "epoch"
             case reset = "reset"
         }
@@ -2339,6 +2367,7 @@ extension API {
             outbox = try container.decode([SyncOp].self, forKey: .outbox)
             clock = try container.decode(Hlc.self, forKey: .clock)
             timeZone = try container.decode(String.self, forKey: .timeZone)
+            dictation = try container.decodeAbsent(DictationChoice.self, forKey: .dictation) ?? .native
             epoch = try container.decodeAbsent(Int.self, forKey: .epoch) ?? 0
             reset = try container.decodeAbsent(Bool.self, forKey: .reset) ?? false
             if decoder.validates {
@@ -2364,6 +2393,7 @@ extension API {
             try container.encode(self.outbox, forKey: .outbox)
             try container.encode(self.clock, forKey: .clock)
             try container.encode(self.timeZone, forKey: .timeZone)
+            try container.encode(self.dictation, forKey: .dictation)
             try container.encode(self.epoch, forKey: .epoch)
             try container.encode(self.reset, forKey: .reset)
         }
@@ -2863,6 +2893,40 @@ extension API {
             try container.encode(self.start, forKey: .start)
             try container.encode(self.end, forKey: .end)
         }
+    }
+
+    public struct VoiceCapture: Codable, Hashable, Sendable {
+        public var engine: VoiceCaptureEngine
+        public var capture: DictationCapture
+
+        public init(engine: VoiceCaptureEngine, capture: DictationCapture) {
+            self.engine = engine
+            self.capture = capture
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case engine = "engine"
+            case capture = "capture"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            engine = try container.decode(VoiceCaptureEngine.self, forKey: .engine)
+            capture = try container.decode(DictationCapture.self, forKey: .capture)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.engine, forKey: .engine)
+            try container.encode(self.capture, forKey: .capture)
+        }
+    }
+
+    public enum VoiceCaptureEngine: String, Codable, Hashable, Sendable, CaseIterable, Identifiable {
+        case native = "native"
+        case elevenlabs = "elevenlabs"
+
+        public var id: String { rawValue }
     }
 
     /// Sunday is 0, as in `Date#getDay`.

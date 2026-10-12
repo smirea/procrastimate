@@ -2,7 +2,7 @@ import Core
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// Settings: the theme, the notifications line, import, and delete all data. The same panel as the web.
+/// Settings: the theme, dictation, the notifications line, import, and delete all data. The same panel as the web.
 struct SettingsSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(ThemeSettings.self) private var theme
@@ -27,6 +27,20 @@ struct SettingsSheet: View {
                     }
                     .pickerStyle(.segmented)
                     .labelsHidden()
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets())
+                }
+
+                Section("Dictation") {
+                    Picker("Dictation", selection: Binding(get: { store.dictation }, set: { store.setDictation($0) })) {
+                        ForEach(DictationChoice.allCases) { choice in
+                            Text(choice.label).tag(choice)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                    .accessibilityLabel("Dictation")
+                    .accessibilityIdentifier("Dictation")
                     .listRowBackground(Color.clear)
                     .listRowInsets(EdgeInsets())
                 }
@@ -87,6 +101,7 @@ struct SettingsSheet: View {
             }
         }
         .sensoryFeedback(.selection, trigger: theme.choice)
+        .sensoryFeedback(.selection, trigger: store.dictation)
     }
 }
 

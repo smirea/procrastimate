@@ -1,0 +1,110 @@
+{
+	"module": "dictation",
+	"timeZone": "America/New_York",
+	"cases": [
+		{
+			"fn": "voiceCapture",
+			"test": "voiceCapture › native stays native while offline, and uses speech when the platform has it",
+			"input": [
+				"native",
+				false,
+				true
+			],
+			"output": {
+				"capture": "speech",
+				"engine": "native"
+			}
+		},
+		{
+			"fn": "voiceCapture",
+			"test": "voiceCapture › elevenlabs stays native while offline, and uses speech when the platform has it",
+			"input": [
+				"elevenlabs",
+				false,
+				true
+			],
+			"output": {
+				"capture": "speech",
+				"engine": "native"
+			}
+		},
+		{
+			"fn": "voiceCapture",
+			"test": "voiceCapture › native stays native while offline, and types when the platform has no recognizer",
+			"input": [
+				"native",
+				false,
+				false
+			],
+			"output": {
+				"capture": "typed",
+				"engine": "native"
+			}
+		},
+		{
+			"fn": "voiceCapture",
+			"test": "voiceCapture › elevenlabs stays native while offline, and types when the platform has no recognizer",
+			"input": [
+				"elevenlabs",
+				false,
+				false
+			],
+			"output": {
+				"capture": "typed",
+				"engine": "native"
+			}
+		},
+		{
+			"fn": "voiceCapture",
+			"test": "voiceCapture › native uses the platform recognizer while online",
+			"input": [
+				"native",
+				true,
+				true
+			],
+			"output": {
+				"capture": "speech",
+				"engine": "native"
+			}
+		},
+		{
+			"fn": "voiceCapture",
+			"test": "voiceCapture › native types when the browser has no SpeechRecognition",
+			"input": [
+				"native",
+				true,
+				false
+			],
+			"output": {
+				"capture": "typed",
+				"engine": "native"
+			}
+		},
+		{
+			"fn": "voiceCapture",
+			"test": "voiceCapture › elevenlabs uses the server socket only while online",
+			"input": [
+				"elevenlabs",
+				true,
+				true
+			],
+			"output": {
+				"capture": "socket",
+				"engine": "elevenlabs"
+			}
+		},
+		{
+			"fn": "voiceCapture",
+			"test": "voiceCapture › elevenlabs uses the server socket only while online",
+			"input": [
+				"elevenlabs",
+				true,
+				false
+			],
+			"output": {
+				"capture": "socket",
+				"engine": "elevenlabs"
+			}
+		}
+	]
+}

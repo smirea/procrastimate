@@ -230,7 +230,10 @@ function commands(rand: Random, device: string, now: number, ids: () => string):
 		},
 		{
 			name: 'time zone',
-			run: s => ({ ...s, settings: { timeZone: rand.pick(['Europe/Berlin', 'America/New_York', 'Asia/Tokyo'])! } }),
+			run: s => ({
+				...s,
+				settings: { ...s.settings, timeZone: rand.pick(['Europe/Berlin', 'America/New_York', 'Asia/Tokyo'])! },
+			}),
 		},
 	];
 }

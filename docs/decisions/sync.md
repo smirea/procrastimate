@@ -4,7 +4,7 @@ Web and iOS share one set of tasks, projects, and labels through the Worker. The
 
 ## What syncs
 
-- **Synced:** tasks, projects, labels, and one `settings` record with the id `settings`, which exists without a create and cannot be deleted. The only setting today is `timeZone` (IANA name), which the server needs to compute notification times. A device writes it only when its own zone changes from the last one it saw, such as after travel, never because the synced value differs. So two devices in different zones do not overwrite each other, and the device that moved last wins.
+- **Synced:** tasks, projects, labels, and one `settings` record with the id `settings`, which exists without a create and cannot be deleted. `timeZone` (IANA name) is what the server needs to compute notification times. A device writes it only when its own zone changes from the last one it saw, such as after travel, never because the synced value differs. So two devices in different zones do not overwrite each other, and the device that moved last wins. `dictation` is `native` or `elevenlabs`, `native` until changed. It is last-writer-wins like any other field: the device that changed it last wins, and the other device adopts that choice on the next sync.
 - **Device-local:** the theme (see [Theming](theming.md)), `remindersCheckedAt` (each open app toasts its own reminders), the push subscription, the sync section, and the session. The session never sits in the snapshot document. See [Auth](auth.md).
 - **Entities keep their shape.** `Task`, `Project`, and `Label` stay as they are in `shared/task.ts`. Ids are client-made UUIDs, so creating offline never collides. The one model change is ordering (see Conflicts).
 
@@ -66,7 +66,7 @@ Every field is last-writer-wins by HLC. Different fields from different devices 
 
 - **One loop, one module.** `app-web/src/lib/sync.svelte.ts` owns the triggers. Only one sync runs at a time, and a trigger during one queues one more right after it. A response with a full page of changes syncs again at once. A `401` clears the session and shows sign-in. A network failure keeps the outbox for the next trigger. There is no sync status in the UI.
 - **The store records, the loop sends.** Every store command diffs its before and after into the outbox and tells the loop, which syncs one second later. The loop sends the whole outbox and hands the response back to the store, which runs `applyResponse`.
-- **The device's own zone.** The client's settings record holds only the zone this device last wrote, kept in its `sync` section, so ordinary diffs never touch `timeZone`. The first sync writes the device's zone, and a later sync that finds the zone changed writes the new one first.
+- **The device's own zone.** The client's settings record holds the zone this device last wrote, kept in its `sync` section, so ordinary diffs never touch `timeZone`. The first sync writes the device's zone, and a later sync that finds the zone changed writes the new one first. `dictation` lives in that same section. Changing it writes one settings op, and a sync applies the server's choice back onto it.
 - **The clock persists.** The `sync` section keeps the last clock the device issued or saw, so a reload never issues a clock below one it has seen. It also keeps `epoch` and `reset`.
 
 ## Auth

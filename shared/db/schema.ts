@@ -1,4 +1,5 @@
 import { index, integer, primaryKey, real, sqliteTable, text, type AnySQLiteColumn } from 'drizzle-orm/sqlite-core';
+import { DICTATION_CHOICES } from '../dictation.ts';
 import { KINDS } from '../sync/kinds.ts';
 import { DEFAULT_PRIORITY } from '../values.ts';
 import type { ColumnValue } from './json.ts';
@@ -83,6 +84,11 @@ export const settings = sqliteTable(
 		id: text('id').notNull(),
 		/** IANA name. The server needs it to compute notification times. */
 		timeZone: text('time_zone'),
+		/** `native` or `elevenlabs`. Offline sessions still use native. */
+		dictation: text('dictation', { enum: DICTATION_CHOICES })
+			.$type<ColumnValue<'settings', 'dictation'>>()
+			.notNull()
+			.default('native'),
 		clocks: clocks(),
 	},
 	userEntity,

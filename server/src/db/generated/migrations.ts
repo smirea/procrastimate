@@ -28,5 +28,12 @@ export const migrations: { tag: string; when: number; statements: string[] }[] =
 			"CREATE TABLE `verification` (\n\t`id` text PRIMARY KEY NOT NULL,\n\t`identifier` text NOT NULL,\n\t`value` text NOT NULL,\n\t`expiresAt` integer NOT NULL,\n\t`createdAt` integer NOT NULL,\n\t`updatedAt` integer NOT NULL\n);",
 			"CREATE INDEX `verification_identifier_idx` ON `verification` (`identifier`);"
 		]
+	},
+	{
+		"tag": "0001_superb_leo",
+		"when": 1791824898941,
+		"statements": [
+			"ALTER TABLE `settings` ADD `dictation` text DEFAULT 'native' NOT NULL;"
+		]
 	}
 ];

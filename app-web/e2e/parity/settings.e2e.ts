@@ -14,6 +14,19 @@ test('settings-sheet: Settings opens as a sheet with the theme, notifications, i
 	await app.closeSettings();
 });
 
+test('settings-dictation: Dictation offers Native and ElevenLabs, and the choice stays', async ({ app, snap }) => {
+	await app.openSettings();
+	await expect(app.dictationOption('Native')).toHaveAttribute('aria-checked', 'true');
+	await app.dictationOption('ElevenLabs').tap();
+	await expect(app.dictationOption('ElevenLabs')).toHaveAttribute('aria-checked', 'true');
+	await snap('settings-dictation');
+	await app.closeSettings();
+	await app.openSettings();
+	await expect(app.dictationOption('ElevenLabs')).toHaveAttribute('aria-checked', 'true');
+	await app.dictationOption('Native').tap();
+	await expect(app.dictationOption('Native')).toHaveAttribute('aria-checked', 'true');
+});
+
 test('settings-theme: the Theme control switches the theme', async ({ app, snap }) => {
 	await app.openSettings();
 	await expect(app.themeOption('System')).toHaveAttribute('aria-checked', 'true');
