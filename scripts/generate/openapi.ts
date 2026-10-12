@@ -4,6 +4,9 @@ import { z } from 'zod';
 import { contract } from '../../shared/api/contract';
 // Register the shared model's schemas that no endpoint uses.
 import '../../shared/format';
+import '../../shared/name-search';
+import '../../shared/quick-add';
+import '../../shared/search';
 import '../../shared/snapshot';
 import '../../shared/store';
 import '../../shared/subtasks';

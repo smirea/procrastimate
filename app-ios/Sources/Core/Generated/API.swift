@@ -641,6 +641,40 @@ extension API {
         case later = "later"
     }
 
+    /// One matched text and the half-open spans to highlight in it.
+    public struct Highlight: Codable, Hashable, Sendable {
+        public var text: String
+        public var ranges: [Range<Int>]
+
+        public init(text: String, ranges: [Range<Int>] = []) {
+            self.text = text
+            self.ranges = ranges
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case text = "text"
+            case ranges = "ranges"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            text = try container.decode(String.self, forKey: .text)
+            ranges = try container.decode([Range<Int>].self, forKey: .ranges)
+            if decoder.validates {
+                do {
+                    let value = self.ranges
+                    try check(value.allSatisfy { $0.count >= 2 }, .ranges, in: container, "each ranges at least 2 items")
+                }
+            }
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.text, forKey: .text)
+            try container.encode(self.ranges, forKey: .ranges)
+        }
+    }
+
     public typealias Hlc = String
 
     public struct ImportSummary: Codable, Hashable, Sendable {
@@ -1072,6 +1106,113 @@ extension API {
         }
     }
 
+    public struct ParsedQuickAdd: Codable, Hashable, Sendable {
+        public var title: String
+        public var due: Due?
+        public var recurrence: Recurrence?
+        public var priority: Priority?
+        public var reminders: [Reminder]
+        public var projectId: String?
+        public var labelIds: [String]
+        public var tokens: [QuickAddToken]
+
+        public init(title: String, due: Due? = nil, recurrence: Recurrence? = nil, priority: Priority? = nil, reminders: [Reminder] = [], projectId: String? = nil, labelIds: [String] = [], tokens: [QuickAddToken] = []) {
+            self.title = title
+            self.due = due
+            self.recurrence = recurrence
+            self.priority = priority
+            self.reminders = reminders
+            self.projectId = projectId
+            self.labelIds = labelIds
+            self.tokens = tokens
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case title = "title"
+            case due = "due"
+            case recurrence = "recurrence"
+            case priority = "priority"
+            case reminders = "reminders"
+            case projectId = "projectId"
+            case labelIds = "labelIds"
+            case tokens = "tokens"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            title = try container.decode(String.self, forKey: .title)
+            due = try container.decode(Due?.self, forKey: .due)
+            recurrence = try container.decode(Recurrence?.self, forKey: .recurrence)
+            priority = try container.decode(Priority?.self, forKey: .priority)
+            reminders = try container.decode([Reminder].self, forKey: .reminders)
+            projectId = try container.decode(String?.self, forKey: .projectId)
+            labelIds = try container.decode([String].self, forKey: .labelIds)
+            tokens = try container.decode([QuickAddToken].self, forKey: .tokens)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.title, forKey: .title)
+            try container.encode(self.due, forKey: .due)
+            try container.encode(self.recurrence, forKey: .recurrence)
+            try container.encode(self.priority, forKey: .priority)
+            try container.encode(self.reminders, forKey: .reminders)
+            try container.encode(self.projectId, forKey: .projectId)
+            try container.encode(self.labelIds, forKey: .labelIds)
+            try container.encode(self.tokens, forKey: .tokens)
+        }
+    }
+
+    public struct ParseOptions: Codable, Hashable, Sendable {
+        public var now: Date
+        public var projects: [Project]
+        public var labels: [Label]
+        /// Token texts the user chose to keep as plain title text, compared case-insensitively.
+        public var disabled: [String]
+        /// The due date set outside the text, such as by a picker or on an existing task.
+        public var due: Due?
+        /// Transcribed speech rather than typing, so typing shorthands that speech never means do not apply.
+        public var spoken: Bool
+
+        public init(now: Date, projects: [Project] = [], labels: [Label] = [], disabled: [String] = [], due: Due? = nil, spoken: Bool = false) {
+            self.now = now
+            self.projects = projects
+            self.labels = labels
+            self.disabled = disabled
+            self.due = due
+            self.spoken = spoken
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case now = "now"
+            case projects = "projects"
+            case labels = "labels"
+            case disabled = "disabled"
+            case due = "due"
+            case spoken = "spoken"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            now = try container.decode(Date.self, forKey: .now)
+            projects = try container.decodeIfPresent([Project].self, forKey: .projects) ?? []
+            labels = try container.decodeIfPresent([Label].self, forKey: .labels) ?? []
+            disabled = try container.decodeIfPresent([String].self, forKey: .disabled) ?? []
+            due = try container.decodeIfPresent(Due.self, forKey: .due)
+            spoken = try container.decodeIfPresent(Bool.self, forKey: .spoken) ?? false
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.now, forKey: .now)
+            try container.encode(self.projects, forKey: .projects)
+            try container.encode(self.labels, forKey: .labels)
+            try container.encode(self.disabled, forKey: .disabled)
+            try container.encode(self.due, forKey: .due)
+            try container.encode(self.spoken, forKey: .spoken)
+        }
+    }
+
     /// Todoist priorities: 1 is the most urgent, 4 is the unmarked default.
     public enum Priority: Int, Codable, Hashable, Sendable, CaseIterable, Comparable {
         case p1 = 1
@@ -1336,6 +1477,44 @@ extension API {
         }
     }
 
+    /// A recognized phrase, highlighted in the input. `start` and `end` are UTF-16 offsets, like JavaScript's.
+    public struct QuickAddToken: Codable, Hashable, Sendable {
+        public var kind: TokenKind
+        public var start: Int
+        public var end: Int
+        public var text: String
+
+        public init(kind: TokenKind, start: Int, end: Int, text: String) {
+            self.kind = kind
+            self.start = start
+            self.end = end
+            self.text = text
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case kind = "kind"
+            case start = "start"
+            case end = "end"
+            case text = "text"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            kind = try container.decode(TokenKind.self, forKey: .kind)
+            start = try container.decode(Int.self, forKey: .start)
+            end = try container.decode(Int.self, forKey: .end)
+            text = try container.decode(String.self, forKey: .text)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.kind, forKey: .kind)
+            try container.encode(self.start, forKey: .start)
+            try container.encode(self.end, forKey: .end)
+            try container.encode(self.text, forKey: .text)
+        }
+    }
+
     public struct Recurrence: Codable, Hashable, Sendable {
         public var interval: Int
         public var unit: RecurrenceUnit
@@ -1480,6 +1659,43 @@ extension API {
         }
     }
 
+    public struct SearchResults: Codable, Hashable, Sendable {
+        public var projects: [Search.NameHit<Project>]
+        public var labels: [Search.NameHit<Label>]
+        public var open: [TaskHit]
+        public var completed: [TaskHit]
+
+        public init(projects: [Search.NameHit<Project>] = [], labels: [Search.NameHit<Label>] = [], open: [TaskHit] = [], completed: [TaskHit] = []) {
+            self.projects = projects
+            self.labels = labels
+            self.open = open
+            self.completed = completed
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case projects = "projects"
+            case labels = "labels"
+            case open = "open"
+            case completed = "completed"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            projects = try container.decode([Search.NameHit<Project>].self, forKey: .projects)
+            labels = try container.decode([Search.NameHit<Label>].self, forKey: .labels)
+            open = try container.decode([TaskHit].self, forKey: .open)
+            completed = try container.decode([TaskHit].self, forKey: .completed)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.projects, forKey: .projects)
+            try container.encode(self.labels, forKey: .labels)
+            try container.encode(self.open, forKey: .open)
+            try container.encode(self.completed, forKey: .completed)
+        }
+    }
+
     public struct Settings: Codable, Hashable, Sendable {
         public var timeZone: String?
 
@@ -1563,6 +1779,44 @@ extension API {
 
     public enum SettingsPatchKind: String, Codable, Hashable, Sendable, CaseIterable {
         case settings = "settings"
+    }
+
+    public enum Sigil: String, Codable, Hashable, Sendable, CaseIterable {
+        case project = "#"
+        case label = "@"
+    }
+
+    /// The `#query` or `@query` the caret sits in. `start` is the sigil, `end` is the end of the word under the caret.
+    public struct SigilFragment: Codable, Hashable, Sendable {
+        public var start: Int
+        public var end: Int
+        public var query: String
+
+        public init(start: Int, end: Int, query: String) {
+            self.start = start
+            self.end = end
+            self.query = query
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case start = "start"
+            case end = "end"
+            case query = "query"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            start = try container.decode(Int.self, forKey: .start)
+            end = try container.decode(Int.self, forKey: .end)
+            query = try container.decode(String.self, forKey: .query)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.start, forKey: .start)
+            try container.encode(self.end, forKey: .end)
+            try container.encode(self.query, forKey: .query)
+        }
     }
 
     public struct Snapshot: Codable, Hashable, Sendable {
@@ -2128,6 +2382,46 @@ extension API {
         }
     }
 
+    /// Every searchable text on a task, in the order fields are scored.
+    public enum TaskField: String, Codable, Hashable, Sendable, CaseIterable {
+        case title = "title"
+        case project = "project"
+        case labels = "labels"
+        case notes = "notes"
+    }
+
+    public struct TaskHit: Codable, Hashable, Sendable {
+        public var task: Task
+        public var score: Int
+        public var matches: [TaskField: [Highlight]]
+
+        public init(task: Task, score: Int, matches: [TaskField: [Highlight]]) {
+            self.task = task
+            self.score = score
+            self.matches = matches
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case task = "task"
+            case score = "score"
+            case matches = "matches"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            task = try container.decode(Task.self, forKey: .task)
+            score = try container.decode(Int.self, forKey: .score)
+            matches = try container.decode([TaskField: [Highlight]].self, forKey: .matches)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.task, forKey: .task)
+            try container.encode(self.score, forKey: .score)
+            try container.encode(self.matches, forKey: .matches)
+        }
+    }
+
     public struct TaskPatch: Codable, Hashable, Sendable, Identifiable {
         public var kind: TaskPatchKind
         public var id: String
@@ -2338,6 +2632,53 @@ extension API {
             try container.encode(self.projects, forKey: .projects)
             try container.encode(self.tasks, forKey: .tasks)
             try container.encode(self.warnings, forKey: .warnings)
+        }
+    }
+
+    public enum TokenKind: String, Codable, Hashable, Sendable, CaseIterable {
+        case due = "due"
+        case recurrence = "recurrence"
+        case priority = "priority"
+        case reminder = "reminder"
+        case project = "project"
+        case label = "label"
+    }
+
+    /// A `#name` or `@name` in the text that names no project or label yet.
+    public struct UnknownName: Codable, Hashable, Sendable {
+        public var sigil: Sigil
+        public var name: String
+        public var start: Int
+        public var end: Int
+
+        public init(sigil: Sigil, name: String, start: Int, end: Int) {
+            self.sigil = sigil
+            self.name = name
+            self.start = start
+            self.end = end
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case sigil = "sigil"
+            case name = "name"
+            case start = "start"
+            case end = "end"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            sigil = try container.decode(Sigil.self, forKey: .sigil)
+            name = try container.decode(String.self, forKey: .name)
+            start = try container.decode(Int.self, forKey: .start)
+            end = try container.decode(Int.self, forKey: .end)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.sigil, forKey: .sigil)
+            try container.encode(self.name, forKey: .name)
+            try container.encode(self.start, forKey: .start)
+            try container.encode(self.end, forKey: .end)
         }
     }
 

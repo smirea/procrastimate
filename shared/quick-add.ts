@@ -1,3 +1,5 @@
+import { z } from 'zod';
+import { labelSchema, projectSchema, taskSchema } from './sync/protocol.ts';
 import {
 	addDays,
 	addInterval,
@@ -11,9 +13,7 @@ import {
 	toTimeOfDay,
 	type DateKey,
 	type Due,
-	type Label,
 	type Priority,
-	type Project,
 	type Recurrence,
 	type RecurrenceUnit,
 	type Reminder,
@@ -21,32 +21,55 @@ import {
 	type Weekday,
 } from './task.ts';
 
-export type TokenKind = 'due' | 'recurrence' | 'priority' | 'reminder' | 'project' | 'label';
+export const tokenKindSchema = z
+	.enum(['due', 'recurrence', 'priority', 'reminder', 'project', 'label'])
+	.meta({ id: 'TokenKind' });
+export type TokenKind = z.infer<typeof tokenKindSchema>;
 
-export type QuickAddToken = { kind: TokenKind; start: number; end: number; text: string };
+export const quickAddTokenSchema = z
+	.object({ kind: tokenKindSchema, start: z.number().int(), end: z.number().int(), text: z.string() })
+	.meta({
+		id: 'QuickAddToken',
+		description:
+			"A recognized phrase, highlighted in the input. `start` and `end` are UTF-16 offsets, like JavaScript's.",
+	});
+export type QuickAddToken = z.infer<typeof quickAddTokenSchema>;
 
-export type ParsedQuickAdd = {
-	title: string;
-	due: Due | null;
-	recurrence: Recurrence | null;
-	priority: Priority | null;
-	reminders: Reminder[];
-	projectId: string | null;
-	labelIds: string[];
-	tokens: QuickAddToken[];
-};
+const taskShape = taskSchema.shape;
 
-export type ParseOptions = {
-	now: Date;
-	projects?: readonly Project[];
-	labels?: readonly Label[];
-	/** Token texts the user chose to keep as plain title text, compared case-insensitively. */
-	disabled?: readonly string[];
-	/** The due date set outside the text, such as by a picker or on an existing task. */
-	due?: Due | null;
-	/** Transcribed speech rather than typing, so typing shorthands that speech never means do not apply. */
-	spoken?: boolean;
-};
+export const parsedQuickAddSchema = z
+	.object({
+		title: taskShape.title,
+		due: taskShape.due,
+		recurrence: taskShape.recurrence,
+		priority: taskShape.priority.nullable(),
+		reminders: taskShape.reminders,
+		projectId: taskShape.projectId,
+		labelIds: taskShape.labelIds,
+		tokens: z.array(quickAddTokenSchema),
+	})
+	.meta({ id: 'ParsedQuickAdd' });
+export type ParsedQuickAdd = z.infer<typeof parsedQuickAddSchema>;
+
+export const parseOptionsSchema = z
+	.object({
+		now: z.date().meta({ 'x-swift-type': 'Date' }),
+		projects: z.array(projectSchema).readonly().default([]),
+		labels: z.array(labelSchema).readonly().default([]),
+		disabled: z
+			.array(z.string())
+			.readonly()
+			.default([])
+			.meta({ description: 'Token texts the user chose to keep as plain title text, compared case-insensitively.' }),
+		due: taskShape.due
+			.default(null)
+			.meta({ description: 'The due date set outside the text, such as by a picker or on an existing task.' }),
+		spoken: z.boolean().default(false).meta({
+			description: 'Transcribed speech rather than typing, so typing shorthands that speech never means do not apply.',
+		}),
+	})
+	.meta({ id: 'ParseOptions' });
+export type ParseOptions = z.input<typeof parseOptionsSchema>;
 
 const WEEKDAYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
 const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'] as const;

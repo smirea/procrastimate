@@ -93,7 +93,7 @@ type Prop = {
 type Decl =
 	| { kind: 'alias'; name: string; target: string; doc?: string }
 	| { kind: 'ints'; name: string; cases: { name: string; value: number }[]; defaultCase?: string; doc?: string }
-	| { kind: 'strings'; name: string; values: string[]; doc?: string }
+	| { kind: 'strings'; name: string; values: string[]; names?: string[]; doc?: string }
 	| { kind: 'struct'; name: string; props: Prop[]; customDecode: boolean; doc?: string }
 	| { kind: 'tagged'; name: string; tag: string; variants: { value: string; type: string }[]; doc?: string }
 	| { kind: 'inline'; name: string; tag: string; variants: { value: string; props: Prop[] }[]; doc?: string }
@@ -288,7 +288,8 @@ class Generator {
 					type: this.type(inner, `${owner}${pascal(json)}`),
 					required: required.has(json),
 					nullable,
-					defaultValue: property.default ?? inner.default ?? defaults?.[json],
+					defaultValue:
+						'default' in property ? property.default : 'default' in inner ? inner.default : defaults?.[json],
 					checks: this.valueChecks(inner),
 					itemChecks: items ? this.valueChecks(items) : [],
 					doc: property.description,
@@ -414,7 +415,8 @@ class Generator {
 
 	private enumeration(input: Schema, values: unknown[], name: string): string {
 		if (values.every(value => typeof value === 'string')) {
-			return this.declare(input, { kind: 'strings', name, values: values as string[], doc: input.description });
+			const names = input['x-enum-names'];
+			return this.declare(input, { kind: 'strings', name, values: values as string[], names, doc: input.description });
 		}
 		if (values.every(value => Number.isInteger(value))) return 'Int';
 		if (values.every(value => typeof value === 'number')) return 'Double';
@@ -437,7 +439,7 @@ class Generator {
 			if (!match) throw new Error(`${type} has no case for default ${JSON.stringify(value)}`);
 			return `.${identifier(match.name)}`;
 		}
-		if (decl?.kind === 'strings') return `.${identifier(camel(String(value)))}`;
+		if (decl?.kind === 'strings') return `.${caseName(decl, String(value))}`;
 		if (Array.isArray(value)) {
 			if (value.length) throw new Error(`Only empty array defaults are supported, not ${JSON.stringify(value)}`);
 			return '[]';
@@ -455,6 +457,13 @@ class Generator {
 
 const PROTOCOLS = 'Codable, Hashable, Sendable';
 
+/** A string enum's case: its `x-enum-names` entry, or the value in camel case. */
+function caseName(decl: { values: string[]; names?: string[] }, value: string): string {
+	const name = decl.names?.[decl.values.indexOf(value)] ?? camel(value);
+	if (!name) throw new Error(`Add x-enum-names for the string enum value ${JSON.stringify(value)}`);
+	return identifier(name);
+}
+
 function references(schema: unknown): string[] {
 	if (!schema || typeof schema !== 'object') return [];
 	if (Array.isArray(schema)) return schema.flatMap(references);
@@ -469,16 +478,19 @@ const docLines = (doc: string | undefined, indent: string) =>
 /** A property that may be absent but has a default is stored as the plain type. */
 const defaulted = (prop: Prop) => !prop.required && !prop.nullable && prop.defaultValue !== undefined;
 
+/** Absent and `null` mean different things only when absent has no default of its own. */
+const tristate = (prop: Prop) => prop.nullable && !prop.required && prop.defaultValue !== null;
+
 /** The stored type: `T??` for optional and nullable, `T?` when it may be absent or null. */
 function storedType(prop: Prop): string {
-	if (prop.nullable && !prop.required) return `${prop.type}??`;
+	if (tristate(prop)) return `${prop.type}??`;
 	if (defaulted(prop)) return prop.type;
 	return prop.nullable || !prop.required ? `${prop.type}?` : prop.type;
 }
 
 function initParam(prop: Prop, generator: Generator): string {
 	const type = storedType(prop);
-	if (prop.defaultValue !== undefined && !(prop.nullable && !prop.required)) {
+	if (prop.defaultValue !== undefined && prop.defaultValue !== null && !tristate(prop)) {
 		return `${prop.swift}: ${type} = ${generator.literal(prop.defaultValue, prop.type)}`;
 	}
 	if (type.endsWith('?')) return `${prop.swift}: ${type} = nil`;
@@ -539,8 +551,7 @@ function checkLines(prop: Prop, source: string, indent: string): string[] {
 	];
 	if (!lines.length) return [];
 	const body = lines.map(line => `${indent}    ${line}`);
-	if (prop.nullable && !prop.required)
-		return [`${indent}if case let .value(value)? = ${source} {`, ...body, `${indent}}`];
+	if (tristate(prop)) return [`${indent}if case let value?? = ${source} {`, ...body, `${indent}}`];
 	if (storedType(prop).endsWith('?')) return [`${indent}if let value = ${source} {`, ...body, `${indent}}`];
 	return [`${indent}do {`, `${indent}    let value = ${source}`, ...body, `${indent}}`];
 }
@@ -558,7 +569,8 @@ function decodeExpression(prop: Prop, generator: Generator): string {
 		return `${JSON.stringify(values)}.contains(${tag}.rawValue) ? ${decodeExpression({ ...prop, onlyWhen: undefined }, generator)} : nil`;
 	}
 	const key = `.${bare(prop.swift)}`;
-	if (prop.nullable && !prop.required) return `try container.decodeNullable(${prop.type}.self, forKey: ${key})`;
+	if (tristate(prop)) return `try container.decodeNullable(${prop.type}.self, forKey: ${key})`;
+	if (prop.nullable && !prop.required) return `try container.decodeIfPresent(${prop.type}.self, forKey: ${key})`;
 	if (prop.nullable) return `try container.decode(${prop.type}?.self, forKey: ${key})`;
 	if (defaulted(prop)) {
 		return `try container.decodeIfPresent(${prop.type}.self, forKey: ${key}) ?? ${generator.literal(prop.defaultValue, prop.type)}`;
@@ -570,7 +582,7 @@ function decodeExpression(prop: Prop, generator: Generator): string {
 function encodeLine(prop: Prop, value: string): string {
 	const key = `.${bare(prop.swift)}`;
 	if (prop.epochMs) return `try container.encode(${value}.epochMilliseconds, forKey: ${key})`;
-	if (prop.nullable && !prop.required) return `try container.encodeNullable(${value}, forKey: ${key})`;
+	if (tristate(prop)) return `try container.encodeNullable(${value}, forKey: ${key})`;
 	if (storedType(prop).endsWith('?') && !prop.nullable)
 		return `try container.encodeIfPresent(${value}, forKey: ${key})`;
 	return `try container.encode(${value}, forKey: ${key})`;
@@ -687,7 +699,7 @@ function renderDecl(decl: Decl, generator: Generator): string {
 			return [
 				...doc,
 				`    public enum ${decl.name}: String, ${PROTOCOLS}, CaseIterable {`,
-				...decl.values.map(value => `        case ${identifier(camel(value))} = ${JSON.stringify(value)}`),
+				...decl.values.map(value => `        case ${caseName(decl, value)} = ${JSON.stringify(value)}`),
 				'    }',
 			].join('\n');
 		case 'struct':

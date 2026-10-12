@@ -11,17 +11,8 @@ extension Label: NamedItem {}
 
 /// The `#` and `@` suggestion rules of `shared/name-search.ts`. Offsets count UTF-16 code units, as on the web.
 public enum NameSearch {
-    public enum Sigil: String, Codable, Sendable {
-        case project = "#"
-        case label = "@"
-    }
-
-    /// The `#query` or `@query` the caret sits in. `start` is the sigil, `end` is the end of the word under the caret.
-    public struct Fragment: Hashable, Codable, Sendable {
-        public var start: Int
-        public var end: Int
-        public var query: String
-    }
+    public typealias Sigil = API.Sigil
+    public typealias Fragment = API.SigilFragment
 
     public enum Suggestion<Item: NamedItem & Hashable & Sendable>: Hashable, Sendable {
         case existing(Item)
@@ -48,13 +39,7 @@ public enum NameSearch {
         return Fragment(start: start, end: end, query: UTF16Text.string(query))
     }
 
-    /// A `#name` or `@name` in the text that names no project or label yet.
-    public struct UnknownName: Hashable, Codable, Sendable {
-        public var sigil: Sigil
-        public var name: String
-        public var start: Int
-        public var end: Int
-    }
+    public typealias UnknownName = API.UnknownName
 
     /// `SIGIL_WORD` from `name-search.ts`, written for ICU: `\s` is JavaScript's whitespace set and `$` is the end of
     /// the input. `QuickAdd.Pattern` would escape the braces of `\p{L}` inside a class, so this is ICU syntax directly.

@@ -3,59 +3,16 @@ import Foundation
 /// Search over tasks, projects, and labels, from `shared/search.ts`. Offsets in a `Highlight` count UTF-16 code units,
 /// as on the web.
 public enum Search {
-    /// One matched text and the half-open spans to highlight in it.
-    public struct Highlight: Hashable, Codable, Sendable {
-        public var text: String
-        public var ranges: [Range<Int>]
-
-        public init(text: String, ranges: [Range<Int>]) {
-            self.text = text
-            self.ranges = ranges
-        }
-    }
-
-    /// Every searchable text on a task, in the order fields are scored.
-    public enum TaskField: String, Codable, CodingKeyRepresentable, CaseIterable, Sendable {
-        case title, project, labels, notes
-
-        /// How much a match in the field counts.
-        var weight: Int {
-            switch self {
-            case .title: 4
-            case .project, .labels: 2
-            case .notes: 1
-            }
-        }
-
-        /// A list, so that multi-valued fields such as labels fit the same shape.
-        func values(_ task: TaskItem, _ context: Context) -> [String] {
-            switch self {
-            case .title: [task.title]
-            case .project: task.projectId.flatMap { context.projects[$0] }.map { [$0.name] } ?? []
-            case .labels: task.labelIds.compactMap { context.labels[$0]?.name }
-            case .notes: [task.notes]
-            }
-        }
-    }
-
-    public struct TaskHit: Hashable, Codable, Sendable {
-        public var task: TaskItem
-        public var score: Int
-        public var matches: [TaskField: [Highlight]]
-    }
+    public typealias Highlight = API.Highlight
+    public typealias TaskField = API.TaskField
+    public typealias TaskHit = API.TaskHit
+    public typealias Results = API.SearchResults
 
     /// A project or label whose name matched.
     public struct NameHit<Item: Hashable & Codable & Sendable>: Hashable, Codable, Sendable {
         public var item: Item
         public var score: Int
         public var name: Highlight
-    }
-
-    public struct Results: Hashable, Codable, Sendable {
-        public var projects: [NameHit<Project>] = []
-        public var labels: [NameHit<Label>] = []
-        public var open: [TaskHit] = []
-        public var completed: [TaskHit] = []
     }
 
     struct Context {
@@ -215,5 +172,26 @@ public enum Search {
             text: "…" + UTF16Text.string(units[start...]),
             ranges: highlight.ranges.map { ($0.lowerBound - start + 1)..<($0.upperBound - start + 1) }
         )
+    }
+}
+
+extension API.TaskField: CodingKeyRepresentable {
+    /// How much a match in the field counts.
+    var weight: Int {
+        switch self {
+        case .title: 4
+        case .project, .labels: 2
+        case .notes: 1
+        }
+    }
+
+    /// A list, so that multi-valued fields such as labels fit the same shape.
+    func values(_ task: TaskItem, _ context: Search.Context) -> [String] {
+        switch self {
+        case .title: [task.title]
+        case .project: task.projectId.flatMap { context.projects[$0] }.map { [$0.name] } ?? []
+        case .labels: task.labelIds.compactMap { context.labels[$0]?.name }
+        case .notes: [task.notes]
+        }
     }
 }

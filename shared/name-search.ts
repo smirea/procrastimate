@@ -1,12 +1,20 @@
+import { z } from 'zod';
 import type { Task } from './task.ts';
 
 /** Anything picked by name after a sigil: projects after `#`, labels after `@`. */
 export type Named = { id: string; name: string };
 
-export type Sigil = '#' | '@';
+export const sigilSchema = z.enum(['#', '@']).meta({ id: 'Sigil', 'x-enum-names': ['project', 'label'] });
+export type Sigil = z.infer<typeof sigilSchema>;
 
-/** The `#query` or `@query` the caret sits in. `start` is the sigil, `end` is the end of the word under the caret. */
-export type SigilFragment = { start: number; end: number; query: string };
+const offset = z.number().int();
+
+export const sigilFragmentSchema = z.object({ start: offset, end: offset, query: z.string() }).meta({
+	id: 'SigilFragment',
+	description:
+		'The `#query` or `@query` the caret sits in. `start` is the sigil, `end` is the end of the word under the caret.',
+});
+export type SigilFragment = z.infer<typeof sigilFragmentSchema>;
 
 export type Suggestion<T extends Named> = { kind: 'existing'; item: T } | { kind: 'create'; name: string };
 
@@ -33,8 +41,10 @@ export function sigilFragment(
 	return { start, end: caret + /^\S*/.exec(value.slice(caret))![0].length, query };
 }
 
-/** A `#name` or `@name` in the text that names no project or label yet. */
-export type UnknownName = { sigil: Sigil; name: string; start: number; end: number };
+export const unknownNameSchema = z
+	.object({ sigil: sigilSchema, name: z.string(), start: offset, end: offset })
+	.meta({ id: 'UnknownName', description: 'A `#name` or `@name` in the text that names no project or label yet.' });
+export type UnknownName = z.infer<typeof unknownNameSchema>;
 
 const SIGIL_WORD = /(?<!\S)([#@])([\p{L}\p{N}_-]+)(?=[,.;:!?)]*(?:\s|$))/gu;
 

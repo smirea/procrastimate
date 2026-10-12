@@ -1,10 +1,16 @@
+import { z } from 'zod';
+import { labelSchema, projectSchema, taskSchema } from './sync/protocol.ts';
 import type { Label, Project, Task } from './task.ts';
 
 /** A half-open `[start, end)` span of the original text. */
 export type Range = readonly [start: number, end: number];
+const rangeSchema = z.tuple([z.number().int(), z.number().int()]).readonly();
 
-/** One matched text and the spans to highlight in it. */
-export type Highlight = { text: string; ranges: Range[] };
+export const highlightSchema = z
+	// Swift's `Range<Int>` encodes as the same two-number array.
+	.object({ text: z.string(), ranges: z.array(rangeSchema).meta({ 'x-swift-type': '[Range<Int>]' }) })
+	.meta({ id: 'Highlight', description: 'One matched text and the half-open spans to highlight in it.' });
+export type Highlight = z.infer<typeof highlightSchema>;
 
 type FieldContext = { projects: ReadonlyMap<string, Project>; labels: ReadonlyMap<string, Label> };
 
@@ -26,19 +32,40 @@ const TASK_FIELDS = {
 		values: (task: Task, { labels }: FieldContext) => task.labelIds.flatMap(id => labels.get(id)?.name ?? []),
 	},
 	notes: { weight: 1, values: (task: Task) => [task.notes] },
-} satisfies Record<string, { weight: number; values: (task: Task, context: FieldContext) => string[] }>;
+} satisfies Record<TaskField, { weight: number; values: (task: Task, context: FieldContext) => string[] }>;
 
-export type TaskField = keyof typeof TASK_FIELDS;
+/** Every searchable text on a task, in the order fields are scored. */
+export const taskFieldSchema = z
+	.enum(['title', 'project', 'labels', 'notes'])
+	.meta({ id: 'TaskField', description: 'Every searchable text on a task, in the order fields are scored.' });
+export type TaskField = z.infer<typeof taskFieldSchema>;
 
-export type TaskHit = { task: Task; score: number; matches: Partial<Record<TaskField, Highlight[]>> };
+export const taskHitSchema = z
+	.object({
+		task: taskSchema,
+		score: z.number().int(),
+		// Swift keys the matches by the field enum, which encodes as the same object.
+		matches: z
+			.partialRecord(taskFieldSchema, z.array(highlightSchema))
+			.meta({ 'x-swift-type': '[TaskField: [Highlight]]' }),
+	})
+	.meta({ id: 'TaskHit' });
+export type TaskHit = z.infer<typeof taskHitSchema>;
 /** A project or label whose name matched. */
 export type NameHit<T extends { name: string }> = { item: T; score: number; name: Highlight };
-export type SearchResults = {
-	projects: NameHit<Project>[];
-	labels: NameHit<Label>[];
-	open: TaskHit[];
-	completed: TaskHit[];
-};
+const nameHitSchema = <T extends z.ZodType<{ name: string }>>(item: T) =>
+	z.object({ item, score: z.number().int(), name: highlightSchema });
+
+export const searchResultsSchema = z
+	.object({
+		// Swift keeps one generic `NameHit`, which JSON Schema cannot name.
+		projects: z.array(nameHitSchema(projectSchema)).meta({ 'x-swift-type': '[Search.NameHit<Project>]' }),
+		labels: z.array(nameHitSchema(labelSchema)).meta({ 'x-swift-type': '[Search.NameHit<Label>]' }),
+		open: z.array(taskHitSchema),
+		completed: z.array(taskHitSchema),
+	})
+	.meta({ id: 'SearchResults' });
+export type SearchResults = z.infer<typeof searchResultsSchema>;
 
 /** `map` points each folded character back to its original offset, and is null when they line up. */
 type Folded = { text: string; map: number[] | null };
