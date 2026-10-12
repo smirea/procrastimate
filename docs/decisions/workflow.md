@@ -13,4 +13,4 @@
 
 - **Every feature is built for all clients at once.** Web and iOS today. A feature request is planned and built for every client where it makes sense, not for one client with the others catching up later.
 - **Each feature plan names its clients.** It lists the target clients and says why any are excluded. Some clients get a subset; a future Apple Watch app, for example, gets only what suits a watch.
-- **Web and iOS slices are planned together.** Shared logic lands once in `shared/` with its Swift port through the test vectors. Each UI slice has a twin on the other client, written against the same parity ids, and every UI scenario gets a paired Playwright and XCUITest test (see [iOS app](ios.md#build-and-verification)). The twins may run as parallel PRs.
+- **Web and iOS slices are planned together.** Shared logic lands once in `shared/` with its Swift port through the test vectors. Each UI slice has a twin on the other client. Automated UI pairs are not part of the suite; parsers, vectors, and the auth and sync smoke are ([Testing](testing.md)). The twins may run as parallel PRs.

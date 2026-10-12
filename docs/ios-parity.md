@@ -13,10 +13,8 @@ macOS `core` and `app` stay off until a release ([Workflow](decisions/workflow.m
 - **Feature** is the feature map's sub-feature id. A row marked *iOS only* is a native affordance with no web counterpart. A row marked *web only* has no iOS equivalent.
 - **iOS** is `Planned`, `Built` (merged, parity tests green), or `n/a`. Each slice updates only its own rows.
 - **Slice** is the thread that ships the row (see [Thread split](#thread-split)). `S3→S5` means the logic comes from S3 and the UI from S5.
-- **XCUITest** is a method in `app-ios/Tests/AppUITests/<Class>.swift`.
-- **Playwright** is `<file> › <id>`: the test titled `<id>: …` in `app-web/e2e/parity/<file>.e2e.ts`, run by the `parity` project (WebKit, iPhone 15 Pro). The web column only tracks whether the feature exists on the web; its existing proof stays in the feature map.
-- **Screenshot** is the file both sides save: `app-web/test-results/parity/<file>` on the web and `<file>` in the `ios-parity` CI artifact on iOS. The `parity-report` artifact shows each pair side by side.
-- Both tests in a row seed the same data through quick add, pin the clock to Wednesday, October 14 2026, 10:00 UTC, perform the same steps, and assert the same accessible names and visible strings. Parser phrases, guards, recurrence math, ranking, and import mapping are proven case by case by the shared test vectors, so their UI rows run one representative scenario.
+- **XCUITest** and **Playwright** columns are the old scenario ids. Those UI tests are gone. Parser phrases, guards, recurrence math, ranking, and import mapping are proven by the shared test vectors. See [Testing](decisions/testing.md).
+- **iOS** `Built` means the feature is in the app. It no longer means a parity test is green.
 - **App Intents ship with the feature.** A new iOS feature that someone can do from outside the app includes its App Intents, shortcut phrases, and entities in the same change. The web column stays `n/a`: Siri, Shortcuts, and Spotlight are iOS. See [iOS app](decisions/ios.md#siri-shortcuts-and-spotlight).
 
 ## Checklist

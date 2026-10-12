@@ -2,21 +2,21 @@
 
 This directory is the maintained source for verifying the user-facing behavior of Procrastimate. Procrastimate is Stefan's personal task manager, a rough Todoist clone with one user, a web client, an iOS client, and an Apple Watch client later. It is local first and synced, every interaction responds instantly, and motion is subtle but satisfying. Features change often, so update the map with the feature and never keep entries for removed behavior.
 
-The web client covers adding, viewing, editing, completing, subtasks, repeating, prioritizing, reminding, push notifications, labeling, searching, theming, settings, syncing between paired clients, and importing from Todoist, and every web step not marked `Planned:` is proven by a Playwright test named in its bullet. iOS, Ramble voice capture, completed-task history, and keyboard selection are still planned. A `Planned:` step describes the intended user path and the observable result, with no harness commands or stable handles. Replace it with exact commands when its feature and harness ship.
+The web client covers adding, viewing, editing, completing, subtasks, repeating, prioritizing, reminding, push notifications, labeling, searching, theming, settings, syncing between paired clients, and importing from Todoist. The steps below are how to drive each feature by hand. Automated proof is the parser and vector tests, plus the auth and sync smoke in `docs/decisions/testing.md`. Named Playwright and XCUITest commands in these files are retired. iOS, Ramble voice capture, completed-task history, and keyboard selection are still planned. A `Planned:` step describes the intended user path and the observable result, with no harness commands or stable handles. Replace it with exact commands when its feature and harness ship.
 
 The iOS app works with Siri, Shortcuts, and Spotlight. Every new feature that someone can do from outside the app ships with App Intents in the same change. The web client is excluded: those are iOS system features, so they have no web steps.
 
 ## Baseline preconditions
 
 - Generate env values with `env-manager gen --local`, then start the web client and server with `bun run start` from the repo root.
-- The web client answers at `http://127.0.0.1:6120` or `http://procrastimate.localhost:6120` and opens on Inbox. The API answers `GET /api/status` through the client proxy with `{"ok":true}`. Every request the page makes stays on the client's origin, proven by `e2e/single-origin.e2e.ts`.
+- The web client answers at `http://127.0.0.1:6120` or `http://procrastimate.localhost:6120` and opens on Inbox. The API answers `GET /api/status` through the client proxy with `{"ok":true}`. Every request the page makes stays on the client's origin.
 - The production build runs locally with `bun run preview` at `http://127.0.0.1:8787`, serving the client and `/api` on one origin like the deployed Worker. `E2E_WORKER=1 bun run test:e2e` runs the web suite against it after `bun run build`.
 - Production answers at `https://procrastimate.stf.lol`, deployed from `master`. `GET /api/status` there returns `{"ok":true}`, and deep links such as `/inbox` serve the app.
 - Web data lives in the browser's `localStorage` under the `procrastimate` key. A fresh browser profile is the baseline state with no tasks or projects.
-- Run the automated web suite with `bun run test:e2e` from the repo root, after `bunx playwright install --with-deps chromium webkit` once in `app-web/`. It starts its own client on port 6130 with a fresh profile per test and a clock pinned to Wednesday, October 14 2026, 10:00 UTC, so it can run while the dev server is up. Filter with `bun run test:e2e -- <file> -g "<test name>"`.
-- The suite has three Playwright projects. `desktop` runs every file except `e2e/mobile.e2e.ts` and `e2e/parity/` in Chromium at 1280×800. `mobile` runs only `e2e/mobile.e2e.ts` in WebKit with the `iPhone 15 Pro` profile (393×659, touch). `parity` runs `e2e/parity/*.e2e.ts` in the same WebKit profile, paired with iOS XCUITests, and saves `app-web/test-results/parity/<parity-id>.png`. Pick one with `--project desktop`, `--project mobile`, or `--project parity`.
+- The automated web smoke is `bun run test:e2e` from the repo root (`e2e/auth.e2e.ts` and `e2e/sync.e2e.ts`, Chromium, 1280×800). Install Chromium once with `bunx playwright install --with-deps chromium` in `app-web/`. It starts its own client on port 6130 with a fresh profile per test and a clock pinned to Wednesday, October 14 2026, 10:00 UTC.
+- `swift test` in `app-ios/` runs the Core unit tests, including the TS-to-Swift vectors. There is no XCUITest suite.
 - Start the iOS client in a simulator with `bun run start:ios -t simulator`. It opens on an empty Inbox with Inbox, Today, Upcoming, Browse, and Search tabs; Inbox, Today, Upcoming, and quick add work, and the other screens are placeholders until their slices ship (see `docs/ios-parity.md`). It needs macOS with Xcode, so a Linux agent runs only `swift test` in `app-ios/` and leaves the app to the iOS workflow.
-- iOS UI tests launch with `PROCRASTIMATE_NOW=2026-10-14T10:00:00Z`, `PROCRASTIMATE_TZ=UTC`, and `PROCRASTIMATE_RESET=1` (Debug builds only): the web suite's pinned moment and an empty store. Run them with `xcodebuild test -project app-ios/App.xcodeproj -scheme App -destination 'platform=iOS Simulator,name=iPhone 16'`. The web half of each pair runs with `bun run test:e2e --project=parity`.
+- Debug builds can launch with `PROCRASTINATE_NOW=2026-10-14T10:00:00Z`, `PROCRASTINATE_TZ=UTC`, and `PROCRASTINATE_RESET=1` for an empty store at the pinned moment. Release builds ignore those keys.
 - Seed fixtures through quick add, the real user path. The dev server's sync account lives in memory, so restarting `bun run start` gives a disposable one.
 - Planned: a `verify-procrastimate` skill owns launch, doctor, and cleanup. Until it exists, never drive an instance this run did not start.
 - The ports are fixed (`strictPort`), so two web instances cannot run side by side.
@@ -24,7 +24,7 @@ The iOS app works with Siri, Shortcuts, and Spotlight. Every new feature that so
 ## Driving conventions
 
 - Start every recipe from the baseline state unless its preconditions say otherwise.
-- Drive the web client through a browser with the `control-ui` skill, or run its Playwright test. Planned: drive the iOS client with XCUITest. Use `xcrun simctl` only for simulator lifecycle, screenshots, and recordings.
+- Drive the web client through a browser with the `control-ui` skill. Use `xcrun simctl` only for simulator lifecycle, screenshots, and recordings.
 - Prefer accessible roles and names over CSS selectors, coordinates, or tab order.
 - Below 768 px wide the web client is in its phone layout. The sidebar is hidden behind `Open navigation`, a floating `Quick add` button replaces the `q` shortcut, and quick add and task details open as bottom sheets. Drive phone steps with taps, not keyboard shortcuts.
 - Exercise the real user path. Do not call internal setters, test-only endpoints, or the sync API directly.
