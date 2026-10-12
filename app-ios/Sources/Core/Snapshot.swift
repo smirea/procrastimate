@@ -93,9 +93,9 @@ extension API.Snapshot {
         let loaded = try c.decode([Lenient<StoredTask>].self, forKey: .tasks).compactMap { $0.value?.task }
         tasks = StoreRules.sortTasks(Subtasks.detachOrphans(loaded))
         projects = try c.decode([Project].self, forKey: .projects)
-        labels = try c.decodeAbsentOr([Label].self, forKey: .labels) ?? []
+        labels = try c.decodeAbsent([Label].self, forKey: .labels) ?? []
         remindersCheckedAt = try c.decode(Int.self, forKey: .remindersCheckedAt)
-        sync = try c.decodeAbsentOr(SyncSection.self, forKey: .sync)
+        sync = try c.decodeAbsent(SyncSection.self, forKey: .sync)
     }
 }
 
@@ -136,14 +136,5 @@ private struct StoredTask: Decodable {
             task.recurrence = Dates.weeklyOn(recurrence.interval, recurrence.days ?? [])
         }
         self.task = task
-    }
-}
-
-extension KeyedDecodingContainer {
-    /// Decodes an optional field the way the web's schema does: a missing key is `nil`, but an explicit `null` for a
-    /// field that is not itself nullable is an error, unlike `decodeIfPresent`.
-    func decodeAbsentOr<T: Decodable>(_ type: T.Type, forKey key: Key) throws -> T? {
-        guard contains(key) else { return nil }
-        return try decode(T.self, forKey: key)
     }
 }

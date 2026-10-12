@@ -291,7 +291,8 @@ class Generator {
 					defaultValue:
 						'default' in property ? property.default : 'default' in inner ? inner.default : defaults?.[json],
 					checks: this.valueChecks(inner),
-					itemChecks: items ? this.valueChecks(items) : [],
+					// A Core type picked by x-swift-type is not the JSON array, so its items are not checked.
+					itemChecks: items && !property['x-swift-type'] && !inner['x-swift-type'] ? this.valueChecks(items) : [],
 					doc: property.description,
 				};
 			});
@@ -572,10 +573,11 @@ function decodeExpression(prop: Prop, generator: Generator): string {
 	if (tristate(prop)) return `try container.decodeNullable(${prop.type}.self, forKey: ${key})`;
 	if (prop.nullable && !prop.required) return `try container.decodeIfPresent(${prop.type}.self, forKey: ${key})`;
 	if (prop.nullable) return `try container.decode(${prop.type}?.self, forKey: ${key})`;
+	// An optional value that is not nullable rejects an explicit `null`, as Zod's `.optional()` does.
 	if (defaulted(prop)) {
-		return `try container.decodeIfPresent(${prop.type}.self, forKey: ${key}) ?? ${generator.literal(prop.defaultValue, prop.type)}`;
+		return `try container.decodeAbsent(${prop.type}.self, forKey: ${key}) ?? ${generator.literal(prop.defaultValue, prop.type)}`;
 	}
-	if (!prop.required) return `try container.decodeIfPresent(${prop.type}.self, forKey: ${key})`;
+	if (!prop.required) return `try container.decodeAbsent(${prop.type}.self, forKey: ${key})`;
 	return `try container.decode(${prop.type}.self, forKey: ${key})`;
 }
 
@@ -829,6 +831,12 @@ func check<K: CodingKey>(_ ok: Bool, _ key: K, in container: KeyedDecodingContai
 }
 
 extension KeyedDecodingContainer {
+    /// \`nil\` when the key is missing. Unlike \`decodeIfPresent\`, an explicit \`null\` fails, as Zod's \`.optional()\` does.
+    func decodeAbsent<T: Decodable>(_: T.Type, forKey key: Key) throws -> T? {
+        guard contains(key) else { return nil }
+        return try decode(T.self, forKey: key)
+    }
+
     /// \`nil\` when the key is missing, \`.some(nil)\` when it is \`null\`.
     func decodeNullable<T: Decodable>(_: T.Type, forKey key: Key) throws -> T?? {
         guard contains(key) else { return nil }

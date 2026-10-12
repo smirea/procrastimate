@@ -33,6 +33,16 @@ describe('migrating a libSQL database', () => {
 		expect(await db.all(sql`SELECT * FROM session`)).toEqual([]);
 	});
 
+	test('a rebuild that failed after the bookkeeping table was made runs again', async () => {
+		const client = localClient();
+		await client.executeMultiple(`
+			CREATE TABLE __drizzle_migrations (id SERIAL PRIMARY KEY, hash text NOT NULL, created_at numeric);
+			CREATE TABLE devices (id TEXT PRIMARY KEY);
+		`);
+		const db = await openDatabase(client);
+		expect(tableNames(await db.all<{ name: string }>(TABLES))).toEqual(expected());
+	});
+
 	test('a database migrated by another history is wiped, and one on this history keeps its rows', async () => {
 		const client = localClient();
 		await client.executeMultiple(`

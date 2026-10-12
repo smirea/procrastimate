@@ -57,6 +57,12 @@ func check<K: CodingKey>(_ ok: Bool, _ key: K, in container: KeyedDecodingContai
 }
 
 extension KeyedDecodingContainer {
+    /// `nil` when the key is missing. Unlike `decodeIfPresent`, an explicit `null` fails, as Zod's `.optional()` does.
+    func decodeAbsent<T: Decodable>(_: T.Type, forKey key: Key) throws -> T? {
+        guard contains(key) else { return nil }
+        return try decode(T.self, forKey: key)
+    }
+
     /// `nil` when the key is missing, `.some(nil)` when it is `null`.
     func decodeNullable<T: Decodable>(_: T.Type, forKey key: Key) throws -> T?? {
         guard contains(key) else { return nil }
@@ -478,7 +484,7 @@ extension API {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             kind = try container.decode(CompletionKind.self, forKey: .kind)
             previous = try container.decode([CompletionState].self, forKey: .previous)
-            next = ["rolled"].contains(kind.rawValue) ? try container.decodeIfPresent(Due.self, forKey: .next) : nil
+            next = ["rolled"].contains(kind.rawValue) ? try container.decodeAbsent(Due.self, forKey: .next) : nil
         }
 
         public func encode(to encoder: Encoder) throws {
@@ -673,12 +679,6 @@ extension API {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             text = try container.decode(String.self, forKey: .text)
             ranges = try container.decode([Range<Int>].self, forKey: .ranges)
-            if decoder.validates {
-                do {
-                    let value = self.ranges
-                    try check(value.allSatisfy { $0.count >= 2 }, .ranges, in: container, "each ranges at least 2 items")
-                }
-            }
         }
 
         public func encode(to encoder: Encoder) throws {
@@ -815,9 +815,9 @@ extension API {
 
         public init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
-            name = try container.decodeIfPresent(String.self, forKey: .name)
-            createdAt = try container.decodeIfPresent(Int.self, forKey: .createdAt)
-            deleted = try container.decodeIfPresent(Bool.self, forKey: .deleted)
+            name = try container.decodeAbsent(String.self, forKey: .name)
+            createdAt = try container.decodeAbsent(Int.self, forKey: .createdAt)
+            deleted = try container.decodeAbsent(Bool.self, forKey: .deleted)
         }
 
         public func encode(to encoder: Encoder) throws {
@@ -1238,11 +1238,11 @@ extension API {
         public init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             now = try container.decode(Date.self, forKey: .now)
-            projects = try container.decodeIfPresent([Project].self, forKey: .projects) ?? []
-            labels = try container.decodeIfPresent([Label].self, forKey: .labels) ?? []
-            disabled = try container.decodeIfPresent([String].self, forKey: .disabled) ?? []
+            projects = try container.decodeAbsent([Project].self, forKey: .projects) ?? []
+            labels = try container.decodeAbsent([Label].self, forKey: .labels) ?? []
+            disabled = try container.decodeAbsent([String].self, forKey: .disabled) ?? []
             due = try container.decodeIfPresent(Due.self, forKey: .due)
-            spoken = try container.decodeIfPresent(Bool.self, forKey: .spoken) ?? false
+            spoken = try container.decodeAbsent(Bool.self, forKey: .spoken) ?? false
         }
 
         public func encode(to encoder: Encoder) throws {
@@ -1293,7 +1293,7 @@ extension API {
             id = try container.decode(String.self, forKey: .id)
             name = try container.decode(String.self, forKey: .name)
             createdAt = try container.decode(Int.self, forKey: .createdAt)
-            sourceKey = try container.decodeIfPresent(String.self, forKey: .sourceKey)
+            sourceKey = try container.decodeAbsent(String.self, forKey: .sourceKey)
         }
 
         public func encode(to encoder: Encoder) throws {
@@ -1359,10 +1359,10 @@ extension API {
 
         public init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
-            name = try container.decodeIfPresent(String.self, forKey: .name)
-            createdAt = try container.decodeIfPresent(Int.self, forKey: .createdAt)
+            name = try container.decodeAbsent(String.self, forKey: .name)
+            createdAt = try container.decodeAbsent(Int.self, forKey: .createdAt)
             sourceKey = try container.decodeNullable(String.self, forKey: .sourceKey)
-            deleted = try container.decodeIfPresent(Bool.self, forKey: .deleted)
+            deleted = try container.decodeAbsent(Bool.self, forKey: .deleted)
         }
 
         public func encode(to encoder: Encoder) throws {
@@ -1647,7 +1647,7 @@ extension API {
             case "error":
                 let code = try container.decode(RambleErrorCode.self, forKey: .code)
                 let message = try container.decode(String.self, forKey: .message)
-                let resetsAt = try container.decodeIfPresent(Double.self, forKey: .resetsAt)
+                let resetsAt = try container.decodeAbsent(Double.self, forKey: .resetsAt)
                 self = .error(code: code, message: message, resetsAt: resetsAt)
             case let tag:
                 throw DecodingError.dataCorruptedError(forKey: .tag, in: container, debugDescription: "Unknown type \(tag)")
@@ -1699,7 +1699,7 @@ extension API {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             interval = try container.decode(Int.self, forKey: .interval)
             unit = try container.decode(RecurrenceUnit.self, forKey: .unit)
-            days = ["week"].contains(unit.rawValue) ? try container.decodeIfPresent([Weekday].self, forKey: .days) : nil
+            days = ["week"].contains(unit.rawValue) ? try container.decodeAbsent([Weekday].self, forKey: .days) : nil
             if decoder.validates {
                 do {
                     let value = self.interval
@@ -1932,7 +1932,7 @@ extension API {
         public init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             timeZone = try container.decodeNullable(String.self, forKey: .timeZone)
-            deleted = try container.decodeIfPresent(Bool.self, forKey: .deleted)
+            deleted = try container.decodeAbsent(Bool.self, forKey: .deleted)
         }
 
         public func encode(to encoder: Encoder) throws {
@@ -2144,8 +2144,8 @@ extension API {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             cursor = try container.decode(Int.self, forKey: .cursor)
             ops = try container.decode([Op].self, forKey: .ops)
-            epoch = try container.decodeIfPresent(Int.self, forKey: .epoch) ?? 0
-            reset = try container.decodeIfPresent(Bool.self, forKey: .reset)
+            epoch = try container.decodeAbsent(Int.self, forKey: .epoch) ?? 0
+            reset = try container.decodeAbsent(Bool.self, forKey: .reset)
             if decoder.validates {
                 do {
                     let value = self.cursor
@@ -2339,8 +2339,8 @@ extension API {
             outbox = try container.decode([SyncOp].self, forKey: .outbox)
             clock = try container.decode(Hlc.self, forKey: .clock)
             timeZone = try container.decode(String.self, forKey: .timeZone)
-            epoch = try container.decodeIfPresent(Int.self, forKey: .epoch) ?? 0
-            reset = try container.decodeIfPresent(Bool.self, forKey: .reset) ?? false
+            epoch = try container.decodeAbsent(Int.self, forKey: .epoch) ?? 0
+            reset = try container.decodeAbsent(Bool.self, forKey: .reset) ?? false
             if decoder.validates {
                 do {
                     let value = self.cursor
@@ -2471,7 +2471,7 @@ extension API {
             reminders = try container.decode([Reminder].self, forKey: .reminders)
             createdAt = try container.decode(Int.self, forKey: .createdAt)
             completedAt = try container.decode(Int?.self, forKey: .completedAt)
-            sourceKey = try container.decodeIfPresent(String.self, forKey: .sourceKey)
+            sourceKey = try container.decodeAbsent(String.self, forKey: .sourceKey)
         }
 
         public func encode(to encoder: Encoder) throws {
@@ -2528,14 +2528,14 @@ extension API {
 
         public init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
-            title = try container.decodeIfPresent(String.self, forKey: .title)
-            notes = try container.decodeIfPresent(String.self, forKey: .notes)
+            title = try container.decodeAbsent(String.self, forKey: .title)
+            notes = try container.decodeAbsent(String.self, forKey: .notes)
             projectId = try container.decodeNullable(String.self, forKey: .projectId)
-            labelIds = try container.decodeIfPresent([String].self, forKey: .labelIds)
+            labelIds = try container.decodeAbsent([String].self, forKey: .labelIds)
             due = try container.decodeNullable(Due.self, forKey: .due)
             recurrence = try container.decodeNullable(Recurrence.self, forKey: .recurrence)
-            priority = try container.decodeIfPresent(Priority.self, forKey: .priority)
-            reminders = try container.decodeIfPresent([Reminder].self, forKey: .reminders)
+            priority = try container.decodeAbsent(Priority.self, forKey: .priority)
+            reminders = try container.decodeAbsent([Reminder].self, forKey: .reminders)
         }
 
         public func encode(to encoder: Encoder) throws {
@@ -2678,19 +2678,19 @@ extension API {
         public init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             parentId = try container.decodeNullable(String.self, forKey: .parentId)
-            order = try container.decodeIfPresent(Double.self, forKey: .order)
-            title = try container.decodeIfPresent(String.self, forKey: .title)
-            notes = try container.decodeIfPresent(String.self, forKey: .notes)
+            order = try container.decodeAbsent(Double.self, forKey: .order)
+            title = try container.decodeAbsent(String.self, forKey: .title)
+            notes = try container.decodeAbsent(String.self, forKey: .notes)
             projectId = try container.decodeNullable(String.self, forKey: .projectId)
-            labelIds = try container.decodeIfPresent([String].self, forKey: .labelIds)
+            labelIds = try container.decodeAbsent([String].self, forKey: .labelIds)
             due = try container.decodeNullable(Due.self, forKey: .due)
             recurrence = try container.decodeNullable(Recurrence.self, forKey: .recurrence)
-            priority = try container.decodeIfPresent(Priority.self, forKey: .priority)
-            reminders = try container.decodeIfPresent([Reminder].self, forKey: .reminders)
-            createdAt = try container.decodeIfPresent(Int.self, forKey: .createdAt)
+            priority = try container.decodeAbsent(Priority.self, forKey: .priority)
+            reminders = try container.decodeAbsent([Reminder].self, forKey: .reminders)
+            createdAt = try container.decodeAbsent(Int.self, forKey: .createdAt)
             completedAt = try container.decodeNullable(Int.self, forKey: .completedAt)
             sourceKey = try container.decodeNullable(String.self, forKey: .sourceKey)
-            deleted = try container.decodeIfPresent(Bool.self, forKey: .deleted)
+            deleted = try container.decodeAbsent(Bool.self, forKey: .deleted)
         }
 
         public func encode(to encoder: Encoder) throws {
