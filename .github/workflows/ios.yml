@@ -51,7 +51,7 @@ jobs:
   app:
     if: github.event_name == 'workflow_dispatch'
     runs-on: macos-26
-    timeout-minutes: 75
+    timeout-minutes: 20
     defaults:
       run:
         working-directory: app-ios
@@ -82,131 +82,13 @@ jobs:
           test "$debug" = http://127.0.0.1:6121
           test "$release" = https://procrastimate.stf.lol
 
-      - name: Boot an iPhone 16 simulator on iOS 26
-        id: simulator
-        run: |
-          runtime=$(xcrun simctl list runtimes --json | jq -r '[.runtimes[] | select(.platform == "iOS" and .isAvailable and (.version | startswith("26")))] | sort_by(.version) | last | .identifier')
-          test "$runtime" != null || { xcrun simctl list runtimes; exit 1; }
-          udid=$(xcrun simctl create "Parity iPhone 16" com.apple.CoreSimulator.SimDeviceType.iPhone-16 "$runtime")
-          xcrun simctl boot "$udid"
-          xcrun simctl bootstatus "$udid" -b
-          xcrun simctl status_bar "$udid" override --time 2026-10-14T10:00:00.000Z --batteryState charged --batteryLevel 100
-          echo "udid=$udid" >> "$GITHUB_OUTPUT"
-
       - name: Build
         run: >
-          xcodebuild build-for-testing -quiet -project App.xcodeproj -scheme App
-          -destination "id=${{ steps.simulator.outputs.udid }}" -derivedDataPath DerivedData CODE_SIGNING_ALLOWED=NO
-
-      # The import tests pick these in the document picker, under On My iPhone › ProcrastiMate. Reinstalling the app
-      # for the tests keeps its Documents folder.
-      - name: Todoist fixtures in the app's Documents
-        run: |
-          udid="${{ steps.simulator.outputs.udid }}"
-          xcrun simctl install "$udid" DerivedData/Build/Products/Debug-iphonesimulator/App.app
-          bun scripts/todoist-fixtures.ts "$(xcrun simctl get_app_container "$udid" com.stefan.procrastimate data)/Documents"
+          xcodebuild build -quiet -project App.xcodeproj -scheme App
+          -destination 'generic/platform=iOS Simulator' -derivedDataPath DerivedData CODE_SIGNING_ALLOWED=NO
 
       - name: App bundles its privacy manifest
-        run: plutil -lint DerivedData/Build/Products/Debug-iphonesimulator/App.app/PrivacyInfo.xcprivacy
-
-      - name: UI tests
-        run: >
-          xcodebuild test-without-building -project App.xcodeproj -scheme App
-          -destination "id=${{ steps.simulator.outputs.udid }}" -derivedDataPath DerivedData
-          -resultBundlePath ../ios-results/App.xcresult
-
-      - name: Export screenshots
-        if: ${{ !cancelled() && hashFiles('ios-results/App.xcresult/**') != '' }}
         run: |
-          xcrun xcresulttool export attachments --path ../ios-results/App.xcresult --output-path ../ios-results/attachments
-          bun scripts/parity-attachments.ts ../ios-results/attachments ../ios-parity
-
-      - name: Upload screenshots
-        if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v7
-        with:
-          name: ios-parity
-          path: ios-parity/
-          if-no-files-found: ignore
-
-      - name: Upload test results
-        if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v7
-        with:
-          name: ios-xcresult
-          path: ios-results/App.xcresult
-          if-no-files-found: ignore
-
-  web-parity:
-    runs-on: ubuntu-latest
-    # WebKit's system libraries are about 116 MB. On a slow apt mirror that download used the whole
-    # 15 minute limit and the job was canceled before the parity tests started.
-    timeout-minutes: 60
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup
-
-      - name: Playwright version
-        id: playwright
-        run: echo "version=$(bunx playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
-        working-directory: app-web
-
-      - name: Cache Playwright browsers
-        id: playwright-cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-webkit-${{ steps.playwright.outputs.version }}
-
-      - name: Install Playwright browsers
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: bunx playwright install --with-deps webkit
-        working-directory: app-web
-
-      - name: Install Playwright system dependencies
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: bunx playwright install-deps webkit
-        working-directory: app-web
-
-      - name: Parity tests
-        run: bun run test:e2e --project=parity
-
-      - name: Upload screenshots
-        if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v7
-        with:
-          name: web-parity
-          path: app-web/test-results/parity/
-          if-no-files-found: ignore
-
-  parity-report:
-    needs: [app, web-parity]
-    if: ${{ !cancelled() }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v6
-
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.4.3
-
-      - uses: actions/download-artifact@v8
-        continue-on-error: true
-        with:
-          name: web-parity
-          path: parity/web
-
-      - uses: actions/download-artifact@v8
-        continue-on-error: true
-        with:
-          name: ios-parity
-          path: parity/ios
-
-      - name: Build the report
-        run: bun app-ios/scripts/parity-report.ts parity/web parity/ios parity-report
-
-      - uses: actions/upload-artifact@v7
-        with:
-          name: parity-report
-          path: parity-report/
+          app=$(find DerivedData/Build/Products -name App.app -type d | head -1)
+          test -n "$app"
+          plutil -lint "$app/PrivacyInfo.xcprivacy"

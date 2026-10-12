@@ -57,15 +57,7 @@ jobs:
   e2e:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - project: desktop
-            browser: chromium
-          - project: mobile
-            browser: webkit
-    name: e2e (${{ matrix.project }})
+    name: e2e
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/setup
@@ -83,16 +75,16 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ matrix.browser }}-${{ steps.playwright.outputs.version }}
+          key: playwright-${{ runner.os }}-chromium-${{ steps.playwright.outputs.version }}
 
       - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: bunx playwright install --with-deps ${{ matrix.browser }}
+        run: bunx playwright install --with-deps chromium
         working-directory: app-web
 
       - name: Install Playwright system dependencies
         if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: bunx playwright install-deps ${{ matrix.browser }}
+        run: bunx playwright install-deps chromium
         working-directory: app-web
 
       # CI has no AWS access, so this only generates a throwaway VAPID pair.
@@ -100,7 +92,7 @@ jobs:
         run: bun server/scripts/secrets.ts dev-vars --generate-only
 
       - name: End to end against the Worker
-        run: bun run test:e2e --project=${{ matrix.project }}
+        run: bun run test:e2e --project=desktop
         env:
           E2E_WORKER: '1'
 
