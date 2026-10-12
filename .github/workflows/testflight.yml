@@ -3,6 +3,9 @@ name: TestFlight
 # Archives Release on a GitHub macOS runner and uploads it to App Store Connect, so TestFlight builds never need
 # Stefan's Mac. Internal group `me` has access to all builds, so every upload reaches it without an extra step.
 # Never runs on pull requests: macOS runners queue, and PR checks stay fast.
+# Pushes share one concurrency group and cancel the run already in progress. The debounce job waits ten minutes,
+# then skips the archive when master has moved on, so a burst of merges uploads the latest commit once.
+# A manual workflow_dispatch does not wait.
 on:
   push:
     branches: [master]
@@ -13,13 +16,45 @@ on:
 
 concurrency:
   group: testflight
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 env:
   TZ: UTC
 
 jobs:
+  debounce:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    outputs:
+      build: ${{ steps.gate.outputs.build }}
+    steps:
+      # The wait stays off the xcode-27 runner, which queues and is only needed for the archive.
+      - name: Debounce pushes to master
+        id: gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            echo "Manual dispatch; building ${GITHUB_SHA} without waiting."
+            echo "build=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "Waiting 10 minutes so a burst of merges uploads once."
+          sleep 600
+          head=$(gh api "repos/${GITHUB_REPOSITORY}/commits/master" --jq .sha)
+          if [ "$head" != "$GITHUB_SHA" ]; then
+            echo "master is ${head}; this run is ${GITHUB_SHA}. Skipping the archive."
+            echo "build=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "This commit is still master. Building."
+          echo "build=true" >> "$GITHUB_OUTPUT"
+
   upload:
+    needs: debounce
+    if: needs.debounce.outputs.build == 'true'
     # The app builds against the iOS 27 SDK (IndexedEntityQuery, Swift 6.3 rules), which macos-26 images lack.
     # Xcode 27.0 (27A266a) is this image's default, the same build as Stefan's Mac.
     runs-on: xcode-27
