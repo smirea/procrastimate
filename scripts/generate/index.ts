@@ -1,6 +1,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { migrationsModule } from './migrations';
+import { handWrittenModels } from './models';
 import { tableDefaults, zodModule } from './zod';
 
 /**
@@ -49,6 +50,14 @@ write(
 	'app-ios/Sources/Core/Generated/API.swift',
 	swiftModule({ components: namedSchemas(), paths: JSON.parse(openApi).paths, tableDefaults: tableDefaults() }),
 );
+
+const models = handWrittenModels(root, ['app-ios/Sources']);
+if (models.length) {
+	console.error(
+		`Swift declares models the shared schemas should define. Give the Zod schema an id instead, or list the type in scripts/generate/models.ts with why it stays:\n${models.join('\n')}`,
+	);
+	process.exit(1);
+}
 
 if (check && stale.length) {
 	console.error(`Generated files are stale. Run \`bun run generate\` and commit:\n${stale.join('\n')}`);
