@@ -1,0 +1,98 @@
+{
+	"status": {
+		"~orpc": {
+			"errorMap": {},
+			"meta": {},
+			"route": {
+				"method": "GET",
+				"path": "/api/status"
+			}
+		}
+	},
+	"auth": {
+		"methods": {
+			"~orpc": {
+				"errorMap": {},
+				"meta": {},
+				"route": {
+					"method": "GET",
+					"path": "/api/auth/methods"
+				}
+			}
+		}
+	},
+	"account": {
+		"delete": {
+			"~orpc": {
+				"errorMap": {},
+				"meta": {},
+				"route": {
+					"method": "POST",
+					"path": "/api/account/delete"
+				}
+			}
+		}
+	},
+	"push": {
+		"key": {
+			"~orpc": {
+				"errorMap": {},
+				"meta": {},
+				"route": {
+					"method": "GET",
+					"path": "/api/push/key"
+				}
+			}
+		},
+		"test": {
+			"~orpc": {
+				"errorMap": {},
+				"meta": {},
+				"route": {
+					"method": "POST",
+					"path": "/api/push/test"
+				}
+			}
+		},
+		"subscribe": {
+			"~orpc": {
+				"errorMap": {},
+				"meta": {},
+				"route": {
+					"method": "PUT",
+					"path": "/api/push/subscription"
+				}
+			}
+		},
+		"unsubscribe": {
+			"~orpc": {
+				"errorMap": {},
+				"meta": {},
+				"route": {
+					"method": "DELETE",
+					"path": "/api/push/subscription"
+				}
+			}
+		},
+		"schedule": {
+			"~orpc": {
+				"errorMap": {},
+				"meta": {},
+				"route": {
+					"method": "GET",
+					"path": "/api/push/schedule"
+				}
+			}
+		}
+	},
+	"sync": {
+		"~orpc": {
+			"errorMap": {},
+			"meta": {},
+			"route": {
+				"method": "POST",
+				"path": "/api/sync"
+			}
+		}
+	}
+}

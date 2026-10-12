@@ -8,8 +8,7 @@ import {
 	type ScheduledPush,
 } from '../../../shared/push';
 import { createClock, SERVER_NODE } from '../../../shared/sync/hlc';
-import { entityKey, serverSnapshot, type ServerEntity } from '../../../shared/sync/merge';
-import type { Kind } from '../../../shared/sync/protocol';
+import { entityKey, serverSnapshot } from '../../../shared/sync/merge';
 import { isTimeZone } from '../../../shared/zoned-time';
 import type { AccountContext } from '../auth';
 import { isAllowedEndpoint } from '../push';

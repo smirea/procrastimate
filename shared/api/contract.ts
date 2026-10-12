@@ -9,7 +9,7 @@ import { syncRequestSchema, syncResponseSchema } from '../sync/protocol.ts';
  * Better Auth's `/api/auth/*` routes and the two WebSockets are outside it.
  */
 
-const okSchema = z.object({ ok: z.literal(true) });
+export const okSchema = z.object({ ok: z.literal(true) });
 
 /** Which sign-in buttons the server can offer. Empty credentials hide a provider, so CI boots without them. */
 export const authMethodsSchema = z.object({

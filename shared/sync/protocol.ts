@@ -28,15 +28,17 @@ const timeOfDay = timeOfDaySchema;
 const interval = z.number().int().positive();
 const weekday = z.literal([0, 1, 2, 3, 4, 5, 6]) satisfies z.ZodType<Weekday>;
 
-const recurrence = z.discriminatedUnion('unit', [
+export const recurrenceSchema = z.discriminatedUnion('unit', [
 	z.object({ interval, unit: z.enum(['day', 'weekday', 'month', 'year']) }),
 	z.object({ interval, unit: z.literal('week'), days: z.array(weekday).min(2).readonly().optional() }),
 ]);
 
-const reminder = z.discriminatedUnion('kind', [
+export const reminderSchema = z.discriminatedUnion('kind', [
 	z.object({ kind: z.literal('before'), minutes: z.number().int().nonnegative() }),
 	z.object({ kind: z.literal('at'), date: dateKey, time: timeOfDay }),
 ]);
+
+export const dueSchema = z.object({ date: dateKey, time: timeOfDay.nullable() });
 
 /** Every synced field of each kind. A missing `sourceKey` travels as `null`, since JSON has no `undefined`. */
 export const taskFieldsSchema = z.object({
@@ -46,10 +48,10 @@ export const taskFieldsSchema = z.object({
 	notes: z.string(),
 	projectId: z.string().nullable(),
 	labelIds: z.array(z.string()),
-	due: z.object({ date: dateKey, time: timeOfDay.nullable() }).nullable(),
-	recurrence: recurrence.nullable(),
+	due: dueSchema.nullable(),
+	recurrence: recurrenceSchema.nullable(),
 	priority: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]),
-	reminders: z.array(reminder),
+	reminders: z.array(reminderSchema),
 	createdAt: z.number(),
 	completedAt: z.number().nullable(),
 	sourceKey: z.string().nullable(),
@@ -106,12 +108,19 @@ const patchOf = <K extends Kind>(kind: K) =>
 		fields: FIELDS_SCHEMAS[kind].partial().extend({ deleted: z.boolean().optional() }),
 	});
 
+export const PATCH_SCHEMAS = {
+	task: patchOf('task'),
+	project: patchOf('project'),
+	label: patchOf('label'),
+	settings: patchOf('settings'),
+} as const;
+
 /** One entity's changed fields, before it gets an op id and a clock. */
 export const patchSchema = z.discriminatedUnion('kind', [
-	patchOf('task'),
-	patchOf('project'),
-	patchOf('label'),
-	patchOf('settings'),
+	PATCH_SCHEMAS.task,
+	PATCH_SCHEMAS.project,
+	PATCH_SCHEMAS.label,
+	PATCH_SCHEMAS.settings,
 ]);
 export type Patch = z.infer<typeof patchSchema>;
 

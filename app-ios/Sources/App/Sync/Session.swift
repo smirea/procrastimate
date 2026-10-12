@@ -2,13 +2,9 @@ import Core
 import Foundation
 import Observation
 
-/// Which sign-in buttons the server can offer. Empty credentials hide a provider.
-struct AuthMethods: Equatable {
-    var email = false
-    var google = false
-    var apple = false
-    var googleIosClientId: String?
-    var appleNative = false
+extension API.AuthMethods {
+    /// Until the server answers, no sign-in button shows.
+    static let none = Self(email: false, google: false, apple: false, googleIosClientId: nil, appleNative: false)
 }
 
 /// The signed-in user. A Keychain token means the app opens offline; a rejected token returns to sign-in.
@@ -19,7 +15,7 @@ final class Session {
     private let store: Store
     var signedIn: Bool
     var error: String?
-    var methods = AuthMethods()
+    var methods = API.AuthMethods.none
 
     init(store: Store) {
         self.store = store
@@ -72,16 +68,8 @@ final class Session {
     }
 
     func loadMethods() async {
-        guard let (data, response) = try? await URLSession.shared.data(from: AppEnvironment.apiURL.appending(path: "api/auth/methods")),
-              let http = response as? HTTPURLResponse, http.statusCode == 200,
-              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return }
-        methods = AuthMethods(
-            email: object["email"] as? Bool ?? false,
-            google: object["google"] as? Bool ?? false,
-            apple: object["apple"] as? Bool ?? false,
-            googleIosClientId: object["googleIosClientId"] as? String,
-            appleNative: object["appleNative"] as? Bool ?? false
-        )
+        guard let methods = try? await APIClient.send(API.Endpoints.AuthMethods.self, NoInput(), token: nil) else { return }
+        self.methods = methods
     }
 
     func signIn(email: String, password: String) async {

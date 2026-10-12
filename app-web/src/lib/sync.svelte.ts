@@ -1,4 +1,3 @@
-import { DEVICE_HEADER, DEVICE_NAME_HEADER } from 'shared/auth.ts';
 import {
 	DEVICE_PROTOCOL_PREFIX,
 	nudgeSchema,
@@ -9,6 +8,7 @@ import {
 	SYNC_SOCKET_PROTOCOL,
 	syncResponseSchema,
 } from 'shared/sync/protocol.ts';
+import { api, isUnauthorized } from './api.ts';
 import { session } from './session.svelte.ts';
 import { store } from './store.svelte.ts';
 
@@ -31,41 +31,6 @@ const RECONNECT_MIN = 1000;
 const RECONNECT_MAX = 60_000;
 
 const zone = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-/** A name stored with the device, such as `Chrome on macOS`. It is never shown. */
-function deviceName(): string {
-	const ua = navigator.userAgent;
-	const browser = /Edg\//.test(ua)
-		? 'Edge'
-		: /Firefox\//.test(ua)
-			? 'Firefox'
-			: /Chrome\//.test(ua)
-				? 'Chrome'
-				: /Safari\//.test(ua)
-					? 'Safari'
-					: 'Browser';
-	const os = /iPhone/.test(ua)
-		? 'iPhone'
-		: /iPad/.test(ua)
-			? 'iPad'
-			: /Android/.test(ua)
-				? 'Android'
-				: /Mac OS X/.test(ua)
-					? 'macOS'
-					: /Windows/.test(ua)
-						? 'Windows'
-						: /Linux/.test(ua)
-							? 'Linux'
-							: '';
-	return os ? `${browser} on ${os}` : browser;
-}
-
-/** The install id and name. The session cookie is the credential; these are not. */
-export function deviceHeaders(): Record<string, string> {
-	const id = store.deviceId();
-	if (!id) return {};
-	return { [DEVICE_HEADER]: id, [DEVICE_NAME_HEADER]: deviceName() };
-}
 
 class Sync {
 	#running: Promise<void> | null = null;
@@ -196,25 +161,18 @@ class Sync {
 		store.noteTimeZone(zone());
 		const request = store.syncRequest();
 		if (!request) return false;
-		let response: Response;
+		let response: unknown;
 		try {
-			response = await fetch('/api/sync', {
-				method: 'POST',
-				credentials: 'include',
-				headers: { 'Content-Type': 'application/json', ...deviceHeaders() },
-				body: JSON.stringify(request),
-				signal: AbortSignal.timeout(REQUEST_TIMEOUT),
-			});
-		} catch {
+			response = await api.sync(request, { signal: AbortSignal.timeout(REQUEST_TIMEOUT) });
+		} catch (error) {
+			if (isUnauthorized(error)) {
+				session.clear();
+				this.#disconnect();
+			}
 			return false;
 		}
-		if (response.status === 401) {
-			session.clear();
-			this.#disconnect();
-			return false;
-		}
-		if (!response.ok) return false;
-		const parsed = syncResponseSchema.safeParse(await response.json().catch(() => undefined));
+		// The server is another deploy than this tab, so the response is checked before it reaches the store.
+		const parsed = syncResponseSchema.safeParse(response);
 		if (!parsed.success) {
 			console.warn('sync: unreadable response', parsed.error.issues.slice(0, 5));
 			return false;

@@ -1,0 +1,2013 @@
+{
+	"info": {
+		"title": "Procrastimate",
+		"version": "1"
+	},
+	"openapi": "3.1.1",
+	"components": {
+		"schemas": {
+			"AuthMethods": {
+				"type": "object",
+				"properties": {
+					"email": {
+						"type": "boolean"
+					},
+					"google": {
+						"type": "boolean"
+					},
+					"apple": {
+						"type": "boolean"
+					},
+					"googleIosClientId": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"type": "null"
+							}
+						]
+					},
+					"appleNative": {
+						"type": "boolean"
+					}
+				},
+				"required": [
+					"email",
+					"google",
+					"apple",
+					"googleIosClientId",
+					"appleNative"
+				]
+			},
+			"Change": {
+				"allOf": [
+					{
+						"anyOf": [
+							{
+								"$ref": "#/components/schemas/TaskPatch"
+							},
+							{
+								"$ref": "#/components/schemas/ProjectPatch"
+							},
+							{
+								"$ref": "#/components/schemas/LabelPatch"
+							},
+							{
+								"$ref": "#/components/schemas/SettingsPatch"
+							}
+						]
+					},
+					{
+						"type": "object",
+						"properties": {
+							"seq": {
+								"type": "integer",
+								"minimum": -9007199254740991,
+								"maximum": 9007199254740991,
+								"exclusiveMinimum": 0
+							},
+							"opId": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"seq",
+							"opId"
+						]
+					}
+				]
+			},
+			"Due": {
+				"type": "object",
+				"properties": {
+					"date": {
+						"type": "string",
+						"pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+					},
+					"time": {
+						"anyOf": [
+							{
+								"type": "string",
+								"pattern": "^\\d{2}:\\d{2}$"
+							},
+							{
+								"type": "null"
+							}
+						]
+					}
+				},
+				"required": [
+					"date",
+					"time"
+				]
+			},
+			"Label": {
+				"type": "object",
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"createdAt": {
+						"type": "number"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"name",
+					"createdAt",
+					"id"
+				]
+			},
+			"LabelPatch": {
+				"type": "object",
+				"properties": {
+					"kind": {
+						"const": "label"
+					},
+					"id": {
+						"type": "string"
+					},
+					"fields": {
+						"type": "object",
+						"properties": {
+							"name": {
+								"type": "string"
+							},
+							"createdAt": {
+								"type": "number"
+							},
+							"deleted": {
+								"type": "boolean"
+							}
+						}
+					}
+				},
+				"required": [
+					"kind",
+					"id",
+					"fields"
+				]
+			},
+			"Ok": {
+				"type": "object",
+				"properties": {
+					"ok": {
+						"const": true
+					}
+				},
+				"required": [
+					"ok"
+				]
+			},
+			"Op": {
+				"allOf": [
+					{
+						"anyOf": [
+							{
+								"$ref": "#/components/schemas/TaskPatch"
+							},
+							{
+								"$ref": "#/components/schemas/ProjectPatch"
+							},
+							{
+								"$ref": "#/components/schemas/LabelPatch"
+							},
+							{
+								"$ref": "#/components/schemas/SettingsPatch"
+							}
+						]
+					},
+					{
+						"type": "object",
+						"properties": {
+							"opId": {
+								"type": "string"
+							},
+							"hlc": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"opId",
+							"hlc"
+						]
+					}
+				]
+			},
+			"Project": {
+				"type": "object",
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"createdAt": {
+						"type": "number"
+					},
+					"sourceKey": {
+						"type": "string"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"name",
+					"createdAt",
+					"id"
+				]
+			},
+			"ProjectPatch": {
+				"type": "object",
+				"properties": {
+					"kind": {
+						"const": "project"
+					},
+					"id": {
+						"type": "string"
+					},
+					"fields": {
+						"type": "object",
+						"properties": {
+							"name": {
+								"type": "string"
+							},
+							"createdAt": {
+								"type": "number"
+							},
+							"sourceKey": {
+								"anyOf": [
+									{
+										"type": "string"
+									},
+									{
+										"type": "null"
+									}
+								]
+							},
+							"deleted": {
+								"type": "boolean"
+							}
+						}
+					}
+				},
+				"required": [
+					"kind",
+					"id",
+					"fields"
+				]
+			},
+			"PushKey": {
+				"type": "object",
+				"properties": {
+					"publicKey": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"publicKey"
+				]
+			},
+			"PushSchedule": {
+				"type": "object",
+				"properties": {
+					"notifications": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/ScheduledPush"
+						}
+					}
+				},
+				"required": [
+					"notifications"
+				]
+			},
+			"PushSubscription": {
+				"type": "object",
+				"properties": {
+					"endpoint": {
+						"type": "string",
+						"format": "uri"
+					},
+					"keys": {
+						"type": "object",
+						"properties": {
+							"p256dh": {
+								"type": "string",
+								"minLength": 1
+							},
+							"auth": {
+								"type": "string",
+								"minLength": 1
+							}
+						},
+						"required": [
+							"p256dh",
+							"auth"
+						]
+					}
+				},
+				"required": [
+					"endpoint",
+					"keys"
+				]
+			},
+			"Recurrence": {
+				"anyOf": [
+					{
+						"type": "object",
+						"properties": {
+							"interval": {
+								"type": "integer",
+								"minimum": -9007199254740991,
+								"maximum": 9007199254740991,
+								"exclusiveMinimum": 0
+							},
+							"unit": {
+								"enum": [
+									"day",
+									"weekday",
+									"month",
+									"year"
+								],
+								"type": "string"
+							}
+						},
+						"required": [
+							"interval",
+							"unit"
+						]
+					},
+					{
+						"type": "object",
+						"properties": {
+							"interval": {
+								"type": "integer",
+								"minimum": -9007199254740991,
+								"maximum": 9007199254740991,
+								"exclusiveMinimum": 0
+							},
+							"unit": {
+								"const": "week"
+							},
+							"days": {
+								"type": "array",
+								"minItems": 2,
+								"items": {
+									"enum": [
+										0,
+										1,
+										2,
+										3,
+										4,
+										5,
+										6
+									]
+								},
+								"readOnly": true
+							}
+						},
+						"required": [
+							"interval",
+							"unit"
+						]
+					}
+				]
+			},
+			"Reminder": {
+				"anyOf": [
+					{
+						"type": "object",
+						"properties": {
+							"kind": {
+								"const": "before"
+							},
+							"minutes": {
+								"type": "integer",
+								"minimum": 0,
+								"maximum": 9007199254740991
+							}
+						},
+						"required": [
+							"kind",
+							"minutes"
+						]
+					},
+					{
+						"type": "object",
+						"properties": {
+							"kind": {
+								"const": "at"
+							},
+							"date": {
+								"type": "string",
+								"pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+							},
+							"time": {
+								"type": "string",
+								"pattern": "^\\d{2}:\\d{2}$"
+							}
+						},
+						"required": [
+							"kind",
+							"date",
+							"time"
+						]
+					}
+				]
+			},
+			"ScheduledPush": {
+				"type": "object",
+				"properties": {
+					"at": {
+						"type": "number"
+					},
+					"taskId": {
+						"type": "string"
+					},
+					"title": {
+						"type": "string"
+					},
+					"body": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"at",
+					"taskId",
+					"title",
+					"body"
+				]
+			},
+			"Settings": {
+				"type": "object",
+				"properties": {
+					"timeZone": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"type": "null"
+							}
+						]
+					}
+				},
+				"required": [
+					"timeZone"
+				]
+			},
+			"SettingsPatch": {
+				"type": "object",
+				"properties": {
+					"kind": {
+						"const": "settings"
+					},
+					"id": {
+						"type": "string"
+					},
+					"fields": {
+						"type": "object",
+						"properties": {
+							"timeZone": {
+								"anyOf": [
+									{
+										"type": "string"
+									},
+									{
+										"type": "null"
+									}
+								]
+							},
+							"deleted": {
+								"type": "boolean"
+							}
+						}
+					}
+				},
+				"required": [
+					"kind",
+					"id",
+					"fields"
+				]
+			},
+			"Snapshot": {
+				"type": "object",
+				"properties": {
+					"tasks": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/Task"
+						}
+					},
+					"projects": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/Project"
+						}
+					},
+					"labels": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/Label"
+						}
+					},
+					"settings": {
+						"$ref": "#/components/schemas/Settings"
+					}
+				},
+				"required": [
+					"tasks",
+					"projects",
+					"labels",
+					"settings"
+				]
+			},
+			"SyncRequest": {
+				"type": "object",
+				"properties": {
+					"cursor": {
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 9007199254740991
+					},
+					"ops": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/Op"
+						}
+					},
+					"epoch": {
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 9007199254740991,
+						"default": 0
+					},
+					"reset": {
+						"type": "boolean"
+					}
+				},
+				"required": [
+					"cursor",
+					"ops"
+				]
+			},
+			"SyncResponse": {
+				"anyOf": [
+					{
+						"type": "object",
+						"properties": {
+							"acked": {
+								"type": "array",
+								"items": {
+									"type": "string"
+								}
+							},
+							"changes": {
+								"type": "array",
+								"items": {
+									"$ref": "#/components/schemas/Change"
+								}
+							},
+							"cursor": {
+								"type": "integer",
+								"minimum": 0,
+								"maximum": 9007199254740991
+							},
+							"hlc": {
+								"type": "string"
+							},
+							"epoch": {
+								"type": "integer",
+								"minimum": 0,
+								"maximum": 9007199254740991
+							}
+						},
+						"required": [
+							"acked",
+							"changes",
+							"cursor",
+							"hlc",
+							"epoch"
+						]
+					},
+					{
+						"type": "object",
+						"properties": {
+							"acked": {
+								"type": "array",
+								"items": {
+									"type": "string"
+								}
+							},
+							"snapshot": {
+								"$ref": "#/components/schemas/Snapshot"
+							},
+							"cursor": {
+								"type": "integer",
+								"minimum": 0,
+								"maximum": 9007199254740991
+							},
+							"hlc": {
+								"type": "string"
+							},
+							"epoch": {
+								"type": "integer",
+								"minimum": 0,
+								"maximum": 9007199254740991
+							}
+						},
+						"required": [
+							"acked",
+							"snapshot",
+							"cursor",
+							"hlc",
+							"epoch"
+						]
+					}
+				]
+			},
+			"Task": {
+				"type": "object",
+				"properties": {
+					"parentId": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"type": "null"
+							}
+						]
+					},
+					"order": {
+						"type": "number"
+					},
+					"title": {
+						"type": "string"
+					},
+					"notes": {
+						"type": "string"
+					},
+					"projectId": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"type": "null"
+							}
+						]
+					},
+					"labelIds": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						}
+					},
+					"due": {
+						"anyOf": [
+							{
+								"$ref": "#/components/schemas/Due"
+							},
+							{
+								"type": "null"
+							}
+						]
+					},
+					"recurrence": {
+						"anyOf": [
+							{
+								"$ref": "#/components/schemas/Recurrence"
+							},
+							{
+								"type": "null"
+							}
+						]
+					},
+					"priority": {
+						"anyOf": [
+							{
+								"const": 1
+							},
+							{
+								"const": 2
+							},
+							{
+								"const": 3
+							},
+							{
+								"const": 4
+							}
+						]
+					},
+					"reminders": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/Reminder"
+						}
+					},
+					"createdAt": {
+						"type": "number"
+					},
+					"completedAt": {
+						"anyOf": [
+							{
+								"type": "number"
+							},
+							{
+								"type": "null"
+							}
+						]
+					},
+					"sourceKey": {
+						"type": "string"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"parentId",
+					"order",
+					"title",
+					"notes",
+					"projectId",
+					"labelIds",
+					"due",
+					"recurrence",
+					"priority",
+					"reminders",
+					"createdAt",
+					"completedAt",
+					"id"
+				]
+			},
+			"TaskPatch": {
+				"type": "object",
+				"properties": {
+					"kind": {
+						"const": "task"
+					},
+					"id": {
+						"type": "string"
+					},
+					"fields": {
+						"type": "object",
+						"properties": {
+							"parentId": {
+								"anyOf": [
+									{
+										"type": "string"
+									},
+									{
+										"type": "null"
+									}
+								]
+							},
+							"order": {
+								"type": "number"
+							},
+							"title": {
+								"type": "string"
+							},
+							"notes": {
+								"type": "string"
+							},
+							"projectId": {
+								"anyOf": [
+									{
+										"type": "string"
+									},
+									{
+										"type": "null"
+									}
+								]
+							},
+							"labelIds": {
+								"type": "array",
+								"items": {
+									"type": "string"
+								}
+							},
+							"due": {
+								"anyOf": [
+									{
+										"$ref": "#/components/schemas/Due"
+									},
+									{
+										"type": "null"
+									}
+								]
+							},
+							"recurrence": {
+								"anyOf": [
+									{
+										"$ref": "#/components/schemas/Recurrence"
+									},
+									{
+										"type": "null"
+									}
+								]
+							},
+							"priority": {
+								"anyOf": [
+									{
+										"const": 1
+									},
+									{
+										"const": 2
+									},
+									{
+										"const": 3
+									},
+									{
+										"const": 4
+									}
+								]
+							},
+							"reminders": {
+								"type": "array",
+								"items": {
+									"$ref": "#/components/schemas/Reminder"
+								}
+							},
+							"createdAt": {
+								"type": "number"
+							},
+							"completedAt": {
+								"anyOf": [
+									{
+										"type": "number"
+									},
+									{
+										"type": "null"
+									}
+								]
+							},
+							"sourceKey": {
+								"anyOf": [
+									{
+										"type": "string"
+									},
+									{
+										"type": "null"
+									}
+								]
+							},
+							"deleted": {
+								"type": "boolean"
+							}
+						}
+					}
+				},
+				"required": [
+					"kind",
+					"id",
+					"fields"
+				]
+			}
+		}
+	},
+	"paths": {
+		"/api/status": {
+			"get": {
+				"operationId": "status",
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Ok"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/auth/methods": {
+			"get": {
+				"operationId": "auth.methods",
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/AuthMethods"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/account/delete": {
+			"post": {
+				"operationId": "account.delete",
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Ok"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"type": "object",
+											"properties": {
+												"defined": {
+													"const": true
+												},
+												"code": {
+													"const": "UNAUTHORIZED"
+												},
+												"status": {
+													"const": 401
+												},
+												"message": {
+													"type": "string",
+													"default": "Unauthorized"
+												},
+												"data": {}
+											},
+											"required": [
+												"defined",
+												"code",
+												"status",
+												"message"
+											]
+										},
+										{
+											"type": "object",
+											"properties": {
+												"defined": {
+													"const": false
+												},
+												"code": {
+													"type": "string"
+												},
+												"status": {
+													"type": "number"
+												},
+												"message": {
+													"type": "string"
+												},
+												"data": {}
+											},
+											"required": [
+												"defined",
+												"code",
+												"status",
+												"message"
+											]
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"type": "object",
+											"properties": {
+												"defined": {
+													"const": true
+												},
+												"code": {
+													"const": "SERVICE_UNAVAILABLE"
+												},
+												"status": {
+													"const": 503
+												},
+												"message": {
+													"type": "string",
+													"default": "Service Unavailable"
+												},
+												"data": {}
+											},
+											"required": [
+												"defined",
+												"code",
+												"status",
+												"message"
+											]
+										},
+										{
+											"type": "object",
+											"properties": {
+												"defined": {
+													"const": false
+												},
+												"code": {
+													"type": "string"
+												},
+												"status": {
+													"type": "number"
+												},
+												"message": {
+													"type": "string"
+												},
+												"data": {}
+											},
+											"required": [
+												"defined",
+												"code",
+												"status",
+												"message"
+											]
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/push/key": {
+			"get": {
+				"operationId": "push.key",
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PushKey"
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"type": "object",
+											"properties": {
+												"defined": {
+													"const": true
+												},
+												"code": {
+													"const": "SERVICE_UNAVAILABLE"
+												},
+												"status": {
+													"const": 503
+												},
+												"message": {
+													"type": "string",
+													"default": "Service Unavailable"
+												},
+												"data": {}
+											},
+											"required": [
+												"defined",
+												"code",
+												"status",
+												"message"
+											]
+										},
+										{
+											"type": "object",
+											"properties": {
+												"defined": {
+													"const": false
+												},
+												"code": {
+													"type": "string"
+												},
+												"status": {
+													"type": "number"
+												},
+												"message": {
+													"type": "string"
+												},
+												"data": {}
+											},
+											"required": [
+												"defined",
+												"code",
+												"status",
+												"message"
+											]
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/push/test": {
+			"post": {
+				"operationId": "push.test",
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"subscription": {
+										"$ref": "#/components/schemas/PushSubscription"
+									}
+								},
+								"required": [
+									"subscription"
+								]
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Ok"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"type": "object",
+											"properties": {
+												"defined": {
+													"const": true
+												},
+												"code": {
+													"const": "UNAUTHORIZED"
+												},
+												"status": {
+													"const": 401
+												},
+												"message": {
+													"type": "string",
+													"default": "Unauthorized"
+												},
+												"data": {}
+											},
+											"required": [
+												"defined",
+												"code",
+												"status",
+												"message"
+											]
+										},
+										{
+											"type": "object",
+											"properties": {
+												"defined": {
+													"const": false
+												},
+												"code": {
+													"type": "string"
+												},
+												"status": {
+													"type": "number"
+												},
+												"message": {
+													"type": "string"
+												},
+												"data": {}
+											},
+											"required": [
+												"defined",
+												"code",
+												"status",
+												"message"
+											]
+										}
+									]
+								}
+							}
+						}
+					},
+					"410": {
+						"description": "410",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"type": "object",
+											"properties": {
+												"defined": {
+													"const": true
+												},
+												"code": {
+													"const": "PUSH_GONE"
+												},
+												"status": {
+													"const": 410
+												},
+												"message": {
+													"type": "string",
+													"default": "PUSH_GONE"
+												},
+												"data": {
+													"type": "object",
+													"properties": {
+														"status": {
+															"anyOf": [
+																{
+																	"type": "integer",
+																	"minimum": -9007199254740991,
+																	"maximum": 9007199254740991
+																},
+																{
+																	"type": "null"
+																}
+															]
+														}
+													},
+													"required": [
+														"status"
+													]
+												}
+											},
+											"required": [
+												"defined",
+												"code",
+												"status",
+												"message",
+												"data"
+											]
+										},
+										{
+											"type": "object",
+											"properties": {
+												"defined": {
+													"const": false
+												},
+												"code": {
+													"type": "string"
+												},
+												"status": {
+													"type": "number"
+												},
+												"message": {
+													"type": "string"
+												},
+												"data": {}
+											},
+											"required": [
+												"defined",
+												"code",
+												"status",
+												"message"
+											]
+										}
+									]
+								}
+							}
+						}
+					},
+					"502": {
+						"description": "502",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"type": "object",
+											"properties": {
+												"defined": {
+													"const": true
+												},
+												"code": {
+													"const": "PUSH_FAILED"
+												},
+												"status": {
+													"const": 502
+												},
+												"message": {
+													"type": "string",
+													"default": "PUSH_FAILED"
+												},
+												"data": {
+													"type": "object",
+													"properties": {
+														"status": {
+															"anyOf": [
+																{
+																	"type": "integer",
+																	"minimum": -9007199254740991,
+																	"maximum": 9007199254740991
+																},
+																{
+																	"type": "null"
+																}
+															]
+														}
+													},
+													"required": [
+														"status"
+													]
+												}
+											},
+											"required": [
+												"defined",
+												"code",
+												"status",
+												"message",
+												"data"
+											]
+										},
+										{
+											"type": "object",
+											"properties": {
+												"defined": {
+													"const": false
+												},
+												"code": {
+													"type": "string"
+												},
+												"status": {
+													"type": "number"
+												},
+												"message": {
+													"type": "string"
+												},
+												"data": {}
+											},
+											"required": [
+												"defined",
+												"code",
+												"status",
+												"message"
+											]
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"type": "object",
+											"properties": {
+												"defined": {
+													"const": true
+												},
+												"code": {
+													"const": "SERVICE_UNAVAILABLE"
+												},
+												"status": {
+													"const": 503
+												},
+												"message": {
+													"type": "string",
+													"default": "Service Unavailable"
+												},
+												"data": {}
+											},
+											"required": [
+												"defined",
+												"code",
+												"status",
+												"message"
+											]
+										},
+										{
+											"type": "object",
+											"properties": {
+												"defined": {
+													"const": false
+												},
+												"code": {
+													"type": "string"
+												},
+												"status": {
+													"type": "number"
+												},
+												"message": {
+													"type": "string"
+												},
+												"data": {}
+											},
+											"required": [
+												"defined",
+												"code",
+												"status",
+												"message"
+											]
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/push/subscription": {
+			"put": {
+				"operationId": "push.subscribe",
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"subscription": {
+										"$ref": "#/components/schemas/PushSubscription"
+									}
+								},
+								"required": [
+									"subscription"
+								]
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Ok"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"type": "object",
+											"properties": {
+												"defined": {
+													"const": true
+												},
+												"code": {
+													"const": "UNAUTHORIZED"
+												},
+												"status": {
+													"const": 401
+												},
+												"message": {
+													"type": "string",
+													"default": "Unauthorized"
+												},
+												"data": {}
+											},
+											"required": [
+												"defined",
+												"code",
+												"status",
+												"message"
+											]
+										},
+										{
+											"type": "object",
+											"properties": {
+												"defined": {
+													"const": false
+												},
+												"code": {
+													"type": "string"
+												},
+												"status": {
+													"type": "number"
+												},
+												"message": {
+													"type": "string"
+												},
+												"data": {}
+											},
+											"required": [
+												"defined",
+												"code",
+												"status",
+												"message"
+											]
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"type": "object",
+											"properties": {
+												"defined": {
+													"const": true
+												},
+												"code": {
+													"const": "SERVICE_UNAVAILABLE"
+												},
+												"status": {
+													"const": 503
+												},
+												"message": {
+													"type": "string",
+													"default": "Service Unavailable"
+												},
+												"data": {}
+											},
+											"required": [
+												"defined",
+												"code",
+												"status",
+												"message"
+											]
+										},
+										{
+											"type": "object",
+											"properties": {
+												"defined": {
+													"const": false
+												},
+												"code": {
+													"type": "string"
+												},
+												"status": {
+													"type": "number"
+												},
+												"message": {
+													"type": "string"
+												},
+												"data": {}
+											},
+											"required": [
+												"defined",
+												"code",
+												"status",
+												"message"
+											]
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			},
+			"delete": {
+				"operationId": "push.unsubscribe",
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Ok"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"type": "object",
+											"properties": {
+												"defined": {
+													"const": true
+												},
+												"code": {
+													"const": "UNAUTHORIZED"
+												},
+												"status": {
+													"const": 401
+												},
+												"message": {
+													"type": "string",
+													"default": "Unauthorized"
+												},
+												"data": {}
+											},
+											"required": [
+												"defined",
+												"code",
+												"status",
+												"message"
+											]
+										},
+										{
+											"type": "object",
+											"properties": {
+												"defined": {
+													"const": false
+												},
+												"code": {
+													"type": "string"
+												},
+												"status": {
+													"type": "number"
+												},
+												"message": {
+													"type": "string"
+												},
+												"data": {}
+											},
+											"required": [
+												"defined",
+												"code",
+												"status",
+												"message"
+											]
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"type": "object",
+											"properties": {
+												"defined": {
+													"const": true
+												},
+												"code": {
+													"const": "SERVICE_UNAVAILABLE"
+												},
+												"status": {
+													"const": 503
+												},
+												"message": {
+													"type": "string",
+													"default": "Service Unavailable"
+												},
+												"data": {}
+											},
+											"required": [
+												"defined",
+												"code",
+												"status",
+												"message"
+											]
+										},
+										{
+											"type": "object",
+											"properties": {
+												"defined": {
+													"const": false
+												},
+												"code": {
+													"type": "string"
+												},
+												"status": {
+													"type": "number"
+												},
+												"message": {
+													"type": "string"
+												},
+												"data": {}
+											},
+											"required": [
+												"defined",
+												"code",
+												"status",
+												"message"
+											]
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/push/schedule": {
+			"get": {
+				"operationId": "push.schedule",
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PushSchedule"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"type": "object",
+											"properties": {
+												"defined": {
+													"const": true
+												},
+												"code": {
+													"const": "UNAUTHORIZED"
+												},
+												"status": {
+													"const": 401
+												},
+												"message": {
+													"type": "string",
+													"default": "Unauthorized"
+												},
+												"data": {}
+											},
+											"required": [
+												"defined",
+												"code",
+												"status",
+												"message"
+											]
+										},
+										{
+											"type": "object",
+											"properties": {
+												"defined": {
+													"const": false
+												},
+												"code": {
+													"type": "string"
+												},
+												"status": {
+													"type": "number"
+												},
+												"message": {
+													"type": "string"
+												},
+												"data": {}
+											},
+											"required": [
+												"defined",
+												"code",
+												"status",
+												"message"
+											]
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"type": "object",
+											"properties": {
+												"defined": {
+													"const": true
+												},
+												"code": {
+													"const": "SERVICE_UNAVAILABLE"
+												},
+												"status": {
+													"const": 503
+												},
+												"message": {
+													"type": "string",
+													"default": "Service Unavailable"
+												},
+												"data": {}
+											},
+											"required": [
+												"defined",
+												"code",
+												"status",
+												"message"
+											]
+										},
+										{
+											"type": "object",
+											"properties": {
+												"defined": {
+													"const": false
+												},
+												"code": {
+													"type": "string"
+												},
+												"status": {
+													"type": "number"
+												},
+												"message": {
+													"type": "string"
+												},
+												"data": {}
+											},
+											"required": [
+												"defined",
+												"code",
+												"status",
+												"message"
+											]
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/sync": {
+			"post": {
+				"operationId": "sync",
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/SyncRequest"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/SyncResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"type": "object",
+											"properties": {
+												"defined": {
+													"const": true
+												},
+												"code": {
+													"const": "UNAUTHORIZED"
+												},
+												"status": {
+													"const": 401
+												},
+												"message": {
+													"type": "string",
+													"default": "Unauthorized"
+												},
+												"data": {}
+											},
+											"required": [
+												"defined",
+												"code",
+												"status",
+												"message"
+											]
+										},
+										{
+											"type": "object",
+											"properties": {
+												"defined": {
+													"const": false
+												},
+												"code": {
+													"type": "string"
+												},
+												"status": {
+													"type": "number"
+												},
+												"message": {
+													"type": "string"
+												},
+												"data": {}
+											},
+											"required": [
+												"defined",
+												"code",
+												"status",
+												"message"
+											]
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"type": "object",
+											"properties": {
+												"defined": {
+													"const": true
+												},
+												"code": {
+													"const": "SERVICE_UNAVAILABLE"
+												},
+												"status": {
+													"const": 503
+												},
+												"message": {
+													"type": "string",
+													"default": "Service Unavailable"
+												},
+												"data": {}
+											},
+											"required": [
+												"defined",
+												"code",
+												"status",
+												"message"
+											]
+										},
+										{
+											"type": "object",
+											"properties": {
+												"defined": {
+													"const": false
+												},
+												"code": {
+													"type": "string"
+												},
+												"status": {
+													"type": "number"
+												},
+												"message": {
+													"type": "string"
+												},
+												"data": {}
+											},
+											"required": [
+												"defined",
+												"code",
+												"status",
+												"message"
+											]
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}

@@ -3,6 +3,9 @@ import Foundation
 
 /// Field-level sync for the local document: diff a commit into the outbox, and apply the server's answer.
 public enum SyncEngine {
+    /// The most log rows one response carries. A full page means another round is due.
+    public static let pageSize = 1000
+
     /// Gives a document its sync section, and queues whatever is already stored so the first sync uploads it.
     public static func ensure(_ snapshot: inout Snapshot, deviceId: String, now: Int, timeZone: String, nextOpId: () -> String) {
         guard snapshot.sync == nil else { return }
@@ -105,6 +108,19 @@ public enum SyncEngine {
         ]
         if sync.reset { body["reset"] = true }
         return try? JSONSerialization.data(withJSONObject: body)
+    }
+
+    /// The body of `POST /api/sync` as the contract types it, or nil when this document has not started. Throws when
+    /// the outbox holds an op the contract rejects, which the server would answer with a 400.
+    public static func request(_ snapshot: Snapshot) throws -> API.SyncRequest? {
+        guard let json = requestJSON(snapshot) else { return nil }
+        return try JSONDecoder().decode(API.SyncRequest.self, from: json)
+    }
+
+    /// Applies a response the contract already decoded. `Nullable` keeps every `null`, so the JSON is the same.
+    public static func apply(_ snapshot: inout Snapshot, response: API.SyncResponse) -> Bool {
+        guard let json = try? JSONEncoder().encode(response) else { return false }
+        return apply(&snapshot, response: json)
     }
 
     /// Applies a sync response. A new epoch drops the outbox so a wiped copy cannot be uploaded again.
