@@ -71,7 +71,9 @@ describe.each(storeFactories)('POST /api/sync on the %s store', (_name, createSt
 
 	test('rejects a missing, unknown, or revoked token, and an invalid body', async () => {
 		expect((await post({ cursor: 0, ops: [] })).status).toBe(401);
-		expect((await post({ cursor: 0, ops: [] }, { token: 'made-up', deviceId: 'device-made-up', cookie: '' })).status).toBe(401);
+		expect(
+			(await post({ cursor: 0, ops: [] }, { token: 'made-up', deviceId: 'device-made-up', cookie: '' })).status,
+		).toBe(401);
 
 		const cred = await setup();
 		expect((await post({ cursor: -1, ops: [] }, cred)).status).toBe(400);
@@ -202,6 +204,39 @@ describe.each(storeFactories)('POST /api/sync on the %s store', (_name, createSt
 		]);
 		const ids = new Set(server!.tasks.map(t => t.id));
 		expect(server!.tasks.every(t => t.parentId === null || ids.has(t.parentId))).toBe(true);
+	});
+
+	test('accepts the 0 and 1 that older iOS builds sent as booleans', async () => {
+		const cred = await setup('iPhone');
+		const fields = {
+			deleted: false,
+			title: 'From the phone',
+			notes: '',
+			order: false,
+			priority: true,
+			labelIds: [],
+			reminders: [{ kind: 'before', minutes: false }],
+			recurrence: { interval: true, unit: 'week', days: [false, true] },
+			due: { date: '2026-10-12', time: null },
+			parentId: null,
+			projectId: null,
+			completedAt: null,
+			createdAt: NOW,
+			sourceKey: null,
+		};
+		const response = await post(
+			{ cursor: 0, epoch: 0, ops: [{ ...op('legacy', `${NOW}:0:phone`, {}), fields }] },
+			cred,
+		);
+		expect(response.status).toBe(200);
+		const body = (await response.json()) as SyncResponse;
+		expect(body.acked).toEqual(['legacy']);
+		expect('snapshot' in body && body.snapshot.tasks[0]).toMatchObject({
+			order: 0,
+			priority: 1,
+			reminders: [{ kind: 'before', minutes: 0 }],
+			recurrence: { interval: 1, unit: 'week', days: [0, 1] },
+		});
 	});
 
 	test('reset wipes tasks and a stale epoch cannot bring them back', async () => {

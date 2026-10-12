@@ -163,3 +163,42 @@ export const SOCKET_REVOKED = 4401;
 
 export const nudgeSchema = z.object({ cursor });
 export type Nudge = z.infer<typeof nudgeSchema>;
+
+const asNumber = (value: unknown) => (typeof value === 'boolean' ? Number(value) : value);
+
+/**
+ * iOS builds up to 2026.1011.235500 read every JSON 0 and 1 back as a boolean when they built an op, so a field
+ * such as `order: 0` or `priority: 1` went out as `false` or `true`, and the push failed validation. Only 0 and 1
+ * were turned into booleans, so turning them back is exact. Their stored outboxes still hold those ops.
+ */
+export function repairBooleanNumbers(body: unknown): unknown {
+	if (!body || typeof body !== 'object' || !Array.isArray((body as { ops?: unknown }).ops)) return body;
+	const ops = (body as { ops: unknown[] }).ops.map(op => {
+		if (!op || typeof op !== 'object') return op;
+		const { kind, fields } = op as { kind?: unknown; fields?: Record<string, unknown> };
+		if (!fields || typeof fields !== 'object' || kind === 'settings') return op;
+		const next: Record<string, unknown> = { ...fields };
+		for (const name of ['order', 'createdAt', 'completedAt', 'priority']) {
+			if (name in next) next[name] = asNumber(next[name]);
+		}
+		if (kind === 'task') {
+			const recurrence = next.recurrence as Record<string, unknown> | null | undefined;
+			if (recurrence && typeof recurrence === 'object') {
+				next.recurrence = {
+					...recurrence,
+					interval: asNumber(recurrence.interval),
+					...(Array.isArray(recurrence.days) ? { days: recurrence.days.map(asNumber) } : {}),
+				};
+			}
+			if (Array.isArray(next.reminders)) {
+				next.reminders = next.reminders.map(reminder =>
+					reminder && typeof reminder === 'object' && 'minutes' in reminder
+						? { ...reminder, minutes: asNumber((reminder as { minutes: unknown }).minutes) }
+						: reminder,
+				);
+			}
+		}
+		return { ...op, fields: next };
+	});
+	return { ...body, ops };
+}

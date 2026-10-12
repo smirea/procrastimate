@@ -275,11 +275,12 @@ private func jsonFields(_ object: [String: Any]) -> [String: JSONValue] {
 private func jsonValue(_ value: Any) -> JSONValue? {
     if value is NSNull { return .null }
     if let value = value as? String { return .string(value) }
-    if let value = value as? Bool { return .bool(value) }
+    // Before `as? Bool`: on Apple platforms a JSON 0 or 1 casts to Bool too, which sent `order: 0` as `false`.
     if let value = value as? NSNumber {
         if CFGetTypeID(value) == CFBooleanGetTypeID() { return .bool(value.boolValue) }
         return .number(value.doubleValue)
     }
+    if let value = value as? Bool { return .bool(value) }
     if let value = value as? [Any] { return .array(value.compactMap(jsonValue)) }
     if let value = value as? [String: Any] { return .object(value.compactMapValues(jsonValue)) }
     return nil
