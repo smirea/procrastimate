@@ -8,7 +8,6 @@ import { join, relative } from 'node:path';
 const HAND_WRITTEN: Record<string, string> = {
 	JSONValue: 'Any JSON value, which no schema names.',
 	SyncOp: "An outbox op, whose fields Core's diff handles as JSON values.",
-	Kind: "SyncOp's kind.",
 	NameHit: 'Generic over the matched item, which JSON Schema cannot express.',
 	Lenient: 'A decoding helper that drops one bad array element.',
 	StoredTask: "The stored document's loading rules in front of the generated task.",

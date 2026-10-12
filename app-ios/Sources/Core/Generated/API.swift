@@ -645,6 +645,15 @@ extension API {
         public var id: String { rawValue }
     }
 
+    public enum EntityKind: String, Codable, Hashable, Sendable, CaseIterable, Identifiable {
+        case project = "project"
+        case label = "label"
+        case task = "task"
+        case settings = "settings"
+
+        public var id: String { rawValue }
+    }
+
     /// One matched text and the half-open spans to highlight in it.
     public struct Highlight: Codable, Hashable, Sendable {
         public var text: String

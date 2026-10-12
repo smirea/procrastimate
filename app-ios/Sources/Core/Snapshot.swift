@@ -2,9 +2,7 @@ import Foundation
 
 /// A change waiting to sync, as `docs/decisions/sync.md` describes it. `fields` holds the changed fields' new values.
 public struct SyncOp: Hashable, Codable, Sendable {
-    public enum Kind: String, Codable, Sendable {
-        case task, project, label, settings
-    }
+    public typealias Kind = API.EntityKind
 
     public var opId: String
     public var hlc: String

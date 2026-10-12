@@ -7,7 +7,7 @@ import {
 	tasksRowSchema,
 } from '../db/generated/zod.ts';
 import { hlcSchema } from '../db/json.ts';
-import type { Kind } from './kinds.ts';
+import { KINDS, type Kind } from './kinds.ts';
 
 /**
  * The wire format of `POST /api/sync`. An op carries the new values of the fields one command changed
@@ -16,6 +16,8 @@ import type { Kind } from './kinds.ts';
  */
 
 export { KINDS, type Kind } from './kinds.ts';
+
+export const kindSchema = z.enum(KINDS).meta({ id: 'EntityKind' });
 
 /** The id of the one settings record. */
 export const SETTINGS_ID = 'settings';
