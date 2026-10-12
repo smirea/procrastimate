@@ -1,4 +1,4 @@
-import type { PushScheduleResponse } from 'shared/push.ts';
+import type { PushScheduleResponse } from 'shared/api/contract.ts';
 import { App, deviceHeader, expect, NOW, test as base } from '../fixtures.ts';
 
 export { NOW };
@@ -133,7 +133,7 @@ export class PhoneApp extends App {
 
 	/** What the server will push to this device for `title`, as `title@<ISO time>: body`, like the iOS readout. */
 	async serverSchedule(title: string) {
-				const response = await this.page.request.get('/api/push/schedule', {
+		const response = await this.page.request.get('/api/push/schedule', {
 			headers: await deviceHeader(this.page),
 		});
 		const { notifications } = (await response.json()) as PushScheduleResponse;

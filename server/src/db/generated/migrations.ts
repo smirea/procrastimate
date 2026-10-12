@@ -2,17 +2,31 @@
 export const migrations: { tag: string; when: number; statements: string[] }[] = [
 	{
 		"tag": "0000_baseline",
-		"when": 1791797247086,
+		"when": 1791803336945,
 		"statements": [
-			"CREATE TABLE IF NOT EXISTS `devices` (\n\t`user_id` text NOT NULL,\n\t`id` text NOT NULL,\n\t`name` text NOT NULL,\n\t`token_hash` text NOT NULL,\n\t`created_at` integer NOT NULL,\n\t`last_seen_at` integer NOT NULL,\n\t`revoked_at` integer,\n\tPRIMARY KEY(`user_id`, `id`)\n);",
-			"CREATE UNIQUE INDEX IF NOT EXISTS `devices_token_hash_unique` ON `devices` (`token_hash`);",
-			"CREATE TABLE IF NOT EXISTS `entities` (\n\t`user_id` text NOT NULL,\n\t`kind` text NOT NULL,\n\t`id` text NOT NULL,\n\t`data` text NOT NULL,\n\t`clocks` text NOT NULL,\n\tPRIMARY KEY(`user_id`, `kind`, `id`)\n);",
-			"CREATE TABLE IF NOT EXISTS `log` (\n\t`user_id` text NOT NULL,\n\t`seq` integer NOT NULL,\n\t`op_id` text NOT NULL,\n\t`kind` text NOT NULL,\n\t`id` text NOT NULL,\n\t`fields` text NOT NULL,\n\tPRIMARY KEY(`user_id`, `seq`)\n);",
-			"CREATE INDEX IF NOT EXISTS `log_op_id` ON `log` (`user_id`,`op_id`);",
-			"CREATE TABLE IF NOT EXISTS `meta` (\n\t`user_id` text NOT NULL,\n\t`key` text NOT NULL,\n\t`value` text NOT NULL,\n\tPRIMARY KEY(`user_id`, `key`)\n);",
-			"CREATE TABLE IF NOT EXISTS `push` (\n\t`user_id` text NOT NULL,\n\t`device_id` text NOT NULL,\n\t`subscription` text NOT NULL,\n\t`notifications` text NOT NULL,\n\t`delivered_through` integer NOT NULL,\n\tPRIMARY KEY(`user_id`, `device_id`)\n);",
-			"CREATE TABLE IF NOT EXISTS `ramble_budget` (\n\t`day` text PRIMARY KEY NOT NULL,\n\t`seconds` real NOT NULL\n);",
-			"CREATE TABLE IF NOT EXISTS `ramble_usage` (\n\t`user_id` text NOT NULL,\n\t`day` text NOT NULL,\n\t`seconds` real NOT NULL,\n\tPRIMARY KEY(`user_id`, `day`)\n);"
+			"CREATE TABLE `devices` (\n\t`user_id` text NOT NULL,\n\t`id` text NOT NULL,\n\t`name` text NOT NULL,\n\t`token_hash` text NOT NULL,\n\t`created_at` integer NOT NULL,\n\t`last_seen_at` integer NOT NULL,\n\t`revoked_at` integer,\n\tPRIMARY KEY(`user_id`, `id`)\n);",
+			"CREATE UNIQUE INDEX `devices_token_hash_unique` ON `devices` (`token_hash`);",
+			"CREATE TABLE `labels` (\n\t`user_id` text NOT NULL,\n\t`id` text NOT NULL,\n\t`name` text NOT NULL,\n\t`created_at` integer NOT NULL,\n\t`deleted` integer DEFAULT false NOT NULL,\n\t`clocks` text NOT NULL,\n\tPRIMARY KEY(`user_id`, `id`)\n);",
+			"CREATE TABLE `log` (\n\t`user_id` text NOT NULL,\n\t`seq` integer NOT NULL,\n\t`op_id` text NOT NULL,\n\t`kind` text NOT NULL,\n\t`id` text NOT NULL,\n\t`fields` text NOT NULL,\n\tPRIMARY KEY(`user_id`, `seq`)\n);",
+			"CREATE INDEX `log_op_id` ON `log` (`user_id`,`op_id`);",
+			"CREATE TABLE `meta` (\n\t`user_id` text NOT NULL,\n\t`key` text NOT NULL,\n\t`value` text NOT NULL,\n\tPRIMARY KEY(`user_id`, `key`)\n);",
+			"CREATE TABLE `projects` (\n\t`user_id` text NOT NULL,\n\t`id` text NOT NULL,\n\t`name` text NOT NULL,\n\t`created_at` integer NOT NULL,\n\t`source_key` text,\n\t`deleted` integer DEFAULT false NOT NULL,\n\t`clocks` text NOT NULL,\n\tPRIMARY KEY(`user_id`, `id`)\n);",
+			"CREATE TABLE `push` (\n\t`user_id` text NOT NULL,\n\t`device_id` text NOT NULL,\n\t`subscription` text NOT NULL,\n\t`notifications` text NOT NULL,\n\t`delivered_through` integer NOT NULL,\n\tPRIMARY KEY(`user_id`, `device_id`)\n);",
+			"CREATE TABLE `ramble_budget` (\n\t`day` text PRIMARY KEY NOT NULL,\n\t`seconds` real NOT NULL\n);",
+			"CREATE TABLE `ramble_usage` (\n\t`user_id` text NOT NULL,\n\t`day` text NOT NULL,\n\t`seconds` real NOT NULL,\n\tPRIMARY KEY(`user_id`, `day`)\n);",
+			"CREATE TABLE `settings` (\n\t`user_id` text NOT NULL,\n\t`id` text NOT NULL,\n\t`time_zone` text,\n\t`clocks` text NOT NULL,\n\tPRIMARY KEY(`user_id`, `id`)\n);",
+			"CREATE TABLE `tasks` (\n\t`user_id` text NOT NULL,\n\t`id` text NOT NULL,\n\t`parent_id` text,\n\t`order` real DEFAULT 0 NOT NULL,\n\t`title` text NOT NULL,\n\t`notes` text DEFAULT '' NOT NULL,\n\t`project_id` text,\n\t`label_ids` text DEFAULT '[]' NOT NULL,\n\t`due` text,\n\t`recurrence` text,\n\t`priority` integer DEFAULT 4 NOT NULL,\n\t`reminders` text DEFAULT '[]' NOT NULL,\n\t`created_at` integer NOT NULL,\n\t`completed_at` integer,\n\t`source_key` text,\n\t`deleted` integer DEFAULT false NOT NULL,\n\t`clocks` text NOT NULL,\n\tPRIMARY KEY(`user_id`, `id`)\n);",
+			"CREATE TABLE `account` (\n\t`id` text PRIMARY KEY NOT NULL,\n\t`accountId` text NOT NULL,\n\t`providerId` text NOT NULL,\n\t`userId` text NOT NULL,\n\t`accessToken` text,\n\t`refreshToken` text,\n\t`idToken` text,\n\t`accessTokenExpiresAt` integer,\n\t`refreshTokenExpiresAt` integer,\n\t`scope` text,\n\t`password` text,\n\t`createdAt` integer NOT NULL,\n\t`updatedAt` integer NOT NULL,\n\tFOREIGN KEY (`userId`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE cascade\n);",
+			"CREATE INDEX `account_userId_idx` ON `account` (`userId`);",
+			"CREATE TABLE `rateLimit` (\n\t`id` text PRIMARY KEY NOT NULL,\n\t`key` text NOT NULL,\n\t`count` integer NOT NULL,\n\t`lastRequest` integer NOT NULL\n);",
+			"CREATE UNIQUE INDEX `rateLimit_key_unique` ON `rateLimit` (`key`);",
+			"CREATE TABLE `session` (\n\t`id` text PRIMARY KEY NOT NULL,\n\t`expiresAt` integer NOT NULL,\n\t`token` text NOT NULL,\n\t`createdAt` integer NOT NULL,\n\t`updatedAt` integer NOT NULL,\n\t`ipAddress` text,\n\t`userAgent` text,\n\t`userId` text NOT NULL,\n\tFOREIGN KEY (`userId`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE cascade\n);",
+			"CREATE UNIQUE INDEX `session_token_unique` ON `session` (`token`);",
+			"CREATE INDEX `session_userId_idx` ON `session` (`userId`);",
+			"CREATE TABLE `user` (\n\t`id` text PRIMARY KEY NOT NULL,\n\t`name` text NOT NULL,\n\t`email` text NOT NULL,\n\t`emailVerified` integer NOT NULL,\n\t`image` text,\n\t`createdAt` integer NOT NULL,\n\t`updatedAt` integer NOT NULL\n);",
+			"CREATE UNIQUE INDEX `user_email_unique` ON `user` (`email`);",
+			"CREATE TABLE `verification` (\n\t`id` text PRIMARY KEY NOT NULL,\n\t`identifier` text NOT NULL,\n\t`value` text NOT NULL,\n\t`expiresAt` integer NOT NULL,\n\t`createdAt` integer NOT NULL,\n\t`updatedAt` integer NOT NULL\n);",
+			"CREATE INDEX `verification_identifier_idx` ON `verification` (`identifier`);"
 		]
 	}
 ];

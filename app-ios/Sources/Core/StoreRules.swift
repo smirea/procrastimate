@@ -1,89 +1,13 @@
 import Foundation
 
-/// Everything the store holds that syncs: tasks, projects, and labels.
-public struct StoreData: Hashable, Codable, Sendable {
-    public var tasks: [TaskItem]
-    public var projects: [Project]
-    public var labels: [Label]
+public typealias StoreData = API.StoreData
+public typealias Creation = API.Creation
+public typealias NewTask = API.NewTask
+public typealias TaskPatch = API.TaskEdit
+public typealias CompletionState = API.CompletionState
+public typealias Completion = API.Completion
 
-    public init(tasks: [TaskItem] = [], projects: [Project] = [], labels: [Label] = []) {
-        self.tasks = tasks
-        self.projects = projects
-        self.labels = labels
-    }
-}
-
-/// What the caller supplies for a new record, so the rules stay deterministic.
-public struct Creation: Sendable {
-    public var id: String
-    /// Epoch milliseconds.
-    public var now: Int
-
-    public init(id: String, now: Int) {
-        self.id = id
-        self.now = now
-    }
-}
-
-public struct NewTask: Hashable, Codable, Sendable {
-    public var title: String
-    public var projectId: String?
-    public var labelIds: [String]
-    public var due: Due?
-    public var recurrence: Recurrence?
-    public var priority: Priority?
-    public var reminders: [Reminder]
-
-    public init(
-        title: String,
-        projectId: String? = nil,
-        labelIds: [String] = [],
-        due: Due? = nil,
-        recurrence: Recurrence? = nil,
-        priority: Priority? = nil,
-        reminders: [Reminder] = []
-    ) {
-        self.title = title
-        self.projectId = projectId
-        self.labelIds = labelIds
-        self.due = due
-        self.recurrence = recurrence
-        self.priority = priority
-        self.reminders = reminders
-    }
-}
-
-/// The editable fields of a task. A nil field is left alone; for nullable fields, `.some(nil)` clears the value.
-public struct TaskPatch: Hashable, Sendable {
-    public var title: String?
-    public var notes: String?
-    public var projectId: String??
-    public var labelIds: [String]?
-    public var due: Due??
-    public var recurrence: Recurrence??
-    public var priority: Priority?
-    public var reminders: [Reminder]?
-
-    public init(
-        title: String? = nil,
-        notes: String? = nil,
-        projectId: String?? = nil,
-        labelIds: [String]? = nil,
-        due: Due?? = nil,
-        recurrence: Recurrence?? = nil,
-        priority: Priority? = nil,
-        reminders: [Reminder]? = nil
-    ) {
-        self.title = title
-        self.notes = notes
-        self.projectId = projectId
-        self.labelIds = labelIds
-        self.due = due
-        self.recurrence = recurrence
-        self.priority = priority
-        self.reminders = reminders
-    }
-
+extension API.TaskEdit {
     func apply(to task: inout TaskItem) {
         if let title { task.title = title }
         if let notes { task.notes = notes }
@@ -94,38 +18,6 @@ public struct TaskPatch: Hashable, Sendable {
         if let priority { task.priority = priority }
         if let reminders { task.reminders = reminders }
     }
-}
-
-/// The fields a completion changes. Undo writes back only these, so edits made since then survive it.
-public struct CompletionState: Hashable, Codable, Sendable {
-    public var id: String
-    public var completedAt: Int?
-    public var due: Due?
-    public var reminders: [Reminder]
-
-    private enum CodingKeys: String, CodingKey { case id, completedAt, due, reminders }
-
-    public init(id: String, completedAt: Int?, due: Due?, reminders: [Reminder]) {
-        self.id = id
-        self.completedAt = completedAt
-        self.due = due
-        self.reminders = reminders
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var c = encoder.container(keyedBy: CodingKeys.self)
-        try c.encode(id, forKey: .id)
-        try c.encode(completedAt, forKey: .completedAt)
-        try c.encode(due, forKey: .due)
-        try c.encode(reminders, forKey: .reminders)
-    }
-}
-
-/// `previous` holds every task the completion changed, as it was, so undo can put them back.
-public struct Completion: Hashable, Sendable {
-    /// The next due date of a repeating task, or nil when the task is done.
-    public var next: Due?
-    public var previous: [CompletionState]
 }
 
 /// The store's commands from `shared/store.ts`, as pure functions over its data, so the Swift store and the web store
@@ -208,7 +100,7 @@ public enum StoreRules {
         let next: Due? = if case let .rolled(due, _) = result { due } else { nil }
         var updated = data
         updated.tasks = put(data.tasks, result.changed)
-        return (updated, Completion(next: next, previous: previous))
+        return (updated, Completion(kind: next == nil ? .done : .rolled, previous: previous, next: next))
     }
 
     public static func reopenTask(_ data: StoreData, _ id: String) -> StoreData {

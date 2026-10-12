@@ -64,8 +64,13 @@ describe('the realtime nudge on the dev server', () => {
 		fetch(`${base}${path}`, {
 			method,
 			headers: cred
-				? { Authorization: `Bearer ${cred.token}`, [DEVICE_HEADER]: cred.deviceId, origin: base }
-				: { origin: base },
+				? {
+						'content-type': 'application/json',
+						Authorization: `Bearer ${cred.token}`,
+						[DEVICE_HEADER]: cred.deviceId,
+						origin: base,
+					}
+				: { 'content-type': 'application/json', origin: base },
 			body: body === undefined ? undefined : JSON.stringify(body),
 		});
 

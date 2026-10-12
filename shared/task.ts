@@ -1,57 +1,11 @@
 import { zonedTime } from './zoned-time.ts';
 
-/** Local calendar date, `YYYY-MM-DD`. */
-export type DateKey = `${number}-${number}-${number}`;
-/** Local wall-clock time, `HH:mm`. */
-export type TimeOfDay = `${number}:${number}`;
+import type { Task } from './sync/protocol.ts';
+import type { DateKey, Due, Recurrence, RecurrenceUnit, Reminder, TimeOfDay, Weekday } from './values.ts';
 
-/** Todoist priorities: 1 is the most urgent, 4 is the unmarked default. */
-export type Priority = 1 | 2 | 3 | 4;
-export const DEFAULT_PRIORITY: Priority = 4;
-
-export type Due = { date: DateKey; time: TimeOfDay | null };
-
-export type Reminder = { kind: 'before'; minutes: number } | { kind: 'at'; date: DateKey; time: TimeOfDay };
-
-/** `weekday` counts Monday to Friday only. */
-export type RecurrenceUnit = 'day' | 'weekday' | 'week' | 'month' | 'year';
-
-/** Sunday is 0, as in `Date#getDay`. */
-export type Weekday = 0 | 1 | 2 | 3 | 4 | 5 | 6;
-
-/**
- * Repeats every `interval` units, counted from the due date. A weekly repeat keeps the due date's
- * weekday, or, with `days`, repeats on each listed weekday of every `interval`-th week. `days` holds
- * two or more weekdays sorted Monday first. Build it with `weeklyOn`, so one day is a plain weekly repeat.
- */
-export type Recurrence =
-	| { interval: number; unit: Exclude<RecurrenceUnit, 'week'> }
-	| { interval: number; unit: 'week'; days?: readonly Weekday[] };
-
-export type Task = {
-	id: string;
-	/** The task this one is a subtask of. A subtask shares its root task's project. */
-	parentId: string | null;
-	/** Position among its siblings, ascending. */
-	order: number;
-	title: string;
-	notes: string;
-	projectId: string | null;
-	labelIds: string[];
-	due: Due | null;
-	recurrence: Recurrence | null;
-	priority: Priority;
-	reminders: Reminder[];
-	createdAt: number;
-	completedAt: number | null;
-	/** Where an imported task came from, such as `todoist:task:…`, so importing the same backup again skips it. */
-	sourceKey?: string;
-};
-
-export type Project = { id: string; name: string; createdAt: number; sourceKey?: string };
-
-/** A tag that crosses projects. A task carries any number of them. */
-export type Label = { id: string; name: string; createdAt: number };
+export type { DateKey, Due, Priority, Recurrence, RecurrenceUnit, Reminder, TimeOfDay, Weekday } from './values.ts';
+export { DEFAULT_PRIORITY } from './values.ts';
+export type { Label, Project, Task } from './sync/protocol.ts';
 
 const pad = (n: number) => String(n).padStart(2, '0');
 

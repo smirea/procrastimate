@@ -34,7 +34,11 @@ test('sign-in is off without a secret, and sync is off without the account', asy
 			await api.fetch(
 				new Request('https://procrastimate.test/api/sync', {
 					method: 'POST',
-					headers: { Authorization: `Bearer ${token}`, [DEVICE_HEADER]: crypto.randomUUID() },
+					headers: {
+						'content-type': 'application/json',
+						Authorization: `Bearer ${token}`,
+						[DEVICE_HEADER]: crypto.randomUUID(),
+					},
 					body: JSON.stringify({ cursor: 0, ops: [] }),
 				}),
 				env,

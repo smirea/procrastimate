@@ -37,7 +37,7 @@ enum APIClient {
         guard (200 ..< 300).contains(http.statusCode) else {
             throw APIFailure.status(http.statusCode, try? JSONDecoder().decode(APIError.self, from: data))
         }
-        return try JSONDecoder().decode(E.Output.self, from: data)
+        return try JSONDecoder.validating().decode(E.Output.self, from: data)
     }
 }
 

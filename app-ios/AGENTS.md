@@ -10,7 +10,7 @@
 - `Sources/App`: the SwiftUI app. `Navigation/` holds `RootView`, `Route`, `Sheet`, and `Navigator`; `Screens/<Area>/` holds one file per screen; `Theme/Tokens.swift` is generated.
 - `Tests/CoreTests`: Swift Testing for `Core`. `VectorTests` replays every case in `shared/vectors/*.json`; a ported function needs a handler there, and a module or function without one fails. `Tests/AppUITests`: XCUITests, `<Area>ParityTests.swift` with `test_<parity_id>`, built on `ParityTestCase`.
 - Search and import live in `CSV`, `Search`, `NameSearch`, and `Todoist`. Their offsets count UTF-16 code units like JavaScript strings (see `UTF16Text`), so convert with `String.Index(utf16Offset:in:)` in views.
-- `Sources/Core/Generated/API.swift` is generated from the server contract by `bun run generate` at the repository root, which `./scripts/run` also runs before each build. Never edit it. Call the API through `APIClient` in `Sources/App/Sync` with an `API.Endpoints` descriptor.
+- `Sources/Core/Generated/API.swift` is generated from the shared schemas by `bun run generate` at the repository root, which `./scripts/run` also runs before each build. Never edit it. Core's model types are typealiases of it in `Model.swift` and next to the code that uses them; add behavior in an extension. A new type both clients need is a Zod schema with an `id` in `shared/`, not a Swift declaration. Call the API through `APIClient` in `Sources/App/Sync` with an `API.Endpoints` descriptor.
 - `Package.swift` declares only `Core` and `CoreTests`. `App.xcodeproj` builds `Core` as a static library, the app, and the UI tests from synchronized folders, so adding files never edits `project.pbxproj`.
 
 # Development

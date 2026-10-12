@@ -1,10 +1,6 @@
 import { afterEach, beforeEach, describe, expect, setSystemTime, test } from 'bun:test';
-import {
-	MAX_SCHEDULED,
-	type PushMessage,
-	type PushScheduleResponse,
-	type PushSubscriptionInfo,
-} from '../../../shared/push';
+import { MAX_SCHEDULED, type PushMessage, type PushSubscriptionInfo } from '../../../shared/push';
+import type { PushScheduleResponse } from '../../../shared/api/contract';
 import { completeTask } from '../../../shared/store';
 import { applyResponse, commit, startSync, type ClientSync } from '../../../shared/sync/apply';
 import type { Snapshot, SyncResponse } from '../../../shared/sync/protocol';
@@ -49,7 +45,10 @@ describe.each(storeFactories)('server-computed push on the %s store', (_name, cr
 		api.fetch(
 			new Request(`https://procrastimate.test${path}`, {
 				method,
-				headers: typeof cred === 'string' ? { Authorization: `Bearer ${cred}` } : cred ? authHeaders(cred) : {},
+				headers: {
+					'content-type': 'application/json',
+					...(typeof cred === 'string' ? { Authorization: `Bearer ${cred}` } : cred ? authHeaders(cred) : {}),
+				},
 				body: body === undefined ? undefined : JSON.stringify(body),
 			}),
 			env,

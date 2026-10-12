@@ -1,7 +1,8 @@
 import { createServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import type { APIRequestContext, Page } from '@playwright/test';
-import type { PushMessage, PushScheduleResponse } from 'shared/push.ts';
+import type { PushScheduleResponse } from 'shared/api/contract.ts';
+import type { PushMessage } from 'shared/push.ts';
 import { createReceiverKeys, decryptPush, verifyVapid } from '../../server/src/push-receiver.ts';
 import { expect, test, type App } from './fixtures.ts';
 

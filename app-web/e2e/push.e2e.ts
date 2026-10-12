@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test';
-import type { PushScheduleResponse } from 'shared/push.ts';
+import type { PushScheduleResponse } from 'shared/api/contract.ts';
 import { deviceHeader, expect, test, type App } from './fixtures.ts';
 
 const serverKey = (seed: number) => Buffer.from(Array.from({ length: 65 }, (_, i) => i + seed)).toString('base64url');

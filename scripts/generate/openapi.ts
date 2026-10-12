@@ -1,58 +1,46 @@
 import { OpenAPIGenerator } from '@orpc/openapi';
-import { JSON_SCHEMA_REGISTRY, ZodToJsonSchemaConverter } from '@orpc/zod/zod4';
-import { authMethodsSchema, contract, okSchema, pushKeySchema } from '../../shared/api/contract';
-import { pushScheduleResponseSchema, pushSubscriptionSchema, scheduledPushSchema } from '../../shared/push';
-import {
-	changeSchema,
-	DATE_KEY_PATTERN,
-	dateKeySchema,
-	dueSchema,
-	labelSchema,
-	opSchema,
-	PATCH_SCHEMAS,
-	projectSchema,
-	recurrenceSchema,
-	reminderSchema,
-	settingsSchema,
-	snapshotSchema,
-	syncRequestSchema,
-	syncResponseSchema,
-	taskSchema,
-	TIME_OF_DAY_PATTERN,
-	timeOfDaySchema,
-} from '../../shared/sync/protocol';
+import { ZodToJsonSchemaConverter } from '@orpc/zod';
+import { z } from 'zod';
+import { contract } from '../../shared/api/contract';
+// Register the shared model's schemas that no endpoint uses.
+import '../../shared/format';
+import '../../shared/name-search';
+import '../../shared/quick-add';
+import '../../shared/ramble/protocol';
+import '../../shared/search';
+import '../../shared/snapshot';
+import '../../shared/store';
+import '../../shared/subtasks';
+import '../../shared/theme';
+import '../../shared/todoist';
+import '../../shared/views';
+import type { Schema } from './swift';
 
-// The converter merges these into its `{ not: {} }` for a custom schema, so `not` has to be cleared.
-JSON_SCHEMA_REGISTRY.add(dateKeySchema, { not: undefined, type: 'string', pattern: DATE_KEY_PATTERN.source });
-JSON_SCHEMA_REGISTRY.add(timeOfDaySchema, { not: undefined, type: 'string', pattern: TIME_OF_DAY_PATTERN.source });
+/**
+ * The contract as OpenAPI. Every shared schema with an `id` in zod's registry becomes a named component, through
+ * the `$defs` zod writes for it, which oRPC hoists.
+ */
+export function openApiDocument() {
+	const generator = new OpenAPIGenerator({ converters: [new ZodToJsonSchemaConverter()] });
+	return generator.generate(contract, { version: '3.1.1', base: { info: { title: 'Procrastimate', version: '1' } } });
+}
 
-export async function openApiDocument() {
-	const generator = new OpenAPIGenerator({ schemaConverters: [new ZodToJsonSchemaConverter()] });
-	return generator.generate(contract, {
-		info: { title: 'Procrastimate', version: '1' },
-		commonSchemas: {
-			AuthMethods: { schema: authMethodsSchema },
-			Change: { schema: changeSchema },
-			Due: { schema: dueSchema },
-			Label: { schema: labelSchema },
-			LabelPatch: { schema: PATCH_SCHEMAS.label },
-			Ok: { schema: okSchema },
-			Op: { schema: opSchema },
-			Project: { schema: projectSchema },
-			ProjectPatch: { schema: PATCH_SCHEMAS.project },
-			PushKey: { schema: pushKeySchema },
-			PushSchedule: { schema: pushScheduleResponseSchema },
-			PushSubscription: { schema: pushSubscriptionSchema },
-			Recurrence: { schema: recurrenceSchema },
-			Reminder: { schema: reminderSchema },
-			ScheduledPush: { schema: scheduledPushSchema },
-			Settings: { schema: settingsSchema },
-			SettingsPatch: { schema: PATCH_SCHEMAS.settings },
-			Snapshot: { schema: snapshotSchema },
-			SyncRequest: { schema: syncRequestSchema, strategy: 'input' },
-			SyncResponse: { schema: syncResponseSchema, strategy: 'output' },
-			Task: { schema: taskSchema },
-			TaskPatch: { schema: PATCH_SCHEMAS.task },
-		},
+/**
+ * Every named schema, including the ones no endpoint uses, as JSON Schema with `$ref`s between them. The Swift
+ * generator types the whole shared model from this, not only what crosses the network.
+ */
+export function namedSchemas(): Record<string, Schema> {
+	const { schemas } = z.toJSONSchema(z.globalRegistry, {
+		target: 'draft-2020-12',
+		io: 'input',
+		unrepresentable: 'any',
+		uri: id => `#/components/schemas/${id}`,
 	});
+	// zod's JSON Schema type is wider than the subset `Schema` reads, and the Swift generator rejects the rest.
+	return Object.fromEntries(
+		Object.entries(schemas).map(([id, schema]) => {
+			const { $schema: _, $id: __, ...rest } = schema as Record<string, unknown>;
+			return [id, rest as Schema];
+		}),
+	);
 }

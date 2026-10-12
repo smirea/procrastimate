@@ -38,6 +38,7 @@ const call = (env: Env, method: string, path: string, body?: unknown) =>
 	api.fetch(
 		new Request(`https://procrastimate.test${path}`, {
 			method,
+			headers: { 'content-type': 'application/json' },
 			body: body === undefined ? undefined : JSON.stringify(body),
 		}),
 		env,
@@ -98,7 +99,7 @@ test('the test push requires a session, is sent immediately, and reports a gone 
 	pushService.status = 410;
 	const gone = await authed('/api/push/test', { subscription: { endpoint: ENDPOINT, keys } });
 	expect(gone.status).toBe(410);
-	expect(await gone.json()).toMatchObject({ code: 'PUSH_GONE', status: 410, data: { status: 410 } });
+	expect(await gone.json()).toMatchObject({ code: 'GONE', data: { status: 410 } });
 
 	pushService.status = 503;
 	expect((await authed('/api/push/test', { subscription: { endpoint: ENDPOINT, keys } })).status).toBe(502);

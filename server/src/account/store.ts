@@ -1,5 +1,6 @@
 import type { Kind } from '../../../shared/sync/kinds';
-import type { Device, Entity, LogRow, PushTarget } from '../../../shared/db/schema';
+import type { Device, LogRow, PushTarget } from '../../../shared/db/schema';
+import type { ServerEntity as Entity } from '../../../shared/sync/merge';
 
 export type { Device, Entity, LogRow, PushTarget };
 

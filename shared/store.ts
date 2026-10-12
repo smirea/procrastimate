@@ -1,44 +1,77 @@
+import { z } from 'zod';
 import * as subtasks from './subtasks.ts';
-import {
-	DEFAULT_PRIORITY,
-	type DateKey,
-	type Due,
-	type Label,
-	type Priority,
-	type Project,
-	type Recurrence,
-	type Reminder,
-	type Task,
-} from './task.ts';
+import { labelSchema, projectSchema, taskSchema } from './sync/protocol.ts';
+import { DEFAULT_PRIORITY, type DateKey, type Label, type Project, type Task } from './task.ts';
 
 /**
  * The store's commands as pure functions over its data, so the web store and the Swift store apply the same
  * rules. Each returns new arrays and new objects for what it changes and leaves its input untouched.
  */
-export type StoreData = { tasks: Task[]; projects: Project[]; labels: Label[] };
+export const storeDataSchema = z
+	.object({ tasks: z.array(taskSchema), projects: z.array(projectSchema), labels: z.array(labelSchema) })
+	.meta({ id: 'StoreData', description: 'Everything the store holds that syncs: tasks, projects, and labels.' });
+export type StoreData = z.infer<typeof storeDataSchema>;
 
-/** What the caller supplies for a new record, so the rules stay deterministic. */
-export type Creation = { id: string; now: number };
+export const creationSchema = z
+	.object({ id: z.string(), now: z.number().int().meta({ description: 'Epoch milliseconds.' }) })
+	.meta({ id: 'Creation', description: 'What the caller supplies for a new record, so the rules stay deterministic.' });
+export type Creation = z.infer<typeof creationSchema>;
 
-export type NewTask = {
-	title: string;
-	projectId: string | null;
-	labelIds: string[];
-	due: Due | null;
-	recurrence: Recurrence | null;
-	priority: Priority | null;
-	reminders: Reminder[];
-};
+const taskShape = taskSchema.shape;
 
-export type TaskPatch = Partial<
-	Pick<Task, 'title' | 'notes' | 'projectId' | 'labelIds' | 'due' | 'recurrence' | 'priority' | 'reminders'>
->;
+export const newTaskSchema = z
+	.object({
+		title: taskShape.title,
+		projectId: taskShape.projectId,
+		labelIds: taskShape.labelIds,
+		due: taskShape.due,
+		recurrence: taskShape.recurrence,
+		priority: taskShape.priority.nullable(),
+		reminders: taskShape.reminders,
+	})
+	.meta({ id: 'NewTask' });
+export type NewTask = z.infer<typeof newTaskSchema>;
 
-/** The fields a completion changes. Undo writes back only these, so edits made since then survive it. */
-export type CompletionState = Pick<Task, 'id' | 'completedAt' | 'due' | 'reminders'>;
+export const taskEditSchema = taskSchema
+	.pick({
+		title: true,
+		notes: true,
+		projectId: true,
+		labelIds: true,
+		due: true,
+		recurrence: true,
+		priority: true,
+		reminders: true,
+	})
+	.partial()
+	.meta({
+		id: 'TaskEdit',
+		description:
+			'The editable fields of a task. A missing field is left alone; for nullable fields, `null` clears the value.',
+	});
+export type TaskPatch = z.infer<typeof taskEditSchema>;
 
-/** `previous` holds every task the completion changed, as it was, so undo can put them back. */
-export type Completion = ({ kind: 'done' } | { kind: 'rolled'; next: Due }) & { previous: CompletionState[] };
+export const completionStateSchema = z
+	.object({ id: taskShape.id, completedAt: taskShape.completedAt, due: taskShape.due, reminders: taskShape.reminders })
+	.meta({
+		id: 'CompletionState',
+		description: 'The fields a completion changes. Undo writes back only these, so edits made since then survive it.',
+	});
+export type CompletionState = z.infer<typeof completionStateSchema>;
+
+export const completionSchema = z
+	.discriminatedUnion('kind', [
+		z.object({ kind: z.literal('done'), previous: z.array(completionStateSchema) }),
+		z.object({ kind: z.literal('rolled'), next: taskShape.due.unwrap(), previous: z.array(completionStateSchema) }),
+	])
+	.meta({
+		id: 'Completion',
+		description: '`previous` holds every task the completion changed, as it was, so undo can put them back.',
+		'x-flatten': { kind: 'CompletionKind' },
+	});
+export type Completion = z.infer<typeof completionSchema>;
+
+export const completionKindSchema = z.enum(['done', 'rolled']).meta({ id: 'CompletionKind' });
 
 const byCreation = (a: Task, b: Task) => a.createdAt - b.createdAt || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 

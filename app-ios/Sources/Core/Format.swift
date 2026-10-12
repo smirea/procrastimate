@@ -2,9 +2,7 @@ import Foundation
 
 /// Chip, row, heading, and toast strings from `shared/format.ts`, in US English like the web.
 public enum Format {
-    public enum DueTone: String, Codable, Sendable {
-        case overdue, today, tomorrow, week, later
-    }
+    public typealias DueTone = API.DueTone
 
     public static let weekdayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
     static let longWeekdayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]

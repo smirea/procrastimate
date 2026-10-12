@@ -4,72 +4,10 @@ import Foundation
 /// reminders, project, and labels. The patterns are the TS source's, translated by `QuickAdd.Pattern`, so a rule change
 /// on either side reads the same. The rules and their reasons are in `docs/decisions/quick-add.md`.
 public enum QuickAdd {
-    public enum TokenKind: String, Codable, Sendable {
-        case due, recurrence, priority, reminder, project, label
-    }
-
-    /// A recognized phrase, highlighted in the input. `start` and `end` are UTF-16 offsets, like JavaScript's.
-    public struct Token: Hashable, Codable, Sendable {
-        public var kind: TokenKind
-        public var start: Int
-        public var end: Int
-        public var text: String
-    }
-
-    public struct Parsed: Hashable, Sendable, Encodable {
-        public var title: String
-        public var due: Due?
-        public var recurrence: Recurrence?
-        public var priority: Priority?
-        public var reminders: [Reminder]
-        public var projectId: String?
-        public var labelIds: [String]
-        public var tokens: [Token]
-
-        private enum CodingKeys: String, CodingKey {
-            case title, due, recurrence, priority, reminders, projectId, labelIds, tokens
-        }
-
-        public func encode(to encoder: Encoder) throws {
-            var c = encoder.container(keyedBy: CodingKeys.self)
-            try c.encode(title, forKey: .title)
-            try c.encode(due, forKey: .due)
-            try c.encode(recurrence, forKey: .recurrence)
-            try c.encode(priority, forKey: .priority)
-            try c.encode(reminders, forKey: .reminders)
-            try c.encode(projectId, forKey: .projectId)
-            try c.encode(labelIds, forKey: .labelIds)
-            try c.encode(tokens, forKey: .tokens)
-        }
-    }
-
-    public struct Options: Sendable {
-        public var now: Date
-        public var projects: [Project]
-        public var labels: [Label]
-        /// Token texts the user chose to keep as plain title text, compared case-insensitively.
-        public var disabled: [String]
-        /// The due date set outside the text, such as by a picker or on an existing task.
-        public var due: Due?
-        /// Transcribed speech rather than typing, so typing shorthands that speech never means do not apply.
-        public var spoken: Bool
-
-        public init(
-            now: Date,
-            projects: [Project] = [],
-            labels: [Label] = [],
-            disabled: [String] = [],
-            due: Due? = nil,
-            spoken: Bool = false
-        ) {
-            self.now = now
-            self.projects = projects
-            self.labels = labels
-            self.disabled = disabled
-            self.due = due
-            self.spoken = spoken
-        }
-    }
+    public typealias TokenKind = API.TokenKind
+    public typealias Token = API.QuickAddToken
+    public typealias Parsed = API.ParsedQuickAdd
+    public typealias Options = API.ParseOptions
 
     // MARK: Patterns
 

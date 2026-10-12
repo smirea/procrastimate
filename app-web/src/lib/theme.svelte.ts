@@ -1,7 +1,7 @@
 import { MediaQuery } from 'svelte/reactivity';
+import { themeChoices, type ThemeChoice } from 'shared/theme.ts';
 
-export const themeChoices = ['system', 'light', 'dark'] as const;
-export type ThemeChoice = (typeof themeChoices)[number];
+export { themeChoices, type ThemeChoice };
 export type Theme = Exclude<ThemeChoice, 'system'>;
 
 /** The pre-paint script in `app.html` repeats the key and these colors, which match `--canvas` in `index.css`. */

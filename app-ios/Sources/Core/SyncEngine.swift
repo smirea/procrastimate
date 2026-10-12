@@ -116,7 +116,7 @@ public enum SyncEngine {
         var repaired = snapshot
         repaired.sync?.outbox = snapshot.sync?.outbox.map(repairBooleanNumbers) ?? []
         guard let json = requestJSON(repaired) else { return nil }
-        return try JSONDecoder().decode(API.SyncRequest.self, from: json)
+        return try JSONDecoder.validating().decode(API.SyncRequest.self, from: json)
     }
 
     /// Builds up to 2026.1011.235500 stored `0` and `1` as booleans in numeric fields, and their outboxes still
@@ -147,7 +147,7 @@ public enum SyncEngine {
         return next
     }
 
-    /// Applies a response the contract already decoded. `Nullable` keeps every `null`, so the JSON is the same.
+    /// Applies a response the contract already decoded. Its `T??` fields keep every `null`, so the JSON is the same.
     public static func apply(_ snapshot: inout Snapshot, response: API.SyncResponse) -> Bool {
         guard let json = try? JSONEncoder().encode(response) else { return false }
         return apply(&snapshot, response: json)
@@ -165,7 +165,7 @@ public enum SyncEngine {
         let epochChanged = epoch != sync.epoch
         let sentReset = sync.reset
         if let raw = object["snapshot"] as? [String: Any], let data = try? JSONSerialization.data(withJSONObject: raw),
-           let decoded = try? JSONDecoder().decode(ProtocolSnapshot.self, from: data) {
+           let decoded = try? JSONDecoder().decode(API.SyncSnapshot.self, from: data) {
             snapshot.tasks = StoreRules.sortTasks(decoded.tasks)
             snapshot.projects = decoded.projects.sorted(by: byCreation)
             snapshot.labels = decoded.labels.sorted(by: byCreation)
@@ -229,17 +229,6 @@ private struct Patch {
     var kind: SyncOp.Kind
     var id: String
     var fields: [String: JSONValue]
-}
-
-private struct ProtocolSnapshot: Decodable {
-    var tasks: [TaskItem]
-    var projects: [Project]
-    var labels: [Label]
-    var settings: ProtocolSettings
-}
-
-private struct ProtocolSettings: Decodable {
-    var timeZone: String?
 }
 
 private func synced(_ data: StoreData, timeZone: String) -> SyncedData {

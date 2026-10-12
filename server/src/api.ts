@@ -2,13 +2,12 @@ import { OpenAPIHandler } from '@orpc/openapi/fetch';
 import { accountApiRoutes } from './account/account';
 import { authHandler } from './better-auth';
 import type { Env } from './bindings';
+import { errorResponse } from './errors';
 import { workerRouter } from './router';
 
 export { Account } from './account/account';
 
 const rpc = new OpenAPIHandler(workerRouter);
-
-const notFound = () => Response.json({ ok: false, error: 'Not found' }, { status: 404 });
 
 /**
  * The Worker's procedures first, then the user's `Account` object, whose bodies it forwards unread, then Better
@@ -22,6 +21,6 @@ export default {
 		const { matched, response } = await rpc.handle(request, { context: { env, request } });
 		if (matched) return response;
 		if (url.pathname.startsWith('/api/auth/')) return authHandler(request, env);
-		return notFound();
+		return errorResponse('NOT_FOUND', 'Not found');
 	},
 } satisfies { fetch: (request: Request, env: Env) => Response | Promise<Response> };

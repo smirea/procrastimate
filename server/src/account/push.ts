@@ -1,12 +1,7 @@
 import { upcomingNotifications } from '../../../shared/notifications';
 import { ORPCError } from '@orpc/server';
-import {
-	pushTag,
-	type PushMessage,
-	type PushScheduleResponse,
-	type PushSubscriptionInfo,
-	type ScheduledPush,
-} from '../../../shared/push';
+import type { PushScheduleResponse } from '../../../shared/api/contract';
+import { pushTag, type PushMessage, type PushSubscriptionInfo, type ScheduledPush } from '../../../shared/push';
 import { createClock, SERVER_NODE } from '../../../shared/sync/hlc';
 import { entityKey, serverSnapshot } from '../../../shared/sync/merge';
 import { isTimeZone } from '../../../shared/zoned-time';

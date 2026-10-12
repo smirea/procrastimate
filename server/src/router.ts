@@ -27,7 +27,7 @@ export const workerRouter = os.router({
 			const status = await sendTestPush(input.subscription, vapid);
 			if (status !== null && status >= 200 && status < 300) return { ok: true as const };
 			const data = { status };
-			throw classifyDelivery(status) === 'gone' ? errors.PUSH_GONE({ data }) : errors.PUSH_FAILED({ data });
+			throw classifyDelivery(status) === 'gone' ? errors.GONE({ data }) : errors.BAD_GATEWAY({ data });
 		}),
 	},
 });

@@ -1,7 +1,13 @@
 import { z } from 'zod';
-import { isHlc } from './hlc.ts';
-import type { Kind } from './kinds.ts';
-import type { DateKey, Label, Project, Task, TimeOfDay, Weekday } from '../task.ts';
+import {
+	labelsRowSchema,
+	logRowSchema,
+	projectsRowSchema,
+	settingsRowSchema,
+	tasksRowSchema,
+} from '../db/generated/zod.ts';
+import { hlcSchema } from '../db/json.ts';
+import { KINDS, type Kind } from './kinds.ts';
 
 /**
  * The wire format of `POST /api/sync`. An op carries the new values of the fields one command changed
@@ -11,61 +17,25 @@ import type { DateKey, Label, Project, Task, TimeOfDay, Weekday } from '../task.
 
 export { KINDS, type Kind } from './kinds.ts';
 
+export const kindSchema = z.enum(KINDS).meta({ id: 'EntityKind' });
+
 /** The id of the one settings record. */
 export const SETTINGS_ID = 'settings';
 
-export type Settings = { timeZone: string | null };
+/**
+ * Each kind's synced fields are its table's columns, without the user, the id, the per-field clocks, and `deleted`,
+ * which ops carry on their own. JSON columns get the shape of the value they hold. A missing `sourceKey` travels as
+ * `null`, since JSON has no `undefined`.
+ */
+const NOT_FIELDS = { userId: true, id: true, deleted: true, clocks: true } as const;
+
+export const taskFieldsSchema = tasksRowSchema.omit(NOT_FIELDS);
+export const projectFieldsSchema = projectsRowSchema.omit(NOT_FIELDS);
+export const labelFieldsSchema = labelsRowSchema.omit(NOT_FIELDS);
+export const settingsFieldsSchema = settingsRowSchema.omit({ userId: true, id: true, clocks: true });
+
+export type Settings = z.infer<typeof settingsFieldsSchema>;
 export const DEFAULT_SETTINGS: Settings = { timeZone: null };
-
-export const DATE_KEY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
-export const TIME_OF_DAY_PATTERN = /^\d{2}:\d{2}$/;
-
-/** Custom so the parsed type is the template literal. The contract gives both their JSON Schema. */
-export const dateKeySchema = z.custom<DateKey>(v => typeof v === 'string' && DATE_KEY_PATTERN.test(v));
-export const timeOfDaySchema = z.custom<TimeOfDay>(v => typeof v === 'string' && TIME_OF_DAY_PATTERN.test(v));
-const dateKey = dateKeySchema;
-const timeOfDay = timeOfDaySchema;
-const interval = z.number().int().positive();
-const weekday = z.literal([0, 1, 2, 3, 4, 5, 6]) satisfies z.ZodType<Weekday>;
-
-export const recurrenceSchema = z.discriminatedUnion('unit', [
-	z.object({ interval, unit: z.enum(['day', 'weekday', 'month', 'year']) }),
-	z.object({ interval, unit: z.literal('week'), days: z.array(weekday).min(2).readonly().optional() }),
-]);
-
-export const reminderSchema = z.discriminatedUnion('kind', [
-	z.object({ kind: z.literal('before'), minutes: z.number().int().nonnegative() }),
-	z.object({ kind: z.literal('at'), date: dateKey, time: timeOfDay }),
-]);
-
-export const dueSchema = z.object({ date: dateKey, time: timeOfDay.nullable() });
-
-/** Every synced field of each kind. A missing `sourceKey` travels as `null`, since JSON has no `undefined`. */
-export const taskFieldsSchema = z.object({
-	parentId: z.string().nullable(),
-	order: z.number(),
-	title: z.string(),
-	notes: z.string(),
-	projectId: z.string().nullable(),
-	labelIds: z.array(z.string()),
-	due: dueSchema.nullable(),
-	recurrence: recurrenceSchema.nullable(),
-	priority: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]),
-	reminders: z.array(reminderSchema),
-	createdAt: z.number(),
-	completedAt: z.number().nullable(),
-	sourceKey: z.string().nullable(),
-});
-
-export const projectFieldsSchema = z.object({
-	name: z.string(),
-	createdAt: z.number(),
-	sourceKey: z.string().nullable(),
-});
-
-export const labelFieldsSchema = z.object({ name: z.string(), createdAt: z.number() });
-
-export const settingsFieldsSchema = z.object({ timeZone: z.string().nullable() });
 
 export const FIELDS_SCHEMAS = {
 	task: taskFieldsSchema,
@@ -76,43 +46,49 @@ export const FIELDS_SCHEMAS = {
 
 export type FieldsByKind = { [K in Kind]: z.infer<(typeof FIELDS_SCHEMAS)[K]> };
 
-/** A missing `sourceKey` stays missing in a whole entity, since JSON has no `undefined`. */
-export const taskSchema = taskFieldsSchema.extend({
-	id: z.string(),
-	sourceKey: z.string().optional(),
-}) satisfies z.ZodType<Task>;
+/** A whole entity as clients hold it: a live row's fields and its id. A missing `sourceKey` stays missing. */
+const ENTITY = { userId: true, deleted: true, clocks: true } as const;
+export const taskSchema = tasksRowSchema
+	.omit({ ...ENTITY, sourceKey: true })
+	.extend({ sourceKey: z.string().optional() })
+	.meta({ id: 'Task', 'x-table': 'tasks' });
+export const projectSchema = projectsRowSchema
+	.omit({ ...ENTITY, sourceKey: true })
+	.extend({ sourceKey: z.string().optional() })
+	.meta({ id: 'Project', 'x-table': 'projects' });
+export const labelSchema = labelsRowSchema.omit(ENTITY).meta({ id: 'Label', 'x-table': 'labels' });
+export const settingsSchema = settingsFieldsSchema.meta({ id: 'Settings' });
 
-export const projectSchema = projectFieldsSchema.extend({
-	id: z.string(),
-	sourceKey: z.string().optional(),
-}) satisfies z.ZodType<Project>;
-
-export const labelSchema = labelFieldsSchema.extend({ id: z.string() }) satisfies z.ZodType<Label>;
-
-export const settingsSchema = settingsFieldsSchema satisfies z.ZodType<Settings>;
+export type Task = z.infer<typeof taskSchema>;
+export type Project = z.infer<typeof projectSchema>;
+export type Label = z.infer<typeof labelSchema>;
 
 /** Everything that syncs. Device-local state such as the theme or `remindersCheckedAt` stays out. */
-export const snapshotSchema = z.object({
-	tasks: z.array(taskSchema),
-	projects: z.array(projectSchema),
-	labels: z.array(labelSchema),
-	settings: settingsSchema,
-});
+export const snapshotSchema = z
+	.object({
+		tasks: z.array(taskSchema),
+		projects: z.array(projectSchema),
+		labels: z.array(labelSchema),
+		settings: settingsSchema,
+	})
+	.meta({ id: 'SyncSnapshot' });
 
-export type Snapshot = { tasks: Task[]; projects: Project[]; labels: Label[]; settings: Settings };
+export type Snapshot = z.infer<typeof snapshotSchema>;
 
-const patchOf = <K extends Kind>(kind: K) =>
-	z.object({
-		kind: z.literal(kind),
-		id: z.string(),
-		fields: FIELDS_SCHEMAS[kind].partial().extend({ deleted: z.boolean().optional() }),
-	});
+const patchOf = <K extends Kind>(kind: K, id: string) =>
+	z
+		.object({
+			kind: z.literal(kind),
+			id: z.string(),
+			fields: FIELDS_SCHEMAS[kind].partial().extend({ deleted: tasksRowSchema.shape.deleted.optional() }),
+		})
+		.meta({ id });
 
 export const PATCH_SCHEMAS = {
-	task: patchOf('task'),
-	project: patchOf('project'),
-	label: patchOf('label'),
-	settings: patchOf('settings'),
+	task: patchOf('task', 'TaskPatch'),
+	project: patchOf('project', 'ProjectPatch'),
+	label: patchOf('label', 'LabelPatch'),
+	settings: patchOf('settings', 'SettingsPatch'),
 } as const;
 
 /** One entity's changed fields, before it gets an op id and a clock. */
@@ -124,15 +100,15 @@ export const patchSchema = z.discriminatedUnion('kind', [
 ]);
 export type Patch = z.infer<typeof patchSchema>;
 
-const hlc = z.string().refine(isHlc, 'Invalid HLC');
+const hlc = hlcSchema;
 
-export const opSchema = z.intersection(patchSchema, z.object({ opId: z.string(), hlc }));
+export const opSchema = z.intersection(patchSchema, z.object({ opId: z.string(), hlc })).meta({ id: 'Op' });
 export type Op = z.infer<typeof opSchema>;
 
-export const changeSchema = z.intersection(
-	patchSchema,
-	z.object({ seq: z.number().int().positive(), opId: z.string() }),
-);
+/** A log row as clients see it. */
+export const changeSchema = z
+	.intersection(patchSchema, logRowSchema.pick({ opId: true }).extend({ seq: logRowSchema.shape.seq.positive() }))
+	.meta({ id: 'Change' });
 export type Change = z.infer<typeof changeSchema>;
 
 const cursor = z.number().int().nonnegative();
@@ -140,23 +116,27 @@ const cursor = z.number().int().nonnegative();
 /** The most log rows one response carries. A client that gets a full page syncs again right away. */
 export const SYNC_PAGE_SIZE = 1000;
 
-export const syncRequestSchema = z.object({
-	cursor,
-	ops: z.array(opSchema),
-	/** The wipe generation this client last applied. A lower one means its copy was cleared on another device. */
-	epoch: z.number().int().nonnegative().default(0),
-	/** Wipe task data before applying `ops`, then bump the epoch. */
-	reset: z.boolean().optional(),
-});
+export const syncRequestSchema = z
+	.object({
+		cursor,
+		ops: z.array(opSchema),
+		/** The wipe generation this client last applied. A lower one means its copy was cleared on another device. */
+		epoch: z.number().int().nonnegative().default(0),
+		/** Wipe task data before applying `ops`, then bump the epoch. */
+		reset: z.boolean().optional(),
+	})
+	.meta({ id: 'SyncRequest' });
 export type SyncRequest = z.infer<typeof syncRequestSchema>;
 
 const epoch = z.number().int().nonnegative();
 
 /** Cursor `0`, a cursor past the log, a reset, or a stale epoch gets the whole snapshot instead of the log. */
-export const syncResponseSchema = z.union([
-	z.object({ acked: z.array(z.string()), changes: z.array(changeSchema), cursor, hlc, epoch }),
-	z.object({ acked: z.array(z.string()), snapshot: snapshotSchema, cursor, hlc, epoch }),
-]);
+export const syncResponseSchema = z
+	.union([
+		z.object({ acked: z.array(z.string()), changes: z.array(changeSchema), cursor, hlc, epoch }),
+		z.object({ acked: z.array(z.string()), snapshot: snapshotSchema, cursor, hlc, epoch }),
+	])
+	.meta({ id: 'SyncResponse' });
 export type SyncResponse = z.infer<typeof syncResponseSchema>;
 
 /**
@@ -174,7 +154,7 @@ export const SOCKET_PONG = 'pong';
 /** The close code the server uses when the socket's device is removed. */
 export const SOCKET_REVOKED = 4401;
 
-export const nudgeSchema = z.object({ cursor });
+export const nudgeSchema = z.object({ cursor }).meta({ id: 'Nudge' });
 export type Nudge = z.infer<typeof nudgeSchema>;
 
 const asNumber = (value: unknown) => (typeof value === 'boolean' ? Number(value) : value);

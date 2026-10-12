@@ -1,6 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { localClient, localTurso } from '../db/test-turso';
-import { openDatabase } from '../db/turso';
+import { localTurso } from '../db/test-turso';
 import { queuedRambleLedger } from './ramble-ledger';
 import { serialQueue } from './serial';
 import { accountSession, writeRambleUsage } from './turso';
@@ -43,25 +42,19 @@ describe('a Turso session', () => {
 		expect(third.store.epoch()).toBe(3);
 	});
 
-	test('a flush leaves another user alone, and a table without user_id is replaced', async () => {
-		const legacy = localClient();
-		await legacy.executeMultiple(
-			'CREATE TABLE entities (kind TEXT NOT NULL, id TEXT NOT NULL, data TEXT NOT NULL, clocks TEXT NOT NULL, PRIMARY KEY (kind, id))',
-		);
-		await legacy.execute({
-			sql: 'INSERT INTO entities (kind, id, data, clocks) VALUES (?, ?, ?, ?)',
-			args: ['task', 'old', '{}', '{}'],
-		});
-		const client = await openDatabase(legacy);
+	test('a flush leaves another user alone', async () => {
+		const client = await localTurso();
 		const mine = await accountSession(client, 'user-1');
-		mine.store.putEntity({ kind: 'task', id: 't1', data: { title: 'Mine' }, clocks: {} });
+		mine.store.putEntity({ kind: 'task', id: 't1', data: { title: 'Mine' }, clocks: { title: '1:0:device' } });
 		await mine.flush();
 		const other = await accountSession(client, 'user-2');
 		expect(other.store.entities()).toEqual([]);
-		other.store.putEntity({ kind: 'task', id: 't2', data: { title: 'Other' }, clocks: {} });
+		other.store.putEntity({ kind: 'task', id: 't2', data: { title: 'Other' }, clocks: { title: '1:0:device' } });
 		await other.flush();
 		const again = await accountSession(client, 'user-1');
-		expect(again.store.entities()).toEqual([{ kind: 'task', id: 't1', data: { title: 'Mine' }, clocks: {} }]);
+		expect(again.store.entities()).toEqual([
+			{ kind: 'task', id: 't1', data: { title: 'Mine' }, clocks: { title: '1:0:device' } },
+		]);
 	});
 
 	test('queued flushes keep both writes when the first flush yields', async () => {
@@ -79,14 +72,14 @@ describe('a Turso session', () => {
 		const run = serialQueue();
 		const first = run(async () => {
 			const session = await accountSession(client, 'user-1');
-			session.store.putEntity({ kind: 'task', id: 'a', data: { title: 'A' }, clocks: {} });
+			session.store.putEntity({ kind: 'task', id: 'a', data: { title: 'A' }, clocks: { title: '1:0:device' } });
 			await session.flush();
 		});
 		for (let i = 0; i < 50 && batches < 1; i++) await Bun.sleep(5);
 		expect(batches).toBe(1);
 		const second = run(async () => {
 			const session = await accountSession(client, 'user-1');
-			session.store.putEntity({ kind: 'task', id: 'b', data: { title: 'B' }, clocks: {} });
+			session.store.putEntity({ kind: 'task', id: 'b', data: { title: 'B' }, clocks: { title: '1:0:device' } });
 			await session.flush();
 		});
 		release();
@@ -106,7 +99,7 @@ describe('a Turso session', () => {
 		const attach = () => queuedRambleLedger(run, rows => writeRambleUsage(client, 'user-1', rows));
 		let ledger = attach();
 		const first = await accountSession(client, 'user-1', ledger);
-		first.store.putEntity({ kind: 'task', id: 't1', data: { title: 'Buy milk' }, clocks: {} });
+		first.store.putEntity({ kind: 'task', id: 't1', data: { title: 'Buy milk' }, clocks: { title: '1:0:device' } });
 		await first.flush();
 		first.store.addRambleSeconds('2026-10-14', 12.5);
 		await ledger.settled();
@@ -114,7 +107,9 @@ describe('a Turso session', () => {
 		ledger = attach();
 		const second = await accountSession(client, 'user-1', ledger);
 		expect(second.store.rambleSeconds('2026-10-14')).toBe(12.5);
-		expect(second.store.entities()).toEqual([{ kind: 'task', id: 't1', data: { title: 'Buy milk' }, clocks: {} }]);
+		expect(second.store.entities()).toEqual([
+			{ kind: 'task', id: 't1', data: { title: 'Buy milk' }, clocks: { title: '1:0:device' } },
+		]);
 		const other = await accountSession(client, 'user-2');
 		expect(other.store.rambleSeconds('2026-10-14')).toBe(0);
 	});

@@ -1,39 +1,61 @@
+import { z } from 'zod';
 import { parseCsv } from './csv.ts';
 import { parseQuickAdd } from './quick-add.ts';
+import type { StoreData } from './store.ts';
 import { nextSiblingOrder } from './subtasks.ts';
+import { taskSchema } from './sync/protocol.ts';
 import {
 	DEFAULT_PRIORITY,
 	toDateKey,
 	toTimeOfDay,
 	type DateKey,
-	type Due,
 	type Label,
 	type Priority,
 	type Project,
-	type Recurrence,
 	type Reminder,
 	type Task,
 } from './task.ts';
 
-/** One file from a Todoist backup zip, with its path inside the zip. */
-export type BackupFile = { name: string; text: string };
+export const backupFileSchema = z
+	.object({ name: z.string(), text: z.string() })
+	.meta({ id: 'BackupFile', description: 'One file from a Todoist backup zip, with its path inside the zip.' });
+export type BackupFile = z.infer<typeof backupFileSchema>;
 
-export type BackupProject = { sourceKey: string; name: string; inbox: boolean };
+export const backupProjectSchema = z
+	.object({ sourceKey: z.string(), name: z.string(), inbox: z.boolean() })
+	.meta({ id: 'BackupProject' });
+export type BackupProject = z.infer<typeof backupProjectSchema>;
 
-export type BackupTask = Pick<Task, 'title' | 'notes' | 'due' | 'recurrence' | 'priority' | 'reminders'> & {
-	sourceKey: string;
-	/** The source key of the task one indent up, for a subtask. */
-	parentKey: string | null;
-	projectKey: string;
-	labels: string[];
-};
+const taskShape = taskSchema.shape;
 
-/** What a backup holds, read without touching the store. */
-export type TodoistBackup = { projects: BackupProject[]; tasks: BackupTask[]; warnings: string[] };
+export const backupTaskSchema = z
+	.object({
+		sourceKey: z.string(),
+		parentKey: z.string().nullable().meta({ description: 'The source key of the task one indent up, for a subtask.' }),
+		projectKey: z.string(),
+		title: taskShape.title,
+		notes: taskShape.notes,
+		labels: z.array(z.string()),
+		due: taskShape.due,
+		recurrence: taskShape.recurrence,
+		priority: taskShape.priority,
+		reminders: taskShape.reminders,
+	})
+	.meta({ id: 'BackupTask' });
+export type BackupTask = z.infer<typeof backupTaskSchema>;
 
-export type ImportState = { tasks: Task[]; projects: Project[]; labels: Label[] };
+export const todoistBackupSchema = z
+	.object({ projects: z.array(backupProjectSchema), tasks: z.array(backupTaskSchema), warnings: z.array(z.string()) })
+	.meta({ id: 'TodoistBackup', description: 'What a backup holds, read without touching the store.' });
+export type TodoistBackup = z.infer<typeof todoistBackupSchema>;
 
-export type ImportSummary = { projects: number; labels: number; tasks: number; skipped: number; warnings: string[] };
+export type ImportState = StoreData;
+
+const count = z.number().int().meta({ default: 0 });
+export const importSummarySchema = z
+	.object({ projects: count, labels: count, tasks: count, skipped: count, warnings: z.array(z.string()) })
+	.meta({ id: 'ImportSummary' });
+export type ImportSummary = z.infer<typeof importSummarySchema>;
 
 /** `Long Term [6Crcv8Fq].csv`: the project name, then its Todoist id. */
 const FILE_NAME = /^(?<name>.+?) \[(?<id>[^\]]+)\]\.csv$/i;
@@ -41,7 +63,10 @@ const FILE_NAME = /^(?<name>.+?) \[(?<id>[^\]]+)\]\.csv$/i;
 const LABEL = /(?<!\S)@([\p{L}\p{N}_-]+)(?!\S)/gu;
 const ISO = /^(\d{4}-\d{2}-\d{2})(?:[T ](\d{2}):(\d{2})(?::\d{2}(?:\.\d+)?)?(Z|[+-]\d{2}:?\d{2})?)?$/;
 
-type Timing = { due: Due; recurrence: Recurrence | null };
+export const timingSchema = z
+	.object({ due: taskShape.due.unwrap(), recurrence: taskShape.recurrence })
+	.meta({ id: 'Timing' });
+type Timing = z.infer<typeof timingSchema>;
 
 /** A Todoist date string, read by the quick add parser, which must account for all of it. */
 export function readTodoistDate(text: string, now: Date): Timing | null {

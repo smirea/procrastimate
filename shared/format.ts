@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import {
 	addDays,
 	fromDateKey,
@@ -10,7 +11,8 @@ import {
 	type TimeOfDay,
 } from './task.ts';
 
-export type DueTone = 'overdue' | 'today' | 'tomorrow' | 'week' | 'later';
+export const dueToneSchema = z.enum(['overdue', 'today', 'tomorrow', 'week', 'later']).meta({ id: 'DueTone' });
+export type DueTone = z.infer<typeof dueToneSchema>;
 
 export const priorityLabel = (priority: Priority) => `Priority ${priority}`;
 

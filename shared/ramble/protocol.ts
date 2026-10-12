@@ -25,11 +25,12 @@ export const RAMBLE_SESSION_SECONDS = 5 * 60;
 /** Audio seconds all sessions may stream per day in the account's time zone. */
 export const RAMBLE_DAILY_SECONDS = 60 * 60;
 
-export const rambleClientMessageSchema = z.object({ type: z.literal('stop') });
+export const rambleClientMessageSchema = z.object({ type: z.literal('stop') }).meta({ id: 'RambleClientMessage' });
 export type RambleClientMessage = z.infer<typeof rambleClientMessageSchema>;
 
 /** Why a session ended: the client stopped, a cap was reached, the socket went quiet, or transcription failed. */
 export const RAMBLE_END_REASONS = ['stopped', 'session-limit', 'daily-limit', 'idle', 'error'] as const;
+export const rambleEndReasonSchema = z.enum(RAMBLE_END_REASONS).meta({ id: 'RambleEndReason' });
 export type RambleEndReason = (typeof RAMBLE_END_REASONS)[number];
 
 /**
@@ -37,18 +38,21 @@ export type RambleEndReason = (typeof RAMBLE_END_REASONS)[number];
  * ElevenLabs failed or refused. `invalid-audio` is a frame larger than `RAMBLE_MAX_FRAME_BYTES`.
  */
 export const RAMBLE_ERROR_CODES = ['daily-limit', 'upstream', 'invalid-audio'] as const;
+export const rambleErrorCodeSchema = z.enum(RAMBLE_ERROR_CODES).meta({ id: 'RambleErrorCode' });
 export type RambleErrorCode = (typeof RAMBLE_ERROR_CODES)[number];
 
-export const rambleServerMessageSchema = z.discriminatedUnion('type', [
-	z.object({ type: z.literal('started') }),
-	z.object({ type: z.literal('partial'), text: z.string() }),
-	z.object({ type: z.literal('committed'), text: z.string() }),
-	z.object({ type: z.literal('ended'), seconds: z.number().nonnegative(), reason: z.enum(RAMBLE_END_REASONS) }),
-	z.object({
-		type: z.literal('error'),
-		code: z.enum(RAMBLE_ERROR_CODES),
-		message: z.string(),
-		resetsAt: z.number().optional(),
-	}),
-]);
+export const rambleServerMessageSchema = z
+	.discriminatedUnion('type', [
+		z.object({ type: z.literal('started') }),
+		z.object({ type: z.literal('partial'), text: z.string() }),
+		z.object({ type: z.literal('committed'), text: z.string() }),
+		z.object({ type: z.literal('ended'), seconds: z.number().nonnegative(), reason: rambleEndReasonSchema }),
+		z.object({
+			type: z.literal('error'),
+			code: rambleErrorCodeSchema,
+			message: z.string(),
+			resetsAt: z.number().optional(),
+		}),
+	])
+	.meta({ id: 'RambleServerMessage', 'x-inline': true });
 export type RambleServerMessage = z.infer<typeof rambleServerMessageSchema>;

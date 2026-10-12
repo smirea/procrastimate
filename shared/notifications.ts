@@ -1,9 +1,18 @@
+import { z } from 'zod';
 import { calendarDay, clockTime, relativeDay } from './format.ts';
 import { notificationTimes, type Due, type Task } from './task.ts';
 import { zonedDateKey, zonedTime } from './zoned-time.ts';
 
 /** One system notification, shown at `at` in epoch milliseconds. */
-export type ScheduledNotification = { at: number; taskId: string; title: string; body: string };
+export const scheduledNotificationSchema = z
+	.object({
+		at: z.number().meta({ description: 'When it shows, in epoch milliseconds.', 'x-epoch-ms': true }),
+		taskId: z.string(),
+		title: z.string(),
+		body: z.string(),
+	})
+	.meta({ id: 'ScheduledNotification' });
+export type ScheduledNotification = z.infer<typeof scheduledNotificationSchema>;
 
 /**
  * Every moment after `now` an open task notifies, soonest first, keeping the soonest `limit`. Times and bodies are

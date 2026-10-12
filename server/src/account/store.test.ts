@@ -33,7 +33,7 @@ describe.each(storeFactories)('%s store', (_name, createStore) => {
 	test('wipes task data and bumps the epoch without dropping devices', () => {
 		const store = createStore();
 		store.addDevice(device('a', 1));
-		store.putEntity({ kind: 'task', id: '1', data: { title: 'A' }, clocks: {} });
+		store.putEntity({ kind: 'task', id: '1', data: { title: 'A' }, clocks: { title: '1:0:device' } });
 		store.appendLog({ opId: 'op', kind: 'task', id: '1', fields: { title: 'A' } });
 		expect(store.epoch()).toBe(0);
 		store.clearTaskData();
@@ -49,7 +49,7 @@ describe.each(storeFactories)('%s store', (_name, createStore) => {
 		const store = createStore();
 		store.putEntity({ kind: 'task', id: '1', data: { title: 'A' }, clocks: { title: '1:0:x' } });
 		store.putEntity({ kind: 'task', id: '1', data: { title: 'B' }, clocks: { title: '2:0:x' } });
-		store.putEntity({ kind: 'label', id: '1', data: { name: 'L' }, clocks: {} });
+		store.putEntity({ kind: 'label', id: '1', data: { name: 'L' }, clocks: { name: '1:0:device' } });
 		expect(store.entity('task', '1')).toEqual({
 			kind: 'task',
 			id: '1',
@@ -75,7 +75,7 @@ describe.each(storeFactories)('%s store', (_name, createStore) => {
 	test('hands out copies, not references', () => {
 		const store = createStore();
 		const data = { title: 'A' };
-		store.putEntity({ kind: 'task', id: '1', data, clocks: {} });
+		store.putEntity({ kind: 'task', id: '1', data, clocks: { title: '1:0:device' } });
 		data.title = 'changed';
 		expect(store.entity('task', '1')?.data).toEqual({ title: 'A' });
 	});

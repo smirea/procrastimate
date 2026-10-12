@@ -3,15 +3,7 @@ import Foundation
 /// When tasks notify and what the notification says, from `shared/task.ts` and `shared/notifications.ts`.
 public enum Notifications {
     /// One system notification, shown at `at`.
-    public struct Scheduled: Hashable, Sendable {
-        public var at: Date
-        public var taskId: String
-        public var title: String
-        public var body: String
-
-        /// The identifier both clients use, `<taskId>:<epoch ms>`, so scheduling a moment again replaces it.
-        public var tag: String { "\(taskId):\(at.epochMilliseconds)" }
-    }
+    public typealias Scheduled = API.ScheduledNotification
 
     /// When a reminder fires, or nil for a relative reminder on a task without a due time.
     public static func reminderFiresAt(_ reminder: Reminder, _ due: Due?, in zone: TimeZone) -> Date? {
@@ -68,4 +60,9 @@ public enum Notifications {
         }
         return Array(all.stableSorted { a, b in a.at == b.at ? nil : a.at < b.at }.prefix(limit))
     }
+}
+
+extension API.ScheduledNotification {
+    /// The identifier both clients use, `<taskId>:<epoch ms>`, so scheduling a moment again replaces it.
+    public var tag: String { "\(taskId):\(at.epochMilliseconds)" }
 }

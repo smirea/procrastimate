@@ -19,6 +19,7 @@ import { queuedRambleLedger, type RambleLedger, type RambleUsage } from './rambl
 import { durableSockets, noSockets, realtime, realtimeRoutes, type SocketHost } from './realtime';
 import { serialQueue } from './serial';
 import { tursoTarget } from '../db/turso';
+import { errorResponse } from '../errors';
 import { routeKeys } from '../routes';
 import { accountRouter } from './router';
 import { sqliteStore } from './sqlite-store';
@@ -29,8 +30,6 @@ import { tursoSession, writeUserRamble, type AccountSession } from './turso';
 const socketRoutes: Record<string, AccountRoute> = { ...realtimeRoutes, ...rambleRoutes };
 
 type SetAlarm = (at: number | null) => Promise<void>;
-
-const fail = (status: number, error: string) => Response.json({ ok: false, error }, { status });
 
 const rpc = new OpenAPIHandler(accountRouter, {
 	interceptors: [
@@ -80,7 +79,7 @@ const [SYNC_ROUTE] = routeKeys(accountContract.sync);
 async function call(request: Request, key: string, context: AccountContext): Promise<Response> {
 	const parsed = key === SYNC_ROUTE ? await repairSyncBody(request) : request;
 	const { response } = await rpc.handle(parsed, { context: { ...context, request: parsed } });
-	return response ?? fail(404, 'Not found');
+	return response ?? errorResponse('NOT_FOUND', 'Not found');
 }
 
 /**
@@ -138,7 +137,7 @@ export class Account {
 
 	async fetch(request: Request): Promise<Response> {
 		const userId = accountUserId(request, this.ctx.id.name);
-		if (!userId) return fail(401, 'Not signed in');
+		if (!userId) return errorResponse('UNAUTHORIZED', 'Not signed in');
 		this.userId = userId;
 		return this.run(() => this.withStore(userId, store => this.handle(request, store)));
 	}
@@ -198,10 +197,10 @@ function workerRamble(env: Env): RambleConfig {
 }
 
 const forward: Handler = async (request, env) => {
-	if (!env.ACCOUNT) return fail(503, 'Sync is not configured');
-	if (!(await getAuth(env))) return fail(503, 'Sign-in is not configured');
+	if (!env.ACCOUNT) return errorResponse('SERVICE_UNAVAILABLE', 'Sync is not configured');
+	if (!(await getAuth(env))) return errorResponse('SERVICE_UNAVAILABLE', 'Sign-in is not configured');
 	const user = await readSession(request, env);
-	if (!user) return fail(401, 'Not signed in');
+	if (!user) return errorResponse('UNAUTHORIZED', 'Not signed in');
 	const stub = env.ACCOUNT.get(env.ACCOUNT.idFromName(user.id));
 	return stub.fetch(withUser(request, user.id) as never) as unknown as Promise<Response>;
 };

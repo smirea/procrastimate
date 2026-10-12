@@ -39,7 +39,7 @@ import Testing
         #expect(request.cursor == 0)
         #expect(request.ops.count == 1)
         guard case let .settings(op) = request.ops.first else { Issue.record("expected the settings op"); return }
-        #expect(op.fields.timeZone == .value("UTC"))
+        #expect(op.fields.timeZone == .some("UTC"))
     }
 
     @Test func anOutboxFromTheBooleanBugStillSends() throws {
@@ -54,6 +54,16 @@ import Testing
         let request = try #require(try SyncEngine.request(snapshot))
         guard case let .task(op) = request.ops.last else { Issue.record("expected the task op"); return }
         #expect(op.fields.order == 0)
-        #expect(op.fields.priority == 1)
+        #expect(op.fields.priority == .p1)
+    }
+
+    @Test func aOneCharacterHighlightDecodes() throws {
+        let highlight = try JSONDecoder.validating().decode(Search.Highlight.self, from: Data(#"{"text":"a","ranges":[[0,1]]}"#.utf8))
+        #expect(highlight.ranges == [0..<1])
+    }
+
+    @Test func anOptionalFieldRejectsNullLikeZod() {
+        let json = #"{"id":"p","name":"Home","createdAt":1,"sourceKey":null}"#
+        #expect(throws: DecodingError.self) { try JSONDecoder().decode(Project.self, from: Data(json.utf8)) }
     }
 }

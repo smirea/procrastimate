@@ -1,5 +1,5 @@
 import { createORPCClient, ORPCError } from '@orpc/client';
-import { OpenAPILink } from '@orpc/openapi-client/fetch';
+import { OpenAPILink } from '@orpc/openapi/fetch';
 import type { ApiClient, contract } from 'shared/api/contract.ts';
 import { DEVICE_HEADER, DEVICE_NAME_HEADER } from 'shared/auth.ts';
 import routes from './generated/contract.json';
@@ -46,11 +46,10 @@ export function deviceHeaders(): Record<string, string> {
  */
 export const api: ApiClient = createORPCClient(
 	new OpenAPILink(routes as unknown as typeof contract, {
-		url: () => location.origin,
 		headers: deviceHeaders,
-		fetch: (request, init) => fetch(request, { ...init, credentials: 'include' }),
+		fetch: (url, init) => fetch(url, { ...init, credentials: 'include' }),
 	}),
 );
 
 /** A `401`, which ends the session. */
-export const isUnauthorized = (error: unknown) => error instanceof ORPCError && error.status === 401;
+export const isUnauthorized = (error: unknown) => error instanceof ORPCError && error.code === 'UNAUTHORIZED';

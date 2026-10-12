@@ -14,9 +14,9 @@
 	},
 	"devDependencies": {
 		"@fontsource-variable/google-sans-flex": "^5.3.1",
-		"@orpc/client": "1.15.6",
-		"@orpc/contract": "1.15.6",
-		"@orpc/openapi-client": "1.15.6",
+		"@orpc/client": "2.0.0-beta.43",
+		"@orpc/contract": "2.0.0-beta.43",
+		"@orpc/openapi": "2.0.0-beta.43",
 		"@playwright/test": "^1.64.0",
 		"@sveltejs/adapter-static": "^4.0.0",
 		"@sveltejs/kit": "^3.0.1",

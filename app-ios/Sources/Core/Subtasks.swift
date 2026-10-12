@@ -4,21 +4,8 @@ import Foundation
 /// keeps two invariants: an open task never sits under a completed one, and a subtask shares its root task's project.
 /// Commands return the new versions of the tasks they change, so the caller can keep the old ones for undo.
 public enum Subtasks {
-    public struct Progress: Hashable, Codable, Sendable {
-        public var done: Int
-        public var total: Int
-    }
-
-    public enum Completion: Hashable, Sendable {
-        case done(changed: [TaskItem])
-        case rolled(next: Due, changed: [TaskItem])
-
-        public var changed: [TaskItem] {
-            switch self {
-            case let .done(changed), let .rolled(_, changed): changed
-            }
-        }
-    }
+    public typealias Progress = API.SubtaskProgress
+    public typealias Completion = API.SubtaskCompletion
 
     static func siblingOrder(_ a: TaskItem, _ b: TaskItem) -> Bool? {
         if a.order != b.order { return a.order < b.order }
@@ -171,5 +158,13 @@ extension Array {
         enumerated()
             .sorted { a, b in order(a.element, b.element) ?? (a.offset < b.offset) }
             .map(\.element)
+    }
+}
+
+extension API.SubtaskCompletion {
+    public var changed: [TaskItem] {
+        switch self {
+        case let .done(changed), let .rolled(_, changed): changed
+        }
     }
 }

@@ -2,9 +2,7 @@ import Foundation
 
 /// A change waiting to sync, as `docs/decisions/sync.md` describes it. `fields` holds the changed fields' new values.
 public struct SyncOp: Hashable, Codable, Sendable {
-    public enum Kind: String, Codable, Sendable {
-        case task, project, label, settings
-    }
+    public typealias Kind = API.EntityKind
 
     public var opId: String
     public var hlc: String
@@ -60,90 +58,13 @@ private extension Character {
 /// Device-local sync state. Every document has one. `clock` is the last clock the device issued or saw, and
 /// `timeZone` the zone it last wrote to the synced settings. `epoch` is the wipe generation it last applied.
 /// `reset` stays set until the server has wiped task data for a local delete-all.
-public struct SyncSection: Hashable, Codable, Sendable {
-    public var deviceId: String
-    public var cursor: Int
-    public var outbox: [SyncOp]
-    public var clock: String
-    public var timeZone: String
-    public var epoch: Int
-    public var reset: Bool
-
-    public init(
-        deviceId: String,
-        cursor: Int,
-        outbox: [SyncOp],
-        clock: String,
-        timeZone: String,
-        epoch: Int = 0,
-        reset: Bool = false
-    ) {
-        self.deviceId = deviceId
-        self.cursor = cursor
-        self.outbox = outbox
-        self.clock = clock
-        self.timeZone = timeZone
-        self.epoch = epoch
-        self.reset = reset
-    }
-
-    public init(from decoder: Decoder) throws {
-        let c = try decoder.container(keyedBy: CodingKeys.self)
-        deviceId = try c.decode(String.self, forKey: .deviceId)
-        cursor = try c.decode(Int.self, forKey: .cursor)
-        outbox = try c.decode([SyncOp].self, forKey: .outbox)
-        clock = try c.decode(String.self, forKey: .clock)
-        timeZone = try c.decode(String.self, forKey: .timeZone)
-        epoch = try c.decodeIfPresent(Int.self, forKey: .epoch) ?? 0
-        reset = try c.decodeIfPresent(Bool.self, forKey: .reset) ?? false
-        guard cursor >= 0, epoch >= 0 else {
-            throw DecodingError.dataCorruptedError(forKey: .cursor, in: c, debugDescription: "Negative cursor or epoch")
-        }
-        guard isHlc(clock) else {
-            throw DecodingError.dataCorruptedError(forKey: .clock, in: c, debugDescription: "Invalid HLC")
-        }
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case deviceId, cursor, outbox, clock, timeZone, epoch, reset
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var c = encoder.container(keyedBy: CodingKeys.self)
-        try c.encode(deviceId, forKey: .deviceId)
-        try c.encode(cursor, forKey: .cursor)
-        try c.encode(outbox, forKey: .outbox)
-        try c.encode(clock, forKey: .clock)
-        try c.encode(timeZone, forKey: .timeZone)
-        try c.encode(epoch, forKey: .epoch)
-        try c.encode(reset, forKey: .reset)
-    }
-}
+public typealias SyncSection = API.SyncSection
 
 /// The one stored document: the web's `procrastimate` localStorage value and the iOS app's JSON file. Loading drops an
 /// invalid task on its own, defaults fields added later, and discards an invalid document, with no migrations.
-public struct Snapshot: Hashable, Codable, Sendable {
-    public var tasks: [TaskItem]
-    public var projects: [Project]
-    public var labels: [Label]
-    /// Epoch milliseconds of the last check for due reminders.
-    public var remindersCheckedAt: Int
-    public var sync: SyncSection?
+public typealias Snapshot = API.Snapshot
 
-    public init(
-        tasks: [TaskItem] = [],
-        projects: [Project] = [],
-        labels: [Label] = [],
-        remindersCheckedAt: Int,
-        sync: SyncSection? = nil
-    ) {
-        self.tasks = tasks
-        self.projects = projects
-        self.labels = labels
-        self.remindersCheckedAt = remindersCheckedAt
-        self.sync = sync
-    }
-
+extension API.Snapshot {
     public static func empty(now: Int) -> Snapshot { Snapshot(remindersCheckedAt: now) }
 
     public var data: StoreData {
@@ -157,7 +78,7 @@ public struct Snapshot: Hashable, Codable, Sendable {
 
     /// Reads a stored document, or starts empty when it is invalid.
     public static func load(_ json: Data, now: Int) -> Snapshot {
-        (try? JSONDecoder().decode(Snapshot.self, from: json)) ?? .empty(now: now)
+        (try? JSONDecoder.validating().decode(Snapshot.self, from: json)) ?? .empty(now: now)
     }
 
     /// The stored JSON, with keys sorted so a write is stable.
@@ -167,16 +88,14 @@ public struct Snapshot: Hashable, Codable, Sendable {
         return try encoder.encode(self)
     }
 
-    private enum CodingKeys: String, CodingKey { case tasks, projects, labels, remindersCheckedAt, sync }
-
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        let loaded = try c.decode([Lenient<TaskItem>].self, forKey: .tasks).compactMap { $0.value?.validated() }
+        let loaded = try c.decode([Lenient<StoredTask>].self, forKey: .tasks).compactMap { $0.value?.task }
         tasks = StoreRules.sortTasks(Subtasks.detachOrphans(loaded))
         projects = try c.decode([Project].self, forKey: .projects)
-        labels = try c.decodeAbsentOr([Label].self, forKey: .labels) ?? []
+        labels = try c.decodeAbsent([Label].self, forKey: .labels) ?? []
         remindersCheckedAt = try c.decode(Int.self, forKey: .remindersCheckedAt)
-        sync = try c.decodeAbsentOr(SyncSection.self, forKey: .sync)
+        sync = try c.decodeAbsent(SyncSection.self, forKey: .sync)
     }
 }
 
@@ -189,47 +108,33 @@ private struct Lenient<T: Decodable>: Decodable {
     }
 }
 
-extension TaskItem {
-    /// The web schema's value rules on top of the JSON shape: well-formed dates and times, positive whole intervals,
-    /// weekdays 0 to 6, and reminder offsets of zero or more. A weekday set is normalized like `weeklyOn`.
-    func validated() -> TaskItem? {
-        guard let due = validated(due), let recurrence = validated(recurrence) else { return nil }
-        for reminder in reminders {
-            switch reminder {
-            case let .before(minutes) where minutes < 0: return nil
-            case let .at(date, time) where !Self.isDateKey(date) || !Self.isTimeOfDay(time): return nil
-            case .before, .at: continue
-            }
+/**
+ The stored document's loading rules on top of the task type, as `shared/snapshot.ts` adds them: fields added after
+ launch default when missing, and a weekly repeat is normalized like `weeklyOn`, so one stored day is a plain weekly
+ repeat. The validating decoder checks every other rule, so a task that breaks one is dropped on its own.
+ */
+private struct StoredTask: Decodable {
+    let task: TaskItem
+
+    private static let added: [(String, JSONValue)] = [
+        ("parentId", .null), ("order", .number(0)), ("labelIds", .array([])), ("recurrence", .null),
+    ]
+
+    init(from decoder: Decoder) throws {
+        guard case var .object(fields) = try JSONValue(from: decoder) else {
+            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Not a task"))
         }
-        var task = self
-        task.due = due
-        task.recurrence = recurrence
-        return task
-    }
-
-    /// Nil when invalid; `.some(nil)` when there is no due date.
-    private func validated(_ due: Due?) -> Due?? {
-        guard let due else { return .some(nil) }
-        guard Self.isDateKey(due.date), due.time.map(Self.isTimeOfDay) ?? true else { return nil }
-        return due
-    }
-
-    private func validated(_ recurrence: Recurrence?) -> Recurrence?? {
-        guard let recurrence else { return .some(nil) }
-        guard recurrence.interval > 0 else { return nil }
-        guard recurrence.unit == .week else { return recurrence }
-        if let days = recurrence.days, days.isEmpty || days.contains(where: { !(0...6).contains($0) }) { return nil }
-        return Dates.weeklyOn(recurrence.interval, recurrence.days ?? [])
-    }
-
-    static func isDateKey(_ value: String) -> Bool { matches(value, "dddd-dd-dd") }
-    static func isTimeOfDay(_ value: String) -> Bool { matches(value, "dd:dd") }
-
-    /// `d` is an ASCII digit and any other character must match itself.
-    private static func matches(_ value: String, _ pattern: String) -> Bool {
-        let scalars = Array(value.unicodeScalars)
-        let expected = Array(pattern.unicodeScalars)
-        guard scalars.count == expected.count else { return false }
-        return zip(scalars, expected).allSatisfy { s, p in p == "d" ? ("0"..."9").contains(s) : s == p }
+        for (key, value) in Self.added where fields[key] == nil { fields[key] = value }
+        if case var .object(recurrence) = fields["recurrence"], recurrence["unit"] == .string("week"),
+           case let .array(days) = recurrence["days"], days.count == 1,
+           case let .number(day) = days[0], (0...6).contains(day), day == day.rounded() {
+            recurrence["days"] = nil
+            fields["recurrence"] = .object(recurrence)
+        }
+        var task = try JSONDecoder.validating().decode(TaskItem.self, from: JSONEncoder().encode(JSONValue.object(fields)))
+        if let recurrence = task.recurrence, recurrence.unit == .week {
+            task.recurrence = Dates.weeklyOn(recurrence.interval, recurrence.days ?? [])
+        }
+        self.task = task
     }
 }
