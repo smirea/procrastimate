@@ -32,7 +32,13 @@ export const project = (id: string, fields: Partial<Project> = {}): Project => (
 
 export const label = (id: string, fields: Partial<Label> = {}): Label => ({ id, name: id, createdAt: 1, ...fields });
 
-export const snapshotOf = (fields: Partial<Snapshot> = {}): Snapshot => ({ ...emptySnapshot(), ...fields });
+export const snapshotOf = (
+	fields: Partial<Omit<Snapshot, 'settings'>> & { settings?: Partial<Snapshot['settings']> } = {},
+): Snapshot => ({
+	...emptySnapshot(),
+	...fields,
+	settings: { ...emptySnapshot().settings, ...fields.settings },
+});
 
 export const counter = (prefix: string) => {
 	let n = 0;

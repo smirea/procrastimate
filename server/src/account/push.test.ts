@@ -153,7 +153,7 @@ describe.each(storeFactories)('server-computed push on the %s store', (_name, cr
 		expect(await mac.schedule()).toEqual(['Gym@1710m: Due at 1:00 PM', 'Gym@1740m: Due now']);
 		expect(alarm).toBe(NOW + 1710 * 60_000);
 
-		await mac.edit(snapshot => ({ ...snapshot, settings: { timeZone: 'Asia/Tokyo' } }));
+		await mac.edit(snapshot => ({ ...snapshot, settings: { ...snapshot.settings, timeZone: 'Asia/Tokyo' } }));
 		// 13:00 in Tokyo is 04:00 UTC.
 		expect(await mac.schedule()).toEqual(['Gym@930m: Due at 1:00 PM', 'Gym@960m: Due now']);
 		expect(alarm).toBe(NOW + 930 * 60_000);

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { dictationChoiceSchema } from '../dictation.ts';
 import { pushSubscriptionSchema, scheduledPushSchema } from '../push.ts';
 import { isHlc } from '../sync/hlc.ts';
 import { dueSchema, prioritySchema, recurrenceSchema, reminderSchema } from '../values.ts';
@@ -24,7 +25,7 @@ export const COLUMN_VALUES = {
 	},
 	projects: { clocks },
 	labels: { clocks },
-	settings: { clocks },
+	settings: { clocks, dictation: dictationChoiceSchema },
 	log: { fields: z.record(z.string(), z.unknown()) },
 	push: { subscription: pushSubscriptionSchema, notifications: z.array(scheduledPushSchema) },
 } as const;

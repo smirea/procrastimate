@@ -55,8 +55,9 @@ private extension Character {
     var isASCIIDigit: Bool { isASCII && isNumber }
 }
 
-/// Device-local sync state. Every document has one. `clock` is the last clock the device issued or saw, and
-/// `timeZone` the zone it last wrote to the synced settings. `epoch` is the wipe generation it last applied.
+/// Device-local sync state. Every document has one. `clock` is the last clock the device issued or saw,
+/// `timeZone` the zone it last wrote to the synced settings, and `dictation` the choice last applied.
+/// `epoch` is the wipe generation it last applied.
 /// `reset` stays set until the server has wiped task data for a local delete-all.
 public typealias SyncSection = API.SyncSection
 

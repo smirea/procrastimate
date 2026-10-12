@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { dictationChoiceSchema } from './dictation.ts';
 import { sortTasks } from './store.ts';
 import { detachOrphans } from './subtasks.ts';
 import { hlcSchema } from './db/json.ts';
@@ -50,7 +51,8 @@ const tasksSchema = z
 
 /**
  * Device-local sync state. `clock` is the last clock the device issued or saw, and `timeZone` the zone it last wrote
- * to the synced settings, so it writes again only after it moves. `epoch` is the wipe generation it last applied.
+ * to the synced settings, so it writes again only after it moves. `dictation` is the choice this device
+ * last applied, including one that arrived from another device. `epoch` is the wipe generation it last applied.
  * `reset` is set until the server has wiped task data for a local delete-all.
  */
 const syncSchema = z
@@ -61,6 +63,7 @@ const syncSchema = z
 		outbox: z.array(opSchema.meta({ 'x-swift-type': 'SyncOp' })),
 		clock: hlcSchema,
 		timeZone: z.string(),
+		dictation: dictationChoiceSchema.default('native'),
 		epoch: z.number().int().nonnegative().default(0),
 		reset: z.boolean().default(false),
 	})

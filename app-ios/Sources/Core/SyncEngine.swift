@@ -29,7 +29,10 @@ public enum SyncEngine {
         nextOpId: () -> String
     ) {
         guard var sync = snapshot.sync else { return }
-        let patches = diff(before: synced(before, timeZone: sync.timeZone), after: synced(after, timeZone: sync.timeZone))
+        let patches = diff(
+            before: synced(before, timeZone: sync.timeZone, dictation: sync.dictation),
+            after: synced(after, timeZone: sync.timeZone, dictation: sync.dictation)
+        )
         guard !patches.isEmpty else { return }
         var clock = parseClock(sync.clock)
         for patch in patches {
@@ -39,6 +42,21 @@ public enum SyncEngine {
         sync.clock = format(clock)
         sync.timeZone = afterTimeZone(after, fallback: sync.timeZone)
         snapshot.sync = sync
+    }
+
+    /// Writes the dictation choice and keeps it on the document, so the next sync and the other devices see it.
+    public static func setDictation(
+        _ snapshot: inout Snapshot,
+        _ choice: DictationChoice,
+        now: Int,
+        nextOpId: () -> String
+    ) {
+        guard snapshot.sync?.dictation != choice else { return }
+        append(&snapshot, kind: .settings, id: "settings", fields: ["dictation": .string(choice.rawValue)], now: now, nextOpId: nextOpId)
+        if var sync = snapshot.sync {
+            sync.dictation = choice
+            snapshot.sync = sync
+        }
     }
 
     /// Writes the device zone only when it changed since this device last wrote it.
@@ -81,6 +99,7 @@ public enum SyncEngine {
             outbox: [],
             clock: clock,
             timeZone: timeZone,
+            dictation: .native,
             epoch: 0,
             reset: false
         )
@@ -169,6 +188,7 @@ public enum SyncEngine {
             snapshot.tasks = StoreRules.sortTasks(decoded.tasks)
             snapshot.projects = decoded.projects.sorted(by: byCreation)
             snapshot.labels = decoded.labels.sorted(by: byCreation)
+            sync.dictation = decoded.settings.dictation
             if let zone = decoded.settings.timeZone { sync.timeZone = zone }
         } else if let changes = object["changes"] as? [[String: Any]] {
             for change in changes { applyChange(&snapshot, change) }
@@ -209,10 +229,12 @@ public enum SyncEngine {
         case "project": merge(&snapshot.projects, id: id, fields: fields)
         case "label": merge(&snapshot.labels, id: id, fields: fields)
         case "settings":
-            if let zone = fields["timeZone"] as? String, var sync = snapshot.sync {
-                sync.timeZone = zone
-                snapshot.sync = sync
+            guard var sync = snapshot.sync else { break }
+            if let zone = fields["timeZone"] as? String { sync.timeZone = zone }
+            if let raw = fields["dictation"] as? String, let choice = DictationChoice(rawValue: raw) {
+                sync.dictation = choice
             }
+            snapshot.sync = sync
         default: break
         }
     }
@@ -223,6 +245,7 @@ private struct SyncedData {
     var projects: [Project]
     var labels: [Label]
     var timeZone: String?
+    var dictation: DictationChoice
 }
 
 private struct Patch {
@@ -231,8 +254,8 @@ private struct Patch {
     var fields: [String: JSONValue]
 }
 
-private func synced(_ data: StoreData, timeZone: String) -> SyncedData {
-    SyncedData(tasks: data.tasks, projects: data.projects, labels: data.labels, timeZone: timeZone)
+private func synced(_ data: StoreData, timeZone: String, dictation: DictationChoice) -> SyncedData {
+    SyncedData(tasks: data.tasks, projects: data.projects, labels: data.labels, timeZone: timeZone, dictation: dictation)
 }
 
 private func afterTimeZone(_ data: StoreData, fallback: String) -> String { fallback }
@@ -242,8 +265,8 @@ private func diff(before: SyncedData, after: SyncedData) -> [Patch] {
     patches += entityDiff(kind: .project, before: before.projects.map(fieldsOf), after: after.projects.map(fieldsOf))
     patches += entityDiff(kind: .label, before: before.labels.map(fieldsOf), after: after.labels.map(fieldsOf))
     patches += entityDiff(kind: .task, before: before.tasks.map(fieldsOf), after: after.tasks.map(fieldsOf))
-    let prior = settingsFields(before.timeZone)
-    let next = settingsFields(after.timeZone)
+    let prior = settingsFields(before.timeZone, before.dictation)
+    let next = settingsFields(after.timeZone, after.dictation)
     if !sameJSON(prior, next) {
         patches.append(Patch(kind: .settings, id: "settings", fields: jsonFields(next)))
     }
@@ -293,8 +316,8 @@ private func fieldsOf(_ project: Project) -> [String: Any] {
 
 private func fieldsOf(_ label: Label) -> [String: Any] { jsonObject(label) }
 
-private func settingsFields(_ timeZone: String?) -> [String: Any] {
-    ["id": "settings", "timeZone": timeZone ?? NSNull()]
+private func settingsFields(_ timeZone: String?, _ dictation: DictationChoice) -> [String: Any] {
+    ["id": "settings", "timeZone": timeZone ?? NSNull(), "dictation": dictation.rawValue]
 }
 
 private func jsonObject<T: Encodable>(_ value: T) -> [String: Any] {

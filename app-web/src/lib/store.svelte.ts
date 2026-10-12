@@ -1,3 +1,4 @@
+import type { DictationChoice } from 'shared/dictation.ts';
 import type { DateKey, Label, Project, Task } from 'shared/task.ts';
 import { groupChildren, progressOf } from 'shared/subtasks.ts';
 import { newId } from 'shared/id.ts';
@@ -39,9 +40,11 @@ class Store {
 	/** A first launch uploads whatever is already stored, so an existing list joins the account. */
 	#fresh(deviceId: string): SyncSection {
 		const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-		return sectionOf(startSync({ ...this.#data, settings: { timeZone } }, deviceId, Date.now()), {
+		const dictation: DictationChoice = 'native';
+		return sectionOf(startSync({ ...this.#data, settings: { timeZone, dictation } }, deviceId, Date.now()), {
 			deviceId,
 			timeZone,
+			dictation,
 			reset: false,
 		});
 	}
@@ -50,9 +53,12 @@ class Store {
 		return { tasks: this.tasks, projects: this.projects, labels: this.labels };
 	}
 
-	/** The settings record holds only the zone this device last wrote, so a commit never rewrites another's. */
+	/**
+	 * The zone on the settings record is the one this device last wrote, so a commit never rewrites another's.
+	 * Dictation is the choice last applied here, including one that arrived from another device.
+	 */
 	#synced(sync: SyncSection): SyncedData {
-		return { ...this.#data, settings: { timeZone: sync.timeZone } };
+		return { ...this.#data, settings: { timeZone: sync.timeZone, dictation: sync.dictation } };
 	}
 
 	#apply(data: rules.StoreData) {
@@ -67,7 +73,11 @@ class Store {
 	#record(sync: SyncSection, before: SyncedData, after: SyncedData) {
 		const next = commit(clientSync(sync), before, after, Date.now());
 		if (next.outbox.length === sync.outbox.length) return;
-		this.#sync = sectionOf(next, { ...sync, timeZone: after.settings.timeZone ?? sync.timeZone });
+		this.#sync = sectionOf(next, {
+			...sync,
+			timeZone: after.settings.timeZone ?? sync.timeZone,
+			dictation: after.settings.dictation,
+		});
 		this.#onCommit?.();
 	}
 
@@ -116,7 +126,7 @@ class Store {
 		this.tasks = [];
 		this.projects = [];
 		this.labels = [];
-		this.#sync = { deviceId, cursor: 0, outbox: [], clock, timeZone, epoch: 0, reset: false };
+		this.#sync = { deviceId, cursor: 0, outbox: [], clock, timeZone, dictation: 'native', epoch: 0, reset: false };
 		this.#commit();
 	}
 
@@ -130,10 +140,28 @@ class Store {
 		this.#onCommit?.();
 	}
 
+	/** The dictation choice last applied here. Native until a document has loaded. */
+	get dictation(): DictationChoice {
+		return this.#sync?.dictation ?? 'native';
+	}
+
+	/** Remembers the choice and queues it for sync. Offline voice still uses native. */
+	setDictation(choice: DictationChoice) {
+		if (!this.#sync || this.#sync.dictation === choice) return;
+		this.#record(this.#sync, this.#synced(this.#sync), {
+			...this.#data,
+			settings: { timeZone: this.#sync.timeZone, dictation: choice },
+		});
+		this.#commit();
+	}
+
 	/** Writes the synced time zone only when this device's own zone changed since it last wrote it. */
 	noteTimeZone(timeZone: string) {
 		if (!this.#sync || this.#sync.timeZone === timeZone) return;
-		this.#record(this.#sync, this.#synced(this.#sync), { ...this.#data, settings: { timeZone } });
+		this.#record(this.#sync, this.#synced(this.#sync), {
+			...this.#data,
+			settings: { timeZone, dictation: this.#sync.dictation },
+		});
 		this.#commit();
 	}
 
@@ -156,7 +184,7 @@ class Store {
 		this.tasks = snapshot.tasks;
 		this.projects = snapshot.projects;
 		this.labels = snapshot.labels;
-		this.#sync = sectionOf(sync, { ...this.#sync, reset: false });
+		this.#sync = sectionOf(sync, { ...this.#sync, reset: false, dictation: snapshot.settings.dictation });
 		this.#commit();
 	}
 
@@ -277,13 +305,14 @@ const clientSync = ({ cursor, outbox, clock, epoch }: SyncSection): ClientSync =
 
 const sectionOf = (
 	{ cursor, outbox, clock, epoch }: ClientSync,
-	previous: Pick<SyncSection, 'deviceId' | 'timeZone' | 'reset'>,
+	previous: Pick<SyncSection, 'deviceId' | 'timeZone' | 'dictation' | 'reset'>,
 ): SyncSection => ({
 	deviceId: previous.deviceId,
 	cursor,
 	outbox,
 	clock: formatHlc(clock),
 	timeZone: previous.timeZone,
+	dictation: previous.dictation,
 	epoch,
 	reset: previous.reset,
 });

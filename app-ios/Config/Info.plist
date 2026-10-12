@@ -17,6 +17,10 @@
     </array>
     <key>ITSAppUsesNonExemptEncryption</key>
     <false/>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Procrastinate uses the microphone to turn speech into tasks.</string>
+    <key>NSSpeechRecognitionUsageDescription</key>
+    <string>Procrastinate uses speech recognition to turn what you say into tasks.</string>
     <key>NSAppTransportSecurity</key>
     <dict>
         <key>NSAllowsLocalNetworking</key>

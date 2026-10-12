@@ -32,6 +32,7 @@
 						"clock": "1791972000001:0:d-phone",
 						"cursor": 12,
 						"deviceId": "d-phone",
+						"dictation": "native",
 						"epoch": 0,
 						"outbox": [
 							{
@@ -169,6 +170,285 @@
 					"clock": "1791972000001:0:d-phone",
 					"cursor": 12,
 					"deviceId": "d-phone",
+					"dictation": "native",
+					"epoch": 0,
+					"outbox": [
+						{
+							"fields": {
+								"due": {
+									"date": "2026-10-16",
+									"time": "07:00"
+								},
+								"labelIds": [
+									"l-health"
+								],
+								"title": "Gym"
+							},
+							"hlc": "1791972000000:0:d-phone",
+							"id": "a0d6b1e2-0001-4c1e-9b1e-000000000001",
+							"kind": "task",
+							"opId": "op-1"
+						},
+						{
+							"fields": {
+								"deleted": true
+							},
+							"hlc": "1791972000001:0:d-phone",
+							"id": "l-old",
+							"kind": "label",
+							"opId": "op-2"
+						}
+					],
+					"reset": false,
+					"timeZone": "Europe/Berlin"
+				},
+				"tasks": [
+					{
+						"completedAt": null,
+						"createdAt": 1791900000000,
+						"due": {
+							"date": "2026-10-16",
+							"time": "07:00"
+						},
+						"id": "a0d6b1e2-0001-4c1e-9b1e-000000000001",
+						"labelIds": [
+							"l-health"
+						],
+						"notes": "Leg day",
+						"order": 0,
+						"parentId": null,
+						"priority": 2,
+						"projectId": "p-home",
+						"recurrence": {
+							"days": [
+								1,
+								3,
+								5
+							],
+							"interval": 1,
+							"unit": "week"
+						},
+						"reminders": [
+							{
+								"kind": "before",
+								"minutes": 30
+							},
+							{
+								"date": "2026-10-15",
+								"kind": "at",
+								"time": "21:00"
+							}
+						],
+						"title": "Gym"
+					},
+					{
+						"completedAt": 1791950000000,
+						"createdAt": 1791900000001,
+						"due": null,
+						"id": "a0d6b1e2-0002-4c1e-9b1e-000000000002",
+						"labelIds": [],
+						"notes": "",
+						"order": 1.5,
+						"parentId": "a0d6b1e2-0001-4c1e-9b1e-000000000001",
+						"priority": 4,
+						"projectId": "p-home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "Stretch"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 1791900000002,
+						"due": {
+							"date": "2026-11-01",
+							"time": null
+						},
+						"id": "a0d6b1e2-0003-4c1e-9b1e-000000000003",
+						"labelIds": [],
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 1,
+						"projectId": null,
+						"recurrence": {
+							"interval": 1,
+							"unit": "year"
+						},
+						"reminders": [],
+						"sourceKey": "todoist:task:42",
+						"title": "Taxes"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseSnapshot",
+			"test": "parseSnapshot › a document stored before dictation defaults to native",
+			"input": [
+				{
+					"labels": [
+						{
+							"createdAt": 1791800000002,
+							"id": "l-health",
+							"name": "health"
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 1791800000000,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 1791800000001,
+							"id": "p-work",
+							"name": "Work",
+							"sourceKey": "todoist:project:7"
+						}
+					],
+					"remindersCheckedAt": 1791972000000,
+					"sync": {
+						"clock": "1791972000001:0:d-phone",
+						"cursor": 12,
+						"deviceId": "d-phone",
+						"epoch": 0,
+						"outbox": [
+							{
+								"fields": {
+									"due": {
+										"date": "2026-10-16",
+										"time": "07:00"
+									},
+									"labelIds": [
+										"l-health"
+									],
+									"title": "Gym"
+								},
+								"hlc": "1791972000000:0:d-phone",
+								"id": "a0d6b1e2-0001-4c1e-9b1e-000000000001",
+								"kind": "task",
+								"opId": "op-1"
+							},
+							{
+								"fields": {
+									"deleted": true
+								},
+								"hlc": "1791972000001:0:d-phone",
+								"id": "l-old",
+								"kind": "label",
+								"opId": "op-2"
+							}
+						],
+						"reset": false,
+						"timeZone": "Europe/Berlin"
+					},
+					"tasks": [
+						{
+							"completedAt": null,
+							"createdAt": 1791900000000,
+							"due": {
+								"date": "2026-10-16",
+								"time": "07:00"
+							},
+							"id": "a0d6b1e2-0001-4c1e-9b1e-000000000001",
+							"labelIds": [
+								"l-health"
+							],
+							"notes": "Leg day",
+							"order": 0,
+							"parentId": null,
+							"priority": 2,
+							"projectId": "p-home",
+							"recurrence": {
+								"days": [
+									1,
+									3,
+									5
+								],
+								"interval": 1,
+								"unit": "week"
+							},
+							"reminders": [
+								{
+									"kind": "before",
+									"minutes": 30
+								},
+								{
+									"date": "2026-10-15",
+									"kind": "at",
+									"time": "21:00"
+								}
+							],
+							"title": "Gym"
+						},
+						{
+							"completedAt": 1791950000000,
+							"createdAt": 1791900000001,
+							"due": null,
+							"id": "a0d6b1e2-0002-4c1e-9b1e-000000000002",
+							"labelIds": [],
+							"notes": "",
+							"order": 1.5,
+							"parentId": "a0d6b1e2-0001-4c1e-9b1e-000000000001",
+							"priority": 4,
+							"projectId": "p-home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "Stretch"
+						},
+						{
+							"completedAt": null,
+							"createdAt": 1791900000002,
+							"due": {
+								"date": "2026-11-01",
+								"time": null
+							},
+							"id": "a0d6b1e2-0003-4c1e-9b1e-000000000003",
+							"labelIds": [],
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 1,
+							"projectId": null,
+							"recurrence": {
+								"interval": 1,
+								"unit": "year"
+							},
+							"reminders": [],
+							"sourceKey": "todoist:task:42",
+							"title": "Taxes"
+						}
+					]
+				},
+				10
+			],
+			"output": {
+				"labels": [
+					{
+						"createdAt": 1791800000002,
+						"id": "l-health",
+						"name": "health"
+					}
+				],
+				"projects": [
+					{
+						"createdAt": 1791800000000,
+						"id": "p-home",
+						"name": "Home"
+					},
+					{
+						"createdAt": 1791800000001,
+						"id": "p-work",
+						"name": "Work",
+						"sourceKey": "todoist:project:7"
+					}
+				],
+				"remindersCheckedAt": 1791972000000,
+				"sync": {
+					"clock": "1791972000001:0:d-phone",
+					"cursor": 12,
+					"deviceId": "d-phone",
+					"dictation": "native",
 					"epoch": 0,
 					"outbox": [
 						{

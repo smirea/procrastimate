@@ -5,6 +5,22 @@ const shoot = async (app: App, name: string) => {
 	await app.page.screenshot({ path: `test-results/settings-import/${name}.png` });
 };
 
+test('dictation is one line, native until changed, and kept across a reload', async ({ app, page }) => {
+	await app.openSettings();
+	await expect(app.dictationOption('Native')).toHaveAttribute('aria-checked', 'true');
+	await expect(app.dictationOption('ElevenLabs')).toHaveAttribute('aria-checked', 'false');
+	await app.dictationOption('ElevenLabs').click();
+	await expect(app.dictationOption('ElevenLabs')).toHaveAttribute('aria-checked', 'true');
+	await page.keyboard.press('Escape');
+	await page.reload();
+	await app.openSettings();
+	await expect(app.dictationOption('ElevenLabs')).toHaveAttribute('aria-checked', 'true');
+	const stored = await page.evaluate(() => localStorage.getItem('procrastinate'));
+	expect(JSON.parse(stored ?? '{}').sync.dictation).toBe('elevenlabs');
+	await app.dictationOption('Native').click();
+	await expect(app.dictationOption('Native')).toHaveAttribute('aria-checked', 'true');
+});
+
 test('the settings gear opens a popover that holds the theme switch', async ({ app, page }) => {
 	await expect(page.getByRole('radiogroup', { name: 'Theme' })).toHaveCount(0);
 	await app.openSettings();

@@ -183,7 +183,7 @@ describe('applyOps', () => {
 			{ opId: 's', hlc: '10:0:a', kind: 'settings', id: 'settings', fields: { timeZone: 'Asia/Tokyo' } },
 			{ opId: 'd', hlc: '11:0:a', kind: 'settings', id: 'settings', fields: { deleted: true } },
 		]);
-		expect(serverSnapshot(state).settings).toEqual({ timeZone: 'Asia/Tokyo' });
+		expect(serverSnapshot(state).settings).toEqual({ timeZone: 'Asia/Tokyo', dictation: 'native' });
 	});
 });
 

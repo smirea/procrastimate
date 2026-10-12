@@ -93,6 +93,7 @@ const webDocument: snapshot.Snapshot = {
 		],
 		clock: '1791972000001:0:d-phone',
 		timeZone: 'Europe/Berlin',
+		dictation: 'native',
 		epoch: 0,
 		reset: false,
 	},
@@ -101,6 +102,11 @@ const webDocument: snapshot.Snapshot = {
 describe('parseSnapshot', () => {
 	test('a document the web wrote reads back unchanged', () => {
 		expect(parseSnapshot(webDocument, 10)).toEqual(webDocument);
+	});
+
+	test('a document stored before dictation defaults to native', () => {
+		const { dictation: _, ...sync } = webDocument.sync!;
+		expect(parseSnapshot({ ...webDocument, sync }, 10).sync?.dictation).toBe('native');
 	});
 
 	test('a document without a sync section has not synced yet', () => {

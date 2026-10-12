@@ -177,6 +177,7 @@ The web's Web Push rows map to native local notifications. Permission is asked o
 | `settings-popover`: the desktop sidebar's settings popover (*web only*) | ✓ | n/a | — | — | — | — |
 | `settings-sheet`: Settings in Browse (the phone web's settings sheet) | ✓ | Built | S8 | `SettingsParityTests.test_settings_sheet` | `settings › settings-sheet` | `settings-sheet.png` |
 | `settings-theme`: the `Theme` segmented control | ✓ | Built | S8 | `SettingsParityTests.test_settings_theme` | `settings › settings-theme` | `settings-theme.png` |
+| `settings-dictation`: `Dictation` with `Native` and `ElevenLabs`, `Native` until changed, kept while Settings is closed | ✓ | Built | — | `SettingsParityTests.test_settings_dictation` | `settings › settings-dictation` | `settings-dictation.png` |
 | `settings-import`: `Import from Todoist` | ✓ | Built | S8 | see Todoist import | see Todoist import | — |
 | `theme-system`: follows the device appearance live | ✓ | Built | S8 | `ThemeParityTests.test_theme_system` (light only: the CI simulator ignores `XCUIDevice.shared.appearance`) | `theme › theme-system` | `theme-system-light.png`, `theme-system-dark.png` (web) |
 | `theme-override`: `Light` and `Dark` | ✓ | Built | S8 | `ThemeParityTests.test_theme_override` | `theme › theme-override` | `theme-override.png` |
@@ -221,7 +222,7 @@ Planned on both clients together. The design and its slices `R1` to `R7` are in 
 | `ramble-discard`: a card is discarded and restored with `Undo` | Planned | Planned | R4, R5 | `RambleParityTests.test_ramble_discard` | `ramble › ramble-discard` | `ramble-discard.png` |
 | `ramble-save-undo`: `Add <n> tasks` saves them all, and one `Undo` removes them | Planned | Planned | R4, R5 | `RambleParityTests.test_ramble_save_undo` | `ramble › ramble-save-undo` | `ramble-save-undo.png` |
 | `ramble-hold`: hold to talk listens while held | Planned | Planned | R4, R5 | `RambleParityTests.test_ramble_hold` | `ramble › ramble-hold` | `ramble-hold.png` |
-| `ramble-unavailable`: offline and a missing key explain why Ramble is off | Planned | Planned | R4, R5 | `RambleParityTests.test_ramble_unavailable` | `ramble › ramble-unavailable` | `ramble-unavailable.png` |
+| `ramble-unavailable`: a missing ElevenLabs key or a refused socket explains why that path is off; offline uses native dictation | Planned | Planned | R4, R5 | `RambleParityTests.test_ramble_unavailable` | `ramble › ramble-unavailable` | `ramble-unavailable.png` |
 
 ### Siri, Shortcuts, and Spotlight
 

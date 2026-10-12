@@ -35,7 +35,7 @@ export const labelFieldsSchema = labelsRowSchema.omit(NOT_FIELDS);
 export const settingsFieldsSchema = settingsRowSchema.omit({ userId: true, id: true, clocks: true });
 
 export type Settings = z.infer<typeof settingsFieldsSchema>;
-export const DEFAULT_SETTINGS: Settings = { timeZone: null };
+export const DEFAULT_SETTINGS: Settings = { timeZone: null, dictation: 'native' };
 
 export const FIELDS_SCHEMAS = {
 	task: taskFieldsSchema,
@@ -57,7 +57,7 @@ export const projectSchema = projectsRowSchema
 	.extend({ sourceKey: z.string().optional() })
 	.meta({ id: 'Project', 'x-table': 'projects' });
 export const labelSchema = labelsRowSchema.omit(ENTITY).meta({ id: 'Label', 'x-table': 'labels' });
-export const settingsSchema = settingsFieldsSchema.meta({ id: 'Settings' });
+export const settingsSchema = settingsFieldsSchema.meta({ id: 'Settings', 'x-table': 'settings' });
 
 export type Task = z.infer<typeof taskSchema>;
 export type Project = z.infer<typeof projectSchema>;

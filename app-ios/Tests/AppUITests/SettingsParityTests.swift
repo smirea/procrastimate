@@ -14,6 +14,22 @@ final class SettingsParityTests: ParityTestCase {
         XCTAssertTrue(app.navigationBars["Browse"].exists)
     }
 
+    func test_settings_dictation() {
+        start()
+        openSettings()
+        let dictation = app.segmentedControls["Dictation"]
+        XCTAssertTrue(dictation.waitForExistence(timeout: 5))
+        XCTAssertTrue(dictation.buttons["Native"].isSelected)
+        dictation.buttons["ElevenLabs"].tap()
+        XCTAssertTrue(dictation.buttons["ElevenLabs"].isSelected)
+        snap("settings-dictation")
+        closeSettings()
+        openSettings()
+        XCTAssertTrue(app.segmentedControls["Dictation"].buttons["ElevenLabs"].isSelected)
+        app.segmentedControls["Dictation"].buttons["Native"].tap()
+        XCTAssertTrue(app.segmentedControls["Dictation"].buttons["Native"].isSelected)
+    }
+
     func test_settings_theme() {
         start()
         openSettings()

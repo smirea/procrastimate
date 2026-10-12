@@ -87,6 +87,16 @@ public final class Store {
         scheduleWrite()
     }
 
+    /// The dictation choice last applied here, including one that arrived from another device.
+    public var dictation: DictationChoice { snapshot.sync?.dictation ?? .native }
+
+    /// Remembers the choice and queues it for sync.
+    public func setDictation(_ choice: DictationChoice) {
+        guard dictation != choice else { return }
+        SyncEngine.setDictation(&snapshot, choice, now: clock.now.epochMilliseconds, nextOpId: newId)
+        scheduleWrite()
+    }
+
     /// Writes this device's zone when it has moved since the last sync.
     public func noteTimeZone(_ timeZone: String) {
         guard snapshot.sync?.timeZone != timeZone else { return }
