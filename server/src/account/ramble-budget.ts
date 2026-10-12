@@ -1,4 +1,6 @@
-import { createClient, type Client, type InStatement } from '@libsql/client/web';
+import { eq, sql } from 'drizzle-orm';
+import { rambleBudget } from '../../../shared/db/schema';
+import { tursoDatabase, type TursoDatabase, type TursoTarget } from '../db/turso';
 import { serialQueue } from './serial';
 
 /**
@@ -15,11 +17,6 @@ export type RambleBudget = {
 	reserve(day: string, seconds: number): Promise<number>;
 	release(day: string, seconds: number): Promise<void>;
 };
-
-const BUDGET_TABLE = `CREATE TABLE IF NOT EXISTS ramble_budget (
-	day TEXT PRIMARY KEY, seconds REAL NOT NULL)`;
-
-const num = (value: unknown) => (typeof value === 'bigint' ? Number(value) : Number(value ?? 0));
 
 /** In-process budget for tests and for a dev server that is not on Turso. */
 export function memoryRambleBudget(limit: number): RambleBudget {
@@ -42,35 +39,41 @@ export function memoryRambleBudget(limit: number): RambleBudget {
 }
 
 /**
- * One Turso row per UTC day. The batch is a write transaction, so two accounts reserving at once cannot both
- * read the same remainder.
+ * One Turso row per UTC day. The batch is one transaction that writes first, so two accounts reserving at once
+ * cannot both read the same remainder.
  */
-export function tursoRambleBudget(client: Client, limit: number): RambleBudget {
+export function tursoRambleBudget(db: TursoDatabase, limit: number): RambleBudget {
+	const seconds = (day: string) =>
+		db.select({ seconds: rambleBudget.seconds }).from(rambleBudget).where(eq(rambleBudget.day, day));
 	return {
-		async reserve(day, seconds) {
-			if (!(seconds > 0) || !(limit > 0)) return 0;
-			const statements: InStatement[] = [
-				{ sql: BUDGET_TABLE, args: [] },
-				{ sql: 'INSERT INTO ramble_budget (day, seconds) VALUES (?, 0) ON CONFLICT(day) DO NOTHING', args: [day] },
-				{ sql: 'SELECT seconds FROM ramble_budget WHERE day = ?', args: [day] },
-				{ sql: 'UPDATE ramble_budget SET seconds = MIN(seconds + ?, ?) WHERE day = ?', args: [seconds, limit, day] },
-				{ sql: 'SELECT seconds FROM ramble_budget WHERE day = ?', args: [day] },
-			];
-			const results = await client.batch(statements, 'write');
-			const before = num(results[2]?.rows[0]?.seconds);
-			const after = num(results[4]?.rows[0]?.seconds);
-			return Math.min(seconds, Math.max(0, after - before));
+		async reserve(day, requested) {
+			if (!(requested > 0) || !(limit > 0)) return 0;
+			const [, before, , after] = await db.batch([
+				db.insert(rambleBudget).values({ day, seconds: 0 }).onConflictDoNothing(),
+				seconds(day),
+				db
+					.update(rambleBudget)
+					.set({ seconds: sql`MIN(${rambleBudget.seconds} + ${requested}, ${limit})` })
+					.where(eq(rambleBudget.day, day)),
+				seconds(day),
+			]);
+			return Math.min(requested, Math.max(0, (after[0]?.seconds ?? 0) - (before[0]?.seconds ?? 0)));
 		},
-		async release(day, seconds) {
-			if (!(seconds > 0)) return;
-			await client.execute({
-				sql: 'UPDATE ramble_budget SET seconds = MAX(0, seconds - ?) WHERE day = ?',
-				args: [seconds, day],
-			});
+		async release(day, released) {
+			if (!(released > 0)) return;
+			await db
+				.update(rambleBudget)
+				.set({ seconds: sql`MAX(0, ${rambleBudget.seconds} - ${released})` })
+				.where(eq(rambleBudget.day, day));
 		},
 	};
 }
 
-export function openRambleBudget(url: string, authToken: string, limit = RAMBLE_GLOBAL_DAILY_SECONDS): RambleBudget {
-	return tursoRambleBudget(createClient({ url, authToken }), limit);
+/** Opens lazily, so a budget made at startup does not reach Turso until the first reservation. */
+export function openRambleBudget(target: TursoTarget, limit = RAMBLE_GLOBAL_DAILY_SECONDS): RambleBudget {
+	const budget = () => tursoDatabase(target).then(db => tursoRambleBudget(db, limit));
+	return {
+		reserve: async (day, seconds) => (await budget()).reserve(day, seconds),
+		release: async (day, seconds) => (await budget()).release(day, seconds),
+	};
 }

@@ -13,7 +13,7 @@ const server = serveDev({
 	turso,
 	ramble: {
 		connect: elevenLabs ? bunUpstream(elevenLabs) : cassetteUpstream(),
-		budget: elevenLabs && turso ? openRambleBudget(turso.url, turso.authToken) : null,
+		budget: elevenLabs && turso ? openRambleBudget(turso) : null,
 	},
 });
 

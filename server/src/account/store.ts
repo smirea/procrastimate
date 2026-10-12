@@ -1,24 +1,7 @@
-/** A registered install. `revokedAt` is set once its token is removed; the row stays so the id is never reused. */
-export type Device = {
-	id: string;
-	name: string;
-	tokenHash: string;
-	createdAt: number;
-	lastSeenAt: number;
-	revokedAt: number | null;
-};
+import type { Kind } from '../../../shared/sync/kinds';
+import type { Device, Entity, LogRow, PushTarget } from '../../../shared/db/schema';
 
-/** The current value of one synced entity, with its per-field clocks. Both are JSON the sync core defines. */
-export type Entity = { kind: string; id: string; data: unknown; clocks: unknown };
-
-/** One append-only log row: the fields of one op that won, at server sequence `seq`. */
-export type LogEntry = { seq: number; opId: string; kind: string; id: string; fields: unknown };
-
-/**
- * A device's Web Push subscription and what the alarm still owes it. `deliveredThrough` is when the alarm last ran
- * for it, or when it subscribed. Both JSON fields are the push module's.
- */
-export type PushTarget = { deviceId: string; subscription: unknown; notifications: unknown; deliveredThrough: number };
+export type { Device, Entity, LogRow, PushTarget };
 
 /**
  * Everything the `Account` object keeps. Methods are synchronous, like Durable Object SQLite, so a request that
@@ -37,14 +20,14 @@ export interface AccountStore {
 	/** Returns false when the device is unknown or already revoked. Revoking also drops its push target. */
 	revokeDevice(id: string, at: number): boolean;
 
-	entity(kind: string, id: string): Entity | null;
+	entity(kind: Kind, id: string): Entity | null;
 	entities(): Entity[];
 	putEntity(entity: Entity): void;
 
 	/** Appends one row and returns its `seq`, which starts at 1. */
-	appendLog(entry: Omit<LogEntry, 'seq'>): number;
+	appendLog(entry: Omit<LogRow, 'seq'>): number;
 	/** Rows with `seq` greater than `after`, in order, at most `limit` of them. */
-	logAfter(after: number, limit: number): LogEntry[];
+	logAfter(after: number, limit: number): LogRow[];
 	hasOp(opId: string): boolean;
 	/** The highest `seq`, or 0 when the log is empty. */
 	lastSeq(): number;

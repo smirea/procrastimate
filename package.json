@@ -8,6 +8,9 @@
 	"scripts": {
 		"lint": "oxlint --fix && oxfmt",
 		"test": "bun test",
+		"generate": "bun scripts/generate/index.ts",
+		"generate:check": "bun scripts/generate/index.ts --check",
+		"db:generate": "drizzle-kit generate && bun run generate",
 		"vectors": "VECTORS=record TZ=America/New_York bun test shared",
 		"test:e2e": "bun run --cwd app-web test:e2e",
 		"check": "bunx --bun tsc --noEmit && bun run --cwd app-web check",
@@ -31,10 +34,18 @@
 		"@better-auth/memory-adapter": "1.7.7",
 		"@libsql/client": "^0.18.0",
 		"@libsql/kysely-libsql": "^0.4.1",
+		"@orpc/client": "1.15.6",
+		"@orpc/contract": "1.15.6",
+		"@orpc/openapi": "1.15.6",
+		"@orpc/openapi-client": "1.15.6",
+		"@orpc/server": "1.15.6",
+		"@orpc/zod": "1.15.6",
 		"@tailwindcss/vite": "^4.3.3",
 		"@types/bun": "^1.4.2",
 		"better-auth": "^1.7.7",
 		"concurrently": "^10.0.6",
+		"drizzle-orm": "0.45.4",
+		"drizzle-zod": "0.8.3",
 		"es-toolkit": "^1.52.0",
 		"kill-port-process": "^5.0.0",
 		"kysely": "^0.29.6",
@@ -49,6 +60,7 @@
 	},
 	"devDependencies": {
 		"@cloudflare/workers-types": "^5.20261010.1",
+		"drizzle-kit": "0.31.11",
 		"wrangler": "^4.149.0"
 	}
 }

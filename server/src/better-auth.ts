@@ -6,6 +6,7 @@ import { getMigrations } from 'better-auth/db/migration';
 import { bearer } from 'better-auth/plugins';
 import { USER_HEADER } from '../../shared/auth';
 import type { Env } from './bindings';
+import { tursoTarget } from './db/turso';
 import { withUser } from './request-user';
 
 /** A year. Days offline must not sign the account out; a day online extends the session. */
@@ -78,11 +79,6 @@ const trim = (value: string | undefined) => {
 export function authSecret(env: Env): string | null {
 	if (env.E2E_SHARD) return E2E_AUTH_SECRET;
 	return trim(env.BETTER_AUTH_SECRET) || null;
-}
-
-function tursoTarget(env: Env): { url: string; authToken: string } | null {
-	if (env.E2E_SHARD || !env.TURSO_DATABASE_URL || !env.TURSO_AUTH_TOKEN) return null;
-	return { url: env.TURSO_DATABASE_URL, authToken: env.TURSO_AUTH_TOKEN };
 }
 
 function appleKeyReady(env: Env): boolean {

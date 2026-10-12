@@ -1,5 +1,6 @@
-/** One day's Ramble audio, the rows `ramble_usage` stores. */
-export type RambleUsage = { day: string; seconds: number };
+import type { RambleUsage } from '../../../shared/db/schema';
+
+export type { RambleUsage };
 
 /**
  * The seconds streamed for one user while the process is up. Seeded once from Turso. Later requests share it, so a

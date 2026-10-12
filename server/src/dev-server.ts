@@ -112,7 +112,7 @@ export function serveDev({
 			task => queueFor(id)(task),
 			rows => {
 				if (!database) return Promise.resolve();
-				return writeUserRamble(database.url, database.authToken, id, rows);
+				return writeUserRamble(database, id, rows);
 			},
 		);
 		ledgers.set(id, created);
@@ -122,7 +122,7 @@ export function serveDev({
 		if (!database) return handle(request, memoryFor(id));
 		const ledger = ledgerFor(id);
 		return queueFor(id)(async () => {
-			const session = await tursoSession(database.url, database.authToken, id, ledger);
+			const session = await tursoSession(database, id, ledger);
 			try {
 				return await handle(request, session.store);
 			} finally {

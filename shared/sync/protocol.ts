@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { isHlc } from './hlc.ts';
+import type { Kind } from './kinds.ts';
 import type { DateKey, Label, Project, Task, TimeOfDay, Weekday } from '../task.ts';
 
 /**
@@ -8,8 +9,7 @@ import type { DateKey, Label, Project, Task, TimeOfDay, Weekday } from '../task.
  * op that won on the server, in server order.
  */
 
-export const KINDS = ['project', 'label', 'task', 'settings'] as const;
-export type Kind = (typeof KINDS)[number];
+export { KINDS, type Kind } from './kinds.ts';
 
 /** The id of the one settings record. */
 export const SETTINGS_ID = 'settings';

@@ -1,12 +1,13 @@
-import type { AccountStore, Device, Entity, LogEntry, PushTarget } from './store';
+import type { RambleUsage } from '../../../shared/db/schema';
+import type { AccountStore, Device, Entity, LogRow, PushTarget } from './store';
 
 /** The rows a Turso session loads and writes back. `log` is in `seq` order. */
 export type AccountTables = {
 	devices: Device[];
 	entities: Entity[];
-	log: LogEntry[];
+	log: LogRow[];
 	push: PushTarget[];
-	ramble: { day: string; seconds: number }[];
+	ramble: RambleUsage[];
 	epoch: number;
 };
 
@@ -17,7 +18,7 @@ export type AccountTables = {
 export function memoryStore(seed?: AccountTables): AccountStore & { tables(): AccountTables } {
 	const devices = new Map<string, Device>((seed?.devices ?? []).map(device => [device.id, { ...device }]));
 	const entities = new Map<string, Entity>();
-	const log: LogEntry[] = (seed?.log ?? []).map(entry => structuredClone(entry));
+	const log: LogRow[] = (seed?.log ?? []).map(entry => structuredClone(entry));
 	const pushTargets = new Map<string, PushTarget>(
 		(seed?.push ?? []).map(target => [target.deviceId, structuredClone(target)]),
 	);

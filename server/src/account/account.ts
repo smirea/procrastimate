@@ -13,6 +13,8 @@ import { cassetteUpstream } from './ramble-cassette';
 import { queuedRambleLedger, type RambleLedger, type RambleUsage } from './ramble-ledger';
 import { durableSockets, noSockets, realtime, realtimeRoutes, type SocketHost } from './realtime';
 import { serialQueue } from './serial';
+import { drizzle } from 'drizzle-orm/durable-sqlite';
+import { tursoTarget } from '../db/turso';
 import { sqliteStore } from './sqlite-store';
 import type { AccountStore } from './store';
 import { syncRoutes } from './sync';
@@ -69,9 +71,8 @@ export async function openAccount(
 	userId: string,
 	ledger?: RambleLedger,
 ): Promise<AccountSession> {
-	if (!env.E2E_SHARD && env.TURSO_DATABASE_URL && env.TURSO_AUTH_TOKEN) {
-		return tursoSession(env.TURSO_DATABASE_URL, env.TURSO_AUTH_TOKEN, userId, ledger);
-	}
+	const turso = tursoTarget(env);
+	if (turso) return tursoSession(turso, userId, ledger);
 	return { store: fallback, flush: async () => {} };
 }
 
@@ -101,7 +102,7 @@ export class Account {
 		private readonly ctx: DurableObjectState,
 		private readonly env: Env,
 	) {
-		this.sqlite = sqliteStore(ctx.storage.sql, run => ctx.storage.transactionSync(run));
+		this.sqlite = sqliteStore(drizzle(ctx.storage), ctx.id.name ?? '');
 		this.handle = accountHandler(at => this.setAlarm(at), durableSockets(ctx), workerRamble(env));
 		this.ledger = queuedRambleLedger(
 			task => {
@@ -156,10 +157,9 @@ export class Account {
 
 	/** Writes the ledger's seconds. A no-op until Turso is configured and a request has named the user. */
 	private writeLedger(rows: RambleUsage[]): Promise<void> {
-		const url = this.env.TURSO_DATABASE_URL;
-		const token = this.env.TURSO_AUTH_TOKEN;
-		if (!url || !token || !this.userId || this.env.E2E_SHARD) return Promise.resolve();
-		return writeUserRamble(url, token, this.userId, rows);
+		const turso = tursoTarget(this.env);
+		if (!turso || !this.userId) return Promise.resolve();
+		return writeUserRamble(turso, this.userId, rows);
 	}
 }
 
@@ -170,10 +170,8 @@ export class Account {
 function workerRamble(env: Env): RambleConfig {
 	if (env.RAMBLE_UPSTREAM === 'cassette') return { connect: cassetteUpstream() };
 	if (!env.ELEVENLABS_API_KEY) return { connect: null };
-	const budget =
-		env.TURSO_DATABASE_URL && env.TURSO_AUTH_TOKEN && !env.E2E_SHARD
-			? openRambleBudget(env.TURSO_DATABASE_URL, env.TURSO_AUTH_TOKEN)
-			: null;
+	const turso = tursoTarget(env);
+	const budget = turso ? openRambleBudget(turso) : null;
 	return { connect: workerUpstream(env.ELEVENLABS_API_KEY), budget };
 }
 
