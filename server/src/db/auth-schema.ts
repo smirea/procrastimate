@@ -1,14 +1,7 @@
-import { customType, index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import { index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 
-/**
- * Better Auth's tables, as its Kysely migrations created them in production: camelCase columns, and dates as ISO
- * strings in `date` columns, which also sort in time order.
- */
-const isoDate = customType<{ data: Date; driverData: string }>({
-	dataType: () => 'date',
-	toDriver: value => value.toISOString(),
-	fromDriver: value => new Date(value),
-});
+/** Better Auth's tables, in the shape its Drizzle adapter expects. Dates are epoch milliseconds. */
+const timestamp = (name: string) => integer(name, { mode: 'timestamp_ms' });
 
 export const user = sqliteTable('user', {
 	id: text('id').primaryKey(),
@@ -16,18 +9,18 @@ export const user = sqliteTable('user', {
 	email: text('email').notNull().unique(),
 	emailVerified: integer('emailVerified', { mode: 'boolean' }).notNull(),
 	image: text('image'),
-	createdAt: isoDate('createdAt').notNull(),
-	updatedAt: isoDate('updatedAt').notNull(),
+	createdAt: timestamp('createdAt').notNull(),
+	updatedAt: timestamp('updatedAt').notNull(),
 });
 
 export const session = sqliteTable(
 	'session',
 	{
 		id: text('id').primaryKey(),
-		expiresAt: isoDate('expiresAt').notNull(),
+		expiresAt: timestamp('expiresAt').notNull(),
 		token: text('token').notNull().unique(),
-		createdAt: isoDate('createdAt').notNull(),
-		updatedAt: isoDate('updatedAt').notNull(),
+		createdAt: timestamp('createdAt').notNull(),
+		updatedAt: timestamp('updatedAt').notNull(),
 		ipAddress: text('ipAddress'),
 		userAgent: text('userAgent'),
 		userId: text('userId')
@@ -49,12 +42,12 @@ export const account = sqliteTable(
 		accessToken: text('accessToken'),
 		refreshToken: text('refreshToken'),
 		idToken: text('idToken'),
-		accessTokenExpiresAt: isoDate('accessTokenExpiresAt'),
-		refreshTokenExpiresAt: isoDate('refreshTokenExpiresAt'),
+		accessTokenExpiresAt: timestamp('accessTokenExpiresAt'),
+		refreshTokenExpiresAt: timestamp('refreshTokenExpiresAt'),
 		scope: text('scope'),
 		password: text('password'),
-		createdAt: isoDate('createdAt').notNull(),
-		updatedAt: isoDate('updatedAt').notNull(),
+		createdAt: timestamp('createdAt').notNull(),
+		updatedAt: timestamp('updatedAt').notNull(),
 	},
 	table => [index('account_userId_idx').on(table.userId)],
 );
@@ -65,9 +58,9 @@ export const verification = sqliteTable(
 		id: text('id').primaryKey(),
 		identifier: text('identifier').notNull(),
 		value: text('value').notNull(),
-		expiresAt: isoDate('expiresAt').notNull(),
-		createdAt: isoDate('createdAt').notNull(),
-		updatedAt: isoDate('updatedAt').notNull(),
+		expiresAt: timestamp('expiresAt').notNull(),
+		createdAt: timestamp('createdAt').notNull(),
+		updatedAt: timestamp('updatedAt').notNull(),
 	},
 	table => [index('verification_identifier_idx').on(table.identifier)],
 );

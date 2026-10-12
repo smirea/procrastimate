@@ -1,6 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { localClient, localTurso } from '../db/test-turso';
-import { openDatabase } from '../db/turso';
+import { localTurso } from '../db/test-turso';
 import { queuedRambleLedger } from './ramble-ledger';
 import { serialQueue } from './serial';
 import { accountSession, writeRambleUsage } from './turso';
@@ -43,80 +42,8 @@ describe('a Turso session', () => {
 		expect(third.store.epoch()).toBe(3);
 	});
 
-	test('rows from the old entities table move into the typed tables', async () => {
-		const legacy = localClient();
-		await legacy.execute(
-			'CREATE TABLE entities (user_id TEXT NOT NULL, kind TEXT NOT NULL, id TEXT NOT NULL, data TEXT NOT NULL, clocks TEXT NOT NULL, PRIMARY KEY (user_id, kind, id))',
-		);
-		const task = {
-			parentId: null,
-			order: 1.5,
-			title: 'Call mom',
-			notes: '',
-			projectId: 'p1',
-			labelIds: ['l1'],
-			due: { date: '2026-10-14', time: '09:30' },
-			recurrence: { interval: 1, unit: 'week', days: [1, 3] },
-			priority: 2,
-			reminders: [{ kind: 'before', minutes: 30 }],
-			createdAt: 10,
-			completedAt: null,
-			sourceKey: null,
-			deleted: false,
-		};
-		const clocks = Object.fromEntries(Object.keys(task).map(key => [key, '1:0:mac']));
-		const rows: [string, string, unknown, Record<string, string>][] = [
-			['task', 't1', task, clocks],
-			['task', 'gone', { deleted: true }, { deleted: '2:0:mac' }],
-			[
-				'project',
-				'p1',
-				{ name: 'Home', createdAt: 1, sourceKey: 'todoist:project:1', deleted: false },
-				{ name: '1:0:mac', createdAt: '1:0:mac', sourceKey: '1:0:mac', deleted: '1:0:mac' },
-			],
-			[
-				'label',
-				'l1',
-				{ name: 'Errand', createdAt: 2, deleted: false },
-				{ name: '1:0:mac', createdAt: '1:0:mac', deleted: '1:0:mac' },
-			],
-			['settings', 'settings', { timeZone: 'Europe/Berlin' }, { timeZone: '1:0:mac' }],
-		];
-		for (const [kind, id, data, rowClocks] of rows) {
-			await legacy.execute({
-				sql: 'INSERT INTO entities VALUES (?, ?, ?, ?, ?)',
-				args: ['user-1', kind, id, JSON.stringify(data), JSON.stringify(rowClocks)],
-			});
-		}
-		const session = await accountSession(await openDatabase(legacy), 'user-1');
-		const byId = new Map(session.store.entities().map(entity => [entity.id, entity]));
-		expect(byId.get('t1')).toEqual({ kind: 'task', id: 't1', data: task, clocks });
-		expect(byId.get('gone')).toEqual({
-			kind: 'task',
-			id: 'gone',
-			data: { deleted: true },
-			clocks: { deleted: '2:0:mac' },
-		});
-		expect(byId.get('p1')?.data).toEqual({
-			name: 'Home',
-			createdAt: 1,
-			sourceKey: 'todoist:project:1',
-			deleted: false,
-		});
-		expect(byId.get('l1')?.data).toEqual({ name: 'Errand', createdAt: 2, deleted: false });
-		expect(byId.get('settings')?.data).toEqual({ timeZone: 'Europe/Berlin' });
-	});
-
-	test('a flush leaves another user alone, and a table without user_id is replaced', async () => {
-		const legacy = localClient();
-		await legacy.executeMultiple(
-			'CREATE TABLE entities (kind TEXT NOT NULL, id TEXT NOT NULL, data TEXT NOT NULL, clocks TEXT NOT NULL, PRIMARY KEY (kind, id))',
-		);
-		await legacy.execute({
-			sql: 'INSERT INTO entities (kind, id, data, clocks) VALUES (?, ?, ?, ?)',
-			args: ['task', 'old', '{}', '{}'],
-		});
-		const client = await openDatabase(legacy);
+	test('a flush leaves another user alone', async () => {
+		const client = await localTurso();
 		const mine = await accountSession(client, 'user-1');
 		mine.store.putEntity({ kind: 'task', id: 't1', data: { title: 'Mine' }, clocks: { title: '1:0:device' } });
 		await mine.flush();

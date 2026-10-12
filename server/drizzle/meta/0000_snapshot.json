@@ -1,7 +1,7 @@
 {
 	"version": "6",
 	"dialect": "sqlite",
-	"id": "4b63a75f-09c1-4886-a9de-ffe8dfce5f45",
+	"id": "02bf4ac8-8905-492f-bb4d-8894741985e2",
 	"prevId": "00000000-0000-0000-0000-000000000000",
 	"tables": {
 		"devices": {
@@ -643,14 +643,14 @@
 				},
 				"accessTokenExpiresAt": {
 					"name": "accessTokenExpiresAt",
-					"type": "date",
+					"type": "integer",
 					"primaryKey": false,
 					"notNull": false,
 					"autoincrement": false
 				},
 				"refreshTokenExpiresAt": {
 					"name": "refreshTokenExpiresAt",
-					"type": "date",
+					"type": "integer",
 					"primaryKey": false,
 					"notNull": false,
 					"autoincrement": false
@@ -671,14 +671,14 @@
 				},
 				"createdAt": {
 					"name": "createdAt",
-					"type": "date",
+					"type": "integer",
 					"primaryKey": false,
 					"notNull": true,
 					"autoincrement": false
 				},
 				"updatedAt": {
 					"name": "updatedAt",
-					"type": "date",
+					"type": "integer",
 					"primaryKey": false,
 					"notNull": true,
 					"autoincrement": false
@@ -762,7 +762,7 @@
 				},
 				"expiresAt": {
 					"name": "expiresAt",
-					"type": "date",
+					"type": "integer",
 					"primaryKey": false,
 					"notNull": true,
 					"autoincrement": false
@@ -776,14 +776,14 @@
 				},
 				"createdAt": {
 					"name": "createdAt",
-					"type": "date",
+					"type": "integer",
 					"primaryKey": false,
 					"notNull": true,
 					"autoincrement": false
 				},
 				"updatedAt": {
 					"name": "updatedAt",
-					"type": "date",
+					"type": "integer",
 					"primaryKey": false,
 					"notNull": true,
 					"autoincrement": false
@@ -877,14 +877,14 @@
 				},
 				"createdAt": {
 					"name": "createdAt",
-					"type": "date",
+					"type": "integer",
 					"primaryKey": false,
 					"notNull": true,
 					"autoincrement": false
 				},
 				"updatedAt": {
 					"name": "updatedAt",
-					"type": "date",
+					"type": "integer",
 					"primaryKey": false,
 					"notNull": true,
 					"autoincrement": false
@@ -928,21 +928,21 @@
 				},
 				"expiresAt": {
 					"name": "expiresAt",
-					"type": "date",
+					"type": "integer",
 					"primaryKey": false,
 					"notNull": true,
 					"autoincrement": false
 				},
 				"createdAt": {
 					"name": "createdAt",
-					"type": "date",
+					"type": "integer",
 					"primaryKey": false,
 					"notNull": true,
 					"autoincrement": false
 				},
 				"updatedAt": {
 					"name": "updatedAt",
-					"type": "date",
+					"type": "integer",
 					"primaryKey": false,
 					"notNull": true,
 					"autoincrement": false
