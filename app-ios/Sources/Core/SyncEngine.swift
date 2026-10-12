@@ -147,7 +147,7 @@ public enum SyncEngine {
         return next
     }
 
-    /// Applies a response the contract already decoded. `Nullable` keeps every `null`, so the JSON is the same.
+    /// Applies a response the contract already decoded. Its `T??` fields keep every `null`, so the JSON is the same.
     public static func apply(_ snapshot: inout Snapshot, response: API.SyncResponse) -> Bool {
         guard let json = try? JSONEncoder().encode(response) else { return false }
         return apply(&snapshot, response: json)

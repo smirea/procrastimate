@@ -2,15 +2,8 @@ import Foundation
 
 /// Which tasks each list shows and in what order, from `shared/views.ts`.
 public enum Views {
-    public struct DayGroup: Hashable, Codable, Sendable {
-        public var date: DateKey
-        public var tasks: [TaskItem]
-    }
-
-    public struct Today: Hashable, Codable, Sendable {
-        public var overdue: [TaskItem]
-        public var today: [TaskItem]
-    }
+    public typealias DayGroup = API.DayGroup
+    public typealias Today = API.Today
 
     /// By due date and time (a date without a time after every timed task that day, no date last), then priority, then
     /// creation.

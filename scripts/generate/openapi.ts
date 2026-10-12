@@ -2,8 +2,13 @@ import { OpenAPIGenerator } from '@orpc/openapi';
 import { ZodToJsonSchemaConverter } from '@orpc/zod';
 import { z } from 'zod';
 import { contract } from '../../shared/api/contract';
-// Registers the stored document's schemas, which no endpoint uses.
+// Register the shared model's schemas that no endpoint uses.
+import '../../shared/format';
 import '../../shared/snapshot';
+import '../../shared/store';
+import '../../shared/subtasks';
+import '../../shared/todoist';
+import '../../shared/views';
 import type { Schema } from './swift';
 
 /**

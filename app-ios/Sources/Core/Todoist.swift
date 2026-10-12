@@ -3,87 +3,12 @@ import Foundation
 /// The Todoist backup reader and merge of `shared/todoist.ts`. The app unzips the backup and passes its files in, so
 /// this stays free of `Compression` and builds on Linux.
 public enum Todoist {
-    /// One file from a Todoist backup zip, with its path inside the zip.
-    public struct BackupFile: Hashable, Codable, Sendable {
-        public var name: String
-        public var text: String
-
-        public init(name: String, text: String) {
-            self.name = name
-            self.text = text
-        }
-    }
-
-    public struct BackupProject: Hashable, Codable, Sendable {
-        public var sourceKey: String
-        public var name: String
-        public var inbox: Bool
-    }
-
-    public struct BackupTask: Hashable, Codable, Sendable {
-        public var sourceKey: String
-        /// The source key of the task one indent up, for a subtask.
-        public var parentKey: String?
-        public var projectKey: String
-        public var title: String
-        public var notes: String
-        public var labels: [String]
-        public var due: Due?
-        public var recurrence: Recurrence?
-        public var priority: Priority
-        public var reminders: [Reminder]
-
-        private enum CodingKeys: String, CodingKey {
-            case sourceKey, parentKey, projectKey, title, notes, labels, due, recurrence, priority, reminders
-        }
-
-        public func encode(to encoder: Encoder) throws {
-            var c = encoder.container(keyedBy: CodingKeys.self)
-            try c.encode(sourceKey, forKey: .sourceKey)
-            try c.encode(parentKey, forKey: .parentKey)
-            try c.encode(projectKey, forKey: .projectKey)
-            try c.encode(title, forKey: .title)
-            try c.encode(notes, forKey: .notes)
-            try c.encode(labels, forKey: .labels)
-            try c.encode(due, forKey: .due)
-            try c.encode(recurrence, forKey: .recurrence)
-            try c.encode(priority, forKey: .priority)
-            try c.encode(reminders, forKey: .reminders)
-        }
-    }
-
-    /// What a backup holds, read without touching the store.
-    public struct Backup: Hashable, Codable, Sendable {
-        public var projects: [BackupProject] = []
-        public var tasks: [BackupTask] = []
-        public var warnings: [String] = []
-    }
-
-    public struct Summary: Hashable, Codable, Sendable {
-        public var projects = 0
-        public var labels = 0
-        public var tasks = 0
-        public var skipped = 0
-        public var warnings: [String]
-    }
-
-    public struct Timing: Hashable, Codable, Sendable {
-        public var due: Due
-        public var recurrence: Recurrence?
-
-        public init(due: Due, recurrence: Recurrence?) {
-            self.due = due
-            self.recurrence = recurrence
-        }
-
-        private enum CodingKeys: String, CodingKey { case due, recurrence }
-
-        public func encode(to encoder: Encoder) throws {
-            var c = encoder.container(keyedBy: CodingKeys.self)
-            try c.encode(due, forKey: .due)
-            try c.encode(recurrence, forKey: .recurrence)
-        }
-    }
+    public typealias BackupFile = API.BackupFile
+    public typealias BackupProject = API.BackupProject
+    public typealias BackupTask = API.BackupTask
+    public typealias Backup = API.TodoistBackup
+    public typealias Summary = API.ImportSummary
+    public typealias Timing = API.Timing
 
     /// `2027-05-20`, `2027-05-20T09:00:00`, or with an offset such as `Z` or `+02:00`.
     nonisolated(unsafe) private static let iso =

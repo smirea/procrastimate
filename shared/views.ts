@@ -1,6 +1,13 @@
+import { z } from 'zod';
+import { taskSchema } from './sync/protocol.ts';
 import type { DateKey, Task } from './task.ts';
+import { dateKeySchema } from './values.ts';
 
-export type DayGroup = { date: DateKey; tasks: Task[] };
+export const dayGroupSchema = z.object({ date: dateKeySchema, tasks: z.array(taskSchema) }).meta({ id: 'DayGroup' });
+export type DayGroup = z.infer<typeof dayGroupSchema>;
+
+export const todaySchema = z.object({ overdue: z.array(taskSchema), today: z.array(taskSchema) }).meta({ id: 'Today' });
+export type Today = z.infer<typeof todaySchema>;
 
 function compareTasks(a: Task, b: Task) {
 	const aDue = a.due ? `${a.due.date} ${a.due.time ?? '99:99'}` : '~';
@@ -32,7 +39,7 @@ export function labelTasks(tasks: readonly Task[], labelId: string) {
 		.toSorted(compareTasks);
 }
 
-export function todayTasks(tasks: readonly Task[], today: DateKey) {
+export function todayTasks(tasks: readonly Task[], today: DateKey): Today {
 	const due = open(tasks)
 		.filter(t => t.due && t.due.date <= today)
 		.toSorted(compareTasks);

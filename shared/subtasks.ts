@@ -1,5 +1,8 @@
+import { z } from 'zod';
 import { bySiblingOrder, moveOrders } from './sync/order.ts';
-import { nextOccurrence, type DateKey, type Due, type Task } from './task.ts';
+import { taskSchema } from './sync/protocol.ts';
+import { dueSchema } from './values.ts';
+import { nextOccurrence, type DateKey, type Task } from './task.ts';
 
 /**
  * Subtasks are tasks with a `parentId`, nested to any depth. Every command here keeps two invariants:
@@ -7,9 +10,18 @@ import { nextOccurrence, type DateKey, type Due, type Task } from './task.ts';
  * Commands return the new versions of the tasks they change, so the caller can keep the old ones for undo.
  */
 
-export type Progress = { done: number; total: number };
+export const progressSchema = z
+	.object({ done: z.number().int(), total: z.number().int() })
+	.meta({ id: 'SubtaskProgress' });
+export type Progress = z.infer<typeof progressSchema>;
 
-export type Completion = { kind: 'done'; changed: Task[] } | { kind: 'rolled'; next: Due; changed: Task[] };
+export const subtaskCompletionSchema = z
+	.discriminatedUnion('kind', [
+		z.object({ kind: z.literal('done'), changed: z.array(taskSchema) }),
+		z.object({ kind: z.literal('rolled'), next: dueSchema, changed: z.array(taskSchema) }),
+	])
+	.meta({ id: 'SubtaskCompletion', 'x-inline': true });
+export type Completion = z.infer<typeof subtaskCompletionSchema>;
 
 /** Each parent's children in sibling order. */
 export function groupChildren(tasks: readonly Task[]): Map<string, Task[]> {

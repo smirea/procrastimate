@@ -39,7 +39,7 @@ import Testing
         #expect(request.cursor == 0)
         #expect(request.ops.count == 1)
         guard case let .settings(op) = request.ops.first else { Issue.record("expected the settings op"); return }
-        #expect(op.fields.timeZone == .value("UTC"))
+        #expect(op.fields.timeZone == .some("UTC"))
     }
 
     @Test func anOutboxFromTheBooleanBugStillSends() throws {

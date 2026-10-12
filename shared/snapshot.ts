@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { sortTasks, type StoreData } from './store.ts';
+import { sortTasks } from './store.ts';
 import { detachOrphans } from './subtasks.ts';
 import { hlcSchema } from './db/json.ts';
 import { labelSchema, opSchema, projectSchema, taskSchema as syncedTaskSchema } from './sync/protocol.ts';

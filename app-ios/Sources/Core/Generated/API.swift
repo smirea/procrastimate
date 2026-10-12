@@ -7,25 +7,6 @@ public enum API {
     public enum Endpoints {}
 }
 
-/// A JSON property that can be missing, `null`, or a value. An optional of this type is missing when `nil`.
-public enum Nullable<Wrapped: Codable & Hashable & Sendable>: Codable, Hashable, Sendable {
-    case null
-    case value(Wrapped)
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        self = container.decodeNil() ? .null : .value(try container.decode(Wrapped.self))
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        switch self {
-        case .null: try container.encodeNil()
-        case let .value(value): try container.encode(value)
-        }
-    }
-}
-
 /// One operation of the contract.
 public protocol APIEndpoint {
     associatedtype Input: Encodable & Sendable
@@ -76,14 +57,16 @@ func check<K: CodingKey>(_ ok: Bool, _ key: K, in container: KeyedDecodingContai
 }
 
 extension KeyedDecodingContainer {
-    func decodeNullable<T>(_: T.Type, forKey key: Key) throws -> Nullable<T>? {
+    /// `nil` when the key is missing, `.some(nil)` when it is `null`.
+    func decodeNullable<T: Decodable>(_: T.Type, forKey key: Key) throws -> T?? {
         guard contains(key) else { return nil }
-        return try decodeNil(forKey: key) ? .null : .value(decode(T.self, forKey: key))
+        return try decodeNil(forKey: key) ? .some(nil) : .some(decode(T.self, forKey: key))
     }
 }
 
 extension KeyedEncodingContainer {
-    mutating func encodeNullable<T>(_ value: Nullable<T>?, forKey key: Key) throws {
+    /// Writes nothing for a missing value and `null` for `.some(nil)`.
+    mutating func encodeNullable<T: Encodable>(_ value: T??, forKey key: Key) throws {
         guard let value else { return }
         try encode(value, forKey: key)
     }
@@ -129,6 +112,134 @@ extension API {
             try container.encode(self.apple, forKey: .apple)
             try container.encode(self.googleIosClientId, forKey: .googleIosClientId)
             try container.encode(self.appleNative, forKey: .appleNative)
+        }
+    }
+
+    /// One file from a Todoist backup zip, with its path inside the zip.
+    public struct BackupFile: Codable, Hashable, Sendable {
+        public var name: String
+        public var text: String
+
+        public init(name: String, text: String) {
+            self.name = name
+            self.text = text
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case name = "name"
+            case text = "text"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            name = try container.decode(String.self, forKey: .name)
+            text = try container.decode(String.self, forKey: .text)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.name, forKey: .name)
+            try container.encode(self.text, forKey: .text)
+        }
+    }
+
+    public struct BackupProject: Codable, Hashable, Sendable {
+        public var sourceKey: String
+        public var name: String
+        public var inbox: Bool
+
+        public init(sourceKey: String, name: String, inbox: Bool) {
+            self.sourceKey = sourceKey
+            self.name = name
+            self.inbox = inbox
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case sourceKey = "sourceKey"
+            case name = "name"
+            case inbox = "inbox"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            sourceKey = try container.decode(String.self, forKey: .sourceKey)
+            name = try container.decode(String.self, forKey: .name)
+            inbox = try container.decode(Bool.self, forKey: .inbox)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.sourceKey, forKey: .sourceKey)
+            try container.encode(self.name, forKey: .name)
+            try container.encode(self.inbox, forKey: .inbox)
+        }
+    }
+
+    public struct BackupTask: Codable, Hashable, Sendable {
+        public var sourceKey: String
+        /// The source key of the task one indent up, for a subtask.
+        public var parentKey: String?
+        public var projectKey: String
+        public var title: String
+        public var notes: String
+        public var labels: [String]
+        public var due: Due?
+        public var recurrence: Recurrence?
+        public var priority: Priority
+        public var reminders: [Reminder]
+
+        public init(sourceKey: String, parentKey: String? = nil, projectKey: String, title: String, notes: String, labels: [String] = [], due: Due? = nil, recurrence: Recurrence? = nil, priority: Priority, reminders: [Reminder] = []) {
+            self.sourceKey = sourceKey
+            self.parentKey = parentKey
+            self.projectKey = projectKey
+            self.title = title
+            self.notes = notes
+            self.labels = labels
+            self.due = due
+            self.recurrence = recurrence
+            self.priority = priority
+            self.reminders = reminders
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case sourceKey = "sourceKey"
+            case parentKey = "parentKey"
+            case projectKey = "projectKey"
+            case title = "title"
+            case notes = "notes"
+            case labels = "labels"
+            case due = "due"
+            case recurrence = "recurrence"
+            case priority = "priority"
+            case reminders = "reminders"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            sourceKey = try container.decode(String.self, forKey: .sourceKey)
+            parentKey = try container.decode(String?.self, forKey: .parentKey)
+            projectKey = try container.decode(String.self, forKey: .projectKey)
+            title = try container.decode(String.self, forKey: .title)
+            notes = try container.decode(String.self, forKey: .notes)
+            labels = try container.decode([String].self, forKey: .labels)
+            due = try container.decode(Due?.self, forKey: .due)
+            recurrence = try container.decode(Recurrence?.self, forKey: .recurrence)
+            priority = try container.decode(Priority.self, forKey: .priority)
+            reminders = try container.decode([Reminder].self, forKey: .reminders)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.sourceKey, forKey: .sourceKey)
+            try container.encode(self.parentKey, forKey: .parentKey)
+            try container.encode(self.projectKey, forKey: .projectKey)
+            try container.encode(self.title, forKey: .title)
+            try container.encode(self.notes, forKey: .notes)
+            try container.encode(self.labels, forKey: .labels)
+            try container.encode(self.due, forKey: .due)
+            try container.encode(self.recurrence, forKey: .recurrence)
+            try container.encode(self.priority, forKey: .priority)
+            try container.encode(self.reminders, forKey: .reminders)
         }
     }
 
@@ -345,8 +456,146 @@ extension API {
         }
     }
 
+    /// `previous` holds every task the completion changed, as it was, so undo can put them back.
+    public struct Completion: Codable, Hashable, Sendable {
+        public var kind: CompletionKind
+        public var previous: [CompletionState]
+        public var next: Due?
+
+        public init(kind: CompletionKind, previous: [CompletionState] = [], next: Due? = nil) {
+            self.kind = kind
+            self.previous = previous
+            self.next = next
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case kind = "kind"
+            case previous = "previous"
+            case next = "next"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            kind = try container.decode(CompletionKind.self, forKey: .kind)
+            previous = try container.decode([CompletionState].self, forKey: .previous)
+            next = ["rolled"].contains(kind.rawValue) ? try container.decodeIfPresent(Due.self, forKey: .next) : nil
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.kind, forKey: .kind)
+            try container.encode(self.previous, forKey: .previous)
+            try container.encodeIfPresent(self.next, forKey: .next)
+        }
+    }
+
+    public enum CompletionKind: String, Codable, Hashable, Sendable, CaseIterable {
+        case done = "done"
+        case rolled = "rolled"
+    }
+
+    /// The fields a completion changes. Undo writes back only these, so edits made since then survive it.
+    public struct CompletionState: Codable, Hashable, Sendable, Identifiable {
+        public var id: String
+        public var completedAt: Int?
+        public var due: Due?
+        public var reminders: [Reminder]
+
+        public init(id: String, completedAt: Int? = nil, due: Due? = nil, reminders: [Reminder] = []) {
+            self.id = id
+            self.completedAt = completedAt
+            self.due = due
+            self.reminders = reminders
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case id = "id"
+            case completedAt = "completedAt"
+            case due = "due"
+            case reminders = "reminders"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            id = try container.decode(String.self, forKey: .id)
+            completedAt = try container.decode(Int?.self, forKey: .completedAt)
+            due = try container.decode(Due?.self, forKey: .due)
+            reminders = try container.decode([Reminder].self, forKey: .reminders)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.id, forKey: .id)
+            try container.encode(self.completedAt, forKey: .completedAt)
+            try container.encode(self.due, forKey: .due)
+            try container.encode(self.reminders, forKey: .reminders)
+        }
+    }
+
+    /// What the caller supplies for a new record, so the rules stay deterministic.
+    public struct Creation: Codable, Hashable, Sendable, Identifiable {
+        public var id: String
+        /// Epoch milliseconds.
+        public var now: Int
+
+        public init(id: String, now: Int) {
+            self.id = id
+            self.now = now
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case id = "id"
+            case now = "now"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            id = try container.decode(String.self, forKey: .id)
+            now = try container.decode(Int.self, forKey: .now)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.id, forKey: .id)
+            try container.encode(self.now, forKey: .now)
+        }
+    }
+
     /// Local calendar date, `YYYY-MM-DD`.
     public typealias DateKey = String
+
+    public struct DayGroup: Codable, Hashable, Sendable {
+        public var date: DateKey
+        public var tasks: [Task]
+
+        public init(date: DateKey, tasks: [Task] = []) {
+            self.date = date
+            self.tasks = tasks
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case date = "date"
+            case tasks = "tasks"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            date = try container.decode(DateKey.self, forKey: .date)
+            tasks = try container.decode([Task].self, forKey: .tasks)
+            if decoder.validates {
+                do {
+                    let value = self.date
+                    try check(value.range(of: #"^[0-9]{4}-[0-9]{2}-[0-9]{2}\z"#, options: .regularExpression) != nil, .date, in: container, "date matching ^\\d{4}-\\d{2}-\\d{2}$")
+                }
+            }
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.date, forKey: .date)
+            try container.encode(self.tasks, forKey: .tasks)
+        }
+    }
 
     public struct Due: Codable, Hashable, Sendable {
         public var date: DateKey
@@ -384,7 +633,57 @@ extension API {
         }
     }
 
+    public enum DueTone: String, Codable, Hashable, Sendable, CaseIterable {
+        case overdue = "overdue"
+        case today = "today"
+        case tomorrow = "tomorrow"
+        case week = "week"
+        case later = "later"
+    }
+
     public typealias Hlc = String
+
+    public struct ImportSummary: Codable, Hashable, Sendable {
+        public var projects: Int
+        public var labels: Int
+        public var tasks: Int
+        public var skipped: Int
+        public var warnings: [String]
+
+        public init(projects: Int = 0, labels: Int = 0, tasks: Int = 0, skipped: Int = 0, warnings: [String] = []) {
+            self.projects = projects
+            self.labels = labels
+            self.tasks = tasks
+            self.skipped = skipped
+            self.warnings = warnings
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case projects = "projects"
+            case labels = "labels"
+            case tasks = "tasks"
+            case skipped = "skipped"
+            case warnings = "warnings"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            projects = try container.decode(Int.self, forKey: .projects)
+            labels = try container.decode(Int.self, forKey: .labels)
+            tasks = try container.decode(Int.self, forKey: .tasks)
+            skipped = try container.decode(Int.self, forKey: .skipped)
+            warnings = try container.decode([String].self, forKey: .warnings)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.projects, forKey: .projects)
+            try container.encode(self.labels, forKey: .labels)
+            try container.encode(self.tasks, forKey: .tasks)
+            try container.encode(self.skipped, forKey: .skipped)
+            try container.encode(self.warnings, forKey: .warnings)
+        }
+    }
 
     public struct Label: Codable, Hashable, Sendable, Identifiable {
         public var id: String
@@ -484,6 +783,58 @@ extension API {
 
     public enum LabelPatchKind: String, Codable, Hashable, Sendable, CaseIterable {
         case label = "label"
+    }
+
+    public struct NewTask: Codable, Hashable, Sendable {
+        public var title: String
+        public var projectId: String?
+        public var labelIds: [String]
+        public var due: Due?
+        public var recurrence: Recurrence?
+        public var priority: Priority?
+        public var reminders: [Reminder]
+
+        public init(title: String, projectId: String? = nil, labelIds: [String] = [], due: Due? = nil, recurrence: Recurrence? = nil, priority: Priority? = nil, reminders: [Reminder] = []) {
+            self.title = title
+            self.projectId = projectId
+            self.labelIds = labelIds
+            self.due = due
+            self.recurrence = recurrence
+            self.priority = priority
+            self.reminders = reminders
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case title = "title"
+            case projectId = "projectId"
+            case labelIds = "labelIds"
+            case due = "due"
+            case recurrence = "recurrence"
+            case priority = "priority"
+            case reminders = "reminders"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            title = try container.decode(String.self, forKey: .title)
+            projectId = try container.decode(String?.self, forKey: .projectId)
+            labelIds = try container.decode([String].self, forKey: .labelIds)
+            due = try container.decode(Due?.self, forKey: .due)
+            recurrence = try container.decode(Recurrence?.self, forKey: .recurrence)
+            priority = try container.decode(Priority?.self, forKey: .priority)
+            reminders = try container.decode([Reminder].self, forKey: .reminders)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.title, forKey: .title)
+            try container.encode(self.projectId, forKey: .projectId)
+            try container.encode(self.labelIds, forKey: .labelIds)
+            try container.encode(self.due, forKey: .due)
+            try container.encode(self.recurrence, forKey: .recurrence)
+            try container.encode(self.priority, forKey: .priority)
+            try container.encode(self.reminders, forKey: .reminders)
+        }
     }
 
     public struct Ok: Codable, Hashable, Sendable {
@@ -805,10 +1156,10 @@ extension API {
     public struct ProjectPatchFields: Codable, Hashable, Sendable {
         public var name: String?
         public var createdAt: Int?
-        public var sourceKey: Nullable<String>?
+        public var sourceKey: String??
         public var deleted: Bool?
 
-        public init(name: String? = nil, createdAt: Int? = nil, sourceKey: Nullable<String>? = nil, deleted: Bool? = nil) {
+        public init(name: String? = nil, createdAt: Int? = nil, sourceKey: String?? = nil, deleted: Bool? = nil) {
             self.name = name
             self.createdAt = createdAt
             self.sourceKey = sourceKey
@@ -1184,10 +1535,10 @@ extension API {
     }
 
     public struct SettingsPatchFields: Codable, Hashable, Sendable {
-        public var timeZone: Nullable<String>?
+        public var timeZone: String??
         public var deleted: Bool?
 
-        public init(timeZone: Nullable<String>? = nil, deleted: Bool? = nil) {
+        public init(timeZone: String?? = nil, deleted: Bool? = nil) {
             self.timeZone = timeZone
             self.deleted = deleted
         }
@@ -1244,6 +1595,105 @@ extension API {
             try container.encode(self.labels, forKey: .labels)
             try container.encode(self.remindersCheckedAt, forKey: .remindersCheckedAt)
             try container.encodeIfPresent(self.sync, forKey: .sync)
+        }
+    }
+
+    /// Everything the store holds that syncs: tasks, projects, and labels.
+    public struct StoreData: Codable, Hashable, Sendable {
+        public var tasks: [Task]
+        public var projects: [Project]
+        public var labels: [Label]
+
+        public init(tasks: [Task] = [], projects: [Project] = [], labels: [Label] = []) {
+            self.tasks = tasks
+            self.projects = projects
+            self.labels = labels
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case tasks = "tasks"
+            case projects = "projects"
+            case labels = "labels"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            tasks = try container.decode([Task].self, forKey: .tasks)
+            projects = try container.decode([Project].self, forKey: .projects)
+            labels = try container.decode([Label].self, forKey: .labels)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.tasks, forKey: .tasks)
+            try container.encode(self.projects, forKey: .projects)
+            try container.encode(self.labels, forKey: .labels)
+        }
+    }
+
+    public enum SubtaskCompletion: Codable, Hashable, Sendable {
+        case done(changed: [Task])
+        case rolled(next: Due, changed: [Task])
+
+        enum CodingKeys: String, CodingKey {
+            case tag = "kind"
+            case changed = "changed"
+            case next = "next"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            switch try container.decode(String.self, forKey: .tag) {
+            case "done":
+                let changed = try container.decode([Task].self, forKey: .changed)
+                self = .done(changed: changed)
+            case "rolled":
+                let next = try container.decode(Due.self, forKey: .next)
+                let changed = try container.decode([Task].self, forKey: .changed)
+                self = .rolled(next: next, changed: changed)
+            case let tag:
+                throw DecodingError.dataCorruptedError(forKey: .tag, in: container, debugDescription: "Unknown kind \(tag)")
+            }
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            switch self {
+            case let .done(changed):
+                try container.encode("done", forKey: .tag)
+                try container.encode(changed, forKey: .changed)
+            case let .rolled(next, changed):
+                try container.encode("rolled", forKey: .tag)
+                try container.encode(next, forKey: .next)
+                try container.encode(changed, forKey: .changed)
+            }
+        }
+    }
+
+    public struct SubtaskProgress: Codable, Hashable, Sendable {
+        public var done: Int
+        public var total: Int
+
+        public init(done: Int, total: Int) {
+            self.done = done
+            self.total = total
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case done = "done"
+            case total = "total"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            done = try container.decode(Int.self, forKey: .done)
+            total = try container.decode(Int.self, forKey: .total)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.done, forKey: .done)
+            try container.encode(self.total, forKey: .total)
         }
     }
 
@@ -1620,6 +2070,64 @@ extension API {
         }
     }
 
+    /// The editable fields of a task. A missing field is left alone; for nullable fields, `null` clears the value.
+    public struct TaskEdit: Codable, Hashable, Sendable {
+        public var title: String?
+        public var notes: String?
+        public var projectId: String??
+        public var labelIds: [String]?
+        public var due: Due??
+        public var recurrence: Recurrence??
+        public var priority: Priority?
+        public var reminders: [Reminder]?
+
+        public init(title: String? = nil, notes: String? = nil, projectId: String?? = nil, labelIds: [String]? = nil, due: Due?? = nil, recurrence: Recurrence?? = nil, priority: Priority? = nil, reminders: [Reminder]? = nil) {
+            self.title = title
+            self.notes = notes
+            self.projectId = projectId
+            self.labelIds = labelIds
+            self.due = due
+            self.recurrence = recurrence
+            self.priority = priority
+            self.reminders = reminders
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case title = "title"
+            case notes = "notes"
+            case projectId = "projectId"
+            case labelIds = "labelIds"
+            case due = "due"
+            case recurrence = "recurrence"
+            case priority = "priority"
+            case reminders = "reminders"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            title = try container.decodeIfPresent(String.self, forKey: .title)
+            notes = try container.decodeIfPresent(String.self, forKey: .notes)
+            projectId = try container.decodeNullable(String.self, forKey: .projectId)
+            labelIds = try container.decodeIfPresent([String].self, forKey: .labelIds)
+            due = try container.decodeNullable(Due.self, forKey: .due)
+            recurrence = try container.decodeNullable(Recurrence.self, forKey: .recurrence)
+            priority = try container.decodeIfPresent(Priority.self, forKey: .priority)
+            reminders = try container.decodeIfPresent([Reminder].self, forKey: .reminders)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encodeIfPresent(self.title, forKey: .title)
+            try container.encodeIfPresent(self.notes, forKey: .notes)
+            try container.encodeNullable(self.projectId, forKey: .projectId)
+            try container.encodeIfPresent(self.labelIds, forKey: .labelIds)
+            try container.encodeNullable(self.due, forKey: .due)
+            try container.encodeNullable(self.recurrence, forKey: .recurrence)
+            try container.encodeIfPresent(self.priority, forKey: .priority)
+            try container.encodeIfPresent(self.reminders, forKey: .reminders)
+        }
+    }
+
     public struct TaskPatch: Codable, Hashable, Sendable, Identifiable {
         public var kind: TaskPatchKind
         public var id: String
@@ -1653,22 +2161,22 @@ extension API {
     }
 
     public struct TaskPatchFields: Codable, Hashable, Sendable {
-        public var parentId: Nullable<String>?
+        public var parentId: String??
         public var order: Double?
         public var title: String?
         public var notes: String?
-        public var projectId: Nullable<String>?
+        public var projectId: String??
         public var labelIds: [String]?
-        public var due: Nullable<Due>?
-        public var recurrence: Nullable<Recurrence>?
+        public var due: Due??
+        public var recurrence: Recurrence??
         public var priority: Priority?
         public var reminders: [Reminder]?
         public var createdAt: Int?
-        public var completedAt: Nullable<Int>?
-        public var sourceKey: Nullable<String>?
+        public var completedAt: Int??
+        public var sourceKey: String??
         public var deleted: Bool?
 
-        public init(parentId: Nullable<String>? = nil, order: Double? = nil, title: String? = nil, notes: String? = nil, projectId: Nullable<String>? = nil, labelIds: [String]? = nil, due: Nullable<Due>? = nil, recurrence: Nullable<Recurrence>? = nil, priority: Priority? = nil, reminders: [Reminder]? = nil, createdAt: Int? = nil, completedAt: Nullable<Int>? = nil, sourceKey: Nullable<String>? = nil, deleted: Bool? = nil) {
+        public init(parentId: String?? = nil, order: Double? = nil, title: String? = nil, notes: String? = nil, projectId: String?? = nil, labelIds: [String]? = nil, due: Due?? = nil, recurrence: Recurrence?? = nil, priority: Priority? = nil, reminders: [Reminder]? = nil, createdAt: Int? = nil, completedAt: Int?? = nil, sourceKey: String?? = nil, deleted: Bool? = nil) {
             self.parentId = parentId
             self.order = order
             self.title = title
@@ -1745,6 +2253,93 @@ extension API {
 
     /// Local wall-clock time, `HH:mm`.
     public typealias TimeOfDay = String
+
+    public struct Timing: Codable, Hashable, Sendable {
+        public var due: Due
+        public var recurrence: Recurrence?
+
+        public init(due: Due, recurrence: Recurrence? = nil) {
+            self.due = due
+            self.recurrence = recurrence
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case due = "due"
+            case recurrence = "recurrence"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            due = try container.decode(Due.self, forKey: .due)
+            recurrence = try container.decode(Recurrence?.self, forKey: .recurrence)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.due, forKey: .due)
+            try container.encode(self.recurrence, forKey: .recurrence)
+        }
+    }
+
+    public struct Today: Codable, Hashable, Sendable {
+        public var overdue: [Task]
+        public var today: [Task]
+
+        public init(overdue: [Task] = [], today: [Task] = []) {
+            self.overdue = overdue
+            self.today = today
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case overdue = "overdue"
+            case today = "today"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            overdue = try container.decode([Task].self, forKey: .overdue)
+            today = try container.decode([Task].self, forKey: .today)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.overdue, forKey: .overdue)
+            try container.encode(self.today, forKey: .today)
+        }
+    }
+
+    /// What a backup holds, read without touching the store.
+    public struct TodoistBackup: Codable, Hashable, Sendable {
+        public var projects: [BackupProject]
+        public var tasks: [BackupTask]
+        public var warnings: [String]
+
+        public init(projects: [BackupProject] = [], tasks: [BackupTask] = [], warnings: [String] = []) {
+            self.projects = projects
+            self.tasks = tasks
+            self.warnings = warnings
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case projects = "projects"
+            case tasks = "tasks"
+            case warnings = "warnings"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            projects = try container.decode([BackupProject].self, forKey: .projects)
+            tasks = try container.decode([BackupTask].self, forKey: .tasks)
+            warnings = try container.decode([String].self, forKey: .warnings)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.projects, forKey: .projects)
+            try container.encode(self.tasks, forKey: .tasks)
+            try container.encode(self.warnings, forKey: .warnings)
+        }
+    }
 
     /// Sunday is 0, as in `Date#getDay`.
     public typealias Weekday = Int

@@ -9,7 +9,7 @@
  * like `safeParse` does. Others only decode the shape, as shared functions accept values the wire would not.
  *
  * JSON tells a missing field from a `null` one, and a sync patch depends on it, so a property that is both optional
- * and nullable becomes `Nullable<T>?`: `nil` is missing, `.null` is `null`.
+ * and nullable becomes `T??`, as Core writes it: `nil` is missing, `.some(nil)` is `null`.
  *
  * Schema keys that shape the Swift:
  * - `x-enum-names`: the case names of an integer enum, which otherwise becomes an `Int` typealias.
@@ -469,9 +469,9 @@ const docLines = (doc: string | undefined, indent: string) =>
 /** A property that may be absent but has a default is stored as the plain type. */
 const defaulted = (prop: Prop) => !prop.required && !prop.nullable && prop.defaultValue !== undefined;
 
-/** The stored type: `Nullable<T>?` for optional and nullable, `T?` when it may be absent or null. */
+/** The stored type: `T??` for optional and nullable, `T?` when it may be absent or null. */
 function storedType(prop: Prop): string {
-	if (prop.nullable && !prop.required) return `Nullable<${prop.type}>?`;
+	if (prop.nullable && !prop.required) return `${prop.type}??`;
 	if (defaulted(prop)) return prop.type;
 	return prop.nullable || !prop.required ? `${prop.type}?` : prop.type;
 }
@@ -762,25 +762,6 @@ public enum API {
     public enum Endpoints {}
 }
 
-/// A JSON property that can be missing, \`null\`, or a value. An optional of this type is missing when \`nil\`.
-public enum Nullable<Wrapped: Codable & Hashable & Sendable>: Codable, Hashable, Sendable {
-    case null
-    case value(Wrapped)
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        self = container.decodeNil() ? .null : .value(try container.decode(Wrapped.self))
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        switch self {
-        case .null: try container.encodeNil()
-        case let .value(value): try container.encode(value)
-        }
-    }
-}
-
 /// One operation of the contract.
 public protocol APIEndpoint {
     associatedtype Input: Encodable & Sendable
@@ -831,14 +812,16 @@ func check<K: CodingKey>(_ ok: Bool, _ key: K, in container: KeyedDecodingContai
 }
 
 extension KeyedDecodingContainer {
-    func decodeNullable<T>(_: T.Type, forKey key: Key) throws -> Nullable<T>? {
+    /// \`nil\` when the key is missing, \`.some(nil)\` when it is \`null\`.
+    func decodeNullable<T: Decodable>(_: T.Type, forKey key: Key) throws -> T?? {
         guard contains(key) else { return nil }
-        return try decodeNil(forKey: key) ? .null : .value(decode(T.self, forKey: key))
+        return try decodeNil(forKey: key) ? .some(nil) : .some(decode(T.self, forKey: key))
     }
 }
 
 extension KeyedEncodingContainer {
-    mutating func encodeNullable<T>(_ value: Nullable<T>?, forKey key: Key) throws {
+    /// Writes nothing for a missing value and \`null\` for \`.some(nil)\`.
+    mutating func encodeNullable<T: Encodable>(_ value: T??, forKey key: Key) throws {
         guard let value else { return }
         try encode(value, forKey: key)
     }
