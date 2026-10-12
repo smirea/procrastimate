@@ -13,13 +13,20 @@ export const pushSubscriptionSchema = z.object({
 export type PushSubscriptionInfo = z.infer<typeof pushSubscriptionSchema>;
 
 /** One system notification the server delivers at `at`, in epoch milliseconds. */
+export const scheduledPushSchema = z.object({
+	at: z.number(),
+	taskId: z.string(),
+	title: z.string(),
+	body: z.string(),
+}) satisfies z.ZodType<ScheduledNotification>;
 export type ScheduledPush = ScheduledNotification;
 
 /** `PUT /api/push/subscription` registers the subscription of the device whose token the request carries. */
 export const subscribeRequestSchema = z.object({ subscription: pushSubscriptionSchema });
 
 /** `GET /api/push/schedule`: what the server will deliver to the calling device, soonest first. */
-export type PushScheduleResponse = { notifications: ScheduledPush[] };
+export const pushScheduleResponseSchema = z.object({ notifications: z.array(scheduledPushSchema) });
+export type PushScheduleResponse = z.infer<typeof pushScheduleResponseSchema>;
 
 /** The decrypted push payload the service worker shows. Notifications with the same `tag` replace each other. */
 export type PushMessage = { title: string; body: string; tag: string; taskId: string | null };

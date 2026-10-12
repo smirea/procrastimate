@@ -1,9 +1,9 @@
 import { replaceState } from '$app/navigation';
 import { page } from '$app/state';
 import { pushSubscriptionSchema, type PushSubscriptionInfo } from 'shared/push.ts';
+import { api, isUnauthorized } from './api.ts';
 import { session } from './session.svelte.ts';
 import { store } from './store.svelte.ts';
-import { deviceHeaders } from './sync.svelte.ts';
 import { sheets } from './ui.svelte.ts';
 
 /** Where this device stands with Web Push. Settings shows one line from it, and nothing else. */
@@ -153,21 +153,13 @@ class Push {
 	/** Registers the subscription for this signed-in device. The server then pushes whatever the synced tasks call for. */
 	async #register(subscription: PushSubscriptionInfo) {
 		if (this.#registered === subscription.endpoint) return;
-		const response = await this.#call('PUT', { subscription });
-		if (response?.ok) this.#registered = subscription.endpoint;
-	}
-
-	/** Calls the subscription route as this device. A `401` ends the session. */
-	async #call(method: 'PUT', body?: unknown): Promise<Response | null> {
-		if (session.state !== 'in' || !store.deviceId()) return null;
-		const response = await fetch('/api/push/subscription', {
-			method,
-			credentials: 'include',
-			headers: { ...JSON_HEADERS, ...deviceHeaders() },
-			body: body === undefined ? undefined : JSON.stringify(body),
-		}).catch(() => null);
-		if (response?.status === 401) session.clear();
-		return response;
+		if (session.state !== 'in' || !store.deviceId()) return;
+		try {
+			await api.push.subscribe({ subscription });
+			this.#registered = subscription.endpoint;
+		} catch (error) {
+			if (isUnauthorized(error)) session.clear();
+		}
 	}
 
 	#retry() {
@@ -195,13 +187,12 @@ function openTask(message: unknown) {
 	if (type === 'open-task' && typeof taskId === 'string' && store.task(taskId)) sheets.openTask(taskId);
 }
 
-const JSON_HEADERS = { 'content-type': 'application/json' };
-
 async function fetchKey(): Promise<Uint8Array<ArrayBuffer> | null> {
-	const response = await fetch('/api/push/key').catch(() => null);
-	if (!response?.ok) return null;
-	const { publicKey } = (await response.json().catch(() => ({}))) as { publicKey?: unknown };
-	if (typeof publicKey !== 'string' || !publicKey) return null;
+	const publicKey = await api.push
+		.key()
+		.then(body => body.publicKey)
+		.catch(() => null);
+	if (!publicKey) return null;
 	try {
 		const base64 = publicKey.replaceAll('-', '+').replaceAll('_', '/');
 		return Uint8Array.from(atob(base64.padEnd(Math.ceil(base64.length / 4) * 4, '=')), c => c.charCodeAt(0));

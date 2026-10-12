@@ -70,11 +70,11 @@ public final class Store {
     }
 
     /// The body of `POST /api/sync`.
-    public func syncRequest() -> Data? { SyncEngine.requestJSON(snapshot) }
+    public func syncRequest() throws -> API.SyncRequest? { try SyncEngine.request(snapshot) }
 
     /// Applies one sync response onto the document.
-    public func takeSyncResponse(_ json: Data) -> Bool {
-        let applied = SyncEngine.apply(&snapshot, response: json)
+    public func takeSyncResponse(_ response: API.SyncResponse) -> Bool {
+        let applied = SyncEngine.apply(&snapshot, response: response)
         if applied { scheduleWrite() }
         return applied
     }

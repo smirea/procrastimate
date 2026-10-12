@@ -114,7 +114,11 @@ function snapshot(project: string) {
     return hash.digest("hex");
 }
 
+/** The repository's generator writes `Sources/Core/Generated/API.swift` from the server contract. */
+const generator = join(root, "../scripts/generate/index.ts");
+
 async function deploy(target: Target, project: string) {
+    if (existsSync(generator)) await command(["bun", generator]);
     console.log(`Building for ${target.name}${target.runtime ? ` (${target.runtime})` : ""}…`);
     const build = join(root, "DerivedData", target.kind);
     mkdirSync(build, { recursive: true });

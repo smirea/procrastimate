@@ -1,3 +1,5 @@
+import type { AuthMethods } from 'shared/api/contract.ts';
+import { api } from './api.ts';
 import { store } from './store.svelte.ts';
 
 /**
@@ -8,14 +10,6 @@ import { store } from './store.svelte.ts';
 
 const USER_KEY = 'procrastimate-user';
 const OWNER_KEY = 'procrastimate-owner';
-
-export type AuthMethods = {
-	email: boolean;
-	google: boolean;
-	apple: boolean;
-	googleIosClientId: string | null;
-	appleNative: boolean;
-};
 
 type State = 'checking' | 'in' | 'out';
 
@@ -113,8 +107,8 @@ class Session {
 	}
 
 	async deleteAccount() {
-		const response = await fetch('/api/account/delete', { method: 'POST', credentials: 'include' }).catch(() => null);
-		if (!response?.ok) {
+		const deleted = await api.account.delete().catch(() => null);
+		if (!deleted) {
 			this.error = 'Could not delete the account';
 			return;
 		}
@@ -147,11 +141,8 @@ class Session {
 	}
 
 	async loadMethods() {
-		const response = await fetch('/api/auth/methods').catch(() => null);
-		if (!response?.ok) return;
-		const body = (await response.json().catch(() => null)) as AuthMethods | null;
-		if (!body) return;
-		this.methods = body;
+		const methods = await api.auth.methods().catch(() => null);
+		if (methods) this.methods = methods;
 	}
 }
 

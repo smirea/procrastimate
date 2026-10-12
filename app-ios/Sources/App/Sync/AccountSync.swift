@@ -72,11 +72,7 @@ final class AccountSync {
     func deleteAccount() async {
         stop()
         guard let token = SessionToken.read() else { return }
-        var request = URLRequest(url: AppEnvironment.apiURL.appending(path: "api/account/delete"))
-        request.httpMethod = "POST"
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        guard let (_, response) = try? await URLSession.shared.data(for: request),
-              let http = response as? HTTPURLResponse, http.statusCode == 200 else {
+        guard (try? await APIClient.send(API.Endpoints.AccountDelete.self, NoInput(), token: token)) != nil else {
             session.error = "Could not delete the account"
             start()
             return
@@ -90,29 +86,24 @@ final class AccountSync {
     private func sync() async {
         guard let token = SessionToken.read() else { return }
         store.noteTimeZone(clock.timeZone.identifier)
-        guard let body = store.syncRequest() else { return }
-        var request = URLRequest(url: AppEnvironment.apiURL.appending(path: "api/sync"))
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        applyDevice(&request)
-        request.httpBody = body
-        let data: Data
-        let response: URLResponse
+        let body: API.SyncRequest
         do {
-            (data, response) = try await URLSession.shared.data(for: request)
+            guard let request = try store.syncRequest() else { return }
+            body = request
+        } catch {
+            print("sync: the outbox does not fit the contract", error)
+            return
+        }
+        let response: API.SyncResponse
+        do {
+            response = try await APIClient.send(API.Endpoints.Sync.self, body, token: token, device: device())
+        } catch let failure as APIFailure where failure.isUnauthorized {
+            reject()
+            return
         } catch {
             return
         }
-        guard let http = response as? HTTPURLResponse else { return }
-        if http.statusCode == 401 {
-            reject()
-            return
-        }
-        guard http.statusCode == 200 else { return }
-        if store.takeSyncResponse(data),
-           let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-           let changes = object["changes"] as? [Any], changes.count >= 1000 {
+        if store.takeSyncResponse(response), case let .changes(page) = response, page.changes.count >= SyncEngine.pageSize {
             await sync()
         }
     }
@@ -162,10 +153,14 @@ final class AccountSync {
         session.signedIn = Launch.signedIn
     }
 
+    private func device() -> (id: String, name: String)? {
+        store.snapshot.sync.map { ($0.deviceId, deviceName()) }
+    }
+
     private func applyDevice(_ request: inout URLRequest) {
-        guard let id = store.snapshot.sync?.deviceId else { return }
+        guard let (id, name) = device() else { return }
         request.setValue(id, forHTTPHeaderField: "x-procrastimate-device")
-        request.setValue(deviceName(), forHTTPHeaderField: "x-procrastimate-device-name")
+        request.setValue(name, forHTTPHeaderField: "x-procrastimate-device-name")
     }
 
     private func deviceName() -> String {

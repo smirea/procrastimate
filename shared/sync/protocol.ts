@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { isHlc } from './hlc.ts';
+import type { Kind } from './kinds.ts';
 import type { DateKey, Label, Project, Task, TimeOfDay, Weekday } from '../task.ts';
 
 /**
@@ -8,8 +9,7 @@ import type { DateKey, Label, Project, Task, TimeOfDay, Weekday } from '../task.
  * op that won on the server, in server order.
  */
 
-export const KINDS = ['project', 'label', 'task', 'settings'] as const;
-export type Kind = (typeof KINDS)[number];
+export { KINDS, type Kind } from './kinds.ts';
 
 /** The id of the one settings record. */
 export const SETTINGS_ID = 'settings';
@@ -17,20 +17,28 @@ export const SETTINGS_ID = 'settings';
 export type Settings = { timeZone: string | null };
 export const DEFAULT_SETTINGS: Settings = { timeZone: null };
 
-const dateKey = z.custom<DateKey>(v => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v));
-const timeOfDay = z.custom<TimeOfDay>(v => typeof v === 'string' && /^\d{2}:\d{2}$/.test(v));
-const interval = z.number().int().positive();
-const weekday = z.custom<Weekday>(v => Number.isInteger(v) && (v as number) >= 0 && (v as number) <= 6);
+export const DATE_KEY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+export const TIME_OF_DAY_PATTERN = /^\d{2}:\d{2}$/;
 
-const recurrence = z.discriminatedUnion('unit', [
+/** Custom so the parsed type is the template literal. The contract gives both their JSON Schema. */
+export const dateKeySchema = z.custom<DateKey>(v => typeof v === 'string' && DATE_KEY_PATTERN.test(v));
+export const timeOfDaySchema = z.custom<TimeOfDay>(v => typeof v === 'string' && TIME_OF_DAY_PATTERN.test(v));
+const dateKey = dateKeySchema;
+const timeOfDay = timeOfDaySchema;
+const interval = z.number().int().positive();
+const weekday = z.literal([0, 1, 2, 3, 4, 5, 6]) satisfies z.ZodType<Weekday>;
+
+export const recurrenceSchema = z.discriminatedUnion('unit', [
 	z.object({ interval, unit: z.enum(['day', 'weekday', 'month', 'year']) }),
 	z.object({ interval, unit: z.literal('week'), days: z.array(weekday).min(2).readonly().optional() }),
 ]);
 
-const reminder = z.discriminatedUnion('kind', [
+export const reminderSchema = z.discriminatedUnion('kind', [
 	z.object({ kind: z.literal('before'), minutes: z.number().int().nonnegative() }),
 	z.object({ kind: z.literal('at'), date: dateKey, time: timeOfDay }),
 ]);
+
+export const dueSchema = z.object({ date: dateKey, time: timeOfDay.nullable() });
 
 /** Every synced field of each kind. A missing `sourceKey` travels as `null`, since JSON has no `undefined`. */
 export const taskFieldsSchema = z.object({
@@ -40,10 +48,10 @@ export const taskFieldsSchema = z.object({
 	notes: z.string(),
 	projectId: z.string().nullable(),
 	labelIds: z.array(z.string()),
-	due: z.object({ date: dateKey, time: timeOfDay.nullable() }).nullable(),
-	recurrence: recurrence.nullable(),
+	due: dueSchema.nullable(),
+	recurrence: recurrenceSchema.nullable(),
 	priority: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]),
-	reminders: z.array(reminder),
+	reminders: z.array(reminderSchema),
 	createdAt: z.number(),
 	completedAt: z.number().nullable(),
 	sourceKey: z.string().nullable(),
@@ -68,18 +76,16 @@ export const FIELDS_SCHEMAS = {
 
 export type FieldsByKind = { [K in Kind]: z.infer<(typeof FIELDS_SCHEMAS)[K]> };
 
-export const taskSchema = taskFieldsSchema
-	.extend({ id: z.string(), sourceKey: z.string().optional() })
-	.transform(({ sourceKey, ...task }) => (sourceKey === undefined ? task : { ...task, sourceKey })) satisfies z.ZodType<
-	Task,
-	unknown
->;
+/** A missing `sourceKey` stays missing in a whole entity, since JSON has no `undefined`. */
+export const taskSchema = taskFieldsSchema.extend({
+	id: z.string(),
+	sourceKey: z.string().optional(),
+}) satisfies z.ZodType<Task>;
 
-export const projectSchema = projectFieldsSchema
-	.extend({ id: z.string(), sourceKey: z.string().optional() })
-	.transform(({ sourceKey, ...project }) =>
-		sourceKey === undefined ? project : { ...project, sourceKey },
-	) satisfies z.ZodType<Project, unknown>;
+export const projectSchema = projectFieldsSchema.extend({
+	id: z.string(),
+	sourceKey: z.string().optional(),
+}) satisfies z.ZodType<Project>;
 
 export const labelSchema = labelFieldsSchema.extend({ id: z.string() }) satisfies z.ZodType<Label>;
 
@@ -102,12 +108,19 @@ const patchOf = <K extends Kind>(kind: K) =>
 		fields: FIELDS_SCHEMAS[kind].partial().extend({ deleted: z.boolean().optional() }),
 	});
 
+export const PATCH_SCHEMAS = {
+	task: patchOf('task'),
+	project: patchOf('project'),
+	label: patchOf('label'),
+	settings: patchOf('settings'),
+} as const;
+
 /** One entity's changed fields, before it gets an op id and a clock. */
 export const patchSchema = z.discriminatedUnion('kind', [
-	patchOf('task'),
-	patchOf('project'),
-	patchOf('label'),
-	patchOf('settings'),
+	PATCH_SCHEMAS.task,
+	PATCH_SCHEMAS.project,
+	PATCH_SCHEMAS.label,
+	PATCH_SCHEMAS.settings,
 ]);
 export type Patch = z.infer<typeof patchSchema>;
 
