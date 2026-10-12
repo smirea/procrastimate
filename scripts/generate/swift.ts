@@ -486,7 +486,7 @@ function mergeOutputTwins(document: Document): Document {
 		if (!value || typeof value !== 'object') return value;
 		return Object.fromEntries(
 			Object.entries(value)
-				.filter(([key]) => key !== 'additionalProperties')
+				.filter(([key, inner]) => key !== 'additionalProperties' || typeof inner !== 'boolean')
 				.map(([key, inner]) => {
 					if (key !== '$ref' || typeof inner !== 'string') return [key, strip(inner, renames)];
 					const name = inner.replace('#/components/schemas/', '');

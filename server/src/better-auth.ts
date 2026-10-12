@@ -11,6 +11,7 @@ import { USER_HEADER } from '../../shared/auth';
 import type { Env } from './bindings';
 import { authSchema, type user } from './db/auth-schema';
 import { tursoDatabase, tursoTarget, type TursoDatabase } from './db/turso';
+import { errorResponse } from './errors';
 import { withUser } from './request-user';
 
 /** A year. Days offline must not sign the account out; a day online extends the session. */
@@ -232,11 +233,9 @@ export function authOnDatabase(secret: string, db: TursoDatabase): Auth {
 	return betterAuth(authOptions(secret, {}, drizzleDatabase(db), {}, true) as never) as Auth;
 }
 
-const fail = (status: number, error: string) => Response.json({ ok: false, error }, { status });
-
 export async function authHandler(request: Request, env: Env): Promise<Response> {
 	const auth = await getAuth(env);
-	if (!auth) return fail(503, 'Sign-in is not configured');
+	if (!auth) return errorResponse('SERVICE_UNAVAILABLE', 'Sign-in is not configured');
 	return auth.handler(request);
 }
 
