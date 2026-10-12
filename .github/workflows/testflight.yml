@@ -4,7 +4,8 @@ name: TestFlight
 # Stefan's Mac. Internal group `me` has access to all builds, so every upload reaches it without an extra step.
 # Never runs on pull requests: macOS runners queue, and PR checks stay fast.
 # Pushes share one concurrency group and cancel the run already in progress. The debounce job waits ten minutes,
-# then skips the archive when master has moved on, so a burst of merges uploads the latest commit once.
+# then skips the archive only when a newer commit touched app-ios or this workflow, because that commit has its
+# own run. A later web or server commit leaves this run to archive, because the path filter would not start one.
 # A manual workflow_dispatch does not wait.
 on:
   push:
@@ -30,11 +31,14 @@ jobs:
     outputs:
       build: ${{ steps.gate.outputs.build }}
     steps:
+      # Full history so the gate can see commits that landed on master during the wait.
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
       # The wait stays off the xcode-27 runner, which queues and is only needed for the archive.
       - name: Debounce pushes to master
         id: gate
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
           if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
             echo "Manual dispatch; building ${GITHUB_SHA} without waiting."
@@ -43,13 +47,24 @@ jobs:
           fi
           echo "Waiting 10 minutes so a burst of merges uploads once."
           sleep 600
-          head=$(gh api "repos/${GITHUB_REPOSITORY}/commits/master" --jq .sha)
-          if [ "$head" != "$GITHUB_SHA" ]; then
-            echo "master is ${head}; this run is ${GITHUB_SHA}. Skipping the archive."
+          git fetch --no-tags origin master
+          head=$(git rev-parse origin/master)
+          if [ "$head" = "$GITHUB_SHA" ]; then
+            echo "This commit is still master. Building."
+            echo "build=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # First-parent diffs, so a merge commit counts the files it brought onto master.
+          # A web or server commit does not start this workflow, so it must not skip the archive.
+          files=$(git log --first-parent --diff-merges=first-parent --name-only --pretty=format: "${GITHUB_SHA}..${head}")
+          touched=$(printf '%s\n' "$files" | grep -e '^app-ios/' -e '^\.github/workflows/testflight\.yml$' || true)
+          if [ -n "$touched" ]; then
+            echo "master is ${head}. A newer commit touches TestFlight paths, so that run archives:"
+            printf '%s\n' "$touched"
             echo "build=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          echo "This commit is still master. Building."
+          echo "master is ${head}, and no newer commit touches app-ios or this workflow. Building ${GITHUB_SHA}."
           echo "build=true" >> "$GITHUB_OUTPUT"
 
   upload:
