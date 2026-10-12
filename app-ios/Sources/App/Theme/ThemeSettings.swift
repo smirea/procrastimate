@@ -1,15 +1,12 @@
+import Core
 import Observation
 import SwiftUI
 import UIKit
 
-/// System, Light, or Dark, the same three choices as the web.
-enum ThemeChoice: String, CaseIterable, Identifiable {
-    case system
-    case light
-    case dark
+/// System, Light, or Dark, the same three choices as the web, from `shared/theme.ts`.
+typealias ThemeChoice = API.ThemeChoice
 
-    var id: Self { self }
-
+extension ThemeChoice {
     var label: String {
         switch self {
         case .system: "System"

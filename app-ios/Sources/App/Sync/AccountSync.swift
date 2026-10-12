@@ -127,10 +127,8 @@ final class AccountSync {
             Task { @MainActor in
                 guard let self, self.socket === task else { return }
                 if case let .success(.string(text)) = result,
-                   let data = text.data(using: .utf8),
-                   let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                   let cursor = object["cursor"] as? Int,
-                   let own = self.store.snapshot.sync?.cursor, cursor > own {
+                   let nudge = try? JSONDecoder.validating().decode(API.Nudge.self, from: Data(text.utf8)),
+                   let own = self.store.snapshot.sync?.cursor, nudge.cursor > own {
                     await self.sync()
                 }
                 if case .failure = result {

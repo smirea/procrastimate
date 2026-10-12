@@ -640,10 +640,13 @@ function renderInline(decl: Extract<Decl, { kind: 'inline' }>, generator: Genera
 	const all = new Map<string, Prop>();
 	for (const variant of decl.variants) for (const prop of variant.props) all.set(prop.swift, prop);
 	const caseOf = (value: string) => identifier(camel(value));
-	const labels = (props: Prop[]) => props.map(prop => `${bare(prop.swift)}: ${storedType(prop)}`).join(', ');
+	const labels = (props: Prop[]) =>
+		props.length ? `(${props.map(prop => `${bare(prop.swift)}: ${storedType(prop)}`).join(', ')})` : '';
+	const values = (props: Prop[], each: (prop: Prop) => string) =>
+		props.length ? `(${props.map(each).join(', ')})` : '';
 	return [
 		`    public enum ${decl.name}: ${PROTOCOLS} {`,
-		...decl.variants.map(variant => `        case ${caseOf(variant.value)}(${labels(variant.props)})`),
+		...decl.variants.map(variant => `        case ${caseOf(variant.value)}${labels(variant.props)}`),
 		'',
 		...codingKeys([...all.values()], [`            case tag = ${JSON.stringify(decl.tag)}`]),
 		'',
@@ -657,7 +660,7 @@ function renderInline(decl: Extract<Decl, { kind: 'inline' }>, generator: Genera
 				variant.props.flatMap(prop => checkLines(prop, prop.swift, '                ')),
 				'                ',
 			),
-			`                self = .${caseOf(variant.value)}(${variant.props.map(prop => `${bare(prop.swift)}: ${prop.swift}`).join(', ')})`,
+			`                self = .${caseOf(variant.value)}${values(variant.props, prop => `${bare(prop.swift)}: ${prop.swift}`)}`,
 		]),
 		'            case let tag:',
 		`                throw DecodingError.dataCorruptedError(forKey: .tag, in: container, debugDescription: "Unknown ${decl.tag} \\(tag)")`,
@@ -668,7 +671,7 @@ function renderInline(decl: Extract<Decl, { kind: 'inline' }>, generator: Genera
 		'            var container = encoder.container(keyedBy: CodingKeys.self)',
 		'            switch self {',
 		...decl.variants.flatMap(variant => [
-			`            case let .${caseOf(variant.value)}(${variant.props.map(prop => bare(prop.swift)).join(', ')}):`,
+			`            case ${variant.props.length ? 'let ' : ''}.${caseOf(variant.value)}${values(variant.props, prop => bare(prop.swift))}:`,
 			`                try container.encode(${JSON.stringify(variant.value)}, forKey: .tag)`,
 			...variant.props.map(prop => `                ${encodeLine(prop, bare(prop.swift))}`),
 		]),
@@ -698,8 +701,10 @@ function renderDecl(decl: Decl, generator: Generator): string {
 		case 'strings':
 			return [
 				...doc,
-				`    public enum ${decl.name}: String, ${PROTOCOLS}, CaseIterable {`,
+				`    public enum ${decl.name}: String, ${PROTOCOLS}, CaseIterable, Identifiable {`,
 				...decl.values.map(value => `        case ${caseName(decl, value)} = ${JSON.stringify(value)}`),
+				'',
+				'        public var id: String { rawValue }',
 				'    }',
 			].join('\n');
 		case 'struct':

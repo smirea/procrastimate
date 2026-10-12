@@ -152,7 +152,7 @@ export const SOCKET_PONG = 'pong';
 /** The close code the server uses when the socket's device is removed. */
 export const SOCKET_REVOKED = 4401;
 
-export const nudgeSchema = z.object({ cursor });
+export const nudgeSchema = z.object({ cursor }).meta({ id: 'Nudge' });
 export type Nudge = z.infer<typeof nudgeSchema>;
 
 const asNumber = (value: unknown) => (typeof value === 'boolean' ? Number(value) : value);

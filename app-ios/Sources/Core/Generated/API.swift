@@ -489,9 +489,11 @@ extension API {
         }
     }
 
-    public enum CompletionKind: String, Codable, Hashable, Sendable, CaseIterable {
+    public enum CompletionKind: String, Codable, Hashable, Sendable, CaseIterable, Identifiable {
         case done = "done"
         case rolled = "rolled"
+
+        public var id: String { rawValue }
     }
 
     /// The fields a completion changes. Undo writes back only these, so edits made since then survive it.
@@ -633,12 +635,14 @@ extension API {
         }
     }
 
-    public enum DueTone: String, Codable, Hashable, Sendable, CaseIterable {
+    public enum DueTone: String, Codable, Hashable, Sendable, CaseIterable, Identifiable {
         case overdue = "overdue"
         case today = "today"
         case tomorrow = "tomorrow"
         case week = "week"
         case later = "later"
+
+        public var id: String { rawValue }
     }
 
     /// One matched text and the half-open spans to highlight in it.
@@ -815,8 +819,10 @@ extension API {
         }
     }
 
-    public enum LabelPatchKind: String, Codable, Hashable, Sendable, CaseIterable {
+    public enum LabelPatchKind: String, Codable, Hashable, Sendable, CaseIterable, Identifiable {
         case label = "label"
+
+        public var id: String { rawValue }
     }
 
     public struct NewTask: Codable, Hashable, Sendable {
@@ -868,6 +874,34 @@ extension API {
             try container.encode(self.recurrence, forKey: .recurrence)
             try container.encode(self.priority, forKey: .priority)
             try container.encode(self.reminders, forKey: .reminders)
+        }
+    }
+
+    public struct Nudge: Codable, Hashable, Sendable {
+        public var cursor: Int
+
+        public init(cursor: Int) {
+            self.cursor = cursor
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case cursor = "cursor"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            cursor = try container.decode(Int.self, forKey: .cursor)
+            if decoder.validates {
+                do {
+                    let value = self.cursor
+                    try check(value >= 0, .cursor, in: container, "cursor at least 0")
+                }
+            }
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.cursor, forKey: .cursor)
         }
     }
 
@@ -1331,8 +1365,10 @@ extension API {
         }
     }
 
-    public enum ProjectPatchKind: String, Codable, Hashable, Sendable, CaseIterable {
+    public enum ProjectPatchKind: String, Codable, Hashable, Sendable, CaseIterable, Identifiable {
         case project = "project"
+
+        public var id: String { rawValue }
     }
 
     public struct PushKey: Codable, Hashable, Sendable {
@@ -1515,6 +1551,124 @@ extension API {
         }
     }
 
+    public struct RambleClientMessage: Codable, Hashable, Sendable {
+        public var type: RambleClientMessageType
+
+        public init(type: RambleClientMessageType) {
+            self.type = type
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case type = "type"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            type = try container.decode(RambleClientMessageType.self, forKey: .type)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.type, forKey: .type)
+        }
+    }
+
+    public enum RambleClientMessageType: String, Codable, Hashable, Sendable, CaseIterable, Identifiable {
+        case stop = "stop"
+
+        public var id: String { rawValue }
+    }
+
+    public enum RambleEndReason: String, Codable, Hashable, Sendable, CaseIterable, Identifiable {
+        case stopped = "stopped"
+        case sessionLimit = "session-limit"
+        case dailyLimit = "daily-limit"
+        case idle = "idle"
+        case error = "error"
+
+        public var id: String { rawValue }
+    }
+
+    public enum RambleErrorCode: String, Codable, Hashable, Sendable, CaseIterable, Identifiable {
+        case dailyLimit = "daily-limit"
+        case upstream = "upstream"
+        case invalidAudio = "invalid-audio"
+
+        public var id: String { rawValue }
+    }
+
+    public enum RambleServerMessage: Codable, Hashable, Sendable {
+        case started
+        case partial(text: String)
+        case committed(text: String)
+        case ended(seconds: Double, reason: RambleEndReason)
+        case error(code: RambleErrorCode, message: String, resetsAt: Double?)
+
+        enum CodingKeys: String, CodingKey {
+            case tag = "type"
+            case text = "text"
+            case seconds = "seconds"
+            case reason = "reason"
+            case code = "code"
+            case message = "message"
+            case resetsAt = "resetsAt"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            switch try container.decode(String.self, forKey: .tag) {
+            case "started":
+                self = .started
+            case "partial":
+                let text = try container.decode(String.self, forKey: .text)
+                self = .partial(text: text)
+            case "committed":
+                let text = try container.decode(String.self, forKey: .text)
+                self = .committed(text: text)
+            case "ended":
+                let seconds = try container.decode(Double.self, forKey: .seconds)
+                let reason = try container.decode(RambleEndReason.self, forKey: .reason)
+                if decoder.validates {
+                    do {
+                        let value = seconds
+                        try check(value >= 0, .seconds, in: container, "seconds at least 0")
+                    }
+                }
+                self = .ended(seconds: seconds, reason: reason)
+            case "error":
+                let code = try container.decode(RambleErrorCode.self, forKey: .code)
+                let message = try container.decode(String.self, forKey: .message)
+                let resetsAt = try container.decodeIfPresent(Double.self, forKey: .resetsAt)
+                self = .error(code: code, message: message, resetsAt: resetsAt)
+            case let tag:
+                throw DecodingError.dataCorruptedError(forKey: .tag, in: container, debugDescription: "Unknown type \(tag)")
+            }
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            switch self {
+            case .started:
+                try container.encode("started", forKey: .tag)
+            case let .partial(text):
+                try container.encode("partial", forKey: .tag)
+                try container.encode(text, forKey: .text)
+            case let .committed(text):
+                try container.encode("committed", forKey: .tag)
+                try container.encode(text, forKey: .text)
+            case let .ended(seconds, reason):
+                try container.encode("ended", forKey: .tag)
+                try container.encode(seconds, forKey: .seconds)
+                try container.encode(reason, forKey: .reason)
+            case let .error(code, message, resetsAt):
+                try container.encode("error", forKey: .tag)
+                try container.encode(code, forKey: .code)
+                try container.encode(message, forKey: .message)
+                try container.encodeIfPresent(resetsAt, forKey: .resetsAt)
+            }
+        }
+    }
+
     public struct Recurrence: Codable, Hashable, Sendable {
         public var interval: Int
         public var unit: RecurrenceUnit
@@ -1557,12 +1711,14 @@ extension API {
         }
     }
 
-    public enum RecurrenceUnit: String, Codable, Hashable, Sendable, CaseIterable {
+    public enum RecurrenceUnit: String, Codable, Hashable, Sendable, CaseIterable, Identifiable {
         case day = "day"
         case weekday = "weekday"
         case week = "week"
         case month = "month"
         case year = "year"
+
+        public var id: String { rawValue }
     }
 
     public enum Reminder: Codable, Hashable, Sendable {
@@ -1777,13 +1933,17 @@ extension API {
         }
     }
 
-    public enum SettingsPatchKind: String, Codable, Hashable, Sendable, CaseIterable {
+    public enum SettingsPatchKind: String, Codable, Hashable, Sendable, CaseIterable, Identifiable {
         case settings = "settings"
+
+        public var id: String { rawValue }
     }
 
-    public enum Sigil: String, Codable, Hashable, Sendable, CaseIterable {
+    public enum Sigil: String, Codable, Hashable, Sendable, CaseIterable, Identifiable {
         case project = "#"
         case label = "@"
+
+        public var id: String { rawValue }
     }
 
     /// The `#query` or `@query` the caret sits in. `start` is the sigil, `end` is the end of the word under the caret.
@@ -2383,11 +2543,13 @@ extension API {
     }
 
     /// Every searchable text on a task, in the order fields are scored.
-    public enum TaskField: String, Codable, Hashable, Sendable, CaseIterable {
+    public enum TaskField: String, Codable, Hashable, Sendable, CaseIterable, Identifiable {
         case title = "title"
         case project = "project"
         case labels = "labels"
         case notes = "notes"
+
+        public var id: String { rawValue }
     }
 
     public struct TaskHit: Codable, Hashable, Sendable {
@@ -2541,8 +2703,18 @@ extension API {
         }
     }
 
-    public enum TaskPatchKind: String, Codable, Hashable, Sendable, CaseIterable {
+    public enum TaskPatchKind: String, Codable, Hashable, Sendable, CaseIterable, Identifiable {
         case task = "task"
+
+        public var id: String { rawValue }
+    }
+
+    public enum ThemeChoice: String, Codable, Hashable, Sendable, CaseIterable, Identifiable {
+        case system = "system"
+        case light = "light"
+        case dark = "dark"
+
+        public var id: String { rawValue }
     }
 
     /// Local wall-clock time, `HH:mm`.
@@ -2635,13 +2807,15 @@ extension API {
         }
     }
 
-    public enum TokenKind: String, Codable, Hashable, Sendable, CaseIterable {
+    public enum TokenKind: String, Codable, Hashable, Sendable, CaseIterable, Identifiable {
         case due = "due"
         case recurrence = "recurrence"
         case priority = "priority"
         case reminder = "reminder"
         case project = "project"
         case label = "label"
+
+        public var id: String { rawValue }
     }
 
     /// A `#name` or `@name` in the text that names no project or label yet.
