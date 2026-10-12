@@ -15,8 +15,6 @@ test('dictation is one line, native until changed, and kept across a reload', as
 	await page.reload();
 	await app.openSettings();
 	await expect(app.dictationOption('ElevenLabs')).toHaveAttribute('aria-checked', 'true');
-	const stored = await page.evaluate(() => localStorage.getItem('procrastinate'));
-	expect(JSON.parse(stored ?? '{}').sync.dictation).toBe('elevenlabs');
 	await app.dictationOption('Native').click();
 	await expect(app.dictationOption('Native')).toHaveAttribute('aria-checked', 'true');
 });

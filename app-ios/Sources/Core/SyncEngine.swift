@@ -208,6 +208,11 @@ public enum SyncEngine {
         sync.epoch = epoch
         sync.reset = false
         sync.clock = format(observe(parseClock(sync.clock), hlc))
+        // A settings change writes the adopted zone and dictation onto the document. Keep them with the new cursor.
+        if let adopted = snapshot.sync {
+            sync.timeZone = adopted.timeZone
+            sync.dictation = adopted.dictation
+        }
         snapshot.sync = sync
         return true
     }
