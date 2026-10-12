@@ -4,12 +4,9 @@ import { notificationTimes, type Due, type Task } from './task.ts';
 import { zonedDateKey, zonedTime } from './zoned-time.ts';
 
 /** One system notification, shown at `at` in epoch milliseconds. */
-export const scheduledNotificationSchema = z.object({
-	at: z.number(),
-	taskId: z.string(),
-	title: z.string(),
-	body: z.string(),
-});
+export const scheduledNotificationSchema = z
+	.object({ at: z.number(), taskId: z.string(), title: z.string(), body: z.string() })
+	.meta({ id: 'ScheduledNotification' });
 export type ScheduledNotification = z.infer<typeof scheduledNotificationSchema>;
 
 /**

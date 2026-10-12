@@ -4,10 +4,12 @@ import { scheduledNotificationSchema, type ScheduledNotification } from './notif
 /** The most notifications the server keeps pending for one device at once. */
 export const MAX_SCHEDULED = 500;
 
-export const pushSubscriptionSchema = z.object({
-	endpoint: z.url({ protocol: /^https?$/ }),
-	keys: z.object({ p256dh: z.string().min(1), auth: z.string().min(1) }),
-});
+export const pushSubscriptionSchema = z
+	.object({
+		endpoint: z.url({ protocol: /^https?$/ }),
+		keys: z.object({ p256dh: z.string().min(1), auth: z.string().min(1) }),
+	})
+	.meta({ id: 'PushSubscription' });
 
 /** A browser push subscription, as `PushSubscription.toJSON()` returns it. */
 export type PushSubscriptionInfo = z.infer<typeof pushSubscriptionSchema>;

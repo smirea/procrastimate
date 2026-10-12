@@ -54,6 +54,6 @@ import Testing
         let request = try #require(try SyncEngine.request(snapshot))
         guard case let .task(op) = request.ops.last else { Issue.record("expected the task op"); return }
         #expect(op.fields.order == 0)
-        #expect(op.fields.priority == 1)
+        #expect(op.fields.priority == .p1)
     }
 }

@@ -1,7 +1,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { migrationsModule } from './migrations';
-import { zodModule } from './zod';
+import { tableDefaults, zodModule } from './zod';
 
 /**
  * Writes every generated file: the row schemas and bundled migrations from the Drizzle schema, then the OpenAPI
@@ -40,13 +40,15 @@ write('server/src/db/generated/migrations.ts', GENERATED + migrationsModule(join
 // The contract imports the row schemas just written, so it loads only now.
 const { minifyContractRouter } = await import('@orpc/contract');
 const { contract } = await import('../../shared/api/contract');
-const { openApiDocument } = await import('./openapi');
+const { namedSchemas, openApiDocument } = await import('./openapi');
 const { swiftModule } = await import('./swift');
 const openApi = json(await openApiDocument());
 write('shared/api/generated/openapi.json', openApi);
 write('app-web/src/lib/generated/contract.json', json(minifyContractRouter(contract)));
-// The Swift generator reads the document as written, not the generator's richer types.
-write('app-ios/Sources/Core/Generated/API.swift', swiftModule(JSON.parse(openApi)));
+write(
+	'app-ios/Sources/Core/Generated/API.swift',
+	swiftModule({ components: namedSchemas(), paths: JSON.parse(openApi).paths, tableDefaults: tableDefaults() }),
+);
 
 if (check && stale.length) {
 	console.error(`Generated files are stale. Run \`bun run generate\` and commit:\n${stale.join('\n')}`);

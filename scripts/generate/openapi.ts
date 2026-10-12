@@ -1,59 +1,34 @@
 import { OpenAPIGenerator } from '@orpc/openapi';
-import { z } from 'zod';
 import { ZodToJsonSchemaConverter } from '@orpc/zod';
-import {
-	authMethodsSchema,
-	contract,
-	okSchema,
-	pushKeySchema,
-	pushScheduleResponseSchema,
-} from '../../shared/api/contract';
-import { pushSubscriptionSchema, scheduledPushSchema } from '../../shared/push';
-import {
-	changeSchema,
-	labelSchema,
-	opSchema,
-	PATCH_SCHEMAS,
-	projectSchema,
-	settingsSchema,
-	snapshotSchema,
-	syncRequestSchema,
-	syncResponseSchema,
-	taskSchema,
-} from '../../shared/sync/protocol';
-import { dueSchema, recurrenceSchema, reminderSchema } from '../../shared/values';
+import { z } from 'zod';
+import { contract } from '../../shared/api/contract';
+import type { Schema } from './swift';
 
-/** Component names. zod's JSON Schema output turns an `id` into a `$defs` entry, which oRPC hoists into components. */
-const COMPONENTS: [z.ZodType, string][] = [
-	[authMethodsSchema, 'AuthMethods'],
-	[changeSchema, 'Change'],
-	[dueSchema, 'Due'],
-	[labelSchema, 'Label'],
-	[PATCH_SCHEMAS.label, 'LabelPatch'],
-	[okSchema, 'Ok'],
-	[opSchema, 'Op'],
-	[projectSchema, 'Project'],
-	[PATCH_SCHEMAS.project, 'ProjectPatch'],
-	[pushKeySchema, 'PushKey'],
-	[pushScheduleResponseSchema, 'PushSchedule'],
-	[pushSubscriptionSchema, 'PushSubscription'],
-	[recurrenceSchema, 'Recurrence'],
-	[reminderSchema, 'Reminder'],
-	[scheduledPushSchema, 'ScheduledPush'],
-	[settingsSchema, 'Settings'],
-	[PATCH_SCHEMAS.settings, 'SettingsPatch'],
-	[snapshotSchema, 'Snapshot'],
-	[syncRequestSchema, 'SyncRequest'],
-	[syncResponseSchema, 'SyncResponse'],
-	[taskSchema, 'Task'],
-	[PATCH_SCHEMAS.task, 'TaskPatch'],
-];
-for (const [schema, id] of COMPONENTS) z.globalRegistry.add(schema, { id });
-
-export async function openApiDocument() {
+/**
+ * The contract as OpenAPI. Every shared schema with an `id` in zod's registry becomes a named component, through
+ * the `$defs` zod writes for it, which oRPC hoists.
+ */
+export function openApiDocument() {
 	const generator = new OpenAPIGenerator({ converters: [new ZodToJsonSchemaConverter()] });
-	return generator.generate(contract, {
-		version: '3.1.1',
-		base: { info: { title: 'Procrastimate', version: '1' } },
+	return generator.generate(contract, { version: '3.1.1', base: { info: { title: 'Procrastimate', version: '1' } } });
+}
+
+/**
+ * Every named schema, including the ones no endpoint uses, as JSON Schema with `$ref`s between them. The Swift
+ * generator types the whole shared model from this, not only what crosses the network.
+ */
+export function namedSchemas(): Record<string, Schema> {
+	const { schemas } = z.toJSONSchema(z.globalRegistry, {
+		target: 'draft-2020-12',
+		io: 'input',
+		unrepresentable: 'any',
+		uri: id => `#/components/schemas/${id}`,
 	});
+	// zod's JSON Schema type is wider than the subset `Schema` reads, and the Swift generator rejects the rest.
+	return Object.fromEntries(
+		Object.entries(schemas).map(([id, schema]) => {
+			const { $schema: _, $id: __, ...rest } = schema as Record<string, unknown>;
+			return [id, rest as Schema];
+		}),
+	);
 }

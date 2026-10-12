@@ -48,39 +48,45 @@ export type FieldsByKind = { [K in Kind]: z.infer<(typeof FIELDS_SCHEMAS)[K]> };
 const ENTITY = { userId: true, deleted: true, clocks: true } as const;
 export const taskSchema = tasksRowSchema
 	.omit({ ...ENTITY, sourceKey: true })
-	.extend({ sourceKey: z.string().optional() });
+	.extend({ sourceKey: z.string().optional() })
+	.meta({ id: 'Task', 'x-table': 'tasks' });
 export const projectSchema = projectsRowSchema
 	.omit({ ...ENTITY, sourceKey: true })
-	.extend({ sourceKey: z.string().optional() });
-export const labelSchema = labelsRowSchema.omit(ENTITY);
-export const settingsSchema = settingsFieldsSchema;
+	.extend({ sourceKey: z.string().optional() })
+	.meta({ id: 'Project', 'x-table': 'projects' });
+export const labelSchema = labelsRowSchema.omit(ENTITY).meta({ id: 'Label', 'x-table': 'labels' });
+export const settingsSchema = settingsFieldsSchema.meta({ id: 'Settings' });
 
 export type Task = z.infer<typeof taskSchema>;
 export type Project = z.infer<typeof projectSchema>;
 export type Label = z.infer<typeof labelSchema>;
 
 /** Everything that syncs. Device-local state such as the theme or `remindersCheckedAt` stays out. */
-export const snapshotSchema = z.object({
-	tasks: z.array(taskSchema),
-	projects: z.array(projectSchema),
-	labels: z.array(labelSchema),
-	settings: settingsSchema,
-});
+export const snapshotSchema = z
+	.object({
+		tasks: z.array(taskSchema),
+		projects: z.array(projectSchema),
+		labels: z.array(labelSchema),
+		settings: settingsSchema,
+	})
+	.meta({ id: 'Snapshot' });
 
 export type Snapshot = z.infer<typeof snapshotSchema>;
 
-const patchOf = <K extends Kind>(kind: K) =>
-	z.object({
-		kind: z.literal(kind),
-		id: z.string(),
-		fields: FIELDS_SCHEMAS[kind].partial().extend({ deleted: tasksRowSchema.shape.deleted.optional() }),
-	});
+const patchOf = <K extends Kind>(kind: K, id: string) =>
+	z
+		.object({
+			kind: z.literal(kind),
+			id: z.string(),
+			fields: FIELDS_SCHEMAS[kind].partial().extend({ deleted: tasksRowSchema.shape.deleted.optional() }),
+		})
+		.meta({ id });
 
 export const PATCH_SCHEMAS = {
-	task: patchOf('task'),
-	project: patchOf('project'),
-	label: patchOf('label'),
-	settings: patchOf('settings'),
+	task: patchOf('task', 'TaskPatch'),
+	project: patchOf('project', 'ProjectPatch'),
+	label: patchOf('label', 'LabelPatch'),
+	settings: patchOf('settings', 'SettingsPatch'),
 } as const;
 
 /** One entity's changed fields, before it gets an op id and a clock. */
@@ -94,14 +100,13 @@ export type Patch = z.infer<typeof patchSchema>;
 
 const hlc = hlcSchema;
 
-export const opSchema = z.intersection(patchSchema, z.object({ opId: z.string(), hlc }));
+export const opSchema = z.intersection(patchSchema, z.object({ opId: z.string(), hlc })).meta({ id: 'Op' });
 export type Op = z.infer<typeof opSchema>;
 
 /** A log row as clients see it. */
-export const changeSchema = z.intersection(
-	patchSchema,
-	logRowSchema.pick({ opId: true }).extend({ seq: logRowSchema.shape.seq.positive() }),
-);
+export const changeSchema = z
+	.intersection(patchSchema, logRowSchema.pick({ opId: true }).extend({ seq: logRowSchema.shape.seq.positive() }))
+	.meta({ id: 'Change' });
 export type Change = z.infer<typeof changeSchema>;
 
 const cursor = z.number().int().nonnegative();
@@ -109,23 +114,27 @@ const cursor = z.number().int().nonnegative();
 /** The most log rows one response carries. A client that gets a full page syncs again right away. */
 export const SYNC_PAGE_SIZE = 1000;
 
-export const syncRequestSchema = z.object({
-	cursor,
-	ops: z.array(opSchema),
-	/** The wipe generation this client last applied. A lower one means its copy was cleared on another device. */
-	epoch: z.number().int().nonnegative().default(0),
-	/** Wipe task data before applying `ops`, then bump the epoch. */
-	reset: z.boolean().optional(),
-});
+export const syncRequestSchema = z
+	.object({
+		cursor,
+		ops: z.array(opSchema),
+		/** The wipe generation this client last applied. A lower one means its copy was cleared on another device. */
+		epoch: z.number().int().nonnegative().default(0),
+		/** Wipe task data before applying `ops`, then bump the epoch. */
+		reset: z.boolean().optional(),
+	})
+	.meta({ id: 'SyncRequest' });
 export type SyncRequest = z.infer<typeof syncRequestSchema>;
 
 const epoch = z.number().int().nonnegative();
 
 /** Cursor `0`, a cursor past the log, a reset, or a stale epoch gets the whole snapshot instead of the log. */
-export const syncResponseSchema = z.union([
-	z.object({ acked: z.array(z.string()), changes: z.array(changeSchema), cursor, hlc, epoch }),
-	z.object({ acked: z.array(z.string()), snapshot: snapshotSchema, cursor, hlc, epoch }),
-]);
+export const syncResponseSchema = z
+	.union([
+		z.object({ acked: z.array(z.string()), changes: z.array(changeSchema), cursor, hlc, epoch }),
+		z.object({ acked: z.array(z.string()), snapshot: snapshotSchema, cursor, hlc, epoch }),
+	])
+	.meta({ id: 'SyncResponse' });
 export type SyncResponse = z.infer<typeof syncResponseSchema>;
 
 /**

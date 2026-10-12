@@ -11,27 +11,29 @@ import { syncRequestSchema, syncResponseSchema } from '../sync/protocol.ts';
  * Better Auth's `/api/auth/*` routes and the two WebSockets are outside it.
  */
 
-export const okSchema = z.object({ ok: z.literal(true) });
+export const okSchema = z.object({ ok: z.literal(true) }).meta({ id: 'Ok' });
 
 /** Which sign-in buttons the server can offer. Empty credentials hide a provider, so CI boots without them. */
-export const authMethodsSchema = z.object({
-	email: z.boolean(),
-	/** Web redirect. The iOS client id alone does not turn this on. */
-	google: z.boolean(),
-	/** Web redirect through the Services ID. */
-	apple: z.boolean(),
-	/** Public iOS client id, or null when Google sign-in on the phone is off. */
-	googleIosClientId: z.string().nullable(),
-	/** Native Sign in with Apple, whose audience is the bundle id. */
-	appleNative: z.boolean(),
-});
+export const authMethodsSchema = z
+	.object({
+		email: z.boolean(),
+		/** Web redirect. The iOS client id alone does not turn this on. */
+		google: z.boolean(),
+		/** Web redirect through the Services ID. */
+		apple: z.boolean(),
+		/** Public iOS client id, or null when Google sign-in on the phone is off. */
+		googleIosClientId: z.string().nullable(),
+		/** Native Sign in with Apple, whose audience is the bundle id. */
+		appleNative: z.boolean(),
+	})
+	.meta({ id: 'AuthMethods' });
 export type AuthMethods = z.infer<typeof authMethodsSchema>;
 
 /** What the server will deliver to the calling device, soonest first: its push row's pending notifications. */
-export const pushScheduleResponseSchema = pushRowSchema.pick({ notifications: true });
+export const pushScheduleResponseSchema = pushRowSchema.pick({ notifications: true }).meta({ id: 'PushSchedule' });
 export type PushScheduleResponse = z.infer<typeof pushScheduleResponseSchema>;
 
-export const pushKeySchema = z.object({ publicKey: z.string() });
+export const pushKeySchema = z.object({ publicKey: z.string() }).meta({ id: 'PushKey' });
 
 /** What the push service answered a test push with, or null when it never answered. */
 const pushStatusSchema = z.object({ status: z.number().int().nullable() });

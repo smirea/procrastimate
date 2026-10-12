@@ -10,8 +10,9 @@ import type { ColumnValue } from './json.ts';
 
 /**
  * One table per synced kind, a column per field. A row also keeps one clock per field it holds, and that is what
- * says which fields it has: a row the server only heard a partial edit or a delete for keeps the rest at their
- * column defaults, and they mean nothing until a clock is set for them. `deleted` makes a row a tombstone.
+ * says which fields it has: a row the server only heard a partial edit or a delete for keeps the rest at a filler
+ * value, which means nothing until a clock is set for it. `deleted` makes a row a tombstone. Column defaults are the
+ * domain's, which new entities and the Swift initializers start from.
  */
 const clocks = () => text('clocks', { mode: 'json' }).$type<ColumnValue<'tasks', 'clocks'>>().notNull();
 const deleted = () => integer('deleted', { mode: 'boolean' }).notNull().default(false);
@@ -28,7 +29,7 @@ export const tasks = sqliteTable(
 		parentId: text('parent_id'),
 		/** Position among its siblings, ascending. */
 		order: real('order').notNull().default(0),
-		title: text('title').notNull().default(''),
+		title: text('title').notNull(),
 		notes: text('notes').notNull().default(''),
 		projectId: text('project_id'),
 		labelIds: text('label_ids', { mode: 'json' }).$type<ColumnValue<'tasks', 'labelIds'>>().notNull().default([]),
@@ -36,7 +37,7 @@ export const tasks = sqliteTable(
 		recurrence: text('recurrence', { mode: 'json' }).$type<ColumnValue<'tasks', 'recurrence'>>(),
 		priority: integer('priority').$type<ColumnValue<'tasks', 'priority'>>().notNull().default(DEFAULT_PRIORITY),
 		reminders: text('reminders', { mode: 'json' }).$type<ColumnValue<'tasks', 'reminders'>>().notNull().default([]),
-		createdAt: integer('created_at').notNull().default(0),
+		createdAt: integer('created_at').notNull(),
 		completedAt: integer('completed_at'),
 		/** Where an imported task came from, such as `todoist:task:…`, so importing the same backup again skips it. */
 		sourceKey: text('source_key'),
@@ -51,8 +52,8 @@ export const projects = sqliteTable(
 	{
 		userId: text('user_id').notNull(),
 		id: text('id').notNull(),
-		name: text('name').notNull().default(''),
-		createdAt: integer('created_at').notNull().default(0),
+		name: text('name').notNull(),
+		createdAt: integer('created_at').notNull(),
 		sourceKey: text('source_key'),
 		deleted: deleted(),
 		clocks: clocks(),
@@ -66,8 +67,8 @@ export const labels = sqliteTable(
 	{
 		userId: text('user_id').notNull(),
 		id: text('id').notNull(),
-		name: text('name').notNull().default(''),
-		createdAt: integer('created_at').notNull().default(0),
+		name: text('name').notNull(),
+		createdAt: integer('created_at').notNull(),
 		deleted: deleted(),
 		clocks: clocks(),
 	},

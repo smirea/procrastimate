@@ -1,4 +1,4 @@
-import { getTableColumns, getTableName } from 'drizzle-orm';
+import { getTableColumns, getTableName, is, SQL } from 'drizzle-orm';
 import { SQLiteTable } from 'drizzle-orm/sqlite-core';
 import { COLUMN_VALUES } from '../../shared/db/json';
 import * as schema from '../../shared/db/schema';
@@ -51,4 +51,21 @@ export function zodModule(): string {
 		blocks.join('\n\n'),
 		'',
 	].join('\n');
+}
+
+/** Each table's column defaults, by property, for the Swift initializers. A SQL expression default is left out. */
+export function tableDefaults(): Record<string, Record<string, unknown>> {
+	const tables = Object.entries(schema as Record<string, unknown>).filter(
+		(entry): entry is [string, SQLiteTable] => entry[1] instanceof SQLiteTable,
+	);
+	return Object.fromEntries(
+		tables.map(([name, table]) => [
+			name,
+			Object.fromEntries(
+				Object.entries(getTableColumns(table) as Record<string, { default?: unknown }>)
+					.filter(([, column]) => column.default !== undefined && !is(column.default, SQL))
+					.map(([key, column]) => [key, column.default]),
+			),
+		]),
+	);
 }

@@ -9,7 +9,8 @@ import { dueSchema, prioritySchema, recurrenceSchema, reminderSchema } from '../
  * row schemas in `db/generated/zod.ts` with them, so each shape is stated once.
  */
 
-export const hlcSchema = z.string().refine(isHlc, 'Invalid HLC');
+/** `<wall ms>:<counter>:<node>`. Swift checks it with Core's `isHlc`. */
+export const hlcSchema = z.string().refine(isHlc, 'Invalid HLC').meta({ id: 'Hlc', 'x-validate': 'isHlc' });
 const clocks = z.record(z.string(), hlcSchema);
 
 export const COLUMN_VALUES = {

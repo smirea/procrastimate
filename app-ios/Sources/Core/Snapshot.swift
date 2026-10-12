@@ -171,7 +171,7 @@ public struct Snapshot: Hashable, Codable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        let loaded = try c.decode([Lenient<TaskItem>].self, forKey: .tasks).compactMap { $0.value?.validated() }
+        let loaded = try c.decode([Lenient<StoredTask>].self, forKey: .tasks).compactMap { $0.value?.task }
         tasks = StoreRules.sortTasks(Subtasks.detachOrphans(loaded))
         projects = try c.decode([Project].self, forKey: .projects)
         labels = try c.decodeAbsentOr([Label].self, forKey: .labels) ?? []
@@ -189,47 +189,42 @@ private struct Lenient<T: Decodable>: Decodable {
     }
 }
 
-extension TaskItem {
-    /// The web schema's value rules on top of the JSON shape: well-formed dates and times, positive whole intervals,
-    /// weekdays 0 to 6, and reminder offsets of zero or more. A weekday set is normalized like `weeklyOn`.
-    func validated() -> TaskItem? {
-        guard let due = validated(due), let recurrence = validated(recurrence) else { return nil }
-        for reminder in reminders {
-            switch reminder {
-            case let .before(minutes) where minutes < 0: return nil
-            case let .at(date, time) where !Self.isDateKey(date) || !Self.isTimeOfDay(time): return nil
-            case .before, .at: continue
-            }
+/**
+ The stored document's loading rules on top of the task type, as `shared/snapshot.ts` adds them: fields added after
+ launch default when missing, and a weekly repeat is normalized like `weeklyOn`, so one stored day is a plain weekly
+ repeat. The validating decoder checks every other rule, so a task that breaks one is dropped on its own.
+ */
+private struct StoredTask: Decodable {
+    let task: TaskItem
+
+    private static let added: [(String, JSONValue)] = [
+        ("parentId", .null), ("order", .number(0)), ("labelIds", .array([])), ("recurrence", .null),
+    ]
+
+    init(from decoder: Decoder) throws {
+        guard case var .object(fields) = try JSONValue(from: decoder) else {
+            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Not a task"))
         }
-        var task = self
-        task.due = due
-        task.recurrence = recurrence
-        return task
+        for (key, value) in Self.added where fields[key] == nil { fields[key] = value }
+        if case var .object(recurrence) = fields["recurrence"], recurrence["unit"] == .string("week"),
+           case let .array(days) = recurrence["days"], days.count == 1,
+           case let .number(day) = days[0], (0...6).contains(day), day == day.rounded() {
+            recurrence["days"] = nil
+            fields["recurrence"] = .object(recurrence)
+        }
+        var task = try JSONDecoder.validating().decode(TaskItem.self, from: JSONEncoder().encode(JSONValue.object(fields)))
+        if let recurrence = task.recurrence, recurrence.unit == .week {
+            task.recurrence = Dates.weeklyOn(recurrence.interval, recurrence.days ?? [])
+        }
+        self.task = task
     }
+}
 
-    /// Nil when invalid; `.some(nil)` when there is no due date.
-    private func validated(_ due: Due?) -> Due?? {
-        guard let due else { return .some(nil) }
-        guard Self.isDateKey(due.date), due.time.map(Self.isTimeOfDay) ?? true else { return nil }
-        return due
-    }
-
-    private func validated(_ recurrence: Recurrence?) -> Recurrence?? {
-        guard let recurrence else { return .some(nil) }
-        guard recurrence.interval > 0 else { return nil }
-        guard recurrence.unit == .week else { return recurrence }
-        if let days = recurrence.days, days.isEmpty || days.contains(where: { !(0...6).contains($0) }) { return nil }
-        return Dates.weeklyOn(recurrence.interval, recurrence.days ?? [])
-    }
-
-    static func isDateKey(_ value: String) -> Bool { matches(value, "dddd-dd-dd") }
-    static func isTimeOfDay(_ value: String) -> Bool { matches(value, "dd:dd") }
-
-    /// `d` is an ASCII digit and any other character must match itself.
-    private static func matches(_ value: String, _ pattern: String) -> Bool {
-        let scalars = Array(value.unicodeScalars)
-        let expected = Array(pattern.unicodeScalars)
-        guard scalars.count == expected.count else { return false }
-        return zip(scalars, expected).allSatisfy { s, p in p == "d" ? ("0"..."9").contains(s) : s == p }
+extension KeyedDecodingContainer {
+    /// Decodes an optional field the way the web's schema does: a missing key is `nil`, but an explicit `null` for a
+    /// field that is not itself nullable is an error, unlike `decodeIfPresent`.
+    func decodeAbsentOr<T: Decodable>(_ type: T.Type, forKey key: Key) throws -> T? {
+        guard contains(key) else { return nil }
+        return try decode(T.self, forKey: key)
     }
 }

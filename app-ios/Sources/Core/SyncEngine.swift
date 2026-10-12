@@ -116,7 +116,7 @@ public enum SyncEngine {
         var repaired = snapshot
         repaired.sync?.outbox = snapshot.sync?.outbox.map(repairBooleanNumbers) ?? []
         guard let json = requestJSON(repaired) else { return nil }
-        return try JSONDecoder().decode(API.SyncRequest.self, from: json)
+        return try JSONDecoder.validating().decode(API.SyncRequest.self, from: json)
     }
 
     /// Builds up to 2026.1011.235500 stored `0` and `1` as booleans in numeric fields, and their outboxes still
