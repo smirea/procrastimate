@@ -18,6 +18,7 @@ Procrastimate's concepts, goals, paradigms, and high-level system decisions, one
 - [Subtasks](subtasks.md): nested child tasks, where they show, completion, reorder, and delete rules.
 - [Push notifications](push-notifications.md): Web Push scheduling, delivery, keys, and permission.
 - [Stack](stack.md): tooling, client and server frameworks, and shared code.
+- [API and database types](api.md): the Drizzle schema, the oRPC contract, and the types generated for every client.
 - [Dev hosting](dev-hosting.md): the dev box, `tailscale serve`, and the single-origin rule.
 - [Production hosting](production-hosting.md): the Cloudflare Worker, deploys, and free-tier fit.
 - [Persistence](persistence.md): local storage, validation, and source keys.
