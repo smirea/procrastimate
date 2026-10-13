@@ -58,9 +58,15 @@ cat > "$options" <<PLIST
 PLIST
 
 echo "Archiving build $build_number"
+# Sign the archive as Apple Distribution. With no identity, automatic signing asks for an
+# iOS App Development certificate, and a fresh runner creates another "Created via API" one.
 xcodebuild archive -project App.xcodeproj -scheme App -configuration Release \
     -destination 'generic/platform=iOS' -archivePath "$archive" \
-    CURRENT_PROJECT_VERSION="$build_number" "${auth[@]}"
+    CURRENT_PROJECT_VERSION="$build_number" \
+    CODE_SIGN_STYLE=Automatic \
+    "CODE_SIGN_IDENTITY=Apple Distribution" \
+    DEVELOPMENT_TEAM=FNYFHG5SV7 \
+    "${auth[@]}"
 
 xcodebuild -exportArchive -archivePath "$archive" -exportOptionsPlist "$options" \
     -exportPath "$out/export" "${auth[@]}"
