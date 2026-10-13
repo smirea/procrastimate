@@ -2,11 +2,12 @@ import Core
 import SwiftUI
 
 /// The reminders chip and its popover: the task's reminders with `Remove reminder`, presets before the due time, and
-/// a custom date and time.
+/// a custom date and time. On an event task the presets count back from the event's moment and stand alone.
 struct ReminderChip: View {
     @Environment(\.clock) private var clock
     let reminders: [Reminder]
     let due: Due?
+    var relativeOnly = false
     let onChange: ([Reminder]) -> Void
 
     @State private var open = false
@@ -25,7 +26,9 @@ struct ReminderChip: View {
         .buttonStyle(.plain)
         .accessibilityLabel(ReminderMenu.chipLabel(reminders.count))
         .popover(isPresented: $open) {
-            ReminderPopover(reminders: reminders, due: due, today: clock.today, onChange: onChange) { open = false }
+            ReminderPopover(
+                reminders: reminders, due: due, today: clock.today, relativeOnly: relativeOnly, onChange: onChange
+            ) { open = false }
                 .presentationCompactAdaptation(.popover)
         }
     }
@@ -36,6 +39,7 @@ private struct ReminderPopover: View {
     let reminders: [Reminder]
     let due: Due?
     let today: DateKey
+    let relativeOnly: Bool
     let onChange: ([Reminder]) -> Void
     let close: () -> Void
 
@@ -70,7 +74,8 @@ private struct ReminderPopover: View {
             }
             if !reminders.isEmpty { Divider().padding(.vertical, 4) }
 
-            Text(ReminderMenu.sectionTitle(due))
+            Text(relativeOnly ? (due?.time == nil ? "Before the event · needs a time" : "Before the event")
+                : ReminderMenu.sectionTitle(due))
                 .font(.caption.weight(.medium))
                 .textCase(.uppercase)
                 .foregroundStyle(.faint)
@@ -84,6 +89,13 @@ private struct ReminderPopover: View {
                 .opacity(due?.time == nil ? 0.4 : 1)
             }
 
+            if !relativeOnly { custom }
+        }
+        .padding(8)
+        .frame(width: 300)
+    }
+
+    @ViewBuilder private var custom: some View {
             Divider().padding(.vertical, 4)
 
             HStack(spacing: 8) {
@@ -110,9 +122,6 @@ private struct ReminderPopover: View {
             .buttonBorderShape(.capsule)
             .frame(maxWidth: .infinity)
             .padding(8)
-        }
-        .padding(8)
-        .frame(width: 300)
     }
 
     /// Unset until picked, so the reminder falls back to the due date, like the web's empty date field.

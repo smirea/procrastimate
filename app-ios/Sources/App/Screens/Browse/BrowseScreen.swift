@@ -1,10 +1,11 @@
 import Core
 import SwiftUI
 
-/// Projects and labels with their open counts, then Notifications and Settings, like the web sidebar.
+/// Projects, then places and calendar events while open tasks use them, then labels, with their open counts, then Notifications and Settings, like the web sidebar.
 struct BrowseScreen: View {
     @Environment(Navigator.self) private var navigator
     @Environment(Store.self) private var store
+    @Environment(\.today) private var today
 
     @State private var adding = false
     @State private var name = ""
@@ -40,6 +41,34 @@ struct BrowseScreen: View {
                         name = ""
                         withAnimation(.snappy) { adding = true }
                     }
+                }
+            }
+
+            let places = Triggers.placeGroups(store.tasks)
+            if !places.isEmpty {
+                Section {
+                    ForEach(places, id: \.key) { place in
+                        NavigationLink(value: Route.place(key: place.key)) {
+                            BrowseRow(name: place.name, systemImage: "mappin.and.ellipse", tone: .accent, count: place.count)
+                        }
+                        .accessibilityIdentifier("browse-place-\(place.name)")
+                    }
+                } header: {
+                    SectionHeader(title: "Places") { EmptyView() }
+                }
+            }
+
+            let events = Triggers.eventGroups(store.tasks, today, in: store.timeZone)
+            if !events.isEmpty {
+                Section {
+                    ForEach(events) { event in
+                        NavigationLink(value: Route.event(id: event.id)) {
+                            BrowseRow(name: event.title, systemImage: "calendar", tone: .toneWeek, count: event.count)
+                        }
+                        .accessibilityIdentifier("browse-event-\(event.title)")
+                    }
+                } header: {
+                    SectionHeader(title: "Events") { EmptyView() }
                 }
             }
 
