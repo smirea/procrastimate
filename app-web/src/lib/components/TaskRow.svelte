@@ -1,6 +1,8 @@
 <script lang="ts">
 	import Bell from 'phosphor-svelte/lib/Bell';
 	import CalendarBlank from 'phosphor-svelte/lib/CalendarBlank';
+	import CalendarStar from 'phosphor-svelte/lib/CalendarStar';
+	import MapPin from 'phosphor-svelte/lib/MapPin';
 	import Hash from 'phosphor-svelte/lib/Hash';
 	import Tray from 'phosphor-svelte/lib/Tray';
 	import Repeat from 'phosphor-svelte/lib/Repeat';
@@ -14,6 +16,7 @@
 	import { store } from '../store.svelte.ts';
 	import { clock, sheets, motion } from '../ui.svelte.ts';
 	import { dueTone, formatDue, formatTime, repeatLabel } from 'shared/format.ts';
+	import { formatEvent, formatLocation, scheduledDue } from 'shared/triggers.ts';
 	import { PRIORITIES } from '../priorities.ts';
 	import { completeTask } from '../completion.ts';
 
@@ -24,6 +27,7 @@
 	const labels = $derived(store.labelsOf(task));
 	const parent = $derived(task.parentId ? store.task(task.parentId) : undefined);
 	const progress = $derived(store.progress(task.id));
+	const due = $derived(scheduledDue(task, clock.today));
 
 	function complete() {
 		if (checking) return;
@@ -42,16 +46,26 @@
 		{#if task.notes}
 			<div class="truncate text-[12px] leading-4 text-muted">{task.notes}</div>
 		{/if}
-		{#if task.due || task.recurrence || task.reminders.length || progress || labels.length || parent || (showProject && project)}
+		{#if due || task.recurrence || task.reminders.length || task.location || progress || labels.length || parent || (showProject && project)}
 			<div class="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-[12px] leading-4 text-muted">
-				{#if task.due && !(timeOnly && !task.due.time)}
-					<span class="flex items-center gap-1" style={`color: var(--tone-${dueTone(task.due, clock.today)})`}>
+				{#if task.event && due}
+					<span class="flex min-w-0 items-center gap-1" style={`color: var(--tone-${dueTone(due, clock.today)})`}>
+						<CalendarStar size={12} class="shrink-0" />
+						<span class="truncate">{formatEvent(task.event)}{due.time ? ` · ${timeOnly ? formatTime(due.time) : formatDue(due, clock.today)}` : ''}</span>
+					</span>
+				{:else if due && !(timeOnly && !due.time)}
+					<span class="flex items-center gap-1" style={`color: var(--tone-${dueTone(due, clock.today)})`}>
 						<CalendarBlank size={12} />
-						{timeOnly && task.due.time ? formatTime(task.due.time) : formatDue(task.due, clock.today)}
+						{timeOnly && due.time ? formatTime(due.time) : formatDue(due, clock.today)}
+					</span>
+				{/if}
+				{#if task.location}
+					<span class="flex min-w-0 items-center gap-1">
+						<MapPin size={12} class="shrink-0" /><span class="truncate">{formatLocation(task.location)}</span>
 					</span>
 				{/if}
 				{#if task.recurrence}
-					<span class="flex items-center text-[var(--tone-tomorrow)]" role="img" aria-label={repeatLabel(task.recurrence, task.due)}>
+					<span class="flex items-center text-[var(--tone-tomorrow)]" role="img" aria-label={repeatLabel(task.recurrence, due)}>
 						<Repeat size={12} weight="bold" />
 					</span>
 				{/if}
