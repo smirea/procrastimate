@@ -26,13 +26,17 @@
 
 	const openTask = $derived(sheets.current.kind === 'task' ? store.task(sheets.current.id) : undefined);
 
-	function openQuickAdd() {
-		menuOpen = false;
-		sheets.openQuickAdd({
+	function listDefaults() {
+		return {
 			projectId: page.route.id === '/projects/[id]' ? (page.params.id ?? null) : null,
 			labelId: page.route.id === '/labels/[id]' ? (page.params.id ?? null) : null,
 			today: page.route.id === '/today',
-		});
+		};
+	}
+
+	function openQuickAdd() {
+		menuOpen = false;
+		sheets.openQuickAdd(listDefaults());
 	}
 
 	function openSearch() {
@@ -61,7 +65,7 @@
 			openSearch();
 			return;
 		}
-		if (event.metaKey || event.ctrlKey || event.altKey) return;
+		if (event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return;
 		if (event.key === 'q' && sheets.current.kind === 'none') {
 			event.preventDefault();
 			openQuickAdd();
@@ -96,6 +100,7 @@
 		void page.url.pathname;
 		menuOpen = false;
 	});
+
 </script>
 
 <svelte:window {onkeydown} />
@@ -144,7 +149,8 @@
 {/if}
 
 {#if sheets.current.kind === 'quick-add'}
-	<QuickAdd defaults={sheets.current.defaults} />
+	{@const defaults = sheets.current.defaults}
+	<QuickAdd {defaults} />
 {:else if sheets.current.kind === 'search'}
 	<Search />
 {:else if sheets.current.kind === 'settings'}

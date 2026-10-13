@@ -11,6 +11,9 @@ const HAND_WRITTEN: Record<string, string> = {
 	NameHit: 'Generic over the matched item, which JSON Schema cannot express.',
 	Lenient: 'A decoding helper that drops one bad array element.',
 	StoredTask: "The stored document's loading rules in front of the generated task.",
+	RambleSpan: 'A transcript offset from the Ramble grammar, matched against the vector corpus.',
+	RambleToken: 'A grammar highlight from the Ramble parse, matched against the vector corpus.',
+	RambleMessage: 'The Ramble socket frame, decoded only inside the capture session.',
 };
 
 const DECLARATION =

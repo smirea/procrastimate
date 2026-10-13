@@ -16,11 +16,12 @@ Every new feature that someone can do from outside the app ships its intents, ph
 - `intent-today` lists tasks due today.
 - `intent-overdue` lists overdue tasks.
 - `intent-spotlight` indexes open tasks and drops a task from Spotlight once it is completed.
-- `intent-delete-all` deletes every task, project, and label on this device. The next sync wipes them on the server.
+- `intent-delete-all` deletes every task, project, and label on this device. The next sync wipes them on the server. It stays available in Shortcuts, without a suggested phrase: App Shortcuts keep ten, and Start Ramble uses that slot.
+- `intent-ramble` opens quick add and starts the mic. Siri and Shortcuts offer "Start Ramble in Procrastinate".
 
 ## How to get to it (user POV)
 
-- iOS, Siri: "Add a task in Procrastimate", "Complete Buy milk in Procrastimate", "Reopen Buy milk in Procrastimate", "Open Today in Procrastimate", "Show Upcoming in Procrastimate", "Open project House in Procrastimate", "Open task Buy milk in Procrastimate", "Search tasks in Procrastimate", "What is due today in Procrastimate", "What is overdue in Procrastimate", "Delete all data in Procrastimate". The title and the search words are the follow-up question, because an App Shortcut phrase can only fill an entity or an enum.
+- iOS, Siri: "Add a task in Procrastinate", "Complete Buy milk in Procrastinate", "Reopen Buy milk in Procrastinate", "Open Today in Procrastimate", "Show Upcoming in Procrastimate", "Open project House in Procrastinate", "Open task Buy milk in Procrastinate", "Search tasks in Procrastinate", "What is due today in Procrastinate", "What is overdue in Procrastinate", "Start Ramble in Procrastinate". The title and the search words are the follow-up question, because an App Shortcut phrase can only fill an entity or an enum.
 - iOS, Shortcuts: the same actions appear in the Shortcuts app, and a shortcut can set the project, labels, priority, due date, and reminder on Add Task.
 - iOS, Spotlight: search for an open task's title. Tapping the result opens it.
 - Web: not available.
