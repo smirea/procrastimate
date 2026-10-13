@@ -134,13 +134,16 @@ public final class Store {
         return task
     }
 
+    /// The zone lists resolve event times in.
+    public var timeZone: TimeZone { clock.timeZone }
+
     public func updateTask(_ id: String, _ patch: TaskPatch) {
         commit(StoreRules.updateTask(snapshot.data, id, patch))
     }
 
     public func completeTask(_ id: String) -> Completion? {
         guard let result = StoreRules.completeTask(
-            snapshot.data, id, today: clock.today, now: clock.now.epochMilliseconds
+            snapshot.data, id, today: clock.today, now: clock.now.epochMilliseconds, in: clock.timeZone
         ) else { return nil }
         commit(result.data)
         return result.completion

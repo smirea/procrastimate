@@ -38,6 +38,10 @@ export const tasks = sqliteTable(
 		recurrence: text('recurrence', { mode: 'json' }).$type<ColumnValue<'tasks', 'recurrence'>>(),
 		priority: integer('priority').$type<ColumnValue<'tasks', 'priority'>>().notNull().default(DEFAULT_PRIORITY),
 		reminders: text('reminders', { mode: 'json' }).$type<ColumnValue<'tasks', 'reminders'>>().notNull().default([]),
+		/** Set only on iOS. A task with a location gets no notification at its due time; the place is its nudge. */
+		location: text('location', { mode: 'json' }).$type<ColumnValue<'tasks', 'location'>>(),
+		/** Set only on iOS. A task with an event has no due date or repeat; the event's times stand in for both. */
+		event: text('event', { mode: 'json' }).$type<ColumnValue<'tasks', 'event'>>(),
 		createdAt: integer('created_at').notNull(),
 		completedAt: integer('completed_at'),
 		/** Where an imported task came from, such as `todoist:task:…`, so importing the same backup again skips it. */

@@ -6,7 +6,7 @@ struct UpcomingScreen: View {
     @Environment(\.today) private var today
 
     var body: some View {
-        let groups = Views.upcomingGroups(store.tasks, today)
+        let groups = Views.upcomingGroups(store.tasks, today, in: store.timeZone)
         TaskListScreen(
             title: "Upcoming",
             isEmpty: groups.isEmpty,

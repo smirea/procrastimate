@@ -96,6 +96,8 @@ export const tasksRowSchema = z.object({
 	recurrence: COLUMN_VALUES.tasks.recurrence.nullable(),
 	priority: COLUMN_VALUES.tasks.priority,
 	reminders: COLUMN_VALUES.tasks.reminders,
+	location: COLUMN_VALUES.tasks.location.nullable(),
+	event: COLUMN_VALUES.tasks.event.nullable(),
 	createdAt: z.number().int(),
 	completedAt: z.number().int().nullable(),
 	sourceKey: z.string().nullable(),

@@ -7,7 +7,7 @@ struct TodayScreen: View {
     @Environment(\.today) private var today
 
     var body: some View {
-        let tasks = Views.todayTasks(store.tasks, today)
+        let tasks = Views.todayTasks(store.tasks, today, in: store.timeZone)
         TaskListScreen(
             title: "Today",
             isEmpty: tasks.overdue.isEmpty && tasks.today.isEmpty,

@@ -8,7 +8,7 @@ struct LabelScreen: View {
 
     var body: some View {
         if let label = store.label(labelID) {
-            let tasks = Views.labelTasks(store.tasks, label.id)
+            let tasks = Views.labelTasks(store.tasks, label.id, in: store.timeZone)
             TaskListScreen(
                 title: label.name,
                 isEmpty: tasks.isEmpty,

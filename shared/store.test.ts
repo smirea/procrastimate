@@ -32,6 +32,8 @@ const task = (id: string, createdAt: number, fields: Partial<Task> = {}): Task =
 	recurrence: null,
 	priority: 4,
 	reminders: [],
+	location: null,
+	event: null,
 	createdAt,
 	completedAt: null,
 	...fields,
@@ -71,6 +73,8 @@ const newTask = {
 	recurrence: null,
 	priority: null,
 	reminders: [],
+	location: null,
+	event: null,
 };
 const ids = (list: readonly Task[]) => list.map(t => t.id);
 const find = (d: StoreData, id: string) => d.tasks.find(t => t.id === id)!;
@@ -113,8 +117,8 @@ describe('tasks', () => {
 		expect(completion).toEqual({
 			kind: 'done',
 			previous: [
-				{ id: 'trip', completedAt: null, due: null, reminders: [] },
-				{ id: 'passport', completedAt: null, due: null, reminders: [] },
+				{ id: 'trip', completedAt: null, due: null, reminders: [], event: null },
+				{ id: 'passport', completedAt: null, due: null, reminders: [], event: null },
 			],
 		});
 		expect(ids(next.tasks.filter(t => t.completedAt === NOW))).toEqual(['trip', 'passport']);
@@ -132,6 +136,7 @@ describe('tasks', () => {
 					completedAt: null,
 					due: { date: today, time: '09:00' },
 					reminders: [{ kind: 'at', date: today, time: '08:00' }],
+					event: null,
 				},
 			],
 		});
@@ -195,5 +200,32 @@ describe('labels', () => {
 		expect(next.labels.map(l => l.id)).toEqual(['phone']);
 		expect(find(next, 'call').labelIds).toEqual(['phone']);
 		expect(next.tasks.length).toBe(5);
+	});
+
+	test('completing a task on an event series moves it past missed occurrences, and undo moves it back', () => {
+		const at = (d: number, h: number) => new Date(2026, 9, d, h).getTime();
+		const occurrences = [7, 14, 21].map(d => ({ start: at(d, 18), end: at(d, 19) }));
+		const event = {
+			id: 'meetup',
+			title: 'Walking meetup',
+			allDay: false,
+			series: true,
+			occurrenceDate: null,
+			edge: 'during' as const,
+			minutes: 0,
+			occurrences,
+		};
+		const before: StoreData = { tasks: [task('jan', 1, { event })], projects: [], labels: [] };
+		const { data: next, completion } = completeTask(before, 'jan', today, NOW)!;
+		expect(completion).toEqual({
+			kind: 'rolled',
+			next: { date: '2026-10-21', time: '18:00' },
+			previous: [{ id: 'jan', completedAt: null, due: null, reminders: [], event }],
+		});
+		expect(next.tasks[0]!.event!.occurrences).toEqual([occurrences[2]!]);
+		expect(next.tasks[0]!.completedAt).toBeNull();
+		expect(restoreCompletion(next, completion.previous)).toEqual(before);
+		const last = completeTask(next, 'jan', '2026-10-21', NOW)!;
+		expect(last.completion.kind).toBe('done');
 	});
 });

@@ -1,0 +1,138 @@
+import Foundation
+
+public typealias TaskLocation = API.TaskLocation
+public typealias LocationTrigger = API.LocationTrigger
+public typealias TaskEvent = API.TaskEvent
+public typealias EventEdge = API.EventEdge
+public typealias EventOccurrence = API.EventOccurrence
+
+/// Tasks that hang off a place or a calendar event, from `shared/triggers.ts`.
+public enum Triggers {
+    public typealias PlaceGroup = API.PlaceGroup
+    public typealias EventGroup = API.EventGroup
+
+    /// The moment the task's edge names on one occurrence, in epoch milliseconds.
+    public static func eventAnchor(_ event: TaskEvent, _ occurrence: EventOccurrence) -> Int {
+        switch event.edge {
+        case .before: occurrence.start - event.minutes * 60_000
+        case .start, .during: occurrence.start
+        case .after: occurrence.end + event.minutes * 60_000
+        }
+    }
+
+    /// A single event keeps its one occurrence, so it goes overdue. A series skips occurrences whose day is over.
+    public static func currentOccurrence(_ event: TaskEvent, _ today: DateKey, in zone: TimeZone) -> EventOccurrence {
+        guard event.series else { return event.occurrences[0] }
+        return event.occurrences.first {
+            Dates.toDateKey(Date(epochMilliseconds: eventAnchor(event, $0)), in: zone) >= today
+        } ?? event.occurrences[event.occurrences.count - 1]
+    }
+
+    /// An occurrence's moment as a due date, without a time for an all-day event.
+    public static func occurrenceDue(_ event: TaskEvent, _ occurrence: EventOccurrence, in zone: TimeZone) -> Due {
+        let at = Date(epochMilliseconds: eventAnchor(event, occurrence))
+        guard !event.allDay else { return Due(date: Dates.toDateKey(at, in: zone), time: nil) }
+        let local = Int((at.timeIntervalSince1970 + Double(zone.secondsFromGMT(for: at))).rounded(.down))
+        let minutes = ((local % 86400 + 86400) % 86400) / 60
+        return Due(date: Dates.toDateKey(at, in: zone), time: Dates.toTimeOfDay(hours: minutes / 60, minutes: minutes % 60))
+    }
+
+    /// The day and time a task sits on in lists. A repeat with a place skips missed occurrences instead of going overdue.
+    public static func scheduledDue(_ task: TaskItem, _ today: DateKey, in zone: TimeZone) -> Due? {
+        if let event = task.event { return occurrenceDue(event, currentOccurrence(event, today, in: zone), in: zone) }
+        guard task.location != nil, let recurrence = task.recurrence, let due = task.due, due.date < today else {
+            return task.due
+        }
+        var date = due.date
+        while date < today { date = Dates.stepRecurrence(date, recurrence) }
+        return Due(date: date, time: due.time)
+    }
+
+    /// When a task notifies, each moment once. An event notifies at each listed moment unless it lasts all day, and a
+    /// due time at a place never notifies on its own.
+    public static func taskNotificationTimes(_ task: TaskItem, _ today: DateKey, in zone: TimeZone) -> [Date] {
+        guard task.event != nil || task.location != nil else {
+            return Notifications.notificationTimes(task.due, task.reminders, in: zone)
+        }
+        var moments: [Date?] = []
+        if let event = task.event {
+            for occurrence in event.series ? event.occurrences : Array(event.occurrences.prefix(1)) {
+                let due = occurrenceDue(event, occurrence, in: zone)
+                if !event.allDay { moments.append(Date(epochMilliseconds: eventAnchor(event, occurrence))) }
+                moments += task.reminders.map { Notifications.reminderFiresAt($0, due, in: zone) }
+            }
+        } else {
+            let due = scheduledDue(task, today, in: zone)
+            moments += task.reminders.map { Notifications.reminderFiresAt($0, due, in: zone) }
+        }
+        var seen = Set<Int>()
+        return moments.compactMap { $0 }.filter { seen.insert($0.epochMilliseconds).inserted }.sorted()
+    }
+
+    public static func formatEvent(_ event: TaskEvent) -> String {
+        switch event.edge {
+        case .before:
+            event.minutes > 0
+                ? "\(Format.formatMinutes(event.minutes)) before \(event.title)" : "When \(event.title) starts"
+        case .start: "When \(event.title) starts"
+        case .during: "During \(event.title)"
+        case .after:
+            event.minutes > 0 ? "\(Format.formatMinutes(event.minutes)) after \(event.title)" : "After \(event.title)"
+        }
+    }
+
+    public static func formatLocation(_ location: TaskLocation) -> String {
+        switch location.trigger {
+        case .arrive: "Arriving at \(location.name)"
+        case .leave: "Leaving \(location.name)"
+        case .during: "While at \(location.name)"
+        }
+    }
+
+    /// Tasks at the same spot share a place, to about 11 meters.
+    public static func placeKey(_ location: TaskLocation) -> String {
+        "\(fixed4(location.latitude)),\(fixed4(location.longitude))"
+    }
+
+    static func fixed4(_ value: Double) -> String { String(format: "%.4f", locale: Locale(identifier: "en_US_POSIX"), value) }
+
+    static func open(_ tasks: [TaskItem]) -> [TaskItem] {
+        tasks.filter { $0.completedAt == nil }.stableSorted { a, b in a.createdAt == b.createdAt ? nil : a.createdAt < b.createdAt }
+    }
+
+    public static func placeGroups(_ tasks: [TaskItem]) -> [PlaceGroup] {
+        var groups: [PlaceGroup] = []
+        for task in open(tasks) {
+            guard let location = task.location else { continue }
+            let key = placeKey(location)
+            if let i = groups.firstIndex(where: { $0.key == key }) {
+                groups[i].count += 1
+            } else {
+                groups.append(PlaceGroup(key: key, name: location.name, count: 1))
+            }
+        }
+        return groups.stableSorted { a, b in
+            let order = a.name.compare(b.name, locale: Locale(identifier: "en"))
+            if order != .orderedSame { return order == .orderedAscending }
+            return a.key == b.key ? nil : a.key < b.key
+        }
+    }
+
+    public static func eventGroups(_ tasks: [TaskItem], _ today: DateKey, in zone: TimeZone) -> [EventGroup] {
+        var groups: [(group: EventGroup, at: Int)] = []
+        for task in open(tasks) {
+            guard let event = task.event else { continue }
+            let at = currentOccurrence(event, today, in: zone).start
+            if let i = groups.firstIndex(where: { $0.group.id == event.id }) {
+                groups[i].group.count += 1
+                groups[i].at = min(groups[i].at, at)
+            } else {
+                groups.append((EventGroup(id: event.id, title: event.title, count: 1), at))
+            }
+        }
+        return groups.stableSorted { a, b in
+            if a.at != b.at { return a.at < b.at }
+            return a.group.id == b.group.id ? nil : a.group.id < b.group.id
+        }.map(\.group)
+    }
+}

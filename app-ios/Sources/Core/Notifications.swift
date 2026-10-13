@@ -41,20 +41,22 @@ public enum Notifications {
             : "Due \(Format.relativeDay(due.date, day) ?? Format.calendarDay(due.date, day)) at \(clock)"
     }
 
-    /// Every future moment an open task notifies, soonest first, keeping the soonest `limit`.
+    /// Every future moment an open task notifies, soonest first, with an event task's body naming its event, keeping the soonest `limit`.
     public static func upcomingNotifications(
         _ tasks: [TaskItem],
         now: Date,
         limit: Int,
         in zone: TimeZone
     ) -> [Scheduled] {
+        let today = Dates.toDateKey(now, in: zone)
         let all = tasks.filter { $0.completedAt == nil }.flatMap { task in
-            notificationTimes(task.due, task.reminders, in: zone).filter { $0 > now }.map { at in
+            Triggers.taskNotificationTimes(task, today, in: zone).filter { $0 > now }.map { at in
                 Scheduled(
                     at: at,
                     taskId: task.id,
                     title: String(decoding: Array(task.title.utf16.prefix(300)), as: UTF16.self),
-                    body: notificationBody(task.due, at: at, in: zone)
+                    body: task.event.map(Triggers.formatEvent)
+                        ?? notificationBody(Triggers.scheduledDue(task, today, in: zone), at: at, in: zone)
                 )
             }
         }

@@ -508,12 +508,14 @@ extension API {
         public var completedAt: Int?
         public var due: Due?
         public var reminders: [Reminder]
+        public var event: TaskEvent?
 
-        public init(id: String, completedAt: Int? = nil, due: Due? = nil, reminders: [Reminder] = []) {
+        public init(id: String, completedAt: Int? = nil, due: Due? = nil, reminders: [Reminder] = [], event: TaskEvent? = nil) {
             self.id = id
             self.completedAt = completedAt
             self.due = due
             self.reminders = reminders
+            self.event = event
         }
 
         enum CodingKeys: String, CodingKey {
@@ -521,6 +523,7 @@ extension API {
             case completedAt = "completedAt"
             case due = "due"
             case reminders = "reminders"
+            case event = "event"
         }
 
         public init(from decoder: Decoder) throws {
@@ -529,6 +532,7 @@ extension API {
             completedAt = try container.decode(Int?.self, forKey: .completedAt)
             due = try container.decode(Due?.self, forKey: .due)
             reminders = try container.decode([Reminder].self, forKey: .reminders)
+            event = try container.decode(TaskEvent?.self, forKey: .event)
         }
 
         public func encode(to encoder: Encoder) throws {
@@ -537,6 +541,7 @@ extension API {
             try container.encode(self.completedAt, forKey: .completedAt)
             try container.encode(self.due, forKey: .due)
             try container.encode(self.reminders, forKey: .reminders)
+            try container.encode(self.event, forKey: .event)
         }
     }
 
@@ -673,6 +678,74 @@ extension API {
         case settings = "settings"
 
         public var id: String { rawValue }
+    }
+
+    public enum EventEdge: String, Codable, Hashable, Sendable, CaseIterable, Identifiable {
+        case before = "before"
+        case start = "start"
+        case during = "during"
+        case after = "after"
+
+        public var id: String { rawValue }
+    }
+
+    public struct EventGroup: Codable, Hashable, Sendable, Identifiable {
+        public var id: String
+        public var title: String
+        public var count: Int
+
+        public init(id: String, title: String, count: Int) {
+            self.id = id
+            self.title = title
+            self.count = count
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case id = "id"
+            case title = "title"
+            case count = "count"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            id = try container.decode(String.self, forKey: .id)
+            title = try container.decode(String.self, forKey: .title)
+            count = try container.decode(Int.self, forKey: .count)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.id, forKey: .id)
+            try container.encode(self.title, forKey: .title)
+            try container.encode(self.count, forKey: .count)
+        }
+    }
+
+    public struct EventOccurrence: Codable, Hashable, Sendable {
+        public var start: Int
+        public var end: Int
+
+        public init(start: Int, end: Int) {
+            self.start = start
+            self.end = end
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case start = "start"
+            case end = "end"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            start = try container.decode(Int.self, forKey: .start)
+            end = try container.decode(Int.self, forKey: .end)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.start, forKey: .start)
+            try container.encode(self.end, forKey: .end)
+        }
     }
 
     /// One matched text and the half-open spans to highlight in it.
@@ -845,6 +918,14 @@ extension API {
 
     public enum LabelPatchKind: String, Codable, Hashable, Sendable, CaseIterable, Identifiable {
         case label = "label"
+
+        public var id: String { rawValue }
+    }
+
+    public enum LocationTrigger: String, Codable, Hashable, Sendable, CaseIterable, Identifiable {
+        case arrive = "arrive"
+        case leave = "leave"
+        case during = "during"
 
         public var id: String { rawValue }
     }
@@ -1268,6 +1349,38 @@ extension API {
             try container.encode(self.disabled, forKey: .disabled)
             try container.encode(self.due, forKey: .due)
             try container.encode(self.spoken, forKey: .spoken)
+        }
+    }
+
+    public struct PlaceGroup: Codable, Hashable, Sendable {
+        public var key: String
+        public var name: String
+        public var count: Int
+
+        public init(key: String, name: String, count: Int) {
+            self.key = key
+            self.name = name
+            self.count = count
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case key = "key"
+            case name = "name"
+            case count = "count"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            key = try container.decode(String.self, forKey: .key)
+            name = try container.decode(String.self, forKey: .name)
+            count = try container.decode(Int.self, forKey: .count)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.key, forKey: .key)
+            try container.encode(self.name, forKey: .name)
+            try container.encode(self.count, forKey: .count)
         }
     }
 
@@ -2448,11 +2561,13 @@ extension API {
         public var recurrence: Recurrence?
         public var priority: Priority
         public var reminders: [Reminder]
+        public var location: TaskLocation?
+        public var event: TaskEvent?
         public var createdAt: Int
         public var completedAt: Int?
         public var sourceKey: String?
 
-        public init(id: String, parentId: String? = nil, order: Double = 0, title: String, notes: String = "", projectId: String? = nil, labelIds: [String] = [], due: Due? = nil, recurrence: Recurrence? = nil, priority: Priority = .p4, reminders: [Reminder] = [], createdAt: Int, completedAt: Int? = nil, sourceKey: String? = nil) {
+        public init(id: String, parentId: String? = nil, order: Double = 0, title: String, notes: String = "", projectId: String? = nil, labelIds: [String] = [], due: Due? = nil, recurrence: Recurrence? = nil, priority: Priority = .p4, reminders: [Reminder] = [], location: TaskLocation? = nil, event: TaskEvent? = nil, createdAt: Int, completedAt: Int? = nil, sourceKey: String? = nil) {
             self.id = id
             self.parentId = parentId
             self.order = order
@@ -2464,6 +2579,8 @@ extension API {
             self.recurrence = recurrence
             self.priority = priority
             self.reminders = reminders
+            self.location = location
+            self.event = event
             self.createdAt = createdAt
             self.completedAt = completedAt
             self.sourceKey = sourceKey
@@ -2481,6 +2598,8 @@ extension API {
             case recurrence = "recurrence"
             case priority = "priority"
             case reminders = "reminders"
+            case location = "location"
+            case event = "event"
             case createdAt = "createdAt"
             case completedAt = "completedAt"
             case sourceKey = "sourceKey"
@@ -2499,6 +2618,8 @@ extension API {
             recurrence = try container.decode(Recurrence?.self, forKey: .recurrence)
             priority = try container.decode(Priority.self, forKey: .priority)
             reminders = try container.decode([Reminder].self, forKey: .reminders)
+            location = try container.decode(TaskLocation?.self, forKey: .location)
+            event = try container.decode(TaskEvent?.self, forKey: .event)
             createdAt = try container.decode(Int.self, forKey: .createdAt)
             completedAt = try container.decode(Int?.self, forKey: .completedAt)
             sourceKey = try container.decodeAbsent(String.self, forKey: .sourceKey)
@@ -2517,6 +2638,8 @@ extension API {
             try container.encode(self.recurrence, forKey: .recurrence)
             try container.encode(self.priority, forKey: .priority)
             try container.encode(self.reminders, forKey: .reminders)
+            try container.encode(self.location, forKey: .location)
+            try container.encode(self.event, forKey: .event)
             try container.encode(self.createdAt, forKey: .createdAt)
             try container.encode(self.completedAt, forKey: .completedAt)
             try container.encodeIfPresent(self.sourceKey, forKey: .sourceKey)
@@ -2533,8 +2656,10 @@ extension API {
         public var recurrence: Recurrence??
         public var priority: Priority?
         public var reminders: [Reminder]?
+        public var location: TaskLocation??
+        public var event: TaskEvent??
 
-        public init(title: String? = nil, notes: String? = nil, projectId: String?? = nil, labelIds: [String]? = nil, due: Due?? = nil, recurrence: Recurrence?? = nil, priority: Priority? = nil, reminders: [Reminder]? = nil) {
+        public init(title: String? = nil, notes: String? = nil, projectId: String?? = nil, labelIds: [String]? = nil, due: Due?? = nil, recurrence: Recurrence?? = nil, priority: Priority? = nil, reminders: [Reminder]? = nil, location: TaskLocation?? = nil, event: TaskEvent?? = nil) {
             self.title = title
             self.notes = notes
             self.projectId = projectId
@@ -2543,6 +2668,8 @@ extension API {
             self.recurrence = recurrence
             self.priority = priority
             self.reminders = reminders
+            self.location = location
+            self.event = event
         }
 
         enum CodingKeys: String, CodingKey {
@@ -2554,6 +2681,8 @@ extension API {
             case recurrence = "recurrence"
             case priority = "priority"
             case reminders = "reminders"
+            case location = "location"
+            case event = "event"
         }
 
         public init(from decoder: Decoder) throws {
@@ -2566,6 +2695,8 @@ extension API {
             recurrence = try container.decodeNullable(Recurrence.self, forKey: .recurrence)
             priority = try container.decodeAbsent(Priority.self, forKey: .priority)
             reminders = try container.decodeAbsent([Reminder].self, forKey: .reminders)
+            location = try container.decodeNullable(TaskLocation.self, forKey: .location)
+            event = try container.decodeNullable(TaskEvent.self, forKey: .event)
         }
 
         public func encode(to encoder: Encoder) throws {
@@ -2578,6 +2709,75 @@ extension API {
             try container.encodeNullable(self.recurrence, forKey: .recurrence)
             try container.encodeIfPresent(self.priority, forKey: .priority)
             try container.encodeIfPresent(self.reminders, forKey: .reminders)
+            try container.encodeNullable(self.location, forKey: .location)
+            try container.encodeNullable(self.event, forKey: .event)
+        }
+    }
+
+    public struct TaskEvent: Codable, Hashable, Sendable, Identifiable {
+        public var id: String
+        public var title: String
+        public var allDay: Bool
+        public var series: Bool
+        public var occurrenceDate: Int?
+        public var edge: EventEdge
+        public var minutes: Int
+        public var occurrences: [EventOccurrence]
+
+        public init(id: String, title: String, allDay: Bool, series: Bool, occurrenceDate: Int? = nil, edge: EventEdge, minutes: Int, occurrences: [EventOccurrence] = []) {
+            self.id = id
+            self.title = title
+            self.allDay = allDay
+            self.series = series
+            self.occurrenceDate = occurrenceDate
+            self.edge = edge
+            self.minutes = minutes
+            self.occurrences = occurrences
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case id = "id"
+            case title = "title"
+            case allDay = "allDay"
+            case series = "series"
+            case occurrenceDate = "occurrenceDate"
+            case edge = "edge"
+            case minutes = "minutes"
+            case occurrences = "occurrences"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            id = try container.decode(String.self, forKey: .id)
+            title = try container.decode(String.self, forKey: .title)
+            allDay = try container.decode(Bool.self, forKey: .allDay)
+            series = try container.decode(Bool.self, forKey: .series)
+            occurrenceDate = try container.decode(Int?.self, forKey: .occurrenceDate)
+            edge = try container.decode(EventEdge.self, forKey: .edge)
+            minutes = try container.decode(Int.self, forKey: .minutes)
+            occurrences = try container.decode([EventOccurrence].self, forKey: .occurrences)
+            if decoder.validates {
+                do {
+                    let value = self.minutes
+                    try check(value >= 0, .minutes, in: container, "minutes at least 0")
+                }
+                do {
+                    let value = self.occurrences
+                    try check(value.count >= 1, .occurrences, in: container, "occurrences at least 1 items")
+                }
+            }
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.id, forKey: .id)
+            try container.encode(self.title, forKey: .title)
+            try container.encode(self.allDay, forKey: .allDay)
+            try container.encode(self.series, forKey: .series)
+            try container.encode(self.occurrenceDate, forKey: .occurrenceDate)
+            try container.encode(self.edge, forKey: .edge)
+            try container.encode(self.minutes, forKey: .minutes)
+            try container.encode(self.occurrences, forKey: .occurrences)
         }
     }
 
@@ -2620,6 +2820,69 @@ extension API {
             try container.encode(self.task, forKey: .task)
             try container.encode(self.score, forKey: .score)
             try container.encode(self.matches, forKey: .matches)
+        }
+    }
+
+    public struct TaskLocation: Codable, Hashable, Sendable {
+        public var name: String
+        public var address: String?
+        public var latitude: Double
+        public var longitude: Double
+        public var radius: Double
+        public var trigger: LocationTrigger
+
+        public init(name: String, address: String? = nil, latitude: Double, longitude: Double, radius: Double, trigger: LocationTrigger) {
+            self.name = name
+            self.address = address
+            self.latitude = latitude
+            self.longitude = longitude
+            self.radius = radius
+            self.trigger = trigger
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case name = "name"
+            case address = "address"
+            case latitude = "latitude"
+            case longitude = "longitude"
+            case radius = "radius"
+            case trigger = "trigger"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            name = try container.decode(String.self, forKey: .name)
+            address = try container.decode(String?.self, forKey: .address)
+            latitude = try container.decode(Double.self, forKey: .latitude)
+            longitude = try container.decode(Double.self, forKey: .longitude)
+            radius = try container.decode(Double.self, forKey: .radius)
+            trigger = try container.decode(LocationTrigger.self, forKey: .trigger)
+            if decoder.validates {
+                do {
+                    let value = self.latitude
+                    try check(value >= -90, .latitude, in: container, "latitude at least -90")
+                    try check(value <= 90, .latitude, in: container, "latitude at most 90")
+                }
+                do {
+                    let value = self.longitude
+                    try check(value >= -180, .longitude, in: container, "longitude at least -180")
+                    try check(value <= 180, .longitude, in: container, "longitude at most 180")
+                }
+                do {
+                    let value = self.radius
+                    try check(value > 0, .radius, in: container, "radius above 0")
+                }
+            }
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.name, forKey: .name)
+            try container.encode(self.address, forKey: .address)
+            try container.encode(self.latitude, forKey: .latitude)
+            try container.encode(self.longitude, forKey: .longitude)
+            try container.encode(self.radius, forKey: .radius)
+            try container.encode(self.trigger, forKey: .trigger)
         }
     }
 
@@ -2666,12 +2929,14 @@ extension API {
         public var recurrence: Recurrence??
         public var priority: Priority?
         public var reminders: [Reminder]?
+        public var location: TaskLocation??
+        public var event: TaskEvent??
         public var createdAt: Int?
         public var completedAt: Int??
         public var sourceKey: String??
         public var deleted: Bool?
 
-        public init(parentId: String?? = nil, order: Double? = nil, title: String? = nil, notes: String? = nil, projectId: String?? = nil, labelIds: [String]? = nil, due: Due?? = nil, recurrence: Recurrence?? = nil, priority: Priority? = nil, reminders: [Reminder]? = nil, createdAt: Int? = nil, completedAt: Int?? = nil, sourceKey: String?? = nil, deleted: Bool? = nil) {
+        public init(parentId: String?? = nil, order: Double? = nil, title: String? = nil, notes: String? = nil, projectId: String?? = nil, labelIds: [String]? = nil, due: Due?? = nil, recurrence: Recurrence?? = nil, priority: Priority? = nil, reminders: [Reminder]? = nil, location: TaskLocation?? = nil, event: TaskEvent?? = nil, createdAt: Int? = nil, completedAt: Int?? = nil, sourceKey: String?? = nil, deleted: Bool? = nil) {
             self.parentId = parentId
             self.order = order
             self.title = title
@@ -2682,6 +2947,8 @@ extension API {
             self.recurrence = recurrence
             self.priority = priority
             self.reminders = reminders
+            self.location = location
+            self.event = event
             self.createdAt = createdAt
             self.completedAt = completedAt
             self.sourceKey = sourceKey
@@ -2699,6 +2966,8 @@ extension API {
             case recurrence = "recurrence"
             case priority = "priority"
             case reminders = "reminders"
+            case location = "location"
+            case event = "event"
             case createdAt = "createdAt"
             case completedAt = "completedAt"
             case sourceKey = "sourceKey"
@@ -2717,6 +2986,8 @@ extension API {
             recurrence = try container.decodeNullable(Recurrence.self, forKey: .recurrence)
             priority = try container.decodeAbsent(Priority.self, forKey: .priority)
             reminders = try container.decodeAbsent([Reminder].self, forKey: .reminders)
+            location = try container.decodeNullable(TaskLocation.self, forKey: .location)
+            event = try container.decodeNullable(TaskEvent.self, forKey: .event)
             createdAt = try container.decodeAbsent(Int.self, forKey: .createdAt)
             completedAt = try container.decodeNullable(Int.self, forKey: .completedAt)
             sourceKey = try container.decodeNullable(String.self, forKey: .sourceKey)
@@ -2735,6 +3006,8 @@ extension API {
             try container.encodeNullable(self.recurrence, forKey: .recurrence)
             try container.encodeIfPresent(self.priority, forKey: .priority)
             try container.encodeIfPresent(self.reminders, forKey: .reminders)
+            try container.encodeNullable(self.location, forKey: .location)
+            try container.encodeNullable(self.event, forKey: .event)
             try container.encodeIfPresent(self.createdAt, forKey: .createdAt)
             try container.encodeNullable(self.completedAt, forKey: .completedAt)
             try container.encodeNullable(self.sourceKey, forKey: .sourceKey)

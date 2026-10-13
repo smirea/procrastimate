@@ -5,7 +5,7 @@ struct InboxScreen: View {
     @Environment(Store.self) private var store
 
     var body: some View {
-        let tasks = Views.inboxTasks(store.tasks)
+        let tasks = Views.inboxTasks(store.tasks, in: store.timeZone)
         TaskListScreen(
             title: "Inbox",
             isEmpty: tasks.isEmpty,

@@ -8,7 +8,7 @@ struct ProjectScreen: View {
 
     var body: some View {
         if let project = store.project(projectID) {
-            let tasks = Views.projectTasks(store.tasks, project.id)
+            let tasks = Views.projectTasks(store.tasks, project.id, in: store.timeZone)
             TaskListScreen(
                 title: project.name,
                 isEmpty: tasks.isEmpty,

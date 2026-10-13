@@ -17,6 +17,8 @@ extension API.TaskEdit {
         if let recurrence { task.recurrence = recurrence }
         if let priority { task.priority = priority }
         if let reminders { task.reminders = reminders }
+        if let location { task.location = location }
+        if let event { task.event = event }
     }
 }
 
@@ -89,13 +91,16 @@ public enum StoreRules {
         _ data: StoreData,
         _ id: String,
         today: DateKey,
-        now: Int
+        now: Int,
+        in zone: TimeZone
     ) -> (data: StoreData, completion: Completion)? {
-        guard let result = Subtasks.completeTask(data.tasks, id, today: today, now: now) else { return nil }
+        guard let result = Subtasks.completeTask(data.tasks, id, today: today, now: now, in: zone) else { return nil }
         let byId = Dictionary(data.tasks.map { ($0.id, $0) }, uniquingKeysWith: { _, last in last })
         let previous = result.changed.map { changed in
             let old = byId[changed.id]!
-            return CompletionState(id: old.id, completedAt: old.completedAt, due: old.due, reminders: old.reminders)
+            return CompletionState(
+                id: old.id, completedAt: old.completedAt, due: old.due, reminders: old.reminders, event: old.event
+            )
         }
         let next: Due? = if case let .rolled(due, _) = result { due } else { nil }
         var updated = data
@@ -119,6 +124,7 @@ public enum StoreRules {
             task.completedAt = state.completedAt
             task.due = state.due
             task.reminders = state.reminders
+            task.event = state.event
             return task
         }
         return next

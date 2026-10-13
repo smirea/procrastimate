@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { calendarDay, clockTime, relativeDay } from './format.ts';
-import { notificationTimes, type Due, type Task } from './task.ts';
+import type { Due, Task } from './task.ts';
+import { formatEvent, scheduledDue, taskNotificationTimes } from './triggers.ts';
 import { zonedDateKey, zonedTime } from './zoned-time.ts';
 
 /** One system notification, shown at `at` in epoch milliseconds. */
@@ -15,7 +16,7 @@ export const scheduledNotificationSchema = z
 export type ScheduledNotification = z.infer<typeof scheduledNotificationSchema>;
 
 /**
- * Every moment after `now` an open task notifies, soonest first, keeping the soonest `limit`. Times and bodies are
+ * Every moment after `now` an open task notifies, soonest first, with an event task's body naming its event, keeping the soonest `limit`. Times and bodies are
  * in `zone`, or in the process zone without one.
  */
 export function upcomingNotifications(
@@ -24,16 +25,19 @@ export function upcomingNotifications(
 	limit: number,
 	zone?: string,
 ): ScheduledNotification[] {
+	const today = zonedDateKey(now, zone);
 	return tasks
 		.filter(task => task.completedAt === null)
 		.flatMap(task =>
-			notificationTimes(task.due, task.reminders, zone)
+			taskNotificationTimes(task, today, zone)
 				.filter(at => at.getTime() > now)
 				.map(at => ({
 					at: at.getTime(),
 					taskId: task.id,
 					title: task.title.slice(0, 300),
-					body: notificationBody(task.due, at.getTime(), zone),
+					body: task.event
+						? formatEvent(task.event)
+						: notificationBody(scheduledDue(task, today, zone), at.getTime(), zone),
 				})),
 		)
 		.sort((a, b) => a.at - b.at)

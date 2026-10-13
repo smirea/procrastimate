@@ -21,7 +21,7 @@ struct BrowseScreen: View {
                             name: project.name,
                             systemImage: "number",
                             tone: .muted,
-                            count: Views.projectTasks(store.tasks, project.id).count
+                            count: Views.projectTasks(store.tasks, project.id, in: store.timeZone).count
                         )
                     }
                     .accessibilityIdentifier("browse-project-\(project.name)")
@@ -51,7 +51,7 @@ struct BrowseScreen: View {
                                 name: label.name,
                                 systemImage: "tag",
                                 tone: .toneLabel,
-                                count: Views.labelTasks(store.tasks, label.id).count
+                                count: Views.labelTasks(store.tasks, label.id, in: store.timeZone).count
                             )
                         }
                         .accessibilityIdentifier("browse-label-\(label.name)")

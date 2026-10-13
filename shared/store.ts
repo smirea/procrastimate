@@ -42,6 +42,8 @@ export const taskEditSchema = taskSchema
 		recurrence: true,
 		priority: true,
 		reminders: true,
+		location: true,
+		event: true,
 	})
 	.partial()
 	.meta({
@@ -52,7 +54,13 @@ export const taskEditSchema = taskSchema
 export type TaskPatch = z.infer<typeof taskEditSchema>;
 
 export const completionStateSchema = z
-	.object({ id: taskShape.id, completedAt: taskShape.completedAt, due: taskShape.due, reminders: taskShape.reminders })
+	.object({
+		id: taskShape.id,
+		completedAt: taskShape.completedAt,
+		due: taskShape.due,
+		reminders: taskShape.reminders,
+		event: taskShape.event,
+	})
 	.meta({
 		id: 'CompletionState',
 		description: 'The fields a completion changes. Undo writes back only these, so edits made since then survive it.',
@@ -113,6 +121,8 @@ export function addTask(
 		recurrence: input.recurrence,
 		priority: input.priority ?? DEFAULT_PRIORITY,
 		reminders: input.reminders,
+		location: null,
+		event: null,
 		createdAt: Math.max(now, (data.tasks.at(-1)?.createdAt ?? -Infinity) + 1),
 		completedAt: null,
 	};
@@ -141,8 +151,8 @@ export function completeTask(
 	if (!result) return null;
 	const byId = new Map(data.tasks.map(t => [t.id, t]));
 	const previous = result.changed.map(({ id }) => {
-		const { completedAt, due, reminders } = byId.get(id)!;
-		return { id, completedAt, due, reminders };
+		const { completedAt, due, reminders, event } = byId.get(id)!;
+		return { id, completedAt, due, reminders, event };
 	});
 	const completion: Completion =
 		result.kind === 'done' ? { kind: 'done', previous } : { kind: 'rolled', next: result.next, previous };

@@ -14,8 +14,10 @@
 							"date": "2026-10-15",
 							"time": "17:00"
 						},
+						"event": null,
 						"id": "Gym",
 						"labelIds": [],
+						"location": null,
 						"notes": "",
 						"order": 0,
 						"parentId": null,
@@ -41,8 +43,10 @@
 							"date": "2026-10-14",
 							"time": "10:30"
 						},
+						"event": null,
 						"id": "Call mom",
 						"labelIds": [],
+						"location": null,
 						"notes": "",
 						"order": 0,
 						"parentId": null,
@@ -56,8 +60,10 @@
 						"completedAt": null,
 						"createdAt": 0,
 						"due": null,
+						"event": null,
 						"id": "Passport",
 						"labelIds": [],
+						"location": null,
 						"notes": "",
 						"order": 0,
 						"parentId": null,
@@ -80,8 +86,10 @@
 							"date": "2026-10-17",
 							"time": null
 						},
+						"event": null,
 						"id": "Taxes",
 						"labelIds": [],
+						"location": null,
 						"notes": "",
 						"order": 0,
 						"parentId": null,
@@ -104,8 +112,10 @@
 							"date": "2026-10-15",
 							"time": null
 						},
+						"event": null,
 						"id": "Rent",
 						"labelIds": [],
+						"location": null,
 						"notes": "",
 						"order": 0,
 						"parentId": null,
@@ -128,8 +138,10 @@
 							"date": "2026-10-21",
 							"time": "12:00"
 						},
+						"event": null,
 						"id": "Lunch",
 						"labelIds": [],
+						"location": null,
 						"notes": "",
 						"order": 0,
 						"parentId": null,
@@ -208,6 +220,82 @@
 		},
 		{
 			"fn": "upcomingNotifications",
+			"test": "upcomingNotifications › an event task names its event, and a due time at a place stays quiet",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": null,
+						"event": {
+							"allDay": false,
+							"edge": "before",
+							"id": "night",
+							"minutes": 30,
+							"occurrenceDate": null,
+							"occurrences": [
+								{
+									"end": 1792033200000,
+									"start": 1792022400000
+								}
+							],
+							"series": false,
+							"title": "Night out"
+						},
+						"id": "Wear red",
+						"labelIds": [],
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Wear red"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 0,
+						"due": {
+							"date": "2026-10-14",
+							"time": "17:00"
+						},
+						"event": null,
+						"id": "Milk",
+						"labelIds": [],
+						"location": {
+							"address": null,
+							"latitude": 52.5,
+							"longitude": 13.4,
+							"name": "Rewe",
+							"radius": 150,
+							"trigger": "arrive"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "Milk"
+					}
+				],
+				1791986400000,
+				500
+			],
+			"output": [
+				{
+					"at": 1792020600000,
+					"body": "30m before Night out",
+					"taskId": "Wear red",
+					"title": "Wear red"
+				}
+			]
+		},
+		{
+			"fn": "upcomingNotifications",
 			"test": "upcomingNotifications › completed tasks, dates without a time, and past moments never notify",
 			"input": [
 				[
@@ -218,8 +306,10 @@
 							"date": "2026-10-14",
 							"time": "11:00"
 						},
+						"event": null,
 						"id": "Done",
 						"labelIds": [],
+						"location": null,
 						"notes": "",
 						"order": 0,
 						"parentId": null,
@@ -236,8 +326,10 @@
 							"date": "2026-10-14",
 							"time": null
 						},
+						"event": null,
 						"id": "Taxes",
 						"labelIds": [],
+						"location": null,
 						"notes": "",
 						"order": 0,
 						"parentId": null,
@@ -254,8 +346,10 @@
 							"date": "2026-10-14",
 							"time": "10:15"
 						},
+						"event": null,
 						"id": "Standup",
 						"labelIds": [],
+						"location": null,
 						"notes": "",
 						"order": 0,
 						"parentId": null,
@@ -277,8 +371,10 @@
 							"date": "2026-10-14",
 							"time": "10:00"
 						},
+						"event": null,
 						"id": "Earlier",
 						"labelIds": [],
+						"location": null,
 						"notes": "",
 						"order": 0,
 						"parentId": null,
@@ -313,8 +409,10 @@
 							"date": "2026-10-14",
 							"time": "10:45"
 						},
+						"event": null,
 						"id": "Standup",
 						"labelIds": [],
+						"location": null,
 						"notes": "",
 						"order": 0,
 						"parentId": null,
@@ -359,8 +457,10 @@
 							"date": "2026-10-14",
 							"time": "09:00"
 						},
+						"event": null,
 						"id": "Water plants",
 						"labelIds": [],
+						"location": null,
 						"notes": "",
 						"order": 0,
 						"parentId": null,
@@ -396,8 +496,10 @@
 							"date": "2026-10-16",
 							"time": "09:00"
 						},
+						"event": null,
 						"id": "Water plants",
 						"labelIds": [],
+						"location": null,
 						"notes": "",
 						"order": 0,
 						"parentId": null,
@@ -443,8 +545,10 @@
 						"completedAt": null,
 						"createdAt": 0,
 						"due": null,
+						"event": null,
 						"id": "latest",
 						"labelIds": [],
+						"location": null,
 						"notes": "",
 						"order": 0,
 						"parentId": null,
@@ -464,8 +568,10 @@
 						"completedAt": null,
 						"createdAt": 0,
 						"due": null,
+						"event": null,
 						"id": "a",
 						"labelIds": [],
+						"location": null,
 						"notes": "",
 						"order": 0,
 						"parentId": null,
@@ -485,8 +591,10 @@
 						"completedAt": null,
 						"createdAt": 0,
 						"due": null,
+						"event": null,
 						"id": "b",
 						"labelIds": [],
+						"location": null,
 						"notes": "",
 						"order": 0,
 						"parentId": null,
@@ -506,8 +614,10 @@
 						"completedAt": null,
 						"createdAt": 0,
 						"due": null,
+						"event": null,
 						"id": "c",
 						"labelIds": [],
+						"location": null,
 						"notes": "",
 						"order": 0,
 						"parentId": null,
@@ -560,8 +670,10 @@
 							"date": "2026-10-14",
 							"time": "11:00"
 						},
+						"event": null,
 						"id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
 						"labelIds": [],
+						"location": null,
 						"notes": "",
 						"order": 0,
 						"parentId": null,
