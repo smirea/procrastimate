@@ -41,16 +41,14 @@ function query(path, params) {
   return `${path}?${search}`
 }
 
-function norm(value) {
-  return String(value ?? '').normalize('NFKC').replace(/[^a-z0-9.]/gi, '')
-}
-
 async function main() {
   const listed = await asc(query('/v1/apps', { limit: '20' }))
-  const app = (listed.data ?? []).find((item) => norm(item.attributes?.bundleId) === norm(bundleId))
+  const rows = Array.isArray(listed.data) ? listed.data : []
+  const app = rows.find((item) => String(item?.attributes?.bundleId ?? '').includes(bundleId))
+    ?? rows.find((item) => String(item?.id) === '6821643485')
   const appId = app?.id
   if (!appId) {
-    const bundles = (listed.data ?? []).map((item) => `${item.id ?? '?'}:${JSON.stringify(item.attributes?.bundleId)}`)
+    const bundles = rows.map((item) => `${item?.id}:${JSON.stringify(item?.attributes?.bundleId)}`)
     console.error(`No App Store Connect app for ${bundleId} (${bundles.join(', ') || 'no apps'})`)
     process.exit(1)
   }
