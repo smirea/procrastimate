@@ -20,14 +20,24 @@ private struct QuickAddForm: View {
 
     @State private var draft: QuickAddDraft
     @State private var listAt: Int?
+    @State private var session = RambleSession()
+    @State private var listening = false
+    @State private var typed = false
+    @State private var notice: String?
+    @State private var transcript = ""
+    @State private var applyOnStop = true
+    /// Text writes that came from the recognizer, so the field's change does not count as typing.
+    @State private var speechWrites = 0
     @FocusState private var focused: Bool
 
     init(defaults: QuickAddDefaults, today: DateKey) {
         _draft = State(initialValue: QuickAddDraft(defaults: defaults, today: today))
     }
 
+    private var showMic: Bool { listening || !typed }
+
     var body: some View {
-        let parsed = draft.parse(now: clock.now, projects: store.projects, labels: store.labels, in: clock.timeZone)
+        let parsed = shownParse()
         let resolved = draft.resolved(parsed)
         VStack(alignment: .leading, spacing: 12) {
             SmartInput(
@@ -40,6 +50,13 @@ private struct QuickAddForm: View {
                 onSubmit: { submit() }
             )
             .font(.body.weight(.medium))
+            .padding(.trailing, showMic ? 28 : 0)
+            .overlay(alignment: .trailing) {
+                if showMic { micButton }
+            }
+            if let notice {
+                Text(notice).font(.footnote).foregroundStyle(.muted)
+            }
 
             FlowLayout(spacing: 6) {
                 chips(parsed, resolved)
@@ -52,16 +69,6 @@ private struct QuickAddForm: View {
                     draft.picked.projectId = id
                 }
                 Spacer(minLength: 0)
-                Button {
-                    navigator.startRambleListening = true
-                    navigator.sheet = .ramble(draft.defaults)
-                } label: {
-                    Image(systemName: "mic.fill")
-                        .frame(width: 44, height: 44)
-                }
-                .buttonStyle(.plain)
-                .foregroundStyle(.muted)
-                .accessibilityLabel("Ramble")
                 Button("Cancel") { navigator.sheet = nil }
                     .buttonStyle(.plain)
                     .foregroundStyle(.muted)
@@ -70,7 +77,7 @@ private struct QuickAddForm: View {
                 Button("Add task") { submit() }
                     .buttonStyle(.borderedProminent)
                     .buttonBorderShape(.capsule)
-                    .disabled(parsed.title.isEmpty)
+                    .disabled(listening || parsed.title.isEmpty)
             }
         }
         .padding(.horizontal, 16)
@@ -87,6 +94,39 @@ private struct QuickAddForm: View {
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("Quick add")
         .onAppear { focused = true }
+        .onChange(of: navigator.startRambleListening, initial: true) {
+            guard navigator.startRambleListening else { return }
+            navigator.startRambleListening = false
+            startRamble()
+        }
+        .onDisappear { if listening { stopRamble(apply: false) } }
+        .onChange(of: draft.text) {
+            if speechWrites > 0 {
+                speechWrites -= 1
+                return
+            }
+            if listening { stopRamble(apply: false) }
+            typed = !draft.text.isEmpty
+        }
+    }
+
+    private var micButton: some View {
+        Button {
+            if listening { stopRamble(apply: true) } else { startRamble() }
+        } label: {
+            Image(systemName: listening ? "stop.fill" : "mic.fill")
+                .frame(width: 36, height: 36)
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(.muted)
+        .accessibilityLabel(listening ? "Stop listening" : "Ramble")
+    }
+
+    /// While the transcript is streaming, the chips stay put. The grammar fills them when listening stops.
+    private func shownParse() -> QuickAdd.Parsed {
+        let parsed = draft.parse(now: clock.now, projects: store.projects, labels: store.labels, in: clock.timeZone)
+        guard listening else { return parsed }
+        return QuickAdd.Parsed(title: draft.text)
     }
 
     @ViewBuilder
@@ -103,9 +143,12 @@ private struct QuickAddForm: View {
             draft.clearToken(.priority, in: parsed)
             draft.picked.priority = priority
         }
-        if let recurrence = parsed.recurrence {
+        if let recurrence = parsed.recurrence ?? draft.appliedRecurrence {
             Chip(systemImage: "repeat", text: Format.formatRecurrence(recurrence, resolved.due), tone: .toneTomorrow)
-                .keepAsText(keepAsText(parsed, .recurrence))
+                .keepAsText(parsed.recurrence == nil ? nil : keepAsText(parsed, .recurrence))
+        }
+        ForEach(Array(draft.picked.reminders.enumerated()), id: \.offset) { item in
+            Chip(systemImage: "bell.fill", text: Format.formatReminder(item.element, today), tone: .toneWeek)
         }
         let reminders = zip(parsed.tokens.filter { $0.kind == .reminder }, parsed.reminders).map(ParsedReminder.init)
         ForEach(reminders, id: \.self) { item in
@@ -151,11 +194,65 @@ private struct QuickAddForm: View {
     }
 
     private func submit() {
+        guard !listening else { return }
         let parsed = draft.parse(now: clock.now, projects: store.projects, labels: store.labels, in: clock.timeZone)
         guard let task = draft.resolve(parsed) else { return }
         withAnimation(.snappy) { _ = store.addTask(task) }
         draft.reset(today: clock.today)
+        typed = false
+        notice = nil
         focused = true
+    }
+
+    private func startRamble() {
+        notice = nil
+        transcript = ""
+        applyOnStop = true
+        listening = true
+        typed = false
+        let choice = store.dictation
+        let deviceId = store.snapshot.sync?.deviceId
+        session.onText = { spoken, _ in
+            guard listening else { return }
+            transcript = spoken
+            if spoken != draft.text {
+                speechWrites += 1
+                draft.setText(spoken)
+            }
+            if Ramble.parse(spoken, now: clock.now, projects: store.projects, labels: store.labels, in: clock.timeZone).ended {
+                stopRamble(apply: true)
+            }
+        }
+        session.onLevel = { _ in }
+        session.onEnd = { end in
+            listening = false
+            switch end {
+            case .stopped:
+                if applyOnStop { applyTranscript() }
+            case .typed:
+                notice = "You can type the task instead."
+            case let .failed(message):
+                notice = message
+                if applyOnStop { applyTranscript() }
+            }
+        }
+        Task { await session.start(choice: choice, deviceId: deviceId) }
+    }
+
+    private func stopRamble(apply: Bool) {
+        applyOnStop = apply
+        listening = false
+        session.stop()
+    }
+
+    private func applyTranscript() {
+        let ramble = Ramble.parse(transcript, now: clock.now, projects: store.projects, labels: store.labels, in: clock.timeZone)
+        let before = draft.text
+        speechWrites += 1
+        if !draft.applyRamble(ramble, today: clock.today), !transcript.isEmpty {
+            draft.setText(transcript)
+        }
+        if draft.text == before { speechWrites -= 1 }
     }
 }
 

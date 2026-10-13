@@ -3,7 +3,7 @@ import { RAMBLE_SOCKET_PATH, RAMBLE_SOCKET_PROTOCOL, type RambleServerMessage } 
 import { voiceCapture, type DictationChoice } from 'shared/dictation.ts';
 import { NativeDictation, speechRecognitionConstructor, type DictationEnd } from '../dictation.ts';
 import { store } from '../store.svelte.ts';
-import { joinTranscript } from './cards.ts';
+import { joinTranscript } from './transcript.ts';
 
 export type CaptureStop = 'stopped' | 'denied' | 'unsupported' | 'error' | 'unavailable' | 'limit';
 

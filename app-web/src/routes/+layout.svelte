@@ -8,7 +8,6 @@
 	import Plus from 'phosphor-svelte/lib/Plus';
 	import Sidebar from '#lib/components/Sidebar.svelte';
 	import QuickAdd from '#lib/components/QuickAdd.svelte';
-	import RambleSheet from '#lib/components/RambleSheet.svelte';
 	import Search from '#lib/components/Search.svelte';
 	import SettingsSheet from '#lib/components/SettingsSheet.svelte';
 	import TaskSheet from '#lib/components/TaskSheet.svelte';
@@ -40,11 +39,6 @@
 		sheets.openQuickAdd(listDefaults());
 	}
 
-	function openRamble(listen: boolean) {
-		menuOpen = false;
-		sheets.openRamble(listDefaults(), listen);
-	}
-
 	function openSearch() {
 		menuOpen = false;
 		sheets.openSearch();
@@ -71,12 +65,7 @@
 			openSearch();
 			return;
 		}
-		if (event.metaKey || event.ctrlKey || event.altKey) return;
-		if (event.shiftKey && event.key.toLowerCase() === 'q' && sheets.current.kind === 'none') {
-			event.preventDefault();
-			openRamble(true);
-			return;
-		}
+		if (event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return;
 		if (event.key === 'q' && sheets.current.kind === 'none') {
 			event.preventDefault();
 			openQuickAdd();
@@ -112,27 +101,6 @@
 		menuOpen = false;
 	});
 
-	let holdTimer = 0;
-	let holdingFab = false;
-	let swallowFab = false;
-
-	function fabDown(event: PointerEvent) {
-		if (event.button !== 0) return;
-		holdingFab = false;
-		(event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
-		holdTimer = window.setTimeout(() => {
-			holdingFab = true;
-			openRamble(true);
-		}, 450);
-	}
-
-	function fabUp() {
-		clearTimeout(holdTimer);
-		if (!holdingFab) return;
-		holdingFab = false;
-		swallowFab = true;
-		sheets.rambleRelease?.();
-	}
 </script>
 
 <svelte:window {onkeydown} />
@@ -173,16 +141,7 @@
 		type="button"
 		class="fab fixed z-20 grid size-14 place-items-center rounded-full bg-accent text-on-accent md:hidden"
 		aria-label="Quick add"
-		onpointerdown={fabDown}
-		onpointerup={fabUp}
-		onpointercancel={fabUp}
-		onclick={() => {
-			if (swallowFab) {
-				swallowFab = false;
-				return;
-			}
-			openQuickAdd();
-		}}
+		onclick={openQuickAdd}
 		transition:scale={motion({ start: 0.6, duration: 200, easing: cubicOut })}
 	>
 		<Plus size={24} weight="bold" />
@@ -191,9 +150,7 @@
 
 {#if sheets.current.kind === 'quick-add'}
 	{@const defaults = sheets.current.defaults}
-	<QuickAdd {defaults} onramble={() => sheets.openRamble(defaults, true)} />
-{:else if sheets.current.kind === 'ramble'}
-	<RambleSheet defaults={sheets.current.defaults} listen={sheets.current.listen} />
+	<QuickAdd {defaults} />
 {:else if sheets.current.kind === 'search'}
 	<Search />
 {:else if sheets.current.kind === 'settings'}
@@ -248,7 +205,6 @@
 	}
 
 	.fab {
-		touch-action: none;
 		right: max(1.25rem, calc(env(safe-area-inset-right) + 0.75rem));
 		bottom: max(1.25rem, calc(env(safe-area-inset-bottom) + 0.5rem));
 		box-shadow:

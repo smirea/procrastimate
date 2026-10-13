@@ -8,7 +8,6 @@ import { applyResponse, commit, startSync, type ClientSync } from 'shared/sync/a
 import { formatHlc, parseHlc } from 'shared/sync/hlc.ts';
 import type { Snapshot as SyncedData, SyncRequest, SyncResponse } from 'shared/sync/protocol.ts';
 import { mergeBackup, type ImportSummary, type TodoistBackup } from 'shared/todoist.ts';
-import type { RambleSave } from './ramble/cards.ts';
 import { loadSnapshot, saveSnapshot } from './persistence.ts';
 
 export type { Completion, CompletionState, NewTask, TaskPatch } from 'shared/store.ts';
@@ -220,50 +219,6 @@ class Store {
 		const { data, task } = rules.addTask(this.#data, input, parentId, this.#creation());
 		this.#apply(data);
 		return task;
-	}
-
-	/** Adds a ramble, including nested subtasks and notes, as one command and one undo. */
-	addRamble(tasks: readonly RambleSave[]): string[] {
-		let data = this.#data;
-		const ids: string[] = [];
-		const add = (task: RambleSave, parentId: string | null) => {
-			const title = task.title.trim();
-			if (!title) return;
-			const created = rules.addTask(
-				data,
-				{
-					title,
-					projectId: task.projectId,
-					labelIds: task.labelIds,
-					due: task.due,
-					recurrence: task.recurrence,
-					priority: task.priority,
-					reminders: task.reminders,
-				},
-				parentId,
-				this.#creation(),
-			);
-			data = created.data;
-			if (task.notes) data = rules.updateTask(data, created.task.id, { notes: task.notes });
-			ids.push(created.task.id);
-			for (const sub of task.subtasks) add(sub, created.task.id);
-		};
-		for (const task of tasks) add(task, null);
-		if (ids.length) this.#apply(data);
-		return ids;
-	}
-
-	/** Deletes each task and the subtasks under it, in one command. */
-	deleteTasks(ids: readonly string[]): Task[] {
-		let data = this.#data;
-		const removed: Task[] = [];
-		for (const id of ids) {
-			const result = rules.deleteTask(data, id);
-			data = result.data;
-			removed.push(...result.removed);
-		}
-		if (removed.length) this.#apply(data);
-		return removed;
 	}
 
 	updateTask(id: string, patch: rules.TaskPatch) {

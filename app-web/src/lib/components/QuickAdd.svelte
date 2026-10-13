@@ -1,14 +1,18 @@
 <script lang="ts">
 	import { fade, fly, scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
+	import { untrack } from 'svelte';
 	import Bell from 'phosphor-svelte/lib/Bell';
 	import Microphone from 'phosphor-svelte/lib/Microphone';
 	import Plus from 'phosphor-svelte/lib/Plus';
 	import Repeat from 'phosphor-svelte/lib/Repeat';
+	import Stop from 'phosphor-svelte/lib/Stop';
 	import Tag from 'phosphor-svelte/lib/Tag';
 	import { parseQuickAdd, type QuickAddToken, type TokenKind } from 'shared/quick-add.ts';
+	import { parseRamble } from 'shared/ramble.ts';
+	import { quickAddFromRamble, withListDefaults } from 'shared/ramble-fill.ts';
 	import { unknownNames, type UnknownName } from 'shared/name-search.ts';
-	import { DEFAULT_PRIORITY, type Due, type Priority, type Reminder } from 'shared/task.ts';
+	import { DEFAULT_PRIORITY, type Due, type Priority, type Recurrence, type Reminder } from 'shared/task.ts';
 	import SmartInput from './SmartInput.svelte';
 	import DuePicker from './DuePicker.svelte';
 	import PriorityPicker from './PriorityPicker.svelte';
@@ -19,8 +23,9 @@
 	import { clock, mobile, sheets, type QuickAddDefaults, motion } from '../ui.svelte.ts';
 	import { formatRecurrence, formatReminder } from 'shared/format.ts';
 	import { NAME_SOURCES } from '../names.ts';
+	import { listenRamble, type RambleListen } from '../ramble/capture.ts';
 
-	let { defaults, onramble }: { defaults: QuickAddDefaults; onramble: () => void } = $props();
+	let { defaults }: { defaults: QuickAddDefaults } = $props();
 
 	type Picked = {
 		due: Due | null;
@@ -40,26 +45,39 @@
 	let text = $state('');
 	let disabled = $state<string[]>([]);
 	let picked = $state<Picked>(initialPicked());
+	let spokenRecurrence = $state<Recurrence | null>(null);
+	let listening = $state(false);
+	let typed = $state(false);
+	let notice = $state('');
 	let input: SmartInput;
 	let listAt = $state<number | null>(null);
+	let session: RambleListen | null = null;
+	let generation = 0;
+	let transcript = '';
+	let applyOnStop = true;
+	let alive = true;
+
+	const showMic = $derived(listening || !typed);
 
 	const parsed = $derived(
 		parseQuickAdd(text, { now: new Date(clock.now), projects: store.projects, labels: store.labels, disabled, due: picked.due }),
 	);
 	const tokenOf = (kind: TokenKind) => parsed.tokens.find((t) => t.kind === kind);
-	const due = $derived(parsed.due ?? picked.due);
-	const priority = $derived(parsed.priority ?? picked.priority ?? DEFAULT_PRIORITY);
-	const projectId = $derived(parsed.projectId ?? picked.projectId);
-	const reminderTokens = $derived(parsed.tokens.filter((t) => t.kind === 'reminder'));
+	const recurrence = $derived(parsed.recurrence ?? spokenRecurrence);
+	const due = $derived(listening ? picked.due : (parsed.due ?? picked.due));
+	const priority = $derived(listening ? (picked.priority ?? DEFAULT_PRIORITY) : (parsed.priority ?? picked.priority ?? DEFAULT_PRIORITY));
+	const projectId = $derived(listening ? picked.projectId : (parsed.projectId ?? picked.projectId));
+	const fieldTokens = $derived(listening ? [] : parsed.tokens);
+	const reminderTokens = $derived(fieldTokens.filter((t) => t.kind === 'reminder'));
 	const labelTokens = $derived(
-		parsed.tokens
+		fieldTokens
 			.filter((t) => t.kind === 'label')
 			.map((token) => ({ token, name: store.labels.find((l) => `@${l.name}`.toLowerCase() === token.text.toLowerCase())?.name })),
 	);
-	const labelIds = $derived([...new Set([...picked.labelIds, ...parsed.labelIds])]);
+	const labelIds = $derived(listening ? picked.labelIds : [...new Set([...picked.labelIds, ...parsed.labelIds])]);
 	/** Names to offer creating. The one the suggestion list is open on already offers it there. */
 	const unknown = $derived(
-		unknownNames(text, parsed.tokens, store.projects, store.labels).filter((name) => name.start !== listAt),
+		unknownNames(text, fieldTokens, store.projects, store.labels).filter((name) => name.start !== listAt),
 	);
 
 	function create(name: UnknownName) {
@@ -80,13 +98,88 @@
 	}
 
 	function submit() {
-		if (!parsed.title) return;
+		if (!parsed.title || listening) return;
 		const reminders = [...parsed.reminders, ...picked.reminders];
-		store.addTask({ title: parsed.title, due, recurrence: parsed.recurrence, priority, projectId, labelIds, reminders });
+		store.addTask({ title: parsed.title, due, recurrence, priority, projectId, labelIds, reminders });
 		text = '';
 		disabled = [];
 		picked = initialPicked();
+		spokenRecurrence = null;
+		typed = false;
+		notice = '';
 		input.focus();
+	}
+
+	function rambleOptions() {
+		return { now: new Date(clock.now), projects: store.projects, labels: store.labels };
+	}
+
+	function applyTranscript() {
+		const draft = parseRamble(transcript, rambleOptions());
+		const fill = quickAddFromRamble(draft);
+		if (!fill) return;
+		const next = withListDefaults(fill, defaults, clock.today);
+		text = next.text;
+		disabled = [];
+		picked = {
+			due: next.due,
+			priority: next.priority,
+			projectId: next.projectId,
+			labelIds: next.labelIds,
+			reminders: next.reminders,
+		};
+		spokenRecurrence = next.recurrence;
+	}
+
+	function start() {
+		const token = ++generation;
+		session?.stop();
+		transcript = '';
+		notice = '';
+		applyOnStop = true;
+		listening = true;
+		typed = false;
+		const next = listenRamble({
+			choice: store.dictation,
+			online: navigator.onLine,
+			onText: (spoken) => {
+				if (token !== generation || !listening) return;
+				transcript = spoken;
+				text = spoken;
+				if (parseRamble(spoken, rambleOptions()).ended) stop(true);
+			},
+			onStop: (reason, message) => {
+				if (token !== generation || !alive) return;
+				listening = false;
+				session = null;
+				if (reason === 'denied') notice = message ?? 'The microphone is off. You can type the ramble instead.';
+				else if (reason === 'limit' || reason === 'unavailable') notice = message ?? 'Ramble needs a connection';
+				else notice = '';
+				if (applyOnStop) applyTranscript();
+			},
+		});
+		session = next;
+		if (next.typed) {
+			listening = false;
+			session = null;
+			notice = 'You can type the task instead.';
+		}
+	}
+
+	function stop(apply = true) {
+		applyOnStop = apply;
+		const current = session;
+		if (!current || current.typed) {
+			listening = false;
+			if (apply) applyTranscript();
+			return;
+		}
+		current.stop();
+	}
+
+	function ontype() {
+		if (listening) stop(false);
+		typed = true;
 	}
 
 	function onkeydown(event: KeyboardEvent) {
@@ -100,7 +193,15 @@
 	}
 
 	$effect(() => {
-		if (!text) disabled = [];
+		if (!text) {
+			disabled = [];
+			typed = false;
+		}
+	});
+
+	$effect(() => () => {
+		alive = false;
+		untrack(() => session?.stop());
 	});
 
 	const enter = (node: Element) =>
@@ -117,18 +218,40 @@
 	transition:enter
 >
 	<div class="px-4 pt-4 pb-2">
-		<SmartInput
-			bind:this={input}
-			bind:value={text}
-			bind:listAt
-			tokens={parsed.tokens}
-			label="Task name"
-			placeholder="Call mom tomorrow 5pm p1 remind me 30m before"
-			autofocus
-			enterkeyhint="send"
-			class="text-[17px] font-medium"
-			{onkeydown}
-		/>
+		<div class="relative">
+			<SmartInput
+				bind:this={input}
+				bind:value={text}
+				bind:listAt
+				tokens={fieldTokens}
+				label="Task name"
+				placeholder="Call mom tomorrow 5pm p1 remind me 30m before"
+				autofocus
+				enterkeyhint="send"
+				reserve={showMic}
+				class="text-[17px] font-medium"
+				oninput={ontype}
+				{onkeydown}
+			/>
+			{#if showMic}
+				<button
+					type="button"
+					class="absolute top-1/2 right-1 grid size-9 -translate-y-1/2 place-items-center text-muted"
+					aria-label={listening ? 'Stop listening' : 'Ramble'}
+					onmousedown={(e) => e.preventDefault()}
+					onclick={() => (listening ? stop() : start())}
+				>
+					{#if listening}
+						<Stop size={16} weight="fill" />
+					{:else}
+						<Microphone size={18} weight="fill" />
+					{/if}
+				</button>
+			{/if}
+		</div>
+		{#if notice}
+			<p class="pt-2 text-[13px] text-muted">{notice}</p>
+		{/if}
 	</div>
 	<div class="flex flex-wrap items-center gap-1.5 px-4 pb-3">
 		<DuePicker {due} onchange={(value) => {
@@ -139,13 +262,15 @@
 				clearToken('priority');
 				picked.priority = value;
 			}} onkeepastext={tokenOf('priority') ? () => keepAsText(tokenOf('priority')) : undefined} />
-		{#if parsed.recurrence}
+		{#if recurrence}
 			<div class="flex items-center" transition:scale={motion({ start: 0.9, duration: 160 })}>
 				<span class="chip" data-active="true" style="color: var(--tone-tomorrow)">
 					<Repeat size={15} weight="bold" />
-					{formatRecurrence(parsed.recurrence, due)}
+					{formatRecurrence(recurrence, due)}
 				</span>
-				<KeepAsText onclick={() => keepAsText(tokenOf('recurrence'))} />
+				{#if parsed.recurrence}
+					<KeepAsText onclick={() => keepAsText(tokenOf('recurrence'))} />
+				{/if}
 			</div>
 		{/if}
 		<ReminderPicker {due} reminders={picked.reminders} onchange={(value) => (picked.reminders = value)} />
@@ -192,11 +317,8 @@
 				picked.projectId = value;
 			}} onkeepastext={tokenOf('project') ? () => keepAsText(tokenOf('project')) : undefined} />
 		<div class="flex gap-1.5">
-			<button type="button" class="btn btn-quiet grid size-11 place-items-center" aria-label="Ramble" onclick={onramble}>
-				<Microphone size={18} weight="fill" />
-			</button>
 			<button type="button" class="btn btn-quiet" onclick={() => sheets.close()}>Cancel</button>
-			<button type="button" class="btn btn-primary" disabled={!parsed.title} onclick={submit}>Add task</button>
+			<button type="button" class="btn btn-primary" disabled={listening || !parsed.title} onclick={submit}>Add task</button>
 		</div>
 	</div>
 </div>

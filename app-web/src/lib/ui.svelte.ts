@@ -74,20 +74,13 @@ export type Sheet =
 	| { kind: 'quick-add'; defaults: QuickAddDefaults }
 	| { kind: 'search' }
 	| { kind: 'settings' }
-	| { kind: 'ramble'; defaults: QuickAddDefaults; listen: boolean }
 	| { kind: 'task'; id: string; arrival: Arrival };
 
 class Sheets {
 	current = $state<Sheet>({ kind: 'none' });
-	/** Set while Ramble is listening, so a hold on the add button can stop it on release. */
-	rambleRelease: (() => void) | null = null;
 
 	openQuickAdd(defaults: QuickAddDefaults) {
 		this.current = { kind: 'quick-add', defaults };
-	}
-
-	openRamble(defaults: QuickAddDefaults, listen = false) {
-		this.current = { kind: 'ramble', defaults, listen };
 	}
 
 	openSearch() {
@@ -103,7 +96,6 @@ class Sheets {
 	}
 
 	close() {
-		this.rambleRelease = null;
 		this.current = { kind: 'none' };
 	}
 }

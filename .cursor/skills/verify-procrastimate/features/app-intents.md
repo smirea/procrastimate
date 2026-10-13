@@ -17,7 +17,7 @@ Every new feature that someone can do from outside the app ships its intents, ph
 - `intent-overdue` lists overdue tasks.
 - `intent-spotlight` indexes open tasks and drops a task from Spotlight once it is completed.
 - `intent-delete-all` deletes every task, project, and label on this device. The next sync wipes them on the server. It stays available in Shortcuts, without a suggested phrase: App Shortcuts keep ten, and Start Ramble uses that slot.
-- `intent-ramble` opens Ramble and starts listening. Siri and Shortcuts offer "Start Ramble in Procrastinate".
+- `intent-ramble` opens quick add and starts the mic. Siri and Shortcuts offer "Start Ramble in Procrastinate".
 
 ## How to get to it (user POV)
 

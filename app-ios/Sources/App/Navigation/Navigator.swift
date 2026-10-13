@@ -6,10 +6,8 @@ final class Navigator {
     var tab: AppTab = .inbox
     var paths: [AppTab: [Route]] = [:]
     var sheet: Sheet?
-    /// Set just before presenting Ramble so the sheet starts listening.
+    /// Set just before opening quick add so the mic starts recording.
     var startRambleListening = false
-    /// While Ramble is listening, a hold on the add button calls this on release.
-    var rambleHoldStop: (() -> Void)?
 
     /// Quick add's defaults while it is open. It shows as an overlay attached to the keyboard, not as a sheet.
     var quickAdd: QuickAddDefaults? {

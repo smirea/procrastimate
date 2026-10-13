@@ -62,14 +62,9 @@ struct CanvasBackground: View {
 struct AddButton: View {
     @Environment(Navigator.self) private var navigator
     let defaults: QuickAddDefaults
-    @State private var held = false
 
     var body: some View {
         Button {
-            if held {
-                held = false
-                return
-            }
             navigator.sheet = .quickAdd(defaults)
         } label: {
             Image(systemName: "plus")
@@ -79,13 +74,6 @@ struct AddButton: View {
         .buttonStyle(.glassProminent)
         .buttonBorderShape(.circle)
         .accessibilityLabel("Quick add")
-        .onLongPressGesture(minimumDuration: 0.45, pressing: { pressing in
-            if !pressing { navigator.rambleHoldStop?() }
-        }, perform: {
-            held = true
-            navigator.startRambleListening = true
-            navigator.sheet = .ramble(defaults)
-        })
     }
 }
 
