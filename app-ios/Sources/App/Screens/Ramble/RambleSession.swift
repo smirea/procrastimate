@@ -163,7 +163,7 @@ final class RambleSession {
     }
 
     private func handle(_ raw: String) {
-        guard let data = raw.data(using: .utf8), let event = try? JSONDecoder().decode(Event.self, from: data) else { return }
+        guard let data = raw.data(using: .utf8), let event = try? JSONDecoder().decode(RambleMessage.self, from: data) else { return }
         switch event.type {
         case "started":
             heard = true
@@ -210,7 +210,7 @@ final class RambleSession {
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
     }
 
-    private struct Event: Decodable {
+    private struct RambleMessage: Decodable {
         var type: String
         var text: String?
         var code: String?
