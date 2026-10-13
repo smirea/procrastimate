@@ -26,19 +26,35 @@ function token() {
 
 async function asc(path) {
   const response = await fetch(`https://api.appstoreconnect.apple.com${path}`, {
-    headers: { Authorization: `Bearer ${token()}` },
+    headers: { Authorization: `Bearer ${token()}`, Accept: 'application/json' },
   })
   const body = await response.text()
   if (!response.ok) {
-    console.error(`App Store Connect ${response.status} ${path}: ${body.slice(0, 500)}`)
+    console.error(`App Store Connect ${response.status} ${path}: ${body.slice(0, 800)}`)
     process.exit(1)
   }
   return JSON.parse(body)
 }
 
+function query(path, params) {
+  const search = new URLSearchParams(params)
+  return `${path}?${search}`
+}
+
 async function main() {
-  const apps = await asc(`/v1/apps?filter[bundleId]=${encodeURIComponent(bundleId)}&limit=1`)
-  const appId = apps.data?.[0]?.id
+  const apps = await asc(query('/v1/apps', {
+    'filter[bundleId]': bundleId,
+    'fields[apps]': 'bundleId,name',
+    limit: '5',
+  }))
+  let appId = (apps.data ?? []).find((app) => app.attributes?.bundleId === bundleId)?.id
+  if (!appId) {
+    const listed = await asc(query('/v1/apps', { 'fields[apps]': 'bundleId,name', limit: '20' }))
+    const bundles = (listed.data ?? []).map((app) => app.attributes?.bundleId).filter(Boolean)
+    console.log(`bundle filter missed; visible apps: ${bundles.join(', ') || '(none)'}`)
+    console.log(`filter response: ${JSON.stringify(apps).slice(0, 500)}`)
+    appId = (listed.data ?? []).find((app) => app.attributes?.bundleId === bundleId)?.id
+  }
   if (!appId) {
     console.error(`No App Store Connect app for ${bundleId}`)
     process.exit(1)
