@@ -69,4 +69,5 @@ Keep implementation details out of the map. Name only user paths, stable handles
 - [Settings](./settings.md) covers the settings popover on desktop and the settings sheet on a phone.
 - [Todoist import](./todoist-import.md) covers importing a Todoist backup zip, the summary and warnings, and safe re-imports.
 - [Theme](./theme.md) covers the System, Light, and Dark themes, persistence, first paint, and contrast.
+- [Places and events](./places-and-events.md) covers places and calendar events on tasks, set on the iPhone: the Maps search and Arrive, Leave, or During, the calendar event picker, rows, the Browse sections, notifications, the Live Activity, and moved events.
 - [Siri, Shortcuts, and Spotlight](./app-intents.md) covers the iOS App Intents: adding and completing tasks, opening lists and projects, search, today's and overdue tasks, and Spotlight. Web is excluded.

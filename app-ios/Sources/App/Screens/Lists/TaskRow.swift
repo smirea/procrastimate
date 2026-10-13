@@ -73,25 +73,34 @@ struct TaskRow: View {
         Subtasks.progressOf(store.tasks.filter { $0.parentId == task.id })
     }
 
+    /// The day the task sits on, which for an event or a repeat at a place is not its stored due date.
+    private var due: Due? { Triggers.scheduledDue(task, today, in: store.timeZone) }
+
     private var hasDetails: Bool {
-        task.due != nil || task.recurrence != nil || !task.reminders.isEmpty || progress != nil || !labels.isEmpty
+        due != nil || task.location != nil || task.recurrence != nil || !task.reminders.isEmpty || progress != nil || !labels.isEmpty
             || parent != nil || showProject
     }
 
     @ViewBuilder private var details: some View {
         if hasDetails {
             HStack(spacing: 10) {
-                if let due = task.due, !(timeOnly && due.time == nil) {
+                if let event = task.event {
+                    Detail(systemImage: "calendar", text: Triggers.formatEvent(event))
+                        .foregroundStyle(due.map { Format.dueTone($0, today).color } ?? .muted)
+                } else if let due, !(timeOnly && due.time == nil) {
                     Detail(
                         systemImage: "calendar",
                         text: timeOnly ? Format.formatTime(due.time!) : Format.formatDue(due, today)
                     )
                     .foregroundStyle(Format.dueTone(due, today).color)
                 }
+                if let location = task.location {
+                    Detail(systemImage: "mappin.and.ellipse", text: Triggers.formatLocation(location))
+                }
                 if let recurrence = task.recurrence {
                     Image(systemName: "repeat")
                         .foregroundStyle(.toneTomorrow)
-                        .accessibilityLabel(Format.repeatLabel(recurrence, task.due))
+                        .accessibilityLabel(Format.repeatLabel(recurrence, due))
                 }
                 if let progress {
                     SubtaskProgress(progress: progress)

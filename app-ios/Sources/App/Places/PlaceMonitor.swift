@@ -1,0 +1,223 @@
+import ActivityKit
+import BackgroundTasks
+import Core
+import CoreLocation
+import Foundation
+import Observation
+@preconcurrency import UserNotifications
+
+/// Watches the places on open tasks with `CLMonitor` region conditions, which iOS evaluates from cell and Wi-Fi changes
+/// without keeping GPS on, and relaunches the app for. `Arrive` and `Leave` notify on the crossing; `During` keeps a
+/// Live Activity of the place's tasks up while Stefan is inside.
+@MainActor @Observable
+final class PlaceMonitor: NSObject {
+    nonisolated static let refreshTaskID = "com.stefan.procrastimate.places"
+    nonisolated static let notificationPrefix = "place:"
+    /// iOS monitors at most 20 regions per app.
+    static let limit = 20
+    private static let statesKey = "procrastimate-place-states"
+
+    @ObservationIgnored private let store: Store
+    @ObservationIgnored private let clock: AppClock
+    @ObservationIgnored private let manager = CLLocationManager()
+    @ObservationIgnored private var monitor: CLMonitor?
+    @ObservationIgnored private var pending: Task<Void, Never>?
+    @ObservationIgnored private var running: Task<Void, Never>?
+    /// The last state each condition reported, kept across launches, so a crossing is a change from a known state and
+    /// the first report after a condition is added never counts as one.
+    @ObservationIgnored private var states: [String: Bool]
+
+    init(store: Store, clock: AppClock) {
+        self.store = store
+        self.clock = clock
+        states = UserDefaults.standard.dictionary(forKey: Self.statesKey) as? [String: Bool] ?? [:]
+        super.init()
+        manager.delegate = self
+    }
+
+    /// Opens the monitor and listens before anything else, since a relaunch for a crossing delivers it right away.
+    func start() async {
+        let monitor = await CLMonitor("ProcrastimatePlaces")
+        self.monitor = monitor
+        Task {
+            do {
+                for try await event in await monitor.events { await handle(event) }
+            } catch {}
+        }
+        await sync()
+    }
+
+    /// Asked the first time a task gets a place. Always is what lets iOS wake the app at a crossing; requesting it
+    /// first shows When In Use, and iOS offers the upgrade later on its own.
+    func requestPermission() {
+        switch manager.authorizationStatus {
+        case .notDetermined, .authorizedWhenInUse: manager.requestAlwaysAuthorization()
+        default: break
+        }
+    }
+
+    var nearby: CLLocation? {
+        switch manager.authorizationStatus {
+        case .authorizedAlways, .authorizedWhenInUse: manager.location
+        default: nil
+        }
+    }
+
+    func tasksChanged() {
+        pending?.cancel()
+        pending = Task {
+            try? await Task.sleep(for: .milliseconds(300))
+            guard !Task.isCancelled else { return }
+            await sync()
+        }
+    }
+
+    /// Arms the soonest 20 places, drops the rest, and brings the Live Activities in line with where Stefan is.
+    func sync() async {
+        let previous = running
+        let task = Task {
+            await previous?.value
+            await apply()
+        }
+        running = task
+        await task.value
+    }
+
+    private func apply() async {
+        guard let monitor else { return }
+        let now = clock.now
+        let plan = Self.plan(store.tasks, now: now, today: clock.today, in: clock.timeZone)
+        let wanted = Dictionary(plan.armed.map { (Self.conditionID($0.task, $0.location), $0.location) }) { a, _ in a }
+        let existing = Set(await monitor.identifiers)
+        for id in existing where wanted[id] == nil {
+            await monitor.remove(id)
+            states[id] = nil
+        }
+        for (id, location) in wanted where !existing.contains(id) {
+            let center = CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude)
+            await monitor.add(CLMonitor.CircularGeographicCondition(center: center, radius: location.radius), identifier: id)
+        }
+        saveStates()
+        await reconcileActivities(entered: [])
+        if let next = plan.nextArm {
+            let request = BGAppRefreshTaskRequest(identifier: Self.refreshTaskID)
+            request.earliestBeginDate = next
+            try? BGTaskScheduler.shared.submit(request)
+        }
+    }
+
+    struct Plan {
+        var armed: [(task: TaskItem, location: TaskLocation)]
+        var nextArm: Date?
+    }
+
+    /// A place with a due date or reminders matters from the start of its day or its first reminder, whichever comes
+    /// first, so it is only watched from then. Without either it is always watched.
+    static func armingMoment(_ task: TaskItem, today: DateKey, in zone: TimeZone) -> Date? {
+        let due = Triggers.scheduledDue(task, today, in: zone)
+        var moments = task.reminders.compactMap { Notifications.reminderFiresAt($0, due, in: zone) }
+        if let due { moments.append(Dates.fromDateKey(due.date, in: zone)) }
+        return moments.min()
+    }
+
+    static func plan(_ tasks: [TaskItem], now: Date, today: DateKey, in zone: TimeZone) -> Plan {
+        var armed: [(at: Date, task: TaskItem, location: TaskLocation)] = []
+        var nextArm: Date?
+        for task in tasks where task.completedAt == nil {
+            guard let location = task.location else { continue }
+            let at = armingMoment(task, today: today, in: zone) ?? .distantPast
+            if at <= now {
+                armed.append((at, task, location))
+            } else {
+                nextArm = min(nextArm ?? at, at)
+            }
+        }
+        armed.sort { $0.at < $1.at }
+        return Plan(armed: armed.prefix(limit).map { ($0.task, $0.location) }, nextArm: nextArm)
+    }
+
+    /// Keyed by task and spot, so moving a task's place replaces its condition while a trigger change keeps it.
+    static func conditionID(_ task: TaskItem, _ location: TaskLocation) -> String {
+        "\(task.id)|\(Triggers.placeKey(location))|\(Int(location.radius))"
+    }
+
+    private static func taskID(_ conditionID: String) -> String {
+        String(conditionID.prefix { $0 != "|" })
+    }
+
+    private func saveStates() {
+        UserDefaults.standard.set(states, forKey: Self.statesKey)
+    }
+
+    private func handle(_ event: CLMonitor.Event) async {
+        let inside: Bool
+        switch event.state {
+        case .satisfied: inside = true
+        case .unsatisfied: inside = false
+        default: return
+        }
+        let id = event.identifier
+        let before = states[id]
+        states[id] = inside
+        saveStates()
+        guard let task = store.task(Self.taskID(id)), task.completedAt == nil, let location = task.location else { return }
+        switch location.trigger {
+        case .arrive:
+            if before == false, inside { notify(task, location) }
+        case .leave:
+            if before == true, !inside { notify(task, location) }
+        case .during:
+            await reconcileActivities(entered: before == false && inside ? [Triggers.placeKey(location)] : [])
+        }
+    }
+
+    private func notify(_ task: TaskItem, _ location: TaskLocation) {
+        let content = UNMutableNotificationContent()
+        content.title = task.title
+        content.body = Triggers.formatLocation(location)
+        content.sound = .default
+        content.threadIdentifier = task.id
+        content.userInfo = ["taskId": task.id]
+        let id = "\(Self.notificationPrefix)\(task.id):\(clock.now.epochMilliseconds)"
+        UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: id, content: content, trigger: nil))
+    }
+
+    /// One activity per place with an open `During` task whose condition last reported inside. ActivityKit starts an
+    /// activity only while the app is in the foreground, so a crossing in the background notifies instead, and the
+    /// next foreground sync starts it if Stefan is still there.
+    private func reconcileActivities(entered: Set<String>) async {
+        var wanted: [String: (name: String, titles: [String], first: TaskItem)] = [:]
+        for task in store.tasks where task.completedAt == nil {
+            guard let location = task.location, location.trigger == .during,
+                  states[Self.conditionID(task, location)] == true else { continue }
+            let key = Triggers.placeKey(location)
+            wanted[key, default: (location.name, [], task)].titles.append(task.title)
+        }
+        for activity in Activity<PlaceActivityAttributes>.activities {
+            let key = activity.attributes.key
+            if let place = wanted.removeValue(forKey: key) {
+                if activity.content.state.titles != place.titles {
+                    await activity.update(.init(state: .init(titles: place.titles), staleDate: nil))
+                }
+            } else {
+                await activity.end(nil, dismissalPolicy: .immediate)
+            }
+        }
+        for (key, place) in wanted {
+            do {
+                _ = try Activity.request(
+                    attributes: PlaceActivityAttributes(key: key, placeName: place.name),
+                    content: .init(state: .init(titles: place.titles), staleDate: nil)
+                )
+            } catch {
+                if entered.contains(key), let location = place.first.location { notify(place.first, location) }
+            }
+        }
+    }
+}
+
+extension PlaceMonitor: CLLocationManagerDelegate {
+    nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        Task { @MainActor in await self.sync() }
+    }
+}

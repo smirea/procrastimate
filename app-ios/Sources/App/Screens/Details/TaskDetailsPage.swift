@@ -52,16 +52,26 @@ private struct TaskDetailsForm: View {
                 .font(.title3.weight(.semibold))
 
                 FlowLayout(spacing: 6) {
-                    DueChip(due: draft.due, onKeepAsText: nil) { store.updateTask(task.id, TaskDetails.setDue(task, $0)) }
-                    RepeatChip(recurrence: draft.recurrence, due: draft.due) { recurrence, due in
-                        store.updateTask(task.id, TaskPatch(due: .some(due), recurrence: .some(recurrence)))
+                    if task.event != nil {
+                        eventChip
+                    } else {
+                        DueChip(due: draft.due, onKeepAsText: nil) { store.updateTask(task.id, TaskDetails.setDue(task, $0)) }
+                        RepeatChip(recurrence: draft.recurrence, due: draft.due) { recurrence, due in
+                            store.updateTask(task.id, TaskPatch(due: .some(due), recurrence: .some(recurrence)))
+                        }
                     }
                     PriorityChip(priority: draft.priority, onKeepAsText: nil) {
                         store.updateTask(task.id, TaskPatch(priority: $0))
                     }
-                    ReminderChip(reminders: draft.reminders, due: draft.due) {
+                    ReminderChip(
+                        reminders: draft.reminders,
+                        due: task.event == nil ? draft.due : Triggers.scheduledDue(task, clock.today, in: clock.timeZone),
+                        relativeOnly: task.event != nil
+                    ) {
                         store.updateTask(task.id, TaskPatch(reminders: $0))
                     }
+                    LocationChip(location: task.location) { store.updateTask(task.id, TaskPatch(location: .some($0))) }
+                    if task.event == nil { eventChip }
                     LabelsChip(labelIds: draft.labelIds) { store.updateTask(task.id, TaskPatch(labelIds: $0)) }
                 }
                 .animation(.snappy(duration: 0.16), value: draft)
@@ -101,6 +111,17 @@ private struct TaskDetailsForm: View {
         .sensoryFeedback(.selection, trigger: Picks(task))
         .onChange(of: titleFocused) { if !titleFocused { commitTitle() } }
         .onDisappear { commitTitle() }
+    }
+
+    /// An event stands in for the date, so it takes the date chip's place, and linking one drops the due date and the
+    /// repeat.
+    private var eventChip: some View {
+        EventChip(event: task.event) { event in
+            store.updateTask(
+                task.id,
+                event == nil ? TaskPatch(event: .some(nil)) : TaskPatch(due: .some(nil), recurrence: .some(nil), event: .some(event))
+            )
+        }
     }
 
     @ToolbarContentBuilder
@@ -174,6 +195,8 @@ private struct Picks: Equatable {
     let projectId: String?
     let labelIds: [String]
     let reminders: [Reminder]
+    let location: TaskLocation?
+    let event: TaskEvent?
 
     init(_ task: TaskItem) {
         due = task.due
@@ -182,6 +205,8 @@ private struct Picks: Equatable {
         projectId = task.projectId
         labelIds = task.labelIds
         reminders = task.reminders
+        location = task.location
+        event = task.event
     }
 }
 
