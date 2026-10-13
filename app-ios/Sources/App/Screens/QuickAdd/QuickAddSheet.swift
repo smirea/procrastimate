@@ -52,6 +52,16 @@ private struct QuickAddForm: View {
                     draft.picked.projectId = id
                 }
                 Spacer(minLength: 0)
+                Button {
+                    navigator.startRambleListening = true
+                    navigator.sheet = .ramble(draft.defaults)
+                } label: {
+                    Image(systemName: "mic.fill")
+                        .frame(width: 44, height: 44)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.muted)
+                .accessibilityLabel("Ramble")
                 Button("Cancel") { navigator.sheet = nil }
                     .buttonStyle(.plain)
                     .foregroundStyle(.muted)

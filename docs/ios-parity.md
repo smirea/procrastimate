@@ -206,21 +206,21 @@ The web's Web Push rows map to native local notifications. Permission is asked o
 
 ### Ramble
 
-Planned on both clients together. The design and its slices `R1` to `R7` are in [Ramble design](ramble-design.md#plan-and-slices); `R4` builds the web half of each pair and `R5` the iOS half.
+Built on web and iOS. The grammar is covered by `shared/vectors/ramble.json` and Linux `VectorTests`. The trimmed suite does not add a Ramble UI test. Cassettes and the optional LLM step are not built. The design is in [Ramble design](ramble-design.md#plan-and-slices).
 
 | Feature | Web | iOS | Slice | XCUITest | Playwright | Screenshot |
 | --- | --- | --- | --- | --- | --- | --- |
-| `ramble-open`: the quick add mic and a long-press on the add button open Ramble | Planned | Planned | R4, R5 | `RambleParityTests.test_ramble_open` | `ramble › ramble-open` | `ramble-open.png` |
-| `ramble-live`: the transcript and task cards appear while talking | Planned | Planned | R4, R5 | `RambleParityTests.test_ramble_live` | `ramble › ramble-live` | `ramble-live.png` |
-| `ramble-chips`: spoken project, label, date, repeat, priority, and reminder show as chips | Planned | Planned | R4, R5 | `RambleParityTests.test_ramble_chips` | `ramble › ramble-chips` | `ramble-chips.png` |
-| `ramble-subtasks`: spoken subtasks nest under their parent | Planned | Planned | R4, R5 | `RambleParityTests.test_ramble_subtasks` | `ramble › ramble-subtasks` | `ramble-subtasks.png` |
-| `ramble-notes`: a spoken note goes under the title | Planned | Planned | R4, R5 | `RambleParityTests.test_ramble_notes` | `ramble › ramble-notes` | `ramble-notes.png` |
-| `ramble-plain`: a ramble with no metadata yields chip-free cards | Planned | Planned | R4, R5 | `RambleParityTests.test_ramble_plain` | `ramble › ramble-plain` | `ramble-plain.png` |
-| `ramble-edit`: a card's title and date are edited before saving | Planned | Planned | R4, R5 | `RambleParityTests.test_ramble_edit` | `ramble › ramble-edit` | `ramble-edit.png` |
-| `ramble-discard`: a card is discarded and restored with `Undo` | Planned | Planned | R4, R5 | `RambleParityTests.test_ramble_discard` | `ramble › ramble-discard` | `ramble-discard.png` |
-| `ramble-save-undo`: `Add <n> tasks` saves them all, and one `Undo` removes them | Planned | Planned | R4, R5 | `RambleParityTests.test_ramble_save_undo` | `ramble › ramble-save-undo` | `ramble-save-undo.png` |
-| `ramble-hold`: hold to talk listens while held | Planned | Planned | R4, R5 | `RambleParityTests.test_ramble_hold` | `ramble › ramble-hold` | `ramble-hold.png` |
-| `ramble-unavailable`: a missing ElevenLabs key or a refused socket explains why that path is off; offline uses native dictation | Planned | Planned | R4, R5 | `RambleParityTests.test_ramble_unavailable` | `ramble › ramble-unavailable` | `ramble-unavailable.png` |
+| `ramble-open`: the quick add mic, a long-press on the add button, and Shift+Q open Ramble | Built | Built | R4, R5 | — | — | — |
+| `ramble-live`: the transcript and task cards appear while talking | Built | Built | R4, R5 | — | — | — |
+| `ramble-chips`: spoken project, label, date, repeat, priority, and reminder show as chips | Built | Built | R4, R5 | — | — | — |
+| `ramble-subtasks`: spoken subtasks nest under their parent | Built | Built | R4, R5 | — | — | — |
+| `ramble-notes`: a spoken note goes under the title | Built | Built | R4, R5 | — | — | — |
+| `ramble-plain`: a ramble with no metadata yields chip-free cards | Built | Built | R4, R5 | — | — | — |
+| `ramble-edit`: a card's title and date are edited before saving | Built | Built | R4, R5 | — | — | — |
+| `ramble-discard`: a card is discarded and restored with `Undo` | Built | Built | R4, R5 | — | — | — |
+| `ramble-save-undo`: `Add <n> tasks` saves them all, and one `Undo` removes them | Built | Built | R4, R5 | — | — | — |
+| `ramble-hold`: hold to talk listens while held | Built | Built | R4, R5 | — | — | — |
+| `ramble-unavailable`: a missing ElevenLabs key or a refused socket explains why that path is off; offline uses native dictation | Built | Built | R4, R5 | — | — | — |
 
 ### Siri, Shortcuts, and Spotlight
 
@@ -239,6 +239,7 @@ iOS only. The web client has no App Intents. New features that can be done from 
 | `intent-overdue`: lists overdue tasks | n/a | Built | Intents | `AppIntentsParityTests.test_intent_today_and_overdue` | n/a | — |
 | `intent-spotlight`: Spotlight indexes open tasks and drops them once completed | n/a | Built | Intents | `AppIntentsParityTests.test_intent_complete_and_spotlight` | n/a | — |
 | `intent-delete-all`: deletes every task, project, and label | n/a | Built | Intents | — | n/a | — |
+| `intent-ramble`: Start Ramble opens the sheet and starts listening | n/a | Built | R5 | — | n/a | — |
 
 ## Thread split
 

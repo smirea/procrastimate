@@ -207,9 +207,92 @@ public final class Store {
     }
 
     /// Device-local, so it changes the document without being a synced change.
+    /// Adds a ramble, including nested subtasks and notes, as one command and one undo.
+    @discardableResult
+    public func addRamble(_ tasks: [RambleOutline]) -> [String] {
+        var data = snapshot.data
+        var ids: [String] = []
+        func add(_ task: RambleOutline, parentId: String?) {
+            let title = task.title.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !title.isEmpty else { return }
+            let (next, created) = StoreRules.addTask(
+                data,
+                NewTask(
+                    title: title,
+                    projectId: task.projectId,
+                    labelIds: task.labelIds,
+                    due: task.due,
+                    recurrence: task.recurrence,
+                    priority: task.priority,
+                    reminders: task.reminders
+                ),
+                parentId: parentId,
+                creation()
+            )
+            data = next
+            if !task.notes.isEmpty {
+                data = StoreRules.updateTask(data, created.id, TaskPatch(notes: task.notes))
+            }
+            ids.append(created.id)
+            for child in task.subtasks { add(child, parentId: created.id) }
+        }
+        for task in tasks { add(task, parentId: nil) }
+        if !ids.isEmpty { commit(data) }
+        return ids
+    }
+
+    /// Deletes each task and the subtasks under it, in one command.
+    @discardableResult
+    public func deleteTasks(_ ids: [String]) -> [TaskItem] {
+        var data = snapshot.data
+        var removed: [TaskItem] = []
+        for id in ids {
+            let result = StoreRules.deleteTask(data, id)
+            data = result.data
+            removed += result.removed
+        }
+        if !removed.isEmpty { commit(data) }
+        return removed
+    }
+
     public func markRemindersChecked(at time: Int) {
         snapshot.remindersCheckedAt = time
         scheduleWrite()
+    }
+}
+
+/// One drafted ramble task, ready to save. Subtasks nest; the store gives a subtask its parent's project.
+public struct RambleOutline: Sendable, Hashable {
+    public var title: String
+    public var notes: String
+    public var due: Due?
+    public var recurrence: Recurrence?
+    public var priority: Priority?
+    public var reminders: [Reminder]
+    public var projectId: String?
+    public var labelIds: [String]
+    public var subtasks: [RambleOutline]
+
+    public init(
+        title: String,
+        notes: String = "",
+        due: Due? = nil,
+        recurrence: Recurrence? = nil,
+        priority: Priority? = nil,
+        reminders: [Reminder] = [],
+        projectId: String? = nil,
+        labelIds: [String] = [],
+        subtasks: [RambleOutline] = []
+    ) {
+        self.title = title
+        self.notes = notes
+        self.due = due
+        self.recurrence = recurrence
+        self.priority = priority
+        self.reminders = reminders
+        self.projectId = projectId
+        self.labelIds = labelIds
+        self.subtasks = subtasks
     }
 }
 

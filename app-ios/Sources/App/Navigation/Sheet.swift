@@ -3,6 +3,7 @@ import Core
 /// Every sheet. Only one shows at a time: presenting another replaces it, as on the web.
 enum Sheet: Identifiable, Hashable {
     case quickAdd(QuickAddDefaults)
+    case ramble(QuickAddDefaults)
     case details(taskID: String)
     case search
     case settings

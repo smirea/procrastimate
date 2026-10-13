@@ -2,6 +2,7 @@
 	import { fade, fly, scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import Bell from 'phosphor-svelte/lib/Bell';
+	import Microphone from 'phosphor-svelte/lib/Microphone';
 	import Plus from 'phosphor-svelte/lib/Plus';
 	import Repeat from 'phosphor-svelte/lib/Repeat';
 	import Tag from 'phosphor-svelte/lib/Tag';
@@ -19,7 +20,7 @@
 	import { formatRecurrence, formatReminder } from 'shared/format.ts';
 	import { NAME_SOURCES } from '../names.ts';
 
-	let { defaults }: { defaults: QuickAddDefaults } = $props();
+	let { defaults, onramble }: { defaults: QuickAddDefaults; onramble: () => void } = $props();
 
 	type Picked = {
 		due: Due | null;
@@ -191,6 +192,9 @@
 				picked.projectId = value;
 			}} onkeepastext={tokenOf('project') ? () => keepAsText(tokenOf('project')) : undefined} />
 		<div class="flex gap-1.5">
+			<button type="button" class="btn btn-quiet grid size-11 place-items-center" aria-label="Ramble" onclick={onramble}>
+				<Microphone size={18} weight="fill" />
+			</button>
 			<button type="button" class="btn btn-quiet" onclick={() => sheets.close()}>Cancel</button>
 			<button type="button" class="btn btn-primary" disabled={!parsed.title} onclick={submit}>Add task</button>
 		</div>

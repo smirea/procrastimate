@@ -1,0 +1,270 @@
+import AVFoundation
+import Core
+import Foundation
+
+/// One Ramble capture. Native speech uses `SpeechDictation`. ElevenLabs streams 16 kHz PCM to the ramble socket.
+/// Offline never opens that socket. A failure leaves the transcript editable.
+@MainActor
+final class RambleSession {
+    enum End {
+        case stopped
+        case typed
+        case failed(String)
+    }
+
+    var onText: (String, Int) -> Void = { _, _ in }
+    var onEnd: (End) -> Void = { _ in }
+    var onLevel: (Float) -> Void = { _ in }
+
+    private let speech = SpeechDictation()
+    private let pump = RamblePump()
+    private var socket: URLSessionWebSocketTask?
+    private var engine: AVAudioEngine?
+    private var committed = ""
+    private var partial = ""
+    private var stopped = false
+    private var userStop = false
+    private var heard = false
+    private var tapped = false
+    private var epoch = 0
+
+    func start(choice: DictationChoice, deviceId: String?) async {
+        epoch += 1
+        speech.stop()
+        haltEngine()
+        socket?.cancel(with: .goingAway, reason: nil)
+        socket = nil
+        stopped = false
+        userStop = false
+        heard = false
+        committed = ""
+        partial = ""
+        let online = await NetworkPath.online()
+        switch Dictation.voiceCapture(choice, online: online, nativeSpeech: true).capture {
+        case .speech:
+            await startSpeech(onDevice: !online)
+        case .socket:
+            await startSocket(deviceId: deviceId)
+        case .typed:
+            onEnd(.typed)
+        }
+    }
+
+    func stop() {
+        userStop = true
+        speech.stop()
+        haltEngine()
+        guard let socket, socket.state == .running else {
+            finish(.stopped)
+            return
+        }
+        socket.send(.string(#"{"type":"stop"}"#)) { _ in }
+        let token = epoch
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(3.5))
+            guard token == self.epoch else { return }
+            self.finish(.stopped)
+        }
+    }
+
+    private func startSpeech(onDevice: Bool) async {
+        do {
+            try await speech.start(onDevice: onDevice) { [weak self] update in
+                Task { @MainActor in self?.onText(update.text, (update.text as NSString).length) }
+            }
+        } catch SpeechDictation.Failure.denied {
+            onEnd(.failed("The microphone is off. You can type the ramble instead."))
+        } catch {
+            onEnd(.typed)
+        }
+    }
+
+    private func startSocket(deviceId: String?) async {
+        guard let token = SessionToken.read() else {
+            onEnd(.failed("Ramble needs a connection"))
+            return
+        }
+        switch AVAudioApplication.shared.recordPermission {
+        case .granted:
+            break
+        case .denied:
+            onEnd(.failed("The microphone is off. You can type the ramble instead."))
+            return
+        case .undetermined:
+            guard await AVAudioApplication.requestRecordPermission() else {
+                onEnd(.failed("The microphone is off. You can type the ramble instead."))
+                return
+            }
+        @unknown default:
+            onEnd(.failed("The microphone is off. You can type the ramble instead."))
+            return
+        }
+        var components = URLComponents(url: AppEnvironment.apiURL.appending(path: "api/ramble/socket"), resolvingAgainstBaseURL: false)
+        components?.scheme = AppEnvironment.apiURL.scheme == "https" ? "wss" : "ws"
+        guard let url = components?.url else {
+            onEnd(.failed("Ramble needs a connection"))
+            return
+        }
+        var request = URLRequest(url: url)
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("procrastinate.ramble", forHTTPHeaderField: "Sec-WebSocket-Protocol")
+        if let deviceId {
+            request.setValue(deviceId, forHTTPHeaderField: "x-procrastinate-device")
+        }
+        let task = URLSession.shared.webSocketTask(with: request)
+        socket = task
+        pump.send = { [weak task] data in task?.send(.data(data)) { _ in } }
+        pump.level = { [weak self] value in Task { @MainActor in self?.onLevel(value) } }
+        task.resume()
+        receive()
+        do {
+            try startEngine()
+        } catch {
+            finish(.failed("The microphone is off. You can type the ramble instead."))
+        }
+    }
+
+    private func startEngine() throws {
+        let audio = AVAudioEngine()
+        let session = AVAudioSession.sharedInstance()
+        try session.setCategory(.record, mode: .measurement, options: [.duckOthers])
+        try session.setActive(true, options: .notifyOthersOnDeactivation)
+        let input = audio.inputNode
+        let format = input.outputFormat(forBus: 0)
+        guard format.sampleRate > 0, format.channelCount > 0 else { throw SpeechDictation.Failure.unsupported }
+        input.installTap(onBus: 0, bufferSize: 4096, format: format) { [pump] buffer, _ in
+            pump.append(buffer)
+        }
+        tapped = true
+        audio.prepare()
+        try audio.start()
+        engine = audio
+    }
+
+    private func receive() {
+        let token = epoch
+        socket?.receive { [weak self] result in
+            Task { @MainActor in
+                guard let self, token == self.epoch, !self.stopped else { return }
+                switch result {
+                case let .success(.string(text)):
+                    self.handle(text)
+                case let .success(.data(data)):
+                    if let text = String(data: data, encoding: .utf8) { self.handle(text) }
+                case .failure:
+                    self.finish(self.userStop || self.heard ? .stopped : .failed("Ramble needs a connection"))
+                    return
+                @unknown default:
+                    return
+                }
+                if !self.stopped { self.receive() }
+            }
+        }
+    }
+
+    private func handle(_ raw: String) {
+        guard let data = raw.data(using: .utf8), let event = try? JSONDecoder().decode(Event.self, from: data) else { return }
+        switch event.type {
+        case "started":
+            heard = true
+        case "partial":
+            partial = event.text ?? ""
+            publish()
+        case "committed":
+            let joined = join(committed, event.text ?? "")
+            committed = joined.text
+            partial = ""
+            publish()
+        case "error":
+            let limit = event.code == "daily-limit"
+            finish(.failed(limit ? "Ramble's daily limit is used up" : (event.message ?? "Ramble needs a connection")))
+        case "ended":
+            finish(userStop || heard ? .stopped : .failed("Ramble needs a connection"))
+        default:
+            break
+        }
+    }
+
+    private func publish() {
+        heard = true
+        let joined = join(committed, partial)
+        onText(joined.text, joined.partialStart)
+    }
+
+    private func finish(_ end: End) {
+        guard !stopped else { return }
+        stopped = true
+        haltEngine()
+        socket?.cancel(with: .goingAway, reason: nil)
+        socket = nil
+        onEnd(end)
+    }
+
+    private func haltEngine() {
+        if tapped {
+            engine?.inputNode.removeTap(onBus: 0)
+            tapped = false
+        }
+        engine?.stop()
+        engine = nil
+        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+    }
+
+    private struct Event: Decodable {
+        var type: String
+        var text: String?
+        var code: String?
+        var message: String?
+    }
+}
+
+private func join(_ committed: String, _ partial: String) -> (text: String, partialStart: Int) {
+    let tail = partial.trimmingCharacters(in: .whitespacesAndNewlines)
+    let base = committed as NSString
+    if committed.isEmpty { return (tail, 0) }
+    if tail.isEmpty { return (committed, base.length) }
+    let gap = committed.hasSuffix(" ") || tail.hasPrefix(" ") ? "" : " "
+    return (committed + gap + tail, base.length + (gap as NSString).length)
+}
+
+/// Downsamples mic buffers to 16 kHz 16-bit frames. The tap calls it off the main actor.
+private final class RamblePump: @unchecked Sendable {
+    var send: (@Sendable (Data) -> Void)?
+    var level: (@Sendable (Float) -> Void)?
+    private let lock = NSLock()
+    private var pending: [Int16] = []
+    private var frac = 0.0
+
+    func append(_ buffer: AVAudioPCMBuffer) {
+        guard let channel = buffer.floatChannelData?[0] else { return }
+        let frames = Int(buffer.frameLength)
+        let step = buffer.format.sampleRate / 16_000
+        guard step > 0 else { return }
+        lock.lock()
+        var index = frac
+        var peak: Float = 0
+        while index < Double(frames) {
+            let sample = max(-1, min(1, channel[Int(index)]))
+            peak = max(peak, abs(sample))
+            let scaled = sample < 0 ? sample * 32_768 : sample * 32_767
+            pending.append(Int16(scaled))
+            index += step
+        }
+        frac = index - Double(frames)
+        var chunks: [Data] = []
+        while pending.count >= 1600 {
+            var bytes = [UInt8]()
+            bytes.reserveCapacity(3200)
+            for sample in pending.prefix(1600) {
+                let value = Int(sample)
+                bytes.append(UInt8(truncatingIfNeeded: value))
+                bytes.append(UInt8(truncatingIfNeeded: value >> 8))
+            }
+            pending.removeFirst(1600)
+            chunks.append(Data(bytes))
+        }
+        lock.unlock()
+        for chunk in chunks { send?(chunk) }
+        level?(peak)
+    }
+}

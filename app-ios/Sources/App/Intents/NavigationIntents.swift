@@ -31,6 +31,16 @@ enum TaskListKind: String, AppEnum {
     }
 }
 
+struct StartRambleIntent: AppIntent {
+    static let title: LocalizedStringResource = "Start Ramble"
+    static let description = IntentDescription("Opens Ramble and starts listening.")
+    static let openAppWhenRun = true
+
+    func perform() async throws -> some IntentResult & ProvidesDialog {
+        .result(dialog: IntentDialog(stringLiteral: await IntentEffects.startRamble()))
+    }
+}
+
 struct OpenViewIntent: AppIntent {
     static let title: LocalizedStringResource = "Open List"
     static let description = IntentDescription("Opens Inbox, Today, or Upcoming.")

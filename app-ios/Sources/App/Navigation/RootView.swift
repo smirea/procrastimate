@@ -47,6 +47,7 @@ struct RootView: View {
         }
         .sensoryFeedback(.success, trigger: actions.completions)
         .searchShortcuts()
+        .rambleShortcut()
         .sheet(item: Binding(
             get: { navigator.quickAdd == nil ? navigator.sheet : nil },
             set: { if $0 != nil || navigator.quickAdd == nil { navigator.sheet = $0 } }
@@ -98,12 +99,46 @@ private struct RouteView: View {
     }
 }
 
+/// Shift+Q opens Ramble and starts listening, on a hardware keyboard, like the web.
+private struct RambleShortcut: ViewModifier {
+    @Environment(Navigator.self) private var navigator
+
+    func body(content: Content) -> some View {
+        content.background {
+            Button("Ramble", action: open)
+                .keyboardShortcut("q", modifiers: .shift)
+                .opacity(0)
+                .frame(width: 0, height: 0)
+                .accessibilityHidden(true)
+        }
+    }
+
+    private func open() {
+        if case .ramble = navigator.sheet { return }
+        navigator.startRambleListening = true
+        navigator.sheet = .ramble(defaults)
+    }
+
+    private var defaults: QuickAddDefaults {
+        switch navigator.paths[navigator.tab]?.last {
+        case let .project(id): QuickAddDefaults(projectId: id)
+        case let .label(id): QuickAddDefaults(labelId: id)
+        case nil: QuickAddDefaults(today: navigator.tab == .today)
+        }
+    }
+}
+
+extension View {
+    func rambleShortcut() -> some View { modifier(RambleShortcut()) }
+}
+
 private struct SheetView: View {
     let sheet: Sheet
 
     var body: some View {
         switch sheet {
         case let .quickAdd(defaults): QuickAddSheet(defaults: defaults)
+        case let .ramble(defaults): RambleSheet(defaults: defaults)
         case let .details(taskID): TaskDetailsSheet(taskID: taskID)
         case .search: NavigationStack { SearchScreen() }
         case .settings: SettingsSheet()

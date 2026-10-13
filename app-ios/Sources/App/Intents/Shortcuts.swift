@@ -1,8 +1,9 @@
 import AppIntents
 
 /// The phrases Siri and the Shortcuts app offer without Stefan setting them up. Each one names the app, which App
-/// Shortcuts require. Ten is the most the system keeps; this list stays under that. Phrases can only interpolate
-/// `AppEntity` and `AppEnum` parameters, so the String ones (a task title, a search query) are asked for after the phrase.
+/// Shortcuts require. Ten is the most the system keeps. Start Ramble uses the slot Delete All Data had; that intent
+/// stays, without a suggested phrase. Phrases can only interpolate `AppEntity` and `AppEnum` parameters, so the
+/// String ones (a task title, a search query) are asked for after the phrase.
 struct ProcrastimateShortcuts: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
         AppShortcut(
@@ -78,13 +79,13 @@ struct ProcrastimateShortcuts: AppShortcutsProvider {
             systemImageName: "sun.max"
         )
         AppShortcut(
-            intent: DeleteAllDataIntent(),
+            intent: StartRambleIntent(),
             phrases: [
-                "Delete all data in \(.applicationName)",
-                "Erase everything in \(.applicationName)",
+                "Start Ramble in \(.applicationName)",
+                "Ramble in \(.applicationName)",
             ],
-            shortTitle: "Delete All Data",
-            systemImageName: "trash"
+            shortTitle: "Ramble",
+            systemImageName: "mic"
         )
         AppShortcut(
             intent: ListOverdueIntent(),
