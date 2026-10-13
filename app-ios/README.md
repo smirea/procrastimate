@@ -55,7 +55,7 @@ Open `App.xcodeproj` and select the shared `App` scheme to debug. Build logs are
 
 ## Archive and upload to TestFlight
 
-Create an App Store Connect API key (Users and Access, Integrations, Team Keys) with the Admin role, so Xcode can use the existing Apple Distribution certificate and profile. The archive signs with that identity and does not create a development certificate. Download its `AuthKey_<id>.p8` somewhere outside the repo, then:
+Create an App Store Connect API key (Users and Access, Integrations, Team Keys) with the Admin role, so export can use the existing Apple Distribution certificate and profile. The archive is unsigned and does not create a development certificate. Download its `AuthKey_<id>.p8` somewhere outside the repo, then:
 
 ```sh
 export ASC_KEY_ID=<key id> ASC_ISSUER_ID=<issuer id> ASC_KEY_PATH=~/.appstoreconnect/AuthKey_<id>.p8
