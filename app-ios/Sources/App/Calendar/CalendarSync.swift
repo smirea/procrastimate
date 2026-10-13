@@ -58,15 +58,19 @@ final class CalendarSync {
     }
 
     static func occurrence(_ event: EKEvent) -> EventOccurrence {
-        EventOccurrence(start: event.startDate.epochMilliseconds, end: event.endDate.epochMilliseconds)
+        EventOccurrence(
+            start: event.startDate.epochMilliseconds,
+            end: event.endDate.epochMilliseconds,
+            original: event.occurrenceDate.epochMilliseconds
+        )
     }
 
     private static func matches(_ event: EKEvent, _ id: String) -> Bool {
         [event.calendarItemExternalIdentifier, event.eventIdentifier].contains { $0.map(seriesID) == id }
     }
 
-    /// What picking `event` saves. A repeating event follows its series unless pinned to this one occurrence, which is
-    /// remembered by its original date so a later move still finds it.
+    /// What picking `event` saves. A repeating event follows its series unless pinned to this one occurrence, which its
+    /// original date finds again after a move.
     func taskEvent(_ event: EKEvent, edge: EventEdge, minutes: Int, onlyThis: Bool, upcoming: [EKEvent]) -> TaskEvent {
         let id = Self.id(event)
         let repeating = Self.repeats(event)
@@ -77,7 +81,6 @@ final class CalendarSync {
             title: event.title ?? "Event",
             allDay: event.isAllDay,
             series: series,
-            occurrenceDate: repeating && onlyThis ? event.occurrenceDate.epochMilliseconds : nil,
             edge: edge,
             minutes: edge == .before || edge == .after ? minutes : 0,
             occurrences: series && !listed.isEmpty ? Array(listed) : [Self.occurrence(event)]
@@ -98,37 +101,27 @@ final class CalendarSync {
         }
     }
 
+    /// A series resumes at the occurrence the task is on, so the ones completing dropped stay dropped. Any other task
+    /// finds its one occurrence by its original date, or a plain event by its id after it moves.
     private func refreshed(_ event: TaskEvent, _ upcoming: [EKEvent]) -> TaskEvent? {
+        let current = event.occurrences[0].original
         let found: [EKEvent]
         if event.series {
-            found = upcoming.filter { Self.matches($0, event.id) }
-        } else if let pinned = event.occurrenceDate {
-            found = pinnedOccurrence(event.id, pinned).map { [$0] } ?? []
+            found = upcoming.filter { Self.matches($0, event.id) && $0.occurrenceDate.epochMilliseconds >= current }
+        } else if let occurrence = occurrence(event.id, current) {
+            found = [occurrence]
         } else {
-            found = plainEvent(event.id).map { [$0] } ?? []
+            found = plainEvent(event.id).flatMap { Self.repeats($0) ? nil : [$0] } ?? []
         }
         guard let first = found.first else { return nil }
         var next = event
         next.title = first.title ?? event.title
         next.allDay = first.isAllDay
-        let occurrences = found.map(Self.occurrence)
-        next.occurrences = event.series
-            ? Array(Self.remaining(occurrences, after: event.occurrences).prefix(Self.seriesLimit))
-            : occurrences
+        next.occurrences = Array(found.prefix(Self.seriesLimit).map(Self.occurrence))
         return next
     }
 
-    /// Completing a series task drops the occurrence it was on, which the calendar still lists from the start of today.
-    /// The stored first occurrence is the one the task is on, so the listing resumes at the occurrence nearest it:
-    /// series occurrences are a period apart, so that is the same occurrence even after it moved.
-    static func remaining(_ found: [EventOccurrence], after stored: [EventOccurrence]) -> [EventOccurrence] {
-        guard let current = stored.first,
-              let index = found.indices.min(by: { abs(found[$0].start - current.start) < abs(found[$1].start - current.start) })
-        else { return found }
-        return Array(found[index...])
-    }
-
-    private func pinnedOccurrence(_ id: String, _ occurrenceDate: Int) -> EKEvent? {
+    private func occurrence(_ id: String, _ occurrenceDate: Int) -> EKEvent? {
         let original = Date(epochMilliseconds: occurrenceDate)
         let start = min(startOfToday, original).addingTimeInterval(-7 * 86400)
         let end = max(startOfToday, original).addingTimeInterval(Self.window)

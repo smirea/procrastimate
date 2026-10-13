@@ -65,10 +65,10 @@ private struct EventSheet: View {
         self.onChange = onChange
         _edge = State(initialValue: event?.edge ?? .start)
         _minutes = State(initialValue: event?.minutes ?? 10)
-        _onlyThis = State(initialValue: event?.occurrenceDate != nil)
+        _onlyThis = State(initialValue: event.map { !$0.series } ?? false)
     }
 
-    private var repeating: Bool { picked.map(CalendarSync.repeats) ?? (event.map { $0.series || $0.occurrenceDate != nil } ?? false) }
+    private var repeating: Bool { picked.map(CalendarSync.repeats) ?? (event?.series ?? false) }
 
     var body: some View {
         NavigationStack {
@@ -147,7 +147,7 @@ private struct EventSheet: View {
             if let event {
                 picked = events.first { item in
                     CalendarSync.id(item) == event.id
-                        && (event.occurrenceDate.map { item.occurrenceDate.epochMilliseconds == $0 } ?? true)
+                        && (event.series || item.occurrenceDate.epochMilliseconds == event.occurrences[0].original)
                 }
             }
             loaded = true

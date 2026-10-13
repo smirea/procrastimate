@@ -232,10 +232,10 @@
 							"edge": "before",
 							"id": "night",
 							"minutes": 30,
-							"occurrenceDate": null,
 							"occurrences": [
 								{
 									"end": 1792033200000,
+									"original": 1792022400000,
 									"start": 1792022400000
 								}
 							],

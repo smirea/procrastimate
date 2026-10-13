@@ -204,13 +204,12 @@ describe('labels', () => {
 
 	test('completing a task on an event series moves it past missed occurrences, and undo moves it back', () => {
 		const at = (d: number, h: number) => new Date(2026, 9, d, h).getTime();
-		const occurrences = [7, 14, 21].map(d => ({ start: at(d, 18), end: at(d, 19) }));
+		const occurrences = [7, 14, 21].map(d => ({ start: at(d, 18), end: at(d, 19), original: at(d, 18) }));
 		const event = {
 			id: 'meetup',
 			title: 'Walking meetup',
 			allDay: false,
 			series: true,
-			occurrenceDate: null,
 			edge: 'during' as const,
 			minutes: 0,
 			occurrences,

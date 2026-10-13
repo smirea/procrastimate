@@ -106,15 +106,18 @@ export type EventEdge = z.infer<typeof eventEdgeSchema>;
 
 const epochMs = z.number().int();
 
-export const eventOccurrenceSchema = z.object({ start: epochMs, end: epochMs }).meta({ id: 'EventOccurrence' });
+/** `original` is EventKit's occurrence date, the start the calendar first gave it, which stays put when it moves. */
+export const eventOccurrenceSchema = z
+	.object({ start: epochMs, end: epochMs, original: epochMs })
+	.meta({ id: 'EventOccurrence' });
 export type EventOccurrence = z.infer<typeof eventOccurrenceSchema>;
 
 /**
  * A calendar event a task hangs off instead of a due date. iOS reads the calendar and rewrites `title` and
  * `occurrences` whenever the event moves, so every client and the push server see current times. `id` is EventKit's
  * external identifier, which every occurrence of a repeating event shares. A task that follows the `series` lists
- * its upcoming occurrences, soonest first; one pinned to a single occurrence of a repeating event keeps that
- * occurrence's original start in `occurrenceDate`, so it is found again after it moves.
+ * its upcoming occurrences, soonest first; any other task lists its one occurrence. Each occurrence's original start
+ * finds it again after it moves.
  */
 export const taskEventSchema = z
 	.object({
@@ -122,7 +125,6 @@ export const taskEventSchema = z
 		title: z.string(),
 		allDay: z.boolean(),
 		series: z.boolean(),
-		occurrenceDate: epochMs.nullable(),
 		edge: eventEdgeSchema,
 		minutes: z.number().int().nonnegative(),
 		occurrences: z.array(eventOccurrenceSchema).min(1),

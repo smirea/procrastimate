@@ -724,27 +724,32 @@ extension API {
     public struct EventOccurrence: Codable, Hashable, Sendable {
         public var start: Int
         public var end: Int
+        public var original: Int
 
-        public init(start: Int, end: Int) {
+        public init(start: Int, end: Int, original: Int) {
             self.start = start
             self.end = end
+            self.original = original
         }
 
         enum CodingKeys: String, CodingKey {
             case start = "start"
             case end = "end"
+            case original = "original"
         }
 
         public init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             start = try container.decode(Int.self, forKey: .start)
             end = try container.decode(Int.self, forKey: .end)
+            original = try container.decode(Int.self, forKey: .original)
         }
 
         public func encode(to encoder: Encoder) throws {
             var container = encoder.container(keyedBy: CodingKeys.self)
             try container.encode(self.start, forKey: .start)
             try container.encode(self.end, forKey: .end)
+            try container.encode(self.original, forKey: .original)
         }
     }
 
@@ -2719,17 +2724,15 @@ extension API {
         public var title: String
         public var allDay: Bool
         public var series: Bool
-        public var occurrenceDate: Int?
         public var edge: EventEdge
         public var minutes: Int
         public var occurrences: [EventOccurrence]
 
-        public init(id: String, title: String, allDay: Bool, series: Bool, occurrenceDate: Int? = nil, edge: EventEdge, minutes: Int, occurrences: [EventOccurrence] = []) {
+        public init(id: String, title: String, allDay: Bool, series: Bool, edge: EventEdge, minutes: Int, occurrences: [EventOccurrence] = []) {
             self.id = id
             self.title = title
             self.allDay = allDay
             self.series = series
-            self.occurrenceDate = occurrenceDate
             self.edge = edge
             self.minutes = minutes
             self.occurrences = occurrences
@@ -2740,7 +2743,6 @@ extension API {
             case title = "title"
             case allDay = "allDay"
             case series = "series"
-            case occurrenceDate = "occurrenceDate"
             case edge = "edge"
             case minutes = "minutes"
             case occurrences = "occurrences"
@@ -2752,7 +2754,6 @@ extension API {
             title = try container.decode(String.self, forKey: .title)
             allDay = try container.decode(Bool.self, forKey: .allDay)
             series = try container.decode(Bool.self, forKey: .series)
-            occurrenceDate = try container.decode(Int?.self, forKey: .occurrenceDate)
             edge = try container.decode(EventEdge.self, forKey: .edge)
             minutes = try container.decode(Int.self, forKey: .minutes)
             occurrences = try container.decode([EventOccurrence].self, forKey: .occurrences)
@@ -2774,7 +2775,6 @@ extension API {
             try container.encode(self.title, forKey: .title)
             try container.encode(self.allDay, forKey: .allDay)
             try container.encode(self.series, forKey: .series)
-            try container.encode(self.occurrenceDate, forKey: .occurrenceDate)
             try container.encode(self.edge, forKey: .edge)
             try container.encode(self.minutes, forKey: .minutes)
             try container.encode(self.occurrences, forKey: .occurrences)

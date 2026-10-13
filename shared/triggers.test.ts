@@ -20,10 +20,9 @@ const meetup = (patch: Partial<TaskEvent> = {}): TaskEvent => ({
 	title: 'Walking meetup',
 	allDay: false,
 	series: false,
-	occurrenceDate: null,
 	edge: 'start',
 	minutes: 0,
-	occurrences: [{ start: local(14, 18), end: local(14, 19, 30) }],
+	occurrences: [{ start: local(14, 18), end: local(14, 19, 30), original: local(14, 18) }],
 	...patch,
 });
 
@@ -71,7 +70,7 @@ describe('scheduledDue', () => {
 	});
 
 	test('a single event stays on its passed occurrence, so it goes overdue', () => {
-		const event = meetup({ occurrences: [{ start: local(12, 18), end: local(12, 19) }] });
+		const event = meetup({ occurrences: [{ start: local(12, 18), end: local(12, 19), original: local(12, 18) }] });
 		expect(scheduledDue(task('a', { event }), today)).toEqual({ date: '2026-10-12', time: '18:00' });
 	});
 
@@ -79,13 +78,17 @@ describe('scheduledDue', () => {
 		const event = meetup({
 			series: true,
 			occurrences: [
-				{ start: local(7, 18), end: local(7, 19) },
-				{ start: local(14, 8), end: local(14, 9) },
-				{ start: local(21, 18), end: local(21, 19) },
+				{ start: local(7, 18), end: local(7, 19), original: local(7, 18) },
+				{ start: local(14, 8), end: local(14, 9), original: local(14, 8) },
+				{ start: local(21, 18), end: local(21, 19), original: local(21, 18) },
 			],
 		});
-		expect(currentOccurrence(event, today)).toEqual({ start: local(14, 8), end: local(14, 9) });
-		expect(currentOccurrence(event, '2026-10-15')).toEqual({ start: local(21, 18), end: local(21, 19) });
+		expect(currentOccurrence(event, today)).toEqual({ start: local(14, 8), end: local(14, 9), original: local(14, 8) });
+		expect(currentOccurrence(event, '2026-10-15')).toEqual({
+			start: local(21, 18),
+			end: local(21, 19),
+			original: local(21, 18),
+		});
 	});
 
 	test('a repeat at a place skips missed occurrences, and a single one at a place stays overdue', () => {
@@ -114,15 +117,18 @@ describe('taskNotificationTimes', () => {
 			series: true,
 			edge: 'after',
 			occurrences: [
-				{ start: local(14, 18), end: local(14, 19) },
-				{ start: local(21, 18), end: local(21, 19) },
+				{ start: local(14, 18), end: local(14, 19), original: local(14, 18) },
+				{ start: local(21, 18), end: local(21, 19), original: local(21, 18) },
 			],
 		});
 		expect(taskNotificationTimes(task('a', { event: series }), today)).toEqual([
 			new Date(local(14, 19)),
 			new Date(local(21, 19)),
 		]);
-		const allDay = meetup({ allDay: true, occurrences: [{ start: local(15, 0), end: local(16, 0) }] });
+		const allDay = meetup({
+			allDay: true,
+			occurrences: [{ start: local(15, 0), end: local(16, 0), original: local(15, 0) }],
+		});
 		expect(
 			taskNotificationTimes(
 				task('b', { event: allDay, reminders: [{ kind: 'at', date: '2026-10-15', time: '08:00' }] }),
@@ -176,7 +182,7 @@ describe('sidebar groups', () => {
 		const later = meetup({
 			id: 'night',
 			title: 'Night out',
-			occurrences: [{ start: local(16, 20), end: local(16, 23) }],
+			occurrences: [{ start: local(16, 20), end: local(16, 23), original: local(16, 20) }],
 		});
 		const tasks = [
 			task('red', { event: later }),

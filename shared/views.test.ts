@@ -106,10 +106,9 @@ describe('task views', () => {
 			title: 'Walking meetup',
 			allDay: false,
 			series: false,
-			occurrenceDate: null,
 			edge,
 			minutes: 30,
-			occurrences: [{ start, end: start + 3_600_000 }],
+			occurrences: [{ start, end: start + 3_600_000, original: start }],
 		});
 		const location = {
 			name: 'Park',

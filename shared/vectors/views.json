@@ -2577,10 +2577,10 @@
 							"edge": "after",
 							"id": "meetup",
 							"minutes": 30,
-							"occurrenceDate": null,
 							"occurrences": [
 								{
 									"end": 1792018800000,
+									"original": 1792015200000,
 									"start": 1792015200000
 								}
 							],
@@ -2608,10 +2608,10 @@
 							"edge": "before",
 							"id": "meetup",
 							"minutes": 30,
-							"occurrenceDate": null,
 							"occurrences": [
 								{
 									"end": 1792018800000,
+									"original": 1792015200000,
 									"start": 1792015200000
 								}
 							],
@@ -2646,10 +2646,10 @@
 							"edge": "before",
 							"id": "meetup",
 							"minutes": 30,
-							"occurrenceDate": null,
 							"occurrences": [
 								{
 									"end": 1791846000000,
+									"original": 1791842400000,
 									"start": 1791842400000
 								}
 							],
@@ -2677,10 +2677,10 @@
 							"edge": "before",
 							"id": "meetup",
 							"minutes": 30,
-							"occurrenceDate": null,
 							"occurrences": [
 								{
 									"end": 1792623600000,
+									"original": 1792620000000,
 									"start": 1792620000000
 								}
 							],
@@ -2737,10 +2737,10 @@
 							"edge": "before",
 							"id": "meetup",
 							"minutes": 30,
-							"occurrenceDate": null,
 							"occurrences": [
 								{
 									"end": 1791846000000,
+									"original": 1791842400000,
 									"start": 1791842400000
 								}
 							],
@@ -2770,10 +2770,10 @@
 							"edge": "before",
 							"id": "meetup",
 							"minutes": 30,
-							"occurrenceDate": null,
 							"occurrences": [
 								{
 									"end": 1792018800000,
+									"original": 1792015200000,
 									"start": 1792015200000
 								}
 							],
@@ -2808,10 +2808,10 @@
 							"edge": "after",
 							"id": "meetup",
 							"minutes": 30,
-							"occurrenceDate": null,
 							"occurrences": [
 								{
 									"end": 1792018800000,
+									"original": 1792015200000,
 									"start": 1792015200000
 								}
 							],
@@ -2847,10 +2847,10 @@
 							"edge": "after",
 							"id": "meetup",
 							"minutes": 30,
-							"occurrenceDate": null,
 							"occurrences": [
 								{
 									"end": 1792018800000,
+									"original": 1792015200000,
 									"start": 1792015200000
 								}
 							],
@@ -2878,10 +2878,10 @@
 							"edge": "before",
 							"id": "meetup",
 							"minutes": 30,
-							"occurrenceDate": null,
 							"occurrences": [
 								{
 									"end": 1792018800000,
+									"original": 1792015200000,
 									"start": 1792015200000
 								}
 							],
@@ -2916,10 +2916,10 @@
 							"edge": "before",
 							"id": "meetup",
 							"minutes": 30,
-							"occurrenceDate": null,
 							"occurrences": [
 								{
 									"end": 1791846000000,
+									"original": 1791842400000,
 									"start": 1791842400000
 								}
 							],
@@ -2947,10 +2947,10 @@
 							"edge": "before",
 							"id": "meetup",
 							"minutes": 30,
-							"occurrenceDate": null,
 							"occurrences": [
 								{
 									"end": 1792623600000,
+									"original": 1792620000000,
 									"start": 1792620000000
 								}
 							],
@@ -3009,10 +3009,10 @@
 								"edge": "before",
 								"id": "meetup",
 								"minutes": 30,
-								"occurrenceDate": null,
 								"occurrences": [
 									{
 										"end": 1792623600000,
+										"original": 1792620000000,
 										"start": 1792620000000
 									}
 								],
@@ -3049,10 +3049,10 @@
 							"edge": "after",
 							"id": "meetup",
 							"minutes": 30,
-							"occurrenceDate": null,
 							"occurrences": [
 								{
 									"end": 1792018800000,
+									"original": 1792015200000,
 									"start": 1792015200000
 								}
 							],
@@ -3080,10 +3080,10 @@
 							"edge": "before",
 							"id": "meetup",
 							"minutes": 30,
-							"occurrenceDate": null,
 							"occurrences": [
 								{
 									"end": 1792018800000,
+									"original": 1792015200000,
 									"start": 1792015200000
 								}
 							],
@@ -3118,10 +3118,10 @@
 							"edge": "before",
 							"id": "meetup",
 							"minutes": 30,
-							"occurrenceDate": null,
 							"occurrences": [
 								{
 									"end": 1791846000000,
+									"original": 1791842400000,
 									"start": 1791842400000
 								}
 							],
@@ -3149,10 +3149,10 @@
 							"edge": "before",
 							"id": "meetup",
 							"minutes": 30,
-							"occurrenceDate": null,
 							"occurrences": [
 								{
 									"end": 1792623600000,
+									"original": 1792620000000,
 									"start": 1792620000000
 								}
 							],
@@ -3209,10 +3209,10 @@
 						"edge": "before",
 						"id": "meetup",
 						"minutes": 30,
-						"occurrenceDate": null,
 						"occurrences": [
 							{
 								"end": 1791846000000,
+								"original": 1791842400000,
 								"start": 1791842400000
 							}
 						],
@@ -3240,10 +3240,10 @@
 						"edge": "before",
 						"id": "meetup",
 						"minutes": 30,
-						"occurrenceDate": null,
 						"occurrences": [
 							{
 								"end": 1792018800000,
+								"original": 1792015200000,
 								"start": 1792015200000
 							}
 						],
@@ -3278,10 +3278,10 @@
 						"edge": "after",
 						"id": "meetup",
 						"minutes": 30,
-						"occurrenceDate": null,
 						"occurrences": [
 							{
 								"end": 1792018800000,
+								"original": 1792015200000,
 								"start": 1792015200000
 							}
 						],
@@ -3309,10 +3309,10 @@
 						"edge": "before",
 						"id": "meetup",
 						"minutes": 30,
-						"occurrenceDate": null,
 						"occurrences": [
 							{
 								"end": 1792623600000,
+								"original": 1792620000000,
 								"start": 1792620000000
 							}
 						],
@@ -3347,10 +3347,10 @@
 							"edge": "after",
 							"id": "meetup",
 							"minutes": 30,
-							"occurrenceDate": null,
 							"occurrences": [
 								{
 									"end": 1792018800000,
+									"original": 1792015200000,
 									"start": 1792015200000
 								}
 							],
@@ -3378,10 +3378,10 @@
 							"edge": "before",
 							"id": "meetup",
 							"minutes": 30,
-							"occurrenceDate": null,
 							"occurrences": [
 								{
 									"end": 1792018800000,
+									"original": 1792015200000,
 									"start": 1792015200000
 								}
 							],
@@ -3416,10 +3416,10 @@
 							"edge": "before",
 							"id": "meetup",
 							"minutes": 30,
-							"occurrenceDate": null,
 							"occurrences": [
 								{
 									"end": 1791846000000,
+									"original": 1791842400000,
 									"start": 1791842400000
 								}
 							],
@@ -3447,10 +3447,10 @@
 							"edge": "before",
 							"id": "meetup",
 							"minutes": 30,
-							"occurrenceDate": null,
 							"occurrences": [
 								{
 									"end": 1792623600000,
+									"original": 1792620000000,
 									"start": 1792620000000
 								}
 							],
@@ -3506,10 +3506,10 @@
 						"edge": "before",
 						"id": "meetup",
 						"minutes": 30,
-						"occurrenceDate": null,
 						"occurrences": [
 							{
 								"end": 1792018800000,
+								"original": 1792015200000,
 								"start": 1792015200000
 							}
 						],

@@ -20,7 +20,8 @@ A task can hang off a place or a calendar event, set only from task details on t
 - iOS: open a task, tap `Location` (after the reminder chip), search, pick `Arrive`, `Leave`, or `During`, and tap a result. Tap the chip again to change the trigger or `Remove location`.
 - iOS: open a task, tap `Event`, pick the moment and an upcoming event, and tap `Save`. Tap the chip again to change it or `Remove event`.
 - iOS: Browse tab, `Places` and `Events` sections.
-- Web: shows the place and event lines and sections from synced tasks, but cannot set either.
+- Web: shows the place and event lines on rows, read-only `During Walking meetup · Oct 21 6pm` and `While at Tiergarten` chips in task details (the event chip replaces the date and repeat pickers), and `Places` and `Events` sidebar sections above Labels opening `/places/<key>` and `/events/<id>`. It cannot set either.
+- Web check: seed tasks with `location` and `event` into the `procrastimate` localStorage document and reload. Today places `30m before Night out` at its time, and a weekly task at a place due last week shows on its next occurrence instead of overdue.
 
 ## Driving it with simctl
 

@@ -691,18 +691,6 @@
 					"series": {
 						"type": "boolean"
 					},
-					"occurrenceDate": {
-						"anyOf": [
-							{
-								"type": "integer",
-								"minimum": -9007199254740991,
-								"maximum": 9007199254740991
-							},
-							{
-								"type": "null"
-							}
-						]
-					},
 					"edge": {
 						"$ref": "#/components/schemas/EventEdge"
 					},
@@ -724,7 +712,6 @@
 					"title",
 					"allDay",
 					"series",
-					"occurrenceDate",
 					"edge",
 					"minutes",
 					"occurrences"
@@ -751,11 +738,17 @@
 						"type": "integer",
 						"minimum": -9007199254740991,
 						"maximum": 9007199254740991
+					},
+					"original": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991
 					}
 				},
 				"required": [
 					"start",
-					"end"
+					"end",
+					"original"
 				]
 			},
 			"ProjectPatch": {
@@ -1297,18 +1290,6 @@
 					"series": {
 						"type": "boolean"
 					},
-					"occurrenceDate": {
-						"anyOf": [
-							{
-								"type": "integer",
-								"minimum": -9007199254740991,
-								"maximum": 9007199254740991
-							},
-							{
-								"type": "null"
-							}
-						]
-					},
 					"edge": {
 						"$ref": "#/components/schemas/EventEdge"
 					},
@@ -1330,7 +1311,6 @@
 					"title",
 					"allDay",
 					"series",
-					"occurrenceDate",
 					"edge",
 					"minutes",
 					"occurrences"
@@ -1349,11 +1329,17 @@
 						"type": "integer",
 						"minimum": -9007199254740991,
 						"maximum": 9007199254740991
+					},
+					"original": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991
 					}
 				},
 				"required": [
 					"start",
-					"end"
+					"end",
+					"original"
 				],
 				"additionalProperties": false
 			},

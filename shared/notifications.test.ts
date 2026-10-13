@@ -76,10 +76,11 @@ describe('upcomingNotifications', () => {
 					title: 'Night out',
 					allDay: false,
 					series: false,
-					occurrenceDate: null,
 					edge: 'before',
 					minutes: 30,
-					occurrences: [{ start: local(2026, 10, 14, 20), end: local(2026, 10, 14, 23) }],
+					occurrences: [
+						{ start: local(2026, 10, 14, 20), end: local(2026, 10, 14, 23), original: local(2026, 10, 14, 20) },
+					],
 				},
 			}),
 			task('Milk', {
