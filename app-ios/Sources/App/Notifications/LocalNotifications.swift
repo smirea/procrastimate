@@ -238,7 +238,7 @@ final class LocalNotifications: NSObject {
     /// A place crossing while the app is open, which no schedule knows about, shows like a reminder toast.
     fileprivate func showPlaceToast(_ taskId: String, title: String, body: String) {
         toasts.show(
-            "\(body): \(title)",
+            "\(title) · \(body)",
             action: .init(label: "Open") { [navigator] in navigator.openTask(taskId) },
             for: .seconds(12)
         )

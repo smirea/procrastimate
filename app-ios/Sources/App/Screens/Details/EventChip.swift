@@ -68,7 +68,7 @@ private struct EventSheet: View {
         _onlyThis = State(initialValue: event?.occurrenceDate != nil)
     }
 
-    private var repeating: Bool { picked?.hasRecurrenceRules ?? (event.map { $0.series || $0.occurrenceDate != nil } ?? false) }
+    private var repeating: Bool { picked.map(CalendarSync.repeats) ?? (event.map { $0.series || $0.occurrenceDate != nil } ?? false) }
 
     var body: some View {
         NavigationStack {
@@ -203,7 +203,7 @@ private struct EventRow: View {
                     Text(event.title ?? "Event").foregroundStyle(.ink).lineLimit(1)
                     HStack(spacing: 4) {
                         Text(times)
-                        if event.hasRecurrenceRules { Image(systemName: "repeat").imageScale(.small) }
+                        if CalendarSync.repeats(event) { Image(systemName: "repeat").imageScale(.small) }
                     }
                     .font(.footnote)
                     .foregroundStyle(.muted)

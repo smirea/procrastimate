@@ -5,7 +5,8 @@ import Foundation
 /// DEBUG-only. The simulator has no way to tap, so `PROCRASTIMATE_DEMO` seeds place and event tasks through the store,
 /// adds calendar events through EventKit, and opens the screen to screenshot. Release builds omit it.
 ///
-/// Space-separated words: `seed`, `browse`, `details:<task title>`, `sheet:location`, `sheet:event`, and
+/// Space-separated words: `seed`, `move` (shifts the next Standup an hour later, then logs what the task holds),
+/// `browse`, `details:<task title>`, `sheet:location`, `sheet:event`, and
 /// `query:<words with + for spaces>` for the location search.
 enum PlacesDemo {
     static var words: [String] {
@@ -27,6 +28,7 @@ enum PlacesDemo {
         #if DEBUG
         guard !words.isEmpty else { return }
         if has("seed") { await seed(store: store, calendar: calendar, clock: clock) }
+        if has("move") { await move(store: store, calendar: calendar) }
         if has("browse") { navigator.tab = .browse }
         if let title = value("details"), let task = store.tasks.first(where: { $0.title == title }) {
             navigator.sheet = .details(taskID: task.id)
@@ -35,6 +37,18 @@ enum PlacesDemo {
     }
 
     #if DEBUG
+    @MainActor
+    private static func move(store: Store, calendar: CalendarSync) async {
+        guard let standup = calendar.upcomingEvents().first(where: { $0.title == "Standup" }),
+              let task = store.tasks.first(where: { $0.event?.title == "Standup" }) else { return }
+        NSLog("PlacesDemo before move: %@", "\(task.event!.occurrences.prefix(2))")
+        standup.startDate = standup.startDate.addingTimeInterval(3600)
+        standup.endDate = standup.endDate.addingTimeInterval(3600)
+        try? calendar.eventStore.save(standup, span: .thisEvent)
+        try? await Task.sleep(for: .seconds(2))
+        NSLog("PlacesDemo after move: %@", "\(store.task(task.id)!.event!.occurrences.prefix(2))")
+    }
+
     @MainActor
     private static func seed(store: Store, calendar: CalendarSync, clock: AppClock) async {
         await calendar.requestAccess()

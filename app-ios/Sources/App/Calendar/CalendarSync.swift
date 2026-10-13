@@ -42,8 +42,19 @@ final class CalendarSync {
             .sorted { $0.startDate < $1.startDate }
     }
 
+    /// A moved occurrence of a repeating event is detached, and its identifiers gain a `/RID=<date>` suffix, so the
+    /// series is named by what comes before it.
     static func id(_ event: EKEvent) -> String {
-        event.calendarItemExternalIdentifier ?? event.eventIdentifier ?? ""
+        seriesID(event.calendarItemExternalIdentifier ?? event.eventIdentifier ?? "")
+    }
+
+    /// A moved occurrence reports no recurrence rules of its own, yet still belongs to its series.
+    static func repeats(_ event: EKEvent) -> Bool {
+        event.hasRecurrenceRules || event.isDetached
+    }
+
+    private static func seriesID(_ id: String) -> String {
+        id.range(of: "/RID=").map { String(id[..<$0.lowerBound]) } ?? id
     }
 
     static func occurrence(_ event: EKEvent) -> EventOccurrence {
@@ -51,14 +62,14 @@ final class CalendarSync {
     }
 
     private static func matches(_ event: EKEvent, _ id: String) -> Bool {
-        event.calendarItemExternalIdentifier == id || event.eventIdentifier == id
+        [event.calendarItemExternalIdentifier, event.eventIdentifier].contains { $0.map(seriesID) == id }
     }
 
     /// What picking `event` saves. A repeating event follows its series unless pinned to this one occurrence, which is
     /// remembered by its original date so a later move still finds it.
     func taskEvent(_ event: EKEvent, edge: EventEdge, minutes: Int, onlyThis: Bool, upcoming: [EKEvent]) -> TaskEvent {
         let id = Self.id(event)
-        let repeating = event.hasRecurrenceRules
+        let repeating = Self.repeats(event)
         let series = repeating && !onlyThis
         let listed = upcoming.filter { Self.matches($0, id) }.prefix(Self.seriesLimit).map(Self.occurrence)
         return TaskEvent(
