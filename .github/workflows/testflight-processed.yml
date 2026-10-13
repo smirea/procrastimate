@@ -1,8 +1,13 @@
 name: TestFlight processed
 
 # Confirms an uploaded build finished processing in App Store Connect. Does not archive or upload.
-# The API key is the same one TestFlight uses. workflow_dispatch only, so a run does not start a build.
+# The API key is the same one TestFlight uses. A push of this file checks the Ramble upload
+# 2026.1013.215734. workflow_dispatch checks the build number you pass.
 on:
+  push:
+    branches: [master]
+    paths:
+      - .github/workflows/testflight-processed.yml
   workflow_dispatch:
     inputs:
       build_number:
@@ -28,7 +33,7 @@ jobs:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           ASC_KEY_PATH: ${{ runner.temp }}/AuthKey.p8
-          BUILD_NUMBER: ${{ inputs.build_number }}
+          BUILD_NUMBER: ${{ inputs.build_number != '' && inputs.build_number || '2026.1013.215734' }}
         run: node <<'EOF'
 const crypto = require('crypto')
 const fs = require('fs')
