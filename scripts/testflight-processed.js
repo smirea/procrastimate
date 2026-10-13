@@ -42,23 +42,15 @@ function query(path, params) {
 }
 
 async function main() {
-  const apps = await asc(query('/v1/apps', {
-    'filter[bundleId]': bundleId,
-    'fields[apps]': 'bundleId,name',
-    limit: '5',
-  }))
-  let appId = (apps.data ?? []).find((app) => app.attributes?.bundleId === bundleId)?.id
+  const listed = await asc(query('/v1/apps', { limit: '20' }))
+  const app = (listed.data ?? []).find((item) => item.attributes?.bundleId === bundleId)
+  const appId = app?.id
   if (!appId) {
-    const listed = await asc(query('/v1/apps', { 'fields[apps]': 'bundleId,name', limit: '20' }))
-    const bundles = (listed.data ?? []).map((app) => app.attributes?.bundleId).filter(Boolean)
-    console.log(`bundle filter missed; visible apps: ${bundles.join(', ') || '(none)'}`)
-    console.log(`filter response: ${JSON.stringify(apps).slice(0, 500)}`)
-    appId = (listed.data ?? []).find((app) => app.attributes?.bundleId === bundleId)?.id
-  }
-  if (!appId) {
-    console.error(`No App Store Connect app for ${bundleId}`)
+    const bundles = (listed.data ?? []).map((item) => `${item.id ?? '?'}:${item.attributes?.bundleId ?? '?'}`)
+    console.error(`No App Store Connect app for ${bundleId} (${bundles.join(', ') || 'no apps'})`)
     process.exit(1)
   }
+  console.log(`app ${appId} ${bundleId}`)
 
   const deadline = Date.now() + 40 * 60 * 1000
   let last = 'missing'
