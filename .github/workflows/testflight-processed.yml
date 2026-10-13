@@ -3,7 +3,7 @@ name: TestFlight processed
 # Confirms an uploaded build finished processing in App Store Connect. Does not archive or upload.
 # The API key is the same one TestFlight uses. A push of this file checks the Ramble upload
 # 2026.1013.215734. A manual run checks the build number you pass.
-# The app row is matched after stripping characters that are not part of a bundle id.
+# The app row is the one whose bundle id contains com.stefan.procrastinate.
 on:
   push:
     branches: [master]
