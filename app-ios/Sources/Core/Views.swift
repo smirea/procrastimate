@@ -4,6 +4,8 @@ import Foundation
 public enum Views {
     public typealias DayGroup = API.DayGroup
     public typealias Today = API.Today
+    public typealias NoDate = API.NoDate
+    public typealias PlaceSection = API.PlaceSection
 
     /// An event task sorts by the occurrence it is on, or by its first one where a list has no today.
     static func sortKey(_ task: TaskItem, today: DateKey?, in zone: TimeZone) -> String {
@@ -40,6 +42,31 @@ public enum Views {
     public static func inboxTasks(_ tasks: [TaskItem], _ today: DateKey, in zone: TimeZone) -> [TaskItem] {
         topLevel(tasks).filter { $0.projectId == nil && Triggers.scheduledDue($0, today, in: zone) == nil }
             .stableSorted(by: compare(today: nil, in: zone))
+    }
+
+    /// Undated inbox tasks, with each place that has two or more of them in its own section below the rest, named after
+    /// its earliest task's place and sorted by name.
+    public static func noDateTasks(_ tasks: [TaskItem], _ today: DateKey, in zone: TimeZone) -> NoDate {
+        let list = inboxTasks(tasks, today, in: zone)
+        var order: [String] = []
+        var byPlace: [String: [TaskItem]] = [:]
+        for task in list {
+            guard let location = task.location else { continue }
+            let key = Triggers.placeKey(location)
+            if byPlace[key] == nil { order.append(key) }
+            byPlace[key, default: []].append(task)
+        }
+        let places = order.compactMap { key -> PlaceSection? in
+            guard let group = byPlace[key], group.count > 1 else { return nil }
+            let earliest = group.stableSorted { a, b in a.createdAt == b.createdAt ? nil : a.createdAt < b.createdAt }[0]
+            return PlaceSection(key: key, name: earliest.location!.name, tasks: group)
+        }.stableSorted { a, b in
+            let order = a.name.compare(b.name, locale: Locale(identifier: "en"))
+            if order != .orderedSame { return order == .orderedAscending }
+            return a.key == b.key ? nil : a.key < b.key
+        }
+        let grouped = Set(places.map(\.key))
+        return NoDate(loose: list.filter { $0.location.map { !grouped.contains(Triggers.placeKey($0)) } ?? true }, places: places)
     }
 
     public static func projectTasks(_ tasks: [TaskItem], _ projectId: String, in zone: TimeZone) -> [TaskItem] {

@@ -24,7 +24,7 @@ Labels let Stefan tag a task with any number of names that cross projects, such 
 - Web: search a label's name and open it from the `Labels` group.
 - iOS: type `@name` in quick add.
 - iOS: open the Browse tab's Labels section, which appears once a label exists, and use `Label actions` in a label's toolbar to rename or delete it.
-- iOS: search a label's name in the search tab and tap it in the `Labels` group.
+- iOS: search a label's name in the field at the top of Browse and tap it in the `Labels` group.
 
 ## Driving it with control-ui and XCUITest
 

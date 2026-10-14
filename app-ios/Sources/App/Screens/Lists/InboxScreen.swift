@@ -41,21 +41,29 @@ struct InboxScreen: View {
     }
 }
 
-/// Inbox tasks without a date, which would otherwise always sit at the bottom of Inbox.
+/// Inbox tasks without a date, which would otherwise always sit at the bottom of Inbox. Places with two or more of them
+/// group below the rest.
 struct NoDateScreen: View {
     @Environment(Store.self) private var store
     @Environment(\.today) private var today
 
     var body: some View {
-        let tasks = Views.inboxTasks(store.tasks, today, in: store.timeZone)
+        let view = Views.noDateTasks(store.tasks, today, in: store.timeZone)
         TaskListScreen(
             title: "No date",
-            isEmpty: tasks.isEmpty,
+            isEmpty: view.loose.isEmpty && view.places.isEmpty,
             emptyTitle: "Inbox zero",
             emptyHint: "Tap + to capture a task.",
             root: true
         ) {
-            ForEach(tasks) { TaskRow(task: $0) }
+            ForEach(view.loose) { TaskRow(task: $0) }
+            ForEach(view.places, id: \.key) { place in
+                Section {
+                    ForEach(place.tasks) { TaskRow(task: $0) }
+                } header: {
+                    ListHeading(text: place.name)
+                }
+            }
         }
     }
 }

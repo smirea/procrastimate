@@ -15,7 +15,7 @@ The iOS app works with Siri, Shortcuts, and Spotlight. Every new feature that so
 - Web data lives in the browser's `localStorage` under the `procrastimate` key. A fresh browser profile is the baseline state with no tasks or projects.
 - The automated web smoke is `bun run test:e2e` from the repo root (`e2e/auth.e2e.ts` and `e2e/sync.e2e.ts`, Chromium, 1280×800). Install Chromium once with `bunx playwright install --with-deps chromium` in `app-web/`. It starts its own client on port 6130 with a fresh profile per test and a clock pinned to Wednesday, October 14 2026, 10:00 UTC.
 - `swift test` in `app-ios/` runs the Core unit tests, including the TS-to-Swift vectors. There is no XCUITest suite.
-- Start the iOS client in a simulator with `bun run start:ios -t simulator`. It opens on an empty Inbox with Inbox, Today, Upcoming, Browse, and Search tabs; Inbox, Today, Upcoming, and quick add work, and the other screens are placeholders until their slices ship (see `docs/ios-parity.md`). It needs macOS with Xcode, so a Linux agent runs only `swift test` in `app-ios/` and leaves the app to the iOS workflow.
+- Start the iOS client in a simulator with `bun run start:ios -t simulator`. It opens on an empty Inbox. The tab bar has Inbox, No date, and Browse, plus a `+` in the separate trailing circle that opens quick add. Search is the field at the top of Browse. It needs macOS with Xcode, so a Linux agent runs only `swift test` in `app-ios/` and leaves the app to the iOS workflow.
 - Debug builds can launch with `PROCRASTINATE_NOW=2026-10-14T10:00:00Z`, `PROCRASTINATE_TZ=UTC`, and `PROCRASTINATE_RESET=1` for an empty store at the pinned moment. Release builds ignore those keys.
 - Seed fixtures through quick add, the real user path. The dev server's sync account lives in memory, so restarting `bun run start` gives a disposable one.
 - Planned: a `verify-procrastimate` skill owns launch, doctor, and cleanup. Until it exists, never drive an instance this run did not start.
@@ -61,7 +61,7 @@ Keep implementation details out of the map. Name only user paths, stable handles
 - [Priority](./priority.md) covers priority shortcuts, the priority picker, and priority colors.
 - [Reminders](./reminders.md) covers typed and picked reminders, due times that notify on their own, and reminders firing while the app is open.
 - [Push notifications](./push-notifications.md) covers turning on Web Push, the permission and Home Screen guidance, the synced schedule, and notifications while the app is closed.
-- [Task views](./task-views.md) covers Inbox, Today, Upcoming, and their empty states.
+- [Task views](./task-views.md) covers the Inbox with its Overdue, Today, and day sections, the No date view, their counts, and their empty states.
 - [Projects](./projects.md) covers creating projects, `#` autocomplete, and moving tasks between them.
 - [Labels](./labels.md) covers `@` labels with autocomplete, row chips, the details picker, and label views.
 - [Offline and sync](./offline-sync.md) covers offline use and convergence across clients.

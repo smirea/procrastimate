@@ -7,6 +7,16 @@ import { dateKeySchema } from './values.ts';
 export const dayGroupSchema = z.object({ date: dateKeySchema, tasks: z.array(taskSchema) }).meta({ id: 'DayGroup' });
 export type DayGroup = z.infer<typeof dayGroupSchema>;
 
+export const placeSectionSchema = z
+	.object({ key: z.string(), name: z.string(), tasks: z.array(taskSchema) })
+	.meta({ id: 'PlaceSection' });
+export type PlaceSection = z.infer<typeof placeSectionSchema>;
+
+export const noDateSchema = z
+	.object({ loose: z.array(taskSchema), places: z.array(placeSectionSchema) })
+	.meta({ id: 'NoDate' });
+export type NoDate = z.infer<typeof noDateSchema>;
+
 export const todaySchema = z.object({ overdue: z.array(taskSchema), today: z.array(taskSchema) }).meta({ id: 'Today' });
 export type Today = z.infer<typeof todaySchema>;
 
@@ -37,6 +47,28 @@ export function inboxTasks(tasks: readonly Task[], today: DateKey) {
 	return topLevel(tasks)
 		.filter(t => t.projectId === null && scheduledDue(t, today) === null)
 		.toSorted((a, b) => compareTasks(a, b));
+}
+
+/**
+ * The No date view: undated inbox tasks, with each place that has two or more of them in its own section below the
+ * rest. A section is named after its earliest task's place, and sections sort by name.
+ */
+export function noDateTasks(tasks: readonly Task[], today: DateKey): NoDate {
+	const list = inboxTasks(tasks, today);
+	const byPlace = new Map<string, Task[]>();
+	for (const task of list) {
+		if (task.location) byPlace.set(placeKey(task.location), [...(byPlace.get(placeKey(task.location)) ?? []), task]);
+	}
+	const places = [...byPlace]
+		.filter(([, group]) => group.length > 1)
+		.map(([key, group]) => ({
+			key,
+			name: group.toSorted((a, b) => a.createdAt - b.createdAt)[0]!.location!.name,
+			tasks: group,
+		}))
+		.toSorted((a, b) => a.name.localeCompare(b.name) || (a.key < b.key ? -1 : 1));
+	const grouped = new Set(places.map(p => p.key));
+	return { loose: list.filter(t => !t.location || !grouped.has(placeKey(t.location))), places };
 }
 
 export function projectTasks(tasks: readonly Task[], projectId: string) {

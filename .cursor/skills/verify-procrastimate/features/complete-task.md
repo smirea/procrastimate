@@ -18,7 +18,7 @@ Complete a task lets Stefan check off a task with a short, satisfying animation,
 - Web on a phone: tap the checkbox. Its tap target is 44 px even though the ring is smaller.
 - Web: press `e` with a task selected. Planned: task selection by keyboard is not built yet.
 - iOS: tap the checkbox next to a task.
-- iOS: swipe a task to complete it.
+- iOS: swipe a task right to complete it.
 
 ## Driving it with control-ui and XCUITest
 
@@ -31,7 +31,7 @@ Preconditions:
 - **Undo.** Choose `Undo` in the toast. `Buy milk` returns above `Pay rent`.
 - **Phone.** Seed `Buy milk` and `Pay rent`, then tap 8 px left of the `Complete Buy milk` ring. The row leaves and the `Undo` toast appears above the `Quick add` button. Tap `Undo`; `Buy milk` returns. Test: `a tap just outside the checkbox completes the task and undo restores it` in `bun run test:e2e -- e2e/mobile.e2e.ts`.
 - **History.** Planned: complete `Buy milk` again and open completed tasks. `Buy milk` is listed there.
-- **iOS.** Tap the checkbox of `Pay rent` in the simulator: it fills with a success haptic, the row animates out, and `Completed “Pay rent”` shows with `Undo`, which restores it. A leading swipe completes too, and a trailing swipe deletes with `Deleted “Pay rent”` and `Undo`. `Standup every fri 9am` moves to `Oct 23 9am` with `Completed “Standup”, next due Oct 23 9am`. Tests: `CompleteParityTests` (`test_complete_check`, `test_complete_undo`, `test_complete_swipe`, `test_complete_recurring`, `test_edit_swipe_delete`), paired with `e2e/parity/complete.e2e.ts` where the web has the feature. Run each pair with the iOS workflow (`xcodebuild test` on an iPhone 16 simulator) and `bun run test:e2e --project=parity`; both sides save `<parity-id>.png`.
+- **iOS.** Tap the checkbox of `Pay rent` in the simulator: it fills with a success haptic, the row animates out, and `Completed “Pay rent”` shows with `Undo`, which restores it. A leading swipe completes too. The trailing swipe postpones instead (see Edit a task). `Standup every fri 9am` moves to `Oct 23 9am` with `Completed “Standup”, next due Oct 23 9am`. Tests: `CompleteParityTests` (`test_complete_check`, `test_complete_undo`, `test_complete_swipe`, `test_complete_recurring`), paired with `e2e/parity/complete.e2e.ts` where the web has the feature. Run each pair with the iOS workflow (`xcodebuild test` on an iPhone 16 simulator) and `bun run test:e2e --project=parity`; both sides save `<parity-id>.png`.
 - **Proof.** Planned: record the check and undo on the web as motion proof, then reload and capture Inbox.
 
 ## Gotchas

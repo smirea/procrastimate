@@ -5,6 +5,7 @@ import { describe, recorded, test } from './vectors/record.ts';
 
 const inboxTasks = recorded('views', views.inboxTasks);
 const labelTasks = recorded('views', views.labelTasks);
+const noDateTasks = recorded('views', views.noDateTasks);
 const projectTasks = recorded('views', views.projectTasks);
 const todayTasks = recorded('views', views.todayTasks);
 const upcomingGroups = recorded('views', views.upcomingGroups);
@@ -121,5 +122,34 @@ describe('task views', () => {
 		expect(upcomingGroups(list, today).map(g => [g.date, ids(g.tasks)])).toEqual([['2026-10-21', ['next week']]]);
 		expect(ids(eventTasks(list, 'meetup', today))).toEqual(['missed', 'jan', 'notes', 'next week']);
 		expect(ids(placeTasks(list, '52.5200,13.4050'))).toEqual(['jan', 'kite']);
+	});
+});
+
+describe('no date', () => {
+	const at = (name: string, latitude: number) => ({
+		name,
+		address: '',
+		latitude,
+		longitude: 13.4,
+		radius: 150,
+		trigger: 'arrive' as const,
+	});
+
+	test('places with two or more undated tasks get their own sections below the rest', () => {
+		const list = [
+			task('read'),
+			task('milk', { location: at('Rewe', 52.5) }),
+			task('coffee', { location: at('Philz', 52.6) }),
+			task('eggs', { location: at('Supermarket', 52.50001) }),
+			task('dated at Rewe', { location: at('Rewe', 52.5), due: { date: today, time: null } }),
+			task('beans', { location: at('Philz', 52.6), priority: 1 }),
+			task('solo', { location: at('Park', 52.7) }),
+		];
+		const view = noDateTasks(list, today);
+		expect(ids(view.loose)).toEqual(['read', 'solo']);
+		expect(view.places.map(p => [p.name, ids(p.tasks)])).toEqual([
+			['Philz', ['beans', 'coffee']],
+			['Rewe', ['milk', 'eggs']],
+		]);
 	});
 });

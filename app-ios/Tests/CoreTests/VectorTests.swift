@@ -186,6 +186,7 @@ private struct Occurrence: Decodable {
 @Sendable func viewsVector(_ fn: String, _ a: Args) throws -> JSONValue {
     switch fn {
     case "inboxTasks": return try json(Views.inboxTasks(a(0), a(1), in: a.zone))
+    case "noDateTasks": return try json(Views.noDateTasks(a(0), a(1), in: a.zone))
     case "projectTasks": return try json(Views.projectTasks(a(0), a(1), in: a.zone))
     case "labelTasks": return try json(Views.labelTasks(a(0), a(1), in: a.zone))
     case "placeTasks": return try json(Views.placeTasks(a(0), a(1), in: a.zone))
