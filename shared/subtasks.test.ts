@@ -25,6 +25,8 @@ const task = (id: string, fields: Partial<Task> = {}): Task => ({
 	recurrence: null,
 	priority: 4,
 	reminders: [],
+	location: null,
+	event: null,
 	createdAt: 1,
 	completedAt: null,
 	...fields,

@@ -119,6 +119,7 @@ private struct StoredTask: Decodable {
 
     private static let added: [(String, JSONValue)] = [
         ("parentId", .null), ("order", .number(0)), ("labelIds", .array([])), ("recurrence", .null),
+        ("location", .null), ("event", .null),
     ]
 
     init(from decoder: Decoder) throws {

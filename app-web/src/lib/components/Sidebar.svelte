@@ -9,6 +9,8 @@
 	import Hash from 'phosphor-svelte/lib/Hash';
 	import Plus from 'phosphor-svelte/lib/Plus';
 	import Tag from 'phosphor-svelte/lib/Tag';
+	import MapPin from 'phosphor-svelte/lib/MapPin';
+	import CalendarStar from 'phosphor-svelte/lib/CalendarStar';
 	import PlusCircle from 'phosphor-svelte/lib/PlusCircle';
 	import MagnifyingGlass from 'phosphor-svelte/lib/MagnifyingGlass';
 	import GearSix from 'phosphor-svelte/lib/GearSix';
@@ -17,6 +19,7 @@
 	import { store } from '../store.svelte.ts';
 	import { clock, mobile, motion } from '../ui.svelte.ts';
 	import { inboxTasks, labelTasks, projectTasks, todayTasks, upcomingGroups } from 'shared/views.ts';
+	import { eventGroups, placeGroups } from 'shared/triggers.ts';
 
 	let { onquickadd, onsearch, onsettings }: { onquickadd: () => void; onsearch: () => void; onsettings: () => void } =
 		$props();
@@ -38,6 +41,19 @@
 			.map((label) => ({ label, count: labelTasks(store.tasks, label.id).length }))
 			.toSorted((a, b) => a.label.name.localeCompare(b.label.name, undefined, { sensitivity: 'base' })),
 	);
+
+	const sections = $derived([
+		{
+			label: 'Places',
+			icon: MapPin,
+			rows: placeGroups(store.tasks).map((g) => ({ key: g.key, name: g.name, count: g.count, href: `/places/${encodeURIComponent(g.key)}` })),
+		},
+		{
+			label: 'Events',
+			icon: CalendarStar,
+			rows: eventGroups(store.tasks, clock.today).map((g) => ({ key: g.id, name: g.title, count: g.count, href: `/events/${encodeURIComponent(g.id)}` })),
+		},
+	]);
 
 	let adding = $state(false);
 	let name = $state('');
@@ -130,6 +146,26 @@
 				{/if}
 			</ul>
 		</section>
+
+		{#each sections as section (section.label)}
+			{#if section.rows.length}
+				<section aria-label={section.label} transition:slide={motion({ duration: 180, easing: cubicOut })}>
+					<h2 class="px-2 pb-1 text-[12px] font-medium tracking-wide text-faint uppercase">{section.label}</h2>
+					<ul class="space-y-0.5">
+						{#each section.rows as row (row.key)}
+							{@const active = page.url.pathname === row.href}
+							<li transition:slide={motion({ duration: 180, easing: cubicOut })}>
+								<a href={row.href} class="nav-link" class:active aria-current={active ? 'page' : undefined}>
+									<section.icon size={18} weight={active ? 'fill' : 'regular'} class={active ? '' : 'text-muted'} />
+									<span class="flex-1 truncate">{row.name}</span>
+									<span class="text-[12px] text-faint">{row.count}</span>
+								</a>
+							</li>
+						{/each}
+					</ul>
+				</section>
+			{/if}
+		{/each}
 
 		{#if labels.length}
 			<section aria-label="Labels" transition:slide={motion({ duration: 180, easing: cubicOut })}>

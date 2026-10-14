@@ -294,6 +294,8 @@ export function mergeBackup(
 			recurrence: source.recurrence,
 			priority: source.priority,
 			reminders: source.reminders,
+			location: null,
+			event: null,
 			// Views order equal priorities by creation, so each task is a millisecond apart to keep Todoist's order.
 			createdAt: now + i,
 			completedAt: null,

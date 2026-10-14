@@ -8,6 +8,8 @@ const labelTasks = recorded('views', views.labelTasks);
 const projectTasks = recorded('views', views.projectTasks);
 const todayTasks = recorded('views', views.todayTasks);
 const upcomingGroups = recorded('views', views.upcomingGroups);
+const placeTasks = recorded('views', views.placeTasks);
+const eventTasks = recorded('views', views.eventTasks);
 
 let created = 0;
 const task = (id: string, fields: Partial<Task> = {}): Task => ({
@@ -22,6 +24,8 @@ const task = (id: string, fields: Partial<Task> = {}): Task => ({
 	recurrence: null,
 	priority: 4,
 	reminders: [],
+	location: null,
+	event: null,
 	createdAt: ++created,
 	completedAt: null,
 	...fields,
@@ -93,5 +97,39 @@ describe('task views', () => {
 		expect(inboxTasks([])).toEqual([]);
 		expect(todayTasks([], today)).toEqual({ overdue: [], today: [] });
 		expect(upcomingGroups([], today)).toEqual([]);
+	});
+
+	test('event tasks sit on their occurrence and place tasks list by place', () => {
+		const at = (d: number, h: number) => new Date(2026, 9, d, h).getTime();
+		const event = (edge: 'before' | 'after', start: number) => ({
+			id: 'meetup',
+			title: 'Walking meetup',
+			allDay: false,
+			series: false,
+			edge,
+			minutes: 30,
+			occurrences: [{ start, end: start + 3_600_000, original: start }],
+		});
+		const location = {
+			name: 'Park',
+			address: null,
+			latitude: 52.52,
+			longitude: 13.405,
+			radius: 150,
+			trigger: 'during' as const,
+		};
+		const list = [
+			task('notes', { event: event('after', at(14, 18)) }),
+			task('jan', { event: event('before', at(14, 18)), location }),
+			task('missed', { event: event('before', at(12, 18)) }),
+			task('next week', { event: event('before', at(21, 18)) }),
+			task('kite', { location }),
+		];
+		const { overdue, today: due } = todayTasks(list, today);
+		expect(ids(overdue)).toEqual(['missed']);
+		expect(ids(due)).toEqual(['jan', 'notes']);
+		expect(upcomingGroups(list, today).map(g => [g.date, ids(g.tasks)])).toEqual([['2026-10-21', ['next week']]]);
+		expect(ids(eventTasks(list, 'meetup', today))).toEqual(['missed', 'jan', 'notes', 'next week']);
+		expect(ids(placeTasks(list, '52.5200,13.4050'))).toEqual(['jan', 'kite']);
 	});
 });

@@ -38,6 +38,23 @@ import Testing
         #expect(patch.priority == .p3)
     }
 
+    @Test func anEventTaskIgnoresATypedDateAndRepeat() {
+        let event = TaskEvent(
+            id: "meetup", title: "Walking meetup", allDay: false, series: true, edge: .during, minutes: 0,
+            occurrences: [EventOccurrence(start: 0, end: 1, original: 0)]
+        )
+        let task = TaskItem(id: "t", title: "Talk to Jan", event: event, createdAt: 0)
+        guard case let .update(patch, title) = TaskDetails.commitTitle(
+            task, title: "Talk to Jan every fri", parse("Talk to Jan every fri", task)
+        ) else {
+            Issue.record("Expected an update")
+            return
+        }
+        #expect(title == "Talk to Jan")
+        #expect(patch.due == .some(nil))
+        #expect(patch.recurrence == .some(nil))
+    }
+
     @Test func aSubtaskTitleKeepsAProjectHashtagAsText() {
         let subtask = TaskItem(id: "s", parentId: "t", title: "Charger", createdAt: 0)
         let parsed = parse("Charger #Home", subtask)

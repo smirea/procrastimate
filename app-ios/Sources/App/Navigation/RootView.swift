@@ -18,12 +18,12 @@ struct RootView: View {
 
     private var signedIn: some View {
         @Bindable var navigator = navigator
-        let today = Views.todayTasks(store.tasks, todayKey)
+        let today = Views.todayTasks(store.tasks, todayKey, in: store.timeZone)
         return TabView(selection: $navigator.tab) {
             Tab("Inbox", systemImage: "tray", value: .inbox) {
                 TabStack(tab: .inbox) { InboxScreen() }
             }
-            .badge(Views.inboxTasks(store.tasks).count)
+            .badge(Views.inboxTasks(store.tasks, in: store.timeZone).count)
             Tab("Today", systemImage: "sun.max", value: .today) {
                 TabStack(tab: .today) { TodayScreen() }
             }
@@ -94,6 +94,8 @@ private struct RouteView: View {
         switch route {
         case let .project(id): ProjectScreen(projectID: id)
         case let .label(id): LabelScreen(labelID: id)
+        case let .place(key): PlaceScreen(key: key)
+        case let .event(id): EventScreen(eventID: id)
         }
     }
 }

@@ -1,0 +1,1007 @@
+{
+	"module": "triggers",
+	"timeZone": "America/New_York",
+	"cases": [
+		{
+			"fn": "scheduledDue",
+			"test": "scheduledDue › an event task sits on its edge",
+			"input": [
+				{
+					"completedAt": null,
+					"createdAt": 1,
+					"due": null,
+					"event": {
+						"allDay": false,
+						"edge": "before",
+						"id": "meetup",
+						"minutes": 30,
+						"occurrences": [
+							{
+								"end": 1792020600000,
+								"original": 1792015200000,
+								"start": 1792015200000
+							}
+						],
+						"series": false,
+						"title": "Walking meetup"
+					},
+					"id": "a",
+					"labelIds": [],
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "a"
+				},
+				"2026-10-14"
+			],
+			"output": {
+				"date": "2026-10-14",
+				"time": "17:30"
+			}
+		},
+		{
+			"fn": "scheduledDue",
+			"test": "scheduledDue › an event task sits on its edge",
+			"input": [
+				{
+					"completedAt": null,
+					"createdAt": 2,
+					"due": null,
+					"event": {
+						"allDay": false,
+						"edge": "after",
+						"id": "meetup",
+						"minutes": 60,
+						"occurrences": [
+							{
+								"end": 1792020600000,
+								"original": 1792015200000,
+								"start": 1792015200000
+							}
+						],
+						"series": false,
+						"title": "Walking meetup"
+					},
+					"id": "b",
+					"labelIds": [],
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "b"
+				},
+				"2026-10-14"
+			],
+			"output": {
+				"date": "2026-10-14",
+				"time": "20:30"
+			}
+		},
+		{
+			"fn": "scheduledDue",
+			"test": "scheduledDue › an event task sits on its edge",
+			"input": [
+				{
+					"completedAt": null,
+					"createdAt": 3,
+					"due": null,
+					"event": {
+						"allDay": true,
+						"edge": "start",
+						"id": "meetup",
+						"minutes": 0,
+						"occurrences": [
+							{
+								"end": 1792020600000,
+								"original": 1792015200000,
+								"start": 1792015200000
+							}
+						],
+						"series": false,
+						"title": "Walking meetup"
+					},
+					"id": "c",
+					"labelIds": [],
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "c"
+				},
+				"2026-10-14"
+			],
+			"output": {
+				"date": "2026-10-14",
+				"time": null
+			}
+		},
+		{
+			"fn": "scheduledDue",
+			"test": "scheduledDue › a single event stays on its passed occurrence, so it goes overdue",
+			"input": [
+				{
+					"completedAt": null,
+					"createdAt": 4,
+					"due": null,
+					"event": {
+						"allDay": false,
+						"edge": "start",
+						"id": "meetup",
+						"minutes": 0,
+						"occurrences": [
+							{
+								"end": 1791846000000,
+								"original": 1791842400000,
+								"start": 1791842400000
+							}
+						],
+						"series": false,
+						"title": "Walking meetup"
+					},
+					"id": "a",
+					"labelIds": [],
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "a"
+				},
+				"2026-10-14"
+			],
+			"output": {
+				"date": "2026-10-12",
+				"time": "18:00"
+			}
+		},
+		{
+			"fn": "currentOccurrence",
+			"test": "scheduledDue › a series skips occurrences whose day is over but keeps one earlier today",
+			"input": [
+				{
+					"allDay": false,
+					"edge": "start",
+					"id": "meetup",
+					"minutes": 0,
+					"occurrences": [
+						{
+							"end": 1791414000000,
+							"original": 1791410400000,
+							"start": 1791410400000
+						},
+						{
+							"end": 1791982800000,
+							"original": 1791979200000,
+							"start": 1791979200000
+						},
+						{
+							"end": 1792623600000,
+							"original": 1792620000000,
+							"start": 1792620000000
+						}
+					],
+					"series": true,
+					"title": "Walking meetup"
+				},
+				"2026-10-14"
+			],
+			"output": {
+				"end": 1791982800000,
+				"original": 1791979200000,
+				"start": 1791979200000
+			}
+		},
+		{
+			"fn": "currentOccurrence",
+			"test": "scheduledDue › a series skips occurrences whose day is over but keeps one earlier today",
+			"input": [
+				{
+					"allDay": false,
+					"edge": "start",
+					"id": "meetup",
+					"minutes": 0,
+					"occurrences": [
+						{
+							"end": 1791414000000,
+							"original": 1791410400000,
+							"start": 1791410400000
+						},
+						{
+							"end": 1791982800000,
+							"original": 1791979200000,
+							"start": 1791979200000
+						},
+						{
+							"end": 1792623600000,
+							"original": 1792620000000,
+							"start": 1792620000000
+						}
+					],
+					"series": true,
+					"title": "Walking meetup"
+				},
+				"2026-10-15"
+			],
+			"output": {
+				"end": 1792623600000,
+				"original": 1792620000000,
+				"start": 1792620000000
+			}
+		},
+		{
+			"fn": "scheduledDue",
+			"test": "scheduledDue › a repeat at a place skips missed occurrences, and a single one at a place stays overdue",
+			"input": [
+				{
+					"completedAt": null,
+					"createdAt": 5,
+					"due": {
+						"date": "2026-10-09",
+						"time": "09:00"
+					},
+					"event": null,
+					"id": "weekly",
+					"labelIds": [],
+					"location": {
+						"address": null,
+						"latitude": 52.52,
+						"longitude": 13.405,
+						"name": "Park",
+						"radius": 150,
+						"trigger": "during"
+					},
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": {
+						"interval": 1,
+						"unit": "week"
+					},
+					"reminders": [],
+					"title": "weekly"
+				},
+				"2026-10-14"
+			],
+			"output": {
+				"date": "2026-10-16",
+				"time": "09:00"
+			}
+		},
+		{
+			"fn": "scheduledDue",
+			"test": "scheduledDue › a repeat at a place skips missed occurrences, and a single one at a place stays overdue",
+			"input": [
+				{
+					"completedAt": null,
+					"createdAt": 6,
+					"due": {
+						"date": "2026-10-09",
+						"time": "09:00"
+					},
+					"event": null,
+					"id": "once",
+					"labelIds": [],
+					"location": {
+						"address": null,
+						"latitude": 52.52,
+						"longitude": 13.405,
+						"name": "Park",
+						"radius": 150,
+						"trigger": "during"
+					},
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "once"
+				},
+				"2026-10-14"
+			],
+			"output": {
+				"date": "2026-10-09",
+				"time": "09:00"
+			}
+		},
+		{
+			"fn": "scheduledDue",
+			"test": "scheduledDue › a repeat at a place skips missed occurrences, and a single one at a place stays overdue",
+			"input": [
+				{
+					"completedAt": null,
+					"createdAt": 7,
+					"due": {
+						"date": "2026-10-09",
+						"time": "09:00"
+					},
+					"event": null,
+					"id": "no place",
+					"labelIds": [],
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": {
+						"interval": 1,
+						"unit": "week"
+					},
+					"reminders": [],
+					"title": "no place"
+				},
+				"2026-10-14"
+			],
+			"output": {
+				"date": "2026-10-09",
+				"time": "09:00"
+			}
+		},
+		{
+			"fn": "taskNotificationTimes",
+			"test": "taskNotificationTimes › an event notifies at its moment, and relative reminders count back from it",
+			"input": [
+				{
+					"completedAt": null,
+					"createdAt": 8,
+					"due": null,
+					"event": {
+						"allDay": false,
+						"edge": "before",
+						"id": "meetup",
+						"minutes": 30,
+						"occurrences": [
+							{
+								"end": 1792020600000,
+								"original": 1792015200000,
+								"start": 1792015200000
+							}
+						],
+						"series": false,
+						"title": "Walking meetup"
+					},
+					"id": "a",
+					"labelIds": [],
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [
+						{
+							"kind": "before",
+							"minutes": 10
+						}
+					],
+					"title": "a"
+				},
+				"2026-10-14"
+			],
+			"output": [
+				1792012800000,
+				1792013400000
+			]
+		},
+		{
+			"fn": "taskNotificationTimes",
+			"test": "taskNotificationTimes › a series notifies at every listed occurrence, and an all-day event only at its reminders",
+			"input": [
+				{
+					"completedAt": null,
+					"createdAt": 9,
+					"due": null,
+					"event": {
+						"allDay": false,
+						"edge": "after",
+						"id": "meetup",
+						"minutes": 0,
+						"occurrences": [
+							{
+								"end": 1792018800000,
+								"original": 1792015200000,
+								"start": 1792015200000
+							},
+							{
+								"end": 1792623600000,
+								"original": 1792620000000,
+								"start": 1792620000000
+							}
+						],
+						"series": true,
+						"title": "Walking meetup"
+					},
+					"id": "a",
+					"labelIds": [],
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "a"
+				},
+				"2026-10-14"
+			],
+			"output": [
+				1792018800000,
+				1792623600000
+			]
+		},
+		{
+			"fn": "taskNotificationTimes",
+			"test": "taskNotificationTimes › a series notifies at every listed occurrence, and an all-day event only at its reminders",
+			"input": [
+				{
+					"completedAt": null,
+					"createdAt": 10,
+					"due": null,
+					"event": {
+						"allDay": true,
+						"edge": "start",
+						"id": "meetup",
+						"minutes": 0,
+						"occurrences": [
+							{
+								"end": 1792123200000,
+								"original": 1792036800000,
+								"start": 1792036800000
+							}
+						],
+						"series": false,
+						"title": "Walking meetup"
+					},
+					"id": "b",
+					"labelIds": [],
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [
+						{
+							"date": "2026-10-15",
+							"kind": "at",
+							"time": "08:00"
+						}
+					],
+					"title": "b"
+				},
+				"2026-10-14"
+			],
+			"output": [
+				1792065600000
+			]
+		},
+		{
+			"fn": "taskNotificationTimes",
+			"test": "taskNotificationTimes › a due time at a place does not notify, but its reminders do",
+			"input": [
+				{
+					"completedAt": null,
+					"createdAt": 11,
+					"due": {
+						"date": "2026-10-14",
+						"time": "17:00"
+					},
+					"event": null,
+					"id": "a",
+					"labelIds": [],
+					"location": {
+						"address": null,
+						"latitude": 52.52,
+						"longitude": 13.405,
+						"name": "Park",
+						"radius": 150,
+						"trigger": "during"
+					},
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "a"
+				},
+				"2026-10-14"
+			],
+			"output": []
+		},
+		{
+			"fn": "taskNotificationTimes",
+			"test": "taskNotificationTimes › a due time at a place does not notify, but its reminders do",
+			"input": [
+				{
+					"completedAt": null,
+					"createdAt": 12,
+					"due": {
+						"date": "2026-10-14",
+						"time": "17:00"
+					},
+					"event": null,
+					"id": "b",
+					"labelIds": [],
+					"location": {
+						"address": null,
+						"latitude": 52.52,
+						"longitude": 13.405,
+						"name": "Park",
+						"radius": 150,
+						"trigger": "during"
+					},
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [
+						{
+							"kind": "before",
+							"minutes": 60
+						}
+					],
+					"title": "b"
+				},
+				"2026-10-14"
+			],
+			"output": [
+				1792008000000
+			]
+		},
+		{
+			"fn": "formatEvent",
+			"test": "labels › events read by edge",
+			"input": [
+				{
+					"allDay": false,
+					"edge": "before",
+					"id": "meetup",
+					"minutes": 30,
+					"occurrences": [
+						{
+							"end": 1792020600000,
+							"original": 1792015200000,
+							"start": 1792015200000
+						}
+					],
+					"series": false,
+					"title": "Walking meetup"
+				}
+			],
+			"output": "30m before Walking meetup"
+		},
+		{
+			"fn": "formatEvent",
+			"test": "labels › events read by edge",
+			"input": [
+				{
+					"allDay": false,
+					"edge": "start",
+					"id": "meetup",
+					"minutes": 0,
+					"occurrences": [
+						{
+							"end": 1792020600000,
+							"original": 1792015200000,
+							"start": 1792015200000
+						}
+					],
+					"series": false,
+					"title": "Walking meetup"
+				}
+			],
+			"output": "When Walking meetup starts"
+		},
+		{
+			"fn": "formatEvent",
+			"test": "labels › events read by edge",
+			"input": [
+				{
+					"allDay": false,
+					"edge": "during",
+					"id": "meetup",
+					"minutes": 0,
+					"occurrences": [
+						{
+							"end": 1792020600000,
+							"original": 1792015200000,
+							"start": 1792015200000
+						}
+					],
+					"series": false,
+					"title": "Walking meetup"
+				}
+			],
+			"output": "During Walking meetup"
+		},
+		{
+			"fn": "formatEvent",
+			"test": "labels › events read by edge",
+			"input": [
+				{
+					"allDay": false,
+					"edge": "after",
+					"id": "meetup",
+					"minutes": 0,
+					"occurrences": [
+						{
+							"end": 1792020600000,
+							"original": 1792015200000,
+							"start": 1792015200000
+						}
+					],
+					"series": false,
+					"title": "Walking meetup"
+				}
+			],
+			"output": "After Walking meetup"
+		},
+		{
+			"fn": "formatEvent",
+			"test": "labels › events read by edge",
+			"input": [
+				{
+					"allDay": false,
+					"edge": "after",
+					"id": "meetup",
+					"minutes": 60,
+					"occurrences": [
+						{
+							"end": 1792020600000,
+							"original": 1792015200000,
+							"start": 1792015200000
+						}
+					],
+					"series": false,
+					"title": "Walking meetup"
+				}
+			],
+			"output": "1h after Walking meetup"
+		},
+		{
+			"fn": "formatLocation",
+			"test": "labels › places read by trigger",
+			"input": [
+				{
+					"address": null,
+					"latitude": 52.52,
+					"longitude": 13.405,
+					"name": "Park",
+					"radius": 150,
+					"trigger": "arrive"
+				}
+			],
+			"output": "Arriving at Park"
+		},
+		{
+			"fn": "formatLocation",
+			"test": "labels › places read by trigger",
+			"input": [
+				{
+					"address": null,
+					"latitude": 52.52,
+					"longitude": 13.405,
+					"name": "Park",
+					"radius": 150,
+					"trigger": "leave"
+				}
+			],
+			"output": "Leaving Park"
+		},
+		{
+			"fn": "formatLocation",
+			"test": "labels › places read by trigger",
+			"input": [
+				{
+					"address": null,
+					"latitude": 52.52,
+					"longitude": 13.405,
+					"name": "Park",
+					"radius": 150,
+					"trigger": "during"
+				}
+			],
+			"output": "While at Park"
+		},
+		{
+			"fn": "placeGroups",
+			"test": "sidebar groups › places group open tasks by spot, named after the earliest task",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"createdAt": 13,
+						"due": null,
+						"event": null,
+						"id": "milk",
+						"labelIds": [],
+						"location": {
+							"address": null,
+							"latitude": 52.5,
+							"longitude": 13.4,
+							"name": "Rewe",
+							"radius": 150,
+							"trigger": "arrive"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "milk"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 14,
+						"due": null,
+						"event": null,
+						"id": "eggs",
+						"labelIds": [],
+						"location": {
+							"address": null,
+							"latitude": 52.50001,
+							"longitude": 13.40001,
+							"name": "Supermarket",
+							"radius": 150,
+							"trigger": "during"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "eggs"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 15,
+						"due": null,
+						"event": null,
+						"id": "jan",
+						"labelIds": [],
+						"location": {
+							"address": null,
+							"latitude": 52.52,
+							"longitude": 13.405,
+							"name": "Park",
+							"radius": 150,
+							"trigger": "during"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "jan"
+					},
+					{
+						"completedAt": 1,
+						"createdAt": 16,
+						"due": null,
+						"event": null,
+						"id": "done",
+						"labelIds": [],
+						"location": {
+							"address": null,
+							"latitude": 52.52,
+							"longitude": 13.405,
+							"name": "Park",
+							"radius": 150,
+							"trigger": "during"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "done"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 17,
+						"due": null,
+						"event": null,
+						"id": "plain",
+						"labelIds": [],
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "plain"
+					}
+				]
+			],
+			"output": [
+				{
+					"count": 1,
+					"key": "52.5200,13.4050",
+					"name": "Park"
+				},
+				{
+					"count": 2,
+					"key": "52.5000,13.4000",
+					"name": "Rewe"
+				}
+			]
+		},
+		{
+			"fn": "placeGroups",
+			"test": "sidebar groups › places group open tasks by spot, named after the earliest task",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"createdAt": 18,
+						"due": null,
+						"event": null,
+						"id": "plain",
+						"labelIds": [],
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "plain"
+					}
+				]
+			],
+			"output": []
+		},
+		{
+			"fn": "eventGroups",
+			"test": "sidebar groups › events group open tasks by event, soonest first",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"createdAt": 19,
+						"due": null,
+						"event": {
+							"allDay": false,
+							"edge": "start",
+							"id": "night",
+							"minutes": 0,
+							"occurrences": [
+								{
+									"end": 1792206000000,
+									"original": 1792195200000,
+									"start": 1792195200000
+								}
+							],
+							"series": false,
+							"title": "Night out"
+						},
+						"id": "red",
+						"labelIds": [],
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "red"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 20,
+						"due": null,
+						"event": {
+							"allDay": false,
+							"edge": "start",
+							"id": "meetup",
+							"minutes": 0,
+							"occurrences": [
+								{
+									"end": 1792020600000,
+									"original": 1792015200000,
+									"start": 1792015200000
+								}
+							],
+							"series": false,
+							"title": "Walking meetup"
+						},
+						"id": "jan",
+						"labelIds": [],
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "jan"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 21,
+						"due": null,
+						"event": {
+							"allDay": false,
+							"edge": "after",
+							"id": "meetup",
+							"minutes": 0,
+							"occurrences": [
+								{
+									"end": 1792020600000,
+									"original": 1792015200000,
+									"start": 1792015200000
+								}
+							],
+							"series": false,
+							"title": "Walking meetup"
+						},
+						"id": "notes",
+						"labelIds": [],
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "notes"
+					}
+				],
+				"2026-10-14"
+			],
+			"output": [
+				{
+					"count": 2,
+					"id": "meetup",
+					"title": "Walking meetup"
+				},
+				{
+					"count": 1,
+					"id": "night",
+					"title": "Night out"
+				}
+			]
+		}
+	]
+}

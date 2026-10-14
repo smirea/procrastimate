@@ -60,14 +60,41 @@ public enum Subtasks {
         tasks.filter { $0.parentId == parentId }.map(\.order).reduce(-1, max) + 1
     }
 
-    /// Completing a task completes every open subtask under it. A recurring task moves to its next occurrence instead,
-    /// and every subtask under it reopens, so each occurrence starts with a fresh checklist.
-    public static func completeTask(_ tasks: [TaskItem], _ id: String, today: DateKey, now: Int) -> Completion? {
+    /// A task on an event series moves past the occurrence it is on, and any missed before it, to the next one the
+    /// calendar listed. With none left it completes, until iOS lists more.
+    static func nextEventOccurrence(_ task: TaskItem, today: DateKey, in zone: TimeZone) -> (due: Due, event: TaskEvent)? {
+        guard var event = task.event, event.series else { return nil }
+        let current = Triggers.currentOccurrence(event, today, in: zone)
+        let index = event.occurrences.firstIndex(of: current) ?? 0
+        let rest = Array(event.occurrences[(index + 1)...])
+        guard let first = rest.first else { return nil }
+        event.occurrences = rest
+        return (Triggers.occurrenceDue(event, first, in: zone), event)
+    }
+
+    /// Completing a task completes every open subtask under it. A recurring task, or one on an event series, moves to
+    /// its next occurrence instead, and every subtask under it reopens, so each occurrence starts with a fresh checklist.
+    public static func completeTask(
+        _ tasks: [TaskItem],
+        _ id: String,
+        today: DateKey,
+        now: Int,
+        in zone: TimeZone
+    ) -> Completion? {
         guard let task = tasks.first(where: { $0.id == id }) else { return nil }
         let descendants = descendantsOf(tasks, id)
-        guard let next = Dates.nextOccurrence(
+        var rolled = task
+        let nextDue: Due
+        if let next = Dates.nextOccurrence(
             due: task.due, recurrence: task.recurrence, reminders: task.reminders, today: today
-        ) else {
+        ) {
+            rolled.due = next.due
+            rolled.reminders = next.reminders
+            nextDue = next.due
+        } else if let next = nextEventOccurrence(task, today: today, in: zone) {
+            rolled.event = next.event
+            nextDue = next.due
+        } else {
             let changed = ([task] + descendants).filter { $0.completedAt == nil }.map { t in
                 var t = t
                 t.completedAt = now
@@ -75,15 +102,12 @@ public enum Subtasks {
             }
             return .done(changed: changed)
         }
-        var rolled = task
-        rolled.due = next.due
-        rolled.reminders = next.reminders
         let reopened = descendants.filter { $0.completedAt != nil }.map { t in
             var t = t
             t.completedAt = nil
             return t
         }
-        return .rolled(next: next.due, changed: [rolled] + reopened)
+        return .rolled(next: nextDue, changed: [rolled] + reopened)
     }
 
     /// Reopening a subtask reopens every completed task above it.

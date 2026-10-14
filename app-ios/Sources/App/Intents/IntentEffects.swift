@@ -208,7 +208,7 @@ enum IntentEffects {
 
     private static func list(overdue: Bool) -> (dialog: String, entities: [TaskEntity]) {
         let (snapshot, clock) = snapshot()
-        let today = Views.todayTasks(snapshot.tasks, clock.today)
+        let today = Views.todayTasks(snapshot.tasks, clock.today, in: clock.timeZone)
         let tasks = overdue ? today.overdue : today.today
         let titles = tasks.map(\.title).joined(separator: ", ")
         note("\(overdue ? "overdue" : "today") \(titles)")

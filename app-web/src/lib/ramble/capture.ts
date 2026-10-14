@@ -170,7 +170,9 @@ function socket(options: {
 }
 
 async function startMic(socket: WebSocket, onLevel?: (level: number) => void) {
-	const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+	const stream = await navigator.mediaDevices.getUserMedia({
+		audio: { echoCancellation: true, noiseSuppression: true },
+	});
 	const audio = new AudioContext();
 	const url = URL.createObjectURL(new Blob([WORKLET], { type: 'text/javascript' }));
 	try {

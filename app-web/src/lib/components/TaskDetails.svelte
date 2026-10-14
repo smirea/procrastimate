@@ -7,6 +7,10 @@
 	import Check from 'phosphor-svelte/lib/Check';
 	import ArrowCounterClockwise from 'phosphor-svelte/lib/ArrowCounterClockwise';
 	import CaretLeft from 'phosphor-svelte/lib/CaretLeft';
+	import CalendarStar from 'phosphor-svelte/lib/CalendarStar';
+	import MapPin from 'phosphor-svelte/lib/MapPin';
+	import { formatDue } from 'shared/format.ts';
+	import { formatEvent, formatLocation, scheduledDue } from 'shared/triggers.ts';
 	import { parseQuickAdd } from 'shared/quick-add.ts';
 	import type { Task } from 'shared/task.ts';
 	import SmartInput from './SmartInput.svelte';
@@ -34,8 +38,9 @@
 		title !== task.title && parsed.title
 			? {
 					title: parsed.title,
-					due: parsed.due ?? task.due,
-					recurrence: parsed.recurrence ?? task.recurrence,
+					// An event stands in for the date and repeat, so a typed one is ignored on an event task.
+					due: task.event ? null : (parsed.due ?? task.due),
+					recurrence: task.event ? null : (parsed.recurrence ?? task.recurrence),
 					priority: parsed.priority ?? task.priority,
 					projectId: parsed.projectId ?? task.projectId,
 					labelIds: [...new Set([...task.labelIds, ...parsed.labelIds])],
@@ -45,6 +50,7 @@
 	);
 
 	const update = (patch: TaskPatch) => store.updateTask(task.id, patch);
+	const eventDue = $derived(task.event ? scheduledDue(task, clock.today) : null);
 
 	function commitTitle() {
 		if (title === task.title) return;
@@ -120,21 +126,34 @@
 	</div>
 	<!-- Outside the scroll area, which would clip the pickers' popovers. -->
 	<div class="flex flex-wrap gap-1.5 px-4 pt-3">
-		<DuePicker
-			due={draft.due}
-			onchange={(due) => update({ due, recurrence: due ? task.recurrence : null })}
-		/>
-		<RecurrencePicker
-			recurrence={draft.recurrence}
-			due={draft.due}
-			onchange={(recurrence, due) => update({ recurrence, due })}
-		/>
+		{#if task.event}
+			<span class="chip" data-active="true" title="Set on iPhone">
+				<CalendarStar size={15} weight="fill" />
+				{formatEvent(task.event)}{eventDue ? ` · ${formatDue(eventDue, clock.today)}` : ''}
+			</span>
+		{:else}
+			<DuePicker
+				due={draft.due}
+				onchange={(due) => update({ due, recurrence: due ? task.recurrence : null })}
+			/>
+			<RecurrencePicker
+				recurrence={draft.recurrence}
+				due={draft.due}
+				onchange={(recurrence, due) => update({ recurrence, due })}
+			/>
+		{/if}
 		<PriorityPicker priority={draft.priority} onchange={(priority) => update({ priority })} />
 		<ReminderPicker
-			due={draft.due}
+			due={eventDue ?? draft.due}
 			reminders={draft.reminders}
 			onchange={(reminders) => update({ reminders })}
 		/>
+		{#if task.location}
+			<span class="chip" data-active="true" title={`${task.location.address ?? task.location.name} · Set on iPhone`}>
+				<MapPin size={15} weight="fill" />
+				{formatLocation(task.location)}
+			</span>
+		{/if}
 	</div>
 	<div class="px-4 pt-3">
 		<LabelPicker labelIds={draft.labelIds} onchange={(labelIds) => update({ labelIds })} />

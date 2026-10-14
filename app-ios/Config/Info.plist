@@ -21,6 +21,14 @@
     <string>Procrastinate uses the microphone to turn speech into tasks.</string>
     <key>NSSpeechRecognitionUsageDescription</key>
     <string>Procrastinate uses speech recognition to turn what you say into tasks.</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>ProcrastiMate uses your location to remind you of tasks when you arrive at or leave a place.</string>
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>ProcrastiMate watches the places on your tasks in the background, so it can remind you when you arrive or leave even while the app is closed.</string>
+    <key>NSCalendarsFullAccessUsageDescription</key>
+    <string>ProcrastiMate links tasks to calendar events and keeps their reminders in step when an event moves.</string>
+    <key>NSSupportsLiveActivities</key>
+    <true/>
     <key>NSAppTransportSecurity</key>
     <dict>
         <key>NSAllowsLocalNetworking</key>
@@ -29,6 +37,7 @@
     <key>BGTaskSchedulerPermittedIdentifiers</key>
     <array>
         <string>com.stefan.procrastimate.refresh</string>
+        <string>com.stefan.procrastimate.places</string>
     </array>
     <key>UIBackgroundModes</key>
     <array>

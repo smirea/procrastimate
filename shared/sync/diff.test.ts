@@ -22,6 +22,8 @@ describe('diff', () => {
 					recurrence: null,
 					priority: 4,
 					reminders: [],
+					location: null,
+					event: null,
 					createdAt: 1,
 					completedAt: null,
 					sourceKey: 'todoist:task:1',

@@ -69,9 +69,13 @@ export function fieldsOf(kind: Kind, entity: Entity): Fields {
 	return fields;
 }
 
-/** Builds an entity from a full set of fields, or null when some are missing or invalid. */
+/**
+ * Builds an entity from a full set of fields, or null when some are missing or invalid. iOS builds from before places
+ * and events create tasks without `location` and `event`, so those two default to none instead of dropping the task.
+ */
 export function entityFrom(kind: Kind, id: string, fields: Fields): Entity | null {
-	const parsed = FIELDS_SCHEMAS[kind].safeParse(fields);
+	const full = kind === 'task' ? { location: null, event: null, ...fields } : fields;
+	const parsed = FIELDS_SCHEMAS[kind].safeParse(full);
 	if (!parsed.success) return null;
 	const entity: Entity = { id, ...parsed.data };
 	if (entity.sourceKey === null) delete entity.sourceKey;

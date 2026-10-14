@@ -47,6 +47,8 @@ const task = (
 	recurrence: null,
 	priority,
 	reminders: [],
+	location: null,
+	event: null,
 	createdAt,
 	completedAt,
 });

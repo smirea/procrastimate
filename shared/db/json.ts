@@ -2,7 +2,14 @@ import { z } from 'zod';
 import { dictationChoiceSchema } from '../dictation.ts';
 import { pushSubscriptionSchema, scheduledPushSchema } from '../push.ts';
 import { isHlc } from '../sync/hlc.ts';
-import { dueSchema, prioritySchema, recurrenceSchema, reminderSchema } from '../values.ts';
+import {
+	dueSchema,
+	prioritySchema,
+	recurrenceSchema,
+	reminderSchema,
+	taskEventSchema,
+	taskLocationSchema,
+} from '../values.ts';
 
 /**
  * What a column holds when its SQL type says less than the value: a JSON column's shape, or an integer column
@@ -21,6 +28,8 @@ export const COLUMN_VALUES = {
 		recurrence: recurrenceSchema,
 		priority: prioritySchema,
 		reminders: z.array(reminderSchema),
+		location: taskLocationSchema,
+		event: taskEventSchema,
 		clocks,
 	},
 	projects: { clocks },

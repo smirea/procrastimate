@@ -2,7 +2,8 @@ import { z } from 'zod';
 import { bySiblingOrder, moveOrders } from './sync/order.ts';
 import { taskSchema } from './sync/protocol.ts';
 import { dueSchema } from './values.ts';
-import { nextOccurrence, type DateKey, type Task } from './task.ts';
+import { nextOccurrence, type DateKey, type Due, type Task } from './task.ts';
+import { currentOccurrence, occurrenceDue } from './triggers.ts';
 
 /**
  * Subtasks are tasks with a `parentId`, nested to any depth. Every command here keeps two invariants:
@@ -70,20 +71,34 @@ export function nextSiblingOrder(tasks: readonly Task[], parentId: string): numb
 }
 
 /**
- * Completing a task completes every open subtask under it. A recurring task moves to its next occurrence
- * instead, and every subtask under it reopens, so each occurrence starts with a fresh checklist.
+ * A task on an event series moves past the occurrence it is on, and any missed before it, to the next one the
+ * calendar listed. With none left it completes, until iOS lists more.
+ */
+function nextEventOccurrence(task: Task, today: DateKey): { next: Due; fields: Pick<Task, 'event'> } | null {
+	const event = task.event;
+	if (!event?.series) return null;
+	const rest = event.occurrences.slice(event.occurrences.indexOf(currentOccurrence(event, today)) + 1);
+	if (!rest.length) return null;
+	return { next: occurrenceDue(event, rest[0]!), fields: { event: { ...event, occurrences: rest } } };
+}
+
+/**
+ * Completing a task completes every open subtask under it. A recurring task, or one on an event series, moves to its
+ * next occurrence instead, and every subtask under it reopens, so each occurrence starts with a fresh checklist.
  */
 export function completeTask(tasks: readonly Task[], id: string, today: DateKey, now: number): Completion | null {
 	const task = tasks.find(t => t.id === id);
 	if (!task) return null;
 	const descendants = descendantsOf(tasks, id);
-	const next = nextOccurrence(task, today);
+	const occurrence = nextOccurrence(task, today);
+	const series = nextEventOccurrence(task, today);
+	const next = occurrence ? { next: occurrence.due, fields: occurrence } : series;
 	if (!next) {
 		const changed = [task, ...descendants].filter(t => t.completedAt === null).map(t => ({ ...t, completedAt: now }));
 		return { kind: 'done', changed };
 	}
 	const reopened = descendants.filter(t => t.completedAt !== null).map(t => ({ ...t, completedAt: null }));
-	return { kind: 'rolled', next: next.due, changed: [{ ...task, ...next }, ...reopened] };
+	return { kind: 'rolled', next: next.next, changed: [{ ...task, ...next.fields }, ...reopened] };
 }
 
 /** Reopening a subtask reopens every completed task above it. */

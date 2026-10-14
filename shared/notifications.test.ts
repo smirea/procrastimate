@@ -23,6 +23,8 @@ const task = (id: string, patch: Partial<Task>): Task => ({
 	recurrence: null,
 	priority: 4,
 	reminders: [],
+	location: null,
+	event: null,
 	createdAt: 0,
 	completedAt: null,
 	...patch,
@@ -63,6 +65,31 @@ describe('upcomingNotifications', () => {
 			{ at: local(2026, 10, 15, 17), taskId: 'Gym', title: 'Gym', body: 'Due now' },
 			{ at: local(2026, 10, 20, 12), taskId: 'Lunch', title: 'Lunch', body: 'Due Tomorrow at 12:00 PM' },
 			{ at: local(2026, 10, 21, 12), taskId: 'Lunch', title: 'Lunch', body: 'Due now' },
+		]);
+	});
+
+	test('an event task names its event, and a due time at a place stays quiet', () => {
+		const tasks = [
+			task('Wear red', {
+				event: {
+					id: 'night',
+					title: 'Night out',
+					allDay: false,
+					series: false,
+					edge: 'before',
+					minutes: 30,
+					occurrences: [
+						{ start: local(2026, 10, 14, 20), end: local(2026, 10, 14, 23), original: local(2026, 10, 14, 20) },
+					],
+				},
+			}),
+			task('Milk', {
+				due: { date: '2026-10-14', time: '17:00' },
+				location: { name: 'Rewe', address: null, latitude: 52.5, longitude: 13.4, radius: 150, trigger: 'arrive' },
+			}),
+		];
+		expect(pushSchedule(tasks, NOW)).toEqual([
+			{ at: local(2026, 10, 14, 19, 30), taskId: 'Wear red', title: 'Wear red', body: '30m before Night out' },
 		]);
 	});
 

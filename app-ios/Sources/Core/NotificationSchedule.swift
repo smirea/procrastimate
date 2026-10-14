@@ -48,8 +48,9 @@ extension Notifications {
 
     /// Open tasks whose due time or a reminder came up after `since` and by `now`, like the web's `fireDueReminders`.
     public static func dueReminders(_ tasks: [TaskItem], since: Int, now: Int, in zone: TimeZone) -> [TaskItem] {
-        tasks.filter { task in
-            task.completedAt == nil && notificationTimes(task.due, task.reminders, in: zone).contains {
+        let today = Dates.toDateKey(Date(epochMilliseconds: now), in: zone)
+        return tasks.filter { task in
+            task.completedAt == nil && Triggers.taskNotificationTimes(task, today, in: zone).contains {
                 let at = $0.epochMilliseconds
                 return at > since && at <= now
             }

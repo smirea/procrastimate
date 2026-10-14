@@ -122,6 +122,7 @@ let handlers: [String: Handler] = [
     "name-search": nameSearchVector,
     "todoist": todoistVector,
     "dictation": dictationVector,
+    "triggers": triggersVector,
     "ramble": rambleVector,
 ]
 
@@ -173,7 +174,9 @@ private struct Occurrence: Decodable {
     case "progressOf": return try json(Subtasks.progressOf(a(0)))
     case "reopenTask": return try json(Subtasks.reopenTask(a(0), a(1)))
     case "completeTask":
-        guard let completion = Subtasks.completeTask(try a(0), try a(1), today: try a(2), now: try a(3)) else {
+        guard let completion = Subtasks.completeTask(
+            try a(0), try a(1), today: try a(2), now: try a(3), in: a.zone
+        ) else {
             return .null
         }
         switch completion {
@@ -190,11 +193,13 @@ private struct Occurrence: Decodable {
 
 @Sendable func viewsVector(_ fn: String, _ a: Args) throws -> JSONValue {
     switch fn {
-    case "inboxTasks": return try json(Views.inboxTasks(a(0)))
-    case "projectTasks": return try json(Views.projectTasks(a(0), a(1)))
-    case "labelTasks": return try json(Views.labelTasks(a(0), a(1)))
-    case "todayTasks": return try json(Views.todayTasks(a(0), a(1)))
-    case "upcomingGroups": return try json(Views.upcomingGroups(a(0), a(1)))
+    case "inboxTasks": return try json(Views.inboxTasks(a(0), in: a.zone))
+    case "projectTasks": return try json(Views.projectTasks(a(0), a(1), in: a.zone))
+    case "labelTasks": return try json(Views.labelTasks(a(0), a(1), in: a.zone))
+    case "placeTasks": return try json(Views.placeTasks(a(0), a(1), in: a.zone))
+    case "eventTasks": return try json(Views.eventTasks(a(0), a(1), a(2), in: a.zone))
+    case "todayTasks": return try json(Views.todayTasks(a(0), a(1), in: a.zone))
+    case "upcomingGroups": return try json(Views.upcomingGroups(a(0), a(1), in: a.zone))
     default: throw unknown(fn)
     }
 }
@@ -264,6 +269,8 @@ private func patch(_ value: JSONValue) throws -> TaskPatch {
         case "recurrence": patch.recurrence = .some(try decode(field))
         case "priority": patch.priority = try decode(field)
         case "reminders": patch.reminders = try decode(field)
+        case "location": patch.location = .some(try decode(field))
+        case "event": patch.event = .some(try decode(field))
         default: throw VectorError(description: "Unknown patch field \(key)")
         }
     }
@@ -290,7 +297,9 @@ private func completion(_ completion: Completion) throws -> JSONValue {
         return object(["data": try json(result.data), "task": try json(result.task)])
     case "updateTask": return try json(StoreRules.updateTask(data(), a(1), patch(a.values[2])))
     case "completeTask":
-        guard let result = StoreRules.completeTask(try data(), try a(1), today: try a(2), now: try a(3)) else {
+        guard let result = StoreRules.completeTask(
+            try data(), try a(1), today: try a(2), now: try a(3), in: a.zone
+        ) else {
             return .null
         }
         return object(["data": try json(result.data), "completion": try completion(result.completion)])
@@ -351,6 +360,22 @@ private struct ParseInput: Decodable {
 @Sendable func quickAddVector(_ fn: String, _ a: Args) throws -> JSONValue {
     switch fn {
     case "parseQuickAdd": return try json(QuickAdd.parse(a(0), a(1, as: ParseInput.self).options, in: a.zone))
+    default: throw unknown(fn)
+    }
+}
+
+// MARK: triggers.ts
+
+@Sendable func triggersVector(_ fn: String, _ a: Args) throws -> JSONValue {
+    switch fn {
+    case "currentOccurrence": return try json(Triggers.currentOccurrence(a(0), a(1), in: a.zone))
+    case "eventGroups": return try json(Triggers.eventGroups(a(0), a(1), in: a.zone))
+    case "formatEvent": return try json(Triggers.formatEvent(a(0)))
+    case "formatLocation": return try json(Triggers.formatLocation(a(0)))
+    case "placeGroups": return try json(Triggers.placeGroups(a(0)))
+    case "scheduledDue": return try json(Triggers.scheduledDue(a(0), a(1), in: a.zone))
+    case "taskNotificationTimes":
+        return try json(Triggers.taskNotificationTimes(a(0), a(1), in: a.zone).map(\.epochMilliseconds))
     default: throw unknown(fn)
     }
 }

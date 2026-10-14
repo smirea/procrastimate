@@ -50,7 +50,9 @@ export function withListDefaults(
 	today: DateKey,
 ): RambleQuickAdd {
 	const labelIds =
-		defaults.labelId && !fill.labelIds.includes(defaults.labelId) ? [defaults.labelId, ...fill.labelIds] : fill.labelIds;
+		defaults.labelId && !fill.labelIds.includes(defaults.labelId)
+			? [defaults.labelId, ...fill.labelIds]
+			: fill.labelIds;
 	return {
 		...fill,
 		due: fill.due ?? (defaults.today ? { date: today, time: null } : null),

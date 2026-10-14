@@ -53,6 +53,8 @@ test('notifications resolve and word their times in the given zone', () => {
 		recurrence: null,
 		priority: 4,
 		reminders: [{ kind: 'before', minutes: 1440 }],
+		location: null,
+		event: null,
 		createdAt: 0,
 		completedAt: null,
 	};

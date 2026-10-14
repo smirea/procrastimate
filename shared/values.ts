@@ -82,3 +82,52 @@ export const reminderSchema = z
 	// Each case is small, so Swift carries its fields inline: `.before(minutes:)` and `.at(date:time:)`.
 	.meta({ id: 'Reminder', 'x-inline': true });
 export type Reminder = z.infer<typeof reminderSchema>;
+
+/** What a place does for its task: notify on arrival, notify on leaving, or show the task while there. */
+export const locationTriggerSchema = z.enum(['arrive', 'leave', 'during']).meta({ id: 'LocationTrigger' });
+export type LocationTrigger = z.infer<typeof locationTriggerSchema>;
+
+/** A place picked from Apple Maps. iOS watches a circle of `radius` meters around it. */
+export const taskLocationSchema = z
+	.object({
+		name: z.string(),
+		address: z.string().nullable(),
+		latitude: z.number().min(-90).max(90),
+		longitude: z.number().min(-180).max(180),
+		radius: z.number().positive(),
+		trigger: locationTriggerSchema,
+	})
+	.meta({ id: 'TaskLocation' });
+export type TaskLocation = z.infer<typeof taskLocationSchema>;
+
+/** Where a task sits relative to its calendar event: `minutes` before the start, at the start, while it runs, or `minutes` after the end. */
+export const eventEdgeSchema = z.enum(['before', 'start', 'during', 'after']).meta({ id: 'EventEdge' });
+export type EventEdge = z.infer<typeof eventEdgeSchema>;
+
+const epochMs = z.number().int();
+
+/** `original` is EventKit's occurrence date, the start the calendar first gave it, which stays put when it moves. */
+export const eventOccurrenceSchema = z
+	.object({ start: epochMs, end: epochMs, original: epochMs })
+	.meta({ id: 'EventOccurrence' });
+export type EventOccurrence = z.infer<typeof eventOccurrenceSchema>;
+
+/**
+ * A calendar event a task hangs off instead of a due date. iOS reads the calendar and rewrites `title` and
+ * `occurrences` whenever the event moves, so every client and the push server see current times. `id` is EventKit's
+ * external identifier, which every occurrence of a repeating event shares. A task that follows the `series` lists
+ * its upcoming occurrences, soonest first; any other task lists its one occurrence. Each occurrence's original start
+ * finds it again after it moves.
+ */
+export const taskEventSchema = z
+	.object({
+		id: z.string(),
+		title: z.string(),
+		allDay: z.boolean(),
+		series: z.boolean(),
+		edge: eventEdgeSchema,
+		minutes: z.number().int().nonnegative(),
+		occurrences: z.array(eventOccurrenceSchema).min(1),
+	})
+	.meta({ id: 'TaskEvent' });
+export type TaskEvent = z.infer<typeof taskEventSchema>;

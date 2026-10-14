@@ -35,5 +35,13 @@ export const migrations: { tag: string; when: number; statements: string[] }[] =
 		"statements": [
 			"ALTER TABLE `settings` ADD `dictation` text DEFAULT 'native' NOT NULL;"
 		]
+	},
+	{
+		"tag": "0002_fluffy_thing",
+		"when": 1791915205024,
+		"statements": [
+			"ALTER TABLE `tasks` ADD `location` text;",
+			"ALTER TABLE `tasks` ADD `event` text;"
+		]
 	}
 ];

@@ -13,6 +13,7 @@ Procrastimate's concepts, goals, paradigms, and high-level system decisions, one
 - [Labels UI](labels.md): how labels show and are edited in rows, the sidebar, and pickers.
 - [Settings](settings.md): the sidebar Settings row, its popover or sheet, and what it holds.
 - [Todoist import](todoist-import.md): importing a Todoist backup zip, field mapping, nesting, and re-runs.
+- [Places and events](places-and-events.md): tasks on a place or a calendar event, their triggers, overdue rules, calendar sync, and the sidebar sections.
 - [Recurring tasks](recurrence.md): completing, next occurrences, and editing repeats.
 - [Search](search.md): matching, ranking, grouping, and the search sheet.
 - [Subtasks](subtasks.md): nested child tasks, where they show, completion, reorder, and delete rules.

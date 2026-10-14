@@ -22,6 +22,8 @@ const taskSchema = syncedTaskSchema.extend({
 	parentId: syncedTaskSchema.shape.parentId.default(null),
 	order: syncedTaskSchema.shape.order.default(0),
 	labelIds: syncedTaskSchema.shape.labelIds.default([]),
+	location: syncedTaskSchema.shape.location.default(null),
+	event: syncedTaskSchema.shape.event.default(null),
 	recurrence: z
 		.discriminatedUnion('unit', [
 			recurrenceSchema.options[0],

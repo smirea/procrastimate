@@ -413,6 +413,26 @@
 									"$ref": "#/components/schemas/Reminder"
 								}
 							},
+							"location": {
+								"anyOf": [
+									{
+										"$ref": "#/components/schemas/TaskLocation"
+									},
+									{
+										"type": "null"
+									}
+								]
+							},
+							"event": {
+								"anyOf": [
+									{
+										"$ref": "#/components/schemas/TaskEvent"
+									},
+									{
+										"type": "null"
+									}
+								]
+							},
 							"createdAt": {
 								"type": "integer",
 								"minimum": -9007199254740991,
@@ -608,6 +628,128 @@
 					}
 				],
 				"x-inline": true
+			},
+			"TaskLocation": {
+				"type": "object",
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"address": {
+						"type": [
+							"string",
+							"null"
+						]
+					},
+					"latitude": {
+						"type": "number",
+						"minimum": -90,
+						"maximum": 90
+					},
+					"longitude": {
+						"type": "number",
+						"minimum": -180,
+						"maximum": 180
+					},
+					"radius": {
+						"type": "number",
+						"exclusiveMinimum": 0
+					},
+					"trigger": {
+						"$ref": "#/components/schemas/LocationTrigger"
+					}
+				},
+				"required": [
+					"name",
+					"address",
+					"latitude",
+					"longitude",
+					"radius",
+					"trigger"
+				]
+			},
+			"LocationTrigger": {
+				"type": "string",
+				"enum": [
+					"arrive",
+					"leave",
+					"during"
+				]
+			},
+			"TaskEvent": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"title": {
+						"type": "string"
+					},
+					"allDay": {
+						"type": "boolean"
+					},
+					"series": {
+						"type": "boolean"
+					},
+					"edge": {
+						"$ref": "#/components/schemas/EventEdge"
+					},
+					"minutes": {
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 9007199254740991
+					},
+					"occurrences": {
+						"minItems": 1,
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/EventOccurrence"
+						}
+					}
+				},
+				"required": [
+					"id",
+					"title",
+					"allDay",
+					"series",
+					"edge",
+					"minutes",
+					"occurrences"
+				]
+			},
+			"EventEdge": {
+				"type": "string",
+				"enum": [
+					"before",
+					"start",
+					"during",
+					"after"
+				]
+			},
+			"EventOccurrence": {
+				"type": "object",
+				"properties": {
+					"start": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991
+					},
+					"end": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991
+					},
+					"original": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991
+					}
+				},
+				"required": [
+					"start",
+					"end",
+					"original"
+				]
 			},
 			"ProjectPatch": {
 				"type": "object",
@@ -910,6 +1052,26 @@
 									"$ref": "#/components/schemas/ReminderOutput"
 								}
 							},
+							"location": {
+								"anyOf": [
+									{
+										"$ref": "#/components/schemas/TaskLocationOutput"
+									},
+									{
+										"type": "null"
+									}
+								]
+							},
+							"event": {
+								"anyOf": [
+									{
+										"$ref": "#/components/schemas/TaskEventOutput"
+									},
+									{
+										"type": "null"
+									}
+								]
+							},
 							"createdAt": {
 								"type": "integer",
 								"minimum": -9007199254740991,
@@ -1072,6 +1234,114 @@
 					}
 				],
 				"x-inline": true
+			},
+			"TaskLocationOutput": {
+				"type": "object",
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"address": {
+						"type": [
+							"string",
+							"null"
+						]
+					},
+					"latitude": {
+						"type": "number",
+						"minimum": -90,
+						"maximum": 90
+					},
+					"longitude": {
+						"type": "number",
+						"minimum": -180,
+						"maximum": 180
+					},
+					"radius": {
+						"type": "number",
+						"exclusiveMinimum": 0
+					},
+					"trigger": {
+						"$ref": "#/components/schemas/LocationTrigger"
+					}
+				},
+				"required": [
+					"name",
+					"address",
+					"latitude",
+					"longitude",
+					"radius",
+					"trigger"
+				],
+				"additionalProperties": false
+			},
+			"TaskEventOutput": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"title": {
+						"type": "string"
+					},
+					"allDay": {
+						"type": "boolean"
+					},
+					"series": {
+						"type": "boolean"
+					},
+					"edge": {
+						"$ref": "#/components/schemas/EventEdge"
+					},
+					"minutes": {
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 9007199254740991
+					},
+					"occurrences": {
+						"minItems": 1,
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/EventOccurrenceOutput"
+						}
+					}
+				},
+				"required": [
+					"id",
+					"title",
+					"allDay",
+					"series",
+					"edge",
+					"minutes",
+					"occurrences"
+				],
+				"additionalProperties": false
+			},
+			"EventOccurrenceOutput": {
+				"type": "object",
+				"properties": {
+					"start": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991
+					},
+					"end": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991
+					},
+					"original": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991
+					}
+				},
+				"required": [
+					"start",
+					"end",
+					"original"
+				],
+				"additionalProperties": false
 			},
 			"ProjectPatchOutput": {
 				"type": "object",
@@ -1280,6 +1550,26 @@
 							"$ref": "#/components/schemas/ReminderOutput"
 						}
 					},
+					"location": {
+						"anyOf": [
+							{
+								"$ref": "#/components/schemas/TaskLocationOutput"
+							},
+							{
+								"type": "null"
+							}
+						]
+					},
+					"event": {
+						"anyOf": [
+							{
+								"$ref": "#/components/schemas/TaskEventOutput"
+							},
+							{
+								"type": "null"
+							}
+						]
+					},
 					"createdAt": {
 						"type": "integer",
 						"minimum": -9007199254740991,
@@ -1313,6 +1603,8 @@
 					"recurrence",
 					"priority",
 					"reminders",
+					"location",
+					"event",
 					"createdAt",
 					"completedAt"
 				],

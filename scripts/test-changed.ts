@@ -47,12 +47,12 @@ for (const file of files) {
 		continue;
 	}
 	if (!file.endsWith('.ts') && !file.endsWith('.svelte')) continue;
-	add(join(root, file.replace(/\.ts$/, '.test.ts')));
+	if (file.endsWith('.ts')) add(join(root, file.replace(/\.ts$/, '.test.ts')));
 	const name = basename(file)
 		.replace(/\.tsx?$/, '')
 		.replace(/\.svelte$/, '');
 	if (name.length < 3 || skipImportNames.has(name)) continue;
-	const imported = new RegExp(`['"\`][^'"\`]*${name}(?:\\.ts)?['"\`]`);
+	const imported = new RegExp(`['"\`][^'"\`]*${RegExp.escape(name)}(?:\\.ts)?['"\`]`);
 	for (const testFile of allTests) {
 		if (imported.test(readFileSync(testFile, 'utf8'))) add(testFile);
 	}

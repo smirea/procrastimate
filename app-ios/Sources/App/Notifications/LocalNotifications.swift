@@ -235,6 +235,15 @@ final class LocalNotifications: NSObject {
         store.markRemindersChecked(at: now)
     }
 
+    /// A place crossing while the app is open, which no schedule knows about, shows like a reminder toast.
+    fileprivate func showPlaceToast(_ taskId: String, title: String, body: String) {
+        toasts.show(
+            "\(title) · \(body)",
+            action: .init(label: "Open") { [navigator] in navigator.openTask(taskId) },
+            for: .seconds(12)
+        )
+    }
+
     fileprivate func open(_ taskId: String) {
         guard store.task(taskId) != nil else { return }
         navigator.openTask(taskId)
@@ -248,8 +257,14 @@ extension LocalNotifications: UNUserNotificationCenterDelegate {
         _ center: UNUserNotificationCenter,
         willPresent notification: UNNotification
     ) async -> UNNotificationPresentationOptions {
-        let isTest = notification.request.identifier == Self.testID
-        await MainActor.run { self.fireDueReminders() }
+        let request = notification.request
+        let isTest = request.identifier == Self.testID
+        let place = request.identifier.hasPrefix(PlaceMonitor.notificationPrefix)
+            ? (request.content.userInfo["taskId"] as? String, request.content.title, request.content.body) : nil
+        await MainActor.run {
+            self.fireDueReminders()
+            if let place, let taskId = place.0 { self.showPlaceToast(taskId, title: place.1, body: place.2) }
+        }
         return isTest ? [.banner, .sound] : []
     }
 

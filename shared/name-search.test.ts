@@ -38,6 +38,8 @@ const task = (projectId: string | null, createdAt: number, labelIds: string[] = 
 	recurrence: null,
 	priority: 4,
 	reminders: [],
+	location: null,
+	event: null,
 	createdAt,
 	completedAt: null,
 });
