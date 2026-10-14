@@ -25,19 +25,19 @@
 	{#if due.overdue.length}
 		<section class="mb-6" aria-label="Overdue">
 			<h2 class="section-heading text-[var(--tone-overdue)]">Overdue</h2>
-			<TaskList tasks={due.overdue} showProject label="Overdue tasks" />
+			<TaskList tasks={due.overdue} showProject="assigned" label="Overdue tasks" />
 		</section>
 	{/if}
 	{#if due.today.length}
 		<section class="mb-6" aria-label="Today">
 			<h2 class="section-heading">Today</h2>
-			<TaskList tasks={due.today} showProject timeOnly label="Today tasks" />
+			<TaskList tasks={due.today} showProject="assigned" timeOnly label="Today tasks" />
 		</section>
 	{/if}
 	{#each days as group (group.date)}
 		<section class="mb-6" aria-label={dayHeading(group.date, clock.today)} animate:flip={motion({ duration: 240, easing: cubicOut })} transition:fade={motion({ duration: 160 })}>
 			<h2 class="section-heading">{dayHeading(group.date, clock.today)}</h2>
-			<TaskList tasks={group.tasks} showProject timeOnly label={`Tasks on ${group.date}`} />
+			<TaskList tasks={group.tasks} showProject="assigned" timeOnly label={`Tasks on ${group.date}`} />
 		</section>
 	{/each}
 </View>

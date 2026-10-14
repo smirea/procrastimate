@@ -18,21 +18,21 @@ struct InboxScreen: View {
         ) {
             if !due.overdue.isEmpty {
                 Section {
-                    ForEach(due.overdue) { TaskRow(task: $0, showProject: true) }
+                    ForEach(due.overdue) { TaskRow(task: $0, showProject: $0.projectId != nil) }
                 } header: {
                     ListHeading(text: "Overdue", tone: .toneOverdue)
                 }
             }
             if !due.today.isEmpty {
                 Section {
-                    ForEach(due.today) { TaskRow(task: $0, showProject: true, timeOnly: true) }
+                    ForEach(due.today) { TaskRow(task: $0, showProject: $0.projectId != nil, timeOnly: true) }
                 } header: {
                     ListHeading(text: "Today")
                 }
             }
             ForEach(days, id: \.date) { group in
                 Section {
-                    ForEach(group.tasks) { TaskRow(task: $0, showProject: true, timeOnly: true) }
+                    ForEach(group.tasks) { TaskRow(task: $0, showProject: $0.projectId != nil, timeOnly: true) }
                 } header: {
                     ListHeading(text: Format.dayHeading(group.date, today))
                 }
