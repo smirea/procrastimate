@@ -9,8 +9,10 @@
 	import CaretLeft from 'phosphor-svelte/lib/CaretLeft';
 	import CalendarStar from 'phosphor-svelte/lib/CalendarStar';
 	import MapPin from 'phosphor-svelte/lib/MapPin';
+	import Waveform from 'phosphor-svelte/lib/Waveform';
 	import { formatDue } from 'shared/format.ts';
 	import { formatEvent, formatLocation, scheduledDue } from 'shared/triggers.ts';
+	import { parseMemoSource } from 'shared/memo-tasks.ts';
 	import { parseQuickAdd } from 'shared/quick-add.ts';
 	import type { Task } from 'shared/task.ts';
 	import SmartInput from './SmartInput.svelte';
@@ -167,6 +169,12 @@
 			value={task.notes}
 			oninput={(e) => update({ notes: e.currentTarget.value })}
 		></textarea>
+		{#if parseMemoSource(task.sourceKey)}
+			<!-- A browser cannot open the phone app, so the line is not a link. -->
+			<p class="flex items-center gap-1.5 text-[13px] text-muted" title="Opens on iPhone">
+				<Waveform size={14} />Voice memo
+			</p>
+		{/if}
 		<Subtasks {task} />
 	</div>
 	<footer class="border-t border-ink/5 px-4 py-3 touch:py-2">
