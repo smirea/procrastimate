@@ -33,7 +33,6 @@ function color(tokens: Tokens, value: string): Rgba | undefined {
 	return undefined;
 }
 
-/** `--color-on-accent` and `--glass-strong-bg` become `onAccent` and `glassStrongBg`. */
 const swiftName = (token: string) =>
 	token.replace(/^--(color-)?/, '').replace(/-([a-z0-9])/g, (_, c: string) => c.toUpperCase());
 
@@ -42,7 +41,6 @@ const literal = ([r, g, b, a]: Rgba) => {
 	return a === 1 ? `SRGB(${hex})` : `SRGB(${hex}, ${a})`;
 };
 
-/** An asset catalog color with the token's light and dark values. */
 const colorset = (lightValue: Rgba, darkValue: Rgba) => {
 	const entry = ([r, g, b, a]: Rgba) => ({
 		'color-space': 'srgb',
@@ -60,7 +58,6 @@ const colorset = (lightValue: Rgba, darkValue: Rgba) => {
 	return `${JSON.stringify({ colors, info: { author: 'xcode', version: 1 } }, null, '\t')}\n`;
 };
 
-/** Every generated file, keyed by its path under `app-ios/`. */
 function generate(css: string): Record<string, string> {
 	const light = { ...block(css, '@theme'), ...block(css, ':root') };
 	const dark = { ...light, ...block(css, ":root[data-theme='dark']") };

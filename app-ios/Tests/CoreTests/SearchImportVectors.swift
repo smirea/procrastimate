@@ -1,16 +1,12 @@
 import Core
 import Foundation
 
-// MARK: csv.ts
-
 @Sendable func csvVector(_ fn: String, _ a: Args) throws -> JSONValue {
     switch fn {
     case "parseCsv": return try json(CSV.parseCsv(a(0)))
     default: throw unknown(fn)
     }
 }
-
-// MARK: search.ts
 
 private struct SearchNames: Decodable {
     let projects: [Project]
@@ -28,8 +24,6 @@ private struct SearchNames: Decodable {
     }
 }
 
-// MARK: name-search.ts
-
 @Sendable func nameSearchVector(_ fn: String, _ a: Args) throws -> JSONValue {
     switch fn {
     case "sigilFragment":
@@ -42,8 +36,6 @@ private struct SearchNames: Decodable {
     default: throw unknown(fn)
     }
 }
-
-// MARK: todoist.ts
 
 private struct MergeOptions: Decodable {
     let now: Int

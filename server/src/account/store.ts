@@ -27,7 +27,6 @@ export interface AccountStore {
 
 	/** Appends one row and returns its `seq`, which starts at 1. */
 	appendLog(entry: Omit<LogRow, 'seq'>): number;
-	/** Rows with `seq` greater than `after`, in order, at most `limit` of them. */
 	logAfter(after: number, limit: number): LogRow[];
 	hasOp(opId: string): boolean;
 	/** The highest `seq`, or 0 when the log is empty. */
@@ -40,9 +39,7 @@ export interface AccountStore {
 	epoch(): number;
 	setEpoch(epoch: number): void;
 
-	/** Every device with a push subscription. */
 	pushTargets(): PushTarget[];
-	/** Adds or replaces the device's target. */
 	putPushTarget(target: PushTarget): void;
 	deletePushTarget(deviceId: string): void;
 

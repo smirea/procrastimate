@@ -114,7 +114,6 @@ function snapshot(project: string) {
     return hash.digest("hex");
 }
 
-/** The repository's generator writes `Sources/Core/Generated/API.swift` from the server contract. */
 const generator = join(root, "../scripts/generate/index.ts");
 
 async function deploy(target: Target, project: string) {

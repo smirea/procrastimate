@@ -92,7 +92,6 @@ export const emptySnapshot = (now: number): Snapshot => ({
 	remindersCheckedAt: now,
 });
 
-/** Reads a stored document, or starts empty when it is missing or invalid. */
 export function parseSnapshot(value: unknown, now: number): Snapshot {
 	const parsed = snapshotSchema.safeParse(value);
 	return parsed.success ? parsed.data : emptySnapshot(now);

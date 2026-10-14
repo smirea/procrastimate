@@ -85,7 +85,6 @@ class Store {
 		saveSnapshot({ ...this.#data, remindersCheckedAt: this.remindersCheckedAt, sync: this.#sync });
 	}
 
-	/** This install's id. Present once the document has loaded in a browser. */
 	deviceId() {
 		return this.#sync?.deviceId;
 	}
@@ -94,7 +93,6 @@ class Store {
 		return this.#sync !== undefined;
 	}
 
-	/** Ops waiting for the server to acknowledge them. */
 	get pending() {
 		return this.#sync?.outbox.length ?? 0;
 	}
@@ -210,7 +208,6 @@ class Store {
 		return this.labels.find(l => l.id === id);
 	}
 
-	/** A task's labels in the order they were added, skipping any that were deleted. */
 	labelsOf(task: Pick<Task, 'labelIds'>) {
 		return task.labelIds.map(id => this.label(id)).filter(label => label !== undefined);
 	}

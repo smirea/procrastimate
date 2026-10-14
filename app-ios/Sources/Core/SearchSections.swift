@@ -1,5 +1,3 @@
-/// How the search sheet lays out `Search.Results`, like the web's `Search.svelte`: Projects, Labels, Tasks, and
-/// Completed, each with its best few rows and the full count in its header, skipping empty groups.
 public enum SearchSections {
     public static let limits = (projects: 5, labels: 5, open: 30, completed: 15)
 

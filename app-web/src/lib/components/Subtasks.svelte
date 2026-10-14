@@ -48,7 +48,6 @@
 	}
 
 	let list: HTMLUListElement;
-	/** While the dragged row follows the pointer, the rows it passes slide one step out of its way. */
 	type Drag = { id: string; pointerId: number; startY: number; dy: number; from: number; to: number; mids: number[]; step: number };
 	let drag = $state<Drag | null>(null);
 	let settling = $state(false);

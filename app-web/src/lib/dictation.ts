@@ -31,7 +31,6 @@ export function speechRecognitionConstructor(): (new () => SpeechSession) | null
 	return host.SpeechRecognition ?? host.webkitSpeechRecognition ?? null;
 }
 
-/** Joins the text already committed with this session's final and interim pieces. */
 export function dictationText(
 	committed: string,
 	results: ArrayLike<SpeechPiece>,

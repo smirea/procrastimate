@@ -51,5 +51,4 @@ export const api: ApiClient = createORPCClient(
 	}),
 );
 
-/** A `401`, which ends the session. */
 export const isUnauthorized = (error: unknown) => error instanceof ORPCError && error.code === 'UNAUTHORIZED';

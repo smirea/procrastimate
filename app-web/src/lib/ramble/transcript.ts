@@ -1,4 +1,3 @@
-/** Joins committed utterances with the partial that replaces the tail. */
 export function joinTranscript(committed: string, partial: string): { text: string; partialStart: number } {
 	const tail = partial.trim();
 	if (!committed) return { text: tail, partialStart: 0 };

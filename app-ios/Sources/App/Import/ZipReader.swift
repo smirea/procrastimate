@@ -20,7 +20,6 @@ enum ZipReader {
     private static let centralDirectoryHeader: UInt32 = 0x0201_4B50
     private static let localFileHeader: UInt32 = 0x0403_4B50
 
-    /// Every file entry whose name passes `include`, in central directory order. Folders are skipped.
     static func entries(of archive: Data, include: (String) -> Bool = { _ in true }) throws(Failure) -> [Entry] {
         let bytes = [UInt8](archive)
         let end = try findEndOfCentralDirectory(bytes)

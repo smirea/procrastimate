@@ -45,7 +45,6 @@ const replace = (tasks: readonly Task[], changed: readonly Task[]) => {
 const nameTaken = (items: readonly { id: string; name: string }[], name: string, except?: string) =>
 	items.some(i => i.id !== except && i.name.toLowerCase() === name.toLowerCase());
 
-/** Reverts the entities one command changed, as the store's undo does. */
 function undo(current: Snapshot, before: Snapshot, after: Snapshot): Snapshot {
 	const touched = new Set(diff(before, after).map(p => `${p.kind}:${p.id}`));
 	return KINDS.reduce((s, kind) => {

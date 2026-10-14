@@ -1,7 +1,6 @@
 import Core
 import SwiftUI
 
-/// Runs an intent against the live store when the app is up, and against the snapshot file when a query arrives first.
 @MainActor
 enum IntentEffects {
     static func snapshot() -> (Snapshot, AppClock) {
@@ -232,7 +231,6 @@ enum IntentEffects {
         }
     }
 
-    /// Open tasks for a full Spotlight rebuild.
     static func spotlightEntities() -> [TaskEntity] {
         let (snapshot, clock) = snapshot()
         return IntentRules.indexedTasks(snapshot.tasks).map { entity($0, snapshot, clock) }

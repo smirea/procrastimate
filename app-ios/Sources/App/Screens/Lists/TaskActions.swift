@@ -2,7 +2,6 @@ import Core
 import Observation
 import SwiftUI
 
-/// Completing and deleting from any list, each with an undo toast, plus the success haptic that `RootView` plays.
 @MainActor @Observable
 final class TaskActions {
     private(set) var completions = 0
@@ -17,7 +16,6 @@ final class TaskActions {
         self.clock = clock
     }
 
-    /// Completes a task, or moves a repeating one to its next occurrence. The spoken text matches the undo toast.
     @discardableResult
     func complete(_ task: TaskItem) -> String? {
         guard let completion = withAnimation(.snappy, { store.completeTask(task.id) }) else { return nil }

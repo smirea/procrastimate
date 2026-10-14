@@ -83,9 +83,6 @@ const metadataOf = (task: Shape | RambleTask): number =>
 	task.reminders.length +
 	task.subtasks.reduce((sum: number, s: Shape | RambleTask) => sum + metadataOf(s), 0);
 
-// ---------------------------------------------------------------------------------------------------
-// The scorer.
-
 const normalizeTitle = (title: string) =>
 	title
 		.toLowerCase()
@@ -93,7 +90,6 @@ const normalizeTitle = (title: string) =>
 		.replaceAll(/\s+/g, ' ')
 		.trim();
 
-/** Pairs tasks with the same normalized title first, then the rest in order. */
 function align(expected: Shape[], actual: Shape[]): Array<[Shape, Shape | null]> {
 	const free = new Set(actual.map((_, i) => i));
 	const pairs: Array<[Shape, number | null]> = expected.map(e => {
@@ -205,8 +201,6 @@ function score(results: Array<{ item: RambleCase; draft: RambleDraft }>): Score 
 }
 
 const percent = (t: Tally) => `${(rate(t) * 100).toFixed(1)}% (${t.hits}/${t.total})`;
-
-// ---------------------------------------------------------------------------------------------------
 
 test('the corpus is large, unique, and scores only non-precision cases', () => {
 	expect(CORPUS.length).toBeGreaterThanOrEqual(300);

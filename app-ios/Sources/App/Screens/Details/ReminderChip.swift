@@ -1,8 +1,7 @@
 import Core
 import SwiftUI
 
-/// The reminders chip and its popover: the task's reminders with `Remove reminder`, presets before the due time, and
-/// a custom date and time. On an event task the presets count back from the event's moment and stand alone.
+/// On an event task the presets count back from the event's moment and stand alone.
 struct ReminderChip: View {
     @Environment(\.clock) private var clock
     let reminders: [Reminder]

@@ -3,7 +3,6 @@ import Foundation
 /// The date and recurrence rules of `shared/task.ts`. Calendar dates are civil (no zone), and only turning a date and
 /// time into a moment takes a time zone, which the caller passes in.
 public enum Dates {
-    // MARK: Civil dates
 
     /// Days since 1970-01-01 for a proleptic Gregorian date, from Howard Hinnant's `days_from_civil`.
     static func days(year: Int, month: Int, day: Int) -> Int {
@@ -147,7 +146,6 @@ public enum Dates {
         return (Due(date: date, time: due?.time), shifted)
     }
 
-    // MARK: Moments
 
     /// The moment a local date and time happen in `zone`, resolved like JavaScript's `new Date(y, m, d, h, min)`: a
     /// repeated hour takes its first occurrence, and a skipped hour moves forward by the gap.
@@ -167,7 +165,6 @@ public enum Dates {
         return Date(timeIntervalSince1970: seconds - Double(before))
     }
 
-    /// The local calendar date a moment falls on in `zone`.
     public static func toDateKey(_ date: Date, in zone: TimeZone) -> DateKey {
         let local = date.timeIntervalSince1970 + Double(zone.secondsFromGMT(for: date))
         return key(days: Int((local / 86400).rounded(.down)))
@@ -184,6 +181,5 @@ extension Date {
 }
 
 extension AppClock {
-    /// Today's local date.
     public var today: DateKey { Dates.toDateKey(now, in: timeZone) }
 }

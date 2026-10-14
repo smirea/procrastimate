@@ -15,20 +15,15 @@ export const RAMBLE_SOCKET_PROTOCOL = 'procrastimate.ramble';
 
 export const RAMBLE_SAMPLE_RATE = 16_000;
 export const RAMBLE_BYTES_PER_SECOND = RAMBLE_SAMPLE_RATE * 2;
-/** One 100 ms frame. */
 export const RAMBLE_FRAME_BYTES = RAMBLE_BYTES_PER_SECOND / 10;
-/** The largest frame the server accepts, one second of audio. */
 export const RAMBLE_MAX_FRAME_BYTES = RAMBLE_BYTES_PER_SECOND;
 
-/** Audio seconds one session may stream before the server ends it. */
 export const RAMBLE_SESSION_SECONDS = 5 * 60;
-/** Audio seconds all sessions may stream per day in the account's time zone. */
 export const RAMBLE_DAILY_SECONDS = 60 * 60;
 
 export const rambleClientMessageSchema = z.object({ type: z.literal('stop') }).meta({ id: 'RambleClientMessage' });
 export type RambleClientMessage = z.infer<typeof rambleClientMessageSchema>;
 
-/** Why a session ended: the client stopped, a cap was reached, the socket went quiet, or transcription failed. */
 export const RAMBLE_END_REASONS = ['stopped', 'session-limit', 'daily-limit', 'idle', 'error'] as const;
 export const rambleEndReasonSchema = z.enum(RAMBLE_END_REASONS).meta({ id: 'RambleEndReason' });
 export type RambleEndReason = (typeof RAMBLE_END_REASONS)[number];

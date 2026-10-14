@@ -14,7 +14,6 @@ struct SmartInput: View {
     let label: String
     var placeholder = ""
     var suggestProjects = true
-    /// Where the open suggestion list's `#` or `@` sits, or nil while no list shows.
     var listAt: Binding<Int?> = .constant(nil)
     var focused: FocusState<Bool>.Binding
     let onSubmit: () -> Void
@@ -24,13 +23,11 @@ struct SmartInput: View {
     @State private var active = 0
     /// Arrow keys were used, so Return picks even when the typed name already matches.
     @State private var navigated = false
-    /// The sigil position dismissed with Escape.
     @State private var dismissed: Int?
     /// The text this editor last wrote or showed. Typing can run ahead of rendering, so `onChange(of: text)` may
     /// still report an older keystroke, which must not overwrite the newer editor contents.
     @State private var written = ""
     #if DEBUG
-    /// What the focused editor renders tinted, read back from its text storage for UI tests.
     @State private var rendered = ""
     #endif
 
@@ -116,7 +113,6 @@ struct SmartInput: View {
         return navigated || !named ? match.suggestions[min(active, match.suggestions.count - 1)] : nil
     }
 
-    /// Hardware keys while suggestions are open, like the web's `handleKeydown`.
     private func pressed(_ key: KeyEquivalent) -> KeyPress.Result {
         guard let match else { return .ignored }
         let count = match.suggestions.count
@@ -166,7 +162,6 @@ struct SmartInput: View {
         text = value
     }
 
-    /// The text changed from outside, as after saving, `Keep as text`, or a pick.
     private func replaceIfNeeded() {
         guard text != written, text != String(attributed.characters) else { return }
         replace(with: text, caret: text.utf16.count)

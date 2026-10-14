@@ -22,7 +22,6 @@ enum SpotlightIndex {
         }
     }
 
-    /// Replaces every indexed task. Spotlight calls this, through the task query, when it rebuilds the index.
     static func replaceAll(_ entities: [TaskEntity]) async throws {
         let spotlight = CSSearchableIndex.default()
         try await spotlight.deleteAppEntities(ofType: TaskEntity.self)
@@ -30,7 +29,6 @@ enum SpotlightIndex {
         try await spotlight.indexAppEntities(entities, priority: 0)
     }
 
-    /// Puts `entities` into the index and removes `ids` that are completed or gone.
     static func replace(_ entities: [TaskEntity], removing ids: [String]) async throws {
         let spotlight = CSSearchableIndex.default()
         if !ids.isEmpty {

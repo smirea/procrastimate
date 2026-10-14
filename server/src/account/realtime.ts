@@ -17,7 +17,6 @@ import { authenticate, type AccountRoute } from '../auth';
 
 export type Socket = { send(message: string): void; close(code: number, reason: string): void };
 
-/** What a streaming socket hears: text or binary messages, then one close. */
 export type StreamEvents = { message(data: string | Uint8Array): void; close(): void };
 
 /**
@@ -34,9 +33,7 @@ export type SocketHost = {
 
 export type Realtime = {
 	accept: SocketHost['accept'];
-	/** Tells every open socket the log's new head. */
 	nudge(cursor: number): void;
-	/** Closes a removed device's sockets. */
 	revoke(deviceId: string): void;
 };
 

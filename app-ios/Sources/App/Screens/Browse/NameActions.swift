@@ -1,9 +1,6 @@
 import SwiftUI
 
-/// The `Project actions` or `Label actions` toolbar menu: `Rename` in an alert prefilled with the name, and a
-/// destructive delete behind a confirmation that returns to the previous screen, like the web's header popover.
 struct NameActions: ViewModifier {
-    /// `project` or `label`, as the web words it.
     let noun: String
     let name: String
     let deletePrompt: String

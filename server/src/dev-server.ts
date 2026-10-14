@@ -11,7 +11,6 @@ import api from './api';
 import type { Env } from './bindings';
 import { originalRequest } from './request-user';
 
-/** A nudge socket carries its device; a streaming socket carries the `start` its route passed, then its handlers. */
 type SocketData =
 	| { kind: 'nudge'; deviceId: string }
 	| { kind: 'stream'; start: (socket: Socket) => StreamEvents; events?: StreamEvents };

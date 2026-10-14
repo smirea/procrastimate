@@ -256,7 +256,6 @@ private struct QuickAddForm: View {
     }
 }
 
-// MARK: Chips
 
 private struct ParsedReminder: Hashable {
     let token: QuickAdd.Token
@@ -286,7 +285,6 @@ struct Chip: View {
 }
 
 extension View {
-    /// Adds `Keep as text` after a chip whose value came from the text.
     @ViewBuilder
     func keepAsText(_ action: (() -> Void)?) -> some View {
         if let action {
@@ -439,7 +437,6 @@ struct ProjectChip: View {
     }
 }
 
-/// Lays chips out in rows, wrapping like the web's chip row.
 struct FlowLayout: Layout {
     var spacing: CGFloat
 

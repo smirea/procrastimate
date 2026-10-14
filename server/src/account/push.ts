@@ -35,7 +35,6 @@ function computeNotifications(store: AccountStore, now: number): ScheduledPush[]
 	return upcomingNotifications(tasks, now - STALE_AFTER_MS - 1, Number.POSITIVE_INFINITY, zone);
 }
 
-/** Replans every subscribed device against the synced tasks. Returns when the alarm should fire, or null. */
 export function replan(store: AccountStore, now: number): number | null {
 	return store.transaction(() => {
 		const list = targets(store);
@@ -52,7 +51,6 @@ export function replan(store: AccountStore, now: number): number | null {
 	});
 }
 
-/** Replans and arms the alarm. */
 export async function refreshPush({ store, now, setAlarm }: AccountContext) {
 	await setAlarm(replan(store, now));
 }

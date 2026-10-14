@@ -43,7 +43,6 @@ function dropOrder(tables: string[], parentsOf: (table: string) => string[]): st
 	return order;
 }
 
-/** What to run: every migration after a wipe, or the ones this database has not had. */
 function plan(tables: string[], applied: number[], parentsOf: (table: string) => string[]): SQL[] {
 	const history = migrations.map(migration => migration.when);
 	// An empty history is ours only on an empty database, so a rebuild that failed halfway runs again.

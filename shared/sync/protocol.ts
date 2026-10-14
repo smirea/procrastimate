@@ -9,17 +9,10 @@ import {
 import { hlcSchema } from '../db/json.ts';
 import { KINDS, type Kind } from './kinds.ts';
 
-/**
- * The wire format of `POST /api/sync`. An op carries the new values of the fields one command changed
- * on one entity, plus `deleted` for a delete or an undelete. A change is a log row: the fields of one
- * op that won on the server, in server order.
- */
-
 export { KINDS, type Kind } from './kinds.ts';
 
 export const kindSchema = z.enum(KINDS).meta({ id: 'EntityKind' });
 
-/** The id of the one settings record. */
 export const SETTINGS_ID = 'settings';
 
 /**
@@ -91,7 +84,6 @@ export const PATCH_SCHEMAS = {
 	settings: patchOf('settings', 'SettingsPatch'),
 } as const;
 
-/** One entity's changed fields, before it gets an op id and a clock. */
 export const patchSchema = z.discriminatedUnion('kind', [
 	PATCH_SCHEMAS.task,
 	PATCH_SCHEMAS.project,
@@ -105,7 +97,6 @@ const hlc = hlcSchema;
 export const opSchema = z.intersection(patchSchema, z.object({ opId: z.string(), hlc })).meta({ id: 'Op' });
 export type Op = z.infer<typeof opSchema>;
 
-/** A log row as clients see it. */
 export const changeSchema = z
 	.intersection(patchSchema, logRowSchema.pick({ opId: true }).extend({ seq: logRowSchema.shape.seq.positive() }))
 	.meta({ id: 'Change' });
@@ -122,7 +113,6 @@ export const syncRequestSchema = z
 		ops: z.array(opSchema),
 		/** The wipe generation this client last applied. A lower one means its copy was cleared on another device. */
 		epoch: z.number().int().nonnegative().default(0),
-		/** Wipe task data before applying `ops`, then bump the epoch. */
 		reset: z.boolean().optional(),
 	})
 	.meta({ id: 'SyncRequest' });

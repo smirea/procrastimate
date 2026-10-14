@@ -71,7 +71,6 @@ struct VectorError: Error, CustomStringConvertible {
     let description: String
 }
 
-/// A case's recorded arguments, decoded on demand into the types the Swift function takes.
 struct Args {
     let values: [JSONValue]
     let zone: TimeZone
@@ -105,7 +104,6 @@ func unknown(_ fn: String) -> VectorError { VectorError(description: "No Swift h
 
 typealias Handler = @Sendable (String, Args) throws -> JSONValue
 
-/// Empty once every recorded module has a Swift handler.
 private let pendingPorts: Set<String> = []
 
 let handlers: [String: Handler] = [
@@ -125,8 +123,6 @@ let handlers: [String: Handler] = [
     "triggers": triggersVector,
     "ramble": rambleVector,
 ]
-
-// MARK: task.ts
 
 private struct Occurrence: Decodable {
     let due: Due?
@@ -161,8 +157,6 @@ private struct Occurrence: Decodable {
     }
 }
 
-// MARK: subtasks.ts
-
 @Sendable func subtasksVector(_ fn: String, _ a: Args) throws -> JSONValue {
     switch fn {
     case "ancestorsOf": return try json(Subtasks.ancestorsOf(a(0), a(1)))
@@ -189,8 +183,6 @@ private struct Occurrence: Decodable {
     }
 }
 
-// MARK: views.ts
-
 @Sendable func viewsVector(_ fn: String, _ a: Args) throws -> JSONValue {
     switch fn {
     case "inboxTasks": return try json(Views.inboxTasks(a(0), in: a.zone))
@@ -203,8 +195,6 @@ private struct Occurrence: Decodable {
     default: throw unknown(fn)
     }
 }
-
-// MARK: format.ts
 
 @Sendable func formatVector(_ fn: String, _ a: Args) throws -> JSONValue {
     switch fn {
@@ -227,8 +217,6 @@ private struct Occurrence: Decodable {
     }
 }
 
-// MARK: notifications.ts
-
 @Sendable func notificationsVector(_ fn: String, _ a: Args) throws -> JSONValue {
     switch fn {
     case "notificationBody":
@@ -246,8 +234,6 @@ private struct Occurrence: Decodable {
     default: throw unknown(fn)
     }
 }
-
-// MARK: store.ts
 
 private struct CreationInput: Decodable {
     let id: String
@@ -324,8 +310,6 @@ private func completion(_ completion: Completion) throws -> JSONValue {
     }
 }
 
-// MARK: snapshot.ts
-
 @Sendable func snapshotVector(_ fn: String, _ a: Args) throws -> JSONValue {
     switch fn {
     case "parseSnapshot":
@@ -334,8 +318,6 @@ private func completion(_ completion: Completion) throws -> JSONValue {
     default: throw unknown(fn)
     }
 }
-
-// MARK: quick-add.ts
 
 private struct ParseInput: Decodable {
     let now: Int
@@ -364,8 +346,6 @@ private struct ParseInput: Decodable {
     }
 }
 
-// MARK: triggers.ts
-
 @Sendable func triggersVector(_ fn: String, _ a: Args) throws -> JSONValue {
     switch fn {
     case "currentOccurrence": return try json(Triggers.currentOccurrence(a(0), a(1), in: a.zone))
@@ -380,16 +360,12 @@ private struct ParseInput: Decodable {
     }
 }
 
-// MARK: dictation.ts
-
 @Sendable func dictationVector(_ fn: String, _ a: Args) throws -> JSONValue {
     switch fn {
     case "voiceCapture": return try json(Dictation.voiceCapture(a(0), online: a(1), nativeSpeech: a(2)))
     default: throw unknown(fn)
     }
 }
-
-// MARK: ramble.ts
 
 private struct RambleInput: Decodable {
     let now: Int

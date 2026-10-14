@@ -1,6 +1,6 @@
 import Foundation
 
-/// Which tasks each list shows and in what order, from `shared/views.ts`. Event times resolve in `zone`.
+/// Event times resolve in `zone`.
 public enum Views {
     public typealias DayGroup = API.DayGroup
     public typealias Today = API.Today

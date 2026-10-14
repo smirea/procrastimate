@@ -1,7 +1,6 @@
 import type { Label, Project, Task } from '../task.ts';
 import { DEFAULT_SETTINGS, FIELDS_SCHEMAS, SETTINGS_ID, type Kind, type Settings, type Snapshot } from './protocol.ts';
 
-/** Field values keyed by name, the shape ops, changes, and the server's rows carry. */
 export type Fields = Record<string, unknown>;
 
 export type Entity = { id: string } & Fields;

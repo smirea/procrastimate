@@ -7,7 +7,6 @@ import { z } from 'zod';
 
 /** Local calendar date, `YYYY-MM-DD`. */
 export type DateKey = `${number}-${number}-${number}`;
-/** Local wall-clock time, `HH:mm`. */
 export type TimeOfDay = `${number}:${number}`;
 
 export const DATE_KEY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;

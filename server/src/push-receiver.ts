@@ -1,6 +1,5 @@
 import { base64urlDecode, base64urlEncode, deriveContentKey, ecdhSecret, importEcdhPublic, utf8 } from './web-push';
 
-/** A fake browser's side of a push subscription. Test infrastructure for unit tests and the end to end push service. */
 export type PushReceiver = { privateKey: CryptoKey; publicKey: Uint8Array<ArrayBuffer>; auth: Uint8Array<ArrayBuffer> };
 
 export async function createReceiverKeys(): Promise<{

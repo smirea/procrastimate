@@ -8,7 +8,6 @@ public enum Search {
     public typealias TaskHit = API.TaskHit
     public typealias Results = API.SearchResults
 
-    /// A project or label whose name matched.
     public struct NameHit<Item: Hashable & Codable & Sendable>: Hashable, Codable, Sendable {
         public var item: Item
         public var score: Int
@@ -20,8 +19,6 @@ public enum Search {
         let labels: [String: Label]
     }
 
-    /// Lowercased with accents stripped. `map` points each folded unit back to its original offset, and is nil when
-    /// they line up.
     struct Folded {
         let text: [UInt16]
         let map: [Int]?
@@ -88,7 +85,6 @@ public enum Search {
     /// Splits a query into folded terms. Every term must match somewhere for a result to count.
     public static func searchTerms(_ query: String) -> [String] { terms(query).map(UTF16Text.string) }
 
-    /// Scores texts that share a weight: each term counts its best match, and every match is highlighted.
     static func scoreTexts(_ texts: [String], _ terms: [[UInt16]]) -> (best: [Int], highlights: [Highlight]) {
         let folded = texts.map(fold)
         var ranges = texts.map { _ in [Range<Int>]() }
@@ -119,7 +115,6 @@ public enum Search {
         return TaskHit(task: task, score: best.reduce(0, +), matches: matches)
     }
 
-    /// Best score first, then alphabetical.
     static func searchNames<T: NamedItem & Hashable & Codable & Sendable>(_ items: [T], _ terms: [[UInt16]]) -> [NameHit<T>] {
         items
             .compactMap { item -> NameHit<T>? in
@@ -176,7 +171,6 @@ public enum Search {
 }
 
 extension API.TaskField: CodingKeyRepresentable {
-    /// How much a match in the field counts.
     var weight: Int {
         switch self {
         case .title: 4

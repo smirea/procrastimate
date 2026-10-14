@@ -1,7 +1,6 @@
 import type { RambleDraft } from './ramble.ts';
 import type { DateKey, Due, Priority, Recurrence, Reminder } from './task.ts';
 
-/** What one ramble writes into quick add: the title in the textbox, and the chips beside it. */
 export type RambleQuickAdd = {
 	text: string;
 	due: Due | null;
@@ -43,7 +42,6 @@ export function quickAddFromRamble(draft: RambleDraft): RambleQuickAdd | null {
 	};
 }
 
-/** List defaults fill only the fields the speech left empty. A spoken value replaces the list's. */
 export function withListDefaults(
 	fill: RambleQuickAdd,
 	defaults: { projectId: string | null; labelId: string | null; today: boolean },

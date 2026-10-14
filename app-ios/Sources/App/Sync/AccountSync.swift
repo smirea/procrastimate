@@ -3,7 +3,6 @@ import Foundation
 import Observation
 import UIKit
 
-/// Keeps the local document in sync for the signed-in user. Nothing about it is shown.
 @MainActor @Observable
 final class AccountSync {
     private let store: Store
@@ -41,7 +40,6 @@ final class AccountSync {
         disconnect()
     }
 
-    /// Syncs at once. Foreground and launch use this.
     func syncNow() {
         soon?.cancel()
         Task { await sync() }

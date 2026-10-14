@@ -228,7 +228,6 @@ export function getAuth(env: Env): Promise<Auth | null> {
 	return pending;
 }
 
-/** Auth on a caller-supplied database, as production has, for tests. */
 export function authOnDatabase(secret: string, db: TursoDatabase): Auth {
 	return betterAuth(authOptions(secret, {}, drizzleDatabase(db), {}, true) as never) as Auth;
 }
@@ -241,7 +240,6 @@ export async function authHandler(request: Request, env: Env): Promise<Response>
 
 export type SessionUser = Pick<typeof user.$inferSelect, 'id' | 'email' | 'name'>;
 
-/** The signed-in user, from the session cookie or the bearer plugin's `Authorization` header. */
 export async function readSession(request: Request, env: Env): Promise<SessionUser | null> {
 	const auth = await getAuth(env);
 	if (!auth) return null;
@@ -255,7 +253,6 @@ export async function readSession(request: Request, env: Env): Promise<SessionUs
 	return { id: body.user.id, email: body.user.email ?? '', name: body.user.name ?? '' };
 }
 
-/** The signed-in user, or the contract's error when sign-in is off or the request carries no session. */
 export async function requireUser(request: Request, env: Env): Promise<{ user: SessionUser; auth: Auth }> {
 	const auth = await getAuth(env);
 	if (!auth) throw new ORPCError('SERVICE_UNAVAILABLE', { message: 'Sign-in is not configured' });

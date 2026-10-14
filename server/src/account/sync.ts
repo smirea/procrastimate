@@ -27,7 +27,6 @@ function loadState(store: AccountStore): ServerState {
 /** The live synced state, as a client would see it. */
 export const accountSnapshot = (store: AccountStore) => serverSnapshot(loadState(store));
 
-/** One push, all in one transaction: apply, log every op, then answer from the log or with the snapshot. */
 export function sync(store: AccountStore, request: SyncRequest, now: number): SyncResponse {
 	return store.transaction(() => {
 		if (request.reset) {
@@ -60,7 +59,6 @@ export function sync(store: AccountStore, request: SyncRequest, now: number): Sy
 		if (request.reset || request.cursor === 0 || restarted) {
 			return { acked: pushed.acked, snapshot: serverSnapshot(pushed.state), cursor: head, hlc, epoch };
 		}
-		// The rows hold what `applyPush` logged, and the contract checks the response on its way out.
 		const changes = store.logAfter(request.cursor, SYNC_PAGE_SIZE) as Change[];
 		const cursor = changes.at(-1)?.seq ?? request.cursor;
 		// Before the last page, an op is acked only with its row, or the client would drop it from its outbox and

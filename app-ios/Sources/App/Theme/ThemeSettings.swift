@@ -3,7 +3,6 @@ import Observation
 import SwiftUI
 import UIKit
 
-/// System, Light, or Dark, the same three choices as the web, from `shared/theme.ts`.
 typealias ThemeChoice = API.ThemeChoice
 
 extension ThemeChoice {

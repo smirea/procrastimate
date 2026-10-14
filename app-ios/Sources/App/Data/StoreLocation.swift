@@ -1,7 +1,5 @@
 import Foundation
 
-/// The folder in Application Support that holds all local task data, whatever its format, plus `UserDefaults` for
-/// device preferences.
 enum StoreLocation {
     static var directory: URL {
         URL.applicationSupportDirectory.appending(path: "procrastimate", directoryHint: .isDirectory)

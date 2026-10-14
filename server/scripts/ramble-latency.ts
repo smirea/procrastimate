@@ -39,7 +39,6 @@ if (values.help) {
 	process.exit(0);
 }
 
-/** The PCM in a 16 kHz mono 16-bit WAV. */
 async function readWav(path: string): Promise<Uint8Array<ArrayBuffer>> {
 	const bytes = new Uint8Array(await Bun.file(path).arrayBuffer());
 	const view = new DataView(bytes.buffer);
@@ -85,14 +84,12 @@ function utterances(frames: Uint8Array[]): { first: number; last: number }[] {
 
 type Heard = { kind: 'started' | 'partial' | 'committed' | 'ended' | 'error'; text?: string };
 
-/** How one mode connects, frames audio, stops, and reads replies. */
 type Link = {
 	url: string;
 	init: object;
 	audio(frame: Uint8Array<ArrayBuffer>): string | Uint8Array<ArrayBuffer>;
 	stop(): string;
 	read(data: string): Heard | null;
-	/** Whether the session is over once this arrives after stop. */
 	done(heard: Heard): boolean;
 };
 

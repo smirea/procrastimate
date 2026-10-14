@@ -190,7 +190,6 @@
 		scale: 0.96;
 	}
 
-	/* A task's label on a row or a search result. */
 	.label-chip {
 		display: inline-flex;
 		align-items: center;

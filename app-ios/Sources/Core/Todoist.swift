@@ -10,7 +10,6 @@ public enum Todoist {
     public typealias Summary = API.ImportSummary
     public typealias Timing = API.Timing
 
-    /// `2027-05-20`, `2027-05-20T09:00:00`, or with an offset such as `Z` or `+02:00`.
     nonisolated(unsafe) private static let iso =
         /^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?(Z|[+-]\d{2}:?\d{2})?)?$/.asciiOnlyDigits()
 
@@ -60,7 +59,6 @@ public enum Todoist {
         return offset.first == "-" ? -total : total
     }
 
-    /// `Long Term [6Crcv8Fq].csv`: the project name, then its Todoist id.
     nonisolated(unsafe) private static let fileName = /^(.+?) \[([^\]]+)\]\.csv$/.ignoresCase()
 
     private static func baseName(_ path: String) -> String {

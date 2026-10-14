@@ -1,6 +1,5 @@
 import Foundation
 
-/// The strings and order of the Browse tab and the project and label screens, matching the web sidebar and views.
 public enum Browse {
     /// Labels alphabetically, ignoring case and accents in `en-US` collation, like the web sidebar's Labels section.
     public static func labelsByName(_ labels: [Label]) -> [Label] {

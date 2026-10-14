@@ -29,7 +29,6 @@ class Session {
 	});
 	error = $state('');
 
-	/** Checks the cookie, then loads which buttons the server can offer. */
 	async start() {
 		await this.refresh();
 		this.confirmed = true;

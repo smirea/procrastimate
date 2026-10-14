@@ -46,7 +46,6 @@ const shown = (page: Page) =>
 		return (await registration.getNotifications()).map(n => ({ title: n.title, body: n.body, tag: n.tag }));
 	});
 
-/** What the server will push to this device for this run's tasks. */
 const schedule = async (page: Page) => {
 	const deviceId = await page.evaluate(() => {
 		const raw = localStorage.getItem('procrastimate');

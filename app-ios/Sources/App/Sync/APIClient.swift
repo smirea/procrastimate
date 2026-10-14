@@ -1,13 +1,11 @@
 import Core
 import Foundation
 
-/// A failed call: the server's error body with its status, or no answer at all.
 enum APIFailure: Error {
     case status(Int, APIError?)
     case unreachable
 }
 
-/// Calls one endpoint of the generated contract as this install.
 enum APIClient {
     static func send<E: APIEndpoint>(
         _: E.Type,

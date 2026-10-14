@@ -195,7 +195,6 @@ type Rule = {
 	kind: TokenKind;
 	pattern: RegExp;
 	repeatable: boolean;
-	/** Runs on the input with `GUARDS` masked out. */
 	guarded: boolean;
 	read: (m: RegExpExecArray, ctx: Context) => Match | null;
 };

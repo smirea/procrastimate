@@ -129,8 +129,6 @@ extension RambleDraft: Codable {
     }
 }
 
-/// The spoken grammar of `shared/ramble.ts`. A transcript becomes tasks locally, on every partial, with the quick
-/// add parser in its spoken mode for dates, times, recurrence, and reminders.
 public enum Ramble {
     public static func parse(
         _ transcript: String,
@@ -144,7 +142,6 @@ public enum Ramble {
     }
 }
 
-// MARK: - Normalize
 
 struct Mapped {
     var text: String

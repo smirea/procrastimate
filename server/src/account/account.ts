@@ -142,7 +142,6 @@ export class Account {
 		return this.run(() => this.withStore(userId, store => this.handle(request, store)));
 	}
 
-	/** Delivers due Web Push notifications, then re-arms for the next. */
 	async alarm(): Promise<void> {
 		const userId = this.ctx.id.name ?? '';
 		if (!userId) return;

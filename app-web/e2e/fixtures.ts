@@ -13,7 +13,6 @@ export function e2eEmail(): string {
 	return `e2e-${id}@procrastimate.test`;
 }
 
-/** Signs this context in. The first call creates the user; a later context in the same test signs in. */
 export async function signInAccount(context: BrowserContext) {
 	const email = e2eEmail();
 	const signUp = await context.request.post('/api/auth/sign-up/email', {
@@ -26,7 +25,6 @@ export async function signInAccount(context: BrowserContext) {
 	if (!signIn.ok()) throw new Error(`sign-in failed: ${signIn.status()} ${await signIn.text()}`);
 }
 
-/** The install id the page will send. The session cookie is already on the request. */
 export async function deviceHeader(page: Page): Promise<Record<string, string>> {
 	const deviceId = await page.evaluate(() => {
 		const raw = localStorage.getItem('procrastimate');
@@ -67,7 +65,6 @@ export class App {
 		await expect(this.taskInput()).toBeFocused();
 	}
 
-	/** Adds each task through quick add, then closes it. */
 	async add(...titles: string[]) {
 		await this.openQuickAdd();
 		for (const title of titles) {
@@ -92,7 +89,7 @@ export class App {
 		await expect(this.page.getByRole('heading', { level: 1, name })).toBeVisible();
 	}
 
-	/** Waits for running animations. One that is cancelled, as when a newer transition replaces it, counts as settled. */
+	/** `animation.finished` rejects when the animation is cancelled, so that rejection counts as settled. */
 	settle() {
 		return this.page.evaluate(() =>
 			Promise.all(document.getAnimations().map(animation => animation.finished.catch(() => undefined))),
@@ -117,14 +114,12 @@ export class App {
 	dictationOption = (name: 'Native' | 'ElevenLabs') =>
 		this.settings().getByRole('radiogroup', { name: 'Dictation' }).getByRole('radio', { name });
 
-	/** Picks the synthetic Todoist backup through the file chooser that `Import from Todoist` opens. */
 	async importBackup(press: 'click' | 'tap' = 'click') {
 		const chooser = this.page.waitForEvent('filechooser');
 		await this.settings().getByRole('button', { name: 'Import from Todoist' })[press]();
 		await (await chooser).setFiles(todoistBackupZip());
 	}
 
-	/** The theme the user sees: `<html>`'s theme, the canvas the page paints, and the browser chrome around it. */
 	async expectTheme(theme: 'light' | 'dark') {
 		await expect(this.page.locator('html')).toHaveAttribute('data-theme', theme);
 		await expect(this.page.locator('body')).toHaveCSS(

@@ -54,7 +54,6 @@ export function formatMinutes(minutes: number): string {
 
 export const WEEKDAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
 
-/** `Every Mon`, `Every Mon, Wed, Fri`, `Every 2 weeks on Tue, Thu`, `Every 3 days`. */
 export function formatRecurrence(recurrence: Recurrence, due: Due | null): string {
 	const { interval, unit } = recurrence;
 	const days = unit === 'week' ? (recurrence.days ?? (due && interval === 1 ? [weekdayOf(due.date)] : null)) : null;
@@ -65,13 +64,11 @@ export function formatRecurrence(recurrence: Recurrence, due: Due | null): strin
 	return interval === 1 ? `Every ${unit}` : `Every ${interval} ${unit}s`;
 }
 
-/** `Repeats every Mon`. */
 export function repeatLabel(recurrence: Recurrence, due: Due | null): string {
 	const repeat = formatRecurrence(recurrence, due);
 	return `Repeats ${repeat[0]!.toLowerCase()}${repeat.slice(1)}`;
 }
 
-/** `5:00 PM`, spelled out because `toLocaleTimeString` inserts a narrow no-break space on newer ICU. */
 export function clockTime(time: TimeOfDay): string {
 	const [h, m] = time.split(':').map(Number) as [number, number];
 	return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`;
@@ -111,10 +108,8 @@ export function dayHeading(date: DateKey, today: DateKey): string {
 	return date === addDays(today, 1) ? `${label} · Tomorrow · ${weekday}` : `${label} · ${weekday}`;
 }
 
-/** The undo toast after completing a task: `Completed “Standup”`, or `…, next due Friday 9am` when it repeats. */
 export function completedToast(title: string, next: Due | null, today: DateKey): string {
 	return next ? `Completed “${title}”, next due ${formatDue(next, today)}` : `Completed “${title}”`;
 }
 
-/** The toast an open app shows when a task's due time or reminder comes up. */
 export const reminderToast = (title: string) => `Reminder: ${title}`;

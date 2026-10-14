@@ -5,15 +5,12 @@ import Observation
 import SwiftUI
 @preconcurrency import UserNotifications
 
-/// Where this device stands with notifications. Each one is a view on the Notifications screen.
 enum NotificationStatus: Equatable {
     case checking
-    /// Permission not asked yet, or granted and turned off here.
     case off
     case denied
     case on
 
-    /// The short status Browse shows next to Notifications, like the web sidebar.
     var label: String? {
         switch self {
         case .checking: nil
@@ -33,7 +30,6 @@ final class LocalNotifications: NSObject {
     nonisolated static let testID = "test"
 
     private(set) var status: NotificationStatus = .checking
-    /// The requests the device holds, soonest first, as `title@<ISO time>: body` like the web suite's server schedule.
     private(set) var pending: [String] = []
 
     @ObservationIgnored private let store: Store
@@ -59,8 +55,6 @@ final class LocalNotifications: NSObject {
         center.delegate = self
     }
 
-    /// Detects the status, asks on first launch, refills the window, and shows reminders that came up while closed.
-    /// reminders every minute while the app runs.
     func run() async {
         if await authorizationStatus() == .notDetermined {
             if simulatesDenial {
@@ -95,7 +89,6 @@ final class LocalNotifications: NSObject {
         return await center.notificationSettings().authorizationStatus
     }
 
-    /// The settings line, when permission was blocked. Opens the system Settings app.
     func openSettings() async {
         guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
         await UIApplication.shared.open(url)
@@ -286,7 +279,6 @@ extension LocalNotifications: UNUserNotificationCenterDelegate {
 }
 
 extension Navigator {
-    /// Opens a task from a notification or a reminder toast.
     func openTask(_ id: String) {
         sheet = .details(taskID: id)
     }

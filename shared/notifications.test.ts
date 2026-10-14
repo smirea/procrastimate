@@ -7,7 +7,6 @@ const notificationBody = recorded('notifications', notifications.notificationBod
 const upcomingNotifications = recorded('notifications', notifications.upcomingNotifications);
 const pushSchedule = (tasks: readonly Task[], now: number) => upcomingNotifications(tasks, now, 500);
 
-/** Local wall-clock time in epoch milliseconds, matching how tasks resolve their times. */
 const local = (y: number, month: number, d: number, h: number, min = 0) => new Date(y, month - 1, d, h, min).getTime();
 const NOW = local(2026, 10, 14, 10);
 

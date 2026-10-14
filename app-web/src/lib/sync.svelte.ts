@@ -41,7 +41,6 @@ class Sync {
 	#reconnect: ReturnType<typeof setTimeout> | undefined;
 	#failures = 0;
 
-	/** Registers the triggers, opens the realtime socket, and syncs once. Returns the cleanup. */
 	start() {
 		const onVisible = () => {
 			if (document.visibilityState !== 'visible') return this.#disconnect();
@@ -125,7 +124,6 @@ class Sync {
 		socket.close();
 	}
 
-	/** Drops a failed socket and opens another after a delay that doubles up to a minute. */
 	#retry() {
 		this.#disconnect();
 		const delay = Math.min(RECONNECT_MIN * 2 ** this.#failures, RECONNECT_MAX);
@@ -138,7 +136,6 @@ class Sync {
 		this.#timer = setTimeout(() => void this.syncNow(), COMMIT_DELAY);
 	}
 
-	/** Syncs now, or once more right after the sync already running. */
 	syncNow(): Promise<void> {
 		if (this.#running) {
 			this.#again = true;

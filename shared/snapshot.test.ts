@@ -21,7 +21,6 @@ const task = (id: string, recurrence: unknown, fields: Record<string, unknown> =
 	...fields,
 });
 
-/** A document as the web app writes it, with every field in use. */
 const webDocument: snapshot.Snapshot = {
 	tasks: [
 		{

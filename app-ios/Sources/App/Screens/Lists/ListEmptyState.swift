@@ -1,6 +1,5 @@
 import SwiftUI
 
-/// A list's empty state, with the web's title and phone hint.
 struct ListEmptyState: View {
     let title: String
     let hint: String

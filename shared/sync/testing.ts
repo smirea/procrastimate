@@ -4,8 +4,6 @@ import type { Change, Snapshot, SyncResponse } from './protocol.ts';
 import { emptySnapshot } from './snapshot.ts';
 import type { Label, Project, Task } from '../task.ts';
 
-/** Test doubles: an in-memory server that keeps a log the way the `Account` object does, and a client. */
-
 export const task = (id: string, fields: Partial<Task> = {}): Task => ({
 	id,
 	parentId: null,
@@ -79,7 +77,6 @@ export class MemoryClient {
 	constructor(
 		readonly name: string,
 		snapshot: Snapshot = emptySnapshot(),
-		/** How far this device's clock runs ahead of the true time. */
 		readonly skew = 0,
 	) {
 		this.snapshot = snapshot;

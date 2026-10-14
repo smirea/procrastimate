@@ -2,7 +2,6 @@ import Core
 import SwiftUI
 
 extension Priority {
-    /// The checkbox and flag tint, like the web's `PRIORITIES`.
     var tone: Color {
         switch self {
         case .p1: .p1
@@ -26,7 +25,6 @@ extension Format.DueTone {
 }
 
 extension QuickAdd.TokenKind {
-    /// The inline highlight behind a parsed phrase.
     var tint: Color {
         switch self {
         case .due: .tokenDue

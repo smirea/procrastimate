@@ -1,6 +1,5 @@
 import Foundation
 
-/// Anything picked by name after a sigil: projects after `#`, labels after `@`.
 public protocol NamedItem {
     var id: String { get }
     var name: String { get }

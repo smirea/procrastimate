@@ -1,8 +1,6 @@
 import Core
 import SwiftUI
 
-/// One search result. A project or label shows its highlighted name. A task shows its status, highlighted title,
-/// notes excerpt, parent, matched label chips, due date or completion day, and project, like the web's result rows.
 struct SearchResultRow: View {
     @Environment(Store.self) private var store
     @Environment(TaskActions.self) private var actions
@@ -59,7 +57,6 @@ struct SearchResultRow: View {
         }
     }
 
-    /// Completed results reopen and open ones complete, from a leading swipe or the context menu.
     @ViewBuilder private var taskAction: some View {
         if case let .task(hit) = row {
             taskAction(hit.task)
@@ -194,7 +191,6 @@ private struct TaskResult: View {
     }
 }
 
-/// The result's status dot: a priority-tinted ring, or a faint filled check once completed.
 private struct Status: View {
     let done: Bool
     let tone: Color

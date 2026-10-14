@@ -25,7 +25,6 @@ async function device(browser: Browser): Promise<Device> {
 	return { app: new App(page), page, context };
 }
 
-/** The window coming back into focus, one of the sync triggers. */
 const focus = (page: Page) => page.evaluate(() => window.dispatchEvent(new Event('focus')));
 
 const goOffline = ({ context }: Device) => context.route('**/api/sync', route => route.abort('internetdisconnected'));

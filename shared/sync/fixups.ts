@@ -43,7 +43,6 @@ export function fixups(snapshot: Snapshot): Snapshot {
 	return { ...snapshot, tasks, projects: byName.kept, labels: labelMerge.kept };
 }
 
-/** Keeps the oldest of each group sharing a key and maps every dropped id to its survivor. */
 function mergeDuplicates<T extends { id: string; createdAt: number }>(
 	items: readonly T[],
 	keyOf: (item: T) => string | undefined,

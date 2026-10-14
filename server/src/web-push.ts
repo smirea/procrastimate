@@ -111,7 +111,6 @@ async function vapidAuthorization(endpoint: string, vapid: Vapid): Promise<strin
 	return `vapid t=${unsigned}.${base64urlEncode(new Uint8Array(signature))}, k=${vapid.publicKey}`;
 }
 
-/** Encrypts `message` for the subscription and posts it to its push service. Resolves with the service's response. */
 export async function sendPush(
 	subscription: PushSubscriptionInfo,
 	message: PushMessage,

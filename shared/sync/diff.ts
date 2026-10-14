@@ -41,7 +41,6 @@ export function diff(before: Snapshot, after: Snapshot): Patch[] {
 	return patches;
 }
 
-/** Gives each patch an op id and the next clock, in order. */
 export function stamp(
 	patches: readonly Patch[],
 	clock: Clock,

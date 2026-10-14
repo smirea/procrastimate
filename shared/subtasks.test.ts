@@ -32,7 +32,6 @@ const task = (id: string, fields: Partial<Task> = {}): Task => ({
 	...fields,
 });
 
-/** Trip has Passport, Charger, and Socks in that order. Charger has Cable under it. */
 const trip = () => [
 	task('trip'),
 	task('socks', { parentId: 'trip', order: 2 }),

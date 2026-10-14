@@ -9,7 +9,6 @@ public enum QuickAdd {
     public typealias Parsed = API.ParsedQuickAdd
     public typealias Options = API.ParseOptions
 
-    // MARK: Patterns
 
     static let weekdayNames = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"]
     static let monthNames = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"]
@@ -128,7 +127,6 @@ public enum QuickAdd {
         }
     }
 
-    // MARK: Phrases
 
     struct Context {
         let now: Date
@@ -169,7 +167,6 @@ public enum QuickAdd {
         let kind: TokenKind
         let pattern: Pattern
         let repeatable: Bool
-        /// Runs on the input with `guards` masked out.
         let guarded: Bool
         let read: @Sendable (Found, Context) -> Match?
     }
@@ -371,7 +368,6 @@ public enum QuickAdd {
         "annually": .year,
     ]
 
-    // MARK: Rules
 
     static let reminderRule = Rule(
         kind: .reminder,
@@ -522,7 +518,6 @@ public enum QuickAdd {
         }
     }
 
-    // MARK: Parsing
 
     public static func parse(_ input: String, _ options: Options, in zone: TimeZone) -> Parsed {
         let now = options.now

@@ -34,7 +34,6 @@ extension QuickAdd {
 
         func test(_ text: String) -> Bool { first(in: text) != nil }
 
-        /// `text.replace(pattern, transform)` with a global pattern.
         func replace(_ text: String, _ transform: (Found) -> String) -> String {
             let ns = NSString(string: text)
             var out = ""

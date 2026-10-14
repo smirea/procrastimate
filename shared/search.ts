@@ -34,7 +34,6 @@ const TASK_FIELDS = {
 	notes: { weight: 1, values: (task: Task) => [task.notes] },
 } satisfies Record<TaskField, { weight: number; values: (task: Task, context: FieldContext) => string[] }>;
 
-/** Every searchable text on a task, in the order fields are scored. */
 export const taskFieldSchema = z
 	.enum(['title', 'project', 'labels', 'notes'])
 	.meta({ id: 'TaskField', description: 'Every searchable text on a task, in the order fields are scored.' });
@@ -51,7 +50,6 @@ export const taskHitSchema = z
 	})
 	.meta({ id: 'TaskHit' });
 export type TaskHit = z.infer<typeof taskHitSchema>;
-/** A project or label whose name matched. */
 export type NameHit<T extends { name: string }> = { item: T; score: number; name: Highlight };
 const nameHitSchema = <T extends z.ZodType<{ name: string }>>(item: T) =>
 	z.object({ item, score: z.number().int(), name: highlightSchema });
@@ -67,10 +65,8 @@ export const searchResultsSchema = z
 	.meta({ id: 'SearchResults' });
 export type SearchResults = z.infer<typeof searchResultsSchema>;
 
-/** `map` points each folded character back to its original offset, and is null when they line up. */
 type Folded = { text: string; map: number[] | null };
 
-/** Lowercases and strips accents one character at a time, keeping a map back to the original offsets. */
 function fold(text: string): Folded {
 	if (/^\p{ASCII}*$/u.test(text)) return { text: text.toLowerCase(), map: null };
 	let out = '';
@@ -121,7 +117,6 @@ export function searchTerms(query: string): string[] {
 	return fold(query.trim()).text.split(/\s+/).filter(Boolean);
 }
 
-/** Scores texts that share a weight: each term counts its best match, and every match is highlighted. */
 function scoreTexts(texts: readonly string[], terms: readonly string[]) {
 	const folded = texts.map(fold);
 	const ranges = texts.map((): Range[] => []);
@@ -155,7 +150,6 @@ function scoreTask(task: Task, terms: readonly string[], context: FieldContext):
 	return { task, score: best.reduce((a, b) => a + b, 0), matches };
 }
 
-/** Best score first, then alphabetical. */
 function searchNames<T extends { name: string }>(items: readonly T[], terms: readonly string[]): NameHit<T>[] {
 	return items
 		.flatMap(item => {
@@ -166,12 +160,6 @@ function searchNames<T extends { name: string }>(items: readonly T[], terms: rea
 		.toSorted((a, b) => b.score - a.score || a.item.name.localeCompare(b.item.name, 'en-US', { sensitivity: 'base' }));
 }
 
-/**
- * Matches tasks, projects, and labels against every term of the query, case- and accent-insensitively.
- * A title match outweighs a project or label match, which outweighs a notes match, and a match at the start of
- * a word outweighs one inside a word. Open tasks break ties by priority, then newest first. Completed
- * tasks come back separately, most recently completed first on a tie.
- */
 export function search(
 	query: string,
 	tasks: readonly Task[],
@@ -198,7 +186,6 @@ export function search(
 	};
 }
 
-/** Cuts a long text down to a window that starts a little before its first highlight. */
 export function excerpt({ text, ranges }: Highlight, lead = 24): Highlight {
 	const first = ranges[0]?.[0] ?? 0;
 	if (first <= lead) return { text, ranges };

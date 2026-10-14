@@ -40,7 +40,6 @@ struct TaskDetailsSheet: View {
     }
 }
 
-/// How a details page moves within the sheet.
 struct DetailsNavigation {
     let open: (_ taskID: String) -> Void
     let back: (_ parentID: String) -> Void

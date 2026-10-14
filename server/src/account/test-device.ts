@@ -46,7 +46,6 @@ function sessionFor(env: Env) {
 	return created;
 }
 
-/** Signs this env's user in once, then registers another device on that session. */
 export async function registerDevice(env: Env, name = 'Device'): Promise<DeviceCredentials> {
 	withAuth(env);
 	const session = await sessionFor(env);
