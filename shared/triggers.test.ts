@@ -166,7 +166,7 @@ describe('labels', () => {
 			when: '4:15pm',
 		});
 		expect(eventLabel(meetup({ edge: 'before', minutes: 60, occurrences: on(20, 9, 30) }), today).when).toBe(
-			'Tue 8:30am',
+			'Tuesday 8:30am',
 		);
 		expect(eventLabel(meetup({ occurrences: on(21, 18) }), today)).toEqual({
 			lead: 'Start of',
@@ -175,7 +175,7 @@ describe('labels', () => {
 		});
 		expect(eventLabel(meetup({ edge: 'during', occurrences: on(12, 18) }), today).when).toBe('Oct 12 6pm');
 		expect(eventLabel(meetup({ allDay: true, occurrences: on(14, 0) }), today).when).toBeNull();
-		expect(eventLabel(meetup({ allDay: true, occurrences: on(16, 0) }), today).when).toBe('Fri');
+		expect(eventLabel(meetup({ allDay: true, occurrences: on(16, 0) }), today).when).toBe('Friday');
 		expect(eventLabel(meetup({ occurrences: on(14, 18) }), '2025-12-30').when).toBe('Oct 14, 2026 6pm');
 	});
 

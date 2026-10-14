@@ -32,7 +32,7 @@ struct InboxScreen: View {
             }
             ForEach(days, id: \.date) { group in
                 Section {
-                    ForEach(group.tasks) { TaskRow(task: $0, showProject: $0.projectId != nil, timeOnly: true) }
+                    ForEach(group.tasks) { TaskRow(task: $0, showProject: $0.projectId != nil) }
                 } header: {
                     ListHeading(text: Format.dayHeading(group.date, today))
                 }

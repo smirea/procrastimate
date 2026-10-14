@@ -79,7 +79,7 @@
 					</span>
 				{/if}
 				{#if task.recurrence}
-					<span class="flex items-center text-[var(--tone-tomorrow)]" role="img" aria-label={repeatLabel(task.recurrence, due)}>
+					<span class="flex items-center text-[var(--tone-repeat)]" role="img" aria-label={repeatLabel(task.recurrence, due)}>
 						<Repeat size={12} weight="bold" />
 					</span>
 				{/if}

@@ -88,7 +88,7 @@ public enum Triggers {
     }
 
     /// A row's event line in parts: `4:15pm`, `15m after`, `Standup`. `when` is the task's moment on its occurrence,
-    /// with only what today leaves ambiguous.
+    /// worded like any due date but without the day when it is today.
     public static func eventLabel(_ event: TaskEvent, _ today: DateKey, in zone: TimeZone) -> EventLabel {
         let lead = switch event.edge {
         case .before: event.minutes > 0 ? "\(Format.formatMinutes(event.minutes)) before" : "Start of"
@@ -96,20 +96,9 @@ public enum Triggers {
         case .during: "During"
         case .after: event.minutes > 0 ? "\(Format.formatMinutes(event.minutes)) after" : "After"
         }
-        let at = eventAnchor(event, currentOccurrence(event, today, in: zone))
-        let date = Dates.toDateKey(Date(epochMilliseconds: at), in: zone)
-        let day: String? = if date == today {
-            nil
-        } else if date == Dates.addDays(today, 1) {
-            "Tomorrow"
-        } else if date > today, date < Dates.addDays(today, 7) {
-            Format.weekdayNames[Dates.weekdayOf(date)]
-        } else {
-            Format.shortDate(date, today)
-        }
-        let time = event.allDay ? nil : Format.formatTime(wallTime(at, in: zone))
-        let when = [day, time].compactMap { $0 }.joined(separator: " ")
-        return EventLabel(lead: lead, title: event.title, when: when.isEmpty ? nil : when)
+        let due = occurrenceDue(event, currentOccurrence(event, today, in: zone), in: zone)
+        let when = due.date != today ? Format.formatDue(due, today) : due.time.map(Format.formatTime)
+        return EventLabel(lead: lead, title: event.title, when: when)
     }
 
     public static func formatLocation(_ location: TaskLocation) -> String {

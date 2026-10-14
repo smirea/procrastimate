@@ -12,7 +12,7 @@ import {
 } from './task.ts';
 import { dateKeySchema } from './values.ts';
 
-export const dueToneSchema = z.enum(['overdue', 'today', 'tomorrow', 'week', 'later']).meta({ id: 'DueTone' });
+export const dueToneSchema = z.enum(['overdue', 'today', 'soon', 'week', 'later']).meta({ id: 'DueTone' });
 export type DueTone = z.infer<typeof dueToneSchema>;
 
 export const priorityLabel = (priority: Priority) => `Priority ${priority}`;
@@ -48,11 +48,12 @@ export function formatDue(due: Due, today: DateKey): string {
 	return due.time ? `${date} ${formatTime(due.time)}` : date;
 }
 
+/** Red overdue, orange today, green through 3 days out, purple through a week, then gray. */
 export function dueTone(due: Due, today: DateKey): DueTone {
 	if (due.date < today) return 'overdue';
 	if (due.date === today) return 'today';
-	if (due.date === addDays(today, 1)) return 'tomorrow';
-	if (due.date < addDays(today, 7)) return 'week';
+	if (due.date <= addDays(today, 3)) return 'soon';
+	if (due.date <= addDays(today, 7)) return 'week';
 	return 'later';
 }
 

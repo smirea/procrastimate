@@ -150,7 +150,7 @@ private struct QuickAddForm: View {
             draft.picked.priority = priority
         }
         if let recurrence = parsed.recurrence ?? draft.appliedRecurrence {
-            Chip(systemImage: "repeat", text: Format.formatRecurrence(recurrence, resolved.due), tone: .toneTomorrow)
+            Chip(systemImage: "repeat", text: Format.formatRecurrence(recurrence, resolved.due), tone: .toneRepeat)
                 .keepAsText(parsed.recurrence == nil ? nil : keepAsText(parsed, .recurrence))
         }
         ForEach(Array(draft.picked.reminders.enumerated()), id: \.offset) { item in

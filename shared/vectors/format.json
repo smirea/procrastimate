@@ -430,7 +430,7 @@
 		},
 		{
 			"fn": "dueTone",
-			"test": "dates › 2026-10-15 is tinted tomorrow",
+			"test": "dates › 2026-10-15 is tinted soon",
 			"input": [
 				{
 					"date": "2026-10-15",
@@ -438,14 +438,26 @@
 				},
 				"2026-10-14"
 			],
-			"output": "tomorrow"
+			"output": "soon"
 		},
 		{
 			"fn": "dueTone",
-			"test": "dates › 2026-10-20 is tinted week",
+			"test": "dates › 2026-10-17 is tinted soon",
 			"input": [
 				{
-					"date": "2026-10-20",
+					"date": "2026-10-17",
+					"time": null
+				},
+				"2026-10-14"
+			],
+			"output": "soon"
+		},
+		{
+			"fn": "dueTone",
+			"test": "dates › 2026-10-18 is tinted week",
+			"input": [
+				{
+					"date": "2026-10-18",
 					"time": null
 				},
 				"2026-10-14"
@@ -454,10 +466,22 @@
 		},
 		{
 			"fn": "dueTone",
-			"test": "dates › 2026-10-21 is tinted later",
+			"test": "dates › 2026-10-21 is tinted week",
 			"input": [
 				{
 					"date": "2026-10-21",
+					"time": null
+				},
+				"2026-10-14"
+			],
+			"output": "week"
+		},
+		{
+			"fn": "dueTone",
+			"test": "dates › 2026-10-22 is tinted later",
+			"input": [
+				{
+					"date": "2026-10-22",
 					"time": null
 				},
 				"2026-10-14"

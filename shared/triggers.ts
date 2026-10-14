@@ -1,7 +1,6 @@
 import { z } from 'zod';
-import { WEEKDAY_NAMES, formatMinutes, formatTime, shortDate } from './format.ts';
+import { formatDue, formatMinutes, formatTime } from './format.ts';
 import {
-	addDays,
 	notificationTimes,
 	reminderFiresAt,
 	stepRecurrence,
@@ -9,7 +8,6 @@ import {
 	type DateKey,
 	type Due,
 	type Task,
-	weekdayOf,
 } from './task.ts';
 import type { EventOccurrence, TaskEvent, TaskLocation } from './values.ts';
 import { zonedDateKey } from './zoned-time.ts';
@@ -135,9 +133,8 @@ export type EventLabel = z.infer<typeof eventLabelSchema>;
 
 /**
  * A row's event line in parts: `4:15pm` `(15m after` `Standup)`, with icons before the title. `when` is the task's
- * moment on the occurrence it is on, with only what today leaves ambiguous: no day for today, `Tomorrow`, a weekday
- * within the week ahead, else the date, and no time all day. A row shows it even under a day heading, which is easy
- * to lose in a long list.
+ * moment on the occurrence it is on, worded like any due date but without the day when it is today. A row shows it
+ * even under a day heading, which is easy to lose in a long list.
  */
 export function eventLabel(event: TaskEvent, today: DateKey, zone?: string): EventLabel {
 	const lead = (() => {
@@ -156,19 +153,9 @@ export function eventLabel(event: TaskEvent, today: DateKey, zone?: string): Eve
 			}
 		}
 	})();
-	const at = eventAnchor(event, currentOccurrence(event, today, zone));
-	const date = zonedDateKey(at, zone);
-	const day =
-		date === today
-			? null
-			: date === addDays(today, 1)
-				? 'Tomorrow'
-				: date > today && date < addDays(today, 7)
-					? WEEKDAY_NAMES[weekdayOf(date)]!
-					: shortDate(date, today);
-	const time = event.allDay ? null : formatTime(wallTime(at, zone));
-	const when = [day, time].filter(part => part !== null).join(' ');
-	return { lead, title: event.title, when: when || null };
+	const due = occurrenceDue(event, currentOccurrence(event, today, zone), zone);
+	const when = due.date !== today ? formatDue(due, today) : due.time ? formatTime(due.time) : null;
+	return { lead, title: event.title, when };
 }
 
 /** `Arriving at Rewe`, `Leaving Rewe`, `While at Rewe`. */

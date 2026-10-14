@@ -21,7 +21,7 @@ struct RepeatChip: View {
             Chip(
                 systemImage: "repeat",
                 text: recurrence.map { Format.formatRecurrence($0, due) } ?? "Repeat",
-                tone: recurrence == nil ? .muted : .toneTomorrow
+                tone: recurrence == nil ? .muted : .toneRepeat
             )
         }
         .buttonStyle(.plain)

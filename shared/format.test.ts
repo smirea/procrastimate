@@ -92,9 +92,11 @@ describe('dates', () => {
 	test.each([
 		['2026-10-10', 'overdue'],
 		['2026-10-14', 'today'],
-		['2026-10-15', 'tomorrow'],
-		['2026-10-20', 'week'],
-		['2026-10-21', 'later'],
+		['2026-10-15', 'soon'],
+		['2026-10-17', 'soon'],
+		['2026-10-18', 'week'],
+		['2026-10-21', 'week'],
+		['2026-10-22', 'later'],
 	] as const)('%s is tinted %s', (date, tone) => {
 		expect(dueTone({ date, time: null }, today)).toBe(tone);
 	});

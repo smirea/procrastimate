@@ -43,7 +43,7 @@ struct TaskRow: View {
         }
         .swipeActions(edge: .leading, allowsFullSwipe: true) {
             Button("Complete", systemImage: "checkmark") { actions.complete(task) }
-                .tint(.toneToday)
+                .tint(.toneSoon)
         }
         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
             // An event task's day comes from its calendar event, so there is nothing to move.
@@ -120,7 +120,7 @@ struct TaskRow: View {
                 }
                 if let recurrence = task.recurrence {
                     Image(systemName: "repeat")
-                        .foregroundStyle(.toneTomorrow)
+                        .foregroundStyle(.toneRepeat)
                         .accessibilityLabel(Format.repeatLabel(recurrence, due))
                 }
                 if let progress {

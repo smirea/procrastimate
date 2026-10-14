@@ -265,7 +265,7 @@
 			}} onkeepastext={tokenOf('priority') ? () => keepAsText(tokenOf('priority')) : undefined} />
 		{#if recurrence}
 			<div class="flex items-center" transition:scale={motion({ start: 0.9, duration: 160 })}>
-				<span class="chip" data-active="true" style="color: var(--tone-tomorrow)">
+				<span class="chip" data-active="true" style="color: var(--tone-repeat)">
 					<Repeat size={15} weight="bold" />
 					{formatRecurrence(recurrence, due)}
 				</span>

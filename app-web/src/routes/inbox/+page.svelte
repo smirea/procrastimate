@@ -37,7 +37,7 @@
 	{#each days as group (group.date)}
 		<section class="mb-6" aria-label={dayHeading(group.date, clock.today)} animate:flip={motion({ duration: 240, easing: cubicOut })} transition:fade={motion({ duration: 160 })}>
 			<h2 class="section-heading">{dayHeading(group.date, clock.today)}</h2>
-			<TaskList tasks={group.tasks} showProject="assigned" timeOnly label={`Tasks on ${group.date}`} />
+			<TaskList tasks={group.tasks} showProject="assigned" label={`Tasks on ${group.date}`} />
 		</section>
 	{/each}
 </View>

@@ -664,7 +664,7 @@ extension API {
     public enum DueTone: String, Codable, Hashable, Sendable, CaseIterable, Identifiable {
         case overdue = "overdue"
         case today = "today"
-        case tomorrow = "tomorrow"
+        case soon = "soon"
         case week = "week"
         case later = "later"
 

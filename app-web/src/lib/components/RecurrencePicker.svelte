@@ -67,7 +67,7 @@
 				opened = anchor;
 				toggle();
 			}}
-			style={recurrence ? 'color: var(--tone-tomorrow)' : ''}
+			style={recurrence ? 'color: var(--tone-repeat)' : ''}
 		>
 			<Repeat size={15} weight={recurrence ? 'bold' : 'regular'} />
 			{recurrence ? formatRecurrence(recurrence, due) : 'Repeat'}

@@ -50,11 +50,12 @@ public enum Format {
         return due.time.map { "\(date) \(formatTime($0))" } ?? date
     }
 
+    /// Red overdue, orange today, green through 3 days out, purple through a week, then gray.
     public static func dueTone(_ due: Due, _ today: DateKey) -> DueTone {
         if due.date < today { return .overdue }
         if due.date == today { return .today }
-        if due.date == Dates.addDays(today, 1) { return .tomorrow }
-        if due.date < Dates.addDays(today, 7) { return .week }
+        if due.date <= Dates.addDays(today, 3) { return .soon }
+        if due.date <= Dates.addDays(today, 7) { return .week }
         return .later
     }
 

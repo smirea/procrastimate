@@ -66,7 +66,7 @@ struct SearchResultRow: View {
     @ViewBuilder private func taskAction(_ task: TaskItem) -> some View {
         if task.completedAt == nil {
             Button("Complete", systemImage: "checkmark") { actions.complete(task) }
-                .tint(.toneToday)
+                .tint(.toneSoon)
         } else {
             Button("Reopen", systemImage: "arrow.uturn.backward") {
                 withAnimation(.snappy) { store.reopenTask(task.id) }
