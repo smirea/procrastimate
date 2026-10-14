@@ -29,7 +29,6 @@ const filler = (column: Column) => column.default ?? (column.notNull ? FILLER[co
 export function entityRow(userId: string, { kind, id, data, clocks }: ServerEntity) {
 	const row: Record<string, unknown> = { userId, id, clocks };
 	for (const [key, column] of COLUMNS[kind]) row[key] = key in data ? data[key] : filler(column);
-	// Built column by column from the table itself, which is what the insert type describes.
 	return row as EntityTable['$inferInsert'];
 }
 

@@ -65,7 +65,6 @@ export const toasts = new Toasts();
 
 export type QuickAddDefaults = { projectId: string | null; labelId: string | null; today: boolean };
 
-/** How task details reached a task: into a subtask, back to its parent, or opened fresh. */
 export type Arrival = 'forward' | 'back' | 'none';
 
 /** Which floating layer is open. Sheets never stack. */

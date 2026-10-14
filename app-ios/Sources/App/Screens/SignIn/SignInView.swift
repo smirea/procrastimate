@@ -2,7 +2,6 @@ import AuthenticationServices
 import CryptoKit
 import SwiftUI
 
-/// The first screen when there is no session. Email, and Google or Apple when the server has credentials for them.
 struct SignInView: View {
     @Environment(Session.self) private var session
     @Environment(AccountSync.self) private var accountSync

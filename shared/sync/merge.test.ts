@@ -29,7 +29,6 @@ const apply = (state: ServerState, ops: Op[], applied = new Set<string>()) =>
 
 const seeded = () => apply(createServerState(), [createTask('t', '10:0:a')]).state;
 
-/** Whether a client that saw `returned` issues its next clock after `applied`. */
 const issuedAfter = (returned: string, applied: string) =>
 	compareHlc(formatHlc(tick(observe(createClock('client'), returned), 0)), applied) > 0;
 

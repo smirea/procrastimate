@@ -54,7 +54,6 @@ struct RootView: View {
     }
 }
 
-/// Quick add over a scrim, attached to the top of the keyboard. Tapping the scrim discards the draft.
 private struct QuickAddOverlay: View {
     @Environment(Navigator.self) private var navigator
 
@@ -74,7 +73,6 @@ private struct QuickAddOverlay: View {
     }
 }
 
-/// A tab's `NavigationStack`, bound to its path in the navigator.
 private struct TabStack<Content: View>: View {
     @Environment(Navigator.self) private var navigator
     let tab: AppTab

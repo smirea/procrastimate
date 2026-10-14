@@ -1,7 +1,6 @@
 import SwiftUI
 import UIKit
 
-/// An sRGB color literal for the generated tokens: `0xRRGGBB` plus an opacity.
 struct SRGB {
     let hex: UInt32
     let opacity: Double

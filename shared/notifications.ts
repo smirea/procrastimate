@@ -4,7 +4,6 @@ import type { Due, Task } from './task.ts';
 import { formatEvent, scheduledDue, taskNotificationTimes } from './triggers.ts';
 import { zonedDateKey, zonedTime } from './zoned-time.ts';
 
-/** One system notification, shown at `at` in epoch milliseconds. */
 export const scheduledNotificationSchema = z
 	.object({
 		at: z.number().meta({ description: 'When it shows, in epoch milliseconds.', 'x-epoch-ms': true }),
@@ -44,7 +43,6 @@ export function upcomingNotifications(
 		.slice(0, limit);
 }
 
-/** `Due now`, `Due at 5:00 PM`, `Due Tomorrow at 5:00 PM`, `Due today`, or `Reminder`. Days are named relative to the moment it shows. */
 export function notificationBody(due: Due | null, at: number, zone?: string): string {
 	if (!due) return 'Reminder';
 	const day = zonedDateKey(at, zone);

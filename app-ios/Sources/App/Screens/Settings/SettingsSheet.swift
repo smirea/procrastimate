@@ -2,7 +2,6 @@ import Core
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// Settings: the theme, dictation, the notifications line, import, and delete all data. The same panel as the web.
 struct SettingsSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(ThemeSettings.self) private var theme

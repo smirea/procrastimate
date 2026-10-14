@@ -48,7 +48,6 @@ export const PROD_API_URL = 'https://procrastimate.stf.lol';
 
 export type IosKey = { name: string; fallback: string };
 
-/** Keys the root schema assigns to `app-ios`, with the schema's own fallback value. */
 export function appIosKeys(schema: string): IosKey[] {
 	let ios = false;
 	const keys: IosKey[] = [];

@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import type { Task } from './task.ts';
 
-/** Anything picked by name after a sigil: projects after `#`, labels after `@`. */
 export type Named = { id: string; name: string };
 
 export const sigilSchema = z.enum(['#', '@']).meta({ id: 'Sigil', 'x-enum-names': ['project', 'label'] });
@@ -79,7 +78,6 @@ export function unknownNames(
 	return found;
 }
 
-/** When each id last appeared on a newly created task, the store's only record of use. */
 export function lastUsed(tasks: readonly Task[], idsOf: (task: Task) => readonly string[]): Map<string, number> {
 	const used = new Map<string, number>();
 	for (const task of tasks) {
@@ -102,7 +100,6 @@ function matchTier(name: string, query: string): number | null {
 	return n.includes(query) ? 3 : null;
 }
 
-/** Best match first, then most recently used, then alphabetical. Offers to create the query when no name equals it. */
 export function suggest<T extends Named>(
 	items: readonly T[],
 	used: ReadonlyMap<string, number>,

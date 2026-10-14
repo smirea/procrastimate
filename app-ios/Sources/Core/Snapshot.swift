@@ -1,6 +1,5 @@
 import Foundation
 
-/// A change waiting to sync, as `docs/decisions/sync.md` describes it. `fields` holds the changed fields' new values.
 public struct SyncOp: Hashable, Codable, Sendable {
     public typealias Kind = API.EntityKind
 

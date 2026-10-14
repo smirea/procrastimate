@@ -24,7 +24,6 @@ export const subtaskCompletionSchema = z
 	.meta({ id: 'SubtaskCompletion', 'x-inline': true });
 export type Completion = z.infer<typeof subtaskCompletionSchema>;
 
-/** Each parent's children in sibling order. */
 export function groupChildren(tasks: readonly Task[]): Map<string, Task[]> {
 	const groups = new Map<string, Task[]>();
 	for (const task of tasks) {
@@ -50,7 +49,6 @@ export function descendantsOf(tasks: readonly Task[], id: string): Task[] {
 	return out;
 }
 
-/** From the root down to the task's parent. */
 export function ancestorsOf(tasks: readonly Task[], id: string): Task[] {
 	const byId = new Map(tasks.map(t => [t.id, t]));
 	const out: Task[] = [];

@@ -44,7 +44,6 @@ public final class Store {
     /// A task's labels in the order they were added, skipping any that were deleted.
     public func labels(of task: TaskItem) -> [Label] { task.labelIds.compactMap(label) }
 
-    /// The single path every change takes.
     public func commit(_ next: StoreData) {
         let before = snapshot.data
         var data = next
@@ -125,7 +124,6 @@ public final class Store {
 
     private func creation() -> Creation { Creation(id: newId(), now: clock.now.epochMilliseconds) }
 
-    // MARK: Commands
 
     @discardableResult
     public func addTask(_ input: NewTask, parentId: String? = nil) -> TaskItem {

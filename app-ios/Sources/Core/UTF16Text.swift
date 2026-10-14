@@ -16,7 +16,6 @@ enum UTF16Text {
         Unicode.Scalar(unit).map(isWhitespace) ?? false
     }
 
-    /// `/[\p{L}\p{N}]/u`.
     static func isLetterOrNumber(_ scalar: Unicode.Scalar) -> Bool {
         switch scalar.properties.generalCategory {
         case .uppercaseLetter, .lowercaseLetter, .titlecaseLetter, .modifierLetter, .otherLetter,
@@ -33,7 +32,6 @@ enum UTF16Text {
         }
     }
 
-    /// `String#trim`.
     static func trim(_ text: String) -> String {
         let scalars = text.unicodeScalars
         guard let first = scalars.firstIndex(where: { !isWhitespace($0) }),
@@ -50,7 +48,6 @@ enum UTF16Text {
         text.starts(with: prefix)
     }
 
-    /// `String#indexOf`: the first occurrence of `needle` at or after `from`.
     static func indexOf(_ haystack: [UInt16], _ needle: [UInt16], from: Int = 0) -> Int? {
         guard needle.count <= haystack.count else { return nil }
         var at = max(from, 0)
@@ -65,7 +62,6 @@ enum UTF16Text {
         needle.isEmpty || indexOf(haystack, needle) != nil
     }
 
-    /// Splits on runs of whitespace, like `split(/\s+/)`.
     static func words(_ units: [UInt16]) -> [ArraySlice<UInt16>] {
         units.split(omittingEmptySubsequences: false, whereSeparator: isWhitespace)
     }

@@ -5,12 +5,10 @@ import { labelIdsOf, projectIdsOf, type Named, type Sigil } from 'shared/name-se
 import type { Task } from 'shared/task.ts';
 import { store } from './store.svelte.ts';
 
-/** Everything typed after a sigil and picked by name. Both kinds share one autocomplete. */
 export type NameKind = 'project' | 'label';
 
 export type NameSource = {
 	sigil: Sigil;
-	/** The listbox's accessible name. */
 	list: string;
 	noun: string;
 	icon: Component<{ size?: number; class?: string }>;

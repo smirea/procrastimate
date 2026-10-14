@@ -26,7 +26,6 @@ export type ServerEntity = { kind: Kind; id: string; data: Fields; clocks: Recor
 
 export type ServerState = { entities: ReadonlyMap<string, ServerEntity>; clock: Clock };
 
-/** A log row before it gets its sequence number: the fields of one op that won. */
 export type LogEntry = Patch & { opId: string };
 
 export type MergeContext = {
@@ -108,7 +107,6 @@ export function applyOps(
 	return { state: { entities, clock }, acked, log };
 }
 
-/** The live entities, as a client holds them. */
 export function serverSnapshot(state: ServerState): Snapshot {
 	const live = new Map<Kind, Entity[]>(KINDS.map(kind => [kind, []]));
 	for (const { kind, id, data } of state.entities.values()) {
@@ -120,7 +118,6 @@ export function serverSnapshot(state: ServerState): Snapshot {
 	return sortSnapshot(KINDS.reduce((snapshot, kind) => withEntities(snapshot, kind, live.get(kind)!), emptySnapshot()));
 }
 
-/** Runs `fixups` on the live state and writes each repair as a server op with a clock newer than any seen. */
 export function applyFixups(state: ServerState, ctx: MergeContext): { state: ServerState; log: LogEntry[] } {
 	const before = serverSnapshot(state);
 	const entities = new Map(state.entities);
@@ -133,7 +130,6 @@ export function applyFixups(state: ServerState, ctx: MergeContext): { state: Ser
 	return { state: { entities, clock }, log };
 }
 
-/** One push: the device's ops, then the repairs they call for. */
 export function applyPush(state: ServerState, ops: readonly Op[], ctx: MergeContext) {
 	const applied = applyOps(state, ops, ctx);
 	const fixed = applyFixups(applied.state, ctx);

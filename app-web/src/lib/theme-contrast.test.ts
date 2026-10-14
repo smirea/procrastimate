@@ -50,7 +50,6 @@ function contrast(text: Rgba, background: Rgba) {
 	return (hi! + 0.05) / (lo! + 0.05);
 }
 
-/** Text pairs that ship in the UI, each checked against every backdrop it can sit on. */
 function pairs(tokens: Tokens) {
 	const c = (name: string) => color(tokens, `var(${name})`);
 	const canvas = c('--canvas');

@@ -47,7 +47,6 @@ describe.each(storeFactories)('POST /api/sync on the %s store', (_name, createSt
 		return (await response.json()) as SyncResponse;
 	}
 
-	/** A signed-in device that uploads its whole snapshot on its first sync, as the web and iOS clients do. */
 	async function device(name: string, snapshot: Snapshot) {
 		const cred = await setup(name);
 		const client: { snapshot: Snapshot; sync: ClientSync } = {

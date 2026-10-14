@@ -7,7 +7,6 @@ struct RepeatChip: View {
     @Environment(\.clock) private var clock
     let recurrence: Recurrence?
     let due: Due?
-    /// A repeat comes with the due date it starts on.
     let onChange: (Recurrence?, Due?) -> Void
 
     @State private var open = false
@@ -129,7 +128,6 @@ private struct RepeatPopover: View {
     }
 }
 
-/// A popover row with an optional checkmark, like the web's `.menu-item`.
 struct MenuRow: View {
     let text: String
     var checked = false

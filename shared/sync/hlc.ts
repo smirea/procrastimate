@@ -34,7 +34,6 @@ export function compareClocks(a: Clock, b: Clock): number {
 
 export const compareHlc = (a: Hlc, b: Hlc) => compareClocks(parseHlc(a), parseHlc(b));
 
-/** The clock for the next local write: the wall time when it moved past the last one, else one more count. */
 export function tick(clock: Clock, now: number): Clock {
 	return now > clock.wall ? { ...clock, wall: now, counter: 0 } : { ...clock, counter: clock.counter + 1 };
 }

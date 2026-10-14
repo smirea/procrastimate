@@ -9,7 +9,6 @@ export type RambleToken = { kind: RambleTokenKind; start: number; end: number; t
 export type RambleSpan = { start: number; end: number };
 
 export type RambleTask = {
-	/** The span of the transcript this task came from, covering its notes and subtasks. */
 	segment: RambleSpan;
 	title: string;
 	notes: string;
@@ -247,10 +246,6 @@ function normalize(transcript: string): Mapped {
 	return REWRITES.reduce((text, [pattern, replace]) => rewrite(text, pattern, replace), identity(transcript));
 }
 
-// ---------------------------------------------------------------------------------------------------
-// Spoken attributes: project, labels, and priority phrases against existing names, then the quick add
-// parser in its spoken mode for dates, times, recurrence, and reminders.
-
 type Range = { start: number; end: number };
 type FieldToken = Range & { kind: TokenKind };
 
@@ -397,9 +392,6 @@ function readAttributes(text: string, base: number, grammar: Grammar, allowProje
 	};
 }
 
-// ---------------------------------------------------------------------------------------------------
-// Titles.
-
 const INTENT = String.raw`(?:(?:i|we)\s+(?:also\s+|still\s+|really\s+|definitely\s+|probably\s+)*(?:(?:need|have|want|got|ought)\s+to|'ve\s+got\s+to|gotta|should|must|will|'ll|'d\s+like\s+to|would\s+like\s+to|am\s+going\s+to|'m\s+going\s+to)(?:\s+(?:probably|really|also|still|definitely))?|i'll|we'll|(?:also\s+)?(?:need|have|got)\s+to|gotta|don't\s+forget\s+to|do\s+not\s+forget\s+to|remember\s+to|remind\s+me\s+to|make\s+sure\s+(?:to|i|we)|let's|let\s+me|please)`;
 const FILLER = String.raw`(?:let's\s+see|let\s+me\s+(?:think|see)|hmm+|and|also|then|so|oh|hey|plus|okay|ok|um|uh|er|well|actually|wait|sorry|alright|anyway|maybe|probably|possibly)`;
 const LEADING_JOINERS = new RegExp(
@@ -467,9 +459,6 @@ function buildTitle(
 	}
 	return cleanTitle(parts.join(' '));
 }
-
-// ---------------------------------------------------------------------------------------------------
-// Segmenting into tasks, subtasks, and notes.
 
 const VERBS = [
 	'call',
@@ -664,7 +653,6 @@ function isTaskLike(text: string): boolean {
 	return new RegExp(String.raw`^(?:\S+\s+){1,3}${INTENT}\b`, 'i').test(t);
 }
 
-/** Splits a run of text inside one sentence into clauses, each starting a new task after the first. */
 function splitClauses(text: string, base: number): Range[] {
 	const clauses: Range[] = [];
 	let start = 0;
@@ -748,8 +736,6 @@ function findBoundaries(text: string): Boundary[] {
 
 const isBlank = (text: string) => !/[\p{L}\p{N}]/u.test(text);
 
-// ---------------------------------------------------------------------------------------------------
-
 export function parseRamble(transcript: string, options: RambleOptions): RambleDraft {
 	const mapped = normalize(transcript);
 	const grammar: Grammar = {
@@ -794,7 +780,6 @@ export function parseRamble(transcript: string, options: RambleOptions): RambleD
 
 	const isAttributesOnly = (range: Range, item: Item) => !titleOf([range], item.parent === null).title;
 
-	/** A continuation cue at the start of a clause, such as `make it` in `Make it due tomorrow`. */
 	const leadingCue = (range: Range): Range | null => {
 		const clause = span(range);
 		const skip = clause.length - clause.replace(/^\s+/, '').length;

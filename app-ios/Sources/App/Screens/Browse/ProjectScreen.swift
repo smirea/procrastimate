@@ -1,7 +1,6 @@
 import Core
 import SwiftUI
 
-/// A project's top-level open tasks. Quick add here files new tasks into the project.
 struct ProjectScreen: View {
     @Environment(Store.self) private var store
     let projectID: String

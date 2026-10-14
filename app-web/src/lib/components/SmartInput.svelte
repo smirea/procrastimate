@@ -31,10 +31,8 @@
 		autofocus?: boolean;
 		suggestProjects?: boolean;
 		enterkeyhint?: 'enter' | 'done' | 'send';
-		/** Where the open suggestion list's `#` or `@` sits, or null while no list shows. */
 		listAt?: number | null;
 		class?: string;
-		/** Leaves room on the right for a mic or stop button sitting in the field. */
 		reserve?: boolean;
 		oninput?: () => void;
 		onkeydown?: (event: KeyboardEvent) => void;
@@ -56,7 +54,6 @@
 	let active = $state(0);
 	/** Arrow keys were used, so Enter picks even when the typed name already matches. */
 	let navigated = $state(false);
-	/** The sigil position the user dismissed with Escape. */
 	let dismissed = $state<number | null>(null);
 
 	type Segment = { text: string; kind: QuickAddToken['kind'] | null };
@@ -73,7 +70,6 @@
 		return out;
 	});
 
-	/** The `#` or `@` fragment closest before the caret. */
 	const fragment = $derived.by(() => {
 		if (!focused) return null;
 		let closest: (SigilFragment & { kind: NameKind }) | null = null;

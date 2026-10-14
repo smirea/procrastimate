@@ -86,7 +86,6 @@ const byCreation = (a: Task, b: Task) => a.createdAt - b.createdAt || (a.id < b.
 /** Tasks stay sorted by `createdAt`, then `id`, so every client and the sync server agree on one order. */
 export const sortTasks = (tasks: readonly Task[]) => tasks.toSorted(byCreation);
 
-/** Writes each value over the fields of the task with its id. */
 function put(tasks: readonly Task[], changed: readonly (Partial<Task> & Pick<Task, 'id'>)[]): Task[] {
 	if (!changed.length) return [...tasks];
 	const byId = new Map(changed.map(c => [c.id, c]));
@@ -163,7 +162,6 @@ export function reopenTask(data: StoreData, id: string): StoreData {
 	return { ...data, tasks: put(data.tasks, subtasks.reopenTask(data.tasks, id)) };
 }
 
-/** Puts back what a completion changed, as its undo captured it. */
 export function restoreCompletion(data: StoreData, previous: readonly CompletionState[]): StoreData {
 	return { ...data, tasks: put(data.tasks, previous) };
 }

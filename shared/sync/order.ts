@@ -12,7 +12,6 @@ export const MIN_ORDER_GAP = 1e-9;
 export const bySiblingOrder = (a: Sibling, b: Sibling) =>
 	a.order - b.order || a.createdAt - b.createdAt || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 
-/** The midpoint of two neighbors, or one past the only neighbor, or `0` with none. */
 export function orderBetween(previous: number | null, next: number | null): number {
 	if (previous === null) return next === null ? 0 : next - 1;
 	if (next === null) return previous + 1;
@@ -38,7 +37,6 @@ export function moveOrders(siblings: readonly Sibling[], id: string, index: numb
 	return placed.flatMap((s, order) => (s.order === order ? [] : [{ id: s.id, order }]));
 }
 
-/** Whether the move leaves the sibling where it already sits. */
 function sameSpot(siblings: readonly Sibling[], moved: Sibling, at: number) {
 	return siblings.toSorted(bySiblingOrder).indexOf(moved) === at;
 }

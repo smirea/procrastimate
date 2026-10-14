@@ -1,7 +1,6 @@
 import Core
 import SwiftUI
 
-/// Every open task with the label, across projects, each naming its project. Quick add here starts with the label.
 struct LabelScreen: View {
     @Environment(Store.self) private var store
     let labelID: String

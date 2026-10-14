@@ -1,14 +1,10 @@
 import Observation
 import SwiftUI
 
-/// What an intent asks the interface to show, and the DEBUG readouts the UI tests read back.
 @MainActor @Observable
 final class IntentRouter {
-    /// Set by Search Tasks. The search screen applies it once and clears it.
     var searchQuery: String?
-    /// Machine-readable lines from intents, present only while the UI test script is set.
     var harnessLog = ""
-    /// Titles of the open tasks the app is indexing in Spotlight, sorted and comma-separated.
     var spotlight = ""
 
     func note(_ line: String) {

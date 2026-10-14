@@ -51,14 +51,12 @@ struct CanvasBackground: View {
             .ignoresSafeArea()
     }
 
-    /// `radial-gradient(<width> <height> at <center>, <color>, transparent 60%)`.
     private func glow(_ color: Color, at center: UnitPoint, width: CGFloat, height: CGFloat) -> some View {
         RadialGradient(colors: [color, color.opacity(0)], center: center, startRadius: 0, endRadius: width * 0.6)
             .scaleEffect(x: 1, y: height / width, anchor: center)
     }
 }
 
-/// The floating `.glassProminent` plus button, like the web's floating `Quick add`.
 struct AddButton: View {
     @Environment(Navigator.self) private var navigator
     let defaults: QuickAddDefaults
@@ -77,7 +75,6 @@ struct AddButton: View {
     }
 }
 
-/// A section heading in a list, such as `Overdue` or an Upcoming day.
 struct ListHeading: View {
     let text: String
     var tone: Color = .ink

@@ -1,11 +1,9 @@
 import Foundation
 
-/// The iOS side of notifying: which moments the device keeps pending, and which reminders the open app shows.
 extension Notifications {
     /// iOS keeps at most 64 pending requests per app. The app keeps the soonest 60 and refills the window as they fire.
     public static let maxScheduled = 60
 
-    /// A request the device already holds, by the identifier and content it was scheduled with.
     public struct Pending: Hashable, Sendable {
         public var id: String
         public var title: String

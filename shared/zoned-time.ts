@@ -27,7 +27,6 @@ function formatter(zone: string): Intl.DateTimeFormat {
 	return format;
 }
 
-/** The wall clock of `at` in `zone`. */
 function wallClock(at: number, zone: string) {
 	const parts: Record<string, number> = {};
 	for (const part of formatter(zone).formatToParts(at)) {
@@ -36,7 +35,6 @@ function wallClock(at: number, zone: string) {
 	return parts as Record<'year' | 'month' | 'day' | 'hour' | 'minute' | 'second', number>;
 }
 
-/** How far `zone`'s wall clock is ahead of UTC at `at`, in milliseconds. */
 function offsetAt(at: number, zone: string): number {
 	const wall = wallClock(at, zone);
 	const asUtc = Date.UTC(wall.year, wall.month - 1, wall.day, wall.hour, wall.minute, wall.second);
@@ -70,7 +68,6 @@ export function zonedTime(date: DateKey, time: TimeOfDay, zone?: string): number
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
-/** The calendar date `at` falls on in `zone`. */
 export function zonedDateKey(at: number, zone?: string): DateKey {
 	if (zone === undefined) {
 		const date = new Date(at);

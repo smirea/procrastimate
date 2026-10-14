@@ -16,7 +16,6 @@ struct SubtaskList: View {
     @State private var drag: Drag?
     @State private var frames: [String: CGRect] = [:]
 
-    /// The dragged row follows the finger, and the rows it passes slide one step out of its way.
     private struct Drag: Equatable {
         let id: String
         let from: Int
@@ -137,7 +136,6 @@ struct SubtaskList: View {
             }
     }
 
-    /// Moves a subtask one place up or down, for VoiceOver's actions on the handle.
     private func move(_ id: String, from index: Int, by: Int, count: Int) {
         let to = index + by
         guard to >= 0, to < count else { return }

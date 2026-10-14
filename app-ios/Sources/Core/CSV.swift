@@ -1,6 +1,5 @@
 import Foundation
 
-/// The CSV reader of `shared/csv.ts`.
 public enum CSV {
     /// Rows of an RFC 4180 CSV document. Quoted fields hold commas, doubled quotes, and line breaks. Line endings
     /// become `\n`, inside fields too, and a leading byte order mark is dropped.

@@ -34,7 +34,6 @@ public enum StoreRules {
         }
     }
 
-    /// Writes each changed task over the task with its id.
     static func put(_ tasks: [TaskItem], _ changed: [TaskItem]) -> [TaskItem] {
         let byId = Dictionary(changed.map { ($0.id, $0) }, uniquingKeysWith: { _, last in last })
         return tasks.map { byId[$0.id] ?? $0 }

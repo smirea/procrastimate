@@ -42,7 +42,6 @@ const task = (id: string, createdAt: number, fields: Partial<Task> = {}): Task =
 const NOW = 1_000;
 const today = '2026-10-14';
 
-/** Trip, in Home, has Passport and Charger. Standup repeats daily. Call has the `calls` label. */
 const data = (): StoreData => ({
 	tasks: [
 		task('trip', 1, { projectId: 'home' }),

@@ -46,7 +46,6 @@ export function upstreamUrl(keyterms: readonly string[]): string {
 	return url.toString();
 }
 
-/** The words the spoken grammar listens for, biased first. */
 export const KEYTERM_TRIGGERS = ['subtask', 'priority', 'remind', 'project', 'label'];
 export const MAX_KEYTERMS = 50;
 export const MAX_KEYTERM_LENGTH = 20;
@@ -120,10 +119,8 @@ export const DEFAULT_LIMITS: RambleLimits = {
 /** How the account reaches ElevenLabs: null without a key, which turns Ramble off. */
 export type RambleConfig = { connect: ConnectUpstream | null; limits?: RambleLimits; budget?: RambleBudget | null };
 
-/** Seconds reserved against the deployment's UTC-day budget for one session. */
 type RambleGrant = { day: string; seconds: number };
 
-/** Ramble on one account: how to host and transcribe a session, and the sessions streaming now. */
 export type Ramble = {
 	stream: SocketHost['stream'];
 	connect: ConnectUpstream | null;
@@ -144,7 +141,6 @@ export function ramble(sockets: SocketHost, config: RambleConfig): Ramble {
 	};
 }
 
-/** How long a stop waits for the last committed text before ending anyway. */
 const FINAL_COMMIT_MS = 3000;
 /** How long ElevenLabs has to start a session. */
 const CONNECT_MS = 10_000;
@@ -391,7 +387,6 @@ function session({
 	};
 }
 
-/** The account's time zone, or UTC, which is where the daily cap's day starts and ends. */
 function accountZone(timeZone: string | null): string {
 	return timeZone && isTimeZone(timeZone) ? timeZone : 'UTC';
 }

@@ -59,10 +59,8 @@ type Operation = {
 };
 
 export type Input = {
-	/** Every named schema, with `$ref`s to `#/components/schemas/<name>`. */
 	components: Record<string, Schema>;
 	paths: Record<string, Record<string, Operation>>;
-	/** Each Drizzle table's column defaults, by property. */
 	tableDefaults: Record<string, Record<string, unknown>>;
 };
 
@@ -80,11 +78,9 @@ type Prop = {
 	required: boolean;
 	nullable: boolean;
 	defaultValue?: unknown;
-	/** Checks on the value, and on each item of an array of plain values. */
 	checks: Check[];
 	itemChecks: Check[];
 	doc?: string;
-	/** Epoch milliseconds in JSON, read and written through Core's `Date(epochMilliseconds:)`. */
 	epochMs?: boolean;
 	/** In a flattened union, the tag values whose branches have this property. Others ignore it, as Zod does. */
 	onlyWhen?: { tag: string; values: string[] };
@@ -119,7 +115,6 @@ const PRIMITIVES: Record<string, string> = { string: 'String', integer: 'Int', n
 class Generator {
 	readonly decls = new Map<string, Decl>();
 	private readonly named = new Map<Schema, string>();
-	/** The checks a typealias carries to every property that uses it. */
 	private readonly aliasChecks = new Map<string, Check[]>();
 	private readonly visiting = new Set<string>();
 
@@ -152,7 +147,6 @@ class Generator {
 		return { schema: { ...schema, anyOf: rest, oneOf: undefined }, nullable: true };
 	}
 
-	/** `allOf` over one union becomes a union of each branch merged with the rest. */
 	private flatten(schema: Schema): Schema {
 		if (!schema.allOf) return schema;
 		const parts = schema.allOf.map(part => this.flatten(this.resolve(part)));
@@ -197,7 +191,6 @@ class Generator {
 		}
 	}
 
-	/** The Swift type for `schema`, declaring it as `hint` when it needs a declaration of its own. */
 	type(input: Schema, hint: string): string {
 		if (input['x-swift-type']) return input['x-swift-type'];
 		if (input.$ref) return this.component(this.refName(input.$ref));
@@ -250,7 +243,6 @@ class Generator {
 		return checks;
 	}
 
-	/** A value's checks: its own, and those of the typealias it refers to. */
 	private valueChecks(schema: Schema): Check[] {
 		if (!schema.$ref) return this.ownChecks(schema);
 		const name = this.refName(schema.$ref);
@@ -353,7 +345,6 @@ class Generator {
 		return name;
 	}
 
-	/** One struct with every branch's properties. Those not in every branch are optional. */
 	private flattened(input: Schema, branches: Schema[], name: string, tags: Record<string, string>): string {
 		const properties: Record<string, Schema> = {};
 		for (const branch of branches) Object.assign(properties, branch.properties);
@@ -379,7 +370,6 @@ class Generator {
 		return name;
 	}
 
-	/** A property every branch requires as a distinct string constant. */
 	private tag(branches: Schema[]): string | null {
 		const first = branches[0];
 		if (!first?.properties) return null;
@@ -392,7 +382,6 @@ class Generator {
 		return null;
 	}
 
-	/** Each branch's case: its first string value of a property they all share, or its first property no other has. */
 	private caseNames(branches: Schema[]): string[] {
 		const shared = Object.keys(branches[0]?.properties ?? {}).find(key =>
 			branches.every(branch => {
@@ -431,7 +420,6 @@ class Generator {
 		throw new Error(`${name}: unsupported constant ${JSON.stringify(value)}`);
 	}
 
-	/** A default as a Swift literal of `type`. */
 	literal(value: unknown, type: string): string {
 		if (value === null) return 'nil';
 		const decl = this.decls.get(type);
@@ -458,7 +446,6 @@ class Generator {
 
 const PROTOCOLS = 'Codable, Hashable, Sendable';
 
-/** A string enum's case: its `x-enum-names` entry, or the value in camel case. */
 function caseName(decl: { values: string[]; names?: string[] }, value: string): string {
 	const name = decl.names?.[decl.values.indexOf(value)] ?? camel(value);
 	if (!name) throw new Error(`Add x-enum-names for the string enum value ${JSON.stringify(value)}`);
@@ -476,7 +463,6 @@ function references(schema: unknown): string[] {
 const docLines = (doc: string | undefined, indent: string) =>
 	doc ? doc.split('\n').map(line => `${indent}/// ${line}`) : [];
 
-/** A property that may be absent but has a default is stored as the plain type. */
 const defaulted = (prop: Prop) => !prop.required && !prop.nullable && prop.defaultValue !== undefined;
 
 /** Absent and `null` mean different things only when absent has no default of its own. */
@@ -538,7 +524,6 @@ function rule(check: Check): string {
 	}
 }
 
-/** The decoder's checks of one property, once `source` holds it. */
 function checkLines(prop: Prop, source: string, indent: string): string[] {
 	const key = `.${bare(prop.swift)}`;
 	const lines = [
@@ -557,7 +542,6 @@ function checkLines(prop: Prop, source: string, indent: string): string[] {
 	return [`${indent}do {`, `${indent}    let value = ${source}`, ...body, `${indent}}`];
 }
 
-/** Checks run only for a decoder that asks for them, as at the network and storage boundaries. */
 function validating(lines: string[], indent: string): string[] {
 	if (!lines.length) return [];
 	return [`${indent}if decoder.validates {`, ...lines.map(line => `    ${line}`), `${indent}}`];

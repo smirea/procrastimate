@@ -1,8 +1,6 @@
 import Core
 import SwiftUI
 
-/// A task in a list: a priority-tinted checkbox, the title, and a line of details. Leading swipe completes, trailing
-/// swipe deletes, and tapping opens task details.
 struct TaskRow: View {
     @Environment(Store.self) private var store
     @Environment(TaskActions.self) private var actions
@@ -130,7 +128,6 @@ struct TaskRow: View {
     }
 }
 
-/// An icon and a short text in a row's detail line.
 private struct Detail: View {
     let systemImage: String
     let text: String
@@ -158,7 +155,6 @@ struct LabelChip: View {
     }
 }
 
-/// `done/total` with a ring, on a parent's row.
 struct SubtaskProgress: View {
     let progress: Subtasks.Progress
 
@@ -182,7 +178,6 @@ struct SubtaskProgress: View {
     }
 }
 
-/// A round checkbox tinted by priority. It fills and pops when checked.
 struct Checkbox: View {
     let checked: Bool
     let tone: Color

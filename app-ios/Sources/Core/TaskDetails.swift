@@ -138,7 +138,6 @@ public enum RepeatMenu {
     }
 }
 
-/// The reminder menu's rules from `ReminderPicker.svelte`.
 public enum ReminderMenu {
     /// Minutes before the due time: at due time, 10m, 30m, 1h, and 1d.
     public static let presets = [0, 10, 30, 60, 1440]

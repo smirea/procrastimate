@@ -1,9 +1,6 @@
 import Core
 import SwiftUI
 
-/// The search tab: `.searchable` over tasks, notes, projects, and labels, grouped and highlighted by `Core`'s
-/// `Search`. A task opens task details, and a project or label pushes its screen onto the search tab. Return opens the
-/// selected result, and a hardware keyboard's Up and Down move the selection, like the web's combobox.
 struct SearchScreen: View {
     @Environment(Store.self) private var store
     @Environment(Navigator.self) private var navigator
@@ -74,7 +71,6 @@ struct SearchScreen: View {
         .onChange(of: router.searchQuery) { applyRoutedQuery() }
     }
 
-    /// Search Tasks sets the query before this tab is shown, or while it is already on screen.
     private func applyRoutedQuery() {
         guard let routed = router.searchQuery else { return }
         router.searchQuery = nil

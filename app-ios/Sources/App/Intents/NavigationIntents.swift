@@ -1,6 +1,5 @@
 import AppIntents
 
-/// Inbox, Today, and Upcoming, spoken as those words.
 enum TaskListKind: String, AppEnum {
     case inbox, today, upcoming
 

@@ -6,7 +6,6 @@ import { session } from './session.svelte.ts';
 import { store } from './store.svelte.ts';
 import { sheets } from './ui.svelte.ts';
 
-/** Where this device stands with Web Push. Settings shows one line from it, and nothing else. */
 export type PushState =
 	| { kind: 'checking' }
 	| { kind: 'unsupported' }
@@ -39,7 +38,6 @@ class Push {
 		return 'off';
 	}
 
-	/** Detects the state and listens for what can change it. Returns the cleanup. */
 	start() {
 		void this.detect();
 		const listeners: [EventTarget, string, (event: Event) => void][] = [
@@ -122,7 +120,7 @@ class Push {
 		});
 	}
 
-	/** The settings line, when permission was blocked. Asks again; the browser may only offer its own settings. */
+	/** The browser may only offer its own settings. */
 	request() {
 		const key = this.#key;
 		if (!key || this.state.kind === 'on' || this.state.kind === 'enabling') return;
@@ -150,7 +148,6 @@ class Push {
 		}
 	}
 
-	/** Registers the subscription for this signed-in device. The server then pushes whatever the synced tasks call for. */
 	async #register(subscription: PushSubscriptionInfo) {
 		if (this.#registered === subscription.endpoint) return;
 		if (session.state !== 'in' || !store.deviceId()) return;

@@ -1,6 +1,5 @@
 import Foundation
 
-/// What one ramble writes into quick add. Mirrors `quickAddFromRamble` in `shared/ramble-fill.ts`.
 public struct RambleQuickAdd: Hashable, Sendable {
     public var text: String
     public var due: Due?

@@ -39,14 +39,11 @@ export const NO_METADATA_CATEGORIES: readonly Category[] = ['plain', 'trigger-wo
 export type ExpectedTask = {
 	title: string;
 	notes?: string;
-	/** `YYYY-MM-DD` or `YYYY-MM-DD HH:MM`. */
 	due?: string;
 	recurrence?: Recurrence;
 	priority?: Priority;
 	reminders?: Reminder[];
-	/** A seed project's name. */
 	project?: string;
-	/** Seed label names. */
 	labels?: string[];
 	subtasks?: ExpectedTask[];
 };

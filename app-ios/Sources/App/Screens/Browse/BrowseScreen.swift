@@ -1,7 +1,7 @@
 import Core
 import SwiftUI
 
-/// Projects, then places and calendar events while open tasks use them, then labels, with their open counts, then Notifications and Settings, like the web sidebar.
+/// Places and calendar events show while open tasks use them.
 struct BrowseScreen: View {
     @Environment(Navigator.self) private var navigator
     @Environment(Store.self) private var store
@@ -110,7 +110,6 @@ struct BrowseScreen: View {
         .sensoryFeedback(.success, trigger: created)
     }
 
-    /// Like the web sidebar: an empty name cancels, and a new project opens at once.
     private func createProject() {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         name = ""
@@ -122,7 +121,6 @@ struct BrowseScreen: View {
     }
 }
 
-/// A project or label in Browse: its tinted icon, its name, and its open count when it has any.
 private struct BrowseRow: View {
     let name: String
     let systemImage: String

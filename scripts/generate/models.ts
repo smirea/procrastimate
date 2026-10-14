@@ -20,7 +20,6 @@ const HAND_WRITTEN: Record<string, string> = {
 const DECLARATION =
 	/^\s*(?:public |private |fileprivate |internal )?(?:struct|enum) (\w+)(?:<[^>]*>)?:[^{]*\b(?:Codable|Decodable|Encodable)\b/gm;
 
-/** Codable declarations under `folders` that are neither generated nor on the list above. */
 export function handWrittenModels(root: string, folders: string[]): string[] {
 	const found: string[] = [];
 	for (const folder of folders) {

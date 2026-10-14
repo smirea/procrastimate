@@ -1,6 +1,5 @@
 import Foundation
 
-/// Chip, row, heading, and toast strings from `shared/format.ts`, in US English like the web.
 public enum Format {
     public typealias DueTone = API.DueTone
 
@@ -117,6 +116,5 @@ public enum Format {
         next.map { "Completed “\(title)”, next due \(formatDue($0, today))" } ?? "Completed “\(title)”"
     }
 
-    /// The toast an open app shows when a task's due time or reminder comes up.
     public static func reminderToast(_ title: String) -> String { "Reminder: \(title)" }
 }

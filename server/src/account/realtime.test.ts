@@ -16,7 +16,6 @@ import { TEST_AUTH_SECRET } from './test-device';
 import { serveDev } from '../dev-server';
 import { durableSockets, realtime } from './realtime';
 
-/** A client socket that records what it hears. `opened` settles false when the server refuses the upgrade. */
 function listen(socket: WebSocket) {
 	const messages: string[] = [];
 	const opened = new Promise<boolean>(resolve => {
@@ -34,7 +33,6 @@ function listen(socket: WebSocket) {
 		messages,
 		opened,
 		closed,
-		/** Resolves with the next message, or the one already waiting at `index`. */
 		async message(index: number) {
 			while (messages.length <= index) await new Promise<void>(resolve => (waiter = resolve));
 			return messages[index]!;

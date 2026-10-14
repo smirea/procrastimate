@@ -1,8 +1,6 @@
 import Core
 import SwiftUI
 
-/// Everything typed after a sigil and picked by name: projects after `#`, labels after `@`. Both kinds share one
-/// autocomplete, like the web's `NAME_SOURCES`.
 enum NameKind: CaseIterable {
     case project
     case label
@@ -14,7 +12,6 @@ enum NameKind: CaseIterable {
         }
     }
 
-    /// The list's accessible name.
     var list: String {
         switch self {
         case .project: "Projects"
@@ -37,7 +34,6 @@ enum NameKind: CaseIterable {
     }
 }
 
-/// The `#` or `@` fragment at the caret with its ranked suggestions.
 struct NameMatch: Equatable {
     enum Suggestion: Hashable {
         case existing(id: String, name: String)
@@ -48,7 +44,6 @@ struct NameMatch: Equatable {
     let fragment: NameSearch.Fragment
     let suggestions: [Suggestion]
 
-    /// The fragment closest before the caret, of either kind.
     @MainActor
     static func at(_ caret: Int, in text: String, store: Store, kinds: [NameKind]) -> NameMatch? {
         var closest: (kind: NameKind, fragment: NameSearch.Fragment)?
@@ -71,7 +66,6 @@ struct NameMatch: Equatable {
         return NameMatch(kind: kind, fragment: fragment, suggestions: suggestions)
     }
 
-    /// The name to insert, creating the project or label when the row offers to.
     @MainActor
     func name(of suggestion: Suggestion, store: Store) -> String {
         switch suggestion {
@@ -94,10 +88,8 @@ extension NameMatch.Suggestion {
     }
 }
 
-/// The suggestion list above the input, with the typed part of each name in bold.
 struct NameSuggestionList: View {
     let match: NameMatch
-    /// The row hardware keys move through and Return or Tab picks.
     let active: Int
     let onPick: (NameMatch.Suggestion) -> Void
 

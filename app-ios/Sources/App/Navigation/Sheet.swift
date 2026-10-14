@@ -10,5 +10,4 @@ enum Sheet: Identifiable, Hashable {
     var id: Self { self }
 }
 
-/// What a new task starts with, from the list quick add opened in.
 typealias QuickAddDefaults = QuickAddDraft.Defaults

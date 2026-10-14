@@ -14,7 +14,6 @@ import type { AccountStore } from './store';
 import { authHeaders, registerDevice, withAuth, type DeviceCredentials } from './test-device';
 import { storeFactories } from './test-stores';
 
-/** Saturday, October 10 2026, 12:00 UTC. */
 const NOW = Date.UTC(2026, 9, 10, 12);
 const HOUR = 3_600_000;
 
@@ -67,7 +66,6 @@ describe.each(storeFactories)('server-computed push on the %s store', (_name, cr
 	const received = (name: string) =>
 		sent.filter(push => push.endpoint === subscriptionFor(name).endpoint).map(push => push.message);
 
-	/** A paired device with its own copy of the data, which syncs each edit the way the clients do. */
 	async function device(name: string, initial: Snapshot = snapshotOf()) {
 		const credentials = await registerDevice(env, name);
 		const nextOpId = counter(`${name}-op-`);
@@ -149,12 +147,10 @@ describe.each(storeFactories)('server-computed push on the %s store', (_name, cr
 				}),
 			),
 		);
-		// 13:00 in New York is 17:00 UTC.
 		expect(await mac.schedule()).toEqual(['Gym@1710m: Due at 1:00 PM', 'Gym@1740m: Due now']);
 		expect(alarm).toBe(NOW + 1710 * 60_000);
 
 		await mac.edit(snapshot => ({ ...snapshot, settings: { ...snapshot.settings, timeZone: 'Asia/Tokyo' } }));
-		// 13:00 in Tokyo is 04:00 UTC.
 		expect(await mac.schedule()).toEqual(['Gym@930m: Due at 1:00 PM', 'Gym@960m: Due now']);
 		expect(alarm).toBe(NOW + 930 * 60_000);
 	});

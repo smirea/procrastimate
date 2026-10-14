@@ -13,7 +13,6 @@ export type RambleLedger = {
 	add(day: string, seconds: number): void;
 	clear(): void;
 	snapshot(): RambleUsage[];
-	/** Resolves when the latest scheduled write has finished. */
 	settled(): Promise<void>;
 };
 

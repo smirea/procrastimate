@@ -29,7 +29,6 @@ export const authMethodsSchema = z
 	.meta({ id: 'AuthMethods' });
 export type AuthMethods = z.infer<typeof authMethodsSchema>;
 
-/** What the server will deliver to the calling device, soonest first: its push row's pending notifications. */
 export const pushScheduleResponseSchema = pushRowSchema.pick({ notifications: true }).meta({ id: 'PushSchedule' });
 export type PushScheduleResponse = z.infer<typeof pushScheduleResponseSchema>;
 
@@ -40,7 +39,6 @@ const pushStatusSchema = z.object({ status: z.number().int().nullable() });
 
 const signedIn = oc.errors({ UNAUTHORIZED: {}, SERVICE_UNAVAILABLE: {} });
 
-/** Served by the Worker itself. */
 export const workerContract = {
 	status: oc.meta(openapi({ method: 'GET', path: '/api/status' })).output(okSchema),
 	auth: {
@@ -55,7 +53,6 @@ export const workerContract = {
 			.errors({ SERVICE_UNAVAILABLE: {} })
 			.meta(openapi({ method: 'GET', path: '/api/push/key' }))
 			.output(pushKeySchema),
-		/** Sends one push to `subscription` right away, for the settings check. */
 		test: signedIn
 			.errors({
 				GONE: { data: pushStatusSchema },
@@ -93,7 +90,6 @@ export const internalContract = {
 		.output(okSchema),
 };
 
-/** What clients call. */
 export const contract = {
 	...workerContract,
 	...accountContract,

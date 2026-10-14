@@ -4,7 +4,6 @@ import { MAX_SCHEDULED, pushTag, type ScheduledPush } from '../../shared/push';
 export const STALE_AFTER_MS = 10 * 60_000;
 export const RETRY_DELAY_MS = 60_000;
 
-/** How a push service response settles one scheduled push. */
 export type Delivery = 'sent' | 'gone' | 'retry';
 
 /**

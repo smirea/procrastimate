@@ -1,7 +1,6 @@
 import Observation
 import SwiftUI
 
-/// The glass toasts at the bottom, such as undo after completing or deleting. Each one closes after five seconds.
 @MainActor @Observable
 final class Toasts {
     struct Action {

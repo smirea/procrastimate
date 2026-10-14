@@ -28,7 +28,6 @@ export const tasks = sqliteTable(
 		id: text('id').notNull(),
 		/** The task this one is a subtask of. A subtask shares its root task's project. */
 		parentId: text('parent_id'),
-		/** Position among its siblings, ascending. */
 		order: real('order').notNull().default(0),
 		title: text('title').notNull(),
 		notes: text('notes').notNull().default(''),
@@ -66,7 +65,6 @@ export const projects = sqliteTable(
 	userEntity,
 );
 
-/** A tag that crosses projects. A task carries any number of them. */
 export const labels = sqliteTable(
 	'labels',
 	{
@@ -168,7 +166,6 @@ export const rambleUsage = sqliteTable(
 	table => [primaryKey({ columns: [table.userId, table.day] })],
 );
 
-/** Audio seconds the whole deployment streamed on one UTC day. */
 export const rambleBudget = sqliteTable('ramble_budget', {
 	day: text('day').primaryKey(),
 	seconds: real('seconds').notNull(),

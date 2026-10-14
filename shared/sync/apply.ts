@@ -4,7 +4,6 @@ import { diff, stamp } from './diff.ts';
 import type { Change, Op, Patch, Snapshot, SyncResponse } from './protocol.ts';
 import { emptySnapshot, entitiesOf, entityFrom, fieldsOf, sortSnapshot, withEntities } from './snapshot.ts';
 
-/** A client's sync state, stored next to its snapshot. `epoch` is the wipe generation it last applied. */
 export type ClientSync = { cursor: number; outbox: Op[]; clock: Clock; epoch: number };
 
 /**
@@ -28,7 +27,6 @@ export function applyPatch(snapshot: Snapshot, { kind, id, fields }: Pick<Patch,
 const applyAll = (snapshot: Snapshot, patches: readonly Pick<Patch, 'kind' | 'id' | 'fields'>[]) =>
 	sortSnapshot(patches.reduce(applyPatch, snapshot));
 
-/** Applies the server's log rows in order. */
 export const applyChanges = (snapshot: Snapshot, changes: readonly Change[]) => applyAll(snapshot, changes);
 
 /** Reapplies ops the server has not acknowledged, so local edits stay visible until the server answers. */

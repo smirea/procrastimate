@@ -53,7 +53,6 @@ export function zodModule(): string {
 	].join('\n');
 }
 
-/** Each table's column defaults, by property, for the Swift initializers. A SQL expression default is left out. */
 export function tableDefaults(): Record<string, Record<string, unknown>> {
 	const tables = Object.entries(schema as Record<string, unknown>).filter(
 		(entry): entry is [string, SQLiteTable] => entry[1] instanceof SQLiteTable,

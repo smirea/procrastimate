@@ -3,7 +3,6 @@ import Foundation
 public typealias DictationChoice = API.DictationChoice
 public typealias VoiceCapture = API.VoiceCapture
 
-/// Which recognizer a voice session uses. The same rule as `shared/dictation.ts`.
 public enum Dictation {
     /// ElevenLabs only when it is selected and the device is online. Otherwise native: `speech` when the
     /// platform can start a recognizer, and `typed` when it cannot. `typed` keeps the transcript editable.

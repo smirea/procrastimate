@@ -11,7 +11,6 @@ enum EditorTints {
         let color: UIColor
     }
 
-    /// Applies `tints` to the first-responder text view showing `text`. Returns false when no such view is focused.
     @discardableResult
     static func apply(_ tints: [Tint], to text: String) -> Bool {
         guard let view = focusedTextView(), view.text == text else { return false }
@@ -30,7 +29,6 @@ enum EditorTints {
         return true
     }
 
-    /// The phrases the focused editor actually renders tinted, joined like the highlight readout, for UI tests.
     static func rendered() -> String {
         guard let view = focusedTextView() else { return "" }
         let text = view.textStorage.string as NSString

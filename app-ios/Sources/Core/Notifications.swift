@@ -1,8 +1,6 @@
 import Foundation
 
-/// When tasks notify and what the notification says, from `shared/task.ts` and `shared/notifications.ts`.
 public enum Notifications {
-    /// One system notification, shown at `at`.
     public typealias Scheduled = API.ScheduledNotification
 
     /// When a reminder fires, or nil for a relative reminder on a task without a due time.

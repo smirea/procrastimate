@@ -1,8 +1,6 @@
 import Core
 import SwiftUI
 
-/// One task's details: the title, which parses like quick add and applies on return or when it loses focus, the chips
-/// that spell out what it will apply, labels, notes, subtasks, and delete. Every other change saves as it is made.
 struct TaskDetailsPage: View {
     @Environment(Store.self) private var store
     let taskID: String
