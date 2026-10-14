@@ -42,6 +42,13 @@ struct RootView: View {
         }
         .tabViewStyle(.sidebarAdaptable)
         .tabBarMinimizeBehavior(.onScrollDown)
+        .overlay(alignment: .bottomTrailing) {
+            if navigator.quickAdd == nil {
+                AddButton { navigator.sheet = .quickAdd(navigator.listDefaults) }
+                    .transition(.scale(scale: 0.6).combined(with: .opacity))
+            }
+        }
+        .animation(.snappy(duration: 0.2), value: navigator.quickAdd == nil)
         .overlay(alignment: .bottom) { QuickAddOverlay() }
         .overlay(alignment: navigator.quickAdd == nil ? .bottom : .top) {
             // Quick add covers the bottom of the screen, so toasts move to the top while it is open, as on the web.
@@ -53,6 +60,27 @@ struct RootView: View {
             get: { navigator.quickAdd == nil ? navigator.sheet : nil },
             set: { if $0 != nil || navigator.quickAdd == nil { navigator.sheet = $0 } }
         )) { SheetView(sheet: $0) }
+    }
+}
+
+/// The accent add button. A tab item cannot take its own color, so this sits exactly over the search-role tab's circle,
+/// which keeps the tab bar's layout and stays as the fallback if the two ever drift apart.
+private struct AddButton: View {
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: "plus")
+                .font(.title2.weight(.semibold))
+                .foregroundStyle(.white)
+                .frame(width: 62, height: 62)
+                .glassEffect(.regular.tint(.accent).interactive(), in: .circle)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Quick add")
+        .padding([.trailing, .bottom], 21)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+        .ignoresSafeArea()
     }
 }
 
