@@ -144,7 +144,7 @@ func assemble(_ raw: [(text: String, subtasks: [String])], _ transcript: String)
         if ProcessInfo.processInfo.environment["WHY"] != nil { print("  unbacked: \(t.text) \(t.subtasks)") }
         throw Unbacked()
     }
-    return tasks.flatMap { t -> [RambleTask] in
+    let result = tasks.flatMap { t -> [RambleTask] in
         let own = Set(words(t.text))
         let subtasks = t.subtasks.filter { !Set(words($0)).isSubset(of: own) }.map { fieldsOf($0) }.filter { !$0.title.isEmpty }
         // Without a list, the grammar's own split of the text wins: the model often runs two errands together.
@@ -154,6 +154,13 @@ func assemble(_ raw: [(text: String, subtasks: [String])], _ transcript: String)
         task.subtasks = subtasks
         return [task]
     }
+    // The model can copy one reminder or date into two to-dos; the grammar over the whole transcript bounds them.
+    let whole = grammar(transcript).flatMap { [$0] + $0.subtasks }
+    let all = result.flatMap { [$0] + $0.subtasks }
+    if all.flatMap(\.reminders).count > whole.flatMap(\.reminders).count || all.filter({ $0.due != nil }).count > whole.filter({ $0.due != nil }).count {
+        throw Unbacked()
+    }
+    return result
 }
 
 func split(_ text: String) async throws -> [RambleTask] {
