@@ -87,7 +87,7 @@ final class PlaceMonitor: NSObject {
         guard let monitor else { return }
         let now = clock.now
         let plan = Self.plan(store.tasks, now: now, today: clock.today, in: clock.timeZone)
-        let wanted = Dictionary(plan.armed.map { (Self.conditionID($0.task, $0.location), $0.location) }) { a, _ in a }
+        let wanted = Dictionary(plan.armed.map { (Self.conditionID($0), $0) }) { a, _ in a }
         let existing = Set(await monitor.identifiers)
         for id in existing where wanted[id] == nil {
             await monitor.remove(id)
@@ -107,7 +107,7 @@ final class PlaceMonitor: NSObject {
     }
 
     struct Plan {
-        var armed: [(task: TaskItem, location: TaskLocation)]
+        var armed: [TaskLocation]
         var nextArm: Date?
     }
 
@@ -120,29 +120,31 @@ final class PlaceMonitor: NSObject {
         return moments.min()
     }
 
+    static func isArmed(_ task: TaskItem, now: Date, today: DateKey, in zone: TimeZone) -> Bool {
+        (armingMoment(task, today: today, in: zone) ?? .distantPast) <= now
+    }
+
+    /// One condition per place, armed from its first armed task, so many tasks at one place take one of the 20 slots.
     static func plan(_ tasks: [TaskItem], now: Date, today: DateKey, in zone: TimeZone) -> Plan {
-        var armed: [(at: Date, task: TaskItem, location: TaskLocation)] = []
+        var armed: [String: (at: Date, location: TaskLocation)] = [:]
         var nextArm: Date?
         for task in tasks where task.completedAt == nil {
             guard let location = task.location else { continue }
             let at = armingMoment(task, today: today, in: zone) ?? .distantPast
-            if at <= now {
-                armed.append((at, task, location))
-            } else {
+            guard at <= now else {
                 nextArm = min(nextArm ?? at, at)
+                continue
             }
+            let id = conditionID(location)
+            if at < armed[id]?.at ?? .distantFuture { armed[id] = (at, location) }
         }
-        armed.sort { $0.at < $1.at }
-        return Plan(armed: armed.prefix(limit).map { ($0.task, $0.location) }, nextArm: nextArm)
+        let soonest = armed.values.sorted { $0.at == $1.at ? conditionID($0.location) < conditionID($1.location) : $0.at < $1.at }
+        return Plan(armed: soonest.prefix(limit).map(\.location), nextArm: nextArm)
     }
 
-    /// Keyed by task and spot, so moving a task's place replaces its condition while a trigger change keeps it.
-    static func conditionID(_ task: TaskItem, _ location: TaskLocation) -> String {
-        "\(task.id)|\(Triggers.placeKey(location))|\(Int(location.radius))"
-    }
-
-    private static func taskID(_ conditionID: String) -> String {
-        String(conditionID.prefix { $0 != "|" })
+    /// Keyed by spot and radius, so tasks at one place share a condition and moving a place replaces it.
+    static func conditionID(_ location: TaskLocation) -> String {
+        "\(Triggers.placeKey(location))|\(Int(location.radius))"
     }
 
     private func saveStates() {
@@ -160,14 +162,22 @@ final class PlaceMonitor: NSObject {
         let before = states[id]
         states[id] = inside
         saveStates()
-        guard let task = store.task(Self.taskID(id)), task.completedAt == nil, let location = task.location else { return }
-        switch location.trigger {
-        case .arrive:
-            if before == false, inside { notify(task, location) }
-        case .leave:
-            if before == true, !inside { notify(task, location) }
-        case .during:
-            await reconcileActivities(entered: before == false && inside ? [Triggers.placeKey(location)] : [])
+        let now = clock.now
+        let here = store.tasks.filter { task in
+            guard task.completedAt == nil, let location = task.location else { return false }
+            return Self.conditionID(location) == id && Self.isArmed(task, now: now, today: clock.today, in: clock.timeZone)
+        }
+        for task in here {
+            guard let location = task.location else { continue }
+            switch location.trigger {
+            case .arrive: if before == false, inside { notify(task, location) }
+            case .leave: if before == true, !inside { notify(task, location) }
+            case .during: break
+            }
+        }
+        if here.contains(where: { $0.location?.trigger == .during }) {
+            let entered = before == false && inside ? here.compactMap(\.location).map(Triggers.placeKey) : []
+            await reconcileActivities(entered: Set(entered))
         }
     }
 
@@ -189,7 +199,7 @@ final class PlaceMonitor: NSObject {
         var wanted: [String: (name: String, titles: [String], first: TaskItem)] = [:]
         for task in store.tasks where task.completedAt == nil {
             guard let location = task.location, location.trigger == .during,
-                  states[Self.conditionID(task, location)] == true else { continue }
+                  states[Self.conditionID(location)] == true else { continue }
             let key = Triggers.placeKey(location)
             wanted[key, default: (location.name, [], task)].titles.append(task.title)
         }

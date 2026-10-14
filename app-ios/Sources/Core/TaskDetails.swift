@@ -53,8 +53,9 @@ public enum TaskDetails {
         var draft = Draft(task)
         guard title != task.title, !parsed.title.isEmpty else { return draft }
         draft.title = parsed.title
-        draft.due = parsed.due ?? task.due
-        draft.recurrence = parsed.recurrence ?? task.recurrence
+        // An event stands in for the date and repeat, so a typed one is ignored on an event task, as on the web.
+        draft.due = task.event == nil ? parsed.due ?? task.due : nil
+        draft.recurrence = task.event == nil ? parsed.recurrence ?? task.recurrence : nil
         draft.priority = parsed.priority ?? task.priority
         draft.projectId = parsed.projectId ?? task.projectId
         for id in parsed.labelIds where !draft.labelIds.contains(id) { draft.labelIds.append(id) }

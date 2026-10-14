@@ -71,6 +71,18 @@ import Testing
         #expect(titles(61, 600) == [])
     }
 
+    @Test func dueRemindersFollowEventsAndSkipDueTimesAtAPlace() {
+        var meetup = task("Talk to Jan", nil)
+        meetup.event = TaskEvent(
+            id: "meetup", title: "Walking meetup", allDay: false, series: false, edge: .before, minutes: 15,
+            occurrences: [EventOccurrence(start: minutes(30), end: minutes(90), original: minutes(30))]
+        )
+        var milk = task("Buy milk", Due(date: "2026-10-14", time: "10:30"))
+        milk.location = TaskLocation(name: "Rewe", address: nil, latitude: 52.5, longitude: 13.4, radius: 150, trigger: .arrive)
+        let titles = Notifications.dueReminders([meetup, milk], since: minutes(0), now: minutes(31), in: utc).map(\.title)
+        #expect(titles == ["Talk to Jan"])
+    }
+
     @Test func importingTheSameBackupTwiceAddsNothing() {
         var next = 0
         let store = Store(file: nil, clock: AppClock.fixed(pinned, timeZone: utc), newId: {
