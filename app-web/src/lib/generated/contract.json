@@ -103,5 +103,42 @@
 				}
 			}
 		}
+	},
+	"memoTasks": {
+		"list": {
+			"~orpc": {
+				"errorMap": {},
+				"meta": {
+					"~openapi": {
+						"method": "GET",
+						"path": "/api/memo-tasks",
+						"inputStructure": "detailed"
+					}
+				}
+			}
+		},
+		"put": {
+			"~orpc": {
+				"errorMap": {},
+				"meta": {
+					"~openapi": {
+						"method": "PUT",
+						"path": "/api/memo-tasks"
+					}
+				}
+			}
+		},
+		"delete": {
+			"~orpc": {
+				"errorMap": {},
+				"meta": {
+					"~openapi": {
+						"method": "DELETE",
+						"path": "/api/memo-tasks",
+						"inputStructure": "detailed"
+					}
+				}
+			}
+		}
 	}
 }

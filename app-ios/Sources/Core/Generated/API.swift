@@ -967,6 +967,204 @@ extension API {
         public var id: String { rawValue }
     }
 
+    public struct MemoSource: Codable, Hashable, Sendable {
+        public var memoId: String
+        public var taskKey: String
+
+        public init(memoId: String, taskKey: String) {
+            self.memoId = memoId
+            self.taskKey = taskKey
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case memoId = "memoId"
+            case taskKey = "taskKey"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            memoId = try container.decode(String.self, forKey: .memoId)
+            taskKey = try container.decode(String.self, forKey: .taskKey)
+            if decoder.validates {
+                do {
+                    let value = self.memoId
+                    try check(value.range(of: #"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\z"#, options: .regularExpression) != nil, .memoId, in: container, "memoId matching ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
+                }
+                do {
+                    let value = self.taskKey
+                    try check(value.range(of: #"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\z"#, options: .regularExpression) != nil, .taskKey, in: container, "taskKey matching ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
+                }
+            }
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.memoId, forKey: .memoId)
+            try container.encode(self.taskKey, forKey: .taskKey)
+        }
+    }
+
+    public struct MemoTask: Codable, Hashable, Sendable, Identifiable {
+        public var key: String
+        public var id: String
+        public var title: String
+        public var completedAt: Int?
+        public var due: Due?
+        public var event: TaskEvent?
+
+        public init(key: String, id: String, title: String, completedAt: Int? = nil, due: Due? = nil, event: TaskEvent? = nil) {
+            self.key = key
+            self.id = id
+            self.title = title
+            self.completedAt = completedAt
+            self.due = due
+            self.event = event
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case key = "key"
+            case id = "id"
+            case title = "title"
+            case completedAt = "completedAt"
+            case due = "due"
+            case event = "event"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            key = try container.decode(String.self, forKey: .key)
+            id = try container.decode(String.self, forKey: .id)
+            title = try container.decode(String.self, forKey: .title)
+            completedAt = try container.decode(Int?.self, forKey: .completedAt)
+            due = try container.decode(Due?.self, forKey: .due)
+            event = try container.decode(TaskEvent?.self, forKey: .event)
+            if decoder.validates {
+                do {
+                    let value = self.key
+                    try check(value.range(of: #"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\z"#, options: .regularExpression) != nil, .key, in: container, "key matching ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
+                }
+            }
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.key, forKey: .key)
+            try container.encode(self.id, forKey: .id)
+            try container.encode(self.title, forKey: .title)
+            try container.encode(self.completedAt, forKey: .completedAt)
+            try container.encode(self.due, forKey: .due)
+            try container.encode(self.event, forKey: .event)
+        }
+    }
+
+    public struct MemoTaskInput: Codable, Hashable, Sendable {
+        public var key: String
+        public var title: String
+        public var notes: String
+        public var when: String?
+        public var event: TaskEvent?
+
+        public init(key: String, title: String, notes: String, when: String? = nil, event: TaskEvent? = nil) {
+            self.key = key
+            self.title = title
+            self.notes = notes
+            self.when = when
+            self.event = event
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case key = "key"
+            case title = "title"
+            case notes = "notes"
+            case when = "when"
+            case event = "event"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            key = try container.decode(String.self, forKey: .key)
+            title = try container.decode(String.self, forKey: .title)
+            notes = try container.decode(String.self, forKey: .notes)
+            when = try container.decode(String?.self, forKey: .when)
+            event = try container.decode(TaskEvent?.self, forKey: .event)
+            if decoder.validates {
+                do {
+                    let value = self.key
+                    try check(value.range(of: #"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\z"#, options: .regularExpression) != nil, .key, in: container, "key matching ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
+                }
+            }
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.key, forKey: .key)
+            try container.encode(self.title, forKey: .title)
+            try container.encode(self.notes, forKey: .notes)
+            try container.encode(self.when, forKey: .when)
+            try container.encode(self.event, forKey: .event)
+        }
+    }
+
+    public struct MemoTasks: Codable, Hashable, Sendable {
+        public var tasks: [MemoTask]
+
+        public init(tasks: [MemoTask] = []) {
+            self.tasks = tasks
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case tasks = "tasks"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            tasks = try container.decode([MemoTask].self, forKey: .tasks)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.tasks, forKey: .tasks)
+        }
+    }
+
+    public struct MemoTasksRequest: Codable, Hashable, Sendable {
+        public var memoId: String
+        public var recordedAt: Int
+        public var tasks: [MemoTaskInput]
+
+        public init(memoId: String, recordedAt: Int, tasks: [MemoTaskInput] = []) {
+            self.memoId = memoId
+            self.recordedAt = recordedAt
+            self.tasks = tasks
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case memoId = "memoId"
+            case recordedAt = "recordedAt"
+            case tasks = "tasks"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            memoId = try container.decode(String.self, forKey: .memoId)
+            recordedAt = try container.decode(Int.self, forKey: .recordedAt)
+            tasks = try container.decode([MemoTaskInput].self, forKey: .tasks)
+            if decoder.validates {
+                do {
+                    let value = self.memoId
+                    try check(value.range(of: #"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\z"#, options: .regularExpression) != nil, .memoId, in: container, "memoId matching ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
+                }
+            }
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.memoId, forKey: .memoId)
+            try container.encode(self.recordedAt, forKey: .recordedAt)
+            try container.encode(self.tasks, forKey: .tasks)
+        }
+    }
+
     public struct NewTask: Codable, Hashable, Sendable {
         public var title: String
         public var projectId: String?
@@ -3338,6 +3536,27 @@ extension API.Endpoints {
         public typealias Output = API.AuthMethods
         public static let method = "GET"
         public static let path = "/api/auth/methods"
+    }
+
+    public enum MemoTasksList: APIEndpoint {
+        public typealias Input = NoInput
+        public typealias Output = API.MemoTasks
+        public static let method = "GET"
+        public static let path = "/api/memo-tasks"
+    }
+
+    public enum MemoTasksPut: APIEndpoint {
+        public typealias Input = API.MemoTasksRequest
+        public typealias Output = API.MemoTasks
+        public static let method = "PUT"
+        public static let path = "/api/memo-tasks"
+    }
+
+    public enum MemoTasksDelete: APIEndpoint {
+        public typealias Input = NoInput
+        public typealias Output = API.Ok
+        public static let method = "DELETE"
+        public static let path = "/api/memo-tasks"
     }
 
     public enum PushKey: APIEndpoint {

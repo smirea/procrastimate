@@ -2,6 +2,7 @@ import { oc, type RouterContractClient } from '@orpc/contract';
 import { openapi, type JsonifiedClient } from '@orpc/openapi';
 import { z } from 'zod';
 import { pushRowSchema } from '../db/generated/zod.ts';
+import { memoQuerySchema, memoTasksRequestSchema, memoTasksSchema } from '../memo-tasks.ts';
 import { pushSubscriptionSchema, subscribeRequestSchema } from '../push.ts';
 import { syncRequestSchema, syncResponseSchema } from '../sync/protocol.ts';
 
@@ -79,6 +80,23 @@ export const accountContract = {
 		unsubscribe: signedIn.meta(openapi({ method: 'DELETE', path: '/api/push/subscription' })).output(okSchema),
 		/** What the server will deliver to this device, soonest first. For inspecting a run, not a user path. */
 		schedule: signedIn.meta(openapi({ method: 'GET', path: '/api/push/schedule' })).output(pushScheduleResponseSchema),
+	},
+	/** The voice memo app's tasks. See `docs/decisions/integrations.md`. */
+	memoTasks: {
+		list: signedIn
+			.meta(openapi({ method: 'GET', path: '/api/memo-tasks', inputStructure: 'detailed' }))
+			.input(memoQuerySchema)
+			.output(memoTasksSchema),
+		/** Adds the tasks whose keys the account has never seen, live or deleted, to the Inbox. */
+		put: signedIn
+			.meta(openapi({ method: 'PUT', path: '/api/memo-tasks' }))
+			.input(memoTasksRequestSchema)
+			.output(memoTasksSchema),
+		/** Deletes the memo's live tasks and their subtasks. */
+		delete: signedIn
+			.meta(openapi({ method: 'DELETE', path: '/api/memo-tasks', inputStructure: 'detailed' }))
+			.input(memoQuerySchema)
+			.output(okSchema),
 	},
 };
 

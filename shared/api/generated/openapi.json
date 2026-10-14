@@ -1679,6 +1679,141 @@
 				],
 				"additionalProperties": false,
 				"x-table": "settings"
+			},
+			"MemoTasks": {
+				"type": "object",
+				"properties": {
+					"tasks": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/MemoTask"
+						}
+					}
+				},
+				"required": [
+					"tasks"
+				],
+				"additionalProperties": false
+			},
+			"MemoTask": {
+				"type": "object",
+				"properties": {
+					"key": {
+						"type": "string",
+						"pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+					},
+					"id": {
+						"type": "string"
+					},
+					"title": {
+						"type": "string"
+					},
+					"completedAt": {
+						"anyOf": [
+							{
+								"type": "integer",
+								"minimum": -9007199254740991,
+								"maximum": 9007199254740991
+							},
+							{
+								"type": "null"
+							}
+						]
+					},
+					"due": {
+						"anyOf": [
+							{
+								"$ref": "#/components/schemas/DueOutput"
+							},
+							{
+								"type": "null"
+							}
+						]
+					},
+					"event": {
+						"anyOf": [
+							{
+								"$ref": "#/components/schemas/TaskEventOutput"
+							},
+							{
+								"type": "null"
+							}
+						]
+					}
+				},
+				"required": [
+					"key",
+					"id",
+					"title",
+					"completedAt",
+					"due",
+					"event"
+				],
+				"additionalProperties": false
+			},
+			"MemoTasksRequest": {
+				"type": "object",
+				"properties": {
+					"memoId": {
+						"type": "string",
+						"pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+					},
+					"recordedAt": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991
+					},
+					"tasks": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/MemoTaskInput"
+						}
+					}
+				},
+				"required": [
+					"memoId",
+					"recordedAt",
+					"tasks"
+				]
+			},
+			"MemoTaskInput": {
+				"type": "object",
+				"properties": {
+					"key": {
+						"type": "string",
+						"pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+					},
+					"title": {
+						"type": "string",
+						"minLength": 1
+					},
+					"notes": {
+						"type": "string"
+					},
+					"when": {
+						"type": [
+							"string",
+							"null"
+						]
+					},
+					"event": {
+						"anyOf": [
+							{
+								"$ref": "#/components/schemas/TaskEvent"
+							},
+							{
+								"type": "null"
+							}
+						]
+					}
+				},
+				"required": [
+					"key",
+					"title",
+					"notes",
+					"when",
+					"event"
+				]
 			}
 		}
 	},
@@ -2094,6 +2229,191 @@
 							"application/json": {
 								"schema": {
 									"$ref": "#/components/schemas/SyncResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Unauthorized"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/ServiceUnavailable"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/memo-tasks": {
+			"get": {
+				"operationId": "memoTasks.list",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "memoId",
+						"schema": {
+							"type": "string",
+							"pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true,
+						"required": true
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/MemoTasks"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Unauthorized"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/ServiceUnavailable"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			},
+			"put": {
+				"operationId": "memoTasks.put",
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/MemoTasksRequest"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/MemoTasks"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Unauthorized"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/ServiceUnavailable"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			},
+			"delete": {
+				"operationId": "memoTasks.delete",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "memoId",
+						"schema": {
+							"type": "string",
+							"pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true,
+						"required": true
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Ok"
 								}
 							}
 						}
