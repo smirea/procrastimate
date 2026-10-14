@@ -86,6 +86,14 @@ private struct TaskDetailsForm: View {
                 .background(.ink.opacity(0.04), in: .rect(cornerRadius: 16))
                 .accessibilityLabel("Notes")
 
+                if let memo = task.memoSource {
+                    Link(destination: MemoTasks.memoURL(memo.memoId)) {
+                        SwiftUI.Label("Voice memo", systemImage: "waveform")
+                            .font(.subheadline.weight(.medium))
+                            .frame(minHeight: 44)
+                    }
+                }
+
                 SubtaskList(task: task, navigation: navigation)
 
                 Button(role: .destructive) { delete() } label: {

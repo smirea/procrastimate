@@ -1,3 +1,4 @@
+import Foundation
 import Observation
 
 @MainActor @Observable
@@ -29,5 +30,11 @@ final class Navigator {
         paths[.browse] = []
         tab = .browse
         focusSearch = true
+    }
+
+    /// The task a `procrastimate://task/<id>` link names, such as one from the voice memo app.
+    static func taskID(in url: URL) -> String? {
+        guard url.scheme == "procrastimate", url.host() == "task", url.pathComponents.count == 2 else { return nil }
+        return url.pathComponents[1]
     }
 }

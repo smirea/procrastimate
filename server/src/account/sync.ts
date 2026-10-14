@@ -7,14 +7,20 @@ import {
 	type ServerEntity,
 	type ServerState,
 } from '../../../shared/sync/merge';
-import { SYNC_PAGE_SIZE, type Change, type SyncRequest, type SyncResponse } from '../../../shared/sync/protocol';
+import {
+	SYNC_PAGE_SIZE,
+	type Change,
+	type Op,
+	type SyncRequest,
+	type SyncResponse,
+} from '../../../shared/sync/protocol';
 import type { AccountStore } from './store';
 
 /**
  * The stored rows as the sync core's state. The server's clock is not stored: it only has to stay ahead of every
  * field clock, so it is rebuilt from them, and `tick` keeps it ahead of the wall time.
  */
-function loadState(store: AccountStore): ServerState {
+export function loadState(store: AccountStore): ServerState {
 	const entities = new Map<string, ServerEntity>();
 	let clock = createClock(SERVER_NODE);
 	for (const entity of store.entities()) {
@@ -26,6 +32,16 @@ function loadState(store: AccountStore): ServerState {
 
 /** The live synced state, as a client would see it. */
 export const accountSnapshot = (store: AccountStore) => serverSnapshot(loadState(store));
+
+/** Applies ops and the fixups they need, then writes the entities that changed and every log entry. */
+export function push(store: AccountStore, before: ServerState, ops: readonly Op[], now: number) {
+	const pushed = applyPush(before, ops, { now, isApplied: opId => store.hasOp(opId) });
+	for (const [key, entity] of pushed.state.entities) {
+		if (before.entities.get(key) !== entity) store.putEntity(entity);
+	}
+	for (const entry of pushed.log) store.appendLog(entry);
+	return pushed;
+}
 
 export function sync(store: AccountStore, request: SyncRequest, now: number): SyncResponse {
 	return store.transaction(() => {
@@ -47,12 +63,7 @@ export function sync(store: AccountStore, request: SyncRequest, now: number): Sy
 		}
 		// A cursor past the end means the log was cleared, as after a wipe or a restarted dev server.
 		const restarted = request.cursor > store.lastSeq();
-		const before = loadState(store);
-		const pushed = applyPush(before, request.ops, { now, isApplied: opId => store.hasOp(opId) });
-		for (const [key, entity] of pushed.state.entities) {
-			if (before.entities.get(key) !== entity) store.putEntity(entity);
-		}
-		for (const entry of pushed.log) store.appendLog(entry);
+		const pushed = push(store, loadState(store), request.ops, now);
 
 		const head = store.lastSeq();
 		const hlc = serverHlc(pushed.state);

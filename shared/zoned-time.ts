@@ -66,6 +66,12 @@ export function zonedTime(date: DateKey, time: TimeOfDay, zone?: string): number
 	return valid.length ? Math.min(...valid) : wall - before;
 }
 
+/** The wall clock at `at` in `zone`, as a `Date` whose local fields read it in any process zone. */
+export function wallDate(at: number, zone: string): Date {
+	const wall = wallClock(at, zone);
+	return new Date(wall.year, wall.month - 1, wall.day, wall.hour, wall.minute, wall.second);
+}
+
 const pad = (n: number) => String(n).padStart(2, '0');
 
 export function zonedDateKey(at: number, zone?: string): DateKey {

@@ -7,6 +7,7 @@
 	import Tray from 'phosphor-svelte/lib/Tray';
 	import Repeat from 'phosphor-svelte/lib/Repeat';
 	import Tag from 'phosphor-svelte/lib/Tag';
+	import Waveform from 'phosphor-svelte/lib/Waveform';
 	import { scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import ArrowElbowDownRight from 'phosphor-svelte/lib/ArrowElbowDownRight';
@@ -20,6 +21,7 @@
 	import { WEEKDAY_NAMES, dueTone, formatDue, formatTime, postponeOptions, repeatLabel } from 'shared/format.ts';
 	import { weekdayOf } from 'shared/task.ts';
 	import { eventLabel, formatLocation, scheduledDue } from 'shared/triggers.ts';
+	import { parseMemoSource } from 'shared/memo-tasks.ts';
 	import { PRIORITIES } from '../priorities.ts';
 	import { completeTask, postponeTask } from '../completion.ts';
 
@@ -32,6 +34,7 @@
 	const progress = $derived(store.progress(task.id));
 	const due = $derived(scheduledDue(task, clock.today));
 	const event = $derived(task.event ? eventLabel(task.event, clock.today) : null);
+	const fromMemo = $derived(parseMemoSource(task.sourceKey) !== null);
 
 	function complete() {
 		if (checking) return;
@@ -50,7 +53,7 @@
 		{#if task.notes}
 			<div class="truncate text-[12px] leading-4 text-muted">{task.notes}</div>
 		{/if}
-		{#if due || task.recurrence || task.reminders.length || task.location || progress || labels.length || parent || (showProject && project)}
+		{#if due || task.recurrence || task.reminders.length || task.location || progress || labels.length || parent || fromMemo || (showProject && project)}
 			<div class="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-[12px] leading-4 text-muted">
 				{#if task.event && event && due}
 					<span
@@ -99,6 +102,11 @@
 								<span class="truncate">{label.name}</span>
 							</span>
 						{/each}
+					</span>
+				{/if}
+				{#if fromMemo}
+					<span class="flex items-center" role="img" aria-label="From a voice memo">
+						<Waveform size={12} />
 					</span>
 				{/if}
 				{#if parent}

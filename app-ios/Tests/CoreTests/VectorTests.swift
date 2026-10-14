@@ -122,6 +122,7 @@ let handlers: [String: Handler] = [
     "dictation": dictationVector,
     "triggers": triggersVector,
     "ramble": rambleVector,
+    "memo-tasks": memoTasksVector,
 ]
 
 private struct Occurrence: Decodable {
@@ -393,4 +394,12 @@ private struct RambleInput: Decodable {
 
 extension JSONValue: ExpressibleByStringLiteral {
     public init(stringLiteral value: String) { self = .string(value) }
+}
+
+@Sendable func memoTasksVector(_ fn: String, _ a: Args) throws -> JSONValue {
+    switch fn {
+    case "memoSourceKey": return try json(MemoTasks.memoSourceKey(a(0)))
+    case "parseMemoSource": return try json(MemoTasks.parseMemoSource(a(0)))
+    default: throw unknown(fn)
+    }
 }

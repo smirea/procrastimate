@@ -107,9 +107,12 @@ struct ProcrastimateApp: App {
                 // launch traps on the missing `IntentRouter`.
                 .overlay(alignment: .top) { IntentReadout().environment(router) }
                 .onOpenURL { url in
-                    guard url.pathExtension.lowercased() == "zip" else { return }
-                    importer.run(url)
-                    navigator.sheet = .settings
+                    if url.pathExtension.lowercased() == "zip" {
+                        importer.run(url)
+                        navigator.sheet = .settings
+                    } else if let id = Navigator.taskID(in: url), store.task(id) != nil {
+                        navigator.openTask(id)
+                    }
                 }
                 .onMessage(of: UIApplication.self, for: .significantTimeChange) { _ in
                     today = clock.today

@@ -2,6 +2,7 @@ import { implement, ORPCError } from '@orpc/server';
 import { USER_HEADER } from '../../../shared/auth';
 import { accountContract, internalContract } from '../../../shared/api/contract';
 import { authenticate, type AccountContext } from '../auth';
+import { deleteMemoTasks, listMemoTasks, putMemoTasks } from './memo-tasks';
 import { pushSchedule, refreshPush, subscribePush, unsubscribePush } from './push';
 import { sync } from './sync';
 
@@ -32,6 +33,23 @@ export const accountRouter = os.router({
 			return { ok: true as const };
 		}),
 		schedule: os.push.schedule.use(device).handler(({ context }) => pushSchedule(context.store, context.deviceId)),
+	},
+	memoTasks: {
+		list: os.memoTasks.list
+			.use(device)
+			.handler(({ input, context }) => listMemoTasks(context.store, input.query.memoId)),
+		put: os.memoTasks.put.use(device).handler(async ({ input, context }) => {
+			const head = context.store.lastSeq();
+			const response = putMemoTasks(context.store, input, context.now);
+			if (context.store.lastSeq() > head) await refreshPush(context);
+			return response;
+		}),
+		delete: os.memoTasks.delete.use(device).handler(async ({ input, context }) => {
+			const head = context.store.lastSeq();
+			deleteMemoTasks(context.store, input.query.memoId, context.now);
+			if (context.store.lastSeq() > head) await refreshPush(context);
+			return { ok: true as const };
+		}),
 	},
 	internal: {
 		wipe: os.internal.wipe.handler(({ context }) => {
