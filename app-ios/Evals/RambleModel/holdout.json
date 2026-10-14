@@ -1,0 +1,502 @@
+[
+	{
+		"text": "Making lasagna tonight. I need ricotta, lasagna sheets and fresh basil for that.",
+		"tasks": [
+			{
+				"title": "make lasagna",
+				"subtasks": ["ricotta", "lasagna sheets", "fresh basil"],
+				"date": "2026-10-14",
+				"time": null,
+				"remindBefore": []
+			}
+		]
+	},
+	{
+		"text": "pick up the kids' shoes and jackets from grandma's",
+		"tasks": [
+			{
+				"title": "pick up the kids' shoes and jackets from grandma's",
+				"subtasks": [],
+				"date": null,
+				"time": null,
+				"remindBefore": []
+			}
+		]
+	},
+	{
+		"text": "Clean the gutters and paint the fence. Actually never mind the fence, just the gutters.",
+		"tasks": [
+			{
+				"title": "clean the gutters",
+				"subtasks": [],
+				"date": null,
+				"time": null,
+				"remindBefore": []
+			}
+		]
+	},
+	{
+		"text": "Okay so um, I need to, uh, call the landlord about the heater, and then pick up the dry cleaning, oh and I gotta email Professor Kim about the extension. Also, uh, book club is at 7pm, remind me like 30 minutes before. And buy wine for that.",
+		"tasks": [
+			{
+				"title": "call the landlord about the heater",
+				"subtasks": [],
+				"date": null,
+				"time": null,
+				"remindBefore": []
+			},
+			{
+				"title": "pick up the dry cleaning",
+				"subtasks": [],
+				"date": null,
+				"time": null,
+				"remindBefore": []
+			},
+			{
+				"title": "email professor kim about the extension",
+				"subtasks": [],
+				"date": null,
+				"time": null,
+				"remindBefore": []
+			},
+			{
+				"title": "book club",
+				"subtasks": [],
+				"date": "2026-10-14",
+				"time": "19:00",
+				"remindBefore": [30]
+			},
+			{
+				"title": "buy wine",
+				"subtasks": [],
+				"date": null,
+				"time": null,
+				"remindBefore": []
+			}
+		]
+	},
+	{
+		"text": "Alright, um, a bunch of things. Pay the water bill. Uh, call Aunt Linda back. Pick up the photos from the print shop, and, uh, I need to get printer ink, hmm, black and color. Oh and put the bins out tonight. And renew the parking permit by the 20th.",
+		"tasks": [
+			{
+				"title": "pay the water bill",
+				"subtasks": [],
+				"date": null,
+				"time": null,
+				"remindBefore": []
+			},
+			{
+				"title": "call aunt linda back",
+				"subtasks": [],
+				"date": null,
+				"time": null,
+				"remindBefore": []
+			},
+			{
+				"title": "pick up the photos from the print shop",
+				"subtasks": [],
+				"date": null,
+				"time": null,
+				"remindBefore": []
+			},
+			{
+				"title": "get printer ink",
+				"subtasks": [],
+				"date": null,
+				"time": null,
+				"remindBefore": []
+			},
+			{
+				"title": "put the bins out",
+				"subtasks": [],
+				"date": "2026-10-14",
+				"time": null,
+				"remindBefore": []
+			},
+			{
+				"title": "renew the parking permit",
+				"subtasks": [],
+				"date": "2026-10-20",
+				"time": null,
+				"remindBefore": []
+			}
+		]
+	},
+	{
+		"text": "so uh lots to do um first thing tomorrow i gotta take the car to the mechanic then like uh grab lunch with kevin at noon and um at some point go to the grocery store and get bananas yogurt and granola oh and also i need to call the cable company and uh vacuum the stairs",
+		"tasks": [
+			{
+				"title": "take the car to the mechanic",
+				"subtasks": [],
+				"date": "2026-10-15",
+				"time": null,
+				"remindBefore": []
+			},
+			{
+				"title": "grab lunch with kevin",
+				"subtasks": [],
+				"date": "2026-10-15",
+				"time": "12:00",
+				"remindBefore": []
+			},
+			{
+				"title": "go to the grocery store",
+				"subtasks": ["bananas", "yogurt", "granola"],
+				"date": null,
+				"time": null,
+				"remindBefore": []
+			},
+			{
+				"title": "call the cable company",
+				"subtasks": [],
+				"date": null,
+				"time": null,
+				"remindBefore": []
+			},
+			{
+				"title": "vacuum the stairs",
+				"subtasks": [],
+				"date": null,
+				"time": null,
+				"remindBefore": []
+			}
+		]
+	},
+	{
+		"text": "text marco back about saturday and after that order new contact lenses",
+		"tasks": [
+			{
+				"title": "text marco back about saturday",
+				"subtasks": [],
+				"date": null,
+				"time": null,
+				"remindBefore": []
+			},
+			{
+				"title": "order new contact lenses",
+				"subtasks": [],
+				"date": null,
+				"time": null,
+				"remindBefore": []
+			}
+		]
+	},
+	{
+		"text": "Get stuff for Mia's birthday party on the 20th. Balloons, candles, a chocolate cake, paper plates and party hats.",
+		"tasks": [
+			{
+				"title": "get stuff for mia's birthday party",
+				"subtasks": ["balloons", "candles", "a chocolate cake", "paper plates", "party hats"],
+				"date": "2026-10-20",
+				"time": null,
+				"remindBefore": []
+			}
+		]
+	},
+	{
+		"text": "Do the tax return by Friday. First gather the W-2s, then find last year's return, then upload everything to the accountant.",
+		"tasks": [
+			{
+				"title": "do the tax return",
+				"subtasks": ["gather the w-2s", "find last year's return", "upload everything to the accountant"],
+				"date": "2026-10-16",
+				"time": null,
+				"remindBefore": []
+			}
+		]
+	},
+	{
+		"text": "Haircut at 1pm and a parent-teacher meeting at 5:15pm, remind me thirty minutes before the meeting.",
+		"tasks": [
+			{
+				"title": "haircut",
+				"subtasks": [],
+				"date": "2026-10-15",
+				"time": "13:00",
+				"remindBefore": []
+			},
+			{
+				"title": "parent-teacher meeting",
+				"subtasks": [],
+				"date": "2026-10-14",
+				"time": "17:15",
+				"remindBefore": [30]
+			}
+		]
+	},
+	{
+		"text": "For the move I need to book the movers, forward my mail and cancel the internet at the old apartment.",
+		"tasks": [
+			{
+				"title": "prepare for the move",
+				"subtasks": ["book the movers", "forward my mail", "cancel the internet at the old apartment"],
+				"date": null,
+				"time": null,
+				"remindBefore": []
+			}
+		]
+	},
+	{
+		"text": "umm fold the laundry and then iron my shirts for the week",
+		"tasks": [
+			{
+				"title": "fold the laundry",
+				"subtasks": [],
+				"date": null,
+				"time": null,
+				"remindBefore": []
+			},
+			{
+				"title": "iron my shirts for the week",
+				"subtasks": [],
+				"date": null,
+				"time": null,
+				"remindBefore": []
+			}
+		]
+	},
+	{
+		"text": "go to the pet store and get cat litter and also a scratching post and some salmon treats",
+		"tasks": [
+			{
+				"title": "go to the pet store",
+				"subtasks": ["cat litter", "a scratching post", "some salmon treats"],
+				"date": null,
+				"time": null,
+				"remindBefore": []
+			}
+		]
+	},
+	{
+		"text": "In two days I need to submit the grant application. Remind me tomorrow at 9am to proofread the budget section.",
+		"tasks": [
+			{
+				"title": "submit the grant application",
+				"subtasks": [],
+				"date": "2026-10-16",
+				"time": null,
+				"remindBefore": []
+			},
+			{
+				"title": "proofread the budget section",
+				"subtasks": [],
+				"date": "2026-10-15",
+				"time": "09:00",
+				"remindBefore": []
+			}
+		]
+	},
+	{
+		"text": "Buy eggs, actually make that two dozen eggs.",
+		"tasks": [
+			{
+				"title": "buy two dozen eggs",
+				"subtasks": [],
+				"date": null,
+				"time": null,
+				"remindBefore": []
+			}
+		]
+	},
+	{
+		"text": "run to target after work and pick up light bulbs a shower curtain aa batteries",
+		"tasks": [
+			{
+				"title": "run to target",
+				"subtasks": ["light bulbs", "a shower curtain", "aa batteries"],
+				"date": null,
+				"time": null,
+				"remindBefore": []
+			}
+		]
+	},
+	{
+		"text": "pack for the camping trip the things to pack are the tent sleeping bags headlamps and the camp stove",
+		"tasks": [
+			{
+				"title": "pack for the camping trip",
+				"subtasks": ["the tent", "sleeping bags", "headlamps", "the camp stove"],
+				"date": null,
+				"time": null,
+				"remindBefore": []
+			}
+		]
+	},
+	{
+		"text": "I need to book a dentist appointment, and then also cancel the gym membership.",
+		"tasks": [
+			{
+				"title": "book a dentist appointment",
+				"subtasks": [],
+				"date": null,
+				"time": null,
+				"remindBefore": []
+			},
+			{
+				"title": "cancel the gym membership",
+				"subtasks": [],
+				"date": null,
+				"time": null,
+				"remindBefore": []
+			}
+		]
+	},
+	{
+		"text": "Text Olivia about the carpool, and send Ben the photos. Actually, forget Ben, I already sent them.",
+		"tasks": [
+			{
+				"title": "text olivia about the carpool",
+				"subtasks": [],
+				"date": null,
+				"time": null,
+				"remindBefore": []
+			}
+		]
+	},
+	{
+		"text": "I need to hit Costco on Friday. Paper towels, dish soap, and a big bag of rice. Oh and also coffee beans.",
+		"tasks": [
+			{
+				"title": "hit costco",
+				"subtasks": ["paper towels", "dish soap", "a big bag of rice", "coffee beans"],
+				"date": "2026-10-16",
+				"time": null,
+				"remindBefore": []
+			}
+		]
+	},
+	{
+		"text": "Read chapter four of the book club book by Sunday.",
+		"tasks": [
+			{
+				"title": "read chapter four of the book club book",
+				"subtasks": [],
+				"date": "2026-10-18",
+				"time": null,
+				"remindBefore": []
+			}
+		]
+	},
+	{
+		"text": "On the 20th, renew the car registration. Next week, schedule a haircut.",
+		"tasks": [
+			{
+				"title": "renew the car registration",
+				"subtasks": [],
+				"date": "2026-10-20",
+				"time": null,
+				"remindBefore": []
+			},
+			{
+				"title": "schedule a haircut",
+				"subtasks": [],
+				"date": "2026-10-19",
+				"time": null,
+				"remindBefore": []
+			}
+		]
+	},
+	{
+		"text": "i need to buy salt and pepper",
+		"tasks": [
+			{
+				"title": "buy salt and pepper",
+				"subtasks": [],
+				"date": null,
+				"time": null,
+				"remindBefore": []
+			}
+		]
+	},
+	{
+		"text": "buy a birthday card for dad",
+		"tasks": [
+			{
+				"title": "buy a birthday card for dad",
+				"subtasks": [],
+				"date": null,
+				"time": null,
+				"remindBefore": []
+			}
+		]
+	},
+	{
+		"text": "Order stuff for the office: printer paper, toner, sticky notes.",
+		"tasks": [
+			{
+				"title": "order stuff for the office",
+				"subtasks": ["printer paper", "toner", "sticky notes"],
+				"date": null,
+				"time": null,
+				"remindBefore": []
+			}
+		]
+	},
+	{
+		"text": "Pick up groceries on the way home: oat milk, spinach, tortillas, cheddar.",
+		"tasks": [
+			{
+				"title": "pick up groceries",
+				"subtasks": ["oat milk", "spinach", "tortillas", "cheddar"],
+				"date": null,
+				"time": null,
+				"remindBefore": []
+			}
+		]
+	},
+	{
+		"text": "set up the fish tank tomorrow rinse the gravel fill it with water add the conditioner and let it cycle",
+		"tasks": [
+			{
+				"title": "set up the fish tank",
+				"subtasks": ["rinse the gravel", "fill it with water", "add the conditioner", "let it cycle"],
+				"date": "2026-10-15",
+				"time": null,
+				"remindBefore": []
+			}
+		]
+	},
+	{
+		"text": "Doctor's appointment on Monday at 2:45 PM. Remind me 45 minutes before. Make sure to bring the insurance card and the referral letter.",
+		"tasks": [
+			{
+				"title": "doctor's appointment",
+				"subtasks": ["the insurance card", "the referral letter"],
+				"date": "2026-10-19",
+				"time": "14:45",
+				"remindBefore": [45]
+			}
+		]
+	},
+	{
+		"text": "Head to the Asian market at 5pm and get fish sauce, rice noodles, lemongrass and Thai basil. Remind me 15 minutes before.",
+		"tasks": [
+			{
+				"title": "head to the asian market",
+				"subtasks": ["fish sauce", "rice noodles", "lemongrass", "thai basil"],
+				"date": "2026-10-14",
+				"time": "17:00",
+				"remindBefore": [15]
+			}
+		]
+	},
+	{
+		"text": "call the bank at 9 am and remind me 5 minutes before then on friday submit the expense report",
+		"tasks": [
+			{
+				"title": "call the bank",
+				"subtasks": [],
+				"date": "2026-10-15",
+				"time": "09:00",
+				"remindBefore": [5]
+			},
+			{
+				"title": "submit the expense report",
+				"subtasks": [],
+				"date": "2026-10-16",
+				"time": null,
+				"remindBefore": []
+			}
+		]
+	}
+]
