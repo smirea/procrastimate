@@ -215,6 +215,8 @@ private struct ProjectMenu: View {
     let projectId: String?
     let onChange: (String?) -> Void
 
+    @State private var creating = false
+
     var body: some View {
         let project = store.project(projectId)
         Menu {
@@ -225,12 +227,14 @@ private struct ProjectMenu: View {
                 }
             }
             .pickerStyle(.inline)
+            Button("New project…", systemImage: "plus") { creating = true }
         } label: {
             SwiftUI.Label(project?.name ?? "Inbox", systemImage: project == nil ? "tray" : "number")
                 .labelStyle(.titleAndIcon)
                 .lineLimit(1)
         }
         .accessibilityLabel("Project \(project?.name ?? "Inbox")")
+        .newProjectPrompt(isPresented: $creating) { onChange($0) }
         .accessibilityIdentifier("Project menu")
     }
 }

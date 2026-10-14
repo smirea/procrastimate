@@ -529,30 +529,48 @@
 		},
 		{
 			"fn": "dayHeading",
-			"test": "dates › the Upcoming heading for 2026-10-15 is Oct 15 · Tomorrow · Thursday",
+			"test": "dates › the Inbox heading for 2026-10-15 is Tomorrow",
 			"input": [
 				"2026-10-15",
 				"2026-10-14"
 			],
-			"output": "Oct 15 · Tomorrow · Thursday"
+			"output": "Tomorrow"
 		},
 		{
 			"fn": "dayHeading",
-			"test": "dates › the Upcoming heading for 2026-10-16 is Oct 16 · Friday",
+			"test": "dates › the Inbox heading for 2026-10-16 is Friday",
 			"input": [
 				"2026-10-16",
 				"2026-10-14"
 			],
-			"output": "Oct 16 · Friday"
+			"output": "Friday"
 		},
 		{
 			"fn": "dayHeading",
-			"test": "dates › the Upcoming heading for 2027-01-04 is Jan 4 · Monday",
+			"test": "dates › the Inbox heading for 2026-10-20 is Tuesday",
 			"input": [
-				"2027-01-04",
+				"2026-10-20",
 				"2026-10-14"
 			],
-			"output": "Jan 4 · Monday"
+			"output": "Tuesday"
+		},
+		{
+			"fn": "dayHeading",
+			"test": "dates › the Inbox heading for 2026-10-31 is Sat, Oct 31",
+			"input": [
+				"2026-10-31",
+				"2026-10-14"
+			],
+			"output": "Sat, Oct 31"
+		},
+		{
+			"fn": "dayHeading",
+			"test": "dates › the Inbox heading for 2027-02-26 is Fri, Feb 26, 2027",
+			"input": [
+				"2027-02-26",
+				"2026-10-14"
+			],
+			"output": "Fri, Feb 26, 2027"
 		},
 		{
 			"fn": "formatReminder",

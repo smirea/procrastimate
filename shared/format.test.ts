@@ -117,10 +117,12 @@ describe('dates', () => {
 	});
 
 	test.each([
-		['2026-10-15', 'Oct 15 · Tomorrow · Thursday'],
-		['2026-10-16', 'Oct 16 · Friday'],
-		['2027-01-04', 'Jan 4 · Monday'],
-	] as const)('the Upcoming heading for %s is %s', (date, expected) => {
+		['2026-10-15', 'Tomorrow'],
+		['2026-10-16', 'Friday'],
+		['2026-10-20', 'Tuesday'],
+		['2026-10-31', 'Sat, Oct 31'],
+		['2027-02-26', 'Fri, Feb 26, 2027'],
+	] as const)('the Inbox heading for %s is %s', (date, expected) => {
 		expect(dayHeading(date, today)).toBe(expected);
 	});
 });

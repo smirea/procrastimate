@@ -4,7 +4,7 @@ Inbox lists everything dated by day: Overdue, Today, and each later day with dat
 
 ## Sub-features
 
-- `views-inbox` lists Overdue, Today, and each later day under a heading such as `Oct 15 · Tomorrow · Thursday`. It holds only dated tasks.
+- `views-inbox` lists Overdue, Today, and each later day under a heading such as `Tomorrow`. It holds only dated tasks.
 - `views-no-date` lists undated top-level tasks without a project. It is an iOS tab and a web sidebar entry at `/no-date` with its count.
 - `views-today` and `views-upcoming` are removed. Their lists are the Inbox's dated sections.
 - `views-empty` shows `Nothing scheduled` with `Tasks with a date show up here by day.` on an Inbox with nothing dated. An empty No date shows `Inbox zero` with `Press Q to capture a task.`, or `Tap + to capture a task.` on a phone and iOS.
@@ -24,10 +24,10 @@ Preconditions:
 - The baseline state. Seed through quick add: with the clock one day earlier, add `Overdue task today`. With the clock back, add `Today task today`, `Later task in 3 days`, and `Someday task`. The steps below assume Wednesday, October 14 2026.
 - No automated test covers this feature. Drive it by hand with `control-ui` on web and through the simulator on iOS.
 
-- **Inbox.** Open Inbox. `Overdue` lists `Overdue task` marked `Yesterday`. `Today` lists `Today task`. `Later task` is under `Oct 17 · Saturday`. `Someday task` is not in Inbox. The sidebar count, or the iOS tab badge, reads 2.
+- **Inbox.** Open Inbox. `Overdue` lists `Overdue task` marked `Yesterday`. `Today` lists `Today task`. `Later task` is under `Saturday`. `Someday task` is not in Inbox. The sidebar count, or the iOS tab badge, reads 2.
 - **No date.** Open No date. It lists `Someday task`. The web sidebar count reads 1.
 - **Places in No date.** On iOS, launch with `PROCRASTIMATE_DEMO="seed nodate"`. `Buy oat milk` is at the top, alone at its place. `Try the seasonal blend` and `Ask about decaf beans` sit below under a `Philz Coffee` heading.
-- **Other projects.** Add `Project task tomorrow #Work` after creating `Work`. It shows under `Oct 15 · Tomorrow · Thursday` with its project named, and not in No date.
+- **Other projects.** Add `Project task tomorrow #Work` after creating `Work`. It shows under `Tomorrow` with its project named, and not in No date.
 - **Empty.** Complete every task. Inbox shows `Nothing scheduled` with `Tasks with a date show up here by day.`. No date shows `Inbox zero` with `Press Q to capture a task.`, or `Tap + to capture a task.` on a phone.
 - **Phone.** Tap `Open navigation`; the `Main` navigation slides in. Tap outside it; it closes. Open Inbox; the same sections show. Open No date; `Someday task` shows.
 - **iOS.** The Inbox tab lists the same sections as the web and shows `Nothing scheduled` when empty. The No date tab lists `Someday task` and shows `Inbox zero` when empty. Launch with `PROCRASTIMATE_DEMO=nodate` to open it directly. The Inbox tab carries the overdue plus today count as its badge. Rows have no separators. The bar is hidden at the top, and a small `Inbox` title fades in once the list scrolls. Lists sit on the same tinted canvas as the web with transparent rows.

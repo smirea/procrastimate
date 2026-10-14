@@ -422,6 +422,8 @@ struct ProjectChip: View {
     let onKeepAsText: (() -> Void)?
     let onChange: (String?) -> Void
 
+    @State private var creating = false
+
     var body: some View {
         let project = store.project(projectId)
         Menu {
@@ -432,10 +434,12 @@ struct ProjectChip: View {
                 }
             }
             .pickerStyle(.inline)
+            Button("New project…", systemImage: "plus") { creating = true }
         } label: {
             Chip(systemImage: project == nil ? "tray" : "number", text: project?.name ?? "Inbox", tone: project == nil ? .muted : .ink)
         }
         .accessibilityLabel("Project \(project?.name ?? "Inbox")")
+        .newProjectPrompt(isPresented: $creating) { onChange($0) }
         .keepAsText(onKeepAsText)
     }
 }

@@ -110,11 +110,11 @@ public enum Format {
     }
 
     /// The Upcoming heading: `Oct 15 · Tomorrow · Thursday`.
+    /// `Tomorrow`, `Friday` within the week, then `Tue, Oct 31`, with the year when it differs.
     public static func dayHeading(_ date: DateKey, _ today: DateKey) -> String {
-        let weekday = longWeekdayNames[Dates.weekdayOf(date)]
-        return date == Dates.addDays(today, 1)
-            ? "\(monthDay(date)) · Tomorrow · \(weekday)"
-            : "\(monthDay(date)) · \(weekday)"
+        if date == Dates.addDays(today, 1) { return "Tomorrow" }
+        if date > today, date < Dates.addDays(today, 7) { return longWeekdayNames[Dates.weekdayOf(date)] }
+        return "\(weekdayNames[Dates.weekdayOf(date)]), \(shortDate(date, today))"
     }
 
     /// The undo toast after completing a task: `Completed “Standup”`, or `…, next due Friday 9am` when it repeats.

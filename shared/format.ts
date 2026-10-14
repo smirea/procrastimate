@@ -111,11 +111,12 @@ export function formatReminder(reminder: Reminder, today: DateKey): string {
 	}
 }
 
+/** A day heading in Inbox with only what today leaves ambiguous: `Tomorrow`, `Friday` within the week, then `Tue, Oct 31`, with the year when it differs. */
 export function dayHeading(date: DateKey, today: DateKey): string {
+	if (date === addDays(today, 1)) return 'Tomorrow';
 	const d = fromDateKey(date);
-	const label = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-	const weekday = d.toLocaleDateString('en-US', { weekday: 'long' });
-	return date === addDays(today, 1) ? `${label} · Tomorrow · ${weekday}` : `${label} · ${weekday}`;
+	if (date > today && date < addDays(today, 7)) return d.toLocaleDateString('en-US', { weekday: 'long' });
+	return `${WEEKDAY_NAMES[weekdayOf(date)]}, ${shortDate(date, today)}`;
 }
 
 export function completedToast(title: string, next: Due | null, today: DateKey): string {
