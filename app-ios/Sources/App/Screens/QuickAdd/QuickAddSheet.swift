@@ -26,6 +26,9 @@ private struct QuickAddForm: View {
     @State private var notice: String?
     @State private var transcript = ""
     @State private var applyOnStop = true
+    /// Picked with their chips only; neither has a phrase in the text.
+    @State private var location: TaskLocation?
+    @State private var event: TaskEvent?
     /// Text writes that came from the recognizer, so the field's change does not count as typing.
     @State private var speechWrites = 0
     @FocusState private var focused: Bool
@@ -141,15 +144,18 @@ private struct QuickAddForm: View {
         _ resolved: (due: Due?, priority: Priority, projectId: String?, labelIds: [String])
     ) -> some View {
         let today = clock.today
-        DueChip(due: resolved.due, onKeepAsText: keepAsText(parsed, .due)) { due in
-            draft.clearToken(.due, in: parsed)
-            draft.picked.due = due
+        // An event stands in for the date and the repeat, as in task details.
+        if event == nil {
+            DueChip(due: resolved.due, onKeepAsText: keepAsText(parsed, .due)) { due in
+                draft.clearToken(.due, in: parsed)
+                draft.picked.due = due
+            }
         }
         PriorityChip(priority: resolved.priority, onKeepAsText: keepAsText(parsed, .priority)) { priority in
             draft.clearToken(.priority, in: parsed)
             draft.picked.priority = priority
         }
-        if let recurrence = parsed.recurrence ?? draft.appliedRecurrence {
+        if event == nil, let recurrence = parsed.recurrence ?? draft.appliedRecurrence {
             Chip(systemImage: "repeat", text: Format.formatRecurrence(recurrence, resolved.due), tone: .toneRepeat)
                 .keepAsText(parsed.recurrence == nil ? nil : keepAsText(parsed, .recurrence))
         }
@@ -161,6 +167,8 @@ private struct QuickAddForm: View {
             Chip(systemImage: "bell.fill", text: Format.formatReminder(item.reminder, today), tone: .toneWeek)
                 .keepAsText { keep(item.token) }
         }
+        LocationChip(location: location) { location = $0 }
+        EventChip(event: event) { event = $0 }
         ForEach(store.labels.filter { draft.picked.labelIds.contains($0.id) && !parsed.labelIds.contains($0.id) }) {
             Chip(systemImage: "tag.fill", text: $0.name, tone: .ink, iconTone: .toneLabel)
         }
@@ -203,7 +211,16 @@ private struct QuickAddForm: View {
         guard !listening else { return }
         let parsed = draft.parse(now: clock.now, projects: store.projects, labels: store.labels, in: clock.timeZone)
         guard let task = draft.resolve(parsed) else { return }
-        withAnimation(.snappy) { _ = store.addTask(task) }
+        withAnimation(.snappy) {
+            let added = store.addTask(task)
+            if let event {
+                store.updateTask(added.id, TaskPatch(due: .some(nil), recurrence: .some(nil), location: .some(location), event: .some(event)))
+            } else if let location {
+                store.updateTask(added.id, TaskPatch(location: .some(location)))
+            }
+        }
+        location = nil
+        event = nil
         draft.reset(today: clock.today)
         typed = false
         notice = nil

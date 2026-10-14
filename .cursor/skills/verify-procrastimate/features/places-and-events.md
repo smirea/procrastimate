@@ -1,6 +1,6 @@
 # Places and events
 
-A task can hang off a place or a calendar event, set only from task details on the iPhone. A place comes from an Apple Maps search and fires on arrival, on leaving, or shows a Live Activity of the place's tasks while Stefan is there. An event comes from the iPhone's calendar and puts the task on a moment of it: before, at the start, during, or after, with reminders counting back from that moment. Moved events move their tasks. Places and events with open tasks get their own Browse sections above Labels. Neither has quick add or Ramble phrases.
+A task can hang off a place or a calendar event, set with the Location and Event chips in task details or quick add on the iPhone, never by typing. A place comes from an Apple Maps search and fires on arrival, on leaving, or shows a Live Activity of the place's tasks while Stefan is there. An event comes from the iPhone's calendar and puts the task on a moment of it: before, at the start, during, or after, with reminders counting back from that moment. Moved events move their tasks. Places and events with open tasks get their own Browse sections above Labels. Neither has quick add or Ramble phrases.
 
 ## Sub-features
 
