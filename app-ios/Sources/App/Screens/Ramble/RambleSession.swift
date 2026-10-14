@@ -39,6 +39,12 @@ final class RambleSession {
         heard = false
         committed = ""
         partial = ""
+        #if DEBUG
+        if let script = ProcessInfo.processInfo.environment["PROCRASTIMATE_RAMBLE_SCRIPT"] {
+            speak(script)
+            return
+        }
+        #endif
         let online = await NetworkPath.online()
         switch Dictation.voiceCapture(choice, online: online, nativeSpeech: true).capture {
         case .speech:
@@ -49,6 +55,23 @@ final class RambleSession {
             onEnd(.typed)
         }
     }
+
+    #if DEBUG
+    /// DEBUG-only. The simulator has no microphone, so `PROCRASTIMATE_RAMBLE_SCRIPT` arrives a word at a time like
+    /// live speech, and the session keeps listening until stopped.
+    private func speak(_ script: String) {
+        let token = epoch
+        let words = script.split(separator: " ")
+        Task { @MainActor in
+            for count in 1 ... max(words.count, 1) {
+                try? await Task.sleep(for: .milliseconds(90))
+                guard token == self.epoch, !self.userStop else { return }
+                let text = words.prefix(count).joined(separator: " ")
+                self.onText(text, (text as NSString).length)
+            }
+        }
+    }
+    #endif
 
     /// The audio thread calls the tap, so it is built outside this main-actor class; see `SpeechDictation.feed`.
     nonisolated private static func feed(_ pump: RamblePump) -> AVAudioNodeTapBlock {
@@ -112,9 +135,9 @@ final class RambleSession {
         }
         var request = URLRequest(url: url)
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        request.setValue("procrastinate.ramble", forHTTPHeaderField: "Sec-WebSocket-Protocol")
+        request.setValue("procrastimate.ramble", forHTTPHeaderField: "Sec-WebSocket-Protocol")
         if let deviceId {
-            request.setValue(deviceId, forHTTPHeaderField: "x-procrastinate-device")
+            request.setValue(deviceId, forHTTPHeaderField: "x-procrastimate-device")
         }
         let task = URLSession.shared.webSocketTask(with: request)
         socket = task

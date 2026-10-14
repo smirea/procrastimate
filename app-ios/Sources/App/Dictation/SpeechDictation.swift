@@ -25,7 +25,7 @@ enum NetworkPath {
                     continuation.resume(returning: path.status == .satisfied)
                 }
             }
-            monitor.start(queue: DispatchQueue(label: "procrastinate.network"))
+            monitor.start(queue: DispatchQueue(label: "procrastimate.network"))
         }
     }
 }

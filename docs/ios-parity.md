@@ -1,6 +1,6 @@
 # iOS parity
 
-Sign-in is the first screen until there is a session. UI tests set PROCRASTINATE_SIGNED_IN so they open the app. What the native iOS app must do to match the web app, row by row from the feature map in `.cursor/skills/verify-procrastimate/features/`, and the threads that build it. The architecture and the reasons behind it are in [iOS app](decisions/ios.md).
+Sign-in is the first screen until there is a session. UI tests set PROCRASTIMATE_SIGNED_IN so they open the app. What the native iOS app must do to match the web app, row by row from the feature map in `.cursor/skills/verify-procrastimate/features/`, and the threads that build it. The architecture and the reasons behind it are in [iOS app](decisions/ios.md).
 
 ## Known item before iOS tests are re-enabled
 
@@ -208,13 +208,17 @@ The web's Web Push rows map to native local notifications. Permission is asked o
 
 ### Ramble
 
-Built on web and iOS, inside quick add. The grammar is covered by `shared/vectors/ramble.json` and Linux `VectorTests`. The trimmed suite does not add a Ramble UI test. There is no sheet, no preview cards, and no hold-to-talk. Cassettes and the optional LLM step are not built. The design is in [Ramble design](ramble-design.md#plan-and-slices).
+Built on web and iOS, inside quick add. The grammar is covered by `shared/vectors/ramble.json` and Linux `VectorTests`. The trimmed suite does not add a Ramble UI test. There is no sheet and no hold-to-talk. On iOS the spoken tasks list live, Apple's on-device model reviews them on stop, and several tasks save from a list; the web keeps one task in the field by Stefan's call. One cassette exists. The design is in [Ramble design](ramble-design.md#plan-and-slices).
 
 | Feature                                                                                                                                                                           | Web   | iOS   | Slice  | XCUITest | Playwright | Screenshot |
 | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | ----- | ------ | -------- | ---------- | ---------- |
 | `ramble-mic`: after Add, the textbox shows a mic on its right, and the mic hides once the user types                                                                              | Built | Built | R4, R5 | —        | —          | —          |
 | `ramble-live`: tapping the mic records, the icon becomes stop, and the transcript fills the textbox                                                                               | Built | Built | R4, R5 | —        | —          | —          |
 | `ramble-parse`: on stop, the textbox shows the parsed title and the chips fill like quick add                                                                                     | Built | Built | R4, R5 | —        | —          | —          |
+| `ramble-live` (iOS): the spoken tasks, subtasks, and fields list under the textbox while talking                                                                                  | n/a   | Built | —      | —        | —          | —          |
+| `ramble-list`: several tasks, or subtasks or notes, stay as a list after stop with remove buttons and `Add N tasks`                                                               | n/a   | Built | —      | —        | —          | —          |
+| `ramble-review`: the on-device model splits item lists into subtasks and continues a spoken list after stop                                                                       | n/a   | Built | —      | —        | —          | —          |
+| `ramble-corrections`: `Thursday actually make that Friday` keeps only Friday                                                                                                      | Built | Built | —      | —        | —          | —          |
 | `ramble-unavailable`: a missing ElevenLabs key or a refused socket explains why that path is off; offline uses native dictation                                                   | Built | Built | R4, R5 | —        | —          | —          |
 | `ramble-fallback`: online, web native dictation that fails before hearing anything moves to ElevenLabs; a stop on error shows `Dictation stopped. You can type the task instead.` | Built | n/a   | —      | —        | —          | —          |
 

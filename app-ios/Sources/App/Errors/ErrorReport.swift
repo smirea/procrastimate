@@ -7,15 +7,20 @@ struct ErrorReport: Equatable {
     let message: String
     let detail: String
 
-    private static let log = Logger(subsystem: Bundle.main.bundleIdentifier ?? "ProcrastiMate", category: "errors")
+    private static let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "ProcrastiMate", category: "errors")
 
     init(_ message: String, detail: String) {
         self.message = message
         self.detail = detail
+        Self.log(message, detail: detail)
+    }
+
+    /// Logs a failure nobody sees on screen, such as a background step that falls back quietly.
+    static func log(_ message: String, detail: String) {
         #if DEBUG
-        Self.log.error("\(message, privacy: .public): \(detail, privacy: .public)")
+        logger.error("\(message, privacy: .public): \(detail, privacy: .public)")
         #else
-        Self.log.error("\(message, privacy: .public): \(detail, privacy: .private)")
+        logger.error("\(message, privacy: .public): \(detail, privacy: .private)")
         #endif
     }
 

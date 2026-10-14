@@ -80,7 +80,7 @@
 - **In the foreground, toast only.** The notification center delegate's `willPresent` returns no banner and the app shows the `Reminder: <title>` toast with `Open`, matching the web rule that the open app shows the toast and leaves the system notification to the background.
 - **Permission is the switch.** The app asks on first launch. When the system allows notifications, they are on, and there is no in-app off switch. Settings shows one line: `Notifications: On`, `Notifications: Off`, or `Notifications need permission`. The last one opens the app's page in Settings. There is no Notifications row in Browse and no `Turn on` toast.
 - **Tapping a notification opens its task** in task details from the `taskId` in its payload. `Navigator.openTask` is the seam a tap goes through. A reminder toast while the app is open stays; it is the open app's own reminder, not a prompt to turn notifications on.
-- **Testing notifications.** The schedule is covered by `NotificationScheduleTests`. A DEBUG-only `PROCRASTINATE_NOTIFICATIONS_DENIED=1` launch key answers the denial without a prompt. Release builds ignore it.
+- **Testing notifications.** The schedule is covered by `NotificationScheduleTests`. A DEBUG-only `PROCRASTIMATE_NOTIFICATIONS_DENIED=1` launch key answers the denial without a prompt. Release builds ignore it.
 
 ## Places and calendar events
 
@@ -105,7 +105,7 @@
 - **Entities.** Tasks, projects, and labels are `AppEntity` values with `EntityQuery` and `EntityStringQuery`, so Shortcuts and Siri can pick them.
 - **Spotlight indexes open tasks.** After each change the app reindexes them with `CSSearchableIndex` and `IndexedEntity`, including the title, the due line, and the project and label names. Renaming a project or label reindexes too, because those names are part of the entry. The task query adopts `IndexedEntityQuery`. The reindex methods that take `CSSearchableIndexDescription` are iOS 27; on the deployment target the app donates the index itself after each change. Completing or deleting a task removes it. Tapping a result opens the task. An intent that runs before the screen is up, or while the app is not showing, still updates Spotlight and the notification schedule after it writes the snapshot.
 - **Phrases.** `ProcrastimateShortcuts` registers the shortcuts, each phrase naming the app, and the app calls `updateAppShortcutParameters()` at launch. A phrase can fill an `AppEntity` or an `AppEnum` only, so the task title and the search words are the follow-up question rather than part of the phrase. The system keeps ten shortcuts. Start Ramble takes the suggested slot Delete All Data had; Delete All Data stays an intent, without a suggested phrase.
-- **Tests.** `IntentRulesTests` covers resolution and matching on Linux. Release builds ignore the DEBUG launch key `PROCRASTINATE_INTENTS`.
+- **Tests.** `IntentRulesTests` covers resolution and matching on Linux. Release builds ignore the DEBUG launch key `PROCRASTIMATE_INTENTS`.
 
 ## Build and verification
 
@@ -119,7 +119,7 @@
 
 ## Distribution
 
-- **TestFlight first, built in CI.** The app ships as `ProcrastiMate` (display name) under bundle id `com.stefan.procrastinate` and team `FNYFHG5SV7`, which the app target sets with automatic signing. Internal TestFlight testers need no App Review; the App Store does.
+- **TestFlight first, built in CI.** The app ships as `ProcrastiMate` (display name) under bundle id `com.stefan.procrastimate` and team `FNYFHG5SV7`, which the app target sets with automatic signing. Internal TestFlight testers need no App Review; the App Store does.
 - **App Store metadata lives in the project.** Category `public.app-category.productivity`. iPhone allows portrait and both landscapes; iPad allows all four orientations, which iPad multitasking requires. `Config/Info.plist` sets `ITSAppUsesNonExemptEncryption` to `false`, since the app only uses HTTPS, so uploads skip the export compliance question. The launch screen stays the generated one.
 - **One icon source.** The 1024-pixel `AppIcon` is a single universal image rendered from `app-web/scripts/app-icon.svg` with the tile color filling the corners, because iOS applies its own mask and rejects icons with transparency. `app-web/scripts/icons.ts` renders it with the web icons, so editing the SVG and rerunning that script updates both clients. The browser favicon is a separate, simpler head-only drawing, `app-web/static/icons/favicon.svg`, that stays legible at 16 pixels.
 - **Release builds call production.** `Config/Base.xcconfig` sets `API_URL[config=Release]` to `https://procrastimate.stf.lol` after including `LocalSecrets.xcconfig` and `Env.xcconfig`, so an archive never ships a dev URL and needs no command-line override. Debug comes from env-manager `dev`, `http://127.0.0.1:6121` by default. The iOS workflow's `app` job checks both.

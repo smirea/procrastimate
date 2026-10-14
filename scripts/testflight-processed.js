@@ -2,7 +2,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 
 const buildNumber = process.env.BUILD_NUMBER;
-const bundleId = 'com.stefan.procrastinate';
+const bundleId = 'com.stefan.procrastimate';
 
 if (!buildNumber) {
 	console.error('BUILD_NUMBER is required');
