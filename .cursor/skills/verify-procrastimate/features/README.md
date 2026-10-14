@@ -70,5 +70,5 @@ Keep implementation details out of the map. Name only user paths, stable handles
 - [Todoist import](./todoist-import.md) covers importing a Todoist backup zip, the summary and warnings, and safe re-imports.
 - [Theme](./theme.md) covers the System, Light, and Dark themes, persistence, first paint, and contrast.
 - [Places and events](./places-and-events.md) covers places and calendar events on tasks, set on the iPhone: the Maps search and Arrive, Leave, or During, the calendar event picker, rows, the Browse sections, notifications, the Live Activity, and moved events.
-- [Voice memo tasks](./voice-memo-tasks.md) covers tasks the voice memo app sends: the waveform icon on rows, the `Voice memo` line in details, `procrastimate://task/<id>` links, and the shared session.
+- [Talkward tasks](./talkward-tasks.md) covers tasks Talkward sends: the waveform icon on rows, the `Talkward` line in details, `procrastimate://task/<id>` links, and the shared session.
 - [Siri, Shortcuts, and Spotlight](./app-intents.md) covers the iOS App Intents: adding and completing tasks, opening lists and projects, search, today's and overdue tasks, and Spotlight. Web is excluded.

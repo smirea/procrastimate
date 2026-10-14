@@ -2,7 +2,7 @@ import Foundation
 
 public typealias MemoSource = API.MemoSource
 
-/// Tasks the voice memo app sent, from `shared/memo-tasks.ts`. Only the task's `sourceKey` marks one.
+/// Tasks Talkward sent, from `shared/memo-tasks.ts`. Only the task's `sourceKey` marks one.
 public enum MemoTasks {
     private static let prefix = "voicememo:"
 
@@ -18,10 +18,10 @@ public enum MemoTasks {
         return MemoSource(memoId: String(parts[0]), taskKey: String(parts[1]))
     }
 
-    /// Opens the memo in the voice memo app.
+    /// Opens the memo in Talkward.
     public static func memoURL(_ memoId: String) -> URL {
         var components = URLComponents()
-        components.scheme = "myvoicememo"
+        components.scheme = "talkward"
         components.host = "entry"
         components.queryItems = [URLQueryItem(name: "id", value: memoId)]
         return components.url!
@@ -33,6 +33,6 @@ public enum MemoTasks {
 }
 
 extension TaskItem {
-    /// The memo this task came from, when the voice memo app sent it.
+    /// The memo this task came from, when Talkward sent it.
     public var memoSource: MemoSource? { MemoTasks.parseMemoSource(sourceKey) }
 }

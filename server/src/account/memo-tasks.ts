@@ -17,7 +17,7 @@ import type { AccountStore } from './store';
 import { loadState, push } from './sync';
 
 /**
- * The voice memo app's routes. Writes are server ops through the same merge as `POST /api/sync`, so they land in the
+ * Talkward's routes. Writes are server ops through the same merge as `POST /api/sync`, so they land in the
  * log, get the fixups, and nudge every device.
  */
 

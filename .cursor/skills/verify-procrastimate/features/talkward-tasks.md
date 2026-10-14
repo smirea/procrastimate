@@ -1,22 +1,22 @@
-# Voice memo tasks
+# Talkward tasks
 
-Stefan's voice memo app extracts tasks from each memo and sends them to ProcrastiMate, which keeps them as ordinary Inbox tasks. A memo task's row shows a small waveform icon on iOS and the web, and its details show a `Voice memo` line, which opens the memo on iOS. The memo app signs in as its own device with ProcrastiMate's session, which ProcrastiMate shares through the team keychain group while signed in. A link `procrastimate://task/<id>` opens a task's details on iOS.
+Talkward, Stefan's voice memo app, extracts tasks from each memo and sends them to ProcrastiMate, which keeps them as ordinary Inbox tasks. A memo task's row shows a small waveform icon on iOS and the web, and its details show a `Talkward` line, which opens the memo on iOS. The memo app signs in as its own device with ProcrastiMate's session, which ProcrastiMate shares through the team keychain group while signed in. A link `procrastimate://task/<id>` opens a task's details on iOS.
 
 ## Sub-features
 
 - `receive` adds the memo's tasks to the Inbox with the spoken time read as a due date and repeat, or with the memo's calendar event.
 - `no-duplicates` skips a task the account has seen before, so a retry adds nothing and a deleted memo task never comes back.
 - `row-icon` shows a waveform icon on a memo task's row.
-- `details-line` shows `Voice memo` in task details: a link to `myvoicememo://entry?id=<memoId>` on iOS, plain text on the web.
+- `details-line` shows `Talkward` in task details: a link to `myvoicememo://entry?id=<memoId>` on iOS, plain text on the web.
 - `task-link` opens `procrastimate://task/<id>` as that task's details on iOS. An unknown id does nothing.
 - `shared-session` keeps the keychain item `procrastimate-link` in `FNYFHG5SV7.com.stefan.shared` while signed in, and removes it on sign-out or a rejected session.
 - `delete-with-memo` deletes a memo's tasks and their subtasks when the memo app asks.
 
 ## How to get to it (user POV)
 
-- iOS: record a memo with a task in the voice memo app. The task appears in Inbox, or No date when it has no date, with the waveform icon. Tap it and tap `Voice memo` to open the memo.
-- iOS: tap a task in the voice memo app to open it in ProcrastiMate.
-- Web: the same rows show the waveform icon, and task details show `Voice memo` without a link.
+- iOS: record a memo with a task in Talkward. The task appears in Inbox, or No date when it has no date, with the waveform icon. Tap it and tap `Talkward` to open the memo.
+- iOS: tap a task in Talkward to open it in ProcrastiMate.
+- Web: the same rows show the waveform icon, and task details show `Talkward` without a link.
 
 ## Driving it with curl, simctl, and Playwright
 
@@ -26,10 +26,10 @@ Preconditions:
 - A session token from `POST /api/auth/sign-up/email` (with an `origin` header naming the server), read from the `set-auth-token` response header.
 - For iOS, the app built for an iOS 27 simulator with `API_URL=http://127.0.0.1:6141` on the `xcodebuild` command line and ad hoc signed (`CODE_SIGN_IDENTITY=-`, as `bun run start:ios` does), so the simulator honors the keychain group. A build with `CODE_SIGNING_ALLOWED=NO` gets `-34018` on the shared item.
 
-- **Receive.** `PUT /api/memo-tasks` with `Authorization: Bearer <token>`, `x-procrastimate-device: <uuid>`, `x-procrastimate-device-name: Voice memo`, and `{"memoId":"<uuid>","recordedAt":<epoch ms>,"tasks":[{"key":"<uuid>","title":"Call the plumber","notes":"","when":"tomorrow at 3pm","event":null}]}`. The response lists the task with `due` set. `GET /api/memo-tasks?memoId=<uuid>` returns the same list. The same `PUT` again changes nothing.
-- **Row and details on the web.** `bun run test:e2e -- e2e/memo-tasks.e2e.ts` in `app-web/`: the row in No date has the image `From a voice memo`, and details show `Voice memo` with no link.
-- **Row on iOS.** Sign in with the same account. The Inbox row reads `Call the plumber … Tomorrow 3pm` followed by the waveform. Its accessibility label ends with `From a voice memo`.
-- **Task link.** `xcrun simctl openurl $UDID procrastimate://task/<id>` and confirm `Open`. The task's details sheet opens with a `Voice memo` link. A made-up id leaves the screen as it was.
+- **Receive.** `PUT /api/memo-tasks` with `Authorization: Bearer <token>`, `x-procrastimate-device: <uuid>`, `x-procrastimate-device-name: Talkward`, and `{"memoId":"<uuid>","recordedAt":<epoch ms>,"tasks":[{"key":"<uuid>","title":"Call the plumber","notes":"","when":"tomorrow at 3pm","event":null}]}`. The response lists the task with `due` set. `GET /api/memo-tasks?memoId=<uuid>` returns the same list. The same `PUT` again changes nothing.
+- **Row and details on the web.** `bun run test:e2e -- e2e/memo-tasks.e2e.ts` in `app-web/`: the row in No date has the image `From Talkward`, and details show `Talkward` with no link.
+- **Row on iOS.** Sign in with the same account. The Inbox row reads `Call the plumber … Tomorrow 3pm` followed by the waveform. Its accessibility label ends with `From Talkward`.
+- **Task link.** `xcrun simctl openurl $UDID procrastimate://task/<id>` and confirm `Open`. The task's details sheet opens with a `Talkward` link. A made-up id leaves the screen as it was.
 - **Shared session.** `xcrun simctl spawn $UDID log show --last 5m --predicate 'category == "procrastimate-link"'` shows `wrote http://127.0.0.1:6141, status 0` after sign-in and at launch, and `deleted, status 0` after `Sign out`.
 - **Delete with memo.** `DELETE /api/memo-tasks?memoId=<uuid>` answers `{"ok":true}`, and the next `GET` lists no tasks.
 
