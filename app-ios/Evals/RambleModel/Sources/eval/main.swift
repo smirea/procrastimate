@@ -33,13 +33,19 @@ struct Out: CustomStringConvertible {
     var date: String?
     var time: String?
     var remindBefore: [Int] = []
+    // Compared only in corpus mode, where any change from the grammar is a regression to inspect.
+    var rest = ""
     init(_ t: RambleTask) {
+        rest = [t.priority.map { "p\($0.rawValue)" }, t.recurrence.map { "\($0)" }, t.projectId, t.labelIds.isEmpty ? nil : "\(t.labelIds)",
+                t.notes.isEmpty ? nil : "note: \(t.notes)", t.reminders.isEmpty ? nil : "\(t.reminders)"]
+            .compactMap { $0 }.joined(separator: " ")
         title = t.title
         subtasks = t.subtasks.map(\.title)
         date = t.due?.date
         time = t.due?.time
         remindBefore = t.reminders.compactMap { if case .before(let m) = $0 { m } else { nil } }
     }
+    var full: String { "\(description) \(rest) \(subtasks.count)" }
     var description: String {
         var s = title
         if let date { s += " @\(date)\(time.map { " \($0)" } ?? "")" }
@@ -147,11 +153,11 @@ func corpusCases() throws -> [String] {
 func corpus(_ name: String, _ strategy: Strategy, verbose: Bool) async throws {
     var changed = 0, errors = 0, total = 0
     for text in try corpusCases() {
-        let before = grammar(text).map(Out.init).map(\.description)
+        let before = grammar(text).map(Out.init).map(\.full)
         guard !before.isEmpty else { continue }
         total += 1
         do {
-            let after = try await strategy(text).map(Out.init).map(\.description)
+            let after = try await strategy(text).map(Out.init).map(\.full)
             if after != before {
                 changed += 1
                 if verbose { print("CHANGED \(text)\n   grammar \(before)\n   \(name) \(after)") }

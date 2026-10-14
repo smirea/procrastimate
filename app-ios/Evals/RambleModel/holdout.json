@@ -3,7 +3,7 @@
 		"text": "Making lasagna tonight. I need ricotta, lasagna sheets and fresh basil for that.",
 		"tasks": [
 			{
-				"title": "make lasagna",
+				"title": "making lasagna",
 				"subtasks": ["ricotta", "lasagna sheets", "fresh basil"],
 				"date": "2026-10-14",
 				"time": null,
@@ -228,7 +228,7 @@
 		"text": "For the move I need to book the movers, forward my mail and cancel the internet at the old apartment.",
 		"tasks": [
 			{
-				"title": "prepare for the move",
+				"title": "the move",
 				"subtasks": ["book the movers", "forward my mail", "cancel the internet at the old apartment"],
 				"date": null,
 				"time": null,

@@ -48,6 +48,21 @@ import Testing
         ]) == nil)
     }
 
+    @Test func aDroppedTaskSharingAVerbKeepsTheGrammar() {
+        #expect(structured("Call Alice. Call Bob.", [RambleSplit(text: "call Alice")]) == nil)
+    }
+
+    @Test func aDroppedPriorityKeepsTheGrammar() {
+        #expect(structured("Pay the electricity bill on Friday priority 1", [RambleSplit(text: "pay the electricity bill on Friday")]) == nil)
+    }
+
+    @Test func aReorderedRemindMeLeavesTheTitle() {
+        #expect(structured("Remind me to call Ben at 5pm. Pack the gym bag.", [
+            RambleSplit(text: "call Ben at 5pm, remind me"),
+            RambleSplit(text: "pack the gym bag"),
+        ]) == ["Call Ben @2026-10-14 17:00", "Pack the gym bag"])
+    }
+
     @Test func aRestatedOrLoneItemIsNotAList() {
         #expect(structured("Clean out the fridge and call the bank", [
             RambleSplit(text: "clean out the fridge", subtasks: ["fridge"]),

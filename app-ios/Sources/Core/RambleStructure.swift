@@ -38,8 +38,9 @@ extension Ramble {
     /// Every piece must come from the transcript. A subtask that only repeats its task's words is dropped, a lone
     /// item is not a list, and a to-do without a list keeps the grammar's own split, because the model often runs two
     /// errands together. The result may not hold more reminders or dates than the grammar found, which catches a
-    /// reminder copied into two to-dos, and every task in the draft must keep half its words, which catches a
-    /// dropped one.
+    /// reminder copied into two to-dos, and must keep the grammar's priorities, repeats, projects, labels, and notes.
+    /// Every task in the draft must keep half of the words that set it apart from the other tasks, which catches a
+    /// dropped one even when it shares a verb with a kept one.
     public static func structured(
         _ split: [RambleSplit],
         transcript: String,
@@ -53,7 +54,7 @@ extension Ramble {
             Ramble.parse(text, now: now, projects: projects, labels: labels, in: zone).tasks
         }
         let pieces = split
-            .map { RambleSplit(text: $0.text, subtasks: $0.subtasks.filter { !words($0).isEmpty }) }
+            .map { RambleSplit(text: withoutDanglingReminder($0.text), subtasks: $0.subtasks.filter { !words($0).isEmpty }) }
             .filter { !words($0.text).isEmpty }
         let said = Set(words(transcript))
         func backed(_ piece: String) -> Bool {
@@ -75,12 +76,21 @@ extension Ramble {
 
         let before = draft.tasks.flatMap { [$0] + $0.subtasks }
         let after = tasks.flatMap { [$0] + $0.subtasks }
+        func count(_ tasks: [RambleTask], _ has: (RambleTask) -> Bool) -> Int { tasks.filter(has).count }
         guard after.flatMap(\.reminders).count <= before.flatMap(\.reminders).count,
-              after.filter({ $0.due != nil }).count <= before.filter({ $0.due != nil }).count else { return nil }
+              count(after, { $0.due != nil }) <= count(before, { $0.due != nil }),
+              count(after, { $0.priority != nil }) == count(before, { $0.priority != nil }),
+              count(after, { $0.recurrence != nil }) == count(before, { $0.recurrence != nil }),
+              count(after, { $0.projectId != nil }) == count(before, { $0.projectId != nil }),
+              after.flatMap(\.labelIds).count == before.flatMap(\.labelIds).count,
+              after.map(\.notes).joined() == before.map(\.notes).joined() else { return nil }
         let out = Set(after.flatMap { words($0.title) })
-        let kept = before.allSatisfy { task in
-            let own = Set(words(task.title)).subtracting(glue)
-            return own.isEmpty || Double(own.intersection(out).count) / Double(own.count) >= 0.5
+        let kept = before.indices.allSatisfy { index in
+            let others = Set(before.indices.filter { $0 != index }.flatMap { words(before[$0].title) })
+            let own = Set(words(before[index].title)).subtracting(glue)
+            let distinct = own.subtracting(others)
+            let judged = distinct.isEmpty ? own : distinct
+            return judged.isEmpty || Double(judged.intersection(out).count) / Double(judged.count) >= 0.5
         }
         return kept && !tasks.isEmpty ? tasks : nil
     }
@@ -99,6 +109,12 @@ extension Ramble {
             first.subtasks += more.subtasks
         }
         return first
+    }
+
+    /// The model turns "remind me to call Ben at 5pm" into "call Ben at 5pm, remind me", and the grammar reads a
+    /// bare trailing "remind me" as title text.
+    private static func withoutDanglingReminder(_ text: String) -> String {
+        text.replacingOccurrences(of: #"[\s,;]*\bremind\s+me[\s.!]*$"#, with: "", options: [.regularExpression, .caseInsensitive])
     }
 
     private static let glue: Set<String> = ["to", "and", "i", "at", "on", "my", "for", "of", "in", "it", "up", "me"]
