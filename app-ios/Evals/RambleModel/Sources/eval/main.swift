@@ -136,6 +136,8 @@ func backed(_ piece: String, by transcript: String) -> Bool {
     return !piece.isEmpty && Double(piece.filter(said.contains).count) / Double(piece.count) >= 0.8
 }
 
+let glue: Set<String> = ["to", "and", "i", "at", "on", "the", "a", "my", "for", "of", "in", "it", "up", "me"]
+
 // The model decides the structure; the grammar reads each piece's fields. Every piece must come from the transcript,
 // a subtask that only repeats its task's own words is dropped, and a lone subtask is not a list.
 func assemble(_ raw: [(text: String, subtasks: [String])], _ transcript: String) throws -> [RambleTask] {
@@ -163,10 +165,28 @@ func assemble(_ raw: [(text: String, subtasks: [String])], _ transcript: String)
     return result
 }
 
+// Spoken commands ("next task", "subtask", "note", "scratch that") are the grammar's to read; the model only helps
+// with natural speech.
+func explicit(_ text: String) -> Bool {
+    Ramble.parse(text, now: now, projects: projects, labels: labels, in: zone).tokens.contains { ["separator", "subtask", "note", "correction"].contains($0.kind) }
+}
+
+// The model may restructure but not lose what the grammar kept.
+func covers(_ result: [RambleTask], _ draft: [RambleTask]) -> Bool {
+    let out = Set(result.flatMap { [$0] + $0.subtasks }.flatMap { words($0.title) })
+    return draft.flatMap { [$0] + $0.subtasks }.allSatisfy { task in
+        let kept = Set(words(task.title)).subtracting(glue)
+        return kept.isEmpty || Double(kept.intersection(out).count) / Double(kept.count) >= 0.5
+    }
+}
+
 func split(_ text: String) async throws -> [RambleTask] {
+    if explicit(text) { return grammar(text) }
     let session = LanguageModelSession(model: model, instructions: splitInstructions)
     let r = try await session.respond(to: "Ramble: \(text)", generating: Split.self, options: GenerationOptions(samplingMode: .greedy))
-    return try assemble(r.content.tasks.map { ($0.text, $0.subtasks) }, text)
+    let result = try assemble(r.content.tasks.map { ($0.text, $0.subtasks) }, text)
+    guard covers(result, grammar(text)) else { throw Unbacked() }
+    return result
 }
 
 typealias Strategy = @Sendable (String) async throws -> [RambleTask]
