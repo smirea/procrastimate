@@ -6,7 +6,8 @@ import Core
 ///
 /// One command per line. The first word is the verb:
 /// `add <quick add text>`, `complete <title>`, `reopen <title>`, `open inbox|today|upcoming`,
-/// `project <name>`, `task <title>`, `search <query>`, `today`, `overdue`.
+/// `project <name>`, `task <title>`, `search <query>`, `today`, `overdue`, and `ramble`, which opens quick add
+/// listening to `PROCRASTIMATE_RAMBLE_SCRIPT`.
 /// `addx` takes tab-separated fields: title, project, comma-separated labels, priority (`p1`–`p4`), due ISO-8601, reminder ISO-8601.
 enum IntentHarness {
     @MainActor
@@ -45,6 +46,7 @@ enum IntentHarness {
         case "search": await search(rest)
         case "today": await perform(ListTodayIntent())
         case "overdue": await perform(ListOverdueIntent())
+        case "ramble": _ = IntentEffects.startRamble()
         default: IntentEffects.note("unknown \(verb)")
         }
     }

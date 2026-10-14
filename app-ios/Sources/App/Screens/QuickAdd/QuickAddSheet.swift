@@ -317,12 +317,16 @@ private struct QuickAddForm: View {
             }
             return
         }
+        guard !Ramble.usesCommands(ramble) else { return settle(ramble.tasks) }
         spoken = .reviewing(ramble.tasks)
-        let transcript = transcript
+        let transcript = transcript, now = clock.now, projects = store.projects, labels = store.labels, zone = clock.timeZone
         Task {
-            let reviews = await RambleModel.review(transcript, ramble.tasks)
+            let split = await RambleModel.split(transcript)
             guard case .reviewing = spoken else { return }
-            settle(reviews.map { Ramble.reviewed(ramble.tasks, by: $0, in: transcript) } ?? ramble.tasks)
+            let structured = split.flatMap {
+                Ramble.structured($0, transcript: transcript, draft: ramble, now: now, projects: projects, labels: labels, in: zone)
+            }
+            settle(structured ?? ramble.tasks)
         }
     }
 
