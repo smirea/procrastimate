@@ -213,7 +213,7 @@ private struct Picks: Equatable {
 private struct ProjectMenu: View {
     @Environment(Store.self) private var store
     let projectId: String?
-    let onChange: (String?) -> Void
+    let onChange: @MainActor (String?) -> Void
 
     @State private var creating = false
 

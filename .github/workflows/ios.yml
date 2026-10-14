@@ -21,7 +21,7 @@ env:
 jobs:
   core:
     if: github.event_name == 'workflow_dispatch'
-    runs-on: macos-26
+    runs-on: xcode-27
     timeout-minutes: 20
     defaults:
       run:
@@ -38,7 +38,7 @@ jobs:
   core-linux:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    container: swift:6.2
+    container: swift:6.4
     defaults:
       run:
         working-directory: app-ios
@@ -50,7 +50,7 @@ jobs:
 
   app:
     if: github.event_name == 'workflow_dispatch'
-    runs-on: macos-26
+    runs-on: xcode-27
     timeout-minutes: 20
     defaults:
       run:

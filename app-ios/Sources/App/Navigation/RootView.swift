@@ -87,12 +87,8 @@ private struct TabBar: View {
         .opacity(hidden ? 0 : 1)
         .allowsHitTesting(!hidden)
         .animation(.snappy(duration: 0.2), value: hidden)
-        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
-            keyboardShown = true
-        }
-        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
-            keyboardShown = false
-        }
+        .onMessage(of: UIScreen.self, for: .keyboardWillShow) { _ in keyboardShown = true }
+        .onMessage(of: UIScreen.self, for: .keyboardWillHide) { _ in keyboardShown = false }
     }
 
     private var hidden: Bool { keyboardShown || navigator.quickAdd != nil }

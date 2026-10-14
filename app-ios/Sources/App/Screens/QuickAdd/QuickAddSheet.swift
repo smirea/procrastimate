@@ -23,6 +23,8 @@ private struct QuickAddForm: View {
     @State private var listAt: Int?
     @State private var session = RambleSession()
     @State private var listening = false
+    /// True from start until the session ends. After a stop that applies, the last words still arrive.
+    @State private var capturing = false
     @State private var typed = false
     @State private var notice: String?
     @State private var transcript = ""
@@ -252,8 +254,9 @@ private struct QuickAddForm: View {
         typed = false
         let choice = store.dictation
         let deviceId = store.snapshot.sync?.deviceId
+        capturing = true
         session.onText = { spoken, _ in
-            guard listening else { return }
+            guard capturing else { return }
             transcript = spoken
             if spoken != draft.text {
                 speechWrites += 1
@@ -264,6 +267,7 @@ private struct QuickAddForm: View {
         session.onLevel = { _ in }
         session.onEnd = { end in
             listening = false
+            capturing = false
             switch end {
             case .stopped:
                 if applyOnStop { applyTranscript() }
@@ -280,6 +284,7 @@ private struct QuickAddForm: View {
     private func stopRamble(apply: Bool) {
         applyOnStop = apply
         listening = false
+        if !apply { capturing = false }
         liveParse?.cancel()
         if !apply { spoken = .none }
         session.stop()
@@ -478,7 +483,7 @@ struct DueChip: View {
 struct PriorityChip: View {
     let priority: Priority
     var iconOnly = false
-    let onChange: (Priority) -> Void
+    let onChange: @MainActor (Priority) -> Void
 
     var body: some View {
         Menu {
@@ -505,7 +510,7 @@ struct PriorityChip: View {
 struct ProjectChip: View {
     @Environment(Store.self) private var store
     let projectId: String?
-    let onChange: (String?) -> Void
+    let onChange: @MainActor (String?) -> Void
 
     @State private var creating = false
 

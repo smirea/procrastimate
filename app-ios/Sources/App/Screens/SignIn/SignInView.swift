@@ -5,6 +5,7 @@ import SwiftUI
 struct SignInView: View {
     @Environment(Session.self) private var session
     @Environment(AccountSync.self) private var accountSync
+    @Environment(\.webAuthenticationSession) private var webAuthenticationSession
 
     @State private var email = ""
     @State private var password = ""
@@ -101,7 +102,7 @@ struct SignInView: View {
     private func google(_ clientId: String) async {
         await finish {
             do {
-                let token = try await GoogleNativeSignIn.signIn(clientId: clientId)
+                let token = try await GoogleNativeSignIn.signIn(clientId: clientId, with: webAuthenticationSession)
                 await session.signIn(provider: "google", idToken: token)
             } catch is CancellationError {
                 return
@@ -121,7 +122,7 @@ struct SignInView: View {
 
 /// Google's installed-app flow: an auth code with PKCE, exchanged for an ID token, with no client secret.
 enum GoogleNativeSignIn {
-    static func signIn(clientId: String) async throws -> String {
+    static func signIn(clientId: String, with session: WebAuthenticationSession) async throws -> String {
         let verifier = random(32)
         let challenge = Data(SHA256.hash(data: Data(verifier.utf8))).base64URLEncodedString()
         let scheme = reversedScheme(clientId)
@@ -136,7 +137,17 @@ enum GoogleNativeSignIn {
             URLQueryItem(name: "code_challenge_method", value: "S256"),
         ]
         guard let url = components.url else { throw URLError(.badURL) }
-        let callback = try await WebAuthenticator.authenticate(url: url, scheme: scheme)
+        let callback: URL
+        do {
+            callback = try await session.authenticate(
+                using: url,
+                callback: .customScheme(scheme),
+                preferredBrowserSession: .ephemeral,
+                additionalHeaderFields: [:]
+            )
+        } catch ASWebAuthenticationSessionError.canceledLogin {
+            throw CancellationError()
+        }
         guard let code = URLComponents(url: callback, resolvingAgainstBaseURL: false)?
             .queryItems?.first(where: { $0.name == "code" })?.value else { throw URLError(.badServerResponse) }
         return try await exchange(code: code, verifier: verifier, clientId: clientId, redirect: redirect)
@@ -179,37 +190,5 @@ enum GoogleNativeSignIn {
 private extension Data {
     func base64URLEncodedString() -> String {
         base64EncodedString().replacingOccurrences(of: "+", with: "-").replacingOccurrences(of: "/", with: "_").replacingOccurrences(of: "=", with: "")
-    }
-}
-
-@MainActor
-private enum WebAuthenticator {
-    private static var session: ASWebAuthenticationSession?
-    private static let presenter = Presenter()
-
-    static func authenticate(url: URL, scheme: String) async throws -> URL {
-        try await withCheckedThrowingContinuation { continuation in
-            let session = ASWebAuthenticationSession(url: url, callbackURLScheme: scheme) { callback, error in
-                self.session = nil
-                if let callback {
-                    continuation.resume(returning: callback)
-                } else if let error = error as? ASWebAuthenticationSessionError, error.code == .canceledLogin {
-                    continuation.resume(throwing: CancellationError())
-                } else {
-                    continuation.resume(throwing: error ?? URLError(.cancelled))
-                }
-            }
-            session.presentationContextProvider = presenter
-            session.prefersEphemeralWebBrowserSession = true
-            self.session = session
-            if !session.start() { continuation.resume(throwing: URLError(.unknown)) }
-        }
-    }
-}
-
-private final class Presenter: NSObject, ASWebAuthenticationPresentationContextProviding {
-    func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
-        let scene = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first
-        return scene?.keyWindow ?? scene?.windows.first ?? ASPresentationAnchor()
     }
 }

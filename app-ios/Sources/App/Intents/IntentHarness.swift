@@ -61,7 +61,7 @@ enum IntentHarness {
 
     @MainActor
     private static func add(_ text: String) async {
-        var intent = AddTaskIntent()
+        let intent = AddTaskIntent()
         intent.title = text
         await perform(intent)
     }
@@ -74,7 +74,7 @@ enum IntentHarness {
             return
         }
         let (snapshot, _) = IntentEffects.snapshot()
-        var intent = AddTaskIntent()
+        let intent = AddTaskIntent()
         intent.title = title
         if fields.count > 1, !fields[1].isEmpty {
             guard let project = IntentRules.named(snapshot.projects, fields[1], name: \.name) else {
@@ -130,11 +130,11 @@ enum IntentHarness {
             return
         }
         if reopen {
-            var intent = ReopenTaskIntent()
+            let intent = ReopenTaskIntent()
             intent.task = entity
             await perform(intent)
         } else {
-            var intent = CompleteTaskIntent()
+            let intent = CompleteTaskIntent()
             intent.task = entity
             await perform(intent)
         }
@@ -152,7 +152,7 @@ enum IntentHarness {
             IntentEffects.note("unknown \(name)")
             return
         }
-        var intent = OpenViewIntent()
+        let intent = OpenViewIntent()
         intent.list = list
         await perform(intent)
     }
@@ -164,7 +164,7 @@ enum IntentHarness {
             IntentEffects.note("missing-project \(name)")
             return
         }
-        var intent = OpenProjectIntent()
+        let intent = OpenProjectIntent()
         intent.project = project
         await perform(intent)
     }
@@ -176,14 +176,14 @@ enum IntentHarness {
             IntentEffects.note("missing \(title)")
             return
         }
-        var intent = OpenTaskIntent()
+        let intent = OpenTaskIntent()
         intent.target = entity
         await perform(intent)
     }
 
     @MainActor
     private static func search(_ query: String) async {
-        var intent = SearchTasksIntent()
+        let intent = SearchTasksIntent()
         intent.query = query
         await perform(intent)
     }

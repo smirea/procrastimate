@@ -33,7 +33,7 @@ enum RambleModel {
                 let response = try await session.respond(
                     to: prompt,
                     generating: Review.self,
-                    options: GenerationOptions(sampling: .greedy)
+                    options: GenerationOptions(samplingMode: .greedy)
                 )
                 return response.content.tasks.map {
                     RambleReview(number: $0.number, role: $0.role.reviewRole, items: $0.items)

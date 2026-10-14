@@ -16,161 +16,133 @@ extension DictationChoice {
 /// Whether the device can reach the network. Used when a voice session starts, not as a status in Settings.
 enum NetworkPath {
     static func online() async -> Bool {
-        await withCheckedContinuation { continuation in
-            let monitor = NWPathMonitor()
-            let once = Once()
-            monitor.pathUpdateHandler = { path in
-                once.run {
-                    monitor.cancel()
-                    continuation.resume(returning: path.status == .satisfied)
-                }
-            }
-            monitor.start(queue: DispatchQueue(label: "procrastimate.network"))
-        }
+        for await path in NWPathMonitor() { return path.status == .satisfied }
+        return false
     }
 }
 
-/// A one-shot gate, so a path monitor cannot resume its continuation twice.
-private final class Once: @unchecked Sendable {
-    private let lock = NSLock()
-    private var ran = false
-
-    func run(_ body: () -> Void) {
-        lock.lock()
-        let first = !ran
-        ran = true
-        lock.unlock()
-        if first { body() }
-    }
-}
-
-/// Apple's speech recognizer. On-device when the session is offline. Permission is asked here, when dictation
-/// starts, and a denial is not asked again.
+/// Apple's on-device dictation: `SpeechAnalyzer` with a `DictationTranscriber`, so audio never leaves the phone and
+/// it works offline. The language assets download on first use. Only the microphone needs permission.
 @MainActor
 final class SpeechDictation {
-    struct Update: Sendable {
-        var text: String
-        var isFinal: Bool
-    }
-
     enum Failure: Error {
         case unsupported
         case denied
     }
 
     private var engine: AVAudioEngine?
-    private var request: SFSpeechAudioBufferRecognitionRequest?
-    private var task: SFSpeechRecognitionTask?
+    private var input: AsyncStream<AnalyzerInput>.Continuation?
+    private var analyzer: SpeechAnalyzer?
+    private var reader: Task<Void, Never>?
 
-    func start(onDevice: Bool, onUpdate: @escaping @Sendable (Update) -> Void) async throws {
-        guard await Self.speechAllowed() else { throw Failure.denied }
-        guard await Self.microphoneAllowed() else { throw Failure.denied }
-        guard let recognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US")), recognizer.isAvailable else {
+    /// Streams the transcript so far, finalized text followed by the words still being recognized.
+    func start(onText: @escaping @MainActor (String) -> Void) async throws {
+        guard let locale = await DictationTranscriber.supportedLocale(equivalentTo: Locale(identifier: "en-US")) else {
             throw Failure.unsupported
         }
-        if onDevice, !recognizer.supportsOnDeviceRecognition { throw Failure.unsupported }
+        let transcriber = DictationTranscriber(
+            locale: locale,
+            contentHints: [],
+            transcriptionOptions: [.punctuation],
+            reportingOptions: [.volatileResults, .frequentFinalization],
+            attributeOptions: []
+        )
+        if let request = try await AssetInventory.assetInstallationRequest(supporting: [transcriber]) {
+            try await request.downloadAndInstall()
+        }
+        let converter = try await AnalyzerInputConverter.converter(compatibleWith: [transcriber])
+        let (stream, input) = AsyncStream.makeStream(of: AnalyzerInput.self)
+        let analyzer = SpeechAnalyzer(modules: [transcriber])
+        reader = Task {
+            var finalized = AttributedString()
+            do {
+                for try await result in transcriber.results {
+                    if result.isFinal { finalized += result.text }
+                    onText(String((result.isFinal ? finalized : finalized + result.text).characters))
+                }
+            } catch {
+                ErrorReport.log("Dictation stopped", detail: String(reflecting: error))
+            }
+        }
+        try await analyzer.start(inputSequence: stream)
+        self.analyzer = analyzer
+        self.input = input
 
-        let recognition = SFSpeechAudioBufferRecognitionRequest()
-        recognition.shouldReportPartialResults = true
-        recognition.addsPunctuation = true
-        recognition.requiresOnDeviceRecognition = onDevice
-        request = recognition
-
+        #if DEBUG
+        if let path = ProcessInfo.processInfo.environment["PROCRASTIMATE_RAMBLE_AUDIO"] {
+            try Self.play(URL(fileURLWithPath: path), through: converter, into: input)
+            return
+        }
+        #endif
+        guard await AVAudioApplication.requestRecordPermission() else {
+            cancel()
+            throw Failure.denied
+        }
         let audio = AVAudioEngine()
         let session = AVAudioSession.sharedInstance()
         do {
             try session.setCategory(.record, mode: .measurement, options: [.duckOthers])
             try session.setActive(true, options: .notifyOthersOnDeactivation)
-            let input = audio.inputNode
-            let format = input.outputFormat(forBus: 0)
+            let node = audio.inputNode
+            let format = node.outputFormat(forBus: 0)
             guard format.sampleRate > 0, format.channelCount > 0 else { throw Failure.unsupported }
-            input.installTap(onBus: 0, bufferSize: 1024, format: format, block: Self.feed(recognition))
+            try node.installAudioTap(onBus: 0, bufferSize: 1024, format: format, tapProvider: Self.feed(converter, input))
             audio.prepare()
             try audio.start()
         } catch {
-            audio.stop()
-            try? session.setActive(false, options: .notifyOthersOnDeactivation)
+            cancel()
             throw error
         }
         engine = audio
-
-        task = recognizer.recognitionTask(with: recognition, resultHandler: Self.results(onUpdate))
     }
 
-    // AVAudioEngine and Speech call these back on their own threads. A closure written inside this main-actor class
-    // inherits its isolation, and Swift 6 traps when it runs off the main thread, so they are built outside it.
-    nonisolated private static func feed(_ request: SFSpeechAudioBufferRecognitionRequest) -> AVAudioNodeTapBlock {
-        { buffer, _ in request.append(buffer) }
-    }
-
-    nonisolated private static func results(
-        _ onUpdate: @escaping @Sendable (Update) -> Void
-    ) -> @Sendable (SFSpeechRecognitionResult?, (any Error)?) -> Void {
-        { result, _ in
-            guard let result else { return }
-            let update = Update(text: result.bestTranscription.formattedString, isFinal: result.isFinal)
-            Task { @MainActor in onUpdate(update) }
+    /// The tap runs on the audio thread. The converter is only ever used there once the tap is installed.
+    nonisolated private static func feed(
+        _ converter: AnalyzerInputConverter,
+        _ input: AsyncStream<AnalyzerInput>.Continuation
+    ) -> @Sendable (AVReadOnlyAudioPCMBuffer, AVAudioTime) -> Void {
+        nonisolated(unsafe) let converter = converter
+        return { buffer, time in
+            guard let items = try? converter.convert(AVAudioPCMBuffer(copying: buffer), at: time) else { return }
+            for item in items { input.yield(item) }
         }
     }
 
-    func stop() {
-        task?.finish()
-        task = nil
-        request?.endAudio()
-        request = nil
+    #if DEBUG
+    /// DEBUG-only. The simulator has no microphone, so `PROCRASTIMATE_RAMBLE_AUDIO` names a spoken audio file that
+    /// goes through the same converter and analyzer in tap-sized chunks.
+    private static func play(_ url: URL, through converter: AnalyzerInputConverter, into input: AsyncStream<AnalyzerInput>.Continuation) throws {
+        let file = try AVAudioFile(forReading: url)
+        while file.framePosition < file.length {
+            let buffer = try file.read(frameCount: 1024)
+            for item in try converter.convert(AVAudioPCMBuffer(copying: buffer), at: nil) { input.yield(item) }
+        }
+        for item in try converter.flush() { input.yield(item) }
+    }
+    #endif
+
+    /// Stops listening and waits until the words already heard are final, so the last of them are not lost.
+    func finish() async {
+        let analyzer = self.analyzer
+        let reader = self.reader
+        halt()
+        try? await analyzer?.finalizeAndFinishThroughEndOfInput()
+        await reader?.value
+    }
+
+    func cancel() {
+        reader?.cancel()
+        halt()
+    }
+
+    private func halt() {
         engine?.inputNode.removeTap(onBus: 0)
         engine?.stop()
         engine = nil
+        input?.finish()
+        input = nil
+        analyzer = nil
+        reader = nil
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
     }
-
-    nonisolated private static func speechAllowed() async -> Bool {
-        let status = SFSpeechRecognizer.authorizationStatus()
-        switch status {
-        case .authorized: return true
-        case .denied, .restricted: return false
-        case .notDetermined:
-            return await withCheckedContinuation { continuation in
-                SFSpeechRecognizer.requestAuthorization { next in
-                    continuation.resume(returning: next == .authorized)
-                }
-            }
-        @unknown default: return false
-        }
-    }
-
-    private static func microphoneAllowed() async -> Bool {
-        switch AVAudioApplication.shared.recordPermission {
-        case .granted: return true
-        case .denied: return false
-        case .undetermined: return await AVAudioApplication.requestRecordPermission()
-        @unknown default: return false
-        }
-    }
-}
-
-/// The voice session Ramble and any other speech input start. Native text is the transcript the Ramble grammar
-/// parses. ElevenLabs stays the socket, and only when that option is selected and the device is online.
-@MainActor
-final class VoiceInput {
-    private let speech = SpeechDictation()
-    private let onTranscript: @Sendable (String) -> Void
-
-    init(onTranscript: @escaping @Sendable (String) -> Void) {
-        self.onTranscript = onTranscript
-    }
-
-    func start(choice: DictationChoice) async {
-        let online = await NetworkPath.online()
-        let plan = Dictation.voiceCapture(choice, online: online, nativeSpeech: true)
-        switch plan.capture {
-        case .speech:
-            let deliver = onTranscript
-            try? await speech.start(onDevice: !online) { update in deliver(update.text) }
-        case .socket, .typed:
-            break
-        }
-    }
-
-    func stop() { speech.stop() }
 }

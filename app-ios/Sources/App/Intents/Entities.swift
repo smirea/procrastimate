@@ -97,13 +97,11 @@ struct TaskEntityQuery: EntityStringQuery, IndexedEntityQuery {
         await IntentEffects.suggestedTasks()
     }
 
-    @available(iOS 27.0, *)
     func reindexEntities(for identifiers: [TaskEntity.ID], indexDescription _: CSSearchableIndexDescription) async throws {
         let (keep, drop) = await IntentEffects.spotlightEntities(ids: identifiers)
         try await SpotlightIndex.replace(keep, removing: drop)
     }
 
-    @available(iOS 27.0, *)
     func reindexAllEntities(indexDescription _: CSSearchableIndexDescription) async throws {
         try await SpotlightIndex.replaceAll(await IntentEffects.spotlightEntities())
     }

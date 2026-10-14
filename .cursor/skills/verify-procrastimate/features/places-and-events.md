@@ -27,7 +27,7 @@ A task can hang off a place or a calendar event, set with the Location and Event
 
 Preconditions:
 
-- A booted iOS 26 simulator, the app built with `xcodebuild` for it and installed. `UDID` is the simulator's identifier.
+- A booted iOS 27 simulator, the app built with `xcodebuild` for it and installed. `UDID` is the simulator's identifier.
 - `xcrun simctl privacy $UDID grant location-always com.stefan.procrastimate` and `xcrun simctl privacy $UDID grant calendar com.stefan.procrastimate`. Notifications cannot be granted through `simctl`; allow the prompt once by hand.
 - The DEBUG launch key `PROCRASTIMATE_DEMO` stands in for taps, as space-separated words: `seed` adds `Standup` (daily) and `Dentist` to the calendar and seeds `Buy oat milk` (arrive at Whole Foods Market), two `During` tasks at Philz Coffee, `Post standup notes` (15m after Standup), and `Floss first` (1h before Dentist); `browse` opens Browse; `nodate` opens the No date tab; `details:<title with + for spaces>` opens a task; `sheet:location` or `sheet:event` opens that chip's sheet; `query:<words>` fills the Maps search; `quickadd` opens quick add; `ramble` opens quick add listening; `search` opens Browse with its search field focused; `type:<text with + for spaces>` types into the focused field through `UIKeyInput` one character at a time, then logs `PlacesDemo typed: …`; `move` moves the next Standup an hour later and logs the task's occurrences before and after. Pass it as `SIMCTL_CHILD_PROCRASTIMATE_DEMO`, with `SIMCTL_CHILD_PROCRASTIMATE_SIGNED_IN=1`.
 
