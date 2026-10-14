@@ -70,9 +70,11 @@ private struct TabBar: View {
                         .font(.title2.weight(.semibold))
                         .foregroundStyle(.white)
                         .frame(width: 62, height: 62)
+                        .contentShape(.circle)
+                        // On the label, not the button: glass around a plain-style button shrinks its tap area to the glyph.
+                        .glassEffect(.regular.tint(.accent).interactive(), in: .circle)
                 }
                 .buttonStyle(.plain)
-                .glassEffect(.regular.tint(.accent).interactive(), in: .circle)
                 .accessibilityLabel("Quick add")
             }
         }
