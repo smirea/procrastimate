@@ -4,18 +4,15 @@
 	import Check from 'phosphor-svelte/lib/Check';
 	import Plus from 'phosphor-svelte/lib/Plus';
 	import Popover from './Popover.svelte';
-	import KeepAsText from './KeepAsText.svelte';
 	import { store } from '../store.svelte.ts';
 
 	let {
 		projectId,
 		onchange,
-		onkeepastext,
 		align = 'start',
 	}: {
 		projectId: string | null;
 		onchange: (projectId: string | null) => void;
-		onkeepastext?: () => void;
 		align?: 'start' | 'end';
 	} = $props();
 
@@ -89,5 +86,4 @@
 			</div>
 		{/snippet}
 	</Popover>
-	{#if onkeepastext}<KeepAsText onclick={onkeepastext} />{/if}
 </div>

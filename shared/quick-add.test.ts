@@ -267,12 +267,6 @@ describe('labels', () => {
 		expect(parse('Call mom @calls.').labelIds).toEqual(['l-calls']);
 	});
 
-	test('a label kept as text stays in the title while the others still parse', () => {
-		const parsed = parse('Plan @calls @waiting', { disabled: ['@calls'] });
-		expect(parsed.title).toBe('Plan @calls');
-		expect(parsed.labelIds).toEqual(['l-waiting']);
-	});
-
 	test('with no labels, @words stay text', () => {
 		expect(parse('Call @calls', { labels: [] }).title).toBe('Call @calls');
 	});
@@ -537,13 +531,6 @@ describe('recurrence', () => {
 		expect(parsed.recurrence).toBe(null);
 	});
 
-	test('a weekday set kept as text does not leak a weekday into the due date', () => {
-		const parsed = parse('gym mon wed fri 7am', { disabled: ['mon wed fri'] });
-		expect(parsed.title).toBe('gym mon wed fri');
-		expect(parsed.recurrence).toBe(null);
-		expect(parsed.due).toEqual({ date: '2026-10-15', time: '07:00' });
-	});
-
 	test('a yearly repeat on a day that does not exist stays text', () => {
 		const parsed = parse('Party every feb 30');
 		expect(parsed.recurrence).toBeNull();
@@ -629,35 +616,6 @@ describe('ordinary words stay in the title', () => {
 	test('months never read as minutes', () => {
 		expect(parse('Renew 3mo').due).toEqual({ date: '2027-01-14', time: null });
 		expect(parse('Renew 3m').due).toEqual({ date: '2026-10-14', time: '10:03' });
-	});
-});
-
-describe('disabled tokens', () => {
-	test('a disabled recurrence stays in the title', () => {
-		const parsed = parse('Water plants every day', { disabled: ['every day'] });
-		expect(parsed.title).toBe('Water plants every day');
-		expect(parsed.recurrence).toBe(null);
-		expect(parsed.due).toBe(null);
-	});
-
-	test('a disabled weekday repeat does not leak its weekday into the due date', () => {
-		const parsed = parse('Water every mon', { disabled: ['every mon'] });
-		expect(parsed.title).toBe('Water every mon');
-		expect(parsed.due).toBe(null);
-		expect(parsed.tokens).toEqual([]);
-	});
-
-	test('a disabled phrase stays in the title while other phrases still parse', () => {
-		const parsed = parse('Read Monday Night Club p1', { disabled: ['monday'] });
-		expect(parsed.title).toBe('Read Monday Night Club');
-		expect(parsed.due).toBe(null);
-		expect(parsed.priority).toBe(1);
-	});
-
-	test('a disabled phrase falls through to the next occurrence', () => {
-		const parsed = parse('Watch Friday Night Lights fri', { disabled: ['friday'] });
-		expect(parsed.title).toBe('Watch Friday Night Lights');
-		expect(parsed.due).toEqual({ date: '2026-10-16', time: null });
 	});
 });
 

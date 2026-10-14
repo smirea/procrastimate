@@ -325,7 +325,6 @@ private struct ParseInput: Decodable {
     let now: Int
     let projects: [Project]?
     let labels: [Label]?
-    let disabled: [String]?
     let due: Due?
     let spoken: Bool?
 
@@ -334,7 +333,6 @@ private struct ParseInput: Decodable {
             now: Date(epochMilliseconds: now),
             projects: projects ?? [],
             labels: labels ?? [],
-            disabled: disabled ?? [],
             due: due,
             spoken: spoken ?? false
         )

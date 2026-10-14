@@ -1370,18 +1370,15 @@ extension API {
         public var now: Date
         public var projects: [Project]
         public var labels: [Label]
-        /// Token texts the user chose to keep as plain title text, compared case-insensitively.
-        public var disabled: [String]
         /// The due date set outside the text, such as by a picker or on an existing task.
         public var due: Due?
         /// Transcribed speech rather than typing, so typing shorthands that speech never means do not apply.
         public var spoken: Bool
 
-        public init(now: Date, projects: [Project] = [], labels: [Label] = [], disabled: [String] = [], due: Due? = nil, spoken: Bool = false) {
+        public init(now: Date, projects: [Project] = [], labels: [Label] = [], due: Due? = nil, spoken: Bool = false) {
             self.now = now
             self.projects = projects
             self.labels = labels
-            self.disabled = disabled
             self.due = due
             self.spoken = spoken
         }
@@ -1390,7 +1387,6 @@ extension API {
             case now = "now"
             case projects = "projects"
             case labels = "labels"
-            case disabled = "disabled"
             case due = "due"
             case spoken = "spoken"
         }
@@ -1400,7 +1396,6 @@ extension API {
             now = try container.decode(Date.self, forKey: .now)
             projects = try container.decodeAbsent([Project].self, forKey: .projects) ?? []
             labels = try container.decodeAbsent([Label].self, forKey: .labels) ?? []
-            disabled = try container.decodeAbsent([String].self, forKey: .disabled) ?? []
             due = try container.decodeIfPresent(Due.self, forKey: .due)
             spoken = try container.decodeAbsent(Bool.self, forKey: .spoken) ?? false
         }
@@ -1410,7 +1405,6 @@ extension API {
             try container.encode(self.now, forKey: .now)
             try container.encode(self.projects, forKey: .projects)
             try container.encode(self.labels, forKey: .labels)
-            try container.encode(self.disabled, forKey: .disabled)
             try container.encode(self.due, forKey: .due)
             try container.encode(self.spoken, forKey: .spoken)
         }

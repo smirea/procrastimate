@@ -28,8 +28,6 @@ public struct QuickAddDraft: Hashable, Sendable {
 
     public let defaults: Defaults
     public private(set) var text = ""
-    /// Token texts kept as plain title text.
-    public private(set) var disabled: [String] = []
     public var picked: Picked
     /// A repeat the ramble grammar set. The text's own repeat wins when it has one.
     public var appliedRecurrence: Recurrence? = nil
@@ -49,22 +47,16 @@ public struct QuickAddDraft: Hashable, Sendable {
         )
     }
 
-    /// Clearing the text forgets the phrases kept as text, so the next task parses them again.
     public mutating func setText(_ value: String) {
         text = value
-        if value.isEmpty { disabled = [] }
     }
 
     public func parse(now: Date, projects: [Project], labels: [Label], in zone: TimeZone) -> QuickAdd.Parsed {
         QuickAdd.parse(
             text,
-            QuickAdd.Options(now: now, projects: projects, labels: labels, disabled: disabled, due: picked.due),
+            QuickAdd.Options(now: now, projects: projects, labels: labels, due: picked.due),
             in: zone
         )
-    }
-
-    public mutating func keepAsText(_ token: QuickAdd.Token) {
-        disabled.append(token.text)
     }
 
     /// A manual pick replaces whatever the text said for that attribute.
@@ -105,7 +97,6 @@ public struct QuickAddDraft: Hashable, Sendable {
     /// Starts the next task: an empty field with the sheet's defaults.
     public mutating func reset(today: DateKey) {
         text = ""
-        disabled = []
         picked = Self.initialPicked(defaults, today)
         appliedRecurrence = nil
     }
@@ -116,7 +107,6 @@ public struct QuickAddDraft: Hashable, Sendable {
     public mutating func applyRamble(_ ramble: RambleDraft, today: DateKey) -> Bool {
         guard let fill = Ramble.quickAdd(from: ramble) else { return false }
         text = fill.text
-        disabled = []
         var labelIds = fill.labelIds
         if let labelId = defaults.labelId, !labelIds.contains(labelId) { labelIds.insert(labelId, at: 0) }
         picked = Picked(

@@ -53,12 +53,12 @@ private struct TaskDetailsForm: View {
                     if task.event != nil {
                         eventChip
                     } else {
-                        DueChip(due: draft.due, onKeepAsText: nil) { store.updateTask(task.id, TaskDetails.setDue(task, $0)) }
+                        DueChip(due: draft.due) { store.updateTask(task.id, TaskDetails.setDue(task, $0)) }
                         RepeatChip(recurrence: draft.recurrence, due: draft.due) { recurrence, due in
                             store.updateTask(task.id, TaskPatch(due: .some(due), recurrence: .some(recurrence)))
                         }
                     }
-                    PriorityChip(priority: draft.priority, onKeepAsText: nil) {
+                    PriorityChip(priority: draft.priority) {
                         store.updateTask(task.id, TaskPatch(priority: $0))
                     }
                     ReminderChip(

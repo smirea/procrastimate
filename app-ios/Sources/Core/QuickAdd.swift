@@ -528,14 +528,13 @@ public enum QuickAdd {
             time: clock(now, in: zone),
             spoken: options.spoken
         )
-        let disabled = Set(options.disabled.map { $0.lowercased() })
         let named = [
             namedRule(.project, "#", options.projects.map { ($0.id, $0.name) }) { .project($0) },
             namedRule(.label, "@", options.labels.map { ($0.id, $0.name) }) { .label($0) },
         ].compactMap { $0 }
         let rules = [reminderRule, recurrenceRule] + named + [priorityRule, dueRule]
         let source = NSString(string: input)
-        // Every phrase a rule recognizes is masked out of both views, including kept-as-text and superseded ones, so a
+        // Every phrase a rule recognizes is masked out of both views, including superseded ones, so a
         // later rule never reads part of it as something else.
         var raw = input
         var guarded = maskGuarded(input, spoken: options.spoken)
@@ -553,9 +552,7 @@ public enum QuickAdd {
                 let range = m.result.range
                 let text = source.substring(with: range)
                 spans.append(range)
-                if !disabled.contains(text.lowercased()) {
-                    found.append((Token(kind: rule.kind, start: m.start, end: m.end, text: text), match))
-                }
+                found.append((Token(kind: rule.kind, start: m.start, end: m.end, text: text), match))
             }
             // Attributes usually trail the title, so a single-valued attribute takes its last phrase.
             for (token, match) in rule.repeatable ? found : Array(found.suffix(1)) {

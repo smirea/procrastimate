@@ -18,7 +18,6 @@
 	import PriorityPicker from './PriorityPicker.svelte';
 	import ReminderPicker from './ReminderPicker.svelte';
 	import ProjectPicker from './ProjectPicker.svelte';
-	import KeepAsText from './KeepAsText.svelte';
 	import { store } from '../store.svelte.ts';
 	import { clock, mobile, sheets, type QuickAddDefaults, motion } from '../ui.svelte.ts';
 	import { formatRecurrence, formatReminder } from 'shared/format.ts';
@@ -43,7 +42,6 @@
 	});
 
 	let text = $state('');
-	let disabled = $state<string[]>([]);
 	let picked = $state<Picked>(initialPicked());
 	let spokenRecurrence = $state<Recurrence | null>(null);
 	let listening = $state(false);
@@ -60,7 +58,7 @@
 	const showMic = $derived(listening || !typed);
 
 	const parsed = $derived(
-		parseQuickAdd(text, { now: new Date(clock.now), projects: store.projects, labels: store.labels, disabled, due: picked.due }),
+		parseQuickAdd(text, { now: new Date(clock.now), projects: store.projects, labels: store.labels, due: picked.due }),
 	);
 	const tokenOf = (kind: TokenKind) => parsed.tokens.find((t) => t.kind === kind);
 	const recurrence = $derived(parsed.recurrence ?? spokenRecurrence);
@@ -85,11 +83,6 @@
 		input.focus();
 	}
 
-	function keepAsText(token: QuickAddToken | undefined) {
-		if (token) disabled = [...disabled, token.text];
-		input.focus();
-	}
-
 	/** A manual pick replaces whatever the text said for that attribute. */
 	function clearToken(kind: TokenKind) {
 		const token = tokenOf(kind);
@@ -102,7 +95,6 @@
 		const reminders = [...parsed.reminders, ...picked.reminders];
 		store.addTask({ title: parsed.title, due, recurrence, priority, projectId, labelIds, reminders });
 		text = '';
-		disabled = [];
 		picked = initialPicked();
 		spokenRecurrence = null;
 		typed = false;
@@ -120,7 +112,6 @@
 		if (!fill) return;
 		const next = withListDefaults(fill, defaults, clock.today);
 		text = next.text;
-		disabled = [];
 		picked = {
 			due: next.due,
 			priority: next.priority,
@@ -195,8 +186,7 @@
 
 	$effect(() => {
 		if (!text) {
-			disabled = [];
-			typed = false;
+				typed = false;
 		}
 	});
 
@@ -259,16 +249,13 @@
 		<DuePicker {due} onchange={(value) => {
 				clearToken('due');
 				picked.due = value;
-			}} onkeepastext={tokenOf('due') ? () => keepAsText(tokenOf('due')) : undefined} />
+			}} />
 		{#if recurrence}
 			<div class="flex items-center" transition:scale={motion({ start: 0.9, duration: 160 })}>
 				<span class="chip" data-active="true" style="color: var(--tone-repeat)">
 					<Repeat size={15} weight="bold" />
 					{formatRecurrence(recurrence, due)}
 				</span>
-				{#if parsed.recurrence}
-					<KeepAsText onclick={() => keepAsText(tokenOf('recurrence'))} />
-				{/if}
 			</div>
 		{/if}
 		<ReminderPicker {due} reminders={picked.reminders} onchange={(value) => (picked.reminders = value)} />
@@ -278,7 +265,6 @@
 					<Bell size={15} weight="fill" />
 					{formatReminder(parsed.reminders[i]!, clock.today)}
 				</span>
-				<KeepAsText onclick={() => keepAsText(token)} />
 			</div>
 		{/each}
 		{#each store.labelsOf({ labelIds: picked.labelIds.filter((id) => !parsed.labelIds.includes(id)) }) as label (label.id)}
@@ -293,7 +279,6 @@
 					<Tag size={15} weight="fill" class="text-[var(--tone-label)]" />
 					{name}
 				</span>
-				<KeepAsText onclick={() => keepAsText(token)} />
 			</div>
 		{/each}
 		{#each unknown as name (name.sigil + name.name.toLowerCase())}
@@ -312,13 +297,13 @@
 	<PriorityPicker iconOnly {priority} onchange={(value) => {
 			clearToken('priority');
 			picked.priority = value;
-		}} onkeepastext={tokenOf('priority') ? () => keepAsText(tokenOf('priority')) : undefined} />
+		}} />
 	</div>
 	<div class="flex items-center justify-between gap-2 border-t border-ink/5 px-3 py-2.5">
 		<ProjectPicker {projectId} onchange={(value) => {
 				clearToken('project');
 				picked.projectId = value;
-			}} onkeepastext={tokenOf('project') ? () => keepAsText(tokenOf('project')) : undefined} />
+			}} />
 		<div class="flex gap-1.5">
 			<button type="button" class="btn btn-quiet" onclick={() => sheets.close()}>Cancel</button>
 			<button type="button" class="btn btn-primary" disabled={listening || !parsed.title} onclick={submit}>Add task</button>

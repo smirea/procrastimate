@@ -3,15 +3,13 @@
 	import Check from 'phosphor-svelte/lib/Check';
 	import type { Priority } from 'shared/task.ts';
 	import Popover from './Popover.svelte';
-	import KeepAsText from './KeepAsText.svelte';
 	import { PRIORITIES } from '../priorities.ts';
 
 	let {
 		priority,
 		onchange,
-		onkeepastext,
 		iconOnly = false,
-	}: { priority: Priority; onchange: (priority: Priority) => void; onkeepastext?: () => void; iconOnly?: boolean } = $props();
+	}: { priority: Priority; onchange: (priority: Priority) => void; iconOnly?: boolean } = $props();
 
 	const levels: Priority[] = [1, 2, 3, 4];
 </script>
@@ -23,6 +21,7 @@
 				type="button"
 				class="chip"
 				data-active={priority !== 4}
+				style={iconOnly && priority !== 4 ? `background: color-mix(in srgb, ${PRIORITIES[priority].tone} 18%, transparent)` : ''}
 				aria-label={`Priority ${priority}`}
 				onclick={toggle}
 			>
@@ -47,5 +46,4 @@
 			{/each}
 		{/snippet}
 	</Popover>
-	{#if onkeepastext}<KeepAsText onclick={onkeepastext} />{/if}
 </div>
