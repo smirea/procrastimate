@@ -138,8 +138,12 @@ func backed(_ piece: String, by transcript: String) -> Bool {
 
 // The model decides the structure; the grammar reads each piece's fields. Every piece must come from the transcript,
 // a subtask that only repeats its task's own words is dropped, and a lone subtask is not a list.
-func assemble(_ tasks: [(text: String, subtasks: [String])], _ transcript: String) throws -> [RambleTask] {
-    for t in tasks where !backed(t.text, by: transcript) || !t.subtasks.allSatisfy({ backed($0, by: transcript) }) { throw Unbacked() }
+func assemble(_ raw: [(text: String, subtasks: [String])], _ transcript: String) throws -> [RambleTask] {
+    let tasks = raw.map { (text: $0.text, subtasks: $0.subtasks.filter { !words($0).isEmpty }) }.filter { !words($0.text).isEmpty }
+    for t in tasks where !backed(t.text, by: transcript) || !t.subtasks.allSatisfy({ backed($0, by: transcript) }) {
+        if ProcessInfo.processInfo.environment["WHY"] != nil { print("  unbacked: \(t.text) \(t.subtasks)") }
+        throw Unbacked()
+    }
     return tasks.flatMap { t -> [RambleTask] in
         let own = Set(words(t.text))
         let subtasks = t.subtasks.filter { !Set(words($0)).isSubset(of: own) }.map { fieldsOf($0) }.filter { !$0.title.isEmpty }
@@ -199,7 +203,7 @@ func percentile(_ xs: [Double], _ p: Double) -> Double {
 }
 
 func corpusCases() throws -> [String] {
-    let url = URL(fileURLWithPath: #filePath).appending(path: "../../../../../shared/vectors/ramble.json").standardized
+    let url = URL(fileURLWithPath: #filePath).appending(path: "../../../../../../shared/vectors/ramble.json").standardized
     let root = try JSONSerialization.jsonObject(with: Data(contentsOf: url)) as! [String: Any]
     return (root["cases"] as! [[String: Any]]).filter { ($0["fn"] as? String) == "parseRamble" }.map { ($0["input"] as! [Any])[0] as! String }
 }
