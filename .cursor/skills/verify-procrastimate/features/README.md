@@ -53,7 +53,7 @@ Keep implementation details out of the map. Name only user paths, stable handles
 
 ## Features
 
-- [Add a task](./add-task.md) covers quick add from each client, inline natural-language parsing and shorthands, recurrence, keep as text, defaults, and cancel.
+- [Add a task](./add-task.md) covers quick add from each client, inline natural-language parsing and shorthands, recurrence, the chip row, defaults, and cancel.
 - [Complete a task](./complete-task.md) covers completion, undo, and the completion animation.
 - [Edit a task](./edit-task.md) covers title, notes, due date, priority, natural language in the title, and delete.
 - [Subtasks](./subtasks.md) covers adding, checking, reordering, and nesting subtasks, parent progress, and how completing or repeating a parent treats them.

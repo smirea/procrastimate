@@ -1,5 +1,6 @@
 import Core
 import SwiftUI
+import UIKit
 
 /// Quick add: a glass card attached to the top of the keyboard with the smart input, the chips that spell out what
 /// the text set, and the project picker. It is an overlay rather than a sheet, because a sheet floats above the
@@ -385,7 +386,7 @@ struct PriorityChip: View {
         Menu {
             Picker("Priority", selection: Binding(get: { priority }, set: onChange)) {
                 ForEach(Priority.allCases, id: \.self) { level in
-                    SwiftUI.Label(Format.priorityLabel(level), systemImage: level == .p4 ? "flag" : "flag.fill").tag(level)
+                    SwiftUI.Label { Text(Format.priorityLabel(level)) } icon: { level.flag }.tag(level)
                 }
             }
             .pickerStyle(.inline)
@@ -398,6 +399,7 @@ struct PriorityChip: View {
                 fill: iconOnly && priority != .p4 ? priority.tone : nil
             )
         }
+        .menuOrder(.fixed)
         .accessibilityLabel(Format.priorityLabel(priority))
     }
 }
@@ -459,5 +461,13 @@ struct FlowLayout: Layout {
             widest = max(widest, x - spacing)
         }
         return (origins, widest, y + rowHeight)
+    }
+}
+
+extension Priority {
+    /// Menus draw SF Symbols as templates in the app's tint, so the flag is pre-colored to keep each level's color.
+    var flag: Image {
+        let symbol = UIImage(systemName: self == .p4 ? "flag" : "flag.fill")!
+        return Image(uiImage: symbol.withTintColor(UIColor(tone), renderingMode: .alwaysOriginal))
     }
 }
