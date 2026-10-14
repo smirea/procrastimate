@@ -237,15 +237,15 @@
 			{#if showMic}
 				<button
 					type="button"
-					class="absolute top-1/2 right-1 grid size-9 -translate-y-1/2 place-items-center text-muted"
+					class="mic absolute top-1/2 right-1 grid size-8 -translate-y-1/2 place-items-center rounded-full bg-accent text-on-accent transition-transform active:scale-90"
 					aria-label={listening ? 'Stop listening' : 'Ramble'}
 					onmousedown={(e) => e.preventDefault()}
 					onclick={() => (listening ? stop() : start())}
 				>
 					{#if listening}
-						<Stop size={16} weight="fill" />
+						<Stop size={14} weight="fill" />
 					{:else}
-						<Microphone size={18} weight="fill" />
+						<Microphone size={16} weight="fill" />
 					{/if}
 				</button>
 			{/if}
@@ -323,3 +323,11 @@
 		</div>
 	</div>
 </div>
+
+<style>
+	.mic {
+		box-shadow:
+			inset 0 1px 0 0 rgb(255 255 255 / 0.3),
+			0 6px 16px -6px color-mix(in srgb, var(--color-accent) 60%, transparent);
+	}
+</style>

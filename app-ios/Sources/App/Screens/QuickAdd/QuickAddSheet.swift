@@ -50,7 +50,7 @@ private struct QuickAddForm: View {
                 onSubmit: { submit() }
             )
             .font(.body.weight(.medium))
-            .padding(.trailing, showMic ? 28 : 0)
+            .padding(.trailing, showMic ? 36 : 0)
             .overlay(alignment: .trailing) {
                 if showMic { micButton }
             }
@@ -117,11 +117,14 @@ private struct QuickAddForm: View {
             if listening { stopRamble(apply: true) } else { startRamble() }
         } label: {
             Image(systemName: listening ? "stop.fill" : "mic.fill")
-                .frame(width: 36, height: 36)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.white)
+                .frame(width: 32, height: 32)
+                .glassEffect(.regular.tint(.accent).interactive(), in: .circle)
+                .frame(width: 44, height: 44)
                 .contentShape(.rect)
         }
         .buttonStyle(.plain)
-        .foregroundStyle(.muted)
         .accessibilityLabel(listening ? "Stop listening" : "Ramble")
     }
 
