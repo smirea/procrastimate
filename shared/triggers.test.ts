@@ -156,17 +156,17 @@ describe('labels', () => {
 		expect(formatEvent(meetup({ edge: 'after', minutes: 60 }))).toBe('1h after Walking meetup');
 	});
 
-	test('a row names the event with only the day and time today leaves ambiguous', () => {
+	test("a row names the task's moment with only the day and time today leaves ambiguous", () => {
 		const on = (d: number, h: number, min = 0) => [
 			{ start: local(d, h, min), end: local(d, h + 1), original: local(d, h, min) },
 		];
 		expect(eventLabel(meetup({ edge: 'after', minutes: 15, occurrences: on(14, 15) }), today)).toEqual({
 			lead: '15m after',
 			title: 'Walking meetup',
-			when: '3pm',
+			when: '4:15pm',
 		});
 		expect(eventLabel(meetup({ edge: 'before', minutes: 60, occurrences: on(20, 9, 30) }), today).when).toBe(
-			'Tue, 9:30am',
+			'Tue, 8:30am',
 		);
 		expect(eventLabel(meetup({ occurrences: on(21, 18) }), today)).toEqual({
 			lead: 'Start of',
@@ -189,7 +189,7 @@ describe('labels', () => {
 				{ start: local(15, 10), end: local(15, 11), original: local(15, 10) },
 			],
 		});
-		expect(eventLabel(series, today)).toEqual({ lead: 'After', title: 'Walking meetup', when: 'Thu, 10am' });
+		expect(eventLabel(series, today)).toEqual({ lead: 'After', title: 'Walking meetup', when: 'Thu, 11am' });
 	});
 
 	test('places read by trigger', () => {

@@ -91,6 +91,12 @@ struct TaskRow: View {
         Subtasks.progressOf(store.tasks.filter { $0.parentId == task.id })
     }
 
+    private func eventLabel(_ event: TaskEvent) -> Triggers.EventLabel {
+        var label = Triggers.eventLabel(event, today, in: store.timeZone)
+        if timeOnly { label.when = due?.time.map(Format.formatTime) }
+        return label
+    }
+
     /// The day the task sits on, which for an event or a repeat at a place is not its stored due date.
     private var due: Due? { Triggers.scheduledDue(task, today, in: store.timeZone) }
 
@@ -103,8 +109,11 @@ struct TaskRow: View {
         if hasDetails {
             HStack(spacing: 10) {
                 if let event = task.event {
-                    EventDetail(label: Triggers.eventLabel(event, today, in: store.timeZone), series: event.series)
-                        .foregroundStyle(due.map { Format.dueTone($0, today).color } ?? .muted)
+                    EventDetail(
+                        label: eventLabel(event),
+                        series: event.series,
+                        tone: due.map { Format.dueTone($0, today).color } ?? .muted
+                    )
                 } else if let due, !(timeOnly && due.time == nil) {
                     Detail(
                         systemImage: "calendar",
@@ -148,18 +157,27 @@ struct TaskRow: View {
     }
 }
 
-/// `15m after [repeat] [calendar] Standup (Tue, 3pm)`: the icons mark where the event's own name starts, and the repeat
-/// icon, as on a repeating task, marks a task that follows the series.
+/// `4:15pm ([repeat] 15m after [calendar] Standup)`: the task's moment in its due tone, then the event in gray. The
+/// repeat icon, as on a repeating task, marks a task that follows the series.
 private struct EventDetail: View {
     let label: Triggers.EventLabel
     let series: Bool
+    let tone: Color
 
     var body: some View {
-        let repeats = series ? Text("\(Image(systemName: "repeat")) ").foregroundStyle(.toneTomorrow) : Text("")
-        let when = label.when.map { " (\($0))" } ?? ""
-        Text("\(label.lead) \(repeats)\(Image(systemName: "calendar")) \(label.title)\(Text(when).foregroundStyle(.muted))")
-            .imageScale(.small)
-            .accessibilityLabel(series ? "\(label.lead) every \(label.title)\(when)" : "\(label.lead) \(label.title)\(when)")
+        let repeats = series ? Text("\(Image(systemName: "repeat")) ") : Text("")
+        let meta = Text("\(repeats)\(label.lead) \(Image(systemName: "calendar")) \(label.title)")
+        Group {
+            if let when = label.when {
+                Text("\(Text(when).foregroundStyle(tone)) \(Text("(\(meta))").foregroundStyle(.muted))")
+            } else {
+                meta.foregroundStyle(.muted)
+            }
+        }
+        .imageScale(.small)
+        .accessibilityLabel(
+            [label.when, "\(label.lead) \(series ? "every " : "")\(label.title)"].compactMap { $0 }.joined(separator: ", ")
+        )
     }
 }
 

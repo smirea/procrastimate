@@ -87,8 +87,8 @@ public enum Triggers {
         }
     }
 
-    /// A row's event line in parts, so icons can sit before the title: `15m after`, `Standup`, `Tue, 3pm`. `when`
-    /// holds only what today leaves ambiguous.
+    /// A row's event line in parts: `4:15pm`, `15m after`, `Standup`. `when` is the task's moment on its occurrence,
+    /// with only what today leaves ambiguous.
     public static func eventLabel(_ event: TaskEvent, _ today: DateKey, in zone: TimeZone) -> EventLabel {
         let lead = switch event.edge {
         case .before: event.minutes > 0 ? "\(Format.formatMinutes(event.minutes)) before" : "Start of"
@@ -96,8 +96,8 @@ public enum Triggers {
         case .during: "During"
         case .after: event.minutes > 0 ? "\(Format.formatMinutes(event.minutes)) after" : "After"
         }
-        let start = currentOccurrence(event, today, in: zone).start
-        let date = Dates.toDateKey(Date(epochMilliseconds: start), in: zone)
+        let at = eventAnchor(event, currentOccurrence(event, today, in: zone))
+        let date = Dates.toDateKey(Date(epochMilliseconds: at), in: zone)
         let day: String? = if date == today {
             nil
         } else if date > today, date < Dates.addDays(today, 7) {
@@ -105,7 +105,7 @@ public enum Triggers {
         } else {
             Format.shortDate(date, today)
         }
-        let time = event.allDay ? nil : Format.formatTime(wallTime(start, in: zone))
+        let time = event.allDay ? nil : Format.formatTime(wallTime(at, in: zone))
         let when = [day, time].compactMap { $0 }.joined(separator: ", ")
         return EventLabel(lead: lead, title: event.title, when: when.isEmpty ? nil : when)
     }

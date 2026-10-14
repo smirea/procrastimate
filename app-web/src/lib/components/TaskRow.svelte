@@ -31,7 +31,11 @@
 	const parent = $derived(task.parentId ? store.task(task.parentId) : undefined);
 	const progress = $derived(store.progress(task.id));
 	const due = $derived(scheduledDue(task, clock.today));
-	const event = $derived(task.event ? eventLabel(task.event, clock.today) : null);
+	const event = $derived.by(() => {
+		if (!task.event) return null;
+		const label = eventLabel(task.event, clock.today);
+		return timeOnly ? { ...label, when: due?.time ? formatTime(due.time) : null } : label;
+	});
 
 	function complete() {
 		if (checking) return;
@@ -55,13 +59,17 @@
 				{#if task.event && event && due}
 					<span
 						class="flex min-w-0 items-center gap-1"
-						style={`color: var(--tone-${dueTone(due, clock.today)})`}
-						aria-label={`${event.lead}${task.event.series ? ' every' : ''} ${event.title}${event.when ? ` (${event.when})` : ''}`}
+						aria-label={[event.when, `${event.lead}${task.event.series ? ' every' : ''} ${event.title}`].filter(Boolean).join(', ')}
 					>
-						<span class="shrink-0">{event.lead}</span>
-						{#if task.event.series}<Repeat size={12} weight="bold" class="shrink-0 text-[var(--tone-tomorrow)]" />{/if}
-						<CalendarStar size={12} class="shrink-0" />
-						<span class="truncate">{event.title}{#if event.when}<span class="text-muted"> ({event.when})</span>{/if}</span>
+						{#if event.when}<span class="shrink-0" style={`color: var(--tone-${dueTone(due, clock.today)})`}>{event.when}</span>{/if}
+						<span class="flex min-w-0 items-center gap-1 text-muted">
+							{#if event.when}<span class="shrink-0">(</span>{/if}
+							{#if task.event.series}<Repeat size={12} weight="bold" class="shrink-0" />{/if}
+							<span class="shrink-0">{event.lead}</span>
+							<CalendarStar size={12} class="shrink-0" />
+							<span class="truncate">{event.title}</span>
+							{#if event.when}<span class="-ml-1 shrink-0">)</span>{/if}
+						</span>
 					</span>
 				{:else if due && !(timeOnly && !due.time)}
 					<span class="flex items-center gap-1" style={`color: var(--tone-${dueTone(due, clock.today)})`}>

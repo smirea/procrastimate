@@ -134,9 +134,9 @@ export const eventLabelSchema = z
 export type EventLabel = z.infer<typeof eventLabelSchema>;
 
 /**
- * A row's event line in three parts, so icons can sit before the title: `15m after` `Standup` `Tue, 3pm`. A task
- * that follows a series shows the repeat icon there too. `when` is the occurrence's start with only what today
- * leaves ambiguous: no day for today, a weekday within the week ahead, else the date, and no time all day.
+ * A row's event line in parts: `4:15pm` `(15m after` `Standup)`, with icons before the title. `when` is the task's
+ * moment on the occurrence it is on, with only what today leaves ambiguous: no day for today, a weekday within the
+ * week ahead, else the date, and no time all day.
  */
 export function eventLabel(event: TaskEvent, today: DateKey, zone?: string): EventLabel {
 	const lead = (() => {
@@ -155,15 +155,15 @@ export function eventLabel(event: TaskEvent, today: DateKey, zone?: string): Eve
 			}
 		}
 	})();
-	const { start } = currentOccurrence(event, today, zone);
-	const date = zonedDateKey(start, zone);
+	const at = eventAnchor(event, currentOccurrence(event, today, zone));
+	const date = zonedDateKey(at, zone);
 	const day =
 		date === today
 			? null
 			: date > today && date < addDays(today, 7)
 				? WEEKDAY_NAMES[weekdayOf(date)]!
 				: shortDate(date, today);
-	const time = event.allDay ? null : formatTime(wallTime(start, zone));
+	const time = event.allDay ? null : formatTime(wallTime(at, zone));
 	const when = [day, time].filter(part => part !== null).join(', ');
 	return { lead, title: event.title, when: when || null };
 }

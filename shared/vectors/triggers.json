@@ -687,7 +687,7 @@
 		},
 		{
 			"fn": "eventLabel",
-			"test": "labels › a row names the event with only the day and time today leaves ambiguous",
+			"test": "labels › a row names the task's moment with only the day and time today leaves ambiguous",
 			"input": [
 				{
 					"allDay": false,
@@ -709,12 +709,12 @@
 			"output": {
 				"lead": "15m after",
 				"title": "Walking meetup",
-				"when": "3pm"
+				"when": "4:15pm"
 			}
 		},
 		{
 			"fn": "eventLabel",
-			"test": "labels › a row names the event with only the day and time today leaves ambiguous",
+			"test": "labels › a row names the task's moment with only the day and time today leaves ambiguous",
 			"input": [
 				{
 					"allDay": false,
@@ -736,12 +736,12 @@
 			"output": {
 				"lead": "1h before",
 				"title": "Walking meetup",
-				"when": "Tue, 9:30am"
+				"when": "Tue, 8:30am"
 			}
 		},
 		{
 			"fn": "eventLabel",
-			"test": "labels › a row names the event with only the day and time today leaves ambiguous",
+			"test": "labels › a row names the task's moment with only the day and time today leaves ambiguous",
 			"input": [
 				{
 					"allDay": false,
@@ -768,7 +768,7 @@
 		},
 		{
 			"fn": "eventLabel",
-			"test": "labels › a row names the event with only the day and time today leaves ambiguous",
+			"test": "labels › a row names the task's moment with only the day and time today leaves ambiguous",
 			"input": [
 				{
 					"allDay": false,
@@ -795,7 +795,7 @@
 		},
 		{
 			"fn": "eventLabel",
-			"test": "labels › a row names the event with only the day and time today leaves ambiguous",
+			"test": "labels › a row names the task's moment with only the day and time today leaves ambiguous",
 			"input": [
 				{
 					"allDay": true,
@@ -822,7 +822,7 @@
 		},
 		{
 			"fn": "eventLabel",
-			"test": "labels › a row names the event with only the day and time today leaves ambiguous",
+			"test": "labels › a row names the task's moment with only the day and time today leaves ambiguous",
 			"input": [
 				{
 					"allDay": true,
@@ -849,7 +849,7 @@
 		},
 		{
 			"fn": "eventLabel",
-			"test": "labels › a row names the event with only the day and time today leaves ambiguous",
+			"test": "labels › a row names the task's moment with only the day and time today leaves ambiguous",
 			"input": [
 				{
 					"allDay": false,
@@ -903,7 +903,7 @@
 			"output": {
 				"lead": "After",
 				"title": "Walking meetup",
-				"when": "Thu, 10am"
+				"when": "Thu, 11am"
 			}
 		},
 		{
