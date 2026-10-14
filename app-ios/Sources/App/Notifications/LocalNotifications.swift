@@ -127,7 +127,7 @@ final class LocalNotifications: NSObject {
         guard schedule.count == Notifications.maxScheduled else { return }
         let refresh = BGAppRefreshTaskRequest(identifier: refreshTaskID)
         refresh.earliestBeginDate = schedule[schedule.count / 2].at
-        try? BGTaskScheduler.shared.submit(refresh)
+        try? await BGTaskScheduler.shared.submitTaskRequest(refresh)
     }
 
     private static func notificationsAllowed() async -> Bool {
@@ -209,7 +209,7 @@ final class LocalNotifications: NSObject {
         guard schedule.count == Notifications.maxScheduled else { return }
         let request = BGAppRefreshTaskRequest(identifier: Self.refreshTaskID)
         request.earliestBeginDate = schedule[schedule.count / 2].at
-        try? BGTaskScheduler.shared.submit(request)
+        Task { try? await BGTaskScheduler.shared.submitTaskRequest(request) }
     }
 
     /// Shows `Reminder: <title>` with `Open` for every moment that came up since the last check, like the web.
@@ -269,10 +269,8 @@ extension LocalNotifications: UNUserNotificationCenterDelegate {
     ) {
         let taskId = response.notification.request.content.userInfo["taskId"] as? String
         nonisolated(unsafe) let done = completionHandler
-        DispatchQueue.main.async {
-            MainActor.assumeIsolated {
-                if let taskId { self.open(taskId) }
-            }
+        Task { @MainActor in
+            if let taskId { self.open(taskId) }
             done()
         }
     }

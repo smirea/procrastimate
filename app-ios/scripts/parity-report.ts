@@ -40,7 +40,7 @@ writeFileSync(
 	join(out, 'index.html'),
 	`<!doctype html>
 <meta charset="utf-8">
-<title>Procrastimate parity report</title>
+<title>ProcrastiMate parity report</title>
 <style>
     body { font: 15px system-ui, sans-serif; margin: 2rem; background: #f6f6f7; color: #18181b; }
     section { margin-bottom: 3rem; }

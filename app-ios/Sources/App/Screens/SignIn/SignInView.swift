@@ -5,15 +5,41 @@ import SwiftUI
 struct SignInView: View {
     @Environment(Session.self) private var session
     @Environment(AccountSync.self) private var accountSync
+    @Environment(\.webAuthenticationSession) private var webAuthenticationSession
 
     @State private var email = ""
     @State private var password = ""
     @State private var creating = false
     @State private var busy = false
 
+    @State private var height: CGFloat = 0
+
     var body: some View {
+        // The logo yields first when the keyboard or landscape leaves too little height, and the form scrolls after that.
+        ScrollView {
+            VStack(spacing: 20) {
+                if height > 640 {
+                    Image("Logo")
+                        .resizable()
+                        .frame(width: 160, height: 160)
+                        .padding(.bottom, -12)
+                        .accessibilityHidden(true)
+                        .transition(.opacity.combined(with: .scale(scale: 0.9)))
+                }
+                form
+            }
+            .padding(24)
+            .frame(maxWidth: .infinity, minHeight: height)
+        }
+        .scrollBounceBehavior(.basedOnSize)
+        .onGeometryChange(for: CGFloat.self, of: { $0.size.height }) { height = $0 }
+        .animation(.snappy(duration: 0.2), value: height > 640)
+        .task { await session.loadMethods() }
+    }
+
+    private var form: some View {
         VStack(spacing: 16) {
-            Text("Procrastinate")
+            Text("ProcrastiMate")
                 .font(.title2.weight(.semibold))
                 .frame(maxWidth: .infinity, alignment: .leading)
             if session.methods.email {
@@ -49,23 +75,21 @@ struct SignInView: View {
                               let tokenData = credential.identityToken,
                               let token = String(data: tokenData, encoding: .utf8) else { return }
                         Task { await finish { await session.signIn(provider: "apple", idToken: token) } }
-                    case .failure:
-                        break
+                    case let .failure(error):
+                        if (error as? ASAuthorizationError)?.code == .canceled { return }
+                        session.error = ErrorReport("Could not sign in with Apple", error: error)
                     }
                 }
                 .signInWithAppleButtonStyle(.black)
                 .frame(height: 44)
             }
             if let error = session.error {
-                Text(error).font(.footnote).foregroundStyle(.toneOverdue)
+                ErrorText(report: error).font(.footnote)
             }
         }
         .padding(24)
         .frame(maxWidth: 420)
         .glassEffect(.regular, in: .rect(cornerRadius: 28))
-        .padding(24)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .task { await session.loadMethods() }
     }
 
     private func submit() async {
@@ -78,12 +102,12 @@ struct SignInView: View {
     private func google(_ clientId: String) async {
         await finish {
             do {
-                let token = try await GoogleNativeSignIn.signIn(clientId: clientId)
+                let token = try await GoogleNativeSignIn.signIn(clientId: clientId, with: webAuthenticationSession)
                 await session.signIn(provider: "google", idToken: token)
             } catch is CancellationError {
                 return
             } catch {
-                session.error = "Could not sign in"
+                session.error = ErrorReport("Could not sign in with Google", error: error)
             }
         }
     }
@@ -98,7 +122,7 @@ struct SignInView: View {
 
 /// Google's installed-app flow: an auth code with PKCE, exchanged for an ID token, with no client secret.
 enum GoogleNativeSignIn {
-    static func signIn(clientId: String) async throws -> String {
+    static func signIn(clientId: String, with session: WebAuthenticationSession) async throws -> String {
         let verifier = random(32)
         let challenge = Data(SHA256.hash(data: Data(verifier.utf8))).base64URLEncodedString()
         let scheme = reversedScheme(clientId)
@@ -113,7 +137,17 @@ enum GoogleNativeSignIn {
             URLQueryItem(name: "code_challenge_method", value: "S256"),
         ]
         guard let url = components.url else { throw URLError(.badURL) }
-        let callback = try await WebAuthenticator.authenticate(url: url, scheme: scheme)
+        let callback: URL
+        do {
+            callback = try await session.authenticate(
+                using: url,
+                callback: .customScheme(scheme),
+                preferredBrowserSession: .ephemeral,
+                additionalHeaderFields: [:]
+            )
+        } catch ASWebAuthenticationSessionError.canceledLogin {
+            throw CancellationError()
+        }
         guard let code = URLComponents(url: callback, resolvingAgainstBaseURL: false)?
             .queryItems?.first(where: { $0.name == "code" })?.value else { throw URLError(.badServerResponse) }
         return try await exchange(code: code, verifier: verifier, clientId: clientId, redirect: redirect)
@@ -156,37 +190,5 @@ enum GoogleNativeSignIn {
 private extension Data {
     func base64URLEncodedString() -> String {
         base64EncodedString().replacingOccurrences(of: "+", with: "-").replacingOccurrences(of: "/", with: "_").replacingOccurrences(of: "=", with: "")
-    }
-}
-
-@MainActor
-private enum WebAuthenticator {
-    private static var session: ASWebAuthenticationSession?
-    private static let presenter = Presenter()
-
-    static func authenticate(url: URL, scheme: String) async throws -> URL {
-        try await withCheckedThrowingContinuation { continuation in
-            let session = ASWebAuthenticationSession(url: url, callbackURLScheme: scheme) { callback, error in
-                self.session = nil
-                if let callback {
-                    continuation.resume(returning: callback)
-                } else if let error = error as? ASWebAuthenticationSessionError, error.code == .canceledLogin {
-                    continuation.resume(throwing: CancellationError())
-                } else {
-                    continuation.resume(throwing: error ?? URLError(.cancelled))
-                }
-            }
-            session.presentationContextProvider = presenter
-            session.prefersEphemeralWebBrowserSession = true
-            self.session = session
-            if !session.start() { continuation.resume(throwing: URLError(.unknown)) }
-        }
-    }
-}
-
-private final class Presenter: NSObject, ASWebAuthenticationPresentationContextProviding {
-    func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
-        let scene = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first
-        return scene?.keyWindow ?? scene?.windows.first ?? ASPresentationAnchor()
     }
 }

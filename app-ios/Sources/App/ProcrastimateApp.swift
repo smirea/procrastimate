@@ -93,8 +93,10 @@ struct ProcrastimateApp: App {
                 .onChange(of: store.revision) { _, _ in accountSync.syncSoon() }
                 .onChange(of: store.tasks) { old, new in notifications.tasksChanged(from: old, to: new) }
                 .onChange(of: store.tasks) { _, _ in places.tasksChanged() }
-                .task { calendar.sync() }
-                .onReceive(NotificationCenter.default.publisher(for: .EKEventStoreChanged)) { _ in calendar.sync() }
+                .task {
+                    calendar.sync()
+                    for await _ in NotificationCenter.default.notifications(named: .EKEventStoreChanged) { calendar.sync() }
+                }
                 .onChange(of: store.tasks) { _, _ in SpotlightIndex.schedule(session) }
                 .onChange(of: store.projects) { _, _ in SpotlightIndex.schedule(session) }
                 .onChange(of: store.labels) { _, _ in SpotlightIndex.schedule(session) }
@@ -109,7 +111,7 @@ struct ProcrastimateApp: App {
                     importer.run(url)
                     navigator.sheet = .settings
                 }
-                .onReceive(NotificationCenter.default.publisher(for: UIApplication.significantTimeChangeNotification)) { _ in
+                .onMessage(of: UIApplication.self, for: .significantTimeChange) { _ in
                     today = clock.today
                     Task { await notifications.sync() }
                 }

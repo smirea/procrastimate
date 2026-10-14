@@ -1,10 +1,12 @@
 # Product goals
 
-- **Personal task manager.** Procrastimate is Stefan's personal task manager. Todoist is a rough functional reference for behavior where these decisions are silent. It is never a visual reference.
-- **Its own visual language, based on Liquid Glass.** Procrastimate designs its own look on Apple's Liquid Glass, so the web app and the eventual iOS app look alike and modern. See [Visual language](visual-language.md).
+- **Personal task manager.** ProcrastiMate is Stefan's personal task manager. Todoist is a rough functional reference for behavior where these decisions are silent. It is never a visual reference.
+- **The name is ProcrastiMate.** Every user-facing string spells it `ProcrastiMate`, never `Procrastimate` or `Procrastinate`. Identifiers such as the domain, bundle id, headers, and env keys stay lowercase or as they are.
+- **Its own visual language, based on Liquid Glass.** ProcrastiMate designs its own look on Apple's Liquid Glass, so the web app and the eventual iOS app look alike and modern. See [Visual language](visual-language.md).
 - **One user.** There is exactly one user. No accounts, sharing, roles, or multi-tenant concerns.
 - **Platforms.** Web now, iOS later, Apple Watch after iOS.
 - **Features are in flux.** Never keep backwards compatibility. Change data shapes, routes, and storage freely, and delete old behavior instead of migrating it.
 - **Local first, synced.** Every change applies to local state at once. Remote sync happens in the background and never blocks an interaction.
 - **Extremely snappy.** No spinners or visible delays on local data. Every interaction responds on the first frame.
 - **Subtle, satisfying animations.** Motion confirms every interaction without slowing it down.
+- **Not building Todoist's sections, deadlines, or durations.** The due date is the deadline, and reminders give the earlier pings Todoist's separate deadline field exists for. Labels group tasks inside a project, so sections would add a data type, sync, import, and UI for something labels already cover. Durations are covered differently: a task set `During` a calendar event or `While at` a place takes its time span from that, and a Live Activity shows `During` tasks while they run (for places today). Ramble and quick add do not parse any of the three.

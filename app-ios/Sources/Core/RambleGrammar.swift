@@ -329,7 +329,7 @@ struct RambleGrammar {
         ignoreCase: true
     )
     static let structure = RambleRegex(
-        "(?<note>\\b(?:with\\s+(?:a|the)\\s+note(?:\\s+that)?|add\\s+a\\s+note|the\\s+note\\s+is)\\b[\\s:,-]*|(?<=[,;:]\\s*)(?:and\\s+)?(?:notes?|details)(?!\\s+to\\s+self\\b)\\b[\\s:,-]*)|(?<list>\\b(?:with\\s+(?:the\\s+)?|and\\s+)?sub[\\s-]?tasks\\b[\\s:,-]*)|(?<one>\\b(?:and\\s+|with\\s+)?(?:add\\s+)?(?:a\\s+|another\\s+)?sub[\\s-]?task\\b[\\s:,-]*)",
+        "(?<note>\\b(?:with\\s+(?:a|the)\\s+note(?:\\s+that)?|add\\s+a\\s+note|the\\s+note\\s+is)\\b[\\s:,-]*|(?<=[,;:]\\s*)(?:and\\s+)?(?:notes?|details)(?!\\s+to\\s+self\\b)\\b[\\s:,-]*)|(?<list>\\b(?:with\\s+(?:the\\s+)?|and\\s+)?sub[\\s-]?tasks\\b[\\s:,-]*|[\\s,]*\\b(?:the\\s+steps\\s+are|steps\\s+are|which\\s+means|that\\s+means|the\\s+list\\s+is)\\b[\\s:,-]*|(?<=[a-z])\\s*:\\s+(?=[a-z]))|(?<one>\\b(?:and\\s+|with\\s+)?(?:add\\s+)?(?:a\\s+|another\\s+)?sub[\\s-]?task\\b[\\s:,-]*)",
         ignoreCase: true
     )
     static let listSplit = RambleRegex(#"\s*,\s*(?:and\s+)?|\s+and\s+"#, ignoreCase: true)

@@ -16,7 +16,7 @@ export function fireDueReminders(now: number) {
 		toasts.show(reminderToast(task.title), { label: 'Open', run: () => sheets.openTask(task.id) }, 12_000);
 		// With push on, the pushed notification is the system one, so a local one would show it twice.
 		if (push.state.kind !== 'on' && typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-			new Notification(task.title, { body: 'Procrastimate reminder', tag: task.id });
+			new Notification(task.title, { body: 'ProcrastiMate reminder', tag: task.id });
 		}
 	}
 	store.markRemindersChecked(now);

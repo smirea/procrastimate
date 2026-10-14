@@ -18,9 +18,9 @@
     <key>ITSAppUsesNonExemptEncryption</key>
     <false/>
     <key>NSMicrophoneUsageDescription</key>
-    <string>Procrastinate uses the microphone to turn speech into tasks.</string>
+    <string>ProcrastiMate uses the microphone to turn speech into tasks.</string>
     <key>NSSpeechRecognitionUsageDescription</key>
-    <string>Procrastinate uses speech recognition to turn what you say into tasks.</string>
+    <string>ProcrastiMate uses speech recognition to turn what you say into tasks.</string>
     <key>NSLocationWhenInUseUsageDescription</key>
     <string>ProcrastiMate uses your location to remind you of tasks when you arrive at or leave a place.</string>
     <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>

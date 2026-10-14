@@ -80,7 +80,7 @@ class Session {
 	}
 
 	async signUp(email: string, password: string) {
-		const name = email.split('@')[0] || 'Procrastinate';
+		const name = email.split('@')[0] || 'ProcrastiMate';
 		await this.#submit('/api/auth/sign-up/email', { email, password, name });
 	}
 

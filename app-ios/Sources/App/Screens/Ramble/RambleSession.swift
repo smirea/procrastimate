@@ -1,6 +1,7 @@
 import AVFoundation
 import Core
 import Foundation
+import Synchronization
 
 /// One Ramble capture. Native speech uses `SpeechDictation`. ElevenLabs streams 16 kHz PCM to the ramble socket.
 /// Offline never opens that socket. A failure leaves the transcript editable.
@@ -30,7 +31,7 @@ final class RambleSession {
 
     func start(choice: DictationChoice, deviceId: String?) async {
         epoch += 1
-        speech.stop()
+        speech.cancel()
         haltEngine()
         socket?.cancel(with: .goingAway, reason: nil)
         socket = nil
@@ -39,10 +40,16 @@ final class RambleSession {
         heard = false
         committed = ""
         partial = ""
+        #if DEBUG
+        if let script = ProcessInfo.processInfo.environment["PROCRASTIMATE_RAMBLE_SCRIPT"] {
+            speak(script)
+            return
+        }
+        #endif
         let online = await NetworkPath.online()
         switch Dictation.voiceCapture(choice, online: online, nativeSpeech: true).capture {
         case .speech:
-            await startSpeech(onDevice: !online)
+            await startSpeech()
         case .socket:
             await startSocket(deviceId: deviceId)
         case .typed:
@@ -50,17 +57,33 @@ final class RambleSession {
         }
     }
 
-    /// The audio thread calls the tap, so it is built outside this main-actor class; see `SpeechDictation.feed`.
-    nonisolated private static func feed(_ pump: RamblePump) -> AVAudioNodeTapBlock {
-        { buffer, _ in pump.append(buffer) }
+    #if DEBUG
+    /// DEBUG-only. The simulator has no microphone, so `PROCRASTIMATE_RAMBLE_SCRIPT` arrives a word at a time like
+    /// live speech, and the session keeps listening until stopped.
+    private func speak(_ script: String) {
+        let token = epoch
+        let words = script.split(separator: " ")
+        Task { @MainActor in
+            for count in 1 ... max(words.count, 1) {
+                try? await Task.sleep(for: .milliseconds(90))
+                guard token == self.epoch, !self.userStop else { return }
+                let text = words.prefix(count).joined(separator: " ")
+                self.onText(text, (text as NSString).length)
+            }
+        }
     }
+    #endif
 
     func stop() {
         userStop = true
-        speech.stop()
         haltEngine()
         guard let socket, socket.state == .running else {
-            finish(.stopped)
+            let token = epoch
+            Task { @MainActor in
+                await speech.finish()
+                guard token == self.epoch else { return }
+                self.finish(.stopped)
+            }
             return
         }
         socket.send(.string(#"{"type":"stop"}"#)) { _ in }
@@ -72,14 +95,15 @@ final class RambleSession {
         }
     }
 
-    private func startSpeech(onDevice: Bool) async {
+    private func startSpeech() async {
         do {
-            try await speech.start(onDevice: onDevice) { [weak self] update in
-                Task { @MainActor in self?.onText(update.text, (update.text as NSString).length) }
+            try await speech.start { [weak self] text in
+                self?.onText(text, (text as NSString).length)
             }
         } catch SpeechDictation.Failure.denied {
             onEnd(.failed("The microphone is off. You can type the ramble instead."))
         } catch {
+            ErrorReport.log("Dictation could not start", detail: String(reflecting: error))
             onEnd(.typed)
         }
     }
@@ -112,14 +136,16 @@ final class RambleSession {
         }
         var request = URLRequest(url: url)
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        request.setValue("procrastinate.ramble", forHTTPHeaderField: "Sec-WebSocket-Protocol")
+        request.setValue("procrastimate.ramble", forHTTPHeaderField: "Sec-WebSocket-Protocol")
         if let deviceId {
-            request.setValue(deviceId, forHTTPHeaderField: "x-procrastinate-device")
+            request.setValue(deviceId, forHTTPHeaderField: "x-procrastimate-device")
         }
         let task = URLSession.shared.webSocketTask(with: request)
         socket = task
-        pump.send = { [weak task] data in task?.send(.data(data)) { _ in } }
-        pump.level = { [weak self] value in Task { @MainActor in self?.onLevel(value) } }
+        pump.connect(
+            send: { [weak task] data in task?.send(.data(data)) { _ in } },
+            level: { [weak self] value in Task { @MainActor in self?.onLevel(value) } }
+        )
         task.resume()
         receive()
         do {
@@ -137,7 +163,9 @@ final class RambleSession {
         let input = audio.inputNode
         let format = input.outputFormat(forBus: 0)
         guard format.sampleRate > 0, format.channelCount > 0 else { throw SpeechDictation.Failure.unsupported }
-        input.installTap(onBus: 0, bufferSize: 4096, format: format, block: Self.feed(pump))
+        try input.installAudioTap(onBus: 0, bufferSize: 4096, format: format) { [pump] buffer, _ in
+            pump.append(buffer)
+        }
         tapped = true
         audio.prepare()
         try audio.start()
@@ -231,42 +259,50 @@ private func join(_ committed: String, _ partial: String) -> (text: String, part
 }
 
 /// Downsamples mic buffers to 16 kHz 16-bit frames. The tap calls it off the main actor.
-private final class RamblePump: @unchecked Sendable {
-    var send: (@Sendable (Data) -> Void)?
-    var level: (@Sendable (Float) -> Void)?
-    private let lock = NSLock()
-    private var pending: [Int16] = []
-    private var frac = 0.0
+private final class RamblePump: Sendable {
+    private struct State {
+        var send: (@Sendable (Data) -> Void)?
+        var level: (@Sendable (Float) -> Void)?
+        var pending: [Int16] = []
+        var frac = 0.0
+    }
 
-    func append(_ buffer: AVAudioPCMBuffer) {
-        guard let channel = buffer.floatChannelData?[0] else { return }
-        let frames = Int(buffer.frameLength)
+    private let state = Mutex(State())
+
+    func connect(send: @escaping @Sendable (Data) -> Void, level: @escaping @Sendable (Float) -> Void) {
+        state.withLock {
+            $0.send = send
+            $0.level = level
+        }
+    }
+
+    func append(_ buffer: AVReadOnlyAudioPCMBuffer) {
+        guard case let .float(channel) = buffer.channelData(0) else { return }
+        let frames = buffer.frameLength
         let step = buffer.format.sampleRate / 16_000
         guard step > 0 else { return }
-        lock.lock()
-        var index = frac
-        var peak: Float = 0
-        while index < Double(frames) {
-            let sample = max(-1, min(1, channel[Int(index)]))
-            peak = max(peak, abs(sample))
-            let scaled = sample < 0 ? sample * 32_768 : sample * 32_767
-            pending.append(Int16(scaled))
-            index += step
-        }
-        frac = index - Double(frames)
-        var chunks: [Data] = []
-        while pending.count >= 1600 {
-            var bytes = [UInt8]()
-            bytes.reserveCapacity(3200)
-            for sample in pending.prefix(1600) {
-                let value = Int(sample)
-                bytes.append(UInt8(truncatingIfNeeded: value))
-                bytes.append(UInt8(truncatingIfNeeded: value >> 8))
+        let (chunks, peak, send, level) = state.withLock { state in
+            var index = state.frac
+            var peak: Float = 0
+            while index < Double(frames) {
+                let sample = max(-1, min(1, channel[Int(index)]))
+                peak = max(peak, abs(sample))
+                state.pending.append(Int16(sample < 0 ? sample * 32_768 : sample * 32_767))
+                index += step
             }
-            pending.removeFirst(1600)
-            chunks.append(Data(bytes))
+            state.frac = index - Double(frames)
+            var chunks: [Data] = []
+            while state.pending.count >= 1600 {
+                var bytes = Data(capacity: 3200)
+                for sample in state.pending.prefix(1600) {
+                    bytes.append(UInt8(truncatingIfNeeded: Int(sample)))
+                    bytes.append(UInt8(truncatingIfNeeded: Int(sample) >> 8))
+                }
+                state.pending.removeFirst(1600)
+                chunks.append(bytes)
+            }
+            return (chunks, peak, state.send, state.level)
         }
-        lock.unlock()
         for chunk in chunks { send?(chunk) }
         level?(peak)
     }

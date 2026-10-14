@@ -17,11 +17,11 @@ Every new feature that someone can do from outside the app ships its intents, ph
 - `intent-overdue` lists overdue tasks.
 - `intent-spotlight` indexes open tasks and drops a task from Spotlight once it is completed.
 - `intent-delete-all` deletes every task, project, and label on this device. The next sync wipes them on the server. It stays available in Shortcuts, without a suggested phrase: App Shortcuts keep ten, and Start Ramble uses that slot.
-- `intent-ramble` opens quick add and starts the mic. Siri and Shortcuts offer "Start Ramble in Procrastinate".
+- `intent-ramble` opens quick add and starts the mic. Siri and Shortcuts offer "Start Ramble in ProcrastiMate".
 
 ## How to get to it (user POV)
 
-- iOS, Siri: "Add a task in Procrastinate", "Complete Buy milk in Procrastinate", "Reopen Buy milk in Procrastinate", "Open Inbox in Procrastimate", "Show Browse in Procrastimate", "Open project House in Procrastinate", "Open task Buy milk in Procrastinate", "Search tasks in Procrastinate", "What is due today in Procrastinate", "What is overdue in Procrastinate", "Start Ramble in Procrastinate". The title and the search words are the follow-up question, because an App Shortcut phrase can only fill an entity or an enum.
+- iOS, Siri: "Add a task in ProcrastiMate", "Complete Buy milk in ProcrastiMate", "Reopen Buy milk in ProcrastiMate", "Open Inbox in ProcrastiMate", "Show Browse in ProcrastiMate", "Open project House in ProcrastiMate", "Open task Buy milk in ProcrastiMate", "Search tasks in ProcrastiMate", "What is due today in ProcrastiMate", "What is overdue in ProcrastiMate", "Start Ramble in ProcrastiMate". The title and the search words are the follow-up question, because an App Shortcut phrase can only fill an entity or an enum.
 - iOS, Shortcuts: the same actions appear in the Shortcuts app, and a shortcut can set the project, labels, priority, due date, and reminder on Add Task.
 - iOS, Spotlight: search for an open task's title. Tapping the result opens it.
 - Web: not available.
@@ -45,7 +45,7 @@ Preconditions:
 
 ## Gotchas
 
-- The phrases above only work when they include the app name, `Procrastimate`.
+- The phrases above only work when they include the app name, `ProcrastiMate`.
 - `#Project` and `@label` match records that already exist. They do not create one.
 - Words in the title win over a Shortcuts field for the same detail. A field applies only when the title did not set it.
 - A spoken title ignores case and accents. When several open tasks share it, the newest one is first.

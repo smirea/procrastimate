@@ -102,7 +102,7 @@ final class PlaceMonitor: NSObject {
         if let next = plan.nextArm {
             let request = BGAppRefreshTaskRequest(identifier: Self.refreshTaskID)
             request.earliestBeginDate = next
-            try? BGTaskScheduler.shared.submit(request)
+            try? await BGTaskScheduler.shared.submitTaskRequest(request)
         }
     }
 

@@ -136,7 +136,7 @@ enum IntentEffects {
     }
 
     static func startRamble() -> String {
-        guard let session = IntentSession.current else { return "Procrastinate isn't ready." }
+        guard let session = IntentSession.current else { return "ProcrastiMate isn't ready." }
         session.navigator.startRambleListening = true
         session.navigator.sheet = .quickAdd(QuickAddDefaults())
         note("ramble")
@@ -144,7 +144,7 @@ enum IntentEffects {
     }
 
     static func open(tab: AppTab, name: String) -> String {
-        guard let session = IntentSession.current else { return "Procrastimate isn't ready." }
+        guard let session = IntentSession.current else { return "ProcrastiMate isn't ready." }
         session.navigator.sheet = nil
         session.navigator.paths[tab] = []
         session.navigator.tab = tab
@@ -153,7 +153,7 @@ enum IntentEffects {
     }
 
     static func open(project: ProjectEntity) -> String {
-        guard let session = IntentSession.current else { return "Procrastimate isn't ready." }
+        guard let session = IntentSession.current else { return "ProcrastiMate isn't ready." }
         guard session.store.project(project.id) != nil else {
             note("gone \(project.name)")
             return "That project is no longer here."
@@ -166,7 +166,7 @@ enum IntentEffects {
     }
 
     static func open(task: TaskEntity) -> String {
-        guard let session = IntentSession.current else { return "Procrastimate isn't ready." }
+        guard let session = IntentSession.current else { return "ProcrastiMate isn't ready." }
         guard let stored = session.store.task(task.id) else {
             note("gone \(task.title)")
             return "That task is no longer here."

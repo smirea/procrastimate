@@ -5,7 +5,7 @@ Ramble turns a spoken brain dump into tasks. Stefan talks, a live transcript and
 ## Recommendation in short
 
 - **Transcription:** ElevenLabs **Scribe v2 Realtime** over a WebSocket, proxied through the `Account` Durable Object at `GET /api/ramble/socket`, with keyterms built from Stefan's project and label names. About **$0.47 per hour of audio**, under a cent per minute.
-- **Extraction:** the **hybrid** option. A deterministic spoken grammar in `shared/ramble.ts` splits the transcript into tasks, subtasks, and notes, reads spoken triggers such as `project Home` or `priority one`, and runs our quick add parser on each task for dates, times, recurrence, and reminders. Metadata only ever comes from words Stefan said. An LLM is an optional later slice that may only regroup sentences, never add metadata, and it ships only if the test corpus shows the grammar segments natural rambles badly.
+- **Extraction:** the **hybrid** option. A deterministic spoken grammar in `shared/ramble.ts` splits the transcript into tasks, subtasks, and notes, reads spoken triggers such as `project Home` or `priority one`, and runs our quick add parser on each task for dates, times, recurrence, and reminders. Metadata only ever comes from words Stefan said. An LLM is an optional later slice that may only regroup sentences, never add metadata, and it ships only if the test corpus shows the grammar segments natural rambles badly. On iOS, Apple's on-device model now reviews the grammar's draft after stop instead; see [Ramble decisions](decisions/ramble.md).
 - **Clients:** web and iOS together, sharing one endpoint and one parser (ported to Swift through the shared test vectors). The Apple Watch is excluded until its app exists.
 - **Testing:** a corpus of several hundred transcripts with expected structured output, recorded as `shared/vectors/ramble.json` and replayed by the Swift port, with a hard gate that no field is ever set without a spoken phrase behind it. Real audio fixtures and recorded transcription "cassettes" drive paired Playwright and XCUITest flows without a key in CI.
 
@@ -165,7 +165,7 @@ The grammar runs in four passes over the transcript. Every pass records the span
 - **VAD commits are not boundaries.** A commit only means Scribe heard a pause and the text before it is stable. Segmentation reads the joined committed text plus the current partial, so a pause in "Buy milk … tomorrow" never splits a task.
 - **Subtasks.** `subtask <title>` or `add a subtask <title>` adds a child to the current top-level task. `with subtasks A, B, and C` (or `sub tasks`, `sub-tasks`) splits a list on commas and `and` into children. Voice nests one level; deeper nesting is done in task details. A subtask's own date, priority, reminders, and labels follow the same rules as a task; `project` phrases in a subtask are ignored, because a subtask takes its root's project ([Subtasks](decisions/subtasks.md)).
 - **Notes.** Text after `note`, `notes`, `the note is`, `add a note`, or `details` goes to the task's notes, up to the next separator or cue, verbatim.
-- **Voice corrections.** `scratch that`, `remove that`, `delete that`, and `never mind` drop the task being spoken (or the last one, if said at the start of a sentence). `Actually, I meant …` is not supported by the grammar; Stefan edits in the preview instead. It is a candidate for R7.
+- **Voice corrections.** `scratch that`, `remove that`, `delete that`, and `never mind` drop the task being spoken (or the last one, if said at the start of a sentence). Corrections of a date, time, or priority (`Thursday, actually make that Friday`, `the 20th, I mean the 21st`) keep only the new phrase; see [Ramble decisions](decisions/ramble.md). Other `Actually, I meant …` corrections are edited in the list.
 - **Ending.** `that's all` and `that's it` at the very end stop listening and are dropped from the transcript. They never save.
 
 **3. Read spoken attributes** in each segment, in this order, each claiming its text so later rules never reread it:
@@ -302,19 +302,19 @@ Testing is most of the risk and most of the work. Four layers:
 
 Each UI row has one Playwright test in `app-web/e2e/parity/ramble.e2e.ts` and one XCUITest in `RambleParityTests.swift`, both from the same fixture and pinned clock, asserting the same names and strings. The ids are fixed now so the web and iOS slices build them in parallel:
 
-| Parity id            | Scenario                                                                               |
-| -------------------- | -------------------------------------------------------------------------------------- |
-| `ramble-open`        | Mic in quick add opens Ramble; long-press on the add button opens it listening         |
-| `ramble-live`        | Fixture `three-tasks` streams; the transcript and three cards appear before stop       |
-| `ramble-chips`       | Fixture `metadata` yields project, label, date, repeat, priority, and reminder chips   |
-| `ramble-subtasks`    | Fixture `party-subtasks` yields one parent with three indented subtasks                |
-| `ramble-notes`       | Fixture `paint-note` puts the note under the title                                     |
-| `ramble-plain`       | Fixture `no-metadata` yields chip-free cards                                           |
-| `ramble-edit`        | Tapping a card edits its title and changes its date with the picker                    |
-| `ramble-discard`     | Discarding a card removes it, and `Undo` brings it back                                |
-| `ramble-save-undo`   | `Add 3 tasks` saves into the list; the toast's `Undo` removes all three                |
-| `ramble-hold`        | Hold to talk listens while held and stops on release                                   |
-| `ramble-unavailable` | Offline shows `Ramble needs a connection`. There is no unpaired state. |
+| Parity id            | Scenario                                                                             |
+| -------------------- | ------------------------------------------------------------------------------------ |
+| `ramble-open`        | Mic in quick add opens Ramble; long-press on the add button opens it listening       |
+| `ramble-live`        | Fixture `three-tasks` streams; the transcript and three cards appear before stop     |
+| `ramble-chips`       | Fixture `metadata` yields project, label, date, repeat, priority, and reminder chips |
+| `ramble-subtasks`    | Fixture `party-subtasks` yields one parent with three indented subtasks              |
+| `ramble-notes`       | Fixture `paint-note` puts the note under the title                                   |
+| `ramble-plain`       | Fixture `no-metadata` yields chip-free cards                                         |
+| `ramble-edit`        | Tapping a card edits its title and changes its date with the picker                  |
+| `ramble-discard`     | Discarding a card removes it, and `Undo` brings it back                              |
+| `ramble-save-undo`   | `Add 3 tasks` saves into the list; the toast's `Undo` removes all three              |
+| `ramble-hold`        | Hold to talk listens while held and stops on release                                 |
+| `ramble-unavailable` | Offline shows `Ramble needs a connection`. There is no unpaired state.               |
 
 ## Cost and free-tier fit
 

@@ -13,7 +13,7 @@
 	const days = $derived(upcomingGroups(store.tasks, clock.today));
 </script>
 
-<svelte:head><title>Inbox · Procrastimate</title></svelte:head>
+<svelte:head><title>Inbox · ProcrastiMate</title></svelte:head>
 
 <View
 	title="Inbox"

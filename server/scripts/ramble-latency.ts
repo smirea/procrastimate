@@ -20,7 +20,7 @@ import { KEYTERM_TRIGGERS, upstreamUrl } from '../src/account/ramble';
  */
 
 const USAGE = `Usage: bun server/scripts/ramble-latency.ts [--url <origin>] [--direct] [--runs <n>] [--wav <file>]
-  --url     Procrastimate origin (default http://127.0.0.1:6121, the Bun dev server)
+  --url     ProcrastiMate origin (default http://127.0.0.1:6121, the Bun dev server)
   --direct  Talk to ElevenLabs directly with ELEVENLABS_API_KEY instead of the proxy
   --runs    Sessions to run (default 3)
   --wav     16 kHz mono 16-bit WAV with two utterances split by a pause of over a second`;

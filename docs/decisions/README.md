@@ -1,8 +1,8 @@
 # Decisions
 
-Procrastimate's concepts, goals, paradigms, and high-level system decisions, one file per area. Read the areas your work touches before starting. When a change introduces or revises one of these, record it in the matching area file in the same PR as the work, or add a new file and list it here when no area fits. Replace stale entries instead of keeping history; git keeps the history.
+ProcrastiMate's concepts, goals, paradigms, and high-level system decisions, one file per area. Read the areas your work touches before starting. When a change introduces or revises one of these, record it in the matching area file in the same PR as the work, or add a new file and list it here when no area fits. Replace stale entries instead of keeping history; git keeps the history.
 
-- [Product goals](product.md): what Procrastimate is, who it is for, and the snappy local-first bar.
+- [Product goals](product.md): what ProcrastiMate is, who it is for, and the snappy local-first bar.
 - [Workflow](workflow.md): how threads, PRs, rebases, tests, and screenshots work, and building every feature for all clients.
 - [UX principles](ux-principles.md): mobile-first layout, touch, motion, and Liquid Glass parity.
 - [Visual language](visual-language.md): the Liquid Glass materials, shapes, motion, accessibility fallbacks, and rendering pick.

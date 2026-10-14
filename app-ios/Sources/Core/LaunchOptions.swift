@@ -6,7 +6,7 @@ public struct LaunchOptions: Equatable, Sendable {
     public static let timeZoneKey = "PROCRASTIMATE_TZ"
     public static let resetKey = "PROCRASTIMATE_RESET"
     public static let notificationsDeniedKey = "PROCRASTIMATE_NOTIFICATIONS_DENIED"
-    public static let signedInKey = "PROCRASTINATE_SIGNED_IN"
+    public static let signedInKey = "PROCRASTIMATE_SIGNED_IN"
 
     /// Freezes the clock at this moment.
     public var now: Date?

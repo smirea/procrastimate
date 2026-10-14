@@ -165,6 +165,11 @@ const PRIORITY_LEVELS: Record<string, Priority> = {
 };
 const SEPARATOR = String.raw`(?:next|new|another)\s+task|next\s+one|and\s+another\s+thing`;
 
+const TIME = String.raw`(?:\d{1,2}(?::\d{2})?[ap]m|noon|midnight)`;
+const WHEN = String.raw`(?:(?:on|at|by|for|due)\s+)?(?:(?:every|each)\s+)?(?:today|tomorrow|tonight|eod|eow|next\s+(?:week|month|${DAY_NAME})|${DAY_NAME}(?:\s+and\s+${DAY_NAME})?|(?:the\s+)?\d{1,2}(?:st|nd|rd|th)|${MONTH_NAME}\s+\d{1,2}(?:st|nd|rd|th)?|\d{1,2}(?::\d{2})?[ap]m|noon|midnight|in\s+\d+\s+${UNIT_WORD})(?:\s+(?:at\s+)?(?:\d{1,2}(?::\d{2})?[ap]m|noon|midnight))?`;
+const PRIORITY_WORDS = String.raw`(?:priority\s+[1-4]|p[1-4])`;
+const CORRECTED = String.raw`\s*,?\s*(?:actually|no\s+wait|wait|sorry|no|i\s+mean|i\s+meant|scratch\s+that|or\s+rather|rather)\s*,?\s*(?:(?:make|change)\s+(?:that|it)(?:\s+to)?\s+|let's\s+(?:say|do)\s+)?`;
+
 const hourValue = (text: string) => (/^\d/.test(text) ? Number(text) : numberValue(text));
 
 /** Ordered: each rewrite reads the output of the ones before it. */
@@ -240,6 +245,10 @@ const REWRITES: Array<[RegExp, (m: RegExpExecArray) => string | null]> = [
 		/\b(?:pee\s+(?:one|two|three|four|[1-4])|p\s+(?:one|two|three|four)|p-[1-4])\b/gi,
 		m => `p${PRIORITY_LEVELS[m[0].split(/[\s-]+/)[1]!.toLowerCase()]}`,
 	],
+	// A spoken correction keeps only the phrase it switches to: `Thursday, actually make that Friday` becomes `Friday`.
+	[new RegExp(String.raw`\b(?:at\s+)?${TIME}${CORRECTED}(?:at\s+)?(${TIME})(?![\w:])`, 'gi'), m => `at ${m[1]}`],
+	[new RegExp(String.raw`\b${WHEN}${CORRECTED}(${WHEN})\b`, 'gi'), m => m[1]!],
+	[new RegExp(String.raw`\b${PRIORITY_WORDS}${CORRECTED}(${PRIORITY_WORDS})\b`, 'gi'), m => m[1]!],
 ];
 
 function normalize(transcript: string): Mapped {
@@ -699,7 +708,7 @@ const ENDING = /(?:^|[\s,.;!?])(?:that's|thats|that\s+is)\s+(?:all|it)(?:\s+for\
 const NOTE_AT_START =
 	/^\s*(?:and\s+)?(?:add\s+a\s+note|the\s+notes?\s+(?:is|are|says?)|notes?|details)(?!\s+to\s+self\b)\b[\s:,-]*/i;
 const STRUCTURE = new RegExp(
-	String.raw`(?<note>\b(?:with\s+(?:a|the)\s+note(?:\s+that)?|add\s+a\s+note|the\s+note\s+is)\b[\s:,-]*|(?<=[,;:]\s*)(?:and\s+)?(?:notes?|details)(?!\s+to\s+self\b)\b[\s:,-]*)|(?<list>\b(?:with\s+(?:the\s+)?|and\s+)?sub[\s-]?tasks\b[\s:,-]*)|(?<one>\b(?:and\s+|with\s+)?(?:add\s+)?(?:a\s+|another\s+)?sub[\s-]?task\b[\s:,-]*)`,
+	String.raw`(?<note>\b(?:with\s+(?:a|the)\s+note(?:\s+that)?|add\s+a\s+note|the\s+note\s+is)\b[\s:,-]*|(?<=[,;:]\s*)(?:and\s+)?(?:notes?|details)(?!\s+to\s+self\b)\b[\s:,-]*)|(?<list>\b(?:with\s+(?:the\s+)?|and\s+)?sub[\s-]?tasks\b[\s:,-]*|[\s,]*\b(?:the\s+steps\s+are|steps\s+are|which\s+means|that\s+means|the\s+list\s+is)\b[\s:,-]*|(?<=[a-z])\s*:\s+(?=[a-z]))|(?<one>\b(?:and\s+|with\s+)?(?:add\s+)?(?:a\s+|another\s+)?sub[\s-]?task\b[\s:,-]*)`,
 	'gi',
 );
 const LIST_SPLIT = /\s*,\s*(?:and\s+)?|\s+and\s+/gi;

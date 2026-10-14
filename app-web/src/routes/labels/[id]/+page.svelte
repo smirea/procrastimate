@@ -28,7 +28,7 @@
 	}
 </script>
 
-<svelte:head><title>{label?.name ?? 'Label'} · Procrastimate</title></svelte:head>
+<svelte:head><title>{label?.name ?? 'Label'} · ProcrastiMate</title></svelte:head>
 
 {#if label}
 	<View

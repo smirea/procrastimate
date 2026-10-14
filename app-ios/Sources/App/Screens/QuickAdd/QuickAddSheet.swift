@@ -23,6 +23,8 @@ private struct QuickAddForm: View {
     @State private var listAt: Int?
     @State private var session = RambleSession()
     @State private var listening = false
+    /// True from start until the session ends. After a stop that applies, the last words still arrive.
+    @State private var capturing = false
     @State private var typed = false
     @State private var notice: String?
     @State private var transcript = ""
@@ -32,6 +34,8 @@ private struct QuickAddForm: View {
     @State private var event: TaskEvent?
     /// Text writes that came from the recognizer, so the field's change does not count as typing.
     @State private var speechWrites = 0
+    @State private var spoken = Spoken.none
+    @State private var liveParse: Task<Void, Never>?
     @FocusState private var focused: Bool
 
     init(defaults: QuickAddDefaults, today: DateKey) {
@@ -44,6 +48,7 @@ private struct QuickAddForm: View {
         let parsed = shownParse()
         let resolved = draft.resolved(parsed)
         VStack(alignment: .leading, spacing: 12) {
+            if !spoken.isList {
             SmartInput(
                 text: Binding(get: { draft.text }, set: { draft.setText($0) }),
                 tokens: parsed.tokens,
@@ -58,10 +63,15 @@ private struct QuickAddForm: View {
             .overlay(alignment: .trailing) {
                 if showMic { micButton }
             }
+            }
+            if !spoken.tasks.isEmpty {
+                SpokenTaskList(spoken: spoken) { removeSpoken($0, $1) }
+            }
             if let notice {
                 Text(notice).font(.footnote).foregroundStyle(.muted)
             }
 
+            if spoken == .none {
             HStack(alignment: .top, spacing: 6) {
                 FlowLayout(spacing: 6) {
                     chips(parsed, resolved)
@@ -73,11 +83,14 @@ private struct QuickAddForm: View {
                 }
             }
             .animation(.snappy(duration: 0.16), value: parsed.tokens)
+            }
 
             HStack(spacing: 8) {
-                ProjectChip(projectId: resolved.projectId) { id in
-                    draft.clearToken(.project, in: parsed)
-                    draft.picked.projectId = id
+                if spoken == .none {
+                    ProjectChip(projectId: resolved.projectId) { id in
+                        draft.clearToken(.project, in: parsed)
+                        draft.picked.projectId = id
+                    }
                 }
                 Spacer(minLength: 0)
                 Button("Cancel") { navigator.sheet = nil }
@@ -85,12 +98,13 @@ private struct QuickAddForm: View {
                     .foregroundStyle(.muted)
                     .padding(.horizontal, 12)
                     .frame(minHeight: 44)
-                Button("Add task") { submit() }
+                Button(addLabel) { submit() }
                     .buttonStyle(.borderedProminent)
                     .buttonBorderShape(.capsule)
-                    .disabled(listening || parsed.title.isEmpty)
+                    .disabled(listening || (spoken.isList ? false : spoken != .none || parsed.title.isEmpty))
             }
         }
+        .animation(.snappy(duration: 0.22), value: spoken)
         .padding(.horizontal, 16)
         .padding(.top, 20)
         .padding(.bottom, 8)
@@ -119,8 +133,15 @@ private struct QuickAddForm: View {
                 return
             }
             if listening { stopRamble(apply: false) }
+            if case .reviewing = spoken { spoken = .none }
             typed = !draft.text.isEmpty
         }
+    }
+
+    private var addLabel: String {
+        guard spoken.isList else { return "Add task" }
+        let count = spoken.tasks.count
+        return count == 1 ? "Add task" : "Add \(count) tasks"
     }
 
     private var micButton: some View {
@@ -201,6 +222,10 @@ private struct QuickAddForm: View {
 
     private func submit() {
         guard !listening else { return }
+        if spoken.isList {
+            saveSpoken(spoken.tasks)
+            return
+        }
         let parsed = draft.parse(now: clock.now, projects: store.projects, labels: store.labels, in: clock.timeZone)
         guard let task = draft.resolve(parsed) else { return }
         withAnimation(.snappy) {
@@ -222,25 +247,27 @@ private struct QuickAddForm: View {
     private func startRamble() {
         notice = nil
         transcript = ""
+        spoken = .live([])
+        RambleModel.prewarm()
         applyOnStop = true
         listening = true
         typed = false
         let choice = store.dictation
         let deviceId = store.snapshot.sync?.deviceId
+        capturing = true
         session.onText = { spoken, _ in
-            guard listening else { return }
+            guard capturing else { return }
             transcript = spoken
             if spoken != draft.text {
                 speechWrites += 1
                 draft.setText(spoken)
             }
-            if Ramble.parse(spoken, now: clock.now, projects: store.projects, labels: store.labels, in: clock.timeZone).ended {
-                stopRamble(apply: true)
-            }
+            parseLive(spoken)
         }
         session.onLevel = { _ in }
         session.onEnd = { end in
             listening = false
+            capturing = false
             switch end {
             case .stopped:
                 if applyOnStop { applyTranscript() }
@@ -257,17 +284,93 @@ private struct QuickAddForm: View {
     private func stopRamble(apply: Bool) {
         applyOnStop = apply
         listening = false
+        if !apply { capturing = false }
+        liveParse?.cancel()
+        if !apply { spoken = .none }
         session.stop()
+    }
+
+    /// The grammar runs off the main thread on every transcript update, so a long ramble never stalls the field.
+    private func parseLive(_ text: String) {
+        liveParse?.cancel()
+        let now = clock.now, projects = store.projects, labels = store.labels, zone = clock.timeZone
+        liveParse = Task {
+            let draft = await Task.detached(priority: .userInitiated) {
+                Ramble.parse(text, now: now, projects: projects, labels: labels, in: zone)
+            }.value
+            guard !Task.isCancelled, listening else { return }
+            if draft.ended {
+                stopRamble(apply: true)
+            } else {
+                spoken = .live(draft.tasks)
+            }
+        }
     }
 
     private func applyTranscript() {
         let ramble = Ramble.parse(transcript, now: clock.now, projects: store.projects, labels: store.labels, in: clock.timeZone)
+        guard !ramble.tasks.isEmpty else {
+            spoken = .none
+            if !transcript.isEmpty, transcript != draft.text {
+                speechWrites += 1
+                draft.setText(transcript)
+            }
+            return
+        }
+        spoken = .reviewing(ramble.tasks)
+        let transcript = transcript
+        Task {
+            let reviews = await RambleModel.review(transcript, ramble.tasks)
+            guard case .reviewing = spoken else { return }
+            settle(reviews.map { Ramble.reviewed(ramble.tasks, by: $0, in: transcript) } ?? ramble.tasks)
+        }
+    }
+
+    /// One plain task goes into the field to edit like typed text; anything more stays as a list to save together.
+    private func settle(_ tasks: [RambleTask]) {
         let before = draft.text
-        speechWrites += 1
-        if !draft.applyRamble(ramble, today: clock.today), !transcript.isEmpty {
-            draft.setText(transcript)
+        if tasks.count == 1, tasks[0].fitsTheField {
+            spoken = .none
+            speechWrites += 1
+            draft.applyRamble(RambleDraft(tasks: tasks, tokens: [], ended: false), today: clock.today)
+        } else {
+            spoken = .list(tasks)
+            speechWrites += 1
+            draft.setText("")
         }
         if draft.text == before { speechWrites -= 1 }
+    }
+
+    private func removeSpoken(_ index: Int, _ subtask: Int?) {
+        var tasks = spoken.tasks
+        guard tasks.indices.contains(index) else { return }
+        if let subtask {
+            guard tasks[index].subtasks.indices.contains(subtask) else { return }
+            tasks[index].subtasks.remove(at: subtask)
+        } else {
+            tasks.remove(at: index)
+        }
+        spoken = tasks.isEmpty ? .none : .list(tasks)
+    }
+
+    private func saveSpoken(_ tasks: [RambleTask]) {
+        let defaults = draft.defaults
+        let today = clock.today
+        withAnimation(.snappy) {
+            for task in tasks {
+                let added = store.addTask(Ramble.newTask(task, defaults: defaults, today: today))
+                if !task.notes.isEmpty { store.updateTask(added.id, TaskPatch(notes: task.notes)) }
+                for subtask in task.subtasks {
+                    let child = store.addTask(Ramble.newTask(subtask, defaults: nil, today: today), parentId: added.id)
+                    if !subtask.notes.isEmpty { store.updateTask(child.id, TaskPatch(notes: subtask.notes)) }
+                }
+            }
+        }
+        spoken = .none
+        draft.reset(today: today)
+        typed = false
+        notice = nil
+        focused = true
     }
 }
 
@@ -380,7 +483,7 @@ struct DueChip: View {
 struct PriorityChip: View {
     let priority: Priority
     var iconOnly = false
-    let onChange: (Priority) -> Void
+    let onChange: @MainActor (Priority) -> Void
 
     var body: some View {
         Menu {
@@ -407,7 +510,7 @@ struct PriorityChip: View {
 struct ProjectChip: View {
     @Environment(Store.self) private var store
     let projectId: String?
-    let onChange: (String?) -> Void
+    let onChange: @MainActor (String?) -> Void
 
     @State private var creating = false
 

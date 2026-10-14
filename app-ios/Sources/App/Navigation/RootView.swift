@@ -18,40 +18,20 @@ struct RootView: View {
 
     private var signedIn: some View {
         let today = Views.todayTasks(store.tasks, todayKey, in: store.timeZone)
-        return TabView(selection: Binding(
-            get: { navigator.tab },
-            set: { tab in
-                if tab == .add {
-                    navigator.sheet = .quickAdd(navigator.listDefaults)
-                } else {
-                    navigator.tab = tab
-                }
-            }
-        )) {
-            Tab("Inbox", systemImage: "tray", value: .inbox) {
+        return TabView(selection: Binding(get: { navigator.tab }, set: { navigator.tab = $0 })) {
+            Tab(value: AppTab.inbox) {
                 TabStack(tab: .inbox) { InboxScreen() }
             }
-            .badge(today.overdue.count + today.today.count)
-            Tab("No date", systemImage: "calendar.badge.minus", value: .noDate) {
+            Tab(value: AppTab.noDate) {
                 TabStack(tab: .noDate) { NoDateScreen() }
             }
-            Tab("Browse", systemImage: "square.grid.2x2", value: .browse) {
+            Tab(value: AppTab.browse) {
                 TabStack(tab: .browse) { BrowseScreen() }
             }
-            // The search role puts the button in the separate circle at the trailing end of the tab bar.
-            Tab("Add task", systemImage: "plus", value: .add, role: .search) {
-                Color.clear
-            }
         }
-        .tabViewStyle(.sidebarAdaptable)
-        .tabBarMinimizeBehavior(.onScrollDown)
-        .overlay(alignment: .bottomTrailing) {
-            if navigator.quickAdd == nil {
-                AddButton { navigator.sheet = .quickAdd(navigator.listDefaults) }
-                    .transition(.scale(scale: 0.6).combined(with: .opacity))
-            }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            TabBar(inboxBadge: today.overdue.count + today.today.count)
         }
-        .animation(.snappy(duration: 0.2), value: navigator.quickAdd == nil)
         .overlay(alignment: .bottom) { QuickAddOverlay() }
         .overlay(alignment: navigator.quickAdd == nil ? .bottom : .top) {
             // Quick add covers the bottom of the screen, so toasts move to the top while it is open, as on the web.
@@ -66,24 +46,89 @@ struct RootView: View {
     }
 }
 
-/// The accent add button. A tab item cannot take its own color, so this sits exactly over the search-role tab's circle,
-/// which keeps the tab bar's layout and stays as the fallback if the two ever drift apart.
-private struct AddButton: View {
-    let action: () -> Void
+/// The app draws its own tab bar so quick add is one accent circle beside the tabs. The system bar cannot tint a tab,
+/// and the role that gets a separate circle changed between iOS 26 (`.search`) and 27 (`.prominent`).
+private struct TabBar: View {
+    @Environment(Navigator.self) private var navigator
+    @Namespace private var selection
+    @State private var keyboardShown = false
+    @State private var bottomInset: CGFloat = 0
+    let inboxBadge: Int
 
     var body: some View {
-        Button(action: action) {
-            Image(systemName: "plus")
-                .font(.title2.weight(.semibold))
-                .foregroundStyle(.white)
-                .frame(width: 62, height: 62)
-                .glassEffect(.regular.tint(.accent).interactive(), in: .circle)
+        GlassEffectContainer(spacing: 12) {
+            HStack(spacing: 12) {
+                HStack(spacing: 0) {
+                    item(.inbox, "Inbox", "tray", badge: inboxBadge)
+                    item(.noDate, "No date", "calendar.badge.minus")
+                    item(.browse, "Browse", "square.grid.2x2")
+                }
+                .padding(4)
+                .glassEffect(.regular.interactive(), in: .capsule)
+                Button { navigator.sheet = .quickAdd(navigator.listDefaults) } label: {
+                    Image(systemName: "plus")
+                        .font(.title2.weight(.semibold))
+                        .foregroundStyle(.white)
+                        .frame(width: 62, height: 62)
+                        .contentShape(.circle)
+                        // On the label, not the button: glass around a plain-style button shrinks its tap area to the glyph.
+                        .glassEffect(.regular.tint(.accent).interactive(), in: .circle)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Quick add")
+            }
+        }
+        .frame(maxWidth: 520)
+        .padding(.horizontal, 21)
+        // 21 pt from the screen's bottom edge, where the system tab bar sits, whatever the home indicator inset.
+        .padding(.bottom, max(0, 21 - bottomInset))
+        .offset(y: max(0, bottomInset - 21))
+        .onGeometryChange(for: CGFloat.self, of: { $0.safeAreaInsets.bottom }) { bottomInset = $0 }
+        .opacity(hidden ? 0 : 1)
+        .allowsHitTesting(!hidden)
+        .animation(.snappy(duration: 0.2), value: hidden)
+        .onMessage(of: UIScreen.self, for: .keyboardWillShow) { _ in keyboardShown = true }
+        .onMessage(of: UIScreen.self, for: .keyboardWillHide) { _ in keyboardShown = false }
+    }
+
+    private var hidden: Bool { keyboardShown || navigator.quickAdd != nil }
+
+    private func item(_ tab: AppTab, _ title: String, _ symbol: String, badge: Int = 0) -> some View {
+        let selected = navigator.tab == tab
+        return Button {
+            if selected { navigator.paths[tab] = [] } else { navigator.tab = tab }
+        } label: {
+            VStack(spacing: 2) {
+                Image(systemName: symbol)
+                    .symbolVariant(selected ? .fill : .none)
+                    .font(.title3)
+                    .frame(height: 28)
+                    .overlay(alignment: .topTrailing) {
+                        if badge > 0 {
+                            Text("\(badge)")
+                                .font(.caption2.weight(.semibold))
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 5)
+                                .frame(minWidth: 18, minHeight: 18)
+                                .background(.red, in: .capsule)
+                                .offset(x: 12, y: -4)
+                        }
+                    }
+                Text(title).font(.caption2.weight(.medium))
+            }
+            .foregroundStyle(selected ? Color.accent : Color.primary)
+            .frame(maxWidth: .infinity, minHeight: 54)
+            .background {
+                if selected {
+                    Capsule().fill(.ink.opacity(0.08)).matchedGeometryEffect(id: "selection", in: selection)
+                }
+            }
+            .contentShape(.capsule)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("Quick add")
-        .padding([.trailing, .bottom], 21)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
-        .ignoresSafeArea()
+        .animation(.snappy(duration: 0.25), value: navigator.tab)
+        .accessibilityLabel(badge > 0 ? "\(title), \(badge)" : title)
+        .accessibilityAddTraits(selected ? [.isSelected, .isButton] : .isButton)
     }
 }
 
@@ -115,6 +160,7 @@ private struct TabStack<Content: View>: View {
         NavigationStack(path: Binding(get: { navigator.paths[tab] ?? [] }, set: { navigator.paths[tab] = $0 })) {
             content().navigationDestination(for: Route.self) { RouteView(route: $0) }
         }
+        .toolbarVisibility(.hidden, for: .tabBar)
     }
 }
 

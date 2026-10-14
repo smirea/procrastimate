@@ -86,7 +86,7 @@ struct SubtaskList: View {
         .sensoryFeedback(.impact(weight: .light), trigger: drag?.id)
     }
 
-    private static let space = "subtasks"
+    nonisolated private static let space = "subtasks"
 
     private func add() {
         let parsed = QuickAdd.parse(draft, QuickAdd.Options(now: clock.now, labels: store.labels), in: clock.timeZone)

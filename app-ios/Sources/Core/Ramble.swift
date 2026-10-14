@@ -175,6 +175,12 @@ enum RambleNormalize {
     static let meridiemAhead = "(?=\\s*[ap]\\.?\\s?m\\b)"
     static let unitWord = "(?:minutes?|mins?|hours?|hrs?|days?|weeks?|months?|years?)"
     static let separator = "(?:next|new|another)\\s+task|next\\s+one|and\\s+another\\s+thing"
+    static let time = "(?:\\d{1,2}(?::\\d{2})?[ap]m|noon|midnight)"
+    static let when =
+        "(?:(?:on|at|by|for|due)\\s+)?(?:(?:every|each)\\s+)?(?:today|tomorrow|tonight|eod|eow|next\\s+(?:week|month|\(dayName))|\(dayName)(?:\\s+and\\s+\(dayName))?|(?:the\\s+)?\\d{1,2}(?:st|nd|rd|th)|\(monthName)\\s+\\d{1,2}(?:st|nd|rd|th)?|\\d{1,2}(?::\\d{2})?[ap]m|noon|midnight|in\\s+\\d+\\s+\(unitWord))(?:\\s+(?:at\\s+)?(?:\\d{1,2}(?::\\d{2})?[ap]m|noon|midnight))?"
+    static let priorityWords = "(?:priority\\s+[1-4]|p[1-4])"
+    static let corrected =
+        "\\s*,?\\s*(?:actually|no\\s+wait|wait|sorry|no|i\\s+mean|i\\s+meant|scratch\\s+that|or\\s+rather|rather)\\s*,?\\s*(?:(?:make|change)\\s+(?:that|it)(?:\\s+to)?\\s+|let's\\s+(?:say|do)\\s+)?"
     static let priorityLevels = [
         "one": 1, "two": 2, "three": 3, "four": 4, "won": 1, "to": 2, "too": 2, "for": 4, "fore": 4,
         "1": 1, "2": 2, "3": 3, "4": 4,
@@ -319,6 +325,12 @@ enum RambleNormalize {
                 guard parts.count > 1, let level = priorityLevels[rambleFold(parts[1])] else { return nil }
                 return "p\(level)"
             }),
+            // A spoken correction keeps only the phrase it switches to: `Thursday, actually make that Friday` becomes `Friday`.
+            (RambleRegex("\\b(?:at\\s+)?\(time)\(corrected)(?:at\\s+)?(\(time))(?![\\w:])", ignoreCase: true), { match in
+                match[1].map { "at \($0)" }
+            }),
+            (RambleRegex("\\b\(when)\(corrected)(\(when))\\b", ignoreCase: true), { match in match[1] }),
+            (RambleRegex("\\b\(priorityWords)\(corrected)(\(priorityWords))\\b", ignoreCase: true), { match in match[1] }),
         ]
         for (pattern, replace) in steps {
             mapped = rewrite(mapped, pattern, replace)
