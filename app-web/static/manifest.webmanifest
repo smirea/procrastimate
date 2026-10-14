@@ -2,7 +2,7 @@
 	"id": "/",
 	"name": "Procrastimate",
 	"short_name": "Procrastimate",
-	"start_url": "/today",
+	"start_url": "/inbox",
 	"scope": "/",
 	"display": "standalone",
 	"background_color": "#f6f6f7",

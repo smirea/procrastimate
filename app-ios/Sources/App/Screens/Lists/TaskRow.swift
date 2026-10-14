@@ -53,7 +53,7 @@ struct TaskRow: View {
             }
         }
         .confirmationDialog("Postpone “\(task.title)”", isPresented: $postponing, titleVisibility: .visible) {
-            ForEach(Format.postponeOptions(task.due, today), id: \.date) { option in
+            ForEach(Format.postponeOptions(due, today), id: \.date) { option in
                 Button("\(option.label) · \(Format.weekdayNames[Dates.weekdayOf(option.date)])") {
                     actions.postpone(task, to: option.date)
                 }
@@ -64,7 +64,7 @@ struct TaskRow: View {
             Button("Complete", systemImage: "checkmark.circle") { actions.complete(task) }
             if task.event == nil {
                 Menu("Postpone", systemImage: "calendar.badge.clock") {
-                    ForEach(Format.postponeOptions(task.due, today), id: \.date) { option in
+                    ForEach(Format.postponeOptions(due, today), id: \.date) { option in
                         Button(option.label) { actions.postpone(task, to: option.date) }
                     }
                 }

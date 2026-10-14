@@ -123,7 +123,7 @@
 					</button>
 				{/snippet}
 				{#snippet children({ close })}
-					{#each postponeOptions(task.due, clock.today) as option (option.date)}
+					{#each postponeOptions(due, clock.today) as option (option.date)}
 						<button
 							type="button"
 							class="menu-item flex justify-between gap-6"

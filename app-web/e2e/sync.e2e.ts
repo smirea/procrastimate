@@ -20,8 +20,8 @@ async function device(browser: Browser): Promise<Device> {
 	await signInAccount(context);
 	const page = await context.newPage();
 	await page.clock.setFixedTime(NOW);
-	await page.goto('/inbox');
-	await expect(page.getByRole('heading', { name: 'Inbox' })).toBeVisible({ timeout: 30_000 });
+	await page.goto('/no-date');
+	await expect(page.getByRole('heading', { name: 'No date' })).toBeVisible({ timeout: 30_000 });
 	return { app: new App(page), page, context };
 }
 
@@ -62,7 +62,7 @@ async function devices(browser: Browser): Promise<[Device, Device]> {
 async function rename(app: App, from: string, to: string) {
 	await app
 		.row(from)
-		.getByRole('button', { name: new RegExp(from) })
+		.getByRole('button', { name: new RegExp(`^${from}`) })
 		.click();
 	const title = app.details().getByRole('textbox', { name: 'Title' });
 	await title.fill(to);
@@ -142,7 +142,7 @@ test('both devices editing the same task offline converge', async ({ browser }) 
 	await rename(b.app, title, `${title} from B`);
 	await b.app
 		.row(`${title} from B`)
-		.getByRole('button', { name: new RegExp(title) })
+		.getByRole('button', { name: new RegExp(`^${title}`) })
 		.click();
 	await b.app.details().getByRole('textbox', { name: 'Notes' }).fill('Notes from B');
 	await b.app.details().getByRole('button', { name: 'Close' }).click();
@@ -153,8 +153,8 @@ test('both devices editing the same task offline converge', async ({ browser }) 
 	await settled(b);
 	await settled(a);
 
-	const rowA = a.app.list('Inbox tasks').getByRole('listitem').filter({ hasText: title });
-	const rowB = b.app.list('Inbox tasks').getByRole('listitem').filter({ hasText: title });
+	const rowA = a.app.list('Tasks without a date').getByRole('listitem').filter({ hasText: title });
+	const rowB = b.app.list('Tasks without a date').getByRole('listitem').filter({ hasText: title });
 	await expect(rowA).toHaveCount(1);
 	await expect(rowA).toContainText('Notes from B');
 	await expect(rowB).toHaveCount(1);

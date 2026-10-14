@@ -9,7 +9,10 @@ export const E2E_PASSWORD = 'e2e-password-1';
 
 /** One user per test. A second context signs in as the same email, so the two devices share an account. */
 export function e2eEmail(): string {
-	const id = test.info().testId.replace(/[^A-Za-z0-9]/g, '').slice(0, 48);
+	const id = test
+		.info()
+		.testId.replace(/[^A-Za-z0-9]/g, '')
+		.slice(0, 48);
 	return `e2e-${id}@procrastimate.test`;
 }
 
