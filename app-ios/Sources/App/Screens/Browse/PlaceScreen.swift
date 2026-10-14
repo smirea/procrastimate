@@ -12,8 +12,7 @@ struct PlaceScreen: View {
             title: tasks.first?.location?.name ?? "Place",
             isEmpty: tasks.isEmpty,
             emptyTitle: "No tasks at this place",
-            emptyHint: "Set a place from a task's details.",
-            quickAdd: QuickAddDefaults()
+            emptyHint: "Set a place from a task's details."
         ) {
             ForEach(tasks) { TaskRow(task: $0, showProject: true) }
         }
@@ -32,8 +31,7 @@ struct EventScreen: View {
             title: tasks.first?.event?.title ?? "Event",
             isEmpty: tasks.isEmpty,
             emptyTitle: "No tasks on this event",
-            emptyHint: "Link an event from a task's details.",
-            quickAdd: QuickAddDefaults()
+            emptyHint: "Link an event from a task's details."
         ) {
             ForEach(tasks) { TaskRow(task: $0, showProject: true) }
         }

@@ -686,6 +686,227 @@
 			"output": "1h after Walking meetup"
 		},
 		{
+			"fn": "eventLabel",
+			"test": "labels › a row names the event with only the day and time today leaves ambiguous",
+			"input": [
+				{
+					"allDay": false,
+					"edge": "after",
+					"id": "meetup",
+					"minutes": 15,
+					"occurrences": [
+						{
+							"end": 1792008000000,
+							"original": 1792004400000,
+							"start": 1792004400000
+						}
+					],
+					"series": false,
+					"title": "Walking meetup"
+				},
+				"2026-10-14"
+			],
+			"output": {
+				"lead": "15m after",
+				"title": "Walking meetup",
+				"when": "3pm"
+			}
+		},
+		{
+			"fn": "eventLabel",
+			"test": "labels › a row names the event with only the day and time today leaves ambiguous",
+			"input": [
+				{
+					"allDay": false,
+					"edge": "before",
+					"id": "meetup",
+					"minutes": 60,
+					"occurrences": [
+						{
+							"end": 1792504800000,
+							"original": 1792503000000,
+							"start": 1792503000000
+						}
+					],
+					"series": false,
+					"title": "Walking meetup"
+				},
+				"2026-10-14"
+			],
+			"output": {
+				"lead": "1h before",
+				"title": "Walking meetup",
+				"when": "Tue, 9:30am"
+			}
+		},
+		{
+			"fn": "eventLabel",
+			"test": "labels › a row names the event with only the day and time today leaves ambiguous",
+			"input": [
+				{
+					"allDay": false,
+					"edge": "start",
+					"id": "meetup",
+					"minutes": 0,
+					"occurrences": [
+						{
+							"end": 1792623600000,
+							"original": 1792620000000,
+							"start": 1792620000000
+						}
+					],
+					"series": false,
+					"title": "Walking meetup"
+				},
+				"2026-10-14"
+			],
+			"output": {
+				"lead": "Start of",
+				"title": "Walking meetup",
+				"when": "Oct 21, 6pm"
+			}
+		},
+		{
+			"fn": "eventLabel",
+			"test": "labels › a row names the event with only the day and time today leaves ambiguous",
+			"input": [
+				{
+					"allDay": false,
+					"edge": "during",
+					"id": "meetup",
+					"minutes": 0,
+					"occurrences": [
+						{
+							"end": 1791846000000,
+							"original": 1791842400000,
+							"start": 1791842400000
+						}
+					],
+					"series": false,
+					"title": "Walking meetup"
+				},
+				"2026-10-14"
+			],
+			"output": {
+				"lead": "During",
+				"title": "Walking meetup",
+				"when": "Oct 12, 6pm"
+			}
+		},
+		{
+			"fn": "eventLabel",
+			"test": "labels › a row names the event with only the day and time today leaves ambiguous",
+			"input": [
+				{
+					"allDay": true,
+					"edge": "start",
+					"id": "meetup",
+					"minutes": 0,
+					"occurrences": [
+						{
+							"end": 1791954000000,
+							"original": 1791950400000,
+							"start": 1791950400000
+						}
+					],
+					"series": false,
+					"title": "Walking meetup"
+				},
+				"2026-10-14"
+			],
+			"output": {
+				"lead": "Start of",
+				"title": "Walking meetup",
+				"when": null
+			}
+		},
+		{
+			"fn": "eventLabel",
+			"test": "labels › a row names the event with only the day and time today leaves ambiguous",
+			"input": [
+				{
+					"allDay": true,
+					"edge": "start",
+					"id": "meetup",
+					"minutes": 0,
+					"occurrences": [
+						{
+							"end": 1792126800000,
+							"original": 1792123200000,
+							"start": 1792123200000
+						}
+					],
+					"series": false,
+					"title": "Walking meetup"
+				},
+				"2026-10-14"
+			],
+			"output": {
+				"lead": "Start of",
+				"title": "Walking meetup",
+				"when": "Fri"
+			}
+		},
+		{
+			"fn": "eventLabel",
+			"test": "labels › a row names the event with only the day and time today leaves ambiguous",
+			"input": [
+				{
+					"allDay": false,
+					"edge": "start",
+					"id": "meetup",
+					"minutes": 0,
+					"occurrences": [
+						{
+							"end": 1792018800000,
+							"original": 1792015200000,
+							"start": 1792015200000
+						}
+					],
+					"series": false,
+					"title": "Walking meetup"
+				},
+				"2025-12-30"
+			],
+			"output": {
+				"lead": "Start of",
+				"title": "Walking meetup",
+				"when": "Oct 14, 2026, 6pm"
+			}
+		},
+		{
+			"fn": "eventLabel",
+			"test": "labels › a task that follows a series reads the occurrence it is on",
+			"input": [
+				{
+					"allDay": false,
+					"edge": "after",
+					"id": "meetup",
+					"minutes": 0,
+					"occurrences": [
+						{
+							"end": 1791903600000,
+							"original": 1791900000000,
+							"start": 1791900000000
+						},
+						{
+							"end": 1792076400000,
+							"original": 1792072800000,
+							"start": 1792072800000
+						}
+					],
+					"series": true,
+					"title": "Walking meetup"
+				},
+				"2026-10-14"
+			],
+			"output": {
+				"lead": "After",
+				"title": "Walking meetup",
+				"when": "Thu, 10am"
+			}
+		},
+		{
 			"fn": "formatLocation",
 			"test": "labels › places read by trigger",
 			"input": [

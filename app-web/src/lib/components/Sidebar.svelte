@@ -4,8 +4,6 @@
 	import { slide } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import Tray from 'phosphor-svelte/lib/Tray';
-	import CalendarCheck from 'phosphor-svelte/lib/CalendarCheck';
-	import CalendarDots from 'phosphor-svelte/lib/CalendarDots';
 	import Hash from 'phosphor-svelte/lib/Hash';
 	import Plus from 'phosphor-svelte/lib/Plus';
 	import Tag from 'phosphor-svelte/lib/Tag';
@@ -18,7 +16,7 @@
 	import Settings from './Settings.svelte';
 	import { store } from '../store.svelte.ts';
 	import { clock, mobile, motion } from '../ui.svelte.ts';
-	import { inboxTasks, labelTasks, projectTasks, todayTasks, upcomingGroups } from 'shared/views.ts';
+	import { labelTasks, projectTasks, todayTasks } from 'shared/views.ts';
 	import { eventGroups, placeGroups } from 'shared/triggers.ts';
 
 	let { onquickadd, onsearch, onsettings }: { onquickadd: () => void; onsearch: () => void; onsettings: () => void } =
@@ -26,14 +24,7 @@
 
 	const today = $derived(todayTasks(store.tasks, clock.today));
 	const views = $derived([
-		{ href: '/inbox', label: 'Inbox', icon: Tray, count: inboxTasks(store.tasks).length },
-		{ href: '/today', label: 'Today', icon: CalendarCheck, count: today.overdue.length + today.today.length },
-		{
-			href: '/upcoming',
-			label: 'Upcoming',
-			icon: CalendarDots,
-			count: upcomingGroups(store.tasks, clock.today).reduce((n, g) => n + g.tasks.length, 0),
-		},
+		{ href: '/inbox', label: 'Inbox', icon: Tray, count: today.overdue.length + today.today.length },
 	]);
 
 	const labels = $derived(

@@ -14,6 +14,7 @@ struct TaskRow: View {
     var timeOnly = false
 
     @State private var checking = false
+    @State private var postponing = false
 
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
@@ -31,7 +32,7 @@ struct TaskRow: View {
                 }
                 details
             }
-            .padding(.vertical, 11)
+            .padding(.vertical, 6)
             .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
             .contentShape(.rect)
             .onTapGesture { navigator.sheet = .details(taskID: task.id) }
@@ -45,10 +46,29 @@ struct TaskRow: View {
                 .tint(.toneToday)
         }
         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-            Button("Delete", systemImage: "trash", role: .destructive) { actions.delete(task) }
+            // An event task's day comes from its calendar event, so there is nothing to move.
+            if task.event == nil {
+                Button("Postpone", systemImage: "calendar.badge.clock") { postponing = true }
+                    .tint(.toneWeek)
+            }
+        }
+        .confirmationDialog("Postpone “\(task.title)”", isPresented: $postponing, titleVisibility: .visible) {
+            ForEach(Format.postponeOptions(task.due, today), id: \.date) { option in
+                Button("\(option.label) · \(Format.weekdayNames[Dates.weekdayOf(option.date)])") {
+                    actions.postpone(task, to: option.date)
+                }
+            }
+            Button("Pick a date…") { navigator.sheet = .details(taskID: task.id) }
         }
         .contextMenu {
             Button("Complete", systemImage: "checkmark.circle") { actions.complete(task) }
+            if task.event == nil {
+                Menu("Postpone", systemImage: "calendar.badge.clock") {
+                    ForEach(Format.postponeOptions(task.due, today), id: \.date) { option in
+                        Button(option.label) { actions.postpone(task, to: option.date) }
+                    }
+                }
+            }
             Button("Delete", systemImage: "trash", role: .destructive) { actions.delete(task) }
         }
     }
@@ -83,7 +103,7 @@ struct TaskRow: View {
         if hasDetails {
             HStack(spacing: 10) {
                 if let event = task.event {
-                    Detail(systemImage: "calendar", text: Triggers.formatEvent(event))
+                    EventDetail(label: Triggers.eventLabel(event, today, in: store.timeZone), series: event.series)
                         .foregroundStyle(due.map { Format.dueTone($0, today).color } ?? .muted)
                 } else if let due, !(timeOnly && due.time == nil) {
                     Detail(
@@ -125,6 +145,21 @@ struct TaskRow: View {
             .foregroundStyle(.muted)
             .lineLimit(1)
         }
+    }
+}
+
+/// `15m after [repeat] [calendar] Standup (Tue, 3pm)`: the icons mark where the event's own name starts, and the repeat
+/// icon, as on a repeating task, marks a task that follows the series.
+private struct EventDetail: View {
+    let label: Triggers.EventLabel
+    let series: Bool
+
+    var body: some View {
+        let repeats = series ? Text("\(Image(systemName: "repeat")) ").foregroundStyle(.toneTomorrow) : Text("")
+        let when = label.when.map { " (\($0))" } ?? ""
+        Text("\(label.lead) \(repeats)\(Image(systemName: "calendar")) \(label.title)\(Text(when).foregroundStyle(.muted))")
+            .imageScale(.small)
+            .accessibilityLabel(series ? "\(label.lead) every \(label.title)\(when)" : "\(label.lead) \(label.title)\(when)")
     }
 }
 

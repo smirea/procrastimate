@@ -678,6 +678,154 @@
 				"Call mom"
 			],
 			"output": "Reminder: Call mom"
+		},
+		{
+			"fn": "postponeOptions",
+			"test": "postpone › offers tomorrow, the coming weekend, and next week, keeping only new days",
+			"input": [
+				{
+					"date": "2026-10-14",
+					"time": "09:00"
+				},
+				"2026-10-14"
+			],
+			"output": [
+				{
+					"date": "2026-10-15",
+					"label": "Tomorrow"
+				},
+				{
+					"date": "2026-10-17",
+					"label": "This weekend"
+				},
+				{
+					"date": "2026-10-19",
+					"label": "Next week"
+				}
+			]
+		},
+		{
+			"fn": "postponeOptions",
+			"test": "postpone › offers tomorrow, the coming weekend, and next week, keeping only new days",
+			"input": [
+				{
+					"date": "2026-10-15",
+					"time": null
+				},
+				"2026-10-14"
+			],
+			"output": [
+				{
+					"date": "2026-10-17",
+					"label": "This weekend"
+				},
+				{
+					"date": "2026-10-19",
+					"label": "Next week"
+				}
+			]
+		},
+		{
+			"fn": "postponeOptions",
+			"test": "postpone › an overdue or undated task can move to today",
+			"input": [
+				null,
+				"2026-10-14"
+			],
+			"output": [
+				{
+					"date": "2026-10-14",
+					"label": "Today"
+				},
+				{
+					"date": "2026-10-15",
+					"label": "Tomorrow"
+				},
+				{
+					"date": "2026-10-17",
+					"label": "This weekend"
+				},
+				{
+					"date": "2026-10-19",
+					"label": "Next week"
+				}
+			]
+		},
+		{
+			"fn": "postponeOptions",
+			"test": "postpone › an overdue or undated task can move to today",
+			"input": [
+				{
+					"date": "2026-10-01",
+					"time": null
+				},
+				"2026-10-14"
+			],
+			"output": [
+				{
+					"date": "2026-10-14",
+					"label": "Today"
+				},
+				{
+					"date": "2026-10-15",
+					"label": "Tomorrow"
+				},
+				{
+					"date": "2026-10-17",
+					"label": "This weekend"
+				},
+				{
+					"date": "2026-10-19",
+					"label": "Next week"
+				}
+			]
+		},
+		{
+			"fn": "postponeOptions",
+			"test": "postpone › on a Friday the weekend is tomorrow, and on a weekend it is the next one",
+			"input": [
+				null,
+				"2026-10-16"
+			],
+			"output": [
+				{
+					"date": "2026-10-16",
+					"label": "Today"
+				},
+				{
+					"date": "2026-10-17",
+					"label": "Tomorrow"
+				},
+				{
+					"date": "2026-10-19",
+					"label": "Next week"
+				}
+			]
+		},
+		{
+			"fn": "postponeOptions",
+			"test": "postpone › on a Friday the weekend is tomorrow, and on a weekend it is the next one",
+			"input": [
+				{
+					"date": "2026-10-17",
+					"time": null
+				},
+				"2026-10-17"
+			],
+			"output": [
+				{
+					"date": "2026-10-18",
+					"label": "Tomorrow"
+				},
+				{
+					"date": "2026-10-24",
+					"label": "Next weekend"
+				},
+				{
+					"date": "2026-10-19",
+					"label": "Next week"
+				}
+			]
 		}
 	]
 }

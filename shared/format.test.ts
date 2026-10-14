@@ -13,6 +13,7 @@ const formatMinutes = recorded('format', format.formatMinutes);
 const formatRecurrence = recorded('format', format.formatRecurrence);
 const formatReminder = recorded('format', format.formatReminder);
 const formatTime = recorded('format', format.formatTime);
+const postponeOptions = recorded('format', format.postponeOptions);
 const priorityLabel = recorded('format', format.priorityLabel);
 const relativeDay = recorded('format', format.relativeDay);
 const reminderToast = recorded('format', format.reminderToast);
@@ -155,5 +156,37 @@ describe('labels and toasts', () => {
 
 	test('a reminder toast names the task', () => {
 		expect(reminderToast('Call mom')).toBe('Reminder: Call mom');
+	});
+});
+
+describe('postpone', () => {
+	test('offers tomorrow, the coming weekend, and next week, keeping only new days', () => {
+		expect(postponeOptions({ date: today, time: '09:00' }, today)).toEqual([
+			{ label: 'Tomorrow', date: '2026-10-15' },
+			{ label: 'This weekend', date: '2026-10-17' },
+			{ label: 'Next week', date: '2026-10-19' },
+		]);
+		expect(postponeOptions({ date: '2026-10-15', time: null }, today).map(o => o.label)).toEqual([
+			'This weekend',
+			'Next week',
+		]);
+	});
+
+	test('an overdue or undated task can move to today', () => {
+		expect(postponeOptions(null, today)[0]).toEqual({ label: 'Today', date: today });
+		expect(postponeOptions({ date: '2026-10-01', time: null }, today)[0]).toEqual({ label: 'Today', date: today });
+	});
+
+	test('on a Friday the weekend is tomorrow, and on a weekend it is the next one', () => {
+		expect(postponeOptions(null, '2026-10-16')).toEqual([
+			{ label: 'Today', date: '2026-10-16' },
+			{ label: 'Tomorrow', date: '2026-10-17' },
+			{ label: 'Next week', date: '2026-10-19' },
+		]);
+		expect(postponeOptions({ date: '2026-10-17', time: null }, '2026-10-17')).toEqual([
+			{ label: 'Tomorrow', date: '2026-10-18' },
+			{ label: 'Next weekend', date: '2026-10-24' },
+			{ label: 'Next week', date: '2026-10-19' },
+		]);
 	});
 });

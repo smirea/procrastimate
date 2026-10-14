@@ -10,6 +10,7 @@ public typealias EventOccurrence = API.EventOccurrence
 public enum Triggers {
     public typealias PlaceGroup = API.PlaceGroup
     public typealias EventGroup = API.EventGroup
+    public typealias EventLabel = API.EventLabel
 
     /// The moment the task's edge names on one occurrence, in epoch milliseconds.
     public static func eventAnchor(_ event: TaskEvent, _ occurrence: EventOccurrence) -> Int {
@@ -30,11 +31,16 @@ public enum Triggers {
 
     /// An occurrence's moment as a due date, without a time for an all-day event.
     public static func occurrenceDue(_ event: TaskEvent, _ occurrence: EventOccurrence, in zone: TimeZone) -> Due {
-        let at = Date(epochMilliseconds: eventAnchor(event, occurrence))
-        guard !event.allDay else { return Due(date: Dates.toDateKey(at, in: zone), time: nil) }
+        let at = eventAnchor(event, occurrence)
+        let date = Dates.toDateKey(Date(epochMilliseconds: at), in: zone)
+        return Due(date: date, time: event.allDay ? nil : wallTime(at, in: zone))
+    }
+
+    static func wallTime(_ epochMilliseconds: Int, in zone: TimeZone) -> TimeOfDay {
+        let at = Date(epochMilliseconds: epochMilliseconds)
         let local = Int((at.timeIntervalSince1970 + Double(zone.secondsFromGMT(for: at))).rounded(.down))
         let minutes = ((local % 86400 + 86400) % 86400) / 60
-        return Due(date: Dates.toDateKey(at, in: zone), time: Dates.toTimeOfDay(hours: minutes / 60, minutes: minutes % 60))
+        return Dates.toTimeOfDay(hours: minutes / 60, minutes: minutes % 60)
     }
 
     /// The day and time a task sits on in lists. A repeat with a place skips missed occurrences instead of going overdue.
@@ -79,6 +85,29 @@ public enum Triggers {
         case .after:
             event.minutes > 0 ? "\(Format.formatMinutes(event.minutes)) after \(event.title)" : "After \(event.title)"
         }
+    }
+
+    /// A row's event line in parts, so icons can sit before the title: `15m after`, `Standup`, `Tue, 3pm`. `when`
+    /// holds only what today leaves ambiguous.
+    public static func eventLabel(_ event: TaskEvent, _ today: DateKey, in zone: TimeZone) -> EventLabel {
+        let lead = switch event.edge {
+        case .before: event.minutes > 0 ? "\(Format.formatMinutes(event.minutes)) before" : "Start of"
+        case .start: "Start of"
+        case .during: "During"
+        case .after: event.minutes > 0 ? "\(Format.formatMinutes(event.minutes)) after" : "After"
+        }
+        let start = currentOccurrence(event, today, in: zone).start
+        let date = Dates.toDateKey(Date(epochMilliseconds: start), in: zone)
+        let day: String? = if date == today {
+            nil
+        } else if date > today, date < Dates.addDays(today, 7) {
+            Format.weekdayNames[Dates.weekdayOf(date)]
+        } else {
+            Format.shortDate(date, today)
+        }
+        let time = event.allDay ? nil : Format.formatTime(wallTime(start, in: zone))
+        let when = [day, time].compactMap { $0 }.joined(separator: ", ")
+        return EventLabel(lead: lead, title: event.title, when: when.isEmpty ? nil : when)
     }
 
     public static func formatLocation(_ location: TaskLocation) -> String {

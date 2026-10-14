@@ -1,14 +1,13 @@
 import Core
 import SwiftUI
 
-struct SearchScreen: View {
+/// Search results under Browse's search field. Arrow keys on a hardware keyboard move the selection and Return opens it.
+struct SearchResults: View {
     @Environment(Store.self) private var store
     @Environment(Navigator.self) private var navigator
-    @Environment(IntentRouter.self) private var router
 
-    @State private var query = ""
+    let query: String
     @State private var active = 0
-    @FocusState private var focused: Bool
 
     var body: some View {
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -37,45 +36,18 @@ struct SearchScreen: View {
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
-        .background(.canvas)
         .scrollDismissesKeyboard(.immediately)
         .animation(.snappy(duration: 0.18), value: rows.map(\.id))
         .overlay {
-            if trimmed.isEmpty {
-                ContentUnavailableView(
-                    "Search",
-                    systemImage: "magnifyingglass",
-                    description: Text("Find tasks, notes, projects, and labels.")
-                )
-            } else if rows.isEmpty {
+            if rows.isEmpty {
                 ContentUnavailableView("No results for “\(trimmed)”", systemImage: "magnifyingglass")
             }
         }
-        .navigationTitle("Search")
-        .searchable(text: $query, prompt: "Search tasks, notes, projects, and labels")
-        .searchFocused($focused)
-        .autocorrectionDisabled()
-        .textInputAutocapitalization(.never)
         .onSubmit(of: .search) { open(rows.indices.contains(active) ? rows[active] : nil) }
         .onChange(of: query) { active = 0 }
         .onKeyPress(.downArrow) { move(1, in: rows) }
         .onKeyPress(.upArrow) { move(-1, in: rows) }
         .sensoryFeedback(.selection, trigger: active)
-        // The search tab can be built before it is shown, so focus follows the selected tab instead of `onAppear`,
-        // which would pull the keyboard away from quick add.
-        .onAppear {
-            applyRoutedQuery()
-            if navigator.tab == .search { focused = true }
-        }
-        .onChange(of: navigator.tab) { focused = navigator.tab == .search }
-        .onChange(of: router.searchQuery) { applyRoutedQuery() }
-    }
-
-    private func applyRoutedQuery() {
-        guard let routed = router.searchQuery else { return }
-        router.searchQuery = nil
-        if query != routed { query = routed }
-        if navigator.tab == .search { focused = true }
     }
 
     private func move(_ step: Int, in rows: [SearchSections.Row]) -> KeyPress.Result {
@@ -93,10 +65,9 @@ struct SearchScreen: View {
         }
     }
 
-    /// Results open on the search tab's own stack, so Back returns to the results.
+    /// Results open on Browse's stack, so Back returns to the results.
     private func push(_ route: Route) {
         navigator.sheet = nil
-        navigator.tab = .search
-        navigator.paths[.search, default: []].append(route)
+        navigator.paths[.browse, default: []].append(route)
     }
 }

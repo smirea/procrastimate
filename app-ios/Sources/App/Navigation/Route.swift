@@ -1,9 +1,8 @@
 enum AppTab: Hashable {
     case inbox
-    case today
-    case upcoming
     case browse
-    case search
+    /// Not a screen: selecting it opens quick add and leaves the current tab selected.
+    case add
 }
 
 enum Route: Hashable {

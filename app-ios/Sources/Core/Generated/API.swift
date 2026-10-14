@@ -721,6 +721,38 @@ extension API {
         }
     }
 
+    public struct EventLabel: Codable, Hashable, Sendable {
+        public var lead: String
+        public var title: String
+        public var when: String?
+
+        public init(lead: String, title: String, when: String? = nil) {
+            self.lead = lead
+            self.title = title
+            self.when = when
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case lead = "lead"
+            case title = "title"
+            case when = "when"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            lead = try container.decode(String.self, forKey: .lead)
+            title = try container.decode(String.self, forKey: .title)
+            when = try container.decode(String?.self, forKey: .when)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.lead, forKey: .lead)
+            try container.encode(self.title, forKey: .title)
+            try container.encode(self.when, forKey: .when)
+        }
+    }
+
     public struct EventOccurrence: Codable, Hashable, Sendable {
         public var start: Int
         public var end: Int
@@ -1386,6 +1418,39 @@ extension API {
             try container.encode(self.key, forKey: .key)
             try container.encode(self.name, forKey: .name)
             try container.encode(self.count, forKey: .count)
+        }
+    }
+
+    public struct PostponeOption: Codable, Hashable, Sendable {
+        public var label: String
+        public var date: DateKey
+
+        public init(label: String, date: DateKey) {
+            self.label = label
+            self.date = date
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case label = "label"
+            case date = "date"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            label = try container.decode(String.self, forKey: .label)
+            date = try container.decode(DateKey.self, forKey: .date)
+            if decoder.validates {
+                do {
+                    let value = self.date
+                    try check(value.range(of: #"^[0-9]{4}-[0-9]{2}-[0-9]{2}\z"#, options: .regularExpression) != nil, .date, in: container, "date matching ^\\d{4}-\\d{2}-\\d{2}$")
+                }
+            }
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.label, forKey: .label)
+            try container.encode(self.date, forKey: .date)
         }
     }
 

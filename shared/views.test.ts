@@ -56,18 +56,8 @@ const tasks = [
 const ids = (list: readonly Task[]) => list.map(t => t.id);
 
 describe('task views', () => {
-	test('Inbox lists open top-level tasks without a project, by date, then priority, then creation', () => {
-		expect(ids(inboxTasks(tasks))).toEqual([
-			'long overdue',
-			'overdue',
-			'today 9am urgent',
-			'today 9am',
-			'today 5pm',
-			'today, no time',
-			'tomorrow 8am',
-			'urgent, no date',
-			'no date',
-		]);
+	test('Inbox lists open top-level tasks without a project or a day, by priority, then creation', () => {
+		expect(ids(inboxTasks(tasks, today))).toEqual(['urgent, no date', 'no date']);
 	});
 
 	test('a project lists its open top-level tasks', () => {
@@ -94,7 +84,7 @@ describe('task views', () => {
 	});
 
 	test('empty lists stay empty', () => {
-		expect(inboxTasks([])).toEqual([]);
+		expect(inboxTasks([], today)).toEqual([]);
 		expect(todayTasks([], today)).toEqual({ overdue: [], today: [] });
 		expect(upcomingGroups([], today)).toEqual([]);
 	});

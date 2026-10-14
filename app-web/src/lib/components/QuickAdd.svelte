@@ -154,6 +154,7 @@
 				session = null;
 				if (reason === 'denied') notice = message ?? 'The microphone is off. You can type the ramble instead.';
 				else if (reason === 'limit' || reason === 'unavailable') notice = message ?? 'Ramble needs a connection';
+				else if (reason === 'error' || reason === 'unsupported') notice = 'Dictation stopped. You can type the task instead.';
 				else notice = '';
 				if (applyOnStop) applyTranscript();
 			},

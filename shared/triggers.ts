@@ -1,6 +1,7 @@
 import { z } from 'zod';
-import { formatMinutes } from './format.ts';
+import { WEEKDAY_NAMES, formatMinutes, formatTime, shortDate } from './format.ts';
 import {
+	addDays,
 	notificationTimes,
 	reminderFiresAt,
 	stepRecurrence,
@@ -8,6 +9,7 @@ import {
 	type DateKey,
 	type Due,
 	type Task,
+	weekdayOf,
 } from './task.ts';
 import type { EventOccurrence, TaskEvent, TaskLocation } from './values.ts';
 import { zonedDateKey } from './zoned-time.ts';
@@ -124,6 +126,46 @@ export function formatEvent(event: TaskEvent): string {
 			return never;
 		}
 	}
+}
+
+export const eventLabelSchema = z
+	.object({ lead: z.string(), title: z.string(), when: z.string().nullable() })
+	.meta({ id: 'EventLabel' });
+export type EventLabel = z.infer<typeof eventLabelSchema>;
+
+/**
+ * A row's event line in three parts, so icons can sit before the title: `15m after` `Standup` `Tue, 3pm`. A task
+ * that follows a series shows the repeat icon there too. `when` is the occurrence's start with only what today
+ * leaves ambiguous: no day for today, a weekday within the week ahead, else the date, and no time all day.
+ */
+export function eventLabel(event: TaskEvent, today: DateKey, zone?: string): EventLabel {
+	const lead = (() => {
+		switch (event.edge) {
+			case 'before':
+				return event.minutes ? `${formatMinutes(event.minutes)} before` : 'Start of';
+			case 'start':
+				return 'Start of';
+			case 'during':
+				return 'During';
+			case 'after':
+				return event.minutes ? `${formatMinutes(event.minutes)} after` : 'After';
+			default: {
+				const never: never = event.edge;
+				return never;
+			}
+		}
+	})();
+	const { start } = currentOccurrence(event, today, zone);
+	const date = zonedDateKey(start, zone);
+	const day =
+		date === today
+			? null
+			: date > today && date < addDays(today, 7)
+				? WEEKDAY_NAMES[weekdayOf(date)]!
+				: shortDate(date, today);
+	const time = event.allDay ? null : formatTime(wallTime(start, zone));
+	const when = [day, time].filter(part => part !== null).join(', ');
+	return { lead, title: event.title, when: when || null };
 }
 
 /** `Arriving at Rewe`, `Leaving Rewe`, `While at Rewe`. */

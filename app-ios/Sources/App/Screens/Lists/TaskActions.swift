@@ -36,4 +36,16 @@ final class TaskActions {
             action: .init(label: "Undo") { [store] in withAnimation(.snappy) { store.undeleteTasks(removed) } }
         )
     }
+
+    /// Keeps the time of day, and leaves the repeat to count from the new date.
+    func postpone(_ task: TaskItem, to date: DateKey) {
+        let previous = task.due
+        withAnimation(.snappy) { store.updateTask(task.id, TaskPatch(due: .some(Due(date: date, time: task.due?.time)))) }
+        toasts.show(
+            "Moved “\(task.title)” to \(Format.formatDate(date, clock.today))",
+            action: .init(label: "Undo") { [store] in
+                withAnimation(.snappy) { store.updateTask(task.id, TaskPatch(due: .some(previous))) }
+            }
+        )
+    }
 }

@@ -1,8 +1,47 @@
 import Core
 import SwiftUI
 
-/// Places and calendar events show while open tasks use them.
+/// Search at the top, then projects, places, events, and labels. Places and calendar events show while open tasks use
+/// them. Typing a query swaps the list for search results.
 struct BrowseScreen: View {
+    @Environment(Navigator.self) private var navigator
+    @Environment(IntentRouter.self) private var router
+
+    @State private var query = ""
+    @FocusState private var searchFocused: Bool
+
+    var body: some View {
+        Group {
+            if query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                BrowseList()
+            } else {
+                SearchResults(query: query)
+            }
+        }
+        .background(.canvas)
+        .navigationTitle("Browse")
+        .navigationBarTitleDisplayMode(.inline)
+        .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search")
+        .searchFocused($searchFocused)
+        .autocorrectionDisabled()
+        .textInputAutocapitalization(.never)
+        .onAppear { applyRoutedQuery() }
+        .onChange(of: router.searchQuery) { applyRoutedQuery() }
+        .onChange(of: navigator.focusSearch, initial: true) {
+            guard navigator.focusSearch else { return }
+            navigator.focusSearch = false
+            searchFocused = true
+        }
+    }
+
+    private func applyRoutedQuery() {
+        guard let routed = router.searchQuery else { return }
+        router.searchQuery = nil
+        query = routed
+    }
+}
+
+private struct BrowseList: View {
     @Environment(Navigator.self) private var navigator
     @Environment(Store.self) private var store
     @Environment(\.today) private var today
@@ -100,8 +139,6 @@ struct BrowseScreen: View {
             }
         }
         .scrollContentBackground(.hidden)
-        .background(.canvas)
-        .navigationTitle("Browse")
         .animation(.snappy, value: store.projects)
         .animation(.snappy, value: labels)
         .onChange(of: nameFocused) {

@@ -59,8 +59,28 @@ export function listenRamble(options: {
 }): RambleListen {
 	const plan = voiceCapture(options.choice, options.online, speechRecognitionConstructor() !== null);
 	if (plan.capture === 'typed') return { typed: true, stop() {} };
-	if (plan.capture === 'speech') return speech(options);
+	if (plan.capture === 'speech') return options.online ? speechThenSocket(options) : speech(options);
 	return socket(options);
+}
+
+/**
+ * Brave and some Chromium builds expose SpeechRecognition but fail at once with a network error, which stopped the mic
+ * the moment it was tapped. A native session that fails before hearing anything moves to the ramble socket instead.
+ */
+function speechThenSocket(options: Parameters<typeof socket>[0]): RambleListen {
+	let heard = false;
+	let fallback: RambleListen | null = null;
+	const native = speech({
+		onText: (text, partialStart) => {
+			heard = true;
+			options.onText(text, partialStart);
+		},
+		onStop: (reason, message) => {
+			if (!heard && !fallback && (reason === 'error' || reason === 'unsupported')) fallback = socket(options);
+			else options.onStop(reason, message);
+		},
+	});
+	return { typed: false, stop: () => (fallback ?? native).stop() };
 }
 
 function speech(options: {

@@ -4,7 +4,7 @@
 	"cases": [
 		{
 			"fn": "inboxTasks",
-			"test": "task views › Inbox lists open top-level tasks without a project, by date, then priority, then creation",
+			"test": "task views › Inbox lists open top-level tasks without a project or a day, by priority, then creation",
 			"input": [
 				[
 					{
@@ -323,153 +323,10 @@
 						"reminders": [],
 						"title": "inbox subtask"
 					}
-				]
+				],
+				"2026-10-14"
 			],
 			"output": [
-				{
-					"completedAt": null,
-					"createdAt": 8,
-					"due": {
-						"date": "2026-09-30",
-						"time": "08:00"
-					},
-					"event": null,
-					"id": "long overdue",
-					"labelIds": [],
-					"location": null,
-					"notes": "",
-					"order": 0,
-					"parentId": null,
-					"priority": 4,
-					"projectId": null,
-					"recurrence": null,
-					"reminders": [],
-					"title": "long overdue"
-				},
-				{
-					"completedAt": null,
-					"createdAt": 7,
-					"due": {
-						"date": "2026-10-12",
-						"time": null
-					},
-					"event": null,
-					"id": "overdue",
-					"labelIds": [
-						"calls"
-					],
-					"location": null,
-					"notes": "",
-					"order": 0,
-					"parentId": null,
-					"priority": 4,
-					"projectId": null,
-					"recurrence": null,
-					"reminders": [],
-					"title": "overdue"
-				},
-				{
-					"completedAt": null,
-					"createdAt": 6,
-					"due": {
-						"date": "2026-10-14",
-						"time": "09:00"
-					},
-					"event": null,
-					"id": "today 9am urgent",
-					"labelIds": [],
-					"location": null,
-					"notes": "",
-					"order": 0,
-					"parentId": null,
-					"priority": 1,
-					"projectId": null,
-					"recurrence": null,
-					"reminders": [],
-					"title": "today 9am urgent"
-				},
-				{
-					"completedAt": null,
-					"createdAt": 5,
-					"due": {
-						"date": "2026-10-14",
-						"time": "09:00"
-					},
-					"event": null,
-					"id": "today 9am",
-					"labelIds": [],
-					"location": null,
-					"notes": "",
-					"order": 0,
-					"parentId": null,
-					"priority": 3,
-					"projectId": null,
-					"recurrence": null,
-					"reminders": [],
-					"title": "today 9am"
-				},
-				{
-					"completedAt": null,
-					"createdAt": 3,
-					"due": {
-						"date": "2026-10-14",
-						"time": "17:00"
-					},
-					"event": null,
-					"id": "today 5pm",
-					"labelIds": [
-						"calls"
-					],
-					"location": null,
-					"notes": "",
-					"order": 0,
-					"parentId": null,
-					"priority": 4,
-					"projectId": null,
-					"recurrence": null,
-					"reminders": [],
-					"title": "today 5pm"
-				},
-				{
-					"completedAt": null,
-					"createdAt": 4,
-					"due": {
-						"date": "2026-10-14",
-						"time": null
-					},
-					"event": null,
-					"id": "today, no time",
-					"labelIds": [],
-					"location": null,
-					"notes": "",
-					"order": 0,
-					"parentId": null,
-					"priority": 4,
-					"projectId": null,
-					"recurrence": null,
-					"reminders": [],
-					"title": "today, no time"
-				},
-				{
-					"completedAt": null,
-					"createdAt": 11,
-					"due": {
-						"date": "2026-10-15",
-						"time": "08:00"
-					},
-					"event": null,
-					"id": "tomorrow 8am",
-					"labelIds": [],
-					"location": null,
-					"notes": "",
-					"order": 0,
-					"parentId": null,
-					"priority": 4,
-					"projectId": null,
-					"recurrence": null,
-					"reminders": [],
-					"title": "tomorrow 8am"
-				},
 				{
 					"completedAt": null,
 					"createdAt": 2,
@@ -2538,7 +2395,8 @@
 			"fn": "inboxTasks",
 			"test": "task views › empty lists stay empty",
 			"input": [
-				[]
+				[],
+				"2026-10-14"
 			],
 			"output": []
 		},

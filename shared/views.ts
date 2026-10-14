@@ -32,9 +32,10 @@ const open = (tasks: readonly Task[]) => tasks.filter(t => t.completedAt === nul
 /** Inbox and projects list top-level tasks, and a subtask shows as progress on its parent. Dated views list subtasks too. */
 const topLevel = (tasks: readonly Task[]) => open(tasks).filter(t => t.parentId === null);
 
-export function inboxTasks(tasks: readonly Task[]) {
+/** Inbox tasks with no day. The Inbox view lists dated tasks from every project under their day instead. */
+export function inboxTasks(tasks: readonly Task[], today: DateKey) {
 	return topLevel(tasks)
-		.filter(t => t.projectId === null)
+		.filter(t => t.projectId === null && scheduledDue(t, today) === null)
 		.toSorted((a, b) => compareTasks(a, b));
 }
 

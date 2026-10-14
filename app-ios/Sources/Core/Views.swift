@@ -36,8 +36,10 @@ public enum Views {
     /// subtasks too.
     static func topLevel(_ tasks: [TaskItem]) -> [TaskItem] { open(tasks).filter { $0.parentId == nil } }
 
-    public static func inboxTasks(_ tasks: [TaskItem], in zone: TimeZone) -> [TaskItem] {
-        topLevel(tasks).filter { $0.projectId == nil }.stableSorted(by: compare(today: nil, in: zone))
+    /// Inbox tasks with no day. The Inbox view lists dated tasks from every project under their day instead.
+    public static func inboxTasks(_ tasks: [TaskItem], _ today: DateKey, in zone: TimeZone) -> [TaskItem] {
+        topLevel(tasks).filter { $0.projectId == nil && Triggers.scheduledDue($0, today, in: zone) == nil }
+            .stableSorted(by: compare(today: nil, in: zone))
     }
 
     public static func projectTasks(_ tasks: [TaskItem], _ projectId: String, in zone: TimeZone) -> [TaskItem] {

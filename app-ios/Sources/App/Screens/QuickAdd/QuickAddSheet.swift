@@ -90,6 +90,8 @@ private struct QuickAddForm: View {
                 .glassEffect(.regular, in: UnevenRoundedRectangle(topLeadingRadius: 32, topTrailingRadius: 32, style: .continuous))
                 .ignoresSafeArea(.container, edges: .bottom)
         }
+        // A tap between controls, or just beside the plain mic glyph, would otherwise reach the scrim and close the card.
+        .contentShape(.rect)
         .sensoryFeedback(.selection, trigger: draft.picked)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("Quick add")
@@ -116,6 +118,7 @@ private struct QuickAddForm: View {
         } label: {
             Image(systemName: listening ? "stop.fill" : "mic.fill")
                 .frame(width: 36, height: 36)
+                .contentShape(.rect)
         }
         .buttonStyle(.plain)
         .foregroundStyle(.muted)

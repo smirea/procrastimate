@@ -17,25 +17,27 @@ struct RootView: View {
     }
 
     private var signedIn: some View {
-        @Bindable var navigator = navigator
         let today = Views.todayTasks(store.tasks, todayKey, in: store.timeZone)
-        return TabView(selection: $navigator.tab) {
+        return TabView(selection: Binding(
+            get: { navigator.tab },
+            set: { tab in
+                if tab == .add {
+                    navigator.sheet = .quickAdd(navigator.listDefaults)
+                } else {
+                    navigator.tab = tab
+                }
+            }
+        )) {
             Tab("Inbox", systemImage: "tray", value: .inbox) {
                 TabStack(tab: .inbox) { InboxScreen() }
             }
-            .badge(Views.inboxTasks(store.tasks, in: store.timeZone).count)
-            Tab("Today", systemImage: "sun.max", value: .today) {
-                TabStack(tab: .today) { TodayScreen() }
-            }
             .badge(today.overdue.count + today.today.count)
-            Tab("Upcoming", systemImage: "calendar", value: .upcoming) {
-                TabStack(tab: .upcoming) { UpcomingScreen() }
-            }
             Tab("Browse", systemImage: "square.grid.2x2", value: .browse) {
                 TabStack(tab: .browse) { BrowseScreen() }
             }
-            Tab(value: .search, role: .search) {
-                TabStack(tab: .search) { SearchScreen() }
+            // The search role puts the button in the separate circle at the trailing end of the tab bar.
+            Tab("Add task", systemImage: "plus", value: .add, role: .search) {
+                Color.clear
             }
         }
         .tabViewStyle(.sidebarAdaptable)
@@ -105,7 +107,6 @@ private struct SheetView: View {
         switch sheet {
         case let .quickAdd(defaults): QuickAddSheet(defaults: defaults)
         case let .details(taskID): TaskDetailsSheet(taskID: taskID)
-        case .search: NavigationStack { SearchScreen() }
         case .settings: SettingsSheet()
         }
     }
