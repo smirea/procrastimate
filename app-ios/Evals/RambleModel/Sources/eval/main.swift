@@ -49,8 +49,9 @@ struct Out: CustomStringConvertible {
     }
 }
 
+let articles: Set<String> = ["a", "an", "the", "some"]
 func words(_ s: String) -> [String] {
-    s.lowercased().split(whereSeparator: { !$0.isLetter && !$0.isNumber && $0 != "'" }).map(String.init)
+    s.lowercased().split(whereSeparator: { !$0.isLetter && !$0.isNumber && $0 != "'" }).map(String.init).filter { !articles.contains($0) }
 }
 func same(_ a: String, _ b: String) -> Bool {
     let x = Set(words(a)), y = Set(words(b))
@@ -128,15 +129,33 @@ func fieldsOf(_ text: String) -> RambleTask {
     return first
 }
 
+struct Unbacked: Error {}
+
+func backed(_ piece: String, by transcript: String) -> Bool {
+    let said = Set(words(transcript)), piece = words(piece)
+    return !piece.isEmpty && Double(piece.filter(said.contains).count) / Double(piece.count) >= 0.8
+}
+
+// The model decides the structure; the grammar reads each piece's fields. Every piece must come from the transcript,
+// a subtask that only repeats its task's own words is dropped, and a lone subtask is not a list.
+func assemble(_ tasks: [(text: String, subtasks: [String])], _ transcript: String) throws -> [RambleTask] {
+    for t in tasks where !backed(t.text, by: transcript) || !t.subtasks.allSatisfy({ backed($0, by: transcript) }) { throw Unbacked() }
+    return tasks.flatMap { t -> [RambleTask] in
+        let own = Set(words(t.text))
+        let subtasks = t.subtasks.filter { !Set(words($0)).isSubset(of: own) }.map { fieldsOf($0) }.filter { !$0.title.isEmpty }
+        // Without a list, the grammar's own split of the text wins: the model often runs two errands together.
+        guard subtasks.count >= 2 else { return grammar(t.text) }
+        var task = fieldsOf(t.text)
+        guard !task.title.isEmpty else { return [] }
+        task.subtasks = subtasks
+        return [task]
+    }
+}
+
 func split(_ text: String) async throws -> [RambleTask] {
     let session = LanguageModelSession(model: model, instructions: splitInstructions)
     let r = try await session.respond(to: "Ramble: \(text)", generating: Split.self, options: GenerationOptions(samplingMode: .greedy))
-    return r.content.tasks.compactMap { t in
-        var task = fieldsOf(t.text)
-        guard !task.title.isEmpty else { return nil }
-        task.subtasks = t.subtasks.map { fieldsOf($0) }.filter { !$0.title.isEmpty }
-        return task
-    }
+    return try assemble(r.content.tasks.map { ($0.text, $0.subtasks) }, text)
 }
 
 typealias Strategy = @Sendable (String) async throws -> [RambleTask]
