@@ -46,5 +46,5 @@ function parse(text: string | undefined): PushMessage {
 			};
 		}
 	} catch {}
-	return { title: 'Procrastimate', body: 'A task is due', tag: '', taskId: null };
+	return { title: 'ProcrastiMate', body: 'A task is due', tag: '', taskId: null };
 }

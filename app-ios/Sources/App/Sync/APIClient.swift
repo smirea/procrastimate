@@ -3,7 +3,7 @@ import Foundation
 
 enum APIFailure: Error {
     case status(Int, APIError?)
-    case unreachable
+    case unreachable(any Error)
 }
 
 enum APIClient {
@@ -29,9 +29,9 @@ enum APIClient {
         do {
             (data, response) = try await URLSession.shared.data(for: request)
         } catch {
-            throw APIFailure.unreachable
+            throw APIFailure.unreachable(error)
         }
-        guard let http = response as? HTTPURLResponse else { throw APIFailure.unreachable }
+        guard let http = response as? HTTPURLResponse else { throw APIFailure.unreachable(URLError(.badServerResponse)) }
         guard (200 ..< 300).contains(http.statusCode) else {
             throw APIFailure.status(http.statusCode, try? JSONDecoder().decode(APIError.self, from: data))
         }

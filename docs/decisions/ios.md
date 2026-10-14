@@ -20,6 +20,8 @@
 - **API types are generated, not imported.** `Sources/Core/Generated/API.swift` comes from the server's contract through `bun run generate`, so the HTTP calls are typed without Apple's OpenAPI generator and its runtime packages. See [API and database types](api.md).
 - **Dependencies stay at zero.** Unzipping uses a small in-house zip reader on top of Apple's `Compression` framework (raw DEFLATE), mirroring the web's 30-line CSV reader. ZIPFoundation is the fallback if Todoist zips use features the reader does not handle. `Compression` does not exist on Linux, so the zip reader lives in `App`. `Core` takes the extracted files, like the TS `readTodoistBackup(files)` after the web unzips with `fflate`, which keeps `Core` building and testing on Linux.
 
+- **Errors the user sees are `ErrorReport`s.** An `ErrorReport` holds the short `message` the UI shows and a `detail` (request, status, response body, or the underlying error). Creating one logs it to the unified log under the bundle id with category `errors`, so Xcode's console and Console.app show it (`log stream --predicate 'category == "errors"'` on a simulator). `ErrorText` shows the message, and DEBUG builds also show the detail, selectable, under it. Release logs the detail as private.
+
 ## UI mapping
 
 - **Navigation.** A `TabView` with Inbox, No date, and Browse, opening on Inbox like the web. The accent `+` sits in the separate trailing circle and opens quick add. Browse has the search field at the top, then projects and labels with their open counts, then Notifications and Settings, like the web sidebar. Inbox shows its overdue and today count as its tab badge. The tab bar minimizes on scroll. This maps to the web drawer's contents with native chrome.

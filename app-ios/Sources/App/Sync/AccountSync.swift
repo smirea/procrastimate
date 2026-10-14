@@ -70,8 +70,10 @@ final class AccountSync {
     func deleteAccount() async {
         stop()
         guard let token = SessionToken.read() else { return }
-        guard (try? await APIClient.send(API.Endpoints.AccountDelete.self, NoInput(), token: token)) != nil else {
-            session.error = "Could not delete the account"
+        do {
+            _ = try await APIClient.send(API.Endpoints.AccountDelete.self, NoInput(), token: token)
+        } catch {
+            session.error = ErrorReport("Could not delete the account", error: error)
             start()
             return
         }

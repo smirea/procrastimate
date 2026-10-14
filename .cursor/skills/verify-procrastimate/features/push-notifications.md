@@ -1,6 +1,6 @@
 # Push notifications
 
-Stefan gets a system notification at each task's due time and at each reminder, even when Procrastimate is closed, for tasks changed on any device. The server computes the times from the synced tasks. The app asks for permission on first load (web) and first launch (iOS). If the browser still needs a gesture, the first click or keypress asks, with no prompt copy. Settings has one line: `Notifications: On`, `Notifications: Off`, or `Notifications need permission`. The last one is tappable: the web asks again, and iOS opens system Settings. Tapping a notification opens its task. A date with no time never notifies, and a moment notifies once even when a reminder lands on the due time. A reminder toast while the app is open stays.
+Stefan gets a system notification at each task's due time and at each reminder, even when ProcrastiMate is closed, for tasks changed on any device. The server computes the times from the synced tasks. The app asks for permission on first load (web) and first launch (iOS). If the browser still needs a gesture, the first click or keypress asks, with no prompt copy. Settings has one line: `Notifications: On`, `Notifications: Off`, or `Notifications need permission`. The last one is tappable: the web asks again, and iOS opens system Settings. Tapping a notification opens its task. A date with no time never notifies, and a moment notifies once even when a reminder lands on the due time. A reminder toast while the app is open stays.
 
 ## Sub-features
 

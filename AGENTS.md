@@ -16,7 +16,7 @@ Full rules in [`docs/decisions/workflow.md`](docs/decisions/workflow.md).
 
 # Product
 
-- Procrastimate is Stefan's personal task manager, a rough Todoist clone that will grow. One user. Web and iOS now, Apple Watch later.
+- ProcrastiMate is Stefan's personal task manager, a rough Todoist clone that will grow. One user. Web and iOS now, Apple Watch later.
 - Local first and synced, extremely snappy, with subtle, satisfying animations. Never keep backwards compatibility.
 - `.cursor/skills/verify-procrastimate/features/` maps every user-facing feature. Read it before you build a feature, and update it in the same change.
 

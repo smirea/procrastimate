@@ -13,7 +13,7 @@ Ramble lets Stefan talk into quick add. After Add, the textbox shows a mic on it
 ## How to get to it (user POV)
 
 - Web and iOS: tap Add, then the mic inside the textbox.
-- iOS: "Start Ramble in Procrastinate" from Siri or Shortcuts opens quick add and starts the mic. The DEBUG launch word `PROCRASTIMATE_DEMO=ramble` does the same in the simulator.
+- iOS: "Start Ramble in ProcrastiMate" from Siri or Shortcuts opens quick add and starts the mic. The DEBUG launch word `PROCRASTIMATE_DEMO=ramble` does the same in the simulator.
 
 ## Driving it with control-ui and XCUITest
 

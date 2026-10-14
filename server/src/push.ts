@@ -35,7 +35,7 @@ export function pushSender(env: Env): SendPush {
 
 const TEST_MESSAGE = {
 	title: 'Notifications are on',
-	body: 'Procrastimate will notify you here when tasks are due.',
+	body: 'ProcrastiMate will notify you here when tasks are due.',
 	tag: 'test',
 	taskId: null,
 };

@@ -1,6 +1,6 @@
-# Procrastimate verification map
+# ProcrastiMate verification map
 
-This directory is the maintained source for verifying the user-facing behavior of Procrastimate. Procrastimate is Stefan's personal task manager, a rough Todoist clone with one user, a web client, an iOS client, and an Apple Watch client later. It is local first and synced, every interaction responds instantly, and motion is subtle but satisfying. Features change often, so update the map with the feature and never keep entries for removed behavior.
+This directory is the maintained source for verifying the user-facing behavior of ProcrastiMate. ProcrastiMate is Stefan's personal task manager, a rough Todoist clone with one user, a web client, an iOS client, and an Apple Watch client later. It is local first and synced, every interaction responds instantly, and motion is subtle but satisfying. Features change often, so update the map with the feature and never keep entries for removed behavior.
 
 The web client covers adding, viewing, editing, completing, subtasks, repeating, prioritizing, reminding, push notifications, labeling, searching, theming, settings, syncing between paired clients, and importing from Todoist. The steps below are how to drive each feature by hand. Automated proof is the parser and vector tests, plus the auth and sync smoke in `docs/decisions/testing.md`. Named Playwright and XCUITest commands in these files are retired. iOS, Ramble voice capture, completed-task history, and keyboard selection are still planned. A `Planned:` step describes the intended user path and the observable result, with no harness commands or stable handles. Replace it with exact commands when its feature and harness ship.
 

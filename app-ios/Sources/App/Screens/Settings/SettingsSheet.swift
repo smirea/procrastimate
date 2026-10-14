@@ -64,7 +64,7 @@ struct SettingsSheet: View {
                     Button("Sign out") { accountSync.signOut() }
                     Button("Delete account", role: .destructive) { confirmingAccount = true }
                     if let error = session.error {
-                        Text(error).foregroundStyle(.toneOverdue)
+                        ErrorText(report: error)
                     }
                 }
             }

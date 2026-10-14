@@ -12,8 +12,22 @@ struct SignInView: View {
     @State private var busy = false
 
     var body: some View {
+        VStack(spacing: 20) {
+            Image("Logo")
+                .resizable()
+                .frame(width: 160, height: 160)
+                .padding(.bottom, -12)
+                .accessibilityHidden(true)
+            form
+        }
+        .padding(24)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .task { await session.loadMethods() }
+    }
+
+    private var form: some View {
         VStack(spacing: 16) {
-            Text("Procrastinate")
+            Text("ProcrastiMate")
                 .font(.title2.weight(.semibold))
                 .frame(maxWidth: .infinity, alignment: .leading)
             if session.methods.email {
@@ -49,23 +63,21 @@ struct SignInView: View {
                               let tokenData = credential.identityToken,
                               let token = String(data: tokenData, encoding: .utf8) else { return }
                         Task { await finish { await session.signIn(provider: "apple", idToken: token) } }
-                    case .failure:
-                        break
+                    case let .failure(error):
+                        if (error as? ASAuthorizationError)?.code == .canceled { return }
+                        session.error = ErrorReport("Could not sign in with Apple", error: error)
                     }
                 }
                 .signInWithAppleButtonStyle(.black)
                 .frame(height: 44)
             }
             if let error = session.error {
-                Text(error).font(.footnote).foregroundStyle(.toneOverdue)
+                ErrorText(report: error).font(.footnote)
             }
         }
         .padding(24)
         .frame(maxWidth: 420)
         .glassEffect(.regular, in: .rect(cornerRadius: 28))
-        .padding(24)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .task { await session.loadMethods() }
     }
 
     private func submit() async {
@@ -83,7 +95,7 @@ struct SignInView: View {
             } catch is CancellationError {
                 return
             } catch {
-                session.error = "Could not sign in"
+                session.error = ErrorReport("Could not sign in with Google", error: error)
             }
         }
     }

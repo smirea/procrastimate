@@ -12,7 +12,7 @@
 	const tasks = $derived(eventTasks(store.tasks, id, clock.today));
 </script>
 
-<svelte:head><title>{event?.title ?? 'Event'} · Procrastimate</title></svelte:head>
+<svelte:head><title>{event?.title ?? 'Event'} · ProcrastiMate</title></svelte:head>
 
 <View title={event?.title ?? 'Event'} empty={tasks.length === 0} emptyTitle="Nothing left for this event" emptyHint="Link a task to a calendar event on iPhone." quickAdd={{ projectId: null, labelId: null, today: false }}>
 	<TaskList {tasks} showProject label={`Tasks for ${event?.title ?? 'this event'}`} />

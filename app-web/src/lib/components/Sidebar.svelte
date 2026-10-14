@@ -67,7 +67,7 @@
 <nav class="glass flex h-full flex-col rounded-panel p-3" aria-label="Main">
 	<div class="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto overscroll-contain">
 		<div class="flex items-center justify-between px-2 pt-1">
-			<span class="text-[15px] font-semibold tracking-tight">Procrastimate</span>
+			<span class="text-[15px] font-semibold tracking-tight">ProcrastiMate</span>
 		</div>
 
 		<div class="space-y-0.5">

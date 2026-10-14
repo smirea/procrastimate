@@ -18,9 +18,10 @@
 	}
 </script>
 
-<div class="grid min-h-dvh place-items-center px-4">
+<div class="flex min-h-dvh flex-col items-center justify-center gap-5 px-4">
+	<img src="/icons/logo.png" alt="" width="160" height="160" class="-mb-3 size-40" />
 	<form class="glass-strong flex w-full max-w-sm flex-col gap-3 rounded-3xl p-6" aria-label="Sign in" {onsubmit}>
-		<h1 class="text-[22px] font-semibold tracking-tight text-ink">Procrastinate</h1>
+		<h1 class="text-[22px] font-semibold tracking-tight text-ink">ProcrastiMate</h1>
 
 		{#if session.methods.email}
 			<label class="flex flex-col gap-1 text-[13px] text-muted">

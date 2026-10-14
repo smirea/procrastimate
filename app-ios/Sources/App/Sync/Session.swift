@@ -14,7 +14,7 @@ final class Session {
 
     private let store: Store
     var signedIn: Bool
-    var error: String?
+    var error: ErrorReport?
     var methods = API.AuthMethods.none
 
     init(store: Store) {
@@ -68,8 +68,12 @@ final class Session {
     }
 
     func loadMethods() async {
-        guard let methods = try? await APIClient.send(API.Endpoints.AuthMethods.self, NoInput(), token: nil) else { return }
-        self.methods = methods
+        do {
+            methods = try await APIClient.send(API.Endpoints.AuthMethods.self, NoInput(), token: nil)
+        } catch {
+            let report = ErrorReport("Could not reach the server", error: error)
+            if !signedIn { self.error = report }
+        }
     }
 
     func signIn(email: String, password: String) async {
@@ -77,7 +81,7 @@ final class Session {
     }
 
     func signUp(email: String, password: String) async {
-        let name = email.split(separator: "@").first.map(String.init) ?? "Procrastinate"
+        let name = email.split(separator: "@").first.map(String.init) ?? "ProcrastiMate"
         await submit(path: "api/auth/sign-up/email", body: ["email": email, "password": password, "name": name])
     }
 
@@ -99,19 +103,26 @@ final class Session {
         do {
             (data, response) = try await URLSession.shared.data(for: request)
         } catch {
-            self.error = "Could not sign in"
+            self.error = ErrorReport("Could not sign in", detail: "POST \(path): \(String(reflecting: error))")
             return
         }
-        guard let http = response as? HTTPURLResponse else { return }
+        let body = String(decoding: data, as: UTF8.self)
+        guard let http = response as? HTTPURLResponse else {
+            self.error = ErrorReport("Could not sign in", detail: "POST \(path): not an HTTP response")
+            return
+        }
         guard http.statusCode == 200,
               let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            self.error = http.statusCode == 401 ? "Wrong email or password" : "Could not sign in"
+            self.error = ErrorReport(
+                http.statusCode == 401 ? "Wrong email or password" : "Could not sign in",
+                detail: "POST \(path) → \(http.statusCode): \(body)"
+            )
             return
         }
         let header = http.value(forHTTPHeaderField: "set-auth-token")
         let token = header ?? object["token"] as? String
         guard let token, !token.isEmpty else {
-            self.error = "Could not sign in"
+            self.error = ErrorReport("Could not sign in", detail: "POST \(path): no set-auth-token header or token in \(body)")
             return
         }
         SessionToken.write(token)

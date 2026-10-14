@@ -15,6 +15,7 @@ if (!tile) throw new Error('app-icon.svg needs a #tile rect with a hex fill');
  * `bleed` fills the corners with the tile color, for launchers and iOS that apply their own mask.
  * `inset` shrinks the glyph so it fits inside the maskable safe zone (a circle of 40% radius).
  * `glyph` drops the tile, because Android draws notification badges from the alpha channel only.
+ * `bare` drops the tile but keeps the colors, for the logo above the sign-in card.
  */
 const variants = [
 	{ file: 'icon-192.png', size: 192, look: 'tile' },
@@ -27,6 +28,8 @@ const variants = [
 		size: 1024,
 		look: 'bleed',
 	},
+	{ file: 'logo.png', size: 320, look: 'bare' },
+	{ file: '../../../app-ios/Sources/App/Assets.xcassets/Logo.imageset/Logo.png', size: 480, look: 'bare' },
 ] as const;
 
 const browser = await chromium.launch();
@@ -40,6 +43,7 @@ for (const variant of variants) {
 		svg { display: block; width: 100vw; height: 100vh; }
 		#glyph { transform: scale(${inset}); transform-box: view-box; transform-origin: center; }
 		${look === 'glyph' ? '#tile { display: none; } #glyph * { opacity: 1; }' : ''}
+		${look === 'bare' ? '#tile { display: none; }' : ''}
 	</style>${svg}`);
 	await page.screenshot({ path: new URL(file, dir).pathname, omitBackground: look !== 'bleed' });
 	console.log(`${file} ${size}x${size}`);

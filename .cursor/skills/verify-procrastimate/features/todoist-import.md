@@ -15,7 +15,7 @@
 
 - Web desktop: `Settings` at the bottom of the sidebar, then `Import from Todoist`.
 - Web phone: `Open navigation`, `Settings`, then `Import from Todoist`.
-- iOS: `Import from Todoist` in Settings, or open a backup zip into Procrastimate from Files or the share sheet.
+- iOS: `Import from Todoist` in Settings, or open a backup zip into ProcrastiMate from Files or the share sheet.
 
 ## Driving it with control-ui and XCUITest
 
@@ -29,7 +29,7 @@ Preconditions:
 - **Re-import.** Import the same backup again. The summary reads `0 projects`, `0 tasks`, and `12 skipped`, and every list keeps one copy of each task. Same test, and on a phone `importing a Todoist backup twice from the settings sheet adds each task once`.
 - **Wrong file.** Pick a file that is not a zip. An alert reads `This is not a Todoist backup zip.` and no task is added. Test: `a file that is not a Todoist backup shows an error and imports nothing`.
 - **Reader.** CSV edge cases (byte order mark, quoted commas and newlines, CRLF), priority, indent, reminders, labels, and every date example. Tests in `shared/todoist.test.ts` and `shared/csv.test.ts`.
-- **iOS.** `Import from Todoist` opens the document picker limited to zips. Picking `todoist-backup.zip` under On My iPhone › Procrastimate shows `2 projects`, `12 tasks`, `0 skipped`, `3 labels added`, and the same three warnings as the web, the Inbox lists the same five tasks, a second import shows `12 skipped`, and `not-a-backup.zip` shows `This is not a Todoist backup zip.` and changes nothing. CI writes those files into the simulator app's Documents folder with `bun scripts/todoist-fixtures.ts <dir>` in `app-ios/`. Tests: `ImportParityTests` (`test_import_pick`, `test_import_read`, `test_import_summary`, `test_import_dedupe`, `test_import_error`), paired with `e2e/parity/import.e2e.ts`. Run each pair with the iOS workflow (`xcodebuild test` on an iPhone 16 simulator) and `bun run test:e2e --project=parity`; both sides save `<parity-id>.png`. The CSV reader, Todoist reader, and merge are already in `Core`: `swift test` in `app-ios/` replays `shared/vectors/csv.json` and `todoist.json` in `VectorTests`, including Todoist date phrases read by `QuickAdd`.
+- **iOS.** `Import from Todoist` opens the document picker limited to zips. Picking `todoist-backup.zip` under On My iPhone › ProcrastiMate shows `2 projects`, `12 tasks`, `0 skipped`, `3 labels added`, and the same three warnings as the web, the Inbox lists the same five tasks, a second import shows `12 skipped`, and `not-a-backup.zip` shows `This is not a Todoist backup zip.` and changes nothing. CI writes those files into the simulator app's Documents folder with `bun scripts/todoist-fixtures.ts <dir>` in `app-ios/`. Tests: `ImportParityTests` (`test_import_pick`, `test_import_read`, `test_import_summary`, `test_import_dedupe`, `test_import_error`), paired with `e2e/parity/import.e2e.ts`. Run each pair with the iOS workflow (`xcodebuild test` on an iPhone 16 simulator) and `bun run test:e2e --project=parity`; both sides save `<parity-id>.png`. The CSV reader, Todoist reader, and merge are already in `Core`: `swift test` in `app-ios/` replays `shared/vectors/csv.json` and `todoist.json` in `VectorTests`, including Todoist date phrases read by `QuickAdd`.
 
 ## Gotchas
 

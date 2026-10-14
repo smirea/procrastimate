@@ -1,6 +1,6 @@
 # Offline and sync
 
-Procrastimate works fully without a network. Every change applies locally at once and syncs in the background. Sync is always on. Nothing in the UI mentions sync.
+ProcrastiMate works fully without a network. Every change applies locally at once and syncs in the background. Sync is always on. Nothing in the UI mentions sync.
 
 ## Sub-features
 

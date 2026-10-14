@@ -8,7 +8,7 @@
 	const view = $derived(noDateTasks(store.tasks, clock.today));
 </script>
 
-<svelte:head><title>No date · Procrastimate</title></svelte:head>
+<svelte:head><title>No date · ProcrastiMate</title></svelte:head>
 
 <View
 	title="No date"

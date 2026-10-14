@@ -24,7 +24,7 @@ import type { Schema } from './swift';
  */
 export function openApiDocument() {
 	const generator = new OpenAPIGenerator({ converters: [new ZodToJsonSchemaConverter()] });
-	return generator.generate(contract, { version: '3.1.1', base: { info: { title: 'Procrastimate', version: '1' } } });
+	return generator.generate(contract, { version: '3.1.1', base: { info: { title: 'ProcrastiMate', version: '1' } } });
 }
 
 /**
