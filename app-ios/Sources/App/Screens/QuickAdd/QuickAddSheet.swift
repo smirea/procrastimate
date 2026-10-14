@@ -61,8 +61,15 @@ private struct QuickAddForm: View {
                 Text(notice).font(.footnote).foregroundStyle(.muted)
             }
 
-            FlowLayout(spacing: 6) {
-                chips(parsed, resolved)
+            HStack(alignment: .top, spacing: 6) {
+                FlowLayout(spacing: 6) {
+                    chips(parsed, resolved)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                PriorityChip(priority: resolved.priority, onKeepAsText: keepAsText(parsed, .priority), iconOnly: true) { priority in
+                    draft.clearToken(.priority, in: parsed)
+                    draft.picked.priority = priority
+                }
             }
             .animation(.snappy(duration: 0.16), value: parsed.tokens)
 
@@ -151,10 +158,8 @@ private struct QuickAddForm: View {
                 draft.picked.due = due
             }
         }
-        PriorityChip(priority: resolved.priority, onKeepAsText: keepAsText(parsed, .priority)) { priority in
-            draft.clearToken(.priority, in: parsed)
-            draft.picked.priority = priority
-        }
+        LocationChip(location: location) { location = $0 }
+        EventChip(event: event) { event = $0 }
         if event == nil, let recurrence = parsed.recurrence ?? draft.appliedRecurrence {
             Chip(systemImage: "repeat", text: Format.formatRecurrence(recurrence, resolved.due), tone: .toneRepeat)
                 .keepAsText(parsed.recurrence == nil ? nil : keepAsText(parsed, .recurrence))
@@ -167,8 +172,6 @@ private struct QuickAddForm: View {
             Chip(systemImage: "bell.fill", text: Format.formatReminder(item.reminder, today), tone: .toneWeek)
                 .keepAsText { keep(item.token) }
         }
-        LocationChip(location: location) { location = $0 }
-        EventChip(event: event) { event = $0 }
         ForEach(store.labels.filter { draft.picked.labelIds.contains($0.id) && !parsed.labelIds.contains($0.id) }) {
             Chip(systemImage: "tag.fill", text: $0.name, tone: .ink, iconTone: .toneLabel)
         }
@@ -295,7 +298,7 @@ struct Chip: View {
     var body: some View {
         HStack(spacing: 5) {
             Image(systemName: systemImage).imageScale(.small).foregroundStyle(iconTone ?? tone)
-            Text(text).lineLimit(1)
+            if !text.isEmpty { Text(text).lineLimit(1) }
         }
         .font(.subheadline.weight(.medium))
         .foregroundStyle(tone)
@@ -413,6 +416,7 @@ struct DueChip: View {
 struct PriorityChip: View {
     let priority: Priority
     let onKeepAsText: (() -> Void)?
+    var iconOnly = false
     let onChange: (Priority) -> Void
 
     var body: some View {
@@ -426,7 +430,7 @@ struct PriorityChip: View {
         } label: {
             Chip(
                 systemImage: priority == .p4 ? "flag" : "flag.fill",
-                text: priority == .p4 ? "Priority" : "P\(priority.rawValue)",
+                text: iconOnly ? "" : priority == .p4 ? "Priority" : "P\(priority.rawValue)",
                 tone: priority == .p4 ? .muted : .ink,
                 iconTone: priority == .p4 ? nil : priority.tone
             )

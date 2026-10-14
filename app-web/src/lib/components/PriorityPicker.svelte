@@ -10,13 +10,14 @@
 		priority,
 		onchange,
 		onkeepastext,
-	}: { priority: Priority; onchange: (priority: Priority) => void; onkeepastext?: () => void } = $props();
+		iconOnly = false,
+	}: { priority: Priority; onchange: (priority: Priority) => void; onkeepastext?: () => void; iconOnly?: boolean } = $props();
 
 	const levels: Priority[] = [1, 2, 3, 4];
 </script>
 
 <div class="flex items-center">
-	<Popover label="Priority">
+	<Popover label="Priority" align={iconOnly ? 'end' : 'start'}>
 		{#snippet trigger({ toggle })}
 			<button
 				type="button"
@@ -26,7 +27,7 @@
 				onclick={toggle}
 			>
 				<Flag size={15} weight={priority !== 4 ? 'fill' : 'regular'} color={priority !== 4 ? PRIORITIES[priority].tone : undefined} />
-				{priority !== 4 ? `P${priority}` : 'Priority'}
+				{#if !iconOnly}{priority !== 4 ? `P${priority}` : 'Priority'}{/if}
 			</button>
 		{/snippet}
 		{#snippet children({ close })}

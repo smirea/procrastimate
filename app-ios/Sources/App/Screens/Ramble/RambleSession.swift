@@ -50,6 +50,11 @@ final class RambleSession {
         }
     }
 
+    /// The audio thread calls the tap, so it is built outside this main-actor class; see `SpeechDictation.feed`.
+    nonisolated private static func feed(_ pump: RamblePump) -> AVAudioNodeTapBlock {
+        { buffer, _ in pump.append(buffer) }
+    }
+
     func stop() {
         userStop = true
         speech.stop()
@@ -132,9 +137,7 @@ final class RambleSession {
         let input = audio.inputNode
         let format = input.outputFormat(forBus: 0)
         guard format.sampleRate > 0, format.channelCount > 0 else { throw SpeechDictation.Failure.unsupported }
-        input.installTap(onBus: 0, bufferSize: 4096, format: format) { [pump] buffer, _ in
-            pump.append(buffer)
-        }
+        input.installTap(onBus: 0, bufferSize: 4096, format: format, block: Self.feed(pump))
         tapped = true
         audio.prepare()
         try audio.start()

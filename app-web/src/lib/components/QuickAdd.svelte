@@ -254,15 +254,12 @@
 			<p class="pt-2 text-[13px] text-muted">{notice}</p>
 		{/if}
 	</div>
-	<div class="flex flex-wrap items-center gap-1.5 px-4 pb-3">
+	<div class="flex items-start gap-1.5 px-4 pb-3">
+	<div class="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
 		<DuePicker {due} onchange={(value) => {
 				clearToken('due');
 				picked.due = value;
 			}} onkeepastext={tokenOf('due') ? () => keepAsText(tokenOf('due')) : undefined} />
-		<PriorityPicker {priority} onchange={(value) => {
-				clearToken('priority');
-				picked.priority = value;
-			}} onkeepastext={tokenOf('priority') ? () => keepAsText(tokenOf('priority')) : undefined} />
 		{#if recurrence}
 			<div class="flex items-center" transition:scale={motion({ start: 0.9, duration: 160 })}>
 				<span class="chip" data-active="true" style="color: var(--tone-repeat)">
@@ -311,6 +308,11 @@
 				Create {name.sigil}{name.name}
 			</button>
 		{/each}
+	</div>
+	<PriorityPicker iconOnly {priority} onchange={(value) => {
+			clearToken('priority');
+			picked.priority = value;
+		}} onkeepastext={tokenOf('priority') ? () => keepAsText(tokenOf('priority')) : undefined} />
 	</div>
 	<div class="flex items-center justify-between gap-2 border-t border-ink/5 px-3 py-2.5">
 		<ProjectPicker {projectId} onchange={(value) => {
