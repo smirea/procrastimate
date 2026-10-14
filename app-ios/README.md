@@ -35,7 +35,7 @@ The launcher selects a target and watches for changes. Edit `Sources` to rebuild
 ./scripts/run -t "iPhone 17"
 ```
 
-`--targets` lists names and identifiers; `*` marks the default. Selection prefers a connected iOS device, then a booted simulator, then an available iOS 26 simulator.
+`--targets` lists indexes, names, and identifiers; `-t` accepts any of them; `*` marks the default. Selection prefers a connected iOS device, then a booted simulator, then an available iOS 26 simulator.
 
 Set `SWIFT_RUN_DEFAULT_TARGET` to choose a default; `-t` overrides it. For duplicate simulator names, use an identifier to select exactly. Install simulator runtimes in Xcode's settings.
 

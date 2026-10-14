@@ -88,6 +88,11 @@ function selectTarget(all: Target[]): Target {
     });
     if (!ranked.length) throw new Error("No iOS 26 device or simulator. Add an iOS 26 simulator runtime in Xcode's settings.");
     if (!requested) return ranked[0];
+    if (/^\d+$/.test(requested)) {
+        const target = all[Number(requested)];
+        if (!target) throw new Error(`No target at index ${requested}. Use ${runCommand} --targets.`);
+        return target;
+    }
     const matches = ranked.filter(target => requested === "simulator" ? target.kind === "simulator"
         : target.id.toLowerCase() === requested.toLowerCase() || target.name.toLowerCase() === requested.toLowerCase());
     if (!matches.length) throw new Error(`No matching target: ${requested}. Use ${runCommand} --targets.`);
@@ -158,7 +163,7 @@ async function deploy(target: Target, project: string) {
 
 async function main() {
     if (values.help) {
-        console.log(`Usage: ${runCommand} [-t simulator|<target-name-or-id>] [--targets] [--watch|-w] [--no-watch] [--team TEAM_ID]
+        console.log(`Usage: ${runCommand} [-t simulator|<target-index-name-or-id>] [--targets] [--watch|-w] [--no-watch] [--team TEAM_ID]
 
 Defaults to a connected iOS device, then a booted simulator, then an available iOS 26 simulator.
 SWIFT_RUN_DEFAULT_TARGET overrides this choice when -t/--target is omitted. --targets marks the effective default with *.
