@@ -38,8 +38,7 @@ struct RootView: View {
             Tab("Browse", systemImage: "square.grid.2x2", value: .browse) {
                 TabStack(tab: .browse) { BrowseScreen() }
             }
-            // The search role puts the button in the separate circle at the trailing end of the tab bar.
-            Tab("Add task", systemImage: "plus", value: .add, role: .search) {
+            Tab("Add task", systemImage: "plus", value: .add, role: Self.addRole) {
                 Color.clear
             }
         }
@@ -63,6 +62,12 @@ struct RootView: View {
             get: { navigator.quickAdd == nil ? navigator.sheet : nil },
             set: { if $0 != nil || navigator.quickAdd == nil { navigator.sheet = $0 } }
         )) { SheetView(sheet: $0) }
+    }
+
+    /// The tab only reserves the separate circle at the trailing end of the tab bar; `AddButton` draws over it. iOS 26
+    /// separates a search-role tab, but iOS 27 lays search tabs inline and separates `.prominent` ones instead.
+    private static var addRole: TabRole {
+        if #available(iOS 27, *) { .prominent } else { .search }
     }
 }
 
