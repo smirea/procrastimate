@@ -49,8 +49,9 @@
 	--p3: #3e7bfa;
 	--p4: #a1a1aa;
 	--tone-overdue: #c4262b;
-	--tone-today: #127238;
-	--tone-tomorrow: #9e4b06;
+	--tone-today: #9e4b06;
+	--tone-soon: #127238;
+	--tone-repeat: #9e4b06;
 	--tone-week: #6a48e8;
 	--tone-later: var(--color-muted);
 	--tone-label: #0f766e;
@@ -92,8 +93,9 @@
 	--p3: #6b9bff;
 	--p4: #8b8b94;
 	--tone-overdue: #ff7477;
-	--tone-today: #3fcf7c;
-	--tone-tomorrow: #f5a524;
+	--tone-today: #f5a524;
+	--tone-soon: #3fcf7c;
+	--tone-repeat: #f5a524;
 	--tone-week: #a78bfa;
 	--tone-label: #2dd4bf;
 	--token-due: rgb(63 207 124 / 0.22);

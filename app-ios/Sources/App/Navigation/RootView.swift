@@ -17,29 +17,41 @@ struct RootView: View {
     }
 
     private var signedIn: some View {
-        @Bindable var navigator = navigator
         let today = Views.todayTasks(store.tasks, todayKey, in: store.timeZone)
-        return TabView(selection: $navigator.tab) {
+        return TabView(selection: Binding(
+            get: { navigator.tab },
+            set: { tab in
+                if tab == .add {
+                    navigator.sheet = .quickAdd(navigator.listDefaults)
+                } else {
+                    navigator.tab = tab
+                }
+            }
+        )) {
             Tab("Inbox", systemImage: "tray", value: .inbox) {
                 TabStack(tab: .inbox) { InboxScreen() }
             }
-            .badge(Views.inboxTasks(store.tasks, in: store.timeZone).count)
-            Tab("Today", systemImage: "sun.max", value: .today) {
-                TabStack(tab: .today) { TodayScreen() }
-            }
             .badge(today.overdue.count + today.today.count)
-            Tab("Upcoming", systemImage: "calendar", value: .upcoming) {
-                TabStack(tab: .upcoming) { UpcomingScreen() }
+            Tab("No date", systemImage: "calendar.badge.minus", value: .noDate) {
+                TabStack(tab: .noDate) { NoDateScreen() }
             }
             Tab("Browse", systemImage: "square.grid.2x2", value: .browse) {
                 TabStack(tab: .browse) { BrowseScreen() }
             }
-            Tab(value: .search, role: .search) {
-                TabStack(tab: .search) { SearchScreen() }
+            // The search role puts the button in the separate circle at the trailing end of the tab bar.
+            Tab("Add task", systemImage: "plus", value: .add, role: .search) {
+                Color.clear
             }
         }
         .tabViewStyle(.sidebarAdaptable)
         .tabBarMinimizeBehavior(.onScrollDown)
+        .overlay(alignment: .bottomTrailing) {
+            if navigator.quickAdd == nil {
+                AddButton { navigator.sheet = .quickAdd(navigator.listDefaults) }
+                    .transition(.scale(scale: 0.6).combined(with: .opacity))
+            }
+        }
+        .animation(.snappy(duration: 0.2), value: navigator.quickAdd == nil)
         .overlay(alignment: .bottom) { QuickAddOverlay() }
         .overlay(alignment: navigator.quickAdd == nil ? .bottom : .top) {
             // Quick add covers the bottom of the screen, so toasts move to the top while it is open, as on the web.
@@ -51,6 +63,27 @@ struct RootView: View {
             get: { navigator.quickAdd == nil ? navigator.sheet : nil },
             set: { if $0 != nil || navigator.quickAdd == nil { navigator.sheet = $0 } }
         )) { SheetView(sheet: $0) }
+    }
+}
+
+/// The accent add button. A tab item cannot take its own color, so this sits exactly over the search-role tab's circle,
+/// which keeps the tab bar's layout and stays as the fallback if the two ever drift apart.
+private struct AddButton: View {
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: "plus")
+                .font(.title2.weight(.semibold))
+                .foregroundStyle(.white)
+                .frame(width: 62, height: 62)
+                .glassEffect(.regular.tint(.accent).interactive(), in: .circle)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Quick add")
+        .padding([.trailing, .bottom], 21)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+        .ignoresSafeArea()
     }
 }
 
@@ -105,7 +138,6 @@ private struct SheetView: View {
         switch sheet {
         case let .quickAdd(defaults): QuickAddSheet(defaults: defaults)
         case let .details(taskID): TaskDetailsSheet(taskID: taskID)
-        case .search: NavigationStack { SearchScreen() }
         case .settings: SettingsSheet()
         }
     }

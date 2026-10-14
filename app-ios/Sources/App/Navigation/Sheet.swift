@@ -4,7 +4,6 @@ import Core
 enum Sheet: Identifiable, Hashable {
     case quickAdd(QuickAddDefaults)
     case details(taskID: String)
-    case search
     case settings
 
     var id: Self { self }

@@ -8,17 +8,20 @@ Ramble lets Stefan talk into quick add. After Add, the textbox shows a mic on it
 - `ramble-live` turns the mic into stop, and fills the textbox with the transcript while he talks.
 - `ramble-parse` replaces the transcript on stop with the parsed title, and fills the chips the way quick add does.
 - `ramble-unavailable` explains why the ElevenLabs path is off when its key is missing or the socket is refused. Offline dictation uses the platform recognizer, with no extra banner.
+- `ramble-fallback` (web) moves to the ElevenLabs socket when native dictation fails before hearing anything while online, as in Brave, which exposes `SpeechRecognition` but errors at once. A native stop on error or no support shows `Dictation stopped. You can type the task instead.`
 
 ## How to get to it (user POV)
 
 - Web and iOS: tap Add, then the mic inside the textbox.
-- iOS: "Start Ramble in Procrastinate" from Siri or Shortcuts opens quick add and starts the mic.
+- iOS: "Start Ramble in Procrastinate" from Siri or Shortcuts opens quick add and starts the mic. The DEBUG launch word `PROCRASTIMATE_DEMO=ramble` does the same in the simulator.
 
 ## Driving it with control-ui and XCUITest
 
 - On a paired device, open quick add and say "Call mom tomorrow at 5pm priority one." The textbox shows the words while talking. Stop, and the textbox shows `Call mom` with a tomorrow chip and `Priority 1`. Add task saves that one task.
 - Say "Finish the project report" with no project named `report`. Stop leaves that title and no extra chips.
 - With Dictation set to ElevenLabs and no key, or a refused socket, quick add says Ramble needs a connection. Offline, or Dictation set to Native, uses the platform recognizer and does not open the socket.
+- In Brave online with Dictation set to Native, tap the mic. Recognition fails at once and capture moves to the ElevenLabs socket, so the mic keeps listening.
+- On iOS, tap just beside the mic glyph. The mic's whole rectangle is its hit area and the card has a content shape, so the tap never reaches the scrim and quick add stays open.
 
 ## Parser
 

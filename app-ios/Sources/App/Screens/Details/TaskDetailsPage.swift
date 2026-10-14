@@ -53,12 +53,12 @@ private struct TaskDetailsForm: View {
                     if task.event != nil {
                         eventChip
                     } else {
-                        DueChip(due: draft.due, onKeepAsText: nil) { store.updateTask(task.id, TaskDetails.setDue(task, $0)) }
+                        DueChip(due: draft.due) { store.updateTask(task.id, TaskDetails.setDue(task, $0)) }
                         RepeatChip(recurrence: draft.recurrence, due: draft.due) { recurrence, due in
                             store.updateTask(task.id, TaskPatch(due: .some(due), recurrence: .some(recurrence)))
                         }
                     }
-                    PriorityChip(priority: draft.priority, onKeepAsText: nil) {
+                    PriorityChip(priority: draft.priority) {
                         store.updateTask(task.id, TaskPatch(priority: $0))
                     }
                     ReminderChip(
@@ -215,6 +215,8 @@ private struct ProjectMenu: View {
     let projectId: String?
     let onChange: (String?) -> Void
 
+    @State private var creating = false
+
     var body: some View {
         let project = store.project(projectId)
         Menu {
@@ -225,12 +227,14 @@ private struct ProjectMenu: View {
                 }
             }
             .pickerStyle(.inline)
+            Button("New project…", systemImage: "plus") { creating = true }
         } label: {
             SwiftUI.Label(project?.name ?? "Inbox", systemImage: project == nil ? "tray" : "number")
                 .labelStyle(.titleAndIcon)
                 .lineLimit(1)
         }
         .accessibilityLabel("Project \(project?.name ?? "Inbox")")
+        .newProjectPrompt(isPresented: $creating) { onChange($0) }
         .accessibilityIdentifier("Project menu")
     }
 }

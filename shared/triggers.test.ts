@@ -6,6 +6,7 @@ import { describe, recorded, test } from './vectors/record.ts';
 
 const currentOccurrence = recorded('triggers', triggers.currentOccurrence);
 const eventGroups = recorded('triggers', triggers.eventGroups);
+const eventLabel = recorded('triggers', triggers.eventLabel);
 const formatEvent = recorded('triggers', triggers.formatEvent);
 const formatLocation = recorded('triggers', triggers.formatLocation);
 const placeGroups = recorded('triggers', triggers.placeGroups);
@@ -153,6 +154,42 @@ describe('labels', () => {
 		expect(formatEvent(meetup({ edge: 'during' }))).toBe('During Walking meetup');
 		expect(formatEvent(meetup({ edge: 'after', minutes: 0 }))).toBe('After Walking meetup');
 		expect(formatEvent(meetup({ edge: 'after', minutes: 60 }))).toBe('1h after Walking meetup');
+	});
+
+	test("a row names the task's moment with only the day and time today leaves ambiguous", () => {
+		const on = (d: number, h: number, min = 0) => [
+			{ start: local(d, h, min), end: local(d, h + 1), original: local(d, h, min) },
+		];
+		expect(eventLabel(meetup({ edge: 'after', minutes: 15, occurrences: on(14, 15) }), today)).toEqual({
+			lead: '15m after',
+			title: 'Walking meetup',
+			when: '4:15pm',
+		});
+		expect(eventLabel(meetup({ edge: 'before', minutes: 60, occurrences: on(20, 9, 30) }), today).when).toBe(
+			'Tuesday 8:30am',
+		);
+		expect(eventLabel(meetup({ occurrences: on(21, 18) }), today)).toEqual({
+			lead: 'Start of',
+			title: 'Walking meetup',
+			when: 'Oct 21 6pm',
+		});
+		expect(eventLabel(meetup({ edge: 'during', occurrences: on(12, 18) }), today).when).toBe('Oct 12 6pm');
+		expect(eventLabel(meetup({ allDay: true, occurrences: on(14, 0) }), today).when).toBeNull();
+		expect(eventLabel(meetup({ allDay: true, occurrences: on(16, 0) }), today).when).toBe('Friday');
+		expect(eventLabel(meetup({ occurrences: on(14, 18) }), '2025-12-30').when).toBe('Oct 14, 2026 6pm');
+	});
+
+	test('a task that follows a series reads the occurrence it is on', () => {
+		const series = meetup({
+			series: true,
+			edge: 'after',
+			minutes: 0,
+			occurrences: [
+				{ start: local(13, 10), end: local(13, 11), original: local(13, 10) },
+				{ start: local(15, 10), end: local(15, 11), original: local(15, 10) },
+			],
+		});
+		expect(eventLabel(series, today)).toEqual({ lead: 'After', title: 'Walking meetup', when: 'Tomorrow 11am' });
 	});
 
 	test('places read by trigger', () => {

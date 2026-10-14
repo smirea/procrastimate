@@ -4,7 +4,7 @@
 	"cases": [
 		{
 			"fn": "inboxTasks",
-			"test": "task views › Inbox lists open top-level tasks without a project, by date, then priority, then creation",
+			"test": "task views › Inbox lists open top-level tasks without a project or a day, by priority, then creation",
 			"input": [
 				[
 					{
@@ -323,153 +323,10 @@
 						"reminders": [],
 						"title": "inbox subtask"
 					}
-				]
+				],
+				"2026-10-14"
 			],
 			"output": [
-				{
-					"completedAt": null,
-					"createdAt": 8,
-					"due": {
-						"date": "2026-09-30",
-						"time": "08:00"
-					},
-					"event": null,
-					"id": "long overdue",
-					"labelIds": [],
-					"location": null,
-					"notes": "",
-					"order": 0,
-					"parentId": null,
-					"priority": 4,
-					"projectId": null,
-					"recurrence": null,
-					"reminders": [],
-					"title": "long overdue"
-				},
-				{
-					"completedAt": null,
-					"createdAt": 7,
-					"due": {
-						"date": "2026-10-12",
-						"time": null
-					},
-					"event": null,
-					"id": "overdue",
-					"labelIds": [
-						"calls"
-					],
-					"location": null,
-					"notes": "",
-					"order": 0,
-					"parentId": null,
-					"priority": 4,
-					"projectId": null,
-					"recurrence": null,
-					"reminders": [],
-					"title": "overdue"
-				},
-				{
-					"completedAt": null,
-					"createdAt": 6,
-					"due": {
-						"date": "2026-10-14",
-						"time": "09:00"
-					},
-					"event": null,
-					"id": "today 9am urgent",
-					"labelIds": [],
-					"location": null,
-					"notes": "",
-					"order": 0,
-					"parentId": null,
-					"priority": 1,
-					"projectId": null,
-					"recurrence": null,
-					"reminders": [],
-					"title": "today 9am urgent"
-				},
-				{
-					"completedAt": null,
-					"createdAt": 5,
-					"due": {
-						"date": "2026-10-14",
-						"time": "09:00"
-					},
-					"event": null,
-					"id": "today 9am",
-					"labelIds": [],
-					"location": null,
-					"notes": "",
-					"order": 0,
-					"parentId": null,
-					"priority": 3,
-					"projectId": null,
-					"recurrence": null,
-					"reminders": [],
-					"title": "today 9am"
-				},
-				{
-					"completedAt": null,
-					"createdAt": 3,
-					"due": {
-						"date": "2026-10-14",
-						"time": "17:00"
-					},
-					"event": null,
-					"id": "today 5pm",
-					"labelIds": [
-						"calls"
-					],
-					"location": null,
-					"notes": "",
-					"order": 0,
-					"parentId": null,
-					"priority": 4,
-					"projectId": null,
-					"recurrence": null,
-					"reminders": [],
-					"title": "today 5pm"
-				},
-				{
-					"completedAt": null,
-					"createdAt": 4,
-					"due": {
-						"date": "2026-10-14",
-						"time": null
-					},
-					"event": null,
-					"id": "today, no time",
-					"labelIds": [],
-					"location": null,
-					"notes": "",
-					"order": 0,
-					"parentId": null,
-					"priority": 4,
-					"projectId": null,
-					"recurrence": null,
-					"reminders": [],
-					"title": "today, no time"
-				},
-				{
-					"completedAt": null,
-					"createdAt": 11,
-					"due": {
-						"date": "2026-10-15",
-						"time": "08:00"
-					},
-					"event": null,
-					"id": "tomorrow 8am",
-					"labelIds": [],
-					"location": null,
-					"notes": "",
-					"order": 0,
-					"parentId": null,
-					"priority": 4,
-					"projectId": null,
-					"recurrence": null,
-					"reminders": [],
-					"title": "tomorrow 8am"
-				},
 				{
 					"completedAt": null,
 					"createdAt": 2,
@@ -2538,7 +2395,8 @@
 			"fn": "inboxTasks",
 			"test": "task views › empty lists stay empty",
 			"input": [
-				[]
+				[],
+				"2026-10-14"
 			],
 			"output": []
 		},
@@ -3560,6 +3418,334 @@
 					"title": "kite"
 				}
 			]
+		},
+		{
+			"fn": "noDateTasks",
+			"test": "no date › places with two or more undated tasks get their own sections below the rest",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"createdAt": 22,
+						"due": null,
+						"event": null,
+						"id": "read",
+						"labelIds": [],
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "read"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 23,
+						"due": null,
+						"event": null,
+						"id": "milk",
+						"labelIds": [],
+						"location": {
+							"address": "",
+							"latitude": 52.5,
+							"longitude": 13.4,
+							"name": "Rewe",
+							"radius": 150,
+							"trigger": "arrive"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "milk"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 24,
+						"due": null,
+						"event": null,
+						"id": "coffee",
+						"labelIds": [],
+						"location": {
+							"address": "",
+							"latitude": 52.6,
+							"longitude": 13.4,
+							"name": "Philz",
+							"radius": 150,
+							"trigger": "arrive"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "coffee"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 25,
+						"due": null,
+						"event": null,
+						"id": "eggs",
+						"labelIds": [],
+						"location": {
+							"address": "",
+							"latitude": 52.50001,
+							"longitude": 13.4,
+							"name": "Supermarket",
+							"radius": 150,
+							"trigger": "arrive"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "eggs"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 26,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
+						"id": "dated at Rewe",
+						"labelIds": [],
+						"location": {
+							"address": "",
+							"latitude": 52.5,
+							"longitude": 13.4,
+							"name": "Rewe",
+							"radius": 150,
+							"trigger": "arrive"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "dated at Rewe"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 27,
+						"due": null,
+						"event": null,
+						"id": "beans",
+						"labelIds": [],
+						"location": {
+							"address": "",
+							"latitude": 52.6,
+							"longitude": 13.4,
+							"name": "Philz",
+							"radius": 150,
+							"trigger": "arrive"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 1,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "beans"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 28,
+						"due": null,
+						"event": null,
+						"id": "solo",
+						"labelIds": [],
+						"location": {
+							"address": "",
+							"latitude": 52.7,
+							"longitude": 13.4,
+							"name": "Park",
+							"radius": 150,
+							"trigger": "arrive"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "solo"
+					}
+				],
+				"2026-10-14"
+			],
+			"output": {
+				"loose": [
+					{
+						"completedAt": null,
+						"createdAt": 22,
+						"due": null,
+						"event": null,
+						"id": "read",
+						"labelIds": [],
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "read"
+					},
+					{
+						"completedAt": null,
+						"createdAt": 28,
+						"due": null,
+						"event": null,
+						"id": "solo",
+						"labelIds": [],
+						"location": {
+							"address": "",
+							"latitude": 52.7,
+							"longitude": 13.4,
+							"name": "Park",
+							"radius": 150,
+							"trigger": "arrive"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "solo"
+					}
+				],
+				"places": [
+					{
+						"key": "52.6000,13.4000",
+						"name": "Philz",
+						"tasks": [
+							{
+								"completedAt": null,
+								"createdAt": 27,
+								"due": null,
+								"event": null,
+								"id": "beans",
+								"labelIds": [],
+								"location": {
+									"address": "",
+									"latitude": 52.6,
+									"longitude": 13.4,
+									"name": "Philz",
+									"radius": 150,
+									"trigger": "arrive"
+								},
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 1,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"title": "beans"
+							},
+							{
+								"completedAt": null,
+								"createdAt": 24,
+								"due": null,
+								"event": null,
+								"id": "coffee",
+								"labelIds": [],
+								"location": {
+									"address": "",
+									"latitude": 52.6,
+									"longitude": 13.4,
+									"name": "Philz",
+									"radius": 150,
+									"trigger": "arrive"
+								},
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"title": "coffee"
+							}
+						]
+					},
+					{
+						"key": "52.5000,13.4000",
+						"name": "Rewe",
+						"tasks": [
+							{
+								"completedAt": null,
+								"createdAt": 23,
+								"due": null,
+								"event": null,
+								"id": "milk",
+								"labelIds": [],
+								"location": {
+									"address": "",
+									"latitude": 52.5,
+									"longitude": 13.4,
+									"name": "Rewe",
+									"radius": 150,
+									"trigger": "arrive"
+								},
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"title": "milk"
+							},
+							{
+								"completedAt": null,
+								"createdAt": 25,
+								"due": null,
+								"event": null,
+								"id": "eggs",
+								"labelIds": [],
+								"location": {
+									"address": "",
+									"latitude": 52.50001,
+									"longitude": 13.4,
+									"name": "Supermarket",
+									"radius": 150,
+									"trigger": "arrive"
+								},
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"title": "eggs"
+							}
+						]
+					}
+				]
+			}
 		}
 	]
 }

@@ -84,9 +84,7 @@ final class SpeechDictation {
             let input = audio.inputNode
             let format = input.outputFormat(forBus: 0)
             guard format.sampleRate > 0, format.channelCount > 0 else { throw Failure.unsupported }
-            input.installTap(onBus: 0, bufferSize: 1024, format: format) { buffer, _ in
-                recognition.append(buffer)
-            }
+            input.installTap(onBus: 0, bufferSize: 1024, format: format, block: Self.feed(recognition))
             audio.prepare()
             try audio.start()
         } catch {
@@ -96,7 +94,19 @@ final class SpeechDictation {
         }
         engine = audio
 
-        task = recognizer.recognitionTask(with: recognition) { result, _ in
+        task = recognizer.recognitionTask(with: recognition, resultHandler: Self.results(onUpdate))
+    }
+
+    // AVAudioEngine and Speech call these back on their own threads. A closure written inside this main-actor class
+    // inherits its isolation, and Swift 6 traps when it runs off the main thread, so they are built outside it.
+    nonisolated private static func feed(_ request: SFSpeechAudioBufferRecognitionRequest) -> AVAudioNodeTapBlock {
+        { buffer, _ in request.append(buffer) }
+    }
+
+    nonisolated private static func results(
+        _ onUpdate: @escaping @Sendable (Update) -> Void
+    ) -> @Sendable (SFSpeechRecognitionResult?, (any Error)?) -> Void {
+        { result, _ in
             guard let result else { return }
             let update = Update(text: result.bestTranscription.formattedString, isFinal: result.isFinal)
             Task { @MainActor in onUpdate(update) }
@@ -114,7 +124,7 @@ final class SpeechDictation {
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
     }
 
-    private static func speechAllowed() async -> Bool {
+    nonisolated private static func speechAllowed() async -> Bool {
         let status = SFSpeechRecognizer.authorizationStatus()
         switch status {
         case .authorized: return true

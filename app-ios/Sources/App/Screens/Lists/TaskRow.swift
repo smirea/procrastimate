@@ -14,6 +14,7 @@ struct TaskRow: View {
     var timeOnly = false
 
     @State private var checking = false
+    @State private var postponing = false
 
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
@@ -31,7 +32,7 @@ struct TaskRow: View {
                 }
                 details
             }
-            .padding(.vertical, 11)
+            .padding(.vertical, 6)
             .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
             .contentShape(.rect)
             .onTapGesture { navigator.sheet = .details(taskID: task.id) }
@@ -42,13 +43,32 @@ struct TaskRow: View {
         }
         .swipeActions(edge: .leading, allowsFullSwipe: true) {
             Button("Complete", systemImage: "checkmark") { actions.complete(task) }
-                .tint(.toneToday)
+                .tint(.toneSoon)
         }
         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-            Button("Delete", systemImage: "trash", role: .destructive) { actions.delete(task) }
+            // An event task's day comes from its calendar event, so there is nothing to move.
+            if task.event == nil {
+                Button("Postpone", systemImage: "calendar.badge.clock") { postponing = true }
+                    .tint(.toneWeek)
+            }
+        }
+        .confirmationDialog("Postpone “\(task.title)”", isPresented: $postponing, titleVisibility: .visible) {
+            ForEach(Format.postponeOptions(due, today), id: \.date) { option in
+                Button("\(option.label) · \(Format.weekdayNames[Dates.weekdayOf(option.date)])") {
+                    actions.postpone(task, to: option.date)
+                }
+            }
+            Button("Pick a date…") { navigator.sheet = .details(taskID: task.id) }
         }
         .contextMenu {
             Button("Complete", systemImage: "checkmark.circle") { actions.complete(task) }
+            if task.event == nil {
+                Menu("Postpone", systemImage: "calendar.badge.clock") {
+                    ForEach(Format.postponeOptions(due, today), id: \.date) { option in
+                        Button(option.label) { actions.postpone(task, to: option.date) }
+                    }
+                }
+            }
             Button("Delete", systemImage: "trash", role: .destructive) { actions.delete(task) }
         }
     }
@@ -83,8 +103,11 @@ struct TaskRow: View {
         if hasDetails {
             HStack(spacing: 10) {
                 if let event = task.event {
-                    Detail(systemImage: "calendar", text: Triggers.formatEvent(event))
-                        .foregroundStyle(due.map { Format.dueTone($0, today).color } ?? .muted)
+                    EventDetail(
+                        label: Triggers.eventLabel(event, today, in: store.timeZone),
+                        series: event.series,
+                        tone: due.map { Format.dueTone($0, today).color } ?? .muted
+                    )
                 } else if let due, !(timeOnly && due.time == nil) {
                     Detail(
                         systemImage: "calendar",
@@ -97,7 +120,7 @@ struct TaskRow: View {
                 }
                 if let recurrence = task.recurrence {
                     Image(systemName: "repeat")
-                        .foregroundStyle(.toneTomorrow)
+                        .foregroundStyle(.toneRepeat)
                         .accessibilityLabel(Format.repeatLabel(recurrence, due))
                 }
                 if let progress {
@@ -125,6 +148,30 @@ struct TaskRow: View {
             .foregroundStyle(.muted)
             .lineLimit(1)
         }
+    }
+}
+
+/// `4:15pm ([repeat] 15m after [calendar] Standup)`: the task's moment in its due tone, then the event in gray. The
+/// repeat icon, as on a repeating task, marks a task that follows the series.
+private struct EventDetail: View {
+    let label: Triggers.EventLabel
+    let series: Bool
+    let tone: Color
+
+    var body: some View {
+        let repeats = series ? Text("\(Image(systemName: "repeat")) ") : Text("")
+        let meta = Text("\(repeats)\(label.lead) \(Image(systemName: "calendar")) \(label.title)")
+        Group {
+            if let when = label.when {
+                Text("\(Text(when).foregroundStyle(tone)) \(Text("(\(meta))").foregroundStyle(.muted))")
+            } else {
+                meta.foregroundStyle(.muted)
+            }
+        }
+        .imageScale(.small)
+        .accessibilityLabel(
+            [label.when, "\(label.lead) \(series ? "every " : "")\(label.title)"].compactMap { $0 }.joined(separator: ", ")
+        )
     }
 }
 

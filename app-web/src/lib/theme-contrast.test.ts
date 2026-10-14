@@ -77,7 +77,8 @@ function pairs(tokens: Tokens) {
 		'--color-muted',
 		'--tone-overdue',
 		'--tone-today',
-		'--tone-tomorrow',
+		'--tone-soon',
+		'--tone-repeat',
 		'--tone-week',
 		'--tone-later',
 	];
@@ -95,7 +96,8 @@ function pairs(tokens: Tokens) {
 		'--color-accent',
 		'--tone-overdue',
 		'--tone-today',
-		'--tone-tomorrow',
+		'--tone-soon',
+		'--tone-repeat',
 		'--tone-week',
 		'--tone-later',
 	];

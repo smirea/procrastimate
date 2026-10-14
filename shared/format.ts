@@ -10,8 +10,9 @@ import {
 	type Reminder,
 	type TimeOfDay,
 } from './task.ts';
+import { dateKeySchema } from './values.ts';
 
-export const dueToneSchema = z.enum(['overdue', 'today', 'tomorrow', 'week', 'later']).meta({ id: 'DueTone' });
+export const dueToneSchema = z.enum(['overdue', 'today', 'soon', 'week', 'later']).meta({ id: 'DueTone' });
 export type DueTone = z.infer<typeof dueToneSchema>;
 
 export const priorityLabel = (priority: Priority) => `Priority ${priority}`;
@@ -29,8 +30,17 @@ export function formatDate(date: DateKey, today: DateKey): string {
 	if (date === addDays(today, -1)) return 'Yesterday';
 	const d = fromDateKey(date);
 	if (date > today && date < addDays(today, 7)) return d.toLocaleDateString('en-US', { weekday: 'long' });
+	return shortDate(date, today);
+}
+
+/** `Oct 21`, with the year when it differs from today's. */
+export function shortDate(date: DateKey, today: DateKey): string {
 	const sameYear = date.slice(0, 4) === today.slice(0, 4);
-	return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: sameYear ? undefined : 'numeric' });
+	return fromDateKey(date).toLocaleDateString('en-US', {
+		month: 'short',
+		day: 'numeric',
+		year: sameYear ? undefined : 'numeric',
+	});
 }
 
 export function formatDue(due: Due, today: DateKey): string {
@@ -38,11 +48,12 @@ export function formatDue(due: Due, today: DateKey): string {
 	return due.time ? `${date} ${formatTime(due.time)}` : date;
 }
 
+/** Red overdue, orange today, green through 3 days out, purple through a week, then gray. */
 export function dueTone(due: Due, today: DateKey): DueTone {
 	if (due.date < today) return 'overdue';
 	if (due.date === today) return 'today';
-	if (due.date === addDays(today, 1)) return 'tomorrow';
-	if (due.date < addDays(today, 7)) return 'week';
+	if (due.date <= addDays(today, 3)) return 'soon';
+	if (due.date <= addDays(today, 7)) return 'week';
 	return 'later';
 }
 
@@ -101,11 +112,12 @@ export function formatReminder(reminder: Reminder, today: DateKey): string {
 	}
 }
 
+/** A day heading in Inbox with only what today leaves ambiguous: `Tomorrow`, `Friday` within the week, then `Tue, Oct 31`, with the year when it differs. */
 export function dayHeading(date: DateKey, today: DateKey): string {
+	if (date === addDays(today, 1)) return 'Tomorrow';
 	const d = fromDateKey(date);
-	const label = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-	const weekday = d.toLocaleDateString('en-US', { weekday: 'long' });
-	return date === addDays(today, 1) ? `${label} · Tomorrow · ${weekday}` : `${label} · ${weekday}`;
+	if (date > today && date < addDays(today, 7)) return d.toLocaleDateString('en-US', { weekday: 'long' });
+	return `${WEEKDAY_NAMES[weekdayOf(date)]}, ${shortDate(date, today)}`;
 }
 
 export function completedToast(title: string, next: Due | null, today: DateKey): string {
@@ -113,3 +125,22 @@ export function completedToast(title: string, next: Due | null, today: DateKey):
 }
 
 export const reminderToast = (title: string) => `Reminder: ${title}`;
+
+export const postponeOptionSchema = z.object({ label: z.string(), date: dateKeySchema }).meta({ id: 'PostponeOption' });
+export type PostponeOption = z.infer<typeof postponeOptionSchema>;
+
+/**
+ * The days a task can be pushed to, like Todoist's: `Today` for an overdue or undated task, `Tomorrow`, the coming
+ * Saturday, and the coming Monday. A day the task is already on, or that an earlier option names, is left out.
+ */
+export function postponeOptions(due: Due | null, today: DateKey): PostponeOption[] {
+	const weekday = weekdayOf(today);
+	const weekend = weekday === 0 || weekday === 6;
+	const options: PostponeOption[] = [
+		...(due === null || due.date < today ? [{ label: 'Today', date: today }] : []),
+		{ label: 'Tomorrow', date: addDays(today, 1) },
+		{ label: weekend ? 'Next weekend' : 'This weekend', date: addDays(today, (6 - weekday + 7) % 7 || 7) },
+		{ label: 'Next week', date: addDays(today, (1 - weekday + 7) % 7 || 7) },
+	];
+	return options.filter((o, i) => o.date !== due?.date && options.findIndex(p => p.date === o.date) === i);
+}

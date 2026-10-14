@@ -185,7 +185,8 @@ private struct Occurrence: Decodable {
 
 @Sendable func viewsVector(_ fn: String, _ a: Args) throws -> JSONValue {
     switch fn {
-    case "inboxTasks": return try json(Views.inboxTasks(a(0), in: a.zone))
+    case "inboxTasks": return try json(Views.inboxTasks(a(0), a(1), in: a.zone))
+    case "noDateTasks": return try json(Views.noDateTasks(a(0), a(1), in: a.zone))
     case "projectTasks": return try json(Views.projectTasks(a(0), a(1), in: a.zone))
     case "labelTasks": return try json(Views.labelTasks(a(0), a(1), in: a.zone))
     case "placeTasks": return try json(Views.placeTasks(a(0), a(1), in: a.zone))
@@ -205,6 +206,7 @@ private struct Occurrence: Decodable {
     case "dueTone": return try json(Format.dueTone(a(0), a(1)))
     case "formatDate": return try json(Format.formatDate(a(0), a(1)))
     case "formatDue": return try json(Format.formatDue(a(0), a(1)))
+    case "postponeOptions": return try json(Format.postponeOptions(a(0), a(1)))
     case "formatMinutes": return try json(Format.formatMinutes(a(0)))
     case "formatRecurrence": return try json(Format.formatRecurrence(a(0), a(1)))
     case "formatReminder": return try json(Format.formatReminder(a(0), a(1)))
@@ -323,7 +325,6 @@ private struct ParseInput: Decodable {
     let now: Int
     let projects: [Project]?
     let labels: [Label]?
-    let disabled: [String]?
     let due: Due?
     let spoken: Bool?
 
@@ -332,7 +333,6 @@ private struct ParseInput: Decodable {
             now: Date(epochMilliseconds: now),
             projects: projects ?? [],
             labels: labels ?? [],
-            disabled: disabled ?? [],
             due: due,
             spoken: spoken ?? false
         )
@@ -350,6 +350,7 @@ private struct ParseInput: Decodable {
     switch fn {
     case "currentOccurrence": return try json(Triggers.currentOccurrence(a(0), a(1), in: a.zone))
     case "eventGroups": return try json(Triggers.eventGroups(a(0), a(1), in: a.zone))
+    case "eventLabel": return try json(Triggers.eventLabel(a(0), a(1), in: a.zone))
     case "formatEvent": return try json(Triggers.formatEvent(a(0)))
     case "formatLocation": return try json(Triggers.formatLocation(a(0)))
     case "placeGroups": return try json(Triggers.placeGroups(a(0)))

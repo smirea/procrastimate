@@ -56,11 +56,6 @@ export const parseOptionsSchema = z
 		now: z.date().meta({ 'x-swift-type': 'Date' }),
 		projects: z.array(projectSchema).readonly().default([]),
 		labels: z.array(labelSchema).readonly().default([]),
-		disabled: z
-			.array(z.string())
-			.readonly()
-			.default([])
-			.meta({ description: 'Token texts the user chose to keep as plain title text, compared case-insensitively.' }),
 		due: taskShape.due
 			.default(null)
 			.meta({ description: 'The due date set outside the text, such as by a picker or on an existing task.' }),
@@ -506,7 +501,6 @@ export function parseQuickAdd(input: string, options: ParseOptions): ParsedQuick
 	const now = options.now;
 	const spoken = options.spoken ?? false;
 	const ctx: Context = { now, today: toDateKey(now), time: toTimeOfDay(now.getHours(), now.getMinutes()), spoken };
-	const disabled = new Set(options.disabled?.map(d => d.toLowerCase()));
 	const named = [
 		namedRule('project', '#', options.projects ?? [], projectId => ({ kind: 'project', projectId })),
 		namedRule('label', '@', options.labels ?? [], labelId => ({ kind: 'label', labelId })),
@@ -531,7 +525,7 @@ export function parseQuickAdd(input: string, options: ParseOptions): ParsedQuick
 			const match = rule.read(m, ctx);
 			if (!match) continue;
 			spans.push([start, end]);
-			if (!disabled.has(text.toLowerCase())) found.push({ token: { kind: rule.kind, start, end, text }, match });
+			found.push({ token: { kind: rule.kind, start, end, text }, match });
 		}
 		// Attributes usually trail the title, so a single-valued attribute takes its last phrase.
 		for (const { token, match } of rule.repeatable ? found : found.slice(-1)) {

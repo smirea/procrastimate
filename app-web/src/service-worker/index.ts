@@ -31,7 +31,7 @@ async function open(taskId: string | null) {
 		client.postMessage({ type: 'open-task', taskId });
 		return;
 	}
-	await self.clients.openWindow(taskId ? `/today?task=${encodeURIComponent(taskId)}` : '/today');
+	await self.clients.openWindow(taskId ? `/inbox?task=${encodeURIComponent(taskId)}` : '/inbox');
 }
 
 function parse(text: string | undefined): PushMessage {

@@ -1,31 +1,31 @@
 import AppIntents
 
 enum TaskListKind: String, AppEnum {
-    case inbox, today, upcoming
+    case inbox, noDate, browse
 
     static let typeDisplayRepresentation = TypeDisplayRepresentation(name: "List")
 
     static var caseDisplayRepresentations: [TaskListKind: DisplayRepresentation] {
         [
             .inbox: "Inbox",
-            .today: "Today",
-            .upcoming: "Upcoming",
+            .noDate: "No date",
+            .browse: "Browse",
         ]
     }
 
     var tab: AppTab {
         switch self {
         case .inbox: .inbox
-        case .today: .today
-        case .upcoming: .upcoming
+        case .noDate: .noDate
+        case .browse: .browse
         }
     }
 
     var name: String {
         switch self {
         case .inbox: "Inbox"
-        case .today: "Today"
-        case .upcoming: "Upcoming"
+        case .noDate: "No date"
+        case .browse: "Browse"
         }
     }
 }
@@ -42,7 +42,7 @@ struct StartRambleIntent: AppIntent {
 
 struct OpenViewIntent: AppIntent {
     static let title: LocalizedStringResource = "Open List"
-    static let description = IntentDescription("Opens Inbox, Today, or Upcoming.")
+    static let description = IntentDescription("Opens Inbox, No date, or Browse.")
     static let openAppWhenRun = true
 
     @Parameter(title: "List")

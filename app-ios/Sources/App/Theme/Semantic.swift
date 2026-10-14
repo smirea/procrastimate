@@ -17,7 +17,7 @@ extension Format.DueTone {
         switch self {
         case .overdue: .toneOverdue
         case .today: .toneToday
-        case .tomorrow: .toneTomorrow
+        case .soon: .toneSoon
         case .week: .toneWeek
         case .later: .toneLater
         }

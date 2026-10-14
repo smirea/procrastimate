@@ -18,7 +18,6 @@
 	import PriorityPicker from './PriorityPicker.svelte';
 	import ReminderPicker from './ReminderPicker.svelte';
 	import ProjectPicker from './ProjectPicker.svelte';
-	import KeepAsText from './KeepAsText.svelte';
 	import { store } from '../store.svelte.ts';
 	import { clock, mobile, sheets, type QuickAddDefaults, motion } from '../ui.svelte.ts';
 	import { formatRecurrence, formatReminder } from 'shared/format.ts';
@@ -43,7 +42,6 @@
 	});
 
 	let text = $state('');
-	let disabled = $state<string[]>([]);
 	let picked = $state<Picked>(initialPicked());
 	let spokenRecurrence = $state<Recurrence | null>(null);
 	let listening = $state(false);
@@ -60,7 +58,7 @@
 	const showMic = $derived(listening || !typed);
 
 	const parsed = $derived(
-		parseQuickAdd(text, { now: new Date(clock.now), projects: store.projects, labels: store.labels, disabled, due: picked.due }),
+		parseQuickAdd(text, { now: new Date(clock.now), projects: store.projects, labels: store.labels, due: picked.due }),
 	);
 	const tokenOf = (kind: TokenKind) => parsed.tokens.find((t) => t.kind === kind);
 	const recurrence = $derived(parsed.recurrence ?? spokenRecurrence);
@@ -85,11 +83,6 @@
 		input.focus();
 	}
 
-	function keepAsText(token: QuickAddToken | undefined) {
-		if (token) disabled = [...disabled, token.text];
-		input.focus();
-	}
-
 	/** A manual pick replaces whatever the text said for that attribute. */
 	function clearToken(kind: TokenKind) {
 		const token = tokenOf(kind);
@@ -102,7 +95,6 @@
 		const reminders = [...parsed.reminders, ...picked.reminders];
 		store.addTask({ title: parsed.title, due, recurrence, priority, projectId, labelIds, reminders });
 		text = '';
-		disabled = [];
 		picked = initialPicked();
 		spokenRecurrence = null;
 		typed = false;
@@ -120,7 +112,6 @@
 		if (!fill) return;
 		const next = withListDefaults(fill, defaults, clock.today);
 		text = next.text;
-		disabled = [];
 		picked = {
 			due: next.due,
 			priority: next.priority,
@@ -154,6 +145,7 @@
 				session = null;
 				if (reason === 'denied') notice = message ?? 'The microphone is off. You can type the ramble instead.';
 				else if (reason === 'limit' || reason === 'unavailable') notice = message ?? 'Ramble needs a connection';
+				else if (reason === 'error' || reason === 'unsupported') notice = 'Dictation stopped. You can type the task instead.';
 				else notice = '';
 				if (applyOnStop) applyTranscript();
 			},
@@ -194,8 +186,7 @@
 
 	$effect(() => {
 		if (!text) {
-			disabled = [];
-			typed = false;
+				typed = false;
 		}
 	});
 
@@ -236,15 +227,15 @@
 			{#if showMic}
 				<button
 					type="button"
-					class="absolute top-1/2 right-1 grid size-9 -translate-y-1/2 place-items-center text-muted"
+					class="mic absolute top-1/2 right-1 grid size-8 -translate-y-1/2 place-items-center rounded-full bg-accent text-on-accent transition-transform active:scale-90"
 					aria-label={listening ? 'Stop listening' : 'Ramble'}
 					onmousedown={(e) => e.preventDefault()}
 					onclick={() => (listening ? stop() : start())}
 				>
 					{#if listening}
-						<Stop size={16} weight="fill" />
+						<Stop size={14} weight="fill" />
 					{:else}
-						<Microphone size={18} weight="fill" />
+						<Microphone size={16} weight="fill" />
 					{/if}
 				</button>
 			{/if}
@@ -253,24 +244,18 @@
 			<p class="pt-2 text-[13px] text-muted">{notice}</p>
 		{/if}
 	</div>
-	<div class="flex flex-wrap items-center gap-1.5 px-4 pb-3">
+	<div class="flex items-start gap-1.5 px-4 pb-3">
+	<div class="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
 		<DuePicker {due} onchange={(value) => {
 				clearToken('due');
 				picked.due = value;
-			}} onkeepastext={tokenOf('due') ? () => keepAsText(tokenOf('due')) : undefined} />
-		<PriorityPicker {priority} onchange={(value) => {
-				clearToken('priority');
-				picked.priority = value;
-			}} onkeepastext={tokenOf('priority') ? () => keepAsText(tokenOf('priority')) : undefined} />
+			}} />
 		{#if recurrence}
 			<div class="flex items-center" transition:scale={motion({ start: 0.9, duration: 160 })}>
-				<span class="chip" data-active="true" style="color: var(--tone-tomorrow)">
+				<span class="chip" data-active="true" style="color: var(--tone-repeat)">
 					<Repeat size={15} weight="bold" />
 					{formatRecurrence(recurrence, due)}
 				</span>
-				{#if parsed.recurrence}
-					<KeepAsText onclick={() => keepAsText(tokenOf('recurrence'))} />
-				{/if}
 			</div>
 		{/if}
 		<ReminderPicker {due} reminders={picked.reminders} onchange={(value) => (picked.reminders = value)} />
@@ -280,7 +265,6 @@
 					<Bell size={15} weight="fill" />
 					{formatReminder(parsed.reminders[i]!, clock.today)}
 				</span>
-				<KeepAsText onclick={() => keepAsText(token)} />
 			</div>
 		{/each}
 		{#each store.labelsOf({ labelIds: picked.labelIds.filter((id) => !parsed.labelIds.includes(id)) }) as label (label.id)}
@@ -295,7 +279,6 @@
 					<Tag size={15} weight="fill" class="text-[var(--tone-label)]" />
 					{name}
 				</span>
-				<KeepAsText onclick={() => keepAsText(token)} />
 			</div>
 		{/each}
 		{#each unknown as name (name.sigil + name.name.toLowerCase())}
@@ -311,14 +294,27 @@
 			</button>
 		{/each}
 	</div>
+	<PriorityPicker iconOnly {priority} onchange={(value) => {
+			clearToken('priority');
+			picked.priority = value;
+		}} />
+	</div>
 	<div class="flex items-center justify-between gap-2 border-t border-ink/5 px-3 py-2.5">
 		<ProjectPicker {projectId} onchange={(value) => {
 				clearToken('project');
 				picked.projectId = value;
-			}} onkeepastext={tokenOf('project') ? () => keepAsText(tokenOf('project')) : undefined} />
+			}} />
 		<div class="flex gap-1.5">
 			<button type="button" class="btn btn-quiet" onclick={() => sheets.close()}>Cancel</button>
 			<button type="button" class="btn btn-primary" disabled={listening || !parsed.title} onclick={submit}>Add task</button>
 		</div>
 	</div>
 </div>
+
+<style>
+	.mic {
+		box-shadow:
+			inset 0 1px 0 0 rgb(255 255 255 / 0.3),
+			0 6px 16px -6px color-mix(in srgb, var(--color-accent) 60%, transparent);
+	}
+</style>

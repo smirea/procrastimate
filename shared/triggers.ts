@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { formatMinutes } from './format.ts';
+import { formatDue, formatMinutes, formatTime } from './format.ts';
 import {
 	notificationTimes,
 	reminderFiresAt,
@@ -124,6 +124,38 @@ export function formatEvent(event: TaskEvent): string {
 			return never;
 		}
 	}
+}
+
+export const eventLabelSchema = z
+	.object({ lead: z.string(), title: z.string(), when: z.string().nullable() })
+	.meta({ id: 'EventLabel' });
+export type EventLabel = z.infer<typeof eventLabelSchema>;
+
+/**
+ * A row's event line in parts: `4:15pm` `(15m after` `Standup)`, with icons before the title. `when` is the task's
+ * moment on the occurrence it is on, worded like any due date but without the day when it is today. A row shows it
+ * even under a day heading, which is easy to lose in a long list.
+ */
+export function eventLabel(event: TaskEvent, today: DateKey, zone?: string): EventLabel {
+	const lead = (() => {
+		switch (event.edge) {
+			case 'before':
+				return event.minutes ? `${formatMinutes(event.minutes)} before` : 'Start of';
+			case 'start':
+				return 'Start of';
+			case 'during':
+				return 'During';
+			case 'after':
+				return event.minutes ? `${formatMinutes(event.minutes)} after` : 'After';
+			default: {
+				const never: never = event.edge;
+				return never;
+			}
+		}
+	})();
+	const due = occurrenceDue(event, currentOccurrence(event, today, zone), zone);
+	const when = due.date !== today ? formatDue(due, today) : due.time ? formatTime(due.time) : null;
+	return { lead, title: event.title, when };
 }
 
 /** `Arriving at Rewe`, `Leaving Rewe`, `While at Rewe`. */

@@ -12,8 +12,7 @@ struct LabelScreen: View {
                 title: label.name,
                 isEmpty: tasks.isEmpty,
                 emptyTitle: "No tasks with this label",
-                emptyHint: Browse.labelEmptyHint(label.name),
-                quickAdd: QuickAddDefaults(labelId: label.id)
+                emptyHint: Browse.labelEmptyHint(label.name)
             ) {
                 ForEach(tasks) { TaskRow(task: $0, showProject: true) }
             }

@@ -664,7 +664,7 @@ extension API {
     public enum DueTone: String, Codable, Hashable, Sendable, CaseIterable, Identifiable {
         case overdue = "overdue"
         case today = "today"
-        case tomorrow = "tomorrow"
+        case soon = "soon"
         case week = "week"
         case later = "later"
 
@@ -718,6 +718,38 @@ extension API {
             try container.encode(self.id, forKey: .id)
             try container.encode(self.title, forKey: .title)
             try container.encode(self.count, forKey: .count)
+        }
+    }
+
+    public struct EventLabel: Codable, Hashable, Sendable {
+        public var lead: String
+        public var title: String
+        public var when: String?
+
+        public init(lead: String, title: String, when: String? = nil) {
+            self.lead = lead
+            self.title = title
+            self.when = when
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case lead = "lead"
+            case title = "title"
+            case when = "when"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            lead = try container.decode(String.self, forKey: .lead)
+            title = try container.decode(String.self, forKey: .title)
+            when = try container.decode(String?.self, forKey: .when)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.lead, forKey: .lead)
+            try container.encode(self.title, forKey: .title)
+            try container.encode(self.when, forKey: .when)
         }
     }
 
@@ -984,6 +1016,33 @@ extension API {
             try container.encode(self.recurrence, forKey: .recurrence)
             try container.encode(self.priority, forKey: .priority)
             try container.encode(self.reminders, forKey: .reminders)
+        }
+    }
+
+    public struct NoDate: Codable, Hashable, Sendable {
+        public var loose: [Task]
+        public var places: [PlaceSection]
+
+        public init(loose: [Task] = [], places: [PlaceSection] = []) {
+            self.loose = loose
+            self.places = places
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case loose = "loose"
+            case places = "places"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            loose = try container.decode([Task].self, forKey: .loose)
+            places = try container.decode([PlaceSection].self, forKey: .places)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.loose, forKey: .loose)
+            try container.encode(self.places, forKey: .places)
         }
     }
 
@@ -1311,18 +1370,15 @@ extension API {
         public var now: Date
         public var projects: [Project]
         public var labels: [Label]
-        /// Token texts the user chose to keep as plain title text, compared case-insensitively.
-        public var disabled: [String]
         /// The due date set outside the text, such as by a picker or on an existing task.
         public var due: Due?
         /// Transcribed speech rather than typing, so typing shorthands that speech never means do not apply.
         public var spoken: Bool
 
-        public init(now: Date, projects: [Project] = [], labels: [Label] = [], disabled: [String] = [], due: Due? = nil, spoken: Bool = false) {
+        public init(now: Date, projects: [Project] = [], labels: [Label] = [], due: Due? = nil, spoken: Bool = false) {
             self.now = now
             self.projects = projects
             self.labels = labels
-            self.disabled = disabled
             self.due = due
             self.spoken = spoken
         }
@@ -1331,7 +1387,6 @@ extension API {
             case now = "now"
             case projects = "projects"
             case labels = "labels"
-            case disabled = "disabled"
             case due = "due"
             case spoken = "spoken"
         }
@@ -1341,7 +1396,6 @@ extension API {
             now = try container.decode(Date.self, forKey: .now)
             projects = try container.decodeAbsent([Project].self, forKey: .projects) ?? []
             labels = try container.decodeAbsent([Label].self, forKey: .labels) ?? []
-            disabled = try container.decodeAbsent([String].self, forKey: .disabled) ?? []
             due = try container.decodeIfPresent(Due.self, forKey: .due)
             spoken = try container.decodeAbsent(Bool.self, forKey: .spoken) ?? false
         }
@@ -1351,7 +1405,6 @@ extension API {
             try container.encode(self.now, forKey: .now)
             try container.encode(self.projects, forKey: .projects)
             try container.encode(self.labels, forKey: .labels)
-            try container.encode(self.disabled, forKey: .disabled)
             try container.encode(self.due, forKey: .due)
             try container.encode(self.spoken, forKey: .spoken)
         }
@@ -1386,6 +1439,71 @@ extension API {
             try container.encode(self.key, forKey: .key)
             try container.encode(self.name, forKey: .name)
             try container.encode(self.count, forKey: .count)
+        }
+    }
+
+    public struct PlaceSection: Codable, Hashable, Sendable {
+        public var key: String
+        public var name: String
+        public var tasks: [Task]
+
+        public init(key: String, name: String, tasks: [Task] = []) {
+            self.key = key
+            self.name = name
+            self.tasks = tasks
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case key = "key"
+            case name = "name"
+            case tasks = "tasks"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            key = try container.decode(String.self, forKey: .key)
+            name = try container.decode(String.self, forKey: .name)
+            tasks = try container.decode([Task].self, forKey: .tasks)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.key, forKey: .key)
+            try container.encode(self.name, forKey: .name)
+            try container.encode(self.tasks, forKey: .tasks)
+        }
+    }
+
+    public struct PostponeOption: Codable, Hashable, Sendable {
+        public var label: String
+        public var date: DateKey
+
+        public init(label: String, date: DateKey) {
+            self.label = label
+            self.date = date
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case label = "label"
+            case date = "date"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            label = try container.decode(String.self, forKey: .label)
+            date = try container.decode(DateKey.self, forKey: .date)
+            if decoder.validates {
+                do {
+                    let value = self.date
+                    try check(value.range(of: #"^[0-9]{4}-[0-9]{2}-[0-9]{2}\z"#, options: .regularExpression) != nil, .date, in: container, "date matching ^\\d{4}-\\d{2}-\\d{2}$")
+                }
+            }
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.label, forKey: .label)
+            try container.encode(self.date, forKey: .date)
         }
     }
 

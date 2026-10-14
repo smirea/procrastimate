@@ -6,7 +6,13 @@
 	import type { Task } from 'shared/task.ts';
 	import TaskRow from './TaskRow.svelte';
 
-	let { tasks, showProject = false, timeOnly = false, label }: { tasks: Task[]; showProject?: boolean; timeOnly?: boolean; label: string } = $props();
+	/** `assigned` names only a real project, for Inbox, where `Inbox` on every row would say nothing. */
+	let {
+		tasks,
+		showProject = false,
+		timeOnly = false,
+		label,
+	}: { tasks: Task[]; showProject?: boolean | 'assigned'; timeOnly?: boolean; label: string } = $props();
 </script>
 
 <ul class="divide-y divide-ink/[0.06]" aria-label={label}>
@@ -16,7 +22,7 @@
 			in:fly={motion({ y: -8, duration: 220, easing: cubicOut })}
 			out:slide={motion({ duration: 200, easing: cubicOut })}
 		>
-			<TaskRow {task} {showProject} {timeOnly} />
+			<TaskRow {task} showProject={showProject === 'assigned' ? task.projectId !== null : showProject} {timeOnly} />
 		</li>
 	{/each}
 </ul>

@@ -10,15 +10,18 @@
 	import { scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import ArrowElbowDownRight from 'phosphor-svelte/lib/ArrowElbowDownRight';
+	import CalendarPlus from 'phosphor-svelte/lib/CalendarPlus';
+	import Popover from './Popover.svelte';
 	import type { Task } from 'shared/task.ts';
 	import Checkbox from './Checkbox.svelte';
 	import SubtaskProgress from './SubtaskProgress.svelte';
 	import { store } from '../store.svelte.ts';
 	import { clock, sheets, motion } from '../ui.svelte.ts';
-	import { dueTone, formatDue, formatTime, repeatLabel } from 'shared/format.ts';
-	import { formatEvent, formatLocation, scheduledDue } from 'shared/triggers.ts';
+	import { WEEKDAY_NAMES, dueTone, formatDue, formatTime, postponeOptions, repeatLabel } from 'shared/format.ts';
+	import { weekdayOf } from 'shared/task.ts';
+	import { eventLabel, formatLocation, scheduledDue } from 'shared/triggers.ts';
 	import { PRIORITIES } from '../priorities.ts';
-	import { completeTask } from '../completion.ts';
+	import { completeTask, postponeTask } from '../completion.ts';
 
 	let { task, showProject = false, timeOnly = false }: { task: Task; showProject?: boolean; timeOnly?: boolean } = $props();
 
@@ -28,6 +31,7 @@
 	const parent = $derived(task.parentId ? store.task(task.parentId) : undefined);
 	const progress = $derived(store.progress(task.id));
 	const due = $derived(scheduledDue(task, clock.today));
+	const event = $derived(task.event ? eventLabel(task.event, clock.today) : null);
 
 	function complete() {
 		if (checking) return;
@@ -48,10 +52,20 @@
 		{/if}
 		{#if due || task.recurrence || task.reminders.length || task.location || progress || labels.length || parent || (showProject && project)}
 			<div class="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-[12px] leading-4 text-muted">
-				{#if task.event && due}
-					<span class="flex min-w-0 items-center gap-1" style={`color: var(--tone-${dueTone(due, clock.today)})`}>
-						<CalendarStar size={12} class="shrink-0" />
-						<span class="truncate">{formatEvent(task.event)}{due.time ? ` · ${timeOnly ? formatTime(due.time) : formatDue(due, clock.today)}` : ''}</span>
+				{#if task.event && event && due}
+					<span
+						class="flex min-w-0 items-center gap-1"
+						aria-label={[event.when, `${event.lead}${task.event.series ? ' every' : ''} ${event.title}`].filter(Boolean).join(', ')}
+					>
+						{#if event.when}<span class="shrink-0" style={`color: var(--tone-${dueTone(due, clock.today)})`}>{event.when}</span>{/if}
+						<span class="flex min-w-0 items-center gap-1 text-muted">
+							{#if event.when}<span class="shrink-0">(</span>{/if}
+							{#if task.event.series}<Repeat size={12} weight="bold" class="shrink-0" />{/if}
+							<span class="shrink-0">{event.lead}</span>
+							<CalendarStar size={12} class="shrink-0" />
+							<span class="truncate">{event.title}</span>
+							{#if event.when}<span class="-ml-1 shrink-0">)</span>{/if}
+						</span>
 					</span>
 				{:else if due && !(timeOnly && !due.time)}
 					<span class="flex items-center gap-1" style={`color: var(--tone-${dueTone(due, clock.today)})`}>
@@ -65,7 +79,7 @@
 					</span>
 				{/if}
 				{#if task.recurrence}
-					<span class="flex items-center text-[var(--tone-tomorrow)]" role="img" aria-label={repeatLabel(task.recurrence, due)}>
+					<span class="flex items-center text-[var(--tone-repeat)]" role="img" aria-label={repeatLabel(task.recurrence, due)}>
 						<Repeat size={12} weight="bold" />
 					</span>
 				{/if}
@@ -100,6 +114,31 @@
 			</div>
 		{/if}
 	</button>
+	{#if !task.event}
+		<div class="mt-1.5 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100 touch:opacity-100">
+			<Popover label="Postpone" align="end">
+				{#snippet trigger({ toggle })}
+					<button type="button" class="grid size-8 place-items-center rounded-full text-muted hover:bg-ink/5" aria-label={`Postpone ${task.title}`} onclick={toggle}>
+						<CalendarPlus size={16} />
+					</button>
+				{/snippet}
+				{#snippet children({ close })}
+					{#each postponeOptions(due, clock.today) as option (option.date)}
+						<button
+							type="button"
+							class="menu-item flex justify-between gap-6"
+							onclick={() => {
+								postponeTask(task, option.date);
+								close();
+							}}
+						>
+							{option.label}<span class="text-muted">{WEEKDAY_NAMES[weekdayOf(option.date)]}</span>
+						</button>
+					{/each}
+				{/snippet}
+			</Popover>
+		</div>
+	{/if}
 </div>
 
 <style>

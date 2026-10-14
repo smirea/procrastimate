@@ -2,15 +2,13 @@
 	import CalendarBlank from 'phosphor-svelte/lib/CalendarBlank';
 	import { addDays, fromDateKey, toTimeOfDay, type DateKey, type Due, type TimeOfDay } from 'shared/task.ts';
 	import Popover from './Popover.svelte';
-	import KeepAsText from './KeepAsText.svelte';
 	import { dueTone, formatDue } from 'shared/format.ts';
 	import { clock } from '../ui.svelte.ts';
 
 	let {
 		due,
 		onchange,
-		onkeepastext,
-	}: { due: Due | null; onchange: (due: Due | null) => void; onkeepastext?: () => void } = $props();
+	}: { due: Due | null; onchange: (due: Due | null) => void } = $props();
 
 	const today = $derived(clock.today);
 	const nextMonday = $derived(addDays(today, ((8 - fromDateKey(today).getDay()) % 7) || 7));
@@ -92,5 +90,4 @@
 			{/if}
 		{/snippet}
 	</Popover>
-	{#if onkeepastext}<KeepAsText onclick={onkeepastext} />{/if}
 </div>

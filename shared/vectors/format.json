@@ -430,7 +430,7 @@
 		},
 		{
 			"fn": "dueTone",
-			"test": "dates › 2026-10-15 is tinted tomorrow",
+			"test": "dates › 2026-10-15 is tinted soon",
 			"input": [
 				{
 					"date": "2026-10-15",
@@ -438,14 +438,26 @@
 				},
 				"2026-10-14"
 			],
-			"output": "tomorrow"
+			"output": "soon"
 		},
 		{
 			"fn": "dueTone",
-			"test": "dates › 2026-10-20 is tinted week",
+			"test": "dates › 2026-10-17 is tinted soon",
 			"input": [
 				{
-					"date": "2026-10-20",
+					"date": "2026-10-17",
+					"time": null
+				},
+				"2026-10-14"
+			],
+			"output": "soon"
+		},
+		{
+			"fn": "dueTone",
+			"test": "dates › 2026-10-18 is tinted week",
+			"input": [
+				{
+					"date": "2026-10-18",
 					"time": null
 				},
 				"2026-10-14"
@@ -454,10 +466,22 @@
 		},
 		{
 			"fn": "dueTone",
-			"test": "dates › 2026-10-21 is tinted later",
+			"test": "dates › 2026-10-21 is tinted week",
 			"input": [
 				{
 					"date": "2026-10-21",
+					"time": null
+				},
+				"2026-10-14"
+			],
+			"output": "week"
+		},
+		{
+			"fn": "dueTone",
+			"test": "dates › 2026-10-22 is tinted later",
+			"input": [
+				{
+					"date": "2026-10-22",
 					"time": null
 				},
 				"2026-10-14"
@@ -529,30 +553,48 @@
 		},
 		{
 			"fn": "dayHeading",
-			"test": "dates › the Upcoming heading for 2026-10-15 is Oct 15 · Tomorrow · Thursday",
+			"test": "dates › the Inbox heading for 2026-10-15 is Tomorrow",
 			"input": [
 				"2026-10-15",
 				"2026-10-14"
 			],
-			"output": "Oct 15 · Tomorrow · Thursday"
+			"output": "Tomorrow"
 		},
 		{
 			"fn": "dayHeading",
-			"test": "dates › the Upcoming heading for 2026-10-16 is Oct 16 · Friday",
+			"test": "dates › the Inbox heading for 2026-10-16 is Friday",
 			"input": [
 				"2026-10-16",
 				"2026-10-14"
 			],
-			"output": "Oct 16 · Friday"
+			"output": "Friday"
 		},
 		{
 			"fn": "dayHeading",
-			"test": "dates › the Upcoming heading for 2027-01-04 is Jan 4 · Monday",
+			"test": "dates › the Inbox heading for 2026-10-20 is Tuesday",
 			"input": [
-				"2027-01-04",
+				"2026-10-20",
 				"2026-10-14"
 			],
-			"output": "Jan 4 · Monday"
+			"output": "Tuesday"
+		},
+		{
+			"fn": "dayHeading",
+			"test": "dates › the Inbox heading for 2026-10-31 is Sat, Oct 31",
+			"input": [
+				"2026-10-31",
+				"2026-10-14"
+			],
+			"output": "Sat, Oct 31"
+		},
+		{
+			"fn": "dayHeading",
+			"test": "dates › the Inbox heading for 2027-02-26 is Fri, Feb 26, 2027",
+			"input": [
+				"2027-02-26",
+				"2026-10-14"
+			],
+			"output": "Fri, Feb 26, 2027"
 		},
 		{
 			"fn": "formatReminder",
@@ -678,6 +720,154 @@
 				"Call mom"
 			],
 			"output": "Reminder: Call mom"
+		},
+		{
+			"fn": "postponeOptions",
+			"test": "postpone › offers tomorrow, the coming weekend, and next week, keeping only new days",
+			"input": [
+				{
+					"date": "2026-10-14",
+					"time": "09:00"
+				},
+				"2026-10-14"
+			],
+			"output": [
+				{
+					"date": "2026-10-15",
+					"label": "Tomorrow"
+				},
+				{
+					"date": "2026-10-17",
+					"label": "This weekend"
+				},
+				{
+					"date": "2026-10-19",
+					"label": "Next week"
+				}
+			]
+		},
+		{
+			"fn": "postponeOptions",
+			"test": "postpone › offers tomorrow, the coming weekend, and next week, keeping only new days",
+			"input": [
+				{
+					"date": "2026-10-15",
+					"time": null
+				},
+				"2026-10-14"
+			],
+			"output": [
+				{
+					"date": "2026-10-17",
+					"label": "This weekend"
+				},
+				{
+					"date": "2026-10-19",
+					"label": "Next week"
+				}
+			]
+		},
+		{
+			"fn": "postponeOptions",
+			"test": "postpone › an overdue or undated task can move to today",
+			"input": [
+				null,
+				"2026-10-14"
+			],
+			"output": [
+				{
+					"date": "2026-10-14",
+					"label": "Today"
+				},
+				{
+					"date": "2026-10-15",
+					"label": "Tomorrow"
+				},
+				{
+					"date": "2026-10-17",
+					"label": "This weekend"
+				},
+				{
+					"date": "2026-10-19",
+					"label": "Next week"
+				}
+			]
+		},
+		{
+			"fn": "postponeOptions",
+			"test": "postpone › an overdue or undated task can move to today",
+			"input": [
+				{
+					"date": "2026-10-01",
+					"time": null
+				},
+				"2026-10-14"
+			],
+			"output": [
+				{
+					"date": "2026-10-14",
+					"label": "Today"
+				},
+				{
+					"date": "2026-10-15",
+					"label": "Tomorrow"
+				},
+				{
+					"date": "2026-10-17",
+					"label": "This weekend"
+				},
+				{
+					"date": "2026-10-19",
+					"label": "Next week"
+				}
+			]
+		},
+		{
+			"fn": "postponeOptions",
+			"test": "postpone › on a Friday the weekend is tomorrow, and on a weekend it is the next one",
+			"input": [
+				null,
+				"2026-10-16"
+			],
+			"output": [
+				{
+					"date": "2026-10-16",
+					"label": "Today"
+				},
+				{
+					"date": "2026-10-17",
+					"label": "Tomorrow"
+				},
+				{
+					"date": "2026-10-19",
+					"label": "Next week"
+				}
+			]
+		},
+		{
+			"fn": "postponeOptions",
+			"test": "postpone › on a Friday the weekend is tomorrow, and on a weekend it is the next one",
+			"input": [
+				{
+					"date": "2026-10-17",
+					"time": null
+				},
+				"2026-10-17"
+			],
+			"output": [
+				{
+					"date": "2026-10-18",
+					"label": "Tomorrow"
+				},
+				{
+					"date": "2026-10-24",
+					"label": "Next weekend"
+				},
+				{
+					"date": "2026-10-19",
+					"label": "Next week"
+				}
+			]
 		}
 	]
 }

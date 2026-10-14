@@ -12,8 +12,7 @@ struct ProjectScreen: View {
                 title: project.name,
                 isEmpty: tasks.isEmpty,
                 emptyTitle: "No tasks yet",
-                emptyHint: Browse.projectEmptyHint(project.name),
-                quickAdd: QuickAddDefaults(projectId: project.id)
+                emptyHint: Browse.projectEmptyHint(project.name)
             ) {
                 ForEach(tasks) { TaskRow(task: $0) }
             }

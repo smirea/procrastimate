@@ -27,8 +27,9 @@ enum Palette {
     static let p3 = Color(light: SRGB(0x3E7BFA), dark: SRGB(0x6B9BFF))
     static let p4 = Color(light: SRGB(0xA1A1AA), dark: SRGB(0x8B8B94))
     static let toneOverdue = Color(light: SRGB(0xC4262B), dark: SRGB(0xFF7477))
-    static let toneToday = Color(light: SRGB(0x127238), dark: SRGB(0x3FCF7C))
-    static let toneTomorrow = Color(light: SRGB(0x9E4B06), dark: SRGB(0xF5A524))
+    static let toneToday = Color(light: SRGB(0x9E4B06), dark: SRGB(0xF5A524))
+    static let toneSoon = Color(light: SRGB(0x127238), dark: SRGB(0x3FCF7C))
+    static let toneRepeat = Color(light: SRGB(0x9E4B06), dark: SRGB(0xF5A524))
     static let toneWeek = Color(light: SRGB(0x6A48E8), dark: SRGB(0xA78BFA))
     static let toneLater = Color(light: SRGB(0x56565F), dark: SRGB(0xA8A8B1))
     static let toneLabel = Color(light: SRGB(0x0F766E), dark: SRGB(0x2DD4BF))
@@ -67,7 +68,8 @@ extension ShapeStyle where Self == Color {
     static var p4: Color { Palette.p4 }
     static var toneOverdue: Color { Palette.toneOverdue }
     static var toneToday: Color { Palette.toneToday }
-    static var toneTomorrow: Color { Palette.toneTomorrow }
+    static var toneSoon: Color { Palette.toneSoon }
+    static var toneRepeat: Color { Palette.toneRepeat }
     static var toneWeek: Color { Palette.toneWeek }
     static var toneLater: Color { Palette.toneLater }
     static var toneLabel: Color { Palette.toneLabel }

@@ -28,21 +28,6 @@ import Testing
         #expect(task.priority == .p1)
     }
 
-    @Test func keepAsTextLeavesThePhraseInTheTitleUntilTheFieldClears() throws {
-        var draft = QuickAddDraft(defaults: .init(), today: today)
-        draft.setText("Read Monday Night Club")
-        let token = try #require(parse(draft).tokens.first)
-        draft.keepAsText(token)
-        let parsed = parse(draft)
-        #expect(parsed.tokens.isEmpty)
-        #expect(draft.resolve(parsed)?.title == "Read Monday Night Club")
-        #expect(draft.resolve(parsed)?.due == nil)
-
-        draft.setText("")
-        draft.setText("Read Monday Night Club")
-        #expect(parse(draft).tokens.count == 1)
-    }
-
     @Test func defaultsApplyAndResetForTheNextTask() {
         var draft = QuickAddDraft(defaults: .init(projectId: "p-work", labelId: "l-calls", today: true), today: today)
         draft.setText("Ping Ana @calls")

@@ -1,40 +1,40 @@
 # Task views
 
-Task views let Stefan see his tasks three ways: Inbox for everything without a project, Today for tasks due today or overdue, and Upcoming for tasks after today grouped by day. Switching views is instant and each list animates as tasks arrive and leave.
+Inbox lists everything dated by day: Overdue, Today, and each later day with dated tasks from every project. No date lists the undated top-level tasks that have no project. Project, label, place, and event lists are covered by their own feature files. Each list animates as tasks arrive and leave.
 
 ## Sub-features
 
-- `views-inbox` lists tasks without a project.
-- `views-today` lists tasks due today, with overdue tasks in their own section.
-- `views-upcoming` groups tasks due after today by day.
-- `views-empty` shows an empty state in each view.
-- `views-counts` shows each view's open task count in the sidebar.
+- `views-inbox` lists Overdue, Today, and each later day under a heading such as `Tomorrow`. It holds only dated tasks.
+- `views-no-date` lists undated top-level tasks without a project. It is an iOS tab and a web sidebar entry at `/no-date` with its count.
+- `views-today` and `views-upcoming` are removed. Their lists are the Inbox's dated sections.
+- `views-empty` shows `Nothing scheduled` with `Tasks with a date show up here by day.` on an Inbox with nothing dated. An empty No date shows `Inbox zero` with `Press Q to capture a task.`, or `Tap + to capture a task.` on a phone and iOS.
+- `views-counts` shows the Inbox count, overdue plus today, in the web sidebar and as the iOS tab badge. The web sidebar also counts No date. The iOS No date tab has no badge.
+- `views-compact` (iOS only) shows rows without separators and 6 pt vertical padding. The Inbox root has no navigation bar and fades a small `Inbox` title in once scrolled. Pushed lists use an inline bar with the same small title on scroll.
 
 ## How to get to it (user POV)
 
-- Web: choose Inbox, Today, or Upcoming in the sidebar.
-- Web on a phone: tap `Open navigation`, then a view. The drawer closes as the view opens. Tapping outside the drawer closes it.
-- Web: open each view by keyboard shortcut. Planned: shortcuts are not chosen yet.
-- iOS: tap Inbox, Today, or Upcoming in the main navigation.
+- Web: choose Inbox or No date in the sidebar. No date sits under Inbox.
+- Web on a phone: tap `Open navigation`, then Inbox. The drawer closes as the view opens. Tapping outside the drawer closes it.
+- iOS: tap the Inbox or No date tab. The tab bar has Inbox, No date, and Browse, plus the accent `+` in the separate trailing circle.
 
 ## Driving it with control-ui and XCUITest
 
 Preconditions:
 
-- The baseline state. Seed through quick add: with the clock one day earlier, add `Overdue task today`. With the clock back, add `Today task today`, `Later task in 3 days`, and `Someday task`.
-- Automated proof for every web step: `bun run test:e2e -- e2e/views.e2e.ts`. The suite pins the clock to Wednesday, October 14 2026, 10:00 UTC.
+- The baseline state. Seed through quick add: with the clock one day earlier, add `Overdue task today`. With the clock back, add `Today task today`, `Later task in 3 days`, and `Someday task`. The steps below assume Wednesday, October 14 2026.
+- No automated test covers this feature. Drive it by hand with `control-ui` on web and through the simulator on iOS.
 
-- **Inbox.** Open Inbox. The `Inbox tasks` list has all four tasks. Test: `Inbox, Today, and Upcoming show the right tasks`.
-- **Today.** Open Today. The subtitle reads `Wednesday, October 14`. The `Overdue tasks` list has `Overdue task` marked `Yesterday`, and the `Today tasks` list has `Today task`.
-- **Upcoming.** Open Upcoming. `Later task` is under the `Oct 17 · Saturday` group. `Someday task` and `Today task` are absent.
-- **Empty.** Complete `Today task` and `Overdue task` from Today. `All clear for today` appears. On a fresh store, Inbox shows `Inbox zero` and Upcoming shows `Nothing scheduled`. Test: `each view has an empty state`.
-- **Phone.** Seed `Standup today 10:30am p2`, `Review PR today 3pm p1 remind me 30m before`, `Call mom tomorrow 5pm`, `Dentist in 3 days 2pm`, and `Buy milk`. Tap `Open navigation`; the `Main` navigation slides in. Tap outside it; it closes. Open Today; `Today tasks` lists `Standup` then `Review PR`. Open Upcoming; `Dentist` is under `Oct 17 · Saturday`. The empty Inbox hint reads `Tap + to capture a task.` Test: `the navigation drawer opens, closes, and switches views` in `bun run test:e2e -- e2e/mobile.e2e.ts`.
-- **iOS launch.** The app opens on Inbox with `Inbox zero`, at the pinned moment and with an empty store. Test: `ShellParityTests.test_shell_launch` in the iOS workflow, paired with `shell-launch: the app opens on an empty Inbox` in `bun run test:e2e --project=parity`. Both save `shell-launch.png`.
-- **iOS.** The Inbox, Today (with `Overdue` above `Today`), and Upcoming (grouped under headings such as `Oct 15 · Tomorrow · Thursday`) tabs list the same tasks as the web, show `Inbox zero`, `All clear for today`, and `Nothing scheduled` when empty, and the Inbox and Today tabs carry their open counts as badges. Lists sit on the same tinted canvas as the web with transparent rows. Tests: `ViewsParityTests` (`test_views_inbox`, `test_views_today`, `test_views_upcoming`, `test_views_empty`, `test_views_counts`, `test_views_canvas`, `test_labels_chips`), paired with `e2e/parity/views.e2e.ts`. Run each pair with the iOS workflow (`xcodebuild test` on an iPhone 16 simulator) and `bun run test:e2e --project=parity`; both sides save `<parity-id>.png`.
-- **Proof.** The suite saves `app-web/test-results/view-inbox.png`, `view-today.png`, and `view-upcoming.png`, and the phone screens as `app-web/test-results/mobile/inbox.png`, `navigation-open.png`, `today.png`, and `upcoming.png`.
+- **Inbox.** Open Inbox. `Overdue` lists `Overdue task` marked `Yesterday`. `Today` lists `Today task`. `Later task` is under `Saturday`. `Someday task` is not in Inbox. The sidebar count, or the iOS tab badge, reads 2.
+- **No date.** Open No date. It lists `Someday task`. The web sidebar count reads 1.
+- **Places in No date.** On iOS, launch with `PROCRASTIMATE_DEMO="seed nodate"`. `Buy oat milk` is at the top, alone at its place. `Try the seasonal blend` and `Ask about decaf beans` sit below under a `Philz Coffee` heading.
+- **Other projects.** Add `Project task tomorrow #Work` after creating `Work`. It shows under `Tomorrow` with its project named, and not in No date.
+- **Empty.** Complete every task. Inbox shows `Nothing scheduled` with `Tasks with a date show up here by day.`. No date shows `Inbox zero` with `Press Q to capture a task.`, or `Tap + to capture a task.` on a phone.
+- **Phone.** Tap `Open navigation`; the `Main` navigation slides in. Tap outside it; it closes. Open Inbox; the same sections show. Open No date; `Someday task` shows.
+- **iOS.** The Inbox tab lists the same sections as the web and shows `Nothing scheduled` when empty. The No date tab lists `Someday task` and shows `Inbox zero` when empty. Launch with `PROCRASTIMATE_DEMO=nodate` to open it directly. The Inbox tab carries the overdue plus today count as its badge. Rows have no separators. The bar is hidden at the top, and a small `Inbox` title fades in once the list scrolls. Lists sit on the same tinted canvas as the web with transparent rows.
+- **Proof.** Save a screenshot of the Inbox with every section on each client.
 
 ## Gotchas
 
-- Today depends on the device clock and time zone. Seed dates relative to the run, not fixed calendar dates. To seed an overdue task through the UI, set the clock back a day, reload, add it, then restore the clock and reload.
+- The Inbox's day sections depend on the device clock and time zone. Seed dates relative to the run, not fixed calendar dates. To seed an overdue task through the UI, set the clock back a day, reload, add it, then restore the clock and reload.
 - The app reads the clock every 15 seconds, so a clock change shows after a reload or within 15 seconds.
 - A view that shows a spinner on local data fails the snappiness requirement.

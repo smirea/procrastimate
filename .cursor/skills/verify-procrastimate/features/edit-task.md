@@ -1,6 +1,6 @@
 # Edit a task
 
-Edit a task lets Stefan open a task and change its title, notes, due date, priority, reminders, or project, or delete it, with each change saved as he makes it. The title field parses natural language the same way quick add does.
+Edit a task lets Stefan open a task and change its title, notes, due date, priority, reminders, or project, postpone it, or delete it, with each change saved as he makes it. The title field parses natural language the same way quick add does.
 
 ## Sub-features
 
@@ -9,6 +9,7 @@ Edit a task lets Stefan open a task and change its title, notes, due date, prior
 - `edit-nl` applies phrases typed into the title, such as `fri 6pm !! remind me 1h before`.
 - `edit-config-row` shows the timing, priority, project, and labels the title will apply in the chips below it before Enter or blur commits them.
 - `edit-delete` deletes a task, with undo.
+- `edit-postpone` moves a task to `Today` (overdue or undated only), `Tomorrow`, `This weekend` (the coming Saturday, `Next weekend` on a weekend day), or `Next week` (the coming Monday), skipping its current day, keeping its time, with a `Moved “X” to <day>` toast and `Undo`. Event tasks have no postpone.
 
 ## How to get to it (user POV)
 
@@ -16,6 +17,8 @@ Edit a task lets Stefan open a task and change its title, notes, due date, prior
 - Web on a phone: tap a task. The details sheet slides up from the bottom.
 - Web: press Enter with a task selected. Planned: task selection by keyboard is not built yet.
 - iOS: tap a task in any list. The details sheet slides up.
+- Postpone on web: hover a row and choose the calendar-plus `Postpone <title>` button. On touch screens the button is always visible, so a phone taps it directly. A popover lists the options with their weekdays.
+- Postpone on iOS: swipe a row left. A `Postpone “<title>”` dialog lists the options with their weekdays and `Pick a date…`, which opens task details. The row's context menu has a `Postpone` submenu and `Delete`.
 
 ## Driving it with control-ui and XCUITest
 
@@ -26,15 +29,16 @@ Preconditions:
 
 - **Open.** Choose `Buy milk`. The `Task details` dialog opens with the title `Buy milk` and empty notes. Test: `details edit fields as they change and persist across reload`.
 - **Change fields.** Rename it to `Buy oat milk` and press Enter, add the note `2 cartons`, pick `Today` from the date chip, and pick `Priority 1`. The list row shows the new title and note as they change.
-- **Persist.** Reload and reopen the task. Notes read `2 cartons`, the date chip reads `Today`, and the priority chip reads `Priority 1`. The task is in Today.
+- **Persist.** Reload and reopen the task. Notes read `2 cartons`, the date chip reads `Today`, and the priority chip reads `Priority 1`. The task is under Inbox's `Today` section.
 - **Natural language.** Open `Water plants` and replace the title with `Water plants fri 6pm !! remind me 1h before`, then press Enter. The title becomes `Water plants`, the date chip reads `Friday 6pm`, priority is `Priority 2`, and the reminder chip reads `1 reminder`. Test: `natural language in the details title updates the fields`.
 - **Timing in the title.** Open `Standup` and type ` fri 6pm` at the end of the title. `fri 6pm` is highlighted, nothing appears above the title, and the date chip already reads `Friday 6pm` while the list row keeps its old date. Press Enter; the row moves to Friday. Test: `the configuration row spells out parsed timing with no preview above the input`.
 - **Delete.** Choose `Delete task`. The task leaves every view and an `Undo` toast appears. Undo restores it. Test: `delete removes the task and undo brings it back`.
+- **Postpone.** On Wednesday, October 14, add `Pay rent yesterday 9am`. Hover it and choose `Postpone Pay rent`; the options read `Today`, `Tomorrow`, `This weekend`, and `Next week`. Choose `Tomorrow`. It moves under `Tomorrow` at 9am and `Moved “Pay rent” to Tomorrow` shows with `Undo`, which puts it back under `Overdue`. On a task already due tomorrow, `Today` and `Tomorrow` are absent. No automated test covers it.
 - **Phone.** Add `Water plants` and tap it. Replace the title with `Water plants fri 6pm !! remind me 1h before` and press return; the chips read `Friday 6pm`, `Priority 2`, and `1 reminder`. Type the note `The ferns too`. Tap the `Priority 2` chip; the `Priority` menu opens fully on screen. Tap `Priority 1`. Tap `Close`; the row shows the note. After a reload the chips still read `Friday 6pm` and `Priority 1`. Test: `task details open as a sheet and edit fields` in `bun run test:e2e -- e2e/mobile.e2e.ts`. The suite saves `app-web/test-results/mobile/task-details.png`.
-- **iOS.** Tap `Buy milk`; the details sheet shows its title, the `Set due date` and `Priority 4` chips, and `Notes`. Retitle it `Buy oat milk` and press return, type `2 cartons` into `Notes`, pick `Tomorrow` from the date chip and `Priority 1` from the flag menu; after a relaunch they are still set. `Water plants fri 6pm !! remind me 1h before` becomes `Water plants` with `Due Friday 6pm`, `Priority 2`, and `1 reminder`. Typing ` fri 6pm` after `Standup` highlights it and the chip reads `Due Friday 6pm` before return applies it. `Delete task` closes the sheet with `Deleted “Buy milk”` and `Undo`. The reminders chip adds `30m before` and a custom `Tomorrow 9am` and removes one, the toolbar's `Project Inbox` menu moves the task to `Home`, and the labels popover creates `calls` and `errands` and toggles `calls` off while it stays open. Tests: `DetailsParityTests` (`test_edit_open`, `test_edit_fields`, `test_edit_nl`, `test_edit_config_row`, `test_edit_delete`, `test_reminders_picker`, `test_projects_move`, `test_labels_picker`), paired with `e2e/parity/details.e2e.ts`. Run each pair with the iOS workflow (`xcodebuild test` on an iPhone 16 simulator) and `bun run test:e2e --project=parity`; both sides save `<parity-id>.png`.
+- **iOS.** Tap `Buy milk`; the details sheet shows its title, the `Set due date` and `Priority 4` chips, and `Notes`. Retitle it `Buy oat milk` and press return, type `2 cartons` into `Notes`, pick `Tomorrow` from the date chip and `Priority 1` from the flag menu; after a relaunch they are still set. `Water plants fri 6pm !! remind me 1h before` becomes `Water plants` with `Due Friday 6pm`, `Priority 2`, and `1 reminder`. Typing ` fri 6pm` after `Standup` highlights it and the chip reads `Due Friday 6pm` before return applies it. `Delete task` closes the sheet with `Deleted “Buy milk”` and `Undo`. A trailing swipe on a row opens the postpone dialog with the same options as the web, and the context menu still deletes. The reminders chip adds `30m before` and a custom `Tomorrow 9am` and removes one, the toolbar's `Project Inbox` menu moves the task to `Home`, and the labels popover creates `calls` and `errands` and toggles `calls` off while it stays open. Tests: `DetailsParityTests` (`test_edit_open`, `test_edit_fields`, `test_edit_nl`, `test_edit_config_row`, `test_edit_delete`, `test_reminders_picker`, `test_projects_move`, `test_labels_picker`), paired with `e2e/parity/details.e2e.ts`. Run each pair with the iOS workflow (`xcodebuild test` on an iPhone 16 simulator) and `bun run test:e2e --project=parity`; both sides save `<parity-id>.png`.
 
 ## Gotchas
 
 - There is no save button by design. Assert the stored value after a reload, not the field contents.
 - The title applies on Enter or when the field loses focus. Escape reverts the title and closes the sheet.
-- Setting a due date of today also moves the task into Today. Check both views.
+- Setting a due date moves the task out of No date into its day in Inbox. Check both views.

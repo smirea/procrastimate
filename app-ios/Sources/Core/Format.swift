@@ -2,6 +2,7 @@ import Foundation
 
 public enum Format {
     public typealias DueTone = API.DueTone
+    public typealias PostponeOption = API.PostponeOption
 
     public static let weekdayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
     static let longWeekdayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
@@ -36,7 +37,12 @@ public enum Format {
         if date == Dates.addDays(today, 1) { return "Tomorrow" }
         if date == Dates.addDays(today, -1) { return "Yesterday" }
         if date > today, date < Dates.addDays(today, 7) { return longWeekdayNames[Dates.weekdayOf(date)] }
-        return year(date) == year(today) ? monthDay(date) : "\(monthDay(date)), \(year(date))"
+        return shortDate(date, today)
+    }
+
+    /// `Oct 21`, with the year when it differs from today's.
+    public static func shortDate(_ date: DateKey, _ today: DateKey) -> String {
+        year(date) == year(today) ? monthDay(date) : "\(monthDay(date)), \(year(date))"
     }
 
     public static func formatDue(_ due: Due, _ today: DateKey) -> String {
@@ -44,11 +50,12 @@ public enum Format {
         return due.time.map { "\(date) \(formatTime($0))" } ?? date
     }
 
+    /// Red overdue, orange today, green through 3 days out, purple through a week, then gray.
     public static func dueTone(_ due: Due, _ today: DateKey) -> DueTone {
         if due.date < today { return .overdue }
         if due.date == today { return .today }
-        if due.date == Dates.addDays(today, 1) { return .tomorrow }
-        if due.date < Dates.addDays(today, 7) { return .week }
+        if due.date <= Dates.addDays(today, 3) { return .soon }
+        if due.date <= Dates.addDays(today, 7) { return .week }
         return .later
     }
 
@@ -104,11 +111,11 @@ public enum Format {
     }
 
     /// The Upcoming heading: `Oct 15 · Tomorrow · Thursday`.
+    /// `Tomorrow`, `Friday` within the week, then `Tue, Oct 31`, with the year when it differs.
     public static func dayHeading(_ date: DateKey, _ today: DateKey) -> String {
-        let weekday = longWeekdayNames[Dates.weekdayOf(date)]
-        return date == Dates.addDays(today, 1)
-            ? "\(monthDay(date)) · Tomorrow · \(weekday)"
-            : "\(monthDay(date)) · \(weekday)"
+        if date == Dates.addDays(today, 1) { return "Tomorrow" }
+        if date > today, date < Dates.addDays(today, 7) { return longWeekdayNames[Dates.weekdayOf(date)] }
+        return "\(weekdayNames[Dates.weekdayOf(date)]), \(shortDate(date, today))"
     }
 
     /// The undo toast after completing a task: `Completed “Standup”`, or `…, next due Friday 9am` when it repeats.
@@ -117,4 +124,19 @@ public enum Format {
     }
 
     public static func reminderToast(_ title: String) -> String { "Reminder: \(title)" }
+
+    /// Today for an overdue or undated task, tomorrow, the coming Saturday, and the coming Monday, without the day the
+    /// task is on or a day an earlier option names.
+    public static func postponeOptions(_ due: Due?, _ today: DateKey) -> [PostponeOption] {
+        let weekday = Dates.weekdayOf(today)
+        let weekend = weekday == 0 || weekday == 6
+        let after = { (target: Int) in Dates.addDays(today, (target - weekday + 7) % 7 == 0 ? 7 : (target - weekday + 7) % 7) }
+        var options: [PostponeOption] = []
+        if due == nil || due!.date < today { options.append(PostponeOption(label: "Today", date: today)) }
+        options.append(PostponeOption(label: "Tomorrow", date: Dates.addDays(today, 1)))
+        options.append(PostponeOption(label: weekend ? "Next weekend" : "This weekend", date: after(6)))
+        options.append(PostponeOption(label: "Next week", date: after(1)))
+        var seen = Set<DateKey>()
+        return options.filter { $0.date != due?.date && seen.insert($0.date).inserted }
+    }
 }

@@ -1,5 +1,6 @@
 import Core
 import SwiftUI
+import UIKit
 
 /// Quick add: a glass card attached to the top of the keyboard with the smart input, the chips that spell out what
 /// the text set, and the project picker. It is an overlay rather than a sheet, because a sheet floats above the
@@ -26,6 +27,9 @@ private struct QuickAddForm: View {
     @State private var notice: String?
     @State private var transcript = ""
     @State private var applyOnStop = true
+    /// Picked with their chips only; neither has a phrase in the text.
+    @State private var location: TaskLocation?
+    @State private var event: TaskEvent?
     /// Text writes that came from the recognizer, so the field's change does not count as typing.
     @State private var speechWrites = 0
     @FocusState private var focused: Bool
@@ -50,7 +54,7 @@ private struct QuickAddForm: View {
                 onSubmit: { submit() }
             )
             .font(.body.weight(.medium))
-            .padding(.trailing, showMic ? 28 : 0)
+            .padding(.trailing, showMic ? 36 : 0)
             .overlay(alignment: .trailing) {
                 if showMic { micButton }
             }
@@ -58,13 +62,20 @@ private struct QuickAddForm: View {
                 Text(notice).font(.footnote).foregroundStyle(.muted)
             }
 
-            FlowLayout(spacing: 6) {
-                chips(parsed, resolved)
+            HStack(alignment: .top, spacing: 6) {
+                FlowLayout(spacing: 6) {
+                    chips(parsed, resolved)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                PriorityChip(priority: resolved.priority, iconOnly: true) { priority in
+                    draft.clearToken(.priority, in: parsed)
+                    draft.picked.priority = priority
+                }
             }
             .animation(.snappy(duration: 0.16), value: parsed.tokens)
 
             HStack(spacing: 8) {
-                ProjectChip(projectId: resolved.projectId, onKeepAsText: keepAsText(parsed, .project)) { id in
+                ProjectChip(projectId: resolved.projectId) { id in
                     draft.clearToken(.project, in: parsed)
                     draft.picked.projectId = id
                 }
@@ -90,6 +101,8 @@ private struct QuickAddForm: View {
                 .glassEffect(.regular, in: UnevenRoundedRectangle(topLeadingRadius: 32, topTrailingRadius: 32, style: .continuous))
                 .ignoresSafeArea(.container, edges: .bottom)
         }
+        // A tap between controls, or just beside the plain mic glyph, would otherwise reach the scrim and close the card.
+        .contentShape(.rect)
         .sensoryFeedback(.selection, trigger: draft.picked)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("Quick add")
@@ -115,10 +128,14 @@ private struct QuickAddForm: View {
             if listening { stopRamble(apply: true) } else { startRamble() }
         } label: {
             Image(systemName: listening ? "stop.fill" : "mic.fill")
-                .frame(width: 36, height: 36)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.white)
+                .frame(width: 32, height: 32)
+                .glassEffect(.regular.tint(.accent).interactive(), in: .circle)
+                .frame(width: 44, height: 44)
+                .contentShape(.rect)
         }
         .buttonStyle(.plain)
-        .foregroundStyle(.muted)
         .accessibilityLabel(listening ? "Stop listening" : "Ramble")
     }
 
@@ -135,17 +152,17 @@ private struct QuickAddForm: View {
         _ resolved: (due: Due?, priority: Priority, projectId: String?, labelIds: [String])
     ) -> some View {
         let today = clock.today
-        DueChip(due: resolved.due, onKeepAsText: keepAsText(parsed, .due)) { due in
-            draft.clearToken(.due, in: parsed)
-            draft.picked.due = due
+        // An event stands in for the date and the repeat, as in task details.
+        if event == nil {
+            DueChip(due: resolved.due) { due in
+                draft.clearToken(.due, in: parsed)
+                draft.picked.due = due
+            }
         }
-        PriorityChip(priority: resolved.priority, onKeepAsText: keepAsText(parsed, .priority)) { priority in
-            draft.clearToken(.priority, in: parsed)
-            draft.picked.priority = priority
-        }
-        if let recurrence = parsed.recurrence ?? draft.appliedRecurrence {
-            Chip(systemImage: "repeat", text: Format.formatRecurrence(recurrence, resolved.due), tone: .toneTomorrow)
-                .keepAsText(parsed.recurrence == nil ? nil : keepAsText(parsed, .recurrence))
+        LocationChip(location: location) { location = $0 }
+        EventChip(event: event) { event = $0 }
+        if event == nil, let recurrence = parsed.recurrence ?? draft.appliedRecurrence {
+            Chip(systemImage: "repeat", text: Format.formatRecurrence(recurrence, resolved.due), tone: .toneRepeat)
         }
         ForEach(Array(draft.picked.reminders.enumerated()), id: \.offset) { item in
             Chip(systemImage: "bell.fill", text: Format.formatReminder(item.element, today), tone: .toneWeek)
@@ -153,14 +170,12 @@ private struct QuickAddForm: View {
         let reminders = zip(parsed.tokens.filter { $0.kind == .reminder }, parsed.reminders).map(ParsedReminder.init)
         ForEach(reminders, id: \.self) { item in
             Chip(systemImage: "bell.fill", text: Format.formatReminder(item.reminder, today), tone: .toneWeek)
-                .keepAsText { keep(item.token) }
         }
         ForEach(store.labels.filter { draft.picked.labelIds.contains($0.id) && !parsed.labelIds.contains($0.id) }) {
             Chip(systemImage: "tag.fill", text: $0.name, tone: .ink, iconTone: .toneLabel)
         }
         ForEach(parsed.tokens.filter { $0.kind == .label }, id: \.self) { token in
             Chip(systemImage: "tag.fill", text: QuickAddDraft.labelName(token, store.labels) ?? "", tone: .ink, iconTone: .toneLabel)
-                .keepAsText { keep(token) }
         }
         // The name the suggestion list is open on already offers to create it there.
         ForEach(NameSearch.unknownNames(draft.text, parsed.tokens, store.projects, store.labels).filter { $0.start != listAt }, id: \.self) { name in
@@ -184,20 +199,20 @@ private struct QuickAddForm: View {
         focused = true
     }
 
-    private func keepAsText(_ parsed: QuickAdd.Parsed, _ kind: QuickAdd.TokenKind) -> (() -> Void)? {
-        parsed.tokens.first { $0.kind == kind }.map { token in { keep(token) } }
-    }
-
-    private func keep(_ token: QuickAdd.Token) {
-        draft.keepAsText(token)
-        focused = true
-    }
-
     private func submit() {
         guard !listening else { return }
         let parsed = draft.parse(now: clock.now, projects: store.projects, labels: store.labels, in: clock.timeZone)
         guard let task = draft.resolve(parsed) else { return }
-        withAnimation(.snappy) { _ = store.addTask(task) }
+        withAnimation(.snappy) {
+            let added = store.addTask(task)
+            if let event {
+                store.updateTask(added.id, TaskPatch(due: .some(nil), recurrence: .some(nil), location: .some(location), event: .some(event)))
+            } else if let location {
+                store.updateTask(added.id, TaskPatch(location: .some(location)))
+            }
+        }
+        location = nil
+        event = nil
         draft.reset(today: clock.today)
         typed = false
         notice = nil
@@ -268,51 +283,27 @@ struct Chip: View {
     let text: String
     var tone: Color = .muted
     var iconTone: Color?
+    /// Tints the capsule, as a set priority does.
+    var fill: Color?
 
     var body: some View {
         HStack(spacing: 5) {
             Image(systemName: systemImage).imageScale(.small).foregroundStyle(iconTone ?? tone)
-            Text(text).lineLimit(1)
+            if !text.isEmpty { Text(text).lineLimit(1) }
         }
         .font(.subheadline.weight(.medium))
         .foregroundStyle(tone)
         .padding(.horizontal, 10)
         .frame(minHeight: 32)
-        .background(.ink.opacity(0.06), in: .capsule)
+        .background(fill.map { $0.opacity(0.18) } ?? Color.ink.opacity(0.06), in: .capsule)
         .contentShape(.capsule)
         .transition(.scale(scale: 0.9).combined(with: .opacity))
-    }
-}
-
-extension View {
-    @ViewBuilder
-    func keepAsText(_ action: (() -> Void)?) -> some View {
-        if let action {
-            HStack(spacing: 2) {
-                self
-                Button(action: action) {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundStyle(.muted)
-                        .frame(width: 26, height: 26)
-                        .background(.ink.opacity(0.05), in: .circle)
-                        .frame(width: 36, height: 36)
-                        .contentShape(.circle)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Keep as text")
-            }
-            .transition(.scale(scale: 0.9).combined(with: .opacity))
-        } else {
-            self
-        }
     }
 }
 
 struct DueChip: View {
     @Environment(\.clock) private var clock
     let due: Due?
-    let onKeepAsText: (() -> Void)?
     let onChange: (Due?) -> Void
 
     @State private var picking = false
@@ -383,41 +374,42 @@ struct DueChip: View {
             .padding()
             .presentationCompactAdaptation(.popover)
         }
-        .keepAsText(onKeepAsText)
     }
 }
 
 struct PriorityChip: View {
     let priority: Priority
-    let onKeepAsText: (() -> Void)?
+    var iconOnly = false
     let onChange: (Priority) -> Void
 
     var body: some View {
         Menu {
             Picker("Priority", selection: Binding(get: { priority }, set: onChange)) {
                 ForEach(Priority.allCases, id: \.self) { level in
-                    SwiftUI.Label(Format.priorityLabel(level), systemImage: level == .p4 ? "flag" : "flag.fill").tag(level)
+                    SwiftUI.Label { Text(Format.priorityLabel(level)) } icon: { level.flag }.tag(level)
                 }
             }
             .pickerStyle(.inline)
         } label: {
             Chip(
                 systemImage: priority == .p4 ? "flag" : "flag.fill",
-                text: priority == .p4 ? "Priority" : "P\(priority.rawValue)",
+                text: iconOnly ? "" : priority == .p4 ? "Priority" : "P\(priority.rawValue)",
                 tone: priority == .p4 ? .muted : .ink,
-                iconTone: priority == .p4 ? nil : priority.tone
+                iconTone: priority == .p4 ? nil : priority.tone,
+                fill: iconOnly && priority != .p4 ? priority.tone : nil
             )
         }
+        .menuOrder(.fixed)
         .accessibilityLabel(Format.priorityLabel(priority))
-        .keepAsText(onKeepAsText)
     }
 }
 
 struct ProjectChip: View {
     @Environment(Store.self) private var store
     let projectId: String?
-    let onKeepAsText: (() -> Void)?
     let onChange: (String?) -> Void
+
+    @State private var creating = false
 
     var body: some View {
         let project = store.project(projectId)
@@ -429,11 +421,12 @@ struct ProjectChip: View {
                 }
             }
             .pickerStyle(.inline)
+            Button("New project…", systemImage: "plus") { creating = true }
         } label: {
             Chip(systemImage: project == nil ? "tray" : "number", text: project?.name ?? "Inbox", tone: project == nil ? .muted : .ink)
         }
         .accessibilityLabel("Project \(project?.name ?? "Inbox")")
-        .keepAsText(onKeepAsText)
+        .newProjectPrompt(isPresented: $creating) { onChange($0) }
     }
 }
 
@@ -468,5 +461,13 @@ struct FlowLayout: Layout {
             widest = max(widest, x - spacing)
         }
         return (origins, widest, y + rowHeight)
+    }
+}
+
+extension Priority {
+    /// Menus draw SF Symbols as templates in the app's tint, so the flag is pre-colored to keep each level's color.
+    var flag: Image {
+        let symbol = UIImage(systemName: self == .p4 ? "flag" : "flag.fill")!
+        return Image(uiImage: symbol.withTintColor(UIColor(tone), renderingMode: .alwaysOriginal))
     }
 }
