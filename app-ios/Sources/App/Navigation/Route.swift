@@ -1,5 +1,6 @@
 enum AppTab: Hashable {
     case inbox
+    case noDate
     case browse
     /// Not a screen: selecting it opens quick add and leaves the current tab selected.
     case add

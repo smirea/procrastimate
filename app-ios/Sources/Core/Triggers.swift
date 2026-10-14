@@ -100,13 +100,15 @@ public enum Triggers {
         let date = Dates.toDateKey(Date(epochMilliseconds: at), in: zone)
         let day: String? = if date == today {
             nil
+        } else if date == Dates.addDays(today, 1) {
+            "Tomorrow"
         } else if date > today, date < Dates.addDays(today, 7) {
             Format.weekdayNames[Dates.weekdayOf(date)]
         } else {
             Format.shortDate(date, today)
         }
         let time = event.allDay ? nil : Format.formatTime(wallTime(at, in: zone))
-        let when = [day, time].compactMap { $0 }.joined(separator: ", ")
+        let when = [day, time].compactMap { $0 }.joined(separator: " ")
         return EventLabel(lead: lead, title: event.title, when: when.isEmpty ? nil : when)
     }
 

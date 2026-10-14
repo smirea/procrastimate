@@ -166,17 +166,17 @@ describe('labels', () => {
 			when: '4:15pm',
 		});
 		expect(eventLabel(meetup({ edge: 'before', minutes: 60, occurrences: on(20, 9, 30) }), today).when).toBe(
-			'Tue, 8:30am',
+			'Tue 8:30am',
 		);
 		expect(eventLabel(meetup({ occurrences: on(21, 18) }), today)).toEqual({
 			lead: 'Start of',
 			title: 'Walking meetup',
-			when: 'Oct 21, 6pm',
+			when: 'Oct 21 6pm',
 		});
-		expect(eventLabel(meetup({ edge: 'during', occurrences: on(12, 18) }), today).when).toBe('Oct 12, 6pm');
+		expect(eventLabel(meetup({ edge: 'during', occurrences: on(12, 18) }), today).when).toBe('Oct 12 6pm');
 		expect(eventLabel(meetup({ allDay: true, occurrences: on(14, 0) }), today).when).toBeNull();
 		expect(eventLabel(meetup({ allDay: true, occurrences: on(16, 0) }), today).when).toBe('Fri');
-		expect(eventLabel(meetup({ occurrences: on(14, 18) }), '2025-12-30').when).toBe('Oct 14, 2026, 6pm');
+		expect(eventLabel(meetup({ occurrences: on(14, 18) }), '2025-12-30').when).toBe('Oct 14, 2026 6pm');
 	});
 
 	test('a task that follows a series reads the occurrence it is on', () => {
@@ -189,7 +189,7 @@ describe('labels', () => {
 				{ start: local(15, 10), end: local(15, 11), original: local(15, 10) },
 			],
 		});
-		expect(eventLabel(series, today)).toEqual({ lead: 'After', title: 'Walking meetup', when: 'Thu, 11am' });
+		expect(eventLabel(series, today)).toEqual({ lead: 'After', title: 'Walking meetup', when: 'Tomorrow 11am' });
 	});
 
 	test('places read by trigger', () => {

@@ -736,7 +736,7 @@
 			"output": {
 				"lead": "1h before",
 				"title": "Walking meetup",
-				"when": "Tue, 8:30am"
+				"when": "Tue 8:30am"
 			}
 		},
 		{
@@ -763,7 +763,7 @@
 			"output": {
 				"lead": "Start of",
 				"title": "Walking meetup",
-				"when": "Oct 21, 6pm"
+				"when": "Oct 21 6pm"
 			}
 		},
 		{
@@ -790,7 +790,7 @@
 			"output": {
 				"lead": "During",
 				"title": "Walking meetup",
-				"when": "Oct 12, 6pm"
+				"when": "Oct 12 6pm"
 			}
 		},
 		{
@@ -871,7 +871,7 @@
 			"output": {
 				"lead": "Start of",
 				"title": "Walking meetup",
-				"when": "Oct 14, 2026, 6pm"
+				"when": "Oct 14, 2026 6pm"
 			}
 		},
 		{
@@ -903,7 +903,7 @@
 			"output": {
 				"lead": "After",
 				"title": "Walking meetup",
-				"when": "Thu, 11am"
+				"when": "Tomorrow 11am"
 			}
 		},
 		{

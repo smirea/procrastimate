@@ -32,6 +32,9 @@ struct RootView: View {
                 TabStack(tab: .inbox) { InboxScreen() }
             }
             .badge(today.overdue.count + today.today.count)
+            Tab("No date", systemImage: "calendar.badge.minus", value: .noDate) {
+                TabStack(tab: .noDate) { NoDateScreen() }
+            }
             Tab("Browse", systemImage: "square.grid.2x2", value: .browse) {
                 TabStack(tab: .browse) { BrowseScreen() }
             }

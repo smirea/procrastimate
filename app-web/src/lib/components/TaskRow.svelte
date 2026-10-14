@@ -31,11 +31,7 @@
 	const parent = $derived(task.parentId ? store.task(task.parentId) : undefined);
 	const progress = $derived(store.progress(task.id));
 	const due = $derived(scheduledDue(task, clock.today));
-	const event = $derived.by(() => {
-		if (!task.event) return null;
-		const label = eventLabel(task.event, clock.today);
-		return timeOnly ? { ...label, when: due?.time ? formatTime(due.time) : null } : label;
-	});
+	const event = $derived(task.event ? eventLabel(task.event, clock.today) : null);
 
 	function complete() {
 		if (checking) return;
@@ -119,7 +115,7 @@
 		{/if}
 	</button>
 	{#if !task.event}
-		<div class="mt-1.5 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100 touch:hidden">
+		<div class="mt-1.5 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100 touch:opacity-100">
 			<Popover label="Postpone" align="end">
 				{#snippet trigger({ toggle })}
 					<button type="button" class="grid size-8 place-items-center rounded-full text-muted hover:bg-ink/5" aria-label={`Postpone ${task.title}`} onclick={toggle}>

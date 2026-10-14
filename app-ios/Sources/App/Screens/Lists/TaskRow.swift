@@ -91,12 +91,6 @@ struct TaskRow: View {
         Subtasks.progressOf(store.tasks.filter { $0.parentId == task.id })
     }
 
-    private func eventLabel(_ event: TaskEvent) -> Triggers.EventLabel {
-        var label = Triggers.eventLabel(event, today, in: store.timeZone)
-        if timeOnly { label.when = due?.time.map(Format.formatTime) }
-        return label
-    }
-
     /// The day the task sits on, which for an event or a repeat at a place is not its stored due date.
     private var due: Due? { Triggers.scheduledDue(task, today, in: store.timeZone) }
 
@@ -110,7 +104,7 @@ struct TaskRow: View {
             HStack(spacing: 10) {
                 if let event = task.event {
                     EventDetail(
-                        label: eventLabel(event),
+                        label: Triggers.eventLabel(event, today, in: store.timeZone),
                         series: event.series,
                         tone: due.map { Format.dueTone($0, today).color } ?? .muted
                     )

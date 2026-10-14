@@ -5,22 +5,21 @@
 	import View from '#lib/components/View.svelte';
 	import TaskList from '#lib/components/TaskList.svelte';
 	import { store } from '#lib/store.svelte.ts';
-	import { clock, mobile, motion } from '#lib/ui.svelte.ts';
-	import { inboxTasks, todayTasks, upcomingGroups } from 'shared/views.ts';
+	import { clock, motion } from '#lib/ui.svelte.ts';
+	import { todayTasks, upcomingGroups } from 'shared/views.ts';
 	import { dayHeading } from 'shared/format.ts';
 
 	const due = $derived(todayTasks(store.tasks, clock.today));
 	const days = $derived(upcomingGroups(store.tasks, clock.today));
-	const undated = $derived(inboxTasks(store.tasks, clock.today));
 </script>
 
 <svelte:head><title>Inbox · Procrastimate</title></svelte:head>
 
 <View
 	title="Inbox"
-	empty={due.overdue.length + due.today.length + days.length + undated.length === 0}
-	emptyTitle="Inbox zero"
-	emptyHint={mobile.current ? 'Tap + to capture a task.' : 'Press Q to capture a task.'}
+	empty={due.overdue.length + due.today.length + days.length === 0}
+	emptyTitle="Nothing scheduled"
+	emptyHint="Tasks with a date show up here by day."
 	quickAdd={{ projectId: null, labelId: null, today: false }}
 >
 	{#if due.overdue.length}
@@ -41,12 +40,6 @@
 			<TaskList tasks={group.tasks} showProject timeOnly label={`Tasks on ${group.date}`} />
 		</section>
 	{/each}
-	{#if undated.length}
-		<section class="mb-6" aria-label="No date">
-			<h2 class="section-heading">No date</h2>
-			<TaskList tasks={undated} label="Inbox tasks" />
-		</section>
-	{/if}
 </View>
 
 <style>
