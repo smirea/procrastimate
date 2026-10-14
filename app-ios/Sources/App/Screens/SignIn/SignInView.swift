@@ -11,17 +11,28 @@ struct SignInView: View {
     @State private var creating = false
     @State private var busy = false
 
+    @State private var height: CGFloat = 0
+
     var body: some View {
-        VStack(spacing: 20) {
-            Image("Logo")
-                .resizable()
-                .frame(width: 160, height: 160)
-                .padding(.bottom, -12)
-                .accessibilityHidden(true)
-            form
+        // The logo yields first when the keyboard or landscape leaves too little height, and the form scrolls after that.
+        ScrollView {
+            VStack(spacing: 20) {
+                if height > 640 {
+                    Image("Logo")
+                        .resizable()
+                        .frame(width: 160, height: 160)
+                        .padding(.bottom, -12)
+                        .accessibilityHidden(true)
+                        .transition(.opacity.combined(with: .scale(scale: 0.9)))
+                }
+                form
+            }
+            .padding(24)
+            .frame(maxWidth: .infinity, minHeight: height)
         }
-        .padding(24)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .scrollBounceBehavior(.basedOnSize)
+        .onGeometryChange(for: CGFloat.self, of: { $0.size.height }) { height = $0 }
+        .animation(.snappy(duration: 0.2), value: height > 640)
         .task { await session.loadMethods() }
     }
 
