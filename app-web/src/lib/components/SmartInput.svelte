@@ -19,6 +19,8 @@
 		enterkeyhint,
 		listAt = $bindable(null),
 		class: className = '',
+		reserve = false,
+		oninput,
 		onkeydown,
 		onblur,
 	}: {
@@ -32,6 +34,9 @@
 		/** Where the open suggestion list's `#` or `@` sits, or null while no list shows. */
 		listAt?: number | null;
 		class?: string;
+		/** Leaves room on the right for a mic or stop button sitting in the field. */
+		reserve?: boolean;
+		oninput?: () => void;
 		onkeydown?: (event: KeyboardEvent) => void;
 		onblur?: () => void;
 	} = $props();
@@ -184,7 +189,7 @@
 	});
 </script>
 
-<div bind:this={root} class="smart relative {className}">
+<div bind:this={root} class="smart relative {className}" class:reserve>
 	<div bind:this={backdrop} aria-hidden="true" class="smart-layer pointer-events-none absolute inset-0 overflow-hidden text-transparent">
 		{#each segments as segment, i (i)}
 			{#if segment.kind}
@@ -209,6 +214,7 @@
 		oninput={() => {
 			syncScroll();
 			syncCaret();
+			oninput?.();
 		}}
 		onkeyup={syncCaret}
 		onclick={syncCaret}
@@ -239,6 +245,10 @@
 </div>
 
 <style>
+	.reserve .smart-layer {
+		padding-right: 2.5rem;
+	}
+
 	.smart-layer {
 		white-space: pre;
 		font: inherit;

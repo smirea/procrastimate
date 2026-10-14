@@ -55,7 +55,7 @@ Open `App.xcodeproj` and select the shared `App` scheme to debug. Build logs are
 
 ## Archive and upload to TestFlight
 
-Create an App Store Connect API key (Users and Access, Integrations, Team Keys) with the Admin role, so Xcode can create the distribution certificate and profile. Download its `AuthKey_<id>.p8` somewhere outside the repo, then:
+Create an App Store Connect API key (Users and Access, Integrations, Team Keys) with the Admin role, so export can use the existing Apple Distribution certificate and profile. The archive is unsigned and does not create a development certificate. Download its `AuthKey_<id>.p8` somewhere outside the repo, then:
 
 ```sh
 export ASC_KEY_ID=<key id> ASC_ISSUER_ID=<issuer id> ASC_KEY_PATH=~/.appstoreconnect/AuthKey_<id>.p8
@@ -63,7 +63,7 @@ export ASC_KEY_ID=<key id> ASC_ISSUER_ID=<issuer id> ASC_KEY_PATH=~/.appstorecon
 ./scripts/archive --export-only  # write build/archive/export/App.ipa without uploading
 ```
 
-Release builds always call `https://procrastimate.stf.lol`; Debug uses `API_URL` from the environment below. The build number defaults to the current UTC time as `year.MMdd.HHmmss` (`BUILD_NUMBER` overrides it), so each upload is higher than the last. Nothing here runs in CI, and the key values never go in the repo.
+Release builds always call `https://procrastimate.stf.lol`; Debug uses `API_URL` from the environment below. The build number defaults to the current UTC time as `year.MMdd.HHmmss` (`BUILD_NUMBER` overrides it), so each upload is higher than the last. GitHub Actions runs this script for TestFlight; the key values never go in the repo.
 
 ## Environment
 

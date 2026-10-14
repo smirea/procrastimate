@@ -105,8 +105,8 @@ func unknown(_ fn: String) -> VectorError { VectorError(description: "No Swift h
 
 typealias Handler = @Sendable (String, Args) throws -> JSONValue
 
-/// `ramble` is recorded for R3. Until `Core` has a handler, its cases are not a failure.
-private let pendingPorts: Set<String> = ["ramble"]
+/// Empty once every recorded module has a Swift handler.
+private let pendingPorts: Set<String> = []
 
 let handlers: [String: Handler] = [
     "task": taskVector,
@@ -123,6 +123,7 @@ let handlers: [String: Handler] = [
     "todoist": todoistVector,
     "dictation": dictationVector,
     "triggers": triggersVector,
+    "ramble": rambleVector,
 ]
 
 // MARK: task.ts
@@ -384,6 +385,31 @@ private struct ParseInput: Decodable {
 @Sendable func dictationVector(_ fn: String, _ a: Args) throws -> JSONValue {
     switch fn {
     case "voiceCapture": return try json(Dictation.voiceCapture(a(0), online: a(1), nativeSpeech: a(2)))
+    default: throw unknown(fn)
+    }
+}
+
+// MARK: ramble.ts
+
+private struct RambleInput: Decodable {
+    let now: Int
+    let projects: [Project]?
+    let labels: [Label]?
+}
+
+@Sendable func rambleVector(_ fn: String, _ a: Args) throws -> JSONValue {
+    switch fn {
+    case "parseRamble":
+        let options = try a(1, as: RambleInput.self)
+        return try json(
+            Ramble.parse(
+                try a(0),
+                now: Date(epochMilliseconds: options.now),
+                projects: options.projects ?? [],
+                labels: options.labels ?? [],
+                in: a.zone
+            )
+        )
     default: throw unknown(fn)
     }
 }
