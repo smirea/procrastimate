@@ -342,7 +342,7 @@ const HAND_WRITTEN: Record<Category, Row[]> = {
 		],
 		[
 			'Groceries: eggs, spinach, and oat milk. Also call the vet tomorrow.',
-			[t('Groceries: eggs, spinach, and oat milk'), t('Call the vet', { due: '2026-10-15' })],
+			[t('Groceries', { subtasks: plain('Eggs', 'Spinach', 'Oat milk') }), t('Call the vet', { due: '2026-10-15' })],
 		],
 		[
 			'So this week I want to finish the Q3 report, prep for the board meeting on Thursday, and maybe start on the budget.',
@@ -425,6 +425,22 @@ const HAND_WRITTEN: Record<Category, Row[]> = {
 			[t('Plan the party', { subtasks: plain('Invitations', 'Cake', 'Music') })],
 		],
 		['Clean garage. Subtask sort tools.', [t('Clean garage', { subtasks: plain('Sort tools') })]],
+		[
+			'Plan the trip to Lisbon, the steps are book flights, find a hotel, and rent a car',
+			[t('Plan the trip to Lisbon', { subtasks: plain('Book flights', 'Find a hotel', 'Rent a car') })],
+		],
+		[
+			'Clean the apartment which means vacuum, mop the kitchen and take out the recycling',
+			[t('Clean the apartment', { subtasks: plain('Vacuum', 'Mop the kitchen', 'Take out the recycling') })],
+		],
+		[
+			'Pack for the trip: passport, charger and sunscreen. Call Dave tomorrow.',
+			[
+				t('Pack for the trip', { subtasks: plain('Passport', 'Charger', 'Sunscreen') }),
+				t('Call Dave', { due: '2026-10-15' }),
+			],
+		],
+		['Meet Ana at 5:30pm', [t('Meet Ana', { due: '2026-10-14 17:30' })]],
 		[
 			'Prepare the trip with subtasks book flights, reserve the hotel and buy travel insurance',
 			[t('Prepare the trip', { subtasks: plain('Book flights', 'Reserve the hotel', 'Buy travel insurance') })],
@@ -712,6 +728,22 @@ const HAND_WRITTEN: Record<Category, Row[]> = {
 		['Order pizza tonight. Scratch that. Order sushi tonight.', [t('Order sushi', { due: '2026-10-14 20:00' })]],
 		['Buy stamps. That is all.', plain('Buy stamps'), { ended: true }],
 		['Call Sam, never mind, call Alex priority one', [t('Call Alex', { priority: 1 })]],
+		[
+			'Email Sarah about the deck on Thursday actually make that Friday',
+			[t('Email Sarah about the deck', { due: '2026-10-16' })],
+		],
+		['Renew the car insurance on the 20th, I mean the 21st', [t('Renew the car insurance', { due: '2026-10-21' })]],
+		[
+			'Pick up a prescription today, no wait, tomorrow, and text Dan the address',
+			[t('Pick up a prescription', { due: '2026-10-15' }), t('Text Dan the address')],
+		],
+		[
+			'Water the plants every Monday and Thursday, scratch that, every Monday. Also call mom',
+			[t('Water the plants', { due: '2026-10-19', recurrence: weekly }), t('Call mom')],
+		],
+		['Pay rent priority 2, actually priority 1', [t('Pay rent', { priority: 1 })]],
+		['Call the dentist tomorrow at 3pm sorry 4pm', [t('Call the dentist', { due: '2026-10-15 16:00' })]],
+		['Say no to the Friday meeting', plain('Say no to the Friday meeting')],
 	],
 	dates: [
 		['Gym every other week on Monday', [t('Gym', { due: '2026-10-19', recurrence: { interval: 2, unit: 'week' } })]],

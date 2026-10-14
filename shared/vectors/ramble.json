@@ -11913,8 +11913,54 @@
 							"end": 38,
 							"start": 0
 						},
-						"subtasks": [],
-						"title": "Groceries: eggs, spinach, and oat milk"
+						"subtasks": [
+							{
+								"due": null,
+								"labelIds": [],
+								"notes": "",
+								"priority": null,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"segment": {
+									"end": 15,
+									"start": 11
+								},
+								"subtasks": [],
+								"title": "Eggs"
+							},
+							{
+								"due": null,
+								"labelIds": [],
+								"notes": "",
+								"priority": null,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"segment": {
+									"end": 24,
+									"start": 17
+								},
+								"subtasks": [],
+								"title": "Spinach"
+							},
+							{
+								"due": null,
+								"labelIds": [],
+								"notes": "",
+								"priority": null,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"segment": {
+									"end": 38,
+									"start": 30
+								},
+								"subtasks": [],
+								"title": "Oat milk"
+							}
+						],
+						"title": "Groceries"
 					},
 					{
 						"due": {
@@ -11936,6 +11982,12 @@
 					}
 				],
 				"tokens": [
+					{
+						"end": 10,
+						"kind": "subtask",
+						"start": 9,
+						"text": ":"
+					},
 					{
 						"end": 66,
 						"kind": "due",
@@ -14588,6 +14640,519 @@
 						"kind": "subtask",
 						"start": 14,
 						"text": "Subtask"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseRamble",
+			"test": "locked cases › subtasks-plan-the-trip-to-lisbon-the-steps-are-book-fligh",
+			"input": [
+				"Plan the trip to Lisbon, the steps are book flights, find a hotel, and rent a car",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-errands",
+							"name": "errands"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-work",
+							"name": "Work"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-indonesia",
+							"name": "Indonesia"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-finance",
+							"name": "Finance"
+						}
+					]
+				}
+			],
+			"output": {
+				"ended": false,
+				"tasks": [
+					{
+						"due": null,
+						"labelIds": [],
+						"notes": "",
+						"priority": null,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"segment": {
+							"end": 81,
+							"start": 0
+						},
+						"subtasks": [
+							{
+								"due": null,
+								"labelIds": [],
+								"notes": "",
+								"priority": null,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"segment": {
+									"end": 51,
+									"start": 39
+								},
+								"subtasks": [],
+								"title": "Book flights"
+							},
+							{
+								"due": null,
+								"labelIds": [],
+								"notes": "",
+								"priority": null,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"segment": {
+									"end": 65,
+									"start": 53
+								},
+								"subtasks": [],
+								"title": "Find a hotel"
+							},
+							{
+								"due": null,
+								"labelIds": [],
+								"notes": "",
+								"priority": null,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"segment": {
+									"end": 81,
+									"start": 71
+								},
+								"subtasks": [],
+								"title": "Rent a car"
+							}
+						],
+						"title": "Plan the trip to Lisbon"
+					}
+				],
+				"tokens": [
+					{
+						"end": 38,
+						"kind": "subtask",
+						"start": 23,
+						"text": ", the steps are"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseRamble",
+			"test": "locked cases › subtasks-clean-the-apartment-which-means-vacuum-mop-the-k",
+			"input": [
+				"Clean the apartment which means vacuum, mop the kitchen and take out the recycling",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-errands",
+							"name": "errands"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-work",
+							"name": "Work"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-indonesia",
+							"name": "Indonesia"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-finance",
+							"name": "Finance"
+						}
+					]
+				}
+			],
+			"output": {
+				"ended": false,
+				"tasks": [
+					{
+						"due": null,
+						"labelIds": [],
+						"notes": "",
+						"priority": null,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"segment": {
+							"end": 82,
+							"start": 0
+						},
+						"subtasks": [
+							{
+								"due": null,
+								"labelIds": [],
+								"notes": "",
+								"priority": null,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"segment": {
+									"end": 38,
+									"start": 32
+								},
+								"subtasks": [],
+								"title": "Vacuum"
+							},
+							{
+								"due": null,
+								"labelIds": [],
+								"notes": "",
+								"priority": null,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"segment": {
+									"end": 55,
+									"start": 40
+								},
+								"subtasks": [],
+								"title": "Mop the kitchen"
+							},
+							{
+								"due": null,
+								"labelIds": [],
+								"notes": "",
+								"priority": null,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"segment": {
+									"end": 82,
+									"start": 60
+								},
+								"subtasks": [],
+								"title": "Take out the recycling"
+							}
+						],
+						"title": "Clean the apartment"
+					}
+				],
+				"tokens": [
+					{
+						"end": 31,
+						"kind": "subtask",
+						"start": 20,
+						"text": "which means"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseRamble",
+			"test": "locked cases › subtasks-pack-for-the-trip-passport-charger-and-sunscreen",
+			"input": [
+				"Pack for the trip: passport, charger and sunscreen. Call Dave tomorrow.",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-errands",
+							"name": "errands"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-work",
+							"name": "Work"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-indonesia",
+							"name": "Indonesia"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-finance",
+							"name": "Finance"
+						}
+					]
+				}
+			],
+			"output": {
+				"ended": false,
+				"tasks": [
+					{
+						"due": null,
+						"labelIds": [],
+						"notes": "",
+						"priority": null,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"segment": {
+							"end": 50,
+							"start": 0
+						},
+						"subtasks": [
+							{
+								"due": null,
+								"labelIds": [],
+								"notes": "",
+								"priority": null,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"segment": {
+									"end": 27,
+									"start": 19
+								},
+								"subtasks": [],
+								"title": "Passport"
+							},
+							{
+								"due": null,
+								"labelIds": [],
+								"notes": "",
+								"priority": null,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"segment": {
+									"end": 36,
+									"start": 29
+								},
+								"subtasks": [],
+								"title": "Charger"
+							},
+							{
+								"due": null,
+								"labelIds": [],
+								"notes": "",
+								"priority": null,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"segment": {
+									"end": 50,
+									"start": 41
+								},
+								"subtasks": [],
+								"title": "Sunscreen"
+							}
+						],
+						"title": "Pack for the trip"
+					},
+					{
+						"due": {
+							"date": "2026-10-15",
+							"time": null
+						},
+						"labelIds": [],
+						"notes": "",
+						"priority": null,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"segment": {
+							"end": 70,
+							"start": 51
+						},
+						"subtasks": [],
+						"title": "Call Dave"
+					}
+				],
+				"tokens": [
+					{
+						"end": 18,
+						"kind": "subtask",
+						"start": 17,
+						"text": ":"
+					},
+					{
+						"end": 70,
+						"kind": "due",
+						"start": 62,
+						"text": "tomorrow"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseRamble",
+			"test": "locked cases › subtasks-meet-ana-at-5-30pm",
+			"input": [
+				"Meet Ana at 5:30pm",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-errands",
+							"name": "errands"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-work",
+							"name": "Work"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-indonesia",
+							"name": "Indonesia"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-finance",
+							"name": "Finance"
+						}
+					]
+				}
+			],
+			"output": {
+				"ended": false,
+				"tasks": [
+					{
+						"due": {
+							"date": "2026-10-14",
+							"time": "17:30"
+						},
+						"labelIds": [],
+						"notes": "",
+						"priority": null,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"segment": {
+							"end": 18,
+							"start": 0
+						},
+						"subtasks": [],
+						"title": "Meet Ana"
+					}
+				],
+				"tokens": [
+					{
+						"end": 18,
+						"kind": "due",
+						"start": 9,
+						"text": "at 5:30pm"
 					}
 				]
 			}
@@ -29028,6 +29593,656 @@
 						"text": "priority one"
 					}
 				]
+			}
+		},
+		{
+			"fn": "parseRamble",
+			"test": "locked cases › corrections-email-sarah-about-the-deck-on-thursday-actually-",
+			"input": [
+				"Email Sarah about the deck on Thursday actually make that Friday",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-errands",
+							"name": "errands"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-work",
+							"name": "Work"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-indonesia",
+							"name": "Indonesia"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-finance",
+							"name": "Finance"
+						}
+					]
+				}
+			],
+			"output": {
+				"ended": false,
+				"tasks": [
+					{
+						"due": {
+							"date": "2026-10-16",
+							"time": null
+						},
+						"labelIds": [],
+						"notes": "",
+						"priority": null,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"segment": {
+							"end": 64,
+							"start": 0
+						},
+						"subtasks": [],
+						"title": "Email Sarah about the deck"
+					}
+				],
+				"tokens": [
+					{
+						"end": 64,
+						"kind": "due",
+						"start": 27,
+						"text": "on Thursday actually make that Friday"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseRamble",
+			"test": "locked cases › corrections-renew-the-car-insurance-on-the-20th-i-mean-the-2",
+			"input": [
+				"Renew the car insurance on the 20th, I mean the 21st",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-errands",
+							"name": "errands"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-work",
+							"name": "Work"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-indonesia",
+							"name": "Indonesia"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-finance",
+							"name": "Finance"
+						}
+					]
+				}
+			],
+			"output": {
+				"ended": false,
+				"tasks": [
+					{
+						"due": {
+							"date": "2026-10-21",
+							"time": null
+						},
+						"labelIds": [],
+						"notes": "",
+						"priority": null,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"segment": {
+							"end": 52,
+							"start": 0
+						},
+						"subtasks": [],
+						"title": "Renew the car insurance"
+					}
+				],
+				"tokens": [
+					{
+						"end": 52,
+						"kind": "due",
+						"start": 24,
+						"text": "on the 20th, I mean the 21st"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseRamble",
+			"test": "locked cases › corrections-pick-up-a-prescription-today-no-wait-tomorrow-an",
+			"input": [
+				"Pick up a prescription today, no wait, tomorrow, and text Dan the address",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-errands",
+							"name": "errands"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-work",
+							"name": "Work"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-indonesia",
+							"name": "Indonesia"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-finance",
+							"name": "Finance"
+						}
+					]
+				}
+			],
+			"output": {
+				"ended": false,
+				"tasks": [
+					{
+						"due": {
+							"date": "2026-10-15",
+							"time": null
+						},
+						"labelIds": [],
+						"notes": "",
+						"priority": null,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"segment": {
+							"end": 47,
+							"start": 0
+						},
+						"subtasks": [],
+						"title": "Pick up a prescription"
+					},
+					{
+						"due": null,
+						"labelIds": [],
+						"notes": "",
+						"priority": null,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"segment": {
+							"end": 73,
+							"start": 47
+						},
+						"subtasks": [],
+						"title": "Text Dan the address"
+					}
+				],
+				"tokens": [
+					{
+						"end": 47,
+						"kind": "due",
+						"start": 23,
+						"text": "today, no wait, tomorrow"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseRamble",
+			"test": "locked cases › corrections-water-the-plants-every-monday-and-thursday-scrat",
+			"input": [
+				"Water the plants every Monday and Thursday, scratch that, every Monday. Also call mom",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-errands",
+							"name": "errands"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-work",
+							"name": "Work"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-indonesia",
+							"name": "Indonesia"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-finance",
+							"name": "Finance"
+						}
+					]
+				}
+			],
+			"output": {
+				"ended": false,
+				"tasks": [
+					{
+						"due": {
+							"date": "2026-10-19",
+							"time": null
+						},
+						"labelIds": [],
+						"notes": "",
+						"priority": null,
+						"projectId": null,
+						"recurrence": {
+							"interval": 1,
+							"unit": "week"
+						},
+						"reminders": [],
+						"segment": {
+							"end": 70,
+							"start": 0
+						},
+						"subtasks": [],
+						"title": "Water the plants"
+					},
+					{
+						"due": null,
+						"labelIds": [],
+						"notes": "",
+						"priority": null,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"segment": {
+							"end": 85,
+							"start": 71
+						},
+						"subtasks": [],
+						"title": "Call mom"
+					}
+				],
+				"tokens": [
+					{
+						"end": 70,
+						"kind": "recurrence",
+						"start": 17,
+						"text": "every Monday and Thursday, scratch that, every Monday"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseRamble",
+			"test": "locked cases › corrections-pay-rent-priority-2-actually-priority-1",
+			"input": [
+				"Pay rent priority 2, actually priority 1",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-errands",
+							"name": "errands"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-work",
+							"name": "Work"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-indonesia",
+							"name": "Indonesia"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-finance",
+							"name": "Finance"
+						}
+					]
+				}
+			],
+			"output": {
+				"ended": false,
+				"tasks": [
+					{
+						"due": null,
+						"labelIds": [],
+						"notes": "",
+						"priority": 1,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"segment": {
+							"end": 40,
+							"start": 0
+						},
+						"subtasks": [],
+						"title": "Pay rent"
+					}
+				],
+				"tokens": [
+					{
+						"end": 40,
+						"kind": "priority",
+						"start": 9,
+						"text": "priority 2, actually priority 1"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseRamble",
+			"test": "locked cases › corrections-call-the-dentist-tomorrow-at-3pm-sorry-4pm",
+			"input": [
+				"Call the dentist tomorrow at 3pm sorry 4pm",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-errands",
+							"name": "errands"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-work",
+							"name": "Work"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-indonesia",
+							"name": "Indonesia"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-finance",
+							"name": "Finance"
+						}
+					]
+				}
+			],
+			"output": {
+				"ended": false,
+				"tasks": [
+					{
+						"due": {
+							"date": "2026-10-15",
+							"time": "16:00"
+						},
+						"labelIds": [],
+						"notes": "",
+						"priority": null,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"segment": {
+							"end": 42,
+							"start": 0
+						},
+						"subtasks": [],
+						"title": "Call the dentist"
+					}
+				],
+				"tokens": [
+					{
+						"end": 42,
+						"kind": "due",
+						"start": 17,
+						"text": "tomorrow at 3pm sorry 4pm"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseRamble",
+			"test": "locked cases › corrections-say-no-to-the-friday-meeting",
+			"input": [
+				"Say no to the Friday meeting",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-errands",
+							"name": "errands"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-work",
+							"name": "Work"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-indonesia",
+							"name": "Indonesia"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-finance",
+							"name": "Finance"
+						}
+					]
+				}
+			],
+			"output": {
+				"ended": false,
+				"tasks": [
+					{
+						"due": null,
+						"labelIds": [],
+						"notes": "",
+						"priority": null,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"segment": {
+							"end": 28,
+							"start": 0
+						},
+						"subtasks": [],
+						"title": "Say no to the Friday meeting"
+					}
+				],
+				"tokens": []
 			}
 		},
 		{
