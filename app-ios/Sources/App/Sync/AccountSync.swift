@@ -195,9 +195,11 @@ enum SessionToken {
             kSecValueData as String: Data(token.utf8),
         ]
         SecItemAdd(query as CFDictionary, nil)
+        SharedSession.write(token: token)
     }
 
     static func clear() {
+        SharedSession.delete()
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,

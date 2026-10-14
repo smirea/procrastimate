@@ -96,7 +96,7 @@ struct TaskRow: View {
 
     private var hasDetails: Bool {
         due != nil || task.location != nil || task.recurrence != nil || !task.reminders.isEmpty || progress != nil || !labels.isEmpty
-            || parent != nil || showProject
+            || parent != nil || showProject || task.memoSource != nil
     }
 
     @ViewBuilder private var details: some View {
@@ -133,6 +133,11 @@ struct TaskRow: View {
                 }
                 ForEach(labels) { label in
                     LabelChip(name: label.name)
+                }
+                if task.memoSource != nil {
+                    Image(systemName: "waveform")
+                        .imageScale(.small)
+                        .accessibilityLabel("From a voice memo")
                 }
                 if let parent {
                     Detail(systemImage: "arrow.turn.down.right", text: parent.title)

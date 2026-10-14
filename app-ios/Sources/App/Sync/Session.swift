@@ -23,6 +23,8 @@ final class Session {
     }
 
     func start() async {
+        // At launch too, so the shared item names the server this build talks to.
+        if let token = SessionToken.read() { SharedSession.write(token: token) }
         await refresh()
         await loadMethods()
     }
