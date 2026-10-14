@@ -75,25 +75,6 @@ func grammar(_ text: String) -> [RambleTask] { Ramble.parse(text, now: now, proj
 let model = SystemLanguageModel(guardrails: .permissiveContentTransformations)
 
 // Mirrors RambleModel in the app, which cannot be imported here.
-@Generable enum Role: String { case task, subtaskOfPrevious, partOfPrevious, takenBack }
-@Generable struct Reviewed {
-    @Guide(description: "The draft task's number.") var number: Int
-    var role: Role
-    @Guide(description: "If the task's text names several items or steps that belong inside it, those items copied exactly from the text. Otherwise empty.")
-    var items: [String]
-}
-@Generable struct Review { @Guide(description: "One entry per draft task, in order.") var tasks: [Reviewed] }
-
-func review(_ text: String) async throws -> [RambleTask] {
-    let draft = grammar(text)
-    guard !draft.isEmpty else { return draft }
-    let session = LanguageModelSession(model: model, instructions: RambleReview.instructions)
-    let lines = draft.enumerated().map { "\($0.offset + 1). \($0.element.title)" }.joined(separator: "\n")
-    let r = try await session.respond(to: "Ramble: \(text)\nDraft:\n\(lines)", generating: Review.self, options: GenerationOptions(samplingMode: .greedy))
-    let reviews = r.content.tasks.map { RambleReview(number: $0.number, role: RambleReview.Role(rawValue: $0.role.rawValue) ?? .task, items: $0.items) }
-    return Ramble.reviewed(draft, by: reviews, in: text)
-}
-
 @Generable struct SplitTask {
     @Guide(description: "The to-do in the speaker's own words, copied from the ramble, including when it is due and any reminder, without the listed items.")
     var text: String
@@ -102,97 +83,24 @@ func review(_ text: String) async throws -> [RambleTask] {
 }
 @Generable struct Split { var tasks: [SplitTask] }
 
-let splitInstructions = """
-You turn a spoken to-do ramble into to-dos. Copy the speaker's words; never add words they did not say.
-Each to-do is one thing to do. Keep its time words and reminders in its text ("at 2pm", "tomorrow", "remind me 10 minutes before"), \
-even when they come in a later sentence. Drop filler like "um", "so", "and then", "I need to".
-When the speaker lists things that belong inside one to-do (items to buy, things to pack, steps of a project), \
-put each in that to-do's subtasks and leave them out of its text. Separate errands are separate to-dos, not subtasks. \
-"buy salt and pepper" is one to-do with no subtasks.
-If the speaker cancels a to-do ("scratch that", "never mind"), leave it out. Keep other corrections as said ("Thursday, actually Friday").
-
-Example ramble: Go to the store at 5pm and grab apples, flour and butter. Then I need to call Mia tomorrow, remind me an hour before.
-Answer: [{text: "go to the store at 5pm", subtasks: ["apples", "flour", "butter"]}, {text: "call Mia tomorrow, remind me an hour before", subtasks: []}]
-"""
-
-func fieldsOf(_ text: String) -> RambleTask {
-    let parsed = grammar(text)
-    guard var first = parsed.first else { return RambleTask(segment: RambleSpan(start: 0, end: 0), title: "") }
-    for more in parsed.dropFirst() {
-        first.title += " " + more.title.prefix(1).lowercased() + more.title.dropFirst()
-        first.due = first.due ?? more.due
-        first.recurrence = first.recurrence ?? more.recurrence
-        first.priority = first.priority ?? more.priority
-        first.reminders += more.reminders
-        first.subtasks += more.subtasks
-    }
-    return first
-}
-
 struct Unbacked: Error {}
 
-func backed(_ piece: String, by transcript: String) -> Bool {
-    let said = Set(words(transcript)), piece = words(piece)
-    return !piece.isEmpty && Double(piece.filter(said.contains).count) / Double(piece.count) >= 0.8
-}
-
-let glue: Set<String> = ["to", "and", "i", "at", "on", "the", "a", "my", "for", "of", "in", "it", "up", "me"]
-
-// The model decides the structure; the grammar reads each piece's fields. Every piece must come from the transcript,
-// a subtask that only repeats its task's own words is dropped, and a lone subtask is not a list.
-func assemble(_ raw: [(text: String, subtasks: [String])], _ transcript: String) throws -> [RambleTask] {
-    let tasks = raw.map { (text: $0.text, subtasks: $0.subtasks.filter { !words($0).isEmpty }) }.filter { !words($0.text).isEmpty }
-    for t in tasks where !backed(t.text, by: transcript) || !t.subtasks.allSatisfy({ backed($0, by: transcript) }) {
-        if ProcessInfo.processInfo.environment["WHY"] != nil { print("  unbacked: \(t.text) \(t.subtasks)") }
-        throw Unbacked()
-    }
-    let result = tasks.flatMap { t -> [RambleTask] in
-        let own = Set(words(t.text))
-        let subtasks = t.subtasks.filter { !Set(words($0)).isSubset(of: own) }.map { fieldsOf($0) }.filter { !$0.title.isEmpty }
-        // Without a list, the grammar's own split of the text wins: the model often runs two errands together.
-        guard subtasks.count >= 2 else { return grammar(t.text) }
-        var task = fieldsOf(t.text)
-        guard !task.title.isEmpty else { return [] }
-        task.subtasks = subtasks
-        return [task]
-    }
-    // The model can copy one reminder or date into two to-dos; the grammar over the whole transcript bounds them.
-    let whole = grammar(transcript).flatMap { [$0] + $0.subtasks }
-    let all = result.flatMap { [$0] + $0.subtasks }
-    if all.flatMap(\.reminders).count > whole.flatMap(\.reminders).count || all.filter({ $0.due != nil }).count > whole.filter({ $0.due != nil }).count {
-        throw Unbacked()
-    }
-    return result
-}
-
-// Spoken commands ("next task", "subtask", "note", "scratch that") are the grammar's to read; the model only helps
-// with natural speech.
-func explicit(_ text: String) -> Bool {
-    Ramble.parse(text, now: now, projects: projects, labels: labels, in: zone).tokens.contains { ["separator", "subtask", "note", "correction"].contains($0.kind) }
-}
-
-// The model may restructure but not lose what the grammar kept.
-func covers(_ result: [RambleTask], _ draft: [RambleTask]) -> Bool {
-    let out = Set(result.flatMap { [$0] + $0.subtasks }.flatMap { words($0.title) })
-    return draft.flatMap { [$0] + $0.subtasks }.allSatisfy { task in
-        let kept = Set(words(task.title)).subtracting(glue)
-        return kept.isEmpty || Double(kept.intersection(out).count) / Double(kept.count) >= 0.5
-    }
-}
-
 func split(_ text: String) async throws -> [RambleTask] {
-    if explicit(text) { return grammar(text) }
-    let session = LanguageModelSession(model: model, instructions: splitInstructions)
+    let draft = Ramble.parse(text, now: now, projects: projects, labels: labels, in: zone)
+    if Ramble.usesCommands(draft) { return draft.tasks }
+    let session = LanguageModelSession(model: model, instructions: Ramble.splitInstructions)
     let r = try await session.respond(to: "Ramble: \(text)", generating: Split.self, options: GenerationOptions(samplingMode: .greedy))
-    let result = try assemble(r.content.tasks.map { ($0.text, $0.subtasks) }, text)
-    guard covers(result, grammar(text)) else { throw Unbacked() }
-    return result
+    let pieces = r.content.tasks.map { RambleSplit(text: $0.text, subtasks: $0.subtasks) }
+    guard let tasks = Ramble.structured(pieces, transcript: text, draft: draft, now: now, projects: projects, labels: labels, in: zone) else {
+        if ProcessInfo.processInfo.environment["WHY"] != nil { print("  fallback: \(pieces)") }
+        throw Unbacked()
+    }
+    return tasks
 }
 
 typealias Strategy = @Sendable (String) async throws -> [RambleTask]
 let strategies: [String: Strategy] = [
     "grammar": { grammar($0) },
-    "review": review,
     "split": split,
 ]
 
