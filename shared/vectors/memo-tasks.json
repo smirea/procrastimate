@@ -1,0 +1,100 @@
+{
+	"module": "memo-tasks",
+	"timeZone": "America/New_York",
+	"cases": [
+		{
+			"fn": "memoSourceKey",
+			"test": "memo source keys › build and parse back",
+			"input": [
+				{
+					"memoId": "0b7c1f9e-6a59-4f0e-9d7e-3c2a1b0f9e8d",
+					"taskKey": "aaaaaaaa-0000-4000-8000-000000000001"
+				}
+			],
+			"output": "voicememo:0b7c1f9e-6a59-4f0e-9d7e-3c2a1b0f9e8d:aaaaaaaa-0000-4000-8000-000000000001"
+		},
+		{
+			"fn": "parseMemoSource",
+			"test": "memo source keys › build and parse back",
+			"input": [
+				"voicememo:0b7c1f9e-6a59-4f0e-9d7e-3c2a1b0f9e8d:aaaaaaaa-0000-4000-8000-000000000001"
+			],
+			"output": {
+				"memoId": "0b7c1f9e-6a59-4f0e-9d7e-3c2a1b0f9e8d",
+				"taskKey": "aaaaaaaa-0000-4000-8000-000000000001"
+			}
+		},
+		{
+			"fn": "parseMemoSource",
+			"test": "memo source keys › undefined is not a memo task",
+			"input": [
+				null
+			],
+			"output": null
+		},
+		{
+			"fn": "parseMemoSource",
+			"test": "memo source keys › null is not a memo task",
+			"input": [
+				null
+			],
+			"output": null
+		},
+		{
+			"fn": "parseMemoSource",
+			"test": "memo source keys › \"\" is not a memo task",
+			"input": [
+				""
+			],
+			"output": null
+		},
+		{
+			"fn": "parseMemoSource",
+			"test": "memo source keys › \"todoist:task:6Xmpl1Fq:Call the dentist\" is not a memo task",
+			"input": [
+				"todoist:task:6Xmpl1Fq:Call the dentist"
+			],
+			"output": null
+		},
+		{
+			"fn": "parseMemoSource",
+			"test": "memo source keys › \"voicememo:0b7c1f9e-6a59-4f0e-9d7e-3c2a1b0f9e8d\" is not a memo task",
+			"input": [
+				"voicememo:0b7c1f9e-6a59-4f0e-9d7e-3c2a1b0f9e8d"
+			],
+			"output": null
+		},
+		{
+			"fn": "parseMemoSource",
+			"test": "memo source keys › \"voicememo:0b7c1f9e-6a59-4f0e-9d7e-3c2a1b0f9e8d:\" is not a memo task",
+			"input": [
+				"voicememo:0b7c1f9e-6a59-4f0e-9d7e-3c2a1b0f9e8d:"
+			],
+			"output": null
+		},
+		{
+			"fn": "parseMemoSource",
+			"test": "memo source keys › \"voicememo:0b7c1f9e-6a59-4f0e-9d7e-3c2a1b0f9e8d:aaaaaaaa-0000-4000-8000-000000000001:extra\" is not a memo task",
+			"input": [
+				"voicememo:0b7c1f9e-6a59-4f0e-9d7e-3c2a1b0f9e8d:aaaaaaaa-0000-4000-8000-000000000001:extra"
+			],
+			"output": null
+		},
+		{
+			"fn": "parseMemoSource",
+			"test": "memo source keys › \"voicememo:0B7C1F9E-6A59-4F0E-9D7E-3C2A1B0F9E8D:aaaaaaaa-0000-4000-8000-000000000001\" is not a memo task",
+			"input": [
+				"voicememo:0B7C1F9E-6A59-4F0E-9D7E-3C2A1B0F9E8D:aaaaaaaa-0000-4000-8000-000000000001"
+			],
+			"output": null
+		},
+		{
+			"fn": "parseMemoSource",
+			"test": "memo source keys › \"voicememo:not-a-uuid:aaaaaaaa-0000-4000-8000-000000000001\" is not a memo task",
+			"input": [
+				"voicememo:not-a-uuid:aaaaaaaa-0000-4000-8000-000000000001"
+			],
+			"output": null
+		}
+	]
+}
