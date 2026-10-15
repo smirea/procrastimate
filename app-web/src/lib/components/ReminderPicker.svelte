@@ -11,7 +11,14 @@
 		due,
 		onchange,
 		label = 'Reminders',
-	}: { reminders: Reminder[]; due: Due | null; onchange: (reminders: Reminder[]) => void; label?: string } = $props();
+		open = $bindable(false),
+	}: {
+		reminders: Reminder[];
+		due: Due | null;
+		onchange: (reminders: Reminder[]) => void;
+		label?: string;
+		open?: boolean;
+	} = $props();
 
 	const PRESETS = [0, 10, 30, 60, 1440];
 	let customDate = $state('');
@@ -31,7 +38,7 @@
 	const presetLabel = (minutes: number) => formatReminder({ kind: 'before', minutes }, clock.today);
 </script>
 
-<Popover {label}>
+<Popover {label} bind:open>
 	{#snippet trigger({ toggle })}
 		<button
 			type="button"

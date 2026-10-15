@@ -6,13 +6,17 @@
 	import { dueTone, formatDue } from 'shared/format.ts';
 	import { clock } from '../ui.svelte.ts';
 
-	let { due, onchange }: { due: Due | null; onchange: (due: Due | null) => void } = $props();
+	let {
+		due,
+		onchange,
+		open = $bindable(false),
+	}: { due: Due | null; onchange: (due: Due | null) => void; open?: boolean } = $props();
 
 	const today = $derived(clock.today);
 </script>
 
 <div class="flex items-center">
-	<Popover label="Due date">
+	<Popover label="Due date" bind:open>
 		{#snippet trigger({ toggle })}
 			<button
 				type="button"

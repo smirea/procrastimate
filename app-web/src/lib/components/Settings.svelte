@@ -4,6 +4,8 @@
 	import ArrowSquareIn from 'phosphor-svelte/lib/ArrowSquareIn';
 	import Warning from 'phosphor-svelte/lib/Warning';
 	import type { ImportSummary } from 'shared/todoist.ts';
+	import { toggleButton } from 'shared/quick-add-buttons.ts';
+	import { BUTTON_INFO, WEB_BUTTONS } from '../quick-add-buttons.ts';
 	import AiAccounts from './AiAccounts.svelte';
 	import DictationSwitcher from './DictationSwitcher.svelte';
 	import ThemeSwitcher from './ThemeSwitcher.svelte';
@@ -69,6 +71,27 @@
 	<section class="flex flex-col gap-2">
 		<h3 class="heading">Dictation</h3>
 		<DictationSwitcher />
+	</section>
+
+	<section class="flex flex-col gap-2">
+		<h3 class="heading">Quick add buttons</h3>
+		<div class="flex flex-wrap gap-1.5" role="group" aria-label="Quick add buttons">
+			{#each WEB_BUTTONS as button (button)}
+				{@const { name, icon: Icon } = BUTTON_INFO[button]}
+				{@const shown = store.quickAddButtons.includes(button)}
+				<button
+					type="button"
+					class="chip h-8 px-2.5 touch:h-11"
+					data-active={shown}
+					aria-pressed={shown}
+					onclick={() => store.setQuickAddButtons(toggleButton(store.quickAddButtons, button))}
+				>
+					<Icon size={14} weight={shown ? 'fill' : 'regular'} class={shown ? 'text-accent' : ''} />
+					{name}
+				</button>
+			{/each}
+		</div>
+		<p class="px-1.5 text-[12px] text-muted">The rest stay in quick add's + menu.</p>
 	</section>
 
 	{#if push.line === 'needs-permission'}
