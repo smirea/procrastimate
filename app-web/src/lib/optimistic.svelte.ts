@@ -11,27 +11,38 @@ export type Row<T> = { key: string; value: T; pending: boolean; saved: Promise<T
  * at once, and a refusal puts things back and says so in a toast. Acting on a row that is still being created waits
  * for it.
  */
+const PENDING = 'pending-';
+
 export class OptimisticList<T> {
 	rows = $state.raw<Row<T>[]>([]);
 
 	constructor(private readonly keyOf: (value: T) => string) {}
 
-	/** Keeps rows still being created, so an add made before the list arrived survives it. */
+	/**
+	 * The list can be read before or after an add commits, so a row added here survives a list without it, and a row
+	 * the list already has keeps its key, so it never re-mounts or loses state tied to it.
+	 */
 	load(values: readonly T[]) {
-		const loaded = values.map(value => ({
-			key: this.keyOf(value),
-			value,
-			pending: false,
-			saved: Promise.resolve(value),
-		}));
-		this.rows = [...loaded, ...this.rows.filter(row => row.pending)];
+		const ids = new Set(values.map(this.keyOf));
+		const saved = new Map(this.rows.filter(row => !row.pending).map(row => [this.keyOf(row.value), row]));
+		const loaded = values.map(value => {
+			const row = saved.get(this.keyOf(value));
+			return row ? { ...row, value } : { key: this.keyOf(value), value, pending: false, saved: Promise.resolve(value) };
+		});
+		const added = this.rows.filter(
+			row => row.pending || (row.key.startsWith(PENDING) && !ids.has(this.keyOf(row.value))),
+		);
+		this.rows = [...loaded, ...added];
 	}
 
 	add(placeholder: T, request: () => Promise<T>, failure: string): Row<T> {
-		const key = `pending-${crypto.randomUUID()}`;
+		const key = `${PENDING}${crypto.randomUUID()}`;
 		const saved = request().then(
 			value => {
-				this.rows = this.rows.map(row => (row.key === key ? { ...row, value, pending: false } : row));
+				const id = this.keyOf(value);
+				this.rows = this.rows
+					.filter(row => row.key === key || row.pending || this.keyOf(row.value) !== id)
+					.map(row => (row.key === key ? { ...row, value, pending: false } : row));
 				return value;
 			},
 			() => {

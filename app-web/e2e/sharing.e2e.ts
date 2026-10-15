@@ -55,8 +55,11 @@ test('a guest completes a task in a project shared with them, and the owner sees
 
 	await owner.page.getByRole('button', { name: 'Share project' }).click();
 	await shareSheet(owner.page).getByRole('textbox', { name: 'Email or name' }).fill(guest.email);
+	// The row shows before the server has the share, so wait for the share itself before the guest looks.
+	const created = owner.page.waitForResponse(r => r.url().includes('/api/shares') && r.request().method() === 'POST');
 	await shareSheet(owner.page).getByRole('list', { name: 'People found' }).getByRole('button', { name: /Gus/ }).click();
 	await expect(shareSheet(owner.page).getByRole('region', { name: 'People with access' })).toContainText('Gus');
+	expect((await created).ok()).toBe(true);
 	await owner.page.keyboard.press('Escape');
 
 	// The guest's tab learned its spaces at launch, before the share existed, so a reload is the launch that sees it.
@@ -125,8 +128,10 @@ test('a public link opens read only for someone who is not signed in', async ({ 
 	await expect(page.getByRole('checkbox')).toHaveCount(0);
 	await expect(page.getByRole('form', { name: 'Sign in' })).toHaveCount(0);
 
+	const revoked = owner.page.waitForResponse(r => r.url().includes('/api/shares') && r.request().method() === 'DELETE');
 	await shareSheet(owner.page).getByRole('button', { name: 'Stop sharing' }).click();
 	await expect(shareSheet(owner.page).getByLabel('Link')).toHaveCount(0);
+	expect((await revoked).ok()).toBe(true);
 	await page.reload();
 	await expect(page.getByText('This link no longer works')).toBeVisible({ timeout: 15_000 });
 });

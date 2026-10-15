@@ -13,6 +13,8 @@ final class OptimisticList<Value: Equatable & Sendable> {
         var pending: Bool
     }
 
+    private static var pending: String { "pending-" }
+
     private(set) var rows: [Row] = []
     @ObservationIgnored private var saving: [String: Task<Value?, Never>] = [:]
     @ObservationIgnored private let keyOf: (Value) -> String
@@ -21,9 +23,16 @@ final class OptimisticList<Value: Equatable & Sendable> {
         keyOf = key
     }
 
-    /// Keeps rows still being created, so an add made before the list arrived survives it.
+    /// The list can be read before or after an add commits, so a row added here survives a list without it, and a row
+    /// the list already has keeps its id, so it never re-mounts or loses state tied to it, like a token on show.
     func load(_ values: [Value]) {
-        rows = values.map { Row(id: keyOf($0), value: $0, pending: false) } + rows.filter(\.pending)
+        let ids = Set(values.map(keyOf))
+        let saved = Dictionary(rows.filter { !$0.pending }.map { (keyOf($0.value), $0) }, uniquingKeysWith: { first, _ in first })
+        let loaded = values.map { value in
+            Row(id: saved[keyOf(value)]?.id ?? keyOf(value), value: value, pending: false)
+        }
+        let added = rows.filter { $0.pending || ($0.id.hasPrefix(Self.pending) && !ids.contains(keyOf($0.value))) }
+        rows = loaded + added
     }
 
     @discardableResult
@@ -33,11 +42,13 @@ final class OptimisticList<Value: Equatable & Sendable> {
         toasts: Toasts,
         request: @escaping @MainActor () async throws -> Value
     ) -> Row {
-        let row = Row(id: "pending-\(UUID().uuidString)", value: placeholder, pending: true)
+        let row = Row(id: Self.pending + UUID().uuidString, value: placeholder, pending: true)
         rows.append(row)
         saving[row.id] = Task {
             do {
                 let value = try await request()
+                let id = keyOf(value)
+                rows.removeAll { $0.id != row.id && !$0.pending && keyOf($0.value) == id }
                 if let index = rows.firstIndex(where: { $0.id == row.id }) {
                     rows[index] = Row(id: row.id, value: value, pending: false)
                 }

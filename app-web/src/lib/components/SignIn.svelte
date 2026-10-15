@@ -18,6 +18,11 @@
 		if (session.error) opening = null;
 	}
 
+	/** Back from the provider can restore this page from the back-forward cache with the button still waiting. */
+	function onpageshow(event: PageTransitionEvent) {
+		if (event.persisted) opening = null;
+	}
+
 	async function onsubmit(event: SubmitEvent) {
 		event.preventDefault();
 		if (busy) return;
@@ -27,6 +32,8 @@
 		busy = false;
 	}
 </script>
+
+<svelte:window {onpageshow} />
 
 <div class="flex min-h-dvh flex-col items-center justify-center gap-5 px-4">
 	<img src="/icons/logo.png" alt="" width="160" height="160" class="-mb-3 size-40" />
