@@ -124,6 +124,7 @@ let handlers: [String: Handler] = [
     "triggers": triggersVector,
     "ramble": rambleVector,
     "memo-tasks": memoTasksVector,
+    "links": linksVector,
 ]
 
 private struct Occurrence: Decodable {

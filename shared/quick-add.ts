@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { labelSchema, projectSchema, taskSchema } from './sync/protocol.ts';
+import { linkify } from './links.ts';
 import {
 	addDays,
 	addInterval,
@@ -509,10 +510,11 @@ export function parseQuickAdd(input: string, options: ParseOptions): ParsedQuick
 	const rules = [...RULES.slice(0, 2), ...named, ...RULES.slice(2)];
 	// Every phrase a rule recognizes is masked out of both views, including kept-as-text and
 	// superseded ones, so a later rule never reads part of it as something else.
-	let raw = input;
-	let guarded = maskGuarded(input, spoken);
 	const claim = (text: string, start: number, end: number) =>
 		text.slice(0, start) + '_'.repeat(end - start) + text.slice(end);
+	// A link is never a phrase, so `5m`, `#top`, or `@user` inside a URL stays part of it.
+	let raw = linkify(input).reduce((text, s) => (s.href ? claim(text, s.start, s.end) : text), input);
+	let guarded = maskGuarded(raw, spoken);
 
 	const tokens: QuickAddToken[] = [];
 	const matches: Match[] = [];

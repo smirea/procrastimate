@@ -538,11 +538,14 @@ public enum QuickAdd {
         let source = NSString(string: input)
         // Every phrase a rule recognizes is masked out of both views, including superseded ones, so a
         // later rule never reads part of it as something else.
-        var raw = input
-        var guarded = maskGuarded(input, spoken: options.spoken)
         let claim = { (text: String, range: NSRange) in
             NSString(string: text).replacingCharacters(in: range, with: String(repeating: "_", count: range.length))
         }
+        // A link is never a phrase, so `5m`, `#top`, or `@user` inside a URL stays part of it.
+        var raw = Links.linkify(input).reduce(input) { text, segment in
+            segment.href == nil ? text : claim(text, NSRange(location: segment.start, length: segment.end - segment.start))
+        }
+        var guarded = maskGuarded(raw, spoken: options.spoken)
 
         var tokens: [Token] = []
         var matches: [Match] = []
