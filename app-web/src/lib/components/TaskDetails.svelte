@@ -172,7 +172,7 @@
 		{#if parseMemoSource(task.sourceKey)}
 			<!-- A browser cannot open the phone app, so the line is not a link. -->
 			<p class="flex items-center gap-1.5 text-[13px] text-muted" title="Opens on iPhone">
-				<Waveform size={14} />Talkward
+				<Waveform size={14} />NoteTorus
 			</p>
 		{/if}
 		<Subtasks {task} />

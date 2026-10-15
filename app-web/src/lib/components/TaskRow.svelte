@@ -105,7 +105,7 @@
 					</span>
 				{/if}
 				{#if fromMemo}
-					<span class="flex items-center" role="img" aria-label="From Talkward">
+					<span class="flex items-center" role="img" aria-label="From NoteTorus">
 						<Waveform size={12} />
 					</span>
 				{/if}
