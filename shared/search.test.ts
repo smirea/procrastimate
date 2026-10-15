@@ -42,6 +42,7 @@ const task = (
 	title,
 	notes,
 	projectId,
+	sectionId: null,
 	labelIds,
 	due: null,
 	recurrence: null,

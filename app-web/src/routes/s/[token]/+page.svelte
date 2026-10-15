@@ -17,7 +17,7 @@
 	let state = $state<State>({ kind: 'loading' });
 	const view = $derived(state.kind === 'ready' ? state.view : null);
 
-	provideReadOnlyLookup(() => view ?? { tasks: [], projects: [], labels: [] });
+	provideReadOnlyLookup(() => view ?? { tasks: [], projects: [], sections: [], labels: [] });
 
 	/** Open tasks whose parent is not shared with them, so subtasks show under their parent's progress instead. */
 	const tasks = $derived.by(() => {

@@ -1,10 +1,10 @@
 import { z } from 'zod';
 import { apiTokensRowSchema, peopleRowSchema, sharesRowSchema } from './db/generated/zod.ts';
-import { labelSchema, projectSchema, shareTargetSchema, taskSchema } from './sync/protocol.ts';
+import { labelSchema, projectSchema, sectionSchema, shareTargetSchema, taskSchema } from './sync/protocol.ts';
 import { roleSchema } from './values.ts';
 
 /**
- * Sharing's shapes. A space is one user's tasks, projects, and labels, served by the `Account` object named by
+ * Sharing's shapes. A space is one user's tasks, projects, sections, and labels, served by the `Account` object named by
  * that user's id. The owner shares the whole space, a project, a label, or a task, with a person or as a public
  * link. See `docs/decisions/sharing.md`.
  */
@@ -53,6 +53,7 @@ export const sharedViewSchema = z
 		owner: personSchema,
 		tasks: z.array(taskSchema),
 		projects: z.array(projectSchema),
+		sections: z.array(sectionSchema),
 		labels: z.array(labelSchema),
 	})
 	.meta({ id: 'SharedView', description: 'What a public link shows, read only, without signing in.' });
@@ -105,6 +106,7 @@ export const agentNewTaskSchema = z
 		title: taskShape.title.optional(),
 		notes: taskShape.notes.optional(),
 		projectId: taskShape.projectId.optional(),
+		sectionId: taskShape.sectionId.optional(),
 		parentId: taskShape.parentId.optional(),
 		labelIds: taskShape.labelIds.optional(),
 		priority: taskShape.priority.optional(),
@@ -116,6 +118,7 @@ export const spaceViewSchema = z
 	.object({
 		tasks: z.array(taskSchema),
 		projects: z.array(projectSchema),
+		sections: z.array(sectionSchema),
 		labels: z.array(labelSchema),
 		/** Visible task ids the caller may not edit. */
 		readOnly: z.array(z.string()),

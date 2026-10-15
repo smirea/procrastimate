@@ -1,5 +1,5 @@
 import { detachOrphans } from '../subtasks.ts';
-import type { Task } from '../task.ts';
+import type { Section, Task } from '../task.ts';
 import type { Snapshot } from './protocol.ts';
 import { byCreation } from './snapshot.ts';
 
@@ -7,13 +7,16 @@ import { byCreation } from './snapshot.ts';
  * Repairs that concurrent edits can call for, run by the server after every push. Each one is what the
  * local commands already guarantee, so the result is a state a single device could have produced:
  *
- * - Projects with the same `sourceKey` or name (ignoring case) merge into the oldest, moving their tasks.
+ * - Projects with the same `sourceKey` or name (ignoring case) merge into the oldest, moving their tasks and sections.
+ * - Sections of a deleted project are deleted. Sections with the same `sourceKey`, or the same name (ignoring case) in
+ *   one project, merge into the oldest, and tasks take the survivor's id.
  * - Labels with the same name (ignoring case) merge into the oldest, and tasks take the survivor's id.
  * - Tasks with the same `sourceKey` merge into the oldest, and the dropped copies' subtasks move under it.
  * - Tasks drop labels that no longer exist, and tasks in a deleted project move to Inbox.
  * - A subtask whose parent is gone, or whose parents loop, becomes top level.
  * - A subtask takes its root task's project.
  * - An open task reopens every completed task above it.
+ * - A task keeps its section only while it is top level and the section is a live one of its project.
  */
 export function fixups(snapshot: Snapshot): Snapshot {
 	const bySource = mergeDuplicates(snapshot.projects, p => p.sourceKey);
@@ -21,6 +24,18 @@ export function fixups(snapshot: Snapshot): Snapshot {
 	const projectOf = (id: string) =>
 		byName.survivorOf.get(bySource.survivorOf.get(id) ?? id) ?? bySource.survivorOf.get(id) ?? id;
 	const projects = new Set(byName.kept.map(p => p.id));
+
+	const placed = snapshot.sections.flatMap(section => {
+		const projectId = projectOf(section.projectId);
+		if (!projects.has(projectId)) return [];
+		return [section.projectId === projectId ? section : { ...section, projectId }];
+	});
+	const sectionBySource = mergeDuplicates(placed, s => s.sourceKey);
+	const sectionByName = mergeDuplicates(sectionBySource.kept, s => `${s.projectId}\n${s.name.toLowerCase()}`);
+	const sectionOf = (id: string) => {
+		const bySource = sectionBySource.survivorOf.get(id) ?? id;
+		return sectionByName.survivorOf.get(bySource) ?? bySource;
+	};
 
 	const labelMerge = mergeDuplicates(snapshot.labels, l => l.name.toLowerCase());
 	const labels = new Set(labelMerge.kept.map(l => l.id));
@@ -34,13 +49,24 @@ export function fixups(snapshot: Snapshot): Snapshot {
 		const labelIds = [
 			...new Set(task.labelIds.map(id => labelMerge.survivorOf.get(id) ?? id).filter(id => labels.has(id))),
 		];
-		return { ...task, parentId, projectId, labelIds };
+		const sectionId = task.sectionId === null ? null : sectionOf(task.sectionId);
+		return { ...task, parentId, projectId, sectionId, labelIds };
 	});
 	tasks = detachOrphans(tasks);
 	tasks = takeRootProject(tasks);
 	tasks = reopenAncestors(tasks);
+	tasks = keepSections(tasks, sectionByName.kept);
 
-	return { ...snapshot, tasks, projects: byName.kept, labels: labelMerge.kept };
+	return { ...snapshot, tasks, projects: byName.kept, sections: sectionByName.kept, labels: labelMerge.kept };
+}
+
+function keepSections(tasks: readonly Task[], sections: readonly Section[]): Task[] {
+	const projectOf = new Map(sections.map(s => [s.id, s.projectId]));
+	return tasks.map(task => {
+		if (task.sectionId === null) return task;
+		const fits = task.parentId === null && projectOf.get(task.sectionId) === task.projectId;
+		return fits ? task : { ...task, sectionId: null };
+	});
 }
 
 function mergeDuplicates<T extends { id: string; createdAt: number }>(

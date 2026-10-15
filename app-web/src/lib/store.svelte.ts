@@ -1,5 +1,5 @@
 import type { DictationChoice } from 'shared/dictation.ts';
-import type { DateKey, Label, Project, Task } from 'shared/task.ts';
+import type { DateKey, Label, Project, Section, Task } from 'shared/task.ts';
 import { groupChildren, progressOf } from 'shared/subtasks.ts';
 import { newId } from 'shared/id.ts';
 import type { Person, Space } from 'shared/sharing.ts';
@@ -20,11 +20,12 @@ import { creationHome, emptySection, fitToSpace, homes, merged, type Home } from
 export type { Completion, CompletionState, NewTask, TaskPatch } from 'shared/store.ts';
 
 /** A shared section's data has no settings of its own, so both sides of its diff carry the same placeholder. */
-const EMPTY: rules.StoreData = { tasks: [], projects: [], labels: [] };
+const EMPTY: rules.StoreData = { tasks: [], projects: [], sections: [], labels: [] };
 
-const sectionData = ({ tasks, projects, labels }: rules.StoreData): SyncedData => ({
+const sectionData = ({ tasks, projects, sections, labels }: rules.StoreData): SyncedData => ({
 	tasks,
 	projects,
+	sections,
 	labels,
 	settings: DEFAULT_SETTINGS,
 });
@@ -34,12 +35,12 @@ const sectionData = ({ tasks, projects, labels }: rules.StoreData): SyncedData =
  * arrays and objects for what they change, so the arrays are raw state that each command replaces. Sync is always
  * on: each command diffs into the outbox, which leaves on its own.
  *
- * `own` is the signed-in user's space and `spaces` the sections shared with them. `tasks`, `projects`, and
- * `labels` are the merged view. Each command finds the space that holds its target and runs its rule on that
+ * `own` is the signed-in user's space and `spaces` the sections shared with them. `tasks`, `projects`, `sections`,
+ * and `labels` are the merged view. Each command finds the space that holds its target and runs its rule on that
  * space's data only, so personal views read `own` and nothing ever crosses spaces.
  */
 class Store {
-	own = $state.raw<rules.StoreData>({ tasks: [], projects: [], labels: [] });
+	own = $state.raw<rules.StoreData>({ tasks: [], projects: [], sections: [], labels: [] });
 	remindersCheckedAt = $state(0);
 	spaces = $state.raw<Record<string, SpaceSection>>({});
 	people = $state.raw<Person[]>([]);
@@ -63,6 +64,10 @@ class Store {
 		return this.#view.labels;
 	}
 
+	get sections(): Section[] {
+		return this.#view.sections;
+	}
+
 	constructor() {
 		if (typeof localStorage === 'undefined') return;
 		this.#load();
@@ -83,7 +88,12 @@ class Store {
 
 	#load() {
 		const snapshot = loadSnapshot(Date.now());
-		this.own = { tasks: snapshot.tasks, projects: snapshot.projects, labels: snapshot.labels };
+		this.own = {
+			tasks: snapshot.tasks,
+			projects: snapshot.projects,
+			sections: snapshot.sections,
+			labels: snapshot.labels,
+		};
 		this.remindersCheckedAt = snapshot.remindersCheckedAt;
 		this.spaces = snapshot.spaces;
 		this.people = snapshot.people;
@@ -116,7 +126,7 @@ class Store {
 
 	#apply(data: rules.StoreData) {
 		const before = this.#sync && this.#synced(this.#sync);
-		this.own = { tasks: data.tasks, projects: data.projects, labels: data.labels };
+		this.own = { tasks: data.tasks, projects: data.projects, sections: data.sections, labels: data.labels };
 		if (this.#sync && before) this.#record(this.#sync, before, this.#synced(this.#sync));
 		this.#commit();
 	}
@@ -179,7 +189,7 @@ class Store {
 		const deviceId = this.#sync?.deviceId ?? crypto.randomUUID();
 		const timeZone = this.#sync?.timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
 		const clock = this.#sync?.clock ?? `0:0:${deviceId}`;
-		this.own = { tasks: [], projects: [], labels: [] };
+		this.own = { tasks: [], projects: [], sections: [], labels: [] };
 		this.spaces = {};
 		this.people = [];
 		this.#sync = {
@@ -196,9 +206,9 @@ class Store {
 		this.#commit();
 	}
 
-	/** Empties tasks, projects, and labels here, and asks the next sync to wipe them on the server too. */
+	/** Empties tasks, projects, sections, and labels here, and asks the next sync to wipe them on the server too. */
 	deleteAll() {
-		this.own = { tasks: [], projects: [], labels: [] };
+		this.own = { tasks: [], projects: [], sections: [], labels: [] };
 		if (this.#sync) this.#sync = { ...this.#sync, cursor: 0, outbox: [], reset: true };
 		this.#commit();
 		this.#onCommit?.();
@@ -250,7 +260,12 @@ class Store {
 			sentReset: this.#sync.reset,
 		});
 		const seeded = this.#sync.seed && !sync.seed && sync.outbox.length > 0;
-		this.own = { tasks: snapshot.tasks, projects: snapshot.projects, labels: snapshot.labels };
+		this.own = {
+			tasks: snapshot.tasks,
+			projects: snapshot.projects,
+			sections: snapshot.sections,
+			labels: snapshot.labels,
+		};
 		this.#sync = sectionOf(sync, { ...this.#sync, reset: false, dictation: snapshot.settings.dictation });
 		this.#commit();
 		return seeded;
@@ -287,7 +302,14 @@ class Store {
 		if (next === current) return;
 		this.spaces = {
 			...this.spaces,
-			[home]: { ...section, tasks: after.tasks, projects: after.projects, labels: after.labels, outbox: next.outbox },
+			[home]: {
+				...section,
+				tasks: after.tasks,
+				projects: after.projects,
+				sections: after.sections,
+				labels: after.labels,
+				outbox: next.outbox,
+			},
 		};
 		this.#sync = { ...this.#sync, clock: formatHlc(next.clock) };
 		this.#commit();
@@ -316,6 +338,15 @@ class Store {
 
 	label(id: string) {
 		return this.labels.find(l => l.id === id);
+	}
+
+	section(id: string | null) {
+		return id ? this.sections.find(s => s.id === id) : undefined;
+	}
+
+	/** A project's sections in their order. */
+	sectionsOf(projectId: string): Section[] {
+		return rules.sectionsOf(this.sections, projectId);
 	}
 
 	labelsOf(task: Pick<Task, 'labelIds'>) {
@@ -415,6 +446,26 @@ class Store {
 		if (this.homeOf(id) === null) this.#apply(rules.deleteProject(this.own, id));
 	}
 
+	/** Sections, like projects, are only ever written in the user's own space. */
+	addSection(projectId: string, name: string): Section | undefined {
+		if (this.homeOf(projectId) !== null) return;
+		const { data, section } = rules.addSection(this.own, projectId, name, this.#creation());
+		this.#apply(data);
+		return section;
+	}
+
+	renameSection(id: string, name: string) {
+		if (this.homeOf(id) === null) this.#apply(rules.renameSection(this.own, id, name));
+	}
+
+	moveSection(id: string, index: number) {
+		if (this.homeOf(id) === null) this.#apply(rules.moveSection(this.own, id, index));
+	}
+
+	deleteSection(id: string) {
+		if (this.homeOf(id) === null) this.#apply(rules.deleteSection(this.own, id));
+	}
+
 	addLabel(name: string): Label {
 		const { data, label } = rules.addLabel(this.own, name, this.#creation());
 		this.#apply(data);
@@ -482,6 +533,7 @@ class Store {
 				...section,
 				tasks: snapshot.tasks,
 				projects: snapshot.projects,
+				sections: snapshot.sections,
 				labels: snapshot.labels,
 				cursor: sync.cursor,
 				outbox: sync.outbox,

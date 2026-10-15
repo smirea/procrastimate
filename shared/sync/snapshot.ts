@@ -1,4 +1,4 @@
-import type { Label, Project, Task } from '../task.ts';
+import type { Label, Project, Section, Task } from '../task.ts';
 import { DEFAULT_SETTINGS, FIELDS_SCHEMAS, SETTINGS_ID, type Kind, type Settings, type Snapshot } from './protocol.ts';
 
 export type Fields = Record<string, unknown>;
@@ -8,6 +8,7 @@ export type Entity = { id: string } & Fields;
 export const emptySnapshot = (): Snapshot => ({
 	tasks: [],
 	projects: [],
+	sections: [],
 	labels: [],
 	settings: { ...DEFAULT_SETTINGS },
 });
@@ -20,6 +21,7 @@ export function sortSnapshot(snapshot: Snapshot): Snapshot {
 	return {
 		tasks: snapshot.tasks.toSorted(byCreation),
 		projects: snapshot.projects.toSorted(byCreation),
+		sections: snapshot.sections.toSorted(byCreation),
 		labels: snapshot.labels.toSorted(byCreation),
 		settings: snapshot.settings,
 	};
@@ -31,6 +33,8 @@ export function entitiesOf(snapshot: Snapshot, kind: Kind): readonly Entity[] {
 			return snapshot.tasks;
 		case 'project':
 			return snapshot.projects;
+		case 'section':
+			return snapshot.sections;
 		case 'label':
 			return snapshot.labels;
 		case 'settings':
@@ -48,6 +52,8 @@ export function withEntities(snapshot: Snapshot, kind: Kind, entities: readonly 
 			return { ...snapshot, tasks: entities as unknown as Task[] };
 		case 'project':
 			return { ...snapshot, projects: entities as unknown as Project[] };
+		case 'section':
+			return { ...snapshot, sections: entities as unknown as Section[] };
 		case 'label':
 			return { ...snapshot, labels: entities as unknown as Label[] };
 		case 'settings': {
@@ -71,9 +77,17 @@ export function fieldsOf(kind: Kind, entity: Entity): Fields {
 /**
  * Builds an entity from a full set of fields, or null when some are missing or invalid. Task fields added after launch
  * default to none instead of dropping the task: iOS builds from before places and events create tasks without
- * `location` and `event`, and tasks stored before sharing hold no authorship or `lastCompletedAt`.
+ * `location` and `event`, tasks stored before sharing hold no authorship or `lastCompletedAt`, and builds from before
+ * sections send no `sectionId`.
  */
-const TASK_DEFAULTS = { location: null, event: null, createdBy: null, completedBy: null, lastCompletedAt: null };
+const TASK_DEFAULTS = {
+	sectionId: null,
+	location: null,
+	event: null,
+	createdBy: null,
+	completedBy: null,
+	lastCompletedAt: null,
+};
 
 export function entityFrom(kind: Kind, id: string, fields: Fields): Entity | null {
 	const full = kind === 'task' ? { ...TASK_DEFAULTS, ...fields } : fields;

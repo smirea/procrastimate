@@ -6,18 +6,23 @@ import { describe, recorded, test } from './vectors/record.ts';
 
 const addLabel = recorded('store', store.addLabel);
 const addProject = recorded('store', store.addProject);
+const addSection = recorded('store', store.addSection);
 const addTask = recorded('store', store.addTask);
 const completeTask = recorded('store', store.completeTask);
 const deleteLabel = recorded('store', store.deleteLabel);
 const deleteProject = recorded('store', store.deleteProject);
+const deleteSection = recorded('store', store.deleteSection);
 const deleteTask = recorded('store', store.deleteTask);
 const explodeSubtasks = recorded('store', store.explodeSubtasks);
+const moveSection = recorded('store', store.moveSection);
 const moveSubtask = recorded('store', store.moveSubtask);
 const renameLabel = recorded('store', store.renameLabel);
 const renameProject = recorded('store', store.renameProject);
+const renameSection = recorded('store', store.renameSection);
 const reopenTask = recorded('store', store.reopenTask);
 const restoreCompletion = recorded('store', store.restoreCompletion);
 const restoreExploded = recorded('store', store.restoreExploded);
+const sectionsOf = recorded('store', store.sectionsOf);
 const sortTasks = recorded('store', store.sortTasks);
 const undeleteTasks = recorded('store', store.undeleteTasks);
 const updateTask = recorded('store', store.updateTask);
@@ -29,6 +34,7 @@ const task = (id: string, createdAt: number, fields: Partial<Task> = {}): Task =
 	title: id,
 	notes: '',
 	projectId: null,
+	sectionId: null,
 	labelIds: [],
 	due: null,
 	recurrence: null,
@@ -62,6 +68,11 @@ const data = (): StoreData => ({
 	projects: [
 		{ id: 'home', name: 'Home', createdAt: 1 },
 		{ id: 'work', name: 'Work', createdAt: 2 },
+	],
+	sections: [
+		{ id: 'later', projectId: 'home', name: 'Later', order: 1, createdAt: 1 },
+		{ id: 'next', projectId: 'home', name: 'Next', order: 0, createdAt: 2 },
+		{ id: 'someday', projectId: 'work', name: 'Someday', order: 0, createdAt: 3 },
 	],
 	labels: [
 		{ id: 'calls', name: 'calls', createdAt: 1 },
@@ -311,6 +322,86 @@ describe('projects', () => {
 		const deleted = deleteProject(data(), 'home');
 		expect(deleted.projects.map(p => p.id)).toEqual(['work']);
 		expect(ids(deleted.tasks)).toEqual(['standup', 'call']);
+		expect(deleted.sections.map(s => s.id)).toEqual(['someday']);
+	});
+});
+
+describe('sections', () => {
+	const sectioned = (): StoreData => updateTask(data(), 'trip', { sectionId: 'next' });
+
+	test('a project lists its sections in their order', () => {
+		expect(sectionsOf(data().sections, 'home').map(s => s.id)).toEqual(['next', 'later']);
+	});
+
+	test('a new section comes last in its project, and a taken name returns the section that has it', () => {
+		const { data: added, section } = addSection(data(), 'home', 'Errands', { id: 'errands', now: NOW });
+		expect(section).toEqual({ id: 'errands', projectId: 'home', name: 'Errands', order: 2, createdAt: NOW });
+		expect(sectionsOf(added.sections, 'home').map(s => s.id)).toEqual(['next', 'later', 'errands']);
+		const taken = addSection(data(), 'home', 'later', { id: 'dup', now: NOW });
+		expect([taken.section.id, taken.data]).toEqual(['later', data()]);
+		expect(addSection(data(), 'work', 'Later', { id: 'w', now: NOW }).section.order).toBe(1);
+	});
+
+	test('renaming keeps names unique within a project, ignoring case', () => {
+		expect(renameSection(data(), 'later', 'Soon').sections[0]!.name).toBe('Soon');
+		expect(renameSection(data(), 'later', 'NEXT')).toEqual(data());
+		expect(renameSection(data(), 'someday', 'Next').sections[2]!.name).toBe('Next');
+	});
+
+	test('moving a section writes only its own order', () => {
+		const moved = moveSection(data(), 'later', 0);
+		expect(sectionsOf(moved.sections, 'home').map(s => [s.id, s.order])).toEqual([
+			['later', -1],
+			['next', 0],
+		]);
+		expect(moveSection(data(), 'next', 0)).toEqual(data());
+	});
+
+	test('deleting a section deletes its tasks with their subtasks and leaves the rest of the project', () => {
+		const deleted = deleteSection(sectioned(), 'next');
+		expect(deleted.sections.map(s => s.id)).toEqual(['later', 'someday']);
+		expect(ids(deleted.tasks)).toEqual(['standup', 'call']);
+		expect(ids(deleteSection(data(), 'next').tasks)).toEqual(ids(data().tasks));
+	});
+
+	test('a section moves a task into its project, and its subtasks follow the project but sit in no section', () => {
+		const next = updateTask(data(), 'call', { sectionId: 'someday' });
+		expect([find(next, 'call').projectId, find(next, 'call').sectionId]).toEqual(['work', 'someday']);
+		const trip = updateTask(data(), 'trip', { sectionId: 'someday' });
+		expect(trip.tasks.filter(t => t.projectId === 'work').map(t => [t.id, t.sectionId])).toEqual([
+			['trip', 'someday'],
+			['passport', null],
+			['charger', null],
+		]);
+	});
+
+	test('a new project leaves the section, and no section keeps the project', () => {
+		expect(find(updateTask(sectioned(), 'trip', { projectId: 'work' }), 'trip')).toMatchObject({
+			projectId: 'work',
+			sectionId: null,
+		});
+		expect(find(updateTask(sectioned(), 'trip', { sectionId: null }), 'trip')).toMatchObject({
+			projectId: 'home',
+			sectionId: null,
+		});
+		expect(find(updateTask(sectioned(), 'trip', { title: 'Rome' }), 'trip').sectionId).toBe('next');
+	});
+
+	test('a subtask never takes a section of its own', () => {
+		expect(find(updateTask(data(), 'passport', { sectionId: 'someday' }), 'passport')).toMatchObject({
+			projectId: 'home',
+			sectionId: null,
+		});
+	});
+
+	test('a new task keeps a section of its project only, and a subtask gets none', () => {
+		const add = (input: Partial<typeof newTask> & { sectionId: string }, parentId: string | null = null) =>
+			addTask(data(), { ...newTask, ...input }, parentId, { id: 'new', now: NOW }).task.sectionId;
+		expect([
+			add({ sectionId: 'someday' }),
+			add({ sectionId: 'next' }),
+			add({ projectId: 'home', sectionId: 'next' }, 'trip'),
+		]).toEqual(['someday', null, null]);
 	});
 });
 
@@ -342,7 +433,7 @@ describe('labels', () => {
 			minutes: 0,
 			occurrences,
 		};
-		const before: StoreData = { tasks: [task('jan', 1, { event })], projects: [], labels: [] };
+		const before: StoreData = { tasks: [task('jan', 1, { event })], projects: [], sections: [], labels: [] };
 		const { data: next, completion } = completeTask(before, 'jan', today, NOW)!;
 		expect(completion).toEqual({
 			kind: 'rolled',

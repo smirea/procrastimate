@@ -33,6 +33,7 @@ const task = (projectId: string | null, createdAt: number, labelIds: string[] = 
 	parentId: null,
 	order: 0,
 	projectId,
+	sectionId: null,
 	labelIds,
 	due: null,
 	recurrence: null,

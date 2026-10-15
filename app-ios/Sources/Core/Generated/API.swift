@@ -163,15 +163,17 @@ extension API {
         public var title: String?
         public var notes: String?
         public var projectId: String??
+        public var sectionId: String??
         public var parentId: String??
         public var labelIds: [String]?
         public var priority: Priority?
 
-        public init(text: String? = nil, title: String? = nil, notes: String? = nil, projectId: String?? = nil, parentId: String?? = nil, labelIds: [String]? = nil, priority: Priority? = nil) {
+        public init(text: String? = nil, title: String? = nil, notes: String? = nil, projectId: String?? = nil, sectionId: String?? = nil, parentId: String?? = nil, labelIds: [String]? = nil, priority: Priority? = nil) {
             self.text = text
             self.title = title
             self.notes = notes
             self.projectId = projectId
+            self.sectionId = sectionId
             self.parentId = parentId
             self.labelIds = labelIds
             self.priority = priority
@@ -182,6 +184,7 @@ extension API {
             case title = "title"
             case notes = "notes"
             case projectId = "projectId"
+            case sectionId = "sectionId"
             case parentId = "parentId"
             case labelIds = "labelIds"
             case priority = "priority"
@@ -193,6 +196,7 @@ extension API {
             title = try container.decodeAbsent(String.self, forKey: .title)
             notes = try container.decodeAbsent(String.self, forKey: .notes)
             projectId = try container.decodeNullable(String.self, forKey: .projectId)
+            sectionId = try container.decodeNullable(String.self, forKey: .sectionId)
             parentId = try container.decodeNullable(String.self, forKey: .parentId)
             labelIds = try container.decodeAbsent([String].self, forKey: .labelIds)
             priority = try container.decodeAbsent(Priority.self, forKey: .priority)
@@ -204,6 +208,7 @@ extension API {
             try container.encodeIfPresent(self.title, forKey: .title)
             try container.encodeIfPresent(self.notes, forKey: .notes)
             try container.encodeNullable(self.projectId, forKey: .projectId)
+            try container.encodeNullable(self.sectionId, forKey: .sectionId)
             try container.encodeNullable(self.parentId, forKey: .parentId)
             try container.encodeIfPresent(self.labelIds, forKey: .labelIds)
             try container.encodeIfPresent(self.priority, forKey: .priority)
@@ -421,11 +426,45 @@ extension API {
         }
     }
 
+    public struct BackupSection: Codable, Hashable, Sendable {
+        public var sourceKey: String
+        public var projectKey: String
+        public var name: String
+
+        public init(sourceKey: String, projectKey: String, name: String) {
+            self.sourceKey = sourceKey
+            self.projectKey = projectKey
+            self.name = name
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case sourceKey = "sourceKey"
+            case projectKey = "projectKey"
+            case name = "name"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            sourceKey = try container.decode(String.self, forKey: .sourceKey)
+            projectKey = try container.decode(String.self, forKey: .projectKey)
+            name = try container.decode(String.self, forKey: .name)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.sourceKey, forKey: .sourceKey)
+            try container.encode(self.projectKey, forKey: .projectKey)
+            try container.encode(self.name, forKey: .name)
+        }
+    }
+
     public struct BackupTask: Codable, Hashable, Sendable {
         public var sourceKey: String
         /// The source key of the task one indent up, for a subtask.
         public var parentKey: String?
         public var projectKey: String
+        /// The source key of the section a top-level task sits under. Subtasks have none.
+        public var sectionKey: String?
         public var title: String
         public var notes: String
         public var labels: [String]
@@ -434,10 +473,11 @@ extension API {
         public var priority: Priority
         public var reminders: [Reminder]
 
-        public init(sourceKey: String, parentKey: String? = nil, projectKey: String, title: String, notes: String, labels: [String] = [], due: Due? = nil, recurrence: Recurrence? = nil, priority: Priority, reminders: [Reminder] = []) {
+        public init(sourceKey: String, parentKey: String? = nil, projectKey: String, sectionKey: String? = nil, title: String, notes: String, labels: [String] = [], due: Due? = nil, recurrence: Recurrence? = nil, priority: Priority, reminders: [Reminder] = []) {
             self.sourceKey = sourceKey
             self.parentKey = parentKey
             self.projectKey = projectKey
+            self.sectionKey = sectionKey
             self.title = title
             self.notes = notes
             self.labels = labels
@@ -451,6 +491,7 @@ extension API {
             case sourceKey = "sourceKey"
             case parentKey = "parentKey"
             case projectKey = "projectKey"
+            case sectionKey = "sectionKey"
             case title = "title"
             case notes = "notes"
             case labels = "labels"
@@ -465,6 +506,7 @@ extension API {
             sourceKey = try container.decode(String.self, forKey: .sourceKey)
             parentKey = try container.decode(String?.self, forKey: .parentKey)
             projectKey = try container.decode(String.self, forKey: .projectKey)
+            sectionKey = try container.decode(String?.self, forKey: .sectionKey)
             title = try container.decode(String.self, forKey: .title)
             notes = try container.decode(String.self, forKey: .notes)
             labels = try container.decode([String].self, forKey: .labels)
@@ -479,6 +521,7 @@ extension API {
             try container.encode(self.sourceKey, forKey: .sourceKey)
             try container.encode(self.parentKey, forKey: .parentKey)
             try container.encode(self.projectKey, forKey: .projectKey)
+            try container.encode(self.sectionKey, forKey: .sectionKey)
             try container.encode(self.title, forKey: .title)
             try container.encode(self.notes, forKey: .notes)
             try container.encode(self.labels, forKey: .labels)
@@ -492,6 +535,7 @@ extension API {
     public enum Change: Codable, Hashable, Sendable {
         case task(ChangeTask)
         case project(ChangeProject)
+        case section(ChangeSection)
         case label(ChangeLabel)
         case settings(ChangeSettings)
 
@@ -504,6 +548,7 @@ extension API {
             switch tag {
             case "task": self = .task(try ChangeTask(from: decoder))
             case "project": self = .project(try ChangeProject(from: decoder))
+            case "section": self = .section(try ChangeSection(from: decoder))
             case "label": self = .label(try ChangeLabel(from: decoder))
             case "settings": self = .settings(try ChangeSettings(from: decoder))
             default:
@@ -519,6 +564,9 @@ extension API {
                 try value.encode(to: encoder)
             case let .project(value):
                 try container.encode("project", forKey: .tag)
+                try value.encode(to: encoder)
+            case let .section(value):
+                try container.encode("section", forKey: .tag)
                 try value.encode(to: encoder)
             case let .label(value):
                 try container.encode("label", forKey: .tag)
@@ -597,6 +645,49 @@ extension API {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             id = try container.decode(String.self, forKey: .id)
             fields = try container.decode(ProjectPatchFields.self, forKey: .fields)
+            opId = try container.decode(String.self, forKey: .opId)
+            seq = try container.decode(Int.self, forKey: .seq)
+            if decoder.validates {
+                do {
+                    let value = self.seq
+                    try check(value > 0, .seq, in: container, "seq above 0")
+                }
+            }
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.id, forKey: .id)
+            try container.encode(self.fields, forKey: .fields)
+            try container.encode(self.opId, forKey: .opId)
+            try container.encode(self.seq, forKey: .seq)
+        }
+    }
+
+    public struct ChangeSection: Codable, Hashable, Sendable, Identifiable {
+        public var id: String
+        public var fields: SectionPatchFields
+        public var opId: String
+        public var seq: Int
+
+        public init(id: String, fields: SectionPatchFields, opId: String, seq: Int) {
+            self.id = id
+            self.fields = fields
+            self.opId = opId
+            self.seq = seq
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case id = "id"
+            case fields = "fields"
+            case opId = "opId"
+            case seq = "seq"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            id = try container.decode(String.self, forKey: .id)
+            fields = try container.decode(SectionPatchFields.self, forKey: .fields)
             opId = try container.decode(String.self, forKey: .opId)
             seq = try container.decode(Int.self, forKey: .seq)
             if decoder.validates {
@@ -996,6 +1087,7 @@ extension API {
 
     public enum EntityKind: String, Codable, Hashable, Sendable, CaseIterable, Identifiable {
         case project = "project"
+        case section = "section"
         case label = "label"
         case task = "task"
         case settings = "settings"
@@ -1202,13 +1294,15 @@ extension API {
 
     public struct ImportSummary: Codable, Hashable, Sendable {
         public var projects: Int
+        public var sections: Int
         public var labels: Int
         public var tasks: Int
         public var skipped: Int
         public var warnings: [String]
 
-        public init(projects: Int = 0, labels: Int = 0, tasks: Int = 0, skipped: Int = 0, warnings: [String] = []) {
+        public init(projects: Int = 0, sections: Int = 0, labels: Int = 0, tasks: Int = 0, skipped: Int = 0, warnings: [String] = []) {
             self.projects = projects
+            self.sections = sections
             self.labels = labels
             self.tasks = tasks
             self.skipped = skipped
@@ -1217,6 +1311,7 @@ extension API {
 
         enum CodingKeys: String, CodingKey {
             case projects = "projects"
+            case sections = "sections"
             case labels = "labels"
             case tasks = "tasks"
             case skipped = "skipped"
@@ -1226,6 +1321,7 @@ extension API {
         public init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             projects = try container.decode(Int.self, forKey: .projects)
+            sections = try container.decode(Int.self, forKey: .sections)
             labels = try container.decode(Int.self, forKey: .labels)
             tasks = try container.decode(Int.self, forKey: .tasks)
             skipped = try container.decode(Int.self, forKey: .skipped)
@@ -1235,6 +1331,7 @@ extension API {
         public func encode(to encoder: Encoder) throws {
             var container = encoder.container(keyedBy: CodingKeys.self)
             try container.encode(self.projects, forKey: .projects)
+            try container.encode(self.sections, forKey: .sections)
             try container.encode(self.labels, forKey: .labels)
             try container.encode(self.tasks, forKey: .tasks)
             try container.encode(self.skipped, forKey: .skipped)
@@ -1709,15 +1806,18 @@ extension API {
     public struct NewTask: Codable, Hashable, Sendable {
         public var title: String
         public var projectId: String?
+        /// A section of `projectId`; any other is dropped.
+        public var sectionId: String?
         public var labelIds: [String]
         public var due: Due?
         public var recurrence: Recurrence?
         public var priority: Priority?
         public var reminders: [Reminder]
 
-        public init(title: String, projectId: String? = nil, labelIds: [String] = [], due: Due? = nil, recurrence: Recurrence? = nil, priority: Priority? = nil, reminders: [Reminder] = []) {
+        public init(title: String, projectId: String? = nil, sectionId: String? = nil, labelIds: [String] = [], due: Due? = nil, recurrence: Recurrence? = nil, priority: Priority? = nil, reminders: [Reminder] = []) {
             self.title = title
             self.projectId = projectId
+            self.sectionId = sectionId
             self.labelIds = labelIds
             self.due = due
             self.recurrence = recurrence
@@ -1728,6 +1828,7 @@ extension API {
         enum CodingKeys: String, CodingKey {
             case title = "title"
             case projectId = "projectId"
+            case sectionId = "sectionId"
             case labelIds = "labelIds"
             case due = "due"
             case recurrence = "recurrence"
@@ -1739,6 +1840,7 @@ extension API {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             title = try container.decode(String.self, forKey: .title)
             projectId = try container.decode(String?.self, forKey: .projectId)
+            sectionId = try container.decodeIfPresent(String.self, forKey: .sectionId)
             labelIds = try container.decode([String].self, forKey: .labelIds)
             due = try container.decode(Due?.self, forKey: .due)
             recurrence = try container.decode(Recurrence?.self, forKey: .recurrence)
@@ -1750,6 +1852,7 @@ extension API {
             var container = encoder.container(keyedBy: CodingKeys.self)
             try container.encode(self.title, forKey: .title)
             try container.encode(self.projectId, forKey: .projectId)
+            try container.encode(self.sectionId, forKey: .sectionId)
             try container.encode(self.labelIds, forKey: .labelIds)
             try container.encode(self.due, forKey: .due)
             try container.encode(self.recurrence, forKey: .recurrence)
@@ -1843,6 +1946,7 @@ extension API {
     public enum Op: Codable, Hashable, Sendable {
         case task(OpTask)
         case project(OpProject)
+        case section(OpSection)
         case label(OpLabel)
         case settings(OpSettings)
 
@@ -1855,6 +1959,7 @@ extension API {
             switch tag {
             case "task": self = .task(try OpTask(from: decoder))
             case "project": self = .project(try OpProject(from: decoder))
+            case "section": self = .section(try OpSection(from: decoder))
             case "label": self = .label(try OpLabel(from: decoder))
             case "settings": self = .settings(try OpSettings(from: decoder))
             default:
@@ -1870,6 +1975,9 @@ extension API {
                 try value.encode(to: encoder)
             case let .project(value):
                 try container.encode("project", forKey: .tag)
+                try value.encode(to: encoder)
+            case let .section(value):
+                try container.encode("section", forKey: .tag)
                 try value.encode(to: encoder)
             case let .label(value):
                 try container.encode("label", forKey: .tag)
@@ -1948,6 +2056,49 @@ extension API {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             id = try container.decode(String.self, forKey: .id)
             fields = try container.decode(ProjectPatchFields.self, forKey: .fields)
+            opId = try container.decode(String.self, forKey: .opId)
+            hlc = try container.decode(Hlc.self, forKey: .hlc)
+            if decoder.validates {
+                do {
+                    let value = self.hlc
+                    try check(isHlc(value), .hlc, in: container, "hlc passing isHlc")
+                }
+            }
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.id, forKey: .id)
+            try container.encode(self.fields, forKey: .fields)
+            try container.encode(self.opId, forKey: .opId)
+            try container.encode(self.hlc, forKey: .hlc)
+        }
+    }
+
+    public struct OpSection: Codable, Hashable, Sendable, Identifiable {
+        public var id: String
+        public var fields: SectionPatchFields
+        public var opId: String
+        public var hlc: Hlc
+
+        public init(id: String, fields: SectionPatchFields, opId: String, hlc: Hlc) {
+            self.id = id
+            self.fields = fields
+            self.opId = opId
+            self.hlc = hlc
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case id = "id"
+            case fields = "fields"
+            case opId = "opId"
+            case hlc = "hlc"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            id = try container.decode(String.self, forKey: .id)
+            fields = try container.decode(SectionPatchFields.self, forKey: .fields)
             opId = try container.decode(String.self, forKey: .opId)
             hlc = try container.decode(Hlc.self, forKey: .hlc)
             if decoder.validates {
@@ -2060,16 +2211,18 @@ extension API {
         public var priority: Priority?
         public var reminders: [Reminder]
         public var projectId: String?
+        public var sectionId: String?
         public var labelIds: [String]
         public var tokens: [QuickAddToken]
 
-        public init(title: String, due: Due? = nil, recurrence: Recurrence? = nil, priority: Priority? = nil, reminders: [Reminder] = [], projectId: String? = nil, labelIds: [String] = [], tokens: [QuickAddToken] = []) {
+        public init(title: String, due: Due? = nil, recurrence: Recurrence? = nil, priority: Priority? = nil, reminders: [Reminder] = [], projectId: String? = nil, sectionId: String? = nil, labelIds: [String] = [], tokens: [QuickAddToken] = []) {
             self.title = title
             self.due = due
             self.recurrence = recurrence
             self.priority = priority
             self.reminders = reminders
             self.projectId = projectId
+            self.sectionId = sectionId
             self.labelIds = labelIds
             self.tokens = tokens
         }
@@ -2081,6 +2234,7 @@ extension API {
             case priority = "priority"
             case reminders = "reminders"
             case projectId = "projectId"
+            case sectionId = "sectionId"
             case labelIds = "labelIds"
             case tokens = "tokens"
         }
@@ -2093,6 +2247,7 @@ extension API {
             priority = try container.decode(Priority?.self, forKey: .priority)
             reminders = try container.decode([Reminder].self, forKey: .reminders)
             projectId = try container.decode(String?.self, forKey: .projectId)
+            sectionId = try container.decode(String?.self, forKey: .sectionId)
             labelIds = try container.decode([String].self, forKey: .labelIds)
             tokens = try container.decode([QuickAddToken].self, forKey: .tokens)
         }
@@ -2105,6 +2260,7 @@ extension API {
             try container.encode(self.priority, forKey: .priority)
             try container.encode(self.reminders, forKey: .reminders)
             try container.encode(self.projectId, forKey: .projectId)
+            try container.encode(self.sectionId, forKey: .sectionId)
             try container.encode(self.labelIds, forKey: .labelIds)
             try container.encode(self.tokens, forKey: .tokens)
         }
@@ -2113,16 +2269,21 @@ extension API {
     public struct ParseOptions: Codable, Hashable, Sendable {
         public var now: Date
         public var projects: [Project]
+        public var sections: [ProjectSection]
         public var labels: [Label]
+        /// The project set outside the text, such as the open project, whose sections `/name` reads.
+        public var projectId: String?
         /// The due date set outside the text, such as by a picker or on an existing task.
         public var due: Due?
         /// Transcribed speech rather than typing, so typing shorthands that speech never means do not apply.
         public var spoken: Bool
 
-        public init(now: Date, projects: [Project] = [], labels: [Label] = [], due: Due? = nil, spoken: Bool = false) {
+        public init(now: Date, projects: [Project] = [], sections: [ProjectSection] = [], labels: [Label] = [], projectId: String? = nil, due: Due? = nil, spoken: Bool = false) {
             self.now = now
             self.projects = projects
+            self.sections = sections
             self.labels = labels
+            self.projectId = projectId
             self.due = due
             self.spoken = spoken
         }
@@ -2130,7 +2291,9 @@ extension API {
         enum CodingKeys: String, CodingKey {
             case now = "now"
             case projects = "projects"
+            case sections = "sections"
             case labels = "labels"
+            case projectId = "projectId"
             case due = "due"
             case spoken = "spoken"
         }
@@ -2139,7 +2302,9 @@ extension API {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             now = try container.decode(Date.self, forKey: .now)
             projects = try container.decodeAbsent([Project].self, forKey: .projects) ?? []
+            sections = try container.decodeAbsent([ProjectSection].self, forKey: .sections) ?? []
             labels = try container.decodeAbsent([Label].self, forKey: .labels) ?? []
+            projectId = try container.decodeIfPresent(String.self, forKey: .projectId)
             due = try container.decodeIfPresent(Due.self, forKey: .due)
             spoken = try container.decodeAbsent(Bool.self, forKey: .spoken) ?? false
         }
@@ -2148,7 +2313,9 @@ extension API {
             var container = encoder.container(keyedBy: CodingKeys.self)
             try container.encode(self.now, forKey: .now)
             try container.encode(self.projects, forKey: .projects)
+            try container.encode(self.sections, forKey: .sections)
             try container.encode(self.labels, forKey: .labels)
+            try container.encode(self.projectId, forKey: .projectId)
             try container.encode(self.due, forKey: .due)
             try container.encode(self.spoken, forKey: .spoken)
         }
@@ -2360,6 +2527,34 @@ extension API {
         }
     }
 
+    /// One heading of a project view. The group with no section has none.
+    public struct ProjectGroup: Codable, Hashable, Sendable {
+        public var section: ProjectSection?
+        public var tasks: [Task]
+
+        public init(section: ProjectSection? = nil, tasks: [Task] = []) {
+            self.section = section
+            self.tasks = tasks
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case section = "section"
+            case tasks = "tasks"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            section = try container.decode(ProjectSection?.self, forKey: .section)
+            tasks = try container.decode([Task].self, forKey: .tasks)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.section, forKey: .section)
+            try container.encode(self.tasks, forKey: .tasks)
+        }
+    }
+
     public struct ProjectPatch: Codable, Hashable, Sendable, Identifiable {
         public var kind: ProjectPatchKind
         public var id: String
@@ -2433,6 +2628,53 @@ extension API {
         case project = "project"
 
         public var id: String { rawValue }
+    }
+
+    public struct ProjectSection: Codable, Hashable, Sendable, Identifiable {
+        public var id: String
+        public var projectId: String
+        public var name: String
+        public var order: Double
+        public var createdAt: Int
+        public var sourceKey: String?
+
+        public init(id: String, projectId: String, name: String, order: Double = 0, createdAt: Int, sourceKey: String? = nil) {
+            self.id = id
+            self.projectId = projectId
+            self.name = name
+            self.order = order
+            self.createdAt = createdAt
+            self.sourceKey = sourceKey
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case id = "id"
+            case projectId = "projectId"
+            case name = "name"
+            case order = "order"
+            case createdAt = "createdAt"
+            case sourceKey = "sourceKey"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            id = try container.decode(String.self, forKey: .id)
+            projectId = try container.decode(String.self, forKey: .projectId)
+            name = try container.decode(String.self, forKey: .name)
+            order = try container.decode(Double.self, forKey: .order)
+            createdAt = try container.decode(Int.self, forKey: .createdAt)
+            sourceKey = try container.decodeAbsent(String.self, forKey: .sourceKey)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.id, forKey: .id)
+            try container.encode(self.projectId, forKey: .projectId)
+            try container.encode(self.name, forKey: .name)
+            try container.encode(self.order, forKey: .order)
+            try container.encode(self.createdAt, forKey: .createdAt)
+            try container.encodeIfPresent(self.sourceKey, forKey: .sourceKey)
+        }
     }
 
     public struct PushKey: Codable, Hashable, Sendable {
@@ -2923,6 +3165,91 @@ extension API {
         }
     }
 
+    public struct SectionPatch: Codable, Hashable, Sendable, Identifiable {
+        public var kind: SectionPatchKind
+        public var id: String
+        public var fields: SectionPatchFields
+
+        public init(kind: SectionPatchKind, id: String, fields: SectionPatchFields) {
+            self.kind = kind
+            self.id = id
+            self.fields = fields
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case kind = "kind"
+            case id = "id"
+            case fields = "fields"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            kind = try container.decode(SectionPatchKind.self, forKey: .kind)
+            id = try container.decode(String.self, forKey: .id)
+            fields = try container.decode(SectionPatchFields.self, forKey: .fields)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.kind, forKey: .kind)
+            try container.encode(self.id, forKey: .id)
+            try container.encode(self.fields, forKey: .fields)
+        }
+    }
+
+    public struct SectionPatchFields: Codable, Hashable, Sendable {
+        public var projectId: String?
+        public var name: String?
+        public var order: Double?
+        public var createdAt: Int?
+        public var sourceKey: String??
+        public var deleted: Bool?
+
+        public init(projectId: String? = nil, name: String? = nil, order: Double? = nil, createdAt: Int? = nil, sourceKey: String?? = nil, deleted: Bool? = nil) {
+            self.projectId = projectId
+            self.name = name
+            self.order = order
+            self.createdAt = createdAt
+            self.sourceKey = sourceKey
+            self.deleted = deleted
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case projectId = "projectId"
+            case name = "name"
+            case order = "order"
+            case createdAt = "createdAt"
+            case sourceKey = "sourceKey"
+            case deleted = "deleted"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            projectId = try container.decodeAbsent(String.self, forKey: .projectId)
+            name = try container.decodeAbsent(String.self, forKey: .name)
+            order = try container.decodeAbsent(Double.self, forKey: .order)
+            createdAt = try container.decodeAbsent(Int.self, forKey: .createdAt)
+            sourceKey = try container.decodeNullable(String.self, forKey: .sourceKey)
+            deleted = try container.decodeAbsent(Bool.self, forKey: .deleted)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encodeIfPresent(self.projectId, forKey: .projectId)
+            try container.encodeIfPresent(self.name, forKey: .name)
+            try container.encodeIfPresent(self.order, forKey: .order)
+            try container.encodeIfPresent(self.createdAt, forKey: .createdAt)
+            try container.encodeNullable(self.sourceKey, forKey: .sourceKey)
+            try container.encodeIfPresent(self.deleted, forKey: .deleted)
+        }
+    }
+
+    public enum SectionPatchKind: String, Codable, Hashable, Sendable, CaseIterable, Identifiable {
+        case section = "section"
+
+        public var id: String { rawValue }
+    }
+
     public struct Settings: Codable, Hashable, Sendable {
         public var timeZone: String?
         public var dictation: DictationChoice
@@ -3064,13 +3391,15 @@ extension API {
         public var owner: Person
         public var tasks: [Task]
         public var projects: [Project]
+        public var sections: [ProjectSection]
         public var labels: [Label]
 
-        public init(target: ShareTarget, owner: Person, tasks: [Task] = [], projects: [Project] = [], labels: [Label] = []) {
+        public init(target: ShareTarget, owner: Person, tasks: [Task] = [], projects: [Project] = [], sections: [ProjectSection] = [], labels: [Label] = []) {
             self.target = target
             self.owner = owner
             self.tasks = tasks
             self.projects = projects
+            self.sections = sections
             self.labels = labels
         }
 
@@ -3079,6 +3408,7 @@ extension API {
             case owner = "owner"
             case tasks = "tasks"
             case projects = "projects"
+            case sections = "sections"
             case labels = "labels"
         }
 
@@ -3088,6 +3418,7 @@ extension API {
             owner = try container.decode(Person.self, forKey: .owner)
             tasks = try container.decode([Task].self, forKey: .tasks)
             projects = try container.decode([Project].self, forKey: .projects)
+            sections = try container.decode([ProjectSection].self, forKey: .sections)
             labels = try container.decode([Label].self, forKey: .labels)
         }
 
@@ -3097,6 +3428,7 @@ extension API {
             try container.encode(self.owner, forKey: .owner)
             try container.encode(self.tasks, forKey: .tasks)
             try container.encode(self.projects, forKey: .projects)
+            try container.encode(self.sections, forKey: .sections)
             try container.encode(self.labels, forKey: .labels)
         }
     }
@@ -3251,15 +3583,17 @@ extension API {
     public struct Snapshot: Codable, Hashable, Sendable {
         public var tasks: [Task]
         public var projects: [Project]
+        public var sections: [ProjectSection]
         public var labels: [Label]
         public var remindersCheckedAt: Int
         public var sync: SyncSection?
         public var spaces: [String: SpaceSection]
         public var people: [Person]
 
-        public init(tasks: [Task] = [], projects: [Project] = [], labels: [Label] = [], remindersCheckedAt: Int, sync: SyncSection? = nil, spaces: [String: SpaceSection] = [:], people: [Person] = []) {
+        public init(tasks: [Task] = [], projects: [Project] = [], sections: [ProjectSection] = [], labels: [Label] = [], remindersCheckedAt: Int, sync: SyncSection? = nil, spaces: [String: SpaceSection] = [:], people: [Person] = []) {
             self.tasks = tasks
             self.projects = projects
+            self.sections = sections
             self.labels = labels
             self.remindersCheckedAt = remindersCheckedAt
             self.sync = sync
@@ -3270,6 +3604,7 @@ extension API {
         enum CodingKeys: String, CodingKey {
             case tasks = "tasks"
             case projects = "projects"
+            case sections = "sections"
             case labels = "labels"
             case remindersCheckedAt = "remindersCheckedAt"
             case sync = "sync"
@@ -3281,6 +3616,7 @@ extension API {
             var container = encoder.container(keyedBy: CodingKeys.self)
             try container.encode(self.tasks, forKey: .tasks)
             try container.encode(self.projects, forKey: .projects)
+            try container.encode(self.sections, forKey: .sections)
             try container.encode(self.labels, forKey: .labels)
             try container.encode(self.remindersCheckedAt, forKey: .remindersCheckedAt)
             try container.encodeIfPresent(self.sync, forKey: .sync)
@@ -3349,9 +3685,10 @@ extension API {
         public var targets: [ShareTarget]
         public var tasks: [Task]
         public var projects: [Project]
+        public var sections: [ProjectSection]
         public var labels: [Label]
 
-        public init(owner: Person, cursor: Int, outbox: [SyncOp] = [], epoch: Int = 0, scope: String = "", readOnly: [String] = [], targets: [ShareTarget] = [], tasks: [Task] = [], projects: [Project] = [], labels: [Label] = []) {
+        public init(owner: Person, cursor: Int, outbox: [SyncOp] = [], epoch: Int = 0, scope: String = "", readOnly: [String] = [], targets: [ShareTarget] = [], tasks: [Task] = [], projects: [Project] = [], sections: [ProjectSection] = [], labels: [Label] = []) {
             self.owner = owner
             self.cursor = cursor
             self.outbox = outbox
@@ -3361,6 +3698,7 @@ extension API {
             self.targets = targets
             self.tasks = tasks
             self.projects = projects
+            self.sections = sections
             self.labels = labels
         }
 
@@ -3374,6 +3712,7 @@ extension API {
             case targets = "targets"
             case tasks = "tasks"
             case projects = "projects"
+            case sections = "sections"
             case labels = "labels"
         }
 
@@ -3388,6 +3727,7 @@ extension API {
             try container.encode(self.targets, forKey: .targets)
             try container.encode(self.tasks, forKey: .tasks)
             try container.encode(self.projects, forKey: .projects)
+            try container.encode(self.sections, forKey: .sections)
             try container.encode(self.labels, forKey: .labels)
         }
     }
@@ -3396,12 +3736,14 @@ extension API {
     public struct SpaceView: Codable, Hashable, Sendable {
         public var tasks: [Task]
         public var projects: [Project]
+        public var sections: [ProjectSection]
         public var labels: [Label]
         public var readOnly: [String]
 
-        public init(tasks: [Task] = [], projects: [Project] = [], labels: [Label] = [], readOnly: [String] = []) {
+        public init(tasks: [Task] = [], projects: [Project] = [], sections: [ProjectSection] = [], labels: [Label] = [], readOnly: [String] = []) {
             self.tasks = tasks
             self.projects = projects
+            self.sections = sections
             self.labels = labels
             self.readOnly = readOnly
         }
@@ -3409,6 +3751,7 @@ extension API {
         enum CodingKeys: String, CodingKey {
             case tasks = "tasks"
             case projects = "projects"
+            case sections = "sections"
             case labels = "labels"
             case readOnly = "readOnly"
         }
@@ -3417,6 +3760,7 @@ extension API {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             tasks = try container.decode([Task].self, forKey: .tasks)
             projects = try container.decode([Project].self, forKey: .projects)
+            sections = try container.decode([ProjectSection].self, forKey: .sections)
             labels = try container.decode([Label].self, forKey: .labels)
             readOnly = try container.decode([String].self, forKey: .readOnly)
         }
@@ -3425,26 +3769,30 @@ extension API {
             var container = encoder.container(keyedBy: CodingKeys.self)
             try container.encode(self.tasks, forKey: .tasks)
             try container.encode(self.projects, forKey: .projects)
+            try container.encode(self.sections, forKey: .sections)
             try container.encode(self.labels, forKey: .labels)
             try container.encode(self.readOnly, forKey: .readOnly)
         }
     }
 
-    /// Everything the store holds that syncs: tasks, projects, and labels.
+    /// Everything the store holds that syncs: tasks, projects, sections, and labels.
     public struct StoreData: Codable, Hashable, Sendable {
         public var tasks: [Task]
         public var projects: [Project]
+        public var sections: [ProjectSection]
         public var labels: [Label]
 
-        public init(tasks: [Task] = [], projects: [Project] = [], labels: [Label] = []) {
+        public init(tasks: [Task] = [], projects: [Project] = [], sections: [ProjectSection] = [], labels: [Label] = []) {
             self.tasks = tasks
             self.projects = projects
+            self.sections = sections
             self.labels = labels
         }
 
         enum CodingKeys: String, CodingKey {
             case tasks = "tasks"
             case projects = "projects"
+            case sections = "sections"
             case labels = "labels"
         }
 
@@ -3452,6 +3800,7 @@ extension API {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             tasks = try container.decode([Task].self, forKey: .tasks)
             projects = try container.decode([Project].self, forKey: .projects)
+            sections = try container.decode([ProjectSection].self, forKey: .sections)
             labels = try container.decode([Label].self, forKey: .labels)
         }
 
@@ -3459,6 +3808,7 @@ extension API {
             var container = encoder.container(keyedBy: CodingKeys.self)
             try container.encode(self.tasks, forKey: .tasks)
             try container.encode(self.projects, forKey: .projects)
+            try container.encode(self.sections, forKey: .sections)
             try container.encode(self.labels, forKey: .labels)
         }
     }
@@ -3816,12 +4166,14 @@ extension API {
     public struct SyncSnapshot: Codable, Hashable, Sendable {
         public var tasks: [Task]
         public var projects: [Project]
+        public var sections: [ProjectSection]
         public var labels: [Label]
         public var settings: Settings
 
-        public init(tasks: [Task] = [], projects: [Project] = [], labels: [Label] = [], settings: Settings) {
+        public init(tasks: [Task] = [], projects: [Project] = [], sections: [ProjectSection] = [], labels: [Label] = [], settings: Settings) {
             self.tasks = tasks
             self.projects = projects
+            self.sections = sections
             self.labels = labels
             self.settings = settings
         }
@@ -3829,6 +4181,7 @@ extension API {
         enum CodingKeys: String, CodingKey {
             case tasks = "tasks"
             case projects = "projects"
+            case sections = "sections"
             case labels = "labels"
             case settings = "settings"
         }
@@ -3837,6 +4190,7 @@ extension API {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             tasks = try container.decode([Task].self, forKey: .tasks)
             projects = try container.decode([Project].self, forKey: .projects)
+            sections = try container.decode([ProjectSection].self, forKey: .sections)
             labels = try container.decode([Label].self, forKey: .labels)
             settings = try container.decode(Settings.self, forKey: .settings)
         }
@@ -3845,6 +4199,7 @@ extension API {
             var container = encoder.container(keyedBy: CodingKeys.self)
             try container.encode(self.tasks, forKey: .tasks)
             try container.encode(self.projects, forKey: .projects)
+            try container.encode(self.sections, forKey: .sections)
             try container.encode(self.labels, forKey: .labels)
             try container.encode(self.settings, forKey: .settings)
         }
@@ -3857,6 +4212,7 @@ extension API {
         public var title: String
         public var notes: String
         public var projectId: String?
+        public var sectionId: String?
         public var labelIds: [String]
         public var due: Due?
         public var recurrence: Recurrence?
@@ -3871,13 +4227,14 @@ extension API {
         public var lastCompletedAt: Int?
         public var sourceKey: String?
 
-        public init(id: String, parentId: String? = nil, order: Double = 0, title: String, notes: String = "", projectId: String? = nil, labelIds: [String] = [], due: Due? = nil, recurrence: Recurrence? = nil, priority: Priority = .p4, reminders: [Reminder] = [], location: TaskLocation? = nil, event: TaskEvent? = nil, createdAt: Int, completedAt: Int? = nil, createdBy: String? = nil, completedBy: String? = nil, lastCompletedAt: Int? = nil, sourceKey: String? = nil) {
+        public init(id: String, parentId: String? = nil, order: Double = 0, title: String, notes: String = "", projectId: String? = nil, sectionId: String? = nil, labelIds: [String] = [], due: Due? = nil, recurrence: Recurrence? = nil, priority: Priority = .p4, reminders: [Reminder] = [], location: TaskLocation? = nil, event: TaskEvent? = nil, createdAt: Int, completedAt: Int? = nil, createdBy: String? = nil, completedBy: String? = nil, lastCompletedAt: Int? = nil, sourceKey: String? = nil) {
             self.id = id
             self.parentId = parentId
             self.order = order
             self.title = title
             self.notes = notes
             self.projectId = projectId
+            self.sectionId = sectionId
             self.labelIds = labelIds
             self.due = due
             self.recurrence = recurrence
@@ -3900,6 +4257,7 @@ extension API {
             case title = "title"
             case notes = "notes"
             case projectId = "projectId"
+            case sectionId = "sectionId"
             case labelIds = "labelIds"
             case due = "due"
             case recurrence = "recurrence"
@@ -3923,6 +4281,7 @@ extension API {
             title = try container.decode(String.self, forKey: .title)
             notes = try container.decode(String.self, forKey: .notes)
             projectId = try container.decode(String?.self, forKey: .projectId)
+            sectionId = try container.decode(String?.self, forKey: .sectionId)
             labelIds = try container.decode([String].self, forKey: .labelIds)
             due = try container.decode(Due?.self, forKey: .due)
             recurrence = try container.decode(Recurrence?.self, forKey: .recurrence)
@@ -3946,6 +4305,7 @@ extension API {
             try container.encode(self.title, forKey: .title)
             try container.encode(self.notes, forKey: .notes)
             try container.encode(self.projectId, forKey: .projectId)
+            try container.encode(self.sectionId, forKey: .sectionId)
             try container.encode(self.labelIds, forKey: .labelIds)
             try container.encode(self.due, forKey: .due)
             try container.encode(self.recurrence, forKey: .recurrence)
@@ -3962,11 +4322,12 @@ extension API {
         }
     }
 
-    /// The editable fields of a task. A missing field is left alone; for nullable fields, `null` clears the value.
+    /// The editable fields of a task. A missing field is left alone; for nullable fields, `null` clears the value. A section moves the task into its project, and a new project without one leaves the task in no section.
     public struct TaskEdit: Codable, Hashable, Sendable {
         public var title: String?
         public var notes: String?
         public var projectId: String??
+        public var sectionId: String??
         public var labelIds: [String]?
         public var due: Due??
         public var recurrence: Recurrence??
@@ -3975,10 +4336,11 @@ extension API {
         public var location: TaskLocation??
         public var event: TaskEvent??
 
-        public init(title: String? = nil, notes: String? = nil, projectId: String?? = nil, labelIds: [String]? = nil, due: Due?? = nil, recurrence: Recurrence?? = nil, priority: Priority? = nil, reminders: [Reminder]? = nil, location: TaskLocation?? = nil, event: TaskEvent?? = nil) {
+        public init(title: String? = nil, notes: String? = nil, projectId: String?? = nil, sectionId: String?? = nil, labelIds: [String]? = nil, due: Due?? = nil, recurrence: Recurrence?? = nil, priority: Priority? = nil, reminders: [Reminder]? = nil, location: TaskLocation?? = nil, event: TaskEvent?? = nil) {
             self.title = title
             self.notes = notes
             self.projectId = projectId
+            self.sectionId = sectionId
             self.labelIds = labelIds
             self.due = due
             self.recurrence = recurrence
@@ -3992,6 +4354,7 @@ extension API {
             case title = "title"
             case notes = "notes"
             case projectId = "projectId"
+            case sectionId = "sectionId"
             case labelIds = "labelIds"
             case due = "due"
             case recurrence = "recurrence"
@@ -4006,6 +4369,7 @@ extension API {
             title = try container.decodeAbsent(String.self, forKey: .title)
             notes = try container.decodeAbsent(String.self, forKey: .notes)
             projectId = try container.decodeNullable(String.self, forKey: .projectId)
+            sectionId = try container.decodeNullable(String.self, forKey: .sectionId)
             labelIds = try container.decodeAbsent([String].self, forKey: .labelIds)
             due = try container.decodeNullable(Due.self, forKey: .due)
             recurrence = try container.decodeNullable(Recurrence.self, forKey: .recurrence)
@@ -4020,6 +4384,7 @@ extension API {
             try container.encodeIfPresent(self.title, forKey: .title)
             try container.encodeIfPresent(self.notes, forKey: .notes)
             try container.encodeNullable(self.projectId, forKey: .projectId)
+            try container.encodeNullable(self.sectionId, forKey: .sectionId)
             try container.encodeIfPresent(self.labelIds, forKey: .labelIds)
             try container.encodeNullable(self.due, forKey: .due)
             try container.encodeNullable(self.recurrence, forKey: .recurrence)
@@ -4235,6 +4600,7 @@ extension API {
         public var title: String?
         public var notes: String?
         public var projectId: String??
+        public var sectionId: String??
         public var labelIds: [String]?
         public var due: Due??
         public var recurrence: Recurrence??
@@ -4250,12 +4616,13 @@ extension API {
         public var sourceKey: String??
         public var deleted: Bool?
 
-        public init(parentId: String?? = nil, order: Double? = nil, title: String? = nil, notes: String? = nil, projectId: String?? = nil, labelIds: [String]? = nil, due: Due?? = nil, recurrence: Recurrence?? = nil, priority: Priority? = nil, reminders: [Reminder]? = nil, location: TaskLocation?? = nil, event: TaskEvent?? = nil, createdAt: Int? = nil, completedAt: Int?? = nil, createdBy: String?? = nil, completedBy: String?? = nil, lastCompletedAt: Int?? = nil, sourceKey: String?? = nil, deleted: Bool? = nil) {
+        public init(parentId: String?? = nil, order: Double? = nil, title: String? = nil, notes: String? = nil, projectId: String?? = nil, sectionId: String?? = nil, labelIds: [String]? = nil, due: Due?? = nil, recurrence: Recurrence?? = nil, priority: Priority? = nil, reminders: [Reminder]? = nil, location: TaskLocation?? = nil, event: TaskEvent?? = nil, createdAt: Int? = nil, completedAt: Int?? = nil, createdBy: String?? = nil, completedBy: String?? = nil, lastCompletedAt: Int?? = nil, sourceKey: String?? = nil, deleted: Bool? = nil) {
             self.parentId = parentId
             self.order = order
             self.title = title
             self.notes = notes
             self.projectId = projectId
+            self.sectionId = sectionId
             self.labelIds = labelIds
             self.due = due
             self.recurrence = recurrence
@@ -4278,6 +4645,7 @@ extension API {
             case title = "title"
             case notes = "notes"
             case projectId = "projectId"
+            case sectionId = "sectionId"
             case labelIds = "labelIds"
             case due = "due"
             case recurrence = "recurrence"
@@ -4301,6 +4669,7 @@ extension API {
             title = try container.decodeAbsent(String.self, forKey: .title)
             notes = try container.decodeAbsent(String.self, forKey: .notes)
             projectId = try container.decodeNullable(String.self, forKey: .projectId)
+            sectionId = try container.decodeNullable(String.self, forKey: .sectionId)
             labelIds = try container.decodeAbsent([String].self, forKey: .labelIds)
             due = try container.decodeNullable(Due.self, forKey: .due)
             recurrence = try container.decodeNullable(Recurrence.self, forKey: .recurrence)
@@ -4324,6 +4693,7 @@ extension API {
             try container.encodeIfPresent(self.title, forKey: .title)
             try container.encodeIfPresent(self.notes, forKey: .notes)
             try container.encodeNullable(self.projectId, forKey: .projectId)
+            try container.encodeNullable(self.sectionId, forKey: .sectionId)
             try container.encodeIfPresent(self.labelIds, forKey: .labelIds)
             try container.encodeNullable(self.due, forKey: .due)
             try container.encodeNullable(self.recurrence, forKey: .recurrence)
@@ -4458,17 +4828,20 @@ extension API {
     /// What a backup holds, read without touching the store.
     public struct TodoistBackup: Codable, Hashable, Sendable {
         public var projects: [BackupProject]
+        public var sections: [BackupSection]
         public var tasks: [BackupTask]
         public var warnings: [String]
 
-        public init(projects: [BackupProject] = [], tasks: [BackupTask] = [], warnings: [String] = []) {
+        public init(projects: [BackupProject] = [], sections: [BackupSection] = [], tasks: [BackupTask] = [], warnings: [String] = []) {
             self.projects = projects
+            self.sections = sections
             self.tasks = tasks
             self.warnings = warnings
         }
 
         enum CodingKeys: String, CodingKey {
             case projects = "projects"
+            case sections = "sections"
             case tasks = "tasks"
             case warnings = "warnings"
         }
@@ -4476,6 +4849,7 @@ extension API {
         public init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             projects = try container.decode([BackupProject].self, forKey: .projects)
+            sections = try container.decode([BackupSection].self, forKey: .sections)
             tasks = try container.decode([BackupTask].self, forKey: .tasks)
             warnings = try container.decode([String].self, forKey: .warnings)
         }
@@ -4483,6 +4857,7 @@ extension API {
         public func encode(to encoder: Encoder) throws {
             var container = encoder.container(keyedBy: CodingKeys.self)
             try container.encode(self.projects, forKey: .projects)
+            try container.encode(self.sections, forKey: .sections)
             try container.encode(self.tasks, forKey: .tasks)
             try container.encode(self.warnings, forKey: .warnings)
         }
@@ -4494,6 +4869,7 @@ extension API {
         case priority = "priority"
         case reminder = "reminder"
         case project = "project"
+        case section = "section"
         case label = "label"
 
         public var id: String { rawValue }

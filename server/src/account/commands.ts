@@ -34,9 +34,9 @@ const grantsOf = (access: Access): readonly Grant[] | null => (access.role === '
 /** What the actor sees of the space. Owners see everything and may edit it all. */
 export function viewOf(snapshot: Snapshot, access: Access): SpaceView {
 	const grants = grantsOf(access);
-	if (!grants) return { tasks: snapshot.tasks, projects: snapshot.projects, labels: snapshot.labels, readOnly: [] };
-	const { filtered, readOnly } = guestView(snapshot, grants);
-	return { tasks: filtered.tasks, projects: filtered.projects, labels: filtered.labels, readOnly };
+	const { filtered, readOnly } = grants ? guestView(snapshot, grants) : { filtered: snapshot, readOnly: [] };
+	const { tasks, projects, sections, labels } = filtered;
+	return { tasks, projects, sections, labels, readOnly };
 }
 
 export const view = ({ store, access }: Space): SpaceView => viewOf(serverSnapshot(loadState(store)), access);
@@ -50,8 +50,8 @@ function run(space: Space, command: (data: StoreData, visible: SpaceView, zone: 
 		const before = loadState(store);
 		const snapshot = serverSnapshot(before);
 		const visible = viewOf(snapshot, access);
-		const { tasks, projects, labels } = snapshot;
-		const next = command({ tasks, projects, labels }, visible, zoneOf(snapshot));
+		const { tasks, projects, sections, labels } = snapshot;
+		const next = command({ tasks, projects, sections, labels }, visible, zoneOf(snapshot));
 		const patches = diff(snapshot, { ...snapshot, ...next });
 		const { ops } = stamp(patches, before.clock, now);
 		const grants = grantsOf(access);
@@ -82,6 +82,7 @@ export function createTask(space: Space, input: AgentNewTask): Task {
 			? parseQuickAdd(input.text, {
 					now: wallDate(space.now, zone),
 					projects: visible.projects,
+					sections: visible.sections,
 					labels: visible.labels,
 				})
 			: null;
@@ -94,6 +95,7 @@ export function createTask(space: Space, input: AgentNewTask): Task {
 			{
 				title,
 				projectId: input.projectId ?? parsed?.projectId ?? null,
+				sectionId: input.sectionId ?? parsed?.sectionId ?? null,
 				labelIds: input.labelIds ?? parsed?.labelIds ?? [],
 				due: parsed?.due ?? null,
 				recurrence: parsed?.recurrence ?? null,

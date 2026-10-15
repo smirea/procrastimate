@@ -32,6 +32,8 @@ export const tasks = sqliteTable(
 		title: text('title').notNull(),
 		notes: text('notes').notNull().default(''),
 		projectId: text('project_id'),
+		/** A section of the task's project. A subtask shares its root task's section, like its project. */
+		sectionId: text('section_id'),
 		labelIds: text('label_ids', { mode: 'json' }).$type<ColumnValue<'tasks', 'labelIds'>>().notNull().default([]),
 		due: text('due', { mode: 'json' }).$type<ColumnValue<'tasks', 'due'>>(),
 		recurrence: text('recurrence', { mode: 'json' }).$type<ColumnValue<'tasks', 'recurrence'>>(),
@@ -62,6 +64,23 @@ export const projects = sqliteTable(
 		userId: text('user_id').notNull(),
 		id: text('id').notNull(),
 		name: text('name').notNull(),
+		createdAt: integer('created_at').notNull(),
+		sourceKey: text('source_key'),
+		deleted: deleted(),
+		clocks: clocks(),
+	},
+	userEntity,
+);
+
+/** A heading inside one project that groups its top-level tasks, in `order` (fractional, like subtasks). */
+export const sections = sqliteTable(
+	'sections',
+	{
+		userId: text('user_id').notNull(),
+		id: text('id').notNull(),
+		projectId: text('project_id').notNull(),
+		name: text('name').notNull(),
+		order: real('order').notNull().default(0),
 		createdAt: integer('created_at').notNull(),
 		sourceKey: text('source_key'),
 		deleted: deleted(),
@@ -102,7 +121,7 @@ export const settings = sqliteTable(
 );
 
 /** Each kind's table, so code that handles every kind finds its columns in one place. */
-export const ENTITY_TABLES = { task: tasks, project: projects, label: labels, settings } as const;
+export const ENTITY_TABLES = { task: tasks, project: projects, section: sections, label: labels, settings } as const;
 
 /** Append-only: the fields of one op that won, at server sequence `seq`, which starts at 1 for each user. */
 export const log = sqliteTable(

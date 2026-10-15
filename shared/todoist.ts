@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { parseCsv } from './csv.ts';
 import { parseQuickAdd } from './quick-add.ts';
-import type { StoreData } from './store.ts';
+import { sectionsOf, type StoreData } from './store.ts';
 import { nextSiblingOrder } from './subtasks.ts';
 import { taskSchema } from './sync/protocol.ts';
 import {
@@ -13,6 +13,7 @@ import {
 	type Priority,
 	type Project,
 	type Reminder,
+	type Section,
 	type Task,
 } from './task.ts';
 
@@ -26,6 +27,11 @@ export const backupProjectSchema = z
 	.meta({ id: 'BackupProject' });
 export type BackupProject = z.infer<typeof backupProjectSchema>;
 
+export const backupSectionSchema = z
+	.object({ sourceKey: z.string(), projectKey: z.string(), name: z.string() })
+	.meta({ id: 'BackupSection' });
+export type BackupSection = z.infer<typeof backupSectionSchema>;
+
 const taskShape = taskSchema.shape;
 
 export const backupTaskSchema = z
@@ -33,6 +39,10 @@ export const backupTaskSchema = z
 		sourceKey: z.string(),
 		parentKey: z.string().nullable().meta({ description: 'The source key of the task one indent up, for a subtask.' }),
 		projectKey: z.string(),
+		sectionKey: z
+			.string()
+			.nullable()
+			.meta({ description: 'The source key of the section a top-level task sits under. Subtasks have none.' }),
 		title: taskShape.title,
 		notes: taskShape.notes,
 		labels: z.array(z.string()),
@@ -45,7 +55,12 @@ export const backupTaskSchema = z
 export type BackupTask = z.infer<typeof backupTaskSchema>;
 
 export const todoistBackupSchema = z
-	.object({ projects: z.array(backupProjectSchema), tasks: z.array(backupTaskSchema), warnings: z.array(z.string()) })
+	.object({
+		projects: z.array(backupProjectSchema),
+		sections: z.array(backupSectionSchema),
+		tasks: z.array(backupTaskSchema),
+		warnings: z.array(z.string()),
+	})
 	.meta({ id: 'TodoistBackup', description: 'What a backup holds, read without touching the store.' });
 export type TodoistBackup = z.infer<typeof todoistBackupSchema>;
 
@@ -53,7 +68,14 @@ export type ImportState = StoreData;
 
 const count = z.number().int().meta({ default: 0 });
 export const importSummarySchema = z
-	.object({ projects: count, labels: count, tasks: count, skipped: count, warnings: z.array(z.string()) })
+	.object({
+		projects: count,
+		sections: count,
+		labels: count,
+		tasks: count,
+		skipped: count,
+		warnings: z.array(z.string()),
+	})
 	.meta({ id: 'ImportSummary' });
 export type ImportSummary = z.infer<typeof importSummarySchema>;
 
@@ -114,10 +136,13 @@ function readProject(file: BackupFile, now: Date, backup: TodoistBackup) {
 	const get = (row: string[], column: string) => row[columns.get(column) ?? -1]?.trim() ?? '';
 	const warn = (message: string) => backup.warnings.push(`${name}: ${message}`);
 	const projectKey = `todoist:project:${id}`;
-	backup.projects.push({ sourceKey: projectKey, name, inbox: name === 'Inbox' });
+	const inbox = name === 'Inbox';
+	backup.projects.push({ sourceKey: projectKey, name, inbox });
 
 	const drafts: Draft[] = [];
-	const sections: string[] = [];
+	const inboxSections: string[] = [];
+	let sectionKey: string | null = null;
+	const sectionsSeen = new Map<string, number>();
 	const ancestors: Array<{ indent: number; content: string; sourceKey: string }> = [];
 	const seen = new Map<string, number>();
 
@@ -125,6 +150,7 @@ function readProject(file: BackupFile, now: Date, backup: TodoistBackup) {
 		const indent = Math.max(1, Number.parseInt(get(row, 'INDENT'), 10) || 1);
 		while (ancestors.length > 0 && ancestors.at(-1)!.indent >= indent) ancestors.pop();
 		const parentKey = ancestors.at(-1)?.sourceKey ?? null;
+		const inSection = parentKey === null ? sectionKey : null;
 		const path = [...ancestors.map(a => a.content), content].join(' › ');
 		const occurrence = (seen.get(path) ?? 0) + 1;
 		seen.set(path, occurrence);
@@ -153,6 +179,7 @@ function readProject(file: BackupFile, now: Date, backup: TodoistBackup) {
 				sourceKey,
 				parentKey,
 				projectKey,
+				sectionKey: inSection,
 				title,
 				labels,
 				due: timing?.due ?? null,
@@ -186,9 +213,19 @@ function readProject(file: BackupFile, now: Date, backup: TodoistBackup) {
 			case '':
 			case 'meta':
 				break;
-			case 'section':
-				sections.push(content);
+			case 'section': {
+				if (inbox) {
+					inboxSections.push(content);
+					break;
+				}
+				// A section starts a new outline, so the next task is top level whatever its indent.
+				ancestors.length = 0;
+				const occurrence = (sectionsSeen.get(content) ?? 0) + 1;
+				sectionsSeen.set(content, occurrence);
+				sectionKey = `todoist:section:${id}:${content}${occurrence > 1 ? `#${occurrence}` : ''}`;
+				backup.sections.push({ sourceKey: sectionKey, projectKey, name: content });
 				break;
+			}
 			case 'task':
 				drafts.push(readTask(row, content));
 				break;
@@ -213,7 +250,7 @@ function readProject(file: BackupFile, now: Date, backup: TodoistBackup) {
 		}
 	}
 
-	if (sections.length > 0) warn(`sections are not imported: ${sections.join(', ')}`);
+	if (inboxSections.length > 0) warn(`Inbox has no sections, so these were left out: ${inboxSections.join(', ')}`);
 	for (const { task, notes, extras } of drafts) {
 		backup.tasks.push({ ...task, notes: [...notes, ...extras].filter(Boolean).join('\n\n') });
 	}
@@ -221,7 +258,7 @@ function readProject(file: BackupFile, now: Date, backup: TodoistBackup) {
 
 /** Reads every project CSV in a Todoist backup. Other files, such as macOS metadata, are ignored. */
 export function readTodoistBackup(files: readonly BackupFile[], now: Date): TodoistBackup {
-	const backup: TodoistBackup = { projects: [], tasks: [], warnings: [] };
+	const backup: TodoistBackup = { projects: [], sections: [], tasks: [], warnings: [] };
 	for (const file of files) {
 		const base = file.name.split('/').pop()!;
 		if (!/\.csv$/i.test(base) || base.startsWith('.') || file.name.includes('__MACOSX/')) continue;
@@ -231,10 +268,12 @@ export function readTodoistBackup(files: readonly BackupFile[], now: Date): Todo
 }
 
 /**
- * Adds a backup's projects, labels, and tasks to the store's state. A task whose source key is already
- * stored is skipped, so importing the same backup twice changes nothing. A project matches by source key,
- * then by name, and Inbox maps to our Inbox. Labels match by name, ignoring case. A subtask lands as its
- * parent's last subtask, in the parent's project, so adding rows in source order reproduces Todoist's outline.
+ * Adds a backup's projects, sections, labels, and tasks to the store's state. A task whose source key is already
+ * stored is skipped, so importing the same backup twice changes nothing, except that a skipped top-level task still in
+ * no section and in its project joins its section, so a backup imported before sections existed gains them. A project
+ * matches by source key, then by name, and Inbox maps to our Inbox. A section matches by source key, then by name in
+ * its project. Labels match by name, ignoring case. A subtask lands as its parent's last subtask, in the parent's
+ * project, so adding rows in source order reproduces Todoist's outline.
  */
 export function mergeBackup(
 	state: ImportState,
@@ -242,9 +281,17 @@ export function mergeBackup(
 	{ newId, now }: { newId: () => string; now: number },
 ): { state: ImportState; summary: ImportSummary } {
 	const projects = [...state.projects];
+	const sections = [...state.sections];
 	const labels = [...state.labels];
 	const tasks = [...state.tasks];
-	const summary: ImportSummary = { projects: 0, labels: 0, tasks: 0, skipped: 0, warnings: backup.warnings };
+	const summary: ImportSummary = {
+		projects: 0,
+		sections: 0,
+		labels: 0,
+		tasks: 0,
+		skipped: 0,
+		warnings: backup.warnings,
+	};
 	const sameName = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
 
 	const projectIds = new Map<string, string | null>();
@@ -266,6 +313,38 @@ export function mergeBackup(
 		summary.projects++;
 	}
 
+	const sectionIds = new Map<string, string>();
+	for (const source of backup.sections) {
+		const projectId = projectIds.get(source.projectKey);
+		if (!projectId) continue;
+		const index = sections.findIndex(s => s.sourceKey === source.sourceKey);
+		const match =
+			index === -1
+				? sections.findIndex(s => !s.sourceKey && s.projectId === projectId && sameName(s.name, source.name))
+				: index;
+		if (match !== -1) {
+			sections[match] = { ...sections[match]!, sourceKey: source.sourceKey };
+			sectionIds.set(source.sourceKey, sections[match]!.id);
+			continue;
+		}
+		const last = sectionsOf(sections, projectId).at(-1);
+		const section: Section = {
+			id: newId(),
+			projectId,
+			name: source.name,
+			order: last ? last.order + 1 : 0,
+			createdAt: now,
+			sourceKey: source.sourceKey,
+		};
+		sections.push(section);
+		sectionIds.set(source.sourceKey, section.id);
+		summary.sections++;
+	}
+	const sectionOf = (source: BackupTask, projectId: string | null) => {
+		const id = source.sectionKey === null ? undefined : sectionIds.get(source.sectionKey);
+		return id && sections.find(s => s.id === id)?.projectId === projectId ? id : null;
+	};
+
 	const labelId = (name: string) => {
 		const existing = labels.find(l => sameName(l.name, name));
 		if (existing) return existing.id;
@@ -277,18 +356,26 @@ export function mergeBackup(
 
 	const imported = new Map(tasks.flatMap(t => (t.sourceKey ? [[t.sourceKey, t] as const] : [])));
 	for (const [i, source] of backup.tasks.entries()) {
-		if (imported.has(source.sourceKey)) {
+		const existing = imported.get(source.sourceKey);
+		if (existing) {
+			const sectionId = existing.parentId === null ? sectionOf(source, existing.projectId) : null;
+			if (existing.sectionId === null && sectionId !== null) {
+				const index = tasks.findIndex(t => t.id === existing.id);
+				tasks[index] = { ...existing, sectionId };
+			}
 			summary.skipped++;
 			continue;
 		}
 		const parent = source.parentKey ? imported.get(source.parentKey) : undefined;
+		const projectId = parent ? parent.projectId : (projectIds.get(source.projectKey) ?? null);
 		const task: Task = {
 			id: newId(),
 			parentId: parent?.id ?? null,
 			order: parent ? nextSiblingOrder(tasks, parent.id) : 0,
 			title: source.title,
 			notes: source.notes,
-			projectId: parent ? parent.projectId : (projectIds.get(source.projectKey) ?? null),
+			projectId,
+			sectionId: parent ? null : sectionOf(source, projectId),
 			labelIds: source.labels.map(labelId),
 			due: source.due,
 			recurrence: source.recurrence,
@@ -308,5 +395,5 @@ export function mergeBackup(
 		imported.set(task.sourceKey!, task);
 		summary.tasks++;
 	}
-	return { state: { tasks, projects, labels }, summary };
+	return { state: { tasks, projects, sections, labels }, summary };
 }

@@ -18,7 +18,7 @@ const counter = () => {
 	let n = 0;
 	return () => `id-${++n}`;
 };
-const empty = (): ImportState => ({ tasks: [], projects: [], labels: [] });
+const empty = (): ImportState => ({ tasks: [], projects: [], sections: [], labels: [] });
 const read = (text: string, name = 'Errands [42].csv') => readTodoistBackup([{ name, text }], now);
 /** Read inside the first test that needs it, so its vector is recorded once and named after that test. */
 let fixture: TodoistBackup | undefined;
@@ -75,6 +75,7 @@ describe('reading a backup', () => {
 				sourceKey: 'todoist:task:6Xmpl1Fq:Call the dentist',
 				parentKey: null,
 				projectKey: 'todoist:project:6Xmpl1Fq',
+				sectionKey: null,
 				title: 'Call the dentist',
 				notes: '',
 				labels: [],
@@ -87,6 +88,7 @@ describe('reading a backup', () => {
 				sourceKey: 'todoist:task:6Xmpl1Fq:cancel [meetup.com](https://meetup.com)',
 				parentKey: null,
 				projectKey: 'todoist:project:6Xmpl1Fq',
+				sectionKey: null,
 				title: 'cancel [meetup.com](https://meetup.com)',
 				notes: '',
 				labels: [],
@@ -99,6 +101,7 @@ describe('reading a backup', () => {
 				sourceKey: 'todoist:task:6Xmpl1Fq:Renew passport #Travel',
 				parentKey: null,
 				projectKey: 'todoist:project:6Xmpl1Fq',
+				sectionKey: null,
 				title: 'Renew passport #Travel',
 				notes: '',
 				labels: [],
@@ -160,11 +163,26 @@ describe('reading a backup', () => {
 		]);
 	});
 
+	test('a section row puts the top-level tasks under it in that section, and their subtasks in none', () => {
+		const backup = readFixture();
+		expect(backup.sections).toEqual([
+			{ sourceKey: 'todoist:section:8Xmpl2Wq:Someday', projectKey: 'todoist:project:8Xmpl2Wq', name: 'Someday' },
+			{ sourceKey: 'todoist:section:8Xmpl2Wq:Reading', projectKey: 'todoist:project:8Xmpl2Wq', name: 'Reading' },
+		]);
+		const longTerm = backup.tasks.filter(t => t.projectKey === 'todoist:project:8Xmpl2Wq');
+		expect(longTerm.map(t => [t.title, t.sectionKey])).toEqual([
+			['Visit Japan', 'todoist:section:8Xmpl2Wq:Someday'],
+			['Book flights', null],
+			['Pack bags', null],
+			['Read Dune', 'todoist:section:8Xmpl2Wq:Reading'],
+			['Read Dune', 'todoist:section:8Xmpl2Wq:Reading'],
+		]);
+	});
+
 	test('warns about what it could not carry over, and ignores macOS metadata', () => {
 		const backup = readFixture();
 		expect(backup.warnings).toEqual([
 			'Inbox: could not read the date "every! 3 days" on "Fix bike", kept it in notes',
-			'Long Term: sections are not imported: Someday, Reading',
 			'Job: could not read the date "jeden Montag" on "Email Sam", kept it in notes',
 		]);
 	});
@@ -213,6 +231,17 @@ describe('CSV edge cases', () => {
 		});
 	});
 
+	test('Inbox has no sections, so its section rows are left out with a warning and its tasks stay in Inbox', () => {
+		const backup = read(`${HEADER}\ntask,A,,4,1,,\nsection,Later,,,,,\ntask,B,,4,1,,\n`, 'Inbox [1].csv');
+		expect([backup.sections, backup.tasks.map(t => t.sectionKey)]).toEqual([[], [null, null]]);
+		expect(backup.warnings).toEqual(['Inbox: Inbox has no sections, so these were left out: Later']);
+	});
+
+	test('two sections with the same name in one project stay apart', () => {
+		const backup = read(`${HEADER}\nsection,Later,,,,,\ntask,A,,4,1,,\nsection,Later,,,,,\ntask,B,,4,1,,\n`);
+		expect(backup.tasks.map(t => t.sectionKey)).toEqual(['todoist:section:42:Later', 'todoist:section:42:Later#2']);
+	});
+
 	test('a file without a Todoist header is skipped with a warning', () => {
 		const backup = read('name,amount\nrent,100\n', 'budget.csv');
 		expect(backup.projects).toEqual([]);
@@ -224,7 +253,14 @@ describe('merging into the store', () => {
 	test('adds projects, labels, and tasks, with Inbox tasks in our Inbox', () => {
 		const backup = readFixture();
 		const { state, summary } = mergeBackup(empty(), backup, { newId: counter(), now: 1000 });
-		expect(summary).toEqual({ projects: 2, labels: 3, tasks: 12, skipped: 0, warnings: backup.warnings });
+		expect(summary).toEqual({
+			projects: 2,
+			sections: 2,
+			labels: 3,
+			tasks: 12,
+			skipped: 0,
+			warnings: backup.warnings,
+		});
 		expect(state.projects.map(p => p.name)).toEqual(['Long Term', 'Job']);
 		expect(state.labels.map(l => l.name)).toEqual(['home', 'work', 'deep-work']);
 		const dentist = state.tasks.find(t => t.title === 'Call the dentist')!;
@@ -239,10 +275,61 @@ describe('merging into the store', () => {
 		const backup = readFixture();
 		const first = mergeBackup(empty(), backup, { newId: counter(), now: 1000 });
 		const second = mergeBackup(first.state, backup, { newId: counter(), now: 2000 });
-		expect(second.summary).toEqual({ projects: 0, labels: 0, tasks: 0, skipped: 12, warnings: backup.warnings });
-		expect(second.state.tasks).toHaveLength(12);
+		expect(second.summary).toEqual({
+			projects: 0,
+			sections: 0,
+			labels: 0,
+			tasks: 0,
+			skipped: 12,
+			warnings: backup.warnings,
+		});
+		expect(second.state.tasks).toEqual(first.state.tasks);
 		expect(second.state.projects).toHaveLength(2);
+		expect(second.state.sections).toEqual(first.state.sections);
 		expect(second.state.labels).toHaveLength(3);
+	});
+
+	test("sections land in their project in Todoist's order, holding their top-level tasks", () => {
+		const { state } = mergeBackup(empty(), readFixture(), { newId: counter(), now: 1000 });
+		const longTerm = state.projects.find(p => p.name === 'Long Term')!;
+		expect(state.sections.map(s => [s.name, s.projectId, s.order])).toEqual([
+			['Someday', longTerm.id, 0],
+			['Reading', longTerm.id, 1],
+		]);
+		const sectionName = (id: string | null) => state.sections.find(s => s.id === id)?.name ?? null;
+		expect(state.tasks.filter(t => t.projectId === longTerm.id).map(t => [t.title, sectionName(t.sectionId)])).toEqual([
+			['Visit Japan', 'Someday'],
+			['Book flights', null],
+			['Pack bags', null],
+			['Read Dune', 'Reading'],
+			['Read Dune', 'Reading'],
+		]);
+	});
+
+	test('importing again puts tasks imported before sections existed into their sections', () => {
+		const backup = readFixture();
+		const first = mergeBackup(empty(), { ...backup, sections: [] }, { newId: counter(), now: 1000 });
+		expect(first.state.tasks.every(t => t.sectionId === null)).toBe(true);
+		const second = mergeBackup(first.state, backup, { newId: counter(), now: 2000 });
+		expect(second.summary).toMatchObject({ sections: 2, tasks: 0, skipped: 12 });
+		const sectioned = second.state.tasks.filter(t => t.sectionId !== null).map(t => t.title);
+		expect(sectioned).toEqual(['Visit Japan', 'Read Dune', 'Read Dune']);
+	});
+
+	test('an existing section with the same name in the project is reused', () => {
+		const state: ImportState = {
+			tasks: [],
+			projects: [{ id: 'p-long', name: 'Long Term', createdAt: 0 }],
+			sections: [{ id: 's-mine', projectId: 'p-long', name: 'someday', order: 0, createdAt: 0 }],
+			labels: [],
+		};
+		const merged = mergeBackup(state, readFixture(), { newId: counter(), now: 1000 });
+		expect(merged.summary.sections).toBe(1);
+		expect(merged.state.sections.map(s => [s.name, s.order, s.sourceKey])).toEqual([
+			['someday', 0, 'todoist:section:8Xmpl2Wq:Someday'],
+			['Reading', 1, 'todoist:section:8Xmpl2Wq:Reading'],
+		]);
+		expect(merged.state.tasks.find(t => t.title === 'Visit Japan')!.sectionId).toBe('s-mine');
 	});
 
 	test("indents become subtasks in Todoist order, in their parent's project", () => {
@@ -278,6 +365,7 @@ describe('merging into the store', () => {
 		const state: ImportState = {
 			tasks: [],
 			projects: [{ id: 'mine', name: 'job', createdAt: 0 }],
+			sections: [],
 			labels: [{ id: 'l-home', name: 'Home', createdAt: 0 }],
 		};
 		const merged = mergeBackup(state, backup, { newId: counter(), now: 1000 });

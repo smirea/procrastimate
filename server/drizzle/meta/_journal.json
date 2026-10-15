@@ -29,6 +29,13 @@
 			"when": 1792093674133,
 			"tag": "0003_small_frank_castle",
 			"breakpoints": true
+		},
+		{
+			"idx": 4,
+			"version": "6",
+			"when": 1792105211579,
+			"tag": "0004_careful_maginty",
+			"breakpoints": true
 		}
 	]
 }

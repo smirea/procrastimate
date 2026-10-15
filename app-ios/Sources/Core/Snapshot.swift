@@ -68,10 +68,11 @@ extension API.Snapshot {
     public static func empty(now: Int) -> Snapshot { Snapshot(remindersCheckedAt: now) }
 
     public var data: StoreData {
-        get { StoreData(tasks: tasks, projects: projects, labels: labels) }
+        get { StoreData(tasks: tasks, projects: projects, sections: sections, labels: labels) }
         set {
             tasks = newValue.tasks
             projects = newValue.projects
+            sections = newValue.sections
             labels = newValue.labels
         }
     }
@@ -93,6 +94,7 @@ extension API.Snapshot {
         let loaded = try c.decode([Lenient<StoredTask>].self, forKey: .tasks).compactMap { $0.value?.task }
         tasks = StoreRules.sortTasks(Subtasks.detachOrphans(loaded))
         projects = try c.decode([Project].self, forKey: .projects)
+        sections = try c.decodeAbsent([ProjectSection].self, forKey: .sections) ?? []
         labels = try c.decodeAbsent([Label].self, forKey: .labels) ?? []
         remindersCheckedAt = try c.decode(Int.self, forKey: .remindersCheckedAt)
         sync = try c.decodeAbsent(SyncSection.self, forKey: .sync)
@@ -122,6 +124,7 @@ extension API.SpaceSection {
         let loaded = try c.decode([Lenient<StoredTask>].self, forKey: .tasks).compactMap { $0.value?.task }
         tasks = StoreRules.sortTasks(Subtasks.detachOrphans(loaded))
         projects = try c.decodeAbsent([Project].self, forKey: .projects) ?? []
+        sections = try c.decodeAbsent([ProjectSection].self, forKey: .sections) ?? []
         labels = try c.decodeAbsent([Label].self, forKey: .labels) ?? []
     }
 }
@@ -144,7 +147,7 @@ private struct StoredTask: Decodable {
     let task: TaskItem
 
     private static let added: [(String, JSONValue)] = [
-        ("parentId", .null), ("order", .number(0)), ("labelIds", .array([])), ("recurrence", .null),
+        ("parentId", .null), ("order", .number(0)), ("sectionId", .null), ("labelIds", .array([])), ("recurrence", .null),
         ("location", .null), ("event", .null), ("createdBy", .null), ("completedBy", .null), ("lastCompletedAt", .null),
     ]
 

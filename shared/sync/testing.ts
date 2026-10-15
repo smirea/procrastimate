@@ -4,7 +4,7 @@ import { createClock } from './hlc.ts';
 import { applyPush, createServerState, serverHlc, serverSnapshot, type ServerState } from './merge.ts';
 import type { Change, Snapshot, SyncResponse } from './protocol.ts';
 import { emptySnapshot } from './snapshot.ts';
-import type { Label, Project, Task } from '../task.ts';
+import type { Label, Project, Section, Task } from '../task.ts';
 
 export const task = (id: string, fields: Partial<Task> = {}): Task => ({
 	id,
@@ -13,6 +13,7 @@ export const task = (id: string, fields: Partial<Task> = {}): Task => ({
 	title: id,
 	notes: '',
 	projectId: null,
+	sectionId: null,
 	labelIds: [],
 	due: null,
 	recurrence: null,
@@ -31,6 +32,15 @@ export const task = (id: string, fields: Partial<Task> = {}): Task => ({
 export const project = (id: string, fields: Partial<Project> = {}): Project => ({
 	id,
 	name: id,
+	createdAt: 1,
+	...fields,
+});
+
+export const section = (id: string, projectId: string, fields: Partial<Section> = {}): Section => ({
+	id,
+	projectId,
+	name: id,
+	order: 0,
 	createdAt: 1,
 	...fields,
 });

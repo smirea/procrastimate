@@ -213,6 +213,39 @@ describe('projects', () => {
 	});
 });
 
+describe('sections', () => {
+	const section = (id: string, name: string, projectId: string) => ({ id, projectId, name, order: 0, createdAt: 0 });
+	const sections = [
+		section('s-home-later', 'Later', 'p-home'),
+		section('s-home-next', 'Next up', 'p-home'),
+		section('s-side-later', 'later', 'p-side'),
+	];
+
+	test('`/name` picks a section of the typed project, case-insensitively', () => {
+		const parsed = parse('Fix sink #Home /later fri', { sections });
+		expect([parsed.title, parsed.projectId, parsed.sectionId]).toEqual(['Fix sink', 'p-home', 's-home-later']);
+		expect(parsed.tokens).toEqual([
+			{ kind: 'project', start: 9, end: 14, text: '#Home' },
+			{ kind: 'section', start: 15, end: 21, text: '/later' },
+			{ kind: 'due', start: 22, end: 25, text: 'fri' },
+		]);
+		expect(parse('Ship /Later #side project', { sections }).sectionId).toBe('s-side-later');
+		expect(parse('Plan /next up', { sections, projectId: 'p-home' }).sectionId).toBe('s-home-next');
+	});
+
+	test('without a project, a section of the project set outside the text, else none', () => {
+		const parsed = parse('Fix sink /next up', { sections, projectId: 'p-home' });
+		expect([parsed.title, parsed.projectId, parsed.sectionId]).toEqual(['Fix sink', null, 's-home-next']);
+		expect(parse('Fix sink /later', { sections }).title).toBe('Fix sink /later');
+	});
+
+	test('a section of another project, a slash inside a word, and a path stay text', () => {
+		expect(parse('Fix sink #Home /someday', { sections }).title).toBe('Fix sink /someday');
+		expect(parse('Pick and/later tomorrow', { sections, projectId: 'p-home' }).title).toBe('Pick and/later');
+		expect(parse('Clean /later/cache', { sections, projectId: 'p-home' }).sectionId).toBe(null);
+	});
+});
+
 describe('labels', () => {
 	test('every known label is assigned, case-insensitively and in any project', () => {
 		const parsed = parse('Call plumber @Calls #home @waiting');
@@ -659,6 +692,7 @@ test('everything at once', () => {
 		priority: 1,
 		reminders: [{ kind: 'before', minutes: 60 }],
 		projectId: 'p-home',
+		sectionId: null,
 		labelIds: [],
 		tokens: [
 			{ kind: 'project', start: 14, end: 19, text: '#Home' },

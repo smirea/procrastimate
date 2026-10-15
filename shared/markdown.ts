@@ -2,7 +2,8 @@ import { z } from 'zod';
 import { formatDue, formatRecurrence } from './format.ts';
 import { labelSchema, projectSchema, taskSchema } from './sync/protocol.ts';
 import { groupChildren } from './subtasks.ts';
-import type { Task } from './task.ts';
+import type { Project, Task } from './task.ts';
+import type { ProjectGroup } from './views.ts';
 import { scheduledDue } from './triggers.ts';
 import { dateKeySchema } from './values.ts';
 
@@ -26,6 +27,15 @@ export const markdownContextSchema = z
 	})
 	.meta({ id: 'MarkdownContext' });
 export type MarkdownContext = z.infer<typeof markdownContextSchema>;
+
+/** A project view's copy: its loose tasks, then each section under its name. */
+export function projectDocument(project: Project, groups: readonly ProjectGroup[]): MarkdownDocument {
+	return {
+		title: project.name,
+		projectId: project.id,
+		sections: groups.map(group => ({ heading: group.section?.name ?? null, tasks: group.tasks })),
+	};
+}
 
 /**
  * A copy as a Markdown checklist. Each task carries its subtasks nested under it, done ones checked, so a subtask

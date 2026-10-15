@@ -3,6 +3,7 @@ import {
 	labelsRowSchema,
 	logRowSchema,
 	projectsRowSchema,
+	sectionsRowSchema,
 	settingsRowSchema,
 	tasksRowSchema,
 } from '../db/generated/zod.ts';
@@ -25,6 +26,7 @@ const NOT_FIELDS = { userId: true, id: true, deleted: true, clocks: true } as co
 
 export const taskFieldsSchema = tasksRowSchema.omit(NOT_FIELDS);
 export const projectFieldsSchema = projectsRowSchema.omit(NOT_FIELDS);
+export const sectionFieldsSchema = sectionsRowSchema.omit(NOT_FIELDS);
 export const labelFieldsSchema = labelsRowSchema.omit(NOT_FIELDS);
 export const settingsFieldsSchema = settingsRowSchema.omit({ userId: true, id: true, clocks: true });
 
@@ -34,6 +36,7 @@ export const DEFAULT_SETTINGS: Settings = { timeZone: null, dictation: 'native' 
 export const FIELDS_SCHEMAS = {
 	task: taskFieldsSchema,
 	project: projectFieldsSchema,
+	section: sectionFieldsSchema,
 	label: labelFieldsSchema,
 	settings: settingsFieldsSchema,
 } as const satisfies Record<Kind, z.ZodObject>;
@@ -50,11 +53,16 @@ export const projectSchema = projectsRowSchema
 	.omit({ ...ENTITY, sourceKey: true })
 	.extend({ sourceKey: z.string().optional() })
 	.meta({ id: 'Project', 'x-table': 'projects' });
+export const sectionSchema = sectionsRowSchema
+	.omit({ ...ENTITY, sourceKey: true })
+	.extend({ sourceKey: z.string().optional() })
+	.meta({ id: 'ProjectSection', 'x-table': 'sections' });
 export const labelSchema = labelsRowSchema.omit(ENTITY).meta({ id: 'Label', 'x-table': 'labels' });
 export const settingsSchema = settingsFieldsSchema.meta({ id: 'Settings', 'x-table': 'settings' });
 
 export type Task = z.infer<typeof taskSchema>;
 export type Project = z.infer<typeof projectSchema>;
+export type Section = z.infer<typeof sectionSchema>;
 export type Label = z.infer<typeof labelSchema>;
 
 /** Everything that syncs. Device-local state such as the theme or `remindersCheckedAt` stays out. */
@@ -62,6 +70,7 @@ export const snapshotSchema = z
 	.object({
 		tasks: z.array(taskSchema),
 		projects: z.array(projectSchema),
+		sections: z.array(sectionSchema),
 		labels: z.array(labelSchema),
 		settings: settingsSchema,
 	})
@@ -81,6 +90,7 @@ const patchOf = <K extends Kind>(kind: K, id: string) =>
 export const PATCH_SCHEMAS = {
 	task: patchOf('task', 'TaskPatch'),
 	project: patchOf('project', 'ProjectPatch'),
+	section: patchOf('section', 'SectionPatch'),
 	label: patchOf('label', 'LabelPatch'),
 	settings: patchOf('settings', 'SettingsPatch'),
 } as const;
@@ -88,6 +98,7 @@ export const PATCH_SCHEMAS = {
 export const patchSchema = z.discriminatedUnion('kind', [
 	PATCH_SCHEMAS.task,
 	PATCH_SCHEMAS.project,
+	PATCH_SCHEMAS.section,
 	PATCH_SCHEMAS.label,
 	PATCH_SCHEMAS.settings,
 ]);

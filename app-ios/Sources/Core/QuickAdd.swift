@@ -159,6 +159,7 @@ public enum QuickAdd {
         case recurrence(RecurrencePhrase)
         case priority(Priority)
         case project(String)
+        case section(String)
         case label(String)
         case reminder(ReminderDraft)
     }
@@ -455,8 +456,8 @@ public enum QuickAdd {
 
     static func escapeRegExp(_ text: String) -> String { special.replace(text) { "\\" + $0.value } }
 
-    /// `#Name` or `@Name` for a name that exists, at the start of the text or after whitespace, so `a@b.com` never
-    /// matches. The name must end the word, so `@home.com` and `@homework` do not read as `@home`.
+    /// `#Name`, `/Name`, or `@Name` for a name that exists, at the start of the text or after whitespace, so `a@b.com`
+    /// and `and/or` never match. The name must end the word, so `@home.com` and `@homework` do not read as `@home`.
     static func namedRule(
         _ kind: TokenKind,
         _ sigil: String,
@@ -549,7 +550,7 @@ public enum QuickAdd {
 
         var tokens: [Token] = []
         var matches: [Match] = []
-        for rule in rules {
+        func apply(_ rule: Rule) {
             var found: [(token: Token, match: Match)] = []
             var spans: [NSRange] = []
             for m in rule.pattern.matches(in: rule.guarded ? guarded : raw) {
@@ -569,6 +570,16 @@ public enum QuickAdd {
                 guarded = claim(guarded, span)
             }
         }
+        for rule in rules {
+            apply(rule)
+            // A section belongs to one project, so `/name` reads the typed `#project`'s sections, else the outside one's.
+            guard rule.kind == .project else { continue }
+            let typed: String? = matches.last { if case .project = $0 { true } else { false } }
+                .flatMap { if case let .project(id) = $0 { id } else { nil } }
+            let inProject = typed ?? options.projectId
+            let sections = options.sections.filter { $0.projectId == inProject }.map { ($0.id, $0.name) }
+            if let sectionRule = namedRule(.section, "/", sections, { .section($0) }) { apply(sectionRule) }
+        }
         tokens = tokens.enumerated().sorted { a, b in
             a.element.start != b.element.start ? a.element.start < b.element.start : a.offset < b.offset
         }.map(\.element)
@@ -577,6 +588,7 @@ public enum QuickAdd {
         var repeatPhrase: RecurrencePhrase?
         var priority: Priority?
         var projectId: String?
+        var sectionId: String?
         var labelIds: [String] = []
         var reminderDrafts: [ReminderDraft] = []
         for match in matches {
@@ -585,6 +597,7 @@ public enum QuickAdd {
             case let .recurrence(recurrence): repeatPhrase = recurrence
             case let .priority(level): priority = level
             case let .project(id): projectId = id
+            case let .section(id): sectionId = id
             case let .label(id): if !labelIds.contains(id) { labelIds.append(id) }
             case let .reminder(draft): reminderDrafts.append(draft)
             }
@@ -607,6 +620,7 @@ public enum QuickAdd {
             priority: priority,
             reminders: reminderDrafts.map { resolveReminder($0, due ?? outside, ctx) },
             projectId: projectId,
+            sectionId: sectionId,
             labelIds: labelIds,
             tokens: tokens
         )

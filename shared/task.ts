@@ -5,7 +5,7 @@ import type { DateKey, Due, Recurrence, RecurrenceUnit, Reminder, TimeOfDay, Wee
 
 export type { DateKey, Due, Priority, Recurrence, RecurrenceUnit, Reminder, TimeOfDay, Weekday } from './values.ts';
 export { DEFAULT_PRIORITY } from './values.ts';
-export type { Label, Project, Task } from './sync/protocol.ts';
+export type { Label, Project, Section, Task } from './sync/protocol.ts';
 
 const pad = (n: number) => String(n).padStart(2, '0');
 

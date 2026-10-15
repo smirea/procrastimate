@@ -5,6 +5,7 @@ import Foundation
 public enum Todoist {
     public typealias BackupFile = API.BackupFile
     public typealias BackupProject = API.BackupProject
+    public typealias BackupSection = API.BackupSection
     public typealias BackupTask = API.BackupTask
     public typealias Backup = API.TodoistBackup
     public typealias Summary = API.ImportSummary
@@ -176,10 +177,13 @@ public enum Todoist {
         var warnings: [String] = []
         func warn(_ message: String) { warnings.append("\(name): \(message)") }
         let projectKey = "todoist:project:\(id)"
-        backup.projects.append(BackupProject(sourceKey: projectKey, name: name, inbox: name == "Inbox"))
+        let inbox = name == "Inbox"
+        backup.projects.append(BackupProject(sourceKey: projectKey, name: name, inbox: inbox))
 
         var drafts: [Draft] = []
-        var sections: [String] = []
+        var inboxSections: [String] = []
+        var sectionKey: String?
+        var sectionsSeen: [String: Int] = [:]
         var ancestors: [(indent: Int, content: String, sourceKey: String)] = []
         var seen: [String: Int] = [:]
 
@@ -188,6 +192,7 @@ public enum Todoist {
             let indent = max(1, parsed == 0 ? 1 : parsed)
             while let last = ancestors.last, last.indent >= indent { ancestors.removeLast() }
             let parentKey = ancestors.last?.sourceKey
+            let inSection = parentKey == nil ? sectionKey : nil
             let path = (ancestors.map(\.content) + [content]).joined(separator: " › ")
             let occurrence = (seen[path] ?? 0) + 1
             seen[path] = occurrence
@@ -217,6 +222,7 @@ public enum Todoist {
                 sourceKey: sourceKey,
                 parentKey: parentKey,
                 projectKey: projectKey,
+                sectionKey: inSection,
                 title: title,
                 notes: "",
                 labels: labels,
@@ -250,7 +256,17 @@ public enum Todoist {
             case "", "meta":
                 break
             case "section":
-                sections.append(content)
+                if inbox {
+                    inboxSections.append(content)
+                    break
+                }
+                // A section starts a new outline, so the next task is top level whatever its indent.
+                ancestors.removeAll()
+                let occurrence = (sectionsSeen[content] ?? 0) + 1
+                sectionsSeen[content] = occurrence
+                let key = "todoist:section:\(id):\(content)\(occurrence > 1 ? "#\(occurrence)" : "")"
+                sectionKey = key
+                backup.sections.append(BackupSection(sourceKey: key, projectKey: projectKey, name: content))
             case "task":
                 drafts.append(readTask(row, content))
             case "note":
@@ -273,7 +289,9 @@ public enum Todoist {
             }
         }
 
-        if !sections.isEmpty { warn("sections are not imported: \(sections.joined(separator: ", "))") }
+        if !inboxSections.isEmpty {
+            warn("Inbox has no sections, so these were left out: \(inboxSections.joined(separator: ", "))")
+        }
         backup.warnings += warnings
         for draft in drafts {
             var task = draft.task
@@ -297,9 +315,11 @@ public enum Todoist {
         return backup
     }
 
-    /// Adds a backup's projects, labels, and tasks to the store's data. A task whose source key is already stored is
-    /// skipped, so importing the same backup twice changes nothing. A project matches by source key, then by name, and
-    /// Inbox maps to our Inbox. Labels match by name, ignoring case. A subtask lands as its parent's last subtask, in the
+    /// Adds a backup's projects, sections, labels, and tasks to the store's data. A task whose source key is already
+    /// stored is skipped, so importing the same backup twice changes nothing, except that a skipped top-level task still
+    /// in no section and in its project joins its section, so a backup imported before sections existed gains them. A
+    /// project matches by source key, then by name, and Inbox maps to our Inbox. A section matches by source key, then
+    /// by name in its project. Labels match by name, ignoring case. A subtask lands as its parent's last subtask, in the
     /// parent's project, so adding rows in source order reproduces Todoist's outline.
     public static func mergeBackup(
         _ data: StoreData,
@@ -308,6 +328,7 @@ public enum Todoist {
         now: Int
     ) -> (data: StoreData, summary: Summary) {
         var projects = data.projects
+        var sections = data.sections
         var labels = data.labels
         var tasks = data.tasks
         var summary = Summary(warnings: backup.warnings)
@@ -332,6 +353,37 @@ public enum Todoist {
             summary.projects += 1
         }
 
+        var sectionIds: [String: String] = [:]
+        for source in backup.sections {
+            guard let projectId = projectIds[source.projectKey] ?? nil else { continue }
+            let match = sections.firstIndex { $0.sourceKey == source.sourceKey }
+                ?? sections.firstIndex {
+                    ($0.sourceKey ?? "").isEmpty && $0.projectId == projectId && sameName($0.name, source.name)
+                }
+            if let match {
+                sections[match].sourceKey = source.sourceKey
+                sectionIds[source.sourceKey] = sections[match].id
+                continue
+            }
+            let last = StoreRules.sectionsOf(sections, projectId).last
+            let section = ProjectSection(
+                id: newId(),
+                projectId: projectId,
+                name: source.name,
+                order: last.map { $0.order + 1 } ?? 0,
+                createdAt: now,
+                sourceKey: source.sourceKey
+            )
+            sections.append(section)
+            sectionIds[source.sourceKey] = section.id
+            summary.sections += 1
+        }
+        func sectionOf(_ source: BackupTask, _ projectId: String?) -> String? {
+            guard let id = source.sectionKey.flatMap({ sectionIds[$0] }),
+                  sections.first(where: { $0.id == id })?.projectId == projectId else { return nil }
+            return id
+        }
+
         func labelId(_ name: String) -> String {
             if let existing = labels.first(where: { sameName($0.name, name) }) { return existing.id }
             let label = Label(id: newId(), name: name, createdAt: now)
@@ -343,18 +395,24 @@ public enum Todoist {
         var imported: [String: TaskItem] = [:]
         for task in tasks { if let key = task.sourceKey, !key.isEmpty { imported[key] = task } }
         for (i, source) in backup.tasks.enumerated() {
-            if imported[source.sourceKey] != nil {
+            if let existing = imported[source.sourceKey] {
+                let sectionId = existing.parentId == nil ? sectionOf(source, existing.projectId) : nil
+                if existing.sectionId == nil, let sectionId, let index = tasks.firstIndex(where: { $0.id == existing.id }) {
+                    tasks[index].sectionId = sectionId
+                }
                 summary.skipped += 1
                 continue
             }
             let parent = source.parentKey.flatMap { imported[$0] }
+            let projectId = parent.map(\.projectId) ?? (projectIds[source.projectKey] ?? nil)
             let task = TaskItem(
                 id: newId(),
                 parentId: parent?.id,
                 order: parent.map { Subtasks.nextSiblingOrder(tasks, $0.id) } ?? 0,
                 title: source.title,
                 notes: source.notes,
-                projectId: parent.map(\.projectId) ?? (projectIds[source.projectKey] ?? nil),
+                projectId: projectId,
+                sectionId: parent == nil ? sectionOf(source, projectId) : nil,
                 labelIds: source.labels.map(labelId),
                 due: source.due,
                 recurrence: source.recurrence,
@@ -368,6 +426,6 @@ public enum Todoist {
             imported[source.sourceKey] = task
             summary.tasks += 1
         }
-        return (StoreData(tasks: tasks, projects: projects, labels: labels), summary)
+        return (StoreData(tasks: tasks, projects: projects, sections: sections, labels: labels), summary)
     }
 }

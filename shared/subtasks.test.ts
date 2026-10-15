@@ -20,6 +20,7 @@ const task = (id: string, fields: Partial<Task> = {}): Task => ({
 	title: id,
 	notes: '',
 	projectId: null,
+	sectionId: null,
 	labelIds: [],
 	due: null,
 	recurrence: null,

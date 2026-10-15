@@ -3,7 +3,7 @@ import type { ActivityEntry, Person, ShareView, SharedView, Space, SpaceView } f
 import { formatHlc } from '../../../shared/sync/hlc';
 import type { Op, Snapshot, SyncResponse, Task } from '../../../shared/sync/protocol';
 import { fieldsOf } from '../../../shared/sync/snapshot';
-import { label, project, task } from '../../../shared/sync/testing';
+import { label, project, section, task } from '../../../shared/sync/testing';
 import api from '../api';
 import type { Env } from '../bindings';
 import { memoryAccount } from './account';
@@ -462,6 +462,7 @@ test('project tasks reach their subtasks through the parent, not the subtask’s
 	const snapshot: Snapshot = {
 		tasks: [task('root', { projectId: 'p' }), task('child', { parentId: 'root', projectId: 'p' })],
 		projects: [project('p')],
+		sections: [],
 		labels: [],
 		settings: { timeZone: null, dictation: 'native' },
 	};
@@ -470,4 +471,25 @@ test('project tasks reach their subtasks through the parent, not the subtask’s
 	expect([...scope.tasks]).toEqual(['root', 'child']);
 	expect([...scope.editable]).toEqual([]);
 	expect([...scope.projects]).toEqual(['p']);
+});
+
+test('a guest sees every section of each project it sees, and may not put a task in any other', async () => {
+	const snapshot: Snapshot = {
+		tasks: [
+			task('shared', { projectId: 'p', labelIds: ['l'] }),
+			task('private', { projectId: 'q', sectionId: 'q-later' }),
+		],
+		projects: [project('p'), project('q')],
+		sections: [section('p-next', 'p'), section('p-later', 'p'), section('q-later', 'q')],
+		labels: [label('l')],
+		settings: { timeZone: null, dictation: 'native' },
+	};
+	const { admit, filterSnapshot, scopeOf } = await import('../../../shared/scope');
+	const grants = [{ targetKind: 'label', targetId: 'l', role: 'edit' }] as const;
+	expect(filterSnapshot(snapshot, scopeOf(snapshot, grants)).sections.map(s => s.id)).toEqual(['p-next', 'p-later']);
+	const hlc = formatHlc({ wall: NOW, counter: 0, node: 'd' });
+	const move = (sectionId: string): Op => ({ opId: sectionId, hlc, kind: 'task', id: 'shared', fields: { sectionId } });
+	const rename: Op = { opId: 'rename', hlc, kind: 'section', id: 'p-next', fields: { name: 'Mine' } };
+	const { admitted, refused } = admit(snapshot, grants, [move('p-later'), move('q-later'), rename]);
+	expect([admitted.map(o => o.opId), refused.map(o => o.opId)]).toEqual([['p-later'], ['q-later', 'rename']]);
 });

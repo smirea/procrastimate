@@ -68,6 +68,7 @@ export function putMemoTasks(store: AccountStore, request: MemoTasksRequest, now
 				title: input.title,
 				notes: input.notes,
 				projectId: null,
+				sectionId: null,
 				labelIds: [],
 				...schedule(input, request.recordedAt, zone),
 				priority: DEFAULT_PRIORITY,

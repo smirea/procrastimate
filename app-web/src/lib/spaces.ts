@@ -15,7 +15,8 @@ export type Sections = Readonly<Record<string, SpaceSection>>;
 export function homes(spaces: Sections): Map<string, string> {
 	const map = new Map<string, string>();
 	for (const [owner, section] of Object.entries(spaces)) {
-		for (const entity of [...section.tasks, ...section.projects, ...section.labels]) map.set(entity.id, owner);
+		for (const entity of [...section.tasks, ...section.projects, ...section.sections, ...section.labels])
+			map.set(entity.id, owner);
 	}
 	return map;
 }
@@ -38,11 +39,15 @@ export function creationHome(
 	return null;
 }
 
-/** Drops the project and labels that belong to another space, since nothing crosses spaces. */
-export function fitToSpace<T extends Pick<NewTask, 'projectId' | 'labelIds'>>(data: StoreData, input: T): T {
+/** Drops the project, section, and labels that belong to another space, since nothing crosses spaces. */
+export function fitToSpace<T extends Pick<NewTask, 'projectId' | 'sectionId' | 'labelIds'>>(
+	data: StoreData,
+	input: T,
+): T {
 	const projectId = input.projectId && data.projects.some(p => p.id === input.projectId) ? input.projectId : null;
+	const sectionId = input.sectionId && data.sections.some(s => s.id === input.sectionId) ? input.sectionId : null;
 	const labelIds = input.labelIds.filter(id => data.labels.some(l => l.id === id));
-	return { ...input, projectId, labelIds };
+	return { ...input, projectId, sectionId, labelIds };
 }
 
 /** Own data first, then each section, as one list for lookups, details, children, and shared pages. */
@@ -52,6 +57,7 @@ export function merged(own: StoreData, spaces: Sections): StoreData {
 	return {
 		tasks: sortTasks([...own.tasks, ...sections.flatMap(s => s.tasks)]),
 		projects: [...own.projects, ...sections.flatMap(s => s.projects)],
+		sections: [...own.sections, ...sections.flatMap(s => s.sections)],
 		labels: [...own.labels, ...sections.flatMap(s => s.labels)],
 	};
 }
@@ -80,5 +86,6 @@ export const emptySection = (owner: SpaceSection['owner']): SpaceSection => ({
 	targets: [],
 	tasks: [],
 	projects: [],
+	sections: [],
 	labels: [],
 });

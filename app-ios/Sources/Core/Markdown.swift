@@ -6,6 +6,15 @@ public enum Markdown {
     public typealias Section = API.MarkdownSection
     public typealias Context = API.MarkdownContext
 
+    /// A project view's copy: its loose tasks, then each section under its name.
+    public static func projectDocument(_ project: Project, _ groups: [Views.ProjectGroup]) -> Document {
+        Document(
+            title: project.name,
+            projectId: project.id,
+            sections: groups.map { Section(heading: $0.section?.name, tasks: $0.tasks) }
+        )
+    }
+
     /// A copy as a Markdown checklist. Each task carries its subtasks nested under it, done ones checked, so a subtask
     /// whose ancestor is also in the copy shows only there.
     public static func toMarkdown(_ document: Document, _ context: Context, in zone: TimeZone) -> String {
