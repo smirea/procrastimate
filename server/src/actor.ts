@@ -36,7 +36,7 @@ export async function readActor(request: Request, env: Env): Promise<Actor | nul
 	return user ? { id: user.id, name: user.name, kind: user.kind, ownerId: user.ownerId } : null;
 }
 
-/** The Worker's human-only routes. An AI account acts only through the routes in `AI_ROUTES`. */
+/** The Worker's human-only routes. An AI account acts only through the routes in `SHARED_ROUTES`. */
 export async function requireHuman(request: Request, env: Env): Promise<Actor> {
 	const actor = await readActor(request, env);
 	if (!actor) throw new ORPCError('UNAUTHORIZED', { message: 'Not signed in' });
