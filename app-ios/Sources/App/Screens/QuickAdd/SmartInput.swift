@@ -16,11 +16,11 @@ struct SmartInput: View {
     var placeholder = ""
     var suggestProjects = true
     var listAt: Binding<Int?> = .constant(nil)
+    /// The height it grows to before it scrolls: about eight lines of body text.
+    var maxHeight: CGFloat = 200
     var focused: FocusState<Bool>.Binding
     let onSubmit: () -> Void
 
-    /// About eight lines of body text.
-    static let maxHeight: CGFloat = 200
 
     @State private var textHeight: CGFloat = 36
     @State private var attributed = AttributedString()
@@ -46,7 +46,7 @@ struct SmartInput: View {
                 .focused(focused)
                 .onKeyPress(keys: [.upArrow, .downArrow, .tab, .return, .escape]) { pressed($0.key) }
                 .scrollContentBackground(.hidden)
-                .frame(height: min(max(textHeight, 36), Self.maxHeight))
+                .frame(height: min(max(textHeight, 36), maxHeight))
                 // The editor's own ideal height updates only while typing, so text set in code, such as a long title
                 // when details open, would stay one line tall. A hidden copy of the text, with the editor's insets,
                 // measures it instead. Past the cap the editor scrolls.
@@ -166,7 +166,12 @@ struct SmartInput: View {
 
     private func typed() {
         let plain = String(attributed.characters)
-        if plain.contains("\n") {
+        if plain.contains("\n"), pasted(plain) {
+            // The field is one line of text that wraps, so a pasted line break becomes a space instead of saving.
+            let joined = plain.replacingOccurrences(of: "\r\n", with: " ").replacingOccurrences(of: "\n", with: " ")
+            write(joined)
+            replace(with: joined, caret: caret)
+        } else if plain.contains("\n") {
             if let match = match(at: max(0, caret - 1)), let suggestion = returnPick(in: match) {
                 pick(suggestion, in: match)
                 return
@@ -180,6 +185,13 @@ struct SmartInput: View {
         } else if plain != text {
             write(plain)
         }
+    }
+
+    /// Return inserts one line break right before the caret; anything else that brings one is a paste.
+    private func pasted(_ plain: String) -> Bool {
+        let units = Array(plain.utf16)
+        let returnKey = plain.filter { $0 == "\n" }.count == 1 && caret > 0 && caret <= units.count && units[caret - 1] == 10
+        return !returnKey && units.count - written.utf16.count > 1
     }
 
     private func write(_ value: String) {

@@ -18,6 +18,12 @@ test('title, notes, and subtask fields grow with their text instead of cutting i
 	const empty = await box(taskName);
 	expect(empty.height).toBeLessThan(empty.lineHeight * 1.5);
 
+	// Quick add sits above the keyboard, so its title stops growing at four lines.
+	await taskName.fill(`${LONG} ${LONG} ${LONG}`);
+	const quickCapped = await box(taskName);
+	expect(quickCapped.height).toBeLessThanOrEqual(quickCapped.lineHeight * 4 + 6);
+	expect(quickCapped.content).toBeGreaterThan(quickCapped.height);
+
 	// A pasted line break joins the lines, since the field is one line that wraps.
 	await taskName.fill(`${LONG}\nsecond line`);
 	await expect(taskName).toHaveValue(`${LONG} second line`);

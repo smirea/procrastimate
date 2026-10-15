@@ -20,6 +20,7 @@
 		listAt = $bindable(null),
 		class: className = '',
 		reserve = false,
+		lines = 8,
 		oninput,
 		onkeydown,
 		onblur,
@@ -34,6 +35,8 @@
 		listAt?: number | null;
 		class?: string;
 		reserve?: boolean;
+		/** How many lines the field grows to before it scrolls. */
+		lines?: number;
 		oninput?: () => void;
 		onkeydown?: (event: KeyboardEvent) => void;
 		onblur?: () => void;
@@ -195,7 +198,7 @@
 	});
 </script>
 
-<div bind:this={root} class="smart relative {className}" class:reserve>
+<div bind:this={root} class="smart relative {className}" class:reserve style:--lines={lines}>
 	<div bind:this={backdrop} aria-hidden="true" class="smart-layer pointer-events-none absolute inset-0 overflow-hidden text-transparent">
 		{#each segments as segment, i (i)}
 			{#if segment.kind}
@@ -257,11 +260,11 @@
 		padding-right: 2.5rem;
 	}
 
-	/* Wraps and grows with the text up to eight lines, then scrolls, with the tint layer scrolled to match. */
+	/* Wraps and grows with the text up to `lines`, then scrolls, with the tint layer scrolled to match. */
 	.smart-layer {
 		white-space: pre-wrap;
 		overflow-wrap: anywhere;
-		max-height: calc(1.6em * 8 + 0.25rem);
+		max-height: calc(1.6em * var(--lines) + 0.25rem);
 		scrollbar-width: none;
 		font: inherit;
 		letter-spacing: inherit;
