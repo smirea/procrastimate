@@ -7,7 +7,7 @@
 	import { lastUsed, sigilFragment, suggest, type Named, type SigilFragment, type Suggestion } from 'shared/name-search.ts';
 	import NameSuggestions from './NameSuggestions.svelte';
 	import { store } from '../store.svelte.ts';
-	import { NAME_SOURCES, type NameKind } from '../names.ts';
+	import { NAME_SOURCES, sectionSource, type NameKind, type NameSource } from '../names.ts';
 
 	let {
 		value = $bindable(),
@@ -16,6 +16,7 @@
 		placeholder = '',
 		autofocus = false,
 		suggestProjects: projectSuggestions = true,
+		projectId = null,
 		enterkeyhint,
 		listAt = $bindable(null),
 		class: className = '',
@@ -31,6 +32,8 @@
 		placeholder?: string;
 		autofocus?: boolean;
 		suggestProjects?: boolean;
+		/** The project in effect, whose sections `/` suggests. Only the user's own projects get sections here. */
+		projectId?: string | null;
 		enterkeyhint?: 'enter' | 'done' | 'send';
 		listAt?: number | null;
 		class?: string;
@@ -73,17 +76,21 @@
 		return out;
 	});
 
+	const sources = $derived<Partial<Record<NameKind, NameSource>>>({
+		...(projectSuggestions ? { project: NAME_SOURCES.project } : {}),
+		...(projectSuggestions && projectId && store.homeOf(projectId) === null ? { section: sectionSource(projectId) } : {}),
+		label: NAME_SOURCES.label,
+	});
 	const fragment = $derived.by(() => {
 		if (!focused) return null;
 		let closest: (SigilFragment & { kind: NameKind }) | null = null;
-		for (const kind of ['project', 'label'] as const) {
-			if (kind === 'project' && !projectSuggestions) continue;
-			const found = sigilFragment(value, caret, NAME_SOURCES[kind].sigil, NAME_SOURCES[kind].items());
+		for (const [kind, named] of Object.entries(sources) as [NameKind, NameSource][]) {
+			const found = sigilFragment(value, caret, named.sigil, named.items());
 			if (found && (!closest || found.start > closest.start)) closest = { ...found, kind };
 		}
 		return closest;
 	});
-	const source = $derived(fragment && NAME_SOURCES[fragment.kind]);
+	const source = $derived(fragment && sources[fragment.kind]);
 	const suggestions = $derived(
 		fragment && source && fragment.start !== dismissed
 			? suggest(source.items(), lastUsed(store.tasks, source.idsOf), fragment.query)
@@ -303,7 +310,8 @@
 	.token-reminder {
 		--tint: var(--token-reminder);
 	}
-	.token-project {
+	.token-project,
+	.token-section {
 		--tint: var(--token-project);
 	}
 	.token-recurrence {

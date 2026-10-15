@@ -2,10 +2,10 @@
 	import type { Snippet } from 'svelte';
 	import { fade, fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
-	import Plus from 'phosphor-svelte/lib/Plus';
 	import type { MarkdownDocument } from 'shared/markdown.ts';
+	import AddTaskButton from './AddTaskButton.svelte';
 	import CopyButton from './CopyButton.svelte';
-	import { sheets, motion, type QuickAddDefaults } from '../ui.svelte.ts';
+	import { motion, type QuickAddDefaults } from '../ui.svelte.ts';
 
 	let {
 		title,
@@ -54,16 +54,7 @@
 	{@render children()}
 
 	{#if canAdd}
-		<button
-			type="button"
-			class="press group mt-1 flex h-10 w-full items-center gap-3 rounded-full px-2 text-[14px] text-muted transition-colors hover:text-accent touch:h-12 touch:text-[15px]"
-			onclick={() => sheets.openQuickAdd(quickAdd)}
-		>
-			<span class="grid size-[18px] place-items-center rounded-full text-accent transition-colors group-hover:bg-accent group-hover:text-on-accent">
-				<Plus size={13} weight="bold" />
-			</span>
-			Add task
-		</button>
+		<AddTaskButton {quickAdd} />
 	{/if}
 
 	{#if empty}

@@ -3542,12 +3542,13 @@ extension API {
 
     public enum Sigil: String, Codable, Hashable, Sendable, CaseIterable, Identifiable {
         case project = "#"
+        case section = "/"
         case label = "@"
 
         public var id: String { rawValue }
     }
 
-    /// The `#query` or `@query` the caret sits in. `start` is the sigil, `end` is the end of the word under the caret.
+    /// The `#query`, `/query`, or `@query` the caret sits in. `start` is the sigil, `end` is the end of the word under the caret.
     public struct SigilFragment: Codable, Hashable, Sendable {
         public var start: Int
         public var end: Int

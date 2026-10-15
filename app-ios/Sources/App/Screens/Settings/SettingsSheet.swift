@@ -121,8 +121,11 @@ private struct ImportOutcome: View {
                     Stat(count: summary.tasks, word: plural(summary.tasks, "task"))
                     Stat(count: summary.skipped, word: "skipped")
                 }
-                if summary.labels > 0 {
-                    Text("\(summary.labels) \(plural(summary.labels, "label")) added")
+                if summary.sections > 0 || summary.labels > 0 {
+                    let added = [(summary.sections, "section"), (summary.labels, "label")]
+                        .filter { $0.0 > 0 }
+                        .map { "\($0.0) \(plural($0.0, $0.1))" }
+                    Text("\(added.joined(separator: " and ")) added")
                         .font(.footnote)
                         .foregroundStyle(.muted)
                 }

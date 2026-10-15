@@ -327,6 +327,11 @@
 		scale: 0.98;
 	}
 
+	.menu-item:disabled {
+		opacity: 0.4;
+		pointer-events: none;
+	}
+
 	.field {
 		height: 2.25rem;
 		border-radius: 0.75rem;

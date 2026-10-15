@@ -64,7 +64,12 @@ class Toasts {
 
 export const toasts = new Toasts();
 
-export type QuickAddDefaults = { projectId: string | null; labelId: string | null; today: boolean };
+export type QuickAddDefaults = {
+	projectId: string | null;
+	sectionId?: string | null;
+	labelId: string | null;
+	today: boolean;
+};
 
 export type Arrival = 'forward' | 'back' | 'none';
 

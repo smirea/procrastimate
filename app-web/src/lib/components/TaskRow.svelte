@@ -35,6 +35,7 @@
 	let checking = $state(false);
 	const editable = $derived(lookup.canEdit(task.id));
 	const project = $derived(lookup.project(task.projectId));
+	const section = $derived(lookup.section(task.sectionId));
 	const labelChips = $derived(lookup.labelsOf(task).map((label) => ({ text: label.name, ranges: [] })));
 	const parent = $derived(task.parentId ? lookup.task(task.parentId) : undefined);
 	const progress = $derived(lookup.progress(task.id));
@@ -132,7 +133,7 @@
 					{/if}
 					{#if showProject}
 						<span class="ml-auto flex shrink-0 items-center gap-1">
-							{#if project}<Hash size={12} />{project.name}{:else}<Tray size={12} />Inbox{/if}
+							{#if project}<Hash size={12} />{project.name}{#if section}{` / ${section.name}`}{/if}{:else}<Tray size={12} />Inbox{/if}
 						</span>
 					{/if}
 				</div>

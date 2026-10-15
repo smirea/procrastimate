@@ -76,6 +76,7 @@ public enum NameSearch {
             let exists = switch sigil {
             case .project: projects.contains { $0.name.lowercased() == lower }
             case .label: labels.contains { $0.name.lowercased() == lower }
+            case .section: true
             }
             if exists || !seen.insert(sigil.rawValue + lower).inserted { continue }
             found.append(UnknownName(sigil: sigil, name: name, start: start, end: nameRange.location + nameRange.length))
@@ -97,6 +98,8 @@ public enum NameSearch {
     public static func projectIdsOf(_ task: TaskItem) -> [String] { task.projectId.map { [$0] } ?? [] }
 
     public static func labelIdsOf(_ task: TaskItem) -> [String] { task.labelIds }
+
+    public static func sectionIdsOf(_ task: TaskItem) -> [String] { task.sectionId.map { [$0] } ?? [] }
 
     /// 0 exact, 1 prefix, 2 word prefix, 3 substring, nil no match.
     static func matchTier(_ name: String, _ query: [UInt16]) -> Int? {

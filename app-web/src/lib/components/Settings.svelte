@@ -88,8 +88,9 @@
 							<p class="stat"><span class="text-[17px] font-semibold text-ink">{count}</span> <span>{words.join(' ')}</span></p>
 						{/each}
 					</div>
-					{#if summary.labels}
-						<p class="text-[12px] text-muted">{plural(summary.labels, 'label')} added</p>
+					{#if summary.sections || summary.labels}
+						{@const added = [summary.sections && plural(summary.sections, 'section'), summary.labels && plural(summary.labels, 'label')]}
+						<p class="text-[12px] text-muted">{added.filter(Boolean).join(' and ')} added</p>
 					{/if}
 					{#if summary.warnings.length}
 						<div class="flex flex-col gap-1" transition:slide={motion({ duration: 200, easing: cubicOut })}>

@@ -43,10 +43,18 @@
 	const owner = $derived(home ? store.spaces[home]?.owner : undefined);
 	const editable = $derived(store.canEdit(task.id));
 	const project = $derived(store.project(task.projectId));
+	const section = $derived(store.section(task.sectionId));
 
 	let title = $state(untrack(() => task.title));
 	const parsed = $derived(
-		parseQuickAdd(title, { now: new Date(clock.now), projects: parent ? [] : space.projects, labels: space.labels, due: task.due }),
+		parseQuickAdd(title, {
+			now: new Date(clock.now),
+			projects: parent ? [] : space.projects,
+			sections: parent ? [] : space.sections,
+			labels: space.labels,
+			projectId: task.projectId,
+			due: task.due,
+		}),
 	);
 	// The chips below show what the title will apply, so the edit can be checked before Enter or blur commits it.
 	const draft = $derived(
@@ -58,6 +66,7 @@
 					recurrence: task.event ? null : (parsed.recurrence ?? task.recurrence),
 					priority: parsed.priority ?? task.priority,
 					projectId: parsed.projectId ?? task.projectId,
+					sectionId: parsed.sectionId ?? (parsed.projectId && parsed.projectId !== task.projectId ? null : task.sectionId),
 					labelIds: [...new Set([...task.labelIds, ...parsed.labelIds])],
 					reminders: [...task.reminders, ...parsed.reminders],
 				}
@@ -73,8 +82,8 @@
 			title = task.title;
 			return;
 		}
-		const { title: next, due, recurrence, priority, projectId, labelIds, reminders } = draft;
-		update({ title: next, due, recurrence, priority, projectId, labelIds, reminders });
+		const { title: next, due, recurrence, priority, projectId, sectionId, labelIds, reminders } = draft;
+		update({ title: next, due, recurrence, priority, projectId, sectionId, labelIds, reminders });
 		title = next;
 	}
 
@@ -129,10 +138,17 @@
 				<CaretLeft size={14} class="shrink-0" /><span class="truncate">{parent.title}</span>
 			</button>
 		{:else if editable}
-			<ProjectPicker projectId={draft.projectId} projects={space.projects} canCreate={home === null} onchange={(projectId) => update({ projectId })} />
+			<ProjectPicker
+				projectId={draft.projectId}
+				sectionId={draft.sectionId}
+				projects={space.projects}
+				sections={space.sections}
+				canCreate={home === null}
+				onchange={(place) => update(place)}
+			/>
 		{:else}
 			<span class="chip min-w-0" data-active={!!project}>
-				{#if project}<Hash size={15} class="shrink-0" />{:else}<Tray size={15} class="shrink-0" />{/if}<span class="truncate">{project?.name ?? 'Inbox'}</span>
+				{#if project}<Hash size={15} class="shrink-0" />{:else}<Tray size={15} class="shrink-0" />{/if}<span class="truncate">{project?.name ?? 'Inbox'}{#if section}{` / ${section.name}`}{/if}</span>
 			</span>
 		{/if}
 		<div class="flex shrink-0 items-center gap-1">
@@ -156,7 +172,7 @@
 		{/if}
 		{#if editable}
 			<LinkedField text={title} class="px-1 py-0.5 text-[19px] leading-[1.6] font-semibold whitespace-pre-wrap [overflow-wrap:anywhere]">
-				<SmartInput bind:value={title} tokens={parsed.tokens} label="Title" enterkeyhint="done" suggestProjects={!parent} class="text-[19px] font-semibold" {onkeydown} onblur={commitTitle} />
+				<SmartInput bind:value={title} tokens={parsed.tokens} projectId={draft.projectId} label="Title" enterkeyhint="done" suggestProjects={!parent} class="text-[19px] font-semibold" {onkeydown} onblur={commitTitle} />
 			</LinkedField>
 		{:else}
 			<h2 class="text-[19px] font-semibold break-words"><LinkedText text={task.title} /></h2>

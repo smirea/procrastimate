@@ -6,6 +6,7 @@
 	import LinkSimple from 'phosphor-svelte/lib/LinkSimple';
 	import type { SharedView } from 'shared/sharing.ts';
 	import { sortTasks } from 'shared/store.ts';
+	import { projectGroups } from 'shared/views.ts';
 	import TaskList from '#lib/components/TaskList.svelte';
 	import PersonName from '#lib/components/PersonName.svelte';
 	import { api } from '#lib/api.ts';
@@ -25,6 +26,13 @@
 		const ids = new Set(view.tasks.map((t) => t.id));
 		return sortTasks(view.tasks.filter((t) => t.completedAt === null && (t.parentId === null || !ids.has(t.parentId))));
 	});
+
+	/** A shared project shows under its sections, like the project view. */
+	const groups = $derived(
+		view?.target.kind === 'project'
+			? projectGroups(view.tasks, view.sections, view.target.id)
+			: [{ section: null, tasks }],
+	);
 
 	const title = $derived.by(() => {
 		if (!view) return 'Shared tasks';
@@ -52,7 +60,12 @@
 				</p>
 				<h1 class="truncate text-[26px] font-semibold tracking-tight">{title}</h1>
 			</header>
-			<TaskList {tasks} showProject={view.target.kind !== 'project'} label={`${title} tasks`} />
+			{#each groups as group (group.section?.id ?? '')}
+				{#if group.section}
+					<h2 class="mt-6 mb-1 truncate border-b border-ink/[0.07] pb-1.5 pl-2 text-[13px] font-semibold">{group.section.name}</h2>
+				{/if}
+				<TaskList tasks={group.tasks} showProject={view.target.kind !== 'project'} label={`${group.section?.name ?? title} tasks`} />
+			{/each}
 			{#if tasks.length === 0}
 				<p class="mt-16 text-center text-[15px] font-medium" in:fade={motion({ duration: 240, delay: 120 })}>Nothing open here</p>
 			{/if}
