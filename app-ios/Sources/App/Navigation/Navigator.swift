@@ -66,7 +66,7 @@ final class Navigator {
         focusSearch = true
     }
 
-    /// The task a `procrastimate://task/<id>` link names, such as one from NoteTorus.
+    /// The task a `procrastimate://task/<id>` link names, such as one from Notouroboros.
     static func taskID(in url: URL) -> String? {
         guard url.scheme == "procrastimate", url.host() == "task", url.pathComponents.count == 2 else { return nil }
         return url.pathComponents[1]
