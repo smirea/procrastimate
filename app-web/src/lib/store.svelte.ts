@@ -14,7 +14,7 @@ import {
 	type SyncResponse,
 } from 'shared/sync/protocol.ts';
 import { mergeBackup, type ImportSummary, type TodoistBackup } from 'shared/todoist.ts';
-import { loadSnapshot, saveSnapshot } from './persistence.ts';
+import { loadSnapshot, saveSnapshot, STORAGE_KEY } from './persistence.ts';
 import { creationHome, emptySection, fitToSpace, homes, merged, type Home } from './spaces.ts';
 
 export type { Completion, CompletionState, NewTask, TaskPatch } from 'shared/store.ts';
@@ -65,13 +65,23 @@ class Store {
 
 	constructor() {
 		if (typeof localStorage === 'undefined') return;
+		this.#load();
+		if (!this.#sync) {
+			this.#sync = this.#fresh(crypto.randomUUID());
+			this.#commit();
+		}
+		// Every tab saves the whole document, so one left open in the background would save its old copy over
+		// what this tab synced, and the next launch would start from it.
+		window.addEventListener('storage', event => event.key === STORAGE_KEY && this.#load());
+	}
+
+	#load() {
 		const snapshot = loadSnapshot(Date.now());
 		this.own = { tasks: snapshot.tasks, projects: snapshot.projects, labels: snapshot.labels };
 		this.remindersCheckedAt = snapshot.remindersCheckedAt;
 		this.spaces = snapshot.spaces;
 		this.people = snapshot.people;
-		this.#sync = snapshot.sync ?? this.#fresh(crypto.randomUUID());
-		if (!snapshot.sync) this.#commit();
+		this.#sync = snapshot.sync;
 	}
 
 	/** A first launch uploads whatever is already stored, so an existing list joins the account. */

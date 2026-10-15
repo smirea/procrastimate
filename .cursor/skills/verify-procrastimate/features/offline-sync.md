@@ -25,6 +25,7 @@ Preconditions:
 
 - **Propagate.** Add a task on A. It appears on B after B regains focus or within a minute. Completing it on B removes it from A's Inbox. Test: `a change on one device shows on the other`.
 - **Realtime.** With A and B both open and nothing focusing B, add a task on A. B shows it within a couple of seconds. Completing it on B removes it from A the same way. In devtools, B's Network tab shows one WebSocket to `/api/sync/socket` with a `{"cursor":N}` frame per change. Test: `a change on one device shows on the other at once, without focus or the minute timer`.
+- **Tabs.** With two tabs of the same browser open, the background one offline, add a task in the first and let it sync, then add one in the background tab. The `procrastimate` document still holds the first task, and reloading opens on it without waiting for sync. Test: `a stale tab in the same browser never saves over what another tab synced`.
 - **Offline.** Block A's `/api/sync` requests. Add and rename tasks on A. Each change applies at once and survives a reload. Test: `changes made offline apply at once and upload when the network returns`.
 - **Reconnect.** Let A's requests through again. B shows the new and renamed tasks. Same test.
 - **Conflict.** Block both clients, rename the same task differently on each, and add notes on B. After both reconnect, both show the same title (the later write wins) and B's notes, since different fields merge. Test: `both devices editing the same task offline converge`.
