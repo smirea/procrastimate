@@ -22,6 +22,7 @@ const repeatLabel = recorded('format', format.repeatLabel);
 const completedWhen = recorded('format', format.completedWhen);
 const completedHeading = recorded('format', format.completedHeading);
 const reopenedToast = recorded('format', format.reopenedToast);
+const completedRangeLabel = recorded('format', format.completedRangeLabel);
 
 // Wednesday, October 14 2026.
 const today = '2026-10-14';
@@ -191,6 +192,31 @@ describe('completed', () => {
 		expect(completedWhen(new Date(2026, 9, 13, 9, 0).getTime(), today)).toBe('Yesterday 9am');
 		expect(completedWhen(new Date(2026, 9, 9, 0, 30).getTime(), today)).toBe('Oct 9 12:30am');
 		expect(completedWhen(new Date(2025, 11, 31, 23, 59).getTime(), today)).toBe('Dec 31, 2025 11:59pm');
+	});
+
+	test('a range reads as its preset, else as its days', () => {
+		const ranges = [
+			{ from: null, to: null },
+			{ from: today, to: today },
+			{ from: '2026-10-08', to: today },
+			{ from: '2026-09-15', to: today },
+			{ from: '2026-10-01', to: '2026-10-12' },
+			{ from: '2026-10-09', to: '2026-10-09' },
+			{ from: '2025-12-30', to: today },
+			{ from: null, to: '2026-10-12' },
+			{ from: '2026-10-01', to: null },
+		] as const;
+		expect(ranges.map(r => completedRangeLabel(r, today))).toEqual([
+			'All time',
+			'Today',
+			'Last 7 days',
+			'Last 30 days',
+			'Oct 1 – Oct 12',
+			'Oct 9',
+			'Dec 30, 2025 – Oct 14',
+			'Until Oct 12',
+			'Since Oct 1',
+		]);
 	});
 
 	test('day headings name today and yesterday, then the weekday and date', () => {

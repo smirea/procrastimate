@@ -229,6 +229,7 @@ private struct Occurrence: Decodable {
     case "relativeDay": return try json(Format.relativeDay(a(0), a(1)))
     case "addedAgo": return try json(Format.addedAgo(a(0), a(1)))
     case "reminderToast": return try json(Format.reminderToast(a(0)))
+    case "completedRangeLabel": return try json(Format.completedRangeLabel(a(0), a(1)))
     case "reopenedToast": return try json(Format.reopenedToast(a(0)))
     case "completedWhen": return try json(Format.completedWhen(a.date(0), a(1), in: a.zone))
     case "completedHeading": return try json(Format.completedHeading(a(0), a(1)))

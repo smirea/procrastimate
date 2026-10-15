@@ -134,6 +134,19 @@ public enum Format {
 
     public static func reminderToast(_ title: String) -> String { "Reminder: \(title)" }
 
+    /// `Today`, `Last 7 days`, `Last 30 days`, `All time`, or the custom days, such as `Oct 1 – Oct 12`.
+    public static func completedRangeLabel(_ range: Views.CompletedRange, _ today: DateKey) -> String {
+        switch (range.from, range.to) {
+        case (nil, nil): return "All time"
+        case let (from?, to?) where to == today && from == today: return "Today"
+        case let (from?, to?) where to == today && from == Dates.addDays(today, -6): return "Last 7 days"
+        case let (from?, to?) where to == today && from == Dates.addDays(today, -29): return "Last 30 days"
+        case let (nil, to?): return "Until \(shortDate(to, today))"
+        case let (from?, nil): return "Since \(shortDate(from, today))"
+        case let (from?, to?): return from == to ? shortDate(from, today) : "\(shortDate(from, today)) – \(shortDate(to, today))"
+        }
+    }
+
     public static func reopenedToast(_ title: String) -> String { "Reopened “\(title)”" }
 
     /// When a task was completed, in `zone`: `Today 3:04pm`, `Yesterday 9am`, `Oct 12 3:04pm`.

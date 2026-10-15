@@ -13,6 +13,7 @@ import {
 	type TimeOfDay,
 } from './task.ts';
 import { dateKeySchema } from './values.ts';
+import type { CompletedRange } from './views.ts';
 
 export const dueToneSchema = z.enum(['overdue', 'today', 'soon', 'week', 'later']).meta({ id: 'DueTone' });
 export type DueTone = z.infer<typeof dueToneSchema>;
@@ -149,6 +150,18 @@ export function completedHeading(date: DateKey, today: DateKey): string {
 	if (date === today) return 'Today';
 	if (date === addDays(today, -1)) return 'Yesterday';
 	return `${WEEKDAY_NAMES[weekdayOf(date)]}, ${shortDate(date, today)}`;
+}
+
+/** `Today`, `Last 7 days`, `Last 30 days`, `All time`, or the custom days, such as `Oct 1 – Oct 12`. */
+export function completedRangeLabel(range: CompletedRange, today: DateKey): string {
+	const { from, to } = range;
+	if (from === null && to === null) return 'All time';
+	if (to === today && from === today) return 'Today';
+	if (to === today && from === addDays(today, -6)) return 'Last 7 days';
+	if (to === today && from === addDays(today, -29)) return 'Last 30 days';
+	if (from === null) return `Until ${shortDate(to!, today)}`;
+	if (to === null) return `Since ${shortDate(from, today)}`;
+	return from === to ? shortDate(from, today) : `${shortDate(from, today)} – ${shortDate(to, today)}`;
 }
 
 export const reopenedToast = (title: string) => `Reopened “${title}”`;
