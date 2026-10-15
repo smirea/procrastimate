@@ -21,6 +21,9 @@ final class PlaceMonitor: NSObject {
     @ObservationIgnored private let clock: AppClock
     @ObservationIgnored private let manager = CLLocationManager()
     @ObservationIgnored private var monitor: CLMonitor?
+    /// Since iOS 18 an app with Always authorization gets `CLMonitor` events while not in use only while it holds a
+    /// session requiring Always. Without one, crossings queued until Stefan opened the app.
+    @ObservationIgnored private var session: CLServiceSession?
     @ObservationIgnored private var pending: Task<Void, Never>?
     @ObservationIgnored private var running: Task<Void, Never>?
     /// The last state each condition reported, kept across launches, so a crossing is a change from a known state and
@@ -37,6 +40,7 @@ final class PlaceMonitor: NSObject {
 
     /// Opens the monitor and listens before anything else, since a relaunch for a crossing delivers it right away.
     func start() async {
+        holdSession()
         let monitor = await CLMonitor("ProcrastimatePlaces")
         self.monitor = monitor
         Task {
@@ -54,6 +58,13 @@ final class PlaceMonitor: NSObject {
         case .notDetermined, .authorizedWhenInUse: manager.requestAlwaysAuthorization()
         default: break
         }
+    }
+
+    /// Taken only once Always is granted, since a session requiring Always asks for it and nothing may ask at launch.
+    /// It must be retaken right at launch, including a background relaunch for a crossing, which `start` does.
+    private func holdSession() {
+        guard session == nil, manager.authorizationStatus == .authorizedAlways else { return }
+        session = CLServiceSession(authorization: .always)
     }
 
     var nearby: CLLocation? {
@@ -228,6 +239,9 @@ final class PlaceMonitor: NSObject {
 
 extension PlaceMonitor: CLLocationManagerDelegate {
     nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        Task { @MainActor in await self.sync() }
+        Task { @MainActor in
+            self.holdSession()
+            await self.sync()
+        }
     }
 }

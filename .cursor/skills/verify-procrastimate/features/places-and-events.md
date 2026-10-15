@@ -6,7 +6,7 @@ A task can hang off a place or a calendar event, set with the Location and Event
 
 - `place-pick` sets a place from the `Location` chip: an Apple Maps search with `Arrive`, `Leave`, or `During` beside the field.
 - `place-permission` asks for location access the first time a place is set, and asks to upgrade to Always.
-- `place-arrive` notifies on arriving, `place-leave` on leaving, never for the state the phone was already in when the place was set.
+- `place-arrive` notifies on arriving, `place-leave` on leaving, never for the state the phone was already in when the place was set. With Always granted this works while the app is suspended or terminated, because the app holds a `CLServiceSession` requiring Always from launch.
 - `place-during` starts a Live Activity listing the place's open `During` tasks while inside, and ends it on leaving.
 - `place-arming` watches at most 20 places, and a place with a due date or reminders only from the start of its due day or its first reminder.
 - `event-pick` links a calendar event from the `Event` chip, with the moment and minutes, and `Only this one` for a repeating event.
@@ -42,6 +42,7 @@ Preconditions:
 ## Gotchas
 
 - The first state report after a place is set never notifies, so start outside a place before moving into it.
+- The iOS 27 simulator has no region monitoring: `CLLocationManager.isMonitoringAvailable(for: CLCircularRegion.self)` is false, and every condition reports `.unmonitored`, so `Arrive`, `Leave`, and `During` crossings, foreground or background, need a device. The steps above describe the device behavior.
 - The simulator does not wake a suspended app for a crossing the way a phone does, and `simctl io` screenshots do not show the Dynamic Island or the lock screen. Background delivery and the Live Activity's look need a device.
 - A Live Activity can only start while the app is in the foreground. A `During` crossing in the background notifies instead, and the activity starts when the app next opens while still inside.
 - Moving one occurrence of a repeating event detaches it, and its identifiers gain `/RID=<date>`. It still belongs to the series.
