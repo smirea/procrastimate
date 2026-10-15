@@ -99,6 +99,22 @@ export function relativeDay(date: DateKey, today: DateKey): string | null {
 	return date === addDays(today, -1) ? 'Yesterday' : null;
 }
 
+/** How long ago a task was added: `Today`, `Yesterday`, `3 days ago`, `2 weeks ago`, `5 months ago`, `1 year ago`. */
+export function addedAgo(added: DateKey, today: DateKey): string {
+	const days = Math.round((Date.parse(today) - Date.parse(added)) / 86_400_000);
+	if (days <= 0) return 'Today';
+	if (days === 1) return 'Yesterday';
+	const [count, unit] =
+		days < 7
+			? [days, 'day']
+			: days < 30
+				? [Math.floor(days / 7), 'week']
+				: days < 365
+					? [Math.floor(days / 30), 'month']
+					: [Math.floor(days / 365), 'year'];
+	return `${count} ${unit}${count === 1 ? '' : 's'} ago`;
+}
+
 export function formatReminder(reminder: Reminder, today: DateKey): string {
 	switch (reminder.kind) {
 		case 'before':

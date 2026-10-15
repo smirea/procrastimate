@@ -16,6 +16,7 @@ const formatTime = recorded('format', format.formatTime);
 const postponeOptions = recorded('format', format.postponeOptions);
 const priorityLabel = recorded('format', format.priorityLabel);
 const relativeDay = recorded('format', format.relativeDay);
+const addedAgo = recorded('format', format.addedAgo);
 const reminderToast = recorded('format', format.reminderToast);
 const repeatLabel = recorded('format', format.repeatLabel);
 
@@ -108,6 +109,20 @@ describe('dates', () => {
 		['2026-10-16', null],
 	] as const)('%s is relatively %p', (date, expected) => {
 		expect(relativeDay(date, today)).toBe(expected);
+	});
+
+	test.each([
+		['2026-10-14', 'Today'],
+		['2026-10-13', 'Yesterday'],
+		['2026-10-11', '3 days ago'],
+		['2026-10-07', '1 week ago'],
+		['2026-09-16', '4 weeks ago'],
+		['2026-09-14', '1 month ago'],
+		['2026-03-01', '7 months ago'],
+		['2025-10-14', '1 year ago'],
+		['2023-10-01', '3 years ago'],
+	] as const)('added on %s reads %p', (date, expected) => {
+		expect(addedAgo(date, today)).toBe(expected);
 	});
 
 	test.each([

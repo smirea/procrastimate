@@ -45,9 +45,12 @@ public enum Views {
     }
 
     /// Undated inbox tasks, with each place that has two or more of them in its own section below the rest, named after
-    /// its earliest task's place and sorted by name.
-    public static func noDateTasks(_ tasks: [TaskItem], _ today: DateKey, in zone: TimeZone) -> NoDate {
-        let list = inboxTasks(tasks, today, in: zone)
+    /// its earliest task's place and sorted by name. Tasks sort by when they were added.
+    public static func noDateTasks(_ tasks: [TaskItem], _ today: DateKey, newestFirst: Bool, in zone: TimeZone) -> NoDate {
+        let list = inboxTasks(tasks, today, in: zone).stableSorted { a, b in
+            if a.createdAt != b.createdAt { return newestFirst ? a.createdAt > b.createdAt : a.createdAt < b.createdAt }
+            return a.id == b.id ? nil : a.id < b.id
+        }
         var order: [String] = []
         var byPlace: [String: [TaskItem]] = [:]
         for task in list {

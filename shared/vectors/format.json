@@ -525,6 +525,87 @@
 			"output": null
 		},
 		{
+			"fn": "addedAgo",
+			"test": "dates › added on 2026-10-14 reads \"Today\"",
+			"input": [
+				"2026-10-14",
+				"2026-10-14"
+			],
+			"output": "Today"
+		},
+		{
+			"fn": "addedAgo",
+			"test": "dates › added on 2026-10-13 reads \"Yesterday\"",
+			"input": [
+				"2026-10-13",
+				"2026-10-14"
+			],
+			"output": "Yesterday"
+		},
+		{
+			"fn": "addedAgo",
+			"test": "dates › added on 2026-10-11 reads \"3 days ago\"",
+			"input": [
+				"2026-10-11",
+				"2026-10-14"
+			],
+			"output": "3 days ago"
+		},
+		{
+			"fn": "addedAgo",
+			"test": "dates › added on 2026-10-07 reads \"1 week ago\"",
+			"input": [
+				"2026-10-07",
+				"2026-10-14"
+			],
+			"output": "1 week ago"
+		},
+		{
+			"fn": "addedAgo",
+			"test": "dates › added on 2026-09-16 reads \"4 weeks ago\"",
+			"input": [
+				"2026-09-16",
+				"2026-10-14"
+			],
+			"output": "4 weeks ago"
+		},
+		{
+			"fn": "addedAgo",
+			"test": "dates › added on 2026-09-14 reads \"1 month ago\"",
+			"input": [
+				"2026-09-14",
+				"2026-10-14"
+			],
+			"output": "1 month ago"
+		},
+		{
+			"fn": "addedAgo",
+			"test": "dates › added on 2026-03-01 reads \"7 months ago\"",
+			"input": [
+				"2026-03-01",
+				"2026-10-14"
+			],
+			"output": "7 months ago"
+		},
+		{
+			"fn": "addedAgo",
+			"test": "dates › added on 2025-10-14 reads \"1 year ago\"",
+			"input": [
+				"2025-10-14",
+				"2026-10-14"
+			],
+			"output": "1 year ago"
+		},
+		{
+			"fn": "addedAgo",
+			"test": "dates › added on 2023-10-01 reads \"3 years ago\"",
+			"input": [
+				"2023-10-01",
+				"2026-10-14"
+			],
+			"output": "3 years ago"
+		},
+		{
 			"fn": "calendarDay",
 			"test": "dates › 2026-10-17 is the calendar day Sat Oct 17",
 			"input": [

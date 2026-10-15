@@ -13,7 +13,7 @@ Add a task lets Stefan capture a task in one motion from anywhere in the app. Re
 - `add-config-row` spells out the resolved due date, repeat, and reminders in the configuration row below the field while the text carries them.
 - `add-defaults` defaults the project inside a project view and the label inside a label view. On iOS the tab bar's `+` takes them from the project or label on screen.
 - `add-cancel` discards an unsaved draft.
-- `add-repeat` keeps quick add open after save for the next task.
+- `add-reveal` closes quick add after save and shows the task's list, scrolled to the new row, which flashes. The list is the open label or project when it holds the task, else the task's project, else Inbox for a dated task or No date for an undated one.
 - `add-create` offers `Create #name` or `Create @name` in the chip row for an unknown project or label and creates it only when picked.
 - `add-dock` attaches quick add to the keyboard on a phone and hides the add button while it is open.
 - `add-toast` moves a toast to the top of a phone screen while quick add is open, so it never covers the chips.
@@ -34,7 +34,7 @@ Preconditions:
 
 - **Open quick add.** Press `q` on the web Inbox. The `Quick add` dialog appears with focus in the `Task name` field. Test: `q opens quick add`.
 - **Highlight and save.** Type `call mom tomorrow 5pm remind me 30m before p1`. `tomorrow 5pm`, `remind me 30m before`, and `p1` are highlighted, the chips read `Tomorrow 5pm` and `30m before`, and the priority flag is filled red. Press Enter. `call mom` appears in Inbox with `Tomorrow 5pm` and one reminder, and the field clears with focus kept. Test: `q opens quick add, parses the brief example inline, and saves it`.
-- **Repeat.** Save `Buy milk`, then `Pay rent`. Both are in Inbox and quick add stays open. Test: `saving lands the task in Inbox and keeps quick add open`.
+- **Reveal.** From Inbox, save `Buy milk`. Quick add closes, No date opens, and the `Buy milk` row flashes. Save `Pay rent tomorrow`; Inbox opens with it under `Tomorrow`. From a project, save `Fix sink`; the project stays open with the row flashing. On iOS a project task opens its project in Browse unless that project is already open.
 - **Due date.** Add `Call mom tomorrow`. The task title reads `Call mom` and shows `Tomorrow`. Test: `a due date typed into the title is removed from the title`.
 - **Shorthands.** Type `Call Tom about the sun hat tom 5p r30m`. Only `tom 5p` and `r30m` are highlighted, and the chips read `Tomorrow 5pm` and `30m before`. Press Enter. `Call Tom about the sun hat` shows `Tomorrow 5pm`. Test: `shorthands parse inline while names and ordinary words stay text`.
 - **Recurrence.** In the same test, type `Standup every mon 9:30a`. `every mon` and `9:30a` are highlighted, and the chips read `Every Mon` and `Monday 9:30am`. Save. `Standup` shows `Monday 9:30am`, also after a reload. Planned: the row and task details show the repeat, and completing the task moves it to the next Monday.

@@ -33,7 +33,7 @@ struct TaskDetailsSheet: View {
                 .navigationDestination(for: String.self) { TaskDetailsPage(taskID: $0, navigation: navigation) }
         }
         .overlay(alignment: .bottom) {
-            ToastStack().padding(.bottom, 8)
+            ToastStack().padding(.bottom, 76)
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("Task details")

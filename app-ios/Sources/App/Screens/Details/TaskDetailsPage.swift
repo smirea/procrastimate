@@ -23,6 +23,7 @@ private struct TaskDetailsForm: View {
 
     @State private var title: String
     @FocusState private var titleFocused: Bool
+    @State private var keyboardShown = false
 
     init(task: TaskItem, navigation: DetailsNavigation) {
         self.task = task
@@ -95,20 +96,16 @@ private struct TaskDetailsForm: View {
                 }
 
                 SubtaskList(task: task, navigation: navigation)
-
-                Button(role: .destructive) { delete() } label: {
-                    SwiftUI.Label("Delete task", systemImage: "trash")
-                        .font(.subheadline.weight(.medium))
-                        .foregroundStyle(.toneOverdue)
-                        .frame(minHeight: 44)
-                }
-                .buttonStyle(.plain)
             }
             .padding(.horizontal, 20)
             .padding(.top, 8)
-            .padding(.bottom, 80)
+            // Clears the floating Complete and Delete buttons at the end of a long task.
+            .padding(.bottom, 120)
         }
         .scrollDismissesKeyboard(.interactively)
+        .overlay(alignment: .bottom) { floatingActions }
+        .onMessage(of: UIScreen.self, for: .keyboardWillShow) { _ in keyboardShown = true }
+        .onMessage(of: UIScreen.self, for: .keyboardWillHide) { _ in keyboardShown = false }
         .background(.canvas)
         .navigationTitle("Task details")
         .navigationBarTitleDisplayMode(.inline)
@@ -117,6 +114,38 @@ private struct TaskDetailsForm: View {
         .sensoryFeedback(.selection, trigger: Picks(task))
         .onChange(of: titleFocused) { if !titleFocused { commitTitle() } }
         .onDisappear { commitTitle() }
+    }
+
+    /// Hidden while typing so they never cover the field above the keyboard.
+    private var floatingActions: some View {
+        HStack {
+            if task.completedAt == nil {
+                floatingButton("Complete", systemImage: "checkmark", tint: .toneSoon) { complete() }
+            } else {
+                floatingButton("Reopen", systemImage: "arrow.counterclockwise", tint: .accent) { store.reopenTask(task.id) }
+            }
+            Spacer()
+            floatingButton("Delete", systemImage: "trash", tint: .toneOverdue) { delete() }
+                .accessibilityLabel("Delete task")
+        }
+        .padding(.horizontal, 20)
+        .padding(.bottom, 12)
+        .opacity(keyboardShown ? 0 : 1)
+        .allowsHitTesting(!keyboardShown)
+        .animation(.snappy(duration: 0.2), value: keyboardShown)
+    }
+
+    private func floatingButton(_ title: String, systemImage: String, tint: Color, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            SwiftUI.Label(title, systemImage: systemImage)
+                .font(.body.weight(.semibold))
+                .foregroundStyle(.white)
+                .padding(.horizontal, 20)
+                .frame(minHeight: 52)
+                .contentShape(.capsule)
+                .glassEffect(.regular.tint(tint).interactive(), in: .capsule)
+        }
+        .buttonStyle(.plain)
     }
 
     /// An event stands in for the date, so it takes the date chip's place, and linking one drops the due date and the
@@ -148,16 +177,6 @@ private struct TaskDetailsForm: View {
                 ProjectMenu(projectId: draft.projectId) { store.updateTask(task.id, TaskPatch(projectId: .some($0))) }
             }
         }
-        ToolbarItemGroup(placement: .topBarTrailing) {
-            if task.completedAt == nil {
-                Button("Complete", systemImage: "checkmark") { complete() }
-                    .labelStyle(.titleAndIcon)
-            } else {
-                Button("Reopen", systemImage: "arrow.counterclockwise") { store.reopenTask(task.id) }
-                    .labelStyle(.titleAndIcon)
-            }
-        }
-        ToolbarSpacer(.fixed, placement: .topBarTrailing)
         ToolbarItem(placement: .topBarTrailing) {
             Button(role: .close) { navigation.close() }
                 .accessibilityLabel("Close")
@@ -237,9 +256,12 @@ private struct ProjectMenu: View {
             .pickerStyle(.inline)
             Button("New project…", systemImage: "plus") { creating = true }
         } label: {
-            SwiftUI.Label(project?.name ?? "Inbox", systemImage: project == nil ? "tray" : "number")
-                .labelStyle(.titleAndIcon)
-                .lineLimit(1)
+            // The close button is the only other item in the bar, so the name gets the rest of the width and truncates.
+            HStack(spacing: 6) {
+                Image(systemName: project == nil ? "tray" : "number")
+                Text(project?.name ?? "Inbox").lineLimit(1).truncationMode(.tail)
+            }
+            .frame(maxWidth: 240, alignment: .leading)
         }
         .accessibilityLabel("Project \(project?.name ?? "Inbox")")
         .newProjectPrompt(isPresented: $creating) { onChange($0) }

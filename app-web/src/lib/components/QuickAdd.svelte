@@ -12,14 +12,17 @@
 	import { parseRamble } from 'shared/ramble.ts';
 	import { quickAddFromRamble, withListDefaults } from 'shared/ramble-fill.ts';
 	import { unknownNames, type UnknownName } from 'shared/name-search.ts';
-	import { DEFAULT_PRIORITY, type Due, type Priority, type Recurrence, type Reminder } from 'shared/task.ts';
+	import { DEFAULT_PRIORITY, type Due, type Priority, type Recurrence, type Reminder, type Task } from 'shared/task.ts';
 	import SmartInput from './SmartInput.svelte';
 	import DuePicker from './DuePicker.svelte';
 	import PriorityPicker from './PriorityPicker.svelte';
 	import ReminderPicker from './ReminderPicker.svelte';
 	import ProjectPicker from './ProjectPicker.svelte';
 	import { store } from '../store.svelte.ts';
-	import { clock, mobile, sheets, type QuickAddDefaults, motion } from '../ui.svelte.ts';
+	import { clock, mobile, reveal, sheets, type QuickAddDefaults, motion } from '../ui.svelte.ts';
+	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
+	import { scheduledDue } from 'shared/triggers.ts';
 	import { formatRecurrence, formatReminder } from 'shared/format.ts';
 	import { NAME_SOURCES } from '../names.ts';
 	import { listenRamble, type RambleListen } from '../ramble/capture.ts';
@@ -93,13 +96,19 @@
 	function submit() {
 		if (!parsed.title || listening) return;
 		const reminders = [...parsed.reminders, ...picked.reminders];
-		store.addTask({ title: parsed.title, due, recurrence, priority, projectId, labelIds, reminders });
-		text = '';
-		picked = initialPicked();
-		spokenRecurrence = null;
-		typed = false;
-		notice = '';
-		input.focus();
+		const task = store.addTask({ title: parsed.title, due, recurrence, priority, projectId, labelIds, reminders });
+		sheets.close();
+		const path = listOf(task);
+		if (path !== page.url.pathname) void goto(path);
+		reveal.show(task.id);
+	}
+
+	/** The open list when it already shows the task, else its project, else Inbox when it has a day or No date when it has none. */
+	function listOf(task: Task) {
+		const [, kind, id] = page.url.pathname.split('/');
+		if (kind === 'labels' && id && task.labelIds.includes(id)) return page.url.pathname;
+		if (task.projectId) return `/projects/${task.projectId}`;
+		return scheduledDue(task, clock.today) ? '/inbox' : '/no-date';
 	}
 
 	function rambleOptions() {

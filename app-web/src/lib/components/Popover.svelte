@@ -64,7 +64,7 @@
 
 <svelte:window onkeydowncapture={onWindowKeydown} onpointerdowncapture={onWindowPointerdown} />
 
-<div class="relative" bind:this={root}>
+<div class="relative min-w-0" bind:this={root}>
 	{@render trigger({ open, toggle })}
 	{#if open}
 		<div

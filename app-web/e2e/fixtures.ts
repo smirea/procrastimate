@@ -68,15 +68,14 @@ export class App {
 		await expect(this.taskInput()).toBeFocused();
 	}
 
+	/** Saving closes quick add, so each task opens it again. */
 	async add(...titles: string[]) {
-		await this.openQuickAdd();
 		for (const title of titles) {
+			await this.openQuickAdd();
 			await this.taskInput().fill(title);
 			await this.taskInput().press('Enter');
-			await expect(this.taskInput()).toHaveValue('');
+			await expect(this.quickAdd()).toBeHidden();
 		}
-		await this.taskInput().press('Escape');
-		await expect(this.quickAdd()).toBeHidden();
 	}
 
 	async go(view: string) {
