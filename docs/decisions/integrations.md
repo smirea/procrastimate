@@ -27,6 +27,6 @@ All three routes are account routes in `shared/api/contract.ts`, served by the `
 ## Links
 
 - **ProcrastiMate opens `procrastimate://task/<id>`** on iOS: it shows that task's details over the current screen. An unknown id does nothing.
-- **The memo app opens `myvoicememo://entry?id=<memoId>`.** A memo task's row shows a small waveform icon, on iOS and the web. Its details show `Voice memo`, which opens the memo on iOS. The web shows the same line without a link, because a browser cannot open the phone app.
+- **Talkward opens `talkward://entry?id=<memoId>`.** A memo task's row shows a small waveform icon, on iOS and the web. Its details show `Talkward`, which opens the memo on iOS. The web shows the same line without a link, because a browser cannot open the phone app.
 - **The memo app assumes ProcrastiMate is installed.** It checks with `canOpenURL(procrastimate://)`. When ProcrastiMate is missing, the memo's extracted tasks stay on the memo with the note `Could save these todos if you also had ProcrastiMate.` When it is installed but signed out, the note asks to sign in. Either way the tasks go out on their own once the link appears.
 - **Deleting a memo keeps its tasks.** When a memo has tasks in ProcrastiMate, deleting it asks whether to delete them too, and the default keeps them. A kept task keeps its link, which then opens a memo that no longer exists.

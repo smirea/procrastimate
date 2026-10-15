@@ -7,7 +7,7 @@ Talkward, Stefan's voice memo app, extracts tasks from each memo and sends them 
 - `receive` adds the memo's tasks to the Inbox with the spoken time read as a due date and repeat, or with the memo's calendar event.
 - `no-duplicates` skips a task the account has seen before, so a retry adds nothing and a deleted memo task never comes back.
 - `row-icon` shows a waveform icon on a memo task's row.
-- `details-line` shows `Talkward` in task details: a link to `myvoicememo://entry?id=<memoId>` on iOS, plain text on the web.
+- `details-line` shows `Talkward` in task details: a link to `talkward://entry?id=<memoId>` on iOS, plain text on the web.
 - `task-link` opens `procrastimate://task/<id>` as that task's details on iOS. An unknown id does nothing.
 - `shared-session` keeps the keychain item `procrastimate-link` in `FNYFHG5SV7.com.stefan.shared` while signed in, and removes it on sign-out or a rejected session.
 - `delete-with-memo` deletes a memo's tasks and their subtasks when the memo app asks.
