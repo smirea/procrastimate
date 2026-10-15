@@ -1,18 +1,24 @@
 <script module lang="ts">
-	const remeasure = new WeakMap<Element, () => void>();
+	const remeasure = new Map<Element, () => void>();
 	const widths = new WeakMap<Element, number>();
 	let observer: ResizeObserver | undefined;
 
-	/** One observer for every row. A title only reflows when its width changes, so height changes are ignored. */
+	/**
+	 * One observer for every row. A title reflows when its width changes, so height changes are ignored, or when a font
+	 * finishes loading, since rows measured with the fallback font can wrap differently at the same width.
+	 */
 	function observe(el: Element, measure: () => void) {
-		observer ??= new ResizeObserver((entries) => {
-			for (const entry of entries) {
-				const width = entry.contentRect.width;
-				if (widths.get(entry.target) === width) continue;
-				widths.set(entry.target, width);
-				remeasure.get(entry.target)?.();
-			}
-		});
+		if (!observer) {
+			observer = new ResizeObserver((entries) => {
+				for (const entry of entries) {
+					const width = entry.contentRect.width;
+					if (widths.get(entry.target) === width) continue;
+					widths.set(entry.target, width);
+					remeasure.get(entry.target)?.();
+				}
+			});
+			document.fonts.addEventListener('loadingdone', () => remeasure.forEach((measure) => measure()));
+		}
 		remeasure.set(el, measure);
 		observer.observe(el);
 		return () => {
