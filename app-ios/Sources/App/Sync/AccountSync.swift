@@ -65,7 +65,7 @@ final class AccountSync {
             var request = URLRequest(url: AppEnvironment.apiURL.appending(path: "api/auth/sign-out"))
             request.httpMethod = "POST"
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-            Task { _ = try? await URLSession.shared.data(for: request) }
+            Task { _ = try? await APIClient.session.data(for: request) }
         }
         SessionToken.clear()
         session.signedIn = Launch.signedIn
@@ -172,7 +172,7 @@ final class AccountSync {
         var request = URLRequest(url: url)
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         applyDevice(&request)
-        let task = URLSession.shared.webSocketTask(with: request)
+        let task = APIClient.session.webSocketTask(with: request)
         socket = task
         task.resume()
         listen(task)

@@ -39,7 +39,7 @@ final class Session {
         let data: Data
         let response: URLResponse
         do {
-            (data, response) = try await URLSession.shared.data(for: request)
+            (data, response) = try await APIClient.session.data(for: request)
         } catch {
             return
         }
@@ -103,7 +103,7 @@ final class Session {
         let data: Data
         let response: URLResponse
         do {
-            (data, response) = try await URLSession.shared.data(for: request)
+            (data, response) = try await APIClient.session.data(for: request)
         } catch {
             self.error = ErrorReport("Could not sign in", detail: "POST \(path): \(String(reflecting: error))")
             return

@@ -140,7 +140,7 @@ final class RambleSession {
         if let deviceId {
             request.setValue(deviceId, forHTTPHeaderField: "x-procrastimate-device")
         }
-        let task = URLSession.shared.webSocketTask(with: request)
+        let task = APIClient.session.webSocketTask(with: request)
         socket = task
         pump.connect(
             send: { [weak task] data in task?.send(.data(data)) { _ in } },
