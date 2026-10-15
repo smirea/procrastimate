@@ -10,6 +10,7 @@ import {
 import { hlcSchema } from '../db/json.ts';
 import { KINDS, type Kind } from './kinds.ts';
 import { shareTargetKindSchema } from '../values.ts';
+import { DEFAULT_QUICK_ADD_BUTTONS } from '../quick-add-buttons.ts';
 
 export { KINDS, type Kind } from './kinds.ts';
 
@@ -31,7 +32,11 @@ export const labelFieldsSchema = labelsRowSchema.omit(NOT_FIELDS);
 export const settingsFieldsSchema = settingsRowSchema.omit({ userId: true, id: true, clocks: true });
 
 export type Settings = z.infer<typeof settingsFieldsSchema>;
-export const DEFAULT_SETTINGS: Settings = { timeZone: null, dictation: 'native' };
+export const DEFAULT_SETTINGS: Settings = {
+	timeZone: null,
+	dictation: 'native',
+	quickAddButtons: DEFAULT_QUICK_ADD_BUTTONS,
+};
 
 export const FIELDS_SCHEMAS = {
 	task: taskFieldsSchema,

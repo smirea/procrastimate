@@ -30,15 +30,11 @@ public enum SyncEngine {
         nextOpId: () -> String
     ) {
         guard var sync = snapshot.sync else { return }
-        let patches = diff(
-            before: synced(before, timeZone: sync.timeZone, dictation: sync.dictation),
-            after: synced(after, timeZone: sync.timeZone, dictation: sync.dictation)
-        )
+        let patches = diff(before: before, after: after)
         guard !patches.isEmpty else { return }
         var clock = parseClock(sync.clock)
         sync.outbox = enqueue(sync.outbox, stamp(patches, clock: &clock, now: now, nextOpId: nextOpId))
         sync.clock = format(clock)
-        sync.timeZone = afterTimeZone(after, fallback: sync.timeZone)
         snapshot.sync = sync
     }
 
@@ -53,6 +49,22 @@ public enum SyncEngine {
         append(&snapshot, kind: .settings, id: "settings", fields: ["dictation": .string(choice.rawValue)], now: now, nextOpId: nextOpId)
         if var sync = snapshot.sync {
             sync.dictation = choice
+            snapshot.sync = sync
+        }
+    }
+
+    /// Writes the pinned quick add buttons, in row order, and keeps them on the document like dictation.
+    public static func setQuickAddButtons(
+        _ snapshot: inout Snapshot,
+        _ buttons: [QuickAddButton],
+        now: Int,
+        nextOpId: () -> String
+    ) {
+        guard snapshot.sync?.quickAddButtons != buttons else { return }
+        let value = JSONValue.array(buttons.map { .string($0.rawValue) })
+        append(&snapshot, kind: .settings, id: "settings", fields: ["quickAddButtons": value], now: now, nextOpId: nextOpId)
+        if var sync = snapshot.sync {
+            sync.quickAddButtons = buttons
             snapshot.sync = sync
         }
     }
@@ -157,7 +169,6 @@ public enum SyncEngine {
             outbox: [],
             clock: clock,
             timeZone: timeZone,
-            dictation: .native,
             epoch: 0,
             reset: false
         )
@@ -253,10 +264,12 @@ public enum SyncEngine {
             snapshot.sections = decoded.sections.sorted(by: byCreation)
             snapshot.labels = decoded.labels.sorted(by: byCreation)
             sync.dictation = decoded.settings.dictation
+            sync.quickAddButtons = decoded.settings.quickAddButtons
             if let zone = decoded.settings.timeZone { sync.timeZone = zone }
             // The adoption below reads the document's section, so it must hold the server's dictation too. The zone
             // stays the one this device last wrote, so two devices in different zones never overwrite each other.
             snapshot.sync?.dictation = sync.dictation
+            snapshot.sync?.quickAddButtons = sync.quickAddButtons
             // A wipe this device never saw makes its local copy stale, so it must not upload it.
             if sync.seed && (!epochChanged || sentReset) { seeds = seedPatches(server: snapshot.data, local: local) }
             sync.seed = false
@@ -274,10 +287,11 @@ public enum SyncEngine {
         sync.epoch = epoch
         sync.reset = false
         sync.clock = format(clock)
-        // A settings change writes the adopted zone and dictation onto the document. Keep them with the new cursor.
+        // A settings change writes the adopted settings onto the document. Keep them with the new cursor.
         if let adopted = snapshot.sync {
             sync.timeZone = adopted.timeZone
             sync.dictation = adopted.dictation
+            sync.quickAddButtons = adopted.quickAddButtons
         }
         snapshot.sync = sync
         return true
@@ -319,19 +333,13 @@ public enum SyncEngine {
             if let raw = fields["dictation"] as? String, let choice = DictationChoice(rawValue: raw) {
                 sync.dictation = choice
             }
+            if let raw = fields["quickAddButtons"] as? [String] {
+                sync.quickAddButtons = raw.compactMap(QuickAddButton.init(rawValue:))
+            }
             snapshot.sync = sync
         default: break
         }
     }
-}
-
-private struct SyncedData {
-    var tasks: [TaskItem]
-    var projects: [Project]
-    var sections: [ProjectSection]
-    var labels: [Label]
-    var timeZone: String?
-    var dictation: DictationChoice
 }
 
 /// One entity's changed fields, before a clock and an op id make it a `SyncOp`.
@@ -341,30 +349,13 @@ public struct SyncPatch: Hashable, Encodable, Sendable {
     public var fields: [String: JSONValue]
 }
 
-private func synced(_ data: StoreData, timeZone: String, dictation: DictationChoice) -> SyncedData {
-    SyncedData(
-        tasks: data.tasks,
-        projects: data.projects,
-        sections: data.sections,
-        labels: data.labels,
-        timeZone: timeZone,
-        dictation: dictation
-    )
-}
-
-private func afterTimeZone(_ data: StoreData, fallback: String) -> String { fallback }
-
-private func diff(before: SyncedData, after: SyncedData) -> [SyncPatch] {
+/// Settings change only through their own setters, which append their op directly, so a commit diffs entities alone.
+private func diff(before: StoreData, after: StoreData) -> [SyncPatch] {
     var patches: [SyncPatch] = []
     patches += entityDiff(kind: .project, before: before.projects.map(fieldsOf), after: after.projects.map(fieldsOf))
     patches += entityDiff(kind: .section, before: before.sections.map(fieldsOf), after: after.sections.map(fieldsOf))
     patches += entityDiff(kind: .label, before: before.labels.map(fieldsOf), after: after.labels.map(fieldsOf))
     patches += entityDiff(kind: .task, before: before.tasks.map(fieldsOf), after: after.tasks.map(fieldsOf))
-    let prior = settingsFields(before.timeZone, before.dictation)
-    let next = settingsFields(after.timeZone, after.dictation)
-    if !sameJSON(prior, next) {
-        patches.append(SyncPatch(kind: .settings, id: "settings", fields: jsonFields(next)))
-    }
     return patches
 }
 
@@ -416,10 +407,6 @@ private func fieldsOf(_ section: ProjectSection) -> [String: Any] {
 }
 
 private func fieldsOf(_ label: Label) -> [String: Any] { jsonObject(label) }
-
-private func settingsFields(_ timeZone: String?, _ dictation: DictationChoice) -> [String: Any] {
-    ["id": "settings", "timeZone": timeZone ?? NSNull(), "dictation": dictation.rawValue]
-}
 
 private func jsonObject<T: Encodable>(_ value: T) -> [String: Any] {
     guard let data = try? JSONEncoder().encode(value),

@@ -1715,6 +1715,12 @@
 							"dictation": {
 								"$ref": "#/components/schemas/DictationChoice"
 							},
+							"quickAddButtons": {
+								"type": "array",
+								"items": {
+									"$ref": "#/components/schemas/QuickAddButton"
+								}
+							},
 							"deleted": {
 								"type": "boolean"
 							}
@@ -1732,6 +1738,19 @@
 				"enum": [
 					"native",
 					"elevenlabs"
+				]
+			},
+			"QuickAddButton": {
+				"type": "string",
+				"enum": [
+					"date",
+					"priority",
+					"reminders",
+					"repeat",
+					"labels",
+					"subtasks",
+					"location",
+					"event"
 				]
 			},
 			"Hlc": {
@@ -2175,6 +2194,12 @@
 							"dictation": {
 								"$ref": "#/components/schemas/DictationChoice"
 							},
+							"quickAddButtons": {
+								"type": "array",
+								"items": {
+									"$ref": "#/components/schemas/QuickAddButton"
+								}
+							},
 							"deleted": {
 								"type": "boolean"
 							}
@@ -2240,11 +2265,18 @@
 					},
 					"dictation": {
 						"$ref": "#/components/schemas/DictationChoice"
+					},
+					"quickAddButtons": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/QuickAddButton"
+						}
 					}
 				},
 				"required": [
 					"timeZone",
-					"dictation"
+					"dictation",
+					"quickAddButtons"
 				],
 				"additionalProperties": false,
 				"x-table": "settings"

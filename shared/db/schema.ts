@@ -1,5 +1,6 @@
 import { index, integer, primaryKey, real, sqliteTable, text, type AnySQLiteColumn } from 'drizzle-orm/sqlite-core';
 import { DICTATION_CHOICES } from '../dictation.ts';
+import { DEFAULT_QUICK_ADD_BUTTONS } from '../quick-add-buttons.ts';
 import { KINDS } from '../sync/kinds.ts';
 import { ACTOR_KINDS, DEFAULT_PRIORITY, ROLES, SERVER_ACTOR, SHARE_TARGET_KINDS } from '../values.ts';
 import type { ColumnValue } from './json.ts';
@@ -115,6 +116,11 @@ export const settings = sqliteTable(
 			.$type<ColumnValue<'settings', 'dictation'>>()
 			.notNull()
 			.default('native'),
+		/** The quick add buttons pinned to the chip row, in row order. The `+` menu lists the rest. */
+		quickAddButtons: text('quick_add_buttons', { mode: 'json' })
+			.$type<ColumnValue<'settings', 'quickAddButtons'>>()
+			.notNull()
+			.default(DEFAULT_QUICK_ADD_BUTTONS),
 		clocks: clocks(),
 	},
 	userEntity,

@@ -2824,6 +2824,19 @@ extension API {
         }
     }
 
+    public enum QuickAddButton: String, Codable, Hashable, Sendable, CaseIterable, Identifiable {
+        case date = "date"
+        case priority = "priority"
+        case reminders = "reminders"
+        case `repeat` = "repeat"
+        case labels = "labels"
+        case subtasks = "subtasks"
+        case location = "location"
+        case event = "event"
+
+        public var id: String { rawValue }
+    }
+
     /// A recognized phrase, highlighted in the input. `start` and `end` are UTF-16 offsets, like JavaScript's.
     public struct QuickAddToken: Codable, Hashable, Sendable {
         public var kind: TokenKind
@@ -3258,27 +3271,32 @@ extension API {
     public struct Settings: Codable, Hashable, Sendable {
         public var timeZone: String?
         public var dictation: DictationChoice
+        public var quickAddButtons: [QuickAddButton]
 
-        public init(timeZone: String? = nil, dictation: DictationChoice = .native) {
+        public init(timeZone: String? = nil, dictation: DictationChoice = .native, quickAddButtons: [QuickAddButton] = [.date, .priority, .reminders, .subtasks]) {
             self.timeZone = timeZone
             self.dictation = dictation
+            self.quickAddButtons = quickAddButtons
         }
 
         enum CodingKeys: String, CodingKey {
             case timeZone = "timeZone"
             case dictation = "dictation"
+            case quickAddButtons = "quickAddButtons"
         }
 
         public init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             timeZone = try container.decode(String?.self, forKey: .timeZone)
             dictation = try container.decode(DictationChoice.self, forKey: .dictation)
+            quickAddButtons = try container.decode([QuickAddButton].self, forKey: .quickAddButtons)
         }
 
         public func encode(to encoder: Encoder) throws {
             var container = encoder.container(keyedBy: CodingKeys.self)
             try container.encode(self.timeZone, forKey: .timeZone)
             try container.encode(self.dictation, forKey: .dictation)
+            try container.encode(self.quickAddButtons, forKey: .quickAddButtons)
         }
     }
 
@@ -3317,17 +3335,20 @@ extension API {
     public struct SettingsPatchFields: Codable, Hashable, Sendable {
         public var timeZone: String??
         public var dictation: DictationChoice?
+        public var quickAddButtons: [QuickAddButton]?
         public var deleted: Bool?
 
-        public init(timeZone: String?? = nil, dictation: DictationChoice? = nil, deleted: Bool? = nil) {
+        public init(timeZone: String?? = nil, dictation: DictationChoice? = nil, quickAddButtons: [QuickAddButton]? = nil, deleted: Bool? = nil) {
             self.timeZone = timeZone
             self.dictation = dictation
+            self.quickAddButtons = quickAddButtons
             self.deleted = deleted
         }
 
         enum CodingKeys: String, CodingKey {
             case timeZone = "timeZone"
             case dictation = "dictation"
+            case quickAddButtons = "quickAddButtons"
             case deleted = "deleted"
         }
 
@@ -3335,6 +3356,7 @@ extension API {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             timeZone = try container.decodeNullable(String.self, forKey: .timeZone)
             dictation = try container.decodeAbsent(DictationChoice.self, forKey: .dictation)
+            quickAddButtons = try container.decodeAbsent([QuickAddButton].self, forKey: .quickAddButtons)
             deleted = try container.decodeAbsent(Bool.self, forKey: .deleted)
         }
 
@@ -3342,6 +3364,7 @@ extension API {
             var container = encoder.container(keyedBy: CodingKeys.self)
             try container.encodeNullable(self.timeZone, forKey: .timeZone)
             try container.encodeIfPresent(self.dictation, forKey: .dictation)
+            try container.encodeIfPresent(self.quickAddButtons, forKey: .quickAddButtons)
             try container.encodeIfPresent(self.deleted, forKey: .deleted)
         }
     }
@@ -4100,17 +4123,19 @@ extension API {
         public var clock: Hlc
         public var timeZone: String
         public var dictation: DictationChoice
+        public var quickAddButtons: [QuickAddButton]
         public var epoch: Int
         public var reset: Bool
         public var seed: Bool
 
-        public init(deviceId: String, cursor: Int, outbox: [SyncOp] = [], clock: Hlc, timeZone: String, dictation: DictationChoice = .native, epoch: Int = 0, reset: Bool = false, seed: Bool = false) {
+        public init(deviceId: String, cursor: Int, outbox: [SyncOp] = [], clock: Hlc, timeZone: String, dictation: DictationChoice = .native, quickAddButtons: [QuickAddButton] = [.date, .priority, .reminders, .subtasks], epoch: Int = 0, reset: Bool = false, seed: Bool = false) {
             self.deviceId = deviceId
             self.cursor = cursor
             self.outbox = outbox
             self.clock = clock
             self.timeZone = timeZone
             self.dictation = dictation
+            self.quickAddButtons = quickAddButtons
             self.epoch = epoch
             self.reset = reset
             self.seed = seed
@@ -4123,6 +4148,7 @@ extension API {
             case clock = "clock"
             case timeZone = "timeZone"
             case dictation = "dictation"
+            case quickAddButtons = "quickAddButtons"
             case epoch = "epoch"
             case reset = "reset"
             case seed = "seed"
@@ -4136,6 +4162,7 @@ extension API {
             clock = try container.decode(Hlc.self, forKey: .clock)
             timeZone = try container.decode(String.self, forKey: .timeZone)
             dictation = try container.decodeAbsent(DictationChoice.self, forKey: .dictation) ?? .native
+            quickAddButtons = try container.decodeAbsent([QuickAddButton].self, forKey: .quickAddButtons) ?? [.date, .priority, .reminders, .subtasks]
             epoch = try container.decodeAbsent(Int.self, forKey: .epoch) ?? 0
             reset = try container.decodeAbsent(Bool.self, forKey: .reset) ?? false
             seed = try container.decodeAbsent(Bool.self, forKey: .seed) ?? false
@@ -4163,6 +4190,7 @@ extension API {
             try container.encode(self.clock, forKey: .clock)
             try container.encode(self.timeZone, forKey: .timeZone)
             try container.encode(self.dictation, forKey: .dictation)
+            try container.encode(self.quickAddButtons, forKey: .quickAddButtons)
             try container.encode(self.epoch, forKey: .epoch)
             try container.encode(self.reset, forKey: .reset)
             try container.encode(self.seed, forKey: .seed)

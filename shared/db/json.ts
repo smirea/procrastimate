@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { dictationChoiceSchema } from '../dictation.ts';
+import { quickAddButtonSchema } from '../quick-add-buttons.ts';
 import { pushSubscriptionSchema, scheduledPushSchema } from '../push.ts';
 import { isHlc } from '../sync/hlc.ts';
 import {
@@ -38,7 +39,7 @@ export const COLUMN_VALUES = {
 	projects: { clocks },
 	sections: { clocks },
 	labels: { clocks },
-	settings: { clocks, dictation: dictationChoiceSchema },
+	settings: { clocks, dictation: dictationChoiceSchema, quickAddButtons: z.array(quickAddButtonSchema) },
 	log: { fields: z.record(z.string(), z.unknown()) },
 	push: { subscription: pushSubscriptionSchema, notifications: z.array(scheduledPushSchema) },
 	shares: { targetKind: shareTargetKindSchema, role: roleSchema },

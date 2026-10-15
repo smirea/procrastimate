@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test';
 import { applyChanges, applyResponse, commit, replayOutbox } from './apply.ts';
 import { diff, stamp } from './diff.ts';
 import { createClock } from './hlc.ts';
-import type { Change } from './protocol.ts';
+import { DEFAULT_SETTINGS, type Change } from './protocol.ts';
 import { counter, label, MemoryClient, MemoryServer, project, snapshotOf, task } from './testing.ts';
 
 const change = (seq: number, fields: Change['fields'], id = 't'): Change =>
@@ -46,7 +46,7 @@ describe('applyChanges', () => {
 		const result = applyChanges(snapshotOf(), [
 			{ seq: 1, opId: 's', kind: 'settings', id: 'settings', fields: { timeZone: 'Europe/Paris' } },
 		]);
-		expect(result.settings).toEqual({ timeZone: 'Europe/Paris', dictation: 'native' });
+		expect(result.settings).toEqual({ ...DEFAULT_SETTINGS, timeZone: 'Europe/Paris' });
 	});
 });
 

@@ -148,6 +148,7 @@ const webDocument: snapshot.Snapshot = {
 		clock: '1791972000001:0:d-phone',
 		timeZone: 'Europe/Berlin',
 		dictation: 'native',
+		quickAddButtons: ['date', 'labels'],
 		epoch: 0,
 		reset: false,
 		seed: false,
@@ -211,6 +212,16 @@ describe('parseSnapshot', () => {
 	test('a document stored before dictation defaults to native', () => {
 		const { dictation: _, ...sync } = webDocument.sync!;
 		expect(parseSnapshot({ ...webDocument, sync }, 10).sync?.dictation).toBe('native');
+	});
+
+	test('a document stored before quick add buttons gets the default row', () => {
+		const { quickAddButtons: _, ...sync } = webDocument.sync!;
+		expect(parseSnapshot({ ...webDocument, sync }, 10).sync?.quickAddButtons).toEqual([
+			'date',
+			'priority',
+			'reminders',
+			'subtasks',
+		]);
 	});
 
 	test('a document without a sync section has not synced yet', () => {

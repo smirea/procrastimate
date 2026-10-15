@@ -1,0 +1,1 @@
+ALTER TABLE `settings` ADD `quick_add_buttons` text DEFAULT '["date","priority","reminders","subtasks"]' NOT NULL;

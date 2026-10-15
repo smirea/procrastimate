@@ -69,5 +69,12 @@ export const migrations: { tag: string; when: number; statements: string[] }[] =
 			"CREATE TABLE `sections` (\n\t`user_id` text NOT NULL,\n\t`id` text NOT NULL,\n\t`project_id` text NOT NULL,\n\t`name` text NOT NULL,\n\t`order` real DEFAULT 0 NOT NULL,\n\t`created_at` integer NOT NULL,\n\t`source_key` text,\n\t`deleted` integer DEFAULT false NOT NULL,\n\t`clocks` text NOT NULL,\n\tPRIMARY KEY(`user_id`, `id`)\n);",
 			"ALTER TABLE `tasks` ADD `section_id` text;"
 		]
+	},
+	{
+		"tag": "0005_past_jack_murdock",
+		"when": 1792137216220,
+		"statements": [
+			"ALTER TABLE `settings` ADD `quick_add_buttons` text DEFAULT '[\"date\",\"priority\",\"reminders\",\"subtasks\"]' NOT NULL;"
+		]
 	}
 ];

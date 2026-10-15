@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, setSystemTime, test } from 'bun:test';
 import type { ActivityEntry, Person, ShareView, SharedView, Space, SpaceView } from '../../../shared/sharing';
 import { formatHlc } from '../../../shared/sync/hlc';
-import type { Op, Snapshot, SyncResponse, Task } from '../../../shared/sync/protocol';
+import { DEFAULT_SETTINGS, type Op, type Snapshot, type SyncResponse, type Task } from '../../../shared/sync/protocol';
 import { fieldsOf } from '../../../shared/sync/snapshot';
 import { label, project, section, task } from '../../../shared/sync/testing';
 import api from '../api';
@@ -464,7 +464,7 @@ test('project tasks reach their subtasks through the parent, not the subtask’s
 		projects: [project('p')],
 		sections: [],
 		labels: [],
-		settings: { timeZone: null, dictation: 'native' },
+		settings: DEFAULT_SETTINGS,
 	};
 	const { scopeOf } = await import('../../../shared/scope');
 	const scope = scopeOf(snapshot, [{ targetKind: 'task', targetId: 'root', role: 'view' }]);
@@ -482,7 +482,7 @@ test('a guest sees every section of each project it sees, and may not put a task
 		projects: [project('p'), project('q')],
 		sections: [section('p-next', 'p'), section('p-later', 'p'), section('q-later', 'q')],
 		labels: [label('l')],
-		settings: { timeZone: null, dictation: 'native' },
+		settings: DEFAULT_SETTINGS,
 	};
 	const { admit, filterSnapshot, scopeOf } = await import('../../../shared/scope');
 	const grants = [{ targetKind: 'label', targetId: 'l', role: 'edit' }] as const;

@@ -396,6 +396,12 @@
 					"sections": [],
 					"settings": {
 						"dictation": "native",
+						"quickAddButtons": [
+							"date",
+							"priority",
+							"reminders",
+							"subtasks"
+						],
 						"timeZone": null
 					},
 					"tasks": [
@@ -463,6 +469,12 @@
 					"sections": [],
 					"settings": {
 						"dictation": "native",
+						"quickAddButtons": [
+							"date",
+							"priority",
+							"reminders",
+							"subtasks"
+						],
 						"timeZone": null
 					},
 					"tasks": [
@@ -531,6 +543,12 @@
 					"sections": [],
 					"settings": {
 						"dictation": "elevenlabs",
+						"quickAddButtons": [
+							"date",
+							"priority",
+							"reminders",
+							"subtasks"
+						],
 						"timeZone": null
 					},
 					"tasks": [
@@ -596,6 +614,12 @@
 					"sections": [],
 					"settings": {
 						"dictation": "native",
+						"quickAddButtons": [
+							"date",
+							"priority",
+							"reminders",
+							"subtasks"
+						],
 						"timeZone": "Europe/Paris"
 					},
 					"tasks": [

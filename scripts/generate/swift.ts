@@ -95,7 +95,21 @@ type Decl =
 	| { kind: 'inline'; name: string; tag: string; variants: { value: string; props: Prop[] }[]; doc?: string }
 	| { kind: 'untagged'; name: string; variants: { name: string; type: string }[]; doc?: string };
 
-const KEYWORDS = new Set(['default', 'in', 'is', 'as', 'case', 'class', 'enum', 'func', 'let', 'var', 'self', 'Type']);
+const KEYWORDS = new Set([
+	'default',
+	'in',
+	'is',
+	'as',
+	'case',
+	'class',
+	'enum',
+	'func',
+	'let',
+	'var',
+	'self',
+	'Type',
+	'repeat',
+]);
 const pascal = (value: string) =>
 	value
 		.split(/[^A-Za-z0-9]+/)
@@ -430,8 +444,9 @@ class Generator {
 		}
 		if (decl?.kind === 'strings') return `.${caseName(decl, String(value))}`;
 		if (Array.isArray(value)) {
-			if (value.length) throw new Error(`Only empty array defaults are supported, not ${JSON.stringify(value)}`);
-			return '[]';
+			const element = /^\[([^:]+)\]$/.exec(type)?.[1];
+			if (value.length && !element) throw new Error(`No element type in ${type} for default ${JSON.stringify(value)}`);
+			return `[${value.map(item => this.literal(item, element!)).join(', ')}]`;
 		}
 		if (typeof value === 'object') {
 			if (Object.keys(value).length)

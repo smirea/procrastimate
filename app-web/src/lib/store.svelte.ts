@@ -1,4 +1,5 @@
 import type { DictationChoice } from 'shared/dictation.ts';
+import { DEFAULT_QUICK_ADD_BUTTONS, type QuickAddButton } from 'shared/quick-add-buttons.ts';
 import type { DateKey, Label, Project, Section, Task } from 'shared/task.ts';
 import { groupChildren, progressOf } from 'shared/subtasks.ts';
 import { newId } from 'shared/id.ts';
@@ -9,6 +10,7 @@ import { applyResponse, commit, startSync, type ClientSync } from 'shared/sync/a
 import { formatHlc, parseHlc } from 'shared/sync/hlc.ts';
 import {
 	DEFAULT_SETTINGS,
+	type Settings,
 	type Snapshot as SyncedData,
 	type SyncRequest,
 	type SyncResponse,
@@ -102,12 +104,10 @@ class Store {
 
 	/** A first launch seeds: its first snapshot queues whatever stored data the server lacks, so an existing list joins. */
 	#fresh(deviceId: string): SyncSection {
-		const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-		const dictation: DictationChoice = 'native';
-		return sectionOf(startSync({ timeZone, dictation }, deviceId, Date.now()), {
+		const settings = { ...DEFAULT_SETTINGS, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone };
+		return sectionOf(startSync(settings, deviceId, Date.now()), {
+			...settings,
 			deviceId,
-			timeZone,
-			dictation,
 			reset: false,
 		});
 	}
@@ -118,10 +118,10 @@ class Store {
 
 	/**
 	 * The zone on the settings record is the one this device last wrote, so a commit never rewrites another's.
-	 * Dictation is the choice last applied here, including one that arrived from another device.
+	 * The other settings are the choices last applied here, including ones that arrived from another device.
 	 */
 	#synced(sync: SyncSection): SyncedData {
-		return { ...this.#data, settings: { timeZone: sync.timeZone, dictation: sync.dictation } };
+		return { ...this.#data, settings: settingsOf(sync) };
 	}
 
 	#apply(data: rules.StoreData) {
@@ -137,8 +137,8 @@ class Store {
 		if (next === current) return;
 		this.#sync = sectionOf(next, {
 			...sync,
+			...after.settings,
 			timeZone: after.settings.timeZone ?? sync.timeZone,
-			dictation: after.settings.dictation,
 		});
 		this.#onCommit?.();
 	}
@@ -193,12 +193,12 @@ class Store {
 		this.spaces = {};
 		this.people = [];
 		this.#sync = {
+			...DEFAULT_SETTINGS,
 			deviceId,
 			cursor: 0,
 			outbox: [],
 			clock,
 			timeZone,
-			dictation: 'native',
 			epoch: 0,
 			reset: false,
 			seed: false,
@@ -220,22 +220,30 @@ class Store {
 	}
 
 	/** Remembers the choice and queues it for sync. Offline voice still uses native. */
-	setDictation(choice: DictationChoice) {
-		if (!this.#sync || this.#sync.dictation === choice) return;
-		this.#record(this.#sync, this.#synced(this.#sync), {
-			...this.#data,
-			settings: { timeZone: this.#sync.timeZone, dictation: choice },
-		});
-		this.#commit();
+	setDictation(dictation: DictationChoice) {
+		this.#setSettings({ dictation });
+	}
+
+	/** The quick add buttons pinned to the chip row. The defaults until a document has loaded. */
+	get quickAddButtons(): QuickAddButton[] {
+		return this.#sync?.quickAddButtons ?? DEFAULT_QUICK_ADD_BUTTONS;
+	}
+
+	setQuickAddButtons(quickAddButtons: QuickAddButton[]) {
+		this.#setSettings({ quickAddButtons });
 	}
 
 	/** Writes the synced time zone only when this device's own zone changed since it last wrote it. */
 	noteTimeZone(timeZone: string) {
-		if (!this.#sync || this.#sync.timeZone === timeZone) return;
-		this.#record(this.#sync, this.#synced(this.#sync), {
-			...this.#data,
-			settings: { timeZone, dictation: this.#sync.dictation },
-		});
+		this.#setSettings({ timeZone });
+	}
+
+	#setSettings(patch: Partial<Settings>) {
+		if (!this.#sync) return;
+		const before = settingsOf(this.#sync);
+		const after = { ...before, ...patch };
+		if (JSON.stringify(after) === JSON.stringify(before)) return;
+		this.#record(this.#sync, this.#synced(this.#sync), { ...this.#data, settings: after });
 		this.#commit();
 	}
 
@@ -266,7 +274,8 @@ class Store {
 			sections: snapshot.sections,
 			labels: snapshot.labels,
 		};
-		this.#sync = sectionOf(sync, { ...this.#sync, reset: false, dictation: snapshot.settings.dictation });
+		const { dictation, quickAddButtons } = snapshot.settings;
+		this.#sync = sectionOf(sync, { ...this.#sync, reset: false, dictation, quickAddButtons });
 		this.#commit();
 		return seeded;
 	}
@@ -590,9 +599,15 @@ const spaceSync = ({ cursor, outbox, epoch }: SpaceSection, sync: SyncSection): 
 	seed: false,
 });
 
+const settingsOf = ({ timeZone, dictation, quickAddButtons }: SyncSection): Settings => ({
+	timeZone,
+	dictation,
+	quickAddButtons,
+});
+
 const sectionOf = (
 	{ cursor, outbox, clock, epoch, seed }: ClientSync,
-	previous: Pick<SyncSection, 'deviceId' | 'timeZone' | 'dictation' | 'reset'>,
+	previous: Pick<SyncSection, 'deviceId' | 'timeZone' | 'dictation' | 'quickAddButtons' | 'reset'>,
 ): SyncSection => ({
 	deviceId: previous.deviceId,
 	cursor,
@@ -600,6 +615,7 @@ const sectionOf = (
 	clock: formatHlc(clock),
 	timeZone: previous.timeZone,
 	dictation: previous.dictation,
+	quickAddButtons: previous.quickAddButtons,
 	epoch,
 	reset: previous.reset,
 	seed,
