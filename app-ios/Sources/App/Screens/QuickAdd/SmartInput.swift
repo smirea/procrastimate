@@ -19,6 +19,10 @@ struct SmartInput: View {
     var focused: FocusState<Bool>.Binding
     let onSubmit: () -> Void
 
+    /// About eight lines of body text.
+    static let maxHeight: CGFloat = 200
+
+    @State private var textHeight: CGFloat = 36
     @State private var attributed = AttributedString()
     @State private var selection = AttributedTextSelection()
     @State private var active = 0
@@ -42,9 +46,29 @@ struct SmartInput: View {
                 .focused(focused)
                 .onKeyPress(keys: [.upArrow, .downArrow, .tab, .return, .escape]) { pressed($0.key) }
                 .scrollContentBackground(.hidden)
-                .scrollDisabled(true)
-                .frame(minHeight: 36, maxHeight: 88)
-                .fixedSize(horizontal: false, vertical: true)
+                .frame(height: min(max(textHeight, 36), Self.maxHeight))
+                // The editor's own ideal height updates only while typing, so text set in code, such as a long title
+                // when details open, would stay one line tall. A hidden copy of the text, with the editor's insets,
+                // measures it instead. Past the cap the editor scrolls.
+                .background(alignment: .topLeading) {
+                    Text(text.isEmpty ? " " : text)
+                        .padding(.vertical, 8)
+                        .padding(.horizontal, 5)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .hidden()
+                        .onGeometryChange(for: CGFloat.self, of: { $0.size.height }) { height in
+                            let grew = ceil(height) > textHeight
+                            textHeight = ceil(height)
+                            guard grew, focused.wrappedValue else { return }
+                            Task {
+                                // After the editor has taken its new height.
+                                try? await Task.sleep(for: .milliseconds(60))
+                                EditorCaret.reveal()
+                            }
+                        }
+                        .accessibilityHidden(true)
+                }
                 .overlay(alignment: .topLeading) {
                     if text.isEmpty {
                         Text(placeholder)

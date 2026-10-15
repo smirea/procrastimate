@@ -44,7 +44,7 @@
 	const uid = $props.id();
 
 	let root: HTMLDivElement;
-	let input: HTMLInputElement;
+	let input: HTMLTextAreaElement;
 	let backdrop: HTMLDivElement;
 	let overlay = $state<HTMLDivElement>();
 	let placement = $state({ above: true, maxHeight: 0 });
@@ -91,8 +91,17 @@
 	);
 
 	const syncScroll = () => {
-		if (backdrop) backdrop.scrollLeft = input.scrollLeft;
+		if (backdrop) backdrop.scrollTop = input.scrollTop;
 	};
+
+	/** The field is one line of text that wraps, so a pasted line break becomes a space. */
+	function dropLineBreaks() {
+		if (!/[\r\n]/.test(input.value)) return;
+		const at = input.selectionStart;
+		value = input.value.replace(/\r\n?|\n/g, ' ');
+		input.value = value;
+		input.setSelectionRange(at, at);
+	}
 
 	const syncCaret = () => {
 		caret = input.selectionStart ?? value.length;
@@ -142,6 +151,7 @@
 			}
 		}
 		onkeydown?.(event);
+		if (event.key === 'Enter' && !event.defaultPrevented) event.preventDefault();
 	}
 
 	/** Prefers the space above the input, the only room on a phone with the keyboard open, and flips below when that is too short. */
@@ -193,7 +203,7 @@
 			{:else}{segment.text}{/if}
 		{/each}
 	</div>
-	<input
+	<textarea
 		bind:this={input}
 		bind:value
 		aria-label={label}
@@ -201,13 +211,15 @@
 		aria-controls={suggestions.length ? `${uid}-names` : undefined}
 		aria-activedescendant={suggestions.length ? `${uid}-names-${active}` : undefined}
 		{placeholder}
-		class="smart-layer relative w-full bg-transparent outline-none placeholder:text-faint"
+		rows="1"
+		class="smart-layer smart-field relative block w-full resize-none bg-transparent outline-none placeholder:text-faint"
 		autocomplete="off"
 		autocapitalize="sentences"
 		{enterkeyhint}
 		spellcheck="false"
 		onscroll={syncScroll}
 		oninput={() => {
+			dropLineBreaks();
 			syncScroll();
 			syncCaret();
 			oninput?.();
@@ -223,7 +235,7 @@
 			focused = false;
 			onblur?.();
 		}}
-	/>
+	></textarea>
 	{#if fragment && source && suggestions.length}
 		<div
 			bind:this={overlay}
@@ -245,14 +257,30 @@
 		padding-right: 2.5rem;
 	}
 
+	/* Wraps and grows with the text up to eight lines, then scrolls, with the tint layer scrolled to match. */
 	.smart-layer {
-		white-space: pre;
+		white-space: pre-wrap;
+		overflow-wrap: anywhere;
+		max-height: calc(1.6em * 8 + 0.25rem);
+		scrollbar-width: none;
 		font: inherit;
 		letter-spacing: inherit;
 		padding: 0.125rem 0.25rem;
 		line-height: 1.6;
 		border: 0;
 		margin: 0;
+	}
+
+	.smart-field {
+		field-sizing: content;
+		overflow-y: auto;
+	}
+
+	/* A long placeholder would otherwise size an empty field to two lines on a phone. */
+	.smart-field::placeholder {
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 
 	.token {

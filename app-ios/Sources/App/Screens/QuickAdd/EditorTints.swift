@@ -43,7 +43,7 @@ enum EditorTints {
         return tints
     }
 
-    private static func focusedTextView() -> UITextView? {
+    static func focusedTextView() -> UITextView? {
         let windows = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.flatMap(\.windows)
         for window in windows where window.isKeyWindow {
             if let view = firstResponder(in: window) { return view }
@@ -57,5 +57,26 @@ enum EditorTints {
             if let found = firstResponder(in: subview) { return found }
         }
         return nil
+    }
+}
+
+/// A focused editor that grows past the bottom of the visible area, such as `Add subtask` at the end of a long task's
+/// details, pushes its caret under the keyboard, and UIKit scrolls the caret into view only when the keyboard appears.
+@MainActor
+enum EditorCaret {
+    static func reveal() {
+        guard let view = EditorTints.focusedTextView(), let range = view.selectedTextRange else { return }
+        var ancestor = view.superview
+        while let candidate = ancestor, !(candidate is UIScrollView) { ancestor = candidate.superview }
+        guard let scroll = ancestor as? UIScrollView, let window = scroll.window else { return }
+        // The scroll view runs on under the keyboard, so `scrollRectToVisible` counts a caret behind it as visible.
+        let caret = view.convert(view.caretRect(for: range.end), to: window)
+        let keyboard = window.keyboardLayoutGuide.layoutFrame
+        let bottom = min(scroll.convert(scroll.bounds, to: window).maxY - scroll.adjustedContentInset.bottom, keyboard.minY)
+        let overflow = caret.maxY + 12 - bottom
+        guard overflow > 0 else { return }
+        let limit = scroll.contentSize.height + scroll.adjustedContentInset.bottom - scroll.bounds.height
+        let y = min(scroll.contentOffset.y + overflow, max(limit, scroll.contentOffset.y))
+        scroll.setContentOffset(CGPoint(x: scroll.contentOffset.x, y: y), animated: true)
     }
 }

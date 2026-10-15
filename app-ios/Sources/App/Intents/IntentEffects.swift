@@ -180,8 +180,7 @@ enum IntentEffects {
         let (snapshot, clock) = snapshot()
         let tasks = IntentRules.searchTasks(query, snapshot.tasks, projects: snapshot.projects, labels: snapshot.labels)
         if let session = IntentSession.current {
-            session.router.searchQuery = query
-            session.navigator.showSearch()
+            session.navigator.showSearch(query: query)
         }
         let titles = tasks.map(\.title).joined(separator: ", ")
         note("search \(query): \(titles)")

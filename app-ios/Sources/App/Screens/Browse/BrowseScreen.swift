@@ -5,12 +5,11 @@ import SwiftUI
 /// them. Typing a query swaps the list for search results.
 struct BrowseScreen: View {
     @Environment(Navigator.self) private var navigator
-    @Environment(IntentRouter.self) private var router
-
-    @State private var query = ""
     @FocusState private var searchFocused: Bool
 
     var body: some View {
+        @Bindable var navigator = navigator
+        let query = navigator.searchQuery
         Group {
             if query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 BrowseList()
@@ -21,23 +20,15 @@ struct BrowseScreen: View {
         .background(.canvas)
         .navigationTitle("Browse")
         .navigationBarTitleDisplayMode(.inline)
-        .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search")
+        .searchable(text: $navigator.searchQuery, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search")
         .searchFocused($searchFocused)
         .autocorrectionDisabled()
         .textInputAutocapitalization(.never)
-        .onAppear { applyRoutedQuery() }
-        .onChange(of: router.searchQuery) { applyRoutedQuery() }
         .onChange(of: navigator.focusSearch, initial: true) {
             guard navigator.focusSearch else { return }
             navigator.focusSearch = false
             searchFocused = true
         }
-    }
-
-    private func applyRoutedQuery() {
-        guard let routed = router.searchQuery else { return }
-        router.searchQuery = nil
-        query = routed
     }
 }
 

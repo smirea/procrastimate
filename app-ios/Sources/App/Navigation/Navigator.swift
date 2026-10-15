@@ -4,7 +4,12 @@ import Observation
 
 @MainActor @Observable
 final class Navigator {
-    var tab: AppTab = .inbox
+    /// Coming to Browse from another tab starts a fresh search, like the web's search sheet. Back from a result keeps
+    /// the query, because that never leaves Browse.
+    var tab: AppTab = .inbox {
+        didSet { if tab != oldValue, tab == .browse { searchQuery = "" } }
+    }
+    var searchQuery = ""
     var paths: [AppTab: [Route]] = [:]
     var sheet: Sheet?
     /// Set just before opening quick add so the mic starts recording.
@@ -59,10 +64,11 @@ final class Navigator {
         }
     }
 
-    func showSearch() {
+    func showSearch(query: String = "") {
         sheet = nil
         paths[.browse] = []
         tab = .browse
+        searchQuery = query
         focusSearch = true
     }
 
