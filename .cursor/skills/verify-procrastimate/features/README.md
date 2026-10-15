@@ -62,6 +62,7 @@ Keep implementation details out of the map. Name only user paths, stable handles
 - [Reminders](./reminders.md) covers typed and picked reminders, due times that notify on their own, and reminders firing while the app is open.
 - [Push notifications](./push-notifications.md) covers turning on Web Push, the permission and Home Screen guidance, the synced schedule, and notifications while the app is closed.
 - [Task views](./task-views.md) covers the Inbox with its Overdue, Today, and day sections, the No date view, their counts, and their empty states.
+- [Copy as Markdown](./copy-markdown.md) covers copying a view, a section, or a task to the clipboard as a Markdown checklist.
 - [Projects](./projects.md) covers creating projects, `#` autocomplete, and moving tasks between them.
 - [Labels](./labels.md) covers `@` labels with autocomplete, row chips, the details picker, and label views.
 - [Offline and sync](./offline-sync.md) covers offline use and convergence across clients.
