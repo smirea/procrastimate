@@ -5,7 +5,7 @@ Edit a task lets Stefan open a task and change its title, notes, due date, prior
 ## Sub-features
 
 - `edit-open` opens task details.
-- `edit-fields` changes title, notes, due date, and priority.
+- `edit-fields` changes title, notes, due date and time, and priority. The date chip opens the same due picker as quick add (`add-due-picker`).
 - `edit-nl` applies phrases typed into the title, such as `fri 6pm !! remind me 1h before`.
 - `edit-config-row` shows the timing, priority, project, and labels the title will apply in the chips below it before Enter or blur commits them.
 - `edit-delete` deletes a task, with undo.
@@ -31,6 +31,7 @@ Preconditions:
 - **Open.** Choose `Buy milk`. The `Task details` dialog opens with the title `Buy milk` and empty notes. Test: `details edit fields as they change and persist across reload`.
 - **Change fields.** Rename it to `Buy oat milk` and press Enter, add the note `2 cartons`, pick `Today` from the date chip, and pick `Priority 1`. The list row shows the new title and note as they change.
 - **Persist.** Reload and reopen the task. Notes read `2 cartons`, the date chip reads `Today`, and the priority chip reads `Priority 1`. The task is under Inbox's `Today` section.
+- **Date and time.** Open `Water plants` from `No date`, choose `Set due date`, pick Friday October 16 in the calendar, choose `Add time`, then `6pm`. The chip reads `Due Friday 6pm` and, after a reload, the Inbox row shows `6pm`. No automated spec, because the e2e suite is smoke only. On an overdue task, `Add time` then a time moves it to that time's next occurrence, today or tomorrow.
 - **Natural language.** Open `Water plants` and replace the title with `Water plants fri 6pm !! remind me 1h before`, then press Enter. The title becomes `Water plants`, the date chip reads `Friday 6pm`, priority is `Priority 2`, and the reminder chip reads `1 reminder`. Test: `natural language in the details title updates the fields`.
 - **Timing in the title.** Open `Standup` and type ` fri 6pm` at the end of the title. `fri 6pm` is highlighted, nothing appears above the title, and the date chip already reads `Friday 6pm` while the list row keeps its old date. Press Enter; the row moves to Friday. Test: `the configuration row spells out parsed timing with no preview above the input`.
 - **Delete.** Choose the floating `Delete` button (named `Delete task`). The task leaves every view and an `Undo` toast appears. Undo restores it. Test: `delete removes the task and undo brings it back`.

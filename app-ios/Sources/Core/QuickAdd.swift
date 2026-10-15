@@ -508,9 +508,7 @@ public enum QuickAdd {
                 : start
             return Due(date: date, time: time)
         }
-        guard let time else { return nil }
-        let start = outside?.date ?? ctx.today
-        return Due(date: passed(start) ? (passed(ctx.today) ? Dates.addDays(ctx.today, 1) : ctx.today) : start, time: time)
+        return time.map { Dates.dueAtTime(outside, $0, today: ctx.today, now: ctx.time) }
     }
 
     static func resolveReminder(_ draft: ReminderDraft, _ due: Due?, _ ctx: Context) -> Reminder {

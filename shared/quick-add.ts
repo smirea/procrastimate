@@ -3,6 +3,7 @@ import { labelSchema, projectSchema, taskSchema } from './sync/protocol.ts';
 import {
 	addDays,
 	addInterval,
+	dueAtTime,
 	alignToRecurrence,
 	isWeekday,
 	fromDateKey,
@@ -204,7 +205,8 @@ function unitOf(text: string): DurationUnit | null {
 	return t.startsWith('mo') ? 'month' : (UNIT_LETTERS[t[0] ?? ''] ?? null);
 }
 
-function resolveTime(text: string): TimeOfDay | null {
+/** A clock time as typed, such as `5pm`, `5:30p`, `17:30`, `1730`, or `noon`. */
+export function resolveTime(text: string): TimeOfDay | null {
 	const t = text.toLowerCase().replaceAll(/\s+/g, '');
 	if (t === 'noon') return toTimeOfDay(12, 0);
 	if (t === 'midnight') return toTimeOfDay(0, 0);
@@ -486,9 +488,7 @@ function resolveDue(
 		const date = passed(start) ? (passed(ctx.today) ? stepRecurrence(ctx.today, repeat.recurrence) : ctx.today) : start;
 		return { date, time };
 	}
-	if (!time) return null;
-	const start = outside?.date ?? ctx.today;
-	return { date: passed(start) ? (passed(ctx.today) ? addDays(ctx.today, 1) : ctx.today) : start, time };
+	return time ? dueAtTime(outside, time, ctx.today, ctx.time) : null;
 }
 
 function resolveReminder(draft: ReminderDraft, due: Due | null, ctx: Context): Reminder {
