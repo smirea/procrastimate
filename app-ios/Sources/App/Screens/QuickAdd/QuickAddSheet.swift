@@ -36,7 +36,11 @@ private struct QuickAddForm: View {
     @State private var speechWrites = 0
     @State private var spoken = Spoken.none
     @State private var liveParse: Task<Void, Never>?
+    @State private var subtasks: [DraftSubtask] = []
+    @State private var subtaskText = ""
+    @State private var subtasksOpen = false
     @FocusState private var focused: Bool
+    @FocusState private var subtaskFocused: Bool
 
     init(defaults: QuickAddDefaults, today: DateKey) {
         _draft = State(initialValue: QuickAddDraft(defaults: defaults, today: today))
@@ -64,6 +68,10 @@ private struct QuickAddForm: View {
                 if showMic { micButton }
             }
             }
+            if spoken == .none, subtasksOpen || !subtasks.isEmpty {
+                QuickAddSubtasks(subtasks: $subtasks, text: $subtaskText, focused: $subtaskFocused) { submit() }
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+            }
             if !spoken.tasks.isEmpty {
                 SpokenTaskList(spoken: spoken) { removeSpoken($0, $1) }
             }
@@ -77,6 +85,7 @@ private struct QuickAddForm: View {
                     chips(parsed, resolved)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
+                subtaskChip
                 PriorityChip(priority: resolved.priority, iconOnly: true) { priority in
                     draft.clearToken(.priority, in: parsed)
                     draft.picked.priority = priority
@@ -105,6 +114,7 @@ private struct QuickAddForm: View {
             }
         }
         .animation(.snappy(duration: 0.22), value: spoken)
+        .animation(.snappy(duration: 0.2), value: subtasksOpen)
         .padding(.horizontal, 16)
         .padding(.top, 20)
         .padding(.bottom, 8)
@@ -136,6 +146,25 @@ private struct QuickAddForm: View {
             if case .reviewing = spoken { spoken = .none }
             typed = !draft.text.isEmpty
         }
+        .onChange(of: subtaskFocused) {
+            if !subtaskFocused, subtaskText.isEmpty, subtasks.isEmpty { subtasksOpen = false }
+        }
+    }
+
+    private var subtaskChip: some View {
+        Button {
+            subtasksOpen = true
+            subtaskFocused = true
+        } label: {
+            Chip(
+                systemImage: "checklist",
+                text: subtasks.isEmpty ? "" : "\(subtasks.count)",
+                tone: subtasksOpen || !subtasks.isEmpty ? .ink : .muted
+            )
+            .contentShape(.rect.inset(by: -6))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(subtasks.isEmpty ? "Add subtask" : "Add subtask, \(subtasks.count) added")
     }
 
     private var addLabel: String {
@@ -228,8 +257,11 @@ private struct QuickAddForm: View {
         }
         let parsed = draft.parse(now: clock.now, projects: store.projects, labels: store.labels, in: clock.timeZone)
         guard let task = draft.resolve(parsed) else { return }
+        let typing = NewTask(subtask: QuickAdd.parseSubtask(subtaskText, now: clock.now, labels: store.labels, in: clock.timeZone))
+        let children = subtasks.map(\.task) + (typing.map { [$0] } ?? [])
         let added = withAnimation(.snappy) {
             let added = store.addTask(task)
+            for child in children { _ = store.addTask(child, parentId: added.id) }
             if let event {
                 store.updateTask(added.id, TaskPatch(due: .some(nil), recurrence: .some(nil), location: .some(location), event: .some(event)))
             } else if let location {

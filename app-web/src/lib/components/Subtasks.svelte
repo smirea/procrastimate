@@ -6,12 +6,12 @@
 	import Plus from 'phosphor-svelte/lib/Plus';
 	import CalendarBlank from 'phosphor-svelte/lib/CalendarBlank';
 	import DotsSixVertical from 'phosphor-svelte/lib/DotsSixVertical';
-	import { parseQuickAdd } from 'shared/quick-add.ts';
 	import type { Task } from 'shared/task.ts';
 	import Checkbox from './Checkbox.svelte';
 	import SmartInput from './SmartInput.svelte';
 	import SubtaskProgress from './SubtaskProgress.svelte';
 	import { store } from '../store.svelte.ts';
+	import { parseSubtask, subtaskTask } from '../subtask-draft.ts';
 	import { clock, sheets, motion } from '../ui.svelte.ts';
 	import { dueTone, formatDue } from 'shared/format.ts';
 	import { PRIORITIES } from '../priorities.ts';
@@ -21,12 +21,12 @@
 	const progress = $derived(store.progress(task.id));
 
 	let draft = $state('');
-	const parsed = $derived(parseQuickAdd(draft, { now: new Date(clock.now), projects: [], labels: store.labels, due: null }));
+	const parsed = $derived(parseSubtask(draft));
 
 	function add() {
-		if (!parsed.title) return;
-		const { title, due, recurrence, priority, reminders, labelIds } = parsed;
-		store.addTask({ title, due, recurrence, priority, reminders, labelIds, projectId: null }, task.id);
+		const subtask = subtaskTask(parsed);
+		if (!subtask) return;
+		store.addTask(subtask, task.id);
 		draft = '';
 	}
 

@@ -26,7 +26,7 @@ struct SubtaskList: View {
     var body: some View {
         let children = Subtasks.groupChildren(store.tasks)[task.id] ?? []
         let progress = Subtasks.progressOf(children)
-        let parsed = QuickAdd.parse(draft, QuickAdd.Options(now: clock.now, labels: store.labels), in: clock.timeZone)
+        let parsed = QuickAdd.parseSubtask(draft, now: clock.now, labels: store.labels, in: clock.timeZone)
         VStack(alignment: .leading, spacing: 4) {
             HStack {
                 Text("Subtasks")
@@ -89,20 +89,10 @@ struct SubtaskList: View {
     nonisolated private static let space = "subtasks"
 
     private func add() {
-        let parsed = QuickAdd.parse(draft, QuickAdd.Options(now: clock.now, labels: store.labels), in: clock.timeZone)
-        guard !parsed.title.isEmpty else { return }
+        let parsed = QuickAdd.parseSubtask(draft, now: clock.now, labels: store.labels, in: clock.timeZone)
+        guard let subtask = NewTask(subtask: parsed) else { return }
         withAnimation(reduceMotion ? nil : .snappy) {
-            _ = store.addTask(
-                NewTask(
-                    title: parsed.title,
-                    labelIds: parsed.labelIds,
-                    due: parsed.due,
-                    recurrence: parsed.recurrence,
-                    priority: parsed.priority,
-                    reminders: parsed.reminders
-                ),
-                parentId: task.id
-            )
+            _ = store.addTask(subtask, parentId: task.id)
         }
         draft = ""
         adding = true
@@ -218,5 +208,26 @@ private struct SubtaskRow<Reorder: Gesture>: View {
         withAnimation(.snappy) {
             if done { store.reopenTask(child.id) } else { _ = store.completeTask(child.id) }
         }
+    }
+}
+
+extension QuickAdd {
+    /// A subtask line parses like quick add without `#` projects, because a subtask always shares its root's project.
+    static func parseSubtask(_ text: String, now: Date, labels: [Core.Label], in timeZone: TimeZone) -> Parsed {
+        parse(text, Options(now: now, labels: labels), in: timeZone)
+    }
+}
+
+extension NewTask {
+    init?(subtask parsed: QuickAdd.Parsed) {
+        guard !parsed.title.isEmpty else { return nil }
+        self.init(
+            title: parsed.title,
+            labelIds: parsed.labelIds,
+            due: parsed.due,
+            recurrence: parsed.recurrence,
+            priority: parsed.priority,
+            reminders: parsed.reminders
+        )
     }
 }
