@@ -104,7 +104,7 @@ func unknown(_ fn: String) -> VectorError { VectorError(description: "No Swift h
 
 typealias Handler = @Sendable (String, Args) throws -> JSONValue
 
-private let pendingPorts: Set<String> = []
+private let pendingPorts: Set<String> = ["markdown"]
 
 let handlers: [String: Handler] = [
     "task": taskVector,

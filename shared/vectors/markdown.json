@@ -1,0 +1,472 @@
+{
+	"module": "markdown",
+	"timeZone": "America/New_York",
+	"cases": [
+		{
+			"fn": "toMarkdown",
+			"test": "toMarkdown › a task lists its due, repeat, priority, project, labels, and notes",
+			"input": [
+				{
+					"projectId": null,
+					"sections": [
+						{
+							"heading": null,
+							"tasks": [
+								{
+									"completedAt": null,
+									"createdAt": 1,
+									"due": {
+										"date": "2026-10-15",
+										"time": "09:00"
+									},
+									"event": null,
+									"id": "Pay rent",
+									"labelIds": [
+										"home",
+										"deep",
+										"gone"
+									],
+									"location": null,
+									"notes": "Transfer from savings\n\nRef 42  ",
+									"order": 0,
+									"parentId": null,
+									"priority": 1,
+									"projectId": "work",
+									"recurrence": {
+										"interval": 1,
+										"unit": "month"
+									},
+									"reminders": [],
+									"title": "Pay rent"
+								}
+							]
+						}
+					],
+					"title": null
+				},
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "home",
+							"name": "home"
+						},
+						{
+							"createdAt": 0,
+							"id": "deep",
+							"name": "deep work"
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "work",
+							"name": "Work"
+						}
+					],
+					"tasks": [
+						{
+							"completedAt": null,
+							"createdAt": 1,
+							"due": {
+								"date": "2026-10-15",
+								"time": "09:00"
+							},
+							"event": null,
+							"id": "Pay rent",
+							"labelIds": [
+								"home",
+								"deep",
+								"gone"
+							],
+							"location": null,
+							"notes": "Transfer from savings\n\nRef 42  ",
+							"order": 0,
+							"parentId": null,
+							"priority": 1,
+							"projectId": "work",
+							"recurrence": {
+								"interval": 1,
+								"unit": "month"
+							},
+							"reminders": [],
+							"title": "Pay rent"
+						}
+					],
+					"today": "2026-10-14"
+				}
+			],
+			"output": "- [ ] Pay rent · Tomorrow 9am · Every month · p1 · #Work · @home · @deep work\n  Transfer from savings\n\n  Ref 42"
+		},
+		{
+			"fn": "toMarkdown",
+			"test": "toMarkdown › the project a copy comes from is not repeated on its rows",
+			"input": [
+				{
+					"projectId": "work",
+					"sections": [
+						{
+							"heading": null,
+							"tasks": [
+								{
+									"completedAt": null,
+									"createdAt": 2,
+									"due": null,
+									"event": null,
+									"id": "Write spec",
+									"labelIds": [],
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": "work",
+									"recurrence": null,
+									"reminders": [],
+									"title": "Write spec"
+								}
+							]
+						}
+					],
+					"title": "Work"
+				},
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "home",
+							"name": "home"
+						},
+						{
+							"createdAt": 0,
+							"id": "deep",
+							"name": "deep work"
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "work",
+							"name": "Work"
+						}
+					],
+					"tasks": [
+						{
+							"completedAt": null,
+							"createdAt": 2,
+							"due": null,
+							"event": null,
+							"id": "Write spec",
+							"labelIds": [],
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "work",
+							"recurrence": null,
+							"reminders": [],
+							"title": "Write spec"
+						}
+					],
+					"today": "2026-10-14"
+				}
+			],
+			"output": "# Work\n\n- [ ] Write spec"
+		},
+		{
+			"fn": "toMarkdown",
+			"test": "toMarkdown › subtasks nest under their parent, done ones checked, and are not repeated at the top level",
+			"input": [
+				{
+					"projectId": null,
+					"sections": [
+						{
+							"heading": "Today",
+							"tasks": [
+								{
+									"completedAt": null,
+									"createdAt": 3,
+									"due": {
+										"date": "2026-10-14",
+										"time": null
+									},
+									"event": null,
+									"id": "Plan trip",
+									"labelIds": [],
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"title": "Plan trip"
+								}
+							]
+						},
+						{
+							"heading": "Friday",
+							"tasks": [
+								{
+									"completedAt": null,
+									"createdAt": 4,
+									"due": {
+										"date": "2026-10-16",
+										"time": null
+									},
+									"event": null,
+									"id": "Book flights",
+									"labelIds": [],
+									"location": null,
+									"notes": "",
+									"order": 1,
+									"parentId": "Plan trip",
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"title": "Book flights"
+								}
+							]
+						}
+					],
+					"title": "Inbox"
+				},
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "home",
+							"name": "home"
+						},
+						{
+							"createdAt": 0,
+							"id": "deep",
+							"name": "deep work"
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "work",
+							"name": "Work"
+						}
+					],
+					"tasks": [
+						{
+							"completedAt": null,
+							"createdAt": 3,
+							"due": {
+								"date": "2026-10-14",
+								"time": null
+							},
+							"event": null,
+							"id": "Plan trip",
+							"labelIds": [],
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Plan trip"
+						},
+						{
+							"completedAt": null,
+							"createdAt": 4,
+							"due": {
+								"date": "2026-10-16",
+								"time": null
+							},
+							"event": null,
+							"id": "Book flights",
+							"labelIds": [],
+							"location": null,
+							"notes": "",
+							"order": 1,
+							"parentId": "Plan trip",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Book flights"
+						},
+						{
+							"completedAt": 5,
+							"createdAt": 5,
+							"due": null,
+							"event": null,
+							"id": "Pack",
+							"labelIds": [],
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "Plan trip",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Pack"
+						},
+						{
+							"completedAt": null,
+							"createdAt": 6,
+							"due": null,
+							"event": null,
+							"id": "Socks",
+							"labelIds": [],
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "Pack",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Socks"
+						}
+					],
+					"today": "2026-10-14"
+				}
+			],
+			"output": "# Inbox\n\n## Today\n\n- [ ] Plan trip · Today\n  - [x] Pack\n    - [ ] Socks\n  - [ ] Book flights · Friday"
+		},
+		{
+			"fn": "toMarkdown",
+			"test": "toMarkdown › a subtask copied without its parent stands on its own",
+			"input": [
+				{
+					"projectId": null,
+					"sections": [
+						{
+							"heading": "Tomorrow",
+							"tasks": [
+								{
+									"completedAt": null,
+									"createdAt": 8,
+									"due": null,
+									"event": null,
+									"id": "Book flights",
+									"labelIds": [],
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": "Plan trip",
+									"priority": 4,
+									"projectId": "work",
+									"recurrence": null,
+									"reminders": [],
+									"title": "Book flights"
+								}
+							]
+						}
+					],
+					"title": null
+				},
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "home",
+							"name": "home"
+						},
+						{
+							"createdAt": 0,
+							"id": "deep",
+							"name": "deep work"
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "work",
+							"name": "Work"
+						}
+					],
+					"tasks": [
+						{
+							"completedAt": null,
+							"createdAt": 7,
+							"due": null,
+							"event": null,
+							"id": "Plan trip",
+							"labelIds": [],
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "Plan trip"
+						},
+						{
+							"completedAt": null,
+							"createdAt": 8,
+							"due": null,
+							"event": null,
+							"id": "Book flights",
+							"labelIds": [],
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "Plan trip",
+							"priority": 4,
+							"projectId": "work",
+							"recurrence": null,
+							"reminders": [],
+							"title": "Book flights"
+						}
+					],
+					"today": "2026-10-14"
+				}
+			],
+			"output": "## Tomorrow\n\n- [ ] Book flights"
+		},
+		{
+			"fn": "toMarkdown",
+			"test": "toMarkdown › a view with nothing in it is only its title",
+			"input": [
+				{
+					"projectId": null,
+					"sections": [
+						{
+							"heading": null,
+							"tasks": []
+						}
+					],
+					"title": "No date"
+				},
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "home",
+							"name": "home"
+						},
+						{
+							"createdAt": 0,
+							"id": "deep",
+							"name": "deep work"
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "work",
+							"name": "Work"
+						}
+					],
+					"tasks": [],
+					"today": "2026-10-14"
+				}
+			],
+			"output": "# No date"
+		}
+	]
+}
