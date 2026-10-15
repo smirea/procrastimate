@@ -119,11 +119,12 @@ describe('tasks', () => {
 		expect(completion).toEqual({
 			kind: 'done',
 			previous: [
-				{ id: 'trip', completedAt: null, due: null, reminders: [], event: null },
-				{ id: 'passport', completedAt: null, due: null, reminders: [], event: null },
+				{ id: 'trip', completedAt: null, lastCompletedAt: null, due: null, reminders: [], event: null },
+				{ id: 'passport', completedAt: null, lastCompletedAt: null, due: null, reminders: [], event: null },
 			],
 		});
 		expect(ids(next.tasks.filter(t => t.completedAt === NOW))).toEqual(['trip', 'passport']);
+		expect(ids(next.tasks.filter(t => t.lastCompletedAt === NOW))).toEqual(['trip']);
 		expect(restoreCompletion(next, completion.previous)).toEqual(data());
 	});
 
@@ -136,6 +137,7 @@ describe('tasks', () => {
 				{
 					id: 'standup',
 					completedAt: null,
+					lastCompletedAt: null,
 					due: { date: today, time: '09:00' },
 					reminders: [{ kind: 'at', date: today, time: '08:00' }],
 					event: null,
@@ -143,6 +145,7 @@ describe('tasks', () => {
 			],
 		});
 		expect(find(next, 'standup').reminders).toEqual([{ kind: 'at', date: '2026-10-15', time: '08:00' }]);
+		expect([find(next, 'standup').completedAt, find(next, 'standup').lastCompletedAt]).toEqual([null, NOW]);
 		expect(restoreCompletion(next, completion.previous)).toEqual(data());
 		expect(completeTask(data(), 'missing', today, NOW)).toBeNull();
 	});
@@ -221,7 +224,7 @@ describe('labels', () => {
 		expect(completion).toEqual({
 			kind: 'rolled',
 			next: { date: '2026-10-21', time: '18:00' },
-			previous: [{ id: 'jan', completedAt: null, due: null, reminders: [], event }],
+			previous: [{ id: 'jan', completedAt: null, lastCompletedAt: null, due: null, reminders: [], event }],
 		});
 		expect(next.tasks[0]!.event!.occurrences).toEqual([occurrences[2]!]);
 		expect(next.tasks[0]!.completedAt).toBeNull();

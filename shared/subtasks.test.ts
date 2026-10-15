@@ -87,7 +87,7 @@ describe('completeTask', () => {
 			kind: 'rolled',
 			next: { date: '2026-10-23', time: null },
 			changed: [
-				{ ...tasks[0]!, due: { date: '2026-10-23', time: null } },
+				{ ...tasks[0]!, due: { date: '2026-10-23', time: null }, lastCompletedAt: NOW },
 				{ ...tasks[1]!, completedAt: null },
 				{ ...tasks[3]!, completedAt: null },
 			],

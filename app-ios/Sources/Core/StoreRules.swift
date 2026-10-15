@@ -98,7 +98,12 @@ public enum StoreRules {
         let previous = result.changed.map { changed in
             let old = byId[changed.id]!
             return CompletionState(
-                id: old.id, completedAt: old.completedAt, due: old.due, reminders: old.reminders, event: old.event
+                id: old.id,
+                completedAt: old.completedAt,
+                lastCompletedAt: old.lastCompletedAt,
+                due: old.due,
+                reminders: old.reminders,
+                event: old.event
             )
         }
         let next: Due? = if case let .rolled(due, _) = result { due } else { nil }
@@ -121,6 +126,7 @@ public enum StoreRules {
             guard let state = byId[task.id] else { return task }
             var task = task
             task.completedAt = state.completedAt
+            task.lastCompletedAt = state.lastCompletedAt
             task.due = state.due
             task.reminders = state.reminders
             task.event = state.event

@@ -746,13 +746,15 @@ extension API {
     public struct CompletionState: Codable, Hashable, Sendable, Identifiable {
         public var id: String
         public var completedAt: Int?
+        public var lastCompletedAt: Int?
         public var due: Due?
         public var reminders: [Reminder]
         public var event: TaskEvent?
 
-        public init(id: String, completedAt: Int? = nil, due: Due? = nil, reminders: [Reminder] = [], event: TaskEvent? = nil) {
+        public init(id: String, completedAt: Int? = nil, lastCompletedAt: Int? = nil, due: Due? = nil, reminders: [Reminder] = [], event: TaskEvent? = nil) {
             self.id = id
             self.completedAt = completedAt
+            self.lastCompletedAt = lastCompletedAt
             self.due = due
             self.reminders = reminders
             self.event = event
@@ -761,6 +763,7 @@ extension API {
         enum CodingKeys: String, CodingKey {
             case id = "id"
             case completedAt = "completedAt"
+            case lastCompletedAt = "lastCompletedAt"
             case due = "due"
             case reminders = "reminders"
             case event = "event"
@@ -770,6 +773,7 @@ extension API {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             id = try container.decode(String.self, forKey: .id)
             completedAt = try container.decode(Int?.self, forKey: .completedAt)
+            lastCompletedAt = try container.decode(Int?.self, forKey: .lastCompletedAt)
             due = try container.decode(Due?.self, forKey: .due)
             reminders = try container.decode([Reminder].self, forKey: .reminders)
             event = try container.decode(TaskEvent?.self, forKey: .event)
@@ -779,6 +783,7 @@ extension API {
             var container = encoder.container(keyedBy: CodingKeys.self)
             try container.encode(self.id, forKey: .id)
             try container.encode(self.completedAt, forKey: .completedAt)
+            try container.encode(self.lastCompletedAt, forKey: .lastCompletedAt)
             try container.encode(self.due, forKey: .due)
             try container.encode(self.reminders, forKey: .reminders)
             try container.encode(self.event, forKey: .event)

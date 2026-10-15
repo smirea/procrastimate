@@ -2444,6 +2444,7 @@
 							"due": null,
 							"event": null,
 							"id": "trip",
+							"lastCompletedAt": null,
 							"reminders": []
 						},
 						{
@@ -2451,6 +2452,7 @@
 							"due": null,
 							"event": null,
 							"id": "passport",
+							"lastCompletedAt": null,
 							"reminders": []
 						}
 					]
@@ -2490,7 +2492,7 @@
 							"event": null,
 							"id": "trip",
 							"labelIds": [],
-							"lastCompletedAt": null,
+							"lastCompletedAt": 1000,
 							"location": null,
 							"notes": "",
 							"order": 0,
@@ -2639,7 +2641,7 @@
 							"event": null,
 							"id": "trip",
 							"labelIds": [],
-							"lastCompletedAt": null,
+							"lastCompletedAt": 1000,
 							"location": null,
 							"notes": "",
 							"order": 0,
@@ -2753,6 +2755,7 @@
 						"due": null,
 						"event": null,
 						"id": "trip",
+						"lastCompletedAt": null,
 						"reminders": []
 					},
 					{
@@ -2760,6 +2763,7 @@
 						"due": null,
 						"event": null,
 						"id": "passport",
+						"lastCompletedAt": null,
 						"reminders": []
 					}
 				]
@@ -3075,6 +3079,7 @@
 							},
 							"event": null,
 							"id": "standup",
+							"lastCompletedAt": null,
 							"reminders": [
 								{
 									"date": "2026-10-14",
@@ -3183,7 +3188,7 @@
 							"event": null,
 							"id": "standup",
 							"labelIds": [],
-							"lastCompletedAt": null,
+							"lastCompletedAt": 1000,
 							"location": null,
 							"notes": "",
 							"order": 0,
@@ -3332,7 +3337,7 @@
 							"event": null,
 							"id": "standup",
 							"labelIds": [],
-							"lastCompletedAt": null,
+							"lastCompletedAt": 1000,
 							"location": null,
 							"notes": "",
 							"order": 0,
@@ -3386,6 +3391,7 @@
 						},
 						"event": null,
 						"id": "standup",
+						"lastCompletedAt": null,
 						"reminders": [
 							{
 								"date": "2026-10-14",
@@ -3853,6 +3859,7 @@
 							"due": null,
 							"event": null,
 							"id": "trip",
+							"lastCompletedAt": null,
 							"reminders": []
 						},
 						{
@@ -3860,6 +3867,7 @@
 							"due": null,
 							"event": null,
 							"id": "passport",
+							"lastCompletedAt": null,
 							"reminders": []
 						}
 					]
@@ -3899,7 +3907,7 @@
 							"event": null,
 							"id": "trip",
 							"labelIds": [],
-							"lastCompletedAt": null,
+							"lastCompletedAt": 1000,
 							"location": null,
 							"notes": "",
 							"order": 0,
@@ -4048,7 +4056,7 @@
 							"event": null,
 							"id": "trip",
 							"labelIds": [],
-							"lastCompletedAt": null,
+							"lastCompletedAt": 1000,
 							"location": null,
 							"notes": "",
 							"order": 0,
@@ -4196,7 +4204,7 @@
 						"event": null,
 						"id": "trip",
 						"labelIds": [],
-						"lastCompletedAt": null,
+						"lastCompletedAt": 1000,
 						"location": null,
 						"notes": "",
 						"order": 0,
@@ -4344,7 +4352,7 @@
 							"event": null,
 							"id": "trip",
 							"labelIds": [],
-							"lastCompletedAt": null,
+							"lastCompletedAt": 1000,
 							"location": null,
 							"notes": "",
 							"order": 0,
@@ -4458,6 +4466,7 @@
 						"due": null,
 						"event": null,
 						"id": "trip",
+						"lastCompletedAt": null,
 						"reminders": []
 					},
 					{
@@ -4465,6 +4474,7 @@
 						"due": null,
 						"event": null,
 						"id": "passport",
+						"lastCompletedAt": null,
 						"reminders": []
 					}
 				]
@@ -4773,6 +4783,7 @@
 							"due": null,
 							"event": null,
 							"id": "trip",
+							"lastCompletedAt": null,
 							"reminders": []
 						},
 						{
@@ -4780,6 +4791,7 @@
 							"due": null,
 							"event": null,
 							"id": "passport",
+							"lastCompletedAt": null,
 							"reminders": []
 						}
 					]
@@ -4819,7 +4831,7 @@
 							"event": null,
 							"id": "trip",
 							"labelIds": [],
-							"lastCompletedAt": null,
+							"lastCompletedAt": 1000,
 							"location": null,
 							"notes": "",
 							"order": 0,
@@ -4968,7 +4980,7 @@
 							"event": null,
 							"id": "trip",
 							"labelIds": [],
-							"lastCompletedAt": null,
+							"lastCompletedAt": 1000,
 							"location": null,
 							"notes": "",
 							"order": 0,
@@ -5113,7 +5125,7 @@
 						"event": null,
 						"id": "trip",
 						"labelIds": [],
-						"lastCompletedAt": null,
+						"lastCompletedAt": 1000,
 						"location": null,
 						"notes": "",
 						"order": 0,
@@ -8867,6 +8879,7 @@
 								"title": "Walking meetup"
 							},
 							"id": "jan",
+							"lastCompletedAt": null,
 							"reminders": []
 						}
 					]
@@ -8898,7 +8911,7 @@
 							},
 							"id": "jan",
 							"labelIds": [],
-							"lastCompletedAt": null,
+							"lastCompletedAt": 1000,
 							"location": null,
 							"notes": "",
 							"order": 0,
@@ -8944,7 +8957,7 @@
 							},
 							"id": "jan",
 							"labelIds": [],
-							"lastCompletedAt": null,
+							"lastCompletedAt": 1000,
 							"location": null,
 							"notes": "",
 							"order": 0,
@@ -8987,6 +9000,7 @@
 							"title": "Walking meetup"
 						},
 						"id": "jan",
+						"lastCompletedAt": null,
 						"reminders": []
 					}
 				]
@@ -9073,7 +9087,7 @@
 							},
 							"id": "jan",
 							"labelIds": [],
-							"lastCompletedAt": null,
+							"lastCompletedAt": 1000,
 							"location": null,
 							"notes": "",
 							"order": 0,
@@ -9113,6 +9127,7 @@
 								"title": "Walking meetup"
 							},
 							"id": "jan",
+							"lastCompletedAt": 1000,
 							"reminders": []
 						}
 					]
@@ -9144,7 +9159,7 @@
 							},
 							"id": "jan",
 							"labelIds": [],
-							"lastCompletedAt": null,
+							"lastCompletedAt": 1000,
 							"location": null,
 							"notes": "",
 							"order": 0,
