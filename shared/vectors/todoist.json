@@ -841,12 +841,12 @@
 		},
 		{
 			"fn": "readTodoistBackup",
-			"test": "CSV edge cases › two sections with the same name in one project stay apart",
+			"test": "CSV edge cases › a section name that repeats in one project lands in one section, also on a second import",
 			"input": [
 				[
 					{
 						"name": "Errands [42].csv",
-						"text": "TYPE,CONTENT,DESCRIPTION,PRIORITY,INDENT,DATE,DATE_LANG\nsection,Later,,,,,\ntask,A,,4,1,,\nsection,Later,,,,,\ntask,B,,4,1,,\n"
+						"text": "TYPE,CONTENT,DESCRIPTION,PRIORITY,INDENT,DATE,DATE_LANG\nsection,Later,,,,,\ntask,A,,4,1,,\nsection,later,,,,,\ntask,B,,4,1,,\n"
 					}
 				],
 				1791986400000
@@ -866,9 +866,9 @@
 						"sourceKey": "todoist:section:42:Later"
 					},
 					{
-						"name": "Later",
+						"name": "later",
 						"projectKey": "todoist:project:42",
-						"sourceKey": "todoist:section:42:Later#2"
+						"sourceKey": "todoist:section:42:later"
 					}
 				],
 				"tasks": [
@@ -894,12 +894,411 @@
 						"projectKey": "todoist:project:42",
 						"recurrence": null,
 						"reminders": [],
-						"sectionKey": "todoist:section:42:Later#2",
+						"sectionKey": "todoist:section:42:later",
 						"sourceKey": "todoist:task:42:B",
 						"title": "B"
 					}
 				],
 				"warnings": []
+			}
+		},
+		{
+			"fn": "mergeBackup",
+			"test": "CSV edge cases › a section name that repeats in one project lands in one section, also on a second import",
+			"input": [
+				{
+					"labels": [],
+					"projects": [],
+					"sections": [],
+					"tasks": []
+				},
+				{
+					"projects": [
+						{
+							"inbox": false,
+							"name": "Errands",
+							"sourceKey": "todoist:project:42"
+						}
+					],
+					"sections": [
+						{
+							"name": "Later",
+							"projectKey": "todoist:project:42",
+							"sourceKey": "todoist:section:42:Later"
+						},
+						{
+							"name": "later",
+							"projectKey": "todoist:project:42",
+							"sourceKey": "todoist:section:42:later"
+						}
+					],
+					"tasks": [
+						{
+							"due": null,
+							"labels": [],
+							"notes": "",
+							"parentKey": null,
+							"priority": 4,
+							"projectKey": "todoist:project:42",
+							"recurrence": null,
+							"reminders": [],
+							"sectionKey": "todoist:section:42:Later",
+							"sourceKey": "todoist:task:42:A",
+							"title": "A"
+						},
+						{
+							"due": null,
+							"labels": [],
+							"notes": "",
+							"parentKey": null,
+							"priority": 4,
+							"projectKey": "todoist:project:42",
+							"recurrence": null,
+							"reminders": [],
+							"sectionKey": "todoist:section:42:later",
+							"sourceKey": "todoist:task:42:B",
+							"title": "B"
+						}
+					],
+					"warnings": []
+				},
+				{
+					"now": 1000
+				}
+			],
+			"output": {
+				"state": {
+					"labels": [],
+					"projects": [
+						{
+							"createdAt": 1000,
+							"id": "id-1",
+							"name": "Errands",
+							"sourceKey": "todoist:project:42"
+						}
+					],
+					"sections": [
+						{
+							"createdAt": 1000,
+							"id": "id-2",
+							"name": "Later",
+							"order": 0,
+							"projectId": "id-1",
+							"sourceKey": "todoist:section:42:Later"
+						}
+					],
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1000,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "id-3",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "id-1",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": "id-2",
+							"sourceKey": "todoist:task:42:A",
+							"title": "A"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1001,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "id-4",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "id-1",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": "id-2",
+							"sourceKey": "todoist:task:42:B",
+							"title": "B"
+						}
+					]
+				},
+				"summary": {
+					"labels": 0,
+					"projects": 1,
+					"sections": 1,
+					"skipped": 0,
+					"tasks": 2,
+					"warnings": []
+				}
+			}
+		},
+		{
+			"fn": "mergeBackup",
+			"test": "CSV edge cases › a section name that repeats in one project lands in one section, also on a second import",
+			"input": [
+				{
+					"labels": [],
+					"projects": [
+						{
+							"createdAt": 1000,
+							"id": "id-1",
+							"name": "Errands",
+							"sourceKey": "todoist:project:42"
+						}
+					],
+					"sections": [
+						{
+							"createdAt": 1000,
+							"id": "id-2",
+							"name": "Later",
+							"order": 0,
+							"projectId": "id-1",
+							"sourceKey": "todoist:section:42:Later"
+						}
+					],
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1000,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "id-3",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "id-1",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": "id-2",
+							"sourceKey": "todoist:task:42:A",
+							"title": "A"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1001,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "id-4",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "id-1",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": "id-2",
+							"sourceKey": "todoist:task:42:B",
+							"title": "B"
+						}
+					]
+				},
+				{
+					"projects": [
+						{
+							"inbox": false,
+							"name": "Errands",
+							"sourceKey": "todoist:project:42"
+						}
+					],
+					"sections": [
+						{
+							"name": "Later",
+							"projectKey": "todoist:project:42",
+							"sourceKey": "todoist:section:42:Later"
+						},
+						{
+							"name": "later",
+							"projectKey": "todoist:project:42",
+							"sourceKey": "todoist:section:42:later"
+						}
+					],
+					"tasks": [
+						{
+							"due": null,
+							"labels": [],
+							"notes": "",
+							"parentKey": null,
+							"priority": 4,
+							"projectKey": "todoist:project:42",
+							"recurrence": null,
+							"reminders": [],
+							"sectionKey": "todoist:section:42:Later",
+							"sourceKey": "todoist:task:42:A",
+							"title": "A"
+						},
+						{
+							"due": null,
+							"labels": [],
+							"notes": "",
+							"parentKey": null,
+							"priority": 4,
+							"projectKey": "todoist:project:42",
+							"recurrence": null,
+							"reminders": [],
+							"sectionKey": "todoist:section:42:later",
+							"sourceKey": "todoist:task:42:B",
+							"title": "B"
+						}
+					],
+					"warnings": []
+				},
+				{
+					"now": 2000
+				}
+			],
+			"output": {
+				"state": {
+					"labels": [],
+					"projects": [
+						{
+							"createdAt": 1000,
+							"id": "id-1",
+							"name": "Errands",
+							"sourceKey": "todoist:project:42"
+						}
+					],
+					"sections": [
+						{
+							"createdAt": 1000,
+							"id": "id-2",
+							"name": "Later",
+							"order": 0,
+							"projectId": "id-1",
+							"sourceKey": "todoist:section:42:Later"
+						}
+					],
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1000,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "id-3",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "id-1",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": "id-2",
+							"sourceKey": "todoist:task:42:A",
+							"title": "A"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1001,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "id-4",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "id-1",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": "id-2",
+							"sourceKey": "todoist:task:42:B",
+							"title": "B"
+						}
+					]
+				},
+				"summary": {
+					"labels": 0,
+					"projects": 0,
+					"sections": 0,
+					"skipped": 2,
+					"tasks": 0,
+					"warnings": []
+				}
+			}
+		},
+		{
+			"fn": "readTodoistBackup",
+			"test": "CSV edge cases › a section row ends the nesting above it, in Inbox too",
+			"input": [
+				[
+					{
+						"name": "Inbox [1].csv",
+						"text": "TYPE,CONTENT,DESCRIPTION,PRIORITY,INDENT,DATE,DATE_LANG\ntask,A,,4,1,,\nsection,Later,,,,,\ntask,B,,4,2,,\n"
+					}
+				],
+				1791986400000
+			],
+			"output": {
+				"projects": [
+					{
+						"inbox": true,
+						"name": "Inbox",
+						"sourceKey": "todoist:project:1"
+					}
+				],
+				"sections": [],
+				"tasks": [
+					{
+						"due": null,
+						"labels": [],
+						"notes": "",
+						"parentKey": null,
+						"priority": 4,
+						"projectKey": "todoist:project:1",
+						"recurrence": null,
+						"reminders": [],
+						"sectionKey": null,
+						"sourceKey": "todoist:task:1:A",
+						"title": "A"
+					},
+					{
+						"due": null,
+						"labels": [],
+						"notes": "",
+						"parentKey": null,
+						"priority": 4,
+						"projectKey": "todoist:project:1",
+						"recurrence": null,
+						"reminders": [],
+						"sectionKey": null,
+						"sourceKey": "todoist:task:1:B",
+						"title": "B"
+					}
+				],
+				"warnings": [
+					"Inbox: Inbox has no sections, so these were left out: Later"
+				]
 			}
 		},
 		{

@@ -23,6 +23,7 @@ const reopenTask = recorded('store', store.reopenTask);
 const restoreCompletion = recorded('store', store.restoreCompletion);
 const restoreExploded = recorded('store', store.restoreExploded);
 const sectionsOf = recorded('store', store.sectionsOf);
+const sectionTasks = recorded('store', store.sectionTasks);
 const sortTasks = recorded('store', store.sortTasks);
 const undeleteTasks = recorded('store', store.undeleteTasks);
 const updateTask = recorded('store', store.updateTask);
@@ -358,6 +359,7 @@ describe('sections', () => {
 	});
 
 	test('deleting a section deletes its tasks with their subtasks and leaves the rest of the project', () => {
+		expect(ids(sectionTasks(sectioned().tasks, 'next'))).toEqual(['trip', 'passport', 'charger']);
 		const deleted = deleteSection(sectioned(), 'next');
 		expect(deleted.sections.map(s => s.id)).toEqual(['later', 'someday']);
 		expect(ids(deleted.tasks)).toEqual(['standup', 'call']);
@@ -394,14 +396,33 @@ describe('sections', () => {
 		});
 	});
 
-	test('a new task keeps a section of its project only, and a subtask gets none', () => {
-		const add = (input: Partial<typeof newTask> & { sectionId: string }, parentId: string | null = null) =>
-			addTask(data(), { ...newTask, ...input }, parentId, { id: 'new', now: NOW }).task.sectionId;
+	test('a new task goes into its section and that section’s project, and a subtask gets none', () => {
+		const add = (input: { projectId?: string | null; sectionId: string }, parentId: string | null = null) => {
+			const { task } = addTask(data(), { ...newTask, ...input }, parentId, { id: 'new', now: NOW });
+			return [task.projectId, task.sectionId];
+		};
 		expect([
 			add({ sectionId: 'someday' }),
-			add({ sectionId: 'next' }),
+			add({ projectId: null, sectionId: 'next' }),
+			add({ sectionId: 'missing' }),
 			add({ projectId: 'home', sectionId: 'next' }, 'trip'),
-		]).toEqual(['someday', null, null]);
+		]).toEqual([
+			['work', 'someday'],
+			['home', 'next'],
+			['work', null],
+			['home', null],
+		]);
+	});
+
+	test('moving a sectioned task to Inbox clears its project and section', () => {
+		expect(find(updateTask(sectioned(), 'trip', { projectId: null, sectionId: null }), 'trip')).toMatchObject({
+			projectId: null,
+			sectionId: null,
+		});
+		expect(find(updateTask(sectioned(), 'trip', { projectId: null }), 'trip')).toMatchObject({
+			projectId: null,
+			sectionId: null,
+		});
 	});
 });
 

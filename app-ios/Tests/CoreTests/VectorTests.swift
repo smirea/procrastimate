@@ -337,6 +337,7 @@ private func completion(_ completion: Completion) throws -> JSONValue {
     case "renameLabel": return try json(StoreRules.renameLabel(data(), a(1), a(2)))
     case "deleteLabel": return try json(StoreRules.deleteLabel(data(), a(1)))
     case "sectionsOf": return try json(StoreRules.sectionsOf(a(0), a(1)))
+    case "sectionTasks": return try json(StoreRules.sectionTasks(a(0), a(1)))
     case "addSection":
         let result = StoreRules.addSection(try data(), try a(1), try a(2), try a(3, as: CreationInput.self).creation)
         return object(["data": try json(result.data), "section": try json(result.section)])

@@ -214,12 +214,12 @@ function readProject(file: BackupFile, now: Date, backup: TodoistBackup) {
 			case 'meta':
 				break;
 			case 'section': {
+				// A section starts a new outline, so the next task is top level whatever its indent.
+				ancestors.length = 0;
 				if (inbox) {
 					inboxSections.push(content);
 					break;
 				}
-				// A section starts a new outline, so the next task is top level whatever its indent.
-				ancestors.length = 0;
 				const occurrence = (sectionsSeen.get(content) ?? 0) + 1;
 				sectionsSeen.set(content, occurrence);
 				sectionKey = `todoist:section:${id}:${content}${occurrence > 1 ? `#${occurrence}` : ''}`;
@@ -317,13 +317,12 @@ export function mergeBackup(
 	for (const source of backup.sections) {
 		const projectId = projectIds.get(source.projectKey);
 		if (!projectId) continue;
+		// Names are unique in a project, so a repeated name in the backup joins the section that already has it.
 		const index = sections.findIndex(s => s.sourceKey === source.sourceKey);
 		const match =
-			index === -1
-				? sections.findIndex(s => !s.sourceKey && s.projectId === projectId && sameName(s.name, source.name))
-				: index;
+			index === -1 ? sections.findIndex(s => s.projectId === projectId && sameName(s.name, source.name)) : index;
 		if (match !== -1) {
-			sections[match] = { ...sections[match]!, sourceKey: source.sourceKey };
+			sections[match] = { ...sections[match]!, sourceKey: sections[match]!.sourceKey ?? source.sourceKey };
 			sectionIds.set(source.sourceKey, sections[match]!.id);
 			continue;
 		}

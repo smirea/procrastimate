@@ -237,9 +237,18 @@ describe('CSV edge cases', () => {
 		expect(backup.warnings).toEqual(['Inbox: Inbox has no sections, so these were left out: Later']);
 	});
 
-	test('two sections with the same name in one project stay apart', () => {
-		const backup = read(`${HEADER}\nsection,Later,,,,,\ntask,A,,4,1,,\nsection,Later,,,,,\ntask,B,,4,1,,\n`);
-		expect(backup.tasks.map(t => t.sectionKey)).toEqual(['todoist:section:42:Later', 'todoist:section:42:Later#2']);
+	test('a section name that repeats in one project lands in one section, also on a second import', () => {
+		const backup = read(`${HEADER}\nsection,Later,,,,,\ntask,A,,4,1,,\nsection,later,,,,,\ntask,B,,4,1,,\n`);
+		expect(backup.tasks.map(t => t.sectionKey)).toEqual(['todoist:section:42:Later', 'todoist:section:42:later']);
+		const first = mergeBackup(empty(), backup, { newId: counter(), now: 1000 });
+		const second = mergeBackup(first.state, backup, { newId: counter(), now: 2000 });
+		expect(second.state.sections.map(s => [s.name, s.sourceKey])).toEqual([['Later', 'todoist:section:42:Later']]);
+		expect(new Set(second.state.tasks.map(t => t.sectionId)).size).toBe(1);
+	});
+
+	test('a section row ends the nesting above it, in Inbox too', () => {
+		const backup = read(`${HEADER}\ntask,A,,4,1,,\nsection,Later,,,,,\ntask,B,,4,2,,\n`, 'Inbox [1].csv');
+		expect(backup.tasks.map(t => t.parentKey)).toEqual([null, null]);
 	});
 
 	test('a file without a Todoist header is skipped with a warning', () => {

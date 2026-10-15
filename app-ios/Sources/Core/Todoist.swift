@@ -256,12 +256,12 @@ public enum Todoist {
             case "", "meta":
                 break
             case "section":
+                // A section starts a new outline, so the next task is top level whatever its indent.
+                ancestors.removeAll()
                 if inbox {
                     inboxSections.append(content)
                     break
                 }
-                // A section starts a new outline, so the next task is top level whatever its indent.
-                ancestors.removeAll()
                 let occurrence = (sectionsSeen[content] ?? 0) + 1
                 sectionsSeen[content] = occurrence
                 let key = "todoist:section:\(id):\(content)\(occurrence > 1 ? "#\(occurrence)" : "")"
@@ -356,12 +356,11 @@ public enum Todoist {
         var sectionIds: [String: String] = [:]
         for source in backup.sections {
             guard let projectId = projectIds[source.projectKey] ?? nil else { continue }
+            // Names are unique in a project, so a repeated name in the backup joins the section that already has it.
             let match = sections.firstIndex { $0.sourceKey == source.sourceKey }
-                ?? sections.firstIndex {
-                    ($0.sourceKey ?? "").isEmpty && $0.projectId == projectId && sameName($0.name, source.name)
-                }
+                ?? sections.firstIndex { $0.projectId == projectId && sameName($0.name, source.name) }
             if let match {
-                sections[match].sourceKey = source.sourceKey
+                if sections[match].sourceKey == nil { sections[match].sourceKey = source.sourceKey }
                 sectionIds[source.sourceKey] = sections[match].id
                 continue
             }

@@ -34,7 +34,7 @@ export const newTaskSchema = z
 		projectId: taskShape.projectId,
 		sectionId: taskShape.sectionId
 			.default(null)
-			.meta({ description: 'A section of `projectId`; any other is dropped.' }),
+			.meta({ description: 'A section puts the task in its project. A subtask gets none.' }),
 		labelIds: taskShape.labelIds,
 		due: taskShape.due,
 		recurrence: taskShape.recurrence,
@@ -125,6 +125,7 @@ function put(tasks: readonly Task[], changed: readonly (Partial<Task> & Pick<Tas
 }
 
 /**
+ * A section puts a top-level task in that section and its project, as in `updateTask`.
  * With a `parentId`, adds the task as that parent's last subtask, in its project, and reopens the parent if it is done.
  * Adding rows in their source order with each row's parent reproduces an outline's nesting and order. `createdAt` is
  * at least one past the newest task's, so tasks added within one millisecond, or under a frozen clock, keep the order
@@ -137,14 +138,15 @@ export function addTask(
 	{ id, now }: Creation,
 ): { data: StoreData; task: Task } {
 	const parent = parentId ? data.tasks.find(t => t.id === parentId) : undefined;
+	const section = parent || !input.sectionId ? undefined : data.sections.find(s => s.id === input.sectionId);
 	const task: Task = {
 		id,
 		parentId: parent?.id ?? null,
 		order: parent ? subtasks.nextSiblingOrder(data.tasks, parent.id) : 0,
 		title: input.title,
 		notes: '',
-		projectId: parent ? parent.projectId : input.projectId,
-		sectionId: parent ? null : sectionIn(data, input.projectId, input.sectionId ?? null),
+		projectId: parent ? parent.projectId : (section?.projectId ?? input.projectId),
+		sectionId: section?.id ?? null,
 		labelIds: input.labelIds,
 		due: input.due,
 		recurrence: input.recurrence,
@@ -163,12 +165,6 @@ export function addTask(
 	return { data: { ...data, tasks }, task };
 }
 
-/** `sectionId` when it is a section of `projectId`, else none. */
-function sectionIn(data: StoreData, projectId: string | null, sectionId: string | null): string | null {
-	const section = sectionId === null ? undefined : data.sections.find(s => s.id === sectionId);
-	return section && section.projectId === projectId ? section.id : null;
-}
-
 /**
  * A section moves a top-level task into the section's project, and a new project without a section leaves it in none.
  * Only top-level tasks sit in a section; a subtask shows under its parent. A new project applies to every subtask
@@ -180,7 +176,8 @@ export function updateTask(data: StoreData, id: string, patch: TaskPatch): Store
 	let next: Partial<Task> & Pick<Task, 'id'> = { ...patch, id };
 	if (patch.sectionId !== undefined || (patch.projectId !== undefined && patch.projectId !== task.projectId)) {
 		const section = patch.sectionId ? data.sections.find(s => s.id === patch.sectionId) : undefined;
-		const projectId = section && task.parentId === null ? section.projectId : (patch.projectId ?? task.projectId);
+		const asked = patch.projectId === undefined ? task.projectId : patch.projectId;
+		const projectId = section && task.parentId === null ? section.projectId : asked;
 		next = { ...next, projectId, sectionId: task.parentId === null ? (section?.id ?? null) : null };
 	}
 	const changed = [next];
@@ -348,10 +345,14 @@ export function moveSection(data: StoreData, id: string, index: number): StoreDa
 	return { ...data, sections: data.sections.map(s => (orders.has(s.id) ? { ...s, order: orders.get(s.id)! } : s)) };
 }
 
+/** Every task in a section, done ones and subtasks included: what deleting it removes, so its prompt can count them. */
+export function sectionTasks(tasks: readonly Task[], id: string): Task[] {
+	return tasks.filter(t => t.sectionId === id).flatMap(t => [t, ...subtasks.descendantsOf(tasks, t.id)]);
+}
+
 /** Deleting a section deletes its tasks with their subtasks, as Todoist does and as deleting a project does. */
 export function deleteSection(data: StoreData, id: string): StoreData {
-	const roots = data.tasks.filter(t => t.sectionId === id);
-	const removed = new Set(roots.flatMap(t => [t.id, ...subtasks.descendantsOf(data.tasks, t.id).map(d => d.id)]));
+	const removed = new Set(sectionTasks(data.tasks, id).map(t => t.id));
 	return {
 		...data,
 		sections: data.sections.filter(s => s.id !== id),

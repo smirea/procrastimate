@@ -42,6 +42,7 @@ public enum StoreRules {
         return tasks.map { byId[$0.id] ?? $0 }
     }
 
+    /// A section puts a top-level task in that section and its project, as in `updateTask`.
     /// With a `parentId`, adds the task as that parent's last subtask, in its project, and reopens the parent if it is
     /// done. Adding rows in their source order with each row's parent reproduces an outline's nesting and order.
     /// `createdAt` is at least one past the newest task's, so tasks added within one millisecond, or under a frozen
@@ -53,13 +54,14 @@ public enum StoreRules {
         _ creation: Creation
     ) -> (data: StoreData, task: TaskItem) {
         let parent = parentId.flatMap { id in data.tasks.first { $0.id == id } }
+        let section = parent == nil ? input.sectionId.flatMap { id in data.sections.first { $0.id == id } } : nil
         let task = TaskItem(
             id: creation.id,
             parentId: parent?.id,
             order: parent.map { Subtasks.nextSiblingOrder(data.tasks, $0.id) } ?? 0,
             title: input.title,
-            projectId: parent.map(\.projectId) ?? input.projectId,
-            sectionId: parent == nil ? section(in: data, input.projectId, input.sectionId) : nil,
+            projectId: parent.map(\.projectId) ?? section?.projectId ?? input.projectId,
+            sectionId: section?.id,
             labelIds: input.labelIds,
             due: input.due,
             recurrence: input.recurrence,
@@ -71,12 +73,6 @@ public enum StoreRules {
         next.tasks = data.tasks + [task]
         if let parent { next.tasks = put(next.tasks, Subtasks.reopenTask(next.tasks, parent.id)) }
         return (next, task)
-    }
-
-    /// `sectionId` when it is a section of `projectId`, else none.
-    static func section(in data: StoreData, _ projectId: String?, _ sectionId: String?) -> String? {
-        guard let sectionId, let section = data.sections.first(where: { $0.id == sectionId }) else { return nil }
-        return section.projectId == projectId ? section.id : nil
     }
 
     /// A section moves a top-level task into the section's project, and a new project without a section leaves it in
@@ -355,10 +351,14 @@ public enum StoreRules {
         return next
     }
 
+    /// Every task in a section, done ones and subtasks included: what deleting it removes, so its prompt can count them.
+    public static func sectionTasks(_ tasks: [TaskItem], _ id: String) -> [TaskItem] {
+        tasks.filter { $0.sectionId == id }.flatMap { [$0] + Subtasks.descendantsOf(tasks, $0.id) }
+    }
+
     /// Deleting a section deletes its tasks with their subtasks, as Todoist does and as deleting a project does.
     public static func deleteSection(_ data: StoreData, _ id: String) -> StoreData {
-        let roots = data.tasks.filter { $0.sectionId == id }
-        let removed = Set(roots.flatMap { [$0.id] + Subtasks.descendantsOf(data.tasks, $0.id).map(\.id) })
+        let removed = Set(sectionTasks(data.tasks, id).map(\.id))
         var next = data
         next.sections = data.sections.filter { $0.id != id }
         next.tasks = data.tasks.filter { !removed.contains($0.id) }

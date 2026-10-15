@@ -4,6 +4,7 @@
 	import DotsThree from 'phosphor-svelte/lib/DotsThree';
 	import PencilSimple from 'phosphor-svelte/lib/PencilSimple';
 	import Trash from 'phosphor-svelte/lib/Trash';
+	import { sectionTasks } from 'shared/store.ts';
 	import type { Section, Task } from 'shared/task.ts';
 	import AddTaskButton from './AddTaskButton.svelte';
 	import Popover from './Popover.svelte';
@@ -21,6 +22,7 @@
 		canAdd,
 	}: { section: Section; tasks: Task[]; index: number; count: number; editable: boolean; canAdd: boolean } = $props();
 
+	const removing = $derived(sectionTasks(store.tasks, section.id).length);
 	let renaming = $state(false);
 	let confirmingDelete = $state(false);
 
@@ -72,7 +74,7 @@
 					{#snippet children({ close })}
 						{#if confirmingDelete}
 							<div class="w-60 p-1.5 text-[13px]">
-								<p>Delete <strong>{section.name}</strong>{tasks.length ? ` and its ${tasks.length} task${tasks.length === 1 ? '' : 's'}` : ''}?</p>
+								<p>Delete <strong>{section.name}</strong>{removing ? ` and its ${removing} task${removing === 1 ? '' : 's'}` : ''}?</p>
 								<div class="mt-2 flex justify-end gap-1.5">
 									<button type="button" class="btn btn-quiet" onclick={close}>Cancel</button>
 									<button

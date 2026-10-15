@@ -19,6 +19,8 @@ struct ProjectScreen: View {
             let count = groups.reduce(0) { $0 + $1.tasks.count }
             let done = showCompleted
                 ? Views.completedTasks(data.tasks.filter { $0.projectId == project.id }, .init(), in: store.timeZone) : []
+            // A view-only shared project takes no new tasks, as on the web.
+            let canAdd = space == .own || count == 0 || groups.contains { $0.tasks.contains { !store.isReadOnly($0.id) } }
             TaskListScreen(
                 title: project.name,
                 isEmpty: count == 0 && sections.isEmpty && !showCompleted,
@@ -35,7 +37,9 @@ struct ProjectScreen: View {
                             tasks: entry.tasks,
                             index: index,
                             count: sections.count,
-                            editable: space == .own
+                            editable: space == .own,
+                            canAdd: canAdd,
+                            removing: StoreRules.sectionTasks(data.tasks, entry.section.id).count
                         )
                     }
                 }
@@ -77,6 +81,9 @@ private struct SectionHeading: View {
     let index: Int
     let count: Int
     let editable: Bool
+    let canAdd: Bool
+    /// How many tasks deleting the section removes, done ones and subtasks included.
+    let removing: Int
 
     @State private var renaming = false
     @State private var draft = ""
@@ -85,8 +92,10 @@ private struct SectionHeading: View {
     var body: some View {
         // A plain List never shows a header's `.contextMenu`, so a long press opens this menu and a tap does nothing.
         Menu {
-            Button("Add task", systemImage: "plus") {
-                navigator.sheet = .quickAdd(QuickAddDefaults(projectId: section.projectId, sectionId: section.id))
+            if canAdd {
+                Button("Add task", systemImage: "plus") {
+                    navigator.sheet = .quickAdd(QuickAddDefaults(projectId: section.projectId, sectionId: section.id))
+                }
             }
             Button("Copy as Markdown", systemImage: "doc.on.doc") {
                 actions.copyAsMarkdown(
@@ -143,7 +152,7 @@ private struct SectionHeading: View {
             .keyboardShortcut(.defaultAction)
         }
         .confirmationDialog(
-            Browse.deleteSectionPrompt(section.name, taskCount: tasks.count),
+            Browse.deleteSectionPrompt(section.name, taskCount: removing),
             isPresented: $confirmingDelete,
             titleVisibility: .visible
         ) {

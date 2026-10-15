@@ -1806,7 +1806,7 @@ extension API {
     public struct NewTask: Codable, Hashable, Sendable {
         public var title: String
         public var projectId: String?
-        /// A section of `projectId`; any other is dropped.
+        /// A section puts the task in its project. A subtask gets none.
         public var sectionId: String?
         public var labelIds: [String]
         public var due: Due?

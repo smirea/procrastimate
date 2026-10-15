@@ -84,6 +84,7 @@ export function createTask(space: Space, input: AgentNewTask): Task {
 					projects: visible.projects,
 					sections: visible.sections,
 					labels: visible.labels,
+					projectId: input.projectId ?? null,
 				})
 			: null;
 		const title = (input.title ?? parsed?.title ?? '').trim();

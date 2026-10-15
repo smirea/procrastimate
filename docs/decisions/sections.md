@@ -14,8 +14,8 @@ Todoist-style sections: named headings inside one project that group its tasks.
 
 `shared/store.ts`, ported to `StoreRules.swift` with vectors:
 
-- `updateTask` with a `sectionId` moves a top-level task into that section's project. A new `projectId` without a `sectionId` leaves the task in no section, and `sectionId: null` keeps the project. A section outside the task's project is dropped, and so is any section on a subtask. `addTask` follows the same rule for `NewTask.sectionId`.
-- **Deleting a section deletes its tasks**, subtasks included, as Todoist does and as deleting a project does. Both clients confirm with `Delete <name> and its N tasks?`, or `Delete <name>?` when it is empty. Moving tasks to `No section` first is how to keep them.
+- `updateTask` with a `sectionId` moves a top-level task into that section's project. A new `projectId` without a `sectionId` leaves the task in no section, `projectId: null` moves it to Inbox, and `sectionId: null` keeps the project. A subtask never takes a section. `addTask` follows the same rule for `NewTask.sectionId`, so the agent API can create a task from a section id alone.
+- **Deleting a section deletes its tasks**, subtasks included, as Todoist does and as deleting a project does. Both clients confirm with `Delete <name> and its N tasks?`, counting done tasks and subtasks (`sectionTasks`), or `Delete <name>?` when it holds none. Moving tasks to `No section` first is how to keep them.
 - Deleting a project deletes its sections too.
 
 ## Concurrent edits
@@ -40,4 +40,4 @@ Sections follow their project's visibility: a guest sees every section of each p
 
 ## Todoist import
 
-Each `section` row starts a section in that project, and the top-level tasks after it, until the next section row, belong to it. Subtasks sit in no section. A section's source key is `todoist:section:<project id>:<name>`, numbered like task keys when a name repeats. On import, a section matches by source key, then by name in its project. Re-importing a backup puts already-imported top-level tasks that are still in no section, and still in that project, into their section, so a backup imported before sections existed gains them; task source keys never included the section, so they are unchanged. Todoist's Inbox can hold sections but ours is not a project, so those rows are left out with a warning.
+Each `section` row starts a section in that project, and the top-level tasks after it, until the next section row, belong to it. Subtasks sit in no section. A section's source key is `todoist:section:<project id>:<name>`, numbered like task keys when a name repeats. On import, a section matches by source key, then by name in its project. A repeated name in one project lands in the one section that has it, since names are unique per project. A section row also ends the indent nesting above it, in Inbox too. Re-importing a backup puts already-imported top-level tasks that are still in no section, and still in that project, into their section, so a backup imported before sections existed gains them. Task source keys never included the section, so they are unchanged for Todoist's exports, which always start a section with an unindented task. Todoist's Inbox can hold sections but ours is not a project, so those rows are left out with a warning.
