@@ -132,7 +132,7 @@
 		<h2 class="font-medium tracking-wide uppercase">Subtasks</h2>
 		<div class="flex items-center gap-1">
 			{#if progress}<SubtaskProgress {progress} />{/if}
-			{#if editable && children.length}
+			{#if store.homeOf(task.id) === null && children.length}
 				<Popover label="Turn into tasks" align="end">
 					{#snippet trigger({ toggle })}
 						<button type="button" class="hit-area relative grid size-6 place-items-center rounded-full text-muted transition-colors hover:text-ink" aria-label="Subtask actions" onclick={toggle}>

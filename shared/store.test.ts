@@ -278,6 +278,24 @@ describe('exploding subtasks', () => {
 		]);
 	});
 
+	test('undo leaves a subtask where it is when its parent was deleted since', () => {
+		const { data: next, previous } = explodeSubtasks(outline(), 'trip', 'prefix');
+		const { data: deleted } = deleteTask(next, 'trip');
+		expect(shape(restoreExploded(deleted, previous))).toEqual([
+			{ id: 'passport', parentId: null, order: 0, title: 'passport', labelIds: [], due: null, priority: 4 },
+			{
+				id: 'charger',
+				parentId: null,
+				order: 0,
+				title: 'charger',
+				labelIds: ['phone'],
+				due: { date: '2026-10-20', time: null },
+				priority: 1,
+			},
+			{ id: 'photo', parentId: 'passport', order: 0, title: 'photo', labelIds: [], due: null, priority: 4 },
+		]);
+	});
+
 	test('a task without subtasks, or a missing one, changes nothing', () => {
 		expect(explodeSubtasks(outline(), 'photo', 'direct')).toEqual({ data: outline(), previous: [] });
 		expect(explodeSubtasks(outline(), 'missing', 'direct')).toEqual({ data: outline(), previous: [] });

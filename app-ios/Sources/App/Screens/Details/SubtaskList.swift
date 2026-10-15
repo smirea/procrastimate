@@ -37,7 +37,7 @@ struct SubtaskList: View {
                     .accessibilityAddTraits(.isHeader)
                 Spacer()
                 if let progress { SubtaskProgress(progress: progress).font(.caption) }
-                if !children.isEmpty, !store.isReadOnly(task.id) { ExplodeMenu(task: task) }
+                if !children.isEmpty, taskSpace == .own { ExplodeMenu(task: task) }
             }
             .padding(.horizontal, 4)
 

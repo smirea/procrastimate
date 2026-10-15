@@ -247,8 +247,13 @@ export function explodeSubtasks(
 	return { data: { ...data, tasks: put(data.tasks, changed) }, previous };
 }
 
+/** A subtask whose parent was deleted since stays where it is, so it never goes unreachable. */
 export function restoreExploded(data: StoreData, previous: readonly ExplodedState[]): StoreData {
-	return { ...data, tasks: put(data.tasks, previous) };
+	const ids = new Set(data.tasks.map(t => t.id));
+	const restored = previous.map(({ parentId, order, ...state }) =>
+		parentId === null || ids.has(parentId) ? { ...state, parentId, order } : state,
+	);
+	return { ...data, tasks: put(data.tasks, restored) };
 }
 
 export function addProject(

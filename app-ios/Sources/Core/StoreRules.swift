@@ -206,15 +206,19 @@ public enum StoreRules {
         return (next, previous)
     }
 
-    /// Puts back what exploding subtasks changed, as its undo captured it.
+    /// Puts back what exploding subtasks changed, as its undo captured it. A subtask whose parent was deleted since
+    /// stays where it is, so it never goes unreachable.
     public static func restoreExploded(_ data: StoreData, _ previous: [ExplodedState]) -> StoreData {
         let byId = Dictionary(previous.map { ($0.id, $0) }, uniquingKeysWith: { _, last in last })
+        let ids = Set(data.tasks.map(\.id))
         var next = data
         next.tasks = data.tasks.map { task in
             guard let state = byId[task.id] else { return task }
             var task = task
-            task.parentId = state.parentId
-            task.order = state.order
+            if state.parentId.map(ids.contains) ?? true {
+                task.parentId = state.parentId
+                task.order = state.order
+            }
             task.title = state.title
             task.labelIds = state.labelIds
             task.due = state.due
