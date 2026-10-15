@@ -125,6 +125,7 @@ let handlers: [String: Handler] = [
     "ramble": rambleVector,
     "memo-tasks": memoTasksVector,
     "links": linksVector,
+    "sync": syncVector,
 ]
 
 private struct Occurrence: Decodable {
@@ -411,6 +412,14 @@ extension JSONValue: ExpressibleByStringLiteral {
     switch fn {
     case "memoSourceKey": return try json(MemoTasks.memoSourceKey(a(0)))
     case "parseMemoSource": return try json(MemoTasks.parseMemoSource(a(0)))
+    default: throw unknown(fn)
+    }
+}
+
+@Sendable func syncVector(_ fn: String, _ a: Args) throws -> JSONValue {
+    switch fn {
+    case "enqueue": return try json(SyncEngine.enqueue(a(0), a(1)))
+    case "seedPatches": return try json(SyncEngine.seedPatches(server: a(0), local: a(1)))
     default: throw unknown(fn)
     }
 }

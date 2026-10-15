@@ -1,0 +1,631 @@
+{
+	"module": "sync",
+	"timeZone": "America/New_York",
+	"cases": [
+		{
+			"fn": "enqueue",
+			"test": "enqueue › each field keeps the clock it was written at",
+			"input": [
+				[
+					{
+						"fields": {
+							"completedAt": 10,
+							"title": "Draft"
+						},
+						"hlc": "10:0:a",
+						"id": "t",
+						"kind": "task",
+						"opId": "1"
+					}
+				],
+				[
+					{
+						"fields": {
+							"title": "Final"
+						},
+						"hlc": "20:0:a",
+						"id": "t",
+						"kind": "task",
+						"opId": "2"
+					},
+					{
+						"fields": {
+							"notes": "n"
+						},
+						"hlc": "30:0:a",
+						"id": "t",
+						"kind": "task",
+						"opId": "3"
+					}
+				]
+			],
+			"output": [
+				{
+					"fields": {
+						"completedAt": 10
+					},
+					"hlc": "10:0:a",
+					"id": "t",
+					"kind": "task",
+					"opId": "1"
+				},
+				{
+					"fields": {
+						"title": "Final"
+					},
+					"hlc": "20:0:a",
+					"id": "t",
+					"kind": "task",
+					"opId": "2"
+				},
+				{
+					"fields": {
+						"notes": "n"
+					},
+					"hlc": "30:0:a",
+					"id": "t",
+					"kind": "task",
+					"opId": "3"
+				}
+			]
+		},
+		{
+			"fn": "enqueue",
+			"test": "enqueue › edits to an entity created since the last sync fold into its create under the newest id and clock",
+			"input": [
+				[
+					{
+						"fields": {
+							"title": "Other"
+						},
+						"hlc": "5:0:a",
+						"id": "u",
+						"kind": "task",
+						"opId": "other"
+					},
+					{
+						"fields": {
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"deleted": false,
+							"due": null,
+							"event": null,
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"sourceKey": null,
+							"title": ""
+						},
+						"hlc": "10:0:a",
+						"id": "t",
+						"kind": "task",
+						"opId": "c-1"
+					}
+				],
+				[
+					{
+						"fields": {
+							"title": "Milk"
+						},
+						"hlc": "20:0:a",
+						"id": "t",
+						"kind": "task",
+						"opId": "2"
+					},
+					{
+						"fields": {
+							"priority": 1
+						},
+						"hlc": "30:0:a",
+						"id": "t",
+						"kind": "task",
+						"opId": "3"
+					}
+				]
+			],
+			"output": [
+				{
+					"fields": {
+						"title": "Other"
+					},
+					"hlc": "5:0:a",
+					"id": "u",
+					"kind": "task",
+					"opId": "other"
+				},
+				{
+					"fields": {
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": null,
+						"deleted": false,
+						"due": null,
+						"event": null,
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 1,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sourceKey": null,
+						"title": "Milk"
+					},
+					"hlc": "30:0:a",
+					"id": "t",
+					"kind": "task",
+					"opId": "3"
+				}
+			]
+		},
+		{
+			"fn": "enqueue",
+			"test": "enqueue › a delete replaces the edits queued for its entity, and an undo replaces the delete",
+			"input": [
+				[
+					{
+						"fields": {
+							"title": "x"
+						},
+						"hlc": "10:0:a",
+						"id": "t",
+						"kind": "task",
+						"opId": "1"
+					},
+					{
+						"fields": {
+							"title": "y"
+						},
+						"hlc": "11:0:a",
+						"id": "u",
+						"kind": "task",
+						"opId": "2"
+					}
+				],
+				[
+					{
+						"fields": {
+							"deleted": true
+						},
+						"hlc": "20:0:a",
+						"id": "t",
+						"kind": "task",
+						"opId": "3"
+					}
+				]
+			],
+			"output": [
+				{
+					"fields": {
+						"title": "y"
+					},
+					"hlc": "11:0:a",
+					"id": "u",
+					"kind": "task",
+					"opId": "2"
+				},
+				{
+					"fields": {
+						"deleted": true
+					},
+					"hlc": "20:0:a",
+					"id": "t",
+					"kind": "task",
+					"opId": "3"
+				}
+			]
+		},
+		{
+			"fn": "enqueue",
+			"test": "enqueue › a delete replaces the edits queued for its entity, and an undo replaces the delete",
+			"input": [
+				[
+					{
+						"fields": {
+							"title": "y"
+						},
+						"hlc": "11:0:a",
+						"id": "u",
+						"kind": "task",
+						"opId": "2"
+					},
+					{
+						"fields": {
+							"deleted": true
+						},
+						"hlc": "20:0:a",
+						"id": "t",
+						"kind": "task",
+						"opId": "3"
+					}
+				],
+				[
+					{
+						"fields": {
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"deleted": false,
+							"due": null,
+							"event": null,
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"sourceKey": null,
+							"title": "t"
+						},
+						"hlc": "30:0:a",
+						"id": "t",
+						"kind": "task",
+						"opId": "r-1"
+					}
+				]
+			],
+			"output": [
+				{
+					"fields": {
+						"title": "y"
+					},
+					"hlc": "11:0:a",
+					"id": "u",
+					"kind": "task",
+					"opId": "2"
+				},
+				{
+					"fields": {
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": null,
+						"deleted": false,
+						"due": null,
+						"event": null,
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sourceKey": null,
+						"title": "t"
+					},
+					"hlc": "30:0:a",
+					"id": "t",
+					"kind": "task",
+					"opId": "r-1"
+				}
+			]
+		},
+		{
+			"fn": "enqueue",
+			"test": "enqueue › settings ops coalesce by field like any other entity",
+			"input": [
+				[
+					{
+						"fields": {
+							"dictation": "elevenlabs",
+							"timeZone": "Europe/Paris"
+						},
+						"hlc": "10:0:a",
+						"id": "settings",
+						"kind": "settings",
+						"opId": "1"
+					}
+				],
+				[
+					{
+						"fields": {
+							"dictation": "native"
+						},
+						"hlc": "20:0:a",
+						"id": "settings",
+						"kind": "settings",
+						"opId": "2"
+					}
+				]
+			],
+			"output": [
+				{
+					"fields": {
+						"timeZone": "Europe/Paris"
+					},
+					"hlc": "10:0:a",
+					"id": "settings",
+					"kind": "settings",
+					"opId": "1"
+				},
+				{
+					"fields": {
+						"dictation": "native"
+					},
+					"hlc": "20:0:a",
+					"id": "settings",
+					"kind": "settings",
+					"opId": "2"
+				}
+			]
+		},
+		{
+			"fn": "seedPatches",
+			"test": "first sync › with a server that already has the same tasks pushes no ops",
+			"input": [
+				{
+					"labels": [
+						{
+							"createdAt": 1,
+							"id": "l",
+							"name": "l"
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 1,
+							"id": "p",
+							"name": "p"
+						}
+					],
+					"settings": {
+						"dictation": "native",
+						"timeZone": null
+					},
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "t1",
+							"labelIds": [
+								"l"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "p",
+							"recurrence": null,
+							"reminders": [],
+							"title": "t1"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 2,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "t2",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "t2"
+						}
+					]
+				},
+				{
+					"labels": [
+						{
+							"createdAt": 1,
+							"id": "l",
+							"name": "l"
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 1,
+							"id": "p",
+							"name": "p"
+						}
+					],
+					"settings": {
+						"dictation": "native",
+						"timeZone": null
+					},
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "t1",
+							"labelIds": [
+								"l"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "p",
+							"recurrence": null,
+							"reminders": [],
+							"title": "t1"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 2,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "t2",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "t2"
+						}
+					]
+				}
+			],
+			"output": []
+		},
+		{
+			"fn": "seedPatches",
+			"test": "first sync › queues only what the server lacks or holds differently, and keeps the server’s settings",
+			"input": [
+				{
+					"labels": [],
+					"projects": [
+						{
+							"createdAt": 1,
+							"id": "p",
+							"name": "p"
+						}
+					],
+					"settings": {
+						"dictation": "elevenlabs",
+						"timeZone": null
+					},
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "t1",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "p",
+							"recurrence": null,
+							"reminders": [],
+							"title": "t1"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 3,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "theirs",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "theirs"
+						}
+					]
+				},
+				{
+					"labels": [
+						{
+							"createdAt": 1,
+							"id": "mine",
+							"name": "mine"
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 1,
+							"id": "p",
+							"name": "p"
+						}
+					],
+					"settings": {
+						"dictation": "native",
+						"timeZone": "Europe/Paris"
+					},
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "t1",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "p",
+							"recurrence": null,
+							"reminders": [],
+							"title": "Renamed offline"
+						}
+					]
+				}
+			],
+			"output": [
+				{
+					"fields": {
+						"createdAt": 1,
+						"deleted": false,
+						"name": "mine"
+					},
+					"id": "mine",
+					"kind": "label"
+				},
+				{
+					"fields": {
+						"title": "Renamed offline"
+					},
+					"id": "t1",
+					"kind": "task"
+				}
+			]
+		}
+	]
+}

@@ -210,7 +210,7 @@ class Sync {
 		if (parsed.success) store.takeSpaceResponse(owner, parsed.data);
 	}
 
-	/** One round trip. True when the response was a full page, so another round is due. */
+	/** One round trip. True when the response was a full page or seeded the outbox, so another round is due. */
 	async #once(): Promise<boolean> {
 		if (session.state !== 'in' || !store.ready || !store.deviceId()) return false;
 		store.noteTimeZone(zone());
@@ -232,8 +232,8 @@ class Sync {
 			console.warn('sync: unreadable response', parsed.error.issues.slice(0, 5));
 			return false;
 		}
-		store.takeResponse(parsed.data);
-		return 'changes' in parsed.data && parsed.data.changes.length >= SYNC_PAGE_SIZE;
+		const seeded = store.takeResponse(parsed.data);
+		return seeded || ('changes' in parsed.data && parsed.data.changes.length >= SYNC_PAGE_SIZE);
 	}
 }
 

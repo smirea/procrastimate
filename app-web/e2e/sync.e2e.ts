@@ -149,6 +149,34 @@ test('changes made offline apply at once and upload when the network returns', a
 	await expect(b.app.row(`${kept} renamed`)).toBeVisible({ timeout: 10_000 });
 });
 
+test('typing notes shows each keystroke at once and queues one op with the last value', async ({ browser }) => {
+	const [a, b] = await devices(browser);
+	const title = unique('Typed');
+	await a.app.add(title);
+	await settled(a);
+
+	await goOffline(a);
+	await a.app
+		.row(title)
+		.getByRole('button', { name: new RegExp(`^${title}`) })
+		.click();
+	const notes = a.app.details().getByRole('textbox', { name: 'Notes' });
+	await notes.pressSequentially('Buy oat milk');
+	await expect(notes).toHaveValue('Buy oat milk');
+	await expect.poll(() => outbox(a.page)).toBe(1);
+
+	await goOnline(a);
+	await settled(a);
+	await focus(b.page);
+	await b.app
+		.row(title)
+		.getByRole('button', { name: new RegExp(`^${title}`) })
+		.click();
+	await expect(b.app.details().getByRole('textbox', { name: 'Notes' })).toHaveValue('Buy oat milk', {
+		timeout: 10_000,
+	});
+});
+
 test('both devices editing the same task offline converge', async ({ browser }) => {
 	const [a, b] = await devices(browser);
 	const title = unique('Shared');

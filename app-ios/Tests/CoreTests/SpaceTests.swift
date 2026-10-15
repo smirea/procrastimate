@@ -118,7 +118,8 @@ import Testing
 
         #expect(store.space(ofTask: "paint") == .shared("ann"))
         #expect(store.tasks.isEmpty)
-        #expect(outbox(store).map(\.fields["deleted"]) == [.bool(true), .bool(false)])
+        // The undo carries every field with a later clock, so it replaces the queued delete.
+        #expect(outbox(store).map(\.fields["deleted"]) == [.bool(false)])
     }
 
     @Test func aSharedSpaceSyncsWithItsCursorScopeAndOutbox() throws {

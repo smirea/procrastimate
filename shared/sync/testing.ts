@@ -1,4 +1,6 @@
 import { applyResponse, commit, startSync, type ClientSync } from './apply.ts';
+import { diff, stamp } from './diff.ts';
+import { createClock } from './hlc.ts';
 import { applyPush, createServerState, serverHlc, serverSnapshot, type ServerState } from './merge.ts';
 import type { Change, Snapshot, SyncResponse } from './protocol.ts';
 import { emptySnapshot } from './snapshot.ts';
@@ -48,6 +50,10 @@ export const counter = (prefix: string) => {
 	return () => `${prefix}${++n}`;
 };
 
+/** Every entity of a snapshot as create ops, the way a device that already had them would have queued them. */
+export const createOps = (snapshot: Snapshot, node: string, now: number, nextOpId: () => string) =>
+	stamp(diff(emptySnapshot(), snapshot), createClock(node), now, nextOpId).ops;
+
 export class MemoryServer {
 	state: ServerState = createServerState();
 	log: Change[] = [];
@@ -84,7 +90,7 @@ export class MemoryClient {
 	) {
 		this.snapshot = snapshot;
 		this.nextOpId = counter(`${name}-op-`);
-		this.sync = startSync(snapshot, name, skew, this.nextOpId);
+		this.sync = startSync(snapshot.settings, name, skew, this.nextOpId);
 	}
 
 	run(command: (snapshot: Snapshot) => Snapshot, now: number) {
@@ -93,10 +99,17 @@ export class MemoryClient {
 		this.snapshot = after;
 	}
 
-	/** Pushes the outbox and applies the answer, unless the answer is lost on the way back. */
+	/**
+	 * Pushes the outbox and applies the answer, unless the answer is lost on the way back. Like the apps, it goes
+	 * again when the first snapshot seeded the outbox.
+	 */
 	pull(server: MemoryServer, now: number, { lost = false } = {}) {
 		const response = server.sync(this.sync.cursor, this.sync.outbox, now);
 		if (lost) return;
-		({ snapshot: this.snapshot, sync: this.sync } = applyResponse(this.snapshot, this.sync, response));
+		const seeding = this.sync.seed;
+		({ snapshot: this.snapshot, sync: this.sync } = applyResponse(this.snapshot, this.sync, response, now + this.skew, {
+			nextOpId: this.nextOpId,
+		}));
+		if (seeding && !this.sync.seed && this.sync.outbox.length) this.pull(server, now);
 	}
 }

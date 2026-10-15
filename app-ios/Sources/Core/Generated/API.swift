@@ -3634,8 +3634,9 @@ extension API {
         public var dictation: DictationChoice
         public var epoch: Int
         public var reset: Bool
+        public var seed: Bool
 
-        public init(deviceId: String, cursor: Int, outbox: [SyncOp] = [], clock: Hlc, timeZone: String, dictation: DictationChoice = .native, epoch: Int = 0, reset: Bool = false) {
+        public init(deviceId: String, cursor: Int, outbox: [SyncOp] = [], clock: Hlc, timeZone: String, dictation: DictationChoice = .native, epoch: Int = 0, reset: Bool = false, seed: Bool = false) {
             self.deviceId = deviceId
             self.cursor = cursor
             self.outbox = outbox
@@ -3644,6 +3645,7 @@ extension API {
             self.dictation = dictation
             self.epoch = epoch
             self.reset = reset
+            self.seed = seed
         }
 
         enum CodingKeys: String, CodingKey {
@@ -3655,6 +3657,7 @@ extension API {
             case dictation = "dictation"
             case epoch = "epoch"
             case reset = "reset"
+            case seed = "seed"
         }
 
         public init(from decoder: Decoder) throws {
@@ -3667,6 +3670,7 @@ extension API {
             dictation = try container.decodeAbsent(DictationChoice.self, forKey: .dictation) ?? .native
             epoch = try container.decodeAbsent(Int.self, forKey: .epoch) ?? 0
             reset = try container.decodeAbsent(Bool.self, forKey: .reset) ?? false
+            seed = try container.decodeAbsent(Bool.self, forKey: .seed) ?? false
             if decoder.validates {
                 do {
                     let value = self.cursor
@@ -3693,6 +3697,7 @@ extension API {
             try container.encode(self.dictation, forKey: .dictation)
             try container.encode(self.epoch, forKey: .epoch)
             try container.encode(self.reset, forKey: .reset)
+            try container.encode(self.seed, forKey: .seed)
         }
     }
 

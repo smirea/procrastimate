@@ -3,7 +3,7 @@ import { todoistBackupFiles } from '../../../shared/fixtures/todoist-backup.mts'
 import { applyResponse, startSync, type ClientSync } from '../../../shared/sync/apply';
 import { formatHlc } from '../../../shared/sync/hlc';
 import { SYNC_PAGE_SIZE, type Op, type Snapshot, type SyncResponse } from '../../../shared/sync/protocol';
-import { counter, label, project, snapshotOf, task } from '../../../shared/sync/testing';
+import { counter, createOps, label, project, snapshotOf, task } from '../../../shared/sync/testing';
 import { mergeBackup, readTodoistBackup } from '../../../shared/todoist';
 import api from '../api';
 import type { Env } from '../bindings';
@@ -49,18 +49,24 @@ describe.each(storeFactories)('POST /api/sync on the %s store', (_name, createSt
 
 	async function device(name: string, snapshot: Snapshot) {
 		const cred = await setup(name);
+		const nextOpId = counter(`${name}-op-`);
 		const client: { snapshot: Snapshot; sync: ClientSync } = {
 			snapshot,
-			sync: startSync(snapshot, cred.deviceId, Date.now(), counter(`${name}-op-`)),
+			sync: startSync(snapshot.settings, cred.deviceId, Date.now(), nextOpId),
 		};
-		return {
-			client,
-			async pull() {
-				const response = await sync(cred, client.sync.cursor, client.sync.outbox);
-				({ snapshot: client.snapshot, sync: client.sync } = applyResponse(client.snapshot, client.sync, response));
-				return response;
-			},
+		const pull = async (): Promise<SyncResponse> => {
+			const response = await sync(cred, client.sync.cursor, client.sync.outbox);
+			const seeding = client.sync.seed;
+			({ snapshot: client.snapshot, sync: client.sync } = applyResponse(
+				client.snapshot,
+				client.sync,
+				response,
+				Date.now(),
+				{ nextOpId },
+			));
+			return seeding && client.sync.outbox.length ? pull() : response;
 		};
+		return { client, pull };
 	}
 
 	const serverSnapshot = async (): Promise<Snapshot | null> => {
@@ -86,7 +92,7 @@ describe.each(storeFactories)('POST /api/sync on the %s store', (_name, createSt
 	test('a retried push applies once and answers the same', async () => {
 		const cred = await setup();
 		const created = task('t1', { createdAt: NOW, title: 'A' });
-		const ops = startSync(snapshotOf({ tasks: [created] }), 'mac', NOW, counter('op-')).outbox;
+		const ops = createOps(snapshotOf({ tasks: [created] }), 'mac', NOW, counter('op-'));
 		const first = await sync(cred, 0, ops);
 		const head = store.lastSeq();
 		const retry = await sync(cred, 0, ops);
@@ -98,7 +104,7 @@ describe.each(storeFactories)('POST /api/sync on the %s store', (_name, createSt
 	test('logs every op, even one that won nothing, so a retry with a clamped clock cannot win again', async () => {
 		const mac = await setup('mac');
 		const phone = await setup('phone');
-		await sync(mac, 0, startSync(snapshotOf({ tasks: [task('t1')] }), 'mac', NOW, counter('op-')).outbox);
+		await sync(mac, 0, createOps(snapshotOf({ tasks: [task('t1')] }), 'mac', NOW, counter('op-')));
 		const head = store.lastSeq();
 		const future = op('future', formatHlc({ wall: NOW + 3_600_000, counter: 0, node: 'mac' }), { title: 'Ahead' });
 		const stale = op('stale', formatHlc({ wall: 1, counter: 0, node: 'mac' }), { notes: 'Stale' });
@@ -124,7 +130,7 @@ describe.each(storeFactories)('POST /api/sync on the %s store', (_name, createSt
 		await sync(cred, 0, [op('seed', `${NOW}:0:mac`, { ...task('seed'), deleted: false }, 'seed')]);
 		const head = store.lastSeq();
 		const tasks = Array.from({ length: SYNC_PAGE_SIZE + 5 }, (_, i) => task(`t${i}`, { createdAt: NOW + i }));
-		const ops = startSync(snapshotOf({ tasks }), 'mac', NOW, counter('op-')).outbox;
+		const ops = createOps(snapshotOf({ tasks }), 'mac', NOW, counter('op-'));
 		const first = await sync(cred, head, ops);
 		if (!('changes' in first)) throw new Error('expected changes');
 		expect(first.changes.map(change => change.seq)).toEqual(tasks.slice(0, SYNC_PAGE_SIZE).map((_, i) => head + i + 1));
@@ -243,8 +249,7 @@ describe.each(storeFactories)('POST /api/sync on the %s store', (_name, createSt
 		const created = await sync(
 			cred,
 			0,
-			startSync(snapshotOf({ tasks: [task('t1', { createdAt: NOW, title: 'Keep' })] }), 'mac', NOW, counter('op-'))
-				.outbox,
+			createOps(snapshotOf({ tasks: [task('t1', { createdAt: NOW, title: 'Keep' })] }), 'mac', NOW, counter('op-')),
 		);
 		expect(created.epoch).toBe(0);
 		expect('snapshot' in created && created.snapshot.tasks.map(t => t.title)).toEqual(['Keep']);
@@ -262,12 +267,12 @@ describe.each(storeFactories)('POST /api/sync on the %s store', (_name, createSt
 		expect(rejected).toMatchObject({ acked: [], epoch: 1 });
 		expect('snapshot' in rejected && rejected.snapshot.tasks).toEqual([]);
 
-		const ops = startSync(
+		const ops = createOps(
 			snapshotOf({ tasks: [task('t2', { createdAt: NOW, title: 'Next' })] }),
 			'mac',
 			NOW + 6,
 			counter('next-'),
-		).outbox;
+		);
 		const added = await post({ cursor: 0, epoch: 1, ops }, cred);
 		const next = (await added.json()) as SyncResponse;
 		expect(next.epoch).toBe(1);
@@ -282,7 +287,7 @@ describe.each(storeFactories)('POST /api/sync on the %s store', (_name, createSt
 		);
 		const { user } = (await session.json()) as { user: { id: string } };
 		const orphan = task('child', { createdAt: NOW, parentId: 'gone' });
-		const ops = startSync(snapshotOf({ tasks: [orphan] }), 'mac', NOW, counter('op-')).outbox;
+		const ops = createOps(snapshotOf({ tasks: [orphan] }), 'mac', NOW, counter('op-'));
 		await sync(cred, 0, ops);
 
 		expect(store.logAfter(0, 10).map(({ opId, actor, at }) => ({ opId, actor, at }))).toEqual([

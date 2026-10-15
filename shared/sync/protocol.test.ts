@@ -1,7 +1,6 @@
 import { describe, expect, test } from 'bun:test';
-import { startSync } from './apply.ts';
 import { opSchema, syncRequestSchema, syncResponseSchema } from './protocol.ts';
-import { counter, MemoryServer, project, snapshotOf, task } from './testing.ts';
+import { counter, createOps, MemoryServer, project, snapshotOf, task } from './testing.ts';
 
 describe('protocol', () => {
 	const local = snapshotOf({
@@ -10,13 +9,13 @@ describe('protocol', () => {
 	});
 
 	test('a request built from a diff parses as itself', () => {
-		const request = { cursor: 0, epoch: 0, scope: '', ops: startSync(local, 'dev', 1, counter('op-')).outbox };
+		const request = { cursor: 0, epoch: 0, scope: '', ops: createOps(local, 'dev', 1, counter('op-')) };
 		expect(syncRequestSchema.parse(JSON.parse(JSON.stringify(request)))).toEqual(request);
 	});
 
 	test('both response shapes parse as themselves', () => {
 		const server = new MemoryServer();
-		const ops = startSync(local, 'dev', 1, counter('op-')).outbox;
+		const ops = createOps(local, 'dev', 1, counter('op-'));
 		const first = server.sync(0, ops, 10);
 		const next = server.sync(1, [], 20);
 		expect(syncResponseSchema.parse(JSON.parse(JSON.stringify(first)))).toEqual(first);
