@@ -24,13 +24,13 @@ struct TaskRow: View {
                 .accessibilityLabel("Complete \(task.title)")
                 .accessibilityValue(Format.priorityLabel(task.priority))
             VStack(alignment: .leading, spacing: 2) {
-                Text(task.title)
+                Text(Links.attributed(task.title))
                     .font(.body)
                     .foregroundStyle(checking ? Color.faint : Color.ink)
                     .strikethrough(checking, color: .faint)
                     .lineLimit(1)
                 if !task.notes.isEmpty {
-                    Text(task.notes).font(.footnote).foregroundStyle(.muted).lineLimit(1)
+                    Text(Links.attributed(task.notes)).font(.footnote).foregroundStyle(.muted).lineLimit(1)
                 }
                 details
             }

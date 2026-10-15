@@ -33,6 +33,7 @@
   - A number after `$`, `€`, or `£`, or after a decimal point, is not a time or an offset.
   - `1/2` always reads as January 2.
   - A word right after `#` or `@` is a name or a handle, so `@5pm`, `@tomorrow`, `@p1`, and `@urgent` stay text.
+  - A link is never a phrase, so `5m`, `p1`, `3pm`, `#anchor`, or `@user` inside a URL or a Markdown link stays part of it. The parser masks every link `linkify` finds (see Links in [Domain](domain.md)) before any rule runs.
 - **Parsing order.** Reminders claim their text first, then recurrence, project, labels, priority, and the due date. A later rule never reads text an earlier rule recognized, so `every wed 9am` is one repeat and one time. That includes an earlier copy of a repeated phrase.
 - **Projects.** `#Name` assigns an existing project, matched case-insensitively. It is highlighted only when the project exists.
 - **Labels.** `@name` adds an existing label, matched case-insensitively, anywhere in the text. Every `@label` counts, and a label typed twice is added once. Like `#`, the `@` must start the text or follow a space, and the name must end the word, so `bob@site.com`, `you@calls`, `@calls.com`, and `@callsign` stay text. An `@word` that names no label stays in the title. Typing labels in the task details title adds them to the task's labels and never removes any.

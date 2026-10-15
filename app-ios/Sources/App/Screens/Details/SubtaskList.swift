@@ -151,32 +151,34 @@ private struct SubtaskRow<Reorder: Gesture>: View {
             Checkbox(checked: done, tone: child.priority.tone) { toggle(done) }
                 .accessibilityLabel("Complete \(child.title)")
                 .accessibilityAddTraits(done ? .isSelected : [])
-            Button(action: open) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(child.title)
-                        .font(.subheadline)
-                        .foregroundStyle(done ? Color.faint : Color.ink)
-                        .strikethrough(done, color: .faint)
-                        .multilineTextAlignment(.leading)
-                    if (child.due != nil && !done) || progress != nil {
-                        HStack(spacing: 10) {
-                            if let due = child.due, !done {
-                                HStack(spacing: 3) {
-                                    Image(systemName: "calendar").imageScale(.small)
-                                    Text(Format.formatDue(due, today))
-                                }
-                                .foregroundStyle(Format.dueTone(due, today).color)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(Links.attributed(child.title))
+                    .font(.subheadline)
+                    .foregroundStyle(done ? Color.faint : Color.ink)
+                    .strikethrough(done, color: .faint)
+                    .multilineTextAlignment(.leading)
+                if (child.due != nil && !done) || progress != nil {
+                    HStack(spacing: 10) {
+                        if let due = child.due, !done {
+                            HStack(spacing: 3) {
+                                Image(systemName: "calendar").imageScale(.small)
+                                Text(Format.formatDue(due, today))
                             }
-                            if let progress { SubtaskProgress(progress: progress) }
+                            .foregroundStyle(Format.dueTone(due, today).color)
                         }
-                        .font(.caption)
+                        if let progress { SubtaskProgress(progress: progress) }
                     }
+                    .font(.caption)
                 }
-                .padding(.vertical, 8)
-                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-                .contentShape(.rect)
             }
-            .buttonStyle(.plain)
+            .padding(.vertical, 8)
+            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+            .contentShape(.rect)
+            // A tap gesture rather than a Button, which would swallow taps on a link in the title.
+            .onTapGesture(perform: open)
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(.isButton)
+            .accessibilityAction { open() }
             .accessibilityIdentifier("subtask-\(child.title)")
             if reorderable {
                 Image(systemName: "line.3.horizontal")

@@ -12,17 +12,20 @@ struct SearchResultRow: View {
     let open: () -> Void
 
     var body: some View {
-        Button(action: open) {
-            content
-                .frame(maxWidth: .infinity, minHeight: 32, alignment: .leading)
-                .contentShape(.rect)
-        }
-        .listRowBackground(selected ? Color.ink.opacity(0.07) : Color.clear)
-        .swipeActions(edge: .leading, allowsFullSwipe: true) { taskAction }
-        .contextMenu { taskAction }
-        .accessibilityLabel(spokenLabel)
-        .accessibilityIdentifier(identifier)
-        .accessibilityValue(matchReadout)
+        // A tap gesture rather than a Button, which would swallow taps on a link in the text.
+        content
+            .frame(maxWidth: .infinity, minHeight: 32, alignment: .leading)
+            .contentShape(.rect)
+            .onTapGesture(perform: open)
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(.isButton)
+            .accessibilityAction { open() }
+            .listRowBackground(selected ? Color.ink.opacity(0.07) : Color.clear)
+            .swipeActions(edge: .leading, allowsFullSwipe: true) { taskAction }
+            .contextMenu { taskAction }
+            .accessibilityLabel(spokenLabel)
+            .accessibilityIdentifier(identifier)
+            .accessibilityValue(matchReadout)
     }
 
     /// The row's visible strings in reading order, so VoiceOver and XCUITests read what the row shows.
@@ -126,12 +129,13 @@ private struct TaskResult: View {
             Status(done: done, tone: task.priority.tone)
                 .padding(.top, 2)
             VStack(alignment: .leading, spacing: 2) {
-                Text((hit.matches[.title]?.first ?? Search.Highlight(text: task.title, ranges: [])).attributed)
+                Text(Links.attributed(task.title, hit.matches[.title]?.first?.ranges ?? []))
                     .foregroundStyle(done ? Color.faint : Color.ink)
                     .strikethrough(done, color: .faint)
                     .lineLimit(1)
                 if let notes = hit.matches[.notes]?.first {
-                    Text(Search.excerpt(notes).attributed)
+                    let excerpt = Search.excerpt(notes)
+                    Text(Links.attributed(excerpt.text, excerpt.ranges))
                         .font(.footnote)
                         .foregroundStyle(.muted)
                         .lineLimit(1)
