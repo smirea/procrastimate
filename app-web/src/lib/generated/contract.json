@@ -93,13 +93,262 @@
 			}
 		}
 	},
+	"people": {
+		"search": {
+			"~orpc": {
+				"errorMap": {},
+				"meta": {
+					"~openapi": {
+						"method": "GET",
+						"path": "/api/people",
+						"inputStructure": "detailed"
+					}
+				}
+			}
+		}
+	},
+	"me": {
+		"~orpc": {
+			"errorMap": {},
+			"meta": {
+				"~openapi": {
+					"method": "GET",
+					"path": "/api/me"
+				}
+			}
+		}
+	},
+	"ai": {
+		"list": {
+			"~orpc": {
+				"errorMap": {},
+				"meta": {
+					"~openapi": {
+						"method": "GET",
+						"path": "/api/ai"
+					}
+				}
+			}
+		},
+		"create": {
+			"~orpc": {
+				"errorMap": {},
+				"meta": {
+					"~openapi": {
+						"method": "POST",
+						"path": "/api/ai"
+					}
+				}
+			}
+		},
+		"delete": {
+			"~orpc": {
+				"errorMap": {},
+				"meta": {
+					"~openapi": {
+						"method": "DELETE",
+						"path": "/api/ai",
+						"inputStructure": "detailed"
+					}
+				}
+			}
+		}
+	},
+	"shared": {
+		"view": {
+			"~orpc": {
+				"errorMap": {},
+				"meta": {
+					"~openapi": {
+						"method": "GET",
+						"path": "/api/shared",
+						"inputStructure": "detailed"
+					}
+				}
+			}
+		}
+	},
 	"sync": {
 		"~orpc": {
 			"errorMap": {},
 			"meta": {
 				"~openapi": {
 					"method": "POST",
-					"path": "/api/sync"
+					"path": "/api/sync",
+					"inputStructure": "detailed"
+				}
+			}
+		}
+	},
+	"spaces": {
+		"list": {
+			"~orpc": {
+				"errorMap": {},
+				"meta": {
+					"~openapi": {
+						"method": "GET",
+						"path": "/api/spaces"
+					}
+				}
+			}
+		}
+	},
+	"shares": {
+		"list": {
+			"~orpc": {
+				"errorMap": {},
+				"meta": {
+					"~openapi": {
+						"method": "GET",
+						"path": "/api/shares"
+					}
+				}
+			}
+		},
+		"create": {
+			"~orpc": {
+				"errorMap": {},
+				"meta": {
+					"~openapi": {
+						"method": "POST",
+						"path": "/api/shares"
+					}
+				}
+			}
+		},
+		"delete": {
+			"~orpc": {
+				"errorMap": {},
+				"meta": {
+					"~openapi": {
+						"method": "DELETE",
+						"path": "/api/shares",
+						"inputStructure": "detailed"
+					}
+				}
+			}
+		}
+	},
+	"tokens": {
+		"list": {
+			"~orpc": {
+				"errorMap": {},
+				"meta": {
+					"~openapi": {
+						"method": "GET",
+						"path": "/api/ai-tokens"
+					}
+				}
+			}
+		},
+		"create": {
+			"~orpc": {
+				"errorMap": {},
+				"meta": {
+					"~openapi": {
+						"method": "POST",
+						"path": "/api/ai-tokens"
+					}
+				}
+			}
+		},
+		"delete": {
+			"~orpc": {
+				"errorMap": {},
+				"meta": {
+					"~openapi": {
+						"method": "DELETE",
+						"path": "/api/ai-tokens",
+						"inputStructure": "detailed"
+					}
+				}
+			}
+		}
+	},
+	"activity": {
+		"list": {
+			"~orpc": {
+				"errorMap": {},
+				"meta": {
+					"~openapi": {
+						"method": "GET",
+						"path": "/api/activity",
+						"inputStructure": "detailed"
+					}
+				}
+			}
+		}
+	},
+	"view": {
+		"~orpc": {
+			"errorMap": {},
+			"meta": {
+				"~openapi": {
+					"method": "GET",
+					"path": "/api/view",
+					"inputStructure": "detailed"
+				}
+			}
+		}
+	},
+	"tasks": {
+		"create": {
+			"~orpc": {
+				"errorMap": {},
+				"meta": {
+					"~openapi": {
+						"method": "POST",
+						"path": "/api/tasks",
+						"inputStructure": "detailed"
+					}
+				}
+			}
+		},
+		"update": {
+			"~orpc": {
+				"errorMap": {},
+				"meta": {
+					"~openapi": {
+						"method": "PATCH",
+						"path": "/api/tasks",
+						"inputStructure": "detailed"
+					}
+				}
+			}
+		},
+		"complete": {
+			"~orpc": {
+				"errorMap": {},
+				"meta": {
+					"~openapi": {
+						"method": "POST",
+						"path": "/api/tasks/complete",
+						"inputStructure": "detailed"
+					}
+				}
+			}
+		},
+		"reopen": {
+			"~orpc": {
+				"errorMap": {},
+				"meta": {
+					"~openapi": {
+						"method": "POST",
+						"path": "/api/tasks/reopen",
+						"inputStructure": "detailed"
+					}
+				}
+			}
+		},
+		"delete": {
+			"~orpc": {
+				"errorMap": {},
+				"meta": {
+					"~openapi": {
+						"method": "DELETE",
+						"path": "/api/tasks",
+						"inputStructure": "detailed"
+					}
 				}
 			}
 		}

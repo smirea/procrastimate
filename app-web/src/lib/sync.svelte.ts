@@ -160,7 +160,7 @@ class Sync {
 		if (!request) return false;
 		let response: unknown;
 		try {
-			response = await api.sync(request, { signal: AbortSignal.timeout(REQUEST_TIMEOUT) });
+			response = await api.sync({ query: {}, body: request }, { signal: AbortSignal.timeout(REQUEST_TIMEOUT) });
 		} catch (error) {
 			if (isUnauthorized(error)) {
 				session.clear();

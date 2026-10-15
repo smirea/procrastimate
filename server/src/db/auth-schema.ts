@@ -1,4 +1,5 @@
 import { index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import { ACTOR_KINDS } from '../../../shared/values';
 
 /** Better Auth's tables, in the shape its Drizzle adapter expects. Dates are epoch milliseconds. */
 const timestamp = (name: string) => integer(name, { mode: 'timestamp_ms' });
@@ -11,6 +12,9 @@ export const user = sqliteTable('user', {
 	image: text('image'),
 	createdAt: timestamp('createdAt').notNull(),
 	updatedAt: timestamp('updatedAt').notNull(),
+	/** `ai` accounts have no credential, so they never sign in; they act through API tokens their owner made. */
+	kind: text('kind', { enum: ACTOR_KINDS }).notNull().default('human'),
+	ownerId: text('owner_id'),
 });
 
 export const session = sqliteTable(

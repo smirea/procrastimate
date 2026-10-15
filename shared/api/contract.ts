@@ -4,7 +4,21 @@ import { z } from 'zod';
 import { pushRowSchema } from '../db/generated/zod.ts';
 import { memoQuerySchema, memoTasksRequestSchema, memoTasksSchema } from '../memo-tasks.ts';
 import { pushSubscriptionSchema, subscribeRequestSchema } from '../push.ts';
-import { syncRequestSchema, syncResponseSchema } from '../sync/protocol.ts';
+import {
+	activityEntrySchema,
+	agentNewTaskSchema,
+	apiTokenSchema,
+	createdApiTokenSchema,
+	personSchema,
+	shareAudienceSchema,
+	sharedViewSchema,
+	shareTargetSchema,
+	shareViewSchema,
+	spaceSchema,
+	spaceViewSchema,
+} from '../sharing.ts';
+import { taskEditSchema } from '../store.ts';
+import { syncRequestSchema, syncResponseSchema, taskSchema } from '../sync/protocol.ts';
 
 /**
  * Every HTTP endpoint the clients call, as one oRPC contract. The server implements it, the web client calls it
@@ -39,6 +53,27 @@ export const pushKeySchema = z.object({ publicKey: z.string() }).meta({ id: 'Pus
 const pushStatusSchema = z.object({ status: z.number().int().nullable() });
 
 const signedIn = oc.errors({ UNAUTHORIZED: {}, SERVICE_UNAVAILABLE: {} });
+/** `FORBIDDEN` when the caller may not reach the space, or is an AI account on a human-only route. */
+const allowed = signedIn.errors({ FORBIDDEN: {} });
+const found = allowed.errors({ NOT_FOUND: {} });
+
+/** Which space a request is for, by its owner's id. Without it, the caller's own (an AI account's owner's). */
+const spaceQuery = z.object({ space: z.string().optional() });
+const byId = z.object({ id: z.string() });
+const taskQuery = spaceQuery.extend(byId.shape);
+
+export const peopleSchema = z.object({ people: z.array(personSchema) }).meta({ id: 'People' });
+export const aiAccountsSchema = z.object({ accounts: z.array(personSchema) }).meta({ id: 'AiAccounts' });
+export const spacesSchema = z.object({ spaces: z.array(spaceSchema) }).meta({ id: 'Spaces' });
+export const sharesSchema = z.object({ shares: z.array(shareViewSchema) }).meta({ id: 'Shares' });
+export const newShareSchema = z
+	.object({ target: shareTargetSchema, audience: shareAudienceSchema })
+	.meta({ id: 'NewShare' });
+export const apiTokensSchema = z.object({ tokens: z.array(apiTokenSchema) }).meta({ id: 'ApiTokens' });
+export const newApiTokenSchema = z
+	.object({ aiUserId: apiTokenSchema.shape.aiUserId, name: apiTokenSchema.shape.name })
+	.meta({ id: 'NewApiToken' });
+export const activitySchema = z.object({ entries: z.array(activityEntrySchema) }).meta({ id: 'Activity' });
 
 export const workerContract = {
 	status: oc.meta(openapi({ method: 'GET', path: '/api/status' })).output(okSchema),
@@ -63,14 +98,114 @@ export const workerContract = {
 			.input(z.object({ subscription: pushSubscriptionSchema }))
 			.output(okSchema),
 	},
+	people: {
+		/**
+		 * An exact email match over every user, plus the caller's AI accounts and the people its space has met,
+		 * matched on a name prefix. There is no prefix search over every user, so nobody can list them.
+		 */
+		search: signedIn
+			.meta(openapi({ method: 'GET', path: '/api/people', inputStructure: 'detailed' }))
+			.input(z.object({ query: z.object({ q: z.string() }) }))
+			.output(peopleSchema),
+	},
+	me: signedIn.meta(openapi({ method: 'GET', path: '/api/me' })).output(personSchema),
+	/** The signed-in human's AI accounts. */
+	ai: {
+		list: allowed.meta(openapi({ method: 'GET', path: '/api/ai' })).output(aiAccountsSchema),
+		/** Also shares the owner's whole space with it, to edit. */
+		create: allowed
+			.meta(openapi({ method: 'POST', path: '/api/ai' }))
+			.input(z.object({ name: personSchema.shape.name }))
+			.output(personSchema),
+		/** Deletes the account, its tokens, and its share. */
+		delete: found
+			.meta(openapi({ method: 'DELETE', path: '/api/ai', inputStructure: 'detailed' }))
+			.input(z.object({ query: byId }))
+			.output(okSchema),
+	},
+	shared: {
+		/** What a public link shows. Needs no session; the token names the owner. */
+		view: oc
+			.errors({ NOT_FOUND: {}, SERVICE_UNAVAILABLE: {} })
+			.meta(openapi({ method: 'GET', path: '/api/shared', inputStructure: 'detailed' }))
+			.input(z.object({ query: z.object({ token: z.string() }) }))
+			.output(sharedViewSchema),
+	},
 };
 
-/** Served by the signed-in user's `Account` Durable Object, as the device the request names. */
+/**
+ * Served by a space's `Account` Durable Object: the caller's own unless `?space=` names one shared with them. The
+ * Worker routes on that query alone and forwards the body unread.
+ */
 export const accountContract = {
-	sync: signedIn
-		.meta(openapi({ method: 'POST', path: '/api/sync' }))
-		.input(syncRequestSchema)
+	sync: allowed
+		.meta(openapi({ method: 'POST', path: '/api/sync', inputStructure: 'detailed' }))
+		.input(z.object({ query: spaceQuery, body: syncRequestSchema }))
 		.output(syncResponseSchema),
+	spaces: {
+		/** The spaces shared with the caller. Served by the caller's own object. */
+		list: signedIn.meta(openapi({ method: 'GET', path: '/api/spaces' })).output(spacesSchema),
+	},
+	/** The owner's shares of their own space. Human owners only. */
+	shares: {
+		list: allowed.meta(openapi({ method: 'GET', path: '/api/shares' })).output(sharesSchema),
+		/** A user audience also adds the grantee to the space's people and writes their membership. */
+		create: found
+			.meta(openapi({ method: 'POST', path: '/api/shares' }))
+			.input(newShareSchema)
+			.output(shareViewSchema),
+		delete: found
+			.meta(openapi({ method: 'DELETE', path: '/api/shares', inputStructure: 'detailed' }))
+			.input(z.object({ query: byId }))
+			.output(okSchema),
+	},
+	/** API tokens for the owner's AI accounts. Human owners only. */
+	tokens: {
+		list: allowed.meta(openapi({ method: 'GET', path: '/api/ai-tokens' })).output(apiTokensSchema),
+		/** The only response that carries the secret. */
+		create: found
+			.meta(openapi({ method: 'POST', path: '/api/ai-tokens' }))
+			.input(newApiTokenSchema)
+			.output(createdApiTokenSchema),
+		delete: found
+			.meta(openapi({ method: 'DELETE', path: '/api/ai-tokens', inputStructure: 'detailed' }))
+			.input(z.object({ query: byId }))
+			.output(okSchema),
+	},
+	activity: {
+		/** One task's history from the space's log, oldest first. */
+		list: found
+			.meta(openapi({ method: 'GET', path: '/api/activity', inputStructure: 'detailed' }))
+			.input(z.object({ query: taskQuery }))
+			.output(activitySchema),
+	},
+	/** The agent command API: the store's rules run on the server, for anyone who may edit the space. */
+	view: allowed
+		.meta(openapi({ method: 'GET', path: '/api/view', inputStructure: 'detailed' }))
+		.input(z.object({ query: spaceQuery }))
+		.output(spaceViewSchema),
+	tasks: {
+		create: found
+			.meta(openapi({ method: 'POST', path: '/api/tasks', inputStructure: 'detailed' }))
+			.input(z.object({ query: spaceQuery, body: agentNewTaskSchema }))
+			.output(taskSchema),
+		update: found
+			.meta(openapi({ method: 'PATCH', path: '/api/tasks', inputStructure: 'detailed' }))
+			.input(z.object({ query: taskQuery, body: taskEditSchema }))
+			.output(taskSchema),
+		complete: found
+			.meta(openapi({ method: 'POST', path: '/api/tasks/complete', inputStructure: 'detailed' }))
+			.input(z.object({ query: taskQuery }))
+			.output(taskSchema),
+		reopen: found
+			.meta(openapi({ method: 'POST', path: '/api/tasks/reopen', inputStructure: 'detailed' }))
+			.input(z.object({ query: taskQuery }))
+			.output(taskSchema),
+		delete: found
+			.meta(openapi({ method: 'DELETE', path: '/api/tasks', inputStructure: 'detailed' }))
+			.input(z.object({ query: taskQuery }))
+			.output(okSchema),
+	},
 	push: {
 		/** Registers this device's subscription. A browser that paired again as a new device replaces its old entry. */
 		subscribe: signedIn
@@ -106,6 +241,24 @@ export const internalContract = {
 		.errors({ UNAUTHORIZED: {} })
 		.meta(openapi({ method: 'POST', path: '/api/account/wipe' }))
 		.output(okSchema),
+	/** Owner to guest: the owner's space is shared with this user (`live`), or no longer is. */
+	membership: oc
+		.errors({ UNAUTHORIZED: {} })
+		.meta(openapi({ method: 'POST', path: '/api/account/membership' }))
+		.input(z.object({ spaceId: z.string(), owner: personSchema, live: z.boolean() }))
+		.output(okSchema),
+	/** Owner to guest: `space` moved, so the guest's sockets hear `{ cursor, space }`. Skips the serial queue. */
+	nudge: oc
+		.errors({ UNAUTHORIZED: {} })
+		.meta(openapi({ method: 'POST', path: '/api/account/nudge' }))
+		.input(z.object({ space: z.string() }))
+		.output(okSchema),
+	/** Worker to owner: the AI account a `pm.<ownerId>.<secret>` token belongs to, or null. */
+	resolveToken: oc
+		.errors({ UNAUTHORIZED: {} })
+		.meta(openapi({ method: 'POST', path: '/api/account/resolve-token' }))
+		.input(z.object({ secret: z.string() }))
+		.output(z.object({ aiUserId: z.string().nullable() })),
 };
 
 export const contract = {

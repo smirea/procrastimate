@@ -174,6 +174,13 @@ function authOptions(
 		trustedOrigins,
 		database,
 		emailAndPassword: { enabled: true },
+		// `input: false` keeps sign-up from claiming to be an AI account or naming an owner.
+		user: {
+			additionalFields: {
+				kind: { type: 'string', required: false, defaultValue: 'human', input: false },
+				ownerId: { type: 'string', required: false, input: false },
+			},
+		},
 		socialProviders: providers,
 		session: { expiresIn: SESSION_SECONDS, updateAge: SESSION_UPDATE_SECONDS },
 		plugins: [bearer()],

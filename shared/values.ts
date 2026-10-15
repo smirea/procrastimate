@@ -130,3 +130,21 @@ export const taskEventSchema = z
 	})
 	.meta({ id: 'TaskEvent' });
 export type TaskEvent = z.infer<typeof taskEventSchema>;
+
+/** A human signs in. An AI account belongs to a human and acts only through API tokens. */
+export const ACTOR_KINDS = ['human', 'ai'] as const;
+export const actorKindSchema = z.enum(ACTOR_KINDS).meta({ id: 'ActorKind' });
+export type ActorKind = z.infer<typeof actorKindSchema>;
+
+/** The actor of a log row the server wrote on its own, such as a fixup. Activity never shows it. */
+export const SERVER_ACTOR = 'server';
+
+/** A link share is always `view`. */
+export const ROLES = ['view', 'edit'] as const;
+export const roleSchema = z.enum(ROLES).meta({ id: 'Role' });
+export type Role = z.infer<typeof roleSchema>;
+
+/** `space` is the owner's whole space, offered only to AI accounts. */
+export const SHARE_TARGET_KINDS = ['space', 'project', 'label', 'task'] as const;
+export const shareTargetKindSchema = z.enum(SHARE_TARGET_KINDS).meta({ id: 'ShareTargetKind' });
+export type ShareTargetKind = z.infer<typeof shareTargetKindSchema>;

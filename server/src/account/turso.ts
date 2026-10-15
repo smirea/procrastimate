@@ -1,9 +1,28 @@
 import { and, asc, eq } from 'drizzle-orm';
 import type { BatchItem } from 'drizzle-orm/batch';
-import { devices, log, meta, push, rambleUsage } from '../../../shared/db/schema';
+import {
+	apiTokens,
+	devices,
+	log,
+	memberships,
+	meta,
+	people,
+	push,
+	rambleUsage,
+	shares,
+} from '../../../shared/db/schema';
 import { KINDS } from '../../../shared/sync/kinds';
 import { ENTITY_TABLES, entityRow, rowEntity } from '../db/entities';
-import { deviceColumns, logColumns, pushColumns, rambleColumns } from '../db/columns';
+import {
+	apiTokenColumns,
+	deviceColumns,
+	logColumns,
+	membershipColumns,
+	personColumns,
+	pushColumns,
+	rambleColumns,
+	shareColumns,
+} from '../db/columns';
 import { batch, tursoDatabase, type TursoDatabase, type TursoTarget } from '../db/turso';
 import { memoryStore, type AccountTables } from './memory-store';
 import type { RambleLedger, RambleUsage } from './ramble-ledger';
@@ -27,7 +46,18 @@ function chunks<T>(rows: T[]): T[][] {
 	return result;
 }
 
-const USER_TABLES = [...Object.values(ENTITY_TABLES), devices, log, push, rambleUsage, meta];
+const USER_TABLES = [
+	...Object.values(ENTITY_TABLES),
+	devices,
+	log,
+	push,
+	rambleUsage,
+	meta,
+	shares,
+	memberships,
+	people,
+	apiTokens,
+];
 
 function writes(db: TursoDatabase, userId: string, tables: AccountTables): BatchItem<'sqlite'>[] {
 	const scoped = <T extends object>(rows: T[]) => chunks(rows.map(row => ({ ...row, userId })));
@@ -42,6 +72,10 @@ function writes(db: TursoDatabase, userId: string, tables: AccountTables): Batch
 		...scoped(tables.log).map(rows => db.insert(log).values(rows)),
 		...scoped(tables.push).map(rows => db.insert(push).values(rows)),
 		...scoped(tables.ramble).map(rows => db.insert(rambleUsage).values(rows)),
+		...scoped(tables.shares).map(rows => db.insert(shares).values(rows)),
+		...scoped(tables.memberships).map(rows => db.insert(memberships).values(rows)),
+		...scoped(tables.people).map(rows => db.insert(people).values(rows)),
+		...scoped(tables.apiTokens).map(rows => db.insert(apiTokens).values(rows)),
 	];
 }
 
@@ -53,7 +87,18 @@ async function readTables(db: TursoDatabase, userId: string): Promise<AccountTab
 			return rows.map(row => rowEntity(kind, row));
 		}),
 	);
-	const [entityRows, deviceRows, logRows, pushRows, rambleRows, epochRows] = await Promise.all([
+	const [
+		entityRows,
+		deviceRows,
+		logRows,
+		pushRows,
+		rambleRows,
+		epochRows,
+		shareRows,
+		membershipRows,
+		personRows,
+		apiTokenRows,
+	] = await Promise.all([
 		loadEntities,
 		db.select(deviceColumns).from(devices).where(eq(devices.userId, userId)),
 		db.select(logColumns).from(log).where(eq(log.userId, userId)).orderBy(asc(log.seq)),
@@ -63,6 +108,10 @@ async function readTables(db: TursoDatabase, userId: string): Promise<AccountTab
 			.select({ value: meta.value })
 			.from(meta)
 			.where(and(eq(meta.userId, userId), eq(meta.key, 'epoch'))),
+		db.select(shareColumns).from(shares).where(eq(shares.userId, userId)),
+		db.select(membershipColumns).from(memberships).where(eq(memberships.userId, userId)),
+		db.select(personColumns).from(people).where(eq(people.userId, userId)),
+		db.select(apiTokenColumns).from(apiTokens).where(eq(apiTokens.userId, userId)),
 	]);
 	return {
 		devices: deviceRows,
@@ -70,6 +119,10 @@ async function readTables(db: TursoDatabase, userId: string): Promise<AccountTab
 		log: logRows,
 		push: pushRows,
 		ramble: rambleRows,
+		shares: shareRows,
+		memberships: membershipRows,
+		people: personRows,
+		apiTokens: apiTokenRows,
 		epoch: Number(epochRows[0]?.value ?? 0),
 	};
 }

@@ -2,6 +2,7 @@ import { implement } from '@orpc/server';
 import { workerContract } from '../../shared/api/contract';
 import { authMethods, deleteAccount, requireUser } from './better-auth';
 import type { Env } from './bindings';
+import { notImplemented } from './errors';
 import { classifyDelivery } from './push-schedule';
 import { requireVapid, sendTestPush } from './push';
 
@@ -29,5 +30,17 @@ export const workerRouter = os.router({
 			const data = { status };
 			throw classifyDelivery(status) === 'gone' ? errors.GONE({ data }) : errors.BAD_GATEWAY({ data });
 		}),
+	},
+	people: {
+		search: os.people.search.handler(notImplemented),
+	},
+	me: os.me.handler(notImplemented),
+	ai: {
+		list: os.ai.list.handler(notImplemented),
+		create: os.ai.create.handler(notImplemented),
+		delete: os.ai.delete.handler(notImplemented),
+	},
+	shared: {
+		view: os.shared.view.handler(notImplemented),
 	},
 });

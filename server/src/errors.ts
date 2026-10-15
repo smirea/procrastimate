@@ -8,3 +8,8 @@ type Code = keyof typeof COMMON_ERROR_STATUS_MAP;
  */
 export const errorResponse = (code: Code, message: string) =>
 	Response.json(new ORPCError(code, { message }).toJSON(), { status: COMMON_ERROR_STATUS_MAP[code] });
+
+/** A contract route whose server side is still to be written. */
+export const notImplemented = (): never => {
+	throw new ORPCError('NOT_IMPLEMENTED', { message: 'Not implemented' });
+};

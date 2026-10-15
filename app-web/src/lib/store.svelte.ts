@@ -2,7 +2,8 @@ import type { DictationChoice } from 'shared/dictation.ts';
 import type { DateKey, Label, Project, Task } from 'shared/task.ts';
 import { groupChildren, progressOf } from 'shared/subtasks.ts';
 import { newId } from 'shared/id.ts';
-import type { SyncSection } from 'shared/snapshot.ts';
+import type { Person } from 'shared/sharing.ts';
+import type { SpaceSection, SyncSection } from 'shared/snapshot.ts';
 import * as rules from 'shared/store.ts';
 import { applyResponse, commit, startSync, type ClientSync } from 'shared/sync/apply.ts';
 import { formatHlc, parseHlc } from 'shared/sync/hlc.ts';
@@ -22,6 +23,8 @@ class Store {
 	projects = $state.raw<Project[]>([]);
 	labels = $state.raw<Label[]>([]);
 	remindersCheckedAt = $state(0);
+	spaces = $state.raw<Record<string, SpaceSection>>({});
+	people = $state.raw<Person[]>([]);
 	#sync = $state.raw<SyncSection | undefined>();
 	#onCommit: (() => void) | undefined;
 	#children = $derived(groupChildren(this.tasks));
@@ -33,6 +36,8 @@ class Store {
 		this.projects = snapshot.projects;
 		this.labels = snapshot.labels;
 		this.remindersCheckedAt = snapshot.remindersCheckedAt;
+		this.spaces = snapshot.spaces;
+		this.people = snapshot.people;
 		this.#sync = snapshot.sync ?? this.#fresh(crypto.randomUUID());
 		if (!snapshot.sync) this.#commit();
 	}
@@ -82,7 +87,13 @@ class Store {
 	}
 
 	#commit() {
-		saveSnapshot({ ...this.#data, remindersCheckedAt: this.remindersCheckedAt, sync: this.#sync });
+		saveSnapshot({
+			...this.#data,
+			remindersCheckedAt: this.remindersCheckedAt,
+			sync: this.#sync,
+			spaces: this.spaces,
+			people: this.people,
+		});
 	}
 
 	deviceId() {
@@ -124,6 +135,8 @@ class Store {
 		this.tasks = [];
 		this.projects = [];
 		this.labels = [];
+		this.spaces = {};
+		this.people = [];
 		this.#sync = { deviceId, cursor: 0, outbox: [], clock, timeZone, dictation: 'native', epoch: 0, reset: false };
 		this.#commit();
 	}
@@ -169,6 +182,7 @@ class Store {
 			cursor: this.#sync.cursor,
 			ops: this.#sync.outbox,
 			epoch: this.#sync.epoch,
+			scope: '',
 			...(this.#sync.reset ? { reset: true } : {}),
 		};
 	}

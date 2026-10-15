@@ -9,7 +9,9 @@
 				[
 					{
 						"completedAt": null,
+						"completedBy": null,
 						"createdAt": 0,
+						"createdBy": null,
 						"due": {
 							"date": "2026-10-15",
 							"time": "17:00"
@@ -17,6 +19,7 @@
 						"event": null,
 						"id": "Gym",
 						"labelIds": [],
+						"lastCompletedAt": null,
 						"location": null,
 						"notes": "",
 						"order": 0,
@@ -38,7 +41,9 @@
 					},
 					{
 						"completedAt": null,
+						"completedBy": null,
 						"createdAt": 0,
+						"createdBy": null,
 						"due": {
 							"date": "2026-10-14",
 							"time": "10:30"
@@ -46,6 +51,7 @@
 						"event": null,
 						"id": "Call mom",
 						"labelIds": [],
+						"lastCompletedAt": null,
 						"location": null,
 						"notes": "",
 						"order": 0,
@@ -58,11 +64,14 @@
 					},
 					{
 						"completedAt": null,
+						"completedBy": null,
 						"createdAt": 0,
+						"createdBy": null,
 						"due": null,
 						"event": null,
 						"id": "Passport",
 						"labelIds": [],
+						"lastCompletedAt": null,
 						"location": null,
 						"notes": "",
 						"order": 0,
@@ -81,7 +90,9 @@
 					},
 					{
 						"completedAt": null,
+						"completedBy": null,
 						"createdAt": 0,
+						"createdBy": null,
 						"due": {
 							"date": "2026-10-17",
 							"time": null
@@ -89,6 +100,7 @@
 						"event": null,
 						"id": "Taxes",
 						"labelIds": [],
+						"lastCompletedAt": null,
 						"location": null,
 						"notes": "",
 						"order": 0,
@@ -107,7 +119,9 @@
 					},
 					{
 						"completedAt": null,
+						"completedBy": null,
 						"createdAt": 0,
+						"createdBy": null,
 						"due": {
 							"date": "2026-10-15",
 							"time": null
@@ -115,6 +129,7 @@
 						"event": null,
 						"id": "Rent",
 						"labelIds": [],
+						"lastCompletedAt": null,
 						"location": null,
 						"notes": "",
 						"order": 0,
@@ -133,7 +148,9 @@
 					},
 					{
 						"completedAt": null,
+						"completedBy": null,
 						"createdAt": 0,
+						"createdBy": null,
 						"due": {
 							"date": "2026-10-21",
 							"time": "12:00"
@@ -141,6 +158,7 @@
 						"event": null,
 						"id": "Lunch",
 						"labelIds": [],
+						"lastCompletedAt": null,
 						"location": null,
 						"notes": "",
 						"order": 0,
@@ -225,7 +243,9 @@
 				[
 					{
 						"completedAt": null,
+						"completedBy": null,
 						"createdAt": 0,
+						"createdBy": null,
 						"due": null,
 						"event": {
 							"allDay": false,
@@ -244,6 +264,7 @@
 						},
 						"id": "Wear red",
 						"labelIds": [],
+						"lastCompletedAt": null,
 						"location": null,
 						"notes": "",
 						"order": 0,
@@ -256,7 +277,9 @@
 					},
 					{
 						"completedAt": null,
+						"completedBy": null,
 						"createdAt": 0,
+						"createdBy": null,
 						"due": {
 							"date": "2026-10-14",
 							"time": "17:00"
@@ -264,6 +287,7 @@
 						"event": null,
 						"id": "Milk",
 						"labelIds": [],
+						"lastCompletedAt": null,
 						"location": {
 							"address": null,
 							"latitude": 52.5,
@@ -301,7 +325,9 @@
 				[
 					{
 						"completedAt": 1791986399999,
+						"completedBy": null,
 						"createdAt": 0,
+						"createdBy": null,
 						"due": {
 							"date": "2026-10-14",
 							"time": "11:00"
@@ -309,6 +335,7 @@
 						"event": null,
 						"id": "Done",
 						"labelIds": [],
+						"lastCompletedAt": null,
 						"location": null,
 						"notes": "",
 						"order": 0,
@@ -321,7 +348,9 @@
 					},
 					{
 						"completedAt": null,
+						"completedBy": null,
 						"createdAt": 0,
+						"createdBy": null,
 						"due": {
 							"date": "2026-10-14",
 							"time": null
@@ -329,6 +358,7 @@
 						"event": null,
 						"id": "Taxes",
 						"labelIds": [],
+						"lastCompletedAt": null,
 						"location": null,
 						"notes": "",
 						"order": 0,
@@ -341,7 +371,9 @@
 					},
 					{
 						"completedAt": null,
+						"completedBy": null,
 						"createdAt": 0,
+						"createdBy": null,
 						"due": {
 							"date": "2026-10-14",
 							"time": "10:15"
@@ -349,6 +381,7 @@
 						"event": null,
 						"id": "Standup",
 						"labelIds": [],
+						"lastCompletedAt": null,
 						"location": null,
 						"notes": "",
 						"order": 0,
@@ -366,7 +399,9 @@
 					},
 					{
 						"completedAt": null,
+						"completedBy": null,
 						"createdAt": 0,
+						"createdBy": null,
 						"due": {
 							"date": "2026-10-14",
 							"time": "10:00"
@@ -374,6 +409,7 @@
 						"event": null,
 						"id": "Earlier",
 						"labelIds": [],
+						"lastCompletedAt": null,
 						"location": null,
 						"notes": "",
 						"order": 0,
@@ -404,7 +440,9 @@
 				[
 					{
 						"completedAt": null,
+						"completedBy": null,
 						"createdAt": 0,
+						"createdBy": null,
 						"due": {
 							"date": "2026-10-14",
 							"time": "10:45"
@@ -412,6 +450,7 @@
 						"event": null,
 						"id": "Standup",
 						"labelIds": [],
+						"lastCompletedAt": null,
 						"location": null,
 						"notes": "",
 						"order": 0,
@@ -452,7 +491,9 @@
 				[
 					{
 						"completedAt": null,
+						"completedBy": null,
 						"createdAt": 0,
+						"createdBy": null,
 						"due": {
 							"date": "2026-10-14",
 							"time": "09:00"
@@ -460,6 +501,7 @@
 						"event": null,
 						"id": "Water plants",
 						"labelIds": [],
+						"lastCompletedAt": null,
 						"location": null,
 						"notes": "",
 						"order": 0,
@@ -491,7 +533,9 @@
 				[
 					{
 						"completedAt": null,
+						"completedBy": null,
 						"createdAt": 0,
+						"createdBy": null,
 						"due": {
 							"date": "2026-10-16",
 							"time": "09:00"
@@ -499,6 +543,7 @@
 						"event": null,
 						"id": "Water plants",
 						"labelIds": [],
+						"lastCompletedAt": null,
 						"location": null,
 						"notes": "",
 						"order": 0,
@@ -543,11 +588,14 @@
 				[
 					{
 						"completedAt": null,
+						"completedBy": null,
 						"createdAt": 0,
+						"createdBy": null,
 						"due": null,
 						"event": null,
 						"id": "latest",
 						"labelIds": [],
+						"lastCompletedAt": null,
 						"location": null,
 						"notes": "",
 						"order": 0,
@@ -566,11 +614,14 @@
 					},
 					{
 						"completedAt": null,
+						"completedBy": null,
 						"createdAt": 0,
+						"createdBy": null,
 						"due": null,
 						"event": null,
 						"id": "a",
 						"labelIds": [],
+						"lastCompletedAt": null,
 						"location": null,
 						"notes": "",
 						"order": 0,
@@ -589,11 +640,14 @@
 					},
 					{
 						"completedAt": null,
+						"completedBy": null,
 						"createdAt": 0,
+						"createdBy": null,
 						"due": null,
 						"event": null,
 						"id": "b",
 						"labelIds": [],
+						"lastCompletedAt": null,
 						"location": null,
 						"notes": "",
 						"order": 0,
@@ -612,11 +666,14 @@
 					},
 					{
 						"completedAt": null,
+						"completedBy": null,
 						"createdAt": 0,
+						"createdBy": null,
 						"due": null,
 						"event": null,
 						"id": "c",
 						"labelIds": [],
+						"lastCompletedAt": null,
 						"location": null,
 						"notes": "",
 						"order": 0,
@@ -665,7 +722,9 @@
 				[
 					{
 						"completedAt": null,
+						"completedBy": null,
 						"createdAt": 0,
+						"createdBy": null,
 						"due": {
 							"date": "2026-10-14",
 							"time": "11:00"
@@ -673,6 +732,7 @@
 						"event": null,
 						"id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
 						"labelIds": [],
+						"lastCompletedAt": null,
 						"location": null,
 						"notes": "",
 						"order": 0,

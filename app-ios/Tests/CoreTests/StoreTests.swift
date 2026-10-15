@@ -45,7 +45,7 @@ import Testing
 
         let json = try #require(file.read())
         let object = try #require(try JSONSerialization.jsonObject(with: json) as? [String: Any])
-        #expect(Set(object.keys) == ["tasks", "projects", "labels", "remindersCheckedAt", "sync"])
+        #expect(Set(object.keys) == ["tasks", "projects", "labels", "remindersCheckedAt", "sync", "spaces", "people"])
     }
 
     @Test func commitKeepsTasksInSyncOrder() {

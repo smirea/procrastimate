@@ -17,7 +17,14 @@ describe('a Turso session', () => {
 			revokedAt: null,
 		});
 		first.store.putEntity({ kind: 'task', id: 't1', data: { title: 'Buy milk' }, clocks: { title: '1:0:mac' } });
-		first.store.appendLog({ opId: 'op-1', kind: 'task', id: 't1', fields: { title: 'Buy milk' } });
+		first.store.appendLog({
+			opId: 'op-1',
+			kind: 'task',
+			id: 't1',
+			fields: { title: 'Buy milk' },
+			actor: 'user-1',
+			at: 5,
+		});
 		first.store.setEpoch(2);
 		await first.flush();
 
@@ -27,7 +34,7 @@ describe('a Turso session', () => {
 			{ kind: 'task', id: 't1', data: { title: 'Buy milk' }, clocks: { title: '1:0:mac' } },
 		]);
 		expect(second.store.logAfter(0, 10)).toEqual([
-			{ seq: 1, opId: 'op-1', kind: 'task', id: 't1', fields: { title: 'Buy milk' } },
+			{ seq: 1, opId: 'op-1', kind: 'task', id: 't1', fields: { title: 'Buy milk' }, actor: 'user-1', at: 5 },
 		]);
 		expect(second.store.epoch()).toBe(2);
 
@@ -40,6 +47,30 @@ describe('a Turso session', () => {
 		expect(third.store.lastSeq()).toBe(0);
 		expect(third.store.liveDevices()).toHaveLength(1);
 		expect(third.store.epoch()).toBe(3);
+	});
+
+	test('loads the sharing rows the last flush wrote', async () => {
+		const client = await localTurso();
+		const first = await accountSession(client, 'user-1');
+		const share = { id: 's1', targetKind: 'label', targetId: 'l', grantee: 'u2', role: 'edit', createdAt: 1 } as const;
+		const membership = { spaceId: 'owner', createdAt: 2 };
+		const person = { id: 'u2', name: 'Ana', kind: 'human', ownerId: null, seenAt: 3 } as const;
+		const token = { id: 'k', aiUserId: 'ai', name: 'CLI', tokenHash: 'h', createdAt: 4, lastUsedAt: 5 };
+		first.store.putShare(share);
+		first.store.putMembership(membership);
+		first.store.upsertPerson(person);
+		first.store.putApiToken(token);
+		await first.flush();
+
+		const second = await accountSession(client, 'user-1');
+		expect([
+			second.store.shares(),
+			second.store.memberships(),
+			second.store.people(),
+			second.store.apiTokens(),
+		]).toEqual([[share], [membership], [person], [token]]);
+		const other = await accountSession(client, 'user-2');
+		expect(other.store.shares()).toEqual([]);
 	});
 
 	test('a flush leaves another user alone', async () => {

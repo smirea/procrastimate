@@ -36,6 +36,9 @@ const task = (id: string, createdAt: number, fields: Partial<Task> = {}): Task =
 	event: null,
 	createdAt,
 	completedAt: null,
+	createdBy: null,
+	completedBy: null,
+	lastCompletedAt: null,
 	...fields,
 });
 

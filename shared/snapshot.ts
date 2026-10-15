@@ -4,6 +4,7 @@ import { sortTasks } from './store.ts';
 import { detachOrphans } from './subtasks.ts';
 import { hlcSchema } from './db/json.ts';
 import { labelSchema, opSchema, projectSchema, taskSchema as syncedTaskSchema } from './sync/protocol.ts';
+import { personSchema } from './sharing.ts';
 import { weeklyOn } from './task.ts';
 import { recurrenceSchema, weekdaySchema } from './values.ts';
 
@@ -24,6 +25,9 @@ const taskSchema = syncedTaskSchema.extend({
 	labelIds: syncedTaskSchema.shape.labelIds.default([]),
 	location: syncedTaskSchema.shape.location.default(null),
 	event: syncedTaskSchema.shape.event.default(null),
+	createdBy: syncedTaskSchema.shape.createdBy.default(null),
+	completedBy: syncedTaskSchema.shape.completedBy.default(null),
+	lastCompletedAt: syncedTaskSchema.shape.lastCompletedAt.default(null),
 	recurrence: z
 		.discriminatedUnion('unit', [
 			recurrenceSchema.options[0],
@@ -71,6 +75,40 @@ const syncSchema = z
 	})
 	.meta({ id: 'SyncSection' });
 
+/**
+ * A space someone shared with this user, kept apart from the user's own data and synced on its own: `cursor`,
+ * `outbox`, and `epoch` work as in the sync section, `scope` is the hash of what the server last let it see, and
+ * `readOnly` lists the visible tasks it may not edit. The device clock in the sync section serves every space.
+ */
+const spaceSectionSchema = z
+	.object({
+		owner: personSchema,
+		cursor: syncSchema.shape.cursor,
+		outbox: syncSchema.shape.outbox,
+		epoch: z.number().int().nonnegative().default(0),
+		scope: z.string().default(''),
+		readOnly: z.array(z.string()).default([]),
+		tasks: tasksSchema,
+		projects: z.array(projectSchema).default([]),
+		labels: z.array(labelSchema).default([]),
+	})
+	// Core decodes the section's tasks with the same loading rules, so it writes its own decoder.
+	.meta({ id: 'SpaceSection', 'x-decode': 'custom' });
+
+/** Drops a section that fails validation, so one bad shared space never wipes the document. The next sync refills it. */
+const spacesSchema = z
+	.record(z.string(), z.unknown())
+	.default({})
+	.meta({ 'x-swift-type': '[String: SpaceSection]' })
+	.transform(sections =>
+		Object.fromEntries(
+			Object.entries(sections).flatMap(([owner, value]) => {
+				const section = spaceSectionSchema.safeParse(value);
+				return section.success ? [[owner, section.data] as const] : [];
+			}),
+		),
+	);
+
 const snapshotSchema = z
 	.object({
 		tasks: tasksSchema,
@@ -78,11 +116,16 @@ const snapshotSchema = z
 		labels: z.array(labelSchema).default([]),
 		remindersCheckedAt: z.number().int(),
 		sync: syncSchema.optional(),
+		/** Shared spaces by owner id. */
+		spaces: spacesSchema,
+		/** Everyone this device has seen named, so authorship shows offline. */
+		people: z.array(personSchema).default([]),
 	})
 	// Core decodes tasks one by one with the loading rules above, so it writes its own decoder.
 	.meta({ id: 'Snapshot', 'x-decode': 'custom' });
 
 export type SyncSection = z.infer<typeof syncSchema>;
+export type SpaceSection = z.infer<typeof spaceSectionSchema>;
 export type Snapshot = z.infer<typeof snapshotSchema>;
 
 export const emptySnapshot = (now: number): Snapshot => ({
@@ -90,6 +133,8 @@ export const emptySnapshot = (now: number): Snapshot => ({
 	projects: [],
 	labels: [],
 	remindersCheckedAt: now,
+	spaces: {},
+	people: [],
 });
 
 export function parseSnapshot(value: unknown, now: number): Snapshot {

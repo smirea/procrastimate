@@ -21,6 +21,29 @@ const task = (id: string, recurrence: unknown, fields: Record<string, unknown> =
 	...fields,
 });
 
+const ana = { id: 'u-ana', name: 'Ana', kind: 'human', ownerId: null } as const;
+
+const sharedTask = (id: string, createdAt: number) => ({
+	id,
+	parentId: null,
+	order: 0,
+	title: id,
+	notes: '',
+	projectId: 'p-ana',
+	labelIds: [],
+	due: null,
+	recurrence: null,
+	priority: 4 as const,
+	reminders: [],
+	location: null,
+	event: null,
+	createdAt,
+	completedAt: null,
+	createdBy: null,
+	completedBy: null,
+	lastCompletedAt: null,
+});
+
 const webDocument: snapshot.Snapshot = {
 	tasks: [
 		{
@@ -42,6 +65,9 @@ const webDocument: snapshot.Snapshot = {
 			event: null,
 			createdAt: 1_791_900_000_000,
 			completedAt: null,
+			createdBy: null,
+			completedBy: null,
+			lastCompletedAt: null,
 		},
 		{
 			id: 'a0d6b1e2-0002-4c1e-9b1e-000000000002',
@@ -59,6 +85,9 @@ const webDocument: snapshot.Snapshot = {
 			event: null,
 			createdAt: 1_791_900_000_001,
 			completedAt: 1_791_950_000_000,
+			createdBy: null,
+			completedBy: null,
+			lastCompletedAt: null,
 		},
 		{
 			id: 'a0d6b1e2-0003-4c1e-9b1e-000000000003',
@@ -76,6 +105,9 @@ const webDocument: snapshot.Snapshot = {
 			event: null,
 			createdAt: 1_791_900_000_002,
 			completedAt: null,
+			createdBy: null,
+			completedBy: null,
+			lastCompletedAt: null,
 			sourceKey: 'todoist:task:42',
 		},
 	],
@@ -104,11 +136,51 @@ const webDocument: snapshot.Snapshot = {
 		epoch: 0,
 		reset: false,
 	},
+	spaces: {
+		'u-ana': {
+			owner: ana,
+			cursor: 3,
+			outbox: [
+				{ opId: 'op-3', hlc: '1791972000002:0:d-phone', kind: 'task', id: 't-ana-1', fields: { title: 'Paint' } },
+			],
+			epoch: 1,
+			scope: 'scope-hash',
+			readOnly: ['t-ana-2'],
+			tasks: [
+				{ ...sharedTask('t-ana-1', 1_791_900_000_010), title: 'Paint', createdBy: 'u-ana' },
+				{ ...sharedTask('t-ana-2', 1_791_900_000_011), completedBy: 'u-ana', lastCompletedAt: 1_791_960_000_000 },
+			],
+			projects: [{ id: 'p-ana', name: 'Studio', createdAt: 1_791_800_000_010 }],
+			labels: [],
+		},
+	},
+	people: [ana],
 };
 
 describe('parseSnapshot', () => {
 	test('a document the web wrote reads back unchanged', () => {
 		expect(parseSnapshot(webDocument, 10)).toEqual(webDocument);
+	});
+
+	test('a document stored before sharing has no shared spaces', () => {
+		const { spaces: _, people: __, ...stored } = webDocument;
+		const loaded = parseSnapshot(stored, 10);
+		expect([loaded.spaces, loaded.people, loaded.tasks.length]).toEqual([{}, [], 3]);
+	});
+
+	test('a shared space that fails validation is dropped and the rest of the document stays', () => {
+		const loaded = parseSnapshot({ ...webDocument, spaces: { ...webDocument.spaces, 'u-bad': { cursor: -1 } } }, 10);
+		expect(Object.keys(loaded.spaces)).toEqual(['u-ana']);
+		expect(loaded.tasks.length).toBe(3);
+	});
+
+	test('a shared space drops a bad task on its own', () => {
+		const section = webDocument.spaces['u-ana']!;
+		const spaces = { 'u-ana': { ...section, tasks: [...section.tasks, { id: 'broken' }] } };
+		expect(parseSnapshot({ ...webDocument, spaces }, 10).spaces['u-ana']?.tasks.map(t => t.id)).toEqual([
+			't-ana-1',
+			't-ana-2',
+		]);
 	});
 
 	test('a document stored before dictation defaults to native', () => {
@@ -203,7 +275,14 @@ describe('parseSnapshot', () => {
 		['not an object', ['tasks']],
 		['null', null],
 	] as const)('a document with %s starts empty', (_, document) => {
-		expect(parseSnapshot(document, 10)).toEqual({ tasks: [], projects: [], labels: [], remindersCheckedAt: 10 });
+		expect(parseSnapshot(document, 10)).toEqual({
+			tasks: [],
+			projects: [],
+			labels: [],
+			remindersCheckedAt: 10,
+			spaces: {},
+			people: [],
+		});
 	});
 
 	test('a store saved before labels existed loads every task with no labels', () => {

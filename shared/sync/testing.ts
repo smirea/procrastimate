@@ -20,6 +20,9 @@ export const task = (id: string, fields: Partial<Task> = {}): Task => ({
 	event: null,
 	createdAt: 1,
 	completedAt: null,
+	createdBy: null,
+	completedBy: null,
+	lastCompletedAt: null,
 	...fields,
 });
 

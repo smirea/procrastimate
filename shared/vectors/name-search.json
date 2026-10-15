@@ -681,11 +681,14 @@
 				[
 					{
 						"completedAt": null,
+						"completedBy": null,
 						"createdAt": 5,
+						"createdBy": null,
 						"due": null,
 						"event": null,
 						"id": "work-5",
 						"labelIds": [],
+						"lastCompletedAt": null,
 						"location": null,
 						"notes": "",
 						"order": 0,
@@ -698,11 +701,14 @@
 					},
 					{
 						"completedAt": null,
+						"completedBy": null,
 						"createdAt": 9,
+						"createdBy": null,
 						"due": null,
 						"event": null,
 						"id": "errands-9",
 						"labelIds": [],
+						"lastCompletedAt": null,
 						"location": null,
 						"notes": "",
 						"order": 0,
@@ -715,11 +721,14 @@
 					},
 					{
 						"completedAt": null,
+						"completedBy": null,
 						"createdAt": 2,
+						"createdBy": null,
 						"due": null,
 						"event": null,
 						"id": "work-2",
 						"labelIds": [],
+						"lastCompletedAt": null,
 						"location": null,
 						"notes": "",
 						"order": 0,
@@ -1077,11 +1086,14 @@
 				[
 					{
 						"completedAt": null,
+						"completedBy": null,
 						"createdAt": 1,
+						"createdBy": null,
 						"due": null,
 						"event": null,
 						"id": "homework-1",
 						"labelIds": [],
+						"lastCompletedAt": null,
 						"location": null,
 						"notes": "",
 						"order": 0,
@@ -1274,13 +1286,16 @@
 				[
 					{
 						"completedAt": null,
+						"completedBy": null,
 						"createdAt": 3,
+						"createdBy": null,
 						"due": null,
 						"event": null,
 						"id": "home-3",
 						"labelIds": [
 							"calls"
 						],
+						"lastCompletedAt": null,
 						"location": null,
 						"notes": "",
 						"order": 0,
@@ -1293,7 +1308,9 @@
 					},
 					{
 						"completedAt": null,
+						"completedBy": null,
 						"createdAt": 7,
+						"createdBy": null,
 						"due": null,
 						"event": null,
 						"id": "null-7",
@@ -1301,6 +1318,7 @@
 							"waiting",
 							"deep"
 						],
+						"lastCompletedAt": null,
 						"location": null,
 						"notes": "",
 						"order": 0,
@@ -1313,13 +1331,16 @@
 					},
 					{
 						"completedAt": null,
+						"completedBy": null,
 						"createdAt": 5,
+						"createdBy": null,
 						"due": null,
 						"event": null,
 						"id": "work-5",
 						"labelIds": [
 							"calls"
 						],
+						"lastCompletedAt": null,
 						"location": null,
 						"notes": "",
 						"order": 0,
@@ -1400,13 +1421,16 @@
 				[
 					{
 						"completedAt": null,
+						"completedBy": null,
 						"createdAt": 1,
+						"createdBy": null,
 						"due": null,
 						"event": null,
 						"id": "null-1",
 						"labelIds": [
 							"calls"
 						],
+						"lastCompletedAt": null,
 						"location": null,
 						"notes": "",
 						"order": 0,
@@ -1483,13 +1507,16 @@
 				[
 					{
 						"completedAt": null,
+						"completedBy": null,
 						"createdAt": 3,
+						"createdBy": null,
 						"due": null,
 						"event": null,
 						"id": "home-3",
 						"labelIds": [
 							"calls"
 						],
+						"lastCompletedAt": null,
 						"location": null,
 						"notes": "",
 						"order": 0,
@@ -1502,7 +1529,9 @@
 					},
 					{
 						"completedAt": null,
+						"completedBy": null,
 						"createdAt": 7,
+						"createdBy": null,
 						"due": null,
 						"event": null,
 						"id": "null-7",
@@ -1510,6 +1539,7 @@
 							"waiting",
 							"deep"
 						],
+						"lastCompletedAt": null,
 						"location": null,
 						"notes": "",
 						"order": 0,
@@ -1522,13 +1552,16 @@
 					},
 					{
 						"completedAt": null,
+						"completedBy": null,
 						"createdAt": 5,
+						"createdBy": null,
 						"due": null,
 						"event": null,
 						"id": "work-5",
 						"labelIds": [
 							"calls"
 						],
+						"lastCompletedAt": null,
 						"location": null,
 						"notes": "",
 						"order": 0,

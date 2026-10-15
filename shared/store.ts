@@ -124,6 +124,9 @@ export function addTask(
 		event: null,
 		createdAt: Math.max(now, (data.tasks.at(-1)?.createdAt ?? -Infinity) + 1),
 		completedAt: null,
+		createdBy: null,
+		completedBy: null,
+		lastCompletedAt: null,
 	};
 	let tasks = [...data.tasks, task];
 	if (parent) tasks = put(tasks, subtasks.reopenTask(tasks, parent.id));

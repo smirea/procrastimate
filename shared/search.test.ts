@@ -51,6 +51,9 @@ const task = (
 	event: null,
 	createdAt,
 	completedAt,
+	createdBy: null,
+	completedBy: null,
+	lastCompletedAt: null,
 });
 
 const titles = (query: string, tasks: Task[]) => {

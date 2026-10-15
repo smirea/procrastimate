@@ -1,6 +1,7 @@
 import { createClock, observe, SERVER_NODE } from '../../../shared/sync/hlc';
 import {
-	applyPush,
+	applyFixups,
+	applyOps,
 	entityKey,
 	serverHlc,
 	serverSnapshot,
@@ -14,7 +15,8 @@ import {
 	type SyncRequest,
 	type SyncResponse,
 } from '../../../shared/sync/protocol';
-import type { AccountStore } from './store';
+import { SERVER_ACTOR } from '../../../shared/values';
+import type { AccountStore, LogRow } from './store';
 
 /**
  * The stored rows as the sync core's state. The server's clock is not stored: it only has to stay ahead of every
@@ -33,17 +35,29 @@ export function loadState(store: AccountStore): ServerState {
 /** The live synced state, as a client would see it. */
 export const accountSnapshot = (store: AccountStore) => serverSnapshot(loadState(store));
 
-/** Applies ops and the fixups they need, then writes the entities that changed and every log entry. */
-export function push(store: AccountStore, before: ServerState, ops: readonly Op[], now: number) {
-	const pushed = applyPush(before, ops, { now, isApplied: opId => store.hasOp(opId) });
-	for (const [key, entity] of pushed.state.entities) {
+/**
+ * Applies ops and the fixups they need, then writes the entities that changed and every log entry. The ops' rows
+ * name `actor`, the user id that sent them, and the fixups' rows name the server.
+ */
+export function push(store: AccountStore, before: ServerState, ops: readonly Op[], now: number, actor: string) {
+	const ctx = { now, isApplied: (opId: string) => store.hasOp(opId) };
+	const applied = applyOps(before, ops, ctx);
+	const fixed = applyFixups(applied.state, ctx);
+	for (const [key, entity] of fixed.state.entities) {
 		if (before.entities.get(key) !== entity) store.putEntity(entity);
 	}
-	for (const entry of pushed.log) store.appendLog(entry);
-	return pushed;
+	for (const entry of applied.log) store.appendLog({ ...entry, actor, at: now });
+	for (const entry of fixed.log) store.appendLog({ ...entry, actor: SERVER_ACTOR, at: now });
+	return { state: fixed.state, acked: applied.acked };
 }
 
-export function sync(store: AccountStore, request: SyncRequest, now: number): SyncResponse {
+/** Who wrote a row and when stay on the server; activity reads them, clients never apply them. */
+function asChange(row: LogRow): Change {
+	const { actor: _, at: __, ...change } = row;
+	return change as Change;
+}
+
+export function sync(store: AccountStore, request: SyncRequest, now: number, actor: string): SyncResponse {
 	return store.transaction(() => {
 		if (request.reset) {
 			store.clearTaskData();
@@ -63,14 +77,14 @@ export function sync(store: AccountStore, request: SyncRequest, now: number): Sy
 		}
 		// A cursor past the end means the log was cleared, as after a wipe or a restarted dev server.
 		const restarted = request.cursor > store.lastSeq();
-		const pushed = push(store, loadState(store), request.ops, now);
+		const pushed = push(store, loadState(store), request.ops, now, actor);
 
 		const head = store.lastSeq();
 		const hlc = serverHlc(pushed.state);
 		if (request.reset || request.cursor === 0 || restarted) {
 			return { acked: pushed.acked, snapshot: serverSnapshot(pushed.state), cursor: head, hlc, epoch };
 		}
-		const changes = store.logAfter(request.cursor, SYNC_PAGE_SIZE) as Change[];
+		const changes = store.logAfter(request.cursor, SYNC_PAGE_SIZE).map(asChange);
 		const cursor = changes.at(-1)?.seq ?? request.cursor;
 		// Before the last page, an op is acked only with its row, or the client would drop it from its outbox and
 		// apply older rows without it. The retry dedupes, and the last page acks everything.

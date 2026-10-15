@@ -1,5 +1,15 @@
 import type { RambleUsage } from '../../../shared/db/schema';
-import type { AccountStore, Device, Entity, LogRow, PushTarget } from './store';
+import type {
+	AccountStore,
+	ApiTokenRow,
+	Device,
+	Entity,
+	LogRow,
+	Membership,
+	PersonRow,
+	PushTarget,
+	ShareRow,
+} from './store';
 
 /** The rows a Turso session loads and writes back. `log` is in `seq` order. */
 export type AccountTables = {
@@ -8,8 +18,21 @@ export type AccountTables = {
 	log: LogRow[];
 	push: PushTarget[];
 	ramble: RambleUsage[];
+	shares: ShareRow[];
+	memberships: Membership[];
+	people: PersonRow[];
+	apiTokens: ApiTokenRow[];
 	epoch: number;
 };
+
+const keyed = <T>(rows: T[] | undefined, key: (row: T) => string) =>
+	new Map((rows ?? []).map(row => [key(row), structuredClone(row)]));
+
+/** Ties break by key, as the SQLite store orders them. */
+const oldestFirst = <T extends { createdAt: number }>(rows: Map<string, T>) =>
+	[...rows]
+		.sort(([a, rowA], [b, rowB]) => rowA.createdAt - rowB.createdAt || (a < b ? -1 : a > b ? 1 : 0))
+		.map(([, row]) => structuredClone(row));
 
 /**
  * The Bun dev server's account, kept in memory and lost on restart. Values are cloned in and out so callers never
@@ -23,6 +46,10 @@ export function memoryStore(seed?: AccountTables): AccountStore & { tables(): Ac
 		(seed?.push ?? []).map(target => [target.deviceId, structuredClone(target)]),
 	);
 	const rambleUsage = new Map<string, number>((seed?.ramble ?? []).map(row => [row.day, row.seconds]));
+	const shares = keyed(seed?.shares, share => share.id);
+	const memberships = keyed(seed?.memberships, membership => membership.spaceId);
+	const people = keyed(seed?.people, person => person.id);
+	const apiTokens = keyed(seed?.apiTokens, token => token.id);
 	let epoch = seed?.epoch ?? 0;
 	let nextSeq = log.at(-1)?.seq ?? 0;
 	const entityKey = (kind: string, id: string) => `${kind}\u0000${id}`;
@@ -89,6 +116,10 @@ export function memoryStore(seed?: AccountTables): AccountStore & { tables(): Ac
 			nextSeq = 0;
 			pushTargets.clear();
 			rambleUsage.clear();
+			shares.clear();
+			memberships.clear();
+			people.clear();
+			apiTokens.clear();
 			epoch = 0;
 		},
 		epoch: () => epoch,
@@ -109,12 +140,53 @@ export function memoryStore(seed?: AccountTables): AccountStore & { tables(): Ac
 			rambleUsage.set(day, (rambleUsage.get(day) ?? 0) + seconds);
 		},
 
+		shares: () => oldestFirst(shares),
+		putShare: share => {
+			shares.set(share.id, structuredClone(share));
+		},
+		deleteShare: id => {
+			shares.delete(id);
+		},
+
+		memberships: () => oldestFirst(memberships),
+		putMembership: membership => {
+			memberships.set(membership.spaceId, structuredClone(membership));
+		},
+		deleteMembership: spaceId => {
+			memberships.delete(spaceId);
+		},
+
+		people: () => [...people.values()].sort((a, b) => (a.id < b.id ? -1 : 1)).map(person => structuredClone(person)),
+		upsertPerson: person => {
+			people.set(person.id, structuredClone(person));
+		},
+
+		apiTokens: () => oldestFirst(apiTokens),
+		putApiToken: token => {
+			apiTokens.set(token.id, structuredClone(token));
+		},
+		deleteApiToken: id => {
+			apiTokens.delete(id);
+		},
+		apiTokenByHash: tokenHash => {
+			const token = [...apiTokens.values()].find(token => token.tokenHash === tokenHash);
+			return token ? structuredClone(token) : null;
+		},
+		touchApiToken: (id, at) => {
+			const token = apiTokens.get(id);
+			if (token) token.lastUsedAt = at;
+		},
+
 		tables: () => ({
 			devices: [...devices.values()].map(device => ({ ...device })),
 			entities: [...entities.values()].map(entity => structuredClone(entity)),
 			log: log.map(entry => structuredClone(entry)),
 			push: [...pushTargets.values()].map(target => structuredClone(target)),
 			ramble: [...rambleUsage].map(([day, seconds]) => ({ day, seconds })),
+			shares: [...shares.values()].map(share => structuredClone(share)),
+			memberships: [...memberships.values()].map(membership => structuredClone(membership)),
+			people: [...people.values()].map(person => structuredClone(person)),
+			apiTokens: [...apiTokens.values()].map(token => structuredClone(token)),
 			epoch,
 		}),
 	};

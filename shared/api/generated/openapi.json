@@ -280,6 +280,667 @@
 				],
 				"additionalProperties": false
 			},
+			"People": {
+				"type": "object",
+				"properties": {
+					"people": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/Person"
+						}
+					}
+				},
+				"required": [
+					"people"
+				],
+				"additionalProperties": false
+			},
+			"Person": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"kind": {
+						"$ref": "#/components/schemas/ActorKind"
+					},
+					"ownerId": {
+						"type": [
+							"string",
+							"null"
+						]
+					}
+				},
+				"required": [
+					"id",
+					"name",
+					"kind",
+					"ownerId"
+				],
+				"additionalProperties": false,
+				"description": "A human, or an AI account with the human who owns it."
+			},
+			"ActorKind": {
+				"type": "string",
+				"enum": [
+					"human",
+					"ai"
+				]
+			},
+			"AiAccounts": {
+				"type": "object",
+				"properties": {
+					"accounts": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/Person"
+						}
+					}
+				},
+				"required": [
+					"accounts"
+				],
+				"additionalProperties": false
+			},
+			"Forbidden": {
+				"title": "FORBIDDEN",
+				"type": "object",
+				"properties": {
+					"defined": {
+						"const": true
+					},
+					"code": {
+						"const": "FORBIDDEN"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {}
+				},
+				"required": [
+					"defined",
+					"code",
+					"message"
+				]
+			},
+			"NotFound": {
+				"title": "NOT_FOUND",
+				"type": "object",
+				"properties": {
+					"defined": {
+						"const": true
+					},
+					"code": {
+						"const": "NOT_FOUND"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {}
+				},
+				"required": [
+					"defined",
+					"code",
+					"message"
+				]
+			},
+			"SharedView": {
+				"type": "object",
+				"properties": {
+					"target": {
+						"$ref": "#/components/schemas/ShareTarget"
+					},
+					"owner": {
+						"$ref": "#/components/schemas/Person"
+					},
+					"tasks": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/Task"
+						}
+					},
+					"projects": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/Project"
+						}
+					},
+					"labels": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/Label"
+						}
+					}
+				},
+				"required": [
+					"target",
+					"owner",
+					"tasks",
+					"projects",
+					"labels"
+				],
+				"additionalProperties": false,
+				"description": "What a public link shows, read only, without signing in."
+			},
+			"ShareTarget": {
+				"type": "object",
+				"properties": {
+					"kind": {
+						"$ref": "#/components/schemas/ShareTargetKind"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"kind",
+					"id"
+				],
+				"additionalProperties": false,
+				"description": "What a share reaches. `id` is empty for the whole space."
+			},
+			"ShareTargetKind": {
+				"type": "string",
+				"enum": [
+					"space",
+					"project",
+					"label",
+					"task"
+				]
+			},
+			"Task": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"parentId": {
+						"type": [
+							"string",
+							"null"
+						]
+					},
+					"order": {
+						"type": "number"
+					},
+					"title": {
+						"type": "string"
+					},
+					"notes": {
+						"type": "string"
+					},
+					"projectId": {
+						"type": [
+							"string",
+							"null"
+						]
+					},
+					"labelIds": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						}
+					},
+					"due": {
+						"anyOf": [
+							{
+								"$ref": "#/components/schemas/Due"
+							},
+							{
+								"type": "null"
+							}
+						]
+					},
+					"recurrence": {
+						"anyOf": [
+							{
+								"$ref": "#/components/schemas/Recurrence"
+							},
+							{
+								"type": "null"
+							}
+						]
+					},
+					"priority": {
+						"$ref": "#/components/schemas/Priority"
+					},
+					"reminders": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/Reminder"
+						}
+					},
+					"location": {
+						"anyOf": [
+							{
+								"$ref": "#/components/schemas/TaskLocation"
+							},
+							{
+								"type": "null"
+							}
+						]
+					},
+					"event": {
+						"anyOf": [
+							{
+								"$ref": "#/components/schemas/TaskEvent"
+							},
+							{
+								"type": "null"
+							}
+						]
+					},
+					"createdAt": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991
+					},
+					"completedAt": {
+						"anyOf": [
+							{
+								"type": "integer",
+								"minimum": -9007199254740991,
+								"maximum": 9007199254740991
+							},
+							{
+								"type": "null"
+							}
+						]
+					},
+					"createdBy": {
+						"type": [
+							"string",
+							"null"
+						]
+					},
+					"completedBy": {
+						"type": [
+							"string",
+							"null"
+						]
+					},
+					"lastCompletedAt": {
+						"anyOf": [
+							{
+								"type": "integer",
+								"minimum": -9007199254740991,
+								"maximum": 9007199254740991
+							},
+							{
+								"type": "null"
+							}
+						]
+					},
+					"sourceKey": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"id",
+					"parentId",
+					"order",
+					"title",
+					"notes",
+					"projectId",
+					"labelIds",
+					"due",
+					"recurrence",
+					"priority",
+					"reminders",
+					"location",
+					"event",
+					"createdAt",
+					"completedAt",
+					"createdBy",
+					"completedBy",
+					"lastCompletedAt"
+				],
+				"additionalProperties": false,
+				"x-table": "tasks"
+			},
+			"Due": {
+				"type": "object",
+				"properties": {
+					"date": {
+						"$ref": "#/components/schemas/DateKey"
+					},
+					"time": {
+						"anyOf": [
+							{
+								"$ref": "#/components/schemas/TimeOfDay"
+							},
+							{
+								"type": "null"
+							}
+						]
+					}
+				},
+				"required": [
+					"date",
+					"time"
+				],
+				"additionalProperties": false
+			},
+			"DateKey": {
+				"description": "Local calendar date, `YYYY-MM-DD`.",
+				"type": "string",
+				"pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+			},
+			"TimeOfDay": {
+				"description": "Local wall-clock time, `HH:mm`.",
+				"type": "string",
+				"pattern": "^\\d{2}:\\d{2}$"
+			},
+			"Recurrence": {
+				"oneOf": [
+					{
+						"type": "object",
+						"properties": {
+							"interval": {
+								"type": "integer",
+								"exclusiveMinimum": 0,
+								"maximum": 9007199254740991
+							},
+							"unit": {
+								"type": "string",
+								"enum": [
+									"day",
+									"weekday",
+									"month",
+									"year"
+								]
+							}
+						},
+						"required": [
+							"interval",
+							"unit"
+						],
+						"additionalProperties": false
+					},
+					{
+						"type": "object",
+						"properties": {
+							"interval": {
+								"type": "integer",
+								"exclusiveMinimum": 0,
+								"maximum": 9007199254740991
+							},
+							"unit": {
+								"type": "string",
+								"const": "week"
+							},
+							"days": {
+								"readOnly": true,
+								"minItems": 2,
+								"type": "array",
+								"items": {
+									"$ref": "#/components/schemas/Weekday"
+								}
+							}
+						},
+						"required": [
+							"interval",
+							"unit"
+						],
+						"additionalProperties": false
+					}
+				],
+				"x-flatten": {
+					"unit": "RecurrenceUnit"
+				}
+			},
+			"Weekday": {
+				"type": "number",
+				"enum": [
+					0,
+					1,
+					2,
+					3,
+					4,
+					5,
+					6
+				],
+				"description": "Sunday is 0, as in `Date#getDay`."
+			},
+			"Priority": {
+				"type": "number",
+				"enum": [
+					1,
+					2,
+					3,
+					4
+				],
+				"description": "Todoist priorities: 1 is the most urgent, 4 is the unmarked default.",
+				"default": 4,
+				"x-enum-names": [
+					"p1",
+					"p2",
+					"p3",
+					"p4"
+				]
+			},
+			"Reminder": {
+				"oneOf": [
+					{
+						"type": "object",
+						"properties": {
+							"kind": {
+								"type": "string",
+								"const": "before"
+							},
+							"minutes": {
+								"type": "integer",
+								"minimum": 0,
+								"maximum": 9007199254740991
+							}
+						},
+						"required": [
+							"kind",
+							"minutes"
+						],
+						"additionalProperties": false
+					},
+					{
+						"type": "object",
+						"properties": {
+							"kind": {
+								"type": "string",
+								"const": "at"
+							},
+							"date": {
+								"$ref": "#/components/schemas/DateKey"
+							},
+							"time": {
+								"$ref": "#/components/schemas/TimeOfDay"
+							}
+						},
+						"required": [
+							"kind",
+							"date",
+							"time"
+						],
+						"additionalProperties": false
+					}
+				],
+				"x-inline": true
+			},
+			"TaskLocation": {
+				"type": "object",
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"address": {
+						"type": [
+							"string",
+							"null"
+						]
+					},
+					"latitude": {
+						"type": "number",
+						"minimum": -90,
+						"maximum": 90
+					},
+					"longitude": {
+						"type": "number",
+						"minimum": -180,
+						"maximum": 180
+					},
+					"radius": {
+						"type": "number",
+						"exclusiveMinimum": 0
+					},
+					"trigger": {
+						"$ref": "#/components/schemas/LocationTrigger"
+					}
+				},
+				"required": [
+					"name",
+					"address",
+					"latitude",
+					"longitude",
+					"radius",
+					"trigger"
+				],
+				"additionalProperties": false
+			},
+			"LocationTrigger": {
+				"type": "string",
+				"enum": [
+					"arrive",
+					"leave",
+					"during"
+				]
+			},
+			"TaskEvent": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"title": {
+						"type": "string"
+					},
+					"allDay": {
+						"type": "boolean"
+					},
+					"series": {
+						"type": "boolean"
+					},
+					"edge": {
+						"$ref": "#/components/schemas/EventEdge"
+					},
+					"minutes": {
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 9007199254740991
+					},
+					"occurrences": {
+						"minItems": 1,
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/EventOccurrence"
+						}
+					}
+				},
+				"required": [
+					"id",
+					"title",
+					"allDay",
+					"series",
+					"edge",
+					"minutes",
+					"occurrences"
+				],
+				"additionalProperties": false
+			},
+			"EventEdge": {
+				"type": "string",
+				"enum": [
+					"before",
+					"start",
+					"during",
+					"after"
+				]
+			},
+			"EventOccurrence": {
+				"type": "object",
+				"properties": {
+					"start": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991
+					},
+					"end": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991
+					},
+					"original": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991
+					}
+				},
+				"required": [
+					"start",
+					"end",
+					"original"
+				],
+				"additionalProperties": false
+			},
+			"Project": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"createdAt": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991
+					},
+					"sourceKey": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"id",
+					"name",
+					"createdAt"
+				],
+				"additionalProperties": false,
+				"x-table": "projects"
+			},
+			"Label": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"createdAt": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991
+					}
+				},
+				"required": [
+					"id",
+					"name",
+					"createdAt"
+				],
+				"additionalProperties": false,
+				"x-table": "labels"
+			},
 			"SyncRequest": {
 				"type": "object",
 				"properties": {
@@ -302,6 +963,10 @@
 					},
 					"reset": {
 						"type": "boolean"
+					},
+					"scope": {
+						"default": "",
+						"type": "string"
 					}
 				},
 				"required": [
@@ -387,7 +1052,7 @@
 							"due": {
 								"anyOf": [
 									{
-										"$ref": "#/components/schemas/Due"
+										"$ref": "#/components/schemas/DueInput"
 									},
 									{
 										"type": "null"
@@ -397,7 +1062,7 @@
 							"recurrence": {
 								"anyOf": [
 									{
-										"$ref": "#/components/schemas/Recurrence"
+										"$ref": "#/components/schemas/RecurrenceInput"
 									},
 									{
 										"type": "null"
@@ -410,13 +1075,13 @@
 							"reminders": {
 								"type": "array",
 								"items": {
-									"$ref": "#/components/schemas/Reminder"
+									"$ref": "#/components/schemas/ReminderInput"
 								}
 							},
 							"location": {
 								"anyOf": [
 									{
-										"$ref": "#/components/schemas/TaskLocation"
+										"$ref": "#/components/schemas/TaskLocationInput"
 									},
 									{
 										"type": "null"
@@ -426,7 +1091,7 @@
 							"event": {
 								"anyOf": [
 									{
-										"$ref": "#/components/schemas/TaskEvent"
+										"$ref": "#/components/schemas/TaskEventInput"
 									},
 									{
 										"type": "null"
@@ -439,6 +1104,30 @@
 								"maximum": 9007199254740991
 							},
 							"completedAt": {
+								"anyOf": [
+									{
+										"type": "integer",
+										"minimum": -9007199254740991,
+										"maximum": 9007199254740991
+									},
+									{
+										"type": "null"
+									}
+								]
+							},
+							"createdBy": {
+								"type": [
+									"string",
+									"null"
+								]
+							},
+							"completedBy": {
+								"type": [
+									"string",
+									"null"
+								]
+							},
+							"lastCompletedAt": {
 								"anyOf": [
 									{
 										"type": "integer",
@@ -468,7 +1157,7 @@
 					"fields"
 				]
 			},
-			"Due": {
+			"DueInput": {
 				"type": "object",
 				"properties": {
 					"date": {
@@ -490,17 +1179,7 @@
 					"time"
 				]
 			},
-			"DateKey": {
-				"description": "Local calendar date, `YYYY-MM-DD`.",
-				"type": "string",
-				"pattern": "^\\d{4}-\\d{2}-\\d{2}$"
-			},
-			"TimeOfDay": {
-				"description": "Local wall-clock time, `HH:mm`.",
-				"type": "string",
-				"pattern": "^\\d{2}:\\d{2}$"
-			},
-			"Recurrence": {
+			"RecurrenceInput": {
 				"oneOf": [
 					{
 						"type": "object",
@@ -556,37 +1235,7 @@
 					"unit": "RecurrenceUnit"
 				}
 			},
-			"Weekday": {
-				"type": "number",
-				"enum": [
-					0,
-					1,
-					2,
-					3,
-					4,
-					5,
-					6
-				],
-				"description": "Sunday is 0, as in `Date#getDay`."
-			},
-			"Priority": {
-				"type": "number",
-				"enum": [
-					1,
-					2,
-					3,
-					4
-				],
-				"description": "Todoist priorities: 1 is the most urgent, 4 is the unmarked default.",
-				"default": 4,
-				"x-enum-names": [
-					"p1",
-					"p2",
-					"p3",
-					"p4"
-				]
-			},
-			"Reminder": {
+			"ReminderInput": {
 				"oneOf": [
 					{
 						"type": "object",
@@ -629,7 +1278,7 @@
 				],
 				"x-inline": true
 			},
-			"TaskLocation": {
+			"TaskLocationInput": {
 				"type": "object",
 				"properties": {
 					"name": {
@@ -668,15 +1317,7 @@
 					"trigger"
 				]
 			},
-			"LocationTrigger": {
-				"type": "string",
-				"enum": [
-					"arrive",
-					"leave",
-					"during"
-				]
-			},
-			"TaskEvent": {
+			"TaskEventInput": {
 				"type": "object",
 				"properties": {
 					"id": {
@@ -703,7 +1344,7 @@
 						"minItems": 1,
 						"type": "array",
 						"items": {
-							"$ref": "#/components/schemas/EventOccurrence"
+							"$ref": "#/components/schemas/EventOccurrenceInput"
 						}
 					}
 				},
@@ -717,16 +1358,7 @@
 					"occurrences"
 				]
 			},
-			"EventEdge": {
-				"type": "string",
-				"enum": [
-					"before",
-					"start",
-					"during",
-					"after"
-				]
-			},
-			"EventOccurrence": {
+			"EventOccurrenceInput": {
 				"type": "object",
 				"properties": {
 					"start": {
@@ -897,6 +1529,9 @@
 								"type": "integer",
 								"minimum": 0,
 								"maximum": 9007199254740991
+							},
+							"scope": {
+								"type": "string"
 							}
 						},
 						"required": [
@@ -932,6 +1567,15 @@
 								"type": "integer",
 								"minimum": 0,
 								"maximum": 9007199254740991
+							},
+							"scope": {
+								"type": "string"
+							},
+							"readOnly": {
+								"type": "array",
+								"items": {
+									"type": "string"
+								}
 							}
 						},
 						"required": [
@@ -1026,7 +1670,7 @@
 							"due": {
 								"anyOf": [
 									{
-										"$ref": "#/components/schemas/DueOutput"
+										"$ref": "#/components/schemas/Due"
 									},
 									{
 										"type": "null"
@@ -1036,7 +1680,7 @@
 							"recurrence": {
 								"anyOf": [
 									{
-										"$ref": "#/components/schemas/RecurrenceOutput"
+										"$ref": "#/components/schemas/Recurrence"
 									},
 									{
 										"type": "null"
@@ -1049,13 +1693,13 @@
 							"reminders": {
 								"type": "array",
 								"items": {
-									"$ref": "#/components/schemas/ReminderOutput"
+									"$ref": "#/components/schemas/Reminder"
 								}
 							},
 							"location": {
 								"anyOf": [
 									{
-										"$ref": "#/components/schemas/TaskLocationOutput"
+										"$ref": "#/components/schemas/TaskLocation"
 									},
 									{
 										"type": "null"
@@ -1065,7 +1709,7 @@
 							"event": {
 								"anyOf": [
 									{
-										"$ref": "#/components/schemas/TaskEventOutput"
+										"$ref": "#/components/schemas/TaskEvent"
 									},
 									{
 										"type": "null"
@@ -1078,6 +1722,30 @@
 								"maximum": 9007199254740991
 							},
 							"completedAt": {
+								"anyOf": [
+									{
+										"type": "integer",
+										"minimum": -9007199254740991,
+										"maximum": 9007199254740991
+									},
+									{
+										"type": "null"
+									}
+								]
+							},
+							"createdBy": {
+								"type": [
+									"string",
+									"null"
+								]
+							},
+							"completedBy": {
+								"type": [
+									"string",
+									"null"
+								]
+							},
+							"lastCompletedAt": {
 								"anyOf": [
 									{
 										"type": "integer",
@@ -1106,240 +1774,6 @@
 					"kind",
 					"id",
 					"fields"
-				],
-				"additionalProperties": false
-			},
-			"DueOutput": {
-				"type": "object",
-				"properties": {
-					"date": {
-						"$ref": "#/components/schemas/DateKey"
-					},
-					"time": {
-						"anyOf": [
-							{
-								"$ref": "#/components/schemas/TimeOfDay"
-							},
-							{
-								"type": "null"
-							}
-						]
-					}
-				},
-				"required": [
-					"date",
-					"time"
-				],
-				"additionalProperties": false
-			},
-			"RecurrenceOutput": {
-				"oneOf": [
-					{
-						"type": "object",
-						"properties": {
-							"interval": {
-								"type": "integer",
-								"exclusiveMinimum": 0,
-								"maximum": 9007199254740991
-							},
-							"unit": {
-								"type": "string",
-								"enum": [
-									"day",
-									"weekday",
-									"month",
-									"year"
-								]
-							}
-						},
-						"required": [
-							"interval",
-							"unit"
-						],
-						"additionalProperties": false
-					},
-					{
-						"type": "object",
-						"properties": {
-							"interval": {
-								"type": "integer",
-								"exclusiveMinimum": 0,
-								"maximum": 9007199254740991
-							},
-							"unit": {
-								"type": "string",
-								"const": "week"
-							},
-							"days": {
-								"readOnly": true,
-								"minItems": 2,
-								"type": "array",
-								"items": {
-									"$ref": "#/components/schemas/Weekday"
-								}
-							}
-						},
-						"required": [
-							"interval",
-							"unit"
-						],
-						"additionalProperties": false
-					}
-				],
-				"x-flatten": {
-					"unit": "RecurrenceUnit"
-				}
-			},
-			"ReminderOutput": {
-				"oneOf": [
-					{
-						"type": "object",
-						"properties": {
-							"kind": {
-								"type": "string",
-								"const": "before"
-							},
-							"minutes": {
-								"type": "integer",
-								"minimum": 0,
-								"maximum": 9007199254740991
-							}
-						},
-						"required": [
-							"kind",
-							"minutes"
-						],
-						"additionalProperties": false
-					},
-					{
-						"type": "object",
-						"properties": {
-							"kind": {
-								"type": "string",
-								"const": "at"
-							},
-							"date": {
-								"$ref": "#/components/schemas/DateKey"
-							},
-							"time": {
-								"$ref": "#/components/schemas/TimeOfDay"
-							}
-						},
-						"required": [
-							"kind",
-							"date",
-							"time"
-						],
-						"additionalProperties": false
-					}
-				],
-				"x-inline": true
-			},
-			"TaskLocationOutput": {
-				"type": "object",
-				"properties": {
-					"name": {
-						"type": "string"
-					},
-					"address": {
-						"type": [
-							"string",
-							"null"
-						]
-					},
-					"latitude": {
-						"type": "number",
-						"minimum": -90,
-						"maximum": 90
-					},
-					"longitude": {
-						"type": "number",
-						"minimum": -180,
-						"maximum": 180
-					},
-					"radius": {
-						"type": "number",
-						"exclusiveMinimum": 0
-					},
-					"trigger": {
-						"$ref": "#/components/schemas/LocationTrigger"
-					}
-				},
-				"required": [
-					"name",
-					"address",
-					"latitude",
-					"longitude",
-					"radius",
-					"trigger"
-				],
-				"additionalProperties": false
-			},
-			"TaskEventOutput": {
-				"type": "object",
-				"properties": {
-					"id": {
-						"type": "string"
-					},
-					"title": {
-						"type": "string"
-					},
-					"allDay": {
-						"type": "boolean"
-					},
-					"series": {
-						"type": "boolean"
-					},
-					"edge": {
-						"$ref": "#/components/schemas/EventEdge"
-					},
-					"minutes": {
-						"type": "integer",
-						"minimum": 0,
-						"maximum": 9007199254740991
-					},
-					"occurrences": {
-						"minItems": 1,
-						"type": "array",
-						"items": {
-							"$ref": "#/components/schemas/EventOccurrenceOutput"
-						}
-					}
-				},
-				"required": [
-					"id",
-					"title",
-					"allDay",
-					"series",
-					"edge",
-					"minutes",
-					"occurrences"
-				],
-				"additionalProperties": false
-			},
-			"EventOccurrenceOutput": {
-				"type": "object",
-				"properties": {
-					"start": {
-						"type": "integer",
-						"minimum": -9007199254740991,
-						"maximum": 9007199254740991
-					},
-					"end": {
-						"type": "integer",
-						"minimum": -9007199254740991,
-						"maximum": 9007199254740991
-					},
-					"original": {
-						"type": "integer",
-						"minimum": -9007199254740991,
-						"maximum": 9007199254740991
-					}
-				},
-				"required": [
-					"start",
-					"end",
-					"original"
 				],
 				"additionalProperties": false
 			},
@@ -1488,11 +1922,391 @@
 				],
 				"additionalProperties": false
 			},
-			"Task": {
+			"Settings": {
+				"type": "object",
+				"properties": {
+					"timeZone": {
+						"type": [
+							"string",
+							"null"
+						]
+					},
+					"dictation": {
+						"$ref": "#/components/schemas/DictationChoice"
+					}
+				},
+				"required": [
+					"timeZone",
+					"dictation"
+				],
+				"additionalProperties": false,
+				"x-table": "settings"
+			},
+			"Spaces": {
+				"type": "object",
+				"properties": {
+					"spaces": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/Space"
+						}
+					}
+				},
+				"required": [
+					"spaces"
+				],
+				"additionalProperties": false
+			},
+			"Space": {
 				"type": "object",
 				"properties": {
 					"id": {
 						"type": "string"
+					},
+					"owner": {
+						"$ref": "#/components/schemas/Person"
+					}
+				},
+				"required": [
+					"id",
+					"owner"
+				],
+				"additionalProperties": false,
+				"description": "A space shared with the signed-in user. `id` is its owner’s user id."
+			},
+			"Shares": {
+				"type": "object",
+				"properties": {
+					"shares": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/ShareView"
+						}
+					}
+				},
+				"required": [
+					"shares"
+				],
+				"additionalProperties": false
+			},
+			"ShareView": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"target": {
+						"$ref": "#/components/schemas/ShareTarget"
+					},
+					"grantee": {
+						"anyOf": [
+							{
+								"$ref": "#/components/schemas/Person"
+							},
+							{
+								"type": "null"
+							}
+						]
+					},
+					"role": {
+						"$ref": "#/components/schemas/Role"
+					},
+					"createdAt": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991
+					},
+					"url": {
+						"type": [
+							"string",
+							"null"
+						]
+					}
+				},
+				"required": [
+					"id",
+					"target",
+					"grantee",
+					"role",
+					"createdAt",
+					"url"
+				],
+				"additionalProperties": false,
+				"description": "A share as the owner sees it in the share sheet."
+			},
+			"Role": {
+				"type": "string",
+				"enum": [
+					"view",
+					"edit"
+				]
+			},
+			"NewShare": {
+				"type": "object",
+				"properties": {
+					"target": {
+						"$ref": "#/components/schemas/ShareTargetInput"
+					},
+					"audience": {
+						"$ref": "#/components/schemas/ShareAudience"
+					}
+				},
+				"required": [
+					"target",
+					"audience"
+				]
+			},
+			"ShareTargetInput": {
+				"type": "object",
+				"properties": {
+					"kind": {
+						"$ref": "#/components/schemas/ShareTargetKind"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"kind",
+					"id"
+				],
+				"description": "What a share reaches. `id` is empty for the whole space."
+			},
+			"ShareAudience": {
+				"oneOf": [
+					{
+						"type": "object",
+						"properties": {
+							"kind": {
+								"type": "string",
+								"const": "link"
+							}
+						},
+						"required": [
+							"kind"
+						]
+					},
+					{
+						"type": "object",
+						"properties": {
+							"kind": {
+								"type": "string",
+								"const": "user"
+							},
+							"userId": {
+								"type": "string"
+							},
+							"role": {
+								"$ref": "#/components/schemas/Role"
+							}
+						},
+						"required": [
+							"kind",
+							"userId",
+							"role"
+						]
+					}
+				],
+				"description": "Who a new share is for: anyone with the link, read only, or one user with a role.",
+				"x-inline": true
+			},
+			"ApiTokens": {
+				"type": "object",
+				"properties": {
+					"tokens": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/ApiToken"
+						}
+					}
+				},
+				"required": [
+					"tokens"
+				],
+				"additionalProperties": false
+			},
+			"ApiToken": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"aiUserId": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"createdAt": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991
+					},
+					"lastUsedAt": {
+						"anyOf": [
+							{
+								"type": "integer",
+								"minimum": -9007199254740991,
+								"maximum": 9007199254740991
+							},
+							{
+								"type": "null"
+							}
+						]
+					}
+				},
+				"required": [
+					"id",
+					"aiUserId",
+					"name",
+					"createdAt",
+					"lastUsedAt"
+				],
+				"additionalProperties": false,
+				"description": "An AI account’s token. The secret is shown once, when it is made."
+			},
+			"NewApiToken": {
+				"type": "object",
+				"properties": {
+					"aiUserId": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"aiUserId",
+					"name"
+				]
+			},
+			"CreatedApiToken": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"token": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"id",
+					"token"
+				],
+				"additionalProperties": false,
+				"description": "`token` is `pm.<ownerId>.<secret>`, shown only this once."
+			},
+			"Activity": {
+				"type": "object",
+				"properties": {
+					"entries": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/ActivityEntry"
+						}
+					}
+				},
+				"required": [
+					"entries"
+				],
+				"additionalProperties": false
+			},
+			"ActivityEntry": {
+				"type": "object",
+				"properties": {
+					"at": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991
+					},
+					"actor": {
+						"$ref": "#/components/schemas/Person"
+					},
+					"action": {
+						"$ref": "#/components/schemas/ActivityAction"
+					},
+					"fields": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						}
+					}
+				},
+				"required": [
+					"at",
+					"actor",
+					"action",
+					"fields"
+				],
+				"additionalProperties": false,
+				"description": "One change to a task, read from the space’s log."
+			},
+			"ActivityAction": {
+				"type": "string",
+				"enum": [
+					"created",
+					"edited",
+					"completed",
+					"reopened",
+					"deleted",
+					"restored"
+				]
+			},
+			"SpaceView": {
+				"type": "object",
+				"properties": {
+					"tasks": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/Task"
+						}
+					},
+					"projects": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/Project"
+						}
+					},
+					"labels": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/Label"
+						}
+					},
+					"readOnly": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						}
+					}
+				},
+				"required": [
+					"tasks",
+					"projects",
+					"labels",
+					"readOnly"
+				],
+				"additionalProperties": false,
+				"description": "What the caller sees of a space, for the agent command API."
+			},
+			"AgentNewTask": {
+				"type": "object",
+				"properties": {
+					"text": {
+						"type": "string"
+					},
+					"title": {
+						"type": "string"
+					},
+					"notes": {
+						"type": "string"
+					},
+					"projectId": {
+						"type": [
+							"string",
+							"null"
+						]
 					},
 					"parentId": {
 						"type": [
@@ -1500,9 +2314,21 @@
 							"null"
 						]
 					},
-					"order": {
-						"type": "number"
+					"labelIds": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						}
 					},
+					"priority": {
+						"$ref": "#/components/schemas/Priority"
+					}
+				},
+				"description": "A task the agent command API adds. It needs `text` or `title`."
+			},
+			"TaskEdit": {
+				"type": "object",
+				"properties": {
 					"title": {
 						"type": "string"
 					},
@@ -1524,7 +2350,7 @@
 					"due": {
 						"anyOf": [
 							{
-								"$ref": "#/components/schemas/DueOutput"
+								"$ref": "#/components/schemas/DueInput"
 							},
 							{
 								"type": "null"
@@ -1534,7 +2360,7 @@
 					"recurrence": {
 						"anyOf": [
 							{
-								"$ref": "#/components/schemas/RecurrenceOutput"
+								"$ref": "#/components/schemas/RecurrenceInput"
 							},
 							{
 								"type": "null"
@@ -1547,13 +2373,13 @@
 					"reminders": {
 						"type": "array",
 						"items": {
-							"$ref": "#/components/schemas/ReminderOutput"
+							"$ref": "#/components/schemas/ReminderInput"
 						}
 					},
 					"location": {
 						"anyOf": [
 							{
-								"$ref": "#/components/schemas/TaskLocationOutput"
+								"$ref": "#/components/schemas/TaskLocationInput"
 							},
 							{
 								"type": "null"
@@ -1563,122 +2389,15 @@
 					"event": {
 						"anyOf": [
 							{
-								"$ref": "#/components/schemas/TaskEventOutput"
+								"$ref": "#/components/schemas/TaskEventInput"
 							},
 							{
 								"type": "null"
 							}
 						]
-					},
-					"createdAt": {
-						"type": "integer",
-						"minimum": -9007199254740991,
-						"maximum": 9007199254740991
-					},
-					"completedAt": {
-						"anyOf": [
-							{
-								"type": "integer",
-								"minimum": -9007199254740991,
-								"maximum": 9007199254740991
-							},
-							{
-								"type": "null"
-							}
-						]
-					},
-					"sourceKey": {
-						"type": "string"
 					}
 				},
-				"required": [
-					"id",
-					"parentId",
-					"order",
-					"title",
-					"notes",
-					"projectId",
-					"labelIds",
-					"due",
-					"recurrence",
-					"priority",
-					"reminders",
-					"location",
-					"event",
-					"createdAt",
-					"completedAt"
-				],
-				"additionalProperties": false,
-				"x-table": "tasks"
-			},
-			"Project": {
-				"type": "object",
-				"properties": {
-					"id": {
-						"type": "string"
-					},
-					"name": {
-						"type": "string"
-					},
-					"createdAt": {
-						"type": "integer",
-						"minimum": -9007199254740991,
-						"maximum": 9007199254740991
-					},
-					"sourceKey": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"id",
-					"name",
-					"createdAt"
-				],
-				"additionalProperties": false,
-				"x-table": "projects"
-			},
-			"Label": {
-				"type": "object",
-				"properties": {
-					"id": {
-						"type": "string"
-					},
-					"name": {
-						"type": "string"
-					},
-					"createdAt": {
-						"type": "integer",
-						"minimum": -9007199254740991,
-						"maximum": 9007199254740991
-					}
-				},
-				"required": [
-					"id",
-					"name",
-					"createdAt"
-				],
-				"additionalProperties": false,
-				"x-table": "labels"
-			},
-			"Settings": {
-				"type": "object",
-				"properties": {
-					"timeZone": {
-						"type": [
-							"string",
-							"null"
-						]
-					},
-					"dictation": {
-						"$ref": "#/components/schemas/DictationChoice"
-					}
-				},
-				"required": [
-					"timeZone",
-					"dictation"
-				],
-				"additionalProperties": false,
-				"x-table": "settings"
+				"description": "The editable fields of a task. A missing field is left alone; for nullable fields, `null` clears the value."
 			},
 			"MemoTasks": {
 				"type": "object",
@@ -1723,7 +2442,7 @@
 					"due": {
 						"anyOf": [
 							{
-								"$ref": "#/components/schemas/DueOutput"
+								"$ref": "#/components/schemas/Due"
 							},
 							{
 								"type": "null"
@@ -1733,7 +2452,7 @@
 					"event": {
 						"anyOf": [
 							{
-								"$ref": "#/components/schemas/TaskEventOutput"
+								"$ref": "#/components/schemas/TaskEvent"
 							},
 							{
 								"type": "null"
@@ -1799,7 +2518,7 @@
 					"event": {
 						"anyOf": [
 							{
-								"$ref": "#/components/schemas/TaskEvent"
+								"$ref": "#/components/schemas/TaskEventInput"
 							},
 							{
 								"type": "null"
@@ -2209,9 +2928,444 @@
 				}
 			}
 		},
+		"/api/people": {
+			"get": {
+				"operationId": "people.search",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "q",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true,
+						"required": true
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/People"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Unauthorized"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/ServiceUnavailable"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/me": {
+			"get": {
+				"operationId": "me",
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Person"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Unauthorized"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/ServiceUnavailable"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/ai": {
+			"get": {
+				"operationId": "ai.list",
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/AiAccounts"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Unauthorized"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "403",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Forbidden"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/ServiceUnavailable"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			},
+			"post": {
+				"operationId": "ai.create",
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"name": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"name"
+								]
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Person"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Unauthorized"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "403",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Forbidden"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/ServiceUnavailable"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			},
+			"delete": {
+				"operationId": "ai.delete",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "id",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true,
+						"required": true
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Ok"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Unauthorized"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "403",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Forbidden"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "404",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/NotFound"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/ServiceUnavailable"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/shared": {
+			"get": {
+				"operationId": "shared.view",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "token",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true,
+						"required": true
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/SharedView"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "404",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/NotFound"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/ServiceUnavailable"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			}
+		},
 		"/api/sync": {
 			"post": {
 				"operationId": "sync",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "space",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true
+					}
+				],
 				"requestBody": {
 					"required": true,
 					"content": {
@@ -2241,6 +3395,1307 @@
 									"oneOf": [
 										{
 											"$ref": "#/components/schemas/Unauthorized"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "403",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Forbidden"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/ServiceUnavailable"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/spaces": {
+			"get": {
+				"operationId": "spaces.list",
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Spaces"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Unauthorized"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/ServiceUnavailable"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/shares": {
+			"get": {
+				"operationId": "shares.list",
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Shares"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Unauthorized"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "403",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Forbidden"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/ServiceUnavailable"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			},
+			"post": {
+				"operationId": "shares.create",
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/NewShare"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ShareView"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Unauthorized"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "403",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Forbidden"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "404",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/NotFound"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/ServiceUnavailable"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			},
+			"delete": {
+				"operationId": "shares.delete",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "id",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true,
+						"required": true
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Ok"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Unauthorized"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "403",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Forbidden"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "404",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/NotFound"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/ServiceUnavailable"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/ai-tokens": {
+			"get": {
+				"operationId": "tokens.list",
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiTokens"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Unauthorized"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "403",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Forbidden"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/ServiceUnavailable"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			},
+			"post": {
+				"operationId": "tokens.create",
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/NewApiToken"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/CreatedApiToken"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Unauthorized"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "403",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Forbidden"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "404",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/NotFound"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/ServiceUnavailable"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			},
+			"delete": {
+				"operationId": "tokens.delete",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "id",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true,
+						"required": true
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Ok"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Unauthorized"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "403",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Forbidden"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "404",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/NotFound"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/ServiceUnavailable"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/activity": {
+			"get": {
+				"operationId": "activity.list",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "space",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true
+					},
+					{
+						"in": "query",
+						"name": "id",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true,
+						"required": true
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Activity"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Unauthorized"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "403",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Forbidden"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "404",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/NotFound"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/ServiceUnavailable"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/view": {
+			"get": {
+				"operationId": "view",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "space",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/SpaceView"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Unauthorized"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "403",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Forbidden"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/ServiceUnavailable"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/tasks": {
+			"post": {
+				"operationId": "tasks.create",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "space",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/AgentNewTask"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Task"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Unauthorized"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "403",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Forbidden"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "404",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/NotFound"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/ServiceUnavailable"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			},
+			"patch": {
+				"operationId": "tasks.update",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "space",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true
+					},
+					{
+						"in": "query",
+						"name": "id",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true,
+						"required": true
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/TaskEdit"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Task"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Unauthorized"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "403",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Forbidden"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "404",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/NotFound"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/ServiceUnavailable"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			},
+			"delete": {
+				"operationId": "tasks.delete",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "space",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true
+					},
+					{
+						"in": "query",
+						"name": "id",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true,
+						"required": true
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Ok"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Unauthorized"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "403",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Forbidden"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "404",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/NotFound"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/ServiceUnavailable"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/tasks/complete": {
+			"post": {
+				"operationId": "tasks.complete",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "space",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true
+					},
+					{
+						"in": "query",
+						"name": "id",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true,
+						"required": true
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Task"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Unauthorized"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "403",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Forbidden"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "404",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/NotFound"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/ServiceUnavailable"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/tasks/reopen": {
+			"post": {
+				"operationId": "tasks.reopen",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "space",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true
+					},
+					{
+						"in": "query",
+						"name": "id",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true,
+						"required": true
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Task"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Unauthorized"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "403",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Forbidden"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "404",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/NotFound"
 										},
 										{
 											"$ref": "#/components/schemas/UndefinedError"

@@ -14,3 +14,4 @@ public typealias Recurrence = API.Recurrence
 public typealias TaskItem = API.Task
 public typealias Project = API.Project
 public typealias Label = API.Label
+public typealias Person = API.Person

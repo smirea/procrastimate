@@ -96,6 +96,32 @@ extension API.Snapshot {
         labels = try c.decodeAbsent([Label].self, forKey: .labels) ?? []
         remindersCheckedAt = try c.decode(Int.self, forKey: .remindersCheckedAt)
         sync = try c.decodeAbsent(SyncSection.self, forKey: .sync)
+        // A shared space that fails is dropped on its own; its next sync starts it over.
+        spaces = (try c.decodeAbsent([String: Lenient<SpaceSection>].self, forKey: .spaces) ?? [:])
+            .compactMapValues(\.value)
+        people = try c.decodeAbsent([Person].self, forKey: .people) ?? []
+    }
+}
+
+/// A space someone shared with this user, kept apart from the user's own data and synced on its own. The document's
+/// sync clock serves every space.
+public typealias SpaceSection = API.SpaceSection
+
+extension API.SpaceSection {
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        owner = try c.decode(Person.self, forKey: .owner)
+        cursor = try c.decode(Int.self, forKey: .cursor)
+        try check(cursor >= 0, CodingKeys.cursor, in: c, "cursor >= 0")
+        outbox = try c.decode([SyncOp].self, forKey: .outbox)
+        epoch = try c.decodeAbsent(Int.self, forKey: .epoch) ?? 0
+        try check(epoch >= 0, CodingKeys.epoch, in: c, "epoch >= 0")
+        scope = try c.decodeAbsent(String.self, forKey: .scope) ?? ""
+        readOnly = try c.decodeAbsent([String].self, forKey: .readOnly) ?? []
+        let loaded = try c.decode([Lenient<StoredTask>].self, forKey: .tasks).compactMap { $0.value?.task }
+        tasks = StoreRules.sortTasks(Subtasks.detachOrphans(loaded))
+        projects = try c.decodeAbsent([Project].self, forKey: .projects) ?? []
+        labels = try c.decodeAbsent([Label].self, forKey: .labels) ?? []
     }
 }
 
@@ -118,7 +144,7 @@ private struct StoredTask: Decodable {
 
     private static let added: [(String, JSONValue)] = [
         ("parentId", .null), ("order", .number(0)), ("labelIds", .array([])), ("recurrence", .null),
-        ("location", .null), ("event", .null),
+        ("location", .null), ("event", .null), ("createdBy", .null), ("completedBy", .null), ("lastCompletedAt", .null),
     ]
 
     init(from decoder: Decoder) throws {
