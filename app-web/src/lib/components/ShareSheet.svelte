@@ -12,6 +12,7 @@
 	import PersonName from './PersonName.svelte';
 	import { api } from '../api.ts';
 	import { store } from '../store.svelte.ts';
+	import { sync } from '../sync.svelte.ts';
 	import { sheets, motion } from '../ui.svelte.ts';
 
 	let { target, name }: { target: ShareTarget; name: string } = $props();
@@ -58,10 +59,16 @@
 		return () => clearTimeout(timer);
 	});
 
+	/** The server shares only what it holds, so a project made a moment ago has to arrive before its share. */
+	async function uploaded() {
+		if (store.pending) await sync.syncNow();
+	}
+
 	async function copyLink() {
 		error = '';
 		let url = link?.url;
 		if (!url) {
+			await uploaded();
 			const share = await api.shares.create({ target, audience: { kind: 'link' } }).catch(() => null);
 			if (!share?.url) {
 				error = 'Could not create the link';
@@ -77,6 +84,7 @@
 
 	async function add(person: Person) {
 		error = '';
+		await uploaded();
 		const share = await api.shares
 			.create({ target, audience: { kind: 'user', userId: person.id, role } })
 			.catch(() => null);
