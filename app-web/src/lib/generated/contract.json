@@ -168,6 +168,42 @@
 			}
 		}
 	},
+	"shares": {
+		"create": {
+			"~orpc": {
+				"errorMap": {},
+				"meta": {
+					"~openapi": {
+						"method": "POST",
+						"path": "/api/shares"
+					}
+				}
+			}
+		},
+		"list": {
+			"~orpc": {
+				"errorMap": {},
+				"meta": {
+					"~openapi": {
+						"method": "GET",
+						"path": "/api/shares"
+					}
+				}
+			}
+		},
+		"delete": {
+			"~orpc": {
+				"errorMap": {},
+				"meta": {
+					"~openapi": {
+						"method": "DELETE",
+						"path": "/api/shares",
+						"inputStructure": "detailed"
+					}
+				}
+			}
+		}
+	},
 	"sync": {
 		"~orpc": {
 			"errorMap": {},
@@ -188,42 +224,6 @@
 					"~openapi": {
 						"method": "GET",
 						"path": "/api/spaces"
-					}
-				}
-			}
-		}
-	},
-	"shares": {
-		"list": {
-			"~orpc": {
-				"errorMap": {},
-				"meta": {
-					"~openapi": {
-						"method": "GET",
-						"path": "/api/shares"
-					}
-				}
-			}
-		},
-		"create": {
-			"~orpc": {
-				"errorMap": {},
-				"meta": {
-					"~openapi": {
-						"method": "POST",
-						"path": "/api/shares"
-					}
-				}
-			}
-		},
-		"delete": {
-			"~orpc": {
-				"errorMap": {},
-				"meta": {
-					"~openapi": {
-						"method": "DELETE",
-						"path": "/api/shares",
-						"inputStructure": "detailed"
 					}
 				}
 			}

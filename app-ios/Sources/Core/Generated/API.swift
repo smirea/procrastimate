@@ -4446,17 +4446,17 @@ extension API.Endpoints {
         public static let path = "/api/shared"
     }
 
-    public enum SharesList: APIEndpoint {
-        public typealias Input = NoInput
-        public typealias Output = API.Shares
-        public static let method = "GET"
-        public static let path = "/api/shares"
-    }
-
     public enum SharesCreate: APIEndpoint {
         public typealias Input = API.NewShare
         public typealias Output = API.ShareView
         public static let method = "POST"
+        public static let path = "/api/shares"
+    }
+
+    public enum SharesList: APIEndpoint {
+        public typealias Input = NoInput
+        public typealias Output = API.Shares
+        public static let method = "GET"
         public static let path = "/api/shares"
     }
 

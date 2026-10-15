@@ -9,7 +9,7 @@ import api from '../api';
 import type { Env } from '../bindings';
 import { memoryAccount } from './account';
 import type { AccountStore } from './store';
-import { authHeaders, registerDevice, withAuth, type DeviceCredentials } from './test-device';
+import { authHeaders, registerDevice, whoAmI, withAuth, type DeviceCredentials } from './test-device';
 import { storeFactories } from './test-stores';
 
 const NOW = Date.UTC(2026, 9, 14, 18);
@@ -48,6 +48,7 @@ describe.each(storeFactories)('/api/memo-tasks on the %s store', (_name, createS
 	let env: Env;
 	let memoApp: DeviceCredentials;
 	let phone: DeviceCredentials;
+	let userId: string;
 	let hlc = 0;
 
 	beforeEach(async () => {
@@ -55,6 +56,7 @@ describe.each(storeFactories)('/api/memo-tasks on the %s store', (_name, createS
 		env = withAuth({ ACCOUNT: memoryAccount(store) });
 		phone = await registerDevice(env, 'iPhone');
 		memoApp = await registerDevice(env, 'NoteTorus');
+		userId = (await whoAmI(env, phone)).id;
 	});
 
 	const call = (method: string, query: string, body?: unknown, cred: DeviceCredentials | null = memoApp) =>
@@ -126,9 +128,15 @@ describe.each(storeFactories)('/api/memo-tasks on the %s store', (_name, createS
 				title: 'Call the plumber',
 				notes: 'Why: the sink leaks. "it is dripping again"',
 				createdAt: NOW,
+				createdBy: userId,
 				sourceKey: `voicememo:${MEMO}:${KEY_A}`,
 			}),
-			task(ids[1]!, { title: 'Buy filters', createdAt: NOW + 1, sourceKey: `voicememo:${MEMO}:${KEY_B}` }),
+			task(ids[1]!, {
+				title: 'Buy filters',
+				createdAt: NOW + 1,
+				createdBy: userId,
+				sourceKey: `voicememo:${MEMO}:${KEY_B}`,
+			}),
 		]);
 		expect(store.hasOp(`voicememo:${MEMO}:${KEY_A}`)).toBe(true);
 	});

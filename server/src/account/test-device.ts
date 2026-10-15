@@ -1,4 +1,5 @@
 import { DEVICE_HEADER, DEVICE_NAME_HEADER } from '../../../shared/auth';
+import type { Person } from '../../../shared/sharing';
 import api from '../api';
 import type { Env } from '../bindings';
 
@@ -70,4 +71,14 @@ export async function registerDevice(env: Env, name = 'Device'): Promise<DeviceC
 
 export function authHeaders(credentials: Pick<DeviceCredentials, 'token' | 'deviceId'>): Record<string, string> {
 	return { Authorization: `Bearer ${credentials.token}`, [DEVICE_HEADER]: credentials.deviceId };
+}
+
+/** The signed-in user behind `credentials`, from `GET /api/me`. */
+export async function whoAmI(env: Env, credentials: Pick<DeviceCredentials, 'token' | 'deviceId'>): Promise<Person> {
+	const response = await api.fetch(
+		new Request('https://procrastimate.test/api/me', { headers: authHeaders(credentials) }),
+		env,
+	);
+	if (!response.ok) throw new Error(`me failed: ${response.status} ${await response.text()}`);
+	return (await response.json()) as Person;
 }

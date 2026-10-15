@@ -33,7 +33,8 @@ export type SocketHost = {
 
 export type Realtime = {
 	accept: SocketHost['accept'];
-	nudge(cursor: number): void;
+	/** `space` names another space that moved, by its owner's id; without it the nudge is for this one. */
+	nudge(cursor: number, space?: string): void;
 	revoke(deviceId: string): void;
 };
 
@@ -47,8 +48,8 @@ function attempt(run: () => void) {
 export function realtime(host: SocketHost): Realtime {
 	return {
 		accept: (request, deviceId) => host.accept(request, deviceId),
-		nudge(cursor) {
-			const message = JSON.stringify({ cursor } satisfies Nudge);
+		nudge(cursor, space) {
+			const message = JSON.stringify((space ? { cursor, space } : { cursor }) satisfies Nudge);
 			for (const socket of host.sockets()) attempt(() => socket.send(message));
 		},
 		revoke(deviceId) {
