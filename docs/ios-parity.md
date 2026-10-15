@@ -222,6 +222,16 @@ Built on web and iOS, inside quick add. The grammar is covered by `shared/vector
 | `ramble-unavailable`: a missing ElevenLabs key or a refused socket explains why that path is off; offline uses native dictation                                                   | Built | Built | R4, R5 | —        | —          | —          |
 | `ramble-fallback`: online, web native dictation that fails before hearing anything moves to ElevenLabs; a stop on error shows `Dictation stopped. You can type the task instead.` | Built | n/a   | —      | —        | —          | —          |
 
+### Sharing
+
+| Feature                                                                                                                                           | Web | iOS                                                     | Slice   | XCUITest                                    | Playwright       | Screenshot |
+| ------------------------------------------------------------------------------------------------------------------------------------------------- | --- | ------------------------------------------------------- | ------- | ------------------------------------------- | ---------------- | ---------- |
+| `share-person`, `share-link`: the share sheet on projects, labels, and task details                                                               | ✓   | Built (plus the system share sheet for the link)        | Sharing | throwaway tap project against a mock server | `sharing.e2e.ts` | —          |
+| `shared-with-me`, `guest-edit`, `pickers-stay-in-space`: shared spaces as their own store sections, edits routed to the space that holds the task | ✓   | Built                                                   | Sharing | `swift test` (`SpaceTests`)                 | `sharing.e2e.ts` | —          |
+| `authorship`, `activity`: Created by, Completed by, and the Activity list in task details                                                         | ✓   | Built                                                   | Sharing | —                                           | `sharing.e2e.ts` | —          |
+| `public-link`: `/s/<token>` read only without signing in; Universal Links open it in the app                                                      | ✓   | Built (untested until the association file is deployed) | Sharing | `swift test` (link parser)                  | `sharing.e2e.ts` | —          |
+| `ai-accounts`: create, generate a token shown once, delete                                                                                        | ✓   | Built                                                   | Sharing | throwaway tap project against a mock server | —                | —          |
+
 ### Siri, Shortcuts, and Spotlight
 
 iOS only. The web client has no App Intents. New features that can be done from outside the app add their rows here in the same change. See [iOS app](decisions/ios.md#siri-shortcuts-and-spotlight).

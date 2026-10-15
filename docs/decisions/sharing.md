@@ -35,3 +35,20 @@ Sharing lets the owner of a space give other people, AI accounts, or anyone with
 
 - **Same protocol, one space per request.** `POST /api/sync?space=<ownerId>` syncs a shared space; no `space` is the caller's own. The Worker routes on the query alone and never reads bodies. A guest sends `scope`, the hash of what it last saw, and gets either no changes or a fresh filtered snapshot with `readOnly`.
 - **A nudge names its space.** A socket nudge with `space` tells the client to sync that section. The owner's object sends it to each human grantee's object after a request moved its log, with the owner's new head as `cursor`. A new membership is followed by one too, so a client that hears an unknown space lists its spaces again.
+
+## Clients
+
+Web and iOS build the same behavior.
+
+- **Sections, routed by id.** The user's own data stays where it was. Each shared space is a section with its own outbox. Lookups, details, children, and the shared project and label screens read the merged view of own data and every section. Each command finds the space that holds its target and runs the store rule on that space's data only. A new task takes its parent's space, then its project's, then a shared label's, then the user's own, and drops a project or label from another space. Personal views (Inbox, Today, No date, places, events, search, reminders, and on iOS Spotlight and the App Intents) read own data only, so shared tasks never show there.
+- **Read only is the server's call.** A section's `readOnly` ids lose the checkbox, swipes, editable title, delete, and subtask add. Another space's projects and labels are never renamed or deleted, and the pickers on a shared task list only that space's projects and labels, with no create.
+- **The sync loop.** Own sync runs first, unchanged. Then `GET /api/spaces` adds or drops sections, at launch, every five minutes, and when a nudge names an unknown space. Then each section syncs with `POST /api/sync?space=`. A `403` drops the section and its unsent edits. A section with unsent edits sends an empty `scope`, so an edit the server refused comes back overwritten instead of lingering.
+- **Shared with me** lists each target the owner shared with this user that is still in the section, with the owner's name. A whole-space share lists its projects.
+- **Authorship offline, history online.** Task details show `Created by` and `Completed by` from the task's fields and the people cache. The Activity list comes from `GET /api/activity` and shows only when someone other than the user touched the task, so a solo task looks as it did. An AI account carries an `AI` badge wherever a person shows.
+- **Sharing needs the target on the server.** The share sheet uploads unsent edits before it creates a share, so a project made a moment ago can be shared at once.
+- **Public links.** The web `/s/[token]` route renders outside the sign-in gate with the list rows over a read-only lookup. iOS opens `https://procrastimate.stf.lol/s/<token>` through Universal Links (`applinks:procrastimate.stf.lol`) in a read-only screen, also when signed out, and sends a member of that space to the space's own screen.
+- **AI accounts in Settings.** Create by name, generate a token shown once with Copy, delete. Tokens are never listed again.
+
+## Not built yet
+
+- Moving a task between spaces, assignees, shared tasks in personal views, a guest renaming a shared project or label, and notifications for shared tasks on a guest's devices.
