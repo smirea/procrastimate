@@ -5,7 +5,7 @@
 	import { clock, mobile } from '#lib/ui.svelte.ts';
 	import { noDateTasks } from 'shared/views.ts';
 
-	const view = $derived(noDateTasks(store.tasks, clock.today));
+	const view = $derived(noDateTasks(store.own.tasks, clock.today));
 </script>
 
 <svelte:head><title>No date · ProcrastiMate</title></svelte:head>

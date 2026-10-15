@@ -23,15 +23,15 @@
 	let { onquickadd, onsearch, onsettings }: { onquickadd: () => void; onsearch: () => void; onsettings: () => void } =
 		$props();
 
-	const today = $derived(todayTasks(store.tasks, clock.today));
+	const today = $derived(todayTasks(store.own.tasks, clock.today));
 	const views = $derived([
 		{ href: '/inbox', label: 'Inbox', icon: Tray, count: today.overdue.length + today.today.length },
-		{ href: '/no-date', label: 'No date', icon: CalendarMinus, count: inboxTasks(store.tasks, clock.today).length },
+		{ href: '/no-date', label: 'No date', icon: CalendarMinus, count: inboxTasks(store.own.tasks, clock.today).length },
 	]);
 
 	const labels = $derived(
-		store.labels
-			.map((label) => ({ label, count: labelTasks(store.tasks, label.id).length }))
+		store.own.labels
+			.map((label) => ({ label, count: labelTasks(store.own.tasks, label.id).length }))
 			.toSorted((a, b) => a.label.name.localeCompare(b.label.name, undefined, { sensitivity: 'base' })),
 	);
 
@@ -39,12 +39,12 @@
 		{
 			label: 'Places',
 			icon: MapPin,
-			rows: placeGroups(store.tasks).map((g) => ({ key: g.key, name: g.name, count: g.count, href: `/places/${encodeURIComponent(g.key)}` })),
+			rows: placeGroups(store.own.tasks).map((g) => ({ key: g.key, name: g.name, count: g.count, href: `/places/${encodeURIComponent(g.key)}` })),
 		},
 		{
 			label: 'Events',
 			icon: CalendarStar,
-			rows: eventGroups(store.tasks, clock.today).map((g) => ({ key: g.id, name: g.title, count: g.count, href: `/events/${encodeURIComponent(g.id)}` })),
+			rows: eventGroups(store.own.tasks, clock.today).map((g) => ({ key: g.id, name: g.title, count: g.count, href: `/events/${encodeURIComponent(g.id)}` })),
 		},
 	]);
 
@@ -104,15 +104,15 @@
 				</button>
 			</div>
 			<ul class="space-y-0.5">
-				{#each store.projects as project (project.id)}
+				{#each store.own.projects as project (project.id)}
 					{@const href = `/projects/${project.id}`}
 					{@const active = page.url.pathname === href}
 					<li transition:slide={motion({ duration: 180, easing: cubicOut })}>
 						<a {href} class="nav-link" class:active aria-current={active ? 'page' : undefined}>
 							<Hash size={18} />
 							<span class="flex-1 truncate">{project.name}</span>
-							{#if projectTasks(store.tasks, project.id).length}
-								<span class="text-[12px] text-faint">{projectTasks(store.tasks, project.id).length}</span>
+							{#if projectTasks(store.own.tasks, project.id).length}
+								<span class="text-[12px] text-faint">{projectTasks(store.own.tasks, project.id).length}</span>
 							{/if}
 						</a>
 					</li>

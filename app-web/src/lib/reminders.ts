@@ -9,7 +9,7 @@ import { sheets, toasts } from './ui.svelte.ts';
 export function fireDueReminders(now: number) {
 	const since = store.remindersCheckedAt;
 	const today = toDateKey(new Date(now));
-	for (const task of store.tasks) {
+	for (const task of store.own.tasks) {
 		if (task.completedAt !== null) continue;
 		const due = taskNotificationTimes(task, today).some(t => t.getTime() > since && t.getTime() <= now);
 		if (!due) continue;
