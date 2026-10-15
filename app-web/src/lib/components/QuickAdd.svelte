@@ -124,9 +124,12 @@
 		input.focus();
 	}
 
-	/** A manual pick replaces whatever the text said for that attribute. */
+	/**
+	 * A manual pick replaces whatever the text said for that attribute. The parser shows only the last copy of a
+	 * repeated phrase, so each cut reparses until no copy is left to take over from the pick.
+	 */
 	function clearToken(kind: TokenKind) {
-		cut([tokenOf(kind)]);
+		for (let token = tokenOf(kind); token; token = tokenOf(kind)) cut([token]);
 		input.focus();
 	}
 

@@ -29,7 +29,7 @@ import Testing
         var snapshot = Snapshot.empty(now: 0)
         SyncEngine.ensure(&snapshot, deviceId: "device", now: 0, timeZone: "UTC") { "op-1" }
         let body = Data(
-            #"{"acked":["op-1"],"cursor":3,"hlc":"2:0:server","epoch":0,"snapshot":{"tasks":[],"projects":[],"labels":[],"settings":{"timeZone":"Europe/Berlin","dictation":"elevenlabs","quickAddButtons":["labels"]}}}"#
+            #"{"acked":["op-1"],"cursor":3,"hlc":"2:0:server","epoch":0,"snapshot":{"tasks":[],"projects":[],"sections":[],"labels":[],"settings":{"timeZone":"Europe/Berlin","dictation":"elevenlabs","quickAddButtons":["labels"]}}}"#
                 .utf8
         )
         #expect(SyncEngine.apply(&snapshot, response: body, now: 3) { "op-3" })

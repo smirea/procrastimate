@@ -33,6 +33,8 @@ extension QuickAddButton {
 /// and a `Customize row` submenu whose toggles pin or unpin each button for every device.
 struct QuickAddMenu: View {
     @Environment(Store.self) private var store
+    /// The actions this draft can take. A picked event leaves out Date and Repeat, which it stands in for.
+    let buttons: [QuickAddButton]
     let priority: Priority
     let onPriority: @MainActor (Priority) -> Void
     let run: @MainActor (QuickAddButton) -> Void
@@ -40,7 +42,7 @@ struct QuickAddMenu: View {
     var body: some View {
         Menu {
             Section {
-                ForEach(QuickAddButton.allCases) { button in
+                ForEach(buttons) { button in
                     if button == .priority {
                         Menu {
                             Picker("Priority", selection: Binding(get: { priority }, set: onPriority)) {

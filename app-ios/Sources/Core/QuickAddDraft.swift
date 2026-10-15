@@ -76,10 +76,20 @@ public struct QuickAddDraft: Hashable, Sendable {
         )
     }
 
-    /// A manual pick replaces whatever the text said for that attribute.
-    public mutating func clearToken(_ kind: QuickAdd.TokenKind, in parsed: QuickAdd.Parsed) {
-        guard let token = parsed.tokens.first(where: { $0.kind == kind }) else { return }
-        removeTokens([token])
+    /// A manual pick replaces whatever the text said for that attribute. The parser shows only the last copy of a
+    /// repeated phrase, so each cut reparses until no copy is left to take over from the pick.
+    public mutating func clearTokens(
+        _ kind: QuickAdd.TokenKind,
+        now: Date,
+        projects: [Project],
+        sections: [ProjectSection] = [],
+        labels: [Label],
+        in zone: TimeZone
+    ) {
+        while let token = parse(now: now, projects: projects, sections: sections, labels: labels, in: zone).tokens
+            .first(where: { $0.kind == kind }) {
+            removeTokens([token])
+        }
     }
 
     /// Cuts each token's phrase from the text, as unchecking a typed label in the labels picker does.

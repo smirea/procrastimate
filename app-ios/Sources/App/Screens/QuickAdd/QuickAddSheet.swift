@@ -75,16 +75,14 @@ private struct QuickAddForm: View {
             }
             HStack(spacing: 6) {
                 chipRow(parsed, resolved)
-                QuickAddMenu(priority: resolved.priority, onPriority: { setPriority($0, parsed) }, run: { run($0) })
+                QuickAddMenu(buttons: supported, priority: resolved.priority, onPriority: { setPriority($0) }, run: { run($0) })
             }
             .animation(.snappy(duration: 0.16), value: parsed.tokens)
 
             HStack(spacing: 8) {
                 ProjectChip(projectId: resolved.projectId, sectionId: resolved.sectionId) { projectId, sectionId in
-                    draft.clearToken(.section, in: parsed)
-                    draft.clearToken(.project, in: draft.parse(
-                        now: clock.now, projects: spaceProjects, sections: spaceSections, labels: spaceLabels, in: clock.timeZone
-                    ))
+                    clear(.section)
+                    clear(.project)
                     draft.picked.projectId = projectId
                     draft.picked.sectionId = sectionId
                 }
@@ -236,11 +234,11 @@ private struct QuickAddForm: View {
         switch button {
         case .date:
             DueChip(due: resolved.due, openTrigger: trigger) { due in
-                draft.clearToken(.due, in: parsed)
+                clear(.due)
                 draft.picked.due = due
             }
         case .priority:
-            PriorityChip(priority: resolved.priority, iconOnly: true) { setPriority($0, parsed) }
+            PriorityChip(priority: resolved.priority, iconOnly: true) { setPriority($0) }
         case .reminders:
             ReminderChip(reminders: draft.picked.reminders, due: resolved.due, openTrigger: trigger) {
                 draft.picked.reminders = $0
@@ -251,7 +249,7 @@ private struct QuickAddForm: View {
             }
         case .repeat:
             RepeatChip(recurrence: parsed.recurrence ?? draft.picked.recurrence, due: resolved.due, openTrigger: trigger) {
-                setRecurrence($0, start: $1, parsed: parsed, due: resolved.due)
+                setRecurrence($0, start: $1, due: resolved.due)
             }
         case .labels:
             LabelsChip(labelIds: resolved.labelIds, openTrigger: trigger) { setLabels($0, parsed) }
@@ -264,19 +262,25 @@ private struct QuickAddForm: View {
         }
     }
 
-    private func setPriority(_ priority: Priority, _ parsed: QuickAdd.Parsed) {
-        draft.clearToken(.priority, in: parsed)
+    /// A pick wins over every typed copy of its phrase.
+    private func clear(_ kind: QuickAdd.TokenKind) {
+        draft.clearTokens(
+            kind, now: clock.now, projects: spaceProjects, sections: spaceSections, labels: spaceLabels, in: clock.timeZone
+        )
+    }
+
+    private func setPriority(_ priority: Priority) {
+        clear(.priority)
         draft.picked.priority = priority
     }
 
     /// A repeat picked here replaces a typed one, and moves the date when the repeat starts on another day.
-    private func setRecurrence(_ recurrence: Recurrence?, start: Due?, parsed: QuickAdd.Parsed, due: Due?) {
-        var tokens = parsed.tokens.filter { $0.kind == .recurrence }
+    private func setRecurrence(_ recurrence: Recurrence?, start: Due?, due: Due?) {
+        clear(.recurrence)
         if start != due {
-            tokens += parsed.tokens.filter { $0.kind == .due }
+            clear(.due)
             draft.picked.due = start
         }
-        draft.removeTokens(tokens)
         draft.picked.recurrence = recurrence
     }
 
