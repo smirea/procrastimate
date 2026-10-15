@@ -32,20 +32,26 @@ extension Browse {
         public let owner: Person
     }
 
-    /// What Browse lists under "Shared with me", as the web sidebar does: each space's projects and labels, then its
-    /// open top-level tasks that no listed project holds, which reach this user on their own.
+    /// What Browse lists under "Shared with me", as the web sidebar does: each thing its owner shared with this user
+    /// that is still there. A whole-space share lists the space's projects.
     public static func sharedEntries(_ spaces: [(id: String, section: SpaceSection)]) -> [SharedEntry] {
         spaces.flatMap { _, section in
-            let projectIds = Set(section.projects.map(\.id))
-            let taskIds = Set(section.tasks.map(\.id))
-            let loose = section.tasks.filter { task in
-                task.completedAt == nil
-                    && (task.parentId.map { !taskIds.contains($0) } ?? true)
-                    && (task.projectId.map { !projectIds.contains($0) } ?? true)
+            let owner = section.owner
+            return section.targets.flatMap { target -> [SharedEntry] in
+                switch target.kind {
+                case .project:
+                    section.projects.filter { $0.id == target.id }
+                        .map { SharedEntry(kind: .project, id: $0.id, name: $0.name, owner: owner) }
+                case .label:
+                    section.labels.filter { $0.id == target.id }
+                        .map { SharedEntry(kind: .label, id: $0.id, name: $0.name, owner: owner) }
+                case .task:
+                    section.tasks.filter { $0.id == target.id }
+                        .map { SharedEntry(kind: .task, id: $0.id, name: $0.title, owner: owner) }
+                case .space:
+                    section.projects.map { SharedEntry(kind: .project, id: $0.id, name: $0.name, owner: owner) }
+                }
             }
-            return section.projects.map { SharedEntry(kind: .project, id: $0.id, name: $0.name, owner: section.owner) }
-                + section.labels.map { SharedEntry(kind: .label, id: $0.id, name: $0.name, owner: section.owner) }
-                + loose.map { SharedEntry(kind: .task, id: $0.id, name: $0.title, owner: section.owner) }
         }
     }
 }
@@ -104,6 +110,7 @@ extension SyncEngine {
         case let .snapshot(full):
             section.scope = full.scope ?? ""
             section.readOnly = full.readOnly ?? []
+            section.targets = full.targets ?? []
         }
         snapshot.spaces[id] = section
         return true

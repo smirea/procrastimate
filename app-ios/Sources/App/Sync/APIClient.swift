@@ -1,5 +1,6 @@
 import Core
 import Foundation
+import Synchronization
 
 enum APIFailure: Error {
     case status(Int, APIError?)
@@ -7,6 +8,10 @@ enum APIFailure: Error {
 }
 
 enum APIClient {
+    /// This install's device, which the owner's routes (spaces, shares, tokens) authenticate along with the session.
+    /// Sync sets it before its first request.
+    static let device = Mutex<(id: String, name: String)?>(nil)
+
     /// `query` drops nil values, so an own-space request sends no `space`.
     static func send<E: APIEndpoint>(
         _: E.Type,
@@ -15,6 +20,7 @@ enum APIClient {
         token: String? = SessionToken.read(),
         device: (id: String, name: String)? = nil
     ) async throws -> E.Output {
+        let device = device ?? (token == nil ? nil : Self.device.withLock { $0 })
         var url = AppEnvironment.apiURL.appending(path: String(E.path.dropFirst()))
         let items = query.compactMap { key, value in value.map { URLQueryItem(name: key, value: $0) } }
         if !items.isEmpty { url.append(queryItems: items.sorted { $0.name < $1.name }) }

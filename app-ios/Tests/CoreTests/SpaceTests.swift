@@ -143,24 +143,29 @@ import Testing
         #expect(store.task("paint")?.completedAt == pinned.epochMilliseconds)
     }
 
-    @Test func sharedWithMeListsProjectsLabelsAndTasksSharedOnTheirOwn() {
+    @Test func sharedWithMeListsTheTargetsStillThere() {
         let section = SpaceSection(
             owner: ann,
             cursor: 1,
-            tasks: [
-                TaskItem(id: "a", title: "Paint", projectId: "house", createdAt: 1),
-                TaskItem(id: "b", title: "Book the vet", createdAt: 2),
-                TaskItem(id: "c", parentId: "b", title: "Call first", createdAt: 3),
-                TaskItem(id: "d", title: "Done already", createdAt: 4, completedAt: 5),
-                TaskItem(id: "e", parentId: "gone", title: "Orphan step", createdAt: 6),
+            targets: [
+                API.ShareTarget(kind: .project, id: "house"),
+                API.ShareTarget(kind: .task, id: "b"),
+                API.ShareTarget(kind: .label, id: "gone"),
             ],
-            projects: [Project(id: "house", name: "House", createdAt: 1)],
+            tasks: [
+                TaskItem(id: "a", title: "Paint", projectId: "house", labelIds: ["urgent"], createdAt: 1),
+                TaskItem(id: "b", title: "Book the vet", projectId: "pets", createdAt: 2),
+            ],
+            projects: [Project(id: "house", name: "House", createdAt: 1), Project(id: "pets", name: "Pets", createdAt: 2)],
             labels: [Label(id: "urgent", name: "urgent", createdAt: 1)]
         )
         let entries = Browse.sharedEntries([(id: "ann", section: section)])
-        #expect(entries.map(\.name) == ["House", "urgent", "Book the vet", "Orphan step"])
-        #expect(entries.map(\.kind) == [.project, .label, .task, .task])
-        #expect(Set(entries.map(\.owner.name)) == ["Ann"])
+        #expect(entries.map(\.name) == ["House", "Book the vet"])
+        #expect(entries.map(\.kind) == [.project, .task])
+
+        var whole = section
+        whole.targets = [API.ShareTarget(kind: .space, id: "")]
+        #expect(Browse.sharedEntries([(id: "ann", section: whole)]).map(\.name) == ["House", "Pets"])
     }
 
     @Test func onlyAShareLinkOnTheAppsDomainNamesAToken() {

@@ -28,7 +28,9 @@ enum SharingDemo {
             settings: API.Settings()
         )
         _ = store.takeSyncResponse(
-            .snapshot(.init(snapshot: shared, cursor: 1, hlc: "1:0:server", epoch: 0, scope: "demo", readOnly: ["fence"])),
+            .snapshot(.init(snapshot: shared, cursor: 1, hlc: "1:0:server", epoch: 0, scope: "demo", readOnly: ["fence"], targets: [
+                API.ShareTarget(kind: .project, id: "garden"), API.ShareTarget(kind: .task, id: "vet"),
+            ])),
             space: ann.id
         )
         if !store.projects.contains(where: { $0.name == "Trip to Lisbon" }) {

@@ -18,6 +18,8 @@ final class AccountSync {
         self.store = store
         self.clock = clock
         self.session = session
+        let device = store.snapshot.sync.map { ($0.deviceId, Self.deviceName()) }
+        APIClient.device.withLock { $0 = device }
     }
 
     /// Syncs while a real session token is in the Keychain. The DEBUG launch flag is not a token.
@@ -89,6 +91,8 @@ final class AccountSync {
     private func sync() async {
         guard let token = SessionToken.read() else { return }
         store.noteTimeZone(clock.timeZone.identifier)
+        let device = device()
+        APIClient.device.withLock { $0 = device }
         guard await syncSpace(.own, token: token) else { return }
         if spacesListedAt.map({ $0.duration(to: .now) > Self.spacesInterval }) ?? true {
             await listSpaces(token: token)
@@ -126,6 +130,7 @@ final class AccountSync {
             if let id = space.query { store.dropSpace(id) }
             return false
         } catch {
+            ErrorReport.log("Sync failed for \(space.query ?? "own space")", detail: String(reflecting: error))
             return false
         }
         let applied = switch space {
@@ -139,9 +144,13 @@ final class AccountSync {
     }
 
     private func listSpaces(token: String) async {
-        guard let listed = try? await APIClient.send(API.Endpoints.SpacesList.self, NoInput(), token: token) else { return }
-        spacesListedAt = .now
-        store.setSpaces(listed.spaces)
+        do {
+            let listed = try await APIClient.send(API.Endpoints.SpacesList.self, NoInput(), token: token)
+            spacesListedAt = .now
+            store.setSpaces(listed.spaces)
+        } catch {
+            ErrorReport.log("Could not list shared spaces", detail: String(reflecting: error))
+        }
     }
 
     /// A nudge for a space this device does not know yet means it was just shared, so the list comes first.
@@ -198,7 +207,7 @@ final class AccountSync {
     }
 
     private func device() -> (id: String, name: String)? {
-        store.snapshot.sync.map { ($0.deviceId, deviceName()) }
+        store.snapshot.sync.map { ($0.deviceId, Self.deviceName()) }
     }
 
     private func applyDevice(_ request: inout URLRequest) {
@@ -207,7 +216,7 @@ final class AccountSync {
         request.setValue(name, forHTTPHeaderField: "x-procrastimate-device-name")
     }
 
-    private func deviceName() -> String {
+    private static func deviceName() -> String {
         #if os(iOS)
         UIDevice.current.userInterfaceIdiom == .pad ? "iPad" : "iPhone"
         #else
