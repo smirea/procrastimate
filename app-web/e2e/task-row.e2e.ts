@@ -23,13 +23,15 @@ test('a row shows two lines of title with its labels inline, and a long title gi
 		for (const row of [short, long]) {
 			const flow = row.locator('.flow');
 			const chip = row.locator('[data-label="home"]');
-			await expect(chip).toBeVisible();
-			const [flowBox, chipBox] = [await flow.boundingBox(), await chip.boundingBox()];
-			expect(chipBox!.y + chipBox!.height).toBeLessThanOrEqual(flowBox!.y + flowBox!.height);
-			expect(chipBox!.x + chipBox!.width).toBeLessThanOrEqual(flowBox!.x + flowBox!.width + 1);
-			expect(flowBox!.height).toBeLessThanOrEqual(2 * lineHeight);
+			// A resize re-renders the chips in their inline or floated spot, so the boxes are read until they settle.
+			await expect(async () => {
+				const [flowBox, chipBox] = [await flow.boundingBox(), await chip.boundingBox()];
+				expect(chipBox!.y + chipBox!.height).toBeLessThanOrEqual(flowBox!.y + flowBox!.height);
+				expect(chipBox!.x + chipBox!.width).toBeLessThanOrEqual(flowBox!.x + flowBox!.width + 1);
+				expect(flowBox!.height).toBeLessThanOrEqual(2 * lineHeight);
+			}).toPass({ timeout: 5000 });
 		}
 	}
-	expect((await long.locator('.flow').boundingBox())!.height).toBe(2 * lineHeight);
-	expect((await short.locator('.flow').boundingBox())!.height).toBe(lineHeight);
+	await expect.poll(async () => (await long.locator('.flow').boundingBox())?.height).toBe(2 * lineHeight);
+	await expect.poll(async () => (await short.locator('.flow').boundingBox())?.height).toBe(lineHeight);
 });
