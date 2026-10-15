@@ -222,12 +222,13 @@ private struct RouteView: View {
 }
 
 private struct SheetView: View {
+    @Environment(Store.self) private var store
     let sheet: Sheet
 
     var body: some View {
         switch sheet {
         case let .quickAdd(defaults): QuickAddSheet(defaults: defaults)
-        case let .details(taskID): TaskDetailsSheet(taskID: taskID)
+        case let .details(taskID): TaskDetailsSheet(stack: Subtasks.ancestorsOf(store.tasks, taskID).map(\.id) + [taskID])
         case .settings: SettingsSheet()
         }
     }

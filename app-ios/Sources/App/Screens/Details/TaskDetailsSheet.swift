@@ -1,17 +1,19 @@
 import Core
 import SwiftUI
 
-/// Task details: a sheet with a `NavigationStack`, so opening a subtask pushes its details. A subtask's back chip
-/// returns to its parent: it pops when the parent is underneath, and slides the parent in when the subtask was opened
-/// directly, such as from Today or search.
+/// Task details: a sheet with a `NavigationStack`, so opening a subtask pushes its details. A subtask opened directly,
+/// such as from Inbox or search, starts with its ancestors already underneath, so the back chip and the edge swipe both
+/// pop to its parent. A parent that changed while open slides in instead.
 struct TaskDetailsSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var root: String
     @State private var path: [String] = []
 
-    init(taskID: String) {
-        _root = State(initialValue: taskID)
+    /// From the top-level task down to the one to show.
+    init(stack: [String]) {
+        _root = State(initialValue: stack[0])
+        _path = State(initialValue: Array(stack.dropFirst()))
     }
 
     var body: some View {
