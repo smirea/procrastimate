@@ -28,7 +28,10 @@ struct RepeatChip: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(recurrence.map { Format.repeatLabel($0, due) } ?? "Set repeat")
-        .onChange(of: openTrigger) { open = true }
+        .onChange(of: openTrigger) {
+            opened = anchor
+            open = true
+        }
         .popover(isPresented: $open) {
             RepeatPopover(recurrence: recurrence, anchor: anchor) { next in
                 let set = RepeatMenu.set(next, opened: opened ?? anchor, due: due)
