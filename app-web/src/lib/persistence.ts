@@ -1,6 +1,6 @@
 import { emptySnapshot, parseSnapshot, type Snapshot } from 'shared/snapshot.ts';
 
-const STORAGE_KEY = 'procrastimate';
+export const STORAGE_KEY = 'procrastimate';
 
 export function loadSnapshot(now: number): Snapshot {
 	const raw = localStorage.getItem(STORAGE_KEY);
