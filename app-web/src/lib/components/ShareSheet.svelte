@@ -90,6 +90,8 @@
 				if (value === null) throw new Error('No link');
 				return new Blob([value], { type: 'text/plain' });
 			});
+			// The browser may refuse the write before the link settles, and then nothing else observes this promise.
+			text.catch(() => undefined);
 			await navigator.clipboard.write([new ClipboardItem({ 'text/plain': text })]).catch(() => undefined);
 		} else {
 			const value = await url;
