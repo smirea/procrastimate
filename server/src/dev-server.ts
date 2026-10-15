@@ -1,18 +1,19 @@
 import type { Server, ServerWebSocket } from 'bun';
 import { SOCKET_PING, SOCKET_PONG } from '../../shared/sync/protocol';
-import { accountHandler } from './account/account';
+import { accountHandler, isNudge } from './account/account';
 import { memoryStore } from './account/memory-store';
 import { upstreamUrl, type ConnectUpstream, type RambleConfig } from './account/ramble';
 import { queuedRambleLedger, type RambleLedger } from './account/ramble-ledger';
 import { acceptedProtocol, type Socket, type SocketHost, type StreamEvents } from './account/realtime';
 import { serialQueue } from './account/serial';
+import type { AccountStore } from './account/store';
 import { tursoSession, writeUserRamble } from './account/turso';
+import { originalRequest } from './actor';
 import api from './api';
 import type { Env } from './bindings';
-import { originalRequest } from './request-user';
 
 type SocketData =
-	| { kind: 'nudge'; deviceId: string }
+	| { kind: 'nudge'; space: string; deviceId: string }
 	| { kind: 'stream'; start: (socket: Socket) => StreamEvents; events?: StreamEvents };
 
 /** ElevenLabs from Bun, whose `WebSocket` client can set the key header. */
@@ -76,13 +77,19 @@ export function serveDev({
 		upgraded.add(marker);
 		return marker;
 	};
-	const sockets: SocketHost = {
+	// One Bun server carries every space's sockets, so each space's host sees only its own, as a Durable Object does.
+	const socketsFor = (space: string): SocketHost => ({
 		accept: (request, deviceId) =>
-			upgrade(originalRequest(request), { kind: 'nudge', deviceId }, acceptedProtocol['Sec-WebSocket-Protocol']),
+			upgrade(originalRequest(request), { kind: 'nudge', space, deviceId }, acceptedProtocol['Sec-WebSocket-Protocol']),
 		sockets: deviceId =>
-			[...open].filter(socket => socket.data.kind === 'nudge' && (!deviceId || socket.data.deviceId === deviceId)),
+			[...open].filter(
+				socket =>
+					socket.data.kind === 'nudge' &&
+					socket.data.space === space &&
+					(!deviceId || socket.data.deviceId === deviceId),
+			),
 		stream: (request, protocol, start) => upgrade(originalRequest(request), { kind: 'stream', start }, protocol),
-	};
+	});
 	const memories = new Map<string, ReturnType<typeof memoryStore>>();
 	const memoryFor = (id: string) => {
 		const existing = memories.get(id);
@@ -91,7 +98,19 @@ export function serveDev({
 		memories.set(id, created);
 		return created;
 	};
-	const handle = accountHandler(async () => {}, sockets, ramble);
+	const handlers = new Map<string, ReturnType<typeof accountHandler>>();
+	const handleFor = (id: string) => {
+		const existing = handlers.get(id);
+		if (existing) return existing;
+		const created = accountHandler(
+			async () => {},
+			socketsFor(id),
+			ramble,
+			() => bindings.ACCOUNT,
+		);
+		handlers.set(id, created);
+		return created;
+	};
 	// End-to-end sharding stays in memory even when the shell has Turso credentials.
 	const sharded = extra.E2E_SHARD ?? process.env.E2E_SHARD;
 	const database = turso && !sharded ? turso : undefined;
@@ -117,17 +136,27 @@ export function serveDev({
 		ledgers.set(id, created);
 		return created;
 	};
-	const accountFetch = (id: string, request: Request) => {
-		if (!database) return handle(request, memoryFor(id));
-		const ledger = ledgerFor(id);
-		return queueFor(id)(async () => {
-			const session = await tursoSession(database, id, ledger);
+	// Like the Worker: one request per space at a time, calls to other spaces after the slot, nudges outside it.
+	const accountFetch = async (id: string, request: Request) => {
+		const handle = handleFor(id);
+		if (isNudge(request)) return handle.relay(request);
+		const deferred: Array<() => Promise<void>> = [];
+		const host = (store: AccountStore) => ({
+			store,
+			space: id,
+			defer: (task: () => Promise<void>) => deferred.push(task),
+		});
+		const response = await queueFor(id)(async () => {
+			if (!database) return handle.fetch(request, host(memoryFor(id)));
+			const session = await tursoSession(database, id, ledgerFor(id));
 			try {
-				return await handle(request, session.store);
+				return await handle.fetch(request, host(session.store));
 			} finally {
 				await session.flush();
 			}
 		});
+		void Promise.allSettled(deferred.map(task => task()));
+		return response;
 	};
 	const fromProcess = Object.fromEntries(
 		AUTH_ENV.flatMap(key => {
@@ -135,12 +164,12 @@ export function serveDev({
 			return value ? [[key, value]] : [];
 		}),
 	);
-	const bindings = {
+	const bindings: Env = {
 		...fromProcess,
 		ACCOUNT: {
 			idFromName: (name: string) => name,
 			get: (id: string) => ({ fetch: (request: Request) => accountFetch(id, request) }),
-		},
+		} as unknown as Env['ACCOUNT'],
 	};
 
 	server = Bun.serve<SocketData>({
@@ -148,7 +177,7 @@ export function serveDev({
 		idleTimeout: 120,
 		port,
 		async fetch(request) {
-			const response = await api.fetch(request, bindings as unknown as Env);
+			const response = await api.fetch(request, bindings);
 			return upgraded.has(response) ? undefined : response;
 		},
 		websocket: {

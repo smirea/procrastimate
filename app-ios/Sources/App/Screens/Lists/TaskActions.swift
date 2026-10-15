@@ -39,7 +39,7 @@ final class TaskActions {
     }
 
     func copyAsMarkdown(_ document: Markdown.Document) {
-        let context = Markdown.Context(tasks: store.tasks, projects: store.projects, labels: store.labels, today: clock.today)
+        let context = Markdown.Context(tasks: store.allTasks, projects: store.allProjects, labels: store.allLabels, today: clock.today)
         UIPasteboard.general.string = Markdown.toMarkdown(document, context, in: store.timeZone)
         toasts.show("Copied as Markdown", for: .seconds(2))
     }
@@ -49,7 +49,7 @@ final class TaskActions {
     }
 
     func copyAsMarkdown(project: Project) {
-        let tasks = Views.projectTasks(store.tasks, project.id, in: store.timeZone)
+        let tasks = Views.projectTasks(store.data(in: store.space(ofProject: project.id) ?? .own).tasks, project.id, in: store.timeZone)
         copyAsMarkdown(Markdown.Document(title: project.name, projectId: project.id, sections: [.init(tasks: tasks)]))
     }
 

@@ -19,6 +19,7 @@
 	let { task }: { task: Task } = $props();
 
 	const children = $derived(store.children(task.id));
+	const editable = $derived(store.canEdit(task.id));
 	const progress = $derived(store.progress(task.id));
 
 	let draft = $state('');
@@ -127,7 +128,11 @@
 				in:fly={motion({ y: -6, duration: 200, easing: cubicOut })}
 				out:slide={motion({ duration: 180, easing: cubicOut })}
 			>
-				<Checkbox checked={done} tone={PRIORITIES[child.priority].tone} label={`Complete ${child.title}`} onclick={() => toggle(child)} />
+				{#if store.canEdit(child.id)}
+					<Checkbox checked={done} tone={PRIORITIES[child.priority].tone} label={`Complete ${child.title}`} onclick={() => toggle(child)} />
+				{:else}
+					<span class="size-[18px] shrink-0 rounded-full border-[1.5px] border-dashed border-faint/60 touch:size-5" aria-hidden="true"></span>
+				{/if}
 				<div class="relative min-w-0 flex-1 py-2 touch:min-h-11 touch:py-2.5">
 					<button type="button" class="absolute inset-0 rounded-xl" aria-label={child.title} onclick={() => sheets.openTask(child.id, 'forward')}></button>
 					<div class="pointer-events-none relative">
@@ -144,7 +149,7 @@
 						{/if}
 					</div>
 				</div>
-				{#if children.length > 1}
+				{#if editable && children.length > 1}
 					<button
 						type="button"
 						data-handle
@@ -163,19 +168,21 @@
 			</li>
 		{/each}
 	</ul>
-	<div class="flex items-center gap-3 px-2">
-		<span class="grid size-[18px] shrink-0 place-items-center rounded-full text-accent touch:size-5"><Plus size={13} weight="bold" /></span>
-		<SmartInput
-			bind:value={draft}
-			tokens={parsed.tokens}
-			label="Add subtask"
-			placeholder="Add subtask"
-			enterkeyhint="enter"
-			suggestProjects={false}
-			class="min-w-0 flex-1 py-2 text-[14px] touch:py-3"
-			{onkeydown}
-		/>
-	</div>
+	{#if editable}
+		<div class="flex items-center gap-3 px-2">
+			<span class="grid size-[18px] shrink-0 place-items-center rounded-full text-accent touch:size-5"><Plus size={13} weight="bold" /></span>
+			<SmartInput
+				bind:value={draft}
+				tokens={parsed.tokens}
+				label="Add subtask"
+				placeholder="Add subtask"
+				enterkeyhint="enter"
+				suggestProjects={false}
+				class="min-w-0 flex-1 py-2 text-[14px] touch:py-3"
+				{onkeydown}
+			/>
+		</div>
+	{/if}
 </section>
 
 <style>

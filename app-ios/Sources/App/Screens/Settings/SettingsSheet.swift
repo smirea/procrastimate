@@ -54,6 +54,8 @@ struct SettingsSheet: View {
                     }
                 }
 
+                AIAccountsSection()
+
                 Section("Data") {
                     Button("Import from Todoist", systemImage: "square.and.arrow.down") { picking = true }
                     ImportOutcome(status: importer.status)

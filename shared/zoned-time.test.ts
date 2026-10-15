@@ -57,6 +57,9 @@ test('notifications resolve and word their times in the given zone', () => {
 		event: null,
 		createdAt: 0,
 		completedAt: null,
+		createdBy: null,
+		completedBy: null,
+		lastCompletedAt: null,
 	};
 	const now = Date.parse('2026-10-14T00:00:00Z');
 	expect(upcomingNotifications([task], now, 10, 'America/New_York')).toEqual([

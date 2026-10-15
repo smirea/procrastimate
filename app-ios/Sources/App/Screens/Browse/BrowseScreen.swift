@@ -87,6 +87,17 @@ private struct BrowseList: View {
                 }
             }
 
+            let shared = Browse.sharedEntries(store.sharedSpaces)
+            if !shared.isEmpty {
+                Section {
+                    ForEach(shared) { entry in
+                        SharedRow(entry: entry)
+                    }
+                } header: {
+                    SectionHeader(title: "Shared with me") { EmptyView() }
+                }
+            }
+
             let places = Triggers.placeGroups(store.tasks)
             if !places.isEmpty {
                 Section {
@@ -189,6 +200,42 @@ private struct BrowseRow: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(name)
         .accessibilityValue(count > 0 ? "\(count)" : "")
+    }
+}
+
+/// A project, label, or task someone shared, with its owner's name where a project row has its count.
+private struct SharedRow: View {
+    @Environment(Navigator.self) private var navigator
+    let entry: Browse.SharedEntry
+
+    var body: some View {
+        switch entry.kind {
+        case .project:
+            NavigationLink(value: Route.project(id: entry.id)) { label("number", .muted) }
+        case .label:
+            NavigationLink(value: Route.label(id: entry.id)) { label("tag", .toneLabel) }
+        case .task:
+            Button { navigator.sheet = .details(taskID: entry.id) } label: { label("checkmark.circle", .muted) }
+        }
+    }
+
+    private func label(_ systemImage: String, _ tone: Color) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: systemImage)
+                .foregroundStyle(tone)
+                .frame(width: 22)
+            Text(entry.name)
+                .foregroundStyle(.ink)
+                .lineLimit(1)
+            Spacer(minLength: 8)
+            PersonName(person: entry.owner)
+                .font(.subheadline)
+                .foregroundStyle(.faint)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(entry.name)
+        .accessibilityValue("Shared by \(entry.owner.name)")
+        .accessibilityIdentifier("browse-shared-\(entry.name)")
     }
 }
 

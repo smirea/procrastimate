@@ -8,13 +8,15 @@ import {
 	SYNC_SOCKET_PROTOCOL,
 	syncResponseSchema,
 } from 'shared/sync/protocol.ts';
+import { ORPCError } from '@orpc/client';
 import { api, isUnauthorized } from './api.ts';
 import { session } from './session.svelte.ts';
 import { store } from './store.svelte.ts';
 
 /**
- * Syncs this install with the signed-in user's account: on launch, on focus, when the network returns, one second
- * after a commit, every minute while visible, and whenever the realtime socket reports a cursor past this device's.
+ * Syncs this install with the signed-in user's account, then each space shared with them, one request per space:
+ * on launch, on focus, when the network returns, one second after a commit, every minute while visible, and whenever
+ * the realtime socket reports a cursor past this device's or a change in a shared space.
  * A failed sync keeps the outbox and retries on the next trigger. Nothing about it is shown.
  */
 
@@ -27,6 +29,8 @@ const INTERVAL = 60_000;
 const REQUEST_TIMEOUT = 20_000;
 /** A keepalive that also finds a dead socket: one that answers nothing between two pings is dropped. */
 const PING_INTERVAL = 30_000;
+/** How often the list of spaces shared with this user is checked, besides launch and a nudge from an unknown one. */
+const SPACES_INTERVAL = 5 * 60_000;
 const RECONNECT_MIN = 1000;
 const RECONNECT_MAX = 60_000;
 
@@ -40,6 +44,7 @@ class Sync {
 	#keepalive: ReturnType<typeof setInterval> | undefined;
 	#reconnect: ReturnType<typeof setTimeout> | undefined;
 	#failures = 0;
+	#spacesAt = 0;
 
 	start() {
 		const onVisible = () => {
@@ -102,7 +107,9 @@ class Sync {
 				return;
 			}
 			const nudge = nudgeSchema.safeParse(message);
-			if (nudge.success) void this.#hear(nudge.data.cursor);
+			if (!nudge.success) return;
+			if (nudge.data.space === undefined) void this.#hear(nudge.data.cursor);
+			else void this.#hearSpace(nudge.data.space);
 		};
 		socket.onclose = () => this.#retry();
 	}
@@ -112,6 +119,16 @@ class Sync {
 		await this.#running;
 		const own = store.syncRequest()?.cursor;
 		if (own !== undefined && cursor > own) void this.syncNow();
+	}
+
+	/**
+	 * A shared space's nudge carries this user's own head, not the space's, so it always syncs. One from a space not
+	 * listed here yet refreshes the list first.
+	 */
+	async #hearSpace(space: string) {
+		await this.#running;
+		if (!store.spaces[space]) this.#spacesAt = 0;
+		void this.syncNow();
 	}
 
 	#disconnect() {
@@ -149,7 +166,48 @@ class Sync {
 		do {
 			this.#again = false;
 			if (await this.#once()) this.#again = true;
+			else await this.#shared();
 		} while (this.#again && store.ready);
+	}
+
+	/** After the user's own sync: refreshes which spaces are shared when due, then syncs each one. */
+	async #shared() {
+		if (session.state !== 'in' || !store.ready) return;
+		if (Date.now() - this.#spacesAt >= SPACES_INTERVAL) {
+			const options = { signal: AbortSignal.timeout(REQUEST_TIMEOUT) };
+			const [list, me, shares] = await Promise.all([
+				api.spaces.list(undefined, options).catch(() => null),
+				api.me(undefined, options).catch(() => null),
+				api.shares.list(undefined, options).catch(() => null),
+			]);
+			if (list) {
+				this.#spacesAt = Date.now();
+				store.setSpaces(list.spaces);
+			}
+			// The people this user shares with, so their edits to the user's own tasks are named offline.
+			store.rememberPeople([
+				...(me ? [me] : []),
+				...(shares?.shares.flatMap(s => (s.grantee ? [s.grantee] : [])) ?? []),
+			]);
+		}
+		for (const owner of Object.keys(store.spaces)) await this.#space(owner);
+	}
+
+	async #space(owner: string) {
+		const request = store.spaceRequest(owner);
+		if (!request) return;
+		let response: unknown;
+		try {
+			response = await api.sync(
+				{ query: { space: owner }, body: request },
+				{ signal: AbortSignal.timeout(REQUEST_TIMEOUT) },
+			);
+		} catch (error) {
+			if (error instanceof ORPCError && error.code === 'FORBIDDEN') store.dropSpace(owner);
+			return;
+		}
+		const parsed = syncResponseSchema.safeParse(response);
+		if (parsed.success) store.takeSpaceResponse(owner, parsed.data);
 	}
 
 	/** One round trip. True when the response was a full page, so another round is due. */
@@ -160,7 +218,7 @@ class Sync {
 		if (!request) return false;
 		let response: unknown;
 		try {
-			response = await api.sync(request, { signal: AbortSignal.timeout(REQUEST_TIMEOUT) });
+			response = await api.sync({ query: {}, body: request }, { signal: AbortSignal.timeout(REQUEST_TIMEOUT) });
 		} catch (error) {
 			if (isUnauthorized(error)) {
 				session.clear();

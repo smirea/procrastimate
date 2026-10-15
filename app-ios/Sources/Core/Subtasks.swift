@@ -74,6 +74,7 @@ public enum Subtasks {
 
     /// Completing a task completes every open subtask under it. A recurring task, or one on an event series, moves to
     /// its next occurrence instead, and every subtask under it reopens, so each occurrence starts with a fresh checklist.
+    /// Either way the task's `lastCompletedAt` becomes `now`, which is what tells a roll apart from a postpone.
     public static func completeTask(
         _ tasks: [TaskItem],
         _ id: String,
@@ -98,6 +99,7 @@ public enum Subtasks {
             let changed = ([task] + descendants).filter { $0.completedAt == nil }.map { t in
                 var t = t
                 t.completedAt = now
+                if t.id == id { t.lastCompletedAt = now }
                 return t
             }
             return .done(changed: changed)
@@ -107,6 +109,7 @@ public enum Subtasks {
             t.completedAt = nil
             return t
         }
+        rolled.lastCompletedAt = now
         return .rolled(next: nextDue, changed: [rolled] + reopened)
     }
 

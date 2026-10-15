@@ -1,8 +1,16 @@
 import type { Kind } from '../../../shared/sync/kinds';
-import type { Device, LogRow, PushTarget } from '../../../shared/db/schema';
+import type {
+	ApiTokenRow,
+	Device,
+	LogRow,
+	Membership,
+	PersonRow,
+	PushTarget,
+	ShareRow,
+} from '../../../shared/db/schema';
 import type { ServerEntity as Entity } from '../../../shared/sync/merge';
 
-export type { Device, Entity, LogRow, PushTarget };
+export type { ApiTokenRow, Device, Entity, LogRow, Membership, PersonRow, PushTarget, ShareRow };
 
 /**
  * Everything the `Account` object keeps. Methods are synchronous, like Durable Object SQLite, so a request that
@@ -33,7 +41,7 @@ export interface AccountStore {
 	lastSeq(): number;
 	/** Drops every task, project, label, and the log. Devices and push subscriptions stay. */
 	clearTaskData(): void;
-	/** Drops the whole account: tasks, devices, push, and Ramble usage. */
+	/** Drops the whole account: tasks, devices, push, Ramble usage, shares, memberships, people, and API tokens. */
 	clearAccount(): void;
 	/** Bumped when task data is wiped, so a client still holding the old copy drops it. */
 	epoch(): number;
@@ -46,4 +54,26 @@ export interface AccountStore {
 	/** Ramble audio seconds streamed on `day`, a date key in the account's time zone. */
 	rambleSeconds(day: string): number;
 	addRambleSeconds(day: string, seconds: number): void;
+
+	/** Shares this space grants, oldest first. */
+	shares(): ShareRow[];
+	/** Inserts or replaces by id. */
+	putShare(share: ShareRow): void;
+	deleteShare(id: string): void;
+
+	/** Spaces shared with this user, oldest first. */
+	memberships(): Membership[];
+	putMembership(membership: Membership): void;
+	deleteMembership(spaceId: string): void;
+
+	people(): PersonRow[];
+	/** Inserts or replaces by id. */
+	upsertPerson(person: PersonRow): void;
+
+	/** API tokens of this user's AI accounts, oldest first. */
+	apiTokens(): ApiTokenRow[];
+	putApiToken(token: ApiTokenRow): void;
+	deleteApiToken(id: string): void;
+	apiTokenByHash(tokenHash: string): ApiTokenRow | null;
+	touchApiToken(id: string, at: number): void;
 }

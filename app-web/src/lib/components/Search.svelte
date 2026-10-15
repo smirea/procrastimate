@@ -35,7 +35,7 @@
 	let input: HTMLInputElement;
 	let list = $state<HTMLDivElement>();
 
-	const results = $derived(search(query, store.tasks, { projects: store.projects, labels: store.labels }));
+	const results = $derived(search(query, store.own.tasks, { projects: store.own.projects, labels: store.own.labels }));
 	const sections = $derived(
 		[
 			{

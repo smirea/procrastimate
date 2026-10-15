@@ -34,13 +34,16 @@ struct LabelsChip: View {
 
 private struct LabelsPopover: View {
     @Environment(Store.self) private var store
+    @Environment(\.space) private var space
     let labelIds: [String]
     let onChange: ([String]) -> Void
 
     @State private var query = ""
 
     var body: some View {
-        let options = NameSearch.suggest(store.labels, NameSearch.lastUsed(store.tasks, NameSearch.labelIdsOf), query)
+        let data = store.data(in: space)
+        let options = NameSearch.suggest(data.labels, NameSearch.lastUsed(data.tasks, NameSearch.labelIdsOf), query)
+            .filter { if case .create = $0 { space == .own } else { true } }
         VStack(alignment: .leading, spacing: 0) {
             TextField("Find or create a label", text: $query)
                 .textInputAutocapitalization(.never)

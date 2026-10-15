@@ -4,6 +4,7 @@
 	import ArrowSquareIn from 'phosphor-svelte/lib/ArrowSquareIn';
 	import Warning from 'phosphor-svelte/lib/Warning';
 	import type { ImportSummary } from 'shared/todoist.ts';
+	import AiAccounts from './AiAccounts.svelte';
 	import DictationSwitcher from './DictationSwitcher.svelte';
 	import ThemeSwitcher from './ThemeSwitcher.svelte';
 	import { push } from '../push.svelte.ts';
@@ -66,6 +67,8 @@
 	{:else}
 		<p class="px-1.5 text-[13px] text-ink">{notificationLine}</p>
 	{/if}
+
+	<AiAccounts />
 
 	<section class="flex flex-col gap-1.5">
 		<h3 class="heading">Data</h3>

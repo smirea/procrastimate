@@ -83,6 +83,7 @@ function nextEventOccurrence(task: Task, today: DateKey): { next: Due; fields: P
 /**
  * Completing a task completes every open subtask under it. A recurring task, or one on an event series, moves to its
  * next occurrence instead, and every subtask under it reopens, so each occurrence starts with a fresh checklist.
+ * Either way the task's `lastCompletedAt` becomes `now`, which is what tells a roll apart from a postpone.
  */
 export function completeTask(tasks: readonly Task[], id: string, today: DateKey, now: number): Completion | null {
 	const task = tasks.find(t => t.id === id);
@@ -92,11 +93,17 @@ export function completeTask(tasks: readonly Task[], id: string, today: DateKey,
 	const series = nextEventOccurrence(task, today);
 	const next = occurrence ? { next: occurrence.due, fields: occurrence } : series;
 	if (!next) {
-		const changed = [task, ...descendants].filter(t => t.completedAt === null).map(t => ({ ...t, completedAt: now }));
+		const changed = [task, ...descendants]
+			.filter(t => t.completedAt === null)
+			.map(t => (t.id === id ? { ...t, completedAt: now, lastCompletedAt: now } : { ...t, completedAt: now }));
 		return { kind: 'done', changed };
 	}
 	const reopened = descendants.filter(t => t.completedAt !== null).map(t => ({ ...t, completedAt: null }));
-	return { kind: 'rolled', next: next.next, changed: [{ ...task, ...next.fields }, ...reopened] };
+	return {
+		kind: 'rolled',
+		next: next.next,
+		changed: [{ ...task, ...next.fields, lastCompletedAt: now }, ...reopened],
+	};
 }
 
 /** Reopening a subtask reopens every completed task above it. */

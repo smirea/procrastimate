@@ -2,6 +2,17 @@
 import { z } from 'zod';
 import { COLUMN_VALUES } from '../json.ts';
 
+/** A `api_tokens` row. */
+export const apiTokensRowSchema = z.object({
+	userId: z.string(),
+	id: z.string(),
+	aiUserId: z.string(),
+	name: z.string(),
+	tokenHash: z.string(),
+	createdAt: z.number().int(),
+	lastUsedAt: z.number().int().nullable(),
+});
+
 /** A `devices` row. */
 export const devicesRowSchema = z.object({
 	userId: z.string(),
@@ -31,6 +42,15 @@ export const logRowSchema = z.object({
 	kind: z.enum(["project","label","task","settings"]),
 	id: z.string(),
 	fields: COLUMN_VALUES.log.fields,
+	actor: z.string(),
+	at: z.number().int(),
+});
+
+/** A `memberships` row. */
+export const membershipsRowSchema = z.object({
+	userId: z.string(),
+	spaceId: z.string(),
+	createdAt: z.number().int(),
 });
 
 /** A `meta` row. */
@@ -38,6 +58,16 @@ export const metaRowSchema = z.object({
 	userId: z.string(),
 	key: z.enum(["epoch"]),
 	value: z.string(),
+});
+
+/** A `people` row. */
+export const peopleRowSchema = z.object({
+	userId: z.string(),
+	id: z.string(),
+	name: z.string(),
+	kind: COLUMN_VALUES.people.kind,
+	ownerId: z.string().nullable(),
+	seenAt: z.number().int(),
 });
 
 /** A `projects` row. */
@@ -82,6 +112,17 @@ export const settingsRowSchema = z.object({
 	clocks: COLUMN_VALUES.settings.clocks,
 });
 
+/** A `shares` row. */
+export const sharesRowSchema = z.object({
+	userId: z.string(),
+	id: z.string(),
+	targetKind: COLUMN_VALUES.shares.targetKind,
+	targetId: z.string(),
+	grantee: z.string().nullable(),
+	role: COLUMN_VALUES.shares.role,
+	createdAt: z.number().int(),
+});
+
 /** A `tasks` row. */
 export const tasksRowSchema = z.object({
 	userId: z.string(),
@@ -100,6 +141,9 @@ export const tasksRowSchema = z.object({
 	event: COLUMN_VALUES.tasks.event.nullable(),
 	createdAt: z.number().int(),
 	completedAt: z.number().int().nullable(),
+	createdBy: z.string().nullable(),
+	completedBy: z.string().nullable(),
+	lastCompletedAt: z.number().int().nullable(),
 	sourceKey: z.string().nullable(),
 	deleted: z.boolean(),
 	clocks: COLUMN_VALUES.tasks.clocks,

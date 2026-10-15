@@ -10,6 +10,9 @@
 	import CalendarStar from 'phosphor-svelte/lib/CalendarStar';
 	import MapPin from 'phosphor-svelte/lib/MapPin';
 	import Waveform from 'phosphor-svelte/lib/Waveform';
+	import ShareNetwork from 'phosphor-svelte/lib/ShareNetwork';
+	import Hash from 'phosphor-svelte/lib/Hash';
+	import Tray from 'phosphor-svelte/lib/Tray';
 	import { formatDue } from 'shared/format.ts';
 	import { formatEvent, formatLocation, scheduledDue } from 'shared/triggers.ts';
 	import { parseMemoSource } from 'shared/memo-tasks.ts';
@@ -17,6 +20,7 @@
 	import type { Task } from 'shared/task.ts';
 	import SmartInput from './SmartInput.svelte';
 	import LinkedField from './LinkedField.svelte';
+	import LinkedText from './LinkedText.svelte';
 	import DuePicker from './DuePicker.svelte';
 	import PriorityPicker from './PriorityPicker.svelte';
 	import ReminderPicker from './ReminderPicker.svelte';
@@ -24,6 +28,8 @@
 	import ProjectPicker from './ProjectPicker.svelte';
 	import LabelPicker from './LabelPicker.svelte';
 	import Subtasks from './Subtasks.svelte';
+	import TaskActivity from './TaskActivity.svelte';
+	import PersonName from './PersonName.svelte';
 	import CopyButton from './CopyButton.svelte';
 	import { store, type TaskPatch } from '../store.svelte.ts';
 	import { clock, sheets, toasts, motion, type Arrival } from '../ui.svelte.ts';
@@ -32,10 +38,15 @@
 	let { task, arrival }: { task: Task; arrival: Arrival } = $props();
 
 	const parent = $derived(task.parentId ? store.task(task.parentId) : undefined);
+	const home = $derived(store.homeOf(task.id));
+	const space = $derived(store.dataOf(home));
+	const owner = $derived(home ? store.spaces[home]?.owner : undefined);
+	const editable = $derived(store.canEdit(task.id));
+	const project = $derived(store.project(task.projectId));
 
 	let title = $state(untrack(() => task.title));
 	const parsed = $derived(
-		parseQuickAdd(title, { now: new Date(clock.now), projects: parent ? [] : store.projects, labels: store.labels, due: task.due }),
+		parseQuickAdd(title, { now: new Date(clock.now), projects: parent ? [] : space.projects, labels: space.labels, due: task.due }),
 	);
 	// The chips below show what the title will apply, so the edit can be checked before Enter or blur commits it.
 	const draft = $derived(
@@ -111,10 +122,22 @@
 			>
 				<CaretLeft size={14} class="shrink-0" /><span class="truncate">{parent.title}</span>
 			</button>
+		{:else if editable}
+			<ProjectPicker projectId={draft.projectId} projects={space.projects} canCreate={home === null} onchange={(projectId) => update({ projectId })} />
 		{:else}
-			<ProjectPicker projectId={draft.projectId} onchange={(projectId) => update({ projectId })} />
+			<span class="chip min-w-0" data-active={!!project}>
+				{#if project}<Hash size={15} class="shrink-0" />{:else}<Tray size={15} class="shrink-0" />{/if}<span class="truncate">{project?.name ?? 'Inbox'}</span>
+			</span>
 		{/if}
 		<div class="flex shrink-0 items-center gap-1">
+			{#if !editable}
+				<span class="px-2 text-[12px] text-faint">View only</span>
+			{/if}
+			{#if home === null}
+				<button type="button" class="icon-btn" aria-label="Share task" onclick={() => sheets.openShare({ kind: 'task', id: task.id }, task.title, task.id)}>
+					<ShareNetwork size={16} />
+				</button>
+			{/if}
 			<CopyButton label="Copy task as Markdown" markdown={() => ({ title: null, projectId: null, sections: [{ heading: null, tasks: [task] }] })} />
 			<button type="button" class="icon-btn" aria-label="Close" onclick={() => sheets.close()}>
 				<X size={16} />
@@ -122,12 +145,19 @@
 		</div>
 	</header>
 	<div class="px-4 pt-4">
-		<LinkedField text={title} class="truncate px-1 py-0.5 text-[19px] leading-[1.6] font-semibold whitespace-pre">
-			<SmartInput bind:value={title} tokens={parsed.tokens} label="Title" enterkeyhint="done" suggestProjects={!parent} class="text-[19px] font-semibold" {onkeydown} onblur={commitTitle} />
-		</LinkedField>
+		{#if owner}
+			<p class="mb-1 flex items-center gap-1 text-[12px] text-faint">Shared by <PersonName person={owner} /></p>
+		{/if}
+		{#if editable}
+			<LinkedField text={title} class="truncate px-1 py-0.5 text-[19px] leading-[1.6] font-semibold whitespace-pre">
+				<SmartInput bind:value={title} tokens={parsed.tokens} label="Title" enterkeyhint="done" suggestProjects={!parent} class="text-[19px] font-semibold" {onkeydown} onblur={commitTitle} />
+			</LinkedField>
+		{:else}
+			<h2 class="text-[19px] font-semibold break-words"><LinkedText text={task.title} /></h2>
+		{/if}
 	</div>
-	<!-- Outside the scroll area, which would clip the pickers' popovers. -->
-	<div class="flex flex-wrap gap-1.5 px-4 pt-3">
+	<!-- Outside the scroll area, which would clip the pickers' popovers. A read-only task keeps the chips as plain facts. -->
+	<div class="flex flex-wrap gap-1.5 px-4 pt-3" inert={!editable}>
 		{#if task.event}
 			<span class="chip" data-active="true" title="Set on iPhone">
 				<CalendarStar size={15} weight="fill" />
@@ -157,36 +187,43 @@
 			</span>
 		{/if}
 	</div>
-	<div class="px-4 pt-3">
-		<LabelPicker labelIds={draft.labelIds} onchange={(labelIds) => update({ labelIds })} />
+	<div class="px-4 pt-3" inert={!editable}>
+		<LabelPicker labelIds={draft.labelIds} labels={space.labels} canCreate={home === null} onchange={(labelIds) => update({ labelIds })} />
 	</div>
-	<div class="flex-1 space-y-4 overflow-y-auto overscroll-contain px-4 pt-4 pb-24 min-h-0">
-		<LinkedField text={task.notes} class="border border-transparent px-3.5 py-2.5 text-[14px] whitespace-pre-wrap [overflow-wrap:anywhere] touch:text-base">
-			<textarea
-				aria-label="Notes"
-				placeholder="Notes"
-				rows="4"
-				class="block w-full resize-none rounded-2xl border border-transparent bg-ink/[0.04] px-3.5 py-2.5 text-[14px] outline-none touch:text-base transition-colors placeholder:text-faint focus:border-ink/15 focus:bg-surface/60"
-				value={task.notes}
-				oninput={(e) => update({ notes: e.currentTarget.value })}
-			></textarea>
-		</LinkedField>
+	<div class="flex-1 space-y-4 overflow-y-auto overscroll-contain px-4 pt-4 min-h-0" class:pb-24={editable} class:pb-4={!editable}>
+		{#if editable}
+			<LinkedField text={task.notes} class="border border-transparent px-3.5 py-2.5 text-[14px] whitespace-pre-wrap [overflow-wrap:anywhere] touch:text-base">
+				<textarea
+					aria-label="Notes"
+					placeholder="Notes"
+					rows="4"
+					class="block w-full resize-none rounded-2xl border border-transparent bg-ink/[0.04] px-3.5 py-2.5 text-[14px] outline-none touch:text-base transition-colors placeholder:text-faint focus:border-ink/15 focus:bg-surface/60"
+					value={task.notes}
+					oninput={(e) => update({ notes: e.currentTarget.value })}
+				></textarea>
+			</LinkedField>
+		{:else if task.notes}
+			<p class="rounded-2xl bg-ink/[0.04] px-3.5 py-2.5 text-[14px] whitespace-pre-wrap [overflow-wrap:anywhere] touch:text-base"><LinkedText text={task.notes} /></p>
+		{/if}
 		{#if parseMemoSource(task.sourceKey)}
 			<!-- A browser cannot open the phone app, so the line is not a link. -->
 			<p class="flex items-center gap-1.5 text-[13px] text-muted" title="Opens on iPhone">
 				<Waveform size={14} />Notouroboros
 			</p>
 		{/if}
-		<Subtasks {task} />
+		{#if editable || store.children(task.id).length}<Subtasks {task} />{/if}
+		<TaskActivity {task} {home} />
 	</div>
-	<div class="pointer-events-none absolute inset-x-0 bottom-0 flex justify-between px-4 pb-4">
-		{#if task.completedAt === null}
-			<button type="button" class="floating pointer-events-auto bg-[var(--tone-soon)]" onclick={complete}><Check size={16} weight="bold" />Complete</button>
-		{:else}
-			<button type="button" class="floating pointer-events-auto bg-accent" onclick={() => store.reopenTask(task.id)}><ArrowCounterClockwise size={16} weight="bold" />Reopen</button>
-		{/if}
-		<button type="button" class="floating pointer-events-auto bg-[var(--tone-overdue)]" aria-label="Delete task" onclick={remove}><Trash size={16} weight="bold" />Delete</button>
-	</div>
+	{#if editable}
+		<div class="pointer-events-none absolute inset-x-0 bottom-0 flex justify-between px-4 pb-4">
+			{#if task.completedAt === null}
+				<button type="button" class="floating pointer-events-auto bg-[var(--tone-soon)]" onclick={complete}><Check size={16} weight="bold" />Complete</button>
+			{:else}
+				<button type="button" class="floating pointer-events-auto bg-accent" onclick={() => store.reopenTask(task.id)}><ArrowCounterClockwise size={16} weight="bold" />Reopen</button>
+			{/if}
+			<button type="button" class="floating pointer-events-auto bg-[var(--tone-overdue)]" aria-label="Delete task" onclick={remove}><Trash size={16} weight="bold" />Delete</button>
+		</div>
+	{/if}
 </div>
 
 <style>

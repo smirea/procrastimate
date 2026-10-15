@@ -10,15 +10,15 @@ struct DraftSubtask: Identifiable, Hashable {
 /// Quick add's subtask lines under the title: each Return adds the line and keeps focus for the next, and Return on
 /// an empty field saves the whole task. Lines parse like task details' `Add subtask`.
 struct QuickAddSubtasks: View {
-    @Environment(Store.self) private var store
     @Environment(\.clock) private var clock
+    let spaceLabels: [Core.Label]
     @Binding var subtasks: [DraftSubtask]
     @Binding var text: String
     var focused: FocusState<Bool>.Binding
     let save: () -> Void
 
     var body: some View {
-        let parsed = QuickAdd.parseSubtask(text, now: clock.now, labels: store.labels, in: clock.timeZone)
+        let parsed = QuickAdd.parseSubtask(text, now: clock.now, labels: spaceLabels, in: clock.timeZone)
         VStack(alignment: .leading, spacing: 2) {
             ForEach(subtasks) { subtask in
                 row(subtask)
@@ -73,7 +73,7 @@ struct QuickAddSubtasks: View {
                 Text(task.title)
                     .font(.subheadline)
                     .fixedSize(horizontal: false, vertical: true)
-                let labels = store.labels.filter { task.labelIds.contains($0.id) }
+                let labels = spaceLabels.filter { task.labelIds.contains($0.id) }
                 if task.due != nil || task.recurrence != nil || !labels.isEmpty {
                     HStack(spacing: 10) {
                         if let due = task.due {

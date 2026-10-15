@@ -7,8 +7,8 @@
 	import { placeTasks } from 'shared/views.ts';
 
 	const key = $derived(page.params.key ?? '');
-	const place = $derived(placeGroups(store.tasks).find((g) => g.key === key));
-	const tasks = $derived(placeTasks(store.tasks, key));
+	const place = $derived(placeGroups(store.own.tasks).find((g) => g.key === key));
+	const tasks = $derived(placeTasks(store.own.tasks, key));
 </script>
 
 <svelte:head><title>{place?.name ?? 'Place'} · ProcrastiMate</title></svelte:head>

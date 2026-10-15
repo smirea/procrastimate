@@ -69,11 +69,14 @@ export function fieldsOf(kind: Kind, entity: Entity): Fields {
 }
 
 /**
- * Builds an entity from a full set of fields, or null when some are missing or invalid. iOS builds from before places
- * and events create tasks without `location` and `event`, so those two default to none instead of dropping the task.
+ * Builds an entity from a full set of fields, or null when some are missing or invalid. Task fields added after launch
+ * default to none instead of dropping the task: iOS builds from before places and events create tasks without
+ * `location` and `event`, and tasks stored before sharing hold no authorship or `lastCompletedAt`.
  */
+const TASK_DEFAULTS = { location: null, event: null, createdBy: null, completedBy: null, lastCompletedAt: null };
+
 export function entityFrom(kind: Kind, id: string, fields: Fields): Entity | null {
-	const full = kind === 'task' ? { location: null, event: null, ...fields } : fields;
+	const full = kind === 'task' ? { ...TASK_DEFAULTS, ...fields } : fields;
 	const parsed = FIELDS_SCHEMAS[kind].safeParse(full);
 	if (!parsed.success) return null;
 	const entity: Entity = { id, ...parsed.data };

@@ -8,7 +8,9 @@
 			"input": [
 				{
 					"completedAt": null,
+					"completedBy": null,
 					"createdAt": 1,
+					"createdBy": null,
 					"due": null,
 					"event": {
 						"allDay": false,
@@ -27,6 +29,7 @@
 					},
 					"id": "a",
 					"labelIds": [],
+					"lastCompletedAt": null,
 					"location": null,
 					"notes": "",
 					"order": 0,
@@ -50,7 +53,9 @@
 			"input": [
 				{
 					"completedAt": null,
+					"completedBy": null,
 					"createdAt": 2,
+					"createdBy": null,
 					"due": null,
 					"event": {
 						"allDay": false,
@@ -69,6 +74,7 @@
 					},
 					"id": "b",
 					"labelIds": [],
+					"lastCompletedAt": null,
 					"location": null,
 					"notes": "",
 					"order": 0,
@@ -92,7 +98,9 @@
 			"input": [
 				{
 					"completedAt": null,
+					"completedBy": null,
 					"createdAt": 3,
+					"createdBy": null,
 					"due": null,
 					"event": {
 						"allDay": true,
@@ -111,6 +119,7 @@
 					},
 					"id": "c",
 					"labelIds": [],
+					"lastCompletedAt": null,
 					"location": null,
 					"notes": "",
 					"order": 0,
@@ -134,7 +143,9 @@
 			"input": [
 				{
 					"completedAt": null,
+					"completedBy": null,
 					"createdAt": 4,
+					"createdBy": null,
 					"due": null,
 					"event": {
 						"allDay": false,
@@ -153,6 +164,7 @@
 					},
 					"id": "a",
 					"labelIds": [],
+					"lastCompletedAt": null,
 					"location": null,
 					"notes": "",
 					"order": 0,
@@ -250,7 +262,9 @@
 			"input": [
 				{
 					"completedAt": null,
+					"completedBy": null,
 					"createdAt": 5,
+					"createdBy": null,
 					"due": {
 						"date": "2026-10-09",
 						"time": "09:00"
@@ -258,6 +272,7 @@
 					"event": null,
 					"id": "weekly",
 					"labelIds": [],
+					"lastCompletedAt": null,
 					"location": {
 						"address": null,
 						"latitude": 52.52,
@@ -291,7 +306,9 @@
 			"input": [
 				{
 					"completedAt": null,
+					"completedBy": null,
 					"createdAt": 6,
+					"createdBy": null,
 					"due": {
 						"date": "2026-10-09",
 						"time": "09:00"
@@ -299,6 +316,7 @@
 					"event": null,
 					"id": "once",
 					"labelIds": [],
+					"lastCompletedAt": null,
 					"location": {
 						"address": null,
 						"latitude": 52.52,
@@ -329,7 +347,9 @@
 			"input": [
 				{
 					"completedAt": null,
+					"completedBy": null,
 					"createdAt": 7,
+					"createdBy": null,
 					"due": {
 						"date": "2026-10-09",
 						"time": "09:00"
@@ -337,6 +357,7 @@
 					"event": null,
 					"id": "no place",
 					"labelIds": [],
+					"lastCompletedAt": null,
 					"location": null,
 					"notes": "",
 					"order": 0,
@@ -363,7 +384,9 @@
 			"input": [
 				{
 					"completedAt": null,
+					"completedBy": null,
 					"createdAt": 8,
+					"createdBy": null,
 					"due": null,
 					"event": {
 						"allDay": false,
@@ -382,6 +405,7 @@
 					},
 					"id": "a",
 					"labelIds": [],
+					"lastCompletedAt": null,
 					"location": null,
 					"notes": "",
 					"order": 0,
@@ -410,7 +434,9 @@
 			"input": [
 				{
 					"completedAt": null,
+					"completedBy": null,
 					"createdAt": 9,
+					"createdBy": null,
 					"due": null,
 					"event": {
 						"allDay": false,
@@ -434,6 +460,7 @@
 					},
 					"id": "a",
 					"labelIds": [],
+					"lastCompletedAt": null,
 					"location": null,
 					"notes": "",
 					"order": 0,
@@ -457,7 +484,9 @@
 			"input": [
 				{
 					"completedAt": null,
+					"completedBy": null,
 					"createdAt": 10,
+					"createdBy": null,
 					"due": null,
 					"event": {
 						"allDay": true,
@@ -476,6 +505,7 @@
 					},
 					"id": "b",
 					"labelIds": [],
+					"lastCompletedAt": null,
 					"location": null,
 					"notes": "",
 					"order": 0,
@@ -504,7 +534,9 @@
 			"input": [
 				{
 					"completedAt": null,
+					"completedBy": null,
 					"createdAt": 11,
+					"createdBy": null,
 					"due": {
 						"date": "2026-10-14",
 						"time": "17:00"
@@ -512,6 +544,7 @@
 					"event": null,
 					"id": "a",
 					"labelIds": [],
+					"lastCompletedAt": null,
 					"location": {
 						"address": null,
 						"latitude": 52.52,
@@ -539,7 +572,9 @@
 			"input": [
 				{
 					"completedAt": null,
+					"completedBy": null,
 					"createdAt": 12,
+					"createdBy": null,
 					"due": {
 						"date": "2026-10-14",
 						"time": "17:00"
@@ -547,6 +582,7 @@
 					"event": null,
 					"id": "b",
 					"labelIds": [],
+					"lastCompletedAt": null,
 					"location": {
 						"address": null,
 						"latitude": 52.52,
@@ -958,11 +994,14 @@
 				[
 					{
 						"completedAt": null,
+						"completedBy": null,
 						"createdAt": 13,
+						"createdBy": null,
 						"due": null,
 						"event": null,
 						"id": "milk",
 						"labelIds": [],
+						"lastCompletedAt": null,
 						"location": {
 							"address": null,
 							"latitude": 52.5,
@@ -982,11 +1021,14 @@
 					},
 					{
 						"completedAt": null,
+						"completedBy": null,
 						"createdAt": 14,
+						"createdBy": null,
 						"due": null,
 						"event": null,
 						"id": "eggs",
 						"labelIds": [],
+						"lastCompletedAt": null,
 						"location": {
 							"address": null,
 							"latitude": 52.50001,
@@ -1006,11 +1048,14 @@
 					},
 					{
 						"completedAt": null,
+						"completedBy": null,
 						"createdAt": 15,
+						"createdBy": null,
 						"due": null,
 						"event": null,
 						"id": "jan",
 						"labelIds": [],
+						"lastCompletedAt": null,
 						"location": {
 							"address": null,
 							"latitude": 52.52,
@@ -1030,11 +1075,14 @@
 					},
 					{
 						"completedAt": 1,
+						"completedBy": null,
 						"createdAt": 16,
+						"createdBy": null,
 						"due": null,
 						"event": null,
 						"id": "done",
 						"labelIds": [],
+						"lastCompletedAt": null,
 						"location": {
 							"address": null,
 							"latitude": 52.52,
@@ -1054,11 +1102,14 @@
 					},
 					{
 						"completedAt": null,
+						"completedBy": null,
 						"createdAt": 17,
+						"createdBy": null,
 						"due": null,
 						"event": null,
 						"id": "plain",
 						"labelIds": [],
+						"lastCompletedAt": null,
 						"location": null,
 						"notes": "",
 						"order": 0,
@@ -1091,11 +1142,14 @@
 				[
 					{
 						"completedAt": null,
+						"completedBy": null,
 						"createdAt": 18,
+						"createdBy": null,
 						"due": null,
 						"event": null,
 						"id": "plain",
 						"labelIds": [],
+						"lastCompletedAt": null,
 						"location": null,
 						"notes": "",
 						"order": 0,
@@ -1117,7 +1171,9 @@
 				[
 					{
 						"completedAt": null,
+						"completedBy": null,
 						"createdAt": 19,
+						"createdBy": null,
 						"due": null,
 						"event": {
 							"allDay": false,
@@ -1136,6 +1192,7 @@
 						},
 						"id": "red",
 						"labelIds": [],
+						"lastCompletedAt": null,
 						"location": null,
 						"notes": "",
 						"order": 0,
@@ -1148,7 +1205,9 @@
 					},
 					{
 						"completedAt": null,
+						"completedBy": null,
 						"createdAt": 20,
+						"createdBy": null,
 						"due": null,
 						"event": {
 							"allDay": false,
@@ -1167,6 +1226,7 @@
 						},
 						"id": "jan",
 						"labelIds": [],
+						"lastCompletedAt": null,
 						"location": null,
 						"notes": "",
 						"order": 0,
@@ -1179,7 +1239,9 @@
 					},
 					{
 						"completedAt": null,
+						"completedBy": null,
 						"createdAt": 21,
+						"createdBy": null,
 						"due": null,
 						"event": {
 							"allDay": false,
@@ -1198,6 +1260,7 @@
 						},
 						"id": "notes",
 						"labelIds": [],
+						"lastCompletedAt": null,
 						"location": null,
 						"notes": "",
 						"order": 0,

@@ -1,4 +1,5 @@
 import { MediaQuery } from 'svelte/reactivity';
+import type { ShareTarget } from 'shared/sharing.ts';
 import { toDateKey } from 'shared/task.ts';
 
 /** Matches Tailwind's `md` breakpoint, below which the sidebar becomes a drawer and sheets dock to the bottom. */
@@ -73,7 +74,9 @@ export type Sheet =
 	| { kind: 'quick-add'; defaults: QuickAddDefaults }
 	| { kind: 'search' }
 	| { kind: 'settings' }
-	| { kind: 'task'; id: string; arrival: Arrival };
+	| { kind: 'task'; id: string; arrival: Arrival }
+	/** `from` is the task whose details opened it, which closing returns to. */
+	| { kind: 'share'; target: ShareTarget; name: string; from: string | null };
 
 class Sheets {
 	current = $state<Sheet>({ kind: 'none' });
@@ -94,8 +97,14 @@ class Sheets {
 		this.current = { kind: 'task', id, arrival };
 	}
 
+	openShare(target: ShareTarget, name: string, from: string | null = null) {
+		this.current = { kind: 'share', target, name, from };
+	}
+
 	close() {
-		this.current = { kind: 'none' };
+		const current = this.current;
+		this.current =
+			current.kind === 'share' && current.from ? { kind: 'task', id: current.from, arrival: 'back' } : { kind: 'none' };
 	}
 }
 

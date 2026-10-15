@@ -433,6 +433,11 @@ class Generator {
 			if (value.length) throw new Error(`Only empty array defaults are supported, not ${JSON.stringify(value)}`);
 			return '[]';
 		}
+		if (typeof value === 'object') {
+			if (Object.keys(value).length)
+				throw new Error(`Only empty object defaults are supported, not ${JSON.stringify(value)}`);
+			return '[:]';
+		}
 		if (typeof value === 'string') return JSON.stringify(value);
 		if (typeof value === 'number' || typeof value === 'boolean') return String(value);
 		throw new Error(`Unsupported default ${JSON.stringify(value)} for ${type}`);

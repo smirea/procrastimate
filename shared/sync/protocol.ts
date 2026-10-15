@@ -8,6 +8,7 @@ import {
 } from '../db/generated/zod.ts';
 import { hlcSchema } from '../db/json.ts';
 import { KINDS, type Kind } from './kinds.ts';
+import { shareTargetKindSchema } from '../values.ts';
 
 export { KINDS, type Kind } from './kinds.ts';
 
@@ -114,17 +115,38 @@ export const syncRequestSchema = z
 		/** The wipe generation this client last applied. A lower one means its copy was cleared on another device. */
 		epoch: z.number().int().nonnegative().default(0),
 		reset: z.boolean().optional(),
+		/** In a shared space, the hash of the filtered snapshot this client last applied. Owners send `''`. */
+		scope: z.string().default(''),
 	})
 	.meta({ id: 'SyncRequest' });
 export type SyncRequest = z.infer<typeof syncRequestSchema>;
 
 const epoch = z.number().int().nonnegative();
 
+export const shareTargetSchema = z
+	.object({ kind: shareTargetKindSchema, id: z.string() })
+	.meta({ id: 'ShareTarget', description: 'What a share reaches. `id` is empty for the whole space.' });
+export type ShareTarget = z.infer<typeof shareTargetSchema>;
+
+/** A guest's sync of a shared space answers with the hash of what it may see. An owner's sync has none. */
+const scope = z.string().optional();
+
 /** Cursor `0`, a cursor past the log, a reset, or a stale epoch gets the whole snapshot instead of the log. */
 export const syncResponseSchema = z
 	.union([
-		z.object({ acked: z.array(z.string()), changes: z.array(changeSchema), cursor, hlc, epoch }),
-		z.object({ acked: z.array(z.string()), snapshot: snapshotSchema, cursor, hlc, epoch }),
+		z.object({ acked: z.array(z.string()), changes: z.array(changeSchema), cursor, hlc, epoch, scope }),
+		z.object({
+			acked: z.array(z.string()),
+			snapshot: snapshotSchema,
+			cursor,
+			hlc,
+			epoch,
+			scope,
+			/** In a shared space, the visible task ids the caller may not edit. */
+			readOnly: z.array(z.string()).optional(),
+			/** In a shared space, what the owner shared with the caller. */
+			targets: z.array(shareTargetSchema).optional(),
+		}),
 	])
 	.meta({ id: 'SyncResponse' });
 export type SyncResponse = z.infer<typeof syncResponseSchema>;
@@ -144,7 +166,8 @@ export const SOCKET_PONG = 'pong';
 /** The close code the server uses when the socket's device is removed. */
 export const SOCKET_REVOKED = 4401;
 
-export const nudgeSchema = z.object({ cursor }).meta({ id: 'Nudge' });
+/** `space` names the shared space that moved, by its owner's id. Without it the nudge is for the user's own space. */
+export const nudgeSchema = z.object({ cursor, space: z.string().optional() }).meta({ id: 'Nudge' });
 export type Nudge = z.infer<typeof nudgeSchema>;
 
 const asNumber = (value: unknown) => (typeof value === 'boolean' ? Number(value) : value);

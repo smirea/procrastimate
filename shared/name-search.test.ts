@@ -42,6 +42,9 @@ const task = (projectId: string | null, createdAt: number, labelIds: string[] = 
 	event: null,
 	createdAt,
 	completedAt: null,
+	createdBy: null,
+	completedBy: null,
+	lastCompletedAt: null,
 });
 
 const shown = (suggestions: Suggestion<Named>[]) =>

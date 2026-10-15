@@ -43,5 +43,23 @@ export const migrations: { tag: string; when: number; statements: string[] }[] =
 			"ALTER TABLE `tasks` ADD `location` text;",
 			"ALTER TABLE `tasks` ADD `event` text;"
 		]
+	},
+	{
+		"tag": "0003_small_frank_castle",
+		"when": 1792093674133,
+		"statements": [
+			"CREATE TABLE `api_tokens` (\n\t`user_id` text NOT NULL,\n\t`id` text NOT NULL,\n\t`ai_user_id` text NOT NULL,\n\t`name` text NOT NULL,\n\t`token_hash` text NOT NULL,\n\t`created_at` integer NOT NULL,\n\t`last_used_at` integer,\n\tPRIMARY KEY(`user_id`, `id`)\n);",
+			"CREATE UNIQUE INDEX `api_tokens_token_hash_unique` ON `api_tokens` (`token_hash`);",
+			"CREATE TABLE `memberships` (\n\t`user_id` text NOT NULL,\n\t`space_id` text NOT NULL,\n\t`created_at` integer NOT NULL,\n\tPRIMARY KEY(`user_id`, `space_id`)\n);",
+			"CREATE TABLE `people` (\n\t`user_id` text NOT NULL,\n\t`id` text NOT NULL,\n\t`name` text NOT NULL,\n\t`kind` text NOT NULL,\n\t`owner_id` text,\n\t`seen_at` integer NOT NULL,\n\tPRIMARY KEY(`user_id`, `id`)\n);",
+			"CREATE TABLE `shares` (\n\t`user_id` text NOT NULL,\n\t`id` text NOT NULL,\n\t`target_kind` text NOT NULL,\n\t`target_id` text NOT NULL,\n\t`grantee` text,\n\t`role` text NOT NULL,\n\t`created_at` integer NOT NULL,\n\tPRIMARY KEY(`user_id`, `id`)\n);",
+			"ALTER TABLE `log` ADD `actor` text DEFAULT 'server' NOT NULL;",
+			"ALTER TABLE `log` ADD `at` integer DEFAULT 0 NOT NULL;",
+			"ALTER TABLE `tasks` ADD `created_by` text;",
+			"ALTER TABLE `tasks` ADD `completed_by` text;",
+			"ALTER TABLE `tasks` ADD `last_completed_at` integer;",
+			"ALTER TABLE `user` ADD `kind` text DEFAULT 'human' NOT NULL;",
+			"ALTER TABLE `user` ADD `owner_id` text;"
+		]
 	}
 ];

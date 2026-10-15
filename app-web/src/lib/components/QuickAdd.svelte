@@ -111,6 +111,7 @@
 		if (!parsed.title || listening) return;
 		const reminders = [...parsed.reminders, ...picked.reminders];
 		const task = store.addTask({ title: parsed.title, due, recurrence, priority, projectId, labelIds, reminders });
+		if (!task) return;
 		const typing = subtaskTask(subtaskParsed);
 		for (const child of [...subtasks.map((s) => s.task), ...(typing ? [typing] : [])]) store.addTask(child, task.id);
 		sheets.close();

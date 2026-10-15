@@ -9,6 +9,7 @@ struct TaskDetailsPage: View {
     var body: some View {
         if let task = store.task(taskID) {
             TaskDetailsForm(task: task, navigation: navigation)
+                .environment(\.space, store.space(ofTask: task.id) ?? .own)
         }
     }
 }
@@ -17,6 +18,7 @@ private struct TaskDetailsForm: View {
     @Environment(Store.self) private var store
     @Environment(TaskActions.self) private var actions
     @Environment(\.clock) private var clock
+    @Environment(\.space) private var space
 
     let task: TaskItem
     let navigation: DetailsNavigation
@@ -33,14 +35,25 @@ private struct TaskDetailsForm: View {
     }
 
     private var parent: TaskItem? { task.parentId.flatMap(store.task) }
+    private var locked: Bool { store.isReadOnly(task.id) }
 
     var body: some View {
         let parsed = TaskDetails.parse(
-            title, task, now: clock.now, projects: store.projects, labels: store.labels, in: clock.timeZone
+            title, task, now: clock.now, projects: store.projects(in: space), labels: store.labels(in: space), in: clock.timeZone
         )
         let draft = TaskDetails.draft(task, title: title, parsed)
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
+                if let owner = store.owner(of: space) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "person.2")
+                        Text(locked ? "Shared by \(owner.name) · View only" : "Shared by \(owner.name)")
+                    }
+                    .font(.footnote.weight(.medium))
+                    .foregroundStyle(.muted)
+                    .accessibilityElement(children: .combine)
+                }
+
                 // The insets are the text editor's own, so the linked text sits exactly where the raw text will.
                 LinkedField(text: title, focused: $titleFocused, inset: EdgeInsets(top: 8, leading: 5, bottom: 8, trailing: 5)) {
                     SmartInput(
@@ -51,6 +64,7 @@ private struct TaskDetailsForm: View {
                         focused: $titleFocused,
                         onSubmit: { commitTitle() }
                     )
+                    .disabled(locked)
                 }
                 .font(.title3.weight(.semibold))
 
@@ -78,6 +92,7 @@ private struct TaskDetailsForm: View {
                     LabelsChip(labelIds: draft.labelIds) { store.updateTask(task.id, TaskPatch(labelIds: $0)) }
                 }
                 .animation(.snappy(duration: 0.16), value: draft)
+                .disabled(locked)
 
                 LinkedField(text: task.notes, focused: $notesFocused) {
                     TextField(
@@ -87,6 +102,7 @@ private struct TaskDetailsForm: View {
                     )
                     .lineLimit(3...)
                     .focused($notesFocused)
+                    .disabled(locked)
                 }
                 .font(.subheadline)
                 .padding(.horizontal, 14)
@@ -104,6 +120,8 @@ private struct TaskDetailsForm: View {
 
                 SubtaskList(task: task, navigation: navigation)
 
+                TaskPeople(task: task)
+
                 Button {
                     commitTitle()
                     actions.copyAsMarkdown(store.task(task.id) ?? task)
@@ -113,7 +131,6 @@ private struct TaskDetailsForm: View {
                         .foregroundStyle(.muted)
                         .frame(minHeight: 44)
                 }
-                .buttonStyle(.plain)
             }
             .padding(.horizontal, 20)
             .padding(.top, 8)
@@ -121,7 +138,7 @@ private struct TaskDetailsForm: View {
             .padding(.bottom, 120)
         }
         .scrollDismissesKeyboard(.interactively)
-        .overlay(alignment: .bottom) { floatingActions }
+        .overlay(alignment: .bottom) { if !locked { floatingActions } }
         .onMessage(of: UIScreen.self, for: .keyboardWillShow) { _ in keyboardShown = true }
         .onMessage(of: UIScreen.self, for: .keyboardWillHide) { _ in keyboardShown = false }
         .background(.canvas)
@@ -193,6 +210,13 @@ private struct TaskDetailsForm: View {
                 .accessibilityLabel("Back to \(parent.title)")
             } else {
                 ProjectMenu(projectId: draft.projectId) { store.updateTask(task.id, TaskPatch(projectId: .some($0))) }
+                    .disabled(locked)
+            }
+        }
+        if space == .own {
+            ToolbarItem(placement: .topBarTrailing) {
+                ShareButton(target: API.ShareTarget(kind: .task, id: task.id), name: task.title)
+                    .labelStyle(.iconOnly)
             }
         }
         ToolbarItem(placement: .topBarTrailing) {
@@ -202,8 +226,9 @@ private struct TaskDetailsForm: View {
     }
 
     private func commitTitle() {
+        guard !locked else { return }
         let parsed = TaskDetails.parse(
-            title, task, now: clock.now, projects: store.projects, labels: store.labels, in: clock.timeZone
+            title, task, now: clock.now, projects: store.projects(in: space), labels: store.labels(in: space), in: clock.timeZone
         )
         switch TaskDetails.commitTitle(task, title: title, parsed) {
         case .unchanged:
@@ -257,6 +282,7 @@ private struct Picks: Equatable {
 /// instead.
 private struct ProjectMenu: View {
     @Environment(Store.self) private var store
+    @Environment(\.space) private var space
     let projectId: String?
     let onChange: @MainActor (String?) -> Void
 
@@ -267,14 +293,14 @@ private struct ProjectMenu: View {
         Menu {
             Picker("Project", selection: Binding(get: { project?.id }, set: onChange)) {
                 SwiftUI.Label("Inbox", systemImage: "tray").tag(String?.none)
-                ForEach(store.projects) { project in
+                ForEach(store.projects(in: space)) { project in
                     SwiftUI.Label(project.name, systemImage: "number").tag(String?.some(project.id))
                 }
             }
             .pickerStyle(.inline)
-            Button("New project…", systemImage: "plus") { creating = true }
+            if space == .own { Button("New project…", systemImage: "plus") { creating = true } }
         } label: {
-            // The close button is the only other item in the bar, so the name gets the rest of the width and truncates.
+            // Only the share and close buttons share the bar, so the name gets most of the width and truncates.
             HStack(spacing: 6) {
                 Image(systemName: project == nil ? "tray" : "number")
                 Text(project?.name ?? "Inbox").lineLimit(1).truncationMode(.tail)

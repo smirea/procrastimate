@@ -8,8 +8,8 @@
 	import { eventTasks } from 'shared/views.ts';
 
 	const id = $derived(page.params.id ?? '');
-	const event = $derived(eventGroups(store.tasks, clock.today).find((g) => g.id === id));
-	const tasks = $derived(eventTasks(store.tasks, id, clock.today));
+	const event = $derived(eventGroups(store.own.tasks, clock.today).find((g) => g.id === id));
+	const tasks = $derived(eventTasks(store.own.tasks, id, clock.today));
 </script>
 
 <svelte:head><title>{event?.title ?? 'Event'} · ProcrastiMate</title></svelte:head>

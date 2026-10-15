@@ -10,7 +10,7 @@
 
 	const SORT_KEY = 'procrastimate.noDateOldestFirst';
 	let newestFirst = $state(localStorage.getItem(SORT_KEY) === null);
-	const view = $derived(noDateTasks(store.tasks, clock.today, newestFirst));
+	const view = $derived(noDateTasks(store.own.tasks, clock.today, newestFirst));
 
 	function flip() {
 		newestFirst = !newestFirst;

@@ -57,6 +57,7 @@ export const completionStateSchema = z
 	.object({
 		id: taskShape.id,
 		completedAt: taskShape.completedAt,
+		lastCompletedAt: taskShape.lastCompletedAt,
 		due: taskShape.due,
 		reminders: taskShape.reminders,
 		event: taskShape.event,
@@ -124,6 +125,9 @@ export function addTask(
 		event: null,
 		createdAt: Math.max(now, (data.tasks.at(-1)?.createdAt ?? -Infinity) + 1),
 		completedAt: null,
+		createdBy: null,
+		completedBy: null,
+		lastCompletedAt: null,
 	};
 	let tasks = [...data.tasks, task];
 	if (parent) tasks = put(tasks, subtasks.reopenTask(tasks, parent.id));
@@ -150,8 +154,8 @@ export function completeTask(
 	if (!result) return null;
 	const byId = new Map(data.tasks.map(t => [t.id, t]));
 	const previous = result.changed.map(({ id }) => {
-		const { completedAt, due, reminders, event } = byId.get(id)!;
-		return { id, completedAt, due, reminders, event };
+		const { completedAt, lastCompletedAt, due, reminders, event } = byId.get(id)!;
+		return { id, completedAt, lastCompletedAt, due, reminders, event };
 	});
 	const completion: Completion =
 		result.kind === 'done' ? { kind: 'done', previous } : { kind: 'rolled', next: result.next, previous };

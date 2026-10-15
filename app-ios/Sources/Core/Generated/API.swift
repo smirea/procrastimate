@@ -79,6 +79,246 @@ extension KeyedEncodingContainer {
 }
 
 extension API {
+    public struct Activity: Codable, Hashable, Sendable {
+        public var entries: [ActivityEntry]
+
+        public init(entries: [ActivityEntry] = []) {
+            self.entries = entries
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case entries = "entries"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            entries = try container.decode([ActivityEntry].self, forKey: .entries)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.entries, forKey: .entries)
+        }
+    }
+
+    public enum ActivityAction: String, Codable, Hashable, Sendable, CaseIterable, Identifiable {
+        case created = "created"
+        case edited = "edited"
+        case completed = "completed"
+        case reopened = "reopened"
+        case deleted = "deleted"
+        case restored = "restored"
+
+        public var id: String { rawValue }
+    }
+
+    /// One change to a task, read from the space’s log.
+    public struct ActivityEntry: Codable, Hashable, Sendable {
+        public var at: Int
+        public var actor: Person
+        public var action: ActivityAction
+        public var fields: [String]
+
+        public init(at: Int, actor: Person, action: ActivityAction, fields: [String] = []) {
+            self.at = at
+            self.actor = actor
+            self.action = action
+            self.fields = fields
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case at = "at"
+            case actor = "actor"
+            case action = "action"
+            case fields = "fields"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            at = try container.decode(Int.self, forKey: .at)
+            actor = try container.decode(Person.self, forKey: .actor)
+            action = try container.decode(ActivityAction.self, forKey: .action)
+            fields = try container.decode([String].self, forKey: .fields)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.at, forKey: .at)
+            try container.encode(self.actor, forKey: .actor)
+            try container.encode(self.action, forKey: .action)
+            try container.encode(self.fields, forKey: .fields)
+        }
+    }
+
+    public enum ActorKind: String, Codable, Hashable, Sendable, CaseIterable, Identifiable {
+        case human = "human"
+        case ai = "ai"
+
+        public var id: String { rawValue }
+    }
+
+    /// A task the agent command API adds. It needs `text` or `title`.
+    public struct AgentNewTask: Codable, Hashable, Sendable {
+        public var text: String?
+        public var title: String?
+        public var notes: String?
+        public var projectId: String??
+        public var parentId: String??
+        public var labelIds: [String]?
+        public var priority: Priority?
+
+        public init(text: String? = nil, title: String? = nil, notes: String? = nil, projectId: String?? = nil, parentId: String?? = nil, labelIds: [String]? = nil, priority: Priority? = nil) {
+            self.text = text
+            self.title = title
+            self.notes = notes
+            self.projectId = projectId
+            self.parentId = parentId
+            self.labelIds = labelIds
+            self.priority = priority
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case text = "text"
+            case title = "title"
+            case notes = "notes"
+            case projectId = "projectId"
+            case parentId = "parentId"
+            case labelIds = "labelIds"
+            case priority = "priority"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            text = try container.decodeAbsent(String.self, forKey: .text)
+            title = try container.decodeAbsent(String.self, forKey: .title)
+            notes = try container.decodeAbsent(String.self, forKey: .notes)
+            projectId = try container.decodeNullable(String.self, forKey: .projectId)
+            parentId = try container.decodeNullable(String.self, forKey: .parentId)
+            labelIds = try container.decodeAbsent([String].self, forKey: .labelIds)
+            priority = try container.decodeAbsent(Priority.self, forKey: .priority)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encodeIfPresent(self.text, forKey: .text)
+            try container.encodeIfPresent(self.title, forKey: .title)
+            try container.encodeIfPresent(self.notes, forKey: .notes)
+            try container.encodeNullable(self.projectId, forKey: .projectId)
+            try container.encodeNullable(self.parentId, forKey: .parentId)
+            try container.encodeIfPresent(self.labelIds, forKey: .labelIds)
+            try container.encodeIfPresent(self.priority, forKey: .priority)
+        }
+    }
+
+    public struct AiAccounts: Codable, Hashable, Sendable {
+        public var accounts: [Person]
+
+        public init(accounts: [Person] = []) {
+            self.accounts = accounts
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case accounts = "accounts"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            accounts = try container.decode([Person].self, forKey: .accounts)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.accounts, forKey: .accounts)
+        }
+    }
+
+    public struct AiCreateInput: Codable, Hashable, Sendable {
+        public var name: String
+
+        public init(name: String) {
+            self.name = name
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case name = "name"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            name = try container.decode(String.self, forKey: .name)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.name, forKey: .name)
+        }
+    }
+
+    /// An AI account’s token. The secret is shown once, when it is made.
+    public struct ApiToken: Codable, Hashable, Sendable, Identifiable {
+        public var id: String
+        public var aiUserId: String
+        public var name: String
+        public var createdAt: Int
+        public var lastUsedAt: Int?
+
+        public init(id: String, aiUserId: String, name: String, createdAt: Int, lastUsedAt: Int? = nil) {
+            self.id = id
+            self.aiUserId = aiUserId
+            self.name = name
+            self.createdAt = createdAt
+            self.lastUsedAt = lastUsedAt
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case id = "id"
+            case aiUserId = "aiUserId"
+            case name = "name"
+            case createdAt = "createdAt"
+            case lastUsedAt = "lastUsedAt"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            id = try container.decode(String.self, forKey: .id)
+            aiUserId = try container.decode(String.self, forKey: .aiUserId)
+            name = try container.decode(String.self, forKey: .name)
+            createdAt = try container.decode(Int.self, forKey: .createdAt)
+            lastUsedAt = try container.decode(Int?.self, forKey: .lastUsedAt)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.id, forKey: .id)
+            try container.encode(self.aiUserId, forKey: .aiUserId)
+            try container.encode(self.name, forKey: .name)
+            try container.encode(self.createdAt, forKey: .createdAt)
+            try container.encode(self.lastUsedAt, forKey: .lastUsedAt)
+        }
+    }
+
+    public struct ApiTokens: Codable, Hashable, Sendable {
+        public var tokens: [ApiToken]
+
+        public init(tokens: [ApiToken] = []) {
+            self.tokens = tokens
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case tokens = "tokens"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            tokens = try container.decode([ApiToken].self, forKey: .tokens)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.tokens, forKey: .tokens)
+        }
+    }
+
     public struct AuthMethods: Codable, Hashable, Sendable {
         public var email: Bool
         public var google: Bool
@@ -506,13 +746,15 @@ extension API {
     public struct CompletionState: Codable, Hashable, Sendable, Identifiable {
         public var id: String
         public var completedAt: Int?
+        public var lastCompletedAt: Int?
         public var due: Due?
         public var reminders: [Reminder]
         public var event: TaskEvent?
 
-        public init(id: String, completedAt: Int? = nil, due: Due? = nil, reminders: [Reminder] = [], event: TaskEvent? = nil) {
+        public init(id: String, completedAt: Int? = nil, lastCompletedAt: Int? = nil, due: Due? = nil, reminders: [Reminder] = [], event: TaskEvent? = nil) {
             self.id = id
             self.completedAt = completedAt
+            self.lastCompletedAt = lastCompletedAt
             self.due = due
             self.reminders = reminders
             self.event = event
@@ -521,6 +763,7 @@ extension API {
         enum CodingKeys: String, CodingKey {
             case id = "id"
             case completedAt = "completedAt"
+            case lastCompletedAt = "lastCompletedAt"
             case due = "due"
             case reminders = "reminders"
             case event = "event"
@@ -530,6 +773,7 @@ extension API {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             id = try container.decode(String.self, forKey: .id)
             completedAt = try container.decode(Int?.self, forKey: .completedAt)
+            lastCompletedAt = try container.decode(Int?.self, forKey: .lastCompletedAt)
             due = try container.decode(Due?.self, forKey: .due)
             reminders = try container.decode([Reminder].self, forKey: .reminders)
             event = try container.decode(TaskEvent?.self, forKey: .event)
@@ -539,9 +783,38 @@ extension API {
             var container = encoder.container(keyedBy: CodingKeys.self)
             try container.encode(self.id, forKey: .id)
             try container.encode(self.completedAt, forKey: .completedAt)
+            try container.encode(self.lastCompletedAt, forKey: .lastCompletedAt)
             try container.encode(self.due, forKey: .due)
             try container.encode(self.reminders, forKey: .reminders)
             try container.encode(self.event, forKey: .event)
+        }
+    }
+
+    /// `token` is `pm.<ownerId>.<secret>`, shown only this once.
+    public struct CreatedApiToken: Codable, Hashable, Sendable, Identifiable {
+        public var id: String
+        public var token: String
+
+        public init(id: String, token: String) {
+            self.id = id
+            self.token = token
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case id = "id"
+            case token = "token"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            id = try container.decode(String.self, forKey: .id)
+            token = try container.decode(String.self, forKey: .token)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.id, forKey: .id)
+            try container.encode(self.token, forKey: .token)
         }
     }
 
@@ -1267,6 +1540,60 @@ extension API {
         }
     }
 
+    public struct NewApiToken: Codable, Hashable, Sendable {
+        public var aiUserId: String
+        public var name: String
+
+        public init(aiUserId: String, name: String) {
+            self.aiUserId = aiUserId
+            self.name = name
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case aiUserId = "aiUserId"
+            case name = "name"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            aiUserId = try container.decode(String.self, forKey: .aiUserId)
+            name = try container.decode(String.self, forKey: .name)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.aiUserId, forKey: .aiUserId)
+            try container.encode(self.name, forKey: .name)
+        }
+    }
+
+    public struct NewShare: Codable, Hashable, Sendable {
+        public var target: ShareTarget
+        public var audience: ShareAudience
+
+        public init(target: ShareTarget, audience: ShareAudience) {
+            self.target = target
+            self.audience = audience
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case target = "target"
+            case audience = "audience"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            target = try container.decode(ShareTarget.self, forKey: .target)
+            audience = try container.decode(ShareAudience.self, forKey: .audience)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.target, forKey: .target)
+            try container.encode(self.audience, forKey: .audience)
+        }
+    }
+
     public struct NewTask: Codable, Hashable, Sendable {
         public var title: String
         public var projectId: String?
@@ -1348,18 +1675,22 @@ extension API {
 
     public struct Nudge: Codable, Hashable, Sendable {
         public var cursor: Int
+        public var space: String?
 
-        public init(cursor: Int) {
+        public init(cursor: Int, space: String? = nil) {
             self.cursor = cursor
+            self.space = space
         }
 
         enum CodingKeys: String, CodingKey {
             case cursor = "cursor"
+            case space = "space"
         }
 
         public init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             cursor = try container.decode(Int.self, forKey: .cursor)
+            space = try container.decodeAbsent(String.self, forKey: .space)
             if decoder.validates {
                 do {
                     let value = self.cursor
@@ -1371,6 +1702,7 @@ extension API {
         public func encode(to encoder: Encoder) throws {
             var container = encoder.container(keyedBy: CodingKeys.self)
             try container.encode(self.cursor, forKey: .cursor)
+            try container.encodeIfPresent(self.space, forKey: .space)
         }
     }
 
@@ -1707,6 +2039,66 @@ extension API {
             try container.encode(self.labels, forKey: .labels)
             try container.encode(self.due, forKey: .due)
             try container.encode(self.spoken, forKey: .spoken)
+        }
+    }
+
+    public struct People: Codable, Hashable, Sendable {
+        public var people: [Person]
+
+        public init(people: [Person] = []) {
+            self.people = people
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case people = "people"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            people = try container.decode([Person].self, forKey: .people)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.people, forKey: .people)
+        }
+    }
+
+    /// A human, or an AI account with the human who owns it.
+    public struct Person: Codable, Hashable, Sendable, Identifiable {
+        public var id: String
+        public var name: String
+        public var kind: ActorKind
+        public var ownerId: String?
+
+        public init(id: String, name: String, kind: ActorKind, ownerId: String? = nil) {
+            self.id = id
+            self.name = name
+            self.kind = kind
+            self.ownerId = ownerId
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case id = "id"
+            case name = "name"
+            case kind = "kind"
+            case ownerId = "ownerId"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            id = try container.decode(String.self, forKey: .id)
+            name = try container.decode(String.self, forKey: .name)
+            kind = try container.decode(ActorKind.self, forKey: .kind)
+            ownerId = try container.decode(String?.self, forKey: .ownerId)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.id, forKey: .id)
+            try container.encode(self.name, forKey: .name)
+            try container.encode(self.kind, forKey: .kind)
+            try container.encode(self.ownerId, forKey: .ownerId)
         }
     }
 
@@ -2337,6 +2729,13 @@ extension API {
         }
     }
 
+    public enum Role: String, Codable, Hashable, Sendable, CaseIterable, Identifiable {
+        case view = "view"
+        case edit = "edit"
+
+        public var id: String { rawValue }
+    }
+
     public struct ScheduledNotification: Codable, Hashable, Sendable {
         /// When it shows, in epoch milliseconds.
         public var at: Date
@@ -2509,6 +2908,194 @@ extension API {
         public var id: String { rawValue }
     }
 
+    /// Who a new share is for: anyone with the link, read only, or one user with a role.
+    public enum ShareAudience: Codable, Hashable, Sendable {
+        case link
+        case user(userId: String, role: Role)
+
+        enum CodingKeys: String, CodingKey {
+            case tag = "kind"
+            case userId = "userId"
+            case role = "role"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            switch try container.decode(String.self, forKey: .tag) {
+            case "link":
+                self = .link
+            case "user":
+                let userId = try container.decode(String.self, forKey: .userId)
+                let role = try container.decode(Role.self, forKey: .role)
+                self = .user(userId: userId, role: role)
+            case let tag:
+                throw DecodingError.dataCorruptedError(forKey: .tag, in: container, debugDescription: "Unknown kind \(tag)")
+            }
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            switch self {
+            case .link:
+                try container.encode("link", forKey: .tag)
+            case let .user(userId, role):
+                try container.encode("user", forKey: .tag)
+                try container.encode(userId, forKey: .userId)
+                try container.encode(role, forKey: .role)
+            }
+        }
+    }
+
+    /// What a public link shows, read only, without signing in.
+    public struct SharedView: Codable, Hashable, Sendable {
+        public var target: ShareTarget
+        public var owner: Person
+        public var tasks: [Task]
+        public var projects: [Project]
+        public var labels: [Label]
+
+        public init(target: ShareTarget, owner: Person, tasks: [Task] = [], projects: [Project] = [], labels: [Label] = []) {
+            self.target = target
+            self.owner = owner
+            self.tasks = tasks
+            self.projects = projects
+            self.labels = labels
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case target = "target"
+            case owner = "owner"
+            case tasks = "tasks"
+            case projects = "projects"
+            case labels = "labels"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            target = try container.decode(ShareTarget.self, forKey: .target)
+            owner = try container.decode(Person.self, forKey: .owner)
+            tasks = try container.decode([Task].self, forKey: .tasks)
+            projects = try container.decode([Project].self, forKey: .projects)
+            labels = try container.decode([Label].self, forKey: .labels)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.target, forKey: .target)
+            try container.encode(self.owner, forKey: .owner)
+            try container.encode(self.tasks, forKey: .tasks)
+            try container.encode(self.projects, forKey: .projects)
+            try container.encode(self.labels, forKey: .labels)
+        }
+    }
+
+    public struct Shares: Codable, Hashable, Sendable {
+        public var shares: [ShareView]
+
+        public init(shares: [ShareView] = []) {
+            self.shares = shares
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case shares = "shares"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            shares = try container.decode([ShareView].self, forKey: .shares)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.shares, forKey: .shares)
+        }
+    }
+
+    /// What a share reaches. `id` is empty for the whole space.
+    public struct ShareTarget: Codable, Hashable, Sendable, Identifiable {
+        public var kind: ShareTargetKind
+        public var id: String
+
+        public init(kind: ShareTargetKind, id: String) {
+            self.kind = kind
+            self.id = id
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case kind = "kind"
+            case id = "id"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            kind = try container.decode(ShareTargetKind.self, forKey: .kind)
+            id = try container.decode(String.self, forKey: .id)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.kind, forKey: .kind)
+            try container.encode(self.id, forKey: .id)
+        }
+    }
+
+    public enum ShareTargetKind: String, Codable, Hashable, Sendable, CaseIterable, Identifiable {
+        case space = "space"
+        case project = "project"
+        case label = "label"
+        case task = "task"
+
+        public var id: String { rawValue }
+    }
+
+    /// A share as the owner sees it in the share sheet.
+    public struct ShareView: Codable, Hashable, Sendable, Identifiable {
+        public var id: String
+        public var target: ShareTarget
+        public var grantee: Person?
+        public var role: Role
+        public var createdAt: Int
+        public var url: String?
+
+        public init(id: String, target: ShareTarget, grantee: Person? = nil, role: Role, createdAt: Int, url: String? = nil) {
+            self.id = id
+            self.target = target
+            self.grantee = grantee
+            self.role = role
+            self.createdAt = createdAt
+            self.url = url
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case id = "id"
+            case target = "target"
+            case grantee = "grantee"
+            case role = "role"
+            case createdAt = "createdAt"
+            case url = "url"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            id = try container.decode(String.self, forKey: .id)
+            target = try container.decode(ShareTarget.self, forKey: .target)
+            grantee = try container.decode(Person?.self, forKey: .grantee)
+            role = try container.decode(Role.self, forKey: .role)
+            createdAt = try container.decode(Int.self, forKey: .createdAt)
+            url = try container.decode(String?.self, forKey: .url)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.id, forKey: .id)
+            try container.encode(self.target, forKey: .target)
+            try container.encode(self.grantee, forKey: .grantee)
+            try container.encode(self.role, forKey: .role)
+            try container.encode(self.createdAt, forKey: .createdAt)
+            try container.encode(self.url, forKey: .url)
+        }
+    }
+
     public enum Sigil: String, Codable, Hashable, Sendable, CaseIterable, Identifiable {
         case project = "#"
         case label = "@"
@@ -2555,13 +3142,17 @@ extension API {
         public var labels: [Label]
         public var remindersCheckedAt: Int
         public var sync: SyncSection?
+        public var spaces: [String: SpaceSection]
+        public var people: [Person]
 
-        public init(tasks: [Task] = [], projects: [Project] = [], labels: [Label] = [], remindersCheckedAt: Int, sync: SyncSection? = nil) {
+        public init(tasks: [Task] = [], projects: [Project] = [], labels: [Label] = [], remindersCheckedAt: Int, sync: SyncSection? = nil, spaces: [String: SpaceSection] = [:], people: [Person] = []) {
             self.tasks = tasks
             self.projects = projects
             self.labels = labels
             self.remindersCheckedAt = remindersCheckedAt
             self.sync = sync
+            self.spaces = spaces
+            self.people = people
         }
 
         enum CodingKeys: String, CodingKey {
@@ -2570,6 +3161,8 @@ extension API {
             case labels = "labels"
             case remindersCheckedAt = "remindersCheckedAt"
             case sync = "sync"
+            case spaces = "spaces"
+            case people = "people"
         }
 
         public func encode(to encoder: Encoder) throws {
@@ -2579,6 +3172,149 @@ extension API {
             try container.encode(self.labels, forKey: .labels)
             try container.encode(self.remindersCheckedAt, forKey: .remindersCheckedAt)
             try container.encodeIfPresent(self.sync, forKey: .sync)
+            try container.encode(self.spaces, forKey: .spaces)
+            try container.encode(self.people, forKey: .people)
+        }
+    }
+
+    /// A space shared with the signed-in user. `id` is its owner’s user id.
+    public struct Space: Codable, Hashable, Sendable, Identifiable {
+        public var id: String
+        public var owner: Person
+
+        public init(id: String, owner: Person) {
+            self.id = id
+            self.owner = owner
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case id = "id"
+            case owner = "owner"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            id = try container.decode(String.self, forKey: .id)
+            owner = try container.decode(Person.self, forKey: .owner)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.id, forKey: .id)
+            try container.encode(self.owner, forKey: .owner)
+        }
+    }
+
+    public struct Spaces: Codable, Hashable, Sendable {
+        public var spaces: [Space]
+
+        public init(spaces: [Space] = []) {
+            self.spaces = spaces
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case spaces = "spaces"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            spaces = try container.decode([Space].self, forKey: .spaces)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.spaces, forKey: .spaces)
+        }
+    }
+
+    public struct SpaceSection: Codable, Hashable, Sendable {
+        public var owner: Person
+        public var cursor: Int
+        public var outbox: [SyncOp]
+        public var epoch: Int
+        public var scope: String
+        public var readOnly: [String]
+        public var targets: [ShareTarget]
+        public var tasks: [Task]
+        public var projects: [Project]
+        public var labels: [Label]
+
+        public init(owner: Person, cursor: Int, outbox: [SyncOp] = [], epoch: Int = 0, scope: String = "", readOnly: [String] = [], targets: [ShareTarget] = [], tasks: [Task] = [], projects: [Project] = [], labels: [Label] = []) {
+            self.owner = owner
+            self.cursor = cursor
+            self.outbox = outbox
+            self.epoch = epoch
+            self.scope = scope
+            self.readOnly = readOnly
+            self.targets = targets
+            self.tasks = tasks
+            self.projects = projects
+            self.labels = labels
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case owner = "owner"
+            case cursor = "cursor"
+            case outbox = "outbox"
+            case epoch = "epoch"
+            case scope = "scope"
+            case readOnly = "readOnly"
+            case targets = "targets"
+            case tasks = "tasks"
+            case projects = "projects"
+            case labels = "labels"
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.owner, forKey: .owner)
+            try container.encode(self.cursor, forKey: .cursor)
+            try container.encode(self.outbox, forKey: .outbox)
+            try container.encode(self.epoch, forKey: .epoch)
+            try container.encode(self.scope, forKey: .scope)
+            try container.encode(self.readOnly, forKey: .readOnly)
+            try container.encode(self.targets, forKey: .targets)
+            try container.encode(self.tasks, forKey: .tasks)
+            try container.encode(self.projects, forKey: .projects)
+            try container.encode(self.labels, forKey: .labels)
+        }
+    }
+
+    /// What the caller sees of a space, for the agent command API.
+    public struct SpaceView: Codable, Hashable, Sendable {
+        public var tasks: [Task]
+        public var projects: [Project]
+        public var labels: [Label]
+        public var readOnly: [String]
+
+        public init(tasks: [Task] = [], projects: [Project] = [], labels: [Label] = [], readOnly: [String] = []) {
+            self.tasks = tasks
+            self.projects = projects
+            self.labels = labels
+            self.readOnly = readOnly
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case tasks = "tasks"
+            case projects = "projects"
+            case labels = "labels"
+            case readOnly = "readOnly"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            tasks = try container.decode([Task].self, forKey: .tasks)
+            projects = try container.decode([Project].self, forKey: .projects)
+            labels = try container.decode([Label].self, forKey: .labels)
+            readOnly = try container.decode([String].self, forKey: .readOnly)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.tasks, forKey: .tasks)
+            try container.encode(self.projects, forKey: .projects)
+            try container.encode(self.labels, forKey: .labels)
+            try container.encode(self.readOnly, forKey: .readOnly)
         }
     }
 
@@ -2686,12 +3422,14 @@ extension API {
         public var ops: [Op]
         public var epoch: Int
         public var reset: Bool?
+        public var scope: String
 
-        public init(cursor: Int, ops: [Op] = [], epoch: Int = 0, reset: Bool? = nil) {
+        public init(cursor: Int, ops: [Op] = [], epoch: Int = 0, reset: Bool? = nil, scope: String = "") {
             self.cursor = cursor
             self.ops = ops
             self.epoch = epoch
             self.reset = reset
+            self.scope = scope
         }
 
         enum CodingKeys: String, CodingKey {
@@ -2699,6 +3437,7 @@ extension API {
             case ops = "ops"
             case epoch = "epoch"
             case reset = "reset"
+            case scope = "scope"
         }
 
         public init(from decoder: Decoder) throws {
@@ -2707,6 +3446,7 @@ extension API {
             ops = try container.decode([Op].self, forKey: .ops)
             epoch = try container.decodeAbsent(Int.self, forKey: .epoch) ?? 0
             reset = try container.decodeAbsent(Bool.self, forKey: .reset)
+            scope = try container.decodeAbsent(String.self, forKey: .scope) ?? ""
             if decoder.validates {
                 do {
                     let value = self.cursor
@@ -2725,6 +3465,7 @@ extension API {
             try container.encode(self.ops, forKey: .ops)
             try container.encode(self.epoch, forKey: .epoch)
             try container.encodeIfPresent(self.reset, forKey: .reset)
+            try container.encode(self.scope, forKey: .scope)
         }
     }
 
@@ -2758,13 +3499,15 @@ extension API {
         public var cursor: Int
         public var hlc: Hlc
         public var epoch: Int
+        public var scope: String?
 
-        public init(acked: [String] = [], changes: [Change] = [], cursor: Int, hlc: Hlc, epoch: Int) {
+        public init(acked: [String] = [], changes: [Change] = [], cursor: Int, hlc: Hlc, epoch: Int, scope: String? = nil) {
             self.acked = acked
             self.changes = changes
             self.cursor = cursor
             self.hlc = hlc
             self.epoch = epoch
+            self.scope = scope
         }
 
         enum CodingKeys: String, CodingKey {
@@ -2773,6 +3516,7 @@ extension API {
             case cursor = "cursor"
             case hlc = "hlc"
             case epoch = "epoch"
+            case scope = "scope"
         }
 
         public init(from decoder: Decoder) throws {
@@ -2782,6 +3526,7 @@ extension API {
             cursor = try container.decode(Int.self, forKey: .cursor)
             hlc = try container.decode(Hlc.self, forKey: .hlc)
             epoch = try container.decode(Int.self, forKey: .epoch)
+            scope = try container.decodeAbsent(String.self, forKey: .scope)
             if decoder.validates {
                 do {
                     let value = self.cursor
@@ -2805,6 +3550,7 @@ extension API {
             try container.encode(self.cursor, forKey: .cursor)
             try container.encode(self.hlc, forKey: .hlc)
             try container.encode(self.epoch, forKey: .epoch)
+            try container.encodeIfPresent(self.scope, forKey: .scope)
         }
     }
 
@@ -2814,13 +3560,19 @@ extension API {
         public var cursor: Int
         public var hlc: Hlc
         public var epoch: Int
+        public var scope: String?
+        public var readOnly: [String]?
+        public var targets: [ShareTarget]?
 
-        public init(acked: [String] = [], snapshot: SyncSnapshot, cursor: Int, hlc: Hlc, epoch: Int) {
+        public init(acked: [String] = [], snapshot: SyncSnapshot, cursor: Int, hlc: Hlc, epoch: Int, scope: String? = nil, readOnly: [String]? = nil, targets: [ShareTarget]? = nil) {
             self.acked = acked
             self.snapshot = snapshot
             self.cursor = cursor
             self.hlc = hlc
             self.epoch = epoch
+            self.scope = scope
+            self.readOnly = readOnly
+            self.targets = targets
         }
 
         enum CodingKeys: String, CodingKey {
@@ -2829,6 +3581,9 @@ extension API {
             case cursor = "cursor"
             case hlc = "hlc"
             case epoch = "epoch"
+            case scope = "scope"
+            case readOnly = "readOnly"
+            case targets = "targets"
         }
 
         public init(from decoder: Decoder) throws {
@@ -2838,6 +3593,9 @@ extension API {
             cursor = try container.decode(Int.self, forKey: .cursor)
             hlc = try container.decode(Hlc.self, forKey: .hlc)
             epoch = try container.decode(Int.self, forKey: .epoch)
+            scope = try container.decodeAbsent(String.self, forKey: .scope)
+            readOnly = try container.decodeAbsent([String].self, forKey: .readOnly)
+            targets = try container.decodeAbsent([ShareTarget].self, forKey: .targets)
             if decoder.validates {
                 do {
                     let value = self.cursor
@@ -2861,6 +3619,9 @@ extension API {
             try container.encode(self.cursor, forKey: .cursor)
             try container.encode(self.hlc, forKey: .hlc)
             try container.encode(self.epoch, forKey: .epoch)
+            try container.encodeIfPresent(self.scope, forKey: .scope)
+            try container.encodeIfPresent(self.readOnly, forKey: .readOnly)
+            try container.encodeIfPresent(self.targets, forKey: .targets)
         }
     }
 
@@ -2988,9 +3749,12 @@ extension API {
         public var event: TaskEvent?
         public var createdAt: Int
         public var completedAt: Int?
+        public var createdBy: String?
+        public var completedBy: String?
+        public var lastCompletedAt: Int?
         public var sourceKey: String?
 
-        public init(id: String, parentId: String? = nil, order: Double = 0, title: String, notes: String = "", projectId: String? = nil, labelIds: [String] = [], due: Due? = nil, recurrence: Recurrence? = nil, priority: Priority = .p4, reminders: [Reminder] = [], location: TaskLocation? = nil, event: TaskEvent? = nil, createdAt: Int, completedAt: Int? = nil, sourceKey: String? = nil) {
+        public init(id: String, parentId: String? = nil, order: Double = 0, title: String, notes: String = "", projectId: String? = nil, labelIds: [String] = [], due: Due? = nil, recurrence: Recurrence? = nil, priority: Priority = .p4, reminders: [Reminder] = [], location: TaskLocation? = nil, event: TaskEvent? = nil, createdAt: Int, completedAt: Int? = nil, createdBy: String? = nil, completedBy: String? = nil, lastCompletedAt: Int? = nil, sourceKey: String? = nil) {
             self.id = id
             self.parentId = parentId
             self.order = order
@@ -3006,6 +3770,9 @@ extension API {
             self.event = event
             self.createdAt = createdAt
             self.completedAt = completedAt
+            self.createdBy = createdBy
+            self.completedBy = completedBy
+            self.lastCompletedAt = lastCompletedAt
             self.sourceKey = sourceKey
         }
 
@@ -3025,6 +3792,9 @@ extension API {
             case event = "event"
             case createdAt = "createdAt"
             case completedAt = "completedAt"
+            case createdBy = "createdBy"
+            case completedBy = "completedBy"
+            case lastCompletedAt = "lastCompletedAt"
             case sourceKey = "sourceKey"
         }
 
@@ -3045,6 +3815,9 @@ extension API {
             event = try container.decode(TaskEvent?.self, forKey: .event)
             createdAt = try container.decode(Int.self, forKey: .createdAt)
             completedAt = try container.decode(Int?.self, forKey: .completedAt)
+            createdBy = try container.decode(String?.self, forKey: .createdBy)
+            completedBy = try container.decode(String?.self, forKey: .completedBy)
+            lastCompletedAt = try container.decode(Int?.self, forKey: .lastCompletedAt)
             sourceKey = try container.decodeAbsent(String.self, forKey: .sourceKey)
         }
 
@@ -3065,6 +3838,9 @@ extension API {
             try container.encode(self.event, forKey: .event)
             try container.encode(self.createdAt, forKey: .createdAt)
             try container.encode(self.completedAt, forKey: .completedAt)
+            try container.encode(self.createdBy, forKey: .createdBy)
+            try container.encode(self.completedBy, forKey: .completedBy)
+            try container.encode(self.lastCompletedAt, forKey: .lastCompletedAt)
             try container.encodeIfPresent(self.sourceKey, forKey: .sourceKey)
         }
     }
@@ -3351,10 +4127,13 @@ extension API {
         public var event: TaskEvent??
         public var createdAt: Int?
         public var completedAt: Int??
+        public var createdBy: String??
+        public var completedBy: String??
+        public var lastCompletedAt: Int??
         public var sourceKey: String??
         public var deleted: Bool?
 
-        public init(parentId: String?? = nil, order: Double? = nil, title: String? = nil, notes: String? = nil, projectId: String?? = nil, labelIds: [String]? = nil, due: Due?? = nil, recurrence: Recurrence?? = nil, priority: Priority? = nil, reminders: [Reminder]? = nil, location: TaskLocation?? = nil, event: TaskEvent?? = nil, createdAt: Int? = nil, completedAt: Int?? = nil, sourceKey: String?? = nil, deleted: Bool? = nil) {
+        public init(parentId: String?? = nil, order: Double? = nil, title: String? = nil, notes: String? = nil, projectId: String?? = nil, labelIds: [String]? = nil, due: Due?? = nil, recurrence: Recurrence?? = nil, priority: Priority? = nil, reminders: [Reminder]? = nil, location: TaskLocation?? = nil, event: TaskEvent?? = nil, createdAt: Int? = nil, completedAt: Int?? = nil, createdBy: String?? = nil, completedBy: String?? = nil, lastCompletedAt: Int?? = nil, sourceKey: String?? = nil, deleted: Bool? = nil) {
             self.parentId = parentId
             self.order = order
             self.title = title
@@ -3369,6 +4148,9 @@ extension API {
             self.event = event
             self.createdAt = createdAt
             self.completedAt = completedAt
+            self.createdBy = createdBy
+            self.completedBy = completedBy
+            self.lastCompletedAt = lastCompletedAt
             self.sourceKey = sourceKey
             self.deleted = deleted
         }
@@ -3388,6 +4170,9 @@ extension API {
             case event = "event"
             case createdAt = "createdAt"
             case completedAt = "completedAt"
+            case createdBy = "createdBy"
+            case completedBy = "completedBy"
+            case lastCompletedAt = "lastCompletedAt"
             case sourceKey = "sourceKey"
             case deleted = "deleted"
         }
@@ -3408,6 +4193,9 @@ extension API {
             event = try container.decodeNullable(TaskEvent.self, forKey: .event)
             createdAt = try container.decodeAbsent(Int.self, forKey: .createdAt)
             completedAt = try container.decodeNullable(Int.self, forKey: .completedAt)
+            createdBy = try container.decodeNullable(String.self, forKey: .createdBy)
+            completedBy = try container.decodeNullable(String.self, forKey: .completedBy)
+            lastCompletedAt = try container.decodeNullable(Int.self, forKey: .lastCompletedAt)
             sourceKey = try container.decodeNullable(String.self, forKey: .sourceKey)
             deleted = try container.decodeAbsent(Bool.self, forKey: .deleted)
         }
@@ -3428,6 +4216,9 @@ extension API {
             try container.encodeNullable(self.event, forKey: .event)
             try container.encodeIfPresent(self.createdAt, forKey: .createdAt)
             try container.encodeNullable(self.completedAt, forKey: .completedAt)
+            try container.encodeNullable(self.createdBy, forKey: .createdBy)
+            try container.encodeNullable(self.completedBy, forKey: .completedBy)
+            try container.encodeNullable(self.lastCompletedAt, forKey: .lastCompletedAt)
             try container.encodeNullable(self.sourceKey, forKey: .sourceKey)
             try container.encodeIfPresent(self.deleted, forKey: .deleted)
         }
@@ -3676,11 +4467,67 @@ extension API.Endpoints {
         public static let path = "/api/account/delete"
     }
 
+    public enum ActivityList: APIEndpoint {
+        public typealias Input = NoInput
+        public typealias Output = API.Activity
+        public static let method = "GET"
+        public static let path = "/api/activity"
+    }
+
+    public enum AiList: APIEndpoint {
+        public typealias Input = NoInput
+        public typealias Output = API.AiAccounts
+        public static let method = "GET"
+        public static let path = "/api/ai"
+    }
+
+    public enum AiCreate: APIEndpoint {
+        public typealias Input = API.AiCreateInput
+        public typealias Output = API.Person
+        public static let method = "POST"
+        public static let path = "/api/ai"
+    }
+
+    public enum AiDelete: APIEndpoint {
+        public typealias Input = NoInput
+        public typealias Output = API.Ok
+        public static let method = "DELETE"
+        public static let path = "/api/ai"
+    }
+
+    public enum TokensList: APIEndpoint {
+        public typealias Input = NoInput
+        public typealias Output = API.ApiTokens
+        public static let method = "GET"
+        public static let path = "/api/ai-tokens"
+    }
+
+    public enum TokensCreate: APIEndpoint {
+        public typealias Input = API.NewApiToken
+        public typealias Output = API.CreatedApiToken
+        public static let method = "POST"
+        public static let path = "/api/ai-tokens"
+    }
+
+    public enum TokensDelete: APIEndpoint {
+        public typealias Input = NoInput
+        public typealias Output = API.Ok
+        public static let method = "DELETE"
+        public static let path = "/api/ai-tokens"
+    }
+
     public enum AuthMethods: APIEndpoint {
         public typealias Input = NoInput
         public typealias Output = API.AuthMethods
         public static let method = "GET"
         public static let path = "/api/auth/methods"
+    }
+
+    public enum Me: APIEndpoint {
+        public typealias Input = NoInput
+        public typealias Output = API.Person
+        public static let method = "GET"
+        public static let path = "/api/me"
     }
 
     public enum MemoTasksList: APIEndpoint {
@@ -3702,6 +4549,13 @@ extension API.Endpoints {
         public typealias Output = API.Ok
         public static let method = "DELETE"
         public static let path = "/api/memo-tasks"
+    }
+
+    public enum PeopleSearch: APIEndpoint {
+        public typealias Input = NoInput
+        public typealias Output = API.People
+        public static let method = "GET"
+        public static let path = "/api/people"
     }
 
     public enum PushKey: APIEndpoint {
@@ -3739,6 +4593,41 @@ extension API.Endpoints {
         public static let path = "/api/push/test"
     }
 
+    public enum SharedView: APIEndpoint {
+        public typealias Input = NoInput
+        public typealias Output = API.SharedView
+        public static let method = "GET"
+        public static let path = "/api/shared"
+    }
+
+    public enum SharesCreate: APIEndpoint {
+        public typealias Input = API.NewShare
+        public typealias Output = API.ShareView
+        public static let method = "POST"
+        public static let path = "/api/shares"
+    }
+
+    public enum SharesList: APIEndpoint {
+        public typealias Input = NoInput
+        public typealias Output = API.Shares
+        public static let method = "GET"
+        public static let path = "/api/shares"
+    }
+
+    public enum SharesDelete: APIEndpoint {
+        public typealias Input = NoInput
+        public typealias Output = API.Ok
+        public static let method = "DELETE"
+        public static let path = "/api/shares"
+    }
+
+    public enum SpacesList: APIEndpoint {
+        public typealias Input = NoInput
+        public typealias Output = API.Spaces
+        public static let method = "GET"
+        public static let path = "/api/spaces"
+    }
+
     public enum Status: APIEndpoint {
         public typealias Input = NoInput
         public typealias Output = API.Ok
@@ -3751,5 +4640,47 @@ extension API.Endpoints {
         public typealias Output = API.SyncResponse
         public static let method = "POST"
         public static let path = "/api/sync"
+    }
+
+    public enum TasksCreate: APIEndpoint {
+        public typealias Input = API.AgentNewTask
+        public typealias Output = API.Task
+        public static let method = "POST"
+        public static let path = "/api/tasks"
+    }
+
+    public enum TasksUpdate: APIEndpoint {
+        public typealias Input = API.TaskEdit
+        public typealias Output = API.Task
+        public static let method = "PATCH"
+        public static let path = "/api/tasks"
+    }
+
+    public enum TasksDelete: APIEndpoint {
+        public typealias Input = NoInput
+        public typealias Output = API.Ok
+        public static let method = "DELETE"
+        public static let path = "/api/tasks"
+    }
+
+    public enum TasksComplete: APIEndpoint {
+        public typealias Input = NoInput
+        public typealias Output = API.Task
+        public static let method = "POST"
+        public static let path = "/api/tasks/complete"
+    }
+
+    public enum TasksReopen: APIEndpoint {
+        public typealias Input = NoInput
+        public typealias Output = API.Task
+        public static let method = "POST"
+        public static let path = "/api/tasks/reopen"
+    }
+
+    public enum View: APIEndpoint {
+        public typealias Input = NoInput
+        public typealias Output = API.SpaceView
+        public static let method = "GET"
+        public static let path = "/api/view"
     }
 }

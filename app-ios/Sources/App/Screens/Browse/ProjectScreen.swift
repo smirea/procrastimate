@@ -11,7 +11,8 @@ struct ProjectScreen: View {
 
     var body: some View {
         if let project = store.project(projectID) {
-            let tasks = Views.projectTasks(store.tasks, project.id, in: store.timeZone)
+            let space = store.space(ofProject: project.id) ?? .own
+            let tasks = Views.projectTasks(store.data(in: space).tasks, project.id, in: store.timeZone)
             TaskListScreen(
                 title: project.name,
                 isEmpty: tasks.isEmpty,
@@ -20,9 +21,12 @@ struct ProjectScreen: View {
             ) {
                 ForEach(tasks) { TaskRow(task: $0) }
             }
+            .environment(\.space, space)
             .nameActions(
                 noun: "project",
                 name: project.name,
+                space: space,
+                share: API.ShareTarget(kind: .project, id: project.id),
                 deletePrompt: Browse.deleteProjectPrompt(project.name, taskCount: tasks.count),
                 copy: { actions.copyAsMarkdown(project: project) },
                 rename: { store.renameProject(project.id, $0) },

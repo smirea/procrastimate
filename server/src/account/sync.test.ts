@@ -273,4 +273,25 @@ describe.each(storeFactories)('POST /api/sync on the %s store', (_name, createSt
 		expect(next.epoch).toBe(1);
 		expect('snapshot' in next && next.snapshot.tasks.map(t => t.title)).toEqual(['Next']);
 	});
+
+	test('the log names the user behind each op and the server behind each fixup, and keeps both off the wire', async () => {
+		const cred = await setup('mac');
+		const session = await api.fetch(
+			new Request('https://procrastimate.test/api/auth/get-session', { headers: authHeaders(cred) }),
+			env,
+		);
+		const { user } = (await session.json()) as { user: { id: string } };
+		const orphan = task('child', { createdAt: NOW, parentId: 'gone' });
+		const ops = startSync(snapshotOf({ tasks: [orphan] }), 'mac', NOW, counter('op-')).outbox;
+		await sync(cred, 0, ops);
+
+		expect(store.logAfter(0, 10).map(({ opId, actor, at }) => ({ opId, actor, at }))).toEqual([
+			{ opId: 'op-1', actor: user.id, at: NOW },
+			{ opId: expect.any(String), actor: 'server', at: NOW },
+		]);
+		const changes = await sync(cred, 1, []);
+		expect('changes' in changes && changes.changes.map(change => Object.keys(change).toSorted())).toEqual([
+			['fields', 'id', 'kind', 'opId', 'seq'],
+		]);
+	});
 });

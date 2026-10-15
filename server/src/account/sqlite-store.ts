@@ -1,9 +1,27 @@
 import { and, asc, eq, gt, isNull, max, sql } from 'drizzle-orm';
 import type { AnySQLiteColumn } from 'drizzle-orm/sqlite-core';
-import { devices, log, meta, push, rambleUsage } from '../../../shared/db/schema';
+import {
+	apiTokens,
+	devices,
+	log,
+	memberships,
+	meta,
+	people,
+	push,
+	rambleUsage,
+	shares,
+} from '../../../shared/db/schema';
 import { KINDS } from '../../../shared/sync/kinds';
 import { ENTITY_TABLES, entityRow, rowEntity } from '../db/entities';
-import { deviceColumns, logColumns, pushColumns } from '../db/columns';
+import {
+	apiTokenColumns,
+	deviceColumns,
+	logColumns,
+	membershipColumns,
+	personColumns,
+	pushColumns,
+	shareColumns,
+} from '../db/columns';
 import { migrateSync, type SyncDatabase } from '../db/migrate';
 import type { AccountStore } from './store';
 
@@ -114,7 +132,18 @@ export function sqliteStore(db: SyncDatabase, userId: string): AccountStore {
 			for (const table of [...Object.values(ENTITY_TABLES), log]) db.delete(table).where(own(table.userId)).run();
 		},
 		clearAccount: () => {
-			for (const table of [...Object.values(ENTITY_TABLES), devices, log, push, rambleUsage, meta]) {
+			for (const table of [
+				...Object.values(ENTITY_TABLES),
+				devices,
+				log,
+				push,
+				rambleUsage,
+				meta,
+				shares,
+				memberships,
+				people,
+				apiTokens,
+			]) {
 				db.delete(table).where(own(table.userId)).run();
 			}
 		},
@@ -160,6 +189,87 @@ export function sqliteStore(db: SyncDatabase, userId: string): AccountStore {
 					target: [rambleUsage.userId, rambleUsage.day],
 					set: { seconds: sql`${rambleUsage.seconds} + excluded.seconds` },
 				})
+				.run();
+		},
+
+		shares: () =>
+			db
+				.select(shareColumns)
+				.from(shares)
+				.where(own(shares.userId))
+				.orderBy(asc(shares.createdAt), asc(shares.id))
+				.all(),
+		putShare: share => {
+			const { id: _, ...set } = share;
+			db.insert(shares)
+				.values({ ...share, userId })
+				.onConflictDoUpdate({ target: [shares.userId, shares.id], set })
+				.run();
+		},
+		deleteShare: id => {
+			db.delete(shares)
+				.where(and(own(shares.userId), eq(shares.id, id)))
+				.run();
+		},
+
+		memberships: () =>
+			db
+				.select(membershipColumns)
+				.from(memberships)
+				.where(own(memberships.userId))
+				.orderBy(asc(memberships.createdAt), asc(memberships.spaceId))
+				.all(),
+		putMembership: membership => {
+			const { spaceId: _, ...set } = membership;
+			db.insert(memberships)
+				.values({ ...membership, userId })
+				.onConflictDoUpdate({ target: [memberships.userId, memberships.spaceId], set })
+				.run();
+		},
+		deleteMembership: spaceId => {
+			db.delete(memberships)
+				.where(and(own(memberships.userId), eq(memberships.spaceId, spaceId)))
+				.run();
+		},
+
+		people: () => db.select(personColumns).from(people).where(own(people.userId)).orderBy(asc(people.id)).all(),
+		upsertPerson: person => {
+			const { id: _, ...set } = person;
+			db.insert(people)
+				.values({ ...person, userId })
+				.onConflictDoUpdate({ target: [people.userId, people.id], set })
+				.run();
+		},
+
+		apiTokens: () =>
+			db
+				.select(apiTokenColumns)
+				.from(apiTokens)
+				.where(own(apiTokens.userId))
+				.orderBy(asc(apiTokens.createdAt), asc(apiTokens.id))
+				.all(),
+		putApiToken: token => {
+			const { id: _, ...set } = token;
+			db.insert(apiTokens)
+				.values({ ...token, userId })
+				.onConflictDoUpdate({ target: [apiTokens.userId, apiTokens.id], set })
+				.run();
+		},
+		deleteApiToken: id => {
+			db.delete(apiTokens)
+				.where(and(own(apiTokens.userId), eq(apiTokens.id, id)))
+				.run();
+		},
+		apiTokenByHash: tokenHash =>
+			db
+				.select(apiTokenColumns)
+				.from(apiTokens)
+				.where(and(own(apiTokens.userId), eq(apiTokens.tokenHash, tokenHash)))
+				.get() ?? null,
+		touchApiToken: (id, at) => {
+			db.update(apiTokens)
+				.set({ lastUsedAt: at })
+				.where(and(own(apiTokens.userId), eq(apiTokens.id, id)))
 				.run();
 		},
 	};

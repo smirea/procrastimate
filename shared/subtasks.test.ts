@@ -29,6 +29,9 @@ const task = (id: string, fields: Partial<Task> = {}): Task => ({
 	event: null,
 	createdAt: 1,
 	completedAt: null,
+	createdBy: null,
+	completedBy: null,
+	lastCompletedAt: null,
 	...fields,
 });
 
@@ -84,7 +87,7 @@ describe('completeTask', () => {
 			kind: 'rolled',
 			next: { date: '2026-10-23', time: null },
 			changed: [
-				{ ...tasks[0]!, due: { date: '2026-10-23', time: null } },
+				{ ...tasks[0]!, due: { date: '2026-10-23', time: null }, lastCompletedAt: NOW },
 				{ ...tasks[1]!, completedAt: null },
 				{ ...tasks[3]!, completedAt: null },
 			],

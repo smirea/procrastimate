@@ -93,6 +93,8 @@ public enum SyncEngine {
         snapshot.tasks = []
         snapshot.projects = []
         snapshot.labels = []
+        snapshot.spaces = [:]
+        snapshot.people = []
         snapshot.sync = SyncSection(
             deviceId: deviceId,
             cursor: 0,
@@ -230,7 +232,7 @@ public enum SyncEngine {
             return
         }
         switch kind {
-        case "task": merge(&snapshot.tasks, id: id, fields: fields)
+        case "task": merge(&snapshot.tasks, id: id, fields: fields, defaults: taskDefaults)
         case "project": merge(&snapshot.projects, id: id, fields: fields)
         case "label": merge(&snapshot.labels, id: id, fields: fields)
         case "settings":
@@ -366,12 +368,19 @@ private func sameJSON(_ a: Any, _ b: Any) -> Bool {
     return false
 }
 
-private func merge<T: Codable & Identifiable>(_ items: inout [T], id: String, fields: [String: Any]) where T.ID == String {
+/// Task fields added after launch, which a task the server stored before them lacks. They start as `null`, as
+/// `entityFrom` fills them.
+private let taskDefaults = ["location", "event", "createdBy", "completedBy", "lastCompletedAt"]
+
+private func merge<T: Codable & Identifiable>(
+    _ items: inout [T], id: String, fields: [String: Any], defaults: [String] = []
+) where T.ID == String {
     var object: [String: Any]
     if let index = items.firstIndex(where: { $0.id == id }) {
         object = jsonObject(items[index])
     } else {
         object = ["id": id]
+        for key in defaults { object[key] = NSNull() }
     }
     for (key, value) in fields where key != "deleted" { object[key] = value }
     if object["sourceKey"] is NSNull { object.removeValue(forKey: "sourceKey") }

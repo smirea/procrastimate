@@ -45,25 +45,28 @@ struct NameMatch: Equatable {
     let suggestions: [Suggestion]
 
     @MainActor
-    static func at(_ caret: Int, in text: String, store: Store, kinds: [NameKind]) -> NameMatch? {
+    /// Suggests only the space's own names. A guest cannot create projects or labels in someone else's space.
+    static func at(_ caret: Int, in text: String, store: Store, space: SpaceKey, kinds: [NameKind]) -> NameMatch? {
+        let data = store.data(in: space)
         var closest: (kind: NameKind, fragment: NameSearch.Fragment)?
         for kind in kinds {
             let found = switch kind {
-            case .project: NameSearch.sigilFragment(text, caret, kind.sigil, store.projects)
-            case .label: NameSearch.sigilFragment(text, caret, kind.sigil, store.labels)
+            case .project: NameSearch.sigilFragment(text, caret, kind.sigil, data.projects)
+            case .label: NameSearch.sigilFragment(text, caret, kind.sigil, data.labels)
             }
             if let found, found.start > closest?.fragment.start ?? -1 { closest = (kind, found) }
         }
         guard let (kind, fragment) = closest else { return nil }
         let suggestions: [Suggestion] = switch kind {
         case .project:
-            NameSearch.suggest(store.projects, NameSearch.lastUsed(store.tasks, NameSearch.projectIdsOf), fragment.query)
+            NameSearch.suggest(data.projects, NameSearch.lastUsed(data.tasks, NameSearch.projectIdsOf), fragment.query)
                 .map(Suggestion.init)
         case .label:
-            NameSearch.suggest(store.labels, NameSearch.lastUsed(store.tasks, NameSearch.labelIdsOf), fragment.query)
+            NameSearch.suggest(data.labels, NameSearch.lastUsed(data.tasks, NameSearch.labelIdsOf), fragment.query)
                 .map(Suggestion.init)
         }
-        return NameMatch(kind: kind, fragment: fragment, suggestions: suggestions)
+        let allowed = space == .own ? suggestions : suggestions.filter { if case .create = $0 { false } else { true } }
+        return NameMatch(kind: kind, fragment: fragment, suggestions: allowed)
     }
 
     @MainActor

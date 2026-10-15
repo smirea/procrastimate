@@ -17,8 +17,8 @@
 	import Checkbox from './Checkbox.svelte';
 	import LinkedText from './LinkedText.svelte';
 	import SubtaskProgress from './SubtaskProgress.svelte';
-	import { store } from '../store.svelte.ts';
-	import { clock, reveal, sheets, motion } from '../ui.svelte.ts';
+	import { useLookup } from '../lookup.ts';
+	import { clock, reveal, motion } from '../ui.svelte.ts';
 	import { WEEKDAY_NAMES, addedAgo, dueTone, formatDue, formatTime, postponeOptions, repeatLabel } from 'shared/format.ts';
 	import { toDateKey, weekdayOf } from 'shared/task.ts';
 	import { eventLabel, formatLocation, scheduledDue } from 'shared/triggers.ts';
@@ -33,11 +33,13 @@
 		showAdded = false,
 	}: { task: Task; showProject?: boolean; timeOnly?: boolean; showAdded?: boolean } = $props();
 
+	const lookup = useLookup();
 	let checking = $state(false);
-	const project = $derived(store.project(task.projectId));
-	const labels = $derived(store.labelsOf(task));
-	const parent = $derived(task.parentId ? store.task(task.parentId) : undefined);
-	const progress = $derived(store.progress(task.id));
+	const editable = $derived(lookup.canEdit(task.id));
+	const project = $derived(lookup.project(task.projectId));
+	const labels = $derived(lookup.labelsOf(task));
+	const parent = $derived(task.parentId ? lookup.task(task.parentId) : undefined);
+	const progress = $derived(lookup.progress(task.id));
 	const due = $derived(scheduledDue(task, clock.today));
 	const event = $derived(task.event ? eventLabel(task.event, clock.today) : null);
 	const fromMemo = $derived(parseMemoSource(task.sourceKey) !== null);
@@ -64,10 +66,16 @@
 	class:revealed
 	data-task={task.title}
 >
-	<Checkbox checked={checking} tone={PRIORITIES[task.priority].tone} label={`Complete ${task.title}`} class="mt-3 touch:mt-3.5" onclick={complete} />
+	{#if editable}
+		<Checkbox checked={checking} tone={PRIORITIES[task.priority].tone} label={`Complete ${task.title}`} class="mt-3 touch:mt-3.5" onclick={complete} />
+	{:else}
+		<span class="mt-3 size-[18px] shrink-0 rounded-full border-[1.5px] border-dashed border-faint/60 touch:mt-3.5 touch:size-5" aria-hidden="true"></span>
+	{/if}
 	<!-- The button sits under the text rather than around it, since HTML forbids a link inside a button. -->
 	<div class="relative min-w-0 flex-1 py-2.5 touch:min-h-11 touch:py-3">
-		<button type="button" class="absolute inset-0 rounded-xl" aria-label={task.title} onclick={() => sheets.openTask(task.id)}></button>
+		{#if lookup.open}
+			<button type="button" class="absolute inset-0 rounded-xl" aria-label={task.title} onclick={() => lookup.open?.(task.id)}></button>
+		{/if}
 		<div class="pointer-events-none relative">
 			<div class="truncate text-[14px] leading-5 text-ink transition-colors" class:done={checking}><LinkedText text={task.title} /></div>
 			{#if task.notes}
@@ -146,7 +154,7 @@
 	{#if showAdded}
 		<span class="shrink-0 pt-3 text-[12px] leading-5 text-faint touch:pt-3.5">{addedAgo(toDateKey(new Date(task.createdAt)), clock.today)}</span>
 	{/if}
-	{#if !task.event}
+	{#if !task.event && editable}
 		<div class="mt-1.5 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100 touch:opacity-100">
 			<Popover label="Postpone" align="end">
 				{#snippet trigger({ toggle })}

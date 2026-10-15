@@ -14,7 +14,9 @@
 							"tasks": [
 								{
 									"completedAt": null,
+									"completedBy": null,
 									"createdAt": 1,
+									"createdBy": null,
 									"due": {
 										"date": "2026-10-15",
 										"time": "09:00"
@@ -26,6 +28,7 @@
 										"deep",
 										"gone"
 									],
+									"lastCompletedAt": null,
 									"location": null,
 									"notes": "Transfer from savings\r\n\nRef 42  ",
 									"order": 0,
@@ -67,7 +70,9 @@
 					"tasks": [
 						{
 							"completedAt": null,
+							"completedBy": null,
 							"createdAt": 1,
+							"createdBy": null,
 							"due": {
 								"date": "2026-10-15",
 								"time": "09:00"
@@ -79,6 +84,7 @@
 								"deep",
 								"gone"
 							],
+							"lastCompletedAt": null,
 							"location": null,
 							"notes": "Transfer from savings\r\n\nRef 42  ",
 							"order": 0,
@@ -110,11 +116,14 @@
 							"tasks": [
 								{
 									"completedAt": null,
+									"completedBy": null,
 									"createdAt": 2,
+									"createdBy": null,
 									"due": null,
 									"event": null,
 									"id": "Write spec",
 									"labelIds": [],
+									"lastCompletedAt": null,
 									"location": null,
 									"notes": "",
 									"order": 0,
@@ -153,11 +162,14 @@
 					"tasks": [
 						{
 							"completedAt": null,
+							"completedBy": null,
 							"createdAt": 2,
+							"createdBy": null,
 							"due": null,
 							"event": null,
 							"id": "Write spec",
 							"labelIds": [],
+							"lastCompletedAt": null,
 							"location": null,
 							"notes": "",
 							"order": 0,
@@ -186,7 +198,9 @@
 							"tasks": [
 								{
 									"completedAt": null,
+									"completedBy": null,
 									"createdAt": 3,
+									"createdBy": null,
 									"due": {
 										"date": "2026-10-14",
 										"time": null
@@ -194,6 +208,7 @@
 									"event": null,
 									"id": "Plan trip",
 									"labelIds": [],
+									"lastCompletedAt": null,
 									"location": null,
 									"notes": "",
 									"order": 0,
@@ -211,7 +226,9 @@
 							"tasks": [
 								{
 									"completedAt": null,
+									"completedBy": null,
 									"createdAt": 4,
+									"createdBy": null,
 									"due": {
 										"date": "2026-10-16",
 										"time": null
@@ -219,6 +236,7 @@
 									"event": null,
 									"id": "Book flights",
 									"labelIds": [],
+									"lastCompletedAt": null,
 									"location": null,
 									"notes": "",
 									"order": 1,
@@ -257,7 +275,9 @@
 					"tasks": [
 						{
 							"completedAt": null,
+							"completedBy": null,
 							"createdAt": 3,
+							"createdBy": null,
 							"due": {
 								"date": "2026-10-14",
 								"time": null
@@ -265,6 +285,7 @@
 							"event": null,
 							"id": "Plan trip",
 							"labelIds": [],
+							"lastCompletedAt": null,
 							"location": null,
 							"notes": "",
 							"order": 0,
@@ -277,7 +298,9 @@
 						},
 						{
 							"completedAt": null,
+							"completedBy": null,
 							"createdAt": 4,
+							"createdBy": null,
 							"due": {
 								"date": "2026-10-16",
 								"time": null
@@ -285,6 +308,7 @@
 							"event": null,
 							"id": "Book flights",
 							"labelIds": [],
+							"lastCompletedAt": null,
 							"location": null,
 							"notes": "",
 							"order": 1,
@@ -297,11 +321,14 @@
 						},
 						{
 							"completedAt": 5,
+							"completedBy": null,
 							"createdAt": 5,
+							"createdBy": null,
 							"due": null,
 							"event": null,
 							"id": "Pack",
 							"labelIds": [],
+							"lastCompletedAt": null,
 							"location": null,
 							"notes": "",
 							"order": 0,
@@ -314,11 +341,14 @@
 						},
 						{
 							"completedAt": null,
+							"completedBy": null,
 							"createdAt": 6,
+							"createdBy": null,
 							"due": null,
 							"event": null,
 							"id": "Socks",
 							"labelIds": [],
+							"lastCompletedAt": null,
 							"location": null,
 							"notes": "",
 							"order": 0,
@@ -347,11 +377,14 @@
 							"tasks": [
 								{
 									"completedAt": null,
+									"completedBy": null,
 									"createdAt": 8,
+									"createdBy": null,
 									"due": null,
 									"event": null,
 									"id": "Book flights",
 									"labelIds": [],
+									"lastCompletedAt": null,
 									"location": null,
 									"notes": "",
 									"order": 0,
@@ -390,11 +423,14 @@
 					"tasks": [
 						{
 							"completedAt": null,
+							"completedBy": null,
 							"createdAt": 7,
+							"createdBy": null,
 							"due": null,
 							"event": null,
 							"id": "Plan trip",
 							"labelIds": [],
+							"lastCompletedAt": null,
 							"location": null,
 							"notes": "",
 							"order": 0,
@@ -407,11 +443,14 @@
 						},
 						{
 							"completedAt": null,
+							"completedBy": null,
 							"createdAt": 8,
+							"createdBy": null,
 							"due": null,
 							"event": null,
 							"id": "Book flights",
 							"labelIds": [],
+							"lastCompletedAt": null,
 							"location": null,
 							"notes": "",
 							"order": 0,

@@ -7,7 +7,7 @@ import UIKit
 /// adds calendar events through EventKit, and opens the screen to screenshot. Release builds omit it.
 ///
 /// Space-separated words: `seed`, `move` (shifts the next Standup an hour later, then logs what the task holds),
-/// `browse`, `details:<task title>`, `sheet:location`, `sheet:event`, and
+/// `browse`, `details:<task title>`, `link:<share token>`, `sharing` (see `SharingDemo`), `sheet:location`, `sheet:event`, and
 /// `query:<words with + for spaces>` for the location search.
 enum PlacesDemo {
     static var words: [String] {
@@ -33,9 +33,11 @@ enum PlacesDemo {
         if has("browse") { navigator.tab = .browse }
         if has("nodate") { navigator.tab = .noDate }
         if has("search") { navigator.showSearch() }
-        if let title = value("details"), let task = store.tasks.first(where: { $0.title == title }) {
+        if let title = value("details"), let task = store.allTasks.first(where: { $0.title == title }) {
             navigator.sheet = .details(taskID: task.id)
         }
+        // The simulator only hands the app a Universal Link once the domain's association file verifies.
+        if let token = value("link") { navigator.sheet = .sharedLink(token: token) }
         if has("ramble") { navigator.startRambleListening = true }
         if has("quickadd") || has("ramble") { navigator.sheet = .quickAdd(QuickAddDefaults()) }
         if let text = value("type") { await type(text) }
@@ -108,17 +110,17 @@ enum PlacesDemo {
         }
         seedEventTasks(store: store, calendar: calendar)
         guard !store.tasks.contains(where: { $0.title == "Buy oat milk" }) else { return }
-        let milk = store.addTask(NewTask(title: "Buy oat milk"))
+        guard let milk = store.addTask(NewTask(title: "Buy oat milk")) else { return }
         store.updateTask(milk.id, TaskPatch(location: .some(TaskLocation(
             name: "Whole Foods Market", address: "20955 Stevens Creek Blvd, Cupertino",
             latitude: 37.3236, longitude: -122.0397, radius: 150, trigger: .arrive
         ))))
-        let coffee = store.addTask(NewTask(title: "Try the seasonal blend"))
+        guard let coffee = store.addTask(NewTask(title: "Try the seasonal blend")) else { return }
         store.updateTask(coffee.id, TaskPatch(location: .some(TaskLocation(
             name: "Philz Coffee", address: "20686 Stevens Creek Blvd, Cupertino",
             latitude: 37.3229, longitude: -122.0322, radius: 150, trigger: .during
         ))))
-        let beans = store.addTask(NewTask(title: "Ask about decaf beans"))
+        guard let beans = store.addTask(NewTask(title: "Ask about decaf beans")) else { return }
         store.updateTask(beans.id, TaskPatch(location: .some(TaskLocation(
             name: "Philz Coffee", address: "20686 Stevens Creek Blvd, Cupertino",
             latitude: 37.3229, longitude: -122.0322, radius: 150, trigger: .during
@@ -130,14 +132,14 @@ enum PlacesDemo {
         guard !store.tasks.contains(where: { $0.event != nil }) else { return }
         let upcoming = calendar.upcomingEvents()
         if let standup = upcoming.first(where: { $0.title == "Standup" }) {
-            let notes = store.addTask(NewTask(title: "Post standup notes"))
+            guard let notes = store.addTask(NewTask(title: "Post standup notes")) else { return }
             store.updateTask(notes.id, TaskPatch(
                 reminders: [.before(minutes: 10)],
                 event: .some(calendar.taskEvent(standup, edge: .after, minutes: 15, onlyThis: false, upcoming: upcoming))
             ))
         }
         if let dentist = upcoming.first(where: { $0.title == "Dentist" }) {
-            let floss = store.addTask(NewTask(title: "Floss first"))
+            guard let floss = store.addTask(NewTask(title: "Floss first")) else { return }
             store.updateTask(floss.id, TaskPatch(
                 event: .some(calendar.taskEvent(dentist, edge: .before, minutes: 60, onlyThis: false, upcoming: upcoming))
             ))

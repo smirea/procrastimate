@@ -34,7 +34,7 @@ import Testing
         let file = tempFile()
         let store = Store(file: file, clock: clock, newId: ids())
         store.addTask(NewTask(title: "Buy milk"))
-        let rent = store.addTask(NewTask(title: "Pay rent", due: Due(date: "2026-10-14", time: nil)))
+        let rent = try #require(store.addTask(NewTask(title: "Pay rent", due: Due(date: "2026-10-14", time: nil))))
         _ = store.completeTask(rent.id)
         await store.flush()
 
@@ -45,7 +45,7 @@ import Testing
 
         let json = try #require(file.read())
         let object = try #require(try JSONSerialization.jsonObject(with: json) as? [String: Any])
-        #expect(Set(object.keys) == ["tasks", "projects", "labels", "remindersCheckedAt", "sync"])
+        #expect(Set(object.keys) == ["tasks", "projects", "labels", "remindersCheckedAt", "sync", "spaces", "people"])
     }
 
     @Test func commitKeepsTasksInSyncOrder() {
@@ -59,7 +59,7 @@ import Testing
 
     @Test func undoPutsBackACompletionAndADelete() {
         let store = Store(file: nil, clock: clock, newId: ids())
-        let task = store.addTask(NewTask(title: "Standup", due: Due(date: "2026-10-14", time: "09:00"), recurrence: Recurrence(interval: 1, unit: .day)))
+        let task = try! #require(store.addTask(NewTask(title: "Standup", due: Due(date: "2026-10-14", time: "09:00"), recurrence: Recurrence(interval: 1, unit: .day))))
         let completion = try! #require(store.completeTask(task.id))
         #expect(completion.next == Due(date: "2026-10-15", time: "09:00"))
         store.restoreCompletion(completion.previous)

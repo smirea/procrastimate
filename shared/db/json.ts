@@ -3,10 +3,13 @@ import { dictationChoiceSchema } from '../dictation.ts';
 import { pushSubscriptionSchema, scheduledPushSchema } from '../push.ts';
 import { isHlc } from '../sync/hlc.ts';
 import {
+	actorKindSchema,
 	dueSchema,
 	prioritySchema,
 	recurrenceSchema,
 	reminderSchema,
+	roleSchema,
+	shareTargetKindSchema,
 	taskEventSchema,
 	taskLocationSchema,
 } from '../values.ts';
@@ -37,6 +40,8 @@ export const COLUMN_VALUES = {
 	settings: { clocks, dictation: dictationChoiceSchema },
 	log: { fields: z.record(z.string(), z.unknown()) },
 	push: { subscription: pushSubscriptionSchema, notifications: z.array(scheduledPushSchema) },
+	shares: { targetKind: shareTargetKindSchema, role: roleSchema },
+	people: { kind: actorKindSchema },
 } as const;
 
 type Values = typeof COLUMN_VALUES;

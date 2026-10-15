@@ -7,6 +7,7 @@ struct SubtaskList: View {
     @Environment(Store.self) private var store
     @Environment(\.clock) private var clock
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.space) private var taskSpace
 
     let task: TaskItem
     let navigation: DetailsNavigation
@@ -24,9 +25,9 @@ struct SubtaskList: View {
     }
 
     var body: some View {
-        let children = Subtasks.groupChildren(store.tasks)[task.id] ?? []
+        let children = Subtasks.groupChildren(store.allTasks)[task.id] ?? []
         let progress = Subtasks.progressOf(children)
-        let parsed = QuickAdd.parseSubtask(draft, now: clock.now, labels: store.labels, in: clock.timeZone)
+        let parsed = QuickAdd.parseSubtask(draft, now: clock.now, labels: store.labels(in: taskSpace), in: clock.timeZone)
         VStack(alignment: .leading, spacing: 4) {
             HStack {
                 Text("Subtasks")
@@ -64,23 +65,25 @@ struct SubtaskList: View {
             .accessibilityElement(children: .contain)
             .accessibilityLabel("Subtasks of \(task.title)")
 
-            HStack(spacing: 10) {
-                Image(systemName: "plus")
-                    .font(.footnote.weight(.bold))
-                    .foregroundStyle(.accent)
-                    .frame(width: 22)
-                SmartInput(
-                    text: $draft,
-                    tokens: parsed.tokens,
-                    label: "Add subtask",
-                    placeholder: "Add subtask",
-                    suggestProjects: false,
-                    focused: $adding,
-                    onSubmit: { add() }
-                )
-                .font(.subheadline)
+            if !store.isReadOnly(task.id) {
+                HStack(spacing: 10) {
+                    Image(systemName: "plus")
+                        .font(.footnote.weight(.bold))
+                        .foregroundStyle(.accent)
+                        .frame(width: 22)
+                    SmartInput(
+                        text: $draft,
+                        tokens: parsed.tokens,
+                        label: "Add subtask",
+                        placeholder: "Add subtask",
+                        suggestProjects: false,
+                        focused: $adding,
+                        onSubmit: { add() }
+                    )
+                    .font(.subheadline)
+                }
+                .padding(.horizontal, 4)
             }
-            .padding(.horizontal, 4)
         }
         .sensoryFeedback(.success, trigger: progress?.done ?? 0) { old, new in new > old }
         .sensoryFeedback(.impact(weight: .light), trigger: drag?.id)
@@ -89,7 +92,7 @@ struct SubtaskList: View {
     nonisolated private static let space = "subtasks"
 
     private func add() {
-        let parsed = QuickAdd.parseSubtask(draft, now: clock.now, labels: store.labels, in: clock.timeZone)
+        let parsed = QuickAdd.parseSubtask(draft, now: clock.now, labels: store.labels(in: taskSpace), in: clock.timeZone)
         guard let subtask = NewTask(subtask: parsed) else { return }
         withAnimation(reduceMotion ? nil : .snappy) {
             _ = store.addTask(subtask, parentId: task.id)
@@ -144,13 +147,16 @@ private struct SubtaskRow<Reorder: Gesture>: View {
     let move: (Int) -> Void
     let dragGesture: Reorder
 
+    private var locked: Bool { store.isReadOnly(child.id) }
+
     var body: some View {
         let done = child.completedAt != nil
-        let progress = Subtasks.progressOf(store.tasks.filter { $0.parentId == child.id })
+        let progress = Subtasks.progressOf(store.allTasks.filter { $0.parentId == child.id })
         HStack(spacing: 10) {
             Checkbox(checked: done, tone: child.priority.tone) { toggle(done) }
                 .accessibilityLabel("Complete \(child.title)")
                 .accessibilityAddTraits(done ? .isSelected : [])
+                .disabled(locked)
             VStack(alignment: .leading, spacing: 2) {
                 Text(Links.attributed(child.title))
                     .font(.subheadline)
@@ -180,7 +186,7 @@ private struct SubtaskRow<Reorder: Gesture>: View {
             .accessibilityAddTraits(.isButton)
             .accessibilityAction { open() }
             .accessibilityIdentifier("subtask-\(child.title)")
-            if reorderable {
+            if reorderable && !locked {
                 Image(systemName: "line.3.horizontal")
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.faint)

@@ -2,15 +2,17 @@ import type { DurableObjectNamespace, DurableObjectState } from '@cloudflare/wor
 import { onError, ORPCError, ValidationError } from '@orpc/server';
 import { OpenAPIHandler } from '@orpc/openapi/fetch';
 import { drizzle } from 'drizzle-orm/durable-sqlite';
-import { USER_HEADER } from '../../../shared/auth';
-import { accountContract } from '../../../shared/api/contract';
-import { repairBooleanNumbers } from '../../../shared/sync/protocol';
-import type { AccountContext, AccountRoute } from '../auth';
-import { getAuth, readSession } from '../better-auth';
+import { accountContract, internalContract } from '../../../shared/api/contract';
+import type { Person } from '../../../shared/sharing';
+import { nudgeSchema, repairBooleanNumbers } from '../../../shared/sync/protocol';
+import { actorOf, readActor, SHARED_ROUTES, spaceOf, withActor } from '../actor';
+import type { AccountContext, AccountRoute, Access } from '../auth';
+import { getAuth } from '../better-auth';
 import type { Env, Handler } from '../bindings';
-import { withUser } from '../request-user';
 import { pushSender } from '../push';
+import { personOf } from './activity';
 import { memoryStore } from './memory-store';
+import { internalClient } from './peers';
 import { deliverDue } from './push';
 import { ramble, rambleRoutes, workerUpstream, type RambleConfig } from './ramble';
 import { openRambleBudget } from './ramble-budget';
@@ -22,6 +24,7 @@ import { tursoTarget } from '../db/turso';
 import { errorResponse } from '../errors';
 import { routeKeys } from '../routes';
 import { accountRouter } from './router';
+import { liveGuests, rememberPerson } from './sharing';
 import { sqliteStore } from './sqlite-store';
 import type { AccountStore } from './store';
 import { tursoSession, writeUserRamble, type AccountSession } from './turso';
@@ -29,7 +32,24 @@ import { tursoSession, writeUserRamble, type AccountSession } from './turso';
 /** The WebSocket upgrades, which the contract cannot describe. */
 const socketRoutes: Record<string, AccountRoute> = { ...realtimeRoutes, ...rambleRoutes };
 
+const INTERNAL_ROUTES = new Set(routeKeys(internalContract));
+const [NUDGE_ROUTE] = routeKeys(internalContract.nudge);
+const [SYNC_ROUTE] = routeKeys(accountContract.sync);
+
 type SetAlarm = (at: number | null) => Promise<void>;
+
+/** What a host gives the handler for one request. `defer` runs after the request leaves the serial queue. */
+export type RequestHost = {
+	store: AccountStore;
+	space: string;
+	defer: (task: () => Promise<void>) => void;
+};
+
+export type AccountHandler = {
+	fetch(request: Request, host: RequestHost): Promise<Response>;
+	/** The nudge from another space, answered without the queue or the store: it only touches sockets. */
+	relay(request: Request): Promise<Response>;
+};
 
 const rpc = new OpenAPIHandler(accountRouter, {
 	interceptors: [
@@ -51,36 +71,92 @@ async function repairSyncBody(request: Request): Promise<Request> {
 	return new Request(request.url, { method, headers, body: JSON.stringify(repairBooleanNumbers(body)) });
 }
 
+export const routeKey = (request: Request) => `${request.method} ${new URL(request.url).pathname}`;
+
 /**
- * The object's request handler over any store, shared by the Worker and the Bun dev server. The dev server has no
- * alarms, so its `setAlarm` does nothing. Whenever a request moves the log, every open socket hears the new head.
+ * The object's request handler over any store, shared by the Worker, the Bun dev server, and the test binding. The
+ * object is the space: it serves its owner, a guest the owner shared with, and the Worker's internal calls, which
+ * act as the owner. Whenever a request moves the log, every open socket hears the new head, and every guest's
+ * space is told after the request leaves the queue.
  */
 export function accountHandler(
 	setAlarm: SetAlarm,
 	sockets: SocketHost = noSockets,
 	rambleConfig: RambleConfig = { connect: null },
-) {
+	peers: () => DurableObjectNamespace | undefined = () => undefined,
+): AccountHandler {
 	const live = realtime(sockets);
 	const transcription = ramble(sockets, rambleConfig);
-	return async (request: Request, store: AccountStore): Promise<Response> => {
-		const key = `${request.method} ${new URL(request.url).pathname}`;
-		const context = { store, now: Date.now(), setAlarm, realtime: live, ramble: transcription };
-		const head = store.lastSeq();
-		const socket = socketRoutes[key];
-		const response = socket ? await socket(request, context) : await call(request, key, context);
-		const next = store.lastSeq();
-		if (next > head) live.nudge(next);
-		return response;
+	return {
+		async fetch(request, { store, space, defer }) {
+			const key = routeKey(request);
+			const now = Date.now();
+			const origin = new URL(request.url).origin;
+			// Behind Vite's dev proxy the request URL names the API port, while the browser's origin is the app's.
+			const linkOrigin = request.headers.get('origin') ?? origin;
+			const internal = INTERNAL_ROUTES.has(key);
+			const actor = internal ? personOf(store, space) : actorOf(request);
+			if (!actor) return errorResponse('UNAUTHORIZED', 'Not signed in');
+			const access = admission(store, space, actor);
+			if (!access) return errorResponse('FORBIDDEN', 'Not shared with you');
+			if (access.role === 'guest' && !SHARED_ROUTES.has(key)) {
+				return errorResponse('FORBIDDEN', 'Only the owner can do this');
+			}
+			if (!internal) rememberPerson(store, actor, now);
+			const context: AccountContext = {
+				store,
+				now,
+				setAlarm,
+				realtime: live,
+				ramble: transcription,
+				space,
+				actor,
+				access,
+				origin: linkOrigin,
+				defer,
+				peer: id => {
+					const namespace = peers();
+					return namespace ? internalClient(namespace, id, origin) : null;
+				},
+			};
+			const head = store.lastSeq();
+			const socket = socketRoutes[key];
+			const response = socket ? await socket(request, context) : await call(request, key, context);
+			const next = store.lastSeq();
+			if (next > head) {
+				live.nudge(next);
+				for (const guest of liveGuests(store)) {
+					defer(async () => {
+						await context.peer(guest)?.nudge({ cursor: next, space });
+					});
+				}
+			}
+			return response;
+		},
+		async relay(request) {
+			const parsed = nudgeSchema.required({ space: true }).safeParse(await request.json().catch(() => null));
+			if (!parsed.success) return errorResponse('BAD_REQUEST', 'Invalid nudge');
+			live.nudge(parsed.data.cursor, parsed.data.space);
+			return Response.json({ ok: true });
+		},
 	};
 }
 
-const [SYNC_ROUTE] = routeKeys(accountContract.sync);
+/** The owner, or a guest with the space's shares to them. Anyone else is turned away. */
+function admission(store: AccountStore, space: string, actor: Person): Access | null {
+	// An AI account has no space of its own; owning one would hand each token an empty writable partition.
+	if (actor.id === space) return actor.kind === 'human' ? { role: 'owner' } : null;
+	const shares = store.shares().filter(share => share.grantee === actor.id);
+	return shares.length ? { role: 'guest', shares } : null;
+}
 
 async function call(request: Request, key: string, context: AccountContext): Promise<Response> {
 	const parsed = key === SYNC_ROUTE ? await repairSyncBody(request) : request;
 	const { response } = await rpc.handle(parsed, { context: { ...context, request: parsed } });
 	return response ?? errorResponse('NOT_FOUND', 'Not found');
 }
+
+export const isNudge = (request: Request) => routeKey(request) === NUDGE_ROUTE;
 
 /**
  * Turso when both secrets are set, otherwise the store the host already has (SQLite on the Worker, memory in dev).
@@ -89,42 +165,38 @@ async function call(request: Request, key: string, context: AccountContext): Pro
 export async function openAccount(
 	env: Env,
 	fallback: AccountStore,
-	userId: string,
+	spaceId: string,
 	ledger?: RambleLedger,
 ): Promise<AccountSession> {
 	const turso = tursoTarget(env);
-	if (turso) return tursoSession(turso, userId, ledger);
+	if (turso) return tursoSession(turso, spaceId, ledger);
 	return { store: fallback, flush: async () => {} };
 }
 
 /**
- * The user id the Worker put on the request after checking the session. A missing header is rejected. So is a
- * header that names someone other than the object, which is created with `idFromName(userId)`.
- */
-export function accountUserId(request: Request, name: string | undefined): string | null {
-	const userId = request.headers.get(USER_HEADER)?.trim() ?? '';
-	if (!userId) return null;
-	if (name && name !== userId) return null;
-	return userId;
-}
-
-/**
- * The single account, one SQLite-backed Durable Object. Turso I/O yields, so requests for this user run through
- * `run`: load, handle, and flush finish before the next one starts.
+ * One space, one SQLite-backed Durable Object named by its owner's user id. Turso I/O yields, so requests for this
+ * space run through `run`: load, handle, and flush finish before the next one starts. Calls to other spaces run
+ * after the slot releases, and a nudge from another space skips the queue, so mutual shares never wait on each other.
  */
 export class Account {
 	private readonly sqlite: AccountStore;
-	private readonly handle: (request: Request, store: AccountStore) => Promise<Response>;
+	private readonly handle: AccountHandler;
 	private readonly run = serialQueue();
 	private readonly ledger: RambleLedger;
-	private userId = '';
+	private readonly space: string;
 
 	constructor(
 		private readonly ctx: DurableObjectState,
 		private readonly env: Env,
 	) {
-		this.sqlite = sqliteStore(drizzle(ctx.storage), ctx.id.name ?? '');
-		this.handle = accountHandler(at => this.setAlarm(at), durableSockets(ctx), workerRamble(env));
+		this.space = ctx.id.name ?? '';
+		this.sqlite = sqliteStore(drizzle(ctx.storage), this.space);
+		this.handle = accountHandler(
+			at => this.setAlarm(at),
+			durableSockets(ctx),
+			workerRamble(env),
+			() => env.ACCOUNT,
+		);
 		this.ledger = queuedRambleLedger(
 			task => {
 				const pending = this.run(task);
@@ -136,18 +208,22 @@ export class Account {
 	}
 
 	async fetch(request: Request): Promise<Response> {
-		const userId = accountUserId(request, this.ctx.id.name);
-		if (!userId) return errorResponse('UNAUTHORIZED', 'Not signed in');
-		this.userId = userId;
-		return this.run(() => this.withStore(userId, store => this.handle(request, store)));
+		if (!this.space) return errorResponse('NOT_FOUND', 'No such space');
+		if (isNudge(request)) return this.handle.relay(request);
+		const deferred: Array<() => Promise<void>> = [];
+		const response = await this.run(() =>
+			this.withStore(store =>
+				this.handle.fetch(request, { store, space: this.space, defer: task => deferred.push(task) }),
+			),
+		);
+		this.ctx.waitUntil(Promise.allSettled(deferred.map(task => task())));
+		return response;
 	}
 
 	async alarm(): Promise<void> {
-		const userId = this.ctx.id.name ?? '';
-		if (!userId) return;
-		this.userId = userId;
+		if (!this.space) return;
 		await this.run(() =>
-			this.withStore(userId, async store => {
+			this.withStore(async store => {
 				await this.setAlarm(await deliverDue(store, Date.now(), pushSender(this.env)));
 			}),
 		);
@@ -166,8 +242,8 @@ export class Account {
 		await (at === null ? this.ctx.storage.deleteAlarm() : this.ctx.storage.setAlarm(at));
 	}
 
-	private async withStore<T>(userId: string, use: (store: AccountStore) => Promise<T>): Promise<T> {
-		const session = await openAccount(this.env, this.sqlite, userId, this.ledger);
+	private async withStore<T>(use: (store: AccountStore) => Promise<T>): Promise<T> {
+		const session = await openAccount(this.env, this.sqlite, this.space, this.ledger);
 		try {
 			return await use(session.store);
 		} finally {
@@ -175,11 +251,11 @@ export class Account {
 		}
 	}
 
-	/** Writes the ledger's seconds. A no-op until Turso is configured and a request has named the user. */
+	/** Writes the ledger's seconds. A no-op until Turso is configured. */
 	private writeLedger(rows: RambleUsage[]): Promise<void> {
 		const turso = tursoTarget(this.env);
-		if (!turso || !this.userId) return Promise.resolve();
-		return writeUserRamble(turso, this.userId, rows);
+		if (!turso) return Promise.resolve();
+		return writeUserRamble(turso, this.space, rows);
 	}
 }
 
@@ -195,13 +271,21 @@ function workerRamble(env: Env): RambleConfig {
 	return { connect: workerUpstream(env.ELEVENLABS_API_KEY), budget };
 }
 
+/**
+ * Every account route goes to the space `?space=` names, or the actor's own, with the actor on the request and the
+ * body unread. An AI account only reaches the routes in `SHARED_ROUTES`.
+ */
 const forward: Handler = async (request, env) => {
 	if (!env.ACCOUNT) return errorResponse('SERVICE_UNAVAILABLE', 'Sync is not configured');
 	if (!(await getAuth(env))) return errorResponse('SERVICE_UNAVAILABLE', 'Sign-in is not configured');
-	const user = await readSession(request, env);
-	if (!user) return errorResponse('UNAUTHORIZED', 'Not signed in');
-	const stub = env.ACCOUNT.get(env.ACCOUNT.idFromName(user.id));
-	return stub.fetch(withUser(request, user.id) as never) as unknown as Promise<Response>;
+	const actor = await readActor(request, env);
+	if (!actor) return errorResponse('UNAUTHORIZED', 'Not signed in');
+	const url = new URL(request.url);
+	if (actor.kind === 'ai' && !SHARED_ROUTES.has(`${request.method} ${url.pathname}`)) {
+		return errorResponse('FORBIDDEN', 'Not for AI accounts');
+	}
+	const stub = env.ACCOUNT.get(env.ACCOUNT.idFromName(spaceOf(url, actor)));
+	return stub.fetch(withActor(request, actor) as never) as unknown as Promise<Response>;
 };
 
 /** The Worker's routes for the account, mounted by `api.ts`. The internal contract stays off this map. */
@@ -210,8 +294,9 @@ export const accountApiRoutes: Record<string, Handler> = Object.fromEntries(
 );
 
 /**
- * An `ACCOUNT` binding for tests. The first user id uses `store`, which the test inspects. Another user gets a
- * fresh store, so two accounts do not share tasks.
+ * An `ACCOUNT` binding for tests. The first space uses `store`, which the test inspects. Another space gets a fresh
+ * store, so two accounts do not share tasks. Like the Worker, each space runs one request at a time and answers a
+ * nudge outside that queue.
  */
 export function memoryAccount(
 	store: AccountStore = memoryStore(),
@@ -219,20 +304,27 @@ export function memoryAccount(
 	sockets: SocketHost = noSockets,
 	rambleConfig: RambleConfig = { connect: null },
 ): DurableObjectNamespace {
-	const handle = accountHandler(setAlarm, sockets, rambleConfig);
-	const stores = new Map<string, AccountStore>();
+	const spaces = new Map<string, { store: AccountStore; run: ReturnType<typeof serialQueue> }>();
 	const namespace = {
 		idFromName: (name: string) => name,
 		get: (id: string) => ({
-			fetch: (request: Request) => {
-				let current = stores.get(id);
-				if (!current) {
-					current = stores.size === 0 ? store : memoryStore();
-					stores.set(id, current);
+			fetch: async (request: Request) => {
+				if (isNudge(request)) return handle.relay(request);
+				let space = spaces.get(id);
+				if (!space) {
+					space = { store: spaces.size === 0 ? store : memoryStore(), run: serialQueue() };
+					spaces.set(id, space);
 				}
-				return handle(request, current);
+				const { store: current, run } = space;
+				const deferred: Array<() => Promise<void>> = [];
+				const response = await run(() =>
+					handle.fetch(request, { store: current, space: id, defer: task => deferred.push(task) }),
+				);
+				void Promise.allSettled(deferred.map(task => task()));
+				return response;
 			},
 		}),
-	};
-	return namespace as unknown as DurableObjectNamespace;
+	} as unknown as DurableObjectNamespace;
+	const handle = accountHandler(setAlarm, sockets, rambleConfig, () => namespace);
+	return namespace;
 }

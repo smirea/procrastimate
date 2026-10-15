@@ -26,6 +26,9 @@ const task = (id: string, patch: Partial<Task>): Task => ({
 	event: null,
 	createdAt: 0,
 	completedAt: null,
+	createdBy: null,
+	completedBy: null,
+	lastCompletedAt: null,
 	...patch,
 });
 

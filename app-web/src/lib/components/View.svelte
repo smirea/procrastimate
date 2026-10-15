@@ -14,6 +14,7 @@
 		emptyTitle,
 		emptyHint,
 		quickAdd,
+		canAdd = true,
 		actions,
 		markdown,
 		children,
@@ -24,6 +25,7 @@
 		emptyTitle: string;
 		emptyHint: string;
 		quickAdd: QuickAddDefaults;
+		canAdd?: boolean;
 		actions?: Snippet;
 		markdown: () => MarkdownDocument;
 		children: Snippet;
@@ -48,16 +50,18 @@
 
 	{@render children()}
 
-	<button
-		type="button"
-		class="press group mt-1 flex h-10 w-full items-center gap-3 rounded-full px-2 text-[14px] text-muted transition-colors hover:text-accent touch:h-12 touch:text-[15px]"
-		onclick={() => sheets.openQuickAdd(quickAdd)}
-	>
-		<span class="grid size-[18px] place-items-center rounded-full text-accent transition-colors group-hover:bg-accent group-hover:text-on-accent">
-			<Plus size={13} weight="bold" />
-		</span>
-		Add task
-	</button>
+	{#if canAdd}
+		<button
+			type="button"
+			class="press group mt-1 flex h-10 w-full items-center gap-3 rounded-full px-2 text-[14px] text-muted transition-colors hover:text-accent touch:h-12 touch:text-[15px]"
+			onclick={() => sheets.openQuickAdd(quickAdd)}
+		>
+			<span class="grid size-[18px] place-items-center rounded-full text-accent transition-colors group-hover:bg-accent group-hover:text-on-accent">
+				<Plus size={13} weight="bold" />
+			</span>
+			Add task
+		</button>
+	{/if}
 
 	{#if empty}
 		<div class="mt-16 text-center" in:fade={motion({ duration: 240, delay: 120 })}>

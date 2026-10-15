@@ -48,7 +48,7 @@ function schedule({ when, event }: MemoTaskInput, recordedAt: number, zone: stri
 	return { due, recurrence };
 }
 
-export function putMemoTasks(store: AccountStore, request: MemoTasksRequest, now: number): MemoTasks {
+export function putMemoTasks(store: AccountStore, request: MemoTasksRequest, now: number, actor: string): MemoTasks {
 	return store.transaction(() => {
 		const before = loadState(store);
 		const snapshot = serverSnapshot(before);
@@ -76,6 +76,9 @@ export function putMemoTasks(store: AccountStore, request: MemoTasksRequest, now
 				event: input.event,
 				createdAt: createdAt++,
 				completedAt: null,
+				createdBy: null,
+				completedBy: null,
+				lastCompletedAt: null,
 				sourceKey,
 			});
 		}
@@ -83,11 +86,11 @@ export function putMemoTasks(store: AccountStore, request: MemoTasksRequest, now
 		const opIds = added.map(task => task.sourceKey!).values();
 		const patches = diff(snapshot, { ...snapshot, tasks: [...snapshot.tasks, ...added] });
 		const { ops } = stamp(patches, before.clock, now, () => opIds.next().value!);
-		return memoTasks(serverSnapshot(push(store, before, ops, now).state), request.memoId);
+		return memoTasks(serverSnapshot(push(store, before, ops, now, actor).state), request.memoId);
 	});
 }
 
-export function deleteMemoTasks(store: AccountStore, memoId: string, now: number): void {
+export function deleteMemoTasks(store: AccountStore, memoId: string, now: number, actor: string): void {
 	store.transaction(() => {
 		const before = loadState(store);
 		const snapshot = serverSnapshot(before);
@@ -99,6 +102,6 @@ export function deleteMemoTasks(store: AccountStore, memoId: string, now: number
 		}
 		if (!gone.size) return;
 		const patches = diff(snapshot, { ...snapshot, tasks: snapshot.tasks.filter(task => !gone.has(task.id)) });
-		push(store, before, stamp(patches, before.clock, now).ops, now);
+		push(store, before, stamp(patches, before.clock, now).ops, now, actor);
 	});
 }
