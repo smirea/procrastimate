@@ -205,7 +205,7 @@ private struct DuePopover: View {
         if let due, let time = due.time { return Dates.fromDateKey(due.date, time, in: clock.timeZone) }
         if let due, due.date > today { return Dates.fromDateKey(due.date, "09:00", in: clock.timeZone) }
         let parts = clock.calendar.dateComponents([.hour, .minute], from: clock.now)
-        let minutes = min(((parts.hour ?? 0) * 60 + (parts.minute ?? 0) + 29) / 30 * 30, 23 * 60 + 30)
+        let minutes = (((parts.hour ?? 0) * 60 + (parts.minute ?? 0) + 29) / 30 * 30) % (24 * 60)
         return Dates.fromDateKey(today, Dates.toTimeOfDay(hours: minutes / 60, minutes: minutes % 60), in: clock.timeZone)
     }
 }
