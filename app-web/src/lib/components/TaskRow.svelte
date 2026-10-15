@@ -6,16 +6,14 @@
 	import Hash from 'phosphor-svelte/lib/Hash';
 	import Tray from 'phosphor-svelte/lib/Tray';
 	import Repeat from 'phosphor-svelte/lib/Repeat';
-	import Tag from 'phosphor-svelte/lib/Tag';
 	import Waveform from 'phosphor-svelte/lib/Waveform';
-	import { scale } from 'svelte/transition';
-	import { cubicOut } from 'svelte/easing';
 	import ArrowElbowDownRight from 'phosphor-svelte/lib/ArrowElbowDownRight';
 	import CalendarPlus from 'phosphor-svelte/lib/CalendarPlus';
 	import Popover from './Popover.svelte';
 	import type { Task } from 'shared/task.ts';
 	import Checkbox from './Checkbox.svelte';
 	import LinkedText from './LinkedText.svelte';
+	import TitleFlow from './TitleFlow.svelte';
 	import SubtaskProgress from './SubtaskProgress.svelte';
 	import { useLookup } from '../lookup.ts';
 	import { clock, reveal, motion } from '../ui.svelte.ts';
@@ -37,7 +35,7 @@
 	let checking = $state(false);
 	const editable = $derived(lookup.canEdit(task.id));
 	const project = $derived(lookup.project(task.projectId));
-	const labels = $derived(lookup.labelsOf(task));
+	const labelChips = $derived(lookup.labelsOf(task).map((label) => ({ text: label.name, ranges: [] })));
 	const parent = $derived(task.parentId ? lookup.task(task.parentId) : undefined);
 	const progress = $derived(lookup.progress(task.id));
 	const due = $derived(scheduledDue(task, clock.today));
@@ -77,11 +75,11 @@
 			<button type="button" class="absolute inset-0 rounded-xl" aria-label={task.title} onclick={() => lookup.open?.(task.id)}></button>
 		{/if}
 		<div class="pointer-events-none relative">
-			<div class="truncate text-[14px] leading-5 text-ink transition-colors" class:done={checking}><LinkedText text={task.title} /></div>
+			<TitleFlow title={task.title} labels={labelChips} class="text-[14px] leading-5 transition-colors {checking ? 'text-faint line-through' : 'text-ink'}" />
 			{#if task.notes}
 				<div class="truncate text-[12px] leading-4 text-muted"><LinkedText text={task.notes} /></div>
 			{/if}
-			{#if due || task.recurrence || task.reminders.length || task.location || progress || labels.length || parent || fromMemo || (showProject && project)}
+			{#if due || task.recurrence || task.reminders.length || task.location || progress || parent || fromMemo || (showProject && project)}
 				<div class="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-[12px] leading-4 text-muted">
 					{#if task.event && event && due}
 						<span
@@ -120,16 +118,6 @@
 					{#if task.reminders.length}
 						<span class="flex items-center gap-1" aria-label={`${task.reminders.length} reminders`}>
 							<Bell size={12} />{task.reminders.length}
-						</span>
-					{/if}
-					{#if labels.length}
-						<span class="flex min-w-0 flex-wrap items-center gap-1">
-							{#each labels as label (label.id)}
-								<span class="label-chip" data-label={label.name} transition:scale={motion({ start: 0.6, duration: 180, easing: cubicOut })}>
-									<Tag size={10} weight="fill" class="shrink-0 text-[var(--tone-label)]" />
-									<span class="truncate">{label.name}</span>
-								</span>
-							{/each}
 						</span>
 					{/if}
 					{#if fromMemo}
@@ -184,10 +172,5 @@
 <style>
 	.revealed {
 		background: color-mix(in srgb, var(--color-accent) 12%, transparent);
-	}
-
-	.done {
-		color: var(--color-faint);
-		text-decoration: line-through;
 	}
 </style>

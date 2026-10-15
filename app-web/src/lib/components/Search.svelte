@@ -15,6 +15,7 @@
 	import { toDateKey, type Label, type Project } from 'shared/task.ts';
 	import Highlighted from './Highlighted.svelte';
 	import LinkedText from './LinkedText.svelte';
+	import TitleFlow from './TitleFlow.svelte';
 	import { store } from '../store.svelte.ts';
 	import { clock, mobile, sheets, motion } from '../ui.svelte.ts';
 	import { dueTone, formatDate, formatDue } from 'shared/format.ts';
@@ -221,22 +222,18 @@
 									{#if done}<Check size={10} weight="bold" />{/if}
 								</span>
 								<span class="min-w-0 flex-1">
-									<span class="block truncate text-[14px] leading-5 touch:text-[15px]" class:title-done={done}>
-										<LinkedText text={task.title} ranges={row.hit.matches.title?.[0]?.ranges} />
-									</span>
+									<TitleFlow
+										title={task.title}
+										ranges={row.hit.matches.title?.[0]?.ranges}
+										labels={row.hit.matches.labels ?? []}
+										class="text-[14px] leading-5 touch:text-[15px] {done ? 'text-faint line-through' : ''}"
+									/>
 									{#if notes}
 										<span class="block truncate text-[12px] leading-4 text-muted"><LinkedText {...excerpt(notes)} /></span>
 									{/if}
 									{#if parent}
 										<span class="flex min-w-0 items-center gap-1 text-[12px] leading-4 text-muted" aria-label={`Subtask of ${parent.title}`}>
 											<ArrowElbowDownRight size={12} class="shrink-0" /><span class="truncate">{parent.title}</span>
-										</span>
-									{/if}
-									{#if row.hit.matches.labels}
-										<span class="mt-0.5 flex flex-wrap gap-1">
-											{#each row.hit.matches.labels as label (label.text)}
-												<span class="label-chip"><Tag size={10} weight="fill" class="shrink-0 text-[var(--tone-label)]" /><Highlighted highlight={label} /></span>
-											{/each}
 										</span>
 									{/if}
 									{#if done}
@@ -296,11 +293,6 @@
 		border-color: var(--color-faint);
 		background: var(--color-faint);
 		color: var(--color-surface);
-	}
-
-	.title-done {
-		color: var(--color-faint);
-		text-decoration: line-through;
 	}
 
 	input::-webkit-search-cancel-button {
