@@ -25,7 +25,7 @@
     </array>
     <key>LSApplicationQueriesSchemes</key>
     <array>
-        <string>talkward</string>
+        <string>notetorus</string>
     </array>
     <key>ITSAppUsesNonExemptEncryption</key>
     <false/>

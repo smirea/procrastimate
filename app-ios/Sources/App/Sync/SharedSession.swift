@@ -2,7 +2,7 @@ import Foundation
 import OSLog
 import Security
 
-/// ProcrastiMate's session, shared with Talkward through the team's keychain access group, so that app
+/// ProcrastiMate's session, shared with NoteTorus through the team's keychain access group, so that app
 /// can send tasks as its own device. It mirrors `SessionToken`: written while signed in, deleted on sign-out or a 401.
 /// The memo app processes with the screen locked, so the item is readable after first unlock. See
 /// `docs/decisions/integrations.md`.

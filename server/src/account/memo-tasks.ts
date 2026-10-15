@@ -17,7 +17,7 @@ import type { AccountStore } from './store';
 import { loadState, push } from './sync';
 
 /**
- * Talkward's routes. Writes are server ops through the same merge as `POST /api/sync`, so they land in the
+ * NoteTorus's routes. Writes are server ops through the same merge as `POST /api/sync`, so they land in the
  * log, get the fixups, and nudge every device.
  */
 

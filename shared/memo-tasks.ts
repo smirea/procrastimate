@@ -3,7 +3,7 @@ import { taskSchema } from './sync/protocol.ts';
 import { taskEventSchema } from './values.ts';
 
 /**
- * Tasks Talkward extracts from a memo. Nothing but the task's `sourceKey`, `voicememo:<memoId>:<taskKey>`,
+ * Tasks NoteTorus extracts from a memo. Nothing but the task's `sourceKey`, `voicememo:<memoId>:<taskKey>`,
  * marks one, so every client derives the memo link from the key. See `docs/decisions/integrations.md`.
  */
 
