@@ -9,4 +9,5 @@ enum Route: Hashable {
     case label(id: String)
     case place(key: String)
     case event(id: String)
+    case completed
 }

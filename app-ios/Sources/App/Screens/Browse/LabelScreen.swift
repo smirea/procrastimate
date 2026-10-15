@@ -8,19 +8,25 @@ struct LabelScreen: View {
     let labelID: String
 
     @State private var name: String?
+    @AppStorage("showCompleted") private var showCompleted = false
 
     var body: some View {
         if let label = store.label(labelID) {
             let space = store.space(ofLabel: label.id) ?? .own
-            let tasks = Views.labelTasks(store.data(in: space).tasks, label.id, in: store.timeZone)
+            let all = store.data(in: space).tasks
+            let tasks = Views.labelTasks(all, label.id, in: store.timeZone)
+            let done = showCompleted
+                ? Views.completedTasks(all.filter { $0.labelIds.contains(label.id) }, .init(), in: store.timeZone) : []
             TaskListScreen(
                 title: label.name,
-                isEmpty: tasks.isEmpty,
+                isEmpty: tasks.isEmpty && !showCompleted,
                 emptyTitle: "No tasks with this label",
                 emptyHint: Browse.labelEmptyHint(label.name)
             ) {
                 ForEach(tasks) { TaskRow(task: $0, showProject: true) }
+                if showCompleted { CompletedSection(tasks: done, showProject: true) }
             }
+            .animation(.snappy, value: showCompleted)
             .environment(\.space, space)
             .nameActions(
                 noun: "label",
