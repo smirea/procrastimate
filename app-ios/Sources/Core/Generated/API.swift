@@ -702,6 +702,51 @@ extension API {
         }
     }
 
+    public enum CompletedPreset: String, Codable, Hashable, Sendable, CaseIterable, Identifiable {
+        case today = "today"
+        case week = "week"
+        case month = "month"
+        case all = "all"
+
+        public var id: String { rawValue }
+    }
+
+    /// Local days, both ends included. A null end is open.
+    public struct CompletedRange: Codable, Hashable, Sendable {
+        public var from: DateKey?
+        public var to: DateKey?
+
+        public init(from: DateKey? = nil, to: DateKey? = nil) {
+            self.from = from
+            self.to = to
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case from = "from"
+            case to = "to"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            from = try container.decode(DateKey?.self, forKey: .from)
+            to = try container.decode(DateKey?.self, forKey: .to)
+            if decoder.validates {
+                if let value = self.from {
+                    try check(value.range(of: #"^[0-9]{4}-[0-9]{2}-[0-9]{2}\z"#, options: .regularExpression) != nil, .from, in: container, "from matching ^\\d{4}-\\d{2}-\\d{2}$")
+                }
+                if let value = self.to {
+                    try check(value.range(of: #"^[0-9]{4}-[0-9]{2}-[0-9]{2}\z"#, options: .regularExpression) != nil, .to, in: container, "to matching ^\\d{4}-\\d{2}-\\d{2}$")
+                }
+            }
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.from, forKey: .from)
+            try container.encode(self.to, forKey: .to)
+        }
+    }
+
     /// `previous` holds every task the completion changed, as it was, so undo can put them back.
     public struct Completion: Codable, Hashable, Sendable {
         public var kind: CompletionKind

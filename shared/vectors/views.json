@@ -2777,7 +2777,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 17,
+						"createdAt": 27,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -2811,7 +2811,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 18,
+						"createdAt": 28,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -2852,7 +2852,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 19,
+						"createdAt": 29,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -2886,7 +2886,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 20,
+						"createdAt": 30,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -2920,7 +2920,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 21,
+						"createdAt": 31,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -2952,7 +2952,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 19,
+						"createdAt": 29,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -2988,7 +2988,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 18,
+						"createdAt": 28,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -3029,7 +3029,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 17,
+						"createdAt": 27,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -3071,7 +3071,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 17,
+						"createdAt": 27,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -3105,7 +3105,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 18,
+						"createdAt": 28,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -3146,7 +3146,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 19,
+						"createdAt": 29,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -3180,7 +3180,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 20,
+						"createdAt": 30,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -3214,7 +3214,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 21,
+						"createdAt": 31,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -3248,7 +3248,7 @@
 						{
 							"completedAt": null,
 							"completedBy": null,
-							"createdAt": 20,
+							"createdAt": 30,
 							"createdBy": null,
 							"due": null,
 							"event": {
@@ -3291,7 +3291,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 17,
+						"createdAt": 27,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -3325,7 +3325,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 18,
+						"createdAt": 28,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -3366,7 +3366,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 19,
+						"createdAt": 29,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -3400,7 +3400,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 20,
+						"createdAt": 30,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -3434,7 +3434,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 21,
+						"createdAt": 31,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -3466,7 +3466,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 19,
+					"createdAt": 29,
 					"createdBy": null,
 					"due": null,
 					"event": {
@@ -3500,7 +3500,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 18,
+					"createdAt": 28,
 					"createdBy": null,
 					"due": null,
 					"event": {
@@ -3541,7 +3541,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 17,
+					"createdAt": 27,
 					"createdBy": null,
 					"due": null,
 					"event": {
@@ -3575,7 +3575,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 20,
+					"createdAt": 30,
 					"createdBy": null,
 					"due": null,
 					"event": {
@@ -3616,7 +3616,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 17,
+						"createdAt": 27,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -3650,7 +3650,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 18,
+						"createdAt": 28,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -3691,7 +3691,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 19,
+						"createdAt": 29,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -3725,7 +3725,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 20,
+						"createdAt": 30,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -3759,7 +3759,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 21,
+						"createdAt": 31,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -3790,7 +3790,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 18,
+					"createdAt": 28,
 					"createdBy": null,
 					"due": null,
 					"event": {
@@ -3831,7 +3831,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 21,
+					"createdAt": 31,
 					"createdBy": null,
 					"due": null,
 					"event": null,
@@ -3865,7 +3865,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 22,
+						"createdAt": 32,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -3885,7 +3885,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 23,
+						"createdAt": 33,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -3912,7 +3912,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 24,
+						"createdAt": 34,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -3939,7 +3939,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 25,
+						"createdAt": 35,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -3966,7 +3966,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 26,
+						"createdAt": 36,
 						"createdBy": null,
 						"due": {
 							"date": "2026-10-14",
@@ -3996,7 +3996,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 27,
+						"createdAt": 37,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -4023,7 +4023,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 28,
+						"createdAt": 38,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -4056,7 +4056,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 22,
+						"createdAt": 32,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -4076,7 +4076,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 28,
+						"createdAt": 38,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -4109,7 +4109,7 @@
 							{
 								"completedAt": null,
 								"completedBy": null,
-								"createdAt": 24,
+								"createdAt": 34,
 								"createdBy": null,
 								"due": null,
 								"event": null,
@@ -4136,7 +4136,7 @@
 							{
 								"completedAt": null,
 								"completedBy": null,
-								"createdAt": 27,
+								"createdAt": 37,
 								"createdBy": null,
 								"due": null,
 								"event": null,
@@ -4169,7 +4169,7 @@
 							{
 								"completedAt": null,
 								"completedBy": null,
-								"createdAt": 23,
+								"createdAt": 33,
 								"createdBy": null,
 								"due": null,
 								"event": null,
@@ -4196,7 +4196,7 @@
 							{
 								"completedAt": null,
 								"completedBy": null,
-								"createdAt": 25,
+								"createdAt": 35,
 								"createdBy": null,
 								"due": null,
 								"event": null,
@@ -4233,7 +4233,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 29,
+						"createdAt": 39,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -4253,7 +4253,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 30,
+						"createdAt": 40,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -4273,7 +4273,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 31,
+						"createdAt": 41,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -4293,7 +4293,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 32,
+						"createdAt": 42,
 						"createdBy": null,
 						"due": {
 							"date": "2026-10-14",
@@ -4322,7 +4322,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 31,
+						"createdAt": 41,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -4342,7 +4342,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 30,
+						"createdAt": 40,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -4362,7 +4362,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 29,
+						"createdAt": 39,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -4382,6 +4382,1380 @@
 				],
 				"places": []
 			}
+		},
+		{
+			"fn": "completedRange",
+			"test": "completed › presets count today in their days",
+			"input": [
+				"today",
+				"2026-10-14"
+			],
+			"output": {
+				"from": "2026-10-14",
+				"to": "2026-10-14"
+			}
+		},
+		{
+			"fn": "completedRange",
+			"test": "completed › presets count today in their days",
+			"input": [
+				"week",
+				"2026-10-14"
+			],
+			"output": {
+				"from": "2026-10-08",
+				"to": "2026-10-14"
+			}
+		},
+		{
+			"fn": "completedRange",
+			"test": "completed › presets count today in their days",
+			"input": [
+				"month",
+				"2026-10-14"
+			],
+			"output": {
+				"from": "2026-09-15",
+				"to": "2026-10-14"
+			}
+		},
+		{
+			"fn": "completedRange",
+			"test": "completed › presets count today in their days",
+			"input": [
+				"all",
+				"2026-10-14"
+			],
+			"output": {
+				"from": null,
+				"to": null
+			}
+		},
+		{
+			"fn": "completedTasks",
+			"test": "completed › lists done tasks and the last roll of repeating ones, newest first",
+			"input": [
+				[
+					{
+						"completedAt": 1791982800000,
+						"completedBy": null,
+						"createdAt": 17,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "paid rent",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "paid rent"
+					},
+					{
+						"completedAt": 1790870400000,
+						"completedBy": null,
+						"createdAt": 18,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "old",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "old"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 19,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-15",
+							"time": null
+						},
+						"event": null,
+						"id": "standup",
+						"labelIds": [],
+						"lastCompletedAt": 1791900000000,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": {
+							"interval": 1,
+							"unit": "day"
+						},
+						"reminders": [],
+						"title": "standup"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 20,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "reopened",
+						"labelIds": [],
+						"lastCompletedAt": 1791979200000,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "reopened"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 21,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "never done",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": {
+							"interval": 1,
+							"unit": "day"
+						},
+						"reminders": [],
+						"title": "never done"
+					},
+					{
+						"completedAt": 1791842400000,
+						"completedBy": null,
+						"createdAt": 22,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "trip",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "trip"
+					},
+					{
+						"completedAt": 1791842400000,
+						"completedBy": null,
+						"createdAt": 23,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "pack",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "pack"
+					},
+					{
+						"completedAt": 1791630000000,
+						"completedBy": null,
+						"createdAt": 24,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "book",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "book"
+					},
+					{
+						"completedAt": 1791990000000,
+						"completedBy": null,
+						"createdAt": 25,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "call",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "no such parent",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "call"
+					},
+					{
+						"completedAt": 1791982800000,
+						"completedBy": null,
+						"createdAt": 26,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "tie",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "tie"
+					}
+				],
+				{
+					"from": null,
+					"to": null
+				}
+			],
+			"output": [
+				{
+					"completedAt": 1791990000000,
+					"completedBy": null,
+					"createdAt": 25,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"id": "call",
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": "no such parent",
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "call"
+				},
+				{
+					"completedAt": 1791982800000,
+					"completedBy": null,
+					"createdAt": 17,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"id": "paid rent",
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "paid rent"
+				},
+				{
+					"completedAt": 1791982800000,
+					"completedBy": null,
+					"createdAt": 26,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"id": "tie",
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "tie"
+				},
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 19,
+					"createdBy": null,
+					"due": {
+						"date": "2026-10-15",
+						"time": null
+					},
+					"event": null,
+					"id": "standup",
+					"labelIds": [],
+					"lastCompletedAt": 1791900000000,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": {
+						"interval": 1,
+						"unit": "day"
+					},
+					"reminders": [],
+					"title": "standup"
+				},
+				{
+					"completedAt": 1791842400000,
+					"completedBy": null,
+					"createdAt": 22,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"id": "trip",
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": "home",
+					"recurrence": null,
+					"reminders": [],
+					"title": "trip"
+				},
+				{
+					"completedAt": 1791630000000,
+					"completedBy": null,
+					"createdAt": 24,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"id": "book",
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": "trip",
+					"priority": 4,
+					"projectId": "home",
+					"recurrence": null,
+					"reminders": [],
+					"title": "book"
+				},
+				{
+					"completedAt": 1790870400000,
+					"completedBy": null,
+					"createdAt": 18,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"id": "old",
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "old"
+				}
+			]
+		},
+		{
+			"fn": "completedTasks",
+			"test": "completed › a range keeps only the days inside it, both ends included",
+			"input": [
+				[
+					{
+						"completedAt": 1791982800000,
+						"completedBy": null,
+						"createdAt": 17,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "paid rent",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "paid rent"
+					},
+					{
+						"completedAt": 1790870400000,
+						"completedBy": null,
+						"createdAt": 18,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "old",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "old"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 19,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-15",
+							"time": null
+						},
+						"event": null,
+						"id": "standup",
+						"labelIds": [],
+						"lastCompletedAt": 1791900000000,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": {
+							"interval": 1,
+							"unit": "day"
+						},
+						"reminders": [],
+						"title": "standup"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 20,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "reopened",
+						"labelIds": [],
+						"lastCompletedAt": 1791979200000,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "reopened"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 21,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "never done",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": {
+							"interval": 1,
+							"unit": "day"
+						},
+						"reminders": [],
+						"title": "never done"
+					},
+					{
+						"completedAt": 1791842400000,
+						"completedBy": null,
+						"createdAt": 22,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "trip",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "trip"
+					},
+					{
+						"completedAt": 1791842400000,
+						"completedBy": null,
+						"createdAt": 23,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "pack",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "pack"
+					},
+					{
+						"completedAt": 1791630000000,
+						"completedBy": null,
+						"createdAt": 24,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "book",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "book"
+					},
+					{
+						"completedAt": 1791990000000,
+						"completedBy": null,
+						"createdAt": 25,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "call",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "no such parent",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "call"
+					},
+					{
+						"completedAt": 1791982800000,
+						"completedBy": null,
+						"createdAt": 26,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "tie",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "tie"
+					}
+				],
+				{
+					"from": "2026-10-12",
+					"to": "2026-10-13"
+				}
+			],
+			"output": [
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 19,
+					"createdBy": null,
+					"due": {
+						"date": "2026-10-15",
+						"time": null
+					},
+					"event": null,
+					"id": "standup",
+					"labelIds": [],
+					"lastCompletedAt": 1791900000000,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": {
+						"interval": 1,
+						"unit": "day"
+					},
+					"reminders": [],
+					"title": "standup"
+				},
+				{
+					"completedAt": 1791842400000,
+					"completedBy": null,
+					"createdAt": 22,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"id": "trip",
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": "home",
+					"recurrence": null,
+					"reminders": [],
+					"title": "trip"
+				}
+			]
+		},
+		{
+			"fn": "completedRange",
+			"test": "completed › a range keeps only the days inside it, both ends included",
+			"input": [
+				"today",
+				"2026-10-14"
+			],
+			"output": {
+				"from": "2026-10-14",
+				"to": "2026-10-14"
+			}
+		},
+		{
+			"fn": "completedTasks",
+			"test": "completed › a range keeps only the days inside it, both ends included",
+			"input": [
+				[
+					{
+						"completedAt": 1791982800000,
+						"completedBy": null,
+						"createdAt": 17,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "paid rent",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "paid rent"
+					},
+					{
+						"completedAt": 1790870400000,
+						"completedBy": null,
+						"createdAt": 18,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "old",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "old"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 19,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-15",
+							"time": null
+						},
+						"event": null,
+						"id": "standup",
+						"labelIds": [],
+						"lastCompletedAt": 1791900000000,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": {
+							"interval": 1,
+							"unit": "day"
+						},
+						"reminders": [],
+						"title": "standup"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 20,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "reopened",
+						"labelIds": [],
+						"lastCompletedAt": 1791979200000,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "reopened"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 21,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "never done",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": {
+							"interval": 1,
+							"unit": "day"
+						},
+						"reminders": [],
+						"title": "never done"
+					},
+					{
+						"completedAt": 1791842400000,
+						"completedBy": null,
+						"createdAt": 22,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "trip",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "trip"
+					},
+					{
+						"completedAt": 1791842400000,
+						"completedBy": null,
+						"createdAt": 23,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "pack",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "pack"
+					},
+					{
+						"completedAt": 1791630000000,
+						"completedBy": null,
+						"createdAt": 24,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "book",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "book"
+					},
+					{
+						"completedAt": 1791990000000,
+						"completedBy": null,
+						"createdAt": 25,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "call",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "no such parent",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "call"
+					},
+					{
+						"completedAt": 1791982800000,
+						"completedBy": null,
+						"createdAt": 26,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "tie",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "tie"
+					}
+				],
+				{
+					"from": "2026-10-14",
+					"to": "2026-10-14"
+				}
+			],
+			"output": [
+				{
+					"completedAt": 1791990000000,
+					"completedBy": null,
+					"createdAt": 25,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"id": "call",
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": "no such parent",
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "call"
+				},
+				{
+					"completedAt": 1791982800000,
+					"completedBy": null,
+					"createdAt": 17,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"id": "paid rent",
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "paid rent"
+				},
+				{
+					"completedAt": 1791982800000,
+					"completedBy": null,
+					"createdAt": 26,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"id": "tie",
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"title": "tie"
+				}
+			]
+		},
+		{
+			"fn": "completedTasks",
+			"test": "completed › a range keeps only the days inside it, both ends included",
+			"input": [
+				[],
+				{
+					"from": null,
+					"to": null
+				}
+			],
+			"output": []
+		},
+		{
+			"fn": "completedRange",
+			"test": "completed › groups by the local day of completion",
+			"input": [
+				"week",
+				"2026-10-14"
+			],
+			"output": {
+				"from": "2026-10-08",
+				"to": "2026-10-14"
+			}
+		},
+		{
+			"fn": "completedDays",
+			"test": "completed › groups by the local day of completion",
+			"input": [
+				[
+					{
+						"completedAt": 1791982800000,
+						"completedBy": null,
+						"createdAt": 17,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "paid rent",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "paid rent"
+					},
+					{
+						"completedAt": 1790870400000,
+						"completedBy": null,
+						"createdAt": 18,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "old",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "old"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 19,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-15",
+							"time": null
+						},
+						"event": null,
+						"id": "standup",
+						"labelIds": [],
+						"lastCompletedAt": 1791900000000,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": {
+							"interval": 1,
+							"unit": "day"
+						},
+						"reminders": [],
+						"title": "standup"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 20,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "reopened",
+						"labelIds": [],
+						"lastCompletedAt": 1791979200000,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "reopened"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 21,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "never done",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": {
+							"interval": 1,
+							"unit": "day"
+						},
+						"reminders": [],
+						"title": "never done"
+					},
+					{
+						"completedAt": 1791842400000,
+						"completedBy": null,
+						"createdAt": 22,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "trip",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "trip"
+					},
+					{
+						"completedAt": 1791842400000,
+						"completedBy": null,
+						"createdAt": 23,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "pack",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "pack"
+					},
+					{
+						"completedAt": 1791630000000,
+						"completedBy": null,
+						"createdAt": 24,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "book",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "book"
+					},
+					{
+						"completedAt": 1791990000000,
+						"completedBy": null,
+						"createdAt": 25,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "call",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "no such parent",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "call"
+					},
+					{
+						"completedAt": 1791982800000,
+						"completedBy": null,
+						"createdAt": 26,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "tie",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "tie"
+					}
+				],
+				{
+					"from": "2026-10-08",
+					"to": "2026-10-14"
+				}
+			],
+			"output": [
+				{
+					"date": "2026-10-14",
+					"tasks": [
+						{
+							"completedAt": 1791990000000,
+							"completedBy": null,
+							"createdAt": 25,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "call",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "no such parent",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "call"
+						},
+						{
+							"completedAt": 1791982800000,
+							"completedBy": null,
+							"createdAt": 17,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "paid rent",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "paid rent"
+						},
+						{
+							"completedAt": 1791982800000,
+							"completedBy": null,
+							"createdAt": 26,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "tie",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"title": "tie"
+						}
+					]
+				},
+				{
+					"date": "2026-10-13",
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 19,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-15",
+								"time": null
+							},
+							"event": null,
+							"id": "standup",
+							"labelIds": [],
+							"lastCompletedAt": 1791900000000,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": {
+								"interval": 1,
+								"unit": "day"
+							},
+							"reminders": [],
+							"title": "standup"
+						}
+					]
+				},
+				{
+					"date": "2026-10-12",
+					"tasks": [
+						{
+							"completedAt": 1791842400000,
+							"completedBy": null,
+							"createdAt": 22,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "trip",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "trip"
+						}
+					]
+				},
+				{
+					"date": "2026-10-10",
+					"tasks": [
+						{
+							"completedAt": 1791630000000,
+							"completedBy": null,
+							"createdAt": 24,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "book",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "book"
+						}
+					]
+				}
+			]
 		}
 	]
 }

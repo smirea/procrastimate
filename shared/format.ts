@@ -2,6 +2,8 @@ import { z } from 'zod';
 import {
 	addDays,
 	fromDateKey,
+	toDateKey,
+	toTimeOfDay,
 	weekdayOf,
 	type DateKey,
 	type Due,
@@ -135,6 +137,21 @@ export function dayHeading(date: DateKey, today: DateKey): string {
 	if (date > today && date < addDays(today, 7)) return d.toLocaleDateString('en-US', { weekday: 'long' });
 	return `${WEEKDAY_NAMES[weekdayOf(date)]}, ${shortDate(date, today)}`;
 }
+
+/** When a task was completed, in local time: `Today 3:04pm`, `Yesterday 9am`, `Oct 12 3:04pm`. */
+export function completedWhen(at: number, today: DateKey): string {
+	const date = new Date(at);
+	return formatDue({ date: toDateKey(date), time: toTimeOfDay(date.getHours(), date.getMinutes()) }, today);
+}
+
+/** A day heading in the Completed view: `Today`, `Yesterday`, then `Mon, Oct 12`, with the year when it differs. */
+export function completedHeading(date: DateKey, today: DateKey): string {
+	if (date === today) return 'Today';
+	if (date === addDays(today, -1)) return 'Yesterday';
+	return `${WEEKDAY_NAMES[weekdayOf(date)]}, ${shortDate(date, today)}`;
+}
+
+export const reopenedToast = (title: string) => `Reopened “${title}”`;
 
 export function completedToast(title: string, next: Due | null, today: DateKey): string {
 	return next ? `Completed “${title}”, next due ${formatDue(next, today)}` : `Completed “${title}”`;

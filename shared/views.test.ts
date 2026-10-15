@@ -11,6 +11,9 @@ const todayTasks = recorded('views', views.todayTasks);
 const upcomingGroups = recorded('views', views.upcomingGroups);
 const placeTasks = recorded('views', views.placeTasks);
 const eventTasks = recorded('views', views.eventTasks);
+const completedRange = recorded('views', views.completedRange);
+const completedTasks = recorded('views', views.completedTasks);
+const completedDays = recorded('views', views.completedDays);
 
 let created = 0;
 const task = (id: string, fields: Partial<Task> = {}): Task => ({
@@ -164,5 +167,61 @@ describe('no date', () => {
 			task('later', { due: { date: today, time: null } }),
 		];
 		expect(ids(noDateTasks(list, today, true).loose)).toEqual(['new', 'mid', 'old']);
+	});
+});
+
+describe('completed', () => {
+	const at = (d: number, h: number) => new Date(2026, 9, d, h).getTime();
+	const list = [
+		task('paid rent', { completedAt: at(14, 9) }),
+		task('old', { completedAt: at(1, 12) }),
+		task('standup', {
+			recurrence: { interval: 1, unit: 'day' },
+			due: { date: '2026-10-15', time: null },
+			lastCompletedAt: at(13, 10),
+		}),
+		task('reopened', { lastCompletedAt: at(14, 8) }),
+		task('never done', { recurrence: { interval: 1, unit: 'day' } }),
+		task('trip', { completedAt: at(12, 18), projectId: 'home' }),
+		task('pack', { parentId: 'trip', projectId: 'home', completedAt: at(12, 18) }),
+		task('book', { parentId: 'trip', projectId: 'home', completedAt: at(10, 7) }),
+		task('call', { parentId: 'no such parent', completedAt: at(14, 11) }),
+		task('tie', { completedAt: at(14, 9) }),
+	];
+
+	test('presets count today in their days', () => {
+		expect((['today', 'week', 'month', 'all'] as const).map(p => completedRange(p, today))).toEqual([
+			{ from: today, to: today },
+			{ from: '2026-10-08', to: today },
+			{ from: '2026-09-15', to: today },
+			{ from: null, to: null },
+		]);
+	});
+
+	test('lists done tasks and the last roll of repeating ones, newest first', () => {
+		expect(ids(completedTasks(list, { from: null, to: null }))).toEqual([
+			'call',
+			'paid rent',
+			'tie',
+			'standup',
+			'trip',
+			'book',
+			'old',
+		]);
+	});
+
+	test('a range keeps only the days inside it, both ends included', () => {
+		expect(ids(completedTasks(list, { from: '2026-10-12', to: '2026-10-13' }))).toEqual(['standup', 'trip']);
+		expect(ids(completedTasks(list, completedRange('today', today)))).toEqual(['call', 'paid rent', 'tie']);
+		expect(completedTasks([], { from: null, to: null })).toEqual([]);
+	});
+
+	test('groups by the local day of completion', () => {
+		expect(completedDays(list, completedRange('week', today)).map(g => [g.date, ids(g.tasks)])).toEqual([
+			['2026-10-14', ['call', 'paid rent', 'tie']],
+			['2026-10-13', ['standup']],
+			['2026-10-12', ['trip']],
+			['2026-10-10', ['book']],
+		]);
 	});
 });

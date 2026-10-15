@@ -197,6 +197,9 @@ private struct Occurrence: Decodable {
     case "eventTasks": return try json(Views.eventTasks(a(0), a(1), a(2), in: a.zone))
     case "todayTasks": return try json(Views.todayTasks(a(0), a(1), in: a.zone))
     case "upcomingGroups": return try json(Views.upcomingGroups(a(0), a(1), in: a.zone))
+    case "completedRange": return try json(Views.completedRange(a(0), a(1)))
+    case "completedTasks": return try json(Views.completedTasks(a(0), a(1), in: a.zone))
+    case "completedDays": return try json(Views.completedDays(a(0), a(1), in: a.zone))
     default: throw unknown(fn)
     }
 }
@@ -226,6 +229,9 @@ private struct Occurrence: Decodable {
     case "relativeDay": return try json(Format.relativeDay(a(0), a(1)))
     case "addedAgo": return try json(Format.addedAgo(a(0), a(1)))
     case "reminderToast": return try json(Format.reminderToast(a(0)))
+    case "reopenedToast": return try json(Format.reopenedToast(a(0)))
+    case "completedWhen": return try json(Format.completedWhen(a.date(0), a(1), in: a.zone))
+    case "completedHeading": return try json(Format.completedHeading(a(0), a(1)))
     case "repeatLabel": return try json(Format.repeatLabel(a(0), a(1)))
     default: throw unknown(fn)
     }

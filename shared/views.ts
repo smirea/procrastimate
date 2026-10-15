@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { taskSchema } from './sync/protocol.ts';
-import type { DateKey, Due, Task } from './task.ts';
+import { addDays, toDateKey, type DateKey, type Due, type Task } from './task.ts';
 import { occurrenceDue, placeKey, scheduledDue } from './triggers.ts';
 import { dateKeySchema } from './values.ts';
 
@@ -128,4 +128,70 @@ export function eventTasks(tasks: readonly Task[], eventId: string, today: DateK
 	return open(tasks)
 		.filter(t => t.event?.id === eventId)
 		.toSorted((a, b) => compareTasks(a, b, today));
+}
+
+export const completedPresetSchema = z.enum(['today', 'week', 'month', 'all']).meta({ id: 'CompletedPreset' });
+export type CompletedPreset = z.infer<typeof completedPresetSchema>;
+
+export const completedRangeSchema = z
+	.object({ from: dateKeySchema.nullable(), to: dateKeySchema.nullable() })
+	.meta({ id: 'CompletedRange', description: 'Local days, both ends included. A null end is open.' });
+export type CompletedRange = z.infer<typeof completedRangeSchema>;
+
+/** Today, the last 7 days, or the last 30 days, each counting today, or all time. */
+export function completedRange(preset: CompletedPreset, today: DateKey): CompletedRange {
+	switch (preset) {
+		case 'today':
+			return { from: today, to: today };
+		case 'week':
+			return { from: addDays(today, -6), to: today };
+		case 'month':
+			return { from: addDays(today, -29), to: today };
+		case 'all':
+			return { from: null, to: null };
+		default: {
+			const never: never = preset;
+			return never;
+		}
+	}
+}
+
+/**
+ * When the task was last completed: a done task's `completedAt`, or the last roll of a task that repeats. A repeating
+ * task keeps no history of earlier rolls, so it counts once, at its latest. A reopened task keeps `lastCompletedAt`,
+ * which is why the repeat has to be there too.
+ */
+export function completedMoment(task: Task): number | null {
+	if (task.completedAt !== null) return task.completedAt;
+	return task.recurrence || task.event?.series ? task.lastCompletedAt : null;
+}
+
+/**
+ * Completed tasks in `range`, newest first. A subtask completed along with its parent shows as the parent's progress
+ * instead of its own row, since completing a parent completes every open subtask at the same moment.
+ */
+export function completedTasks(tasks: readonly Task[], range: CompletedRange): Task[] {
+	const byId = new Map(tasks.map(t => [t.id, t]));
+	return tasks
+		.flatMap(task => {
+			const at = completedMoment(task);
+			if (at === null) return [];
+			const parent = task.parentId ? byId.get(task.parentId) : undefined;
+			if (parent && parent.completedAt === task.completedAt) return [];
+			const day = toDateKey(new Date(at));
+			if ((range.from && day < range.from) || (range.to && day > range.to)) return [];
+			return [{ task, at }];
+		})
+		.toSorted((a, b) => b.at - a.at || (a.task.id < b.task.id ? -1 : a.task.id > b.task.id ? 1 : 0))
+		.map(entry => entry.task);
+}
+
+/** Completed tasks in `range` under the local day each was completed, newest day first. */
+export function completedDays(tasks: readonly Task[], range: CompletedRange): DayGroup[] {
+	const groups = new Map<DateKey, Task[]>();
+	for (const task of completedTasks(tasks, range)) {
+		const day = toDateKey(new Date(completedMoment(task)!));
+		groups.set(day, [...(groups.get(day) ?? []), task]);
+	}
+	return [...groups].map(([date, list]) => ({ date, tasks: list }));
 }

@@ -134,6 +134,23 @@ public enum Format {
 
     public static func reminderToast(_ title: String) -> String { "Reminder: \(title)" }
 
+    public static func reopenedToast(_ title: String) -> String { "Reopened “\(title)”" }
+
+    /// When a task was completed, in `zone`: `Today 3:04pm`, `Yesterday 9am`, `Oct 12 3:04pm`.
+    public static func completedWhen(_ at: Date, _ today: DateKey, in zone: TimeZone) -> String {
+        let local = Int((at.timeIntervalSince1970 + Double(zone.secondsFromGMT(for: at))).rounded(.down))
+        let minutes = ((local / 60) % 1440 + 1440) % 1440
+        let time = Dates.toTimeOfDay(hours: minutes / 60, minutes: minutes % 60)
+        return formatDue(Due(date: Dates.toDateKey(at, in: zone), time: time), today)
+    }
+
+    /// A day heading in the Completed view: `Today`, `Yesterday`, then `Mon, Oct 12`, with the year when it differs.
+    public static func completedHeading(_ date: DateKey, _ today: DateKey) -> String {
+        if date == today { return "Today" }
+        if date == Dates.addDays(today, -1) { return "Yesterday" }
+        return "\(weekdayNames[Dates.weekdayOf(date)]), \(shortDate(date, today))"
+    }
+
     /// Today for an overdue or undated task, tomorrow, the coming Saturday, and the coming Monday, without the day the
     /// task is on or a day an earlier option names.
     public static func postponeOptions(_ due: Due?, _ today: DateKey) -> [PostponeOption] {

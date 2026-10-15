@@ -19,6 +19,9 @@ const relativeDay = recorded('format', format.relativeDay);
 const addedAgo = recorded('format', format.addedAgo);
 const reminderToast = recorded('format', format.reminderToast);
 const repeatLabel = recorded('format', format.repeatLabel);
+const completedWhen = recorded('format', format.completedWhen);
+const completedHeading = recorded('format', format.completedHeading);
+const reopenedToast = recorded('format', format.reopenedToast);
 
 // Wednesday, October 14 2026.
 const today = '2026-10-14';
@@ -175,6 +178,25 @@ describe('labels and toasts', () => {
 
 	test('a reminder toast names the task', () => {
 		expect(reminderToast('Call mom')).toBe('Reminder: Call mom');
+	});
+
+	test('reopening names the task', () => {
+		expect(reopenedToast('Pay rent')).toBe('Reopened “Pay rent”');
+	});
+});
+
+describe('completed', () => {
+	test('a completion reads as its local day and time', () => {
+		expect(completedWhen(new Date(2026, 9, 14, 15, 4).getTime(), today)).toBe('Today 3:04pm');
+		expect(completedWhen(new Date(2026, 9, 13, 9, 0).getTime(), today)).toBe('Yesterday 9am');
+		expect(completedWhen(new Date(2026, 9, 9, 0, 30).getTime(), today)).toBe('Oct 9 12:30am');
+		expect(completedWhen(new Date(2025, 11, 31, 23, 59).getTime(), today)).toBe('Dec 31, 2025 11:59pm');
+	});
+
+	test('day headings name today and yesterday, then the weekday and date', () => {
+		expect(
+			(['2026-10-14', '2026-10-13', '2026-10-12', '2025-12-31'] as const).map(d => completedHeading(d, today)),
+		).toEqual(['Today', 'Yesterday', 'Mon, Oct 12', 'Wed, Dec 31, 2025']);
 	});
 });
 
