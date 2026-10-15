@@ -126,7 +126,7 @@
 			>
 				<Checkbox checked={done} tone={PRIORITIES[child.priority].tone} label={`Complete ${child.title}`} onclick={() => toggle(child)} />
 				<button type="button" class="min-w-0 flex-1 py-2 text-left touch:min-h-11 touch:py-2.5" onclick={() => sheets.openTask(child.id, 'forward')}>
-					<div class="truncate text-[14px] leading-5 transition-colors" class:done>{child.title}</div>
+					<div class="text-[14px] leading-5 [overflow-wrap:anywhere] transition-colors" class:done>{child.title}</div>
 					{#if (child.due && !done) || childProgress}
 						<div class="mt-0.5 flex items-center gap-3 text-[12px] leading-4 text-muted">
 							{#if child.due && !done}

@@ -42,6 +42,7 @@ Preconditions:
 ## Gotchas
 
 - The reorder handle only shows with two or more subtasks.
+- A subtask title wraps onto as many lines as it needs in task details; it never truncates.
 - Checking a subtask in its parent's details shows no toast. Uncheck it to undo.
 - A subtask has no project picker. It always shares its root task's project.
 - Playwright's mobile drag uses mouse events on the WebKit iPhone profile, since Playwright cannot synthesize a touch drag. Prove a real finger drag on a device or the iOS simulator.
