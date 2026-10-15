@@ -18,8 +18,8 @@ struct RootView: View {
         }
         // Outside the sign-in gate, so a share link opens its read-only page signed out too.
         .sheet(item: Binding(
-            get: { navigator.quickAdd == nil ? navigator.sheet : nil },
-            set: { if $0 != nil || navigator.quickAdd == nil { navigator.sheet = $0 } }
+            get: { navigator.quickAdd == nil && navigator.ramble == nil ? navigator.sheet : nil },
+            set: { if $0 != nil || (navigator.quickAdd == nil && navigator.ramble == nil) { navigator.sheet = $0 } }
         )) { SheetView(sheet: $0) }
     }
 
@@ -40,6 +40,7 @@ struct RootView: View {
             TabBar(inboxBadge: today.overdue.count + today.today.count)
         }
         .overlay(alignment: .bottom) { QuickAddOverlay() }
+        .overlay { RambleOverlay() }
         .overlay(alignment: navigator.quickAdd == nil ? .bottom : .top) {
             // Quick add covers the bottom of the screen, so toasts move to the top while it is open, as on the web.
             ToastStack().padding(navigator.quickAdd == nil ? .bottom : .top, navigator.quickAdd == nil ? 124 : 8)
@@ -200,7 +201,30 @@ private struct QuickAddOverlay: View {
     }
 
     private func space(of defaults: QuickAddDefaults) -> SpaceKey {
-        defaults.projectId.flatMap(store.space(ofProject:)) ?? defaults.labelId.flatMap(store.space(ofLabel:)) ?? .own
+        store.space(of: defaults)
+    }
+}
+
+private struct RambleOverlay: View {
+    @Environment(Navigator.self) private var navigator
+    @Environment(Store.self) private var store
+
+    var body: some View {
+        ZStack {
+            if let defaults = navigator.ramble {
+                RambleDrawer(defaults: defaults)
+                    .environment(\.space, store.space(of: defaults))
+                    .transition(.move(edge: .bottom))
+            }
+        }
+        .animation(.spring(duration: 0.45, bounce: 0.12), value: navigator.ramble)
+    }
+}
+
+extension Store {
+    /// The space quick add or Ramble saves into: the shared project's or label's, else the user's own.
+    func space(of defaults: QuickAddDefaults) -> SpaceKey {
+        defaults.projectId.flatMap(space(ofProject:)) ?? defaults.labelId.flatMap(space(ofLabel:)) ?? .own
     }
 }
 
@@ -237,6 +261,7 @@ private struct SheetView: View {
     var body: some View {
         switch sheet {
         case let .quickAdd(defaults): QuickAddSheet(defaults: defaults)
+        case let .ramble(defaults): RambleDrawer(defaults: defaults)
         case let .details(taskID): TaskDetailsSheet(stack: Subtasks.ancestorsOf(store.allTasks, taskID).map(\.id) + [taskID])
         case .settings: SettingsSheet()
         case let .sharedLink(token): SharedLinkSheet(token: token)

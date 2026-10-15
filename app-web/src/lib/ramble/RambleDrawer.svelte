@@ -42,8 +42,8 @@
 		denied: 'The microphone is off. You can type the tasks instead.',
 		limit: "Ramble's daily limit is used up",
 		unavailable: 'Ramble needs a connection',
-		error: 'Dictation stopped. What was heard is kept.',
-		unsupported: 'Dictation stopped. What was heard is kept.',
+		error: 'Dictation stopped. You can type the task instead.',
+		unsupported: 'Dictation stopped. You can type the task instead.',
 	};
 
 	let phase = $state<Phase>('listening');
