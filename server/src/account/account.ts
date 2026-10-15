@@ -91,6 +91,8 @@ export function accountHandler(
 			const key = routeKey(request);
 			const now = Date.now();
 			const origin = new URL(request.url).origin;
+			// Behind Vite's dev proxy the request URL names the API port, while the browser's origin is the app's.
+			const linkOrigin = request.headers.get('origin') ?? origin;
 			const internal = INTERNAL_ROUTES.has(key);
 			const actor = internal ? personOf(store, space) : actorOf(request);
 			if (!actor) return errorResponse('UNAUTHORIZED', 'Not signed in');
@@ -109,7 +111,7 @@ export function accountHandler(
 				space,
 				actor,
 				access,
-				origin,
+				origin: linkOrigin,
 				defer,
 				peer: id => {
 					const namespace = peers();

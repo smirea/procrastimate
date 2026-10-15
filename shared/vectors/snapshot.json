@@ -69,6 +69,12 @@
 								"t-ana-2"
 							],
 							"scope": "scope-hash",
+							"targets": [
+								{
+									"id": "p-ana",
+									"kind": "project"
+								}
+							],
 							"tasks": [
 								{
 									"completedAt": null,
@@ -307,6 +313,12 @@
 							"t-ana-2"
 						],
 						"scope": "scope-hash",
+						"targets": [
+							{
+								"id": "p-ana",
+								"kind": "project"
+							}
+						],
 						"tasks": [
 							{
 								"completedAt": null,
@@ -859,6 +871,12 @@
 								"t-ana-2"
 							],
 							"scope": "scope-hash",
+							"targets": [
+								{
+									"id": "p-ana",
+									"kind": "project"
+								}
+							],
 							"tasks": [
 								{
 									"completedAt": null,
@@ -1100,6 +1118,12 @@
 							"t-ana-2"
 						],
 						"scope": "scope-hash",
+						"targets": [
+							{
+								"id": "p-ana",
+								"kind": "project"
+							}
+						],
 						"tasks": [
 							{
 								"completedAt": null,
@@ -1341,6 +1365,12 @@
 								"t-ana-2"
 							],
 							"scope": "scope-hash",
+							"targets": [
+								{
+									"id": "p-ana",
+									"kind": "project"
+								}
+							],
 							"tasks": [
 								{
 									"completedAt": null,
@@ -1582,6 +1612,12 @@
 							"t-ana-2"
 						],
 						"scope": "scope-hash",
+						"targets": [
+							{
+								"id": "p-ana",
+								"kind": "project"
+							}
+						],
 						"tasks": [
 							{
 								"completedAt": null,
@@ -1823,6 +1859,12 @@
 								"t-ana-2"
 							],
 							"scope": "scope-hash",
+							"targets": [
+								{
+									"id": "p-ana",
+									"kind": "project"
+								}
+							],
 							"tasks": [
 								{
 									"completedAt": null,
@@ -2060,6 +2102,12 @@
 							"t-ana-2"
 						],
 						"scope": "scope-hash",
+						"targets": [
+							{
+								"id": "p-ana",
+								"kind": "project"
+							}
+						],
 						"tasks": [
 							{
 								"completedAt": null,
@@ -2301,6 +2349,12 @@
 								"t-ana-2"
 							],
 							"scope": "scope-hash",
+							"targets": [
+								{
+									"id": "p-ana",
+									"kind": "project"
+								}
+							],
 							"tasks": [
 								{
 									"completedAt": null,
@@ -2503,6 +2557,12 @@
 							"t-ana-2"
 						],
 						"scope": "scope-hash",
+						"targets": [
+							{
+								"id": "p-ana",
+								"kind": "project"
+							}
+						],
 						"tasks": [
 							{
 								"completedAt": null,

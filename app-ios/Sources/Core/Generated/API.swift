@@ -3132,17 +3132,19 @@ extension API {
         public var epoch: Int
         public var scope: String
         public var readOnly: [String]
+        public var targets: [ShareTarget]
         public var tasks: [Task]
         public var projects: [Project]
         public var labels: [Label]
 
-        public init(owner: Person, cursor: Int, outbox: [SyncOp] = [], epoch: Int = 0, scope: String = "", readOnly: [String] = [], tasks: [Task] = [], projects: [Project] = [], labels: [Label] = []) {
+        public init(owner: Person, cursor: Int, outbox: [SyncOp] = [], epoch: Int = 0, scope: String = "", readOnly: [String] = [], targets: [ShareTarget] = [], tasks: [Task] = [], projects: [Project] = [], labels: [Label] = []) {
             self.owner = owner
             self.cursor = cursor
             self.outbox = outbox
             self.epoch = epoch
             self.scope = scope
             self.readOnly = readOnly
+            self.targets = targets
             self.tasks = tasks
             self.projects = projects
             self.labels = labels
@@ -3155,6 +3157,7 @@ extension API {
             case epoch = "epoch"
             case scope = "scope"
             case readOnly = "readOnly"
+            case targets = "targets"
             case tasks = "tasks"
             case projects = "projects"
             case labels = "labels"
@@ -3168,6 +3171,7 @@ extension API {
             try container.encode(self.epoch, forKey: .epoch)
             try container.encode(self.scope, forKey: .scope)
             try container.encode(self.readOnly, forKey: .readOnly)
+            try container.encode(self.targets, forKey: .targets)
             try container.encode(self.tasks, forKey: .tasks)
             try container.encode(self.projects, forKey: .projects)
             try container.encode(self.labels, forKey: .labels)
@@ -3456,8 +3460,9 @@ extension API {
         public var epoch: Int
         public var scope: String?
         public var readOnly: [String]?
+        public var targets: [ShareTarget]?
 
-        public init(acked: [String] = [], snapshot: SyncSnapshot, cursor: Int, hlc: Hlc, epoch: Int, scope: String? = nil, readOnly: [String]? = nil) {
+        public init(acked: [String] = [], snapshot: SyncSnapshot, cursor: Int, hlc: Hlc, epoch: Int, scope: String? = nil, readOnly: [String]? = nil, targets: [ShareTarget]? = nil) {
             self.acked = acked
             self.snapshot = snapshot
             self.cursor = cursor
@@ -3465,6 +3470,7 @@ extension API {
             self.epoch = epoch
             self.scope = scope
             self.readOnly = readOnly
+            self.targets = targets
         }
 
         enum CodingKeys: String, CodingKey {
@@ -3475,6 +3481,7 @@ extension API {
             case epoch = "epoch"
             case scope = "scope"
             case readOnly = "readOnly"
+            case targets = "targets"
         }
 
         public init(from decoder: Decoder) throws {
@@ -3486,6 +3493,7 @@ extension API {
             epoch = try container.decode(Int.self, forKey: .epoch)
             scope = try container.decodeAbsent(String.self, forKey: .scope)
             readOnly = try container.decodeAbsent([String].self, forKey: .readOnly)
+            targets = try container.decodeAbsent([ShareTarget].self, forKey: .targets)
             if decoder.validates {
                 do {
                     let value = self.cursor
@@ -3511,6 +3519,7 @@ extension API {
             try container.encode(self.epoch, forKey: .epoch)
             try container.encodeIfPresent(self.scope, forKey: .scope)
             try container.encodeIfPresent(self.readOnly, forKey: .readOnly)
+            try container.encodeIfPresent(self.targets, forKey: .targets)
         }
     }
 

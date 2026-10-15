@@ -1712,6 +1712,12 @@
 								"items": {
 									"type": "string"
 								}
+							},
+							"targets": {
+								"type": "array",
+								"items": {
+									"$ref": "#/components/schemas/ShareTarget"
+								}
 							}
 						},
 						"required": [

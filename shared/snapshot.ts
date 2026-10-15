@@ -3,7 +3,13 @@ import { dictationChoiceSchema } from './dictation.ts';
 import { sortTasks } from './store.ts';
 import { detachOrphans } from './subtasks.ts';
 import { hlcSchema } from './db/json.ts';
-import { labelSchema, opSchema, projectSchema, taskSchema as syncedTaskSchema } from './sync/protocol.ts';
+import {
+	labelSchema,
+	opSchema,
+	projectSchema,
+	shareTargetSchema,
+	taskSchema as syncedTaskSchema,
+} from './sync/protocol.ts';
 import { personSchema } from './sharing.ts';
 import { weeklyOn } from './task.ts';
 import { recurrenceSchema, weekdaySchema } from './values.ts';
@@ -78,7 +84,8 @@ const syncSchema = z
 /**
  * A space someone shared with this user, kept apart from the user's own data and synced on its own: `cursor`,
  * `outbox`, and `epoch` work as in the sync section, `scope` is the hash of what the server last let it see, and
- * `readOnly` lists the visible tasks it may not edit. The device clock in the sync section serves every space.
+ * `readOnly` lists the visible tasks it may not edit, and `targets`
+ * what the owner shared with this user. The device clock in the sync section serves every space.
  */
 const spaceSectionSchema = z
 	.object({
@@ -88,6 +95,7 @@ const spaceSectionSchema = z
 		epoch: z.number().int().nonnegative().default(0),
 		scope: z.string().default(''),
 		readOnly: z.array(z.string()).default([]),
+		targets: z.array(shareTargetSchema).default([]),
 		tasks: tasksSchema,
 		projects: z.array(projectSchema).default([]),
 		labels: z.array(labelSchema).default([]),

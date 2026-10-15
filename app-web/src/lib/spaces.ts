@@ -58,26 +58,16 @@ export function merged(own: StoreData, spaces: Sections): StoreData {
 
 export type SharedEntry = { kind: 'project' | 'label' | 'task'; id: string; name: string; owner: Person };
 
-/**
- * What the sidebar lists under "Shared with me": each section's projects and labels, and its open top-level tasks
- * that no listed project holds, which reach this user on their own.
- */
+/** What the sidebar lists under "Shared with me": each thing its owner shared with this user that is still there. */
 export function sharedEntries(spaces: Sections): SharedEntry[] {
-	return Object.values(spaces).flatMap(({ owner, tasks, projects, labels }) => {
-		const projectIds = new Set(projects.map(p => p.id));
-		const taskIds = new Set(tasks.map(t => t.id));
-		const loose = tasks.filter(
-			t =>
-				t.completedAt === null &&
-				(t.parentId === null || !taskIds.has(t.parentId)) &&
-				(t.projectId === null || !projectIds.has(t.projectId)),
-		);
-		return [
-			...projects.map(p => ({ kind: 'project' as const, id: p.id, name: p.name, owner })),
-			...labels.map(l => ({ kind: 'label' as const, id: l.id, name: l.name, owner })),
-			...loose.map(t => ({ kind: 'task' as const, id: t.id, name: t.title, owner })),
-		];
-	});
+	return Object.values(spaces).flatMap(({ owner, targets, tasks, projects, labels }) =>
+		targets.flatMap(({ kind, id }): SharedEntry[] => {
+			if (kind === 'project') return projects.filter(p => p.id === id).map(p => ({ kind, id, name: p.name, owner }));
+			if (kind === 'label') return labels.filter(l => l.id === id).map(l => ({ kind, id, name: l.name, owner }));
+			if (kind === 'task') return tasks.filter(t => t.id === id).map(t => ({ kind, id, name: t.title, owner }));
+			return projects.map(p => ({ kind: 'project' as const, id: p.id, name: p.name, owner }));
+		}),
+	);
 }
 
 export const emptySection = (owner: SpaceSection['owner']): SpaceSection => ({
@@ -87,6 +77,7 @@ export const emptySection = (owner: SpaceSection['owner']): SpaceSection => ({
 	epoch: 0,
 	scope: '',
 	readOnly: [],
+	targets: [],
 	tasks: [],
 	projects: [],
 	labels: [],

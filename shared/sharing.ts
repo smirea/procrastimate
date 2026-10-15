@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { apiTokensRowSchema, peopleRowSchema, sharesRowSchema } from './db/generated/zod.ts';
-import { labelSchema, projectSchema, taskSchema } from './sync/protocol.ts';
-import { roleSchema, shareTargetKindSchema } from './values.ts';
+import { labelSchema, projectSchema, shareTargetSchema, taskSchema } from './sync/protocol.ts';
+import { roleSchema } from './values.ts';
 
 /**
  * Sharing's shapes. A space is one user's tasks, projects, and labels, served by the `Account` object named by
@@ -15,10 +15,7 @@ export const personSchema = peopleRowSchema.pick({ id: true, name: true, kind: t
 });
 export type Person = z.infer<typeof personSchema>;
 
-export const shareTargetSchema = z
-	.object({ kind: shareTargetKindSchema, id: sharesRowSchema.shape.targetId })
-	.meta({ id: 'ShareTarget', description: 'What a share reaches. `id` is empty for the whole space.' });
-export type ShareTarget = z.infer<typeof shareTargetSchema>;
+export { shareTargetSchema, type ShareTarget } from './sync/protocol.ts';
 
 export const shareAudienceSchema = z
 	.discriminatedUnion('kind', [

@@ -439,6 +439,7 @@ class Store {
 				epoch: sync.epoch,
 				scope: response.scope ?? section.scope,
 				readOnly: 'snapshot' in response ? (response.readOnly ?? []) : section.readOnly,
+				targets: 'snapshot' in response ? (response.targets ?? []) : section.targets,
 			},
 		};
 		this.#sync = { ...this.#sync, clock: formatHlc(sync.clock) };
