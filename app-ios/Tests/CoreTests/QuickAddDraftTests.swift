@@ -83,6 +83,14 @@ import Testing
         #expect(QuickAddDraft.labelName(token, labels) == "Calls")
     }
 
+    @Test func removingSeveralTokensCutsEachPhrase() {
+        var draft = QuickAddDraft(defaults: .init(), today: today)
+        draft.setText("Ping @calls tomorrow every day p1")
+        let tokens = parse(draft).tokens.filter { $0.kind == .label || $0.kind == .recurrence }
+        draft.removeTokens(tokens)
+        #expect(draft.text == "Ping tomorrow p1")
+    }
+
     @Test func nextWeekIsTheComingMonday() {
         #expect(QuickAddDraft.datePresets(today).map(\.date) == ["2026-10-14", "2026-10-15", "2026-10-19"])
         #expect(QuickAddDraft.datePresets("2026-10-19").last?.date == "2026-10-26")

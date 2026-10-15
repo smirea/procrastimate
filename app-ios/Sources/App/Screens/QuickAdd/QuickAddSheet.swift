@@ -33,6 +33,11 @@ private struct QuickAddForm: View {
     @State private var subtasks: [DraftSubtask] = []
     @State private var subtaskText = ""
     @State private var subtasksOpen = false
+    /// Buttons opened from the `+` menu stay in the row for this draft, so their picker has a chip to hang from.
+    @State private var opened: [QuickAddButton] = []
+    @State private var openTriggers: [QuickAddButton: Int] = [:]
+    @State private var scrollTarget: QuickAddButton?
+    @State private var fade = RowFade()
     @FocusState private var focused: Bool
     @FocusState private var subtaskFocused: Bool
 
@@ -68,16 +73,9 @@ private struct QuickAddForm: View {
                 QuickAddSubtasks(spaceLabels: spaceLabels, subtasks: $subtasks, text: $subtaskText, focused: $subtaskFocused) { submit() }
                     .transition(.opacity.combined(with: .move(edge: .top)))
             }
-            HStack(alignment: .top, spacing: 6) {
-                FlowLayout(spacing: 6) {
-                    chips(parsed, resolved)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                subtaskChip
-                PriorityChip(priority: resolved.priority, iconOnly: true) { priority in
-                    draft.clearToken(.priority, in: parsed)
-                    draft.picked.priority = priority
-                }
+            HStack(spacing: 6) {
+                chipRow(parsed, resolved)
+                QuickAddMenu(priority: resolved.priority, onPriority: { setPriority($0, parsed) }, run: { run($0) })
             }
             .animation(.snappy(duration: 0.16), value: parsed.tokens)
 
@@ -156,36 +154,68 @@ private struct QuickAddForm: View {
         .accessibilityLabel("Ramble")
     }
 
-    @ViewBuilder
-    private func chips(
-        _ parsed: QuickAdd.Parsed,
-        _ resolved: (due: Due?, priority: Priority, projectId: String?, sectionId: String?, labelIds: [String])
-    ) -> some View {
-        let today = clock.today
-        // An event stands in for the date and the repeat, as in task details.
-        if event == nil {
-            DueChip(due: resolved.due) { due in
-                draft.clearToken(.due, in: parsed)
-                draft.picked.due = due
+    /// One line that scrolls sideways, faded at whichever end has more chips past it.
+    private func chipRow(_ parsed: QuickAdd.Parsed, _ resolved: Resolved) -> some View {
+        ScrollViewReader { proxy in
+            ScrollView(.horizontal) {
+                HStack(spacing: 6) {
+                    chips(parsed, resolved)
+                }
+                .padding(.vertical, 6)
+            }
+            .scrollIndicators(.hidden)
+            .onScrollGeometryChange(for: RowFade.self) { geometry in
+                RowFade(
+                    start: geometry.contentOffset.x > 1,
+                    end: geometry.contentOffset.x + geometry.containerSize.width < geometry.contentSize.width - 1
+                )
+            } action: { _, value in
+                fade = value
+            }
+            .mask {
+                HStack(spacing: 0) {
+                    LinearGradient(colors: [.clear, .black], startPoint: .leading, endPoint: .trailing)
+                        .frame(width: fade.start ? 20 : 0)
+                    Color.black
+                    LinearGradient(colors: [.black, .clear], startPoint: .leading, endPoint: .trailing)
+                        .frame(width: fade.end ? 20 : 0)
+                }
+            }
+            .onChange(of: scrollTarget) {
+                guard let scrollTarget else { return }
+                withAnimation(.snappy) { proxy.scrollTo(scrollTarget) }
+                self.scrollTarget = nil
             }
         }
-        LocationChip(location: location) { location = $0 }
-        EventChip(event: event) { event = $0 }
-        if event == nil, let recurrence = parsed.recurrence {
-            Chip(systemImage: "repeat", text: Format.formatRecurrence(recurrence, resolved.due), tone: .toneRepeat)
-        }
-        ForEach(Array(draft.picked.reminders.enumerated()), id: \.offset) { item in
-            Chip(systemImage: "bell.fill", text: Format.formatReminder(item.element, today), tone: .toneWeek)
-        }
-        let reminders = zip(parsed.tokens.filter { $0.kind == .reminder }, parsed.reminders).map(ParsedReminder.init)
-        ForEach(reminders, id: \.self) { item in
-            Chip(systemImage: "bell.fill", text: Format.formatReminder(item.reminder, today), tone: .toneWeek)
-        }
-        ForEach(spaceLabels.filter { draft.picked.labelIds.contains($0.id) && !parsed.labelIds.contains($0.id) }) {
-            Chip(systemImage: "tag.fill", text: $0.name, tone: .ink, iconTone: .toneLabel)
-        }
-        ForEach(parsed.tokens.filter { $0.kind == .label }, id: \.self) { token in
-            Chip(systemImage: "tag.fill", text: QuickAddDraft.labelName(token, spaceLabels) ?? "", tone: .ink, iconTone: .toneLabel)
+        .padding(.vertical, -6)
+    }
+
+    private typealias Resolved = (due: Due?, priority: Priority, projectId: String?, sectionId: String?, labelIds: [String])
+
+    /// Each attribute that holds something shows in the row even when it is not pinned.
+    private func filled(_ parsed: QuickAdd.Parsed, _ resolved: Resolved) -> [QuickAddButton] {
+        var buttons: [QuickAddButton] = []
+        if resolved.due != nil { buttons.append(.date) }
+        if resolved.priority != .default { buttons.append(.priority) }
+        if !draft.picked.reminders.isEmpty || !parsed.reminders.isEmpty { buttons.append(.reminders) }
+        if parsed.recurrence ?? draft.picked.recurrence != nil { buttons.append(.repeat) }
+        if !resolved.labelIds.isEmpty { buttons.append(.labels) }
+        if subtasksOpen || !subtasks.isEmpty { buttons.append(.subtasks) }
+        if location != nil { buttons.append(.location) }
+        if event != nil { buttons.append(.event) }
+        return buttons
+    }
+
+    /// An event stands in for the date and the repeat, as in task details.
+    private var supported: [QuickAddButton] {
+        event == nil ? QuickAddButton.allCases : QuickAddButton.allCases.filter { $0 != .date && $0 != .repeat }
+    }
+
+    @ViewBuilder
+    private func chips(_ parsed: QuickAdd.Parsed, _ resolved: Resolved) -> some View {
+        let buttons = QuickAddButtons.rowButtons(store.quickAddButtons, opened + filled(parsed, resolved), supported)
+        ForEach(buttons) { button in
+            chip(button, parsed, resolved).id(button)
         }
         // The name the suggestion list is open on already offers to create it there.
         ForEach(NameSearch.unknownNames(draft.text, parsed.tokens, spaceProjects, spaceLabels).filter { $0.start != listAt && space == .own }, id: \.self) { name in
@@ -197,6 +227,83 @@ private struct QuickAddForm: View {
             }
                 .buttonStyle(.plain)
                 .accessibilityLabel(title)
+        }
+    }
+
+    @ViewBuilder
+    private func chip(_ button: QuickAddButton, _ parsed: QuickAdd.Parsed, _ resolved: Resolved) -> some View {
+        let trigger = openTriggers[button, default: 0]
+        switch button {
+        case .date:
+            DueChip(due: resolved.due, openTrigger: trigger) { due in
+                draft.clearToken(.due, in: parsed)
+                draft.picked.due = due
+            }
+        case .priority:
+            PriorityChip(priority: resolved.priority, iconOnly: true) { setPriority($0, parsed) }
+        case .reminders:
+            ReminderChip(reminders: draft.picked.reminders, due: resolved.due, openTrigger: trigger) {
+                draft.picked.reminders = $0
+            }
+            let reminders = zip(parsed.tokens.filter { $0.kind == .reminder }, parsed.reminders).map(ParsedReminder.init)
+            ForEach(reminders, id: \.self) { item in
+                Chip(systemImage: "bell.fill", text: Format.formatReminder(item.reminder, clock.today), tone: .toneWeek)
+            }
+        case .repeat:
+            RepeatChip(recurrence: parsed.recurrence ?? draft.picked.recurrence, due: resolved.due, openTrigger: trigger) {
+                setRecurrence($0, start: $1, parsed: parsed, due: resolved.due)
+            }
+        case .labels:
+            LabelsChip(labelIds: resolved.labelIds, openTrigger: trigger) { setLabels($0, parsed) }
+        case .subtasks:
+            subtaskChip
+        case .location:
+            LocationChip(location: location, openTrigger: trigger) { location = $0 }
+        case .event:
+            EventChip(event: event, openTrigger: trigger) { event = $0 }
+        }
+    }
+
+    private func setPriority(_ priority: Priority, _ parsed: QuickAdd.Parsed) {
+        draft.clearToken(.priority, in: parsed)
+        draft.picked.priority = priority
+    }
+
+    /// A repeat picked here replaces a typed one, and moves the date when the repeat starts on another day.
+    private func setRecurrence(_ recurrence: Recurrence?, start: Due?, parsed: QuickAdd.Parsed, due: Due?) {
+        var tokens = parsed.tokens.filter { $0.kind == .recurrence }
+        if start != due {
+            tokens += parsed.tokens.filter { $0.kind == .due }
+            draft.picked.due = start
+        }
+        draft.removeTokens(tokens)
+        draft.picked.recurrence = recurrence
+    }
+
+    /// Unchecking a typed label removes its `@name`, so the picker's list is what saves.
+    private func setLabels(_ labelIds: [String], _ parsed: QuickAdd.Parsed) {
+        let dropped = parsed.tokens.filter { token in
+            token.kind == .label && !labelIds.contains { id in
+                spaceLabels.first { $0.id == id }.map { "@\($0.name)".lowercased() == token.text.lowercased() } ?? false
+            }
+        }
+        draft.removeTokens(dropped)
+        draft.picked.labelIds = labelIds
+    }
+
+    /// Runs a `+` menu action: the checklist opens its field, and every other button opens its picker in the row.
+    private func run(_ button: QuickAddButton) {
+        if button == .subtasks {
+            subtasksOpen = true
+            subtaskFocused = true
+            return
+        }
+        if !opened.contains(button) { opened.append(button) }
+        scrollTarget = button
+        Task {
+            // The menu has to finish closing before a popover can present from the chip.
+            try? await Task.sleep(for: .milliseconds(350))
+            openTriggers[button, default: 0] += 1
         }
     }
 
@@ -233,6 +340,12 @@ private struct QuickAddForm: View {
         navigator.sheet = nil
         if let task = store.task(taskID) { navigator.reveal(task, today: clock.today, in: clock.timeZone) }
     }
+}
+
+
+private struct RowFade: Equatable {
+    var start = false
+    var end = false
 }
 
 private struct ParsedReminder: Hashable {

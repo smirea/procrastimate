@@ -5,6 +5,8 @@ import SwiftUI
 struct LabelsChip: View {
     @Environment(Store.self) private var store
     let labelIds: [String]
+    /// Bumped to open the picker from outside, as quick add's `+` menu does.
+    var openTrigger = 0
     let onChange: ([String]) -> Void
 
     @State private var open = false
@@ -25,6 +27,7 @@ struct LabelsChip: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(chosen.isEmpty ? "Add labels" : "Labels \(names)")
+        .onChange(of: openTrigger) { open = true }
         .popover(isPresented: $open) {
             LabelsPopover(labelIds: labelIds, onChange: onChange)
                 .presentationCompactAdaptation(.popover)

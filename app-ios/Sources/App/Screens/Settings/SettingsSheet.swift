@@ -46,6 +46,21 @@ struct SettingsSheet: View {
                 }
 
                 Section {
+                    ForEach(QuickAddButton.allCases) { button in
+                        Toggle(isOn: Binding(
+                            get: { store.quickAddButtons.contains(button) },
+                            set: { _ in store.setQuickAddButtons(QuickAddButtons.toggleButton(store.quickAddButtons, button)) }
+                        )) {
+                            SwiftUI.Label(button.name, systemImage: button.systemImage)
+                        }
+                    }
+                } header: {
+                    Text("Quick add buttons")
+                } footer: {
+                    Text("The rest stay in quick add’s + menu.")
+                }
+
+                Section {
                     if notifications.status == .denied {
                         Button("Notifications need permission") {
                             Task { await notifications.openSettings() }
