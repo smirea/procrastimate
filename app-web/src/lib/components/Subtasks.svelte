@@ -6,14 +6,20 @@
 	import Plus from 'phosphor-svelte/lib/Plus';
 	import CalendarBlank from 'phosphor-svelte/lib/CalendarBlank';
 	import DotsSixVertical from 'phosphor-svelte/lib/DotsSixVertical';
+	import DotsThree from 'phosphor-svelte/lib/DotsThree';
+	import ArrowUpRight from 'phosphor-svelte/lib/ArrowUpRight';
+	import TextAa from 'phosphor-svelte/lib/TextAa';
+	import Tag from 'phosphor-svelte/lib/Tag';
+	import type { ExplodeMethod } from 'shared/store.ts';
 	import type { Task } from 'shared/task.ts';
 	import Checkbox from './Checkbox.svelte';
 	import LinkedText from './LinkedText.svelte';
 	import SmartInput from './SmartInput.svelte';
 	import SubtaskProgress from './SubtaskProgress.svelte';
+	import Popover from './Popover.svelte';
 	import { store } from '../store.svelte.ts';
 	import { parseSubtask, subtaskTask } from '../subtask-draft.ts';
-	import { clock, sheets, motion } from '../ui.svelte.ts';
+	import { clock, sheets, toasts, motion } from '../ui.svelte.ts';
 	import { dueTone, formatDue } from 'shared/format.ts';
 	import { PRIORITIES } from '../priorities.ts';
 	let { task }: { task: Task } = $props();
@@ -47,6 +53,20 @@
 	function toggle(child: Task) {
 		if (child.completedAt === null) store.completeTask(child.id, clock.today);
 		else store.reopenTask(child.id);
+	}
+
+	const explodeOptions = $derived([
+		{ method: 'direct', label: 'Keep titles', Icon: ArrowUpRight },
+		{ method: 'prefix', label: `Start with “${task.title}:”`, Icon: TextAa },
+		{ method: 'inherit', label: 'Inherit labels, date, and priority', Icon: Tag },
+	] satisfies { method: ExplodeMethod; label: string; Icon: typeof Tag }[]);
+
+	/** The parent stays, and the toast undoes it. */
+	function explode(method: ExplodeMethod) {
+		const previous = store.explodeSubtasks(task.id, method);
+		if (!previous.length) return;
+		const message = previous.length === 1 ? 'Turned 1 subtask into a task' : `Turned ${previous.length} subtasks into tasks`;
+		toasts.show(message, { label: 'Undo', run: () => store.restoreExploded(previous) });
 	}
 
 	let list: HTMLUListElement;
@@ -110,7 +130,35 @@
 <section aria-label="Subtasks">
 	<div class="mb-1 flex items-center justify-between px-2 text-[12px] text-muted">
 		<h2 class="font-medium tracking-wide uppercase">Subtasks</h2>
-		{#if progress}<SubtaskProgress {progress} />{/if}
+		<div class="flex items-center gap-1">
+			{#if progress}<SubtaskProgress {progress} />{/if}
+			{#if editable && children.length}
+				<Popover label="Turn into tasks" align="end">
+					{#snippet trigger({ toggle })}
+						<button type="button" class="hit-area relative grid size-6 place-items-center rounded-full text-muted transition-colors hover:text-ink" aria-label="Subtask actions" onclick={toggle}>
+							<DotsThree size={16} weight="bold" />
+						</button>
+					{/snippet}
+					{#snippet children({ close })}
+						<div class="w-72 max-w-[calc(100vw-2rem)]">
+							<p class="px-2.5 pt-1.5 pb-1 text-[12px] font-medium text-muted">Turn into tasks</p>
+							{#each explodeOptions as option (option.method)}
+								<button
+									type="button"
+									class="menu-item"
+									onclick={() => {
+										close();
+										explode(option.method);
+									}}
+								>
+									<option.Icon size={15} class="shrink-0" /><span class="flex-1 truncate">{option.label}</span>
+								</button>
+							{/each}
+						</div>
+					{/snippet}
+				</Popover>
+			{/if}
+		</div>
 	</div>
 	<ul bind:this={list} class="relative" aria-label={`Subtasks of ${task.title}`}>
 		{#each children as child, index (child.id)}

@@ -6,6 +6,8 @@ public typealias NewTask = API.NewTask
 public typealias TaskPatch = API.TaskEdit
 public typealias CompletionState = API.CompletionState
 public typealias Completion = API.Completion
+public typealias ExplodeMethod = API.ExplodeMethod
+public typealias ExplodedState = API.ExplodedState
 
 extension API.TaskEdit {
     func apply(to task: inout TaskItem) {
@@ -155,6 +157,70 @@ public enum StoreRules {
         let ids = Set(data.tasks.map(\.id))
         var next = data
         next.tasks = sortTasks(data.tasks + removed.filter { !ids.contains($0.id) })
+        return next
+    }
+
+    /// Turns a task's direct subtasks into tasks of their own, one level up: top-level tasks for a top-level parent,
+    /// else siblings right after it, in their order. Each keeps its own subtasks. The parent stays, without them.
+    /// Returns the subtasks as they were, for undo.
+    public static func explodeSubtasks(
+        _ data: StoreData,
+        _ id: String,
+        _ method: ExplodeMethod
+    ) -> (data: StoreData, previous: [ExplodedState]) {
+        guard let parent = data.tasks.first(where: { $0.id == id }),
+              let children = Subtasks.groupChildren(data.tasks)[id], !children.isEmpty
+        else { return (data, []) }
+        let nextOrder = parent.parentId.flatMap { grandparent in
+            data.tasks
+                .filter { $0.parentId == grandparent && $0.id != id && Subtasks.siblingOrder(parent, $0) == true }
+                .stableSorted(by: Subtasks.siblingOrder)
+                .first?.order
+        }
+        let count = Double(children.count)
+        let gap = nextOrder.map { $0 - parent.order } ?? count + 1
+        let changed = children.enumerated().map { index, child in
+            var moved = child
+            moved.parentId = parent.parentId
+            moved.order = parent.parentId == nil ? 0 : parent.order + Double(index + 1) * gap / (count + 1)
+            switch method {
+            case .direct:
+                break
+            case .prefix:
+                moved.title = "\(parent.title): \(child.title)"
+            case .inherit:
+                if child.labelIds.isEmpty { moved.labelIds = parent.labelIds }
+                if child.due == nil, child.event == nil { moved.due = parent.due }
+                if child.priority == .default { moved.priority = parent.priority }
+            }
+            return moved
+        }
+        let previous = children.map {
+            ExplodedState(
+                id: $0.id, parentId: $0.parentId, order: $0.order, title: $0.title, labelIds: $0.labelIds, due: $0.due,
+                priority: $0.priority
+            )
+        }
+        var next = data
+        next.tasks = put(data.tasks, changed)
+        return (next, previous)
+    }
+
+    /// Puts back what exploding subtasks changed, as its undo captured it.
+    public static func restoreExploded(_ data: StoreData, _ previous: [ExplodedState]) -> StoreData {
+        let byId = Dictionary(previous.map { ($0.id, $0) }, uniquingKeysWith: { _, last in last })
+        var next = data
+        next.tasks = data.tasks.map { task in
+            guard let state = byId[task.id] else { return task }
+            var task = task
+            task.parentId = state.parentId
+            task.order = state.order
+            task.title = state.title
+            task.labelIds = state.labelIds
+            task.due = state.due
+            task.priority = state.priority
+            return task
+        }
         return next
     }
 

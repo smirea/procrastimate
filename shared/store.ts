@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import * as subtasks from './subtasks.ts';
+import { bySiblingOrder } from './sync/order.ts';
 import { labelSchema, projectSchema, taskSchema } from './sync/protocol.ts';
 import { DEFAULT_PRIORITY, type DateKey, type Label, type Project, type Task } from './task.ts';
 
@@ -81,6 +82,21 @@ export const completionSchema = z
 export type Completion = z.infer<typeof completionSchema>;
 
 export const completionKindSchema = z.enum(['done', 'rolled']).meta({ id: 'CompletionKind' });
+
+export const explodeMethodSchema = z.enum(['direct', 'prefix', 'inherit']).meta({
+	id: 'ExplodeMethod',
+	description:
+		"How subtasks become tasks: `direct` keeps their titles, `prefix` puts the parent's title before each, as in `Parent: child`, and `inherit` fills in the parent's labels, date, and priority where a subtask has none.",
+});
+export type ExplodeMethod = z.infer<typeof explodeMethodSchema>;
+
+export const explodedStateSchema = taskSchema
+	.pick({ id: true, parentId: true, order: true, title: true, labelIds: true, due: true, priority: true })
+	.meta({
+		id: 'ExplodedState',
+		description: 'The fields exploding subtasks changes, as they were. Undo writes back only these.',
+	});
+export type ExplodedState = z.infer<typeof explodedStateSchema>;
 
 const byCreation = (a: Task, b: Task) => a.createdAt - b.createdAt || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 
@@ -186,6 +202,53 @@ export function deleteTask(data: StoreData, id: string): { data: StoreData; remo
 export function undeleteTasks(data: StoreData, removed: readonly Task[]): StoreData {
 	const ids = new Set(data.tasks.map(t => t.id));
 	return { ...data, tasks: sortTasks([...data.tasks, ...removed.filter(t => !ids.has(t.id))]) };
+}
+
+/**
+ * Turns a task's direct subtasks into tasks of their own, one level up: top-level tasks for a top-level parent, else
+ * siblings right after it, in their order. Each keeps its own subtasks. The parent stays, without them. Returns the
+ * subtasks as they were, for undo.
+ */
+export function explodeSubtasks(
+	data: StoreData,
+	id: string,
+	method: ExplodeMethod,
+): { data: StoreData; previous: ExplodedState[] } {
+	const parent = data.tasks.find(t => t.id === id);
+	const children = subtasks.groupChildren(data.tasks).get(id) ?? [];
+	if (!parent || !children.length) return { data, previous: [] };
+	const nextOrder = parent.parentId
+		? (data.tasks
+				.filter(t => t.parentId === parent.parentId && t.id !== id && bySiblingOrder(t, parent) > 0)
+				.toSorted(bySiblingOrder)[0]?.order ?? null)
+		: null;
+	const gap = nextOrder === null ? children.length + 1 : nextOrder - parent.order;
+	const orderAt = (index: number) => (parent.parentId ? parent.order + ((index + 1) * gap) / (children.length + 1) : 0);
+	const changed = children.map((child, index): Task => {
+		const moved = { ...child, parentId: parent.parentId, order: orderAt(index) };
+		if (method === 'prefix') return { ...moved, title: `${parent.title}: ${child.title}` };
+		if (method === 'direct') return moved;
+		return {
+			...moved,
+			labelIds: child.labelIds.length ? child.labelIds : parent.labelIds,
+			due: child.due === null && child.event === null ? parent.due : child.due,
+			priority: child.priority === DEFAULT_PRIORITY ? parent.priority : child.priority,
+		};
+	});
+	const previous = children.map(({ id, parentId, order, title, labelIds, due, priority }) => ({
+		id,
+		parentId,
+		order,
+		title,
+		labelIds,
+		due,
+		priority,
+	}));
+	return { data: { ...data, tasks: put(data.tasks, changed) }, previous };
+}
+
+export function restoreExploded(data: StoreData, previous: readonly ExplodedState[]): StoreData {
+	return { ...data, tasks: put(data.tasks, previous) };
 }
 
 export function addProject(

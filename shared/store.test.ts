@@ -11,11 +11,13 @@ const completeTask = recorded('store', store.completeTask);
 const deleteLabel = recorded('store', store.deleteLabel);
 const deleteProject = recorded('store', store.deleteProject);
 const deleteTask = recorded('store', store.deleteTask);
+const explodeSubtasks = recorded('store', store.explodeSubtasks);
 const moveSubtask = recorded('store', store.moveSubtask);
 const renameLabel = recorded('store', store.renameLabel);
 const renameProject = recorded('store', store.renameProject);
 const reopenTask = recorded('store', store.reopenTask);
 const restoreCompletion = recorded('store', store.restoreCompletion);
+const restoreExploded = recorded('store', store.restoreExploded);
 const sortTasks = recorded('store', store.sortTasks);
 const undeleteTasks = recorded('store', store.undeleteTasks);
 const updateTask = recorded('store', store.updateTask);
@@ -176,6 +178,109 @@ describe('tasks', () => {
 		expect(undeleteTasks(next, removed)).toEqual(data());
 		expect(undeleteTasks(data(), removed)).toEqual(data());
 		expect(deleteTask(data(), 'missing')).toEqual({ data: data(), removed: [] });
+	});
+});
+
+describe('exploding subtasks', () => {
+	const due = { date: today, time: '18:00' } as const;
+	const outline = (): StoreData => ({
+		tasks: [
+			task('trip', 1, { projectId: 'home', labelIds: ['calls'], due, priority: 2 }),
+			task('passport', 2, { parentId: 'trip', projectId: 'home', order: 1 }),
+			task('charger', 3, {
+				parentId: 'trip',
+				projectId: 'home',
+				labelIds: ['phone'],
+				due: { date: '2026-10-20', time: null },
+				priority: 1,
+				completedAt: 50,
+			}),
+			task('photo', 4, { parentId: 'passport', projectId: 'home' }),
+		],
+		projects: [],
+		labels: [],
+	});
+	const shape = (next: StoreData) =>
+		next.tasks.map(({ id, parentId, order, title, labelIds, due, priority }) => ({
+			id,
+			parentId,
+			order,
+			title,
+			labelIds,
+			due,
+			priority,
+		}));
+
+	test('directly makes each subtask a top-level task with its own title, keeping its subtasks', () => {
+		const { data: next, previous } = explodeSubtasks(outline(), 'trip', 'direct');
+		expect(shape(next)).toEqual([
+			{ id: 'trip', parentId: null, order: 0, title: 'trip', labelIds: ['calls'], due, priority: 2 },
+			{ id: 'passport', parentId: null, order: 0, title: 'passport', labelIds: [], due: null, priority: 4 },
+			{
+				id: 'charger',
+				parentId: null,
+				order: 0,
+				title: 'charger',
+				labelIds: ['phone'],
+				due: { date: '2026-10-20', time: null },
+				priority: 1,
+			},
+			{ id: 'photo', parentId: 'passport', order: 0, title: 'photo', labelIds: [], due: null, priority: 4 },
+		]);
+		expect(find(next, 'charger').completedAt).toBe(50);
+		expect(find(next, 'passport').projectId).toBe('home');
+		expect(restoreExploded(next, previous)).toEqual(outline());
+	});
+
+	test("prefix puts the parent's title before each subtask's", () => {
+		const { data: next } = explodeSubtasks(outline(), 'trip', 'prefix');
+		expect(next.tasks.map(t => t.title)).toEqual(['trip', 'trip: passport', 'trip: charger', 'photo']);
+	});
+
+	test("inherit fills in the parent's labels, date, and priority only where a subtask has none", () => {
+		const { data: next } = explodeSubtasks(outline(), 'trip', 'inherit');
+		expect(shape(next).slice(1, 3)).toEqual([
+			{ id: 'passport', parentId: null, order: 0, title: 'passport', labelIds: ['calls'], due, priority: 2 },
+			{
+				id: 'charger',
+				parentId: null,
+				order: 0,
+				title: 'charger',
+				labelIds: ['phone'],
+				due: { date: '2026-10-20', time: null },
+				priority: 1,
+			},
+		]);
+	});
+
+	test('a nested parent passes its subtasks up to sit right after it, in order', () => {
+		const { data: next, previous } = explodeSubtasks(
+			{ ...outline(), tasks: [...outline().tasks, task('visa', 5, { parentId: 'trip', projectId: 'home', order: 2 })] },
+			'passport',
+			'prefix',
+		);
+		expect(shape(next).filter(t => t.parentId === 'trip')).toEqual([
+			{ id: 'passport', parentId: 'trip', order: 1, title: 'passport', labelIds: [], due: null, priority: 4 },
+			{
+				id: 'charger',
+				parentId: 'trip',
+				order: 0,
+				title: 'charger',
+				labelIds: ['phone'],
+				due: { date: '2026-10-20', time: null },
+				priority: 1,
+			},
+			{ id: 'photo', parentId: 'trip', order: 1.5, title: 'passport: photo', labelIds: [], due: null, priority: 4 },
+			{ id: 'visa', parentId: 'trip', order: 2, title: 'visa', labelIds: [], due: null, priority: 4 },
+		]);
+		expect(previous).toEqual([
+			{ id: 'photo', parentId: 'passport', order: 0, title: 'photo', labelIds: [], due: null, priority: 4 },
+		]);
+	});
+
+	test('a task without subtasks, or a missing one, changes nothing', () => {
+		expect(explodeSubtasks(outline(), 'photo', 'direct')).toEqual({ data: outline(), previous: [] });
+		expect(explodeSubtasks(outline(), 'missing', 'direct')).toEqual({ data: outline(), previous: [] });
 	});
 });
 

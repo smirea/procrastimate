@@ -6770,6 +6770,1574 @@
 			}
 		},
 		{
+			"fn": "explodeSubtasks",
+			"test": "exploding subtasks › directly makes each subtask a top-level task with its own title, keeping its subtasks",
+			"input": [
+				{
+					"labels": [],
+					"projects": [],
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-14",
+								"time": "18:00"
+							},
+							"event": null,
+							"id": "trip",
+							"labelIds": [
+								"calls"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 2,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "trip"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 2,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "passport",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 1,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "passport"
+						},
+						{
+							"completedAt": 50,
+							"completedBy": null,
+							"createdAt": 3,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-20",
+								"time": null
+							},
+							"event": null,
+							"id": "charger",
+							"labelIds": [
+								"phone"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "trip",
+							"priority": 1,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "charger"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 4,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "photo",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "passport",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "photo"
+						}
+					]
+				},
+				"trip",
+				"direct"
+			],
+			"output": {
+				"data": {
+					"labels": [],
+					"projects": [],
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-14",
+								"time": "18:00"
+							},
+							"event": null,
+							"id": "trip",
+							"labelIds": [
+								"calls"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 2,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "trip"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 2,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "passport",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "passport"
+						},
+						{
+							"completedAt": 50,
+							"completedBy": null,
+							"createdAt": 3,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-20",
+								"time": null
+							},
+							"event": null,
+							"id": "charger",
+							"labelIds": [
+								"phone"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 1,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "charger"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 4,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "photo",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "passport",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "photo"
+						}
+					]
+				},
+				"previous": [
+					{
+						"due": {
+							"date": "2026-10-20",
+							"time": null
+						},
+						"id": "charger",
+						"labelIds": [
+							"phone"
+						],
+						"order": 0,
+						"parentId": "trip",
+						"priority": 1,
+						"title": "charger"
+					},
+					{
+						"due": null,
+						"id": "passport",
+						"labelIds": [],
+						"order": 1,
+						"parentId": "trip",
+						"priority": 4,
+						"title": "passport"
+					}
+				]
+			}
+		},
+		{
+			"fn": "restoreExploded",
+			"test": "exploding subtasks › directly makes each subtask a top-level task with its own title, keeping its subtasks",
+			"input": [
+				{
+					"labels": [],
+					"projects": [],
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-14",
+								"time": "18:00"
+							},
+							"event": null,
+							"id": "trip",
+							"labelIds": [
+								"calls"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 2,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "trip"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 2,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "passport",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "passport"
+						},
+						{
+							"completedAt": 50,
+							"completedBy": null,
+							"createdAt": 3,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-20",
+								"time": null
+							},
+							"event": null,
+							"id": "charger",
+							"labelIds": [
+								"phone"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 1,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "charger"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 4,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "photo",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "passport",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "photo"
+						}
+					]
+				},
+				[
+					{
+						"due": {
+							"date": "2026-10-20",
+							"time": null
+						},
+						"id": "charger",
+						"labelIds": [
+							"phone"
+						],
+						"order": 0,
+						"parentId": "trip",
+						"priority": 1,
+						"title": "charger"
+					},
+					{
+						"due": null,
+						"id": "passport",
+						"labelIds": [],
+						"order": 1,
+						"parentId": "trip",
+						"priority": 4,
+						"title": "passport"
+					}
+				]
+			],
+			"output": {
+				"labels": [],
+				"projects": [],
+				"tasks": [
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": "18:00"
+						},
+						"event": null,
+						"id": "trip",
+						"labelIds": [
+							"calls"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 2,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "trip"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 2,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "passport",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 1,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "passport"
+					},
+					{
+						"completedAt": 50,
+						"completedBy": null,
+						"createdAt": 3,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-20",
+							"time": null
+						},
+						"event": null,
+						"id": "charger",
+						"labelIds": [
+							"phone"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "trip",
+						"priority": 1,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "charger"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 4,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "photo",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "passport",
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"title": "photo"
+					}
+				]
+			}
+		},
+		{
+			"fn": "explodeSubtasks",
+			"test": "exploding subtasks › prefix puts the parent's title before each subtask's",
+			"input": [
+				{
+					"labels": [],
+					"projects": [],
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-14",
+								"time": "18:00"
+							},
+							"event": null,
+							"id": "trip",
+							"labelIds": [
+								"calls"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 2,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "trip"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 2,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "passport",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 1,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "passport"
+						},
+						{
+							"completedAt": 50,
+							"completedBy": null,
+							"createdAt": 3,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-20",
+								"time": null
+							},
+							"event": null,
+							"id": "charger",
+							"labelIds": [
+								"phone"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "trip",
+							"priority": 1,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "charger"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 4,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "photo",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "passport",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "photo"
+						}
+					]
+				},
+				"trip",
+				"prefix"
+			],
+			"output": {
+				"data": {
+					"labels": [],
+					"projects": [],
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-14",
+								"time": "18:00"
+							},
+							"event": null,
+							"id": "trip",
+							"labelIds": [
+								"calls"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 2,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "trip"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 2,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "passport",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "trip: passport"
+						},
+						{
+							"completedAt": 50,
+							"completedBy": null,
+							"createdAt": 3,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-20",
+								"time": null
+							},
+							"event": null,
+							"id": "charger",
+							"labelIds": [
+								"phone"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 1,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "trip: charger"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 4,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "photo",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "passport",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "photo"
+						}
+					]
+				},
+				"previous": [
+					{
+						"due": {
+							"date": "2026-10-20",
+							"time": null
+						},
+						"id": "charger",
+						"labelIds": [
+							"phone"
+						],
+						"order": 0,
+						"parentId": "trip",
+						"priority": 1,
+						"title": "charger"
+					},
+					{
+						"due": null,
+						"id": "passport",
+						"labelIds": [],
+						"order": 1,
+						"parentId": "trip",
+						"priority": 4,
+						"title": "passport"
+					}
+				]
+			}
+		},
+		{
+			"fn": "explodeSubtasks",
+			"test": "exploding subtasks › inherit fills in the parent's labels, date, and priority only where a subtask has none",
+			"input": [
+				{
+					"labels": [],
+					"projects": [],
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-14",
+								"time": "18:00"
+							},
+							"event": null,
+							"id": "trip",
+							"labelIds": [
+								"calls"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 2,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "trip"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 2,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "passport",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 1,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "passport"
+						},
+						{
+							"completedAt": 50,
+							"completedBy": null,
+							"createdAt": 3,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-20",
+								"time": null
+							},
+							"event": null,
+							"id": "charger",
+							"labelIds": [
+								"phone"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "trip",
+							"priority": 1,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "charger"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 4,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "photo",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "passport",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "photo"
+						}
+					]
+				},
+				"trip",
+				"inherit"
+			],
+			"output": {
+				"data": {
+					"labels": [],
+					"projects": [],
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-14",
+								"time": "18:00"
+							},
+							"event": null,
+							"id": "trip",
+							"labelIds": [
+								"calls"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 2,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "trip"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 2,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-14",
+								"time": "18:00"
+							},
+							"event": null,
+							"id": "passport",
+							"labelIds": [
+								"calls"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 2,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "passport"
+						},
+						{
+							"completedAt": 50,
+							"completedBy": null,
+							"createdAt": 3,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-20",
+								"time": null
+							},
+							"event": null,
+							"id": "charger",
+							"labelIds": [
+								"phone"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 1,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "charger"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 4,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "photo",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "passport",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "photo"
+						}
+					]
+				},
+				"previous": [
+					{
+						"due": {
+							"date": "2026-10-20",
+							"time": null
+						},
+						"id": "charger",
+						"labelIds": [
+							"phone"
+						],
+						"order": 0,
+						"parentId": "trip",
+						"priority": 1,
+						"title": "charger"
+					},
+					{
+						"due": null,
+						"id": "passport",
+						"labelIds": [],
+						"order": 1,
+						"parentId": "trip",
+						"priority": 4,
+						"title": "passport"
+					}
+				]
+			}
+		},
+		{
+			"fn": "explodeSubtasks",
+			"test": "exploding subtasks › a nested parent passes its subtasks up to sit right after it, in order",
+			"input": [
+				{
+					"labels": [],
+					"projects": [],
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-14",
+								"time": "18:00"
+							},
+							"event": null,
+							"id": "trip",
+							"labelIds": [
+								"calls"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 2,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "trip"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 2,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "passport",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 1,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "passport"
+						},
+						{
+							"completedAt": 50,
+							"completedBy": null,
+							"createdAt": 3,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-20",
+								"time": null
+							},
+							"event": null,
+							"id": "charger",
+							"labelIds": [
+								"phone"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "trip",
+							"priority": 1,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "charger"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 4,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "photo",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "passport",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "photo"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 5,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "visa",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 2,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "visa"
+						}
+					]
+				},
+				"passport",
+				"prefix"
+			],
+			"output": {
+				"data": {
+					"labels": [],
+					"projects": [],
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-14",
+								"time": "18:00"
+							},
+							"event": null,
+							"id": "trip",
+							"labelIds": [
+								"calls"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 2,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "trip"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 2,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "passport",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 1,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "passport"
+						},
+						{
+							"completedAt": 50,
+							"completedBy": null,
+							"createdAt": 3,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-20",
+								"time": null
+							},
+							"event": null,
+							"id": "charger",
+							"labelIds": [
+								"phone"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "trip",
+							"priority": 1,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "charger"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 4,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "photo",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 1.5,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "passport: photo"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 5,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "visa",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 2,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "visa"
+						}
+					]
+				},
+				"previous": [
+					{
+						"due": null,
+						"id": "photo",
+						"labelIds": [],
+						"order": 0,
+						"parentId": "passport",
+						"priority": 4,
+						"title": "photo"
+					}
+				]
+			}
+		},
+		{
+			"fn": "explodeSubtasks",
+			"test": "exploding subtasks › a task without subtasks, or a missing one, changes nothing",
+			"input": [
+				{
+					"labels": [],
+					"projects": [],
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-14",
+								"time": "18:00"
+							},
+							"event": null,
+							"id": "trip",
+							"labelIds": [
+								"calls"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 2,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "trip"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 2,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "passport",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 1,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "passport"
+						},
+						{
+							"completedAt": 50,
+							"completedBy": null,
+							"createdAt": 3,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-20",
+								"time": null
+							},
+							"event": null,
+							"id": "charger",
+							"labelIds": [
+								"phone"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "trip",
+							"priority": 1,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "charger"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 4,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "photo",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "passport",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "photo"
+						}
+					]
+				},
+				"photo",
+				"direct"
+			],
+			"output": {
+				"data": {
+					"labels": [],
+					"projects": [],
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-14",
+								"time": "18:00"
+							},
+							"event": null,
+							"id": "trip",
+							"labelIds": [
+								"calls"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 2,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "trip"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 2,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "passport",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 1,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "passport"
+						},
+						{
+							"completedAt": 50,
+							"completedBy": null,
+							"createdAt": 3,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-20",
+								"time": null
+							},
+							"event": null,
+							"id": "charger",
+							"labelIds": [
+								"phone"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "trip",
+							"priority": 1,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "charger"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 4,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "photo",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "passport",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "photo"
+						}
+					]
+				},
+				"previous": []
+			}
+		},
+		{
+			"fn": "explodeSubtasks",
+			"test": "exploding subtasks › a task without subtasks, or a missing one, changes nothing",
+			"input": [
+				{
+					"labels": [],
+					"projects": [],
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-14",
+								"time": "18:00"
+							},
+							"event": null,
+							"id": "trip",
+							"labelIds": [
+								"calls"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 2,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "trip"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 2,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "passport",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 1,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "passport"
+						},
+						{
+							"completedAt": 50,
+							"completedBy": null,
+							"createdAt": 3,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-20",
+								"time": null
+							},
+							"event": null,
+							"id": "charger",
+							"labelIds": [
+								"phone"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "trip",
+							"priority": 1,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "charger"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 4,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "photo",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "passport",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "photo"
+						}
+					]
+				},
+				"missing",
+				"direct"
+			],
+			"output": {
+				"data": {
+					"labels": [],
+					"projects": [],
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-14",
+								"time": "18:00"
+							},
+							"event": null,
+							"id": "trip",
+							"labelIds": [
+								"calls"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 2,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "trip"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 2,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "passport",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 1,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "passport"
+						},
+						{
+							"completedAt": 50,
+							"completedBy": null,
+							"createdAt": 3,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-20",
+								"time": null
+							},
+							"event": null,
+							"id": "charger",
+							"labelIds": [
+								"phone"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "trip",
+							"priority": 1,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "charger"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 4,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "photo",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "passport",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"title": "photo"
+						}
+					]
+				},
+				"previous": []
+			}
+		},
+		{
 			"fn": "addProject",
 			"test": "projects › adding, renaming, and deleting a project, which deletes its tasks",
 			"input": [

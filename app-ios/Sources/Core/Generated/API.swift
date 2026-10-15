@@ -1058,6 +1058,68 @@ extension API {
         }
     }
 
+    /// The fields exploding subtasks changes, as they were. Undo writes back only these.
+    public struct ExplodedState: Codable, Hashable, Sendable, Identifiable {
+        public var id: String
+        public var parentId: String?
+        public var order: Double
+        public var title: String
+        public var labelIds: [String]
+        public var due: Due?
+        public var priority: Priority
+
+        public init(id: String, parentId: String? = nil, order: Double, title: String, labelIds: [String] = [], due: Due? = nil, priority: Priority) {
+            self.id = id
+            self.parentId = parentId
+            self.order = order
+            self.title = title
+            self.labelIds = labelIds
+            self.due = due
+            self.priority = priority
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case id = "id"
+            case parentId = "parentId"
+            case order = "order"
+            case title = "title"
+            case labelIds = "labelIds"
+            case due = "due"
+            case priority = "priority"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            id = try container.decode(String.self, forKey: .id)
+            parentId = try container.decode(String?.self, forKey: .parentId)
+            order = try container.decode(Double.self, forKey: .order)
+            title = try container.decode(String.self, forKey: .title)
+            labelIds = try container.decode([String].self, forKey: .labelIds)
+            due = try container.decode(Due?.self, forKey: .due)
+            priority = try container.decode(Priority.self, forKey: .priority)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.id, forKey: .id)
+            try container.encode(self.parentId, forKey: .parentId)
+            try container.encode(self.order, forKey: .order)
+            try container.encode(self.title, forKey: .title)
+            try container.encode(self.labelIds, forKey: .labelIds)
+            try container.encode(self.due, forKey: .due)
+            try container.encode(self.priority, forKey: .priority)
+        }
+    }
+
+    /// How subtasks become tasks: `direct` keeps their titles, `prefix` puts the parent's title before each, as in `Parent: child`, and `inherit` fills in the parent's labels, date, and priority where a subtask has none.
+    public enum ExplodeMethod: String, Codable, Hashable, Sendable, CaseIterable, Identifiable {
+        case direct = "direct"
+        case prefix = "prefix"
+        case inherit = "inherit"
+
+        public var id: String { rawValue }
+    }
+
     /// One matched text and the half-open spans to highlight in it.
     public struct Highlight: Codable, Hashable, Sendable {
         public var text: String

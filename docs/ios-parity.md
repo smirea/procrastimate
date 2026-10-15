@@ -83,6 +83,7 @@ macOS `core` and `app` stay off until a release ([Workflow](decisions/workflow.m
 | `subtasks-recurring`: a recurring parent reopens its subtasks                   | ✓   | Built | S6    | `SubtasksParityTests.test_subtasks_recurring`       | `subtasks › subtasks-recurring`       | `subtasks-recurring.png`       |
 | `subtasks-search`: found by its own text, names its parent                      | ✓   | Built | S7    | `SearchParityTests.test_subtasks_search`            | `search › subtasks-search`            | `subtasks-search.png`          |
 | `subtasks-dated`: dated subtasks in the Inbox's day sections under their parent | ✓   | Built | S6    | `SubtasksParityTests.test_subtasks_dated`           | `subtasks › subtasks-dated`           | `subtasks-dated.png`           |
+| `subtasks-explode`: subtasks become tasks three ways, the parent stays, undo    | ✓   | Built | —     | `StoreRules.explodeSubtasks` vectors                | `sync › subtasks turned into tasks`   | —                              |
 
 ### Recurring tasks
 
