@@ -16,6 +16,7 @@
 	import { parseQuickAdd } from 'shared/quick-add.ts';
 	import type { Task } from 'shared/task.ts';
 	import SmartInput from './SmartInput.svelte';
+	import LinkedField from './LinkedField.svelte';
 	import DuePicker from './DuePicker.svelte';
 	import PriorityPicker from './PriorityPicker.svelte';
 	import ReminderPicker from './ReminderPicker.svelte';
@@ -121,7 +122,9 @@
 		</div>
 	</header>
 	<div class="px-4 pt-4">
-		<SmartInput bind:value={title} tokens={parsed.tokens} label="Title" enterkeyhint="done" suggestProjects={!parent} class="text-[19px] font-semibold" {onkeydown} onblur={commitTitle} />
+		<LinkedField text={title} class="truncate px-1 py-0.5 text-[19px] leading-[1.6] font-semibold whitespace-pre">
+			<SmartInput bind:value={title} tokens={parsed.tokens} label="Title" enterkeyhint="done" suggestProjects={!parent} class="text-[19px] font-semibold" {onkeydown} onblur={commitTitle} />
+		</LinkedField>
 	</div>
 	<!-- Outside the scroll area, which would clip the pickers' popovers. -->
 	<div class="flex flex-wrap gap-1.5 px-4 pt-3">
@@ -158,14 +161,16 @@
 		<LabelPicker labelIds={draft.labelIds} onchange={(labelIds) => update({ labelIds })} />
 	</div>
 	<div class="flex-1 space-y-4 overflow-y-auto overscroll-contain px-4 pt-4 pb-24 min-h-0">
-		<textarea
-			aria-label="Notes"
-			placeholder="Notes"
-			rows="4"
-			class="w-full resize-none rounded-2xl border border-transparent bg-ink/[0.04] px-3.5 py-2.5 text-[14px] outline-none touch:text-base transition-colors placeholder:text-faint focus:border-ink/15 focus:bg-surface/60"
-			value={task.notes}
-			oninput={(e) => update({ notes: e.currentTarget.value })}
-		></textarea>
+		<LinkedField text={task.notes} class="border border-transparent px-3.5 py-2.5 text-[14px] whitespace-pre-wrap [overflow-wrap:anywhere] touch:text-base">
+			<textarea
+				aria-label="Notes"
+				placeholder="Notes"
+				rows="4"
+				class="block w-full resize-none rounded-2xl border border-transparent bg-ink/[0.04] px-3.5 py-2.5 text-[14px] outline-none touch:text-base transition-colors placeholder:text-faint focus:border-ink/15 focus:bg-surface/60"
+				value={task.notes}
+				oninput={(e) => update({ notes: e.currentTarget.value })}
+			></textarea>
+		</LinkedField>
 		{#if parseMemoSource(task.sourceKey)}
 			<!-- A browser cannot open the phone app, so the line is not a link. -->
 			<p class="flex items-center gap-1.5 text-[13px] text-muted" title="Opens on iPhone">

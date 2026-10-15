@@ -5,10 +5,11 @@ Subtasks let Stefan break a task into steps, such as `Pack for trip` with `Passp
 ## Sub-features
 
 - `subtasks-add` adds a subtask from the `Add subtask` field in task details, parsing dates, repeats, priority, reminders, and `@` labels like quick add.
+- `subtasks-quick-add` adds subtasks while capturing the parent in quick add (see `add-subtasks` in `add-task.md`).
 - `subtasks-progress` shows a progress ring and `done/total` on the parent row and on nested subtask rows.
 - `subtasks-check` toggles a subtask from its checkbox in the parent's details, with no toast.
 - `subtasks-reorder` drags a subtask by its handle, by mouse or touch, or moves it with the arrow keys on the focused handle.
-- `subtasks-nest` opens a subtask's own details in the same sheet, where it can have subtasks, with a back chip to the parent.
+- `subtasks-nest` opens a subtask's own details in the same sheet, where it can have subtasks, with a back chip to the parent. On iOS an edge swipe from the left also goes back, including for a subtask opened straight from Inbox or search.
 - `subtasks-complete-parent` completes every open subtask under a completed task, with undo restoring each one as it was.
 - `subtasks-recurring` reopens every subtask when a recurring parent moves to its next occurrence.
 - `subtasks-search` finds a subtask in search by its own text, names its parent, and opens it with the back chip.
@@ -20,6 +21,7 @@ Subtasks let Stefan break a task into steps, such as `Pack for trip` with `Passp
 - Web: in task details, tap a subtask's title to open it, and tap the back chip to return.
 - Web: drag the six-dot handle at the end of a subtask row, or focus it and press up or down.
 - Web: check off the parent from any list or with `Complete` in its details.
+- Web and iOS: in quick add, tap the checklist chip and type subtask lines before saving.
 - iOS: open a task and type in `Add subtask`, then press return. Tap a subtask to push its details, and drag the three-line handle to reorder.
 
 ## Driving it with control-ui and XCUITest

@@ -489,24 +489,26 @@ public enum QuickAdd {
 
     // MARK: Resolving
 
-    /// A typed date wins, moved to the first listed weekday on or after it. A time alone lands on the date set outside
-    /// the text, or else on the first future occurrence: today, or tomorrow once that time has passed. A repeat without
-    /// a typed date starts on its first weekday, the date set outside the text, or today, and moves to the next
-    /// occurrence when its time has passed today.
+    /// A typed date wins, moved to the first listed weekday on or after it, even when that leaves it in the past.
+    /// Otherwise a time never lands in the past. A time alone lands on the date set outside the text, or on the first
+    /// future occurrence: today, or tomorrow once that time has passed. A repeat without a typed date starts on its
+    /// first weekday, the date set outside the text, or today, and moves to the next occurrence when its time has passed.
     static func resolveDue(_ phrase: DuePhrase?, _ repeat: RecurrencePhrase?, _ outside: Due?, _ ctx: Context) -> Due? {
         if let date = phrase?.date {
             return Due(date: `repeat`.map { Dates.alignToRecurrence(date, $0.recurrence) } ?? date, time: phrase?.time)
         }
-        let time = phrase?.time
-        let passed = { (date: DateKey) in time.map { date == ctx.today && $0 < ctx.time } ?? false }
-        if let `repeat` {
-            if `repeat`.anchor == nil, let outside { return Due(date: outside.date, time: time ?? outside.time) }
-            let date = `repeat`.anchor ?? ctx.today
-            return Due(date: passed(date) ? Dates.stepRecurrence(date, `repeat`.recurrence) : date, time: time)
+        let time = phrase?.time ?? (`repeat` != nil && `repeat`?.anchor == nil ? outside?.time : nil)
+        let passed = { (date: DateKey) in
+            time.map { date < ctx.today || (date == ctx.today && $0 < ctx.time) } ?? false
         }
-        guard let time else { return nil }
-        if let outside { return Due(date: outside.date, time: time) }
-        return Due(date: passed(ctx.today) ? Dates.addDays(ctx.today, 1) : ctx.today, time: time)
+        if let `repeat` {
+            let start = `repeat`.anchor ?? outside?.date ?? ctx.today
+            let date = passed(start)
+                ? (passed(ctx.today) ? Dates.stepRecurrence(ctx.today, `repeat`.recurrence) : ctx.today)
+                : start
+            return Due(date: date, time: time)
+        }
+        return time.map { Dates.dueAtTime(outside, $0, today: ctx.today, now: ctx.time) }
     }
 
     static func resolveReminder(_ draft: ReminderDraft, _ due: Due?, _ ctx: Context) -> Reminder {
@@ -536,11 +538,14 @@ public enum QuickAdd {
         let source = NSString(string: input)
         // Every phrase a rule recognizes is masked out of both views, including superseded ones, so a
         // later rule never reads part of it as something else.
-        var raw = input
-        var guarded = maskGuarded(input, spoken: options.spoken)
         let claim = { (text: String, range: NSRange) in
             NSString(string: text).replacingCharacters(in: range, with: String(repeating: "_", count: range.length))
         }
+        // A link is never a phrase, so `5m`, `#top`, or `@user` inside a URL stays part of it.
+        var raw = Links.linkify(input).reduce(input) { text, segment in
+            segment.href == nil ? text : claim(text, NSRange(location: segment.start, length: segment.end - segment.start))
+        }
+        var guarded = maskGuarded(raw, spoken: options.spoken)
 
         var tokens: [Token] = []
         var matches: [Match] = []

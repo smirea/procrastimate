@@ -50,6 +50,14 @@ public enum Dates {
 
     public static func toTimeOfDay(hours: Int, minutes: Int) -> TimeOfDay { "\(pad(hours)):\(pad(minutes))" }
 
+    /// A time set without a day of its own never lands in the past. It keeps a date still ahead, and otherwise
+    /// lands on the next time that clock time comes around: today, or tomorrow once it has passed.
+    public static func dueAtTime(_ due: Due?, _ time: TimeOfDay, today: DateKey, now: TimeOfDay) -> Due {
+        let date = due?.date ?? today
+        if date > today || (date == today && time >= now) { return Due(date: date, time: time) }
+        return Due(date: time < now ? addDays(today, 1) : today, time: time)
+    }
+
     public static func addDays(_ key: DateKey, _ days: Int) -> DateKey { Self.key(days: Self.days(key) + days) }
 
     /// Clamps to the last day of a shorter month, so Jan 31 plus one month is Feb 28.

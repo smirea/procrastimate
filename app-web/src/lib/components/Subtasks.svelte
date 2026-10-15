@@ -6,12 +6,13 @@
 	import Plus from 'phosphor-svelte/lib/Plus';
 	import CalendarBlank from 'phosphor-svelte/lib/CalendarBlank';
 	import DotsSixVertical from 'phosphor-svelte/lib/DotsSixVertical';
-	import { parseQuickAdd } from 'shared/quick-add.ts';
 	import type { Task } from 'shared/task.ts';
 	import Checkbox from './Checkbox.svelte';
+	import LinkedText from './LinkedText.svelte';
 	import SmartInput from './SmartInput.svelte';
 	import SubtaskProgress from './SubtaskProgress.svelte';
 	import { store } from '../store.svelte.ts';
+	import { parseSubtask, subtaskTask } from '../subtask-draft.ts';
 	import { clock, sheets, motion } from '../ui.svelte.ts';
 	import { dueTone, formatDue } from 'shared/format.ts';
 	import { PRIORITIES } from '../priorities.ts';
@@ -21,12 +22,12 @@
 	const progress = $derived(store.progress(task.id));
 
 	let draft = $state('');
-	const parsed = $derived(parseQuickAdd(draft, { now: new Date(clock.now), projects: [], labels: store.labels, due: null }));
+	const parsed = $derived(parseSubtask(draft));
 
 	function add() {
-		if (!parsed.title) return;
-		const { title, due, recurrence, priority, reminders, labelIds } = parsed;
-		store.addTask({ title, due, recurrence, priority, reminders, labelIds, projectId: null }, task.id);
+		const subtask = subtaskTask(parsed);
+		if (!subtask) return;
+		store.addTask(subtask, task.id);
 		draft = '';
 	}
 
@@ -127,19 +128,22 @@
 				out:slide={motion({ duration: 180, easing: cubicOut })}
 			>
 				<Checkbox checked={done} tone={PRIORITIES[child.priority].tone} label={`Complete ${child.title}`} onclick={() => toggle(child)} />
-				<button type="button" class="min-w-0 flex-1 py-2 text-left touch:min-h-11 touch:py-2.5" onclick={() => sheets.openTask(child.id, 'forward')}>
-					<div class="text-[14px] leading-5 [overflow-wrap:anywhere] transition-colors" class:done>{child.title}</div>
-					{#if (child.due && !done) || childProgress}
-						<div class="mt-0.5 flex items-center gap-3 text-[12px] leading-4 text-muted">
-							{#if child.due && !done}
-								<span class="flex items-center gap-1" style={`color: var(--tone-${dueTone(child.due, clock.today)})`}>
-									<CalendarBlank size={12} />{formatDue(child.due, clock.today)}
-								</span>
-							{/if}
-							{#if childProgress}<SubtaskProgress progress={childProgress} />{/if}
-						</div>
-					{/if}
-				</button>
+				<div class="relative min-w-0 flex-1 py-2 touch:min-h-11 touch:py-2.5">
+					<button type="button" class="absolute inset-0 rounded-xl" aria-label={child.title} onclick={() => sheets.openTask(child.id, 'forward')}></button>
+					<div class="pointer-events-none relative">
+						<div class="text-[14px] leading-5 [overflow-wrap:anywhere] transition-colors" class:done><LinkedText text={child.title} /></div>
+						{#if (child.due && !done) || childProgress}
+							<div class="mt-0.5 flex items-center gap-3 text-[12px] leading-4 text-muted">
+								{#if child.due && !done}
+									<span class="flex items-center gap-1" style={`color: var(--tone-${dueTone(child.due, clock.today)})`}>
+										<CalendarBlank size={12} />{formatDue(child.due, clock.today)}
+									</span>
+								{/if}
+								{#if childProgress}<SubtaskProgress progress={childProgress} />{/if}
+							</div>
+						{/if}
+					</div>
+				</div>
 				{#if children.length > 1}
 					<button
 						type="button"

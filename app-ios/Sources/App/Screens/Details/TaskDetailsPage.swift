@@ -24,6 +24,7 @@ private struct TaskDetailsForm: View {
     @State private var title: String
     @FocusState private var titleFocused: Bool
     @State private var keyboardShown = false
+    @FocusState private var notesFocused: Bool
 
     init(task: TaskItem, navigation: DetailsNavigation) {
         self.task = task
@@ -40,14 +41,17 @@ private struct TaskDetailsForm: View {
         let draft = TaskDetails.draft(task, title: title, parsed)
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                SmartInput(
-                    text: $title,
-                    tokens: parsed.tokens,
-                    label: "Title",
-                    suggestProjects: parent == nil,
-                    focused: $titleFocused,
-                    onSubmit: { commitTitle() }
-                )
+                // The insets are the text editor's own, so the linked text sits exactly where the raw text will.
+                LinkedField(text: title, focused: $titleFocused, inset: EdgeInsets(top: 8, leading: 5, bottom: 8, trailing: 5)) {
+                    SmartInput(
+                        text: $title,
+                        tokens: parsed.tokens,
+                        label: "Title",
+                        suggestProjects: parent == nil,
+                        focused: $titleFocused,
+                        onSubmit: { commitTitle() }
+                    )
+                }
                 .font(.title3.weight(.semibold))
 
                 FlowLayout(spacing: 6) {
@@ -75,12 +79,15 @@ private struct TaskDetailsForm: View {
                 }
                 .animation(.snappy(duration: 0.16), value: draft)
 
-                TextField(
-                    "Notes",
-                    text: Binding(get: { task.notes }, set: { store.updateTask(task.id, TaskPatch(notes: $0)) }),
-                    axis: .vertical
-                )
-                .lineLimit(3...)
+                LinkedField(text: task.notes, focused: $notesFocused) {
+                    TextField(
+                        "Notes",
+                        text: Binding(get: { task.notes }, set: { store.updateTask(task.id, TaskPatch(notes: $0)) }),
+                        axis: .vertical
+                    )
+                    .lineLimit(3...)
+                    .focused($notesFocused)
+                }
                 .font(.subheadline)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)

@@ -23,6 +23,16 @@ export function fromDateKey(key: DateKey, time: TimeOfDay | null = null): Date {
 	return new Date(y, m - 1, d, h, min);
 }
 
+/**
+ * A time set without a day of its own never lands in the past. It keeps a date still ahead, and otherwise
+ * lands on the next time that clock time comes around: today, or tomorrow once it has passed.
+ */
+export function dueAtTime(due: Due | null, time: TimeOfDay, today: DateKey, now: TimeOfDay): Due {
+	const date = due?.date ?? today;
+	if (date > today || (date === today && time >= now)) return { date, time };
+	return { date: time < now ? addDays(today, 1) : today, time };
+}
+
 export function addDays(key: DateKey, days: number): DateKey {
 	const date = fromDateKey(key);
 	date.setDate(date.getDate() + days);

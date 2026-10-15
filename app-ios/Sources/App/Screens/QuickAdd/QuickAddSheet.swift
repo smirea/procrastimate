@@ -36,7 +36,11 @@ private struct QuickAddForm: View {
     @State private var speechWrites = 0
     @State private var spoken = Spoken.none
     @State private var liveParse: Task<Void, Never>?
+    @State private var subtasks: [DraftSubtask] = []
+    @State private var subtaskText = ""
+    @State private var subtasksOpen = false
     @FocusState private var focused: Bool
+    @FocusState private var subtaskFocused: Bool
 
     init(defaults: QuickAddDefaults, today: DateKey) {
         _draft = State(initialValue: QuickAddDraft(defaults: defaults, today: today))
@@ -64,6 +68,10 @@ private struct QuickAddForm: View {
                 if showMic { micButton }
             }
             }
+            if spoken == .none, subtasksOpen || !subtasks.isEmpty {
+                QuickAddSubtasks(subtasks: $subtasks, text: $subtaskText, focused: $subtaskFocused) { submit() }
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+            }
             if !spoken.tasks.isEmpty {
                 SpokenTaskList(spoken: spoken) { removeSpoken($0, $1) }
             }
@@ -77,6 +85,7 @@ private struct QuickAddForm: View {
                     chips(parsed, resolved)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
+                subtaskChip
                 PriorityChip(priority: resolved.priority, iconOnly: true) { priority in
                     draft.clearToken(.priority, in: parsed)
                     draft.picked.priority = priority
@@ -105,6 +114,7 @@ private struct QuickAddForm: View {
             }
         }
         .animation(.snappy(duration: 0.22), value: spoken)
+        .animation(.snappy(duration: 0.2), value: subtasksOpen)
         .padding(.horizontal, 16)
         .padding(.top, 20)
         .padding(.bottom, 8)
@@ -136,6 +146,25 @@ private struct QuickAddForm: View {
             if case .reviewing = spoken { spoken = .none }
             typed = !draft.text.isEmpty
         }
+        .onChange(of: subtaskFocused) {
+            if !subtaskFocused, subtaskText.isEmpty, subtasks.isEmpty { subtasksOpen = false }
+        }
+    }
+
+    private var subtaskChip: some View {
+        Button {
+            subtasksOpen = true
+            subtaskFocused = true
+        } label: {
+            Chip(
+                systemImage: "checklist",
+                text: subtasks.isEmpty ? "" : "\(subtasks.count)",
+                tone: subtasksOpen || !subtasks.isEmpty ? .ink : .muted
+            )
+            .contentShape(.rect.inset(by: -6))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(subtasks.isEmpty ? "Add subtask" : "Add subtask, \(subtasks.count) added")
     }
 
     private var addLabel: String {
@@ -228,8 +257,11 @@ private struct QuickAddForm: View {
         }
         let parsed = draft.parse(now: clock.now, projects: store.projects, labels: store.labels, in: clock.timeZone)
         guard let task = draft.resolve(parsed) else { return }
+        let typing = NewTask(subtask: QuickAdd.parseSubtask(subtaskText, now: clock.now, labels: store.labels, in: clock.timeZone))
+        let children = subtasks.map(\.task) + (typing.map { [$0] } ?? [])
         let added = withAnimation(.snappy) {
             let added = store.addTask(task)
+            for child in children { _ = store.addTask(child, parentId: added.id) }
             if let event {
                 store.updateTask(added.id, TaskPatch(due: .some(nil), recurrence: .some(nil), location: .some(location), event: .some(event)))
             } else if let location {
@@ -403,82 +435,6 @@ struct Chip: View {
         .background(fill.map { $0.opacity(0.18) } ?? Color.ink.opacity(0.06), in: .capsule)
         .contentShape(.capsule)
         .transition(.scale(scale: 0.9).combined(with: .opacity))
-    }
-}
-
-struct DueChip: View {
-    @Environment(\.clock) private var clock
-    let due: Due?
-    let onChange: (Due?) -> Void
-
-    @State private var picking = false
-    @State private var pickingTime = false
-
-    var body: some View {
-        let today = clock.today
-        Menu {
-            ForEach(QuickAddDraft.datePresets(today), id: \.label) { preset in
-                Button(preset.label) { onChange(Due(date: preset.date, time: due?.time)) }
-            }
-            if due != nil {
-                Button("No date", role: .destructive) { onChange(nil) }
-            }
-            Divider()
-            Button("Pick a date", systemImage: "calendar") { picking = true }
-            if let due, due.time != nil {
-                Button("Change time", systemImage: "clock") { pickingTime = true }
-                Button("No time", systemImage: "clock.badge.xmark") { onChange(Due(date: due.date, time: nil)) }
-            } else {
-                Button("Add time", systemImage: "clock") { onChange(Due(date: due?.date ?? today, time: "09:00")) }
-            }
-        } label: {
-            Chip(
-                systemImage: due == nil ? "calendar" : "calendar.circle.fill",
-                text: due.map { Format.formatDue($0, today) } ?? "Date",
-                tone: due.map { Format.dueTone($0, today).color } ?? .muted
-            )
-        }
-        .accessibilityLabel(due.map { "Due \(Format.formatDue($0, today))" } ?? "Set due date")
-        .popover(isPresented: $picking) {
-            DatePicker(
-                "Due date",
-                selection: Binding(
-                    get: { Dates.fromDateKey(due?.date ?? today, in: clock.timeZone) },
-                    set: {
-                        onChange(Due(date: Dates.toDateKey($0, in: clock.timeZone), time: due?.time))
-                        picking = false
-                    }
-                ),
-                displayedComponents: .date
-            )
-            .datePickerStyle(.graphical)
-            .environment(\.timeZone, clock.timeZone)
-            .environment(\.calendar, clock.calendar)
-            .padding()
-            .frame(width: 340)
-            .presentationCompactAdaptation(.popover)
-        }
-        .popover(isPresented: $pickingTime) {
-            DatePicker(
-                "Due time",
-                selection: Binding(
-                    get: { Dates.fromDateKey(due?.date ?? today, due?.time, in: clock.timeZone) },
-                    set: { date in
-                        let parts = clock.calendar.dateComponents([.hour, .minute], from: date)
-                        onChange(Due(
-                            date: due?.date ?? today,
-                            time: Dates.toTimeOfDay(hours: parts.hour ?? 9, minutes: parts.minute ?? 0)
-                        ))
-                    }
-                ),
-                displayedComponents: .hourAndMinute
-            )
-            .datePickerStyle(.wheel)
-            .labelsHidden()
-            .environment(\.timeZone, clock.timeZone)
-            .padding()
-            .presentationCompactAdaptation(.popover)
-        }
     }
 }
 

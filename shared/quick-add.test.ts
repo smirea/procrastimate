@@ -353,6 +353,25 @@ describe('a time with no day', () => {
 		expect(parsed.due).toEqual({ date: '2026-10-16', time: '09:00' });
 	});
 
+	test.each([
+		['2026-10-14', '9am', '2026-10-15', '09:00'],
+		['2026-10-14', '11am', '2026-10-14', '11:00'],
+		['2026-10-10', '9am', '2026-10-15', '09:00'],
+		['2026-10-10', '11am', '2026-10-14', '11:00'],
+	])('a time alone on the outside date %s never lands in the past: %s', (outside, phrase, date, time) => {
+		expect<unknown>(parse(`Call mom ${phrase}`, { due: { date: outside, time: null } }).due).toEqual({ date, time });
+	});
+
+	test('a typed day keeps a past time even with a date set outside the text', () => {
+		const parsed = parse('Call mom today 9am', { due: { date: '2026-10-14', time: null } });
+		expect(parsed.due).toEqual({ date: '2026-10-14', time: '09:00' });
+	});
+
+	test('a repeat on the outside date moves past a time that has passed', () => {
+		const parsed = parse('Water plants every day 9am', { due: { date: '2026-10-14', time: null } });
+		expect(parsed.due).toEqual({ date: '2026-10-15', time: '09:00' });
+	});
+
 	test('an absolute reminder time that has passed lands tomorrow', () => {
 		const parsed = parse('Water plants remind me at 9am');
 		expect(parsed.reminders).toEqual([{ kind: 'at', date: '2026-10-15', time: '09:00' }]);
@@ -592,6 +611,11 @@ describe('ordinary words stay in the title', () => {
 			'I sat and waited',
 			'Sat and sun bathed',
 			'Plan mon wed fri rota',
+			'Read https://example.com/5m#Home',
+			'Watch https://youtu.be/x?t=10m',
+			'See https://x.com/@calls/status/1',
+			'Check www.site.com/docs/monday-1pm',
+			'Read [p1 notes](https://blog.dev/p1/every-day)',
 		].map(input => [input] as const),
 	)('%s', input => {
 		const parsed = parse(input);
@@ -611,6 +635,13 @@ describe('ordinary words stay in the title', () => {
 		const parsed = parse('Water plants daily');
 		expect(parsed.title).toBe('Water plants');
 		expect(parsed.recurrence).toEqual({ interval: 1, unit: 'day' });
+	});
+
+	test('phrases around a link still parse', () => {
+		const parsed = parse('Read https://a.com/5pm #Home fri 9am');
+		expect(parsed.title).toBe('Read https://a.com/5pm');
+		expect(parsed.due).toEqual({ date: '2026-10-16', time: '09:00' });
+		expect(parsed.projectId).toBe('p-home');
 	});
 
 	test('months never read as minutes', () => {

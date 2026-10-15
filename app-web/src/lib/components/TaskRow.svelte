@@ -15,6 +15,7 @@
 	import Popover from './Popover.svelte';
 	import type { Task } from 'shared/task.ts';
 	import Checkbox from './Checkbox.svelte';
+	import LinkedText from './LinkedText.svelte';
 	import SubtaskProgress from './SubtaskProgress.svelte';
 	import { store } from '../store.svelte.ts';
 	import { clock, reveal, sheets, motion } from '../ui.svelte.ts';
@@ -64,80 +65,84 @@
 	data-task={task.title}
 >
 	<Checkbox checked={checking} tone={PRIORITIES[task.priority].tone} label={`Complete ${task.title}`} class="mt-3 touch:mt-3.5" onclick={complete} />
-	<button type="button" class="min-w-0 flex-1 py-2.5 text-left touch:min-h-11 touch:py-3" onclick={() => sheets.openTask(task.id)}>
-		<div class="truncate text-[14px] leading-5 text-ink transition-colors" class:done={checking}>{task.title}</div>
-		{#if task.notes}
-			<div class="truncate text-[12px] leading-4 text-muted">{task.notes}</div>
-		{/if}
-		{#if due || task.recurrence || task.reminders.length || task.location || progress || labels.length || parent || fromMemo || (showProject && project)}
-			<div class="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-[12px] leading-4 text-muted">
-				{#if task.event && event && due}
-					<span
-						class="flex min-w-0 items-center gap-1"
-						aria-label={[event.when, `${event.lead}${task.event.series ? ' every' : ''} ${event.title}`].filter(Boolean).join(', ')}
-					>
-						{#if event.when}<span class="shrink-0" style={`color: var(--tone-${dueTone(due, clock.today)})`}>{event.when}</span>{/if}
-						<span class="flex min-w-0 items-center gap-1 text-muted">
-							{#if event.when}<span class="shrink-0">(</span>{/if}
-							{#if task.event.series}<Repeat size={12} weight="bold" class="shrink-0" />{/if}
-							<span class="shrink-0">{event.lead}</span>
-							<CalendarStar size={12} class="shrink-0" />
-							<span class="truncate">{event.title}</span>
-							{#if event.when}<span class="-ml-1 shrink-0">)</span>{/if}
-						</span>
-					</span>
-				{:else if due && !(timeOnly && !due.time)}
-					<span class="flex items-center gap-1" style={`color: var(--tone-${dueTone(due, clock.today)})`}>
-						<CalendarBlank size={12} />
-						{timeOnly && due.time ? formatTime(due.time) : formatDue(due, clock.today)}
-					</span>
-				{/if}
-				{#if task.location}
-					<span class="flex min-w-0 items-center gap-1">
-						<MapPin size={12} class="shrink-0" /><span class="truncate">{formatLocation(task.location)}</span>
-					</span>
-				{/if}
-				{#if task.recurrence}
-					<span class="flex items-center text-[var(--tone-repeat)]" role="img" aria-label={repeatLabel(task.recurrence, due)}>
-						<Repeat size={12} weight="bold" />
-					</span>
-				{/if}
-				{#if progress}
-					<SubtaskProgress {progress} />
-				{/if}
-				{#if task.reminders.length}
-					<span class="flex items-center gap-1" aria-label={`${task.reminders.length} reminders`}>
-						<Bell size={12} />{task.reminders.length}
-					</span>
-				{/if}
-				{#if labels.length}
-					<span class="flex min-w-0 flex-wrap items-center gap-1">
-						{#each labels as label (label.id)}
-							<span class="label-chip" data-label={label.name} transition:scale={motion({ start: 0.6, duration: 180, easing: cubicOut })}>
-								<Tag size={10} weight="fill" class="shrink-0 text-[var(--tone-label)]" />
-								<span class="truncate">{label.name}</span>
+	<!-- The button sits under the text rather than around it, since HTML forbids a link inside a button. -->
+	<div class="relative min-w-0 flex-1 py-2.5 touch:min-h-11 touch:py-3">
+		<button type="button" class="absolute inset-0 rounded-xl" aria-label={task.title} onclick={() => sheets.openTask(task.id)}></button>
+		<div class="pointer-events-none relative">
+			<div class="truncate text-[14px] leading-5 text-ink transition-colors" class:done={checking}><LinkedText text={task.title} /></div>
+			{#if task.notes}
+				<div class="truncate text-[12px] leading-4 text-muted"><LinkedText text={task.notes} /></div>
+			{/if}
+			{#if due || task.recurrence || task.reminders.length || task.location || progress || labels.length || parent || fromMemo || (showProject && project)}
+				<div class="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-[12px] leading-4 text-muted">
+					{#if task.event && event && due}
+						<span
+							class="flex min-w-0 items-center gap-1"
+							aria-label={[event.when, `${event.lead}${task.event.series ? ' every' : ''} ${event.title}`].filter(Boolean).join(', ')}
+						>
+							{#if event.when}<span class="shrink-0" style={`color: var(--tone-${dueTone(due, clock.today)})`}>{event.when}</span>{/if}
+							<span class="flex min-w-0 items-center gap-1 text-muted">
+								{#if event.when}<span class="shrink-0">(</span>{/if}
+								{#if task.event.series}<Repeat size={12} weight="bold" class="shrink-0" />{/if}
+								<span class="shrink-0">{event.lead}</span>
+								<CalendarStar size={12} class="shrink-0" />
+								<span class="truncate">{event.title}</span>
+								{#if event.when}<span class="-ml-1 shrink-0">)</span>{/if}
 							</span>
-						{/each}
-					</span>
-				{/if}
-				{#if fromMemo}
-					<span class="flex items-center" role="img" aria-label="From Notouroboros">
-						<Waveform size={12} />
-					</span>
-				{/if}
-				{#if parent}
-					<span class="flex min-w-0 items-center gap-1" aria-label={`Subtask of ${parent.title}`}>
-						<ArrowElbowDownRight size={12} class="shrink-0" /><span class="truncate">{parent.title}</span>
-					</span>
-				{/if}
-				{#if showProject}
-					<span class="ml-auto flex shrink-0 items-center gap-1">
-						{#if project}<Hash size={12} />{project.name}{:else}<Tray size={12} />Inbox{/if}
-					</span>
-				{/if}
-			</div>
-		{/if}
-	</button>
+						</span>
+					{:else if due && !(timeOnly && !due.time)}
+						<span class="flex items-center gap-1" style={`color: var(--tone-${dueTone(due, clock.today)})`}>
+							<CalendarBlank size={12} />
+							{timeOnly && due.time ? formatTime(due.time) : formatDue(due, clock.today)}
+						</span>
+					{/if}
+					{#if task.location}
+						<span class="flex min-w-0 items-center gap-1">
+							<MapPin size={12} class="shrink-0" /><span class="truncate">{formatLocation(task.location)}</span>
+						</span>
+					{/if}
+					{#if task.recurrence}
+						<span class="flex items-center text-[var(--tone-repeat)]" role="img" aria-label={repeatLabel(task.recurrence, due)}>
+							<Repeat size={12} weight="bold" />
+						</span>
+					{/if}
+					{#if progress}
+						<SubtaskProgress {progress} />
+					{/if}
+					{#if task.reminders.length}
+						<span class="flex items-center gap-1" aria-label={`${task.reminders.length} reminders`}>
+							<Bell size={12} />{task.reminders.length}
+						</span>
+					{/if}
+					{#if labels.length}
+						<span class="flex min-w-0 flex-wrap items-center gap-1">
+							{#each labels as label (label.id)}
+								<span class="label-chip" data-label={label.name} transition:scale={motion({ start: 0.6, duration: 180, easing: cubicOut })}>
+									<Tag size={10} weight="fill" class="shrink-0 text-[var(--tone-label)]" />
+									<span class="truncate">{label.name}</span>
+								</span>
+							{/each}
+						</span>
+					{/if}
+					{#if fromMemo}
+						<span class="flex items-center" role="img" aria-label="From Notouroboros">
+							<Waveform size={12} />
+						</span>
+					{/if}
+					{#if parent}
+						<span class="flex min-w-0 items-center gap-1" aria-label={`Subtask of ${parent.title}`}>
+							<ArrowElbowDownRight size={12} class="shrink-0" /><span class="truncate">{parent.title}</span>
+						</span>
+					{/if}
+					{#if showProject}
+						<span class="ml-auto flex shrink-0 items-center gap-1">
+							{#if project}<Hash size={12} />{project.name}{:else}<Tray size={12} />Inbox{/if}
+						</span>
+					{/if}
+				</div>
+			{/if}
+		</div>
+	</div>
 	{#if showAdded}
 		<span class="shrink-0 pt-3 text-[12px] leading-5 text-faint touch:pt-3.5">{addedAgo(toDateKey(new Date(task.createdAt)), clock.today)}</span>
 	{/if}

@@ -3439,6 +3439,49 @@ extension API {
         public var id: String { rawValue }
     }
 
+    /// A run of displayed text, a link when `href` is set. `start` and `end` span the source, including a Markdown link’s brackets and URL. `marks` are the highlight ranges within `text`.
+    public struct TextSegment: Codable, Hashable, Sendable {
+        public var text: String
+        public var href: String?
+        public var start: Int
+        public var end: Int
+        public var marks: [Range<Int>]
+
+        public init(text: String, href: String? = nil, start: Int, end: Int, marks: [Range<Int>] = []) {
+            self.text = text
+            self.href = href
+            self.start = start
+            self.end = end
+            self.marks = marks
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case text = "text"
+            case href = "href"
+            case start = "start"
+            case end = "end"
+            case marks = "marks"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            text = try container.decode(String.self, forKey: .text)
+            href = try container.decode(String?.self, forKey: .href)
+            start = try container.decode(Int.self, forKey: .start)
+            end = try container.decode(Int.self, forKey: .end)
+            marks = try container.decode([Range<Int>].self, forKey: .marks)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.text, forKey: .text)
+            try container.encode(self.href, forKey: .href)
+            try container.encode(self.start, forKey: .start)
+            try container.encode(self.end, forKey: .end)
+            try container.encode(self.marks, forKey: .marks)
+        }
+    }
+
     public enum ThemeChoice: String, Codable, Hashable, Sendable, CaseIterable, Identifiable {
         case system = "system"
         case light = "light"
