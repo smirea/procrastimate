@@ -35,14 +35,32 @@ struct TaskPeople: View {
                         .textCase(.uppercase)
                         .foregroundStyle(.muted)
                         .accessibilityAddTraits(.isHeader)
-                    ForEach(Array(entries.enumerated()), id: \.offset) { _, entry in
-                        ActivityRow(entry: entry, now: clock.now)
+                    ForEach(days, id: \.key) { day in
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(Format.relativeDay(day.key, clock.today) ?? Format.dayHeading(day.key, clock.today))
+                                .font(.caption.weight(.medium))
+                                .foregroundStyle(.faint)
+                                .accessibilityAddTraits(.isHeader)
+                            ForEach(Array(day.entries.enumerated()), id: \.offset) { _, entry in
+                                ActivityRow(entry: entry, zone: clock.timeZone)
+                            }
+                        }
                     }
                 }
             }
         }
         .padding(.horizontal, 4)
         .task(id: task.id) { await load() }
+    }
+
+    /// Newest day first, each day's entries newest first, Todoist history style.
+    private var days: [(key: DateKey, entries: [API.ActivityEntry])] {
+        var groups: [(key: DateKey, entries: [API.ActivityEntry])] = []
+        for entry in entries {
+            let key = Dates.toDateKey(Date(epochMilliseconds: entry.at), in: clock.timeZone)
+            if groups.last?.key == key { groups[groups.count - 1].entries.append(entry) } else { groups.append((key, [entry])) }
+        }
+        return groups
     }
 
     private func byline(_ label: String, _ person: Person) -> some View {
@@ -70,30 +88,26 @@ struct TaskPeople: View {
 
 private struct ActivityRow: View {
     let entry: API.ActivityEntry
-    let now: Date
+    let zone: TimeZone
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 6) {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
             PersonName(person: entry.actor, you: entry.actor.id == Session.userID)
                 .fontWeight(.medium)
-            Text(summary).foregroundStyle(.muted).lineLimit(1)
-            Spacer(minLength: 8)
-            Text(ago).font(.caption).foregroundStyle(.faint)
+                .fixedSize()
+            Text(entry.summary)
+                .foregroundStyle(.muted)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            Text(time).font(.caption).monospacedDigit().foregroundStyle(.faint)
         }
         .font(.subheadline)
         .accessibilityElement(children: .combine)
     }
 
-    private var summary: String {
-        guard entry.action == .edited, !entry.fields.isEmpty else { return "\(entry.action.rawValue) it" }
-        return "changed " + entry.fields.map { Self.fieldNames[$0] ?? $0 }.joined(separator: ", ")
+    private var time: String {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = zone
+        let parts = calendar.dateComponents([.hour, .minute], from: Date(epochMilliseconds: entry.at))
+        return Format.formatTime(String(format: "%02d:%02d", parts.hour ?? 0, parts.minute ?? 0))
     }
-
-    private var ago: String {
-        let at = Date(timeIntervalSince1970: Double(entry.at) / 1000)
-        guard abs(at.timeIntervalSince(now)) >= 60 else { return "just now" }
-        return at.formatted(.relative(presentation: .numeric, unitsStyle: .abbreviated))
-    }
-
-    private static let fieldNames = ["projectId": "project", "labelIds": "labels", "parentId": "parent"]
 }

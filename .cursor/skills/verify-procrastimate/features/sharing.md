@@ -10,7 +10,7 @@ The owner shares a project, a label, or a task with another account, to edit or 
 - `guest-edit` lets a guest with `Can edit` add, edit, complete, and delete tasks in what was shared. A `Can view` guest gets no checkbox, editable title, delete, or add.
 - `pickers-stay-in-space` lists only the shared space's projects and labels on a shared task.
 - `authorship` shows `Created by` and `Completed by` in task details, offline too.
-- `activity` lists each change to a task with who and when, when online. It shows only when someone other than you touched the task.
+- `activity` lists each change to a task with who, what, and when, when online, grouped by day newest first. One actor's edits less than five minutes apart are one row naming each field, such as `You changed due to Oct 20 and edited notes`. It shows only when someone other than you touched the task.
 - `public-link` opens `/s/<token>` read only for a signed-out visitor. A stopped link shows nothing. On an iPhone with the app installed, the link opens the app.
 - `ai-accounts` creates an AI account by name, generates a token shown once with `Copy`, and deletes the account. People that are AI accounts carry an `AI` badge everywhere.
 - `agent-docs` serves public Markdown at `/api/docs` (and `/llms.txt` pointing to it) on how an agent gets a token, and, with a token, `/api/docs/agent` and `/api/docs/openapi` covering exactly the routes it may call. `Copy prompt for your AI` beside a new token copies the token and where the guide is.
@@ -33,6 +33,6 @@ The owner shares a project, a label, or a task with another account, to edit or 
 ## Gotchas
 
 - A share needs its target on the server, so the share sheet uploads unsent edits first.
-- The e2e clock is pinned to October 14 while the server uses real time, so activity times read `tomorrow` in the tests.
+- The e2e clock is pinned to October 14 while the server uses real time, so activity rows can sit under a later day heading than the pinned today in the tests.
 - An AI token works only on sync, view, the task commands, and activity. Shares, tokens, AI accounts, and push answer `FORBIDDEN`.
 - Revoking a share drops the guest's unsent edits to that space.

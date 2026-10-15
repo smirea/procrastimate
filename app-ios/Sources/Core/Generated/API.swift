@@ -112,25 +112,25 @@ extension API {
         public var id: String { rawValue }
     }
 
-    /// One change to a task, read from the space’s log.
+    /// One change to a task, or one run of quick edits by the same actor, read from the space’s log.
     public struct ActivityEntry: Codable, Hashable, Sendable {
         public var at: Int
         public var actor: Person
         public var action: ActivityAction
-        public var fields: [String]
+        public var summary: String
 
-        public init(at: Int, actor: Person, action: ActivityAction, fields: [String] = []) {
+        public init(at: Int, actor: Person, action: ActivityAction, summary: String) {
             self.at = at
             self.actor = actor
             self.action = action
-            self.fields = fields
+            self.summary = summary
         }
 
         enum CodingKeys: String, CodingKey {
             case at = "at"
             case actor = "actor"
             case action = "action"
-            case fields = "fields"
+            case summary = "summary"
         }
 
         public init(from decoder: Decoder) throws {
@@ -138,7 +138,7 @@ extension API {
             at = try container.decode(Int.self, forKey: .at)
             actor = try container.decode(Person.self, forKey: .actor)
             action = try container.decode(ActivityAction.self, forKey: .action)
-            fields = try container.decode([String].self, forKey: .fields)
+            summary = try container.decode(String.self, forKey: .summary)
         }
 
         public func encode(to encoder: Encoder) throws {
@@ -146,7 +146,7 @@ extension API {
             try container.encode(self.at, forKey: .at)
             try container.encode(self.actor, forKey: .actor)
             try container.encode(self.action, forKey: .action)
-            try container.encode(self.fields, forKey: .fields)
+            try container.encode(self.summary, forKey: .summary)
         }
     }
 

@@ -3,7 +3,9 @@
 	import { fly, slide } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import type { ActivityEntry } from 'shared/sharing.ts';
-	import type { Task } from 'shared/task.ts';
+	import { dayHeading, formatTime, relativeDay } from 'shared/format.ts';
+	import { toDateKey, type Task } from 'shared/task.ts';
+	import type { DateKey, TimeOfDay } from 'shared/values.ts';
 	import PersonName from './PersonName.svelte';
 	import { api } from '../api.ts';
 	import type { Home } from '../spaces.ts';
@@ -24,30 +26,23 @@
 			entries.some((e) => e.actor.id !== session.userId),
 	);
 
-	const ACTIONS: Record<ActivityEntry['action'], string> = {
-		created: 'created it',
-		edited: 'edited it',
-		completed: 'completed it',
-		reopened: 'reopened it',
-		deleted: 'deleted it',
-		restored: 'restored it',
-	};
+	/** Newest day first, each day's entries newest first, Todoist history style. */
+	const days = $derived.by(() => {
+		const groups: { key: DateKey; entries: ActivityEntry[] }[] = [];
+		for (const entry of entries) {
+			const key = toDateKey(new Date(entry.at));
+			const last = groups.at(-1);
+			if (last?.key === key) last.entries.push(entry);
+			else groups.push({ key, entries: [entry] });
+		}
+		return groups;
+	});
 
-	const FIELD_NAMES: Record<string, string> = { projectId: 'project', labelIds: 'labels', parentId: 'parent' };
+	const heading = (key: DateKey) => relativeDay(key, clock.today) ?? dayHeading(key, clock.today);
 
-	function describe(entry: ActivityEntry) {
-		if (entry.action !== 'edited' || entry.fields.length === 0) return ACTIONS[entry.action];
-		return `changed ${entry.fields.map((f) => FIELD_NAMES[f] ?? f).join(', ')}`;
-	}
-
-	const relative = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto', style: 'short' });
-	function ago(at: number) {
-		const minutes = Math.round((at - clock.now) / 60_000);
-		if (Math.abs(minutes) < 1) return 'just now';
-		if (Math.abs(minutes) < 60) return relative.format(minutes, 'minute');
-		const hours = Math.round(minutes / 60);
-		if (Math.abs(hours) < 24) return relative.format(hours, 'hour');
-		return relative.format(Math.round(hours / 24), 'day');
+	function timeOf(at: number) {
+		const date = new Date(at);
+		return formatTime(`${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}` as TimeOfDay);
 	}
 
 	onMount(async () => {
@@ -70,15 +65,24 @@
 		{/if}
 		{#if entries.length}
 			<h2 class="text-[12px] font-medium tracking-wide text-muted uppercase">Activity</h2>
-			<ol class="flex flex-col gap-1.5" aria-label="Activity list">
-				{#each entries as entry, i (i)}
-					<li class="flex items-baseline gap-1.5 text-[13px]" in:fly={motion({ y: 4, duration: 180, delay: Math.min(i, 6) * 30, easing: cubicOut })}>
-						<PersonName person={entry.actor} you class="font-medium" />
-						<span class="min-w-0 flex-1 truncate text-muted">{describe(entry)}</span>
-						<time class="shrink-0 text-[12px] text-faint" datetime={new Date(entry.at).toISOString()}>{ago(entry.at)}</time>
-					</li>
+			<div class="flex flex-col gap-3">
+				{#each days as day, d (day.key)}
+					<section class="flex flex-col gap-1.5" aria-label={heading(day.key)} in:fly={motion({ y: 4, duration: 180, delay: Math.min(d, 4) * 40, easing: cubicOut })}>
+						<h3 class="text-[12px] font-medium text-faint">{heading(day.key)}</h3>
+						<ol class="flex flex-col gap-1.5">
+							{#each day.entries as entry, i (i)}
+								<li class="flex items-baseline gap-2 text-[13px]">
+									<p class="min-w-0 flex-1 text-muted [overflow-wrap:anywhere]">
+										<PersonName person={entry.actor} you class="font-medium text-ink" />
+										{entry.summary}
+									</p>
+									<time class="shrink-0 text-[12px] text-faint tabular-nums" datetime={new Date(entry.at).toISOString()}>{timeOf(entry.at)}</time>
+								</li>
+							{/each}
+						</ol>
+					</section>
 				{/each}
-			</ol>
+			</div>
 		{/if}
 	</section>
 {/if}
