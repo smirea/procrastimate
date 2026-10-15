@@ -3,6 +3,7 @@
 	import ArrowUp from 'phosphor-svelte/lib/ArrowUp';
 	import View from '#lib/components/View.svelte';
 	import TaskList from '#lib/components/TaskList.svelte';
+	import SectionHeading from '#lib/components/SectionHeading.svelte';
 	import { store } from '#lib/store.svelte.ts';
 	import { clock, mobile } from '#lib/ui.svelte.ts';
 	import { noDateTasks } from 'shared/views.ts';
@@ -26,6 +27,11 @@
 	emptyTitle="Inbox zero"
 	emptyHint={mobile.current ? 'Tap + to capture a task.' : 'Press Q to capture a task.'}
 	quickAdd={{ projectId: null, labelId: null, today: false }}
+	markdown={() => ({
+		title: 'No date',
+		projectId: null,
+		sections: [{ heading: null, tasks: view.loose }, ...view.places.map(place => ({ heading: place.name, tasks: place.tasks }))],
+	})}
 >
 	{#snippet actions()}
 		<button type="button" class="btn btn-quiet shrink-0" aria-label={newestFirst ? 'Sorted newest first' : 'Sorted oldest first'} onclick={flip}>
@@ -35,7 +41,7 @@
 	<TaskList tasks={view.loose} label="Tasks without a date" showAdded />
 	{#each view.places as place (place.key)}
 		<section class="mt-6" aria-label={place.name}>
-			<h2 class="mb-1 border-b border-ink/[0.07] px-2 pb-1.5 text-[13px] font-semibold">{place.name}</h2>
+			<SectionHeading heading={place.name} tasks={place.tasks} />
 			<TaskList tasks={place.tasks} label={`Tasks at ${place.name}`} showAdded />
 		</section>
 	{/each}

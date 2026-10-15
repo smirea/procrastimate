@@ -39,6 +39,7 @@
 		emptyTitle="No tasks with this label"
 		emptyHint={`Type @${label.name} in quick add, or pick it in a task's details.`}
 		quickAdd={{ projectId: null, labelId: label.id, today: false }}
+		markdown={() => ({ title: label.name, projectId: null, sections: [{ heading: null, tasks }] })}
 	>
 		{#snippet title()}
 			{#if renaming}
