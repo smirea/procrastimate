@@ -44,7 +44,7 @@ public enum Markdown {
             let trimmed = task.notes.trimmingCharacters(in: .whitespacesAndNewlines)
             let notes = trimmed.isEmpty
                 ? []
-                : trimmed.split(separator: "\n", omittingEmptySubsequences: false).map { note in
+                : trimmed.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline).map { note in
                     String("\(indent)  \(note)".trimmingSuffix(while: \.isWhitespace))
                 }
             return ["\(indent)- [\(task.completedAt == nil ? " " : "x")] \(line(task))"]

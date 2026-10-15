@@ -27,7 +27,7 @@
 										"gone"
 									],
 									"location": null,
-									"notes": "Transfer from savings\n\nRef 42  ",
+									"notes": "Transfer from savings\r\n\nRef 42  ",
 									"order": 0,
 									"parentId": null,
 									"priority": 1,
@@ -80,7 +80,7 @@
 								"gone"
 							],
 							"location": null,
-							"notes": "Transfer from savings\n\nRef 42  ",
+							"notes": "Transfer from savings\r\n\nRef 42  ",
 							"order": 0,
 							"parentId": null,
 							"priority": 1,

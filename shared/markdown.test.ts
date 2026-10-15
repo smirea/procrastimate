@@ -41,7 +41,7 @@ describe('toMarkdown', () => {
 			priority: 1,
 			projectId: 'work',
 			labelIds: ['home', 'deep', 'gone'],
-			notes: 'Transfer from savings\n\nRef 42  ',
+			notes: 'Transfer from savings\r\n\nRef 42  ',
 		});
 		const context = { tasks: [pay], projects, labels, today };
 		expect(toMarkdown({ title: null, projectId: null, sections: [{ heading: null, tasks: [pay] }] }, context)).toBe(
