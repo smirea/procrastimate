@@ -2084,181 +2084,6 @@
 				"additionalProperties": false,
 				"x-table": "settings"
 			},
-			"Spaces": {
-				"type": "object",
-				"properties": {
-					"spaces": {
-						"type": "array",
-						"items": {
-							"$ref": "#/components/schemas/Space"
-						}
-					}
-				},
-				"required": [
-					"spaces"
-				],
-				"additionalProperties": false
-			},
-			"Space": {
-				"type": "object",
-				"properties": {
-					"id": {
-						"type": "string"
-					},
-					"owner": {
-						"$ref": "#/components/schemas/Person"
-					}
-				},
-				"required": [
-					"id",
-					"owner"
-				],
-				"additionalProperties": false,
-				"description": "A space shared with the signed-in user. `id` is its owner’s user id."
-			},
-			"ApiTokens": {
-				"type": "object",
-				"properties": {
-					"tokens": {
-						"type": "array",
-						"items": {
-							"$ref": "#/components/schemas/ApiToken"
-						}
-					}
-				},
-				"required": [
-					"tokens"
-				],
-				"additionalProperties": false
-			},
-			"ApiToken": {
-				"type": "object",
-				"properties": {
-					"id": {
-						"type": "string"
-					},
-					"aiUserId": {
-						"type": "string"
-					},
-					"name": {
-						"type": "string"
-					},
-					"createdAt": {
-						"type": "integer",
-						"minimum": -9007199254740991,
-						"maximum": 9007199254740991
-					},
-					"lastUsedAt": {
-						"anyOf": [
-							{
-								"type": "integer",
-								"minimum": -9007199254740991,
-								"maximum": 9007199254740991
-							},
-							{
-								"type": "null"
-							}
-						]
-					}
-				},
-				"required": [
-					"id",
-					"aiUserId",
-					"name",
-					"createdAt",
-					"lastUsedAt"
-				],
-				"additionalProperties": false,
-				"description": "An AI account’s token. The secret is shown once, when it is made."
-			},
-			"NewApiToken": {
-				"type": "object",
-				"properties": {
-					"aiUserId": {
-						"type": "string"
-					},
-					"name": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"aiUserId",
-					"name"
-				]
-			},
-			"CreatedApiToken": {
-				"type": "object",
-				"properties": {
-					"id": {
-						"type": "string"
-					},
-					"token": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"id",
-					"token"
-				],
-				"additionalProperties": false,
-				"description": "`token` is `pm.<ownerId>.<secret>`, shown only this once."
-			},
-			"Activity": {
-				"type": "object",
-				"properties": {
-					"entries": {
-						"type": "array",
-						"items": {
-							"$ref": "#/components/schemas/ActivityEntry"
-						}
-					}
-				},
-				"required": [
-					"entries"
-				],
-				"additionalProperties": false
-			},
-			"ActivityEntry": {
-				"type": "object",
-				"properties": {
-					"at": {
-						"type": "integer",
-						"minimum": -9007199254740991,
-						"maximum": 9007199254740991
-					},
-					"actor": {
-						"$ref": "#/components/schemas/Person"
-					},
-					"action": {
-						"$ref": "#/components/schemas/ActivityAction"
-					},
-					"fields": {
-						"type": "array",
-						"items": {
-							"type": "string"
-						}
-					}
-				},
-				"required": [
-					"at",
-					"actor",
-					"action",
-					"fields"
-				],
-				"additionalProperties": false,
-				"description": "One change to a task, read from the space’s log."
-			},
-			"ActivityAction": {
-				"type": "string",
-				"enum": [
-					"created",
-					"edited",
-					"completed",
-					"reopened",
-					"deleted",
-					"restored"
-				]
-			},
 			"SpaceView": {
 				"type": "object",
 				"properties": {
@@ -2404,6 +2229,185 @@
 					}
 				},
 				"description": "The editable fields of a task. A missing field is left alone; for nullable fields, `null` clears the value."
+			},
+			"Activity": {
+				"type": "object",
+				"properties": {
+					"entries": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/ActivityEntry"
+						}
+					}
+				},
+				"required": [
+					"entries"
+				],
+				"additionalProperties": false
+			},
+			"ActivityEntry": {
+				"type": "object",
+				"properties": {
+					"at": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991
+					},
+					"actor": {
+						"$ref": "#/components/schemas/Person"
+					},
+					"action": {
+						"$ref": "#/components/schemas/ActivityAction"
+					},
+					"fields": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						}
+					}
+				},
+				"required": [
+					"at",
+					"actor",
+					"action",
+					"fields"
+				],
+				"additionalProperties": false,
+				"description": "One change to a task, read from the space’s log."
+			},
+			"ActivityAction": {
+				"type": "string",
+				"enum": [
+					"created",
+					"edited",
+					"completed",
+					"reopened",
+					"deleted",
+					"restored"
+				]
+			},
+			"Spaces": {
+				"type": "object",
+				"properties": {
+					"spaces": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/Space"
+						}
+					}
+				},
+				"required": [
+					"spaces"
+				],
+				"additionalProperties": false
+			},
+			"Space": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"owner": {
+						"$ref": "#/components/schemas/Person"
+					}
+				},
+				"required": [
+					"id",
+					"owner"
+				],
+				"additionalProperties": false,
+				"description": "A space shared with the signed-in user. `id` is its owner’s user id."
+			},
+			"ApiTokens": {
+				"type": "object",
+				"properties": {
+					"tokens": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/ApiToken"
+						}
+					}
+				},
+				"required": [
+					"tokens"
+				],
+				"additionalProperties": false
+			},
+			"ApiToken": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"aiUserId": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"createdAt": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991
+					},
+					"lastUsedAt": {
+						"anyOf": [
+							{
+								"type": "integer",
+								"minimum": -9007199254740991,
+								"maximum": 9007199254740991
+							},
+							{
+								"type": "null"
+							}
+						]
+					}
+				},
+				"required": [
+					"id",
+					"aiUserId",
+					"name",
+					"createdAt",
+					"lastUsedAt"
+				],
+				"additionalProperties": false,
+				"description": "An AI account’s token. The secret is shown once, when it is made."
+			},
+			"NewApiToken": {
+				"type": "object",
+				"properties": {
+					"aiUserId": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"aiUserId",
+					"name"
+				]
+			},
+			"CreatedApiToken": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"token": {
+						"type": "string"
+					},
+					"prompt": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"id",
+					"token",
+					"prompt"
+				],
+				"additionalProperties": false,
+				"description": "`token` is `pm.<ownerId>.<secret>`, shown only this once, and `prompt` carries it."
 			},
 			"MemoTasks": {
 				"type": "object",
@@ -3614,9 +3618,142 @@
 				}
 			}
 		},
+		"/api/docs": {
+			"get": {
+				"operationId": "docs.start",
+				"summary": "What ProcrastiMate is and how an agent gets in",
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"text/markdown; charset=utf-8": {
+								"schema": {
+									"type": "string",
+									"format": "binary",
+									"contentEncoding": "binary",
+									"contentMediaType": "text/markdown; charset=utf-8"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/docs/agent": {
+			"get": {
+				"operationId": "docs.agent",
+				"summary": "The guide to every route the caller may use",
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"text/markdown; charset=utf-8": {
+								"schema": {
+									"type": "string",
+									"format": "binary",
+									"contentEncoding": "binary",
+									"contentMediaType": "text/markdown; charset=utf-8"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Unauthorized"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/ServiceUnavailable"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/docs/openapi": {
+			"get": {
+				"operationId": "docs.openapi",
+				"summary": "The OpenAPI subset the caller may use",
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json; charset=utf-8": {
+								"schema": {
+									"type": "string",
+									"format": "binary",
+									"contentEncoding": "binary",
+									"contentMediaType": "application/json; charset=utf-8"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Unauthorized"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/ServiceUnavailable"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			}
+		},
 		"/api/sync": {
 			"post": {
 				"operationId": "sync",
+				"summary": "Sync the space",
+				"description": "The apps’ replication protocol. `{ \"cursor\": 0, \"ops\": [] }` answers with the whole visible snapshot. A task op is applied when the task is editable before and after it; project and label ops are acknowledged and dropped.",
 				"parameters": [
 					{
 						"in": "query",
@@ -3674,6 +3811,739 @@
 									"oneOf": [
 										{
 											"$ref": "#/components/schemas/Forbidden"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/ServiceUnavailable"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/view": {
+			"get": {
+				"operationId": "view",
+				"summary": "Everything the caller sees",
+				"description": "The tasks, projects, and labels of the space, and the ids of visible tasks the caller may not edit.",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "space",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/SpaceView"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Unauthorized"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "403",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Forbidden"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/ServiceUnavailable"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/tasks": {
+			"post": {
+				"operationId": "tasks.create",
+				"summary": "Add a task",
+				"description": "`text` reads like the app’s quick add: dates, repeats, `p1` to `p4`, reminders, and `#Project` and `@label` for ones that exist. Explicit fields win over parsed ones.",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "space",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/AgentNewTask"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Task"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Unauthorized"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "403",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Forbidden"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "404",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/NotFound"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/ServiceUnavailable"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			},
+			"patch": {
+				"operationId": "tasks.update",
+				"summary": "Edit a task",
+				"description": "Only the fields sent change; `null` clears a nullable field.",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "space",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true
+					},
+					{
+						"in": "query",
+						"name": "id",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true,
+						"required": true
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/TaskEdit"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Task"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Unauthorized"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "403",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Forbidden"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "404",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/NotFound"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/ServiceUnavailable"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			},
+			"delete": {
+				"operationId": "tasks.delete",
+				"summary": "Delete a task and its subtasks",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "space",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true
+					},
+					{
+						"in": "query",
+						"name": "id",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true,
+						"required": true
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Ok"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Unauthorized"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "403",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Forbidden"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "404",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/NotFound"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/ServiceUnavailable"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/tasks/complete": {
+			"post": {
+				"operationId": "tasks.complete",
+				"summary": "Complete a task",
+				"description": "A recurring task moves to its next date instead of closing.",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "space",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true
+					},
+					{
+						"in": "query",
+						"name": "id",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true,
+						"required": true
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Task"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Unauthorized"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "403",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Forbidden"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "404",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/NotFound"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/ServiceUnavailable"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/tasks/reopen": {
+			"post": {
+				"operationId": "tasks.reopen",
+				"summary": "Reopen a completed task",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "space",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true
+					},
+					{
+						"in": "query",
+						"name": "id",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true,
+						"required": true
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Task"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Unauthorized"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "403",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Forbidden"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "404",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/NotFound"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/ServiceUnavailable"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/activity": {
+			"get": {
+				"operationId": "activity.list",
+				"summary": "A task’s history",
+				"description": "Who created, edited, completed, reopened, or deleted the task, and when, oldest first.",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "space",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true
+					},
+					{
+						"in": "query",
+						"name": "id",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true,
+						"required": true
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Activity"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Unauthorized"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "403",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Forbidden"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "404",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/NotFound"
 										},
 										{
 											"$ref": "#/components/schemas/UndefinedError"
@@ -3935,727 +4805,6 @@
 							"application/json": {
 								"schema": {
 									"$ref": "#/components/schemas/Ok"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "401",
-						"content": {
-							"application/json": {
-								"schema": {
-									"oneOf": [
-										{
-											"$ref": "#/components/schemas/Unauthorized"
-										},
-										{
-											"$ref": "#/components/schemas/UndefinedError"
-										}
-									]
-								}
-							}
-						}
-					},
-					"403": {
-						"description": "403",
-						"content": {
-							"application/json": {
-								"schema": {
-									"oneOf": [
-										{
-											"$ref": "#/components/schemas/Forbidden"
-										},
-										{
-											"$ref": "#/components/schemas/UndefinedError"
-										}
-									]
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "404",
-						"content": {
-							"application/json": {
-								"schema": {
-									"oneOf": [
-										{
-											"$ref": "#/components/schemas/NotFound"
-										},
-										{
-											"$ref": "#/components/schemas/UndefinedError"
-										}
-									]
-								}
-							}
-						}
-					},
-					"503": {
-						"description": "503",
-						"content": {
-							"application/json": {
-								"schema": {
-									"oneOf": [
-										{
-											"$ref": "#/components/schemas/ServiceUnavailable"
-										},
-										{
-											"$ref": "#/components/schemas/UndefinedError"
-										}
-									]
-								}
-							}
-						}
-					}
-				}
-			}
-		},
-		"/api/activity": {
-			"get": {
-				"operationId": "activity.list",
-				"parameters": [
-					{
-						"in": "query",
-						"name": "space",
-						"schema": {
-							"type": "string"
-						},
-						"allowEmptyValue": true,
-						"allowReserved": true
-					},
-					{
-						"in": "query",
-						"name": "id",
-						"schema": {
-							"type": "string"
-						},
-						"allowEmptyValue": true,
-						"allowReserved": true,
-						"required": true
-					}
-				],
-				"responses": {
-					"200": {
-						"description": "OK",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Activity"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "401",
-						"content": {
-							"application/json": {
-								"schema": {
-									"oneOf": [
-										{
-											"$ref": "#/components/schemas/Unauthorized"
-										},
-										{
-											"$ref": "#/components/schemas/UndefinedError"
-										}
-									]
-								}
-							}
-						}
-					},
-					"403": {
-						"description": "403",
-						"content": {
-							"application/json": {
-								"schema": {
-									"oneOf": [
-										{
-											"$ref": "#/components/schemas/Forbidden"
-										},
-										{
-											"$ref": "#/components/schemas/UndefinedError"
-										}
-									]
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "404",
-						"content": {
-							"application/json": {
-								"schema": {
-									"oneOf": [
-										{
-											"$ref": "#/components/schemas/NotFound"
-										},
-										{
-											"$ref": "#/components/schemas/UndefinedError"
-										}
-									]
-								}
-							}
-						}
-					},
-					"503": {
-						"description": "503",
-						"content": {
-							"application/json": {
-								"schema": {
-									"oneOf": [
-										{
-											"$ref": "#/components/schemas/ServiceUnavailable"
-										},
-										{
-											"$ref": "#/components/schemas/UndefinedError"
-										}
-									]
-								}
-							}
-						}
-					}
-				}
-			}
-		},
-		"/api/view": {
-			"get": {
-				"operationId": "view",
-				"parameters": [
-					{
-						"in": "query",
-						"name": "space",
-						"schema": {
-							"type": "string"
-						},
-						"allowEmptyValue": true,
-						"allowReserved": true
-					}
-				],
-				"responses": {
-					"200": {
-						"description": "OK",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/SpaceView"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "401",
-						"content": {
-							"application/json": {
-								"schema": {
-									"oneOf": [
-										{
-											"$ref": "#/components/schemas/Unauthorized"
-										},
-										{
-											"$ref": "#/components/schemas/UndefinedError"
-										}
-									]
-								}
-							}
-						}
-					},
-					"403": {
-						"description": "403",
-						"content": {
-							"application/json": {
-								"schema": {
-									"oneOf": [
-										{
-											"$ref": "#/components/schemas/Forbidden"
-										},
-										{
-											"$ref": "#/components/schemas/UndefinedError"
-										}
-									]
-								}
-							}
-						}
-					},
-					"503": {
-						"description": "503",
-						"content": {
-							"application/json": {
-								"schema": {
-									"oneOf": [
-										{
-											"$ref": "#/components/schemas/ServiceUnavailable"
-										},
-										{
-											"$ref": "#/components/schemas/UndefinedError"
-										}
-									]
-								}
-							}
-						}
-					}
-				}
-			}
-		},
-		"/api/tasks": {
-			"post": {
-				"operationId": "tasks.create",
-				"parameters": [
-					{
-						"in": "query",
-						"name": "space",
-						"schema": {
-							"type": "string"
-						},
-						"allowEmptyValue": true,
-						"allowReserved": true
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/AgentNewTask"
-							}
-						}
-					}
-				},
-				"responses": {
-					"200": {
-						"description": "OK",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Task"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "401",
-						"content": {
-							"application/json": {
-								"schema": {
-									"oneOf": [
-										{
-											"$ref": "#/components/schemas/Unauthorized"
-										},
-										{
-											"$ref": "#/components/schemas/UndefinedError"
-										}
-									]
-								}
-							}
-						}
-					},
-					"403": {
-						"description": "403",
-						"content": {
-							"application/json": {
-								"schema": {
-									"oneOf": [
-										{
-											"$ref": "#/components/schemas/Forbidden"
-										},
-										{
-											"$ref": "#/components/schemas/UndefinedError"
-										}
-									]
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "404",
-						"content": {
-							"application/json": {
-								"schema": {
-									"oneOf": [
-										{
-											"$ref": "#/components/schemas/NotFound"
-										},
-										{
-											"$ref": "#/components/schemas/UndefinedError"
-										}
-									]
-								}
-							}
-						}
-					},
-					"503": {
-						"description": "503",
-						"content": {
-							"application/json": {
-								"schema": {
-									"oneOf": [
-										{
-											"$ref": "#/components/schemas/ServiceUnavailable"
-										},
-										{
-											"$ref": "#/components/schemas/UndefinedError"
-										}
-									]
-								}
-							}
-						}
-					}
-				}
-			},
-			"patch": {
-				"operationId": "tasks.update",
-				"parameters": [
-					{
-						"in": "query",
-						"name": "space",
-						"schema": {
-							"type": "string"
-						},
-						"allowEmptyValue": true,
-						"allowReserved": true
-					},
-					{
-						"in": "query",
-						"name": "id",
-						"schema": {
-							"type": "string"
-						},
-						"allowEmptyValue": true,
-						"allowReserved": true,
-						"required": true
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/TaskEdit"
-							}
-						}
-					}
-				},
-				"responses": {
-					"200": {
-						"description": "OK",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Task"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "401",
-						"content": {
-							"application/json": {
-								"schema": {
-									"oneOf": [
-										{
-											"$ref": "#/components/schemas/Unauthorized"
-										},
-										{
-											"$ref": "#/components/schemas/UndefinedError"
-										}
-									]
-								}
-							}
-						}
-					},
-					"403": {
-						"description": "403",
-						"content": {
-							"application/json": {
-								"schema": {
-									"oneOf": [
-										{
-											"$ref": "#/components/schemas/Forbidden"
-										},
-										{
-											"$ref": "#/components/schemas/UndefinedError"
-										}
-									]
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "404",
-						"content": {
-							"application/json": {
-								"schema": {
-									"oneOf": [
-										{
-											"$ref": "#/components/schemas/NotFound"
-										},
-										{
-											"$ref": "#/components/schemas/UndefinedError"
-										}
-									]
-								}
-							}
-						}
-					},
-					"503": {
-						"description": "503",
-						"content": {
-							"application/json": {
-								"schema": {
-									"oneOf": [
-										{
-											"$ref": "#/components/schemas/ServiceUnavailable"
-										},
-										{
-											"$ref": "#/components/schemas/UndefinedError"
-										}
-									]
-								}
-							}
-						}
-					}
-				}
-			},
-			"delete": {
-				"operationId": "tasks.delete",
-				"parameters": [
-					{
-						"in": "query",
-						"name": "space",
-						"schema": {
-							"type": "string"
-						},
-						"allowEmptyValue": true,
-						"allowReserved": true
-					},
-					{
-						"in": "query",
-						"name": "id",
-						"schema": {
-							"type": "string"
-						},
-						"allowEmptyValue": true,
-						"allowReserved": true,
-						"required": true
-					}
-				],
-				"responses": {
-					"200": {
-						"description": "OK",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Ok"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "401",
-						"content": {
-							"application/json": {
-								"schema": {
-									"oneOf": [
-										{
-											"$ref": "#/components/schemas/Unauthorized"
-										},
-										{
-											"$ref": "#/components/schemas/UndefinedError"
-										}
-									]
-								}
-							}
-						}
-					},
-					"403": {
-						"description": "403",
-						"content": {
-							"application/json": {
-								"schema": {
-									"oneOf": [
-										{
-											"$ref": "#/components/schemas/Forbidden"
-										},
-										{
-											"$ref": "#/components/schemas/UndefinedError"
-										}
-									]
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "404",
-						"content": {
-							"application/json": {
-								"schema": {
-									"oneOf": [
-										{
-											"$ref": "#/components/schemas/NotFound"
-										},
-										{
-											"$ref": "#/components/schemas/UndefinedError"
-										}
-									]
-								}
-							}
-						}
-					},
-					"503": {
-						"description": "503",
-						"content": {
-							"application/json": {
-								"schema": {
-									"oneOf": [
-										{
-											"$ref": "#/components/schemas/ServiceUnavailable"
-										},
-										{
-											"$ref": "#/components/schemas/UndefinedError"
-										}
-									]
-								}
-							}
-						}
-					}
-				}
-			}
-		},
-		"/api/tasks/complete": {
-			"post": {
-				"operationId": "tasks.complete",
-				"parameters": [
-					{
-						"in": "query",
-						"name": "space",
-						"schema": {
-							"type": "string"
-						},
-						"allowEmptyValue": true,
-						"allowReserved": true
-					},
-					{
-						"in": "query",
-						"name": "id",
-						"schema": {
-							"type": "string"
-						},
-						"allowEmptyValue": true,
-						"allowReserved": true,
-						"required": true
-					}
-				],
-				"responses": {
-					"200": {
-						"description": "OK",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Task"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "401",
-						"content": {
-							"application/json": {
-								"schema": {
-									"oneOf": [
-										{
-											"$ref": "#/components/schemas/Unauthorized"
-										},
-										{
-											"$ref": "#/components/schemas/UndefinedError"
-										}
-									]
-								}
-							}
-						}
-					},
-					"403": {
-						"description": "403",
-						"content": {
-							"application/json": {
-								"schema": {
-									"oneOf": [
-										{
-											"$ref": "#/components/schemas/Forbidden"
-										},
-										{
-											"$ref": "#/components/schemas/UndefinedError"
-										}
-									]
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "404",
-						"content": {
-							"application/json": {
-								"schema": {
-									"oneOf": [
-										{
-											"$ref": "#/components/schemas/NotFound"
-										},
-										{
-											"$ref": "#/components/schemas/UndefinedError"
-										}
-									]
-								}
-							}
-						}
-					},
-					"503": {
-						"description": "503",
-						"content": {
-							"application/json": {
-								"schema": {
-									"oneOf": [
-										{
-											"$ref": "#/components/schemas/ServiceUnavailable"
-										},
-										{
-											"$ref": "#/components/schemas/UndefinedError"
-										}
-									]
-								}
-							}
-						}
-					}
-				}
-			}
-		},
-		"/api/tasks/reopen": {
-			"post": {
-				"operationId": "tasks.reopen",
-				"parameters": [
-					{
-						"in": "query",
-						"name": "space",
-						"schema": {
-							"type": "string"
-						},
-						"allowEmptyValue": true,
-						"allowReserved": true
-					},
-					{
-						"in": "query",
-						"name": "id",
-						"schema": {
-							"type": "string"
-						},
-						"allowEmptyValue": true,
-						"allowReserved": true,
-						"required": true
-					}
-				],
-				"responses": {
-					"200": {
-						"description": "OK",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Task"
 								}
 							}
 						}

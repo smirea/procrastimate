@@ -12,6 +12,7 @@ import type {
 import { scopeOf, filterSnapshot } from '../../../shared/scope';
 import type { Role } from '../../../shared/values';
 import { sha256, type AccountContext } from '../auth';
+import { agentPrompt } from '../docs';
 import { personOf } from './activity';
 import type { AccountStore, PersonRow, ShareRow } from './store';
 import { accountSnapshot } from './sync';
@@ -173,7 +174,7 @@ function ownAi(store: AccountStore, space: string, aiUserId: string): PersonRow 
 }
 
 export async function createToken(
-	{ store, now, space }: AccountContext,
+	{ store, now, space, origin }: AccountContext,
 	aiUserId: string,
 	name: string,
 ): Promise<CreatedApiToken> {
@@ -182,7 +183,8 @@ export async function createToken(
 	const tokenHash = await sha256(secret);
 	const id = newId();
 	store.putApiToken({ id, aiUserId, name, tokenHash, createdAt: now, lastUsedAt: null });
-	return { id, token: `pm.${space}.${secret}` };
+	const token = `pm.${space}.${secret}`;
+	return { id, token, prompt: agentPrompt(origin, token) };
 }
 
 export function deleteToken(store: AccountStore, id: string) {

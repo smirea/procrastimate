@@ -10,8 +10,8 @@ struct AIAccountsSection: View {
     @State private var accounts: [Person] = []
     @State private var loaded = false
     @State private var name = ""
-    @State private var token: (accountID: String, value: String)?
-    @State private var copied = false
+    @State private var token: (accountID: String, value: String, prompt: String)?
+    @State private var copied: Copied?
     @State private var deleting: Person?
     @State private var error: ErrorReport?
 
@@ -37,7 +37,9 @@ struct AIAccountsSection: View {
                             .frame(minWidth: 44, minHeight: 44)
                     }
                     if let token, token.accountID == account.id {
-                        TokenReveal(value: token.value, copied: copied) { copy(token.value) }
+                        TokenReveal(value: token.value, copied: copied) { what in
+                            copy(what == .token ? token.value : token.prompt, as: what)
+                        }
                             .transition(.opacity.combined(with: .move(edge: .top)))
                     }
                 }
@@ -60,7 +62,7 @@ struct AIAccountsSection: View {
         }
         .animation(.snappy, value: accounts)
         .animation(.snappy, value: token?.value)
-        .sensoryFeedback(.success, trigger: copied) { _, new in new }
+        .sensoryFeedback(.success, trigger: copied) { _, new in new != nil }
         .confirmationDialog(
             "Delete \(deleting?.name ?? "")? Its tokens stop working.",
             isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }),
@@ -103,20 +105,20 @@ struct AIAccountsSection: View {
             let created = try await APIClient.send(
                 API.Endpoints.TokensCreate.self, API.NewApiToken(aiUserId: account.id, name: account.name)
             )
-            token = (account.id, created.token)
-            copied = false
+            token = (account.id, created.token, created.prompt)
+            copied = nil
             error = nil
         } catch {
             self.error = ErrorReport("Could not make a token", error: error)
         }
     }
 
-    private func copy(_ value: String) {
+    private func copy(_ value: String, as what: Copied) {
         UIPasteboard.general.string = value
-        copied = true
+        copied = what
         Task {
             try? await Task.sleep(for: .seconds(1.5))
-            copied = false
+            if copied == what { copied = nil }
         }
     }
 
@@ -132,10 +134,12 @@ struct AIAccountsSection: View {
     }
 }
 
+private enum Copied { case token, prompt }
+
 private struct TokenReveal: View {
     let value: String
-    let copied: Bool
-    let copy: () -> Void
+    let copied: Copied?
+    let copy: (Copied) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -150,15 +154,28 @@ private struct TokenReveal: View {
                     .textSelection(.enabled)
                     .accessibilityLabel("Token")
                 Spacer(minLength: 4)
-                Button(action: copy) {
-                    SwiftUI.Label(copied ? "Copied" : "Copy", systemImage: copied ? "checkmark" : "doc.on.doc")
-                        .contentTransition(.symbolEffect(.replace))
+                Button { copy(.token) } label: {
+                    SwiftUI.Label(
+                        copied == .token ? "Copied" : "Copy",
+                        systemImage: copied == .token ? "checkmark" : "doc.on.doc"
+                    )
+                    .contentTransition(.symbolEffect(.replace))
                 }
                 .font(.subheadline)
                 .buttonStyle(.borderless)
             }
             .padding(10)
             .background(.ink.opacity(0.05), in: .rect(cornerRadius: 12))
+            Button { copy(.prompt) } label: {
+                SwiftUI.Label(
+                    copied == .prompt ? "Copied" : "Copy prompt for your AI",
+                    systemImage: copied == .prompt ? "checkmark" : "sparkles"
+                )
+                .contentTransition(.symbolEffect(.replace))
+            }
+            .font(.subheadline)
+            .buttonStyle(.borderless)
+            .accessibilityHint("Copies the token with where to find the API docs")
         }
     }
 }

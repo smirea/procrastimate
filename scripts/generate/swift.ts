@@ -55,7 +55,7 @@ export type Schema = {
 type Operation = {
 	operationId: string;
 	requestBody?: { content: { 'application/json': { schema: Schema } } };
-	responses: Record<string, { content?: { 'application/json': { schema: Schema } } }>;
+	responses: Record<string, { content?: { 'application/json'?: { schema: Schema } } }>;
 };
 
 export type Input = {
@@ -851,7 +851,7 @@ export function swiftModule(input: Input): string {
 			const name = pascal(operation.operationId);
 			const body = operation.requestBody?.content['application/json'].schema;
 			const success = Object.entries(operation.responses).find(([status]) => status.startsWith('2'))?.[1];
-			const output = success?.content?.['application/json'].schema;
+			const output = success?.content?.['application/json']?.schema;
 			const inputType = body ? generator.type(body, `${name}Input`) : 'NoInput';
 			const outputType = output ? generator.type(output, `${name}Output`) : 'NoInput';
 			endpoints.push(

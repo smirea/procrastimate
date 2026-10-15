@@ -29,6 +29,11 @@ import { nudgeSchema, syncRequestSchema, syncResponseSchema, taskSchema } from '
 
 export const okSchema = z.object({ ok: z.literal(true) }).meta({ id: 'Ok' });
 
+/** oRPC sends a `File` as its own body, so a bot reading the docs gets plain Markdown instead of a JSON string. */
+export const MARKDOWN = 'text/markdown; charset=utf-8';
+export const JSON_UTF8 = 'application/json; charset=utf-8';
+const markdownSchema = z.file().mime(MARKDOWN);
+
 /** Which sign-in buttons the server can offer. Empty credentials hide a provider, so CI boots without them. */
 export const authMethodsSchema = z
 	.object({
@@ -142,6 +147,127 @@ export const workerContract = {
 			.input(newShareSchema)
 			.output(shareViewSchema),
 	},
+	/** Docs for AI agents, generated from `agentContract`. The entry point needs no token; the reference does. */
+	docs: {
+		start: oc
+			.meta(openapi({ method: 'GET', path: '/api/docs', summary: 'What ProcrastiMate is and how an agent gets in' }))
+			.output(markdownSchema),
+		agent: signedIn
+			.meta(openapi({ method: 'GET', path: '/api/docs/agent', summary: 'The guide to every route the caller may use' }))
+			.output(markdownSchema),
+		openapi: signedIn
+			.meta(openapi({ method: 'GET', path: '/api/docs/openapi', summary: 'The OpenAPI subset the caller may use' }))
+			.output(z.file().mime(JSON_UTF8)),
+	},
+};
+
+/**
+ * What an AI account, or a guest of a space, may call: sync, view, the task commands, and activity. Everything else
+ * is the human owner's. The agent docs and their OpenAPI subset are generated from it, so each `summary` and
+ * `description` here is what an agent reads.
+ */
+export const agentContract = {
+	sync: allowed
+		.meta(
+			openapi({
+				method: 'POST',
+				path: '/api/sync',
+				inputStructure: 'detailed',
+				summary: 'Sync the space',
+				description:
+					'The apps’ replication protocol. `{ "cursor": 0, "ops": [] }` answers with the whole visible snapshot. A task op is applied when the task is editable before and after it; project and label ops are acknowledged and dropped.',
+			}),
+		)
+		.input(z.object({ query: spaceQuery, body: syncRequestSchema }))
+		.output(syncResponseSchema),
+	view: allowed
+		.meta(
+			openapi({
+				method: 'GET',
+				path: '/api/view',
+				inputStructure: 'detailed',
+				summary: 'Everything the caller sees',
+				description:
+					'The tasks, projects, and labels of the space, and the ids of visible tasks the caller may not edit.',
+			}),
+		)
+		.input(z.object({ query: spaceQuery }))
+		.output(spaceViewSchema),
+	tasks: {
+		create: found
+			.meta(
+				openapi({
+					method: 'POST',
+					path: '/api/tasks',
+					inputStructure: 'detailed',
+					summary: 'Add a task',
+					description:
+						'`text` reads like the app’s quick add: dates, repeats, `p1` to `p4`, reminders, and `#Project` and `@label` for ones that exist. Explicit fields win over parsed ones.',
+				}),
+			)
+			.input(z.object({ query: spaceQuery, body: agentNewTaskSchema }))
+			.output(taskSchema),
+		update: found
+			.meta(
+				openapi({
+					method: 'PATCH',
+					path: '/api/tasks',
+					inputStructure: 'detailed',
+					summary: 'Edit a task',
+					description: 'Only the fields sent change; `null` clears a nullable field.',
+				}),
+			)
+			.input(z.object({ query: taskQuery, body: taskEditSchema }))
+			.output(taskSchema),
+		complete: found
+			.meta(
+				openapi({
+					method: 'POST',
+					path: '/api/tasks/complete',
+					inputStructure: 'detailed',
+					summary: 'Complete a task',
+					description: 'A recurring task moves to its next date instead of closing.',
+				}),
+			)
+			.input(z.object({ query: taskQuery }))
+			.output(taskSchema),
+		reopen: found
+			.meta(
+				openapi({
+					method: 'POST',
+					path: '/api/tasks/reopen',
+					inputStructure: 'detailed',
+					summary: 'Reopen a completed task',
+				}),
+			)
+			.input(z.object({ query: taskQuery }))
+			.output(taskSchema),
+		delete: found
+			.meta(
+				openapi({
+					method: 'DELETE',
+					path: '/api/tasks',
+					inputStructure: 'detailed',
+					summary: 'Delete a task and its subtasks',
+				}),
+			)
+			.input(z.object({ query: taskQuery }))
+			.output(okSchema),
+	},
+	activity: {
+		list: found
+			.meta(
+				openapi({
+					method: 'GET',
+					path: '/api/activity',
+					inputStructure: 'detailed',
+					summary: 'A task’s history',
+					description: 'Who created, edited, completed, reopened, or deleted the task, and when, oldest first.',
+				}),
+			)
+			.input(z.object({ query: taskQuery }))
+			.output(activitySchema),
+	},
 };
 
 /**
@@ -149,10 +275,7 @@ export const workerContract = {
  * Worker routes on that query alone and forwards the body unread.
  */
 export const accountContract = {
-	sync: allowed
-		.meta(openapi({ method: 'POST', path: '/api/sync', inputStructure: 'detailed' }))
-		.input(z.object({ query: spaceQuery, body: syncRequestSchema }))
-		.output(syncResponseSchema),
+	...agentContract,
 	spaces: {
 		/** The spaces shared with the caller. Served by the caller's own object. */
 		list: signedIn.meta(openapi({ method: 'GET', path: '/api/spaces' })).output(spacesSchema),
@@ -176,40 +299,6 @@ export const accountContract = {
 		delete: found
 			.meta(openapi({ method: 'DELETE', path: '/api/ai-tokens', inputStructure: 'detailed' }))
 			.input(z.object({ query: byId }))
-			.output(okSchema),
-	},
-	activity: {
-		/** One task's history from the space's log, oldest first. */
-		list: found
-			.meta(openapi({ method: 'GET', path: '/api/activity', inputStructure: 'detailed' }))
-			.input(z.object({ query: taskQuery }))
-			.output(activitySchema),
-	},
-	/** The agent command API: the store's rules run on the server, for anyone who may edit the space. */
-	view: allowed
-		.meta(openapi({ method: 'GET', path: '/api/view', inputStructure: 'detailed' }))
-		.input(z.object({ query: spaceQuery }))
-		.output(spaceViewSchema),
-	tasks: {
-		create: found
-			.meta(openapi({ method: 'POST', path: '/api/tasks', inputStructure: 'detailed' }))
-			.input(z.object({ query: spaceQuery, body: agentNewTaskSchema }))
-			.output(taskSchema),
-		update: found
-			.meta(openapi({ method: 'PATCH', path: '/api/tasks', inputStructure: 'detailed' }))
-			.input(z.object({ query: taskQuery, body: taskEditSchema }))
-			.output(taskSchema),
-		complete: found
-			.meta(openapi({ method: 'POST', path: '/api/tasks/complete', inputStructure: 'detailed' }))
-			.input(z.object({ query: taskQuery }))
-			.output(taskSchema),
-		reopen: found
-			.meta(openapi({ method: 'POST', path: '/api/tasks/reopen', inputStructure: 'detailed' }))
-			.input(z.object({ query: taskQuery }))
-			.output(taskSchema),
-		delete: found
-			.meta(openapi({ method: 'DELETE', path: '/api/tasks', inputStructure: 'detailed' }))
-			.input(z.object({ query: taskQuery }))
 			.output(okSchema),
 	},
 	push: {

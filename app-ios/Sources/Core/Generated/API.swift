@@ -790,31 +790,36 @@ extension API {
         }
     }
 
-    /// `token` is `pm.<ownerId>.<secret>`, shown only this once.
+    /// `token` is `pm.<ownerId>.<secret>`, shown only this once, and `prompt` carries it.
     public struct CreatedApiToken: Codable, Hashable, Sendable, Identifiable {
         public var id: String
         public var token: String
+        public var prompt: String
 
-        public init(id: String, token: String) {
+        public init(id: String, token: String, prompt: String) {
             self.id = id
             self.token = token
+            self.prompt = prompt
         }
 
         enum CodingKeys: String, CodingKey {
             case id = "id"
             case token = "token"
+            case prompt = "prompt"
         }
 
         public init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             id = try container.decode(String.self, forKey: .id)
             token = try container.decode(String.self, forKey: .token)
+            prompt = try container.decode(String.self, forKey: .prompt)
         }
 
         public func encode(to encoder: Encoder) throws {
             var container = encoder.container(keyedBy: CodingKeys.self)
             try container.encode(self.id, forKey: .id)
             try container.encode(self.token, forKey: .token)
+            try container.encode(self.prompt, forKey: .prompt)
         }
     }
 
@@ -4521,6 +4526,27 @@ extension API.Endpoints {
         public typealias Output = API.AuthMethods
         public static let method = "GET"
         public static let path = "/api/auth/methods"
+    }
+
+    public enum DocsStart: APIEndpoint {
+        public typealias Input = NoInput
+        public typealias Output = NoInput
+        public static let method = "GET"
+        public static let path = "/api/docs"
+    }
+
+    public enum DocsAgent: APIEndpoint {
+        public typealias Input = NoInput
+        public typealias Output = NoInput
+        public static let method = "GET"
+        public static let path = "/api/docs/agent"
+    }
+
+    public enum DocsOpenapi: APIEndpoint {
+        public typealias Input = NoInput
+        public typealias Output = NoInput
+        public static let method = "GET"
+        public static let path = "/api/docs/openapi"
     }
 
     public enum Me: APIEndpoint {

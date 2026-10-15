@@ -1,7 +1,7 @@
 import { OpenAPIGenerator } from '@orpc/openapi';
 import { ZodToJsonSchemaConverter } from '@orpc/zod';
 import { z } from 'zod';
-import { contract } from '../../shared/api/contract';
+import { agentContract, contract } from '../../shared/api/contract';
 // Register the shared model's schemas that no endpoint uses.
 import '../../shared/dictation';
 import '../../shared/format';
@@ -27,6 +27,23 @@ import type { Schema } from './swift';
 export function openApiDocument() {
 	const generator = new OpenAPIGenerator({ converters: [new ZodToJsonSchemaConverter()] });
 	return generator.generate(contract, { version: '3.1.1', base: { info: { title: 'ProcrastiMate', version: '1' } } });
+}
+
+/** What an AI account may call, as `/api/docs/openapi` serves it with the caller's origin as its server. */
+export function agentOpenApiDocument() {
+	const generator = new OpenAPIGenerator({ converters: [new ZodToJsonSchemaConverter()] });
+	return generator.generate(agentContract, {
+		version: '3.1.1',
+		base: {
+			info: {
+				title: 'ProcrastiMate agent API',
+				version: '1',
+				description: 'The routes an AI account may call with its `pm.<ownerId>.<secret>` token.',
+			},
+			components: { securitySchemes: { token: { type: 'http', scheme: 'bearer' } } },
+			security: [{ token: [] }],
+		},
+	});
 }
 
 /**

@@ -204,6 +204,44 @@
 			}
 		}
 	},
+	"docs": {
+		"start": {
+			"~orpc": {
+				"errorMap": {},
+				"meta": {
+					"~openapi": {
+						"method": "GET",
+						"path": "/api/docs",
+						"summary": "What ProcrastiMate is and how an agent gets in"
+					}
+				}
+			}
+		},
+		"agent": {
+			"~orpc": {
+				"errorMap": {},
+				"meta": {
+					"~openapi": {
+						"method": "GET",
+						"path": "/api/docs/agent",
+						"summary": "The guide to every route the caller may use"
+					}
+				}
+			}
+		},
+		"openapi": {
+			"~orpc": {
+				"errorMap": {},
+				"meta": {
+					"~openapi": {
+						"method": "GET",
+						"path": "/api/docs/openapi",
+						"summary": "The OpenAPI subset the caller may use"
+					}
+				}
+			}
+		}
+	},
 	"sync": {
 		"~orpc": {
 			"errorMap": {},
@@ -211,7 +249,109 @@
 				"~openapi": {
 					"method": "POST",
 					"path": "/api/sync",
-					"inputStructure": "detailed"
+					"inputStructure": "detailed",
+					"summary": "Sync the space",
+					"description": "The apps’ replication protocol. `{ \"cursor\": 0, \"ops\": [] }` answers with the whole visible snapshot. A task op is applied when the task is editable before and after it; project and label ops are acknowledged and dropped."
+				}
+			}
+		}
+	},
+	"view": {
+		"~orpc": {
+			"errorMap": {},
+			"meta": {
+				"~openapi": {
+					"method": "GET",
+					"path": "/api/view",
+					"inputStructure": "detailed",
+					"summary": "Everything the caller sees",
+					"description": "The tasks, projects, and labels of the space, and the ids of visible tasks the caller may not edit."
+				}
+			}
+		}
+	},
+	"tasks": {
+		"create": {
+			"~orpc": {
+				"errorMap": {},
+				"meta": {
+					"~openapi": {
+						"method": "POST",
+						"path": "/api/tasks",
+						"inputStructure": "detailed",
+						"summary": "Add a task",
+						"description": "`text` reads like the app’s quick add: dates, repeats, `p1` to `p4`, reminders, and `#Project` and `@label` for ones that exist. Explicit fields win over parsed ones."
+					}
+				}
+			}
+		},
+		"update": {
+			"~orpc": {
+				"errorMap": {},
+				"meta": {
+					"~openapi": {
+						"method": "PATCH",
+						"path": "/api/tasks",
+						"inputStructure": "detailed",
+						"summary": "Edit a task",
+						"description": "Only the fields sent change; `null` clears a nullable field."
+					}
+				}
+			}
+		},
+		"complete": {
+			"~orpc": {
+				"errorMap": {},
+				"meta": {
+					"~openapi": {
+						"method": "POST",
+						"path": "/api/tasks/complete",
+						"inputStructure": "detailed",
+						"summary": "Complete a task",
+						"description": "A recurring task moves to its next date instead of closing."
+					}
+				}
+			}
+		},
+		"reopen": {
+			"~orpc": {
+				"errorMap": {},
+				"meta": {
+					"~openapi": {
+						"method": "POST",
+						"path": "/api/tasks/reopen",
+						"inputStructure": "detailed",
+						"summary": "Reopen a completed task"
+					}
+				}
+			}
+		},
+		"delete": {
+			"~orpc": {
+				"errorMap": {},
+				"meta": {
+					"~openapi": {
+						"method": "DELETE",
+						"path": "/api/tasks",
+						"inputStructure": "detailed",
+						"summary": "Delete a task and its subtasks"
+					}
+				}
+			}
+		}
+	},
+	"activity": {
+		"list": {
+			"~orpc": {
+				"errorMap": {},
+				"meta": {
+					"~openapi": {
+						"method": "GET",
+						"path": "/api/activity",
+						"inputStructure": "detailed",
+						"summary": "A task’s history",
+						"description": "Who created, edited, completed, reopened, or deleted the task, and when, oldest first."
+					}
 				}
 			}
 		}
@@ -259,94 +399,6 @@
 					"~openapi": {
 						"method": "DELETE",
 						"path": "/api/ai-tokens",
-						"inputStructure": "detailed"
-					}
-				}
-			}
-		}
-	},
-	"activity": {
-		"list": {
-			"~orpc": {
-				"errorMap": {},
-				"meta": {
-					"~openapi": {
-						"method": "GET",
-						"path": "/api/activity",
-						"inputStructure": "detailed"
-					}
-				}
-			}
-		}
-	},
-	"view": {
-		"~orpc": {
-			"errorMap": {},
-			"meta": {
-				"~openapi": {
-					"method": "GET",
-					"path": "/api/view",
-					"inputStructure": "detailed"
-				}
-			}
-		}
-	},
-	"tasks": {
-		"create": {
-			"~orpc": {
-				"errorMap": {},
-				"meta": {
-					"~openapi": {
-						"method": "POST",
-						"path": "/api/tasks",
-						"inputStructure": "detailed"
-					}
-				}
-			}
-		},
-		"update": {
-			"~orpc": {
-				"errorMap": {},
-				"meta": {
-					"~openapi": {
-						"method": "PATCH",
-						"path": "/api/tasks",
-						"inputStructure": "detailed"
-					}
-				}
-			}
-		},
-		"complete": {
-			"~orpc": {
-				"errorMap": {},
-				"meta": {
-					"~openapi": {
-						"method": "POST",
-						"path": "/api/tasks/complete",
-						"inputStructure": "detailed"
-					}
-				}
-			}
-		},
-		"reopen": {
-			"~orpc": {
-				"errorMap": {},
-				"meta": {
-					"~openapi": {
-						"method": "POST",
-						"path": "/api/tasks/reopen",
-						"inputStructure": "detailed"
-					}
-				}
-			}
-		},
-		"delete": {
-			"~orpc": {
-				"errorMap": {},
-				"meta": {
-					"~openapi": {
-						"method": "DELETE",
-						"path": "/api/tasks",
 						"inputStructure": "detailed"
 					}
 				}

@@ -41,10 +41,11 @@ write('server/src/db/generated/migrations.ts', GENERATED + migrationsModule(join
 // The contract imports the row schemas just written, so it loads only now.
 const { minifyContractRouter } = await import('@orpc/contract');
 const { contract } = await import('../../shared/api/contract');
-const { namedSchemas, openApiDocument } = await import('./openapi');
+const { agentOpenApiDocument, namedSchemas, openApiDocument } = await import('./openapi');
 const { swiftModule } = await import('./swift');
 const openApi = json(await openApiDocument());
 write('shared/api/generated/openapi.json', openApi);
+write('shared/api/generated/agent-openapi.json', json(await agentOpenApiDocument()));
 write('app-web/src/lib/generated/contract.json', json(minifyContractRouter(contract)));
 write(
 	'app-ios/Sources/Core/Generated/API.swift',
