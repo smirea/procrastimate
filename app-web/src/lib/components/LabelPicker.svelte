@@ -10,13 +10,21 @@
 	import { store } from '../store.svelte.ts';
 	import { mobile, motion } from '../ui.svelte.ts';
 
-	let { labelIds, onchange }: { labelIds: string[]; onchange: (labelIds: string[]) => void } = $props();
+	/** A shared task passes its space's labels, and cannot create one: labels made here are always the user's own. */
+	let {
+		labelIds,
+		onchange,
+		labels,
+		canCreate = true,
+	}: { labelIds: string[]; onchange: (labelIds: string[]) => void; labels?: readonly Label[]; canCreate?: boolean } = $props();
 
 	let query = $state('');
 	let active = $state(0);
 
 	const chosen = $derived(store.labelsOf({ labelIds }));
-	const options = $derived(suggest(store.labels, lastUsed(store.tasks, labelIdsOf), query));
+	const options = $derived(
+		suggest(labels ?? store.labels, lastUsed(store.tasks, labelIdsOf), query).filter((o) => canCreate || o.kind !== 'create'),
+	);
 
 	function choose(option: Suggestion<Label>) {
 		if (option.kind === 'create') {

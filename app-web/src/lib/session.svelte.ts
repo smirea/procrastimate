@@ -18,6 +18,7 @@ const cachedUser = () => (typeof localStorage === 'undefined' ? null : localStor
 class Session {
 	/** `in` immediately when a user id is cached, so a day offline never shows the sign-in screen. */
 	state = $state<State>(cachedUser() ? 'in' : 'checking');
+	userId = $state(cachedUser());
 	/** True once the session check has settled, so sync does not upload before a user switch clears the document. */
 	confirmed = $state(false);
 	methods = $state<AuthMethods>({
@@ -65,6 +66,7 @@ class Session {
 		if (owner && owner !== id) store.switchUser();
 		localStorage.setItem(USER_KEY, id);
 		localStorage.setItem(OWNER_KEY, id);
+		this.userId = id;
 		this.state = 'in';
 		this.error = '';
 	}
@@ -72,6 +74,7 @@ class Session {
 	/** Drops the cached session. The owner id stays, and so does the local document. */
 	clear() {
 		localStorage.removeItem(USER_KEY);
+		this.userId = null;
 		this.state = 'out';
 	}
 

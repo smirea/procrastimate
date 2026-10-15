@@ -8,6 +8,7 @@ import {
 } from '../db/generated/zod.ts';
 import { hlcSchema } from '../db/json.ts';
 import { KINDS, type Kind } from './kinds.ts';
+import { shareTargetKindSchema } from '../values.ts';
 
 export { KINDS, type Kind } from './kinds.ts';
 
@@ -121,6 +122,12 @@ export const syncRequestSchema = z
 export type SyncRequest = z.infer<typeof syncRequestSchema>;
 
 const epoch = z.number().int().nonnegative();
+
+export const shareTargetSchema = z
+	.object({ kind: shareTargetKindSchema, id: z.string() })
+	.meta({ id: 'ShareTarget', description: 'What a share reaches. `id` is empty for the whole space.' });
+export type ShareTarget = z.infer<typeof shareTargetSchema>;
+
 /** A guest's sync of a shared space answers with the hash of what it may see. An owner's sync has none. */
 const scope = z.string().optional();
 
@@ -137,6 +144,8 @@ export const syncResponseSchema = z
 			scope,
 			/** In a shared space, the visible task ids the caller may not edit. */
 			readOnly: z.array(z.string()).optional(),
+			/** In a shared space, what the owner shared with the caller. */
+			targets: z.array(shareTargetSchema).optional(),
 		}),
 	])
 	.meta({ id: 'SyncResponse' });

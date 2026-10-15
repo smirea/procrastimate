@@ -13,7 +13,8 @@ const os = implement(workerContract).$context<{ env: Env; request: Request }>();
 /** The caller's own space, for the routes that resolve a user with Better Auth before the space writes anything. */
 function ownSpace(env: Env, request: Request, actor: Person) {
 	if (!env.ACCOUNT) throw new ORPCError('SERVICE_UNAVAILABLE', { message: 'Sync is not configured' });
-	return internalClient(env.ACCOUNT, actor.id, new URL(request.url).origin);
+	// The origin shapes link URLs; behind Vite's dev proxy only the browser's `Origin` names the app's port.
+	return internalClient(env.ACCOUNT, actor.id, request.headers.get('origin') ?? new URL(request.url).origin);
 }
 
 const prefixed = (name: string, q: string) => name.toLowerCase().startsWith(q.toLowerCase());

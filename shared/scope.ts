@@ -92,8 +92,8 @@ function stableJson(value: unknown): string {
 }
 
 /** cyrb53 over the stable JSON, so the hash is the same whichever process computes it. */
-export function scopeHash(filtered: Snapshot): string {
-	const text = stableJson(filtered);
+export function scopeHash(view: unknown): string {
+	const text = stableJson(view);
 	let h1 = 0xdeadbeef;
 	let h2 = 0x41c6ce57;
 	for (let i = 0; i < text.length; i++) {

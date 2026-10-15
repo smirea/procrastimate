@@ -9,8 +9,8 @@
 	import { todayTasks, upcomingGroups } from 'shared/views.ts';
 	import { dayHeading } from 'shared/format.ts';
 
-	const due = $derived(todayTasks(store.tasks, clock.today));
-	const days = $derived(upcomingGroups(store.tasks, clock.today));
+	const due = $derived(todayTasks(store.own.tasks, clock.today));
+	const days = $derived(upcomingGroups(store.own.tasks, clock.today));
 </script>
 
 <svelte:head><title>Inbox · ProcrastiMate</title></svelte:head>

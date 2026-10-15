@@ -148,9 +148,11 @@ export function guestSync(
 		}
 		const acked = request.ops.map(op => op.opId);
 		const { filtered, readOnly } = guestView(serverSnapshot(pushed.state), grants);
-		const scope = scopeHash(filtered);
+		const targets = grants.map(({ targetKind, targetId }) => ({ kind: targetKind, id: targetId }));
+		// A new share or a changed role can leave the visible tasks as they were, so both are part of the hash.
+		const scope = scopeHash({ filtered, readOnly, targets });
 		const base = { acked, cursor: store.lastSeq(), hlc: serverHlc(pushed.state), epoch, scope };
 		if (request.epoch === epoch && request.scope === scope) return { ...base, changes: [] };
-		return { ...base, snapshot: filtered, readOnly };
+		return { ...base, snapshot: filtered, readOnly, targets };
 	});
 }

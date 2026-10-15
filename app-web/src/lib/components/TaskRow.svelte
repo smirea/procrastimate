@@ -16,8 +16,8 @@
 	import type { Task } from 'shared/task.ts';
 	import Checkbox from './Checkbox.svelte';
 	import SubtaskProgress from './SubtaskProgress.svelte';
-	import { store } from '../store.svelte.ts';
-	import { clock, sheets, motion } from '../ui.svelte.ts';
+	import { useLookup } from '../lookup.ts';
+	import { clock, motion } from '../ui.svelte.ts';
 	import { WEEKDAY_NAMES, dueTone, formatDue, formatTime, postponeOptions, repeatLabel } from 'shared/format.ts';
 	import { weekdayOf } from 'shared/task.ts';
 	import { eventLabel, formatLocation, scheduledDue } from 'shared/triggers.ts';
@@ -27,11 +27,13 @@
 
 	let { task, showProject = false, timeOnly = false }: { task: Task; showProject?: boolean; timeOnly?: boolean } = $props();
 
+	const lookup = useLookup();
 	let checking = $state(false);
-	const project = $derived(store.project(task.projectId));
-	const labels = $derived(store.labelsOf(task));
-	const parent = $derived(task.parentId ? store.task(task.parentId) : undefined);
-	const progress = $derived(store.progress(task.id));
+	const editable = $derived(lookup.canEdit(task.id));
+	const project = $derived(lookup.project(task.projectId));
+	const labels = $derived(lookup.labelsOf(task));
+	const parent = $derived(task.parentId ? lookup.task(task.parentId) : undefined);
+	const progress = $derived(lookup.progress(task.id));
 	const due = $derived(scheduledDue(task, clock.today));
 	const event = $derived(task.event ? eventLabel(task.event, clock.today) : null);
 	const fromMemo = $derived(parseMemoSource(task.sourceKey) !== null);
@@ -47,8 +49,12 @@
 </script>
 
 <div class="group flex items-start gap-3 rounded-2xl px-2 transition-colors hover:bg-surface/60" data-task={task.title}>
-	<Checkbox checked={checking} tone={PRIORITIES[task.priority].tone} label={`Complete ${task.title}`} class="mt-3 touch:mt-3.5" onclick={complete} />
-	<button type="button" class="min-w-0 flex-1 py-2.5 text-left touch:min-h-11 touch:py-3" onclick={() => sheets.openTask(task.id)}>
+	{#if editable}
+		<Checkbox checked={checking} tone={PRIORITIES[task.priority].tone} label={`Complete ${task.title}`} class="mt-3 touch:mt-3.5" onclick={complete} />
+	{:else}
+		<span class="mt-3 size-[18px] shrink-0 rounded-full border-[1.5px] border-dashed border-faint/60 touch:mt-3.5 touch:size-5" aria-hidden="true"></span>
+	{/if}
+	{#snippet body()}
 		<div class="truncate text-[14px] leading-5 text-ink transition-colors" class:done={checking}>{task.title}</div>
 		{#if task.notes}
 			<div class="truncate text-[12px] leading-4 text-muted">{task.notes}</div>
@@ -121,8 +127,13 @@
 				{/if}
 			</div>
 		{/if}
-	</button>
-	{#if !task.event}
+	{/snippet}
+	{#if lookup.open}
+		<button type="button" class="min-w-0 flex-1 py-2.5 text-left touch:min-h-11 touch:py-3" onclick={() => lookup.open?.(task.id)}>{@render body()}</button>
+	{:else}
+		<div class="min-w-0 flex-1 py-2.5 text-left touch:min-h-11 touch:py-3">{@render body()}</div>
+	{/if}
+	{#if !task.event && editable}
 		<div class="mt-1.5 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100 touch:opacity-100">
 			<Popover label="Postpone" align="end">
 				{#snippet trigger({ toggle })}
