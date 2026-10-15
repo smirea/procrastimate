@@ -49,6 +49,12 @@ final class AccountSync {
         Task { await sync() }
     }
 
+    /// Uploads this install's pending edits now, for a request the server can only answer once it has them.
+    func flush() async {
+        soon?.cancel()
+        await sync()
+    }
+
     /// Syncs one second after a local edit, so a burst is one request.
     func syncSoon() {
         soon?.cancel()

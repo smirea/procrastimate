@@ -93,10 +93,12 @@ extension SyncEngine {
 
     /// The body of `POST /api/sync?space=<id>`, with the scope hash the space last applied.
     public static func request(_ snapshot: Snapshot, space id: String) throws -> API.SyncRequest? {
-        guard let scope = snapshot.spaces[id]?.scope else { return nil }
+        guard let section = snapshot.spaces[id] else { return nil }
         var copy = snapshot
         guard var body = try inSpace(&copy, id, { try request($0) }) ?? nil else { return nil }
-        body.scope = scope
+        // An edit the server refuses can leave the view's hash as it was, and the empty answer would then keep the
+        // refused edit on screen. Pending edits always ask for a fresh snapshot, as on the web.
+        body.scope = section.outbox.isEmpty ? section.scope : ""
         return body
     }
 

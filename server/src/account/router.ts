@@ -147,6 +147,9 @@ export const accountRouter = os.router({
 		}),
 		membership: os.internal.membership.handler(({ input, context }) => {
 			recordMembership(context.store, input.spaceId, input.owner, input.live, context.now);
+			// A membership never moves this space's log, so the open clients hear about it here or not until they
+			// list their spaces again.
+			context.realtime.nudge(context.store.lastSeq(), input.spaceId);
 			return { ok: true as const };
 		}),
 		// The nudge never reaches the router: the object answers it before the serial queue. See `account.ts`.

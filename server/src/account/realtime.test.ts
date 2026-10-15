@@ -181,16 +181,17 @@ describe('the realtime nudge on the dev server', () => {
 			fields: { deleted: false, name: 'Home', createdAt: Date.now(), sourceKey: null },
 		};
 		await call('POST', '/api/sync', owner, { cursor: 0, ops: [project] });
+		const guestSocket = connect(guest);
+		expect(await guestSocket.opened).toBe(true);
 		const shared = await call('POST', '/api/shares', owner, {
 			target: { kind: 'project', id: 'home' },
 			audience: { kind: 'user', userId: guestId, role: 'edit' },
 		});
 		expect(shared.status).toBe(200);
-		const guestSocket = connect(guest);
-		expect(await guestSocket.opened).toBe(true);
+		expect(JSON.parse(await guestSocket.message(0))).toEqual({ cursor: 0, space: ownerId });
 
 		const moved = await push(owner, 0, 'Fix the sink', 'home');
-		expect(JSON.parse(await guestSocket.message(0))).toEqual({ cursor: moved.cursor, space: ownerId });
+		expect(JSON.parse(await guestSocket.message(1))).toEqual({ cursor: moved.cursor, space: ownerId });
 	});
 });
 

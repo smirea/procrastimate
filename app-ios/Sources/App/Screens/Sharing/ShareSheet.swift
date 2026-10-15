@@ -25,6 +25,7 @@ struct ShareButton: View {
 struct ShareSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(Store.self) private var store
+    @Environment(AccountSync.self) private var accountSync
     let target: API.ShareTarget
     let name: String
 
@@ -201,6 +202,8 @@ struct ShareSheet: View {
         defer { busy = false }
         if link == nil {
             do {
+                // The server shares only a target it holds, so one made a moment ago uploads first.
+                await accountSync.flush()
                 let created = try await APIClient.send(API.Endpoints.SharesCreate.self, API.NewShare(target: target, audience: .link))
                 shares.append(created)
             } catch {
@@ -217,6 +220,7 @@ struct ShareSheet: View {
 
     private func add(_ person: Person) async {
         do {
+            await accountSync.flush()
             let created = try await APIClient.send(
                 API.Endpoints.SharesCreate.self,
                 API.NewShare(target: target, audience: .user(userId: person.id, role: role))

@@ -123,10 +123,12 @@ import Testing
 
     @Test func aSharedSpaceSyncsWithItsCursorScopeAndOutbox() throws {
         let store = store()
+        let idle = try #require(try store.syncRequest(space: "ann"))
+        #expect(idle.scope == "h1")
         _ = store.completeTask("paint")
         let request = try #require(try store.syncRequest(space: "ann"))
         #expect(request.cursor == 7)
-        #expect(request.scope == "h1")
+        #expect(request.scope == "")
         #expect(request.ops.count == 1)
 
         let opId = outbox(store)[0].opId
