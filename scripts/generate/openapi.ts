@@ -5,6 +5,7 @@ import { contract } from '../../shared/api/contract';
 // Register the shared model's schemas that no endpoint uses.
 import '../../shared/dictation';
 import '../../shared/format';
+import '../../shared/markdown';
 import '../../shared/name-search';
 import '../../shared/quick-add';
 import '../../shared/ramble/protocol';

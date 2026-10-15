@@ -39,6 +39,7 @@
 		emptyTitle="No tasks yet"
 		emptyHint={`Add one here, or type #${project.name} in quick add.`}
 		quickAdd={{ projectId: project.id, labelId: null, today: false }}
+		markdown={() => ({ title: project.name, projectId: project.id, sections: [{ heading: null, tasks }] })}
 	>
 		{#snippet title()}
 			{#if renaming}

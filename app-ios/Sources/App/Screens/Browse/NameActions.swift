@@ -5,6 +5,7 @@ struct NameActions: ViewModifier {
     let name: String
     let deletePrompt: String
     var deleteMessage: String?
+    let copy: () -> Void
     let rename: (String) -> Void
     let delete: () -> Void
 
@@ -26,6 +27,7 @@ struct NameActions: ViewModifier {
                             draft = name
                             renaming = true
                         }
+                        Button("Copy as Markdown", systemImage: "doc.on.doc") { copy() }
                         Button("Delete \(noun)", systemImage: "trash", role: .destructive) {
                             confirmingDelete = true
                         }
@@ -67,11 +69,12 @@ extension View {
         name: String,
         deletePrompt: String,
         deleteMessage: String? = nil,
+        copy: @escaping () -> Void,
         rename: @escaping (String) -> Void,
         delete: @escaping () -> Void
     ) -> some View {
         modifier(NameActions(
-            noun: noun, name: name, deletePrompt: deletePrompt, deleteMessage: deleteMessage, rename: rename, delete: delete
+            noun: noun, name: name, deletePrompt: deletePrompt, deleteMessage: deleteMessage, copy: copy, rename: rename, delete: delete
         ))
     }
 }

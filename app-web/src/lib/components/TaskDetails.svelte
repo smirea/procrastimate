@@ -23,6 +23,7 @@
 	import ProjectPicker from './ProjectPicker.svelte';
 	import LabelPicker from './LabelPicker.svelte';
 	import Subtasks from './Subtasks.svelte';
+	import CopyButton from './CopyButton.svelte';
 	import { store, type TaskPatch } from '../store.svelte.ts';
 	import { clock, sheets, toasts, motion, type Arrival } from '../ui.svelte.ts';
 	import { completeTask } from '../completion.ts';
@@ -112,9 +113,12 @@
 		{:else}
 			<ProjectPicker projectId={draft.projectId} onchange={(projectId) => update({ projectId })} />
 		{/if}
-		<button type="button" class="icon-btn shrink-0" aria-label="Close" onclick={() => sheets.close()}>
-			<X size={16} />
-		</button>
+		<div class="flex shrink-0 items-center gap-1">
+			<CopyButton label="Copy task as Markdown" markdown={() => ({ title: null, projectId: null, sections: [{ heading: null, tasks: [task] }] })} />
+			<button type="button" class="icon-btn" aria-label="Close" onclick={() => sheets.close()}>
+				<X size={16} />
+			</button>
+		</div>
 	</header>
 	<div class="px-4 pt-4">
 		<SmartInput bind:value={title} tokens={parsed.tokens} label="Title" enterkeyhint="done" suggestProjects={!parent} class="text-[19px] font-semibold" {onkeydown} onblur={commitTitle} />

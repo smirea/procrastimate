@@ -4,6 +4,7 @@ import SwiftUI
 struct LabelScreen: View {
     @Environment(Store.self) private var store
     @Environment(Navigator.self) private var navigator
+    @Environment(TaskActions.self) private var actions
     let labelID: String
 
     @State private var name: String?
@@ -24,6 +25,7 @@ struct LabelScreen: View {
                 name: label.name,
                 deletePrompt: Browse.deleteLabelPrompt(label.name),
                 deleteMessage: Browse.deleteLabelMessage,
+                copy: { actions.copyAsMarkdown(Markdown.Document(title: label.name, sections: [.init(tasks: tasks)])) },
                 rename: { store.renameLabel(label.id, $0) },
                 delete: { store.deleteLabel(label.id) }
             )

@@ -115,14 +115,37 @@ struct CanvasBackground: View {
 }
 
 struct ListHeading: View {
+    @Environment(TaskActions.self) private var actions
+
     let text: String
     var tone: Color = .ink
+    let tasks: [TaskItem]
 
     var body: some View {
-        Text(text)
-            .font(.footnote.weight(.semibold))
-            .foregroundStyle(tone)
-            .textCase(nil)
-            .accessibilityAddTraits(.isHeader)
+        // A plain List never shows a header's `.contextMenu`, so a long press opens this menu and a tap does nothing.
+        Menu {
+            Button("Copy as Markdown", systemImage: "doc.on.doc") {
+                actions.copyAsMarkdown(Markdown.Document(sections: [.init(heading: text, tasks: tasks)]))
+            }
+        } label: {
+            Text(text)
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(tone)
+                .textCase(nil)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(.rect)
+        } primaryAction: {}
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(.isHeader)
+        .accessibilityIdentifier("heading-\(text)")
+    }
+}
+
+struct CopyMarkdownButton: View {
+    @Environment(TaskActions.self) private var actions
+    let document: Markdown.Document
+
+    var body: some View {
+        Button("Copy as Markdown", systemImage: "doc.on.doc") { actions.copyAsMarkdown(document) }
     }
 }

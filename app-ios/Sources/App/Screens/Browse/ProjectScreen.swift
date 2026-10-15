@@ -4,6 +4,7 @@ import SwiftUI
 struct ProjectScreen: View {
     @Environment(Store.self) private var store
     @Environment(Navigator.self) private var navigator
+    @Environment(TaskActions.self) private var actions
     let projectID: String
 
     @State private var name: String?
@@ -23,6 +24,7 @@ struct ProjectScreen: View {
                 noun: "project",
                 name: project.name,
                 deletePrompt: Browse.deleteProjectPrompt(project.name, taskCount: tasks.count),
+                copy: { actions.copyAsMarkdown(project: project) },
                 rename: { store.renameProject(project.id, $0) },
                 delete: { store.deleteProject(project.id) }
             )

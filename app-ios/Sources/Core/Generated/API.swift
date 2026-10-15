@@ -967,6 +967,108 @@ extension API {
         public var id: String { rawValue }
     }
 
+    public struct MarkdownContext: Codable, Hashable, Sendable {
+        public var tasks: [Task]
+        public var projects: [Project]
+        public var labels: [Label]
+        public var today: DateKey
+
+        public init(tasks: [Task] = [], projects: [Project] = [], labels: [Label] = [], today: DateKey) {
+            self.tasks = tasks
+            self.projects = projects
+            self.labels = labels
+            self.today = today
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case tasks = "tasks"
+            case projects = "projects"
+            case labels = "labels"
+            case today = "today"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            tasks = try container.decode([Task].self, forKey: .tasks)
+            projects = try container.decode([Project].self, forKey: .projects)
+            labels = try container.decode([Label].self, forKey: .labels)
+            today = try container.decode(DateKey.self, forKey: .today)
+            if decoder.validates {
+                do {
+                    let value = self.today
+                    try check(value.range(of: #"^[0-9]{4}-[0-9]{2}-[0-9]{2}\z"#, options: .regularExpression) != nil, .today, in: container, "today matching ^\\d{4}-\\d{2}-\\d{2}$")
+                }
+            }
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.tasks, forKey: .tasks)
+            try container.encode(self.projects, forKey: .projects)
+            try container.encode(self.labels, forKey: .labels)
+            try container.encode(self.today, forKey: .today)
+        }
+    }
+
+    public struct MarkdownDocument: Codable, Hashable, Sendable {
+        public var title: String?
+        public var projectId: String?
+        public var sections: [MarkdownSection]
+
+        public init(title: String? = nil, projectId: String? = nil, sections: [MarkdownSection] = []) {
+            self.title = title
+            self.projectId = projectId
+            self.sections = sections
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case title = "title"
+            case projectId = "projectId"
+            case sections = "sections"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            title = try container.decode(String?.self, forKey: .title)
+            projectId = try container.decode(String?.self, forKey: .projectId)
+            sections = try container.decode([MarkdownSection].self, forKey: .sections)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.title, forKey: .title)
+            try container.encode(self.projectId, forKey: .projectId)
+            try container.encode(self.sections, forKey: .sections)
+        }
+    }
+
+    public struct MarkdownSection: Codable, Hashable, Sendable {
+        public var heading: String?
+        public var tasks: [Task]
+
+        public init(heading: String? = nil, tasks: [Task] = []) {
+            self.heading = heading
+            self.tasks = tasks
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case heading = "heading"
+            case tasks = "tasks"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            heading = try container.decode(String?.self, forKey: .heading)
+            tasks = try container.decode([Task].self, forKey: .tasks)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.heading, forKey: .heading)
+            try container.encode(self.tasks, forKey: .tasks)
+        }
+    }
+
     public struct MemoSource: Codable, Hashable, Sendable {
         public var memoId: String
         public var taskKey: String

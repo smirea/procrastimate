@@ -20,21 +20,21 @@ struct InboxScreen: View {
                 Section {
                     ForEach(due.overdue) { TaskRow(task: $0, showProject: $0.projectId != nil) }
                 } header: {
-                    ListHeading(text: "Overdue", tone: .toneOverdue)
+                    ListHeading(text: "Overdue", tone: .toneOverdue, tasks: due.overdue)
                 }
             }
             if !due.today.isEmpty {
                 Section {
                     ForEach(due.today) { TaskRow(task: $0, showProject: $0.projectId != nil, timeOnly: true) }
                 } header: {
-                    ListHeading(text: "Today")
+                    ListHeading(text: "Today", tasks: due.today)
                 }
             }
             ForEach(days, id: \.date) { group in
                 Section {
                     ForEach(group.tasks) { TaskRow(task: $0, showProject: $0.projectId != nil) }
                 } header: {
-                    ListHeading(text: Format.dayHeading(group.date, today))
+                    ListHeading(text: Format.dayHeading(group.date, today), tasks: group.tasks)
                 }
             }
         }
@@ -63,7 +63,7 @@ struct NoDateScreen: View {
                 Section {
                     ForEach(place.tasks) { row($0) }
                 } header: {
-                    ListHeading(text: place.name)
+                    ListHeading(text: place.name, tasks: place.tasks)
                 }
             }
         }
