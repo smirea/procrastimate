@@ -941,6 +941,142 @@
 				"additionalProperties": false,
 				"x-table": "labels"
 			},
+			"NewShare": {
+				"type": "object",
+				"properties": {
+					"target": {
+						"$ref": "#/components/schemas/ShareTargetInput"
+					},
+					"audience": {
+						"$ref": "#/components/schemas/ShareAudience"
+					}
+				},
+				"required": [
+					"target",
+					"audience"
+				]
+			},
+			"ShareTargetInput": {
+				"type": "object",
+				"properties": {
+					"kind": {
+						"$ref": "#/components/schemas/ShareTargetKind"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"kind",
+					"id"
+				],
+				"description": "What a share reaches. `id` is empty for the whole space."
+			},
+			"ShareAudience": {
+				"oneOf": [
+					{
+						"type": "object",
+						"properties": {
+							"kind": {
+								"type": "string",
+								"const": "link"
+							}
+						},
+						"required": [
+							"kind"
+						]
+					},
+					{
+						"type": "object",
+						"properties": {
+							"kind": {
+								"type": "string",
+								"const": "user"
+							},
+							"userId": {
+								"type": "string"
+							},
+							"role": {
+								"$ref": "#/components/schemas/Role"
+							}
+						},
+						"required": [
+							"kind",
+							"userId",
+							"role"
+						]
+					}
+				],
+				"description": "Who a new share is for: anyone with the link, read only, or one user with a role.",
+				"x-inline": true
+			},
+			"Role": {
+				"type": "string",
+				"enum": [
+					"view",
+					"edit"
+				]
+			},
+			"ShareView": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"target": {
+						"$ref": "#/components/schemas/ShareTarget"
+					},
+					"grantee": {
+						"anyOf": [
+							{
+								"$ref": "#/components/schemas/Person"
+							},
+							{
+								"type": "null"
+							}
+						]
+					},
+					"role": {
+						"$ref": "#/components/schemas/Role"
+					},
+					"createdAt": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991
+					},
+					"url": {
+						"type": [
+							"string",
+							"null"
+						]
+					}
+				},
+				"required": [
+					"id",
+					"target",
+					"grantee",
+					"role",
+					"createdAt",
+					"url"
+				],
+				"additionalProperties": false,
+				"description": "A share as the owner sees it in the share sheet."
+			},
+			"Shares": {
+				"type": "object",
+				"properties": {
+					"shares": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/ShareView"
+						}
+					}
+				},
+				"required": [
+					"shares"
+				],
+				"additionalProperties": false
+			},
 			"SyncRequest": {
 				"type": "object",
 				"properties": {
@@ -1973,142 +2109,6 @@
 				],
 				"additionalProperties": false,
 				"description": "A space shared with the signed-in user. `id` is its owner’s user id."
-			},
-			"Shares": {
-				"type": "object",
-				"properties": {
-					"shares": {
-						"type": "array",
-						"items": {
-							"$ref": "#/components/schemas/ShareView"
-						}
-					}
-				},
-				"required": [
-					"shares"
-				],
-				"additionalProperties": false
-			},
-			"ShareView": {
-				"type": "object",
-				"properties": {
-					"id": {
-						"type": "string"
-					},
-					"target": {
-						"$ref": "#/components/schemas/ShareTarget"
-					},
-					"grantee": {
-						"anyOf": [
-							{
-								"$ref": "#/components/schemas/Person"
-							},
-							{
-								"type": "null"
-							}
-						]
-					},
-					"role": {
-						"$ref": "#/components/schemas/Role"
-					},
-					"createdAt": {
-						"type": "integer",
-						"minimum": -9007199254740991,
-						"maximum": 9007199254740991
-					},
-					"url": {
-						"type": [
-							"string",
-							"null"
-						]
-					}
-				},
-				"required": [
-					"id",
-					"target",
-					"grantee",
-					"role",
-					"createdAt",
-					"url"
-				],
-				"additionalProperties": false,
-				"description": "A share as the owner sees it in the share sheet."
-			},
-			"Role": {
-				"type": "string",
-				"enum": [
-					"view",
-					"edit"
-				]
-			},
-			"NewShare": {
-				"type": "object",
-				"properties": {
-					"target": {
-						"$ref": "#/components/schemas/ShareTargetInput"
-					},
-					"audience": {
-						"$ref": "#/components/schemas/ShareAudience"
-					}
-				},
-				"required": [
-					"target",
-					"audience"
-				]
-			},
-			"ShareTargetInput": {
-				"type": "object",
-				"properties": {
-					"kind": {
-						"$ref": "#/components/schemas/ShareTargetKind"
-					},
-					"id": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"kind",
-					"id"
-				],
-				"description": "What a share reaches. `id` is empty for the whole space."
-			},
-			"ShareAudience": {
-				"oneOf": [
-					{
-						"type": "object",
-						"properties": {
-							"kind": {
-								"type": "string",
-								"const": "link"
-							}
-						},
-						"required": [
-							"kind"
-						]
-					},
-					{
-						"type": "object",
-						"properties": {
-							"kind": {
-								"type": "string",
-								"const": "user"
-							},
-							"userId": {
-								"type": "string"
-							},
-							"role": {
-								"$ref": "#/components/schemas/Role"
-							}
-						},
-						"required": [
-							"kind",
-							"userId",
-							"role"
-						]
-					}
-				],
-				"description": "Who a new share is for: anyone with the link, read only, or one user with a role.",
-				"x-inline": true
 			},
 			"ApiTokens": {
 				"type": "object",
@@ -3352,6 +3352,262 @@
 				}
 			}
 		},
+		"/api/shares": {
+			"post": {
+				"operationId": "shares.create",
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/NewShare"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ShareView"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Unauthorized"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "403",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Forbidden"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "404",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/NotFound"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/ServiceUnavailable"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			},
+			"get": {
+				"operationId": "shares.list",
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Shares"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Unauthorized"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "403",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Forbidden"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/ServiceUnavailable"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			},
+			"delete": {
+				"operationId": "shares.delete",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "id",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true,
+						"required": true
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Ok"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Unauthorized"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "403",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Forbidden"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "404",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/NotFound"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/ServiceUnavailable"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			}
+		},
 		"/api/sync": {
 			"post": {
 				"operationId": "sync",
@@ -3463,262 +3719,6 @@
 									"oneOf": [
 										{
 											"$ref": "#/components/schemas/Unauthorized"
-										},
-										{
-											"$ref": "#/components/schemas/UndefinedError"
-										}
-									]
-								}
-							}
-						}
-					},
-					"503": {
-						"description": "503",
-						"content": {
-							"application/json": {
-								"schema": {
-									"oneOf": [
-										{
-											"$ref": "#/components/schemas/ServiceUnavailable"
-										},
-										{
-											"$ref": "#/components/schemas/UndefinedError"
-										}
-									]
-								}
-							}
-						}
-					}
-				}
-			}
-		},
-		"/api/shares": {
-			"get": {
-				"operationId": "shares.list",
-				"responses": {
-					"200": {
-						"description": "OK",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Shares"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "401",
-						"content": {
-							"application/json": {
-								"schema": {
-									"oneOf": [
-										{
-											"$ref": "#/components/schemas/Unauthorized"
-										},
-										{
-											"$ref": "#/components/schemas/UndefinedError"
-										}
-									]
-								}
-							}
-						}
-					},
-					"403": {
-						"description": "403",
-						"content": {
-							"application/json": {
-								"schema": {
-									"oneOf": [
-										{
-											"$ref": "#/components/schemas/Forbidden"
-										},
-										{
-											"$ref": "#/components/schemas/UndefinedError"
-										}
-									]
-								}
-							}
-						}
-					},
-					"503": {
-						"description": "503",
-						"content": {
-							"application/json": {
-								"schema": {
-									"oneOf": [
-										{
-											"$ref": "#/components/schemas/ServiceUnavailable"
-										},
-										{
-											"$ref": "#/components/schemas/UndefinedError"
-										}
-									]
-								}
-							}
-						}
-					}
-				}
-			},
-			"post": {
-				"operationId": "shares.create",
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/NewShare"
-							}
-						}
-					}
-				},
-				"responses": {
-					"200": {
-						"description": "OK",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ShareView"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "401",
-						"content": {
-							"application/json": {
-								"schema": {
-									"oneOf": [
-										{
-											"$ref": "#/components/schemas/Unauthorized"
-										},
-										{
-											"$ref": "#/components/schemas/UndefinedError"
-										}
-									]
-								}
-							}
-						}
-					},
-					"403": {
-						"description": "403",
-						"content": {
-							"application/json": {
-								"schema": {
-									"oneOf": [
-										{
-											"$ref": "#/components/schemas/Forbidden"
-										},
-										{
-											"$ref": "#/components/schemas/UndefinedError"
-										}
-									]
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "404",
-						"content": {
-							"application/json": {
-								"schema": {
-									"oneOf": [
-										{
-											"$ref": "#/components/schemas/NotFound"
-										},
-										{
-											"$ref": "#/components/schemas/UndefinedError"
-										}
-									]
-								}
-							}
-						}
-					},
-					"503": {
-						"description": "503",
-						"content": {
-							"application/json": {
-								"schema": {
-									"oneOf": [
-										{
-											"$ref": "#/components/schemas/ServiceUnavailable"
-										},
-										{
-											"$ref": "#/components/schemas/UndefinedError"
-										}
-									]
-								}
-							}
-						}
-					}
-				}
-			},
-			"delete": {
-				"operationId": "shares.delete",
-				"parameters": [
-					{
-						"in": "query",
-						"name": "id",
-						"schema": {
-							"type": "string"
-						},
-						"allowEmptyValue": true,
-						"allowReserved": true,
-						"required": true
-					}
-				],
-				"responses": {
-					"200": {
-						"description": "OK",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Ok"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "401",
-						"content": {
-							"application/json": {
-								"schema": {
-									"oneOf": [
-										{
-											"$ref": "#/components/schemas/Unauthorized"
-										},
-										{
-											"$ref": "#/components/schemas/UndefinedError"
-										}
-									]
-								}
-							}
-						}
-					},
-					"403": {
-						"description": "403",
-						"content": {
-							"application/json": {
-								"schema": {
-									"oneOf": [
-										{
-											"$ref": "#/components/schemas/Forbidden"
-										},
-										{
-											"$ref": "#/components/schemas/UndefinedError"
-										}
-									]
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "404",
-						"content": {
-							"application/json": {
-								"schema": {
-									"oneOf": [
-										{
-											"$ref": "#/components/schemas/NotFound"
 										},
 										{
 											"$ref": "#/components/schemas/UndefinedError"

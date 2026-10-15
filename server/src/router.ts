@@ -1,14 +1,24 @@
-import { implement } from '@orpc/server';
+import { implement, ORPCError } from '@orpc/server';
 import { workerContract } from '../../shared/api/contract';
-import { authMethods, deleteAccount, requireUser } from './better-auth';
+import type { Person } from '../../shared/sharing';
+import { requireHuman } from './actor';
+import { internalClient } from './account/peers';
+import { aiAccounts, authMethods, createAiUser, deleteAccount, deleteUser, userByEmail, userById } from './better-auth';
 import type { Env } from './bindings';
-import { notImplemented } from './errors';
 import { classifyDelivery } from './push-schedule';
 import { requireVapid, sendTestPush } from './push';
 
 const os = implement(workerContract).$context<{ env: Env; request: Request }>();
 
-/** The contract's procedures the Worker serves itself. The rest run in the user's `Account` object. */
+/** The caller's own space, for the routes that resolve a user with Better Auth before the space writes anything. */
+function ownSpace(env: Env, request: Request, actor: Person) {
+	if (!env.ACCOUNT) throw new ORPCError('SERVICE_UNAVAILABLE', { message: 'Sync is not configured' });
+	return internalClient(env.ACCOUNT, actor.id, new URL(request.url).origin);
+}
+
+const prefixed = (name: string, q: string) => name.toLowerCase().startsWith(q.toLowerCase());
+
+/** The contract's procedures the Worker serves itself. The rest run in the space's `Account` object. */
 export const workerRouter = os.router({
 	status: os.status.handler(() => ({ ok: true as const })),
 	auth: {
@@ -16,7 +26,8 @@ export const workerRouter = os.router({
 	},
 	account: {
 		delete: os.account.delete.handler(async ({ context }) => {
-			await deleteAccount(context.request, context.env);
+			const actor = await requireHuman(context.request, context.env);
+			await deleteAccount(context.request, context.env, actor);
 			return { ok: true as const };
 		}),
 	},
@@ -24,7 +35,7 @@ export const workerRouter = os.router({
 		key: os.push.key.handler(({ context }) => ({ publicKey: requireVapid(context.env).publicKey })),
 		test: os.push.test.handler(async ({ input, context, errors }) => {
 			const vapid = requireVapid(context.env);
-			await requireUser(context.request, context.env);
+			await requireHuman(context.request, context.env);
 			const status = await sendTestPush(input.subscription, vapid);
 			if (status !== null && status >= 200 && status < 300) return { ok: true as const };
 			const data = { status };
@@ -32,15 +43,72 @@ export const workerRouter = os.router({
 		}),
 	},
 	people: {
-		search: os.people.search.handler(notImplemented),
+		search: os.people.search.handler(async ({ input, context }) => {
+			const actor = await requireHuman(context.request, context.env);
+			const q = input.query.q.trim();
+			if (!q) return { people: [] };
+			const found = new Map<string, Person>();
+			const byEmail = q.includes('@') ? await userByEmail(context.env, q.toLowerCase()) : null;
+			if (byEmail && byEmail.id !== actor.id) found.set(byEmail.id, byEmail);
+			for (const ai of await aiAccounts(context.env, actor.id)) if (prefixed(ai.name, q)) found.set(ai.id, ai);
+			const { people } = await ownSpace(context.env, context.request, actor).people();
+			for (const person of people) {
+				if (person.id !== actor.id && prefixed(person.name, q)) found.set(person.id, person);
+			}
+			return { people: [...found.values()] };
+		}),
 	},
-	me: os.me.handler(notImplemented),
+	me: os.me.handler(({ context }) => requireHuman(context.request, context.env)),
 	ai: {
-		list: os.ai.list.handler(notImplemented),
-		create: os.ai.create.handler(notImplemented),
-		delete: os.ai.delete.handler(notImplemented),
+		list: os.ai.list.handler(async ({ context }) => {
+			const actor = await requireHuman(context.request, context.env);
+			return { accounts: await aiAccounts(context.env, actor.id) };
+		}),
+		create: os.ai.create.handler(async ({ input, context }) => {
+			const actor = await requireHuman(context.request, context.env);
+			const name = input.name.trim();
+			if (!name) throw new ORPCError('BAD_REQUEST', { message: 'An AI account needs a name' });
+			const ai = await createAiUser(context.env, actor.id, name);
+			await ownSpace(context.env, context.request, actor).share({
+				target: { kind: 'space', id: '' },
+				grantee: ai,
+				role: 'edit',
+			});
+			return ai;
+		}),
+		delete: os.ai.delete.handler(async ({ input, context }) => {
+			const actor = await requireHuman(context.request, context.env);
+			const ai = await userById(context.env, input.query.id);
+			if (!ai || ai.kind !== 'ai' || ai.ownerId !== actor.id) {
+				throw new ORPCError('NOT_FOUND', { message: 'No such AI account' });
+			}
+			await deleteUser(context.env, ai.id);
+			await ownSpace(context.env, context.request, actor).revokeAi({ aiUserId: ai.id });
+			return { ok: true as const };
+		}),
 	},
 	shared: {
-		view: os.shared.view.handler(notImplemented),
+		view: os.shared.view.handler(async ({ input, context }) => {
+			const { env, request } = context;
+			if (!env.ACCOUNT) throw new ORPCError('SERVICE_UNAVAILABLE', { message: 'Sync is not configured' });
+			const [ownerId, id, ...rest] = input.query.token.split('.');
+			if (!ownerId || !id || rest.length) throw new ORPCError('NOT_FOUND', { message: 'No such link' });
+			return internalClient(env.ACCOUNT, ownerId, new URL(request.url).origin).sharedView({ id });
+		}),
+	},
+	shares: {
+		create: os.shares.create.handler(async ({ input, context }) => {
+			const actor = await requireHuman(context.request, context.env);
+			const { audience, target } = input;
+			const grantee = audience.kind === 'user' ? await userById(context.env, audience.userId) : null;
+			if (audience.kind === 'user' && (!grantee || grantee.id === actor.id)) {
+				throw new ORPCError('NOT_FOUND', { message: 'No such user' });
+			}
+			if (grantee?.kind === 'ai' && grantee.ownerId !== actor.id) {
+				throw new ORPCError('NOT_FOUND', { message: 'No such user' });
+			}
+			const role = audience.kind === 'user' ? audience.role : 'view';
+			return ownSpace(context.env, context.request, actor).share({ target, grantee, role });
+		}),
 	},
 });

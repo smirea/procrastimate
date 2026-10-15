@@ -12,6 +12,7 @@ import {
 	type Op,
 	type SyncResponse,
 } from '../../../shared/sync/protocol';
+import type { Person } from '../../../shared/sharing';
 import { TEST_AUTH_SECRET } from './test-device';
 import { serveDev } from '../dev-server';
 import { durableSockets, realtime } from './realtime';
@@ -72,8 +73,8 @@ describe('the realtime nudge on the dev server', () => {
 			body: body === undefined ? undefined : JSON.stringify(body),
 		});
 
-	async function setup(name: string) {
-		if (!session) {
+	async function signUp(name: string) {
+		{
 			const response = await fetch(`${base}/api/auth/sign-up/email`, {
 				method: 'POST',
 				headers: { 'content-type': 'application/json', origin: base },
@@ -86,7 +87,7 @@ describe('the realtime nudge on the dev server', () => {
 			if (!response.ok) throw new Error(await response.text());
 			const token = response.headers.get('set-auth-token');
 			if (!token) throw new Error('missing session token');
-			session = {
+			return {
 				token,
 				cookie: response.headers
 					.getSetCookie()
@@ -94,17 +95,22 @@ describe('the realtime nudge on the dev server', () => {
 					.join('; '),
 			};
 		}
+	}
+
+	async function setup(name: string, own?: { token: string; cookie: string }) {
+		if (!own && !session) session = await signUp(name);
 		const deviceId = crypto.randomUUID();
-		const cred = { ...session, deviceId };
+		const cred = { ...(own ?? session!), deviceId };
 		const synced = await call('POST', '/api/sync', cred, { cursor: 0, ops: [] });
 		if (!synced.ok) throw new Error(await synced.text());
 		return cred;
 	}
 
 	let ops = 0;
-	async function push(cred: { token: string; deviceId: string }, cursor: number, title?: string) {
+	async function push(cred: { token: string; deviceId: string }, cursor: number, title?: string, projectId?: string) {
 		const op = { opId: `op-${++ops}`, hlc: formatHlc({ wall: Date.now(), counter: ops, node: 'dev' }) };
-		const body = { cursor, ops: title ? [{ ...op, kind: 'task', id: `t${ops}`, fields: { title } } as Op] : [] };
+		const fields = { title, ...(projectId ? { projectId } : {}) };
+		const body = { cursor, ops: title ? [{ ...op, kind: 'task', id: `t${ops}`, fields } as Op] : [] };
 		return (await (await call('POST', '/api/sync', cred, body)).json()) as SyncResponse;
 	}
 
@@ -160,6 +166,31 @@ describe('the realtime nudge on the dev server', () => {
 		const second = await push(phone, first.cursor, 'Call mom');
 		expect(second.cursor).toBeGreaterThan(first.cursor);
 		expect(JSON.parse(await macSocket.message(1))).toEqual({ cursor: second.cursor });
+	});
+
+	test('tells a guest’s own socket which shared space moved', async () => {
+		const owner = await setup('Owner');
+		const guest = await setup('Guest', await signUp('Guest'));
+		const whoAmI = async (cred: typeof owner) => ((await (await call('GET', '/api/me', cred)).json()) as Person).id;
+		const [ownerId, guestId] = [await whoAmI(owner), await whoAmI(guest)];
+		const project = {
+			opId: 'project-op',
+			hlc: formatHlc({ wall: Date.now(), counter: 99, node: 'dev' }),
+			kind: 'project',
+			id: 'home',
+			fields: { deleted: false, name: 'Home', createdAt: Date.now(), sourceKey: null },
+		};
+		await call('POST', '/api/sync', owner, { cursor: 0, ops: [project] });
+		const shared = await call('POST', '/api/shares', owner, {
+			target: { kind: 'project', id: 'home' },
+			audience: { kind: 'user', userId: guestId, role: 'edit' },
+		});
+		expect(shared.status).toBe(200);
+		const guestSocket = connect(guest);
+		expect(await guestSocket.opened).toBe(true);
+
+		const moved = await push(owner, 0, 'Fix the sink', 'home');
+		expect(JSON.parse(await guestSocket.message(0))).toEqual({ cursor: moved.cursor, space: ownerId });
 	});
 });
 

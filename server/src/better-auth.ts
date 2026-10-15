@@ -1,18 +1,15 @@
-import { createORPCClient } from '@orpc/client';
-import type { RouterContractClient } from '@orpc/contract';
-import { OpenAPILink } from '@orpc/openapi/fetch';
 import { ORPCError } from '@orpc/server';
 import { betterAuth } from 'better-auth';
 import { memoryAdapter, type MemoryDB } from '@better-auth/memory-adapter';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { bearer } from 'better-auth/plugins';
-import { internalContract, type AuthMethods } from '../../shared/api/contract';
-import { USER_HEADER } from '../../shared/auth';
+import type { AuthMethods } from '../../shared/api/contract';
+import type { Person } from '../../shared/sharing';
 import type { Env } from './bindings';
-import { authSchema, type user } from './db/auth-schema';
+import { authSchema } from './db/auth-schema';
 import { tursoDatabase, tursoTarget, type TursoDatabase } from './db/turso';
 import { errorResponse } from './errors';
-import { withUser } from './request-user';
+import { internalClient } from './account/peers';
 
 /** A year. Days offline must not sign the account out; a day online extends the session. */
 const SESSION_SECONDS = 60 * 60 * 24 * 365;
@@ -48,9 +45,19 @@ function trustedOrigins(request?: Request): string[] {
 	return [...TRUSTED_ORIGINS, ...loopback];
 }
 
+type Where = { field: string; value: string };
+
+/** A `user` row with the sharing fields. Rows from before them read as humans. */
+type UserRow = { id: string; email: string; name: string; kind?: 'human' | 'ai' | null; ownerId?: string | null };
+
 type Auth = {
 	handler: (request: Request) => Promise<Response>;
 	$context: Promise<{
+		adapter: {
+			create: <T>(data: { model: string; data: Record<string, unknown> }) => Promise<T>;
+			findOne: <T>(data: { model: string; where: Where[] }) => Promise<T | null>;
+			findMany: <T>(data: { model: string; where?: Where[] }) => Promise<T[]>;
+		};
 		internalAdapter: {
 			deleteUser: (userId: string) => Promise<void>;
 			deleteUserSessions: (userId: string) => Promise<void>;
@@ -245,7 +252,14 @@ export async function authHandler(request: Request, env: Env): Promise<Response>
 	return auth.handler(request);
 }
 
-export type SessionUser = Pick<typeof user.$inferSelect, 'id' | 'email' | 'name'>;
+export type SessionUser = Person & { email: string };
+
+const asPerson = (row: UserRow): Person => ({
+	id: row.id,
+	name: row.name,
+	kind: row.kind ?? 'human',
+	ownerId: row.ownerId ?? null,
+});
 
 export async function readSession(request: Request, env: Env): Promise<SessionUser | null> {
 	const auth = await getAuth(env);
@@ -253,41 +267,66 @@ export async function readSession(request: Request, env: Env): Promise<SessionUs
 	const url = new URL('/api/auth/get-session', request.url);
 	const response = await auth.handler(new Request(url, { method: 'GET', headers: request.headers }));
 	if (!response.ok) return null;
-	const body = (await response.json().catch(() => null)) as {
-		user?: { id?: string; email?: string; name?: string };
-	} | null;
+	const body = (await response.json().catch(() => null)) as { user?: Partial<UserRow> } | null;
 	if (!body?.user?.id) return null;
-	return { id: body.user.id, email: body.user.email ?? '', name: body.user.name ?? '' };
+	const { id, email = '', name = '', kind, ownerId } = body.user;
+	return { ...asPerson({ id, email, name, kind, ownerId }), email };
 }
 
-export async function requireUser(request: Request, env: Env): Promise<{ user: SessionUser; auth: Auth }> {
-	const auth = await getAuth(env);
-	if (!auth) throw new ORPCError('SERVICE_UNAVAILABLE', { message: 'Sign-in is not configured' });
-	const user = await readSession(request, env);
-	if (!user) throw new ORPCError('UNAUTHORIZED', { message: 'Not signed in' });
-	return { user, auth };
+const users = async (env: Env) => (await (await getAuth(env))!.$context).adapter;
+
+export async function userById(env: Env, id: string): Promise<Person | null> {
+	const row = await (await users(env)).findOne<UserRow>({ model: 'user', where: [{ field: 'id', value: id }] });
+	return row ? asPerson(row) : null;
+}
+
+export async function userByEmail(env: Env, email: string): Promise<Person | null> {
+	const row = await (await users(env)).findOne<UserRow>({ model: 'user', where: [{ field: 'email', value: email }] });
+	return row ? asPerson(row) : null;
+}
+
+/** The AI accounts `ownerId` made, oldest first. */
+export async function aiAccounts(env: Env, ownerId: string): Promise<Person[]> {
+	const rows = await (
+		await users(env)
+	).findMany<UserRow>({ model: 'user', where: [{ field: 'ownerId', value: ownerId }] });
+	return rows.filter(row => row.kind === 'ai').map(asPerson);
+}
+
+/** A user that can never sign in: no credential row, and an email nobody receives. */
+export async function createAiUser(env: Env, ownerId: string, name: string): Promise<Person> {
+	const now = new Date();
+	const row = await (
+		await users(env)
+	).create<UserRow>({
+		model: 'user',
+		data: {
+			name,
+			email: `ai-${crypto.randomUUID()}@ai.procrastimate.invalid`,
+			emailVerified: false,
+			kind: 'ai',
+			ownerId,
+			createdAt: now,
+			updatedAt: now,
+		},
+	});
+	return asPerson(row);
+}
+
+export async function deleteUser(env: Env, userId: string): Promise<void> {
+	const context = await (await getAuth(env))!.$context;
+	await context.internalAdapter.deleteUser(userId);
+	await context.internalAdapter.deleteUserSessions(userId);
+	await context.internalAdapter.deleteAccounts(userId);
 }
 
 /**
- * Deletes the signed-in user and their tasks. The confirmation lives in Settings. Social accounts have no
- * password, so this does not ask for one.
+ * Deletes the signed-in human, their tasks, and the AI accounts they made. The confirmation lives in Settings.
+ * Social accounts have no password, so this does not ask for one.
  */
-export async function deleteAccount(request: Request, env: Env): Promise<void> {
+export async function deleteAccount(request: Request, env: Env, user: Person): Promise<void> {
 	if (!env.ACCOUNT) throw new ORPCError('SERVICE_UNAVAILABLE', { message: 'Sync is not configured' });
-	const { user, auth } = await requireUser(request, env);
-	const stub = env.ACCOUNT.get(env.ACCOUNT.idFromName(user.id));
-	const account: RouterContractClient<typeof internalContract> = createORPCClient(
-		new OpenAPILink(internalContract, {
-			origin: new URL(request.url).origin,
-			fetch: (url, init) =>
-				stub.fetch(withUser(new Request(url, init), user.id) as never) as unknown as Promise<Response>,
-		}),
-	);
-	await account.wipe();
-	const context = await auth.$context;
-	await context.internalAdapter.deleteUser(user.id);
-	await context.internalAdapter.deleteUserSessions(user.id);
-	await context.internalAdapter.deleteAccounts(user.id);
+	await internalClient(env.ACCOUNT, user.id, new URL(request.url).origin).wipe();
+	for (const ai of await aiAccounts(env, user.id)) await deleteUser(env, ai.id);
+	await deleteUser(env, user.id);
 }
-
-export { USER_HEADER };
