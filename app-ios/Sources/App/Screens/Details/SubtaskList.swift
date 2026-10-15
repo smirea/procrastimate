@@ -167,7 +167,7 @@ private struct SubtaskRow<Reorder: Gesture>: View {
                         .font(.subheadline)
                         .foregroundStyle(done ? Color.faint : Color.ink)
                         .strikethrough(done, color: .faint)
-                        .lineLimit(1)
+                        .multilineTextAlignment(.leading)
                     if (child.due != nil && !done) || progress != nil {
                         HStack(spacing: 10) {
                             if let due = child.due, !done {
@@ -182,6 +182,7 @@ private struct SubtaskRow<Reorder: Gesture>: View {
                         .font(.caption)
                     }
                 }
+                .padding(.vertical, 8)
                 .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
                 .contentShape(.rect)
             }

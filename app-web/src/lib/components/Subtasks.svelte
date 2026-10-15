@@ -57,8 +57,7 @@
 		event.preventDefault();
 		(event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
 		const rects = [...list.children].map((row) => row.getBoundingClientRect());
-		const step = rects[1]!.top - rects[0]!.top;
-		drag = { id, pointerId: event.pointerId, startY: event.clientY, dy: 0, from: index, to: index, mids: rects.map((r) => r.top + r.height / 2), step };
+		drag = { id, pointerId: event.pointerId, startY: event.clientY, dy: 0, from: index, to: index, mids: rects.map((r) => r.top + r.height / 2), step: rects[index]!.height };
 	}
 
 	function moveDrag(event: PointerEvent) {
@@ -71,13 +70,16 @@
 
 	async function endDrag(event: PointerEvent, commit: boolean) {
 		if (drag?.pointerId !== event.pointerId) return;
-		const { id, from, to, dy, step } = drag;
+		const { id, from, to } = drag;
+		const row = () => list.querySelector(`[data-subtask-id="${id}"]`);
+		const lifted = row()?.getBoundingClientRect().top ?? 0;
 		settling = true;
 		drag = null;
 		if (commit && to !== from) store.moveSubtask(id, to);
-		const residual = dy - (commit ? (to - from) * step : 0);
 		await tick();
-		list.querySelector(`[data-subtask-id="${id}"]`)?.animate([{ transform: `translateY(${residual}px)` }, { transform: 'none' }], {
+		const landed = row();
+		const residual = lifted - (landed?.getBoundingClientRect().top ?? lifted);
+		landed?.animate([{ transform: `translateY(${residual}px)` }, { transform: 'none' }], {
 			duration: 200,
 			easing: 'cubic-bezier(0.32, 0.72, 0, 1)',
 		});
@@ -126,7 +128,7 @@
 			>
 				<Checkbox checked={done} tone={PRIORITIES[child.priority].tone} label={`Complete ${child.title}`} onclick={() => toggle(child)} />
 				<button type="button" class="min-w-0 flex-1 py-2 text-left touch:min-h-11 touch:py-2.5" onclick={() => sheets.openTask(child.id, 'forward')}>
-					<div class="truncate text-[14px] leading-5 transition-colors" class:done>{child.title}</div>
+					<div class="text-[14px] leading-5 [overflow-wrap:anywhere] transition-colors" class:done>{child.title}</div>
 					{#if (child.due && !done) || childProgress}
 						<div class="mt-0.5 flex items-center gap-3 text-[12px] leading-4 text-muted">
 							{#if child.due && !done}
