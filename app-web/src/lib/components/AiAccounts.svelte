@@ -12,15 +12,16 @@
 	import type { Person } from 'shared/sharing.ts';
 	import PersonName from './PersonName.svelte';
 	import { api } from '../api.ts';
+	import { OptimisticList, type Row } from '../optimistic.svelte.ts';
+	import { session } from '../session.svelte.ts';
 	import { store } from '../store.svelte.ts';
-	import { motion } from '../ui.svelte.ts';
+	import { motion, toasts } from '../ui.svelte.ts';
 
-	let accounts = $state<Person[]>([]);
+	const accounts = new OptimisticList<Person>((account) => account.id);
 	let loaded = $state(false);
 	let name = $state('');
-	let error = $state('');
-	/** The secret is only ever in this response, so it lives here until the popover closes. */
-	let token = $state<{ accountId: string; value: string; prompt: string } | null>(null);
+	/** The secret is only ever in this response, so it lives here until the popover closes. Null while it is made. */
+	let token = $state.raw<{ key: string; made: { value: string; prompt: string } | null } | null>(null);
 	let copied = $state<'token' | 'prompt' | null>(null);
 	let confirming = $state<string | null>(null);
 
@@ -28,88 +29,99 @@
 		const result = await api.ai.list().catch(() => null);
 		loaded = true;
 		if (!result) return;
-		accounts = result.accounts;
-		store.rememberPeople(accounts);
+		accounts.load(result.accounts);
+		store.rememberPeople(result.accounts);
 	});
 
-	async function create(event: SubmitEvent) {
+	function create(event: SubmitEvent) {
 		event.preventDefault();
 		const trimmed = name.trim();
 		if (!trimmed) return;
-		error = '';
-		const account = await api.ai.create({ name: trimmed }).catch(() => null);
-		if (!account) {
-			error = 'Could not create the AI account';
-			return;
-		}
-		accounts = [...accounts, account];
-		store.rememberPeople([account]);
 		name = '';
+		const placeholder: Person = { id: '', name: trimmed, kind: 'ai', ownerId: session.userId };
+		accounts.add(
+			placeholder,
+			async () => {
+				const account = await api.ai.create({ name: trimmed });
+				store.rememberPeople([account]);
+				return account;
+			},
+			`Could not create ${trimmed}`,
+		);
 	}
 
-	async function generate(account: Person) {
-		error = '';
-		const created = await api.tokens.create({ aiUserId: account.id, name: account.name }).catch(() => null);
-		if (!created) {
-			error = 'Could not make a token';
-			return;
-		}
-		token = { accountId: account.id, value: created.token, prompt: created.prompt };
+	async function generate(row: Row<Person>) {
+		const pending = { key: row.key, made: null };
+		token = pending;
 		copied = null;
+		const account = await row.saved;
+		const created = account
+			? await api.tokens.create({ aiUserId: account.id, name: account.name }).catch(() => null)
+			: null;
+		if (token !== pending) return;
+		if (created) {
+			token = { key: row.key, made: { value: created.token, prompt: created.prompt } };
+		} else {
+			token = null;
+			if (account) toasts.show('Could not make a token');
+		}
 	}
 
 	async function copy(what: 'token' | 'prompt') {
-		if (!token) return;
-		await navigator.clipboard?.writeText(what === 'token' ? token.value : token.prompt).catch(() => undefined);
+		const made = token?.made;
+		if (!made) return;
+		await navigator.clipboard?.writeText(what === 'token' ? made.value : made.prompt).catch(() => undefined);
 		copied = what;
 	}
 
-	async function remove(account: Person) {
-		error = '';
+	function remove(row: Row<Person>) {
 		confirming = null;
-		const before = accounts;
-		accounts = accounts.filter((a) => a.id !== account.id);
-		if (token?.accountId === account.id) token = null;
-		const done = await api.ai.delete({ query: { id: account.id } }).catch(() => null);
-		if (!done) {
-			accounts = before;
-			error = `Could not delete ${account.name}`;
-		}
+		if (token?.key === row.key) token = null;
+		void accounts.remove(
+			row,
+			(account) => api.ai.delete({ query: { id: account.id } }),
+			`Could not delete ${row.value.name}`,
+		);
 	}
 </script>
 
 <section class="flex flex-col gap-1.5" aria-label="AI accounts">
 	<h3 class="heading">AI accounts</h3>
-	{#if loaded && accounts.length === 0}
+	{#if loaded && accounts.rows.length === 0}
 		<p class="px-1.5 text-[12px] text-muted">An AI account can read and edit all your tasks with its own token.</p>
 	{/if}
 	<ul class="flex flex-col">
-		{#each accounts as account (account.id)}
+		{#each accounts.rows as row (row.key)}
+			{@const account = row.value}
 			<li class="flex flex-col" animate:flip={motion({ duration: 200 })} transition:slide={motion({ duration: 180, easing: cubicOut })}>
 				<div class="flex items-center gap-1 px-1.5 py-0.5">
 					<PersonName person={account} class="flex-1 text-[14px]" />
-					{#if confirming === account.id}
-						<button type="button" class="btn press h-8 bg-[var(--tone-overdue)] px-3 text-[12px] text-on-accent touch:h-11" onclick={() => remove(account)}>Delete</button>
+					{#if confirming === row.key}
+						<button type="button" class="btn press h-8 bg-[var(--tone-overdue)] px-3 text-[12px] text-on-accent touch:h-11" onclick={() => remove(row)}>Delete</button>
 						<button type="button" class="btn btn-quiet h-8 px-3 text-[12px] touch:h-11" onclick={() => (confirming = null)}>Cancel</button>
 					{:else}
-						<button type="button" class="btn btn-quiet h-8 px-3 text-[12px] touch:h-11" onclick={() => generate(account)}>
+						<button type="button" class="btn btn-quiet h-8 px-3 text-[12px] touch:h-11" onclick={() => generate(row)}>
 							<Key size={13} />Generate token
 						</button>
-						<button type="button" class="icon-btn size-8 touch:size-11" aria-label={`Delete ${account.name}`} onclick={() => (confirming = account.id)}>
+						<button type="button" class="icon-btn size-8 touch:size-11" aria-label={`Delete ${account.name}`} onclick={() => (confirming = row.key)}>
 							<Trash size={14} />
 						</button>
 					{/if}
 				</div>
-				{#if token?.accountId === account.id}
+				{#if token?.key === row.key}
 					<div class="token mx-1.5 mb-1 flex flex-col gap-1.5 rounded-xl p-2" transition:slide={motion({ duration: 200, easing: cubicOut })}>
 						<p class="text-[12px] text-muted">Copy it now. It will not be shown again.</p>
 						<div class="flex items-center gap-1.5">
-							<code class="min-w-0 flex-1 truncate text-[12px] select-all" aria-label="Token">{token.value}</code>
-							<button type="button" class="btn btn-quiet h-8 px-3 text-[12px] touch:h-11" onclick={() => copy('token')}>
+							{#if token.made === null}
+								<span class="pending-value h-4 min-w-0 flex-1" role="status" aria-label="Making a token"></span>
+							{:else}
+								<code class="min-w-0 flex-1 truncate text-[12px] select-all" aria-label="Token" in:fly={motion({ y: 3, duration: 140 })}>{token.made.value}</code>
+							{/if}
+							<button type="button" class="btn btn-quiet h-8 px-3 text-[12px] touch:h-11" disabled={token.made === null} onclick={() => copy('token')}>
 								{#if copied === 'token'}<span class="flex items-center gap-1" in:fly={motion({ y: 3, duration: 140 })}><Check size={13} weight="bold" />Copied</span>{:else}<Copy size={13} />Copy{/if}
 							</button>
 						</div>
-						<button type="button" class="btn btn-quiet h-8 self-start px-3 text-[12px] touch:h-11" title="Copies the token with where to find the API docs" onclick={() => copy('prompt')}>
+						<button type="button" class="btn btn-quiet h-8 self-start px-3 text-[12px] touch:h-11" title="Copies the token with where to find the API docs" disabled={token.made === null} onclick={() => copy('prompt')}>
 							{#if copied === 'prompt'}<span class="flex items-center gap-1" in:fly={motion({ y: 3, duration: 140 })}><Check size={13} weight="bold" />Copied</span>{:else}<Robot size={13} />Copy prompt for your AI{/if}
 						</button>
 					</div>
@@ -123,9 +135,6 @@
 			<Plus size={16} weight="bold" />
 		</button>
 	</form>
-	{#if error}
-		<p role="alert" class="px-1.5 text-[13px] text-[var(--tone-overdue)]">{error}</p>
-	{/if}
 </section>
 
 <style>

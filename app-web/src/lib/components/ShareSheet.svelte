@@ -7,10 +7,12 @@
 	import Check from 'phosphor-svelte/lib/Check';
 	import LinkSimple from 'phosphor-svelte/lib/LinkSimple';
 	import UserPlus from 'phosphor-svelte/lib/UserPlus';
-	import type { Person, ShareTarget, ShareView } from 'shared/sharing.ts';
+	import { namePrefixed, type Person, type ShareAudience, type ShareTarget, type ShareView } from 'shared/sharing.ts';
 	import type { Role } from 'shared/values.ts';
 	import PersonName from './PersonName.svelte';
 	import { api } from '../api.ts';
+	import { OptimisticList, type Row } from '../optimistic.svelte.ts';
+	import { session } from '../session.svelte.ts';
 	import { store } from '../store.svelte.ts';
 	import { sync } from '../sync.svelte.ts';
 	import { sheets, motion } from '../ui.svelte.ts';
@@ -19,18 +21,28 @@
 
 	const SEARCH_DELAY = 200;
 
-	let shares = $state<ShareView[]>([]);
+	const shares = new OptimisticList<ShareView>((share) => share.id);
 	let loaded = $state(false);
 	let error = $state('');
 	let copied = $state(false);
 	let query = $state('');
 	let role = $state<Role>('edit');
-	let found = $state<Person[]>([]);
-	let searching = $state(false);
+	let found = $state<{ q: string; people: Person[] } | null>(null);
 
-	const link = $derived(shares.find((s) => s.grantee === null));
-	const people = $derived(shares.filter((s): s is ShareView & { grantee: Person } => s.grantee !== null));
-	const suggestions = $derived(found.filter((p) => !people.some((s) => s.grantee.id === p.id)));
+	const link = $derived(shares.rows.find((row) => row.value.grantee === null));
+	const people = $derived(
+		shares.rows.filter((row): row is Row<ShareView & { grantee: Person }> => row.value.grantee !== null),
+	);
+	/** The people this space has met match at once; the server adds exact email matches when it answers. */
+	const suggestions = $derived.by(() => {
+		const q = query.trim();
+		if (!q) return [];
+		const known = store.people.filter((p) => p.id !== session.userId && namePrefixed(p.name, q));
+		const remote = found?.q === q ? found.people : [];
+		const all = [...known, ...remote.filter((p) => !known.some((k) => k.id === p.id))];
+		return all.filter((p) => !people.some((row) => row.value.grantee.id === p.id));
+	});
+	const searching = $derived(found?.q !== query.trim());
 
 	onMount(async () => {
 		const list = await api.shares.list().catch(() => null);
@@ -39,79 +51,79 @@
 			error = 'Sharing needs a connection';
 			return;
 		}
-		shares = list.shares.filter((s) => s.target.kind === target.kind && s.target.id === target.id);
-		store.rememberPeople(people.map((s) => s.grantee));
+		shares.load(list.shares.filter((s) => s.target.kind === target.kind && s.target.id === target.id));
+		store.rememberPeople(people.map((row) => row.value.grantee));
 	});
 
 	$effect(() => {
 		const q = query.trim();
-		if (!q) {
-			found = [];
-			return;
-		}
-		searching = true;
+		if (!q) return;
 		const timer = setTimeout(async () => {
 			const result = await api.people.search({ query: { q } }).catch(() => null);
-			if (query.trim() !== q) return;
-			searching = false;
-			found = result?.people ?? [];
+			found = { q, people: result?.people ?? [] };
 		}, SEARCH_DELAY);
 		return () => clearTimeout(timer);
 	});
 
 	/** The server shares only what it holds, so a project made a moment ago has to arrive before its share. */
-	async function uploaded() {
+	async function create(audience: ShareAudience) {
 		if (store.pending) await sync.syncNow();
+		return api.shares.create({ target, audience });
+	}
+
+	const placeholder = (grantee: Person | null, role: Role): ShareView => ({
+		id: '',
+		target,
+		grantee,
+		role,
+		createdAt: Date.now(),
+		url: null,
+	});
+
+	/**
+	 * Safari only writes the clipboard inside the tap, so a link the server has not made yet goes in as a promise.
+	 * Browsers without promised clipboard items write it once it arrives.
+	 */
+	async function writeClipboard(url: Promise<string | null>) {
+		if (typeof ClipboardItem !== 'undefined' && navigator.clipboard?.write) {
+			const text = url.then((value) => {
+				if (value === null) throw new Error('No link');
+				return new Blob([value], { type: 'text/plain' });
+			});
+			await navigator.clipboard.write([new ClipboardItem({ 'text/plain': text })]).catch(() => undefined);
+		} else {
+			const value = await url;
+			if (value !== null) await navigator.clipboard?.writeText(value).catch(() => undefined);
+		}
+		return (await url) !== null;
 	}
 
 	async function copyLink() {
-		error = '';
-		let url = link?.url;
-		if (!url) {
-			await uploaded();
-			const share = await api.shares.create({ target, audience: { kind: 'link' } }).catch(() => null);
-			if (!share?.url) {
-				error = 'Could not create the link';
-				return;
-			}
-			shares = [...shares, share];
-			url = share.url;
-		}
-		await navigator.clipboard?.writeText(url).catch(() => undefined);
+		const row = link ?? shares.add(placeholder(null, 'view'), () => create({ kind: 'link' }), 'Could not create the link');
+		const url = row.saved.then((share) => share?.url ?? null);
+		if (!(await writeClipboard(url))) return;
 		copied = true;
 		setTimeout(() => (copied = false), 1600);
 	}
 
-	async function add(person: Person) {
-		error = '';
-		await uploaded();
-		const share = await api.shares
-			.create({ target, audience: { kind: 'user', userId: person.id, role } })
-			.catch(() => null);
-		if (!share) {
-			error = `Could not share with ${person.name}`;
-			return;
-		}
-		shares = [...shares.filter((s) => s.grantee?.id !== person.id), share];
-		store.rememberPeople([person]);
+	function add(person: Person) {
 		query = '';
+		store.rememberPeople([person]);
+		shares.add(
+			placeholder(person, role),
+			() => create({ kind: 'user', userId: person.id, role }),
+			`Could not share with ${person.name}`,
+		);
 	}
 
-	async function remove(share: ShareView) {
-		error = '';
-		const before = shares;
-		shares = shares.filter((s) => s.id !== share.id);
-		const done = await api.shares.delete({ query: { id: share.id } }).catch(() => null);
-		if (!done) {
-			shares = before;
-			error = 'Could not stop sharing';
-		}
+	function remove(row: Row<ShareView>) {
+		void shares.remove(row, (share) => api.shares.delete({ query: { id: share.id } }), 'Could not stop sharing');
 	}
 
 	function onkeydown(event: KeyboardEvent) {
 		if (event.key === 'Enter' && suggestions[0]) {
 			event.preventDefault();
-			void add(suggestions[0]);
+			add(suggestions[0]);
 		} else if (event.key === 'Escape') {
 			event.preventDefault();
 			if (query) query = '';
@@ -185,11 +197,12 @@
 		<section class="flex flex-col gap-1" aria-label="People with access" transition:slide={motion({ duration: 180, easing: cubicOut })}>
 			<h3 class="heading px-1.5">Who has access</h3>
 			<ul class="flex flex-col">
-				{#each people as share (share.id)}
+				{#each people as row (row.key)}
+					{@const share = row.value}
 					<li class="flex items-center gap-2 rounded-xl px-1.5 py-1" animate:flip={motion({ duration: 200 })} transition:slide={motion({ duration: 180, easing: cubicOut })}>
 						<PersonName person={share.grantee} class="flex-1 text-[14px]" />
 						<span class="text-[12px] text-faint">{share.role === 'edit' ? 'Can edit' : 'Can view'}</span>
-						<button type="button" class="icon-btn size-8 touch:size-11" aria-label={`Remove ${share.grantee.name}`} onclick={() => remove(share)}>
+						<button type="button" class="icon-btn size-8 touch:size-11" aria-label={`Remove ${share.grantee.name}`} onclick={() => remove(row)}>
 							<X size={14} />
 						</button>
 					</li>
@@ -199,7 +212,11 @@
 						<LinkSimple size={15} class="shrink-0 text-muted" />
 						<span class="min-w-0 flex-1">
 							<span class="block text-[14px]">Anyone with the link</span>
-							<span class="block truncate text-[12px] text-faint" aria-label="Link">{link.url}</span>
+							{#if link.value.url}
+								<span class="block truncate text-[12px] text-faint" aria-label="Link" in:fade={motion({ duration: 140 })}>{link.value.url}</span>
+							{:else}
+								<span class="pending-value mt-1 h-3 w-40" role="status" aria-label="Making the link"></span>
+							{/if}
 						</span>
 						<button type="button" class="btn btn-quiet h-8 px-3 text-[12px] touch:h-11" onclick={() => remove(link)}>Stop sharing</button>
 					</li>

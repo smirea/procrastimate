@@ -5,8 +5,18 @@
 	let password = $state('');
 	let creating = $state(false);
 	let busy = $state(false);
+	let opening = $state<'google' | 'apple' | null>(null);
 
-	const submitLabel = $derived(creating ? 'Create account' : 'Sign in');
+	const submitLabel = $derived(
+		busy ? (creating ? 'Creating account…' : 'Signing in…') : creating ? 'Create account' : 'Sign in',
+	);
+
+	/** The provider's page loads next, so the button says so until the redirect, or until it fails. */
+	async function social(provider: 'google' | 'apple') {
+		opening = provider;
+		await session.social(provider);
+		if (session.error) opening = null;
+	}
 
 	async function onsubmit(event: SubmitEvent) {
 		event.preventDefault();
@@ -54,10 +64,14 @@
 		{/if}
 
 		{#if session.methods.google}
-			<button type="button" class="btn press" onclick={() => session.social('google')}>Sign in with Google</button>
+			<button type="button" class="btn press" disabled={opening !== null} onclick={() => social('google')}>
+				{opening === 'google' ? 'Opening Google…' : 'Sign in with Google'}
+			</button>
 		{/if}
 		{#if session.methods.apple}
-			<button type="button" class="btn press" onclick={() => session.social('apple')}>Sign in with Apple</button>
+			<button type="button" class="btn press" disabled={opening !== null} onclick={() => social('apple')}>
+				{opening === 'apple' ? 'Opening Apple…' : 'Sign in with Apple'}
+			</button>
 		{/if}
 
 		{#if session.error}

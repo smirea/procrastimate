@@ -405,6 +405,23 @@
 	}
 }
 
+/* Holds the place of a value only the server can make, like a new token or link, until it arrives. */
+.pending-value {
+	display: block;
+	border-radius: 9999px;
+	background: color-mix(in srgb, var(--color-ink) 9%, transparent);
+	animation: pending-pulse 900ms var(--ease-spring) infinite alternate;
+}
+
+@keyframes pending-pulse {
+	from {
+		opacity: 0.45;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
 /* CSS motion collapses under reduced motion. Svelte transitions read `motion()` in `ui.svelte.ts` instead. */
 @media (prefers-reduced-motion: reduce) {
 	*,
