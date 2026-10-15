@@ -8,6 +8,7 @@ import UIKit
 /// has focus, tints go straight to its text storage through `EditorTints` instead of through the binding.
 struct SmartInput: View {
     @Environment(Store.self) private var store
+    @Environment(\.space) private var space
 
     @Binding var text: String
     let tokens: [QuickAdd.Token]
@@ -98,7 +99,7 @@ struct SmartInput: View {
 
     private func match(at caret: Int) -> NameMatch? {
         guard focused.wrappedValue else { return nil }
-        let match = NameMatch.at(caret, in: text, store: store, kinds: suggestProjects ? [.project, .label] : [.label])
+        let match = NameMatch.at(caret, in: text, store: store, space: space, kinds:suggestProjects ? [.project, .label] : [.label])
         guard let match, !match.suggestions.isEmpty, match.fragment.start != dismissed else { return nil }
         return match
     }

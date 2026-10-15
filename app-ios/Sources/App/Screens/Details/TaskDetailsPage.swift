@@ -9,6 +9,7 @@ struct TaskDetailsPage: View {
     var body: some View {
         if let task = store.task(taskID) {
             TaskDetailsForm(task: task, navigation: navigation)
+                .environment(\.space, store.space(ofTask: task.id) ?? .own)
         }
     }
 }
@@ -17,6 +18,7 @@ private struct TaskDetailsForm: View {
     @Environment(Store.self) private var store
     @Environment(TaskActions.self) private var actions
     @Environment(\.clock) private var clock
+    @Environment(\.space) private var space
 
     let task: TaskItem
     let navigation: DetailsNavigation
@@ -31,14 +33,25 @@ private struct TaskDetailsForm: View {
     }
 
     private var parent: TaskItem? { task.parentId.flatMap(store.task) }
+    private var locked: Bool { store.isReadOnly(task.id) }
 
     var body: some View {
         let parsed = TaskDetails.parse(
-            title, task, now: clock.now, projects: store.projects, labels: store.labels, in: clock.timeZone
+            title, task, now: clock.now, projects: store.projects(in: space), labels: store.labels(in: space), in: clock.timeZone
         )
         let draft = TaskDetails.draft(task, title: title, parsed)
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
+                if let owner = store.owner(of: space) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "person.2")
+                        Text(locked ? "Shared by \(owner.name) · View only" : "Shared by \(owner.name)")
+                    }
+                    .font(.footnote.weight(.medium))
+                    .foregroundStyle(.muted)
+                    .accessibilityElement(children: .combine)
+                }
+
                 SmartInput(
                     text: $title,
                     tokens: parsed.tokens,
@@ -48,6 +61,7 @@ private struct TaskDetailsForm: View {
                     onSubmit: { commitTitle() }
                 )
                 .font(.title3.weight(.semibold))
+                .disabled(locked)
 
                 FlowLayout(spacing: 6) {
                     if task.event != nil {
@@ -73,6 +87,7 @@ private struct TaskDetailsForm: View {
                     LabelsChip(labelIds: draft.labelIds) { store.updateTask(task.id, TaskPatch(labelIds: $0)) }
                 }
                 .animation(.snappy(duration: 0.16), value: draft)
+                .disabled(locked)
 
                 TextField(
                     "Notes",
@@ -85,6 +100,7 @@ private struct TaskDetailsForm: View {
                 .padding(.vertical, 10)
                 .background(.ink.opacity(0.04), in: .rect(cornerRadius: 16))
                 .accessibilityLabel("Notes")
+                .disabled(locked)
 
                 if let memo = task.memoSource {
                     Link(destination: MemoTasks.memoURL(memo.memoId)) {
@@ -96,13 +112,17 @@ private struct TaskDetailsForm: View {
 
                 SubtaskList(task: task, navigation: navigation)
 
-                Button(role: .destructive) { delete() } label: {
-                    SwiftUI.Label("Delete task", systemImage: "trash")
-                        .font(.subheadline.weight(.medium))
-                        .foregroundStyle(.toneOverdue)
-                        .frame(minHeight: 44)
+                TaskPeople(task: task)
+
+                if !locked {
+                    Button(role: .destructive) { delete() } label: {
+                        SwiftUI.Label("Delete task", systemImage: "trash")
+                            .font(.subheadline.weight(.medium))
+                            .foregroundStyle(.toneOverdue)
+                            .frame(minHeight: 44)
+                    }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
             }
             .padding(.horizontal, 20)
             .padding(.top, 8)
@@ -146,15 +166,22 @@ private struct TaskDetailsForm: View {
                 .accessibilityLabel("Back to \(parent.title)")
             } else {
                 ProjectMenu(projectId: draft.projectId) { store.updateTask(task.id, TaskPatch(projectId: .some($0))) }
+                    .disabled(locked)
             }
         }
         ToolbarItemGroup(placement: .topBarTrailing) {
-            if task.completedAt == nil {
-                Button("Complete", systemImage: "checkmark") { complete() }
-                    .labelStyle(.titleAndIcon)
-            } else {
-                Button("Reopen", systemImage: "arrow.counterclockwise") { store.reopenTask(task.id) }
-                    .labelStyle(.titleAndIcon)
+            if space == .own {
+                ShareButton(target: API.ShareTarget(kind: .task, id: task.id), name: task.title)
+                    .labelStyle(.iconOnly)
+            }
+            if !locked {
+                if task.completedAt == nil {
+                    Button("Complete", systemImage: "checkmark") { complete() }
+                        .labelStyle(.titleAndIcon)
+                } else {
+                    Button("Reopen", systemImage: "arrow.counterclockwise") { store.reopenTask(task.id) }
+                        .labelStyle(.titleAndIcon)
+                }
             }
         }
         ToolbarSpacer(.fixed, placement: .topBarTrailing)
@@ -165,8 +192,9 @@ private struct TaskDetailsForm: View {
     }
 
     private func commitTitle() {
+        guard !locked else { return }
         let parsed = TaskDetails.parse(
-            title, task, now: clock.now, projects: store.projects, labels: store.labels, in: clock.timeZone
+            title, task, now: clock.now, projects: store.projects(in: space), labels: store.labels(in: space), in: clock.timeZone
         )
         switch TaskDetails.commitTitle(task, title: title, parsed) {
         case .unchanged:
@@ -220,6 +248,7 @@ private struct Picks: Equatable {
 /// instead.
 private struct ProjectMenu: View {
     @Environment(Store.self) private var store
+    @Environment(\.space) private var space
     let projectId: String?
     let onChange: @MainActor (String?) -> Void
 
@@ -230,12 +259,12 @@ private struct ProjectMenu: View {
         Menu {
             Picker("Project", selection: Binding(get: { project?.id }, set: onChange)) {
                 SwiftUI.Label("Inbox", systemImage: "tray").tag(String?.none)
-                ForEach(store.projects) { project in
+                ForEach(store.projects(in: space)) { project in
                     SwiftUI.Label(project.name, systemImage: "number").tag(String?.some(project.id))
                 }
             }
             .pickerStyle(.inline)
-            Button("New project…", systemImage: "plus") { creating = true }
+            if space == .own { Button("New project…", systemImage: "plus") { creating = true } }
         } label: {
             SwiftUI.Label(project?.name ?? "Inbox", systemImage: project == nil ? "tray" : "number")
                 .labelStyle(.titleAndIcon)

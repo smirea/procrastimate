@@ -102,17 +102,14 @@ struct ProcrastimateApp: App {
                 .onChange(of: store.labels) { _, _ in SpotlightIndex.schedule(session) }
                 .task { SpotlightIndex.schedule(session) }
                 .task { await IntentHarness.run() }
+                .task { SharingDemo.run(store: store) }
                 .task { await PlacesDemo.run(store: store, calendar: calendar, navigator: navigator, clock: clock) }
                 // An overlay sits outside the `.environment` calls above, so it gets the router itself; without it every
                 // launch traps on the missing `IntentRouter`.
                 .overlay(alignment: .top) { IntentReadout().environment(router) }
-                .onOpenURL { url in
-                    if url.pathExtension.lowercased() == "zip" {
-                        importer.run(url)
-                        navigator.sheet = .settings
-                    } else if let id = Navigator.taskID(in: url), store.task(id) != nil {
-                        navigator.openTask(id)
-                    }
+                .onOpenURL { open($0) }
+                .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { activity in
+                    if let url = activity.webpageURL { open(url) }
                 }
                 .onMessage(of: UIApplication.self, for: .significantTimeChange) { _ in
                     today = clock.today
@@ -136,6 +133,17 @@ struct ProcrastimateApp: App {
         .backgroundTask(.appRefresh(PlaceMonitor.refreshTaskID)) { [calendar, places] in
             await calendar.sync()
             await places.sync()
+        }
+    }
+
+    private func open(_ url: URL) {
+        if url.pathExtension.lowercased() == "zip" {
+            importer.run(url)
+            navigator.sheet = .settings
+        } else if let token = SharedLinks.token(in: url) {
+            navigator.sheet = .sharedLink(token: token)
+        } else if let id = Navigator.taskID(in: url), store.task(id) != nil {
+            navigator.openTask(id)
         }
     }
 }

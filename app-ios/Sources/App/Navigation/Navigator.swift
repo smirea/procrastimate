@@ -1,3 +1,4 @@
+import Core
 import Foundation
 import Observation
 
@@ -36,5 +37,27 @@ final class Navigator {
     static func taskID(in url: URL) -> String? {
         guard url.scheme == "procrastimate", url.host() == "task", url.pathComponents.count == 2 else { return nil }
         return url.pathComponents[1]
+    }
+
+    /// Opens what a share link points at in a space this user is already a member of, instead of the read-only
+    /// page. Returns false when it is not theirs to open.
+    func openShared(_ target: API.ShareTarget, in store: Store) -> Bool {
+        switch target.kind {
+        case .project where store.project(target.id) != nil:
+            show(.project(id: target.id))
+        case .label where store.label(target.id) != nil:
+            show(.label(id: target.id))
+        case .task where store.task(target.id) != nil:
+            sheet = .details(taskID: target.id)
+        default:
+            return false
+        }
+        return true
+    }
+
+    private func show(_ route: Route) {
+        sheet = nil
+        tab = .browse
+        paths[.browse] = [route]
     }
 }

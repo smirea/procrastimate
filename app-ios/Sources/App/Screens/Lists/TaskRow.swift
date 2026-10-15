@@ -21,6 +21,7 @@ struct TaskRow: View {
             Checkbox(checked: checking, tone: task.priority.tone) { check() }
                 .accessibilityLabel("Complete \(task.title)")
                 .accessibilityValue(Format.priorityLabel(task.priority))
+                .disabled(locked)
             VStack(alignment: .leading, spacing: 2) {
                 Text(task.title)
                     .font(.body)
@@ -42,12 +43,14 @@ struct TaskRow: View {
             .accessibilityAction { navigator.sheet = .details(taskID: task.id) }
         }
         .swipeActions(edge: .leading, allowsFullSwipe: true) {
-            Button("Complete", systemImage: "checkmark") { actions.complete(task) }
-                .tint(.toneSoon)
+            if !locked {
+                Button("Complete", systemImage: "checkmark") { actions.complete(task) }
+                    .tint(.toneSoon)
+            }
         }
         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
             // An event task's day comes from its calendar event, so there is nothing to move.
-            if task.event == nil {
+            if task.event == nil && !locked {
                 Button("Postpone", systemImage: "calendar.badge.clock") { postponing = true }
                     .tint(.toneWeek)
             }
@@ -61,15 +64,17 @@ struct TaskRow: View {
             Button("Pick a date…") { navigator.sheet = .details(taskID: task.id) }
         }
         .contextMenu {
-            Button("Complete", systemImage: "checkmark.circle") { actions.complete(task) }
-            if task.event == nil {
-                Menu("Postpone", systemImage: "calendar.badge.clock") {
-                    ForEach(Format.postponeOptions(due, today), id: \.date) { option in
-                        Button(option.label) { actions.postpone(task, to: option.date) }
+            if !locked {
+                Button("Complete", systemImage: "checkmark.circle") { actions.complete(task) }
+                if task.event == nil {
+                    Menu("Postpone", systemImage: "calendar.badge.clock") {
+                        ForEach(Format.postponeOptions(due, today), id: \.date) { option in
+                            Button(option.label) { actions.postpone(task, to: option.date) }
+                        }
                     }
                 }
+                Button("Delete", systemImage: "trash", role: .destructive) { actions.delete(task) }
             }
-            Button("Delete", systemImage: "trash", role: .destructive) { actions.delete(task) }
         }
     }
 
@@ -84,11 +89,12 @@ struct TaskRow: View {
         }
     }
 
+    private var locked: Bool { store.isReadOnly(task.id) }
     private var project: Project? { store.project(task.projectId) }
     private var labels: [Core.Label] { store.labels(of: task) }
     private var parent: TaskItem? { task.parentId.flatMap(store.task) }
     private var progress: Subtasks.Progress? {
-        Subtasks.progressOf(store.tasks.filter { $0.parentId == task.id })
+        Subtasks.progressOf(store.allTasks.filter { $0.parentId == task.id })
     }
 
     /// The day the task sits on, which for an event or a repeat at a place is not its stored due date.

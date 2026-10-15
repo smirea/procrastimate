@@ -11,6 +11,45 @@ public enum SpaceKey: Hashable, Sendable {
     }
 }
 
+public enum SharedLinks {
+    /// The token of a public share link, `https://procrastimate.stf.lol/s/<token>`, which Universal Links open in the
+    /// app.
+    public static func token(in url: URL) -> String? {
+        let path = url.pathComponents
+        guard url.scheme == "https", url.host() == "procrastimate.stf.lol", path.count == 3, path[1] == "s",
+              !path[2].isEmpty else { return nil }
+        return path[2]
+    }
+}
+
+extension Browse {
+    public struct SharedEntry: Hashable, Sendable, Identifiable {
+        public enum Kind: Hashable, Sendable { case project, label, task }
+
+        public let kind: Kind
+        public let id: String
+        public let name: String
+        public let owner: Person
+    }
+
+    /// What Browse lists under "Shared with me", as the web sidebar does: each space's projects and labels, then its
+    /// open top-level tasks that no listed project holds, which reach this user on their own.
+    public static func sharedEntries(_ spaces: [(id: String, section: SpaceSection)]) -> [SharedEntry] {
+        spaces.flatMap { _, section in
+            let projectIds = Set(section.projects.map(\.id))
+            let taskIds = Set(section.tasks.map(\.id))
+            let loose = section.tasks.filter { task in
+                task.completedAt == nil
+                    && (task.parentId.map { !taskIds.contains($0) } ?? true)
+                    && (task.projectId.map { !projectIds.contains($0) } ?? true)
+            }
+            return section.projects.map { SharedEntry(kind: .project, id: $0.id, name: $0.name, owner: section.owner) }
+                + section.labels.map { SharedEntry(kind: .label, id: $0.id, name: $0.name, owner: section.owner) }
+                + loose.map { SharedEntry(kind: .task, id: $0.id, name: $0.title, owner: section.owner) }
+        }
+    }
+}
+
 extension SyncEngine {
     /// Runs `body` on one shared space dressed as a document: the space's data, cursor, outbox, and epoch with this
     /// device's id and clock. Commits and responses then go through the same code as the user's own space, and the

@@ -7,7 +7,8 @@ struct LabelScreen: View {
 
     var body: some View {
         if let label = store.label(labelID) {
-            let tasks = Views.labelTasks(store.tasks, label.id, in: store.timeZone)
+            let space = store.space(ofLabel: label.id) ?? .own
+            let tasks = Views.labelTasks(store.data(in: space).tasks, label.id, in: store.timeZone)
             TaskListScreen(
                 title: label.name,
                 isEmpty: tasks.isEmpty,
@@ -16,9 +17,12 @@ struct LabelScreen: View {
             ) {
                 ForEach(tasks) { TaskRow(task: $0, showProject: true) }
             }
+            .environment(\.space, space)
             .nameActions(
                 noun: "label",
                 name: label.name,
+                space: space,
+                share: API.ShareTarget(kind: .label, id: label.id),
                 deletePrompt: Browse.deleteLabelPrompt(label.name),
                 deleteMessage: Browse.deleteLabelMessage,
                 rename: { store.renameLabel(label.id, $0) },

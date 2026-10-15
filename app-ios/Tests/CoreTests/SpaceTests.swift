@@ -143,6 +143,35 @@ import Testing
         #expect(store.task("paint")?.completedAt == pinned.epochMilliseconds)
     }
 
+    @Test func sharedWithMeListsProjectsLabelsAndTasksSharedOnTheirOwn() {
+        let section = SpaceSection(
+            owner: ann,
+            cursor: 1,
+            tasks: [
+                TaskItem(id: "a", title: "Paint", projectId: "house", createdAt: 1),
+                TaskItem(id: "b", title: "Book the vet", createdAt: 2),
+                TaskItem(id: "c", parentId: "b", title: "Call first", createdAt: 3),
+                TaskItem(id: "d", title: "Done already", createdAt: 4, completedAt: 5),
+                TaskItem(id: "e", parentId: "gone", title: "Orphan step", createdAt: 6),
+            ],
+            projects: [Project(id: "house", name: "House", createdAt: 1)],
+            labels: [Label(id: "urgent", name: "urgent", createdAt: 1)]
+        )
+        let entries = Browse.sharedEntries([(id: "ann", section: section)])
+        #expect(entries.map(\.name) == ["House", "urgent", "Book the vet", "Orphan step"])
+        #expect(entries.map(\.kind) == [.project, .label, .task, .task])
+        #expect(Set(entries.map(\.owner.name)) == ["Ann"])
+    }
+
+    @Test func onlyAShareLinkOnTheAppsDomainNamesAToken() {
+        func token(_ link: String) -> String? { SharedLinks.token(in: URL(string: link)!) }
+        #expect(token("https://procrastimate.stf.lol/s/u1.abc") == "u1.abc")
+        #expect(token("https://procrastimate.stf.lol/s/") == nil)
+        #expect(token("https://procrastimate.stf.lol/s/u1.abc/more") == nil)
+        #expect(token("https://example.com/s/u1.abc") == nil)
+        #expect(token("procrastimate://task/abc") == nil)
+    }
+
     @Test func spacesNoLongerSharedAreDropped() {
         let store = store()
         let bo = Person(id: "bo", name: "Bo", kind: .ai, ownerId: "me")

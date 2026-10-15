@@ -9,11 +9,18 @@ struct RootView: View {
     @Environment(\.today) private var todayKey
 
     var body: some View {
-        if session.signedIn {
-            signedIn
-        } else {
-            SignInView()
+        Group {
+            if session.signedIn {
+                signedIn
+            } else {
+                SignInView()
+            }
         }
+        // Outside the sign-in gate, so a share link opens its read-only page signed out too.
+        .sheet(item: Binding(
+            get: { navigator.quickAdd == nil ? navigator.sheet : nil },
+            set: { if $0 != nil || navigator.quickAdd == nil { navigator.sheet = $0 } }
+        )) { SheetView(sheet: $0) }
     }
 
     private var signedIn: some View {
@@ -39,10 +46,6 @@ struct RootView: View {
         }
         .sensoryFeedback(.success, trigger: actions.completions)
         .searchShortcuts()
-        .sheet(item: Binding(
-            get: { navigator.quickAdd == nil ? navigator.sheet : nil },
-            set: { if $0 != nil || navigator.quickAdd == nil { navigator.sheet = $0 } }
-        )) { SheetView(sheet: $0) }
     }
 }
 
@@ -134,6 +137,7 @@ private struct TabBar: View {
 
 private struct QuickAddOverlay: View {
     @Environment(Navigator.self) private var navigator
+    @Environment(Store.self) private var store
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -144,10 +148,15 @@ private struct QuickAddOverlay: View {
                     .accessibilityHidden(true)
                     .transition(.opacity)
                 QuickAddSheet(defaults: defaults)
+                    .environment(\.space, space(of: defaults))
                     .transition(.move(edge: .bottom))
             }
         }
         .animation(.snappy(duration: 0.3), value: navigator.quickAdd)
+    }
+
+    private func space(of defaults: QuickAddDefaults) -> SpaceKey {
+        defaults.projectId.flatMap(store.space(ofProject:)) ?? defaults.labelId.flatMap(store.space(ofLabel:)) ?? .own
     }
 }
 
@@ -185,6 +194,7 @@ private struct SheetView: View {
         case let .quickAdd(defaults): QuickAddSheet(defaults: defaults)
         case let .details(taskID): TaskDetailsSheet(taskID: taskID)
         case .settings: SettingsSheet()
+        case let .sharedLink(token): SharedLinkSheet(token: token)
         }
     }
 }

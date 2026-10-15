@@ -5,6 +5,8 @@ enum Sheet: Identifiable, Hashable {
     case quickAdd(QuickAddDefaults)
     case details(taskID: String)
     case settings
+    /// A public share link's read-only page.
+    case sharedLink(token: String)
 
     var id: Self { self }
 }

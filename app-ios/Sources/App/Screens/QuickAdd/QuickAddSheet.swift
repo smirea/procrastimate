@@ -18,6 +18,11 @@ private struct QuickAddForm: View {
     @Environment(Store.self) private var store
     @Environment(Navigator.self) private var navigator
     @Environment(\.clock) private var clock
+    @Environment(\.space) private var space
+
+    /// Quick add from a shared project or label names only that space's projects and labels.
+    private var spaceProjects: [Project] { store.projects(in: space) }
+    private var spaceLabels: [Core.Label] { store.labels(in: space) }
 
     @State private var draft: QuickAddDraft
     @State private var listAt: Int?
@@ -162,7 +167,7 @@ private struct QuickAddForm: View {
 
     /// While the transcript is streaming, the chips stay put. The grammar fills them when listening stops.
     private func shownParse() -> QuickAdd.Parsed {
-        let parsed = draft.parse(now: clock.now, projects: store.projects, labels: store.labels, in: clock.timeZone)
+        let parsed = draft.parse(now: clock.now, projects: spaceProjects, labels: spaceLabels, in: clock.timeZone)
         guard listening else { return parsed }
         return QuickAdd.Parsed(title: draft.text)
     }
@@ -192,14 +197,14 @@ private struct QuickAddForm: View {
         ForEach(reminders, id: \.self) { item in
             Chip(systemImage: "bell.fill", text: Format.formatReminder(item.reminder, today), tone: .toneWeek)
         }
-        ForEach(store.labels.filter { draft.picked.labelIds.contains($0.id) && !parsed.labelIds.contains($0.id) }) {
+        ForEach(spaceLabels.filter { draft.picked.labelIds.contains($0.id) && !parsed.labelIds.contains($0.id) }) {
             Chip(systemImage: "tag.fill", text: $0.name, tone: .ink, iconTone: .toneLabel)
         }
         ForEach(parsed.tokens.filter { $0.kind == .label }, id: \.self) { token in
-            Chip(systemImage: "tag.fill", text: QuickAddDraft.labelName(token, store.labels) ?? "", tone: .ink, iconTone: .toneLabel)
+            Chip(systemImage: "tag.fill", text: QuickAddDraft.labelName(token, spaceLabels) ?? "", tone: .ink, iconTone: .toneLabel)
         }
         // The name the suggestion list is open on already offers to create it there.
-        ForEach(NameSearch.unknownNames(draft.text, parsed.tokens, store.projects, store.labels).filter { $0.start != listAt }, id: \.self) { name in
+        ForEach(NameSearch.unknownNames(draft.text, parsed.tokens, spaceProjects, spaceLabels).filter { $0.start != listAt && space == .own }, id: \.self) { name in
             let title = "Create \(name.sigil.rawValue)\(name.name)"
             Button { create(name) } label: {
                 Chip(systemImage: "plus", text: title, tone: .accent)
@@ -226,7 +231,7 @@ private struct QuickAddForm: View {
             saveSpoken(spoken.tasks)
             return
         }
-        let parsed = draft.parse(now: clock.now, projects: store.projects, labels: store.labels, in: clock.timeZone)
+        let parsed = draft.parse(now: clock.now, projects: spaceProjects, labels: spaceLabels, in: clock.timeZone)
         guard let task = draft.resolve(parsed) else { return }
         withAnimation(.snappy) {
             guard let added = store.addTask(task) else { return }
@@ -293,7 +298,7 @@ private struct QuickAddForm: View {
     /// The grammar runs off the main thread on every transcript update, so a long ramble never stalls the field.
     private func parseLive(_ text: String) {
         liveParse?.cancel()
-        let now = clock.now, projects = store.projects, labels = store.labels, zone = clock.timeZone
+        let now = clock.now, projects = spaceProjects, labels = spaceLabels, zone = clock.timeZone
         liveParse = Task {
             let draft = await Task.detached(priority: .userInitiated) {
                 Ramble.parse(text, now: now, projects: projects, labels: labels, in: zone)
@@ -308,7 +313,7 @@ private struct QuickAddForm: View {
     }
 
     private func applyTranscript() {
-        let ramble = Ramble.parse(transcript, now: clock.now, projects: store.projects, labels: store.labels, in: clock.timeZone)
+        let ramble = Ramble.parse(transcript, now: clock.now, projects: spaceProjects, labels: spaceLabels, in: clock.timeZone)
         guard !ramble.tasks.isEmpty else {
             spoken = .none
             if !transcript.isEmpty, transcript != draft.text {
@@ -319,7 +324,7 @@ private struct QuickAddForm: View {
         }
         guard !Ramble.usesCommands(ramble) else { return settle(ramble.tasks) }
         spoken = .reviewing(ramble.tasks)
-        let transcript = transcript, now = clock.now, projects = store.projects, labels = store.labels, zone = clock.timeZone
+        let transcript = transcript, now = clock.now, projects = spaceProjects, labels = spaceLabels, zone = clock.timeZone
         Task {
             let split = await RambleModel.split(transcript)
             guard case .reviewing = spoken else { return }
@@ -513,6 +518,7 @@ struct PriorityChip: View {
 
 struct ProjectChip: View {
     @Environment(Store.self) private var store
+    @Environment(\.space) private var space
     let projectId: String?
     let onChange: @MainActor (String?) -> Void
 
@@ -523,12 +529,12 @@ struct ProjectChip: View {
         Menu {
             Picker("Project", selection: Binding(get: { project?.id }, set: onChange)) {
                 SwiftUI.Label("Inbox", systemImage: "tray").tag(String?.none)
-                ForEach(store.projects) { project in
+                ForEach(store.projects(in: space)) { project in
                     SwiftUI.Label(project.name, systemImage: "number").tag(String?.some(project.id))
                 }
             }
             .pickerStyle(.inline)
-            Button("New project…", systemImage: "plus") { creating = true }
+            if space == .own { Button("New project…", systemImage: "plus") { creating = true } }
         } label: {
             Chip(systemImage: project == nil ? "tray" : "number", text: project?.name ?? "Inbox", tone: project == nil ? .muted : .ink)
         }
