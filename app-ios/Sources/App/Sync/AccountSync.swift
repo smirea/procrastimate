@@ -11,6 +11,8 @@ final class AccountSync {
     private var task: Task<Void, Never>?
     private var soon: Task<Void, Never>?
     private var socket: URLSessionWebSocketTask?
+    private var spacesListedAt: ContinuousClock.Instant?
+    private static let spacesInterval = Duration.seconds(300)
 
     init(store: Store, clock: AppClock, session: Session) {
         self.store = store
@@ -83,29 +85,74 @@ final class AccountSync {
         session.signedIn = Launch.signedIn
     }
 
+    /// The user's own space first, then the list of spaces shared with them when it is due, then each shared space.
     private func sync() async {
         guard let token = SessionToken.read() else { return }
         store.noteTimeZone(clock.timeZone.identifier)
+        guard await syncSpace(.own, token: token) else { return }
+        if spacesListedAt.map({ $0.duration(to: .now) > Self.spacesInterval }) ?? true {
+            await listSpaces(token: token)
+        }
+        for (id, _) in store.sharedSpaces {
+            await syncSpace(.shared(id), token: token)
+        }
+    }
+
+    /// One round of the sync protocol for a space, repeated while pages come back full. A shared space that answers
+    /// `403` is no longer shared, so its section goes.
+    @discardableResult
+    private func syncSpace(_ space: SpaceKey, token: String) async -> Bool {
         let body: API.SyncRequest
         do {
-            guard let request = try store.syncRequest() else { return }
+            let request = switch space {
+            case .own: try store.syncRequest()
+            case let .shared(id): try store.syncRequest(space: id)
+            }
+            guard let request else { return false }
             body = request
         } catch {
             print("sync: the outbox does not fit the contract", error)
-            return
+            return false
         }
         let response: API.SyncResponse
         do {
-            response = try await APIClient.send(API.Endpoints.Sync.self, body, token: token, device: device())
+            response = try await APIClient.send(
+                API.Endpoints.Sync.self, body, query: ["space": space.query], token: token, device: device()
+            )
         } catch let failure as APIFailure where failure.isUnauthorized {
             reject()
-            return
+            return false
+        } catch let failure as APIFailure where failure.isForbidden {
+            if let id = space.query { store.dropSpace(id) }
+            return false
         } catch {
+            return false
+        }
+        let applied = switch space {
+        case .own: store.takeSyncResponse(response)
+        case let .shared(id): store.takeSyncResponse(response, space: id)
+        }
+        if applied, case let .changes(page) = response, page.changes.count >= SyncEngine.pageSize {
+            return await syncSpace(space, token: token)
+        }
+        return applied
+    }
+
+    private func listSpaces(token: String) async {
+        guard let listed = try? await APIClient.send(API.Endpoints.SpacesList.self, NoInput(), token: token) else { return }
+        spacesListedAt = .now
+        store.setSpaces(listed.spaces)
+    }
+
+    /// A nudge for a space this device does not know yet means it was just shared, so the list comes first.
+    private func nudged(_ nudge: API.Nudge) async {
+        guard let space = nudge.space else {
+            if let own = store.snapshot.sync?.cursor, nudge.cursor > own { await sync() }
             return
         }
-        if store.takeSyncResponse(response), case let .changes(page) = response, page.changes.count >= SyncEngine.pageSize {
-            await sync()
-        }
+        guard let token = SessionToken.read() else { return }
+        if store.snapshot.spaces[space] == nil { await listSpaces(token: token) }
+        if store.snapshot.spaces[space] != nil { await syncSpace(.shared(space), token: token) }
     }
 
     private func connect() {
@@ -127,9 +174,8 @@ final class AccountSync {
             Task { @MainActor in
                 guard let self, self.socket === task else { return }
                 if case let .success(.string(text)) = result,
-                   let nudge = try? JSONDecoder.validating().decode(API.Nudge.self, from: Data(text.utf8)),
-                   let own = self.store.snapshot.sync?.cursor, nudge.cursor > own {
-                    await self.sync()
+                   let nudge = try? JSONDecoder.validating().decode(API.Nudge.self, from: Data(text.utf8)) {
+                    await self.nudged(nudge)
                 }
                 if case .failure = result {
                     self.disconnect()
