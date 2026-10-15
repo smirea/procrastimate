@@ -89,7 +89,7 @@ private struct TaskDetailsForm: View {
 
                 if let memo = task.memoSource {
                     Link(destination: MemoTasks.memoURL(memo.memoId)) {
-                        SwiftUI.Label("NoteTorus", systemImage: "waveform")
+                        SwiftUI.Label("Notouroboros", systemImage: "waveform")
                             .font(.subheadline.weight(.medium))
                             .frame(minHeight: 44)
                     }

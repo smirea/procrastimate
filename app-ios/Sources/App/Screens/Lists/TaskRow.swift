@@ -154,7 +154,7 @@ struct TaskRow: View {
                 if task.memoSource != nil {
                     Image(systemName: "waveform")
                         .imageScale(.small)
-                        .accessibilityLabel("From NoteTorus")
+                        .accessibilityLabel("From Notouroboros")
                 }
                 if let parent {
                     Detail(systemImage: "arrow.turn.down.right", text: parent.title)

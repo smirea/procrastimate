@@ -81,7 +81,7 @@ export const accountContract = {
 		/** What the server will deliver to this device, soonest first. For inspecting a run, not a user path. */
 		schedule: signedIn.meta(openapi({ method: 'GET', path: '/api/push/schedule' })).output(pushScheduleResponseSchema),
 	},
-	/** NoteTorus's tasks. See `docs/decisions/integrations.md`. */
+	/** Notouroboros's tasks. See `docs/decisions/integrations.md`. */
 	memoTasks: {
 		list: signedIn
 			.meta(openapi({ method: 'GET', path: '/api/memo-tasks', inputStructure: 'detailed' }))
