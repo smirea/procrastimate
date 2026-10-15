@@ -14,6 +14,7 @@
 	import { excerpt, search, type NameHit, type TaskHit } from 'shared/search.ts';
 	import { toDateKey, type Label, type Project } from 'shared/task.ts';
 	import Highlighted from './Highlighted.svelte';
+	import LinkedText from './LinkedText.svelte';
 	import { store } from '../store.svelte.ts';
 	import { clock, mobile, sheets, motion } from '../ui.svelte.ts';
 	import { dueTone, formatDate, formatDue } from 'shared/format.ts';
@@ -221,10 +222,10 @@
 								</span>
 								<span class="min-w-0 flex-1">
 									<span class="block truncate text-[14px] leading-5 touch:text-[15px]" class:title-done={done}>
-										<Highlighted highlight={row.hit.matches.title?.[0] ?? { text: task.title, ranges: [] }} />
+										<LinkedText text={task.title} ranges={row.hit.matches.title?.[0]?.ranges} />
 									</span>
 									{#if notes}
-										<span class="block truncate text-[12px] leading-4 text-muted"><Highlighted highlight={excerpt(notes)} /></span>
+										<span class="block truncate text-[12px] leading-4 text-muted"><LinkedText {...excerpt(notes)} /></span>
 									{/if}
 									{#if parent}
 										<span class="flex min-w-0 items-center gap-1 text-[12px] leading-4 text-muted" aria-label={`Subtask of ${parent.title}`}>
