@@ -138,8 +138,10 @@
 
 	/** Unchecking a typed label removes its `@name`, so the picker's list is what saves. */
 	function setLabels(next: string[]) {
+		const typed = parsed.labelIds;
 		cut(labelTokens.filter(({ token }) => !next.includes(labelIdOf(token) ?? '')).map(({ token }) => token));
-		picked.labelIds = next;
+		// A label the text still types stays the text's, so deleting its `@name` later drops it.
+		picked.labelIds = next.filter((id) => !typed.includes(id) || picked.labelIds.includes(id));
 	}
 
 	const labelIdOf = (token: QuickAddToken) =>

@@ -288,7 +288,9 @@ private struct QuickAddForm: View {
             }
         }
         draft.removeTokens(dropped)
-        draft.picked.labelIds = labelIds
+        // A label the text still types stays the text's, so deleting its `@name` later drops it.
+        let picked = draft.picked.labelIds
+        draft.picked.labelIds = labelIds.filter { !parsed.labelIds.contains($0) || picked.contains($0) }
     }
 
     /// Runs a `+` menu action: the checklist opens its field, and every other button opens its picker in the row.
