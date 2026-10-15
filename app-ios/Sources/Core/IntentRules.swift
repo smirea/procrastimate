@@ -40,6 +40,7 @@ public enum IntentRules {
     public static func newTask(
         _ request: AddRequest,
         projects: [Project],
+        sections: [ProjectSection] = [],
         labels: [Label],
         now: Date,
         zone: TimeZone
@@ -50,7 +51,7 @@ public enum IntentRules {
         draft.picked.labelIds = request.labelIds
         draft.picked.priority = request.priority
         draft.picked.due = request.due
-        let parsed = draft.parse(now: now, projects: projects, labels: labels, in: zone)
+        let parsed = draft.parse(now: now, projects: projects, sections: sections, labels: labels, in: zone)
         // The quick-add draft keeps a typed reminder and a picked one. A shortcut field fills the gap only.
         if parsed.reminders.isEmpty { draft.picked.reminders = request.reminders }
         return draft.resolve(parsed)

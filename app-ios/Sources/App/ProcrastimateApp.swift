@@ -103,7 +103,10 @@ struct ProcrastimateApp: App {
                 .task { SpotlightIndex.schedule(session) }
                 .task { await IntentHarness.run() }
                 .task { SharingDemo.run(store: store) }
-                .task { await PlacesDemo.run(store: store, calendar: calendar, navigator: navigator, clock: clock) }
+                .task {
+                    SectionsDemo.run(store: store, navigator: navigator)
+                    await PlacesDemo.run(store: store, calendar: calendar, navigator: navigator, clock: clock)
+                }
                 // An overlay sits outside the `.environment` calls above, so it gets the router itself; without it every
                 // launch traps on the missing `IntentRouter`.
                 .overlay(alignment: .top) { IntentReadout().environment(router) }

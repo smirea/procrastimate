@@ -22,6 +22,7 @@ private struct QuickAddForm: View {
 
     /// Quick add from a shared project or label names only that space's projects and labels.
     private var spaceProjects: [Project] { store.projects(in: space) }
+    private var spaceSections: [ProjectSection] { store.data(in: space).sections }
     private var spaceLabels: [Core.Label] { store.labels(in: space) }
 
     @State private var draft: QuickAddDraft
@@ -42,7 +43,7 @@ private struct QuickAddForm: View {
     private var showMic: Bool { draft.text.isEmpty }
 
     var body: some View {
-        let parsed = draft.parse(now: clock.now, projects: spaceProjects, labels: spaceLabels, in: clock.timeZone)
+        let parsed = draft.parse(now: clock.now, projects: spaceProjects, sections: spaceSections, labels: spaceLabels, in: clock.timeZone)
         let resolved = draft.resolved(parsed)
         VStack(alignment: .leading, spacing: 12) {
             SmartInput(
@@ -50,6 +51,7 @@ private struct QuickAddForm: View {
                 tokens: parsed.tokens,
                 label: "Task name",
                 placeholder: "Call mom tomorrow 5pm p1 remind me 30m before",
+                projectId: resolved.projectId,
                 listAt: $listAt,
                 // Four lines, and three in a subtask field, so the sheet fits above the keyboard with its subtasks.
                 maxHeight: 104,
@@ -80,9 +82,13 @@ private struct QuickAddForm: View {
             .animation(.snappy(duration: 0.16), value: parsed.tokens)
 
             HStack(spacing: 8) {
-                ProjectChip(projectId: resolved.projectId) { id in
-                    draft.clearToken(.project, in: parsed)
-                    draft.picked.projectId = id
+                ProjectChip(projectId: resolved.projectId, sectionId: resolved.sectionId) { projectId, sectionId in
+                    draft.clearToken(.section, in: parsed)
+                    draft.clearToken(.project, in: draft.parse(
+                        now: clock.now, projects: spaceProjects, sections: spaceSections, labels: spaceLabels, in: clock.timeZone
+                    ))
+                    draft.picked.projectId = projectId
+                    draft.picked.sectionId = sectionId
                 }
                 Spacer(minLength: 0)
                 Button("Cancel") { navigator.sheet = nil }
@@ -153,7 +159,7 @@ private struct QuickAddForm: View {
     @ViewBuilder
     private func chips(
         _ parsed: QuickAdd.Parsed,
-        _ resolved: (due: Due?, priority: Priority, projectId: String?, labelIds: [String])
+        _ resolved: (due: Due?, priority: Priority, projectId: String?, sectionId: String?, labelIds: [String])
     ) -> some View {
         let today = clock.today
         // An event stands in for the date and the repeat, as in task details.
@@ -199,12 +205,13 @@ private struct QuickAddForm: View {
         switch name.sigil {
         case .project: _ = store.addProject(name.name)
         case .label: _ = store.addLabel(name.name)
+        case .section: break
         }
         focused = true
     }
 
     private func submit() {
-        let parsed = draft.parse(now: clock.now, projects: spaceProjects, labels: spaceLabels, in: clock.timeZone)
+        let parsed = draft.parse(now: clock.now, projects: spaceProjects, sections: spaceSections, labels: spaceLabels, in: clock.timeZone)
         guard let task = draft.resolve(parsed) else { return }
         let typing = NewTask(subtask: QuickAdd.parseSubtask(subtaskText, now: clock.now, labels: spaceLabels, in: clock.timeZone))
         let children = subtasks.map(\.task) + (typing.map { [$0] } ?? [])
@@ -284,30 +291,81 @@ struct PriorityChip: View {
     }
 }
 
-struct ProjectChip: View {
+/// Where a task sits: a project, or Inbox, and a section of that project.
+struct Place: Hashable {
+    var projectId: String?
+    var sectionId: String?
+}
+
+extension Store {
+    /// `Project / Section`, the project alone, or `Inbox`.
+    func placeName(_ projectId: String?, _ sectionId: String?) -> String {
+        guard let project = project(projectId) else { return "Inbox" }
+        guard let section = section(sectionId), section.projectId == project.id else { return project.name }
+        return "\(project.name) / \(section.name)"
+    }
+}
+
+/// The rows of a project menu. A project with sections opens a submenu that lists `No section` and each section,
+/// since a menu cannot indent rows.
+struct PlaceMenuContent: View {
     @Environment(Store.self) private var store
     @Environment(\.space) private var space
+    let selection: Binding<Place>
+    @Binding var creating: Bool
+
+    var body: some View {
+        let projects = store.projects(in: space)
+        let sections = store.data(in: space).sections
+        let sectioned = { (project: Project) in sections.contains { $0.projectId == project.id } }
+        Picker("Project", selection: selection) {
+            SwiftUI.Label("Inbox", systemImage: "tray").tag(Place())
+            ForEach(projects.filter { !sectioned($0) }) { project in
+                SwiftUI.Label(project.name, systemImage: "number").tag(Place(projectId: project.id))
+            }
+        }
+        .pickerStyle(.inline)
+        ForEach(projects.filter(sectioned)) { project in
+            Menu {
+                Picker(project.name, selection: selection) {
+                    SwiftUI.Label("No section", systemImage: "number").tag(Place(projectId: project.id))
+                    ForEach(StoreRules.sectionsOf(sections, project.id)) { section in
+                        SwiftUI.Label(section.name, systemImage: "rectangle.split.1x2")
+                            .tag(Place(projectId: project.id, sectionId: section.id))
+                    }
+                }
+                .pickerStyle(.inline)
+            } label: {
+                SwiftUI.Label(project.name, systemImage: selection.wrappedValue.projectId == project.id ? "checkmark" : "number")
+            }
+        }
+        if space == .own { Button("New project…", systemImage: "plus") { creating = true } }
+    }
+}
+
+struct ProjectChip: View {
+    @Environment(Store.self) private var store
     let projectId: String?
-    let onChange: @MainActor (String?) -> Void
+    var sectionId: String?
+    let onChange: @MainActor (String?, String?) -> Void
 
     @State private var creating = false
 
     var body: some View {
-        let project = store.project(projectId)
+        let name = store.placeName(projectId, sectionId)
         Menu {
-            Picker("Project", selection: Binding(get: { project?.id }, set: onChange)) {
-                SwiftUI.Label("Inbox", systemImage: "tray").tag(String?.none)
-                ForEach(store.projects(in: space)) { project in
-                    SwiftUI.Label(project.name, systemImage: "number").tag(String?.some(project.id))
-                }
-            }
-            .pickerStyle(.inline)
-            if space == .own { Button("New project…", systemImage: "plus") { creating = true } }
+            PlaceMenuContent(
+                selection: Binding(
+                    get: { Place(projectId: projectId, sectionId: sectionId) },
+                    set: { onChange($0.projectId, $0.sectionId) }
+                ),
+                creating: $creating
+            )
         } label: {
-            Chip(systemImage: project == nil ? "tray" : "number", text: project?.name ?? "Inbox", tone: project == nil ? .muted : .ink)
+            Chip(systemImage: projectId == nil ? "tray" : "number", text: name, tone: projectId == nil ? .muted : .ink)
         }
-        .accessibilityLabel("Project \(project?.name ?? "Inbox")")
-        .newProjectPrompt(isPresented: $creating) { onChange($0) }
+        .accessibilityLabel("Project \(name)")
+        .newProjectPrompt(isPresented: $creating) { onChange($0, nil) }
     }
 }
 

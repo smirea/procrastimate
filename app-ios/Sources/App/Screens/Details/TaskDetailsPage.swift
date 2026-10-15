@@ -39,7 +39,13 @@ private struct TaskDetailsForm: View {
 
     var body: some View {
         let parsed = TaskDetails.parse(
-            title, task, now: clock.now, projects: store.projects(in: space), labels: store.labels(in: space), in: clock.timeZone
+            title,
+            task,
+            now: clock.now,
+            projects: store.projects(in: space),
+            sections: store.data(in: space).sections,
+            labels: store.labels(in: space),
+            in: clock.timeZone
         )
         let draft = TaskDetails.draft(task, title: title, parsed)
         ScrollView {
@@ -61,6 +67,7 @@ private struct TaskDetailsForm: View {
                         tokens: parsed.tokens,
                         label: "Title",
                         suggestProjects: parent == nil,
+                        projectId: draft.projectId,
                         focused: $titleFocused,
                         onSubmit: { commitTitle() }
                     )
@@ -209,8 +216,10 @@ private struct TaskDetailsForm: View {
                 }
                 .accessibilityLabel("Back to \(parent.title)")
             } else {
-                ProjectMenu(projectId: draft.projectId) { store.updateTask(task.id, TaskPatch(projectId: .some($0))) }
-                    .disabled(locked)
+                ProjectMenu(projectId: draft.projectId, sectionId: draft.sectionId) { projectId, sectionId in
+                    store.updateTask(task.id, TaskPatch(projectId: .some(projectId), sectionId: .some(sectionId)))
+                }
+                .disabled(locked)
             }
         }
         if space == .own {
@@ -228,7 +237,13 @@ private struct TaskDetailsForm: View {
     private func commitTitle() {
         guard !locked else { return }
         let parsed = TaskDetails.parse(
-            title, task, now: clock.now, projects: store.projects(in: space), labels: store.labels(in: space), in: clock.timeZone
+            title,
+            task,
+            now: clock.now,
+            projects: store.projects(in: space),
+            sections: store.data(in: space).sections,
+            labels: store.labels(in: space),
+            in: clock.timeZone
         )
         switch TaskDetails.commitTitle(task, title: title, parsed) {
         case .unchanged:
@@ -261,6 +276,7 @@ private struct Picks: Equatable {
     let recurrence: Recurrence?
     let priority: Priority
     let projectId: String?
+    let sectionId: String?
     let labelIds: [String]
     let reminders: [Reminder]
     let location: TaskLocation?
@@ -271,6 +287,7 @@ private struct Picks: Equatable {
         recurrence = task.recurrence
         priority = task.priority
         projectId = task.projectId
+        sectionId = task.sectionId
         labelIds = task.labelIds
         reminders = task.reminders
         location = task.location
@@ -282,33 +299,32 @@ private struct Picks: Equatable {
 /// instead.
 private struct ProjectMenu: View {
     @Environment(Store.self) private var store
-    @Environment(\.space) private var space
     let projectId: String?
-    let onChange: @MainActor (String?) -> Void
+    let sectionId: String?
+    let onChange: @MainActor (String?, String?) -> Void
 
     @State private var creating = false
 
     var body: some View {
-        let project = store.project(projectId)
+        let name = store.placeName(projectId, sectionId)
         Menu {
-            Picker("Project", selection: Binding(get: { project?.id }, set: onChange)) {
-                SwiftUI.Label("Inbox", systemImage: "tray").tag(String?.none)
-                ForEach(store.projects(in: space)) { project in
-                    SwiftUI.Label(project.name, systemImage: "number").tag(String?.some(project.id))
-                }
-            }
-            .pickerStyle(.inline)
-            if space == .own { Button("New project…", systemImage: "plus") { creating = true } }
+            PlaceMenuContent(
+                selection: Binding(
+                    get: { Place(projectId: projectId, sectionId: sectionId) },
+                    set: { onChange($0.projectId, $0.sectionId) }
+                ),
+                creating: $creating
+            )
         } label: {
             // Only the share and close buttons share the bar, so the name gets most of the width and truncates.
             HStack(spacing: 6) {
-                Image(systemName: project == nil ? "tray" : "number")
-                Text(project?.name ?? "Inbox").lineLimit(1).truncationMode(.tail)
+                Image(systemName: projectId == nil ? "tray" : "number")
+                Text(name).lineLimit(1).truncationMode(.tail)
             }
             .frame(maxWidth: 240, alignment: .leading)
         }
-        .accessibilityLabel("Project \(project?.name ?? "Inbox")")
-        .newProjectPrompt(isPresented: $creating) { onChange($0) }
+        .accessibilityLabel("Project \(name)")
+        .newProjectPrompt(isPresented: $creating) { onChange($0, nil) }
         .accessibilityIdentifier("Project menu")
     }
 }

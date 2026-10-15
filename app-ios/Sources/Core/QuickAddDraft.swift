@@ -7,11 +7,13 @@ public struct QuickAddDraft: Hashable, Sendable {
     /// What the sheet opened with, from the list it opened in.
     public struct Defaults: Hashable, Sendable {
         public var projectId: String?
+        public var sectionId: String?
         public var labelId: String?
         public var today: Bool
 
-        public init(projectId: String? = nil, labelId: String? = nil, today: Bool = false) {
+        public init(projectId: String? = nil, sectionId: String? = nil, labelId: String? = nil, today: Bool = false) {
             self.projectId = projectId
+            self.sectionId = sectionId
             self.labelId = labelId
             self.today = today
         }
@@ -22,6 +24,7 @@ public struct QuickAddDraft: Hashable, Sendable {
         public var due: Due?
         public var priority: Priority?
         public var projectId: String?
+        public var sectionId: String?
         public var labelIds: [String]
         public var reminders: [Reminder]
     }
@@ -40,6 +43,7 @@ public struct QuickAddDraft: Hashable, Sendable {
             due: defaults.today ? Due(date: today, time: nil) : nil,
             priority: nil,
             projectId: defaults.projectId,
+            sectionId: defaults.sectionId,
             labelIds: defaults.labelId.map { [$0] } ?? [],
             reminders: []
         )
@@ -49,10 +53,23 @@ public struct QuickAddDraft: Hashable, Sendable {
         text = value
     }
 
-    public func parse(now: Date, projects: [Project], labels: [Label], in zone: TimeZone) -> QuickAdd.Parsed {
+    public func parse(
+        now: Date,
+        projects: [Project],
+        sections: [ProjectSection] = [],
+        labels: [Label],
+        in zone: TimeZone
+    ) -> QuickAdd.Parsed {
         QuickAdd.parse(
             text,
-            QuickAdd.Options(now: now, projects: projects, labels: labels, due: picked.due),
+            QuickAdd.Options(
+                now: now,
+                projects: projects,
+                sections: sections,
+                labels: labels,
+                projectId: picked.projectId,
+                due: picked.due
+            ),
             in: zone
         )
     }
@@ -72,6 +89,7 @@ public struct QuickAddDraft: Hashable, Sendable {
         return NewTask(
             title: parsed.title,
             projectId: resolved.projectId,
+            sectionId: resolved.sectionId,
             labelIds: resolved.labelIds,
             due: resolved.due,
             recurrence: parsed.recurrence,
@@ -80,14 +98,19 @@ public struct QuickAddDraft: Hashable, Sendable {
         )
     }
 
-    /// The values the chips show: the text's when it has one, else the pick's.
-    public func resolved(_ parsed: QuickAdd.Parsed) -> (due: Due?, priority: Priority, projectId: String?, labelIds: [String]) {
+    /// The values the chips show: the text's when it has one, else the pick's. A typed project other than the picked
+    /// one leaves the picked section behind.
+    public func resolved(
+        _ parsed: QuickAdd.Parsed
+    ) -> (due: Due?, priority: Priority, projectId: String?, sectionId: String?, labelIds: [String]) {
         var labelIds = picked.labelIds
         for id in parsed.labelIds where !labelIds.contains(id) { labelIds.append(id) }
+        let projectId = parsed.projectId ?? picked.projectId
         return (
             parsed.due ?? picked.due,
             parsed.priority ?? picked.priority ?? .default,
-            parsed.projectId ?? picked.projectId,
+            projectId,
+            parsed.sectionId ?? (projectId == picked.projectId ? picked.sectionId : nil),
             labelIds
         )
     }
@@ -98,7 +121,7 @@ public struct QuickAddDraft: Hashable, Sendable {
         picked = Self.initialPicked(defaults, today)
     }
 
-    /// Replaces a `#` or `@` fragment from `start` to `end` with the picked name and a space, and returns the new text
+    /// Replaces a `#`, `/`, or `@` fragment from `start` to `end` with the picked name and a space, and returns the new text
     /// with the caret after the space.
     public static func insertingName(
         _ name: String,

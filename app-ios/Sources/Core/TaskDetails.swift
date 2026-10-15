@@ -10,6 +10,7 @@ public enum TaskDetails {
         public var recurrence: Recurrence?
         public var priority: Priority
         public var projectId: String?
+        public var sectionId: String?
         public var labelIds: [String]
         public var reminders: [Reminder]
 
@@ -19,6 +20,7 @@ public enum TaskDetails {
             recurrence = task.recurrence
             priority = task.priority
             projectId = task.projectId
+            sectionId = task.sectionId
             labelIds = task.labelIds
             reminders = task.reminders
         }
@@ -32,18 +34,28 @@ public enum TaskDetails {
         case update(TaskPatch, title: String)
     }
 
-    /// A subtask's title never parses `#Name`, since a subtask always shares its root task's project.
+    /// A subtask's title never parses `#Name` or `/Name`, since a subtask always shares its root task's project and
+    /// sits under its parent rather than in a section.
     public static func parse(
         _ title: String,
         _ task: TaskItem,
         now: Date,
         projects: [Project],
+        sections: [ProjectSection] = [],
         labels: [Label],
         in zone: TimeZone
     ) -> QuickAdd.Parsed {
-        QuickAdd.parse(
+        let topLevel = task.parentId == nil
+        return QuickAdd.parse(
             title,
-            QuickAdd.Options(now: now, projects: task.parentId == nil ? projects : [], labels: labels, due: task.due),
+            QuickAdd.Options(
+                now: now,
+                projects: topLevel ? projects : [],
+                sections: topLevel ? sections : [],
+                labels: labels,
+                projectId: task.projectId,
+                due: task.due
+            ),
             in: zone
         )
     }
@@ -58,6 +70,8 @@ public enum TaskDetails {
         draft.recurrence = task.event == nil ? parsed.recurrence ?? task.recurrence : nil
         draft.priority = parsed.priority ?? task.priority
         draft.projectId = parsed.projectId ?? task.projectId
+        draft.sectionId = parsed.sectionId
+            ?? (parsed.projectId.map { $0 != task.projectId } == true ? nil : task.sectionId)
         for id in parsed.labelIds where !draft.labelIds.contains(id) { draft.labelIds.append(id) }
         draft.reminders = task.reminders + parsed.reminders
         return draft
@@ -70,6 +84,7 @@ public enum TaskDetails {
         let patch = TaskPatch(
             title: draft.title,
             projectId: .some(draft.projectId),
+            sectionId: .some(draft.sectionId),
             labelIds: draft.labelIds,
             due: .some(draft.due),
             recurrence: .some(draft.recurrence),

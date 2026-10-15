@@ -3,11 +3,13 @@ import SwiftUI
 
 enum NameKind: CaseIterable {
     case project
+    case section
     case label
 
     var sigil: NameSearch.Sigil {
         switch self {
         case .project: .project
+        case .section: .section
         case .label: .label
         }
     }
@@ -15,6 +17,7 @@ enum NameKind: CaseIterable {
     var list: String {
         switch self {
         case .project: "Projects"
+        case .section: "Sections"
         case .label: "Labels"
         }
     }
@@ -22,6 +25,7 @@ enum NameKind: CaseIterable {
     var noun: String {
         switch self {
         case .project: "project"
+        case .section: "section"
         case .label: "label"
         }
     }
@@ -29,6 +33,7 @@ enum NameKind: CaseIterable {
     var systemImage: String {
         switch self {
         case .project: "number"
+        case .section: "rectangle.split.1x2"
         case .label: "tag"
         }
     }
@@ -43,15 +48,27 @@ struct NameMatch: Equatable {
     let kind: NameKind
     let fragment: NameSearch.Fragment
     let suggestions: [Suggestion]
+    /// The project whose sections a `/` match lists and creates in.
+    var projectId: String?
 
     @MainActor
-    /// Suggests only the space's own names. A guest cannot create projects or labels in someone else's space.
-    static func at(_ caret: Int, in text: String, store: Store, space: SpaceKey, kinds: [NameKind]) -> NameMatch? {
+    /// Suggests only the space's own names. A guest cannot create projects or labels in someone else's space. `/`
+    /// suggests the sections of `projectId`, the project in effect, and only in the user's own space.
+    static func at(
+        _ caret: Int,
+        in text: String,
+        store: Store,
+        space: SpaceKey,
+        kinds: [NameKind],
+        projectId: String? = nil
+    ) -> NameMatch? {
         let data = store.data(in: space)
+        let sections = projectId.map { StoreRules.sectionsOf(data.sections, $0) } ?? []
         var closest: (kind: NameKind, fragment: NameSearch.Fragment)?
         for kind in kinds {
             let found = switch kind {
             case .project: NameSearch.sigilFragment(text, caret, kind.sigil, data.projects)
+            case .section: space == .own && projectId != nil ? NameSearch.sigilFragment(text, caret, kind.sigil, sections) : nil
             case .label: NameSearch.sigilFragment(text, caret, kind.sigil, data.labels)
             }
             if let found, found.start > closest?.fragment.start ?? -1 { closest = (kind, found) }
@@ -61,12 +78,15 @@ struct NameMatch: Equatable {
         case .project:
             NameSearch.suggest(data.projects, NameSearch.lastUsed(data.tasks, NameSearch.projectIdsOf), fragment.query)
                 .map(Suggestion.init)
+        case .section:
+            NameSearch.suggest(sections, NameSearch.lastUsed(data.tasks, NameSearch.sectionIdsOf), fragment.query)
+                .map(Suggestion.init)
         case .label:
             NameSearch.suggest(data.labels, NameSearch.lastUsed(data.tasks, NameSearch.labelIdsOf), fragment.query)
                 .map(Suggestion.init)
         }
         let allowed = space == .own ? suggestions : suggestions.filter { if case .create = $0 { false } else { true } }
-        return NameMatch(kind: kind, fragment: fragment, suggestions: allowed)
+        return NameMatch(kind: kind, fragment: fragment, suggestions: allowed, projectId: projectId)
     }
 
     @MainActor
@@ -76,6 +96,7 @@ struct NameMatch: Equatable {
         case let .create(name):
             switch kind {
             case .project: return store.addProject(name).name
+            case .section: return projectId.flatMap { store.addSection($0, name)?.name } ?? name
             case .label: return store.addLabel(name).name
             }
         }

@@ -13,6 +13,8 @@ struct NameActions: ViewModifier {
     let copy: () -> Void
     let rename: (String) -> Void
     let delete: () -> Void
+    /// A project's screen adds sections from its menu.
+    var addSection: ((String) -> Void)?
 
     @Environment(Store.self) private var store
     @Environment(\.dismiss) private var dismiss
@@ -22,6 +24,8 @@ struct NameActions: ViewModifier {
     @State private var confirmingDelete = false
     @State private var deleted = 0
     @AppStorage("showCompleted") private var showCompleted = false
+    @State private var addingSection = false
+    @State private var sectionName = ""
 
     private var title: String { noun.prefix(1).uppercased() + noun.dropFirst() }
 
@@ -40,6 +44,12 @@ struct NameActions: ViewModifier {
                             Button("Rename", systemImage: "pencil") {
                                 draft = name
                                 renaming = true
+                            }
+                        }
+                        if space == .own, addSection != nil {
+                            Button("Add section", systemImage: "rectangle.split.1x2") {
+                                sectionName = ""
+                                addingSection = true
                             }
                         }
                         Button("Copy as Markdown", systemImage: "doc.on.doc") { copy() }
@@ -61,6 +71,16 @@ struct NameActions: ViewModifier {
                 Button("Rename") {
                     let trimmed = draft.trimmingCharacters(in: .whitespacesAndNewlines)
                     if !trimmed.isEmpty { withAnimation(.snappy) { rename(trimmed) } }
+                }
+                .keyboardShortcut(.defaultAction)
+            }
+            .alert("Add section", isPresented: $addingSection) {
+                TextField("Section name", text: $sectionName)
+                    .submitLabel(.done)
+                Button("Cancel", role: .cancel) {}
+                Button("Add") {
+                    let trimmed = sectionName.trimmingCharacters(in: .whitespacesAndNewlines)
+                    if !trimmed.isEmpty { withAnimation(.snappy) { addSection?(trimmed) } }
                 }
                 .keyboardShortcut(.defaultAction)
             }
@@ -91,7 +111,8 @@ extension View {
         deleteMessage: String? = nil,
         copy: @escaping () -> Void,
         rename: @escaping (String) -> Void,
-        delete: @escaping () -> Void
+        delete: @escaping () -> Void,
+        addSection: ((String) -> Void)? = nil
     ) -> some View {
         modifier(NameActions(
             noun: noun,
@@ -102,7 +123,8 @@ extension View {
             deleteMessage: deleteMessage,
             copy: copy,
             rename: rename,
-            delete: delete
+            delete: delete,
+            addSection: addSection
         ))
     }
 }

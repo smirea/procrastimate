@@ -7,6 +7,7 @@ public protocol NamedItem {
 
 extension Project: NamedItem {}
 extension Label: NamedItem {}
+extension ProjectSection: NamedItem {}
 
 /// The `#` and `@` suggestion rules of `shared/name-search.ts`. Offsets count UTF-16 code units, as on the web.
 public enum NameSearch {

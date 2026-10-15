@@ -79,8 +79,9 @@ final class TaskActions {
     }
 
     func copyAsMarkdown(project: Project) {
-        let tasks = Views.projectTasks(store.data(in: store.space(ofProject: project.id) ?? .own).tasks, project.id, in: store.timeZone)
-        copyAsMarkdown(Markdown.Document(title: project.name, projectId: project.id, sections: [.init(tasks: tasks)]))
+        let data = store.data(in: store.space(ofProject: project.id) ?? .own)
+        let groups = Views.projectGroups(data.tasks, data.sections, project.id, in: store.timeZone)
+        copyAsMarkdown(Markdown.projectDocument(project, groups))
     }
 
     /// Keeps the time of day, and leaves the repeat to count from the new date.

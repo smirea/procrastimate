@@ -30,7 +30,7 @@ extension QuickAdd.TokenKind {
         case .due: .tokenDue
         case .priority: .tokenPriority
         case .reminder: .tokenReminder
-        case .project: .tokenProject
+        case .project, .section: .tokenProject
         case .recurrence: .tokenRecurrence
         case .label: .tokenLabel
         }
