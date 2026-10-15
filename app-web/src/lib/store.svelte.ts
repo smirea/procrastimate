@@ -72,7 +72,13 @@ class Store {
 		}
 		// Every tab saves the whole document, so one left open in the background would save its old copy over
 		// what this tab synced, and the next launch would start from it.
-		window.addEventListener('storage', event => event.key === STORAGE_KEY && this.#load());
+		window.addEventListener('storage', event => {
+			if (event.key !== STORAGE_KEY) return;
+			this.#load();
+			// The writing tab may be offline, so this one uploads what it left in the outbox.
+			if (this.#sync?.outbox.length || this.#sync?.reset || Object.values(this.spaces).some(s => s.outbox.length))
+				this.#onCommit?.();
+		});
 	}
 
 	#load() {

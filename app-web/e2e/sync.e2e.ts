@@ -105,20 +105,25 @@ test('a change on one device shows on the other at once, without focus or the mi
 	await expect(a.app.row(title)).toHaveCount(0, { timeout: 10_000 });
 });
 
-test('a stale tab in the same browser never saves over what another tab synced', async ({ browser }) => {
+test('a stale tab in the same browser never saves over what another tab synced, and its edits still upload', async ({
+	browser,
+}) => {
 	const [a] = await devices(browser);
 	const stale = await a.context.newPage();
 	await stale.clock.setFixedTime(NOW);
 	await stale.route('**/api/sync', route => route.abort('internetdisconnected'));
+	await stale.routeWebSocket('**/api/sync/socket', socket => socket.close());
 	await stale.goto('/no-date');
 	await expect(stale.getByRole('heading', { name: 'No date' })).toBeVisible();
 
 	const synced = unique('Synced in the other tab');
 	await a.app.add(synced);
-	await settled(a);
+	// Its own commit timer uploads it, so no timer is left to upload the stale tab's edit by chance.
+	await expect.poll(() => outbox(a.page)).toBe(0);
 	await new App(stale).add(unique('Added in the stale tab'));
 
 	expect(await a.page.evaluate(() => localStorage.getItem('procrastimate'))).toContain(synced);
+	await expect.poll(() => outbox(a.page), { timeout: 5_000 }).toBe(0);
 });
 
 test('changes made offline apply at once and upload when the network returns', async ({ browser }) => {
