@@ -20,50 +20,57 @@ struct InboxScreen: View {
                 Section {
                     ForEach(due.overdue) { TaskRow(task: $0, showProject: $0.projectId != nil) }
                 } header: {
-                    ListHeading(text: "Overdue", tone: .toneOverdue)
+                    ListHeading(text: "Overdue", tone: .toneOverdue, tasks: due.overdue)
                 }
             }
             if !due.today.isEmpty {
                 Section {
                     ForEach(due.today) { TaskRow(task: $0, showProject: $0.projectId != nil, timeOnly: true) }
                 } header: {
-                    ListHeading(text: "Today")
+                    ListHeading(text: "Today", tasks: due.today)
                 }
             }
             ForEach(days, id: \.date) { group in
                 Section {
                     ForEach(group.tasks) { TaskRow(task: $0, showProject: $0.projectId != nil) }
                 } header: {
-                    ListHeading(text: Format.dayHeading(group.date, today))
+                    ListHeading(text: Format.dayHeading(group.date, today), tasks: group.tasks)
                 }
             }
         }
     }
 }
 
-/// Inbox tasks without a date, which would otherwise always sit at the bottom of Inbox. Places with two or more of them
-/// group below the rest.
+/// Inbox tasks without a date, which would otherwise always sit at the bottom of Inbox, by when they were added. Places
+/// with two or more of them group below the rest.
 struct NoDateScreen: View {
     @Environment(Store.self) private var store
     @Environment(\.today) private var today
+    @AppStorage("noDateNewestFirst") private var newestFirst = true
 
     var body: some View {
-        let view = Views.noDateTasks(store.tasks, today, in: store.timeZone)
+        let view = Views.noDateTasks(store.tasks, today, newestFirst: newestFirst, in: store.timeZone)
         TaskListScreen(
             title: "No date",
             isEmpty: view.loose.isEmpty && view.places.isEmpty,
             emptyTitle: "Inbox zero",
             emptyHint: "Tap + to capture a task.",
-            root: true
+            root: true,
+            newestFirst: $newestFirst
         ) {
-            ForEach(view.loose) { TaskRow(task: $0) }
+            ForEach(view.loose) { row($0) }
             ForEach(view.places, id: \.key) { place in
                 Section {
-                    ForEach(place.tasks) { TaskRow(task: $0) }
+                    ForEach(place.tasks) { row($0) }
                 } header: {
-                    ListHeading(text: place.name)
+                    ListHeading(text: place.name, tasks: place.tasks)
                 }
             }
         }
+        .animation(.snappy, value: newestFirst)
+    }
+
+    private func row(_ task: TaskItem) -> some View {
+        TaskRow(task: task, added: Format.addedAgo(Dates.toDateKey(Date(timeIntervalSince1970: Double(task.createdAt) / 1000), in: store.timeZone), today))
     }
 }

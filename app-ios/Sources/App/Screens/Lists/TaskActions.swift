@@ -1,6 +1,7 @@
 import Core
 import Observation
 import SwiftUI
+import UIKit
 
 @MainActor @Observable
 final class TaskActions {
@@ -35,6 +36,21 @@ final class TaskActions {
             "Deleted “\(task.title)”",
             action: .init(label: "Undo") { [store] in withAnimation(.snappy) { store.undeleteTasks(removed) } }
         )
+    }
+
+    func copyAsMarkdown(_ document: Markdown.Document) {
+        let context = Markdown.Context(tasks: store.allTasks, projects: store.allProjects, labels: store.allLabels, today: clock.today)
+        UIPasteboard.general.string = Markdown.toMarkdown(document, context, in: store.timeZone)
+        toasts.show("Copied as Markdown", for: .seconds(2))
+    }
+
+    func copyAsMarkdown(_ task: TaskItem) {
+        copyAsMarkdown(Markdown.Document(sections: [.init(tasks: [task])]))
+    }
+
+    func copyAsMarkdown(project: Project) {
+        let tasks = Views.projectTasks(store.data(in: store.space(ofProject: project.id) ?? .own).tasks, project.id, in: store.timeZone)
+        copyAsMarkdown(Markdown.Document(title: project.name, projectId: project.id, sections: [.init(tasks: tasks)]))
     }
 
     /// Keeps the time of day, and leaves the repeat to count from the new date.

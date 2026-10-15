@@ -1,8 +1,10 @@
 import { z } from 'zod';
 import { labelSchema, projectSchema, taskSchema } from './sync/protocol.ts';
+import { linkify } from './links.ts';
 import {
 	addDays,
 	addInterval,
+	dueAtTime,
 	alignToRecurrence,
 	isWeekday,
 	fromDateKey,
@@ -204,7 +206,8 @@ function unitOf(text: string): DurationUnit | null {
 	return t.startsWith('mo') ? 'month' : (UNIT_LETTERS[t[0] ?? ''] ?? null);
 }
 
-function resolveTime(text: string): TimeOfDay | null {
+/** A clock time as typed, such as `5pm`, `5:30p`, `17:30`, `1730`, or `noon`. */
+export function resolveTime(text: string): TimeOfDay | null {
 	const t = text.toLowerCase().replaceAll(/\s+/g, '');
 	if (t === 'noon') return toTimeOfDay(12, 0);
 	if (t === 'midnight') return toTimeOfDay(0, 0);
@@ -464,10 +467,11 @@ function namedRule(
 }
 
 /**
- * A typed date wins, moved to the first listed weekday on or after it. A time alone lands on the date
- * set outside the text, or else on the first future occurrence: today, or tomorrow once that time has
- * passed. A repeat without a typed date starts on its first weekday, the date set outside the text,
- * or today, and moves to the next occurrence when its time has passed today.
+ * A typed date wins, moved to the first listed weekday on or after it, even when that leaves it in the past.
+ * Otherwise a time never lands in the past. A time alone lands on the date set outside the text, or on the
+ * first future occurrence: today, or tomorrow once that time has passed. A repeat without a typed date starts
+ * on its first weekday, the date set outside the text, or today, and moves to the next occurrence when its
+ * time has passed.
  */
 function resolveDue(
 	phrase: DuePhrase | null,
@@ -478,16 +482,14 @@ function resolveDue(
 	if (phrase?.date) {
 		return { date: repeat ? alignToRecurrence(phrase.date, repeat.recurrence) : phrase.date, time: phrase.time };
 	}
-	const time = phrase?.time ?? null;
-	const passed = (date: DateKey) => time !== null && date === ctx.today && time < ctx.time;
+	const time = phrase?.time ?? (repeat && !repeat.anchor ? outside?.time : null) ?? null;
+	const passed = (date: DateKey) => time !== null && (date < ctx.today || (date === ctx.today && time < ctx.time));
 	if (repeat) {
-		if (!repeat.anchor && outside) return { date: outside.date, time: time ?? outside.time };
-		const date = repeat.anchor ?? ctx.today;
-		return { date: passed(date) ? stepRecurrence(date, repeat.recurrence) : date, time };
+		const start = repeat.anchor ?? outside?.date ?? ctx.today;
+		const date = passed(start) ? (passed(ctx.today) ? stepRecurrence(ctx.today, repeat.recurrence) : ctx.today) : start;
+		return { date, time };
 	}
-	if (!time) return null;
-	if (outside) return { date: outside.date, time };
-	return { date: passed(ctx.today) ? addDays(ctx.today, 1) : ctx.today, time };
+	return time ? dueAtTime(outside, time, ctx.today, ctx.time) : null;
 }
 
 function resolveReminder(draft: ReminderDraft, due: Due | null, ctx: Context): Reminder {
@@ -508,10 +510,11 @@ export function parseQuickAdd(input: string, options: ParseOptions): ParsedQuick
 	const rules = [...RULES.slice(0, 2), ...named, ...RULES.slice(2)];
 	// Every phrase a rule recognizes is masked out of both views, including kept-as-text and
 	// superseded ones, so a later rule never reads part of it as something else.
-	let raw = input;
-	let guarded = maskGuarded(input, spoken);
 	const claim = (text: string, start: number, end: number) =>
 		text.slice(0, start) + '_'.repeat(end - start) + text.slice(end);
+	// A link is never a phrase, so `5m`, `#top`, or `@user` inside a URL stays part of it.
+	let raw = linkify(input).reduce((text, s) => (s.href ? claim(text, s.start, s.end) : text), input);
+	let guarded = maskGuarded(raw, spoken);
 
 	const tokens: QuickAddToken[] = [];
 	const matches: Match[] = [];

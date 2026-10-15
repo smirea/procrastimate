@@ -10,12 +10,15 @@
 	import Popover from '#lib/components/Popover.svelte';
 	import { store } from '#lib/store.svelte.ts';
 	import { sheets } from '#lib/ui.svelte.ts';
+	import { followMerged } from '#lib/merged.svelte.ts';
 	import { labelTasks } from 'shared/views.ts';
 
 	const label = $derived(store.label(page.params.id ?? ''));
 	const tasks = $derived(label ? labelTasks(store.tasks, label.id) : []);
 	const home = $derived(label ? store.homeOf(label.id) : null);
 	const owner = $derived(home ? store.spaces[home]?.owner : undefined);
+
+	followMerged('/labels', () => page.params.id, () => store.labels);
 
 	let renaming = $state(false);
 	let confirmingDelete = $state(false);
@@ -42,6 +45,7 @@
 		subtitle={owner ? `Shared by ${owner.name}` : undefined}
 		canAdd={!home || tasks.length === 0 || tasks.some((t) => store.canEdit(t.id))}
 		quickAdd={{ projectId: null, labelId: label.id, today: false }}
+		markdown={() => ({ title: label.name, projectId: null, sections: [{ heading: null, tasks }] })}
 	>
 		{#snippet title()}
 			{#if renaming}

@@ -12,6 +12,8 @@ struct TaskRow: View {
     var showProject = false
     /// Within a day's list the date goes without saying, so a timed task shows only its time.
     var timeOnly = false
+    /// No date shows how long ago each task was added, such as `3 days ago`.
+    var added: String?
 
     @State private var checking = false
     @State private var postponing = false
@@ -23,13 +25,13 @@ struct TaskRow: View {
                 .accessibilityValue(Format.priorityLabel(task.priority))
                 .disabled(locked)
             VStack(alignment: .leading, spacing: 2) {
-                Text(task.title)
+                Text(Links.attributed(task.title))
                     .font(.body)
                     .foregroundStyle(checking ? Color.faint : Color.ink)
                     .strikethrough(checking, color: .faint)
                     .lineLimit(1)
                 if !task.notes.isEmpty {
-                    Text(task.notes).font(.footnote).foregroundStyle(.muted).lineLimit(1)
+                    Text(Links.attributed(task.notes)).font(.footnote).foregroundStyle(.muted).lineLimit(1)
                 }
                 details
             }
@@ -41,6 +43,21 @@ struct TaskRow: View {
             .accessibilityAddTraits(.isButton)
             .accessibilityIdentifier("task-\(task.title)")
             .accessibilityAction { navigator.sheet = .details(taskID: task.id) }
+            if let added {
+                Text(added)
+                    .font(.caption)
+                    .foregroundStyle(.faint)
+                    .lineLimit(1)
+                    .fixedSize()
+                    .padding(.top, 9)
+                    .accessibilityLabel("Added \(added.lowercased())")
+            }
+        }
+        .background {
+            RoundedRectangle(cornerRadius: 14)
+                .fill(.accent.opacity(navigator.revealed == task.id ? 0.14 : 0))
+                .padding(.horizontal, -8)
+                .animation(.easeOut(duration: 0.6), value: navigator.revealed == task.id)
         }
         .swipeActions(edge: .leading, allowsFullSwipe: true) {
             if !locked {
@@ -75,6 +92,7 @@ struct TaskRow: View {
                 }
                 Button("Delete", systemImage: "trash", role: .destructive) { actions.delete(task) }
             }
+            Button("Copy as Markdown", systemImage: "doc.on.doc") { actions.copyAsMarkdown(task) }
         }
     }
 
@@ -143,7 +161,7 @@ struct TaskRow: View {
                 if task.memoSource != nil {
                     Image(systemName: "waveform")
                         .imageScale(.small)
-                        .accessibilityLabel("From NoteTorus")
+                        .accessibilityLabel("From Notouroboros")
                 }
                 if let parent {
                     Detail(systemImage: "arrow.turn.down.right", text: parent.title)

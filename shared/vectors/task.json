@@ -112,6 +112,133 @@
 			]
 		},
 		{
+			"fn": "dueAtTime",
+			"test": "dueAtTime › keeps a date still ahead",
+			"input": [
+				{
+					"date": "2026-10-20",
+					"time": null
+				},
+				"08:00",
+				"2026-10-14",
+				"10:00"
+			],
+			"output": {
+				"date": "2026-10-20",
+				"time": "08:00"
+			}
+		},
+		{
+			"fn": "dueAtTime",
+			"test": "dueAtTime › replaces the time it has",
+			"input": [
+				{
+					"date": "2026-10-14",
+					"time": "09:00"
+				},
+				"17:30",
+				"2026-10-14",
+				"10:00"
+			],
+			"output": {
+				"date": "2026-10-14",
+				"time": "17:30"
+			}
+		},
+		{
+			"fn": "dueAtTime",
+			"test": "dueAtTime › today and a passed time is tomorrow",
+			"input": [
+				{
+					"date": "2026-10-14",
+					"time": null
+				},
+				"08:00",
+				"2026-10-14",
+				"10:00"
+			],
+			"output": {
+				"date": "2026-10-15",
+				"time": "08:00"
+			}
+		},
+		{
+			"fn": "dueAtTime",
+			"test": "dueAtTime › a past date and a later time is today",
+			"input": [
+				{
+					"date": "2026-10-10",
+					"time": null
+				},
+				"11:00",
+				"2026-10-14",
+				"10:00"
+			],
+			"output": {
+				"date": "2026-10-14",
+				"time": "11:00"
+			}
+		},
+		{
+			"fn": "dueAtTime",
+			"test": "dueAtTime › a past date and a passed time is tomorrow",
+			"input": [
+				{
+					"date": "2026-10-10",
+					"time": null
+				},
+				"09:00",
+				"2026-10-14",
+				"10:00"
+			],
+			"output": {
+				"date": "2026-10-15",
+				"time": "09:00"
+			}
+		},
+		{
+			"fn": "dueAtTime",
+			"test": "dueAtTime › no date and a later time is today",
+			"input": [
+				null,
+				"17:00",
+				"2026-10-14",
+				"10:00"
+			],
+			"output": {
+				"date": "2026-10-14",
+				"time": "17:00"
+			}
+		},
+		{
+			"fn": "dueAtTime",
+			"test": "dueAtTime › no date and the current minute is today",
+			"input": [
+				null,
+				"10:00",
+				"2026-10-14",
+				"10:00"
+			],
+			"output": {
+				"date": "2026-10-14",
+				"time": "10:00"
+			}
+		},
+		{
+			"fn": "dueAtTime",
+			"test": "dueAtTime › no date and a passed time is tomorrow",
+			"input": [
+				null,
+				"09:59",
+				"2026-10-14",
+				"10:00"
+			],
+			"output": {
+				"date": "2026-10-15",
+				"time": "09:59"
+			}
+		},
+		{
 			"fn": "addInterval",
 			"test": "addInterval › 2026-10-14 plus 1 weekday is 2026-10-15",
 			"input": [

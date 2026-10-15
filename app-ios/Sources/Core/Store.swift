@@ -40,8 +40,10 @@ public final class Store {
     public var projects: [Project] { snapshot.projects }
     public var labels: [Label] { snapshot.labels }
 
-    /// Own tasks, then each shared space's, for subtasks, details, and shared project and label screens.
+    /// Own data, then each shared space's, for subtasks, details, and shared project and label screens.
     public var allTasks: [TaskItem] { snapshot.tasks + sharedSpaces.flatMap(\.section.tasks) }
+    public var allProjects: [Project] { snapshot.projects + sharedSpaces.flatMap(\.section.projects) }
+    public var allLabels: [Label] { snapshot.labels + sharedSpaces.flatMap(\.section.labels) }
 
     /// Shared spaces by owner name, with their ids.
     public var sharedSpaces: [(id: String, section: SpaceSection)] {

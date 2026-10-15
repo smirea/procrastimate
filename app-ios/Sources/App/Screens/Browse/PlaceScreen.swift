@@ -8,13 +8,19 @@ struct PlaceScreen: View {
 
     var body: some View {
         let tasks = Views.placeTasks(store.tasks, key, in: store.timeZone)
+        let title = tasks.first?.location?.name ?? "Place"
         TaskListScreen(
-            title: tasks.first?.location?.name ?? "Place",
+            title: title,
             isEmpty: tasks.isEmpty,
             emptyTitle: "No tasks at this place",
             emptyHint: "Set a place from a task's details."
         ) {
             ForEach(tasks) { TaskRow(task: $0, showProject: true) }
+        }
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                CopyMarkdownButton(document: Markdown.Document(title: title, sections: [.init(tasks: tasks)]))
+            }
         }
     }
 }
@@ -27,13 +33,19 @@ struct EventScreen: View {
 
     var body: some View {
         let tasks = Views.eventTasks(store.tasks, eventID, today, in: store.timeZone)
+        let title = tasks.first?.event?.title ?? "Event"
         TaskListScreen(
-            title: tasks.first?.event?.title ?? "Event",
+            title: title,
             isEmpty: tasks.isEmpty,
             emptyTitle: "No tasks on this event",
             emptyHint: "Link an event from a task's details."
         ) {
             ForEach(tasks) { TaskRow(task: $0, showProject: true) }
+        }
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                CopyMarkdownButton(document: Markdown.Document(title: title, sections: [.init(tasks: tasks)]))
+            }
         }
     }
 }

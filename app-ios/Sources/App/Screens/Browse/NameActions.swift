@@ -10,6 +10,7 @@ struct NameActions: ViewModifier {
     let share: API.ShareTarget
     let deletePrompt: String
     var deleteMessage: String?
+    let copy: () -> Void
     let rename: (String) -> Void
     let delete: () -> Void
 
@@ -31,18 +32,23 @@ struct NameActions: ViewModifier {
                     ToolbarItem(placement: .primaryAction) {
                         ShareButton(target: share, name: name)
                     }
-                    ToolbarItem(placement: .primaryAction) {
-                        Menu {
+                }
+                ToolbarItem(placement: .primaryAction) {
+                    Menu {
+                        if space == .own {
                             Button("Rename", systemImage: "pencil") {
                                 draft = name
                                 renaming = true
                             }
+                        }
+                        Button("Copy as Markdown", systemImage: "doc.on.doc") { copy() }
+                        if space == .own {
                             Button("Delete \(noun)", systemImage: "trash", role: .destructive) {
                                 confirmingDelete = true
                             }
-                        } label: {
-                            SwiftUI.Label("\(title) actions", systemImage: "ellipsis")
                         }
+                    } label: {
+                        SwiftUI.Label("\(title) actions", systemImage: "ellipsis")
                     }
                 }
             }
@@ -81,6 +87,7 @@ extension View {
         share: API.ShareTarget,
         deletePrompt: String,
         deleteMessage: String? = nil,
+        copy: @escaping () -> Void,
         rename: @escaping (String) -> Void,
         delete: @escaping () -> Void
     ) -> some View {
@@ -91,6 +98,7 @@ extension View {
             share: share,
             deletePrompt: deletePrompt,
             deleteMessage: deleteMessage,
+            copy: copy,
             rename: rename,
             delete: delete
         ))

@@ -3,7 +3,11 @@ import SwiftUI
 
 struct ProjectScreen: View {
     @Environment(Store.self) private var store
+    @Environment(Navigator.self) private var navigator
+    @Environment(TaskActions.self) private var actions
     let projectID: String
+
+    @State private var name: String?
 
     var body: some View {
         if let project = store.project(projectID) {
@@ -24,11 +28,17 @@ struct ProjectScreen: View {
                 space: space,
                 share: API.ShareTarget(kind: .project, id: project.id),
                 deletePrompt: Browse.deleteProjectPrompt(project.name, taskCount: tasks.count),
+                copy: { actions.copyAsMarkdown(project: project) },
                 rename: { store.renameProject(project.id, $0) },
                 delete: { store.deleteProject(project.id) }
             )
+            .task(id: project.name) { name = project.name }
         } else {
-            ContentUnavailableView("This project no longer exists.", systemImage: "number")
+            // Sync merges a project into the oldest one with its name, so the screen follows the name there.
+            Color.clear.task {
+                let survivor = name.flatMap { name in store.projects.first { $0.name.lowercased() == name.lowercased() } }
+                navigator.replace(.project(id: projectID), with: survivor.map { .project(id: $0.id) })
+            }
         }
     }
 }

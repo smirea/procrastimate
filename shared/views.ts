@@ -51,10 +51,14 @@ export function inboxTasks(tasks: readonly Task[], today: DateKey) {
 
 /**
  * The No date view: undated inbox tasks, with each place that has two or more of them in its own section below the
- * rest. A section is named after its earliest task's place, and sections sort by name.
+ * rest. A section is named after its earliest task's place, and sections sort by name. Tasks sort by when they were
+ * added.
  */
-export function noDateTasks(tasks: readonly Task[], today: DateKey): NoDate {
-	const list = inboxTasks(tasks, today);
+export function noDateTasks(tasks: readonly Task[], today: DateKey, newestFirst: boolean): NoDate {
+	const list = inboxTasks(tasks, today).toSorted(
+		(a, b) =>
+			(newestFirst ? b.createdAt - a.createdAt : a.createdAt - b.createdAt) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0),
+	);
 	const byPlace = new Map<string, Task[]>();
 	for (const task of list) {
 		if (task.location) byPlace.set(placeKey(task.location), [...(byPlace.get(placeKey(task.location)) ?? []), task]);

@@ -148,11 +148,21 @@ describe('no date', () => {
 			task('beans', { location: at('Philz', 52.6), priority: 1 }),
 			task('solo', { location: at('Park', 52.7) }),
 		];
-		const view = noDateTasks(list, today);
+		const view = noDateTasks(list, today, false);
 		expect(ids(view.loose)).toEqual(['read', 'solo']);
 		expect(view.places.map(p => [p.name, ids(p.tasks)])).toEqual([
-			['Philz', ['beans', 'coffee']],
+			['Philz', ['coffee', 'beans']],
 			['Rewe', ['milk', 'eggs']],
 		]);
+	});
+
+	test('newest first flips the order within the list and each place', () => {
+		const list = [
+			task('old'),
+			task('mid', { priority: 1 }),
+			task('new'),
+			task('later', { due: { date: today, time: null } }),
+		];
+		expect(ids(noDateTasks(list, today, true).loose)).toEqual(['new', 'mid', 'old']);
 	});
 });

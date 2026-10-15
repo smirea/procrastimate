@@ -62,6 +62,7 @@ Keep implementation details out of the map. Name only user paths, stable handles
 - [Reminders](./reminders.md) covers typed and picked reminders, due times that notify on their own, and reminders firing while the app is open.
 - [Push notifications](./push-notifications.md) covers turning on Web Push, the permission and Home Screen guidance, the synced schedule, and notifications while the app is closed.
 - [Task views](./task-views.md) covers the Inbox with its Overdue, Today, and day sections, the No date view, their counts, and their empty states.
+- [Copy as Markdown](./copy-markdown.md) covers copying a view, a section, or a task to the clipboard as a Markdown checklist.
 - [Projects](./projects.md) covers creating projects, `#` autocomplete, and moving tasks between them.
 - [Labels](./labels.md) covers `@` labels with autocomplete, row chips, the details picker, and label views.
 - [Offline and sync](./offline-sync.md) covers offline use and convergence across clients.
@@ -70,5 +71,5 @@ Keep implementation details out of the map. Name only user paths, stable handles
 - [Todoist import](./todoist-import.md) covers importing a Todoist backup zip, the summary and warnings, and safe re-imports.
 - [Theme](./theme.md) covers the System, Light, and Dark themes, persistence, first paint, and contrast.
 - [Places and events](./places-and-events.md) covers places and calendar events on tasks, set on the iPhone: the Maps search and Arrive, Leave, or During, the calendar event picker, rows, the Browse sections, notifications, the Live Activity, and moved events.
-- [NoteTorus tasks](./notetorus-tasks.md) covers tasks NoteTorus sends: the waveform icon on rows, the `NoteTorus` line in details, `procrastimate://task/<id>` links, and the shared session.
+- [Notouroboros tasks](./notouroboros-tasks.md) covers tasks Notouroboros sends: the waveform icon on rows, the `Notouroboros` line in details, `procrastimate://task/<id>` links, and the shared session.
 - [Siri, Shortcuts, and Spotlight](./app-intents.md) covers the iOS App Intents: adding and completing tasks, opening lists and projects, search, today's and overdue tasks, and Spotlight. Web is excluded.

@@ -10,19 +10,34 @@ struct TaskListScreen<Content: View>: View {
     let emptyHint: String
     /// A tab's root list has no back button, so it drops the bar and floats the title over the scroll edge instead.
     var root = false
+    /// Shows a sort button at the top right that flips this.
+    var newestFirst: Binding<Bool>?
     @ViewBuilder let content: () -> Content
 
+    @Environment(Navigator.self) private var navigator
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var scrolled = false
 
     var body: some View {
-        List {
-            content()
-                .listRowBackground(Color.clear)
-                .listRowSeparator(.hidden)
-                .listSectionSeparator(.hidden)
-                .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
+        ScrollViewReader { proxy in
+            List {
+                content()
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                    .listSectionSeparator(.hidden)
+                    .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
+            }
+            // Every list in every tab stays alive, so each tries; only the one holding the row moves.
+            .task(id: navigator.revealed) {
+                guard let id = navigator.revealed else { return }
+                try? await Task.sleep(for: .milliseconds(300))
+                withAnimation(reduceMotion ? nil : .snappy) { proxy.scrollTo(id, anchor: .center) }
+            }
         }
         .listStyle(.plain)
+        .safeAreaInset(edge: .top, spacing: 0) {
+            if let newestFirst { SortButton(newestFirst: newestFirst) }
+        }
         .environment(\.defaultMinListRowHeight, 0)
         .scrollContentBackground(.hidden)
         .background { CanvasBackground() }
@@ -47,12 +62,39 @@ struct TaskListScreen<Content: View>: View {
         }
     }
 
+    /// A pushed list always names itself between the back and actions buttons; a root list only once scrolled.
     private var compactTitle: some View {
         Text(title)
             .font(.subheadline.weight(.semibold))
-            .opacity(scrolled ? 1 : 0)
+            .lineLimit(1)
+            .opacity(scrolled || !root ? 1 : 0)
             .animation(.snappy(duration: 0.2), value: scrolled)
             .accessibilityHidden(true)
+    }
+}
+
+private struct SortButton: View {
+    @Binding var newestFirst: Bool
+
+    var body: some View {
+        Button {
+            newestFirst.toggle()
+        } label: {
+            SwiftUI.Label(newestFirst ? "Newest" : "Oldest", systemImage: newestFirst ? "arrow.down" : "arrow.up")
+                .font(.subheadline.weight(.medium))
+                .contentTransition(.symbolEffect(.replace))
+                .padding(.horizontal, 14)
+                .frame(minHeight: 44)
+                .contentShape(.capsule)
+                .glassEffect(.regular.interactive(), in: .capsule)
+        }
+        .buttonStyle(.plain)
+        .frame(maxWidth: .infinity, alignment: .trailing)
+        .padding(.horizontal, 16)
+        .padding(.bottom, 4)
+        .sensoryFeedback(.selection, trigger: newestFirst)
+        .accessibilityLabel(newestFirst ? "Sorted newest first" : "Sorted oldest first")
+        .accessibilityHint("Flips the sort")
     }
 }
 
@@ -73,14 +115,37 @@ struct CanvasBackground: View {
 }
 
 struct ListHeading: View {
+    @Environment(TaskActions.self) private var actions
+
     let text: String
     var tone: Color = .ink
+    let tasks: [TaskItem]
 
     var body: some View {
-        Text(text)
-            .font(.footnote.weight(.semibold))
-            .foregroundStyle(tone)
-            .textCase(nil)
-            .accessibilityAddTraits(.isHeader)
+        // A plain List never shows a header's `.contextMenu`, so a long press opens this menu and a tap does nothing.
+        Menu {
+            Button("Copy as Markdown", systemImage: "doc.on.doc") {
+                actions.copyAsMarkdown(Markdown.Document(sections: [.init(heading: text, tasks: tasks)]))
+            }
+        } label: {
+            Text(text)
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(tone)
+                .textCase(nil)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(.rect)
+        } primaryAction: {}
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(.isHeader)
+        .accessibilityIdentifier("heading-\(text)")
+    }
+}
+
+struct CopyMarkdownButton: View {
+    @Environment(TaskActions.self) private var actions
+    let document: Markdown.Document
+
+    var body: some View {
+        Button("Copy as Markdown", systemImage: "doc.on.doc") { actions.copyAsMarkdown(document) }
     }
 }

@@ -3,6 +3,8 @@
 	import { fade, fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import Plus from 'phosphor-svelte/lib/Plus';
+	import type { MarkdownDocument } from 'shared/markdown.ts';
+	import CopyButton from './CopyButton.svelte';
 	import { sheets, motion, type QuickAddDefaults } from '../ui.svelte.ts';
 
 	let {
@@ -14,6 +16,7 @@
 		quickAdd,
 		canAdd = true,
 		actions,
+		markdown,
 		children,
 	}: {
 		title: Snippet | string;
@@ -24,6 +27,7 @@
 		quickAdd: QuickAddDefaults;
 		canAdd?: boolean;
 		actions?: Snippet;
+		markdown: () => MarkdownDocument;
 		children: Snippet;
 	} = $props();
 </script>
@@ -38,7 +42,10 @@
 			{/if}
 			{#if subtitle}<p class="mt-0.5 text-[13px] text-muted">{subtitle}</p>{/if}
 		</div>
-		{@render actions?.()}
+		<div class="flex shrink-0 items-center gap-1">
+			<CopyButton label={`Copy ${markdown().title} as Markdown`} {markdown} />
+			{@render actions?.()}
+		</div>
 	</header>
 
 	{@render children()}

@@ -55,7 +55,7 @@ describe.each(storeFactories)('/api/memo-tasks on the %s store', (_name, createS
 		store = createStore();
 		env = withAuth({ ACCOUNT: memoryAccount(store) });
 		phone = await registerDevice(env, 'iPhone');
-		memoApp = await registerDevice(env, 'NoteTorus');
+		memoApp = await registerDevice(env, 'Notouroboros');
 		userId = (await whoAmI(env, phone)).id;
 	});
 

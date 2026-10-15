@@ -6,6 +6,8 @@ Inbox lists everything dated by day: Overdue, Today, and each later day with dat
 
 - `views-inbox` lists Overdue, Today, and each later day under a heading such as `Tomorrow`. It holds only dated tasks.
 - `views-no-date` lists undated top-level tasks without a project. It is an iOS tab and a web sidebar entry at `/no-date` with its count.
+- `views-no-date-sort` sorts No date by when each task was added, newest first. Each row shows how long ago at its right: `Today`, `Yesterday`, `3 days ago`, `2 weeks ago`, `5 months ago`, `1 year ago`. The `Newest` button at the top right flips it to `Oldest` and back, and the choice persists per device.
+- `views-inbox-menu` (iOS only) opens a menu of `Inbox` and every project from the Inbox tab, on a tap while Inbox is selected or a long press at any time. A project opens on the Inbox tab's stack. The web sidebar already lists projects.
 - `views-today` and `views-upcoming` are removed. Their lists are the Inbox's dated sections.
 - `views-empty` shows `Nothing scheduled` with `Tasks with a date show up here by day.` on an Inbox with nothing dated. An empty No date shows `Inbox zero` with `Press Q to capture a task.`, or `Tap + to capture a task.` on a phone and iOS.
 - `views-counts` shows the Inbox count, overdue plus today, in the web sidebar and as the iOS tab badge. The web sidebar also counts No date. The iOS No date tab has no badge.
@@ -25,7 +27,8 @@ Preconditions:
 - No automated test covers this feature. Drive it by hand with `control-ui` on web and through the simulator on iOS.
 
 - **Inbox.** Open Inbox. `Overdue` lists `Overdue task` marked `Yesterday`. `Today` lists `Today task`. `Later task` is under `Saturday`. `Someday task` is not in Inbox. The sidebar count, or the iOS tab badge, reads 2.
-- **No date.** Open No date. It lists `Someday task`. The web sidebar count reads 1.
+- **No date.** Open No date. It lists `Someday task` with `Today` at its right. The web sidebar count reads 1. Choose `Sorted newest first`; it reads `Oldest` and the oldest task leads. Reload; it still reads `Oldest`.
+- **Inbox menu (iOS).** Create project `Home`. Tap Inbox, then tap it again; a menu lists `Projects` with `Home` and `Inbox`. Choose `Home`; its screen opens with `Home` centered in the bar between back and `Project actions`. Long press `No date`'s neighbor Inbox from another tab; the same menu opens.
 - **Places in No date.** On iOS, launch with `PROCRASTIMATE_DEMO="seed nodate"`. `Buy oat milk` is at the top, alone at its place. `Try the seasonal blend` and `Ask about decaf beans` sit below under a `Philz Coffee` heading.
 - **Other projects.** Add `Project task tomorrow #Work` after creating `Work`. It shows under `Tomorrow` with its project named, and not in No date.
 - **Empty.** Complete every task. Inbox shows `Nothing scheduled` with `Tasks with a date show up here by day.`. No date shows `Inbox zero` with `Press Q to capture a task.`, or `Tap + to capture a task.` on a phone.

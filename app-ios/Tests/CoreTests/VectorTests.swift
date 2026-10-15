@@ -111,6 +111,7 @@ let handlers: [String: Handler] = [
     "subtasks": subtasksVector,
     "views": viewsVector,
     "format": formatVector,
+    "markdown": markdownVector,
     "notifications": notificationsVector,
     "store": storeVector,
     "snapshot": snapshotVector,
@@ -123,6 +124,7 @@ let handlers: [String: Handler] = [
     "triggers": triggersVector,
     "ramble": rambleVector,
     "memo-tasks": memoTasksVector,
+    "links": linksVector,
 ]
 
 private struct Occurrence: Decodable {
@@ -137,6 +139,7 @@ private struct Occurrence: Decodable {
     case "addInterval": return try json(Dates.addInterval(a(0), a(1), a(2)))
     case "addMonths": return try json(Dates.addMonths(a(0), a(1)))
     case "alignToRecurrence": return try json(Dates.alignToRecurrence(a(0), a(1)))
+    case "dueAtTime": return try json(Dates.dueAtTime(a(0), a(1), today: a(2), now: a(3)))
     case "fromDateKey": return try json(Dates.fromDateKey(a(0), a(1), in: a.zone).epochMilliseconds)
     case "isWeekday": return try json(Dates.isWeekday(a(0)))
     case "weekdayOf": return try json(Dates.weekdayOf(a(0)))
@@ -187,13 +190,20 @@ private struct Occurrence: Decodable {
 @Sendable func viewsVector(_ fn: String, _ a: Args) throws -> JSONValue {
     switch fn {
     case "inboxTasks": return try json(Views.inboxTasks(a(0), a(1), in: a.zone))
-    case "noDateTasks": return try json(Views.noDateTasks(a(0), a(1), in: a.zone))
+    case "noDateTasks": return try json(Views.noDateTasks(a(0), a(1), newestFirst: a(2), in: a.zone))
     case "projectTasks": return try json(Views.projectTasks(a(0), a(1), in: a.zone))
     case "labelTasks": return try json(Views.labelTasks(a(0), a(1), in: a.zone))
     case "placeTasks": return try json(Views.placeTasks(a(0), a(1), in: a.zone))
     case "eventTasks": return try json(Views.eventTasks(a(0), a(1), a(2), in: a.zone))
     case "todayTasks": return try json(Views.todayTasks(a(0), a(1), in: a.zone))
     case "upcomingGroups": return try json(Views.upcomingGroups(a(0), a(1), in: a.zone))
+    default: throw unknown(fn)
+    }
+}
+
+@Sendable func markdownVector(_ fn: String, _ a: Args) throws -> JSONValue {
+    switch fn {
+    case "toMarkdown": return try json(Markdown.toMarkdown(a(0), a(1), in: a.zone))
     default: throw unknown(fn)
     }
 }
@@ -214,6 +224,7 @@ private struct Occurrence: Decodable {
     case "formatTime": return try json(Format.formatTime(a(0)))
     case "priorityLabel": return try json(Format.priorityLabel(a(0)))
     case "relativeDay": return try json(Format.relativeDay(a(0), a(1)))
+    case "addedAgo": return try json(Format.addedAgo(a(0), a(1)))
     case "reminderToast": return try json(Format.reminderToast(a(0)))
     case "repeatLabel": return try json(Format.repeatLabel(a(0), a(1)))
     default: throw unknown(fn)

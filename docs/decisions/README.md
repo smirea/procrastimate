@@ -28,5 +28,5 @@ ProcrastiMate's concepts, goals, paradigms, and high-level system decisions, one
 - [iOS app](ios.md): the native SwiftUI app, its architecture, the Swift port and shared test vectors, local notifications, macOS CI, and paired parity tests. Its checklist and thread split are in [iOS parity](../ios-parity.md).
 - [Auth](auth.md): Better Auth sessions, Google and Apple, and per-user data.
 - [Sharing](sharing.md): spaces, actors, shares, public links, AI accounts and their tokens, and who did what.
-- [Integrations](integrations.md): other apps, starting with NoteTorus, creating and reading tasks through the server, the shared keychain link, and deep links.
+- [Integrations](integrations.md): other apps, starting with Notouroboros, creating and reading tasks through the server, the shared keychain link, and deep links.
 - [Sync account and auth](sync-auth.md): the `Account` Durable Object, Turso for task data, and the device id.

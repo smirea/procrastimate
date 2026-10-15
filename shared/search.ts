@@ -4,7 +4,7 @@ import type { Label, Project, Task } from './task.ts';
 
 /** A half-open `[start, end)` span of the original text. */
 export type Range = readonly [start: number, end: number];
-const rangeSchema = z.tuple([z.number().int(), z.number().int()]).readonly();
+export const rangeSchema = z.tuple([z.number().int(), z.number().int()]).readonly();
 
 export const highlightSchema = z
 	// Swift's `Range<Int>` encodes as the same two-number array.

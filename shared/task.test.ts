@@ -6,6 +6,7 @@ import { describe, recorded, test } from './vectors/record.ts';
 const addDays = recorded('task', dates.addDays);
 const addInterval = recorded('task', dates.addInterval);
 const addMonths = recorded('task', dates.addMonths);
+const dueAtTime = recorded('task', dates.dueAtTime);
 const alignToRecurrence = recorded('task', dates.alignToRecurrence);
 const fromDateKey = recorded('task', dates.fromDateKey);
 const isWeekday = recorded('task', dates.isWeekday);
@@ -65,6 +66,36 @@ const today = '2026-10-14';
 
 const next = (due: Due | null, recurrence: Recurrence | null, reminders: Reminder[] = []) =>
 	nextOccurrence({ due, recurrence, reminders }, today);
+
+describe('dueAtTime', () => {
+	test.each([
+		['keeps a date still ahead', { date: '2026-10-20', time: null }, '08:00', { date: '2026-10-20', time: '08:00' }],
+		['replaces the time it has', { date: '2026-10-14', time: '09:00' }, '17:30', { date: '2026-10-14', time: '17:30' }],
+		[
+			'today and a passed time is tomorrow',
+			{ date: '2026-10-14', time: null },
+			'08:00',
+			{ date: '2026-10-15', time: '08:00' },
+		],
+		[
+			'a past date and a later time is today',
+			{ date: '2026-10-10', time: null },
+			'11:00',
+			{ date: '2026-10-14', time: '11:00' },
+		],
+		[
+			'a past date and a passed time is tomorrow',
+			{ date: '2026-10-10', time: null },
+			'09:00',
+			{ date: '2026-10-15', time: '09:00' },
+		],
+		['no date and a later time is today', null, '17:00', { date: '2026-10-14', time: '17:00' }],
+		['no date and the current minute is today', null, '10:00', { date: '2026-10-14', time: '10:00' }],
+		['no date and a passed time is tomorrow', null, '09:59', { date: '2026-10-15', time: '09:59' }],
+	] as const)('%s', (_, due, time, expected) => {
+		expect(dueAtTime(due, time, today, '10:00')).toEqual(expected);
+	});
+});
 
 describe('addInterval', () => {
 	test.each([

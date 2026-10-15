@@ -19,6 +19,8 @@
 	import { parseQuickAdd } from 'shared/quick-add.ts';
 	import type { Task } from 'shared/task.ts';
 	import SmartInput from './SmartInput.svelte';
+	import LinkedField from './LinkedField.svelte';
+	import LinkedText from './LinkedText.svelte';
 	import DuePicker from './DuePicker.svelte';
 	import PriorityPicker from './PriorityPicker.svelte';
 	import ReminderPicker from './ReminderPicker.svelte';
@@ -28,6 +30,7 @@
 	import Subtasks from './Subtasks.svelte';
 	import TaskActivity from './TaskActivity.svelte';
 	import PersonName from './PersonName.svelte';
+	import CopyButton from './CopyButton.svelte';
 	import { store, type TaskPatch } from '../store.svelte.ts';
 	import { clock, sheets, toasts, motion, type Arrival } from '../ui.svelte.ts';
 	import { completeTask } from '../completion.ts';
@@ -108,7 +111,7 @@
 	const slideFrom = { forward: 28, back: -28, none: 0 } satisfies Record<Arrival, number>;
 </script>
 
-<div class="flex min-h-0 flex-1 flex-col" in:fly={motion({ x: slideFrom[arrival], duration: arrival === 'none' ? 0 : 220, easing: cubicOut })}>
+<div class="relative flex min-h-0 flex-1 flex-col" in:fly={motion({ x: slideFrom[arrival], duration: arrival === 'none' ? 0 : 220, easing: cubicOut })}>
 	<header class="flex items-center justify-between gap-2 px-4 pt-3">
 		{#if parent}
 			<button
@@ -129,16 +132,13 @@
 		<div class="flex shrink-0 items-center gap-1">
 			{#if !editable}
 				<span class="px-2 text-[12px] text-faint">View only</span>
-			{:else if task.completedAt === null}
-				<button type="button" class="btn btn-quiet" onclick={complete}><Check size={14} />Complete</button>
-			{:else}
-				<button type="button" class="btn btn-quiet" onclick={() => store.reopenTask(task.id)}><ArrowCounterClockwise size={14} />Reopen</button>
 			{/if}
 			{#if home === null}
 				<button type="button" class="icon-btn" aria-label="Share task" onclick={() => sheets.openShare({ kind: 'task', id: task.id }, task.title, task.id)}>
 					<ShareNetwork size={16} />
 				</button>
 			{/if}
+			<CopyButton label="Copy task as Markdown" markdown={() => ({ title: null, projectId: null, sections: [{ heading: null, tasks: [task] }] })} />
 			<button type="button" class="icon-btn" aria-label="Close" onclick={() => sheets.close()}>
 				<X size={16} />
 			</button>
@@ -149,9 +149,11 @@
 			<p class="mb-1 flex items-center gap-1 text-[12px] text-faint">Shared by <PersonName person={owner} /></p>
 		{/if}
 		{#if editable}
-			<SmartInput bind:value={title} tokens={parsed.tokens} label="Title" enterkeyhint="done" suggestProjects={!parent} class="text-[19px] font-semibold" {onkeydown} onblur={commitTitle} />
+			<LinkedField text={title} class="truncate px-1 py-0.5 text-[19px] leading-[1.6] font-semibold whitespace-pre">
+				<SmartInput bind:value={title} tokens={parsed.tokens} label="Title" enterkeyhint="done" suggestProjects={!parent} class="text-[19px] font-semibold" {onkeydown} onblur={commitTitle} />
+			</LinkedField>
 		{:else}
-			<h2 class="text-[19px] font-semibold break-words">{task.title}</h2>
+			<h2 class="text-[19px] font-semibold break-words"><LinkedText text={task.title} /></h2>
 		{/if}
 	</div>
 	<!-- Outside the scroll area, which would clip the pickers' popovers. A read-only task keeps the chips as plain facts. -->
@@ -188,30 +190,60 @@
 	<div class="px-4 pt-3" inert={!editable}>
 		<LabelPicker labelIds={draft.labelIds} labels={space.labels} canCreate={home === null} onchange={(labelIds) => update({ labelIds })} />
 	</div>
-	<div class="flex-1 space-y-4 overflow-y-auto overscroll-contain px-4 pt-4 pb-4 min-h-0">
-		{#if editable || task.notes}
-			<textarea
-				aria-label="Notes"
-				placeholder="Notes"
-				rows="4"
-				class="w-full resize-none rounded-2xl border border-transparent bg-ink/[0.04] px-3.5 py-2.5 text-[14px] outline-none touch:text-base transition-colors placeholder:text-faint focus:border-ink/15 focus:bg-surface/60"
-				value={task.notes}
-				readonly={!editable}
-				oninput={(e) => update({ notes: e.currentTarget.value })}
-			></textarea>
+	<div class="flex-1 space-y-4 overflow-y-auto overscroll-contain px-4 pt-4 min-h-0" class:pb-24={editable} class:pb-4={!editable}>
+		{#if editable}
+			<LinkedField text={task.notes} class="border border-transparent px-3.5 py-2.5 text-[14px] whitespace-pre-wrap [overflow-wrap:anywhere] touch:text-base">
+				<textarea
+					aria-label="Notes"
+					placeholder="Notes"
+					rows="4"
+					class="block w-full resize-none rounded-2xl border border-transparent bg-ink/[0.04] px-3.5 py-2.5 text-[14px] outline-none touch:text-base transition-colors placeholder:text-faint focus:border-ink/15 focus:bg-surface/60"
+					value={task.notes}
+					oninput={(e) => update({ notes: e.currentTarget.value })}
+				></textarea>
+			</LinkedField>
+		{:else if task.notes}
+			<p class="rounded-2xl bg-ink/[0.04] px-3.5 py-2.5 text-[14px] whitespace-pre-wrap [overflow-wrap:anywhere] touch:text-base"><LinkedText text={task.notes} /></p>
 		{/if}
 		{#if parseMemoSource(task.sourceKey)}
 			<!-- A browser cannot open the phone app, so the line is not a link. -->
 			<p class="flex items-center gap-1.5 text-[13px] text-muted" title="Opens on iPhone">
-				<Waveform size={14} />NoteTorus
+				<Waveform size={14} />Notouroboros
 			</p>
 		{/if}
 		{#if editable || store.children(task.id).length}<Subtasks {task} />{/if}
 		<TaskActivity {task} {home} />
 	</div>
 	{#if editable}
-		<footer class="border-t border-ink/5 px-4 py-3 touch:py-2">
-			<button type="button" class="btn -ml-2 text-[var(--tone-overdue)] hover:bg-[var(--token-priority)]" onclick={remove}><Trash size={14} />Delete task</button>
-		</footer>
+		<div class="pointer-events-none absolute inset-x-0 bottom-0 flex justify-between px-4 pb-4">
+			{#if task.completedAt === null}
+				<button type="button" class="floating pointer-events-auto bg-[var(--tone-soon)]" onclick={complete}><Check size={16} weight="bold" />Complete</button>
+			{:else}
+				<button type="button" class="floating pointer-events-auto bg-accent" onclick={() => store.reopenTask(task.id)}><ArrowCounterClockwise size={16} weight="bold" />Reopen</button>
+			{/if}
+			<button type="button" class="floating pointer-events-auto bg-[var(--tone-overdue)]" aria-label="Delete task" onclick={remove}><Trash size={16} weight="bold" />Delete</button>
+		</div>
 	{/if}
 </div>
+
+<style>
+	.floating {
+		display: flex;
+		height: 2.75rem;
+		align-items: center;
+		gap: 0.5rem;
+		border-radius: 9999px;
+		padding-inline: 1.125rem;
+		font-size: 15px;
+		font-weight: 600;
+		color: white;
+		box-shadow:
+			inset 0 1px 0 0 rgb(255 255 255 / 0.3),
+			0 10px 24px -10px rgb(0 0 0 / 0.45);
+		transition: scale 220ms var(--ease-spring);
+	}
+
+	.floating:active {
+		scale: 0.94;
+	}
+</style>

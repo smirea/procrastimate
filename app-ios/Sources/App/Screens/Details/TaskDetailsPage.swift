@@ -25,6 +25,8 @@ private struct TaskDetailsForm: View {
 
     @State private var title: String
     @FocusState private var titleFocused: Bool
+    @State private var keyboardShown = false
+    @FocusState private var notesFocused: Bool
 
     init(task: TaskItem, navigation: DetailsNavigation) {
         self.task = task
@@ -52,16 +54,19 @@ private struct TaskDetailsForm: View {
                     .accessibilityElement(children: .combine)
                 }
 
-                SmartInput(
-                    text: $title,
-                    tokens: parsed.tokens,
-                    label: "Title",
-                    suggestProjects: parent == nil,
-                    focused: $titleFocused,
-                    onSubmit: { commitTitle() }
-                )
+                // The insets are the text editor's own, so the linked text sits exactly where the raw text will.
+                LinkedField(text: title, focused: $titleFocused, inset: EdgeInsets(top: 8, leading: 5, bottom: 8, trailing: 5)) {
+                    SmartInput(
+                        text: $title,
+                        tokens: parsed.tokens,
+                        label: "Title",
+                        suggestProjects: parent == nil,
+                        focused: $titleFocused,
+                        onSubmit: { commitTitle() }
+                    )
+                    .disabled(locked)
+                }
                 .font(.title3.weight(.semibold))
-                .disabled(locked)
 
                 FlowLayout(spacing: 6) {
                     if task.event != nil {
@@ -89,22 +94,25 @@ private struct TaskDetailsForm: View {
                 .animation(.snappy(duration: 0.16), value: draft)
                 .disabled(locked)
 
-                TextField(
-                    "Notes",
-                    text: Binding(get: { task.notes }, set: { store.updateTask(task.id, TaskPatch(notes: $0)) }),
-                    axis: .vertical
-                )
-                .lineLimit(3...)
+                LinkedField(text: task.notes, focused: $notesFocused) {
+                    TextField(
+                        "Notes",
+                        text: Binding(get: { task.notes }, set: { store.updateTask(task.id, TaskPatch(notes: $0)) }),
+                        axis: .vertical
+                    )
+                    .lineLimit(3...)
+                    .focused($notesFocused)
+                    .disabled(locked)
+                }
                 .font(.subheadline)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
                 .background(.ink.opacity(0.04), in: .rect(cornerRadius: 16))
                 .accessibilityLabel("Notes")
-                .disabled(locked)
 
                 if let memo = task.memoSource {
                     Link(destination: MemoTasks.memoURL(memo.memoId)) {
-                        SwiftUI.Label("NoteTorus", systemImage: "waveform")
+                        SwiftUI.Label("Notouroboros", systemImage: "waveform")
                             .font(.subheadline.weight(.medium))
                             .frame(minHeight: 44)
                     }
@@ -114,21 +122,25 @@ private struct TaskDetailsForm: View {
 
                 TaskPeople(task: task)
 
-                if !locked {
-                    Button(role: .destructive) { delete() } label: {
-                        SwiftUI.Label("Delete task", systemImage: "trash")
-                            .font(.subheadline.weight(.medium))
-                            .foregroundStyle(.toneOverdue)
-                            .frame(minHeight: 44)
-                    }
-                    .buttonStyle(.plain)
+                Button {
+                    commitTitle()
+                    actions.copyAsMarkdown(store.task(task.id) ?? task)
+                } label: {
+                    SwiftUI.Label("Copy as Markdown", systemImage: "doc.on.doc")
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(.muted)
+                        .frame(minHeight: 44)
                 }
             }
             .padding(.horizontal, 20)
             .padding(.top, 8)
-            .padding(.bottom, 80)
+            // Clears the floating Complete and Delete buttons at the end of a long task.
+            .padding(.bottom, 120)
         }
         .scrollDismissesKeyboard(.interactively)
+        .overlay(alignment: .bottom) { if !locked { floatingActions } }
+        .onMessage(of: UIScreen.self, for: .keyboardWillShow) { _ in keyboardShown = true }
+        .onMessage(of: UIScreen.self, for: .keyboardWillHide) { _ in keyboardShown = false }
         .background(.canvas)
         .navigationTitle("Task details")
         .navigationBarTitleDisplayMode(.inline)
@@ -137,6 +149,38 @@ private struct TaskDetailsForm: View {
         .sensoryFeedback(.selection, trigger: Picks(task))
         .onChange(of: titleFocused) { if !titleFocused { commitTitle() } }
         .onDisappear { commitTitle() }
+    }
+
+    /// Hidden while typing so they never cover the field above the keyboard.
+    private var floatingActions: some View {
+        HStack {
+            if task.completedAt == nil {
+                floatingButton("Complete", systemImage: "checkmark", tint: .toneSoon) { complete() }
+            } else {
+                floatingButton("Reopen", systemImage: "arrow.counterclockwise", tint: .accent) { store.reopenTask(task.id) }
+            }
+            Spacer()
+            floatingButton("Delete", systemImage: "trash", tint: .toneOverdue) { delete() }
+                .accessibilityLabel("Delete task")
+        }
+        .padding(.horizontal, 20)
+        .padding(.bottom, 12)
+        .opacity(keyboardShown ? 0 : 1)
+        .allowsHitTesting(!keyboardShown)
+        .animation(.snappy(duration: 0.2), value: keyboardShown)
+    }
+
+    private func floatingButton(_ title: String, systemImage: String, tint: Color, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            SwiftUI.Label(title, systemImage: systemImage)
+                .font(.body.weight(.semibold))
+                .foregroundStyle(.white)
+                .padding(.horizontal, 20)
+                .frame(minHeight: 52)
+                .contentShape(.capsule)
+                .glassEffect(.regular.tint(tint).interactive(), in: .capsule)
+        }
+        .buttonStyle(.plain)
     }
 
     /// An event stands in for the date, so it takes the date chip's place, and linking one drops the due date and the
@@ -169,22 +213,12 @@ private struct TaskDetailsForm: View {
                     .disabled(locked)
             }
         }
-        ToolbarItemGroup(placement: .topBarTrailing) {
-            if space == .own {
+        if space == .own {
+            ToolbarItem(placement: .topBarTrailing) {
                 ShareButton(target: API.ShareTarget(kind: .task, id: task.id), name: task.title)
                     .labelStyle(.iconOnly)
             }
-            if !locked {
-                if task.completedAt == nil {
-                    Button("Complete", systemImage: "checkmark") { complete() }
-                        .labelStyle(.titleAndIcon)
-                } else {
-                    Button("Reopen", systemImage: "arrow.counterclockwise") { store.reopenTask(task.id) }
-                        .labelStyle(.titleAndIcon)
-                }
-            }
         }
-        ToolbarSpacer(.fixed, placement: .topBarTrailing)
         ToolbarItem(placement: .topBarTrailing) {
             Button(role: .close) { navigation.close() }
                 .accessibilityLabel("Close")
@@ -266,9 +300,12 @@ private struct ProjectMenu: View {
             .pickerStyle(.inline)
             if space == .own { Button("New project…", systemImage: "plus") { creating = true } }
         } label: {
-            SwiftUI.Label(project?.name ?? "Inbox", systemImage: project == nil ? "tray" : "number")
-                .labelStyle(.titleAndIcon)
-                .lineLimit(1)
+            // Only the share and close buttons share the bar, so the name gets most of the width and truncates.
+            HStack(spacing: 6) {
+                Image(systemName: project == nil ? "tray" : "number")
+                Text(project?.name ?? "Inbox").lineLimit(1).truncationMode(.tail)
+            }
+            .frame(maxWidth: 240, alignment: .leading)
         }
         .accessibilityLabel("Project \(project?.name ?? "Inbox")")
         .newProjectPrompt(isPresented: $creating) { onChange($0) }

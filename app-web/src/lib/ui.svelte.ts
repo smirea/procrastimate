@@ -109,3 +109,17 @@ class Sheets {
 }
 
 export const sheets = new Sheets();
+
+/** The task quick add just saved. Its row scrolls into view and flashes, then this clears. */
+class Reveal {
+	id = $state<string | null>(null);
+
+	show(id: string) {
+		this.id = id;
+		setTimeout(() => {
+			if (this.id === id) this.id = null;
+		}, 1500);
+	}
+}
+
+export const reveal = new Reveal();

@@ -24,7 +24,7 @@ import { guestView, loadState, push } from './sync';
 /**
  * The agent command API: the store's rules run on the server over the space's snapshot, diffed, stamped, and pushed
  * through the same merge and the same admission a guest's synced ops meet. `memo-tasks.ts` is the same shape for
- * NoteTorus.
+ * Notouroboros.
  */
 
 type Space = { store: AccountStore; now: number; actor: string; access: Access };

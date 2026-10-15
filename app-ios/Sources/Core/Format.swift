@@ -103,6 +103,15 @@ public enum Format {
         return date == Dates.addDays(today, -1) ? "Yesterday" : nil
     }
 
+    /// How long ago a task was added: `Today`, `Yesterday`, `3 days ago`, `2 weeks ago`, `5 months ago`, `1 year ago`.
+    public static func addedAgo(_ added: DateKey, _ today: DateKey) -> String {
+        let days = Dates.days(today) - Dates.days(added)
+        if days <= 0 { return "Today" }
+        if days == 1 { return "Yesterday" }
+        let (count, unit) = days < 7 ? (days, "day") : days < 30 ? (days / 7, "week") : days < 365 ? (days / 30, "month") : (days / 365, "year")
+        return "\(count) \(unit)\(count == 1 ? "" : "s") ago"
+    }
+
     public static func formatReminder(_ reminder: Reminder, _ today: DateKey) -> String {
         switch reminder {
         case let .before(minutes): minutes == 0 ? "At due time" : "\(formatMinutes(minutes)) before"

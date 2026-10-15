@@ -1,0 +1,558 @@
+{
+	"module": "links",
+	"timeZone": "America/New_York",
+	"cases": [
+		{
+			"fn": "linkify",
+			"test": "linkify › \"Buy milk\" reads as \"Buy milk\"",
+			"input": [
+				"Buy milk"
+			],
+			"output": [
+				{
+					"end": 8,
+					"href": null,
+					"marks": [],
+					"start": 0,
+					"text": "Buy milk"
+				}
+			]
+		},
+		{
+			"fn": "linkify",
+			"test": "linkify › \"\" reads as \"\"",
+			"input": [
+				""
+			],
+			"output": []
+		},
+		{
+			"fn": "linkify",
+			"test": "linkify › \"Read https://example.com/a?b=1#top\" reads as \"Read |[https://example.com/a?b=1#top](https://example.com/a?b=1#top)\"",
+			"input": [
+				"Read https://example.com/a?b=1#top"
+			],
+			"output": [
+				{
+					"end": 5,
+					"href": null,
+					"marks": [],
+					"start": 0,
+					"text": "Read "
+				},
+				{
+					"end": 34,
+					"href": "https://example.com/a?b=1#top",
+					"marks": [],
+					"start": 5,
+					"text": "https://example.com/a?b=1#top"
+				}
+			]
+		},
+		{
+			"fn": "linkify",
+			"test": "linkify › \"http://x.dev\" reads as \"[http://x.dev](http://x.dev)\"",
+			"input": [
+				"http://x.dev"
+			],
+			"output": [
+				{
+					"end": 12,
+					"href": "http://x.dev",
+					"marks": [],
+					"start": 0,
+					"text": "http://x.dev"
+				}
+			]
+		},
+		{
+			"fn": "linkify",
+			"test": "linkify › \"Visit www.site.com/path today\" reads as \"Visit |[www.site.com/path](https://www.site.com/path)| today\"",
+			"input": [
+				"Visit www.site.com/path today"
+			],
+			"output": [
+				{
+					"end": 6,
+					"href": null,
+					"marks": [],
+					"start": 0,
+					"text": "Visit "
+				},
+				{
+					"end": 23,
+					"href": "https://www.site.com/path",
+					"marks": [],
+					"start": 6,
+					"text": "www.site.com/path"
+				},
+				{
+					"end": 29,
+					"href": null,
+					"marks": [],
+					"start": 23,
+					"text": " today"
+				}
+			]
+		},
+		{
+			"fn": "linkify",
+			"test": "linkify › \"See https://a.com.\" reads as \"See |[https://a.com](https://a.com)|.\"",
+			"input": [
+				"See https://a.com."
+			],
+			"output": [
+				{
+					"end": 4,
+					"href": null,
+					"marks": [],
+					"start": 0,
+					"text": "See "
+				},
+				{
+					"end": 17,
+					"href": "https://a.com",
+					"marks": [],
+					"start": 4,
+					"text": "https://a.com"
+				},
+				{
+					"end": 18,
+					"href": null,
+					"marks": [],
+					"start": 17,
+					"text": "."
+				}
+			]
+		},
+		{
+			"fn": "linkify",
+			"test": "linkify › \"(see https://a.com/x)\" reads as \"(see |[https://a.com/x](https://a.com/x)|)\"",
+			"input": [
+				"(see https://a.com/x)"
+			],
+			"output": [
+				{
+					"end": 5,
+					"href": null,
+					"marks": [],
+					"start": 0,
+					"text": "(see "
+				},
+				{
+					"end": 20,
+					"href": "https://a.com/x",
+					"marks": [],
+					"start": 5,
+					"text": "https://a.com/x"
+				},
+				{
+					"end": 21,
+					"href": null,
+					"marks": [],
+					"start": 20,
+					"text": ")"
+				}
+			]
+		},
+		{
+			"fn": "linkify",
+			"test": "linkify › \"https://en.wikipedia.org/wiki/Foo_(bar) ok\" reads as \"[https://en.wikipedia.org/wiki/Foo_(bar)](https://en.wikipedia.org/wiki/Foo_(bar))| ok\"",
+			"input": [
+				"https://en.wikipedia.org/wiki/Foo_(bar) ok"
+			],
+			"output": [
+				{
+					"end": 39,
+					"href": "https://en.wikipedia.org/wiki/Foo_(bar)",
+					"marks": [],
+					"start": 0,
+					"text": "https://en.wikipedia.org/wiki/Foo_(bar)"
+				},
+				{
+					"end": 42,
+					"href": null,
+					"marks": [],
+					"start": 39,
+					"text": " ok"
+				}
+			]
+		},
+		{
+			"fn": "linkify",
+			"test": "linkify › \"Two: https://a.com, https://b.com!\" reads as \"Two: |[https://a.com](https://a.com)|, |[https://b.com](https://b.com)|!\"",
+			"input": [
+				"Two: https://a.com, https://b.com!"
+			],
+			"output": [
+				{
+					"end": 5,
+					"href": null,
+					"marks": [],
+					"start": 0,
+					"text": "Two: "
+				},
+				{
+					"end": 18,
+					"href": "https://a.com",
+					"marks": [],
+					"start": 5,
+					"text": "https://a.com"
+				},
+				{
+					"end": 20,
+					"href": null,
+					"marks": [],
+					"start": 18,
+					"text": ", "
+				},
+				{
+					"end": 33,
+					"href": "https://b.com",
+					"marks": [],
+					"start": 20,
+					"text": "https://b.com"
+				},
+				{
+					"end": 34,
+					"href": null,
+					"marks": [],
+					"start": 33,
+					"text": "!"
+				}
+			]
+		},
+		{
+			"fn": "linkify",
+			"test": "linkify › \"cancel [meetup.com](https://meetup.com)\" reads as \"cancel |[meetup.com](https://meetup.com)\"",
+			"input": [
+				"cancel [meetup.com](https://meetup.com)"
+			],
+			"output": [
+				{
+					"end": 7,
+					"href": null,
+					"marks": [],
+					"start": 0,
+					"text": "cancel "
+				},
+				{
+					"end": 39,
+					"href": "https://meetup.com",
+					"marks": [],
+					"start": 7,
+					"text": "meetup.com"
+				}
+			]
+		},
+		{
+			"fn": "linkify",
+			"test": "linkify › \"[Doc (draft)](https://d.co/x_(1)) now\" reads as \"[Doc (draft)](https://d.co/x_(1))| now\"",
+			"input": [
+				"[Doc (draft)](https://d.co/x_(1)) now"
+			],
+			"output": [
+				{
+					"end": 33,
+					"href": "https://d.co/x_(1)",
+					"marks": [],
+					"start": 0,
+					"text": "Doc (draft)"
+				},
+				{
+					"end": 37,
+					"href": null,
+					"marks": [],
+					"start": 33,
+					"text": " now"
+				}
+			]
+		},
+		{
+			"fn": "linkify",
+			"test": "linkify › \"HTTPS://LOUD.COM\" reads as \"[HTTPS://LOUD.COM](HTTPS://LOUD.COM)\"",
+			"input": [
+				"HTTPS://LOUD.COM"
+			],
+			"output": [
+				{
+					"end": 16,
+					"href": "HTTPS://LOUD.COM",
+					"marks": [],
+					"start": 0,
+					"text": "HTTPS://LOUD.COM"
+				}
+			]
+		},
+		{
+			"fn": "linkify",
+			"test": "linkify › bare domains stay text",
+			"input": [
+				"Fix example.com and file.txt"
+			],
+			"output": [
+				{
+					"end": 28,
+					"href": null,
+					"marks": [],
+					"start": 0,
+					"text": "Fix example.com and file.txt"
+				}
+			]
+		},
+		{
+			"fn": "linkify",
+			"test": "linkify › an email stays text",
+			"input": [
+				"Email me@www.site.com"
+			],
+			"output": [
+				{
+					"end": 21,
+					"href": null,
+					"marks": [],
+					"start": 0,
+					"text": "Email me@www.site.com"
+				}
+			]
+		},
+		{
+			"fn": "linkify",
+			"test": "linkify › a scheme with nothing after it stays text",
+			"input": [
+				"Type https:// here"
+			],
+			"output": [
+				{
+					"end": 18,
+					"href": null,
+					"marks": [],
+					"start": 0,
+					"text": "Type https:// here"
+				}
+			]
+		},
+		{
+			"fn": "linkify",
+			"test": "linkify › www. alone stays text",
+			"input": [
+				"the www. prefix"
+			],
+			"output": [
+				{
+					"end": 15,
+					"href": null,
+					"marks": [],
+					"start": 0,
+					"text": "the www. prefix"
+				}
+			]
+		},
+		{
+			"fn": "linkify",
+			"test": "linkify › a scheme inside a word stays text",
+			"input": [
+				"xhttps://a.com"
+			],
+			"output": [
+				{
+					"end": 14,
+					"href": null,
+					"marks": [],
+					"start": 0,
+					"text": "xhttps://a.com"
+				}
+			]
+		},
+		{
+			"fn": "linkify",
+			"test": "linkify › a non-web Markdown link stays text",
+			"input": [
+				"[app](todoist://task?id=1)"
+			],
+			"output": [
+				{
+					"end": 26,
+					"href": null,
+					"marks": [],
+					"start": 0,
+					"text": "[app](todoist://task?id=1)"
+				}
+			]
+		},
+		{
+			"fn": "linkify",
+			"test": "linkify › a Markdown link without a URL stays text",
+			"input": [
+				"[todo] (later)"
+			],
+			"output": [
+				{
+					"end": 14,
+					"href": null,
+					"marks": [],
+					"start": 0,
+					"text": "[todo] (later)"
+				}
+			]
+		},
+		{
+			"fn": "linkify",
+			"test": "linkify › segments span the source, so a Markdown link covers its brackets and URL",
+			"input": [
+				"a [b](https://c.d) e"
+			],
+			"output": [
+				{
+					"end": 2,
+					"href": null,
+					"marks": [],
+					"start": 0,
+					"text": "a "
+				},
+				{
+					"end": 18,
+					"href": "https://c.d",
+					"marks": [],
+					"start": 2,
+					"text": "b"
+				},
+				{
+					"end": 20,
+					"href": null,
+					"marks": [],
+					"start": 18,
+					"text": " e"
+				}
+			]
+		},
+		{
+			"fn": "linkify",
+			"test": "linkify › highlight ranges become marks within each segment, on a Markdown link’s label",
+			"input": [
+				"meet [meetup.com](https://meetup.com) up",
+				[
+					[
+						0,
+						4
+					],
+					[
+						6,
+						10
+					],
+					[
+						37,
+						40
+					]
+				]
+			],
+			"output": [
+				{
+					"end": 5,
+					"href": null,
+					"marks": [
+						[
+							0,
+							4
+						]
+					],
+					"start": 0,
+					"text": "meet "
+				},
+				{
+					"end": 37,
+					"href": "https://meetup.com",
+					"marks": [
+						[
+							0,
+							4
+						]
+					],
+					"start": 5,
+					"text": "meetup.com"
+				},
+				{
+					"end": 40,
+					"href": null,
+					"marks": [
+						[
+							0,
+							3
+						]
+					],
+					"start": 37,
+					"text": " up"
+				}
+			]
+		},
+		{
+			"fn": "linkify",
+			"test": "linkify › highlight ranges become marks within each segment, on a Markdown link’s label",
+			"input": [
+				"go https://a.com",
+				[
+					[
+						1,
+						8
+					]
+				]
+			],
+			"output": [
+				{
+					"end": 3,
+					"href": null,
+					"marks": [
+						[
+							1,
+							3
+						]
+					],
+					"start": 0,
+					"text": "go "
+				},
+				{
+					"end": 16,
+					"href": "https://a.com",
+					"marks": [
+						[
+							0,
+							5
+						]
+					],
+					"start": 3,
+					"text": "https://a.com"
+				}
+			]
+		},
+		{
+			"fn": "linkify",
+			"test": "linkify › offsets count UTF-16 code units, as JavaScript strings do",
+			"input": [
+				"🎉 https://a.com 🎉"
+			],
+			"output": [
+				{
+					"end": 3,
+					"href": null,
+					"marks": [],
+					"start": 0,
+					"text": "🎉 "
+				},
+				{
+					"end": 16,
+					"href": "https://a.com",
+					"marks": [],
+					"start": 3,
+					"text": "https://a.com"
+				},
+				{
+					"end": 19,
+					"href": null,
+					"marks": [],
+					"start": 16,
+					"text": " 🎉"
+				}
+			]
+		}
+	]
+}

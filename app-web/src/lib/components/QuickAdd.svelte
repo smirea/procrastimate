@@ -1,8 +1,12 @@
 <script lang="ts">
-	import { fade, fly, scale } from 'svelte/transition';
+	import { fade, fly, scale, slide } from 'svelte/transition';
+	import { flip } from 'svelte/animate';
 	import { cubicOut } from 'svelte/easing';
-	import { untrack } from 'svelte';
+	import { tick, untrack } from 'svelte';
 	import Bell from 'phosphor-svelte/lib/Bell';
+	import CalendarBlank from 'phosphor-svelte/lib/CalendarBlank';
+	import ListChecks from 'phosphor-svelte/lib/ListChecks';
+	import X from 'phosphor-svelte/lib/X';
 	import Microphone from 'phosphor-svelte/lib/Microphone';
 	import Plus from 'phosphor-svelte/lib/Plus';
 	import Repeat from 'phosphor-svelte/lib/Repeat';
@@ -12,15 +16,21 @@
 	import { parseRamble } from 'shared/ramble.ts';
 	import { quickAddFromRamble, withListDefaults } from 'shared/ramble-fill.ts';
 	import { unknownNames, type UnknownName } from 'shared/name-search.ts';
-	import { DEFAULT_PRIORITY, type Due, type Priority, type Recurrence, type Reminder } from 'shared/task.ts';
+	import { DEFAULT_PRIORITY, type Due, type Priority, type Recurrence, type Reminder, type Task } from 'shared/task.ts';
 	import SmartInput from './SmartInput.svelte';
 	import DuePicker from './DuePicker.svelte';
 	import PriorityPicker from './PriorityPicker.svelte';
 	import ReminderPicker from './ReminderPicker.svelte';
 	import ProjectPicker from './ProjectPicker.svelte';
 	import { store } from '../store.svelte.ts';
-	import { clock, mobile, sheets, type QuickAddDefaults, motion } from '../ui.svelte.ts';
-	import { formatRecurrence, formatReminder } from 'shared/format.ts';
+	import { clock, mobile, reveal, sheets, type QuickAddDefaults, motion } from '../ui.svelte.ts';
+	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
+	import { scheduledDue } from 'shared/triggers.ts';
+	import { dueTone, formatDue, formatRecurrence, formatReminder } from 'shared/format.ts';
+	import type { NewTask } from 'shared/store.ts';
+	import { PRIORITIES } from '../priorities.ts';
+	import { parseSubtask, subtaskTask } from '../subtask-draft.ts';
 	import { NAME_SOURCES } from '../names.ts';
 	import { listenRamble, type RambleListen } from '../ramble/capture.ts';
 
@@ -48,6 +58,12 @@
 	let typed = $state(false);
 	let notice = $state('');
 	let input: SmartInput;
+	let subtaskInput = $state<SmartInput>();
+	let subtaskList = $state<HTMLUListElement>();
+	let subtasks = $state<{ key: number; task: NewTask }[]>([]);
+	let subtaskText = $state('');
+	let subtasksOpen = $state(false);
+	let subtaskKey = 0;
 	let listAt = $state<number | null>(null);
 	let session: RambleListen | null = null;
 	let generation = 0;
@@ -56,6 +72,7 @@
 	let alive = true;
 
 	const showMic = $derived(listening || !typed);
+	const subtaskParsed = $derived(parseSubtask(subtaskText));
 
 	const parsed = $derived(
 		parseQuickAdd(text, { now: new Date(clock.now), projects: store.projects, labels: store.labels, due: picked.due }),
@@ -93,13 +110,57 @@
 	function submit() {
 		if (!parsed.title || listening) return;
 		const reminders = [...parsed.reminders, ...picked.reminders];
-		store.addTask({ title: parsed.title, due, recurrence, priority, projectId, labelIds, reminders });
-		text = '';
-		picked = initialPicked();
-		spokenRecurrence = null;
-		typed = false;
-		notice = '';
-		input.focus();
+		const task = store.addTask({ title: parsed.title, due, recurrence, priority, projectId, labelIds, reminders });
+		if (!task) return;
+		const typing = subtaskTask(subtaskParsed);
+		for (const child of [...subtasks.map((s) => s.task), ...(typing ? [typing] : [])]) store.addTask(child, task.id);
+		sheets.close();
+		const path = listOf(task);
+		if (path !== page.url.pathname) void goto(path);
+		reveal.show(task.id);
+	}
+
+	/** The open list when it already shows the task, else its project, else Inbox when it has a day or No date when it has none. */
+	function listOf(task: Task) {
+		const [, kind, id] = page.url.pathname.split('/');
+		if (kind === 'labels' && id && task.labelIds.includes(id)) return page.url.pathname;
+		if (task.projectId) return `/projects/${task.projectId}`;
+		return scheduledDue(task, clock.today) ? '/inbox' : '/no-date';
+	}
+
+	async function openSubtasks() {
+		subtasksOpen = true;
+		await tick();
+		subtaskInput?.focus();
+	}
+
+	async function addSubtask() {
+		if (!subtaskText.trim()) return submit();
+		const task = subtaskTask(subtaskParsed);
+		if (!task) return;
+		subtasks.push({ key: subtaskKey++, task });
+		subtaskText = '';
+		await tick();
+		subtaskList?.scrollTo({ top: subtaskList.scrollHeight, behavior: 'smooth' });
+	}
+
+	function removeSubtask(key: number) {
+		subtasks = subtasks.filter((s) => s.key !== key);
+		if (!subtasks.length && !subtaskText) subtaskInput?.focus();
+	}
+
+	function onsubtaskkeydown(event: KeyboardEvent) {
+		if (event.key === 'Enter') {
+			event.preventDefault();
+			void addSubtask();
+		} else if (event.key === 'Escape') {
+			event.preventDefault();
+			sheets.close();
+		} else if (event.key === 'Backspace' && !subtaskText && !subtasks.length) {
+			event.preventDefault();
+			subtasksOpen = false;
+			input.focus();
+		}
 	}
 
 	function rambleOptions() {
@@ -244,6 +305,66 @@
 			<p class="pt-2 text-[13px] text-muted">{notice}</p>
 		{/if}
 	</div>
+	{#if subtasksOpen || subtasks.length}
+		<div class="mx-4 mb-2 ml-5 border-l border-ink/10 pl-3" transition:slide={motion({ duration: 180, easing: cubicOut })}>
+			<ul bind:this={subtaskList} class="max-h-48 overflow-y-auto" aria-label="Subtasks">
+				{#each subtasks as { key, task } (key)}
+					<li
+						class="flex items-center gap-2.5"
+						animate:flip={motion({ duration: 200, easing: cubicOut })}
+						in:fly={motion({ y: -6, duration: 180, easing: cubicOut })}
+						out:slide={motion({ duration: 160, easing: cubicOut })}
+					>
+						<span class="size-4 shrink-0 rounded-full border-[1.5px]" style:border-color={PRIORITIES[task.priority ?? DEFAULT_PRIORITY].tone}></span>
+						<div class="min-w-0 flex-1 py-1.5">
+							<div class="text-[14px] leading-5 [overflow-wrap:anywhere]">{task.title}</div>
+							{#if task.due || task.recurrence || task.labelIds.length}
+								<div class="flex flex-wrap items-center gap-x-3 text-[12px] leading-4 text-muted">
+									{#if task.due}
+										<span class="flex items-center gap-1" style={`color: var(--tone-${dueTone(task.due, clock.today)})`}>
+											<CalendarBlank size={12} />{formatDue(task.due, clock.today)}
+										</span>
+									{/if}
+									{#if task.recurrence}
+										<span class="flex items-center gap-1" style="color: var(--tone-repeat)"><Repeat size={12} />{formatRecurrence(task.recurrence, task.due)}</span>
+									{/if}
+									{#each store.labelsOf(task) as label (label.id)}
+										<span class="flex items-center gap-1"><Tag size={12} weight="fill" class="text-[var(--tone-label)]" />{label.name}</span>
+									{/each}
+								</div>
+							{/if}
+						</div>
+						<button
+							type="button"
+							class="grid size-8 shrink-0 place-items-center rounded-full text-faint transition-colors hover:text-ink touch:size-11"
+							aria-label={`Remove ${task.title}`}
+							onmousedown={(e) => e.preventDefault()}
+							onclick={() => removeSubtask(key)}
+						>
+							<X size={13} weight="bold" />
+						</button>
+					</li>
+				{/each}
+			</ul>
+			<div class="flex items-center gap-2.5">
+				<span class="grid size-4 shrink-0 place-items-center text-accent"><Plus size={13} weight="bold" /></span>
+				<SmartInput
+					bind:this={subtaskInput}
+					bind:value={subtaskText}
+					tokens={subtaskParsed.tokens}
+					label="Add subtask"
+					placeholder="Add subtask"
+					enterkeyhint="enter"
+					suggestProjects={false}
+					class="-ml-1 min-w-0 flex-1 py-1.5 text-[14px]"
+					onkeydown={onsubtaskkeydown}
+					onblur={() => {
+						if (!subtaskText && !subtasks.length) subtasksOpen = false;
+					}}
+				/>
+			</div>
+		</div>
+	{/if}
 	<div class="flex items-start gap-1.5 px-4 pb-3">
 	<div class="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
 		<DuePicker {due} onchange={(value) => {
@@ -294,6 +415,17 @@
 			</button>
 		{/each}
 	</div>
+	<button
+		type="button"
+		class="chip shrink-0"
+		data-active={subtasksOpen || subtasks.length > 0}
+		aria-label={subtasks.length ? `Add subtask, ${subtasks.length} added` : 'Add subtask'}
+		onmousedown={(e) => e.preventDefault()}
+		onclick={openSubtasks}
+	>
+		<ListChecks size={16} weight={subtasks.length ? 'bold' : 'regular'} />
+		{#if subtasks.length}<span class="tabular-nums">{subtasks.length}</span>{/if}
+	</button>
 	<PriorityPicker iconOnly {priority} onchange={(value) => {
 			clearToken('priority');
 			picked.priority = value;

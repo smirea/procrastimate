@@ -4048,7 +4048,8 @@
 						"title": "solo"
 					}
 				],
-				"2026-10-14"
+				"2026-10-14",
+				false
 			],
 			"output": {
 				"loose": [
@@ -4108,33 +4109,6 @@
 							{
 								"completedAt": null,
 								"completedBy": null,
-								"createdAt": 27,
-								"createdBy": null,
-								"due": null,
-								"event": null,
-								"id": "beans",
-								"labelIds": [],
-								"lastCompletedAt": null,
-								"location": {
-									"address": "",
-									"latitude": 52.6,
-									"longitude": 13.4,
-									"name": "Philz",
-									"radius": 150,
-									"trigger": "arrive"
-								},
-								"notes": "",
-								"order": 0,
-								"parentId": null,
-								"priority": 1,
-								"projectId": null,
-								"recurrence": null,
-								"reminders": [],
-								"title": "beans"
-							},
-							{
-								"completedAt": null,
-								"completedBy": null,
 								"createdAt": 24,
 								"createdBy": null,
 								"due": null,
@@ -4158,6 +4132,33 @@
 								"recurrence": null,
 								"reminders": [],
 								"title": "coffee"
+							},
+							{
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 27,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"id": "beans",
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": {
+									"address": "",
+									"latitude": 52.6,
+									"longitude": 13.4,
+									"name": "Philz",
+									"radius": 150,
+									"trigger": "arrive"
+								},
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 1,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"title": "beans"
 							}
 						]
 					},
@@ -4222,6 +4223,164 @@
 						]
 					}
 				]
+			}
+		},
+		{
+			"fn": "noDateTasks",
+			"test": "no date › newest first flips the order within the list and each place",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 29,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "old",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "old"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 30,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "mid",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 1,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "mid"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 31,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "new",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "new"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 32,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
+						"id": "later",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "later"
+					}
+				],
+				"2026-10-14",
+				true
+			],
+			"output": {
+				"loose": [
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 31,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "new",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "new"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 30,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "mid",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 1,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "mid"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 29,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "old",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"title": "old"
+					}
+				],
+				"places": []
 			}
 		}
 	]

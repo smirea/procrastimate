@@ -11,8 +11,9 @@
 		tasks,
 		showProject = false,
 		timeOnly = false,
+		showAdded = false,
 		label,
-	}: { tasks: Task[]; showProject?: boolean | 'assigned'; timeOnly?: boolean; label: string } = $props();
+	}: { tasks: Task[]; showProject?: boolean | 'assigned'; timeOnly?: boolean; showAdded?: boolean; label: string } = $props();
 </script>
 
 <ul class="divide-y divide-ink/[0.06]" aria-label={label}>
@@ -22,7 +23,7 @@
 			in:fly={motion({ y: -8, duration: 220, easing: cubicOut })}
 			out:slide={motion({ duration: 200, easing: cubicOut })}
 		>
-			<TaskRow {task} showProject={showProject === 'assigned' ? task.projectId !== null : showProject} {timeOnly} />
+			<TaskRow {task} showProject={showProject === 'assigned' ? task.projectId !== null : showProject} {timeOnly} {showAdded} />
 		</li>
 	{/each}
 </ul>

@@ -13,6 +13,6 @@
 
 <svelte:head><title>{place?.name ?? 'Place'} · ProcrastiMate</title></svelte:head>
 
-<View title={place?.name ?? 'Place'} empty={tasks.length === 0} emptyTitle="Nothing left here" emptyHint="Add a place to a task on iPhone." quickAdd={{ projectId: null, labelId: null, today: false }}>
+<View title={place?.name ?? 'Place'} empty={tasks.length === 0} emptyTitle="Nothing left here" emptyHint="Add a place to a task on iPhone." quickAdd={{ projectId: null, labelId: null, today: false }} markdown={() => ({ title: place?.name ?? 'Place', projectId: null, sections: [{ heading: null, tasks }] })}>
 	<TaskList {tasks} showProject label={`Tasks at ${place?.name ?? 'this place'}`} />
 </View>
