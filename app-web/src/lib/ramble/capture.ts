@@ -89,11 +89,14 @@ function speech(options: {
 	onStop: (reason: CaptureStop, message?: string) => void;
 	onLevel?: (level: number) => void;
 }): RambleListen {
-	const stopMeter = options.onLevel ? meter(options.onLevel) : () => {};
+	const level = options.onLevel ? speechLevel(options.onLevel) : null;
 	const dictation = new NativeDictation(
-		text => options.onText(text, text.length),
+		text => {
+			level?.heard();
+			options.onText(text, text.length);
+		},
 		(reason: DictationEnd) => {
-			stopMeter();
+			level?.stop();
 			options.onStop(reason === 'stopped' ? 'stopped' : reason);
 		},
 	);
@@ -218,9 +221,33 @@ async function startMic(socket: WebSocket, onLevel?: (level: number) => void) {
 }
 
 /**
- * The browser recognizer reports no audio level, so the waveform reads its own mic stream. A meter that cannot open
- * leaves the waveform idle and never stops the recognizer.
+ * The browser recognizer reports no audio level. Chromium shares the mic, so the waveform reads its own stream, opened
+ * only after the recognizer hears something, so a meter can never cause the fail-before-hearing fallback. WebKit
+ * (only `webkitSpeechRecognition`) may stop recognition when a second capture opens, so there each recognized update
+ * pulses the bars instead.
  */
+function speechLevel(onLevel: (level: number) => void) {
+	const webkit = !('SpeechRecognition' in window);
+	let stopMeter: (() => void) | null = null;
+	let pulse: ReturnType<typeof setTimeout> | undefined;
+	return {
+		heard() {
+			if (!webkit) {
+				stopMeter ??= meter(onLevel);
+				return;
+			}
+			onLevel(0.2 + Math.random() * 0.35);
+			clearTimeout(pulse);
+			pulse = setTimeout(() => onLevel(0), 160);
+		},
+		stop() {
+			clearTimeout(pulse);
+			stopMeter?.();
+		},
+	};
+}
+
+/** A meter that cannot open leaves the waveform idle and never stops the recognizer. */
 function meter(onLevel: (level: number) => void): () => void {
 	let stopped = false;
 	let frame = 0;

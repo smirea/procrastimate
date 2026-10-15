@@ -48,6 +48,7 @@ final class RambleSession {
         }
         #endif
         let online = await NetworkPath.online()
+        guard !userStop else { return }
         switch Dictation.voiceCapture(choice, online: online, nativeSpeech: true).capture {
         case .speech:
             await startSpeech()
@@ -104,6 +105,8 @@ final class RambleSession {
             try await speech.start(meter: meter) { [weak self] text in
                 self?.onText(text, (text as NSString).length)
             }
+            // A stop during the model or permission setup finished early; the recognizer that started since must not run.
+            if userStop { speech.cancel() }
         } catch SpeechDictation.Failure.denied {
             onEnd(.failed("The microphone is off. You can type the ramble instead."))
         } catch {
@@ -128,6 +131,7 @@ final class RambleSession {
                 onEnd(.failed("The microphone is off. You can type the ramble instead."))
                 return
             }
+            guard !userStop else { return }
         @unknown default:
             onEnd(.failed("The microphone is off. You can type the ramble instead."))
             return

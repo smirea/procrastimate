@@ -1,7 +1,10 @@
-import { describe, expect, test } from 'bun:test';
+import { expect } from 'bun:test';
 import { parseRamble } from './ramble.ts';
-import { rambleNewTask } from './ramble-fill.ts';
+import * as fill from './ramble-fill.ts';
 import type { RambleTask } from './ramble.ts';
+import { describe, recorded, test } from './vectors/record.ts';
+
+const rambleNewTask = recorded('ramble-fill', fill.rambleNewTask);
 
 const now = new Date(1791986400000);
 

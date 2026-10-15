@@ -79,13 +79,14 @@
 		elapsed = 0;
 		meter.level = 0;
 		const began = performance.now();
+		let ended = false;
 		const timer = setInterval(() => (elapsed = Math.floor((performance.now() - began) / 1000)), 250);
 		const next = listenRamble({
 			choice: store.dictation,
 			online: navigator.onLine,
 			onLevel: (level) => (meter.level = level),
 			onText: (spoken) => {
-				if (token !== generation || phase !== 'listening') return;
+				if (token !== generation || phase === 'review') return;
 				const draft = parseRamble(spoken, options());
 				transcript = spoken;
 				tokens = draft.tokens;
@@ -94,12 +95,14 @@
 			},
 			onStop: (reason, message) => {
 				clearInterval(timer);
+				ended = true;
 				if (token !== generation) return;
 				session = null;
 				notice = reason === 'stopped' ? '' : (message ?? NOTICES[reason] ?? '');
 				settle();
 			},
 		});
+		if (ended) return;
 		session = next;
 		if (next.typed) {
 			clearInterval(timer);
@@ -181,7 +184,7 @@
 			event.stopPropagation();
 			if (phase === 'listening') stop();
 			else open = null;
-		} else if (event.key === 'Enter' && !event.shiftKey && phase === 'review' && !isTyping(event.target)) {
+		} else if (event.key === 'Enter' && !event.shiftKey && phase === 'review' && !isTyping(event.target) && !(event.target instanceof HTMLButtonElement)) {
 			event.preventDefault();
 			save();
 		} else if (event.key === ' ' && !isTyping(event.target) && !(event.target instanceof HTMLButtonElement)) {

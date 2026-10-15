@@ -511,7 +511,7 @@ struct RambleDrawer: View {
         startedAt = .now
         RambleModel.prewarm()
         session.onText = { spoken, _ in
-            guard token == generation, phase == .listening else { return }
+            guard token == generation, phase == .listening || phase == .finishing else { return }
             transcript = spoken
             parseLive(spoken, token: token)
         }
@@ -549,7 +549,7 @@ struct RambleDrawer: View {
             let draft = await Task.detached(priority: .userInitiated) {
                 Ramble.parse(text, now: now, projects: projects, labels: labels, in: zone)
             }.value
-            guard !Task.isCancelled, token == generation, phase == .listening else { return }
+            guard !Task.isCancelled, token == generation, phase == .listening || phase == .finishing else { return }
             tokens = draft.tokens
             live = RambleEntry.keyed(draft.tasks, base: base)
             if draft.ended { stop() }
