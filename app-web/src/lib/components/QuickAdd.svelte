@@ -25,6 +25,7 @@
 	import { rowButtons } from 'shared/quick-add-buttons.ts';
 	import { WEB_BUTTONS, type WebButton } from '../quick-add-buttons.ts';
 	import { store } from '../store.svelte.ts';
+	import { creationHome } from '../spaces.ts';
 	import { clock, mobile, sheets, type QuickAddDefaults, motion } from '../ui.svelte.ts';
 	import { dueTone, formatDue, formatRecurrence, formatReminder } from 'shared/format.ts';
 	import type { NewTask } from 'shared/store.ts';
@@ -100,6 +101,8 @@
 			.map((token) => ({ token, name: store.labels.find((l) => `@${l.name}`.toLowerCase() === token.text.toLowerCase())?.name })),
 	);
 	const labelIds = $derived([...new Set([...picked.labelIds, ...parsed.labelIds])]);
+	/** The space the task will land in. A shared one offers only its own labels and creates none, as in task details. */
+	const home = $derived(creationHome(store.homeOf, { projectId, labelIds }, null));
 	/** What each attribute holds. One with a value shows in the row even when it is not pinned. */
 	const values = $derived<Partial<Record<WebButton, string>>>({
 		...(due && { date: formatDue(due, clock.today) }),
@@ -401,7 +404,7 @@
 					{:else if button === 'repeat'}
 						<RecurrencePicker {recurrence} {due} bind:open={repeatOpen.get, repeatOpen.set} onchange={setRecurrence} />
 					{:else if button === 'labels'}
-						<LabelPicker {labelIds} bind:open={labelsOpen.get, labelsOpen.set} onchange={setLabels} />
+						<LabelPicker {labelIds} labels={store.dataOf(home).labels} canCreate={home === null} bind:open={labelsOpen.get, labelsOpen.set} onchange={setLabels} />
 					{:else if button === 'subtasks'}
 						<button
 							type="button"
