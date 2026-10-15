@@ -38,6 +38,8 @@ type Draft = {
 	/** For an edit, each changed field's value before the run and after it. */
 	before: Fields;
 	after: Fields;
+	/** The whole task after the run, for fields a summary reads but the run left alone. */
+	state: Fields;
 };
 
 export function unknownPerson(id: string): Person {
@@ -54,7 +56,11 @@ function actionOf(row: Fields, prev: Fields, wasLive: boolean, everLive: boolean
 	if (!wasLive) return row.deleted === false ? (everLive ? 'restored' : 'created') : null;
 	if (typeof row.completedAt === 'number' && prev.completedAt == null) return 'completed';
 	if (row.completedAt === null && prev.completedAt != null) return 'reopened';
-	if (row.lastCompletedAt !== undefined && !sameValue(row.lastCompletedAt, prev.lastCompletedAt)) return 'completed';
+	if (row.lastCompletedAt !== undefined && !sameValue(row.lastCompletedAt, prev.lastCompletedAt)) {
+		// Undoing a recurring roll restores the previous `lastCompletedAt`, which reads as reopening it.
+		const rolled = typeof row.lastCompletedAt === 'number' && row.lastCompletedAt > Number(prev.lastCompletedAt ?? -1);
+		return rolled ? 'completed' : 'reopened';
+	}
 	return 'edited';
 }
 
@@ -88,7 +94,7 @@ export function taskActivity(store: AccountStore, taskId: string): ActivityEntry
 			continue;
 		}
 		if (action !== 'edited') {
-			drafts.push({ at: row.at, actor: row.actor, action, before: {}, after: {} });
+			drafts.push({ at: row.at, actor: row.actor, action, before: {}, after: {}, state: data });
 			continue;
 		}
 		const changed = changedFields(fields, prev);
@@ -96,8 +102,9 @@ export function taskActivity(store: AccountStore, taskId: string): ActivityEntry
 		const draft: Draft =
 			recent && last.action === 'edited'
 				? last
-				: drafts[drafts.push({ at: row.at, actor: row.actor, action, before: {}, after: {} }) - 1]!;
+				: drafts[drafts.push({ at: row.at, actor: row.actor, action, before: {}, after: {}, state: data }) - 1]!;
 		draft.at = row.at;
+		draft.state = data;
 		for (const name of changed) {
 			if (!(name in draft.before)) draft.before[name] = prev[name];
 			draft.after[name] = data[name];
@@ -153,7 +160,7 @@ function summarize(draft: Draft, nameOf: NameOf): string | null {
 	if (draft.action !== 'edited') return ACTION_SUMMARIES[draft.action];
 	const today = new Date(draft.at).toISOString().slice(0, 10) as DateKey;
 	const parts = Object.keys(draft.after).flatMap(name => {
-		const part = describeField(name, draft.before[name], draft.after[name], today, draft.after, nameOf);
+		const part = describeField(name, draft.before[name], draft.after[name], today, draft.state, nameOf);
 		return part ? [part] : [];
 	});
 	return parts.length ? listOf(parts) : null;
@@ -164,7 +171,7 @@ function describeField(
 	before: unknown,
 	after: unknown,
 	today: DateKey,
-	changes: Fields,
+	task: Fields,
 	nameOf: NameOf,
 ): string | null {
 	switch (name) {
@@ -182,7 +189,7 @@ function describeField(
 		case 'recurrence': {
 			const recurrence = after as Task['recurrence'];
 			if (!recurrence) return 'stopped repeating it';
-			const repeat = formatRecurrence(recurrence, (changes.due as Task['due'] | undefined) ?? null);
+			const repeat = formatRecurrence(recurrence, (task.due as Task['due'] | undefined) ?? null);
 			return `set it to repeat ${repeat[0]!.toLowerCase()}${repeat.slice(1)}`;
 		}
 		case 'priority':

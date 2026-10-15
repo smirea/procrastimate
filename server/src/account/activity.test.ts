@@ -138,4 +138,27 @@ describe('task activity', () => {
 		mac.push(NOW + 4000);
 		expect(summaries(store)).toEqual([[ME, 'created', 'added this task', NOW]]);
 	});
+
+	test('a recurring completion undone right away shows nothing', () => {
+		const store = memoryStore();
+		const due = { date: '2026-10-20', time: null } as const;
+		const recurrence = { interval: 1, unit: 'week' } as const;
+		const mac = device(store, 'mac', snapshotOf({ tasks: [task('paint', { title: 'Paint', due, recurrence })] }));
+		mac.push(NOW);
+		mac.edit({ lastCompletedAt: NOW + 1000, due: { date: '2026-10-27', time: null } }, NOW + 1000);
+		mac.push(NOW + 1000);
+		mac.edit({ lastCompletedAt: null, due }, NOW + 2000);
+		mac.push(NOW + 2000);
+		expect(summaries(store)).toEqual([[ME, 'created', 'added this task', NOW]]);
+	});
+
+	test('a weekly repeat on a dated task names the due date’s weekday', () => {
+		const store = memoryStore();
+		const due = { date: '2026-10-20', time: null } as const;
+		const mac = device(store, 'mac', snapshotOf({ tasks: [task('paint', { title: 'Paint', due })] }));
+		mac.push(NOW);
+		mac.edit({ recurrence: { interval: 1, unit: 'week' } }, NOW + 1000);
+		mac.push(NOW + 1000);
+		expect(summaries(store).at(-1)).toEqual([ME, 'edited', 'set it to repeat every Tue', NOW + 1000]);
+	});
 });
