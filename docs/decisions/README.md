@@ -16,6 +16,7 @@ ProcrastiMate's concepts, goals, paradigms, and high-level system decisions, one
 - [Places and events](places-and-events.md): tasks on a place or a calendar event, their triggers, overdue rules, calendar sync, and the sidebar sections.
 - [Recurring tasks](recurrence.md): completing, next occurrences, and editing repeats.
 - [Search](search.md): matching, ranking, grouping, and the search sheet.
+- [Sections](sections.md): Todoist-style headings inside a project, their order, delete rule, quick add `/name`, sharing, and import.
 - [Subtasks](subtasks.md): nested child tasks, where they show, completion, reorder, and delete rules.
 - [Push notifications](push-notifications.md): Web Push scheduling, delivery, keys, and permission.
 - [Stack](stack.md): tooling, client and server frameworks, and shared code.

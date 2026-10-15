@@ -10,7 +10,13 @@ Projects let Stefan group tasks, open a project to see its tasks, and move a tas
 - `projects-autocomplete` suggests projects after `#` in quick add and the task title, and offers to create a missing one.
 - `projects-move` moves a task to another project or back to Inbox.
 - `projects-rename` renames a project.
-- `projects-delete` deletes a project and its tasks after confirmation.
+- `projects-delete` deletes a project, its sections, and its tasks after confirmation.
+- `sections-create` adds a section to a project.
+- `sections-group` lists a project's tasks in no section first, then each section with its tasks.
+- `sections-add-task` adds a task straight into a section.
+- `sections-quick-add` puts a task in a section by typing `/Name`, with suggestions after `/`.
+- `sections-move` moves a task into a section from task details.
+- `sections-rename`, `sections-reorder`, and `sections-delete` rename, move up or down, and delete a section with its tasks.
 
 ## How to get to it (user POV)
 
@@ -21,6 +27,8 @@ Projects let Stefan group tasks, open a project to see its tasks, and move a tas
 - Web: use `Project actions` in a project's header to rename or delete it.
 - iOS: open the Browse tab. `Add project` in the Projects header creates one.
 - iOS: use `Project actions` in a project's toolbar to rename or delete it.
+- Web: `Add section` at the end of a project. Each section heading has `<name> actions` (Rename, Move up, Move down, Delete section) and its own `Add task`.
+- iOS: `Add section` in `Project actions`. Long-press a section header for Add task, Copy as Markdown, Rename, Move up, Move down, and Delete section.
 
 ## Driving it with control-ui and XCUITest
 
@@ -42,11 +50,14 @@ Preconditions:
 - **Phone.** Tap `Open navigation`, `Add project`, type `Home`, and press return. `Home` opens and the drawer closes. Add `Fix sink #home p3` and `Paint fence fri`. Open Inbox, then `Home` from the drawer; `Home tasks` lists `Paint fence` then `Fix sink`. Test: `the navigation drawer creates a project and switches to it` in `bun run test:e2e -- e2e/mobile.e2e.ts`. The suite saves `app-web/test-results/mobile/project.png`.
 - **Phone autocomplete.** Create `Home` and `Errands` from the drawer, tap `Quick add`, and type `Fix sink #h` with the keyboard open. The `Projects` list sits above the field, fully on screen, with `Home` and `Create project “h”`. Tap `Home`; the field reads `Fix sink #Home ` and keeps focus. Type `#Garden` and tap `Create project “Garden”`; the project chip reads `Garden`. Test: `# suggests projects above the keyboard and a tap picks or creates one` in `bun run test:e2e -- e2e/mobile.e2e.ts`. The suite saves `app-web/test-results/mobile/project-autocomplete.png` and `project-autocomplete-create.png`.
 - **iOS.** In Browse, tap `Add project`, type `Home`, and press return; `Home` opens with `No tasks yet`. Quick add from the tab bar `+` there starts with `Project Home`, so `Fix sink p3` and `Paint fence fri` land in `Home`, listed `Paint fence` then `Fix sink`, and Browse shows `Home` with `2`. `Project actions`, `Rename` opens an alert prefilled with the name; entering `House` retitles the screen and the Browse row. `Delete project` confirms with `Delete House and its 3 tasks?`, then goes back to Browse without `House`, and its tasks are gone from search. Tests: `ProjectsParityTests` (`test_projects_create`, `test_projects_open`, `test_projects_rename`, `test_projects_delete`), paired with `e2e/parity/projects.e2e.ts`. Run each pair with the iOS workflow (`xcodebuild test` on an iPhone 16 simulator) and `bun run test:e2e --project=parity`; both sides save `<parity-id>.png`. An unknown `#Personal` shows `Create #Personal` in quick add's chip row and creates the project only when tapped (`QuickAddParityTests.test_add_create`, paired with `quick-add › add-create`). In task details, the toolbar's `Project Inbox` menu moves `Buy milk` to `Home`, and it leaves Inbox. Test: `DetailsParityTests.test_projects_move`, paired with `projects-move` in `e2e/parity/details.e2e.ts`.
+- **Sections.** In `Home`, choose `Add section`, type `Later`, press Enter, then add `Next up` the same way. Both headings show, `Later` first. Choose `Add task` under `Later` and save `Fix fence`; quick add's project chip reads `Home / Later`, and the task lands under `Later`. In quick add type `Paint door #Home /next`; the `Sections` list offers `Next up`, Tab inserts `/Next up `, and the task lands under `Next up`. Open `Water plants` in no section, open the project chip, and pick `Next up` under `Home`; the chip reads `Home / Next up`. `Copy Home as Markdown` gives `# Home`, `## Later`, `## Next up` with their tasks. `Next up actions`, `Move up` puts `Next up` first. `Later actions`, `Rename` to `Someday` survives a reload. `Someday actions`, `Delete section` asks `Delete Someday and its 1 task?` and removes `Fix fence`. Tests: `bun run test:e2e -- e2e/sections.e2e.ts`, which saves `app-web/test-results/sections/project.png`, `quick-add.png`, and at 393 px `phone.png`.
+- **Sections on iOS.** A debug build launched with `PROCRASTIMATE_DEMO=sections` seeds `Home` with `Next up` and `Later` and opens it; add `quickadd type:Paint+shed+/ne` to see the `Sections` suggestions, or `type:Paint+shed+/later+` to see the chip read `Home / Later`. Core rules run in `swift test` (`VectorTests` store, views, markdown, quick-add, todoist; `QuickAddDraftTests`).
 - **Proof.** The suite saves `app-web/test-results/view-project.png`.
 
 ## Gotchas
 
-- Deleting a project deletes its tasks. Seed a fresh project for this step, never a shared one.
+- Deleting a project deletes its tasks. Deleting a section deletes its tasks too.
+- `/Name` only reads the sections of the project in effect: the typed `#Project`, else the one quick add opened with. Without a project it stays text. Seed a fresh project for this step, never a shared one.
 - `#Name` is highlighted only for an existing project. An unknown `#word` stays in the title.
 - Escape closes the suggestions for that `#` until the `#` is deleted, so typing more does not reopen them.
 - Picking a suggestion appends a space, which closes the list. Enter picks while the list is open unless the typed name already matches a project and the selection was not moved.
