@@ -9,7 +9,7 @@ Subtasks let Stefan break a task into steps, such as `Pack for trip` with `Passp
 - `subtasks-progress` shows a progress ring and `done/total` on the parent row and on nested subtask rows.
 - `subtasks-check` toggles a subtask from its checkbox in the parent's details, with no toast.
 - `subtasks-reorder` drags a subtask by its handle, by mouse or touch, or moves it with the arrow keys on the focused handle.
-- `subtasks-nest` opens a subtask's own details in the same sheet, where it can have subtasks, with a back chip to the parent. On iOS an edge swipe from the left also goes back, including for a subtask opened straight from Inbox or search.
+- `subtasks-nest` opens a subtask's own details in the same sheet, where it can have subtasks, with a back chip to the parent. Going back returns to where the parent was scrolled (test: `going back from a subtask returns to where the parent was scrolled` in `e2e/details-scroll.e2e.ts`). On iOS an edge swipe from the left also goes back, including for a subtask opened straight from Inbox or search.
 - `subtasks-complete-parent` completes every open subtask under a completed task, with undo restoring each one as it was.
 - `subtasks-recurring` reopens every subtask when a recurring parent moves to its next occurrence.
 - `subtasks-search` finds a subtask in search by its own text, names its parent, and opens it with the back chip.

@@ -109,6 +109,12 @@
 	}
 
 	const slideFrom = { forward: 28, back: -28, none: 0 } satisfies Record<Arrival, number>;
+
+	let body: HTMLDivElement;
+
+	$effect(() => {
+		if (untrack(() => arrival) === 'back') body.scrollTop = sheets.scrollTops.get(untrack(() => task.id)) ?? 0;
+	});
 </script>
 
 <div class="relative flex min-h-0 flex-1 flex-col" in:fly={motion({ x: slideFrom[arrival], duration: arrival === 'none' ? 0 : 220, easing: cubicOut })}>
@@ -190,7 +196,13 @@
 	<div class="px-4 pt-3" inert={!editable}>
 		<LabelPicker labelIds={draft.labelIds} labels={space.labels} canCreate={home === null} onchange={(labelIds) => update({ labelIds })} />
 	</div>
-	<div class="flex-1 space-y-4 overflow-y-auto overscroll-contain px-4 pt-4 min-h-0" class:pb-24={editable} class:pb-4={!editable}>
+	<div
+		bind:this={body}
+		class="flex-1 space-y-4 overflow-y-auto overscroll-contain px-4 pt-4 min-h-0"
+		class:pb-24={editable}
+		class:pb-4={!editable}
+		onscroll={(e) => sheets.scrollTops.set(task.id, e.currentTarget.scrollTop)}
+	>
 		{#if editable}
 			<LinkedField text={task.notes} class="border border-transparent px-3.5 py-2.5 text-[14px] whitespace-pre-wrap [overflow-wrap:anywhere] touch:text-base">
 				<textarea
