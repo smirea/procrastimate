@@ -25,7 +25,7 @@
     </array>
     <key>LSApplicationQueriesSchemes</key>
     <array>
-        <string>myvoicememo</string>
+        <string>talkward</string>
     </array>
     <key>ITSAppUsesNonExemptEncryption</key>
     <false/>
