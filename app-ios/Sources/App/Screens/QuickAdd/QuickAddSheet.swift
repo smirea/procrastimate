@@ -229,7 +229,7 @@ private struct QuickAddForm: View {
         let parsed = draft.parse(now: clock.now, projects: store.projects, labels: store.labels, in: clock.timeZone)
         guard let task = draft.resolve(parsed) else { return }
         withAnimation(.snappy) {
-            let added = store.addTask(task)
+            guard let added = store.addTask(task) else { return }
             if let event {
                 store.updateTask(added.id, TaskPatch(due: .some(nil), recurrence: .some(nil), location: .some(location), event: .some(event)))
             } else if let location {
@@ -362,10 +362,10 @@ private struct QuickAddForm: View {
         let today = clock.today
         withAnimation(.snappy) {
             for task in tasks {
-                let added = store.addTask(Ramble.newTask(task, defaults: defaults, today: today))
+                guard let added = store.addTask(Ramble.newTask(task, defaults: defaults, today: today)) else { continue }
                 if !task.notes.isEmpty { store.updateTask(added.id, TaskPatch(notes: task.notes)) }
                 for subtask in task.subtasks {
-                    let child = store.addTask(Ramble.newTask(subtask, defaults: nil, today: today), parentId: added.id)
+                    guard let child = store.addTask(Ramble.newTask(subtask, defaults: nil, today: today), parentId: added.id) else { continue }
                     if !subtask.notes.isEmpty { store.updateTask(child.id, TaskPatch(notes: subtask.notes)) }
                 }
             }

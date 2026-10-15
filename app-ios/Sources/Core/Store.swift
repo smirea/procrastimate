@@ -15,6 +15,8 @@ public final class Store {
     @ObservationIgnored private let newId: () -> String
     @ObservationIgnored private var version = 0
     @ObservationIgnored private var pendingWrite: Task<Void, Never>?
+    /// Where each deleted task lived, so undo puts it back in the same space.
+    @ObservationIgnored private var deletedFrom: [String: SpaceKey] = [:]
 
     public init(file: SnapshotFile?, clock: AppClock, newId: @escaping () -> String = { UUID().uuidString.lowercased() }) {
         self.file = file
@@ -33,23 +35,95 @@ public final class Store {
         if !hadSync { scheduleWrite() }
     }
 
+    /// The user's own tasks, projects, and labels, which the personal views (Inbox, Today, No date, places, search) show.
     public var tasks: [TaskItem] { snapshot.tasks }
     public var projects: [Project] { snapshot.projects }
     public var labels: [Label] { snapshot.labels }
 
-    public func task(_ id: String) -> TaskItem? { snapshot.tasks.first { $0.id == id } }
-    public func project(_ id: String?) -> Project? { id.flatMap { id in snapshot.projects.first { $0.id == id } } }
-    public func label(_ id: String) -> Label? { snapshot.labels.first { $0.id == id } }
+    /// Own tasks, then each shared space's, for subtasks, details, and shared project and label screens.
+    public var allTasks: [TaskItem] { snapshot.tasks + sharedSpaces.flatMap(\.section.tasks) }
+
+    /// Shared spaces by owner name, with their ids.
+    public var sharedSpaces: [(id: String, section: SpaceSection)] {
+        snapshot.spaces.map { ($0.key, $0.value) }.sorted { ($0.section.owner.name, $0.id) < ($1.section.owner.name, $1.id) }
+    }
+
+    public func task(_ id: String) -> TaskItem? {
+        snapshot.tasks.first { $0.id == id }
+            ?? snapshot.spaces.values.lazy.compactMap { $0.tasks.first { $0.id == id } }.first
+    }
+
+    public func project(_ id: String?) -> Project? {
+        guard let id else { return nil }
+        return snapshot.projects.first { $0.id == id }
+            ?? snapshot.spaces.values.lazy.compactMap { $0.projects.first { $0.id == id } }.first
+    }
+
+    public func label(_ id: String) -> Label? {
+        snapshot.labels.first { $0.id == id }
+            ?? snapshot.spaces.values.lazy.compactMap { $0.labels.first { $0.id == id } }.first
+    }
 
     /// A task's labels in the order they were added, skipping any that were deleted.
     public func labels(of task: TaskItem) -> [Label] { task.labelIds.compactMap(label) }
 
-    public func commit(_ next: StoreData) {
-        let before = snapshot.data
+    public func space(ofTask id: String) -> SpaceKey? { space { $0.tasks.contains { $0.id == id } } }
+    public func space(ofProject id: String) -> SpaceKey? { space { $0.projects.contains { $0.id == id } } }
+    public func space(ofLabel id: String) -> SpaceKey? { space { $0.labels.contains { $0.id == id } } }
+
+    private func space(where holds: (StoreData) -> Bool) -> SpaceKey? {
+        if holds(snapshot.data) { return .own }
+        return snapshot.spaces.keys.first { holds(data(in: .shared($0))) }.map { .shared($0) }
+    }
+
+    public func data(in space: SpaceKey) -> StoreData {
+        switch space {
+        case .own: return snapshot.data
+        case let .shared(id):
+            guard let section = snapshot.spaces[id] else { return StoreData() }
+            return StoreData(tasks: section.tasks, projects: section.projects, labels: section.labels)
+        }
+    }
+
+    /// The projects and labels a task in this space can pick. A task never leaves its space.
+    public func projects(in space: SpaceKey) -> [Project] { data(in: space).projects }
+    public func labels(in space: SpaceKey) -> [Label] { data(in: space).labels }
+
+    /// The owner of a shared space, or nil for the user's own.
+    public func owner(of space: SpaceKey) -> Person? {
+        space.query.flatMap { snapshot.spaces[$0]?.owner }
+    }
+
+    /// A shared task this user may see but not change.
+    public func isReadOnly(_ taskID: String) -> Bool {
+        snapshot.spaces.values.contains { $0.readOnly.contains(taskID) }
+    }
+
+    public func person(_ id: String?) -> Person? {
+        guard let id else { return nil }
+        return snapshot.people.first { $0.id == id }
+    }
+
+    public func commit(_ next: StoreData) { commit(next, in: .own) }
+
+    /// Commits into the space the command ran on, so its ops queue in that space's outbox.
+    public func commit(_ next: StoreData, in space: SpaceKey) {
         var data = next
         data.tasks = StoreRules.sortTasks(next.tasks)
-        snapshot.data = data
-        SyncEngine.record(&snapshot, before: before, after: snapshot.data, now: clock.now.epochMilliseconds, nextOpId: newId)
+        let now = clock.now.epochMilliseconds
+        switch space {
+        case .own:
+            let before = snapshot.data
+            snapshot.data = data
+            SyncEngine.record(&snapshot, before: before, after: data, now: now, nextOpId: newId)
+        case let .shared(id):
+            let recorded: Void? = SyncEngine.inSpace(&snapshot, id) { lens in
+                let before = lens.data
+                lens.data = data
+                SyncEngine.record(&lens, before: before, after: data, now: now, nextOpId: newId)
+            }
+            guard recorded != nil else { return }
+        }
         revision += 1
         scheduleWrite()
     }
@@ -76,6 +150,39 @@ public final class Store {
         let applied = SyncEngine.apply(&snapshot, response: response)
         if applied { scheduleWrite() }
         return applied
+    }
+
+    /// The body of `POST /api/sync?space=<id>` for a shared space.
+    public func syncRequest(space id: String) throws -> API.SyncRequest? { try SyncEngine.request(snapshot, space: id) }
+
+    public func takeSyncResponse(_ response: API.SyncResponse, space id: String) -> Bool {
+        let applied = SyncEngine.apply(&snapshot, space: id, response: response)
+        if applied { scheduleWrite() }
+        return applied
+    }
+
+    /// Matches the sections to the spaces the server says are shared with this user.
+    public func setSpaces(_ spaces: [API.Space]) {
+        var next = snapshot
+        SyncEngine.setSpaces(&next, spaces)
+        guard next != snapshot else { return }
+        snapshot = next
+        scheduleWrite()
+    }
+
+    /// Forgets a space whose sync was refused, as when its last share was revoked.
+    public func dropSpace(_ id: String) {
+        guard snapshot.spaces[id] != nil else { return }
+        snapshot.spaces[id] = nil
+        scheduleWrite()
+    }
+
+    public func rememberPeople(_ people: [Person]) {
+        var next = snapshot
+        SyncEngine.rememberPeople(&next, people)
+        guard next != snapshot else { return }
+        snapshot = next
+        scheduleWrite()
     }
 
     /// Keeps the outbox when the server stores this install under a different id.
@@ -124,50 +231,79 @@ public final class Store {
 
     private func creation() -> Creation { Creation(id: newId(), now: clock.now.epochMilliseconds) }
 
-
+    /// Adds the task to its parent's space, else its project's, else the space of a shared label it carries (as from a
+    /// shared label's screen), else the user's own. A project or label from another space is dropped from it, and a
+    /// read-only parent takes no subtasks.
     @discardableResult
-    public func addTask(_ input: NewTask, parentId: String? = nil) -> TaskItem {
-        let (data, task) = StoreRules.addTask(snapshot.data, input, parentId: parentId, creation())
-        commit(data)
+    public func addTask(_ input: NewTask, parentId: String? = nil) -> TaskItem? {
+        if let parentId, isReadOnly(parentId) { return nil }
+        let space = parentId.flatMap { space(ofTask: $0) }
+            ?? input.projectId.flatMap { space(ofProject: $0) }
+            ?? input.labelIds.lazy.compactMap { self.space(ofLabel: $0) }.first { $0 != .own }
+            ?? .own
+        let data = data(in: space)
+        var input = input
+        input.projectId = input.projectId.flatMap { id in data.projects.contains { $0.id == id } ? id : nil }
+        input.labelIds = input.labelIds.filter { id in data.labels.contains { $0.id == id } }
+        let (next, task) = StoreRules.addTask(data, input, parentId: parentId, creation())
+        commit(next, in: space)
         return task
+    }
+
+    /// Runs a task command on the space that holds the task. A read-only task does not change.
+    private func edit(_ taskID: String, _ command: (StoreData) -> StoreData) {
+        guard let space = space(ofTask: taskID), !isReadOnly(taskID) else { return }
+        commit(command(data(in: space)), in: space)
     }
 
     /// The zone lists resolve event times in.
     public var timeZone: TimeZone { clock.timeZone }
 
     public func updateTask(_ id: String, _ patch: TaskPatch) {
-        commit(StoreRules.updateTask(snapshot.data, id, patch))
+        guard let space = space(ofTask: id) else { return }
+        let data = data(in: space)
+        var patch = patch
+        if case let .some(.some(projectId)) = patch.projectId, !data.projects.contains(where: { $0.id == projectId }) {
+            patch.projectId = nil
+        }
+        patch.labelIds = patch.labelIds?.filter { id in data.labels.contains { $0.id == id } }
+        edit(id) { StoreRules.updateTask($0, id, patch) }
     }
 
     public func completeTask(_ id: String) -> Completion? {
-        guard let result = StoreRules.completeTask(
-            snapshot.data, id, today: clock.today, now: clock.now.epochMilliseconds, in: clock.timeZone
+        guard let space = space(ofTask: id), !isReadOnly(id), let result = StoreRules.completeTask(
+            data(in: space), id, today: clock.today, now: clock.now.epochMilliseconds, in: clock.timeZone
         ) else { return nil }
-        commit(result.data)
+        commit(result.data, in: space)
         return result.completion
     }
 
     public func reopenTask(_ id: String) {
-        commit(StoreRules.reopenTask(snapshot.data, id))
+        edit(id) { StoreRules.reopenTask($0, id) }
     }
 
     public func restoreCompletion(_ previous: [CompletionState]) {
-        commit(StoreRules.restoreCompletion(snapshot.data, previous))
+        guard let first = previous.first else { return }
+        edit(first.id) { StoreRules.restoreCompletion($0, previous) }
     }
 
     public func moveSubtask(_ id: String, to index: Int) {
-        commit(StoreRules.moveSubtask(snapshot.data, id, index))
+        edit(id) { StoreRules.moveSubtask($0, id, index) }
     }
 
     /// Deletes the task with every subtask under it, and returns them for undo.
     public func deleteTask(_ id: String) -> [TaskItem] {
-        let (data, removed) = StoreRules.deleteTask(snapshot.data, id)
-        commit(data)
+        guard let space = space(ofTask: id), !isReadOnly(id) else { return [] }
+        let (data, removed) = StoreRules.deleteTask(data(in: space), id)
+        commit(data, in: space)
+        for task in removed { deletedFrom[task.id] = space }
         return removed
     }
 
     public func undeleteTasks(_ removed: [TaskItem]) {
-        commit(StoreRules.undeleteTasks(snapshot.data, removed))
+        guard let first = removed.first else { return }
+        let space = deletedFrom[first.id] ?? .own
+        commit(StoreRules.undeleteTasks(data(in: space), removed), in: space)
     }
 
     @discardableResult
@@ -177,11 +313,14 @@ public final class Store {
         return project
     }
 
+    /// Guests never write another space's projects or labels, so these change only the user's own.
     public func renameProject(_ id: String, _ name: String) {
+        guard space(ofProject: id) == .own else { return }
         commit(StoreRules.renameProject(snapshot.data, id, name))
     }
 
     public func deleteProject(_ id: String) {
+        guard space(ofProject: id) == .own else { return }
         commit(StoreRules.deleteProject(snapshot.data, id))
     }
 
@@ -193,10 +332,12 @@ public final class Store {
     }
 
     public func renameLabel(_ id: String, _ name: String) {
+        guard space(ofLabel: id) == .own else { return }
         commit(StoreRules.renameLabel(snapshot.data, id, name))
     }
 
     public func deleteLabel(_ id: String) {
+        guard space(ofLabel: id) == .own else { return }
         commit(StoreRules.deleteLabel(snapshot.data, id))
     }
 

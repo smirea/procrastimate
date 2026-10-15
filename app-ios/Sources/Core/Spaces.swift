@@ -1,0 +1,98 @@
+import Foundation
+
+/// Where an entity lives for life: the user's own space, or a space someone shared, named by its owner's id.
+public enum SpaceKey: Hashable, Sendable {
+    case own
+    case shared(String)
+
+    /// The `space` query a request for this space sends. The own space sends none.
+    public var query: String? {
+        if case let .shared(id) = self { id } else { nil }
+    }
+}
+
+extension SyncEngine {
+    /// Runs `body` on one shared space dressed as a document: the space's data, cursor, outbox, and epoch with this
+    /// device's id and clock. Commits and responses then go through the same code as the user's own space, and the
+    /// one device clock keeps advancing across every space.
+    static func inSpace<R>(_ snapshot: inout Snapshot, _ id: String, _ body: (inout Snapshot) throws -> R) rethrows -> R? {
+        guard var section = snapshot.spaces[id], let sync = snapshot.sync else { return nil }
+        var lens = Snapshot(
+            tasks: section.tasks,
+            projects: section.projects,
+            labels: section.labels,
+            remindersCheckedAt: snapshot.remindersCheckedAt,
+            sync: SyncSection(
+                deviceId: sync.deviceId,
+                cursor: section.cursor,
+                outbox: section.outbox,
+                clock: sync.clock,
+                timeZone: sync.timeZone,
+                dictation: sync.dictation,
+                epoch: section.epoch
+            )
+        )
+        let result = try body(&lens)
+        section.tasks = lens.tasks
+        section.projects = lens.projects
+        section.labels = lens.labels
+        if let after = lens.sync {
+            section.cursor = after.cursor
+            section.outbox = after.outbox
+            section.epoch = after.epoch
+            snapshot.sync?.clock = after.clock
+        }
+        snapshot.spaces[id] = section
+        return result
+    }
+
+    /// The body of `POST /api/sync?space=<id>`, with the scope hash the space last applied.
+    public static func request(_ snapshot: Snapshot, space id: String) throws -> API.SyncRequest? {
+        guard let scope = snapshot.spaces[id]?.scope else { return nil }
+        var copy = snapshot
+        guard var body = try inSpace(&copy, id, { try request($0) }) ?? nil else { return nil }
+        body.scope = scope
+        return body
+    }
+
+    /// Applies a shared space's sync response, keeping the scope hash and the read-only ids it carries.
+    public static func apply(_ snapshot: inout Snapshot, space id: String, response: API.SyncResponse) -> Bool {
+        let applied = inSpace(&snapshot, id) { lens in apply(&lens, response: response) } ?? false
+        guard applied, var section = snapshot.spaces[id] else { return false }
+        switch response {
+        case let .changes(page):
+            if let scope = page.scope { section.scope = scope }
+        case let .snapshot(full):
+            section.scope = full.scope ?? ""
+            section.readOnly = full.readOnly ?? []
+        }
+        snapshot.spaces[id] = section
+        return true
+    }
+
+    /// Adds a section for each space now shared with this user and drops the ones no longer shared. Owners join the
+    /// people cache so their names show offline.
+    public static func setSpaces(_ snapshot: inout Snapshot, _ spaces: [API.Space]) {
+        let listed = Set(spaces.map(\.id))
+        snapshot.spaces = snapshot.spaces.filter { listed.contains($0.key) }
+        for space in spaces {
+            if snapshot.spaces[space.id] == nil {
+                snapshot.spaces[space.id] = SpaceSection(owner: space.owner, cursor: 0)
+            } else {
+                snapshot.spaces[space.id]?.owner = space.owner
+            }
+        }
+        rememberPeople(&snapshot, spaces.map(\.owner))
+    }
+
+    /// Adds or renames people in the cache, keyed by id.
+    public static func rememberPeople(_ snapshot: inout Snapshot, _ people: [Person]) {
+        for person in people {
+            if let index = snapshot.people.firstIndex(where: { $0.id == person.id }) {
+                snapshot.people[index] = person
+            } else {
+                snapshot.people.append(person)
+            }
+        }
+    }
+}

@@ -108,17 +108,17 @@ enum PlacesDemo {
         }
         seedEventTasks(store: store, calendar: calendar)
         guard !store.tasks.contains(where: { $0.title == "Buy oat milk" }) else { return }
-        let milk = store.addTask(NewTask(title: "Buy oat milk"))
+        guard let milk = store.addTask(NewTask(title: "Buy oat milk")) else { return }
         store.updateTask(milk.id, TaskPatch(location: .some(TaskLocation(
             name: "Whole Foods Market", address: "20955 Stevens Creek Blvd, Cupertino",
             latitude: 37.3236, longitude: -122.0397, radius: 150, trigger: .arrive
         ))))
-        let coffee = store.addTask(NewTask(title: "Try the seasonal blend"))
+        guard let coffee = store.addTask(NewTask(title: "Try the seasonal blend")) else { return }
         store.updateTask(coffee.id, TaskPatch(location: .some(TaskLocation(
             name: "Philz Coffee", address: "20686 Stevens Creek Blvd, Cupertino",
             latitude: 37.3229, longitude: -122.0322, radius: 150, trigger: .during
         ))))
-        let beans = store.addTask(NewTask(title: "Ask about decaf beans"))
+        guard let beans = store.addTask(NewTask(title: "Ask about decaf beans")) else { return }
         store.updateTask(beans.id, TaskPatch(location: .some(TaskLocation(
             name: "Philz Coffee", address: "20686 Stevens Creek Blvd, Cupertino",
             latitude: 37.3229, longitude: -122.0322, radius: 150, trigger: .during
@@ -130,14 +130,14 @@ enum PlacesDemo {
         guard !store.tasks.contains(where: { $0.event != nil }) else { return }
         let upcoming = calendar.upcomingEvents()
         if let standup = upcoming.first(where: { $0.title == "Standup" }) {
-            let notes = store.addTask(NewTask(title: "Post standup notes"))
+            guard let notes = store.addTask(NewTask(title: "Post standup notes")) else { return }
             store.updateTask(notes.id, TaskPatch(
                 reminders: [.before(minutes: 10)],
                 event: .some(calendar.taskEvent(standup, edge: .after, minutes: 15, onlyThis: false, upcoming: upcoming))
             ))
         }
         if let dentist = upcoming.first(where: { $0.title == "Dentist" }) {
-            let floss = store.addTask(NewTask(title: "Floss first"))
+            guard let floss = store.addTask(NewTask(title: "Floss first")) else { return }
             store.updateTask(floss.id, TaskPatch(
                 event: .some(calendar.taskEvent(dentist, edge: .before, minutes: 60, onlyThis: false, upcoming: upcoming))
             ))
