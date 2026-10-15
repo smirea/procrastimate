@@ -13,10 +13,13 @@
 	import PlusCircle from 'phosphor-svelte/lib/PlusCircle';
 	import MagnifyingGlass from 'phosphor-svelte/lib/MagnifyingGlass';
 	import GearSix from 'phosphor-svelte/lib/GearSix';
+	import CheckCircle from 'phosphor-svelte/lib/CheckCircle';
 	import Popover from './Popover.svelte';
+	import PersonName from './PersonName.svelte';
 	import Settings from './Settings.svelte';
 	import { store } from '../store.svelte.ts';
-	import { clock, mobile, motion } from '../ui.svelte.ts';
+	import { clock, mobile, motion, sheets } from '../ui.svelte.ts';
+	import { sharedEntries } from '../spaces.ts';
 	import { inboxTasks, labelTasks, projectTasks, todayTasks } from 'shared/views.ts';
 	import { eventGroups, placeGroups } from 'shared/triggers.ts';
 
@@ -47,6 +50,8 @@
 			rows: eventGroups(store.own.tasks, clock.today).map((g) => ({ key: g.id, name: g.title, count: g.count, href: `/events/${encodeURIComponent(g.id)}` })),
 		},
 	]);
+
+	const shared = $derived(sharedEntries(store.spaces));
 
 	let adding = $state(false);
 	let name = $state('');
@@ -159,6 +164,31 @@
 				</section>
 			{/if}
 		{/each}
+
+		{#if shared.length}
+			<section aria-label="Shared with me" transition:slide={motion({ duration: 180, easing: cubicOut })}>
+				<h2 class="px-2 pb-1 text-[12px] font-medium tracking-wide text-faint uppercase">Shared with me</h2>
+				<ul class="space-y-0.5">
+					{#each shared as entry (entry.id)}
+						{@const href = entry.kind === 'task' ? null : `/${entry.kind}s/${entry.id}`}
+						{@const active = href !== null && page.url.pathname === href}
+						{@const Icon = entry.kind === 'project' ? Hash : entry.kind === 'label' ? Tag : CheckCircle}
+						{#snippet row()}
+							<Icon size={18} weight={active ? 'fill' : 'regular'} class={active ? '' : entry.kind === 'label' ? 'text-[var(--tone-label)]' : 'text-muted'} />
+							<span class="min-w-0 flex-1 truncate">{entry.name}</span>
+							<PersonName person={entry.owner} class="max-w-[45%] text-[12px] text-faint" />
+						{/snippet}
+						<li transition:slide={motion({ duration: 180, easing: cubicOut })}>
+							{#if href}
+								<a {href} class="nav-link" class:active aria-current={active ? 'page' : undefined}>{@render row()}</a>
+							{:else}
+								<button type="button" class="nav-link w-full text-left" onclick={() => sheets.openTask(entry.id)}>{@render row()}</button>
+							{/if}
+						</li>
+					{/each}
+				</ul>
+			</section>
+		{/if}
 
 		{#if labels.length}
 			<section aria-label="Labels" transition:slide={motion({ duration: 180, easing: cubicOut })}>

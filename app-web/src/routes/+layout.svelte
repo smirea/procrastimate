@@ -10,6 +10,7 @@
 	import QuickAdd from '#lib/components/QuickAdd.svelte';
 	import Search from '#lib/components/Search.svelte';
 	import SettingsSheet from '#lib/components/SettingsSheet.svelte';
+	import ShareSheet from '#lib/components/ShareSheet.svelte';
 	import TaskSheet from '#lib/components/TaskSheet.svelte';
 	import Toasts from '#lib/components/Toasts.svelte';
 	import { store } from '#lib/store.svelte.ts';
@@ -24,6 +25,8 @@
 	let { children }: { children: Snippet } = $props();
 	let menuOpen = $state(false);
 
+	/** A public link renders for anyone, signed in or not, outside the app's chrome. */
+	const isPublic = $derived(page.route.id === '/s/[token]');
 	const openTask = $derived(sheets.current.kind === 'task' ? store.task(sheets.current.id) : undefined);
 
 	function listDefaults() {
@@ -105,7 +108,9 @@
 
 <svelte:window {onkeydown} />
 
-{#if session.state === 'out'}
+{#if isPublic}
+	{@render children()}
+{:else if session.state === 'out'}
 	<SignIn />
 {:else if session.state === 'in'}
 <div class="app flex min-h-dvh gap-3">
@@ -155,6 +160,8 @@
 	<Search />
 {:else if sheets.current.kind === 'settings'}
 	<SettingsSheet />
+{:else if sheets.current.kind === 'share'}
+	<ShareSheet target={sheets.current.target} name={sheets.current.name} />
 {:else if openTask && sheets.current.kind === 'task'}
 	<TaskSheet task={openTask} arrival={sheets.current.arrival} />
 {/if}
