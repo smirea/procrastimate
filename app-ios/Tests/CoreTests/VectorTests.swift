@@ -104,13 +104,14 @@ func unknown(_ fn: String) -> VectorError { VectorError(description: "No Swift h
 
 typealias Handler = @Sendable (String, Args) throws -> JSONValue
 
-private let pendingPorts: Set<String> = ["markdown"]
+private let pendingPorts: Set<String> = []
 
 let handlers: [String: Handler] = [
     "task": taskVector,
     "subtasks": subtasksVector,
     "views": viewsVector,
     "format": formatVector,
+    "markdown": markdownVector,
     "notifications": notificationsVector,
     "store": storeVector,
     "snapshot": snapshotVector,
@@ -194,6 +195,13 @@ private struct Occurrence: Decodable {
     case "eventTasks": return try json(Views.eventTasks(a(0), a(1), a(2), in: a.zone))
     case "todayTasks": return try json(Views.todayTasks(a(0), a(1), in: a.zone))
     case "upcomingGroups": return try json(Views.upcomingGroups(a(0), a(1), in: a.zone))
+    default: throw unknown(fn)
+    }
+}
+
+@Sendable func markdownVector(_ fn: String, _ a: Args) throws -> JSONValue {
+    switch fn {
+    case "toMarkdown": return try json(Markdown.toMarkdown(a(0), a(1), in: a.zone))
     default: throw unknown(fn)
     }
 }
