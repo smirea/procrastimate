@@ -104,6 +104,10 @@
 		if (event.key === 'Enter' && suggestions[0]) {
 			event.preventDefault();
 			void add(suggestions[0]);
+		} else if (event.key === 'Escape') {
+			event.preventDefault();
+			if (query) query = '';
+			else sheets.close();
 		}
 	}
 </script>
@@ -137,7 +141,7 @@
 		<div class="flex items-center gap-1.5">
 			<input
 				class="field min-w-0 flex-1 touch:h-11 touch:text-base"
-				type="search"
+				enterkeyhint="done"
 				aria-label="Email or name"
 				placeholder="Add by email or name"
 				autocomplete="off"

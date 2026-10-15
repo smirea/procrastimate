@@ -47,7 +47,7 @@
 	{#if state.kind === 'ready' && view}
 		<section in:fly={motion({ y: 6, duration: 220, easing: cubicOut })}>
 			<header class="mb-5">
-				<p class="mb-1 flex items-center gap-1.5 text-[12px] font-medium tracking-wide text-faint uppercase">
+				<p class="mb-1 flex items-center gap-1 text-[12px] font-medium tracking-wide text-faint uppercase">
 					<LinkSimple size={13} weight="bold" />Shared by <PersonName person={view.owner} />
 				</p>
 				<h1 class="truncate text-[26px] font-semibold tracking-tight">{title}</h1>

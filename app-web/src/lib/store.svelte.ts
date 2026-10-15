@@ -226,7 +226,6 @@ class Store {
 
 	#creation = (): rules.Creation => ({ id: newId(), now: Date.now() });
 
-	/** The owner id of the shared section holding `id`, or null for the user's own space. */
 	homeOf = (id: string): Home => this.#homes.get(id) ?? null;
 
 	/** The data of one space, whose projects and labels are the only ones its tasks may use. */
@@ -267,7 +266,6 @@ class Store {
 		this.#onCommit?.();
 	}
 
-	/** Runs a rule on the space that holds the task, unless the task is read only. */
 	#onTask(id: string, rule: (data: rules.StoreData) => rules.StoreData) {
 		if (this.canEdit(id)) this.#run(this.homeOf(id), rule);
 	}
