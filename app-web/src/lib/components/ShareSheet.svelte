@@ -100,7 +100,7 @@
 
 	async function copyLink() {
 		const row = link ?? shares.add(placeholder(null, 'view'), () => create({ kind: 'link' }), 'Could not create the link');
-		const url = row.saved.then((share) => share?.url ?? null);
+		const url = row.saved.then((share) => (shares.rows.some((r) => r.key === row.key) ? (share?.url ?? null) : null));
 		if (!(await writeClipboard(url))) return;
 		copied = true;
 		setTimeout(() => (copied = false), 1600);

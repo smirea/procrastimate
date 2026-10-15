@@ -97,6 +97,7 @@ struct ShareSheet: View {
             .disabled(!loaded)
             if let link, link.value.url == nil {
                 PendingValue(label: "Making the link")
+                Button("Stop sharing the link", role: .destructive) { Task { await remove(link) } }
             }
             if let url = link?.value.url.flatMap(URL.init(string:)) {
                 ShareLink(item: url) {
@@ -230,7 +231,8 @@ struct ShareSheet: View {
         let row = link ?? shares.add(placeholder(nil, .view), failure: "Could not make a link", toasts: toasts) {
             try await create(.link)
         }
-        guard let url = await shares.saved(row)?.url else { return }
+        // Stopping the link while it was made leaves nothing worth copying.
+        guard let url = await shares.saved(row)?.url, link?.id == row.id else { return }
         UIPasteboard.general.string = url
         copied = true
         try? await Task.sleep(for: .seconds(1.5))

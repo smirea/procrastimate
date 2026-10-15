@@ -72,6 +72,20 @@ test('a new link holds a place until the server makes it, and a refused stop put
 	await expect(sheet.getByLabel('Link')).toHaveText(/\/s\/.+/);
 });
 
+test('a link stopped while it is made stays stopped once the server makes it', async ({ app, page }) => {
+	await app.createProject('Errands');
+	await slow(page, '/api/shares*', 'POST');
+	await page.getByRole('button', { name: 'Share project' }).click();
+	const sheet = page.getByRole('dialog', { name: 'Share' });
+	await sheet.getByRole('button', { name: 'Copy link' }).click();
+	await expect(sheet.getByRole('status', { name: 'Making the link' })).toBeVisible(INSTANT);
+	const revoked = page.waitForResponse(r => r.url().includes('/api/shares') && r.request().method() === 'DELETE');
+	await sheet.getByRole('button', { name: 'Stop sharing' }).click();
+	await expect(sheet.getByText('Anyone with the link')).toHaveCount(0, INSTANT);
+	expect((await revoked).ok()).toBe(true);
+	await expect(sheet.getByText('Anyone with the link')).toHaveCount(0);
+});
+
 test('sign out is instant, and a refused one signs back in with a toast', async ({ app, page }) => {
 	await refuse(page, '/api/auth/sign-out', 'POST');
 	await app.openSettings();

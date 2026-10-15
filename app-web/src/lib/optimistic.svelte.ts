@@ -6,15 +6,17 @@ import { toasts } from './ui.svelte.ts';
  */
 export type Row<T> = { key: string; value: T; pending: boolean; saved: Promise<T | null> };
 
+const PENDING = 'pending-';
+
 /**
  * A list the server owns but the user changes instantly: an add shows its placeholder at once, a remove hides the row
  * at once, and a refusal puts things back and says so in a toast. Acting on a row that is still being created waits
  * for it.
  */
-const PENDING = 'pending-';
-
 export class OptimisticList<T> {
 	rows = $state.raw<Row<T>[]>([]);
+	/** Server ids being deleted, so a list read before the delete committed does not bring them back. */
+	#removing = new Set<string>();
 
 	constructor(private readonly keyOf: (value: T) => string) {}
 
@@ -23,6 +25,7 @@ export class OptimisticList<T> {
 	 * the list already has keeps its key, so it never re-mounts or loses state tied to it.
 	 */
 	load(values: readonly T[]) {
+		values = values.filter(value => !this.#removing.has(this.keyOf(value)));
 		const ids = new Set(values.map(this.keyOf));
 		const saved = new Map(this.rows.filter(row => !row.pending).map(row => [this.keyOf(row.value), row]));
 		const loaded = values.map(value => {
@@ -62,11 +65,16 @@ export class OptimisticList<T> {
 		this.rows = this.rows.toSpliced(index, 1);
 		const value = await row.saved;
 		if (value === null) return;
+		const id = this.keyOf(value);
+		this.#removing.add(id);
+		this.rows = this.rows.filter(r => r.pending || this.keyOf(r.value) !== id);
 		try {
 			await request(value);
 		} catch {
 			this.rows = this.rows.toSpliced(Math.min(index, this.rows.length), 0, { ...row, value, pending: false });
 			toasts.show(failure);
+		} finally {
+			this.#removing.delete(id);
 		}
 	}
 }

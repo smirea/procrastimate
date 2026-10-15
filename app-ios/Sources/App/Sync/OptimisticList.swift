@@ -17,6 +17,8 @@ final class OptimisticList<Value: Equatable & Sendable> {
 
     private(set) var rows: [Row] = []
     @ObservationIgnored private var saving: [String: Task<Value?, Never>] = [:]
+    /// Server ids being deleted, so a list read before the delete committed does not bring them back.
+    @ObservationIgnored private var removing: Set<String> = []
     @ObservationIgnored private let keyOf: (Value) -> String
 
     init(key: @escaping (Value) -> String) {
@@ -26,6 +28,7 @@ final class OptimisticList<Value: Equatable & Sendable> {
     /// The list can be read before or after an add commits, so a row added here survives a list without it, and a row
     /// the list already has keeps its id, so it never re-mounts or loses state tied to it, like a token on show.
     func load(_ values: [Value]) {
+        let values = values.filter { !removing.contains(keyOf($0)) }
         let ids = Set(values.map(keyOf))
         let saved = Dictionary(rows.filter { !$0.pending }.map { (keyOf($0.value), $0) }, uniquingKeysWith: { first, _ in first })
         let loaded = values.map { value in
@@ -78,6 +81,10 @@ final class OptimisticList<Value: Equatable & Sendable> {
         guard let index = rows.firstIndex(where: { $0.id == row.id }) else { return }
         rows.remove(at: index)
         guard let value = await saved(row) else { return }
+        let id = keyOf(value)
+        removing.insert(id)
+        defer { removing.remove(id) }
+        rows.removeAll { !$0.pending && keyOf($0.value) == id }
         do {
             try await request(value)
         } catch {
