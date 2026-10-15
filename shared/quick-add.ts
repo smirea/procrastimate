@@ -464,10 +464,11 @@ function namedRule(
 }
 
 /**
- * A typed date wins, moved to the first listed weekday on or after it. A time alone lands on the date
- * set outside the text, or else on the first future occurrence: today, or tomorrow once that time has
- * passed. A repeat without a typed date starts on its first weekday, the date set outside the text,
- * or today, and moves to the next occurrence when its time has passed today.
+ * A typed date wins, moved to the first listed weekday on or after it, even when that leaves it in the past.
+ * Otherwise a time never lands in the past. A time alone lands on the date set outside the text, or on the
+ * first future occurrence: today, or tomorrow once that time has passed. A repeat without a typed date starts
+ * on its first weekday, the date set outside the text, or today, and moves to the next occurrence when its
+ * time has passed.
  */
 function resolveDue(
 	phrase: DuePhrase | null,
@@ -478,16 +479,16 @@ function resolveDue(
 	if (phrase?.date) {
 		return { date: repeat ? alignToRecurrence(phrase.date, repeat.recurrence) : phrase.date, time: phrase.time };
 	}
-	const time = phrase?.time ?? null;
-	const passed = (date: DateKey) => time !== null && date === ctx.today && time < ctx.time;
+	const time = phrase?.time ?? (repeat && !repeat.anchor ? outside?.time : null) ?? null;
+	const passed = (date: DateKey) => time !== null && (date < ctx.today || (date === ctx.today && time < ctx.time));
 	if (repeat) {
-		if (!repeat.anchor && outside) return { date: outside.date, time: time ?? outside.time };
-		const date = repeat.anchor ?? ctx.today;
-		return { date: passed(date) ? stepRecurrence(date, repeat.recurrence) : date, time };
+		const start = repeat.anchor ?? outside?.date ?? ctx.today;
+		const date = passed(start) ? (passed(ctx.today) ? stepRecurrence(ctx.today, repeat.recurrence) : ctx.today) : start;
+		return { date, time };
 	}
 	if (!time) return null;
-	if (outside) return { date: outside.date, time };
-	return { date: passed(ctx.today) ? addDays(ctx.today, 1) : ctx.today, time };
+	const start = outside?.date ?? ctx.today;
+	return { date: passed(start) ? (passed(ctx.today) ? addDays(ctx.today, 1) : ctx.today) : start, time };
 }
 
 function resolveReminder(draft: ReminderDraft, due: Due | null, ctx: Context): Reminder {

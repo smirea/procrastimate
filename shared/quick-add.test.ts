@@ -353,6 +353,25 @@ describe('a time with no day', () => {
 		expect(parsed.due).toEqual({ date: '2026-10-16', time: '09:00' });
 	});
 
+	test.each([
+		['2026-10-14', '9am', '2026-10-15', '09:00'],
+		['2026-10-14', '11am', '2026-10-14', '11:00'],
+		['2026-10-10', '9am', '2026-10-15', '09:00'],
+		['2026-10-10', '11am', '2026-10-14', '11:00'],
+	])('a time alone on the outside date %s never lands in the past: %s', (outside, phrase, date, time) => {
+		expect<unknown>(parse(`Call mom ${phrase}`, { due: { date: outside, time: null } }).due).toEqual({ date, time });
+	});
+
+	test('a typed day keeps a past time even with a date set outside the text', () => {
+		const parsed = parse('Call mom today 9am', { due: { date: '2026-10-14', time: null } });
+		expect(parsed.due).toEqual({ date: '2026-10-14', time: '09:00' });
+	});
+
+	test('a repeat on the outside date moves past a time that has passed', () => {
+		const parsed = parse('Water plants every day 9am', { due: { date: '2026-10-14', time: null } });
+		expect(parsed.due).toEqual({ date: '2026-10-15', time: '09:00' });
+	});
+
 	test('an absolute reminder time that has passed lands tomorrow', () => {
 		const parsed = parse('Water plants remind me at 9am');
 		expect(parsed.reminders).toEqual([{ kind: 'at', date: '2026-10-15', time: '09:00' }]);

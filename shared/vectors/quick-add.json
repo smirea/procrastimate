@@ -8416,6 +8416,423 @@
 		},
 		{
 			"fn": "parseQuickAdd",
+			"test": "a time with no day › a time alone on the outside date 2026-10-14 never lands in the past: 9am",
+			"input": [
+				"Call mom 9am",
+				{
+					"due": {
+						"date": "2026-10-14",
+						"time": null
+					},
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-15",
+					"time": "09:00"
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"title": "Call mom",
+				"tokens": [
+					{
+						"end": 12,
+						"kind": "due",
+						"start": 9,
+						"text": "9am"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "a time with no day › a time alone on the outside date 2026-10-14 never lands in the past: 11am",
+			"input": [
+				"Call mom 11am",
+				{
+					"due": {
+						"date": "2026-10-14",
+						"time": null
+					},
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-14",
+					"time": "11:00"
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"title": "Call mom",
+				"tokens": [
+					{
+						"end": 13,
+						"kind": "due",
+						"start": 9,
+						"text": "11am"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "a time with no day › a time alone on the outside date 2026-10-10 never lands in the past: 9am",
+			"input": [
+				"Call mom 9am",
+				{
+					"due": {
+						"date": "2026-10-10",
+						"time": null
+					},
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-15",
+					"time": "09:00"
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"title": "Call mom",
+				"tokens": [
+					{
+						"end": 12,
+						"kind": "due",
+						"start": 9,
+						"text": "9am"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "a time with no day › a time alone on the outside date 2026-10-10 never lands in the past: 11am",
+			"input": [
+				"Call mom 11am",
+				{
+					"due": {
+						"date": "2026-10-10",
+						"time": null
+					},
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-14",
+					"time": "11:00"
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"title": "Call mom",
+				"tokens": [
+					{
+						"end": 13,
+						"kind": "due",
+						"start": 9,
+						"text": "11am"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "a time with no day › a typed day keeps a past time even with a date set outside the text",
+			"input": [
+				"Call mom today 9am",
+				{
+					"due": {
+						"date": "2026-10-14",
+						"time": null
+					},
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-14",
+					"time": "09:00"
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"title": "Call mom",
+				"tokens": [
+					{
+						"end": 18,
+						"kind": "due",
+						"start": 9,
+						"text": "today 9am"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "a time with no day › a repeat on the outside date moves past a time that has passed",
+			"input": [
+				"Water plants every day 9am",
+				{
+					"due": {
+						"date": "2026-10-14",
+						"time": null
+					},
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-15",
+					"time": "09:00"
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": {
+					"interval": 1,
+					"unit": "day"
+				},
+				"reminders": [],
+				"title": "Water plants",
+				"tokens": [
+					{
+						"end": 22,
+						"kind": "recurrence",
+						"start": 13,
+						"text": "every day"
+					},
+					{
+						"end": 26,
+						"kind": "due",
+						"start": 23,
+						"text": "9am"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
 			"test": "a time with no day › an absolute reminder time that has passed lands tomorrow",
 			"input": [
 				"Water plants remind me at 9am",
