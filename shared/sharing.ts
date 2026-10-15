@@ -95,7 +95,7 @@ const taskShape = taskSchema.shape;
 
 export const agentNewTaskSchema = z
 	.object({
-		/** Read by the quick add parser, as the app's quick add reads it. `title` wins over the parsed title. */
+		/** Read by the quick add parser, as the app's quick add reads it. */
 		text: z.string().optional(),
 		title: taskShape.title.optional(),
 		notes: taskShape.notes.optional(),
