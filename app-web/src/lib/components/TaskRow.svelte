@@ -17,15 +17,20 @@
 	import Checkbox from './Checkbox.svelte';
 	import SubtaskProgress from './SubtaskProgress.svelte';
 	import { store } from '../store.svelte.ts';
-	import { clock, sheets, motion } from '../ui.svelte.ts';
-	import { WEEKDAY_NAMES, dueTone, formatDue, formatTime, postponeOptions, repeatLabel } from 'shared/format.ts';
-	import { weekdayOf } from 'shared/task.ts';
+	import { clock, reveal, sheets, motion } from '../ui.svelte.ts';
+	import { WEEKDAY_NAMES, addedAgo, dueTone, formatDue, formatTime, postponeOptions, repeatLabel } from 'shared/format.ts';
+	import { toDateKey, weekdayOf } from 'shared/task.ts';
 	import { eventLabel, formatLocation, scheduledDue } from 'shared/triggers.ts';
 	import { parseMemoSource } from 'shared/memo-tasks.ts';
 	import { PRIORITIES } from '../priorities.ts';
 	import { completeTask, postponeTask } from '../completion.ts';
 
-	let { task, showProject = false, timeOnly = false }: { task: Task; showProject?: boolean; timeOnly?: boolean } = $props();
+	let {
+		task,
+		showProject = false,
+		timeOnly = false,
+		showAdded = false,
+	}: { task: Task; showProject?: boolean; timeOnly?: boolean; showAdded?: boolean } = $props();
 
 	let checking = $state(false);
 	const project = $derived(store.project(task.projectId));
@@ -35,6 +40,12 @@
 	const due = $derived(scheduledDue(task, clock.today));
 	const event = $derived(task.event ? eventLabel(task.event, clock.today) : null);
 	const fromMemo = $derived(parseMemoSource(task.sourceKey) !== null);
+
+	const revealed = $derived(reveal.id === task.id);
+	let row: HTMLElement;
+	$effect(() => {
+		if (revealed) row.scrollIntoView({ block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
+	});
 
 	function complete() {
 		if (checking) return;
@@ -46,7 +57,12 @@
 	}
 </script>
 
-<div class="group flex items-start gap-3 rounded-2xl px-2 transition-colors hover:bg-surface/60" data-task={task.title}>
+<div
+	bind:this={row}
+	class="group flex items-start gap-3 rounded-2xl px-2 transition-colors duration-500 hover:bg-surface/60"
+	class:revealed
+	data-task={task.title}
+>
 	<Checkbox checked={checking} tone={PRIORITIES[task.priority].tone} label={`Complete ${task.title}`} class="mt-3 touch:mt-3.5" onclick={complete} />
 	<button type="button" class="min-w-0 flex-1 py-2.5 text-left touch:min-h-11 touch:py-3" onclick={() => sheets.openTask(task.id)}>
 		<div class="truncate text-[14px] leading-5 text-ink transition-colors" class:done={checking}>{task.title}</div>
@@ -122,6 +138,9 @@
 			</div>
 		{/if}
 	</button>
+	{#if showAdded}
+		<span class="shrink-0 pt-3 text-[12px] leading-5 text-faint touch:pt-3.5">{addedAgo(toDateKey(new Date(task.createdAt)), clock.today)}</span>
+	{/if}
 	{#if !task.event}
 		<div class="mt-1.5 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100 touch:opacity-100">
 			<Popover label="Postpone" align="end">
@@ -150,6 +169,10 @@
 </div>
 
 <style>
+	.revealed {
+		background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+	}
+
 	.done {
 		color: var(--color-faint);
 		text-decoration: line-through;

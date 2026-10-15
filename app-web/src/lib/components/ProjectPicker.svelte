@@ -32,12 +32,12 @@
 	}
 </script>
 
-<div class="flex items-center">
+<div class="flex min-w-0 items-center">
 	<Popover label="Project" {align}>
 		{#snippet trigger({ toggle })}
-			<button type="button" class="chip" data-active={!!project} aria-label={`Project ${project?.name ?? 'Inbox'}`} onclick={toggle}>
-				{#if project}<Hash size={15} />{:else}<Tray size={15} />{/if}
-				{project?.name ?? 'Inbox'}
+			<button type="button" class="chip max-w-full" data-active={!!project} aria-label={`Project ${project?.name ?? 'Inbox'}`} onclick={toggle}>
+				{#if project}<Hash size={15} class="shrink-0" />{:else}<Tray size={15} class="shrink-0" />{/if}
+				<span class="truncate">{project?.name ?? 'Inbox'}</span>
 			</button>
 		{/snippet}
 		{#snippet children({ close })}

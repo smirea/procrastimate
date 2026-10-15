@@ -8,10 +8,13 @@
 	import TaskList from '#lib/components/TaskList.svelte';
 	import Popover from '#lib/components/Popover.svelte';
 	import { store } from '#lib/store.svelte.ts';
+	import { followMerged } from '#lib/merged.svelte.ts';
 	import { labelTasks } from 'shared/views.ts';
 
 	const label = $derived(store.label(page.params.id ?? ''));
 	const tasks = $derived(label ? labelTasks(store.tasks, label.id) : []);
+
+	followMerged('/labels', () => page.params.id, () => store.labels);
 
 	let renaming = $state(false);
 	let confirmingDelete = $state(false);

@@ -12,6 +12,8 @@ struct TaskRow: View {
     var showProject = false
     /// Within a day's list the date goes without saying, so a timed task shows only its time.
     var timeOnly = false
+    /// No date shows how long ago each task was added, such as `3 days ago`.
+    var added: String?
 
     @State private var checking = false
     @State private var postponing = false
@@ -40,6 +42,21 @@ struct TaskRow: View {
             .accessibilityAddTraits(.isButton)
             .accessibilityIdentifier("task-\(task.title)")
             .accessibilityAction { navigator.sheet = .details(taskID: task.id) }
+            if let added {
+                Text(added)
+                    .font(.caption)
+                    .foregroundStyle(.faint)
+                    .lineLimit(1)
+                    .fixedSize()
+                    .padding(.top, 9)
+                    .accessibilityLabel("Added \(added.lowercased())")
+            }
+        }
+        .background {
+            RoundedRectangle(cornerRadius: 14)
+                .fill(.accent.opacity(navigator.revealed == task.id ? 0.14 : 0))
+                .padding(.horizontal, -8)
+                .animation(.easeOut(duration: 0.6), value: navigator.revealed == task.id)
         }
         .swipeActions(edge: .leading, allowsFullSwipe: true) {
             Button("Complete", systemImage: "checkmark") { actions.complete(task) }

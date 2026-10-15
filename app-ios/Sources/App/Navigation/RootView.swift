@@ -50,6 +50,7 @@ struct RootView: View {
 /// and the role that gets a separate circle changed between iOS 26 (`.search`) and 27 (`.prominent`).
 private struct TabBar: View {
     @Environment(Navigator.self) private var navigator
+    @Environment(Store.self) private var store
     @Namespace private var selection
     @State private var keyboardShown = false
     @State private var bottomInset: CGFloat = 0
@@ -59,7 +60,7 @@ private struct TabBar: View {
         GlassEffectContainer(spacing: 12) {
             HStack(spacing: 12) {
                 HStack(spacing: 0) {
-                    item(.inbox, "Inbox", "tray", badge: inboxBadge)
+                    inboxItem
                     item(.noDate, "No date", "calendar.badge.minus")
                     item(.browse, "Browse", "square.grid.2x2")
                 }
@@ -93,42 +94,85 @@ private struct TabBar: View {
 
     private var hidden: Bool { keyboardShown || navigator.quickAdd != nil }
 
+    /// Tapping Inbox again, or long pressing it at any time, lists the projects to jump to. A plain `Menu` opens on tap,
+    /// and one with a primary action opens only on a long press.
+    @ViewBuilder private var inboxItem: some View {
+        let label = itemLabel(.inbox, "Inbox", "tray", badge: inboxBadge)
+        if navigator.tab == .inbox {
+            Menu { projectsMenu } label: { label }
+                .menuStyle(.button)
+                .buttonStyle(.plain)
+                .itemAccessibility("Inbox", badge: inboxBadge, selected: true)
+        } else {
+            Menu { projectsMenu } label: { label } primaryAction: { navigator.tab = .inbox }
+                .menuStyle(.button)
+                .buttonStyle(.plain)
+                .itemAccessibility("Inbox", badge: inboxBadge, selected: false)
+        }
+    }
+
+    @ViewBuilder private var projectsMenu: some View {
+        Button("Inbox", systemImage: "tray") {
+            navigator.tab = .inbox
+            navigator.paths[.inbox] = []
+        }
+        Section("Projects") {
+            ForEach(store.projects) { project in
+                Button(project.name, systemImage: "number") {
+                    navigator.tab = .inbox
+                    navigator.paths[.inbox] = [.project(id: project.id)]
+                }
+            }
+        }
+    }
+
     private func item(_ tab: AppTab, _ title: String, _ symbol: String, badge: Int = 0) -> some View {
         let selected = navigator.tab == tab
         return Button {
             if selected { navigator.paths[tab] = [] } else { navigator.tab = tab }
         } label: {
-            VStack(spacing: 2) {
-                Image(systemName: symbol)
-                    .symbolVariant(selected ? .fill : .none)
-                    .font(.title3)
-                    .frame(height: 28)
-                    .overlay(alignment: .topTrailing) {
-                        if badge > 0 {
-                            Text("\(badge)")
-                                .font(.caption2.weight(.semibold))
-                                .foregroundStyle(.white)
-                                .padding(.horizontal, 5)
-                                .frame(minWidth: 18, minHeight: 18)
-                                .background(.red, in: .capsule)
-                                .offset(x: 12, y: -4)
-                        }
-                    }
-                Text(title).font(.caption2.weight(.medium))
-            }
-            .foregroundStyle(selected ? Color.accent : Color.primary)
-            .frame(maxWidth: .infinity, minHeight: 54)
-            .background {
-                if selected {
-                    Capsule().fill(.ink.opacity(0.08)).matchedGeometryEffect(id: "selection", in: selection)
-                }
-            }
-            .contentShape(.capsule)
+            itemLabel(tab, title, symbol, badge: badge)
         }
         .buttonStyle(.plain)
+        .itemAccessibility(title, badge: badge, selected: selected)
+    }
+
+    private func itemLabel(_ tab: AppTab, _ title: String, _ symbol: String, badge: Int = 0) -> some View {
+        let selected = navigator.tab == tab
+        return VStack(spacing: 2) {
+            Image(systemName: symbol)
+                .symbolVariant(selected ? .fill : .none)
+                .font(.title3)
+                .frame(height: 28)
+                .overlay(alignment: .topTrailing) {
+                    if badge > 0 {
+                        Text("\(badge)")
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 5)
+                            .frame(minWidth: 18, minHeight: 18)
+                            .background(.red, in: .capsule)
+                            .offset(x: 12, y: -4)
+                    }
+                }
+            Text(title).font(.caption2.weight(.medium))
+        }
+        .foregroundStyle(selected ? Color.accent : Color.primary)
+        .frame(maxWidth: .infinity, minHeight: 54)
+        .background {
+            if selected {
+                Capsule().fill(.ink.opacity(0.08)).matchedGeometryEffect(id: "selection", in: selection)
+            }
+        }
+        .contentShape(.capsule)
         .animation(.snappy(duration: 0.25), value: navigator.tab)
-        .accessibilityLabel(badge > 0 ? "\(title), \(badge)" : title)
-        .accessibilityAddTraits(selected ? [.isSelected, .isButton] : .isButton)
+    }
+}
+
+private extension View {
+    func itemAccessibility(_ title: String, badge: Int, selected: Bool) -> some View {
+        accessibilityLabel(badge > 0 ? "\(title), \(badge)" : title)
+            .accessibilityAddTraits(selected ? [.isSelected, .isButton] : .isButton)
     }
 }
 

@@ -98,7 +98,7 @@
 	const slideFrom = { forward: 28, back: -28, none: 0 } satisfies Record<Arrival, number>;
 </script>
 
-<div class="flex min-h-0 flex-1 flex-col" in:fly={motion({ x: slideFrom[arrival], duration: arrival === 'none' ? 0 : 220, easing: cubicOut })}>
+<div class="relative flex min-h-0 flex-1 flex-col" in:fly={motion({ x: slideFrom[arrival], duration: arrival === 'none' ? 0 : 220, easing: cubicOut })}>
 	<header class="flex items-center justify-between gap-2 px-4 pt-3">
 		{#if parent}
 			<button
@@ -112,16 +112,9 @@
 		{:else}
 			<ProjectPicker projectId={draft.projectId} onchange={(projectId) => update({ projectId })} />
 		{/if}
-		<div class="flex shrink-0 items-center gap-1">
-			{#if task.completedAt === null}
-				<button type="button" class="btn btn-quiet" onclick={complete}><Check size={14} />Complete</button>
-			{:else}
-				<button type="button" class="btn btn-quiet" onclick={() => store.reopenTask(task.id)}><ArrowCounterClockwise size={14} />Reopen</button>
-			{/if}
-			<button type="button" class="icon-btn" aria-label="Close" onclick={() => sheets.close()}>
-				<X size={16} />
-			</button>
-		</div>
+		<button type="button" class="icon-btn shrink-0" aria-label="Close" onclick={() => sheets.close()}>
+			<X size={16} />
+		</button>
 	</header>
 	<div class="px-4 pt-4">
 		<SmartInput bind:value={title} tokens={parsed.tokens} label="Title" enterkeyhint="done" suggestProjects={!parent} class="text-[19px] font-semibold" {onkeydown} onblur={commitTitle} />
@@ -160,7 +153,7 @@
 	<div class="px-4 pt-3">
 		<LabelPicker labelIds={draft.labelIds} onchange={(labelIds) => update({ labelIds })} />
 	</div>
-	<div class="flex-1 space-y-4 overflow-y-auto overscroll-contain px-4 pt-4 pb-4 min-h-0">
+	<div class="flex-1 space-y-4 overflow-y-auto overscroll-contain px-4 pt-4 pb-24 min-h-0">
 		<textarea
 			aria-label="Notes"
 			placeholder="Notes"
@@ -177,7 +170,34 @@
 		{/if}
 		<Subtasks {task} />
 	</div>
-	<footer class="border-t border-ink/5 px-4 py-3 touch:py-2">
-		<button type="button" class="btn -ml-2 text-[var(--tone-overdue)] hover:bg-[var(--token-priority)]" onclick={remove}><Trash size={14} />Delete task</button>
-	</footer>
+	<div class="pointer-events-none absolute inset-x-0 bottom-0 flex justify-between px-4 pb-4">
+		{#if task.completedAt === null}
+			<button type="button" class="floating pointer-events-auto bg-[var(--tone-soon)]" onclick={complete}><Check size={16} weight="bold" />Complete</button>
+		{:else}
+			<button type="button" class="floating pointer-events-auto bg-accent" onclick={() => store.reopenTask(task.id)}><ArrowCounterClockwise size={16} weight="bold" />Reopen</button>
+		{/if}
+		<button type="button" class="floating pointer-events-auto bg-[var(--tone-overdue)]" aria-label="Delete task" onclick={remove}><Trash size={16} weight="bold" />Delete</button>
+	</div>
 </div>
+
+<style>
+	.floating {
+		display: flex;
+		height: 2.75rem;
+		align-items: center;
+		gap: 0.5rem;
+		border-radius: 9999px;
+		padding-inline: 1.125rem;
+		font-size: 15px;
+		font-weight: 600;
+		color: white;
+		box-shadow:
+			inset 0 1px 0 0 rgb(255 255 255 / 0.3),
+			0 10px 24px -10px rgb(0 0 0 / 0.45);
+		transition: scale 220ms var(--ease-spring);
+	}
+
+	.floating:active {
+		scale: 0.94;
+	}
+</style>

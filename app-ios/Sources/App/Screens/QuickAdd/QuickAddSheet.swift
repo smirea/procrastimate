@@ -4,7 +4,7 @@ import UIKit
 
 /// Quick add: a glass card attached to the top of the keyboard with the smart input, the chips that spell out what
 /// the text set, and the project picker. It is an overlay rather than a sheet, because a sheet floats above the
-/// keyboard with a gap. Saving keeps it open for the next task; dismissing discards the draft.
+/// keyboard with a gap. Saving closes it and shows the new task in its list; dismissing discards the draft.
 struct QuickAddSheet: View {
     @Environment(\.clock) private var clock
     let defaults: QuickAddDefaults
@@ -228,20 +228,21 @@ private struct QuickAddForm: View {
         }
         let parsed = draft.parse(now: clock.now, projects: store.projects, labels: store.labels, in: clock.timeZone)
         guard let task = draft.resolve(parsed) else { return }
-        withAnimation(.snappy) {
+        let added = withAnimation(.snappy) {
             let added = store.addTask(task)
             if let event {
                 store.updateTask(added.id, TaskPatch(due: .some(nil), recurrence: .some(nil), location: .some(location), event: .some(event)))
             } else if let location {
                 store.updateTask(added.id, TaskPatch(location: .some(location)))
             }
+            return added
         }
-        location = nil
-        event = nil
-        draft.reset(today: clock.today)
-        typed = false
-        notice = nil
-        focused = true
+        close(revealing: added.id)
+    }
+
+    private func close(revealing taskID: String) {
+        navigator.sheet = nil
+        if let task = store.task(taskID) { navigator.reveal(task, today: clock.today, in: clock.timeZone) }
     }
 
     private func startRamble() {
@@ -360,21 +361,18 @@ private struct QuickAddForm: View {
     private func saveSpoken(_ tasks: [RambleTask]) {
         let defaults = draft.defaults
         let today = clock.today
-        withAnimation(.snappy) {
-            for task in tasks {
+        let added = withAnimation(.snappy) {
+            tasks.map { task in
                 let added = store.addTask(Ramble.newTask(task, defaults: defaults, today: today))
                 if !task.notes.isEmpty { store.updateTask(added.id, TaskPatch(notes: task.notes)) }
                 for subtask in task.subtasks {
                     let child = store.addTask(Ramble.newTask(subtask, defaults: nil, today: today), parentId: added.id)
                     if !subtask.notes.isEmpty { store.updateTask(child.id, TaskPatch(notes: subtask.notes)) }
                 }
+                return added
             }
         }
-        spoken = .none
-        draft.reset(today: today)
-        typed = false
-        notice = nil
-        focused = true
+        if let first = added.first { close(revealing: first.id) } else { navigator.sheet = nil }
     }
 }
 

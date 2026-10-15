@@ -187,7 +187,7 @@ private struct Occurrence: Decodable {
 @Sendable func viewsVector(_ fn: String, _ a: Args) throws -> JSONValue {
     switch fn {
     case "inboxTasks": return try json(Views.inboxTasks(a(0), a(1), in: a.zone))
-    case "noDateTasks": return try json(Views.noDateTasks(a(0), a(1), in: a.zone))
+    case "noDateTasks": return try json(Views.noDateTasks(a(0), a(1), newestFirst: a(2), in: a.zone))
     case "projectTasks": return try json(Views.projectTasks(a(0), a(1), in: a.zone))
     case "labelTasks": return try json(Views.labelTasks(a(0), a(1), in: a.zone))
     case "placeTasks": return try json(Views.placeTasks(a(0), a(1), in: a.zone))
@@ -214,6 +214,7 @@ private struct Occurrence: Decodable {
     case "formatTime": return try json(Format.formatTime(a(0)))
     case "priorityLabel": return try json(Format.priorityLabel(a(0)))
     case "relativeDay": return try json(Format.relativeDay(a(0), a(1)))
+    case "addedAgo": return try json(Format.addedAgo(a(0), a(1)))
     case "reminderToast": return try json(Format.reminderToast(a(0)))
     case "repeatLabel": return try json(Format.repeatLabel(a(0), a(1)))
     default: throw unknown(fn)
