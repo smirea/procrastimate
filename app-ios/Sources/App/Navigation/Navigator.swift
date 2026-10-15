@@ -52,6 +52,13 @@ final class Navigator {
         }
     }
 
+    /// Swaps a route in every tab's stack, or drops it when `next` is nil.
+    func replace(_ route: Route, with next: Route?) {
+        for (tab, path) in paths where path.contains(route) {
+            paths[tab] = path.compactMap { $0 == route ? next : $0 }
+        }
+    }
+
     func showSearch() {
         sheet = nil
         paths[.browse] = []
