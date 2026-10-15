@@ -72,6 +72,8 @@ export type Arrival = 'forward' | 'back' | 'none';
 export type Sheet =
 	| { kind: 'none' }
 	| { kind: 'quick-add'; defaults: QuickAddDefaults }
+	/** The fullscreen voice capture. It opens listening, and saves into the list quick add would have. */
+	| { kind: 'ramble'; defaults: QuickAddDefaults }
 	| { kind: 'search' }
 	| { kind: 'settings' }
 	| { kind: 'task'; id: string; arrival: Arrival }
@@ -83,6 +85,10 @@ class Sheets {
 
 	openQuickAdd(defaults: QuickAddDefaults) {
 		this.current = { kind: 'quick-add', defaults };
+	}
+
+	openRamble(defaults: QuickAddDefaults) {
+		this.current = { kind: 'ramble', defaults };
 	}
 
 	openSearch() {

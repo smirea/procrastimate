@@ -71,6 +71,7 @@ function speechThenSocket(options: Parameters<typeof socket>[0]): RambleListen {
 	let heard = false;
 	let fallback: RambleListen | null = null;
 	const native = speech({
+		onLevel: options.onLevel,
 		onText: (text, partialStart) => {
 			heard = true;
 			options.onText(text, partialStart);
@@ -86,10 +87,15 @@ function speechThenSocket(options: Parameters<typeof socket>[0]): RambleListen {
 function speech(options: {
 	onText: (text: string, partialStart: number) => void;
 	onStop: (reason: CaptureStop, message?: string) => void;
+	onLevel?: (level: number) => void;
 }): RambleListen {
+	const stopMeter = options.onLevel ? meter(options.onLevel) : () => {};
 	const dictation = new NativeDictation(
 		text => options.onText(text, text.length),
-		(reason: DictationEnd) => options.onStop(reason === 'stopped' ? 'stopped' : reason),
+		(reason: DictationEnd) => {
+			stopMeter();
+			options.onStop(reason === 'stopped' ? 'stopped' : reason);
+		},
 	);
 	dictation.start(() => {
 		const Ctor = speechRecognitionConstructor();
@@ -209,4 +215,42 @@ async function startMic(socket: WebSocket, onLevel?: (level: number) => void) {
 	};
 	source.connect(node);
 	return { audio, stream };
+}
+
+/**
+ * The browser recognizer reports no audio level, so the waveform reads its own mic stream. A meter that cannot open
+ * leaves the waveform idle and never stops the recognizer.
+ */
+function meter(onLevel: (level: number) => void): () => void {
+	let stopped = false;
+	let frame = 0;
+	let close = () => {};
+	void navigator.mediaDevices
+		?.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } })
+		.then(stream => {
+			const audio = new AudioContext();
+			close = () => {
+				stream.getTracks().forEach(track => track.stop());
+				void audio.close();
+			};
+			if (stopped) return close();
+			const analyser = audio.createAnalyser();
+			analyser.fftSize = 1024;
+			audio.createMediaStreamSource(stream).connect(analyser);
+			const samples = new Float32Array(analyser.fftSize);
+			const read = () => {
+				analyser.getFloatTimeDomainData(samples);
+				let peak = 0;
+				for (const sample of samples) peak = Math.max(peak, Math.abs(sample));
+				onLevel(peak);
+				frame = requestAnimationFrame(read);
+			};
+			read();
+		})
+		.catch(() => {});
+	return () => {
+		stopped = true;
+		cancelAnimationFrame(frame);
+		close();
+	};
 }

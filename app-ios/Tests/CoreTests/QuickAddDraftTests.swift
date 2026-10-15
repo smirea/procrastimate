@@ -62,31 +62,6 @@ import Testing
         #expect(QuickAddDraft.labelName(token, labels) == "Calls")
     }
 
-    @Test func aRambleReplacesTheFieldAndKeepsListDefaultsOnlyWhereSpeechWasSilent() throws {
-        var draft = QuickAddDraft(defaults: .init(projectId: "p-work", labelId: "l-calls", today: true), today: today)
-        draft.setText("something else")
-        draft.picked.priority = .p2
-        let ramble = RambleDraft(
-            tasks: [
-                RambleTask(
-                    segment: RambleSpan(start: 0, end: 8),
-                    title: "Pay rent",
-                    projectId: "spoken"
-                ),
-            ],
-            tokens: [],
-            ended: false
-        )
-        let applied = draft.applyRamble(ramble, today: today)
-        #expect(applied)
-        let task = try #require(draft.resolve(parse(draft)))
-        #expect(task.title == "Pay rent")
-        #expect(task.projectId == "spoken")
-        #expect(task.labelIds == ["l-calls"])
-        #expect(task.due == Due(date: today, time: nil))
-        #expect(task.priority == .default)
-    }
-
     @Test func nextWeekIsTheComingMonday() {
         #expect(QuickAddDraft.datePresets(today).map(\.date) == ["2026-10-14", "2026-10-15", "2026-10-19"])
         #expect(QuickAddDraft.datePresets("2026-10-19").last?.date == "2026-10-26")

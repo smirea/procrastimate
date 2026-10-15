@@ -29,8 +29,6 @@ public struct QuickAddDraft: Hashable, Sendable {
     public let defaults: Defaults
     public private(set) var text = ""
     public var picked: Picked
-    /// A repeat the ramble grammar set. The text's own repeat wins when it has one.
-    public var appliedRecurrence: Recurrence? = nil
 
     public init(defaults: Defaults, today: DateKey) {
         self.defaults = defaults
@@ -76,7 +74,7 @@ public struct QuickAddDraft: Hashable, Sendable {
             projectId: resolved.projectId,
             labelIds: resolved.labelIds,
             due: resolved.due,
-            recurrence: parsed.recurrence ?? appliedRecurrence,
+            recurrence: parsed.recurrence,
             priority: resolved.priority,
             reminders: parsed.reminders + picked.reminders
         )
@@ -98,26 +96,6 @@ public struct QuickAddDraft: Hashable, Sendable {
     public mutating func reset(today: DateKey) {
         text = ""
         picked = Self.initialPicked(defaults, today)
-        appliedRecurrence = nil
-    }
-
-    /// Replaces the field with a finished ramble. The title goes in the textbox and the metadata into the chips.
-    /// List defaults fill only what the speech left empty. Returns false when the grammar found no task.
-    @discardableResult
-    public mutating func applyRamble(_ ramble: RambleDraft, today: DateKey) -> Bool {
-        guard let fill = Ramble.quickAdd(from: ramble) else { return false }
-        text = fill.text
-        var labelIds = fill.labelIds
-        if let labelId = defaults.labelId, !labelIds.contains(labelId) { labelIds.insert(labelId, at: 0) }
-        picked = Picked(
-            due: fill.due ?? (defaults.today ? Due(date: today, time: nil) : nil),
-            priority: fill.priority,
-            projectId: fill.projectId ?? defaults.projectId,
-            labelIds: labelIds,
-            reminders: fill.reminders
-        )
-        appliedRecurrence = fill.recurrence
-        return true
     }
 
     /// Replaces a `#` or `@` fragment from `start` to `end` with the picked name and a space, and returns the new text

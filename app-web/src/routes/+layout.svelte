@@ -8,6 +8,7 @@
 	import Plus from 'phosphor-svelte/lib/Plus';
 	import Sidebar from '#lib/components/Sidebar.svelte';
 	import QuickAdd from '#lib/components/QuickAdd.svelte';
+	import RambleDrawer from '#lib/ramble/RambleDrawer.svelte';
 	import Search from '#lib/components/Search.svelte';
 	import SettingsSheet from '#lib/components/SettingsSheet.svelte';
 	import ShareSheet from '#lib/components/ShareSheet.svelte';
@@ -156,6 +157,8 @@
 {#if sheets.current.kind === 'quick-add'}
 	{@const defaults = sheets.current.defaults}
 	<QuickAdd {defaults} />
+{:else if sheets.current.kind === 'ramble'}
+	<RambleDrawer defaults={sheets.current.defaults} />
 {:else if sheets.current.kind === 'search'}
 	<Search />
 {:else if sheets.current.kind === 'settings'}
