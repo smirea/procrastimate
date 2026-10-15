@@ -143,7 +143,7 @@ public enum Views {
         let byID = Dictionary(tasks.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         return tasks.compactMap { task -> (task: TaskItem, at: Int)? in
             guard let at = completedMoment(task) else { return nil }
-            if let parent = task.parentId.flatMap({ byID[$0] }), parent.completedAt == task.completedAt { return nil }
+            if task.completedAt != nil, let parent = task.parentId.flatMap({ byID[$0] }), parent.completedAt == task.completedAt { return nil }
             let day = Dates.toDateKey(Date(epochMilliseconds: at), in: zone)
             if let from = range.from, day < from { return nil }
             if let to = range.to, day > to { return nil }

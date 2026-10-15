@@ -187,6 +187,8 @@ describe('completed', () => {
 		task('book', { parentId: 'trip', projectId: 'home', completedAt: at(10, 7) }),
 		task('call', { parentId: 'no such parent', completedAt: at(14, 11) }),
 		task('tie', { completedAt: at(14, 9) }),
+		task('chore', {}),
+		task('sweep', { parentId: 'chore', recurrence: { interval: 1, unit: 'week' }, lastCompletedAt: at(11, 8) }),
 	];
 
 	test('presets count today in their days', () => {
@@ -205,6 +207,7 @@ describe('completed', () => {
 			'tie',
 			'standup',
 			'trip',
+			'sweep',
 			'book',
 			'old',
 		]);
@@ -221,6 +224,7 @@ describe('completed', () => {
 			['2026-10-14', ['call', 'paid rent', 'tie']],
 			['2026-10-13', ['standup']],
 			['2026-10-12', ['trip']],
+			['2026-10-11', ['sweep']],
 			['2026-10-10', ['book']],
 		]);
 	});

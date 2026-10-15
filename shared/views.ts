@@ -177,7 +177,7 @@ export function completedTasks(tasks: readonly Task[], range: CompletedRange): T
 			const at = completedMoment(task);
 			if (at === null) return [];
 			const parent = task.parentId ? byId.get(task.parentId) : undefined;
-			if (parent && parent.completedAt === task.completedAt) return [];
+			if (task.completedAt !== null && parent?.completedAt === task.completedAt) return [];
 			const day = toDateKey(new Date(at));
 			if ((range.from && day < range.from) || (range.to && day > range.to)) return [];
 			return [{ task, at }];
