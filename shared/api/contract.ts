@@ -18,7 +18,8 @@ import {
 	spaceViewSchema,
 } from '../sharing.ts';
 import { taskEditSchema } from '../store.ts';
-import { syncRequestSchema, syncResponseSchema, taskSchema } from '../sync/protocol.ts';
+import { roleSchema } from '../values.ts';
+import { nudgeSchema, syncRequestSchema, syncResponseSchema, taskSchema } from '../sync/protocol.ts';
 
 /**
  * Every HTTP endpoint the clients call, as one oRPC contract. The server implements it, the web client calls it
@@ -131,6 +132,16 @@ export const workerContract = {
 			.input(z.object({ query: z.object({ token: z.string() }) }))
 			.output(sharedViewSchema),
 	},
+	shares: {
+		/**
+		 * Shares the caller's own space. The Worker serves it because a user audience needs the grantee's name from
+		 * Better Auth; the share itself lands in the owner's object, which also writes the guest's membership.
+		 */
+		create: found
+			.meta(openapi({ method: 'POST', path: '/api/shares' }))
+			.input(newShareSchema)
+			.output(shareViewSchema),
+	},
 };
 
 /**
@@ -149,11 +160,6 @@ export const accountContract = {
 	/** The owner's shares of their own space. Human owners only. */
 	shares: {
 		list: allowed.meta(openapi({ method: 'GET', path: '/api/shares' })).output(sharesSchema),
-		/** A user audience also adds the grantee to the space's people and writes their membership. */
-		create: found
-			.meta(openapi({ method: 'POST', path: '/api/shares' }))
-			.input(newShareSchema)
-			.output(shareViewSchema),
 		delete: found
 			.meta(openapi({ method: 'DELETE', path: '/api/shares', inputStructure: 'detailed' }))
 			.input(z.object({ query: byId }))
@@ -247,12 +253,31 @@ export const internalContract = {
 		.meta(openapi({ method: 'POST', path: '/api/account/membership' }))
 		.input(z.object({ spaceId: z.string(), owner: personSchema, live: z.boolean() }))
 		.output(okSchema),
-	/** Owner to guest: `space` moved, so the guest's sockets hear `{ cursor, space }`. Skips the serial queue. */
+	/** Owner to guest: `space` moved to `cursor`, which the guest's sockets hear as is. Skips the serial queue. */
 	nudge: oc
 		.errors({ UNAUTHORIZED: {} })
 		.meta(openapi({ method: 'POST', path: '/api/account/nudge' }))
-		.input(z.object({ space: z.string() }))
+		.input(nudgeSchema.required({ space: true }))
 		.output(okSchema),
+	/** Worker to owner: a share the Worker resolved the grantee of. `grantee` is null for a link. */
+	share: oc
+		.errors({ NOT_FOUND: {} })
+		.meta(openapi({ method: 'POST', path: '/api/account/share' }))
+		.input(z.object({ target: shareTargetSchema, grantee: personSchema.nullable(), role: roleSchema }))
+		.output(shareViewSchema),
+	/** Worker to owner: an AI account was deleted, so its tokens, shares, and people row go. */
+	revokeAi: oc
+		.meta(openapi({ method: 'POST', path: '/api/account/revoke-ai' }))
+		.input(z.object({ aiUserId: z.string() }))
+		.output(okSchema),
+	/** Worker to owner: everyone the space has met, for people search. */
+	people: oc.meta(openapi({ method: 'POST', path: '/api/account/people' })).output(peopleSchema),
+	/** Worker to owner: what the link share `id` shows, for anyone holding its token. */
+	sharedView: oc
+		.errors({ NOT_FOUND: {} })
+		.meta(openapi({ method: 'POST', path: '/api/account/shared-view' }))
+		.input(byId)
+		.output(sharedViewSchema),
 	/** Worker to owner: the AI account a `pm.<ownerId>.<secret>` token belongs to, or null. */
 	resolveToken: oc
 		.errors({ UNAUTHORIZED: {} })
@@ -265,6 +290,7 @@ export const contract = {
 	...workerContract,
 	...accountContract,
 	push: { ...workerContract.push, ...accountContract.push },
+	shares: { ...workerContract.shares, ...accountContract.shares },
 };
 
 /** OpenAPI carries JSON, so the client's types are the contract's jsonified. */
