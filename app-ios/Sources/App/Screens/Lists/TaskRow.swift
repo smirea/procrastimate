@@ -86,6 +86,7 @@ struct TaskRow: View {
                     }
                 }
             }
+            Button("Copy as Markdown", systemImage: "doc.on.doc") { actions.copyAsMarkdown(task) }
             Button("Delete", systemImage: "trash", role: .destructive) { actions.delete(task) }
         }
     }

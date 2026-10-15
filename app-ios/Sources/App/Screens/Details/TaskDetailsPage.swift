@@ -96,6 +96,17 @@ private struct TaskDetailsForm: View {
                 }
 
                 SubtaskList(task: task, navigation: navigation)
+
+                Button {
+                    commitTitle()
+                    actions.copyAsMarkdown(store.task(task.id) ?? task)
+                } label: {
+                    SwiftUI.Label("Copy as Markdown", systemImage: "doc.on.doc")
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(.muted)
+                        .frame(minHeight: 44)
+                }
+                .buttonStyle(.plain)
             }
             .padding(.horizontal, 20)
             .padding(.top, 8)
