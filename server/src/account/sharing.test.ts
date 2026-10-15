@@ -328,6 +328,7 @@ describe('sharing between two users', () => {
 		).toBe(403);
 		expect((await asAi('GET', '/api/ai-tokens')).status).toBe(403);
 		expect((await asAi('GET', '/api/me')).status).toBe(403);
+		expect((await asAi('POST', `/api/sync?space=${ai.id}`, { cursor: 0, ops: [], reset: true })).status).toBe(403);
 
 		const { entries } = await json<{ entries: ActivityEntry[] }>(call(owner, 'GET', `/api/activity?id=${added.id}`));
 		expect(entries.map(e => [e.action, e.actor.name, e.actor.kind])).toEqual([
@@ -386,6 +387,64 @@ describe('sharing between two users', () => {
 		expect(ownersHome).toContain('Guest in Home');
 		const guestsWork = (await snapshotOf(sync(guest))).tasks.map(t => t.title);
 		expect(guestsWork).toEqual(['Guest moves', 'Owner in Work']);
+	});
+
+	/** Owner-only: project Secret with an imported task and its subtask, and a label no shared task carries. */
+	const seedPrivate = () =>
+		json(
+			sync(owner, [
+				op(owner, 'secret', { deleted: false, name: 'Secret', createdAt: NOW, sourceKey: null }, 'project'),
+				op(owner, 'private-label', { deleted: false, name: 'Private', createdAt: NOW }, 'label'),
+				create(
+					owner,
+					task('diary', { title: 'Diary', projectId: 'secret', sourceKey: 'todoist:task:1', createdAt: NOW + 5 }),
+				),
+				create(owner, task('entry', { title: 'Entry', projectId: 'secret', parentId: 'diary', createdAt: NOW + 6 })),
+			]),
+		);
+
+	test('a guest cannot take over a private imported task by sending its source key', async () => {
+		await seedOwner();
+		await seedPrivate();
+		await userShare();
+		await settled();
+		const imposter = task('imposter', {
+			title: 'Imposter',
+			projectId: 'home',
+			sourceKey: 'todoist:task:1',
+			createdAt: NOW - 1000,
+		});
+		const seen = await snapshotOf(sync(guest, [create(guest, imposter)], owner.me.id));
+		expect(seen.tasks.map(t => t.id)).toEqual(['fix-sink', 'buy-washer', 'paint']);
+		const own = await snapshotOf(sync(owner));
+		expect(own.tasks.filter(t => t.projectId === 'secret').map(t => [t.id, t.parentId])).toEqual([
+			['diary', null],
+			['entry', 'diary'],
+		]);
+	});
+
+	test('a guest cannot point a shared task at a private parent, project, or label', async () => {
+		await seedOwner();
+		await seedPrivate();
+		await share({ kind: 'label', id: 'urgent' }, { kind: 'user', userId: guest.me.id, role: 'edit' });
+		await settled();
+		const seen = await snapshotOf(
+			sync(
+				guest,
+				[
+					op(guest, 'taxes', { parentId: 'diary' }),
+					op(guest, 'taxes', { projectId: 'secret' }),
+					op(guest, 'taxes', { labelIds: ['urgent', 'private-label'] }),
+					op(guest, 'taxes', { title: 'Do the taxes' }),
+				],
+				owner.me.id,
+			),
+		);
+		expect(seen.tasks.map(t => [t.id, t.title, t.parentId, t.projectId, t.labelIds])).toEqual([
+			['taxes', 'Do the taxes', null, null, ['urgent']],
+		]);
+		expect(seen.projects).toEqual([]);
+		expect(seen.labels.map(l => l.name)).toEqual(['Urgent']);
 	});
 
 	test('a stranger is turned away from a space, and a guest from its owner-only routes', async () => {

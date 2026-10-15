@@ -3,6 +3,7 @@ import { onError, ORPCError, ValidationError } from '@orpc/server';
 import { OpenAPIHandler } from '@orpc/openapi/fetch';
 import { drizzle } from 'drizzle-orm/durable-sqlite';
 import { accountContract, internalContract } from '../../../shared/api/contract';
+import type { Person } from '../../../shared/sharing';
 import { nudgeSchema, repairBooleanNumbers } from '../../../shared/sync/protocol';
 import { actorOf, readActor, SHARED_ROUTES, spaceOf, withActor } from '../actor';
 import type { AccountContext, AccountRoute, Access } from '../auth';
@@ -96,7 +97,7 @@ export function accountHandler(
 			const internal = INTERNAL_ROUTES.has(key);
 			const actor = internal ? personOf(store, space) : actorOf(request);
 			if (!actor) return errorResponse('UNAUTHORIZED', 'Not signed in');
-			const access = admission(store, space, actor.id);
+			const access = admission(store, space, actor);
 			if (!access) return errorResponse('FORBIDDEN', 'Not shared with you');
 			if (access.role === 'guest' && !SHARED_ROUTES.has(key)) {
 				return errorResponse('FORBIDDEN', 'Only the owner can do this');
@@ -142,9 +143,10 @@ export function accountHandler(
 }
 
 /** The owner, or a guest with the space's shares to them. Anyone else is turned away. */
-function admission(store: AccountStore, space: string, actorId: string): Access | null {
-	if (actorId === space) return { role: 'owner' };
-	const shares = store.shares().filter(share => share.grantee === actorId);
+function admission(store: AccountStore, space: string, actor: Person): Access | null {
+	// An AI account has no space of its own; owning one would hand each token an empty writable partition.
+	if (actor.id === space) return actor.kind === 'human' ? { role: 'owner' } : null;
+	const shares = store.shares().filter(share => share.grantee === actor.id);
 	return shares.length ? { role: 'guest', shares } : null;
 }
 

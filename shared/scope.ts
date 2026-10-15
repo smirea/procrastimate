@@ -1,7 +1,7 @@
 import type { ShareRow } from './db/schema.ts';
 import { groupChildren } from './subtasks.ts';
 import { applyPatch } from './sync/apply.ts';
-import { DEFAULT_SETTINGS, type Op, type Snapshot, type Task } from './sync/protocol.ts';
+import { DEFAULT_SETTINGS, type FieldsByKind, type Op, type Snapshot, type Task } from './sync/protocol.ts';
 
 /**
  * What a guest reaches in a space, from the owner's shares to them. Server only, never ported: the client only ever
@@ -107,6 +107,19 @@ export function scopeHash(view: unknown): string {
 }
 
 /**
+ * A guest's op may only point at what the guest can already see: a parent it may edit, and projects and labels in
+ * its view, so it cannot graft its task onto the owner's private tree or pull hidden names into its snapshot. It may
+ * not set `sourceKey` either, because fixups merge tasks by it and would tombstone the owner's matching task.
+ */
+function staysInScope(fields: Partial<FieldsByKind['task']>, scope: Scope): boolean {
+	const { parentId, projectId, labelIds, sourceKey } = fields;
+	if (sourceKey !== undefined && sourceKey !== null) return false;
+	if (parentId && !scope.editable.has(parentId)) return false;
+	if (projectId && !scope.projects.has(projectId)) return false;
+	return (labelIds ?? []).every(id => scope.labels.has(id));
+}
+
+/**
  * Which of a guest's ops may be written, checked in order against a working copy the admitted ops update. A guest
  * writes tasks only: an existing task must be editable before and after the op, a new one editable after it (under an
  * editable parent, or in an edit-shared project or label). A delete only needs the task editable before. Projects,
@@ -135,6 +148,11 @@ export function admit(snapshot: Snapshot, grants: readonly Grant[], ops: readonl
 			working = applyPatch(working, op);
 			scope = scopeOf(working, grants);
 			admitted.push(op);
+			continue;
+		}
+		// `op.kind` is checked above; the intersection type does not narrow `fields` with it.
+		if (!staysInScope(op.fields as Partial<FieldsByKind['task']>, scope)) {
+			refused.push(op);
 			continue;
 		}
 		const next = applyPatch(working, op);
