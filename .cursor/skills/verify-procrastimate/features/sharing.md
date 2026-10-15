@@ -4,15 +4,15 @@ The owner shares a project, a label, or a task with another account, to edit or 
 
 ## Sub-features
 
-- `share-person` adds a person by email, or from people already met, with `Can edit` or `Can view`, and removes them.
-- `share-link` copies a public link `https://procrastimate.stf.lol/s/<ownerId>.<secret>` and stops sharing it.
+- `share-person` adds a person by email, or from people already met, with `Can edit` or `Can view`, and removes them. People already met match as you type, before the server answers. Adding and removing are instant and roll back with a toast.
+- `share-link` shows the link row at once with a placeholder labelled `Making the link`, then copies a public link `https://procrastimate.stf.lol/s/<ownerId>.<secret>` and stops sharing it.
 - `shared-with-me` lists each shared project, label, and task under `Shared with me` with the owner's name. Shared tasks never show in Inbox, Today, No date, places, or search.
 - `guest-edit` lets a guest with `Can edit` add, edit, complete, and delete tasks in what was shared. A `Can view` guest gets no checkbox, editable title, delete, or add.
 - `pickers-stay-in-space` lists only the shared space's projects and labels on a shared task.
 - `authorship` shows `Created by` and `Completed by` in task details, offline too.
 - `activity` lists each change to a task with who, what, and when, when online, grouped by day newest first. One actor's edits less than five minutes apart are one row naming each field, such as `You changed due to Oct 20 and edited notes`. It shows only when someone other than you touched the task.
 - `public-link` opens `/s/<token>` read only for a signed-out visitor. A stopped link shows nothing. On an iPhone with the app installed, the link opens the app.
-- `ai-accounts` creates an AI account by name, generates a token shown once with `Copy`, and deletes the account. People that are AI accounts carry an `AI` badge everywhere.
+- `ai-accounts` creates an AI account by name, generates a token shown once with `Copy`, and deletes the account. The account shows and goes at once. The token panel opens at once with a pulsing placeholder labelled `Making a token` until the secret arrives. People that are AI accounts carry an `AI` badge everywhere.
 - `agent-docs` serves public Markdown at `/api/docs` (and `/llms.txt` pointing to it) on how an agent gets a token, and, with a token, `/api/docs/agent` and `/api/docs/openapi` covering exactly the routes it may call. `Copy prompt for your AI` beside a new token copies the token and where the guide is.
 - `agent-api` lets an AI token read `GET /api/view` and add, edit, complete, reopen, and delete tasks through `/api/tasks`, credited to the AI.
 
@@ -32,7 +32,8 @@ The owner shares a project, a label, or a task with another account, to edit or 
 
 ## Gotchas
 
-- A share needs its target on the server, so the share sheet uploads unsent edits first.
+- A share needs its target on the server, so the share sheet uploads unsent edits first, behind the optimistic row.
+- Every share sheet and AI account action is optimistic. `bun run test:e2e -- e2e/optimistic.e2e.ts` holds each request for 2 s, or refuses it, and checks the UI moved within 1 s and rolled back with a toast. On iOS, point `API_URL` at a proxy that delays `POST /api/ai`, `/api/ai-tokens`, `/api/shares`, and `GET /api/people` to see the same thing.
 - The e2e clock is pinned to October 14 while the server uses real time, so activity rows can sit under a later day heading than the pinned today in the tests.
 - An AI token works only on sync, view, the task commands, and activity. Shares, tokens, AI accounts, and push answer `FORBIDDEN`.
 - Revoking a share drops the guest's unsent edits to that space.

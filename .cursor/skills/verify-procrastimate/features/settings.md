@@ -10,7 +10,8 @@ A `Settings` row with a gear sits at the bottom of the sidebar, which is also th
 - `settings-dictation` holds `Dictation`: `Native` or `ElevenLabs`. `Native` is selected until changed, and the choice is kept across a reload. Offline voice still uses native. See [Ramble](./ramble.md).
 - `settings-notifications` is one line: `Notifications: On`, `Notifications: Off`, or `Notifications need permission`. The last one is a button. See [Push notifications](./push-notifications.md).
 - `settings-delete` is `Delete all data`. Confirming wipes tasks, projects, and labels on this device and the server. See [Offline and sync](./offline-sync.md).
-- `settings-import` holds `Import from Todoist`. See [Todoist import](./todoist-import.md).
+- `settings-import` holds `Import from Todoist`. It reads `Importing…` while the zip is read. See [Todoist import](./todoist-import.md).
+- `settings-account` holds `Sign out`, which is instant, and `Delete account`, which reads `Deleting…` until the server confirms. A refused web sign-out signs back in with the toast `Could not sign out`. Test: `sign out is instant, and a refused one signs back in with a toast` in `e2e/optimistic.e2e.ts`.
 
 ## How to get to it (user POV)
 

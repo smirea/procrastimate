@@ -77,20 +77,22 @@ final class AccountSync {
         session.signedIn = Launch.signedIn
     }
 
-    func deleteAccount() async {
+    /// Not optimistic: it cannot be undone, so the account stays until the server confirms. False when it refused.
+    func deleteAccount() async -> Bool {
         stop()
-        guard let token = SessionToken.read() else { return }
+        guard let token = SessionToken.read() else { return false }
         do {
             _ = try await APIClient.send(API.Endpoints.AccountDelete.self, NoInput(), token: token)
         } catch {
-            session.error = ErrorReport("Could not delete the account", error: error)
+            _ = ErrorReport("Could not delete the account", error: error)
             start()
-            return
+            return false
         }
         store.switchUser()
         UserDefaults.standard.removeObject(forKey: Session.ownerKey)
         SessionToken.clear()
         session.signedIn = Launch.signedIn
+        return true
     }
 
     /// The user's own space first, then the list of spaces shared with them when it is due, then each shared space.

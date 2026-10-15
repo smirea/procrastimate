@@ -6,39 +6,48 @@ import UIKit
 /// made, with Copy.
 struct AIAccountsSection: View {
     @Environment(Store.self) private var store
+    @Environment(Toasts.self) private var toasts
 
-    @State private var accounts: [Person] = []
+    /// The secret is only ever in the create response, so it lives here until Settings closes. Nil while it is made.
+    private struct Token: Equatable {
+        let rowID: String
+        let attempt = UUID()
+        var value: String?
+        var prompt: String?
+    }
+
+    @State private var accounts = OptimisticList<Person>(key: \.id)
     @State private var loaded = false
     @State private var name = ""
-    @State private var token: (accountID: String, value: String, prompt: String)?
+    @State private var token: Token?
     @State private var copied: Copied?
-    @State private var deleting: Person?
+    @State private var deleting: OptimisticList<Person>.Row?
     @State private var error: ErrorReport?
 
     var body: some View {
         Section {
-            if loaded && accounts.isEmpty {
+            if loaded && accounts.rows.isEmpty {
                 Text("None yet. An AI account can read and change your tasks with its token.")
                     .font(.subheadline)
                     .foregroundStyle(.muted)
             }
-            ForEach(accounts) { account in
+            ForEach(accounts.rows) { row in
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
-                        PersonName(person: account)
+                        PersonName(person: row.value)
                         Spacer()
-                        Button("Generate token", systemImage: "key") { Task { await generate(account) } }
+                        Button("Generate token", systemImage: "key") { Task { await generate(row) } }
                             .labelStyle(.titleAndIcon)
                             .font(.subheadline)
                             .buttonStyle(.borderless)
-                        Button("Delete \(account.name)", systemImage: "trash", role: .destructive) { deleting = account }
+                        Button("Delete \(row.value.name)", systemImage: "trash", role: .destructive) { deleting = row }
                             .labelStyle(.iconOnly)
                             .buttonStyle(.borderless)
                             .frame(minWidth: 44, minHeight: 44)
                     }
-                    if let token, token.accountID == account.id {
+                    if let token, token.rowID == row.id {
                         TokenReveal(value: token.value, copied: copied) { what in
-                            copy(what == .token ? token.value : token.prompt, as: what)
+                            if let value = what == .token ? token.value : token.prompt { copy(value, as: what) }
                         }
                             .transition(.opacity.combined(with: .move(edge: .top)))
                     }
@@ -47,9 +56,9 @@ struct AIAccountsSection: View {
             HStack {
                 TextField("New AI account", text: $name)
                     .submitLabel(.done)
-                    .onSubmit { Task { await create() } }
+                    .onSubmit { create() }
                     .accessibilityLabel("AI account name")
-                Button("Create AI account", systemImage: "plus.circle.fill") { Task { await create() } }
+                Button("Create AI account", systemImage: "plus.circle.fill") { create() }
                     .labelStyle(.iconOnly)
                     .font(.title3)
                     .buttonStyle(.borderless)
@@ -60,11 +69,11 @@ struct AIAccountsSection: View {
         } header: {
             Text("AI accounts")
         }
-        .animation(.snappy, value: accounts)
-        .animation(.snappy, value: token?.value)
+        .animation(.snappy, value: accounts.rows)
+        .animation(.snappy, value: token)
         .sensoryFeedback(.success, trigger: copied) { _, new in new != nil }
         .confirmationDialog(
-            "Delete \(deleting?.name ?? "")? Its tokens stop working.",
+            "Delete \(deleting?.value.name ?? "")? Its tokens stop working.",
             isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }),
             titleVisibility: .visible
         ) {
@@ -77,8 +86,9 @@ struct AIAccountsSection: View {
 
     private func load() async {
         do {
-            accounts = try await APIClient.send(API.Endpoints.AiList.self, NoInput()).accounts
-            store.rememberPeople(accounts)
+            let loaded = try await APIClient.send(API.Endpoints.AiList.self, NoInput()).accounts
+            accounts.load(loaded)
+            store.rememberPeople(loaded)
             error = nil
         } catch {
             self.error = ErrorReport("Could not load AI accounts", error: error)
@@ -86,30 +96,39 @@ struct AIAccountsSection: View {
         loaded = true
     }
 
-    private func create() async {
+    private func create() {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
-        do {
+        name = ""
+        let owner = UserDefaults.standard.string(forKey: Session.ownerKey)
+        accounts.add(Person(id: "", name: trimmed, kind: .ai, ownerId: owner), failure: "Could not create \(trimmed)", toasts: toasts) {
             let account = try await APIClient.send(API.Endpoints.AiCreate.self, API.AiCreateInput(name: trimmed))
-            accounts.append(account)
             store.rememberPeople([account])
-            name = ""
-            error = nil
-        } catch {
-            self.error = ErrorReport("Could not create the AI account", error: error)
+            return account
         }
     }
 
-    private func generate(_ account: Person) async {
+    private func generate(_ row: OptimisticList<Person>.Row) async {
+        let pending = Token(rowID: row.id)
+        token = pending
+        copied = nil
+        guard let account = await accounts.saved(row) else {
+            if token == pending { token = nil }
+            return
+        }
         do {
             let created = try await APIClient.send(
                 API.Endpoints.TokensCreate.self, API.NewApiToken(aiUserId: account.id, name: account.name)
             )
-            token = (account.id, created.token, created.prompt)
-            copied = nil
-            error = nil
+            if token == pending {
+                token?.value = created.token
+                token?.prompt = created.prompt
+            }
         } catch {
-            self.error = ErrorReport("Could not make a token", error: error)
+            _ = ErrorReport("Could not make a token", error: error)
+            guard token == pending else { return }
+            token = nil
+            toasts.show("Could not make a token")
         }
     }
 
@@ -122,14 +141,10 @@ struct AIAccountsSection: View {
         }
     }
 
-    private func remove(_ account: Person) async {
-        do {
+    private func remove(_ row: OptimisticList<Person>.Row) async {
+        if token?.rowID == row.id { token = nil }
+        await accounts.remove(row, failure: "Could not delete \(row.value.name)", toasts: toasts) { account in
             _ = try await APIClient.send(API.Endpoints.AiDelete.self, NoInput(), query: ["id": account.id])
-            accounts.removeAll { $0.id == account.id }
-            if token?.accountID == account.id { token = nil }
-            error = nil
-        } catch {
-            self.error = ErrorReport("Could not delete \(account.name)", error: error)
         }
     }
 }
@@ -137,7 +152,7 @@ struct AIAccountsSection: View {
 private enum Copied { case token, prompt }
 
 private struct TokenReveal: View {
-    let value: String
+    let value: String?
     let copied: Copied?
     let copy: (Copied) -> Void
 
@@ -147,12 +162,17 @@ private struct TokenReveal: View {
                 .font(.caption)
                 .foregroundStyle(.muted)
             HStack(spacing: 8) {
-                Text(value)
-                    .font(.caption.monospaced())
-                    .lineLimit(1)
-                    .truncationMode(.middle)
-                    .textSelection(.enabled)
-                    .accessibilityLabel("Token")
+                if let value {
+                    Text(value)
+                        .font(.caption.monospaced())
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                        .textSelection(.enabled)
+                        .accessibilityLabel("Token")
+                        .transition(.opacity)
+                } else {
+                    PendingValue(label: "Making a token")
+                }
                 Spacer(minLength: 4)
                 Button { copy(.token) } label: {
                     SwiftUI.Label(
@@ -163,6 +183,7 @@ private struct TokenReveal: View {
                 }
                 .font(.subheadline)
                 .buttonStyle(.borderless)
+                .disabled(value == nil)
             }
             .padding(10)
             .background(.ink.opacity(0.05), in: .rect(cornerRadius: 12))
@@ -175,6 +196,7 @@ private struct TokenReveal: View {
             }
             .font(.subheadline)
             .buttonStyle(.borderless)
+            .disabled(value == nil)
             .accessibilityHint("Copies the token with where to find the API docs")
         }
     }

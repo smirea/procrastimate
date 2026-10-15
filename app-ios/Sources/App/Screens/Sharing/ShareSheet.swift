@@ -26,21 +26,36 @@ struct ShareSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(Store.self) private var store
     @Environment(AccountSync.self) private var accountSync
+    @Environment(Toasts.self) private var toasts
     let target: API.ShareTarget
     let name: String
 
-    @State private var shares: [API.ShareView] = []
+    private typealias Row = OptimisticList<API.ShareView>.Row
+
+    @State private var shares = OptimisticList<API.ShareView>(key: \.id)
     @State private var loaded = false
     @State private var query = ""
     @State private var found: [Person] = []
     @State private var searched = ""
     @State private var role = API.Role.edit
     @State private var copied = false
-    @State private var busy = false
     @State private var error: ErrorReport?
 
-    private var link: API.ShareView? { shares.first { $0.grantee == nil } }
-    private var people: [API.ShareView] { shares.filter { $0.grantee != nil } }
+    private var link: Row? { shares.rows.first { $0.value.grantee == nil } }
+    private var people: [Row] { shares.rows.filter { $0.value.grantee != nil } }
+
+    /// The people this space has met match at once; the server adds exact email matches when it answers. Matching is
+    /// `namePrefixed` in `shared/sharing.ts`.
+    private var suggestions: [Person] {
+        let q = trimmedQuery.lowercased()
+        guard !q.isEmpty else { return [] }
+        let me = UserDefaults.standard.string(forKey: Session.ownerKey)
+        let known = store.snapshot.people.filter { $0.id != me && $0.name.lowercased().hasPrefix(q) }
+        let remote = searched == trimmedQuery ? found : []
+        let granted = Set(people.compactMap(\.value.grantee?.id))
+        let all = known + remote.filter { person in !known.contains { $0.id == person.id } }
+        return all.filter { !granted.contains($0.id) }
+    }
 
     var body: some View {
         NavigationStack {
@@ -62,12 +77,13 @@ struct ShareSheet: View {
                     Button("Done", role: .confirm) { dismiss() }
                 }
             }
-            .animation(.snappy, value: shares)
-            .animation(.snappy, value: found)
+            .animation(.snappy, value: shares.rows)
+            .animation(.snappy, value: suggestions)
             .sensoryFeedback(.success, trigger: copied) { _, new in new }
             .task { await load() }
             .task(id: query) { await search() }
         }
+        .overlay(alignment: .bottom) { ToastStack() }
     }
 
     private var linkSection: some View {
@@ -78,8 +94,11 @@ struct ShareSheet: View {
                 SwiftUI.Label(copied ? "Copied" : "Copy link", systemImage: copied ? "checkmark" : "link")
                     .contentTransition(.symbolEffect(.replace))
             }
-            .disabled(busy)
-            if let url = link?.url.flatMap(URL.init(string:)) {
+            .disabled(!loaded)
+            if let link, link.value.url == nil {
+                PendingValue(label: "Making the link")
+            }
+            if let url = link?.value.url.flatMap(URL.init(string:)) {
                 ShareLink(item: url) {
                     SwiftUI.Label("Send link…", systemImage: "square.and.arrow.up")
                 }
@@ -115,10 +134,9 @@ struct ShareSheet: View {
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
                 .accessibilityLabel("Email or name")
-            let granted = Set(people.compactMap(\.grantee?.id))
-            ForEach(found.filter { !granted.contains($0.id) }) { person in
+            ForEach(suggestions) { person in
                 Button {
-                    Task { await add(person) }
+                    add(person)
                 } label: {
                     HStack {
                         PersonName(person: person).foregroundStyle(.ink)
@@ -131,7 +149,7 @@ struct ShareSheet: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel("Add \(person.name)")
             }
-            if found.isEmpty, searched.contains("@"), searched == trimmedQuery {
+            if suggestions.isEmpty, searched.contains("@"), searched == trimmedQuery {
                 Text("No one with that email uses ProcrastiMate yet.")
                     .font(.footnote)
                     .foregroundStyle(.muted)
@@ -144,16 +162,16 @@ struct ShareSheet: View {
             if people.isEmpty {
                 Text(loaded ? "Only you" : "Loading…").foregroundStyle(.muted)
             }
-            ForEach(people) { share in
-                if let person = share.grantee {
+            ForEach(people) { row in
+                if let person = row.value.grantee {
                     HStack {
                         PersonName(person: person)
                         Spacer()
-                        Text(share.role == .edit ? "Can edit" : "Can view")
+                        Text(row.value.role == .edit ? "Can edit" : "Can view")
                             .font(.subheadline)
                             .foregroundStyle(.muted)
                         Button {
-                            Task { await remove(share) }
+                            Task { await remove(row) }
                         } label: {
                             Image(systemName: "xmark.circle.fill")
                                 .foregroundStyle(.faint)
@@ -173,8 +191,9 @@ struct ShareSheet: View {
     private func load() async {
         do {
             let all = try await APIClient.send(API.Endpoints.SharesList.self, NoInput())
-            shares = all.shares.filter { $0.target == target }
-            store.rememberPeople(shares.compactMap(\.grantee))
+            let mine = all.shares.filter { $0.target == target }
+            shares.load(mine)
+            store.rememberPeople(mine.compactMap(\.grantee))
             error = nil
         } catch {
             self.error = ErrorReport("Could not load who has access", error: error)
@@ -197,50 +216,39 @@ struct ShareSheet: View {
         searched = q
     }
 
+    /// The server shares only a target it holds, so one made a moment ago uploads first.
+    private func create(_ audience: API.ShareAudience) async throws -> API.ShareView {
+        await accountSync.flush()
+        return try await APIClient.send(API.Endpoints.SharesCreate.self, API.NewShare(target: target, audience: audience))
+    }
+
+    private func placeholder(_ grantee: Person?, _ role: API.Role) -> API.ShareView {
+        API.ShareView(id: "", target: target, grantee: grantee, role: role, createdAt: 0, url: nil)
+    }
+
     private func copyLink() async {
-        busy = true
-        defer { busy = false }
-        if link == nil {
-            do {
-                // The server shares only a target it holds, so one made a moment ago uploads first.
-                await accountSync.flush()
-                let created = try await APIClient.send(API.Endpoints.SharesCreate.self, API.NewShare(target: target, audience: .link))
-                shares.append(created)
-            } catch {
-                self.error = ErrorReport("Could not make a link", error: error)
-                return
-            }
+        let row = link ?? shares.add(placeholder(nil, .view), failure: "Could not make a link", toasts: toasts) {
+            try await create(.link)
         }
-        guard let url = link?.url else { return }
+        guard let url = await shares.saved(row)?.url else { return }
         UIPasteboard.general.string = url
         copied = true
         try? await Task.sleep(for: .seconds(1.5))
         copied = false
     }
 
-    private func add(_ person: Person) async {
-        do {
-            await accountSync.flush()
-            let created = try await APIClient.send(
-                API.Endpoints.SharesCreate.self,
-                API.NewShare(target: target, audience: .user(userId: person.id, role: role))
-            )
-            shares.append(created)
-            store.rememberPeople([person])
-            query = ""
-            error = nil
-        } catch {
-            self.error = ErrorReport("Could not share with \(person.name)", error: error)
+    private func add(_ person: Person) {
+        query = ""
+        store.rememberPeople([person])
+        let role = role
+        shares.add(placeholder(person, role), failure: "Could not share with \(person.name)", toasts: toasts) {
+            try await create(.user(userId: person.id, role: role))
         }
     }
 
-    private func remove(_ share: API.ShareView) async {
-        do {
+    private func remove(_ row: Row) async {
+        await shares.remove(row, failure: "Could not stop sharing", toasts: toasts) { share in
             _ = try await APIClient.send(API.Endpoints.SharesDelete.self, NoInput(), query: ["id": share.id])
-            shares.removeAll { $0.id == share.id }
-            error = nil
-        } catch {
-            self.error = ErrorReport("Could not stop sharing", error: error)
         }
     }
 }
