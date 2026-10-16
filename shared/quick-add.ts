@@ -124,7 +124,8 @@ const BEFORE_UNIT = String.raw`(?:m(?:ins?|inutes?)?|h(?:rs?|ours?)?|d(?:ays?)?|
  * first alternative that matches wins. A spelled-out day before the month needs `of`, so `the first May draft` stays
  * text.
  */
-const MONTH_DATE = String.raw`(?:${WEEKDAY},?\s+)?(?:${MONTH}(?:\.\s*|\s+)(?:the\s+)?(?:${SPELLED_ORDINAL}|${ORDINAL})|(?:the\s+)?(?:(?:\d{1,2}(?:st|nd|rd|th)|${SPELLED_ORDINAL})\s+of|${ORDINAL})\s+${MONTH})(?:,?\s+(?:19|20)\d\d)?`;
+const MONTH_DAY = String.raw`(?:${MONTH}(?:\.\s*|\s+)(?:the\s+)?(?:${SPELLED_ORDINAL}|${ORDINAL})|(?:the\s+)?(?:(?:\d{1,2}(?:st|nd|rd|th)|${SPELLED_ORDINAL})\s+of|${ORDINAL})\s+${MONTH})`;
+const MONTH_DATE = String.raw`(?:${WEEKDAY},?\s+)?${MONTH_DAY}(?:,?\s+(?:19|20)\d\d)?`;
 
 const DATE = [
 	'today|tonight|tomorrow|tmrw?|tom|eod|eow',
@@ -176,7 +177,7 @@ const GUARDS: RegExp[] = [
 	),
 	new RegExp(String.raw`(?<=\b(?:${ADDRESS})\.?\s+)\d[\w:/]*`, 'gi'),
 	new RegExp(String.raw`(?<!\w)\d[\w:/]*(?=\s+(?:[\w.]+\s+)?(?:${STREET})\b)`, 'gi'),
-	new RegExp(String.raw`\b(?:may|march)(?=\s+(?:the\s+)?${SPELLED_ORDINAL}\b)`, 'g'),
+	new RegExp(String.raw`(?<!\b(?:every|each)\s+)\b(?:may|march)(?=\s+(?:the\s+)?${SPELLED_ORDINAL}\b)`, 'g'),
 ];
 
 /**
@@ -458,7 +459,7 @@ const RULES: Rule[] = [
 		repeatable: false,
 		guarded: true,
 		pattern: new RegExp(
-			String.raw`${BEFORE}(?:(?:every|each)\s+(?:(?<yearDay>${MONTH}\s+${ORDINAL}|${ORDINAL}\s+${MONTH})|(?<other>other)\s+(?<otherUnit>day|week|month|year)|(?<interval>\d+)\s*(?<intervalUnit>${DAY_UNIT})|(?<unit>day|week|month|year)|(?<workday>weekday|workday)|(?<weekdays>${WEEKDAY_LIST}|${WEEKDAY}))|(?<listed>${WEEKDAY_LIST})|(?<adverb>daily|weekdays|weekly|monthly|yearly|annually))${AFTER}`,
+			String.raw`${BEFORE}(?:(?:every|each)\s+(?:(?<yearDay>${MONTH_DAY})|(?<other>other)\s+(?<otherUnit>day|week|month|year)|(?<interval>\d+)\s*(?<intervalUnit>${DAY_UNIT})|(?<unit>day|week|month|year)|(?<workday>weekday|workday)|(?<weekdays>${WEEKDAY_LIST}|${WEEKDAY}))|(?<listed>${WEEKDAY_LIST})|(?<adverb>daily|weekdays|weekly|monthly|yearly|annually))${AFTER}`,
 			'gi',
 		),
 		read: (m, ctx) => {

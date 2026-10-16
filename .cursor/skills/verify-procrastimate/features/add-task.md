@@ -8,7 +8,7 @@ Add a task lets Stefan capture a task in one motion from anywhere in the app. Re
 - `add-save` saves a task with a title and lands it in the current list.
 - `add-due` parses a due date typed into the title, such as `tomorrow`, `fri 5pm`, a month name date such as `Dec. 25`, `20th of October`, `Monday, October 19`, `Oct 19, 10am`, or a spelled-out day such as `October twentieth` or `the third of May`, a bare hour after `at` such as `November 3rd at 10` (10am), and `@` for `at` as in `Oct 2 @ 3pm`.
 - `add-shorthand` parses compact phrases such as `tom 5p`, `eow`, `2d`, `5m`, `1730`, `10/15`, and `the 15th`, and leaves names and ordinary words such as `Tom` and `sun hat` as text. An offset past the year 9999, such as `3929284d`, also stays text.
-- `add-recurrence` parses a repeat such as `every mon`, `daily`, yearly `every march 2nd`, or a weekday list such as `mon wed fri 7am` or `tue/thu`, shows it as a chip, and stores it on the task. A weekday list in prose, such as `Discuss mon wed plan`, stays text.
+- `add-recurrence` parses a repeat such as `every mon`, `daily`, yearly `every march 2nd` or `every March second`, or a weekday list such as `mon wed fri 7am` or `tue/thu`, shows it as a chip, and stores it on the task. A weekday list in prose, such as `Discuss mon wed plan`, stays text.
 - `add-highlight` highlights each parsed phrase inline and shows its value as a chip.
 - `add-due-picker` sets the date and time from the date chip: preset tiles, a calendar, and a time view that commits only a picked time.
 - `add-config-row` spells out the resolved due date, repeat, and reminders in the configuration row below the field while the text carries them.
