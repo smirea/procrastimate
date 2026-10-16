@@ -9,10 +9,11 @@ import type {
 	SharedView,
 	Space,
 } from '../../../shared/sharing';
-import { scopeOf, filterSnapshot } from '../../../shared/scope';
+import { filterSnapshot, scopeOf } from '../../../shared/scope';
 import type { Role } from '../../../shared/values';
 import { sha256, type AccountContext } from '../auth';
 import { agentPrompt } from '../docs';
+import { requireManager } from './commands';
 import { personOf } from './activity';
 import type { AccountStore, PersonRow, ShareRow } from './store';
 import { accountSnapshot } from './sync';
@@ -95,6 +96,26 @@ export function createShare(
 		tellMembership(context, grantee, true);
 	}
 	return shareView(store, space, origin, share);
+}
+
+/** Public links through the agent API, so a guest cannot publish what it was shared. */
+
+export function listLinks(context: AccountContext): ShareView[] {
+	requireManager(context.access);
+	return listShares(context).filter(share => share.grantee === null);
+}
+
+export function createLink(context: AccountContext, target: ShareTarget): ShareView {
+	requireManager(context.access);
+	return createShare(context, target, null, 'view');
+}
+
+export function deleteLink(context: AccountContext, id: string) {
+	requireManager(context.access);
+	if (!context.store.shares().some(share => share.id === id && share.grantee === null)) {
+		throw new ORPCError('NOT_FOUND', { message: 'No such link' });
+	}
+	deleteShare(context, id);
 }
 
 export function deleteShare(context: AccountContext, id: string) {

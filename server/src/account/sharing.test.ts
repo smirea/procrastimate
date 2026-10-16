@@ -544,6 +544,76 @@ describe('sharing between two users', () => {
 		expect(seen.labels.map(l => l.name)).toEqual(['Urgent']);
 	});
 
+	test('an AI account organizes the space and publishes read-only links; a guest may do neither', async () => {
+		await seedOwner();
+		const ai = await json<Person>(call(owner, 'POST', '/api/ai', { name: 'Butler' }));
+		const { token } = await json<{ token: string }>(
+			call(owner, 'POST', '/api/ai-tokens', { aiUserId: ai.id, name: 'laptop' }),
+		);
+		const asAi = (method: string, path: string, body?: unknown) =>
+			call(null, method, path, body, { Authorization: `Bearer ${token}` });
+
+		const garden = await json<{ id: string; name: string }>(asAi('POST', '/api/projects', { name: ' Garden ' }));
+		expect(garden.name).toBe('Garden');
+		expect(await json(asAi('POST', '/api/projects', { name: 'garden' }))).toMatchObject({ id: garden.id });
+		expect((await asAi('PATCH', `/api/projects?id=${garden.id}`, { name: 'HOME' })).status).toBe(400);
+		expect((await json<SpaceView>(asAi('GET', '/api/view'))).projects.map(p => p.name).toSorted()).toEqual([
+			'Garden',
+			'Home',
+		]);
+		const later = await json<{ id: string }>(asAi('POST', '/api/sections', { projectId: garden.id, name: 'Later' }));
+		const soon = await json<{ id: string }>(asAi('POST', '/api/sections', { projectId: garden.id, name: 'Soon' }));
+		expect(await json(asAi('POST', '/api/sections', { projectId: garden.id, name: 'later' }))).toMatchObject({
+			id: later.id,
+		});
+		await json(asAi('PATCH', `/api/sections?id=${soon.id}`, { index: 0 }));
+		const ordered = (await json<SpaceView>(asAi('GET', '/api/view'))).sections.toSorted((a, b) => a.order - b.order);
+		expect(ordered.map(s => s.name)).toEqual(['Soon', 'Later']);
+		expect((await asAi('PATCH', `/api/sections?id=${soon.id}`, { name: 'Later' })).status).toBe(400);
+		const waiting = await json<{ id: string }>(asAi('POST', '/api/labels', { name: 'waiting', color: 'orange' }));
+		expect(await json(asAi('POST', '/api/labels', { name: 'Waiting' }))).toMatchObject({ id: waiting.id });
+		expect((await asAi('PATCH', `/api/labels?id=${waiting.id}`, { name: 'urgent' })).status).toBe(400);
+		const seeds = await json<Task>(asAi('POST', '/api/tasks', { text: 'Plant seeds #Garden /Soon @waiting' }));
+		expect(seeds).toMatchObject({ projectId: garden.id, sectionId: soon.id, labelIds: [waiting.id] });
+
+		const link = await json<ShareView>(asAi('POST', '/api/links', { target: { kind: 'task', id: seeds.id } }));
+		expect(link).toMatchObject({ grantee: null, role: 'view', target: { kind: 'task', id: seeds.id } });
+		expect(link.url).toBe(`https://procrastimate.test/s/${owner.me.id}.${link.id}`);
+		const published = await json<SharedView>(call(null, 'GET', `/api/shared?token=${owner.me.id}.${link.id}`));
+		expect(published.tasks.map(t => t.title)).toEqual(['Plant seeds']);
+		expect(published.projects.map(p => p.name)).toEqual(['Garden']);
+		const ownerLink = await share({ kind: 'label', id: 'urgent' }, { kind: 'link' });
+		await userShare();
+		expect((await json<{ links: ShareView[] }>(asAi('GET', '/api/links'))).links.map(l => l.id).toSorted()).toEqual(
+			[link.id, ownerLink.id].toSorted(),
+		);
+		expect((await asAi('POST', '/api/links', { target: { kind: 'space', id: '' } })).status).toBe(400);
+		expect(await json<Ok>(asAi('DELETE', `/api/links?id=${link.id}`))).toEqual({ ok: true });
+		expect((await call(null, 'GET', `/api/shared?token=${owner.me.id}.${link.id}`)).status).toBe(404);
+
+		const inGuest = (method: string, path: string, body?: unknown) =>
+			call(guest, method, `${path}${path.includes('?') ? '&' : '?'}space=${owner.me.id}`, body);
+		const wholeSpace = (audience: unknown) =>
+			call(owner, 'POST', '/api/shares', { target: { kind: 'space', id: '' }, audience });
+		expect((await wholeSpace({ kind: 'user', userId: guest.me.id, role: 'edit' })).status).toBe(400);
+		expect((await wholeSpace({ kind: 'link' })).status).toBe(400);
+		expect((await inGuest('GET', '/api/links')).status).toBe(403);
+		expect((await inGuest('POST', '/api/links', { target: { kind: 'task', id: 'fix-sink' } })).status).toBe(403);
+		expect((await inGuest('POST', '/api/projects', { name: 'Mine' })).status).toBe(403);
+		expect((await inGuest('PATCH', '/api/projects?id=home', { name: 'Ours' })).status).toBe(403);
+		expect((await json<SpaceView>(inGuest('GET', '/api/view'))).labels).toEqual([]);
+		expect((await inGuest('POST', '/api/labels', { name: 'URGENT' })).status).toBe(403);
+		expect((await inGuest('POST', '/api/sections', { projectId: 'home', name: 'Mine' })).status).toBe(403);
+
+		expect(await json<Ok>(asAi('DELETE', `/api/labels?id=${waiting.id}`))).toEqual({ ok: true });
+		expect(await json<Ok>(asAi('DELETE', `/api/projects?id=${garden.id}`))).toEqual({ ok: true });
+		const after = await snapshotOf(sync(owner));
+		expect(after.projects.map(p => p.name)).toEqual(['Home']);
+		expect(after.sections).toEqual([]);
+		expect(after.labels.map(l => l.name)).toEqual(['Urgent']);
+		expect(after.tasks.some(t => t.title === 'Plant seeds')).toBe(false);
+	});
+
 	test('a stranger is turned away from a space, and a guest from its owner-only routes', async () => {
 		await seedOwner();
 		expect((await sync(guest, [], owner.me.id)).status).toBe(403);

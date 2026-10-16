@@ -8,7 +8,8 @@ import {
 	shareTargetSchema,
 	taskSchema,
 } from './sync/protocol.ts';
-import { roleSchema } from './values.ts';
+import { labelColorSchema } from './label-colors.ts';
+import { roleSchema, shareTargetKindSchema } from './values.ts';
 
 /**
  * Sharing's shapes. A space is one user's tasks, projects, sections, and labels, served by the `Account` object named by
@@ -156,3 +157,52 @@ export const newCommentSchema = z
 	.object({ taskId: commentSchema.shape.taskId, body: commentSchema.shape.body })
 	.meta({ id: 'NewComment', description: 'A comment the agent command API adds. A blank body is refused.' });
 export type NewComment = z.infer<typeof newCommentSchema>;
+
+export const newProjectSchema = z
+	.object({ name: projectSchema.shape.name })
+	.meta({ id: 'NewProject', description: 'A project the agent command API adds or renames. A blank name is refused.' });
+export type NewProject = z.infer<typeof newProjectSchema>;
+
+export const newSectionSchema = z
+	.object({ projectId: sectionSchema.shape.projectId, name: sectionSchema.shape.name })
+	.meta({
+		id: 'NewSection',
+		description:
+			'A section the agent command API adds last in its project. A name the project has already returns that section.',
+	});
+export type NewSection = z.infer<typeof newSectionSchema>;
+
+export const sectionEditSchema = z
+	.object({
+		name: sectionSchema.shape.name.optional(),
+		index: z
+			.number()
+			.int()
+			.nonnegative()
+			.optional()
+			.meta({ description: 'Its new place among the project’s sections, from 0.' }),
+	})
+	.meta({ id: 'SectionEdit', description: 'Renames a section, moves it among its project’s sections, or both.' });
+export type SectionEdit = z.infer<typeof sectionEditSchema>;
+
+export const newLabelSchema = z.object({ name: labelSchema.shape.name, color: labelColorSchema.optional() }).meta({
+	id: 'NewLabel',
+	description: 'A label the agent command API adds. A name already taken, ignoring case, returns that label.',
+});
+export type NewLabel = z.infer<typeof newLabelSchema>;
+
+export const labelEditSchema = newLabelSchema
+	.partial()
+	.meta({ id: 'LabelEdit', description: 'Renames a label, recolors it, or both. Names stay unique ignoring case.' });
+export type LabelEdit = z.infer<typeof labelEditSchema>;
+
+export const newLinkSchema = z
+	.object({
+		target: z.object({ kind: shareTargetKindSchema.exclude(['space']), id: z.string() }),
+	})
+	.meta({
+		id: 'NewLink',
+		description:
+			'A public read-only link to a task, a project, or a label. Asking again for the same target returns the same link.',
+	});
+export type NewLink = z.infer<typeof newLinkSchema>;

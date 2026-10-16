@@ -124,6 +124,9 @@ export const workerRouter = os.router({
 			if (grantee?.kind === 'ai' && grantee.ownerId !== actor.id) {
 				throw new ORPCError('NOT_FOUND', { message: 'No such user' });
 			}
+			if (target.kind === 'space' && grantee?.kind !== 'ai') {
+				throw new ORPCError('BAD_REQUEST', { message: 'Only an AI account can be given the whole space' });
+			}
 			const role = audience.kind === 'user' ? audience.role : 'view';
 			return ownSpace(context.env, context.request, actor).share({ target, grantee, role });
 		}),

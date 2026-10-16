@@ -9,20 +9,34 @@ import {
 	agentNewTaskSchema,
 	apiTokenSchema,
 	createdApiTokenSchema,
+	labelEditSchema,
 	newCommentSchema,
+	newLabelSchema,
+	newLinkSchema,
+	newProjectSchema,
+	newSectionSchema,
 	personSchema,
 	shareAudienceSchema,
 	sharedViewSchema,
 	shareTargetSchema,
 	shareViewSchema,
 	spaceSchema,
+	sectionEditSchema,
 	spaceViewSchema,
 	taskCommentSchema,
 } from '../sharing.ts';
 import { taskEditSchema } from '../store.ts';
 import { imageSizeSchema } from '../images.ts';
 import { roleSchema } from '../values.ts';
-import { nudgeSchema, syncRequestSchema, syncResponseSchema, taskSchema } from '../sync/protocol.ts';
+import {
+	labelSchema,
+	nudgeSchema,
+	projectSchema,
+	sectionSchema,
+	syncRequestSchema,
+	syncResponseSchema,
+	taskSchema,
+} from '../sync/protocol.ts';
 
 /**
  * Every HTTP endpoint the clients call, as one oRPC contract. The server implements it, the web client calls it
@@ -84,6 +98,7 @@ export const newApiTokenSchema = z
 	.meta({ id: 'NewApiToken' });
 export const taskCommentsSchema = z.object({ comments: z.array(taskCommentSchema) }).meta({ id: 'TaskComments' });
 export const activitySchema = z.object({ entries: z.array(activityEntrySchema) }).meta({ id: 'Activity' });
+export const linksSchema = z.object({ links: z.array(shareViewSchema) }).meta({ id: 'Links' });
 
 export const workerContract = {
 	status: oc.meta(openapi({ method: 'GET', path: '/api/status' })).output(okSchema),
@@ -166,8 +181,9 @@ export const workerContract = {
 };
 
 /**
- * What an AI account, or a guest of a space, may call: sync, view, the task commands, comments, and activity. Everything else
- * is the human owner's. The agent docs and their OpenAPI subset are generated from it, so each `summary` and
+ * What an AI account, or a guest of a space, may call: sync, view, the task, project, section, label, and link commands,
+ * comments, and activity. Projects, sections, labels, and links are only the owner's and an AI account's, which holds
+ * a whole-space edit share. Everything else is the human owner's. The agent docs and their OpenAPI subset are generated from it, so each `summary` and
  * `description` here is what an agent reads.
  */
 export const agentContract = {
@@ -179,7 +195,7 @@ export const agentContract = {
 				inputStructure: 'detailed',
 				summary: 'Sync the space',
 				description:
-					'The apps’ replication protocol. `{ "cursor": 0, "ops": [] }` answers with the whole visible snapshot. A task op is applied when the task is editable before and after it, and a comment op when its task is editable and the comment is new or the caller’s own; project and label ops are acknowledged and dropped. Each op is validated on its own: one that fails is listed in `rejected` with the reason and never applies, the rest still do, and the answer is the whole snapshot.',
+					'The apps’ replication protocol. `{ "cursor": 0, "ops": [] }` answers with the whole visible snapshot. A task op is applied when the task is editable before and after it, a comment op when its task is editable and the comment is new or the caller’s own, and a project, section, or label op only for the owner or an AI account; other ops are acknowledged and dropped. Each op is validated on its own: one that fails is listed in `rejected` with the reason and never applies, the rest still do, and the answer is the whole snapshot.',
 			}),
 		)
 		.input(z.object({ query: spaceQuery, body: syncRequestSchema }))
@@ -317,6 +333,161 @@ export const agentContract = {
 					inputStructure: 'detailed',
 					summary: 'Delete your comment',
 					description: '`id` is the comment’s. Only its author may delete it.',
+				}),
+			)
+			.input(z.object({ query: taskQuery }))
+			.output(okSchema),
+	},
+	projects: {
+		create: found
+			.meta(
+				openapi({
+					method: 'POST',
+					path: '/api/projects',
+					inputStructure: 'detailed',
+					summary: 'Add a project',
+					description: 'A name already taken, ignoring case, returns that project.',
+				}),
+			)
+			.input(z.object({ query: spaceQuery, body: newProjectSchema }))
+			.output(projectSchema),
+		update: found
+			.meta(
+				openapi({
+					method: 'PATCH',
+					path: '/api/projects',
+					inputStructure: 'detailed',
+					summary: 'Rename a project',
+					description: '`id` is the project’s. Another project’s name, ignoring case, is refused.',
+				}),
+			)
+			.input(z.object({ query: taskQuery, body: newProjectSchema }))
+			.output(projectSchema),
+		delete: found
+			.meta(
+				openapi({
+					method: 'DELETE',
+					path: '/api/projects',
+					inputStructure: 'detailed',
+					summary: 'Delete a project with its sections and tasks',
+					description: '`id` is the project’s. Every task in it goes too, subtasks included.',
+				}),
+			)
+			.input(z.object({ query: taskQuery }))
+			.output(okSchema),
+	},
+	sections: {
+		create: found
+			.meta(
+				openapi({
+					method: 'POST',
+					path: '/api/sections',
+					inputStructure: 'detailed',
+					summary: 'Add a section to a project',
+					description:
+						'It goes last in the project. A name the project already has, ignoring case, returns that section.',
+				}),
+			)
+			.input(z.object({ query: spaceQuery, body: newSectionSchema }))
+			.output(sectionSchema),
+		update: found
+			.meta(
+				openapi({
+					method: 'PATCH',
+					path: '/api/sections',
+					inputStructure: 'detailed',
+					summary: 'Rename or move a section',
+					description: '`id` is the section’s. `index` is its new place among the project’s sections, from 0.',
+				}),
+			)
+			.input(z.object({ query: taskQuery, body: sectionEditSchema }))
+			.output(sectionSchema),
+		delete: found
+			.meta(
+				openapi({
+					method: 'DELETE',
+					path: '/api/sections',
+					inputStructure: 'detailed',
+					summary: 'Delete a section with its tasks',
+					description: '`id` is the section’s. Every task in it goes too, subtasks included.',
+				}),
+			)
+			.input(z.object({ query: taskQuery }))
+			.output(okSchema),
+	},
+	labels: {
+		create: found
+			.meta(
+				openapi({
+					method: 'POST',
+					path: '/api/labels',
+					inputStructure: 'detailed',
+					summary: 'Add a label',
+					description:
+						'A name already taken, ignoring case, returns that label. Without `color` it gets the app’s default for the name.',
+				}),
+			)
+			.input(z.object({ query: spaceQuery, body: newLabelSchema }))
+			.output(labelSchema),
+		update: found
+			.meta(
+				openapi({
+					method: 'PATCH',
+					path: '/api/labels',
+					inputStructure: 'detailed',
+					summary: 'Rename or recolor a label',
+					description: '`id` is the label’s.',
+				}),
+			)
+			.input(z.object({ query: taskQuery, body: labelEditSchema }))
+			.output(labelSchema),
+		delete: found
+			.meta(
+				openapi({
+					method: 'DELETE',
+					path: '/api/labels',
+					inputStructure: 'detailed',
+					summary: 'Delete a label',
+					description: '`id` is the label’s. Its tasks stay and only lose the label.',
+				}),
+			)
+			.input(z.object({ query: taskQuery }))
+			.output(okSchema),
+	},
+	links: {
+		list: found
+			.meta(
+				openapi({
+					method: 'GET',
+					path: '/api/links',
+					inputStructure: 'detailed',
+					summary: 'The space’s public links',
+					description: 'Every read-only link the owner or an AI account made, with its `url`.',
+				}),
+			)
+			.input(z.object({ query: spaceQuery }))
+			.output(linksSchema),
+		create: found
+			.meta(
+				openapi({
+					method: 'POST',
+					path: '/api/links',
+					inputStructure: 'detailed',
+					summary: 'Publish a task, project, or label as a read-only link',
+					description:
+						'Anyone with `url` sees the target, its subtasks, and their projects and labels, without signing in, until the link is deleted. Asking again for the same target returns the same link.',
+				}),
+			)
+			.input(z.object({ query: spaceQuery, body: newLinkSchema }))
+			.output(shareViewSchema),
+		delete: found
+			.meta(
+				openapi({
+					method: 'DELETE',
+					path: '/api/links',
+					inputStructure: 'detailed',
+					summary: 'Delete a public link',
+					description: '`id` is the link’s. Its `url` stops working at once.',
 				}),
 			)
 			.input(z.object({ query: taskQuery }))

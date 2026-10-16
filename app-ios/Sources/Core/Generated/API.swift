@@ -1837,6 +1837,34 @@ extension API {
         public var id: String { rawValue }
     }
 
+    /// Renames a label, recolors it, or both. Names stay unique ignoring case.
+    public struct LabelEdit: Codable, Hashable, Sendable {
+        public var name: String?
+        public var color: LabelColor?
+
+        public init(name: String? = nil, color: LabelColor? = nil) {
+            self.name = name
+            self.color = color
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case name = "name"
+            case color = "color"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            name = try container.decodeAbsent(String.self, forKey: .name)
+            color = try container.decodeAbsent(LabelColor.self, forKey: .color)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encodeIfPresent(self.name, forKey: .name)
+            try container.encodeIfPresent(self.color, forKey: .color)
+        }
+    }
+
     public struct LabelPatch: Codable, Hashable, Sendable, Identifiable {
         public var kind: LabelPatchKind
         public var id: String
@@ -1910,6 +1938,28 @@ extension API {
         case label = "label"
 
         public var id: String { rawValue }
+    }
+
+    public struct Links: Codable, Hashable, Sendable {
+        public var links: [ShareView]
+
+        public init(links: [ShareView] = []) {
+            self.links = links
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case links = "links"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            links = try container.decode([ShareView].self, forKey: .links)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.links, forKey: .links)
+        }
     }
 
     public enum LocationTrigger: String, Codable, Hashable, Sendable, CaseIterable, Identifiable {
@@ -2272,6 +2322,143 @@ extension API {
             var container = encoder.container(keyedBy: CodingKeys.self)
             try container.encode(self.taskId, forKey: .taskId)
             try container.encode(self.body, forKey: .body)
+        }
+    }
+
+    /// A label the agent command API adds. A name already taken, ignoring case, returns that label.
+    public struct NewLabel: Codable, Hashable, Sendable {
+        public var name: String
+        public var color: LabelColor?
+
+        public init(name: String, color: LabelColor? = nil) {
+            self.name = name
+            self.color = color
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case name = "name"
+            case color = "color"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            name = try container.decode(String.self, forKey: .name)
+            color = try container.decodeAbsent(LabelColor.self, forKey: .color)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.name, forKey: .name)
+            try container.encodeIfPresent(self.color, forKey: .color)
+        }
+    }
+
+    /// A public read-only link to a task, a project, or a label. Asking again for the same target returns the same link.
+    public struct NewLink: Codable, Hashable, Sendable {
+        public var target: NewLinkTarget
+
+        public init(target: NewLinkTarget) {
+            self.target = target
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case target = "target"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            target = try container.decode(NewLinkTarget.self, forKey: .target)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.target, forKey: .target)
+        }
+    }
+
+    public struct NewLinkTarget: Codable, Hashable, Sendable, Identifiable {
+        public var kind: NewLinkTargetKind
+        public var id: String
+
+        public init(kind: NewLinkTargetKind, id: String) {
+            self.kind = kind
+            self.id = id
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case kind = "kind"
+            case id = "id"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            kind = try container.decode(NewLinkTargetKind.self, forKey: .kind)
+            id = try container.decode(String.self, forKey: .id)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.kind, forKey: .kind)
+            try container.encode(self.id, forKey: .id)
+        }
+    }
+
+    public enum NewLinkTargetKind: String, Codable, Hashable, Sendable, CaseIterable, Identifiable {
+        case project = "project"
+        case label = "label"
+        case task = "task"
+
+        public var id: String { rawValue }
+    }
+
+    /// A project the agent command API adds or renames. A blank name is refused.
+    public struct NewProject: Codable, Hashable, Sendable {
+        public var name: String
+
+        public init(name: String) {
+            self.name = name
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case name = "name"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            name = try container.decode(String.self, forKey: .name)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.name, forKey: .name)
+        }
+    }
+
+    /// A section the agent command API adds last in its project. A name the project has already returns that section.
+    public struct NewSection: Codable, Hashable, Sendable {
+        public var projectId: String
+        public var name: String
+
+        public init(projectId: String, name: String) {
+            self.projectId = projectId
+            self.name = name
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case projectId = "projectId"
+            case name = "name"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            projectId = try container.decode(String.self, forKey: .projectId)
+            name = try container.decode(String.self, forKey: .name)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.projectId, forKey: .projectId)
+            try container.encode(self.name, forKey: .name)
         }
     }
 
@@ -3770,6 +3957,40 @@ extension API {
             try container.encode(self.labels, forKey: .labels)
             try container.encode(self.open, forKey: .open)
             try container.encode(self.completed, forKey: .completed)
+        }
+    }
+
+    /// Renames a section, moves it among its project’s sections, or both.
+    public struct SectionEdit: Codable, Hashable, Sendable {
+        public var name: String?
+        /// Its new place among the project’s sections, from 0.
+        public var index: Int?
+
+        public init(name: String? = nil, index: Int? = nil) {
+            self.name = name
+            self.index = index
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case name = "name"
+            case index = "index"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            name = try container.decodeAbsent(String.self, forKey: .name)
+            index = try container.decodeAbsent(Int.self, forKey: .index)
+            if decoder.validates {
+                if let value = self.index {
+                    try check(value >= 0, .index, in: container, "index at least 0")
+                }
+            }
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encodeIfPresent(self.name, forKey: .name)
+            try container.encodeIfPresent(self.index, forKey: .index)
         }
     }
 
@@ -5855,6 +6076,48 @@ extension API.Endpoints {
         public static let path = "/api/images"
     }
 
+    public enum LabelsCreate: APIEndpoint {
+        public typealias Input = API.NewLabel
+        public typealias Output = API.Label
+        public static let method = "POST"
+        public static let path = "/api/labels"
+    }
+
+    public enum LabelsUpdate: APIEndpoint {
+        public typealias Input = API.LabelEdit
+        public typealias Output = API.Label
+        public static let method = "PATCH"
+        public static let path = "/api/labels"
+    }
+
+    public enum LabelsDelete: APIEndpoint {
+        public typealias Input = NoInput
+        public typealias Output = API.Ok
+        public static let method = "DELETE"
+        public static let path = "/api/labels"
+    }
+
+    public enum LinksList: APIEndpoint {
+        public typealias Input = NoInput
+        public typealias Output = API.Links
+        public static let method = "GET"
+        public static let path = "/api/links"
+    }
+
+    public enum LinksCreate: APIEndpoint {
+        public typealias Input = API.NewLink
+        public typealias Output = API.ShareView
+        public static let method = "POST"
+        public static let path = "/api/links"
+    }
+
+    public enum LinksDelete: APIEndpoint {
+        public typealias Input = NoInput
+        public typealias Output = API.Ok
+        public static let method = "DELETE"
+        public static let path = "/api/links"
+    }
+
     public enum Me: APIEndpoint {
         public typealias Input = NoInput
         public typealias Output = API.Person
@@ -5890,6 +6153,27 @@ extension API.Endpoints {
         public static let path = "/api/people"
     }
 
+    public enum ProjectsCreate: APIEndpoint {
+        public typealias Input = API.NewProject
+        public typealias Output = API.Project
+        public static let method = "POST"
+        public static let path = "/api/projects"
+    }
+
+    public enum ProjectsUpdate: APIEndpoint {
+        public typealias Input = API.NewProject
+        public typealias Output = API.Project
+        public static let method = "PATCH"
+        public static let path = "/api/projects"
+    }
+
+    public enum ProjectsDelete: APIEndpoint {
+        public typealias Input = NoInput
+        public typealias Output = API.Ok
+        public static let method = "DELETE"
+        public static let path = "/api/projects"
+    }
+
     public enum PushKey: APIEndpoint {
         public typealias Input = NoInput
         public typealias Output = API.PushKey
@@ -5923,6 +6207,27 @@ extension API.Endpoints {
         public typealias Output = API.Ok
         public static let method = "POST"
         public static let path = "/api/push/test"
+    }
+
+    public enum SectionsCreate: APIEndpoint {
+        public typealias Input = API.NewSection
+        public typealias Output = API.ProjectSection
+        public static let method = "POST"
+        public static let path = "/api/sections"
+    }
+
+    public enum SectionsUpdate: APIEndpoint {
+        public typealias Input = API.SectionEdit
+        public typealias Output = API.ProjectSection
+        public static let method = "PATCH"
+        public static let path = "/api/sections"
+    }
+
+    public enum SectionsDelete: APIEndpoint {
+        public typealias Input = NoInput
+        public typealias Output = API.Ok
+        public static let method = "DELETE"
+        public static let path = "/api/sections"
     }
 
     public enum SharedView: APIEndpoint {
