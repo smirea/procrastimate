@@ -563,6 +563,10 @@ describe('the day of this month in words', () => {
 		['the thirty-first', '2026-10-31', null],
 		['the thirteenth', '2026-11-13', null],
 		['the fifteenth at 9am', '2026-10-15', '09:00'],
+		['the 1st of the month', '2026-11-01', null],
+		['the first of the month', '2026-11-01', null],
+		['the 20th of the month at 3pm', '2026-10-20', '15:00'],
+		['the twentieth of the month', '2026-10-20', null],
 		['the fifteenth p1', '2026-10-15', null],
 	])('Pay rent %s', (phrase, date, time) => {
 		const parsed = parse(`Pay rent ${phrase}`);
@@ -575,7 +579,6 @@ describe('the day of this month in words', () => {
 		['Read the fifth chapter'],
 		['Take the second left'],
 		['Take the first May train'],
-		['Meet the first of the month'],
 	])('an ordinal before an ordinary word stays text: %s', input => {
 		const parsed = parse(input);
 		expect(parsed.title).toBe(input);
@@ -889,7 +892,7 @@ describe('monthly repeats on a day', () => {
 	test.each([
 		['Water plants every 3rd day'],
 		['Rotate every 2nd week'],
-		['Call every 1st Monday'],
+		['Call every 5th Monday'],
 		['Every second counts'],
 		['Read every third chapter'],
 		['Pay rent every 32nd'],
@@ -898,6 +901,82 @@ describe('monthly repeats on a day', () => {
 		const parsed = parse(input);
 		expect(parsed.recurrence).toBeNull();
 		expect(parsed.title).toBe(input.replace(/ Monday$/, ''));
+	});
+});
+
+describe('monthly repeats on the nth weekday', () => {
+	test.each([
+		['every 1st Monday', 1, 1, 1, '2026-11-02', null],
+		['every 3rd Mon', 1, 3, 1, '2026-10-19', null],
+		['every 2nd Wednesday', 1, 2, 3, '2026-10-14', null],
+		['every 4th thu', 1, 4, 4, '2026-10-22', null],
+		['every last Friday', 1, -1, 5, '2026-10-30', null],
+		['every last fri 9am', 1, -1, 5, '2026-10-30', '09:00'],
+		['every first Monday', 1, 1, 1, '2026-11-02', null],
+		['every second Tuesday', 1, 2, 2, '2026-11-10', null],
+		['every first Monday of the month', 1, 1, 1, '2026-11-02', null],
+		['every last Friday of the month', 1, -1, 5, '2026-10-30', null],
+		['every month on the 3rd Monday', 1, 3, 1, '2026-10-19', null],
+		['every month on the last Friday', 1, -1, 5, '2026-10-30', null],
+		['monthly on the first Monday', 1, 1, 1, '2026-11-02', null],
+		['every 2 months on the 1st Monday', 2, 1, 1, '2026-11-02', null],
+		['every other month on the last Sunday', 2, -1, 0, '2026-10-25', null],
+		['every 3rd Monday p1', 1, 3, 1, '2026-10-19', null],
+	])('Review budget %s', (phrase, interval, week, weekday, date, time) => {
+		const parsed = parse(`Review budget ${phrase}`);
+		expect(parsed.title).toBe('Review budget');
+		expect<unknown>(parsed.recurrence).toEqual({ interval, unit: 'month', nth: { week, weekday } });
+		expect<unknown>(parsed.due).toEqual({ date, time });
+	});
+
+	test('a typed date moves to the next such weekday', () => {
+		expect(parse('Review budget every 3rd Monday 10/20').due).toEqual({ date: '2026-11-16', time: null });
+	});
+
+	test('a passed time today moves to next month', () => {
+		const parsed = parse('Review budget every 2nd Wednesday 9am');
+		expect(parsed.due).toEqual({ date: '2026-11-11', time: '09:00' });
+	});
+});
+
+describe('a repeat never saves an invalid due date', () => {
+	test('a huge monthly interval with a passed time stays text', () => {
+		const parsed = parse('x every 99999999mo 9am');
+		expect(parsed.title).toBe('x every 99999999mo');
+		expect(parsed.recurrence).toBeNull();
+		expect(parsed.due).toEqual({ date: '2026-10-15', time: '09:00' });
+	});
+
+	test.each([
+		['Stretch every 1000 days'],
+		['Stretch every 99999999mo'],
+		['Stretch every 999999999999999999w'],
+		['Stretch every 99999999999999999999 days'],
+	])('an interval over the maximum stays text: %s', input => {
+		const parsed = parse(input);
+		expect(parsed.title).toBe(input);
+		expect(parsed.recurrence).toBeNull();
+		expect(parsed.due).toBeNull();
+	});
+
+	test('the largest interval repeats', () => {
+		const parsed = parse('Stretch every 999 years 9am');
+		expect(parsed.recurrence).toEqual({ interval: 999, unit: 'year' });
+		expect(parsed.due).toEqual({ date: '3025-10-14', time: '09:00' });
+	});
+
+	test.each([
+		['Renew every 15th', { interval: 1, unit: 'month', day: 15 }, { date: '9999-12-20', time: null }],
+		[
+			'Renew every 1st Monday',
+			{ interval: 1, unit: 'month', nth: { week: 1, weekday: 1 } },
+			{ date: '9999-12-20', time: null },
+		],
+		['Renew every year 9am', { interval: 1, unit: 'year' }, { date: '9999-12-20', time: '09:00' }],
+	])('a repeat with no occurrence before 10000 starts today: %s', (input, recurrence, due) => {
+		const parsed = parse(input, { now: new Date(9999, 11, 20, 10, 0) });
+		expect<unknown>(parsed.recurrence).toEqual(recurrence);
+		expect<unknown>(parsed.due).toEqual(due);
 	});
 });
 

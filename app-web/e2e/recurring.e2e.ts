@@ -22,3 +22,34 @@ test('a monthly repeat on the 31st lands on the last day of February and returns
 		await expect(row).toContainText(next);
 	}
 });
+
+test('a repeat on the last Friday of the month rolls to next month’s last Friday', async ({ app, page }) => {
+	await app.setNow(new Date('2026-10-14T10:00:00Z'));
+	await page.reload();
+	await app.openQuickAdd();
+	await app.taskInput().fill('Review budget every last Friday');
+	await expect(app.quickAdd().getByText('Every month on the last Fri')).toBeVisible();
+	await app.taskInput().press('Enter');
+	await expect(app.quickAdd()).toBeHidden();
+
+	const row = app.row('Review budget');
+	await expect(row.getByRole('img', { name: 'Repeats every month on the last Fri' })).toBeVisible();
+	await expect(row).toContainText('Oct 30');
+	await row.getByRole('checkbox').click();
+	await expect(page.getByText(/Completed “Review budget”, next due .*Nov 27/)).toBeVisible();
+});
+
+test('the repeat menu offers the due date’s weekday of the month', async ({ app, page }) => {
+	await app.setNow(new Date('2026-10-14T10:00:00Z'));
+	await page.reload();
+	await app.add('Pay card oct 19');
+	await app.row('Pay card').click();
+	await app.details().getByRole('button', { name: 'Set repeat' }).click();
+	await page.getByRole('button', { name: 'Every month on the 3rd Mon' }).click();
+	await expect(app.details().getByRole('button', { name: 'Repeats every month on the 3rd Mon' })).toBeVisible();
+	await app.details().getByRole('button', { name: 'Repeats every month on the 3rd Mon' }).click();
+	await page.getByRole('spinbutton', { name: 'Repeat interval' }).fill('2');
+	await page.getByRole('combobox', { name: 'Repeat unit' }).selectOption('month');
+	await page.getByRole('button', { name: 'Set', exact: true }).click();
+	await expect(app.details().getByRole('button', { name: 'Repeats every 2 months on the 3rd Mon' })).toBeVisible();
+});

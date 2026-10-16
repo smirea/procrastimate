@@ -34,6 +34,9 @@ public enum QuickAdd {
     static let spelledOrdinalWord = Pattern(
         #"(?:(twenty|thirty)[-\s]*)?\b(\#(ordinalWords.joined(separator: "|"))|thirtieth)\b"#
     )
+    /// Which weekday of the month, as in `every 3rd Monday` or `every last Friday`.
+    static let nthWords = ["first", "second", "third", "fourth"]
+    static let nth = #"(?:[1-4](?:st|nd|rd|th)|\#(nthWords.joined(separator: "|"))|last)"#
     /// `mo` is listed before `m` everywhere, so months never read as minutes.
     static let dayUnit = #"(?:d(?:ays?)?|w(?:ks?|eeks?)?|mo(?:s|nths?)?|y(?:rs?|ears?)?)"#
     static let clockUnit = #"(?:m(?:ins?|inutes?)?|h(?:rs?|ours?)?)"#
@@ -54,7 +57,7 @@ public enum QuickAdd {
         weekday,
         #"in\s+\d+\s*\#(dayUnit)"#,
         #"\d+(?:d|wks?|w|mos?)"#,
-        #"the\s+(?:\d{1,2}(?:st|nd|rd|th)|\#(spelledOrdinal)(?!\s+\#(month)\b))"#,
+        #"the\s+(?:\d{1,2}(?:st|nd|rd|th)|\#(spelledOrdinal)(?!\s+\#(month)\b))(?!\s+\#(weekday)\b)(?:\s+of\s+the\s+month)?"#,
         #"\d{1,2}/\d{1,2}(?:/(?:\d{4}|\d{2}))?"#,
     ].joined(separator: "|")
     /// `@` followed by a space means `at`, as in `Oct 2 @ 3pm`, while `@name` is a label.
@@ -89,13 +92,16 @@ public enum QuickAdd {
         Pattern(#"\b(?!tom\b)[Tt][Oo][Mm]\b"#),
         Pattern(#"(?<=\b(?:\#(nameContext))\s+)tom\b"#, ignoreCase: true),
         Pattern(
-            #"(?<!\#(weekday)\b\#(weekdaySeparator))\b(?:tom|sun|sat|wed|daily|weekdays|weekly|monthly|yearly)\b(?=\s+(?!(?:\#(phraseWords)|and\s+\#(weekday))\b|(?:on\s+)?the\s+(?:\d|\#(spelledOrdinal)))[a-z]+(?![\w'’]))"#,
+            #"(?<!\#(weekday)\b\#(weekdaySeparator))\b(?:tom|sun|sat|wed|daily|weekdays|weekly|monthly|yearly)\b(?=\s+(?!(?:\#(phraseWords)|and\s+\#(weekday))\b|(?:on\s+)?the\s+(?:\d|last\b|\#(spelledOrdinal)))[a-z]+(?![\w'’]))"#,
             ignoreCase: true
         ),
         Pattern(#"(?<=\b(?:\#(address))\.?\s+)\d[\w:/]*"#, ignoreCase: true),
         Pattern(#"(?<!\w)\d[\w:/]*(?=\s+(?:[\w.]+\s+)?(?:\#(street))\b)"#, ignoreCase: true),
         Pattern(#"(?<!\b(?:[Ee]very|[Ee]ach|EVERY|EACH)\s+)\b(?:may|march)(?=\s+(?:the\s+)?\#(spelledOrdinal)\b)"#),
-        Pattern(#"(?<=\bthe\s+)\#(spelledOrdinal)(?=\s+(?!(?:at|(?:of\s+)?\#(month)|p[1-4]|remind)\b)[a-z])"#, ignoreCase: true),
+        Pattern(
+            #"(?<=\bthe\s+)\#(spelledOrdinal)(?=\s+(?!(?:at|(?:of\s+)?\#(month)|of\s+the\s+month|\#(weekday)|p[1-4]|remind)\b)[a-z])"#,
+            ignoreCase: true
+        ),
     ]
 
     /// Extra guards for speech. A bare four-digit number is not a time without `at`, compact units such as `5m` or
@@ -114,7 +120,7 @@ public enum QuickAdd {
         Pattern(#"(?<!\bin\s+)(?<![\w.])\d+\s+(?:mins?|hrs?)\b(?!\s+before)"#, ignoreCase: true),
         Pattern(#"\b(?:\#(weekday)|today|tonight|tomorrow|tom)(?=['’]s\b)"#, ignoreCase: true),
         Pattern(
-            #"(?<=\bthe\s+)\d{1,2}(?:st|nd|rd|th)(?=\s+(?!(?:at|of|\#(month))\b)[a-z]+)"#,
+            #"(?<=\bthe\s+)\d{1,2}(?:st|nd|rd|th)(?=\s+(?!(?:at|of|\#(month)|\#(weekday))\b)[a-z]+)"#,
             ignoreCase: true
         ),
         Pattern(#"\b(?:Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)day(?=\s+(?!\#(month)\b)[A-Z][a-z])"#),
@@ -190,6 +196,8 @@ public enum QuickAdd {
         case section(String)
         case label(String)
         case reminder(ReminderDraft)
+        /// Keeps the phrase in the title but claims it, so no later rule reads part of it.
+        case text
     }
 
     struct Rule: Sendable {
@@ -327,7 +335,7 @@ public enum QuickAdd {
             }
             return Dates.addInterval(today, amount, unit)
         }),
-        (Pattern(#"^the (\d{1,2})(?:st|nd|rd|th)?$"#), { m, today in
+        (Pattern(#"^the (\d{1,2})(?:st|nd|rd|th)?(?: of the month)?$"#), { m, today in
             let day = number(m[1])!
             let (year, month, _) = Dates.parts(today)
             for months in 0...12 {
@@ -450,50 +458,66 @@ public enum QuickAdd {
     static let recurrenceRule = Rule(
         kind: .recurrence,
         pattern: Pattern(
-            #"\#(before)(?:(?:(?:every|each)\s+(?:(?<months>\d+|other)\s+)?months?|monthly)\s+(?:on\s+)?the\s+(?<monthDay>\#(ordinal)|\#(spelledOrdinal))|(?:every|each)\s+(?:(?<yearDay>\#(monthDay))|(?<dayOfMonth>(?:\d{1,2}(?:st|nd|rd|th)|\#(spelledOrdinal))\s+of\s+(?:the|each|every)\s+month|\d{1,2}(?:st|nd|rd|th)(?!\s+(?!(?:at|p[1-4]|remind)\b)[a-z]))|(?<other>other)\s+(?<otherUnit>day|week|month|year)|(?<interval>\d+)\s*(?<intervalUnit>\#(dayUnit))|(?<unit>day|week|month|year)|(?<workday>weekday|workday)|(?<weekdays>\#(weekdayList)|\#(weekday)))|(?<listed>\#(weekdayList))|(?<adverb>daily|weekdays|weekly|monthly|yearly|annually))\#(after)"#,
+            #"\#(before)(?:(?:(?:every|each)\s+(?:(?<months>\d+|other)\s+)?months?|monthly)\s+(?:on\s+)?the\s+(?:(?<monthNth>\#(nth))\s+(?<monthNthDay>\#(weekday))\b|(?<monthDay>\#(ordinal)|\#(spelledOrdinal)))|(?:every|each)\s+(?:(?<yearDay>\#(monthDay))|(?<nth>\#(nth))\s+(?<nthDay>\#(weekday))\b(?:\s+of\s+(?:the|each|every)\s+month)?|(?<dayOfMonth>(?:\d{1,2}(?:st|nd|rd|th)|\#(spelledOrdinal))\s+of\s+(?:the|each|every)\s+month|\d{1,2}(?:st|nd|rd|th)(?!\s+(?!(?:at|p[1-4]|remind)\b)[a-z]))|(?<other>other)\s+(?<otherUnit>day|week|month|year)|(?<interval>\d+)\s*(?<intervalUnit>\#(dayUnit))|(?<unit>day|week|month|year)|(?<workday>weekday|workday)|(?<weekdays>\#(weekdayList)|\#(weekday)))|(?<listed>\#(weekdayList))|(?<adverb>daily|weekdays|weekly|monthly|yearly|annually))\#(after)"#,
             ignoreCase: true
         ),
         repeatable: false,
         guarded: true,
         read: { m, ctx in
-            if let dayText = m["monthDay"] ?? m["dayOfMonth"] {
-                guard let day = number(leadingNumber.first(in: digitOrdinals(dayText))?.value),
-                      let every = m["months"]?.lowercased() == "other" ? 2 : number(m["months"] ?? "1"),
-                      (1...31).contains(day), every >= 1
-                else { return nil }
-                let recurrence = Recurrence(interval: every, unit: .month, day: day)
-                return .recurrence(
-                    RecurrencePhrase(recurrence: recurrence, anchor: Dates.alignToRecurrence(ctx.today, recurrence))
-                )
-            }
-            if let yearDay = m["yearDay"] {
-                guard let day = resolveDate(yearDay, ctx.today) else { return nil }
-                return .recurrence(RecurrencePhrase(recurrence: Recurrence(interval: 1, unit: .year), anchor: day.date))
-            }
-            let unitText = m["otherUnit"] ?? m["intervalUnit"] ?? m["unit"]
-            let days = Dates.sortWeekdays(
-                weekdayWord.matches(in: m["weekdays"] ?? m["listed"] ?? "").map { weekdayIndex($0.value.lowercased()) }
-            )
-            let recurrence: Recurrence?
-            if m["workday"] != nil {
-                recurrence = Recurrence(interval: 1, unit: .weekday)
-            } else if !days.isEmpty {
-                recurrence = Dates.weeklyOn(1, days)
-            } else if let adverb = m["adverb"] {
-                recurrence = recurrenceAdverbs[adverb.lowercased()].map { Recurrence(interval: 1, unit: $0) }
-            } else if let unitText, let unit = unitOf(unitText)?.recurrenceUnit {
-                guard let interval = m["other"] != nil ? 2 : number(m["interval"] ?? "1") else { return nil }
-                recurrence = Recurrence(interval: interval, unit: unit)
-            } else {
-                recurrence = nil
-            }
-            guard let recurrence, recurrence.interval >= 1 else { return nil }
-            let anchor: DateKey? = !days.isEmpty
-                ? Dates.alignToRecurrence(ctx.today, Recurrence(interval: 1, unit: .week, days: days))
-                : recurrence.unit == .weekday && !Dates.isWeekday(ctx.today) ? nextWeekday(ctx.today, 1) : nil
-            return .recurrence(RecurrencePhrase(recurrence: recurrence, anchor: anchor))
+            guard let phrase = readRecurrence(m, ctx) else { return nil }
+            // Too long a repeat stays text, and `1000` in `every 1000 days` must not then read as a time.
+            guard (1...Dates.maxRecurrenceInterval).contains(phrase.recurrence.interval) else { return .text }
+            return .recurrence(phrase)
         }
     )
+
+    /// A repeat as typed, before the recurrence rule checks its interval. A number too large for `Int` is out of range.
+    static func readRecurrence(_ m: Found, _ ctx: Context) -> RecurrencePhrase? {
+        let everyMonths = m["months"]?.lowercased() == "other" ? 2 : number(m["months"] ?? "1") ?? Int.max
+        let nthText = (m["monthNth"] ?? m["nth"])?.lowercased()
+        let dayText = m["monthDay"] ?? m["dayOfMonth"]
+        if nthText != nil || dayText != nil {
+            let recurrence: Recurrence
+            if let nthText, let dayName = m["monthNthDay"] ?? m["nthDay"] {
+                let week = nthText == "last" ? -1 : (nthWords.firstIndex(of: nthText).map { $0 + 1 } ?? number(String(nthText.prefix(1)))!)
+                recurrence = Recurrence(
+                    interval: everyMonths, unit: .month, nth: NthWeekday(week: week, weekday: weekdayIndex(dayName.lowercased()))
+                )
+            } else {
+                guard let dayText, let day = number(leadingNumber.first(in: digitOrdinals(dayText))?.value),
+                      (1...31).contains(day)
+                else { return nil }
+                recurrence = Recurrence(interval: everyMonths, unit: .month, day: day)
+            }
+            return RecurrencePhrase(recurrence: recurrence, anchor: Dates.alignToRecurrence(ctx.today, recurrence))
+        }
+        if let yearDay = m["yearDay"] {
+            guard let day = resolveDate(yearDay, ctx.today) else { return nil }
+            return RecurrencePhrase(recurrence: Recurrence(interval: 1, unit: .year), anchor: day.date)
+        }
+        let unitText = m["otherUnit"] ?? m["intervalUnit"] ?? m["unit"]
+        let days = Dates.sortWeekdays(
+            weekdayWord.matches(in: m["weekdays"] ?? m["listed"] ?? "").map { weekdayIndex($0.value.lowercased()) }
+        )
+        let recurrence: Recurrence?
+        if m["workday"] != nil {
+            recurrence = Recurrence(interval: 1, unit: .weekday)
+        } else if !days.isEmpty {
+            recurrence = Dates.weeklyOn(1, days)
+        } else if let adverb = m["adverb"] {
+            recurrence = recurrenceAdverbs[adverb.lowercased()].map { Recurrence(interval: 1, unit: $0) }
+        } else if let unitText, let unit = unitOf(unitText)?.recurrenceUnit {
+            let interval = m["other"] != nil ? 2 : number(m["interval"] ?? "1") ?? Int.max
+            recurrence = Recurrence(interval: interval, unit: unit)
+        } else {
+            recurrence = nil
+        }
+        guard let recurrence else { return nil }
+        let anchor: DateKey? = !days.isEmpty
+            ? Dates.alignToRecurrence(ctx.today, Recurrence(interval: 1, unit: .week, days: days))
+            : recurrence.unit == .weekday && !Dates.isWeekday(ctx.today) ? nextWeekday(ctx.today, 1) : nil
+        return RecurrencePhrase(recurrence: recurrence, anchor: anchor)
+    }
 
     static let priorityRule = Rule(
         kind: .priority,
@@ -564,7 +588,7 @@ public enum QuickAdd {
     /// first weekday, the date set outside the text, or today, and moves to the next occurrence when its time has passed.
     static func resolveDue(_ phrase: DuePhrase?, _ repeat: RecurrencePhrase?, _ outside: Due?, _ ctx: Context) -> Due? {
         if let date = phrase?.date {
-            return Due(date: `repeat`.map { Dates.alignToRecurrence(date, $0.recurrence) } ?? date, time: phrase?.time)
+            return Due(date: `repeat`.flatMap { Dates.alignToRecurrence(date, $0.recurrence) } ?? date, time: phrase?.time)
         }
         let time = phrase?.time ?? (`repeat` != nil && `repeat`?.anchor == nil ? outside?.time : nil)
         let passed = { (date: DateKey) in
@@ -572,9 +596,8 @@ public enum QuickAdd {
         }
         if let `repeat` {
             let start = `repeat`.anchor ?? outside?.date ?? ctx.today
-            let date = passed(start)
-                ? (passed(ctx.today) ? Dates.stepRecurrence(ctx.today, `repeat`.recurrence) : ctx.today)
-                : start
+            let next = passed(ctx.today) ? Dates.stepRecurrence(ctx.today, `repeat`.recurrence) : nil
+            let date = passed(start) ? next ?? ctx.today : start
             return Due(date: date, time: time)
         }
         return time.map { Dates.dueAtTime(outside, $0, today: ctx.today, now: ctx.time) }
@@ -626,6 +649,7 @@ public enum QuickAdd {
                 let range = m.result.range
                 let text = source.substring(with: range)
                 spans.append(range)
+                if case .text = match { continue }
                 found.append((Token(kind: rule.kind, start: m.start, end: m.end, text: text), match))
             }
             // Attributes usually trail the title, so a single-valued attribute takes its last phrase.
@@ -668,6 +692,7 @@ public enum QuickAdd {
             case let .section(id): sectionId = id
             case let .label(id): if !labelIds.contains(id) { labelIds.append(id) }
             case let .reminder(draft): reminderDrafts.append(draft)
+            case .text: break
             }
         }
 

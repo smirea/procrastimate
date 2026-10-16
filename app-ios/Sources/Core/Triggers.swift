@@ -50,7 +50,10 @@ public enum Triggers {
             return task.due
         }
         var date = due.date
-        while date < today { date = Dates.stepRecurrence(date, recurrence) }
+        while date < today {
+            guard let next = Dates.stepRecurrence(date, recurrence) else { return due }
+            date = next
+        }
         return Due(date: date, time: due.time)
     }
 

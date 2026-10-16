@@ -53,7 +53,19 @@ export type Priority = z.infer<typeof prioritySchema>;
 export const dueSchema = z.object({ date: dateKeySchema, time: timeOfDaySchema.nullable() }).meta({ id: 'Due' });
 export type Due = z.infer<typeof dueSchema>;
 
-const interval = z.number().int().positive();
+/**
+ * The longest repeat. Larger intervals stepped dates past 9999-12-31, or to `NaN`, which the server rejects along with
+ * the rest of the device's outbox, and overflowed Swift's month math.
+ */
+export const MAX_RECURRENCE_INTERVAL = 999;
+
+const interval = z.number().int().positive().max(MAX_RECURRENCE_INTERVAL);
+
+/** The `week`-th `weekday` of a month, from the 1st to the 4th, or the last one when `week` is -1. */
+export const nthWeekdaySchema = z
+	.object({ week: z.literal([1, 2, 3, 4, -1]), weekday: weekdaySchema })
+	.meta({ id: 'NthWeekday' });
+export type NthWeekday = z.infer<typeof nthWeekdaySchema>;
 
 /** `weekday` counts Monday to Friday only. */
 export const recurrenceUnitSchema = z.enum(['day', 'weekday', 'week', 'month', 'year']).meta({ id: 'RecurrenceUnit' });
@@ -63,15 +75,22 @@ export const recurrenceUnitSchema = z.enum(['day', 'weekday', 'week', 'month', '
  * `days`, repeats on each listed weekday of every `interval`-th week. `days` holds two or more weekdays sorted
  * Monday first. Build it with `weeklyOn`, so one day is a plain weekly repeat. A monthly repeat with `day` lands on
  * that day of the month, or on the last day of a month that lacks it, so a repeat on the 31st returns to the 31st
- * after February.
+ * after February. One with `nth` lands on that weekday of the month, as in the 3rd Monday. It sets one of the two.
  */
 export const recurrenceSchema = z
 	.discriminatedUnion('unit', [
 		z.object({ interval, unit: recurrenceUnitSchema.exclude(['week', 'month']) }),
 		z.object({ interval, unit: z.literal('week'), days: z.array(weekdaySchema).min(2).readonly().optional() }),
-		z.object({ interval, unit: z.literal('month'), day: z.number().int().min(1).max(31).optional() }),
+		z
+			.object({
+				interval,
+				unit: z.literal('month'),
+				day: z.number().int().min(1).max(31).optional(),
+				nth: nthWeekdaySchema.optional(),
+			})
+			.refine(r => r.day === undefined || r.nth === undefined, 'A monthly repeat sets `day` or `nth`, not both'),
 	])
-	// Swift keeps one struct whose `days` and `day` only their unit sets, which reads better than an enum of three.
+	// Swift keeps one struct whose `days`, `day`, and `nth` only their unit sets, which reads better than an enum of three.
 	.meta({ id: 'Recurrence', 'x-flatten': { unit: 'RecurrenceUnit' } });
 export type Recurrence = z.infer<typeof recurrenceSchema>;
 export type RecurrenceUnit = z.infer<typeof recurrenceUnitSchema>;

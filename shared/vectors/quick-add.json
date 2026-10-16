@@ -15634,6 +15634,290 @@
 		},
 		{
 			"fn": "parseQuickAdd",
+			"test": "the day of this month in words › Pay rent the 1st of the month",
+			"input": [
+				"Pay rent the 1st of the month",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-11-01",
+					"time": null
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"sectionId": null,
+				"title": "Pay rent",
+				"tokens": [
+					{
+						"end": 29,
+						"kind": "due",
+						"start": 9,
+						"text": "the 1st of the month"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "the day of this month in words › Pay rent the first of the month",
+			"input": [
+				"Pay rent the first of the month",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-11-01",
+					"time": null
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"sectionId": null,
+				"title": "Pay rent",
+				"tokens": [
+					{
+						"end": 31,
+						"kind": "due",
+						"start": 9,
+						"text": "the first of the month"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "the day of this month in words › Pay rent the 20th of the month at 3pm",
+			"input": [
+				"Pay rent the 20th of the month at 3pm",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-20",
+					"time": "15:00"
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"sectionId": null,
+				"title": "Pay rent",
+				"tokens": [
+					{
+						"end": 37,
+						"kind": "due",
+						"start": 9,
+						"text": "the 20th of the month at 3pm"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "the day of this month in words › Pay rent the twentieth of the month",
+			"input": [
+				"Pay rent the twentieth of the month",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-20",
+					"time": null
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"sectionId": null,
+				"title": "Pay rent",
+				"tokens": [
+					{
+						"end": 35,
+						"kind": "due",
+						"start": 9,
+						"text": "the twentieth of the month"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
 			"test": "the day of this month in words › Pay rent the fifteenth p1",
 			"input": [
 				"Pay rent the fifteenth p1",
@@ -15950,67 +16234,6 @@
 				"reminders": [],
 				"sectionId": null,
 				"title": "Take the first May train",
-				"tokens": []
-			}
-		},
-		{
-			"fn": "parseQuickAdd",
-			"test": "the day of this month in words › an ordinal before an ordinary word stays text: Meet the first of the month",
-			"input": [
-				"Meet the first of the month",
-				{
-					"labels": [
-						{
-							"color": "gray",
-							"createdAt": 0,
-							"id": "l-calls",
-							"name": "calls"
-						},
-						{
-							"color": "gray",
-							"createdAt": 0,
-							"id": "l-waiting",
-							"name": "Waiting"
-						},
-						{
-							"color": "gray",
-							"createdAt": 0,
-							"id": "l-deep",
-							"name": "deep work"
-						},
-						{
-							"color": "gray",
-							"createdAt": 0,
-							"id": "l-tom",
-							"name": "tom"
-						}
-					],
-					"now": 1791986400000,
-					"projects": [
-						{
-							"createdAt": 0,
-							"id": "p-home",
-							"name": "Home",
-							"order": 0
-						},
-						{
-							"createdAt": 0,
-							"id": "p-side",
-							"name": "Side Project",
-							"order": 0
-						}
-					]
-				}
-			],
-			"output": {
-				"due": null,
-				"labelIds": [],
-				"priority": null,
-				"projectId": null,
-				"recurrence": null,
-				"reminders": [],
-				"sectionId": null,
-				"title": "Meet the first of the month",
 				"tokens": []
 			}
 		},
@@ -24952,9 +25175,9 @@
 		},
 		{
 			"fn": "parseQuickAdd",
-			"test": "monthly repeats on a day › Call every 1st Monday does not repeat on a day of the month",
+			"test": "monthly repeats on a day › Call every 5th Monday does not repeat on a day of the month",
 			"input": [
-				"Call every 1st Monday",
+				"Call every 5th Monday",
 				{
 					"labels": [
 						{
@@ -25010,7 +25233,7 @@
 				"recurrence": null,
 				"reminders": [],
 				"sectionId": null,
-				"title": "Call every 1st",
+				"title": "Call every 5th",
 				"tokens": [
 					{
 						"end": 21,
@@ -25263,6 +25486,2062 @@
 				"sectionId": null,
 				"title": "Pay rent every month on the 32nd",
 				"tokens": []
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "monthly repeats on the nth weekday › Review budget every 1st Monday",
+			"input": [
+				"Review budget every 1st Monday",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-11-02",
+					"time": null
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": {
+					"interval": 1,
+					"nth": {
+						"week": 1,
+						"weekday": 1
+					},
+					"unit": "month"
+				},
+				"reminders": [],
+				"sectionId": null,
+				"title": "Review budget",
+				"tokens": [
+					{
+						"end": 30,
+						"kind": "recurrence",
+						"start": 14,
+						"text": "every 1st Monday"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "monthly repeats on the nth weekday › Review budget every 3rd Mon",
+			"input": [
+				"Review budget every 3rd Mon",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-19",
+					"time": null
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": {
+					"interval": 1,
+					"nth": {
+						"week": 3,
+						"weekday": 1
+					},
+					"unit": "month"
+				},
+				"reminders": [],
+				"sectionId": null,
+				"title": "Review budget",
+				"tokens": [
+					{
+						"end": 27,
+						"kind": "recurrence",
+						"start": 14,
+						"text": "every 3rd Mon"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "monthly repeats on the nth weekday › Review budget every 2nd Wednesday",
+			"input": [
+				"Review budget every 2nd Wednesday",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-14",
+					"time": null
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": {
+					"interval": 1,
+					"nth": {
+						"week": 2,
+						"weekday": 3
+					},
+					"unit": "month"
+				},
+				"reminders": [],
+				"sectionId": null,
+				"title": "Review budget",
+				"tokens": [
+					{
+						"end": 33,
+						"kind": "recurrence",
+						"start": 14,
+						"text": "every 2nd Wednesday"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "monthly repeats on the nth weekday › Review budget every 4th thu",
+			"input": [
+				"Review budget every 4th thu",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-22",
+					"time": null
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": {
+					"interval": 1,
+					"nth": {
+						"week": 4,
+						"weekday": 4
+					},
+					"unit": "month"
+				},
+				"reminders": [],
+				"sectionId": null,
+				"title": "Review budget",
+				"tokens": [
+					{
+						"end": 27,
+						"kind": "recurrence",
+						"start": 14,
+						"text": "every 4th thu"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "monthly repeats on the nth weekday › Review budget every last Friday",
+			"input": [
+				"Review budget every last Friday",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-30",
+					"time": null
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": {
+					"interval": 1,
+					"nth": {
+						"week": -1,
+						"weekday": 5
+					},
+					"unit": "month"
+				},
+				"reminders": [],
+				"sectionId": null,
+				"title": "Review budget",
+				"tokens": [
+					{
+						"end": 31,
+						"kind": "recurrence",
+						"start": 14,
+						"text": "every last Friday"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "monthly repeats on the nth weekday › Review budget every last fri 9am",
+			"input": [
+				"Review budget every last fri 9am",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-30",
+					"time": "09:00"
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": {
+					"interval": 1,
+					"nth": {
+						"week": -1,
+						"weekday": 5
+					},
+					"unit": "month"
+				},
+				"reminders": [],
+				"sectionId": null,
+				"title": "Review budget",
+				"tokens": [
+					{
+						"end": 28,
+						"kind": "recurrence",
+						"start": 14,
+						"text": "every last fri"
+					},
+					{
+						"end": 32,
+						"kind": "due",
+						"start": 29,
+						"text": "9am"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "monthly repeats on the nth weekday › Review budget every first Monday",
+			"input": [
+				"Review budget every first Monday",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-11-02",
+					"time": null
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": {
+					"interval": 1,
+					"nth": {
+						"week": 1,
+						"weekday": 1
+					},
+					"unit": "month"
+				},
+				"reminders": [],
+				"sectionId": null,
+				"title": "Review budget",
+				"tokens": [
+					{
+						"end": 32,
+						"kind": "recurrence",
+						"start": 14,
+						"text": "every first Monday"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "monthly repeats on the nth weekday › Review budget every second Tuesday",
+			"input": [
+				"Review budget every second Tuesday",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-11-10",
+					"time": null
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": {
+					"interval": 1,
+					"nth": {
+						"week": 2,
+						"weekday": 2
+					},
+					"unit": "month"
+				},
+				"reminders": [],
+				"sectionId": null,
+				"title": "Review budget",
+				"tokens": [
+					{
+						"end": 34,
+						"kind": "recurrence",
+						"start": 14,
+						"text": "every second Tuesday"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "monthly repeats on the nth weekday › Review budget every first Monday of the month",
+			"input": [
+				"Review budget every first Monday of the month",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-11-02",
+					"time": null
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": {
+					"interval": 1,
+					"nth": {
+						"week": 1,
+						"weekday": 1
+					},
+					"unit": "month"
+				},
+				"reminders": [],
+				"sectionId": null,
+				"title": "Review budget",
+				"tokens": [
+					{
+						"end": 45,
+						"kind": "recurrence",
+						"start": 14,
+						"text": "every first Monday of the month"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "monthly repeats on the nth weekday › Review budget every last Friday of the month",
+			"input": [
+				"Review budget every last Friday of the month",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-30",
+					"time": null
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": {
+					"interval": 1,
+					"nth": {
+						"week": -1,
+						"weekday": 5
+					},
+					"unit": "month"
+				},
+				"reminders": [],
+				"sectionId": null,
+				"title": "Review budget",
+				"tokens": [
+					{
+						"end": 44,
+						"kind": "recurrence",
+						"start": 14,
+						"text": "every last Friday of the month"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "monthly repeats on the nth weekday › Review budget every month on the 3rd Monday",
+			"input": [
+				"Review budget every month on the 3rd Monday",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-19",
+					"time": null
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": {
+					"interval": 1,
+					"nth": {
+						"week": 3,
+						"weekday": 1
+					},
+					"unit": "month"
+				},
+				"reminders": [],
+				"sectionId": null,
+				"title": "Review budget",
+				"tokens": [
+					{
+						"end": 43,
+						"kind": "recurrence",
+						"start": 14,
+						"text": "every month on the 3rd Monday"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "monthly repeats on the nth weekday › Review budget every month on the last Friday",
+			"input": [
+				"Review budget every month on the last Friday",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-30",
+					"time": null
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": {
+					"interval": 1,
+					"nth": {
+						"week": -1,
+						"weekday": 5
+					},
+					"unit": "month"
+				},
+				"reminders": [],
+				"sectionId": null,
+				"title": "Review budget",
+				"tokens": [
+					{
+						"end": 44,
+						"kind": "recurrence",
+						"start": 14,
+						"text": "every month on the last Friday"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "monthly repeats on the nth weekday › Review budget monthly on the first Monday",
+			"input": [
+				"Review budget monthly on the first Monday",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-11-02",
+					"time": null
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": {
+					"interval": 1,
+					"nth": {
+						"week": 1,
+						"weekday": 1
+					},
+					"unit": "month"
+				},
+				"reminders": [],
+				"sectionId": null,
+				"title": "Review budget",
+				"tokens": [
+					{
+						"end": 41,
+						"kind": "recurrence",
+						"start": 14,
+						"text": "monthly on the first Monday"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "monthly repeats on the nth weekday › Review budget every 2 months on the 1st Monday",
+			"input": [
+				"Review budget every 2 months on the 1st Monday",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-11-02",
+					"time": null
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": {
+					"interval": 2,
+					"nth": {
+						"week": 1,
+						"weekday": 1
+					},
+					"unit": "month"
+				},
+				"reminders": [],
+				"sectionId": null,
+				"title": "Review budget",
+				"tokens": [
+					{
+						"end": 46,
+						"kind": "recurrence",
+						"start": 14,
+						"text": "every 2 months on the 1st Monday"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "monthly repeats on the nth weekday › Review budget every other month on the last Sunday",
+			"input": [
+				"Review budget every other month on the last Sunday",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-25",
+					"time": null
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": {
+					"interval": 2,
+					"nth": {
+						"week": -1,
+						"weekday": 0
+					},
+					"unit": "month"
+				},
+				"reminders": [],
+				"sectionId": null,
+				"title": "Review budget",
+				"tokens": [
+					{
+						"end": 50,
+						"kind": "recurrence",
+						"start": 14,
+						"text": "every other month on the last Sunday"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "monthly repeats on the nth weekday › Review budget every 3rd Monday p1",
+			"input": [
+				"Review budget every 3rd Monday p1",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-19",
+					"time": null
+				},
+				"labelIds": [],
+				"priority": 1,
+				"projectId": null,
+				"recurrence": {
+					"interval": 1,
+					"nth": {
+						"week": 3,
+						"weekday": 1
+					},
+					"unit": "month"
+				},
+				"reminders": [],
+				"sectionId": null,
+				"title": "Review budget",
+				"tokens": [
+					{
+						"end": 30,
+						"kind": "recurrence",
+						"start": 14,
+						"text": "every 3rd Monday"
+					},
+					{
+						"end": 33,
+						"kind": "priority",
+						"start": 31,
+						"text": "p1"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "monthly repeats on the nth weekday › a typed date moves to the next such weekday",
+			"input": [
+				"Review budget every 3rd Monday 10/20",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-11-16",
+					"time": null
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": {
+					"interval": 1,
+					"nth": {
+						"week": 3,
+						"weekday": 1
+					},
+					"unit": "month"
+				},
+				"reminders": [],
+				"sectionId": null,
+				"title": "Review budget",
+				"tokens": [
+					{
+						"end": 30,
+						"kind": "recurrence",
+						"start": 14,
+						"text": "every 3rd Monday"
+					},
+					{
+						"end": 36,
+						"kind": "due",
+						"start": 31,
+						"text": "10/20"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "monthly repeats on the nth weekday › a passed time today moves to next month",
+			"input": [
+				"Review budget every 2nd Wednesday 9am",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-11-11",
+					"time": "09:00"
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": {
+					"interval": 1,
+					"nth": {
+						"week": 2,
+						"weekday": 3
+					},
+					"unit": "month"
+				},
+				"reminders": [],
+				"sectionId": null,
+				"title": "Review budget",
+				"tokens": [
+					{
+						"end": 33,
+						"kind": "recurrence",
+						"start": 14,
+						"text": "every 2nd Wednesday"
+					},
+					{
+						"end": 37,
+						"kind": "due",
+						"start": 34,
+						"text": "9am"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "a repeat never saves an invalid due date › a huge monthly interval with a passed time stays text",
+			"input": [
+				"x every 99999999mo 9am",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-15",
+					"time": "09:00"
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"sectionId": null,
+				"title": "x every 99999999mo",
+				"tokens": [
+					{
+						"end": 22,
+						"kind": "due",
+						"start": 19,
+						"text": "9am"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "a repeat never saves an invalid due date › an interval over the maximum stays text: Stretch every 1000 days",
+			"input": [
+				"Stretch every 1000 days",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"due": null,
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"sectionId": null,
+				"title": "Stretch every 1000 days",
+				"tokens": []
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "a repeat never saves an invalid due date › an interval over the maximum stays text: Stretch every 99999999mo",
+			"input": [
+				"Stretch every 99999999mo",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"due": null,
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"sectionId": null,
+				"title": "Stretch every 99999999mo",
+				"tokens": []
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "a repeat never saves an invalid due date › an interval over the maximum stays text: Stretch every 999999999999999999w",
+			"input": [
+				"Stretch every 999999999999999999w",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"due": null,
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"sectionId": null,
+				"title": "Stretch every 999999999999999999w",
+				"tokens": []
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "a repeat never saves an invalid due date › an interval over the maximum stays text: Stretch every 99999999999999999999 days",
+			"input": [
+				"Stretch every 99999999999999999999 days",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"due": null,
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"sectionId": null,
+				"title": "Stretch every 99999999999999999999 days",
+				"tokens": []
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "a repeat never saves an invalid due date › the largest interval repeats",
+			"input": [
+				"Stretch every 999 years 9am",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "3025-10-14",
+					"time": "09:00"
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": {
+					"interval": 999,
+					"unit": "year"
+				},
+				"reminders": [],
+				"sectionId": null,
+				"title": "Stretch",
+				"tokens": [
+					{
+						"end": 23,
+						"kind": "recurrence",
+						"start": 8,
+						"text": "every 999 years"
+					},
+					{
+						"end": 27,
+						"kind": "due",
+						"start": 24,
+						"text": "9am"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "a repeat never saves an invalid due date › a repeat with no occurrence before 10000 starts today: Renew every 15th",
+			"input": [
+				"Renew every 15th",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 253401318000000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "9999-12-20",
+					"time": null
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": {
+					"day": 15,
+					"interval": 1,
+					"unit": "month"
+				},
+				"reminders": [],
+				"sectionId": null,
+				"title": "Renew",
+				"tokens": [
+					{
+						"end": 16,
+						"kind": "recurrence",
+						"start": 6,
+						"text": "every 15th"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "a repeat never saves an invalid due date › a repeat with no occurrence before 10000 starts today: Renew every 1st Monday",
+			"input": [
+				"Renew every 1st Monday",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 253401318000000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "9999-12-20",
+					"time": null
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": {
+					"interval": 1,
+					"nth": {
+						"week": 1,
+						"weekday": 1
+					},
+					"unit": "month"
+				},
+				"reminders": [],
+				"sectionId": null,
+				"title": "Renew",
+				"tokens": [
+					{
+						"end": 22,
+						"kind": "recurrence",
+						"start": 6,
+						"text": "every 1st Monday"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "a repeat never saves an invalid due date › a repeat with no occurrence before 10000 starts today: Renew every year 9am",
+			"input": [
+				"Renew every year 9am",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 253401318000000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "9999-12-20",
+					"time": "09:00"
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": {
+					"interval": 1,
+					"unit": "year"
+				},
+				"reminders": [],
+				"sectionId": null,
+				"title": "Renew",
+				"tokens": [
+					{
+						"end": 16,
+						"kind": "recurrence",
+						"start": 6,
+						"text": "every year"
+					},
+					{
+						"end": 20,
+						"kind": "due",
+						"start": 17,
+						"text": "9am"
+					}
+				]
 			}
 		},
 		{

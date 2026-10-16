@@ -1,10 +1,22 @@
 import { zonedTime } from './zoned-time.ts';
 
 import type { Task } from './sync/protocol.ts';
-import type { DateKey, Due, Recurrence, RecurrenceUnit, Reminder, TimeOfDay, Weekday } from './values.ts';
+import { DATE_KEY_PATTERN, MAX_RECURRENCE_INTERVAL } from './values.ts';
 
-export type { DateKey, Due, Priority, Recurrence, RecurrenceUnit, Reminder, TimeOfDay, Weekday } from './values.ts';
-export { DEFAULT_PRIORITY } from './values.ts';
+import type { DateKey, Due, NthWeekday, Recurrence, RecurrenceUnit, Reminder, TimeOfDay, Weekday } from './values.ts';
+
+export type {
+	DateKey,
+	Due,
+	NthWeekday,
+	Priority,
+	Recurrence,
+	RecurrenceUnit,
+	Reminder,
+	TimeOfDay,
+	Weekday,
+} from './values.ts';
+export { DEFAULT_PRIORITY, MAX_RECURRENCE_INTERVAL } from './values.ts';
 export type { Label, Project, Section, Task } from './sync/protocol.ts';
 
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -106,23 +118,56 @@ export function weeklyOn(interval: number, days: Iterable<Weekday>): Recurrence 
 }
 
 /**
- * The occurrence after `date`. A weekday set moves to the next listed day of the same week, or past
- * Sunday to the first listed day `interval` weeks after this week's Monday.
+ * A date past 9999-12-31, or `NaN` from one past JavaScript's range, is not a `DateKey`, and the server rejects the op
+ * that carries it along with the rest of the outbox. Every date a repeat computes passes through here.
  */
-export function stepRecurrence(date: DateKey, recurrence: Recurrence): DateKey {
-	if (recurrence.unit === 'month' && recurrence.day) return addMonths(date, recurrence.interval, recurrence.day);
-	if (recurrence.unit !== 'week' || !recurrence.days) return addInterval(date, recurrence.interval, recurrence.unit);
-	const position = mondayIndex(weekdayOf(date));
-	const later = recurrence.days.find(day => mondayIndex(day) > position);
-	if (later !== undefined) return addDays(date, mondayIndex(later) - position);
-	return addDays(date, recurrence.interval * 7 - position + mondayIndex(recurrence.days[0]!));
+const inRange = (key: DateKey): DateKey | null => (DATE_KEY_PATTERN.test(key) ? key : null);
+
+function nthWeekday(monthStart: DateKey, { week, weekday }: NthWeekday): DateKey {
+	if (week === -1) {
+		const last = addDays(addMonths(monthStart, 1), -1);
+		return addDays(last, -((weekdayOf(last) - weekday + 7) % 7));
+	}
+	return addDays(monthStart, ((weekday - weekdayOf(monthStart) + 7) % 7) + (week - 1) * 7);
 }
 
-/** The first occurrence on or after `date`: `date` itself unless a weekday set or a day of the month leaves it out. */
-export function alignToRecurrence(date: DateKey, recurrence: Recurrence): DateKey {
-	if (recurrence.unit === 'month' && recurrence.day) {
-		const thisMonth = addMonths(date, 0, recurrence.day);
-		return thisMonth >= date ? thisMonth : addMonths(date, 1, recurrence.day);
+/** A monthly repeat's occurrence `months` after the month of `date`, on its day or its nth weekday. */
+function monthlyOn(date: DateKey, months: number, on: { day?: number; nth?: NthWeekday }): DateKey {
+	return on.nth ? nthWeekday(addMonths(date, months, 1), on.nth) : addMonths(date, months, on.day);
+}
+
+/** Which weekday of its month `date` is. The 29th to the 31st are the last, since no month has a 5th of every weekday. */
+export function monthlyWeekdayOf(date: DateKey): NthWeekday {
+	const day = Number(date.slice(8));
+	return { week: day > 28 ? -1 : (Math.ceil(day / 7) as 1 | 2 | 3 | 4), weekday: weekdayOf(date) };
+}
+
+/**
+ * The occurrence after `date`, or null when there is none before 10000 or the interval is out of range. A weekday set
+ * moves to the next listed day of the same week, or past Sunday to the first listed day `interval` weeks after this
+ * week's Monday.
+ */
+export function stepRecurrence(date: DateKey, recurrence: Recurrence): DateKey | null {
+	const { interval } = recurrence;
+	if (!(interval >= 1 && interval <= MAX_RECURRENCE_INTERVAL)) return null;
+	if (recurrence.unit === 'month' && (recurrence.day || recurrence.nth)) {
+		return inRange(monthlyOn(date, interval, recurrence));
+	}
+	if (recurrence.unit !== 'week' || !recurrence.days) return inRange(addInterval(date, interval, recurrence.unit));
+	const position = mondayIndex(weekdayOf(date));
+	const later = recurrence.days.find(day => mondayIndex(day) > position);
+	if (later !== undefined) return inRange(addDays(date, mondayIndex(later) - position));
+	return inRange(addDays(date, interval * 7 - position + mondayIndex(recurrence.days[0]!)));
+}
+
+/**
+ * The first occurrence on or after `date`: `date` itself unless a weekday set, a day of the month, or a weekday of the
+ * month leaves it out. Null when that occurrence falls after 9999-12-31.
+ */
+export function alignToRecurrence(date: DateKey, recurrence: Recurrence): DateKey | null {
+	if (recurrence.unit === 'month' && (recurrence.day || recurrence.nth)) {
+		const thisMonth = monthlyOn(date, 0, recurrence);
+		return inRange(thisMonth >= date ? thisMonth : monthlyOn(date, 1, recurrence));
 	}
 	const off = recurrence.unit === 'week' && recurrence.days && !recurrence.days.includes(weekdayOf(date));
 	return off ? stepRecurrence(date, { ...recurrence, interval: 1 }) : date;
@@ -135,7 +180,8 @@ const daysBetween = (from: DateKey, to: DateKey) =>
  * Where a recurring task moves when it is completed: the first occurrence after today, stepping one
  * interval at a time from the due date, or from today when it has none. Each step counts from the last,
  * so a month clamped to its last day carries that day forward, unless the repeat names its day. Absolute reminders shift by the same
- * number of days, and relative reminders follow the due time.
+ * number of days, and relative reminders follow the due time. Null when it does not repeat, or has no occurrence left
+ * before 10000, so completing it closes it.
  */
 export function nextOccurrence(
 	task: Pick<Task, 'due' | 'recurrence' | 'reminders'>,
@@ -145,7 +191,8 @@ export function nextOccurrence(
 	if (!recurrence) return null;
 	const from = task.due?.date ?? today;
 	let date = stepRecurrence(from, recurrence);
-	while (date <= today) date = stepRecurrence(date, recurrence);
+	while (date !== null && date <= today) date = stepRecurrence(date, recurrence);
+	if (date === null) return null;
 	const shift = daysBetween(from, date);
 	return {
 		due: { date, time: task.due?.time ?? null },

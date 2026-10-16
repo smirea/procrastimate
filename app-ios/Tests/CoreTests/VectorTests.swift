@@ -147,6 +147,7 @@ private struct Occurrence: Decodable {
     case "dueAtTime": return try json(Dates.dueAtTime(a(0), a(1), today: a(2), now: a(3)))
     case "fromDateKey": return try json(Dates.fromDateKey(a(0), a(1), in: a.zone).epochMilliseconds)
     case "isWeekday": return try json(Dates.isWeekday(a(0)))
+    case "monthlyWeekdayOf": return try json(Dates.monthlyWeekdayOf(a(0)))
     case "weekdayOf": return try json(Dates.weekdayOf(a(0)))
     case "sortWeekdays": return try json(Dates.sortWeekdays(a(0, as: [Weekday].self)))
     case "stepRecurrence": return try json(Dates.stepRecurrence(a(0), a(1)))

@@ -120,16 +120,63 @@ import Testing
         #expect(RepeatMenu.custom(2, .week, set) == Recurrence(interval: 2, unit: .week, days: [2, 4]))
         #expect(RepeatMenu.custom(3, .day, set) == Recurrence(interval: 3, unit: .day))
         #expect(RepeatMenu.toggling(1, Recurrence(interval: 2, unit: .week, days: [2, 4]), anchor: wednesday).interval == 2)
-        #expect(!RepeatMenu.presets.contains { RepeatMenu.isSelected($0, set) })
-        #expect(RepeatMenu.presets.map { Format.formatRecurrence($0, wednesday) }
-            == ["Every day", "Every weekday", "Every Wed", "Every month", "Every year"])
+        #expect(!RepeatMenu.presets(anchor: wednesday).contains { RepeatMenu.isSelected($0, set) })
+        #expect(RepeatMenu.presets(anchor: wednesday).map { Format.formatRecurrence($0, wednesday) }
+            == ["Every day", "Every weekday", "Every Wed", "Every month", "Every month on the 2nd Wed", "Every year"])
     }
 
     @Test func aCustomMonthlyIntervalKeepsTheDayAndADayOfTheMonthMatchesNoPreset() {
         let onThe31st = Recurrence(interval: 1, unit: .month, day: 31)
         #expect(RepeatMenu.custom(2, .month, onThe31st) == Recurrence(interval: 2, unit: .month, day: 31))
         #expect(RepeatMenu.custom(2, .week, onThe31st) == Recurrence(interval: 2, unit: .week))
-        #expect(!RepeatMenu.presets.contains { RepeatMenu.isSelected($0, onThe31st) })
+        #expect(!RepeatMenu.presets(anchor: wednesday).contains { RepeatMenu.isSelected($0, onThe31st) })
+    }
+
+    @Test func theWeekdayOfTheMonthPresetMovesTheDateAndACustomIntervalKeepsIt() {
+        let lastFriday = Recurrence(interval: 1, unit: .month, nth: NthWeekday(week: -1, weekday: 5))
+        let set = RepeatMenu.set(lastFriday, opened: wednesday, due: wednesday)
+        #expect(set.due == Due(date: "2026-10-30", time: "09:00"))
+        #expect(RepeatMenu.custom(2, .month, lastFriday) == Recurrence(interval: 2, unit: .month, nth: lastFriday.nth))
+        let secondWednesday = RepeatMenu.presets(anchor: wednesday)[4]
+        #expect(RepeatMenu.isSelected(secondWednesday, Recurrence(interval: 1, unit: .month, nth: NthWeekday(week: 2, weekday: 3))))
+        #expect(!RepeatMenu.isSelected(Recurrence(interval: 1, unit: .month), lastFriday))
+    }
+
+    @Test func aRepeatPastTheYear9999KeepsTheOpenedDate() {
+        let late = Due(date: "9999-12-20", time: nil)
+        let set = RepeatMenu.set(Recurrence(interval: 1, unit: .month, day: 15), opened: late, due: late)
+        #expect(set.due == late)
+    }
+}
+
+@Suite struct RecurrenceRangeTests {
+    @Test(arguments: [RecurrenceUnit.day, .weekday, .week, .month, .year])
+    func anIntervalTooLargeForTheMathHasNoNextOccurrenceInsteadOfTrapping(_ unit: RecurrenceUnit) {
+        for interval in [Int.max, Int.max / 7, Dates.maxRecurrenceInterval + 1, 0, -1, Int.min] {
+            #expect(Dates.stepRecurrence("2026-10-14", Recurrence(interval: interval, unit: unit)) == nil)
+        }
+        let task = Recurrence(interval: Int.max, unit: unit)
+        #expect(Dates.nextOccurrence(due: Due(date: "2026-10-14", time: nil), recurrence: task, reminders: [], today: "2026-10-14") == nil)
+    }
+
+    @Test func aHugeMonthlyRepeatOnADayOrWeekdayHasNoNextOccurrence() {
+        #expect(Dates.stepRecurrence("2026-10-14", Recurrence(interval: Int.max, unit: .month, day: 31)) == nil)
+        let nth = NthWeekday(week: -1, weekday: 5)
+        #expect(Dates.stepRecurrence("2026-10-14", Recurrence(interval: Int.max, unit: .month, nth: nth)) == nil)
+    }
+
+    @Test func quickAddKeepsAnIntervalTooLargeForAnIntAsText() {
+        let now = Dates.fromDateKey("2026-10-14", "10:00", in: .gmt)
+        let cases: [(String, Due?)] = [
+            ("x every 99999999mo 9am", Due(date: "2026-10-15", time: "09:00")),
+            ("x every 999999999999999999w", nil),
+            ("x every 99999999999999999999 days", nil),
+        ]
+        for (input, due) in cases {
+            let parsed = QuickAdd.parse(input, QuickAdd.Options(now: now), in: .gmt)
+            #expect(parsed.recurrence == nil)
+            #expect(parsed.due == due)
+        }
     }
 }
 

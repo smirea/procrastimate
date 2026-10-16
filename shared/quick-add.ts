@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { labelSchema, projectSchema, sectionSchema, taskSchema } from './sync/protocol.ts';
 import { linkify } from './links.ts';
-import { DATE_KEY_PATTERN } from './values.ts';
+import { DATE_KEY_PATTERN, MAX_RECURRENCE_INTERVAL } from './values.ts';
 import {
 	addDays,
 	addInterval,
@@ -113,6 +113,9 @@ const SPELLED_ORDINAL_WORD = new RegExp(
 	String.raw`(?:(twenty|thirty)[-\s]*)?\b(${ORDINAL_WORDS.join('|')}|thirtieth)\b`,
 	'g',
 );
+/** Which weekday of the month, as in `every 3rd Monday` or `every last Friday`. */
+const NTH_WORDS = ['first', 'second', 'third', 'fourth'];
+const NTH = String.raw`(?:[1-4](?:st|nd|rd|th)|${NTH_WORDS.join('|')}|last)`;
 /** `mo` is listed before `m` everywhere, so months never read as minutes. */
 const DAY_UNIT = String.raw`(?:d(?:ays?)?|w(?:ks?|eeks?)?|mo(?:s|nths?)?|y(?:rs?|ears?)?)`;
 const CLOCK_UNIT = String.raw`(?:m(?:ins?|inutes?)?|h(?:rs?|ours?)?)`;
@@ -134,7 +137,7 @@ const DATE = [
 	WEEKDAY,
 	String.raw`in\s+\d+\s*${DAY_UNIT}`,
 	String.raw`\d+(?:d|wks?|w|mos?)`,
-	String.raw`the\s+(?:\d{1,2}(?:st|nd|rd|th)|${SPELLED_ORDINAL}(?!\s+${MONTH}\b))`,
+	String.raw`the\s+(?:\d{1,2}(?:st|nd|rd|th)|${SPELLED_ORDINAL}(?!\s+${MONTH}\b))(?!\s+${WEEKDAY}\b)(?:\s+of\s+the\s+month)?`,
 	String.raw`\d{1,2}/\d{1,2}(?:/(?:\d{4}|\d{2}))?`,
 ].join('|');
 /** `@` followed by a space means `at`, as in `Oct 2 @ 3pm`, while `@name` is a label. */
@@ -172,7 +175,7 @@ const GUARDS: RegExp[] = [
 	/\b(?!tom\b)[Tt][Oo][Mm]\b/g,
 	new RegExp(String.raw`(?<=\b(?:${NAME_CONTEXT})\s+)tom\b`, 'gi'),
 	new RegExp(
-		String.raw`(?<!${WEEKDAY}\b${WEEKDAY_SEPARATOR})\b(?:tom|sun|sat|wed|daily|weekdays|weekly|monthly|yearly)\b(?=\s+(?!(?:${PHRASE_WORDS}|and\s+${WEEKDAY})\b|(?:on\s+)?the\s+(?:\d|${SPELLED_ORDINAL}))[a-z]+(?![\w'’]))`,
+		String.raw`(?<!${WEEKDAY}\b${WEEKDAY_SEPARATOR})\b(?:tom|sun|sat|wed|daily|weekdays|weekly|monthly|yearly)\b(?=\s+(?!(?:${PHRASE_WORDS}|and\s+${WEEKDAY})\b|(?:on\s+)?the\s+(?:\d|last\b|${SPELLED_ORDINAL}))[a-z]+(?![\w'’]))`,
 		'gi',
 	),
 	new RegExp(String.raw`(?<=\b(?:${ADDRESS})\.?\s+)\d[\w:/]*`, 'gi'),
@@ -182,7 +185,7 @@ const GUARDS: RegExp[] = [
 		'g',
 	),
 	new RegExp(
-		String.raw`(?<=\bthe\s+)${SPELLED_ORDINAL}(?=\s+(?!(?:at|(?:of\s+)?${MONTH}|p[1-4]|remind)\b)[a-z])`,
+		String.raw`(?<=\bthe\s+)${SPELLED_ORDINAL}(?=\s+(?!(?:at|(?:of\s+)?${MONTH}|of\s+the\s+month|${WEEKDAY}|p[1-4]|remind)\b)[a-z])`,
 		'gi',
 	),
 ];
@@ -218,7 +221,7 @@ const SPOKEN_GUARDS: RegExp[] = [
 	/(?<![\w#@!$€£.])r?\d+(?:mos?|m(?:ins?)?|h(?:rs?)?|d|w(?:ks?)?|y(?:rs?)?)(?![\w!])/gi,
 	/(?<!\bin\s+)(?<![\w.])\d+\s+(?:mins?|hrs?)\b(?!\s+before)/gi,
 	new RegExp(String.raw`\b(?:${WEEKDAY}|today|tonight|tomorrow|tom)(?=['’]s\b)`, 'gi'),
-	new RegExp(String.raw`(?<=\bthe\s+)\d{1,2}(?:st|nd|rd|th)(?=\s+(?!(?:at|of|${MONTH})\b)[a-z]+)`, 'gi'),
+	new RegExp(String.raw`(?<=\bthe\s+)\d{1,2}(?:st|nd|rd|th)(?=\s+(?!(?:at|of|${MONTH}|${WEEKDAY})\b)[a-z]+)`, 'gi'),
 	new RegExp(String.raw`\b(?:Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)day(?=\s+(?!${MONTH}\b)[A-Z][a-z])`, 'g'),
 	new RegExp(
 		String.raw`\b${WEEKDAY}(?=\s+(?:lunch|dinner|breakfast|brunch|drinks|meeting|meetings|standup|stand-up|service|game|match|party|class|shift|market|plans|practice|session|show)\b)`,
@@ -258,7 +261,8 @@ type Rule = {
 	pattern: RegExp;
 	repeatable: boolean;
 	guarded: boolean;
-	read: (m: RegExpExecArray, ctx: Context) => Match | null;
+	/** `text` keeps the phrase in the title but claims it, so no later rule reads part of it. */
+	read: (m: RegExpExecArray, ctx: Context) => Match | 'text' | null;
 };
 
 type DurationUnit = 'minute' | 'hour' | RecurrenceUnit;
@@ -345,7 +349,7 @@ const DATE_READERS: Array<[RegExp, (m: RegExpExecArray, today: DateKey) => DateK
 		},
 	],
 	[
-		/^the (\d{1,2})(?:st|nd|rd|th)?$/,
+		/^the (\d{1,2})(?:st|nd|rd|th)?(?: of the month)?$/,
 		(m, today) => {
 			const day = Number(m[1]);
 			const start = fromDateKey(today);
@@ -444,6 +448,71 @@ const RECURRENCE_ADVERBS: Record<string, RecurrenceUnit> = {
 	annually: 'year',
 };
 
+/** A repeat as typed, before the recurrence rule checks its interval. */
+function readRecurrence(groups: Record<string, string | undefined>, ctx: Context): RecurrencePhrase | null {
+	const {
+		months,
+		monthNth,
+		monthNthDay,
+		nth,
+		nthDay,
+		monthDay,
+		dayOfMonth,
+		yearDay,
+		other,
+		otherUnit,
+		interval,
+		intervalUnit,
+		unit,
+		workday,
+		weekdays,
+		listed,
+		adverb,
+	} = groups;
+	const everyMonths = months?.toLowerCase() === 'other' ? 2 : Number(months ?? 1);
+	const nthText = (monthNth ?? nth)?.toLowerCase();
+	const dayText = monthDay ?? dayOfMonth;
+	if (nthText || dayText) {
+		const day = dayText ? Number(/\d+/.exec(digitOrdinals(dayText))![0]) : null;
+		if (day !== null && (day < 1 || day > 31)) return null;
+		const recurrence: Recurrence = nthText
+			? {
+					interval: everyMonths,
+					unit: 'month',
+					nth: {
+						week: nthText === 'last' ? -1 : ((NTH_WORDS.indexOf(nthText) + 1 || Number(nthText[0])) as 1 | 2 | 3 | 4),
+						weekday: weekdayIndex((monthNthDay ?? nthDay)!.toLowerCase()) as Weekday,
+					},
+				}
+			: { interval: everyMonths, unit: 'month', day: day! };
+		return { recurrence, anchor: alignToRecurrence(ctx.today, recurrence) };
+	}
+	if (yearDay) {
+		const day = resolveDate(yearDay, ctx.today);
+		return day && { recurrence: { interval: 1, unit: 'year' }, anchor: day.date };
+	}
+	const unitText = otherUnit ?? intervalUnit ?? unit;
+	const days = sortWeekdays(
+		[...(weekdays ?? listed ?? '').matchAll(WEEKDAY_WORD)].map(w => weekdayIndex(w[0].toLowerCase()) as Weekday),
+	);
+	const recurrence: Recurrence | null = workday
+		? { interval: 1, unit: 'weekday' }
+		: days.length
+			? weeklyOn(1, days)
+			: adverb
+				? { interval: 1, unit: RECURRENCE_ADVERBS[adverb.toLowerCase()]! }
+				: unitText
+					? { interval: other ? 2 : Number(interval ?? 1), unit: unitOf(unitText) as RecurrenceUnit }
+					: null;
+	if (!recurrence) return null;
+	const anchor = days.length
+		? alignToRecurrence(ctx.today, { interval: 1, unit: 'week', days })
+		: recurrence.unit === 'weekday' && !isWeekday(ctx.today)
+			? nextWeekday(ctx.today, 1)
+			: null;
+	return { recurrence, anchor };
+}
+
 /** Ordered by precedence: an earlier rule claims its text before later rules can. */
 const RULES: Rule[] = [
 	{
@@ -471,59 +540,16 @@ const RULES: Rule[] = [
 		repeatable: false,
 		guarded: true,
 		pattern: new RegExp(
-			String.raw`${BEFORE}(?:(?:(?:every|each)\s+(?:(?<months>\d+|other)\s+)?months?|monthly)\s+(?:on\s+)?the\s+(?<monthDay>${ORDINAL}|${SPELLED_ORDINAL})|(?:every|each)\s+(?:(?<yearDay>${MONTH_DAY})|(?<dayOfMonth>(?:\d{1,2}(?:st|nd|rd|th)|${SPELLED_ORDINAL})\s+of\s+(?:the|each|every)\s+month|\d{1,2}(?:st|nd|rd|th)(?!\s+(?!(?:at|p[1-4]|remind)\b)[a-z]))|(?<other>other)\s+(?<otherUnit>day|week|month|year)|(?<interval>\d+)\s*(?<intervalUnit>${DAY_UNIT})|(?<unit>day|week|month|year)|(?<workday>weekday|workday)|(?<weekdays>${WEEKDAY_LIST}|${WEEKDAY}))|(?<listed>${WEEKDAY_LIST})|(?<adverb>daily|weekdays|weekly|monthly|yearly|annually))${AFTER}`,
+			String.raw`${BEFORE}(?:(?:(?:every|each)\s+(?:(?<months>\d+|other)\s+)?months?|monthly)\s+(?:on\s+)?the\s+(?:(?<monthNth>${NTH})\s+(?<monthNthDay>${WEEKDAY})\b|(?<monthDay>${ORDINAL}|${SPELLED_ORDINAL}))|(?:every|each)\s+(?:(?<yearDay>${MONTH_DAY})|(?<nth>${NTH})\s+(?<nthDay>${WEEKDAY})\b(?:\s+of\s+(?:the|each|every)\s+month)?|(?<dayOfMonth>(?:\d{1,2}(?:st|nd|rd|th)|${SPELLED_ORDINAL})\s+of\s+(?:the|each|every)\s+month|\d{1,2}(?:st|nd|rd|th)(?!\s+(?!(?:at|p[1-4]|remind)\b)[a-z]))|(?<other>other)\s+(?<otherUnit>day|week|month|year)|(?<interval>\d+)\s*(?<intervalUnit>${DAY_UNIT})|(?<unit>day|week|month|year)|(?<workday>weekday|workday)|(?<weekdays>${WEEKDAY_LIST}|${WEEKDAY}))|(?<listed>${WEEKDAY_LIST})|(?<adverb>daily|weekdays|weekly|monthly|yearly|annually))${AFTER}`,
 			'gi',
 		),
 		read: (m, ctx) => {
-			const {
-				months,
-				monthDay,
-				dayOfMonth,
-				yearDay,
-				other,
-				otherUnit,
-				interval,
-				intervalUnit,
-				unit,
-				workday,
-				weekdays,
-				listed,
-				adverb,
-			} = m.groups ?? {};
-			const dayText = monthDay ?? dayOfMonth;
-			if (dayText) {
-				const day = Number(/\d+/.exec(digitOrdinals(dayText))![0]);
-				const every = months?.toLowerCase() === 'other' ? 2 : Number(months ?? 1);
-				if (day < 1 || day > 31 || every < 1) return null;
-				const recurrence: Recurrence = { interval: every, unit: 'month', day };
-				return { kind: 'recurrence', recurrence: { recurrence, anchor: alignToRecurrence(ctx.today, recurrence) } };
-			}
-			if (yearDay) {
-				const day = resolveDate(yearDay, ctx.today);
-				return (
-					day && { kind: 'recurrence', recurrence: { recurrence: { interval: 1, unit: 'year' }, anchor: day.date } }
-				);
-			}
-			const unitText = otherUnit ?? intervalUnit ?? unit;
-			const days = sortWeekdays(
-				[...(weekdays ?? listed ?? '').matchAll(WEEKDAY_WORD)].map(w => weekdayIndex(w[0].toLowerCase()) as Weekday),
-			);
-			const recurrence: Recurrence | null = workday
-				? { interval: 1, unit: 'weekday' }
-				: days.length
-					? weeklyOn(1, days)
-					: adverb
-						? { interval: 1, unit: RECURRENCE_ADVERBS[adverb.toLowerCase()]! }
-						: unitText
-							? { interval: other ? 2 : Number(interval ?? 1), unit: unitOf(unitText) as RecurrenceUnit }
-							: null;
-			if (!recurrence || recurrence.interval < 1) return null;
-			const anchor = days.length
-				? alignToRecurrence(ctx.today, { interval: 1, unit: 'week', days })
-				: recurrence.unit === 'weekday' && !isWeekday(ctx.today)
-					? nextWeekday(ctx.today, 1)
-					: null;
-			return { kind: 'recurrence', recurrence: { recurrence, anchor } };
+			const phrase = readRecurrence(m.groups ?? {}, ctx);
+			if (!phrase) return null;
+			const { interval } = phrase.recurrence;
+			// Too long a repeat stays text, and `1000` in `every 1000 days` must not then read as a time.
+			if (!(interval >= 1 && interval <= MAX_RECURRENCE_INTERVAL)) return 'text';
+			return { kind: 'recurrence', recurrence: phrase };
 		},
 	},
 	{
@@ -592,13 +618,14 @@ function resolveDue(
 	ctx: Context,
 ): Due | null {
 	if (phrase?.date) {
-		return { date: repeat ? alignToRecurrence(phrase.date, repeat.recurrence) : phrase.date, time: phrase.time };
+		return { date: (repeat && alignToRecurrence(phrase.date, repeat.recurrence)) ?? phrase.date, time: phrase.time };
 	}
 	const time = phrase?.time ?? (repeat && !repeat.anchor ? outside?.time : null) ?? null;
 	const passed = (date: DateKey) => time !== null && (date < ctx.today || (date === ctx.today && time < ctx.time));
 	if (repeat) {
 		const start = repeat.anchor ?? outside?.date ?? ctx.today;
-		const date = passed(start) ? (passed(ctx.today) ? stepRecurrence(ctx.today, repeat.recurrence) : ctx.today) : start;
+		const next = passed(ctx.today) ? stepRecurrence(ctx.today, repeat.recurrence) : null;
+		const date = passed(start) ? (next ?? ctx.today) : start;
 		return { date, time };
 	}
 	return time ? dueAtTime(outside, time, ctx.today, ctx.time) : null;
@@ -640,6 +667,7 @@ export function parseQuickAdd(input: string, options: ParseOptions): ParsedQuick
 			const match = rule.read(m, ctx);
 			if (!match) continue;
 			spans.push([start, end]);
+			if (match === 'text') continue;
 			found.push({ token: { kind: rule.kind, start, end, text }, match });
 		}
 		// Attributes usually trail the title, so a single-valued attribute takes its last phrase.

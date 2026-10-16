@@ -1,7 +1,8 @@
 import { expect } from 'bun:test';
 import * as dates from './task.ts';
-import type { Due, Recurrence, Reminder } from './task.ts';
+import type { Due, Recurrence, Reminder, Weekday } from './task.ts';
 import { describe, recorded, test } from './vectors/record.ts';
+import { recurrenceSchema } from './values.ts';
 
 const addDays = recorded('task', dates.addDays);
 const addInterval = recorded('task', dates.addInterval);
@@ -10,6 +11,7 @@ const dueAtTime = recorded('task', dates.dueAtTime);
 const alignToRecurrence = recorded('task', dates.alignToRecurrence);
 const fromDateKey = recorded('task', dates.fromDateKey);
 const isWeekday = recorded('task', dates.isWeekday);
+const monthlyWeekdayOf = recorded('task', dates.monthlyWeekdayOf);
 const nextOccurrence = recorded('task', dates.nextOccurrence);
 const notificationTimes = recorded('task', dates.notificationTimes);
 const reminderFiresAt = recorded('task', dates.reminderFiresAt);
@@ -251,6 +253,87 @@ describe('a monthly repeat on a day', () => {
 	] as const)('nextOccurrence: %s', (_, date, completedOn, expected) => {
 		const task = { due: { date, time: null }, recurrence: on(31), reminders: [] };
 		expect(nextOccurrence(task, completedOn)?.due.date).toBe(expected);
+	});
+});
+
+describe('a monthly repeat on the nth weekday', () => {
+	const on = (week: 1 | 2 | 3 | 4 | -1, weekday: Weekday, interval = 1): Recurrence => ({
+		interval,
+		unit: 'month',
+		nth: { week, weekday },
+	});
+
+	test.each([
+		["the 3rd Monday goes to next month's", '2026-10-19', on(3, 1), '2026-11-16'],
+		['the 1st Monday', '2026-10-05', on(1, 1), '2026-11-02'],
+		['the last Friday', '2026-10-30', on(-1, 5), '2026-11-27'],
+		['the last Friday of February', '2027-01-29', on(-1, 5), '2027-02-26'],
+		['the 4th Thursday', '2026-10-22', on(4, 4), '2026-11-26'],
+		['a moved due date goes back to the weekday', '2026-10-21', on(3, 1), '2026-11-16'],
+		['every 2 months', '2026-10-19', on(3, 1, 2), '2026-12-21'],
+		['into next year', '2026-12-21', on(3, 1), '2027-01-18'],
+	] as const)('stepRecurrence: %s', (_, from, recurrence, expected) => {
+		expect(stepRecurrence(from, recurrence)).toBe(expected);
+	});
+
+	test.each([
+		['a later one this month stays in it', '2026-10-14', on(3, 1), '2026-10-19'],
+		['the day itself stays', '2026-10-19', on(3, 1), '2026-10-19'],
+		['a passed one moves to next month', '2026-10-20', on(3, 1), '2026-11-16'],
+		['the last Friday this month', '2026-10-14', on(-1, 5), '2026-10-30'],
+	] as const)('alignToRecurrence: %s', (_, from, recurrence, expected) => {
+		expect(alignToRecurrence(from, recurrence)).toBe(expected);
+	});
+
+	test('nextOccurrence skips missed months to the next one after today', () => {
+		const task = { due: { date: '2026-08-17', time: '09:00' } as const, recurrence: on(3, 1), reminders: [] };
+		expect(nextOccurrence(task, '2026-10-20')?.due).toEqual({ date: '2026-11-16', time: '09:00' });
+	});
+
+	test.each([
+		['2026-10-05', { week: 1, weekday: 1 }],
+		['2026-10-19', { week: 3, weekday: 1 }],
+		['2026-10-26', { week: 4, weekday: 1 }],
+		['2026-10-29', { week: -1, weekday: 4 }],
+		['2026-10-31', { week: -1, weekday: 6 }],
+	] as const)('monthlyWeekdayOf %s is %p', (date, expected) => {
+		expect<unknown>(monthlyWeekdayOf(date)).toEqual(expected);
+	});
+});
+
+test('a monthly repeat sets a day or a weekday of the month, not both', () => {
+	const nth = { week: -1, weekday: 5 } as const;
+	expect(recurrenceSchema.safeParse({ interval: 1, unit: 'month', day: 15, nth }).success).toBe(false);
+	expect(recurrenceSchema.safeParse({ interval: 1, unit: 'month', nth }).success).toBe(true);
+	expect(recurrenceSchema.safeParse({ interval: 1000, unit: 'day' }).success).toBe(false);
+});
+
+describe('a repeat never leaves the valid date range', () => {
+	test.each([
+		['a day past 9999-12-31', '9999-12-31', { interval: 1, unit: 'day' }],
+		['a year past 9999', '9999-06-01', { interval: 1, unit: 'year' }],
+		['a monthly day past 9999', '9999-12-20', { interval: 1, unit: 'month', day: 15 }],
+		['a huge interval', '2026-10-14', { interval: 99_999_999, unit: 'month' }],
+		['an interval over the maximum', '2026-10-14', { interval: dates.MAX_RECURRENCE_INTERVAL + 1, unit: 'day' }],
+		['a zero interval', '2026-10-14', { interval: 0, unit: 'day' }],
+		['a negative interval', '2026-10-14', { interval: -1, unit: 'week' }],
+	] as const)('stepRecurrence: %s has no next occurrence', (_, from, recurrence) => {
+		expect(stepRecurrence(from, recurrence as Recurrence)).toBeNull();
+	});
+
+	test('the largest interval still steps', () => {
+		expect(stepRecurrence('2026-10-14', { interval: dates.MAX_RECURRENCE_INTERVAL, unit: 'year' })).toBe('3025-10-14');
+	});
+
+	test('alignToRecurrence past 9999 has no occurrence', () => {
+		expect(alignToRecurrence('9999-12-20', { interval: 1, unit: 'month', day: 15 })).toBeNull();
+		expect(alignToRecurrence('9999-12-29', { interval: 1, unit: 'month', nth: { week: 1, weekday: 1 } })).toBeNull();
+	});
+
+	test('completing a repeat with no next occurrence ends it', () => {
+		const recurrence: Recurrence = { interval: 1, unit: 'year' };
+		const task = { due: { date: '9999-06-01', time: null } as const, recurrence, reminders: [] };
+		expect(nextOccurrence(task, '2026-10-14')).toBeNull();
 	});
 });
 

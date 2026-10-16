@@ -103,7 +103,14 @@ public enum TaskDetails {
 /// The repeat menu's rules from `RecurrencePicker.svelte`: presets, a custom interval, and a row of weekday toggles,
 /// Monday first, that edits a weekly set while the menu stays open.
 public enum RepeatMenu {
-    public static let presets: [Recurrence] = RecurrenceUnit.allCases.map { Recurrence(interval: 1, unit: $0) }
+    /// One per unit, with the anchor's weekday of the month after `Every month`, as in `Every month on the 3rd Mon`.
+    public static func presets(anchor: Due) -> [Recurrence] {
+        RecurrenceUnit.allCases.flatMap { unit in
+            let plain = Recurrence(interval: 1, unit: unit)
+            guard unit == .month else { return [plain] }
+            return [plain, Recurrence(interval: 1, unit: .month, nth: Dates.monthlyWeekdayOf(anchor.date))]
+        }
+    }
     public static let units = RecurrenceUnit.allCases
     public static let week: [Weekday] = [1, 2, 3, 4, 5, 6, 0]
     public static let intervals = 1...365
@@ -118,7 +125,7 @@ public enum RepeatMenu {
     public static func set(_ next: Recurrence?, opened: Due, due: Due?) -> (recurrence: Recurrence?, due: Due?) {
         guard let next else { return (nil, due) }
         let stored = next.unit == .week && next.days != nil ? Dates.weeklyOn(next.interval, next.days!) : next
-        return (stored, Due(date: Dates.alignToRecurrence(opened.date, next), time: opened.time))
+        return (stored, Due(date: Dates.alignToRecurrence(opened.date, next) ?? opened.date, time: opened.time))
     }
 
     /// A plain weekly repeat already repeats on its due weekday. Any other repeat starts with no days.
@@ -139,22 +146,21 @@ public enum RepeatMenu {
         return Recurrence(interval: recurrence?.unit == .week ? recurrence!.interval : 1, unit: .week, days: days)
     }
 
-    /// A custom weekly interval keeps the current weekday set, and a custom monthly one its day of the month.
+    /// A custom weekly interval keeps the current weekday set, and a custom monthly one its day or weekday of the month.
     public static func custom(_ interval: Int, _ unit: RecurrenceUnit, _ recurrence: Recurrence?) -> Recurrence {
         let same = recurrence?.unit == unit
         return Recurrence(
             interval: interval,
             unit: unit,
             days: unit == .week && same ? recurrence?.days : nil,
-            day: unit == .month && same ? recurrence?.day : nil
+            day: unit == .month && same ? recurrence?.day : nil,
+            nth: unit == .month && same ? recurrence?.nth : nil
         )
     }
 
     /// Whether a preset shows as the current repeat. A weekday set or a day of the month matches none.
     public static func isSelected(_ preset: Recurrence, _ recurrence: Recurrence?) -> Bool {
-        guard let recurrence else { return false }
-        return recurrence.interval == preset.interval && recurrence.unit == preset.unit
-            && !(recurrence.unit == .week && recurrence.days != nil) && recurrence.day == nil
+        recurrence == preset
     }
 }
 

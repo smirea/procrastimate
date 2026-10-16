@@ -151,6 +151,28 @@
 		},
 		{
 			"fn": "readTodoistDate",
+			"test": "Todoist dates › every 3rd friday",
+			"input": [
+				"every 3rd friday",
+				1791986400000
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-16",
+					"time": null
+				},
+				"recurrence": {
+					"interval": 1,
+					"nth": {
+						"week": 3,
+						"weekday": 5
+					},
+					"unit": "month"
+				}
+			}
+		},
+		{
+			"fn": "readTodoistDate",
 			"test": "Todoist dates › 2027-01-05",
 			"input": [
 				"2027-01-05",
@@ -190,9 +212,9 @@
 		},
 		{
 			"fn": "readTodoistDate",
-			"test": "Todoist dates › every 3rd friday is not read",
+			"test": "Todoist dates › every 5th friday is not read",
 			"input": [
-				"every 3rd friday",
+				"every 5th friday",
 				1791986400000
 			],
 			"output": null
