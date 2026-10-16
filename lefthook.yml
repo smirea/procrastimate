@@ -14,10 +14,10 @@ pre-commit:
       run: bun run check
     test:
       glob: '*.{js,ts,jsx,tsx,svelte,swift}'
-      run: bun scripts/test-changed.ts {staged_files}
+      run: bun --no-env-file scripts/test-changed.ts {staged_files}
 
 pre-push:
   commands:
     test:
       glob: '*.{js,ts,jsx,tsx,svelte,swift}'
-      run: bun scripts/test-changed.ts {push_files}
+      run: bun --no-env-file scripts/test-changed.ts {push_files}
