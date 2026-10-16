@@ -6,7 +6,7 @@ import UIKit
 /// DEBUG-only. The simulator has no way to tap, so `PROCRASTIMATE_DEMO` seeds place and event tasks through the store,
 /// adds calendar events through EventKit, and opens the screen to screenshot. Release builds omit it.
 ///
-/// Space-separated words: `seed`, `rows` (labeled tasks with long titles, for the two-line row), `move` (shifts the next Standup an hour later, then logs what the task holds),
+/// Space-separated words: `seed`, `rows` (labeled tasks with long titles, for the two-line row, and a parent with open subtasks), `move` (shifts the next Standup an hour later, then logs what the task holds),
 /// `browse`, `sections` (see `SectionsDemo`), `details:<task title>`, `link:<share token>`, `sharing` (see `SharingDemo`), `sheet:location`, `sheet:event`, and
 /// `query:<words with + for spaces>` for the first location search.
 enum PlacesDemo {
@@ -156,6 +156,10 @@ enum PlacesDemo {
             ),
         ]
         for row in rows { _ = store.addTask(row) }
+        if let trip = store.addTask(NewTask(title: "Pack for trip", due: today)) {
+            let items = ["Passport", "Charger", "Socks", "Toothbrush", "Sunglasses", "Beach towel"].compactMap { store.addTask(NewTask(title: $0), parentId: trip.id) }
+            _ = store.completeTask(items[1].id)
+        }
     }
 
     @MainActor
