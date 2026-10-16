@@ -65,10 +65,6 @@
 		if (open) query = '';
 	});
 
-	/** A phone keeps its keyboard down until the field is tapped, so the list stays in view. */
-	const focusUnlessPhone = (node: HTMLInputElement) => {
-		if (!mobile.current) node.focus();
-	};
 </script>
 
 <Popover label="Labels" bind:open>
@@ -88,8 +84,9 @@
 	{#snippet children()}
 		<div class="w-64">
 			<div class="px-1 pt-0.5 pb-1.5">
+				<!-- A phone keeps its keyboard down until the field is tapped, so the list stays in view. -->
 				<input
-					use:focusUnlessPhone
+					data-autofocus={mobile.current ? undefined : ''}
 					class="field w-full"
 					aria-label="Find or create a label"
 					placeholder="Find or create a label"

@@ -113,7 +113,7 @@
 			{#if task.notes}
 				<div class="truncate text-[12px] leading-4 text-muted"><LinkedText text={task.notes} /></div>
 			{/if}
-			{#if due || task.recurrence || task.reminders.length || task.images.length || task.location || progress || commentBadge || parent || fromMemo || (showProject && project)}
+			{#if due || task.recurrence || task.reminders.length || task.images.length || task.location || progress || commentBadge || parent || fromMemo || showProject}
 				<div class="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-[12px] leading-4 text-muted">
 					{#if task.event && event && due}
 						<span

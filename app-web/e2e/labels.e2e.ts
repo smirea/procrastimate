@@ -39,7 +39,7 @@ test('a label view lists its tasks across projects, and the label renames and de
 	await expect(app.row('Call bank')).not.toContainText('phone');
 });
 
-test.fixme('a label view names Inbox on an Inbox task that has no date', async ({ app }) => {
+test('a label view names Inbox on an Inbox task that has no date', async ({ app }) => {
 	await app.addCreating('@calls Call bank');
 	await app.nav('calls').click();
 	await expect(app.list('calls tasks').locator('[data-task="Call bank"]')).toContainText('Inbox');

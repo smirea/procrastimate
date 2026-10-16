@@ -55,11 +55,17 @@ test('task details edit the title, notes, date, priority, and labels, and keep t
 	await expect(details.getByRole('button', { name: 'Labels errands' })).toBeVisible();
 });
 
-test.fixme('Labels in task details opens with focus in its search field', async ({ app, page }) => {
+test('Labels in task details opens with focus in its search field and gives it back to the chip on Escape', async ({
+	app,
+	page,
+}) => {
 	await app.add('Buy milk');
 	await app.row('Buy milk').getByRole('button', { name: 'Buy milk', exact: true }).click();
-	await app.details().getByRole('button', { name: 'Add labels' }).click();
-	await expect(
-		page.getByRole('dialog', { name: 'Labels' }).getByRole('textbox', { name: 'Find or create a label' }),
-	).toBeFocused();
+	const chip = app.details().getByRole('button', { name: 'Add labels' });
+	await chip.click();
+	const field = page.getByRole('dialog', { name: 'Labels' }).getByRole('textbox', { name: 'Find or create a label' });
+	await expect(field).toBeFocused();
+	await field.press('Escape');
+	await expect(page.getByRole('dialog', { name: 'Labels' })).toBeHidden();
+	await expect(chip).toBeFocused();
 });
