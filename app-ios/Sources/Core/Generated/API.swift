@@ -1786,17 +1786,20 @@ extension API {
     public struct Label: Codable, Hashable, Sendable, Identifiable {
         public var id: String
         public var name: String
+        public var color: LabelColor
         public var createdAt: Int
 
-        public init(id: String, name: String, createdAt: Int) {
+        public init(id: String, name: String, color: LabelColor = .gray, createdAt: Int) {
             self.id = id
             self.name = name
+            self.color = color
             self.createdAt = createdAt
         }
 
         enum CodingKeys: String, CodingKey {
             case id = "id"
             case name = "name"
+            case color = "color"
             case createdAt = "createdAt"
         }
 
@@ -1804,6 +1807,7 @@ extension API {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             id = try container.decode(String.self, forKey: .id)
             name = try container.decode(String.self, forKey: .name)
+            color = try container.decode(LabelColor.self, forKey: .color)
             createdAt = try container.decode(Int.self, forKey: .createdAt)
         }
 
@@ -1811,8 +1815,26 @@ extension API {
             var container = encoder.container(keyedBy: CodingKeys.self)
             try container.encode(self.id, forKey: .id)
             try container.encode(self.name, forKey: .name)
+            try container.encode(self.color, forKey: .color)
             try container.encode(self.createdAt, forKey: .createdAt)
         }
+    }
+
+    public enum LabelColor: String, Codable, Hashable, Sendable, CaseIterable, Identifiable {
+        case red = "red"
+        case orange = "orange"
+        case amber = "amber"
+        case lime = "lime"
+        case green = "green"
+        case teal = "teal"
+        case cyan = "cyan"
+        case blue = "blue"
+        case indigo = "indigo"
+        case violet = "violet"
+        case pink = "pink"
+        case gray = "gray"
+
+        public var id: String { rawValue }
     }
 
     public struct LabelPatch: Codable, Hashable, Sendable, Identifiable {
@@ -1849,17 +1871,20 @@ extension API {
 
     public struct LabelPatchFields: Codable, Hashable, Sendable {
         public var name: String?
+        public var color: LabelColor?
         public var createdAt: Int?
         public var deleted: Bool?
 
-        public init(name: String? = nil, createdAt: Int? = nil, deleted: Bool? = nil) {
+        public init(name: String? = nil, color: LabelColor? = nil, createdAt: Int? = nil, deleted: Bool? = nil) {
             self.name = name
+            self.color = color
             self.createdAt = createdAt
             self.deleted = deleted
         }
 
         enum CodingKeys: String, CodingKey {
             case name = "name"
+            case color = "color"
             case createdAt = "createdAt"
             case deleted = "deleted"
         }
@@ -1867,6 +1892,7 @@ extension API {
         public init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             name = try container.decodeAbsent(String.self, forKey: .name)
+            color = try container.decodeAbsent(LabelColor.self, forKey: .color)
             createdAt = try container.decodeAbsent(Int.self, forKey: .createdAt)
             deleted = try container.decodeAbsent(Bool.self, forKey: .deleted)
         }
@@ -1874,6 +1900,7 @@ extension API {
         public func encode(to encoder: Encoder) throws {
             var container = encoder.container(keyedBy: CodingKeys.self)
             try container.encodeIfPresent(self.name, forKey: .name)
+            try container.encodeIfPresent(self.color, forKey: .color)
             try container.encodeIfPresent(self.createdAt, forKey: .createdAt)
             try container.encodeIfPresent(self.deleted, forKey: .deleted)
         }

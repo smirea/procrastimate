@@ -13,8 +13,8 @@ const projects: Project[] = [
 	{ id: 'cafe', name: 'Café Ideas', createdAt: 0 },
 ];
 const labels: Label[] = [
-	{ id: 'calls', name: 'calls', createdAt: 0 },
-	{ id: 'waiting', name: 'Waiting on', createdAt: 0 },
+	{ id: 'calls', name: 'calls', color: 'gray', createdAt: 0 },
+	{ id: 'waiting', name: 'Waiting on', color: 'gray', createdAt: 0 },
 ];
 
 let nextId = 0;

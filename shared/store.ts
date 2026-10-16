@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { defaultLabelColor, type LabelColor } from './label-colors.ts';
 import * as subtasks from './subtasks.ts';
 import { bySiblingOrder, moveOrders } from './sync/order.ts';
 import { commentSchema, labelSchema, projectSchema, readSchema, sectionSchema, taskSchema } from './sync/protocol.ts';
@@ -379,8 +380,12 @@ export function deleteSection(data: StoreData, id: string): StoreData {
 }
 
 export function addLabel(data: StoreData, name: string, { id, now }: Creation): { data: StoreData; label: Label } {
-	const label: Label = { id, name, createdAt: now };
+	const label: Label = { id, name, color: defaultLabelColor(name), createdAt: now };
 	return { data: { ...data, labels: [...data.labels, label] }, label };
+}
+
+export function setLabelColor(data: StoreData, id: string, color: LabelColor): StoreData {
+	return { ...data, labels: data.labels.map(l => (l.id === id ? { ...l, color } : l)) };
 }
 
 /** Names stay unique ignoring case, since `@name` must resolve to one label. */

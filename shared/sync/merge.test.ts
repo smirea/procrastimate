@@ -177,6 +177,20 @@ describe('applyOps', () => {
 		expect(serverSnapshot(state).tasks[0]?.labelIds).toEqual(['home']);
 	});
 
+	test('a label created before colors takes its name’s default color, and a color edit then wins', () => {
+		const create: Op = {
+			opId: 'l',
+			hlc: '10:0:a',
+			kind: 'label',
+			id: 'l',
+			fields: { deleted: false, name: 'urgent', createdAt: 1 },
+		};
+		const { state } = apply(createServerState(), [create]);
+		expect(serverSnapshot(state).labels).toEqual([{ id: 'l', name: 'urgent', color: 'red', createdAt: 1 }]);
+		const recolored = apply(state, [{ opId: 'c', hlc: '11:0:a', kind: 'label', id: 'l', fields: { color: 'teal' } }]);
+		expect(serverSnapshot(recolored.state).labels[0]?.color).toBe('teal');
+	});
+
 	test('the settings record needs no create and cannot be deleted', () => {
 		const { state } = apply(createServerState(), [
 			{ opId: 's', hlc: '10:0:a', kind: 'settings', id: 'settings', fields: { timeZone: 'Asia/Tokyo' } },

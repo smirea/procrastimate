@@ -53,6 +53,7 @@ export const labelsRowSchema = z.object({
 	userId: z.string(),
 	id: z.string(),
 	name: z.string(),
+	color: COLUMN_VALUES.labels.color,
 	createdAt: z.number().int(),
 	deleted: z.boolean(),
 	clocks: COLUMN_VALUES.labels.clocks,

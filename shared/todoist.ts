@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { parseCsv } from './csv.ts';
+import { defaultLabelColor } from './label-colors.ts';
 import { parseQuickAdd } from './quick-add.ts';
 import { sectionsOf, type StoreData } from './store.ts';
 import { nextSiblingOrder } from './subtasks.ts';
@@ -347,7 +348,7 @@ export function mergeBackup(
 	const labelId = (name: string) => {
 		const existing = labels.find(l => sameName(l.name, name));
 		if (existing) return existing.id;
-		const label: Label = { id: newId(), name, createdAt: now };
+		const label: Label = { id: newId(), name, color: defaultLabelColor(name), createdAt: now };
 		labels.push(label);
 		summary.labels++;
 		return label.id;

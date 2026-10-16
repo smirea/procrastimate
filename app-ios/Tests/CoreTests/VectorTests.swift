@@ -122,6 +122,7 @@ let handlers: [String: Handler] = [
     "todoist": todoistVector,
     "dictation": dictationVector,
     "quick-add-buttons": quickAddButtonsVector,
+    "label-colors": labelColorsVector,
     "triggers": triggersVector,
     "ramble": rambleVector,
     "ramble-fill": rambleFillVector,
@@ -351,6 +352,7 @@ private func completion(_ completion: Completion) throws -> JSONValue {
         let result = StoreRules.addLabel(try data(), try a(1), try a(2, as: CreationInput.self).creation)
         return object(["data": try json(result.data), "label": try json(result.label)])
     case "renameLabel": return try json(StoreRules.renameLabel(data(), a(1), a(2)))
+    case "setLabelColor": return try json(StoreRules.setLabelColor(data(), a(1), a(2)))
     case "deleteLabel": return try json(StoreRules.deleteLabel(data(), a(1)))
     case "sectionsOf": return try json(StoreRules.sectionsOf(a(0), a(1)))
     case "sectionTasks": return try json(StoreRules.sectionTasks(a(0), a(1)))
@@ -428,6 +430,13 @@ private struct ParseInput: Decodable {
     switch fn {
     case "toggleButton": return try json(QuickAddButtons.toggleButton(a(0), a(1)))
     case "rowButtons": return try json(QuickAddButtons.rowButtons(a(0), a(1), a(2)))
+    default: throw unknown(fn)
+    }
+}
+
+@Sendable func labelColorsVector(_ fn: String, _ a: Args) throws -> JSONValue {
+    switch fn {
+    case "defaultLabelColor": return try json(LabelColors.defaultLabelColor(a(0)))
     default: throw unknown(fn)
     }
 }

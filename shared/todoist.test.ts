@@ -377,7 +377,7 @@ describe('merging into the store', () => {
 			tasks: [],
 			projects: [{ id: 'mine', name: 'job', createdAt: 0 }],
 			sections: [],
-			labels: [{ id: 'l-home', name: 'Home', createdAt: 0 }],
+			labels: [{ id: 'l-home', name: 'Home', color: 'gray', createdAt: 0 }],
 			comments: [],
 			reads: [],
 		};
@@ -392,5 +392,11 @@ describe('merging into the store', () => {
 		});
 		expect(merged.state.tasks.find(t => t.title === 'Email Sam')!.projectId).toBe('mine');
 		expect(merged.state.tasks.find(t => t.title === 'Water plants')!.labelIds).toEqual(['l-home']);
+		// Backups carry no label colors, so a new label takes its name's default and an existing one keeps its own.
+		expect(merged.state.labels.map(l => [l.name, l.color])).toEqual([
+			['Home', 'gray'],
+			['work', 'blue'],
+			['deep-work', 'blue'],
+		]);
 	});
 });

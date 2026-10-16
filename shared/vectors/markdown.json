@@ -52,11 +52,13 @@
 				{
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "home",
 							"name": "home"
 						},
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "deep",
 							"name": "deep work"
@@ -148,11 +150,13 @@
 				{
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "home",
 							"name": "home"
 						},
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "deep",
 							"name": "deep work"
@@ -267,11 +271,13 @@
 				{
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "home",
 							"name": "home"
 						},
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "deep",
 							"name": "deep work"
@@ -425,11 +431,13 @@
 				{
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "home",
 							"name": "home"
 						},
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "deep",
 							"name": "deep work"
@@ -510,11 +518,13 @@
 				{
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "home",
 							"name": "home"
 						},
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "deep",
 							"name": "deep work"

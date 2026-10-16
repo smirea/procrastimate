@@ -19,6 +19,7 @@
 					],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1791800000002,
 							"id": "l-health",
 							"name": "health"
@@ -330,6 +331,7 @@
 				],
 				"labels": [
 					{
+						"color": "gray",
 						"createdAt": 1791800000002,
 						"id": "l-health",
 						"name": "health"
@@ -644,6 +646,7 @@
 					],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1791800000002,
 							"id": "l-health",
 							"name": "health"
@@ -1334,6 +1337,7 @@
 				],
 				"labels": [
 					{
+						"color": "gray",
 						"createdAt": 1791800000002,
 						"id": "l-health",
 						"name": "health"
@@ -1632,6 +1636,7 @@
 					],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1791800000002,
 							"id": "l-health",
 							"name": "health"
@@ -1946,6 +1951,7 @@
 				],
 				"labels": [
 					{
+						"color": "gray",
 						"createdAt": 1791800000002,
 						"id": "l-health",
 						"name": "health"
@@ -2260,6 +2266,7 @@
 					],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1791800000002,
 							"id": "l-health",
 							"name": "health"
@@ -2574,6 +2581,7 @@
 				],
 				"labels": [
 					{
+						"color": "gray",
 						"createdAt": 1791800000002,
 						"id": "l-health",
 						"name": "health"
@@ -2888,6 +2896,7 @@
 					],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1791800000002,
 							"id": "l-health",
 							"name": "health"
@@ -3198,6 +3207,7 @@
 				],
 				"labels": [
 					{
+						"color": "gray",
 						"createdAt": 1791800000002,
 						"id": "l-health",
 						"name": "health"
@@ -3512,6 +3522,7 @@
 					],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1791800000002,
 							"id": "l-health",
 							"name": "health"
@@ -3819,6 +3830,7 @@
 				],
 				"labels": [
 					{
+						"color": "gray",
 						"createdAt": 1791800000002,
 						"id": "l-health",
 						"name": "health"
@@ -6432,6 +6444,7 @@
 				{
 					"labels": [
 						{
+							"color": "pink",
 							"createdAt": 1,
 							"id": "l",
 							"name": "calls"
@@ -6469,6 +6482,7 @@
 				"comments": [],
 				"labels": [
 					{
+						"color": "pink",
 						"createdAt": 1,
 						"id": "l",
 						"name": "calls"
@@ -6509,6 +6523,40 @@
 						"title": "Call"
 					}
 				]
+			}
+		},
+		{
+			"fn": "parseSnapshot",
+			"test": "parseSnapshot › a label stored before colors loads with its name's default color",
+			"input": [
+				{
+					"labels": [
+						{
+							"createdAt": 1,
+							"id": "l",
+							"name": "bugs"
+						}
+					],
+					"projects": [],
+					"remindersCheckedAt": 5,
+					"tasks": []
+				},
+				10
+			],
+			"output": {
+				"labels": [
+					{
+						"color": "red",
+						"createdAt": 1,
+						"id": "l",
+						"name": "bugs"
+					}
+				],
+				"people": [],
+				"projects": [],
+				"remindersCheckedAt": 5,
+				"spaces": {},
+				"tasks": []
 			}
 		},
 		{

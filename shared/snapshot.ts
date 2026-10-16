@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { dictationChoiceSchema } from './dictation.ts';
+import { defaultLabelColor } from './label-colors.ts';
 import { DEFAULT_QUICK_ADD_BUTTONS, quickAddButtonSchema } from './quick-add-buttons.ts';
 import { sortTasks } from './store.ts';
 import { detachOrphans } from './subtasks.ts';
@@ -50,6 +51,14 @@ const taskSchema = syncedTaskSchema.extend({
 		.nullable()
 		.default(null),
 });
+
+/** A label stored before colors takes its name's default color, as the server gives it. */
+const labelsSchema = z
+	.array(labelSchema.extend({ color: labelSchema.shape.color.optional() }))
+	.default([])
+	// Core's decoder of the document fills the color the same way.
+	.meta({ 'x-swift-type': '[Label]' })
+	.transform(labels => labels.map(label => ({ ...label, color: label.color ?? defaultLabelColor(label.name) })));
 
 /** Drops a task that fails validation instead of failing the whole snapshot, so one bad task never wipes the rest. */
 const tasksSchema = z
@@ -108,7 +117,7 @@ const spaceSectionSchema = z
 		tasks: tasksSchema,
 		projects: z.array(projectSchema).default([]),
 		sections: z.array(sectionSchema).default([]),
-		labels: z.array(labelSchema).default([]),
+		labels: labelsSchema,
 		comments: z.array(commentSchema).default([]),
 	})
 	// Core decodes the section's tasks with the same loading rules, so it writes its own decoder.
@@ -133,7 +142,7 @@ const snapshotSchema = z
 		tasks: tasksSchema,
 		projects: z.array(projectSchema),
 		sections: z.array(sectionSchema).default([]),
-		labels: z.array(labelSchema).default([]),
+		labels: labelsSchema,
 		comments: z.array(commentSchema).default([]),
 		/** When this user last read each task's comments, by task id, for own and shared tasks alike. */
 		reads: z.array(readSchema).default([]),

@@ -344,7 +344,7 @@ describe('sharing between two users', () => {
 		expect(view.target).toEqual({ kind: 'label', id: 'urgent' });
 		expect(view.tasks.map(t => t.title)).toEqual(['Do taxes']);
 		expect(view.projects).toEqual([]);
-		expect(view.labels).toEqual([label('urgent', { name: 'Urgent', createdAt: NOW })]);
+		expect(view.labels).toEqual([label('urgent', { name: 'Urgent', color: 'red', createdAt: NOW })]);
 		expect((await call(null, 'GET', `/api/shared?token=${owner.me.id}.nope`)).status).toBe(404);
 
 		const missing = await call(owner, 'POST', '/api/shares', {

@@ -1,6 +1,7 @@
 import { expect } from 'bun:test';
 import * as quickAdd from './quick-add.ts';
 import type { ParseOptions } from './quick-add.ts';
+import type { Label } from './task.ts';
 import { describe, recorded, test } from './vectors/record.ts';
 
 const parseQuickAdd = recorded('quick-add', quickAdd.parseQuickAdd);
@@ -11,11 +12,11 @@ const projects = [
 	{ id: 'p-home', name: 'Home', createdAt: 0 },
 	{ id: 'p-side', name: 'Side Project', createdAt: 0 },
 ];
-const labels = [
-	{ id: 'l-calls', name: 'calls', createdAt: 0 },
-	{ id: 'l-waiting', name: 'Waiting', createdAt: 0 },
-	{ id: 'l-deep', name: 'deep work', createdAt: 0 },
-	{ id: 'l-tom', name: 'tom', createdAt: 0 },
+const labels: Label[] = [
+	{ id: 'l-calls', name: 'calls', color: 'gray', createdAt: 0 },
+	{ id: 'l-waiting', name: 'Waiting', color: 'gray', createdAt: 0 },
+	{ id: 'l-deep', name: 'deep work', color: 'gray', createdAt: 0 },
+	{ id: 'l-tom', name: 'tom', color: 'gray', createdAt: 0 },
 ];
 const parse = (input: string, options: Partial<ParseOptions> = {}) =>
 	parseQuickAdd(input, { now, projects, labels, ...options });

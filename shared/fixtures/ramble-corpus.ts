@@ -65,10 +65,10 @@ export const PROJECTS: Project[] = [
 ];
 
 export const LABELS: Label[] = [
-	{ id: 'l-calls', name: 'calls', createdAt: 0 },
-	{ id: 'l-errands', name: 'errands', createdAt: 0 },
-	{ id: 'l-waiting', name: 'waiting', createdAt: 0 },
-	{ id: 'l-deep', name: 'deep work', createdAt: 0 },
+	{ id: 'l-calls', name: 'calls', color: 'gray', createdAt: 0 },
+	{ id: 'l-errands', name: 'errands', color: 'gray', createdAt: 0 },
+	{ id: 'l-waiting', name: 'waiting', color: 'gray', createdAt: 0 },
+	{ id: 'l-deep', name: 'deep work', color: 'gray', createdAt: 0 },
 ];
 
 const t = (title: string, fields: Omit<ExpectedTask, 'title'> = {}): ExpectedTask => ({ title, ...fields });

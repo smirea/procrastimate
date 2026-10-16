@@ -326,7 +326,13 @@ public enum SyncEngine {
         case "section":
             merge(&snapshot.sections, id: id, fields: fields)
             snapshot.sections.sort(by: byCreation)
-        case "label": merge(&snapshot.labels, id: id, fields: fields)
+        case "label":
+            // A label created before colors takes its name's default, as `entityFrom` gives it.
+            var fields = fields
+            if fields["color"] == nil, !snapshot.labels.contains(where: { $0.id == id }), let name = fields["name"] as? String {
+                fields["color"] = LabelColors.defaultLabelColor(name).rawValue
+            }
+            merge(&snapshot.labels, id: id, fields: fields)
         case "comment": merge(&snapshot.comments, id: id, fields: fields)
         case "read": merge(&snapshot.reads, id: id, fields: fields)
         case "settings":
