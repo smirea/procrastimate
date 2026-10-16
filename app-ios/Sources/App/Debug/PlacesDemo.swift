@@ -8,7 +8,7 @@ import UIKit
 ///
 /// Space-separated words: `seed`, `rows` (labeled tasks with long titles, for the two-line row), `move` (shifts the next Standup an hour later, then logs what the task holds),
 /// `browse`, `sections` (see `SectionsDemo`), `details:<task title>`, `link:<share token>`, `sharing` (see `SharingDemo`), `sheet:location`, `sheet:event`, and
-/// `query:<words with + for spaces>` for the location search.
+/// `query:<words with + for spaces>` for the first location search.
 enum PlacesDemo {
     static var words: [String] {
         #if DEBUG
@@ -22,6 +22,15 @@ enum PlacesDemo {
 
     static func value(_ key: String) -> String? {
         words.first { $0.hasPrefix("\(key):") }.map { String($0.dropFirst(key.count + 1)).replacingOccurrences(of: "+", with: " ") }
+    }
+
+    @MainActor private static var queryTaken = false
+
+    /// The `query:` words prefill only the first location search, so a reopened sheet shows the place it picked.
+    @MainActor static func takeQuery() -> String? {
+        guard !queryTaken else { return nil }
+        queryTaken = true
+        return value("query")
     }
 
     @MainActor

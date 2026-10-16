@@ -57,7 +57,7 @@ private struct LocationSheet: View {
     let location: TaskLocation?
     let onChange: (TaskLocation?) -> Void
 
-    @State private var query = PlacesDemo.value("query") ?? ""
+    @State private var query: String
     @State private var trigger: LocationTrigger
     @State private var radius: Double
     /// Only ever grows while the sheet is open, so `Fitted` stays put after it is tapped instead of vanishing under the
@@ -70,6 +70,7 @@ private struct LocationSheet: View {
     init(location: TaskLocation?, onChange: @escaping (TaskLocation?) -> Void) {
         self.location = location
         self.onChange = onChange
+        _query = State(initialValue: PlacesDemo.takeQuery() ?? "")
         _trigger = State(initialValue: location?.trigger ?? .arrive)
         _radius = State(initialValue: location?.radius ?? 150)
         _presets = State(initialValue: location.map(Triggers.radiusPresets(for:)) ?? Triggers.radiusPresets)
