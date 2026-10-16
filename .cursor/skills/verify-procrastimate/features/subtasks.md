@@ -52,6 +52,6 @@ Preconditions:
 - Checking a subtask in its parent's details shows no toast. Uncheck it to undo.
 - A done subtask hides its date and postpone action.
 - On iOS, vertical drags over the subtask rows still scroll the details; the swipe actions only take sideways drags.
-- On iOS a done subtask has only the right swipe (`Reopen`). Swiping it left leaves the row in place, and the next right swipe still shows `Reopen`. An open row stays open when you tap elsewhere in the details; a swipe the other way closes it.
+- On iOS a done subtask has only the right swipe (`Reopen`). Swiping it left leaves the row in place, and the next right swipe still shows `Reopen`. As in a list, an open row closes when you tap elsewhere in the details or scroll them, and opening one row's swipe closes any other.
 - A subtask has no project picker. It always shares its root task's project.
 - Playwright cannot synthesize a touch drag. Prove a real finger drag on a device or the iOS simulator.
