@@ -175,13 +175,13 @@ describe('sharing between two users', () => {
 				at: NOW,
 				actor: { id: owner.me.id, name: 'Test', kind: 'human', ownerId: null },
 				action: 'created',
-				fields: [],
+				summary: 'added this task',
 			},
 			{
 				at: NOW,
 				actor: { id: guest.me.id, name: 'Test', kind: 'human', ownerId: null },
 				action: 'completed',
-				fields: [],
+				summary: 'completed it',
 			},
 		]);
 	});

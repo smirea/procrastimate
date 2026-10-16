@@ -2259,21 +2259,18 @@
 					"action": {
 						"$ref": "#/components/schemas/ActivityAction"
 					},
-					"fields": {
-						"type": "array",
-						"items": {
-							"type": "string"
-						}
+					"summary": {
+						"type": "string"
 					}
 				},
 				"required": [
 					"at",
 					"actor",
 					"action",
-					"fields"
+					"summary"
 				],
 				"additionalProperties": false,
-				"description": "One change to a task, read from the space’s log."
+				"description": "One change to a task, or one run of quick edits by the same actor, read from the space’s log."
 			},
 			"ActivityAction": {
 				"type": "string",

@@ -72,10 +72,13 @@ export const activityEntrySchema = z
 		at: z.number().int(),
 		actor: personSchema,
 		action: activityActionSchema,
-		/** The fields an edit changed. */
-		fields: z.array(z.string()),
+		/** What changed, in words that follow the actor's name: `changed due to Oct 20 and edited notes`. */
+		summary: z.string(),
 	})
-	.meta({ id: 'ActivityEntry', description: 'One change to a task, read from the space’s log.' });
+	.meta({
+		id: 'ActivityEntry',
+		description: 'One change to a task, or one run of quick edits by the same actor, read from the space’s log.',
+	});
 export type ActivityEntry = z.infer<typeof activityEntrySchema>;
 
 export const apiTokenSchema = apiTokensRowSchema

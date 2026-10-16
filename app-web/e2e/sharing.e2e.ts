@@ -69,6 +69,12 @@ test('a guest completes a task in a project shared with them, and the owner sees
 	await expect(guest.page.getByText('Shared by Olive')).toBeVisible();
 	await guest.app
 		.row(task)
+		.getByRole('button', { name: new RegExp(`^${task}`) })
+		.click();
+	await guest.app.details().getByRole('textbox', { name: 'Notes' }).pressSequentially('Two litres, oat');
+	await guest.app.details().getByRole('button', { name: 'Close' }).click();
+	await guest.app
+		.row(task)
 		.getByRole('checkbox', { name: `Complete ${task}` })
 		.click();
 	await expect(guest.app.row(task)).toHaveCount(0);
@@ -80,7 +86,13 @@ test('a guest completes a task in a project shared with them, and the owner sees
 	await owner.page.getByRole('option', { name: new RegExp(task) }).click();
 	const details = owner.app.details();
 	await expect(details.getByText(/Completed by\s*Gus/)).toBeVisible();
-	await expect(details.getByRole('list', { name: 'Activity list' })).toContainText(/Gus\s*completed it/);
+	// Typed key by key; however many ops that syncs as, the activity reads one edit.
+	const activity = details.getByRole('region', { name: 'Activity' });
+	await expect(activity.getByRole('listitem')).toHaveText([
+		/Gus\s*completed it/,
+		/Gus\s*added notes/,
+		/You\s*added this task/,
+	]);
 	await owner.page.keyboard.press('Escape');
 
 	await sidebar(owner.page)
