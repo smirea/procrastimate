@@ -6759,6 +6759,49 @@
 								"time": null
 							},
 							"event": null,
+							"id": "Rent",
+							"images": [],
+							"location": null,
+							"notes": "",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": {
+								"day": 31,
+								"interval": 1,
+								"unit": "month"
+							},
+							"reminders": [],
+							"title": "Rent"
+						},
+						{
+							"completedAt": null,
+							"createdAt": 41,
+							"due": {
+								"date": "2026-10-14",
+								"time": null
+							},
+							"event": null,
+							"id": "Review month",
+							"images": [],
+							"location": null,
+							"notes": "",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": {
+								"interval": 1,
+								"unit": "month"
+							},
+							"reminders": [],
+							"title": "Review month"
+						},
+						{
+							"completedAt": null,
+							"createdAt": 42,
+							"due": {
+								"date": "2026-10-14",
+								"time": null
+							},
+							"event": null,
 							"id": "Old",
 							"images": [],
 							"location": null,
@@ -6770,7 +6813,7 @@
 						},
 						{
 							"completedAt": null,
-							"createdAt": 41,
+							"createdAt": 43,
 							"due": {
 								"date": "2026-10-14",
 								"time": null
@@ -6792,7 +6835,7 @@
 						},
 						{
 							"completedAt": null,
-							"createdAt": 42,
+							"createdAt": 44,
 							"due": {
 								"date": "2026-10-14",
 								"time": null
@@ -6955,6 +6998,63 @@
 							"time": null
 						},
 						"event": null,
+						"id": "Rent",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": {
+							"day": 31,
+							"interval": 1,
+							"unit": "month"
+						},
+						"reminders": [],
+						"sectionId": null,
+						"title": "Rent"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 41,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
+						"id": "Review month",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": {
+							"interval": 1,
+							"unit": "month"
+						},
+						"reminders": [],
+						"sectionId": null,
+						"title": "Review month"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 42,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
 						"id": "Old",
 						"images": [],
 						"labelIds": [],
@@ -6973,7 +7073,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 42,
+						"createdAt": 44,
 						"createdBy": null,
 						"due": {
 							"date": "2026-10-14",
@@ -7011,7 +7111,7 @@
 					"tasks": [
 						{
 							"completedAt": null,
-							"createdAt": 43,
+							"createdAt": 45,
 							"due": {
 								"date": "2026-10-14",
 								"time": null
@@ -7028,7 +7128,7 @@
 						},
 						{
 							"completedAt": null,
-							"createdAt": 44,
+							"createdAt": 46,
 							"due": {
 								"date": "2026-10-14",
 								"time": null
@@ -7067,7 +7167,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 43,
+						"createdAt": 45,
 						"createdBy": null,
 						"due": {
 							"date": "2026-10-14",
@@ -7092,7 +7192,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 44,
+						"createdAt": 46,
 						"createdBy": null,
 						"due": {
 							"date": "2026-10-14",
@@ -7133,7 +7233,7 @@
 					"tasks": [
 						{
 							"completedAt": null,
-							"createdAt": 45,
+							"createdAt": 47,
 							"due": {
 								"date": "2026-10-14",
 								"time": null
@@ -7166,7 +7266,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 45,
+						"createdAt": 47,
 						"createdBy": null,
 						"due": {
 							"date": "2026-10-14",
@@ -7201,7 +7301,7 @@
 					"tasks": [
 						{
 							"completedAt": null,
-							"createdAt": 46,
+							"createdAt": 48,
 							"due": {
 								"date": "2026-10-14",
 								"time": null
@@ -7220,7 +7320,7 @@
 						},
 						{
 							"completedAt": null,
-							"createdAt": 47,
+							"createdAt": 49,
 							"due": {
 								"date": "2026-10-14",
 								"time": null
@@ -7240,7 +7340,7 @@
 						},
 						{
 							"completedAt": null,
-							"createdAt": 48,
+							"createdAt": 50,
 							"due": {
 								"date": "2026-10-14",
 								"time": null
@@ -7259,7 +7359,7 @@
 						},
 						{
 							"completedAt": null,
-							"createdAt": 49,
+							"createdAt": 51,
 							"due": {
 								"date": "2026-10-14",
 								"time": null
@@ -7295,7 +7395,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 46,
+						"createdAt": 48,
 						"createdBy": null,
 						"due": {
 							"date": "2026-10-14",
@@ -7320,7 +7420,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 47,
+						"createdAt": 49,
 						"createdBy": null,
 						"due": {
 							"date": "2026-10-14",
@@ -7345,7 +7445,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 48,
+						"createdAt": 50,
 						"createdBy": null,
 						"due": {
 							"date": "2026-10-14",

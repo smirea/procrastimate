@@ -394,6 +394,8 @@ describe('parseSnapshot', () => {
 					task('Review', { interval: 1, unit: 'week' }),
 					task('One day', { interval: 2, unit: 'week', days: [5, 5] }),
 					task('Water', { interval: 2, unit: 'day' }),
+					task('Rent', { interval: 1, unit: 'month', day: 31 }),
+					task('Review month', { interval: 1, unit: 'month' }),
 					task('Old', undefined),
 					task('Empty set', { interval: 1, unit: 'week', days: [] }),
 					task('Days on a daily repeat', { interval: 1, unit: 'day', days: [1] }),
@@ -408,6 +410,8 @@ describe('parseSnapshot', () => {
 			['Review', { interval: 1, unit: 'week' }],
 			['One day', { interval: 2, unit: 'week' }],
 			['Water', { interval: 2, unit: 'day' }],
+			['Rent', { interval: 1, unit: 'month', day: 31 }],
+			['Review month', { interval: 1, unit: 'month' }],
 			['Old', null],
 			['Days on a daily repeat', { interval: 1, unit: 'day' }],
 		]);
