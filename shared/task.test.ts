@@ -2,6 +2,7 @@ import { expect } from 'bun:test';
 import * as dates from './task.ts';
 import type { Due, Recurrence, Reminder, Weekday } from './task.ts';
 import { describe, recorded, test } from './vectors/record.ts';
+import { recurrenceSchema } from './values.ts';
 
 const addDays = recorded('task', dates.addDays);
 const addInterval = recorded('task', dates.addInterval);
@@ -298,6 +299,13 @@ describe('a monthly repeat on the nth weekday', () => {
 	] as const)('monthlyWeekdayOf %s is %p', (date, expected) => {
 		expect<unknown>(monthlyWeekdayOf(date)).toEqual(expected);
 	});
+});
+
+test('a monthly repeat sets a day or a weekday of the month, not both', () => {
+	const nth = { week: -1, weekday: 5 } as const;
+	expect(recurrenceSchema.safeParse({ interval: 1, unit: 'month', day: 15, nth }).success).toBe(false);
+	expect(recurrenceSchema.safeParse({ interval: 1, unit: 'month', nth }).success).toBe(true);
+	expect(recurrenceSchema.safeParse({ interval: 1000, unit: 'day' }).success).toBe(false);
 });
 
 describe('a repeat never leaves the valid date range', () => {

@@ -81,12 +81,14 @@ export const recurrenceSchema = z
 	.discriminatedUnion('unit', [
 		z.object({ interval, unit: recurrenceUnitSchema.exclude(['week', 'month']) }),
 		z.object({ interval, unit: z.literal('week'), days: z.array(weekdaySchema).min(2).readonly().optional() }),
-		z.object({
-			interval,
-			unit: z.literal('month'),
-			day: z.number().int().min(1).max(31).optional(),
-			nth: nthWeekdaySchema.optional(),
-		}),
+		z
+			.object({
+				interval,
+				unit: z.literal('month'),
+				day: z.number().int().min(1).max(31).optional(),
+				nth: nthWeekdaySchema.optional(),
+			})
+			.refine(r => r.day === undefined || r.nth === undefined, 'A monthly repeat sets `day` or `nth`, not both'),
 	])
 	// Swift keeps one struct whose `days`, `day`, and `nth` only their unit sets, which reads better than an enum of three.
 	.meta({ id: 'Recurrence', 'x-flatten': { unit: 'RecurrenceUnit' } });
