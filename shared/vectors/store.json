@@ -10,11 +10,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -207,11 +209,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -435,11 +439,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -632,11 +638,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -860,11 +868,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -1057,11 +1067,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -1285,11 +1297,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -1504,11 +1518,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -1754,11 +1770,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -1825,11 +1843,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -2070,11 +2090,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -2254,11 +2276,13 @@
 				"comments": [],
 				"labels": [
 					{
+						"color": "gray",
 						"createdAt": 1,
 						"id": "calls",
 						"name": "calls"
 					},
 					{
+						"color": "gray",
 						"createdAt": 2,
 						"id": "phone",
 						"name": "Phone"
@@ -2437,11 +2461,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -2620,11 +2646,13 @@
 				"comments": [],
 				"labels": [
 					{
+						"color": "gray",
 						"createdAt": 1,
 						"id": "calls",
 						"name": "calls"
 					},
 					{
+						"color": "gray",
 						"createdAt": 2,
 						"id": "phone",
 						"name": "Phone"
@@ -2803,11 +2831,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -3007,11 +3037,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -3191,11 +3223,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -3388,11 +3422,13 @@
 				"comments": [],
 				"labels": [
 					{
+						"color": "gray",
 						"createdAt": 1,
 						"id": "calls",
 						"name": "calls"
 					},
 					{
+						"color": "gray",
 						"createdAt": 2,
 						"id": "phone",
 						"name": "Phone"
@@ -3571,11 +3607,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -3780,11 +3818,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -3964,11 +4004,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -4162,11 +4204,13 @@
 				"comments": [],
 				"labels": [
 					{
+						"color": "gray",
 						"createdAt": 1,
 						"id": "calls",
 						"name": "calls"
 					},
 					{
+						"color": "gray",
 						"createdAt": 2,
 						"id": "phone",
 						"name": "Phone"
@@ -4345,11 +4389,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -4533,11 +4579,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -4737,11 +4785,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -4921,11 +4971,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -5104,11 +5156,13 @@
 				"comments": [],
 				"labels": [
 					{
+						"color": "gray",
 						"createdAt": 1,
 						"id": "calls",
 						"name": "calls"
 					},
 					{
+						"color": "gray",
 						"createdAt": 2,
 						"id": "phone",
 						"name": "Phone"
@@ -5287,11 +5341,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -5484,11 +5540,13 @@
 				"comments": [],
 				"labels": [
 					{
+						"color": "gray",
 						"createdAt": 1,
 						"id": "calls",
 						"name": "calls"
 					},
 					{
+						"color": "gray",
 						"createdAt": 2,
 						"id": "phone",
 						"name": "Phone"
@@ -5667,11 +5725,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -5871,11 +5931,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -6055,11 +6117,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -6235,11 +6299,13 @@
 				"comments": [],
 				"labels": [
 					{
+						"color": "gray",
 						"createdAt": 1,
 						"id": "calls",
 						"name": "calls"
 					},
 					{
+						"color": "gray",
 						"createdAt": 2,
 						"id": "phone",
 						"name": "Phone"
@@ -6418,11 +6484,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -6599,11 +6667,13 @@
 				"comments": [],
 				"labels": [
 					{
+						"color": "gray",
 						"createdAt": 1,
 						"id": "calls",
 						"name": "calls"
 					},
 					{
+						"color": "gray",
 						"createdAt": 2,
 						"id": "phone",
 						"name": "Phone"
@@ -6782,11 +6852,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -6963,11 +7035,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -7149,11 +7223,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -7330,11 +7406,13 @@
 				"comments": [],
 				"labels": [
 					{
+						"color": "gray",
 						"createdAt": 1,
 						"id": "calls",
 						"name": "calls"
 					},
 					{
+						"color": "gray",
 						"createdAt": 2,
 						"id": "phone",
 						"name": "Phone"
@@ -7513,11 +7591,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -7760,11 +7840,13 @@
 				"comments": [],
 				"labels": [
 					{
+						"color": "gray",
 						"createdAt": 1,
 						"id": "calls",
 						"name": "calls"
 					},
 					{
+						"color": "gray",
 						"createdAt": 2,
 						"id": "phone",
 						"name": "Phone"
@@ -7943,11 +8025,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -8124,11 +8208,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -11243,11 +11329,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -11428,11 +11516,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -11622,11 +11712,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -11803,11 +11895,13 @@
 				"comments": [],
 				"labels": [
 					{
+						"color": "gray",
 						"createdAt": 1,
 						"id": "calls",
 						"name": "calls"
 					},
 					{
+						"color": "gray",
 						"createdAt": 2,
 						"id": "phone",
 						"name": "Phone"
@@ -11986,11 +12080,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -12166,11 +12262,13 @@
 				"comments": [],
 				"labels": [
 					{
+						"color": "gray",
 						"createdAt": 1,
 						"id": "calls",
 						"name": "calls"
 					},
 					{
+						"color": "gray",
 						"createdAt": 2,
 						"id": "phone",
 						"name": "Phone"
@@ -12310,11 +12408,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -12496,11 +12596,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -12754,11 +12856,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -12940,11 +13044,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -13131,11 +13237,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -13317,11 +13425,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -13515,11 +13625,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -13696,11 +13808,13 @@
 				"comments": [],
 				"labels": [
 					{
+						"color": "gray",
 						"createdAt": 1,
 						"id": "calls",
 						"name": "calls"
 					},
 					{
+						"color": "gray",
 						"createdAt": 2,
 						"id": "phone",
 						"name": "Phone"
@@ -13879,11 +13993,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -14060,11 +14176,13 @@
 				"comments": [],
 				"labels": [
 					{
+						"color": "gray",
 						"createdAt": 1,
 						"id": "calls",
 						"name": "calls"
 					},
 					{
+						"color": "gray",
 						"createdAt": 2,
 						"id": "phone",
 						"name": "Phone"
@@ -14243,11 +14361,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -14424,11 +14544,13 @@
 				"comments": [],
 				"labels": [
 					{
+						"color": "gray",
 						"createdAt": 1,
 						"id": "calls",
 						"name": "calls"
 					},
 					{
+						"color": "gray",
 						"createdAt": 2,
 						"id": "phone",
 						"name": "Phone"
@@ -14607,11 +14729,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -14788,11 +14912,13 @@
 				"comments": [],
 				"labels": [
 					{
+						"color": "gray",
 						"createdAt": 1,
 						"id": "calls",
 						"name": "calls"
 					},
 					{
+						"color": "gray",
 						"createdAt": 2,
 						"id": "phone",
 						"name": "Phone"
@@ -15017,11 +15143,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -15198,11 +15326,13 @@
 				"comments": [],
 				"labels": [
 					{
+						"color": "gray",
 						"createdAt": 1,
 						"id": "calls",
 						"name": "calls"
 					},
 					{
+						"color": "gray",
 						"createdAt": 2,
 						"id": "phone",
 						"name": "Phone"
@@ -15381,11 +15511,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -15564,11 +15696,13 @@
 				"comments": [],
 				"labels": [
 					{
+						"color": "gray",
 						"createdAt": 1,
 						"id": "calls",
 						"name": "calls"
 					},
 					{
+						"color": "gray",
 						"createdAt": 2,
 						"id": "phone",
 						"name": "Phone"
@@ -15949,11 +16083,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -16132,11 +16268,13 @@
 				"comments": [],
 				"labels": [
 					{
+						"color": "gray",
 						"createdAt": 1,
 						"id": "calls",
 						"name": "calls"
 					},
 					{
+						"color": "gray",
 						"createdAt": 2,
 						"id": "phone",
 						"name": "Phone"
@@ -16315,11 +16453,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -16495,11 +16635,13 @@
 				"comments": [],
 				"labels": [
 					{
+						"color": "gray",
 						"createdAt": 1,
 						"id": "calls",
 						"name": "calls"
 					},
 					{
+						"color": "gray",
 						"createdAt": 2,
 						"id": "phone",
 						"name": "Phone"
@@ -16605,11 +16747,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -16785,11 +16929,13 @@
 				"comments": [],
 				"labels": [
 					{
+						"color": "gray",
 						"createdAt": 1,
 						"id": "calls",
 						"name": "calls"
 					},
 					{
+						"color": "gray",
 						"createdAt": 2,
 						"id": "phone",
 						"name": "Phone"
@@ -16961,11 +17107,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -17144,11 +17292,13 @@
 				"comments": [],
 				"labels": [
 					{
+						"color": "gray",
 						"createdAt": 1,
 						"id": "calls",
 						"name": "calls"
 					},
 					{
+						"color": "gray",
 						"createdAt": 2,
 						"id": "phone",
 						"name": "Phone"
@@ -17327,11 +17477,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -17510,11 +17662,13 @@
 				"comments": [],
 				"labels": [
 					{
+						"color": "gray",
 						"createdAt": 1,
 						"id": "calls",
 						"name": "calls"
 					},
 					{
+						"color": "gray",
 						"createdAt": 2,
 						"id": "phone",
 						"name": "Phone"
@@ -17693,11 +17847,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -17876,11 +18032,13 @@
 				"comments": [],
 				"labels": [
 					{
+						"color": "gray",
 						"createdAt": 1,
 						"id": "calls",
 						"name": "calls"
 					},
 					{
+						"color": "gray",
 						"createdAt": 2,
 						"id": "phone",
 						"name": "Phone"
@@ -18059,11 +18217,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -18242,11 +18402,13 @@
 				"comments": [],
 				"labels": [
 					{
+						"color": "gray",
 						"createdAt": 1,
 						"id": "calls",
 						"name": "calls"
 					},
 					{
+						"color": "gray",
 						"createdAt": 2,
 						"id": "phone",
 						"name": "Phone"
@@ -18425,11 +18587,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -18608,11 +18772,13 @@
 				"comments": [],
 				"labels": [
 					{
+						"color": "gray",
 						"createdAt": 1,
 						"id": "calls",
 						"name": "calls"
 					},
 					{
+						"color": "gray",
 						"createdAt": 2,
 						"id": "phone",
 						"name": "Phone"
@@ -18791,11 +18957,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -18974,11 +19142,13 @@
 				"comments": [],
 				"labels": [
 					{
+						"color": "gray",
 						"createdAt": 1,
 						"id": "calls",
 						"name": "calls"
 					},
 					{
+						"color": "gray",
 						"createdAt": 2,
 						"id": "phone",
 						"name": "Phone"
@@ -19157,11 +19327,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -19340,11 +19512,13 @@
 				"comments": [],
 				"labels": [
 					{
+						"color": "gray",
 						"createdAt": 1,
 						"id": "calls",
 						"name": "calls"
 					},
 					{
+						"color": "gray",
 						"createdAt": 2,
 						"id": "phone",
 						"name": "Phone"
@@ -19523,11 +19697,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -19706,11 +19882,13 @@
 				"comments": [],
 				"labels": [
 					{
+						"color": "gray",
 						"createdAt": 1,
 						"id": "calls",
 						"name": "calls"
 					},
 					{
+						"color": "gray",
 						"createdAt": 2,
 						"id": "phone",
 						"name": "Phone"
@@ -19889,11 +20067,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -20072,11 +20252,13 @@
 				"comments": [],
 				"labels": [
 					{
+						"color": "gray",
 						"createdAt": 1,
 						"id": "calls",
 						"name": "calls"
 					},
 					{
+						"color": "gray",
 						"createdAt": 2,
 						"id": "phone",
 						"name": "Phone"
@@ -20255,11 +20437,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -20453,11 +20637,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -20681,11 +20867,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -20879,11 +21067,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -21107,11 +21297,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -21305,11 +21497,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -21533,11 +21727,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -21731,11 +21927,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -21959,11 +22157,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -22142,11 +22342,13 @@
 				"comments": [],
 				"labels": [
 					{
+						"color": "gray",
 						"createdAt": 1,
 						"id": "calls",
 						"name": "calls"
 					},
 					{
+						"color": "gray",
 						"createdAt": 2,
 						"id": "phone",
 						"name": "Phone"
@@ -22325,11 +22527,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -22509,11 +22713,13 @@
 				"comments": [],
 				"labels": [
 					{
+						"color": "gray",
 						"createdAt": 1,
 						"id": "calls",
 						"name": "calls"
 					},
 					{
+						"color": "gray",
 						"createdAt": 2,
 						"id": "phone",
 						"name": "Phone"
@@ -22692,11 +22898,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -22875,11 +23083,13 @@
 				"comments": [],
 				"labels": [
 					{
+						"color": "gray",
 						"createdAt": 1,
 						"id": "calls",
 						"name": "calls"
 					},
 					{
+						"color": "gray",
 						"createdAt": 2,
 						"id": "phone",
 						"name": "Phone"
@@ -23058,11 +23268,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -23241,11 +23453,13 @@
 				"comments": [],
 				"labels": [
 					{
+						"color": "gray",
 						"createdAt": 1,
 						"id": "calls",
 						"name": "calls"
 					},
 					{
+						"color": "gray",
 						"createdAt": 2,
 						"id": "phone",
 						"name": "Phone"
@@ -23417,6 +23631,374 @@
 			}
 		},
 		{
+			"fn": "setLabelColor",
+			"test": "labels › setting a label color changes only that label",
+			"input": [
+				{
+					"comments": [],
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 1,
+							"id": "calls",
+							"name": "calls"
+						},
+						{
+							"color": "gray",
+							"createdAt": 2,
+							"id": "phone",
+							"name": "Phone"
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 1,
+							"id": "home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 2,
+							"id": "work",
+							"name": "Work"
+						}
+					],
+					"reads": [],
+					"sections": [
+						{
+							"createdAt": 1,
+							"id": "later",
+							"name": "Later",
+							"order": 1,
+							"projectId": "home"
+						},
+						{
+							"createdAt": 2,
+							"id": "next",
+							"name": "Next",
+							"order": 0,
+							"projectId": "home"
+						},
+						{
+							"createdAt": 3,
+							"id": "someday",
+							"name": "Someday",
+							"order": 0,
+							"projectId": "work"
+						}
+					],
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "trip",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "trip"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 2,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "passport",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "passport"
+						},
+						{
+							"completedAt": 50,
+							"completedBy": null,
+							"createdAt": 3,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "charger",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 1,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "charger"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 4,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-14",
+								"time": "09:00"
+							},
+							"event": null,
+							"id": "standup",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": {
+								"interval": 1,
+								"unit": "day"
+							},
+							"reminders": [
+								{
+									"date": "2026-10-14",
+									"kind": "at",
+									"time": "08:00"
+								}
+							],
+							"sectionId": null,
+							"title": "standup"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 5,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "call",
+							"images": [],
+							"labelIds": [
+								"calls",
+								"phone"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "call"
+						}
+					]
+				},
+				"phone",
+				"violet"
+			],
+			"output": {
+				"comments": [],
+				"labels": [
+					{
+						"color": "gray",
+						"createdAt": 1,
+						"id": "calls",
+						"name": "calls"
+					},
+					{
+						"color": "violet",
+						"createdAt": 2,
+						"id": "phone",
+						"name": "Phone"
+					}
+				],
+				"projects": [
+					{
+						"createdAt": 1,
+						"id": "home",
+						"name": "Home"
+					},
+					{
+						"createdAt": 2,
+						"id": "work",
+						"name": "Work"
+					}
+				],
+				"reads": [],
+				"sections": [
+					{
+						"createdAt": 1,
+						"id": "later",
+						"name": "Later",
+						"order": 1,
+						"projectId": "home"
+					},
+					{
+						"createdAt": 2,
+						"id": "next",
+						"name": "Next",
+						"order": 0,
+						"projectId": "home"
+					},
+					{
+						"createdAt": 3,
+						"id": "someday",
+						"name": "Someday",
+						"order": 0,
+						"projectId": "work"
+					}
+				],
+				"tasks": [
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "trip",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "trip"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 2,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "passport",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "passport"
+					},
+					{
+						"completedAt": 50,
+						"completedBy": null,
+						"createdAt": 3,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "charger",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 1,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "charger"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 4,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": "09:00"
+						},
+						"event": null,
+						"id": "standup",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": {
+							"interval": 1,
+							"unit": "day"
+						},
+						"reminders": [
+							{
+								"date": "2026-10-14",
+								"kind": "at",
+								"time": "08:00"
+							}
+						],
+						"sectionId": null,
+						"title": "standup"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 5,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "call",
+						"images": [],
+						"labelIds": [
+							"calls",
+							"phone"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "call"
+					}
+				]
+			}
+		},
+		{
 			"fn": "addLabel",
 			"test": "labels › adding a label and renaming it, unique ignoring case",
 			"input": [
@@ -23424,11 +24006,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -23609,16 +24193,19 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
 						},
 						{
+							"color": "orange",
 							"createdAt": 1000,
 							"id": "errands",
 							"name": "errands"
@@ -23789,6 +24376,7 @@
 					]
 				},
 				"label": {
+					"color": "orange",
 					"createdAt": 1000,
 					"id": "errands",
 					"name": "errands"
@@ -23803,11 +24391,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -23984,11 +24574,13 @@
 				"comments": [],
 				"labels": [
 					{
+						"color": "gray",
 						"createdAt": 1,
 						"id": "calls",
 						"name": "Calls"
 					},
 					{
+						"color": "gray",
 						"createdAt": 2,
 						"id": "phone",
 						"name": "Phone"
@@ -24167,11 +24759,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -24348,11 +24942,13 @@
 				"comments": [],
 				"labels": [
 					{
+						"color": "gray",
 						"createdAt": 1,
 						"id": "calls",
 						"name": "calls"
 					},
 					{
+						"color": "gray",
 						"createdAt": 2,
 						"id": "phone",
 						"name": "Phone"
@@ -24531,11 +25127,13 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 2,
 							"id": "phone",
 							"name": "Phone"
@@ -24711,6 +25309,7 @@
 				"comments": [],
 				"labels": [
 					{
+						"color": "gray",
 						"createdAt": 2,
 						"id": "phone",
 						"name": "Phone"

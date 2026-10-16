@@ -844,6 +844,7 @@
 				],
 				"labels": [
 					{
+						"color": "gray",
 						"createdAt": 1791800000002,
 						"id": "l-health",
 						"name": "health"
@@ -1046,6 +1047,7 @@
 					],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1791800000002,
 							"id": "l-health",
 							"name": "health"
@@ -4147,6 +4149,7 @@
 					],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1791800000002,
 							"id": "l-health",
 							"name": "health"
@@ -4417,6 +4420,7 @@
 				],
 				"labels": [
 					{
+						"color": "gray",
 						"createdAt": 1791800000002,
 						"id": "l-health",
 						"name": "health"
@@ -6544,6 +6548,7 @@
 				10
 			],
 			"output": {
+				"comments": [],
 				"labels": [
 					{
 						"color": "red",
@@ -6554,7 +6559,9 @@
 				],
 				"people": [],
 				"projects": [],
+				"reads": [],
 				"remindersCheckedAt": 5,
+				"sections": [],
 				"spaces": {},
 				"tasks": []
 			}

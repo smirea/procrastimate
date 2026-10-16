@@ -124,7 +124,7 @@ describe('first sync', () => {
 			settings: { timeZone: 'Europe/Paris' },
 		});
 		expect(seedPatches(server, local)).toEqual([
-			{ kind: 'label', id: 'mine', fields: { deleted: false, name: 'mine', createdAt: 1 } },
+			{ kind: 'label', id: 'mine', fields: { deleted: false, name: 'mine', color: 'gray', createdAt: 1 } },
 			{ kind: 'task', id: 't1', fields: { title: 'Renamed offline' } },
 		]);
 	});

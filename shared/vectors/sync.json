@@ -386,6 +386,7 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "l",
 							"name": "l"
@@ -463,6 +464,7 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "l",
 							"name": "l"
@@ -616,6 +618,7 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 1,
 							"id": "mine",
 							"name": "mine"
@@ -669,6 +672,7 @@
 			"output": [
 				{
 					"fields": {
+						"color": "gray",
 						"createdAt": 1,
 						"deleted": false,
 						"name": "mine"

@@ -20,6 +20,7 @@
 	import ProjectPicker from '../components/ProjectPicker.svelte';
 	import LabelPicker from '../components/LabelPicker.svelte';
 	import { store } from '../store.svelte.ts';
+	import { labelStyle } from '../label-colors.ts';
 	import { clock, mobile, motion, sheets, toasts, type QuickAddDefaults } from '../ui.svelte.ts';
 	import { PRIORITIES } from '../priorities.ts';
 	import { showAdded } from '../show-added.ts';
@@ -498,7 +499,7 @@
 				<span class="token" in:pop><Hash size={13} weight="bold" />{project.name}</span>
 			{/if}
 			{#each labels as label (label.id)}
-				<span class="token" in:pop><Tag size={13} weight="fill" class="text-[var(--tone-label)]" />{label.name}</span>
+				<span class="token" in:pop><Tag size={13} weight="fill" class="text-[var(--label-tone)]" style={labelStyle(label.color)} />{label.name}</span>
 			{/each}
 		</div>
 	{/if}
