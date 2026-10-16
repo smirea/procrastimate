@@ -40,10 +40,10 @@ export function addDays(key: DateKey, days: number): DateKey {
 }
 
 /** Clamps to the last day of a shorter month, so Jan 31 plus one month is Feb 28. */
-export function addMonths(key: DateKey, months: number): DateKey {
+export function addMonths(key: DateKey, months: number, day?: number): DateKey {
 	const [y, m, d] = key.split('-').map(Number) as [number, number, number];
 	const lastDay = new Date(y, m - 1 + months + 1, 0).getDate();
-	return toDateKey(new Date(y, m - 1 + months, Math.min(d, lastDay)));
+	return toDateKey(new Date(y, m - 1 + months, Math.min(day ?? d, lastDay)));
 }
 
 export function addInterval(key: DateKey, interval: number, unit: RecurrenceUnit): DateKey {
@@ -110,6 +110,7 @@ export function weeklyOn(interval: number, days: Iterable<Weekday>): Recurrence 
  * Sunday to the first listed day `interval` weeks after this week's Monday.
  */
 export function stepRecurrence(date: DateKey, recurrence: Recurrence): DateKey {
+	if (recurrence.unit === 'month' && recurrence.day) return addMonths(date, recurrence.interval, recurrence.day);
 	if (recurrence.unit !== 'week' || !recurrence.days) return addInterval(date, recurrence.interval, recurrence.unit);
 	const position = mondayIndex(weekdayOf(date));
 	const later = recurrence.days.find(day => mondayIndex(day) > position);
@@ -117,8 +118,12 @@ export function stepRecurrence(date: DateKey, recurrence: Recurrence): DateKey {
 	return addDays(date, recurrence.interval * 7 - position + mondayIndex(recurrence.days[0]!));
 }
 
-/** The first occurrence on or after `date`: `date` itself unless a weekday set leaves it out. */
+/** The first occurrence on or after `date`: `date` itself unless a weekday set or a day of the month leaves it out. */
 export function alignToRecurrence(date: DateKey, recurrence: Recurrence): DateKey {
+	if (recurrence.unit === 'month' && recurrence.day) {
+		const thisMonth = addMonths(date, 0, recurrence.day);
+		return thisMonth >= date ? thisMonth : addMonths(date, 1, recurrence.day);
+	}
 	const off = recurrence.unit === 'week' && recurrence.days && !recurrence.days.includes(weekdayOf(date));
 	return off ? stepRecurrence(date, { ...recurrence, interval: 1 }) : date;
 }
@@ -129,7 +134,7 @@ const daysBetween = (from: DateKey, to: DateKey) =>
 /**
  * Where a recurring task moves when it is completed: the first occurrence after today, stepping one
  * interval at a time from the due date, or from today when it has none. Each step counts from the last,
- * so a month clamped to its last day carries that day forward. Absolute reminders shift by the same
+ * so a month clamped to its last day carries that day forward, unless the repeat names its day. Absolute reminders shift by the same
  * number of days, and relative reminders follow the due time.
  */
 export function nextOccurrence(

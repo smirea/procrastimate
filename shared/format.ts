@@ -75,7 +75,14 @@ export function formatRecurrence(recurrence: Recurrence, due: Due | null): strin
 		const names = days.map(day => WEEKDAY_NAMES[day]).join(', ');
 		return interval === 1 ? `Every ${names}` : `Every ${interval} weeks on ${names}`;
 	}
-	return interval === 1 ? `Every ${unit}` : `Every ${interval} ${unit}s`;
+	const every = interval === 1 ? `Every ${unit}` : `Every ${interval} ${unit}s`;
+	return unit === 'month' && recurrence.day ? `${every} on the ${ordinal(recurrence.day)}` : every;
+}
+
+/** `1st`, `2nd`, `11th`, `22nd`. */
+function ordinal(n: number): string {
+	const teen = n % 100 >= 11 && n % 100 <= 13;
+	return `${n}${teen ? 'th' : (['th', 'st', 'nd', 'rd'][n % 10] ?? 'th')}`;
 }
 
 export function repeatLabel(recurrence: Recurrence, due: Due | null): string {

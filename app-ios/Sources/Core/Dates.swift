@@ -61,8 +61,9 @@ public enum Dates {
     public static func addDays(_ key: DateKey, _ days: Int) -> DateKey { Self.key(days: Self.days(key) + days) }
 
     /// Clamps to the last day of a shorter month, so Jan 31 plus one month is Feb 28.
-    public static func addMonths(_ key: DateKey, _ months: Int) -> DateKey {
-        let (y, m, d) = parts(key)
+    public static func addMonths(_ key: DateKey, _ months: Int, day: Int? = nil) -> DateKey {
+        let (y, m, keyDay) = parts(key)
+        let d = day ?? keyDay
         let total = y * 12 + (m - 1) + months
         let year = Int((Double(total) / 12).rounded(.down))
         let month = total - year * 12 + 1
@@ -114,6 +115,7 @@ public enum Dates {
     /// The occurrence after `date`. A weekday set moves to the next listed day of the same week, or past Sunday to the
     /// first listed day `interval` weeks after this week's Monday.
     public static func stepRecurrence(_ date: DateKey, _ recurrence: Recurrence) -> DateKey {
+        if recurrence.unit == .month, let day = recurrence.day { return addMonths(date, recurrence.interval, day: day) }
         guard recurrence.unit == .week, let days = recurrence.days, let first = days.first else {
             return addInterval(date, recurrence.interval, recurrence.unit)
         }
@@ -124,8 +126,12 @@ public enum Dates {
         return addDays(date, recurrence.interval * 7 - position + mondayIndex(first))
     }
 
-    /// The first occurrence on or after `date`: `date` itself unless a weekday set leaves it out.
+    /// The first occurrence on or after `date`: `date` itself unless a weekday set or a day of the month leaves it out.
     public static func alignToRecurrence(_ date: DateKey, _ recurrence: Recurrence) -> DateKey {
+        if recurrence.unit == .month, let day = recurrence.day {
+            let thisMonth = addMonths(date, 0, day: day)
+            return thisMonth >= date ? thisMonth : addMonths(date, 1, day: day)
+        }
         guard recurrence.unit == .week, let days = recurrence.days, !days.contains(weekdayOf(date)) else { return date }
         var once = recurrence
         once.interval = 1
@@ -134,7 +140,7 @@ public enum Dates {
 
     /// Where a recurring task moves when it is completed: the first occurrence after today, stepping one interval at a
     /// time from the due date, or from today when it has none. Each step counts from the last, so a month clamped to its
-    /// last day carries that day forward. Absolute reminders shift by the same number of days, and relative reminders
+    /// last day carries that day forward, unless the repeat names its day. Absolute reminders shift by the same number of days, and relative reminders
     /// follow the due time.
     public static func nextOccurrence(
         due: Due?,

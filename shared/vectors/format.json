@@ -137,6 +137,118 @@
 		},
 		{
 			"fn": "formatRecurrence",
+			"test": "formatRecurrence › {\"interval\":1,\"unit\":\"month\",\"day\":3} reads \"Every month on the 3rd\"",
+			"input": [
+				{
+					"day": 3,
+					"interval": 1,
+					"unit": "month"
+				},
+				{
+					"date": "2026-10-14",
+					"time": null
+				}
+			],
+			"output": "Every month on the 3rd"
+		},
+		{
+			"fn": "formatRecurrence",
+			"test": "formatRecurrence › {\"interval\":1,\"unit\":\"month\",\"day\":1} reads \"Every month on the 1st\"",
+			"input": [
+				{
+					"day": 1,
+					"interval": 1,
+					"unit": "month"
+				},
+				{
+					"date": "2026-10-14",
+					"time": null
+				}
+			],
+			"output": "Every month on the 1st"
+		},
+		{
+			"fn": "formatRecurrence",
+			"test": "formatRecurrence › {\"interval\":1,\"unit\":\"month\",\"day\":22} reads \"Every month on the 22nd\"",
+			"input": [
+				{
+					"day": 22,
+					"interval": 1,
+					"unit": "month"
+				},
+				{
+					"date": "2026-10-14",
+					"time": null
+				}
+			],
+			"output": "Every month on the 22nd"
+		},
+		{
+			"fn": "formatRecurrence",
+			"test": "formatRecurrence › {\"interval\":1,\"unit\":\"month\",\"day\":11} reads \"Every month on the 11th\"",
+			"input": [
+				{
+					"day": 11,
+					"interval": 1,
+					"unit": "month"
+				},
+				{
+					"date": "2026-10-14",
+					"time": null
+				}
+			],
+			"output": "Every month on the 11th"
+		},
+		{
+			"fn": "formatRecurrence",
+			"test": "formatRecurrence › {\"interval\":1,\"unit\":\"month\",\"day\":12} reads \"Every month on the 12th\"",
+			"input": [
+				{
+					"day": 12,
+					"interval": 1,
+					"unit": "month"
+				},
+				{
+					"date": "2026-10-14",
+					"time": null
+				}
+			],
+			"output": "Every month on the 12th"
+		},
+		{
+			"fn": "formatRecurrence",
+			"test": "formatRecurrence › {\"interval\":1,\"unit\":\"month\",\"day\":13} reads \"Every month on the 13th\"",
+			"input": [
+				{
+					"day": 13,
+					"interval": 1,
+					"unit": "month"
+				},
+				{
+					"date": "2026-10-14",
+					"time": null
+				}
+			],
+			"output": "Every month on the 13th"
+		},
+		{
+			"fn": "formatRecurrence",
+			"test": "formatRecurrence › {\"interval\":2,\"unit\":\"month\",\"day\":31} reads \"Every 2 months on the 31st\"",
+			"input": [
+				{
+					"day": 31,
+					"interval": 2,
+					"unit": "month"
+				},
+				{
+					"date": "2026-10-14",
+					"time": null
+				}
+			],
+			"output": "Every 2 months on the 31st"
+		},
+		{
+			"fn": "formatRecurrence",
 			"test": "formatRecurrence › a weekly repeat without a due date names no day",
 			"input": [
 				{

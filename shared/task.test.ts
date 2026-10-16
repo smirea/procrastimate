@@ -220,6 +220,40 @@ describe('stepRecurrence on a weekday set', () => {
 	});
 });
 
+describe('a monthly repeat on a day', () => {
+	const on = (day: number, interval = 1): Recurrence => ({ interval, unit: 'month', day });
+
+	test.each([
+		['the 31st clamps to February', '2026-01-31', on(31), '2026-02-28'],
+		['the clamped 28th returns to the 31st', '2026-02-28', on(31), '2026-03-31'],
+		['the 30th of April goes to the 31st of May', '2026-04-30', on(31), '2026-05-31'],
+		['a moved due date goes back to the day', '2026-10-20', on(3), '2026-11-03'],
+		['every 2 months', '2026-12-31', on(31, 2), '2027-02-28'],
+		['a leap year keeps the 29th', '2028-01-29', on(29), '2028-02-29'],
+	] as const)('stepRecurrence: %s', (_, from, recurrence, expected) => {
+		expect(stepRecurrence(from, recurrence)).toBe(expected);
+	});
+
+	test.each([
+		['the day itself stays', '2026-10-14', on(14), '2026-10-14'],
+		['a passed day moves to next month', '2026-10-14', on(3), '2026-11-03'],
+		['a day later this month stays in it', '2026-10-14', on(20), '2026-10-20'],
+		['a day this month lacks is its last day', '2027-02-10', on(31), '2027-02-28'],
+		['a plain monthly repeat leaves the date alone', '2026-10-14', { interval: 1, unit: 'month' }, '2026-10-14'],
+	] as const)('alignToRecurrence: %s', (_, from, recurrence, expected) => {
+		expect(alignToRecurrence(from, recurrence)).toBe(expected);
+	});
+
+	test.each([
+		['completed on time in January', '2026-01-31', '2026-01-31', '2026-02-28'],
+		['completed on time in February', '2026-02-28', '2026-02-28', '2026-03-31'],
+		['overdue from January', '2026-01-31', '2026-03-01', '2026-03-31'],
+	] as const)('nextOccurrence: %s', (_, date, completedOn, expected) => {
+		const task = { due: { date, time: null }, recurrence: on(31), reminders: [] };
+		expect(nextOccurrence(task, completedOn)?.due.date).toBe(expected);
+	});
+});
+
 test.each([
 	[[5, 1, 3, 1], { interval: 1, unit: 'week', days: [1, 3, 5] }],
 	[[0, 6], { interval: 1, unit: 'week', days: [6, 0] }],

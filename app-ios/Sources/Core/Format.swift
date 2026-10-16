@@ -65,7 +65,7 @@ public enum Format {
         return "\(minutes)m"
     }
 
-    /// `Every Mon`, `Every Mon, Wed, Fri`, `Every 2 weeks on Tue, Thu`, `Every 3 days`.
+    /// `Every Mon`, `Every Mon, Wed, Fri`, `Every 2 weeks on Tue, Thu`, `Every 3 days`, `Every month on the 31st`.
     public static func formatRecurrence(_ recurrence: Recurrence, _ due: Due?) -> String {
         let interval = recurrence.interval
         let unit = recurrence.unit
@@ -76,7 +76,16 @@ public enum Format {
             let names = days.map { weekdayNames[$0] }.joined(separator: ", ")
             return interval == 1 ? "Every \(names)" : "Every \(interval) weeks on \(names)"
         }
-        return interval == 1 ? "Every \(unit.rawValue)" : "Every \(interval) \(unit.rawValue)s"
+        let every = interval == 1 ? "Every \(unit.rawValue)" : "Every \(interval) \(unit.rawValue)s"
+        guard unit == .month, let day = recurrence.day else { return every }
+        return "\(every) on the \(ordinal(day))"
+    }
+
+    /// `1st`, `2nd`, `11th`, `22nd`.
+    static func ordinal(_ n: Int) -> String {
+        let suffixes = ["th", "st", "nd", "rd"]
+        let teen = (11...13).contains(n % 100)
+        return "\(n)\(teen || n % 10 > 3 ? "th" : suffixes[n % 10])"
     }
 
     /// `Repeats every Mon`.

@@ -134,7 +134,7 @@ const DATE = [
 	WEEKDAY,
 	String.raw`in\s+\d+\s*${DAY_UNIT}`,
 	String.raw`\d+(?:d|wks?|w|mos?)`,
-	String.raw`the\s+\d{1,2}(?:st|nd|rd|th)`,
+	String.raw`the\s+(?:\d{1,2}(?:st|nd|rd|th)|${SPELLED_ORDINAL}(?!\s+${MONTH}\b))`,
 	String.raw`\d{1,2}/\d{1,2}(?:/(?:\d{4}|\d{2}))?`,
 ].join('|');
 /** `@` followed by a space means `at`, as in `Oct 2 @ 3pm`, while `@name` is a label. */
@@ -172,7 +172,7 @@ const GUARDS: RegExp[] = [
 	/\b(?!tom\b)[Tt][Oo][Mm]\b/g,
 	new RegExp(String.raw`(?<=\b(?:${NAME_CONTEXT})\s+)tom\b`, 'gi'),
 	new RegExp(
-		String.raw`(?<!${WEEKDAY}\b${WEEKDAY_SEPARATOR})\b(?:tom|sun|sat|wed|daily|weekdays|weekly|monthly|yearly)\b(?=\s+(?!(?:${PHRASE_WORDS}|and\s+${WEEKDAY})\b)[a-z]+(?![\w'’]))`,
+		String.raw`(?<!${WEEKDAY}\b${WEEKDAY_SEPARATOR})\b(?:tom|sun|sat|wed|daily|weekdays|weekly|monthly|yearly)\b(?=\s+(?!(?:${PHRASE_WORDS}|and\s+${WEEKDAY})\b|(?:on\s+)?the\s+(?:\d|${SPELLED_ORDINAL}))[a-z]+(?![\w'’]))`,
 		'gi',
 	),
 	new RegExp(String.raw`(?<=\b(?:${ADDRESS})\.?\s+)\d[\w:/]*`, 'gi'),
@@ -180,6 +180,10 @@ const GUARDS: RegExp[] = [
 	new RegExp(
 		String.raw`(?<!\b(?:[Ee]very|[Ee]ach|EVERY|EACH)\s+)\b(?:may|march)(?=\s+(?:the\s+)?${SPELLED_ORDINAL}\b)`,
 		'g',
+	),
+	new RegExp(
+		String.raw`(?<=\bthe\s+)${SPELLED_ORDINAL}(?=\s+(?!(?:at|(?:of\s+)?${MONTH}|p[1-4]|remind)\b)[a-z])`,
+		'gi',
 	),
 ];
 
@@ -341,7 +345,7 @@ const DATE_READERS: Array<[RegExp, (m: RegExpExecArray, today: DateKey) => DateK
 		},
 	],
 	[
-		/^the (\d{1,2})(?:st|nd|rd|th)$/,
+		/^the (\d{1,2})(?:st|nd|rd|th)?$/,
 		(m, today) => {
 			const day = Number(m[1]);
 			const start = fromDateKey(today);
@@ -373,8 +377,9 @@ const DATE_READERS: Array<[RegExp, (m: RegExpExecArray, today: DateKey) => DateK
 	],
 ];
 
-function resolveDate(text: string, today: DateKey): Day | null {
-	const t = text
+/** Lowercases and writes each spelled-out day number in digits, so `the twenty-first` reads `the 21`. */
+function digitOrdinals(text: string): string {
+	return text
 		.toLowerCase()
 		.replaceAll(/\s+/g, ' ')
 		.trim()
@@ -384,6 +389,10 @@ function resolveDate(text: string, today: DateKey): Day | null {
 					(word === 'thirtieth' ? 30 : ORDINAL_WORDS.indexOf(word) + 1),
 			),
 		);
+}
+
+function resolveDate(text: string, today: DateKey): Day | null {
+	const t = digitOrdinals(text);
 	const word = DAY_WORDS[t];
 	if (word) return word(today);
 	for (const [pattern, read] of DATE_READERS) {
@@ -462,12 +471,33 @@ const RULES: Rule[] = [
 		repeatable: false,
 		guarded: true,
 		pattern: new RegExp(
-			String.raw`${BEFORE}(?:(?:every|each)\s+(?:(?<yearDay>${MONTH_DAY})|(?<other>other)\s+(?<otherUnit>day|week|month|year)|(?<interval>\d+)\s*(?<intervalUnit>${DAY_UNIT})|(?<unit>day|week|month|year)|(?<workday>weekday|workday)|(?<weekdays>${WEEKDAY_LIST}|${WEEKDAY}))|(?<listed>${WEEKDAY_LIST})|(?<adverb>daily|weekdays|weekly|monthly|yearly|annually))${AFTER}`,
+			String.raw`${BEFORE}(?:(?:(?:every|each)\s+(?:(?<months>\d+|other)\s+)?months?|monthly)\s+(?:on\s+)?the\s+(?<monthDay>${ORDINAL}|${SPELLED_ORDINAL})|(?:every|each)\s+(?:(?<yearDay>${MONTH_DAY})|(?<dayOfMonth>(?:\d{1,2}(?:st|nd|rd|th)|${SPELLED_ORDINAL})\s+of\s+(?:the|each|every)\s+month|\d{1,2}(?:st|nd|rd|th)(?!\s+(?!(?:at|p[1-4]|remind)\b)[a-z]))|(?<other>other)\s+(?<otherUnit>day|week|month|year)|(?<interval>\d+)\s*(?<intervalUnit>${DAY_UNIT})|(?<unit>day|week|month|year)|(?<workday>weekday|workday)|(?<weekdays>${WEEKDAY_LIST}|${WEEKDAY}))|(?<listed>${WEEKDAY_LIST})|(?<adverb>daily|weekdays|weekly|monthly|yearly|annually))${AFTER}`,
 			'gi',
 		),
 		read: (m, ctx) => {
-			const { yearDay, other, otherUnit, interval, intervalUnit, unit, workday, weekdays, listed, adverb } =
-				m.groups ?? {};
+			const {
+				months,
+				monthDay,
+				dayOfMonth,
+				yearDay,
+				other,
+				otherUnit,
+				interval,
+				intervalUnit,
+				unit,
+				workday,
+				weekdays,
+				listed,
+				adverb,
+			} = m.groups ?? {};
+			const dayText = monthDay ?? dayOfMonth;
+			if (dayText) {
+				const day = Number(/\d+/.exec(digitOrdinals(dayText))![0]);
+				const every = months?.toLowerCase() === 'other' ? 2 : Number(months ?? 1);
+				if (day < 1 || day > 31 || every < 1) return null;
+				const recurrence: Recurrence = { interval: every, unit: 'month', day };
+				return { kind: 'recurrence', recurrence: { recurrence, anchor: alignToRecurrence(ctx.today, recurrence) } };
+			}
 			if (yearDay) {
 				const day = resolveDate(yearDay, ctx.today);
 				return (

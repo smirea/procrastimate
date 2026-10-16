@@ -47,6 +47,7 @@ const taskSchema = syncedTaskSchema.extend({
 			z
 				.object({ interval, unit: z.literal('week'), days: z.array(weekdaySchema).min(1).optional() })
 				.transform(({ interval, days }) => weeklyOn(interval, days ?? [])),
+			recurrenceSchema.options[2],
 		])
 		.nullable()
 		.default(null),

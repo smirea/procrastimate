@@ -61,14 +61,17 @@ export const recurrenceUnitSchema = z.enum(['day', 'weekday', 'week', 'month', '
 /**
  * Repeats every `interval` units, counted from the due date. A weekly repeat keeps the due date's weekday, or, with
  * `days`, repeats on each listed weekday of every `interval`-th week. `days` holds two or more weekdays sorted
- * Monday first. Build it with `weeklyOn`, so one day is a plain weekly repeat.
+ * Monday first. Build it with `weeklyOn`, so one day is a plain weekly repeat. A monthly repeat with `day` lands on
+ * that day of the month, or on the last day of a month that lacks it, so a repeat on the 31st returns to the 31st
+ * after February.
  */
 export const recurrenceSchema = z
 	.discriminatedUnion('unit', [
-		z.object({ interval, unit: recurrenceUnitSchema.exclude(['week']) }),
+		z.object({ interval, unit: recurrenceUnitSchema.exclude(['week', 'month']) }),
 		z.object({ interval, unit: z.literal('week'), days: z.array(weekdaySchema).min(2).readonly().optional() }),
+		z.object({ interval, unit: z.literal('month'), day: z.number().int().min(1).max(31).optional() }),
 	])
-	// Swift keeps one struct whose `days` only a weekly repeat sets, which reads better than an enum of two.
+	// Swift keeps one struct whose `days` and `day` only their unit sets, which reads better than an enum of three.
 	.meta({ id: 'Recurrence', 'x-flatten': { unit: 'RecurrenceUnit' } });
 export type Recurrence = z.infer<typeof recurrenceSchema>;
 export type RecurrenceUnit = z.infer<typeof recurrenceUnitSchema>;

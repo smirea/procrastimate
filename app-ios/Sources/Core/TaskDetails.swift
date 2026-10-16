@@ -139,17 +139,22 @@ public enum RepeatMenu {
         return Recurrence(interval: recurrence?.unit == .week ? recurrence!.interval : 1, unit: .week, days: days)
     }
 
-    /// A custom weekly interval keeps the current weekday set.
+    /// A custom weekly interval keeps the current weekday set, and a custom monthly one its day of the month.
     public static func custom(_ interval: Int, _ unit: RecurrenceUnit, _ recurrence: Recurrence?) -> Recurrence {
-        let days = unit == .week && recurrence?.unit == .week ? recurrence?.days : nil
-        return Recurrence(interval: interval, unit: unit, days: days)
+        let same = recurrence?.unit == unit
+        return Recurrence(
+            interval: interval,
+            unit: unit,
+            days: unit == .week && same ? recurrence?.days : nil,
+            day: unit == .month && same ? recurrence?.day : nil
+        )
     }
 
-    /// Whether a preset shows as the current repeat. A weekday set matches none.
+    /// Whether a preset shows as the current repeat. A weekday set or a day of the month matches none.
     public static func isSelected(_ preset: Recurrence, _ recurrence: Recurrence?) -> Bool {
         guard let recurrence else { return false }
         return recurrence.interval == preset.interval && recurrence.unit == preset.unit
-            && !(recurrence.unit == .week && recurrence.days != nil)
+            && !(recurrence.unit == .week && recurrence.days != nil) && recurrence.day == nil
     }
 }
 

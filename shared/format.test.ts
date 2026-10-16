@@ -37,6 +37,13 @@ describe('formatRecurrence', () => {
 		[{ interval: 1, unit: 'weekday' }, 'Every weekday'],
 		[{ interval: 3, unit: 'day' }, 'Every 3 days'],
 		[{ interval: 1, unit: 'year' }, 'Every year'],
+		[{ interval: 1, unit: 'month', day: 3 }, 'Every month on the 3rd'],
+		[{ interval: 1, unit: 'month', day: 1 }, 'Every month on the 1st'],
+		[{ interval: 1, unit: 'month', day: 22 }, 'Every month on the 22nd'],
+		[{ interval: 1, unit: 'month', day: 11 }, 'Every month on the 11th'],
+		[{ interval: 1, unit: 'month', day: 12 }, 'Every month on the 12th'],
+		[{ interval: 1, unit: 'month', day: 13 }, 'Every month on the 13th'],
+		[{ interval: 2, unit: 'month', day: 31 }, 'Every 2 months on the 31st'],
 	] as const)('%p reads %p', (recurrence, expected) => {
 		expect(formatRecurrence(recurrence, { date: today, time: null })).toBe(expected);
 	});

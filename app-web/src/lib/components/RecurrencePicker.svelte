@@ -59,7 +59,7 @@
 	}
 
 	const same = (a: Recurrence | null, b: Recurrence) =>
-		a?.interval === b.interval && a.unit === b.unit && !(a.unit === 'week' && a.days);
+		a?.interval === b.interval && a.unit === b.unit && !(a.unit === 'week' && a.days) && !(a.unit === 'month' && a.day);
 </script>
 
 <Popover label="Repeat" bind:open>
@@ -127,7 +127,14 @@
 					e.preventDefault();
 					if (!customValid) return;
 					const days = customUnit === 'week' && recurrence?.unit === 'week' ? recurrence.days : undefined;
-					set(days ? { interval: customInterval!, unit: 'week', days } : { interval: customInterval!, unit: customUnit });
+					const day = customUnit === 'month' && recurrence?.unit === 'month' ? recurrence.day : undefined;
+					set(
+						days
+							? { interval: customInterval!, unit: 'week', days }
+							: day
+								? { interval: customInterval!, unit: 'month', day }
+								: { interval: customInterval!, unit: customUnit },
+					);
 					close();
 				}}
 			>
