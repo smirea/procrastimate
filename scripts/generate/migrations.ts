@@ -1,18 +1,21 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import journal from '../../server/drizzle/meta/_journal.json';
 
-type Journal = { entries: { idx: number; when: number; tag: string }[] };
-
-/** `server/drizzle` as a module, since neither the Worker nor a Durable Object can read the migration files. */
-export function migrationsModule(folder: string): string {
-	const journal = JSON.parse(readFileSync(join(folder, 'meta/_journal.json'), 'utf8')) as Journal;
-	const migrations = journal.entries.map(entry => ({
-		tag: entry.tag,
-		when: entry.when,
-		statements: readFileSync(join(folder, `${entry.tag}.sql`), 'utf8')
-			.split('--> statement-breakpoint')
-			.map(statement => statement.trim())
-			.filter(Boolean),
-	}));
+/**
+ * `server/drizzle` as a module, since neither the Worker nor a Durable Object can read the migration files. Imported
+ * rather than read so `bun --watch` regenerates when a migration changes.
+ */
+export async function migrationsModule(): Promise<string> {
+	const migrations = await Promise.all(
+		journal.entries.map(async entry => ({
+			tag: entry.tag,
+			when: entry.when,
+			statements: (
+				(await import(`../../server/drizzle/${entry.tag}.sql`, { with: { type: 'text' } })) as { default: string }
+			).default
+				.split('--> statement-breakpoint')
+				.map(statement => statement.trim())
+				.filter(Boolean),
+		})),
+	);
 	return `export const migrations: { tag: string; when: number; statements: string[] }[] = ${JSON.stringify(migrations, null, '\t')};\n`;
 }
