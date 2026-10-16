@@ -105,13 +105,13 @@ export class Reorder {
 	}
 
 	#rows() {
-		return [...this.#list!.querySelectorAll(`[${this.#options.key}]`)];
+		return [...this.#list!.querySelectorAll<HTMLElement>(`[${this.#options.key}]`)];
 	}
 
 	#lift() {
 		const press = this.#press;
 		if (!press || !this.#list) return;
-		const rects = this.#rows().map(row => row.getBoundingClientRect());
+		const rects = this.#rows().map(row => layoutRect(row, this.#list!));
 		const own = rects[press.index]!;
 		const mid = own.top + own.height / 2;
 		const gap = rects.length > 1 ? rects[1]!.top - rects[0]!.bottom : 0;
@@ -215,6 +215,16 @@ export class Reorder {
 		});
 		this.settling = false;
 	}
+}
+
+/**
+ * A row's place in the layout, in viewport coordinates. A row can be mid-flip or still holding a drag offset, and its
+ * transformed rect would put the drop bounds and midpoints where the row is drawn instead of where it sits.
+ */
+function layoutRect(row: HTMLElement, list: HTMLElement) {
+	if (row.offsetParent !== list) throw new Error('A reorderable list must be the positioned parent of its rows');
+	const top = list.getBoundingClientRect().top + list.clientTop + row.offsetTop;
+	return { top, bottom: top + row.offsetHeight, height: row.offsetHeight };
 }
 
 function scrollerOf(element: HTMLElement): Element {

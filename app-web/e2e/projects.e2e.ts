@@ -63,6 +63,24 @@ test('dragging a project reorders the sidebar, survives a reload, and a plain cl
 	]);
 });
 
+test('a project lifted while the rows still animate from a move lands where it is dropped', async ({ app, page }) => {
+	for (const name of ['Home', 'Work', 'Errands']) await app.createProject(name);
+	await app.settle();
+	const cdp = await page.context().newCDPSession(page);
+	await cdp.send('Animation.enable');
+	await cdp.send('Animation.setPlaybackRate', { playbackRate: 0 });
+
+	await app.nav('Home').focus();
+	await page.keyboard.press('Alt+ArrowDown');
+	await expect(sidebarProjects(page)).toHaveText(['Work', 'Home', 'Errands']);
+	const start = await center(app.nav('Errands'));
+	await page.mouse.move(start.x, start.y);
+	await page.mouse.down();
+	await page.mouse.move(start.x, 0, { steps: 12 });
+	await page.mouse.up();
+	await expect(sidebarProjects(page)).toHaveText(['Errands', 'Work', 'Home']);
+});
+
 test.describe('in a short window', () => {
 	test.use({ viewport: { width: 1280, height: 480 } });
 
