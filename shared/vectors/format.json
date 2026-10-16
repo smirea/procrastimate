@@ -803,6 +803,194 @@
 			"output": "Reminder: Call mom"
 		},
 		{
+			"fn": "reopenedToast",
+			"test": "labels and toasts › reopening names the task",
+			"input": [
+				"Pay rent"
+			],
+			"output": "Reopened “Pay rent”"
+		},
+		{
+			"fn": "completedWhen",
+			"test": "completed › a completion reads as its local day and time",
+			"input": [
+				1792004640000,
+				"2026-10-14"
+			],
+			"output": "Today 3:04pm"
+		},
+		{
+			"fn": "completedWhen",
+			"test": "completed › a completion reads as its local day and time",
+			"input": [
+				1791896400000,
+				"2026-10-14"
+			],
+			"output": "Yesterday 9am"
+		},
+		{
+			"fn": "completedWhen",
+			"test": "completed › a completion reads as its local day and time",
+			"input": [
+				1791520200000,
+				"2026-10-14"
+			],
+			"output": "Oct 9 12:30am"
+		},
+		{
+			"fn": "completedWhen",
+			"test": "completed › a completion reads as its local day and time",
+			"input": [
+				1767243540000,
+				"2026-10-14"
+			],
+			"output": "Dec 31, 2025 11:59pm"
+		},
+		{
+			"fn": "completedRangeLabel",
+			"test": "completed › a range reads as its preset, else as its days",
+			"input": [
+				{
+					"from": null,
+					"to": null
+				},
+				"2026-10-14"
+			],
+			"output": "All time"
+		},
+		{
+			"fn": "completedRangeLabel",
+			"test": "completed › a range reads as its preset, else as its days",
+			"input": [
+				{
+					"from": "2026-10-14",
+					"to": "2026-10-14"
+				},
+				"2026-10-14"
+			],
+			"output": "Today"
+		},
+		{
+			"fn": "completedRangeLabel",
+			"test": "completed › a range reads as its preset, else as its days",
+			"input": [
+				{
+					"from": "2026-10-08",
+					"to": "2026-10-14"
+				},
+				"2026-10-14"
+			],
+			"output": "Last 7 days"
+		},
+		{
+			"fn": "completedRangeLabel",
+			"test": "completed › a range reads as its preset, else as its days",
+			"input": [
+				{
+					"from": "2026-09-15",
+					"to": "2026-10-14"
+				},
+				"2026-10-14"
+			],
+			"output": "Last 30 days"
+		},
+		{
+			"fn": "completedRangeLabel",
+			"test": "completed › a range reads as its preset, else as its days",
+			"input": [
+				{
+					"from": "2026-10-01",
+					"to": "2026-10-12"
+				},
+				"2026-10-14"
+			],
+			"output": "Oct 1 – Oct 12"
+		},
+		{
+			"fn": "completedRangeLabel",
+			"test": "completed › a range reads as its preset, else as its days",
+			"input": [
+				{
+					"from": "2026-10-09",
+					"to": "2026-10-09"
+				},
+				"2026-10-14"
+			],
+			"output": "Oct 9"
+		},
+		{
+			"fn": "completedRangeLabel",
+			"test": "completed › a range reads as its preset, else as its days",
+			"input": [
+				{
+					"from": "2025-12-30",
+					"to": "2026-10-14"
+				},
+				"2026-10-14"
+			],
+			"output": "Dec 30, 2025 – Oct 14"
+		},
+		{
+			"fn": "completedRangeLabel",
+			"test": "completed › a range reads as its preset, else as its days",
+			"input": [
+				{
+					"from": null,
+					"to": "2026-10-12"
+				},
+				"2026-10-14"
+			],
+			"output": "Until Oct 12"
+		},
+		{
+			"fn": "completedRangeLabel",
+			"test": "completed › a range reads as its preset, else as its days",
+			"input": [
+				{
+					"from": "2026-10-01",
+					"to": null
+				},
+				"2026-10-14"
+			],
+			"output": "Since Oct 1"
+		},
+		{
+			"fn": "completedHeading",
+			"test": "completed › day headings name today and yesterday, then the weekday and date",
+			"input": [
+				"2026-10-14",
+				"2026-10-14"
+			],
+			"output": "Today"
+		},
+		{
+			"fn": "completedHeading",
+			"test": "completed › day headings name today and yesterday, then the weekday and date",
+			"input": [
+				"2026-10-13",
+				"2026-10-14"
+			],
+			"output": "Yesterday"
+		},
+		{
+			"fn": "completedHeading",
+			"test": "completed › day headings name today and yesterday, then the weekday and date",
+			"input": [
+				"2026-10-12",
+				"2026-10-14"
+			],
+			"output": "Mon, Oct 12"
+		},
+		{
+			"fn": "completedHeading",
+			"test": "completed › day headings name today and yesterday, then the weekday and date",
+			"input": [
+				"2025-12-31",
+				"2026-10-14"
+			],
+			"output": "Wed, Dec 31, 2025"
+		},
+		{
 			"fn": "postponeOptions",
 			"test": "postpone › offers tomorrow, the coming weekend, and next week, keeping only new days",
 			"input": [

@@ -49,15 +49,15 @@ macOS `core` and `app` stay off until a release ([Workflow](decisions/workflow.m
 
 ### Complete a task
 
-| Feature                                                                             | Web     | iOS     | Slice         | XCUITest                                      | Playwright                      | Screenshot               |
-| ----------------------------------------------------------------------------------- | ------- | ------- | ------------- | --------------------------------------------- | ------------------------------- | ------------------------ |
-| `complete-check`: checkbox completes and animates out, with a success haptic on iOS | ✓       | Built   | S5            | `CompleteParityTests.test_complete_check`     | `complete › complete-check`     | `complete-check.png`     |
-| `complete-undo`: the toast's `Undo` restores the row                                | ✓       | Built   | S5            | `CompleteParityTests.test_complete_undo`      | `complete › complete-undo`      | `complete-undo.png`      |
-| `complete-swipe`: leading swipe completes (_iOS only_)                              | n/a     | Built   | S5            | `CompleteParityTests.test_complete_swipe`     | n/a                             | `complete-swipe.png`     |
-| `complete-recurring`: moves to the next occurrence with `next due …` toast          | ✓       | Built   | S5            | `CompleteParityTests.test_complete_recurring` | `complete › complete-recurring` | `complete-recurring.png` |
-| `complete-subtasks`: see `subtasks-complete-parent`                                 | ✓       | Built   | S6            | see Subtasks                                  | see Subtasks                    | —                        |
-| `complete-reopen`: `Reopen` in details of a completed task, reached through search  | ✓       | Built   | S7            | `SearchParityTests.test_search_completed`     | `search › search-completed`     | `search-completed.png`   |
-| `complete-history`: a completed tasks list                                          | Planned | Planned | not scheduled | —                                             | —                               | —                        |
+| Feature                                                                             | Web | iOS   | Slice | XCUITest                                      | Playwright                      | Screenshot               |
+| ----------------------------------------------------------------------------------- | --- | ----- | ----- | --------------------------------------------- | ------------------------------- | ------------------------ |
+| `complete-check`: checkbox completes and animates out, with a success haptic on iOS | ✓   | Built | S5    | `CompleteParityTests.test_complete_check`     | `complete › complete-check`     | `complete-check.png`     |
+| `complete-undo`: the toast's `Undo` restores the row                                | ✓   | Built | S5    | `CompleteParityTests.test_complete_undo`      | `complete › complete-undo`      | `complete-undo.png`      |
+| `complete-swipe`: leading swipe completes (_iOS only_)                              | n/a | Built | S5    | `CompleteParityTests.test_complete_swipe`     | n/a                             | `complete-swipe.png`     |
+| `complete-recurring`: moves to the next occurrence with `next due …` toast          | ✓   | Built | S5    | `CompleteParityTests.test_complete_recurring` | `complete › complete-recurring` | `complete-recurring.png` |
+| `complete-subtasks`: see `subtasks-complete-parent`                                 | ✓   | Built | S6    | see Subtasks                                  | see Subtasks                    | —                        |
+| `complete-reopen`: `Reopen` in details of a completed task, reached through search  | ✓   | Built | S7    | `SearchParityTests.test_search_completed`     | `search › search-completed`     | `search-completed.png`   |
+| `complete-history`: the Completed view with ranges, the completed toggle, reopen    | ✓   | Built | —     | —                                             | —                               | —                        |
 
 ### Edit a task
 

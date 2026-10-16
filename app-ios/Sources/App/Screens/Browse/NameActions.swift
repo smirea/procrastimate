@@ -21,6 +21,7 @@ struct NameActions: ViewModifier {
     @State private var draft = ""
     @State private var confirmingDelete = false
     @State private var deleted = 0
+    @AppStorage("showCompleted") private var showCompleted = false
 
     private var title: String { noun.prefix(1).uppercased() + noun.dropFirst() }
 
@@ -42,6 +43,7 @@ struct NameActions: ViewModifier {
                             }
                         }
                         Button("Copy as Markdown", systemImage: "doc.on.doc") { copy() }
+                        Toggle("Show completed", systemImage: "checkmark.circle", isOn: $showCompleted)
                         if space == .own {
                             Button("Delete \(noun)", systemImage: "trash", role: .destructive) {
                                 confirmingDelete = true

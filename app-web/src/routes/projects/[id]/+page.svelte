@@ -8,6 +8,8 @@
 	import View from '#lib/components/View.svelte';
 	import TaskList from '#lib/components/TaskList.svelte';
 	import Popover from '#lib/components/Popover.svelte';
+	import CompletedSection from '#lib/components/CompletedSection.svelte';
+	import CompletedToggle from '#lib/components/CompletedToggle.svelte';
 	import { store } from '#lib/store.svelte.ts';
 	import { sheets } from '#lib/ui.svelte.ts';
 	import { followMerged } from '#lib/merged.svelte.ts';
@@ -66,6 +68,7 @@
 			{/if}
 		{/snippet}
 		{#snippet actions()}
+			<CompletedToggle />
 			{#if !home}
 				<div class="flex items-center gap-1">
 					<button type="button" class="icon-btn touch:size-11" aria-label="Share project" onclick={() => sheets.openShare({ kind: 'project', id: project.id }, project.name)}>
@@ -102,6 +105,9 @@
 			{/if}
 		{/snippet}
 		<TaskList {tasks} label={`${project.name} tasks`} />
+		{#snippet after()}
+			<CompletedSection tasks={store.tasks.filter((t) => t.projectId === project.id)} />
+		{/snippet}
 	</View>
 {:else}
 	<p class="mt-16 text-center text-muted">This project no longer exists.</p>

@@ -226,6 +226,7 @@ private struct RouteView: View {
         case let .label(id): LabelScreen(labelID: id)
         case let .place(key): PlaceScreen(key: key)
         case let .event(id): EventScreen(eventID: id)
+        case .completed: CompletedScreen()
         }
     }
 }

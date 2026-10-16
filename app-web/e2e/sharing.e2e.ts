@@ -81,6 +81,18 @@ test('a guest completes a task in a project shared with them, and the owner sees
 	const details = owner.app.details();
 	await expect(details.getByText(/Completed by\s*Gus/)).toBeVisible();
 	await expect(details.getByRole('list', { name: 'Activity list' })).toContainText(/Gus\s*completed it/);
+	await owner.page.keyboard.press('Escape');
+
+	await sidebar(owner.page)
+		.getByRole('link', { name: new RegExp(project) })
+		.click();
+	await owner.page.getByRole('button', { name: 'Show completed' }).click();
+	const completed = owner.page.getByRole('list', { name: 'Completed tasks' }).locator(`[data-task="${task}"]`);
+	await expect(completed.getByLabel('Completed by Gus')).toBeVisible();
+	await completed.getByRole('checkbox', { name: `Reopen ${task}` }).click();
+	await expect(
+		owner.page.getByRole('list', { name: `${project} tasks` }).locator(`[data-task="${task}"]`),
+	).toBeVisible();
 });
 
 test('a public link opens read only for someone who is not signed in', async ({ browser }) => {

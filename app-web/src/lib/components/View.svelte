@@ -18,6 +18,7 @@
 		actions,
 		markdown,
 		children,
+		after,
 	}: {
 		title: Snippet | string;
 		subtitle?: string;
@@ -29,6 +30,8 @@
 		actions?: Snippet;
 		markdown: () => MarkdownDocument;
 		children: Snippet;
+		/** Below the add button and the empty state, such as a view's completed tasks. */
+		after?: Snippet;
 	} = $props();
 </script>
 
@@ -69,4 +72,6 @@
 			<p class="mt-1 text-[13px] text-muted">{emptyHint}</p>
 		</div>
 	{/if}
+
+	{@render after?.()}
 </section>

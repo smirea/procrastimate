@@ -2,6 +2,8 @@ import { z } from 'zod';
 import {
 	addDays,
 	fromDateKey,
+	toDateKey,
+	toTimeOfDay,
 	weekdayOf,
 	type DateKey,
 	type Due,
@@ -11,6 +13,7 @@ import {
 	type TimeOfDay,
 } from './task.ts';
 import { dateKeySchema } from './values.ts';
+import type { CompletedRange } from './views.ts';
 
 export const dueToneSchema = z.enum(['overdue', 'today', 'soon', 'week', 'later']).meta({ id: 'DueTone' });
 export type DueTone = z.infer<typeof dueToneSchema>;
@@ -135,6 +138,33 @@ export function dayHeading(date: DateKey, today: DateKey): string {
 	if (date > today && date < addDays(today, 7)) return d.toLocaleDateString('en-US', { weekday: 'long' });
 	return `${WEEKDAY_NAMES[weekdayOf(date)]}, ${shortDate(date, today)}`;
 }
+
+/** When a task was completed, in local time: `Today 3:04pm`, `Yesterday 9am`, `Oct 12 3:04pm`. */
+export function completedWhen(at: number, today: DateKey): string {
+	const date = new Date(at);
+	return formatDue({ date: toDateKey(date), time: toTimeOfDay(date.getHours(), date.getMinutes()) }, today);
+}
+
+/** A day heading in the Completed view: `Today`, `Yesterday`, then `Mon, Oct 12`, with the year when it differs. */
+export function completedHeading(date: DateKey, today: DateKey): string {
+	if (date === today) return 'Today';
+	if (date === addDays(today, -1)) return 'Yesterday';
+	return `${WEEKDAY_NAMES[weekdayOf(date)]}, ${shortDate(date, today)}`;
+}
+
+/** `Today`, `Last 7 days`, `Last 30 days`, `All time`, or the custom days, such as `Oct 1 – Oct 12`. */
+export function completedRangeLabel(range: CompletedRange, today: DateKey): string {
+	const { from, to } = range;
+	if (from === null && to === null) return 'All time';
+	if (to === today && from === today) return 'Today';
+	if (to === today && from === addDays(today, -6)) return 'Last 7 days';
+	if (to === today && from === addDays(today, -29)) return 'Last 30 days';
+	if (from === null) return `Until ${shortDate(to!, today)}`;
+	if (to === null) return `Since ${shortDate(from, today)}`;
+	return from === to ? shortDate(from, today) : `${shortDate(from, today)} – ${shortDate(to, today)}`;
+}
+
+export const reopenedToast = (title: string) => `Reopened “${title}”`;
 
 export function completedToast(title: string, next: Due | null, today: DateKey): string {
 	return next ? `Completed “${title}”, next due ${formatDue(next, today)}` : `Completed “${title}”`;

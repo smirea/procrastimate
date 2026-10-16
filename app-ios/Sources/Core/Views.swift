@@ -6,6 +6,8 @@ public enum Views {
     public typealias Today = API.Today
     public typealias NoDate = API.NoDate
     public typealias PlaceSection = API.PlaceSection
+    public typealias CompletedPreset = API.CompletedPreset
+    public typealias CompletedRange = API.CompletedRange
 
     /// An event task sorts by the occurrence it is on, or by its first one where a list has no today.
     static func sortKey(_ task: TaskItem, today: DateKey?, in zone: TimeZone) -> String {
@@ -115,5 +117,56 @@ public enum Views {
             }
         }
         return groups.stableSorted { a, b in a.date == b.date ? nil : a.date < b.date }
+    }
+
+    /// Today, the last 7 days, or the last 30 days, each counting today, or all time.
+    public static func completedRange(_ preset: CompletedPreset, _ today: DateKey) -> CompletedRange {
+        switch preset {
+        case .today: CompletedRange(from: today, to: today)
+        case .week: CompletedRange(from: Dates.addDays(today, -6), to: today)
+        case .month: CompletedRange(from: Dates.addDays(today, -29), to: today)
+        case .all: CompletedRange(from: nil, to: nil)
+        }
+    }
+
+    /// When the task was last completed: a done task's `completedAt`, or the last roll of a task that repeats. A
+    /// repeating task keeps no history of earlier rolls, so it counts once, at its latest. A reopened task keeps
+    /// `lastCompletedAt`, which is why the repeat has to be there too.
+    public static func completedMoment(_ task: TaskItem) -> Int? {
+        if let completedAt = task.completedAt { return completedAt }
+        return task.recurrence != nil || task.event?.series == true ? task.lastCompletedAt : nil
+    }
+
+    /// Completed tasks in `range`, newest first. A subtask completed along with its parent shows as the parent's
+    /// progress instead of its own row, since completing a parent completes every open subtask at the same moment.
+    public static func completedTasks(_ tasks: [TaskItem], _ range: CompletedRange, in zone: TimeZone) -> [TaskItem] {
+        let byID = Dictionary(tasks.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        return tasks.compactMap { task -> (task: TaskItem, at: Int)? in
+            guard let at = completedMoment(task) else { return nil }
+            if task.completedAt != nil, let parent = task.parentId.flatMap({ byID[$0] }), parent.completedAt == task.completedAt { return nil }
+            let day = Dates.toDateKey(Date(epochMilliseconds: at), in: zone)
+            if let from = range.from, day < from { return nil }
+            if let to = range.to, day > to { return nil }
+            return (task, at)
+        }
+        .stableSorted { a, b in
+            if a.at != b.at { return a.at > b.at }
+            return a.task.id == b.task.id ? nil : a.task.id < b.task.id
+        }
+        .map(\.task)
+    }
+
+    /// Completed tasks in `range` under the local day each was completed, newest day first.
+    public static func completedDays(_ tasks: [TaskItem], _ range: CompletedRange, in zone: TimeZone) -> [DayGroup] {
+        var groups: [DayGroup] = []
+        for task in completedTasks(tasks, range, in: zone) {
+            let day = Dates.toDateKey(Date(epochMilliseconds: completedMoment(task)!), in: zone)
+            if let i = groups.firstIndex(where: { $0.date == day }) {
+                groups[i].tasks.append(task)
+            } else {
+                groups.append(DayGroup(date: day, tasks: [task]))
+            }
+        }
+        return groups
     }
 }

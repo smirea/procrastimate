@@ -2,7 +2,7 @@ import Core
 import Foundation
 
 /// DEBUG-only. `PROCRASTIMATE_DEMO=sharing` seeds a space Ann Lee shared, through the same response a sync applies,
-/// plus an own project to share, so the sharing screens can be driven without a second account. Release builds omit
+/// with two tasks Claude and Ann completed, plus an own project to share, so the sharing screens can be driven without a second account. Release builds omit
 /// it.
 enum SharingDemo {
     @MainActor
@@ -22,6 +22,14 @@ enum SharingDemo {
                 ),
                 TaskItem(id: "hose", title: "Buy a new hose", projectId: "garden", createdAt: 3, createdBy: "claude"),
                 TaskItem(id: "vet", title: "Book the vet for Milo", createdAt: 4, createdBy: "ann"),
+                TaskItem(
+                    id: "rake", title: "Rake the leaves", projectId: "garden", createdAt: 5, completedAt: 1_791_903_600_000,
+                    createdBy: "ann", completedBy: "claude", lastCompletedAt: 1_791_903_600_000
+                ),
+                TaskItem(
+                    id: "seeds", title: "Order seeds", projectId: "garden", createdAt: 6, completedAt: 1_791_968_400_000,
+                    createdBy: "ann", completedBy: "ann", lastCompletedAt: 1_791_968_400_000
+                ),
             ],
             projects: [Project(id: "garden", name: "Garden", createdAt: 1)],
             labels: [],

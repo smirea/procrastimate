@@ -30,6 +30,7 @@
 	const views = $derived([
 		{ href: '/inbox', label: 'Inbox', icon: Tray, count: today.overdue.length + today.today.length },
 		{ href: '/no-date', label: 'No date', icon: CalendarMinus, count: inboxTasks(store.own.tasks, clock.today).length },
+		{ href: '/completed', label: 'Completed', icon: CheckCircle, count: 0 },
 	]);
 
 	const labels = $derived(

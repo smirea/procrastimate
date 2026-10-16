@@ -8,19 +8,25 @@ struct ProjectScreen: View {
     let projectID: String
 
     @State private var name: String?
+    @AppStorage("showCompleted") private var showCompleted = false
 
     var body: some View {
         if let project = store.project(projectID) {
             let space = store.space(ofProject: project.id) ?? .own
-            let tasks = Views.projectTasks(store.data(in: space).tasks, project.id, in: store.timeZone)
+            let all = store.data(in: space).tasks
+            let tasks = Views.projectTasks(all, project.id, in: store.timeZone)
+            let done = showCompleted
+                ? Views.completedTasks(all.filter { $0.projectId == project.id }, .init(), in: store.timeZone) : []
             TaskListScreen(
                 title: project.name,
-                isEmpty: tasks.isEmpty,
+                isEmpty: tasks.isEmpty && !showCompleted,
                 emptyTitle: "No tasks yet",
                 emptyHint: Browse.projectEmptyHint(project.name)
             ) {
                 ForEach(tasks) { TaskRow(task: $0) }
+                if showCompleted { CompletedSection(tasks: done) }
             }
+            .animation(.snappy, value: showCompleted)
             .environment(\.space, space)
             .nameActions(
                 noun: "project",

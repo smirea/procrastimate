@@ -47,6 +47,13 @@ private struct BrowseList: View {
         let labels = Browse.labelsByName(store.labels)
         List {
             Section {
+                NavigationLink(value: Route.completed) {
+                    BrowseRow(name: "Completed", systemImage: "checkmark.circle", tone: .toneSoon, count: 0)
+                }
+                .accessibilityIdentifier("browse-completed")
+            }
+
+            Section {
                 ForEach(store.projects) { project in
                     NavigationLink(value: Route.project(id: project.id)) {
                         BrowseRow(
