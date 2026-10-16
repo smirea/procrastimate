@@ -45,13 +45,45 @@ export async function deviceHeader(page: Page): Promise<Record<string, string>> 
 	return { 'x-procrastimate-device': deviceId };
 }
 
+/**
+ * Collects every uncaught error in the context's pages. The pinned clock runs timer callbacks itself and logs what
+ * they throw with `console.error(error)` instead of letting it escape, so a console error whose first argument is an
+ * Error counts too. The app never logs an Error itself, and the browser's own lines, such as `Failed to load
+ * resource`, carry no arguments.
+ */
+export function watchPageErrors(context: BrowserContext) {
+	const errors: string[] = [];
+	const pending: Promise<void>[] = [];
+	context.on('weberror', error => errors.push(String(error.error())));
+	context.on('console', message => {
+		const [first] = message.type() === 'error' ? message.args() : [];
+		if (!first) return;
+		pending.push(
+			first
+				.evaluate(value => (value instanceof Error ? String(value) : null))
+				.then(
+					error => {
+						if (error) errors.push(error);
+					},
+					// The page navigated before the argument could be read, so judge by the logged text.
+					() => {
+						if (/^\w*Error\b/.test(message.text())) errors.push(message.text());
+					},
+				),
+		);
+	});
+	return async () => {
+		await Promise.all(pending);
+		return errors;
+	};
+}
+
 export const test = base.extend<{ app: App }>({
 	context: async ({ context }, use) => {
 		await signInAccount(context);
-		const errors: Error[] = [];
-		context.on('weberror', error => errors.push(error.error()));
+		const errors = watchPageErrors(context);
 		await use(context);
-		expect(errors, 'uncaught page errors').toEqual([]);
+		expect(await errors(), 'uncaught page errors').toEqual([]);
 	},
 	app: async ({ page }, use) => {
 		await page.clock.setFixedTime(NOW);
@@ -76,9 +108,14 @@ export class App {
 	list = (name: string) => this.page.getByRole('list', { name });
 	nav = (name: string) => this.page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name });
 
+	/** A phone has no keyboard shortcut, so it uses the floating button. */
 	async openQuickAdd() {
-		await this.page.locator('body').click({ position: { x: 1200, y: 700 } });
-		await this.page.keyboard.press('q');
+		if (this.page.viewportSize()!.width < 768) {
+			await this.page.getByRole('button', { name: 'Quick add' }).click();
+		} else {
+			await this.page.locator('body').click({ position: { x: 1200, y: 700 } });
+			await this.page.keyboard.press('q');
+		}
 		await expect(this.taskInput()).toBeFocused();
 	}
 
@@ -90,6 +127,32 @@ export class App {
 			await this.taskInput().press('Enter');
 			await expect(this.quickAdd()).toBeHidden();
 		}
+	}
+
+	async openNavigation() {
+		await this.page.getByRole('button', { name: 'Open navigation' }).tap();
+		await expect(this.page.getByRole('navigation', { name: 'Main' })).toBeInViewport();
+	}
+
+	/** Like `add`, but first creates each unknown #project and @label from its chip, as a person would. */
+	async addCreating(title: string) {
+		await this.openQuickAdd();
+		await this.taskInput().fill(title);
+		for (const [, name] of title.matchAll(/(?:^|\s)([#@][^\s#@]+)/g)) {
+			const create = this.quickAdd().getByRole('button', { name: `Create ${name}`, exact: true });
+			const parsed = this.quickAdd().locator('[data-token]').getByText(name!, { exact: true });
+			await expect(create.or(parsed).first()).toBeVisible();
+			if (await parsed.isVisible()) continue;
+			await create.click();
+			await expect(parsed).toBeVisible();
+		}
+		await this.taskInput().press('Enter');
+		await expect(this.quickAdd()).toBeHidden();
+	}
+
+	async closeDetails() {
+		await this.details().getByRole('button', { name: 'Close' }).click();
+		await expect(this.details()).toBeHidden();
 	}
 
 	async go(view: string) {

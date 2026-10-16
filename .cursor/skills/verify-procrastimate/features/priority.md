@@ -23,7 +23,7 @@ Preconditions:
 
 - **Shortcuts.** In quick add, type `File taxes p2`, then repeat with `!!`, `!!!`, `urgent`, and `p3`. Each shortcut is highlighted, the flag's accessible name reads the matching `Priority N`, and the saved task's checkbox takes that level's color.
 - **Picker replaces text.** Type `File taxes p1`, open the red `Priority 1` flag, and pick `Priority 3`. `p1` is removed from the input and the flag turns blue. Picking `Priority 4` instead leaves a plain gray outline flag.
-- **Details.** Open a task and pick `Priority 1` from its flag chip. After a reload the chip still reads `Priority 1`.
+- **Details.** Open a task and pick `Priority 1` from its flag chip. After a reload the chip still reads `Priority 1`. Test: `task details edit the title, notes, date, priority, and labels, and keep them after a reload` in `e2e/edit-task.e2e.ts`.
 - **iOS.** `p1`, `!!`, and `urgent` set the level, the flag menu picks one and removes the typed phrase, and each checkbox reports its level as its accessibility value. Drive it with `bun run start:ios -t simulator`. The same flag menu sets the level in task details.
 
 ## Gotchas
