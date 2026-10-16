@@ -53,15 +53,28 @@
 		};
 	}
 
+	let returnFocus: HTMLElement | null = null;
+
 	/**
 	 * The panel owns focus on open: a child's own mount action or effect runs before this one, while the panel is
 	 * still hidden, so its focus() would be a no-op. Children mark the field instead.
 	 */
 	function show(node: HTMLDivElement) {
+		returnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
 		node.showPopover();
 		place(node);
 		node.querySelector<HTMLElement>('[data-autofocus]')?.focus();
 	}
+
+	/**
+	 * Focus inside the panel returns to where it was on close, so Tab continues from the trigger instead of the page.
+	 * This runs before the outro, which makes the panel inert and drops its focus to the body.
+	 */
+	$effect.pre(() => {
+		if (open || !returnFocus) return;
+		if (panel?.contains(document.activeElement)) returnFocus.focus();
+		returnFocus = null;
+	});
 
 	/** The anchor can move under a fixed panel, as when its row scrolls, so the panel follows it. */
 	function onWindowMove() {
