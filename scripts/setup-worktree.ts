@@ -1,6 +1,7 @@
 /**
- * Prepares a linked git worktree for an agent: `bun scripts/setup-worktree.ts [branch]`.
- * Safe to rerun. Never touches AWS or the shared dev database.
+ * Prepares a linked git worktree for an agent: `bun scripts/setup-worktree.ts`. T3 Code runs it on every new
+ * procrastimate worktree as the project's `runOnWorktreeCreate` script. Safe to rerun. Never touches AWS or the
+ * shared dev database.
  */
 import { spawnSync } from 'node:child_process';
 import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
@@ -22,23 +23,8 @@ function git(...args: string[]): string {
 
 const root = git('rev-parse', '--show-toplevel');
 process.chdir(root);
-const args = process.argv.slice(2);
-const branch = args.find(arg => !arg.startsWith('-'));
-
 if (git('rev-parse', '--git-dir') === git('rev-parse', '--git-common-dir')) {
 	throw new Error('This is the main checkout. Run this inside a linked worktree.');
-}
-
-const current = git('branch', '--show-current');
-if (branch && branch !== current) {
-	if (git('status', '--porcelain'))
-		throw new Error(`Uncommitted changes on ${current}; commit or discard them before switching to ${branch}.`);
-	git('fetch', 'origin', 'master');
-	git('switch', '-c', branch, 'origin/master');
-	// The harness names the worktree's branch itself; drop that branch once it holds nothing new.
-	if (current && spawnSync('git', ['branch', '-d', current], { stdio: 'ignore' }).status === 0) {
-		console.log(`Deleted the empty branch ${current}.`);
-	}
 }
 
 run(['bun', 'install', '--frozen-lockfile']);
