@@ -8,6 +8,25 @@ import { App, expect, test } from './fixtures.ts';
  */
 
 const KEYBOARD = 336;
+
+test.use({
+	permissions: ['microphone'],
+	launchOptions: { args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'] },
+});
+
+/** The page never names a Ramble cassette, so the socket URL gets one here. */
+test.beforeEach(async ({ page }) => {
+	await page.addInitScript(() => {
+		const Native = window.WebSocket;
+		window.WebSocket = class extends Native {
+			constructor(url: string | URL, protocols?: string | string[]) {
+				const next = new URL(url, location.href);
+				if (next.pathname === '/api/ramble/socket') next.searchParams.set('cassette', 'party');
+				super(next, protocols);
+			}
+		};
+	});
+});
 const shots = process.env.LAYOUT_SHOTS;
 
 type Finding = { screen: string; problem: string };
@@ -181,6 +200,31 @@ for (const [width, height] of [
 		await check(page, findings, `${prefix}-share`);
 		if (phone) await check(page, findings, `${prefix}-share-keyboard`, KEYBOARD);
 		await page.keyboard.press('Escape');
+		await expect(share).toBeHidden();
+
+		await open('Inbox');
+		for (let i = 1; i <= 10; i++)
+			await page.getByRole('checkbox', { name: `Complete Inbox chore ${i}`, exact: true }).click();
+		await open('Completed');
+		await check(page, findings, `${prefix}-completed`);
+
+		if (phone) await page.getByRole('button', { name: 'Open navigation' }).click();
+		await app.openSettings();
+		await app.dictationOption('ElevenLabs').click();
+		await page.keyboard.press('Escape');
+		await expect(app.settings()).toBeHidden();
+		if (phone) await page.getByRole('button', { name: 'Quick add' }).click();
+		else await app.openQuickAdd();
+		await app.quickAdd().getByRole('button', { name: 'Ramble' }).click();
+		const drawer = page.getByRole('dialog', { name: 'Ramble' });
+		await expect(drawer.getByText('Renew the passport', { exact: true })).toBeVisible({ timeout: 15_000 });
+		await drawer.getByRole('button', { name: 'Stop listening' }).click();
+		await expect(drawer.getByRole('button', { name: /^Add \d+ tasks$/ })).toBeVisible();
+		await check(page, findings, `${prefix}-ramble`);
+		if (phone) {
+			await drawer.getByRole('textbox', { name: 'Task title', exact: true }).first().focus();
+			await check(page, findings, `${prefix}-ramble-keyboard`, KEYBOARD);
+		}
 
 		expect(findings).toEqual([]);
 	});

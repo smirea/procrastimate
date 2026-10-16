@@ -505,8 +505,10 @@
 {/snippet}
 
 <style>
+	/* iOS Safari overlays the keyboard on a fixed layer, so the drawer ends above it to keep its footer and the field in view. */
 	.ramble {
 		border-radius: 0;
+		bottom: var(--keyboard-inset, 0px);
 	}
 
 	.row {

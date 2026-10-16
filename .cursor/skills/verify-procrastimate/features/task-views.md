@@ -35,7 +35,7 @@ Preconditions:
 - **Empty.** Complete every task. Inbox shows `Nothing scheduled` with `Tasks with a date show up here by day.`. No date shows `Inbox zero` with `Press Q to capture a task.`, or `Tap + to capture a task.` on a phone.
 - **Phone.** Tap `Open navigation`; the `Main` navigation slides in. Tap outside it; it closes. Open Inbox; the same sections show. Open No date; `Someday task` shows.
 - **iOS.** The Inbox tab lists the same sections as the web and shows `Nothing scheduled` when empty. The No date tab lists `Someday task` and shows `Inbox zero` when empty. Launch with `PROCRASTIMATE_DEMO=nodate` to open it directly. The Inbox tab carries the overdue plus today count as its badge. Rows have no separators. The bar is hidden at the top, and a small `Inbox` title fades in once the list scrolls. Lists sit on the same tinted canvas as the web with transparent rows.
-- **Scroll to the end.** With more tasks than fit on screen, scroll Inbox, No date, a project, Browse, and search results to the very end. The last row sits fully above the tab bar and the `+` on iOS, and above the floating `Quick add` on a phone. `bun run test:e2e -- e2e/layout.e2e.ts` checks every web view, sheet, and dialog at 1280 px and 393 px.
+- **Scroll to the end.** With more tasks than fit on screen, scroll Inbox, No date, a project, Completed, Browse, and search results to the very end. The last row sits fully above the tab bar and the `+` on iOS, and above the floating `Quick add` on a phone. `bun run test:e2e -- e2e/layout.e2e.ts` checks every web view, sheet, and dialog at 1280 px and 393 px.
 - **Proof.** Save a screenshot of the Inbox with every section on each client.
 
 ## Gotchas
