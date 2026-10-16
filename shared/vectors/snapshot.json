@@ -7,6 +7,16 @@
 			"test": "parseSnapshot › a document the web wrote reads back unchanged",
 			"input": [
 				{
+					"comments": [
+						{
+							"authorId": "u-me",
+							"body": "Ask about https://example.com/form",
+							"createdAt": 1791900000100,
+							"editedAt": null,
+							"id": "c-1",
+							"taskId": "a0d6b1e2-0001-4c1e-9b1e-000000000001"
+						}
+					],
 					"labels": [
 						{
 							"createdAt": 1791800000002,
@@ -35,6 +45,12 @@
 							"sourceKey": "todoist:project:7"
 						}
 					],
+					"reads": [
+						{
+							"id": "t-ana-1",
+							"readAt": 1791960000000
+						}
+					],
 					"remindersCheckedAt": 1791972000000,
 					"sections": [
 						{
@@ -55,6 +71,16 @@
 					],
 					"spaces": {
 						"u-ana": {
+							"comments": [
+								{
+									"authorId": "u-ana",
+									"body": "Two coats",
+									"createdAt": 1791950000000,
+									"editedAt": 1791950100000,
+									"id": "c-ana",
+									"taskId": "t-ana-1"
+								}
+							],
 							"cursor": 3,
 							"epoch": 1,
 							"labels": [],
@@ -287,6 +313,16 @@
 				10
 			],
 			"output": {
+				"comments": [
+					{
+						"authorId": "u-me",
+						"body": "Ask about https://example.com/form",
+						"createdAt": 1791900000100,
+						"editedAt": null,
+						"id": "c-1",
+						"taskId": "a0d6b1e2-0001-4c1e-9b1e-000000000001"
+					}
+				],
 				"labels": [
 					{
 						"createdAt": 1791800000002,
@@ -315,6 +351,12 @@
 						"sourceKey": "todoist:project:7"
 					}
 				],
+				"reads": [
+					{
+						"id": "t-ana-1",
+						"readAt": 1791960000000
+					}
+				],
 				"remindersCheckedAt": 1791972000000,
 				"sections": [
 					{
@@ -335,6 +377,16 @@
 				],
 				"spaces": {
 					"u-ana": {
+						"comments": [
+							{
+								"authorId": "u-ana",
+								"body": "Two coats",
+								"createdAt": 1791950000000,
+								"editedAt": 1791950100000,
+								"id": "c-ana",
+								"taskId": "t-ana-1"
+							}
+						],
 						"cursor": 3,
 						"epoch": 1,
 						"labels": [],
@@ -570,6 +622,16 @@
 			"test": "parseSnapshot › a document stored before sharing has no shared spaces",
 			"input": [
 				{
+					"comments": [
+						{
+							"authorId": "u-me",
+							"body": "Ask about https://example.com/form",
+							"createdAt": 1791900000100,
+							"editedAt": null,
+							"id": "c-1",
+							"taskId": "a0d6b1e2-0001-4c1e-9b1e-000000000001"
+						}
+					],
 					"labels": [
 						{
 							"createdAt": 1791800000002,
@@ -588,6 +650,12 @@
 							"id": "p-work",
 							"name": "Work",
 							"sourceKey": "todoist:project:7"
+						}
+					],
+					"reads": [
+						{
+							"id": "t-ana-1",
+							"readAt": 1791960000000
 						}
 					],
 					"remindersCheckedAt": 1791972000000,
@@ -748,6 +816,16 @@
 				10
 			],
 			"output": {
+				"comments": [
+					{
+						"authorId": "u-me",
+						"body": "Ask about https://example.com/form",
+						"createdAt": 1791900000100,
+						"editedAt": null,
+						"id": "c-1",
+						"taskId": "a0d6b1e2-0001-4c1e-9b1e-000000000001"
+					}
+				],
 				"labels": [
 					{
 						"createdAt": 1791800000002,
@@ -767,6 +845,12 @@
 						"id": "p-work",
 						"name": "Work",
 						"sourceKey": "todoist:project:7"
+					}
+				],
+				"reads": [
+					{
+						"id": "t-ana-1",
+						"readAt": 1791960000000
 					}
 				],
 				"remindersCheckedAt": 1791972000000,
@@ -931,6 +1015,16 @@
 			"test": "parseSnapshot › a document stored before sections has none, and its tasks sit in no section",
 			"input": [
 				{
+					"comments": [
+						{
+							"authorId": "u-me",
+							"body": "Ask about https://example.com/form",
+							"createdAt": 1791900000100,
+							"editedAt": null,
+							"id": "c-1",
+							"taskId": "a0d6b1e2-0001-4c1e-9b1e-000000000001"
+						}
+					],
 					"labels": [
 						{
 							"createdAt": 1791800000002,
@@ -959,9 +1053,25 @@
 							"sourceKey": "todoist:project:7"
 						}
 					],
+					"reads": [
+						{
+							"id": "t-ana-1",
+							"readAt": 1791960000000
+						}
+					],
 					"remindersCheckedAt": 1791972000000,
 					"spaces": {
 						"u-ana": {
+							"comments": [
+								{
+									"authorId": "u-ana",
+									"body": "Two coats",
+									"createdAt": 1791950000000,
+									"editedAt": 1791950100000,
+									"id": "c-ana",
+									"taskId": "t-ana-1"
+								}
+							],
 							"cursor": 3,
 							"epoch": 1,
 							"labels": [],
@@ -1191,6 +1301,16 @@
 				10
 			],
 			"output": {
+				"comments": [
+					{
+						"authorId": "u-me",
+						"body": "Ask about https://example.com/form",
+						"createdAt": 1791900000100,
+						"editedAt": null,
+						"id": "c-1",
+						"taskId": "a0d6b1e2-0001-4c1e-9b1e-000000000001"
+					}
+				],
 				"labels": [
 					{
 						"createdAt": 1791800000002,
@@ -1219,10 +1339,26 @@
 						"sourceKey": "todoist:project:7"
 					}
 				],
+				"reads": [
+					{
+						"id": "t-ana-1",
+						"readAt": 1791960000000
+					}
+				],
 				"remindersCheckedAt": 1791972000000,
 				"sections": [],
 				"spaces": {
 					"u-ana": {
+						"comments": [
+							{
+								"authorId": "u-ana",
+								"body": "Two coats",
+								"createdAt": 1791950000000,
+								"editedAt": 1791950100000,
+								"id": "c-ana",
+								"taskId": "t-ana-1"
+							}
+						],
 						"cursor": 3,
 						"epoch": 1,
 						"labels": [],
@@ -1458,6 +1594,16 @@
 			"test": "parseSnapshot › a shared space that fails validation is dropped and the rest of the document stays",
 			"input": [
 				{
+					"comments": [
+						{
+							"authorId": "u-me",
+							"body": "Ask about https://example.com/form",
+							"createdAt": 1791900000100,
+							"editedAt": null,
+							"id": "c-1",
+							"taskId": "a0d6b1e2-0001-4c1e-9b1e-000000000001"
+						}
+					],
 					"labels": [
 						{
 							"createdAt": 1791800000002,
@@ -1486,6 +1632,12 @@
 							"sourceKey": "todoist:project:7"
 						}
 					],
+					"reads": [
+						{
+							"id": "t-ana-1",
+							"readAt": 1791960000000
+						}
+					],
 					"remindersCheckedAt": 1791972000000,
 					"sections": [
 						{
@@ -1506,6 +1658,16 @@
 					],
 					"spaces": {
 						"u-ana": {
+							"comments": [
+								{
+									"authorId": "u-ana",
+									"body": "Two coats",
+									"createdAt": 1791950000000,
+									"editedAt": 1791950100000,
+									"id": "c-ana",
+									"taskId": "t-ana-1"
+								}
+							],
 							"cursor": 3,
 							"epoch": 1,
 							"labels": [],
@@ -1741,6 +1903,16 @@
 				10
 			],
 			"output": {
+				"comments": [
+					{
+						"authorId": "u-me",
+						"body": "Ask about https://example.com/form",
+						"createdAt": 1791900000100,
+						"editedAt": null,
+						"id": "c-1",
+						"taskId": "a0d6b1e2-0001-4c1e-9b1e-000000000001"
+					}
+				],
 				"labels": [
 					{
 						"createdAt": 1791800000002,
@@ -1769,6 +1941,12 @@
 						"sourceKey": "todoist:project:7"
 					}
 				],
+				"reads": [
+					{
+						"id": "t-ana-1",
+						"readAt": 1791960000000
+					}
+				],
 				"remindersCheckedAt": 1791972000000,
 				"sections": [
 					{
@@ -1789,6 +1967,16 @@
 				],
 				"spaces": {
 					"u-ana": {
+						"comments": [
+							{
+								"authorId": "u-ana",
+								"body": "Two coats",
+								"createdAt": 1791950000000,
+								"editedAt": 1791950100000,
+								"id": "c-ana",
+								"taskId": "t-ana-1"
+							}
+						],
 						"cursor": 3,
 						"epoch": 1,
 						"labels": [],
@@ -2024,6 +2212,16 @@
 			"test": "parseSnapshot › a shared space drops a bad task on its own",
 			"input": [
 				{
+					"comments": [
+						{
+							"authorId": "u-me",
+							"body": "Ask about https://example.com/form",
+							"createdAt": 1791900000100,
+							"editedAt": null,
+							"id": "c-1",
+							"taskId": "a0d6b1e2-0001-4c1e-9b1e-000000000001"
+						}
+					],
 					"labels": [
 						{
 							"createdAt": 1791800000002,
@@ -2052,6 +2250,12 @@
 							"sourceKey": "todoist:project:7"
 						}
 					],
+					"reads": [
+						{
+							"id": "t-ana-1",
+							"readAt": 1791960000000
+						}
+					],
 					"remindersCheckedAt": 1791972000000,
 					"sections": [
 						{
@@ -2072,6 +2276,16 @@
 					],
 					"spaces": {
 						"u-ana": {
+							"comments": [
+								{
+									"authorId": "u-ana",
+									"body": "Two coats",
+									"createdAt": 1791950000000,
+									"editedAt": 1791950100000,
+									"id": "c-ana",
+									"taskId": "t-ana-1"
+								}
+							],
 							"cursor": 3,
 							"epoch": 1,
 							"labels": [],
@@ -2307,6 +2521,16 @@
 				10
 			],
 			"output": {
+				"comments": [
+					{
+						"authorId": "u-me",
+						"body": "Ask about https://example.com/form",
+						"createdAt": 1791900000100,
+						"editedAt": null,
+						"id": "c-1",
+						"taskId": "a0d6b1e2-0001-4c1e-9b1e-000000000001"
+					}
+				],
 				"labels": [
 					{
 						"createdAt": 1791800000002,
@@ -2335,6 +2559,12 @@
 						"sourceKey": "todoist:project:7"
 					}
 				],
+				"reads": [
+					{
+						"id": "t-ana-1",
+						"readAt": 1791960000000
+					}
+				],
 				"remindersCheckedAt": 1791972000000,
 				"sections": [
 					{
@@ -2355,6 +2585,16 @@
 				],
 				"spaces": {
 					"u-ana": {
+						"comments": [
+							{
+								"authorId": "u-ana",
+								"body": "Two coats",
+								"createdAt": 1791950000000,
+								"editedAt": 1791950100000,
+								"id": "c-ana",
+								"taskId": "t-ana-1"
+							}
+						],
 						"cursor": 3,
 						"epoch": 1,
 						"labels": [],
@@ -2590,6 +2830,16 @@
 			"test": "parseSnapshot › a document stored before dictation defaults to native",
 			"input": [
 				{
+					"comments": [
+						{
+							"authorId": "u-me",
+							"body": "Ask about https://example.com/form",
+							"createdAt": 1791900000100,
+							"editedAt": null,
+							"id": "c-1",
+							"taskId": "a0d6b1e2-0001-4c1e-9b1e-000000000001"
+						}
+					],
 					"labels": [
 						{
 							"createdAt": 1791800000002,
@@ -2618,6 +2868,12 @@
 							"sourceKey": "todoist:project:7"
 						}
 					],
+					"reads": [
+						{
+							"id": "t-ana-1",
+							"readAt": 1791960000000
+						}
+					],
 					"remindersCheckedAt": 1791972000000,
 					"sections": [
 						{
@@ -2638,6 +2894,16 @@
 					],
 					"spaces": {
 						"u-ana": {
+							"comments": [
+								{
+									"authorId": "u-ana",
+									"body": "Two coats",
+									"createdAt": 1791950000000,
+									"editedAt": 1791950100000,
+									"id": "c-ana",
+									"taskId": "t-ana-1"
+								}
+							],
 							"cursor": 3,
 							"epoch": 1,
 							"labels": [],
@@ -2869,6 +3135,16 @@
 				10
 			],
 			"output": {
+				"comments": [
+					{
+						"authorId": "u-me",
+						"body": "Ask about https://example.com/form",
+						"createdAt": 1791900000100,
+						"editedAt": null,
+						"id": "c-1",
+						"taskId": "a0d6b1e2-0001-4c1e-9b1e-000000000001"
+					}
+				],
 				"labels": [
 					{
 						"createdAt": 1791800000002,
@@ -2897,6 +3173,12 @@
 						"sourceKey": "todoist:project:7"
 					}
 				],
+				"reads": [
+					{
+						"id": "t-ana-1",
+						"readAt": 1791960000000
+					}
+				],
 				"remindersCheckedAt": 1791972000000,
 				"sections": [
 					{
@@ -2917,6 +3199,16 @@
 				],
 				"spaces": {
 					"u-ana": {
+						"comments": [
+							{
+								"authorId": "u-ana",
+								"body": "Two coats",
+								"createdAt": 1791950000000,
+								"editedAt": 1791950100000,
+								"id": "c-ana",
+								"taskId": "t-ana-1"
+							}
+						],
 						"cursor": 3,
 						"epoch": 1,
 						"labels": [],
@@ -3152,6 +3444,16 @@
 			"test": "parseSnapshot › a document stored before quick add buttons gets the default row",
 			"input": [
 				{
+					"comments": [
+						{
+							"authorId": "u-me",
+							"body": "Ask about https://example.com/form",
+							"createdAt": 1791900000100,
+							"editedAt": null,
+							"id": "c-1",
+							"taskId": "a0d6b1e2-0001-4c1e-9b1e-000000000001"
+						}
+					],
 					"labels": [
 						{
 							"createdAt": 1791800000002,
@@ -3180,6 +3482,12 @@
 							"sourceKey": "todoist:project:7"
 						}
 					],
+					"reads": [
+						{
+							"id": "t-ana-1",
+							"readAt": 1791960000000
+						}
+					],
 					"remindersCheckedAt": 1791972000000,
 					"sections": [
 						{
@@ -3200,6 +3508,16 @@
 					],
 					"spaces": {
 						"u-ana": {
+							"comments": [
+								{
+									"authorId": "u-ana",
+									"body": "Two coats",
+									"createdAt": 1791950000000,
+									"editedAt": 1791950100000,
+									"id": "c-ana",
+									"taskId": "t-ana-1"
+								}
+							],
 							"cursor": 3,
 							"epoch": 1,
 							"labels": [],
@@ -3428,6 +3746,16 @@
 				10
 			],
 			"output": {
+				"comments": [
+					{
+						"authorId": "u-me",
+						"body": "Ask about https://example.com/form",
+						"createdAt": 1791900000100,
+						"editedAt": null,
+						"id": "c-1",
+						"taskId": "a0d6b1e2-0001-4c1e-9b1e-000000000001"
+					}
+				],
 				"labels": [
 					{
 						"createdAt": 1791800000002,
@@ -3456,6 +3784,12 @@
 						"sourceKey": "todoist:project:7"
 					}
 				],
+				"reads": [
+					{
+						"id": "t-ana-1",
+						"readAt": 1791960000000
+					}
+				],
 				"remindersCheckedAt": 1791972000000,
 				"sections": [
 					{
@@ -3476,6 +3810,16 @@
 				],
 				"spaces": {
 					"u-ana": {
+						"comments": [
+							{
+								"authorId": "u-ana",
+								"body": "Two coats",
+								"createdAt": 1791950000000,
+								"editedAt": 1791950100000,
+								"id": "c-ana",
+								"taskId": "t-ana-1"
+							}
+						],
 						"cursor": 3,
 						"epoch": 1,
 						"labels": [],
@@ -3713,6 +4057,16 @@
 			"test": "parseSnapshot › a document without a sync section has not synced yet",
 			"input": [
 				{
+					"comments": [
+						{
+							"authorId": "u-me",
+							"body": "Ask about https://example.com/form",
+							"createdAt": 1791900000100,
+							"editedAt": null,
+							"id": "c-1",
+							"taskId": "a0d6b1e2-0001-4c1e-9b1e-000000000001"
+						}
+					],
 					"labels": [
 						{
 							"createdAt": 1791800000002,
@@ -3741,6 +4095,12 @@
 							"sourceKey": "todoist:project:7"
 						}
 					],
+					"reads": [
+						{
+							"id": "t-ana-1",
+							"readAt": 1791960000000
+						}
+					],
 					"remindersCheckedAt": 1791972000000,
 					"sections": [
 						{
@@ -3761,6 +4121,16 @@
 					],
 					"spaces": {
 						"u-ana": {
+							"comments": [
+								{
+									"authorId": "u-ana",
+									"body": "Two coats",
+									"createdAt": 1791950000000,
+									"editedAt": 1791950100000,
+									"id": "c-ana",
+									"taskId": "t-ana-1"
+								}
+							],
 							"cursor": 3,
 							"epoch": 1,
 							"labels": [],
@@ -3952,6 +4322,16 @@
 				10
 			],
 			"output": {
+				"comments": [
+					{
+						"authorId": "u-me",
+						"body": "Ask about https://example.com/form",
+						"createdAt": 1791900000100,
+						"editedAt": null,
+						"id": "c-1",
+						"taskId": "a0d6b1e2-0001-4c1e-9b1e-000000000001"
+					}
+				],
 				"labels": [
 					{
 						"createdAt": 1791800000002,
@@ -3980,6 +4360,12 @@
 						"sourceKey": "todoist:project:7"
 					}
 				],
+				"reads": [
+					{
+						"id": "t-ana-1",
+						"readAt": 1791960000000
+					}
+				],
 				"remindersCheckedAt": 1791972000000,
 				"sections": [
 					{
@@ -4000,6 +4386,16 @@
 				],
 				"spaces": {
 					"u-ana": {
+						"comments": [
+							{
+								"authorId": "u-ana",
+								"body": "Two coats",
+								"createdAt": 1791950000000,
+								"editedAt": 1791950100000,
+								"id": "c-ana",
+								"taskId": "t-ana-1"
+							}
+						],
 						"cursor": 3,
 						"epoch": 1,
 						"labels": [],
@@ -4253,9 +4649,11 @@
 				10
 			],
 			"output": {
+				"comments": [],
 				"labels": [],
 				"people": [],
 				"projects": [],
+				"reads": [],
 				"remindersCheckedAt": 5,
 				"sections": [],
 				"spaces": {},
@@ -4394,6 +4792,7 @@
 				10
 			],
 			"output": {
+				"comments": [],
 				"labels": [],
 				"people": [],
 				"projects": [
@@ -4403,6 +4802,7 @@
 						"name": "Home"
 					}
 				],
+				"reads": [],
 				"remindersCheckedAt": 5,
 				"sections": [],
 				"spaces": {},
@@ -4483,9 +4883,11 @@
 				10
 			],
 			"output": {
+				"comments": [],
 				"labels": [],
 				"people": [],
 				"projects": [],
+				"reads": [],
 				"remindersCheckedAt": 5,
 				"sections": [],
 				"spaces": {},
@@ -4564,9 +4966,11 @@
 				10
 			],
 			"output": {
+				"comments": [],
 				"labels": [],
 				"people": [],
 				"projects": [],
+				"reads": [],
 				"remindersCheckedAt": 5,
 				"sections": [],
 				"spaces": {},
@@ -4641,9 +5045,11 @@
 				10
 			],
 			"output": {
+				"comments": [],
 				"labels": [],
 				"people": [],
 				"projects": [],
+				"reads": [],
 				"remindersCheckedAt": 5,
 				"sections": [],
 				"spaces": {},
@@ -4722,9 +5128,11 @@
 				10
 			],
 			"output": {
+				"comments": [],
 				"labels": [],
 				"people": [],
 				"projects": [],
+				"reads": [],
 				"remindersCheckedAt": 5,
 				"sections": [],
 				"spaces": {},
@@ -4803,9 +5211,11 @@
 				10
 			],
 			"output": {
+				"comments": [],
 				"labels": [],
 				"people": [],
 				"projects": [],
+				"reads": [],
 				"remindersCheckedAt": 5,
 				"sections": [],
 				"spaces": {},
@@ -4884,9 +5294,11 @@
 				10
 			],
 			"output": {
+				"comments": [],
 				"labels": [],
 				"people": [],
 				"projects": [],
+				"reads": [],
 				"remindersCheckedAt": 5,
 				"sections": [],
 				"spaces": {},
@@ -4970,9 +5382,11 @@
 				10
 			],
 			"output": {
+				"comments": [],
 				"labels": [],
 				"people": [],
 				"projects": [],
+				"reads": [],
 				"remindersCheckedAt": 5,
 				"sections": [],
 				"spaces": {},
@@ -5056,9 +5470,11 @@
 				10
 			],
 			"output": {
+				"comments": [],
 				"labels": [],
 				"people": [],
 				"projects": [],
+				"reads": [],
 				"remindersCheckedAt": 5,
 				"sections": [],
 				"spaces": {},
@@ -5142,9 +5558,11 @@
 				10
 			],
 			"output": {
+				"comments": [],
 				"labels": [],
 				"people": [],
 				"projects": [],
+				"reads": [],
 				"remindersCheckedAt": 5,
 				"sections": [],
 				"spaces": {},
@@ -5226,9 +5644,11 @@
 				10
 			],
 			"output": {
+				"comments": [],
 				"labels": [],
 				"people": [],
 				"projects": [],
+				"reads": [],
 				"remindersCheckedAt": 5,
 				"sections": [],
 				"spaces": {},
@@ -5310,9 +5730,11 @@
 				10
 			],
 			"output": {
+				"comments": [],
 				"labels": [],
 				"people": [],
 				"projects": [],
+				"reads": [],
 				"remindersCheckedAt": 5,
 				"sections": [],
 				"spaces": {},
@@ -5398,9 +5820,11 @@
 				10
 			],
 			"output": {
+				"comments": [],
 				"labels": [],
 				"people": [],
 				"projects": [],
+				"reads": [],
 				"remindersCheckedAt": 5,
 				"sections": [],
 				"spaces": {},
@@ -5478,9 +5902,11 @@
 				10
 			],
 			"output": {
+				"comments": [],
 				"labels": [],
 				"people": [],
 				"projects": [],
+				"reads": [],
 				"remindersCheckedAt": 5,
 				"sections": [],
 				"spaces": {},
@@ -5559,9 +5985,11 @@
 				10
 			],
 			"output": {
+				"comments": [],
 				"labels": [],
 				"people": [],
 				"projects": [],
+				"reads": [],
 				"remindersCheckedAt": 5,
 				"sections": [],
 				"spaces": {},
@@ -5604,9 +6032,11 @@
 				10
 			],
 			"output": {
+				"comments": [],
 				"labels": [],
 				"people": [],
 				"projects": [],
+				"reads": [],
 				"remindersCheckedAt": 10,
 				"sections": [],
 				"spaces": {},
@@ -5631,9 +6061,11 @@
 				10
 			],
 			"output": {
+				"comments": [],
 				"labels": [],
 				"people": [],
 				"projects": [],
+				"reads": [],
 				"remindersCheckedAt": 10,
 				"sections": [],
 				"spaces": {},
@@ -5657,9 +6089,11 @@
 				10
 			],
 			"output": {
+				"comments": [],
 				"labels": [],
 				"people": [],
 				"projects": [],
+				"reads": [],
 				"remindersCheckedAt": 10,
 				"sections": [],
 				"spaces": {},
@@ -5677,9 +6111,11 @@
 				10
 			],
 			"output": {
+				"comments": [],
 				"labels": [],
 				"people": [],
 				"projects": [],
+				"reads": [],
 				"remindersCheckedAt": 10,
 				"sections": [],
 				"spaces": {},
@@ -5705,9 +6141,11 @@
 				10
 			],
 			"output": {
+				"comments": [],
 				"labels": [],
 				"people": [],
 				"projects": [],
+				"reads": [],
 				"remindersCheckedAt": 10,
 				"sections": [],
 				"spaces": {},
@@ -5741,9 +6179,11 @@
 				10
 			],
 			"output": {
+				"comments": [],
 				"labels": [],
 				"people": [],
 				"projects": [],
+				"reads": [],
 				"remindersCheckedAt": 10,
 				"sections": [],
 				"spaces": {},
@@ -5760,9 +6200,11 @@
 				10
 			],
 			"output": {
+				"comments": [],
 				"labels": [],
 				"people": [],
 				"projects": [],
+				"reads": [],
 				"remindersCheckedAt": 10,
 				"sections": [],
 				"spaces": {},
@@ -5777,9 +6219,11 @@
 				10
 			],
 			"output": {
+				"comments": [],
 				"labels": [],
 				"people": [],
 				"projects": [],
+				"reads": [],
 				"remindersCheckedAt": 10,
 				"sections": [],
 				"spaces": {},
@@ -5816,9 +6260,11 @@
 				10
 			],
 			"output": {
+				"comments": [],
 				"labels": [],
 				"people": [],
 				"projects": [],
+				"reads": [],
 				"remindersCheckedAt": 5,
 				"sections": [],
 				"spaces": {},
@@ -5890,6 +6336,7 @@
 				10
 			],
 			"output": {
+				"comments": [],
 				"labels": [
 					{
 						"createdAt": 1,
@@ -5899,6 +6346,7 @@
 				],
 				"people": [],
 				"projects": [],
+				"reads": [],
 				"remindersCheckedAt": 5,
 				"sections": [],
 				"spaces": {},
@@ -6094,9 +6542,11 @@
 				10
 			],
 			"output": {
+				"comments": [],
 				"labels": [],
 				"people": [],
 				"projects": [],
+				"reads": [],
 				"remindersCheckedAt": 5,
 				"sections": [],
 				"spaces": {},
@@ -6298,9 +6748,11 @@
 				10
 			],
 			"output": {
+				"comments": [],
 				"labels": [],
 				"people": [],
 				"projects": [],
+				"reads": [],
 				"remindersCheckedAt": 5,
 				"sections": [],
 				"spaces": {},
@@ -6420,9 +6872,11 @@
 				10
 			],
 			"output": {
+				"comments": [],
 				"labels": [],
 				"people": [],
 				"projects": [],
+				"reads": [],
 				"remindersCheckedAt": 5,
 				"sections": [],
 				"spaces": {},

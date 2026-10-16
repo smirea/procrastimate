@@ -15,9 +15,9 @@ Comments let the people on a task talk about it: the owner, guests who can edit 
 
 - **The server stamps the author.** `push` sets `authorId` to the sender on a comment's first appearance and ignores what the client sent. After that, only the author may change a comment, and never its task or creation time. An op from anyone else on an existing comment keeps no fields. This applies to the owner's own sync too, so an owner cannot rewrite a guest's comment.
 - **Commenting needs edit access.** `admit` lets a guest create a comment only on a task they may edit, and edit or delete only their own comment on such a task. A view-only guest reads the comments but cannot write one, the same as every other write in a view share. Public links show no comments, because a link has no identity to answer as and comments can be a private conversation. Guests never write read markers into the owner's space.
-- **Comments follow their task's visibility.** `filterSnapshot` keeps the comments whose task the guest can see, and the scope hash covers them, so a new comment sends the guest a fresh snapshot.
-- **Activity shows comments.** A comment row that appears on a task reads as `commented` in `GET /api/activity`.
-- **The agent API.** `GET /api/comments?id=<task>` lists a task's comments with each author. `POST /api/comments` adds one (`taskId`, `body`), and `PATCH` and `DELETE /api/comments?id=<comment>` edit or delete the caller's own. They are in `SHARED_ROUTES`, so AI accounts and guests reach them under the same admission as a sync.
+- **Comments follow their task's visibility,** the way sections follow their project's. `filterSnapshot` keeps the comments whose task the guest can see, whatever project or section the task sits in, and the scope hash covers them, so a new comment sends the guest a fresh snapshot.
+- **Activity shows comments.** A comment's first appearance on its task is one `commented` entry whose summary quotes it, such as `commented “Oat milk?”`. Undoing a comment's delete does not add another.
+- **The agent API.** `GET /api/comments?id=<task>` lists a task's comments with each author. `POST /api/comments` adds one (`taskId`, `body`), and `PATCH` and `DELETE /api/comments?id=<comment>` edit or delete the caller's own. They are in `agentContract`, so `SHARED_ROUTES` and the agent docs include them, with an example per route, and AI accounts and guests reach them under the same admission as a sync.
 
 ## Clients
 

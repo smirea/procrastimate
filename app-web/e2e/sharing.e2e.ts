@@ -115,8 +115,10 @@ test('a guest comments on a shared task, and the owner sees it unread until they
 	const { owner, project, task } = await ownerWithProject(browser);
 	await owner.page.getByRole('button', { name: 'Share project' }).click();
 	await shareSheet(owner.page).getByRole('textbox', { name: 'Email or name' }).fill(guest.email);
+	const created = owner.page.waitForResponse(r => r.url().includes('/api/shares') && r.request().method() === 'POST');
 	await shareSheet(owner.page).getByRole('list', { name: 'People found' }).getByRole('button', { name: /Gus/ }).click();
 	await expect(shareSheet(owner.page).getByRole('region', { name: 'People with access' })).toContainText('Gus');
+	expect((await created).ok()).toBe(true);
 	await owner.page.keyboard.press('Escape');
 
 	await guest.page.reload();
@@ -139,7 +141,9 @@ test('a guest comments on a shared task, and the owner sees it unread until they
 	const list = owner.app.details().getByRole('list', { name: 'Comment list' });
 	await expect(list).toContainText('Gus');
 	await expect(list).toContainText('Oat milk?');
-	await expect(owner.app.details().getByRole('list', { name: 'Activity list' })).toContainText(/Gus\s*commented/);
+	await expect(owner.app.details().getByRole('region', { name: 'Activity' }).getByRole('listitem').first()).toHaveText(
+		/Gus\s*commented “Oat milk\? https:\/\/example\.com\/oat”/,
+	);
 	await owner.page.keyboard.press('Escape');
 	await expect(owner.app.row(task).locator('[data-comments="read"]')).toHaveText('1');
 	await expect(owner.app.row(task).locator('[data-comments="unread"]')).toHaveCount(0);
