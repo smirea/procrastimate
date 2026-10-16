@@ -1,5 +1,5 @@
 import type { Browser, BrowserContext, Page } from '@playwright/test';
-import { App, expect, NOW, signInAccount, test } from './fixtures.ts';
+import { App, expect, NOW, signInAccount, test, unique } from './fixtures.ts';
 
 /**
  * Two browser contexts are two devices on this test's account. Sync starts on its own. Each test has its own
@@ -8,9 +8,6 @@ import { App, expect, NOW, signInAccount, test } from './fixtures.ts';
  */
 
 type Device = { app: App; page: Page; context: BrowserContext };
-
-/** The Worker's account outlives a run, so titles carry a random suffix. */
-const unique = (name: string) => `${name} ${crypto.randomUUID().slice(0, 8)}`;
 
 test.describe.configure({ mode: 'serial' });
 

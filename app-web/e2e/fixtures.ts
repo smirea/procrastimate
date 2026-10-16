@@ -16,6 +16,12 @@ export function e2eEmail(): string {
 	return `e2e-${id}@procrastimate.test`;
 }
 
+/**
+ * A title that is new on an account that outlives the run, as the Worker's does. The suffix starts with a letter
+ * so quick add never reads it as a token: a bare hex id such as `3929284d` is a due date 3,929,284 days away.
+ */
+export const unique = (name: string) => `${name} x${crypto.randomUUID().slice(0, 8)}`;
+
 export async function signInAccount(context: BrowserContext) {
 	const email = e2eEmail();
 	const signUp = await context.request.post('/api/auth/sign-up/email', {
@@ -46,6 +52,8 @@ export const test = base.extend<{ app: App }>({
 		await page.clock.setFixedTime(NOW);
 		await page.goto('/inbox');
 		await expect(page.getByRole('heading', { name: 'Inbox' })).toBeVisible({ timeout: 30_000 });
+		// Until the web font arrives, text wraps in the much wider fallback, and specs measure layout.
+		await page.evaluate(() => document.fonts.ready.then(() => undefined));
 		await use(new App(page));
 	},
 });

@@ -1,5 +1,5 @@
 import type { Browser, BrowserContext, Page } from '@playwright/test';
-import { App, E2E_PASSWORD, expect, NOW, test } from './fixtures.ts';
+import { App, E2E_PASSWORD, expect, NOW, test, unique } from './fixtures.ts';
 
 /**
  * Two people, each with their own account in their own browser context. The owner shares a project with the
@@ -7,8 +7,6 @@ import { App, E2E_PASSWORD, expect, NOW, test } from './fixtures.ts';
  */
 
 type Person = { app: App; page: Page; context: BrowserContext; email: string; name: string };
-
-const unique = (name: string) => `${name} ${crypto.randomUUID().slice(0, 8)}`;
 
 test.describe.configure({ mode: 'serial' });
 

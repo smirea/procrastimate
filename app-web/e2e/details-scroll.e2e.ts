@@ -21,12 +21,12 @@ test('going back from a subtask returns to where the parent was scrolled', async
 	await page.mouse.wheel(0, 500);
 	await expect.poll(scrollTop).toBe(500);
 
-	await app
-		.details()
-		.getByRole('button', { name: /^Item 20/ })
-		.click();
+	// Clicking a subtask the body clips would scroll it into view first, and the scroll would move the place to return to.
+	const item = app.details().getByRole('button', { name: /^Item 15/ });
+	await expect(item).toBeInViewport({ ratio: 1 });
+	await item.click();
 	await app.details().getByRole('button', { name: 'Back to Pack for trip' }).click();
-	await expect(app.details().getByRole('button', { name: /^Item 20/ })).toBeVisible();
+	await expect(item).toBeVisible();
 	await expect.poll(scrollTop).toBe(500);
 
 	// Opening the task afresh starts at the top.
