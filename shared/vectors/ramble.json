@@ -35496,6 +35496,7 @@
 						"priority": null,
 						"projectId": null,
 						"recurrence": {
+							"day": 1,
 							"interval": 1,
 							"unit": "month"
 						},
@@ -35510,16 +35511,10 @@
 				],
 				"tokens": [
 					{
-						"end": 26,
+						"end": 37,
 						"kind": "recurrence",
 						"start": 15,
-						"text": "every month"
-					},
-					{
-						"end": 37,
-						"kind": "due",
-						"start": 27,
-						"text": "on the 1st"
+						"text": "every month on the 1st"
 					}
 				]
 			}

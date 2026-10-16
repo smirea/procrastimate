@@ -785,7 +785,7 @@ const HAND_WRITTEN: Record<Category, Row[]> = {
 		['Go running every morning', plain('Go running every morning')],
 		[
 			'Monthly review every month on the 1st',
-			[t('Monthly review', { due: '2026-11-01', recurrence: { interval: 1, unit: 'month' } })],
+			[t('Monthly review', { due: '2026-11-01', recurrence: { interval: 1, unit: 'month', day: 1 } })],
 		],
 		['Call Mom on her birthday March 3rd', [t('Call Mom on her birthday', { due: '2027-03-03' })]],
 		['Clean the fridge this evening', [t('Clean the fridge', { due: '2026-10-14 20:00' })]],

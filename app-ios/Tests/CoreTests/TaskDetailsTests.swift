@@ -124,6 +124,13 @@ import Testing
         #expect(RepeatMenu.presets.map { Format.formatRecurrence($0, wednesday) }
             == ["Every day", "Every weekday", "Every Wed", "Every month", "Every year"])
     }
+
+    @Test func aCustomMonthlyIntervalKeepsTheDayAndADayOfTheMonthMatchesNoPreset() {
+        let onThe31st = Recurrence(interval: 1, unit: .month, day: 31)
+        #expect(RepeatMenu.custom(2, .month, onThe31st) == Recurrence(interval: 2, unit: .month, day: 31))
+        #expect(RepeatMenu.custom(2, .week, onThe31st) == Recurrence(interval: 2, unit: .week))
+        #expect(!RepeatMenu.presets.contains { RepeatMenu.isSelected($0, onThe31st) })
+    }
 }
 
 @Suite struct ReminderMenuTests {

@@ -556,6 +556,37 @@ describe('spelled-out day numbers', () => {
 	});
 });
 
+describe('the day of this month in words', () => {
+	test.each([
+		['the fifteenth', '2026-10-15', null],
+		['on the twenty-first', '2026-10-21', null],
+		['the thirty-first', '2026-10-31', null],
+		['the thirteenth', '2026-11-13', null],
+		['the fifteenth at 9am', '2026-10-15', '09:00'],
+		['the fifteenth p1', '2026-10-15', null],
+	])('Pay rent %s', (phrase, date, time) => {
+		const parsed = parse(`Pay rent ${phrase}`);
+		expect(parsed.title).toBe('Pay rent');
+		expect<unknown>(parsed.due).toEqual({ date, time });
+	});
+
+	test.each([
+		['Pick the third option'],
+		['Read the fifth chapter'],
+		['Take the second left'],
+		['Take the first May train'],
+		['Meet the first of the month'],
+	])('an ordinal before an ordinary word stays text: %s', input => {
+		const parsed = parse(input);
+		expect(parsed.title).toBe(input);
+		expect(parsed.due).toBeNull();
+	});
+
+	test('it reads when spoken', () => {
+		expect(parse('Pay rent on the fifteenth.', { spoken: true }).due).toEqual({ date: '2026-10-15', time: null });
+	});
+});
+
 describe('@ before a time means at', () => {
 	test.each([
 		['Meet Oct 2 @ 3pm', '2027-10-02', '15:00'],
@@ -814,6 +845,59 @@ describe('recurrence', () => {
 			{ kind: 'recurrence', start: 13, end: 22, text: 'every day' },
 			{ kind: 'due', start: 23, end: 26, text: '9am' },
 		]);
+	});
+});
+
+describe('monthly repeats on a day', () => {
+	test.each([
+		['every 3rd', 1, 3, '2026-11-03', null],
+		['every 14th', 1, 14, '2026-10-14', null],
+		['every 14th 9am', 1, 14, '2026-11-14', '09:00'],
+		['every 31st', 1, 31, '2026-10-31', null],
+		['every 15th of the month', 1, 15, '2026-10-15', null],
+		['every fifteenth of the month', 1, 15, '2026-10-15', null],
+		['every month on the 20th', 1, 20, '2026-10-20', null],
+		['every month on the twentieth', 1, 20, '2026-10-20', null],
+		['every month the 20th at 9am', 1, 20, '2026-10-20', '09:00'],
+		['each month on the 1st', 1, 1, '2026-11-01', null],
+		['monthly on the 5th', 1, 5, '2026-11-05', null],
+		['every 2 months on the 31st', 2, 31, '2026-10-31', null],
+		['every other month on the 1st', 2, 1, '2026-11-01', null],
+		['every 3rd p1', 1, 3, '2026-11-03', null],
+	])('Pay rent %s', (phrase, interval, day, date, time) => {
+		const parsed = parse(`Pay rent ${phrase}`);
+		expect(parsed.title).toBe('Pay rent');
+		expect<unknown>(parsed.recurrence).toEqual({ interval, unit: 'month', day });
+		expect<unknown>(parsed.due).toEqual({ date, time });
+	});
+
+	test('a day this month lacks starts on its last day', () => {
+		const parsed = parse('Pay rent every 30th', { now: new Date(2027, 1, 10, 10, 0) });
+		expect(parsed.recurrence).toEqual({ interval: 1, unit: 'month', day: 30 });
+		expect(parsed.due).toEqual({ date: '2027-02-28', time: null });
+	});
+
+	test('a typed date moves to the next day of the repeat', () => {
+		expect(parse('Pay rent every 3rd 10/20').due).toEqual({ date: '2026-11-03', time: null });
+	});
+
+	test('the day wins over the date set outside the text', () => {
+		const parsed = parse('Pay rent every 3rd', { due: { date: '2026-10-20', time: '08:00' } });
+		expect(parsed.due).toEqual({ date: '2026-11-03', time: null });
+	});
+
+	test.each([
+		['Water plants every 3rd day'],
+		['Rotate every 2nd week'],
+		['Call every 1st Monday'],
+		['Every second counts'],
+		['Read every third chapter'],
+		['Pay rent every 32nd'],
+		['Pay rent every month on the 32nd'],
+	])('%s does not repeat on a day of the month', input => {
+		const parsed = parse(input);
+		expect(parsed.recurrence).toBeNull();
+		expect(parsed.title).toBe(input.replace(/ Monday$/, ''));
 	});
 });
 
