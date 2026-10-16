@@ -9,17 +9,19 @@ final class AccountSync {
     private let clock: AppClock
     private let session: Session
     private let images: TaskImages
+    private let toasts: Toasts
     private var task: Task<Void, Never>?
     private var soon: Task<Void, Never>?
     private var socket: URLSessionWebSocketTask?
     private var spacesListedAt: ContinuousClock.Instant?
     private static let spacesInterval = Duration.seconds(300)
 
-    init(store: Store, clock: AppClock, session: Session, images: TaskImages) {
+    init(store: Store, clock: AppClock, session: Session, images: TaskImages, toasts: Toasts) {
         self.store = store
         self.clock = clock
         self.session = session
         self.images = images
+        self.toasts = toasts
         let device = store.snapshot.sync.map { ($0.deviceId, Self.deviceName()) }
         APIClient.device.withLock { $0 = device }
     }
@@ -126,7 +128,7 @@ final class AccountSync {
             guard let request else { return false }
             body = request
         } catch {
-            print("sync: the outbox does not fit the contract", error)
+            print("sync: the request does not fit the contract", error)
             return false
         }
         // Built before the uploads, so every edit it carries was recorded after its image was queued, and the edits that
@@ -153,10 +155,12 @@ final class AccountSync {
             return false
         }
         let seeding = space == .own && store.snapshot.sync?.seed == true
-        let applied = switch space {
+        let taken = switch space {
         case .own: store.takeSyncResponse(response)
         case let .shared(id): store.takeSyncResponse(response, space: id)
         }
+        if let notice = taken?.notice { toasts.show(notice) }
+        let applied = taken != nil
         if applied, case let .changes(page) = response, page.changes.count >= SyncEngine.pageSize {
             return await syncSpace(space, token: token)
         }

@@ -13,9 +13,9 @@ import Testing
             .appending(path: "procrastimate.json"))
         let store = Store(file: file, clock: clock)
         let body = Data(#"""
-        {"acked":[],"cursor":1,"hlc":"2:0:server","epoch":0,"changes":[{"seq":1,"opId":"\#(sourceKey)","kind":"task","id":"memo-task","fields":{"deleted":false,"parentId":null,"order":0,"title":"Call the plumber","notes":"","projectId":null,"labelIds":[],"due":null,"recurrence":null,"priority":4,"reminders":[],"location":null,"event":null,"createdAt":1,"completedAt":null,"sourceKey":"\#(sourceKey)"}}]}
+        {"rejected":[],"acked":[],"cursor":1,"hlc":"2:0:server","epoch":0,"changes":[{"seq":1,"opId":"\#(sourceKey)","kind":"task","id":"memo-task","fields":{"deleted":false,"parentId":null,"order":0,"title":"Call the plumber","notes":"","projectId":null,"labelIds":[],"due":null,"recurrence":null,"priority":4,"reminders":[],"location":null,"event":null,"createdAt":1,"completedAt":null,"sourceKey":"\#(sourceKey)"}}]}
         """#.utf8)
-        #expect(store.takeSyncResponse(try JSONDecoder().decode(API.SyncResponse.self, from: body)))
+        #expect(store.takeSyncResponse(try JSONDecoder().decode(API.SyncResponse.self, from: body)) != nil)
         store.updateTask("memo-task", TaskPatch(title: "Call the plumber today"))
         await store.flush()
 

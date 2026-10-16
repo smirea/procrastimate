@@ -21,12 +21,12 @@ import Testing
     @Test func aResponseDecodesTheSnapshotOrTheChanges() throws {
         let snapshot = try JSONDecoder().decode(
             API.SyncResponse.self,
-            from: Data(#"{"acked":[],"cursor":0,"hlc":"1:0:server","epoch":0,"snapshot":{"tasks":[],"projects":[],"sections":[],"labels":[],"comments":[],"reads":[],"settings":{"timeZone":null,"dictation":"native","quickAddButtons":["date"]}}}"#.utf8)
+            from: Data(#"{"rejected":[],"acked":[],"cursor":0,"hlc":"1:0:server","epoch":0,"snapshot":{"tasks":[],"projects":[],"sections":[],"labels":[],"comments":[],"reads":[],"settings":{"timeZone":null,"dictation":"native","quickAddButtons":["date"]}}}"#.utf8)
         )
         guard case .snapshot = snapshot else { Issue.record("expected a snapshot"); return }
         let changes = try JSONDecoder().decode(
             API.SyncResponse.self,
-            from: Data(#"{"acked":["op-1"],"cursor":3,"hlc":"1:0:server","epoch":0,"changes":[{"seq":3,"opId":"op-1","kind":"label","id":"l1","fields":{"name":"Home"}}]}"#.utf8)
+            from: Data(#"{"rejected":[],"acked":["op-1"],"cursor":3,"hlc":"1:0:server","epoch":0,"changes":[{"seq":3,"opId":"op-1","kind":"label","id":"l1","fields":{"name":"Home"}}]}"#.utf8)
         )
         guard case let .changes(page) = changes else { Issue.record("expected changes"); return }
         #expect(page.changes.count == 1)
@@ -37,24 +37,20 @@ import Testing
         SyncEngine.ensure(&snapshot, deviceId: "device-1234", now: 0, timeZone: "UTC") { "op-1" }
         let request = try #require(try SyncEngine.request(snapshot))
         #expect(request.cursor == 0)
-        #expect(request.ops.count == 1)
-        guard case let .settings(op) = request.ops.first else { Issue.record("expected the settings op"); return }
-        #expect(op.fields.timeZone == .some("UTC"))
+        #expect(request.ops == [.object([
+            "opId": .string("op-1"), "hlc": .string("0:1:device-1234"), "kind": .string("settings"),
+            "id": .string("settings"), "fields": .object(["timeZone": .string("UTC")]),
+        ])])
     }
 
-    @Test func anOutboxFromTheBooleanBugStillSends() throws {
+    @Test func anOpTheContractRefusesStillGoesOutForTheServerToRejectAlone() throws {
         var snapshot = Snapshot.empty(now: 0)
         SyncEngine.ensure(&snapshot, deviceId: "device-1234", now: 0, timeZone: "UTC") { "op-1" }
         snapshot.sync?.outbox.append(SyncOp(opId: "op-2", hlc: "1:0:device-1234", kind: .task, id: "t1", fields: [
-            "order": .bool(false),
-            "priority": .bool(true),
-            "recurrence": .object(["interval": .bool(true), "unit": .string("week"), "days": .array([.bool(true), .number(3)])]),
-            "reminders": .array([.object(["kind": .string("before"), "minutes": .bool(false)])]),
+            "due": .object(["date": .string("12784-10-19"), "time": .null]),
         ]))
         let request = try #require(try SyncEngine.request(snapshot))
-        guard case let .task(op) = request.ops.last else { Issue.record("expected the task op"); return }
-        #expect(op.fields.order == 0)
-        #expect(op.fields.priority == .p1)
+        #expect(request.ops.count == 2)
     }
 
     @Test func aOneCharacterHighlightDecodes() throws {

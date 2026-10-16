@@ -10,10 +10,12 @@ import {
 	type ServerState,
 } from '../../../shared/sync/merge';
 import {
+	opSchema,
 	SYNC_PAGE_SIZE,
 	type Change,
 	type FieldsByKind,
 	type Op,
+	type Rejection,
 	type Snapshot,
 	type SyncRequest,
 	type SyncResponse,
@@ -86,6 +88,27 @@ export function push(store: AccountStore, before: ServerState, ops: readonly Op[
 	return { state: fixed.state, acked: applied.acked };
 }
 
+/**
+ * Parses each op of a request on its own, so one the contract refuses is rejected by itself and the rest still apply.
+ * An entry without a string `opId` cannot be named in `rejected`; no client can store one, so it is skipped.
+ */
+export function parseOps(raw: readonly unknown[]): { ops: Op[]; rejected: Rejection[] } {
+	const ops: Op[] = [];
+	const rejected: Rejection[] = [];
+	for (const entry of raw) {
+		const parsed = opSchema.safeParse(entry);
+		if (parsed.success) {
+			ops.push(parsed.data);
+			continue;
+		}
+		const opId = (entry as { opId?: unknown } | null)?.opId;
+		if (typeof opId !== 'string') continue;
+		const reason = parsed.error.issues.map(issue => `${issue.path.join('.') || 'op'}: ${issue.message}`).join('; ');
+		rejected.push({ opId, reason: reason.slice(0, 500) });
+	}
+	return { ops, rejected };
+}
+
 /** Who wrote a row and when stay on the server; activity reads them, clients never apply them. */
 function asChange(row: LogRow): Change {
 	const { actor: _, at: __, ...change } = row;
@@ -104,6 +127,7 @@ export function sync(store: AccountStore, request: SyncRequest, now: number, act
 			const state = loadState(store);
 			return {
 				acked: [],
+				rejected: [],
 				snapshot: serverSnapshot(state),
 				cursor: store.lastSeq(),
 				hlc: serverHlc(state),
@@ -112,12 +136,14 @@ export function sync(store: AccountStore, request: SyncRequest, now: number, act
 		}
 		// A cursor past the end means the log was cleared, as after a wipe or a restarted dev server.
 		const restarted = request.cursor > store.lastSeq();
-		const pushed = push(store, loadState(store), request.ops, now, actor);
+		const { ops, rejected } = parseOps(request.ops);
+		const pushed = push(store, loadState(store), ops, now, actor);
 
 		const head = store.lastSeq();
 		const hlc = serverHlc(pushed.state);
-		if (request.reset || request.cursor === 0 || restarted) {
-			return { acked: pushed.acked, snapshot: serverSnapshot(pushed.state), cursor: head, hlc, epoch };
+		// The snapshot puts a rejected op's entity back to what the server holds, which the log alone may never carry.
+		if (request.reset || request.cursor === 0 || restarted || rejected.length) {
+			return { acked: pushed.acked, rejected, snapshot: serverSnapshot(pushed.state), cursor: head, hlc, epoch };
 		}
 		const changes = store.logAfter(request.cursor, SYNC_PAGE_SIZE).map(asChange);
 		const cursor = changes.at(-1)?.seq ?? request.cursor;
@@ -125,7 +151,7 @@ export function sync(store: AccountStore, request: SyncRequest, now: number, act
 		// apply older rows without it. The retry dedupes, and the last page acks everything.
 		const paged = new Set(changes.map(change => change.opId));
 		const acked = cursor === head ? pushed.acked : pushed.acked.filter(opId => paged.has(opId));
-		return { acked, changes, cursor, hlc, epoch };
+		return { acked, rejected, changes, cursor, hlc, epoch };
 	});
 }
 
@@ -153,19 +179,20 @@ export function guestSync(
 	return store.transaction(() => {
 		const epoch = store.epoch();
 		const before = loadState(store);
-		const { admitted, refused } = admit(serverSnapshot(before), grants, request.ops, actor);
+		const { ops, rejected } = parseOps(request.ops);
+		const { admitted, refused } = admit(serverSnapshot(before), grants, ops, actor);
 		const pushed = push(store, before, admitted, now, actor);
 		for (const op of refused) {
 			if (store.hasOp(op.opId)) continue;
 			store.appendLog({ opId: op.opId, kind: op.kind, id: op.id, fields: {}, actor, at: now });
 		}
-		const acked = request.ops.map(op => op.opId);
+		const acked = ops.map(op => op.opId);
 		const { filtered, readOnly } = guestView(serverSnapshot(pushed.state), grants);
 		const targets = grants.map(({ targetKind, targetId }) => ({ kind: targetKind, id: targetId }));
 		// A new share or a changed role can leave the visible tasks as they were, so both are part of the hash.
 		const scope = scopeHash({ filtered, readOnly, targets });
-		const base = { acked, cursor: store.lastSeq(), hlc: serverHlc(pushed.state), epoch, scope };
-		if (request.epoch === epoch && request.scope === scope) return { ...base, changes: [] };
+		const base = { acked, rejected, cursor: store.lastSeq(), hlc: serverHlc(pushed.state), epoch, scope };
+		if (request.epoch === epoch && request.scope === scope && !rejected.length) return { ...base, changes: [] };
 		return { ...base, snapshot: filtered, readOnly, targets };
 	});
 }

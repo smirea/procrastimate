@@ -140,10 +140,14 @@ const cursor = z.number().int().nonnegative();
 /** The most log rows one response carries. A client that gets a full page syncs again right away. */
 export const SYNC_PAGE_SIZE = 1000;
 
+/**
+ * The request checks only that `ops` is a list. The server parses each op on its own, so one invalid op is rejected by
+ * itself instead of failing the request and wedging the device's outbox (see `rejected` in the response).
+ */
 export const syncRequestSchema = z
 	.object({
 		cursor,
-		ops: z.array(opSchema),
+		ops: z.array(z.unknown().meta({ description: 'An `Op`, parsed by itself.' })),
 		/** The wipe generation this client last applied. A lower one means its copy was cleared on another device. */
 		epoch: z.number().int().nonnegative().default(0),
 		reset: z.boolean().optional(),
@@ -163,12 +167,22 @@ export type ShareTarget = z.infer<typeof shareTargetSchema>;
 /** A guest's sync of a shared space answers with the hash of what it may see. An owner's sync has none. */
 const scope = z.string().optional();
 
-/** Cursor `0`, a cursor past the log, a reset, or a stale epoch gets the whole snapshot instead of the log. */
+/** An op the server will never apply, with why. Its id is never acked, and the client drops it from its outbox. */
+export const rejectionSchema = z.object({ opId: z.string(), reason: z.string() }).meta({ id: 'SyncRejection' });
+export type Rejection = z.infer<typeof rejectionSchema>;
+
+const rejected = z.array(rejectionSchema);
+
+/**
+ * Cursor `0`, a cursor past the log, a reset, a stale epoch, or a rejected op gets the whole snapshot instead of the
+ * log, so a rejected op's entity goes back to the server's value.
+ */
 export const syncResponseSchema = z
 	.union([
-		z.object({ acked: z.array(z.string()), changes: z.array(changeSchema), cursor, hlc, epoch, scope }),
+		z.object({ acked: z.array(z.string()), rejected, changes: z.array(changeSchema), cursor, hlc, epoch, scope }),
 		z.object({
 			acked: z.array(z.string()),
+			rejected,
 			snapshot: snapshotSchema,
 			cursor,
 			hlc,

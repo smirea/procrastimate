@@ -146,6 +146,39 @@ test('changes made offline apply at once and upload when the network returns', a
 	await expect(b.app.row(`${kept} renamed`)).toBeVisible({ timeout: 10_000 });
 });
 
+test('an edit the server rejects goes back to the server value with a notice, and the device keeps syncing', async ({
+	browser,
+}) => {
+	const [a, b] = await devices(browser);
+	const title = unique('Guarded');
+	await a.app.add(title);
+	await settled(a);
+
+	const refused = `${title} refused`;
+	// Stands in for an op only a client bug could build: it reaches the server with a priority the contract refuses.
+	await a.context.route('**/api/sync', async route => {
+		const body = route.request().postDataJSON() as { ops?: { fields: Record<string, unknown> }[] } | null;
+		for (const op of body?.ops ?? []) if (op.fields.title === refused) op.fields.priority = 99;
+		await route.continue({ postData: JSON.stringify(body) });
+	});
+	await rename(a.app, title, refused);
+	await expect(a.page.getByRole('status').filter({ hasText: `Couldn’t save a change to “${refused}”` })).toBeVisible({
+		timeout: 10_000,
+	});
+	await expect(a.app.row(title)).toBeVisible();
+	await expect(a.app.row(refused)).toHaveCount(0);
+	await expect.poll(() => outbox(a.page)).toBe(0);
+	await a.context.unroute('**/api/sync');
+
+	const next = unique('After the rejection');
+	await a.app.add(next);
+	await settled(a);
+	await focus(b.page);
+	await expect(b.app.row(next)).toBeVisible({ timeout: 10_000 });
+	await expect(b.app.row(title)).toBeVisible();
+	await expect(b.app.row(refused)).toHaveCount(0);
+});
+
 test('typing notes shows each keystroke at once and queues one op with the last value', async ({ browser }) => {
 	const [a, b] = await devices(browser);
 	const title = unique('Typed');

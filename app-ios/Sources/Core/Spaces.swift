@@ -107,10 +107,11 @@ extension SyncEngine {
         return body
     }
 
-    /// Applies a shared space's sync response, keeping the scope hash and the read-only ids it carries.
-    public static func apply(_ snapshot: inout Snapshot, space id: String, response: API.SyncResponse, now: Int, nextOpId: () -> String) -> Bool {
-        let applied = inSpace(&snapshot, id) { lens in apply(&lens, response: response, now: now, nextOpId: nextOpId) } ?? false
-        guard applied, var section = snapshot.spaces[id] else { return false }
+    /// Applies a shared space's sync response, keeping the scope hash and the read-only ids it carries, and returns
+    /// the ops the server rejected, or nil when it could not apply.
+    public static func apply(_ snapshot: inout Snapshot, space id: String, response: API.SyncResponse, now: Int, nextOpId: () -> String) -> [SyncOp]? {
+        let rejected = inSpace(&snapshot, id) { lens in apply(&lens, response: response, now: now, nextOpId: nextOpId) } ?? nil
+        guard let rejected, var section = snapshot.spaces[id] else { return nil }
         switch response {
         case let .changes(page):
             if let scope = page.scope { section.scope = scope }
@@ -120,7 +121,7 @@ extension SyncEngine {
             section.targets = full.targets ?? []
         }
         snapshot.spaces[id] = section
-        return true
+        return rejected
     }
 
     /// Adds a section for each space now shared with this user and drops the ones no longer shared. Owners join the

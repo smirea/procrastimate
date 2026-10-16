@@ -144,6 +144,7 @@ describe('sharing between two users', () => {
 		const again = await json<SyncResponse>(sync(guest, [], owner.me.id, { scope: first.scope }));
 		expect(again).toEqual({
 			acked: [],
+			rejected: [],
 			changes: [],
 			cursor: first.cursor,
 			hlc: first.hlc,

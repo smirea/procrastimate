@@ -75,6 +75,7 @@ export const accountRouter = os.router({
 		} else {
 			response = guestSync(store, input.body, now, actor.id, access.shares);
 		}
+		if (response.rejected.length) console.warn('sync: rejected ops', JSON.stringify(response.rejected).slice(0, 2000));
 		if (input.body.ops.length) await refreshPush(context);
 		return response;
 	}),

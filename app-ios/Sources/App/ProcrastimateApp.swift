@@ -33,7 +33,7 @@ struct ProcrastimateApp: App {
         let notifications = LocalNotifications(store: store, toasts: toasts, navigator: navigator, clock: clock)
         let auth = Session(store: store)
         let images = TaskImages(store: store, toasts: toasts)
-        let accountSync = AccountSync(store: store, clock: clock, session: auth, images: images)
+        let accountSync = AccountSync(store: store, clock: clock, session: auth, images: images, toasts: toasts)
         let session = IntentSession(
             store: store,
             navigator: navigator,

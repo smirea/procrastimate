@@ -30,10 +30,10 @@ import Testing
         var snapshot = Snapshot.empty(now: 0)
         SyncEngine.ensure(&snapshot, deviceId: "device", now: 0, timeZone: "UTC") { "op-1" }
         let body = Data(
-            #"{"acked":["op-1"],"cursor":1,"hlc":"2:0:server","epoch":0,"changes":[{"seq":1,"opId":"op-2","kind":"settings","id":"settings","fields":{"dictation":"elevenlabs"}}]}"#
+            #"{"rejected":[],"acked":["op-1"],"cursor":1,"hlc":"2:0:server","epoch":0,"changes":[{"seq":1,"opId":"op-2","kind":"settings","id":"settings","fields":{"dictation":"elevenlabs"}}]}"#
                 .utf8
         )
-        #expect(SyncEngine.apply(&snapshot, response: body, now: 3) { "op-3" })
+        #expect(SyncEngine.apply(&snapshot, response: body, now: 3) { "op-3" } != nil)
         #expect(snapshot.sync?.dictation == .elevenlabs)
         #expect(snapshot.sync?.timeZone == "UTC")
     }

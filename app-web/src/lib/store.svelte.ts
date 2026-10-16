@@ -8,7 +8,7 @@ import type { Person, Space } from 'shared/sharing.ts';
 import type { SpaceSection, SyncSection } from 'shared/snapshot.ts';
 import * as comments from 'shared/comments.ts';
 import * as rules from 'shared/store.ts';
-import { applyResponse, commit, startSync, type ClientSync } from 'shared/sync/apply.ts';
+import { applyResponse, commit, rejectionNotice, startSync, type ClientSync } from 'shared/sync/apply.ts';
 import { formatHlc, parseHlc } from 'shared/sync/hlc.ts';
 import {
 	DEFAULT_SETTINGS,
@@ -266,12 +266,14 @@ class Store {
 	}
 
 	/**
-	 * Drops the acknowledged ops, applies the server's changes, and replays the rest of the outbox on top. True when
-	 * the first snapshot queued local data the server lacks, so another round is due.
+	 * Drops the acknowledged and rejected ops, applies the server's changes, and replays the rest of the outbox on top.
+	 * `seeded` is set when the first snapshot queued local data the server lacks, so another round is due, and
+	 * `notice` names what the server refused to save.
 	 */
-	takeResponse(response: SyncResponse): boolean {
-		if (!this.#sync) return false;
-		const { snapshot, sync } = applyResponse(this.#synced(this.#sync), clientSync(this.#sync), response, Date.now(), {
+	takeResponse(response: SyncResponse): { seeded: boolean; notice: string | null } {
+		if (!this.#sync) return { seeded: false, notice: null };
+		const before = this.#synced(this.#sync);
+		const { snapshot, sync, rejected } = applyResponse(before, clientSync(this.#sync), response, Date.now(), {
 			sentReset: this.#sync.reset,
 		});
 		const seeded = this.#sync.seed && !sync.seed && sync.outbox.length > 0;
@@ -279,7 +281,7 @@ class Store {
 		const { dictation, quickAddButtons } = snapshot.settings;
 		this.#sync = sectionOf(sync, { ...this.#sync, reset: false, dictation, quickAddButtons });
 		this.#commit();
-		return seeded;
+		return { seeded, notice: rejectionNotice(before, rejected) };
 	}
 
 	#creation = (): rules.Creation => ({ id: newId(), now: Date.now() });
@@ -525,15 +527,12 @@ class Store {
 		};
 	}
 
-	takeSpaceResponse(owner: string, response: SyncResponse) {
+	/** Applies a shared space's answer like `takeResponse`, and returns the notice for what the server refused. */
+	takeSpaceResponse(owner: string, response: SyncResponse): string | null {
 		const section = this.spaces[owner];
-		if (!section || !this.#sync) return;
-		const { snapshot, sync } = applyResponse(
-			sectionData(sectionStore(section)),
-			spaceSync(section, this.#sync),
-			response,
-			Date.now(),
-		);
+		if (!section || !this.#sync) return null;
+		const before = sectionData(sectionStore(section));
+		const { snapshot, sync, rejected } = applyResponse(before, spaceSync(section, this.#sync), response, Date.now());
 		this.spaces = {
 			...this.spaces,
 			[owner]: {
@@ -553,6 +552,7 @@ class Store {
 		};
 		this.#sync = { ...this.#sync, clock: formatHlc(sync.clock) };
 		this.#commit();
+		return rejectionNotice(before, rejected);
 	}
 
 	/** Comments are written in the task's space, so only someone who may edit the task can comment on it. */

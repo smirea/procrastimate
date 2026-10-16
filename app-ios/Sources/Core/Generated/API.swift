@@ -4493,14 +4493,41 @@ extension API {
         }
     }
 
+    public struct SyncRejection: Codable, Hashable, Sendable {
+        public var opId: String
+        public var reason: String
+
+        public init(opId: String, reason: String) {
+            self.opId = opId
+            self.reason = reason
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case opId = "opId"
+            case reason = "reason"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            opId = try container.decode(String.self, forKey: .opId)
+            reason = try container.decode(String.self, forKey: .reason)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.opId, forKey: .opId)
+            try container.encode(self.reason, forKey: .reason)
+        }
+    }
+
     public struct SyncRequest: Codable, Hashable, Sendable {
         public var cursor: Int
-        public var ops: [Op]
+        public var ops: [JSONValue]
         public var epoch: Int
         public var reset: Bool?
         public var scope: String
 
-        public init(cursor: Int, ops: [Op] = [], epoch: Int = 0, reset: Bool? = nil, scope: String = "") {
+        public init(cursor: Int, ops: [JSONValue] = [], epoch: Int = 0, reset: Bool? = nil, scope: String = "") {
             self.cursor = cursor
             self.ops = ops
             self.epoch = epoch
@@ -4519,7 +4546,7 @@ extension API {
         public init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             cursor = try container.decode(Int.self, forKey: .cursor)
-            ops = try container.decode([Op].self, forKey: .ops)
+            ops = try container.decode([JSONValue].self, forKey: .ops)
             epoch = try container.decodeAbsent(Int.self, forKey: .epoch) ?? 0
             reset = try container.decodeAbsent(Bool.self, forKey: .reset)
             scope = try container.decodeAbsent(String.self, forKey: .scope) ?? ""
@@ -4571,14 +4598,16 @@ extension API {
 
     public struct SyncResponseChanges: Codable, Hashable, Sendable {
         public var acked: [String]
+        public var rejected: [SyncRejection]
         public var changes: [Change]
         public var cursor: Int
         public var hlc: Hlc
         public var epoch: Int
         public var scope: String?
 
-        public init(acked: [String] = [], changes: [Change] = [], cursor: Int, hlc: Hlc, epoch: Int, scope: String? = nil) {
+        public init(acked: [String] = [], rejected: [SyncRejection] = [], changes: [Change] = [], cursor: Int, hlc: Hlc, epoch: Int, scope: String? = nil) {
             self.acked = acked
+            self.rejected = rejected
             self.changes = changes
             self.cursor = cursor
             self.hlc = hlc
@@ -4588,6 +4617,7 @@ extension API {
 
         enum CodingKeys: String, CodingKey {
             case acked = "acked"
+            case rejected = "rejected"
             case changes = "changes"
             case cursor = "cursor"
             case hlc = "hlc"
@@ -4598,6 +4628,7 @@ extension API {
         public init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             acked = try container.decode([String].self, forKey: .acked)
+            rejected = try container.decode([SyncRejection].self, forKey: .rejected)
             changes = try container.decode([Change].self, forKey: .changes)
             cursor = try container.decode(Int.self, forKey: .cursor)
             hlc = try container.decode(Hlc.self, forKey: .hlc)
@@ -4622,6 +4653,7 @@ extension API {
         public func encode(to encoder: Encoder) throws {
             var container = encoder.container(keyedBy: CodingKeys.self)
             try container.encode(self.acked, forKey: .acked)
+            try container.encode(self.rejected, forKey: .rejected)
             try container.encode(self.changes, forKey: .changes)
             try container.encode(self.cursor, forKey: .cursor)
             try container.encode(self.hlc, forKey: .hlc)
@@ -4632,6 +4664,7 @@ extension API {
 
     public struct SyncResponseSnapshot: Codable, Hashable, Sendable {
         public var acked: [String]
+        public var rejected: [SyncRejection]
         public var snapshot: SyncSnapshot
         public var cursor: Int
         public var hlc: Hlc
@@ -4640,8 +4673,9 @@ extension API {
         public var readOnly: [String]?
         public var targets: [ShareTarget]?
 
-        public init(acked: [String] = [], snapshot: SyncSnapshot, cursor: Int, hlc: Hlc, epoch: Int, scope: String? = nil, readOnly: [String]? = nil, targets: [ShareTarget]? = nil) {
+        public init(acked: [String] = [], rejected: [SyncRejection] = [], snapshot: SyncSnapshot, cursor: Int, hlc: Hlc, epoch: Int, scope: String? = nil, readOnly: [String]? = nil, targets: [ShareTarget]? = nil) {
             self.acked = acked
+            self.rejected = rejected
             self.snapshot = snapshot
             self.cursor = cursor
             self.hlc = hlc
@@ -4653,6 +4687,7 @@ extension API {
 
         enum CodingKeys: String, CodingKey {
             case acked = "acked"
+            case rejected = "rejected"
             case snapshot = "snapshot"
             case cursor = "cursor"
             case hlc = "hlc"
@@ -4665,6 +4700,7 @@ extension API {
         public init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             acked = try container.decode([String].self, forKey: .acked)
+            rejected = try container.decode([SyncRejection].self, forKey: .rejected)
             snapshot = try container.decode(SyncSnapshot.self, forKey: .snapshot)
             cursor = try container.decode(Int.self, forKey: .cursor)
             hlc = try container.decode(Hlc.self, forKey: .hlc)
@@ -4691,6 +4727,7 @@ extension API {
         public func encode(to encoder: Encoder) throws {
             var container = encoder.container(keyedBy: CodingKeys.self)
             try container.encode(self.acked, forKey: .acked)
+            try container.encode(self.rejected, forKey: .rejected)
             try container.encode(self.snapshot, forKey: .snapshot)
             try container.encode(self.cursor, forKey: .cursor)
             try container.encode(self.hlc, forKey: .hlc)
