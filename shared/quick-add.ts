@@ -177,7 +177,10 @@ const GUARDS: RegExp[] = [
 	),
 	new RegExp(String.raw`(?<=\b(?:${ADDRESS})\.?\s+)\d[\w:/]*`, 'gi'),
 	new RegExp(String.raw`(?<!\w)\d[\w:/]*(?=\s+(?:[\w.]+\s+)?(?:${STREET})\b)`, 'gi'),
-	new RegExp(String.raw`(?<!\b(?:every|each)\s+)\b(?:may|march)(?=\s+(?:the\s+)?${SPELLED_ORDINAL}\b)`, 'g'),
+	new RegExp(
+		String.raw`(?<!\b(?:[Ee]very|[Ee]ach|EVERY|EACH)\s+)\b(?:may|march)(?=\s+(?:the\s+)?${SPELLED_ORDINAL}\b)`,
+		'g',
+	),
 ];
 
 /**

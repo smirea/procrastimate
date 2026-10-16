@@ -94,7 +94,7 @@ public enum QuickAdd {
         ),
         Pattern(#"(?<=\b(?:\#(address))\.?\s+)\d[\w:/]*"#, ignoreCase: true),
         Pattern(#"(?<!\w)\d[\w:/]*(?=\s+(?:[\w.]+\s+)?(?:\#(street))\b)"#, ignoreCase: true),
-        Pattern(#"(?<!\b(?:every|each)\s+)\b(?:may|march)(?=\s+(?:the\s+)?\#(spelledOrdinal)\b)"#),
+        Pattern(#"(?<!\b(?:[Ee]very|[Ee]ach|EVERY|EACH)\s+)\b(?:may|march)(?=\s+(?:the\s+)?\#(spelledOrdinal)\b)"#),
     ]
 
     /// Extra guards for speech. A bare four-digit number is not a time without `at`, compact units such as `5m` or

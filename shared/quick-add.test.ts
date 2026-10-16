@@ -796,6 +796,13 @@ describe('recurrence', () => {
 		},
 	);
 
+	test('a capitalized every still reads a lowercase month', () => {
+		const parsed = parse('Every march second water plants');
+		expect(parsed.title).toBe('water plants');
+		expect(parsed.recurrence).toEqual({ interval: 1, unit: 'year' });
+		expect(parsed.due).toEqual({ date: '2027-03-02', time: null });
+	});
+
 	test('a spelled-out day before the month needs of', () => {
 		const parsed = parse('Trip every second March');
 		expect(parsed.recurrence).toBeNull();

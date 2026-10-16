@@ -22503,6 +22503,80 @@
 		},
 		{
 			"fn": "parseQuickAdd",
+			"test": "recurrence › a capitalized every still reads a lowercase month",
+			"input": [
+				"Every march second water plants",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2027-03-02",
+					"time": null
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": {
+					"interval": 1,
+					"unit": "year"
+				},
+				"reminders": [],
+				"sectionId": null,
+				"title": "water plants",
+				"tokens": [
+					{
+						"end": 18,
+						"kind": "recurrence",
+						"start": 0,
+						"text": "Every march second"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
 			"test": "recurrence › a spelled-out day before the month needs of",
 			"input": [
 				"Trip every second March",
