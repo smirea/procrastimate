@@ -23,6 +23,7 @@
 
 <View
 	title="Inbox"
+	open={sections.reduce((n, s) => n + s.tasks.length, 0)}
 	empty={due.overdue.length + due.today.length + days.length === 0}
 	emptyTitle="Nothing scheduled"
 	emptyHint="Tasks with a date show up here by day."

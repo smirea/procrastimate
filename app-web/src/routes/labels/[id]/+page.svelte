@@ -45,6 +45,7 @@
 
 {#if label}
 	<View
+		open={tasks.length}
 		empty={tasks.length === 0}
 		emptyTitle="No tasks with this label"
 		emptyHint={`Type @${label.name} in quick add, or pick it in a task's details.`}

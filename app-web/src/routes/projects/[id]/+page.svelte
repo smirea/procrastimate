@@ -59,6 +59,7 @@
 
 {#if project}
 	<View
+		open={tasks.length}
 		empty={tasks.length === 0 && sections.length === 0}
 		emptyTitle="No tasks yet"
 		emptyHint={`Add one here, or type #${project.name} in quick add.`}

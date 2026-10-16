@@ -48,6 +48,14 @@ const open = (tasks: readonly Task[]) => tasks.filter(t => t.completedAt === nul
 /** Inbox and projects list top-level tasks, and a subtask shows as progress on its parent. Dated views list subtasks too. */
 const topLevel = (tasks: readonly Task[]) => open(tasks).filter(t => t.parentId === null);
 
+/**
+ * The count a header over a list shows: its open rows once there are more than 4, since a glance covers a shorter list.
+ * Pass the rows the list shows, so a subtask counts only where it has a row of its own.
+ */
+export function pendingCount(open: number): number | null {
+	return open > 4 ? open : null;
+}
+
 /** Inbox tasks with no day. The Inbox view lists dated tasks from every project under their day instead. */
 export function inboxTasks(tasks: readonly Task[], today: DateKey) {
 	return topLevel(tasks)

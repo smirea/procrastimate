@@ -134,7 +134,7 @@ struct CompletedSection: View {
             }
             ForEach(tasks) { CompletedRow(task: $0, showProject: showProject) }
         } header: {
-            ListHeading(text: "Completed", tone: .muted, tasks: tasks)
+            ListHeading(text: "Completed", tone: .muted, tasks: tasks, counted: false)
         }
     }
 }

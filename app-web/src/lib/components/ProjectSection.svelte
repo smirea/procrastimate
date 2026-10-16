@@ -49,10 +49,7 @@
 					}}
 				/>
 			{:else}
-				<h2 class="flex min-w-0 items-baseline gap-1.5 text-[13px] font-semibold">
-					<span class="truncate">{section.name}</span>
-					{#if tasks.length}<span class="shrink-0 text-[12px] font-normal text-faint tabular-nums">{tasks.length}</span>{/if}
-				</h2>
+				<h2 class="min-w-0 truncate text-[13px] font-semibold">{section.name}</h2>
 			{/if}
 		{/snippet}
 		{#snippet actions()}

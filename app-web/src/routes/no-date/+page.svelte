@@ -23,6 +23,7 @@
 
 <View
 	title="No date"
+	open={view.loose.length + view.places.reduce((n, p) => n + p.tasks.length, 0)}
 	empty={view.loose.length + view.places.length === 0}
 	emptyTitle="Inbox zero"
 	emptyHint={mobile.current ? 'Tap + to capture a task.' : 'Press Q to capture a task.'}

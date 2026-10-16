@@ -15,6 +15,7 @@ const eventTasks = recorded('views', views.eventTasks);
 const completedRange = recorded('views', views.completedRange);
 const completedTasks = recorded('views', views.completedTasks);
 const completedDays = recorded('views', views.completedDays);
+const pendingCount = recorded('views', views.pendingCount);
 
 let created = 0;
 const task = (id: string, fields: Partial<Task> = {}): Task => ({
@@ -250,5 +251,11 @@ describe('completed', () => {
 			['2026-10-11', ['sweep']],
 			['2026-10-10', ['book']],
 		]);
+	});
+});
+
+describe('pending count', () => {
+	test('shows only above 4 open rows', () => {
+		expect([0, 1, 4, 5, 12].map(n => pendingCount(n))).toEqual([null, null, null, 5, 12]);
 	});
 });

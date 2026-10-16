@@ -9,6 +9,7 @@
 	import { projectGroups } from 'shared/views.ts';
 	import TaskList from '#lib/components/TaskList.svelte';
 	import PersonName from '#lib/components/PersonName.svelte';
+	import PendingCount from '#lib/components/PendingCount.svelte';
 	import { api } from '#lib/api.ts';
 	import { provideReadOnlyLookup } from '#lib/lookup.ts';
 	import { motion } from '#lib/ui.svelte.ts';
@@ -58,11 +59,17 @@
 				<p class="mb-1 flex items-center gap-1 text-[12px] font-medium tracking-wide text-faint uppercase">
 					<LinkSimple size={13} weight="bold" />Shared by <PersonName person={view.owner} />
 				</p>
-				<h1 class="truncate text-[26px] font-semibold tracking-tight">{title}</h1>
+				<div class="flex min-w-0 items-baseline gap-2.5">
+					<h1 class="truncate text-[26px] font-semibold tracking-tight">{title}</h1>
+					<PendingCount open={groups.reduce((n, g) => n + g.tasks.length, 0)} class="text-[15px]" />
+				</div>
 			</header>
 			{#each groups as group (group.section?.id ?? '')}
 				{#if group.section}
-					<h2 class="mt-6 mb-1 truncate border-b border-ink/[0.07] pb-1.5 pl-2 text-[13px] font-semibold">{group.section.name}</h2>
+					<div class="mt-6 mb-1 flex items-baseline justify-between gap-2 border-b border-ink/[0.07] pr-2 pb-1.5 pl-2">
+						<h2 class="min-w-0 truncate text-[13px] font-semibold">{group.section.name}</h2>
+						<PendingCount open={group.tasks.length} class="text-[12px]" />
+					</div>
 				{/if}
 				<TaskList tasks={group.tasks} showProject={view.target.kind !== 'project'} label={`${group.section?.name ?? title} tasks`} />
 			{/each}

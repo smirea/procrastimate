@@ -14,6 +14,8 @@ struct TaskListScreen<Content: View>: View {
     var newestFirst: Binding<Bool>?
     /// A label screen leads its title with the label's tag in its color.
     var labelColor: LabelColor?
+    /// The open rows the list shows, for the count beside the title.
+    var open: Int?
     @ViewBuilder let content: () -> Content
 
     @Environment(Navigator.self) private var navigator
@@ -71,6 +73,7 @@ struct TaskListScreen<Content: View>: View {
                 Image(systemName: "tag.fill").imageScale(.small).foregroundStyle(labelColor.tone)
             }
             Text(title)
+            if let open { PendingCount(open: open, font: .footnote) }
         }
             .font(.subheadline.weight(.semibold))
             .lineLimit(1)
@@ -127,6 +130,8 @@ struct ListHeading: View {
     let text: String
     var tone: Color = .ink
     let tasks: [TaskItem]
+    /// Off for done tasks, which are not pending.
+    var counted = true
 
     var body: some View {
         // A plain List never shows a header's `.contextMenu`, so a long press opens this menu and a tap does nothing.
@@ -135,12 +140,15 @@ struct ListHeading: View {
                 actions.copyAsMarkdown(Markdown.Document(sections: [.init(heading: text, tasks: tasks)]))
             }
         } label: {
-            Text(text)
-                .font(.footnote.weight(.semibold))
-                .foregroundStyle(tone)
-                .textCase(nil)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .contentShape(.rect)
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                Text(text)
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(tone)
+                Spacer(minLength: 0)
+                if counted { PendingCount(open: tasks.count) }
+            }
+            .textCase(nil)
+            .contentShape(.rect)
         } primaryAction: {}
         .buttonStyle(.plain)
         .accessibilityAddTraits(.isHeader)
@@ -154,5 +162,24 @@ struct CopyMarkdownButton: View {
 
     var body: some View {
         Button("Copy as Markdown", systemImage: "doc.on.doc") { actions.copyAsMarkdown(document) }
+    }
+}
+
+/// A list's open rows as small faint text, shown only when `Views.pendingCount` says the list is long enough. The number
+/// rolls to its new value, and its digits keep one width so nothing beside it moves.
+struct PendingCount: View {
+    let open: Int
+    var font: Font = .caption
+
+    var body: some View {
+        if let count = Views.pendingCount(open) {
+            Text("\(count)")
+                .font(font.weight(.regular))
+                .foregroundStyle(.faint)
+                .monospacedDigit()
+                .contentTransition(.numericText(value: Double(count)))
+                .animation(.snappy, value: count)
+                .accessibilityLabel("\(count) open tasks")
+        }
     }
 }

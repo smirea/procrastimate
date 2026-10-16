@@ -34,7 +34,7 @@
 	{#each days as day, i (day.date)}
 		{@const heading = completedHeading(day.date, clock.today)}
 		<section class={i > 0 ? 'mt-6' : ''} aria-label={heading}>
-			<SectionHeading {heading} tasks={day.tasks} />
+			<SectionHeading {heading} tasks={day.tasks} counted={false} />
 			<CompletedList tasks={day.tasks} showProject label={`Completed ${heading}`} />
 		</section>
 	{/each}

@@ -25,7 +25,8 @@ struct ProjectScreen: View {
                 title: project.name,
                 isEmpty: count == 0 && sections.isEmpty && !showCompleted,
                 emptyTitle: "No tasks yet",
-                emptyHint: Browse.projectEmptyHint(project.name)
+                emptyHint: Browse.projectEmptyHint(project.name),
+                open: count
             ) {
                 ForEach(groups.first?.tasks ?? []) { TaskRow(task: $0) }
                 ForEach(Array(sections.enumerated()), id: \.element.section.id) { index, entry in
@@ -122,13 +123,8 @@ private struct SectionHeading: View {
                 Text(section.name)
                     .font(.footnote.weight(.semibold))
                     .foregroundStyle(.ink)
-                if !tasks.isEmpty {
-                    Text("\(tasks.count)")
-                        .font(.caption)
-                        .foregroundStyle(.faint)
-                        .monospacedDigit()
-                }
                 Spacer(minLength: 0)
+                PendingCount(open: tasks.count)
                 Image(systemName: "ellipsis")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.faint)
@@ -139,7 +135,6 @@ private struct SectionHeading: View {
         } primaryAction: {}
         .buttonStyle(.plain)
         .accessibilityAddTraits(.isHeader)
-        .accessibilityLabel(tasks.isEmpty ? section.name : "\(section.name), \(tasks.count)")
         .accessibilityIdentifier("heading-\(section.name)")
         .alert("Rename section", isPresented: $renaming) {
             TextField("Section name", text: $draft)
