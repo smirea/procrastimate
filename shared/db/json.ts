@@ -6,6 +6,7 @@ import { isHlc } from '../sync/hlc.ts';
 import {
 	actorKindSchema,
 	dueSchema,
+	imageRefSchema,
 	prioritySchema,
 	recurrenceSchema,
 	reminderSchema,
@@ -34,6 +35,7 @@ export const COLUMN_VALUES = {
 		reminders: z.array(reminderSchema),
 		location: taskLocationSchema,
 		event: taskEventSchema,
+		images: z.array(imageRefSchema),
 		clocks,
 	},
 	projects: { clocks },
@@ -46,6 +48,7 @@ export const COLUMN_VALUES = {
 	push: { subscription: pushSubscriptionSchema, notifications: z.array(scheduledPushSchema) },
 	shares: { targetKind: shareTargetKindSchema, role: roleSchema },
 	people: { kind: actorKindSchema },
+	images: { bytes: z.instanceof(Uint8Array) },
 } as const;
 
 type Values = typeof COLUMN_VALUES;

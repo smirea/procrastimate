@@ -10,6 +10,7 @@
 	import Tray from 'phosphor-svelte/lib/Tray';
 	import Repeat from 'phosphor-svelte/lib/Repeat';
 	import Waveform from 'phosphor-svelte/lib/Waveform';
+	import ImageSquare from 'phosphor-svelte/lib/ImageSquare';
 	import ArrowElbowDownRight from 'phosphor-svelte/lib/ArrowElbowDownRight';
 	import CalendarPlus from 'phosphor-svelte/lib/CalendarPlus';
 	import Popover from './Popover.svelte';
@@ -84,7 +85,7 @@
 			{#if task.notes}
 				<div class="truncate text-[12px] leading-4 text-muted"><LinkedText text={task.notes} /></div>
 			{/if}
-			{#if due || task.recurrence || task.reminders.length || task.location || progress || commentBadge || parent || fromMemo || (showProject && project)}
+			{#if due || task.recurrence || task.reminders.length || task.images.length || task.location || progress || commentBadge || parent || fromMemo || (showProject && project)}
 				<div class="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-[12px] leading-4 text-muted">
 					{#if task.event && event && due}
 						<span
@@ -123,6 +124,11 @@
 					{#if task.reminders.length}
 						<span class="flex items-center gap-1" aria-label={`${task.reminders.length} reminders`}>
 							<Bell size={12} />{task.reminders.length}
+						</span>
+					{/if}
+					{#if task.images.length}
+						<span class="flex items-center gap-1" role="img" aria-label={task.images.length === 1 ? '1 image' : `${task.images.length} images`}>
+							<ImageSquare size={12} />{task.images.length}
 						</span>
 					{/if}
 					{#if commentBadge}

@@ -1,6 +1,7 @@
 import { DEVICE_HEADER, DEVICE_NAME_HEADER, type Actor } from '../../shared/auth';
 import type { ShareRow } from '../../shared/db/schema';
 import { DEVICE_PROTOCOL_PREFIX } from '../../shared/sync/protocol';
+import type { ImageStore } from './account/images';
 import type { InternalClient } from './account/peers';
 import type { Ramble } from './account/ramble';
 import type { Realtime } from './account/realtime';
@@ -29,6 +30,8 @@ export type AccountContext = {
 	space: string;
 	actor: Actor;
 	access: Access;
+	/** The space's image bytes, which the account itself never loads. */
+	images: ImageStore;
 	/** The request's origin, for the links the space hands out. */
 	origin: string;
 	defer: (task: () => Promise<void>) => void;

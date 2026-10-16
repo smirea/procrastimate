@@ -22,9 +22,10 @@ export type Example = {
 	body?: unknown;
 };
 
-/** Stand in for a real task and comment id in the examples; the docs test swaps in ones it made. */
+/** Stand in for a real task, comment, and image id in the examples; the docs test swaps in ones it made. */
 export const TASK_ID = '<task-id>';
 export const COMMENT_ID = '<comment-id>';
+export const IMAGE_ID = '<image-id>';
 
 /** One per agent route at least. The docs test runs every one against a real space with an AI token. */
 export const agentExamples: readonly Example[] = [
@@ -66,6 +67,12 @@ export const agentExamples: readonly Example[] = [
 		body: { body: 'Booked the plumber for Tuesday 10am' },
 	},
 	{ title: 'Delete your comment', method: 'DELETE', path: '/api/comments', query: { id: COMMENT_ID } },
+	{
+		title: 'Download a task’s image, as a thumbnail',
+		method: 'GET',
+		path: '/api/images',
+		query: { id: IMAGE_ID, size: 'thumb' },
+	},
 	{ title: 'Delete a task and its subtasks', method: 'DELETE', path: '/api/tasks', query: { id: TASK_ID } },
 	{
 		title: 'Sync from scratch, as the apps do',
@@ -145,7 +152,7 @@ These are the only routes a token may call. Every other route answers \`403 FORB
 
 ${routeTable()}
 
-Routes that take a task use \`?id=<task id>\`; editing or deleting a comment takes \`?id=<comment id>\`. Ids come from \`GET /api/view\` or from the task a route returns. \`?space=\` is optional and defaults to the owner's space, the only one an AI account can reach.
+Routes that take a task use \`?id=<task id>\`; editing or deleting a comment takes \`?id=<comment id>\`, and an image \`?id=<image id>\`. Ids come from \`GET /api/view\` or from the task a route returns. \`?space=\` is optional and defaults to the owner's space, the only one an AI account can reach.
 
 ## Tasks
 
@@ -154,6 +161,7 @@ Routes that take a task use \`?id=<task id>\`; editing or deleting a comment tak
 - \`priority\` is 1 (most urgent) to 4 (none).
 - \`completedAt\` is epoch milliseconds, or \`null\` while the task is open.
 - \`parentId\` makes a subtask. Deleting a task deletes its subtasks.
+- \`images\` lists the task's images as \`{ id, width, height }\`. Download one with \`GET /api/images?id=<image id>&size=full\` or \`size=thumb\`. You can reorder or remove images by sending \`images\` to \`PATCH /api/tasks\`, but not upload new ones.
 - \`text\` on \`POST /api/tasks\` reads like the app's quick add, for example \`Water the plants every 2 weeks p2\` or \`Email Sam fri 10am remind me 30m before\`. Phrases it recognizes are removed from the title. Explicit fields such as \`title\` or \`priority\` win over what it parsed.
 
 ## Comments
@@ -180,7 +188,7 @@ Errors are JSON \`{ "code", "message" }\`:
 - \`400 BAD_REQUEST\`: the input does not match the schema, or a new task has no title.
 - \`401 UNAUTHORIZED\`: the token is missing, wrong, or revoked.
 - \`403 FORBIDDEN\`: the route is not open to AI accounts, or the change touches something you may not edit.
-- \`404 NOT_FOUND\`: no task with that id is visible to you.
+- \`404 NOT_FOUND\`: no task, comment, or image with that id is visible to you.
 
 ## Sync
 

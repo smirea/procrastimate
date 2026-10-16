@@ -1,4 +1,14 @@
-import { index, integer, primaryKey, real, sqliteTable, text, type AnySQLiteColumn } from 'drizzle-orm/sqlite-core';
+import {
+	customType,
+	index,
+	integer,
+	primaryKey,
+	real,
+	sqliteTable,
+	text,
+	type AnySQLiteColumn,
+} from 'drizzle-orm/sqlite-core';
+import { IMAGE_SIZES, IMAGE_TYPES } from '../images.ts';
 import { DICTATION_CHOICES } from '../dictation.ts';
 import { DEFAULT_QUICK_ADD_BUTTONS } from '../quick-add-buttons.ts';
 import { KINDS } from '../sync/kinds.ts';
@@ -44,6 +54,8 @@ export const tasks = sqliteTable(
 		location: text('location', { mode: 'json' }).$type<ColumnValue<'tasks', 'location'>>(),
 		/** Set only on iOS. A task with an event has no due date or repeat; the event's times stand in for both. */
 		event: text('event', { mode: 'json' }).$type<ColumnValue<'tasks', 'event'>>(),
+		/** Attached images, as one last-writer-wins list like `labelIds`. The bytes are in `images`, never here. */
+		images: text('images', { mode: 'json' }).$type<ColumnValue<'tasks', 'images'>>().notNull().default([]),
 		createdAt: integer('created_at').notNull(),
 		completedAt: integer('completed_at'),
 		/** Who created the task and who completed it last. The server stamps both and overwrites what a client sends. */
@@ -304,6 +316,35 @@ export const apiTokens = sqliteTable(
 	table => [primaryKey({ columns: [table.userId, table.id] })],
 );
 
+/** Durable Object SQLite and libSQL read a blob back as an `ArrayBuffer` and `bun:sqlite` as a `Buffer`. */
+const bytes = customType<{ data: Uint8Array<ArrayBuffer>; driverData: ArrayBuffer | Uint8Array }>({
+	dataType: () => 'blob',
+	toDriver: value => value,
+	fromDriver: value =>
+		ArrayBuffer.isView(value)
+			? new Uint8Array(value.buffer as ArrayBuffer, value.byteOffset, value.byteLength)
+			: new Uint8Array(value),
+});
+
+/**
+ * The bytes of task images, one row per size. Unlike every other user table, the account never loads or rewrites it:
+ * rows are written and read one at a time by id. A row is garbage once no live task lists its id; `orphanedAt` is
+ * when a sweep first saw that, and a later sweep deletes it after a grace period.
+ */
+export const images = sqliteTable(
+	'images',
+	{
+		userId: text('user_id').notNull(),
+		id: text('id').notNull(),
+		size: text('size', { enum: IMAGE_SIZES }).notNull(),
+		type: text('type', { enum: IMAGE_TYPES }).notNull(),
+		bytes: bytes('bytes').$type<ColumnValue<'images', 'bytes'>>().notNull(),
+		createdAt: integer('created_at').notNull(),
+		orphanedAt: integer('orphaned_at'),
+	},
+	table => [primaryKey({ columns: [table.userId, table.id, table.size] })],
+);
+
 export const rambleBudget = sqliteTable('ramble_budget', {
 	day: text('day').primaryKey(),
 	seconds: real('seconds').notNull(),
@@ -319,3 +360,4 @@ export type ShareRow = Row<typeof shares>;
 export type Membership = Row<typeof memberships>;
 export type PersonRow = Row<typeof people>;
 export type ApiTokenRow = Row<typeof apiTokens>;
+export type ImageRow = Row<typeof images>;

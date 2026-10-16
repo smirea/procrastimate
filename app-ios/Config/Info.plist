@@ -29,6 +29,8 @@
     </array>
     <key>ITSAppUsesNonExemptEncryption</key>
     <false/>
+    <key>NSCameraUsageDescription</key>
+    <string>ProcrastiMate uses the camera to attach photos to tasks.</string>
     <key>NSMicrophoneUsageDescription</key>
     <string>ProcrastiMate uses the microphone to turn speech into tasks.</string>
     <key>NSSpeechRecognitionUsageDescription</key>

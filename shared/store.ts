@@ -61,6 +61,7 @@ export const taskEditSchema = taskSchema
 		reminders: true,
 		location: true,
 		event: true,
+		images: true,
 	})
 	.partial()
 	.meta({
@@ -167,6 +168,7 @@ export function addTask(
 		reminders: input.reminders,
 		location: null,
 		event: null,
+		images: [],
 		createdAt: Math.max(now, (data.tasks.at(-1)?.createdAt ?? -Infinity) + 1),
 		completedAt: null,
 		createdBy: null,

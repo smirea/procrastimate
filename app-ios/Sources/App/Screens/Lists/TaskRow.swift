@@ -121,7 +121,8 @@ struct TaskRow: View {
     private var due: Due? { Triggers.scheduledDue(task, today, in: store.timeZone) }
 
     private var hasDetails: Bool {
-        due != nil || task.location != nil || task.recurrence != nil || !task.reminders.isEmpty || progress != nil || parent != nil || showProject || task.memoSource != nil
+        due != nil || task.location != nil || task.recurrence != nil || !task.reminders.isEmpty || !task.images.isEmpty
+            || progress != nil || parent != nil || showProject || task.memoSource != nil
             || commentBadge != nil
     }
 
@@ -156,6 +157,11 @@ struct TaskRow: View {
                     Detail(systemImage: "bell", text: "\(task.reminders.count)")
                         .accessibilityElement(children: .ignore)
                         .accessibilityLabel("\(task.reminders.count) reminders")
+                }
+                if !task.images.isEmpty {
+                    Detail(systemImage: "photo", text: "\(task.images.count)")
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel(task.images.count == 1 ? "1 image" : "\(task.images.count) images")
                 }
                 if let commentBadge {
                     CommentBadgeView(badge: commentBadge)

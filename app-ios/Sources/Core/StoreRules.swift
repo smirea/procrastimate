@@ -22,6 +22,7 @@ extension API.TaskEdit {
         if let reminders { task.reminders = reminders }
         if let location { task.location = location }
         if let event { task.event = event }
+        if let images { task.images = images }
     }
 }
 

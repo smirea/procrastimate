@@ -6,7 +6,7 @@ import { authHeaders, registerDevice, TEST_AUTH_SECRET, type DeviceCredentials }
 import { SHARED_ROUTES } from './actor';
 import api from './api';
 import type { Env } from './bindings';
-import { agentExamples, agentRoutes, COMMENT_ID, examplePath, TASK_ID } from './docs';
+import { agentExamples, agentRoutes, COMMENT_ID, examplePath, IMAGE_ID, TASK_ID } from './docs';
 
 const ORIGIN = 'https://procrastimate.test';
 
@@ -70,6 +70,7 @@ describe('agent docs', () => {
 			'POST /api/comments',
 			'PATCH /api/comments',
 			'DELETE /api/comments',
+			'GET /api/images',
 		];
 		expect([...SHARED_ROUTES].toSorted()).toEqual(routes.toSorted());
 
@@ -101,7 +102,22 @@ describe('agent docs', () => {
 		const target = (await (await asAi('POST', '/api/tasks', { title: 'Fix the sink' })).json()) as Task;
 		const posted = await asAi('POST', '/api/comments', { taskId: target.id, body: 'On it' });
 		const comment = (await posted.json()) as { id: string };
-		const ids = (text: string) => text.replaceAll(TASK_ID, target.id).replaceAll(COMMENT_ID, comment.id);
+		const image = crypto.randomUUID();
+		const jpeg = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3]);
+		for (const size of ['full', 'thumb']) {
+			const uploaded = await api.fetch(
+				new Request(`${ORIGIN}/api/images?id=${image}&size=${size}`, {
+					method: 'PUT',
+					headers: { ...authHeaders(owner), 'content-type': 'image/jpeg' },
+					body: jpeg,
+				}),
+				env,
+			);
+			expect(uploaded.status).toBe(200);
+		}
+		await asAi('PATCH', `/api/tasks?id=${target.id}`, { images: [{ id: image, width: 4, height: 3 }] });
+		const ids = (text: string) =>
+			text.replaceAll(TASK_ID, target.id).replaceAll(COMMENT_ID, comment.id).replaceAll(IMAGE_ID, image);
 		const fill = (value: unknown) => JSON.parse(ids(JSON.stringify(value ?? null)));
 		const statuses = [];
 		for (const example of agentExamples) {

@@ -131,6 +131,16 @@ export const taskEventSchema = z
 	.meta({ id: 'TaskEvent' });
 export type TaskEvent = z.infer<typeof taskEventSchema>;
 
+/**
+ * An image attached to a task. The task carries only this; the bytes are stored on the server by `id` and fetched on
+ * their own, so the synced document never holds them. `width` and `height` are the full image's pixels, so a client
+ * lays it out before the bytes arrive.
+ */
+export const imageRefSchema = z
+	.object({ id: z.string().min(1), width: z.number().int().positive(), height: z.number().int().positive() })
+	.meta({ id: 'ImageRef' });
+export type ImageRef = z.infer<typeof imageRefSchema>;
+
 /** A human signs in. An AI account belongs to a human and acts only through API tokens. */
 export const ACTOR_KINDS = ['human', 'ai'] as const;
 export const actorKindSchema = z.enum(ACTOR_KINDS).meta({ id: 'ActorKind' });

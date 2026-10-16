@@ -37,6 +37,17 @@ export const devicesRowSchema = z.object({
 	revokedAt: z.number().int().nullable(),
 });
 
+/** A `images` row. */
+export const imagesRowSchema = z.object({
+	userId: z.string(),
+	id: z.string(),
+	size: z.enum(["full","thumb"]),
+	type: z.enum(["image/webp","image/jpeg"]),
+	bytes: COLUMN_VALUES.images.bytes,
+	createdAt: z.number().int(),
+	orphanedAt: z.number().int().nullable(),
+});
+
 /** A `labels` row. */
 export const labelsRowSchema = z.object({
 	userId: z.string(),
@@ -176,6 +187,7 @@ export const tasksRowSchema = z.object({
 	reminders: COLUMN_VALUES.tasks.reminders,
 	location: COLUMN_VALUES.tasks.location.nullable(),
 	event: COLUMN_VALUES.tasks.event.nullable(),
+	images: COLUMN_VALUES.tasks.images,
 	createdAt: z.number().int(),
 	completedAt: z.number().int().nullable(),
 	createdBy: z.string().nullable(),

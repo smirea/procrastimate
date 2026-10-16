@@ -7,6 +7,7 @@ import SwiftUI
 struct TaskDetailsSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(TaskImages.self) private var images
     @State private var root: String
     @State private var path: [String] = []
 
@@ -37,6 +38,8 @@ struct TaskDetailsSheet: View {
         .overlay(alignment: .bottom) {
             ToastStack().padding(.bottom, 76)
         }
+        // Once for the whole stack: a cover on each pushed page would have every page try to present it.
+        .fullScreenCover(item: Bindable(images).viewing) { ImageViewer(start: $0) }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("Task details")
     }

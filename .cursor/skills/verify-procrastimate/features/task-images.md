@@ -1,0 +1,39 @@
+# Task images
+
+Task images let Stefan attach photos and screenshots to a task. Task details show them as thumbnails, the row shows how many there are, a tap opens one full screen, and each can be deleted with undo. They sync to his other devices and to people the task is shared with, and an image added offline uploads once the device is back online.
+
+## Sub-features
+
+- `images-add` attaches images: the `Add image` tile's file picker, a paste, or a drop onto details on the web; `Add image` then `Photo Library`, `Take Photo`, or `Paste` on iOS. A tile pulses or spins while an image is being prepared.
+- `images-thumbs` shows each image as a square thumbnail in details, named `Open image <n> of <count>`, after the notes.
+- `images-row` shows a photo icon with the count on the row, named `1 image` or `<n> images`.
+- `images-viewer` opens an image full screen (dialog `Image` on the web): `Previous image` and `Next image` or the arrow keys on the web, swipes and pinch or double-tap zoom on iOS, `Close image` or Escape to leave.
+- `images-delete` deletes the open image with `Delete image` (or the thumbnail's context menu on iOS); the `Deleted image` toast's `Undo` puts it back.
+- `images-sync` shows an image on another device of the same account, and on a guest's device when the task is shared with them. A read-only task shows its images without the add tile or delete.
+- `images-offline` keeps an image added offline on the device and uploads it, before the edit that lists it, when the network returns.
+
+## How to get to it (user POV)
+
+- Web: open a task's details. Choose the dashed `Add image` tile, paste an image anywhere in details, or drag image files onto details, which shows `Drop to attach`.
+- iOS: open a task's details and tap `Add image`, then `Photo Library`, `Take Photo` (devices with a camera), or `Paste`.
+- Both: tap a thumbnail to open it full screen.
+
+## Driving it with Playwright and XCUITest
+
+Preconditions:
+
+- The baseline state, with Inbox seeded with `Fix the fridge` through quick add.
+- Automated web proof: `bun run test:e2e -- e2e/images.e2e.ts`.
+
+- **Pick.** Open `Fix the fridge`, choose `Add image`, and pick a 3000 × 2000 photo. One `Open image 1 of 1` thumbnail appears, the row shows `1 image`, and the stored task lists the image at 2048 × 1365. Test: `an image picked in details shows as a thumbnail and on the row, opens full screen, and deletes with undo`.
+- **View and delete.** Choose the thumbnail. The `Image` dialog shows it at 2048 wide. Escape closes only the viewer. Open it again and choose `Delete image`; the thumbnail and the row count go, and `Undo` brings both back. After a reload the thumbnail still shows. Same test.
+- **Paste and drop.** In details, paste an image while the notes field has focus; it attaches and the notes stay empty. Drop an image file on details; a second thumbnail appears. Test: `pasting or dropping an image into details attaches it`.
+- **Offline.** With two devices on one account, take device A offline, attach an image to a task there, and confirm device B's row shows no image. Bring A back online; B's row shows `1 image`, and B's details load a 320 px wide thumbnail from the server. Test: `an image added offline uploads when the network returns and shows on the other device`.
+- **iOS.** Sign in to an account where the web attached an image to `Beach photos`. Its row reads `1 image`; details show the thumbnail, which opens full screen and closes with `Close image`. On `Fix the fridge`, `Add image`, `Photo Library`, and a photo attach `Open image 1 of 1`. Copy an image, then `Add image` and `Paste` (allow the paste prompt) attach `Open image 2 of 2`. Open it and `Delete image`; one thumbnail remains. Afterwards the server's task lists the photo library image. No automated iOS test: there is no XCUITest suite, so drive it with a throwaway UI test outside the repo.
+
+## Gotchas
+
+- A thumbnail shows a gray placeholder until its bytes arrive. Another device that has not uploaded yet keeps it gray, and the tile asks again 30 seconds later, so wait or reopen details.
+- Safari and iOS store JPEG, Chromium stores WebP. Assert sizes, not the format.
+- The web keeps images in IndexedDB, not `localStorage`; clearing site data clears them, and they download again.
+- On iOS, an image picked offline stays in the upload queue until a sync reaches the server. Signing in as another user clears the queue.

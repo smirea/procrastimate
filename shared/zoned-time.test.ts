@@ -56,6 +56,7 @@ test('notifications resolve and word their times in the given zone', () => {
 		reminders: [{ kind: 'before', minutes: 1440 }],
 		location: null,
 		event: null,
+		images: [],
 		createdAt: 0,
 		completedAt: null,
 		createdBy: null,

@@ -36,6 +36,7 @@ const taskSchema = syncedTaskSchema.extend({
 	labelIds: syncedTaskSchema.shape.labelIds.default([]),
 	location: syncedTaskSchema.shape.location.default(null),
 	event: syncedTaskSchema.shape.event.default(null),
+	images: syncedTaskSchema.shape.images.default([]),
 	createdBy: syncedTaskSchema.shape.createdBy.default(null),
 	completedBy: syncedTaskSchema.shape.completedBy.default(null),
 	lastCompletedAt: syncedTaskSchema.shape.lastCompletedAt.default(null),

@@ -20,6 +20,7 @@ import {
 	taskCommentSchema,
 } from '../sharing.ts';
 import { taskEditSchema } from '../store.ts';
+import { imageSizeSchema } from '../images.ts';
 import { roleSchema } from '../values.ts';
 import { nudgeSchema, syncRequestSchema, syncResponseSchema, taskSchema } from '../sync/protocol.ts';
 
@@ -320,6 +321,25 @@ export const agentContract = {
 			)
 			.input(z.object({ query: taskQuery }))
 			.output(okSchema),
+	},
+	/**
+	 * The `Account` object answers it before its router, so the owner's reads skip the space's queue. Uploading,
+	 * `PUT /api/images`, stays outside the contract: its body is raw bytes, and AI accounts do not upload.
+	 */
+	images: {
+		get: found
+			.meta(
+				openapi({
+					method: 'GET',
+					path: '/api/images',
+					inputStructure: 'detailed',
+					summary: 'An image on a task',
+					description:
+						'`id` is an image id from a task’s `images`, and `size` is `full` (at most 2048 px on its long side) or `thumb` (320 px). Answers the JPEG or WebP bytes. An image is visible when a task you can see lists it.',
+				}),
+			)
+			.input(z.object({ query: spaceQuery.extend({ id: z.string(), size: imageSizeSchema }) }))
+			.output(z.file()),
 	},
 };
 

@@ -21,6 +21,7 @@ export const task = (id: string, fields: Partial<Task> = {}): Task => ({
 	reminders: [],
 	location: null,
 	event: null,
+	images: [],
 	createdAt: 1,
 	completedAt: null,
 	createdBy: null,

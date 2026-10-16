@@ -1,6 +1,7 @@
 import type { Server, ServerWebSocket } from 'bun';
 import { SOCKET_PING, SOCKET_PONG } from '../../shared/sync/protocol';
 import { accountHandler, isNudge } from './account/account';
+import { databaseImages, isImageRoute, memoryImages, type ImageStore } from './account/images';
 import { memoryStore } from './account/memory-store';
 import { upstreamUrl, type ConnectUpstream, type RambleConfig } from './account/ramble';
 import { queuedRambleLedger, type RambleLedger } from './account/ramble-ledger';
@@ -8,6 +9,7 @@ import { acceptedProtocol, type Socket, type SocketHost, type StreamEvents } fro
 import { serialQueue } from './account/serial';
 import type { AccountStore } from './account/store';
 import { tursoSession, writeUserRamble } from './account/turso';
+import { tursoDatabase } from './db/turso';
 import { originalRequest } from './actor';
 import api from './api';
 import type { Env } from './bindings';
@@ -136,25 +138,47 @@ export function serveDev({
 		ledgers.set(id, created);
 		return created;
 	};
-	// Like the Worker: one request per space at a time, calls to other spaces after the slot, nudges outside it.
+	const images = new Map<string, ImageStore>();
+	const imagesFor = (id: string) => {
+		const existing = images.get(id);
+		if (existing) return existing;
+		const created = database ? databaseImages(() => tursoDatabase(database), id) : memoryImages();
+		images.set(id, created);
+		return created;
+	};
+	const withStore = async <T>(id: string, use: (store: AccountStore) => Promise<T>) => {
+		if (!database) return use(memoryFor(id));
+		const session = await tursoSession(database, id, ledgerFor(id));
+		try {
+			return await use(session.store);
+		} finally {
+			await session.flush();
+		}
+	};
+	// Like the Worker: one request per space at a time, calls to other spaces after the slot, nudges and the owner's
+	// images outside it.
 	const accountFetch = async (id: string, request: Request) => {
 		const handle = handleFor(id);
 		if (isNudge(request)) return handle.relay(request);
+		const queue = queueFor(id);
+		if (isImageRoute(request)) {
+			return handle.images(request, {
+				images: imagesFor(id),
+				space: id,
+				open: use => queue(() => withStore(id, use)),
+			});
+		}
 		const deferred: Array<() => Promise<void>> = [];
-		const host = (store: AccountStore) => ({
-			store,
-			space: id,
-			defer: (task: () => Promise<void>) => deferred.push(task),
-		});
-		const response = await queueFor(id)(async () => {
-			if (!database) return handle.fetch(request, host(memoryFor(id)));
-			const session = await tursoSession(database, id, ledgerFor(id));
-			try {
-				return await handle.fetch(request, host(session.store));
-			} finally {
-				await session.flush();
-			}
-		});
+		const response = await queue(() =>
+			withStore(id, store =>
+				handle.fetch(request, {
+					store,
+					images: imagesFor(id),
+					space: id,
+					defer: task => deferred.push(task),
+				}),
+			),
+		);
 		void Promise.allSettled(deferred.map(task => task()));
 		return response;
 	};

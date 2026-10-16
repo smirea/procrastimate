@@ -75,6 +75,7 @@ export function putMemoTasks(store: AccountStore, request: MemoTasksRequest, now
 				reminders: [],
 				location: null,
 				event: input.event,
+				images: [],
 				createdAt: createdAt++,
 				completedAt: null,
 				createdBy: null,

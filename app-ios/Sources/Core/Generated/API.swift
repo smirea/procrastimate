@@ -1680,6 +1680,62 @@ extension API {
 
     public typealias Hlc = String
 
+    public struct ImageRef: Codable, Hashable, Sendable, Identifiable {
+        public var id: String
+        public var width: Int
+        public var height: Int
+
+        public init(id: String, width: Int, height: Int) {
+            self.id = id
+            self.width = width
+            self.height = height
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case id = "id"
+            case width = "width"
+            case height = "height"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            id = try container.decode(String.self, forKey: .id)
+            width = try container.decode(Int.self, forKey: .width)
+            height = try container.decode(Int.self, forKey: .height)
+            if decoder.validates {
+                do {
+                    let value = self.width
+                    try check(value > 0, .width, in: container, "width above 0")
+                }
+                do {
+                    let value = self.height
+                    try check(value > 0, .height, in: container, "height above 0")
+                }
+            }
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.id, forKey: .id)
+            try container.encode(self.width, forKey: .width)
+            try container.encode(self.height, forKey: .height)
+        }
+    }
+
+    public enum ImageSize: String, Codable, Hashable, Sendable, CaseIterable, Identifiable {
+        case full = "full"
+        case thumb = "thumb"
+
+        public var id: String { rawValue }
+    }
+
+    public enum ImageType: String, Codable, Hashable, Sendable, CaseIterable, Identifiable {
+        case imageWebp = "image/webp"
+        case imageJpeg = "image/jpeg"
+
+        public var id: String { rawValue }
+    }
+
     public struct ImportSummary: Codable, Hashable, Sendable {
         public var projects: Int
         public var sections: Int
@@ -4793,6 +4849,7 @@ extension API {
         public var reminders: [Reminder]
         public var location: TaskLocation?
         public var event: TaskEvent?
+        public var images: [ImageRef]
         public var createdAt: Int
         public var completedAt: Int?
         public var createdBy: String?
@@ -4800,7 +4857,7 @@ extension API {
         public var lastCompletedAt: Int?
         public var sourceKey: String?
 
-        public init(id: String, parentId: String? = nil, order: Double = 0, title: String, notes: String = "", projectId: String? = nil, sectionId: String? = nil, labelIds: [String] = [], due: Due? = nil, recurrence: Recurrence? = nil, priority: Priority = .p4, reminders: [Reminder] = [], location: TaskLocation? = nil, event: TaskEvent? = nil, createdAt: Int, completedAt: Int? = nil, createdBy: String? = nil, completedBy: String? = nil, lastCompletedAt: Int? = nil, sourceKey: String? = nil) {
+        public init(id: String, parentId: String? = nil, order: Double = 0, title: String, notes: String = "", projectId: String? = nil, sectionId: String? = nil, labelIds: [String] = [], due: Due? = nil, recurrence: Recurrence? = nil, priority: Priority = .p4, reminders: [Reminder] = [], location: TaskLocation? = nil, event: TaskEvent? = nil, images: [ImageRef] = [], createdAt: Int, completedAt: Int? = nil, createdBy: String? = nil, completedBy: String? = nil, lastCompletedAt: Int? = nil, sourceKey: String? = nil) {
             self.id = id
             self.parentId = parentId
             self.order = order
@@ -4815,6 +4872,7 @@ extension API {
             self.reminders = reminders
             self.location = location
             self.event = event
+            self.images = images
             self.createdAt = createdAt
             self.completedAt = completedAt
             self.createdBy = createdBy
@@ -4838,6 +4896,7 @@ extension API {
             case reminders = "reminders"
             case location = "location"
             case event = "event"
+            case images = "images"
             case createdAt = "createdAt"
             case completedAt = "completedAt"
             case createdBy = "createdBy"
@@ -4862,6 +4921,7 @@ extension API {
             reminders = try container.decode([Reminder].self, forKey: .reminders)
             location = try container.decode(TaskLocation?.self, forKey: .location)
             event = try container.decode(TaskEvent?.self, forKey: .event)
+            images = try container.decode([ImageRef].self, forKey: .images)
             createdAt = try container.decode(Int.self, forKey: .createdAt)
             completedAt = try container.decode(Int?.self, forKey: .completedAt)
             createdBy = try container.decode(String?.self, forKey: .createdBy)
@@ -4886,6 +4946,7 @@ extension API {
             try container.encode(self.reminders, forKey: .reminders)
             try container.encode(self.location, forKey: .location)
             try container.encode(self.event, forKey: .event)
+            try container.encode(self.images, forKey: .images)
             try container.encode(self.createdAt, forKey: .createdAt)
             try container.encode(self.completedAt, forKey: .completedAt)
             try container.encode(self.createdBy, forKey: .createdBy)
@@ -4983,8 +5044,9 @@ extension API {
         public var reminders: [Reminder]?
         public var location: TaskLocation??
         public var event: TaskEvent??
+        public var images: [ImageRef]?
 
-        public init(title: String? = nil, notes: String? = nil, projectId: String?? = nil, sectionId: String?? = nil, labelIds: [String]? = nil, due: Due?? = nil, recurrence: Recurrence?? = nil, priority: Priority? = nil, reminders: [Reminder]? = nil, location: TaskLocation?? = nil, event: TaskEvent?? = nil) {
+        public init(title: String? = nil, notes: String? = nil, projectId: String?? = nil, sectionId: String?? = nil, labelIds: [String]? = nil, due: Due?? = nil, recurrence: Recurrence?? = nil, priority: Priority? = nil, reminders: [Reminder]? = nil, location: TaskLocation?? = nil, event: TaskEvent?? = nil, images: [ImageRef]? = nil) {
             self.title = title
             self.notes = notes
             self.projectId = projectId
@@ -4996,6 +5058,7 @@ extension API {
             self.reminders = reminders
             self.location = location
             self.event = event
+            self.images = images
         }
 
         enum CodingKeys: String, CodingKey {
@@ -5010,6 +5073,7 @@ extension API {
             case reminders = "reminders"
             case location = "location"
             case event = "event"
+            case images = "images"
         }
 
         public init(from decoder: Decoder) throws {
@@ -5025,6 +5089,7 @@ extension API {
             reminders = try container.decodeAbsent([Reminder].self, forKey: .reminders)
             location = try container.decodeNullable(TaskLocation.self, forKey: .location)
             event = try container.decodeNullable(TaskEvent.self, forKey: .event)
+            images = try container.decodeAbsent([ImageRef].self, forKey: .images)
         }
 
         public func encode(to encoder: Encoder) throws {
@@ -5040,6 +5105,7 @@ extension API {
             try container.encodeIfPresent(self.reminders, forKey: .reminders)
             try container.encodeNullable(self.location, forKey: .location)
             try container.encodeNullable(self.event, forKey: .event)
+            try container.encodeIfPresent(self.images, forKey: .images)
         }
     }
 
@@ -5256,6 +5322,7 @@ extension API {
         public var reminders: [Reminder]?
         public var location: TaskLocation??
         public var event: TaskEvent??
+        public var images: [ImageRef]?
         public var createdAt: Int?
         public var completedAt: Int??
         public var createdBy: String??
@@ -5264,7 +5331,7 @@ extension API {
         public var sourceKey: String??
         public var deleted: Bool?
 
-        public init(parentId: String?? = nil, order: Double? = nil, title: String? = nil, notes: String? = nil, projectId: String?? = nil, sectionId: String?? = nil, labelIds: [String]? = nil, due: Due?? = nil, recurrence: Recurrence?? = nil, priority: Priority? = nil, reminders: [Reminder]? = nil, location: TaskLocation?? = nil, event: TaskEvent?? = nil, createdAt: Int? = nil, completedAt: Int?? = nil, createdBy: String?? = nil, completedBy: String?? = nil, lastCompletedAt: Int?? = nil, sourceKey: String?? = nil, deleted: Bool? = nil) {
+        public init(parentId: String?? = nil, order: Double? = nil, title: String? = nil, notes: String? = nil, projectId: String?? = nil, sectionId: String?? = nil, labelIds: [String]? = nil, due: Due?? = nil, recurrence: Recurrence?? = nil, priority: Priority? = nil, reminders: [Reminder]? = nil, location: TaskLocation?? = nil, event: TaskEvent?? = nil, images: [ImageRef]? = nil, createdAt: Int? = nil, completedAt: Int?? = nil, createdBy: String?? = nil, completedBy: String?? = nil, lastCompletedAt: Int?? = nil, sourceKey: String?? = nil, deleted: Bool? = nil) {
             self.parentId = parentId
             self.order = order
             self.title = title
@@ -5278,6 +5345,7 @@ extension API {
             self.reminders = reminders
             self.location = location
             self.event = event
+            self.images = images
             self.createdAt = createdAt
             self.completedAt = completedAt
             self.createdBy = createdBy
@@ -5301,6 +5369,7 @@ extension API {
             case reminders = "reminders"
             case location = "location"
             case event = "event"
+            case images = "images"
             case createdAt = "createdAt"
             case completedAt = "completedAt"
             case createdBy = "createdBy"
@@ -5325,6 +5394,7 @@ extension API {
             reminders = try container.decodeAbsent([Reminder].self, forKey: .reminders)
             location = try container.decodeNullable(TaskLocation.self, forKey: .location)
             event = try container.decodeNullable(TaskEvent.self, forKey: .event)
+            images = try container.decodeAbsent([ImageRef].self, forKey: .images)
             createdAt = try container.decodeAbsent(Int.self, forKey: .createdAt)
             completedAt = try container.decodeNullable(Int.self, forKey: .completedAt)
             createdBy = try container.decodeNullable(String.self, forKey: .createdBy)
@@ -5349,6 +5419,7 @@ extension API {
             try container.encodeIfPresent(self.reminders, forKey: .reminders)
             try container.encodeNullable(self.location, forKey: .location)
             try container.encodeNullable(self.event, forKey: .event)
+            try container.encodeIfPresent(self.images, forKey: .images)
             try container.encodeIfPresent(self.createdAt, forKey: .createdAt)
             try container.encodeNullable(self.completedAt, forKey: .completedAt)
             try container.encodeNullable(self.createdBy, forKey: .createdBy)
@@ -5711,6 +5782,13 @@ extension API.Endpoints {
         public typealias Output = NoInput
         public static let method = "GET"
         public static let path = "/api/docs/openapi"
+    }
+
+    public enum ImagesGet: APIEndpoint {
+        public typealias Input = NoInput
+        public typealias Output = NoInput
+        public static let method = "GET"
+        public static let path = "/api/images"
     }
 
     public enum Me: APIEndpoint {

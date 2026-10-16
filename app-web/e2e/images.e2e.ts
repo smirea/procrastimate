@@ -1,0 +1,169 @@
+import type { Browser, BrowserContext, Page } from '@playwright/test';
+import { App, expect, NOW, signInAccount, test } from './fixtures.ts';
+
+/**
+ * Task images: attach by picker, paste, or drop; thumbnails in details, a count on the row, the full-screen viewer,
+ * delete with undo, and the bytes reaching another device, also when the image was added offline.
+ */
+
+type Device = { app: App; page: Page; context: BrowserContext };
+
+const unique = (name: string) => `${name} ${crypto.randomUUID().slice(0, 8)}`;
+
+/** A PNG drawn in the page, `width` by `height`, as a file Playwright can pick. */
+async function png(page: Page, width: number, height: number) {
+	const base64 = await page.evaluate(
+		([w, h]) => {
+			const canvas = document.createElement('canvas');
+			canvas.width = w;
+			canvas.height = h;
+			const context = canvas.getContext('2d')!;
+			context.fillStyle = '#3366cc';
+			context.fillRect(0, 0, w, h);
+			context.fillStyle = '#ffcc00';
+			context.fillRect(w / 4, h / 4, w / 2, h / 2);
+			return canvas.toDataURL('image/png').split(',')[1]!;
+		},
+		[width, height] as const,
+	);
+	return { name: 'photo.png', mimeType: 'image/png', buffer: Buffer.from(base64, 'base64') };
+}
+
+async function openDetails(app: App, title: string) {
+	await app
+		.row(title)
+		.getByRole('button', { name: new RegExp(`^${title}`) })
+		.click();
+	await expect(app.details()).toBeVisible();
+}
+
+const thumbnails = (app: App) => app.details().getByRole('button', { name: /^Open image/ });
+
+test.afterEach(async ({ browser }) => {
+	for (const context of browser.contexts()) await context.close();
+});
+
+test('an image picked in details shows as a thumbnail and on the row, opens full screen, and deletes with undo', async ({
+	app,
+	page,
+}) => {
+	const title = unique('Fix the fridge');
+	await app.add(title);
+	await openDetails(app, title);
+	await app
+		.details()
+		.locator('input[type="file"]')
+		.setInputFiles(await png(page, 3000, 2000));
+	await expect(thumbnails(app)).toHaveCount(1);
+	await expect(thumbnails(app).first().locator('img')).toHaveAttribute('src', /^blob:/);
+	await expect(app.row(title).getByRole('img', { name: '1 image' })).toBeVisible();
+
+	const stored = await page.evaluate(() => {
+		const raw = JSON.parse(localStorage.getItem('procrastimate')!) as { tasks: { images: unknown[] }[] };
+		return raw.tasks.flatMap(task => task.images);
+	});
+	expect(stored).toEqual([{ id: expect.any(String), width: 2048, height: 1365 }]);
+
+	await thumbnails(app).first().click();
+	const viewer = page.getByRole('dialog', { name: 'Image' });
+	await expect(viewer.getByRole('img', { name: `Image 1 of ${title}` })).toHaveAttribute('width', '2048');
+	await page.keyboard.press('Escape');
+	await expect(viewer).toBeHidden();
+	await expect(app.details()).toBeVisible();
+
+	await thumbnails(app).first().click();
+	await viewer.getByRole('button', { name: 'Delete image' }).click();
+	await expect(viewer).toBeHidden();
+	await expect(thumbnails(app)).toHaveCount(0);
+	await expect(app.row(title).getByRole('img', { name: /image/ })).toHaveCount(0);
+	await page.getByRole('button', { name: 'Undo' }).click();
+	await expect(thumbnails(app)).toHaveCount(1);
+
+	await page.reload();
+	await openDetails(app, title);
+	await expect(thumbnails(app).first().locator('img')).toHaveAttribute('src', /^blob:/);
+});
+
+test('pasting or dropping an image into details attaches it', async ({ app, page }) => {
+	const title = unique('Receipts');
+	await app.add(title);
+	await openDetails(app, title);
+	const file = await png(page, 400, 300);
+	const base64 = file.buffer.toString('base64');
+	const send = (kind: 'paste' | 'drop') =>
+		app.details().evaluate(
+			(details, [data, type]) => {
+				const bytes = Uint8Array.from(atob(data), c => c.charCodeAt(0));
+				const transfer = new DataTransfer();
+				transfer.items.add(new File([bytes], 'shot.png', { type: 'image/png' }));
+				const target = details.querySelector('textarea')!;
+				if (type === 'paste') {
+					target.dispatchEvent(
+						new ClipboardEvent('paste', { clipboardData: transfer, bubbles: true, cancelable: true }),
+					);
+				} else {
+					target.dispatchEvent(new DragEvent('dragover', { dataTransfer: transfer, bubbles: true, cancelable: true }));
+					target.dispatchEvent(new DragEvent('drop', { dataTransfer: transfer, bubbles: true, cancelable: true }));
+				}
+			},
+			[base64, kind] as const,
+		);
+	await send('paste');
+	await expect(thumbnails(app)).toHaveCount(1);
+	await send('drop');
+	await expect(thumbnails(app)).toHaveCount(2);
+	await expect(app.details().getByRole('textbox', { name: 'Notes' })).toHaveValue('');
+});
+
+async function device(browser: Browser): Promise<Device> {
+	const { baseURL, timezoneId, viewport } = test.info().project.use;
+	const context = await browser.newContext({ baseURL, timezoneId, viewport });
+	await signInAccount(context);
+	const page = await context.newPage();
+	await page.clock.setFixedTime(NOW);
+	await page.goto('/no-date');
+	await expect(page.getByRole('heading', { name: 'No date' })).toBeVisible({ timeout: 30_000 });
+	return { app: new App(page), page, context };
+}
+
+const focus = (page: Page) => page.evaluate(() => window.dispatchEvent(new Event('focus')));
+
+test('an image added offline uploads when the network returns and shows on the other device', async ({ browser }) => {
+	const a = await device(browser);
+	const b = await device(browser);
+	const title = unique('Broken hinge');
+	await a.app.add(title);
+	await focus(b.page);
+	await expect(b.app.row(title)).toBeVisible({ timeout: 10_000 });
+
+	const offline = (route: { abort: (reason: string) => Promise<void> }) => route.abort('internetdisconnected');
+	await a.context.route('**/api/sync', offline);
+	await a.context.route('**/api/images**', offline);
+	await openDetails(a.app, title);
+	await a.app
+		.details()
+		.locator('input[type="file"]')
+		.setInputFiles(await png(a.page, 1200, 900));
+	await expect(thumbnails(a.app)).toHaveCount(1);
+	await focus(a.page);
+	await focus(b.page);
+	await expect(b.app.row(title).getByRole('img', { name: '1 image' })).toHaveCount(0);
+
+	await a.context.unroute('**/api/sync', offline);
+	await a.context.unroute('**/api/images**', offline);
+	await focus(a.page);
+	await focus(b.page);
+	await expect(b.app.row(title).getByRole('img', { name: '1 image' })).toBeVisible({ timeout: 10_000 });
+	await openDetails(b.app, title);
+	await expect(thumbnails(b.app).first().locator('img')).toHaveAttribute('src', /^blob:/, { timeout: 10_000 });
+	const size = await thumbnails(b.app)
+		.first()
+		.locator('img')
+		.evaluate(
+			img =>
+				new Promise<number>(resolve =>
+					(img as HTMLImageElement).decode().then(() => resolve((img as HTMLImageElement).naturalWidth)),
+				),
+		);
+	expect(size).toBe(320);
+});

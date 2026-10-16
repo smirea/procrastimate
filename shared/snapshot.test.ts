@@ -16,6 +16,7 @@ const task = (id: string, recurrence: unknown, fields: Record<string, unknown> =
 	reminders: [],
 	location: null,
 	event: null,
+	images: [],
 	createdAt: ++created,
 	completedAt: null,
 	...fields,
@@ -38,6 +39,7 @@ const sharedTask = (id: string, createdAt: number) => ({
 	reminders: [],
 	location: null,
 	event: null,
+	images: [],
 	createdAt,
 	completedAt: null,
 	createdBy: null,
@@ -65,6 +67,7 @@ const webDocument: snapshot.Snapshot = {
 			],
 			location: null,
 			event: null,
+			images: [],
 			createdAt: 1_791_900_000_000,
 			completedAt: null,
 			createdBy: null,
@@ -86,6 +89,7 @@ const webDocument: snapshot.Snapshot = {
 			reminders: [],
 			location: null,
 			event: null,
+			images: [],
 			createdAt: 1_791_900_000_001,
 			completedAt: 1_791_950_000_000,
 			createdBy: null,
@@ -107,6 +111,7 @@ const webDocument: snapshot.Snapshot = {
 			reminders: [],
 			location: null,
 			event: null,
+			images: [],
 			createdAt: 1_791_900_000_002,
 			completedAt: null,
 			createdBy: null,
@@ -389,6 +394,19 @@ describe('parseSnapshot', () => {
 			['Water', { interval: 2, unit: 'day' }],
 			['Old', null],
 			['Days on a daily repeat', { interval: 1, unit: 'day' }],
+		]);
+	});
+
+	test('a task stored before images loads with none, and attached images round-trip', () => {
+		const { images: _, ...old } = task('Old', null);
+		const photo = { id: 'img-1', width: 2048, height: 1536 };
+		const loaded = parseSnapshot(
+			{ tasks: [old, task('Receipt', null, { images: [photo] })], projects: [], remindersCheckedAt: 5 },
+			10,
+		);
+		expect(loaded.tasks.map(t => [t.title, t.images])).toEqual([
+			['Old', []],
+			['Receipt', [photo]],
 		]);
 	});
 

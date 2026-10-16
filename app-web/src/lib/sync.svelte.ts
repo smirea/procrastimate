@@ -10,6 +10,7 @@ import {
 } from 'shared/sync/protocol.ts';
 import { ORPCError } from '@orpc/client';
 import { api, isUnauthorized } from './api.ts';
+import { images } from './images/images.svelte.ts';
 import { session } from './session.svelte.ts';
 import { store } from './store.svelte.ts';
 
@@ -194,10 +195,12 @@ class Sync {
 	}
 
 	async #space(owner: string) {
+		// Captured before the uploads, so every edit it carries was recorded after its image was queued.
 		const request = store.spaceRequest(owner);
 		if (!request) return;
 		let response: unknown;
 		try {
+			await images.upload(owner);
 			response = await api.sync(
 				{ query: { space: owner }, body: request },
 				{ signal: AbortSignal.timeout(REQUEST_TIMEOUT) },
@@ -214,10 +217,13 @@ class Sync {
 	async #once(): Promise<boolean> {
 		if (session.state !== 'in' || !store.ready || !store.deviceId()) return false;
 		store.noteTimeZone(zone());
+		// Captured before the uploads, so every edit it carries was recorded after its image was queued, and the edits
+		// that list a new image go out only after its bytes.
 		const request = store.syncRequest();
 		if (!request) return false;
 		let response: unknown;
 		try {
+			await images.upload(null);
 			response = await api.sync({ query: {}, body: request }, { signal: AbortSignal.timeout(REQUEST_TIMEOUT) });
 		} catch (error) {
 			if (isUnauthorized(error)) {

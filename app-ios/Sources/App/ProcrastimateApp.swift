@@ -12,6 +12,7 @@ struct ProcrastimateApp: App {
     @State private var notifications: LocalNotifications
     @State private var importer: TodoistImport
     @State private var accountSync: AccountSync
+    @State private var images: TaskImages
     @State private var auth: Session
     @State private var router: IntentRouter
     @State private var places: PlaceMonitor
@@ -31,7 +32,8 @@ struct ProcrastimateApp: App {
         // The delegate must be set before launch finishes, so tapping a notification can cold-start into its task.
         let notifications = LocalNotifications(store: store, toasts: toasts, navigator: navigator, clock: clock)
         let auth = Session(store: store)
-        let accountSync = AccountSync(store: store, clock: clock, session: auth)
+        let images = TaskImages(store: store, toasts: toasts)
+        let accountSync = AccountSync(store: store, clock: clock, session: auth, images: images)
         let session = IntentSession(
             store: store,
             navigator: navigator,
@@ -61,6 +63,7 @@ struct ProcrastimateApp: App {
         _importer = State(initialValue: TodoistImport(store: store, clock: clock))
         _auth = State(initialValue: auth)
         _accountSync = State(initialValue: accountSync)
+        _images = State(initialValue: images)
     }
 
     var body: some Scene {
@@ -75,6 +78,7 @@ struct ProcrastimateApp: App {
                 .environment(importer)
                 .environment(auth)
                 .environment(accountSync)
+                .environment(images)
                 .environment(router)
                 .environment(places)
                 .environment(calendar)
