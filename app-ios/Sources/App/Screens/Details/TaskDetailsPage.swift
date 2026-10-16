@@ -127,6 +127,8 @@ private struct TaskDetailsForm: View {
 
                 SubtaskList(task: task, navigation: navigation)
 
+                TaskComments(task: task)
+
                 // No spacing here: people adds its own gap only when it shows, so a solo task has no empty slot.
                 VStack(alignment: .leading, spacing: 0) {
                     TaskPeople(task: task)

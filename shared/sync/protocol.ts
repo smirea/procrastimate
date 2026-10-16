@@ -1,9 +1,11 @@
 import { z } from 'zod';
 import {
+	commentsRowSchema,
 	labelsRowSchema,
 	logRowSchema,
 	projectsRowSchema,
 	sectionsRowSchema,
+	readsRowSchema,
 	settingsRowSchema,
 	tasksRowSchema,
 } from '../db/generated/zod.ts';
@@ -29,6 +31,8 @@ export const taskFieldsSchema = tasksRowSchema.omit(NOT_FIELDS);
 export const projectFieldsSchema = projectsRowSchema.omit(NOT_FIELDS);
 export const sectionFieldsSchema = sectionsRowSchema.omit(NOT_FIELDS);
 export const labelFieldsSchema = labelsRowSchema.omit(NOT_FIELDS);
+export const commentFieldsSchema = commentsRowSchema.omit(NOT_FIELDS);
+export const readFieldsSchema = readsRowSchema.omit(NOT_FIELDS);
 export const settingsFieldsSchema = settingsRowSchema.omit({ userId: true, id: true, clocks: true });
 
 export type Settings = z.infer<typeof settingsFieldsSchema>;
@@ -43,6 +47,8 @@ export const FIELDS_SCHEMAS = {
 	project: projectFieldsSchema,
 	section: sectionFieldsSchema,
 	label: labelFieldsSchema,
+	comment: commentFieldsSchema,
+	read: readFieldsSchema,
 	settings: settingsFieldsSchema,
 } as const satisfies Record<Kind, z.ZodObject>;
 
@@ -63,12 +69,16 @@ export const sectionSchema = sectionsRowSchema
 	.extend({ sourceKey: z.string().optional() })
 	.meta({ id: 'ProjectSection', 'x-table': 'sections' });
 export const labelSchema = labelsRowSchema.omit(ENTITY).meta({ id: 'Label', 'x-table': 'labels' });
+export const commentSchema = commentsRowSchema.omit(ENTITY).meta({ id: 'Comment', 'x-table': 'comments' });
+export const readSchema = readsRowSchema.omit(ENTITY).meta({ id: 'CommentRead', 'x-table': 'reads' });
 export const settingsSchema = settingsFieldsSchema.meta({ id: 'Settings', 'x-table': 'settings' });
 
 export type Task = z.infer<typeof taskSchema>;
 export type Project = z.infer<typeof projectSchema>;
 export type Section = z.infer<typeof sectionSchema>;
 export type Label = z.infer<typeof labelSchema>;
+export type Comment = z.infer<typeof commentSchema>;
+export type CommentRead = z.infer<typeof readSchema>;
 
 /** Everything that syncs. Device-local state such as the theme or `remindersCheckedAt` stays out. */
 export const snapshotSchema = z
@@ -77,6 +87,8 @@ export const snapshotSchema = z
 		projects: z.array(projectSchema),
 		sections: z.array(sectionSchema),
 		labels: z.array(labelSchema),
+		comments: z.array(commentSchema),
+		reads: z.array(readSchema),
 		settings: settingsSchema,
 	})
 	.meta({ id: 'SyncSnapshot' });
@@ -97,6 +109,8 @@ export const PATCH_SCHEMAS = {
 	project: patchOf('project', 'ProjectPatch'),
 	section: patchOf('section', 'SectionPatch'),
 	label: patchOf('label', 'LabelPatch'),
+	comment: patchOf('comment', 'CommentPatch'),
+	read: patchOf('read', 'CommentReadPatch'),
 	settings: patchOf('settings', 'SettingsPatch'),
 } as const;
 
@@ -105,6 +119,8 @@ export const patchSchema = z.discriminatedUnion('kind', [
 	PATCH_SCHEMAS.project,
 	PATCH_SCHEMAS.section,
 	PATCH_SCHEMAS.label,
+	PATCH_SCHEMAS.comment,
+	PATCH_SCHEMAS.read,
 	PATCH_SCHEMAS.settings,
 ]);
 export type Patch = z.infer<typeof patchSchema>;

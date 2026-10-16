@@ -33,6 +33,7 @@ enum SharingDemo {
             ],
             projects: [Project(id: "garden", name: "Garden", createdAt: 1)],
             labels: [],
+            comments: demoComments(me: Session.userID ?? "me"),
             settings: API.Settings()
         )
         _ = store.takeSyncResponse(
@@ -47,5 +48,18 @@ enum SharingDemo {
             store.addTask(NewTask(title: "Find a place near Alfama", projectId: trip.id))
         }
         #endif
+    }
+
+    /// Ann and Claude wrote after this user, so Garden shows two tasks with unread comments.
+    private static func demoComments(me: String) -> [Comment] {
+        let now = Int(Date().timeIntervalSince1970 * 1000)
+        return [
+            Comment(id: "c1", taskId: "tulips", body: "Got 40 bulbs at the market", authorId: me, createdAt: now - 7_200_000),
+            Comment(
+                id: "c2", taskId: "tulips", body: "Plant them 15 cm deep, see https://example.com/tulips",
+                authorId: "ann", createdAt: now - 1_800_000
+            ),
+            Comment(id: "c3", taskId: "hose", body: "Found a 30 m one on sale", authorId: "claude", createdAt: now - 600_000),
+        ]
     }
 }

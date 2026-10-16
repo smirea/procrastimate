@@ -17,6 +17,8 @@ const own = {
 	projects: [project('work')],
 	sections: [section('later', 'work')],
 	labels: [label('home')],
+	comments: [],
+	reads: [],
 };
 const homeOf = (id: string) => homes(spaces).get(id) ?? null;
 

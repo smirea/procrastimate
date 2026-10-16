@@ -62,6 +62,12 @@
 								"$ref": "#/components/schemas/LabelPatch"
 							},
 							{
+								"$ref": "#/components/schemas/CommentPatch"
+							},
+							{
+								"$ref": "#/components/schemas/CommentReadPatch"
+							},
+							{
 								"$ref": "#/components/schemas/SettingsPatch"
 							}
 						]
@@ -637,6 +643,90 @@
 					"fields"
 				]
 			},
+			"CommentPatch": {
+				"type": "object",
+				"properties": {
+					"kind": {
+						"type": "string",
+						"const": "comment"
+					},
+					"id": {
+						"type": "string"
+					},
+					"fields": {
+						"type": "object",
+						"properties": {
+							"taskId": {
+								"type": "string"
+							},
+							"body": {
+								"type": "string"
+							},
+							"authorId": {
+								"type": [
+									"string",
+									"null"
+								]
+							},
+							"createdAt": {
+								"type": "integer",
+								"minimum": -9007199254740991,
+								"maximum": 9007199254740991
+							},
+							"editedAt": {
+								"anyOf": [
+									{
+										"type": "integer",
+										"minimum": -9007199254740991,
+										"maximum": 9007199254740991
+									},
+									{
+										"type": "null"
+									}
+								]
+							},
+							"deleted": {
+								"type": "boolean"
+							}
+						}
+					}
+				},
+				"required": [
+					"kind",
+					"id",
+					"fields"
+				]
+			},
+			"CommentReadPatch": {
+				"type": "object",
+				"properties": {
+					"kind": {
+						"type": "string",
+						"const": "read"
+					},
+					"id": {
+						"type": "string"
+					},
+					"fields": {
+						"type": "object",
+						"properties": {
+							"readAt": {
+								"type": "integer",
+								"minimum": -9007199254740991,
+								"maximum": 9007199254740991
+							},
+							"deleted": {
+								"type": "boolean"
+							}
+						}
+					}
+				},
+				"required": [
+					"kind",
+					"id",
+					"fields"
+				]
+			},
 			"SettingsPatch": {
 				"type": "object",
 				"properties": {
@@ -811,6 +901,12 @@
 							},
 							{
 								"$ref": "#/components/schemas/LabelPatchOutput"
+							},
+							{
+								"$ref": "#/components/schemas/CommentPatchOutput"
+							},
+							{
+								"$ref": "#/components/schemas/CommentReadPatchOutput"
 							},
 							{
 								"$ref": "#/components/schemas/SettingsPatchOutput"
@@ -1350,6 +1446,94 @@
 				],
 				"additionalProperties": false
 			},
+			"CommentPatchOutput": {
+				"type": "object",
+				"properties": {
+					"kind": {
+						"type": "string",
+						"const": "comment"
+					},
+					"id": {
+						"type": "string"
+					},
+					"fields": {
+						"type": "object",
+						"properties": {
+							"taskId": {
+								"type": "string"
+							},
+							"body": {
+								"type": "string"
+							},
+							"authorId": {
+								"type": [
+									"string",
+									"null"
+								]
+							},
+							"createdAt": {
+								"type": "integer",
+								"minimum": -9007199254740991,
+								"maximum": 9007199254740991
+							},
+							"editedAt": {
+								"anyOf": [
+									{
+										"type": "integer",
+										"minimum": -9007199254740991,
+										"maximum": 9007199254740991
+									},
+									{
+										"type": "null"
+									}
+								]
+							},
+							"deleted": {
+								"type": "boolean"
+							}
+						},
+						"additionalProperties": false
+					}
+				},
+				"required": [
+					"kind",
+					"id",
+					"fields"
+				],
+				"additionalProperties": false
+			},
+			"CommentReadPatchOutput": {
+				"type": "object",
+				"properties": {
+					"kind": {
+						"type": "string",
+						"const": "read"
+					},
+					"id": {
+						"type": "string"
+					},
+					"fields": {
+						"type": "object",
+						"properties": {
+							"readAt": {
+								"type": "integer",
+								"minimum": -9007199254740991,
+								"maximum": 9007199254740991
+							},
+							"deleted": {
+								"type": "boolean"
+							}
+						},
+						"additionalProperties": false
+					}
+				},
+				"required": [
+					"kind",
+					"id",
+					"fields"
+				],
+				"additionalProperties": false
+			},
 			"SettingsPatchOutput": {
 				"type": "object",
 				"properties": {
@@ -1419,6 +1603,18 @@
 							"$ref": "#/components/schemas/Label"
 						}
 					},
+					"comments": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/Comment"
+						}
+					},
+					"reads": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/CommentRead"
+						}
+					},
 					"settings": {
 						"$ref": "#/components/schemas/Settings"
 					}
@@ -1428,6 +1624,8 @@
 					"projects",
 					"sections",
 					"labels",
+					"comments",
+					"reads",
 					"settings"
 				],
 				"additionalProperties": false
@@ -1671,6 +1869,72 @@
 				],
 				"additionalProperties": false,
 				"x-table": "labels"
+			},
+			"Comment": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"taskId": {
+						"type": "string"
+					},
+					"body": {
+						"type": "string"
+					},
+					"authorId": {
+						"type": [
+							"string",
+							"null"
+						]
+					},
+					"createdAt": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991
+					},
+					"editedAt": {
+						"anyOf": [
+							{
+								"type": "integer",
+								"minimum": -9007199254740991,
+								"maximum": 9007199254740991
+							},
+							{
+								"type": "null"
+							}
+						]
+					}
+				},
+				"required": [
+					"id",
+					"taskId",
+					"body",
+					"authorId",
+					"createdAt",
+					"editedAt"
+				],
+				"additionalProperties": false,
+				"x-table": "comments"
+			},
+			"CommentRead": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"readAt": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991
+					}
+				},
+				"required": [
+					"id",
+					"readAt"
+				],
+				"additionalProperties": false,
+				"x-table": "reads"
 			},
 			"Settings": {
 				"type": "object",
@@ -2093,8 +2357,91 @@
 					"completed",
 					"reopened",
 					"deleted",
-					"restored"
+					"restored",
+					"commented"
 				]
+			},
+			"TaskComments": {
+				"type": "object",
+				"properties": {
+					"comments": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/TaskComment"
+						}
+					}
+				},
+				"required": [
+					"comments"
+				],
+				"additionalProperties": false
+			},
+			"TaskComment": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"taskId": {
+						"type": "string"
+					},
+					"body": {
+						"type": "string"
+					},
+					"authorId": {
+						"type": [
+							"string",
+							"null"
+						]
+					},
+					"createdAt": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991
+					},
+					"editedAt": {
+						"anyOf": [
+							{
+								"type": "integer",
+								"minimum": -9007199254740991,
+								"maximum": 9007199254740991
+							},
+							{
+								"type": "null"
+							}
+						]
+					},
+					"author": {
+						"$ref": "#/components/schemas/Person"
+					}
+				},
+				"required": [
+					"id",
+					"taskId",
+					"body",
+					"authorId",
+					"createdAt",
+					"editedAt",
+					"author"
+				],
+				"additionalProperties": false,
+				"description": "A comment on a task with its author, for the agent command API."
+			},
+			"NewComment": {
+				"type": "object",
+				"properties": {
+					"taskId": {
+						"type": "string"
+					},
+					"body": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"taskId",
+					"body"
+				],
+				"description": "A comment the agent command API adds. A blank body is refused."
 			}
 		}
 	},
@@ -2109,7 +2456,7 @@
 			"post": {
 				"operationId": "sync",
 				"summary": "Sync the space",
-				"description": "The apps’ replication protocol. `{ \"cursor\": 0, \"ops\": [] }` answers with the whole visible snapshot. A task op is applied when the task is editable before and after it; project and label ops are acknowledged and dropped.",
+				"description": "The apps’ replication protocol. `{ \"cursor\": 0, \"ops\": [] }` answers with the whole visible snapshot. A task op is applied when the task is editable before and after it, and a comment op when its task is editable and the comment is new or the caller’s own; project and label ops are acknowledged and dropped.",
 				"parameters": [
 					{
 						"in": "query",
@@ -2854,6 +3201,450 @@
 							"application/json": {
 								"schema": {
 									"$ref": "#/components/schemas/Activity"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Unauthorized"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "403",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Forbidden"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "404",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/NotFound"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/ServiceUnavailable"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/comments": {
+			"get": {
+				"operationId": "comments.list",
+				"summary": "A task’s comments",
+				"description": "`id` is the task’s. Oldest first, each with its author.",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "space",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true
+					},
+					{
+						"in": "query",
+						"name": "id",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true,
+						"required": true
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/TaskComments"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Unauthorized"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "403",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Forbidden"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "404",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/NotFound"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/ServiceUnavailable"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			},
+			"post": {
+				"operationId": "comments.create",
+				"summary": "Comment on a task",
+				"description": "Needs the task editable. Links in `body` show as links in the apps. The caller is the author.",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "space",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/NewComment"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/TaskComment"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Unauthorized"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "403",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Forbidden"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "404",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/NotFound"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/ServiceUnavailable"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			},
+			"patch": {
+				"operationId": "comments.update",
+				"summary": "Edit your comment",
+				"description": "`id` is the comment’s. Only its author may edit it.",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "space",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true
+					},
+					{
+						"in": "query",
+						"name": "id",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true,
+						"required": true
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"body": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"body"
+								]
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/TaskComment"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Unauthorized"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "403",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Forbidden"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "404",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/NotFound"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/ServiceUnavailable"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			},
+			"delete": {
+				"operationId": "comments.delete",
+				"summary": "Delete your comment",
+				"description": "`id` is the comment’s. Only its author may delete it.",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "space",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true
+					},
+					{
+						"in": "query",
+						"name": "id",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true,
+						"required": true
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Ok"
 								}
 							}
 						}

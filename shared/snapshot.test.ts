@@ -131,6 +131,17 @@ const webDocument: snapshot.Snapshot = {
 		},
 	],
 	labels: [{ id: 'l-health', name: 'health', createdAt: 1_791_800_000_002 }],
+	comments: [
+		{
+			id: 'c-1',
+			taskId: 'a0d6b1e2-0001-4c1e-9b1e-000000000001',
+			body: 'Ask about https://example.com/form',
+			authorId: 'u-me',
+			createdAt: 1_791_900_000_100,
+			editedAt: null,
+		},
+	],
+	reads: [{ id: 't-ana-1', readAt: 1_791_960_000_000 }],
 	remindersCheckedAt: 1_791_972_000_000,
 	sync: {
 		deviceId: 'd-phone',
@@ -171,6 +182,16 @@ const webDocument: snapshot.Snapshot = {
 			projects: [{ id: 'p-ana', name: 'Studio', createdAt: 1_791_800_000_010 }],
 			sections: [{ id: 's-ana', projectId: 'p-ana', name: 'Walls', order: 0, createdAt: 1_791_800_000_011 }],
 			labels: [],
+			comments: [
+				{
+					id: 'c-ana',
+					taskId: 't-ana-1',
+					body: 'Two coats',
+					authorId: 'u-ana',
+					createdAt: 1_791_950_000_000,
+					editedAt: 1_791_950_100_000,
+				},
+			],
 		},
 	},
 	people: [ana],
@@ -316,6 +337,8 @@ describe('parseSnapshot', () => {
 			projects: [],
 			sections: [],
 			labels: [],
+			comments: [],
+			reads: [],
 			remindersCheckedAt: 10,
 			spaces: {},
 			people: [],

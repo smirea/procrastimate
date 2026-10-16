@@ -3,6 +3,7 @@ import { ZodToJsonSchemaConverter } from '@orpc/zod';
 import { z } from 'zod';
 import { agentContract, contract } from '../../shared/api/contract';
 // Register the shared model's schemas that no endpoint uses.
+import '../../shared/comments';
 import '../../shared/dictation';
 import '../../shared/format';
 import '../../shared/links';

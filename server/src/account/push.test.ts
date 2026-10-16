@@ -109,8 +109,7 @@ describe.each(storeFactories)('server-computed push on the %s store', (_name, cr
 
 	const addTask = (added: Task) => (snapshot: Snapshot) => ({ ...snapshot, tasks: [...snapshot.tasks, added] });
 	const complete = (id: string, now: number) => (snapshot: Snapshot) => {
-		const { tasks, projects, sections, labels } = snapshot;
-		return { ...snapshot, ...completeTask({ tasks, projects, sections, labels }, id, '2026-10-10', now)!.data };
+		return { ...snapshot, ...completeTask(snapshot, id, '2026-10-10', now)!.data };
 	};
 
 	test('a change on one device notifies every subscribed device once, at its time', async () => {

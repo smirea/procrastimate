@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import * as subtasks from './subtasks.ts';
 import { bySiblingOrder, moveOrders } from './sync/order.ts';
-import { labelSchema, projectSchema, sectionSchema, taskSchema } from './sync/protocol.ts';
+import { commentSchema, labelSchema, projectSchema, readSchema, sectionSchema, taskSchema } from './sync/protocol.ts';
 import { DEFAULT_PRIORITY, type DateKey, type Label, type Project, type Section, type Task } from './task.ts';
 
 /**
@@ -14,10 +14,14 @@ export const storeDataSchema = z
 		projects: z.array(projectSchema),
 		sections: z.array(sectionSchema),
 		labels: z.array(labelSchema),
+		comments: z.array(commentSchema),
+		/** Only the user's own space holds read markers; a shared space's stay empty. */
+		reads: z.array(readSchema),
 	})
 	.meta({
 		id: 'StoreData',
-		description: 'Everything the store holds that syncs: tasks, projects, sections, and labels.',
+		description:
+			'Everything the store holds that syncs: tasks, projects, sections, labels, comments, and read markers.',
 	});
 export type StoreData = z.infer<typeof storeDataSchema>;
 

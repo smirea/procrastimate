@@ -157,10 +157,7 @@ public enum SyncEngine {
         let deviceId = snapshot.sync?.deviceId ?? UUID().uuidString.lowercased()
         let timeZone = snapshot.sync?.timeZone ?? "UTC"
         let clock = snapshot.sync?.clock ?? "0:0:\(deviceId)"
-        snapshot.tasks = []
-        snapshot.projects = []
-        snapshot.sections = []
-        snapshot.labels = []
+        snapshot.data = StoreData()
         snapshot.spaces = [:]
         snapshot.people = []
         snapshot.sync = SyncSection(
@@ -176,10 +173,7 @@ public enum SyncEngine {
 
     /// Empties tasks, projects, sections, and labels, and asks the next sync to wipe them on the server.
     public static func deleteAll(_ snapshot: inout Snapshot) {
-        snapshot.tasks = []
-        snapshot.projects = []
-        snapshot.sections = []
-        snapshot.labels = []
+        snapshot.data = StoreData()
         guard var sync = snapshot.sync else { return }
         sync.cursor = 0
         sync.outbox = []
@@ -263,6 +257,8 @@ public enum SyncEngine {
             snapshot.projects = decoded.projects.sorted(by: byCreation)
             snapshot.sections = decoded.sections.sorted(by: byCreation)
             snapshot.labels = decoded.labels.sorted(by: byCreation)
+            snapshot.comments = decoded.comments.sorted(by: byCreation)
+            snapshot.reads = decoded.reads.sorted { $0.id < $1.id }
             sync.dictation = decoded.settings.dictation
             sync.quickAddButtons = decoded.settings.quickAddButtons
             if let zone = decoded.settings.timeZone { sync.timeZone = zone }
@@ -316,6 +312,8 @@ public enum SyncEngine {
             case "project": snapshot.projects.removeAll { $0.id == id }
             case "section": snapshot.sections.removeAll { $0.id == id }
             case "label": snapshot.labels.removeAll { $0.id == id }
+            case "comment": snapshot.comments.removeAll { $0.id == id }
+            case "read": snapshot.reads.removeAll { $0.id == id }
             default: break
             }
             return
@@ -327,6 +325,8 @@ public enum SyncEngine {
             merge(&snapshot.sections, id: id, fields: fields)
             snapshot.sections.sort(by: byCreation)
         case "label": merge(&snapshot.labels, id: id, fields: fields)
+        case "comment": merge(&snapshot.comments, id: id, fields: fields)
+        case "read": merge(&snapshot.reads, id: id, fields: fields)
         case "settings":
             guard var sync = snapshot.sync else { break }
             if let zone = fields["timeZone"] as? String { sync.timeZone = zone }
@@ -356,6 +356,8 @@ private func diff(before: StoreData, after: StoreData) -> [SyncPatch] {
     patches += entityDiff(kind: .section, before: before.sections.map(fieldsOf), after: after.sections.map(fieldsOf))
     patches += entityDiff(kind: .label, before: before.labels.map(fieldsOf), after: after.labels.map(fieldsOf))
     patches += entityDiff(kind: .task, before: before.tasks.map(fieldsOf), after: after.tasks.map(fieldsOf))
+    patches += entityDiff(kind: .comment, before: before.comments.map { jsonObject($0) }, after: after.comments.map { jsonObject($0) })
+    patches += entityDiff(kind: .read, before: before.reads.map { jsonObject($0) }, after: after.reads.map { jsonObject($0) })
     return patches
 }
 
@@ -483,6 +485,7 @@ private func createdAt<T>(of value: T) -> Int {
     if let project = value as? Project { return project.createdAt }
     if let section = value as? ProjectSection { return section.createdAt }
     if let label = value as? Label { return label.createdAt }
+    if let comment = value as? Comment { return comment.createdAt }
     return 0
 }
 

@@ -13,6 +13,19 @@ export const apiTokensRowSchema = z.object({
 	lastUsedAt: z.number().int().nullable(),
 });
 
+/** A `comments` row. */
+export const commentsRowSchema = z.object({
+	userId: z.string(),
+	id: z.string(),
+	taskId: z.string(),
+	body: z.string(),
+	authorId: z.string().nullable(),
+	createdAt: z.number().int(),
+	editedAt: z.number().int().nullable(),
+	deleted: z.boolean(),
+	clocks: COLUMN_VALUES.comments.clocks,
+});
+
 /** A `devices` row. */
 export const devicesRowSchema = z.object({
 	userId: z.string(),
@@ -39,7 +52,7 @@ export const logRowSchema = z.object({
 	userId: z.string(),
 	seq: z.number().int(),
 	opId: z.string(),
-	kind: z.enum(["project","section","label","task","settings"]),
+	kind: z.enum(["project","section","label","task","comment","read","settings"]),
 	id: z.string(),
 	fields: COLUMN_VALUES.log.fields,
 	actor: z.string(),
@@ -101,6 +114,15 @@ export const rambleUsageRowSchema = z.object({
 	userId: z.string(),
 	day: z.string(),
 	seconds: z.number(),
+});
+
+/** A `reads` row. */
+export const readsRowSchema = z.object({
+	userId: z.string(),
+	id: z.string(),
+	readAt: z.number().int(),
+	deleted: z.boolean(),
+	clocks: COLUMN_VALUES.reads.clocks,
 });
 
 /** A `sections` row. */

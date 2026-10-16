@@ -44,9 +44,22 @@ export const accountSnapshot = (store: AccountStore) => serverSnapshot(loadState
  * when it is reopened. They travel with the same clock as the fields they describe, so they win and lose together.
  */
 type TaskFields = Partial<FieldsByKind['task']> & { deleted?: boolean };
+type CommentFields = Partial<FieldsByKind['comment']> & { deleted?: boolean };
+
+/**
+ * A new comment's author is whoever sent it. Once a comment exists only its author may change it, and never its task
+ * or creation time, so an op from anyone else on an existing comment keeps no fields.
+ */
+function stampComment(before: ServerState, op: Op, actor: string): Op {
+	const { authorId: _, taskId, createdAt, ...fields } = op.fields as CommentFields;
+	const existing = before.entities.get(entityKey('comment', op.id));
+	if (!existing) return { ...op, fields: { ...fields, taskId, createdAt, authorId: actor } } as Op;
+	return { ...op, fields: existing.data.authorId === actor ? fields : {} } as Op;
+}
 
 function stampAuthorship(before: ServerState, ops: readonly Op[], actor: string): Op[] {
 	return ops.map(op => {
+		if (op.kind === 'comment') return stampComment(before, op, actor);
 		if (op.kind !== 'task') return op;
 		const { createdBy: _, completedBy: __, ...fields } = op.fields as TaskFields;
 		const stamped: TaskFields = { ...fields };
@@ -140,7 +153,7 @@ export function guestSync(
 	return store.transaction(() => {
 		const epoch = store.epoch();
 		const before = loadState(store);
-		const { admitted, refused } = admit(serverSnapshot(before), grants, request.ops);
+		const { admitted, refused } = admit(serverSnapshot(before), grants, request.ops, actor);
 		const pushed = push(store, before, admitted, now, actor);
 		for (const op of refused) {
 			if (store.hasOp(op.opId)) continue;

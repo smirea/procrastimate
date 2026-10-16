@@ -21,7 +21,7 @@ import Testing
     @Test func aResponseDecodesTheSnapshotOrTheChanges() throws {
         let snapshot = try JSONDecoder().decode(
             API.SyncResponse.self,
-            from: Data(#"{"acked":[],"cursor":0,"hlc":"1:0:server","epoch":0,"snapshot":{"tasks":[],"projects":[],"sections":[],"labels":[],"settings":{"timeZone":null,"dictation":"native","quickAddButtons":["date"]}}}"#.utf8)
+            from: Data(#"{"acked":[],"cursor":0,"hlc":"1:0:server","epoch":0,"snapshot":{"tasks":[],"projects":[],"sections":[],"labels":[],"comments":[],"reads":[],"settings":{"timeZone":null,"dictation":"native","quickAddButtons":["date"]}}}"#.utf8)
         )
         guard case .snapshot = snapshot else { Issue.record("expected a snapshot"); return }
         let changes = try JSONDecoder().decode(

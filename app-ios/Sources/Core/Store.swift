@@ -98,7 +98,8 @@ public final class Store {
                 tasks: section.tasks,
                 projects: section.projects,
                 sections: section.sections,
-                labels: section.labels
+                labels: section.labels,
+                comments: section.comments
             )
         }
     }
@@ -422,6 +423,57 @@ public final class Store {
         let (data, summary) = Todoist.mergeBackup(snapshot.data, backup, newId: newId, now: clock.now.epochMilliseconds)
         commit(data)
         return summary
+    }
+
+    /// Every comment this user can see, own and shared.
+    public var allComments: [Comment] { snapshot.comments + snapshot.spaces.values.flatMap(\.comments) }
+
+    /// One task's comments, oldest first.
+    public func comments(on taskID: String) -> [Comment] { Comments.commentsOn(allComments, taskID) }
+
+    /// A task's comment count and how many of them someone else wrote since `me` last read it, or nil without any.
+    public func commentBadge(_ taskID: String, me: String?) -> CommentBadge? {
+        Comments.commentBadges(allComments.filter { $0.taskId == taskID }, snapshot.reads, me)[taskID]
+    }
+
+    /// Comments are written in the task's space, so only someone who may edit the task can comment on it.
+    @discardableResult
+    public func addComment(_ taskID: String, _ body: String, by me: String) -> Comment? {
+        guard let space = space(ofTask: taskID), !isReadOnly(taskID) else { return nil }
+        let (next, comment) = Comments.addComment(data(in: space), taskID, body, me, creation())
+        guard comment != nil else { return nil }
+        commit(next, in: space)
+        return comment
+    }
+
+    public func editComment(_ id: String, _ body: String, by me: String) {
+        guard let comment = allComments.first(where: { $0.id == id }) else { return }
+        let now = clock.now.epochMilliseconds
+        edit(comment.taskId) { Comments.editComment($0, id, body, me, now) }
+    }
+
+    /// Deletes `me`'s own comment and returns it for undo.
+    @discardableResult
+    public func deleteComment(_ id: String, by me: String) -> Comment? {
+        guard let comment = allComments.first(where: { $0.id == id && $0.authorId == me }) else { return nil }
+        edit(comment.taskId) { Comments.deleteComment($0, id, me) }
+        return comment
+    }
+
+    public func undeleteComment(_ comment: Comment) {
+        edit(comment.taskId) { data in
+            guard !data.comments.contains(where: { $0.id == comment.id }) else { return data }
+            var next = data
+            next.comments.append(comment)
+            return next
+        }
+    }
+
+    /// The marker goes into the user's own space, whichever space holds the task.
+    public func markCommentsRead(_ taskID: String, by me: String) {
+        let next = Comments.markRead(snapshot.data, taskID, allComments, me, clock.now.epochMilliseconds)
+        guard next != snapshot.data else { return }
+        commit(next)
     }
 
     /// Device-local, so it changes the document without being a synced change.

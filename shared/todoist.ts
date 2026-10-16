@@ -394,5 +394,5 @@ export function mergeBackup(
 		imported.set(task.sourceKey!, task);
 		summary.tasks++;
 	}
-	return { state: { tasks, projects, sections, labels }, summary };
+	return { state: { ...state, tasks, projects, sections, labels }, summary };
 }

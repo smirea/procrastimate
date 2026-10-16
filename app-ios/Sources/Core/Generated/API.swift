@@ -108,6 +108,7 @@ extension API {
         case reopened = "reopened"
         case deleted = "deleted"
         case restored = "restored"
+        case commented = "commented"
 
         public var id: String { rawValue }
     }
@@ -537,6 +538,8 @@ extension API {
         case project(ChangeProject)
         case section(ChangeSection)
         case label(ChangeLabel)
+        case comment(ChangeComment)
+        case read(ChangeRead)
         case settings(ChangeSettings)
 
         private enum TagKey: String, CodingKey {
@@ -550,6 +553,8 @@ extension API {
             case "project": self = .project(try ChangeProject(from: decoder))
             case "section": self = .section(try ChangeSection(from: decoder))
             case "label": self = .label(try ChangeLabel(from: decoder))
+            case "comment": self = .comment(try ChangeComment(from: decoder))
+            case "read": self = .read(try ChangeRead(from: decoder))
             case "settings": self = .settings(try ChangeSettings(from: decoder))
             default:
                 throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unknown kind \(tag)"))
@@ -571,10 +576,59 @@ extension API {
             case let .label(value):
                 try container.encode("label", forKey: .tag)
                 try value.encode(to: encoder)
+            case let .comment(value):
+                try container.encode("comment", forKey: .tag)
+                try value.encode(to: encoder)
+            case let .read(value):
+                try container.encode("read", forKey: .tag)
+                try value.encode(to: encoder)
             case let .settings(value):
                 try container.encode("settings", forKey: .tag)
                 try value.encode(to: encoder)
             }
+        }
+    }
+
+    public struct ChangeComment: Codable, Hashable, Sendable, Identifiable {
+        public var id: String
+        public var fields: CommentPatchFields
+        public var opId: String
+        public var seq: Int
+
+        public init(id: String, fields: CommentPatchFields, opId: String, seq: Int) {
+            self.id = id
+            self.fields = fields
+            self.opId = opId
+            self.seq = seq
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case id = "id"
+            case fields = "fields"
+            case opId = "opId"
+            case seq = "seq"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            id = try container.decode(String.self, forKey: .id)
+            fields = try container.decode(CommentPatchFields.self, forKey: .fields)
+            opId = try container.decode(String.self, forKey: .opId)
+            seq = try container.decode(Int.self, forKey: .seq)
+            if decoder.validates {
+                do {
+                    let value = self.seq
+                    try check(value > 0, .seq, in: container, "seq above 0")
+                }
+            }
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.id, forKey: .id)
+            try container.encode(self.fields, forKey: .fields)
+            try container.encode(self.opId, forKey: .opId)
+            try container.encode(self.seq, forKey: .seq)
         }
     }
 
@@ -645,6 +699,49 @@ extension API {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             id = try container.decode(String.self, forKey: .id)
             fields = try container.decode(ProjectPatchFields.self, forKey: .fields)
+            opId = try container.decode(String.self, forKey: .opId)
+            seq = try container.decode(Int.self, forKey: .seq)
+            if decoder.validates {
+                do {
+                    let value = self.seq
+                    try check(value > 0, .seq, in: container, "seq above 0")
+                }
+            }
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.id, forKey: .id)
+            try container.encode(self.fields, forKey: .fields)
+            try container.encode(self.opId, forKey: .opId)
+            try container.encode(self.seq, forKey: .seq)
+        }
+    }
+
+    public struct ChangeRead: Codable, Hashable, Sendable, Identifiable {
+        public var id: String
+        public var fields: CommentReadPatchFields
+        public var opId: String
+        public var seq: Int
+
+        public init(id: String, fields: CommentReadPatchFields, opId: String, seq: Int) {
+            self.id = id
+            self.fields = fields
+            self.opId = opId
+            self.seq = seq
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case id = "id"
+            case fields = "fields"
+            case opId = "opId"
+            case seq = "seq"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            id = try container.decode(String.self, forKey: .id)
+            fields = try container.decode(CommentReadPatchFields.self, forKey: .fields)
             opId = try container.decode(String.self, forKey: .opId)
             seq = try container.decode(Int.self, forKey: .seq)
             if decoder.validates {
@@ -790,6 +887,290 @@ extension API {
             try container.encode(self.fields, forKey: .fields)
             try container.encode(self.opId, forKey: .opId)
             try container.encode(self.seq, forKey: .seq)
+        }
+    }
+
+    public struct Comment: Codable, Hashable, Sendable, Identifiable {
+        public var id: String
+        public var taskId: String
+        public var body: String
+        public var authorId: String?
+        public var createdAt: Int
+        public var editedAt: Int?
+
+        public init(id: String, taskId: String, body: String, authorId: String? = nil, createdAt: Int, editedAt: Int? = nil) {
+            self.id = id
+            self.taskId = taskId
+            self.body = body
+            self.authorId = authorId
+            self.createdAt = createdAt
+            self.editedAt = editedAt
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case id = "id"
+            case taskId = "taskId"
+            case body = "body"
+            case authorId = "authorId"
+            case createdAt = "createdAt"
+            case editedAt = "editedAt"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            id = try container.decode(String.self, forKey: .id)
+            taskId = try container.decode(String.self, forKey: .taskId)
+            body = try container.decode(String.self, forKey: .body)
+            authorId = try container.decode(String?.self, forKey: .authorId)
+            createdAt = try container.decode(Int.self, forKey: .createdAt)
+            editedAt = try container.decode(Int?.self, forKey: .editedAt)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.id, forKey: .id)
+            try container.encode(self.taskId, forKey: .taskId)
+            try container.encode(self.body, forKey: .body)
+            try container.encode(self.authorId, forKey: .authorId)
+            try container.encode(self.createdAt, forKey: .createdAt)
+            try container.encode(self.editedAt, forKey: .editedAt)
+        }
+    }
+
+    /// How many comments a task has, and how many someone else wrote unread.
+    public struct CommentBadge: Codable, Hashable, Sendable {
+        public var count: Int
+        public var unread: Int
+
+        public init(count: Int, unread: Int) {
+            self.count = count
+            self.unread = unread
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case count = "count"
+            case unread = "unread"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            count = try container.decode(Int.self, forKey: .count)
+            unread = try container.decode(Int.self, forKey: .unread)
+            if decoder.validates {
+                do {
+                    let value = self.count
+                    try check(value >= 0, .count, in: container, "count at least 0")
+                }
+                do {
+                    let value = self.unread
+                    try check(value >= 0, .unread, in: container, "unread at least 0")
+                }
+            }
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.count, forKey: .count)
+            try container.encode(self.unread, forKey: .unread)
+        }
+    }
+
+    public struct CommentPatch: Codable, Hashable, Sendable, Identifiable {
+        public var kind: CommentPatchKind
+        public var id: String
+        public var fields: CommentPatchFields
+
+        public init(kind: CommentPatchKind, id: String, fields: CommentPatchFields) {
+            self.kind = kind
+            self.id = id
+            self.fields = fields
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case kind = "kind"
+            case id = "id"
+            case fields = "fields"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            kind = try container.decode(CommentPatchKind.self, forKey: .kind)
+            id = try container.decode(String.self, forKey: .id)
+            fields = try container.decode(CommentPatchFields.self, forKey: .fields)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.kind, forKey: .kind)
+            try container.encode(self.id, forKey: .id)
+            try container.encode(self.fields, forKey: .fields)
+        }
+    }
+
+    public struct CommentPatchFields: Codable, Hashable, Sendable {
+        public var taskId: String?
+        public var body: String?
+        public var authorId: String??
+        public var createdAt: Int?
+        public var editedAt: Int??
+        public var deleted: Bool?
+
+        public init(taskId: String? = nil, body: String? = nil, authorId: String?? = nil, createdAt: Int? = nil, editedAt: Int?? = nil, deleted: Bool? = nil) {
+            self.taskId = taskId
+            self.body = body
+            self.authorId = authorId
+            self.createdAt = createdAt
+            self.editedAt = editedAt
+            self.deleted = deleted
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case taskId = "taskId"
+            case body = "body"
+            case authorId = "authorId"
+            case createdAt = "createdAt"
+            case editedAt = "editedAt"
+            case deleted = "deleted"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            taskId = try container.decodeAbsent(String.self, forKey: .taskId)
+            body = try container.decodeAbsent(String.self, forKey: .body)
+            authorId = try container.decodeNullable(String.self, forKey: .authorId)
+            createdAt = try container.decodeAbsent(Int.self, forKey: .createdAt)
+            editedAt = try container.decodeNullable(Int.self, forKey: .editedAt)
+            deleted = try container.decodeAbsent(Bool.self, forKey: .deleted)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encodeIfPresent(self.taskId, forKey: .taskId)
+            try container.encodeIfPresent(self.body, forKey: .body)
+            try container.encodeNullable(self.authorId, forKey: .authorId)
+            try container.encodeIfPresent(self.createdAt, forKey: .createdAt)
+            try container.encodeNullable(self.editedAt, forKey: .editedAt)
+            try container.encodeIfPresent(self.deleted, forKey: .deleted)
+        }
+    }
+
+    public enum CommentPatchKind: String, Codable, Hashable, Sendable, CaseIterable, Identifiable {
+        case comment = "comment"
+
+        public var id: String { rawValue }
+    }
+
+    public struct CommentRead: Codable, Hashable, Sendable, Identifiable {
+        public var id: String
+        public var readAt: Int
+
+        public init(id: String, readAt: Int) {
+            self.id = id
+            self.readAt = readAt
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case id = "id"
+            case readAt = "readAt"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            id = try container.decode(String.self, forKey: .id)
+            readAt = try container.decode(Int.self, forKey: .readAt)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.id, forKey: .id)
+            try container.encode(self.readAt, forKey: .readAt)
+        }
+    }
+
+    public struct CommentReadPatch: Codable, Hashable, Sendable, Identifiable {
+        public var kind: CommentReadPatchKind
+        public var id: String
+        public var fields: CommentReadPatchFields
+
+        public init(kind: CommentReadPatchKind, id: String, fields: CommentReadPatchFields) {
+            self.kind = kind
+            self.id = id
+            self.fields = fields
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case kind = "kind"
+            case id = "id"
+            case fields = "fields"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            kind = try container.decode(CommentReadPatchKind.self, forKey: .kind)
+            id = try container.decode(String.self, forKey: .id)
+            fields = try container.decode(CommentReadPatchFields.self, forKey: .fields)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.kind, forKey: .kind)
+            try container.encode(self.id, forKey: .id)
+            try container.encode(self.fields, forKey: .fields)
+        }
+    }
+
+    public struct CommentReadPatchFields: Codable, Hashable, Sendable {
+        public var readAt: Int?
+        public var deleted: Bool?
+
+        public init(readAt: Int? = nil, deleted: Bool? = nil) {
+            self.readAt = readAt
+            self.deleted = deleted
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case readAt = "readAt"
+            case deleted = "deleted"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            readAt = try container.decodeAbsent(Int.self, forKey: .readAt)
+            deleted = try container.decodeAbsent(Bool.self, forKey: .deleted)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encodeIfPresent(self.readAt, forKey: .readAt)
+            try container.encodeIfPresent(self.deleted, forKey: .deleted)
+        }
+    }
+
+    public enum CommentReadPatchKind: String, Codable, Hashable, Sendable, CaseIterable, Identifiable {
+        case read = "read"
+
+        public var id: String { rawValue }
+    }
+
+    public struct CommentsUpdateInput: Codable, Hashable, Sendable {
+        public var body: String
+
+        public init(body: String) {
+            self.body = body
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case body = "body"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            body = try container.decode(String.self, forKey: .body)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.body, forKey: .body)
         }
     }
 
@@ -1090,6 +1471,8 @@ extension API {
         case section = "section"
         case label = "label"
         case task = "task"
+        case comment = "comment"
+        case read = "read"
         case settings = "settings"
 
         public var id: String { rawValue }
@@ -1781,6 +2164,34 @@ extension API {
         }
     }
 
+    /// A comment the agent command API adds. A blank body is refused.
+    public struct NewComment: Codable, Hashable, Sendable {
+        public var taskId: String
+        public var body: String
+
+        public init(taskId: String, body: String) {
+            self.taskId = taskId
+            self.body = body
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case taskId = "taskId"
+            case body = "body"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            taskId = try container.decode(String.self, forKey: .taskId)
+            body = try container.decode(String.self, forKey: .body)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.taskId, forKey: .taskId)
+            try container.encode(self.body, forKey: .body)
+        }
+    }
+
     public struct NewShare: Codable, Hashable, Sendable {
         public var target: ShareTarget
         public var audience: ShareAudience
@@ -1953,6 +2364,8 @@ extension API {
         case project(OpProject)
         case section(OpSection)
         case label(OpLabel)
+        case comment(OpComment)
+        case read(OpRead)
         case settings(OpSettings)
 
         private enum TagKey: String, CodingKey {
@@ -1966,6 +2379,8 @@ extension API {
             case "project": self = .project(try OpProject(from: decoder))
             case "section": self = .section(try OpSection(from: decoder))
             case "label": self = .label(try OpLabel(from: decoder))
+            case "comment": self = .comment(try OpComment(from: decoder))
+            case "read": self = .read(try OpRead(from: decoder))
             case "settings": self = .settings(try OpSettings(from: decoder))
             default:
                 throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unknown kind \(tag)"))
@@ -1987,10 +2402,59 @@ extension API {
             case let .label(value):
                 try container.encode("label", forKey: .tag)
                 try value.encode(to: encoder)
+            case let .comment(value):
+                try container.encode("comment", forKey: .tag)
+                try value.encode(to: encoder)
+            case let .read(value):
+                try container.encode("read", forKey: .tag)
+                try value.encode(to: encoder)
             case let .settings(value):
                 try container.encode("settings", forKey: .tag)
                 try value.encode(to: encoder)
             }
+        }
+    }
+
+    public struct OpComment: Codable, Hashable, Sendable, Identifiable {
+        public var id: String
+        public var fields: CommentPatchFields
+        public var opId: String
+        public var hlc: Hlc
+
+        public init(id: String, fields: CommentPatchFields, opId: String, hlc: Hlc) {
+            self.id = id
+            self.fields = fields
+            self.opId = opId
+            self.hlc = hlc
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case id = "id"
+            case fields = "fields"
+            case opId = "opId"
+            case hlc = "hlc"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            id = try container.decode(String.self, forKey: .id)
+            fields = try container.decode(CommentPatchFields.self, forKey: .fields)
+            opId = try container.decode(String.self, forKey: .opId)
+            hlc = try container.decode(Hlc.self, forKey: .hlc)
+            if decoder.validates {
+                do {
+                    let value = self.hlc
+                    try check(isHlc(value), .hlc, in: container, "hlc passing isHlc")
+                }
+            }
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.id, forKey: .id)
+            try container.encode(self.fields, forKey: .fields)
+            try container.encode(self.opId, forKey: .opId)
+            try container.encode(self.hlc, forKey: .hlc)
         }
     }
 
@@ -2061,6 +2525,49 @@ extension API {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             id = try container.decode(String.self, forKey: .id)
             fields = try container.decode(ProjectPatchFields.self, forKey: .fields)
+            opId = try container.decode(String.self, forKey: .opId)
+            hlc = try container.decode(Hlc.self, forKey: .hlc)
+            if decoder.validates {
+                do {
+                    let value = self.hlc
+                    try check(isHlc(value), .hlc, in: container, "hlc passing isHlc")
+                }
+            }
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.id, forKey: .id)
+            try container.encode(self.fields, forKey: .fields)
+            try container.encode(self.opId, forKey: .opId)
+            try container.encode(self.hlc, forKey: .hlc)
+        }
+    }
+
+    public struct OpRead: Codable, Hashable, Sendable, Identifiable {
+        public var id: String
+        public var fields: CommentReadPatchFields
+        public var opId: String
+        public var hlc: Hlc
+
+        public init(id: String, fields: CommentReadPatchFields, opId: String, hlc: Hlc) {
+            self.id = id
+            self.fields = fields
+            self.opId = opId
+            self.hlc = hlc
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case id = "id"
+            case fields = "fields"
+            case opId = "opId"
+            case hlc = "hlc"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            id = try container.decode(String.self, forKey: .id)
+            fields = try container.decode(CommentReadPatchFields.self, forKey: .fields)
             opId = try container.decode(String.self, forKey: .opId)
             hlc = try container.decode(Hlc.self, forKey: .hlc)
             if decoder.validates {
@@ -3614,16 +4121,20 @@ extension API {
         public var projects: [Project]
         public var sections: [ProjectSection]
         public var labels: [Label]
+        public var comments: [Comment]
+        public var reads: [CommentRead]
         public var remindersCheckedAt: Int
         public var sync: SyncSection?
         public var spaces: [String: SpaceSection]
         public var people: [Person]
 
-        public init(tasks: [Task] = [], projects: [Project] = [], sections: [ProjectSection] = [], labels: [Label] = [], remindersCheckedAt: Int, sync: SyncSection? = nil, spaces: [String: SpaceSection] = [:], people: [Person] = []) {
+        public init(tasks: [Task] = [], projects: [Project] = [], sections: [ProjectSection] = [], labels: [Label] = [], comments: [Comment] = [], reads: [CommentRead] = [], remindersCheckedAt: Int, sync: SyncSection? = nil, spaces: [String: SpaceSection] = [:], people: [Person] = []) {
             self.tasks = tasks
             self.projects = projects
             self.sections = sections
             self.labels = labels
+            self.comments = comments
+            self.reads = reads
             self.remindersCheckedAt = remindersCheckedAt
             self.sync = sync
             self.spaces = spaces
@@ -3635,6 +4146,8 @@ extension API {
             case projects = "projects"
             case sections = "sections"
             case labels = "labels"
+            case comments = "comments"
+            case reads = "reads"
             case remindersCheckedAt = "remindersCheckedAt"
             case sync = "sync"
             case spaces = "spaces"
@@ -3647,6 +4160,8 @@ extension API {
             try container.encode(self.projects, forKey: .projects)
             try container.encode(self.sections, forKey: .sections)
             try container.encode(self.labels, forKey: .labels)
+            try container.encode(self.comments, forKey: .comments)
+            try container.encode(self.reads, forKey: .reads)
             try container.encode(self.remindersCheckedAt, forKey: .remindersCheckedAt)
             try container.encodeIfPresent(self.sync, forKey: .sync)
             try container.encode(self.spaces, forKey: .spaces)
@@ -3716,8 +4231,9 @@ extension API {
         public var projects: [Project]
         public var sections: [ProjectSection]
         public var labels: [Label]
+        public var comments: [Comment]
 
-        public init(owner: Person, cursor: Int, outbox: [SyncOp] = [], epoch: Int = 0, scope: String = "", readOnly: [String] = [], targets: [ShareTarget] = [], tasks: [Task] = [], projects: [Project] = [], sections: [ProjectSection] = [], labels: [Label] = []) {
+        public init(owner: Person, cursor: Int, outbox: [SyncOp] = [], epoch: Int = 0, scope: String = "", readOnly: [String] = [], targets: [ShareTarget] = [], tasks: [Task] = [], projects: [Project] = [], sections: [ProjectSection] = [], labels: [Label] = [], comments: [Comment] = []) {
             self.owner = owner
             self.cursor = cursor
             self.outbox = outbox
@@ -3729,6 +4245,7 @@ extension API {
             self.projects = projects
             self.sections = sections
             self.labels = labels
+            self.comments = comments
         }
 
         enum CodingKeys: String, CodingKey {
@@ -3743,6 +4260,7 @@ extension API {
             case projects = "projects"
             case sections = "sections"
             case labels = "labels"
+            case comments = "comments"
         }
 
         public func encode(to encoder: Encoder) throws {
@@ -3758,6 +4276,7 @@ extension API {
             try container.encode(self.projects, forKey: .projects)
             try container.encode(self.sections, forKey: .sections)
             try container.encode(self.labels, forKey: .labels)
+            try container.encode(self.comments, forKey: .comments)
         }
     }
 
@@ -3804,18 +4323,22 @@ extension API {
         }
     }
 
-    /// Everything the store holds that syncs: tasks, projects, sections, and labels.
+    /// Everything the store holds that syncs: tasks, projects, sections, labels, comments, and read markers.
     public struct StoreData: Codable, Hashable, Sendable {
         public var tasks: [Task]
         public var projects: [Project]
         public var sections: [ProjectSection]
         public var labels: [Label]
+        public var comments: [Comment]
+        public var reads: [CommentRead]
 
-        public init(tasks: [Task] = [], projects: [Project] = [], sections: [ProjectSection] = [], labels: [Label] = []) {
+        public init(tasks: [Task] = [], projects: [Project] = [], sections: [ProjectSection] = [], labels: [Label] = [], comments: [Comment] = [], reads: [CommentRead] = []) {
             self.tasks = tasks
             self.projects = projects
             self.sections = sections
             self.labels = labels
+            self.comments = comments
+            self.reads = reads
         }
 
         enum CodingKeys: String, CodingKey {
@@ -3823,6 +4346,8 @@ extension API {
             case projects = "projects"
             case sections = "sections"
             case labels = "labels"
+            case comments = "comments"
+            case reads = "reads"
         }
 
         public init(from decoder: Decoder) throws {
@@ -3831,6 +4356,8 @@ extension API {
             projects = try container.decode([Project].self, forKey: .projects)
             sections = try container.decode([ProjectSection].self, forKey: .sections)
             labels = try container.decode([Label].self, forKey: .labels)
+            comments = try container.decode([Comment].self, forKey: .comments)
+            reads = try container.decode([CommentRead].self, forKey: .reads)
         }
 
         public func encode(to encoder: Encoder) throws {
@@ -3839,6 +4366,8 @@ extension API {
             try container.encode(self.projects, forKey: .projects)
             try container.encode(self.sections, forKey: .sections)
             try container.encode(self.labels, forKey: .labels)
+            try container.encode(self.comments, forKey: .comments)
+            try container.encode(self.reads, forKey: .reads)
         }
     }
 
@@ -4202,13 +4731,17 @@ extension API {
         public var projects: [Project]
         public var sections: [ProjectSection]
         public var labels: [Label]
+        public var comments: [Comment]
+        public var reads: [CommentRead]
         public var settings: Settings
 
-        public init(tasks: [Task] = [], projects: [Project] = [], sections: [ProjectSection] = [], labels: [Label] = [], settings: Settings) {
+        public init(tasks: [Task] = [], projects: [Project] = [], sections: [ProjectSection] = [], labels: [Label] = [], comments: [Comment] = [], reads: [CommentRead] = [], settings: Settings) {
             self.tasks = tasks
             self.projects = projects
             self.sections = sections
             self.labels = labels
+            self.comments = comments
+            self.reads = reads
             self.settings = settings
         }
 
@@ -4217,6 +4750,8 @@ extension API {
             case projects = "projects"
             case sections = "sections"
             case labels = "labels"
+            case comments = "comments"
+            case reads = "reads"
             case settings = "settings"
         }
 
@@ -4226,6 +4761,8 @@ extension API {
             projects = try container.decode([Project].self, forKey: .projects)
             sections = try container.decode([ProjectSection].self, forKey: .sections)
             labels = try container.decode([Label].self, forKey: .labels)
+            comments = try container.decode([Comment].self, forKey: .comments)
+            reads = try container.decode([CommentRead].self, forKey: .reads)
             settings = try container.decode(Settings.self, forKey: .settings)
         }
 
@@ -4235,6 +4772,8 @@ extension API {
             try container.encode(self.projects, forKey: .projects)
             try container.encode(self.sections, forKey: .sections)
             try container.encode(self.labels, forKey: .labels)
+            try container.encode(self.comments, forKey: .comments)
+            try container.encode(self.reads, forKey: .reads)
             try container.encode(self.settings, forKey: .settings)
         }
     }
@@ -4353,6 +4892,81 @@ extension API {
             try container.encode(self.completedBy, forKey: .completedBy)
             try container.encode(self.lastCompletedAt, forKey: .lastCompletedAt)
             try container.encodeIfPresent(self.sourceKey, forKey: .sourceKey)
+        }
+    }
+
+    /// A comment on a task with its author, for the agent command API.
+    public struct TaskComment: Codable, Hashable, Sendable, Identifiable {
+        public var id: String
+        public var taskId: String
+        public var body: String
+        public var authorId: String?
+        public var createdAt: Int
+        public var editedAt: Int?
+        public var author: Person
+
+        public init(id: String, taskId: String, body: String, authorId: String? = nil, createdAt: Int, editedAt: Int? = nil, author: Person) {
+            self.id = id
+            self.taskId = taskId
+            self.body = body
+            self.authorId = authorId
+            self.createdAt = createdAt
+            self.editedAt = editedAt
+            self.author = author
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case id = "id"
+            case taskId = "taskId"
+            case body = "body"
+            case authorId = "authorId"
+            case createdAt = "createdAt"
+            case editedAt = "editedAt"
+            case author = "author"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            id = try container.decode(String.self, forKey: .id)
+            taskId = try container.decode(String.self, forKey: .taskId)
+            body = try container.decode(String.self, forKey: .body)
+            authorId = try container.decode(String?.self, forKey: .authorId)
+            createdAt = try container.decode(Int.self, forKey: .createdAt)
+            editedAt = try container.decode(Int?.self, forKey: .editedAt)
+            author = try container.decode(Person.self, forKey: .author)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.id, forKey: .id)
+            try container.encode(self.taskId, forKey: .taskId)
+            try container.encode(self.body, forKey: .body)
+            try container.encode(self.authorId, forKey: .authorId)
+            try container.encode(self.createdAt, forKey: .createdAt)
+            try container.encode(self.editedAt, forKey: .editedAt)
+            try container.encode(self.author, forKey: .author)
+        }
+    }
+
+    public struct TaskComments: Codable, Hashable, Sendable {
+        public var comments: [TaskComment]
+
+        public init(comments: [TaskComment] = []) {
+            self.comments = comments
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case comments = "comments"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            comments = try container.decode([TaskComment].self, forKey: .comments)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.comments, forKey: .comments)
         }
     }
 
@@ -5048,6 +5662,34 @@ extension API.Endpoints {
         public typealias Output = API.AuthMethods
         public static let method = "GET"
         public static let path = "/api/auth/methods"
+    }
+
+    public enum CommentsList: APIEndpoint {
+        public typealias Input = NoInput
+        public typealias Output = API.TaskComments
+        public static let method = "GET"
+        public static let path = "/api/comments"
+    }
+
+    public enum CommentsCreate: APIEndpoint {
+        public typealias Input = API.NewComment
+        public typealias Output = API.TaskComment
+        public static let method = "POST"
+        public static let path = "/api/comments"
+    }
+
+    public enum CommentsUpdate: APIEndpoint {
+        public typealias Input = API.CommentsUpdateInput
+        public typealias Output = API.TaskComment
+        public static let method = "PATCH"
+        public static let path = "/api/comments"
+    }
+
+    public enum CommentsDelete: APIEndpoint {
+        public typealias Input = NoInput
+        public typealias Output = API.Ok
+        public static let method = "DELETE"
+        public static let path = "/api/comments"
     }
 
     public enum DocsStart: APIEndpoint {

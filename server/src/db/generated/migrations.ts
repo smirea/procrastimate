@@ -76,5 +76,13 @@ export const migrations: { tag: string; when: number; statements: string[] }[] =
 		"statements": [
 			"ALTER TABLE `settings` ADD `quick_add_buttons` text DEFAULT '[\"date\",\"priority\",\"reminders\",\"subtasks\"]' NOT NULL;"
 		]
+	},
+	{
+		"tag": "0006_purple_brood",
+		"when": 1792137786085,
+		"statements": [
+			"CREATE TABLE `comments` (\n\t`user_id` text NOT NULL,\n\t`id` text NOT NULL,\n\t`task_id` text NOT NULL,\n\t`body` text NOT NULL,\n\t`author_id` text,\n\t`created_at` integer NOT NULL,\n\t`edited_at` integer,\n\t`deleted` integer DEFAULT false NOT NULL,\n\t`clocks` text NOT NULL,\n\tPRIMARY KEY(`user_id`, `id`)\n);",
+			"CREATE TABLE `reads` (\n\t`user_id` text NOT NULL,\n\t`id` text NOT NULL,\n\t`read_at` integer NOT NULL,\n\t`deleted` integer DEFAULT false NOT NULL,\n\t`clocks` text NOT NULL,\n\tPRIMARY KEY(`user_id`, `id`)\n);"
+		]
 	}
 ];

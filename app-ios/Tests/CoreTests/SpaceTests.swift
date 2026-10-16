@@ -53,6 +53,38 @@ import Testing
         #expect(store.snapshot.sync?.clock == op.hlc)
     }
 
+    @Test func aCommentOnASharedTaskQueuesInItsSpaceAndReadingItQueuesAtHome() throws {
+        let store = store()
+        let ownBefore = ownOutbox(store).count
+        let mine = try #require(store.addComment("paint", "  Two coats ", by: "me"))
+        #expect(store.addComment("roof", "Read only", by: "me") == nil)
+        let op = try #require(outbox(store).last)
+        #expect(op.kind == .comment)
+        #expect(op.fields == [
+            "deleted": .bool(false), "taskId": .string("paint"), "body": .string("Two coats"),
+            "authorId": .string("me"), "createdAt": .number(Double(pinned.epochMilliseconds)), "editedAt": .null,
+        ])
+        #expect(ownOutbox(store).count == ownBefore)
+
+        let at = pinned.epochMilliseconds + 5
+        let response = try JSONDecoder().decode(API.SyncResponse.self, from: Data("""
+        {"acked":["\(op.opId)"],"cursor":8,"hlc":"6:0:server","epoch":0,"scope":"h2","changes":[{"seq":8,"opId":"op-ann",\
+        "kind":"comment","id":"c-ann","fields":{"deleted":false,"taskId":"paint","body":"Thanks","authorId":"ann",\
+        "createdAt":\(at),"editedAt":null}}]}
+        """.utf8))
+        #expect(store.takeSyncResponse(response, space: "ann"))
+        #expect(store.comments(on: "paint").map(\.id) == [mine.id, "c-ann"])
+        #expect(store.commentBadge("paint", me: "me") == CommentBadge(count: 2, unread: 1))
+
+        store.markCommentsRead("paint", by: "me")
+        #expect(store.commentBadge("paint", me: "me") == CommentBadge(count: 2, unread: 0))
+        let read = try #require(ownOutbox(store).last)
+        #expect(read.kind == .read)
+        #expect(read.id == "paint")
+        #expect(read.fields["readAt"] == .number(Double(at)))
+        #expect(store.snapshot.spaces["ann"]?.outbox.contains { $0.kind == .read } == false)
+    }
+
     @Test func aNewTaskTakesItsParentsThenProjectsThenLabelsSpace() {
         let store = store()
         let errands = store.projects[0].id

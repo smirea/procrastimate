@@ -22,8 +22,9 @@ export type Example = {
 	body?: unknown;
 };
 
-/** Stands in for a real task id in the examples; the docs test swaps in one it made. */
+/** Stand in for a real task and comment id in the examples; the docs test swaps in ones it made. */
 export const TASK_ID = '<task-id>';
+export const COMMENT_ID = '<comment-id>';
 
 /** One per agent route at least. The docs test runs every one against a real space with an AI token. */
 export const agentExamples: readonly Example[] = [
@@ -50,6 +51,21 @@ export const agentExamples: readonly Example[] = [
 	{ title: 'Complete a task', method: 'POST', path: '/api/tasks/complete', query: { id: TASK_ID } },
 	{ title: 'Reopen it', method: 'POST', path: '/api/tasks/reopen', query: { id: TASK_ID } },
 	{ title: 'Read who did what to a task', method: 'GET', path: '/api/activity', query: { id: TASK_ID } },
+	{
+		title: 'Comment on a task',
+		method: 'POST',
+		path: '/api/comments',
+		body: { taskId: TASK_ID, body: 'Booked the plumber for Tuesday 9am' },
+	},
+	{ title: 'Read a task’s comments', method: 'GET', path: '/api/comments', query: { id: TASK_ID } },
+	{
+		title: 'Edit your comment',
+		method: 'PATCH',
+		path: '/api/comments',
+		query: { id: COMMENT_ID },
+		body: { body: 'Booked the plumber for Tuesday 10am' },
+	},
+	{ title: 'Delete your comment', method: 'DELETE', path: '/api/comments', query: { id: COMMENT_ID } },
 	{ title: 'Delete a task and its subtasks', method: 'DELETE', path: '/api/tasks', query: { id: TASK_ID } },
 	{
 		title: 'Sync from scratch, as the apps do',
@@ -129,7 +145,7 @@ These are the only routes a token may call. Every other route answers \`403 FORB
 
 ${routeTable()}
 
-Routes that take a task use \`?id=<task id>\`. Ids come from \`GET /api/view\` or from the task a route returns. \`?space=\` is optional and defaults to the owner's space, the only one an AI account can reach.
+Routes that take a task use \`?id=<task id>\`; editing or deleting a comment takes \`?id=<comment id>\`. Ids come from \`GET /api/view\` or from the task a route returns. \`?space=\` is optional and defaults to the owner's space, the only one an AI account can reach.
 
 ## Tasks
 
@@ -139,6 +155,11 @@ Routes that take a task use \`?id=<task id>\`. Ids come from \`GET /api/view\` o
 - \`completedAt\` is epoch milliseconds, or \`null\` while the task is open.
 - \`parentId\` makes a subtask. Deleting a task deletes its subtasks.
 - \`text\` on \`POST /api/tasks\` reads like the app's quick add, for example \`Water the plants every 2 weeks p2\` or \`Email Sam fri 10am remind me 30m before\`. Phrases it recognizes are removed from the title. Explicit fields such as \`title\` or \`priority\` win over what it parsed.
+
+## Comments
+
+- Comments are how you talk with the people on a task. The owner and anyone the task is shared with see them in the apps, with your name and an \`AI\` badge, and unread ones light up on the task's row.
+- \`body\` is free text; links in it open in the apps. You may edit or delete only your own comments.
 
 ## Projects and labels
 

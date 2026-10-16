@@ -72,13 +72,18 @@ export function scopeOf(snapshot: Snapshot, grants: readonly Grant[]): Scope {
 	return { tasks, editable, projects, labels, sections };
 }
 
-/** The space as the guest sees it. Settings are the owner's own, so the guest gets defaults. */
+/**
+ * The space as the guest sees it. Comments follow their task. Settings and read markers are the owner's own, so the
+ * guest gets defaults and none.
+ */
 export function filterSnapshot(snapshot: Snapshot, scope: Scope): Snapshot {
 	return {
 		tasks: snapshot.tasks.filter(task => scope.tasks.has(task.id)),
 		projects: snapshot.projects.filter(project => scope.projects.has(project.id)),
 		sections: snapshot.sections.filter(section => scope.sections.has(section.id)),
 		labels: snapshot.labels.filter(label => scope.labels.has(label.id)),
+		comments: snapshot.comments.filter(comment => scope.tasks.has(comment.taskId)),
+		reads: [],
 		settings: { ...DEFAULT_SETTINGS },
 	};
 }
@@ -125,17 +130,46 @@ function staysInScope(fields: Partial<FieldsByKind['task']>, scope: Scope): bool
 }
 
 /**
- * Which of a guest's ops may be written, checked in order against a working copy the admitted ops update. A guest
- * writes tasks only: an existing task must be editable before and after the op, a new one editable after it (under an
- * editable parent, or in an edit-shared project or label). A delete only needs the task editable before. Projects,
- * sections, labels, and settings are never a guest's to write.
+ * A comment needs its task editable: a new one names such a task, and an existing one must be `actor`'s own and stay
+ * on its task. So a view-only guest reads the comments but cannot write one. The author of a new comment is `actor`,
+ * which the server stamps again when it writes it.
  */
-export function admit(snapshot: Snapshot, grants: readonly Grant[], ops: readonly Op[]) {
+function admitComment(working: Snapshot, scope: Scope, op: Op, actor: string): Op | null {
+	const existing = working.comments.find(comment => comment.id === op.id);
+	// The intersection type does not narrow `fields` by `op.kind`, which the caller checked.
+	const fields = op.fields as Partial<FieldsByKind['comment']> & { deleted?: boolean };
+	const { taskId } = fields;
+	if (existing) {
+		const own = existing.authorId === actor && scope.editable.has(existing.taskId);
+		return own && (taskId === undefined || taskId === existing.taskId) ? op : null;
+	}
+	if (fields.deleted !== false || taskId === undefined || !scope.editable.has(taskId)) return null;
+	return { ...op, fields: { ...fields, authorId: actor } } as Op;
+}
+
+/**
+ * Which of a guest's ops may be written, checked in order against a working copy the admitted ops update. A guest
+ * writes tasks and comments only: an existing task must be editable before and after the op, a new one editable
+ * after it (under an editable parent, or in an edit-shared project or label). A delete only needs the task editable
+ * before. Comments follow `admitComment`. Projects, sections, labels, read markers, and settings are never a guest's
+ * to write.
+ */
+export function admit(snapshot: Snapshot, grants: readonly Grant[], ops: readonly Op[], actor: string) {
 	const admitted: Op[] = [];
 	const refused: Op[] = [];
 	let working = snapshot;
 	let scope = scopeOf(working, grants);
 	for (const op of ops) {
+		if (op.kind === 'comment') {
+			const allowed = admitComment(working, scope, op, actor);
+			if (allowed) {
+				working = applyPatch(working, allowed);
+				admitted.push(op);
+			} else {
+				refused.push(op);
+			}
+			continue;
+		}
 		if (op.kind !== 'task') {
 			refused.push(op);
 			continue;

@@ -10,7 +10,8 @@ import type { AccountStore, LogRow } from './store';
  * that syncs while it happens is many ops, so the rows are folded into the task's state and each entry names only what really
  * changed: a row that rewrites a value the task already had, such as a second device uploading its snapshot, shows
  * nothing. Consecutive edits by one actor less than `COALESCE_WINDOW` apart are one entry, and a completion or delete
- * undone that quickly by the same actor shows neither.
+ * undone that quickly by the same actor shows neither. A comment's first appearance on the task is one `commented` entry
+ * quoting it.
  */
 
 export const COALESCE_WINDOW = 5 * 60_000;
@@ -42,6 +43,11 @@ type Draft = {
 	state: Fields;
 };
 
+const isOnTask = (row: LogRow, taskId: string) =>
+	row.kind === 'task'
+		? row.id === taskId
+		: row.kind === 'comment' && row.fields.deleted === false && row.fields.taskId === taskId;
+
 export function unknownPerson(id: string): Person {
 	return { id, name: '', kind: 'human', ownerId: null };
 }
@@ -69,17 +75,30 @@ function changedFields(row: Fields, prev: Fields): string[] {
 }
 
 export function taskActivity(store: AccountStore, taskId: string): ActivityEntry[] {
-	const rows = store
-		.logAfter(0, Number.MAX_SAFE_INTEGER)
-		.filter((row: LogRow) => row.kind === 'task' && row.id === taskId);
+	const rows = store.logAfter(0, Number.MAX_SAFE_INTEGER).filter((row: LogRow) => isOnTask(row, taskId));
 	const drafts: Draft[] = [];
 	const seen = new Set<string>();
+	const commented = new Set<string>();
 	let data: Fields = {};
 	let everLive = false;
 	for (const row of rows) {
 		if (seen.has(row.opId)) continue;
 		seen.add(row.opId);
 		const fields = row.fields as Fields;
+		if (row.kind === 'comment') {
+			// Undoing a comment's delete makes it appear again, which is not a new comment.
+			if (commented.has(row.id) || row.actor === SERVER_ACTOR) continue;
+			commented.add(row.id);
+			drafts.push({
+				at: row.at,
+				actor: row.actor,
+				action: 'commented',
+				before: {},
+				after: { body: fields.body },
+				state: data,
+			});
+			continue;
+		}
 		const prev = data;
 		const wasLive = prev.deleted === false;
 		data = { ...prev, ...fields };
@@ -142,7 +161,7 @@ export function taskActivity(store: AccountStore, taskId: string): ActivityEntry
 
 type NameOf = (kind: 'project' | 'label' | 'task', id: string) => string | null;
 
-const ACTION_SUMMARIES: Record<Exclude<ActivityAction, 'edited'>, string> = {
+const ACTION_SUMMARIES: Record<Exclude<ActivityAction, 'edited' | 'commented'>, string> = {
 	created: 'added this task',
 	completed: 'completed it',
 	reopened: 'reopened it',
@@ -157,6 +176,7 @@ function listOf(names: string[]) {
 }
 
 function summarize(draft: Draft, nameOf: NameOf): string | null {
+	if (draft.action === 'commented') return `commented ${quoted(String(draft.after.body))}`;
 	if (draft.action !== 'edited') return ACTION_SUMMARIES[draft.action];
 	const today = new Date(draft.at).toISOString().slice(0, 10) as DateKey;
 	const parts = Object.keys(draft.after).flatMap(name => {

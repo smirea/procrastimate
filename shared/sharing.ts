@@ -1,6 +1,13 @@
 import { z } from 'zod';
 import { apiTokensRowSchema, peopleRowSchema, sharesRowSchema } from './db/generated/zod.ts';
-import { labelSchema, projectSchema, sectionSchema, shareTargetSchema, taskSchema } from './sync/protocol.ts';
+import {
+	commentSchema,
+	labelSchema,
+	projectSchema,
+	sectionSchema,
+	shareTargetSchema,
+	taskSchema,
+} from './sync/protocol.ts';
 import { roleSchema } from './values.ts';
 
 /**
@@ -67,7 +74,15 @@ export const spaceSchema = z
 	.meta({ id: 'Space', description: 'A space shared with the signed-in user. `id` is its owner’s user id.' });
 export type Space = z.infer<typeof spaceSchema>;
 
-export const ACTIVITY_ACTIONS = ['created', 'edited', 'completed', 'reopened', 'deleted', 'restored'] as const;
+export const ACTIVITY_ACTIONS = [
+	'created',
+	'edited',
+	'completed',
+	'reopened',
+	'deleted',
+	'restored',
+	'commented',
+] as const;
 export const activityActionSchema = z.enum(ACTIVITY_ACTIONS).meta({ id: 'ActivityAction' });
 export type ActivityAction = z.infer<typeof activityActionSchema>;
 
@@ -131,3 +146,13 @@ export const spaceViewSchema = z
 	})
 	.meta({ id: 'SpaceView', description: 'What the caller sees of a space, for the agent command API.' });
 export type SpaceView = z.infer<typeof spaceViewSchema>;
+
+export const taskCommentSchema = commentSchema
+	.extend({ author: personSchema })
+	.meta({ id: 'TaskComment', description: 'A comment on a task with its author, for the agent command API.' });
+export type TaskComment = z.infer<typeof taskCommentSchema>;
+
+export const newCommentSchema = z
+	.object({ taskId: commentSchema.shape.taskId, body: commentSchema.shape.body })
+	.meta({ id: 'NewComment', description: 'A comment the agent command API adds. A blank body is refused.' });
+export type NewComment = z.infer<typeof newCommentSchema>;

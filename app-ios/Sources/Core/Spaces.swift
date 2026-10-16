@@ -67,6 +67,7 @@ extension SyncEngine {
             projects: section.projects,
             sections: section.sections,
             labels: section.labels,
+            comments: section.comments,
             remindersCheckedAt: snapshot.remindersCheckedAt,
             sync: SyncSection(
                 deviceId: sync.deviceId,
@@ -84,6 +85,7 @@ extension SyncEngine {
         section.projects = lens.projects
         section.sections = lens.sections
         section.labels = lens.labels
+        section.comments = lens.comments
         if let after = lens.sync {
             section.cursor = after.cursor
             section.outbox = after.outbox
