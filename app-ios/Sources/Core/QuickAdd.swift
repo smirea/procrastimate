@@ -28,14 +28,19 @@ public enum QuickAdd {
     static let clockUnit = #"(?:m(?:ins?|inutes?)?|h(?:rs?|ours?)?)"#
     static let beforeUnit = #"(?:m(?:ins?|inutes?)?|h(?:rs?|ours?)?|d(?:ays?)?|w(?:ks?|eeks?)?)"#
 
+    /// A month and day in either order, as in `Dec. 25`, `October the 20th`, or `the 1st of December`, optionally after
+    /// the weekday it falls on, which the date overrides. These come before a bare weekday, since the first alternative
+    /// that matches wins.
+    static let monthDate =
+        #"(?:\#(weekday),?\s+)?(?:\#(month)(?:\.\s*|\s+)(?:the\s+)?\#(ordinal)|(?:the\s+)?(?:\d{1,2}(?:st|nd|rd|th)\s+of|\#(ordinal))\s+\#(month))(?:,?\s+(?:19|20)\d\d)?"#
+
     static let date = [
         "today|tonight|tomorrow|tmrw?|tom|eod|eow",
         #"(?:next|nxt)\s+(?:week|\#(weekday))"#,
+        monthDate,
         weekday,
         #"in\s+\d+\s*\#(dayUnit)"#,
         #"\d+(?:d|wks?|w|mos?)"#,
-        #"\#(month)\s+\#(ordinal)(?:,?\s+(?:19|20)\d\d)?"#,
-        #"\#(ordinal)\s+\#(month)(?:,?\s+(?:19|20)\d\d)?"#,
         #"the\s+\d{1,2}(?:st|nd|rd|th)"#,
         #"\d{1,2}/\d{1,2}(?:/(?:\d{4}|\d{2}))?"#,
     ].joined(separator: "|")
@@ -44,8 +49,9 @@ public enum QuickAdd {
         #"noon|midnight|\d{1,2}(?::\d{2})?(?:\s*[ap]m|[ap])|\d{1,2}:\d{2}|(?<=\bat\s+)\d{4}|(?!(?:19|20)\d\d)\d{4}"#
     /// Minutes and hours from now. A spelled-out unit needs `in`, since `study 2 hours` is a length, not a time.
     static let moment = #"in\s+\d+(?:\s*\#(clockUnit))?|\d+\#(clockUnit)|\d+\s+(?:mins?|hrs?)"#
+    /// A comma may sit between a day and its time, as in `Oct 19, 10am`, which is how dictation writes them.
     static let dateTime =
-        #"(?:(?:on\s+)?(?<date1>\#(date))(?:\s+(?:at\s+)?(?<time1>\#(time)))?|(?:at\s+)?(?<time2>\#(time))(?:\s+(?:on\s+)?(?<date2>\#(date)))?|(?<moment>\#(moment)))"#
+        #"(?:(?:on\s+)?(?<date1>\#(date))(?:,?\s+(?:at\s+)?(?<time1>\#(time)))?|(?:at\s+)?(?<time2>\#(time))(?:,?\s+(?:on\s+)?(?<date2>\#(date)))?|(?<moment>\#(moment)))"#
 
     /// `#` and `@` start a name or a handle, so `@5pm` and `@tom` stay text.
     static let before = #"(?<![\w#@!$€£]|\d[/:.])"#
@@ -76,7 +82,7 @@ public enum QuickAdd {
     /// without am or pm, such as `3:30`, is ambiguous in speech and stays text.
     static let spokenGuards: [Pattern] = [
         Pattern(
-            #"(?<![\w#@!$€£:/.])(?<!\bat\s+)(?<!\#(month)\s+\#(ordinal),?\s)\d{4}(?![\w:/])"#,
+            #"(?<![\w#@!$€£:/.])(?<!\bat\s+)(?<!(?:\#(month)\.?\s+\#(ordinal)|\s\#(month)),?\s)\d{4}(?![\w:/])"#,
             ignoreCase: true
         ),
         Pattern(
@@ -89,7 +95,7 @@ public enum QuickAdd {
             #"(?<=\bthe\s+)\d{1,2}(?:st|nd|rd|th)(?=\s+(?!(?:at|of|\#(month))\b)[a-z]+)"#,
             ignoreCase: true
         ),
-        Pattern(#"\b(?:Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)day(?=\s+[A-Z][a-z])"#),
+        Pattern(#"\b(?:Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)day(?=\s+(?!\#(month)\b)[A-Z][a-z])"#),
         Pattern(
             #"\b\#(weekday)(?=\s+(?:lunch|dinner|breakfast|brunch|drinks|meeting|meetings|standup|stand-up|service|game|match|party|class|shift|market|plans|practice|session|show)\b)"#,
             ignoreCase: true
@@ -311,15 +317,18 @@ public enum QuickAdd {
             if month < 1 || month > 12 { return nil }
             return monthDay(today, month - 1, dayFirst ? first : second, m[3])
         }),
-        (Pattern(#"^([a-z]+) (\d{1,2})(?:st|nd|rd|th)?(?:,? (\d{4}))?$"#), { m, today in
+        (Pattern(#"^(?:\#(weekday),? )?([a-z]+)(?:\. ?| )(?:the )?(\d{1,2})(?:st|nd|rd|th)?(?:,? (\d{4}))?$"#), { m, today in
             monthDay(today, monthIndex(m[1]!), number(m[2])!, m[3])
         }),
-        (Pattern(#"^(\d{1,2})(?:st|nd|rd|th)? ([a-z]+)(?:,? (\d{4}))?$"#), { m, today in
+        (Pattern(#"^(?:\#(weekday),? )?(?:the )?(\d{1,2})(?:st|nd|rd|th)?(?: of)? ([a-z]+)(?:,? (\d{4}))?$"#), { m, today in
             monthDay(today, monthIndex(m[2]!), number(m[1])!, m[3])
         }),
     ]
 
     static let edges = Pattern(#"^\s+|\s+$"#)
+    static let trailing = Pattern(#"\s+$"#)
+
+    static func trimEnd(_ text: String) -> String { trailing.replace(text) { _ in "" } }
 
     static func trim(_ text: String) -> String { edges.replace(text) { _ in "" } }
 
@@ -615,13 +624,25 @@ public enum QuickAdd {
             }
         }
 
+        // Punctuation right after a removed phrase stays on the word before it, so `Pay rent oct 20.` saves
+        // `Pay rent.`, and a comma or colon left at the very start, as in `Tomorrow, call mom`, goes.
         var title = ""
         var cursor = 0
+        func append(_ segment: String) {
+            guard let first = segment.first, ".,;:!?".contains(first) else { return title += segment }
+            if !trim(title).isEmpty {
+                title = trimEnd(title) + segment
+            } else {
+                title = String(segment.drop(while: { ",;:".contains($0) }))
+            }
+        }
         for token in tokens {
-            title += source.substring(with: NSRange(location: cursor, length: token.start - cursor)) + " "
+            append(source.substring(with: NSRange(location: cursor, length: token.start - cursor)))
+            title += " "
             cursor = token.end
         }
-        title = collapse(title + source.substring(from: cursor))
+        append(source.substring(from: cursor))
+        title = collapse(title)
 
         let outside = options.due
         let due = resolveDue(duePhrase, repeatPhrase, outside, ctx)

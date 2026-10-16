@@ -93,7 +93,7 @@ struct TaskComments: View {
     private var composer: some View {
         HStack(alignment: .bottom, spacing: 8) {
             TextField("Add a comment", text: $draft, axis: .vertical)
-                .lineLimit(1...6)
+                .lineLimit(1...12)
                 .focused($composing)
                 .font(.subheadline)
                 .padding(.horizontal, 14)

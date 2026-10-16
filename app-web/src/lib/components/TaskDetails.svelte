@@ -37,6 +37,7 @@
 	import { clock, sheets, toasts, motion, type Arrival } from '../ui.svelte.ts';
 	import { completeTask } from '../completion.ts';
 	import { images } from '../images/images.svelte.ts';
+	import { followCaret } from '../caret.ts';
 
 	let { task, arrival }: { task: Task; arrival: Arrival } = $props();
 
@@ -267,6 +268,7 @@
 				<textarea
 					aria-label="Notes"
 					placeholder="Notes"
+					use:followCaret
 					class="block min-h-[6.5rem] w-full resize-none [field-sizing:content] rounded-2xl border border-transparent bg-ink/[0.04] px-3.5 py-2.5 text-[14px] outline-none touch:text-base transition-colors placeholder:text-faint focus:border-ink/15 focus:bg-surface/60"
 					value={task.notes}
 					oninput={(e) => update({ notes: e.currentTarget.value })}

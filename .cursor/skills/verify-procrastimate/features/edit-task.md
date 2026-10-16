@@ -46,4 +46,4 @@ Preconditions:
 - There is no save button by design. Assert the stored value after a reload, not the field contents.
 - The title applies on Enter or when the field loses focus. Escape reverts the title and closes the sheet.
 - Setting a due date moves the task out of No date into its day in Inbox. Check both views.
-- The title, notes, and `Add subtask` fields wrap and grow with long text on both clients; the title and subtask fields stop at eight lines and scroll inside. Test: `title, notes, and subtask fields grow with their text instead of cutting it off` in `e2e/inputs.e2e.ts`.
+- The title, notes, comment, and `Add subtask` fields wrap and grow with long text on both clients; the title and subtask fields stop at eight lines and comments at about twelve, then scroll inside. Pasting a long block keeps the caret's line on screen, inside the field and in the details sheet. Test: `title, notes, and subtask fields grow with their text instead of cutting it off` in `e2e/inputs.e2e.ts` (Chromium); WebKit, which is where a paste used to hide the caret, needs a manual run.

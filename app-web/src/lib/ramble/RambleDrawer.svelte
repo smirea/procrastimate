@@ -27,6 +27,7 @@
 	import { listenRamble, type CaptureStop, type RambleListen } from './capture.ts';
 	import { caption, keyed, type RambleEntry } from './entries.ts';
 	import Waveform, { type LevelMeter } from './Waveform.svelte';
+	import { followCaret } from '../caret.ts';
 
 	let { defaults }: { defaults: QuickAddDefaults } = $props();
 
@@ -205,17 +206,6 @@
 
 	const clockText = (seconds: number) => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
 
-	/** A textarea that grows with its title instead of scrolling. */
-	const autosize = (node: HTMLTextAreaElement) => {
-		const fit = () => {
-			node.style.height = '0';
-			node.style.height = `${node.scrollHeight}px`;
-		};
-		fit();
-		node.addEventListener('input', fit);
-		return { destroy: () => node.removeEventListener('input', fit) };
-	};
-
 	const enter = (node: Element) =>
 		mobile.current
 			? fly(node, motion({ y: '100%', duration: 420, easing: cubicOut, opacity: 1 }))
@@ -365,9 +355,9 @@
 			<div class="min-w-0 flex-1">
 				{#if editable}
 					<textarea
-						use:autosize
+						use:followCaret
 						rows="1"
-						class="title block w-full resize-none bg-transparent text-[17px] leading-6 font-semibold outline-none"
+						class="title block w-full resize-none [field-sizing:content] bg-transparent text-[17px] leading-6 font-semibold outline-none"
 						aria-label="Task title"
 						bind:value={entry.title}
 						onfocus={() => (open = entry.key)}
@@ -438,9 +428,9 @@
 						<div class="min-w-0 flex-1">
 							{#if editable}
 								<textarea
-									use:autosize
+									use:followCaret
 									rows="1"
-									class="title block w-full resize-none bg-transparent text-[15px] leading-[22px] outline-none"
+									class="title block w-full resize-none [field-sizing:content] bg-transparent text-[15px] leading-[22px] outline-none"
 									aria-label="Subtask title"
 									bind:value={subtask.title}
 									onkeydown={(e) => {

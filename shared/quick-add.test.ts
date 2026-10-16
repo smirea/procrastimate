@@ -412,6 +412,52 @@ describe('a time with no day', () => {
 	});
 });
 
+describe('dates with a month name', () => {
+	test.each([
+		['October 20', '2026-10-20', null],
+		['OCT 20', '2026-10-20', null],
+		['october 3rd', '2027-10-03', null],
+		['Dec. 25', '2026-12-25', null],
+		['Sept. 30', '2027-09-30', null],
+		['sept 30th', '2027-09-30', null],
+		['20th of October', '2026-10-20', null],
+		['the 1st of December', '2026-12-01', null],
+		['on the 3rd of november', '2026-11-03', null],
+		['October the 20th', '2026-10-20', null],
+		['20th of October, 2027', '2027-10-20', null],
+		['Monday, October 19', '2026-10-19', null],
+		['tue oct 20', '2026-10-20', null],
+		['Oct 19, 10am', '2026-10-19', '10:00'],
+		['October 20th, 2027, 3pm', '2027-10-20', '15:00'],
+		['October 2nd at 3pm', '2027-10-02', '15:00'],
+		['3pm, Oct 20', '2026-10-20', '15:00'],
+	])('Pay rent %s', (phrase, date, time) => {
+		const parsed = parse(`Pay rent ${phrase}`);
+		expect(parsed.title).toBe('Pay rent');
+		expect<unknown>(parsed.due).toEqual({ date, time });
+	});
+
+	test('punctuation after a removed date stays on the title', () => {
+		expect(parse('Pay rent October 20th.').title).toBe('Pay rent.');
+		expect(parse('Call mom tomorrow, then buy milk').title).toBe('Call mom, then buy milk');
+	});
+
+	test('a month name that is not a date stays text', () => {
+		expect(parse('Book flights for December').due).toBeNull();
+		expect(parse('Read chapter 3 of may').title).toBe('Read chapter 3 of may');
+	});
+
+	test('a month name date spoken with commas parses', () => {
+		const parsed = parse('Dentist on Monday, October 19th, at 3pm.', { spoken: true });
+		expect(parsed.title).toBe('Dentist.');
+		expect(parsed.due).toEqual({ date: '2026-10-19', time: '15:00' });
+	});
+
+	test('a month name date with no such day stays text', () => {
+		expect(parse('Party the 30th of february').due).toBeNull();
+	});
+});
+
 describe('dates with a year', () => {
 	test.each([
 		['Jun 21 2027', '2027-06-21'],
