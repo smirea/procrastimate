@@ -64,6 +64,8 @@ private struct QuickAddForm: View {
                 label: "Task name",
                 placeholder: "Call mom tomorrow 5pm p1 remind me 30m before",
                 listAt: $listAt,
+                // Four lines, and three in a subtask field, so the sheet fits above the keyboard with its subtasks.
+                maxHeight: 104,
                 focused: $focused,
                 onSubmit: { submit() }
             )

@@ -4,7 +4,7 @@ Search lets Stefan find any task, project, or label from anywhere by typing a fe
 
 ## Sub-features
 
-- `search-open` opens search with `/`, Cmd-K or Ctrl-K, or the `Search` button in the sidebar or phone drawer. Shortcuts never fire while typing in a field.
+- `search-open` opens search with `/`, Cmd-K or Ctrl-K, or the `Search` button in the sidebar or phone drawer, always with an empty field. Shortcuts never fire while typing in a field. On iOS, switching to Browse from another tab or pressing Cmd-K empties the field; Back from a result keeps it.
 - `search-match` matches task titles, notes, project names, and label names, ignoring case and accents. Every word of the query must match somewhere.
 - `search-rank` puts title matches above project and label matches above notes matches, and matches at the start of a word above matches inside one.
 - `search-highlight` highlights every matched span in titles, notes excerpts, project names, label names, and the label chips of matching tasks.
@@ -43,4 +43,5 @@ Preconditions:
 - A single letter matches only at the start of a word, so `i` does not match `milk`.
 - Search shows the best 5 projects, 5 labels, 30 open tasks, and 15 completed tasks. Each group header shows the full count.
 - On a phone, scrolling the results dismisses the keyboard.
+- An empty field on reopening is the expected state, not a lost query. Test: `search opens with an empty query each time` in `e2e/inputs.e2e.ts`.
 - Headless WebKit on Linux does not draw the sheet's backdrop blur, so content behind the phone sheet looks sharper in its screenshots than on a real iPhone.

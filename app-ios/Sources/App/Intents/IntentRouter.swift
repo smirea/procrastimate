@@ -3,7 +3,6 @@ import SwiftUI
 
 @MainActor @Observable
 final class IntentRouter {
-    var searchQuery: String?
     var harnessLog = ""
     var spotlight = ""
 

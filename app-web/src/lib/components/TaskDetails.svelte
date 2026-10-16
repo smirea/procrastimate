@@ -109,6 +109,12 @@
 	}
 
 	const slideFrom = { forward: 28, back: -28, none: 0 } satisfies Record<Arrival, number>;
+
+	let body: HTMLDivElement;
+
+	$effect(() => {
+		if (untrack(() => arrival) === 'back') body.scrollTop = sheets.scrollTops.get(untrack(() => task.id)) ?? 0;
+	});
 </script>
 
 <div class="relative flex min-h-0 flex-1 flex-col" in:fly={motion({ x: slideFrom[arrival], duration: arrival === 'none' ? 0 : 220, easing: cubicOut })}>
@@ -149,7 +155,7 @@
 			<p class="mb-1 flex items-center gap-1 text-[12px] text-faint">Shared by <PersonName person={owner} /></p>
 		{/if}
 		{#if editable}
-			<LinkedField text={title} class="truncate px-1 py-0.5 text-[19px] leading-[1.6] font-semibold whitespace-pre">
+			<LinkedField text={title} class="px-1 py-0.5 text-[19px] leading-[1.6] font-semibold whitespace-pre-wrap [overflow-wrap:anywhere]">
 				<SmartInput bind:value={title} tokens={parsed.tokens} label="Title" enterkeyhint="done" suggestProjects={!parent} class="text-[19px] font-semibold" {onkeydown} onblur={commitTitle} />
 			</LinkedField>
 		{:else}
@@ -190,14 +196,19 @@
 	<div class="px-4 pt-3" inert={!editable}>
 		<LabelPicker labelIds={draft.labelIds} labels={space.labels} canCreate={home === null} onchange={(labelIds) => update({ labelIds })} />
 	</div>
-	<div class="flex-1 space-y-4 overflow-y-auto overscroll-contain px-4 pt-4 min-h-0" class:pb-24={editable} class:pb-4={!editable}>
+	<div
+		bind:this={body}
+		class="flex-1 space-y-4 overflow-y-auto overscroll-contain px-4 pt-4 min-h-0"
+		class:pb-24={editable}
+		class:pb-4={!editable}
+		onscroll={(e) => sheets.scrollTops.set(task.id, e.currentTarget.scrollTop)}
+	>
 		{#if editable}
 			<LinkedField text={task.notes} class="border border-transparent px-3.5 py-2.5 text-[14px] whitespace-pre-wrap [overflow-wrap:anywhere] touch:text-base">
 				<textarea
 					aria-label="Notes"
 					placeholder="Notes"
-					rows="4"
-					class="block w-full resize-none rounded-2xl border border-transparent bg-ink/[0.04] px-3.5 py-2.5 text-[14px] outline-none touch:text-base transition-colors placeholder:text-faint focus:border-ink/15 focus:bg-surface/60"
+					class="block min-h-[6.5rem] w-full resize-none [field-sizing:content] rounded-2xl border border-transparent bg-ink/[0.04] px-3.5 py-2.5 text-[14px] outline-none touch:text-base transition-colors placeholder:text-faint focus:border-ink/15 focus:bg-surface/60"
 					value={task.notes}
 					oninput={(e) => update({ notes: e.currentTarget.value })}
 				></textarea>

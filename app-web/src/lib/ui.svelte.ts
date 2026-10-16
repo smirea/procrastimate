@@ -93,7 +93,14 @@ class Sheets {
 		this.current = { kind: 'settings' };
 	}
 
+	/**
+	 * Where each task's details body was scrolled in this sheet. Details remount per task, so going back would
+	 * otherwise land at the top of the parent; iOS keeps the place like any navigation pop.
+	 */
+	readonly scrollTops = new Map<string, number>();
+
 	openTask(id: string, arrival: Arrival = 'none') {
+		if (arrival === 'none') this.scrollTops.clear();
 		this.current = { kind: 'task', id, arrival };
 	}
 
