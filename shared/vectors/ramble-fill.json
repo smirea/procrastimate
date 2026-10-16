@@ -1,0 +1,162 @@
+{
+	"module": "ramble-fill",
+	"timeZone": "America/New_York",
+	"cases": [
+		{
+			"fn": "rambleNewTask",
+			"test": "rambleNewTask › keeps the title and every field the grammar read",
+			"input": [
+				{
+					"due": {
+						"date": "2026-10-15",
+						"time": "17:00"
+					},
+					"labelIds": [],
+					"notes": "",
+					"priority": 1,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"segment": {
+						"end": 43,
+						"start": 0
+					},
+					"subtasks": [],
+					"title": "Call mom"
+				},
+				null,
+				"2026-10-14"
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-15",
+					"time": "17:00"
+				},
+				"labelIds": [],
+				"priority": 1,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"title": "Call mom"
+			}
+		},
+		{
+			"fn": "rambleNewTask",
+			"test": "rambleNewTask › list defaults fill only what speech left empty",
+			"input": [
+				{
+					"due": null,
+					"labelIds": [
+						"bills"
+					],
+					"notes": "",
+					"priority": null,
+					"projectId": "spoken",
+					"recurrence": null,
+					"reminders": [],
+					"segment": {
+						"end": 8,
+						"start": 0
+					},
+					"subtasks": [],
+					"title": "Pay rent"
+				},
+				{
+					"labelId": "errands",
+					"projectId": "list-project",
+					"today": true
+				},
+				"2026-10-14"
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-14",
+					"time": null
+				},
+				"labelIds": [
+					"errands",
+					"bills"
+				],
+				"priority": null,
+				"projectId": "spoken",
+				"recurrence": null,
+				"reminders": [],
+				"title": "Pay rent"
+			}
+		},
+		{
+			"fn": "rambleNewTask",
+			"test": "rambleNewTask › a spoken date wins over Today",
+			"input": [
+				{
+					"due": {
+						"date": "2026-10-20",
+						"time": null
+					},
+					"labelIds": [],
+					"notes": "",
+					"priority": null,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"segment": {
+						"end": 8,
+						"start": 0
+					},
+					"subtasks": [],
+					"title": "Pay rent"
+				},
+				{
+					"labelId": null,
+					"projectId": null,
+					"today": true
+				},
+				"2026-10-14"
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-20",
+					"time": null
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"title": "Pay rent"
+			}
+		},
+		{
+			"fn": "rambleNewTask",
+			"test": "rambleNewTask › a subtask takes no defaults",
+			"input": [
+				{
+					"due": null,
+					"labelIds": [],
+					"notes": "",
+					"priority": null,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"segment": {
+						"end": 4,
+						"start": 0
+					},
+					"subtasks": [],
+					"title": "Milk"
+				},
+				null,
+				"2026-10-14"
+			],
+			"output": {
+				"due": null,
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"title": "Milk"
+			}
+		}
+	]
+}

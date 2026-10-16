@@ -1,7 +1,10 @@
-import { describe, expect, test } from 'bun:test';
+import { expect } from 'bun:test';
 import { parseRamble } from './ramble.ts';
-import { quickAddFromRamble, withListDefaults, type RambleQuickAdd } from './ramble-fill.ts';
+import * as fill from './ramble-fill.ts';
 import type { RambleTask } from './ramble.ts';
+import { describe, recorded, test } from './vectors/record.ts';
+
+const rambleNewTask = recorded('ramble-fill', fill.rambleNewTask);
 
 const now = new Date(1791986400000);
 
@@ -21,60 +24,50 @@ function task(title: string, extra: Partial<RambleTask> = {}): RambleTask {
 	};
 }
 
-describe('quickAddFromRamble', () => {
-	test('one task keeps its title and the metadata the grammar found', () => {
-		const fill = quickAddFromRamble({
-			tasks: [task('Call mom', { due: { date: '2026-10-15', time: '17:00' }, priority: 1, projectId: 'p-home' })],
-			tokens: [],
-			ended: false,
-		});
-		expect(fill).toEqual({
-			text: 'Call mom',
+describe('rambleNewTask', () => {
+	test('keeps the title and every field the grammar read', () => {
+		const [spoken] = parseRamble('Call mom tomorrow at five p.m. priority one', { now }).tasks;
+		expect(rambleNewTask(spoken!, null, '2026-10-14')).toEqual({
+			title: 'Call mom',
+			projectId: null,
+			labelIds: [],
 			due: { date: '2026-10-15', time: '17:00' },
 			recurrence: null,
 			priority: 1,
 			reminders: [],
-			projectId: 'p-home',
-			labelIds: [],
-		} satisfies RambleQuickAdd);
-	});
-
-	test('several tasks become one title and do not pick a date', () => {
-		const fill = quickAddFromRamble({
-			tasks: [task('Buy milk'), task('Call the plumber', { due: { date: '2026-10-15', time: null } })],
-			tokens: [],
-			ended: false,
 		});
-		expect(fill?.text).toBe('Buy milk. Call the plumber');
-		expect(fill?.due).toBeNull();
 	});
 
-	test('a parsed sentence overrides the transcript with the title and its chips', () => {
-		const draft = parseRamble('Call mom tomorrow at five p.m. priority one', { now });
-		const fill = quickAddFromRamble(draft);
-		expect(fill?.text).toBe('Call mom');
-		expect(fill?.priority).toBe(1);
-		expect(fill?.due?.time).toBe('17:00');
-	});
-});
-
-describe('withListDefaults', () => {
-	test('fills only what speech left empty', () => {
-		const fill = withListDefaults(
-			{
-				text: 'Pay rent',
-				due: null,
-				recurrence: null,
-				priority: null,
-				reminders: [],
-				projectId: 'spoken',
-				labelIds: [],
-			},
-			{ projectId: 'inbox-project', labelId: 'errands', today: true },
+	test('list defaults fill only what speech left empty', () => {
+		const saved = rambleNewTask(
+			task('Pay rent', { projectId: 'spoken', labelIds: ['bills'] }),
+			{ projectId: 'list-project', labelId: 'errands', today: true },
 			'2026-10-14',
 		);
-		expect(fill.projectId).toBe('spoken');
-		expect(fill.labelIds).toEqual(['errands']);
-		expect(fill.due).toEqual({ date: '2026-10-14', time: null });
+		expect(saved.projectId).toBe('spoken');
+		expect(saved.labelIds).toEqual(['errands', 'bills']);
+		expect(saved.due).toEqual({ date: '2026-10-14', time: null });
+	});
+
+	test('a spoken date wins over Today', () => {
+		const saved = rambleNewTask(
+			task('Pay rent', { due: { date: '2026-10-20', time: null } }),
+			{ projectId: null, labelId: null, today: true },
+			'2026-10-14',
+		);
+		expect(saved.due).toEqual({ date: '2026-10-20', time: null });
+	});
+
+	test('a subtask takes no defaults', () => {
+		const saved = rambleNewTask(task('Milk'), null, '2026-10-14');
+		expect(saved).toEqual({
+			title: 'Milk',
+			projectId: null,
+			labelIds: [],
+			due: null,
+			recurrence: null,
+			priority: null,
+			reminders: [],
+		});
 	});
 });

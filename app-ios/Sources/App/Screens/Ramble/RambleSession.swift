@@ -15,7 +15,7 @@ final class RambleSession {
 
     var onText: (String, Int) -> Void = { _, _ in }
     var onEnd: (End) -> Void = { _ in }
-    var onLevel: (Float) -> Void = { _ in }
+    let meter = LevelMeter()
 
     private let speech = SpeechDictation()
     private let pump = RamblePump()
@@ -40,6 +40,7 @@ final class RambleSession {
         heard = false
         committed = ""
         partial = ""
+        meter.set(0)
         #if DEBUG
         if let script = ProcessInfo.processInfo.environment["PROCRASTIMATE_RAMBLE_SCRIPT"] {
             speak(script)
@@ -47,6 +48,7 @@ final class RambleSession {
         }
         #endif
         let online = await NetworkPath.online()
+        guard !userStop else { return }
         switch Dictation.voiceCapture(choice, online: online, nativeSpeech: true).capture {
         case .speech:
             await startSpeech()
@@ -67,15 +69,18 @@ final class RambleSession {
             for count in 1 ... max(words.count, 1) {
                 try? await Task.sleep(for: .milliseconds(90))
                 guard token == self.epoch, !self.userStop else { return }
+                self.meter.set(.random(in: 0.08 ... 0.5))
                 let text = words.prefix(count).joined(separator: " ")
                 self.onText(text, (text as NSString).length)
             }
+            self.meter.set(0)
         }
     }
     #endif
 
     func stop() {
         userStop = true
+        meter.set(0)
         haltEngine()
         guard let socket, socket.state == .running else {
             let token = epoch
@@ -97,9 +102,11 @@ final class RambleSession {
 
     private func startSpeech() async {
         do {
-            try await speech.start { [weak self] text in
+            try await speech.start(meter: meter) { [weak self] text in
                 self?.onText(text, (text as NSString).length)
             }
+            // A stop during the model or permission setup finished early; the recognizer that started since must not run.
+            if userStop { speech.cancel() }
         } catch SpeechDictation.Failure.denied {
             onEnd(.failed("The microphone is off. You can type the ramble instead."))
         } catch {
@@ -124,6 +131,7 @@ final class RambleSession {
                 onEnd(.failed("The microphone is off. You can type the ramble instead."))
                 return
             }
+            guard !userStop else { return }
         @unknown default:
             onEnd(.failed("The microphone is off. You can type the ramble instead."))
             return
@@ -142,10 +150,7 @@ final class RambleSession {
         }
         let task = APIClient.session.webSocketTask(with: request)
         socket = task
-        pump.connect(
-            send: { [weak task] data in task?.send(.data(data)) { _ in } },
-            level: { [weak self] value in Task { @MainActor in self?.onLevel(value) } }
-        )
+        pump.connect(send: { [weak task] data in task?.send(.data(data)) { _ in } }, meter: meter)
         task.resume()
         receive()
         do {
@@ -262,17 +267,17 @@ private func join(_ committed: String, _ partial: String) -> (text: String, part
 private final class RamblePump: Sendable {
     private struct State {
         var send: (@Sendable (Data) -> Void)?
-        var level: (@Sendable (Float) -> Void)?
+        var meter: LevelMeter?
         var pending: [Int16] = []
         var frac = 0.0
     }
 
     private let state = Mutex(State())
 
-    func connect(send: @escaping @Sendable (Data) -> Void, level: @escaping @Sendable (Float) -> Void) {
+    func connect(send: @escaping @Sendable (Data) -> Void, meter: LevelMeter) {
         state.withLock {
             $0.send = send
-            $0.level = level
+            $0.meter = meter
         }
     }
 
@@ -281,7 +286,7 @@ private final class RamblePump: Sendable {
         let frames = buffer.frameLength
         let step = buffer.format.sampleRate / 16_000
         guard step > 0 else { return }
-        let (chunks, peak, send, level) = state.withLock { state in
+        let (chunks, peak, send, meter) = state.withLock { state in
             var index = state.frac
             var peak: Float = 0
             while index < Double(frames) {
@@ -301,9 +306,9 @@ private final class RamblePump: Sendable {
                 state.pending.removeFirst(1600)
                 chunks.append(bytes)
             }
-            return (chunks, peak, state.send, state.level)
+            return (chunks, peak, state.send, state.meter)
         }
         for chunk in chunks { send?(chunk) }
-        level?(peak)
+        meter?.set(peak)
     }
 }

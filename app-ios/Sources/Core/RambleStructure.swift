@@ -133,7 +133,7 @@ extension Ramble {
         var labelIds = task.labelIds
         if let labelId = defaults?.labelId, !labelIds.contains(labelId) { labelIds.insert(labelId, at: 0) }
         return NewTask(
-            title: task.title,
+            title: task.title.trimmingCharacters(in: .whitespacesAndNewlines),
             projectId: task.projectId ?? defaults?.projectId,
             labelIds: labelIds,
             due: task.due ?? (defaults?.today == true ? Due(date: today, time: nil) : nil),

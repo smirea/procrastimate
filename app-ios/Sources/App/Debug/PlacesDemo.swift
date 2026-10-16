@@ -39,8 +39,8 @@ enum PlacesDemo {
         }
         // The simulator only hands the app a Universal Link once the domain's association file verifies.
         if let token = value("link") { navigator.sheet = .sharedLink(token: token) }
-        if has("ramble") { navigator.startRambleListening = true }
-        if has("quickadd") || has("ramble") { navigator.sheet = .quickAdd(QuickAddDefaults()) }
+        if has("quickadd") { navigator.sheet = .quickAdd(QuickAddDefaults()) }
+        if has("ramble") { navigator.sheet = .ramble(QuickAddDefaults()) }
         if let text = value("type") { await type(text) }
         #endif
     }

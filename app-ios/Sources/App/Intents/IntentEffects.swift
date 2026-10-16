@@ -137,8 +137,7 @@ enum IntentEffects {
 
     static func startRamble() -> String {
         guard let session = IntentSession.current else { return "ProcrastiMate isn't ready." }
-        session.navigator.startRambleListening = true
-        session.navigator.sheet = .quickAdd(QuickAddDefaults())
+        session.navigator.sheet = .ramble(QuickAddDefaults())
         note("ramble")
         return "Listening"
     }

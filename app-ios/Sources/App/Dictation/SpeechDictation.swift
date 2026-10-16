@@ -36,7 +36,8 @@ final class SpeechDictation {
     private var reader: Task<Void, Never>?
 
     /// Streams the transcript so far, finalized text followed by the words still being recognized.
-    func start(onText: @escaping @MainActor (String) -> Void) async throws {
+    /// The tap also writes each buffer's peak to `meter` for the waveform.
+    func start(meter: LevelMeter, onText: @escaping @MainActor (String) -> Void) async throws {
         guard let locale = await DictationTranscriber.supportedLocale(equivalentTo: Locale(identifier: "en-US")) else {
             throw Failure.unsupported
         }
@@ -86,7 +87,7 @@ final class SpeechDictation {
             let node = audio.inputNode
             let format = node.outputFormat(forBus: 0)
             guard format.sampleRate > 0, format.channelCount > 0 else { throw Failure.unsupported }
-            try node.installAudioTap(onBus: 0, bufferSize: 1024, format: format, tapProvider: Self.feed(converter, input))
+            try node.installAudioTap(onBus: 0, bufferSize: 1024, format: format, tapProvider: Self.feed(converter, input, meter))
             audio.prepare()
             try audio.start()
         } catch {
@@ -99,10 +100,16 @@ final class SpeechDictation {
     /// The tap runs on the audio thread. The converter is only ever used there once the tap is installed.
     nonisolated private static func feed(
         _ converter: AnalyzerInputConverter,
-        _ input: AsyncStream<AnalyzerInput>.Continuation
+        _ input: AsyncStream<AnalyzerInput>.Continuation,
+        _ meter: LevelMeter
     ) -> @Sendable (AVReadOnlyAudioPCMBuffer, AVAudioTime) -> Void {
         nonisolated(unsafe) let converter = converter
         return { buffer, time in
+            if case let .float(channel) = buffer.channelData(0) {
+                var peak: Float = 0
+                for index in 0 ..< Int(buffer.frameLength) { peak = max(peak, abs(channel[index])) }
+                meter.set(peak)
+            }
             guard let items = try? converter.convert(AVAudioPCMBuffer(copying: buffer), at: time) else { return }
             for item in items { input.yield(item) }
         }

@@ -123,6 +123,7 @@ let handlers: [String: Handler] = [
     "dictation": dictationVector,
     "triggers": triggersVector,
     "ramble": rambleVector,
+    "ramble-fill": rambleFillVector,
     "memo-tasks": memoTasksVector,
     "links": linksVector,
     "sync": syncVector,
@@ -411,6 +412,23 @@ private struct RambleInput: Decodable {
                 in: a.zone
             )
         )
+    default: throw unknown(fn)
+    }
+}
+
+private struct ListDefaultsInput: Decodable {
+    let projectId: String?
+    let labelId: String?
+    let today: Bool
+}
+
+@Sendable func rambleFillVector(_ fn: String, _ a: Args) throws -> JSONValue {
+    switch fn {
+    case "rambleNewTask":
+        let defaults = try a(1, as: ListDefaultsInput?.self).map {
+            QuickAddDraft.Defaults(projectId: $0.projectId, labelId: $0.labelId, today: $0.today)
+        }
+        return try json(Ramble.newTask(try a(0), defaults: defaults, today: try a(2)))
     default: throw unknown(fn)
     }
 }

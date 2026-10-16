@@ -1,3 +1,4 @@
+import party from './party.cassette.json';
 import threeTasks from './three-tasks.cassette.json';
 
 /**
@@ -12,7 +13,7 @@ export type Cassette = {
 
 /** Every cassette by id, replayed by the fake upstream on the dev server and under `wrangler dev`. */
 export const CASSETTES: Record<string, Cassette> = Object.fromEntries(
-	([threeTasks] satisfies Cassette[]).map(cassette => [cassette.id, cassette]),
+	([threeTasks, party] satisfies Cassette[]).map(cassette => [cassette.id, cassette]),
 );
 
 export const DEFAULT_CASSETTE = 'three-tasks';

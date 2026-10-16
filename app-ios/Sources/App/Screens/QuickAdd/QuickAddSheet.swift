@@ -26,21 +26,9 @@ private struct QuickAddForm: View {
 
     @State private var draft: QuickAddDraft
     @State private var listAt: Int?
-    @State private var session = RambleSession()
-    @State private var listening = false
-    /// True from start until the session ends. After a stop that applies, the last words still arrive.
-    @State private var capturing = false
-    @State private var typed = false
-    @State private var notice: String?
-    @State private var transcript = ""
-    @State private var applyOnStop = true
     /// Picked with their chips only; neither has a phrase in the text.
     @State private var location: TaskLocation?
     @State private var event: TaskEvent?
-    /// Text writes that came from the recognizer, so the field's change does not count as typing.
-    @State private var speechWrites = 0
-    @State private var spoken = Spoken.none
-    @State private var liveParse: Task<Void, Never>?
     @State private var subtasks: [DraftSubtask] = []
     @State private var subtaskText = ""
     @State private var subtasksOpen = false
@@ -51,13 +39,12 @@ private struct QuickAddForm: View {
         _draft = State(initialValue: QuickAddDraft(defaults: defaults, today: today))
     }
 
-    private var showMic: Bool { listening || !typed }
+    private var showMic: Bool { draft.text.isEmpty }
 
     var body: some View {
-        let parsed = shownParse()
+        let parsed = draft.parse(now: clock.now, projects: spaceProjects, labels: spaceLabels, in: clock.timeZone)
         let resolved = draft.resolved(parsed)
         VStack(alignment: .leading, spacing: 12) {
-            if !spoken.isList {
             SmartInput(
                 text: Binding(get: { draft.text }, set: { draft.setText($0) }),
                 tokens: parsed.tokens,
@@ -72,21 +59,13 @@ private struct QuickAddForm: View {
             .font(.body.weight(.medium))
             .padding(.trailing, showMic ? 36 : 0)
             .overlay(alignment: .trailing) {
-                if showMic { micButton }
+                if showMic { micButton.transition(.scale(scale: 0.6).combined(with: .opacity)) }
             }
-            }
-            if spoken == .none, subtasksOpen || !subtasks.isEmpty {
+            .animation(.snappy(duration: 0.16), value: showMic)
+            if subtasksOpen || !subtasks.isEmpty {
                 QuickAddSubtasks(spaceLabels: spaceLabels, subtasks: $subtasks, text: $subtaskText, focused: $subtaskFocused) { submit() }
                     .transition(.opacity.combined(with: .move(edge: .top)))
             }
-            if !spoken.tasks.isEmpty {
-                SpokenTaskList(spoken: spoken) { removeSpoken($0, $1) }
-            }
-            if let notice {
-                Text(notice).font(.footnote).foregroundStyle(.muted)
-            }
-
-            if spoken == .none {
             HStack(alignment: .top, spacing: 6) {
                 FlowLayout(spacing: 6) {
                     chips(parsed, resolved)
@@ -99,14 +78,11 @@ private struct QuickAddForm: View {
                 }
             }
             .animation(.snappy(duration: 0.16), value: parsed.tokens)
-            }
 
             HStack(spacing: 8) {
-                if spoken == .none {
-                    ProjectChip(projectId: resolved.projectId) { id in
-                        draft.clearToken(.project, in: parsed)
-                        draft.picked.projectId = id
-                    }
+                ProjectChip(projectId: resolved.projectId) { id in
+                    draft.clearToken(.project, in: parsed)
+                    draft.picked.projectId = id
                 }
                 Spacer(minLength: 0)
                 Button("Cancel") { navigator.sheet = nil }
@@ -114,13 +90,12 @@ private struct QuickAddForm: View {
                     .foregroundStyle(.muted)
                     .padding(.horizontal, 12)
                     .frame(minHeight: 44)
-                Button(addLabel) { submit() }
+                Button("Add task") { submit() }
                     .buttonStyle(.borderedProminent)
                     .buttonBorderShape(.capsule)
-                    .disabled(listening || (spoken.isList ? false : spoken != .none || parsed.title.isEmpty))
+                    .disabled(parsed.title.isEmpty)
             }
         }
-        .animation(.snappy(duration: 0.22), value: spoken)
         .animation(.snappy(duration: 0.2), value: subtasksOpen)
         .padding(.horizontal, 16)
         .padding(.top, 20)
@@ -138,21 +113,6 @@ private struct QuickAddForm: View {
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("Quick add")
         .onAppear { focused = true }
-        .onChange(of: navigator.startRambleListening, initial: true) {
-            guard navigator.startRambleListening else { return }
-            navigator.startRambleListening = false
-            startRamble()
-        }
-        .onDisappear { if listening { stopRamble(apply: false) } }
-        .onChange(of: draft.text) {
-            if speechWrites > 0 {
-                speechWrites -= 1
-                return
-            }
-            if listening { stopRamble(apply: false) }
-            if case .reviewing = spoken { spoken = .none }
-            typed = !draft.text.isEmpty
-        }
         .onChange(of: subtaskFocused) {
             if !subtaskFocused, subtaskText.isEmpty, subtasks.isEmpty { subtasksOpen = false }
         }
@@ -174,17 +134,11 @@ private struct QuickAddForm: View {
         .accessibilityLabel(subtasks.isEmpty ? "Add subtask" : "Add subtask, \(subtasks.count) added")
     }
 
-    private var addLabel: String {
-        guard spoken.isList else { return "Add task" }
-        let count = spoken.tasks.count
-        return count == 1 ? "Add task" : "Add \(count) tasks"
-    }
-
     private var micButton: some View {
         Button {
-            if listening { stopRamble(apply: true) } else { startRamble() }
+            navigator.sheet = .ramble(draft.defaults)
         } label: {
-            Image(systemName: listening ? "stop.fill" : "mic.fill")
+            Image(systemName: "mic.fill")
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(.white)
                 .frame(width: 32, height: 32)
@@ -193,14 +147,7 @@ private struct QuickAddForm: View {
                 .contentShape(.rect)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(listening ? "Stop listening" : "Ramble")
-    }
-
-    /// While the transcript is streaming, the chips stay put. The grammar fills them when listening stops.
-    private func shownParse() -> QuickAdd.Parsed {
-        let parsed = draft.parse(now: clock.now, projects: spaceProjects, labels: spaceLabels, in: clock.timeZone)
-        guard listening else { return parsed }
-        return QuickAdd.Parsed(title: draft.text)
+        .accessibilityLabel("Ramble")
     }
 
     @ViewBuilder
@@ -218,7 +165,7 @@ private struct QuickAddForm: View {
         }
         LocationChip(location: location) { location = $0 }
         EventChip(event: event) { event = $0 }
-        if event == nil, let recurrence = parsed.recurrence ?? draft.appliedRecurrence {
+        if event == nil, let recurrence = parsed.recurrence {
             Chip(systemImage: "repeat", text: Format.formatRecurrence(recurrence, resolved.due), tone: .toneRepeat)
         }
         ForEach(Array(draft.picked.reminders.enumerated()), id: \.offset) { item in
@@ -257,11 +204,6 @@ private struct QuickAddForm: View {
     }
 
     private func submit() {
-        guard !listening else { return }
-        if spoken.isList {
-            saveSpoken(spoken.tasks)
-            return
-        }
         let parsed = draft.parse(now: clock.now, projects: spaceProjects, labels: spaceLabels, in: clock.timeZone)
         guard let task = draft.resolve(parsed) else { return }
         let typing = NewTask(subtask: QuickAdd.parseSubtask(subtaskText, now: clock.now, labels: spaceLabels, in: clock.timeZone))
@@ -284,138 +226,7 @@ private struct QuickAddForm: View {
         navigator.sheet = nil
         if let task = store.task(taskID) { navigator.reveal(task, today: clock.today, in: clock.timeZone) }
     }
-
-    private func startRamble() {
-        notice = nil
-        transcript = ""
-        spoken = .live([])
-        RambleModel.prewarm()
-        applyOnStop = true
-        listening = true
-        typed = false
-        let choice = store.dictation
-        let deviceId = store.snapshot.sync?.deviceId
-        capturing = true
-        session.onText = { spoken, _ in
-            guard capturing else { return }
-            transcript = spoken
-            if spoken != draft.text {
-                speechWrites += 1
-                draft.setText(spoken)
-            }
-            parseLive(spoken)
-        }
-        session.onLevel = { _ in }
-        session.onEnd = { end in
-            listening = false
-            capturing = false
-            switch end {
-            case .stopped:
-                if applyOnStop { applyTranscript() }
-            case .typed:
-                notice = "You can type the task instead."
-            case let .failed(message):
-                notice = message
-                if applyOnStop { applyTranscript() }
-            }
-        }
-        Task { await session.start(choice: choice, deviceId: deviceId) }
-    }
-
-    private func stopRamble(apply: Bool) {
-        applyOnStop = apply
-        listening = false
-        if !apply { capturing = false }
-        liveParse?.cancel()
-        if !apply { spoken = .none }
-        session.stop()
-    }
-
-    /// The grammar runs off the main thread on every transcript update, so a long ramble never stalls the field.
-    private func parseLive(_ text: String) {
-        liveParse?.cancel()
-        let now = clock.now, projects = spaceProjects, labels = spaceLabels, zone = clock.timeZone
-        liveParse = Task {
-            let draft = await Task.detached(priority: .userInitiated) {
-                Ramble.parse(text, now: now, projects: projects, labels: labels, in: zone)
-            }.value
-            guard !Task.isCancelled, listening else { return }
-            if draft.ended {
-                stopRamble(apply: true)
-            } else {
-                spoken = .live(draft.tasks)
-            }
-        }
-    }
-
-    private func applyTranscript() {
-        let ramble = Ramble.parse(transcript, now: clock.now, projects: spaceProjects, labels: spaceLabels, in: clock.timeZone)
-        guard !ramble.tasks.isEmpty else {
-            spoken = .none
-            if !transcript.isEmpty, transcript != draft.text {
-                speechWrites += 1
-                draft.setText(transcript)
-            }
-            return
-        }
-        guard !Ramble.usesCommands(ramble) else { return settle(ramble.tasks) }
-        spoken = .reviewing(ramble.tasks)
-        let transcript = transcript, now = clock.now, projects = spaceProjects, labels = spaceLabels, zone = clock.timeZone
-        Task {
-            let split = await RambleModel.split(transcript)
-            guard case .reviewing = spoken else { return }
-            let structured = split.flatMap {
-                Ramble.structured($0, transcript: transcript, draft: ramble, now: now, projects: projects, labels: labels, in: zone)
-            }
-            settle(structured ?? ramble.tasks)
-        }
-    }
-
-    /// One plain task goes into the field to edit like typed text; anything more stays as a list to save together.
-    private func settle(_ tasks: [RambleTask]) {
-        let before = draft.text
-        if tasks.count == 1, tasks[0].fitsTheField {
-            spoken = .none
-            speechWrites += 1
-            draft.applyRamble(RambleDraft(tasks: tasks, tokens: [], ended: false), today: clock.today)
-        } else {
-            spoken = .list(tasks)
-            speechWrites += 1
-            draft.setText("")
-        }
-        if draft.text == before { speechWrites -= 1 }
-    }
-
-    private func removeSpoken(_ index: Int, _ subtask: Int?) {
-        var tasks = spoken.tasks
-        guard tasks.indices.contains(index) else { return }
-        if let subtask {
-            guard tasks[index].subtasks.indices.contains(subtask) else { return }
-            tasks[index].subtasks.remove(at: subtask)
-        } else {
-            tasks.remove(at: index)
-        }
-        spoken = tasks.isEmpty ? .none : .list(tasks)
-    }
-
-    private func saveSpoken(_ tasks: [RambleTask]) {
-        let defaults = draft.defaults
-        let today = clock.today
-        let added = withAnimation(.snappy) {
-            tasks.compactMap { task -> TaskItem? in
-                guard let added = store.addTask(Ramble.newTask(task, defaults: defaults, today: today)) else { return nil }
-                if !task.notes.isEmpty { store.updateTask(added.id, TaskPatch(notes: task.notes)) }
-                for subtask in task.subtasks {
-                    guard let child = store.addTask(Ramble.newTask(subtask, defaults: nil, today: today), parentId: added.id) else { continue }
-                    if !subtask.notes.isEmpty { store.updateTask(child.id, TaskPatch(notes: subtask.notes)) }
-                }
-                return added
-            }
-        }
-        if let first = added.first { close(revealing: first.id) } else { navigator.sheet = nil }
-    }
 }
-
 
 private struct ParsedReminder: Hashable {
     let token: QuickAdd.Token
