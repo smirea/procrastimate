@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Calls the production agent API as the AI account: pm <METHOD> <path> [curl args...]
+# e.g. pm GET /view, pm POST /comments -d '{"taskId":"…","body":"…"}'
+set -euo pipefail
+
+# Worktrees have no ignored env files, so read them from the main checkout.
+root=$(cd "$(git rev-parse --git-common-dir)/.." && pwd)
+if [[ -f "$root/.env.local" ]]; then
+	set -a
+	source "$root/.env.local"
+	set +a
+fi
+: "${APP_BOT_API_URL:?missing; run 'env-manager env set dev && env-manager down' in $root (never 'up')}"
+: "${APP_BOT_TOKEN:?missing; run 'env-manager env set dev && env-manager down' in $root (never 'up')}"
+
+method=$1
+path=$2
+shift 2
+curl -sS --fail-with-body -X "$method" \
+	-H "Authorization: Bearer $APP_BOT_TOKEN" \
+	-H 'Content-Type: application/json' \
+	"$APP_BOT_API_URL$path" "$@"
