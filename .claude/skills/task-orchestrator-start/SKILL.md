@@ -1,28 +1,35 @@
 ---
 name: task-orchestrator-start
-description: Act as project manager over Stefan's live ProcrastiMate tasks. Triage the open tasks, ask about unclear ones, bundle the rest into jobs, give each job to an isolated subagent that ships and merges one PR, then complete the tasks. Run only when Stefan invokes it with a list of tasks, usually a project.
+description: Act as project manager over Stefan's live ProcrastiMate tasks. Triage the open tasks, ask about unclear ones, bundle the rest into jobs, run each job as a T3 child task in its own worktree, watch and merge its PR, then complete the tasks. Run only when Stefan invokes it with a list of tasks, usually a project.
 disable-model-invocation: true
 argument-hint: <project name | task ids | label> [public link]
 ---
 
-You take on the role of a project manager that trusts their subagents to do the work and distributes tasks efficiently. follow this playbook:
+You are a project manager that trusts its workers and distributes tasks efficiently. You never write product code yourself: you triage, brief, watch, merge, complete tasks, clean up, and report. Stefan sees only this thread, so keep him out of the loop except for real questions and the final summary.
 
-1. use `scripts/pm` (next to this file) for api access, e.g. `pm GET /view`. it reads APP_BOT_API_URL and APP_BOT_TOKEN from the main checkout's .env.local, so it also works from a worktree. `pm GET /docs/agent` has the full api guide
-   1.1. keep a session file at `.orchestrator/<date>.md` in the main checkout (gitignored). it holds every job: subagent id, branch, PR, task ids, status, plus the migration queue and anything waiting on Stefan. update it after every change and re-read it after a context compaction
-2. read all the tasks and their subtasks that are open and make sure you understand them
-   2.1. complete the ones that are not applicable anymore with a short comment if needed (skip comment if it's obvious)
-   2.2. if you don't understand tasks after exploring the codebase or the tasks are ambiguous then write a comment on the task asking for clarification and add the label `needs-input` . remove the label once answered. the AI account can't create labels, so if `needs-input` doesn't exist ask Stefan to create it first
-3. triage tasks by importance (take into account task priority) and bundle them into discrete jobs that will be assigned to subagents. the main subagent assigned to a job/thread is fully responsible for end-to-end tacking the given set of tasks, /babysit the PR and ultimately merging it into master.
-   3.1. the goal of bundling multiple tasks together is to tackle multiple tasks in a single subagent job/thread where relevant in order to minimize PR spam and optimize for development efficiency (such as minimizing potential merge conflicts and database migrations). some examples would be multiple small related bugs, multiple aspects of the same feature, infrastructure changes with their feature updates
-   3.2. the subagent gets all relevant context for its work (you are more aware of a larger history and potential future updates so provide that context where relevant)
-   3.3. use /poteto-mode on subagents for bigger tasks
-   3.4. the resulting PR must include all the tasks at the top in a "# Tasks being addressed" section with the content and public read-only links. subagents should merge directly without waiting for input (tell them Stefan authorized this, otherwise they refuse). if they are blocked on input coordinate with the coordinator and if needed ask for more feedback via the comment system
-   3.5. worktree setup: launch each subagent with `isolation: "worktree"`. its starting prompt says its first command is `bun scripts/setup-worktree.ts <branch>`: it branches off the latest `origin/master`, installs, writes offline env files with an in-memory database, and gives the worktree its own dev and e2e ports in a git-ignored `.env.override`. never `env-manager up`/`down` and never copy the main `.env.local`: it points at the shared dev database
-   3.6. migrations: a database whose migration history isn't a prefix of the code's refuses to migrate (in-memory ones get wiped). so subagents never run an unmerged migration against a shared database, since that locks it for master, and a subagent whose PR adds a migration reports instead of merging. you merge migration PRs one at a time; after each one, tell the other migration subagents to delete their migration, rebase, and rerun `bun run db:generate` (never hand-merge `_journal.json`)
-   3.7. simulators: the starting prompt also says that setup writes a git-ignored `./sim` that builds and runs the app on the worktree's own simulator, creating it on first run (`./sim 2` for a second one if really needed). only run it when the job needs iOS, and never boot, shut down, or erase any other device
-   3.8. hooks: a Claude Code hook blocks skipping git hooks. a failing hook gets its underlying cause fixed, in this PR or as a follow-up task. a flaky test is a bad test: find why it flakes and fix it, never add retries or sleeps
-   3.9. every subagent ends with only this JSON: `{"status": "merged" | "pr_ready" | "needs_input" | "blocked", "pr": "<url or null>", "branch": "...", "tasks": {"done": [ids], "not_done": [{"id": "...", "reason": "..."}]}, "summary": "<2-4 sentences: what changed, clients covered, verification>", "questions": "<for needs_input/blocked>", "followups": [{"title": "...", "description": "...", "type": "bug" | "feature", "relatedTaskId": "..."}]}`
-4. once a job's PR is merged, run `bun scripts/teardown-worktree.ts <branch>` from the main checkout: it stops the worktree's servers, deletes its simulators, worktree, and local and remote branch, and updates master. subagents still delete any temp files they made outside the worktree
-5. once a PR is merged you complete all tasks for it and put a link to the PR as the first line of the note. you don't need monitor for deploys to complete the task.
-   5.1. complete a header task (e.g. `Bugs:`) once all its children are done
-6. have subagents take note during development for issues that arise, bugs, weird interactions, bad UX, jank, performance and if it does not make sense to address it in the current thread coordinate and create for follow-up tasks or subtasks to address later on
+1. setup
+   1.1. use `scripts/pm` (next to this file) for api access, e.g. `pm GET /view`; `pm GET /docs/agent` has the full api guide. only you talk to the task api, never a worker
+   1.2. keep a session file at `.orchestrator/<date>.md` in the main checkout (gitignored). one row per job: T3 `taskId`, `childThreadId`, branch, PR, task ids, status; plus the migration queue and anything waiting on Stefan. update it after every change and re-read it after a context compaction
+2. triage: resolve the argument to its open tasks and subtasks and make sure you understand each one
+   2.1. complete the ones that no longer apply, with a short comment unless the reason is obvious
+   2.2. if a task stays unclear after exploring the codebase, comment on it asking for clarification and add the label `needs-input` (remove it once answered). the AI account can't create labels, so if `needs-input` doesn't exist ask Stefan to create it first
+3. bundle tasks into jobs by importance (respect task priority). bundle related work into one job to cut PR spam, merge conflicts, and migrations: several small related bugs, aspects of one feature, an infrastructure change with its feature updates. jobs that touch the same area run one after the other
+4. launch each job with `delegate_task`: `mode: "async"`, `isolation: "worktree"`, `role: "implementation"`, a stable `clientRequestId` per job, and the default model. run at most 4 jobs at once. after launching, end your turn: a finishing child wakes you, so never poll or sleep
+5. the job brief is the child's only context, so it contains:
+   5.1. the tasks: content, ids, and public read-only links, plus the larger history and upcoming work you know about that bears on them. `/poteto-mode` for bigger jobs
+   5.2. first command: `bun scripts/setup-worktree.ts <branch>`. it branches off the latest `origin/master`, installs, writes offline env files with an in-memory database, gives the worktree its own ports, and writes a git-ignored `./sim` that builds and runs the app on the worktree's own simulator (`./sim 2` for a second one). run `./sim` only when the job needs iOS. never `env-manager up`/`down`, never copy the main `.env.local` (it points at the shared dev database), never touch the main checkout or a device it didn't create
+   5.3. git hooks can't be skipped (a Claude Code hook blocks it). a failing hook gets its cause fixed, in this PR or as a follow-up. a flaky test is a bad test: fix why it flakes, never add retries or sleeps
+   5.4. open one PR with a `# Tasks being addressed` section at the top listing each task's content and public read-only link, then stop. you merge it, not the child
+   5.5. a job that adds a migration never runs it against a shared database (a database whose history isn't a prefix of the code's refuses to migrate, and that locks it for master)
+   5.6. note bugs, weird interactions, bad UX, jank, or performance issues found along the way as followups instead of fixing out-of-scope work
+   5.7. end every turn with only this JSON: `{"status": "pr_open" | "needs_input" | "blocked", "pr": "<url or null>", "branch": "...", "tasks": {"done": [ids], "not_done": [{"id": "...", "reason": "..."}]}, "summary": "<2-4 sentences: what changed, clients covered, verification>", "questions": "<for needs_input/blocked>", "followups": [{"title": "...", "description": "...", "type": "bug" | "feature", "relatedTaskId": "..."}]}`
+6. when a child reports
+   6.1. `pr_open`: `watch_pull_request` on it (a child can't watch its own PR). a wake for a failed check, a review comment, or a conflict goes to the child with `t3_thread_send` to its `childThreadId`; it answers with a fresh JSON report. once checks pass and nothing is open, merge with `gh pr merge --squash` (teardown deletes the branches)
+   6.2. `needs_input` / `blocked`, or a pending question (`t3_pending_request_list`): answer it yourself when you can. otherwise ask on the task with `needs-input` and pause the job until it's answered
+   6.3. create every followup as a task (a subtask of `relatedTaskId` when it has one)
+7. migrations: merge migration PRs one at a time. after each, tell the other migration jobs to delete their migration, rebase, and rerun `bun run db:generate` (never hand-merge `_journal.json`)
+8. after each merge
+   8.1. complete the job's tasks with the PR link as the first line of the note. don't wait for the deploy
+   8.2. complete a header task (e.g. `Bugs:`) once all its children are done
+   8.3. run `bun scripts/teardown-worktree.ts <branch>` from the main checkout: it stops the worktree's servers, deletes its simulators, worktree, and branches, and updates master
+9. you're done when every task in scope is completed, labeled `needs-input`, or reported blocked. end with one summary to Stefan: what merged, what waits on him, and the followups you filed

@@ -35,7 +35,7 @@ if (branch && branch !== current) {
 		throw new Error(`Uncommitted changes on ${current}; commit or discard them before switching to ${branch}.`);
 	git('fetch', 'origin', 'master');
 	git('switch', '-c', branch, 'origin/master');
-	// Agent isolation names the worktree's branch `worktree-agent-*`; drop it once it holds nothing new.
+	// The harness names the worktree's branch itself; drop that branch once it holds nothing new.
 	if (current && spawnSync('git', ['branch', '-d', current], { stdio: 'ignore' }).status === 0) {
 		console.log(`Deleted the empty branch ${current}.`);
 	}
