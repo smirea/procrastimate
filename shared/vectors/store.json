@@ -7,6 +7,7 @@
 			"test": "tasks › a new task lands at the end with the default priority and its project",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -31,6 +32,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -196,6 +198,7 @@
 			],
 			"output": {
 				"data": {
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -220,6 +223,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -415,6 +419,7 @@
 			"test": "tasks › a subtask takes its parent project, comes last among siblings, and reopens a done parent",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -439,6 +444,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -604,6 +610,7 @@
 			],
 			"output": {
 				"data": {
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -628,6 +635,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -823,6 +831,7 @@
 			"test": "tasks › a new task is created after the newest one, so tasks added under one clock reading keep their order",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -847,6 +856,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -1012,6 +1022,7 @@
 			],
 			"output": {
 				"data": {
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -1036,6 +1047,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -1231,6 +1243,7 @@
 			"test": "tasks › a new task is created after the newest one, so tasks added under one clock reading keep their order",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -1255,6 +1268,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -1441,6 +1455,7 @@
 			],
 			"output": {
 				"data": {
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -1465,6 +1480,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -1681,6 +1697,7 @@
 			"test": "tasks › a new task is created after the newest one, so tasks added under one clock reading keep their order",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -1705,6 +1722,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -1749,6 +1767,7 @@
 			],
 			"output": {
 				"data": {
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -1773,6 +1792,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -1984,6 +2004,7 @@
 			"test": "tasks › editing writes the patch, and a new project moves every subtask too",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -2008,6 +2029,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -2161,6 +2183,7 @@
 				}
 			],
 			"output": {
+				"comments": [],
 				"labels": [
 					{
 						"createdAt": 1,
@@ -2185,6 +2208,7 @@
 						"name": "Work"
 					}
 				],
+				"reads": [],
 				"sections": [
 					{
 						"createdAt": 1,
@@ -2337,6 +2361,7 @@
 			"test": "tasks › editing writes the patch, and a new project moves every subtask too",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -2361,6 +2386,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -2513,6 +2539,7 @@
 				}
 			],
 			"output": {
+				"comments": [],
 				"labels": [
 					{
 						"createdAt": 1,
@@ -2537,6 +2564,7 @@
 						"name": "Work"
 					}
 				],
+				"reads": [],
 				"sections": [
 					{
 						"createdAt": 1,
@@ -2689,6 +2717,7 @@
 			"test": "tasks › completing a task and its subtasks keeps what undo needs",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -2713,6 +2742,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -2886,6 +2916,7 @@
 					]
 				},
 				"data": {
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -2910,6 +2941,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -3063,6 +3095,7 @@
 			"test": "tasks › completing a task and its subtasks keeps what undo needs",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -3087,6 +3120,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -3253,6 +3287,7 @@
 				]
 			],
 			"output": {
+				"comments": [],
 				"labels": [
 					{
 						"createdAt": 1,
@@ -3277,6 +3312,7 @@
 						"name": "Work"
 					}
 				],
+				"reads": [],
 				"sections": [
 					{
 						"createdAt": 1,
@@ -3429,6 +3465,7 @@
 			"test": "tasks › completing a repeating task moves it to its next occurrence and undo moves it back",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -3453,6 +3490,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -3631,6 +3669,7 @@
 					]
 				},
 				"data": {
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -3655,6 +3694,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -3808,6 +3848,7 @@
 			"test": "tasks › completing a repeating task moves it to its next occurrence and undo moves it back",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -3832,6 +3873,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -3999,6 +4041,7 @@
 				]
 			],
 			"output": {
+				"comments": [],
 				"labels": [
 					{
 						"createdAt": 1,
@@ -4023,6 +4066,7 @@
 						"name": "Work"
 					}
 				],
+				"reads": [],
 				"sections": [
 					{
 						"createdAt": 1,
@@ -4175,6 +4219,7 @@
 			"test": "tasks › completing a repeating task moves it to its next occurrence and undo moves it back",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -4199,6 +4244,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -4356,6 +4402,7 @@
 			"test": "tasks › undo keeps edits made since the completion",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -4380,6 +4427,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -4553,6 +4601,7 @@
 					]
 				},
 				"data": {
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -4577,6 +4626,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -4730,6 +4780,7 @@
 			"test": "tasks › undo keeps edits made since the completion",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -4754,6 +4805,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -4906,6 +4958,7 @@
 				}
 			],
 			"output": {
+				"comments": [],
 				"labels": [
 					{
 						"createdAt": 1,
@@ -4930,6 +4983,7 @@
 						"name": "Work"
 					}
 				],
+				"reads": [],
 				"sections": [
 					{
 						"createdAt": 1,
@@ -5082,6 +5136,7 @@
 			"test": "tasks › undo keeps edits made since the completion",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -5106,6 +5161,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -5272,6 +5328,7 @@
 				]
 			],
 			"output": {
+				"comments": [],
 				"labels": [
 					{
 						"createdAt": 1,
@@ -5296,6 +5353,7 @@
 						"name": "Work"
 					}
 				],
+				"reads": [],
 				"sections": [
 					{
 						"createdAt": 1,
@@ -5448,6 +5506,7 @@
 			"test": "tasks › reopening a subtask reopens its parent",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -5472,6 +5531,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -5645,6 +5705,7 @@
 					]
 				},
 				"data": {
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -5669,6 +5730,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -5822,6 +5884,7 @@
 			"test": "tasks › reopening a subtask reopens its parent",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -5846,6 +5909,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -5995,6 +6059,7 @@
 				"passport"
 			],
 			"output": {
+				"comments": [],
 				"labels": [
 					{
 						"createdAt": 1,
@@ -6019,6 +6084,7 @@
 						"name": "Work"
 					}
 				],
+				"reads": [],
 				"sections": [
 					{
 						"createdAt": 1,
@@ -6171,6 +6237,7 @@
 			"test": "tasks › moving a subtask writes only its own order",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -6195,6 +6262,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -6345,6 +6413,7 @@
 				0
 			],
 			"output": {
+				"comments": [],
 				"labels": [
 					{
 						"createdAt": 1,
@@ -6369,6 +6438,7 @@
 						"name": "Work"
 					}
 				],
+				"reads": [],
 				"sections": [
 					{
 						"createdAt": 1,
@@ -6521,6 +6591,7 @@
 			"test": "tasks › deleting a task removes its subtasks, and undo puts them back in order",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -6545,6 +6616,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -6695,6 +6767,7 @@
 			],
 			"output": {
 				"data": {
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -6719,6 +6792,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -6874,6 +6948,7 @@
 			"test": "tasks › deleting a task removes its subtasks, and undo puts them back in order",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -6898,6 +6973,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -7048,6 +7124,7 @@
 				]
 			],
 			"output": {
+				"comments": [],
 				"labels": [
 					{
 						"createdAt": 1,
@@ -7072,6 +7149,7 @@
 						"name": "Work"
 					}
 				],
+				"reads": [],
 				"sections": [
 					{
 						"createdAt": 1,
@@ -7224,6 +7302,7 @@
 			"test": "tasks › deleting a task removes its subtasks, and undo puts them back in order",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -7248,6 +7327,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -7461,6 +7541,7 @@
 				]
 			],
 			"output": {
+				"comments": [],
 				"labels": [
 					{
 						"createdAt": 1,
@@ -7485,6 +7566,7 @@
 						"name": "Work"
 					}
 				],
+				"reads": [],
 				"sections": [
 					{
 						"createdAt": 1,
@@ -7637,6 +7719,7 @@
 			"test": "tasks › deleting a task removes its subtasks, and undo puts them back in order",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -7661,6 +7744,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -7811,6 +7895,7 @@
 			],
 			"output": {
 				"data": {
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -7835,6 +7920,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -7989,8 +8075,10 @@
 			"test": "exploding subtasks › directly makes each subtask a top-level task with its own title, keeping its subtasks",
 			"input": [
 				{
+					"comments": [],
 					"labels": [],
 					"projects": [],
+					"reads": [],
 					"sections": [],
 					"tasks": [
 						{
@@ -8094,8 +8182,10 @@
 			],
 			"output": {
 				"data": {
+					"comments": [],
 					"labels": [],
 					"projects": [],
+					"reads": [],
 					"sections": [],
 					"tasks": [
 						{
@@ -8228,8 +8318,10 @@
 			"test": "exploding subtasks › directly makes each subtask a top-level task with its own title, keeping its subtasks",
 			"input": [
 				{
+					"comments": [],
 					"labels": [],
 					"projects": [],
+					"reads": [],
 					"sections": [],
 					"tasks": [
 						{
@@ -8357,8 +8449,10 @@
 				]
 			],
 			"output": {
+				"comments": [],
 				"labels": [],
 				"projects": [],
+				"reads": [],
 				"sections": [],
 				"tasks": [
 					{
@@ -8463,8 +8557,10 @@
 			"test": "exploding subtasks › a sectioned parent's subtasks land in its section, and undo takes them back out",
 			"input": [
 				{
+					"comments": [],
 					"labels": [],
 					"projects": [],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -8576,8 +8672,10 @@
 			],
 			"output": {
 				"data": {
+					"comments": [],
 					"labels": [],
 					"projects": [],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -8718,8 +8816,10 @@
 			"test": "exploding subtasks › a sectioned parent's subtasks land in its section, and undo takes them back out",
 			"input": [
 				{
+					"comments": [],
 					"labels": [],
 					"projects": [],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -8855,8 +8955,10 @@
 				]
 			],
 			"output": {
+				"comments": [],
 				"labels": [],
 				"projects": [],
+				"reads": [],
 				"sections": [
 					{
 						"createdAt": 1,
@@ -8969,8 +9071,10 @@
 			"test": "exploding subtasks › prefix puts the parent's title before each subtask's",
 			"input": [
 				{
+					"comments": [],
 					"labels": [],
 					"projects": [],
+					"reads": [],
 					"sections": [],
 					"tasks": [
 						{
@@ -9074,8 +9178,10 @@
 			],
 			"output": {
 				"data": {
+					"comments": [],
 					"labels": [],
 					"projects": [],
+					"reads": [],
 					"sections": [],
 					"tasks": [
 						{
@@ -9208,8 +9314,10 @@
 			"test": "exploding subtasks › inherit fills in the parent's labels, date, and priority only where a subtask has none",
 			"input": [
 				{
+					"comments": [],
 					"labels": [],
 					"projects": [],
+					"reads": [],
 					"sections": [],
 					"tasks": [
 						{
@@ -9313,8 +9421,10 @@
 			],
 			"output": {
 				"data": {
+					"comments": [],
 					"labels": [],
 					"projects": [],
+					"reads": [],
 					"sections": [],
 					"tasks": [
 						{
@@ -9452,8 +9562,10 @@
 			"test": "exploding subtasks › a nested parent passes its subtasks up to sit right after it, in order",
 			"input": [
 				{
+					"comments": [],
 					"labels": [],
 					"projects": [],
+					"reads": [],
 					"sections": [],
 					"tasks": [
 						{
@@ -9578,8 +9690,10 @@
 			],
 			"output": {
 				"data": {
+					"comments": [],
 					"labels": [],
 					"projects": [],
+					"reads": [],
 					"sections": [],
 					"tasks": [
 						{
@@ -9718,8 +9832,10 @@
 			"test": "exploding subtasks › undo leaves a subtask where it is when its parent was deleted since",
 			"input": [
 				{
+					"comments": [],
 					"labels": [],
 					"projects": [],
+					"reads": [],
 					"sections": [],
 					"tasks": [
 						{
@@ -9823,8 +9939,10 @@
 			],
 			"output": {
 				"data": {
+					"comments": [],
 					"labels": [],
 					"projects": [],
+					"reads": [],
 					"sections": [],
 					"tasks": [
 						{
@@ -9957,8 +10075,10 @@
 			"test": "exploding subtasks › undo leaves a subtask where it is when its parent was deleted since",
 			"input": [
 				{
+					"comments": [],
 					"labels": [],
 					"projects": [],
+					"reads": [],
 					"sections": [],
 					"tasks": [
 						{
@@ -10061,8 +10181,10 @@
 			],
 			"output": {
 				"data": {
+					"comments": [],
 					"labels": [],
 					"projects": [],
+					"reads": [],
 					"sections": [],
 					"tasks": [
 						{
@@ -10170,8 +10292,10 @@
 			"test": "exploding subtasks › undo leaves a subtask where it is when its parent was deleted since",
 			"input": [
 				{
+					"comments": [],
 					"labels": [],
 					"projects": [],
+					"reads": [],
 					"sections": [],
 					"tasks": [
 						{
@@ -10273,8 +10397,10 @@
 				]
 			],
 			"output": {
+				"comments": [],
 				"labels": [],
 				"projects": [],
+				"reads": [],
 				"sections": [],
 				"tasks": [
 					{
@@ -10353,8 +10479,10 @@
 			"test": "exploding subtasks › a task without subtasks, or a missing one, changes nothing",
 			"input": [
 				{
+					"comments": [],
 					"labels": [],
 					"projects": [],
+					"reads": [],
 					"sections": [],
 					"tasks": [
 						{
@@ -10458,8 +10586,10 @@
 			],
 			"output": {
 				"data": {
+					"comments": [],
 					"labels": [],
 					"projects": [],
+					"reads": [],
 					"sections": [],
 					"tasks": [
 						{
@@ -10566,8 +10696,10 @@
 			"test": "exploding subtasks › a task without subtasks, or a missing one, changes nothing",
 			"input": [
 				{
+					"comments": [],
 					"labels": [],
 					"projects": [],
+					"reads": [],
 					"sections": [],
 					"tasks": [
 						{
@@ -10671,8 +10803,10 @@
 			],
 			"output": {
 				"data": {
+					"comments": [],
 					"labels": [],
 					"projects": [],
+					"reads": [],
 					"sections": [],
 					"tasks": [
 						{
@@ -10779,6 +10913,7 @@
 			"test": "projects › adding, renaming, and deleting a project, which deletes its tasks",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -10803,6 +10938,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -10957,6 +11093,7 @@
 			],
 			"output": {
 				"data": {
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -10986,6 +11123,7 @@
 							"name": "Errands"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -11144,6 +11282,7 @@
 			"test": "projects › adding, renaming, and deleting a project, which deletes its tasks",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -11168,6 +11307,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -11318,6 +11458,7 @@
 				"House"
 			],
 			"output": {
+				"comments": [],
 				"labels": [
 					{
 						"createdAt": 1,
@@ -11342,6 +11483,7 @@
 						"name": "Work"
 					}
 				],
+				"reads": [],
 				"sections": [
 					{
 						"createdAt": 1,
@@ -11494,6 +11636,7 @@
 			"test": "projects › adding, renaming, and deleting a project, which deletes its tasks",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -11518,6 +11661,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -11667,6 +11811,7 @@
 				"home"
 			],
 			"output": {
+				"comments": [],
 				"labels": [
 					{
 						"createdAt": 1,
@@ -11686,6 +11831,7 @@
 						"name": "Work"
 					}
 				],
+				"reads": [],
 				"sections": [
 					{
 						"createdAt": 3,
@@ -11807,6 +11953,7 @@
 			"test": "sections › a new section comes last in its project, and a taken name returns the section that has it",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -11831,6 +11978,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -11986,6 +12134,7 @@
 			],
 			"output": {
 				"data": {
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -12010,6 +12159,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -12237,6 +12387,7 @@
 			"test": "sections › a new section comes last in its project, and a taken name returns the section that has it",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -12261,6 +12412,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -12416,6 +12568,7 @@
 			],
 			"output": {
 				"data": {
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -12440,6 +12593,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -12600,6 +12754,7 @@
 			"test": "sections › a new section comes last in its project, and a taken name returns the section that has it",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -12624,6 +12779,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -12779,6 +12935,7 @@
 			],
 			"output": {
 				"data": {
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -12803,6 +12960,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -12970,6 +13128,7 @@
 			"test": "sections › renaming keeps names unique within a project, ignoring case",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -12994,6 +13153,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -13144,6 +13304,7 @@
 				"Soon"
 			],
 			"output": {
+				"comments": [],
 				"labels": [
 					{
 						"createdAt": 1,
@@ -13168,6 +13329,7 @@
 						"name": "Work"
 					}
 				],
+				"reads": [],
 				"sections": [
 					{
 						"createdAt": 1,
@@ -13320,6 +13482,7 @@
 			"test": "sections › renaming keeps names unique within a project, ignoring case",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -13344,6 +13507,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -13494,6 +13658,7 @@
 				"NEXT"
 			],
 			"output": {
+				"comments": [],
 				"labels": [
 					{
 						"createdAt": 1,
@@ -13518,6 +13683,7 @@
 						"name": "Work"
 					}
 				],
+				"reads": [],
 				"sections": [
 					{
 						"createdAt": 1,
@@ -13670,6 +13836,7 @@
 			"test": "sections › renaming keeps names unique within a project, ignoring case",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -13694,6 +13861,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -13844,6 +14012,7 @@
 				"Next"
 			],
 			"output": {
+				"comments": [],
 				"labels": [
 					{
 						"createdAt": 1,
@@ -13868,6 +14037,7 @@
 						"name": "Work"
 					}
 				],
+				"reads": [],
 				"sections": [
 					{
 						"createdAt": 1,
@@ -14020,6 +14190,7 @@
 			"test": "sections › moving a section writes only its own order",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -14044,6 +14215,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -14194,6 +14366,7 @@
 				0
 			],
 			"output": {
+				"comments": [],
 				"labels": [
 					{
 						"createdAt": 1,
@@ -14218,6 +14391,7 @@
 						"name": "Work"
 					}
 				],
+				"reads": [],
 				"sections": [
 					{
 						"createdAt": 1,
@@ -14416,6 +14590,7 @@
 			"test": "sections › moving a section writes only its own order",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -14440,6 +14615,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -14590,6 +14766,7 @@
 				0
 			],
 			"output": {
+				"comments": [],
 				"labels": [
 					{
 						"createdAt": 1,
@@ -14614,6 +14791,7 @@
 						"name": "Work"
 					}
 				],
+				"reads": [],
 				"sections": [
 					{
 						"createdAt": 1,
@@ -14766,6 +14944,7 @@
 			"test": "sections › deleting a section deletes its tasks with their subtasks and leaves the rest of the project",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -14790,6 +14969,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -14942,6 +15122,7 @@
 				}
 			],
 			"output": {
+				"comments": [],
 				"labels": [
 					{
 						"createdAt": 1,
@@ -14966,6 +15147,7 @@
 						"name": "Work"
 					}
 				],
+				"reads": [],
 				"sections": [
 					{
 						"createdAt": 1,
@@ -15312,6 +15494,7 @@
 			"test": "sections › deleting a section deletes its tasks with their subtasks and leaves the rest of the project",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -15336,6 +15519,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -15488,6 +15672,7 @@
 				}
 			],
 			"output": {
+				"comments": [],
 				"labels": [
 					{
 						"createdAt": 1,
@@ -15512,6 +15697,7 @@
 						"name": "Work"
 					}
 				],
+				"reads": [],
 				"sections": [
 					{
 						"createdAt": 1,
@@ -15664,6 +15850,7 @@
 			"test": "sections › deleting a section deletes its tasks with their subtasks and leaves the rest of the project",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -15688,6 +15875,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -15837,6 +16025,7 @@
 				"next"
 			],
 			"output": {
+				"comments": [],
 				"labels": [
 					{
 						"createdAt": 1,
@@ -15861,6 +16050,7 @@
 						"name": "Work"
 					}
 				],
+				"reads": [],
 				"sections": [
 					{
 						"createdAt": 1,
@@ -15943,6 +16133,7 @@
 			"test": "sections › deleting a section deletes its tasks with their subtasks and leaves the rest of the project",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -15967,6 +16158,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -16116,6 +16308,7 @@
 				"next"
 			],
 			"output": {
+				"comments": [],
 				"labels": [
 					{
 						"createdAt": 1,
@@ -16140,6 +16333,7 @@
 						"name": "Work"
 					}
 				],
+				"reads": [],
 				"sections": [
 					{
 						"createdAt": 1,
@@ -16285,6 +16479,7 @@
 			"test": "sections › a section moves a task into its project, and its subtasks follow the project but sit in no section",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -16309,6 +16504,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -16461,6 +16657,7 @@
 				}
 			],
 			"output": {
+				"comments": [],
 				"labels": [
 					{
 						"createdAt": 1,
@@ -16485,6 +16682,7 @@
 						"name": "Work"
 					}
 				],
+				"reads": [],
 				"sections": [
 					{
 						"createdAt": 1,
@@ -16637,6 +16835,7 @@
 			"test": "sections › a section moves a task into its project, and its subtasks follow the project but sit in no section",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -16661,6 +16860,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -16813,6 +17013,7 @@
 				}
 			],
 			"output": {
+				"comments": [],
 				"labels": [
 					{
 						"createdAt": 1,
@@ -16837,6 +17038,7 @@
 						"name": "Work"
 					}
 				],
+				"reads": [],
 				"sections": [
 					{
 						"createdAt": 1,
@@ -16989,6 +17191,7 @@
 			"test": "sections › a new project leaves the section, and no section keeps the project",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -17013,6 +17216,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -17165,6 +17369,7 @@
 				}
 			],
 			"output": {
+				"comments": [],
 				"labels": [
 					{
 						"createdAt": 1,
@@ -17189,6 +17394,7 @@
 						"name": "Work"
 					}
 				],
+				"reads": [],
 				"sections": [
 					{
 						"createdAt": 1,
@@ -17341,6 +17547,7 @@
 			"test": "sections › a new project leaves the section, and no section keeps the project",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -17365,6 +17572,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -17517,6 +17725,7 @@
 				}
 			],
 			"output": {
+				"comments": [],
 				"labels": [
 					{
 						"createdAt": 1,
@@ -17541,6 +17750,7 @@
 						"name": "Work"
 					}
 				],
+				"reads": [],
 				"sections": [
 					{
 						"createdAt": 1,
@@ -17693,6 +17903,7 @@
 			"test": "sections › a new project leaves the section, and no section keeps the project",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -17717,6 +17928,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -17869,6 +18081,7 @@
 				}
 			],
 			"output": {
+				"comments": [],
 				"labels": [
 					{
 						"createdAt": 1,
@@ -17893,6 +18106,7 @@
 						"name": "Work"
 					}
 				],
+				"reads": [],
 				"sections": [
 					{
 						"createdAt": 1,
@@ -18045,6 +18259,7 @@
 			"test": "sections › a new project leaves the section, and no section keeps the project",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -18069,6 +18284,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -18221,6 +18437,7 @@
 				}
 			],
 			"output": {
+				"comments": [],
 				"labels": [
 					{
 						"createdAt": 1,
@@ -18245,6 +18462,7 @@
 						"name": "Work"
 					}
 				],
+				"reads": [],
 				"sections": [
 					{
 						"createdAt": 1,
@@ -18397,6 +18615,7 @@
 			"test": "sections › a new project leaves the section, and no section keeps the project",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -18421,6 +18640,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -18573,6 +18793,7 @@
 				}
 			],
 			"output": {
+				"comments": [],
 				"labels": [
 					{
 						"createdAt": 1,
@@ -18597,6 +18818,7 @@
 						"name": "Work"
 					}
 				],
+				"reads": [],
 				"sections": [
 					{
 						"createdAt": 1,
@@ -18749,6 +18971,7 @@
 			"test": "sections › a new project leaves the section, and no section keeps the project",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -18773,6 +18996,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -18925,6 +19149,7 @@
 				}
 			],
 			"output": {
+				"comments": [],
 				"labels": [
 					{
 						"createdAt": 1,
@@ -18949,6 +19174,7 @@
 						"name": "Work"
 					}
 				],
+				"reads": [],
 				"sections": [
 					{
 						"createdAt": 1,
@@ -19101,6 +19327,7 @@
 			"test": "sections › a subtask never takes a section of its own",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -19125,6 +19352,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -19277,6 +19505,7 @@
 				}
 			],
 			"output": {
+				"comments": [],
 				"labels": [
 					{
 						"createdAt": 1,
@@ -19301,6 +19530,7 @@
 						"name": "Work"
 					}
 				],
+				"reads": [],
 				"sections": [
 					{
 						"createdAt": 1,
@@ -19453,6 +19683,7 @@
 			"test": "sections › a new task goes into its section and that section’s project, and a subtask gets none",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -19477,6 +19708,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -19643,6 +19875,7 @@
 			],
 			"output": {
 				"data": {
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -19667,6 +19900,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -19862,6 +20096,7 @@
 			"test": "sections › a new task goes into its section and that section’s project, and a subtask gets none",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -19886,6 +20121,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -20052,6 +20288,7 @@
 			],
 			"output": {
 				"data": {
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -20076,6 +20313,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -20271,6 +20509,7 @@
 			"test": "sections › a new task goes into its section and that section’s project, and a subtask gets none",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -20295,6 +20534,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -20461,6 +20701,7 @@
 			],
 			"output": {
 				"data": {
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -20485,6 +20726,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -20680,6 +20922,7 @@
 			"test": "sections › a new task goes into its section and that section’s project, and a subtask gets none",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -20704,6 +20947,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -20870,6 +21114,7 @@
 			],
 			"output": {
 				"data": {
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -20894,6 +21139,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -21089,6 +21335,7 @@
 			"test": "sections › moving a sectioned task to Inbox clears its project and section",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -21113,6 +21360,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -21265,6 +21513,7 @@
 				}
 			],
 			"output": {
+				"comments": [],
 				"labels": [
 					{
 						"createdAt": 1,
@@ -21289,6 +21538,7 @@
 						"name": "Work"
 					}
 				],
+				"reads": [],
 				"sections": [
 					{
 						"createdAt": 1,
@@ -21441,6 +21691,7 @@
 			"test": "sections › moving a sectioned task to Inbox clears its project and section",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -21465,6 +21716,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -21618,6 +21870,7 @@
 				}
 			],
 			"output": {
+				"comments": [],
 				"labels": [
 					{
 						"createdAt": 1,
@@ -21642,6 +21895,7 @@
 						"name": "Work"
 					}
 				],
+				"reads": [],
 				"sections": [
 					{
 						"createdAt": 1,
@@ -21794,6 +22048,7 @@
 			"test": "sections › moving a sectioned task to Inbox clears its project and section",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -21818,6 +22073,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -21970,6 +22226,7 @@
 				}
 			],
 			"output": {
+				"comments": [],
 				"labels": [
 					{
 						"createdAt": 1,
@@ -21994,6 +22251,7 @@
 						"name": "Work"
 					}
 				],
+				"reads": [],
 				"sections": [
 					{
 						"createdAt": 1,
@@ -22146,6 +22404,7 @@
 			"test": "sections › moving a sectioned task to Inbox clears its project and section",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -22170,6 +22429,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -22322,6 +22582,7 @@
 				}
 			],
 			"output": {
+				"comments": [],
 				"labels": [
 					{
 						"createdAt": 1,
@@ -22346,6 +22607,7 @@
 						"name": "Work"
 					}
 				],
+				"reads": [],
 				"sections": [
 					{
 						"createdAt": 1,
@@ -22498,6 +22760,7 @@
 			"test": "labels › adding a label and renaming it, unique ignoring case",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -22522,6 +22785,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -22676,6 +22940,7 @@
 			],
 			"output": {
 				"data": {
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -22705,6 +22970,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -22863,6 +23129,7 @@
 			"test": "labels › adding a label and renaming it, unique ignoring case",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -22887,6 +23154,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -23037,6 +23305,7 @@
 				"Calls"
 			],
 			"output": {
+				"comments": [],
 				"labels": [
 					{
 						"createdAt": 1,
@@ -23061,6 +23330,7 @@
 						"name": "Work"
 					}
 				],
+				"reads": [],
 				"sections": [
 					{
 						"createdAt": 1,
@@ -23213,6 +23483,7 @@
 			"test": "labels › adding a label and renaming it, unique ignoring case",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -23237,6 +23508,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -23387,6 +23659,7 @@
 				"phone"
 			],
 			"output": {
+				"comments": [],
 				"labels": [
 					{
 						"createdAt": 1,
@@ -23411,6 +23684,7 @@
 						"name": "Work"
 					}
 				],
+				"reads": [],
 				"sections": [
 					{
 						"createdAt": 1,
@@ -23563,6 +23837,7 @@
 			"test": "labels › deleting a label takes it off its tasks and keeps them",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -23587,6 +23862,7 @@
 							"name": "Work"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1,
@@ -23736,6 +24012,7 @@
 				"calls"
 			],
 			"output": {
+				"comments": [],
 				"labels": [
 					{
 						"createdAt": 2,
@@ -23755,6 +24032,7 @@
 						"name": "Work"
 					}
 				],
+				"reads": [],
 				"sections": [
 					{
 						"createdAt": 1,
@@ -23906,8 +24184,10 @@
 			"test": "labels › completing a task on an event series moves it past missed occurrences, and undo moves it back",
 			"input": [
 				{
+					"comments": [],
 					"labels": [],
 					"projects": [],
+					"reads": [],
 					"sections": [],
 					"tasks": [
 						{
@@ -24004,8 +24284,10 @@
 					]
 				},
 				"data": {
+					"comments": [],
 					"labels": [],
 					"projects": [],
+					"reads": [],
 					"sections": [],
 					"tasks": [
 						{
@@ -24052,8 +24334,10 @@
 			"test": "labels › completing a task on an event series moves it past missed occurrences, and undo moves it back",
 			"input": [
 				{
+					"comments": [],
 					"labels": [],
 					"projects": [],
+					"reads": [],
 					"sections": [],
 					"tasks": [
 						{
@@ -24129,8 +24413,10 @@
 				]
 			],
 			"output": {
+				"comments": [],
 				"labels": [],
 				"projects": [],
+				"reads": [],
 				"sections": [],
 				"tasks": [
 					{
@@ -24186,8 +24472,10 @@
 			"test": "labels › completing a task on an event series moves it past missed occurrences, and undo moves it back",
 			"input": [
 				{
+					"comments": [],
 					"labels": [],
 					"projects": [],
+					"reads": [],
 					"sections": [],
 					"tasks": [
 						{
@@ -24260,8 +24548,10 @@
 					]
 				},
 				"data": {
+					"comments": [],
 					"labels": [],
 					"projects": [],
+					"reads": [],
 					"sections": [],
 					"tasks": [
 						{

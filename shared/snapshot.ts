@@ -5,10 +5,12 @@ import { sortTasks } from './store.ts';
 import { detachOrphans } from './subtasks.ts';
 import { hlcSchema } from './db/json.ts';
 import {
+	commentSchema,
 	labelSchema,
 	opSchema,
 	projectSchema,
 	sectionSchema,
+	readSchema,
 	shareTargetSchema,
 	taskSchema as syncedTaskSchema,
 } from './sync/protocol.ts';
@@ -106,6 +108,7 @@ const spaceSectionSchema = z
 		projects: z.array(projectSchema).default([]),
 		sections: z.array(sectionSchema).default([]),
 		labels: z.array(labelSchema).default([]),
+		comments: z.array(commentSchema).default([]),
 	})
 	// Core decodes the section's tasks with the same loading rules, so it writes its own decoder.
 	.meta({ id: 'SpaceSection', 'x-decode': 'custom' });
@@ -130,6 +133,9 @@ const snapshotSchema = z
 		projects: z.array(projectSchema),
 		sections: z.array(sectionSchema).default([]),
 		labels: z.array(labelSchema).default([]),
+		comments: z.array(commentSchema).default([]),
+		/** When this user last read each task's comments, by task id, for own and shared tasks alike. */
+		reads: z.array(readSchema).default([]),
 		remindersCheckedAt: z.number().int(),
 		sync: syncSchema.optional(),
 		/** Shared spaces by owner id. */
@@ -149,6 +155,8 @@ export const emptySnapshot = (now: number): Snapshot => ({
 	projects: [],
 	sections: [],
 	labels: [],
+	comments: [],
+	reads: [],
 	remindersCheckedAt: now,
 	spaces: {},
 	people: [],

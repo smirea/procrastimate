@@ -68,12 +68,14 @@ extension API.Snapshot {
     public static func empty(now: Int) -> Snapshot { Snapshot(remindersCheckedAt: now) }
 
     public var data: StoreData {
-        get { StoreData(tasks: tasks, projects: projects, sections: sections, labels: labels) }
+        get { StoreData(tasks: tasks, projects: projects, sections: sections, labels: labels, comments: comments, reads: reads) }
         set {
             tasks = newValue.tasks
             projects = newValue.projects
             sections = newValue.sections
             labels = newValue.labels
+            comments = newValue.comments
+            reads = newValue.reads
         }
     }
 
@@ -96,6 +98,8 @@ extension API.Snapshot {
         projects = try c.decode([Project].self, forKey: .projects)
         sections = try c.decodeAbsent([ProjectSection].self, forKey: .sections) ?? []
         labels = try c.decodeAbsent([Label].self, forKey: .labels) ?? []
+        comments = try c.decodeAbsent([Comment].self, forKey: .comments) ?? []
+        reads = try c.decodeAbsent([CommentRead].self, forKey: .reads) ?? []
         remindersCheckedAt = try c.decode(Int.self, forKey: .remindersCheckedAt)
         sync = try c.decodeAbsent(SyncSection.self, forKey: .sync)
         // A shared space that fails is dropped on its own; its next sync starts it over.
@@ -126,6 +130,7 @@ extension API.SpaceSection {
         projects = try c.decodeAbsent([Project].self, forKey: .projects) ?? []
         sections = try c.decodeAbsent([ProjectSection].self, forKey: .sections) ?? []
         labels = try c.decodeAbsent([Label].self, forKey: .labels) ?? []
+        comments = try c.decodeAbsent([Comment].self, forKey: .comments) ?? []
     }
 }
 

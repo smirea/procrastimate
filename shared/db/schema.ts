@@ -103,6 +103,42 @@ export const labels = sqliteTable(
 	userEntity,
 );
 
+/**
+ * A comment on a task, in the task's space. The server stamps `authorId` and refuses an edit or a delete from anyone
+ * but the author. A comment outlives its deleted task, so undoing the delete brings it back.
+ */
+export const comments = sqliteTable(
+	'comments',
+	{
+		userId: text('user_id').notNull(),
+		id: text('id').notNull(),
+		taskId: text('task_id').notNull(),
+		body: text('body').notNull(),
+		authorId: text('author_id'),
+		createdAt: integer('created_at').notNull(),
+		editedAt: integer('edited_at'),
+		deleted: deleted(),
+		clocks: clocks(),
+	},
+	userEntity,
+);
+
+/**
+ * When this user last read a task's comments, keyed by the task's id. It lives in the reader's own space, also for a
+ * task in a space shared with them, so each user keeps their own read state.
+ */
+export const reads = sqliteTable(
+	'reads',
+	{
+		userId: text('user_id').notNull(),
+		id: text('id').notNull(),
+		readAt: integer('read_at').notNull(),
+		deleted: deleted(),
+		clocks: clocks(),
+	},
+	userEntity,
+);
+
 /** The one settings record per user, whose id is always `settings`. It cannot be deleted. */
 export const settings = sqliteTable(
 	'settings',
@@ -127,7 +163,15 @@ export const settings = sqliteTable(
 );
 
 /** Each kind's table, so code that handles every kind finds its columns in one place. */
-export const ENTITY_TABLES = { task: tasks, project: projects, section: sections, label: labels, settings } as const;
+export const ENTITY_TABLES = {
+	task: tasks,
+	project: projects,
+	section: sections,
+	label: labels,
+	comment: comments,
+	read: reads,
+	settings,
+} as const;
 
 /** Append-only: the fields of one op that won, at server sequence `seq`, which starts at 1 for each user. */
 export const log = sqliteTable(

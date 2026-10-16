@@ -29,6 +29,7 @@
 	import LabelPicker from './LabelPicker.svelte';
 	import Subtasks from './Subtasks.svelte';
 	import TaskActivity from './TaskActivity.svelte';
+	import TaskComments from './TaskComments.svelte';
 	import PersonName from './PersonName.svelte';
 	import CopyButton from './CopyButton.svelte';
 	import { store, type TaskPatch } from '../store.svelte.ts';
@@ -239,6 +240,7 @@
 			</p>
 		{/if}
 		{#if editable || store.children(task.id).length}<Subtasks {task} />{/if}
+		<TaskComments {task} {home} />
 		<TaskActivity {task} {home} />
 	</div>
 	{#if editable}

@@ -115,12 +115,14 @@ struct TaskRow: View {
     private var progress: Subtasks.Progress? {
         Subtasks.progressOf(store.allTasks.filter { $0.parentId == task.id })
     }
+    private var commentBadge: CommentBadge? { store.commentBadge(task.id, me: Session.userID) }
 
     /// The day the task sits on, which for an event or a repeat at a place is not its stored due date.
     private var due: Due? { Triggers.scheduledDue(task, today, in: store.timeZone) }
 
     private var hasDetails: Bool {
         due != nil || task.location != nil || task.recurrence != nil || !task.reminders.isEmpty || progress != nil || parent != nil || showProject || task.memoSource != nil
+            || commentBadge != nil
     }
 
     @ViewBuilder private var details: some View {
@@ -154,6 +156,9 @@ struct TaskRow: View {
                     Detail(systemImage: "bell", text: "\(task.reminders.count)")
                         .accessibilityElement(children: .ignore)
                         .accessibilityLabel("\(task.reminders.count) reminders")
+                }
+                if let commentBadge {
+                    CommentBadgeView(badge: commentBadge)
                 }
                 if task.memoSource != nil {
                     Image(systemName: "waveform")
@@ -198,6 +203,25 @@ private struct EventDetail: View {
         .accessibilityLabel(
             [label.when, "\(label.lead) \(series ? "every " : "")\(label.title)"].compactMap { $0 }.joined(separator: ", ")
         )
+    }
+}
+
+/// The comment count in gray, or the unread count in the accent color with a filled bubble while some are unread.
+private struct CommentBadgeView: View {
+    let badge: CommentBadge
+
+    var body: some View {
+        let unread = badge.unread > 0
+        HStack(spacing: 3) {
+            Image(systemName: unread ? "bubble.left.fill" : "bubble.left").imageScale(.small)
+            Text("\(unread ? badge.unread : badge.count)").monospacedDigit()
+        }
+        .foregroundStyle(unread ? Color.accent : Color.muted)
+        .fontWeight(unread ? .semibold : .regular)
+        .contentTransition(.numericText())
+        .animation(.snappy, value: badge)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(unread ? "\(badge.unread) unread of \(badge.count) comments" : "\(badge.count) comments")
     }
 }
 

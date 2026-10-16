@@ -79,6 +79,8 @@ const data = (): StoreData => ({
 		{ id: 'calls', name: 'calls', createdAt: 1 },
 		{ id: 'phone', name: 'Phone', createdAt: 2 },
 	],
+	comments: [],
+	reads: [],
 });
 
 const newTask = {
@@ -212,6 +214,8 @@ describe('exploding subtasks', () => {
 		projects: [],
 		sections: [],
 		labels: [],
+		comments: [],
+		reads: [],
 	});
 	const shape = (next: StoreData) =>
 		next.tasks.map(({ id, parentId, order, title, labelIds, due, priority }) => ({
@@ -480,7 +484,14 @@ describe('labels', () => {
 			minutes: 0,
 			occurrences,
 		};
-		const before: StoreData = { tasks: [task('jan', 1, { event })], projects: [], sections: [], labels: [] };
+		const before: StoreData = {
+			tasks: [task('jan', 1, { event })],
+			projects: [],
+			sections: [],
+			labels: [],
+			comments: [],
+			reads: [],
+		};
 		const { data: next, completion } = completeTask(before, 'jan', today, NOW)!;
 		expect(completion).toEqual({
 			kind: 'rolled',

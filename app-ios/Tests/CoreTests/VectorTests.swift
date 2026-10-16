@@ -128,6 +128,7 @@ let handlers: [String: Handler] = [
     "memo-tasks": memoTasksVector,
     "links": linksVector,
     "sync": syncVector,
+    "comments": commentsVector,
 ]
 
 private struct Occurrence: Decodable {
@@ -299,6 +300,20 @@ private func completion(_ completion: Completion) throws -> JSONValue {
         fields["kind"] = "done"
     }
     return .object(fields)
+}
+
+@Sendable func commentsVector(_ fn: String, _ a: Args) throws -> JSONValue {
+    switch fn {
+    case "commentsOn": return try json(Comments.commentsOn(a(0), a(1)))
+    case "commentBadges": return try json(Comments.commentBadges(a(0), a(1), a(2)))
+    case "addComment":
+        let result = Comments.addComment(try a(0), try a(1), try a(2), try a(3), try a(4, as: CreationInput.self).creation)
+        return object(["data": try json(result.data), "comment": try json(result.comment)])
+    case "editComment": return try json(Comments.editComment(a(0), a(1), a(2), a(3), a(4)))
+    case "deleteComment": return try json(Comments.deleteComment(a(0), a(1), a(2)))
+    case "markRead": return try json(Comments.markRead(a(0), a(1), a(2), a(3), a(4)))
+    default: throw unknown(fn)
+    }
 }
 
 @Sendable func storeVector(_ fn: String, _ a: Args) throws -> JSONValue {

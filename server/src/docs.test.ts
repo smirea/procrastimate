@@ -6,7 +6,7 @@ import { authHeaders, registerDevice, TEST_AUTH_SECRET, type DeviceCredentials }
 import { SHARED_ROUTES } from './actor';
 import api from './api';
 import type { Env } from './bindings';
-import { agentExamples, agentRoutes, examplePath, TASK_ID } from './docs';
+import { agentExamples, agentRoutes, COMMENT_ID, examplePath, TASK_ID } from './docs';
 
 const ORIGIN = 'https://procrastimate.test';
 
@@ -66,6 +66,10 @@ describe('agent docs', () => {
 			'POST /api/tasks/complete',
 			'POST /api/tasks/reopen',
 			'GET /api/activity',
+			'GET /api/comments',
+			'POST /api/comments',
+			'PATCH /api/comments',
+			'DELETE /api/comments',
 		];
 		expect([...SHARED_ROUTES].toSorted()).toEqual(routes.toSorted());
 
@@ -95,10 +99,13 @@ describe('agent docs', () => {
 		expect(agentRoutes.filter(route => !exampled.has(`${route.method} ${route.path}`))).toEqual([]);
 
 		const target = (await (await asAi('POST', '/api/tasks', { title: 'Fix the sink' })).json()) as Task;
-		const fill = (value: unknown) => JSON.parse(JSON.stringify(value ?? null).replaceAll(TASK_ID, target.id));
+		const posted = await asAi('POST', '/api/comments', { taskId: target.id, body: 'On it' });
+		const comment = (await posted.json()) as { id: string };
+		const ids = (text: string) => text.replaceAll(TASK_ID, target.id).replaceAll(COMMENT_ID, comment.id);
+		const fill = (value: unknown) => JSON.parse(ids(JSON.stringify(value ?? null)));
 		const statuses = [];
 		for (const example of agentExamples) {
-			const path = examplePath(example).replaceAll(TASK_ID, target.id);
+			const path = ids(examplePath(example));
 			const response = await asAi(example.method, path, example.body === undefined ? undefined : fill(example.body));
 			statuses.push(`${response.status} ${example.title}`);
 		}

@@ -425,6 +425,11 @@ public enum Todoist {
             imported[source.sourceKey] = task
             summary.tasks += 1
         }
-        return (StoreData(tasks: tasks, projects: projects, sections: sections, labels: labels), summary)
+        var merged = data
+        merged.tasks = tasks
+        merged.projects = projects
+        merged.sections = sections
+        merged.labels = labels
+        return (merged, summary)
     }
 }

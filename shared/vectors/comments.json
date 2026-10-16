@@ -1,0 +1,606 @@
+{
+	"module": "comments",
+	"timeZone": "America/New_York",
+	"cases": [
+		{
+			"fn": "commentsOn",
+			"test": "comments › a task lists only its own comments, oldest first",
+			"input": [
+				[
+					{
+						"authorId": "ann",
+						"body": "late",
+						"createdAt": 30,
+						"editedAt": null,
+						"id": "late",
+						"taskId": "t"
+					},
+					{
+						"authorId": "ann",
+						"body": "other",
+						"createdAt": 10,
+						"editedAt": null,
+						"id": "other",
+						"taskId": "u"
+					},
+					{
+						"authorId": "bob",
+						"body": "early",
+						"createdAt": 20,
+						"editedAt": null,
+						"id": "early",
+						"taskId": "t"
+					}
+				],
+				"t"
+			],
+			"output": [
+				{
+					"authorId": "bob",
+					"body": "early",
+					"createdAt": 20,
+					"editedAt": null,
+					"id": "early",
+					"taskId": "t"
+				},
+				{
+					"authorId": "ann",
+					"body": "late",
+					"createdAt": 30,
+					"editedAt": null,
+					"id": "late",
+					"taskId": "t"
+				}
+			]
+		},
+		{
+			"fn": "addComment",
+			"test": "comments › a blank comment is not added, and a body is trimmed",
+			"input": [
+				{
+					"comments": [],
+					"labels": [],
+					"projects": [],
+					"reads": [],
+					"sections": [],
+					"tasks": []
+				},
+				"t",
+				"  \n ",
+				"ann",
+				{
+					"id": "c",
+					"now": 5
+				}
+			],
+			"output": {
+				"comment": null,
+				"data": {
+					"comments": [],
+					"labels": [],
+					"projects": [],
+					"reads": [],
+					"sections": [],
+					"tasks": []
+				}
+			}
+		},
+		{
+			"fn": "addComment",
+			"test": "comments › a blank comment is not added, and a body is trimmed",
+			"input": [
+				{
+					"comments": [],
+					"labels": [],
+					"projects": [],
+					"reads": [],
+					"sections": [],
+					"tasks": []
+				},
+				"t",
+				"  Buy the blue one ",
+				"ann",
+				{
+					"id": "c",
+					"now": 5
+				}
+			],
+			"output": {
+				"comment": {
+					"authorId": "ann",
+					"body": "Buy the blue one",
+					"createdAt": 5,
+					"editedAt": null,
+					"id": "c",
+					"taskId": "t"
+				},
+				"data": {
+					"comments": [
+						{
+							"authorId": "ann",
+							"body": "Buy the blue one",
+							"createdAt": 5,
+							"editedAt": null,
+							"id": "c",
+							"taskId": "t"
+						}
+					],
+					"labels": [],
+					"projects": [],
+					"reads": [],
+					"sections": [],
+					"tasks": []
+				}
+			}
+		},
+		{
+			"fn": "editComment",
+			"test": "comments › only the author edits or deletes a comment",
+			"input": [
+				{
+					"comments": [
+						{
+							"authorId": "ann",
+							"body": "c",
+							"createdAt": 1,
+							"editedAt": null,
+							"id": "c",
+							"taskId": "t"
+						}
+					],
+					"labels": [],
+					"projects": [],
+					"reads": [],
+					"sections": [],
+					"tasks": []
+				},
+				"c",
+				"Changed",
+				"bob",
+				9
+			],
+			"output": {
+				"comments": [
+					{
+						"authorId": "ann",
+						"body": "c",
+						"createdAt": 1,
+						"editedAt": null,
+						"id": "c",
+						"taskId": "t"
+					}
+				],
+				"labels": [],
+				"projects": [],
+				"reads": [],
+				"sections": [],
+				"tasks": []
+			}
+		},
+		{
+			"fn": "editComment",
+			"test": "comments › only the author edits or deletes a comment",
+			"input": [
+				{
+					"comments": [
+						{
+							"authorId": "ann",
+							"body": "c",
+							"createdAt": 1,
+							"editedAt": null,
+							"id": "c",
+							"taskId": "t"
+						}
+					],
+					"labels": [],
+					"projects": [],
+					"reads": [],
+					"sections": [],
+					"tasks": []
+				},
+				"c",
+				"   ",
+				"ann",
+				9
+			],
+			"output": {
+				"comments": [
+					{
+						"authorId": "ann",
+						"body": "c",
+						"createdAt": 1,
+						"editedAt": null,
+						"id": "c",
+						"taskId": "t"
+					}
+				],
+				"labels": [],
+				"projects": [],
+				"reads": [],
+				"sections": [],
+				"tasks": []
+			}
+		},
+		{
+			"fn": "editComment",
+			"test": "comments › only the author edits or deletes a comment",
+			"input": [
+				{
+					"comments": [
+						{
+							"authorId": "ann",
+							"body": "c",
+							"createdAt": 1,
+							"editedAt": null,
+							"id": "c",
+							"taskId": "t"
+						}
+					],
+					"labels": [],
+					"projects": [],
+					"reads": [],
+					"sections": [],
+					"tasks": []
+				},
+				"c",
+				"Changed ",
+				"ann",
+				9
+			],
+			"output": {
+				"comments": [
+					{
+						"authorId": "ann",
+						"body": "Changed",
+						"createdAt": 1,
+						"editedAt": 9,
+						"id": "c",
+						"taskId": "t"
+					}
+				],
+				"labels": [],
+				"projects": [],
+				"reads": [],
+				"sections": [],
+				"tasks": []
+			}
+		},
+		{
+			"fn": "deleteComment",
+			"test": "comments › only the author edits or deletes a comment",
+			"input": [
+				{
+					"comments": [
+						{
+							"authorId": "ann",
+							"body": "c",
+							"createdAt": 1,
+							"editedAt": null,
+							"id": "c",
+							"taskId": "t"
+						}
+					],
+					"labels": [],
+					"projects": [],
+					"reads": [],
+					"sections": [],
+					"tasks": []
+				},
+				"c",
+				"bob"
+			],
+			"output": {
+				"comments": [
+					{
+						"authorId": "ann",
+						"body": "c",
+						"createdAt": 1,
+						"editedAt": null,
+						"id": "c",
+						"taskId": "t"
+					}
+				],
+				"labels": [],
+				"projects": [],
+				"reads": [],
+				"sections": [],
+				"tasks": []
+			}
+		},
+		{
+			"fn": "deleteComment",
+			"test": "comments › only the author edits or deletes a comment",
+			"input": [
+				{
+					"comments": [
+						{
+							"authorId": "ann",
+							"body": "c",
+							"createdAt": 1,
+							"editedAt": null,
+							"id": "c",
+							"taskId": "t"
+						}
+					],
+					"labels": [],
+					"projects": [],
+					"reads": [],
+					"sections": [],
+					"tasks": []
+				},
+				"c",
+				"ann"
+			],
+			"output": {
+				"comments": [],
+				"labels": [],
+				"projects": [],
+				"reads": [],
+				"sections": [],
+				"tasks": []
+			}
+		},
+		{
+			"fn": "commentBadges",
+			"test": "comments › a badge counts every comment and the unread ones someone else wrote after the marker",
+			"input": [
+				[
+					{
+						"authorId": "ann",
+						"body": "mine",
+						"createdAt": 50,
+						"editedAt": null,
+						"id": "mine",
+						"taskId": "t"
+					},
+					{
+						"authorId": null,
+						"body": "pending",
+						"createdAt": 60,
+						"editedAt": null,
+						"id": "pending",
+						"taskId": "t"
+					},
+					{
+						"authorId": "bob",
+						"body": "seen",
+						"createdAt": 10,
+						"editedAt": null,
+						"id": "seen",
+						"taskId": "t"
+					},
+					{
+						"authorId": "bob",
+						"body": "new",
+						"createdAt": 40,
+						"editedAt": null,
+						"id": "new",
+						"taskId": "t"
+					},
+					{
+						"authorId": "bob",
+						"body": "elsewhere",
+						"createdAt": 5,
+						"editedAt": null,
+						"id": "elsewhere",
+						"taskId": "u"
+					}
+				],
+				[
+					{
+						"id": "t",
+						"readAt": 20
+					}
+				],
+				"ann"
+			],
+			"output": {
+				"t": {
+					"count": 4,
+					"unread": 1
+				},
+				"u": {
+					"count": 1,
+					"unread": 1
+				}
+			}
+		},
+		{
+			"fn": "markRead",
+			"test": "comments › reading moves the marker to the newest comment by someone else, never back, and not without news",
+			"input": [
+				{
+					"comments": [],
+					"labels": [],
+					"projects": [],
+					"reads": [],
+					"sections": [],
+					"tasks": []
+				},
+				"t",
+				[
+					{
+						"authorId": "bob",
+						"body": "theirs",
+						"createdAt": 40,
+						"editedAt": null,
+						"id": "theirs",
+						"taskId": "t"
+					},
+					{
+						"authorId": "ann",
+						"body": "mine",
+						"createdAt": 90,
+						"editedAt": null,
+						"id": "mine",
+						"taskId": "t"
+					}
+				],
+				"ann",
+				100
+			],
+			"output": {
+				"comments": [],
+				"labels": [],
+				"projects": [],
+				"reads": [
+					{
+						"id": "t",
+						"readAt": 100
+					}
+				],
+				"sections": [],
+				"tasks": []
+			}
+		},
+		{
+			"fn": "markRead",
+			"test": "comments › reading moves the marker to the newest comment by someone else, never back, and not without news",
+			"input": [
+				{
+					"comments": [],
+					"labels": [],
+					"projects": [],
+					"reads": [
+						{
+							"id": "t",
+							"readAt": 100
+						}
+					],
+					"sections": [],
+					"tasks": []
+				},
+				"t",
+				[
+					{
+						"authorId": "bob",
+						"body": "theirs",
+						"createdAt": 40,
+						"editedAt": null,
+						"id": "theirs",
+						"taskId": "t"
+					},
+					{
+						"authorId": "ann",
+						"body": "mine",
+						"createdAt": 90,
+						"editedAt": null,
+						"id": "mine",
+						"taskId": "t"
+					}
+				],
+				"ann",
+				200
+			],
+			"output": {
+				"comments": [],
+				"labels": [],
+				"projects": [],
+				"reads": [
+					{
+						"id": "t",
+						"readAt": 100
+					}
+				],
+				"sections": [],
+				"tasks": []
+			}
+		},
+		{
+			"fn": "markRead",
+			"test": "comments › reading moves the marker to the newest comment by someone else, never back, and not without news",
+			"input": [
+				{
+					"comments": [],
+					"labels": [],
+					"projects": [],
+					"reads": [
+						{
+							"id": "t",
+							"readAt": 100
+						}
+					],
+					"sections": [],
+					"tasks": []
+				},
+				"t",
+				[
+					{
+						"authorId": "bob",
+						"body": "theirs",
+						"createdAt": 40,
+						"editedAt": null,
+						"id": "theirs",
+						"taskId": "t"
+					},
+					{
+						"authorId": "ann",
+						"body": "mine",
+						"createdAt": 90,
+						"editedAt": null,
+						"id": "mine",
+						"taskId": "t"
+					},
+					{
+						"authorId": "bob",
+						"body": "skewed",
+						"createdAt": 500,
+						"editedAt": null,
+						"id": "skewed",
+						"taskId": "t"
+					}
+				],
+				"ann",
+				300
+			],
+			"output": {
+				"comments": [],
+				"labels": [],
+				"projects": [],
+				"reads": [
+					{
+						"id": "t",
+						"readAt": 500
+					}
+				],
+				"sections": [],
+				"tasks": []
+			}
+		},
+		{
+			"fn": "markRead",
+			"test": "comments › reading moves the marker to the newest comment by someone else, never back, and not without news",
+			"input": [
+				{
+					"comments": [],
+					"labels": [],
+					"projects": [],
+					"reads": [],
+					"sections": [],
+					"tasks": []
+				},
+				"t",
+				[
+					{
+						"authorId": "ann",
+						"body": "mine",
+						"createdAt": 1,
+						"editedAt": null,
+						"id": "mine",
+						"taskId": "t"
+					}
+				],
+				"ann",
+				10
+			],
+			"output": {
+				"comments": [],
+				"labels": [],
+				"projects": [],
+				"reads": [],
+				"sections": [],
+				"tasks": []
+			}
+		}
+	]
+}

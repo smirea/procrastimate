@@ -1,5 +1,14 @@
 import type { Label, Project, Section, Task } from '../task.ts';
-import { DEFAULT_SETTINGS, FIELDS_SCHEMAS, SETTINGS_ID, type Kind, type Settings, type Snapshot } from './protocol.ts';
+import {
+	DEFAULT_SETTINGS,
+	type Comment,
+	type CommentRead,
+	FIELDS_SCHEMAS,
+	SETTINGS_ID,
+	type Kind,
+	type Settings,
+	type Snapshot,
+} from './protocol.ts';
 
 export type Fields = Record<string, unknown>;
 
@@ -10,6 +19,8 @@ export const emptySnapshot = (): Snapshot => ({
 	projects: [],
 	sections: [],
 	labels: [],
+	comments: [],
+	reads: [],
 	settings: { ...DEFAULT_SETTINGS },
 });
 
@@ -17,12 +28,16 @@ export const emptySnapshot = (): Snapshot => ({
 export const byCreation = (a: { createdAt: number; id: string }, b: { createdAt: number; id: string }) =>
 	a.createdAt - b.createdAt || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 
+const byId = (a: { id: string }, b: { id: string }) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+
 export function sortSnapshot(snapshot: Snapshot): Snapshot {
 	return {
 		tasks: snapshot.tasks.toSorted(byCreation),
 		projects: snapshot.projects.toSorted(byCreation),
 		sections: snapshot.sections.toSorted(byCreation),
 		labels: snapshot.labels.toSorted(byCreation),
+		comments: snapshot.comments.toSorted(byCreation),
+		reads: snapshot.reads.toSorted(byId),
 		settings: snapshot.settings,
 	};
 }
@@ -37,6 +52,10 @@ export function entitiesOf(snapshot: Snapshot, kind: Kind): readonly Entity[] {
 			return snapshot.sections;
 		case 'label':
 			return snapshot.labels;
+		case 'comment':
+			return snapshot.comments;
+		case 'read':
+			return snapshot.reads;
 		case 'settings':
 			return [{ id: SETTINGS_ID, ...snapshot.settings }];
 		default: {
@@ -56,6 +75,10 @@ export function withEntities(snapshot: Snapshot, kind: Kind, entities: readonly 
 			return { ...snapshot, sections: entities as unknown as Section[] };
 		case 'label':
 			return { ...snapshot, labels: entities as unknown as Label[] };
+		case 'comment':
+			return { ...snapshot, comments: entities as unknown as Comment[] };
+		case 'read':
+			return { ...snapshot, reads: entities as unknown as CommentRead[] };
 		case 'settings': {
 			const { id: _, ...settings } = entities[0] ?? { id: SETTINGS_ID, ...DEFAULT_SETTINGS };
 			return { ...snapshot, settings: settings as Settings };

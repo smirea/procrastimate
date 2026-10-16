@@ -251,7 +251,7 @@
 					"path": "/api/sync",
 					"inputStructure": "detailed",
 					"summary": "Sync the space",
-					"description": "The apps’ replication protocol. `{ \"cursor\": 0, \"ops\": [] }` answers with the whole visible snapshot. A task op is applied when the task is editable before and after it; project and label ops are acknowledged and dropped."
+					"description": "The apps’ replication protocol. `{ \"cursor\": 0, \"ops\": [] }` answers with the whole visible snapshot. A task op is applied when the task is editable before and after it, and a comment op when its task is editable and the comment is new or the caller’s own; project and label ops are acknowledged and dropped."
 				}
 			}
 		}
@@ -351,6 +351,64 @@
 						"inputStructure": "detailed",
 						"summary": "A task’s history",
 						"description": "Who created, edited, completed, reopened, or deleted the task, and when, oldest first."
+					}
+				}
+			}
+		}
+	},
+	"comments": {
+		"list": {
+			"~orpc": {
+				"errorMap": {},
+				"meta": {
+					"~openapi": {
+						"method": "GET",
+						"path": "/api/comments",
+						"inputStructure": "detailed",
+						"summary": "A task’s comments",
+						"description": "`id` is the task’s. Oldest first, each with its author."
+					}
+				}
+			}
+		},
+		"create": {
+			"~orpc": {
+				"errorMap": {},
+				"meta": {
+					"~openapi": {
+						"method": "POST",
+						"path": "/api/comments",
+						"inputStructure": "detailed",
+						"summary": "Comment on a task",
+						"description": "Needs the task editable. Links in `body` show as links in the apps. The caller is the author."
+					}
+				}
+			}
+		},
+		"update": {
+			"~orpc": {
+				"errorMap": {},
+				"meta": {
+					"~openapi": {
+						"method": "PATCH",
+						"path": "/api/comments",
+						"inputStructure": "detailed",
+						"summary": "Edit your comment",
+						"description": "`id` is the comment’s. Only its author may edit it."
+					}
+				}
+			}
+		},
+		"delete": {
+			"~orpc": {
+				"errorMap": {},
+				"meta": {
+					"~openapi": {
+						"method": "DELETE",
+						"path": "/api/comments",
+						"inputStructure": "detailed",
+						"summary": "Delete your comment",
+						"description": "`id` is the comment’s. Only its author may delete it."
 					}
 				}
 			}

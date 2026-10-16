@@ -907,8 +907,10 @@
 			"test": "CSV edge cases › a section name that repeats in one project lands in one section, also on a second import",
 			"input": [
 				{
+					"comments": [],
 					"labels": [],
 					"projects": [],
+					"reads": [],
 					"sections": [],
 					"tasks": []
 				},
@@ -968,6 +970,7 @@
 			],
 			"output": {
 				"state": {
+					"comments": [],
 					"labels": [],
 					"projects": [
 						{
@@ -977,6 +980,7 @@
 							"sourceKey": "todoist:project:42"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1000,
@@ -1049,6 +1053,7 @@
 			"test": "CSV edge cases › a section name that repeats in one project lands in one section, also on a second import",
 			"input": [
 				{
+					"comments": [],
 					"labels": [],
 					"projects": [
 						{
@@ -1058,6 +1063,7 @@
 							"sourceKey": "todoist:project:42"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1000,
@@ -1171,6 +1177,7 @@
 			],
 			"output": {
 				"state": {
+					"comments": [],
 					"labels": [],
 					"projects": [
 						{
@@ -1180,6 +1187,7 @@
 							"sourceKey": "todoist:project:42"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1000,
@@ -1327,8 +1335,10 @@
 			"test": "merging into the store › adds projects, labels, and tasks, with Inbox tasks in our Inbox",
 			"input": [
 				{
+					"comments": [],
 					"labels": [],
 					"projects": [],
+					"reads": [],
 					"sections": [],
 					"tasks": []
 				},
@@ -1571,6 +1581,7 @@
 			],
 			"output": {
 				"state": {
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1000,
@@ -1602,6 +1613,7 @@
 							"sourceKey": "todoist:project:9Xmpl3Zr"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1000,
@@ -1945,8 +1957,10 @@
 			"test": "merging into the store › importing the same backup again adds nothing",
 			"input": [
 				{
+					"comments": [],
 					"labels": [],
 					"projects": [],
+					"reads": [],
 					"sections": [],
 					"tasks": []
 				},
@@ -2189,6 +2203,7 @@
 			],
 			"output": {
 				"state": {
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1000,
@@ -2220,6 +2235,7 @@
 							"sourceKey": "todoist:project:9Xmpl3Zr"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1000,
@@ -2563,6 +2579,7 @@
 			"test": "merging into the store › importing the same backup again adds nothing",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1000,
@@ -2594,6 +2611,7 @@
 							"sourceKey": "todoist:project:9Xmpl3Zr"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1000,
@@ -3158,6 +3176,7 @@
 			],
 			"output": {
 				"state": {
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1000,
@@ -3189,6 +3208,7 @@
 							"sourceKey": "todoist:project:9Xmpl3Zr"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1000,
@@ -3532,8 +3552,10 @@
 			"test": "merging into the store › sections land in their project in Todoist's order, holding their top-level tasks",
 			"input": [
 				{
+					"comments": [],
 					"labels": [],
 					"projects": [],
+					"reads": [],
 					"sections": [],
 					"tasks": []
 				},
@@ -3776,6 +3798,7 @@
 			],
 			"output": {
 				"state": {
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1000,
@@ -3807,6 +3830,7 @@
 							"sourceKey": "todoist:project:9Xmpl3Zr"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1000,
@@ -4150,8 +4174,10 @@
 			"test": "merging into the store › importing again puts tasks imported before sections existed into their sections",
 			"input": [
 				{
+					"comments": [],
 					"labels": [],
 					"projects": [],
+					"reads": [],
 					"sections": [],
 					"tasks": []
 				},
@@ -4383,6 +4409,7 @@
 			],
 			"output": {
 				"state": {
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1000,
@@ -4414,6 +4441,7 @@
 							"sourceKey": "todoist:project:9Xmpl3Zr"
 						}
 					],
+					"reads": [],
 					"sections": [],
 					"tasks": [
 						{
@@ -4740,6 +4768,7 @@
 			"test": "merging into the store › importing again puts tasks imported before sections existed into their sections",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1000,
@@ -4771,6 +4800,7 @@
 							"sourceKey": "todoist:project:9Xmpl3Zr"
 						}
 					],
+					"reads": [],
 					"sections": [],
 					"tasks": [
 						{
@@ -5318,6 +5348,7 @@
 			],
 			"output": {
 				"state": {
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1000,
@@ -5349,6 +5380,7 @@
 							"sourceKey": "todoist:project:9Xmpl3Zr"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 2000,
@@ -5692,6 +5724,7 @@
 			"test": "merging into the store › an existing section with the same name in the project is reused",
 			"input": [
 				{
+					"comments": [],
 					"labels": [],
 					"projects": [
 						{
@@ -5700,6 +5733,7 @@
 							"name": "Long Term"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 0,
@@ -5950,6 +5984,7 @@
 			],
 			"output": {
 				"state": {
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1000,
@@ -5981,6 +6016,7 @@
 							"sourceKey": "todoist:project:9Xmpl3Zr"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 0,
@@ -6415,8 +6451,10 @@
 			"test": "merging into the store › indents become subtasks in Todoist order, in their parent's project",
 			"input": [
 				{
+					"comments": [],
 					"labels": [],
 					"projects": [],
+					"reads": [],
 					"sections": [],
 					"tasks": []
 				},
@@ -6504,6 +6542,7 @@
 			],
 			"output": {
 				"state": {
+					"comments": [],
 					"labels": [],
 					"projects": [
 						{
@@ -6513,6 +6552,7 @@
 							"sourceKey": "todoist:project:42"
 						}
 					],
+					"reads": [],
 					"sections": [],
 					"tasks": [
 						{
@@ -6694,8 +6734,10 @@
 			"test": "merging into the store › a new subtask under a task imported earlier joins it as the last subtask",
 			"input": [
 				{
+					"comments": [],
 					"labels": [],
 					"projects": [],
+					"reads": [],
 					"sections": [],
 					"tasks": []
 				},
@@ -6744,6 +6786,7 @@
 			],
 			"output": {
 				"state": {
+					"comments": [],
 					"labels": [],
 					"projects": [
 						{
@@ -6753,6 +6796,7 @@
 							"sourceKey": "todoist:project:42"
 						}
 					],
+					"reads": [],
 					"sections": [],
 					"tasks": [
 						{
@@ -6881,6 +6925,7 @@
 			"test": "merging into the store › a new subtask under a task imported earlier joins it as the last subtask",
 			"input": [
 				{
+					"comments": [],
 					"labels": [],
 					"projects": [
 						{
@@ -6890,6 +6935,7 @@
 							"sourceKey": "todoist:project:42"
 						}
 					],
+					"reads": [],
 					"sections": [],
 					"tasks": [
 						{
@@ -6996,6 +7042,7 @@
 			],
 			"output": {
 				"state": {
+					"comments": [],
 					"labels": [],
 					"projects": [
 						{
@@ -7005,6 +7052,7 @@
 							"sourceKey": "todoist:project:42"
 						}
 					],
+					"reads": [],
 					"sections": [],
 					"tasks": [
 						{
@@ -7090,6 +7138,7 @@
 			"test": "merging into the store › an existing project and label with the same name are reused",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 0,
@@ -7104,6 +7153,7 @@
 							"name": "job"
 						}
 					],
+					"reads": [],
 					"sections": [],
 					"tasks": []
 				},
@@ -7346,6 +7396,7 @@
 			],
 			"output": {
 				"state": {
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 0,
@@ -7377,6 +7428,7 @@
 							"sourceKey": "todoist:project:8Xmpl2Wq"
 						}
 					],
+					"reads": [],
 					"sections": [
 						{
 							"createdAt": 1000,

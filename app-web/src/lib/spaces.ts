@@ -41,7 +41,7 @@ export function creationHome(
 
 /** Drops the project, section, and labels that belong to another space, since nothing crosses spaces. */
 export function fitToSpace<T extends Pick<NewTask, 'projectId' | 'sectionId' | 'labelIds'>>(
-	data: StoreData,
+	data: Pick<StoreData, 'projects' | 'sections' | 'labels'>,
 	input: T,
 ): T {
 	const projectId = input.projectId && data.projects.some(p => p.id === input.projectId) ? input.projectId : null;
@@ -50,7 +50,20 @@ export function fitToSpace<T extends Pick<NewTask, 'projectId' | 'sectionId' | '
 	return { ...input, projectId, sectionId, labelIds };
 }
 
-/** Own data first, then each section, as one list for lookups, details, children, and shared pages. */
+/** A shared section as store data. Read markers live only in the user's own space, so a section has none. */
+export const sectionStore = ({ tasks, projects, sections, labels, comments }: SpaceSection): StoreData => ({
+	tasks,
+	projects,
+	sections,
+	labels,
+	comments,
+	reads: [],
+});
+
+/**
+ * Own data first, then each section, as one list for lookups, details, children, and shared pages. The read markers
+ * are the user's own, which cover every space's tasks.
+ */
 export function merged(own: StoreData, spaces: Sections): StoreData {
 	const sections = Object.values(spaces);
 	if (sections.length === 0) return own;
@@ -59,6 +72,8 @@ export function merged(own: StoreData, spaces: Sections): StoreData {
 		projects: [...own.projects, ...sections.flatMap(s => s.projects)],
 		sections: [...own.sections, ...sections.flatMap(s => s.sections)],
 		labels: [...own.labels, ...sections.flatMap(s => s.labels)],
+		comments: [...own.comments, ...sections.flatMap(s => s.comments)],
+		reads: own.reads,
 	};
 }
 
@@ -88,4 +103,5 @@ export const emptySection = (owner: SpaceSection['owner']): SpaceSection => ({
 	projects: [],
 	sections: [],
 	labels: [],
+	comments: [],
 });

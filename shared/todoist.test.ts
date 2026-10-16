@@ -18,7 +18,7 @@ const counter = () => {
 	let n = 0;
 	return () => `id-${++n}`;
 };
-const empty = (): ImportState => ({ tasks: [], projects: [], sections: [], labels: [] });
+const empty = (): ImportState => ({ tasks: [], projects: [], sections: [], labels: [], comments: [], reads: [] });
 const read = (text: string, name = 'Errands [42].csv') => readTodoistBackup([{ name, text }], now);
 /** Read inside the first test that needs it, so its vector is recorded once and named after that test. */
 let fixture: TodoistBackup | undefined;
@@ -331,6 +331,8 @@ describe('merging into the store', () => {
 			projects: [{ id: 'p-long', name: 'Long Term', createdAt: 0 }],
 			sections: [{ id: 's-mine', projectId: 'p-long', name: 'someday', order: 0, createdAt: 0 }],
 			labels: [],
+			comments: [],
+			reads: [],
 		};
 		const merged = mergeBackup(state, readFixture(), { newId: counter(), now: 1000 });
 		expect(merged.summary.sections).toBe(1);
@@ -376,6 +378,8 @@ describe('merging into the store', () => {
 			projects: [{ id: 'mine', name: 'job', createdAt: 0 }],
 			sections: [],
 			labels: [{ id: 'l-home', name: 'Home', createdAt: 0 }],
+			comments: [],
+			reads: [],
 		};
 		const merged = mergeBackup(state, backup, { newId: counter(), now: 1000 });
 		expect(merged.summary.projects).toBe(1);

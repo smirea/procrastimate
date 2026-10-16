@@ -110,6 +110,40 @@ test('a guest completes a task in a project shared with them, and the owner sees
 	).toBeVisible();
 });
 
+test('a guest comments on a shared task, and the owner sees it unread until they open it', async ({ browser }) => {
+	const guest = await person(browser, 'Gus');
+	const { owner, project, task } = await ownerWithProject(browser);
+	await owner.page.getByRole('button', { name: 'Share project' }).click();
+	await shareSheet(owner.page).getByRole('textbox', { name: 'Email or name' }).fill(guest.email);
+	await shareSheet(owner.page).getByRole('list', { name: 'People found' }).getByRole('button', { name: /Gus/ }).click();
+	await expect(shareSheet(owner.page).getByRole('region', { name: 'People with access' })).toContainText('Gus');
+	await owner.page.keyboard.press('Escape');
+
+	await guest.page.reload();
+	const shared = sidebar(guest.page).getByRole('region', { name: 'Shared with me' });
+	await shared.getByRole('link', { name: new RegExp(project) }).click({ timeout: 15_000 });
+	await guest.app.row(task).getByRole('button', { name: task, exact: true }).click();
+	const composer = guest.app.details().getByRole('textbox', { name: 'Add a comment' });
+	await composer.fill('Oat milk? https://example.com/oat');
+	await composer.press('Enter');
+	const posted = guest.app.details().getByRole('list', { name: 'Comment list' });
+	await expect(posted).toContainText(/You\s*just now/);
+	await expect(posted.getByRole('link', { name: 'https://example.com/oat' })).toBeVisible();
+	await guest.page.keyboard.press('Escape');
+	await expect(guest.app.row(task).locator('[data-comments="read"]')).toHaveText('1');
+
+	const unread = owner.app.row(task).locator('[data-comments="unread"]');
+	await expect(unread).toHaveText('1', { timeout: 15_000 });
+	await expect(unread).toHaveAccessibleName('1 unread of 1 comments');
+	await owner.app.row(task).getByRole('button', { name: task, exact: true }).click();
+	const list = owner.app.details().getByRole('list', { name: 'Comment list' });
+	await expect(list).toContainText('Gus');
+	await expect(list).toContainText('Oat milk?');
+	await expect(owner.app.details().getByRole('list', { name: 'Activity list' })).toContainText(/Gus\s*commented/);
+	await owner.page.keyboard.press('Escape');
+	await expect(owner.app.row(task).locator('[data-comments="read"]')).toHaveText('1');
+	await expect(owner.app.row(task).locator('[data-comments="unread"]')).toHaveCount(0);
+});
 test('a public link opens read only for someone who is not signed in', async ({ browser }) => {
 	const { owner, project, task } = await ownerWithProject(browser);
 

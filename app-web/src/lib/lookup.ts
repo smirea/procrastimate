@@ -1,7 +1,9 @@
 import { getContext, setContext } from 'svelte';
+import type { CommentBadge } from 'shared/comments.ts';
 import { groupChildren, progressOf, type Progress } from 'shared/subtasks.ts';
 import type { StoreData } from 'shared/store.ts';
 import type { Label, Project, Section, Task } from 'shared/task.ts';
+import { comments } from './comments.svelte.ts';
 import { store } from './store.svelte.ts';
 import { sheets } from './ui.svelte.ts';
 
@@ -16,6 +18,8 @@ export type Lookup = {
 	task: (id: string) => Task | undefined;
 	progress: (id: string) => Progress | null;
 	canEdit: (id: string) => boolean;
+	/** Undefined for a task without comments. */
+	commentBadge: (id: string) => CommentBadge | undefined;
 	/** Null where rows do not open details. */
 	open: ((id: string) => void) | null;
 };
@@ -29,12 +33,14 @@ const storeLookup: Lookup = {
 	task: id => store.task(id),
 	progress: id => store.progress(id),
 	canEdit: id => store.canEdit(id),
+	commentBadge: id => comments.badge(id),
 	open: id => sheets.openTask(id),
 };
 
 export const useLookup = (): Lookup => getContext<Lookup | undefined>(KEY) ?? storeLookup;
 
-export function provideReadOnlyLookup(data: () => StoreData) {
+/** A public link carries no comments, so its rows show none. */
+export function provideReadOnlyLookup(data: () => Pick<StoreData, 'tasks' | 'projects' | 'sections' | 'labels'>) {
 	const children = () => groupChildren(data().tasks);
 	setContext<Lookup>(KEY, {
 		project: id => (id ? data().projects.find(p => p.id === id) : undefined),
@@ -43,6 +49,7 @@ export function provideReadOnlyLookup(data: () => StoreData) {
 		task: id => data().tasks.find(t => t.id === id),
 		progress: id => progressOf(children().get(id) ?? []),
 		canEdit: () => false,
+		commentBadge: () => undefined,
 		open: null,
 	});
 }

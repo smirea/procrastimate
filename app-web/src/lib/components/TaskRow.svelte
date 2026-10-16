@@ -1,5 +1,8 @@
 <script lang="ts">
 	import Bell from 'phosphor-svelte/lib/Bell';
+	import ChatCircle from 'phosphor-svelte/lib/ChatCircle';
+	import { scale } from 'svelte/transition';
+	import { cubicOut } from 'svelte/easing';
 	import CalendarBlank from 'phosphor-svelte/lib/CalendarBlank';
 	import CalendarStar from 'phosphor-svelte/lib/CalendarStar';
 	import MapPin from 'phosphor-svelte/lib/MapPin';
@@ -42,6 +45,7 @@
 	const due = $derived(scheduledDue(task, clock.today));
 	const event = $derived(task.event ? eventLabel(task.event, clock.today) : null);
 	const fromMemo = $derived(parseMemoSource(task.sourceKey) !== null);
+	const commentBadge = $derived(lookup.commentBadge(task.id));
 
 	const revealed = $derived(reveal.id === task.id);
 	let row: HTMLElement;
@@ -80,7 +84,7 @@
 			{#if task.notes}
 				<div class="truncate text-[12px] leading-4 text-muted"><LinkedText text={task.notes} /></div>
 			{/if}
-			{#if due || task.recurrence || task.reminders.length || task.location || progress || parent || fromMemo || (showProject && project)}
+			{#if due || task.recurrence || task.reminders.length || task.location || progress || commentBadge || parent || fromMemo || (showProject && project)}
 				<div class="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-[12px] leading-4 text-muted">
 					{#if task.event && event && due}
 						<span
@@ -120,6 +124,22 @@
 						<span class="flex items-center gap-1" aria-label={`${task.reminders.length} reminders`}>
 							<Bell size={12} />{task.reminders.length}
 						</span>
+					{/if}
+					{#if commentBadge}
+						{#if commentBadge.unread}
+							<span
+								class="flex items-center gap-1 font-semibold text-accent"
+								data-comments="unread"
+								aria-label={`${commentBadge.unread} unread of ${commentBadge.count} comments`}
+								in:scale={motion({ start: 0.6, duration: 180, easing: cubicOut })}
+							>
+								<ChatCircle size={12} weight="fill" />{commentBadge.unread}
+							</span>
+						{:else}
+							<span class="flex items-center gap-1" data-comments="read" aria-label={`${commentBadge.count} comments`}>
+								<ChatCircle size={12} />{commentBadge.count}
+							</span>
+						{/if}
 					{/if}
 					{#if fromMemo}
 						<span class="flex items-center" role="img" aria-label="From Notouroboros">

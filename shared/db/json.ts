@@ -39,6 +39,8 @@ export const COLUMN_VALUES = {
 	projects: { clocks },
 	sections: { clocks },
 	labels: { clocks },
+	comments: { clocks },
+	reads: { clocks },
 	settings: { clocks, dictation: dictationChoiceSchema, quickAddButtons: z.array(quickAddButtonSchema) },
 	log: { fields: z.record(z.string(), z.unknown()) },
 	push: { subscription: pushSubscriptionSchema, notifications: z.array(scheduledPushSchema) },

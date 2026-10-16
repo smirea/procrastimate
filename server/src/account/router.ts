@@ -2,7 +2,18 @@ import { implement, ORPCError } from '@orpc/server';
 import { accountContract, internalContract } from '../../../shared/api/contract';
 import { authenticate, type AccountContext } from '../auth';
 import { taskActivity } from './activity';
-import { createTask, editTask, finishTask, removeTask, reopen, view } from './commands';
+import {
+	createComment,
+	createTask,
+	editTask,
+	finishTask,
+	listComments,
+	removeComment,
+	removeTask,
+	reopen,
+	updateComment,
+	view,
+} from './commands';
 import { deleteMemoTasks, listMemoTasks, putMemoTasks } from './memo-tasks';
 import { pushSchedule, refreshPush, subscribePush, unsubscribePush } from './push';
 import {
@@ -112,6 +123,21 @@ export const accountRouter = os.router({
 		),
 		delete: os.tasks.delete.handler(async ({ input, context }) => {
 			await moved(context, () => removeTask(commands(context), input.query.id));
+			return { ok: true as const };
+		}),
+	},
+	comments: {
+		list: os.comments.list.handler(({ input, context }) => ({
+			comments: listComments(commands(context), input.query.id),
+		})),
+		create: os.comments.create.handler(({ input, context }) =>
+			moved(context, () => createComment(commands(context), input.body)),
+		),
+		update: os.comments.update.handler(({ input, context }) =>
+			moved(context, () => updateComment(commands(context), input.query.id, input.body.body)),
+		),
+		delete: os.comments.delete.handler(async ({ input, context }) => {
+			await moved(context, () => removeComment(commands(context), input.query.id));
 			return { ok: true as const };
 		}),
 	},

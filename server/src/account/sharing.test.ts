@@ -1,5 +1,13 @@
 import { afterEach, beforeEach, describe, expect, setSystemTime, test } from 'bun:test';
-import type { ActivityEntry, Person, ShareView, SharedView, Space, SpaceView } from '../../../shared/sharing';
+import type {
+	ActivityEntry,
+	Person,
+	ShareView,
+	SharedView,
+	Space,
+	SpaceView,
+	TaskComment,
+} from '../../../shared/sharing';
 import { formatHlc } from '../../../shared/sync/hlc';
 import { DEFAULT_SETTINGS, type Op, type Snapshot, type SyncResponse, type Task } from '../../../shared/sync/protocol';
 import { fieldsOf } from '../../../shared/sync/snapshot';
@@ -229,6 +237,65 @@ describe('sharing between two users', () => {
 		expect((await call(guest, 'POST', `/api/tasks/complete?space=${owner.me.id}&id=fix-sink`)).status).toBe(403);
 	});
 
+	const comment = (user: User, id: string, taskId: string, body: string, authorId: string | null = null) =>
+		op(user, id, { deleted: false, taskId, body, authorId, createdAt: NOW + 50, editedAt: null }, 'comment');
+
+	test('comments follow their task, carry the server’s author stamp, and only the author changes one', async () => {
+		await seedOwner();
+		await userShare();
+		await json(
+			sync(owner, [
+				comment(owner, 'c-owner', 'fix-sink', 'Use the blue washer'),
+				comment(owner, 'c-hidden', 'taxes', 'Private'),
+			]),
+		);
+		const seen = await snapshotOf(sync(guest, [], owner.me.id));
+		expect(seen.comments.map(c => [c.id, c.authorId])).toEqual([['c-owner', owner.me.id]]);
+		expect(seen.reads).toEqual([]);
+
+		await json(
+			sync(
+				guest,
+				[
+					comment(guest, 'c-guest', 'fix-sink', 'On it', owner.me.id),
+					op(guest, 'c-owner', { body: 'Hijacked' }, 'comment'),
+					comment(guest, 'c-sneak', 'taxes', 'Sneaked'),
+					op(guest, 'fix-sink', { deleted: false, readAt: NOW }, 'read'),
+				],
+				owner.me.id,
+			),
+		);
+		await json(sync(owner, [op(owner, 'c-guest', { body: 'Owner rewrote it' }, 'comment')]));
+		const ownersView = await snapshotOf(sync(owner));
+		expect(ownersView.comments.map(c => [c.id, c.body, c.authorId])).toEqual([
+			['c-guest', 'On it', guest.me.id],
+			['c-hidden', 'Private', owner.me.id],
+			['c-owner', 'Use the blue washer', owner.me.id],
+		]);
+		expect(ownersView.reads).toEqual([]);
+
+		const { entries } = await json<{ entries: ActivityEntry[] }>(call(owner, 'GET', '/api/activity?id=fix-sink'));
+		expect(entries.map(e => [e.action, e.actor.id])).toEqual([
+			['created', owner.me.id],
+			['commented', owner.me.id],
+			['commented', guest.me.id],
+		]);
+	});
+
+	test('a view guest reads the comments but cannot write one', async () => {
+		await seedOwner();
+		await userShare('view');
+		await json(sync(owner, [comment(owner, 'c-owner', 'fix-sink', 'Use the blue washer')]));
+		const response = await snapshotOf(sync(guest, [comment(guest, 'c-guest', 'fix-sink', 'Me too')], owner.me.id));
+		expect(response.comments.map(c => c.id)).toEqual(['c-owner']);
+		const posted = await call(guest, 'POST', `/api/comments?space=${owner.me.id}`, { taskId: 'fix-sink', body: 'Hi' });
+		expect(posted.status).toBe(403);
+		const listed = await json<{ comments: { id: string }[] }>(
+			call(guest, 'GET', `/api/comments?space=${owner.me.id}&id=fix-sink`),
+		);
+		expect(listed.comments.map(c => c.id)).toEqual(['c-owner']);
+	});
+
 	test('revoking the share turns the guest away and drops the membership', async () => {
 		await seedOwner();
 		const created = await userShare();
@@ -321,6 +388,35 @@ describe('sharing between two users', () => {
 			completedAt: NOW,
 			completedBy: ai.id,
 		});
+
+		const posted = await json<TaskComment>(
+			asAi('POST', '/api/comments', { taskId: 'fix-sink', body: ' Plumber booked ' }),
+		);
+		expect(posted).toEqual({
+			id: posted.id,
+			taskId: 'fix-sink',
+			body: 'Plumber booked',
+			authorId: ai.id,
+			author: ai,
+			createdAt: NOW,
+			editedAt: null,
+		});
+		await json(sync(owner, [comment(owner, 'c-owner', 'fix-sink', 'Thanks')]));
+		expect((await asAi('PATCH', '/api/comments?id=c-owner', { body: 'Not yours' })).status).toBe(403);
+		expect((await asAi('POST', '/api/comments', { taskId: 'fix-sink', body: '  ' })).status).toBe(400);
+		expect((await asAi('POST', '/api/comments', { taskId: 'nope', body: 'Hi' })).status).toBe(404);
+		expect(
+			await json<TaskComment>(asAi('PATCH', `/api/comments?id=${posted.id}`, { body: 'Booked for 9' })),
+		).toMatchObject({ body: 'Booked for 9', editedAt: NOW });
+		const listed = await json<{ comments: TaskComment[] }>(asAi('GET', '/api/comments?id=fix-sink'));
+		expect(listed.comments.map(c => [c.body, c.author.name])).toEqual([
+			['Booked for 9', 'Butler'],
+			['Thanks', 'Test'],
+		]);
+		expect(await json<Ok>(asAi('DELETE', `/api/comments?id=${posted.id}`))).toEqual({ ok: true });
+		expect((await json<{ comments: TaskComment[] }>(asAi('GET', '/api/comments?id=fix-sink'))).comments).toHaveLength(
+			1,
+		);
 
 		expect((await asAi('GET', '/api/shares')).status).toBe(403);
 		expect(
@@ -464,6 +560,8 @@ test('project tasks reach their subtasks through the parent, not the subtask’s
 		projects: [project('p')],
 		sections: [],
 		labels: [],
+		comments: [],
+		reads: [],
 		settings: DEFAULT_SETTINGS,
 	};
 	const { scopeOf } = await import('../../../shared/scope');
@@ -473,7 +571,7 @@ test('project tasks reach their subtasks through the parent, not the subtask’s
 	expect([...scope.projects]).toEqual(['p']);
 });
 
-test('a guest sees every section of each project it sees, and may not put a task in any other', async () => {
+test('a guest sees every section and comment its tasks reach, and may not put a task in any other section', async () => {
 	const snapshot: Snapshot = {
 		tasks: [
 			task('shared', { projectId: 'p', labelIds: ['l'] }),
@@ -482,14 +580,20 @@ test('a guest sees every section of each project it sees, and may not put a task
 		projects: [project('p'), project('q')],
 		sections: [section('p-next', 'p'), section('p-later', 'p'), section('q-later', 'q')],
 		labels: [label('l')],
+		comments: [
+			{ id: 'c-shared', taskId: 'shared', body: 'Yes', authorId: 'owner', createdAt: 1, editedAt: null },
+			{ id: 'c-private', taskId: 'private', body: 'No', authorId: 'owner', createdAt: 2, editedAt: null },
+		],
+		reads: [],
 		settings: DEFAULT_SETTINGS,
 	};
 	const { admit, filterSnapshot, scopeOf } = await import('../../../shared/scope');
 	const grants = [{ targetKind: 'label', targetId: 'l', role: 'edit' }] as const;
 	expect(filterSnapshot(snapshot, scopeOf(snapshot, grants)).sections.map(s => s.id)).toEqual(['p-next', 'p-later']);
+	expect(filterSnapshot(snapshot, scopeOf(snapshot, grants)).comments.map(c => c.id)).toEqual(['c-shared']);
 	const hlc = formatHlc({ wall: NOW, counter: 0, node: 'd' });
 	const move = (sectionId: string): Op => ({ opId: sectionId, hlc, kind: 'task', id: 'shared', fields: { sectionId } });
 	const rename: Op = { opId: 'rename', hlc, kind: 'section', id: 'p-next', fields: { name: 'Mine' } };
-	const { admitted, refused } = admit(snapshot, grants, [move('p-later'), move('q-later'), rename]);
+	const { admitted, refused } = admit(snapshot, grants, [move('p-later'), move('q-later'), rename], 'guest');
 	expect([admitted.map(o => o.opId), refused.map(o => o.opId)]).toEqual([['p-later'], ['q-later', 'rename']]);
 });

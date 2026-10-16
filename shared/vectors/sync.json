@@ -379,6 +379,7 @@
 			"test": "first sync › with a server that already has the same tasks pushes no ops",
 			"input": [
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -393,6 +394,7 @@
 							"name": "p"
 						}
 					],
+					"reads": [],
 					"sections": [],
 					"settings": {
 						"dictation": "native",
@@ -452,6 +454,7 @@
 					]
 				},
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -466,6 +469,7 @@
 							"name": "p"
 						}
 					],
+					"reads": [],
 					"sections": [],
 					"settings": {
 						"dictation": "native",
@@ -532,6 +536,7 @@
 			"test": "first sync › queues only what the server lacks or holds differently, and keeps the server’s settings",
 			"input": [
 				{
+					"comments": [],
 					"labels": [],
 					"projects": [
 						{
@@ -540,6 +545,7 @@
 							"name": "p"
 						}
 					],
+					"reads": [],
 					"sections": [],
 					"settings": {
 						"dictation": "elevenlabs",
@@ -597,6 +603,7 @@
 					]
 				},
 				{
+					"comments": [],
 					"labels": [
 						{
 							"createdAt": 1,
@@ -611,6 +618,7 @@
 							"name": "p"
 						}
 					],
+					"reads": [],
 					"sections": [],
 					"settings": {
 						"dictation": "native",

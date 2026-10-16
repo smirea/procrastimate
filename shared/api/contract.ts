@@ -9,6 +9,7 @@ import {
 	agentNewTaskSchema,
 	apiTokenSchema,
 	createdApiTokenSchema,
+	newCommentSchema,
 	personSchema,
 	shareAudienceSchema,
 	sharedViewSchema,
@@ -16,6 +17,7 @@ import {
 	shareViewSchema,
 	spaceSchema,
 	spaceViewSchema,
+	taskCommentSchema,
 } from '../sharing.ts';
 import { taskEditSchema } from '../store.ts';
 import { roleSchema } from '../values.ts';
@@ -79,6 +81,7 @@ export const apiTokensSchema = z.object({ tokens: z.array(apiTokenSchema) }).met
 export const newApiTokenSchema = z
 	.object({ aiUserId: apiTokenSchema.shape.aiUserId, name: apiTokenSchema.shape.name })
 	.meta({ id: 'NewApiToken' });
+export const taskCommentsSchema = z.object({ comments: z.array(taskCommentSchema) }).meta({ id: 'TaskComments' });
 export const activitySchema = z.object({ entries: z.array(activityEntrySchema) }).meta({ id: 'Activity' });
 
 export const workerContract = {
@@ -162,7 +165,7 @@ export const workerContract = {
 };
 
 /**
- * What an AI account, or a guest of a space, may call: sync, view, the task commands, and activity. Everything else
+ * What an AI account, or a guest of a space, may call: sync, view, the task commands, comments, and activity. Everything else
  * is the human owner's. The agent docs and their OpenAPI subset are generated from it, so each `summary` and
  * `description` here is what an agent reads.
  */
@@ -175,7 +178,7 @@ export const agentContract = {
 				inputStructure: 'detailed',
 				summary: 'Sync the space',
 				description:
-					'The apps’ replication protocol. `{ "cursor": 0, "ops": [] }` answers with the whole visible snapshot. A task op is applied when the task is editable before and after it; project and label ops are acknowledged and dropped.',
+					'The apps’ replication protocol. `{ "cursor": 0, "ops": [] }` answers with the whole visible snapshot. A task op is applied when the task is editable before and after it, and a comment op when its task is editable and the comment is new or the caller’s own; project and label ops are acknowledged and dropped.',
 			}),
 		)
 		.input(z.object({ query: spaceQuery, body: syncRequestSchema }))
@@ -267,6 +270,56 @@ export const agentContract = {
 			)
 			.input(z.object({ query: taskQuery }))
 			.output(activitySchema),
+	},
+	comments: {
+		list: found
+			.meta(
+				openapi({
+					method: 'GET',
+					path: '/api/comments',
+					inputStructure: 'detailed',
+					summary: 'A task’s comments',
+					description: '`id` is the task’s. Oldest first, each with its author.',
+				}),
+			)
+			.input(z.object({ query: taskQuery }))
+			.output(taskCommentsSchema),
+		create: found
+			.meta(
+				openapi({
+					method: 'POST',
+					path: '/api/comments',
+					inputStructure: 'detailed',
+					summary: 'Comment on a task',
+					description: 'Needs the task editable. Links in `body` show as links in the apps. The caller is the author.',
+				}),
+			)
+			.input(z.object({ query: spaceQuery, body: newCommentSchema }))
+			.output(taskCommentSchema),
+		update: found
+			.meta(
+				openapi({
+					method: 'PATCH',
+					path: '/api/comments',
+					inputStructure: 'detailed',
+					summary: 'Edit your comment',
+					description: '`id` is the comment’s. Only its author may edit it.',
+				}),
+			)
+			.input(z.object({ query: taskQuery, body: newCommentSchema.pick({ body: true }) }))
+			.output(taskCommentSchema),
+		delete: found
+			.meta(
+				openapi({
+					method: 'DELETE',
+					path: '/api/comments',
+					inputStructure: 'detailed',
+					summary: 'Delete your comment',
+					description: '`id` is the comment’s. Only its author may delete it.',
+				}),
+			)
+			.input(z.object({ query: taskQuery }))
+			.output(okSchema),
 	},
 };
 

@@ -1,10 +1,12 @@
 import type { DictationChoice } from 'shared/dictation.ts';
 import { DEFAULT_QUICK_ADD_BUTTONS, type QuickAddButton } from 'shared/quick-add-buttons.ts';
 import type { DateKey, Label, Project, Section, Task } from 'shared/task.ts';
+import type { Comment } from 'shared/sync/protocol.ts';
 import { groupChildren, progressOf } from 'shared/subtasks.ts';
 import { newId } from 'shared/id.ts';
 import type { Person, Space } from 'shared/sharing.ts';
 import type { SpaceSection, SyncSection } from 'shared/snapshot.ts';
+import * as comments from 'shared/comments.ts';
 import * as rules from 'shared/store.ts';
 import { applyResponse, commit, startSync, type ClientSync } from 'shared/sync/apply.ts';
 import { formatHlc, parseHlc } from 'shared/sync/hlc.ts';
@@ -17,19 +19,22 @@ import {
 } from 'shared/sync/protocol.ts';
 import { mergeBackup, type ImportSummary, type TodoistBackup } from 'shared/todoist.ts';
 import { loadSnapshot, saveSnapshot, STORAGE_KEY } from './persistence.ts';
-import { creationHome, emptySection, fitToSpace, homes, merged, type Home } from './spaces.ts';
+import { creationHome, emptySection, fitToSpace, homes, merged, sectionStore, type Home } from './spaces.ts';
 
 export type { Completion, CompletionState, NewTask, TaskPatch } from 'shared/store.ts';
 
-/** A shared section's data has no settings of its own, so both sides of its diff carry the same placeholder. */
-const EMPTY: rules.StoreData = { tasks: [], projects: [], sections: [], labels: [] };
+const empty = (): rules.StoreData => ({ tasks: [], projects: [], sections: [], labels: [], comments: [], reads: [] });
 
-const sectionData = ({ tasks, projects, sections, labels }: rules.StoreData): SyncedData => ({
+/** A shared section's data has no settings of its own, so both sides of its diff carry the same placeholder. */
+const sectionData = (data: rules.StoreData): SyncedData => ({ ...data, settings: DEFAULT_SETTINGS });
+
+const storeData = ({ tasks, projects, sections, labels, comments, reads }: rules.StoreData): rules.StoreData => ({
 	tasks,
 	projects,
 	sections,
 	labels,
-	settings: DEFAULT_SETTINGS,
+	comments,
+	reads,
 });
 
 /**
@@ -42,7 +47,7 @@ const sectionData = ({ tasks, projects, sections, labels }: rules.StoreData): Sy
  * space's data only, so personal views read `own` and nothing ever crosses spaces.
  */
 class Store {
-	own = $state.raw<rules.StoreData>({ tasks: [], projects: [], sections: [], labels: [] });
+	own = $state.raw<rules.StoreData>(empty());
 	remindersCheckedAt = $state(0);
 	spaces = $state.raw<Record<string, SpaceSection>>({});
 	people = $state.raw<Person[]>([]);
@@ -70,6 +75,11 @@ class Store {
 		return this.#view.sections;
 	}
 
+	/** Every comment this user can see, own and shared. */
+	get comments(): Comment[] {
+		return this.#view.comments;
+	}
+
 	constructor() {
 		if (typeof localStorage === 'undefined') return;
 		this.#load();
@@ -90,12 +100,7 @@ class Store {
 
 	#load() {
 		const snapshot = loadSnapshot(Date.now());
-		this.own = {
-			tasks: snapshot.tasks,
-			projects: snapshot.projects,
-			sections: snapshot.sections,
-			labels: snapshot.labels,
-		};
+		this.own = storeData(snapshot);
 		this.remindersCheckedAt = snapshot.remindersCheckedAt;
 		this.spaces = snapshot.spaces;
 		this.people = snapshot.people;
@@ -126,7 +131,7 @@ class Store {
 
 	#apply(data: rules.StoreData) {
 		const before = this.#sync && this.#synced(this.#sync);
-		this.own = { tasks: data.tasks, projects: data.projects, sections: data.sections, labels: data.labels };
+		this.own = storeData(data);
 		if (this.#sync && before) this.#record(this.#sync, before, this.#synced(this.#sync));
 		this.#commit();
 	}
@@ -189,7 +194,7 @@ class Store {
 		const deviceId = this.#sync?.deviceId ?? crypto.randomUUID();
 		const timeZone = this.#sync?.timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
 		const clock = this.#sync?.clock ?? `0:0:${deviceId}`;
-		this.own = { tasks: [], projects: [], sections: [], labels: [] };
+		this.own = empty();
 		this.spaces = {};
 		this.people = [];
 		this.#sync = {
@@ -208,7 +213,7 @@ class Store {
 
 	/** Empties tasks, projects, sections, and labels here, and asks the next sync to wipe them on the server too. */
 	deleteAll() {
-		this.own = { tasks: [], projects: [], sections: [], labels: [] };
+		this.own = empty();
 		if (this.#sync) this.#sync = { ...this.#sync, cursor: 0, outbox: [], reset: true };
 		this.#commit();
 		this.#onCommit?.();
@@ -268,12 +273,7 @@ class Store {
 			sentReset: this.#sync.reset,
 		});
 		const seeded = this.#sync.seed && !sync.seed && sync.outbox.length > 0;
-		this.own = {
-			tasks: snapshot.tasks,
-			projects: snapshot.projects,
-			sections: snapshot.sections,
-			labels: snapshot.labels,
-		};
+		this.own = storeData(snapshot);
 		const { dictation, quickAddButtons } = snapshot.settings;
 		this.#sync = sectionOf(sync, { ...this.#sync, reset: false, dictation, quickAddButtons });
 		this.#commit();
@@ -286,7 +286,8 @@ class Store {
 
 	/** The data of one space, whose projects and labels are the only ones its tasks may use. */
 	dataOf(home: Home): rules.StoreData {
-		return home === null ? this.own : (this.spaces[home] ?? EMPTY);
+		const section = home === null ? undefined : this.spaces[home];
+		return home === null ? this.own : section ? sectionStore(section) : empty();
 	}
 
 	/** False for a shared task the server marked read only, and for one in a space this user no longer reaches. */
@@ -305,20 +306,15 @@ class Store {
 		if (home === null) return this.#apply(rule(this.own));
 		const section = this.spaces[home];
 		if (!section || !this.#sync) return;
-		const after = rule(section);
+		const before = sectionStore(section);
+		const after = rule(before);
 		const current = spaceSync(section, this.#sync);
-		const next = commit(current, sectionData(section), sectionData(after), Date.now());
+		const next = commit(current, sectionData(before), sectionData({ ...after, reads: [] }), Date.now());
 		if (next === current) return;
+		const { tasks, projects, sections, labels, comments } = after;
 		this.spaces = {
 			...this.spaces,
-			[home]: {
-				...section,
-				tasks: after.tasks,
-				projects: after.projects,
-				sections: after.sections,
-				labels: after.labels,
-				outbox: next.outbox,
-			},
+			[home]: { ...section, tasks, projects, sections, labels, comments, outbox: next.outbox },
 		};
 		this.#sync = { ...this.#sync, clock: formatHlc(next.clock) };
 		this.#commit();
@@ -531,7 +527,7 @@ class Store {
 		const section = this.spaces[owner];
 		if (!section || !this.#sync) return;
 		const { snapshot, sync } = applyResponse(
-			sectionData(section),
+			sectionData(sectionStore(section)),
 			spaceSync(section, this.#sync),
 			response,
 			Date.now(),
@@ -544,6 +540,7 @@ class Store {
 				projects: snapshot.projects,
 				sections: snapshot.sections,
 				labels: snapshot.labels,
+				comments: snapshot.comments,
 				cursor: sync.cursor,
 				outbox: sync.outbox,
 				epoch: sync.epoch,
@@ -554,6 +551,41 @@ class Store {
 		};
 		this.#sync = { ...this.#sync, clock: formatHlc(sync.clock) };
 		this.#commit();
+	}
+
+	/** Comments are written in the task's space, so only someone who may edit the task can comment on it. */
+	addComment(taskId: string, body: string, me: string): Comment | undefined {
+		let comment: Comment | null = null;
+		this.#onTask(taskId, data => {
+			const result = comments.addComment(data, taskId, body, me, this.#creation());
+			comment = result.comment;
+			return result.data;
+		});
+		return comment ?? undefined;
+	}
+
+	editComment(id: string, body: string, me: string) {
+		const comment = this.comments.find(c => c.id === id);
+		if (comment) this.#onTask(comment.taskId, data => comments.editComment(data, id, body, me, Date.now()));
+	}
+
+	/** Deletes `me`'s own comment and returns it for undo. */
+	deleteComment(id: string, me: string): Comment | undefined {
+		const comment = this.comments.find(c => c.id === id);
+		if (comment) this.#onTask(comment.taskId, data => comments.deleteComment(data, id, me));
+		return comment;
+	}
+
+	undeleteComment(comment: Comment) {
+		this.#onTask(comment.taskId, data =>
+			data.comments.some(c => c.id === comment.id) ? data : { ...data, comments: [...data.comments, comment] },
+		);
+	}
+
+	/** The marker goes into the user's own space, whichever space holds the task. */
+	markCommentsRead(taskId: string, me: string) {
+		const next = comments.markRead(this.own, taskId, this.comments, me, Date.now());
+		if (next !== this.own) this.#apply(next);
 	}
 
 	person(id: string | null): Person | undefined {
