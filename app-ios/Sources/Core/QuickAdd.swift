@@ -23,16 +23,28 @@ public enum QuickAdd {
     static let month =
         #"(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)"#
     static let ordinal = #"\d{1,2}(?:st|nd|rd|th)?"#
+    static let ordinalWords = [
+        "first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "tenth", "eleventh",
+        "twelfth", "thirteenth", "fourteenth", "fifteenth", "sixteenth", "seventeenth", "eighteenth", "nineteenth",
+        "twentieth",
+    ]
+    /// A day number as dictation sometimes writes it, from `first` to `thirty-first`.
+    static let spelledOrdinal =
+        #"(?:(?:twenty|thirty)(?:-|\s*)(?:\#(ordinalWords.prefix(9).joined(separator: "|")))|\#(ordinalWords.joined(separator: "|"))|thirtieth)"#
+    static let spelledOrdinalWord = Pattern(
+        #"(?:(twenty|thirty)[-\s]*)?\b(\#(ordinalWords.joined(separator: "|"))|thirtieth)\b"#
+    )
     /// `mo` is listed before `m` everywhere, so months never read as minutes.
     static let dayUnit = #"(?:d(?:ays?)?|w(?:ks?|eeks?)?|mo(?:s|nths?)?|y(?:rs?|ears?)?)"#
     static let clockUnit = #"(?:m(?:ins?|inutes?)?|h(?:rs?|ours?)?)"#
     static let beforeUnit = #"(?:m(?:ins?|inutes?)?|h(?:rs?|ours?)?|d(?:ays?)?|w(?:ks?|eeks?)?)"#
 
-    /// A month and day in either order, as in `Dec. 25`, `October the 20th`, or `the 1st of December`, optionally after
-    /// the weekday it falls on, which the date overrides. These come before a bare weekday, since the first alternative
-    /// that matches wins.
+    /// A month and day in either order, as in `Dec. 25`, `October the 20th`, `the 1st of December`, or `the third of
+    /// May`, optionally after the weekday it falls on, which the date overrides. These come before a bare weekday, since
+    /// the first alternative that matches wins. A spelled-out day before the month needs `of`, so `the first May draft`
+    /// stays text.
     static let monthDate =
-        #"(?:\#(weekday),?\s+)?(?:\#(month)(?:\.\s*|\s+)(?:the\s+)?\#(ordinal)|(?:the\s+)?(?:\d{1,2}(?:st|nd|rd|th)\s+of|\#(ordinal))\s+\#(month))(?:,?\s+(?:19|20)\d\d)?"#
+        #"(?:\#(weekday),?\s+)?(?:\#(month)(?:\.\s*|\s+)(?:the\s+)?(?:\#(spelledOrdinal)|\#(ordinal))|(?:the\s+)?(?:(?:\d{1,2}(?:st|nd|rd|th)|\#(spelledOrdinal))\s+of|\#(ordinal))\s+\#(month))(?:,?\s+(?:19|20)\d\d)?"#
 
     static let date = [
         "today|tonight|tomorrow|tmrw?|tom|eod|eow",
@@ -44,14 +56,21 @@ public enum QuickAdd {
         #"the\s+\d{1,2}(?:st|nd|rd|th)"#,
         #"\d{1,2}/\d{1,2}(?:/(?:\d{4}|\d{2}))?"#,
     ].joined(separator: "|")
-    /// A bare four-digit 19xx or 20xx reads as a year unless `at` comes first.
+    /// `@` followed by a space means `at`, as in `Oct 2 @ 3pm`, while `@name` is a label.
+    static let at = #"(?:at|@)\s+"#
+    /// A phrase that may follow a bare hour, so `at 10 tomorrow` is a time while `at 3 options` and `at 3 on the list`
+    /// stay text.
+    static let afterBareHour =
+        #"(?:on\s+)?(?:\#(date))(?![\w!]|[/:]\d)|in\s+\d|(?:every|each)\s+(?:other|\d|day|week|month|year|weekday|workday|\#(weekday)|\#(month))\b|(?:daily|weekdays|weekly|monthly|yearly|remind|urgent|important|p[1-4]|r\d+[mhdw])\b"#
+    /// A bare four-digit 19xx or 20xx reads as a year unless `at` comes first. A bare hour, as in `at 10`, needs `at`
+    /// and no ordinary word after it.
     static let time =
-        #"noon|midnight|\d{1,2}(?::\d{2})?(?:\s*[ap]m|[ap])|\d{1,2}:\d{2}|(?<=\bat\s+)\d{4}|(?!(?:19|20)\d\d)\d{4}"#
+        #"noon|midnight|\d{1,2}(?::\d{2})?(?:\s*[ap]m|[ap])|\d{1,2}:\d{2}|(?<=(?:\bat|@)\s+)\d{4}|(?!(?:19|20)\d\d)\d{4}|(?<=(?:\bat|@)\s+)(?:1\d|2[0-3]|[1-9])(?![\d:%]|[.,]\d|\s+(?!\#(afterBareHour))[a-z])"#
     /// Minutes and hours from now. A spelled-out unit needs `in`, since `study 2 hours` is a length, not a time.
     static let moment = #"in\s+\d+(?:\s*\#(clockUnit))?|\d+\#(clockUnit)|\d+\s+(?:mins?|hrs?)"#
     /// A comma may sit between a day and its time, as in `Oct 19, 10am`, which is how dictation writes them.
     static let dateTime =
-        #"(?:(?:on\s+)?(?<date1>\#(date))(?:,?\s+(?:at\s+)?(?<time1>\#(time)))?|(?:at\s+)?(?<time2>\#(time))(?:,?\s+(?:on\s+)?(?<date2>\#(date)))?|(?<moment>\#(moment)))"#
+        #"(?:(?:on\s+)?(?<date1>\#(date))(?:,?\s+(?:\#(at))?(?<time1>\#(time)))?|(?:\#(at))?(?<time2>\#(time))(?:,?\s+(?:on\s+)?(?<date2>\#(date)))?|(?<moment>\#(moment)))"#
 
     /// `#` and `@` start a name or a handle, so `@5pm` and `@tom` stay text.
     static let before = #"(?<![\w#@!$€£]|\d[/:.])"#
@@ -74,6 +93,7 @@ public enum QuickAdd {
         ),
         Pattern(#"(?<=\b(?:\#(address))\.?\s+)\d[\w:/]*"#, ignoreCase: true),
         Pattern(#"(?<!\w)\d[\w:/]*(?=\s+(?:[\w.]+\s+)?(?:\#(street))\b)"#, ignoreCase: true),
+        Pattern(#"\b(?:may|march)(?=\s+(?:the\s+)?\#(spelledOrdinal)\b)"#),
     ]
 
     /// Extra guards for speech. A bare four-digit number is not a time without `at`, compact units such as `5m` or
@@ -82,7 +102,7 @@ public enum QuickAdd {
     /// without am or pm, such as `3:30`, is ambiguous in speech and stays text.
     static let spokenGuards: [Pattern] = [
         Pattern(
-            #"(?<![\w#@!$€£:/.])(?<!\bat\s+)(?<!(?:\#(month)\.?\s+\#(ordinal)|\s\#(month)),?\s)\d{4}(?![\w:/])"#,
+            #"(?<![\w#@!$€£:/.])(?<!\bat\s+)(?<!(?:\#(month)\.?\s+(?:\#(spelledOrdinal)|\#(ordinal))|\s\#(month)),?\s)\d{4}(?![\w:/])"#,
             ignoreCase: true
         ),
         Pattern(
@@ -110,7 +130,7 @@ public enum QuickAdd {
     /// A weekday list repeats after `every`, next to a time, or when slashed, as in `tue/thu`. Anywhere else, as in
     /// `discuss mon wed plan`, the whole list stays text, since no single day is meant.
     static let weekdayListContext = Pattern(
-        #"(?<lead>\b(?:every|each)\s+|(?<![\w:/.$€£])(?:at\s+)?(?:\#(time))\s+(?:on\s+)?)?(?<![\w#!$€£]|\d[/:.])(?<list>\#(weekdayList))(?<trail>\s+(?:at\s+)?(?:\#(time))(?![\w!]|[/:]\d))?"#,
+        #"(?<lead>\b(?:every|each)\s+|(?<![\w:/.$€£])(?:\#(at))?(?:\#(time))\s+(?:on\s+)?)?(?<![\w#!$€£]|\d[/:.])(?<list>\#(weekdayList))(?<trail>\s+(?:\#(at))?(?:\#(time))(?![\w!]|[/:]\d))?"#,
         ignoreCase: true
     )
 
@@ -213,6 +233,7 @@ public enum QuickAdd {
     static func number(_ text: String?) -> Int? { text.flatMap { Int($0) } }
 
     static let timeShape = Pattern(#"^(\d{1,2}):?(\d{2})?(?:([ap])m?)?$"#)
+    static let bareHour = Pattern(#"^\d{1,2}$"#)
 
     static func resolveTime(_ text: String) -> TimeOfDay? {
         let t = whitespace.replace(text.lowercased()) { _ in "" }
@@ -226,6 +247,9 @@ public enum QuickAdd {
             hours = hours % 12 + (meridiem == "p" ? 12 : 0)
         } else if hours > 23 {
             return nil
+        } else if bareHour.test(t), (1...6).contains(hours) {
+            // A bare hour such as `at 3` means the afternoon up to 6, so 7 to 11 are the morning and 12 is noon.
+            hours += 12
         }
         return Dates.toTimeOfDay(hours: hours, minutes: minutes)
     }
@@ -335,7 +359,11 @@ public enum QuickAdd {
     static func collapse(_ text: String) -> String { trim(whitespace.replace(text) { _ in " " }) }
 
     static func resolveDate(_ text: String, _ today: DateKey) -> Day? {
-        let t = collapse(text.lowercased())
+        let t = spelledOrdinalWord.replace(collapse(text.lowercased())) { found in
+            let tens = found[1] == "twenty" ? 20 : found[1] == "thirty" ? 30 : 0
+            let word = found[2] ?? ""
+            return String(tens + (word == "thirtieth" ? 30 : (ordinalWords.firstIndex(of: word) ?? -1) + 1))
+        }
         if let word = dayWords[t] { return word(today) }
         for (pattern, read) in dateReaders {
             if let m = pattern.first(in: t), let date = read(m, today) { return Day(date: date, time: nil) }

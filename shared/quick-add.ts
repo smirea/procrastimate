@@ -85,17 +85,46 @@ const SLASHED_WEEKDAYS = new RegExp(String.raw`^${WEEKDAY}(?:\s*/\s*${WEEKDAY})+
 const WEEKDAY_WORD = new RegExp(WEEKDAY, 'gi');
 const MONTH = String.raw`(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)`;
 const ORDINAL = String.raw`\d{1,2}(?:st|nd|rd|th)?`;
+const ORDINAL_WORDS = [
+	'first',
+	'second',
+	'third',
+	'fourth',
+	'fifth',
+	'sixth',
+	'seventh',
+	'eighth',
+	'ninth',
+	'tenth',
+	'eleventh',
+	'twelfth',
+	'thirteenth',
+	'fourteenth',
+	'fifteenth',
+	'sixteenth',
+	'seventeenth',
+	'eighteenth',
+	'nineteenth',
+	'twentieth',
+];
+/** A day number as dictation sometimes writes it, from `first` to `thirty-first`. */
+const SPELLED_ORDINAL = String.raw`(?:(?:twenty|thirty)(?:-|\s*)(?:${ORDINAL_WORDS.slice(0, 9).join('|')})|${ORDINAL_WORDS.join('|')}|thirtieth)`;
+const SPELLED_ORDINAL_WORD = new RegExp(
+	String.raw`(?:(twenty|thirty)[-\s]*)?\b(${ORDINAL_WORDS.join('|')}|thirtieth)\b`,
+	'g',
+);
 /** `mo` is listed before `m` everywhere, so months never read as minutes. */
 const DAY_UNIT = String.raw`(?:d(?:ays?)?|w(?:ks?|eeks?)?|mo(?:s|nths?)?|y(?:rs?|ears?)?)`;
 const CLOCK_UNIT = String.raw`(?:m(?:ins?|inutes?)?|h(?:rs?|ours?)?)`;
 const BEFORE_UNIT = String.raw`(?:m(?:ins?|inutes?)?|h(?:rs?|ours?)?|d(?:ays?)?|w(?:ks?|eeks?)?)`;
 
 /**
- * A month and day in either order, as in `Dec. 25`, `October the 20th`, or `the 1st of December`, optionally after
- * the weekday it falls on, which the date overrides. These come before a bare weekday, since the first alternative
- * that matches wins.
+ * A month and day in either order, as in `Dec. 25`, `October the 20th`, `the 1st of December`, or `the third of May`,
+ * optionally after the weekday it falls on, which the date overrides. These come before a bare weekday, since the
+ * first alternative that matches wins. A spelled-out day before the month needs `of`, so `the first May draft` stays
+ * text.
  */
-const MONTH_DATE = String.raw`(?:${WEEKDAY},?\s+)?(?:${MONTH}(?:\.\s*|\s+)(?:the\s+)?${ORDINAL}|(?:the\s+)?(?:\d{1,2}(?:st|nd|rd|th)\s+of|${ORDINAL})\s+${MONTH})(?:,?\s+(?:19|20)\d\d)?`;
+const MONTH_DATE = String.raw`(?:${WEEKDAY},?\s+)?(?:${MONTH}(?:\.\s*|\s+)(?:the\s+)?(?:${SPELLED_ORDINAL}|${ORDINAL})|(?:the\s+)?(?:(?:\d{1,2}(?:st|nd|rd|th)|${SPELLED_ORDINAL})\s+of|${ORDINAL})\s+${MONTH})(?:,?\s+(?:19|20)\d\d)?`;
 
 const DATE = [
 	'today|tonight|tomorrow|tmrw?|tom|eod|eow',
@@ -107,12 +136,22 @@ const DATE = [
 	String.raw`the\s+\d{1,2}(?:st|nd|rd|th)`,
 	String.raw`\d{1,2}/\d{1,2}(?:/(?:\d{4}|\d{2}))?`,
 ].join('|');
-/** A bare four-digit 19xx or 20xx reads as a year unless `at` comes first. */
-const TIME = String.raw`noon|midnight|\d{1,2}(?::\d{2})?(?:\s*[ap]m|[ap])|\d{1,2}:\d{2}|(?<=\bat\s+)\d{4}|(?!(?:19|20)\d\d)\d{4}`;
+/** `@` followed by a space means `at`, as in `Oct 2 @ 3pm`, while `@name` is a label. */
+const AT = String.raw`(?:at|@)\s+`;
+/**
+ * A phrase that may follow a bare hour, so `at 10 tomorrow` is a time while `at 3 options` and `at 3 on the list` stay
+ * text.
+ */
+const AFTER_BARE_HOUR = String.raw`(?:on\s+)?(?:${DATE})(?![\w!]|[/:]\d)|in\s+\d|(?:every|each)\s+(?:other|\d|day|week|month|year|weekday|workday|${WEEKDAY}|${MONTH})\b|(?:daily|weekdays|weekly|monthly|yearly|remind|urgent|important|p[1-4]|r\d+[mhdw])\b`;
+/**
+ * A bare four-digit 19xx or 20xx reads as a year unless `at` comes first. A bare hour, as in `at 10`, needs `at` and
+ * no ordinary word after it.
+ */
+const TIME = String.raw`noon|midnight|\d{1,2}(?::\d{2})?(?:\s*[ap]m|[ap])|\d{1,2}:\d{2}|(?<=(?:\bat|@)\s+)\d{4}|(?!(?:19|20)\d\d)\d{4}|(?<=(?:\bat|@)\s+)(?:1\d|2[0-3]|[1-9])(?![\d:%]|[.,]\d|\s+(?!${AFTER_BARE_HOUR})[a-z])`;
 /** Minutes and hours from now. A spelled-out unit needs `in`, since `study 2 hours` is a length, not a time. */
 const MOMENT = String.raw`in\s+\d+(?:\s*${CLOCK_UNIT})?|\d+${CLOCK_UNIT}|\d+\s+(?:mins?|hrs?)`;
 /** A comma may sit between a day and its time, as in `Oct 19, 10am`, which is how dictation writes them. */
-const DATE_TIME = String.raw`(?:(?:on\s+)?(?<date1>${DATE})(?:,?\s+(?:at\s+)?(?<time1>${TIME}))?|(?:at\s+)?(?<time2>${TIME})(?:,?\s+(?:on\s+)?(?<date2>${DATE}))?|(?<moment>${MOMENT}))`;
+const DATE_TIME = String.raw`(?:(?:on\s+)?(?<date1>${DATE})(?:,?\s+(?:${AT})?(?<time1>${TIME}))?|(?:${AT})?(?<time2>${TIME})(?:,?\s+(?:on\s+)?(?<date2>${DATE}))?|(?<moment>${MOMENT}))`;
 
 /** `#` and `@` start a name or a handle, so `@5pm` and `@tom` stay text. */
 const BEFORE = String.raw`(?<![\w#@!$€£]|\d[/:.])`;
@@ -137,6 +176,7 @@ const GUARDS: RegExp[] = [
 	),
 	new RegExp(String.raw`(?<=\b(?:${ADDRESS})\.?\s+)\d[\w:/]*`, 'gi'),
 	new RegExp(String.raw`(?<!\w)\d[\w:/]*(?=\s+(?:[\w.]+\s+)?(?:${STREET})\b)`, 'gi'),
+	new RegExp(String.raw`\b(?:may|march)(?=\s+(?:the\s+)?${SPELLED_ORDINAL}\b)`, 'g'),
 ];
 
 /**
@@ -144,7 +184,7 @@ const GUARDS: RegExp[] = [
  * else, as in `discuss mon wed plan`, the whole list stays text, since no single day is meant.
  */
 const WEEKDAY_LIST_CONTEXT = new RegExp(
-	String.raw`(?<lead>\b(?:every|each)\s+|(?<![\w:/.$€£])(?:at\s+)?(?:${TIME})\s+(?:on\s+)?)?(?<![\w#!$€£]|\d[/:.])(?<list>${WEEKDAY_LIST})(?<trail>\s+(?:at\s+)?(?:${TIME})(?![\w!]|[/:]\d))?`,
+	String.raw`(?<lead>\b(?:every|each)\s+|(?<![\w:/.$€£])(?:${AT})?(?:${TIME})\s+(?:on\s+)?)?(?<![\w#!$€£]|\d[/:.])(?<list>${WEEKDAY_LIST})(?<trail>\s+(?:${AT})?(?:${TIME})(?![\w!]|[/:]\d))?`,
 	'gi',
 );
 
@@ -164,7 +204,7 @@ function maskProseWeekdayLists(text: string): string {
  */
 const SPOKEN_GUARDS: RegExp[] = [
 	new RegExp(
-		String.raw`(?<![\w#@!$€£:/.])(?<!\bat\s+)(?<!(?:${MONTH}\.?\s+${ORDINAL}|\s${MONTH}),?\s)\d{4}(?![\w:/])`,
+		String.raw`(?<![\w#@!$€£:/.])(?<!\bat\s+)(?<!(?:${MONTH}\.?\s+(?:${SPELLED_ORDINAL}|${ORDINAL})|\s${MONTH}),?\s)\d{4}(?![\w:/])`,
 		'gi',
 	),
 	/(?<![\w#@!$€£.])r?\d+(?:mos?|m(?:ins?)?|h(?:rs?)?|d|w(?:ks?)?|y(?:rs?)?)(?![\w!])/gi,
@@ -239,6 +279,9 @@ export function resolveTime(text: string): TimeOfDay | null {
 		hours = (hours % 12) + (meridiem === 'p' ? 12 : 0);
 	} else if (hours > 23) {
 		return null;
+	} else if (/^\d{1,2}$/.test(t) && hours >= 1 && hours <= 6) {
+		// A bare hour such as `at 3` means the afternoon up to 6, so 7 to 11 are the morning and 12 is noon.
+		hours += 12;
 	}
 	return toTimeOfDay(hours, minutes);
 }
@@ -327,7 +370,16 @@ const DATE_READERS: Array<[RegExp, (m: RegExpExecArray, today: DateKey) => DateK
 ];
 
 function resolveDate(text: string, today: DateKey): Day | null {
-	const t = text.toLowerCase().replaceAll(/\s+/g, ' ').trim();
+	const t = text
+		.toLowerCase()
+		.replaceAll(/\s+/g, ' ')
+		.trim()
+		.replaceAll(SPELLED_ORDINAL_WORD, (_, tens: string | undefined, word: string) =>
+			String(
+				(tens === 'twenty' ? 20 : tens === 'thirty' ? 30 : 0) +
+					(word === 'thirtieth' ? 30 : ORDINAL_WORDS.indexOf(word) + 1),
+			),
+		);
 	const word = DAY_WORDS[t];
 	if (word) return word(today);
 	for (const [pattern, read] of DATE_READERS) {
