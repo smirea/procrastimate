@@ -60,6 +60,9 @@ private struct LocationSheet: View {
     @State private var query = PlacesDemo.value("query") ?? ""
     @State private var trigger: LocationTrigger
     @State private var radius: Double
+    /// Only ever grows while the sheet is open, so `Fitted` stays put after it is tapped instead of vanishing under the
+    /// finger.
+    @State private var presets: [Triggers.RadiusPreset]
     @State private var search = PlaceSearch()
     @State private var resolving: MKLocalSearchCompletion?
     @FocusState private var focused: Bool
@@ -69,6 +72,7 @@ private struct LocationSheet: View {
         self.onChange = onChange
         _trigger = State(initialValue: location?.trigger ?? .arrive)
         _radius = State(initialValue: location?.radius ?? 150)
+        _presets = State(initialValue: location.map(Triggers.radiusPresets(for:)) ?? Triggers.radiusPresets)
     }
 
     var body: some View {
@@ -77,7 +81,7 @@ private struct LocationSheet: View {
                 if let location, query.isEmpty {
                     Section {
                         CurrentPlace(location: location, radius: radius)
-                        RadiusEditor(radius: $radius, max: Triggers.maxRadius(deviceMax: places.maxRadius)) { saveRadius() }
+                        RadiusEditor(radius: $radius, presets: presets, max: Triggers.maxRadius(deviceMax: places.maxRadius)) { saveRadius() }
                         if let unwatched = places.unwatched(location) {
                             UnwatchedNote(reason: unwatched)
                         }
@@ -177,6 +181,8 @@ private struct LocationSheet: View {
         guard var location, location.radius != radius else { return }
         location.radius = radius
         onChange(location)
+        let next = Triggers.radiusPresets(for: location)
+        if next.count > presets.count { withAnimation(.snappy) { presets = next } }
     }
 
     private func pick(_ result: MKLocalSearchCompletion) {
@@ -190,19 +196,21 @@ private struct LocationSheet: View {
             let coordinate = item.location.coordinate
             // The bounding region encloses every returned item, so only a single result is this place's own extent.
             let extent = response.mapItems.count == 1 ? response.boundingRegion : nil
+            let fitted = extent.map {
+                Triggers.placeRadius(
+                    latitudeDelta: $0.span.latitudeDelta,
+                    longitudeDelta: $0.span.longitudeDelta,
+                    latitude: $0.center.latitude,
+                    deviceMax: places.maxRadius
+                )
+            } ?? 150
             onChange(TaskLocation(
                 name: item.name ?? result.title,
                 address: result.subtitle.isEmpty ? item.address?.shortAddress : result.subtitle,
                 latitude: coordinate.latitude,
                 longitude: coordinate.longitude,
-                radius: extent.map {
-                    Triggers.placeRadius(
-                        latitudeDelta: $0.span.latitudeDelta,
-                        longitudeDelta: $0.span.longitudeDelta,
-                        latitude: $0.center.latitude,
-                        deviceMax: places.maxRadius
-                    )
-                } ?? 150,
+                radius: fitted,
+                fittedRadius: fitted,
                 trigger: trigger
             ))
             places.requestPermission()
@@ -257,13 +265,14 @@ private struct CurrentPlace: View {
 /// is saved when the drag ends, so a drag syncs once.
 private struct RadiusEditor: View {
     @Binding var radius: Double
+    let presets: [Triggers.RadiusPreset]
     let max: Double
     let onCommit: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 8) {
-                ForEach(Triggers.radiusPresets, id: \.self) { preset in
+                ForEach(presets, id: \.self) { preset in
                     let selected = radius == preset.meters
                     Button {
                         radius = preset.meters

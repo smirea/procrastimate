@@ -149,6 +149,15 @@ public enum Triggers {
         RadiusPreset(name: "City", meters: 10_000),
     ]
 
+    /// The presets for a place's radius editor, led by `Fitted`, the size fitted from Apple Maps at pick time, while it
+    /// is none of the fixed presets and not the radius the place has now, so it only appears once there is a way back.
+    public static func radiusPresets(for location: TaskLocation) -> [RadiusPreset] {
+        guard let fitted = location.fittedRadius, fitted != location.radius,
+              !radiusPresets.contains(where: { $0.meters == fitted })
+        else { return radiusPresets }
+        return [RadiusPreset(name: "Fitted", meters: fitted)] + radiusPresets
+    }
+
     /// Below about 100 m a phone's cell and Wi-Fi fix can't tell inside from outside, so crossings would flicker.
     public static let minRadius = 100.0
 
