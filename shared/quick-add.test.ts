@@ -590,6 +590,46 @@ describe('the day of this month in words', () => {
 	});
 });
 
+describe('the nth weekday of a month', () => {
+	test.each([
+		['the 1st Monday', '2026-11-02', null],
+		['the first Monday', '2026-11-02', null],
+		['the 2nd Wednesday', '2026-10-14', null],
+		['the 3rd Mon', '2026-10-19', null],
+		['the fourth thursday', '2026-10-22', null],
+		['the last Friday', '2026-10-30', null],
+		['on the last Friday', '2026-10-30', null],
+		['the first Monday of the month', '2026-11-02', null],
+		['the first Monday of November', '2026-11-02', null],
+		['the 1st Monday of October', '2027-10-04', null],
+		['the last Friday of December', '2026-12-25', null],
+		['the 1st Monday at 3pm', '2026-11-02', '15:00'],
+		['the last fri p1', '2026-10-30', null],
+	])('Meet %s', (phrase, date, time) => {
+		const parsed = parse(`Meet ${phrase}`);
+		expect(parsed.title).toBe('Meet');
+		expect<unknown>(parsed.due).toEqual({ date, time });
+		expect(parsed.recurrence).toBeNull();
+	});
+
+	test.each([
+		['Meet the 5th Monday'],
+		['Meet the fifth Friday'],
+		['Plan the first Monday meeting'],
+		['Swap the last Friday shift'],
+	])('stays text: %s', input => {
+		const parsed = parse(input);
+		expect(parsed.title).toBe(input);
+		expect(parsed.due).toBeNull();
+	});
+
+	test('a date that would land after 9999 stays text', () => {
+		const parsed = parse('Meet the 1st Monday', { now: new Date(9999, 11, 20, 10, 0) });
+		expect(parsed.title).toBe('Meet the 1st Monday');
+		expect(parsed.due).toBeNull();
+	});
+});
+
 describe('@ before a time means at', () => {
 	test.each([
 		['Meet Oct 2 @ 3pm', '2027-10-02', '15:00'],
@@ -687,6 +727,9 @@ describe('recurrence', () => {
 		['every 2 weeks', 2, 'week', '2026-10-14', null],
 		['every 3mo', 3, 'month', '2026-10-14', null],
 		['every other week', 2, 'week', '2026-10-14', null],
+		['every other Tuesday', 2, 'week', '2026-10-20', null],
+		['every other wed', 2, 'week', '2026-10-14', null],
+		['every other tue 9am', 2, 'week', '2026-10-20', '09:00'],
 		['every day 5pm', 1, 'day', '2026-10-14', '17:00'],
 		['every day 9am', 1, 'day', '2026-10-15', '09:00'],
 		['every 2d at 9am', 2, 'day', '2026-10-16', '09:00'],
@@ -766,6 +809,13 @@ describe('recurrence', () => {
 		expect(parsed.title).toBe('gym');
 		expect<unknown>(parsed.recurrence).toEqual({ interval: 1, unit: 'week', days });
 		expect<unknown>(parsed.due).toEqual({ date, time });
+	});
+
+	test('every other on a weekday set repeats every two weeks', () => {
+		const parsed = parse('gym every other mon and fri 7am');
+		expect(parsed.title).toBe('gym');
+		expect<unknown>(parsed.recurrence).toEqual({ interval: 2, unit: 'week', days: [1, 5] });
+		expect<unknown>(parsed.due).toEqual({ date: '2026-10-16', time: '07:00' });
 	});
 
 	test.each([
@@ -892,7 +942,6 @@ describe('monthly repeats on a day', () => {
 	test.each([
 		['Water plants every 3rd day'],
 		['Rotate every 2nd week'],
-		['Call every 5th Monday'],
 		['Every second counts'],
 		['Read every third chapter'],
 		['Pay rent every 32nd'],
@@ -900,7 +949,19 @@ describe('monthly repeats on a day', () => {
 	])('%s does not repeat on a day of the month', input => {
 		const parsed = parse(input);
 		expect(parsed.recurrence).toBeNull();
-		expect(parsed.title).toBe(input.replace(/ Monday$/, ''));
+		expect(parsed.title).toBe(input);
+	});
+
+	test.each([
+		['Call every 5th Monday'],
+		['Call every fifth Monday'],
+		['Call every month on the 5th Monday'],
+		['Call every 5th Monday 9am'],
+	])('a 5th weekday stays text with no date: %s', input => {
+		const parsed = parse(input);
+		expect(parsed.recurrence).toBeNull();
+		expect(parsed.title).toBe(input.replace(/ 9am$/, ''));
+		expect(parsed.due).toEqual(input.endsWith('9am') ? { date: '2026-10-15', time: '09:00' } : null);
 	});
 });
 
