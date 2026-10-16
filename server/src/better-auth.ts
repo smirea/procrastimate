@@ -7,17 +7,14 @@ import type { AuthMethods } from '../../shared/api/contract';
 import type { Person } from '../../shared/sharing';
 import type { Env } from './bindings';
 import { authSchema } from './db/auth-schema';
-import { tursoDatabase, tursoTarget, type TursoDatabase } from './db/turso';
-import { errorResponse } from './errors';
+import { config, type AppleSecret, type Config } from './config';
+import { tursoDatabase, type TursoDatabase } from './db/turso';
 import { internalClient } from './account/peers';
 
 /** A year. Days offline must not sign the account out; a day online extends the session. */
 const SESSION_SECONDS = 60 * 60 * 24 * 365;
 const SESSION_UPDATE_SECONDS = 60 * 60 * 24;
 const APPLE_BUNDLE_ID = 'com.stefan.procrastimate';
-/** Used when `E2E_SHARD` is set, so the suite never needs the real secret and never touches Turso. */
-export const E2E_AUTH_SECRET = 'e2e-better-auth-secret-0123456789';
-
 const ALLOWED_HOSTS = [
 	'procrastimate.stf.lol',
 	'procrastimate.localhost:6120',
@@ -69,30 +66,15 @@ type Auth = {
 const memoryDatabases = new Map<string, MemoryDB>();
 const auths = new Map<string, Promise<Auth>>();
 
-const trim = (value: string | undefined) => {
-	const next = value?.trim();
-	return next ? next : '';
-};
-
-/** The secret Better Auth will use, or null when sign-in is off. A deploy without one must not fall back to a public secret. */
-export function authSecret(env: Env): string | null {
-	if (env.E2E_SHARD) return E2E_AUTH_SECRET;
-	return trim(env.BETTER_AUTH_SECRET) || null;
-}
-
-function appleKeyReady(env: Env): boolean {
-	return Boolean(trim(env.APPLE_TEAM_ID) && trim(env.APPLE_KEY_ID) && trim(env.APPLE_PRIVATE_KEY));
-}
-
-/** What the sign-in screen may offer. Empty credentials hide a provider, so CI boots without them. */
+/** What the sign-in screen may offer. A provider without credentials is hidden, so CI boots without them. */
 export function authMethods(env: Env): AuthMethods {
-	const appleReady = Boolean(trim(env.APPLE_CLIENT_SECRET) || appleKeyReady(env));
+	const { google, apple } = config(env);
 	return {
-		email: authSecret(env) !== null,
-		google: Boolean(trim(env.GOOGLE_CLIENT_ID) && trim(env.GOOGLE_CLIENT_SECRET)),
-		apple: Boolean(trim(env.APPLE_CLIENT_ID) && appleReady),
-		googleIosClientId: trim(env.GOOGLE_IOS_CLIENT_ID) || null,
-		appleNative: appleReady,
+		email: true,
+		google: google.web !== null,
+		apple: Boolean(apple?.servicesId),
+		googleIosClientId: google.iosClientId,
+		appleNative: apple !== null,
 	};
 }
 
@@ -103,14 +85,10 @@ const bytesToBase64Url = (bytes: Uint8Array) =>
 		.replaceAll('=', '');
 
 /** Apple's client secret is an ES256 JWT. A stored JWT wins; otherwise the Worker mints one from the .p8. */
-export async function appleClientSecret(env: Env): Promise<string | null> {
-	const stored = trim(env.APPLE_CLIENT_SECRET);
-	if (stored) return stored;
-	const teamId = trim(env.APPLE_TEAM_ID);
-	const keyId = trim(env.APPLE_KEY_ID);
-	const pem = trim(env.APPLE_PRIVATE_KEY).replaceAll('\\n', '\n');
-	const subject = trim(env.APPLE_CLIENT_ID) || APPLE_BUNDLE_ID;
-	if (!teamId || !keyId || !pem.includes('PRIVATE KEY')) return null;
+export async function appleClientSecret(secret: AppleSecret, servicesId: string | null): Promise<string> {
+	if (secret.kind === 'stored') return secret.jwt;
+	const { teamId, keyId, pem } = secret;
+	const subject = servicesId ?? APPLE_BUNDLE_ID;
 	const body = pem
 		.replace(/-----BEGIN PRIVATE KEY-----/, '')
 		.replace(/-----END PRIVATE KEY-----/, '')
@@ -137,22 +115,18 @@ export async function appleClientSecret(env: Env): Promise<string | null> {
 	return `${signingInput}.${bytesToBase64Url(signature)}`;
 }
 
-async function socialProviders(env: Env) {
+async function socialProviders({ google, apple }: Config) {
 	const providers: Record<string, unknown> = {};
-	const webGoogle = trim(env.GOOGLE_CLIENT_ID);
-	const iosGoogle = trim(env.GOOGLE_IOS_CLIENT_ID);
-	const googleSecret = trim(env.GOOGLE_CLIENT_SECRET);
-	const googleIds = [webGoogle, iosGoogle].filter(Boolean);
-	if (googleIds.length && (googleSecret || iosGoogle)) {
+	const googleIds = [google.web?.clientId, google.iosClientId].filter(id => id !== undefined && id !== null);
+	if (googleIds.length) {
 		providers.google = {
 			clientId: googleIds.length === 1 ? googleIds[0] : googleIds,
-			clientSecret: googleSecret || 'ios-id-token-only',
+			clientSecret: google.web?.clientSecret ?? 'ios-id-token-only',
 		};
 	}
-	const appleSecret = await appleClientSecret(env);
-	if (appleSecret) {
-		const services = trim(env.APPLE_CLIENT_ID);
-		const ids = [services, APPLE_BUNDLE_ID].filter(Boolean);
+	if (apple) {
+		const appleSecret = await appleClientSecret(apple.secret, apple.servicesId);
+		const ids = [apple.servicesId, APPLE_BUNDLE_ID].filter(id => id !== null);
 		providers.apple = {
 			clientId: ids.length === 1 ? ids[0] : ids,
 			clientSecret: appleSecret,
@@ -163,13 +137,7 @@ async function socialProviders(env: Env) {
 	return providers;
 }
 
-function authOptions(
-	secret: string,
-	_env: Env,
-	database: unknown,
-	providers: Record<string, unknown>,
-	durableLimits: boolean,
-) {
+function authOptions(secret: string, database: unknown, providers: Record<string, unknown>, durableLimits: boolean) {
 	return {
 		appName: 'procrastimate',
 		secret,
@@ -202,10 +170,11 @@ function authOptions(
 const drizzleDatabase = (db: TursoDatabase) =>
 	drizzleAdapter(db, { provider: 'sqlite', schema: authSchema, transaction: true });
 
-async function buildAuth(env: Env, secret: string, db: TursoDatabase | null): Promise<Auth> {
-	const providers = await socialProviders(env);
-	const database = db ? drizzleDatabase(db) : memoryAdapter(memoryDb(secret));
-	return betterAuth(authOptions(secret, env, database, providers, Boolean(db)) as never) as Auth;
+async function buildAuth(settings: Config, db: TursoDatabase | null): Promise<Auth> {
+	const providers = await socialProviders(settings);
+	const { authSecret } = settings;
+	const database = db ? drizzleDatabase(db) : memoryAdapter(memoryDb(authSecret));
+	return betterAuth(authOptions(authSecret, database, providers, Boolean(db)) as never) as Auth;
 }
 
 function memoryDb(secret: string): MemoryDB {
@@ -217,23 +186,22 @@ function memoryDb(secret: string): MemoryDB {
 }
 
 /** One auth instance per secret and database. The account binding is not part of the key. */
-export function getAuth(env: Env): Promise<Auth | null> {
-	const secret = authSecret(env);
-	if (!secret) return Promise.resolve(null);
-	const turso = tursoTarget(env);
+export function getAuth(env: Env): Promise<Auth> {
+	const settings = config(env);
+	const { authSecret, turso, google, apple } = settings;
 	const key = [
-		secret,
+		authSecret,
 		turso?.url ?? 'memory',
-		trim(env.GOOGLE_CLIENT_ID),
-		trim(env.GOOGLE_IOS_CLIENT_ID),
-		trim(env.APPLE_CLIENT_ID),
-		trim(env.APPLE_KEY_ID),
+		google.web?.clientId,
+		google.iosClientId,
+		apple?.servicesId,
+		apple?.secret.kind === 'key' ? apple.secret.keyId : apple?.secret.kind,
 	].join('|');
 	const existing = auths.get(key);
 	if (existing) return existing;
 	const database = turso ? tursoDatabase(turso) : Promise.resolve(null);
 	const pending = database
-		.then(db => buildAuth(env, secret, db))
+		.then(db => buildAuth(settings, db))
 		.catch(error => {
 			auths.delete(key);
 			throw error;
@@ -243,13 +211,11 @@ export function getAuth(env: Env): Promise<Auth | null> {
 }
 
 export function authOnDatabase(secret: string, db: TursoDatabase): Auth {
-	return betterAuth(authOptions(secret, {}, drizzleDatabase(db), {}, true) as never) as Auth;
+	return betterAuth(authOptions(secret, drizzleDatabase(db), {}, true) as never) as Auth;
 }
 
 export async function authHandler(request: Request, env: Env): Promise<Response> {
-	const auth = await getAuth(env);
-	if (!auth) return errorResponse('SERVICE_UNAVAILABLE', 'Sign-in is not configured');
-	return auth.handler(request);
+	return (await getAuth(env)).handler(request);
 }
 
 export type SessionUser = Person & { email: string };
@@ -263,7 +229,6 @@ const asPerson = (row: UserRow): Person => ({
 
 export async function readSession(request: Request, env: Env): Promise<SessionUser | null> {
 	const auth = await getAuth(env);
-	if (!auth) return null;
 	const url = new URL('/api/auth/get-session', request.url);
 	const response = await auth.handler(new Request(url, { method: 'GET', headers: request.headers }));
 	if (!response.ok) return null;
@@ -273,7 +238,7 @@ export async function readSession(request: Request, env: Env): Promise<SessionUs
 	return { ...asPerson({ id, email, name, kind, ownerId }), email };
 }
 
-const users = async (env: Env) => (await (await getAuth(env))!.$context).adapter;
+const users = async (env: Env) => (await (await getAuth(env)).$context).adapter;
 
 export async function userById(env: Env, id: string): Promise<Person | null> {
 	const row = await (await users(env)).findOne<UserRow>({ model: 'user', where: [{ field: 'id', value: id }] });
@@ -314,7 +279,7 @@ export async function createAiUser(env: Env, ownerId: string, name: string): Pro
 }
 
 export async function deleteUser(env: Env, userId: string): Promise<void> {
-	const context = await (await getAuth(env))!.$context;
+	const context = await (await getAuth(env)).$context;
 	await context.internalAdapter.deleteUser(userId);
 	await context.internalAdapter.deleteUserSessions(userId);
 	await context.internalAdapter.deleteAccounts(userId);

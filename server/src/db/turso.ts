@@ -2,17 +2,10 @@ import { createClient, type Client } from '@libsql/client/web';
 import type { BatchItem } from 'drizzle-orm/batch';
 import type { LibSQLDatabase } from 'drizzle-orm/libsql';
 import { drizzle } from 'drizzle-orm/libsql/web';
-import type { Env } from '../bindings';
 import { migrateAsync, type MigrateMode } from './migrate';
 
 export type TursoTarget = { url: string; authToken: string };
 export type TursoDatabase = LibSQLDatabase;
-
-/** Both Turso secrets, unless an end-to-end shard runs, which must never write the dev database. */
-export function tursoTarget(env: Env): TursoTarget | null {
-	if (env.E2E_SHARD || !env.TURSO_DATABASE_URL || !env.TURSO_AUTH_TOKEN) return null;
-	return { url: env.TURSO_DATABASE_URL, authToken: env.TURSO_AUTH_TOKEN };
-}
 
 const opened = new Map<string, Promise<TursoDatabase>>();
 

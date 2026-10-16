@@ -2,12 +2,8 @@ import { ORPCError } from '@orpc/server';
 import type { PushMessage, PushSubscriptionInfo } from '../../shared/push';
 import type { SendPush } from './account/push';
 import type { Env } from './bindings';
-import { sendPush, VAPID_SUBJECT, type Vapid } from './web-push';
-
-function vapidKeys(env: Env): Vapid | null {
-	if (!env.VAPID_PUBLIC_KEY || !env.VAPID_PRIVATE_KEY) return null;
-	return { publicKey: env.VAPID_PUBLIC_KEY, privateKey: env.VAPID_PRIVATE_KEY, subject: VAPID_SUBJECT };
-}
+import { config } from './config';
+import { sendPush, type Vapid } from './web-push';
 
 /** Push services are https. Loopback http is the end to end suite's fake push service. */
 export function isAllowedEndpoint(endpoint: string) {
@@ -25,10 +21,10 @@ async function send(subscription: PushSubscriptionInfo, message: PushMessage, va
 	}
 }
 
-/** Sends with the Worker's VAPID keys. Without them every send fails like an unreachable push service. */
+/** Sends with the Worker's VAPID keys. In an ephemeral run without them, every send fails like an unreachable push service. */
 export function pushSender(env: Env): SendPush {
 	return async (subscription, message) => {
-		const vapid = vapidKeys(env);
+		const { vapid } = config(env);
 		return vapid ? send(subscription, message, vapid) : null;
 	};
 }
@@ -40,9 +36,9 @@ const TEST_MESSAGE = {
 	taskId: null,
 };
 
-/** The Worker's VAPID keys. Without them push is off. */
+/** The Worker's VAPID keys. Only an ephemeral run can lack them. */
 export function requireVapid(env: Env): Vapid {
-	const vapid = vapidKeys(env);
+	const { vapid } = config(env);
 	if (!env.ACCOUNT || !vapid)
 		throw new ORPCError('SERVICE_UNAVAILABLE', { message: 'Push notifications are not configured' });
 	return vapid;

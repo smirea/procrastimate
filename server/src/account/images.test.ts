@@ -12,7 +12,7 @@ import { migrateSync } from '../db/migrate';
 import { localTurso } from '../db/test-turso';
 import { memoryAccount } from './account';
 import { databaseImages, guestImageAccess, IMAGE_GRACE_MS, memoryImages, sweepPlan, type ImageStore } from './images';
-import { authHeaders, registerDevice, TEST_AUTH_SECRET, whoAmI, type DeviceCredentials } from './test-device';
+import { authHeaders, registerDevice, whoAmI, type DeviceCredentials } from './test-device';
 
 const NOW = Date.UTC(2026, 9, 14, 18);
 const HOUR = 60 * 60 * 1000;
@@ -125,7 +125,7 @@ describe('the image routes', () => {
 	beforeEach(async () => {
 		const account = memoryAccount();
 		const make = async (name: string): Promise<User> => {
-			const env: Env = { ACCOUNT: account, BETTER_AUTH_SECRET: TEST_AUTH_SECRET };
+			const env: Env = { ACCOUNT: account, EPHEMERAL: '1' };
 			const cred = await registerDevice(env, name);
 			return { cred, env, me: await whoAmI(env, cred) };
 		};

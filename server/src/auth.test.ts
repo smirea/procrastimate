@@ -3,7 +3,7 @@ import { DEVICE_HEADER } from '../../shared/auth';
 import { memoryAccount } from './account/account';
 import { memoryStore } from './account/memory-store';
 import type { AccountStore } from './account/store';
-import { registerDevice, TEST_AUTH_SECRET, withAuth } from './account/test-device';
+import { registerDevice, withAuth } from './account/test-device';
 import { storeFactories } from './account/test-stores';
 import api from './api';
 import type { Env } from './bindings';
@@ -23,9 +23,9 @@ const signUp = (env: Env, email = `user-${crypto.randomUUID()}@procrastimate.tes
 		env,
 	);
 
-test('sign-in is off without a secret, and sync is off without the account', async () => {
-	expect((await signUp({})).status).toBe(503);
-	const env: Env = { BETTER_AUTH_SECRET: TEST_AUTH_SECRET };
+test('a Worker without its secrets refuses every request, and sync is off without the account', async () => {
+	await expect(signUp({})).rejects.toThrow('Missing BETTER_AUTH_SECRET');
+	const env: Env = { EPHEMERAL: '1' };
 	expect((await signUp(env)).status).toBe(200);
 	const token = (await signUp(env)).headers.get('set-auth-token');
 	expect(token).toBeTruthy();
@@ -93,7 +93,7 @@ describe.each(storeFactories)('a session on the %s store', (_name, createStore) 
 
 	test('two users do not share tasks', async () => {
 		const first = await registerDevice(env, 'Mac');
-		const otherEnv: Env = { ACCOUNT: env.ACCOUNT, BETTER_AUTH_SECRET: TEST_AUTH_SECRET };
+		const otherEnv: Env = { ACCOUNT: env.ACCOUNT, EPHEMERAL: '1' };
 		const second = await registerDevice(otherEnv, 'Phone');
 		expect(first.token).not.toBe(second.token);
 		expect(store.liveDevices().map(device => device.id)).toEqual([first.deviceId]);
@@ -129,7 +129,7 @@ describe.each(storeFactories)('a session on the %s store', (_name, createStore) 
 
 test('methods hides providers that have no credentials', async () => {
 	const response = await api.fetch(new Request('https://procrastimate.test/api/auth/methods'), {
-		BETTER_AUTH_SECRET: TEST_AUTH_SECRET,
+		EPHEMERAL: '1',
 	});
 	expect(await response.json()).toEqual({
 		email: true,

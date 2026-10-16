@@ -3,16 +3,13 @@ import type { Person } from '../../../shared/sharing';
 import api from '../api';
 import type { Env } from '../bindings';
 
-/** Shared by unit tests. Production never uses it; an unset secret keeps sign-in off. */
-export const TEST_AUTH_SECRET = 'test-better-auth-secret-0123456789';
-
 export type DeviceCredentials = { deviceId: string; token: string; cookie: string };
 
 const sessions = new WeakMap<Env, Promise<{ token: string; cookie: string }>>();
 
-/** Puts the test secret on `env` when the caller did not, so later requests on the same object stay signed in. */
+/** Makes `env` ephemeral, so it signs in against the in-memory user table without any secret. */
 export function withAuth(env: Env): Env {
-	if (!env.BETTER_AUTH_SECRET && !env.E2E_SHARD) env.BETTER_AUTH_SECRET = TEST_AUTH_SECRET;
+	env.EPHEMERAL ??= '1';
 	return env;
 }
 

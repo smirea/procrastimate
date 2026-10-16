@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, setSystemTime, test } from 'bu
 import type { Person } from '../../shared/sharing';
 import type { Task } from '../../shared/sync/protocol';
 import { memoryAccount } from './account/account';
-import { authHeaders, registerDevice, TEST_AUTH_SECRET, type DeviceCredentials } from './account/test-device';
+import { authHeaders, registerDevice, type DeviceCredentials } from './account/test-device';
 import { SHARED_ROUTES } from './actor';
 import api from './api';
 import type { Env } from './bindings';
@@ -43,7 +43,7 @@ describe('agent docs', () => {
 		call(method, path, { Authorization: `Bearer ${token}` }, body);
 
 	beforeEach(async () => {
-		env = { ACCOUNT: memoryAccount(), BETTER_AUTH_SECRET: TEST_AUTH_SECRET };
+		env = { ACCOUNT: memoryAccount(), EPHEMERAL: '1' };
 		owner = await registerDevice(env, 'Owner Mac');
 		const ai = (await (await call('POST', '/api/ai', authHeaders(owner), { name: 'Butler' })).json()) as Person;
 		const created = await call('POST', '/api/ai-tokens', authHeaders(owner), { aiUserId: ai.id, name: 'laptop' });

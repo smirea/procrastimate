@@ -15,7 +15,7 @@ import { label, project, section, task } from '../../../shared/sync/testing';
 import api from '../api';
 import type { Env } from '../bindings';
 import { memoryAccount } from './account';
-import { authHeaders, registerDevice, TEST_AUTH_SECRET, whoAmI, type DeviceCredentials } from './test-device';
+import { authHeaders, registerDevice, whoAmI, type DeviceCredentials } from './test-device';
 
 const NOW = Date.UTC(2026, 9, 14, 18);
 
@@ -37,8 +37,8 @@ describe('sharing between two users', () => {
 	/** `holdSlot` keeps each request in its space's serial queue a while, so two spaces are busy at once. */
 	async function setUp(holdSlot = 0) {
 		const account = memoryAccount(undefined, () => new Promise(resolve => setTimeout(resolve, holdSlot)));
-		const ownerEnv: Env = { ACCOUNT: account, BETTER_AUTH_SECRET: TEST_AUTH_SECRET };
-		const guestEnv: Env = { ACCOUNT: account, BETTER_AUTH_SECRET: TEST_AUTH_SECRET };
+		const ownerEnv: Env = { ACCOUNT: account, EPHEMERAL: '1' };
+		const guestEnv: Env = { ACCOUNT: account, EPHEMERAL: '1' };
 		const ownerCred = await registerDevice(ownerEnv, 'Owner Mac');
 		const guestCred = await registerDevice(guestEnv, 'Guest Phone');
 		owner = { cred: ownerCred, env: ownerEnv, me: await whoAmI(ownerEnv, ownerCred) };

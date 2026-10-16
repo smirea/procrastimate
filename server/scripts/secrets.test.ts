@@ -33,8 +33,13 @@ test('parseDotenv reads plain, quoted, and commented values and drops empty ones
 
 test('workerSecrets keeps only set Worker secrets', () => {
 	expect(
-		workerSecrets({ SYNC_SETUP_CODE: 'code', CLOUDFLARE_API_TOKEN: 'token', API_PORT: '6121', ELEVENLABS_API_KEY: '' }),
-	).toEqual({ SYNC_SETUP_CODE: 'code' });
+		workerSecrets({
+			BETTER_AUTH_SECRET: 'secret',
+			CLOUDFLARE_API_TOKEN: 'token',
+			API_PORT: '6121',
+			ELEVENLABS_API_KEY: '',
+		}),
+	).toEqual({ BETTER_AUTH_SECRET: 'secret' });
 	expect(workerSecrets({ VAPID_PUBLIC_KEY: 'pub', VAPID_PRIVATE_KEY: 'priv' })).toEqual({
 		VAPID_PUBLIC_KEY: 'pub',
 		VAPID_PRIVATE_KEY: 'priv',
