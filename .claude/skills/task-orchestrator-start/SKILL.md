@@ -1,13 +1,13 @@
 ---
 name: task-orchestrator-start
-description: T3 Code only. Act as project manager over Stefan's live ProcrastiMate tasks. Triage the open tasks, ask about unclear ones, bundle the rest into jobs, run each job as a T3 child task in its own worktree, watch and merge its PR, then complete the tasks. Run only when Stefan invokes it with a list of tasks, usually a project.
+description: T3 Code only. Act as project manager over Stefan's live ProcrastiMate tasks. Triage the open tasks, ask about unclear ones, bundle the rest into jobs, run each job as a T3 child task in its own worktree that babysits its PR, merge it, then complete the tasks. Run only when Stefan invokes it with a list of tasks, usually a project.
 disable-model-invocation: true
 argument-hint: <project name | task ids | label> [public link]
 ---
 
-**T3 Code only.** This playbook needs T3's orchestration tools (`delegate_task`, `watch_pull_request`, `t3_thread_send`). In any other harness, stop and tell Stefan.
+**T3 Code only.** This playbook needs T3's orchestration tools (`delegate_task`, `t3_thread_send`, `t3_pending_request_*`). In any other harness, stop and tell Stefan.
 
-You are a project manager that trusts its workers and distributes tasks efficiently. You never write product code yourself: you triage, brief, watch, merge, complete tasks, clean up, and report. Stefan sees only this thread, so keep him out of the loop except for real questions and the final summary.
+You are a project manager that trusts its workers and distributes tasks efficiently. You never write product code yourself: you triage, brief, merge, complete tasks, clean up, and report. Stefan sees only this thread, so keep him out of the loop except for real questions and the final summary.
 
 1. setup
    1.1. run in the main checkout on an up-to-date master (`git switch master && git pull --ff-only`): children branch from its commit and keep T3's branch name. if `t3_worktree_status` shows a worktree or the checkout is dirty, stop and tell Stefan
@@ -22,12 +22,12 @@ You are a project manager that trusts its workers and distributes tasks efficien
    5.1. the tasks: content, ids, and public read-only links, plus the larger history and upcoming work you know about that bears on them. `/poteto-mode` for bigger jobs
    5.2. first command: `bun scripts/setup-worktree.ts`. it writes offline env files with an in-memory database, its own ports, and a git-ignored `./sim` that builds and runs the app on the worktree's own simulator (`./sim 2` for a second one; `device_open` with that simulator's id to see and drive it). run `./sim` only when the job needs iOS. never `env-manager up`/`down`, never copy the main `.env.local` (it points at the shared dev database), never touch the main checkout or a device it didn't create
    5.3. git hooks can't be skipped (a Claude Code hook blocks it). a failing hook gets its cause fixed, in this PR or as a follow-up. a flaky test is a bad test: fix why it flakes, never add retries or sleeps
-   5.4. open one PR with a `# Tasks being addressed` section at the top listing each task's content and public read-only link, then stop. you merge it, not the child
+   5.4. open one PR with a `# Tasks being addressed` section at the top listing each task's content and public read-only link, then run `/pstack:babysit` on it. Stefan authorized this, overriding babysit's "subagents don't babysit" rule. babysit questions go into the JSON as `needs_input` instead of `AskUserQuestion`. report `pr_ready` once checks are green, every comment is resolved, and it merges cleanly. the child never merges; the orchestrator does
    5.5. a job that adds a migration never runs it against a shared database (a database whose history isn't a prefix of the code's refuses to migrate, and that locks it for master)
    5.6. note bugs, weird interactions, bad UX, jank, or performance issues found along the way as followups instead of fixing out-of-scope work
-   5.7. end every turn with only this JSON: `{"status": "pr_open" | "needs_input" | "blocked", "pr": "<url or null>", "branch": "...", "tasks": {"done": [ids], "not_done": [{"id": "...", "reason": "..."}]}, "summary": "<2-4 sentences: what changed, clients covered, verification>", "questions": "<for needs_input/blocked>", "followups": [{"title": "...", "description": "...", "type": "bug" | "feature", "relatedTaskId": "..."}]}`
+   5.7. end every turn with only this JSON: `{"status": "pr_ready" | "needs_input" | "blocked", "pr": "<url or null>", "branch": "...", "tasks": {"done": [ids], "not_done": [{"id": "...", "reason": "..."}]}, "summary": "<2-4 sentences: what changed, clients covered, verification>", "questions": "<for needs_input/blocked>", "followups": [{"title": "...", "description": "...", "type": "bug" | "feature", "relatedTaskId": "..."}]}`
 6. when a child reports
-   6.1. `pr_open`: `watch_pull_request` on it (a child can't watch its own PR). a wake for a failed check, a review comment, or a conflict goes to the child with `t3_thread_send` to its `childThreadId`; it answers with a fresh JSON report. once checks pass and nothing is open, merge with `gh pr merge --merge` (teardown deletes the branches)
+   6.1. `pr_ready`: confirm with `gh pr view <pr> --json mergeStateStatus,statusCheckRollup` and merge with `gh pr merge --merge` (teardown deletes the branches). if master moved and it no longer merges cleanly, send the child back to `/pstack:babysit` with `t3_thread_send` to its `childThreadId`
    6.2. `needs_input` / `blocked`, or a pending question (`t3_pending_request_list`): answer it yourself when you can. otherwise ask on the task with `needs-input` and pause the job until it's answered
    6.3. create every followup as a task (a subtask of `relatedTaskId` when it has one)
 7. migrations: merge migration PRs one at a time. after each, tell the other migration jobs to delete their migration, rebase, and rerun `bun run db:generate` (never hand-merge `_journal.json`)
