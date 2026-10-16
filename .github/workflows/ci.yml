@@ -17,6 +17,17 @@ jobs:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/setup
 
+      # Stefan's machine runs env-manager from a live checkout, so a reader-format change there dirties every worktree until the pin follows.
+      - name: Env readers match the pinned env-manager
+        run: |
+          drift=$(git status --porcelain)
+          if [ -n "$drift" ]; then
+            git status --short
+            git diff
+            echo "::error::env-manager gen --local changed tracked files. Bump the env-manager commit in .github/actions/setup/action.yml to the one you run locally ('git -C ~/code/env-manager rev-parse HEAD'), run 'env-manager gen --local', and commit the regenerated readers."
+            exit 1
+          fi
+
       # drizzle-kit writes a new migration when the schema has changed without one.
       - name: Migrations match the schema
         run: |
