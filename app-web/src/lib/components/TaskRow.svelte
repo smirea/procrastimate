@@ -29,6 +29,7 @@
 	import { parseMemoSource } from 'shared/memo-tasks.ts';
 	import { PRIORITIES } from '../priorities.ts';
 	import { completeTask, postponeTask } from '../completion.ts';
+	import { progressOf } from 'shared/subtasks.ts';
 
 	let {
 		task,
@@ -57,7 +58,9 @@
 	const section = $derived(lookup.section(task.sectionId));
 	const labelChips = $derived(lookup.labelsOf(task).map((label) => ({ text: label.name, ranges: [], color: label.color })));
 	const parent = $derived(task.parentId && !subtask ? lookup.task(task.parentId) : undefined);
-	const progress = $derived(lookup.progress(task.id));
+	const subtasks = $derived(lookup.subtasks(task.id));
+	const progress = $derived(progressOf(subtasks));
+	const pending = $derived(subtasks.filter((s) => s.completedAt === null));
 	const done = $derived(task.completedAt !== null);
 	const due = $derived(done ? null : scheduledDue(task, clock.today));
 	const event = $derived(task.event ? eventLabel(task.event, clock.today) : null);
@@ -112,6 +115,13 @@
 			/>
 			{#if task.notes}
 				<div class="truncate text-[12px] leading-4 text-muted"><LinkedText text={task.notes} /></div>
+			{/if}
+			{#if pending.length}
+				<ul class="truncate text-[12px] leading-4 text-muted" aria-label="Open subtasks">
+					{#each pending as item (item.id)}
+						<li class="inline not-first:ml-3"><span class="text-faint" aria-hidden="true">〇</span> {item.title}</li>
+					{/each}
+				</ul>
 			{/if}
 			{#if due || task.recurrence || task.reminders.length || task.images.length || task.location || progress || commentBadge || parent || fromMemo || showProject}
 				<div class="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-[12px] leading-4 text-muted">

@@ -119,3 +119,18 @@ test('subtasks nest, open in place, and a dated subtask shows in Today under its
 	await app.go('No date');
 	await expect(page.locator('[data-task]')).toHaveText([/Pack for trip/]);
 });
+
+test('a parent row previews its open subtasks in order, and a completed one leaves the preview', async ({ app }) => {
+	await app.add('Pack for trip');
+	await openWithSubtasks(app, 'Pack for trip', ['Passport', 'Charger', 'Socks']);
+	await closeDetails(app);
+
+	const preview = app.row('Pack for trip').getByRole('list', { name: 'Open subtasks' }).getByRole('listitem');
+	await expect(preview).toHaveText(['〇 Passport', '〇 Charger', '〇 Socks']);
+
+	await app.row('Pack for trip').getByRole('button', { name: 'Pack for trip', exact: true }).click();
+	await subtaskCheckbox(app, 'Charger').click();
+	await closeDetails(app);
+	await expect(preview).toHaveText(['〇 Passport', '〇 Socks']);
+	await expect(app.row('Pack for trip').getByRole('img', { name: '1 of 3 subtasks done' })).toBeVisible();
+});

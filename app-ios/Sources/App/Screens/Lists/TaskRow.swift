@@ -74,6 +74,9 @@ struct TaskRow<Trailing: View>: View {
                 if !task.notes.isEmpty {
                     Text(Links.attributed(task.notes)).font(.footnote).foregroundStyle(.muted).lineLimit(1)
                 }
+                if !pending.isEmpty {
+                    PendingSubtasks(titles: pending.map(\.title))
+                }
                 details
             }
             .padding(.vertical, 6)
@@ -172,9 +175,12 @@ struct TaskRow<Trailing: View>: View {
     private var project: Project? { store.project(task.projectId) }
     private var labels: [Core.Label] { store.labels(of: task) }
     private var parent: TaskItem? { isSubtask ? nil : task.parentId.flatMap(store.task) }
-    private var progress: Subtasks.Progress? {
-        Subtasks.progressOf(store.allTasks.filter { $0.parentId == task.id })
+    /// Grouping only this task's children keeps the cost per row at one pass over the tasks.
+    private var subtasks: [TaskItem] {
+        Subtasks.groupChildren(store.allTasks.filter { $0.parentId == task.id })[task.id] ?? []
     }
+    private var progress: Subtasks.Progress? { Subtasks.progressOf(subtasks) }
+    private var pending: [TaskItem] { subtasks.filter { $0.completedAt == nil } }
     private var commentBadge: CommentBadge? { store.commentBadge(task.id, me: Session.userID) }
 
     /// The day the task sits on, which for an event or a repeat at a place is not its stored due date.
@@ -302,6 +308,20 @@ private struct CommentBadgeView: View {
         .animation(.snappy, value: badge)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(unread ? "\(badge.unread) unread of \(badge.count) comments" : "\(badge.count) comments")
+    }
+}
+
+/// `〇 Passport   〇 Charger` on one line, cut off with an ellipsis like the notes above it.
+struct PendingSubtasks: View {
+    let titles: [String]
+
+    var body: some View {
+        let items = titles.map { Text("\(Text("〇").foregroundStyle(.faint)) \($0)") }
+        items.dropFirst().reduce(items[0]) { line, item in Text("\(line)   \(item)") }
+            .font(.footnote)
+            .foregroundStyle(.muted)
+            .lineLimit(1)
+            .accessibilityLabel("Open subtasks: \(titles.formatted(.list(type: .and)))")
     }
 }
 
