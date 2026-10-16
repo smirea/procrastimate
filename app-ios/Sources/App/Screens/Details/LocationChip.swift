@@ -265,16 +265,19 @@ private struct RadiusEditor: View {
             HStack(spacing: 8) {
                 ForEach(Triggers.radiusPresets, id: \.self) { preset in
                     let selected = radius == preset.meters
-                    Button(preset.name) {
+                    Button {
                         radius = preset.meters
                         onCommit()
+                    } label: {
+                        Text(preset.name)
+                            .font(.subheadline.weight(.medium))
+                            .foregroundStyle(selected ? .accent : .ink)
+                            .padding(.horizontal, 12)
+                            .frame(minHeight: 32)
+                            .background(selected ? Color.accent.opacity(0.15) : Color.ink.opacity(0.06), in: .capsule)
+                            .frame(minHeight: 44)
+                            .contentShape(.rect)
                     }
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(selected ? .accent : .ink)
-                    .padding(.horizontal, 12)
-                    .frame(minHeight: 32)
-                    .background(selected ? Color.accent.opacity(0.15) : Color.ink.opacity(0.06), in: .capsule)
-                    .contentShape(.capsule)
                     .buttonStyle(.plain)
                     .disabled(preset.meters > max)
                     .accessibilityAddTraits(selected ? .isSelected : [])

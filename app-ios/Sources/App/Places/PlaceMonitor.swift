@@ -211,6 +211,9 @@ final class PlaceMonitor: NSObject {
         case .unmonitored:
             if unwatched[id] != .refused { Self.logUnwatched(id, .refused) }
             unwatched[id] = .refused
+            states[id] = nil
+            saveStates()
+            await reconcileActivities(entered: [])
             return
         default: return
         }
