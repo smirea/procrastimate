@@ -7,8 +7,7 @@ SwiftUI app for iOS 27, iPhone first. The app needs Bun and Xcode 27; the `Core`
 From this folder:
 
 ```sh
-./scripts/test                  # generates API.swift, then swift test: Core unit tests on macOS or Linux
-bun scripts/tokens.ts --check   # generated colors match app-web/src/index.css
+./scripts/test   # generates API.swift, then swift test: Core unit tests on macOS or Linux
 ```
 
 UI tests run from Xcode's `App` scheme or with:

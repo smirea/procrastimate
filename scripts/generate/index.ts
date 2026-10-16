@@ -2,11 +2,12 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { migrationsModule } from './migrations';
 import { handWrittenModels } from './models';
+import { tokenFiles } from './tokens';
 import { tableDefaults, zodModule } from './zod';
 
 /**
  * Writes every generated file: the row schemas and bundled migrations from the Drizzle schema, then the OpenAPI
- * document, the web client's contract, and the Swift API types from the contract. A file is rewritten only when
+ * document, the web client's contract, and the Swift API types from the contract, and the iOS colors from the web's CSS. A file is rewritten only when
  * its content changes, so watchers do not loop. The outputs are git-ignored: every start, build, check, and test entry
  * point runs this first.
  */
@@ -49,6 +50,9 @@ write(
 	'app-ios/Sources/Core/Generated/API.swift',
 	swiftModule({ components: namedSchemas(), paths: JSON.parse(openApi).paths, tableDefaults: tableDefaults() }),
 );
+
+for (const [path, contents] of Object.entries(tokenFiles(readFileSync(join(root, 'app-web/src/index.css'), 'utf8'))))
+	write(path, contents);
 
 const models = handWrittenModels(root, ['app-ios/Sources']);
 if (models.length) {
