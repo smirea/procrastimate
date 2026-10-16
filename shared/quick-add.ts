@@ -90,14 +90,20 @@ const DAY_UNIT = String.raw`(?:d(?:ays?)?|w(?:ks?|eeks?)?|mo(?:s|nths?)?|y(?:rs?
 const CLOCK_UNIT = String.raw`(?:m(?:ins?|inutes?)?|h(?:rs?|ours?)?)`;
 const BEFORE_UNIT = String.raw`(?:m(?:ins?|inutes?)?|h(?:rs?|ours?)?|d(?:ays?)?|w(?:ks?|eeks?)?)`;
 
+/**
+ * A month and day in either order, as in `Dec. 25`, `October the 20th`, or `the 1st of December`, optionally after
+ * the weekday it falls on, which the date overrides. These come before a bare weekday, since the first alternative
+ * that matches wins.
+ */
+const MONTH_DATE = String.raw`(?:${WEEKDAY},?\s+)?(?:${MONTH}(?:\.\s*|\s+)(?:the\s+)?${ORDINAL}|(?:the\s+)?(?:\d{1,2}(?:st|nd|rd|th)\s+of|${ORDINAL})\s+${MONTH})(?:,?\s+(?:19|20)\d\d)?`;
+
 const DATE = [
 	'today|tonight|tomorrow|tmrw?|tom|eod|eow',
 	String.raw`(?:next|nxt)\s+(?:week|${WEEKDAY})`,
+	MONTH_DATE,
 	WEEKDAY,
 	String.raw`in\s+\d+\s*${DAY_UNIT}`,
 	String.raw`\d+(?:d|wks?|w|mos?)`,
-	String.raw`${MONTH}\s+${ORDINAL}(?:,?\s+(?:19|20)\d\d)?`,
-	String.raw`${ORDINAL}\s+${MONTH}(?:,?\s+(?:19|20)\d\d)?`,
 	String.raw`the\s+\d{1,2}(?:st|nd|rd|th)`,
 	String.raw`\d{1,2}/\d{1,2}(?:/(?:\d{4}|\d{2}))?`,
 ].join('|');
@@ -105,7 +111,8 @@ const DATE = [
 const TIME = String.raw`noon|midnight|\d{1,2}(?::\d{2})?(?:\s*[ap]m|[ap])|\d{1,2}:\d{2}|(?<=\bat\s+)\d{4}|(?!(?:19|20)\d\d)\d{4}`;
 /** Minutes and hours from now. A spelled-out unit needs `in`, since `study 2 hours` is a length, not a time. */
 const MOMENT = String.raw`in\s+\d+(?:\s*${CLOCK_UNIT})?|\d+${CLOCK_UNIT}|\d+\s+(?:mins?|hrs?)`;
-const DATE_TIME = String.raw`(?:(?:on\s+)?(?<date1>${DATE})(?:\s+(?:at\s+)?(?<time1>${TIME}))?|(?:at\s+)?(?<time2>${TIME})(?:\s+(?:on\s+)?(?<date2>${DATE}))?|(?<moment>${MOMENT}))`;
+/** A comma may sit between a day and its time, as in `Oct 19, 10am`, which is how dictation writes them. */
+const DATE_TIME = String.raw`(?:(?:on\s+)?(?<date1>${DATE})(?:,?\s+(?:at\s+)?(?<time1>${TIME}))?|(?:at\s+)?(?<time2>${TIME})(?:,?\s+(?:on\s+)?(?<date2>${DATE}))?|(?<moment>${MOMENT}))`;
 
 /** `#` and `@` start a name or a handle, so `@5pm` and `@tom` stay text. */
 const BEFORE = String.raw`(?<![\w#@!$€£]|\d[/:.])`;
@@ -156,12 +163,15 @@ function maskProseWeekdayLists(text: string): string {
  * text. A 12-hour clock time without am or pm, such as `3:30`, is ambiguous in speech and stays text.
  */
 const SPOKEN_GUARDS: RegExp[] = [
-	new RegExp(String.raw`(?<![\w#@!$€£:/.])(?<!\bat\s+)(?<!${MONTH}\s+${ORDINAL},?\s)\d{4}(?![\w:/])`, 'gi'),
+	new RegExp(
+		String.raw`(?<![\w#@!$€£:/.])(?<!\bat\s+)(?<!(?:${MONTH}\.?\s+${ORDINAL}|\s${MONTH}),?\s)\d{4}(?![\w:/])`,
+		'gi',
+	),
 	/(?<![\w#@!$€£.])r?\d+(?:mos?|m(?:ins?)?|h(?:rs?)?|d|w(?:ks?)?|y(?:rs?)?)(?![\w!])/gi,
 	/(?<!\bin\s+)(?<![\w.])\d+\s+(?:mins?|hrs?)\b(?!\s+before)/gi,
 	new RegExp(String.raw`\b(?:${WEEKDAY}|today|tonight|tomorrow|tom)(?=['’]s\b)`, 'gi'),
 	new RegExp(String.raw`(?<=\bthe\s+)\d{1,2}(?:st|nd|rd|th)(?=\s+(?!(?:at|of|${MONTH})\b)[a-z]+)`, 'gi'),
-	/\b(?:Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)day(?=\s+[A-Z][a-z])/g,
+	new RegExp(String.raw`\b(?:Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)day(?=\s+(?!${MONTH}\b)[A-Z][a-z])`, 'g'),
 	new RegExp(
 		String.raw`\b${WEEKDAY}(?=\s+(?:lunch|dinner|breakfast|brunch|drinks|meeting|meetings|standup|stand-up|service|game|match|party|class|shift|market|plans|practice|session|show)\b)`,
 		'gi',
@@ -307,11 +317,11 @@ const DATE_READERS: Array<[RegExp, (m: RegExpExecArray, today: DateKey) => DateK
 		},
 	],
 	[
-		/^([a-z]+) (\d{1,2})(?:st|nd|rd|th)?(?:,? (\d{4}))?$/,
+		new RegExp(String.raw`^(?:${WEEKDAY},? )?([a-z]+)(?:\. ?| )(?:the )?(\d{1,2})(?:st|nd|rd|th)?(?:,? (\d{4}))?$`),
 		(m, today) => monthDay(today, monthIndex(m[1]!), Number(m[2]), m[3]),
 	],
 	[
-		/^(\d{1,2})(?:st|nd|rd|th)? ([a-z]+)(?:,? (\d{4}))?$/,
+		new RegExp(String.raw`^(?:${WEEKDAY},? )?(?:the )?(\d{1,2})(?:st|nd|rd|th)?(?: of)? ([a-z]+)(?:,? (\d{4}))?$`),
 		(m, today) => monthDay(today, monthIndex(m[2]!), Number(m[1]), m[3]),
 	],
 ];
@@ -605,13 +615,22 @@ export function parseQuickAdd(input: string, options: ParseOptions): ParsedQuick
 		}
 	}
 
+	// Punctuation right after a removed phrase stays on the word before it, so `Pay rent oct 20.` saves `Pay rent.`,
+	// and a comma or colon left at the very start, as in `Tomorrow, call mom`, goes.
 	let title = '';
 	let cursor = 0;
+	const append = (segment: string) => {
+		if (!/^[.,;:!?]/.test(segment)) title += segment;
+		else if (title.trim()) title = title.trimEnd() + segment;
+		else title = segment.replace(/^[,;:]+/, '');
+	};
 	for (const token of tokens) {
-		title += `${input.slice(cursor, token.start)} `;
+		append(input.slice(cursor, token.start));
+		title += ' ';
 		cursor = token.end;
 	}
-	title = (title + input.slice(cursor)).replaceAll(/\s+/g, ' ').trim();
+	append(input.slice(cursor));
+	title = title.replaceAll(/\s+/g, ' ').trim();
 
 	const outside = options.due ?? null;
 	const due = resolveDue(duePhrase, repeat, outside, ctx);

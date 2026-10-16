@@ -6,7 +6,7 @@ Add a task lets Stefan capture a task in one motion from anywhere in the app. Re
 
 - `add-open` opens quick add from each entry point.
 - `add-save` saves a task with a title and lands it in the current list.
-- `add-due` parses a due date typed into the title, such as `tomorrow` or `fri 5pm`.
+- `add-due` parses a due date typed into the title, such as `tomorrow`, `fri 5pm`, or a month name date such as `Dec. 25`, `20th of October`, `Monday, October 19`, or `Oct 19, 10am`.
 - `add-shorthand` parses compact phrases such as `tom 5p`, `eow`, `2d`, `5m`, `1730`, `10/15`, and `the 15th`, and leaves names and ordinary words such as `Tom` and `sun hat` as text. An offset past the year 9999, such as `3929284d`, also stays text.
 - `add-recurrence` parses a repeat such as `every mon`, `daily`, yearly `every march 2nd`, or a weekday list such as `mon wed fri 7am` or `tue/thu`, shows it as a chip, and stores it on the task. A weekday list in prose, such as `Discuss mon wed plan`, stays text.
 - `add-highlight` highlights each parsed phrase inline and shows its value as a chip.
