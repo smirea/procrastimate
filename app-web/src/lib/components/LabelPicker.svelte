@@ -16,7 +16,14 @@
 		onchange,
 		labels,
 		canCreate = true,
-	}: { labelIds: string[]; onchange: (labelIds: string[]) => void; labels?: readonly Label[]; canCreate?: boolean } = $props();
+		open = $bindable(false),
+	}: {
+		labelIds: string[];
+		onchange: (labelIds: string[]) => void;
+		labels?: readonly Label[];
+		canCreate?: boolean;
+		open?: boolean;
+	} = $props();
 
 	let query = $state('');
 	let active = $state(0);
@@ -53,23 +60,24 @@
 		active = 0;
 	});
 
+	$effect(() => {
+		if (open) query = '';
+	});
+
 	/** A phone keeps its keyboard down until the field is tapped, so the list stays in view. */
 	const focusUnlessPhone = (node: HTMLInputElement) => {
 		if (!mobile.current) node.focus();
 	};
 </script>
 
-<Popover label="Labels">
+<Popover label="Labels" bind:open>
 	{#snippet trigger({ toggle })}
 		<button
 			type="button"
 			class="chip max-w-64"
 			data-active={chosen.length > 0}
 			aria-label={chosen.length ? `Labels ${chosen.map((l) => l.name).join(', ')}` : 'Add labels'}
-			onclick={() => {
-				query = '';
-				toggle();
-			}}
+			onclick={toggle}
 		>
 			<Tag size={15} weight={chosen.length ? 'fill' : 'regular'} class="shrink-0 text-[var(--tone-label)]" />
 			<span class="truncate">{chosen.length ? chosen.map((l) => l.name).join(', ') : 'Labels'}</span>

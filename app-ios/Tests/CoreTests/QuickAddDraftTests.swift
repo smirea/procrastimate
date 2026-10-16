@@ -18,7 +18,7 @@ import Testing
         #expect(draft.resolved(parsed).due == Due(date: "2026-10-15", time: nil))
         #expect(draft.resolved(parsed).priority == .p1)
 
-        draft.clearToken(.due, in: parsed)
+        draft.clearTokens(.due, now: pinned, projects: [], labels: labels, in: utc)
         draft.picked.due = Due(date: "2026-10-20", time: nil)
         #expect(draft.text == "Call mom p1 now")
         parsed = parse(draft)
@@ -81,6 +81,21 @@ import Testing
         draft.setText("Ping @CALLS")
         let token = try #require(parse(draft).tokens.first { $0.kind == .label })
         #expect(QuickAddDraft.labelName(token, labels) == "Calls")
+    }
+
+    @Test func aPickClearsEveryCopyOfARepeatedPhrase() {
+        var draft = QuickAddDraft(defaults: .init(), today: today)
+        draft.setText("Water every mon every fri p1")
+        draft.clearTokens(.recurrence, now: pinned, projects: [], labels: labels, in: utc)
+        #expect(draft.text == "Water p1")
+    }
+
+    @Test func removingSeveralTokensCutsEachPhrase() {
+        var draft = QuickAddDraft(defaults: .init(), today: today)
+        draft.setText("Ping @calls tomorrow every day p1")
+        let tokens = parse(draft).tokens.filter { $0.kind == .label || $0.kind == .recurrence }
+        draft.removeTokens(tokens)
+        #expect(draft.text == "Ping tomorrow p1")
     }
 
     @Test func nextWeekIsTheComingMonday() {

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { dictationChoiceSchema } from './dictation.ts';
+import { DEFAULT_QUICK_ADD_BUTTONS, quickAddButtonSchema } from './quick-add-buttons.ts';
 import { sortTasks } from './store.ts';
 import { detachOrphans } from './subtasks.ts';
 import { hlcSchema } from './db/json.ts';
@@ -65,8 +66,8 @@ const tasksSchema = z
 
 /**
  * Device-local sync state. `clock` is the last clock the device issued or saw, and `timeZone` the zone it last wrote
- * to the synced settings, so it writes again only after it moves. `dictation` is the choice this device
- * last applied, including one that arrived from another device. `epoch` is the wipe generation it last applied.
+ * to the synced settings, so it writes again only after it moves. `dictation` and `quickAddButtons` are the
+ * choices this device last applied, including ones that arrived from another device. `epoch` is the wipe generation it last applied.
  * `reset` is set until the server has wiped task data for a local delete-all.
  * `seed` is set until the first snapshot arrives, which queues only what the local data adds to the server.
  */
@@ -79,6 +80,7 @@ const syncSchema = z
 		clock: hlcSchema,
 		timeZone: z.string(),
 		dictation: dictationChoiceSchema.default('native'),
+		quickAddButtons: z.array(quickAddButtonSchema).default(DEFAULT_QUICK_ADD_BUTTONS),
 		epoch: z.number().int().nonnegative().default(0),
 		reset: z.boolean().default(false),
 		seed: z.boolean().default(false),

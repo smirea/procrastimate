@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import Repeat from 'phosphor-svelte/lib/Repeat';
 	import Check from 'phosphor-svelte/lib/Check';
 	import { alignToRecurrence, sortWeekdays, weekdayOf, weeklyOn, type Due, type Recurrence, type RecurrenceUnit, type Weekday } from 'shared/task.ts';
@@ -10,11 +11,13 @@
 		recurrence,
 		due,
 		onchange,
+		open = $bindable(false),
 	}: {
 		recurrence: Recurrence | null;
 		due: Due | null;
 		/** A repeat comes with the due date it starts on: the first occurrence on or after the current one, or today. */
 		onchange: (recurrence: Recurrence | null, due: Due | null) => void;
+		open?: boolean;
 	} = $props();
 
 	const PRESETS: Recurrence[] = [
@@ -35,6 +38,9 @@
 	/** Setting a repeat on an undated task dates it today, so presets read as they will apply. */
 	const anchor = $derived(due ?? { date: clock.today, time: null });
 	let opened = $state<Due | null>(null);
+	$effect(() => {
+		if (open) opened = untrack(() => anchor);
+	});
 
 	/** Aligns from the due date the menu opened with, so toggle order never changes the result. A one-day set is stored as a plain weekly repeat. */
 	function set(next: Recurrence | null) {
@@ -56,17 +62,14 @@
 		a?.interval === b.interval && a.unit === b.unit && !(a.unit === 'week' && a.days);
 </script>
 
-<Popover label="Repeat">
+<Popover label="Repeat" bind:open>
 	{#snippet trigger({ toggle })}
 		<button
 			type="button"
 			class="chip"
 			data-active={!!recurrence}
 			aria-label={recurrence ? repeatLabel(recurrence, due) : 'Set repeat'}
-			onclick={() => {
-				opened = anchor;
-				toggle();
-			}}
+			onclick={toggle}
 			style={recurrence ? 'color: var(--tone-repeat)' : ''}
 		>
 			<Repeat size={15} weight={recurrence ? 'bold' : 'regular'} />

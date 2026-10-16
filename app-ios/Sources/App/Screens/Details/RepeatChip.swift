@@ -7,6 +7,8 @@ struct RepeatChip: View {
     @Environment(\.clock) private var clock
     let recurrence: Recurrence?
     let due: Due?
+    /// Bumped to open the picker from outside, as quick add's `+` menu does.
+    var openTrigger = 0
     let onChange: (Recurrence?, Due?) -> Void
 
     @State private var open = false
@@ -26,6 +28,10 @@ struct RepeatChip: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(recurrence.map { Format.repeatLabel($0, due) } ?? "Set repeat")
+        .onChange(of: openTrigger) {
+            opened = anchor
+            open = true
+        }
         .popover(isPresented: $open) {
             RepeatPopover(recurrence: recurrence, anchor: anchor) { next in
                 let set = RepeatMenu.set(next, opened: opened ?? anchor, due: due)

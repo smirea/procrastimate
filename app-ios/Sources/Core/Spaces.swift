@@ -75,6 +75,7 @@ extension SyncEngine {
                 clock: sync.clock,
                 timeZone: sync.timeZone,
                 dictation: sync.dictation,
+                quickAddButtons: sync.quickAddButtons,
                 epoch: section.epoch
             )
         )

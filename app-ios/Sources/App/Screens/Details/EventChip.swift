@@ -6,6 +6,8 @@ import SwiftUI
 /// repeating event whether it follows the series.
 struct EventChip: View {
     let event: TaskEvent?
+    /// Bumped to open the picker from outside, as quick add's `+` menu does.
+    var openTrigger = 0
     let onChange: (TaskEvent?) -> Void
 
     @State private var open = PlacesDemo.has("sheet:event")
@@ -23,6 +25,7 @@ struct EventChip: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(event.map { "Event: \(Triggers.formatEvent($0))" } ?? "Add event")
+        .onChange(of: openTrigger) { open = true }
         .sheet(isPresented: $open) {
             EventSheet(event: event, onChange: onChange)
         }

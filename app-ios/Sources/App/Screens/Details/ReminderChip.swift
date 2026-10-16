@@ -7,6 +7,8 @@ struct ReminderChip: View {
     let reminders: [Reminder]
     let due: Due?
     var relativeOnly = false
+    /// Bumped to open the picker from outside, as quick add's `+` menu does.
+    var openTrigger = 0
     let onChange: ([Reminder]) -> Void
 
     @State private var open = false
@@ -24,6 +26,7 @@ struct ReminderChip: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(ReminderMenu.chipLabel(reminders.count))
+        .onChange(of: openTrigger) { open = true }
         .popover(isPresented: $open) {
             ReminderPopover(
                 reminders: reminders, due: due, today: clock.today, relativeOnly: relativeOnly, onChange: onChange

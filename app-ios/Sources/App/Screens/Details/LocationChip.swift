@@ -5,6 +5,8 @@ import SwiftUI
 /// The place chip and its sheet: an Apple Maps search with the Arrive, Leave, or During menu beside the field.
 struct LocationChip: View {
     let location: TaskLocation?
+    /// Bumped to open the picker from outside, as quick add's `+` menu does.
+    var openTrigger = 0
     let onChange: (TaskLocation?) -> Void
 
     @State private var open = PlacesDemo.has("sheet:location")
@@ -22,6 +24,7 @@ struct LocationChip: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(location.map { "Location: \(Triggers.formatLocation($0))" } ?? "Add location")
+        .onChange(of: openTrigger) { open = true }
         .sheet(isPresented: $open) {
             LocationSheet(location: location, onChange: onChange)
         }

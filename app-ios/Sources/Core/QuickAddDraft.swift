@@ -27,6 +27,8 @@ public struct QuickAddDraft: Hashable, Sendable {
         public var sectionId: String?
         public var labelIds: [String]
         public var reminders: [Reminder]
+        /// Set by the repeat chip. A typed repeat wins.
+        public var recurrence: Recurrence? = nil
     }
 
     public let defaults: Defaults
@@ -74,12 +76,30 @@ public struct QuickAddDraft: Hashable, Sendable {
         )
     }
 
-    /// A manual pick replaces whatever the text said for that attribute.
-    public mutating func clearToken(_ kind: QuickAdd.TokenKind, in parsed: QuickAdd.Parsed) {
-        guard let token = parsed.tokens.first(where: { $0.kind == kind }) else { return }
-        let units = Array(text.utf16)
-        let joined = Self.string(units[..<token.start]) + Self.string(units[token.end...])
-        text = Self.runsOfWhitespace.replace(joined) { _ in " " }
+    /// A manual pick replaces whatever the text said for that attribute. The parser shows only the last copy of a
+    /// repeated phrase, so each cut reparses until no copy is left to take over from the pick.
+    public mutating func clearTokens(
+        _ kind: QuickAdd.TokenKind,
+        now: Date,
+        projects: [Project],
+        sections: [ProjectSection] = [],
+        labels: [Label],
+        in zone: TimeZone
+    ) {
+        while let token = parse(now: now, projects: projects, sections: sections, labels: labels, in: zone).tokens
+            .first(where: { $0.kind == kind }) {
+            removeTokens([token])
+        }
+    }
+
+    /// Cuts each token's phrase from the text, as unchecking a typed label in the labels picker does.
+    public mutating func removeTokens(_ tokens: [QuickAdd.Token]) {
+        guard !tokens.isEmpty else { return }
+        var units = Array(text.utf16)
+        for token in tokens.sorted(by: { $0.start > $1.start }) {
+            units.removeSubrange(token.start..<token.end)
+        }
+        text = Self.runsOfWhitespace.replace(Self.string(units[...])) { _ in " " }
     }
 
     /// The task to save, or nil while the title is empty.
@@ -92,7 +112,7 @@ public struct QuickAddDraft: Hashable, Sendable {
             sectionId: resolved.sectionId,
             labelIds: resolved.labelIds,
             due: resolved.due,
-            recurrence: parsed.recurrence,
+            recurrence: parsed.recurrence ?? picked.recurrence,
             priority: resolved.priority,
             reminders: parsed.reminders + picked.reminders
         )

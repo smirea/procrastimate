@@ -122,6 +122,7 @@ export const settingsRowSchema = z.object({
 	id: z.string(),
 	timeZone: z.string().nullable(),
 	dictation: COLUMN_VALUES.settings.dictation,
+	quickAddButtons: COLUMN_VALUES.settings.quickAddButtons,
 	clocks: COLUMN_VALUES.settings.clocks,
 });
 

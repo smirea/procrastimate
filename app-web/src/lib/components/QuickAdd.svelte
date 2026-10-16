@@ -13,13 +13,19 @@
 	import Tag from 'phosphor-svelte/lib/Tag';
 	import { parseQuickAdd, type QuickAddToken, type TokenKind } from 'shared/quick-add.ts';
 	import { unknownNames, type UnknownName } from 'shared/name-search.ts';
-	import { DEFAULT_PRIORITY, type Due, type Priority, type Reminder } from 'shared/task.ts';
+	import { DEFAULT_PRIORITY, type Due, type Priority, type Recurrence, type Reminder } from 'shared/task.ts';
 	import SmartInput from './SmartInput.svelte';
 	import DuePicker from './DuePicker.svelte';
 	import PriorityPicker from './PriorityPicker.svelte';
 	import ReminderPicker from './ReminderPicker.svelte';
 	import ProjectPicker from './ProjectPicker.svelte';
+	import LabelPicker from './LabelPicker.svelte';
+	import RecurrencePicker from './RecurrencePicker.svelte';
+	import QuickAddMenu from './QuickAddMenu.svelte';
+	import { rowButtons } from 'shared/quick-add-buttons.ts';
+	import { WEB_BUTTONS, type WebButton } from '../quick-add-buttons.ts';
 	import { store } from '../store.svelte.ts';
+	import { creationHome } from '../spaces.ts';
 	import { clock, mobile, sheets, type QuickAddDefaults, motion } from '../ui.svelte.ts';
 	import { dueTone, formatDue, formatRecurrence, formatReminder } from 'shared/format.ts';
 	import type { NewTask } from 'shared/store.ts';
@@ -37,6 +43,8 @@
 		sectionId: string | null;
 		labelIds: string[];
 		reminders: Reminder[];
+		/** Set by the repeat chip or a ramble. A typed repeat wins. */
+		recurrence: Recurrence | null;
 	};
 	const initialPicked = (): Picked => ({
 		due: defaults.today ? { date: clock.today, time: null } : null,
@@ -45,10 +53,17 @@
 		sectionId: defaults.sectionId ?? null,
 		labelIds: defaults.labelId ? [defaults.labelId] : [],
 		reminders: [],
+		recurrence: null,
 	});
 
 	let text = $state('');
 	let picked = $state<Picked>(initialPicked());
+	/** Buttons opened from the `+` menu stay in the row for this draft, so their picker has a chip to hang from. */
+	let opened = $state<WebButton[]>([]);
+	let picker = $state<WebButton | null>(null);
+	let row = $state<HTMLDivElement>();
+	let rowReady = false;
+	let edges = $state({ start: false, end: false });
 	let input: SmartInput;
 	let subtaskInput = $state<SmartInput>();
 	let subtaskList = $state<HTMLUListElement>();
@@ -72,7 +87,7 @@
 		}),
 	);
 	const tokenOf = (kind: TokenKind) => parsed.tokens.find((t) => t.kind === kind);
-	const recurrence = $derived(parsed.recurrence);
+	const recurrence = $derived(parsed.recurrence ?? picked.recurrence);
 	const due = $derived(parsed.due ?? picked.due);
 	const priority = $derived(parsed.priority ?? picked.priority ?? DEFAULT_PRIORITY);
 	const projectId = $derived(parsed.projectId ?? picked.projectId);
@@ -86,6 +101,22 @@
 			.map((token) => ({ token, name: store.labels.find((l) => `@${l.name}`.toLowerCase() === token.text.toLowerCase())?.name })),
 	);
 	const labelIds = $derived([...new Set([...picked.labelIds, ...parsed.labelIds])]);
+	/** The space the task will land in. A shared one offers only its own labels and creates none, as in task details. */
+	const home = $derived(creationHome(store.homeOf, { projectId, labelIds }, null));
+	/** What each attribute holds. One with a value shows in the row even when it is not pinned. */
+	const values = $derived<Partial<Record<WebButton, string>>>({
+		...(due && { date: formatDue(due, clock.today) }),
+		...(priority !== DEFAULT_PRIORITY && { priority: `P${priority}` }),
+		...((picked.reminders.length || reminderTokens.length) && {
+			reminders: `${picked.reminders.length + reminderTokens.length}`,
+		}),
+		...(recurrence && { repeat: formatRecurrence(recurrence, due) }),
+		...(labelIds.length && { labels: store.labelsOf({ labelIds }).map((l) => l.name).join(', ') }),
+		...((subtasksOpen || subtasks.length) && { subtasks: subtasks.length ? `${subtasks.length}` : 'Open' }),
+	});
+	const buttons = $derived(
+		rowButtons(store.quickAddButtons, [...opened, ...WEB_BUTTONS.filter((b) => values[b])], WEB_BUTTONS) as WebButton[],
+	);
 	/** Names to offer creating. The one the suggestion list is open on already offers it there. */
 	const unknown = $derived(
 		unknownNames(text, fieldTokens, store.projects, store.labels).filter((name) => name.start !== listAt),
@@ -96,12 +127,88 @@
 		input.focus();
 	}
 
-	/** A manual pick replaces whatever the text said for that attribute. */
+	/**
+	 * A manual pick replaces whatever the text said for that attribute. The parser shows only the last copy of a
+	 * repeated phrase, so each cut reparses until no copy is left to take over from the pick.
+	 */
 	function clearToken(kind: TokenKind) {
-		const token = tokenOf(kind);
-		if (token) text = (text.slice(0, token.start) + text.slice(token.end)).replaceAll(/\s{2,}/g, ' ');
+		for (let token = tokenOf(kind); token; token = tokenOf(kind)) cut([token]);
 		input.focus();
 	}
+
+	function cut(tokens: (QuickAddToken | undefined)[]) {
+		for (const token of tokens.filter((t) => !!t).toSorted((a, b) => b.start - a.start))
+			text = text.slice(0, token.start) + text.slice(token.end);
+		text = text.replaceAll(/\s{2,}/g, ' ');
+	}
+
+	/** Unchecking a typed label removes its `@name`, so the picker's list is what saves. */
+	function setLabels(next: string[]) {
+		const typed = parsed.labelIds;
+		cut(labelTokens.filter(({ token }) => !next.includes(labelIdOf(token) ?? '')).map(({ token }) => token));
+		// A label the text still types stays the text's, so deleting its `@name` later drops it.
+		picked.labelIds = next.filter((id) => !typed.includes(id) || picked.labelIds.includes(id));
+	}
+
+	const labelIdOf = (token: QuickAddToken) =>
+		store.labels.find((l) => `@${l.name}`.toLowerCase() === token.text.toLowerCase())?.id;
+
+	function setRecurrence(next: Recurrence | null, start: Due | null) {
+		clearToken('recurrence');
+		picked.recurrence = next;
+		if (JSON.stringify(start) !== JSON.stringify(due)) {
+			clearToken('due');
+			picked.due = start;
+		}
+	}
+
+	/** Runs a `+` menu action: the checklist opens its field, and every other button opens its picker in the row. */
+	async function run(button: WebButton) {
+		if (button === 'subtasks') return openSubtasks();
+		if (!opened.includes(button)) opened.push(button);
+		await tick();
+		row?.querySelector(`[data-button="${button}"]`)?.scrollIntoView({ inline: 'nearest', block: 'nearest', behavior: 'smooth' });
+		picker = button;
+	}
+
+	const pickerOpen = (button: WebButton) => ({
+		get: () => picker === button,
+		set: (open: boolean) => {
+			if (open) picker = button;
+			else if (picker === button) picker = null;
+		},
+	});
+	const dueOpen = pickerOpen('date');
+	const priorityOpen = pickerOpen('priority');
+	const remindersOpen = pickerOpen('reminders');
+	const repeatOpen = pickerOpen('repeat');
+	const labelsOpen = pickerOpen('labels');
+
+	/** A chip that appears after the row first draws, such as one the text just set, scrolls into view. */
+	const intoView = (node: HTMLElement) => {
+		if (rowReady) node.scrollIntoView({ inline: 'nearest', block: 'nearest', behavior: 'smooth' });
+	};
+
+	$effect(() => {
+		void tick().then(() => (rowReady = true));
+	});
+
+	/** Fades whichever end of the row has more chips past it. */
+	function measure() {
+		if (!row) return;
+		const { scrollLeft, scrollWidth, clientWidth } = row;
+		edges = { start: scrollLeft > 1, end: scrollLeft + clientWidth < scrollWidth - 1 };
+	}
+
+	$effect(() => {
+		if (!row) return;
+		void buttons.length;
+		void unknown.length;
+		const observer = new ResizeObserver(measure);
+		observer.observe(row);
+		for (const child of row.children) observer.observe(child);
+		return () => observer.disconnect();
+	});
 
 	function submit() {
 		if (!parsed.title) return;
@@ -264,71 +371,70 @@
 			</div>
 		</div>
 	{/if}
-	<div class="flex items-start gap-1.5 px-4 pb-3">
-	<div class="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
-		<DuePicker {due} onchange={(value) => {
-				clearToken('due');
-				picked.due = value;
-			}} />
-		{#if recurrence}
-			<div class="flex items-center" transition:scale={motion({ start: 0.9, duration: 160 })}>
-				<span class="chip" data-active="true" style="color: var(--tone-repeat)">
-					<Repeat size={15} weight="bold" />
-					{formatRecurrence(recurrence, due)}
-				</span>
-			</div>
-		{/if}
-		<ReminderPicker {due} reminders={picked.reminders} onchange={(value) => (picked.reminders = value)} />
-		{#each reminderTokens as token, i (token.text + token.start)}
-			<div class="flex items-center" transition:scale={motion({ start: 0.9, duration: 160 })}>
-				<span class="chip" data-active="true" style="color: var(--tone-week)">
-					<Bell size={15} weight="fill" />
-					{formatReminder(parsed.reminders[i]!, clock.today)}
-				</span>
-			</div>
-		{/each}
-		{#each store.labelsOf({ labelIds: picked.labelIds.filter((id) => !parsed.labelIds.includes(id)) }) as label (label.id)}
-			<span class="chip" data-active="true" transition:scale={motion({ start: 0.9, duration: 160 })}>
-				<Tag size={15} weight="fill" class="text-[var(--tone-label)]" />
-				{label.name}
-			</span>
-		{/each}
-		{#each labelTokens as { token, name } (token.start)}
-			<div class="flex items-center" transition:scale={motion({ start: 0.9, duration: 160 })}>
-				<span class="chip" data-active="true">
-					<Tag size={15} weight="fill" class="text-[var(--tone-label)]" />
-					{name}
-				</span>
-			</div>
-		{/each}
-		{#each unknown as name (name.sigil + name.name.toLowerCase())}
-			<button
-				type="button"
-				class="chip text-accent"
-				transition:scale={motion({ start: 0.9, duration: 160 })}
-				onmousedown={(e) => e.preventDefault()}
-				onclick={() => create(name)}
-			>
-				<Plus size={15} weight="bold" />
-				Create {name.sigil}{name.name}
-			</button>
-		{/each}
-	</div>
-	<button
-		type="button"
-		class="chip shrink-0"
-		data-active={subtasksOpen || subtasks.length > 0}
-		aria-label={subtasks.length ? `Add subtask, ${subtasks.length} added` : 'Add subtask'}
-		onmousedown={(e) => e.preventDefault()}
-		onclick={openSubtasks}
-	>
-		<ListChecks size={16} weight={subtasks.length ? 'bold' : 'regular'} />
-		{#if subtasks.length}<span class="tabular-nums">{subtasks.length}</span>{/if}
-	</button>
-	<PriorityPicker iconOnly {priority} onchange={(value) => {
-			clearToken('priority');
-			picked.priority = value;
-		}} />
+	<div class="flex items-center gap-1.5 pb-3 pl-4 pr-3">
+		<div
+			bind:this={row}
+			class="chip-row -my-1 flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto py-1"
+			style:--fade-start={edges.start ? '20px' : '0px'}
+			style:--fade-end={edges.end ? '20px' : '0px'}
+			onscroll={measure}
+			role="group"
+			aria-label="Task attributes"
+		>
+			{#each buttons as button (button)}
+				<div class="flex shrink-0 items-center gap-1.5" data-button={button} animate:flip={motion({ duration: 200, easing: cubicOut })} {@attach intoView} transition:scale={motion({ start: 0.9, duration: 160 })}>
+					{#if button === 'date'}
+						<DuePicker {due} bind:open={dueOpen.get, dueOpen.set} onchange={(value) => {
+								clearToken('due');
+								picked.due = value;
+							}} />
+					{:else if button === 'priority'}
+						<PriorityPicker iconOnly {priority} bind:open={priorityOpen.get, priorityOpen.set} onchange={(value) => {
+								clearToken('priority');
+								picked.priority = value;
+							}} />
+					{:else if button === 'reminders'}
+						<ReminderPicker {due} reminders={picked.reminders} bind:open={remindersOpen.get, remindersOpen.set} onchange={(value) => (picked.reminders = value)} />
+						{#each reminderTokens as token, i (token.text + token.start)}
+							<span class="chip shrink-0" data-active="true" style="color: var(--tone-week)" {@attach intoView} transition:scale={motion({ start: 0.9, duration: 160 })}>
+								<Bell size={15} weight="fill" />
+								{formatReminder(parsed.reminders[i]!, clock.today)}
+							</span>
+						{/each}
+					{:else if button === 'repeat'}
+						<RecurrencePicker {recurrence} {due} bind:open={repeatOpen.get, repeatOpen.set} onchange={setRecurrence} />
+					{:else if button === 'labels'}
+						<LabelPicker {labelIds} labels={store.dataOf(home).labels} canCreate={home === null} bind:open={labelsOpen.get, labelsOpen.set} onchange={setLabels} />
+					{:else if button === 'subtasks'}
+						<button
+							type="button"
+							class="chip"
+							data-active={subtasksOpen || subtasks.length > 0}
+							aria-label={subtasks.length ? `Add subtask, ${subtasks.length} added` : 'Add subtask'}
+							onmousedown={(e) => e.preventDefault()}
+							onclick={openSubtasks}
+						>
+							<ListChecks size={16} weight={subtasks.length ? 'bold' : 'regular'} />
+							{#if subtasks.length}<span class="tabular-nums">{subtasks.length}</span>{/if}
+						</button>
+					{/if}
+				</div>
+			{/each}
+			{#each unknown as name (name.sigil + name.name.toLowerCase())}
+				<button
+					type="button"
+					class="chip shrink-0 text-accent"
+					{@attach intoView}
+					transition:scale={motion({ start: 0.9, duration: 160 })}
+					onmousedown={(e) => e.preventDefault()}
+					onclick={() => create(name)}
+				>
+					<Plus size={15} weight="bold" />
+					Create {name.sigil}{name.name}
+				</button>
+			{/each}
+		</div>
+		<QuickAddMenu {values} onrun={run} />
 	</div>
 	<div class="flex items-center justify-between gap-2 border-t border-ink/5 px-3 py-2.5">
 		<ProjectPicker {projectId} {sectionId} onchange={(place) => {
@@ -345,6 +451,18 @@
 </div>
 
 <style>
+	.chip-row {
+		scrollbar-width: none;
+		overscroll-behavior-x: contain;
+		mask-image: linear-gradient(
+			to right,
+			transparent,
+			#000 var(--fade-start),
+			#000 calc(100% - var(--fade-end)),
+			transparent
+		);
+	}
+
 	.mic {
 		box-shadow:
 			inset 0 1px 0 0 rgb(255 255 255 / 0.3),

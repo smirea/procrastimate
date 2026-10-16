@@ -223,6 +223,15 @@ public final class Store {
         scheduleWrite()
     }
 
+    /// The quick add buttons pinned to the chip row, including a change from another device.
+    public var quickAddButtons: [QuickAddButton] { snapshot.sync?.quickAddButtons ?? API.Settings().quickAddButtons }
+
+    public func setQuickAddButtons(_ buttons: [QuickAddButton]) {
+        guard quickAddButtons != buttons else { return }
+        SyncEngine.setQuickAddButtons(&snapshot, buttons, now: clock.now.epochMilliseconds, nextOpId: newId)
+        scheduleWrite()
+    }
+
     /// Writes this device's zone when it has moved since the last sync.
     public func noteTimeZone(_ timeZone: String) {
         guard snapshot.sync?.timeZone != timeZone else { return }

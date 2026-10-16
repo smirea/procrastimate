@@ -1,0 +1,169 @@
+{
+	"module": "quick-add-buttons",
+	"timeZone": "America/New_York",
+	"cases": [
+		{
+			"fn": "toggleButton",
+			"test": "toggleButton › pinning a button puts it in row order",
+			"input": [
+				[
+					"date",
+					"subtasks"
+				],
+				"labels"
+			],
+			"output": [
+				"date",
+				"labels",
+				"subtasks"
+			]
+		},
+		{
+			"fn": "toggleButton",
+			"test": "toggleButton › unpinning removes it",
+			"input": [
+				[
+					"date",
+					"priority",
+					"reminders",
+					"subtasks"
+				],
+				"reminders"
+			],
+			"output": [
+				"date",
+				"priority",
+				"subtasks"
+			]
+		},
+		{
+			"fn": "toggleButton",
+			"test": "toggleButton › a stored list out of order or with repeats comes back clean",
+			"input": [
+				[
+					"subtasks",
+					"date",
+					"date"
+				],
+				"event"
+			],
+			"output": [
+				"date",
+				"subtasks",
+				"event"
+			]
+		},
+		{
+			"fn": "toggleButton",
+			"test": "toggleButton › the last button can be unpinned, leaving only the + menu",
+			"input": [
+				[
+					"date"
+				],
+				"date"
+			],
+			"output": []
+		},
+		{
+			"fn": "rowButtons",
+			"test": "rowButtons › the default row",
+			"input": [
+				[
+					"date",
+					"priority",
+					"reminders",
+					"subtasks"
+				],
+				[],
+				[
+					"date",
+					"priority",
+					"reminders",
+					"repeat",
+					"labels",
+					"subtasks",
+					"location",
+					"event"
+				]
+			],
+			"output": [
+				"date",
+				"priority",
+				"reminders",
+				"subtasks"
+			]
+		},
+		{
+			"fn": "rowButtons",
+			"test": "rowButtons › a hidden button with a value still shows, in its place",
+			"input": [
+				[
+					"date",
+					"subtasks"
+				],
+				[
+					"labels",
+					"priority"
+				],
+				[
+					"date",
+					"priority",
+					"reminders",
+					"repeat",
+					"labels",
+					"subtasks"
+				]
+			],
+			"output": [
+				"date",
+				"priority",
+				"labels",
+				"subtasks"
+			]
+		},
+		{
+			"fn": "rowButtons",
+			"test": "rowButtons › the web leaves out location and event, even when pinned",
+			"input": [
+				[
+					"date",
+					"location",
+					"event"
+				],
+				[
+					"event"
+				],
+				[
+					"date",
+					"priority",
+					"reminders",
+					"repeat",
+					"labels",
+					"subtasks"
+				]
+			],
+			"output": [
+				"date"
+			]
+		},
+		{
+			"fn": "rowButtons",
+			"test": "rowButtons › nothing pinned and nothing set shows no buttons",
+			"input": [
+				[],
+				[],
+				[
+					"date",
+					"priority",
+					"reminders",
+					"repeat",
+					"labels",
+					"subtasks",
+					"location",
+					"event"
+				]
+			],
+			"output": []
+		}
+	]
+}

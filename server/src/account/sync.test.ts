@@ -74,6 +74,17 @@ describe.each(storeFactories)('POST /api/sync on the %s store', (_name, createSt
 		return 'snapshot' in response ? (response.snapshot as Snapshot) : null;
 	};
 
+	test('the quick add buttons a device pins reach every device', async () => {
+		const cred = await setup();
+		const settings = (opId: string, hlc: string, fields: Op['fields']) =>
+			({ opId, hlc, kind: 'settings', id: 'settings', fields }) as Op;
+		await sync(cred, 0, [settings('s1', formatHlc({ wall: NOW, counter: 0, node: 'Mac' }), { timeZone: 'UTC' })]);
+		await sync(cred, 1, [
+			settings('s2', formatHlc({ wall: NOW + 1, counter: 0, node: 'Mac' }), { quickAddButtons: ['date', 'labels'] }),
+		]);
+		expect((await serverSnapshot())?.settings.quickAddButtons).toEqual(['date', 'labels']);
+	});
+
 	test('rejects a missing, unknown, or revoked token, and an invalid body', async () => {
 		expect((await post({ cursor: 0, ops: [] })).status).toBe(401);
 		expect(

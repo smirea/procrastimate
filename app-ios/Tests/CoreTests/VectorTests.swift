@@ -121,6 +121,7 @@ let handlers: [String: Handler] = [
     "name-search": nameSearchVector,
     "todoist": todoistVector,
     "dictation": dictationVector,
+    "quick-add-buttons": quickAddButtonsVector,
     "triggers": triggersVector,
     "ramble": rambleVector,
     "ramble-fill": rambleFillVector,
@@ -404,6 +405,14 @@ private struct ParseInput: Decodable {
 @Sendable func dictationVector(_ fn: String, _ a: Args) throws -> JSONValue {
     switch fn {
     case "voiceCapture": return try json(Dictation.voiceCapture(a(0), online: a(1), nativeSpeech: a(2)))
+    default: throw unknown(fn)
+    }
+}
+
+@Sendable func quickAddButtonsVector(_ fn: String, _ a: Args) throws -> JSONValue {
+    switch fn {
+    case "toggleButton": return try json(QuickAddButtons.toggleButton(a(0), a(1)))
+    case "rowButtons": return try json(QuickAddButtons.rowButtons(a(0), a(1), a(2)))
     default: throw unknown(fn)
     }
 }

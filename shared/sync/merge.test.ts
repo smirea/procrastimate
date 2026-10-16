@@ -11,7 +11,7 @@ import {
 	serverSnapshot,
 	type ServerState,
 } from './merge.ts';
-import type { Op, Patch } from './protocol.ts';
+import { DEFAULT_SETTINGS, type Op, type Patch } from './protocol.ts';
 import { MemoryClient, MemoryServer, project, snapshotOf, task } from './testing.ts';
 
 const NOW = 1_000_000;
@@ -182,7 +182,7 @@ describe('applyOps', () => {
 			{ opId: 's', hlc: '10:0:a', kind: 'settings', id: 'settings', fields: { timeZone: 'Asia/Tokyo' } },
 			{ opId: 'd', hlc: '11:0:a', kind: 'settings', id: 'settings', fields: { deleted: true } },
 		]);
-		expect(serverSnapshot(state).settings).toEqual({ timeZone: 'Asia/Tokyo', dictation: 'native' });
+		expect(serverSnapshot(state).settings).toEqual({ ...DEFAULT_SETTINGS, timeZone: 'Asia/Tokyo' });
 	});
 });
 

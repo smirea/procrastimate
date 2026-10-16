@@ -9,13 +9,14 @@
 		priority,
 		onchange,
 		iconOnly = false,
-	}: { priority: Priority; onchange: (priority: Priority) => void; iconOnly?: boolean } = $props();
+		open = $bindable(false),
+	}: { priority: Priority; onchange: (priority: Priority) => void; iconOnly?: boolean; open?: boolean } = $props();
 
 	const levels: Priority[] = [1, 2, 3, 4];
 </script>
 
 <div class="flex items-center">
-	<Popover label="Priority" align={iconOnly ? 'end' : 'start'}>
+	<Popover label="Priority" align={iconOnly ? 'end' : 'start'} bind:open>
 		{#snippet trigger({ toggle })}
 			<button
 				type="button"

@@ -6,6 +6,8 @@ import SwiftUI
 struct DueChip: View {
     @Environment(\.clock) private var clock
     let due: Due?
+    /// Bumped to open the picker from outside, as quick add's `+` menu does.
+    var openTrigger = 0
     let onChange: (Due?) -> Void
 
     @State private var open = false
@@ -23,6 +25,7 @@ struct DueChip: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(due.map { "Due \(Format.formatDue($0, today))" } ?? "Set due date")
+        .onChange(of: openTrigger) { open = true }
         .popover(isPresented: $open) {
             DuePopover(due: due, onChange: onChange) { open = false }
                 .presentationCompactAdaptation(.popover)
