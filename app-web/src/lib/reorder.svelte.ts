@@ -24,7 +24,11 @@ type Drag = {
 	to: number;
 	/** Row midpoints and the pointer's y, in viewport coordinates at lift time. */
 	mids: number[];
+	/** How far the rows it passes shift: its own height plus the gap between rows. */
 	step: number;
+	/** The lifted row's center stays between the first row's top and the last row's bottom, so it can take either end. */
+	minDy: number;
+	maxDy: number;
 	startY: number;
 	clientY: number;
 	scroller: Element;
@@ -108,14 +112,18 @@ export class Reorder {
 		const press = this.#press;
 		if (!press || !this.#list) return;
 		const rects = this.#rows().map(row => row.getBoundingClientRect());
-		const step = rects.length > 1 ? rects[1]!.top - rects[0]!.top : rects[press.index]!.height;
+		const own = rects[press.index]!;
+		const mid = own.top + own.height / 2;
+		const gap = rects.length > 1 ? rects[1]!.top - rects[0]!.bottom : 0;
 		const scroller = scrollerOf(this.#list);
 		this.drag = {
 			id: press.id,
 			from: press.index,
 			to: press.index,
 			mids: rects.map(r => r.top + r.height / 2),
-			step,
+			step: own.height + gap,
+			minDy: rects[0]!.top - mid,
+			maxDy: rects.at(-1)!.bottom - mid,
 			startY: press.startY,
 			clientY: press.startY,
 			scroller,
@@ -146,13 +154,7 @@ export class Reorder {
 	#follow() {
 		const drag = this.drag!;
 		const scrolled = drag.scroller.scrollTop - drag.scrollStart;
-		const count = this.#options.count();
-		// Half a step past either end, so the center can cross the first or last row's midpoint and take its slot.
-		const reach = (slots: number) => (slots + 0.5) * drag.step;
-		drag.dy = Math.max(
-			-reach(drag.from),
-			Math.min(drag.clientY - drag.startY + scrolled, reach(count - 1 - drag.from)),
-		);
+		drag.dy = Math.max(drag.minDy, Math.min(drag.clientY - drag.startY + scrolled, drag.maxDy));
 		const center = drag.mids[drag.from]! + drag.dy;
 		drag.to = drag.mids.filter((mid, i) => i !== drag.from && mid < center).length;
 	}
