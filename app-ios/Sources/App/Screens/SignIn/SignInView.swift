@@ -54,7 +54,7 @@ struct SignInView: View {
                     .textContentType(creating ? .newPassword : .password)
                     .padding(12)
                     .background(.ink.opacity(0.05), in: .rect(cornerRadius: 16))
-                Button(creating ? "Create account" : "Sign in") { Task { await submit() } }
+                Button(submitLabel) { Task { await submit() } }
                     .buttonStyle(.borderedProminent)
                     .disabled(busy || email.isEmpty || password.count < 8)
                 Button(creating ? "Already have an account" : "Create an account") { creating.toggle() }
@@ -90,6 +90,16 @@ struct SignInView: View {
         .padding(24)
         .frame(maxWidth: 420)
         .glassEffect(.regular, in: .rect(cornerRadius: 28))
+    }
+
+    /// Only the server knows whether the password is right, so the button says it is asking.
+    private var submitLabel: String {
+        switch (busy, creating) {
+        case (true, true): "Creating account…"
+        case (true, false): "Signing in…"
+        case (false, true): "Create account"
+        case (false, false): "Sign in"
+        }
     }
 
     private func submit() async {

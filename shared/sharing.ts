@@ -29,6 +29,9 @@ export const shareAudienceSchema = z
 	});
 export type ShareAudience = z.infer<typeof shareAudienceSchema>;
 
+/** How people search matches a name, on the server and on each client's instant local pass. */
+export const namePrefixed = (name: string, q: string) => name.toLowerCase().startsWith(q.toLowerCase());
+
 /** A `shares` row as the store hands it out. Revoking deletes it. */
 export const shareSchema = sharesRowSchema.omit({ userId: true });
 export type Share = z.infer<typeof shareSchema>;

@@ -1,6 +1,7 @@
 import type { AuthMethods } from 'shared/api/contract.ts';
 import { api } from './api.ts';
 import { store } from './store.svelte.ts';
+import { toasts } from './ui.svelte.ts';
 
 /**
  * The signed-in user. The session cookie is httpOnly, so a cached user id is what lets the app open offline.
@@ -103,20 +104,27 @@ class Session {
 		location.href = body.url;
 	}
 
+	/** Signs out at once. The cookie is httpOnly, so a refused sign-out would sign back in on reload; it comes back now instead. */
 	async signOut() {
-		await fetch('/api/auth/sign-out', { method: 'POST', credentials: 'include' }).catch(() => undefined);
+		const id = this.userId;
 		this.clear();
+		const response = await fetch('/api/auth/sign-out', { method: 'POST', credentials: 'include' }).catch(() => null);
+		if (response?.ok || !id || this.state !== 'out') return;
+		this.adopt(id);
+		toasts.show('Could not sign out');
 	}
 
-	async deleteAccount() {
+	/** Not optimistic: it cannot be undone, so the account stays until the server confirms. */
+	async deleteAccount(): Promise<boolean> {
 		const deleted = await api.account.delete().catch(() => null);
 		if (!deleted) {
-			this.error = 'Could not delete the account';
-			return;
+			toasts.show('Could not delete the account');
+			return false;
 		}
 		store.switchUser();
 		localStorage.removeItem(OWNER_KEY);
 		this.clear();
+		return true;
 	}
 
 	async #submit(path: string, body: object) {

@@ -14,11 +14,16 @@
 	import { motion } from '../ui.svelte.ts';
 	import { readBackupZip } from '../todoist-import.ts';
 
-	type Status = { kind: 'idle' } | { kind: 'done'; summary: ImportSummary } | { kind: 'failed'; message: string };
+	type Status =
+		| { kind: 'idle' }
+		| { kind: 'reading' }
+		| { kind: 'done'; summary: ImportSummary }
+		| { kind: 'failed'; message: string };
 
 	let status = $state<Status>({ kind: 'idle' });
 	let confirmingDelete = $state(false);
 	let confirmingAccount = $state(false);
+	let deletingAccount = $state(false);
 	let input: HTMLInputElement;
 
 	const notificationLine = $derived(
@@ -31,12 +36,18 @@
 		confirmingDelete = false;
 	}
 
+	async function deleteAccount() {
+		deletingAccount = true;
+		if (!(await session.deleteAccount())) deletingAccount = false;
+	}
+
 	const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
 	async function onchange() {
 		const file = input.files?.[0];
 		input.value = '';
 		if (!file) return;
+		status = { kind: 'reading' };
 		try {
 			const backup = await readBackupZip(file, new Date());
 			status =
@@ -78,7 +89,9 @@
 		</button>
 		<input bind:this={input} type="file" accept=".zip,application/zip" class="sr-only" tabindex="-1" aria-label="Todoist backup file" {onchange} />
 
-		{#if status.kind === 'done'}
+		{#if status.kind === 'reading'}
+			<p role="status" class="px-1.5 text-[13px] text-muted" in:fly={motion({ y: 6, duration: 220, easing: cubicOut })}>Importing…</p>
+		{:else if status.kind === 'done'}
 			{@const { summary } = status}
 			{#key summary}
 				<div role="status" aria-label="Import summary" class="flex flex-col gap-2" in:fly={motion({ y: 6, duration: 220, easing: cubicOut })}>
@@ -132,16 +145,15 @@
 		{#if confirmingAccount}
 			<p class="px-1.5 text-[13px] text-ink">Delete this account and every task, project, and label?</p>
 			<div class="flex gap-2">
-				<button type="button" class="btn press bg-[var(--tone-overdue)] text-on-accent" onclick={() => session.deleteAccount()}>Delete account</button>
-				<button type="button" class="btn press" onclick={() => (confirmingAccount = false)}>Cancel</button>
+				<button type="button" class="btn press bg-[var(--tone-overdue)] text-on-accent" disabled={deletingAccount} onclick={deleteAccount}>
+					{deletingAccount ? 'Deleting…' : 'Delete account'}
+				</button>
+				<button type="button" class="btn press" disabled={deletingAccount} onclick={() => (confirmingAccount = false)}>Cancel</button>
 			</div>
 		{:else}
 			<button type="button" class="menu-item -mx-1.5 w-auto text-[var(--tone-overdue)] touch:h-11 touch:text-[15px]" onclick={() => (confirmingAccount = true)}>
 				Delete account
 			</button>
-		{/if}
-		{#if session.error}
-			<p role="alert" class="text-[13px] text-[var(--tone-overdue)]">{session.error}</p>
 		{/if}
 	</section>
 </div>

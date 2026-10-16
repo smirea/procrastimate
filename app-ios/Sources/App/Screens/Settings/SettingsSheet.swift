@@ -8,12 +8,13 @@ struct SettingsSheet: View {
     @Environment(TodoistImport.self) private var importer
     @Environment(Store.self) private var store
     @Environment(LocalNotifications.self) private var notifications
-    @Environment(Session.self) private var session
     @Environment(AccountSync.self) private var accountSync
+    @Environment(Toasts.self) private var toasts
 
     @State private var picking = false
     @State private var confirmingDelete = false
     @State private var confirmingAccount = false
+    @State private var deletingAccount = false
 
     var body: some View {
         NavigationStack {
@@ -64,10 +65,8 @@ struct SettingsSheet: View {
 
                 Section("Account") {
                     Button("Sign out") { accountSync.signOut() }
-                    Button("Delete account", role: .destructive) { confirmingAccount = true }
-                    if let error = session.error {
-                        ErrorText(report: error)
-                    }
+                    Button(deletingAccount ? "Deleting…" : "Delete account", role: .destructive) { confirmingAccount = true }
+                        .disabled(deletingAccount)
                 }
             }
             .animation(.snappy, value: importer.status)
@@ -90,7 +89,7 @@ struct SettingsSheet: View {
                 isPresented: $confirmingAccount,
                 titleVisibility: .visible
             ) {
-                Button("Delete account", role: .destructive) { Task { await accountSync.deleteAccount() } }
+                Button("Delete account", role: .destructive) { Task { await deleteAccount() } }
                 Button("Cancel", role: .cancel) {}
             }
             .navigationTitle("Settings")
@@ -101,8 +100,16 @@ struct SettingsSheet: View {
                 }
             }
         }
+        .overlay(alignment: .bottom) { ToastStack() }
         .sensoryFeedback(.selection, trigger: theme.choice)
         .sensoryFeedback(.selection, trigger: store.dictation)
+    }
+
+    private func deleteAccount() async {
+        deletingAccount = true
+        if await accountSync.deleteAccount() { return }
+        deletingAccount = false
+        toasts.show("Could not delete the account")
     }
 }
 

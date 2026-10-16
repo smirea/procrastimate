@@ -5,8 +5,23 @@
 	let password = $state('');
 	let creating = $state(false);
 	let busy = $state(false);
+	let opening = $state<'google' | 'apple' | null>(null);
 
-	const submitLabel = $derived(creating ? 'Create account' : 'Sign in');
+	const submitLabel = $derived(
+		busy ? (creating ? 'Creating account…' : 'Signing in…') : creating ? 'Create account' : 'Sign in',
+	);
+
+	/** The provider's page loads next, so the button says so until the redirect, or until it fails. */
+	async function social(provider: 'google' | 'apple') {
+		opening = provider;
+		await session.social(provider);
+		if (session.error) opening = null;
+	}
+
+	/** Back from the provider can restore this page from the back-forward cache with the button still waiting. */
+	function onpageshow(event: PageTransitionEvent) {
+		if (event.persisted) opening = null;
+	}
 
 	async function onsubmit(event: SubmitEvent) {
 		event.preventDefault();
@@ -17,6 +32,8 @@
 		busy = false;
 	}
 </script>
+
+<svelte:window {onpageshow} />
 
 <div class="flex min-h-dvh flex-col items-center justify-center gap-5 px-4">
 	<img src="/icons/logo.png" alt="" width="160" height="160" class="-mb-3 size-40" />
@@ -54,10 +71,14 @@
 		{/if}
 
 		{#if session.methods.google}
-			<button type="button" class="btn press" onclick={() => session.social('google')}>Sign in with Google</button>
+			<button type="button" class="btn press" disabled={opening !== null} onclick={() => social('google')}>
+				{opening === 'google' ? 'Opening Google…' : 'Sign in with Google'}
+			</button>
 		{/if}
 		{#if session.methods.apple}
-			<button type="button" class="btn press" onclick={() => session.social('apple')}>Sign in with Apple</button>
+			<button type="button" class="btn press" disabled={opening !== null} onclick={() => social('apple')}>
+				{opening === 'apple' ? 'Opening Apple…' : 'Sign in with Apple'}
+			</button>
 		{/if}
 
 		{#if session.error}

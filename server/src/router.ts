@@ -1,6 +1,6 @@
 import { implement, ORPCError } from '@orpc/server';
 import { JSON_UTF8, MARKDOWN, workerContract } from '../../shared/api/contract';
-import type { Person } from '../../shared/sharing';
+import { namePrefixed, type Person } from '../../shared/sharing';
 import { requireActor, requireHuman } from './actor';
 import { agentDocs, agentOpenApiFor, startDocs } from './docs';
 import { internalClient } from './account/peers';
@@ -22,8 +22,6 @@ function ownSpace(env: Env, request: Request, actor: Person) {
 const originOf = (request: Request) => request.headers.get('origin') ?? new URL(request.url).origin;
 
 const markdown = (name: string, text: string) => new File([text], name, { type: MARKDOWN });
-
-const prefixed = (name: string, q: string) => name.toLowerCase().startsWith(q.toLowerCase());
 
 /** The contract's procedures the Worker serves itself. The rest run in the space's `Account` object. */
 export const workerRouter = os.router({
@@ -57,10 +55,10 @@ export const workerRouter = os.router({
 			const found = new Map<string, Person>();
 			const byEmail = q.includes('@') ? await userByEmail(context.env, q.toLowerCase()) : null;
 			if (byEmail && byEmail.id !== actor.id) found.set(byEmail.id, byEmail);
-			for (const ai of await aiAccounts(context.env, actor.id)) if (prefixed(ai.name, q)) found.set(ai.id, ai);
+			for (const ai of await aiAccounts(context.env, actor.id)) if (namePrefixed(ai.name, q)) found.set(ai.id, ai);
 			const { people } = await ownSpace(context.env, context.request, actor).people();
 			for (const person of people) {
-				if (person.id !== actor.id && prefixed(person.name, q)) found.set(person.id, person);
+				if (person.id !== actor.id && namePrefixed(person.name, q)) found.set(person.id, person);
 			}
 			return { people: [...found.values()] };
 		}),
