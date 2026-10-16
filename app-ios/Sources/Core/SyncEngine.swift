@@ -6,7 +6,8 @@ public enum SyncEngine {
     /// The most log rows one response carries. A full page means another round is due.
     public static let pageSize = 1000
 
-    /// Gives a document its sync section, and queues whatever is already stored so the first sync uploads it.
+    /// Gives a document its sync section. Nothing stored is queued: the first snapshot queues only what the server
+    /// lacks (see `seedPatches`), so an install with the same tasks as the server uploads none of them.
     public static func ensure(_ snapshot: inout Snapshot, deviceId: String, now: Int, timeZone: String, nextOpId: () -> String) {
         guard snapshot.sync == nil else { return }
         snapshot.sync = SyncSection(
@@ -14,13 +15,13 @@ public enum SyncEngine {
             cursor: 0,
             outbox: [],
             clock: "0:0:\(deviceId)",
-            timeZone: timeZone
+            timeZone: timeZone,
+            seed: true
         )
-        record(&snapshot, before: StoreData(), after: snapshot.data, now: now, nextOpId: nextOpId)
         append(&snapshot, kind: .settings, id: "settings", fields: ["timeZone": .string(timeZone)], now: now, nextOpId: nextOpId)
     }
 
-    /// Appends one op per entity the command changed. A delete-all's `reset` flag stays set.
+    /// Queues one op per entity the command changed. A delete-all's `reset` flag stays set.
     public static func record(
         _ snapshot: inout Snapshot,
         before: StoreData,
@@ -35,10 +36,7 @@ public enum SyncEngine {
         )
         guard !patches.isEmpty else { return }
         var clock = parseClock(sync.clock)
-        for patch in patches {
-            clock = tick(clock, now: now)
-            sync.outbox.append(SyncOp(opId: nextOpId(), hlc: format(clock), kind: patch.kind, id: patch.id, fields: patch.fields))
-        }
+        sync.outbox = enqueue(sync.outbox, stamp(patches, clock: &clock, now: now, nextOpId: nextOpId))
         sync.clock = format(clock)
         sync.timeZone = afterTimeZone(after, fallback: sync.timeZone)
         snapshot.sync = sync
@@ -79,10 +77,67 @@ public enum SyncEngine {
     ) {
         guard var sync = snapshot.sync else { return }
         var clock = parseClock(sync.clock)
-        clock = tick(clock, now: now)
-        sync.outbox.append(SyncOp(opId: nextOpId(), hlc: format(clock), kind: kind, id: id, fields: fields))
+        let ops = stamp([SyncPatch(kind: kind, id: id, fields: fields)], clock: &clock, now: now, nextOpId: nextOpId)
+        sync.outbox = enqueue(sync.outbox, ops)
         sync.clock = format(clock)
         snapshot.sync = sync
+    }
+
+    private static func stamp(_ patches: [SyncPatch], clock: inout Clock, now: Int, nextOpId: () -> String) -> [SyncOp] {
+        patches.map { patch in
+            clock = tick(clock, now: now)
+            return SyncOp(opId: nextOpId(), hlc: format(clock), kind: patch.kind, id: patch.id, fields: patch.fields)
+        }
+    }
+
+    /// Adds ops to the outbox so it holds at most one value per entity field, the latest, each with the clock it was
+    /// written at, as `enqueue` in `shared/sync/apply.ts` does. An op carrying `deleted` replaces the entity's queued
+    /// ops, an edit to an entity whose create is queued folds into it under the edit's id and clock, and any other
+    /// edit takes its fields out of the older ops, dropping the ones left empty.
+    public static func enqueue(_ outbox: [SyncOp], _ ops: [SyncOp]) -> [SyncOp] {
+        ops.reduce(into: outbox) { queued, op in
+            let same = { (other: SyncOp) in other.kind == op.kind && other.id == op.id }
+            if op.fields["deleted"] != nil {
+                queued.removeAll(where: same)
+                queued.append(op)
+                return
+            }
+            if let index = queued.firstIndex(where: { same($0) && $0.fields["deleted"] == .bool(false) }) {
+                queued[index].opId = op.opId
+                queued[index].hlc = op.hlc
+                queued[index].fields.merge(op.fields) { _, new in new }
+                return
+            }
+            queued = queued.compactMap { other in
+                guard same(other) else { return other }
+                var rest = other
+                for name in op.fields.keys { rest.fields.removeValue(forKey: name) }
+                return rest.fields.isEmpty ? nil : rest
+            }
+            queued.append(op)
+        }
+    }
+
+    /// What a device's local data adds to the server's on its first sync: the entities the server lacks and the
+    /// fields it holds differently. Nothing the server has is removed, and its settings stay.
+    public static func seedPatches(server: StoreData, local: StoreData) -> [SyncPatch] {
+        func union<T: Identifiable>(_ mine: [T], _ theirs: [T]) -> [T] where T.ID == String {
+            let ids = Set(mine.map(\.id))
+            return mine + theirs.filter { !ids.contains($0.id) }
+        }
+        return entityDiff(
+            kind: .project,
+            before: server.projects.map(fieldsOf),
+            after: union(local.projects, server.projects).map(fieldsOf)
+        ) + entityDiff(
+            kind: .label,
+            before: server.labels.map(fieldsOf),
+            after: union(local.labels, server.labels).map(fieldsOf)
+        ) + entityDiff(
+            kind: .task,
+            before: server.tasks.map(fieldsOf),
+            after: union(local.tasks, server.tasks).map(fieldsOf)
+        )
     }
 
     /// Replaces the document for a different signed-in user. The device id stays. The next sync pulls a snapshot.
@@ -169,13 +224,15 @@ public enum SyncEngine {
     }
 
     /// Applies a response the contract already decoded. Its `T??` fields keep every `null`, so the JSON is the same.
-    public static func apply(_ snapshot: inout Snapshot, response: API.SyncResponse) -> Bool {
+    public static func apply(_ snapshot: inout Snapshot, response: API.SyncResponse, now: Int, nextOpId: () -> String) -> Bool {
         guard let json = try? JSONEncoder().encode(response) else { return false }
-        return apply(&snapshot, response: json)
+        return apply(&snapshot, response: json, now: now, nextOpId: nextOpId)
     }
 
-    /// Applies a sync response. A new epoch drops the outbox so a wiped copy cannot be uploaded again.
-    public static func apply(_ snapshot: inout Snapshot, response json: Data) -> Bool {
+    /// Applies a sync response. A new epoch drops the outbox so a wiped copy cannot be uploaded again. The first
+    /// snapshot of a seeding document queues what its local data adds, so the caller syncs again when the outbox
+    /// is not empty.
+    public static func apply(_ snapshot: inout Snapshot, response json: Data, now: Int, nextOpId: () -> String) -> Bool {
         guard var sync = snapshot.sync,
               let object = try? JSONSerialization.jsonObject(with: json) as? [String: Any],
               let cursor = intValue(object["cursor"]),
@@ -185,31 +242,35 @@ public enum SyncEngine {
         let acked = Set((object["acked"] as? [String]) ?? [])
         let epochChanged = epoch != sync.epoch
         let sentReset = sync.reset
+        var seeds: [SyncPatch] = []
         if let raw = object["snapshot"] as? [String: Any], let data = try? JSONSerialization.data(withJSONObject: raw),
            let decoded = try? JSONDecoder().decode(API.SyncSnapshot.self, from: data) {
+            let local = snapshot.data
             snapshot.tasks = StoreRules.sortTasks(decoded.tasks)
             snapshot.projects = decoded.projects.sorted(by: byCreation)
             snapshot.labels = decoded.labels.sorted(by: byCreation)
             sync.dictation = decoded.settings.dictation
             if let zone = decoded.settings.timeZone { sync.timeZone = zone }
+            // The adoption below reads the document's section, so it must hold the server's dictation too. The zone
+            // stays the one this device last wrote, so two devices in different zones never overwrite each other.
+            snapshot.sync?.dictation = sync.dictation
+            // A wipe this device never saw makes its local copy stale, so it must not upload it.
+            if sync.seed && (!epochChanged || sentReset) { seeds = seedPatches(server: snapshot.data, local: local) }
+            sync.seed = false
         } else if let changes = object["changes"] as? [[String: Any]] {
             for change in changes { applyChange(&snapshot, change) }
             snapshot.tasks = StoreRules.sortTasks(snapshot.tasks)
         }
         let kept = (epochChanged && !sentReset) ? [] : sync.outbox.filter { !acked.contains($0.opId) }
-        if sentReset && epochChanged {
-            for op in kept {
-                guard let data = try? JSONEncoder().encode(op.fields),
-                      let fields = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { continue }
-                applyChange(&snapshot, ["kind": op.kind.rawValue, "id": op.id, "fields": fields])
-            }
-            snapshot.tasks = StoreRules.sortTasks(snapshot.tasks)
-        }
-        sync.outbox = kept
+        if sentReset && epochChanged { replay(&snapshot, kept) }
+        var clock = observe(parseClock(sync.clock), hlc)
+        let seeded = stamp(seeds, clock: &clock, now: now, nextOpId: nextOpId)
+        replay(&snapshot, seeded)
+        sync.outbox = enqueue(kept, seeded)
         sync.cursor = cursor
         sync.epoch = epoch
         sync.reset = false
-        sync.clock = format(observe(parseClock(sync.clock), hlc))
+        sync.clock = format(clock)
         // A settings change writes the adopted zone and dictation onto the document. Keep them with the new cursor.
         if let adopted = snapshot.sync {
             sync.timeZone = adopted.timeZone
@@ -217,6 +278,16 @@ public enum SyncEngine {
         }
         snapshot.sync = sync
         return true
+    }
+
+    private static func replay(_ snapshot: inout Snapshot, _ ops: [SyncOp]) {
+        guard !ops.isEmpty else { return }
+        for op in ops {
+            guard let data = try? JSONEncoder().encode(op.fields),
+                  let fields = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { continue }
+            applyChange(&snapshot, ["kind": op.kind.rawValue, "id": op.id, "fields": fields])
+        }
+        snapshot.tasks = StoreRules.sortTasks(snapshot.tasks)
     }
 
     private static func applyChange(_ snapshot: inout Snapshot, _ change: [String: Any]) {
@@ -255,10 +326,11 @@ private struct SyncedData {
     var dictation: DictationChoice
 }
 
-private struct Patch {
-    var kind: SyncOp.Kind
-    var id: String
-    var fields: [String: JSONValue]
+/// One entity's changed fields, before a clock and an op id make it a `SyncOp`.
+public struct SyncPatch: Hashable, Encodable, Sendable {
+    public var kind: SyncOp.Kind
+    public var id: String
+    public var fields: [String: JSONValue]
 }
 
 private func synced(_ data: StoreData, timeZone: String, dictation: DictationChoice) -> SyncedData {
@@ -267,22 +339,22 @@ private func synced(_ data: StoreData, timeZone: String, dictation: DictationCho
 
 private func afterTimeZone(_ data: StoreData, fallback: String) -> String { fallback }
 
-private func diff(before: SyncedData, after: SyncedData) -> [Patch] {
-    var patches: [Patch] = []
+private func diff(before: SyncedData, after: SyncedData) -> [SyncPatch] {
+    var patches: [SyncPatch] = []
     patches += entityDiff(kind: .project, before: before.projects.map(fieldsOf), after: after.projects.map(fieldsOf))
     patches += entityDiff(kind: .label, before: before.labels.map(fieldsOf), after: after.labels.map(fieldsOf))
     patches += entityDiff(kind: .task, before: before.tasks.map(fieldsOf), after: after.tasks.map(fieldsOf))
     let prior = settingsFields(before.timeZone, before.dictation)
     let next = settingsFields(after.timeZone, after.dictation)
     if !sameJSON(prior, next) {
-        patches.append(Patch(kind: .settings, id: "settings", fields: jsonFields(next)))
+        patches.append(SyncPatch(kind: .settings, id: "settings", fields: jsonFields(next)))
     }
     return patches
 }
 
-private func entityDiff(kind: SyncOp.Kind, before: [[String: Any]], after: [[String: Any]]) -> [Patch] {
+private func entityDiff(kind: SyncOp.Kind, before: [[String: Any]], after: [[String: Any]]) -> [SyncPatch] {
     let previous = Dictionary(uniqueKeysWithValues: before.map { ($0["id"] as? String ?? "", $0) })
-    var patches: [Patch] = []
+    var patches: [SyncPatch] = []
     var kept = Set<String>()
     for entity in after {
         guard let id = entity["id"] as? String else { continue }
@@ -292,7 +364,7 @@ private func entityDiff(kind: SyncOp.Kind, before: [[String: Any]], after: [[Str
         guard let old = previous[id] else {
             var created = next
             created["deleted"] = false
-            patches.append(Patch(kind: kind, id: id, fields: jsonFields(created)))
+            patches.append(SyncPatch(kind: kind, id: id, fields: jsonFields(created)))
             continue
         }
         var prior = old
@@ -301,10 +373,10 @@ private func entityDiff(kind: SyncOp.Kind, before: [[String: Any]], after: [[Str
         for (name, value) in next where !sameJSON(prior[name] ?? NSNull(), value) {
             changed[name] = value
         }
-        if !changed.isEmpty { patches.append(Patch(kind: kind, id: id, fields: jsonFields(changed))) }
+        if !changed.isEmpty { patches.append(SyncPatch(kind: kind, id: id, fields: jsonFields(changed))) }
     }
     for id in previous.keys where !kept.contains(id) && !id.isEmpty {
-        patches.append(Patch(kind: kind, id: id, fields: ["deleted": .bool(true)]))
+        patches.append(SyncPatch(kind: kind, id: id, fields: ["deleted": .bool(true)]))
     }
     return patches
 }

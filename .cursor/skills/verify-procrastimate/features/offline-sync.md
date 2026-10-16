@@ -28,9 +28,11 @@ Preconditions:
 - **Tabs.** With two tabs of the same browser open, the background one offline, add a task in the first and let it sync, then add one in the background tab. The `procrastimate` document still holds the first task, and reloading opens on it without waiting for sync. Test: `a stale tab in the same browser never saves over what another tab synced`.
 - **Offline.** Block A's `/api/sync` requests. Add and rename tasks on A. Each change applies at once and survives a reload. Test: `changes made offline apply at once and upload when the network returns`.
 - **Reconnect.** Let A's requests through again. B shows the new and renamed tasks. Same test.
+- **Typing.** Open a synced task on A, block A's `/api/sync`, and type into Notes. Each keystroke shows at once, and the `procrastimate` document's `sync.outbox` holds one op with the full text. After A reconnects, B shows the notes. Test: `typing notes shows each keystroke at once and queues one op with the last value`.
 - **Conflict.** Block both clients, rename the same task differently on each, and add notes on B. After both reconnect, both show the same title (the later write wins) and B's notes, since different fields merge. Test: `both devices editing the same task offline converge`.
 - **Delete all.** On A, `Settings`, `Delete all data`, confirm. A's tasks are gone and stay gone after a reload. B's tasks are gone once it syncs, and its waiting edits are dropped. Both devices keep their tokens. Test: `delete all data clears this device and the other`.
-- **iOS.** The Core store writes a sync section on first launch and queues local changes. `swift test` covers that. There is no macOS XCUITest of two devices.
+- **First sync.** A new install's first request carries no tasks. Its first snapshot queues only what the server lacks, so a device with the same tasks as the server uploads nothing. `bun test shared/sync/outbox.test.ts` and `swift test --filter OutboxTests` cover it.
+- **iOS.** The Core store writes a sync section on first launch and queues local changes, one op per entity field. `swift test` covers that. There is no macOS XCUITest of two devices.
 
 ## Gotchas
 

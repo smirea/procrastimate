@@ -139,11 +139,16 @@ final class AccountSync {
             ErrorReport.log("Sync failed for \(space.query ?? "own space")", detail: String(reflecting: error))
             return false
         }
+        let seeding = space == .own && store.snapshot.sync?.seed == true
         let applied = switch space {
         case .own: store.takeSyncResponse(response)
         case let .shared(id): store.takeSyncResponse(response, space: id)
         }
         if applied, case let .changes(page) = response, page.changes.count >= SyncEngine.pageSize {
+            return await syncSpace(space, token: token)
+        }
+        // The first snapshot queued what this install adds to the account, which goes up right away.
+        if applied, seeding, store.snapshot.sync?.seed == false, store.snapshot.sync?.outbox.isEmpty == false {
             return await syncSpace(space, token: token)
         }
         return applied

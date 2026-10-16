@@ -90,11 +90,11 @@ class Store {
 		this.#sync = snapshot.sync;
 	}
 
-	/** A first launch uploads whatever is already stored, so an existing list joins the account. */
+	/** A first launch seeds: its first snapshot queues whatever stored data the server lacks, so an existing list joins. */
 	#fresh(deviceId: string): SyncSection {
 		const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 		const dictation: DictationChoice = 'native';
-		return sectionOf(startSync({ ...this.#data, settings: { timeZone, dictation } }, deviceId, Date.now()), {
+		return sectionOf(startSync({ timeZone, dictation }, deviceId, Date.now()), {
 			deviceId,
 			timeZone,
 			dictation,
@@ -122,8 +122,9 @@ class Store {
 	}
 
 	#record(sync: SyncSection, before: SyncedData, after: SyncedData) {
-		const next = commit(clientSync(sync), before, after, Date.now());
-		if (next.outbox.length === sync.outbox.length) return;
+		const current = clientSync(sync);
+		const next = commit(current, before, after, Date.now());
+		if (next === current) return;
 		this.#sync = sectionOf(next, {
 			...sync,
 			timeZone: after.settings.timeZone ?? sync.timeZone,
@@ -181,7 +182,17 @@ class Store {
 		this.own = { tasks: [], projects: [], labels: [] };
 		this.spaces = {};
 		this.people = [];
-		this.#sync = { deviceId, cursor: 0, outbox: [], clock, timeZone, dictation: 'native', epoch: 0, reset: false };
+		this.#sync = {
+			deviceId,
+			cursor: 0,
+			outbox: [],
+			clock,
+			timeZone,
+			dictation: 'native',
+			epoch: 0,
+			reset: false,
+			seed: false,
+		};
 		this.#commit();
 	}
 
@@ -229,15 +240,20 @@ class Store {
 		};
 	}
 
-	/** Drops the acknowledged ops, applies the server's changes, and replays the rest of the outbox on top. */
-	takeResponse(response: SyncResponse) {
-		if (!this.#sync) return;
-		const { snapshot, sync } = applyResponse(this.#synced(this.#sync), clientSync(this.#sync), response, {
+	/**
+	 * Drops the acknowledged ops, applies the server's changes, and replays the rest of the outbox on top. True when
+	 * the first snapshot queued local data the server lacks, so another round is due.
+	 */
+	takeResponse(response: SyncResponse): boolean {
+		if (!this.#sync) return false;
+		const { snapshot, sync } = applyResponse(this.#synced(this.#sync), clientSync(this.#sync), response, Date.now(), {
 			sentReset: this.#sync.reset,
 		});
+		const seeded = this.#sync.seed && !sync.seed && sync.outbox.length > 0;
 		this.own = { tasks: snapshot.tasks, projects: snapshot.projects, labels: snapshot.labels };
 		this.#sync = sectionOf(sync, { ...this.#sync, reset: false, dictation: snapshot.settings.dictation });
 		this.#commit();
+		return seeded;
 	}
 
 	#creation = (): rules.Creation => ({ id: newId(), now: Date.now() });
@@ -266,13 +282,9 @@ class Store {
 		const section = this.spaces[home];
 		if (!section || !this.#sync) return;
 		const after = rule(section);
-		const next = commit(
-			{ cursor: section.cursor, outbox: section.outbox, clock: parseHlc(this.#sync.clock), epoch: section.epoch },
-			sectionData(section),
-			sectionData(after),
-			Date.now(),
-		);
-		if (next.outbox.length === section.outbox.length) return;
+		const current = spaceSync(section, this.#sync);
+		const next = commit(current, sectionData(section), sectionData(after), Date.now());
+		if (next === current) return;
 		this.spaces = {
 			...this.spaces,
 			[home]: { ...section, tasks: after.tasks, projects: after.projects, labels: after.labels, outbox: next.outbox },
@@ -440,8 +452,9 @@ class Store {
 		if (!section || !this.#sync) return;
 		const { snapshot, sync } = applyResponse(
 			sectionData(section),
-			{ cursor: section.cursor, outbox: section.outbox, clock: parseHlc(this.#sync.clock), epoch: section.epoch },
+			spaceSync(section, this.#sync),
 			response,
+			Date.now(),
 		);
 		this.spaces = {
 			...this.spaces,
@@ -488,15 +501,25 @@ class Store {
 	}
 }
 
-const clientSync = ({ cursor, outbox, clock, epoch }: SyncSection): ClientSync => ({
+const clientSync = ({ cursor, outbox, clock, epoch, seed }: SyncSection): ClientSync => ({
 	cursor,
 	outbox,
 	clock: parseHlc(clock),
 	epoch,
+	seed,
+});
+
+/** A shared space only ever holds what its owner synced, so it has nothing to seed. */
+const spaceSync = ({ cursor, outbox, epoch }: SpaceSection, sync: SyncSection): ClientSync => ({
+	cursor,
+	outbox,
+	clock: parseHlc(sync.clock),
+	epoch,
+	seed: false,
 });
 
 const sectionOf = (
-	{ cursor, outbox, clock, epoch }: ClientSync,
+	{ cursor, outbox, clock, epoch, seed }: ClientSync,
 	previous: Pick<SyncSection, 'deviceId' | 'timeZone' | 'dictation' | 'reset'>,
 ): SyncSection => ({
 	deviceId: previous.deviceId,
@@ -507,6 +530,7 @@ const sectionOf = (
 	dictation: previous.dictation,
 	epoch,
 	reset: previous.reset,
+	seed,
 });
 
 export const store = new Store();

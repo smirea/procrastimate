@@ -135,6 +135,7 @@ const webDocument: snapshot.Snapshot = {
 		dictation: 'native',
 		epoch: 0,
 		reset: false,
+		seed: false,
 	},
 	spaces: {
 		'u-ana': {

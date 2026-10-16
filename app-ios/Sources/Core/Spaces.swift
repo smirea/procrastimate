@@ -103,8 +103,8 @@ extension SyncEngine {
     }
 
     /// Applies a shared space's sync response, keeping the scope hash and the read-only ids it carries.
-    public static func apply(_ snapshot: inout Snapshot, space id: String, response: API.SyncResponse) -> Bool {
-        let applied = inSpace(&snapshot, id) { lens in apply(&lens, response: response) } ?? false
+    public static func apply(_ snapshot: inout Snapshot, space id: String, response: API.SyncResponse, now: Int, nextOpId: () -> String) -> Bool {
+        let applied = inSpace(&snapshot, id) { lens in apply(&lens, response: response, now: now, nextOpId: nextOpId) } ?? false
         guard applied, var section = snapshot.spaces[id] else { return false }
         switch response {
         case let .changes(page):

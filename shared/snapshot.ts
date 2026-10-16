@@ -66,6 +66,7 @@ const tasksSchema = z
  * to the synced settings, so it writes again only after it moves. `dictation` is the choice this device
  * last applied, including one that arrived from another device. `epoch` is the wipe generation it last applied.
  * `reset` is set until the server has wiped task data for a local delete-all.
+ * `seed` is set until the first snapshot arrives, which queues only what the local data adds to the server.
  */
 const syncSchema = z
 	.object({
@@ -78,6 +79,7 @@ const syncSchema = z
 		dictation: dictationChoiceSchema.default('native'),
 		epoch: z.number().int().nonnegative().default(0),
 		reset: z.boolean().default(false),
+		seed: z.boolean().default(false),
 	})
 	.meta({ id: 'SyncSection' });
 

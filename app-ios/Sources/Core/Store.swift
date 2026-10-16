@@ -149,7 +149,7 @@ public final class Store {
 
     /// Applies one sync response onto the document.
     public func takeSyncResponse(_ response: API.SyncResponse) -> Bool {
-        let applied = SyncEngine.apply(&snapshot, response: response)
+        let applied = SyncEngine.apply(&snapshot, response: response, now: clock.now.epochMilliseconds, nextOpId: newId)
         if applied { scheduleWrite() }
         return applied
     }
@@ -158,7 +158,9 @@ public final class Store {
     public func syncRequest(space id: String) throws -> API.SyncRequest? { try SyncEngine.request(snapshot, space: id) }
 
     public func takeSyncResponse(_ response: API.SyncResponse, space id: String) -> Bool {
-        let applied = SyncEngine.apply(&snapshot, space: id, response: response)
+        let applied = SyncEngine.apply(
+            &snapshot, space: id, response: response, now: clock.now.epochMilliseconds, nextOpId: newId
+        )
         if applied { scheduleWrite() }
         return applied
     }

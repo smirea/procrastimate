@@ -70,11 +70,15 @@ describe.each(storeFactories)('server-computed push on the %s store', (_name, cr
 		const credentials = await registerDevice(env, name);
 		const nextOpId = counter(`${name}-op-`);
 		let snapshot = initial;
-		let sync: ClientSync = startSync(snapshot, credentials.deviceId, Date.now(), nextOpId);
-		const pull = async () => {
+		let sync: ClientSync = startSync(snapshot.settings, credentials.deviceId, Date.now(), nextOpId);
+		const pull = async (): Promise<void> => {
 			const response = await call('POST', '/api/sync', credentials, { cursor: sync.cursor, ops: sync.outbox });
 			expect(response.status).toBe(200);
-			({ snapshot, sync } = applyResponse(snapshot, sync, (await response.json()) as SyncResponse));
+			const seeding = sync.seed;
+			({ snapshot, sync } = applyResponse(snapshot, sync, (await response.json()) as SyncResponse, Date.now(), {
+				nextOpId,
+			}));
+			if (seeding && sync.outbox.length) await pull();
 		};
 		await pull();
 		return {

@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { applyChanges, applyResponse, commit, replayOutbox, startSync } from './apply.ts';
+import { applyChanges, applyResponse, commit, replayOutbox } from './apply.ts';
 import { diff, stamp } from './diff.ts';
 import { createClock } from './hlc.ts';
 import type { Change } from './protocol.ts';
@@ -67,7 +67,7 @@ describe('applyResponse', () => {
 		client.run(s => ({ ...s, tasks: [task('t', { title: 'Sent' })] }), 20);
 		const response = server.sync(client.sync.cursor, client.sync.outbox, 21);
 		client.run(s => ({ ...s, tasks: [task('t', { title: 'Typed meanwhile' })] }), 22);
-		const { snapshot, sync } = applyResponse(client.snapshot, client.sync, response);
+		const { snapshot, sync } = applyResponse(client.snapshot, client.sync, response, 23);
 		expect(snapshot.tasks[0]?.title).toBe('Typed meanwhile');
 		expect(sync.outbox.map(op => op.fields)).toEqual([{ title: 'Typed meanwhile' }]);
 		expect(sync.cursor).toBe(server.log.length);
@@ -76,7 +76,7 @@ describe('applyResponse', () => {
 	test('a wipe on another device drops the outbox, and the device that reset keeps an in-flight edit', () => {
 		const clock = createClock('a');
 		const during = commit(
-			{ cursor: 0, outbox: [], clock, epoch: 0 },
+			{ cursor: 0, outbox: [], clock, epoch: 0, seed: false },
 			snapshotOf(),
 			snapshotOf({ tasks: [task('n', { title: 'After' })] }),
 			30,
@@ -89,14 +89,14 @@ describe('applyResponse', () => {
 			hlc: '30:0:server',
 			epoch: 1,
 		};
-		const kept = applyResponse(snapshotOf({ tasks: [task('n', { title: 'After' })] }), during, response, {
+		const kept = applyResponse(snapshotOf({ tasks: [task('n', { title: 'After' })] }), during, response, 31, {
 			sentReset: true,
 		});
 		expect(kept.snapshot.tasks.map(t => t.title)).toEqual(['After']);
 		expect(kept.sync.epoch).toBe(1);
 		expect(kept.sync.outbox.map(op => op.id)).toEqual(['n']);
 
-		const dropped = applyResponse(snapshotOf({ tasks: [task('t', { title: 'Local' })] }), during, response);
+		const dropped = applyResponse(snapshotOf({ tasks: [task('t', { title: 'Local' })] }), during, response, 31);
 		expect(dropped.sync.outbox).toEqual([]);
 		expect(dropped.snapshot.tasks).toEqual([]);
 	});
@@ -113,16 +113,6 @@ describe('applyResponse', () => {
 });
 
 describe('first sync', () => {
-	test('uploads the whole local snapshot', () => {
-		const local = snapshotOf({ labels: [label('l')], tasks: [task('t', { labelIds: ['l'] })] });
-		const sync = startSync(local, 'dev', 1, counter('op-'));
-		expect(sync.cursor).toBe(0);
-		expect(sync.outbox.map(op => [op.kind, op.id])).toEqual([
-			['label', 'l'],
-			['task', 't'],
-		]);
-	});
-
 	test('two devices with local data add up, and their shared imports and names merge', () => {
 		const server = new MemoryServer();
 		const a = new MemoryClient(
