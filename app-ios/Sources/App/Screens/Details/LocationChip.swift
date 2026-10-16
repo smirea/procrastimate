@@ -57,7 +57,7 @@ private struct LocationSheet: View {
     let location: TaskLocation?
     let onChange: (TaskLocation?) -> Void
 
-    @State private var query = PlacesDemo.value("query") ?? ""
+    @State private var query: String
     @State private var trigger: LocationTrigger
     @State private var radius: Double
     @State private var search = PlaceSearch()
@@ -67,6 +67,7 @@ private struct LocationSheet: View {
     init(location: TaskLocation?, onChange: @escaping (TaskLocation?) -> Void) {
         self.location = location
         self.onChange = onChange
+        _query = State(initialValue: PlacesDemo.takeQuery() ?? "")
         _trigger = State(initialValue: location?.trigger ?? .arrive)
         _radius = State(initialValue: location?.radius ?? 150)
     }

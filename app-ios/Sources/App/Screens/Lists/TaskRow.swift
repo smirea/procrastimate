@@ -33,17 +33,15 @@ struct TaskRow<Trailing: View>: View {
             row
             trailing
         }
-        .swipeActions(edge: .leading, allowsFullSwipe: true) {
+        .swipeActions(edge: .leading, when: swipes.toggle != nil) {
             if let toggle = swipes.toggle {
                 Button(toggle.label, systemImage: toggle.systemImage) { completeNow() }
                     .tint(.toneSoon)
             }
         }
-        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-            if swipes.postpone {
-                Button("Postpone", systemImage: "calendar.badge.clock") { postponing = true }
-                    .tint(.toneWeek)
-            }
+        .swipeActions(edge: .trailing, when: swipes.postpone) {
+            Button("Postpone", systemImage: "calendar.badge.clock") { postponing = true }
+                .tint(.toneWeek)
         }
         .confirmationDialog("Postpone “\(task.title)”", isPresented: $postponing, titleVisibility: .visible) {
             ForEach(Format.postponeOptions(due, today), id: \.date) { option in
@@ -247,6 +245,14 @@ struct TaskRow<Trailing: View>: View {
             .foregroundStyle(.muted)
             .lineLimit(1)
         }
+    }
+}
+
+private extension View {
+    /// Outside a `List`, an edge whose builder is empty still swipes open, to nothing, and the next swipe the other way
+    /// only closes it. So an edge with no button is left off.
+    @ViewBuilder func swipeActions(edge: HorizontalEdge, when present: Bool, @ViewBuilder content: () -> some View) -> some View {
+        if present { swipeActions(edge: edge, allowsFullSwipe: true, content: content) } else { self }
     }
 }
 
