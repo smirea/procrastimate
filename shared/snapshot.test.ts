@@ -135,7 +135,7 @@ const webDocument: snapshot.Snapshot = {
 			sourceKey: 'todoist:section:7:Later',
 		},
 	],
-	labels: [{ id: 'l-health', name: 'health', createdAt: 1_791_800_000_002 }],
+	labels: [{ id: 'l-health', name: 'health', color: 'gray', createdAt: 1_791_800_000_002 }],
 	comments: [
 		{
 			id: 'c-1',
@@ -361,13 +361,21 @@ describe('parseSnapshot', () => {
 			{
 				tasks: [{ ...task('Call', null), labelIds: ['l'] }],
 				projects: [],
-				labels: [{ id: 'l', name: 'calls', createdAt: 1 }],
+				labels: [{ id: 'l', name: 'calls', color: 'pink', createdAt: 1 }],
 				remindersCheckedAt: 5,
 			},
 			10,
 		);
 		expect(loaded.tasks[0]!.labelIds).toEqual(['l']);
-		expect(loaded.labels).toEqual([{ id: 'l', name: 'calls', createdAt: 1 }]);
+		expect(loaded.labels).toEqual([{ id: 'l', name: 'calls', color: 'pink', createdAt: 1 }]);
+	});
+
+	test("a label stored before colors loads with its name's default color", () => {
+		const loaded = parseSnapshot(
+			{ tasks: [], projects: [], labels: [{ id: 'l', name: 'bugs', createdAt: 1 }], remindersCheckedAt: 5 },
+			10,
+		);
+		expect(loaded.labels).toEqual([{ id: 'l', name: 'bugs', color: 'red', createdAt: 1 }]);
 	});
 
 	test('a weekday set survives a reload, a one-day set loads as a plain weekly repeat, and stored repeats without one still load', () => {

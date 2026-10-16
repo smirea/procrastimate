@@ -11,6 +11,7 @@ import {
 import { IMAGE_SIZES, IMAGE_TYPES } from '../images.ts';
 import { DICTATION_CHOICES } from '../dictation.ts';
 import { DEFAULT_QUICK_ADD_BUTTONS } from '../quick-add-buttons.ts';
+import { LABEL_COLORS } from '../label-colors.ts';
 import { KINDS } from '../sync/kinds.ts';
 import { ACTOR_KINDS, DEFAULT_PRIORITY, ROLES, SERVER_ACTOR, SHARE_TARGET_KINDS } from '../values.ts';
 import type { ColumnValue } from './json.ts';
@@ -108,6 +109,11 @@ export const labels = sqliteTable(
 		userId: text('user_id').notNull(),
 		id: text('id').notNull(),
 		name: text('name').notNull(),
+		/**
+		 * A palette key. The default only fills rows from before colors, which no clock vouches for, so a label
+		 * without a color clock takes `defaultLabelColor` of its name instead.
+		 */
+		color: text('color', { enum: LABEL_COLORS }).$type<ColumnValue<'labels', 'color'>>().notNull().default('gray'),
 		createdAt: integer('created_at').notNull(),
 		deleted: deleted(),
 		clocks: clocks(),

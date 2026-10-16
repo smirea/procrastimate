@@ -1590,16 +1590,19 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "pink",
 							"createdAt": 1000,
 							"id": "id-9",
 							"name": "home"
 						},
 						{
+							"color": "blue",
 							"createdAt": 1000,
 							"id": "id-17",
 							"name": "work"
 						},
 						{
+							"color": "blue",
 							"createdAt": 1000,
 							"id": "id-18",
 							"name": "deep-work"
@@ -2224,16 +2227,19 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "pink",
 							"createdAt": 1000,
 							"id": "id-9",
 							"name": "home"
 						},
 						{
+							"color": "blue",
 							"createdAt": 1000,
 							"id": "id-17",
 							"name": "work"
 						},
 						{
+							"color": "blue",
 							"createdAt": 1000,
 							"id": "id-18",
 							"name": "deep-work"
@@ -2612,16 +2618,19 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "pink",
 							"createdAt": 1000,
 							"id": "id-9",
 							"name": "home"
 						},
 						{
+							"color": "blue",
 							"createdAt": 1000,
 							"id": "id-17",
 							"name": "work"
 						},
 						{
+							"color": "blue",
 							"createdAt": 1000,
 							"id": "id-18",
 							"name": "deep-work"
@@ -3221,16 +3230,19 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "pink",
 							"createdAt": 1000,
 							"id": "id-9",
 							"name": "home"
 						},
 						{
+							"color": "blue",
 							"createdAt": 1000,
 							"id": "id-17",
 							"name": "work"
 						},
 						{
+							"color": "blue",
 							"createdAt": 1000,
 							"id": "id-18",
 							"name": "deep-work"
@@ -3855,16 +3867,19 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "pink",
 							"createdAt": 1000,
 							"id": "id-9",
 							"name": "home"
 						},
 						{
+							"color": "blue",
 							"createdAt": 1000,
 							"id": "id-17",
 							"name": "work"
 						},
 						{
+							"color": "blue",
 							"createdAt": 1000,
 							"id": "id-18",
 							"name": "deep-work"
@@ -4478,16 +4493,19 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "pink",
 							"createdAt": 1000,
 							"id": "id-7",
 							"name": "home"
 						},
 						{
+							"color": "blue",
 							"createdAt": 1000,
 							"id": "id-15",
 							"name": "work"
 						},
 						{
+							"color": "blue",
 							"createdAt": 1000,
 							"id": "id-16",
 							"name": "deep-work"
@@ -4849,16 +4867,19 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "pink",
 							"createdAt": 1000,
 							"id": "id-7",
 							"name": "home"
 						},
 						{
+							"color": "blue",
 							"createdAt": 1000,
 							"id": "id-15",
 							"name": "work"
 						},
 						{
+							"color": "blue",
 							"createdAt": 1000,
 							"id": "id-16",
 							"name": "deep-work"
@@ -5441,16 +5462,19 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "pink",
 							"createdAt": 1000,
 							"id": "id-7",
 							"name": "home"
 						},
 						{
+							"color": "blue",
 							"createdAt": 1000,
 							"id": "id-15",
 							"name": "work"
 						},
 						{
+							"color": "blue",
 							"createdAt": 1000,
 							"id": "id-16",
 							"name": "deep-work"
@@ -6089,16 +6113,19 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "pink",
 							"createdAt": 1000,
 							"id": "id-7",
 							"name": "home"
 						},
 						{
+							"color": "blue",
 							"createdAt": 1000,
 							"id": "id-15",
 							"name": "work"
 						},
 						{
+							"color": "blue",
 							"createdAt": 1000,
 							"id": "id-16",
 							"name": "deep-work"
@@ -7267,6 +7294,7 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "l-home",
 							"name": "Home"
@@ -7525,16 +7553,19 @@
 					"comments": [],
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "l-home",
 							"name": "Home"
 						},
 						{
+							"color": "blue",
 							"createdAt": 1000,
 							"id": "id-15",
 							"name": "work"
 						},
 						{
+							"color": "blue",
 							"createdAt": 1000,
 							"id": "id-16",
 							"name": "deep-work"

@@ -12,6 +12,8 @@ struct TaskListScreen<Content: View>: View {
     var root = false
     /// Shows a sort button at the top right that flips this.
     var newestFirst: Binding<Bool>?
+    /// A label screen leads its title with the label's tag in its color.
+    var labelColor: LabelColor?
     @ViewBuilder let content: () -> Content
 
     @Environment(Navigator.self) private var navigator
@@ -64,7 +66,12 @@ struct TaskListScreen<Content: View>: View {
 
     /// A pushed list always names itself between the back and actions buttons; a root list only once scrolled.
     private var compactTitle: some View {
-        Text(title)
+        HStack(spacing: 5) {
+            if let labelColor {
+                Image(systemName: "tag.fill").imageScale(.small).foregroundStyle(labelColor.tone)
+            }
+            Text(title)
+        }
             .font(.subheadline.weight(.semibold))
             .lineLimit(1)
             .opacity(scrolled || !root ? 1 : 0)

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { dictationChoiceSchema } from '../dictation.ts';
+import { labelColorSchema } from '../label-colors.ts';
 import { quickAddButtonSchema } from '../quick-add-buttons.ts';
 import { pushSubscriptionSchema, scheduledPushSchema } from '../push.ts';
 import { isHlc } from '../sync/hlc.ts';
@@ -40,7 +41,7 @@ export const COLUMN_VALUES = {
 	},
 	projects: { clocks },
 	sections: { clocks },
-	labels: { clocks },
+	labels: { clocks, color: labelColorSchema },
 	comments: { clocks },
 	reads: { clocks },
 	settings: { clocks, dictation: dictationChoiceSchema, quickAddButtons: z.array(quickAddButtonSchema) },

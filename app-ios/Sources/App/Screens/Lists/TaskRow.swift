@@ -27,7 +27,7 @@ struct TaskRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 TitleFlow(
                     title: Links.attributed(task.title),
-                    labels: labels.map { AttributedString($0.name) },
+                    labels: labels.map { TitleFlow.Chip(text: AttributedString($0.name), color: $0.color) },
                     done: checking
                 )
                 .font(.body)

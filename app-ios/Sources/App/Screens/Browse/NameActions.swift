@@ -1,8 +1,8 @@
 import Core
 import SwiftUI
 
-/// The toolbar of a project or label screen. An own one gets its share button and its rename and delete menu. A
-/// shared one names its owner instead, since only the owner changes it.
+/// The toolbar of a project or label screen. An own one gets its share button and its rename and delete menu, and a
+/// label its colors in the same menu. A shared one names its owner instead, since only the owner changes it.
 struct NameActions: ViewModifier {
     let noun: String
     let name: String
@@ -12,6 +12,8 @@ struct NameActions: ViewModifier {
     var deleteMessage: String?
     let copy: () -> Void
     let rename: (String) -> Void
+    var color: LabelColor?
+    var recolor: ((LabelColor) -> Void)?
     let delete: () -> Void
     /// A project's screen adds sections from its menu.
     var addSection: ((String) -> Void)?
@@ -41,6 +43,16 @@ struct NameActions: ViewModifier {
                 ToolbarItem(placement: .primaryAction) {
                     Menu {
                         if space == .own {
+                            if let color, let recolor {
+                                Picker("Color", selection: Binding(get: { color }, set: { next in
+                                    withAnimation(.snappy) { recolor(next) }
+                                })) {
+                                    ForEach(LabelColor.allCases) { option in
+                                        SwiftUI.Label { Text(option.name) } icon: { option.swatch }.tag(option)
+                                    }
+                                }
+                                .pickerStyle(.menu)
+                            }
                             Button("Rename", systemImage: "pencil") {
                                 draft = name
                                 renaming = true
@@ -111,6 +123,8 @@ extension View {
         deleteMessage: String? = nil,
         copy: @escaping () -> Void,
         rename: @escaping (String) -> Void,
+        color: LabelColor? = nil,
+        recolor: ((LabelColor) -> Void)? = nil,
         delete: @escaping () -> Void,
         addSection: ((String) -> Void)? = nil
     ) -> some View {
@@ -123,6 +137,8 @@ extension View {
             deleteMessage: deleteMessage,
             copy: copy,
             rename: rename,
+            color: color,
+            recolor: recolor,
             delete: delete,
             addSection: addSection
         ))

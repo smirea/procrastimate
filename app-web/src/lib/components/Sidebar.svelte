@@ -18,6 +18,7 @@
 	import PersonName from './PersonName.svelte';
 	import Settings from './Settings.svelte';
 	import { store } from '../store.svelte.ts';
+	import { labelStyle } from '../label-colors.ts';
 	import { clock, mobile, motion, sheets } from '../ui.svelte.ts';
 	import { sharedEntries } from '../spaces.ts';
 	import { inboxTasks, labelTasks, projectTasks, todayTasks } from 'shared/views.ts';
@@ -175,7 +176,8 @@
 						{@const active = href !== null && page.url.pathname === href}
 						{@const Icon = entry.kind === 'project' ? Hash : entry.kind === 'label' ? Tag : CheckCircle}
 						{#snippet row()}
-							<Icon size={18} weight={active ? 'fill' : 'regular'} class={active ? '' : entry.kind === 'label' ? 'text-[var(--tone-label)]' : 'text-muted'} />
+							{@const color = entry.kind === 'label' ? store.label(entry.id)?.color : undefined}
+							<Icon size={18} weight={active ? 'fill' : 'regular'} class={color ? 'text-[var(--label-tone)]' : active ? '' : 'text-muted'} style={color ? labelStyle(color) : undefined} />
 							<span class="min-w-0 flex-1 truncate">{entry.name}</span>
 							<PersonName person={entry.owner} class="max-w-[45%] text-[12px] text-faint" />
 						{/snippet}
@@ -200,7 +202,7 @@
 						{@const active = page.url.pathname === href}
 						<li transition:slide={motion({ duration: 180, easing: cubicOut })}>
 							<a {href} class="nav-link" class:active aria-current={active ? 'page' : undefined}>
-								<Tag size={18} weight={active ? 'fill' : 'regular'} class={active ? '' : 'text-[var(--tone-label)]'} />
+								<Tag size={18} weight={active ? 'fill' : 'regular'} class="text-[var(--label-tone)]" style={labelStyle(label.color)} />
 								<span class="flex-1 truncate">{label.name}</span>
 								{#if count}<span class="text-[12px] text-faint">{count}</span>{/if}
 							</a>

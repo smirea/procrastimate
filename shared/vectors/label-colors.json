@@ -1,0 +1,462 @@
+{
+	"module": "label-colors",
+	"timeZone": "America/New_York",
+	"cases": [
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › a word with an obvious color picks it, ignoring case and the words around it",
+			"input": [
+				"bug"
+			],
+			"output": "red"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › a word with an obvious color picks it, ignoring case and the words around it",
+			"input": [
+				"Urgent"
+			],
+			"output": "red"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › a word with an obvious color picks it, ignoring case and the words around it",
+			"input": [
+				"waiting on"
+			],
+			"output": "amber"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › a word with an obvious color picks it, ignoring case and the words around it",
+			"input": [
+				"calls"
+			],
+			"output": "blue"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › a word with an obvious color picks it, ignoring case and the words around it",
+			"input": [
+				"errands"
+			],
+			"output": "orange"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › a word with an obvious color picks it, ignoring case and the words around it",
+			"input": [
+				"health"
+			],
+			"output": "green"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › a word with an obvious color picks it, ignoring case and the words around it",
+			"input": [
+				"reading list"
+			],
+			"output": "violet"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › a word with an obvious color picks it, ignoring case and the words around it",
+			"input": [
+				"someday-maybe"
+			],
+			"output": "amber"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › every hint word picks its color, so the Swift table must list the same words",
+			"input": [
+				"bug"
+			],
+			"output": "red"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › every hint word picks its color, so the Swift table must list the same words",
+			"input": [
+				"bugs"
+			],
+			"output": "red"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › every hint word picks its color, so the Swift table must list the same words",
+			"input": [
+				"urgent"
+			],
+			"output": "red"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › every hint word picks its color, so the Swift table must list the same words",
+			"input": [
+				"asap"
+			],
+			"output": "red"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › every hint word picks its color, so the Swift table must list the same words",
+			"input": [
+				"blocker"
+			],
+			"output": "red"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › every hint word picks its color, so the Swift table must list the same words",
+			"input": [
+				"important"
+			],
+			"output": "red"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › every hint word picks its color, so the Swift table must list the same words",
+			"input": [
+				"errand"
+			],
+			"output": "orange"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › every hint word picks its color, so the Swift table must list the same words",
+			"input": [
+				"errands"
+			],
+			"output": "orange"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › every hint word picks its color, so the Swift table must list the same words",
+			"input": [
+				"shopping"
+			],
+			"output": "orange"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › every hint word picks its color, so the Swift table must list the same words",
+			"input": [
+				"groceries"
+			],
+			"output": "orange"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › every hint word picks its color, so the Swift table must list the same words",
+			"input": [
+				"waiting"
+			],
+			"output": "amber"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › every hint word picks its color, so the Swift table must list the same words",
+			"input": [
+				"wait"
+			],
+			"output": "amber"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › every hint word picks its color, so the Swift table must list the same words",
+			"input": [
+				"someday"
+			],
+			"output": "amber"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › every hint word picks its color, so the Swift table must list the same words",
+			"input": [
+				"maybe"
+			],
+			"output": "amber"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › every hint word picks its color, so the Swift table must list the same words",
+			"input": [
+				"later"
+			],
+			"output": "amber"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › every hint word picks its color, so the Swift table must list the same words",
+			"input": [
+				"money"
+			],
+			"output": "green"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › every hint word picks its color, so the Swift table must list the same words",
+			"input": [
+				"finance"
+			],
+			"output": "green"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › every hint word picks its color, so the Swift table must list the same words",
+			"input": [
+				"bills"
+			],
+			"output": "green"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › every hint word picks its color, so the Swift table must list the same words",
+			"input": [
+				"health"
+			],
+			"output": "green"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › every hint word picks its color, so the Swift table must list the same words",
+			"input": [
+				"gym"
+			],
+			"output": "green"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › every hint word picks its color, so the Swift table must list the same words",
+			"input": [
+				"fitness"
+			],
+			"output": "green"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › every hint word picks its color, so the Swift table must list the same words",
+			"input": [
+				"garden"
+			],
+			"output": "green"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › every hint word picks its color, so the Swift table must list the same words",
+			"input": [
+				"work"
+			],
+			"output": "blue"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › every hint word picks its color, so the Swift table must list the same words",
+			"input": [
+				"call"
+			],
+			"output": "blue"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › every hint word picks its color, so the Swift table must list the same words",
+			"input": [
+				"calls"
+			],
+			"output": "blue"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › every hint word picks its color, so the Swift table must list the same words",
+			"input": [
+				"phone"
+			],
+			"output": "blue"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › every hint word picks its color, so the Swift table must list the same words",
+			"input": [
+				"email"
+			],
+			"output": "blue"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › every hint word picks its color, so the Swift table must list the same words",
+			"input": [
+				"meeting"
+			],
+			"output": "blue"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › every hint word picks its color, so the Swift table must list the same words",
+			"input": [
+				"meetings"
+			],
+			"output": "blue"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › every hint word picks its color, so the Swift table must list the same words",
+			"input": [
+				"idea"
+			],
+			"output": "violet"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › every hint word picks its color, so the Swift table must list the same words",
+			"input": [
+				"ideas"
+			],
+			"output": "violet"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › every hint word picks its color, so the Swift table must list the same words",
+			"input": [
+				"read"
+			],
+			"output": "violet"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › every hint word picks its color, so the Swift table must list the same words",
+			"input": [
+				"reading"
+			],
+			"output": "violet"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › every hint word picks its color, so the Swift table must list the same words",
+			"input": [
+				"learn"
+			],
+			"output": "violet"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › every hint word picks its color, so the Swift table must list the same words",
+			"input": [
+				"family"
+			],
+			"output": "pink"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › every hint word picks its color, so the Swift table must list the same words",
+			"input": [
+				"kids"
+			],
+			"output": "pink"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › every hint word picks its color, so the Swift table must list the same words",
+			"input": [
+				"gift"
+			],
+			"output": "pink"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › every hint word picks its color, so the Swift table must list the same words",
+			"input": [
+				"gifts"
+			],
+			"output": "pink"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › every hint word picks its color, so the Swift table must list the same words",
+			"input": [
+				"friends"
+			],
+			"output": "pink"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › every hint word picks its color, so the Swift table must list the same words",
+			"input": [
+				"fix"
+			],
+			"output": "violet"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › any other name hashes to a stable color, the same for every case and surrounding space",
+			"input": [
+				"tom"
+			],
+			"output": "teal"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › any other name hashes to a stable color, the same for every case and surrounding space",
+			"input": [
+				"home"
+			],
+			"output": "pink"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › any other name hashes to a stable color, the same for every case and surrounding space",
+			"input": [
+				"  Home  "
+			],
+			"output": "pink"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › any other name hashes to a stable color, the same for every case and surrounding space",
+			"input": [
+				"deep work"
+			],
+			"output": "blue"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › any other name hashes to a stable color, the same for every case and surrounding space",
+			"input": [
+				"café"
+			],
+			"output": "violet"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › any other name hashes to a stable color, the same for every case and surrounding space",
+			"input": [
+				"日本"
+			],
+			"output": "orange"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › any other name hashes to a stable color, the same for every case and surrounding space",
+			"input": [
+				"Long Term Goals 🎯"
+			],
+			"output": "pink"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › any other name hashes to a stable color, the same for every case and surrounding space",
+			"input": [
+				"v2"
+			],
+			"output": "blue"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › any other name hashes to a stable color, the same for every case and surrounding space",
+			"input": [
+				""
+			],
+			"output": "lime"
+		}
+	]
+}

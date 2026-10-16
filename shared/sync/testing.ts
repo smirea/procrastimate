@@ -46,7 +46,13 @@ export const section = (id: string, projectId: string, fields: Partial<Section> 
 	...fields,
 });
 
-export const label = (id: string, fields: Partial<Label> = {}): Label => ({ id, name: id, createdAt: 1, ...fields });
+export const label = (id: string, fields: Partial<Label> = {}): Label => ({
+	id,
+	name: id,
+	color: 'gray',
+	createdAt: 1,
+	...fields,
+});
 
 export const snapshotOf = (
 	fields: Partial<Omit<Snapshot, 'settings'>> & { settings?: Partial<Snapshot['settings']> } = {},

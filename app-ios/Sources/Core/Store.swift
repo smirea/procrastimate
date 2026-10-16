@@ -424,6 +424,11 @@ public final class Store {
         commit(StoreRules.renameLabel(snapshot.data, id, name))
     }
 
+    public func setLabelColor(_ id: String, _ color: LabelColor) {
+        guard space(ofLabel: id) == .own else { return }
+        commit(StoreRules.setLabelColor(snapshot.data, id, color))
+    }
+
     public func deleteLabel(_ id: String) {
         guard space(ofLabel: id) == .own else { return }
         commit(StoreRules.deleteLabel(snapshot.data, id))

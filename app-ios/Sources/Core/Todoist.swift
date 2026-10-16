@@ -385,7 +385,7 @@ public enum Todoist {
 
         func labelId(_ name: String) -> String {
             if let existing = labels.first(where: { sameName($0.name, name) }) { return existing.id }
-            let label = Label(id: newId(), name: name, createdAt: now)
+            let label = Label(id: newId(), name: name, color: LabelColors.defaultLabelColor(name), createdAt: now)
             labels.append(label)
             summary.labels += 1
             return label.id

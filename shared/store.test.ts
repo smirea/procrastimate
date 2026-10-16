@@ -20,6 +20,7 @@ const renameLabel = recorded('store', store.renameLabel);
 const renameProject = recorded('store', store.renameProject);
 const renameSection = recorded('store', store.renameSection);
 const reopenTask = recorded('store', store.reopenTask);
+const setLabelColor = recorded('store', store.setLabelColor);
 const restoreCompletion = recorded('store', store.restoreCompletion);
 const restoreExploded = recorded('store', store.restoreExploded);
 const sectionsOf = recorded('store', store.sectionsOf);
@@ -77,8 +78,8 @@ const data = (): StoreData => ({
 		{ id: 'someday', projectId: 'work', name: 'Someday', order: 0, createdAt: 3 },
 	],
 	labels: [
-		{ id: 'calls', name: 'calls', createdAt: 1 },
-		{ id: 'phone', name: 'Phone', createdAt: 2 },
+		{ id: 'calls', name: 'calls', color: 'gray', createdAt: 1 },
+		{ id: 'phone', name: 'Phone', color: 'gray', createdAt: 2 },
 	],
 	comments: [],
 	reads: [],
@@ -459,9 +460,16 @@ describe('sections', () => {
 });
 
 describe('labels', () => {
+	test('setting a label color changes only that label', () => {
+		expect(setLabelColor(data(), 'phone', 'violet').labels).toEqual([
+			{ id: 'calls', name: 'calls', color: 'gray', createdAt: 1 },
+			{ id: 'phone', name: 'Phone', color: 'violet', createdAt: 2 },
+		]);
+	});
+
 	test('adding a label and renaming it, unique ignoring case', () => {
 		const { data: added, label } = addLabel(data(), 'errands', { id: 'errands', now: NOW });
-		expect(label).toEqual({ id: 'errands', name: 'errands', createdAt: NOW });
+		expect(label).toEqual({ id: 'errands', name: 'errands', color: 'orange', createdAt: NOW });
 		expect(added.labels.map(l => l.name)).toEqual(['calls', 'Phone', 'errands']);
 		expect(renameLabel(data(), 'calls', 'Calls').labels[0]!.name).toBe('Calls');
 		expect(renameLabel(data(), 'calls', 'phone')).toEqual(data());

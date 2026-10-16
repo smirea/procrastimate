@@ -21,7 +21,8 @@ struct LabelScreen: View {
                 title: label.name,
                 isEmpty: tasks.isEmpty && !showCompleted,
                 emptyTitle: "No tasks with this label",
-                emptyHint: Browse.labelEmptyHint(label.name)
+                emptyHint: Browse.labelEmptyHint(label.name),
+                labelColor: label.color
             ) {
                 ForEach(tasks) { TaskRow(task: $0, showProject: true) }
                 if showCompleted { CompletedSection(tasks: done, showProject: true) }
@@ -37,6 +38,8 @@ struct LabelScreen: View {
                 deleteMessage: Browse.deleteLabelMessage,
                 copy: { actions.copyAsMarkdown(Markdown.Document(title: label.name, sections: [.init(tasks: tasks)])) },
                 rename: { store.renameLabel(label.id, $0) },
+                color: label.color,
+                recolor: { store.setLabelColor(label.id, $0) },
                 delete: { store.deleteLabel(label.id) }
             )
             .task(id: label.name) { name = label.name }

@@ -799,6 +799,9 @@
 							"name": {
 								"type": "string"
 							},
+							"color": {
+								"$ref": "#/components/schemas/LabelColor"
+							},
 							"createdAt": {
 								"type": "integer",
 								"minimum": -9007199254740991,
@@ -817,6 +820,23 @@
 					"fields"
 				],
 				"additionalProperties": false
+			},
+			"LabelColor": {
+				"type": "string",
+				"enum": [
+					"red",
+					"orange",
+					"amber",
+					"lime",
+					"green",
+					"teal",
+					"cyan",
+					"blue",
+					"indigo",
+					"violet",
+					"pink",
+					"gray"
+				]
 			},
 			"CommentPatch": {
 				"type": "object",
@@ -1259,6 +1279,9 @@
 					"name": {
 						"type": "string"
 					},
+					"color": {
+						"$ref": "#/components/schemas/LabelColor"
+					},
 					"createdAt": {
 						"type": "integer",
 						"minimum": -9007199254740991,
@@ -1268,6 +1291,7 @@
 				"required": [
 					"id",
 					"name",
+					"color",
 					"createdAt"
 				],
 				"additionalProperties": false,

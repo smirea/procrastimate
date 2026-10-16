@@ -1,4 +1,5 @@
 import { newId } from '../id.ts';
+import { defaultLabelColor } from '../label-colors.ts';
 import { diff } from './diff.ts';
 import { fixups } from './fixups.ts';
 import {
@@ -68,6 +69,12 @@ function write(entities: Map<string, ServerEntity>, { kind, id, fields, opId }: 
 	if (kind !== 'settings') take('deleted', deleted);
 	if (isLive(kind, data)) for (const [name, value] of Object.entries(values)) take(name, value);
 	if (!Object.keys(won).length) return { kind, id, opId, fields: {} };
+	// A label from before colors shows its name's default. The first write stores that color with a clock, taken from
+	// the name every replica showed it under, so a rename cannot leave a fresh replica deriving a different one.
+	const shown = current?.data.name ?? data.name;
+	if (kind === 'label' && isLive(kind, data) && !('color' in data) && typeof shown === 'string') {
+		take('color', defaultLabelColor(shown));
+	}
 	entities.set(key, { kind, id, data, clocks });
 	const appeared = !isLive(kind, current?.data) && isLive(kind, data);
 	return { kind, id, opId, fields: appeared ? { ...data } : won } as LogEntry;

@@ -133,11 +133,13 @@
 				{
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "waiting",
 							"name": "Waiting on"
@@ -289,11 +291,13 @@
 				{
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "waiting",
 							"name": "Waiting on"
@@ -484,11 +488,13 @@
 				{
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "waiting",
 							"name": "Waiting on"
@@ -679,11 +685,13 @@
 				{
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "waiting",
 							"name": "Waiting on"
@@ -892,11 +900,13 @@
 				{
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "waiting",
 							"name": "Waiting on"
@@ -976,11 +986,13 @@
 				{
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "waiting",
 							"name": "Waiting on"
@@ -1039,11 +1051,13 @@
 				{
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "waiting",
 							"name": "Waiting on"
@@ -1213,11 +1227,13 @@
 				{
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "waiting",
 							"name": "Waiting on"
@@ -1419,11 +1435,13 @@
 				{
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "waiting",
 							"name": "Waiting on"
@@ -1625,11 +1643,13 @@
 				{
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "waiting",
 							"name": "Waiting on"
@@ -1781,11 +1801,13 @@
 				{
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "waiting",
 							"name": "Waiting on"
@@ -1976,11 +1998,13 @@
 				{
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "waiting",
 							"name": "Waiting on"
@@ -2150,11 +2174,13 @@
 				{
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "waiting",
 							"name": "Waiting on"
@@ -2339,11 +2365,13 @@
 				{
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "waiting",
 							"name": "Waiting on"
@@ -2584,11 +2612,13 @@
 				{
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "waiting",
 							"name": "Waiting on"
@@ -2811,11 +2841,13 @@
 				{
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "waiting",
 							"name": "Waiting on"
@@ -3060,11 +3092,13 @@
 				{
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "waiting",
 							"name": "Waiting on"
@@ -3368,11 +3402,13 @@
 				{
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "waiting",
 							"name": "Waiting on"
@@ -3487,11 +3523,13 @@
 				{
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "waiting",
 							"name": "Waiting on"
@@ -3594,11 +3632,13 @@
 				{
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "waiting",
 							"name": "Waiting on"
@@ -3730,11 +3770,13 @@
 				{
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "waiting",
 							"name": "Waiting on"
@@ -3886,11 +3928,13 @@
 				{
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "waiting",
 							"name": "Waiting on"
@@ -3920,6 +3964,7 @@
 				"labels": [
 					{
 						"item": {
+							"color": "gray",
 							"createdAt": 0,
 							"id": "calls",
 							"name": "calls"
@@ -4078,11 +4123,13 @@
 				{
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "waiting",
 							"name": "Waiting on"
@@ -4244,11 +4291,13 @@
 				{
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "waiting",
 							"name": "Waiting on"
@@ -4278,6 +4327,7 @@
 				"labels": [
 					{
 						"item": {
+							"color": "gray",
 							"createdAt": 0,
 							"id": "calls",
 							"name": "calls"
@@ -4449,11 +4499,13 @@
 				{
 					"labels": [
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "calls",
 							"name": "calls"
 						},
 						{
+							"color": "gray",
 							"createdAt": 0,
 							"id": "waiting",
 							"name": "Waiting on"
@@ -4483,6 +4535,7 @@
 				"labels": [
 					{
 						"item": {
+							"color": "gray",
 							"createdAt": 0,
 							"id": "calls",
 							"name": "calls"

@@ -1007,6 +1007,9 @@
 					"name": {
 						"type": "string"
 					},
+					"color": {
+						"$ref": "#/components/schemas/LabelColor"
+					},
 					"createdAt": {
 						"type": "integer",
 						"minimum": -9007199254740991,
@@ -1016,10 +1019,28 @@
 				"required": [
 					"id",
 					"name",
+					"color",
 					"createdAt"
 				],
 				"additionalProperties": false,
 				"x-table": "labels"
+			},
+			"LabelColor": {
+				"type": "string",
+				"enum": [
+					"red",
+					"orange",
+					"amber",
+					"lime",
+					"green",
+					"teal",
+					"cyan",
+					"blue",
+					"indigo",
+					"violet",
+					"pink",
+					"gray"
+				]
 			},
 			"NewShare": {
 				"type": "object",
@@ -1627,6 +1648,9 @@
 						"properties": {
 							"name": {
 								"type": "string"
+							},
+							"color": {
+								"$ref": "#/components/schemas/LabelColor"
 							},
 							"createdAt": {
 								"type": "integer",

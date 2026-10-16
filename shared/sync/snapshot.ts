@@ -1,3 +1,4 @@
+import { defaultLabelColor } from '../label-colors.ts';
 import type { Label, Project, Section, Task } from '../task.ts';
 import {
 	DEFAULT_SETTINGS,
@@ -101,7 +102,8 @@ export function fieldsOf(kind: Kind, entity: Entity): Fields {
  * Builds an entity from a full set of fields, or null when some are missing or invalid. Task fields added after launch
  * default to none instead of dropping the task: iOS builds from before places and events create tasks without
  * `location` and `event`, tasks stored before sharing hold no authorship or `lastCompletedAt`, builds from before
- * sections send no `sectionId`, and tasks from before images have no `images`.
+ * sections send no `sectionId`, tasks from before images have no `images`, and a label
+ * from before colors takes its name's default color.
  */
 const TASK_DEFAULTS = {
 	sectionId: null,
@@ -113,8 +115,16 @@ const TASK_DEFAULTS = {
 	lastCompletedAt: null,
 };
 
+function withDefaults(kind: Kind, fields: Fields): Fields {
+	if (kind === 'task') return { ...TASK_DEFAULTS, ...fields };
+	if (kind === 'label' && fields.color === undefined && typeof fields.name === 'string') {
+		return { ...fields, color: defaultLabelColor(fields.name) };
+	}
+	return fields;
+}
+
 export function entityFrom(kind: Kind, id: string, fields: Fields): Entity | null {
-	const full = kind === 'task' ? { ...TASK_DEFAULTS, ...fields } : fields;
+	const full = withDefaults(kind, fields);
 	const parsed = FIELDS_SCHEMAS[kind].safeParse(full);
 	if (!parsed.success) return null;
 	const entity: Entity = { id, ...parsed.data };

@@ -17,6 +17,7 @@
 	import LinkedText from './LinkedText.svelte';
 	import TitleFlow from './TitleFlow.svelte';
 	import { store } from '../store.svelte.ts';
+	import { labelStyle } from '../label-colors.ts';
 	import { clock, mobile, sheets, motion } from '../ui.svelte.ts';
 	import { dueTone, formatDate, formatDue } from 'shared/format.ts';
 	import { PRIORITIES } from '../priorities.ts';
@@ -118,6 +119,7 @@
 			: scale(node, motion({ start: 0.96, duration: 200, easing: cubicOut, opacity: 0 }));
 
 	const projectOf = (hit: TaskHit) => store.project(hit.task.projectId);
+	const labelColorOf = (name: string) => store.own.labels.find((l) => l.name === name)?.color ?? 'gray';
 </script>
 
 <div class="fixed inset-0 z-40 bg-scrim backdrop-blur-[2px]" transition:fade={motion({ duration: 160 })} onclick={() => sheets.close()} aria-hidden="true"></div>
@@ -203,7 +205,7 @@
 									<Highlighted highlight={row.hit.name} />
 								</span>
 							{:else if row.kind === 'label'}
-								<Tag size={18} class="mt-px shrink-0 text-[var(--tone-label)]" />
+								<Tag size={18} class="mt-px shrink-0 text-[var(--label-tone)]" style={labelStyle(row.hit.item.color)} />
 								<span class="min-w-0 flex-1 truncate text-[14px] leading-5 touch:text-[15px]">
 									<Highlighted highlight={row.hit.name} />
 								</span>
@@ -225,7 +227,7 @@
 									<TitleFlow
 										title={task.title}
 										ranges={row.hit.matches.title?.[0]?.ranges}
-										labels={row.hit.matches.labels ?? []}
+										labels={(row.hit.matches.labels ?? []).map((label) => ({ ...label, color: labelColorOf(label.text) }))}
 										class="text-[14px] leading-5 touch:text-[15px] {done ? 'text-faint line-through' : ''}"
 									/>
 									{#if notes}

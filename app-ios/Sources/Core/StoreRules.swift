@@ -370,10 +370,21 @@ public enum StoreRules {
     }
 
     public static func addLabel(_ data: StoreData, _ name: String, _ creation: Creation) -> (data: StoreData, label: Label) {
-        let label = Label(id: creation.id, name: name, createdAt: creation.now)
+        let label = Label(id: creation.id, name: name, color: LabelColors.defaultLabelColor(name), createdAt: creation.now)
         var next = data
         next.labels.append(label)
         return (next, label)
+    }
+
+    public static func setLabelColor(_ data: StoreData, _ id: String, _ color: LabelColor) -> StoreData {
+        var next = data
+        next.labels = data.labels.map { l in
+            guard l.id == id else { return l }
+            var l = l
+            l.color = color
+            return l
+        }
+        return next
     }
 
     /// Names stay unique ignoring case, since `@name` must resolve to one label.

@@ -92,5 +92,12 @@ export const migrations: { tag: string; when: number; statements: string[] }[] =
 			"CREATE TABLE `images` (\n\t`user_id` text NOT NULL,\n\t`id` text NOT NULL,\n\t`size` text NOT NULL,\n\t`type` text NOT NULL,\n\t`bytes` blob NOT NULL,\n\t`created_at` integer NOT NULL,\n\t`orphaned_at` integer,\n\tPRIMARY KEY(`user_id`, `id`, `size`)\n);",
 			"ALTER TABLE `tasks` ADD `images` text DEFAULT '[]' NOT NULL;"
 		]
+	},
+	{
+		"tag": "0008_clever_lady_bullseye",
+		"when": 1792139912412,
+		"statements": [
+			"ALTER TABLE `labels` ADD `color` text DEFAULT 'gray' NOT NULL;"
+		]
 	}
 ];

@@ -1,10 +1,17 @@
+import Core
 import SwiftUI
 
-/// A task title with its labels inline after it, as tinted chips, in at most two lines. When it overflows, the title
-/// takes the ellipsis and the labels stay visible at the end of the second line.
+/// A task title with its labels inline after it, as chips in each label's color, in at most two lines. When it
+/// overflows, the title takes the ellipsis and the labels stay visible at the end of the second line. This is iOS's one
+/// label chip, as `LabelChip.svelte` is the web's.
 struct TitleFlow: View {
+    struct Chip {
+        var text: AttributedString
+        var color: LabelColor
+    }
+
     let title: AttributedString
-    let labels: [AttributedString]
+    let labels: [Chip]
     var done = false
 
     var body: some View {
@@ -22,40 +29,45 @@ struct TitleFlow: View {
     }
 
     /// Non-breaking spaces keep a chip on one line; the narrow ones at its ends are the capsule's padding.
-    private static func chip(_ label: AttributedString) -> Text {
-        var name = label
+    private static func chip(_ label: Chip) -> Text {
+        var name = label.text
         while let space = name.range(of: " ") {
             name.replaceSubrange(space, with: AttributedString("\u{00A0}"))
         }
-        let icon = Text(Image(systemName: "tag.fill")).font(.caption2).foregroundStyle(.toneLabel).accessibilityLabel("label")
-        return Text("\u{202F}\(icon)\u{00A0}\(Text(name).foregroundStyle(.muted))\u{202F}")
+        let icon = Text(Image(systemName: "tag.fill")).font(.caption2).accessibilityLabel("label")
+        return Text("\u{202F}\(icon)\u{00A0}\(Text(name))\u{202F}")
             .font(.caption)
-            .customAttribute(LabelChipRun())
+            .foregroundStyle(label.color.tone)
+            .customAttribute(LabelChipRun(color: label.color))
     }
 }
 
-private struct LabelChipRun: TextAttribute {}
+private struct LabelChipRun: TextAttribute {
+    let color: LabelColor
+}
 
 /// Draws a capsule behind each chip's runs, which a `Text` cannot style on its own.
 private struct LabelChipRenderer: TextRenderer {
     func draw(layout: Text.Layout, in context: inout GraphicsContext) {
         for line in layout {
-            var chip: CGRect?
+            var chip: (rect: CGRect, color: LabelColor)?
             for run in line {
-                if run[LabelChipRun.self] != nil {
-                    let bounds = run.typographicBounds.rect
-                    chip = chip.map { $0.union(bounds) } ?? bounds
-                } else if let rect = chip {
-                    fill(rect, in: &context)
+                let label = run[LabelChipRun.self]
+                if let current = chip, label?.color != current.color {
+                    fill(current.rect, current.color, in: &context)
                     chip = nil
                 }
+                if let label {
+                    let bounds = run.typographicBounds.rect
+                    chip = (chip.map { $0.rect.union(bounds) } ?? bounds, label.color)
+                }
             }
-            if let chip { fill(chip, in: &context) }
+            if let chip { fill(chip.rect, chip.color, in: &context) }
             context.draw(line)
         }
     }
 
-    private func fill(_ rect: CGRect, in context: inout GraphicsContext) {
-        context.fill(Capsule().path(in: rect.insetBy(dx: 0, dy: -1)), with: .color(.tokenLabel))
+    private func fill(_ rect: CGRect, _ color: LabelColor, in context: inout GraphicsContext) {
+        context.fill(Capsule().path(in: rect.insetBy(dx: 0, dy: -1)), with: .color(color.fill))
     }
 }

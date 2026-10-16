@@ -133,7 +133,7 @@ private struct BrowseList: View {
                             BrowseRow(
                                 name: label.name,
                                 systemImage: "tag",
-                                tone: .toneLabel,
+                                tone: label.color.tone,
                                 count: Views.labelTasks(store.tasks, label.id, in: store.timeZone).count
                             )
                         }
@@ -212,6 +212,7 @@ private struct BrowseRow: View {
 /// A project, label, or task someone shared, with its owner's name where a project row has its count.
 private struct SharedRow: View {
     @Environment(Navigator.self) private var navigator
+    @Environment(Store.self) private var store
     let entry: Browse.SharedEntry
 
     var body: some View {
@@ -219,7 +220,7 @@ private struct SharedRow: View {
         case .project:
             NavigationLink(value: Route.project(id: entry.id)) { label("number", .muted) }
         case .label:
-            NavigationLink(value: Route.label(id: entry.id)) { label("tag", .toneLabel) }
+            NavigationLink(value: Route.label(id: entry.id)) { label("tag", store.label(entry.id)?.color.tone ?? .toneLabel) }
         case .task:
             Button { navigator.sheet = .details(taskID: entry.id) } label: { label("checkmark.circle", .muted) }
         }

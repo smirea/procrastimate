@@ -1,6 +1,6 @@
 import { expect } from 'bun:test';
 import * as markdown from './markdown.ts';
-import type { DateKey, Task } from './task.ts';
+import type { DateKey, Label, Task } from './task.ts';
 import { describe, recorded, test } from './vectors/record.ts';
 
 const toMarkdown = recorded('markdown', markdown.toMarkdown);
@@ -34,9 +34,9 @@ const task = (id: string, fields: Partial<Task> = {}): Task => ({
 // Wednesday, October 14 2026.
 const today: DateKey = '2026-10-14';
 const projects = [{ id: 'work', name: 'Work', createdAt: 0 }];
-const labels = [
-	{ id: 'home', name: 'home', createdAt: 0 },
-	{ id: 'deep', name: 'deep work', createdAt: 0 },
+const labels: Label[] = [
+	{ id: 'home', name: 'home', color: 'gray', createdAt: 0 },
+	{ id: 'deep', name: 'deep work', color: 'gray', createdAt: 0 },
 ];
 
 describe('toMarkdown', () => {

@@ -1,0 +1,1 @@
+ALTER TABLE `labels` ADD `color` text DEFAULT 'gray' NOT NULL;

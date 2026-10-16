@@ -97,7 +97,7 @@ extension API.Snapshot {
         tasks = StoreRules.sortTasks(Subtasks.detachOrphans(loaded))
         projects = try c.decode([Project].self, forKey: .projects)
         sections = try c.decodeAbsent([ProjectSection].self, forKey: .sections) ?? []
-        labels = try c.decodeAbsent([Label].self, forKey: .labels) ?? []
+        labels = try c.decodeAbsent([StoredLabel].self, forKey: .labels)?.map(\.label) ?? []
         comments = try c.decodeAbsent([Comment].self, forKey: .comments) ?? []
         reads = try c.decodeAbsent([CommentRead].self, forKey: .reads) ?? []
         remindersCheckedAt = try c.decode(Int.self, forKey: .remindersCheckedAt)
@@ -129,7 +129,7 @@ extension API.SpaceSection {
         tasks = StoreRules.sortTasks(Subtasks.detachOrphans(loaded))
         projects = try c.decodeAbsent([Project].self, forKey: .projects) ?? []
         sections = try c.decodeAbsent([ProjectSection].self, forKey: .sections) ?? []
-        labels = try c.decodeAbsent([Label].self, forKey: .labels) ?? []
+        labels = try c.decodeAbsent([StoredLabel].self, forKey: .labels)?.map(\.label) ?? []
         comments = try c.decodeAbsent([Comment].self, forKey: .comments) ?? []
     }
 }
@@ -140,6 +140,24 @@ private struct Lenient<T: Decodable>: Decodable {
 
     init(from decoder: Decoder) throws {
         value = try? T(from: decoder)
+    }
+}
+
+/// A label stored before colors takes its name's default color, as the server gives it.
+private struct StoredLabel: Decodable {
+    let label: Label
+
+    private enum CodingKeys: String, CodingKey { case id, name, color, createdAt }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        let name = try c.decode(String.self, forKey: .name)
+        label = Label(
+            id: try c.decode(String.self, forKey: .id),
+            name: name,
+            color: try c.decodeAbsent(LabelColor.self, forKey: .color) ?? LabelColors.defaultLabelColor(name),
+            createdAt: try c.decode(Int.self, forKey: .createdAt)
+        )
     }
 }
 
