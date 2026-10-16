@@ -153,6 +153,63 @@
 		},
 		{
 			"fn": "formatRecurrence",
+			"test": "formatRecurrence › {\"interval\":1,\"unit\":\"month\",\"nth\":{\"week\":3,\"weekday\":1}} reads \"Every month on the 3rd Mon\"",
+			"input": [
+				{
+					"interval": 1,
+					"nth": {
+						"week": 3,
+						"weekday": 1
+					},
+					"unit": "month"
+				},
+				{
+					"date": "2026-10-14",
+					"time": null
+				}
+			],
+			"output": "Every month on the 3rd Mon"
+		},
+		{
+			"fn": "formatRecurrence",
+			"test": "formatRecurrence › {\"interval\":1,\"unit\":\"month\",\"nth\":{\"week\":1,\"weekday\":0}} reads \"Every month on the 1st Sun\"",
+			"input": [
+				{
+					"interval": 1,
+					"nth": {
+						"week": 1,
+						"weekday": 0
+					},
+					"unit": "month"
+				},
+				{
+					"date": "2026-10-14",
+					"time": null
+				}
+			],
+			"output": "Every month on the 1st Sun"
+		},
+		{
+			"fn": "formatRecurrence",
+			"test": "formatRecurrence › {\"interval\":2,\"unit\":\"month\",\"nth\":{\"week\":-1,\"weekday\":5}} reads \"Every 2 months on the last Fri\"",
+			"input": [
+				{
+					"interval": 2,
+					"nth": {
+						"week": -1,
+						"weekday": 5
+					},
+					"unit": "month"
+				},
+				{
+					"date": "2026-10-14",
+					"time": null
+				}
+			],
+			"output": "Every 2 months on the last Fri"
+		},
+		{
+			"fn": "formatRecurrence",
 			"test": "formatRecurrence › {\"interval\":1,\"unit\":\"month\",\"day\":1} reads \"Every month on the 1st\"",
 			"input": [
 				{

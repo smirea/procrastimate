@@ -79,9 +79,9 @@ export function scheduledDue(task: Scheduled, today: DateKey, zone?: string): Du
 	if (task.event) return occurrenceDue(task.event, currentOccurrence(task.event, today, zone), zone);
 	const { due, recurrence } = task;
 	if (!task.location || !recurrence || !due || due.date >= today) return due;
-	let date = due.date;
-	while (date < today) date = stepRecurrence(date, recurrence);
-	return { date, time: due.time };
+	let date: DateKey | null = due.date;
+	while (date !== null && date < today) date = stepRecurrence(date, recurrence);
+	return date === null ? due : { date, time: due.time };
 }
 
 /**

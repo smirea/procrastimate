@@ -76,7 +76,12 @@ export function formatRecurrence(recurrence: Recurrence, due: Due | null): strin
 		return interval === 1 ? `Every ${names}` : `Every ${interval} weeks on ${names}`;
 	}
 	const every = interval === 1 ? `Every ${unit}` : `Every ${interval} ${unit}s`;
-	return unit === 'month' && recurrence.day ? `${every} on the ${ordinal(recurrence.day)}` : every;
+	if (unit !== 'month') return every;
+	if (recurrence.nth) {
+		const { week, weekday } = recurrence.nth;
+		return `${every} on the ${week === -1 ? 'last' : ordinal(week)} ${WEEKDAY_NAMES[weekday]}`;
+	}
+	return recurrence.day ? `${every} on the ${ordinal(recurrence.day)}` : every;
 }
 
 /** `1st`, `2nd`, `11th`, `22nd`. */

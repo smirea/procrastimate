@@ -35,13 +35,14 @@ describe('Todoist dates', () => {
 		['Oct 13', '2027-10-13', null, null],
 		['every day', '2026-10-14', null, { interval: 1, unit: 'day' }],
 		['every mon 9am', '2026-10-19', '09:00', { interval: 1, unit: 'week' }],
+		['every 3rd friday', '2026-10-16', null, { interval: 1, unit: 'month', nth: { week: 3, weekday: 5 } }],
 		['2027-01-05', '2027-01-05', null, null],
 		['2027-05-20T09:00:00', '2027-05-20', '09:00', null],
 	])('%s', (text, date, time, recurrence) => {
 		expect<unknown>(readTodoistDate(text, now)).toEqual({ due: { date, time }, recurrence });
 	});
 
-	test.each([['every! 3 days'], ['every 3rd friday'], ['after work'], ['p1'], ['2027-01-01T09:00:00+24:00']])(
+	test.each([['every! 3 days'], ['every 5th friday'], ['after work'], ['p1'], ['2027-01-01T09:00:00+24:00']])(
 		'%s is not read',
 		text => {
 			expect(readTodoistDate(text, now)).toBeNull();
