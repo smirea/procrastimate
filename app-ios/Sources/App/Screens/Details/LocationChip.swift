@@ -170,15 +170,25 @@ private struct LocationSheet: View {
         resolving = result
         Task {
             defer { resolving = nil }
-            guard let item = try? await MKLocalSearch(request: MKLocalSearch.Request(completion: result)).start().mapItems.first
+            guard let response = try? await MKLocalSearch(request: MKLocalSearch.Request(completion: result)).start(),
+                  let item = response.mapItems.first
             else { return }
             let coordinate = item.location.coordinate
+            // The bounding region encloses every returned item, so only a single result is this place's own extent.
+            let extent = response.mapItems.count == 1 ? response.boundingRegion : nil
             onChange(TaskLocation(
                 name: item.name ?? result.title,
                 address: result.subtitle.isEmpty ? item.address?.shortAddress : result.subtitle,
                 latitude: coordinate.latitude,
                 longitude: coordinate.longitude,
-                radius: 150,
+                radius: extent.map {
+                    Triggers.placeRadius(
+                        latitudeDelta: $0.span.latitudeDelta,
+                        longitudeDelta: $0.span.longitudeDelta,
+                        latitude: $0.center.latitude,
+                        deviceMax: places.maxRadius
+                    )
+                } ?? 150,
                 trigger: trigger
             ))
             places.requestPermission()
@@ -192,8 +202,9 @@ private struct CurrentPlace: View {
 
     var body: some View {
         let center = CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude)
+        let span = max(900, location.radius * 2.6)
         VStack(alignment: .leading, spacing: 10) {
-            Map(initialPosition: .region(MKCoordinateRegion(center: center, latitudinalMeters: 900, longitudinalMeters: 900))) {
+            Map(initialPosition: .region(MKCoordinateRegion(center: center, latitudinalMeters: span, longitudinalMeters: span))) {
                 Marker(location.name, coordinate: center).tint(.accent)
                 MapCircle(center: center, radius: location.radius)
                     .foregroundStyle(.accent.opacity(0.15))

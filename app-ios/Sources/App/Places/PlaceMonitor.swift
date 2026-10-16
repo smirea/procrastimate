@@ -67,6 +67,12 @@ final class PlaceMonitor: NSObject {
         session = CLServiceSession(authorization: .always)
     }
 
+    /// The largest circle this device can watch, or nil where region monitoring is unavailable, as on the simulator.
+    var maxRadius: Double? {
+        let max = manager.maximumRegionMonitoringDistance
+        return max > 0 ? max : nil
+    }
+
     var nearby: CLLocation? {
         switch manager.authorizationStatus {
         case .authorizedAlways, .authorizedWhenInUse: manager.location

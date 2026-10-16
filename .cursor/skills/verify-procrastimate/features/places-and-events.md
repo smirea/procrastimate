@@ -4,7 +4,7 @@ A task can hang off a place or a calendar event, set with the Location and Event
 
 ## Sub-features
 
-- `place-pick` sets a place from the `Location` chip: an Apple Maps search with `Arrive`, `Leave`, or `During` beside the field.
+- `place-pick` sets a place from the `Location` chip: an Apple Maps search with `Arrive`, `Leave`, or `During` beside the field. The watched radius fits the result: 150 m for a shop or address, about half the city for a city (`Berlin` is about 22 km), capped at 100 km. The current-place map zooms out to show the whole circle.
 - `place-permission` asks for location access the first time a place is set, and asks to upgrade to Always.
 - `place-arrive` notifies on arriving, `place-leave` on leaving, never for the state the phone was already in when the place was set. With Always granted this works while the app is suspended or terminated, because the app holds a `CLServiceSession` requiring Always from launch.
 - `place-during` starts a Live Activity listing the place's open `During` tasks while inside, and ends it on leaving.
