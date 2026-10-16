@@ -7,6 +7,7 @@ import UIKit
 /// and the pasteboard. A read-only task shows only the thumbnails.
 struct ImageStrip: View {
     @Environment(TaskImages.self) private var images
+    @Environment(Toasts.self) private var toasts
     @Environment(\.space) private var space
     let task: TaskItem
     let locked: Bool
@@ -74,8 +75,8 @@ struct ImageStrip: View {
             if UIImagePickerController.isSourceTypeAvailable(.camera) {
                 Button("Take Photo", systemImage: "camera") { shooting = true }
             }
+            // Not disabled by `hasImages`: the menu is built before the user copies, so it would stay stale.
             Button("Paste", systemImage: "doc.on.clipboard") { paste() }
-                .disabled(!UIPasteboard.general.hasImages)
         } label: {
             RoundedRectangle(cornerRadius: 16)
                 .strokeBorder(.ink.opacity(0.16), style: StrokeStyle(lineWidth: 1.5, dash: [5, 4]))
@@ -92,6 +93,10 @@ struct ImageStrip: View {
 
     private func paste() {
         let sources = (UIPasteboard.general.images ?? []).compactMap { $0.jpegData(compressionQuality: 0.95) }
+        guard !sources.isEmpty else {
+            toasts.show("No image to paste", for: .seconds(2))
+            return
+        }
         Task { await images.attach(task.id, sources) }
     }
 }
