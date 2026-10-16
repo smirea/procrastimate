@@ -25,6 +25,17 @@ describe('applyChanges', () => {
 		expect(applyChanges(added, [change(2, { deleted: true })]).tasks).toEqual([]);
 	});
 
+	test('a project from a build before ordering arrives at order 0', () => {
+		const old = {
+			seq: 1,
+			opId: 'op-1',
+			kind: 'project',
+			id: 'p',
+			fields: { deleted: false, name: 'p', createdAt: 1, sourceKey: null },
+		};
+		expect(applyChanges(snapshotOf(), [old as Change]).projects).toEqual([project('p')]);
+	});
+
 	test('skips a partial change for an entity the client does not have', () => {
 		expect(applyChanges(snapshotOf(), [change(1, { title: 'Ghost' })]).tasks).toEqual([]);
 	});

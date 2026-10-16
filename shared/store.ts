@@ -307,8 +307,19 @@ export function addProject(
 	name: string,
 	{ id, now }: Creation,
 ): { data: StoreData; project: Project } {
-	const project: Project = { id, name, createdAt: now };
+	const last = projectsInOrder(data.projects).at(-1);
+	const project: Project = { id, name, order: last ? last.order + 1 : 0, createdAt: now };
 	return { data: { ...data, projects: [...data.projects, project] }, project };
+}
+
+/** Projects as the user ordered them. The stored list stays in creation order, like every synced list. */
+export const projectsInOrder = (projects: readonly Project[]) => projects.toSorted(bySiblingOrder);
+
+/** Writes only the moved project's `order`, like a section move. */
+export function moveProject(data: StoreData, id: string, index: number): StoreData {
+	const orders = new Map(moveOrders(data.projects, id, index).map(o => [o.id, o.order]));
+	if (!orders.size) return data;
+	return { ...data, projects: data.projects.map(p => (orders.has(p.id) ? { ...p, order: orders.get(p.id)! } : p)) };
 }
 
 export function renameProject(data: StoreData, id: string, name: string): StoreData {

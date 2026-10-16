@@ -37,12 +37,14 @@
 						{
 							"createdAt": 1791800000000,
 							"id": "p-home",
-							"name": "Home"
+							"name": "Home",
+							"order": 0
 						},
 						{
 							"createdAt": 1791800000001,
 							"id": "p-work",
 							"name": "Work",
+							"order": 0,
 							"sourceKey": "todoist:project:7"
 						}
 					],
@@ -106,7 +108,8 @@
 								{
 									"createdAt": 1791800000010,
 									"id": "p-ana",
-									"name": "Studio"
+									"name": "Studio",
+									"order": 0
 								}
 							],
 							"readOnly": [
@@ -349,12 +352,14 @@
 					{
 						"createdAt": 1791800000000,
 						"id": "p-home",
-						"name": "Home"
+						"name": "Home",
+						"order": 0
 					},
 					{
 						"createdAt": 1791800000001,
 						"id": "p-work",
 						"name": "Work",
+						"order": 0,
 						"sourceKey": "todoist:project:7"
 					}
 				],
@@ -418,7 +423,8 @@
 							{
 								"createdAt": 1791800000010,
 								"id": "p-ana",
-								"name": "Studio"
+								"name": "Studio",
+								"order": 0
 							}
 						],
 						"readOnly": [
@@ -656,12 +662,14 @@
 						{
 							"createdAt": 1791800000000,
 							"id": "p-home",
-							"name": "Home"
+							"name": "Home",
+							"order": 0
 						},
 						{
 							"createdAt": 1791800000001,
 							"id": "p-work",
 							"name": "Work",
+							"order": 0,
 							"sourceKey": "todoist:project:7"
 						}
 					],
@@ -855,12 +863,14 @@
 					{
 						"createdAt": 1791800000000,
 						"id": "p-home",
-						"name": "Home"
+						"name": "Home",
+						"order": 0
 					},
 					{
 						"createdAt": 1791800000001,
 						"id": "p-work",
 						"name": "Work",
+						"order": 0,
 						"sourceKey": "todoist:project:7"
 					}
 				],
@@ -1065,12 +1075,14 @@
 						{
 							"createdAt": 1791800000000,
 							"id": "p-home",
-							"name": "Home"
+							"name": "Home",
+							"order": 0
 						},
 						{
 							"createdAt": 1791800000001,
 							"id": "p-work",
 							"name": "Work",
+							"order": 0,
 							"sourceKey": "todoist:project:7"
 						}
 					],
@@ -1117,7 +1129,8 @@
 								{
 									"createdAt": 1791800000010,
 									"id": "p-ana",
-									"name": "Studio"
+									"name": "Studio",
+									"order": 0
 								}
 							],
 							"readOnly": [
@@ -1357,12 +1370,14 @@
 					{
 						"createdAt": 1791800000000,
 						"id": "p-home",
-						"name": "Home"
+						"name": "Home",
+						"order": 0
 					},
 					{
 						"createdAt": 1791800000001,
 						"id": "p-work",
 						"name": "Work",
+						"order": 0,
 						"sourceKey": "todoist:project:7"
 					}
 				],
@@ -1410,7 +1425,8 @@
 							{
 								"createdAt": 1791800000010,
 								"id": "p-ana",
-								"name": "Studio"
+								"name": "Studio",
+								"order": 0
 							}
 						],
 						"readOnly": [
@@ -1656,12 +1672,14 @@
 						{
 							"createdAt": 1791800000000,
 							"id": "p-home",
-							"name": "Home"
+							"name": "Home",
+							"order": 0
 						},
 						{
 							"createdAt": 1791800000001,
 							"id": "p-work",
 							"name": "Work",
+							"order": 0,
 							"sourceKey": "todoist:project:7"
 						}
 					],
@@ -1725,7 +1743,8 @@
 								{
 									"createdAt": 1791800000010,
 									"id": "p-ana",
-									"name": "Studio"
+									"name": "Studio",
+									"order": 0
 								}
 							],
 							"readOnly": [
@@ -1971,12 +1990,14 @@
 					{
 						"createdAt": 1791800000000,
 						"id": "p-home",
-						"name": "Home"
+						"name": "Home",
+						"order": 0
 					},
 					{
 						"createdAt": 1791800000001,
 						"id": "p-work",
 						"name": "Work",
+						"order": 0,
 						"sourceKey": "todoist:project:7"
 					}
 				],
@@ -2040,7 +2061,8 @@
 							{
 								"createdAt": 1791800000010,
 								"id": "p-ana",
-								"name": "Studio"
+								"name": "Studio",
+								"order": 0
 							}
 						],
 						"readOnly": [
@@ -2286,12 +2308,14 @@
 						{
 							"createdAt": 1791800000000,
 							"id": "p-home",
-							"name": "Home"
+							"name": "Home",
+							"order": 0
 						},
 						{
 							"createdAt": 1791800000001,
 							"id": "p-work",
 							"name": "Work",
+							"order": 0,
 							"sourceKey": "todoist:project:7"
 						}
 					],
@@ -2355,7 +2379,8 @@
 								{
 									"createdAt": 1791800000010,
 									"id": "p-ana",
-									"name": "Studio"
+									"name": "Studio",
+									"order": 0
 								}
 							],
 							"readOnly": [
@@ -2601,12 +2626,14 @@
 					{
 						"createdAt": 1791800000000,
 						"id": "p-home",
-						"name": "Home"
+						"name": "Home",
+						"order": 0
 					},
 					{
 						"createdAt": 1791800000001,
 						"id": "p-work",
 						"name": "Work",
+						"order": 0,
 						"sourceKey": "todoist:project:7"
 					}
 				],
@@ -2670,7 +2697,8 @@
 							{
 								"createdAt": 1791800000010,
 								"id": "p-ana",
-								"name": "Studio"
+								"name": "Studio",
+								"order": 0
 							}
 						],
 						"readOnly": [
@@ -2916,12 +2944,14 @@
 						{
 							"createdAt": 1791800000000,
 							"id": "p-home",
-							"name": "Home"
+							"name": "Home",
+							"order": 0
 						},
 						{
 							"createdAt": 1791800000001,
 							"id": "p-work",
 							"name": "Work",
+							"order": 0,
 							"sourceKey": "todoist:project:7"
 						}
 					],
@@ -2985,7 +3015,8 @@
 								{
 									"createdAt": 1791800000010,
 									"id": "p-ana",
-									"name": "Studio"
+									"name": "Studio",
+									"order": 0
 								}
 							],
 							"readOnly": [
@@ -3227,12 +3258,14 @@
 					{
 						"createdAt": 1791800000000,
 						"id": "p-home",
-						"name": "Home"
+						"name": "Home",
+						"order": 0
 					},
 					{
 						"createdAt": 1791800000001,
 						"id": "p-work",
 						"name": "Work",
+						"order": 0,
 						"sourceKey": "todoist:project:7"
 					}
 				],
@@ -3296,7 +3329,8 @@
 							{
 								"createdAt": 1791800000010,
 								"id": "p-ana",
-								"name": "Studio"
+								"name": "Studio",
+								"order": 0
 							}
 						],
 						"readOnly": [
@@ -3542,12 +3576,14 @@
 						{
 							"createdAt": 1791800000000,
 							"id": "p-home",
-							"name": "Home"
+							"name": "Home",
+							"order": 0
 						},
 						{
 							"createdAt": 1791800000001,
 							"id": "p-work",
 							"name": "Work",
+							"order": 0,
 							"sourceKey": "todoist:project:7"
 						}
 					],
@@ -3611,7 +3647,8 @@
 								{
 									"createdAt": 1791800000010,
 									"id": "p-ana",
-									"name": "Studio"
+									"name": "Studio",
+									"order": 0
 								}
 							],
 							"readOnly": [
@@ -3850,12 +3887,14 @@
 					{
 						"createdAt": 1791800000000,
 						"id": "p-home",
-						"name": "Home"
+						"name": "Home",
+						"order": 0
 					},
 					{
 						"createdAt": 1791800000001,
 						"id": "p-work",
 						"name": "Work",
+						"order": 0,
 						"sourceKey": "todoist:project:7"
 					}
 				],
@@ -3919,7 +3958,8 @@
 							{
 								"createdAt": 1791800000010,
 								"id": "p-ana",
-								"name": "Studio"
+								"name": "Studio",
+								"order": 0
 							}
 						],
 						"readOnly": [
@@ -4167,12 +4207,14 @@
 						{
 							"createdAt": 1791800000000,
 							"id": "p-home",
-							"name": "Home"
+							"name": "Home",
+							"order": 0
 						},
 						{
 							"createdAt": 1791800000001,
 							"id": "p-work",
 							"name": "Work",
+							"order": 0,
 							"sourceKey": "todoist:project:7"
 						}
 					],
@@ -4236,7 +4278,8 @@
 								{
 									"createdAt": 1791800000010,
 									"id": "p-ana",
-									"name": "Studio"
+									"name": "Studio",
+									"order": 0
 								}
 							],
 							"readOnly": [
@@ -4438,12 +4481,14 @@
 					{
 						"createdAt": 1791800000000,
 						"id": "p-home",
-						"name": "Home"
+						"name": "Home",
+						"order": 0
 					},
 					{
 						"createdAt": 1791800000001,
 						"id": "p-work",
 						"name": "Work",
+						"order": 0,
 						"sourceKey": "todoist:project:7"
 					}
 				],
@@ -4507,7 +4552,8 @@
 							{
 								"createdAt": 1791800000010,
 								"id": "p-ana",
-								"name": "Studio"
+								"name": "Studio",
+								"order": 0
 							}
 						],
 						"readOnly": [
@@ -4840,7 +4886,8 @@
 						{
 							"createdAt": 1,
 							"id": "p",
-							"name": "Home"
+							"name": "Home",
+							"order": 0
 						}
 					],
 					"remindersCheckedAt": 5,
@@ -4899,7 +4946,8 @@
 					{
 						"createdAt": 1,
 						"id": "p",
-						"name": "Home"
+						"name": "Home",
+						"order": 0
 					}
 				],
 				"reads": [],
@@ -6527,6 +6575,42 @@
 						"title": "Call"
 					}
 				]
+			}
+		},
+		{
+			"fn": "parseSnapshot",
+			"test": "parseSnapshot › a project stored before ordering loads at order 0",
+			"input": [
+				{
+					"projects": [
+						{
+							"createdAt": 1,
+							"id": "p",
+							"name": "Home"
+						}
+					],
+					"remindersCheckedAt": 5,
+					"tasks": []
+				},
+				10
+			],
+			"output": {
+				"comments": [],
+				"labels": [],
+				"people": [],
+				"projects": [
+					{
+						"createdAt": 1,
+						"id": "p",
+						"name": "Home",
+						"order": 0
+					}
+				],
+				"reads": [],
+				"remindersCheckedAt": 5,
+				"sections": [],
+				"spaces": {},
+				"tasks": []
 			}
 		},
 		{

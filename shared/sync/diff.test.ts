@@ -39,7 +39,7 @@ describe('diff', () => {
 
 	test('sends a missing sourceKey as null', () => {
 		const [patch] = diff(snapshotOf(), snapshotOf({ projects: [project('p')] }));
-		expect(patch?.fields).toEqual({ deleted: false, name: 'p', createdAt: 1, sourceKey: null });
+		expect(patch?.fields).toEqual({ deleted: false, name: 'p', order: 0, createdAt: 1, sourceKey: null });
 	});
 
 	test('sends only the fields that changed', () => {

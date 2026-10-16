@@ -361,6 +361,8 @@ private func completion(_ completion: Completion) throws -> JSONValue {
         return object(["data": try json(result.data), "section": try json(result.section)])
     case "renameSection": return try json(StoreRules.renameSection(data(), a(1), a(2)))
     case "moveSection": return try json(StoreRules.moveSection(data(), a(1), a(2)))
+    case "moveProject": return try json(StoreRules.moveProject(data(), a(1), a(2)))
+    case "projectsInOrder": return try json(StoreRules.projectsInOrder(a(0)))
     case "deleteSection": return try json(StoreRules.deleteSection(data(), a(1)))
     default: throw unknown(fn)
     }

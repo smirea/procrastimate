@@ -6,6 +6,7 @@ import type {
 	NewComment,
 	NewLabel,
 	NewSection,
+	ProjectEdit,
 	SectionEdit,
 	SpaceView,
 	TaskComment,
@@ -23,6 +24,7 @@ import {
 	deleteProject,
 	deleteSection,
 	deleteTask,
+	moveProject,
 	moveSection,
 	renameLabel,
 	renameProject,
@@ -263,14 +265,18 @@ export function createProject(space: Space, name: string): Project {
 	return visibleIn(snapshot.projects, id, 'project');
 }
 
-export function editProject(space: Space, id: string, name: string): Project {
+export function editProject(space: Space, id: string, edit: ProjectEdit): Project {
 	requireManager(space.access);
-	const title = named(name, 'project');
+	const title = edit.name === undefined ? undefined : named(edit.name, 'project');
 	const snapshot = run(space, (data, visible) => {
 		visibleIn(visible.projects, id, 'project');
-		if (sameName(data.projects, title, id))
-			throw new ORPCError('BAD_REQUEST', { message: 'Another project has that name' });
-		return renameProject(data, id, title);
+		let next = data;
+		if (title !== undefined) {
+			if (sameName(data.projects, title, id))
+				throw new ORPCError('BAD_REQUEST', { message: 'Another project has that name' });
+			next = renameProject(next, id, title);
+		}
+		return edit.index === undefined ? next : moveProject(next, id, edit.index);
 	});
 	return visibleIn(snapshot.projects, id, 'project');
 }

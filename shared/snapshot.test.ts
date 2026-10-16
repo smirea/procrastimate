@@ -121,8 +121,8 @@ const webDocument: snapshot.Snapshot = {
 		},
 	],
 	projects: [
-		{ id: 'p-home', name: 'Home', createdAt: 1_791_800_000_000 },
-		{ id: 'p-work', name: 'Work', createdAt: 1_791_800_000_001, sourceKey: 'todoist:project:7' },
+		{ id: 'p-home', name: 'Home', order: 0, createdAt: 1_791_800_000_000 },
+		{ id: 'p-work', name: 'Work', order: 0, createdAt: 1_791_800_000_001, sourceKey: 'todoist:project:7' },
 	],
 	sections: [
 		{ id: 's-next', projectId: 'p-work', name: 'Next', order: 0, createdAt: 1_791_800_000_003 },
@@ -184,7 +184,7 @@ const webDocument: snapshot.Snapshot = {
 				{ ...sharedTask('t-ana-1', 1_791_900_000_010), title: 'Paint', createdBy: 'u-ana' },
 				{ ...sharedTask('t-ana-2', 1_791_900_000_011), completedBy: 'u-ana', lastCompletedAt: 1_791_960_000_000 },
 			],
-			projects: [{ id: 'p-ana', name: 'Studio', createdAt: 1_791_800_000_010 }],
+			projects: [{ id: 'p-ana', name: 'Studio', order: 0, createdAt: 1_791_800_000_010 }],
 			sections: [{ id: 's-ana', projectId: 'p-ana', name: 'Walls', order: 0, createdAt: 1_791_800_000_011 }],
 			labels: [],
 			comments: [
@@ -272,7 +272,7 @@ describe('parseSnapshot', () => {
 		const loaded = parseSnapshot(
 			{
 				tasks: [task('Good', { interval: 2, unit: 'day' }), task('Bad', { interval: null, unit: 'day' })],
-				projects: [{ id: 'p', name: 'Home', createdAt: 1 }],
+				projects: [{ id: 'p', name: 'Home', order: 0, createdAt: 1 }],
 				remindersCheckedAt: 5,
 			},
 			10,
@@ -368,6 +368,14 @@ describe('parseSnapshot', () => {
 		);
 		expect(loaded.tasks[0]!.labelIds).toEqual(['l']);
 		expect(loaded.labels).toEqual([{ id: 'l', name: 'calls', color: 'pink', createdAt: 1 }]);
+	});
+
+	test('a project stored before ordering loads at order 0', () => {
+		const loaded = parseSnapshot(
+			{ tasks: [], projects: [{ id: 'p', name: 'Home', createdAt: 1 }], remindersCheckedAt: 5 },
+			10,
+		);
+		expect(loaded.projects).toEqual([{ id: 'p', name: 'Home', order: 0, createdAt: 1 }]);
 	});
 
 	test("a label stored before colors loads with its name's default color", () => {

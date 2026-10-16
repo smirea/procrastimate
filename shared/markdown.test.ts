@@ -33,7 +33,7 @@ const task = (id: string, fields: Partial<Task> = {}): Task => ({
 
 // Wednesday, October 14 2026.
 const today: DateKey = '2026-10-14';
-const projects = [{ id: 'work', name: 'Work', createdAt: 0 }];
+const projects = [{ id: 'work', name: 'Work', order: 0, createdAt: 0 }];
 const labels: Label[] = [
 	{ id: 'home', name: 'home', color: 'gray', createdAt: 0 },
 	{ id: 'deep', name: 'deep work', color: 'gray', createdAt: 0 },

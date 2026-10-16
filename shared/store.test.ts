@@ -14,11 +14,13 @@ const deleteProject = recorded('store', store.deleteProject);
 const deleteSection = recorded('store', store.deleteSection);
 const deleteTask = recorded('store', store.deleteTask);
 const explodeSubtasks = recorded('store', store.explodeSubtasks);
+const moveProject = recorded('store', store.moveProject);
 const moveSection = recorded('store', store.moveSection);
 const moveSubtask = recorded('store', store.moveSubtask);
 const renameLabel = recorded('store', store.renameLabel);
 const renameProject = recorded('store', store.renameProject);
 const renameSection = recorded('store', store.renameSection);
+const projectsInOrder = recorded('store', store.projectsInOrder);
 const reopenTask = recorded('store', store.reopenTask);
 const setLabelColor = recorded('store', store.setLabelColor);
 const restoreCompletion = recorded('store', store.restoreCompletion);
@@ -69,8 +71,8 @@ const data = (): StoreData => ({
 		task('call', 5, { labelIds: ['calls', 'phone'] }),
 	],
 	projects: [
-		{ id: 'home', name: 'Home', createdAt: 1 },
-		{ id: 'work', name: 'Work', createdAt: 2 },
+		{ id: 'home', name: 'Home', order: 0, createdAt: 1 },
+		{ id: 'work', name: 'Work', order: 0, createdAt: 2 },
 	],
 	sections: [
 		{ id: 'later', projectId: 'home', name: 'Later', order: 1, createdAt: 1 },
@@ -350,13 +352,34 @@ describe('exploding subtasks', () => {
 describe('projects', () => {
 	test('adding, renaming, and deleting a project, which deletes its tasks', () => {
 		const { data: added, project } = addProject(data(), 'Errands', { id: 'errands', now: NOW });
-		expect(project).toEqual({ id: 'errands', name: 'Errands', createdAt: NOW });
+		expect(project).toEqual({ id: 'errands', name: 'Errands', order: 1, createdAt: NOW });
 		expect(added.projects.map(p => p.name)).toEqual(['Home', 'Work', 'Errands']);
 		expect(renameProject(data(), 'home', 'House').projects[0]!.name).toBe('House');
 		const deleted = deleteProject(data(), 'home');
 		expect(deleted.projects.map(p => p.id)).toEqual(['work']);
 		expect(ids(deleted.tasks)).toEqual(['standup', 'call']);
 		expect(deleted.sections.map(s => s.id)).toEqual(['someday']);
+	});
+
+	test('projects at the same order keep their creation order', () => {
+		expect(projectsInOrder(data().projects).map(p => p.id)).toEqual(['home', 'work']);
+	});
+
+	test('moving a project writes only its own order', () => {
+		const first = moveProject(data(), 'work', 0);
+		expect(first.projects.map(p => [p.id, p.order])).toEqual([
+			['home', 0],
+			['work', -1],
+		]);
+		const { data: three } = addProject(first, 'Errands', { id: 'errands', now: NOW });
+		const moved = moveProject(three, 'errands', 1);
+		expect(projectsInOrder(moved.projects).map(p => [p.id, p.order])).toEqual([
+			['work', -1],
+			['errands', -0.5],
+			['home', 0],
+		]);
+		expect(moveProject(first, 'work', 0)).toEqual(first);
+		expect(moveProject(first, 'missing', 0)).toEqual(first);
 	});
 });
 

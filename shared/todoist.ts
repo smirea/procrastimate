@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { parseCsv } from './csv.ts';
 import { defaultLabelColor } from './label-colors.ts';
 import { parseQuickAdd } from './quick-add.ts';
-import { sectionsOf, type StoreData } from './store.ts';
+import { projectsInOrder, sectionsOf, type StoreData } from './store.ts';
 import { nextSiblingOrder } from './subtasks.ts';
 import { taskSchema } from './sync/protocol.ts';
 import {
@@ -308,7 +308,14 @@ export function mergeBackup(
 			projectIds.set(source.sourceKey, projects[match]!.id);
 			continue;
 		}
-		const project: Project = { id: newId(), name: source.name, createdAt: now, sourceKey: source.sourceKey };
+		const last = projectsInOrder(projects).at(-1);
+		const project: Project = {
+			id: newId(),
+			name: source.name,
+			order: last ? last.order + 1 : 0,
+			createdAt: now,
+			sourceKey: source.sourceKey,
+		};
 		projects.push(project);
 		projectIds.set(source.sourceKey, project.id);
 		summary.projects++;

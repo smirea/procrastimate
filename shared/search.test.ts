@@ -8,9 +8,9 @@ const search = recorded('search', searching.search);
 const searchTerms = recorded('search', searching.searchTerms);
 
 const projects: Project[] = [
-	{ id: 'home', name: 'Home', createdAt: 0 },
-	{ id: 'garden', name: 'Garden', createdAt: 0 },
-	{ id: 'cafe', name: 'Café Ideas', createdAt: 0 },
+	{ id: 'home', name: 'Home', order: 0, createdAt: 0 },
+	{ id: 'garden', name: 'Garden', order: 0, createdAt: 0 },
+	{ id: 'cafe', name: 'Café Ideas', order: 0, createdAt: 0 },
 ];
 const labels: Label[] = [
 	{ id: 'calls', name: 'calls', color: 'gray', createdAt: 0 },
@@ -146,9 +146,9 @@ describe('search ranking', () => {
 
 	test('projects rank by match quality, then name', () => {
 		const list: Project[] = [
-			{ id: 'a', name: 'Side gardening', createdAt: 0 },
-			{ id: 'b', name: 'Garden', createdAt: 0 },
-			{ id: 'c', name: 'Allotment garden', createdAt: 0 },
+			{ id: 'a', name: 'Side gardening', order: 0, createdAt: 0 },
+			{ id: 'b', name: 'Garden', order: 0, createdAt: 0 },
+			{ id: 'c', name: 'Allotment garden', order: 0, createdAt: 0 },
 		];
 		expect(search('garden', [], { projects: list, labels: [] }).projects.map(h => h.item.name)).toEqual([
 			'Garden',

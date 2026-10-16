@@ -159,7 +159,7 @@ export const accountRouter = os.router({
 			moved(context, () => createProject(commands(context), input.body.name)),
 		),
 		update: os.projects.update.handler(({ input, context }) =>
-			moved(context, () => editProject(commands(context), input.query.id, input.body.name)),
+			moved(context, () => editProject(commands(context), input.query.id, input.body)),
 		),
 		delete: os.projects.delete.handler(async ({ input, context }) => {
 			await moved(context, () => removeProject(commands(context), input.query.id));

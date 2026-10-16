@@ -197,6 +197,13 @@ function commands(rand: Random, device: string, now: number, ids: () => string):
 			},
 		},
 		{
+			name: 'move project',
+			run: s => {
+				const p = rand.pick(s.projects);
+				return p ? onData(s, data => rules.moveProject(data, p.id, rand.int(4))) : s;
+			},
+		},
+		{
 			name: 'delete project',
 			run: s => {
 				const p = rand.pick(s.projects);

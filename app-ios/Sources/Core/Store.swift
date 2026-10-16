@@ -35,9 +35,10 @@ public final class Store {
         if !hadSync { scheduleWrite() }
     }
 
-    /// The user's own tasks, projects, and labels, which the personal views (Inbox, Today, No date, places, search) show.
+    /// The user's own tasks, projects (in their order), and labels, which the personal views (Inbox, Today, No date,
+    /// places, search) show.
     public var tasks: [TaskItem] { snapshot.tasks }
-    public var projects: [Project] { snapshot.projects }
+    public var projects: [Project] { StoreRules.projectsInOrder(snapshot.projects) }
     public var labels: [Label] { snapshot.labels }
     public var sections: [ProjectSection] { snapshot.sections }
 
@@ -105,7 +106,7 @@ public final class Store {
     }
 
     /// The projects and labels a task in this space can pick. A task never leaves its space.
-    public func projects(in space: SpaceKey) -> [Project] { data(in: space).projects }
+    public func projects(in space: SpaceKey) -> [Project] { StoreRules.projectsInOrder(data(in: space).projects) }
     public func labels(in space: SpaceKey) -> [Label] { data(in: space).labels }
 
     /// The owner of a shared space, or nil for the user's own.
@@ -386,6 +387,11 @@ public final class Store {
     public func deleteProject(_ id: String) {
         guard space(ofProject: id) == .own else { return }
         commit(StoreRules.deleteProject(snapshot.data, id))
+    }
+
+    public func moveProject(_ id: String, to index: Int) {
+        guard space(ofProject: id) == .own else { return }
+        commit(StoreRules.moveProject(snapshot.data, id, index))
     }
 
     /// Sections, like projects, are only ever written in the user's own space.

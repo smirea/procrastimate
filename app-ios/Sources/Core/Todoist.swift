@@ -347,7 +347,13 @@ public enum Todoist {
                 projectIds[source.sourceKey] = projects[match].id
                 continue
             }
-            let project = Project(id: newId(), name: source.name, createdAt: now, sourceKey: source.sourceKey)
+            let project = Project(
+                id: newId(),
+                name: source.name,
+                order: StoreRules.projectsInOrder(projects).last.map { $0.order + 1 } ?? 0,
+                createdAt: now,
+                sourceKey: source.sourceKey
+            )
             projects.append(project)
             projectIds[source.sourceKey] = project.id
             summary.projects += 1

@@ -102,8 +102,8 @@ export function fieldsOf(kind: Kind, entity: Entity): Fields {
  * Builds an entity from a full set of fields, or null when some are missing or invalid. Task fields added after launch
  * default to none instead of dropping the task: iOS builds from before places and events create tasks without
  * `location` and `event`, tasks stored before sharing hold no authorship or `lastCompletedAt`, builds from before
- * sections send no `sectionId`, tasks from before images have no `images`, and a label
- * from before colors takes its name's default color.
+ * sections send no `sectionId`, tasks from before images have no `images`, a project from before ordering sits at 0,
+ * and a label from before colors takes its name's default color.
  */
 const TASK_DEFAULTS = {
 	sectionId: null,
@@ -117,6 +117,7 @@ const TASK_DEFAULTS = {
 
 function withDefaults(kind: Kind, fields: Fields): Fields {
 	if (kind === 'task') return { ...TASK_DEFAULTS, ...fields };
+	if (kind === 'project') return { order: 0, ...fields };
 	if (kind === 'label' && fields.color === undefined && typeof fields.name === 'string') {
 		return { ...fields, color: defaultLabelColor(fields.name) };
 	}

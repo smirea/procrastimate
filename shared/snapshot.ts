@@ -52,6 +52,12 @@ const taskSchema = syncedTaskSchema.extend({
 		.default(null),
 });
 
+/** A project stored before ordering sits at 0, so it keeps its place by creation. */
+const projectsSchema = z
+	.array(projectSchema.extend({ order: projectSchema.shape.order.default(0) }))
+	// Core's decoder of the document fills the order the same way.
+	.meta({ 'x-swift-type': '[Project]' });
+
 /** A label stored before colors takes its name's default color, as the server gives it. */
 const labelsSchema = z
 	.array(labelSchema.extend({ color: labelSchema.shape.color.optional() }))
@@ -115,7 +121,7 @@ const spaceSectionSchema = z
 		readOnly: z.array(z.string()).default([]),
 		targets: z.array(shareTargetSchema).default([]),
 		tasks: tasksSchema,
-		projects: z.array(projectSchema).default([]),
+		projects: projectsSchema.default([]),
 		sections: z.array(sectionSchema).default([]),
 		labels: labelsSchema,
 		comments: z.array(commentSchema).default([]),
@@ -140,7 +146,7 @@ const spacesSchema = z
 const snapshotSchema = z
 	.object({
 		tasks: tasksSchema,
-		projects: z.array(projectSchema),
+		projects: projectsSchema,
 		sections: z.array(sectionSchema).default([]),
 		labels: labelsSchema,
 		comments: z.array(commentSchema).default([]),

@@ -160,8 +160,19 @@ export type NewComment = z.infer<typeof newCommentSchema>;
 
 export const newProjectSchema = z
 	.object({ name: projectSchema.shape.name })
-	.meta({ id: 'NewProject', description: 'A project the agent command API adds or renames. A blank name is refused.' });
+	.meta({ id: 'NewProject', description: 'A project the agent command API adds. A blank name is refused.' });
 export type NewProject = z.infer<typeof newProjectSchema>;
+
+export const projectEditSchema = z
+	.object({
+		name: projectSchema.shape.name.optional(),
+		index: z.number().int().nonnegative().optional().meta({ description: 'Its new place among the projects, from 0.' }),
+	})
+	.meta({
+		id: 'ProjectEdit',
+		description: 'Renames a project, moves it among the projects, or both. A blank name is refused.',
+	});
+export type ProjectEdit = z.infer<typeof projectEditSchema>;
 
 export const newSectionSchema = z
 	.object({ projectId: sectionSchema.shape.projectId, name: sectionSchema.shape.name })

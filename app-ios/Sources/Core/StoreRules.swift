@@ -246,7 +246,12 @@ public enum StoreRules {
     }
 
     public static func addProject(_ data: StoreData, _ name: String, _ creation: Creation) -> (data: StoreData, project: Project) {
-        let project = Project(id: creation.id, name: name, createdAt: creation.now)
+        let project = Project(
+            id: creation.id,
+            name: name,
+            order: projectsInOrder(data.projects).last.map { $0.order + 1 } ?? 0,
+            createdAt: creation.now
+        )
         var next = data
         next.projects.append(project)
         return (next, project)
@@ -272,14 +277,60 @@ public enum StoreRules {
         return next
     }
 
+    /// Projects as the user ordered them. The stored list stays in creation order, like every synced list.
+    public static func projectsInOrder(_ projects: [Project]) -> [Project] { siblingOrder(projects) }
+
+    /// Writes only the moved project's `order`, like a section move.
+    public static func moveProject(_ data: StoreData, _ id: String, _ index: Int) -> StoreData {
+        let orders = moveOrders(data.projects, id, index)
+        guard !orders.isEmpty else { return data }
+        var next = data
+        next.projects = data.projects.map { p in
+            guard let order = orders[p.id] else { return p }
+            var p = p
+            p.order = order
+            return p
+        }
+        return next
+    }
+
     /// A project's sections in their order: by `order`, then `createdAt`, then `id`, like subtasks.
     public static func sectionsOf(_ sections: [ProjectSection], _ projectId: String) -> [ProjectSection] {
-        sections.filter { $0.projectId == projectId }.stableSorted { a, b in
+        siblingOrder(sections.filter { $0.projectId == projectId })
+    }
+
+    private static func siblingOrder<T: Ordered>(_ items: [T]) -> [T] {
+        items.stableSorted { a, b in
             if a.order != b.order { return a.order < b.order }
             if a.createdAt != b.createdAt { return a.createdAt < b.createdAt }
             if a.id != b.id { return a.id.utf16.lexicographicallyPrecedes(b.id.utf16) }
             return nil
         }
+    }
+
+    /// The orders to write to move `id` to `index`: only the moved one's, or every sibling's new position when the gap
+    /// is too small to split. `moveOrders` in `shared/sync/order.ts`.
+    private static func moveOrders<T: Ordered>(_ items: [T], _ id: String, _ index: Int) -> [String: Double] {
+        guard let moved = items.first(where: { $0.id == id }) else { return [:] }
+        let siblings = siblingOrder(items)
+        let others = siblings.filter { $0.id != id }
+        let at = max(0, min(index, others.count))
+        let previous = at > 0 ? others[at - 1].order : nil
+        let following = at < others.count ? others[at].order : nil
+        var orders: [String: Double] = [:]
+        if let previous, let following, following - previous < Subtasks.minOrderGap {
+            var placed = others
+            placed.insert(moved, at: at)
+            for (order, s) in placed.enumerated() where s.order != Double(order) { orders[s.id] = Double(order) }
+        } else if siblings.firstIndex(where: { $0.id == id }) != at {
+            switch (previous, following) {
+            case (nil, nil): orders[id] = 0
+            case let (nil, following?): orders[id] = following - 1
+            case let (previous?, nil): orders[id] = previous + 1
+            case let (previous?, following?): orders[id] = (previous + following) / 2
+            }
+        }
+        return orders
     }
 
     private static func sameName(_ a: String, _ b: String) -> Bool { a.lowercased() == b.lowercased() }
@@ -322,28 +373,10 @@ public enum StoreRules {
         return next
     }
 
-    /// Writes only the moved section's `order`, like a subtask move, or renumbers the project's sections when the gap
-    /// is too small to split.
+    /// Writes only the moved section's `order`, like a subtask move.
     public static func moveSection(_ data: StoreData, _ id: String, _ index: Int) -> StoreData {
         guard let section = data.sections.first(where: { $0.id == id }) else { return data }
-        let siblings = sectionsOf(data.sections, section.projectId)
-        let others = siblings.filter { $0.id != id }
-        let at = max(0, min(index, others.count))
-        let previous = at > 0 ? others[at - 1].order : nil
-        let following = at < others.count ? others[at].order : nil
-        var orders: [String: Double] = [:]
-        if let previous, let following, following - previous < Subtasks.minOrderGap {
-            var placed = others
-            placed.insert(section, at: at)
-            for (order, s) in placed.enumerated() where s.order != Double(order) { orders[s.id] = Double(order) }
-        } else if siblings.firstIndex(where: { $0.id == id }) != at {
-            switch (previous, following) {
-            case (nil, nil): orders[id] = 0
-            case let (nil, following?): orders[id] = following - 1
-            case let (previous?, nil): orders[id] = previous + 1
-            case let (previous?, following?): orders[id] = (previous + following) / 2
-            }
-        }
+        let orders = moveOrders(data.sections.filter { $0.projectId == section.projectId }, id, index)
         guard !orders.isEmpty else { return data }
         var next = data
         next.sections = data.sections.map { s in
@@ -413,3 +446,13 @@ public enum StoreRules {
         return next
     }
 }
+
+/// What fractional sibling order needs: projects and sections both sort and move by it.
+protocol Ordered {
+    var id: String { get }
+    var order: Double { get }
+    var createdAt: Int { get }
+}
+
+extension Project: Ordered {}
+extension ProjectSection: Ordered {}
