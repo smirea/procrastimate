@@ -77,9 +77,12 @@ export function revealCaret(field: HTMLTextAreaElement) {
 	if (overflow > 0) outer.scrollTop += overflow;
 }
 
-/** Keeps the caret of a growing textarea in view after every edit, once the field has taken its new height. */
+/**
+ * Keeps the caret of a growing textarea in view after every edit. It runs in the input event itself, where reading
+ * layout already gives the field's new height; a frame later it could undo a scroll the user started meanwhile.
+ */
 export function followCaret(field: HTMLTextAreaElement) {
-	const reveal = () => requestAnimationFrame(() => revealCaret(field));
+	const reveal = () => revealCaret(field);
 	field.addEventListener('input', reveal);
 	return { destroy: () => field.removeEventListener('input', reveal) };
 }
