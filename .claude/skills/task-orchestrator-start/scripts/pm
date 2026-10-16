@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
-# Calls the production agent API as the AI account: pm <METHOD> <path> [curl args...]
-# e.g. pm GET /view, pm POST /comments -d '{"taskId":"…","body":"…"}'
+# Calls the production agent API as the AI account.
+#   pm <METHOD> <path> [curl args...]                   raw call, e.g. pm GET /view
+#   pm complete <task id> <pr url> [note]               comment "<pr url>\n<note>", then complete; safe to rerun
+#   pm file <project id> <title> [notes] [--section id] [--parent id]
+#                                                       add a task unless an open one in the project has this title;
+#                                                       prints "<id> <public link>"; safe to rerun
+#   pm link <task id>                                   print the task's public read-only link
 set -euo pipefail
 
 # Worktrees have no ignored env files, so read them from the main checkout.
@@ -13,10 +18,63 @@ fi
 : "${APP_BOT_API_URL:?missing; run 'env-manager env set dev && env-manager down' in $root (never 'up')}"
 : "${APP_BOT_TOKEN:?missing; run 'env-manager env set dev && env-manager down' in $root (never 'up')}"
 
-method=$1
-path=$2
-shift 2
-curl -sS --fail-with-body -X "$method" \
-	-H "Authorization: Bearer $APP_BOT_TOKEN" \
-	-H 'Content-Type: application/json' \
-	"$APP_BOT_API_URL$path" "$@"
+api() {
+	local method=$1 path=$2
+	shift 2
+	# Reads retry on transient errors; writes don't, because a retried write can land twice.
+	local retry=()
+	[[ $method == GET ]] && retry=(--retry 3 --retry-all-errors)
+	curl -sS --fail-with-body ${retry[@]+"${retry[@]}"} -X "$method" \
+		-H "Authorization: Bearer $APP_BOT_TOKEN" \
+		-H 'Content-Type: application/json' \
+		"$APP_BOT_API_URL$path" "$@"
+}
+
+link() {
+	jq -n --arg id "$1" '{target:{kind:"task",id:$id}}' | api POST /links -d @- | jq -r .url
+}
+
+case ${1:-} in
+complete)
+	task=$2 pr=$3 note=${4:-}
+	if ! api GET "/comments?id=$task" | jq -e --arg pr "$pr" '.comments[] | select(.body | startswith($pr))' >/dev/null; then
+		jq -n --arg t "$task" --arg b "$pr${note:+$'\n'$note}" '{taskId:$t,body:$b}' | api POST /comments -d @- >/dev/null
+	fi
+	if api GET /view | jq -e --arg t "$task" '.tasks[] | select(.id == $t and .completedAt == null)' >/dev/null; then
+		api POST "/tasks/complete?id=$task" >/dev/null
+	fi
+	echo "completed $task"
+	;;
+file)
+	project=$2 title=$3
+	shift 3
+	notes='' section='' parent=''
+	while (($#)); do
+		case $1 in
+		--section) section=$2 && shift 2 ;;
+		--parent) parent=$2 && shift 2 ;;
+		*) notes=$1 && shift ;;
+		esac
+	done
+	find() {
+		api GET /view | jq -r --arg p "$project" --arg t "$title" \
+			'[.tasks[] | select(.projectId == $p and .title == $t and .completedAt == null)][0].id // empty'
+	}
+	id=$(find)
+	if [[ -z $id ]]; then
+		body=$(jq -n --arg p "$project" --arg t "$title" --arg n "$notes" --arg s "$section" --arg par "$parent" \
+			'{projectId:$p,title:$t} + (if $n != "" then {notes:$n} else {} end)
+				+ (if $s != "" then {sectionId:$s} else {} end) + (if $par != "" then {parentId:$par} else {} end)')
+		# A failed POST may still have created the task, so look again before the one retry.
+		id=$(api POST /tasks -d "$body" | jq -r .id) || id=$(find)
+		[[ -n $id ]] || id=$(api POST /tasks -d "$body" | jq -r .id)
+	fi
+	echo "$id $(link "$id")"
+	;;
+link)
+	link "$2"
+	;;
+*)
+	api "$@"
+	;;
+esac

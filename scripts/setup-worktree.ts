@@ -1,5 +1,6 @@
 /**
- * Prepares a linked git worktree for an agent: `bun scripts/setup-worktree.ts`.
+ * Prepares a linked git worktree for an agent: `bun scripts/setup-worktree.ts [branch]`.
+ * `branch` renames the worktree's branch first, so the simulator, the PR, and teardown all share the final name.
  * Safe to rerun. Never touches AWS or the shared dev database.
  */
 import { spawnSync } from 'node:child_process';
@@ -24,6 +25,12 @@ const root = git('rev-parse', '--show-toplevel');
 process.chdir(root);
 if (git('rev-parse', '--git-dir') === git('rev-parse', '--git-common-dir')) {
 	throw new Error('This is the main checkout. Run this inside a linked worktree.');
+}
+
+const wanted = process.argv[2];
+if (wanted && wanted !== git('branch', '--show-current')) {
+	if (git('branch', '--show-current')) git('branch', '-m', wanted);
+	else git('switch', '-c', wanted);
 }
 
 run(['bun', 'install', '--frozen-lockfile']);

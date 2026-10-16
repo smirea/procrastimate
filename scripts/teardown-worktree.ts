@@ -1,11 +1,13 @@
 /**
- * Removes an agent's worktree once its PR is merged: `bun scripts/teardown-worktree.ts <branch> [--force]`.
- * A worktree on a detached HEAD has no branch: pass its directory name with --force instead.
- * Run it from the main checkout. Stops its servers, deletes its simulators, worktree, and branches, and updates master.
+ * Removes an agent's worktree once its PR is merged: `bun scripts/teardown-worktree.ts <worktree path | branch> [--force]`.
+ * A worktree on a detached HEAD has no branch: pass its path or directory name with --force instead.
+ * Run it from the main checkout. Stops its servers, deletes its simulators, worktree, and branches, and
+ * updates master.
  */
 import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
-import { basename, join } from 'node:path';
+import { basename, join, resolve } from 'node:path';
+import { devices, owner, remove } from './simulators';
 
 function run(cmd: string[], opts: { allowFail?: boolean } = {}): string {
 	const result = spawnSync(cmd[0]!, cmd.slice(1), { encoding: 'utf8' });
@@ -16,17 +18,12 @@ function run(cmd: string[], opts: { allowFail?: boolean } = {}): string {
 
 const args = process.argv.slice(2);
 const force = args.includes('--force');
-const branch = args.find(arg => !arg.startsWith('-'));
-if (!branch) throw new Error('Usage: bun scripts/teardown-worktree.ts <branch | worktree directory name> [--force]');
+const target = args.find(arg => !arg.startsWith('-'));
+if (!target) throw new Error('Usage: bun scripts/teardown-worktree.ts <worktree path | branch> [--force]');
 
 const root = run(['git', 'rev-parse', '--show-toplevel']);
 if (run(['git', 'rev-parse', '--git-dir']) !== run(['git', 'rev-parse', '--git-common-dir'])) {
 	throw new Error('Run this from the main checkout, not from a worktree.');
-}
-
-const pr = run(['gh', 'pr', 'view', branch, '--json', 'state,url', '-q', '.state + " " + .url'], { allowFail: true });
-if (!pr.startsWith('MERGED') && !force) {
-	throw new Error(`The PR for ${branch} is ${pr || 'missing'}. Pass --force to tear it down anyway.`);
 }
 
 const worktrees = run(['git', 'worktree', 'list', '--porcelain'])
@@ -35,11 +32,20 @@ const worktrees = run(['git', 'worktree', 'list', '--porcelain'])
 		path: block.match(/^worktree (.+)$/m)?.[1],
 		branch: block.match(/^branch refs\/heads\/(.+)$/m)?.[1],
 	}));
-const onBranch = worktrees.find(entry => entry.branch === branch)?.path;
-const detached = onBranch
-	? undefined
-	: worktrees.find(entry => !entry.branch && entry.path && basename(entry.path) === branch)?.path;
-const worktree = onBranch ?? detached;
+const entry =
+	worktrees.find(entry => entry.path === resolve(target)) ??
+	worktrees.find(entry => entry.branch === target) ??
+	worktrees.find(entry => entry.path && basename(entry.path) === target);
+const worktree = entry?.path;
+const branch = entry ? entry.branch : target;
+const detached = Boolean(entry && !entry.branch);
+
+const pr = branch
+	? run(['gh', 'pr', 'view', branch, '--json', 'state,url', '-q', '.state + " " + .url'], { allowFail: true })
+	: '';
+if (!pr.startsWith('MERGED') && !force) {
+	throw new Error(`The PR for ${branch ?? target} is ${pr || 'missing'}. Pass --force to tear it down anyway.`);
+}
 
 if (worktree) {
 	const override = join(worktree, '.env.override');
@@ -56,23 +62,18 @@ if (worktree) {
 
 	const sim = join(worktree, 'sim');
 	const name = existsSync(sim) ? readFileSync(sim, 'utf8').match(/worktree-sim\.ts '([^']+)'/)?.[1] : undefined;
-	if (name) {
-		const { devices } = JSON.parse(run(['xcrun', 'simctl', 'list', 'devices', '--json'])) as {
-			devices: Record<string, { name: string; udid: string }[]>;
-		};
-		for (const device of Object.values(devices).flat()) {
-			if (device.name !== name && !new RegExp(`^${RegExp.escape(name)}-\\d+$`).test(device.name)) continue;
-			run(['xcrun', 'simctl', 'shutdown', device.udid], { allowFail: true });
-			run(['xcrun', 'simctl', 'delete', device.udid]);
-			console.log(`Deleted simulator ${device.name}.`);
-		}
+	for (const device of devices()) {
+		const named = name && (device.name === name || new RegExp(`^${RegExp.escape(name)}-\\d+$`).test(device.name));
+		if (!named && owner(device)?.worktree !== worktree) continue;
+		remove(device);
+		console.log(`Deleted simulator ${device.name}.`);
 	}
 
 	run(['git', 'worktree', 'remove', '--force', worktree]);
 	console.log(`Removed worktree ${worktree}.`);
 }
 
-if (!detached) {
+if (branch && !detached) {
 	run(['git', 'branch', '-D', branch], { allowFail: true });
 	run(['git', 'push', 'origin', '--delete', branch], { allowFail: true });
 }
@@ -84,5 +85,5 @@ if (run(['git', 'branch', '--show-current']) === 'master') {
 	run(['git', 'fetch', 'origin', 'master:master'], { allowFail: true });
 }
 console.log(
-	`Tore down ${branch}${pr ? ` (${pr})` : ''}. ${root} master is at ${run(['git', 'rev-parse', '--short', 'master'])}.`,
+	`Tore down ${worktree ?? branch}${pr ? ` (${pr})` : ''}. ${root} master is at ${run(['git', 'rev-parse', '--short', 'master'])}.`,
 );
