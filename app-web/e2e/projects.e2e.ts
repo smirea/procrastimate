@@ -42,15 +42,23 @@ test('dragging a project reorders the sidebar, survives a reload, and a plain cl
 	await expect(sidebarProjects(page)).toHaveText(['Errands', 'Work', 'Home']);
 	await expect(app.nav('Home')).toBeFocused();
 
+	const last = (await app.nav('Home').boundingBox())!;
+	const first = await center(app.nav('Errands'));
+	await page.mouse.move(first.x, first.y);
+	await page.mouse.down();
+	await page.mouse.move(first.x, last.y + last.height * 2, { steps: 12 });
+	await page.mouse.up();
+	await expect(sidebarProjects(page)).toHaveText(['Work', 'Home', 'Errands']);
+
 	await page.reload();
-	await expect(sidebarProjects(page)).toHaveText(['Errands', 'Work', 'Home']);
+	await expect(sidebarProjects(page)).toHaveText(['Work', 'Home', 'Errands']);
 	await app.openQuickAdd();
 	await app.quickAdd().getByRole('button', { name: 'Project Work' }).click();
 	await expect(page.getByRole('dialog', { name: 'Project' }).locator('.menu-item')).toHaveText([
 		'Inbox',
-		'Errands',
 		'Work',
 		'Home',
+		'Errands',
 		'New project',
 	]);
 });

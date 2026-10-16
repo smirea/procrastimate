@@ -65,7 +65,9 @@
 			lift();
 		}
 		const current = drag!;
-		current.dy = Math.max(-current.from * current.step, Math.min(dy, (projects.length - 1 - current.from) * current.step));
+		// Half a step past either end, so the center can cross the first or last row's midpoint and take its slot.
+		const reach = (slots: number) => (slots + 0.5) * current.step;
+		current.dy = Math.max(-reach(current.from), Math.min(dy, reach(projects.length - 1 - current.from)));
 		const center = current.mids[current.from]! + current.dy;
 		current.to = current.mids.filter((mid, i) => i !== current.from && mid < center).length;
 	}
