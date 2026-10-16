@@ -26,3 +26,6 @@ playwright-report
 # wrangler
 .wrangler
 .dev.vars
+
+# task-orchestrator session files
+.orchestrator
