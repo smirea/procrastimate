@@ -2,7 +2,7 @@
  * The one bridge from env-manager project `procrastimate` to the Worker, GitHub, and `.dev.vars`.
  * Never prints a value: logs key names only and hands values to child processes on stdin.
  *
- * bun server/scripts/secrets.ts <push|github|dev-vars|check|ios> [--env <name>] [--generate-only]
+ * bun server/scripts/secrets.ts <push|github|dev-vars|check|verify|ios> [--env <name>] [--generate-only]
  *
  * Environments are `prod` (the Worker and Release iOS) and `dev` (local development and Debug iOS).
  * There is no `local` environment. `--generate-only` skips AWS, for CI and any machine without credentials.
@@ -10,10 +10,10 @@
 import { chmod, copyFile, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { REQUIRED_WORKER_SECRETS } from '../src/config';
 import { generateVapidKeys } from '../src/web-push';
 
 export const WORKER_SECRETS = [
-	'SYNC_SETUP_CODE',
 	'VAPID_PUBLIC_KEY',
 	'VAPID_PRIVATE_KEY',
 	'ELEVENLABS_API_KEY',
@@ -243,20 +243,42 @@ async function ios(generateOnly: boolean) {
 	);
 }
 
+const workerSecretNames = (env: Values) =>
+	new Set(
+		parseJsonArray(run(['bunx', 'wrangler', 'secret', 'list', '--format', 'json'], { env })).map(secret => secret.name),
+	);
+
+/** The required secrets that `names` lacks. */
+export function missingRequired(names: Set<string>): string[] {
+	return REQUIRED_WORKER_SECRETS.filter(name => !names.has(name));
+}
+
+/** Run by CI before `wrangler deploy` with the Cloudflare credentials in its environment. Needs no AWS. */
+function verify() {
+	const missing = missingRequired(workerSecretNames(cloudflareEnv(process.env as Values)));
+	if (missing.length) {
+		console.error(
+			`The Worker lacks required secrets: ${missing.join(', ')}. Set them in env-manager prod, then run bun run secrets:push.`,
+		);
+		process.exit(1);
+	}
+	console.log(`The Worker has every required secret: ${REQUIRED_WORKER_SECRETS.join(', ')}`);
+}
+
 async function check(env: string) {
 	const values = await readEnv(env);
 	const stored = new Set(Object.keys(workerSecrets(values)));
-	const onWorker = new Set(
-		parseJsonArray(run(['bunx', 'wrangler', 'secret', 'list', '--format', 'json'], { env: cloudflareEnv(values) })).map(
-			secret => secret.name,
-		),
-	);
+	const onWorker = workerSecretNames(cloudflareEnv(values));
 	const onGithub = new Set(
 		(JSON.parse(run(['gh', 'secret', 'list', '--repo', REPO, '--json', 'name'])) as { name: string }[]).map(
 			secret => secret.name,
 		),
 	);
 	let drift = false;
+	for (const name of missingRequired(stored)) {
+		drift = true;
+		console.log(`MISSING env-manager ${name} is required by the Worker`);
+	}
 	for (const name of WORKER_SECRETS) {
 		const ok = stored.has(name) === onWorker.has(name);
 		drift ||= !ok;
@@ -297,9 +319,12 @@ if (import.meta.main) {
 		case 'check':
 			await check(env('prod'));
 			break;
+		case 'verify':
+			verify();
+			break;
 		default:
 			console.error(
-				'Usage: bun server/scripts/secrets.ts <push|github|dev-vars|check|ios> [--env <name>] [--generate-only]',
+				'Usage: bun server/scripts/secrets.ts <push|github|dev-vars|check|verify|ios> [--env <name>] [--generate-only]',
 			);
 			process.exit(1);
 	}

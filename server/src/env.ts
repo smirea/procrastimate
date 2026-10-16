@@ -10,19 +10,12 @@ const optional = <T extends z.ZodType>(schema: T) =>
 const env = z
 	.object({
 		API_PORT: z.coerce.number().int().min(1).max(65535),
-		SYNC_SETUP_CODE: optional(z.string()),
 		VAPID_PUBLIC_KEY: optional(z.string()),
 		VAPID_PRIVATE_KEY: optional(z.string()),
 		ELEVENLABS_API_KEY: optional(z.string()),
-		RAMBLE_UPSTREAM: optional(z.string()),
-		CLOUDFLARE_ACCOUNT_ID: optional(z.string()),
-		CLOUDFLARE_API_TOKEN: optional(z.string()),
-		ASC_KEY_ID: optional(z.string()),
-		ASC_ISSUER_ID: optional(z.string()),
-		ASC_PRIVATE_KEY_B64: optional(z.string()),
-		TURSO_DATABASE_URL: optional(z.string()),
+		RAMBLE_UPSTREAM: optional(z.string().regex(/^cassette$/)),
+		TURSO_DATABASE_URL: optional(z.url()),
 		TURSO_AUTH_TOKEN: optional(z.string()),
-		TURSO_API_TOKEN: optional(z.string()),
 		BETTER_AUTH_SECRET: optional(z.string()),
 		GOOGLE_CLIENT_ID: optional(z.string()),
 		GOOGLE_CLIENT_SECRET: optional(z.string()),
@@ -32,8 +25,6 @@ const env = z
 		APPLE_TEAM_ID: optional(z.string()),
 		APPLE_KEY_ID: optional(z.string()),
 		APPLE_PRIVATE_KEY: optional(z.string()),
-		APP_BOT_API_URL: optional(z.url()),
-		APP_BOT_TOKEN: optional(z.string()),
 	})
 	.parse(process.env);
 

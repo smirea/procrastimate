@@ -7,7 +7,6 @@ import type { Person } from '../../../shared/sharing';
 import { nudgeSchema, repairBooleanNumbers } from '../../../shared/sync/protocol';
 import { actorOf, readActor, SHARED_ROUTES, spaceOf, withActor } from '../actor';
 import type { AccountContext, AccountRoute, Access } from '../auth';
-import { getAuth } from '../better-auth';
 import type { Env, Handler } from '../bindings';
 import { pushSender } from '../push';
 import { personOf } from './activity';
@@ -32,7 +31,8 @@ import { cassetteUpstream } from './ramble-cassette';
 import { queuedRambleLedger, type RambleLedger, type RambleUsage } from './ramble-ledger';
 import { durableSockets, noSockets, realtime, realtimeRoutes, type SocketHost } from './realtime';
 import { serialQueue } from './serial';
-import { tursoDatabase, tursoTarget } from '../db/turso';
+import { config } from '../config';
+import { tursoDatabase } from '../db/turso';
 import { errorResponse } from '../errors';
 import { routeKeys } from '../routes';
 import { accountRouter } from './router';
@@ -225,8 +225,8 @@ export class Account {
 		private readonly env: Env,
 	) {
 		this.space = ctx.id.name ?? '';
-		const turso = tursoTarget(env);
-		// The object's own SQLite holds the account only without Turso (or in an end-to-end shard). With Turso, its
+		const { turso } = config(env);
+		// The object's own SQLite holds the account only in an ephemeral run. With Turso, its
 		// leftover tables are never read, so it is not migrated and its history cannot fail the account.
 		if (turso) {
 			this.open = () => tursoSession(turso, this.space, this.ledger);
@@ -299,9 +299,9 @@ export class Account {
 		}
 	}
 
-	/** Writes the ledger's seconds. A no-op until Turso is configured. */
+	/** Writes the ledger's seconds. A no-op in an ephemeral run. */
 	private writeLedger(rows: RambleUsage[]): Promise<void> {
-		const turso = tursoTarget(this.env);
+		const { turso } = config(this.env);
 		if (!turso) return Promise.resolve();
 		return writeUserRamble(turso, this.space, rows);
 	}
@@ -312,11 +312,10 @@ export class Account {
  * budget is on only for the real upstream, where the seconds are billed.
  */
 function workerRamble(env: Env): RambleConfig {
-	if (env.RAMBLE_UPSTREAM === 'cassette') return { connect: cassetteUpstream() };
-	if (!env.ELEVENLABS_API_KEY) return { connect: null };
-	const turso = tursoTarget(env);
-	const budget = turso ? openRambleBudget(turso) : null;
-	return { connect: workerUpstream(env.ELEVENLABS_API_KEY), budget };
+	const { ramble, turso } = config(env);
+	if (!ramble) return { connect: null };
+	if (ramble.kind === 'cassette') return { connect: cassetteUpstream() };
+	return { connect: workerUpstream(ramble.apiKey), budget: turso ? openRambleBudget(turso) : null };
 }
 
 /**
@@ -325,7 +324,6 @@ function workerRamble(env: Env): RambleConfig {
  */
 const forward: Handler = async (request, env) => {
 	if (!env.ACCOUNT) return errorResponse('SERVICE_UNAVAILABLE', 'Sync is not configured');
-	if (!(await getAuth(env))) return errorResponse('SERVICE_UNAVAILABLE', 'Sign-in is not configured');
 	const actor = await readActor(request, env);
 	if (!actor) return errorResponse('UNAUTHORIZED', 'Not signed in');
 	const url = new URL(request.url);

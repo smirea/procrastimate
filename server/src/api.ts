@@ -2,6 +2,7 @@ import { OpenAPIHandler } from '@orpc/openapi/fetch';
 import { accountApiRoutes } from './account/account';
 import { authHandler } from './better-auth';
 import type { Env } from './bindings';
+import { config } from './config';
 import { errorResponse } from './errors';
 import { workerRouter } from './router';
 
@@ -15,6 +16,9 @@ const rpc = new OpenAPIHandler(workerRouter);
  */
 export default {
 	async fetch(request, env) {
+		// Before routing, so a misconfigured deploy fails every request with the missing key named, not only the
+		// requests that reach the feature.
+		config(env);
 		const url = new URL(request.url);
 		const forward = accountApiRoutes[`${request.method} ${url.pathname}`];
 		if (forward) return forward(request, env);

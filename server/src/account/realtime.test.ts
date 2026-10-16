@@ -13,7 +13,6 @@ import {
 	type SyncResponse,
 } from '../../../shared/sync/protocol';
 import type { Person } from '../../../shared/sharing';
-import { TEST_AUTH_SECRET } from './test-device';
 import { serveDev } from '../dev-server';
 import { durableSockets, realtime } from './realtime';
 
@@ -47,7 +46,7 @@ describe('the realtime nudge on the dev server', () => {
 	const clients: WebSocket[] = [];
 
 	beforeEach(() => {
-		server = serveDev({ port: 0, env: { BETTER_AUTH_SECRET: TEST_AUTH_SECRET } }) as Server<unknown>;
+		server = serveDev({ port: 0, env: { EPHEMERAL: '1' } }) as Server<unknown>;
 		base = `http://127.0.0.1:${server.port}`;
 		session = null;
 	});

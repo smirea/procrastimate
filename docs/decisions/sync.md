@@ -82,7 +82,7 @@ Every field is last-writer-wins by HLC. Different fields from different devices 
 
 ## Auth
 
-Sign-in, sessions, and per-user data are in [Auth](auth.md). `SYNC_SETUP_CODE` stays in the env schema so secrets do not churn, and no route reads it. `server/src/auth.ts` turns a checked session plus a device id into the device row.
+Sign-in, sessions, and per-user data are in [Auth](auth.md). `server/src/auth.ts` turns a checked session plus a device id into the device row.
 
 ## Notifications
 

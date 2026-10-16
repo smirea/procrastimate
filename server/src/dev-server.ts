@@ -13,6 +13,7 @@ import { tursoDatabase } from './db/turso';
 import { originalRequest } from './actor';
 import api from './api';
 import type { Env } from './bindings';
+import { config } from './config';
 
 type SocketData =
 	| { kind: 'nudge'; space: string; deviceId: string }
@@ -40,34 +41,17 @@ export function bunUpstream(apiKey: string): ConnectUpstream {
  * WebSocket server. Bun upgrades through `server.upgrade` and needs the fetch handler to answer nothing, so an
  * accepted upgrade returns a marker response that `fetch` swaps for `undefined`.
  */
-const AUTH_ENV = [
-	'BETTER_AUTH_SECRET',
-	'GOOGLE_CLIENT_ID',
-	'GOOGLE_CLIENT_SECRET',
-	'GOOGLE_IOS_CLIENT_ID',
-	'APPLE_CLIENT_ID',
-	'APPLE_CLIENT_SECRET',
-	'APPLE_TEAM_ID',
-	'APPLE_KEY_ID',
-	'APPLE_PRIVATE_KEY',
-	'TURSO_DATABASE_URL',
-	'TURSO_AUTH_TOKEN',
-	'E2E_SHARD',
-] as const;
-
 export function serveDev({
 	port,
-	turso,
 	ramble = { connect: null },
-	env: extra = {},
+	env,
 }: {
 	port: number;
-	/** When both Turso secrets are set, task data lives there. Otherwise the account stays in memory. */
-	turso?: { url: string; authToken: string };
 	ramble?: RambleConfig;
-	/** Auth and Turso bindings. Unset keys fall through to the process environment. */
-	env?: Partial<Env>;
+	/** Every binding but `ACCOUNT`, which the dev server supplies. */
+	env: Omit<Env, 'ACCOUNT'>;
 }) {
+	const database = config(env).turso;
 	const open = new Set<ServerWebSocket<SocketData>>();
 	const upgraded = new WeakSet<Response>();
 	let server: Server<SocketData> | undefined;
@@ -113,9 +97,6 @@ export function serveDev({
 		handlers.set(id, created);
 		return created;
 	};
-	// End-to-end sharding stays in memory even when the shell has Turso credentials.
-	const sharded = extra.E2E_SHARD ?? process.env.E2E_SHARD;
-	const database = turso && !sharded ? turso : undefined;
 	const queues = new Map<string, ReturnType<typeof serialQueue>>();
 	const ledgers = new Map<string, RambleLedger>();
 	const queueFor = (id: string) => {
@@ -182,14 +163,8 @@ export function serveDev({
 		void Promise.allSettled(deferred.map(task => task()));
 		return response;
 	};
-	const fromProcess = Object.fromEntries(
-		AUTH_ENV.flatMap(key => {
-			const value = extra[key] ?? process.env[key];
-			return value ? [[key, value]] : [];
-		}),
-	);
 	const bindings: Env = {
-		...fromProcess,
+		...env,
 		ACCOUNT: {
 			idFromName: (name: string) => name,
 			get: (id: string) => ({ fetch: (request: Request) => accountFetch(id, request) }),
