@@ -12,7 +12,7 @@ From this folder:
 
 There is no UI-test target. Drive the app in the simulator by hand, as the feature maps in `.cursor/skills/verify-procrastimate/features/` describe.
 
-`.github/workflows/ios.yml` runs `swift test` on Linux (`core-linux`) for every pull request and push. Its macOS jobs run only from a manual `workflow_dispatch`: `core` runs `swift test`, and `app` checks the Debug and Release API URLs and builds the app.
+`.github/workflows/ios.yml` runs `swift test` on Linux (`core-linux`) for every pull request and push. Its macOS jobs run on a pull request that touches `app-ios/`, `shared/`, the Swift generator, or the other inputs its `changes` job lists, and on a manual `workflow_dispatch`, never on `master`. `core` runs `swift test`, and `app` checks the Debug and Release API URLs and builds the app.
 
 ## Run
 
