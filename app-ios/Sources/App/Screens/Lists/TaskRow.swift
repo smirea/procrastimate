@@ -312,7 +312,7 @@ private struct CommentBadgeView: View {
 }
 
 /// `〇 Passport   〇 Charger` on one line, cut off with an ellipsis like the notes above it.
-private struct PendingSubtasks: View {
+struct PendingSubtasks: View {
     let titles: [String]
 
     var body: some View {

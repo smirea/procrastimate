@@ -61,11 +61,12 @@ private struct SharedList: View {
 
     var body: some View {
         let tasks = rows
+        let pending = pendingTitles(listed: tasks + sectionGroups.flatMap(\.tasks))
         let empty = tasks.isEmpty && sectionGroups.allSatisfy(\.tasks.isEmpty)
         List {
             Section {
                 ForEach(tasks) { task in
-                    SharedTaskRow(task: task, labels: task.labelIds.compactMap { id in view.labels.first { $0.id == id } })
+                    SharedTaskRow(task: task, labels: task.labelIds.compactMap { id in view.labels.first { $0.id == id } }, pending: pending[task.id] ?? [])
                         .listRowBackground(Color.clear)
                         .listRowSeparator(.hidden)
                 }
@@ -89,7 +90,7 @@ private struct SharedList: View {
             ForEach(sectionGroups, id: \.section.id) { group in
                 Section {
                     ForEach(group.tasks) { task in
-                        SharedTaskRow(task: task, labels: task.labelIds.compactMap { id in view.labels.first { $0.id == id } })
+                        SharedTaskRow(task: task, labels: task.labelIds.compactMap { id in view.labels.first { $0.id == id } }, pending: pending[task.id] ?? [])
                             .listRowBackground(Color.clear)
                             .listRowSeparator(.hidden)
                     }
@@ -120,6 +121,14 @@ private struct SharedList: View {
         }
     }
 
+    /// Each task's open subtasks, leaving out any the list already shows as rows of their own, as a task share does.
+    private func pendingTitles(listed: [TaskItem]) -> [String: [String]] {
+        let shown = Set(listed.map(\.id))
+        return Subtasks.groupChildren(view.tasks).mapValues { children in
+            children.filter { $0.completedAt == nil && !shown.contains($0.id) }.map(\.title)
+        }
+    }
+
     private var projectGroups: [Views.ProjectGroup] {
         view.target.kind == .project ? Views.projectGroups(view.tasks, view.sections, view.target.id, in: store.timeZone) : []
     }
@@ -143,6 +152,7 @@ private struct SharedTaskRow: View {
     @Environment(\.today) private var today
     let task: TaskItem
     let labels: [Core.Label]
+    let pending: [String]
 
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
@@ -155,6 +165,9 @@ private struct SharedTaskRow: View {
                 Text(task.title).foregroundStyle(.ink).lineLimit(2)
                 if !task.notes.isEmpty {
                     Text(task.notes).font(.footnote).foregroundStyle(.muted).lineLimit(2)
+                }
+                if !pending.isEmpty {
+                    PendingSubtasks(titles: pending)
                 }
                 if task.due != nil || !labels.isEmpty {
                     HStack(spacing: 10) {
