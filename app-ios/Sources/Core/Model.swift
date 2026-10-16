@@ -10,6 +10,8 @@ public typealias Weekday = API.Weekday
 public typealias Priority = API.Priority
 public typealias Due = API.Due
 public typealias Reminder = API.Reminder
+/// An image on a task. The bytes are on the server, fetched by `id`.
+public typealias ImageRef = API.ImageRef
 public typealias RecurrenceUnit = API.RecurrenceUnit
 public typealias Recurrence = API.Recurrence
 public typealias TaskItem = API.Task

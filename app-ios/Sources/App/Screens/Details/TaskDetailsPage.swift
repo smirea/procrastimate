@@ -117,6 +117,8 @@ private struct TaskDetailsForm: View {
                 .background(.ink.opacity(0.04), in: .rect(cornerRadius: 16))
                 .accessibilityLabel("Notes")
 
+                ImageStrip(task: task, locked: locked)
+
                 if let memo = task.memoSource {
                     Link(destination: MemoTasks.memoURL(memo.memoId)) {
                         SwiftUI.Label("Notouroboros", systemImage: "waveform")

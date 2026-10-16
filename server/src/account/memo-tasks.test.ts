@@ -37,6 +37,7 @@ const memoTask = (key: string, title: string, fields: Partial<MemoTasksRequest['
 	notes: '',
 	when: null,
 	event: null,
+	images: [],
 	...fields,
 });
 

@@ -8,16 +8,18 @@ final class AccountSync {
     private let store: Store
     private let clock: AppClock
     private let session: Session
+    private let images: TaskImages
     private var task: Task<Void, Never>?
     private var soon: Task<Void, Never>?
     private var socket: URLSessionWebSocketTask?
     private var spacesListedAt: ContinuousClock.Instant?
     private static let spacesInterval = Duration.seconds(300)
 
-    init(store: Store, clock: AppClock, session: Session) {
+    init(store: Store, clock: AppClock, session: Session, images: TaskImages) {
         self.store = store
         self.clock = clock
         self.session = session
+        self.images = images
         let device = store.snapshot.sync.map { ($0.deviceId, Self.deviceName()) }
         APIClient.device.withLock { $0 = device }
     }
@@ -89,6 +91,7 @@ final class AccountSync {
             return false
         }
         store.switchUser()
+        TaskImages.clearLocal()
         UserDefaults.standard.removeObject(forKey: Session.ownerKey)
         SessionToken.clear()
         session.signedIn = Launch.signedIn
@@ -124,6 +127,14 @@ final class AccountSync {
             body = request
         } catch {
             print("sync: the outbox does not fit the contract", error)
+            return false
+        }
+        // Built before the uploads, so every edit it carries was recorded after its image was queued, and the edits that
+        // list a new image go out only after its bytes.
+        do {
+            try await images.upload(space, token: token)
+        } catch {
+            ErrorReport.log("Image upload failed for \(space.query ?? "own space")", detail: String(reflecting: error))
             return false
         }
         let response: API.SyncResponse

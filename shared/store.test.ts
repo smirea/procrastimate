@@ -43,6 +43,7 @@ const task = (id: string, createdAt: number, fields: Partial<Task> = {}): Task =
 	reminders: [],
 	location: null,
 	event: null,
+	images: [],
 	createdAt,
 	completedAt: null,
 	createdBy: null,
@@ -93,6 +94,7 @@ const newTask = {
 	reminders: [],
 	location: null,
 	event: null,
+	images: [],
 };
 const ids = (list: readonly Task[]) => list.map(t => t.id);
 const find = (d: StoreData, id: string) => d.tasks.find(t => t.id === id)!;

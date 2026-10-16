@@ -451,19 +451,24 @@ private func sameJSON(_ a: Any, _ b: Any) -> Bool {
     return false
 }
 
-/// Task fields added after launch, which a task the server stored before them lacks. They start as `null`, as
+/// Task fields added after launch, which a task the server stored before them lacks. They start empty, as
 /// `entityFrom` fills them.
-private let taskDefaults = ["sectionId", "location", "event", "createdBy", "completedBy", "lastCompletedAt"]
+private var taskDefaults: [String: Any] {
+    [
+        "sectionId": NSNull(), "location": NSNull(), "event": NSNull(), "images": [Any](), "createdBy": NSNull(),
+        "completedBy": NSNull(), "lastCompletedAt": NSNull(),
+    ]
+}
 
 private func merge<T: Codable & Identifiable>(
-    _ items: inout [T], id: String, fields: [String: Any], defaults: [String] = []
+    _ items: inout [T], id: String, fields: [String: Any], defaults: [String: Any] = [:]
 ) where T.ID == String {
     var object: [String: Any]
     if let index = items.firstIndex(where: { $0.id == id }) {
         object = jsonObject(items[index])
     } else {
         object = ["id": id]
-        for key in defaults { object[key] = NSNull() }
+        for (key, value) in defaults { object[key] = value }
     }
     for (key, value) in fields where key != "deleted" { object[key] = value }
     if object["sourceKey"] is NSNull { object.removeValue(forKey: "sourceKey") }

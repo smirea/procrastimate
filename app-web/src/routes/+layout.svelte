@@ -14,6 +14,7 @@
 	import ShareSheet from '#lib/components/ShareSheet.svelte';
 	import TaskSheet from '#lib/components/TaskSheet.svelte';
 	import Toasts from '#lib/components/Toasts.svelte';
+	import ImageViewer from '#lib/components/ImageViewer.svelte';
 	import { store } from '#lib/store.svelte.ts';
 	import { clock, sheets, trackKeyboardInset, motion } from '#lib/ui.svelte.ts';
 	import { fireDueReminders } from '#lib/reminders.ts';
@@ -169,6 +170,7 @@
 	<TaskSheet task={openTask} arrival={sheets.current.arrival} />
 {/if}
 
+<ImageViewer />
 <Toasts />
 {/if}
 

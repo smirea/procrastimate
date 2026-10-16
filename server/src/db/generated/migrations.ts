@@ -84,5 +84,13 @@ export const migrations: { tag: string; when: number; statements: string[] }[] =
 			"CREATE TABLE `comments` (\n\t`user_id` text NOT NULL,\n\t`id` text NOT NULL,\n\t`task_id` text NOT NULL,\n\t`body` text NOT NULL,\n\t`author_id` text,\n\t`created_at` integer NOT NULL,\n\t`edited_at` integer,\n\t`deleted` integer DEFAULT false NOT NULL,\n\t`clocks` text NOT NULL,\n\tPRIMARY KEY(`user_id`, `id`)\n);",
 			"CREATE TABLE `reads` (\n\t`user_id` text NOT NULL,\n\t`id` text NOT NULL,\n\t`read_at` integer NOT NULL,\n\t`deleted` integer DEFAULT false NOT NULL,\n\t`clocks` text NOT NULL,\n\tPRIMARY KEY(`user_id`, `id`)\n);"
 		]
+	},
+	{
+		"tag": "0007_complex_mockingbird",
+		"when": 1792138640130,
+		"statements": [
+			"CREATE TABLE `images` (\n\t`user_id` text NOT NULL,\n\t`id` text NOT NULL,\n\t`size` text NOT NULL,\n\t`type` text NOT NULL,\n\t`bytes` blob NOT NULL,\n\t`created_at` integer NOT NULL,\n\t`orphaned_at` integer,\n\tPRIMARY KEY(`user_id`, `id`, `size`)\n);",
+			"ALTER TABLE `tasks` ADD `images` text DEFAULT '[]' NOT NULL;"
+		]
 	}
 ];

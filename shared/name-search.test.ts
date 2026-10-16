@@ -41,6 +41,7 @@ const task = (projectId: string | null, createdAt: number, labelIds: string[] = 
 	reminders: [],
 	location: null,
 	event: null,
+	images: [],
 	createdAt,
 	completedAt: null,
 	createdBy: null,

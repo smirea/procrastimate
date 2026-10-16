@@ -11,6 +11,18 @@ import { getAuth } from '../better-auth';
 import type { Env, Handler } from '../bindings';
 import { pushSender } from '../push';
 import { personOf } from './activity';
+import {
+	databaseImages,
+	guestImageAccess,
+	imageResponse,
+	isImageRoute,
+	memoryImages,
+	OWNER_ACCESS,
+	referencedImages,
+	IMAGE_UPLOAD_ROUTE,
+	sweepPlan,
+	type ImageStore,
+} from './images';
 import { memoryStore } from './memory-store';
 import { internalClient } from './peers';
 import { deliverDue } from './push';
@@ -20,11 +32,12 @@ import { cassetteUpstream } from './ramble-cassette';
 import { queuedRambleLedger, type RambleLedger, type RambleUsage } from './ramble-ledger';
 import { durableSockets, noSockets, realtime, realtimeRoutes, type SocketHost } from './realtime';
 import { serialQueue } from './serial';
-import { tursoTarget } from '../db/turso';
+import { tursoDatabase, tursoTarget } from '../db/turso';
 import { errorResponse } from '../errors';
 import { routeKeys } from '../routes';
 import { accountRouter } from './router';
 import { liveGuests, rememberPerson } from './sharing';
+import { accountSnapshot } from './sync';
 import { sqliteStore } from './sqlite-store';
 import type { AccountStore } from './store';
 import { tursoSession, writeUserRamble, type AccountSession } from './turso';
@@ -41,15 +54,30 @@ type SetAlarm = (at: number | null) => Promise<void>;
 /** What a host gives the handler for one request. `defer` runs after the request leaves the serial queue. */
 export type RequestHost = {
 	store: AccountStore;
+	images: ImageStore;
 	space: string;
 	defer: (task: () => Promise<void>) => void;
+};
+
+/**
+ * What a host gives an image request. `open` runs `use` on the loaded account inside the space's serial queue, which
+ * only a guest's request needs: the owner's skips the queue and the load.
+ */
+export type ImageHost = {
+	images: ImageStore;
+	space: string;
+	open: <T>(use: (store: AccountStore) => Promise<T>) => Promise<T>;
 };
 
 export type AccountHandler = {
 	fetch(request: Request, host: RequestHost): Promise<Response>;
 	/** The nudge from another space, answered without the queue or the store: it only touches sockets. */
 	relay(request: Request): Promise<Response>;
+	images(request: Request, host: ImageHost): Promise<Response>;
 };
+
+/** A sweep reads every image row's id, so it runs at most this often per space while the object stays up. */
+const SWEEP_INTERVAL = 60 * 60 * 1000;
 
 const rpc = new OpenAPIHandler(accountRouter, {
 	interceptors: [
@@ -87,8 +115,9 @@ export function accountHandler(
 ): AccountHandler {
 	const live = realtime(sockets);
 	const transcription = ramble(sockets, rambleConfig);
+	const swept = new Map<string, number>();
 	return {
-		async fetch(request, { store, space, defer }) {
+		async fetch(request, { store, images, space, defer }) {
 			const key = routeKey(request);
 			const now = Date.now();
 			const origin = new URL(request.url).origin;
@@ -112,6 +141,7 @@ export function accountHandler(
 				space,
 				actor,
 				access,
+				images,
 				origin: linkOrigin,
 				defer,
 				peer: id => {
@@ -123,6 +153,12 @@ export function accountHandler(
 			const socket = socketRoutes[key];
 			const response = socket ? await socket(request, context) : await call(request, key, context);
 			const next = store.lastSeq();
+			// A reset empties the log, so the head can fall; that is a change too, and the wiped tasks' images go.
+			if (next !== head && now - (swept.get(space) ?? 0) >= SWEEP_INTERVAL) {
+				swept.set(space, now);
+				const referenced = referencedImages(accountSnapshot(store));
+				defer(async () => images.sweep(sweepPlan(referenced, await images.states(), now)));
+			}
 			if (next > head) {
 				live.nudge(next);
 				for (const guest of liveGuests(store)) {
@@ -138,6 +174,19 @@ export function accountHandler(
 			if (!parsed.success) return errorResponse('BAD_REQUEST', 'Invalid nudge');
 			live.nudge(parsed.data.cursor, parsed.data.space);
 			return Response.json({ ok: true });
+		},
+		async images(request, { images, space, open }) {
+			const actor = actorOf(request);
+			if (!actor) return errorResponse('UNAUTHORIZED', 'Not signed in');
+			const now = Date.now();
+			if (actor.kind === 'human' && actor.id === space) return imageResponse(request, images, OWNER_ACCESS, now);
+			// Only the check needs the account; the bytes move after the queue releases, so an upload never holds it.
+			const access = await open(async store => {
+				const admitted = admission(store, space, actor);
+				return admitted?.role === 'guest' ? guestImageAccess(accountSnapshot(store), admitted.shares) : null;
+			});
+			if (!access) return errorResponse('FORBIDDEN', 'Not shared with you');
+			return imageResponse(request, images, access, now);
 		},
 	};
 }
@@ -165,6 +214,7 @@ export const isNudge = (request: Request) => routeKey(request) === NUDGE_ROUTE;
  */
 export class Account {
 	private readonly open: () => Promise<AccountSession>;
+	private readonly images: ImageStore;
 	private readonly handle: AccountHandler;
 	private readonly run = serialQueue();
 	private readonly ledger: RambleLedger;
@@ -180,9 +230,12 @@ export class Account {
 		// leftover tables are never read, so it is not migrated and its history cannot fail the account.
 		if (turso) {
 			this.open = () => tursoSession(turso, this.space, this.ledger);
+			this.images = databaseImages(() => tursoDatabase(turso), this.space);
 		} else {
-			const store = sqliteStore(drizzle(ctx.storage), this.space, 'strict');
+			const database = drizzle(ctx.storage);
+			const store = sqliteStore(database, this.space, 'strict');
 			this.open = async () => ({ store, flush: async () => {} });
+			this.images = databaseImages(() => database, this.space);
 		}
 		this.handle = accountHandler(
 			at => this.setAlarm(at),
@@ -203,11 +256,13 @@ export class Account {
 	async fetch(request: Request): Promise<Response> {
 		if (!this.space) return errorResponse('NOT_FOUND', 'No such space');
 		if (isNudge(request)) return this.handle.relay(request);
+		const { images, space } = this;
+		if (isImageRoute(request)) {
+			return this.handle.images(request, { images, space, open: use => this.run(() => this.withStore(use)) });
+		}
 		const deferred: Array<() => Promise<void>> = [];
 		const response = await this.run(() =>
-			this.withStore(store =>
-				this.handle.fetch(request, { store, space: this.space, defer: task => deferred.push(task) }),
-			),
+			this.withStore(store => this.handle.fetch(request, { store, images, space, defer: task => deferred.push(task) })),
 		);
 		this.ctx.waitUntil(Promise.allSettled(deferred.map(task => task())));
 		return response;
@@ -283,7 +338,7 @@ const forward: Handler = async (request, env) => {
 
 /** The Worker's routes for the account, mounted by `api.ts`. The internal contract stays off this map. */
 export const accountApiRoutes: Record<string, Handler> = Object.fromEntries(
-	[...routeKeys(accountContract), ...Object.keys(socketRoutes)].map(key => [key, forward]),
+	[...routeKeys(accountContract), ...Object.keys(socketRoutes), IMAGE_UPLOAD_ROUTE].map(key => [key, forward]),
 );
 
 /**
@@ -297,7 +352,7 @@ export function memoryAccount(
 	sockets: SocketHost = noSockets,
 	rambleConfig: RambleConfig = { connect: null },
 ): DurableObjectNamespace {
-	const spaces = new Map<string, { store: AccountStore; run: ReturnType<typeof serialQueue> }>();
+	const spaces = new Map<string, { store: AccountStore; images: ImageStore; run: ReturnType<typeof serialQueue> }>();
 	const namespace = {
 		idFromName: (name: string) => name,
 		get: (id: string) => ({
@@ -305,13 +360,16 @@ export function memoryAccount(
 				if (isNudge(request)) return handle.relay(request);
 				let space = spaces.get(id);
 				if (!space) {
-					space = { store: spaces.size === 0 ? store : memoryStore(), run: serialQueue() };
+					space = { store: spaces.size === 0 ? store : memoryStore(), images: memoryImages(), run: serialQueue() };
 					spaces.set(id, space);
 				}
-				const { store: current, run } = space;
+				const { store: current, images, run } = space;
+				if (isImageRoute(request)) {
+					return handle.images(request, { images, space: id, open: use => run(() => use(current)) });
+				}
 				const deferred: Array<() => Promise<void>> = [];
 				const response = await run(() =>
-					handle.fetch(request, { store: current, space: id, defer: task => deferred.push(task) }),
+					handle.fetch(request, { store: current, images, space: id, defer: task => deferred.push(task) }),
 				);
 				void Promise.allSettled(deferred.map(task => task()));
 				return response;

@@ -63,7 +63,10 @@ final class Session {
     /// Remembers who the local document belongs to. A different user pulls a fresh snapshot instead of uploading.
     func adopt(_ id: String) {
         let owner = UserDefaults.standard.string(forKey: Self.ownerKey)
-        if let owner, owner != id { store.switchUser() }
+        if let owner, owner != id {
+            store.switchUser()
+            TaskImages.clearLocal()
+        }
         UserDefaults.standard.set(id, forKey: Self.ownerKey)
         signedIn = true
         error = nil

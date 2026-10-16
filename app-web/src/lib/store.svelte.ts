@@ -18,6 +18,7 @@ import {
 	type SyncResponse,
 } from 'shared/sync/protocol.ts';
 import { mergeBackup, type ImportSummary, type TodoistBackup } from 'shared/todoist.ts';
+import { clearLocalImages } from './images/local.ts';
 import { loadSnapshot, saveSnapshot, STORAGE_KEY } from './persistence.ts';
 import { creationHome, emptySection, fitToSpace, homes, merged, sectionStore, type Home } from './spaces.ts';
 
@@ -209,6 +210,7 @@ class Store {
 			seed: false,
 		};
 		this.#commit();
+		void clearLocalImages().catch(() => undefined);
 	}
 
 	/** Empties tasks, projects, sections, and labels here, and asks the next sync to wipe them on the server too. */

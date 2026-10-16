@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
-	import { fly } from 'svelte/transition';
+	import { fade, fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import X from 'phosphor-svelte/lib/X';
 	import Trash from 'phosphor-svelte/lib/Trash';
@@ -28,6 +28,7 @@
 	import ProjectPicker from './ProjectPicker.svelte';
 	import LabelPicker from './LabelPicker.svelte';
 	import Subtasks from './Subtasks.svelte';
+	import TaskImages from './TaskImages.svelte';
 	import TaskActivity from './TaskActivity.svelte';
 	import TaskComments from './TaskComments.svelte';
 	import PersonName from './PersonName.svelte';
@@ -35,6 +36,7 @@
 	import { store, type TaskPatch } from '../store.svelte.ts';
 	import { clock, sheets, toasts, motion, type Arrival } from '../ui.svelte.ts';
 	import { completeTask } from '../completion.ts';
+	import { images } from '../images/images.svelte.ts';
 
 	let { task, arrival }: { task: Task; arrival: Arrival } = $props();
 
@@ -125,9 +127,49 @@
 	$effect(() => {
 		if (untrack(() => arrival) === 'back') body.scrollTop = sheets.scrollTops.get(untrack(() => task.id)) ?? 0;
 	});
+
+	const imageFiles = (data: DataTransfer | null) => [...(data?.files ?? [])].filter(file => file.type.startsWith('image/'));
+	const carriesFiles = (event: DragEvent) => editable && !!event.dataTransfer?.types.includes('Files');
+
+	/** Pasting an image anywhere in details attaches it; pasting text into the title or notes still pastes text. */
+	function onpaste(event: ClipboardEvent) {
+		const files = imageFiles(event.clipboardData);
+		if (!editable || !files.length) return;
+		event.preventDefault();
+		void images.attach(task.id, files);
+	}
+
+	let dropping = $state(false);
+
+	function ondragover(event: DragEvent) {
+		if (!carriesFiles(event)) return;
+		event.preventDefault();
+		dropping = true;
+	}
+
+	function ondragleave(event: DragEvent) {
+		const inside = event.relatedTarget instanceof Node && (event.currentTarget as Node).contains(event.relatedTarget);
+		if (!inside) dropping = false;
+	}
+
+	function ondrop(event: DragEvent) {
+		dropping = false;
+		if (!carriesFiles(event)) return;
+		event.preventDefault();
+		void images.attach(task.id, imageFiles(event.dataTransfer));
+	}
 </script>
 
-<div class="relative flex min-h-0 flex-1 flex-col" in:fly={motion({ x: slideFrom[arrival], duration: arrival === 'none' ? 0 : 220, easing: cubicOut })}>
+<div
+	class="relative flex min-h-0 flex-1 flex-col"
+	in:fly={motion({ x: slideFrom[arrival], duration: arrival === 'none' ? 0 : 220, easing: cubicOut })}
+	{onpaste}
+	{ondragover}
+	{ondragleave}
+	{ondrop}
+	role="group"
+	aria-label={task.title}
+>
 	<header class="flex items-center justify-between gap-2 px-4 pt-3">
 		{#if parent}
 			<button
@@ -239,6 +281,7 @@
 				<Waveform size={14} />Notouroboros
 			</p>
 		{/if}
+		<TaskImages {task} {home} {editable} />
 		{#if editable || store.children(task.id).length}<Subtasks {task} />{/if}
 		<TaskComments {task} {home} />
 		<TaskActivity {task} {home} />
@@ -251,6 +294,11 @@
 				<button type="button" class="floating pointer-events-auto bg-accent" onclick={() => store.reopenTask(task.id)}><ArrowCounterClockwise size={16} weight="bold" />Reopen</button>
 			{/if}
 			<button type="button" class="floating pointer-events-auto bg-[var(--tone-overdue)]" aria-label="Delete task" onclick={remove}><Trash size={16} weight="bold" />Delete</button>
+		</div>
+	{/if}
+	{#if dropping}
+		<div class="drop pointer-events-none absolute inset-2 grid place-items-center rounded-[1.25rem] text-[14px] font-medium text-accent" transition:fade={motion({ duration: 120 })}>
+			Drop to attach
 		</div>
 	{/if}
 </div>
@@ -274,5 +322,11 @@
 
 	.floating:active {
 		scale: 0.94;
+	}
+
+	.drop {
+		background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+		box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--color-accent) 55%, transparent);
+		backdrop-filter: blur(2px);
 	}
 </style>

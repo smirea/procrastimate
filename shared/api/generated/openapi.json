@@ -546,6 +546,12 @@
 							}
 						]
 					},
+					"images": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/ImageRef"
+						}
+					},
 					"createdAt": {
 						"type": "integer",
 						"minimum": -9007199254740991,
@@ -606,6 +612,7 @@
 					"reminders",
 					"location",
 					"event",
+					"images",
 					"createdAt",
 					"completedAt",
 					"createdBy",
@@ -903,6 +910,31 @@
 					"start",
 					"end",
 					"original"
+				],
+				"additionalProperties": false
+			},
+			"ImageRef": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string",
+						"minLength": 1
+					},
+					"width": {
+						"type": "integer",
+						"exclusiveMinimum": 0,
+						"maximum": 9007199254740991
+					},
+					"height": {
+						"type": "integer",
+						"exclusiveMinimum": 0,
+						"maximum": 9007199254740991
+					}
+				},
+				"required": [
+					"id",
+					"width",
+					"height"
 				],
 				"additionalProperties": false
 			},
@@ -1297,6 +1329,12 @@
 									}
 								]
 							},
+							"images": {
+								"type": "array",
+								"items": {
+									"$ref": "#/components/schemas/ImageRefInput"
+								}
+							},
 							"createdAt": {
 								"type": "integer",
 								"minimum": -9007199254740991,
@@ -1580,6 +1618,30 @@
 					"start",
 					"end",
 					"original"
+				]
+			},
+			"ImageRefInput": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string",
+						"minLength": 1
+					},
+					"width": {
+						"type": "integer",
+						"exclusiveMinimum": 0,
+						"maximum": 9007199254740991
+					},
+					"height": {
+						"type": "integer",
+						"exclusiveMinimum": 0,
+						"maximum": 9007199254740991
+					}
+				},
+				"required": [
+					"id",
+					"width",
+					"height"
 				]
 			},
 			"ProjectPatch": {
@@ -2083,6 +2145,12 @@
 										"type": "null"
 									}
 								]
+							},
+							"images": {
+								"type": "array",
+								"items": {
+									"$ref": "#/components/schemas/ImageRef"
+								}
 							},
 							"createdAt": {
 								"type": "integer",
@@ -2706,6 +2774,12 @@
 								"type": "null"
 							}
 						]
+					},
+					"images": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/ImageRefInput"
+						}
 					}
 				},
 				"description": "The editable fields of a task. A missing field is left alone; for nullable fields, `null` clears the value. A section moves the task into its project, and a new project without one leaves the task in no section."
@@ -2845,6 +2919,13 @@
 					"body"
 				],
 				"description": "A comment the agent command API adds. A blank body is refused."
+			},
+			"ImageSize": {
+				"type": "string",
+				"enum": [
+					"full",
+					"thumb"
+				]
 			},
 			"Spaces": {
 				"type": "object",
@@ -5502,6 +5583,128 @@
 							"application/json": {
 								"schema": {
 									"$ref": "#/components/schemas/Ok"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Unauthorized"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "403",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Forbidden"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "404",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/NotFound"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/ServiceUnavailable"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/images": {
+			"get": {
+				"operationId": "images.get",
+				"summary": "An image on a task",
+				"description": "`id` is an image id from a task’s `images`, and `size` is `full` (at most 2048 px on its long side) or `thumb` (320 px). Answers the JPEG or WebP bytes. An image is visible when a task you can see lists it.",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "space",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true
+					},
+					{
+						"in": "query",
+						"name": "id",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true,
+						"required": true
+					},
+					{
+						"in": "query",
+						"name": "size",
+						"schema": {
+							"$ref": "#/components/schemas/ImageSize"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true,
+						"required": true,
+						"style": "deepObject",
+						"explode": true
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"*/*": {
+								"schema": {
+									"type": "string",
+									"format": "binary",
+									"contentEncoding": "binary"
 								}
 							}
 						}

@@ -32,6 +32,7 @@ const task = (id: string, fields: Partial<Task> = {}): Task => ({
 	reminders: [],
 	location: null,
 	event: null,
+	images: [],
 	createdAt: ++created,
 	completedAt: null,
 	createdBy: null,

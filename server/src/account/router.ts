@@ -152,6 +152,12 @@ export const accountRouter = os.router({
 		}),
 		schedule: os.push.schedule.use(owner).handler(({ context }) => pushSchedule(context.store, context.deviceId)),
 	},
+	images: {
+		// Every host hands image requests to `AccountHandler.images` before the router, so this never runs.
+		get: os.images.get.handler(() => {
+			throw new ORPCError('NOT_FOUND', { message: 'Image requests never reach the router' });
+		}),
+	},
 	memoTasks: {
 		list: os.memoTasks.list
 			.use(owner)
@@ -169,6 +175,7 @@ export const accountRouter = os.router({
 	internal: {
 		wipe: os.internal.wipe.handler(({ context }) => {
 			context.store.clearAccount();
+			context.defer(() => context.images.clear());
 			return { ok: true as const };
 		}),
 		membership: os.internal.membership.handler(({ input, context }) => {

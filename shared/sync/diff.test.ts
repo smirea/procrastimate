@@ -25,6 +25,7 @@ describe('diff', () => {
 					reminders: [],
 					location: null,
 					event: null,
+					images: [],
 					createdAt: 1,
 					completedAt: null,
 					createdBy: null,
