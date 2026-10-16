@@ -53,3 +53,28 @@ test('the repeat menu offers the due date’s weekday of the month', async ({ ap
 	await page.getByRole('button', { name: 'Set', exact: true }).click();
 	await expect(app.details().getByRole('button', { name: 'Repeats every 2 months on the 3rd Mon' })).toBeVisible();
 });
+
+test('completing a recurring task moves it and its reminder to the next occurrence', async ({ app, page }) => {
+	await app.add('Standup every weekday 9am remind me 10m before');
+	const row = app.row('Standup');
+	await expect(row).toContainText('Tomorrow 9am');
+	await expect(row.getByRole('img', { name: 'Repeats every weekday' })).toBeVisible();
+	const checkbox = row.getByRole('checkbox', { name: 'Complete Standup' });
+
+	await checkbox.click();
+	await expect(page.getByText('Completed “Standup”, next due Friday 9am')).toBeVisible();
+	await expect(row.filter({ hasText: 'Friday 9am' })).toBeVisible();
+	await expect(row).toHaveCount(1);
+	await expect(checkbox).toHaveAttribute('aria-checked', 'false');
+	await page.getByRole('button', { name: 'Undo' }).click();
+	await expect(row.filter({ hasText: 'Tomorrow 9am' })).toBeVisible();
+	await expect(row).toHaveCount(1);
+
+	await checkbox.click();
+	await expect(row.filter({ hasText: 'Friday 9am' })).toBeVisible();
+	await expect(row).toHaveCount(1);
+	await app.setNow(new Date('2026-10-16T08:51:00Z'));
+	await page.reload();
+	await expect(page.getByText('Reminder: Standup')).toBeVisible();
+	await expect(page.getByRole('region', { name: 'Today' }).locator('[data-task="Standup"]')).toContainText('9am');
+});
