@@ -175,7 +175,7 @@ struct TaskRow<Trailing: View>: View {
     @ViewBuilder private var details: some View {
         if hasDetails {
             HStack(spacing: 10) {
-                if let event = task.event {
+                if let event = task.event, !done {
                     EventDetail(
                         label: Triggers.eventLabel(event, today, in: store.timeZone),
                         series: event.series,
