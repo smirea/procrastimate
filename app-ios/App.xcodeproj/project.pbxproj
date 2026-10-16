@@ -27,7 +27,7 @@
         };
         A00000000000000000000002 = {
             isa = PBXGroup;
-            children = (A00000000000000000000016, A00000000000000000000004, A00000000000000000000030, A00000000000000000000031, A00000000000000000000020, A00000000000000000000003);
+            children = (A00000000000000000000016, A00000000000000000000040, A00000000000000000000043, A00000000000000000000004, A00000000000000000000030, A00000000000000000000031, A00000000000000000000020, A00000000000000000000003);
             sourceTree = "<group>";
         };
         A00000000000000000000003 = {
@@ -38,9 +38,19 @@
         };
         A00000000000000000000016 = { isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config/Base.xcconfig; sourceTree = "<group>"; };
 
+        /* Generated sources, written by Core's Generate phase. A synchronized group lists its files before any phase runs, so a
+           fresh clone would miss them; explicit references to the phase's declared outputs are compiled after it runs. */
+        A00000000000000000000040 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/Core/Generated/API.swift; sourceTree = "<group>"; };
+        A00000000000000000000041 = { isa = PBXBuildFile; fileRef = A00000000000000000000040; };
+        A00000000000000000000042 = { isa = PBXFileSystemSynchronizedBuildFileExceptionSet; membershipExceptions = (Generated/API.swift); target = A00000000000000000000021; };
+        A00000000000000000000043 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/App/Generated/Tokens.swift; sourceTree = "<group>"; };
+        A00000000000000000000044 = { isa = PBXBuildFile; fileRef = A00000000000000000000043; };
+        A00000000000000000000045 = { isa = PBXFileSystemSynchronizedBuildFileExceptionSet; membershipExceptions = (Generated/Tokens.swift); target = A00000000000000000000005; };
+
         /* App */
         A00000000000000000000004 = {
             isa = PBXFileSystemSynchronizedRootGroup;
+            exceptions = (A00000000000000000000045);
             path = Sources/App;
             sourceTree = "<group>";
         };
@@ -63,7 +73,7 @@
             path = App.app;
             sourceTree = BUILT_PRODUCTS_DIR;
         };
-        A00000000000000000000007 = { isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+        A00000000000000000000007 = { isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A00000000000000000000044); runOnlyForDeploymentPostprocessing = 0; };
         A00000000000000000000008 = { isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (A0000000000000000000002A); runOnlyForDeploymentPostprocessing = 0; };
         A00000000000000000000009 = { isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
         A0000000000000000000002A = { isa = PBXBuildFile; fileRef = A00000000000000000000022; };
@@ -134,6 +144,7 @@
         /* Core: Foundation-only logic, also built by Package.swift for `swift test`. */
         A00000000000000000000020 = {
             isa = PBXFileSystemSynchronizedRootGroup;
+            exceptions = (A00000000000000000000042);
             path = Sources/Core;
             sourceTree = "<group>";
         };
@@ -156,7 +167,7 @@
             path = libCore.a;
             sourceTree = BUILT_PRODUCTS_DIR;
         };
-        A00000000000000000000023 = { isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+        A00000000000000000000023 = { isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A00000000000000000000041); runOnlyForDeploymentPostprocessing = 0; };
         A00000000000000000000024 = { isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
         A0000000000000000000003E = {
             isa = PBXShellScriptBuildPhase;
@@ -164,8 +175,12 @@
             buildActionMask = 2147483647;
             files = ();
             inputPaths = ();
-            name = "Generate API types";
-            outputPaths = ();
+            name = Generate;
+            outputPaths = (
+                "$(SRCROOT)/Sources/Core/Generated/API.swift",
+                "$(SRCROOT)/Sources/App/Generated/Tokens.swift",
+                "$(SRCROOT)/Sources/App/Assets.xcassets/AccentColor.colorset/Contents.json",
+            );
             runOnlyForDeploymentPostprocessing = 0;
             shellPath = /bin/sh;
             shellScript = "\"$SRCROOT/scripts/generate\"\n";

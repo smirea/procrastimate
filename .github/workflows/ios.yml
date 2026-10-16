@@ -1,10 +1,10 @@
 name: iOS
 
 # Separate from ci.yml so it never slows the web checks or blocks the Worker deploy.
-# macOS `core` and `app` are off on pull requests and on master until they are turned back on
-# before a release. A manual workflow_dispatch runs them. Skipping those jobs with `if` still
-# reports the check (a skip counts as success), so a required check of that name does not stay
-# pending the way a workflow-level path filter would. `core-linux` still runs every time.
+# The macOS `core` and `app` jobs run on a pull request that can change the app, and on a manual
+# workflow_dispatch. Master skips them, since TestFlight archives every such merge. Skipping with
+# `if` still reports the check (a skip counts as success), so a required check of that name does not
+# stay pending the way a workflow-level path filter would. `core-linux` runs every time.
 on:
   pull_request:
   push:
@@ -19,6 +19,33 @@ env:
   TZ: UTC
 
 jobs:
+  # The paths that change the app's Swift: its sources, the shared schemas and CSS tokens it is generated from, and the
+  # generator with its dependencies.
+  changes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      app: ${{ steps.diff.outputs.app }}
+    steps:
+      - uses: actions/checkout@v6
+        if: github.event_name == 'pull_request'
+        with:
+          fetch-depth: 0
+
+      - id: diff
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then
+            echo "app=true" >> "$GITHUB_OUTPUT"
+          elif [ "$GITHUB_EVENT_NAME" = pull_request ]; then
+            touched=$(git diff --name-only "$BASE" HEAD | grep -e '^app-ios/' -e '^shared/' -e '^scripts/generate/' -e '^app-web/src/index\.css$' -e '^package\.json$' -e '^bun\.lock$' -e '^\.github/workflows/ios\.yml$' || true)
+            printf '%s\n' "$touched"
+            echo "app=$([ -n "$touched" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          else
+            echo "app=false" >> "$GITHUB_OUTPUT"
+          fi
+
   # API.swift is git-ignored, so every Swift job builds against the one this job writes.
   # core-linux's Swift container has no bun, which is why this is an artifact rather than a step per job.
   generate:
@@ -42,8 +69,8 @@ jobs:
           if-no-files-found: error
 
   core:
-    needs: generate
-    if: github.event_name == 'workflow_dispatch'
+    needs: [changes, generate]
+    if: needs.changes.outputs.app == 'true'
     runs-on: xcode-27
     timeout-minutes: 20
     defaults:
@@ -83,7 +110,8 @@ jobs:
         run: swift test
 
   app:
-    if: github.event_name == 'workflow_dispatch'
+    needs: changes
+    if: needs.changes.outputs.app == 'true'
     runs-on: xcode-27
     timeout-minutes: 20
     defaults:
@@ -96,13 +124,11 @@ jobs:
         with:
           bun-version: 1.4.3
 
-      # Core's Run Script phase writes API.swift with the root's dependencies.
+      # Nothing generates before the build, so it proves a fresh clone builds in one pass: Core's Generate phase writes
+      # API.swift, Tokens.swift, and the AccentColor asset with the root's dependencies.
       - name: Install dependencies
         working-directory: ${{ github.workspace }}
-        run: bun install --frozen-lockfile && bun run generate
-
-      - name: Generated colors match index.css
-        run: bun scripts/tokens.ts --check
+        run: bun install --frozen-lockfile
 
       - name: Toolchain
         run: xcodebuild -version

@@ -35,6 +35,8 @@ playwright-report
 /sim
 
 # written by `bun run generate`, which every start, build, check, and test script runs first
+app-ios/Sources/App/Assets.xcassets/AccentColor.colorset
+app-ios/Sources/App/Generated
 app-ios/Sources/Core/Generated
 app-web/src/lib/generated
 server/src/db/generated
