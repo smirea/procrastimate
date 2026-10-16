@@ -7,7 +7,6 @@ import type { Person } from '../../../shared/sharing';
 import { nudgeSchema, repairBooleanNumbers } from '../../../shared/sync/protocol';
 import { actorOf, readActor, SHARED_ROUTES, spaceOf, withActor } from '../actor';
 import type { AccountContext, AccountRoute, Access } from '../auth';
-import { getAuth } from '../better-auth';
 import type { Env, Handler } from '../bindings';
 import { pushSender } from '../push';
 import { personOf } from './activity';
@@ -325,7 +324,6 @@ function workerRamble(env: Env): RambleConfig {
  */
 const forward: Handler = async (request, env) => {
 	if (!env.ACCOUNT) return errorResponse('SERVICE_UNAVAILABLE', 'Sync is not configured');
-	if (!(await getAuth(env))) return errorResponse('SERVICE_UNAVAILABLE', 'Sign-in is not configured');
 	const actor = await readActor(request, env);
 	if (!actor) return errorResponse('UNAUTHORIZED', 'Not signed in');
 	const url = new URL(request.url);
