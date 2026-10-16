@@ -1,0 +1,6 @@
+#!/bin/sh
+# `swift test` for Core, after writing the git-ignored Sources/Core/Generated/API.swift it compiles.
+set -eu
+cd "$(dirname "$0")/.."
+./scripts/generate
+exec swift test "$@"

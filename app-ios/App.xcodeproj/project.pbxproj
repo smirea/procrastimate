@@ -140,7 +140,7 @@
         A00000000000000000000021 = {
             isa = PBXNativeTarget;
             buildConfigurationList = A00000000000000000000025;
-            buildPhases = (A00000000000000000000023, A00000000000000000000024);
+            buildPhases = (A0000000000000000000003E, A00000000000000000000023, A00000000000000000000024);
             buildRules = ();
             dependencies = ();
             fileSystemSynchronizedGroups = (A00000000000000000000020);
@@ -158,6 +158,18 @@
         };
         A00000000000000000000023 = { isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
         A00000000000000000000024 = { isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+        A0000000000000000000003E = {
+            isa = PBXShellScriptBuildPhase;
+            alwaysOutOfDate = 1;
+            buildActionMask = 2147483647;
+            files = ();
+            inputPaths = ();
+            name = "Generate API types";
+            outputPaths = ();
+            runOnlyForDeploymentPostprocessing = 0;
+            shellPath = /bin/sh;
+            shellScript = "\"$SRCROOT/scripts/generate\"\n";
+        };
 
         /* Project configurations, inherited by every target. */
         A00000000000000000000010 = {

@@ -1,0 +1,17 @@
+#!/bin/sh
+# Writes Sources/Core/Generated/API.swift (and the repository's other generated files) with `bun run generate`.
+# Core's Run Script phase calls it, so an Xcode build never compiles a stale API.swift.
+set -eu
+# Xcode runs build phases without the login shell's PATH.
+export PATH="$HOME/.bun/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
+command -v bun >/dev/null || { echo "error: bun is required to generate API.swift. Install it from https://bun.sh." >&2; exit 1; }
+cd "$(dirname "$0")/../.."
+test -d node_modules || { echo "error: Run \`bun install\` at the repository root first." >&2; exit 1; }
+api=app-ios/Sources/Core/Generated/API.swift
+existed=$(test -f "$api" && echo yes || true)
+bun scripts/generate/index.ts
+# Xcode lists a synchronized folder's files before any phase runs, so this build cannot compile a file it never saw.
+if [ -n "${ACTION:-}" ] && [ -z "$existed" ]; then
+    echo "error: $api did not exist when this build started. It does now, so build again." >&2
+    exit 1
+fi

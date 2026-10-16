@@ -4,14 +4,19 @@ name: TestFlight
 # Stefan's Mac. Internal group `me` has access to all builds, so every upload reaches it without an extra step.
 # Never runs on pull requests: macOS runners queue, and PR checks stay fast.
 # Pushes share one concurrency group and cancel the run already in progress. The debounce job waits ten minutes,
-# then skips the archive only when a newer commit touched app-ios or this workflow, because that commit has its
+# then skips the archive only when a newer commit touched the paths below, because that commit has its
 # own run. A later web or server commit leaves this run to archive, because the path filter would not start one.
 # A manual workflow_dispatch does not wait.
 on:
   push:
     branches: [master]
+    # API.swift is generated from shared/ by scripts/generate with the root's dependencies, so those paths change the app too.
     paths:
       - app-ios/**
+      - shared/**
+      - scripts/generate/**
+      - package.json
+      - bun.lock
       - .github/workflows/testflight.yml
   workflow_dispatch:
 
@@ -57,7 +62,7 @@ jobs:
           # First-parent diffs, so a merge commit counts the files it brought onto master.
           # A web or server commit does not start this workflow, so it must not skip the archive.
           files=$(git log --first-parent --diff-merges=first-parent --name-only --pretty=format: "${GITHUB_SHA}..${head}")
-          touched=$(printf '%s\n' "$files" | grep -e '^app-ios/' -e '^\.github/workflows/testflight\.yml$' || true)
+          touched=$(printf '%s\n' "$files" | grep -e '^app-ios/' -e '^shared/' -e '^scripts/generate/' -e '^package\.json$' -e '^bun\.lock$' -e '^\.github/workflows/testflight\.yml$' || true)
           if [ -n "$touched" ]; then
             echo "master is ${head}. A newer commit touches TestFlight paths, so that run archives:"
             printf '%s\n' "$touched"
@@ -79,6 +84,14 @@ jobs:
         working-directory: app-ios
     steps:
       - uses: actions/checkout@v6
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+
+      - name: Install dependencies
+        working-directory: ${{ github.workspace }}
+        run: bun install --frozen-lockfile
 
       - name: Toolchain
         run: xcodebuild -version

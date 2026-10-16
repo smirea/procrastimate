@@ -64,6 +64,8 @@ if (selected.size > 0) {
 }
 
 if (ios) {
+	const generated = spawnSync('bun', ['scripts/generate/index.ts'], { cwd: root, stdio: 'inherit' });
+	if ((generated.status ?? 1) !== 0) process.exit(generated.status ?? 1);
 	const result = spawnSync('swift', ['test'], { cwd: join(root, 'app-ios'), stdio: 'inherit' });
 	if (result.error && (result.error as NodeJS.ErrnoException).code === 'ENOENT') {
 		console.error('swift is not installed; skipping app-ios tests. CI core-linux still runs them.');

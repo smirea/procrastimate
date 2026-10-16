@@ -57,6 +57,8 @@ cat > "$options" <<PLIST
 </plist>
 PLIST
 
+./scripts/generate
+
 echo "Archiving build $build_number"
 # Unsigned archive. Automatic signing here asks for an iOS App Development certificate, and a
 # fresh runner creates another "Created via API" one. Export signs with Apple Distribution.

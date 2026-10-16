@@ -33,3 +33,10 @@ playwright-report
 # per-worktree files written by scripts/setup-worktree.ts
 .env.override
 /sim
+
+# written by `bun run generate`, which every start, build, check, and test script runs first
+app-ios/Sources/Core/Generated
+app-web/src/lib/generated
+server/src/db/generated
+shared/api/generated
+shared/db/generated
