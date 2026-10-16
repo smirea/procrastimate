@@ -18,7 +18,6 @@ test('a monthly repeat on the 31st lands on the last day of February and returns
 	for (const next of ['Feb 28', 'Mar 31']) {
 		await checkbox.click();
 		await expect(page.getByText(new RegExp(`Completed “Pay rent”, next due .*${next}`))).toBeVisible();
-		await expect(row).toHaveCount(1);
 		await expect(row).toContainText(next);
 	}
 });
@@ -63,16 +62,13 @@ test('completing a recurring task moves it and its reminder to the next occurren
 
 	await checkbox.click();
 	await expect(page.getByText('Completed “Standup”, next due Friday 9am')).toBeVisible();
-	await expect(row.filter({ hasText: 'Friday 9am' })).toBeVisible();
-	await expect(row).toHaveCount(1);
-	await expect(checkbox).toHaveAttribute('aria-checked', 'false');
+	await expect(row).toContainText('Friday 9am');
+	await expect(page.getByRole('checkbox', { name: 'Complete Standup' })).toHaveAttribute('aria-checked', 'false');
 	await page.getByRole('button', { name: 'Undo' }).click();
-	await expect(row.filter({ hasText: 'Tomorrow 9am' })).toBeVisible();
-	await expect(row).toHaveCount(1);
+	await expect(row).toContainText('Tomorrow 9am');
 
 	await checkbox.click();
-	await expect(row.filter({ hasText: 'Friday 9am' })).toBeVisible();
-	await expect(row).toHaveCount(1);
+	await expect(row).toContainText('Friday 9am');
 	await app.setNow(new Date('2026-10-16T08:51:00Z'));
 	await page.reload();
 	await expect(page.getByText('Reminder: Standup')).toBeVisible();

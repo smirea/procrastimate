@@ -68,7 +68,8 @@ export class App {
 	quickAdd = () => this.page.getByRole('dialog', { name: 'Quick add' });
 	taskInput = () => this.quickAdd().getByRole('textbox', { name: 'Task name' });
 	details = () => this.page.getByRole('dialog', { name: 'Task details' });
-	row = (title: string) => this.page.locator(`[data-task="${title}"]`);
+	/** Skips a row animating out, which `leaving` hides from assistive tech, so a moving row resolves once. */
+	row = (title: string) => this.page.locator(`[data-task="${title}"]:not([aria-hidden="true"] *)`);
 	list = (name: string) => this.page.getByRole('list', { name });
 	nav = (name: string) => this.page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name });
 

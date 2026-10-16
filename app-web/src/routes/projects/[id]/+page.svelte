@@ -17,7 +17,7 @@
 	import CompletedSection from '#lib/components/CompletedSection.svelte';
 	import CompletedToggle from '#lib/components/CompletedToggle.svelte';
 	import { store } from '#lib/store.svelte.ts';
-	import { motion, sheets } from '#lib/ui.svelte.ts';
+	import { leaving, motion, sheets } from '#lib/ui.svelte.ts';
 	import { followMerged } from '#lib/merged.svelte.ts';
 	import { projectDocument } from 'shared/markdown.ts';
 	import { projectGroups } from 'shared/views.ts';
@@ -127,7 +127,7 @@
 			<AddTaskButton quickAdd={{ projectId: project.id, sectionId: null, labelId: null, today: false }} />
 		{/if}
 		{#each sections as { section, tasks: inSection }, index (section.id)}
-			<div animate:flip={motion({ duration: 260, easing: cubicOut })} transition:fade={motion({ duration: 180 })}>
+			<div {@attach leaving} animate:flip={motion({ duration: 260, easing: cubicOut })} transition:fade={motion({ duration: 180 })}>
 				<ProjectSection {section} tasks={inSection} {index} count={sections.length} editable={!home} {canAdd} />
 			</div>
 		{/each}
