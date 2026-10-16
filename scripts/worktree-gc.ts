@@ -4,18 +4,16 @@
  *   - deletes simulators claimed by a worktree that no longer exists
  *   - shuts down claimed simulators unused for 15 minutes that no running process names
  *   - deletes Xcode DerivedData of the App project at paths that no longer exist
- *   - deletes the hand-made /tmp XCUITest harnesses and clones from before `./sim test`, after a day
  *   - lists worktrees whose PR merged, for teardown-worktree.ts
  */
 import { spawnSync } from 'node:child_process';
-import { existsSync, readdirSync, rmSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, rmSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { devices, owner, remove, shutdown } from './simulators';
 
 const dryRun = process.argv.includes('--dry-run');
 const IDLE_MS = 15 * 60_000;
-const STALE_TMP_MS = 24 * 60 * 60_000;
 
 function run(cmd: string[]): string {
 	const result = spawnSync(cmd[0]!, cmd.slice(1), { encoding: 'utf8' });
@@ -61,14 +59,6 @@ for (const entry of existsSync(derivedData) ? readdirSync(derivedData) : []) {
 	act(`Deleting DerivedData ${entry} of the removed ${workspace}.`, () =>
 		rmSync(join(derivedData, entry), { recursive: true, force: true }),
 	);
-}
-
-for (const entry of readdirSync('/tmp')) {
-	if (!/(-uitap|-uitest|^uitap|^pm-clone)/.test(entry)) continue;
-	const path = join('/tmp', entry);
-	const stats = statSync(path, { throwIfNoEntry: false });
-	if (!stats?.isDirectory() || Date.now() - stats.mtimeMs < STALE_TMP_MS) continue;
-	act(`Deleting ${path}, replaced by ./sim test.`, () => rmSync(path, { recursive: true, force: true }));
 }
 
 for (const { path, branch } of worktrees.slice(1)) {

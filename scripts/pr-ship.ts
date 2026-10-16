@@ -17,7 +17,7 @@ const { values } = parseArgs({
 	options: { merge: { type: 'boolean' }, budget: { type: 'string', default: '540' } },
 });
 const deadline = Date.now() + Number(values.budget) * 1000;
-const CODEX_GRACE_MS = 10 * 60_000;
+const CODEX_NUDGE_MS = 15 * 60_000;
 const POLL_MS = 20_000;
 
 function run(cmd: string[]): string {
@@ -79,7 +79,7 @@ function checks(pr: Pr) {
 function codexRunning(pr: Pr): boolean {
 	const summary = pr.comments.find(comment => comment.body.includes('codex-review-state:v1'));
 	const state = summary?.body.match(/codex-review-state:v1 (\{.*?\}) -->/)?.[1];
-	if (!state) return Date.now() - Date.parse(pr.createdAt) < CODEX_GRACE_MS;
+	if (!state) return true;
 	return (JSON.parse(state).code_review as { status: string | null }).status !== 'completed';
 }
 
@@ -150,7 +150,13 @@ while (true) {
 		continue;
 	}
 	if (!waiting.length) waiting.push('GitHub to compute mergeability');
-	if (Date.now() + POLL_MS > deadline) exit(3, `Still waiting on ${waiting.join(', ')}. Rerun.`);
+	if (Date.now() + POLL_MS > deadline) {
+		const nudge =
+			waiting.includes('Codex review') && Date.now() - Date.parse(pr.createdAt) > CODEX_NUDGE_MS
+				? ' Codex has not reviewed after 15 minutes: comment `@codex review` on the PR once.'
+				: '';
+		exit(3, `Still waiting on ${waiting.join(', ')}.${nudge} Rerun.`);
+	}
 	console.log(`Waiting on ${waiting.join(', ')}…`);
 	await Bun.sleep(POLL_MS);
 }

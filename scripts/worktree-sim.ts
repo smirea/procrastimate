@@ -50,7 +50,9 @@ function ensure(): Device {
 }
 
 if (command === 'stop') {
-	const own = devices().filter(device => device.name === base || device.name.startsWith(`${base}-`));
+	const own = devices().filter(
+		device => device.name === base || new RegExp(`^${RegExp.escape(base)}-\\d+$`).test(device.name),
+	);
 	for (const device of own.filter(device => device.state !== 'Shutdown')) {
 		shutdown(device);
 		console.log(`Shut down ${device.name}.`);
