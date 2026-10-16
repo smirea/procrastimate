@@ -1168,7 +1168,7 @@
 					"ops": {
 						"type": "array",
 						"items": {
-							"$ref": "#/components/schemas/Op"
+							"description": "An `Op`, parsed by itself."
 						}
 					},
 					"epoch": {
@@ -1190,725 +1190,6 @@
 					"ops"
 				]
 			},
-			"Op": {
-				"allOf": [
-					{
-						"oneOf": [
-							{
-								"$ref": "#/components/schemas/TaskPatch"
-							},
-							{
-								"$ref": "#/components/schemas/ProjectPatch"
-							},
-							{
-								"$ref": "#/components/schemas/SectionPatch"
-							},
-							{
-								"$ref": "#/components/schemas/LabelPatch"
-							},
-							{
-								"$ref": "#/components/schemas/CommentPatch"
-							},
-							{
-								"$ref": "#/components/schemas/CommentReadPatch"
-							},
-							{
-								"$ref": "#/components/schemas/SettingsPatch"
-							}
-						]
-					},
-					{
-						"type": "object",
-						"properties": {
-							"opId": {
-								"type": "string"
-							},
-							"hlc": {
-								"$ref": "#/components/schemas/Hlc"
-							}
-						},
-						"required": [
-							"opId",
-							"hlc"
-						]
-					}
-				]
-			},
-			"TaskPatch": {
-				"type": "object",
-				"properties": {
-					"kind": {
-						"type": "string",
-						"const": "task"
-					},
-					"id": {
-						"type": "string"
-					},
-					"fields": {
-						"type": "object",
-						"properties": {
-							"parentId": {
-								"type": [
-									"string",
-									"null"
-								]
-							},
-							"order": {
-								"type": "number"
-							},
-							"title": {
-								"type": "string"
-							},
-							"notes": {
-								"type": "string"
-							},
-							"projectId": {
-								"type": [
-									"string",
-									"null"
-								]
-							},
-							"sectionId": {
-								"type": [
-									"string",
-									"null"
-								]
-							},
-							"labelIds": {
-								"type": "array",
-								"items": {
-									"type": "string"
-								}
-							},
-							"due": {
-								"anyOf": [
-									{
-										"$ref": "#/components/schemas/DueInput"
-									},
-									{
-										"type": "null"
-									}
-								]
-							},
-							"recurrence": {
-								"anyOf": [
-									{
-										"$ref": "#/components/schemas/RecurrenceInput"
-									},
-									{
-										"type": "null"
-									}
-								]
-							},
-							"priority": {
-								"$ref": "#/components/schemas/Priority"
-							},
-							"reminders": {
-								"type": "array",
-								"items": {
-									"$ref": "#/components/schemas/ReminderInput"
-								}
-							},
-							"location": {
-								"anyOf": [
-									{
-										"$ref": "#/components/schemas/TaskLocationInput"
-									},
-									{
-										"type": "null"
-									}
-								]
-							},
-							"event": {
-								"anyOf": [
-									{
-										"$ref": "#/components/schemas/TaskEventInput"
-									},
-									{
-										"type": "null"
-									}
-								]
-							},
-							"images": {
-								"type": "array",
-								"items": {
-									"$ref": "#/components/schemas/ImageRefInput"
-								}
-							},
-							"createdAt": {
-								"type": "integer",
-								"minimum": -9007199254740991,
-								"maximum": 9007199254740991
-							},
-							"completedAt": {
-								"anyOf": [
-									{
-										"type": "integer",
-										"minimum": -9007199254740991,
-										"maximum": 9007199254740991
-									},
-									{
-										"type": "null"
-									}
-								]
-							},
-							"createdBy": {
-								"type": [
-									"string",
-									"null"
-								]
-							},
-							"completedBy": {
-								"type": [
-									"string",
-									"null"
-								]
-							},
-							"lastCompletedAt": {
-								"anyOf": [
-									{
-										"type": "integer",
-										"minimum": -9007199254740991,
-										"maximum": 9007199254740991
-									},
-									{
-										"type": "null"
-									}
-								]
-							},
-							"sourceKey": {
-								"type": [
-									"string",
-									"null"
-								]
-							},
-							"deleted": {
-								"type": "boolean"
-							}
-						}
-					}
-				},
-				"required": [
-					"kind",
-					"id",
-					"fields"
-				]
-			},
-			"DueInput": {
-				"type": "object",
-				"properties": {
-					"date": {
-						"$ref": "#/components/schemas/DateKey"
-					},
-					"time": {
-						"anyOf": [
-							{
-								"$ref": "#/components/schemas/TimeOfDay"
-							},
-							{
-								"type": "null"
-							}
-						]
-					}
-				},
-				"required": [
-					"date",
-					"time"
-				]
-			},
-			"RecurrenceInput": {
-				"oneOf": [
-					{
-						"type": "object",
-						"properties": {
-							"interval": {
-								"type": "integer",
-								"exclusiveMinimum": 0,
-								"maximum": 9007199254740991
-							},
-							"unit": {
-								"type": "string",
-								"enum": [
-									"day",
-									"weekday",
-									"month",
-									"year"
-								]
-							}
-						},
-						"required": [
-							"interval",
-							"unit"
-						]
-					},
-					{
-						"type": "object",
-						"properties": {
-							"interval": {
-								"type": "integer",
-								"exclusiveMinimum": 0,
-								"maximum": 9007199254740991
-							},
-							"unit": {
-								"type": "string",
-								"const": "week"
-							},
-							"days": {
-								"readOnly": true,
-								"minItems": 2,
-								"type": "array",
-								"items": {
-									"$ref": "#/components/schemas/Weekday"
-								}
-							}
-						},
-						"required": [
-							"interval",
-							"unit"
-						]
-					}
-				],
-				"x-flatten": {
-					"unit": "RecurrenceUnit"
-				}
-			},
-			"ReminderInput": {
-				"oneOf": [
-					{
-						"type": "object",
-						"properties": {
-							"kind": {
-								"type": "string",
-								"const": "before"
-							},
-							"minutes": {
-								"type": "integer",
-								"minimum": 0,
-								"maximum": 9007199254740991
-							}
-						},
-						"required": [
-							"kind",
-							"minutes"
-						]
-					},
-					{
-						"type": "object",
-						"properties": {
-							"kind": {
-								"type": "string",
-								"const": "at"
-							},
-							"date": {
-								"$ref": "#/components/schemas/DateKey"
-							},
-							"time": {
-								"$ref": "#/components/schemas/TimeOfDay"
-							}
-						},
-						"required": [
-							"kind",
-							"date",
-							"time"
-						]
-					}
-				],
-				"x-inline": true
-			},
-			"TaskLocationInput": {
-				"type": "object",
-				"properties": {
-					"name": {
-						"type": "string"
-					},
-					"address": {
-						"type": [
-							"string",
-							"null"
-						]
-					},
-					"latitude": {
-						"type": "number",
-						"minimum": -90,
-						"maximum": 90
-					},
-					"longitude": {
-						"type": "number",
-						"minimum": -180,
-						"maximum": 180
-					},
-					"radius": {
-						"type": "number",
-						"exclusiveMinimum": 0
-					},
-					"trigger": {
-						"$ref": "#/components/schemas/LocationTrigger"
-					}
-				},
-				"required": [
-					"name",
-					"address",
-					"latitude",
-					"longitude",
-					"radius",
-					"trigger"
-				]
-			},
-			"TaskEventInput": {
-				"type": "object",
-				"properties": {
-					"id": {
-						"type": "string"
-					},
-					"title": {
-						"type": "string"
-					},
-					"allDay": {
-						"type": "boolean"
-					},
-					"series": {
-						"type": "boolean"
-					},
-					"edge": {
-						"$ref": "#/components/schemas/EventEdge"
-					},
-					"minutes": {
-						"type": "integer",
-						"minimum": 0,
-						"maximum": 9007199254740991
-					},
-					"occurrences": {
-						"minItems": 1,
-						"type": "array",
-						"items": {
-							"$ref": "#/components/schemas/EventOccurrenceInput"
-						}
-					}
-				},
-				"required": [
-					"id",
-					"title",
-					"allDay",
-					"series",
-					"edge",
-					"minutes",
-					"occurrences"
-				]
-			},
-			"EventOccurrenceInput": {
-				"type": "object",
-				"properties": {
-					"start": {
-						"type": "integer",
-						"minimum": -9007199254740991,
-						"maximum": 9007199254740991
-					},
-					"end": {
-						"type": "integer",
-						"minimum": -9007199254740991,
-						"maximum": 9007199254740991
-					},
-					"original": {
-						"type": "integer",
-						"minimum": -9007199254740991,
-						"maximum": 9007199254740991
-					}
-				},
-				"required": [
-					"start",
-					"end",
-					"original"
-				]
-			},
-			"ImageRefInput": {
-				"type": "object",
-				"properties": {
-					"id": {
-						"type": "string",
-						"minLength": 1
-					},
-					"width": {
-						"type": "integer",
-						"exclusiveMinimum": 0,
-						"maximum": 9007199254740991
-					},
-					"height": {
-						"type": "integer",
-						"exclusiveMinimum": 0,
-						"maximum": 9007199254740991
-					}
-				},
-				"required": [
-					"id",
-					"width",
-					"height"
-				]
-			},
-			"ProjectPatch": {
-				"type": "object",
-				"properties": {
-					"kind": {
-						"type": "string",
-						"const": "project"
-					},
-					"id": {
-						"type": "string"
-					},
-					"fields": {
-						"type": "object",
-						"properties": {
-							"name": {
-								"type": "string"
-							},
-							"createdAt": {
-								"type": "integer",
-								"minimum": -9007199254740991,
-								"maximum": 9007199254740991
-							},
-							"sourceKey": {
-								"type": [
-									"string",
-									"null"
-								]
-							},
-							"deleted": {
-								"type": "boolean"
-							}
-						}
-					}
-				},
-				"required": [
-					"kind",
-					"id",
-					"fields"
-				]
-			},
-			"SectionPatch": {
-				"type": "object",
-				"properties": {
-					"kind": {
-						"type": "string",
-						"const": "section"
-					},
-					"id": {
-						"type": "string"
-					},
-					"fields": {
-						"type": "object",
-						"properties": {
-							"projectId": {
-								"type": "string"
-							},
-							"name": {
-								"type": "string"
-							},
-							"order": {
-								"type": "number"
-							},
-							"createdAt": {
-								"type": "integer",
-								"minimum": -9007199254740991,
-								"maximum": 9007199254740991
-							},
-							"sourceKey": {
-								"type": [
-									"string",
-									"null"
-								]
-							},
-							"deleted": {
-								"type": "boolean"
-							}
-						}
-					}
-				},
-				"required": [
-					"kind",
-					"id",
-					"fields"
-				]
-			},
-			"LabelPatch": {
-				"type": "object",
-				"properties": {
-					"kind": {
-						"type": "string",
-						"const": "label"
-					},
-					"id": {
-						"type": "string"
-					},
-					"fields": {
-						"type": "object",
-						"properties": {
-							"name": {
-								"type": "string"
-							},
-							"createdAt": {
-								"type": "integer",
-								"minimum": -9007199254740991,
-								"maximum": 9007199254740991
-							},
-							"deleted": {
-								"type": "boolean"
-							}
-						}
-					}
-				},
-				"required": [
-					"kind",
-					"id",
-					"fields"
-				]
-			},
-			"CommentPatch": {
-				"type": "object",
-				"properties": {
-					"kind": {
-						"type": "string",
-						"const": "comment"
-					},
-					"id": {
-						"type": "string"
-					},
-					"fields": {
-						"type": "object",
-						"properties": {
-							"taskId": {
-								"type": "string"
-							},
-							"body": {
-								"type": "string"
-							},
-							"authorId": {
-								"type": [
-									"string",
-									"null"
-								]
-							},
-							"createdAt": {
-								"type": "integer",
-								"minimum": -9007199254740991,
-								"maximum": 9007199254740991
-							},
-							"editedAt": {
-								"anyOf": [
-									{
-										"type": "integer",
-										"minimum": -9007199254740991,
-										"maximum": 9007199254740991
-									},
-									{
-										"type": "null"
-									}
-								]
-							},
-							"deleted": {
-								"type": "boolean"
-							}
-						}
-					}
-				},
-				"required": [
-					"kind",
-					"id",
-					"fields"
-				]
-			},
-			"CommentReadPatch": {
-				"type": "object",
-				"properties": {
-					"kind": {
-						"type": "string",
-						"const": "read"
-					},
-					"id": {
-						"type": "string"
-					},
-					"fields": {
-						"type": "object",
-						"properties": {
-							"readAt": {
-								"type": "integer",
-								"minimum": -9007199254740991,
-								"maximum": 9007199254740991
-							},
-							"deleted": {
-								"type": "boolean"
-							}
-						}
-					}
-				},
-				"required": [
-					"kind",
-					"id",
-					"fields"
-				]
-			},
-			"SettingsPatch": {
-				"type": "object",
-				"properties": {
-					"kind": {
-						"type": "string",
-						"const": "settings"
-					},
-					"id": {
-						"type": "string"
-					},
-					"fields": {
-						"type": "object",
-						"properties": {
-							"timeZone": {
-								"type": [
-									"string",
-									"null"
-								]
-							},
-							"dictation": {
-								"$ref": "#/components/schemas/DictationChoice"
-							},
-							"quickAddButtons": {
-								"type": "array",
-								"items": {
-									"$ref": "#/components/schemas/QuickAddButton"
-								}
-							},
-							"deleted": {
-								"type": "boolean"
-							}
-						}
-					}
-				},
-				"required": [
-					"kind",
-					"id",
-					"fields"
-				]
-			},
-			"DictationChoice": {
-				"type": "string",
-				"enum": [
-					"native",
-					"elevenlabs"
-				]
-			},
-			"QuickAddButton": {
-				"type": "string",
-				"enum": [
-					"date",
-					"priority",
-					"reminders",
-					"repeat",
-					"labels",
-					"subtasks",
-					"location",
-					"event"
-				]
-			},
-			"Hlc": {
-				"type": "string",
-				"x-validate": "isHlc"
-			},
 			"SyncResponse": {
 				"anyOf": [
 					{
@@ -1918,6 +1199,12 @@
 								"type": "array",
 								"items": {
 									"type": "string"
+								}
+							},
+							"rejected": {
+								"type": "array",
+								"items": {
+									"$ref": "#/components/schemas/SyncRejection"
 								}
 							},
 							"changes": {
@@ -1945,6 +1232,7 @@
 						},
 						"required": [
 							"acked",
+							"rejected",
 							"changes",
 							"cursor",
 							"hlc",
@@ -1959,6 +1247,12 @@
 								"type": "array",
 								"items": {
 									"type": "string"
+								}
+							},
+							"rejected": {
+								"type": "array",
+								"items": {
+									"$ref": "#/components/schemas/SyncRejection"
 								}
 							},
 							"snapshot": {
@@ -1995,6 +1289,7 @@
 						},
 						"required": [
 							"acked",
+							"rejected",
 							"snapshot",
 							"cursor",
 							"hlc",
@@ -2004,30 +1299,46 @@
 					}
 				]
 			},
+			"SyncRejection": {
+				"type": "object",
+				"properties": {
+					"opId": {
+						"type": "string"
+					},
+					"reason": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"opId",
+					"reason"
+				],
+				"additionalProperties": false
+			},
 			"Change": {
 				"allOf": [
 					{
 						"oneOf": [
 							{
-								"$ref": "#/components/schemas/TaskPatchOutput"
+								"$ref": "#/components/schemas/TaskPatch"
 							},
 							{
-								"$ref": "#/components/schemas/ProjectPatchOutput"
+								"$ref": "#/components/schemas/ProjectPatch"
 							},
 							{
-								"$ref": "#/components/schemas/SectionPatchOutput"
+								"$ref": "#/components/schemas/SectionPatch"
 							},
 							{
-								"$ref": "#/components/schemas/LabelPatchOutput"
+								"$ref": "#/components/schemas/LabelPatch"
 							},
 							{
-								"$ref": "#/components/schemas/CommentPatchOutput"
+								"$ref": "#/components/schemas/CommentPatch"
 							},
 							{
-								"$ref": "#/components/schemas/CommentReadPatchOutput"
+								"$ref": "#/components/schemas/CommentReadPatch"
 							},
 							{
-								"$ref": "#/components/schemas/SettingsPatchOutput"
+								"$ref": "#/components/schemas/SettingsPatch"
 							}
 						]
 					},
@@ -2051,7 +1362,7 @@
 					}
 				]
 			},
-			"TaskPatchOutput": {
+			"TaskPatch": {
 				"type": "object",
 				"properties": {
 					"kind": {
@@ -2213,7 +1524,7 @@
 				],
 				"additionalProperties": false
 			},
-			"ProjectPatchOutput": {
+			"ProjectPatch": {
 				"type": "object",
 				"properties": {
 					"kind": {
@@ -2254,7 +1565,7 @@
 				],
 				"additionalProperties": false
 			},
-			"SectionPatchOutput": {
+			"SectionPatch": {
 				"type": "object",
 				"properties": {
 					"kind": {
@@ -2301,7 +1612,7 @@
 				],
 				"additionalProperties": false
 			},
-			"LabelPatchOutput": {
+			"LabelPatch": {
 				"type": "object",
 				"properties": {
 					"kind": {
@@ -2336,7 +1647,7 @@
 				],
 				"additionalProperties": false
 			},
-			"CommentPatchOutput": {
+			"CommentPatch": {
 				"type": "object",
 				"properties": {
 					"kind": {
@@ -2392,7 +1703,7 @@
 				],
 				"additionalProperties": false
 			},
-			"CommentReadPatchOutput": {
+			"CommentReadPatch": {
 				"type": "object",
 				"properties": {
 					"kind": {
@@ -2424,7 +1735,7 @@
 				],
 				"additionalProperties": false
 			},
-			"SettingsPatchOutput": {
+			"SettingsPatch": {
 				"type": "object",
 				"properties": {
 					"kind": {
@@ -2465,6 +1776,30 @@
 					"fields"
 				],
 				"additionalProperties": false
+			},
+			"DictationChoice": {
+				"type": "string",
+				"enum": [
+					"native",
+					"elevenlabs"
+				]
+			},
+			"QuickAddButton": {
+				"type": "string",
+				"enum": [
+					"date",
+					"priority",
+					"reminders",
+					"repeat",
+					"labels",
+					"subtasks",
+					"location",
+					"event"
+				]
+			},
+			"Hlc": {
+				"type": "string",
+				"x-validate": "isHlc"
 			},
 			"SyncSnapshot": {
 				"type": "object",
@@ -2783,6 +2118,256 @@
 					}
 				},
 				"description": "The editable fields of a task. A missing field is left alone; for nullable fields, `null` clears the value. A section moves the task into its project, and a new project without one leaves the task in no section."
+			},
+			"DueInput": {
+				"type": "object",
+				"properties": {
+					"date": {
+						"$ref": "#/components/schemas/DateKey"
+					},
+					"time": {
+						"anyOf": [
+							{
+								"$ref": "#/components/schemas/TimeOfDay"
+							},
+							{
+								"type": "null"
+							}
+						]
+					}
+				},
+				"required": [
+					"date",
+					"time"
+				]
+			},
+			"RecurrenceInput": {
+				"oneOf": [
+					{
+						"type": "object",
+						"properties": {
+							"interval": {
+								"type": "integer",
+								"exclusiveMinimum": 0,
+								"maximum": 9007199254740991
+							},
+							"unit": {
+								"type": "string",
+								"enum": [
+									"day",
+									"weekday",
+									"month",
+									"year"
+								]
+							}
+						},
+						"required": [
+							"interval",
+							"unit"
+						]
+					},
+					{
+						"type": "object",
+						"properties": {
+							"interval": {
+								"type": "integer",
+								"exclusiveMinimum": 0,
+								"maximum": 9007199254740991
+							},
+							"unit": {
+								"type": "string",
+								"const": "week"
+							},
+							"days": {
+								"readOnly": true,
+								"minItems": 2,
+								"type": "array",
+								"items": {
+									"$ref": "#/components/schemas/Weekday"
+								}
+							}
+						},
+						"required": [
+							"interval",
+							"unit"
+						]
+					}
+				],
+				"x-flatten": {
+					"unit": "RecurrenceUnit"
+				}
+			},
+			"ReminderInput": {
+				"oneOf": [
+					{
+						"type": "object",
+						"properties": {
+							"kind": {
+								"type": "string",
+								"const": "before"
+							},
+							"minutes": {
+								"type": "integer",
+								"minimum": 0,
+								"maximum": 9007199254740991
+							}
+						},
+						"required": [
+							"kind",
+							"minutes"
+						]
+					},
+					{
+						"type": "object",
+						"properties": {
+							"kind": {
+								"type": "string",
+								"const": "at"
+							},
+							"date": {
+								"$ref": "#/components/schemas/DateKey"
+							},
+							"time": {
+								"$ref": "#/components/schemas/TimeOfDay"
+							}
+						},
+						"required": [
+							"kind",
+							"date",
+							"time"
+						]
+					}
+				],
+				"x-inline": true
+			},
+			"TaskLocationInput": {
+				"type": "object",
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"address": {
+						"type": [
+							"string",
+							"null"
+						]
+					},
+					"latitude": {
+						"type": "number",
+						"minimum": -90,
+						"maximum": 90
+					},
+					"longitude": {
+						"type": "number",
+						"minimum": -180,
+						"maximum": 180
+					},
+					"radius": {
+						"type": "number",
+						"exclusiveMinimum": 0
+					},
+					"trigger": {
+						"$ref": "#/components/schemas/LocationTrigger"
+					}
+				},
+				"required": [
+					"name",
+					"address",
+					"latitude",
+					"longitude",
+					"radius",
+					"trigger"
+				]
+			},
+			"TaskEventInput": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"title": {
+						"type": "string"
+					},
+					"allDay": {
+						"type": "boolean"
+					},
+					"series": {
+						"type": "boolean"
+					},
+					"edge": {
+						"$ref": "#/components/schemas/EventEdge"
+					},
+					"minutes": {
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 9007199254740991
+					},
+					"occurrences": {
+						"minItems": 1,
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/EventOccurrenceInput"
+						}
+					}
+				},
+				"required": [
+					"id",
+					"title",
+					"allDay",
+					"series",
+					"edge",
+					"minutes",
+					"occurrences"
+				]
+			},
+			"EventOccurrenceInput": {
+				"type": "object",
+				"properties": {
+					"start": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991
+					},
+					"end": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991
+					},
+					"original": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991
+					}
+				},
+				"required": [
+					"start",
+					"end",
+					"original"
+				]
+			},
+			"ImageRefInput": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string",
+						"minLength": 1
+					},
+					"width": {
+						"type": "integer",
+						"exclusiveMinimum": 0,
+						"maximum": 9007199254740991
+					},
+					"height": {
+						"type": "integer",
+						"exclusiveMinimum": 0,
+						"maximum": 9007199254740991
+					}
+				},
+				"required": [
+					"id",
+					"width",
+					"height"
+				]
 			},
 			"Activity": {
 				"type": "object",
@@ -4394,7 +3979,7 @@
 			"post": {
 				"operationId": "sync",
 				"summary": "Sync the space",
-				"description": "The apps’ replication protocol. `{ \"cursor\": 0, \"ops\": [] }` answers with the whole visible snapshot. A task op is applied when the task is editable before and after it, and a comment op when its task is editable and the comment is new or the caller’s own; project and label ops are acknowledged and dropped.",
+				"description": "The apps’ replication protocol. `{ \"cursor\": 0, \"ops\": [] }` answers with the whole visible snapshot. A task op is applied when the task is editable before and after it, and a comment op when its task is editable and the comment is new or the caller’s own; project and label ops are acknowledged and dropped. Each op is validated on its own: one that fails is listed in `rejected` with the reason and never applies, the rest still do, and the answer is the whole snapshot.",
 				"parameters": [
 					{
 						"in": "query",

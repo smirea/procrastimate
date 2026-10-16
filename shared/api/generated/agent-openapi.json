@@ -23,7 +23,7 @@
 					"ops": {
 						"type": "array",
 						"items": {
-							"$ref": "#/components/schemas/Op"
+							"description": "An `Op`, parsed by itself."
 						}
 					},
 					"epoch": {
@@ -45,7 +45,132 @@
 					"ops"
 				]
 			},
-			"Op": {
+			"SyncResponse": {
+				"anyOf": [
+					{
+						"type": "object",
+						"properties": {
+							"acked": {
+								"type": "array",
+								"items": {
+									"type": "string"
+								}
+							},
+							"rejected": {
+								"type": "array",
+								"items": {
+									"$ref": "#/components/schemas/SyncRejection"
+								}
+							},
+							"changes": {
+								"type": "array",
+								"items": {
+									"$ref": "#/components/schemas/Change"
+								}
+							},
+							"cursor": {
+								"type": "integer",
+								"minimum": 0,
+								"maximum": 9007199254740991
+							},
+							"hlc": {
+								"$ref": "#/components/schemas/Hlc"
+							},
+							"epoch": {
+								"type": "integer",
+								"minimum": 0,
+								"maximum": 9007199254740991
+							},
+							"scope": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"acked",
+							"rejected",
+							"changes",
+							"cursor",
+							"hlc",
+							"epoch"
+						],
+						"additionalProperties": false
+					},
+					{
+						"type": "object",
+						"properties": {
+							"acked": {
+								"type": "array",
+								"items": {
+									"type": "string"
+								}
+							},
+							"rejected": {
+								"type": "array",
+								"items": {
+									"$ref": "#/components/schemas/SyncRejection"
+								}
+							},
+							"snapshot": {
+								"$ref": "#/components/schemas/SyncSnapshot"
+							},
+							"cursor": {
+								"type": "integer",
+								"minimum": 0,
+								"maximum": 9007199254740991
+							},
+							"hlc": {
+								"$ref": "#/components/schemas/Hlc"
+							},
+							"epoch": {
+								"type": "integer",
+								"minimum": 0,
+								"maximum": 9007199254740991
+							},
+							"scope": {
+								"type": "string"
+							},
+							"readOnly": {
+								"type": "array",
+								"items": {
+									"type": "string"
+								}
+							},
+							"targets": {
+								"type": "array",
+								"items": {
+									"$ref": "#/components/schemas/ShareTarget"
+								}
+							}
+						},
+						"required": [
+							"acked",
+							"rejected",
+							"snapshot",
+							"cursor",
+							"hlc",
+							"epoch"
+						],
+						"additionalProperties": false
+					}
+				]
+			},
+			"SyncRejection": {
+				"type": "object",
+				"properties": {
+					"opId": {
+						"type": "string"
+					},
+					"reason": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"opId",
+					"reason"
+				],
+				"additionalProperties": false
+			},
+			"Change": {
 				"allOf": [
 					{
 						"oneOf": [
@@ -78,14 +203,17 @@
 							"opId": {
 								"type": "string"
 							},
-							"hlc": {
-								"$ref": "#/components/schemas/Hlc"
+							"seq": {
+								"type": "integer",
+								"exclusiveMinimum": 0,
+								"maximum": 9007199254740991
 							}
 						},
 						"required": [
 							"opId",
-							"hlc"
-						]
+							"seq"
+						],
+						"additionalProperties": false
 					}
 				]
 			},
@@ -240,14 +368,16 @@
 							"deleted": {
 								"type": "boolean"
 							}
-						}
+						},
+						"additionalProperties": false
 					}
 				},
 				"required": [
 					"kind",
 					"id",
 					"fields"
-				]
+				],
+				"additionalProperties": false
 			},
 			"Due": {
 				"type": "object",
@@ -269,7 +399,8 @@
 				"required": [
 					"date",
 					"time"
-				]
+				],
+				"additionalProperties": false
 			},
 			"DateKey": {
 				"description": "Local calendar date, `YYYY-MM-DD`.",
@@ -304,7 +435,8 @@
 						"required": [
 							"interval",
 							"unit"
-						]
+						],
+						"additionalProperties": false
 					},
 					{
 						"type": "object",
@@ -330,7 +462,8 @@
 						"required": [
 							"interval",
 							"unit"
-						]
+						],
+						"additionalProperties": false
 					}
 				],
 				"x-flatten": {
@@ -385,7 +518,8 @@
 						"required": [
 							"kind",
 							"minutes"
-						]
+						],
+						"additionalProperties": false
 					},
 					{
 						"type": "object",
@@ -405,7 +539,8 @@
 							"kind",
 							"date",
 							"time"
-						]
+						],
+						"additionalProperties": false
 					}
 				],
 				"x-inline": true
@@ -447,7 +582,8 @@
 					"longitude",
 					"radius",
 					"trigger"
-				]
+				],
+				"additionalProperties": false
 			},
 			"LocationTrigger": {
 				"type": "string",
@@ -496,7 +632,8 @@
 					"edge",
 					"minutes",
 					"occurrences"
-				]
+				],
+				"additionalProperties": false
 			},
 			"EventEdge": {
 				"type": "string",
@@ -530,7 +667,8 @@
 					"start",
 					"end",
 					"original"
-				]
+				],
+				"additionalProperties": false
 			},
 			"ImageRef": {
 				"type": "object",
@@ -554,7 +692,8 @@
 					"id",
 					"width",
 					"height"
-				]
+				],
+				"additionalProperties": false
 			},
 			"ProjectPatch": {
 				"type": "object",
@@ -586,14 +725,16 @@
 							"deleted": {
 								"type": "boolean"
 							}
-						}
+						},
+						"additionalProperties": false
 					}
 				},
 				"required": [
 					"kind",
 					"id",
 					"fields"
-				]
+				],
+				"additionalProperties": false
 			},
 			"SectionPatch": {
 				"type": "object",
@@ -631,14 +772,16 @@
 							"deleted": {
 								"type": "boolean"
 							}
-						}
+						},
+						"additionalProperties": false
 					}
 				},
 				"required": [
 					"kind",
 					"id",
 					"fields"
-				]
+				],
+				"additionalProperties": false
 			},
 			"LabelPatch": {
 				"type": "object",
@@ -664,14 +807,16 @@
 							"deleted": {
 								"type": "boolean"
 							}
-						}
+						},
+						"additionalProperties": false
 					}
 				},
 				"required": [
 					"kind",
 					"id",
 					"fields"
-				]
+				],
+				"additionalProperties": false
 			},
 			"CommentPatch": {
 				"type": "object",
@@ -718,14 +863,16 @@
 							"deleted": {
 								"type": "boolean"
 							}
-						}
+						},
+						"additionalProperties": false
 					}
 				},
 				"required": [
 					"kind",
 					"id",
 					"fields"
-				]
+				],
+				"additionalProperties": false
 			},
 			"CommentReadPatch": {
 				"type": "object",
@@ -748,14 +895,16 @@
 							"deleted": {
 								"type": "boolean"
 							}
-						}
+						},
+						"additionalProperties": false
 					}
 				},
 				"required": [
 					"kind",
 					"id",
 					"fields"
-				]
+				],
+				"additionalProperties": false
 			},
 			"SettingsPatch": {
 				"type": "object",
@@ -788,14 +937,16 @@
 							"deleted": {
 								"type": "boolean"
 							}
-						}
+						},
+						"additionalProperties": false
 					}
 				},
 				"required": [
 					"kind",
 					"id",
 					"fields"
-				]
+				],
+				"additionalProperties": false
 			},
 			"DictationChoice": {
 				"type": "string",
@@ -820,822 +971,6 @@
 			"Hlc": {
 				"type": "string",
 				"x-validate": "isHlc"
-			},
-			"SyncResponse": {
-				"anyOf": [
-					{
-						"type": "object",
-						"properties": {
-							"acked": {
-								"type": "array",
-								"items": {
-									"type": "string"
-								}
-							},
-							"changes": {
-								"type": "array",
-								"items": {
-									"$ref": "#/components/schemas/Change"
-								}
-							},
-							"cursor": {
-								"type": "integer",
-								"minimum": 0,
-								"maximum": 9007199254740991
-							},
-							"hlc": {
-								"$ref": "#/components/schemas/Hlc"
-							},
-							"epoch": {
-								"type": "integer",
-								"minimum": 0,
-								"maximum": 9007199254740991
-							},
-							"scope": {
-								"type": "string"
-							}
-						},
-						"required": [
-							"acked",
-							"changes",
-							"cursor",
-							"hlc",
-							"epoch"
-						],
-						"additionalProperties": false
-					},
-					{
-						"type": "object",
-						"properties": {
-							"acked": {
-								"type": "array",
-								"items": {
-									"type": "string"
-								}
-							},
-							"snapshot": {
-								"$ref": "#/components/schemas/SyncSnapshot"
-							},
-							"cursor": {
-								"type": "integer",
-								"minimum": 0,
-								"maximum": 9007199254740991
-							},
-							"hlc": {
-								"$ref": "#/components/schemas/Hlc"
-							},
-							"epoch": {
-								"type": "integer",
-								"minimum": 0,
-								"maximum": 9007199254740991
-							},
-							"scope": {
-								"type": "string"
-							},
-							"readOnly": {
-								"type": "array",
-								"items": {
-									"type": "string"
-								}
-							},
-							"targets": {
-								"type": "array",
-								"items": {
-									"$ref": "#/components/schemas/ShareTarget"
-								}
-							}
-						},
-						"required": [
-							"acked",
-							"snapshot",
-							"cursor",
-							"hlc",
-							"epoch"
-						],
-						"additionalProperties": false
-					}
-				]
-			},
-			"Change": {
-				"allOf": [
-					{
-						"oneOf": [
-							{
-								"$ref": "#/components/schemas/TaskPatchOutput"
-							},
-							{
-								"$ref": "#/components/schemas/ProjectPatchOutput"
-							},
-							{
-								"$ref": "#/components/schemas/SectionPatchOutput"
-							},
-							{
-								"$ref": "#/components/schemas/LabelPatchOutput"
-							},
-							{
-								"$ref": "#/components/schemas/CommentPatchOutput"
-							},
-							{
-								"$ref": "#/components/schemas/CommentReadPatchOutput"
-							},
-							{
-								"$ref": "#/components/schemas/SettingsPatchOutput"
-							}
-						]
-					},
-					{
-						"type": "object",
-						"properties": {
-							"opId": {
-								"type": "string"
-							},
-							"seq": {
-								"type": "integer",
-								"exclusiveMinimum": 0,
-								"maximum": 9007199254740991
-							}
-						},
-						"required": [
-							"opId",
-							"seq"
-						],
-						"additionalProperties": false
-					}
-				]
-			},
-			"TaskPatchOutput": {
-				"type": "object",
-				"properties": {
-					"kind": {
-						"type": "string",
-						"const": "task"
-					},
-					"id": {
-						"type": "string"
-					},
-					"fields": {
-						"type": "object",
-						"properties": {
-							"parentId": {
-								"type": [
-									"string",
-									"null"
-								]
-							},
-							"order": {
-								"type": "number"
-							},
-							"title": {
-								"type": "string"
-							},
-							"notes": {
-								"type": "string"
-							},
-							"projectId": {
-								"type": [
-									"string",
-									"null"
-								]
-							},
-							"sectionId": {
-								"type": [
-									"string",
-									"null"
-								]
-							},
-							"labelIds": {
-								"type": "array",
-								"items": {
-									"type": "string"
-								}
-							},
-							"due": {
-								"anyOf": [
-									{
-										"$ref": "#/components/schemas/DueOutput"
-									},
-									{
-										"type": "null"
-									}
-								]
-							},
-							"recurrence": {
-								"anyOf": [
-									{
-										"$ref": "#/components/schemas/RecurrenceOutput"
-									},
-									{
-										"type": "null"
-									}
-								]
-							},
-							"priority": {
-								"$ref": "#/components/schemas/Priority"
-							},
-							"reminders": {
-								"type": "array",
-								"items": {
-									"$ref": "#/components/schemas/ReminderOutput"
-								}
-							},
-							"location": {
-								"anyOf": [
-									{
-										"$ref": "#/components/schemas/TaskLocationOutput"
-									},
-									{
-										"type": "null"
-									}
-								]
-							},
-							"event": {
-								"anyOf": [
-									{
-										"$ref": "#/components/schemas/TaskEventOutput"
-									},
-									{
-										"type": "null"
-									}
-								]
-							},
-							"images": {
-								"type": "array",
-								"items": {
-									"$ref": "#/components/schemas/ImageRefOutput"
-								}
-							},
-							"createdAt": {
-								"type": "integer",
-								"minimum": -9007199254740991,
-								"maximum": 9007199254740991
-							},
-							"completedAt": {
-								"anyOf": [
-									{
-										"type": "integer",
-										"minimum": -9007199254740991,
-										"maximum": 9007199254740991
-									},
-									{
-										"type": "null"
-									}
-								]
-							},
-							"createdBy": {
-								"type": [
-									"string",
-									"null"
-								]
-							},
-							"completedBy": {
-								"type": [
-									"string",
-									"null"
-								]
-							},
-							"lastCompletedAt": {
-								"anyOf": [
-									{
-										"type": "integer",
-										"minimum": -9007199254740991,
-										"maximum": 9007199254740991
-									},
-									{
-										"type": "null"
-									}
-								]
-							},
-							"sourceKey": {
-								"type": [
-									"string",
-									"null"
-								]
-							},
-							"deleted": {
-								"type": "boolean"
-							}
-						},
-						"additionalProperties": false
-					}
-				},
-				"required": [
-					"kind",
-					"id",
-					"fields"
-				],
-				"additionalProperties": false
-			},
-			"DueOutput": {
-				"type": "object",
-				"properties": {
-					"date": {
-						"$ref": "#/components/schemas/DateKey"
-					},
-					"time": {
-						"anyOf": [
-							{
-								"$ref": "#/components/schemas/TimeOfDay"
-							},
-							{
-								"type": "null"
-							}
-						]
-					}
-				},
-				"required": [
-					"date",
-					"time"
-				],
-				"additionalProperties": false
-			},
-			"RecurrenceOutput": {
-				"oneOf": [
-					{
-						"type": "object",
-						"properties": {
-							"interval": {
-								"type": "integer",
-								"exclusiveMinimum": 0,
-								"maximum": 9007199254740991
-							},
-							"unit": {
-								"type": "string",
-								"enum": [
-									"day",
-									"weekday",
-									"month",
-									"year"
-								]
-							}
-						},
-						"required": [
-							"interval",
-							"unit"
-						],
-						"additionalProperties": false
-					},
-					{
-						"type": "object",
-						"properties": {
-							"interval": {
-								"type": "integer",
-								"exclusiveMinimum": 0,
-								"maximum": 9007199254740991
-							},
-							"unit": {
-								"type": "string",
-								"const": "week"
-							},
-							"days": {
-								"readOnly": true,
-								"minItems": 2,
-								"type": "array",
-								"items": {
-									"$ref": "#/components/schemas/Weekday"
-								}
-							}
-						},
-						"required": [
-							"interval",
-							"unit"
-						],
-						"additionalProperties": false
-					}
-				],
-				"x-flatten": {
-					"unit": "RecurrenceUnit"
-				}
-			},
-			"ReminderOutput": {
-				"oneOf": [
-					{
-						"type": "object",
-						"properties": {
-							"kind": {
-								"type": "string",
-								"const": "before"
-							},
-							"minutes": {
-								"type": "integer",
-								"minimum": 0,
-								"maximum": 9007199254740991
-							}
-						},
-						"required": [
-							"kind",
-							"minutes"
-						],
-						"additionalProperties": false
-					},
-					{
-						"type": "object",
-						"properties": {
-							"kind": {
-								"type": "string",
-								"const": "at"
-							},
-							"date": {
-								"$ref": "#/components/schemas/DateKey"
-							},
-							"time": {
-								"$ref": "#/components/schemas/TimeOfDay"
-							}
-						},
-						"required": [
-							"kind",
-							"date",
-							"time"
-						],
-						"additionalProperties": false
-					}
-				],
-				"x-inline": true
-			},
-			"TaskLocationOutput": {
-				"type": "object",
-				"properties": {
-					"name": {
-						"type": "string"
-					},
-					"address": {
-						"type": [
-							"string",
-							"null"
-						]
-					},
-					"latitude": {
-						"type": "number",
-						"minimum": -90,
-						"maximum": 90
-					},
-					"longitude": {
-						"type": "number",
-						"minimum": -180,
-						"maximum": 180
-					},
-					"radius": {
-						"type": "number",
-						"exclusiveMinimum": 0
-					},
-					"trigger": {
-						"$ref": "#/components/schemas/LocationTrigger"
-					}
-				},
-				"required": [
-					"name",
-					"address",
-					"latitude",
-					"longitude",
-					"radius",
-					"trigger"
-				],
-				"additionalProperties": false
-			},
-			"TaskEventOutput": {
-				"type": "object",
-				"properties": {
-					"id": {
-						"type": "string"
-					},
-					"title": {
-						"type": "string"
-					},
-					"allDay": {
-						"type": "boolean"
-					},
-					"series": {
-						"type": "boolean"
-					},
-					"edge": {
-						"$ref": "#/components/schemas/EventEdge"
-					},
-					"minutes": {
-						"type": "integer",
-						"minimum": 0,
-						"maximum": 9007199254740991
-					},
-					"occurrences": {
-						"minItems": 1,
-						"type": "array",
-						"items": {
-							"$ref": "#/components/schemas/EventOccurrenceOutput"
-						}
-					}
-				},
-				"required": [
-					"id",
-					"title",
-					"allDay",
-					"series",
-					"edge",
-					"minutes",
-					"occurrences"
-				],
-				"additionalProperties": false
-			},
-			"EventOccurrenceOutput": {
-				"type": "object",
-				"properties": {
-					"start": {
-						"type": "integer",
-						"minimum": -9007199254740991,
-						"maximum": 9007199254740991
-					},
-					"end": {
-						"type": "integer",
-						"minimum": -9007199254740991,
-						"maximum": 9007199254740991
-					},
-					"original": {
-						"type": "integer",
-						"minimum": -9007199254740991,
-						"maximum": 9007199254740991
-					}
-				},
-				"required": [
-					"start",
-					"end",
-					"original"
-				],
-				"additionalProperties": false
-			},
-			"ImageRefOutput": {
-				"type": "object",
-				"properties": {
-					"id": {
-						"type": "string",
-						"minLength": 1
-					},
-					"width": {
-						"type": "integer",
-						"exclusiveMinimum": 0,
-						"maximum": 9007199254740991
-					},
-					"height": {
-						"type": "integer",
-						"exclusiveMinimum": 0,
-						"maximum": 9007199254740991
-					}
-				},
-				"required": [
-					"id",
-					"width",
-					"height"
-				],
-				"additionalProperties": false
-			},
-			"ProjectPatchOutput": {
-				"type": "object",
-				"properties": {
-					"kind": {
-						"type": "string",
-						"const": "project"
-					},
-					"id": {
-						"type": "string"
-					},
-					"fields": {
-						"type": "object",
-						"properties": {
-							"name": {
-								"type": "string"
-							},
-							"createdAt": {
-								"type": "integer",
-								"minimum": -9007199254740991,
-								"maximum": 9007199254740991
-							},
-							"sourceKey": {
-								"type": [
-									"string",
-									"null"
-								]
-							},
-							"deleted": {
-								"type": "boolean"
-							}
-						},
-						"additionalProperties": false
-					}
-				},
-				"required": [
-					"kind",
-					"id",
-					"fields"
-				],
-				"additionalProperties": false
-			},
-			"SectionPatchOutput": {
-				"type": "object",
-				"properties": {
-					"kind": {
-						"type": "string",
-						"const": "section"
-					},
-					"id": {
-						"type": "string"
-					},
-					"fields": {
-						"type": "object",
-						"properties": {
-							"projectId": {
-								"type": "string"
-							},
-							"name": {
-								"type": "string"
-							},
-							"order": {
-								"type": "number"
-							},
-							"createdAt": {
-								"type": "integer",
-								"minimum": -9007199254740991,
-								"maximum": 9007199254740991
-							},
-							"sourceKey": {
-								"type": [
-									"string",
-									"null"
-								]
-							},
-							"deleted": {
-								"type": "boolean"
-							}
-						},
-						"additionalProperties": false
-					}
-				},
-				"required": [
-					"kind",
-					"id",
-					"fields"
-				],
-				"additionalProperties": false
-			},
-			"LabelPatchOutput": {
-				"type": "object",
-				"properties": {
-					"kind": {
-						"type": "string",
-						"const": "label"
-					},
-					"id": {
-						"type": "string"
-					},
-					"fields": {
-						"type": "object",
-						"properties": {
-							"name": {
-								"type": "string"
-							},
-							"createdAt": {
-								"type": "integer",
-								"minimum": -9007199254740991,
-								"maximum": 9007199254740991
-							},
-							"deleted": {
-								"type": "boolean"
-							}
-						},
-						"additionalProperties": false
-					}
-				},
-				"required": [
-					"kind",
-					"id",
-					"fields"
-				],
-				"additionalProperties": false
-			},
-			"CommentPatchOutput": {
-				"type": "object",
-				"properties": {
-					"kind": {
-						"type": "string",
-						"const": "comment"
-					},
-					"id": {
-						"type": "string"
-					},
-					"fields": {
-						"type": "object",
-						"properties": {
-							"taskId": {
-								"type": "string"
-							},
-							"body": {
-								"type": "string"
-							},
-							"authorId": {
-								"type": [
-									"string",
-									"null"
-								]
-							},
-							"createdAt": {
-								"type": "integer",
-								"minimum": -9007199254740991,
-								"maximum": 9007199254740991
-							},
-							"editedAt": {
-								"anyOf": [
-									{
-										"type": "integer",
-										"minimum": -9007199254740991,
-										"maximum": 9007199254740991
-									},
-									{
-										"type": "null"
-									}
-								]
-							},
-							"deleted": {
-								"type": "boolean"
-							}
-						},
-						"additionalProperties": false
-					}
-				},
-				"required": [
-					"kind",
-					"id",
-					"fields"
-				],
-				"additionalProperties": false
-			},
-			"CommentReadPatchOutput": {
-				"type": "object",
-				"properties": {
-					"kind": {
-						"type": "string",
-						"const": "read"
-					},
-					"id": {
-						"type": "string"
-					},
-					"fields": {
-						"type": "object",
-						"properties": {
-							"readAt": {
-								"type": "integer",
-								"minimum": -9007199254740991,
-								"maximum": 9007199254740991
-							},
-							"deleted": {
-								"type": "boolean"
-							}
-						},
-						"additionalProperties": false
-					}
-				},
-				"required": [
-					"kind",
-					"id",
-					"fields"
-				],
-				"additionalProperties": false
-			},
-			"SettingsPatchOutput": {
-				"type": "object",
-				"properties": {
-					"kind": {
-						"type": "string",
-						"const": "settings"
-					},
-					"id": {
-						"type": "string"
-					},
-					"fields": {
-						"type": "object",
-						"properties": {
-							"timeZone": {
-								"type": [
-									"string",
-									"null"
-								]
-							},
-							"dictation": {
-								"$ref": "#/components/schemas/DictationChoice"
-							},
-							"quickAddButtons": {
-								"type": "array",
-								"items": {
-									"$ref": "#/components/schemas/QuickAddButton"
-								}
-							},
-							"deleted": {
-								"type": "boolean"
-							}
-						},
-						"additionalProperties": false
-					}
-				},
-				"required": [
-					"kind",
-					"id",
-					"fields"
-				],
-				"additionalProperties": false
 			},
 			"SyncSnapshot": {
 				"type": "object",
@@ -1733,7 +1068,7 @@
 					"due": {
 						"anyOf": [
 							{
-								"$ref": "#/components/schemas/DueOutput"
+								"$ref": "#/components/schemas/Due"
 							},
 							{
 								"type": "null"
@@ -1743,7 +1078,7 @@
 					"recurrence": {
 						"anyOf": [
 							{
-								"$ref": "#/components/schemas/RecurrenceOutput"
+								"$ref": "#/components/schemas/Recurrence"
 							},
 							{
 								"type": "null"
@@ -1756,13 +1091,13 @@
 					"reminders": {
 						"type": "array",
 						"items": {
-							"$ref": "#/components/schemas/ReminderOutput"
+							"$ref": "#/components/schemas/Reminder"
 						}
 					},
 					"location": {
 						"anyOf": [
 							{
-								"$ref": "#/components/schemas/TaskLocationOutput"
+								"$ref": "#/components/schemas/TaskLocation"
 							},
 							{
 								"type": "null"
@@ -1772,7 +1107,7 @@
 					"event": {
 						"anyOf": [
 							{
-								"$ref": "#/components/schemas/TaskEventOutput"
+								"$ref": "#/components/schemas/TaskEvent"
 							},
 							{
 								"type": "null"
@@ -1782,7 +1117,7 @@
 					"images": {
 						"type": "array",
 						"items": {
-							"$ref": "#/components/schemas/ImageRefOutput"
+							"$ref": "#/components/schemas/ImageRef"
 						}
 					},
 					"createdAt": {
@@ -2278,7 +1613,7 @@
 					"due": {
 						"anyOf": [
 							{
-								"$ref": "#/components/schemas/Due"
+								"$ref": "#/components/schemas/DueInput"
 							},
 							{
 								"type": "null"
@@ -2288,7 +1623,7 @@
 					"recurrence": {
 						"anyOf": [
 							{
-								"$ref": "#/components/schemas/Recurrence"
+								"$ref": "#/components/schemas/RecurrenceInput"
 							},
 							{
 								"type": "null"
@@ -2301,13 +1636,13 @@
 					"reminders": {
 						"type": "array",
 						"items": {
-							"$ref": "#/components/schemas/Reminder"
+							"$ref": "#/components/schemas/ReminderInput"
 						}
 					},
 					"location": {
 						"anyOf": [
 							{
-								"$ref": "#/components/schemas/TaskLocation"
+								"$ref": "#/components/schemas/TaskLocationInput"
 							},
 							{
 								"type": "null"
@@ -2317,7 +1652,7 @@
 					"event": {
 						"anyOf": [
 							{
-								"$ref": "#/components/schemas/TaskEvent"
+								"$ref": "#/components/schemas/TaskEventInput"
 							},
 							{
 								"type": "null"
@@ -2327,11 +1662,261 @@
 					"images": {
 						"type": "array",
 						"items": {
-							"$ref": "#/components/schemas/ImageRef"
+							"$ref": "#/components/schemas/ImageRefInput"
 						}
 					}
 				},
 				"description": "The editable fields of a task. A missing field is left alone; for nullable fields, `null` clears the value. A section moves the task into its project, and a new project without one leaves the task in no section."
+			},
+			"DueInput": {
+				"type": "object",
+				"properties": {
+					"date": {
+						"$ref": "#/components/schemas/DateKey"
+					},
+					"time": {
+						"anyOf": [
+							{
+								"$ref": "#/components/schemas/TimeOfDay"
+							},
+							{
+								"type": "null"
+							}
+						]
+					}
+				},
+				"required": [
+					"date",
+					"time"
+				]
+			},
+			"RecurrenceInput": {
+				"oneOf": [
+					{
+						"type": "object",
+						"properties": {
+							"interval": {
+								"type": "integer",
+								"exclusiveMinimum": 0,
+								"maximum": 9007199254740991
+							},
+							"unit": {
+								"type": "string",
+								"enum": [
+									"day",
+									"weekday",
+									"month",
+									"year"
+								]
+							}
+						},
+						"required": [
+							"interval",
+							"unit"
+						]
+					},
+					{
+						"type": "object",
+						"properties": {
+							"interval": {
+								"type": "integer",
+								"exclusiveMinimum": 0,
+								"maximum": 9007199254740991
+							},
+							"unit": {
+								"type": "string",
+								"const": "week"
+							},
+							"days": {
+								"readOnly": true,
+								"minItems": 2,
+								"type": "array",
+								"items": {
+									"$ref": "#/components/schemas/Weekday"
+								}
+							}
+						},
+						"required": [
+							"interval",
+							"unit"
+						]
+					}
+				],
+				"x-flatten": {
+					"unit": "RecurrenceUnit"
+				}
+			},
+			"ReminderInput": {
+				"oneOf": [
+					{
+						"type": "object",
+						"properties": {
+							"kind": {
+								"type": "string",
+								"const": "before"
+							},
+							"minutes": {
+								"type": "integer",
+								"minimum": 0,
+								"maximum": 9007199254740991
+							}
+						},
+						"required": [
+							"kind",
+							"minutes"
+						]
+					},
+					{
+						"type": "object",
+						"properties": {
+							"kind": {
+								"type": "string",
+								"const": "at"
+							},
+							"date": {
+								"$ref": "#/components/schemas/DateKey"
+							},
+							"time": {
+								"$ref": "#/components/schemas/TimeOfDay"
+							}
+						},
+						"required": [
+							"kind",
+							"date",
+							"time"
+						]
+					}
+				],
+				"x-inline": true
+			},
+			"TaskLocationInput": {
+				"type": "object",
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"address": {
+						"type": [
+							"string",
+							"null"
+						]
+					},
+					"latitude": {
+						"type": "number",
+						"minimum": -90,
+						"maximum": 90
+					},
+					"longitude": {
+						"type": "number",
+						"minimum": -180,
+						"maximum": 180
+					},
+					"radius": {
+						"type": "number",
+						"exclusiveMinimum": 0
+					},
+					"trigger": {
+						"$ref": "#/components/schemas/LocationTrigger"
+					}
+				},
+				"required": [
+					"name",
+					"address",
+					"latitude",
+					"longitude",
+					"radius",
+					"trigger"
+				]
+			},
+			"TaskEventInput": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"title": {
+						"type": "string"
+					},
+					"allDay": {
+						"type": "boolean"
+					},
+					"series": {
+						"type": "boolean"
+					},
+					"edge": {
+						"$ref": "#/components/schemas/EventEdge"
+					},
+					"minutes": {
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 9007199254740991
+					},
+					"occurrences": {
+						"minItems": 1,
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/EventOccurrenceInput"
+						}
+					}
+				},
+				"required": [
+					"id",
+					"title",
+					"allDay",
+					"series",
+					"edge",
+					"minutes",
+					"occurrences"
+				]
+			},
+			"EventOccurrenceInput": {
+				"type": "object",
+				"properties": {
+					"start": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991
+					},
+					"end": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991
+					},
+					"original": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991
+					}
+				},
+				"required": [
+					"start",
+					"end",
+					"original"
+				]
+			},
+			"ImageRefInput": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string",
+						"minLength": 1
+					},
+					"width": {
+						"type": "integer",
+						"exclusiveMinimum": 0,
+						"maximum": 9007199254740991
+					},
+					"height": {
+						"type": "integer",
+						"exclusiveMinimum": 0,
+						"maximum": 9007199254740991
+					}
+				},
+				"required": [
+					"id",
+					"width",
+					"height"
+				]
 			},
 			"Ok": {
 				"type": "object",
@@ -2537,7 +2122,7 @@
 			"post": {
 				"operationId": "sync",
 				"summary": "Sync the space",
-				"description": "The apps’ replication protocol. `{ \"cursor\": 0, \"ops\": [] }` answers with the whole visible snapshot. A task op is applied when the task is editable before and after it, and a comment op when its task is editable and the comment is new or the caller’s own; project and label ops are acknowledged and dropped.",
+				"description": "The apps’ replication protocol. `{ \"cursor\": 0, \"ops\": [] }` answers with the whole visible snapshot. A task op is applied when the task is editable before and after it, and a comment op when its task is editable and the comment is new or the caller’s own; project and label ops are acknowledged and dropped. Each op is validated on its own: one that fails is listed in `rejected` with the reason and never applies, the rest still do, and the answer is the whole snapshot.",
 				"parameters": [
 					{
 						"in": "query",

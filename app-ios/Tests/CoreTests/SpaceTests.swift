@@ -30,7 +30,7 @@ import Testing
             .snapshot(.init(snapshot: shared, cursor: 7, hlc: "5:0:server", epoch: 0, scope: "h1", readOnly: ["roof"])),
             space: "ann"
         )
-        #expect(applied)
+        #expect(applied != nil)
         return store
     }
 
@@ -68,11 +68,11 @@ import Testing
 
         let at = pinned.epochMilliseconds + 5
         let response = try JSONDecoder().decode(API.SyncResponse.self, from: Data("""
-        {"acked":["\(op.opId)"],"cursor":8,"hlc":"6:0:server","epoch":0,"scope":"h2","changes":[{"seq":8,"opId":"op-ann",\
+        {"rejected":[],"acked":["\(op.opId)"],"cursor":8,"hlc":"6:0:server","epoch":0,"scope":"h2","changes":[{"seq":8,"opId":"op-ann",\
         "kind":"comment","id":"c-ann","fields":{"deleted":false,"taskId":"paint","body":"Thanks","authorId":"ann",\
         "createdAt":\(at),"editedAt":null}}]}
         """.utf8))
-        #expect(store.takeSyncResponse(response, space: "ann"))
+        #expect(store.takeSyncResponse(response, space: "ann") != nil)
         #expect(store.comments(on: "paint").map(\.id) == [mine.id, "c-ann"])
         #expect(store.commentBadge("paint", me: "me") == CommentBadge(count: 2, unread: 1))
 
@@ -169,7 +169,7 @@ import Testing
             .changes(.init(acked: [opId], cursor: 8, hlc: "9:0:server", epoch: 0, scope: "h2")),
             space: "ann"
         )
-        #expect(applied)
+        #expect(applied != nil)
         let section = try #require(store.snapshot.spaces["ann"])
         #expect(section.outbox == [])
         #expect(section.cursor == 8)

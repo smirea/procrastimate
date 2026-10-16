@@ -179,7 +179,7 @@ export const agentContract = {
 				inputStructure: 'detailed',
 				summary: 'Sync the space',
 				description:
-					'The apps’ replication protocol. `{ "cursor": 0, "ops": [] }` answers with the whole visible snapshot. A task op is applied when the task is editable before and after it, and a comment op when its task is editable and the comment is new or the caller’s own; project and label ops are acknowledged and dropped.',
+					'The apps’ replication protocol. `{ "cursor": 0, "ops": [] }` answers with the whole visible snapshot. A task op is applied when the task is editable before and after it, and a comment op when its task is editable and the comment is new or the caller’s own; project and label ops are acknowledged and dropped. Each op is validated on its own: one that fails is listed in `rejected` with the reason and never applies, the rest still do, and the answer is the whole snapshot.',
 			}),
 		)
 		.input(z.object({ query: spaceQuery, body: syncRequestSchema }))

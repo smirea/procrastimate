@@ -684,6 +684,517 @@
 					"kind": "task"
 				}
 			]
+		},
+		{
+			"fn": "settle",
+			"test": "rejected ops › a batch with one invalid op drops the acked ones and that one, and keeps the rest waiting",
+			"input": [
+				[
+					{
+						"fields": {
+							"title": "Renamed"
+						},
+						"hlc": "20:0:a",
+						"id": "t",
+						"kind": "task",
+						"opId": "edit"
+					},
+					{
+						"fields": {
+							"due": {
+								"date": "12784-10-19",
+								"time": null
+							},
+							"title": "Refused"
+						},
+						"hlc": "21:0:a",
+						"id": "t",
+						"kind": "task",
+						"opId": "bad"
+					},
+					{
+						"fields": {
+							"notes": "n"
+						},
+						"hlc": "22:0:a",
+						"id": "u",
+						"kind": "task",
+						"opId": "later"
+					}
+				],
+				[
+					"edit"
+				],
+				[
+					{
+						"opId": "bad",
+						"reason": "fields.due.date: Invalid input"
+					}
+				]
+			],
+			"output": {
+				"outbox": [
+					{
+						"fields": {
+							"notes": "n"
+						},
+						"hlc": "22:0:a",
+						"id": "u",
+						"kind": "task",
+						"opId": "later"
+					}
+				],
+				"rejected": [
+					{
+						"fields": {
+							"due": {
+								"date": "12784-10-19",
+								"time": null
+							},
+							"title": "Refused"
+						},
+						"hlc": "21:0:a",
+						"id": "t",
+						"kind": "task",
+						"opId": "bad"
+					}
+				]
+			}
+		},
+		{
+			"fn": "rejectionNotice",
+			"test": "rejected ops › the rejected op leaves the outbox and its entity takes the server value from the snapshot",
+			"input": [
+				{
+					"comments": [],
+					"labels": [],
+					"projects": [],
+					"reads": [],
+					"sections": [],
+					"settings": {
+						"dictation": "native",
+						"quickAddButtons": [
+							"date",
+							"priority",
+							"reminders",
+							"subtasks"
+						],
+						"timeZone": null
+					},
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "t",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "Refused"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 2,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "u",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "u"
+						}
+					]
+				},
+				[
+					{
+						"fields": {
+							"due": {
+								"date": "12784-10-19",
+								"time": null
+							},
+							"title": "Refused"
+						},
+						"hlc": "21:0:a",
+						"id": "t",
+						"kind": "task",
+						"opId": "bad"
+					}
+				]
+			],
+			"output": "Couldn’t save a change to “Refused”"
+		},
+		{
+			"fn": "rejectionNotice",
+			"test": "rejected ops › the notice names the one entity it refused, or counts them",
+			"input": [
+				{
+					"comments": [],
+					"labels": [],
+					"projects": [
+						{
+							"createdAt": 1,
+							"id": "p",
+							"name": "Home"
+						}
+					],
+					"reads": [],
+					"sections": [],
+					"settings": {
+						"dictation": "native",
+						"quickAddButtons": [
+							"date",
+							"priority",
+							"reminders",
+							"subtasks"
+						],
+						"timeZone": null
+					},
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "t",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "Milk"
+						}
+					]
+				},
+				[]
+			],
+			"output": null
+		},
+		{
+			"fn": "rejectionNotice",
+			"test": "rejected ops › the notice names the one entity it refused, or counts them",
+			"input": [
+				{
+					"comments": [],
+					"labels": [],
+					"projects": [
+						{
+							"createdAt": 1,
+							"id": "p",
+							"name": "Home"
+						}
+					],
+					"reads": [],
+					"sections": [],
+					"settings": {
+						"dictation": "native",
+						"quickAddButtons": [
+							"date",
+							"priority",
+							"reminders",
+							"subtasks"
+						],
+						"timeZone": null
+					},
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "t",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "Milk"
+						}
+					]
+				},
+				[
+					{
+						"fields": {
+							"name": ""
+						},
+						"hlc": "1:0:a",
+						"id": "p",
+						"kind": "project",
+						"opId": "p1"
+					}
+				]
+			],
+			"output": "Couldn’t save a change to “Home”"
+		},
+		{
+			"fn": "rejectionNotice",
+			"test": "rejected ops › the notice names the one entity it refused, or counts them",
+			"input": [
+				{
+					"comments": [],
+					"labels": [],
+					"projects": [
+						{
+							"createdAt": 1,
+							"id": "p",
+							"name": "Home"
+						}
+					],
+					"reads": [],
+					"sections": [],
+					"settings": {
+						"dictation": "native",
+						"quickAddButtons": [
+							"date",
+							"priority",
+							"reminders",
+							"subtasks"
+						],
+						"timeZone": null
+					},
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "t",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "Milk"
+						}
+					]
+				},
+				[
+					{
+						"fields": {
+							"body": ""
+						},
+						"hlc": "1:0:a",
+						"id": "c",
+						"kind": "comment",
+						"opId": "c1"
+					}
+				]
+			],
+			"output": "Couldn’t save a change"
+		},
+		{
+			"fn": "rejectionNotice",
+			"test": "rejected ops › the notice names the one entity it refused, or counts them",
+			"input": [
+				{
+					"comments": [],
+					"labels": [],
+					"projects": [
+						{
+							"createdAt": 1,
+							"id": "p",
+							"name": "Home"
+						}
+					],
+					"reads": [],
+					"sections": [],
+					"settings": {
+						"dictation": "native",
+						"quickAddButtons": [
+							"date",
+							"priority",
+							"reminders",
+							"subtasks"
+						],
+						"timeZone": null
+					},
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "t",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "Milk"
+						}
+					]
+				},
+				[
+					{
+						"fields": {
+							"due": {
+								"date": "12784-10-19",
+								"time": null
+							},
+							"title": "Refused"
+						},
+						"hlc": "21:0:a",
+						"id": "t",
+						"kind": "task",
+						"opId": "bad"
+					},
+					{
+						"fields": {
+							"title": "Renamed"
+						},
+						"hlc": "20:0:a",
+						"id": "t",
+						"kind": "task",
+						"opId": "again"
+					}
+				]
+			],
+			"output": "Couldn’t save a change to “Milk”"
+		},
+		{
+			"fn": "rejectionNotice",
+			"test": "rejected ops › the notice names the one entity it refused, or counts them",
+			"input": [
+				{
+					"comments": [],
+					"labels": [],
+					"projects": [
+						{
+							"createdAt": 1,
+							"id": "p",
+							"name": "Home"
+						}
+					],
+					"reads": [],
+					"sections": [],
+					"settings": {
+						"dictation": "native",
+						"quickAddButtons": [
+							"date",
+							"priority",
+							"reminders",
+							"subtasks"
+						],
+						"timeZone": null
+					},
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "t",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "Milk"
+						}
+					]
+				},
+				[
+					{
+						"fields": {
+							"due": {
+								"date": "12784-10-19",
+								"time": null
+							},
+							"title": "Refused"
+						},
+						"hlc": "21:0:a",
+						"id": "t",
+						"kind": "task",
+						"opId": "bad"
+					},
+					{
+						"fields": {
+							"name": ""
+						},
+						"hlc": "1:0:a",
+						"id": "p",
+						"kind": "project",
+						"opId": "p1"
+					},
+					{
+						"fields": {
+							"body": ""
+						},
+						"hlc": "1:0:a",
+						"id": "c",
+						"kind": "comment",
+						"opId": "c1"
+					}
+				]
+			],
+			"output": "Couldn’t save changes to 3 items"
 		}
 	]
 }

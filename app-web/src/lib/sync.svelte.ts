@@ -13,12 +13,14 @@ import { api, isUnauthorized } from './api.ts';
 import { images } from './images/images.svelte.ts';
 import { session } from './session.svelte.ts';
 import { store } from './store.svelte.ts';
+import { toasts } from './ui.svelte.ts';
 
 /**
  * Syncs this install with the signed-in user's account, then each space shared with them, one request per space:
  * on launch, on focus, when the network returns, one second after a commit, every minute while visible, and whenever
  * the realtime socket reports a cursor past this device's or a change in a shared space.
- * A failed sync keeps the outbox and retries on the next trigger. Nothing about it is shown.
+ * A failed sync keeps the outbox and retries on the next trigger. Nothing about it is shown, except a toast for an
+ * edit the server rejected, which leaves the outbox and goes back to the server's value.
  */
 
 const COMMIT_DELAY = 1000;
@@ -210,7 +212,9 @@ class Sync {
 			return;
 		}
 		const parsed = syncResponseSchema.safeParse(response);
-		if (parsed.success) store.takeSpaceResponse(owner, parsed.data);
+		if (!parsed.success) return;
+		const notice = store.takeSpaceResponse(owner, parsed.data);
+		if (notice) toasts.show(notice);
 	}
 
 	/** One round trip. True when the response was a full page or seeded the outbox, so another round is due. */
@@ -238,7 +242,8 @@ class Sync {
 			console.warn('sync: unreadable response', parsed.error.issues.slice(0, 5));
 			return false;
 		}
-		const seeded = store.takeResponse(parsed.data);
+		const { seeded, notice } = store.takeResponse(parsed.data);
+		if (notice) toasts.show(notice);
 		return seeded || ('changes' in parsed.data && parsed.data.changes.length >= SYNC_PAGE_SIZE);
 	}
 }

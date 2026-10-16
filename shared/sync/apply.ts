@@ -1,7 +1,15 @@
 import { newId } from '../id.ts';
 import { createClock, observe, type Clock } from './hlc.ts';
 import { diff, stamp } from './diff.ts';
-import { KINDS, type Change, type Op, type Patch, type Snapshot, type SyncResponse } from './protocol.ts';
+import {
+	KINDS,
+	type Change,
+	type Op,
+	type Patch,
+	type Rejection,
+	type Snapshot,
+	type SyncResponse,
+} from './protocol.ts';
 import {
 	emptySnapshot,
 	entitiesOf,
@@ -124,9 +132,46 @@ export function enqueue(outbox: readonly Op[], ops: readonly Op[]): Op[] {
 	);
 }
 
+/** Splits the outbox by the server's answer: the ops still waiting, and the ones it rejected, which never apply. */
+export function settle(
+	outbox: readonly Op[],
+	acked: readonly string[],
+	rejected: readonly Rejection[],
+): { outbox: Op[]; rejected: Op[] } {
+	const done = new Set(acked);
+	const refused = new Set(rejected.map(rejection => rejection.opId));
+	return {
+		outbox: outbox.filter(op => !done.has(op.opId) && !refused.has(op.opId)),
+		rejected: outbox.filter(op => refused.has(op.opId)),
+	};
+}
+
+function nameOf(snapshot: Snapshot, { kind, id }: Op): string | undefined {
+	switch (kind) {
+		case 'task':
+			return snapshot.tasks.find(task => task.id === id)?.title;
+		case 'project':
+			return snapshot.projects.find(project => project.id === id)?.name;
+		case 'section':
+			return snapshot.sections.find(section => section.id === id)?.name;
+		case 'label':
+			return snapshot.labels.find(label => label.id === id)?.name;
+	}
+}
+
+/** The notice for rejected ops, named by what `snapshot` shows for their entity before the server's value replaces it. */
+export function rejectionNotice(snapshot: Snapshot, rejected: readonly Op[]): string | null {
+	const entities = [...new Map(rejected.map(op => [`${op.kind}:${op.id}`, op])).values()];
+	if (!entities.length) return null;
+	if (entities.length > 1) return `Couldn’t save changes to ${entities.length} items`;
+	const name = nameOf(snapshot, entities[0]!);
+	return name ? `Couldn’t save a change to “${name}”` : 'Couldn’t save a change';
+}
+
 /**
- * Drops the acknowledged ops, takes the server's state (its snapshot, or the local one with its changes
- * applied), then replays what is still in the outbox on top. The first snapshot a seeding device gets also queues
+ * Drops the acknowledged and rejected ops, takes the server's state (its snapshot, or the local one with its changes
+ * applied), then replays what is still in the outbox on top. A rejection always comes with the snapshot, so the
+ * rejected op's entity shows the server's value again. The first snapshot a seeding device gets also queues
  * what its local data adds, so the caller syncs again when the outbox is not empty.
  */
 export function applyResponse(
@@ -135,12 +180,12 @@ export function applyResponse(
 	response: SyncResponse,
 	now: number,
 	options?: { sentReset?: boolean; nextOpId?: () => string },
-): { snapshot: Snapshot; sync: ClientSync } {
+): { snapshot: Snapshot; sync: ClientSync; rejected: Op[] } {
 	const epochChanged = response.epoch !== sync.epoch;
-	const acked = new Set(response.acked);
+	const settled = settle(sync.outbox, response.acked, response.rejected);
 	// A wipe on another device drops edits that were still waiting here, so they cannot recreate what was deleted.
 	// The device that sent `reset` keeps ops the server has not acked yet and replays them onto the wiped snapshot.
-	const kept = epochChanged && !options?.sentReset ? [] : sync.outbox.filter(op => !acked.has(op.opId));
+	const kept = epochChanged && !options?.sentReset ? [] : settled.outbox;
 	const base = 'snapshot' in response ? sortSnapshot(response.snapshot) : applyChanges(snapshot, response.changes);
 	let clock = observe(sync.clock, response.hlc);
 	let outbox = kept;
@@ -154,5 +199,6 @@ export function applyResponse(
 	return {
 		snapshot: replayOutbox(base, outbox),
 		sync: { cursor: response.cursor, outbox, clock, epoch: response.epoch, seed: sync.seed && !seeding },
+		rejected: settled.rejected,
 	};
 }

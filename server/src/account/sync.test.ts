@@ -93,11 +93,37 @@ describe.each(storeFactories)('POST /api/sync on the %s store', (_name, createSt
 
 		const cred = await setup();
 		expect((await post({ cursor: -1, ops: [] }, cred)).status).toBe(400);
-		expect((await post({ cursor: 0, ops: [op('o1', 'nope', {})] }, cred)).status).toBe(400);
+		expect((await post({ cursor: 0, ops: 'nope' }, cred)).status).toBe(400);
 
 		store.revokeDevice(cred.deviceId, NOW);
 		expect((await post({ cursor: 0, ops: [op('o1', `${NOW}:0:x`, { title: 'A' })] }, cred)).status).toBe(401);
 		expect(store.lastSeq()).toBe(0);
+	});
+
+	test('a batch with one invalid op applies the rest, rejects that one alone, and answers with the snapshot', async () => {
+		const cred = await setup();
+		const created = createOps(snapshotOf({ tasks: [task('t1', { title: 'Kept' })] }), 'mac', NOW, counter('c-'));
+		await sync(cred, 0, created);
+		const head = store.lastSeq();
+		const bad = op('bad', `${NOW + 1}:0:mac`, {
+			title: 'Refused',
+			due: { date: '12784-10-19', time: null },
+		} as Op['fields']);
+		const good = op('good', `${NOW + 2}:0:mac`, { notes: 'Saved' });
+		const [added] = createOps(snapshotOf({ tasks: [task('t2', { title: 'Added' })] }), 'mac', NOW + 3, () => 'added');
+
+		const response = await sync(cred, head, [bad, good, added!, { junk: true } as unknown as Op]);
+		expect(response.acked).toEqual(['good', 'added']);
+		expect(response.rejected).toEqual([{ opId: 'bad', reason: 'fields.due.date: Invalid input' }]);
+		expect('snapshot' in response && response.snapshot.tasks.map(t => [t.id, t.title, t.notes, t.due])).toEqual([
+			['t1', 'Kept', 'Saved', null],
+			['t2', 'Added', '', null],
+		]);
+		expect(store.hasOp('bad')).toBe(false);
+
+		const next = await sync(cred, response.cursor, [op('later', `${NOW + 4}:0:mac`, { title: 'Later' })]);
+		expect(next).toMatchObject({ acked: ['later'], rejected: [] });
+		expect('changes' in next && next.changes.map(change => change.fields)).toEqual([{ title: 'Later' }]);
 	});
 
 	test('a retried push applies once and answers the same', async () => {

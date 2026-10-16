@@ -1,11 +1,14 @@
 import { expect } from 'bun:test';
 import * as apply from './apply.ts';
 import type { Op } from './protocol.ts';
+import { createClock } from './hlc.ts';
 import { counter, createOps, label, MemoryClient, MemoryServer, project, snapshotOf, task } from './testing.ts';
 import { describe, recorded, test } from '../vectors/record.ts';
 
 const enqueue = recorded('sync', apply.enqueue);
 const seedPatches = recorded('sync', apply.seedPatches);
+const settle = recorded('sync', apply.settle);
+const rejectionNotice = recorded('sync', apply.rejectionNotice);
 
 const op = (opId: string, hlc: string, fields: Op['fields'], id = 't'): Op =>
 	({ opId, hlc, kind: 'task', id, fields }) as Op;
@@ -140,9 +143,55 @@ describe('first sync', () => {
 
 	test('a device that missed a delete-all takes the wiped snapshot and uploads nothing', () => {
 		const b = new MemoryClient('b', shared);
-		const wiped = { acked: [], snapshot: snapshotOf(), cursor: 0, hlc: '30:0:server', epoch: 1 };
+		const wiped = { acked: [], rejected: [], snapshot: snapshotOf(), cursor: 0, hlc: '30:0:server', epoch: 1 };
 		const { snapshot, sync } = apply.applyResponse(b.snapshot, b.sync, wiped, 40);
 		expect(snapshot).toEqual(snapshotOf());
 		expect(sync).toMatchObject({ outbox: [], seed: false, epoch: 1 });
+	});
+});
+
+describe('rejected ops', () => {
+	const edit = op('edit', '20:0:a', { title: 'Renamed' });
+	const bad = op('bad', '21:0:a', { title: 'Refused', due: { date: '12784-10-19', time: null } } as Op['fields']);
+	const later = op('later', '22:0:a', { notes: 'n' }, 'u');
+
+	test('a batch with one invalid op drops the acked ones and that one, and keeps the rest waiting', () => {
+		expect(settle([edit, bad, later], ['edit'], [{ opId: 'bad', reason: 'fields.due.date: Invalid input' }])).toEqual({
+			outbox: [later],
+			rejected: [bad],
+		});
+	});
+
+	test('the rejected op leaves the outbox and its entity takes the server value from the snapshot', () => {
+		const local = snapshotOf({ tasks: [task('t', { title: 'Refused' }), task('u', { createdAt: 2 })] });
+		const sync = { cursor: 4, outbox: [bad, later], clock: createClock('a'), epoch: 0, seed: false };
+		const server = snapshotOf({ tasks: [task('t', { title: 'Saved' }), task('u', { createdAt: 2 })] });
+		const response = {
+			acked: [],
+			rejected: [{ opId: 'bad', reason: 'fields.due.date: Invalid input' }],
+			snapshot: server,
+			cursor: 5,
+			hlc: '30:0:server',
+			epoch: 0,
+		};
+		const applied = apply.applyResponse(local, sync, response, 40);
+		expect(applied.rejected).toEqual([bad]);
+		expect(applied.sync.outbox).toEqual([later]);
+		expect(applied.snapshot.tasks.map(t => [t.title, t.notes, t.due])).toEqual([
+			['Saved', '', null],
+			['u', 'n', null],
+		]);
+		expect(rejectionNotice(local, applied.rejected)).toBe('Couldn’t save a change to “Refused”');
+	});
+
+	test('the notice names the one entity it refused, or counts them', () => {
+		const local = snapshotOf({ tasks: [task('t', { title: 'Milk' })], projects: [project('p', { name: 'Home' })] });
+		const projectOp = { opId: 'p1', hlc: '1:0:a', kind: 'project', id: 'p', fields: { name: '' } } as Op;
+		const comment = { opId: 'c1', hlc: '1:0:a', kind: 'comment', id: 'c', fields: { body: '' } } as Op;
+		expect(rejectionNotice(local, [])).toBeNull();
+		expect(rejectionNotice(local, [projectOp])).toBe('Couldn’t save a change to “Home”');
+		expect(rejectionNotice(local, [comment])).toBe('Couldn’t save a change');
+		expect(rejectionNotice(local, [bad, { ...edit, id: 't', opId: 'again' }])).toBe('Couldn’t save a change to “Milk”');
+		expect(rejectionNotice(local, [bad, projectOp, comment])).toBe('Couldn’t save changes to 3 items');
 	});
 });

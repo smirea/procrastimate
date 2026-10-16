@@ -79,7 +79,13 @@ export class MemoryServer {
 		});
 		this.state = pushed.state;
 		for (const entry of pushed.log) this.log.push({ ...entry, seq: this.log.length + 1 });
-		const base = { acked: pushed.acked, cursor: this.log.length, hlc: serverHlc(this.state), epoch: this.epoch };
+		const base = {
+			acked: pushed.acked,
+			rejected: [],
+			cursor: this.log.length,
+			hlc: serverHlc(this.state),
+			epoch: this.epoch,
+		};
 		if (cursor === 0) return { ...base, snapshot: serverSnapshot(this.state) };
 		return { ...base, changes: this.log.filter(change => change.seq > cursor) };
 	}

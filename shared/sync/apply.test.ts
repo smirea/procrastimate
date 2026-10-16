@@ -84,6 +84,7 @@ describe('applyResponse', () => {
 		);
 		const response = {
 			acked: [] as string[],
+			rejected: [],
 			snapshot: snapshotOf(),
 			cursor: 0,
 			hlc: '30:0:server',

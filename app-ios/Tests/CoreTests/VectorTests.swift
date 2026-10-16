@@ -488,6 +488,10 @@ extension JSONValue: ExpressibleByStringLiteral {
     switch fn {
     case "enqueue": return try json(SyncEngine.enqueue(a(0), a(1)))
     case "seedPatches": return try json(SyncEngine.seedPatches(server: a(0), local: a(1)))
+    case "settle":
+        let settled = try SyncEngine.settle(a(0), acked: a(1), rejected: a(2))
+        return try json(["outbox": settled.outbox, "rejected": settled.rejected])
+    case "rejectionNotice": return try json(SyncEngine.rejectionNotice(a(0), a(1)))
     default: throw unknown(fn)
     }
 }

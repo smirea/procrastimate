@@ -193,60 +193,62 @@ public enum SyncEngine {
         return try? JSONSerialization.data(withJSONObject: body)
     }
 
-    /// The body of `POST /api/sync` as the contract types it, or nil when this document has not started. Throws when
-    /// the outbox holds an op the contract rejects, which the server would answer with a 400.
+    /// The body of `POST /api/sync` as the contract types it, or nil when this document has not started. The contract
+    /// leaves each op to the server, which rejects an invalid one alone, so only a broken envelope throws.
     public static func request(_ snapshot: Snapshot) throws -> API.SyncRequest? {
-        var repaired = snapshot
-        repaired.sync?.outbox = snapshot.sync?.outbox.map(repairBooleanNumbers) ?? []
-        guard let json = requestJSON(repaired) else { return nil }
+        guard let json = requestJSON(snapshot) else { return nil }
         return try JSONDecoder.validating().decode(API.SyncRequest.self, from: json)
     }
 
-    /// Builds up to 2026.1011.235500 stored `0` and `1` as booleans in numeric fields, and their outboxes still
-    /// hold those ops. Only 0 and 1 were turned into booleans, so turning them back is exact, as the server does.
-    static func repairBooleanNumbers(_ op: SyncOp) -> SyncOp {
-        guard op.kind != .settings else { return op }
-        func number(_ value: JSONValue) -> JSONValue {
-            if case let .bool(flag) = value { return .number(flag ? 1 : 0) }
-            return value
+    /// Splits the outbox by the server's answer: the ops still waiting, and the ones it rejected, which never apply.
+    public static func settle(
+        _ outbox: [SyncOp], acked: [String], rejected: [API.SyncRejection]
+    ) -> (outbox: [SyncOp], rejected: [SyncOp]) {
+        let done = Set(acked)
+        let refused = Set(rejected.map(\.opId))
+        return (
+            outbox.filter { !done.contains($0.opId) && !refused.contains($0.opId) },
+            outbox.filter { refused.contains($0.opId) }
+        )
+    }
+
+    /// The notice for rejected ops, named by what `data` shows for their entity before the server's value replaces it.
+    public static func rejectionNotice(_ data: StoreData, _ rejected: [SyncOp]) -> String? {
+        var seen = Set<String>()
+        let entities = rejected.filter { seen.insert("\($0.kind.rawValue):\($0.id)").inserted }
+        guard let first = entities.first else { return nil }
+        if entities.count > 1 { return "Couldn’t save changes to \(entities.count) items" }
+        let name: String? = switch first.kind {
+        case .task: data.tasks.first { $0.id == first.id }?.title
+        case .project: data.projects.first { $0.id == first.id }?.name
+        case .section: data.sections.first { $0.id == first.id }?.name
+        case .label: data.labels.first { $0.id == first.id }?.name
+        default: nil
         }
-        var next = op
-        for name in ["order", "createdAt", "completedAt", "priority"] {
-            if let value = next.fields[name] { next.fields[name] = number(value) }
-        }
-        guard op.kind == .task else { return next }
-        if case var .object(recurrence) = next.fields["recurrence"] {
-            if let interval = recurrence["interval"] { recurrence["interval"] = number(interval) }
-            if case let .array(days) = recurrence["days"] { recurrence["days"] = .array(days.map(number)) }
-            next.fields["recurrence"] = .object(recurrence)
-        }
-        if case let .array(reminders) = next.fields["reminders"] {
-            next.fields["reminders"] = .array(reminders.map { reminder in
-                guard case var .object(fields) = reminder, let minutes = fields["minutes"] else { return reminder }
-                fields["minutes"] = number(minutes)
-                return .object(fields)
-            })
-        }
-        return next
+        return name.map { "Couldn’t save a change to “\($0)”" } ?? "Couldn’t save a change"
     }
 
     /// Applies a response the contract already decoded. Its `T??` fields keep every `null`, so the JSON is the same.
-    public static func apply(_ snapshot: inout Snapshot, response: API.SyncResponse, now: Int, nextOpId: () -> String) -> Bool {
-        guard let json = try? JSONEncoder().encode(response) else { return false }
+    public static func apply(_ snapshot: inout Snapshot, response: API.SyncResponse, now: Int, nextOpId: () -> String) -> [SyncOp]? {
+        guard let json = try? JSONEncoder().encode(response) else { return nil }
         return apply(&snapshot, response: json, now: now, nextOpId: nextOpId)
     }
 
-    /// Applies a sync response. A new epoch drops the outbox so a wiped copy cannot be uploaded again. The first
-    /// snapshot of a seeding document queues what its local data adds, so the caller syncs again when the outbox
-    /// is not empty.
-    public static func apply(_ snapshot: inout Snapshot, response json: Data, now: Int, nextOpId: () -> String) -> Bool {
+    /// Applies a sync response and returns the ops the server rejected, or nil when the response is unreadable. A new
+    /// epoch drops the outbox so a wiped copy cannot be uploaded again. A rejection comes with the snapshot, so the
+    /// rejected op's entity shows the server's value again. The first snapshot of a seeding document queues what its
+    /// local data adds, so the caller syncs again when the outbox is not empty.
+    public static func apply(_ snapshot: inout Snapshot, response json: Data, now: Int, nextOpId: () -> String) -> [SyncOp]? {
         guard var sync = snapshot.sync,
               let object = try? JSONSerialization.jsonObject(with: json) as? [String: Any],
               let cursor = intValue(object["cursor"]),
               let epoch = intValue(object["epoch"]),
               let hlc = object["hlc"] as? String,
-              isHlc(hlc) else { return false }
-        let acked = Set((object["acked"] as? [String]) ?? [])
+              isHlc(hlc) else { return nil }
+        let rejected = ((object["rejected"] as? [[String: Any]]) ?? []).compactMap { entry in
+            (entry["opId"] as? String).map { API.SyncRejection(opId: $0, reason: entry["reason"] as? String ?? "") }
+        }
+        let settled = settle(sync.outbox, acked: (object["acked"] as? [String]) ?? [], rejected: rejected)
         let epochChanged = epoch != sync.epoch
         let sentReset = sync.reset
         var seeds: [SyncPatch] = []
@@ -273,7 +275,7 @@ public enum SyncEngine {
             for change in changes { applyChange(&snapshot, change) }
             snapshot.tasks = StoreRules.sortTasks(snapshot.tasks)
         }
-        let kept = (epochChanged && !sentReset) ? [] : sync.outbox.filter { !acked.contains($0.opId) }
+        let kept = (epochChanged && !sentReset) ? [] : settled.outbox
         if sentReset && epochChanged { replay(&snapshot, kept) }
         var clock = observe(parseClock(sync.clock), hlc)
         let seeded = stamp(seeds, clock: &clock, now: now, nextOpId: nextOpId)
@@ -290,7 +292,7 @@ public enum SyncEngine {
             sync.quickAddButtons = adopted.quickAddButtons
         }
         snapshot.sync = sync
-        return true
+        return settled.rejected
     }
 
     private static func replay(_ snapshot: inout Snapshot, _ ops: [SyncOp]) {

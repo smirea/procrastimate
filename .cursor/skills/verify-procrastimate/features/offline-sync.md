@@ -1,6 +1,6 @@
 # Offline and sync
 
-ProcrastiMate works fully without a network. Every change applies locally at once and syncs in the background. Sync is always on. Nothing in the UI mentions sync.
+ProcrastiMate works fully without a network. Every change applies locally at once and syncs in the background. Sync is always on. Nothing in the UI mentions sync, except a toast when the server rejects a change.
 
 ## Sub-features
 
@@ -9,6 +9,7 @@ ProcrastiMate works fully without a network. Every change applies locally at onc
 - `sync-realtime` brings that change over at once while the other client is open and visible, through the server's nudge socket, with no focus or timer.
 - `sync-reconnect` uploads offline changes after the network returns.
 - `sync-conflict` converges when both clients change the same task offline.
+- `sync-rejected` handles an edit the server refuses: the rest of the push still applies, the edit leaves the outbox, the entity goes back to the server's value, and a toast says "Couldn’t save a change to “Title”". The device keeps syncing.
 - `sync-delete` wipes tasks, projects, and labels on this device and the server from Settings, `Delete all data`.
 
 ## How to get to it (user POV)
@@ -29,6 +30,7 @@ Preconditions:
 - **Offline.** Block A's `/api/sync` requests. Add and rename tasks on A. Each change applies at once and survives a reload. Test: `changes made offline apply at once and upload when the network returns`.
 - **Reconnect.** Let A's requests through again. B shows the new and renamed tasks. Same test.
 - **Typing.** Open a synced task on A, block A's `/api/sync`, and type into Notes. Each keystroke shows at once, and the `procrastimate` document's `sync.outbox` holds one op with the full text. After A reconnects, B shows the notes. Test: `typing notes shows each keystroke at once and queues one op with the last value`.
+- **Rejected.** Make A's next push carry an op the contract refuses: the test rewrites a rename's op in flight to `priority: 99`. A shows "Couldn’t save a change to “<new title>”", the row goes back to the old title, the outbox empties, and A's next new task reaches B. The server's console logs `sync: rejected ops` with the reason. Test: `an edit the server rejects goes back to the server value with a notice, and the device keeps syncing`. Server and client halves: `bun test server/src/account/sync.test.ts shared/sync/outbox.test.ts`; iOS: `swift test` (`VectorTests`, `APITests`).
 - **Conflict.** Block both clients, rename the same task differently on each, and add notes on B. After both reconnect, both show the same title (the later write wins) and B's notes, since different fields merge. Test: `both devices editing the same task offline converge`.
 - **Delete all.** On A, `Settings`, `Delete all data`, confirm. A's tasks are gone and stay gone after a reload. B's tasks are gone once it syncs, and its waiting edits are dropped. Both devices keep their tokens. Test: `delete all data clears this device and the other`.
 - **First sync.** A new install's first request carries no tasks. Its first snapshot queues only what the server lacks, so a device with the same tasks as the server uploads nothing. `bun test shared/sync/outbox.test.ts` and `swift test --filter OutboxTests` cover it.

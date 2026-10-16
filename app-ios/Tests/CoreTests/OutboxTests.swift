@@ -55,7 +55,7 @@ import Testing
         let body = try JSONSerialization.data(withJSONObject: [
             "acked": ["zone"], "cursor": 2, "hlc": "30:0:server", "epoch": 0, "snapshot": server,
         ])
-        #expect(SyncEngine.apply(&snapshot, response: body, now: 40) { "seed" })
+        #expect(SyncEngine.apply(&snapshot, response: body, now: 40) { "seed" } != nil)
         #expect(snapshot.sync?.outbox == [])
         #expect(snapshot.sync?.seed == false)
         #expect(snapshot.tasks.map(\.id) == ["t1", "t2"])
@@ -74,7 +74,7 @@ import Testing
         let body = try JSONSerialization.data(withJSONObject: [
             "acked": ["zone"], "cursor": 1, "hlc": "30:0:server", "epoch": 0, "snapshot": server,
         ])
-        #expect(SyncEngine.apply(&snapshot, response: body, now: 40) { "seed" })
+        #expect(SyncEngine.apply(&snapshot, response: body, now: 40) { "seed" } != nil)
         let ops = try #require(snapshot.sync?.outbox)
         #expect(ops.map(\.id) == ["mine"])
         #expect(ops.first?.hlc == "40:0:phone")
@@ -94,7 +94,7 @@ import Testing
         let body = try JSONSerialization.data(withJSONObject: [
             "acked": [], "cursor": 0, "hlc": "30:0:server", "epoch": 2, "snapshot": server,
         ])
-        #expect(SyncEngine.apply(&snapshot, response: body, now: 40) { "seed" })
+        #expect(SyncEngine.apply(&snapshot, response: body, now: 40) { "seed" } != nil)
         #expect(snapshot.tasks.isEmpty)
         #expect(snapshot.sync?.outbox == [])
         #expect(snapshot.sync?.seed == false)

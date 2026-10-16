@@ -164,22 +164,33 @@ public final class Store {
     /// The body of `POST /api/sync`.
     public func syncRequest() throws -> API.SyncRequest? { try SyncEngine.request(snapshot) }
 
-    /// Applies one sync response onto the document.
-    public func takeSyncResponse(_ response: API.SyncResponse) -> Bool {
-        let applied = SyncEngine.apply(&snapshot, response: response, now: clock.now.epochMilliseconds, nextOpId: newId)
-        if applied { scheduleWrite() }
-        return applied
+    /// What applying a sync response left to tell the user: the notice for edits the server rejected, if any.
+    public struct SyncApplied: Sendable {
+        public var notice: String?
+    }
+
+    /// Applies one sync response onto the document. Nil when the response was unreadable.
+    public func takeSyncResponse(_ response: API.SyncResponse) -> SyncApplied? {
+        let before = snapshot.data
+        guard let rejected = SyncEngine.apply(
+            &snapshot, response: response, now: clock.now.epochMilliseconds, nextOpId: newId
+        ) else { return nil }
+        scheduleWrite()
+        return SyncApplied(notice: SyncEngine.rejectionNotice(before, rejected))
     }
 
     /// The body of `POST /api/sync?space=<id>` for a shared space.
     public func syncRequest(space id: String) throws -> API.SyncRequest? { try SyncEngine.request(snapshot, space: id) }
 
-    public func takeSyncResponse(_ response: API.SyncResponse, space id: String) -> Bool {
-        let applied = SyncEngine.apply(
+    public func takeSyncResponse(_ response: API.SyncResponse, space id: String) -> SyncApplied? {
+        guard let section = snapshot.spaces[id], let rejected = SyncEngine.apply(
             &snapshot, space: id, response: response, now: clock.now.epochMilliseconds, nextOpId: newId
+        ) else { return nil }
+        scheduleWrite()
+        let before = StoreData(
+            tasks: section.tasks, projects: section.projects, sections: section.sections, labels: section.labels
         )
-        if applied { scheduleWrite() }
-        return applied
+        return SyncApplied(notice: SyncEngine.rejectionNotice(before, rejected))
     }
 
     /// Matches the sections to the spaces the server says are shared with this user.
