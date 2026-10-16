@@ -72,9 +72,14 @@ export class App {
 	list = (name: string) => this.page.getByRole('list', { name });
 	nav = (name: string) => this.page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name });
 
+	/** A phone has no keyboard shortcut, so it uses the floating button. */
 	async openQuickAdd() {
-		await this.page.locator('body').click({ position: { x: 1200, y: 700 } });
-		await this.page.keyboard.press('q');
+		if (this.page.viewportSize()!.width < 768) {
+			await this.page.getByRole('button', { name: 'Quick add' }).click();
+		} else {
+			await this.page.locator('body').click({ position: { x: 1200, y: 700 } });
+			await this.page.keyboard.press('q');
+		}
 		await expect(this.taskInput()).toBeFocused();
 	}
 
@@ -86,6 +91,32 @@ export class App {
 			await this.taskInput().press('Enter');
 			await expect(this.quickAdd()).toBeHidden();
 		}
+	}
+
+	async openNavigation() {
+		await this.page.getByRole('button', { name: 'Open navigation' }).tap();
+		await expect(this.page.getByRole('navigation', { name: 'Main' })).toBeInViewport();
+	}
+
+	/** Like `add`, but first creates each unknown #project and @label from its chip, as a person would. */
+	async addCreating(title: string) {
+		await this.openQuickAdd();
+		await this.taskInput().fill(title);
+		for (const [, name] of title.matchAll(/(?:^|\s)([#@][^\s#@]+)/g)) {
+			const create = this.quickAdd().getByRole('button', { name: `Create ${name}`, exact: true });
+			const parsed = this.quickAdd().locator('[data-token]').getByText(name!, { exact: true });
+			await expect(create.or(parsed).first()).toBeVisible();
+			if (await parsed.isVisible()) continue;
+			await create.click();
+			await expect(parsed).toBeVisible();
+		}
+		await this.taskInput().press('Enter');
+		await expect(this.quickAdd()).toBeHidden();
+	}
+
+	async closeDetails() {
+		await this.details().getByRole('button', { name: 'Close' }).click();
+		await expect(this.details()).toBeHidden();
 	}
 
 	async go(view: string) {
