@@ -29,13 +29,17 @@ if (!pr.startsWith('MERGED') && !force) {
 	throw new Error(`The PR for ${branch} is ${pr || 'missing'}. Pass --force to tear it down anyway.`);
 }
 
-const worktree = run(['git', 'worktree', 'list', '--porcelain'])
+const worktrees = run(['git', 'worktree', 'list', '--porcelain'])
 	.split('\n\n')
 	.map(block => ({
 		path: block.match(/^worktree (.+)$/m)?.[1],
 		branch: block.match(/^branch refs\/heads\/(.+)$/m)?.[1],
-	}))
-	.find(entry => entry.branch === branch || (entry.path && basename(entry.path) === branch))?.path;
+	}));
+const onBranch = worktrees.find(entry => entry.branch === branch)?.path;
+const detached = onBranch
+	? undefined
+	: worktrees.find(entry => !entry.branch && entry.path && basename(entry.path) === branch)?.path;
+const worktree = onBranch ?? detached;
 
 if (worktree) {
 	const override = join(worktree, '.env.override');
@@ -68,8 +72,10 @@ if (worktree) {
 	console.log(`Removed worktree ${worktree}.`);
 }
 
-run(['git', 'branch', '-D', branch], { allowFail: true });
-run(['git', 'push', 'origin', '--delete', branch], { allowFail: true });
+if (!detached) {
+	run(['git', 'branch', '-D', branch], { allowFail: true });
+	run(['git', 'push', 'origin', '--delete', branch], { allowFail: true });
+}
 run(['git', 'worktree', 'prune']);
 
 if (run(['git', 'branch', '--show-current']) === 'master') {
