@@ -78,6 +78,11 @@ export const projects = sqliteTable(
 		userId: text('user_id').notNull(),
 		id: text('id').notNull(),
 		name: text('name').notNull(),
+		/**
+		 * Fractional, like sections. Rows from before it hold 0 with no clock, and ties sort by `createdAt`, so those
+		 * projects keep the order they were created in.
+		 */
+		order: real('order').notNull().default(0),
 		createdAt: integer('created_at').notNull(),
 		sourceKey: text('source_key'),
 		deleted: deleted(),

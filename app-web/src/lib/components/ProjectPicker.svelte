@@ -4,7 +4,7 @@
 	import Rows from 'phosphor-svelte/lib/Rows';
 	import Check from 'phosphor-svelte/lib/Check';
 	import Plus from 'phosphor-svelte/lib/Plus';
-	import { sectionsOf } from 'shared/store.ts';
+	import { projectsInOrder, sectionsOf } from 'shared/store.ts';
 	import type { Project, Section } from 'shared/task.ts';
 	import Popover from './Popover.svelte';
 	import { store } from '../store.svelte.ts';
@@ -35,7 +35,7 @@
 	const allSections = $derived(sections ?? store.sections);
 	const options = $derived([
 		{ place: { projectId: null, sectionId: null }, name: 'Inbox', nested: false },
-		...(projects ?? store.projects).flatMap((p) => [
+		...(projects ? projectsInOrder(projects) : store.projects).flatMap((p) => [
 			{ place: { projectId: p.id, sectionId: null }, name: p.name, nested: false },
 			...sectionsOf(allSections, p.id).map((s) => ({ place: { projectId: p.id, sectionId: s.id }, name: s.name, nested: true })),
 		]),

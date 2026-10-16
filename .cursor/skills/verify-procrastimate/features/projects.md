@@ -9,6 +9,7 @@ Projects let Stefan group tasks, open a project to see its tasks, and move a tas
 - `projects-assign` assigns a project in quick add by typing `#Name`.
 - `projects-autocomplete` suggests projects after `#` in quick add and the task title, and offers to create a missing one.
 - `projects-move` moves a task to another project or back to Inbox.
+- `projects-reorder` drags a project to a new place in the list, and the order syncs.
 - `projects-rename` renames a project.
 - `projects-delete` deletes a project, its sections, and its tasks after confirmation.
 - `sections-create` adds a section to a project.
@@ -25,6 +26,8 @@ Projects let Stefan group tasks, open a project to see its tasks, and move a tas
 - Web: pick a project in quick add or in task details, or type `#Name` in quick add or the task details title.
 - Web: type `#` in quick add or the task details title to open project suggestions above the field.
 - Web: use `Project actions` in a project's header to rename or delete it.
+- Web: drag a project in the sidebar with the mouse, or long-press then drag on touch. With a project link focused, Alt+Up and Alt+Down move it.
+- iOS: long-press a project in Browse and drag it.
 - iOS: open the Browse tab. `Add project` in the Projects header creates one.
 - iOS: use `Project actions` in a project's toolbar to rename or delete it.
 - Web: `Add section` at the end of a project. Each section heading has `<name> actions` (Rename, Move up, Move down, Delete section) and its own `Add task`.
@@ -35,7 +38,7 @@ Projects let Stefan group tasks, open a project to see its tasks, and move a tas
 Preconditions:
 
 - The baseline state, with no projects.
-- Automated proof for every web step: `bun run test:e2e -- e2e/projects.e2e.ts`.
+- Automated proof for the reorder step: `bun run test:e2e -- e2e/projects.e2e.ts`.
 
 - **Create.** Choose `Add project`, type `Home`, and press Enter. `Home` appears in the sidebar and opens with `No tasks yet`. Test: `create, assign with #, move, rename, and delete a project`.
 - **Assign.** In quick add, save `Fix sink #home` and `Paint fence`. The `Home tasks` list has both tasks, titled without `#home`.
@@ -45,6 +48,7 @@ Preconditions:
 - **Title autocomplete.** Open `Buy milk`, type ` #err` at the end of the title, and click `Errands`. The title reads `Buy milk #Errands ` with focus kept. Press Enter; the project chip reads `Errands`. Test: `# autocompletes in the task details title and a click picks`.
 - **Move.** Add `Buy milk` in Inbox, open it, and pick `Home` from the project chip. It leaves Inbox and `Home` has three tasks.
 - **Create from the picker.** In quick add, open the project chip and choose `New project`. A `Project name` field appears in the dropdown with focus. Type `Garden` and press Enter; the dropdown closes, `Garden` is in the sidebar, and the chip reads `Garden`. Escape cancels. On iOS, `New project…` at the end of the project menu (quick add's chip and the task details toolbar) opens a `New project` alert, and `Create` picks the new project.
+- **Reorder.** Create `Home`, `Work`, and `Errands`. Drag `Errands` onto `Home`; the sidebar reads `Errands`, `Home`, `Work`, and the project that was open stays open. A plain click on `Work` still opens it. Focus `Home` and press Alt+Down; it moves below `Work` and keeps focus. The order survives a reload and shows in quick add's project picker. A second device signed in to the account shows the same order, and a drag there moves it back on the first. On a phone, open the drawer, hold `Errands` until it lifts, and drag it up; the drawer stays open. Tests: `bun run test:e2e -- e2e/projects.e2e.ts`, which saves `app-web/test-results/projects/desktop-lifted.png` and `phone-lifted.png`. On iOS, long-press `Errands` in Browse, drag it above `Home`, and release; the quick add project menu lists the same order. Core rules run in `swift test` (`VectorTests` store).
 - **Rename.** Choose `Project actions`, then `Rename`, and enter `House`. The heading and sidebar show `House`.
 - **Delete.** Choose `Project actions`, then `Delete project`. The prompt reads `Delete House and its 3 tasks?`. Confirm. The app returns to Inbox, `House` is gone from the sidebar, and `Buy milk` is in no view.
 - **Phone.** Tap `Open navigation`, `Add project`, type `Home`, and press return. `Home` opens and the drawer closes. Add `Fix sink #home p3` and `Paint fence fri`. Open Inbox, then `Home` from the drawer; `Home tasks` lists `Paint fence` then `Fix sink`. Test: `the navigation drawer creates a project and switches to it` in `bun run test:e2e -- e2e/mobile.e2e.ts`. The suite saves `app-web/test-results/mobile/project.png`.
@@ -57,6 +61,8 @@ Preconditions:
 ## Gotchas
 
 - Deleting a project deletes its tasks. Deleting a section deletes its tasks too.
+- On iOS a Browse project row also has a context menu. Holding still opens it; start dragging within about half a second to reorder instead. An XCUITest needs `press(forDuration: 0.5, thenDragTo:)`, since 1 s opens the menu.
+- A touch that lands while the drawer is still flinging from a swipe cannot lift a project, since the browser owns that gesture. Let the scroll stop first.
 - `/Name` only reads the sections of the project in effect: the typed `#Project`, else the one quick add opened with. Without a project it stays text. Seed a fresh project for this step, never a shared one.
 - `#Name` is highlighted only for an existing project. An unknown `#word` stays in the title.
 - Escape closes the suggestions for that `#` until the `#` is deleted, so typing more does not reopen them.

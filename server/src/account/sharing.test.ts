@@ -8,6 +8,7 @@ import type {
 	SpaceView,
 	TaskComment,
 } from '../../../shared/sharing';
+import { projectsInOrder } from '../../../shared/store';
 import { formatHlc } from '../../../shared/sync/hlc';
 import { DEFAULT_SETTINGS, type Op, type Snapshot, type SyncResponse, type Task } from '../../../shared/sync/protocol';
 import { fieldsOf } from '../../../shared/sync/snapshot';
@@ -557,10 +558,10 @@ describe('sharing between two users', () => {
 		expect(garden.name).toBe('Garden');
 		expect(await json(asAi('POST', '/api/projects', { name: 'garden' }))).toMatchObject({ id: garden.id });
 		expect((await asAi('PATCH', `/api/projects?id=${garden.id}`, { name: 'HOME' })).status).toBe(400);
-		expect((await json<SpaceView>(asAi('GET', '/api/view'))).projects.map(p => p.name).toSorted()).toEqual([
-			'Garden',
-			'Home',
-		]);
+		const inOrder = async () => projectsInOrder((await json<SpaceView>(asAi('GET', '/api/view'))).projects);
+		expect((await inOrder()).map(p => p.name)).toEqual(['Home', 'Garden']);
+		expect(await json(asAi('PATCH', `/api/projects?id=${garden.id}`, { index: 0 }))).toMatchObject({ name: 'Garden' });
+		expect((await inOrder()).map(p => p.name)).toEqual(['Garden', 'Home']);
 		const later = await json<{ id: string }>(asAi('POST', '/api/sections', { projectId: garden.id, name: 'Later' }));
 		const soon = await json<{ id: string }>(asAi('POST', '/api/sections', { projectId: garden.id, name: 'Soon' }));
 		expect(await json(asAi('POST', '/api/sections', { projectId: garden.id, name: 'later' }))).toMatchObject({

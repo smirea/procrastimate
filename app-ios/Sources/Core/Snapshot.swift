@@ -95,7 +95,7 @@ extension API.Snapshot {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         let loaded = try c.decode([Lenient<StoredTask>].self, forKey: .tasks).compactMap { $0.value?.task }
         tasks = StoreRules.sortTasks(Subtasks.detachOrphans(loaded))
-        projects = try c.decode([Project].self, forKey: .projects)
+        projects = try c.decode([StoredProject].self, forKey: .projects).map(\.project)
         sections = try c.decodeAbsent([ProjectSection].self, forKey: .sections) ?? []
         labels = try c.decodeAbsent([StoredLabel].self, forKey: .labels)?.map(\.label) ?? []
         comments = try c.decodeAbsent([Comment].self, forKey: .comments) ?? []
@@ -127,7 +127,7 @@ extension API.SpaceSection {
         targets = try c.decodeAbsent([API.ShareTarget].self, forKey: .targets) ?? []
         let loaded = try c.decode([Lenient<StoredTask>].self, forKey: .tasks).compactMap { $0.value?.task }
         tasks = StoreRules.sortTasks(Subtasks.detachOrphans(loaded))
-        projects = try c.decodeAbsent([Project].self, forKey: .projects) ?? []
+        projects = try c.decodeAbsent([StoredProject].self, forKey: .projects)?.map(\.project) ?? []
         sections = try c.decodeAbsent([ProjectSection].self, forKey: .sections) ?? []
         labels = try c.decodeAbsent([StoredLabel].self, forKey: .labels)?.map(\.label) ?? []
         comments = try c.decodeAbsent([Comment].self, forKey: .comments) ?? []
@@ -140,6 +140,24 @@ private struct Lenient<T: Decodable>: Decodable {
 
     init(from decoder: Decoder) throws {
         value = try? T(from: decoder)
+    }
+}
+
+/// A project stored before ordering sits at 0, so it keeps its place by creation.
+private struct StoredProject: Decodable {
+    let project: Project
+
+    private enum CodingKeys: String, CodingKey { case id, name, order, createdAt, sourceKey }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        project = Project(
+            id: try c.decode(String.self, forKey: .id),
+            name: try c.decode(String.self, forKey: .name),
+            order: try c.decodeAbsent(Double.self, forKey: .order) ?? 0,
+            createdAt: try c.decode(Int.self, forKey: .createdAt),
+            sourceKey: try c.decodeAbsent(String.self, forKey: .sourceKey)
+        )
     }
 }
 

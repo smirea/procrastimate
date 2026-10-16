@@ -1,0 +1,1 @@
+ALTER TABLE `projects` ADD `order` real DEFAULT 0 NOT NULL;

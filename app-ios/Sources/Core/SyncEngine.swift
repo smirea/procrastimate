@@ -322,7 +322,11 @@ public enum SyncEngine {
         }
         switch kind {
         case "task": merge(&snapshot.tasks, id: id, fields: fields, defaults: taskDefaults)
-        case "project": merge(&snapshot.projects, id: id, fields: fields)
+        case "project":
+            // A project created by a build from before ordering arrives without `order`, as `entityFrom` defaults it.
+            var fields = fields
+            if fields["order"] == nil, !snapshot.projects.contains(where: { $0.id == id }) { fields["order"] = 0 }
+            merge(&snapshot.projects, id: id, fields: fields)
         case "section":
             merge(&snapshot.sections, id: id, fields: fields)
             snapshot.sections.sort(by: byCreation)

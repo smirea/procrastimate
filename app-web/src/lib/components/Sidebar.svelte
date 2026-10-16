@@ -16,12 +16,13 @@
 	import CheckCircle from 'phosphor-svelte/lib/CheckCircle';
 	import Popover from './Popover.svelte';
 	import PersonName from './PersonName.svelte';
+	import ProjectList from './ProjectList.svelte';
 	import Settings from './Settings.svelte';
 	import { store } from '../store.svelte.ts';
 	import { labelStyle } from '../label-colors.ts';
 	import { clock, mobile, motion, sheets } from '../ui.svelte.ts';
 	import { sharedEntries } from '../spaces.ts';
-	import { inboxTasks, labelTasks, projectTasks, todayTasks } from 'shared/views.ts';
+	import { inboxTasks, labelTasks, todayTasks } from 'shared/views.ts';
 	import { eventGroups, placeGroups } from 'shared/triggers.ts';
 
 	let { onquickadd, onsearch, onsettings }: { onquickadd: () => void; onsearch: () => void; onsettings: () => void } =
@@ -110,20 +111,7 @@
 					<Plus size={14} weight="bold" />
 				</button>
 			</div>
-			<ul class="space-y-0.5">
-				{#each store.own.projects as project (project.id)}
-					{@const href = `/projects/${project.id}`}
-					{@const active = page.url.pathname === href}
-					<li transition:slide={motion({ duration: 180, easing: cubicOut })}>
-						<a {href} class="nav-link" class:active aria-current={active ? 'page' : undefined}>
-							<Hash size={18} />
-							<span class="flex-1 truncate">{project.name}</span>
-							{#if projectTasks(store.own.tasks, project.id).length}
-								<span class="text-[12px] text-faint">{projectTasks(store.own.tasks, project.id).length}</span>
-							{/if}
-						</a>
-					</li>
-				{/each}
+			<ProjectList>
 				{#if adding}
 					<li transition:slide={motion({ duration: 180, easing: cubicOut })}>
 						<!-- svelte-ignore a11y_autofocus -->
@@ -144,7 +132,7 @@
 						/>
 					</li>
 				{/if}
-			</ul>
+			</ProjectList>
 		</section>
 
 		{#each sections as section (section.label)}
@@ -233,44 +221,3 @@
 		{/if}
 	</div>
 </nav>
-
-<style>
-	.nav-link {
-		display: flex;
-		align-items: center;
-		gap: 0.625rem;
-		height: 2.25rem;
-		padding: 0 0.75rem;
-		border-radius: 9999px;
-		font-size: 0.875rem;
-		color: var(--color-ink);
-		transition:
-			background 160ms var(--ease-spring),
-			color 160ms var(--ease-spring),
-			scale 220ms var(--ease-spring);
-	}
-
-	.nav-link:active {
-		scale: 0.97;
-	}
-
-	@media (hover: hover) {
-		.nav-link:hover {
-			background: color-mix(in srgb, var(--color-ink) 6%, transparent);
-		}
-	}
-
-	@media (max-width: 767px), (pointer: coarse) {
-		.nav-link {
-			height: 2.75rem;
-			font-size: 0.9375rem;
-		}
-	}
-
-	.nav-link.active {
-		background: color-mix(in srgb, var(--color-accent) 8%, transparent);
-		box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 10%, transparent);
-		color: var(--color-accent);
-		font-weight: 500;
-	}
-</style>

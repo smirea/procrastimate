@@ -16,7 +16,7 @@ const lastUsedLabels = recorded('name-search', function lastUsedLabels(tasks: re
 	return names.lastUsed(tasks, names.labelIdsOf);
 });
 
-const project = (id: string, name: string): Project => ({ id, name, createdAt: 0 });
+const project = (id: string, name: string): Project => ({ id, name, order: 0, createdAt: 0 });
 const projects = [
 	project('home', 'Home'),
 	project('homework', 'Homework'),

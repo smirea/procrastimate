@@ -68,7 +68,8 @@
 						{
 							"createdAt": 0,
 							"id": "work",
-							"name": "Work"
+							"name": "Work",
+							"order": 0
 						}
 					],
 					"tasks": [
@@ -166,7 +167,8 @@
 						{
 							"createdAt": 0,
 							"id": "work",
-							"name": "Work"
+							"name": "Work",
+							"order": 0
 						}
 					],
 					"tasks": [
@@ -287,7 +289,8 @@
 						{
 							"createdAt": 0,
 							"id": "work",
-							"name": "Work"
+							"name": "Work",
+							"order": 0
 						}
 					],
 					"tasks": [
@@ -447,7 +450,8 @@
 						{
 							"createdAt": 0,
 							"id": "work",
-							"name": "Work"
+							"name": "Work",
+							"order": 0
 						}
 					],
 					"tasks": [
@@ -534,7 +538,8 @@
 						{
 							"createdAt": 0,
 							"id": "work",
-							"name": "Work"
+							"name": "Work",
+							"order": 0
 						}
 					],
 					"tasks": [],
@@ -550,7 +555,8 @@
 				{
 					"createdAt": 0,
 					"id": "work",
-					"name": "Work"
+					"name": "Work",
+					"order": 0
 				},
 				[
 					{
@@ -777,7 +783,8 @@
 						{
 							"createdAt": 0,
 							"id": "work",
-							"name": "Work"
+							"name": "Work",
+							"order": 0
 						}
 					],
 					"tasks": [

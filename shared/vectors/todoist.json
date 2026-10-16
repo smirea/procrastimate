@@ -977,6 +977,7 @@
 							"createdAt": 1000,
 							"id": "id-1",
 							"name": "Errands",
+							"order": 0,
 							"sourceKey": "todoist:project:42"
 						}
 					],
@@ -1062,6 +1063,7 @@
 							"createdAt": 1000,
 							"id": "id-1",
 							"name": "Errands",
+							"order": 0,
 							"sourceKey": "todoist:project:42"
 						}
 					],
@@ -1188,6 +1190,7 @@
 							"createdAt": 1000,
 							"id": "id-1",
 							"name": "Errands",
+							"order": 0,
 							"sourceKey": "todoist:project:42"
 						}
 					],
@@ -1613,12 +1616,14 @@
 							"createdAt": 1000,
 							"id": "id-1",
 							"name": "Long Term",
+							"order": 0,
 							"sourceKey": "todoist:project:8Xmpl2Wq"
 						},
 						{
 							"createdAt": 1000,
 							"id": "id-2",
 							"name": "Job",
+							"order": 1,
 							"sourceKey": "todoist:project:9Xmpl3Zr"
 						}
 					],
@@ -2250,12 +2255,14 @@
 							"createdAt": 1000,
 							"id": "id-1",
 							"name": "Long Term",
+							"order": 0,
 							"sourceKey": "todoist:project:8Xmpl2Wq"
 						},
 						{
 							"createdAt": 1000,
 							"id": "id-2",
 							"name": "Job",
+							"order": 1,
 							"sourceKey": "todoist:project:9Xmpl3Zr"
 						}
 					],
@@ -2641,12 +2648,14 @@
 							"createdAt": 1000,
 							"id": "id-1",
 							"name": "Long Term",
+							"order": 0,
 							"sourceKey": "todoist:project:8Xmpl2Wq"
 						},
 						{
 							"createdAt": 1000,
 							"id": "id-2",
 							"name": "Job",
+							"order": 1,
 							"sourceKey": "todoist:project:9Xmpl3Zr"
 						}
 					],
@@ -3253,12 +3262,14 @@
 							"createdAt": 1000,
 							"id": "id-1",
 							"name": "Long Term",
+							"order": 0,
 							"sourceKey": "todoist:project:8Xmpl2Wq"
 						},
 						{
 							"createdAt": 1000,
 							"id": "id-2",
 							"name": "Job",
+							"order": 1,
 							"sourceKey": "todoist:project:9Xmpl3Zr"
 						}
 					],
@@ -3890,12 +3901,14 @@
 							"createdAt": 1000,
 							"id": "id-1",
 							"name": "Long Term",
+							"order": 0,
 							"sourceKey": "todoist:project:8Xmpl2Wq"
 						},
 						{
 							"createdAt": 1000,
 							"id": "id-2",
 							"name": "Job",
+							"order": 1,
 							"sourceKey": "todoist:project:9Xmpl3Zr"
 						}
 					],
@@ -4516,12 +4529,14 @@
 							"createdAt": 1000,
 							"id": "id-1",
 							"name": "Long Term",
+							"order": 0,
 							"sourceKey": "todoist:project:8Xmpl2Wq"
 						},
 						{
 							"createdAt": 1000,
 							"id": "id-2",
 							"name": "Job",
+							"order": 1,
 							"sourceKey": "todoist:project:9Xmpl3Zr"
 						}
 					],
@@ -4890,12 +4905,14 @@
 							"createdAt": 1000,
 							"id": "id-1",
 							"name": "Long Term",
+							"order": 0,
 							"sourceKey": "todoist:project:8Xmpl2Wq"
 						},
 						{
 							"createdAt": 1000,
 							"id": "id-2",
 							"name": "Job",
+							"order": 1,
 							"sourceKey": "todoist:project:9Xmpl3Zr"
 						}
 					],
@@ -5485,12 +5502,14 @@
 							"createdAt": 1000,
 							"id": "id-1",
 							"name": "Long Term",
+							"order": 0,
 							"sourceKey": "todoist:project:8Xmpl2Wq"
 						},
 						{
 							"createdAt": 1000,
 							"id": "id-2",
 							"name": "Job",
+							"order": 1,
 							"sourceKey": "todoist:project:9Xmpl3Zr"
 						}
 					],
@@ -5856,7 +5875,8 @@
 						{
 							"createdAt": 0,
 							"id": "p-long",
-							"name": "Long Term"
+							"name": "Long Term",
+							"order": 0
 						}
 					],
 					"reads": [],
@@ -6136,12 +6156,14 @@
 							"createdAt": 0,
 							"id": "p-long",
 							"name": "Long Term",
+							"order": 0,
 							"sourceKey": "todoist:project:8Xmpl2Wq"
 						},
 						{
 							"createdAt": 1000,
 							"id": "id-1",
 							"name": "Job",
+							"order": 1,
 							"sourceKey": "todoist:project:9Xmpl3Zr"
 						}
 					],
@@ -6690,6 +6712,7 @@
 							"createdAt": 1000,
 							"id": "id-1",
 							"name": "Errands",
+							"order": 0,
 							"sourceKey": "todoist:project:42"
 						}
 					],
@@ -6939,6 +6962,7 @@
 							"createdAt": 1000,
 							"id": "id-1",
 							"name": "Errands",
+							"order": 0,
 							"sourceKey": "todoist:project:42"
 						}
 					],
@@ -7080,6 +7104,7 @@
 							"createdAt": 1000,
 							"id": "id-1",
 							"name": "Errands",
+							"order": 0,
 							"sourceKey": "todoist:project:42"
 						}
 					],
@@ -7199,6 +7224,7 @@
 							"createdAt": 1000,
 							"id": "id-1",
 							"name": "Errands",
+							"order": 0,
 							"sourceKey": "todoist:project:42"
 						}
 					],
@@ -7304,7 +7330,8 @@
 						{
 							"createdAt": 0,
 							"id": "mine",
-							"name": "job"
+							"name": "job",
+							"order": 0
 						}
 					],
 					"reads": [],
@@ -7576,12 +7603,14 @@
 							"createdAt": 0,
 							"id": "mine",
 							"name": "job",
+							"order": 0,
 							"sourceKey": "todoist:project:9Xmpl3Zr"
 						},
 						{
 							"createdAt": 1000,
 							"id": "id-1",
 							"name": "Long Term",
+							"order": 1,
 							"sourceKey": "todoist:project:8Xmpl2Wq"
 						}
 					],

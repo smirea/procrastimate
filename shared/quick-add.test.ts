@@ -9,8 +9,8 @@ const parseQuickAdd = recorded('quick-add', quickAdd.parseQuickAdd);
 // Wednesday, October 14 2026, 10:00 local time.
 const now = new Date(2026, 9, 14, 10, 0);
 const projects = [
-	{ id: 'p-home', name: 'Home', createdAt: 0 },
-	{ id: 'p-side', name: 'Side Project', createdAt: 0 },
+	{ id: 'p-home', name: 'Home', order: 0, createdAt: 0 },
+	{ id: 'p-side', name: 'Side Project', order: 0, createdAt: 0 },
 ];
 const labels: Label[] = [
 	{ id: 'l-calls', name: 'calls', color: 'gray', createdAt: 0 },
@@ -200,7 +200,7 @@ describe('projects', () => {
 	});
 
 	test('a project name with regex characters matches literally', () => {
-		const car = { id: 'p-car', name: 'Car (2) [old]', createdAt: 0 };
+		const car = { id: 'p-car', name: 'Car (2) [old]', order: 0, createdAt: 0 };
 		const parsed = parse('Fix brakes #car (2) [old] fri', { projects: [...projects, car] });
 		expect(parsed.title).toBe('Fix brakes');
 		expect(parsed.projectId).toBe('p-car');

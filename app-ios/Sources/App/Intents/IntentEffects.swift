@@ -226,10 +226,7 @@ enum IntentEffects {
     }
 
     private static func orderedProjects(_ snapshot: Snapshot) -> [Project] {
-        snapshot.projects.sorted { lhs, rhs in
-            if lhs.createdAt != rhs.createdAt { return lhs.createdAt < rhs.createdAt }
-            return lhs.id < rhs.id
-        }
+        StoreRules.projectsInOrder(snapshot.projects)
     }
 
     static func spotlightEntities() -> [TaskEntity] {

@@ -14,6 +14,7 @@ import {
 	newLabelSchema,
 	newLinkSchema,
 	newProjectSchema,
+	projectEditSchema,
 	newSectionSchema,
 	personSchema,
 	shareAudienceSchema,
@@ -357,11 +358,12 @@ export const agentContract = {
 					method: 'PATCH',
 					path: '/api/projects',
 					inputStructure: 'detailed',
-					summary: 'Rename a project',
-					description: '`id` is the project’s. Another project’s name, ignoring case, is refused.',
+					summary: 'Rename or move a project',
+					description:
+						'`id` is the project’s. Another project’s name, ignoring case, is refused. `index` is its new place among the projects, from 0.',
 				}),
 			)
-			.input(z.object({ query: taskQuery, body: newProjectSchema }))
+			.input(z.object({ query: taskQuery, body: projectEditSchema }))
 			.output(projectSchema),
 		delete: found
 			.meta(

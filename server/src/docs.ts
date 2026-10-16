@@ -95,6 +95,13 @@ export const agentExamples: readonly Example[] = [
 		body: { name: 'Home repairs' },
 	},
 	{
+		title: 'Move a project first',
+		method: 'PATCH',
+		path: '/api/projects',
+		query: { id: PROJECT_ID },
+		body: { index: 0 },
+	},
+	{
 		title: 'Add a section to a project',
 		method: 'POST',
 		path: '/api/sections',
@@ -223,7 +230,7 @@ ${routeTable()}
 
 Read them from \`GET /api/view\`. Put a task in one with \`#Project\`, \`/section\`, or \`@label\` in \`text\`, or with \`projectId\`, \`sectionId\`, and \`labelIds\`. A \`#name\` or \`@name\` that matches nothing stays in the task's title, so make the project or label first.
 
-- A project is a list of tasks. Its name is unique, ignoring case. Deleting it deletes its sections and every task in it.
+- A project is a list of tasks. Its name is unique, ignoring case. The apps list projects by \`order\`, then \`createdAt\`, and \`index\` moves one to that place from 0. Deleting it deletes its sections and every task in it.
 - A section is a heading inside one project. Its name is unique in the project, ignoring case, and \`index\` orders the sections from 0. Deleting it deletes its tasks.
 - A label tags tasks across projects. Its name is unique, ignoring case, and its \`color\` is one of \`${LABEL_COLORS.join('`, `')}\`. Deleting it only takes it off its tasks.
 - Adding a project, section, or label with a name already taken returns the existing one, so a retry never makes a duplicate.

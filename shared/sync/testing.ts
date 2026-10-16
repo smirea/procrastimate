@@ -33,6 +33,7 @@ export const task = (id: string, fields: Partial<Task> = {}): Task => ({
 export const project = (id: string, fields: Partial<Project> = {}): Project => ({
 	id,
 	name: id,
+	order: 0,
 	createdAt: 1,
 	...fields,
 });
