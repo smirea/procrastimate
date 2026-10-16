@@ -811,11 +811,21 @@ describe('recurrence', () => {
 		expect<unknown>(parsed.due).toEqual({ date, time });
 	});
 
-	test('every other on a weekday set repeats every two weeks', () => {
-		const parsed = parse('gym every other mon and fri 7am');
+	test.each([
+		['gym every other mon and fri 7am', '07:00'],
+		['gym every other mon and fri', null],
+	])('%s repeats every two weeks', (input, time) => {
+		const parsed = parse(input);
 		expect(parsed.title).toBe('gym');
 		expect<unknown>(parsed.recurrence).toEqual({ interval: 2, unit: 'week', days: [1, 5] });
-		expect<unknown>(parsed.due).toEqual({ date: '2026-10-16', time: '07:00' });
+		expect<unknown>(parsed.due).toEqual({ date: '2026-10-16', time });
+	});
+
+	test('each other before a weekday is reciprocal, not a repeat', () => {
+		const parsed = parse('Call each other Tuesday');
+		expect(parsed.title).toBe('Call each other');
+		expect(parsed.recurrence).toBeNull();
+		expect(parsed.due).toEqual({ date: '2026-10-20', time: null });
 	});
 
 	test.each([

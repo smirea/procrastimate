@@ -202,7 +202,7 @@ const GUARDS: RegExp[] = [
  * else, as in `discuss mon wed plan`, the whole list stays text, since no single day is meant.
  */
 const WEEKDAY_LIST_CONTEXT = new RegExp(
-	String.raw`(?<lead>\b(?:every|each)\s+|(?<![\w:/.$€£])(?:${AT})?(?:${TIME})\s+(?:on\s+)?)?(?<![\w#!$€£]|\d[/:.])(?<list>${WEEKDAY_LIST})(?<trail>\s+(?:${AT})?(?:${TIME})(?![\w!]|[/:]\d))?`,
+	String.raw`(?<lead>\b(?:every|each)\s+|\bevery\s+other\s+|(?<![\w:/.$€£])(?:${AT})?(?:${TIME})\s+(?:on\s+)?)?(?<![\w#!$€£]|\d[/:.])(?<list>${WEEKDAY_LIST})(?<trail>\s+(?:${AT})?(?:${TIME})(?![\w!]|[/:]\d))?`,
 	'gi',
 );
 
@@ -572,7 +572,7 @@ const RULES: Rule[] = [
 		repeatable: false,
 		guarded: true,
 		pattern: new RegExp(
-			String.raw`${BEFORE}(?:(?:(?:every|each)\s+(?:(?<months>\d+|other)\s+)?months?|monthly)\s+(?:on\s+)?the\s+(?:(?<monthNth>${NTH})\s+(?<monthNthDay>${WEEKDAY})\b|(?<monthNoNth>${ANY_ORDINAL}\s+${WEEKDAY})\b|(?<monthDay>${ORDINAL}|${SPELLED_ORDINAL}))|(?:every|each)\s+(?:(?<yearDay>${MONTH_DAY})|(?<nth>${NTH})\s+(?<nthDay>${WEEKDAY})\b(?:\s+of\s+(?:the|each|every)\s+month)?|(?<noNth>${ANY_ORDINAL}\s+${WEEKDAY})\b(?:\s+of\s+(?:the|each|every)\s+month)?|(?<dayOfMonth>(?:\d{1,2}(?:st|nd|rd|th)|${SPELLED_ORDINAL})\s+of\s+(?:the|each|every)\s+month|\d{1,2}(?:st|nd|rd|th)(?!\s+(?!(?:at|p[1-4]|remind)\b)[a-z]))|(?<other>other)\s+(?:(?<otherUnit>day|week|month|year)|(?<otherDays>${WEEKDAY_LIST}|${WEEKDAY}))|(?<interval>\d+)\s*(?<intervalUnit>${DAY_UNIT})|(?<unit>day|week|month|year)|(?<workday>weekday|workday)|(?<weekdays>${WEEKDAY_LIST}|${WEEKDAY}))|(?<listed>${WEEKDAY_LIST})|(?<adverb>daily|weekdays|weekly|monthly|yearly|annually))${AFTER}`,
+			String.raw`${BEFORE}(?:(?:(?:every|each)\s+(?:(?<months>\d+|other)\s+)?months?|monthly)\s+(?:on\s+)?the\s+(?:(?<monthNth>${NTH})\s+(?<monthNthDay>${WEEKDAY})\b|(?<monthNoNth>${ANY_ORDINAL}\s+${WEEKDAY})\b|(?<monthDay>${ORDINAL}|${SPELLED_ORDINAL}))|(?:every|each)\s+(?:(?<yearDay>${MONTH_DAY})|(?<nth>${NTH})\s+(?<nthDay>${WEEKDAY})\b(?:\s+of\s+(?:the|each|every)\s+month)?|(?<noNth>${ANY_ORDINAL}\s+${WEEKDAY})\b(?:\s+of\s+(?:the|each|every)\s+month)?|(?<dayOfMonth>(?:\d{1,2}(?:st|nd|rd|th)|${SPELLED_ORDINAL})\s+of\s+(?:the|each|every)\s+month|\d{1,2}(?:st|nd|rd|th)(?!\s+(?!(?:at|p[1-4]|remind)\b)[a-z]))|(?<other>other)\s+(?:(?<otherUnit>day|week|month|year)|(?<=\bevery\s+other\s+)(?<otherDays>${WEEKDAY_LIST}|${WEEKDAY}))|(?<interval>\d+)\s*(?<intervalUnit>${DAY_UNIT})|(?<unit>day|week|month|year)|(?<workday>weekday|workday)|(?<weekdays>${WEEKDAY_LIST}|${WEEKDAY}))|(?<listed>${WEEKDAY_LIST})|(?<adverb>daily|weekdays|weekly|monthly|yearly|annually))${AFTER}`,
 			'gi',
 		),
 		read: (m, ctx) => {

@@ -145,7 +145,7 @@ public enum QuickAdd {
     /// A weekday list repeats after `every`, next to a time, or when slashed, as in `tue/thu`. Anywhere else, as in
     /// `discuss mon wed plan`, the whole list stays text, since no single day is meant.
     static let weekdayListContext = Pattern(
-        #"(?<lead>\b(?:every|each)\s+|(?<![\w:/.$€£])(?:\#(at))?(?:\#(time))\s+(?:on\s+)?)?(?<![\w#!$€£]|\d[/:.])(?<list>\#(weekdayList))(?<trail>\s+(?:\#(at))?(?:\#(time))(?![\w!]|[/:]\d))?"#,
+        #"(?<lead>\b(?:every|each)\s+|\bevery\s+other\s+|(?<![\w:/.$€£])(?:\#(at))?(?:\#(time))\s+(?:on\s+)?)?(?<![\w#!$€£]|\d[/:.])(?<list>\#(weekdayList))(?<trail>\s+(?:\#(at))?(?:\#(time))(?![\w!]|[/:]\d))?"#,
         ignoreCase: true
     )
 
@@ -483,7 +483,7 @@ public enum QuickAdd {
     static let recurrenceRule = Rule(
         kind: .recurrence,
         pattern: Pattern(
-            #"\#(before)(?:(?:(?:every|each)\s+(?:(?<months>\d+|other)\s+)?months?|monthly)\s+(?:on\s+)?the\s+(?:(?<monthNth>\#(nth))\s+(?<monthNthDay>\#(weekday))\b|(?<monthNoNth>\#(anyOrdinal)\s+\#(weekday))\b|(?<monthDay>\#(ordinal)|\#(spelledOrdinal)))|(?:every|each)\s+(?:(?<yearDay>\#(monthDay))|(?<nth>\#(nth))\s+(?<nthDay>\#(weekday))\b(?:\s+of\s+(?:the|each|every)\s+month)?|(?<noNth>\#(anyOrdinal)\s+\#(weekday))\b(?:\s+of\s+(?:the|each|every)\s+month)?|(?<dayOfMonth>(?:\d{1,2}(?:st|nd|rd|th)|\#(spelledOrdinal))\s+of\s+(?:the|each|every)\s+month|\d{1,2}(?:st|nd|rd|th)(?!\s+(?!(?:at|p[1-4]|remind)\b)[a-z]))|(?<other>other)\s+(?:(?<otherUnit>day|week|month|year)|(?<otherDays>\#(weekdayList)|\#(weekday)))|(?<interval>\d+)\s*(?<intervalUnit>\#(dayUnit))|(?<unit>day|week|month|year)|(?<workday>weekday|workday)|(?<weekdays>\#(weekdayList)|\#(weekday)))|(?<listed>\#(weekdayList))|(?<adverb>daily|weekdays|weekly|monthly|yearly|annually))\#(after)"#,
+            #"\#(before)(?:(?:(?:every|each)\s+(?:(?<months>\d+|other)\s+)?months?|monthly)\s+(?:on\s+)?the\s+(?:(?<monthNth>\#(nth))\s+(?<monthNthDay>\#(weekday))\b|(?<monthNoNth>\#(anyOrdinal)\s+\#(weekday))\b|(?<monthDay>\#(ordinal)|\#(spelledOrdinal)))|(?:every|each)\s+(?:(?<yearDay>\#(monthDay))|(?<nth>\#(nth))\s+(?<nthDay>\#(weekday))\b(?:\s+of\s+(?:the|each|every)\s+month)?|(?<noNth>\#(anyOrdinal)\s+\#(weekday))\b(?:\s+of\s+(?:the|each|every)\s+month)?|(?<dayOfMonth>(?:\d{1,2}(?:st|nd|rd|th)|\#(spelledOrdinal))\s+of\s+(?:the|each|every)\s+month|\d{1,2}(?:st|nd|rd|th)(?!\s+(?!(?:at|p[1-4]|remind)\b)[a-z]))|(?<other>other)\s+(?:(?<otherUnit>day|week|month|year)|(?<=\bevery\s+other\s+)(?<otherDays>\#(weekdayList)|\#(weekday)))|(?<interval>\d+)\s*(?<intervalUnit>\#(dayUnit))|(?<unit>day|week|month|year)|(?<workday>weekday|workday)|(?<weekdays>\#(weekdayList)|\#(weekday)))|(?<listed>\#(weekdayList))|(?<adverb>daily|weekdays|weekly|monthly|yearly|annually))\#(after)"#,
             ignoreCase: true
         ),
         repeatable: false,

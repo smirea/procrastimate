@@ -23795,7 +23795,7 @@
 		},
 		{
 			"fn": "parseQuickAdd",
-			"test": "recurrence › every other on a weekday set repeats every two weeks",
+			"test": "recurrence › gym every other mon and fri 7am repeats every two weeks",
 			"input": [
 				"gym every other mon and fri 7am",
 				{
@@ -23873,6 +23873,155 @@
 						"kind": "due",
 						"start": 28,
 						"text": "7am"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "recurrence › gym every other mon and fri repeats every two weeks",
+			"input": [
+				"gym every other mon and fri",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-16",
+					"time": null
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": {
+					"days": [
+						1,
+						5
+					],
+					"interval": 2,
+					"unit": "week"
+				},
+				"reminders": [],
+				"sectionId": null,
+				"title": "gym",
+				"tokens": [
+					{
+						"end": 27,
+						"kind": "recurrence",
+						"start": 4,
+						"text": "every other mon and fri"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "recurrence › each other before a weekday is reciprocal, not a repeat",
+			"input": [
+				"Call each other Tuesday",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-20",
+					"time": null
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"sectionId": null,
+				"title": "Call each other",
+				"tokens": [
+					{
+						"end": 23,
+						"kind": "due",
+						"start": 16,
+						"text": "Tuesday"
 					}
 				]
 			}
