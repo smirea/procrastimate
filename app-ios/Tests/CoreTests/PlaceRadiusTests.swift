@@ -51,4 +51,19 @@ import Testing
         #expect(Triggers.formatRadius(1_480) == "1.5 km")
         #expect(Triggers.formatRadius(21_920) == "22 km")
     }
+
+    private func park(radius: Double, fitted: Double?) -> TaskLocation {
+        TaskLocation(name: "Tiergarten", latitude: 52.51, longitude: 13.36, radius: radius, fittedRadius: fitted, trigger: .arrive)
+    }
+
+    @Test func aChangedRadiusOffersTheFittedSizeFirst() {
+        #expect(Triggers.radiusPresets(for: park(radius: 150, fitted: 1_480)).map(\.name) == ["Fitted", "Block", "Neighborhood", "City"])
+        #expect(Triggers.radiusPresets(for: park(radius: 150, fitted: 1_480)).first?.meters == 1_480)
+    }
+
+    @Test func theFittedSizeHidesWhileItIsTheRadiusOrAnotherPreset() {
+        #expect(Triggers.radiusPresets(for: park(radius: 1_480, fitted: 1_480)).map(\.name) == ["Block", "Neighborhood", "City"])
+        #expect(Triggers.radiusPresets(for: park(radius: 1_000, fitted: 150)).map(\.name) == ["Block", "Neighborhood", "City"])
+        #expect(Triggers.radiusPresets(for: park(radius: 1_000, fitted: nil)).map(\.name) == ["Block", "Neighborhood", "City"])
+    }
 }

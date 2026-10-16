@@ -89,7 +89,11 @@ export type Reminder = z.infer<typeof reminderSchema>;
 export const locationTriggerSchema = z.enum(['arrive', 'leave', 'during']).meta({ id: 'LocationTrigger' });
 export type LocationTrigger = z.infer<typeof locationTriggerSchema>;
 
-/** A place picked from Apple Maps. iOS watches a circle of `radius` meters around it. */
+/**
+ * A place picked from Apple Maps. iOS watches a circle of `radius` meters around it. `fittedRadius` is the radius iOS
+ * fitted to the Apple Maps result at pick time, kept so the radius editor can go back to it; places picked before it
+ * existed lack it.
+ */
 export const taskLocationSchema = z
 	.object({
 		name: z.string(),
@@ -97,6 +101,7 @@ export const taskLocationSchema = z
 		latitude: z.number().min(-90).max(90),
 		longitude: z.number().min(-180).max(180),
 		radius: z.number().positive(),
+		fittedRadius: z.number().positive().optional(),
 		trigger: locationTriggerSchema,
 	})
 	.meta({ id: 'TaskLocation' });
