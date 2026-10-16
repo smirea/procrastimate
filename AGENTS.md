@@ -52,6 +52,9 @@ Full rules in [`docs/decisions/workflow.md`](docs/decisions/workflow.md).
 - The root env-manager schema declares each directory target with explicit output paths: TypeScript values at `.env.local` and readers at `src/env.ts` (`env.ts` for `app-web`), native values at `Config/LocalSecrets.xcconfig`. Debug and Release iOS builds read `Config/Env.xcconfig`, written by `bun run env:ios` from `dev` and `prod`. Never hand-edit either xcconfig.
 - `Config/Base.xcconfig` and `Config/Info.plist` bridge selected settings into `AppEnvironment.apiURL`. Native settings are bundled; server credentials belong exclusively to the server target.
 
-- `APP_BOT_API_URL` and `APP_BOT_TOKEN` (server target, `dev` and `prod`) hold the production API base and an AI-account bearer token, so agents can read and edit Stefan's tasks through the agent API. `GET $APP_BOT_API_URL/docs/agent` with the token returns the guide.
+- Stefan's live tasks are reachable through the agent API. `APP_BOT_API_URL` (production API base) and `APP_BOT_TOKEN` (an AI-account bearer token) live in env-manager under the `server` target, in `dev` and `prod`. To start exploring:
+  1. Load them from the root `.env.local` (run `env-manager env set dev && env-manager down` first if they're missing; never `up`).
+  2. Read the public overview with `curl -s "$APP_BOT_API_URL/docs"`, then the full guide with `curl -s -H "Authorization: Bearer $APP_BOT_TOKEN" "$APP_BOT_API_URL/docs/agent"`. The OpenAPI spec is at `/docs/openapi`.
+  3. Everything else, such as routes, examples, and what an AI account can't do, is in that guide. Writes land in Stefan's real data, so read with `GET /view` before changing anything.
 
 - Local web host: procrastimate.localhost -> 6120; browser API calls use the /api proxy.
