@@ -96,6 +96,8 @@ if (/^TURSO_DATABASE_URL='?[^'\s#]/m.test(serverEnv)) {
 	throw new Error('server/.env.local points at a Turso database. Worktrees must use the in-memory database.');
 }
 
+run(['bun', 'run', 'generate']);
+
 // Restricted to shell-safe characters because ./sim embeds it in single quotes.
 const simulator = git('branch', '--show-current').replaceAll(/[^\w.-]/g, '-');
 const sim = join(root, 'sim');

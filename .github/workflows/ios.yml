@@ -19,7 +19,30 @@ env:
   TZ: UTC
 
 jobs:
+  # API.swift is git-ignored, so every Swift job builds against the one this job writes.
+  # core-linux's Swift container has no bun, which is why this is an artifact rather than a step per job.
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+
+      - run: bun install --frozen-lockfile
+
+      - run: bun run generate
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: generated-swift
+          path: app-ios/Sources/Core/Generated
+          if-no-files-found: error
+
   core:
+    needs: generate
     if: github.event_name == 'workflow_dispatch'
     runs-on: xcode-27
     timeout-minutes: 20
@@ -29,6 +52,11 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - uses: actions/download-artifact@v4
+        with:
+          name: generated-swift
+          path: app-ios/Sources/Core/Generated
+
       - name: Toolchain
         run: xcodebuild -version && swift --version
 
@@ -36,6 +64,7 @@ jobs:
         run: swift test
 
   core-linux:
+    needs: generate
     runs-on: ubuntu-latest
     timeout-minutes: 20
     container: swift:6.4
@@ -44,6 +73,11 @@ jobs:
         working-directory: app-ios
     steps:
       - uses: actions/checkout@v6
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: generated-swift
+          path: app-ios/Sources/Core/Generated
 
       - name: Core tests
         run: swift test
@@ -61,6 +95,11 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.3
+
+      # Core's Run Script phase writes API.swift with the root's dependencies.
+      - name: Install dependencies
+        working-directory: ${{ github.workspace }}
+        run: bun install --frozen-lockfile && bun run generate
 
       - name: Generated colors match index.css
         run: bun scripts/tokens.ts --check
