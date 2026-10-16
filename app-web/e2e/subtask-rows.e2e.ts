@@ -48,3 +48,29 @@ test('No date leaves the sidebar while it has no tasks, but not while it is open
 	await app.go('Inbox');
 	await expect(app.nav('No date')).toHaveCount(0);
 });
+
+test('dragging a subtask by its handle reorders it, and the arrow keys move it back', async ({ app, page }) => {
+	await app.add('Pack for trip');
+	await app.row('Pack for trip').getByRole('button', { name: 'Pack for trip', exact: true }).click();
+	const add = app.details().getByRole('textbox', { name: 'Add subtask' });
+	for (const title of ['Passport', 'Socks', 'Charger']) {
+		await add.fill(title);
+		await add.press('Enter');
+	}
+	const rows = app.details().getByRole('list', { name: 'Subtasks of Pack for trip' }).locator('[data-subtask]');
+	const titles = () => rows.evaluateAll(items => items.map(item => item.getAttribute('data-subtask')));
+	await expect.poll(titles).toEqual(['Passport', 'Socks', 'Charger']);
+	await app.settle();
+
+	const handle = (await page.getByRole('button', { name: 'Reorder Charger' }).boundingBox())!;
+	const target = (await rows.first().boundingBox())!;
+	await page.mouse.move(handle.x + handle.width / 2, handle.y + handle.height / 2);
+	await page.mouse.down();
+	await page.mouse.move(handle.x + handle.width / 2, target.y + 4, { steps: 12 });
+	await page.mouse.up();
+	await expect.poll(titles).toEqual(['Charger', 'Passport', 'Socks']);
+
+	await page.getByRole('button', { name: 'Reorder Charger' }).press('ArrowDown');
+	await expect.poll(titles).toEqual(['Passport', 'Charger', 'Socks']);
+	await expect(page.getByRole('button', { name: 'Reorder Charger' })).toBeFocused();
+});
