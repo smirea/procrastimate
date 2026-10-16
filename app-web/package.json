@@ -10,7 +10,7 @@
 		"dev": "bun run start",
 		"build": "bun --env-file=.env.local --bun run vite build",
 		"check": "bun --env-file=.env.local --bun run svelte-kit sync && bun --env-file=.env.local run svelte-check --tsconfig ./tsconfig.json && tsc -p src/service-worker",
-		"test:e2e": "playwright test"
+		"test:e2e": "bun --env-file=.env.local run playwright test"
 	},
 	"devDependencies": {
 		"@fontsource-variable/google-sans-flex": "^5.3.1",

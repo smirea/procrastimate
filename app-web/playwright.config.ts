@@ -1,7 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const PORT = 6130;
-const API_PORT = 6131;
+// Offset from the dev ports so the suite runs beside `bun run start`; worktrees move CLIENT_PORT via .env.override.
+const PORT = Number(process.env.CLIENT_PORT || 6120) + 10;
+const API_PORT = PORT + 1;
 
 export default defineConfig({
 	testDir: './e2e',
