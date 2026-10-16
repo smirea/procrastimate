@@ -19093,6 +19093,456 @@
 		},
 		{
 			"fn": "parseQuickAdd",
+			"test": "recurrence › Water plants every March second",
+			"input": [
+				"Water plants every March second",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2027-03-02",
+					"time": null
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": {
+					"interval": 1,
+					"unit": "year"
+				},
+				"reminders": [],
+				"sectionId": null,
+				"title": "Water plants",
+				"tokens": [
+					{
+						"end": 31,
+						"kind": "recurrence",
+						"start": 13,
+						"text": "every March second"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "recurrence › Water plants every march second",
+			"input": [
+				"Water plants every march second",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2027-03-02",
+					"time": null
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": {
+					"interval": 1,
+					"unit": "year"
+				},
+				"reminders": [],
+				"sectionId": null,
+				"title": "Water plants",
+				"tokens": [
+					{
+						"end": 31,
+						"kind": "recurrence",
+						"start": 13,
+						"text": "every march second"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "recurrence › Water plants every October twenty-first 9am",
+			"input": [
+				"Water plants every October twenty-first 9am",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-21",
+					"time": "09:00"
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": {
+					"interval": 1,
+					"unit": "year"
+				},
+				"reminders": [],
+				"sectionId": null,
+				"title": "Water plants",
+				"tokens": [
+					{
+						"end": 39,
+						"kind": "recurrence",
+						"start": 13,
+						"text": "every October twenty-first"
+					},
+					{
+						"end": 43,
+						"kind": "due",
+						"start": 40,
+						"text": "9am"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "recurrence › Water plants every Dec the twenty fifth",
+			"input": [
+				"Water plants every Dec the twenty fifth",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-12-25",
+					"time": null
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": {
+					"interval": 1,
+					"unit": "year"
+				},
+				"reminders": [],
+				"sectionId": null,
+				"title": "Water plants",
+				"tokens": [
+					{
+						"end": 39,
+						"kind": "recurrence",
+						"start": 13,
+						"text": "every Dec the twenty fifth"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "recurrence › Water plants every third of May",
+			"input": [
+				"Water plants every third of May",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2027-05-03",
+					"time": null
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": {
+					"interval": 1,
+					"unit": "year"
+				},
+				"reminders": [],
+				"sectionId": null,
+				"title": "Water plants",
+				"tokens": [
+					{
+						"end": 31,
+						"kind": "recurrence",
+						"start": 13,
+						"text": "every third of May"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "recurrence › Water plants every 1st of December",
+			"input": [
+				"Water plants every 1st of December",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-12-01",
+					"time": null
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": {
+					"interval": 1,
+					"unit": "year"
+				},
+				"reminders": [],
+				"sectionId": null,
+				"title": "Water plants",
+				"tokens": [
+					{
+						"end": 34,
+						"kind": "recurrence",
+						"start": 13,
+						"text": "every 1st of December"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
 			"test": "recurrence › Water plants every oct 14",
 			"input": [
 				"Water plants every oct 14",
@@ -21870,7 +22320,7 @@
 		},
 		{
 			"fn": "parseQuickAdd",
-			"test": "recurrence › a yearly repeat on a day that does not exist stays text",
+			"test": "recurrence › a yearly repeat on a day that does not exist stays text: Party every feb 30",
 			"input": [
 				"Party every feb 30",
 				{
@@ -21926,6 +22376,263 @@
 				"reminders": [],
 				"sectionId": null,
 				"title": "Party every feb 30",
+				"tokens": []
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "recurrence › a yearly repeat on a day that does not exist stays text: Party every February thirtieth",
+			"input": [
+				"Party every February thirtieth",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"due": null,
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"sectionId": null,
+				"title": "Party every February thirtieth",
+				"tokens": []
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "recurrence › a yearly repeat on a day that does not exist stays text: Party every thirty-first of April",
+			"input": [
+				"Party every thirty-first of April",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"due": null,
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"sectionId": null,
+				"title": "Party every thirty-first of April",
+				"tokens": []
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "recurrence › a capitalized every still reads a lowercase month",
+			"input": [
+				"Every march second water plants",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2027-03-02",
+					"time": null
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": {
+					"interval": 1,
+					"unit": "year"
+				},
+				"reminders": [],
+				"sectionId": null,
+				"title": "water plants",
+				"tokens": [
+					{
+						"end": 18,
+						"kind": "recurrence",
+						"start": 0,
+						"text": "Every march second"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "recurrence › a spelled-out day before the month needs of",
+			"input": [
+				"Trip every second March",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"due": null,
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"sectionId": null,
+				"title": "Trip every second March",
 				"tokens": []
 			}
 		},

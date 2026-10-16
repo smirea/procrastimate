@@ -666,6 +666,12 @@ describe('recurrence', () => {
 		['every March 2nd 11 am', 1, 'year', '2027-03-02', '11:00'],
 		['every May 13 11 am', 1, 'year', '2027-05-13', '11:00'],
 		['every 2nd march', 1, 'year', '2027-03-02', null],
+		['every March second', 1, 'year', '2027-03-02', null],
+		['every march second', 1, 'year', '2027-03-02', null],
+		['every October twenty-first 9am', 1, 'year', '2026-10-21', '09:00'],
+		['every Dec the twenty fifth', 1, 'year', '2026-12-25', null],
+		['every third of May', 1, 'year', '2027-05-03', null],
+		['every 1st of December', 1, 'year', '2026-12-01', null],
 		['every oct 14', 1, 'year', '2026-10-14', null],
 		['every oct 14 9am', 1, 'year', '2027-10-14', '09:00'],
 		['every dec 25', 1, 'year', '2026-12-25', null],
@@ -781,10 +787,26 @@ describe('recurrence', () => {
 		expect(parsed.recurrence).toBe(null);
 	});
 
-	test('a yearly repeat on a day that does not exist stays text', () => {
-		const parsed = parse('Party every feb 30');
+	test.each([['Party every feb 30'], ['Party every February thirtieth'], ['Party every thirty-first of April']])(
+		'a yearly repeat on a day that does not exist stays text: %s',
+		input => {
+			const parsed = parse(input);
+			expect(parsed.recurrence).toBeNull();
+			expect(parsed.title).toBe(input);
+		},
+	);
+
+	test('a capitalized every still reads a lowercase month', () => {
+		const parsed = parse('Every march second water plants');
+		expect(parsed.title).toBe('water plants');
+		expect(parsed.recurrence).toEqual({ interval: 1, unit: 'year' });
+		expect(parsed.due).toEqual({ date: '2027-03-02', time: null });
+	});
+
+	test('a spelled-out day before the month needs of', () => {
+		const parsed = parse('Trip every second March');
 		expect(parsed.recurrence).toBeNull();
-		expect(parsed.title).toBe('Party every feb 30');
+		expect(parsed.title).toBe('Trip every second March');
 	});
 
 	test('the recurrence phrase is its own token', () => {

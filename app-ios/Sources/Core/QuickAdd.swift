@@ -43,8 +43,9 @@ public enum QuickAdd {
     /// May`, optionally after the weekday it falls on, which the date overrides. These come before a bare weekday, since
     /// the first alternative that matches wins. A spelled-out day before the month needs `of`, so `the first May draft`
     /// stays text.
-    static let monthDate =
-        #"(?:\#(weekday),?\s+)?(?:\#(month)(?:\.\s*|\s+)(?:the\s+)?(?:\#(spelledOrdinal)|\#(ordinal))|(?:the\s+)?(?:(?:\d{1,2}(?:st|nd|rd|th)|\#(spelledOrdinal))\s+of|\#(ordinal))\s+\#(month))(?:,?\s+(?:19|20)\d\d)?"#
+    static let monthDay =
+        #"(?:\#(month)(?:\.\s*|\s+)(?:the\s+)?(?:\#(spelledOrdinal)|\#(ordinal))|(?:the\s+)?(?:(?:\d{1,2}(?:st|nd|rd|th)|\#(spelledOrdinal))\s+of|\#(ordinal))\s+\#(month))"#
+    static let monthDate = #"(?:\#(weekday),?\s+)?\#(monthDay)(?:,?\s+(?:19|20)\d\d)?"#
 
     static let date = [
         "today|tonight|tomorrow|tmrw?|tom|eod|eow",
@@ -93,7 +94,7 @@ public enum QuickAdd {
         ),
         Pattern(#"(?<=\b(?:\#(address))\.?\s+)\d[\w:/]*"#, ignoreCase: true),
         Pattern(#"(?<!\w)\d[\w:/]*(?=\s+(?:[\w.]+\s+)?(?:\#(street))\b)"#, ignoreCase: true),
-        Pattern(#"\b(?:may|march)(?=\s+(?:the\s+)?\#(spelledOrdinal)\b)"#),
+        Pattern(#"(?<!\b(?:[Ee]very|[Ee]ach|EVERY|EACH)\s+)\b(?:may|march)(?=\s+(?:the\s+)?\#(spelledOrdinal)\b)"#),
     ]
 
     /// Extra guards for speech. A bare four-digit number is not a time without `at`, compact units such as `5m` or
@@ -441,7 +442,7 @@ public enum QuickAdd {
     static let recurrenceRule = Rule(
         kind: .recurrence,
         pattern: Pattern(
-            #"\#(before)(?:(?:every|each)\s+(?:(?<yearDay>\#(month)\s+\#(ordinal)|\#(ordinal)\s+\#(month))|(?<other>other)\s+(?<otherUnit>day|week|month|year)|(?<interval>\d+)\s*(?<intervalUnit>\#(dayUnit))|(?<unit>day|week|month|year)|(?<workday>weekday|workday)|(?<weekdays>\#(weekdayList)|\#(weekday)))|(?<listed>\#(weekdayList))|(?<adverb>daily|weekdays|weekly|monthly|yearly|annually))\#(after)"#,
+            #"\#(before)(?:(?:every|each)\s+(?:(?<yearDay>\#(monthDay))|(?<other>other)\s+(?<otherUnit>day|week|month|year)|(?<interval>\d+)\s*(?<intervalUnit>\#(dayUnit))|(?<unit>day|week|month|year)|(?<workday>weekday|workday)|(?<weekdays>\#(weekdayList)|\#(weekday)))|(?<listed>\#(weekdayList))|(?<adverb>daily|weekdays|weekly|monthly|yearly|annually))\#(after)"#,
             ignoreCase: true
         ),
         repeatable: false,
