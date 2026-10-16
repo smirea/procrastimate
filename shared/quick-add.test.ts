@@ -439,6 +439,25 @@ describe('dates with a year', () => {
 		expect(parsed.due).toBeNull();
 		expect(parsed.title).toBe('Order 2027 calendars');
 	});
+
+	test('the last day of 9999 still reads as a date', () => {
+		expect(parse('Far off 2912156d').due).toEqual({ date: '9999-12-31', time: null });
+	});
+
+	test.each([
+		['Nudged task 2912157d'],
+		['Nudged task 3929284d'],
+		['Nudged task 99999999999999999999d'],
+		['Nudged task in 8000 years'],
+		['Nudged task 99999999999999w'],
+		['Nudged task 9999999999h'],
+		['Nudged task remind me in 99999999999999999999 days'],
+	])('a date past the year 9999 stays text: %s', input => {
+		const parsed = parse(input);
+		expect(parsed.title).toBe(input);
+		expect(parsed.due).toBeNull();
+		expect(parsed.reminders).toEqual([]);
+	});
 });
 
 describe('recurrence', () => {

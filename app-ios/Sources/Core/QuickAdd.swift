@@ -288,7 +288,11 @@ public enum QuickAdd {
             return day == -1 ? nil : nextWeekday(today, day)
         }),
         (Pattern(#"^(?:in )?(\d+) ?([a-z]+)$"#), { m, today in
-            guard let amount = number(m[1]), let unit = unitOf(m[2]!)?.recurrenceUnit else { return nil }
+            // Any count of days, weeks, months, or years this large is past 9999, and a larger one would trap
+            // on overflow in the date arithmetic.
+            guard let amount = number(m[1]), amount <= 3_660_000, let unit = unitOf(m[2]!)?.recurrenceUnit else {
+                return nil
+            }
             return Dates.addInterval(today, amount, unit)
         }),
         (Pattern(#"^the (\d{1,2})(?:st|nd|rd|th)$"#), { m, today in
@@ -349,7 +353,15 @@ public enum QuickAdd {
         return DuePhrase(date: Dates.toDateKey(at, in: ctx.zone), time: clock(at, in: ctx.zone))
     }
 
+    /// A date past 9999-12-31 is not a `DateKey`, and the server rejects the op that carries it along with the rest
+    /// of the outbox, so such a phrase, as in `3929284d`, stays text.
     static func readDateTime(_ m: Found, _ ctx: Context) -> DuePhrase? {
+        guard let phrase = readPhrase(m, ctx) else { return nil }
+        if let date = phrase.date, Dates.parts(date).year > 9999 { return nil }
+        return phrase
+    }
+
+    static func readPhrase(_ m: Found, _ ctx: Context) -> DuePhrase? {
         if let moment = m["moment"] { return resolveMoment(moment, ctx) }
         let dateText = m["date1"] ?? m["date2"]
         let timeText = m["time1"] ?? m["time2"]

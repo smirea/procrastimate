@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { labelSchema, projectSchema, sectionSchema, taskSchema } from './sync/protocol.ts';
 import { linkify } from './links.ts';
+import { DATE_KEY_PATTERN } from './values.ts';
 import {
 	addDays,
 	addInterval,
@@ -339,7 +340,16 @@ function resolveMoment(text: string, ctx: Context): DuePhrase | null {
 	return { date: toDateKey(at), time: toTimeOfDay(at.getHours(), at.getMinutes()) };
 }
 
+/**
+ * A date past 9999-12-31 is not a `DateKey`, and the server rejects the op that carries it along with the rest of
+ * the outbox, so such a phrase, as in `3929284d`, stays text.
+ */
 function readDateTime(groups: Record<string, string | undefined>, ctx: Context): DuePhrase | null {
+	const phrase = readPhrase(groups, ctx);
+	return phrase?.date && !DATE_KEY_PATTERN.test(phrase.date) ? null : phrase;
+}
+
+function readPhrase(groups: Record<string, string | undefined>, ctx: Context): DuePhrase | null {
 	if (groups.moment) return resolveMoment(groups.moment, ctx);
 	const dateText = groups.date1 ?? groups.date2;
 	const timeText = groups.time1 ?? groups.time2;
