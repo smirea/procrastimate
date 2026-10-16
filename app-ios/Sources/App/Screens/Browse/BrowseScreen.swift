@@ -133,7 +133,7 @@ private struct BrowseList: View {
                             BrowseRow(
                                 name: label.name,
                                 systemImage: "tag",
-                                tone: .toneLabel,
+                                tone: label.color.tone,
                                 count: Views.labelTasks(store.tasks, label.id, in: store.timeZone).count
                             )
                         }

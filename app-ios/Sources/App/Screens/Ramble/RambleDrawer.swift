@@ -455,7 +455,7 @@ struct RambleDrawer: View {
                     Token(systemImage: "number", text: project.name, tone: .ink)
                 }
                 ForEach(labels) { label in
-                    Token(systemImage: "tag.fill", text: label.name, tone: .ink, iconTone: .toneLabel)
+                    Token(systemImage: "tag.fill", text: label.name, tone: .ink, iconTone: label.color.tone)
                 }
             }
         }

@@ -367,6 +367,8 @@ struct Chip: View {
     var iconTone: Color?
     /// Tints the capsule, as a set priority does.
     var fill: Color?
+    /// Replaces the capsule's color outright, as a label's fill does.
+    var background: Color?
 
     var body: some View {
         HStack(spacing: 5) {
@@ -377,7 +379,7 @@ struct Chip: View {
         .foregroundStyle(tone)
         .padding(.horizontal, 10)
         .frame(minHeight: 32)
-        .background(fill.map { $0.opacity(0.18) } ?? Color.ink.opacity(0.06), in: .capsule)
+        .background(background ?? fill.map { $0.opacity(0.18) } ?? Color.ink.opacity(0.06), in: .capsule)
         .contentShape(.capsule)
         .transition(.scale(scale: 0.9).combined(with: .opacity))
     }

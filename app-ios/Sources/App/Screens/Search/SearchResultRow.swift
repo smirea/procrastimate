@@ -54,7 +54,7 @@ struct SearchResultRow: View {
         case let .project(hit):
             NameResult(systemImage: "number", tone: .muted, name: hit.name)
         case let .label(hit):
-            NameResult(systemImage: "tag", tone: .toneLabel, name: hit.name)
+            NameResult(systemImage: "tag", tone: hit.item.color.tone, name: hit.name)
         case let .task(hit):
             TaskResult(hit: hit)
         }
@@ -131,7 +131,9 @@ private struct TaskResult: View {
             VStack(alignment: .leading, spacing: 2) {
                 TitleFlow(
                     title: Links.attributed(task.title, hit.matches[.title]?.first?.ranges ?? []),
-                    labels: (hit.matches[.labels] ?? []).map(\.attributed),
+                    labels: (hit.matches[.labels] ?? []).map { match in
+                        TitleFlow.Chip(text: match.attributed, color: store.labels.first { $0.name == match.text }?.color ?? .gray)
+                    },
                     done: done
                 )
                 if let notes = hit.matches[.notes]?.first {
