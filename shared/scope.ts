@@ -11,8 +11,9 @@ import { DEFAULT_SETTINGS, type FieldsByKind, type Op, type Snapshot, type Task 
 export type Grant = Pick<ShareRow, 'targetKind' | 'targetId' | 'role'>;
 
 /**
- * A whole-space edit share makes its holder a manager of the space. Only AI accounts can hold one; `shares.create` refuses the whole space to anyone else. A manager
- * sees every project and label, writes them and sections like the owner, and makes public links.
+ * A whole-space edit share makes its holder a manager of the space. Only AI accounts can hold one; `shares.create`
+ * refuses the whole space to anyone else. A manager sees every project and label, writes them and sections like the
+ * owner, and makes public links.
  */
 export const managesSpace = (grants: readonly Grant[]) =>
 	grants.some(grant => grant.targetKind === 'space' && grant.role === 'edit');
