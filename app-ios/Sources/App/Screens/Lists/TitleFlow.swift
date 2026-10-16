@@ -13,6 +13,8 @@ struct TitleFlow: View {
     let title: AttributedString
     let labels: [Chip]
     var done = false
+    /// Nil shows the whole title, as a subtask row in task details does.
+    var lineLimit: Int? = 2
 
     var body: some View {
         var text = Text(title)
@@ -22,7 +24,7 @@ struct TitleFlow: View {
             text = Text("\(text) \(Self.chip(label))")
         }
         return text
-            .lineLimit(2)
+            .lineLimit(lineLimit)
             // Middle truncation cuts the last line inside the title, so the labels after it stay on screen.
             .truncationMode(labels.isEmpty ? .tail : .middle)
             .textRenderer(LabelChipRenderer())
