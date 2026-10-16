@@ -29,9 +29,11 @@
 		$props();
 
 	const today = $derived(todayTasks(store.own.tasks, clock.today));
+	const noDate = $derived(inboxTasks(store.own.tasks, clock.today).length);
+	/** No date leaves the list once it is empty, but not while it is open, so finishing its last task keeps the page's link. */
 	const views = $derived([
 		{ href: '/inbox', label: 'Inbox', icon: Tray, count: today.overdue.length + today.today.length },
-		{ href: '/no-date', label: 'No date', icon: CalendarMinus, count: inboxTasks(store.own.tasks, clock.today).length },
+		...(noDate || page.url.pathname === '/no-date' ? [{ href: '/no-date', label: 'No date', icon: CalendarMinus, count: noDate }] : []),
 		{ href: '/completed', label: 'Completed', icon: CheckCircle, count: 0 },
 	]);
 
@@ -94,7 +96,7 @@
 		<ul class="space-y-0.5">
 			{#each views as view (view.href)}
 				{@const active = page.url.pathname === view.href}
-				<li>
+				<li transition:slide={motion({ duration: 180, easing: cubicOut })}>
 					<a href={view.href} class="nav-link" class:active aria-current={active ? 'page' : undefined}>
 						<view.icon size={18} weight={active ? 'fill' : 'regular'} />
 						<span class="flex-1">{view.label}</span>

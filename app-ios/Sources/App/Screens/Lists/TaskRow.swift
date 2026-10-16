@@ -1,7 +1,15 @@
 import Core
 import SwiftUI
 
-struct TaskRow: View {
+/// Where a row sits. A list row leaves once checked, with an undo toast. A subtask row in its parent's details stays
+/// when done and toggles in place with no toast, since the checkbox is its own undo, opens by pushing, and wraps its
+/// whole title.
+enum TaskRowPlacement {
+    case list
+    case subtask(open: () -> Void)
+}
+
+struct TaskRow<Trailing: View>: View {
     @Environment(Store.self) private var store
     @Environment(TaskActions.self) private var actions
     @Environment(Navigator.self) private var navigator
@@ -14,21 +22,56 @@ struct TaskRow: View {
     var timeOnly = false
     /// No date shows how long ago each task was added, such as `3 days ago`.
     var added: String?
+    var placement = TaskRowPlacement.list
+    @ViewBuilder var trailing: Trailing
 
     @State private var checking = false
     @State private var postponing = false
 
     var body: some View {
+        HStack(alignment: .top, spacing: 0) {
+            row
+            trailing
+        }
+        .swipeActions(edge: .leading, allowsFullSwipe: true) {
+            if !locked {
+                Button(done ? "Reopen" : "Complete", systemImage: done ? "arrow.uturn.backward" : "checkmark") { completeNow() }
+                    .tint(.toneSoon)
+            }
+        }
+        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+            // An event task's day comes from its calendar event, so there is nothing to move.
+            if task.event == nil && !locked && !done {
+                Button("Postpone", systemImage: "calendar.badge.clock") { postponing = true }
+                    .tint(.toneWeek)
+            }
+        }
+        .confirmationDialog("Postpone “\(task.title)”", isPresented: $postponing, titleVisibility: .visible) {
+            ForEach(Format.postponeOptions(due, today), id: \.date) { option in
+                Button("\(option.label) · \(Format.weekdayNames[Dates.weekdayOf(option.date)])") {
+                    actions.postpone(task, to: option.date)
+                }
+            }
+            Button("Pick a date…") { open() }
+        }
+        // Outside a `List`, swipe actions keep the buttons they were first built with, so a subtask that is checked or
+        // unchecked rebuilds them to swap `Complete` and `Reopen`.
+        .id(done)
+    }
+
+    private var row: some View {
         HStack(alignment: .top, spacing: 10) {
-            Checkbox(checked: checking, tone: task.priority.tone) { check() }
+            Checkbox(checked: checking || done, tone: task.priority.tone) { check() }
                 .accessibilityLabel("Complete \(task.title)")
                 .accessibilityValue(Format.priorityLabel(task.priority))
+                .accessibilityAddTraits(done ? .isSelected : [])
                 .disabled(locked)
             VStack(alignment: .leading, spacing: 2) {
                 TitleFlow(
                     title: Links.attributed(task.title),
                     labels: labels.map { TitleFlow.Chip(text: AttributedString($0.name), color: $0.color) },
-                    done: checking
+                    done: checking || done,
+                    lineLimit: isSubtask ? nil : 2
                 )
                 .font(.body)
                 if !task.notes.isEmpty {
@@ -39,11 +82,12 @@ struct TaskRow: View {
             .padding(.vertical, 6)
             .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
             .contentShape(.rect)
-            .onTapGesture { navigator.sheet = .details(taskID: task.id) }
+            // A tap gesture rather than a Button, which would swallow taps on a link in the title.
+            .onTapGesture { open() }
             .accessibilityElement(children: .combine)
             .accessibilityAddTraits(.isButton)
-            .accessibilityIdentifier("task-\(task.title)")
-            .accessibilityAction { navigator.sheet = .details(taskID: task.id) }
+            .accessibilityIdentifier(isSubtask ? "subtask-\(task.title)" : "task-\(task.title)")
+            .accessibilityAction { open() }
             if let added {
                 Text(added)
                     .font(.caption)
@@ -60,31 +104,10 @@ struct TaskRow: View {
                 .padding(.horizontal, -8)
                 .animation(.easeOut(duration: 0.6), value: navigator.revealed == task.id)
         }
-        .swipeActions(edge: .leading, allowsFullSwipe: true) {
-            if !locked {
-                Button("Complete", systemImage: "checkmark") { actions.complete(task) }
-                    .tint(.toneSoon)
-            }
-        }
-        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-            // An event task's day comes from its calendar event, so there is nothing to move.
-            if task.event == nil && !locked {
-                Button("Postpone", systemImage: "calendar.badge.clock") { postponing = true }
-                    .tint(.toneWeek)
-            }
-        }
-        .confirmationDialog("Postpone “\(task.title)”", isPresented: $postponing, titleVisibility: .visible) {
-            ForEach(Format.postponeOptions(due, today), id: \.date) { option in
-                Button("\(option.label) · \(Format.weekdayNames[Dates.weekdayOf(option.date)])") {
-                    actions.postpone(task, to: option.date)
-                }
-            }
-            Button("Pick a date…") { navigator.sheet = .details(taskID: task.id) }
-        }
         .contextMenu {
             if !locked {
-                Button("Complete", systemImage: "checkmark.circle") { actions.complete(task) }
-                if task.event == nil {
+                Button(done ? "Reopen" : "Complete", systemImage: done ? "arrow.uturn.backward.circle" : "checkmark.circle") { completeNow() }
+                if task.event == nil && !done {
                     Menu("Postpone", systemImage: "calendar.badge.clock") {
                         ForEach(Format.postponeOptions(due, today), id: \.date) { option in
                             Button(option.label) { actions.postpone(task, to: option.date) }
@@ -97,8 +120,14 @@ struct TaskRow: View {
         }
     }
 
-    /// The checkbox fills on the first frame, then the row leaves once the fill has played.
+    /// A list row's checkbox fills on the first frame, then the row leaves once the fill has played.
     private func check() {
+        if isSubtask {
+            withAnimation(reduceMotion ? nil : .snappy) {
+                if done { store.reopenTask(task.id) } else { _ = store.completeTask(task.id) }
+            }
+            return
+        }
         guard !checking else { return }
         checking = true
         Task {
@@ -108,17 +137,34 @@ struct TaskRow: View {
         }
     }
 
+    /// A swipe or menu has no checkbox fill to wait for.
+    private func completeNow() {
+        if isSubtask { check() } else { actions.complete(task) }
+    }
+
+    private func open() {
+        switch placement {
+        case .list: navigator.sheet = .details(taskID: task.id)
+        case .subtask(let open): open()
+        }
+    }
+
+    private var isSubtask: Bool {
+        if case .subtask = placement { true } else { false }
+    }
+
+    private var done: Bool { task.completedAt != nil }
     private var locked: Bool { store.isReadOnly(task.id) }
     private var project: Project? { store.project(task.projectId) }
     private var labels: [Core.Label] { store.labels(of: task) }
-    private var parent: TaskItem? { task.parentId.flatMap(store.task) }
+    private var parent: TaskItem? { isSubtask ? nil : task.parentId.flatMap(store.task) }
     private var progress: Subtasks.Progress? {
         Subtasks.progressOf(store.allTasks.filter { $0.parentId == task.id })
     }
     private var commentBadge: CommentBadge? { store.commentBadge(task.id, me: Session.userID) }
 
     /// The day the task sits on, which for an event or a repeat at a place is not its stored due date.
-    private var due: Due? { Triggers.scheduledDue(task, today, in: store.timeZone) }
+    private var due: Due? { done ? nil : Triggers.scheduledDue(task, today, in: store.timeZone) }
 
     private var hasDetails: Bool {
         due != nil || task.location != nil || task.recurrence != nil || !task.reminders.isEmpty || !task.images.isEmpty
@@ -185,6 +231,12 @@ struct TaskRow: View {
             .foregroundStyle(.muted)
             .lineLimit(1)
         }
+    }
+}
+
+extension TaskRow where Trailing == EmptyView {
+    init(task: TaskItem, showProject: Bool = false, timeOnly: Bool = false, added: String? = nil) {
+        self.init(task: task, showProject: showProject, timeOnly: timeOnly, added: added) { EmptyView() }
     }
 }
 

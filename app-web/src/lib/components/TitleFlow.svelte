@@ -41,11 +41,14 @@
 		title,
 		ranges,
 		labels,
+		wrap = false,
 		class: className = '',
 	}: {
 		title: string;
 		ranges?: readonly Range[];
 		labels: readonly (Highlight & { color: LabelColor })[];
+		/** Shows the whole title over as many lines as it needs instead of two. */
+		wrap?: boolean;
 		class?: string;
 	} = $props();
 
@@ -57,7 +60,7 @@
 	let clamped = $state(false);
 
 	async function measure() {
-		if (!labels.length) {
+		if (!labels.length || wrap) {
 			clamped = false;
 			return;
 		}
@@ -83,7 +86,7 @@
 
 <!-- The flex parent gives the clamped box a definite height, which the float spacer's percentage needs. -->
 <div class="flex">
-	<div bind:this={flow} class="flow {className}" class:clamped>
+	<div bind:this={flow} class="flow {className}" class:clamped class:wrap>
 		{#if clamped}{@render chips(true)}{/if}<LinkedText text={title} {ranges} />{#if labels.length && !clamped}{@render chips(false)}{/if}
 	</div>
 </div>
@@ -98,6 +101,11 @@
 		overflow-wrap: anywhere;
 		min-width: 0;
 		flex: 1;
+	}
+
+	.wrap {
+		-webkit-line-clamp: unset;
+		line-clamp: none;
 	}
 
 	.clamped::before {

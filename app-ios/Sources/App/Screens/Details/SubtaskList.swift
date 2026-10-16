@@ -1,8 +1,8 @@
 import Core
 import SwiftUI
 
-/// A task's subtasks in its details: each toggles in place with no toast, opens its own details, and drags into
-/// order by its handle. `Add subtask` parses like quick add, without `#` projects, and keeps focus for the next one.
+/// A task's subtasks in its details, as list rows placed as subtasks, each dragging into order by its handle.
+/// `Add subtask` parses like quick add, without `#` projects, and keeps focus for the next one.
 struct SubtaskList: View {
     @Environment(Store.self) private var store
     @Environment(\.clock) private var clock
@@ -137,9 +137,9 @@ struct SubtaskList: View {
     }
 }
 
+/// The same row as a list's, placed as a subtask, with the reorder handle at its end.
 private struct SubtaskRow<Reorder: Gesture>: View {
     @Environment(Store.self) private var store
-    @Environment(\.today) private var today
 
     let child: TaskItem
     let reorderable: Bool
@@ -148,46 +148,9 @@ private struct SubtaskRow<Reorder: Gesture>: View {
     let move: (Int) -> Void
     let dragGesture: Reorder
 
-    private var locked: Bool { store.isReadOnly(child.id) }
-
     var body: some View {
-        let done = child.completedAt != nil
-        let progress = Subtasks.progressOf(store.allTasks.filter { $0.parentId == child.id })
-        HStack(spacing: 10) {
-            Checkbox(checked: done, tone: child.priority.tone) { toggle(done) }
-                .accessibilityLabel("Complete \(child.title)")
-                .accessibilityAddTraits(done ? .isSelected : [])
-                .disabled(locked)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(Links.attributed(child.title))
-                    .font(.subheadline)
-                    .foregroundStyle(done ? Color.faint : Color.ink)
-                    .strikethrough(done, color: .faint)
-                    .multilineTextAlignment(.leading)
-                if (child.due != nil && !done) || progress != nil {
-                    HStack(spacing: 10) {
-                        if let due = child.due, !done {
-                            HStack(spacing: 3) {
-                                Image(systemName: "calendar").imageScale(.small)
-                                Text(Format.formatDue(due, today))
-                            }
-                            .foregroundStyle(Format.dueTone(due, today).color)
-                        }
-                        if let progress { SubtaskProgress(progress: progress) }
-                    }
-                    .font(.caption)
-                }
-            }
-            .padding(.vertical, 8)
-            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-            .contentShape(.rect)
-            // A tap gesture rather than a Button, which would swallow taps on a link in the title.
-            .onTapGesture(perform: open)
-            .accessibilityElement(children: .combine)
-            .accessibilityAddTraits(.isButton)
-            .accessibilityAction { open() }
-            .accessibilityIdentifier("subtask-\(child.title)")
-            if reorderable && !locked {
+        TaskRow(task: child, placement: .subtask(open: open)) {
+            if reorderable && !store.isReadOnly(child.id) {
                 Image(systemName: "line.3.horizontal")
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.faint)
@@ -210,13 +173,6 @@ private struct SubtaskRow<Reorder: Gesture>: View {
         }
         .scaleEffect(lifted ? 1.02 : 1)
         .animation(.snappy(duration: 0.16), value: lifted)
-    }
-
-    /// The checkbox is its own undo, so there is no toast.
-    private func toggle(_ done: Bool) {
-        withAnimation(.snappy) {
-            if done { store.reopenTask(child.id) } else { _ = store.completeTask(child.id) }
-        }
     }
 }
 

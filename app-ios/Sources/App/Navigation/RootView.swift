@@ -38,7 +38,12 @@ struct RootView: View {
         }
         // An overlay, not a `safeAreaInset`: the tab view hands its tabs a fresh safe area, so each tab's screens make room
         // with `tabBarClearance()` instead.
-        .overlay(alignment: .bottom) { TabBar(inboxBadge: today.overdue.count + today.today.count) }
+        .overlay(alignment: .bottom) {
+            TabBar(
+                inboxBadge: today.overdue.count + today.today.count,
+                hasNoDate: !Views.inboxTasks(store.tasks, todayKey, in: store.timeZone).isEmpty
+            )
+        }
         .overlay(alignment: .bottom) { QuickAddOverlay() }
         .overlay { RambleOverlay() }
         .overlay(alignment: navigator.quickAdd == nil ? .bottom : .top) {
@@ -90,16 +95,22 @@ private struct TabBar: View {
     @Namespace private var selection
     @State private var keyboardShown = false
     let inboxBadge: Int
+    let hasNoDate: Bool
 
     var body: some View {
         GlassEffectContainer(spacing: 12) {
             HStack(spacing: 12) {
                 HStack(spacing: 0) {
                     inboxItem
-                    item(.noDate, "No date", "calendar.badge.minus")
+                    // No date leaves once it is empty, but not while it is open, so finishing its last task keeps the tab.
+                    if hasNoDate || navigator.tab == .noDate {
+                        item(.noDate, "No date", "calendar.badge.minus")
+                            .transition(.scale(scale: 0.6).combined(with: .opacity))
+                    }
                     item(.browse, "Browse", "square.grid.2x2")
                 }
                 .padding(4)
+                .animation(.snappy(duration: 0.25), value: hasNoDate || navigator.tab == .noDate)
                 .glassEffect(.regular.interactive(), in: .capsule)
                 Button { navigator.sheet = .quickAdd(navigator.listDefaults) } label: {
                     Image(systemName: "plus")

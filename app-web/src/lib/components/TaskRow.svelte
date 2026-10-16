@@ -13,6 +13,7 @@
 	import ImageSquare from 'phosphor-svelte/lib/ImageSquare';
 	import ArrowElbowDownRight from 'phosphor-svelte/lib/ArrowElbowDownRight';
 	import CalendarPlus from 'phosphor-svelte/lib/CalendarPlus';
+	import type { Snippet } from 'svelte';
 	import Popover from './Popover.svelte';
 	import type { Task } from 'shared/task.ts';
 	import Checkbox from './Checkbox.svelte';
@@ -20,7 +21,8 @@
 	import TitleFlow from './TitleFlow.svelte';
 	import SubtaskProgress from './SubtaskProgress.svelte';
 	import { useLookup } from '../lookup.ts';
-	import { clock, reveal, motion } from '../ui.svelte.ts';
+	import { clock, reveal, motion, sheets } from '../ui.svelte.ts';
+	import { store } from '../store.svelte.ts';
 	import { WEEKDAY_NAMES, addedAgo, dueTone, formatDue, formatTime, postponeOptions, repeatLabel } from 'shared/format.ts';
 	import { toDateKey, weekdayOf } from 'shared/task.ts';
 	import { eventLabel, formatLocation, scheduledDue } from 'shared/triggers.ts';
@@ -33,7 +35,20 @@
 		showProject = false,
 		timeOnly = false,
 		showAdded = false,
-	}: { task: Task; showProject?: boolean; timeOnly?: boolean; showAdded?: boolean } = $props();
+		subtask = false,
+		trailing,
+	}: {
+		task: Task;
+		showProject?: boolean;
+		timeOnly?: boolean;
+		showAdded?: boolean;
+		/**
+		 * A row in its parent's details: it stays when done, toggles in place with no toast since the checkbox is its own
+		 * undo, opens by sliding in, and wraps its whole title.
+		 */
+		subtask?: boolean;
+		trailing?: Snippet;
+	} = $props();
 
 	const lookup = useLookup();
 	let checking = $state(false);
@@ -41,9 +56,10 @@
 	const project = $derived(lookup.project(task.projectId));
 	const section = $derived(lookup.section(task.sectionId));
 	const labelChips = $derived(lookup.labelsOf(task).map((label) => ({ text: label.name, ranges: [], color: label.color })));
-	const parent = $derived(task.parentId ? lookup.task(task.parentId) : undefined);
+	const parent = $derived(task.parentId && !subtask ? lookup.task(task.parentId) : undefined);
 	const progress = $derived(lookup.progress(task.id));
-	const due = $derived(scheduledDue(task, clock.today));
+	const done = $derived(task.completedAt !== null);
+	const due = $derived(done ? null : scheduledDue(task, clock.today));
 	const event = $derived(task.event ? eventLabel(task.event, clock.today) : null);
 	const fromMemo = $derived(parseMemoSource(task.sourceKey) !== null);
 	const commentBadge = $derived(lookup.commentBadge(task.id));
@@ -55,6 +71,11 @@
 	});
 
 	function complete() {
+		if (subtask) {
+			if (done) store.reopenTask(task.id);
+			else store.completeTask(task.id, clock.today);
+			return;
+		}
 		if (checking) return;
 		checking = true;
 		setTimeout(() => {
@@ -68,20 +89,27 @@
 	bind:this={row}
 	class="group flex items-start gap-3 rounded-2xl px-2 transition-colors duration-500 hover:bg-surface/60"
 	class:revealed
-	data-task={task.title}
+	data-task={subtask ? undefined : task.title}
 >
 	{#if editable}
-		<Checkbox checked={checking} tone={PRIORITIES[task.priority].tone} label={`Complete ${task.title}`} class="mt-3 touch:mt-3.5" onclick={complete} />
+		<Checkbox checked={checking || done} tone={PRIORITIES[task.priority].tone} label={`Complete ${task.title}`} class="mt-3 touch:mt-3.5" onclick={complete} />
 	{:else}
 		<span class="mt-3 size-[18px] shrink-0 rounded-full border-[1.5px] border-dashed border-faint/60 touch:mt-3.5 touch:size-5" aria-hidden="true"></span>
 	{/if}
 	<!-- The button sits under the text rather than around it, since HTML forbids a link inside a button. -->
 	<div class="relative min-w-0 flex-1 py-2.5 touch:min-h-11 touch:py-3">
-		{#if lookup.open}
+		{#if subtask}
+			<button type="button" class="absolute inset-0 rounded-xl" aria-label={task.title} onclick={() => sheets.openTask(task.id, 'forward')}></button>
+		{:else if lookup.open}
 			<button type="button" class="absolute inset-0 rounded-xl" aria-label={task.title} onclick={() => lookup.open?.(task.id)}></button>
 		{/if}
 		<div class="pointer-events-none relative">
-			<TitleFlow title={task.title} labels={labelChips} class="text-[14px] leading-5 transition-colors {checking ? 'text-faint line-through' : 'text-ink'}" />
+			<TitleFlow
+				title={task.title}
+				labels={labelChips}
+				wrap={subtask}
+				class="text-[14px] leading-5 transition-colors {checking || done ? 'text-faint line-through' : 'text-ink'}"
+			/>
 			{#if task.notes}
 				<div class="truncate text-[12px] leading-4 text-muted"><LinkedText text={task.notes} /></div>
 			{/if}
@@ -169,7 +197,7 @@
 	{#if showAdded}
 		<span class="shrink-0 pt-3 text-[12px] leading-5 text-faint touch:pt-3.5">{addedAgo(toDateKey(new Date(task.createdAt)), clock.today)}</span>
 	{/if}
-	{#if !task.event && editable}
+	{#if !task.event && editable && !done}
 		<div class="mt-1.5 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100 touch:opacity-100">
 			<Popover label="Postpone" align="end">
 				{#snippet trigger({ toggle })}
@@ -194,6 +222,7 @@
 			</Popover>
 		</div>
 	{/if}
+	{@render trailing?.()}
 </div>
 
 <style>
