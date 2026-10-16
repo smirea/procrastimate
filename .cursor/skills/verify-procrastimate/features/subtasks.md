@@ -21,7 +21,7 @@ Subtasks let Stefan break a task into steps, such as `Pack for trip` with `Passp
 
 - Web: open a task and type in `Add subtask` under the notes, then press Enter.
 - Web: in task details, tap a subtask's title to open it, and tap the back chip to return.
-- Web: drag the six-dot handle at the end of a subtask row, or focus it and press up or down.
+- Web: drag the six-dot handle at the end of a subtask row, or focus it and press up or down. Dragging to the edge of the task sheet scrolls it. Test: `dragging a subtask by its handle reorders it, and the arrow keys move it back` in `e2e/subtask-rows.e2e.ts`.
 - Web: check off the parent from any list or with `Complete` in its details.
 - Web and iOS: in quick add, tap the checklist chip and type subtask lines before saving.
 - Web and iOS: in task details, tap the `…` button (`Subtask actions`) at the end of the Subtasks heading and pick one way under `Turn into tasks`.

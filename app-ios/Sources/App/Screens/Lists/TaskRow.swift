@@ -34,14 +34,13 @@ struct TaskRow<Trailing: View>: View {
             trailing
         }
         .swipeActions(edge: .leading, allowsFullSwipe: true) {
-            if !locked {
-                Button(done ? "Reopen" : "Complete", systemImage: done ? "arrow.uturn.backward" : "checkmark") { completeNow() }
+            if let toggle = swipes.toggle {
+                Button(toggle.label, systemImage: toggle.systemImage) { completeNow() }
                     .tint(.toneSoon)
             }
         }
         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-            // An event task's day comes from its calendar event, so there is nothing to move.
-            if task.event == nil && !locked && !done {
+            if swipes.postpone {
                 Button("Postpone", systemImage: "calendar.badge.clock") { postponing = true }
                     .tint(.toneWeek)
             }
@@ -54,9 +53,9 @@ struct TaskRow<Trailing: View>: View {
             }
             Button("Pick a date…") { open() }
         }
-        // Outside a `List`, swipe actions keep the buttons they were first built with, so a subtask that is checked or
-        // unchecked rebuilds them to swap `Complete` and `Reopen`.
-        .id(done)
+        // Outside a `List`, as in task details, swipe actions keep the buttons and closures they were first built with,
+        // so the row rebuilds whenever what they offer changes.
+        .id(swipes)
     }
 
     private var row: some View {
@@ -154,6 +153,23 @@ struct TaskRow<Trailing: View>: View {
     }
 
     private var done: Bool { task.completedAt != nil }
+
+    /// Everything the swipe buttons show and do, so the row's identity can follow it.
+    private struct Swipes: Hashable {
+        enum Toggle: Hashable {
+            case complete, reopen
+            var label: String { self == .complete ? "Complete" : "Reopen" }
+            var systemImage: String { self == .complete ? "checkmark" : "arrow.uturn.backward" }
+        }
+
+        let toggle: Toggle?
+        let postpone: Bool
+    }
+
+    /// An event task's day comes from its calendar event, so there is nothing to postpone.
+    private var swipes: Swipes {
+        Swipes(toggle: locked ? nil : done ? .reopen : .complete, postpone: task.event == nil && !locked && !done)
+    }
     private var locked: Bool { store.isReadOnly(task.id) }
     private var project: Project? { store.project(task.projectId) }
     private var labels: [Core.Label] { store.labels(of: task) }

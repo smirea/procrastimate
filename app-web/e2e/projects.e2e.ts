@@ -63,6 +63,53 @@ test('dragging a project reorders the sidebar, survives a reload, and a plain cl
 	]);
 });
 
+test.describe('in a short window', () => {
+	test.use({ viewport: { width: 1280, height: 480 } });
+
+	test('dragging a project to the sidebar edge scrolls it, so the project lands past the fold', async ({
+		app,
+		page,
+	}) => {
+		const names = [
+			'Alpha',
+			'Bravo',
+			'Charlie',
+			'Delta',
+			'Echo',
+			'Foxtrot',
+			'Golf',
+			'Hotel',
+			'India',
+			'Juliet',
+			'Kilo',
+			'Lima',
+			'Mike',
+			'November',
+			'Oscar',
+			'Papa',
+			'Quebec',
+			'Romeo',
+			'Sierra',
+			'Tango',
+		];
+		for (const name of names) await app.createProject(name);
+		const first = app.nav('Alpha');
+		await first.scrollIntoViewIfNeeded();
+		await app.settle();
+		await expect(app.nav('Tango')).not.toBeInViewport();
+
+		const start = await center(first);
+		await page.mouse.move(start.x, start.y);
+		await page.mouse.down();
+		await page.mouse.move(start.x, 475, { steps: 12 });
+		await expect(app.nav('Tango')).toBeInViewport();
+		await expect(page.locator('[data-project-id]', { hasText: 'Tango' })).toHaveAttribute('style', /translateY\(-/);
+		await page.screenshot({ path: 'test-results/projects/desktop-autoscroll.png' });
+		await page.mouse.up();
+		await expect(sidebarProjects(page)).toHaveText([...names.slice(1), 'Alpha']);
+	});
+});
+
 test('the new order shows on another device', async ({ app, page, browser }) => {
 	for (const name of ['Home', 'Work']) await app.createProject(name);
 	await mouseDrag(page, app.nav('Work'), app.nav('Home'));

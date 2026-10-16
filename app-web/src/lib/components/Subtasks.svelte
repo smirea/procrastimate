@@ -18,6 +18,7 @@
 	import { store } from '../store.svelte.ts';
 	import { parseSubtask, subtaskTask } from '../subtask-draft.ts';
 	import { sheets, toasts, motion } from '../ui.svelte.ts';
+	import { Reorder } from '../reorder.svelte.ts';
 	let { task }: { task: Task } = $props();
 
 	const children = $derived(store.children(task.id));
@@ -60,51 +61,7 @@
 	}
 
 	let list: HTMLUListElement;
-	type Drag = { id: string; pointerId: number; startY: number; dy: number; from: number; to: number; mids: number[]; step: number };
-	let drag = $state<Drag | null>(null);
-	let settling = $state(false);
-
-	function startDrag(event: PointerEvent, id: string, index: number) {
-		if (event.button !== 0 || children.length < 2) return;
-		event.preventDefault();
-		(event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
-		const rects = [...list.children].map((row) => row.getBoundingClientRect());
-		drag = { id, pointerId: event.pointerId, startY: event.clientY, dy: 0, from: index, to: index, mids: rects.map((r) => r.top + r.height / 2), step: rects[index]!.height };
-	}
-
-	function moveDrag(event: PointerEvent) {
-		if (drag?.pointerId !== event.pointerId) return;
-		const dy = event.clientY - drag.startY;
-		const center = drag.mids[drag.from]! + dy;
-		drag.dy = dy;
-		drag.to = drag.mids.filter((mid, i) => i !== drag!.from && mid < center).length;
-	}
-
-	async function endDrag(event: PointerEvent, commit: boolean) {
-		if (drag?.pointerId !== event.pointerId) return;
-		const { id, from, to } = drag;
-		const row = () => list.querySelector(`[data-subtask-id="${id}"]`);
-		const lifted = row()?.getBoundingClientRect().top ?? 0;
-		settling = true;
-		drag = null;
-		if (commit && to !== from) store.moveSubtask(id, to);
-		await tick();
-		const landed = row();
-		const residual = lifted - (landed?.getBoundingClientRect().top ?? lifted);
-		landed?.animate([{ transform: `translateY(${residual}px)` }, { transform: 'none' }], {
-			duration: 200,
-			easing: 'cubic-bezier(0.32, 0.72, 0, 1)',
-		});
-		settling = false;
-	}
-
-	function offset(index: number, id: string) {
-		if (!drag) return 0;
-		if (id === drag.id) return drag.dy;
-		if (drag.from < drag.to && index > drag.from && index <= drag.to) return -drag.step;
-		if (drag.to < drag.from && index >= drag.to && index < drag.from) return drag.step;
-		return 0;
-	}
+	const reorder = new Reorder({ key: 'data-subtask-id', lift: 'handle', count: () => children.length, move: (id, to) => store.moveSubtask(id, to) });
 
 	async function moveByKey(event: KeyboardEvent, id: string, index: number) {
 		const to = event.key === 'ArrowUp' ? index - 1 : event.key === 'ArrowDown' ? index + 1 : null;
@@ -150,17 +107,17 @@
 			{/if}
 		</div>
 	</div>
-	<ul bind:this={list} class="relative" aria-label={`Subtasks of ${task.title}`}>
+	<ul bind:this={list} {@attach reorder.list} class="relative" aria-label={`Subtasks of ${task.title}`}>
 		{#each children as child, index (child.id)}
 			<li
 				data-subtask={child.title}
 				data-subtask-id={child.id}
 				class="relative rounded-2xl"
-				class:glass-strong={drag?.id === child.id}
-				class:lifted={drag?.id === child.id}
-				class:shifting={!!drag && drag.id !== child.id}
-				style:transform={drag ? `translateY(${offset(index, child.id)}px)` : undefined}
-				animate:flip={motion({ duration: settling ? 0 : 220, easing: cubicOut })}
+				class:glass-strong={reorder.drag?.id === child.id}
+				class:lifted={reorder.drag?.id === child.id}
+				class:shifting={!!reorder.drag && reorder.drag.id !== child.id}
+				style:transform={reorder.drag ? `translateY(${reorder.offset(index, child.id)}px)` : undefined}
+				animate:flip={motion({ duration: reorder.settling ? 0 : 220, easing: cubicOut })}
 				in:fly={motion({ y: -6, duration: 200, easing: cubicOut })}
 				out:slide={motion({ duration: 180, easing: cubicOut })}
 			>
@@ -173,10 +130,7 @@
 								aria-label={`Reorder ${child.title}`}
 								title="Drag, or use the arrow keys, to reorder"
 								class="handle hit-area relative mt-1.5 grid size-8 shrink-0 cursor-grab touch-none place-items-center rounded-full text-faint transition-colors hover:text-muted"
-								onpointerdown={(e) => startDrag(e, child.id, index)}
-								onpointermove={moveDrag}
-								onpointerup={(e) => endDrag(e, true)}
-								onpointercancel={(e) => endDrag(e, false)}
+								onpointerdown={(e) => reorder.start(e, child.id, index)}
 								onkeydown={(e) => moveByKey(e, child.id, index)}
 							>
 								<DotsSixVertical size={16} weight="bold" />

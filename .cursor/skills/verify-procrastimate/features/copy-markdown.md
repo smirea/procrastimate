@@ -16,7 +16,7 @@ A view, a section, or a task copies to the clipboard as a Markdown checklist, re
 - iOS: `Copy as Markdown` in a task row's context menu and in task details.
 - iOS: `Copy as Markdown` in a section heading's context menu in Inbox and No date.
 - Web: a project's section headings carry the same copy button. iOS: a section header's long-press menu has `Copy as Markdown`.
-- iOS: `Copy as Markdown` in the project and label `…` menus, on the place and event screens, and in a Browse project row's context menu.
+- iOS: `Copy as Markdown` in the project and label `…` menus, and on the place and event screens.
 
 ## Driving it with control-ui and the simulator
 

@@ -99,11 +99,26 @@ export class App {
 		await expect(this.page.getByRole('heading', { level: 1, name })).toBeVisible();
 	}
 
-	/** `animation.finished` rejects when the animation is cancelled, so that rejection counts as settled. */
+	/**
+	 * Waits until no animation runs. A Svelte transition first plays a zero-length placeholder and starts the real
+	 * animation from its `finish` handler, so waiting once on the animations present returns mid-transition. Each
+	 * round waits on `finish` or `cancel` events, which fire after Svelte's handler has started what comes next.
+	 */
 	settle() {
-		return this.page.evaluate(() =>
-			Promise.all(document.getAnimations().map(animation => animation.finished.catch(() => undefined))),
-		);
+		return this.page.evaluate(async () => {
+			const running = () => document.getAnimations().filter(animation => animation.playState === 'running');
+			for (let busy = running(); busy.length; busy = running()) {
+				await Promise.race(
+					busy.map(
+						animation =>
+							new Promise(done => {
+								animation.addEventListener('finish', done, { once: true });
+								animation.addEventListener('cancel', done, { once: true });
+							}),
+					),
+				);
+			}
+		});
 	}
 
 	async setNow(date: Date) {
