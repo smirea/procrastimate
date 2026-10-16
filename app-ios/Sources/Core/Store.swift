@@ -295,6 +295,25 @@ public final class Store {
         edit(id) { StoreRules.moveSubtask($0, id, index) }
     }
 
+    /// Turns the task's subtasks into tasks of their own, and returns them as they were for undo. Only in the user's own
+    /// space: moving a subtask up can carry it out of what a share grants, and the server would refuse the edit.
+    @discardableResult
+    public func explodeSubtasks(_ id: String, _ method: ExplodeMethod) -> [ExplodedState] {
+        var previous: [ExplodedState] = []
+        guard space(ofTask: id) == .own else { return previous }
+        edit(id) { data in
+            let result = StoreRules.explodeSubtasks(data, id, method)
+            previous = result.previous
+            return result.data
+        }
+        return previous
+    }
+
+    public func restoreExploded(_ previous: [ExplodedState]) {
+        guard let first = previous.first else { return }
+        edit(first.id) { StoreRules.restoreExploded($0, previous) }
+    }
+
     /// Deletes the task with every subtask under it, and returns them for undo.
     public func deleteTask(_ id: String) -> [TaskItem] {
         guard let space = space(ofTask: id), !isReadOnly(id) else { return [] }

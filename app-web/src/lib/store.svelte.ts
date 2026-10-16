@@ -362,6 +362,26 @@ class Store {
 		this.#onTask(id, data => rules.moveSubtask(data, id, index));
 	}
 
+	/**
+	 * Turns the task's subtasks into tasks of their own, and returns them as they were for undo. Only in the user's own
+	 * space: moving a subtask up can carry it out of what a share grants, and the server would refuse the edit.
+	 */
+	explodeSubtasks(id: string, method: rules.ExplodeMethod): rules.ExplodedState[] {
+		let previous: rules.ExplodedState[] = [];
+		if (this.homeOf(id) !== null) return previous;
+		this.#onTask(id, data => {
+			const result = rules.explodeSubtasks(data, id, method);
+			previous = result.previous;
+			return result.data;
+		});
+		return previous;
+	}
+
+	restoreExploded(previous: readonly rules.ExplodedState[]) {
+		const first = previous[0];
+		if (first) this.#onTask(first.id, data => rules.restoreExploded(data, previous));
+	}
+
 	/** Deletes the task with every subtask under it, and returns them for undo. */
 	deleteTask(id: string): Task[] {
 		const home = this.homeOf(id);

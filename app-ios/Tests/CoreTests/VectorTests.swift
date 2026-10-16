@@ -311,6 +311,10 @@ private func completion(_ completion: Completion) throws -> JSONValue {
         let result = StoreRules.deleteTask(try data(), try a(1))
         return object(["data": try json(result.data), "removed": try json(result.removed)])
     case "undeleteTasks": return try json(StoreRules.undeleteTasks(data(), a(1)))
+    case "explodeSubtasks":
+        let result = StoreRules.explodeSubtasks(try data(), try a(1), try a(2))
+        return object(["data": try json(result.data), "previous": try json(result.previous)])
+    case "restoreExploded": return try json(StoreRules.restoreExploded(data(), a(1)))
     case "addProject":
         let result = StoreRules.addProject(try data(), try a(1), try a(2, as: CreationInput.self).creation)
         return object(["data": try json(result.data), "project": try json(result.project)])

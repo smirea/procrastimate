@@ -37,6 +37,7 @@ struct SubtaskList: View {
                     .accessibilityAddTraits(.isHeader)
                 Spacer()
                 if let progress { SubtaskProgress(progress: progress).font(.caption) }
+                if !children.isEmpty, taskSpace == .own { ExplodeMenu(task: task) }
             }
             .padding(.horizontal, 4)
 
@@ -237,5 +238,28 @@ extension NewTask {
             priority: parsed.priority,
             reminders: parsed.reminders
         )
+    }
+}
+
+/// Turns the subtasks into tasks of their own. The parent stays, and the toast undoes it.
+private struct ExplodeMenu: View {
+    @Environment(TaskActions.self) private var actions
+    let task: TaskItem
+
+    var body: some View {
+        Menu {
+            Section("Turn into tasks") {
+                Button("Keep titles", systemImage: "arrow.up.right") { actions.explode(task, .direct) }
+                Button("Start with “\(task.title):”", systemImage: "text.insert") { actions.explode(task, .prefix) }
+                Button("Inherit labels, date, and priority", systemImage: "tag") { actions.explode(task, .inherit) }
+            }
+        } label: {
+            Image(systemName: "ellipsis")
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(.muted)
+                .frame(width: 44, height: 32)
+                .contentShape(.rect)
+        }
+        .accessibilityLabel("Subtask actions")
     }
 }

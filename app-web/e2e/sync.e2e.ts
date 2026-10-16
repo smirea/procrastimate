@@ -230,3 +230,42 @@ test('delete all data clears this device and the other', async ({ browser }) => 
 	await expect(b.app.row(title)).toHaveCount(0, { timeout: 10_000 });
 	expect(await a.page.evaluate(() => localStorage.getItem('procrastimate-user'))).toBeTruthy();
 });
+
+test('subtasks turned into tasks show as tasks on the other device, and undo nests them again', async ({ browser }) => {
+	const [a, b] = await devices(browser);
+	const parent = unique('Pack');
+	await a.app.add(parent);
+	await a.app
+		.row(parent)
+		.getByRole('button', { name: new RegExp(`^${parent}`) })
+		.click();
+	const subtask = a.app.details().getByRole('textbox', { name: 'Add subtask' });
+	for (const title of ['Passport', 'Charger']) {
+		await subtask.fill(title);
+		await subtask.press('Enter');
+	}
+	await a.app.details().getByRole('button', { name: 'Subtask actions' }).click();
+	await a.page.getByRole('button', { name: `Start with “${parent}:”` }).click();
+	await expect(
+		a.app
+			.details()
+			.getByRole('list', { name: `Subtasks of ${parent}` })
+			.getByRole('listitem'),
+	).toHaveCount(0);
+	await a.app.details().getByRole('button', { name: 'Close' }).click();
+	await expect(a.app.row(`${parent}: Passport`)).toBeVisible();
+
+	await settled(a);
+	await focus(b.page);
+	await expect(b.app.row(`${parent}: Passport`)).toBeVisible({ timeout: 10_000 });
+	await expect(b.app.row(`${parent}: Charger`)).toBeVisible();
+	await expect(b.app.row(parent)).toBeVisible();
+
+	await a.page.getByRole('button', { name: 'Undo' }).click();
+	await expect(a.app.row(`${parent}: Passport`)).toHaveCount(0);
+	await expect(a.app.row(parent).getByRole('img', { name: '0 of 2 subtasks done' })).toBeVisible();
+	await settled(a);
+	await focus(b.page);
+	await expect(b.app.row(`${parent}: Passport`)).toHaveCount(0, { timeout: 10_000 });
+	await expect(b.app.row(parent).getByRole('img', { name: '0 of 2 subtasks done' })).toBeVisible();
+});

@@ -38,6 +38,15 @@ final class TaskActions {
         )
     }
 
+    func explode(_ task: TaskItem, _ method: ExplodeMethod) {
+        let previous = withAnimation(.snappy) { store.explodeSubtasks(task.id, method) }
+        guard !previous.isEmpty else { return }
+        toasts.show(
+            previous.count == 1 ? "Turned 1 subtask into a task" : "Turned \(previous.count) subtasks into tasks",
+            action: .init(label: "Undo") { [store] in withAnimation(.snappy) { store.restoreExploded(previous) } }
+        )
+    }
+
     func copyAsMarkdown(_ document: Markdown.Document) {
         let context = Markdown.Context(tasks: store.allTasks, projects: store.allProjects, labels: store.allLabels, today: clock.today)
         UIPasteboard.general.string = Markdown.toMarkdown(document, context, in: store.timeZone)
