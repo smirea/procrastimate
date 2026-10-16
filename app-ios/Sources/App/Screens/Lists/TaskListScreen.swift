@@ -69,17 +69,20 @@ struct TaskListScreen<Content: View>: View {
     /// A pushed list always names itself between the back and actions buttons; a root list only once scrolled.
     private var compactTitle: some View {
         HStack(spacing: 5) {
-            if let labelColor {
-                Image(systemName: "tag.fill").imageScale(.small).foregroundStyle(labelColor.tone)
+            // The navigation title already names the list, so only the count stays for VoiceOver.
+            Group {
+                if let labelColor {
+                    Image(systemName: "tag.fill").imageScale(.small).foregroundStyle(labelColor.tone)
+                }
+                Text(title)
             }
-            Text(title)
+            .accessibilityHidden(true)
             if let open { PendingCount(open: open, font: .footnote) }
         }
             .font(.subheadline.weight(.semibold))
             .lineLimit(1)
             .opacity(scrolled || !root ? 1 : 0)
             .animation(.snappy(duration: 0.2), value: scrolled)
-            .accessibilityHidden(true)
     }
 }
 
