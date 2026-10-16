@@ -12,7 +12,7 @@ import type {
 } from '../../../shared/sharing';
 import { newId } from '../../../shared/id';
 import { parseQuickAdd } from '../../../shared/quick-add';
-import { admit, type Grant } from '../../../shared/scope';
+import { admit, managesSpace, type Grant } from '../../../shared/scope';
 import {
 	addLabel,
 	addProject,
@@ -219,8 +219,18 @@ export function removeComment(space: Space, id: string): void {
 }
 
 /**
- * Projects, sections, and labels. `admit` lets only the owner and a manager of the space write them, so anyone else
- * gets `FORBIDDEN` from `run`. A name is trimmed and may not be blank.
+ * Projects, sections, labels, and links are the owner's and a manager's. Checked before any lookup, because a name
+ * clash read against the whole space would tell a guest what it cannot see.
+ */
+export function requireManager(access: Access) {
+	if (access.role !== 'owner' && !managesSpace(access.shares)) {
+		throw new ORPCError('FORBIDDEN', { message: 'Only the owner or a manager of the space can do this' });
+	}
+}
+
+/**
+ * The sync fixups merge projects that share a name ignoring case, as they do sections in a project and labels, so a
+ * taken name returns the existing one on create and is refused on rename. A name is trimmed and may not be blank.
  */
 
 function named(name: string, what: string): string {
@@ -235,23 +245,38 @@ function visibleIn<T extends { id: string }>(list: readonly T[], id: string, wha
 	return found;
 }
 
+const sameName = <T extends { id: string; name: string }>(list: readonly T[], name: string, except?: string) =>
+	list.find(item => item.id !== except && item.name.toLowerCase() === name.toLowerCase());
+
 export function createProject(space: Space, name: string): Project {
-	const id = newId();
+	requireManager(space.access);
 	const title = named(name, 'project');
-	const snapshot = run(space, data => addProject(data, title, { id, now: space.now }).data);
+	let id = newId();
+	const snapshot = run(space, data => {
+		const existing = sameName(data.projects, title);
+		if (existing) {
+			id = existing.id;
+			return data;
+		}
+		return addProject(data, title, { id, now: space.now }).data;
+	});
 	return visibleIn(snapshot.projects, id, 'project');
 }
 
 export function editProject(space: Space, id: string, name: string): Project {
+	requireManager(space.access);
 	const title = named(name, 'project');
 	const snapshot = run(space, (data, visible) => {
 		visibleIn(visible.projects, id, 'project');
+		if (sameName(data.projects, title, id))
+			throw new ORPCError('BAD_REQUEST', { message: 'Another project has that name' });
 		return renameProject(data, id, title);
 	});
 	return visibleIn(snapshot.projects, id, 'project');
 }
 
 export function removeProject(space: Space, id: string): void {
+	requireManager(space.access);
 	run(space, (data, visible) => {
 		visibleIn(visible.projects, id, 'project');
 		return deleteProject(data, id);
@@ -259,6 +284,7 @@ export function removeProject(space: Space, id: string): void {
 }
 
 export function createSection(space: Space, input: NewSection): Section {
+	requireManager(space.access);
 	const name = named(input.name, 'section');
 	let id = newId();
 	const snapshot = run(space, (data, visible) => {
@@ -271,6 +297,7 @@ export function createSection(space: Space, input: NewSection): Section {
 }
 
 export function editSection(space: Space, id: string, edit: SectionEdit): Section {
+	requireManager(space.access);
 	const name = edit.name === undefined ? undefined : named(edit.name, 'section');
 	const snapshot = run(space, (data, visible) => {
 		visibleIn(visible.sections, id, 'section');
@@ -286,20 +313,19 @@ export function editSection(space: Space, id: string, edit: SectionEdit): Sectio
 }
 
 export function removeSection(space: Space, id: string): void {
+	requireManager(space.access);
 	run(space, (data, visible) => {
 		visibleIn(visible.sections, id, 'section');
 		return deleteSection(data, id);
 	});
 }
 
-const labelNamed = (labels: readonly Label[], name: string) =>
-	labels.find(label => label.name.toLowerCase() === name.toLowerCase());
-
 export function createLabel(space: Space, input: NewLabel): Label {
+	requireManager(space.access);
 	const name = named(input.name, 'label');
 	let id = newId();
 	const snapshot = run(space, data => {
-		const existing = labelNamed(data.labels, name);
+		const existing = sameName(data.labels, name);
 		const added = existing ? { data, label: existing } : addLabel(data, name, { id, now: space.now });
 		id = added.label.id;
 		return input.color ? setLabelColor(added.data, id, input.color) : added.data;
@@ -308,6 +334,7 @@ export function createLabel(space: Space, input: NewLabel): Label {
 }
 
 export function editLabel(space: Space, id: string, edit: LabelEdit): Label {
+	requireManager(space.access);
 	const name = edit.name === undefined ? undefined : named(edit.name, 'label');
 	const snapshot = run(space, (data, visible) => {
 		visibleIn(visible.labels, id, 'label');
@@ -322,6 +349,7 @@ export function editLabel(space: Space, id: string, edit: LabelEdit): Label {
 }
 
 export function removeLabel(space: Space, id: string): void {
+	requireManager(space.access);
 	run(space, (data, visible) => {
 		visibleIn(visible.labels, id, 'label');
 		return deleteLabel(data, id);

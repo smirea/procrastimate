@@ -555,6 +555,8 @@ describe('sharing between two users', () => {
 
 		const garden = await json<{ id: string; name: string }>(asAi('POST', '/api/projects', { name: ' Garden ' }));
 		expect(garden.name).toBe('Garden');
+		expect(await json(asAi('POST', '/api/projects', { name: 'garden' }))).toMatchObject({ id: garden.id });
+		expect((await asAi('PATCH', `/api/projects?id=${garden.id}`, { name: 'HOME' })).status).toBe(400);
 		expect((await json<SpaceView>(asAi('GET', '/api/view'))).projects.map(p => p.name).toSorted()).toEqual([
 			'Garden',
 			'Home',
@@ -595,6 +597,9 @@ describe('sharing between two users', () => {
 		expect((await inGuest('POST', '/api/links', { target: { kind: 'task', id: 'fix-sink' } })).status).toBe(403);
 		expect((await inGuest('POST', '/api/projects', { name: 'Mine' })).status).toBe(403);
 		expect((await inGuest('PATCH', '/api/projects?id=home', { name: 'Ours' })).status).toBe(403);
+		expect((await json<SpaceView>(inGuest('GET', '/api/view'))).labels).toEqual([]);
+		expect((await inGuest('POST', '/api/labels', { name: 'URGENT' })).status).toBe(403);
+		expect((await inGuest('POST', '/api/sections', { projectId: 'home', name: 'Mine' })).status).toBe(403);
 
 		expect(await json<Ok>(asAi('DELETE', `/api/labels?id=${waiting.id}`))).toEqual({ ok: true });
 		expect(await json<Ok>(asAi('DELETE', `/api/projects?id=${garden.id}`))).toEqual({ ok: true });

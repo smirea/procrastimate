@@ -11,8 +11,8 @@ import { DEFAULT_SETTINGS, type FieldsByKind, type Op, type Snapshot, type Task 
 export type Grant = Pick<ShareRow, 'targetKind' | 'targetId' | 'role'>;
 
 /**
- * A whole-space edit share makes its holder a manager of the space, which only AI accounts are offered: it sees every
- * project and label, writes them and sections like the owner, and makes public links.
+ * A whole-space edit share makes its holder a manager of the space. The apps offer one only to AI accounts. A manager
+ * sees every project and label, writes them and sections like the owner, and makes public links.
  */
 export const managesSpace = (grants: readonly Grant[]) =>
 	grants.some(grant => grant.targetKind === 'space' && grant.role === 'edit');
@@ -69,7 +69,7 @@ export function scopeOf(snapshot: Snapshot, grants: readonly Grant[]): Scope {
 		}
 		if (grant.targetKind === 'project') projects.add(grant.targetId);
 		if (grant.targetKind === 'label') labels.add(grant.targetId);
-		if (grant.targetKind === 'space') {
+		if (grant.targetKind === 'space' && grant.role === 'edit') {
 			for (const { id } of snapshot.projects) projects.add(id);
 			for (const { id } of snapshot.labels) labels.add(id);
 		}

@@ -223,10 +223,10 @@ ${routeTable()}
 
 Read them from \`GET /api/view\`. Put a task in one with \`#Project\`, \`/section\`, or \`@label\` in \`text\`, or with \`projectId\`, \`sectionId\`, and \`labelIds\`. A \`#name\` or \`@name\` that matches nothing stays in the task's title, so make the project or label first.
 
-- A project is a list of tasks. Deleting it deletes its sections and every task in it.
+- A project is a list of tasks. Its name is unique, ignoring case. Deleting it deletes its sections and every task in it.
 - A section is a heading inside one project. Its name is unique in the project, ignoring case, and \`index\` orders the sections from 0. Deleting it deletes its tasks.
 - A label tags tasks across projects. Its name is unique, ignoring case, and its \`color\` is one of \`${LABEL_COLORS.join('`, `')}\`. Deleting it only takes it off its tasks.
-- Adding a section or label with a name already taken returns the existing one, so a retry never makes a duplicate.
+- Adding a project, section, or label with a name already taken returns the existing one, so a retry never makes a duplicate.
 
 ## Public links
 
@@ -242,7 +242,7 @@ ${examples.join('\n\n')}
 
 Errors are JSON \`{ "code", "message" }\`:
 
-- \`400 BAD_REQUEST\`: the input does not match the schema, a title or name is blank, or another label, or another section in the project, already has the name.
+- \`400 BAD_REQUEST\`: the input does not match the schema, a title or name is blank, or another project, label, or section in the project already has the name.
 - \`401 UNAUTHORIZED\`: the token is missing, wrong, or revoked.
 - \`403 FORBIDDEN\`: the route is not open to AI accounts, or the change touches something you may not edit.
 - \`404 NOT_FOUND\`: nothing with that id is visible to you.

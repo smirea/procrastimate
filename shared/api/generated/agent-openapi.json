@@ -3580,6 +3580,7 @@
 			"post": {
 				"operationId": "projects.create",
 				"summary": "Add a project",
+				"description": "A name already taken, ignoring case, returns that project.",
 				"parameters": [
 					{
 						"in": "query",
@@ -3685,7 +3686,7 @@
 			"patch": {
 				"operationId": "projects.update",
 				"summary": "Rename a project",
-				"description": "`id` is the project’s.",
+				"description": "`id` is the project’s. Another project’s name, ignoring case, is refused.",
 				"parameters": [
 					{
 						"in": "query",

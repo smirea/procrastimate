@@ -346,6 +346,7 @@ export const agentContract = {
 					path: '/api/projects',
 					inputStructure: 'detailed',
 					summary: 'Add a project',
+					description: 'A name already taken, ignoring case, returns that project.',
 				}),
 			)
 			.input(z.object({ query: spaceQuery, body: newProjectSchema }))
@@ -357,7 +358,7 @@ export const agentContract = {
 					path: '/api/projects',
 					inputStructure: 'detailed',
 					summary: 'Rename a project',
-					description: '`id` is the project’s.',
+					description: '`id` is the project’s. Another project’s name, ignoring case, is refused.',
 				}),
 			)
 			.input(z.object({ query: taskQuery, body: newProjectSchema }))
