@@ -48,7 +48,10 @@ export async function deviceHeader(page: Page): Promise<Record<string, string>> 
 export const test = base.extend<{ app: App }>({
 	context: async ({ context }, use) => {
 		await signInAccount(context);
+		const errors: Error[] = [];
+		context.on('weberror', error => errors.push(error.error()));
 		await use(context);
+		expect(errors, 'uncaught page errors').toEqual([]);
 	},
 	app: async ({ page }, use) => {
 		await page.clock.setFixedTime(NOW);

@@ -39,3 +39,16 @@ test('going back from a subtask returns to where the parent was scrolled', async
 	await expect(app.details().getByRole('textbox', { name: 'Add subtask' })).toBeVisible();
 	await expect.poll(scrollTop).toBe(0);
 });
+
+test('scrolling details while the sheet closes is harmless', async ({ app }) => {
+	await app.add('Pack for trip');
+	await app
+		.row('Pack for trip')
+		.getByRole('button', { name: /^Pack for trip/ })
+		.click();
+	const body = app.details().locator('.overflow-y-auto').first();
+	await app.details().getByRole('button', { name: 'Close' }).click();
+	// The sheet stays in the page while it animates out, after its task has left the store's open sheet.
+	await body.dispatchEvent('scroll');
+	await expect(app.details()).toBeHidden();
+});
