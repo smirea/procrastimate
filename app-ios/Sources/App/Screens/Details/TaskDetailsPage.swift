@@ -127,22 +127,26 @@ private struct TaskDetailsForm: View {
 
                 SubtaskList(task: task, navigation: navigation)
 
-                TaskPeople(task: task)
+                // No spacing here: people adds its own gap only when it shows, so a solo task has no empty slot.
+                VStack(alignment: .leading, spacing: 0) {
+                    TaskPeople(task: task)
 
-                Button {
-                    commitTitle()
-                    actions.copyAsMarkdown(store.task(task.id) ?? task)
-                } label: {
-                    SwiftUI.Label("Copy as Markdown", systemImage: "doc.on.doc")
-                        .font(.subheadline.weight(.medium))
-                        .foregroundStyle(.muted)
-                        .frame(minHeight: 44)
+                    Button {
+                        commitTitle()
+                        actions.copyAsMarkdown(store.task(task.id) ?? task)
+                    } label: {
+                        SwiftUI.Label("Copy as Markdown", systemImage: "doc.on.doc")
+                            .font(.subheadline.weight(.medium))
+                            .foregroundStyle(.muted)
+                            .frame(minHeight: 44)
+                    }
                 }
             }
             .padding(.horizontal, 20)
             .padding(.top, 8)
-            // Clears the floating Complete and Delete buttons at the end of a long task.
-            .padding(.bottom, 120)
+            // Clears the floating Complete and Delete buttons at the end of a long task. They hide while typing, so the
+            // end of the task then sits just above the keyboard.
+            .padding(.bottom, keyboardShown ? 16 : 120)
         }
         .scrollDismissesKeyboard(.interactively)
         .overlay(alignment: .bottom) { if !locked { floatingActions } }
