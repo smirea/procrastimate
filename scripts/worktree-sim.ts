@@ -1,57 +1,75 @@
 /**
- * `./sim [n] [launcher args]`, the git-ignored wrapper setup-worktree.ts writes, calls this with the worktree's
- * simulator name. It builds and runs the app on that simulator, creating it on first use; `n` picks an extra one.
+ * `./sim`, the git-ignored wrapper setup-worktree.ts writes, calls this with the worktree's simulator name.
+ *
+ *   ./sim [n] [launcher args]          build and run the app headless; --show opens Device Hub
+ *   ./sim test [n] <file.swift>... [opts]  run throwaway XCUITests against the app (see sim-uitest.ts)
+ *   ./sim stop                         shut down every simulator of this worktree
+ *   ./sim udid [n]                     print the simulator's UDID, creating it if needed
+ *
+ * `n` picks an extra simulator named `<name>-n`.
  */
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { claim, type Device, devices, shutdown, simctl } from './simulators';
+import { runUITests } from './sim-uitest';
 
-function json<T>(...args: string[]): T {
-	const result = spawnSync('xcrun', ['simctl', 'list', ...args, '--json'], { encoding: 'utf8' });
-	if (result.status !== 0) throw new Error(`xcrun simctl list ${args.join(' ')} failed\n${result.stderr}`);
-	return JSON.parse(result.stdout);
-}
-
-const [base, ...rest] = process.argv.slice(2);
-if (!base) throw new Error('Usage: worktree-sim.ts <simulator name> [n] [launcher args]');
-const extra = rest[0] && /^\d+$/.test(rest[0]) ? rest.shift() : undefined;
+const [base, ...args] = process.argv.slice(2);
+if (!base) throw new Error('Usage: worktree-sim.ts <simulator name> [command] [n] [args]');
+const root = process.cwd();
+const command = ['test', 'stop', 'udid'].includes(args[0] ?? '') ? args.shift()! : 'run';
+const extra = args[0] && /^\d+$/.test(args[0]) ? args.shift() : undefined;
 const name = extra ? `${base}-${extra}` : base;
-
-type Device = { name: string; udid: string; state: string; dataPath: string };
-function find(): Device | undefined {
-	const { devices } = json<{ devices: Record<string, Device[]> }>('devices', 'available');
-	return Object.values(devices)
-		.flat()
-		.find(device => device.name === name);
-}
+const find = () => devices().find(device => device.name === name);
 
 // A permission alert raised before the launcher started granting survives later grants and relaunches; only a reboot
 // clears it. The launcher grants before every launch, so one reboot per simulator is enough. The marker lives in the
 // simulator's data directory, so erasing the simulator resets it too.
-const marker = (device: Device) => join(device.dataPath, 'procrastimate-permission-alerts-cleared');
+const alertsCleared = (device: Device) => join(device.dataPath, 'procrastimate-permission-alerts-cleared');
 
-let device = find();
-if (device && !existsSync(marker(device)) && device.state === 'Booted') {
-	console.log(`Rebooting ${name} to clear any permission alert left from before the launcher granted permissions.`);
-	const shutdown = spawnSync('xcrun', ['simctl', 'shutdown', device.udid], { encoding: 'utf8' });
-	if (shutdown.status !== 0) throw new Error(`Shutting down simulator ${name} failed\n${shutdown.stderr}`);
+function ensure(): Device {
+	let device = find();
+	if (device && !existsSync(alertsCleared(device)) && device.state === 'Booted') {
+		console.log(`Rebooting ${name} to clear any permission alert left from before the launcher granted permissions.`);
+		shutdown(device);
+	}
+	if (!device) {
+		const { runtimes } = JSON.parse(simctl('list', 'runtimes', '--json')) as {
+			runtimes: { identifier: string; isAvailable: boolean }[];
+		};
+		const runtime = runtimes.filter(r => r.isAvailable && r.identifier.includes('SimRuntime.iOS-27')).at(-1);
+		if (!runtime) throw new Error('No iOS 27 simulator runtime. Add one in Xcode settings.');
+		simctl('create', name, 'com.apple.CoreSimulator.SimDeviceType.iPhone-17-Pro', runtime.identifier);
+		console.log(`Created simulator ${name}.`);
+		device = find();
+		if (!device) throw new Error(`simctl created ${name} but does not list it.`);
+	}
+	claim(device, root);
+	writeFileSync(alertsCleared(device), '');
+	return device;
 }
 
-if (!device) {
-	const { runtimes } = json<{ runtimes: { identifier: string; isAvailable: boolean }[] }>('runtimes');
-	const runtime = runtimes.filter(r => r.isAvailable && r.identifier.includes('SimRuntime.iOS-27')).at(-1);
-	if (!runtime) throw new Error('No iOS 27 simulator runtime. Add one in Xcode settings.');
-	const created = spawnSync(
-		'xcrun',
-		['simctl', 'create', name, 'com.apple.CoreSimulator.SimDeviceType.iPhone-17-Pro', runtime.identifier],
-		{ encoding: 'utf8' },
+if (command === 'stop') {
+	const own = devices().filter(
+		device => device.name === base || new RegExp(`^${RegExp.escape(base)}-\\d+$`).test(device.name),
 	);
-	if (created.status !== 0) throw new Error(`Creating simulator ${name} failed\n${created.stderr}`);
-	console.log(`Created simulator ${name}.`);
-	device = find();
-	if (!device) throw new Error(`simctl created ${name} but does not list it.`);
+	for (const device of own.filter(device => device.state !== 'Shutdown')) {
+		shutdown(device);
+		console.log(`Shut down ${device.name}.`);
+	}
+	if (!own.some(device => device.state !== 'Shutdown')) console.log('No simulator of this worktree is running.');
+} else if (command === 'udid') {
+	console.log(ensure().udid);
+} else if (command === 'test') {
+	process.exitCode = await runUITests(ensure(), root, args);
+} else if (args.some(arg => ['-h', '--help', '--targets'].includes(arg))) {
+	process.exitCode = spawnSync('bun', ['app-ios/scripts/run', ...args], { stdio: 'inherit' }).status ?? 1;
+} else {
+	const device = ensure();
+	const show = args.includes('--show');
+	const launcher = args.filter(arg => arg !== '--show');
+	process.exitCode =
+		spawnSync('bun', ['app-ios/scripts/run', '-t', device.udid, ...(show ? [] : ['--headless']), ...launcher], {
+			stdio: 'inherit',
+		}).status ?? 1;
 }
-mkdirSync(device.dataPath, { recursive: true });
-writeFileSync(marker(device), '');
-
-process.exit(spawnSync('bun', ['app-ios/scripts/run', '-t', device.udid, ...rest], { stdio: 'inherit' }).status ?? 1);

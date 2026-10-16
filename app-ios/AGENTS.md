@@ -18,14 +18,14 @@
 - Linux or any machine without Xcode: `./scripts/test` here generates `API.swift` and runs `swift test` for the `Core` tests. Plain `swift test` fails to compile until something has generated it. Install a toolchain with [swiftly](https://www.swift.org/install/linux/) if `swift` is missing. The app needs macOS; on Linux rely on the iOS workflow (`.github/workflows/ios.yml`).
 - Colors come from `app-web/src/index.css`. `bun run generate` writes the git-ignored `Sources/App/Generated/Tokens.swift` and `Sources/App/Assets.xcassets/AccentColor.colorset` from it, as part of every build. The accent comes from the asset, so views need no `.tint`.
 - Run `./scripts/run` to build, install, and launch the app, with automatic rebuild and relaunch after saving. Requires Bun and Xcode 27, and for a simulator `applesimutils` (`brew tap wix/brew && brew install applesimutils`), with which it grants notifications, Always location, and calendar before each launch. Stop with Ctrl-C, or use `--no-watch` for one launch.
-- Use `./scripts/run --targets` to list devices and iOS 27 simulators; `*` marks the effective default. Select with `-t simulator` or `-t "iPhone 17"` (also accepts a `--targets` index or an identifier). It opens Device Hub on Xcode 27 or Simulator.app on earlier Xcode versions.
+- Use `./scripts/run --targets` to list devices and iOS 27 simulators; `*` marks the effective default. Select with `-t simulator` or `-t "iPhone 17"` (also accepts a `--targets` index or an identifier). It opens Device Hub on Xcode 27 or Simulator.app on earlier Xcode versions; `--headless` skips that, and an agent worktree's `./sim` passes it unless given `--show`.
 - Selection precedence is `-t` / `--target`, then `SWIFT_RUN_DEFAULT_TARGET`, then a connected iOS device, booted simulator, or available simulator. Duplicate simulator names prefer a booted instance, then the newest runtime; use an identifier to select exactly.
 - Physical devices need Xcode pairing, Developer Mode, and an unlocked screen. Configure automatic signing in Xcode, pass `--team`, or set `SWIFT_RUN_DEVELOPMENT_TEAM`.
 - Open `App.xcodeproj` and use the shared `App` scheme to debug. Build output is in `DerivedData/device/build.log` or `DerivedData/simulator/build.log`. Use `xcrun simctl io <UDID> screenshot /tmp/app.png` to inspect the screen.
 
 # Testing
 
-- `./scripts/test` runs `Core` unit tests, including `VectorTests`. There is no XCUITest suite.
+- `./scripts/test` runs `Core` unit tests, including `VectorTests`. There is no XCUITest suite. In an agent worktree, `./sim test <file.swift>` runs throwaway XCUITests against the installed app (see `scripts/sim-uitest.ts`).
 
 # Environment
 
