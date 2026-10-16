@@ -15,7 +15,7 @@
 
 # Development
 
-- Linux or any machine without Xcode: `swift test` here runs the `Core` tests. Install a toolchain with [swiftly](https://www.swift.org/install/linux/) if `swift` is missing. The app needs macOS; on Linux rely on the iOS workflow (`.github/workflows/ios.yml`).
+- Linux or any machine without Xcode: `./scripts/test` here generates `API.swift` and runs `swift test` for the `Core` tests. Plain `swift test` fails to compile until something has generated it. Install a toolchain with [swiftly](https://www.swift.org/install/linux/) if `swift` is missing. The app needs macOS; on Linux rely on the iOS workflow (`.github/workflows/ios.yml`).
 - Colors come from `app-web/src/index.css`. After changing it, run `bun scripts/tokens.ts` here and commit `Sources/App/Theme/Tokens.swift` and `Sources/App/Assets.xcassets/AccentColor.colorset`; CI runs `--check`. The accent comes from the asset, so views need no `.tint`.
 - Run `./scripts/run` to build, install, and launch the app, with automatic rebuild and relaunch after saving. Requires Bun and Xcode 27. Stop with Ctrl-C, or use `--no-watch` for one launch.
 - Use `./scripts/run --targets` to list devices and iOS 27 simulators; `*` marks the effective default. Select with `-t simulator` or `-t "iPhone 17"` (also accepts a `--targets` index or an identifier). It opens Device Hub on Xcode 27 or Simulator.app on earlier Xcode versions.
@@ -25,7 +25,7 @@
 
 # Testing
 
-- `swift test` runs `Core` unit tests, including `VectorTests`. There is no XCUITest suite.
+- `./scripts/test` runs `Core` unit tests, including `VectorTests`. There is no XCUITest suite.
 
 # Environment
 

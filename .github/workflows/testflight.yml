@@ -10,11 +10,13 @@ name: TestFlight
 on:
   push:
     branches: [master]
-    # API.swift is generated from shared/ by scripts/generate, so those paths change the app too.
+    # API.swift is generated from shared/ by scripts/generate with the root's dependencies, so those paths change the app too.
     paths:
       - app-ios/**
       - shared/**
       - scripts/generate/**
+      - package.json
+      - bun.lock
       - .github/workflows/testflight.yml
   workflow_dispatch:
 
@@ -60,7 +62,7 @@ jobs:
           # First-parent diffs, so a merge commit counts the files it brought onto master.
           # A web or server commit does not start this workflow, so it must not skip the archive.
           files=$(git log --first-parent --diff-merges=first-parent --name-only --pretty=format: "${GITHUB_SHA}..${head}")
-          touched=$(printf '%s\n' "$files" | grep -e '^app-ios/' -e '^shared/' -e '^scripts/generate/' -e '^\.github/workflows/testflight\.yml$' || true)
+          touched=$(printf '%s\n' "$files" | grep -e '^app-ios/' -e '^shared/' -e '^scripts/generate/' -e '^package\.json$' -e '^bun\.lock$' -e '^\.github/workflows/testflight\.yml$' || true)
           if [ -n "$touched" ]; then
             echo "master is ${head}. A newer commit touches TestFlight paths, so that run archives:"
             printf '%s\n' "$touched"
