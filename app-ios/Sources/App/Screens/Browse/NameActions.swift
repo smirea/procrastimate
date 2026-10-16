@@ -51,7 +51,7 @@ struct NameActions: ViewModifier {
                                         SwiftUI.Label { Text(option.name) } icon: { option.swatch }.tag(option)
                                     }
                                 }
-                                .pickerStyle(.palette)
+                                .pickerStyle(.menu)
                             }
                             Button("Rename", systemImage: "pencil") {
                                 draft = name
