@@ -14,3 +14,8 @@
 - **Every feature is built for all clients at once.** Web and iOS today. A feature request is planned and built for every client where it makes sense, not for one client with the others catching up later.
 - **Each feature plan names its clients.** It lists the target clients and says why any are excluded. Some clients get a subset; a future Apple Watch app, for example, gets only what suits a watch.
 - **Web and iOS slices are planned together.** Shared logic lands once in `shared/` with its Swift port through the test vectors. Each UI slice has a twin on the other client. Automated UI pairs are not part of the suite; parsers, vectors, and the auth and sync smoke are ([Testing](testing.md)). The twins may run as parallel PRs.
+
+## Parallel agents
+
+- **Every agent worktree is sandboxed by script.** `scripts/setup-worktree.ts` gives it its own ports (a git-ignored `.env.override` that env-manager applies to every target), an in-memory database, and a git-ignored `./sim` bound to its own simulator. `scripts/teardown-worktree.ts` removes all of it from the main checkout once the PR is merged. Rules that a script can enforce live in the script, not in prompts.
+- **Git hooks are never skipped.** A Claude Code hook in `.claude/settings.json` blocks `--no-verify` and lefthook overrides. A failing hook gets its cause fixed; a flaky test is a bad test.

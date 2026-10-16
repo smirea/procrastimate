@@ -29,3 +29,7 @@ playwright-report
 
 # task-orchestrator session files
 .orchestrator
+
+# per-worktree files written by scripts/setup-worktree.ts
+.env.override
+/sim
