@@ -34,7 +34,6 @@ struct BrowseScreen: View {
 
 private struct BrowseList: View {
     @Environment(Navigator.self) private var navigator
-    @Environment(TaskActions.self) private var actions
     @Environment(Store.self) private var store
     @Environment(\.today) private var today
 
@@ -63,9 +62,6 @@ private struct BrowseList: View {
                             tone: .muted,
                             count: Views.projectTasks(store.tasks, project.id, in: store.timeZone).count
                         )
-                    }
-                    .contextMenu {
-                        Button("Copy as Markdown", systemImage: "doc.on.doc") { actions.copyAsMarkdown(project: project) }
                     }
                     .accessibilityIdentifier("browse-project-\(project.name)")
                 }
