@@ -77,7 +77,11 @@ public enum Format {
             return interval == 1 ? "Every \(names)" : "Every \(interval) weeks on \(names)"
         }
         let every = interval == 1 ? "Every \(unit.rawValue)" : "Every \(interval) \(unit.rawValue)s"
-        guard unit == .month, let day = recurrence.day else { return every }
+        guard unit == .month else { return every }
+        if let nth = recurrence.nth {
+            return "\(every) on the \(nth.week == -1 ? "last" : ordinal(nth.week)) \(weekdayNames[nth.weekday])"
+        }
+        guard let day = recurrence.day else { return every }
         return "\(every) on the \(ordinal(day))"
     }
 

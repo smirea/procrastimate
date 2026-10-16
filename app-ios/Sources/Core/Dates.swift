@@ -3,6 +3,8 @@ import Foundation
 /// The date and recurrence rules of `shared/task.ts`. Calendar dates are civil (no zone), and only turning a date and
 /// time into a moment takes a time zone, which the caller passes in.
 public enum Dates {
+    /// `MAX_RECURRENCE_INTERVAL` in `shared/values.ts`. A larger interval could overflow the month math and trap.
+    public static let maxRecurrenceInterval = 999
 
     /// Days since 1970-01-01 for a proleptic Gregorian date, from Howard Hinnant's `days_from_civil`.
     static func days(year: Int, month: Int, day: Int) -> Int {
@@ -112,25 +114,58 @@ public enum Dates {
         return Recurrence(interval: interval, unit: .week, days: sorted.count > 1 ? sorted : nil)
     }
 
-    /// The occurrence after `date`. A weekday set moves to the next listed day of the same week, or past Sunday to the
-    /// first listed day `interval` weeks after this week's Monday.
-    public static func stepRecurrence(_ date: DateKey, _ recurrence: Recurrence) -> DateKey {
-        if recurrence.unit == .month, let day = recurrence.day { return addMonths(date, recurrence.interval, day: day) }
+    /// A date past 9999-12-31 is not a `DateKey`, and the server rejects the op that carries it along with the rest of
+    /// the outbox. Every date a repeat computes passes through here.
+    static func inRange(_ key: DateKey) -> DateKey? { parts(key).year <= 9999 ? key : nil }
+
+    static func nthWeekday(_ monthStart: DateKey, _ nth: NthWeekday) -> DateKey {
+        if nth.week == -1 {
+            let last = addDays(addMonths(monthStart, 1), -1)
+            return addDays(last, -((weekdayOf(last) - nth.weekday + 7) % 7))
+        }
+        return addDays(monthStart, (nth.weekday - weekdayOf(monthStart) + 7) % 7 + (nth.week - 1) * 7)
+    }
+
+    /// A monthly repeat's occurrence `months` after the month of `date`, on its day or its nth weekday.
+    static func monthlyOn(_ date: DateKey, _ months: Int, _ recurrence: Recurrence) -> DateKey {
+        if let nth = recurrence.nth { return nthWeekday(addMonths(date, months, day: 1), nth) }
+        return addMonths(date, months, day: recurrence.day)
+    }
+
+    static func isMonthlyOn(_ recurrence: Recurrence) -> Bool {
+        recurrence.unit == .month && (recurrence.day != nil || recurrence.nth != nil)
+    }
+
+    /// Which weekday of its month `date` is. The 29th to the 31st are the last, since no month has a 5th of every
+    /// weekday.
+    public static func monthlyWeekdayOf(_ date: DateKey) -> NthWeekday {
+        let day = parts(date).day
+        return NthWeekday(week: day > 28 ? -1 : (day + 6) / 7, weekday: weekdayOf(date))
+    }
+
+    /// The occurrence after `date`, or nil when there is none before 10000 or the interval is out of range. A weekday
+    /// set moves to the next listed day of the same week, or past Sunday to the first listed day `interval` weeks after
+    /// this week's Monday.
+    public static func stepRecurrence(_ date: DateKey, _ recurrence: Recurrence) -> DateKey? {
+        let interval = recurrence.interval
+        guard (1...maxRecurrenceInterval).contains(interval) else { return nil }
+        if isMonthlyOn(recurrence) { return inRange(monthlyOn(date, interval, recurrence)) }
         guard recurrence.unit == .week, let days = recurrence.days, let first = days.first else {
-            return addInterval(date, recurrence.interval, recurrence.unit)
+            return inRange(addInterval(date, interval, recurrence.unit))
         }
         let position = mondayIndex(weekdayOf(date))
         if let later = days.first(where: { mondayIndex($0) > position }) {
-            return addDays(date, mondayIndex(later) - position)
+            return inRange(addDays(date, mondayIndex(later) - position))
         }
-        return addDays(date, recurrence.interval * 7 - position + mondayIndex(first))
+        return inRange(addDays(date, interval * 7 - position + mondayIndex(first)))
     }
 
-    /// The first occurrence on or after `date`: `date` itself unless a weekday set or a day of the month leaves it out.
-    public static func alignToRecurrence(_ date: DateKey, _ recurrence: Recurrence) -> DateKey {
-        if recurrence.unit == .month, let day = recurrence.day {
-            let thisMonth = addMonths(date, 0, day: day)
-            return thisMonth >= date ? thisMonth : addMonths(date, 1, day: day)
+    /// The first occurrence on or after `date`: `date` itself unless a weekday set, a day of the month, or a weekday of
+    /// the month leaves it out. Nil when that occurrence falls after 9999-12-31.
+    public static func alignToRecurrence(_ date: DateKey, _ recurrence: Recurrence) -> DateKey? {
+        if isMonthlyOn(recurrence) {
+            let thisMonth = monthlyOn(date, 0, recurrence)
+            return inRange(thisMonth >= date ? thisMonth : monthlyOn(date, 1, recurrence))
         }
         guard recurrence.unit == .week, let days = recurrence.days, !days.contains(weekdayOf(date)) else { return date }
         var once = recurrence
@@ -141,7 +176,8 @@ public enum Dates {
     /// Where a recurring task moves when it is completed: the first occurrence after today, stepping one interval at a
     /// time from the due date, or from today when it has none. Each step counts from the last, so a month clamped to its
     /// last day carries that day forward, unless the repeat names its day. Absolute reminders shift by the same number of days, and relative reminders
-    /// follow the due time.
+    /// follow the due time. Nil when it does not repeat, or has no occurrence left before 10000, so completing it closes
+    /// it.
     public static func nextOccurrence(
         due: Due?,
         recurrence: Recurrence?,
@@ -150,8 +186,11 @@ public enum Dates {
     ) -> (due: Due, reminders: [Reminder])? {
         guard let recurrence else { return nil }
         let from = due?.date ?? today
-        var date = stepRecurrence(from, recurrence)
-        while date <= today { date = stepRecurrence(date, recurrence) }
+        guard var date = stepRecurrence(from, recurrence) else { return nil }
+        while date <= today {
+            guard let next = stepRecurrence(date, recurrence) else { return nil }
+            date = next
+        }
         let shift = days(date) - days(from)
         let shifted = reminders.map { reminder -> Reminder in
             if case let .at(day, time) = reminder { return .at(date: addDays(day, shift), time: time) }

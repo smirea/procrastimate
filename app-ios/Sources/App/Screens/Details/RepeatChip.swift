@@ -85,7 +85,7 @@ private struct RepeatPopover: View {
 
             Divider()
 
-            ForEach(RepeatMenu.presets, id: \.unit) { preset in
+            ForEach(RepeatMenu.presets(anchor: anchor), id: \.self) { preset in
                 let selected = RepeatMenu.isSelected(preset, recurrence)
                 MenuRow(text: Format.formatRecurrence(preset, anchor), checked: selected) {
                     set(preset)
