@@ -593,6 +593,10 @@ describe('sharing between two users', () => {
 
 		const inGuest = (method: string, path: string, body?: unknown) =>
 			call(guest, method, `${path}${path.includes('?') ? '&' : '?'}space=${owner.me.id}`, body);
+		const wholeSpace = (audience: unknown) =>
+			call(owner, 'POST', '/api/shares', { target: { kind: 'space', id: '' }, audience });
+		expect((await wholeSpace({ kind: 'user', userId: guest.me.id, role: 'edit' })).status).toBe(400);
+		expect((await wholeSpace({ kind: 'link' })).status).toBe(400);
 		expect((await inGuest('GET', '/api/links')).status).toBe(403);
 		expect((await inGuest('POST', '/api/links', { target: { kind: 'task', id: 'fix-sink' } })).status).toBe(403);
 		expect((await inGuest('POST', '/api/projects', { name: 'Mine' })).status).toBe(403);
