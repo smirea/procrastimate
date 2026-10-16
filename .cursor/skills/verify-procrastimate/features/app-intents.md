@@ -26,22 +26,23 @@ Every new feature that someone can do from outside the app ships its intents, ph
 - iOS, Spotlight: search for an open task's title. Tapping the result opens it.
 - Web: not available.
 
-## Driving it with XCUITest
+## Driving it with the simulator
 
 Preconditions:
 
-- The baseline state, with an empty Inbox. The automated suite pins the clock to Wednesday, October 14 2026, 10:00 UTC.
-- iOS only. Run `AppIntentsParityTests` in the iOS workflow (`xcodebuild test` on an iPhone 16 simulator).
+- The baseline state, with an empty Inbox. Dates below assume Wednesday, October 14 2026, 10:00 UTC.
+- iOS only. Run the app with `bun run start:ios -t simulator`, then run each intent from the Shortcuts app.
+- Rule coverage: `swift test` in `app-ios/` runs `IntentRulesTests`.
 
-- **Add.** The intent adds `Call mom tomorrow 5pm p1 remind me 30m before`. Inbox shows `Call mom` with `Tomorrow 5pm`, one reminder, and a `Priority 1` checkbox. A title that is only `tomorrow` adds nothing. Test: `AppIntentsParityTests.test_intent_add`.
-- **Project, label, and fields.** With project `House` and label `calls` already created, the intent adds `Ping Ana #House @calls p2 tomorrow`, and `House` shows `Ping Ana` with `Tomorrow`, `calls`, and `Priority 2`. A second add sets the project, label, priority, due, and reminder as fields rather than words: `Submit report` shows `Tomorrow 5pm`, `calls`, one reminder, and `Priority 1`. Test: `AppIntentsParityTests.test_intent_project_labels_and_parameters`.
-- **Complete.** `Buy milk` leaves the list and `Call mom` stays. Test: `AppIntentsParityTests.test_intent_complete_and_spotlight`.
-- **Reopen.** After `Buy milk` is completed, reopening puts it back. Test: `AppIntentsParityTests.test_intent_reopen`.
-- **Lists.** Opening Browse and then Inbox shows that tab. No automated test covers it.
-- **Task.** Opening `Buy milk` presents task details. Test: `AppIntentsParityTests.test_intent_open_task`.
-- **Search.** Searching `milk` opens Browse with `milk` in its field and shows `Buy milk` and not `Call mom`. Test: `AppIntentsParityTests.test_intent_search`.
-- **Today and overdue.** With the clock a day earlier, add `Overdue task today`, then return to the pinned day and add `Pay rent today`. Inbox lists both, the overdue readout names `Overdue task`, and the today readout names `Pay rent`. Test: `AppIntentsParityTests.test_intent_today_and_overdue`.
-- **Spotlight.** After `Buy milk` is completed, the indexed titles are `Call mom` only. Completing is the same test as `test_intent_complete_and_spotlight`.
+- **Add.** The intent adds `Call mom tomorrow 5pm p1 remind me 30m before`. Inbox shows `Call mom` with `Tomorrow 5pm`, one reminder, and a `Priority 1` checkbox. A title that is only `tomorrow` adds nothing. The rules are covered by `aSpokenTitleUsesTheQuickAddGrammar` and `aPhraseWithNoTitleSavesNothing`.
+- **Project, label, and fields.** With project `House` and label `calls` already created, the intent adds `Ping Ana #House @calls p2 tomorrow`, and `House` shows `Ping Ana` with `Tomorrow`, `calls`, and `Priority 2`. A second add sets the project, label, priority, due, and reminder as fields rather than words: `Submit report` shows `Tomorrow 5pm`, `calls`, one reminder, and `Priority 1`. The rules are covered by `anExplicitValueFillsWhatTheTitleLeftUnset` and `theTitleWinsOverAnExplicitValueForTheSameField`.
+- **Complete.** `Buy milk` leaves the list and `Call mom` stays. The rules are covered by `completeAndReopenHonorTheChosenStateThenTheOtherMatch`.
+- **Reopen.** After `Buy milk` is completed, reopening puts it back. The rules are covered by `completeAndReopenHonorTheChosenStateThenTheOtherMatch`.
+- **Lists.** Opening Browse and then Inbox shows that tab.
+- **Task.** Opening `Buy milk` presents task details.
+- **Search.** Searching `milk` opens Browse with `milk` in its field and shows `Buy milk` and not `Call mom`. The rules are covered by `searchReturnsOpenHitsBeforeCompletedOnes`.
+- **Today and overdue.** With the clock a day earlier, add `Overdue task today`, then return to the pinned day and add `Pay rent today`. Inbox lists both, the overdue readout names `Overdue task`, and the today readout names `Pay rent`.
+- **Spotlight.** After `Buy milk` is completed, the indexed titles are `Call mom` only. The rules are covered by `spotlightIndexesOpenTasksOnly`.
 
 ## Gotchas
 
@@ -49,6 +50,6 @@ Preconditions:
 - `#Project` and `@label` match records that already exist. They do not create one.
 - Words in the title win over a Shortcuts field for the same detail. A field applies only when the title did not set it.
 - A spoken title ignores case and accents. When several open tasks share it, the newest one is first.
-- Dates follow the device clock. The suite is pinned to Wednesday, October 14 2026, 10:00 UTC. `Tomorrow 5pm` is October 15.
-- The CI simulator cannot drive Siri. The UI test runs the intent itself. Trying the phrases means a device with Siri.
+- Dates follow the device clock. With the clock at Wednesday, October 14 2026, 10:00 UTC, `Tomorrow 5pm` is October 15.
+- The simulator cannot drive Siri. Run the intent from Shortcuts. Trying the phrases means a device with Siri.
 - Spotlight lists open tasks only. A completed task disappears from the index.

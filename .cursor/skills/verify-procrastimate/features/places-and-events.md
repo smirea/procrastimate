@@ -23,7 +23,7 @@ A task can hang off a place or a calendar event, set with the Location and Event
 - iOS: open a task, tap `Event`, pick the moment and an upcoming event, and tap `Save`. Tap the chip again to change it or `Remove event`.
 - iOS: Browse tab, `Places` and `Events` sections.
 - Web: shows the place and event lines on rows, read-only `During Walking meetup · Oct 21 6pm` and `While at Tiergarten` chips in task details (the event chip replaces the date and repeat pickers), and `Places` and `Events` sidebar sections above Labels opening `/places/<key>` and `/events/<id>`. It cannot set either.
-- Web check: seed tasks with `location` and `event` into the `procrastimate` localStorage document and reload. Inbox places `Night out` under its day as `<time> (30m before [calendar] Night out)`, and a weekly task at a place due last week shows on its next occurrence instead of overdue.
+- Web check: seed tasks with `location` and `event` from a second device through `/api/sync` (see Baseline preconditions in the README), and reload. Inbox places `Night out` under its day as `<time> (30m before [calendar] Night out)`, and a weekly task at a place due last week shows on its next occurrence instead of overdue. The Inbox placement is manual. Test for the place in task details: `task details show a place with the radius iOS watches` in `e2e/places.e2e.ts`.
 
 ## Driving it with simctl
 

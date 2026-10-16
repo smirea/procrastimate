@@ -15,17 +15,16 @@ Priority lets Stefan mark how urgent a task is with Todoist's four levels, from 
 - Web: choose the flag chip in quick add or task details and pick a level.
 - iOS: type a priority or use the flag chip in quick add or task details.
 
-## Driving it with control-ui and XCUITest
+## Driving it with control-ui and the simulator
 
 Preconditions:
 
 - The baseline state, with an empty Inbox.
-- Automated proof for every web step: `bun run test:e2e -- e2e/priority-reminders.e2e.ts` (the reminder tests in that file are covered by [Reminders](./reminders.md)).
 
-- **Shortcuts.** In quick add, type `File taxes p2`, then repeat with `!!`, `!!!`, `urgent`, and `p3`. Each shortcut is highlighted, the flag's accessible name reads the matching `Priority N`, and the saved task's checkbox takes that level's color. Tests: `"p2" in quick add sets priority 2` and its siblings.
-- **Picker replaces text.** Type `File taxes p1`, open the red `Priority 1` flag, and pick `Priority 3`. `p1` is removed from the input and the flag turns blue. Picking `Priority 4` instead leaves a plain gray outline flag. Test: `picking a priority in quick add replaces the typed one`.
-- **Details.** Open a task and pick `Priority 1` from its flag chip. After a reload the chip still reads `Priority 1`. Test: `details edit fields as they change and persist across reload` in `e2e/tasks.e2e.ts`.
-- **iOS.** `p1`, `!!`, and `urgent` set the level, the flag menu picks one and removes the typed phrase, and each checkbox reports its level as its accessibility value. Tests: `PriorityParityTests` (`test_priority_nl`, `test_priority_picker`, `test_priority_replace`, `test_priority_display`), paired with `e2e/parity/priority.e2e.ts`. Run each pair with the iOS workflow (`xcodebuild test` on an iPhone 16 simulator) and `bun run test:e2e --project=parity`; both sides save `<parity-id>.png`. The same flag menu sets the level in task details, in the second half of `test_priority_picker`.
+- **Shortcuts.** In quick add, type `File taxes p2`, then repeat with `!!`, `!!!`, `urgent`, and `p3`. Each shortcut is highlighted, the flag's accessible name reads the matching `Priority N`, and the saved task's checkbox takes that level's color.
+- **Picker replaces text.** Type `File taxes p1`, open the red `Priority 1` flag, and pick `Priority 3`. `p1` is removed from the input and the flag turns blue. Picking `Priority 4` instead leaves a plain gray outline flag.
+- **Details.** Open a task and pick `Priority 1` from its flag chip. After a reload the chip still reads `Priority 1`.
+- **iOS.** `p1`, `!!`, and `urgent` set the level, the flag menu picks one and removes the typed phrase, and each checkbox reports its level as its accessibility value. Drive it with `bun run start:ios -t simulator`. The same flag menu sets the level in task details.
 
 ## Gotchas
 

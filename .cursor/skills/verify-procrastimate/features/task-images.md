@@ -18,7 +18,7 @@ Task images let Stefan attach photos and screenshots to a task. Task details sho
 - iOS: open a task's details and tap `Add image`, then `Photo Library`, `Take Photo` (devices with a camera), or `Paste`.
 - Both: tap a thumbnail to open it full screen.
 
-## Driving it with Playwright and XCUITest
+## Driving it with control-ui and the simulator
 
 Preconditions:
 
@@ -29,7 +29,7 @@ Preconditions:
 - **View and delete.** Choose the thumbnail. The `Image` dialog shows it at 2048 wide. Escape closes only the viewer. Open it again and choose `Delete image`; the thumbnail and the row count go, and `Undo` brings both back. After a reload the thumbnail still shows. Same test.
 - **Paste and drop.** In details, paste an image while the notes field has focus; it attaches and the notes stay empty. Drop an image file on details; a second thumbnail appears. Test: `pasting or dropping an image into details attaches it`.
 - **Offline.** With two devices on one account, take device A offline, attach an image to a task there, and confirm device B's row shows no image. Bring A back online; B's row shows `1 image`, and B's details load a 320 px wide thumbnail from the server. Test: `an image added offline uploads when the network returns and shows on the other device`.
-- **iOS.** Sign in to an account where the web attached an image to `Beach photos`. Its row reads `1 image`; details show the thumbnail, which opens full screen and closes with `Close image`. On `Fix the fridge`, `Add image`, `Photo Library`, and a photo attach `Open image 1 of 1`. Copy an image, then `Add image` and `Paste` (allow the paste prompt) attach `Open image 2 of 2`. Open it and `Delete image`; one thumbnail remains. Afterwards the server's task lists the photo library image. No automated iOS test: there is no XCUITest suite, so drive it with a throwaway UI test outside the repo.
+- **iOS.** Sign in to an account where the web attached an image to `Beach photos`. Its row reads `1 image`; details show the thumbnail, which opens full screen and closes with `Close image`. On `Fix the fridge`, `Add image`, `Photo Library`, and a photo attach `Open image 1 of 1`. Copy an image, then `Add image` and `Paste` (allow the paste prompt) attach `Open image 2 of 2`. Open it and `Delete image`; one thumbnail remains. Afterwards the server's task lists the photo library image. No automated iOS test.
 
 ## Gotchas
 

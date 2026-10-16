@@ -17,16 +17,16 @@ ProcrastiMate works fully without a network. Every change applies locally at onc
 - There is no Sync screen. Stefan uses any feature on either client and expects the other client to match. A client syncs on launch, on focus or foreground, when the network returns, one second after each change, every minute while visible, and as soon as the server's realtime socket says another device changed something.
 - `Settings`, then `Delete all data`, then confirm, to empty tasks, projects, and labels on this device and the server.
 
-## Driving it with control-ui and XCUITest
+## Driving it with control-ui and the simulator
 
 Preconditions:
 
-- Two clients: on Linux, two separate browser profiles. The iOS sync client is in Core; macOS XCUITest of two devices is not part of this check.
+- Two clients: on Linux, two separate browser profiles. The iOS sync client is in Core.
 - Automated proof: `bun run test:e2e -- e2e/sync.e2e.ts`. It opens two browser contexts against the dev server's in-memory account, or the Worker's with `E2E_WORKER=1`. Each context registers on its own.
 
 - **Propagate.** Add a task on A. It appears on B after B regains focus or within a minute. Completing it on B removes it from A's Inbox. Test: `a change on one device shows on the other`.
 - **Realtime.** With A and B both open and nothing focusing B, add a task on A. B shows it within a couple of seconds. Completing it on B removes it from A the same way. In devtools, B's Network tab shows one WebSocket to `/api/sync/socket` with a `{"cursor":N}` frame per change. Test: `a change on one device shows on the other at once, without focus or the minute timer`.
-- **Tabs.** With two tabs of the same browser open, the background one offline, add a task in the first and let it sync, then add one in the background tab. The `procrastimate` document still holds the first task, and reloading opens on it without waiting for sync. Test: `a stale tab in the same browser never saves over what another tab synced`.
+- **Tabs.** With two tabs of the same browser open, the background one offline, add a task in the first and let it sync, then add one in the background tab. The `procrastimate` document still holds the first task, and reloading opens on it without waiting for sync. Test: `a stale tab in the same browser never saves over what another tab synced, and its edits still upload`.
 - **Offline.** Block A's `/api/sync` requests. Add and rename tasks on A. Each change applies at once and survives a reload. Test: `changes made offline apply at once and upload when the network returns`.
 - **Reconnect.** Let A's requests through again. B shows the new and renamed tasks. Same test.
 - **Typing.** Open a synced task on A, block A's `/api/sync`, and type into Notes. Each keystroke shows at once, and the `procrastimate` document's `sync.outbox` holds one op with the full text. After A reconnects, B shows the notes. Test: `typing notes shows each keystroke at once and queues one op with the last value`.
@@ -34,7 +34,7 @@ Preconditions:
 - **Conflict.** Block both clients, rename the same task differently on each, and add notes on B. After both reconnect, both show the same title (the later write wins) and B's notes, since different fields merge. Test: `both devices editing the same task offline converge`.
 - **Delete all.** On A, `Settings`, `Delete all data`, confirm. A's tasks are gone and stay gone after a reload. B's tasks are gone once it syncs, and its waiting edits are dropped. Both devices keep their tokens. Test: `delete all data clears this device and the other`.
 - **First sync.** A new install's first request carries no tasks. Its first snapshot queues only what the server lacks, so a device with the same tasks as the server uploads nothing. `bun test shared/sync/outbox.test.ts` and `swift test --filter OutboxTests` cover it.
-- **iOS.** The Core store writes a sync section on first launch and queues local changes, one op per entity field. `swift test` covers that. There is no macOS XCUITest of two devices.
+- **iOS.** The Core store writes a sync section on first launch and queues local changes, one op per entity field. `swift test` covers that.
 
 ## Gotchas
 
