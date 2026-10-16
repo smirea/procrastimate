@@ -472,6 +472,8 @@ describe('a bare hour after at', () => {
 		['Dentist tomorrow at 9', '2026-10-15', '09:00'],
 		['Dentist at 3', '2026-10-14', '15:00'],
 		['Dentist at 9', '2026-10-15', '09:00'],
+		['Dentist at 10 the third of May', '2027-05-03', '10:00'],
+		['Dentist at 4 in 2 days', '2026-10-16', '16:00'],
 	])('%s', (input, date, time) => {
 		const parsed = parse(input);
 		expect(parsed.title).toBe('Dentist');
@@ -493,6 +495,9 @@ describe('a bare hour after at', () => {
 
 	test.each([
 		['Look at 3 options', 'Look at 3 options', null],
+		['Look at 3 on the list', 'Look at 3 on the list', null],
+		['Meet at 3 in the lobby', 'Meet at 3 in the lobby', null],
+		['Look at 3 every time', 'Look at 3 every time', null],
 		['Arrive at 10 Downing', 'Arrive at 10 Downing', null],
 		['Score at 10.5', 'Score at 10.5', null],
 		['Sell at 10%', 'Sell at 10%', null],

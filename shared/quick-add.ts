@@ -138,13 +138,16 @@ const DATE = [
 ].join('|');
 /** `@` followed by a space means `at`, as in `Oct 2 @ 3pm`, while `@name` is a label. */
 const AT = String.raw`(?:at|@)\s+`;
-/** Words that may follow a bare hour, so `at 10 tomorrow` is a time while `at 3 options` stays text. */
-const AFTER_BARE_HOUR = String.raw`on|at|today|tonight|tomorrow|tmrw?|tom|next|nxt|the|in|every|each|daily|weekdays|weekly|monthly|yearly|remind|urgent|important|p[1-4]|r\d+[mhdw]|${WEEKDAY}|${MONTH}`;
+/**
+ * A phrase that may follow a bare hour, so `at 10 tomorrow` is a time while `at 3 options` and `at 3 on the list` stay
+ * text.
+ */
+const AFTER_BARE_HOUR = String.raw`(?:on\s+)?(?:${DATE})(?![\w!]|[/:]\d)|in\s+\d|(?:every|each)\s+(?:other|\d|day|week|month|year|weekday|workday|${WEEKDAY}|${MONTH})\b|(?:daily|weekdays|weekly|monthly|yearly|remind|urgent|important|p[1-4]|r\d+[mhdw])\b`;
 /**
  * A bare four-digit 19xx or 20xx reads as a year unless `at` comes first. A bare hour, as in `at 10`, needs `at` and
  * no ordinary word after it.
  */
-const TIME = String.raw`noon|midnight|\d{1,2}(?::\d{2})?(?:\s*[ap]m|[ap])|\d{1,2}:\d{2}|(?<=(?:\bat|@)\s+)\d{4}|(?!(?:19|20)\d\d)\d{4}|(?<=(?:\bat|@)\s+)(?:1\d|2[0-3]|[1-9])(?![\d:%]|[.,]\d|\s+(?!(?:${AFTER_BARE_HOUR})\b)[a-z])`;
+const TIME = String.raw`noon|midnight|\d{1,2}(?::\d{2})?(?:\s*[ap]m|[ap])|\d{1,2}:\d{2}|(?<=(?:\bat|@)\s+)\d{4}|(?!(?:19|20)\d\d)\d{4}|(?<=(?:\bat|@)\s+)(?:1\d|2[0-3]|[1-9])(?![\d:%]|[.,]\d|\s+(?!${AFTER_BARE_HOUR})[a-z])`;
 /** Minutes and hours from now. A spelled-out unit needs `in`, since `study 2 hours` is a length, not a time. */
 const MOMENT = String.raw`in\s+\d+(?:\s*${CLOCK_UNIT})?|\d+${CLOCK_UNIT}|\d+\s+(?:mins?|hrs?)`;
 /** A comma may sit between a day and its time, as in `Oct 19, 10am`, which is how dictation writes them. */

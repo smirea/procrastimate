@@ -58,13 +58,14 @@ public enum QuickAdd {
     ].joined(separator: "|")
     /// `@` followed by a space means `at`, as in `Oct 2 @ 3pm`, while `@name` is a label.
     static let at = #"(?:at|@)\s+"#
-    /// Words that may follow a bare hour, so `at 10 tomorrow` is a time while `at 3 options` stays text.
+    /// A phrase that may follow a bare hour, so `at 10 tomorrow` is a time while `at 3 options` and `at 3 on the list`
+    /// stay text.
     static let afterBareHour =
-        #"on|at|today|tonight|tomorrow|tmrw?|tom|next|nxt|the|in|every|each|daily|weekdays|weekly|monthly|yearly|remind|urgent|important|p[1-4]|r\d+[mhdw]|\#(weekday)|\#(month)"#
+        #"(?:on\s+)?(?:\#(date))(?![\w!]|[/:]\d)|in\s+\d|(?:every|each)\s+(?:other|\d|day|week|month|year|weekday|workday|\#(weekday)|\#(month))\b|(?:daily|weekdays|weekly|monthly|yearly|remind|urgent|important|p[1-4]|r\d+[mhdw])\b"#
     /// A bare four-digit 19xx or 20xx reads as a year unless `at` comes first. A bare hour, as in `at 10`, needs `at`
     /// and no ordinary word after it.
     static let time =
-        #"noon|midnight|\d{1,2}(?::\d{2})?(?:\s*[ap]m|[ap])|\d{1,2}:\d{2}|(?<=(?:\bat|@)\s+)\d{4}|(?!(?:19|20)\d\d)\d{4}|(?<=(?:\bat|@)\s+)(?:1\d|2[0-3]|[1-9])(?![\d:%]|[.,]\d|\s+(?!(?:\#(afterBareHour))\b)[a-z])"#
+        #"noon|midnight|\d{1,2}(?::\d{2})?(?:\s*[ap]m|[ap])|\d{1,2}:\d{2}|(?<=(?:\bat|@)\s+)\d{4}|(?!(?:19|20)\d\d)\d{4}|(?<=(?:\bat|@)\s+)(?:1\d|2[0-3]|[1-9])(?![\d:%]|[.,]\d|\s+(?!\#(afterBareHour))[a-z])"#
     /// Minutes and hours from now. A spelled-out unit needs `in`, since `study 2 hours` is a length, not a time.
     static let moment = #"in\s+\d+(?:\s*\#(clockUnit))?|\d+\#(clockUnit)|\d+\s+(?:mins?|hrs?)"#
     /// A comma may sit between a day and its time, as in `Oct 19, 10am`, which is how dictation writes them.
