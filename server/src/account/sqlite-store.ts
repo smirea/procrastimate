@@ -22,15 +22,15 @@ import {
 	pushColumns,
 	shareColumns,
 } from '../db/columns';
-import { migrateSync, type SyncDatabase } from '../db/migrate';
+import { migrateSync, type MigrateMode, type SyncDatabase } from '../db/migrate';
 import type { AccountStore } from './store';
 
 /**
  * One user's account in a synchronous SQLite database: the `Account` Durable Object's storage on the Worker, and
  * `bun:sqlite` in tests. Durable Object cursors can run lazily, so every read is drained with `all` or `get`.
  */
-export function sqliteStore(db: SyncDatabase, userId: string): AccountStore {
-	migrateSync(db);
+export function sqliteStore(db: SyncDatabase, userId: string, mode: MigrateMode): AccountStore {
+	migrateSync(db, mode);
 	const own = (column: AnySQLiteColumn) => eq(column, userId);
 
 	return {

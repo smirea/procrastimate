@@ -159,27 +159,12 @@ async function call(request: Request, key: string, context: AccountContext): Pro
 export const isNudge = (request: Request) => routeKey(request) === NUDGE_ROUTE;
 
 /**
- * Turso when both secrets are set, otherwise the store the host already has (SQLite on the Worker, memory in dev).
- * An end-to-end shard stays on that local store, so the run cannot write the dev database.
- */
-export async function openAccount(
-	env: Env,
-	fallback: AccountStore,
-	spaceId: string,
-	ledger?: RambleLedger,
-): Promise<AccountSession> {
-	const turso = tursoTarget(env);
-	if (turso) return tursoSession(turso, spaceId, ledger);
-	return { store: fallback, flush: async () => {} };
-}
-
-/**
  * One space, one SQLite-backed Durable Object named by its owner's user id. Turso I/O yields, so requests for this
  * space run through `run`: load, handle, and flush finish before the next one starts. Calls to other spaces run
  * after the slot releases, and a nudge from another space skips the queue, so mutual shares never wait on each other.
  */
 export class Account {
-	private readonly sqlite: AccountStore;
+	private readonly open: () => Promise<AccountSession>;
 	private readonly handle: AccountHandler;
 	private readonly run = serialQueue();
 	private readonly ledger: RambleLedger;
@@ -190,7 +175,15 @@ export class Account {
 		private readonly env: Env,
 	) {
 		this.space = ctx.id.name ?? '';
-		this.sqlite = sqliteStore(drizzle(ctx.storage), this.space);
+		const turso = tursoTarget(env);
+		// The object's own SQLite holds the account only without Turso (or in an end-to-end shard). With Turso, its
+		// leftover tables are never read, so it is not migrated and its history cannot fail the account.
+		if (turso) {
+			this.open = () => tursoSession(turso, this.space, this.ledger);
+		} else {
+			const store = sqliteStore(drizzle(ctx.storage), this.space, 'strict');
+			this.open = async () => ({ store, flush: async () => {} });
+		}
 		this.handle = accountHandler(
 			at => this.setAlarm(at),
 			durableSockets(ctx),
@@ -243,7 +236,7 @@ export class Account {
 	}
 
 	private async withStore<T>(use: (store: AccountStore) => Promise<T>): Promise<T> {
-		const session = await openAccount(this.env, this.sqlite, this.space, this.ledger);
+		const session = await this.open();
 		try {
 			return await use(session.store);
 		} finally {

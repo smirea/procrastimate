@@ -37,6 +37,7 @@ export async function localTurso(hooks?: ClientHooks): Promise<TursoDatabase> {
 			beforeBatch: async () => (armed ? hooks?.beforeBatch?.() : undefined),
 			onTransaction: () => armed && hooks?.onTransaction?.(),
 		}),
+		'rebuild',
 	);
 	armed = true;
 	return db;

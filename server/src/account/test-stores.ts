@@ -6,7 +6,7 @@ import type { AccountStore } from './store';
 
 /** A fresh SQLite store on an in-memory `bun:sqlite` database, standing in for Durable Object SQL. */
 export function bunSqliteStore(userId = 'user-1'): AccountStore {
-	return sqliteStore(drizzle(new Database(':memory:', { strict: true })), userId);
+	return sqliteStore(drizzle(new Database(':memory:', { strict: true })), userId, 'rebuild');
 }
 
 /** Both store implementations, so tests run each case against each. */
