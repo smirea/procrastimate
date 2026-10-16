@@ -145,7 +145,8 @@ export function applyResponse(
 	let clock = observe(sync.clock, response.hlc);
 	let outbox = kept;
 	const seeding = sync.seed && 'snapshot' in response;
-	if (seeding) {
+	// A wipe this device never saw makes its local copy stale, so it must not upload it.
+	if (seeding && (!epochChanged || options?.sentReset)) {
 		const seeded = stamp(seedPatches(base, snapshot), clock, now, options?.nextOpId);
 		outbox = enqueue(kept, seeded.ops);
 		clock = seeded.clock;

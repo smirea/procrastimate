@@ -251,10 +251,12 @@ public enum SyncEngine {
             snapshot.labels = decoded.labels.sorted(by: byCreation)
             sync.dictation = decoded.settings.dictation
             if let zone = decoded.settings.timeZone { sync.timeZone = zone }
-            if sync.seed {
-                seeds = seedPatches(server: snapshot.data, local: local)
-                sync.seed = false
-            }
+            // The adoption below reads the document's section, so it must hold the server's dictation too. The zone
+            // stays the one this device last wrote, so two devices in different zones never overwrite each other.
+            snapshot.sync?.dictation = sync.dictation
+            // A wipe this device never saw makes its local copy stale, so it must not upload it.
+            if sync.seed && (!epochChanged || sentReset) { seeds = seedPatches(server: snapshot.data, local: local) }
+            sync.seed = false
         } else if let changes = object["changes"] as? [[String: Any]] {
             for change in changes { applyChange(&snapshot, change) }
             snapshot.tasks = StoreRules.sortTasks(snapshot.tasks)

@@ -137,4 +137,12 @@ describe('first sync', () => {
 		expect(b.snapshot).toEqual(server.snapshot);
 		expect(server.snapshot.tasks.map(t => t.id)).toEqual(['t1', 't2', 'new']);
 	});
+
+	test('a device that missed a delete-all takes the wiped snapshot and uploads nothing', () => {
+		const b = new MemoryClient('b', shared);
+		const wiped = { acked: [], snapshot: snapshotOf(), cursor: 0, hlc: '30:0:server', epoch: 1 };
+		const { snapshot, sync } = apply.applyResponse(b.snapshot, b.sync, wiped, 40);
+		expect(snapshot).toEqual(snapshotOf());
+		expect(sync).toMatchObject({ outbox: [], seed: false, epoch: 1 });
+	});
 });

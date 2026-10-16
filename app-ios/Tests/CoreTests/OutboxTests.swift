@@ -80,4 +80,25 @@ import Testing
         #expect(ops.first?.hlc == "40:0:phone")
         #expect(snapshot.tasks.map(\.id) == ["t1", "mine"])
     }
+
+    @Test func aFirstSnapshotAfterAMissedWipeAdoptsTheServerAndUploadsNothing() throws {
+        var snapshot = Snapshot.empty(now: 0)
+        snapshot.tasks = [TaskItem(id: "stale", title: "Wiped elsewhere", createdAt: 10)]
+        SyncEngine.ensure(&snapshot, deviceId: "phone", now: 0, timeZone: "UTC") { "zone" }
+        let server = try JSONSerialization.jsonObject(with: JSONEncoder().encode(API.SyncSnapshot(
+            tasks: [],
+            projects: [],
+            labels: [],
+            settings: API.Settings(timeZone: "Europe/Paris", dictation: .elevenlabs)
+        )))
+        let body = try JSONSerialization.data(withJSONObject: [
+            "acked": [], "cursor": 0, "hlc": "30:0:server", "epoch": 2, "snapshot": server,
+        ])
+        #expect(SyncEngine.apply(&snapshot, response: body, now: 40) { "seed" })
+        #expect(snapshot.tasks.isEmpty)
+        #expect(snapshot.sync?.outbox == [])
+        #expect(snapshot.sync?.seed == false)
+        #expect(snapshot.sync?.dictation == .elevenlabs)
+        #expect(snapshot.sync?.timeZone == "UTC")
+    }
 }
