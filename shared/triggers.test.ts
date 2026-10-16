@@ -9,6 +9,7 @@ const eventGroups = recorded('triggers', triggers.eventGroups);
 const eventLabel = recorded('triggers', triggers.eventLabel);
 const formatEvent = recorded('triggers', triggers.formatEvent);
 const formatLocation = recorded('triggers', triggers.formatLocation);
+const formatRadius = recorded('triggers', triggers.formatRadius);
 const placeGroups = recorded('triggers', triggers.placeGroups);
 const scheduledDue = recorded('triggers', triggers.scheduledDue);
 const taskNotificationTimes = recorded('triggers', triggers.taskNotificationTimes);
@@ -201,6 +202,17 @@ describe('labels', () => {
 		expect(formatLocation(park({ trigger: 'arrive' }))).toBe('Arriving at Park');
 		expect(formatLocation(park({ trigger: 'leave' }))).toBe('Leaving Park');
 		expect(formatLocation(park({ trigger: 'during' }))).toBe('While at Park');
+	});
+
+	test('radii read in meters below a kilometer, then kilometers', () => {
+		expect(formatRadius(150)).toBe('150 m');
+		expect(formatRadius(994)).toBe('990 m');
+		expect(formatRadius(996)).toBe('1 km');
+		expect(formatRadius(1250)).toBe('1.3 km');
+		expect(formatRadius(1480)).toBe('1.5 km');
+		expect(formatRadius(9960)).toBe('10 km');
+		expect(formatRadius(21_920)).toBe('22 km');
+		expect(formatRadius(100_000)).toBe('100 km');
 	});
 });
 

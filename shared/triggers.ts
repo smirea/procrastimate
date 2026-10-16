@@ -174,6 +174,13 @@ export function formatLocation(location: TaskLocation): string {
 	}
 }
 
+/** A watched radius as it reads on a chip: `150 m`, `1.5 km`, `22 km`. */
+export function formatRadius(meters: number): string {
+	if (Math.round(meters / 10) * 10 < 1000) return `${Math.round(meters / 10) * 10} m`;
+	const tenths = Math.round(meters / 100) / 10;
+	return tenths < 10 ? `${tenths} km` : `${Math.round(meters / 1000)} km`;
+}
+
 /** Tasks at the same spot share a place, to about 11 meters, whatever each one named it. */
 export const placeKey = (location: Pick<TaskLocation, 'latitude' | 'longitude'>) =>
 	`${location.latitude.toFixed(4)},${location.longitude.toFixed(4)}`;

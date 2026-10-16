@@ -22,4 +22,33 @@ import Testing
         #expect(Triggers.placeRadius(latitudeDelta: 0.3939, longitudeDelta: 0.7968, latitude: 52.52, deviceMax: 10_000) == 10_000)
         #expect(Triggers.placeRadius(latitudeDelta: 0.0266, longitudeDelta: 0.0845, latitude: 52.5, deviceMax: 10_000) == 1_480)
     }
+
+    @Test func theSliderSpansABlockToAHundredKilometersOnALogScale() {
+        #expect(Triggers.radius(atSlider: 0, max: 100_000) == 100)
+        #expect(Triggers.radius(atSlider: 1, max: 100_000) == 100_000)
+        #expect(Triggers.radius(atSlider: 1.0 / 3, max: 100_000) == 1_000)
+        #expect(Triggers.radius(atSlider: 0.5, max: 100_000) == 3_200)
+        #expect(Triggers.radius(atSlider: 0.8, max: 100_000) == 25_000)
+        #expect(Triggers.radius(atSlider: 0.1, max: 100_000) == 200)
+    }
+
+    @Test func theSliderStopsAtWhatTheDeviceCanWatch() {
+        #expect(Triggers.maxRadius(deviceMax: nil) == 100_000)
+        #expect(Triggers.maxRadius(deviceMax: 10_000) == 10_000)
+        #expect(Triggers.radius(atSlider: 1, max: 10_000) == 10_000)
+    }
+
+    @Test func aRadiusSitsWhereTheSliderWouldProduceIt() {
+        #expect(Triggers.sliderPosition(of: 100, max: 100_000) == 0)
+        #expect(Triggers.sliderPosition(of: 100_000, max: 100_000) == 1)
+        #expect(Triggers.sliderPosition(of: 250_000, max: 100_000) == 1)
+        #expect(Triggers.radius(atSlider: Triggers.sliderPosition(of: 1_480, max: 100_000), max: 100_000) == 1_500)
+    }
+
+    @Test func radiiReadInMetersThenKilometers() {
+        #expect(Triggers.formatRadius(150) == "150 m")
+        #expect(Triggers.formatRadius(1_000) == "1 km")
+        #expect(Triggers.formatRadius(1_480) == "1.5 km")
+        #expect(Triggers.formatRadius(21_920) == "22 km")
+    }
 }

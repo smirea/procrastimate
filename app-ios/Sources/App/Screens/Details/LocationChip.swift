@@ -4,6 +4,7 @@ import SwiftUI
 
 /// The place chip and its sheet: an Apple Maps search with the Arrive, Leave, or During menu beside the field.
 struct LocationChip: View {
+    @Environment(PlaceMonitor.self) private var places
     let location: TaskLocation?
     /// Bumped to open the picker from outside, as quick add's `+` menu does.
     var openTrigger = 0
@@ -12,18 +13,19 @@ struct LocationChip: View {
     @State private var open = PlacesDemo.has("sheet:location")
 
     var body: some View {
+        let unwatched = location.flatMap(places.unwatched)
         Button {
             open = true
         } label: {
             Chip(
-                systemImage: location == nil ? "mappin" : "mappin.and.ellipse",
+                systemImage: location == nil ? "mappin" : unwatched == nil ? "mappin.and.ellipse" : "exclamationmark.triangle",
                 text: location.map(Triggers.formatLocation) ?? "Location",
                 tone: location == nil ? .muted : .ink,
-                iconTone: location == nil ? nil : .accent
+                iconTone: location == nil ? nil : unwatched == nil ? .accent : .toneToday
             )
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(location.map { "Location: \(Triggers.formatLocation($0))" } ?? "Add location")
+        .accessibilityLabel(location.map { "Location: \(Triggers.formatLocation($0))\(unwatched == nil ? "" : ", not watched")" } ?? "Add location")
         .onChange(of: openTrigger) { open = true }
         .sheet(isPresented: $open) {
             LocationSheet(location: location, onChange: onChange)
@@ -57,6 +59,7 @@ private struct LocationSheet: View {
 
     @State private var query = PlacesDemo.value("query") ?? ""
     @State private var trigger: LocationTrigger
+    @State private var radius: Double
     @State private var search = PlaceSearch()
     @State private var resolving: MKLocalSearchCompletion?
     @FocusState private var focused: Bool
@@ -65,6 +68,7 @@ private struct LocationSheet: View {
         self.location = location
         self.onChange = onChange
         _trigger = State(initialValue: location?.trigger ?? .arrive)
+        _radius = State(initialValue: location?.radius ?? 150)
     }
 
     var body: some View {
@@ -72,7 +76,11 @@ private struct LocationSheet: View {
             List {
                 if let location, query.isEmpty {
                     Section {
-                        CurrentPlace(location: location)
+                        CurrentPlace(location: location, radius: radius)
+                        RadiusEditor(radius: $radius, max: Triggers.maxRadius(deviceMax: places.maxRadius)) { saveRadius() }
+                        if let unwatched = places.unwatched(location) {
+                            UnwatchedNote(reason: unwatched)
+                        }
                         Button("Remove location", systemImage: "trash", role: .destructive) {
                             onChange(nil)
                             dismiss()
@@ -165,6 +173,12 @@ private struct LocationSheet: View {
         .padding(.vertical, 8)
     }
 
+    private func saveRadius() {
+        guard var location, location.radius != radius else { return }
+        location.radius = radius
+        onChange(location)
+    }
+
     private func pick(_ result: MKLocalSearchCompletion) {
         guard resolving == nil else { return }
         resolving = result
@@ -199,20 +213,35 @@ private struct LocationSheet: View {
 
 private struct CurrentPlace: View {
     let location: TaskLocation
+    let radius: Double
+    @State private var position: MapCameraPosition
+
+    init(location: TaskLocation, radius: Double) {
+        self.location = location
+        self.radius = radius
+        _position = State(initialValue: Self.framing(location, radius))
+    }
+
+    /// Frames the whole circle with a margin, and never closer than a few blocks so a small place keeps its streets.
+    static func framing(_ location: TaskLocation, _ radius: Double) -> MapCameraPosition {
+        let span = max(900, radius * 2.6)
+        let center = CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude)
+        return .region(MKCoordinateRegion(center: center, latitudinalMeters: span, longitudinalMeters: span))
+    }
 
     var body: some View {
         let center = CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude)
-        let span = max(900, location.radius * 2.6)
         VStack(alignment: .leading, spacing: 10) {
-            Map(initialPosition: .region(MKCoordinateRegion(center: center, latitudinalMeters: span, longitudinalMeters: span))) {
+            Map(position: $position) {
                 Marker(location.name, coordinate: center).tint(.accent)
-                MapCircle(center: center, radius: location.radius)
+                MapCircle(center: center, radius: radius)
                     .foregroundStyle(.accent.opacity(0.15))
                     .stroke(.accent, lineWidth: 1)
             }
             .frame(height: 160)
             .clipShape(.rect(cornerRadius: 12))
             .allowsHitTesting(false)
+            .onChange(of: radius) { withAnimation(.snappy) { position = Self.framing(location, radius) } }
             VStack(alignment: .leading, spacing: 2) {
                 Text(location.name).font(.headline).foregroundStyle(.ink)
                 if let address = location.address {
@@ -221,6 +250,76 @@ private struct CurrentPlace: View {
             }
         }
         .padding(.vertical, 4)
+    }
+}
+
+/// Presets for the common sizes and a log-scale slider between them. The circle follows while dragging, and the radius
+/// is saved when the drag ends, so a drag syncs once.
+private struct RadiusEditor: View {
+    @Binding var radius: Double
+    let max: Double
+    let onCommit: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                ForEach(Triggers.radiusPresets, id: \.self) { preset in
+                    let selected = radius == preset.meters
+                    Button {
+                        radius = preset.meters
+                        onCommit()
+                    } label: {
+                        Text(preset.name)
+                            .font(.subheadline.weight(.medium))
+                            .foregroundStyle(selected ? .accent : .ink)
+                            .padding(.horizontal, 12)
+                            .frame(minHeight: 32)
+                            .background(selected ? Color.accent.opacity(0.15) : Color.ink.opacity(0.06), in: .capsule)
+                            .frame(minHeight: 44)
+                            .contentShape(.rect)
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(preset.meters > max)
+                    .accessibilityAddTraits(selected ? .isSelected : [])
+                }
+            }
+            HStack(spacing: 12) {
+                Slider(
+                    value: Binding(
+                        get: { Triggers.sliderPosition(of: radius, max: max) },
+                        set: { radius = Triggers.radius(atSlider: $0, max: max) }
+                    ),
+                    onEditingChanged: { editing in if !editing { onCommit() } }
+                )
+                .accessibilityLabel("Radius")
+                .accessibilityValue(Triggers.formatRadius(radius))
+                Text(Triggers.formatRadius(radius))
+                    .font(.subheadline.monospacedDigit())
+                    .foregroundStyle(.muted)
+                    .frame(minWidth: 56, alignment: .trailing)
+            }
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+private struct UnwatchedNote: View {
+    let reason: PlaceMonitor.Unwatched
+
+    var body: some View {
+        SwiftUI.Label {
+            Text(text).font(.footnote).foregroundStyle(.muted)
+        } icon: {
+            Image(systemName: "exclamationmark.triangle").foregroundStyle(.toneToday)
+        }
+        .accessibilityIdentifier("place-unwatched")
+    }
+
+    private var text: String {
+        switch reason {
+        case .refused: "iOS isn't watching this place, so it won't fire. A smaller radius may help."
+        case .overLimit: "Not watched yet: iOS watches \(PlaceMonitor.limit) places, and sooner ones come first."
+        }
     }
 }
 

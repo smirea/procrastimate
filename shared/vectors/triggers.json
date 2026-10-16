@@ -1012,6 +1012,70 @@
 			"output": "While at Park"
 		},
 		{
+			"fn": "formatRadius",
+			"test": "labels › radii read in meters below a kilometer, then kilometers",
+			"input": [
+				150
+			],
+			"output": "150 m"
+		},
+		{
+			"fn": "formatRadius",
+			"test": "labels › radii read in meters below a kilometer, then kilometers",
+			"input": [
+				994
+			],
+			"output": "990 m"
+		},
+		{
+			"fn": "formatRadius",
+			"test": "labels › radii read in meters below a kilometer, then kilometers",
+			"input": [
+				996
+			],
+			"output": "1 km"
+		},
+		{
+			"fn": "formatRadius",
+			"test": "labels › radii read in meters below a kilometer, then kilometers",
+			"input": [
+				1250
+			],
+			"output": "1.3 km"
+		},
+		{
+			"fn": "formatRadius",
+			"test": "labels › radii read in meters below a kilometer, then kilometers",
+			"input": [
+				1480
+			],
+			"output": "1.5 km"
+		},
+		{
+			"fn": "formatRadius",
+			"test": "labels › radii read in meters below a kilometer, then kilometers",
+			"input": [
+				9960
+			],
+			"output": "10 km"
+		},
+		{
+			"fn": "formatRadius",
+			"test": "labels › radii read in meters below a kilometer, then kilometers",
+			"input": [
+				21920
+			],
+			"output": "22 km"
+		},
+		{
+			"fn": "formatRadius",
+			"test": "labels › radii read in meters below a kilometer, then kilometers",
+			"input": [
+				100000
+			],
+			"output": "100 km"
+		},
+		{
 			"fn": "placeGroups",
 			"test": "sidebar groups › places group open tasks by spot, named after the earliest task",
 			"input": [

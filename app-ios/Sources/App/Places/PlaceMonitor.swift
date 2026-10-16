@@ -4,6 +4,7 @@ import Core
 import CoreLocation
 import Foundation
 import Observation
+import OSLog
 @preconcurrency import UserNotifications
 
 /// Watches the places on open tasks with `CLMonitor` region conditions, which iOS evaluates from cell and Wi-Fi changes
@@ -16,6 +17,22 @@ final class PlaceMonitor: NSObject {
     /// iOS monitors at most 20 regions per app.
     static let limit = 20
     private static let statesKey = "procrastimate-place-states"
+    private static let log = Logger(subsystem: "com.stefan.procrastimate", category: "places")
+
+    /// Why an armed place is not being watched, keyed by condition id.
+    private(set) var unwatched: [String: Unwatched] = [:]
+
+    enum Unwatched {
+        /// iOS reported the condition `.unmonitored`: too large for the device, past its region limit, or monitoring
+        /// is unavailable, as on the simulator.
+        case refused
+        /// The place lost to the 20 armed soonest.
+        case overLimit
+    }
+
+    func unwatched(_ location: TaskLocation) -> Unwatched? {
+        unwatched[Self.conditionID(location)]
+    }
 
     @ObservationIgnored private let store: Store
     @ObservationIgnored private let clock: AppClock
@@ -114,6 +131,15 @@ final class PlaceMonitor: NSObject {
             let center = CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude)
             await monitor.add(CLMonitor.CircularGeographicCondition(center: center, radius: location.radius), identifier: id)
         }
+        var unwatched: [String: Unwatched] = [:]
+        for id in wanted.keys where await monitor.record(for: id)?.lastEvent.state == .unmonitored {
+            unwatched[id] = .refused
+        }
+        for location in plan.overLimit {
+            unwatched[Self.conditionID(location)] = .overLimit
+        }
+        for (id, reason) in unwatched where self.unwatched[id] != reason { Self.logUnwatched(id, reason) }
+        self.unwatched = unwatched
         saveStates()
         await reconcileActivities(entered: [])
         if let next = plan.nextArm {
@@ -125,6 +151,7 @@ final class PlaceMonitor: NSObject {
 
     struct Plan {
         var armed: [TaskLocation]
+        var overLimit: [TaskLocation]
         var nextArm: Date?
     }
 
@@ -156,7 +183,7 @@ final class PlaceMonitor: NSObject {
             if at < armed[id]?.at ?? .distantFuture { armed[id] = (at, location) }
         }
         let soonest = armed.values.sorted { $0.at == $1.at ? conditionID($0.location) < conditionID($1.location) : $0.at < $1.at }
-        return Plan(armed: soonest.prefix(limit).map(\.location), nextArm: nextArm)
+        return Plan(armed: soonest.prefix(limit).map(\.location), overLimit: soonest.dropFirst(limit).map(\.location), nextArm: nextArm)
     }
 
     /// Keyed by spot and radius, so tasks at one place share a condition and moving a place replaces it.
@@ -164,18 +191,33 @@ final class PlaceMonitor: NSObject {
         "\(Triggers.placeKey(location))|\(Int(location.radius))"
     }
 
+    private static func logUnwatched(_ id: String, _ reason: Unwatched) {
+        switch reason {
+        case .refused: log.error("iOS refused to monitor place \(id, privacy: .private)")
+        case .overLimit: log.error("Not watching place \(id, privacy: .private): \(limit) sooner places are armed")
+        }
+    }
+
     private func saveStates() {
         UserDefaults.standard.set(states, forKey: Self.statesKey)
     }
 
     private func handle(_ event: CLMonitor.Event) async {
+        let id = event.identifier
         let inside: Bool
         switch event.state {
         case .satisfied: inside = true
         case .unsatisfied: inside = false
+        case .unmonitored:
+            if unwatched[id] != .refused { Self.logUnwatched(id, .refused) }
+            unwatched[id] = .refused
+            states[id] = nil
+            saveStates()
+            await reconcileActivities(entered: [])
+            return
         default: return
         }
-        let id = event.identifier
+        if unwatched[id] == .refused { unwatched[id] = nil }
         let before = states[id]
         states[id] = inside
         saveStates()
