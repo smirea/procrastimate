@@ -25,11 +25,12 @@ struct TaskRow: View {
                 .accessibilityValue(Format.priorityLabel(task.priority))
                 .disabled(locked)
             VStack(alignment: .leading, spacing: 2) {
-                Text(Links.attributed(task.title))
-                    .font(.body)
-                    .foregroundStyle(checking ? Color.faint : Color.ink)
-                    .strikethrough(checking, color: .faint)
-                    .lineLimit(1)
+                TitleFlow(
+                    title: Links.attributed(task.title),
+                    labels: labels.map { AttributedString($0.name) },
+                    done: checking
+                )
+                .font(.body)
                 if !task.notes.isEmpty {
                     Text(Links.attributed(task.notes)).font(.footnote).foregroundStyle(.muted).lineLimit(1)
                 }
@@ -119,8 +120,7 @@ struct TaskRow: View {
     private var due: Due? { Triggers.scheduledDue(task, today, in: store.timeZone) }
 
     private var hasDetails: Bool {
-        due != nil || task.location != nil || task.recurrence != nil || !task.reminders.isEmpty || progress != nil || !labels.isEmpty
-            || parent != nil || showProject || task.memoSource != nil
+        due != nil || task.location != nil || task.recurrence != nil || !task.reminders.isEmpty || progress != nil || parent != nil || showProject || task.memoSource != nil
     }
 
     @ViewBuilder private var details: some View {
@@ -154,9 +154,6 @@ struct TaskRow: View {
                     Detail(systemImage: "bell", text: "\(task.reminders.count)")
                         .accessibilityElement(children: .ignore)
                         .accessibilityLabel("\(task.reminders.count) reminders")
-                }
-                ForEach(labels) { label in
-                    LabelChip(name: label.name)
                 }
                 if task.memoSource != nil {
                     Image(systemName: "waveform")
@@ -213,21 +210,6 @@ private struct Detail: View {
             Image(systemName: systemImage).imageScale(.small)
             Text(text)
         }
-    }
-}
-
-struct LabelChip: View {
-    let name: String
-
-    var body: some View {
-        HStack(spacing: 3) {
-            Image(systemName: "tag.fill").imageScale(.small).foregroundStyle(.toneLabel)
-            Text(name).foregroundStyle(.ink)
-        }
-        .padding(.horizontal, 6)
-        .padding(.vertical, 1)
-        .background(.ink.opacity(0.05), in: .capsule)
-        .transition(.scale(scale: 0.6).combined(with: .opacity))
     }
 }
 

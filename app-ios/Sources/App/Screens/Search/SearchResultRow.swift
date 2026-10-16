@@ -129,10 +129,11 @@ private struct TaskResult: View {
             Status(done: done, tone: task.priority.tone)
                 .padding(.top, 2)
             VStack(alignment: .leading, spacing: 2) {
-                Text(Links.attributed(task.title, hit.matches[.title]?.first?.ranges ?? []))
-                    .foregroundStyle(done ? Color.faint : Color.ink)
-                    .strikethrough(done, color: .faint)
-                    .lineLimit(1)
+                TitleFlow(
+                    title: Links.attributed(task.title, hit.matches[.title]?.first?.ranges ?? []),
+                    labels: (hit.matches[.labels] ?? []).map(\.attributed),
+                    done: done
+                )
                 if let notes = hit.matches[.notes]?.first {
                     let excerpt = Search.excerpt(notes)
                     Text(Links.attributed(excerpt.text, excerpt.ranges))
@@ -150,20 +151,6 @@ private struct TaskResult: View {
                     .accessibilityElement(children: .ignore)
                     .accessibilityLabel("Subtask of \(parent.title)")
                 }
-                if let labels = hit.matches[.labels] {
-                    HStack(spacing: 4) {
-                        ForEach(labels, id: \.text) { label in
-                            HStack(spacing: 3) {
-                                Image(systemName: "tag.fill").imageScale(.small).foregroundStyle(.toneLabel)
-                                Text(label.attributed).foregroundStyle(.ink)
-                            }
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 1)
-                            .background(.ink.opacity(0.05), in: .capsule)
-                        }
-                    }
-                    .font(.caption)
-                }
                 if let completedAt = task.completedAt {
                     Text(Browse.completedLine(completedAt, today: today, in: clock.timeZone))
                         .font(.caption)
@@ -177,7 +164,8 @@ private struct TaskResult: View {
                     .foregroundStyle(Format.dueTone(due, today).color)
                 }
             }
-            Spacer(minLength: 8)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.trailing, 8)
             HStack(spacing: 3) {
                 Image(systemName: project == nil ? "tray" : "number").imageScale(.small)
                 if let project {
@@ -190,6 +178,7 @@ private struct TaskResult: View {
             .foregroundStyle(.muted)
             .lineLimit(1)
             .frame(maxWidth: 140, alignment: .trailing)
+            .fixedSize(horizontal: true, vertical: false)
             .padding(.top, 3)
         }
     }

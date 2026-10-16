@@ -6,7 +6,7 @@ import UIKit
 /// DEBUG-only. The simulator has no way to tap, so `PROCRASTIMATE_DEMO` seeds place and event tasks through the store,
 /// adds calendar events through EventKit, and opens the screen to screenshot. Release builds omit it.
 ///
-/// Space-separated words: `seed`, `move` (shifts the next Standup an hour later, then logs what the task holds),
+/// Space-separated words: `seed`, `rows` (labeled tasks with long titles, for the two-line row), `move` (shifts the next Standup an hour later, then logs what the task holds),
 /// `browse`, `details:<task title>`, `link:<share token>`, `sharing` (see `SharingDemo`), `sheet:location`, `sheet:event`, and
 /// `query:<words with + for spaces>` for the location search.
 enum PlacesDemo {
@@ -29,6 +29,7 @@ enum PlacesDemo {
         #if DEBUG
         guard !words.isEmpty else { return }
         if has("seed") { await seed(store: store, calendar: calendar, clock: clock) }
+        if has("rows") { seedRows(store: store, clock: clock) }
         if has("move") { await move(store: store, calendar: calendar) }
         if has("browse") { navigator.tab = .browse }
         if has("nodate") { navigator.tab = .noDate }
@@ -125,6 +126,27 @@ enum PlacesDemo {
             name: "Philz Coffee", address: "20686 Stevens Creek Blvd, Cupertino",
             latitude: 37.3229, longitude: -122.0322, radius: 150, trigger: .during
         ))))
+    }
+
+    @MainActor
+    private static func seedRows(store: Store, clock: AppClock) {
+        guard !store.tasks.contains(where: { $0.title == "Buy milk" }) else { return }
+        let home = store.addLabel("home"), errands = store.addLabel("errands"), work = store.addLabel("work")
+        let today = Due(date: clock.today)
+        let rows: [NewTask] = [
+            NewTask(title: "Short task", labelIds: [home.id], due: today),
+            NewTask(title: "Buy milk", due: today),
+            NewTask(
+                title: "Call the plumber about the leaking kitchen sink and ask whether they can come on Thursday morning",
+                labelIds: [home.id, errands.id], due: today, priority: .p1
+            ),
+            NewTask(title: "Medium length title that needs a bit more room here", labelIds: [work.id, errands.id], due: today),
+            NewTask(
+                title: "An extremely long task title without labels that keeps going far past two lines so it must end in an ellipsis",
+                due: today
+            ),
+        ]
+        for row in rows { _ = store.addTask(row) }
     }
 
     @MainActor

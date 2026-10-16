@@ -1,12 +1,12 @@
 # Labels
 
-Labels let Stefan tag a task with any number of names that cross projects, such as `calls` or `waiting`. He types `@name` in quick add or the task title, with suggestions as he types, or picks labels in task details. Rows show their labels as small chips, and the sidebar's Labels section opens every task with a label.
+Labels let Stefan tag a task with any number of names that cross projects, such as `calls` or `waiting`. He types `@name` in quick add or the task title, with suggestions as he types, or picks labels in task details. Rows show their labels as small chips inline after the title, which wraps to two lines, and the sidebar's Labels section opens every task with a label.
 
 ## Sub-features
 
 - `labels-type` adds existing labels by typing `@name` in quick add or the task details title, and leaves emails and handles such as `bob@site.com` or `@5pm` as text.
 - `labels-autocomplete` suggests labels after `@`, ordered best match, then recently used, then alphabetical, and offers to create a missing one.
-- `labels-chips` shows each task's labels as chips on its row.
+- `labels-chips` shows each task's labels as chips inline after its title. The row shows at most two lines; a longer title ends in an ellipsis and the chips stay visible at the end of the second line.
 - `labels-picker` toggles and creates labels from the `Labels` chip in task details.
 - `labels-view` lists every open task with a label, across projects, from the sidebar's Labels section, and quick add there starts with that label.
 - `labels-rename` renames a label.
@@ -36,6 +36,7 @@ Preconditions:
 - **Emails stay text.** In the same test, type `Email bob@site.com @wa`. The list shows `waiting` and `Create label “wa”`. Press Enter and save. The row `Email bob@site.com` keeps the email in its title and shows the `waiting` chip.
 - **Order and keys.** In the same test, type `Ping @`. The list reads `calls`, `waiting`. Press Down to select `waiting`, then Escape; the list closes and quick add stays open.
 - **Chips.** `Call plumber` shows chips `calls` and `waiting`, also after a reload. The suite saves `app-web/test-results/label-chips.png`.
+- **Two lines.** Add a title long enough to fill three lines with `@home`, plus `Short task @home`. At 1280 and 393 px wide the long row is two lines tall, ends its title in an ellipsis, and shows `home` at the end of the second line; `Short task` is one line with `home` right after the title. Test: `a row shows two lines of title with its labels inline, and a long title gives way to the labels` in `e2e/task-row.e2e.ts`. iOS: launch a Debug build with `PROCRASTIMATE_DEMO=rows` (with `PROCRASTIMATE_SIGNED_IN=1 PROCRASTIMATE_RESET=1`) for the same rows in Inbox, and add `search type:home` for search results.
 - **Label view.** With label `calls` and project `Home`, add `Fix sink @calls` in `Home` and `Call bank @calls` in Inbox. Choose `calls` in the sidebar's Labels section. The heading reads `calls`, and `calls tasks` lists `Fix sink` with `Home`, then `Call bank` with `Inbox`. Quick add there saves `Call dentist` into the list. Test: `the Labels section opens every task with a label across projects`. The suite saves `app-web/test-results/label-view.png`.
 - **Rename and delete.** In the same test, with label `Errands` also present, rename `calls` to `errands`; the heading still reads `calls`, since names are unique ignoring case. Choose `Label actions`, `Rename`, and enter `phone`. The heading and the row chips read `phone`. Choose `Label actions`, `Delete label`, then `Delete`. The app returns to Inbox, `phone` is gone from the Labels section, and `Call bank` remains without chips.
 - **Details picker.** Add `Buy milk @errands`, open it, and choose `Labels errands`. The `Labels` menu opens with focus in `Find or create a label`. Type `groceries` and press Enter; `groceries` is created and checked. Tap `errands` to uncheck it, and press Escape; the chip reads `Labels groceries`. Type ` @err` at the end of the title, click `errands`, and press Enter; the title reads `Buy milk` and the chip reads `Labels groceries, errands`. Test: `the details picker toggles and creates labels, and @ works in the title`. The suite saves `app-web/test-results/label-picker.png`.
@@ -49,4 +50,4 @@ Preconditions:
 - The suite pins the clock, so every task has the same creation time and recency never breaks ties in e2e. `bun test shared/name-search.test.ts` proves recency ordering.
 - Picking a label in the details menu keeps the menu open. Close it with Escape or a tap outside.
 - On a phone the picker's field does not take focus until tapped, so the keyboard stays down.
-- Find row chips with `.label-chip` or `[data-label="<name>"]` inside the row. They are text in the row's button, not a separate list.
+- Find row chips with `.label-chip` or `[data-label="<name>"]` inside the row. They sit inside the title's two-line block, not a separate list.
