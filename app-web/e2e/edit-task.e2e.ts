@@ -55,7 +55,7 @@ test('task details edit the title, notes, date, priority, and labels, and keep t
 	await expect(details.getByRole('button', { name: 'Labels errands' })).toBeVisible();
 });
 
-test.fixme('Labels in task details opens with focus in its search field', async ({ app, page }) => {
+test('Labels in task details opens with focus in its search field', async ({ app, page }) => {
 	await app.add('Buy milk');
 	await app.row('Buy milk').getByRole('button', { name: 'Buy milk', exact: true }).click();
 	await app.details().getByRole('button', { name: 'Add labels' }).click();

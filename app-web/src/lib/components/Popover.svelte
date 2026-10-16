@@ -53,11 +53,15 @@
 		};
 	}
 
-	$effect(() => {
-		if (!panel) return;
-		panel.showPopover();
-		place(panel);
-	});
+	/**
+	 * The panel owns focus on open: a child's own mount action or effect runs before this one, while the panel is
+	 * still hidden, so its focus() would be a no-op. Children mark the field instead.
+	 */
+	function show(node: HTMLDivElement) {
+		node.showPopover();
+		place(node);
+		node.querySelector<HTMLElement>('[data-autofocus]')?.focus();
+	}
 
 	/** The anchor can move under a fixed panel, as when its row scrolls, so the panel follows it. */
 	function onWindowMove() {
@@ -89,6 +93,7 @@
 	{#if open}
 		<div
 			bind:this={panel}
+			{@attach show}
 			popover="manual"
 			role="dialog"
 			aria-label={label}
