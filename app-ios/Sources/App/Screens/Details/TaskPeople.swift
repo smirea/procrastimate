@@ -42,6 +42,7 @@ struct TaskPeople: View {
             }
         }
         .padding(.horizontal, 4)
+        .padding(.bottom, shown ? 16 : 0)
         .task(id: task.id) { await load() }
     }
 

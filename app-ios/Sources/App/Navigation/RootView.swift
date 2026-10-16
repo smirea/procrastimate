@@ -36,17 +36,49 @@ struct RootView: View {
                 TabStack(tab: .browse) { BrowseScreen() }
             }
         }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            TabBar(inboxBadge: today.overdue.count + today.today.count)
-        }
+        // An overlay, not a `safeAreaInset`: the tab view hands its tabs a fresh safe area, so each tab's screens make room
+        // with `tabBarClearance()` instead.
+        .overlay(alignment: .bottom) { TabBar(inboxBadge: today.overdue.count + today.today.count) }
         .overlay(alignment: .bottom) { QuickAddOverlay() }
         .overlay { RambleOverlay() }
         .overlay(alignment: navigator.quickAdd == nil ? .bottom : .top) {
             // Quick add covers the bottom of the screen, so toasts move to the top while it is open, as on the web.
-            ToastStack().padding(navigator.quickAdd == nil ? .bottom : .top, navigator.quickAdd == nil ? 124 : 8)
+            ToastStack()
+                .padding(.top, navigator.quickAdd == nil ? 0 : 8)
+                .tabBarClearance()
         }
         .sensoryFeedback(.success, trigger: actions.completions)
         .searchShortcuts()
+    }
+}
+
+/// The floating tab bar's size and place, shared by the bar and the inset that keeps every tab's content clear of it.
+enum TabBarMetrics {
+    static let height: CGFloat = 62
+    /// From the screen's bottom edge, where the system tab bar sits, whatever the home indicator inset.
+    static let bottomMargin: CGFloat = 21
+    static let contentGap: CGFloat = 12
+    /// How far above the screen's bottom edge content must end to clear the bar.
+    static let clearance = bottomMargin + height + contentGap
+}
+
+extension View {
+    /// Lets a tab's screen scroll its last content above the floating tab bar and add button. The room shrinks by the
+    /// safe area already below the content and goes away while the keyboard, which hides the bar, takes that space.
+    func tabBarClearance() -> some View { modifier(TabBarClearance()) }
+}
+
+private struct TabBarClearance: ViewModifier {
+    @State private var bottomInset: CGFloat = 0
+
+    func body(content: Content) -> some View {
+        content
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                Color.clear
+                    .frame(height: max(0, TabBarMetrics.clearance - bottomInset))
+                    .allowsHitTesting(false)
+            }
+            .onGeometryChange(for: CGFloat.self, of: { $0.safeAreaInsets.bottom }) { bottomInset = $0 }
     }
 }
 
@@ -57,7 +89,6 @@ private struct TabBar: View {
     @Environment(Store.self) private var store
     @Namespace private var selection
     @State private var keyboardShown = false
-    @State private var bottomInset: CGFloat = 0
     let inboxBadge: Int
 
     var body: some View {
@@ -74,7 +105,7 @@ private struct TabBar: View {
                     Image(systemName: "plus")
                         .font(.title2.weight(.semibold))
                         .foregroundStyle(.white)
-                        .frame(width: 62, height: 62)
+                        .frame(width: TabBarMetrics.height, height: TabBarMetrics.height)
                         .contentShape(.circle)
                         // On the label, not the button: glass around a plain-style button shrinks its tap area to the glyph.
                         .glassEffect(.regular.tint(.accent).interactive(), in: .circle)
@@ -85,10 +116,8 @@ private struct TabBar: View {
         }
         .frame(maxWidth: 520)
         .padding(.horizontal, 21)
-        // 21 pt from the screen's bottom edge, where the system tab bar sits, whatever the home indicator inset.
-        .padding(.bottom, max(0, 21 - bottomInset))
-        .offset(y: max(0, bottomInset - 21))
-        .onGeometryChange(for: CGFloat.self, of: { $0.safeAreaInsets.bottom }) { bottomInset = $0 }
+        .padding(.bottom, TabBarMetrics.bottomMargin)
+        .ignoresSafeArea(.all, edges: .bottom)
         .opacity(hidden ? 0 : 1)
         .allowsHitTesting(!hidden)
         .animation(.snappy(duration: 0.2), value: hidden)
@@ -235,7 +264,9 @@ private struct TabStack<Content: View>: View {
 
     var body: some View {
         NavigationStack(path: Binding(get: { navigator.paths[tab] ?? [] }, set: { navigator.paths[tab] = $0 })) {
-            content().navigationDestination(for: Route.self) { RouteView(route: $0) }
+            content()
+                .tabBarClearance()
+                .navigationDestination(for: Route.self) { RouteView(route: $0).tabBarClearance() }
         }
         .toolbarVisibility(.hidden, for: .tabBar)
     }

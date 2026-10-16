@@ -11,6 +11,7 @@ Inbox lists everything dated by day: Overdue, Today, and each later day with dat
 - `views-today` and `views-upcoming` are removed. Their lists are the Inbox's dated sections.
 - `views-empty` shows `Nothing scheduled` with `Tasks with a date show up here by day.` on an Inbox with nothing dated. An empty No date shows `Inbox zero` with `Press Q to capture a task.`, or `Tap + to capture a task.` on a phone and iOS.
 - `views-counts` shows the Inbox count, overdue plus today, in the web sidebar and as the iOS tab badge. The web sidebar also counts No date. The iOS No date tab has no badge.
+- `views-scroll-end` scrolls the last row of every list, and the end of Browse and search results, fully clear of the floating add button and the iOS tab bar, with the keyboard up or down. On iOS the room goes away while the keyboard is up.
 - `views-compact` (iOS only) shows rows without separators and 6 pt vertical padding. The Inbox root has no navigation bar and fades a small `Inbox` title in once scrolled. Pushed lists use an inline bar with the same small title on scroll.
 
 ## How to get to it (user POV)
@@ -34,6 +35,7 @@ Preconditions:
 - **Empty.** Complete every task. Inbox shows `Nothing scheduled` with `Tasks with a date show up here by day.`. No date shows `Inbox zero` with `Press Q to capture a task.`, or `Tap + to capture a task.` on a phone.
 - **Phone.** Tap `Open navigation`; the `Main` navigation slides in. Tap outside it; it closes. Open Inbox; the same sections show. Open No date; `Someday task` shows.
 - **iOS.** The Inbox tab lists the same sections as the web and shows `Nothing scheduled` when empty. The No date tab lists `Someday task` and shows `Inbox zero` when empty. Launch with `PROCRASTIMATE_DEMO=nodate` to open it directly. The Inbox tab carries the overdue plus today count as its badge. Rows have no separators. The bar is hidden at the top, and a small `Inbox` title fades in once the list scrolls. Lists sit on the same tinted canvas as the web with transparent rows.
+- **Scroll to the end.** With more tasks than fit on screen, scroll Inbox, No date, a project, Browse, and search results to the very end. The last row sits fully above the tab bar and the `+` on iOS, and above the floating `Quick add` on a phone. `bun run test:e2e -- e2e/layout.e2e.ts` checks every web view, sheet, and dialog at 1280 px and 393 px.
 - **Proof.** Save a screenshot of the Inbox with every section on each client.
 
 ## Gotchas

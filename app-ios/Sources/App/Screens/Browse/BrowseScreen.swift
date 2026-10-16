@@ -12,7 +12,7 @@ struct BrowseScreen: View {
         let query = navigator.searchQuery
         Group {
             if query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                BrowseList()
+                ScrollViewReader { BrowseList(scroll: $0) }
             } else {
                 SearchResults(query: query)
             }
@@ -42,6 +42,7 @@ private struct BrowseList: View {
     @State private var name = ""
     @State private var created = 0
     @FocusState private var nameFocused: Bool
+    let scroll: ScrollViewProxy
 
     var body: some View {
         let labels = Browse.labelsByName(store.labels)
@@ -70,6 +71,7 @@ private struct BrowseList: View {
                 }
                 if adding {
                     TextField("Project name", text: $name)
+                        .id(Self.newProject)
                         .focused($nameFocused)
                         .submitLabel(.done)
                         .onSubmit(createProject)
@@ -158,7 +160,13 @@ private struct BrowseList: View {
             if !nameFocused, adding { createProject() }
         }
         .sensoryFeedback(.success, trigger: created)
+        // A long project list puts the new field below the fold, where it never appears to take focus.
+        .onChange(of: adding) {
+            if adding { withAnimation(.snappy) { scroll.scrollTo(Self.newProject, anchor: .center) } }
+        }
     }
+
+    private static let newProject = "new-project"
 
     private func createProject() {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
