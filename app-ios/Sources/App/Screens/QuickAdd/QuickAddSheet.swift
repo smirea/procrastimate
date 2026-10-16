@@ -58,8 +58,9 @@ private struct QuickAddForm: View {
                 placeholder: "Call mom tomorrow 5pm p1 remind me 30m before",
                 projectId: resolved.projectId,
                 listAt: $listAt,
-                // Four lines, and three in a subtask field, so the sheet fits above the keyboard with its subtasks.
-                maxHeight: 104,
+                // Ten lines, so a long dictated title stays readable. With the subtask list open the card has to fit it
+                // above the keyboard too, so the title goes back to four lines and the subtask field stays at three.
+                maxHeight: subtasksOpen || !subtasks.isEmpty ? 104 : 240,
                 focused: $focused,
                 onSubmit: { submit() }
             )

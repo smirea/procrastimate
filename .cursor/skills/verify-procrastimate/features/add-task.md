@@ -6,7 +6,7 @@ Add a task lets Stefan capture a task in one motion from anywhere in the app. Re
 
 - `add-open` opens quick add from each entry point.
 - `add-save` saves a task with a title and lands it in the current list.
-- `add-due` parses a due date typed into the title, such as `tomorrow` or `fri 5pm`.
+- `add-due` parses a due date typed into the title, such as `tomorrow`, `fri 5pm`, or a month name date such as `Dec. 25`, `20th of October`, `Monday, October 19`, or `Oct 19, 10am`.
 - `add-shorthand` parses compact phrases such as `tom 5p`, `eow`, `2d`, `5m`, `1730`, `10/15`, and `the 15th`, and leaves names and ordinary words such as `Tom` and `sun hat` as text. An offset past the year 9999, such as `3929284d`, also stays text.
 - `add-recurrence` parses a repeat such as `every mon`, `daily`, yearly `every march 2nd`, or a weekday list such as `mon wed fri 7am` or `tue/thu`, shows it as a chip, and stores it on the task. A weekday list in prose, such as `Discuss mon wed plan`, stays text.
 - `add-highlight` highlights each parsed phrase inline and shows its value as a chip.
@@ -19,6 +19,7 @@ Add a task lets Stefan capture a task in one motion from anywhere in the app. Re
 - `add-dock` attaches quick add to the keyboard on a phone and hides the add button while it is open.
 - `add-chip-row` keeps the attribute chips on one line that scrolls sideways, with a `+` after it whose menu lists every action, opens the picked one's picker in the row, and pins or unpins buttons for every device.
 - `add-subtasks` takes subtask lines under the title from the checklist chip, parses each like `Add subtask`, removes a line with its `×`, and saves them under the new task in order.
+- `add-grow` grows the title with long text, to ten lines on iOS and twelve on the web (less when a phone web screen has no room above the keyboard), or four while the subtask list is open, with the subtask field at three, then scrolls with the caret kept in view, including after a paste.
 - `add-toast` moves a toast to the top of a phone screen while quick add is open, so it never covers the chips.
 
 ## How to get to it (user POV)

@@ -18,11 +18,30 @@ test('title, notes, and subtask fields grow with their text instead of cutting i
 	const empty = await box(taskName);
 	expect(empty.height).toBeLessThan(empty.lineHeight * 1.5);
 
-	// Quick add sits above the keyboard, so its title stops growing at four lines.
-	await taskName.fill(`${LONG} ${LONG} ${LONG}`);
+	// Quick add's title grows to twelve lines, then scrolls.
+	await taskName.fill(`${LONG} ${LONG} ${LONG} ${LONG} ${LONG} ${LONG}`);
 	const quickCapped = await box(taskName);
-	expect(quickCapped.height).toBeLessThanOrEqual(quickCapped.lineHeight * 4 + 6);
+	expect(quickCapped.height).toBeGreaterThan(quickCapped.lineHeight * 11);
+	expect(quickCapped.height).toBeLessThanOrEqual(quickCapped.lineHeight * 12 + 6);
 	expect(quickCapped.content).toBeGreaterThan(quickCapped.height);
+
+	// With the keyboard up it stops where the sheet's buttons would leave the screen, and a paste keeps the caret in view.
+	await page.evaluate(() => document.documentElement.style.setProperty('--keyboard-inset', '336px'));
+	await taskName.fill('');
+	await page.keyboard.insertText(`${LONG} ${LONG} ${LONG} ${LONG} ${LONG} ${LONG} END`);
+	await expect
+		.poll(() => taskName.evaluate(el => el.scrollHeight - el.clientHeight - el.scrollTop))
+		.toBeLessThanOrEqual(3);
+	const keyboardCapped = await box(taskName);
+	expect(keyboardCapped.height).toBeLessThan(keyboardCapped.lineHeight * 10.5);
+	await expect(app.quickAdd().getByRole('button', { name: 'Add task', exact: true })).toBeInViewport();
+	await page.evaluate(() => document.documentElement.style.setProperty('--keyboard-inset', '0px'));
+
+	// With the subtask list open, the sheet has to fit it too, so the title goes back to four lines.
+	await app.quickAdd().getByRole('button', { name: 'Add subtask' }).click();
+	const withSubtasks = await box(taskName);
+	expect(withSubtasks.height).toBeLessThanOrEqual(withSubtasks.lineHeight * 4 + 6);
+	await taskName.focus();
 
 	// A pasted line break joins the lines, since the field is one line that wraps.
 	await taskName.fill(`${LONG}\nsecond line`);

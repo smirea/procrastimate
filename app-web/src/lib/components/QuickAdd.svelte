@@ -293,7 +293,7 @@
 				autofocus
 				enterkeyhint="send"
 				reserve={showMic}
-				lines={4}
+				lines={subtasksOpen || subtasks.length ? 4 : 12}
 				class="text-[17px] font-medium"
 				{onkeydown}
 			/>
