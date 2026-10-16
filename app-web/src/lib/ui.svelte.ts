@@ -12,6 +12,20 @@ export const motion = <T extends { duration?: number }>(params: T): T =>
 	reducedMotion.current ? { ...params, duration: 0 } : params;
 
 /**
+ * Attach to a list item or group that animates out: `{@attach leaving}`. A row moving between lists exists twice while it
+ * animates. Svelte makes the leaving copy inert, which not every screen reader honors and Playwright's role queries
+ * ignore, so this mirrors `inert` into `aria-hidden`, and Svelte clearing `inert` when the item comes back clears it too.
+ */
+export function leaving(node: HTMLElement) {
+	const observer = new MutationObserver(() => {
+		if (node.inert) node.setAttribute('aria-hidden', 'true');
+		else node.removeAttribute('aria-hidden');
+	});
+	observer.observe(node, { attributes: true, attributeFilter: ['inert'] });
+	return () => observer.disconnect();
+}
+
+/**
  * Publishes the on-screen keyboard's height as `--keyboard-inset` so bottom sheets sit above it.
  * iOS Safari overlays the keyboard instead of resizing the layout viewport, so only the visual viewport shrinks.
  */

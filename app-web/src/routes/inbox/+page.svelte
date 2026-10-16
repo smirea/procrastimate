@@ -6,7 +6,7 @@
 	import TaskList from '#lib/components/TaskList.svelte';
 	import SectionHeading from '#lib/components/SectionHeading.svelte';
 	import { store } from '#lib/store.svelte.ts';
-	import { clock, motion } from '#lib/ui.svelte.ts';
+	import { clock, leaving, motion } from '#lib/ui.svelte.ts';
 	import { todayTasks, upcomingGroups } from 'shared/views.ts';
 	import { dayHeading } from 'shared/format.ts';
 
@@ -42,7 +42,7 @@
 		</section>
 	{/if}
 	{#each days as group (group.date)}
-		<section class="mb-6" aria-label={dayHeading(group.date, clock.today)} animate:flip={motion({ duration: 240, easing: cubicOut })} transition:fade={motion({ duration: 160 })}>
+		<section {@attach leaving} class="mb-6" aria-label={dayHeading(group.date, clock.today)} animate:flip={motion({ duration: 240, easing: cubicOut })} transition:fade={motion({ duration: 160 })}>
 			<SectionHeading heading={dayHeading(group.date, clock.today)} tasks={group.tasks} />
 			<TaskList tasks={group.tasks} showProject="assigned" label={`Tasks on ${group.date}`} />
 		</section>

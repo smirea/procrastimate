@@ -116,6 +116,8 @@ const SPELLED_ORDINAL_WORD = new RegExp(
 /** Which weekday of the month, as in `every 3rd Monday` or `every last Friday`. */
 const NTH_WORDS = ['first', 'second', 'third', 'fourth'];
 const NTH = String.raw`(?:[1-4](?:st|nd|rd|th)|${NTH_WORDS.join('|')}|last)`;
+/** Any day ordinal, so `5th Monday`, which most months lack, can be claimed as text rather than half read. */
+const ANY_ORDINAL = String.raw`(?:\d{1,2}(?:st|nd|rd|th)|${SPELLED_ORDINAL})`;
 /** `mo` is listed before `m` everywhere, so months never read as minutes. */
 const DAY_UNIT = String.raw`(?:d(?:ays?)?|w(?:ks?|eeks?)?|mo(?:s|nths?)?|y(?:rs?|ears?)?)`;
 const CLOCK_UNIT = String.raw`(?:m(?:ins?|inutes?)?|h(?:rs?|ours?)?)`;
@@ -137,6 +139,7 @@ const DATE = [
 	WEEKDAY,
 	String.raw`in\s+\d+\s*${DAY_UNIT}`,
 	String.raw`\d+(?:d|wks?|w|mos?)`,
+	String.raw`the\s+(?:${ANY_ORDINAL}|last)\s+${WEEKDAY}\b(?:\s+of\s+(?:the\s+month|${MONTH}\b))?`,
 	String.raw`the\s+(?:\d{1,2}(?:st|nd|rd|th)|${SPELLED_ORDINAL}(?!\s+${MONTH}\b))(?!\s+${WEEKDAY}\b)(?:\s+of\s+the\s+month)?`,
 	String.raw`\d{1,2}/\d{1,2}(?:/(?:\d{4}|\d{2}))?`,
 ].join('|');
@@ -188,6 +191,10 @@ const GUARDS: RegExp[] = [
 		String.raw`(?<=\bthe\s+)${SPELLED_ORDINAL}(?=\s+(?!(?:at|(?:of\s+)?${MONTH}|of\s+the\s+month|${WEEKDAY}|p[1-4]|remind)\b)[a-z])`,
 		'gi',
 	),
+	new RegExp(
+		String.raw`(?<=\bthe\s+)(?<!\b(?:months?|monthly)\s+(?:on\s+)?the\s+)(?:${ANY_ORDINAL}|last)\s+${WEEKDAY}\b(?=\s+(?!(?:${PHRASE_WORDS}|of)\b)[a-z]+(?![\w'’]))`,
+		'gi',
+	),
 ];
 
 /**
@@ -195,7 +202,7 @@ const GUARDS: RegExp[] = [
  * else, as in `discuss mon wed plan`, the whole list stays text, since no single day is meant.
  */
 const WEEKDAY_LIST_CONTEXT = new RegExp(
-	String.raw`(?<lead>\b(?:every|each)\s+|(?<![\w:/.$€£])(?:${AT})?(?:${TIME})\s+(?:on\s+)?)?(?<![\w#!$€£]|\d[/:.])(?<list>${WEEKDAY_LIST})(?<trail>\s+(?:${AT})?(?:${TIME})(?![\w!]|[/:]\d))?`,
+	String.raw`(?<lead>\b(?:every|each)\s+|\bevery\s+other\s+|(?<![\w:/.$€£])(?:${AT})?(?:${TIME})\s+(?:on\s+)?)?(?<![\w#!$€£]|\d[/:.])(?<list>${WEEKDAY_LIST})(?<trail>\s+(?:${AT})?(?:${TIME})(?![\w!]|[/:]\d))?`,
 	'gi',
 );
 
@@ -337,7 +344,29 @@ const DAY_WORDS: Record<string, (today: DateKey) => Day> = {
 	eow: today => ({ date: nextWeekday(today, 5), time: toTimeOfDay(17, 0) }),
 };
 
+/** The next nth weekday of a month, counting today, or of the named month. Most months lack a 5th weekday. */
+function nthWeekdayDate(today: DateKey, nthText: string, weekdayText: string, monthText?: string): DateKey | null {
+	const weekday = weekdayIndex(weekdayText);
+	const week = nthText === 'last' ? -1 : Number(nthText);
+	if (weekday === -1 || !(week === -1 || (week >= 1 && week <= 4))) return null;
+	const recurrence: Recurrence = {
+		interval: 1,
+		unit: 'month',
+		nth: { week: week as 1 | 2 | 3 | 4 | -1, weekday: weekday as Weekday },
+	};
+	if (!monthText) return alignToRecurrence(today, recurrence);
+	const month = monthIndex(monthText);
+	if (month === -1) return null;
+	const inYear = (year: number) => alignToRecurrence(calendarDate(year, month, 1)!, recurrence);
+	const date = inYear(Number(today.slice(0, 4)));
+	return date && date < today ? inYear(Number(today.slice(0, 4)) + 1) : date;
+}
+
 const DATE_READERS: Array<[RegExp, (m: RegExpExecArray, today: DateKey) => DateKey | null]> = [
+	[
+		/^the (\d{1,2}|last)(?:st|nd|rd|th)? ([a-z]+)(?: of (?:the month|([a-z]+)))?$/,
+		(m, today) => nthWeekdayDate(today, m[1]!, m[2]!, m[3]),
+	],
 	[/^(?:next|nxt) week$/, (_, today) => addDays(today, daysToNextMonday(today))],
 	[/^(?:next|nxt) ([a-z]+)$/, (m, today) => addDays(today, daysToNextMonday(today) + ((weekdayIndex(m[1]!) + 6) % 7))],
 	[/^([a-z]+)$/, (m, today) => (weekdayIndex(m[1]!) === -1 ? null : nextWeekday(today, weekdayIndex(m[1]!)))],
@@ -461,6 +490,7 @@ function readRecurrence(groups: Record<string, string | undefined>, ctx: Context
 		yearDay,
 		other,
 		otherUnit,
+		otherDays,
 		interval,
 		intervalUnit,
 		unit,
@@ -493,12 +523,14 @@ function readRecurrence(groups: Record<string, string | undefined>, ctx: Context
 	}
 	const unitText = otherUnit ?? intervalUnit ?? unit;
 	const days = sortWeekdays(
-		[...(weekdays ?? listed ?? '').matchAll(WEEKDAY_WORD)].map(w => weekdayIndex(w[0].toLowerCase()) as Weekday),
+		[...(weekdays ?? listed ?? otherDays ?? '').matchAll(WEEKDAY_WORD)].map(
+			w => weekdayIndex(w[0].toLowerCase()) as Weekday,
+		),
 	);
 	const recurrence: Recurrence | null = workday
 		? { interval: 1, unit: 'weekday' }
 		: days.length
-			? weeklyOn(1, days)
+			? weeklyOn(other ? 2 : 1, days)
 			: adverb
 				? { interval: 1, unit: RECURRENCE_ADVERBS[adverb.toLowerCase()]! }
 				: unitText
@@ -540,10 +572,12 @@ const RULES: Rule[] = [
 		repeatable: false,
 		guarded: true,
 		pattern: new RegExp(
-			String.raw`${BEFORE}(?:(?:(?:every|each)\s+(?:(?<months>\d+|other)\s+)?months?|monthly)\s+(?:on\s+)?the\s+(?:(?<monthNth>${NTH})\s+(?<monthNthDay>${WEEKDAY})\b|(?<monthDay>${ORDINAL}|${SPELLED_ORDINAL}))|(?:every|each)\s+(?:(?<yearDay>${MONTH_DAY})|(?<nth>${NTH})\s+(?<nthDay>${WEEKDAY})\b(?:\s+of\s+(?:the|each|every)\s+month)?|(?<dayOfMonth>(?:\d{1,2}(?:st|nd|rd|th)|${SPELLED_ORDINAL})\s+of\s+(?:the|each|every)\s+month|\d{1,2}(?:st|nd|rd|th)(?!\s+(?!(?:at|p[1-4]|remind)\b)[a-z]))|(?<other>other)\s+(?<otherUnit>day|week|month|year)|(?<interval>\d+)\s*(?<intervalUnit>${DAY_UNIT})|(?<unit>day|week|month|year)|(?<workday>weekday|workday)|(?<weekdays>${WEEKDAY_LIST}|${WEEKDAY}))|(?<listed>${WEEKDAY_LIST})|(?<adverb>daily|weekdays|weekly|monthly|yearly|annually))${AFTER}`,
+			String.raw`${BEFORE}(?:(?:(?:every|each)\s+(?:(?<months>\d+|other)\s+)?months?|monthly)\s+(?:on\s+)?the\s+(?:(?<monthNth>${NTH})\s+(?<monthNthDay>${WEEKDAY})\b|(?<monthNoNth>${ANY_ORDINAL}\s+${WEEKDAY})\b|(?<monthDay>${ORDINAL}|${SPELLED_ORDINAL}))|(?:every|each)\s+(?:(?<yearDay>${MONTH_DAY})|(?<nth>${NTH})\s+(?<nthDay>${WEEKDAY})\b(?:\s+of\s+(?:the|each|every)\s+month)?|(?<noNth>${ANY_ORDINAL}\s+${WEEKDAY})\b(?:\s+of\s+(?:the|each|every)\s+month)?|(?<dayOfMonth>(?:\d{1,2}(?:st|nd|rd|th)|${SPELLED_ORDINAL})\s+of\s+(?:the|each|every)\s+month|\d{1,2}(?:st|nd|rd|th)(?!\s+(?!(?:at|p[1-4]|remind)\b)[a-z]))|(?<other>other)\s+(?:(?<otherUnit>day|week|month|year)|(?<=\bevery\s+other\s+)(?<otherDays>${WEEKDAY_LIST}|${WEEKDAY}))|(?<interval>\d+)\s*(?<intervalUnit>${DAY_UNIT})|(?<unit>day|week|month|year)|(?<workday>weekday|workday)|(?<weekdays>${WEEKDAY_LIST}|${WEEKDAY}))|(?<listed>${WEEKDAY_LIST})|(?<adverb>daily|weekdays|weekly|monthly|yearly|annually))${AFTER}`,
 			'gi',
 		),
 		read: (m, ctx) => {
+			// Most months have no 5th Monday, so `every 5th Monday` stays text whole rather than leave `every 5th` behind.
+			if (m.groups?.noNth || m.groups?.monthNoNth) return 'text';
 			const phrase = readRecurrence(m.groups ?? {}, ctx);
 			if (!phrase) return null;
 			const { interval } = phrase.recurrence;

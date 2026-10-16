@@ -37,6 +37,8 @@ public enum QuickAdd {
     /// Which weekday of the month, as in `every 3rd Monday` or `every last Friday`.
     static let nthWords = ["first", "second", "third", "fourth"]
     static let nth = #"(?:[1-4](?:st|nd|rd|th)|\#(nthWords.joined(separator: "|"))|last)"#
+    /// Any day ordinal, so `5th Monday`, which most months lack, can be claimed as text rather than half read.
+    static let anyOrdinal = #"(?:\d{1,2}(?:st|nd|rd|th)|\#(spelledOrdinal))"#
     /// `mo` is listed before `m` everywhere, so months never read as minutes.
     static let dayUnit = #"(?:d(?:ays?)?|w(?:ks?|eeks?)?|mo(?:s|nths?)?|y(?:rs?|ears?)?)"#
     static let clockUnit = #"(?:m(?:ins?|inutes?)?|h(?:rs?|ours?)?)"#
@@ -57,6 +59,7 @@ public enum QuickAdd {
         weekday,
         #"in\s+\d+\s*\#(dayUnit)"#,
         #"\d+(?:d|wks?|w|mos?)"#,
+        #"the\s+(?:\#(anyOrdinal)|last)\s+\#(weekday)\b(?:\s+of\s+(?:the\s+month|\#(month)\b))?"#,
         #"the\s+(?:\d{1,2}(?:st|nd|rd|th)|\#(spelledOrdinal)(?!\s+\#(month)\b))(?!\s+\#(weekday)\b)(?:\s+of\s+the\s+month)?"#,
         #"\d{1,2}/\d{1,2}(?:/(?:\d{4}|\d{2}))?"#,
     ].joined(separator: "|")
@@ -102,6 +105,10 @@ public enum QuickAdd {
             #"(?<=\bthe\s+)\#(spelledOrdinal)(?=\s+(?!(?:at|(?:of\s+)?\#(month)|of\s+the\s+month|\#(weekday)|p[1-4]|remind)\b)[a-z])"#,
             ignoreCase: true
         ),
+        Pattern(
+            #"(?<=\bthe\s+)(?<!\b(?:months?|monthly)\s+(?:on\s+)?the\s+)(?:\#(anyOrdinal)|last)\s+\#(weekday)\b(?=\s+(?!(?:\#(phraseWords)|of)\b)[a-z]+(?![\w'’]))"#,
+            ignoreCase: true
+        ),
     ]
 
     /// Extra guards for speech. A bare four-digit number is not a time without `at`, compact units such as `5m` or
@@ -138,7 +145,7 @@ public enum QuickAdd {
     /// A weekday list repeats after `every`, next to a time, or when slashed, as in `tue/thu`. Anywhere else, as in
     /// `discuss mon wed plan`, the whole list stays text, since no single day is meant.
     static let weekdayListContext = Pattern(
-        #"(?<lead>\b(?:every|each)\s+|(?<![\w:/.$€£])(?:\#(at))?(?:\#(time))\s+(?:on\s+)?)?(?<![\w#!$€£]|\d[/:.])(?<list>\#(weekdayList))(?<trail>\s+(?:\#(at))?(?:\#(time))(?![\w!]|[/:]\d))?"#,
+        #"(?<lead>\b(?:every|each)\s+|\bevery\s+other\s+|(?<![\w:/.$€£])(?:\#(at))?(?:\#(time))\s+(?:on\s+)?)?(?<![\w#!$€£]|\d[/:.])(?<list>\#(weekdayList))(?<trail>\s+(?:\#(at))?(?:\#(time))(?![\w!]|[/:]\d))?"#,
         ignoreCase: true
     )
 
@@ -318,7 +325,25 @@ public enum QuickAdd {
         "eow": { Day(date: nextWeekday($0, 5), time: Dates.toTimeOfDay(hours: 17, minutes: 0)) },
     ]
 
+    /// The next nth weekday of a month, counting today, or of the named month. Most months lack a 5th weekday.
+    static func nthWeekdayDate(_ today: DateKey, _ nthText: String, _ weekdayText: String, _ monthText: String?) -> DateKey? {
+        let weekday = weekdayIndex(weekdayText)
+        let week = nthText == "last" ? -1 : number(nthText) ?? 0
+        guard weekday != -1, week == -1 || (1...4).contains(week) else { return nil }
+        let recurrence = Recurrence(interval: 1, unit: .month, nth: NthWeekday(week: week, weekday: weekday))
+        guard let monthText else { return Dates.alignToRecurrence(today, recurrence) }
+        let month = monthIndex(monthText)
+        guard month != -1 else { return nil }
+        let year = Dates.parts(today).year
+        let inYear = { (year: Int) in calendarDate(year, month, 1).flatMap { Dates.alignToRecurrence($0, recurrence) } }
+        guard let date = inYear(year) else { return nil }
+        return date < today ? inYear(year + 1) : date
+    }
+
     static let dateReaders: [(Pattern, @Sendable (Found, DateKey) -> DateKey?)] = [
+        (Pattern(#"^the (\d{1,2}|last)(?:st|nd|rd|th)? ([a-z]+)(?: of (?:the month|([a-z]+)))?$"#), { m, today in
+            nthWeekdayDate(today, m[1]!, m[2]!, m[3])
+        }),
         (Pattern(#"^(?:next|nxt) week$"#), { _, today in Dates.addDays(today, daysToNextMonday(today)) }),
         (Pattern(#"^(?:next|nxt) ([a-z]+)$"#), { m, today in
             Dates.addDays(today, daysToNextMonday(today) + (weekdayIndex(m[1]!) + 6) % 7)
@@ -458,12 +483,14 @@ public enum QuickAdd {
     static let recurrenceRule = Rule(
         kind: .recurrence,
         pattern: Pattern(
-            #"\#(before)(?:(?:(?:every|each)\s+(?:(?<months>\d+|other)\s+)?months?|monthly)\s+(?:on\s+)?the\s+(?:(?<monthNth>\#(nth))\s+(?<monthNthDay>\#(weekday))\b|(?<monthDay>\#(ordinal)|\#(spelledOrdinal)))|(?:every|each)\s+(?:(?<yearDay>\#(monthDay))|(?<nth>\#(nth))\s+(?<nthDay>\#(weekday))\b(?:\s+of\s+(?:the|each|every)\s+month)?|(?<dayOfMonth>(?:\d{1,2}(?:st|nd|rd|th)|\#(spelledOrdinal))\s+of\s+(?:the|each|every)\s+month|\d{1,2}(?:st|nd|rd|th)(?!\s+(?!(?:at|p[1-4]|remind)\b)[a-z]))|(?<other>other)\s+(?<otherUnit>day|week|month|year)|(?<interval>\d+)\s*(?<intervalUnit>\#(dayUnit))|(?<unit>day|week|month|year)|(?<workday>weekday|workday)|(?<weekdays>\#(weekdayList)|\#(weekday)))|(?<listed>\#(weekdayList))|(?<adverb>daily|weekdays|weekly|monthly|yearly|annually))\#(after)"#,
+            #"\#(before)(?:(?:(?:every|each)\s+(?:(?<months>\d+|other)\s+)?months?|monthly)\s+(?:on\s+)?the\s+(?:(?<monthNth>\#(nth))\s+(?<monthNthDay>\#(weekday))\b|(?<monthNoNth>\#(anyOrdinal)\s+\#(weekday))\b|(?<monthDay>\#(ordinal)|\#(spelledOrdinal)))|(?:every|each)\s+(?:(?<yearDay>\#(monthDay))|(?<nth>\#(nth))\s+(?<nthDay>\#(weekday))\b(?:\s+of\s+(?:the|each|every)\s+month)?|(?<noNth>\#(anyOrdinal)\s+\#(weekday))\b(?:\s+of\s+(?:the|each|every)\s+month)?|(?<dayOfMonth>(?:\d{1,2}(?:st|nd|rd|th)|\#(spelledOrdinal))\s+of\s+(?:the|each|every)\s+month|\d{1,2}(?:st|nd|rd|th)(?!\s+(?!(?:at|p[1-4]|remind)\b)[a-z]))|(?<other>other)\s+(?:(?<otherUnit>day|week|month|year)|(?<=\bevery\s+other\s+)(?<otherDays>\#(weekdayList)|\#(weekday)))|(?<interval>\d+)\s*(?<intervalUnit>\#(dayUnit))|(?<unit>day|week|month|year)|(?<workday>weekday|workday)|(?<weekdays>\#(weekdayList)|\#(weekday)))|(?<listed>\#(weekdayList))|(?<adverb>daily|weekdays|weekly|monthly|yearly|annually))\#(after)"#,
             ignoreCase: true
         ),
         repeatable: false,
         guarded: true,
         read: { m, ctx in
+            // Most months have no 5th Monday, so `every 5th Monday` stays text whole rather than leave `every 5th` behind.
+            if m["noNth"] != nil || m["monthNoNth"] != nil { return .text }
             guard let phrase = readRecurrence(m, ctx) else { return nil }
             // Too long a repeat stays text, and `1000` in `every 1000 days` must not then read as a time.
             guard (1...Dates.maxRecurrenceInterval).contains(phrase.recurrence.interval) else { return .text }
@@ -497,13 +524,13 @@ public enum QuickAdd {
         }
         let unitText = m["otherUnit"] ?? m["intervalUnit"] ?? m["unit"]
         let days = Dates.sortWeekdays(
-            weekdayWord.matches(in: m["weekdays"] ?? m["listed"] ?? "").map { weekdayIndex($0.value.lowercased()) }
+            weekdayWord.matches(in: m["weekdays"] ?? m["listed"] ?? m["otherDays"] ?? "").map { weekdayIndex($0.value.lowercased()) }
         )
         let recurrence: Recurrence?
         if m["workday"] != nil {
             recurrence = Recurrence(interval: 1, unit: .weekday)
         } else if !days.isEmpty {
-            recurrence = Dates.weeklyOn(1, days)
+            recurrence = Dates.weeklyOn(m["other"] != nil ? 2 : 1, days)
         } else if let adverb = m["adverb"] {
             recurrence = recurrenceAdverbs[adverb.lowercased()].map { Recurrence(interval: 1, unit: $0) }
         } else if let unitText, let unit = unitOf(unitText)?.recurrenceUnit {

@@ -45,10 +45,45 @@ export async function deviceHeader(page: Page): Promise<Record<string, string>> 
 	return { 'x-procrastimate-device': deviceId };
 }
 
+/**
+ * Collects every uncaught error in the context's pages. The pinned clock runs timer callbacks itself and logs what
+ * they throw with `console.error(error)` instead of letting it escape, so a console error whose first argument is an
+ * Error counts too. The app never logs an Error itself, and the browser's own lines, such as `Failed to load
+ * resource`, carry no arguments.
+ */
+export function watchPageErrors(context: BrowserContext) {
+	const errors: string[] = [];
+	const pending: Promise<void>[] = [];
+	context.on('weberror', error => errors.push(String(error.error())));
+	context.on('console', message => {
+		const [first] = message.type() === 'error' ? message.args() : [];
+		if (!first) return;
+		pending.push(
+			first
+				.evaluate(value => (value instanceof Error ? String(value) : null))
+				.then(
+					error => {
+						if (error) errors.push(error);
+					},
+					// The page navigated before the argument could be read, so judge by the logged text.
+					() => {
+						if (/^\w*Error\b/.test(message.text())) errors.push(message.text());
+					},
+				),
+		);
+	});
+	return async () => {
+		await Promise.all(pending);
+		return errors;
+	};
+}
+
 export const test = base.extend<{ app: App }>({
 	context: async ({ context }, use) => {
 		await signInAccount(context);
+		const errors = watchPageErrors(context);
 		await use(context);
+		expect(await errors(), 'uncaught page errors').toEqual([]);
 	},
 	app: async ({ page }, use) => {
 		await page.clock.setFixedTime(NOW);
@@ -68,7 +103,8 @@ export class App {
 	quickAdd = () => this.page.getByRole('dialog', { name: 'Quick add' });
 	taskInput = () => this.quickAdd().getByRole('textbox', { name: 'Task name' });
 	details = () => this.page.getByRole('dialog', { name: 'Task details' });
-	row = (title: string) => this.page.locator(`[data-task="${title}"]`);
+	/** Skips a row animating out, which `leaving` hides from assistive tech, so a moving row resolves once. */
+	row = (title: string) => this.page.locator(`[data-task="${title}"]:not([aria-hidden="true"] *)`);
 	list = (name: string) => this.page.getByRole('list', { name });
 	nav = (name: string) => this.page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name });
 

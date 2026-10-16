@@ -40,12 +40,15 @@
 	import { followCaret } from '../caret.ts';
 
 	let { task, arrival }: { task: Task; arrival: Arrival } = $props();
+	// TaskSheet keys details by task id, so it never changes. While the sheet animates out after closing, `task` already
+	// reads undefined, yet the body still gets scroll events.
+	const id = untrack(() => task.id);
 
 	const parent = $derived(task.parentId ? store.task(task.parentId) : undefined);
-	const home = $derived(store.homeOf(task.id));
+	const home = $derived(store.homeOf(id));
 	const space = $derived(store.dataOf(home));
 	const owner = $derived(home ? store.spaces[home]?.owner : undefined);
-	const editable = $derived(store.canEdit(task.id));
+	const editable = $derived(store.canEdit(id));
 	const project = $derived(store.project(task.projectId));
 	const section = $derived(store.section(task.sectionId));
 
@@ -77,7 +80,7 @@
 			: task,
 	);
 
-	const update = (patch: TaskPatch) => store.updateTask(task.id, patch);
+	const update = (patch: TaskPatch) => store.updateTask(id, patch);
 	const eventDue = $derived(task.event ? scheduledDue(task, clock.today) : null);
 
 	function commitTitle() {
@@ -110,7 +113,7 @@
 
 	function remove() {
 		const { parentId } = task;
-		const removed = store.deleteTask(task.id);
+		const removed = store.deleteTask(id);
 		leave(parentId);
 		toasts.show(`Deleted “${removed[0]!.title}”`, { label: 'Undo', run: () => store.undeleteTasks(removed) });
 	}
@@ -126,7 +129,7 @@
 	let body: HTMLDivElement;
 
 	$effect(() => {
-		if (untrack(() => arrival) === 'back') body.scrollTop = sheets.scrollTops.get(untrack(() => task.id)) ?? 0;
+		if (untrack(() => arrival) === 'back') body.scrollTop = sheets.scrollTops.get(id) ?? 0;
 	});
 
 	const imageFiles = (data: DataTransfer | null) => [...(data?.files ?? [])].filter(file => file.type.startsWith('image/'));
@@ -137,7 +140,7 @@
 		const files = imageFiles(event.clipboardData);
 		if (!editable || !files.length) return;
 		event.preventDefault();
-		void images.attach(task.id, files);
+		void images.attach(id, files);
 	}
 
 	let dropping = $state(false);
@@ -157,7 +160,7 @@
 		dropping = false;
 		if (!carriesFiles(event)) return;
 		event.preventDefault();
-		void images.attach(task.id, imageFiles(event.dataTransfer));
+		void images.attach(id, imageFiles(event.dataTransfer));
 	}
 </script>
 
@@ -200,7 +203,7 @@
 				<span class="px-2 text-[12px] text-faint">View only</span>
 			{/if}
 			{#if home === null}
-				<button type="button" class="icon-btn" aria-label="Share task" onclick={() => sheets.openShare({ kind: 'task', id: task.id }, task.title, task.id)}>
+				<button type="button" class="icon-btn" aria-label="Share task" onclick={() => sheets.openShare({ kind: 'task', id }, task.title, id)}>
 					<ShareNetwork size={16} />
 				</button>
 			{/if}
@@ -262,7 +265,7 @@
 		class="flex-1 space-y-4 overflow-y-auto overscroll-contain px-4 pt-4 min-h-0"
 		class:pb-24={editable}
 		class:pb-4={!editable}
-		onscroll={(e) => sheets.scrollTops.set(task.id, e.currentTarget.scrollTop)}
+		onscroll={(e) => sheets.scrollTops.set(id, e.currentTarget.scrollTop)}
 	>
 		{#if editable}
 			<LinkedField text={task.notes} class="border border-transparent px-3.5 py-2.5 text-[14px] whitespace-pre-wrap [overflow-wrap:anywhere] touch:text-base">
@@ -285,7 +288,7 @@
 			</p>
 		{/if}
 		<TaskImages {task} {home} {editable} />
-		{#if editable || store.children(task.id).length}<Subtasks {task} />{/if}
+		{#if editable || store.children(id).length}<Subtasks {task} />{/if}
 		<TaskComments {task} {home} />
 		<TaskActivity {task} {home} />
 	</div>
@@ -294,7 +297,7 @@
 			{#if task.completedAt === null}
 				<button type="button" class="floating pointer-events-auto bg-[var(--tone-soon)]" onclick={complete}><Check size={16} weight="bold" />Complete</button>
 			{:else}
-				<button type="button" class="floating pointer-events-auto bg-accent" onclick={() => store.reopenTask(task.id)}><ArrowCounterClockwise size={16} weight="bold" />Reopen</button>
+				<button type="button" class="floating pointer-events-auto bg-accent" onclick={() => store.reopenTask(id)}><ArrowCounterClockwise size={16} weight="bold" />Reopen</button>
 			{/if}
 			<button type="button" class="floating pointer-events-auto bg-[var(--tone-overdue)]" aria-label="Delete task" onclick={remove}><Trash size={16} weight="bold" />Delete</button>
 		</div>

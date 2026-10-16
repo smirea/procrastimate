@@ -82,13 +82,11 @@ test('completing a recurring parent moves it to the next occurrence, resets its 
 
 	await parent.getByRole('checkbox', { name: 'Complete Weekly review' }).click();
 	await expect(page.getByText(/Completed “Weekly review”, next due .*Oct 23/)).toBeVisible();
-	await expect(parent.filter({ hasText: 'Oct 23' })).toBeVisible();
-	await expect(parent).toHaveCount(1);
+	await expect(parent).toContainText('Oct 23');
 	await expect(parent.getByRole('img', { name: '0 of 2 subtasks done' })).toBeVisible();
 
 	await page.getByRole('button', { name: 'Undo' }).click();
-	await expect(parent.filter({ hasText: 'Friday' })).toBeVisible();
-	await expect(parent).toHaveCount(1);
+	await expect(parent).toContainText('Friday');
 	await expect(parent.getByRole('img', { name: '2 of 2 subtasks done' })).toBeVisible();
 });
 
