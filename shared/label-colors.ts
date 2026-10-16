@@ -22,8 +22,8 @@ export const LABEL_COLORS = [
 export const labelColorSchema = z.enum(LABEL_COLORS).meta({ id: 'LabelColor' });
 export type LabelColor = z.infer<typeof labelColorSchema>;
 
-const HINTS: Partial<Record<LabelColor, readonly string[]>> = {
-	red: ['bug', 'bugs', 'urgent', 'asap', 'blocker', 'important', 'fix'],
+export const LABEL_COLOR_HINTS: Partial<Record<LabelColor, readonly string[]>> = {
+	red: ['bug', 'bugs', 'urgent', 'asap', 'blocker', 'important'],
 	orange: ['errand', 'errands', 'shopping', 'groceries'],
 	amber: ['waiting', 'wait', 'someday', 'maybe', 'later'],
 	green: ['money', 'finance', 'bills', 'health', 'gym', 'fitness', 'garden'],
@@ -33,7 +33,9 @@ const HINTS: Partial<Record<LabelColor, readonly string[]>> = {
 };
 
 const HINTED = new Map(
-	Object.entries(HINTS).flatMap(([color, words]) => words.map(word => [word, color as LabelColor] as const)),
+	Object.entries(LABEL_COLOR_HINTS).flatMap(([color, words]) =>
+		words.map(word => [word, color as LabelColor] as const),
+	),
 );
 
 /** Gray stays out of the hash so a new label is never the dull one by chance. */

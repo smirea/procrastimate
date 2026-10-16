@@ -21,7 +21,8 @@ struct LabelScreen: View {
                 title: label.name,
                 isEmpty: tasks.isEmpty && !showCompleted,
                 emptyTitle: "No tasks with this label",
-                emptyHint: Browse.labelEmptyHint(label.name)
+                emptyHint: Browse.labelEmptyHint(label.name),
+                labelColor: label.color
             ) {
                 ForEach(tasks) { TaskRow(task: $0, showProject: true) }
                 if showCompleted { CompletedSection(tasks: done, showProject: true) }

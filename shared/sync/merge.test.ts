@@ -191,6 +191,29 @@ describe('applyOps', () => {
 		expect(serverSnapshot(recolored.state).labels[0]?.color).toBe('teal');
 	});
 
+	test('renaming a label stored before colors keeps the color every replica showed', () => {
+		const stored: ServerState = {
+			entities: new Map([
+				[
+					entityKey('label', 'l'),
+					{
+						kind: 'label',
+						id: 'l',
+						data: { deleted: false, name: 'urgent', createdAt: 1 },
+						clocks: { deleted: '10:0:a', name: '10:0:a', createdAt: '10:0:a' },
+					},
+				],
+			]),
+			clock: createClock('server'),
+		};
+		expect(serverSnapshot(stored).labels[0]?.color).toBe('red');
+		const { state, log } = apply(stored, [
+			{ opId: 'r', hlc: '11:0:a', kind: 'label', id: 'l', fields: { name: 'tom' } },
+		]);
+		expect(log[0]?.fields).toEqual({ name: 'tom', color: 'red' });
+		expect(serverSnapshot(state).labels).toEqual([{ id: 'l', name: 'tom', color: 'red', createdAt: 1 }]);
+	});
+
 	test('the settings record needs no create and cannot be deleted', () => {
 		const { state } = apply(createServerState(), [
 			{ opId: 's', hlc: '10:0:a', kind: 'settings', id: 'settings', fields: { timeZone: 'Asia/Tokyo' } },
