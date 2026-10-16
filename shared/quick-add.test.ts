@@ -458,6 +458,133 @@ describe('dates with a month name', () => {
 	});
 });
 
+describe('a bare hour after at', () => {
+	test.each([
+		['Dentist November 3rd at 10', '2026-11-03', '10:00'],
+		['Dentist November 3rd at 7', '2026-11-03', '07:00'],
+		['Dentist November 3rd at 11', '2026-11-03', '11:00'],
+		['Dentist November 3rd at 12', '2026-11-03', '12:00'],
+		['Dentist November 3rd at 1', '2026-11-03', '13:00'],
+		['Dentist November 3rd at 6', '2026-11-03', '18:00'],
+		['Dentist November 3rd at 18', '2026-11-03', '18:00'],
+		['Dentist at 10 tomorrow', '2026-10-15', '10:00'],
+		['Dentist at 3 on fri', '2026-10-16', '15:00'],
+		['Dentist tomorrow at 9', '2026-10-15', '09:00'],
+		['Dentist at 3', '2026-10-14', '15:00'],
+		['Dentist at 9', '2026-10-15', '09:00'],
+	])('%s', (input, date, time) => {
+		const parsed = parse(input);
+		expect(parsed.title).toBe('Dentist');
+		expect<unknown>(parsed.due).toEqual({ date, time });
+	});
+
+	test('a bare hour after at keeps a following phrase', () => {
+		const parsed = parse('Dentist at 9, bring forms p1');
+		expect(parsed.title).toBe('Dentist, bring forms');
+		expect(parsed.due).toEqual({ date: '2026-10-15', time: '09:00' });
+		expect(parsed.priority).toBe(1);
+	});
+
+	test('a bare hour reads the same when spoken', () => {
+		const parsed = parse('Dentist November 3rd at 10.', { spoken: true });
+		expect(parsed.title).toBe('Dentist.');
+		expect(parsed.due).toEqual({ date: '2026-11-03', time: '10:00' });
+	});
+
+	test.each([
+		['Look at 3 options', 'Look at 3 options', null],
+		['Arrive at 10 Downing', 'Arrive at 10 Downing', null],
+		['Score at 10.5', 'Score at 10.5', null],
+		['Sell at 10%', 'Sell at 10%', null],
+		['Meet at 24', 'Meet at 24', null],
+		['Meet at 0', 'Meet at 0', null],
+		['Dentist November 3rd 10', 'Dentist 10', { date: '2026-11-03', time: null }],
+	])('%s keeps the number as text', (input, title, due) => {
+		const parsed = parse(input);
+		expect(parsed.title).toBe(title);
+		expect<unknown>(parsed.due).toEqual(due);
+	});
+});
+
+describe('spelled-out day numbers', () => {
+	test.each([
+		['October twentieth', '2026-10-20'],
+		['October Twentieth', '2026-10-20'],
+		['Oct twenty-first', '2026-10-21'],
+		['October twenty first', '2026-10-21'],
+		['October thirty-first', '2026-10-31'],
+		['November the third', '2026-11-03'],
+		['the third of May', '2027-05-03'],
+		['first of December', '2026-12-01'],
+		['the twelfth of November, 2027', '2027-11-12'],
+		['October twentieth, 2027', '2027-10-20'],
+		['Monday, October nineteenth', '2026-10-19'],
+		['May first', '2027-05-01'],
+	])('Pay rent %s', (phrase, date) => {
+		const parsed = parse(`Pay rent ${phrase}`);
+		expect(parsed.title).toBe('Pay rent');
+		expect<unknown>(parsed.due).toEqual({ date, time: null });
+	});
+
+	test('a spelled-out day takes a time', () => {
+		const parsed = parse('Dentist October twentieth at 3pm');
+		expect(parsed.title).toBe('Dentist');
+		expect(parsed.due).toEqual({ date: '2026-10-20', time: '15:00' });
+	});
+
+	test('a spelled-out day reads when spoken', () => {
+		const parsed = parse('Dentist on the third of May, 2027, at 10am.', { spoken: true });
+		expect(parsed.title).toBe('Dentist.');
+		expect(parsed.due).toEqual({ date: '2027-05-03', time: '10:00' });
+	});
+
+	test.each([
+		['Party February thirtieth', 'Party February thirtieth'],
+		['We may first need a plan', 'We may first need a plan'],
+		['They march second', 'They march second'],
+		['Finish the first May draft', 'Finish the first May draft'],
+		['Second May meeting', 'Second May meeting'],
+	])('%s stays text', (input, title) => {
+		const parsed = parse(input);
+		expect(parsed.title).toBe(title);
+		expect(parsed.due).toBeNull();
+	});
+});
+
+describe('@ before a time means at', () => {
+	test.each([
+		['Meet Oct 2 @ 3pm', '2027-10-02', '15:00'],
+		['Meet tomorrow @ 3pm', '2026-10-15', '15:00'],
+		['Meet @ 3pm tomorrow', '2026-10-15', '15:00'],
+		['Meet @ 3pm', '2026-10-14', '15:00'],
+		['Meet Oct 2 @ 3', '2027-10-02', '15:00'],
+		['Meet fri @ 2030', '2026-10-16', '20:30'],
+	])('%s', (input, date, time) => {
+		const parsed = parse(input);
+		expect(parsed.title).toBe('Meet');
+		expect<unknown>(parsed.due).toEqual({ date, time });
+	});
+
+	test('a weekday list @ a time repeats', () => {
+		const parsed = parse('Gym mon wed fri @ 7am');
+		expect(parsed.title).toBe('Gym');
+		expect(parsed.recurrence).toEqual({ interval: 1, unit: 'week', days: [1, 3, 5] });
+		expect(parsed.due).toEqual({ date: '2026-10-16', time: '07:00' });
+	});
+
+	test('@ before a word is still a label', () => {
+		const parsed = parse('Meet @calls Oct 2 @ 3pm');
+		expect(parsed.title).toBe('Meet');
+		expect(parsed.labelIds).toEqual(['l-calls']);
+		expect(parsed.due).toEqual({ date: '2027-10-02', time: '15:00' });
+	});
+
+	test('@ with no time after it stays text', () => {
+		expect(parse('Meet @ the park').title).toBe('Meet @ the park');
+		expect(parse('Meet @3pm').title).toBe('Meet @3pm');
+	});
+});
+
 describe('dates with a year', () => {
 	test.each([
 		['Jun 21 2027', '2027-06-21'],
