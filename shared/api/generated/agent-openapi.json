@@ -1,0 +1,2727 @@
+{
+	"info": {
+		"title": "ProcrastiMate agent API",
+		"version": "1",
+		"description": "The routes an AI account may call with its `pm.<ownerId>.<secret>` token."
+	},
+	"components": {
+		"securitySchemes": {
+			"token": {
+				"type": "http",
+				"scheme": "bearer"
+			}
+		},
+		"schemas": {
+			"SyncRequest": {
+				"type": "object",
+				"properties": {
+					"cursor": {
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 9007199254740991
+					},
+					"ops": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/Op"
+						}
+					},
+					"epoch": {
+						"default": 0,
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 9007199254740991
+					},
+					"reset": {
+						"type": "boolean"
+					},
+					"scope": {
+						"default": "",
+						"type": "string"
+					}
+				},
+				"required": [
+					"cursor",
+					"ops"
+				]
+			},
+			"Op": {
+				"allOf": [
+					{
+						"oneOf": [
+							{
+								"$ref": "#/components/schemas/TaskPatch"
+							},
+							{
+								"$ref": "#/components/schemas/ProjectPatch"
+							},
+							{
+								"$ref": "#/components/schemas/LabelPatch"
+							},
+							{
+								"$ref": "#/components/schemas/SettingsPatch"
+							}
+						]
+					},
+					{
+						"type": "object",
+						"properties": {
+							"opId": {
+								"type": "string"
+							},
+							"hlc": {
+								"$ref": "#/components/schemas/Hlc"
+							}
+						},
+						"required": [
+							"opId",
+							"hlc"
+						]
+					}
+				]
+			},
+			"TaskPatch": {
+				"type": "object",
+				"properties": {
+					"kind": {
+						"type": "string",
+						"const": "task"
+					},
+					"id": {
+						"type": "string"
+					},
+					"fields": {
+						"type": "object",
+						"properties": {
+							"parentId": {
+								"type": [
+									"string",
+									"null"
+								]
+							},
+							"order": {
+								"type": "number"
+							},
+							"title": {
+								"type": "string"
+							},
+							"notes": {
+								"type": "string"
+							},
+							"projectId": {
+								"type": [
+									"string",
+									"null"
+								]
+							},
+							"labelIds": {
+								"type": "array",
+								"items": {
+									"type": "string"
+								}
+							},
+							"due": {
+								"anyOf": [
+									{
+										"$ref": "#/components/schemas/Due"
+									},
+									{
+										"type": "null"
+									}
+								]
+							},
+							"recurrence": {
+								"anyOf": [
+									{
+										"$ref": "#/components/schemas/Recurrence"
+									},
+									{
+										"type": "null"
+									}
+								]
+							},
+							"priority": {
+								"$ref": "#/components/schemas/Priority"
+							},
+							"reminders": {
+								"type": "array",
+								"items": {
+									"$ref": "#/components/schemas/Reminder"
+								}
+							},
+							"location": {
+								"anyOf": [
+									{
+										"$ref": "#/components/schemas/TaskLocation"
+									},
+									{
+										"type": "null"
+									}
+								]
+							},
+							"event": {
+								"anyOf": [
+									{
+										"$ref": "#/components/schemas/TaskEvent"
+									},
+									{
+										"type": "null"
+									}
+								]
+							},
+							"createdAt": {
+								"type": "integer",
+								"minimum": -9007199254740991,
+								"maximum": 9007199254740991
+							},
+							"completedAt": {
+								"anyOf": [
+									{
+										"type": "integer",
+										"minimum": -9007199254740991,
+										"maximum": 9007199254740991
+									},
+									{
+										"type": "null"
+									}
+								]
+							},
+							"createdBy": {
+								"type": [
+									"string",
+									"null"
+								]
+							},
+							"completedBy": {
+								"type": [
+									"string",
+									"null"
+								]
+							},
+							"lastCompletedAt": {
+								"anyOf": [
+									{
+										"type": "integer",
+										"minimum": -9007199254740991,
+										"maximum": 9007199254740991
+									},
+									{
+										"type": "null"
+									}
+								]
+							},
+							"sourceKey": {
+								"type": [
+									"string",
+									"null"
+								]
+							},
+							"deleted": {
+								"type": "boolean"
+							}
+						}
+					}
+				},
+				"required": [
+					"kind",
+					"id",
+					"fields"
+				]
+			},
+			"Due": {
+				"type": "object",
+				"properties": {
+					"date": {
+						"$ref": "#/components/schemas/DateKey"
+					},
+					"time": {
+						"anyOf": [
+							{
+								"$ref": "#/components/schemas/TimeOfDay"
+							},
+							{
+								"type": "null"
+							}
+						]
+					}
+				},
+				"required": [
+					"date",
+					"time"
+				]
+			},
+			"DateKey": {
+				"description": "Local calendar date, `YYYY-MM-DD`.",
+				"type": "string",
+				"pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+			},
+			"TimeOfDay": {
+				"description": "Local wall-clock time, `HH:mm`.",
+				"type": "string",
+				"pattern": "^\\d{2}:\\d{2}$"
+			},
+			"Recurrence": {
+				"oneOf": [
+					{
+						"type": "object",
+						"properties": {
+							"interval": {
+								"type": "integer",
+								"exclusiveMinimum": 0,
+								"maximum": 9007199254740991
+							},
+							"unit": {
+								"type": "string",
+								"enum": [
+									"day",
+									"weekday",
+									"month",
+									"year"
+								]
+							}
+						},
+						"required": [
+							"interval",
+							"unit"
+						]
+					},
+					{
+						"type": "object",
+						"properties": {
+							"interval": {
+								"type": "integer",
+								"exclusiveMinimum": 0,
+								"maximum": 9007199254740991
+							},
+							"unit": {
+								"type": "string",
+								"const": "week"
+							},
+							"days": {
+								"readOnly": true,
+								"minItems": 2,
+								"type": "array",
+								"items": {
+									"$ref": "#/components/schemas/Weekday"
+								}
+							}
+						},
+						"required": [
+							"interval",
+							"unit"
+						]
+					}
+				],
+				"x-flatten": {
+					"unit": "RecurrenceUnit"
+				}
+			},
+			"Weekday": {
+				"type": "number",
+				"enum": [
+					0,
+					1,
+					2,
+					3,
+					4,
+					5,
+					6
+				],
+				"description": "Sunday is 0, as in `Date#getDay`."
+			},
+			"Priority": {
+				"type": "number",
+				"enum": [
+					1,
+					2,
+					3,
+					4
+				],
+				"description": "Todoist priorities: 1 is the most urgent, 4 is the unmarked default.",
+				"default": 4,
+				"x-enum-names": [
+					"p1",
+					"p2",
+					"p3",
+					"p4"
+				]
+			},
+			"Reminder": {
+				"oneOf": [
+					{
+						"type": "object",
+						"properties": {
+							"kind": {
+								"type": "string",
+								"const": "before"
+							},
+							"minutes": {
+								"type": "integer",
+								"minimum": 0,
+								"maximum": 9007199254740991
+							}
+						},
+						"required": [
+							"kind",
+							"minutes"
+						]
+					},
+					{
+						"type": "object",
+						"properties": {
+							"kind": {
+								"type": "string",
+								"const": "at"
+							},
+							"date": {
+								"$ref": "#/components/schemas/DateKey"
+							},
+							"time": {
+								"$ref": "#/components/schemas/TimeOfDay"
+							}
+						},
+						"required": [
+							"kind",
+							"date",
+							"time"
+						]
+					}
+				],
+				"x-inline": true
+			},
+			"TaskLocation": {
+				"type": "object",
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"address": {
+						"type": [
+							"string",
+							"null"
+						]
+					},
+					"latitude": {
+						"type": "number",
+						"minimum": -90,
+						"maximum": 90
+					},
+					"longitude": {
+						"type": "number",
+						"minimum": -180,
+						"maximum": 180
+					},
+					"radius": {
+						"type": "number",
+						"exclusiveMinimum": 0
+					},
+					"trigger": {
+						"$ref": "#/components/schemas/LocationTrigger"
+					}
+				},
+				"required": [
+					"name",
+					"address",
+					"latitude",
+					"longitude",
+					"radius",
+					"trigger"
+				]
+			},
+			"LocationTrigger": {
+				"type": "string",
+				"enum": [
+					"arrive",
+					"leave",
+					"during"
+				]
+			},
+			"TaskEvent": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"title": {
+						"type": "string"
+					},
+					"allDay": {
+						"type": "boolean"
+					},
+					"series": {
+						"type": "boolean"
+					},
+					"edge": {
+						"$ref": "#/components/schemas/EventEdge"
+					},
+					"minutes": {
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 9007199254740991
+					},
+					"occurrences": {
+						"minItems": 1,
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/EventOccurrence"
+						}
+					}
+				},
+				"required": [
+					"id",
+					"title",
+					"allDay",
+					"series",
+					"edge",
+					"minutes",
+					"occurrences"
+				]
+			},
+			"EventEdge": {
+				"type": "string",
+				"enum": [
+					"before",
+					"start",
+					"during",
+					"after"
+				]
+			},
+			"EventOccurrence": {
+				"type": "object",
+				"properties": {
+					"start": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991
+					},
+					"end": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991
+					},
+					"original": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991
+					}
+				},
+				"required": [
+					"start",
+					"end",
+					"original"
+				]
+			},
+			"ProjectPatch": {
+				"type": "object",
+				"properties": {
+					"kind": {
+						"type": "string",
+						"const": "project"
+					},
+					"id": {
+						"type": "string"
+					},
+					"fields": {
+						"type": "object",
+						"properties": {
+							"name": {
+								"type": "string"
+							},
+							"createdAt": {
+								"type": "integer",
+								"minimum": -9007199254740991,
+								"maximum": 9007199254740991
+							},
+							"sourceKey": {
+								"type": [
+									"string",
+									"null"
+								]
+							},
+							"deleted": {
+								"type": "boolean"
+							}
+						}
+					}
+				},
+				"required": [
+					"kind",
+					"id",
+					"fields"
+				]
+			},
+			"LabelPatch": {
+				"type": "object",
+				"properties": {
+					"kind": {
+						"type": "string",
+						"const": "label"
+					},
+					"id": {
+						"type": "string"
+					},
+					"fields": {
+						"type": "object",
+						"properties": {
+							"name": {
+								"type": "string"
+							},
+							"createdAt": {
+								"type": "integer",
+								"minimum": -9007199254740991,
+								"maximum": 9007199254740991
+							},
+							"deleted": {
+								"type": "boolean"
+							}
+						}
+					}
+				},
+				"required": [
+					"kind",
+					"id",
+					"fields"
+				]
+			},
+			"SettingsPatch": {
+				"type": "object",
+				"properties": {
+					"kind": {
+						"type": "string",
+						"const": "settings"
+					},
+					"id": {
+						"type": "string"
+					},
+					"fields": {
+						"type": "object",
+						"properties": {
+							"timeZone": {
+								"type": [
+									"string",
+									"null"
+								]
+							},
+							"dictation": {
+								"$ref": "#/components/schemas/DictationChoice"
+							},
+							"deleted": {
+								"type": "boolean"
+							}
+						}
+					}
+				},
+				"required": [
+					"kind",
+					"id",
+					"fields"
+				]
+			},
+			"DictationChoice": {
+				"type": "string",
+				"enum": [
+					"native",
+					"elevenlabs"
+				]
+			},
+			"Hlc": {
+				"type": "string",
+				"x-validate": "isHlc"
+			},
+			"SyncResponse": {
+				"anyOf": [
+					{
+						"type": "object",
+						"properties": {
+							"acked": {
+								"type": "array",
+								"items": {
+									"type": "string"
+								}
+							},
+							"changes": {
+								"type": "array",
+								"items": {
+									"$ref": "#/components/schemas/Change"
+								}
+							},
+							"cursor": {
+								"type": "integer",
+								"minimum": 0,
+								"maximum": 9007199254740991
+							},
+							"hlc": {
+								"$ref": "#/components/schemas/Hlc"
+							},
+							"epoch": {
+								"type": "integer",
+								"minimum": 0,
+								"maximum": 9007199254740991
+							},
+							"scope": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"acked",
+							"changes",
+							"cursor",
+							"hlc",
+							"epoch"
+						],
+						"additionalProperties": false
+					},
+					{
+						"type": "object",
+						"properties": {
+							"acked": {
+								"type": "array",
+								"items": {
+									"type": "string"
+								}
+							},
+							"snapshot": {
+								"$ref": "#/components/schemas/SyncSnapshot"
+							},
+							"cursor": {
+								"type": "integer",
+								"minimum": 0,
+								"maximum": 9007199254740991
+							},
+							"hlc": {
+								"$ref": "#/components/schemas/Hlc"
+							},
+							"epoch": {
+								"type": "integer",
+								"minimum": 0,
+								"maximum": 9007199254740991
+							},
+							"scope": {
+								"type": "string"
+							},
+							"readOnly": {
+								"type": "array",
+								"items": {
+									"type": "string"
+								}
+							},
+							"targets": {
+								"type": "array",
+								"items": {
+									"$ref": "#/components/schemas/ShareTarget"
+								}
+							}
+						},
+						"required": [
+							"acked",
+							"snapshot",
+							"cursor",
+							"hlc",
+							"epoch"
+						],
+						"additionalProperties": false
+					}
+				]
+			},
+			"Change": {
+				"allOf": [
+					{
+						"oneOf": [
+							{
+								"$ref": "#/components/schemas/TaskPatchOutput"
+							},
+							{
+								"$ref": "#/components/schemas/ProjectPatchOutput"
+							},
+							{
+								"$ref": "#/components/schemas/LabelPatchOutput"
+							},
+							{
+								"$ref": "#/components/schemas/SettingsPatchOutput"
+							}
+						]
+					},
+					{
+						"type": "object",
+						"properties": {
+							"opId": {
+								"type": "string"
+							},
+							"seq": {
+								"type": "integer",
+								"exclusiveMinimum": 0,
+								"maximum": 9007199254740991
+							}
+						},
+						"required": [
+							"opId",
+							"seq"
+						],
+						"additionalProperties": false
+					}
+				]
+			},
+			"TaskPatchOutput": {
+				"type": "object",
+				"properties": {
+					"kind": {
+						"type": "string",
+						"const": "task"
+					},
+					"id": {
+						"type": "string"
+					},
+					"fields": {
+						"type": "object",
+						"properties": {
+							"parentId": {
+								"type": [
+									"string",
+									"null"
+								]
+							},
+							"order": {
+								"type": "number"
+							},
+							"title": {
+								"type": "string"
+							},
+							"notes": {
+								"type": "string"
+							},
+							"projectId": {
+								"type": [
+									"string",
+									"null"
+								]
+							},
+							"labelIds": {
+								"type": "array",
+								"items": {
+									"type": "string"
+								}
+							},
+							"due": {
+								"anyOf": [
+									{
+										"$ref": "#/components/schemas/DueOutput"
+									},
+									{
+										"type": "null"
+									}
+								]
+							},
+							"recurrence": {
+								"anyOf": [
+									{
+										"$ref": "#/components/schemas/RecurrenceOutput"
+									},
+									{
+										"type": "null"
+									}
+								]
+							},
+							"priority": {
+								"$ref": "#/components/schemas/Priority"
+							},
+							"reminders": {
+								"type": "array",
+								"items": {
+									"$ref": "#/components/schemas/ReminderOutput"
+								}
+							},
+							"location": {
+								"anyOf": [
+									{
+										"$ref": "#/components/schemas/TaskLocationOutput"
+									},
+									{
+										"type": "null"
+									}
+								]
+							},
+							"event": {
+								"anyOf": [
+									{
+										"$ref": "#/components/schemas/TaskEventOutput"
+									},
+									{
+										"type": "null"
+									}
+								]
+							},
+							"createdAt": {
+								"type": "integer",
+								"minimum": -9007199254740991,
+								"maximum": 9007199254740991
+							},
+							"completedAt": {
+								"anyOf": [
+									{
+										"type": "integer",
+										"minimum": -9007199254740991,
+										"maximum": 9007199254740991
+									},
+									{
+										"type": "null"
+									}
+								]
+							},
+							"createdBy": {
+								"type": [
+									"string",
+									"null"
+								]
+							},
+							"completedBy": {
+								"type": [
+									"string",
+									"null"
+								]
+							},
+							"lastCompletedAt": {
+								"anyOf": [
+									{
+										"type": "integer",
+										"minimum": -9007199254740991,
+										"maximum": 9007199254740991
+									},
+									{
+										"type": "null"
+									}
+								]
+							},
+							"sourceKey": {
+								"type": [
+									"string",
+									"null"
+								]
+							},
+							"deleted": {
+								"type": "boolean"
+							}
+						},
+						"additionalProperties": false
+					}
+				},
+				"required": [
+					"kind",
+					"id",
+					"fields"
+				],
+				"additionalProperties": false
+			},
+			"DueOutput": {
+				"type": "object",
+				"properties": {
+					"date": {
+						"$ref": "#/components/schemas/DateKey"
+					},
+					"time": {
+						"anyOf": [
+							{
+								"$ref": "#/components/schemas/TimeOfDay"
+							},
+							{
+								"type": "null"
+							}
+						]
+					}
+				},
+				"required": [
+					"date",
+					"time"
+				],
+				"additionalProperties": false
+			},
+			"RecurrenceOutput": {
+				"oneOf": [
+					{
+						"type": "object",
+						"properties": {
+							"interval": {
+								"type": "integer",
+								"exclusiveMinimum": 0,
+								"maximum": 9007199254740991
+							},
+							"unit": {
+								"type": "string",
+								"enum": [
+									"day",
+									"weekday",
+									"month",
+									"year"
+								]
+							}
+						},
+						"required": [
+							"interval",
+							"unit"
+						],
+						"additionalProperties": false
+					},
+					{
+						"type": "object",
+						"properties": {
+							"interval": {
+								"type": "integer",
+								"exclusiveMinimum": 0,
+								"maximum": 9007199254740991
+							},
+							"unit": {
+								"type": "string",
+								"const": "week"
+							},
+							"days": {
+								"readOnly": true,
+								"minItems": 2,
+								"type": "array",
+								"items": {
+									"$ref": "#/components/schemas/Weekday"
+								}
+							}
+						},
+						"required": [
+							"interval",
+							"unit"
+						],
+						"additionalProperties": false
+					}
+				],
+				"x-flatten": {
+					"unit": "RecurrenceUnit"
+				}
+			},
+			"ReminderOutput": {
+				"oneOf": [
+					{
+						"type": "object",
+						"properties": {
+							"kind": {
+								"type": "string",
+								"const": "before"
+							},
+							"minutes": {
+								"type": "integer",
+								"minimum": 0,
+								"maximum": 9007199254740991
+							}
+						},
+						"required": [
+							"kind",
+							"minutes"
+						],
+						"additionalProperties": false
+					},
+					{
+						"type": "object",
+						"properties": {
+							"kind": {
+								"type": "string",
+								"const": "at"
+							},
+							"date": {
+								"$ref": "#/components/schemas/DateKey"
+							},
+							"time": {
+								"$ref": "#/components/schemas/TimeOfDay"
+							}
+						},
+						"required": [
+							"kind",
+							"date",
+							"time"
+						],
+						"additionalProperties": false
+					}
+				],
+				"x-inline": true
+			},
+			"TaskLocationOutput": {
+				"type": "object",
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"address": {
+						"type": [
+							"string",
+							"null"
+						]
+					},
+					"latitude": {
+						"type": "number",
+						"minimum": -90,
+						"maximum": 90
+					},
+					"longitude": {
+						"type": "number",
+						"minimum": -180,
+						"maximum": 180
+					},
+					"radius": {
+						"type": "number",
+						"exclusiveMinimum": 0
+					},
+					"trigger": {
+						"$ref": "#/components/schemas/LocationTrigger"
+					}
+				},
+				"required": [
+					"name",
+					"address",
+					"latitude",
+					"longitude",
+					"radius",
+					"trigger"
+				],
+				"additionalProperties": false
+			},
+			"TaskEventOutput": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"title": {
+						"type": "string"
+					},
+					"allDay": {
+						"type": "boolean"
+					},
+					"series": {
+						"type": "boolean"
+					},
+					"edge": {
+						"$ref": "#/components/schemas/EventEdge"
+					},
+					"minutes": {
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 9007199254740991
+					},
+					"occurrences": {
+						"minItems": 1,
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/EventOccurrenceOutput"
+						}
+					}
+				},
+				"required": [
+					"id",
+					"title",
+					"allDay",
+					"series",
+					"edge",
+					"minutes",
+					"occurrences"
+				],
+				"additionalProperties": false
+			},
+			"EventOccurrenceOutput": {
+				"type": "object",
+				"properties": {
+					"start": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991
+					},
+					"end": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991
+					},
+					"original": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991
+					}
+				},
+				"required": [
+					"start",
+					"end",
+					"original"
+				],
+				"additionalProperties": false
+			},
+			"ProjectPatchOutput": {
+				"type": "object",
+				"properties": {
+					"kind": {
+						"type": "string",
+						"const": "project"
+					},
+					"id": {
+						"type": "string"
+					},
+					"fields": {
+						"type": "object",
+						"properties": {
+							"name": {
+								"type": "string"
+							},
+							"createdAt": {
+								"type": "integer",
+								"minimum": -9007199254740991,
+								"maximum": 9007199254740991
+							},
+							"sourceKey": {
+								"type": [
+									"string",
+									"null"
+								]
+							},
+							"deleted": {
+								"type": "boolean"
+							}
+						},
+						"additionalProperties": false
+					}
+				},
+				"required": [
+					"kind",
+					"id",
+					"fields"
+				],
+				"additionalProperties": false
+			},
+			"LabelPatchOutput": {
+				"type": "object",
+				"properties": {
+					"kind": {
+						"type": "string",
+						"const": "label"
+					},
+					"id": {
+						"type": "string"
+					},
+					"fields": {
+						"type": "object",
+						"properties": {
+							"name": {
+								"type": "string"
+							},
+							"createdAt": {
+								"type": "integer",
+								"minimum": -9007199254740991,
+								"maximum": 9007199254740991
+							},
+							"deleted": {
+								"type": "boolean"
+							}
+						},
+						"additionalProperties": false
+					}
+				},
+				"required": [
+					"kind",
+					"id",
+					"fields"
+				],
+				"additionalProperties": false
+			},
+			"SettingsPatchOutput": {
+				"type": "object",
+				"properties": {
+					"kind": {
+						"type": "string",
+						"const": "settings"
+					},
+					"id": {
+						"type": "string"
+					},
+					"fields": {
+						"type": "object",
+						"properties": {
+							"timeZone": {
+								"type": [
+									"string",
+									"null"
+								]
+							},
+							"dictation": {
+								"$ref": "#/components/schemas/DictationChoice"
+							},
+							"deleted": {
+								"type": "boolean"
+							}
+						},
+						"additionalProperties": false
+					}
+				},
+				"required": [
+					"kind",
+					"id",
+					"fields"
+				],
+				"additionalProperties": false
+			},
+			"SyncSnapshot": {
+				"type": "object",
+				"properties": {
+					"tasks": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/Task"
+						}
+					},
+					"projects": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/Project"
+						}
+					},
+					"labels": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/Label"
+						}
+					},
+					"settings": {
+						"$ref": "#/components/schemas/Settings"
+					}
+				},
+				"required": [
+					"tasks",
+					"projects",
+					"labels",
+					"settings"
+				],
+				"additionalProperties": false
+			},
+			"Task": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"parentId": {
+						"type": [
+							"string",
+							"null"
+						]
+					},
+					"order": {
+						"type": "number"
+					},
+					"title": {
+						"type": "string"
+					},
+					"notes": {
+						"type": "string"
+					},
+					"projectId": {
+						"type": [
+							"string",
+							"null"
+						]
+					},
+					"labelIds": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						}
+					},
+					"due": {
+						"anyOf": [
+							{
+								"$ref": "#/components/schemas/DueOutput"
+							},
+							{
+								"type": "null"
+							}
+						]
+					},
+					"recurrence": {
+						"anyOf": [
+							{
+								"$ref": "#/components/schemas/RecurrenceOutput"
+							},
+							{
+								"type": "null"
+							}
+						]
+					},
+					"priority": {
+						"$ref": "#/components/schemas/Priority"
+					},
+					"reminders": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/ReminderOutput"
+						}
+					},
+					"location": {
+						"anyOf": [
+							{
+								"$ref": "#/components/schemas/TaskLocationOutput"
+							},
+							{
+								"type": "null"
+							}
+						]
+					},
+					"event": {
+						"anyOf": [
+							{
+								"$ref": "#/components/schemas/TaskEventOutput"
+							},
+							{
+								"type": "null"
+							}
+						]
+					},
+					"createdAt": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991
+					},
+					"completedAt": {
+						"anyOf": [
+							{
+								"type": "integer",
+								"minimum": -9007199254740991,
+								"maximum": 9007199254740991
+							},
+							{
+								"type": "null"
+							}
+						]
+					},
+					"createdBy": {
+						"type": [
+							"string",
+							"null"
+						]
+					},
+					"completedBy": {
+						"type": [
+							"string",
+							"null"
+						]
+					},
+					"lastCompletedAt": {
+						"anyOf": [
+							{
+								"type": "integer",
+								"minimum": -9007199254740991,
+								"maximum": 9007199254740991
+							},
+							{
+								"type": "null"
+							}
+						]
+					},
+					"sourceKey": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"id",
+					"parentId",
+					"order",
+					"title",
+					"notes",
+					"projectId",
+					"labelIds",
+					"due",
+					"recurrence",
+					"priority",
+					"reminders",
+					"location",
+					"event",
+					"createdAt",
+					"completedAt",
+					"createdBy",
+					"completedBy",
+					"lastCompletedAt"
+				],
+				"additionalProperties": false,
+				"x-table": "tasks"
+			},
+			"Project": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"createdAt": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991
+					},
+					"sourceKey": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"id",
+					"name",
+					"createdAt"
+				],
+				"additionalProperties": false,
+				"x-table": "projects"
+			},
+			"Label": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"createdAt": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991
+					}
+				},
+				"required": [
+					"id",
+					"name",
+					"createdAt"
+				],
+				"additionalProperties": false,
+				"x-table": "labels"
+			},
+			"Settings": {
+				"type": "object",
+				"properties": {
+					"timeZone": {
+						"type": [
+							"string",
+							"null"
+						]
+					},
+					"dictation": {
+						"$ref": "#/components/schemas/DictationChoice"
+					}
+				},
+				"required": [
+					"timeZone",
+					"dictation"
+				],
+				"additionalProperties": false,
+				"x-table": "settings"
+			},
+			"ShareTarget": {
+				"type": "object",
+				"properties": {
+					"kind": {
+						"$ref": "#/components/schemas/ShareTargetKind"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"kind",
+					"id"
+				],
+				"additionalProperties": false,
+				"description": "What a share reaches. `id` is empty for the whole space."
+			},
+			"ShareTargetKind": {
+				"type": "string",
+				"enum": [
+					"space",
+					"project",
+					"label",
+					"task"
+				]
+			},
+			"UndefinedError": {
+				"title": "UndefinedError",
+				"type": "object",
+				"properties": {
+					"defined": {
+						"const": false
+					},
+					"code": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {}
+				},
+				"required": [
+					"defined",
+					"code",
+					"message"
+				]
+			},
+			"Unauthorized": {
+				"title": "UNAUTHORIZED",
+				"type": "object",
+				"properties": {
+					"defined": {
+						"const": true
+					},
+					"code": {
+						"const": "UNAUTHORIZED"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {}
+				},
+				"required": [
+					"defined",
+					"code",
+					"message"
+				]
+			},
+			"ServiceUnavailable": {
+				"title": "SERVICE_UNAVAILABLE",
+				"type": "object",
+				"properties": {
+					"defined": {
+						"const": true
+					},
+					"code": {
+						"const": "SERVICE_UNAVAILABLE"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {}
+				},
+				"required": [
+					"defined",
+					"code",
+					"message"
+				]
+			},
+			"Forbidden": {
+				"title": "FORBIDDEN",
+				"type": "object",
+				"properties": {
+					"defined": {
+						"const": true
+					},
+					"code": {
+						"const": "FORBIDDEN"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {}
+				},
+				"required": [
+					"defined",
+					"code",
+					"message"
+				]
+			},
+			"SpaceView": {
+				"type": "object",
+				"properties": {
+					"tasks": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/Task"
+						}
+					},
+					"projects": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/Project"
+						}
+					},
+					"labels": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/Label"
+						}
+					},
+					"readOnly": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						}
+					}
+				},
+				"required": [
+					"tasks",
+					"projects",
+					"labels",
+					"readOnly"
+				],
+				"additionalProperties": false,
+				"description": "What the caller sees of a space, for the agent command API."
+			},
+			"AgentNewTask": {
+				"type": "object",
+				"properties": {
+					"text": {
+						"type": "string"
+					},
+					"title": {
+						"type": "string"
+					},
+					"notes": {
+						"type": "string"
+					},
+					"projectId": {
+						"type": [
+							"string",
+							"null"
+						]
+					},
+					"parentId": {
+						"type": [
+							"string",
+							"null"
+						]
+					},
+					"labelIds": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						}
+					},
+					"priority": {
+						"$ref": "#/components/schemas/Priority"
+					}
+				},
+				"description": "A task the agent command API adds. It needs `text` or `title`."
+			},
+			"NotFound": {
+				"title": "NOT_FOUND",
+				"type": "object",
+				"properties": {
+					"defined": {
+						"const": true
+					},
+					"code": {
+						"const": "NOT_FOUND"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {}
+				},
+				"required": [
+					"defined",
+					"code",
+					"message"
+				]
+			},
+			"TaskEdit": {
+				"type": "object",
+				"properties": {
+					"title": {
+						"type": "string"
+					},
+					"notes": {
+						"type": "string"
+					},
+					"projectId": {
+						"type": [
+							"string",
+							"null"
+						]
+					},
+					"labelIds": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						}
+					},
+					"due": {
+						"anyOf": [
+							{
+								"$ref": "#/components/schemas/Due"
+							},
+							{
+								"type": "null"
+							}
+						]
+					},
+					"recurrence": {
+						"anyOf": [
+							{
+								"$ref": "#/components/schemas/Recurrence"
+							},
+							{
+								"type": "null"
+							}
+						]
+					},
+					"priority": {
+						"$ref": "#/components/schemas/Priority"
+					},
+					"reminders": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/Reminder"
+						}
+					},
+					"location": {
+						"anyOf": [
+							{
+								"$ref": "#/components/schemas/TaskLocation"
+							},
+							{
+								"type": "null"
+							}
+						]
+					},
+					"event": {
+						"anyOf": [
+							{
+								"$ref": "#/components/schemas/TaskEvent"
+							},
+							{
+								"type": "null"
+							}
+						]
+					}
+				},
+				"description": "The editable fields of a task. A missing field is left alone; for nullable fields, `null` clears the value."
+			},
+			"Ok": {
+				"type": "object",
+				"properties": {
+					"ok": {
+						"type": "boolean",
+						"const": true
+					}
+				},
+				"required": [
+					"ok"
+				],
+				"additionalProperties": false
+			},
+			"Activity": {
+				"type": "object",
+				"properties": {
+					"entries": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/ActivityEntry"
+						}
+					}
+				},
+				"required": [
+					"entries"
+				],
+				"additionalProperties": false
+			},
+			"ActivityEntry": {
+				"type": "object",
+				"properties": {
+					"at": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991
+					},
+					"actor": {
+						"$ref": "#/components/schemas/Person"
+					},
+					"action": {
+						"$ref": "#/components/schemas/ActivityAction"
+					},
+					"fields": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						}
+					}
+				},
+				"required": [
+					"at",
+					"actor",
+					"action",
+					"fields"
+				],
+				"additionalProperties": false,
+				"description": "One change to a task, read from the space’s log."
+			},
+			"Person": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"kind": {
+						"$ref": "#/components/schemas/ActorKind"
+					},
+					"ownerId": {
+						"type": [
+							"string",
+							"null"
+						]
+					}
+				},
+				"required": [
+					"id",
+					"name",
+					"kind",
+					"ownerId"
+				],
+				"additionalProperties": false,
+				"description": "A human, or an AI account with the human who owns it."
+			},
+			"ActorKind": {
+				"type": "string",
+				"enum": [
+					"human",
+					"ai"
+				]
+			},
+			"ActivityAction": {
+				"type": "string",
+				"enum": [
+					"created",
+					"edited",
+					"completed",
+					"reopened",
+					"deleted",
+					"restored"
+				]
+			}
+		}
+	},
+	"security": [
+		{
+			"token": []
+		}
+	],
+	"openapi": "3.1.1",
+	"paths": {
+		"/api/sync": {
+			"post": {
+				"operationId": "sync",
+				"summary": "Sync the space",
+				"description": "The apps’ replication protocol. `{ \"cursor\": 0, \"ops\": [] }` answers with the whole visible snapshot. A task op is applied when the task is editable before and after it; project and label ops are acknowledged and dropped.",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "space",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/SyncRequest"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/SyncResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Unauthorized"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "403",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Forbidden"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/ServiceUnavailable"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/view": {
+			"get": {
+				"operationId": "view",
+				"summary": "Everything the caller sees",
+				"description": "The tasks, projects, and labels of the space, and the ids of visible tasks the caller may not edit.",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "space",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/SpaceView"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Unauthorized"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "403",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Forbidden"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/ServiceUnavailable"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/tasks": {
+			"post": {
+				"operationId": "tasks.create",
+				"summary": "Add a task",
+				"description": "`text` reads like the app’s quick add: dates, repeats, `p1` to `p4`, reminders, and `#Project` and `@label` for ones that exist. Explicit fields win over parsed ones.",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "space",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/AgentNewTask"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Task"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Unauthorized"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "403",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Forbidden"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "404",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/NotFound"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/ServiceUnavailable"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			},
+			"patch": {
+				"operationId": "tasks.update",
+				"summary": "Edit a task",
+				"description": "Only the fields sent change; `null` clears a nullable field.",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "space",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true
+					},
+					{
+						"in": "query",
+						"name": "id",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true,
+						"required": true
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/TaskEdit"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Task"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Unauthorized"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "403",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Forbidden"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "404",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/NotFound"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/ServiceUnavailable"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			},
+			"delete": {
+				"operationId": "tasks.delete",
+				"summary": "Delete a task and its subtasks",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "space",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true
+					},
+					{
+						"in": "query",
+						"name": "id",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true,
+						"required": true
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Ok"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Unauthorized"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "403",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Forbidden"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "404",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/NotFound"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/ServiceUnavailable"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/tasks/complete": {
+			"post": {
+				"operationId": "tasks.complete",
+				"summary": "Complete a task",
+				"description": "A recurring task moves to its next date instead of closing.",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "space",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true
+					},
+					{
+						"in": "query",
+						"name": "id",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true,
+						"required": true
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Task"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Unauthorized"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "403",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Forbidden"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "404",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/NotFound"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/ServiceUnavailable"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/tasks/reopen": {
+			"post": {
+				"operationId": "tasks.reopen",
+				"summary": "Reopen a completed task",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "space",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true
+					},
+					{
+						"in": "query",
+						"name": "id",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true,
+						"required": true
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Task"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Unauthorized"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "403",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Forbidden"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "404",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/NotFound"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/ServiceUnavailable"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/activity": {
+			"get": {
+				"operationId": "activity.list",
+				"summary": "A task’s history",
+				"description": "Who created, edited, completed, reopened, or deleted the task, and when, oldest first.",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "space",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true
+					},
+					{
+						"in": "query",
+						"name": "id",
+						"schema": {
+							"type": "string"
+						},
+						"allowEmptyValue": true,
+						"allowReserved": true,
+						"required": true
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Activity"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "401",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Unauthorized"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "403",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/Forbidden"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "404",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/NotFound"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "503",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"$ref": "#/components/schemas/ServiceUnavailable"
+										},
+										{
+											"$ref": "#/components/schemas/UndefinedError"
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}

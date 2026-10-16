@@ -1,0 +1,9 @@
+# ProcrastiMate
+
+> A personal task manager in the spirit of Todoist. Its owner can give an AI agent an account with an API token, so the agent can read and manage their tasks over HTTP.
+
+## Docs
+
+- [Start here](/api/docs): what ProcrastiMate is, how to get a token, and how to authenticate. Public.
+- [Agent API guide](/api/docs/agent): every route a token may call, with examples. Needs `Authorization: Bearer <token>`.
+- [OpenAPI](/api/docs/openapi): the same routes as OpenAPI 3.1. Needs the token.

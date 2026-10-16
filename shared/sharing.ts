@@ -84,8 +84,16 @@ export const apiTokenSchema = apiTokensRowSchema
 export type ApiToken = z.infer<typeof apiTokenSchema>;
 
 export const createdApiTokenSchema = z
-	.object({ id: apiTokensRowSchema.shape.id, token: z.string() })
-	.meta({ id: 'CreatedApiToken', description: '`token` is `pm.<ownerId>.<secret>`, shown only this once.' });
+	.object({
+		id: apiTokensRowSchema.shape.id,
+		token: z.string(),
+		/** Instructions to paste into an AI assistant: the token and where its docs are. */
+		prompt: z.string(),
+	})
+	.meta({
+		id: 'CreatedApiToken',
+		description: '`token` is `pm.<ownerId>.<secret>`, shown only this once, and `prompt` carries it.',
+	});
 export type CreatedApiToken = z.infer<typeof createdApiTokenSchema>;
 
 const taskShape = taskSchema.shape;

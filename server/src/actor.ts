@@ -1,6 +1,6 @@
 import { ORPCError } from '@orpc/server';
 import { ACTOR_HEADER, actorSchema, type Actor } from '../../shared/auth';
-import { accountContract } from '../../shared/api/contract';
+import { agentContract } from '../../shared/api/contract';
 import { internalClient } from './account/peers';
 import { readSession, userById } from './better-auth';
 import type { Env } from './bindings';
@@ -36,23 +36,21 @@ export async function readActor(request: Request, env: Env): Promise<Actor | nul
 	return user ? { id: user.id, name: user.name, kind: user.kind, ownerId: user.ownerId } : null;
 }
 
-/** The Worker's human-only routes. An AI account acts only through the routes in `SHARED_ROUTES`. */
-export async function requireHuman(request: Request, env: Env): Promise<Actor> {
+export async function requireActor(request: Request, env: Env): Promise<Actor> {
 	const actor = await readActor(request, env);
 	if (!actor) throw new ORPCError('UNAUTHORIZED', { message: 'Not signed in' });
+	return actor;
+}
+
+/** The Worker's human-only routes. An AI account acts only through the routes in `SHARED_ROUTES`. */
+export async function requireHuman(request: Request, env: Env): Promise<Actor> {
+	const actor = await requireActor(request, env);
 	if (actor.kind !== 'human') throw new ORPCError('FORBIDDEN', { message: 'Not for AI accounts' });
 	return actor;
 }
 
 /** The account routes an AI account, or a guest of a space, may call. Everything else is the human owner's. */
-export const SHARED_ROUTES: ReadonlySet<string> = new Set(
-	routeKeys({
-		sync: accountContract.sync,
-		view: accountContract.view,
-		tasks: accountContract.tasks,
-		activity: accountContract.activity,
-	}),
-);
+export const SHARED_ROUTES: ReadonlySet<string> = new Set(routeKeys(agentContract));
 
 /** The space a request is for: `?space=`, else the actor's own, which for an AI is its owner's. */
 export function spaceOf(url: URL, actor: Actor): string {

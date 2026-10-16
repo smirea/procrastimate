@@ -13,6 +13,7 @@ The owner shares a project, a label, or a task with another account, to edit or 
 - `activity` lists each change to a task with who and when, when online. It shows only when someone other than you touched the task.
 - `public-link` opens `/s/<token>` read only for a signed-out visitor. A stopped link shows nothing. On an iPhone with the app installed, the link opens the app.
 - `ai-accounts` creates an AI account by name, generates a token shown once with `Copy`, and deletes the account. People that are AI accounts carry an `AI` badge everywhere.
+- `agent-docs` serves public Markdown at `/api/docs` (and `/llms.txt` pointing to it) on how an agent gets a token, and, with a token, `/api/docs/agent` and `/api/docs/openapi` covering exactly the routes it may call. `Copy prompt for your AI` beside a new token copies the token and where the guide is.
 - `agent-api` lets an AI token read `GET /api/view` and add, edit, complete, reopen, and delete tasks through `/api/tasks`, credited to the AI.
 
 ## How to get to it (user POV)
@@ -26,6 +27,7 @@ The owner shares a project, a label, or a task with another account, to edit or 
 - **Two accounts on the web.** `bun run test:e2e -- e2e/sharing.e2e.ts` in the repo root. It signs up an owner and a guest in two browser contexts. The owner shares a project by the guest's email; the guest finds it under `Shared with me`, completes a task; the owner sees `Completed by` with the guest's name and an activity line naming them. The second test opens a link in a signed-out context, sees the tasks read only, then sees nothing after `Stop sharing`.
 - **By hand.** Two browser profiles at `http://procrastimate.localhost:6120`, each signed up with its own email. In profile A, add a project with a task, open the share sheet, type B's email, and `Add`. In profile B, the project shows under `Shared with me` within a second. Complete the task in B; in A the task is completed, and its details read `Completed by <B>` with the activity line `<B> completed it`.
 - **Agent API.** In Settings, create an AI account and `Generate token`. Then `curl -H "Authorization: Bearer <token>" -H 'content-type: application/json' -d '{"text":"Water the plants tomorrow"}' http://127.0.0.1:6120/api/tasks`. The task shows in the owner's Inbox for tomorrow, and its details read `Created by <AI name> AI`.
+- **Agent docs.** `curl http://127.0.0.1:6120/api/docs` answers Markdown with no token. With the token from `Generate token`, `curl -H "Authorization: Bearer <token>" http://127.0.0.1:6120/api/docs/agent` lists eight routes with curl examples; without it, `401`. In Settings, `Copy prompt for your AI` puts a paragraph with the token and the guide URL on the clipboard. `bun test server/src/docs.test.ts` runs every example against a real space.
 - **Universal Links.** `curl -i https://procrastimate.stf.lol/.well-known/apple-app-site-association` answers `200` with `Content-Type: application/json` naming `FNYFHG5SV7.com.stefan.procrastimate` and `/s/*`. Locally, `bun run preview` serves the same file at `http://127.0.0.1:8787`.
 
 ## Gotchas

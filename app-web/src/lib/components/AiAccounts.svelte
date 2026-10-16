@@ -7,6 +7,7 @@
 	import Copy from 'phosphor-svelte/lib/Copy';
 	import Key from 'phosphor-svelte/lib/Key';
 	import Plus from 'phosphor-svelte/lib/Plus';
+	import Robot from 'phosphor-svelte/lib/Robot';
 	import Trash from 'phosphor-svelte/lib/Trash';
 	import type { Person } from 'shared/sharing.ts';
 	import PersonName from './PersonName.svelte';
@@ -19,8 +20,8 @@
 	let name = $state('');
 	let error = $state('');
 	/** The secret is only ever in this response, so it lives here until the popover closes. */
-	let token = $state<{ accountId: string; value: string } | null>(null);
-	let copied = $state(false);
+	let token = $state<{ accountId: string; value: string; prompt: string } | null>(null);
+	let copied = $state<'token' | 'prompt' | null>(null);
 	let confirming = $state<string | null>(null);
 
 	onMount(async () => {
@@ -53,13 +54,14 @@
 			error = 'Could not make a token';
 			return;
 		}
-		token = { accountId: account.id, value: created.token };
-		copied = false;
+		token = { accountId: account.id, value: created.token, prompt: created.prompt };
+		copied = null;
 	}
 
-	async function copy(value: string) {
-		await navigator.clipboard?.writeText(value).catch(() => undefined);
-		copied = true;
+	async function copy(what: 'token' | 'prompt') {
+		if (!token) return;
+		await navigator.clipboard?.writeText(what === 'token' ? token.value : token.prompt).catch(() => undefined);
+		copied = what;
 	}
 
 	async function remove(account: Person) {
@@ -103,10 +105,13 @@
 						<p class="text-[12px] text-muted">Copy it now. It will not be shown again.</p>
 						<div class="flex items-center gap-1.5">
 							<code class="min-w-0 flex-1 truncate text-[12px] select-all" aria-label="Token">{token.value}</code>
-							<button type="button" class="btn btn-quiet h-8 px-3 text-[12px] touch:h-11" onclick={() => copy(token!.value)}>
-								{#if copied}<span class="flex items-center gap-1" in:fly={motion({ y: 3, duration: 140 })}><Check size={13} weight="bold" />Copied</span>{:else}<Copy size={13} />Copy{/if}
+							<button type="button" class="btn btn-quiet h-8 px-3 text-[12px] touch:h-11" onclick={() => copy('token')}>
+								{#if copied === 'token'}<span class="flex items-center gap-1" in:fly={motion({ y: 3, duration: 140 })}><Check size={13} weight="bold" />Copied</span>{:else}<Copy size={13} />Copy{/if}
 							</button>
 						</div>
+						<button type="button" class="btn btn-quiet h-8 self-start px-3 text-[12px] touch:h-11" title="Copies the token with where to find the API docs" onclick={() => copy('prompt')}>
+							{#if copied === 'prompt'}<span class="flex items-center gap-1" in:fly={motion({ y: 3, duration: 140 })}><Check size={13} weight="bold" />Copied</span>{:else}<Robot size={13} />Copy prompt for your AI{/if}
+						</button>
 					</div>
 				{/if}
 			</li>

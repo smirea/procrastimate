@@ -1,7 +1,8 @@
 import { implement, ORPCError } from '@orpc/server';
-import { workerContract } from '../../shared/api/contract';
+import { JSON_UTF8, MARKDOWN, workerContract } from '../../shared/api/contract';
 import type { Person } from '../../shared/sharing';
-import { requireHuman } from './actor';
+import { requireActor, requireHuman } from './actor';
+import { agentDocs, agentOpenApiFor, startDocs } from './docs';
 import { internalClient } from './account/peers';
 import { aiAccounts, authMethods, createAiUser, deleteAccount, deleteUser, userByEmail, userById } from './better-auth';
 import type { Env } from './bindings';
@@ -14,8 +15,13 @@ const os = implement(workerContract).$context<{ env: Env; request: Request }>();
 function ownSpace(env: Env, request: Request, actor: Person) {
 	if (!env.ACCOUNT) throw new ORPCError('SERVICE_UNAVAILABLE', { message: 'Sync is not configured' });
 	// The origin shapes link URLs; behind Vite's dev proxy only the browser's `Origin` names the app's port.
-	return internalClient(env.ACCOUNT, actor.id, request.headers.get('origin') ?? new URL(request.url).origin);
+	return internalClient(env.ACCOUNT, actor.id, originOf(request));
 }
+
+// Behind Vite's dev proxy only the browser's `Origin` names the app's port; a bot's request has none.
+const originOf = (request: Request) => request.headers.get('origin') ?? new URL(request.url).origin;
+
+const markdown = (name: string, text: string) => new File([text], name, { type: MARKDOWN });
 
 const prefixed = (name: string, q: string) => name.toLowerCase().startsWith(q.toLowerCase());
 
@@ -95,6 +101,18 @@ export const workerRouter = os.router({
 			const [ownerId, id, ...rest] = input.query.token.split('.');
 			if (!ownerId || !id || rest.length) throw new ORPCError('NOT_FOUND', { message: 'No such link' });
 			return internalClient(env.ACCOUNT, ownerId, new URL(request.url).origin).sharedView({ id });
+		}),
+	},
+	docs: {
+		start: os.docs.start.handler(({ context }) => markdown('procrastimate.md', startDocs(originOf(context.request)))),
+		agent: os.docs.agent.handler(async ({ context }) => {
+			await requireActor(context.request, context.env);
+			return markdown('procrastimate-agent.md', agentDocs(originOf(context.request)));
+		}),
+		openapi: os.docs.openapi.handler(async ({ context }) => {
+			await requireActor(context.request, context.env);
+			const document = JSON.stringify(agentOpenApiFor(originOf(context.request)), null, '\t');
+			return new File([document], 'procrastimate-agent.openapi.json', { type: JSON_UTF8 });
 		}),
 	},
 	shares: {
