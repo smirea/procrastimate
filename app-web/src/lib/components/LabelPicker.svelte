@@ -8,6 +8,7 @@
 	import type { Label } from 'shared/task.ts';
 	import Popover from './Popover.svelte';
 	import { store } from '../store.svelte.ts';
+	import { labelStyle } from '../label-colors.ts';
 	import { mobile, motion } from '../ui.svelte.ts';
 
 	/** A shared task passes its space's labels, and cannot create one: labels made here are always the user's own. */
@@ -76,10 +77,11 @@
 			type="button"
 			class="chip max-w-64"
 			data-active={chosen.length > 0}
+			style={chosen[0] ? labelStyle(chosen[0].color) : undefined}
 			aria-label={chosen.length ? `Labels ${chosen.map((l) => l.name).join(', ')}` : 'Add labels'}
 			onclick={toggle}
 		>
-			<Tag size={15} weight={chosen.length ? 'fill' : 'regular'} class="shrink-0 text-[var(--tone-label)]" />
+			<Tag size={15} weight={chosen.length ? 'fill' : 'regular'} class="shrink-0 {chosen.length ? 'text-[var(--label-tone)]' : 'text-[var(--tone-label)]'}" />
 			<span class="truncate">{chosen.length ? chosen.map((l) => l.name).join(', ') : 'Labels'}</span>
 		</button>
 	{/snippet}
@@ -109,7 +111,7 @@
 					onclick={() => choose(option)}
 				>
 					{#if option.kind === 'existing'}
-						<Tag size={15} weight={checked ? 'fill' : 'regular'} class="shrink-0 text-[var(--tone-label)]" />
+						<Tag size={15} weight={checked ? 'fill' : 'regular'} class="shrink-0 text-[var(--label-tone)]" style={labelStyle(option.item.color)} />
 						<span class="flex-1 truncate">{option.item.name}</span>
 						{#if checked}<span class="grid" transition:scale={motion({ start: 0.5, duration: 160, easing: cubicOut })}><Check size={14} class="text-accent" /></span>{/if}
 					{:else}

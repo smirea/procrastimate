@@ -40,6 +40,30 @@ enum Palette {
     static let tokenRecurrence = Color(light: SRGB(0xD97706, 0.16), dark: SRGB(0xF5A524, 0.22))
     static let tokenMatch = Color(light: SRGB(0xFACC15, 0.4), dark: SRGB(0xFACC15, 0.3))
     static let tokenLabel = Color(light: SRGB(0x0D9488, 0.15), dark: SRGB(0x2DD4BF, 0.2))
+    static let labelRed = Color(light: SRGB(0xB51B1B), dark: SRGB(0xF98686))
+    static let labelRedFill = Color(light: SRGB(0xEF4444, 0.14), dark: SRGB(0xF87171, 0.2))
+    static let labelOrange = Color(light: SRGB(0xAB390B), dark: SRGB(0xFB933E))
+    static let labelOrangeFill = Color(light: SRGB(0xF97316, 0.14), dark: SRGB(0xFB923C, 0.2))
+    static let labelAmber = Color(light: SRGB(0x9E4908), dark: SRGB(0xFBBF24))
+    static let labelAmberFill = Color(light: SRGB(0xF59E0B, 0.14), dark: SRGB(0xFBBF24, 0.2))
+    static let labelLime = Color(light: SRGB(0x456E0D), dark: SRGB(0xA3E635))
+    static let labelLimeFill = Color(light: SRGB(0x84CC16, 0.14), dark: SRGB(0xA3E635, 0.2))
+    static let labelGreen = Color(light: SRGB(0x126F35), dark: SRGB(0x4ADE80))
+    static let labelGreenFill = Color(light: SRGB(0x22C55E, 0.14), dark: SRGB(0x4ADE80, 0.2))
+    static let labelTeal = Color(light: SRGB(0x0E6D65), dark: SRGB(0x2DD4BF))
+    static let labelTealFill = Color(light: SRGB(0x14B8A6, 0.14), dark: SRGB(0x2DD4BF, 0.2))
+    static let labelCyan = Color(light: SRGB(0x0D6A83), dark: SRGB(0x22D3EE))
+    static let labelCyanFill = Color(light: SRGB(0x06B6D4, 0.14), dark: SRGB(0x22D3EE, 0.2))
+    static let labelBlue = Color(light: SRGB(0x1D4ED8), dark: SRGB(0x70AEFB))
+    static let labelBlueFill = Color(light: SRGB(0x3B82F6, 0.14), dark: SRGB(0x60A5FA, 0.2))
+    static let labelIndigo = Color(light: SRGB(0x4338CA), dark: SRGB(0x99A2F9))
+    static let labelIndigoFill = Color(light: SRGB(0x6366F1, 0.14), dark: SRGB(0x818CF8, 0.2))
+    static let labelViolet = Color(light: SRGB(0x6D28D9), dark: SRGB(0xB39BFB))
+    static let labelVioletFill = Color(light: SRGB(0x8B5CF6, 0.14), dark: SRGB(0xA78BFA, 0.2))
+    static let labelPink = Color(light: SRGB(0xB51758), dark: SRGB(0xF584BF))
+    static let labelPinkFill = Color(light: SRGB(0xEC4899, 0.14), dark: SRGB(0xF472B6, 0.2))
+    static let labelGray = Color(light: SRGB(0x52525B), dark: SRGB(0xABABB3))
+    static let labelGrayFill = Color(light: SRGB(0x71717A, 0.14), dark: SRGB(0xA1A1AA, 0.2))
 }
 
 extension ShapeStyle where Self == Color {
@@ -80,4 +104,28 @@ extension ShapeStyle where Self == Color {
     static var tokenRecurrence: Color { Palette.tokenRecurrence }
     static var tokenMatch: Color { Palette.tokenMatch }
     static var tokenLabel: Color { Palette.tokenLabel }
+    static var labelRed: Color { Palette.labelRed }
+    static var labelRedFill: Color { Palette.labelRedFill }
+    static var labelOrange: Color { Palette.labelOrange }
+    static var labelOrangeFill: Color { Palette.labelOrangeFill }
+    static var labelAmber: Color { Palette.labelAmber }
+    static var labelAmberFill: Color { Palette.labelAmberFill }
+    static var labelLime: Color { Palette.labelLime }
+    static var labelLimeFill: Color { Palette.labelLimeFill }
+    static var labelGreen: Color { Palette.labelGreen }
+    static var labelGreenFill: Color { Palette.labelGreenFill }
+    static var labelTeal: Color { Palette.labelTeal }
+    static var labelTealFill: Color { Palette.labelTealFill }
+    static var labelCyan: Color { Palette.labelCyan }
+    static var labelCyanFill: Color { Palette.labelCyanFill }
+    static var labelBlue: Color { Palette.labelBlue }
+    static var labelBlueFill: Color { Palette.labelBlueFill }
+    static var labelIndigo: Color { Palette.labelIndigo }
+    static var labelIndigoFill: Color { Palette.labelIndigoFill }
+    static var labelViolet: Color { Palette.labelViolet }
+    static var labelVioletFill: Color { Palette.labelVioletFill }
+    static var labelPink: Color { Palette.labelPink }
+    static var labelPinkFill: Color { Palette.labelPinkFill }
+    static var labelGray: Color { Palette.labelGray }
+    static var labelGrayFill: Color { Palette.labelGrayFill }
 }

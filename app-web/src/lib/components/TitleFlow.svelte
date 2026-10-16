@@ -31,20 +31,23 @@
 
 <script lang="ts">
 	import { tick } from 'svelte';
-	import { scale } from 'svelte/transition';
-	import { cubicOut } from 'svelte/easing';
-	import Tag from 'phosphor-svelte/lib/Tag';
+	import type { LabelColor } from 'shared/label-colors.ts';
 	import type { Highlight, Range } from 'shared/search.ts';
 	import LinkedText from './LinkedText.svelte';
 	import Highlighted from './Highlighted.svelte';
-	import { motion } from '../ui.svelte.ts';
+	import LabelChip from './LabelChip.svelte';
 
 	let {
 		title,
 		ranges,
 		labels,
 		class: className = '',
-	}: { title: string; ranges?: readonly Range[]; labels: readonly Highlight[]; class?: string } = $props();
+	}: {
+		title: string;
+		ranges?: readonly Range[];
+		labels: readonly (Highlight & { color: LabelColor })[];
+		class?: string;
+	} = $props();
 
 	let flow: HTMLElement;
 	/**
@@ -73,10 +76,7 @@
 {#snippet chips(float: boolean)}
 	<span class={float ? 'chips float' : 'chips'}>
 		{#each labels as label (label.text)}
-			<span class="label-chip" data-label={label.text} transition:scale={motion({ start: 0.6, duration: 180, easing: cubicOut })}>
-				<Tag size={10} weight="fill" class="shrink-0 text-[var(--tone-label)]" />
-				<span class="truncate"><Highlighted highlight={label} /></span>
-			</span>
+			<LabelChip name={label.text} color={label.color}><span class="truncate"><Highlighted highlight={label} /></span></LabelChip>
 		{/each}
 	</span>
 {/snippet}
@@ -110,12 +110,12 @@
 		text-decoration: none;
 	}
 
-	.chips:not(.float) .label-chip {
+	.chips:not(.float) :global(.label-chip) {
 		margin: calc((1lh - 1.125rem) / 2) 0 0 0.25rem;
 		vertical-align: top;
 	}
 
-	.float .label-chip {
+	.float :global(.label-chip) {
 		min-width: 0;
 	}
 

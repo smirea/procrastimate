@@ -25,6 +25,7 @@
 	import { rowButtons } from 'shared/quick-add-buttons.ts';
 	import { WEB_BUTTONS, type WebButton } from '../quick-add-buttons.ts';
 	import { store } from '../store.svelte.ts';
+	import { labelStyle } from '../label-colors.ts';
 	import { creationHome } from '../spaces.ts';
 	import { clock, mobile, sheets, type QuickAddDefaults, motion } from '../ui.svelte.ts';
 	import { dueTone, formatDue, formatRecurrence, formatReminder } from 'shared/format.ts';
@@ -98,7 +99,7 @@
 	const labelTokens = $derived(
 		fieldTokens
 			.filter((t) => t.kind === 'label')
-			.map((token) => ({ token, name: store.labels.find((l) => `@${l.name}`.toLowerCase() === token.text.toLowerCase())?.name })),
+			.map((token) => ({ token, label: store.labels.find((l) => `@${l.name}`.toLowerCase() === token.text.toLowerCase()) })),
 	);
 	const labelIds = $derived([...new Set([...picked.labelIds, ...parsed.labelIds])]);
 	/** The space the task will land in. A shared one offers only its own labels and creates none, as in task details. */
@@ -334,7 +335,7 @@
 										<span class="flex items-center gap-1" style="color: var(--tone-repeat)"><Repeat size={12} />{formatRecurrence(task.recurrence, task.due)}</span>
 									{/if}
 									{#each store.labelsOf(task) as label (label.id)}
-										<span class="flex items-center gap-1"><Tag size={12} weight="fill" class="text-[var(--tone-label)]" />{label.name}</span>
+										<span class="flex items-center gap-1" style={labelStyle(label.color)}><Tag size={12} weight="fill" class="text-[var(--label-tone)]" />{label.name}</span>
 									{/each}
 								</div>
 							{/if}

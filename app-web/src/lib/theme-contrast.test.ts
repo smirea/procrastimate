@@ -1,5 +1,6 @@
 import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
+import { LABEL_COLORS } from 'shared/label-colors.ts';
 
 type Rgba = [number, number, number, number];
 type Tokens = Record<string, string>;
@@ -115,6 +116,13 @@ function pairs(tokens: Tokens) {
 			surface: 'label chip',
 			ratio: Math.min(...canvases.map(bg => contrast(c('--color-muted'), over(c('--token-label'), bg)))),
 		},
+		...LABEL_COLORS.map(key => ({
+			text: `--label-${key}`,
+			surface: `--label-${key}-fill`,
+			ratio: Math.min(
+				...[...canvases, ...strong, solid].map(bg => contrast(c(`--label-${key}`), over(c(`--label-${key}-fill`), bg))),
+			),
+		})),
 		{ text: '--color-on-accent', surface: '--color-accent', ratio: contrast(c('--color-on-accent'), accent) },
 		{
 			text: '--color-on-accent',
@@ -130,6 +138,13 @@ test('every literal light color has a dark value', () => {
 	const missing = Object.entries(lightColors)
 		.filter(([name, value]) => /^(#|rgb\()/.test(value) && !(name in dark))
 		.map(([name]) => name);
+	expect(missing).toEqual([]);
+});
+
+test('every label color has a tone and a fill', () => {
+	const missing = LABEL_COLORS.flatMap(key => [`--label-${key}`, `--label-${key}-fill`]).filter(
+		name => !(name in light),
+	);
 	expect(missing).toEqual([]);
 });
 

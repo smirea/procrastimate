@@ -4,6 +4,8 @@
 	import DotsThree from 'phosphor-svelte/lib/DotsThree';
 	import PencilSimple from 'phosphor-svelte/lib/PencilSimple';
 	import Trash from 'phosphor-svelte/lib/Trash';
+	import Check from 'phosphor-svelte/lib/Check';
+	import Tag from 'phosphor-svelte/lib/Tag';
 	import ShareNetwork from 'phosphor-svelte/lib/ShareNetwork';
 	import View from '#lib/components/View.svelte';
 	import TaskList from '#lib/components/TaskList.svelte';
@@ -14,6 +16,8 @@
 	import { sheets } from '#lib/ui.svelte.ts';
 	import { followMerged } from '#lib/merged.svelte.ts';
 	import { labelTasks } from 'shared/views.ts';
+	import { LABEL_COLORS } from 'shared/label-colors.ts';
+	import { labelColorName, labelStyle } from '#lib/label-colors.ts';
 
 	const label = $derived(store.label(page.params.id ?? ''));
 	const tasks = $derived(label ? labelTasks(store.tasks, label.id) : []);
@@ -64,7 +68,10 @@
 					}}
 				/>
 			{:else}
-				<h1 class="truncate text-[26px] font-semibold tracking-tight">{label.name}</h1>
+				<h1 class="flex min-w-0 items-center gap-2 text-[26px] font-semibold tracking-tight" style={labelStyle(label.color)}>
+					<Tag size={22} weight="fill" class="shrink-0 text-[var(--label-tone)] transition-colors" />
+					<span class="truncate">{label.name}</span>
+				</h1>
 			{/if}
 		{/snippet}
 		{#snippet actions()}
@@ -93,6 +100,24 @@
 									</div>
 								</div>
 							{:else}
+								<div role="radiogroup" aria-label="Label color" class="grid w-max grid-cols-6 gap-0.5 p-1">
+									{#each LABEL_COLORS as color (color)}
+										{@const checked = label.color === color}
+										<button
+											type="button"
+											role="radio"
+											aria-checked={checked}
+											aria-label={labelColorName(color)}
+											class="swatch press"
+											style={labelStyle(color)}
+											onclick={() => store.setLabelColor(label.id, color)}
+										>
+											<span class="grid size-6 place-items-center rounded-full bg-[var(--label-tone)] text-[var(--canvas)] touch:size-7">
+												{#if checked}<Check size={13} weight="bold" />{/if}
+											</span>
+										</button>
+									{/each}
+								</div>
 								<button type="button" class="menu-item" onclick={() => {
 									renaming = true;
 									close();
@@ -112,3 +137,24 @@
 {:else}
 	<p class="mt-16 text-center text-muted">This label no longer exists.</p>
 {/if}
+
+<style>
+	.swatch {
+		display: grid;
+		place-items: center;
+		width: 2.25rem;
+		height: 2.25rem;
+		border-radius: 9999px;
+	}
+
+	.swatch[aria-checked='true'] {
+		box-shadow: inset 0 0 0 2px var(--label-tone);
+	}
+
+	@media (max-width: 767px), (pointer: coarse) {
+		.swatch {
+			width: 2.75rem;
+			height: 2.75rem;
+		}
+	}
+</style>

@@ -18,6 +18,7 @@
 	import PersonName from './PersonName.svelte';
 	import Settings from './Settings.svelte';
 	import { store } from '../store.svelte.ts';
+	import { labelStyle } from '../label-colors.ts';
 	import { clock, mobile, motion, sheets } from '../ui.svelte.ts';
 	import { sharedEntries } from '../spaces.ts';
 	import { inboxTasks, labelTasks, projectTasks, todayTasks } from 'shared/views.ts';
@@ -200,7 +201,7 @@
 						{@const active = page.url.pathname === href}
 						<li transition:slide={motion({ duration: 180, easing: cubicOut })}>
 							<a {href} class="nav-link" class:active aria-current={active ? 'page' : undefined}>
-								<Tag size={18} weight={active ? 'fill' : 'regular'} class={active ? '' : 'text-[var(--tone-label)]'} />
+								<Tag size={18} weight={active ? 'fill' : 'regular'} class="text-[var(--label-tone)]" style={labelStyle(label.color)} />
 								<span class="flex-1 truncate">{label.name}</span>
 								{#if count}<span class="text-[12px] text-faint">{count}</span>{/if}
 							</a>
