@@ -153,6 +153,8 @@ private struct TaskDetailsForm: View {
             .padding(.bottom, keyboardShown ? 16 : 120)
         }
         .scrollDismissesKeyboard(.interactively)
+        // The subtask rows swipe outside a `List`, so the page gives them a list's closing on outside taps and scrolls.
+        .swipeActionsContainer()
         .overlay(alignment: .bottom) { if !locked { floatingActions } }
         .onMessage(of: UIScreen.self, for: .keyboardWillShow) { _ in keyboardShown = true }
         .onMessage(of: UIScreen.self, for: .keyboardWillHide) { _ in keyboardShown = false }
