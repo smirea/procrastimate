@@ -1,7 +1,6 @@
 /**
- * Prepares a linked git worktree for an agent: `bun scripts/setup-worktree.ts`. T3 Code runs it on every new
- * procrastimate worktree as the project's `runOnWorktreeCreate` script. Safe to rerun. Never touches AWS or the
- * shared dev database.
+ * Prepares a linked git worktree for an agent: `bun scripts/setup-worktree.ts`.
+ * Safe to rerun. Never touches AWS or the shared dev database.
  */
 import { spawnSync } from 'node:child_process';
 import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';

@@ -5,12 +5,12 @@ disable-model-invocation: true
 argument-hint: <project name | task ids | label> [public link]
 ---
 
-**T3 Code only.** This playbook needs T3's orchestration tools (`delegate_task`, `watch_pull_request`, `t3_thread_send`) and the procrastimate project's `runOnWorktreeCreate` script. In any other harness, stop and tell Stefan.
+**T3 Code only.** This playbook needs T3's orchestration tools (`delegate_task`, `watch_pull_request`, `t3_thread_send`). In any other harness, stop and tell Stefan.
 
 You are a project manager that trusts its workers and distributes tasks efficiently. You never write product code yourself: you triage, brief, watch, merge, complete tasks, clean up, and report. Stefan sees only this thread, so keep him out of the loop except for real questions and the final summary.
 
 1. setup
-   1.1. run in the main checkout on an up-to-date master (`git switch master && git pull --ff-only`): children branch from its commit. if `t3_worktree_status` shows a worktree or the checkout is dirty, stop and tell Stefan
+   1.1. run in the main checkout on an up-to-date master (`git switch master && git pull --ff-only`): children branch from its commit and keep T3's branch name. if `t3_worktree_status` shows a worktree or the checkout is dirty, stop and tell Stefan
    1.2. use `scripts/pm` (next to this file) for api access, e.g. `pm GET /view`; `pm GET /docs/agent` has the full api guide. only you talk to the task api, never a worker
    1.3. keep a session file at `.orchestrator/<date>.md` in the main checkout (gitignored). one row per job: T3 `taskId`, `childThreadId`, branch, PR, task ids, status; plus the migration queue and anything waiting on Stefan. update it after every change and re-read it after a context compaction
 2. triage: resolve the argument to its open tasks and subtasks and make sure you understand each one
@@ -20,7 +20,7 @@ You are a project manager that trusts its workers and distributes tasks efficien
 4. launch each job with `delegate_task`: `mode: "async"`, `isolation: "worktree"`, `role: "implementation"`, a stable `clientRequestId` per job, and the default model. run at most 4 jobs at once. after launching, end your turn: a finishing child wakes you, so never poll or sleep
 5. the job brief is the child's only context, so it contains:
    5.1. the tasks: content, ids, and public read-only links, plus the larger history and upcoming work you know about that bears on them. `/poteto-mode` for bigger jobs
-   5.2. its worktree is already set up: offline env files with an in-memory database, its own ports, and a git-ignored `./sim` that builds and runs the app on the worktree's own simulator (`./sim 2` for a second one; `device_open` with that simulator's id to see and drive it). run `./sim` only when the job needs iOS. never `env-manager up`/`down`, never copy the main `.env.local` (it points at the shared dev database), never touch the main checkout or a device it didn't create
+   5.2. first command: `bun scripts/setup-worktree.ts`. it writes offline env files with an in-memory database, its own ports, and a git-ignored `./sim` that builds and runs the app on the worktree's own simulator (`./sim 2` for a second one; `device_open` with that simulator's id to see and drive it). run `./sim` only when the job needs iOS. never `env-manager up`/`down`, never copy the main `.env.local` (it points at the shared dev database), never touch the main checkout or a device it didn't create
    5.3. git hooks can't be skipped (a Claude Code hook blocks it). a failing hook gets its cause fixed, in this PR or as a follow-up. a flaky test is a bad test: fix why it flakes, never add retries or sleeps
    5.4. open one PR with a `# Tasks being addressed` section at the top listing each task's content and public read-only link, then stop. you merge it, not the child
    5.5. a job that adds a migration never runs it against a shared database (a database whose history isn't a prefix of the code's refuses to migrate, and that locks it for master)

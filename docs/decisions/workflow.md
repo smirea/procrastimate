@@ -17,6 +17,6 @@
 
 ## Parallel agents
 
-- **Every agent worktree is sandboxed by script.** `scripts/setup-worktree.ts`, which T3 Code runs on every new worktree, gives it its own ports (a git-ignored `.env.override` that env-manager applies to every target), an in-memory database, and a git-ignored `./sim` bound to its own simulator. `scripts/teardown-worktree.ts` removes all of it from the main checkout once the PR is merged. Rules that a script can enforce live in the script, not in prompts.
+- **Every agent worktree is sandboxed by script.** `scripts/setup-worktree.ts` gives it its own ports (a git-ignored `.env.override` that env-manager applies to every target), an in-memory database, and a git-ignored `./sim` bound to its own simulator. `scripts/teardown-worktree.ts` removes all of it from the main checkout once the PR is merged. Rules that a script can enforce live in the script, not in prompts.
 - **Git hooks are never skipped.** A Claude Code hook in `.claude/settings.json` blocks `--no-verify` and lefthook overrides. A failing hook gets its cause fixed; a flaky test is a bad test.
 - **The orchestrator runs jobs as T3 child tasks.** `task-orchestrator-start` launches each job with `delegate_task` in its own worktree, so Stefan sees one thread instead of one per job. The orchestrator watches every job's PR, forwards failures to the child, and does all merging itself, which also serializes migrations.
