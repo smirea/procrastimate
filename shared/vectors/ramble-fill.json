@@ -37,6 +37,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Call mom"
 			}
 		},
@@ -81,6 +82,7 @@
 				"projectId": "spoken",
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent"
 			}
 		},
@@ -123,6 +125,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent"
 			}
 		},
@@ -155,6 +158,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Milk"
 			}
 		}

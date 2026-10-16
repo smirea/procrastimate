@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { fixups } from './fixups.ts';
-import { label, project, snapshotOf, task } from './testing.ts';
+import { label, project, section, snapshotOf, task } from './testing.ts';
 
 describe('fixups', () => {
 	test('leaves a consistent snapshot alone', () => {
@@ -148,5 +148,87 @@ describe('fixups', () => {
 			}),
 		);
 		expect(fixups(once)).toEqual(once);
+	});
+
+	describe('sections', () => {
+		test('a project merge carries its sections, and same-named sections then merge into the oldest', () => {
+			const fixed = fixups(
+				snapshotOf({
+					projects: [project('a', { name: 'Home', createdAt: 1 }), project('b', { name: 'home', createdAt: 2 })],
+					sections: [
+						section('later-a', 'a', { name: 'Later' }),
+						section('later-b', 'b', { name: 'later', createdAt: 2 }),
+						section('next', 'b'),
+					],
+					tasks: [
+						task('t', { projectId: 'b', sectionId: 'later-b' }),
+						task('u', { projectId: 'b', sectionId: 'next' }),
+					],
+				}),
+			);
+			expect(fixed.sections.map(s => [s.id, s.projectId])).toEqual([
+				['later-a', 'a'],
+				['next', 'a'],
+			]);
+			expect(fixed.tasks.map(t => [t.id, t.projectId, t.sectionId])).toEqual([
+				['t', 'a', 'later-a'],
+				['u', 'a', 'next'],
+			]);
+		});
+
+		test('sections from the same Todoist import merge by source key', () => {
+			const fixed = fixups(
+				snapshotOf({
+					projects: [project('p')],
+					sections: [
+						section('mac', 'p', { name: 'Later', sourceKey: 'todoist:section:1:Later', createdAt: 1 }),
+						section('phone', 'p', { name: 'Later (2)', sourceKey: 'todoist:section:1:Later', createdAt: 2 }),
+					],
+					tasks: [task('t', { projectId: 'p', sectionId: 'phone' })],
+				}),
+			);
+			expect(fixed.sections.map(s => s.id)).toEqual(['mac']);
+			expect(fixed.tasks[0]!.sectionId).toBe('mac');
+		});
+
+		test('a section added to a project deleted elsewhere is deleted too', () => {
+			const fixed = fixups(snapshotOf({ sections: [section('s', 'gone')] }));
+			expect(fixed.sections).toEqual([]);
+		});
+
+		test('a task moved into a section deleted elsewhere stays in its project in no section', () => {
+			const fixed = fixups(
+				snapshotOf({ projects: [project('p')], tasks: [task('t', { projectId: 'p', sectionId: 'gone' })] }),
+			);
+			expect(fixed.tasks.map(t => [t.projectId, t.sectionId])).toEqual([['p', null]]);
+		});
+
+		test('a task moved to another project leaves the section it had', () => {
+			const fixed = fixups(
+				snapshotOf({
+					projects: [project('p'), project('q')],
+					sections: [section('s', 'p')],
+					tasks: [task('t', { projectId: 'q', sectionId: 's' })],
+				}),
+			);
+			expect(fixed.tasks[0]!.sectionId).toBeNull();
+		});
+
+		test('a subtask sits in no section, since it shows under its parent', () => {
+			const fixed = fixups(
+				snapshotOf({
+					projects: [project('p')],
+					sections: [section('s', 'p')],
+					tasks: [
+						task('root', { projectId: 'p', sectionId: 's' }),
+						task('child', { parentId: 'root', projectId: 'p', sectionId: 's' }),
+					],
+				}),
+			);
+			expect(fixed.tasks.map(t => [t.id, t.sectionId])).toEqual([
+				['root', 's'],
+				['child', null],
+			]);
+		});
 	});
 });

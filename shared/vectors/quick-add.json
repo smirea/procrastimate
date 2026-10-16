@@ -55,6 +55,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Café ☕ réunion 🎉",
 				"tokens": [
 					{
@@ -130,6 +131,7 @@
 						"minutes": 30
 					}
 				],
+				"sectionId": null,
 				"title": "call mom",
 				"tokens": [
 					{
@@ -200,6 +202,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -264,6 +267,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -328,6 +332,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -392,6 +397,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -456,6 +462,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -520,6 +527,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -584,6 +592,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -648,6 +657,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -712,6 +722,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -776,6 +787,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -840,6 +852,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -904,6 +917,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -968,6 +982,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -1032,6 +1047,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -1096,6 +1112,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -1160,6 +1177,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -1224,6 +1242,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -1288,6 +1307,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -1352,6 +1372,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -1416,6 +1437,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -1480,6 +1502,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Today task",
 				"tokens": [
 					{
@@ -1541,6 +1564,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Fix monitor and update todays notes",
 				"tokens": []
 			}
@@ -1595,6 +1619,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Buy gift feb 30 at 13pm",
 				"tokens": []
 			}
@@ -1649,6 +1674,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "File taxes",
 				"tokens": [
 					{
@@ -1710,6 +1736,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "File taxes",
 				"tokens": [
 					{
@@ -1771,6 +1798,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "File taxes",
 				"tokens": [
 					{
@@ -1832,6 +1860,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "File taxes",
 				"tokens": [
 					{
@@ -1893,6 +1922,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "File taxes",
 				"tokens": [
 					{
@@ -1954,6 +1984,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "File taxes",
 				"tokens": [
 					{
@@ -2015,6 +2046,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "File taxes",
 				"tokens": [
 					{
@@ -2076,6 +2108,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "file taxes",
 				"tokens": [
 					{
@@ -2137,6 +2170,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "File taxes",
 				"tokens": [
 					{
@@ -2198,6 +2232,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Ship it ! p5",
 				"tokens": []
 			}
@@ -2252,6 +2287,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Wow!! nice",
 				"tokens": []
 			}
@@ -2306,6 +2342,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "p2 Review deck",
 				"tokens": [
 					{
@@ -2375,6 +2412,7 @@
 						"minutes": 60
 					}
 				],
+				"sectionId": null,
 				"title": "Dentist",
 				"tokens": [
 					{
@@ -2450,6 +2488,7 @@
 						"minutes": 120
 					}
 				],
+				"sectionId": null,
 				"title": "Dentist",
 				"tokens": [
 					{
@@ -2525,6 +2564,7 @@
 						"minutes": 45
 					}
 				],
+				"sectionId": null,
 				"title": "Dentist",
 				"tokens": [
 					{
@@ -2600,6 +2640,7 @@
 						"minutes": 1440
 					}
 				],
+				"sectionId": null,
 				"title": "Dentist",
 				"tokens": [
 					{
@@ -2675,6 +2716,7 @@
 						"minutes": 10
 					}
 				],
+				"sectionId": null,
 				"title": "Dentist",
 				"tokens": [
 					{
@@ -2751,6 +2793,7 @@
 						"time": "13:00"
 					}
 				],
+				"sectionId": null,
 				"title": "Dentist",
 				"tokens": [
 					{
@@ -2824,6 +2867,7 @@
 						"time": "18:00"
 					}
 				],
+				"sectionId": null,
 				"title": "Water plants",
 				"tokens": [
 					{
@@ -2895,6 +2939,7 @@
 						"time": "09:00"
 					}
 				],
+				"sectionId": null,
 				"title": "Call mom",
 				"tokens": [
 					{
@@ -2969,6 +3014,7 @@
 						"time": "09:00"
 					}
 				],
+				"sectionId": null,
 				"title": "Call mom",
 				"tokens": [
 					{
@@ -3042,6 +3088,7 @@
 						"time": "09:00"
 					}
 				],
+				"sectionId": null,
 				"title": "Renew passport",
 				"tokens": [
 					{
@@ -3109,6 +3156,7 @@
 						"time": "09:00"
 					}
 				],
+				"sectionId": null,
 				"title": "Book flights",
 				"tokens": [
 					{
@@ -3182,6 +3230,7 @@
 						"minutes": 15
 					}
 				],
+				"sectionId": null,
 				"title": "Launch",
 				"tokens": [
 					{
@@ -3255,6 +3304,7 @@
 				"projectId": "p-home",
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Fix sink",
 				"tokens": [
 					{
@@ -3319,6 +3369,7 @@
 				"projectId": "p-side",
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Write docs",
 				"tokens": [
 					{
@@ -3394,6 +3445,7 @@
 				"projectId": "p-car",
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Fix brakes",
 				"tokens": [
 					{
@@ -3461,7 +3513,702 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Fix sink #garage",
+				"tokens": []
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "sections › `/name` picks a section of the typed project, case-insensitively",
+			"input": [
+				"Fix sink #Home /later fri",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						}
+					],
+					"sections": [
+						{
+							"createdAt": 0,
+							"id": "s-home-later",
+							"name": "Later",
+							"order": 0,
+							"projectId": "p-home"
+						},
+						{
+							"createdAt": 0,
+							"id": "s-home-next",
+							"name": "Next up",
+							"order": 0,
+							"projectId": "p-home"
+						},
+						{
+							"createdAt": 0,
+							"id": "s-side-later",
+							"name": "later",
+							"order": 0,
+							"projectId": "p-side"
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-16",
+					"time": null
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": "p-home",
+				"recurrence": null,
+				"reminders": [],
+				"sectionId": "s-home-later",
+				"title": "Fix sink",
+				"tokens": [
+					{
+						"end": 14,
+						"kind": "project",
+						"start": 9,
+						"text": "#Home"
+					},
+					{
+						"end": 21,
+						"kind": "section",
+						"start": 15,
+						"text": "/later"
+					},
+					{
+						"end": 25,
+						"kind": "due",
+						"start": 22,
+						"text": "fri"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "sections › `/name` picks a section of the typed project, case-insensitively",
+			"input": [
+				"Ship /Later #side project",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						}
+					],
+					"sections": [
+						{
+							"createdAt": 0,
+							"id": "s-home-later",
+							"name": "Later",
+							"order": 0,
+							"projectId": "p-home"
+						},
+						{
+							"createdAt": 0,
+							"id": "s-home-next",
+							"name": "Next up",
+							"order": 0,
+							"projectId": "p-home"
+						},
+						{
+							"createdAt": 0,
+							"id": "s-side-later",
+							"name": "later",
+							"order": 0,
+							"projectId": "p-side"
+						}
+					]
+				}
+			],
+			"output": {
+				"due": null,
+				"labelIds": [],
+				"priority": null,
+				"projectId": "p-side",
+				"recurrence": null,
+				"reminders": [],
+				"sectionId": "s-side-later",
+				"title": "Ship",
+				"tokens": [
+					{
+						"end": 11,
+						"kind": "section",
+						"start": 5,
+						"text": "/Later"
+					},
+					{
+						"end": 25,
+						"kind": "project",
+						"start": 12,
+						"text": "#side project"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "sections › `/name` picks a section of the typed project, case-insensitively",
+			"input": [
+				"Plan /next up",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projectId": "p-home",
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						}
+					],
+					"sections": [
+						{
+							"createdAt": 0,
+							"id": "s-home-later",
+							"name": "Later",
+							"order": 0,
+							"projectId": "p-home"
+						},
+						{
+							"createdAt": 0,
+							"id": "s-home-next",
+							"name": "Next up",
+							"order": 0,
+							"projectId": "p-home"
+						},
+						{
+							"createdAt": 0,
+							"id": "s-side-later",
+							"name": "later",
+							"order": 0,
+							"projectId": "p-side"
+						}
+					]
+				}
+			],
+			"output": {
+				"due": null,
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"sectionId": "s-home-next",
+				"title": "Plan",
+				"tokens": [
+					{
+						"end": 13,
+						"kind": "section",
+						"start": 5,
+						"text": "/next up"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "sections › without a project, a section of the project set outside the text, else none",
+			"input": [
+				"Fix sink /next up",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projectId": "p-home",
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						}
+					],
+					"sections": [
+						{
+							"createdAt": 0,
+							"id": "s-home-later",
+							"name": "Later",
+							"order": 0,
+							"projectId": "p-home"
+						},
+						{
+							"createdAt": 0,
+							"id": "s-home-next",
+							"name": "Next up",
+							"order": 0,
+							"projectId": "p-home"
+						},
+						{
+							"createdAt": 0,
+							"id": "s-side-later",
+							"name": "later",
+							"order": 0,
+							"projectId": "p-side"
+						}
+					]
+				}
+			],
+			"output": {
+				"due": null,
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"sectionId": "s-home-next",
+				"title": "Fix sink",
+				"tokens": [
+					{
+						"end": 17,
+						"kind": "section",
+						"start": 9,
+						"text": "/next up"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "sections › without a project, a section of the project set outside the text, else none",
+			"input": [
+				"Fix sink /later",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						}
+					],
+					"sections": [
+						{
+							"createdAt": 0,
+							"id": "s-home-later",
+							"name": "Later",
+							"order": 0,
+							"projectId": "p-home"
+						},
+						{
+							"createdAt": 0,
+							"id": "s-home-next",
+							"name": "Next up",
+							"order": 0,
+							"projectId": "p-home"
+						},
+						{
+							"createdAt": 0,
+							"id": "s-side-later",
+							"name": "later",
+							"order": 0,
+							"projectId": "p-side"
+						}
+					]
+				}
+			],
+			"output": {
+				"due": null,
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"sectionId": null,
+				"title": "Fix sink /later",
+				"tokens": []
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "sections › a section of another project, a slash inside a word, and a path stay text",
+			"input": [
+				"Fix sink #Home /someday",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						}
+					],
+					"sections": [
+						{
+							"createdAt": 0,
+							"id": "s-home-later",
+							"name": "Later",
+							"order": 0,
+							"projectId": "p-home"
+						},
+						{
+							"createdAt": 0,
+							"id": "s-home-next",
+							"name": "Next up",
+							"order": 0,
+							"projectId": "p-home"
+						},
+						{
+							"createdAt": 0,
+							"id": "s-side-later",
+							"name": "later",
+							"order": 0,
+							"projectId": "p-side"
+						}
+					]
+				}
+			],
+			"output": {
+				"due": null,
+				"labelIds": [],
+				"priority": null,
+				"projectId": "p-home",
+				"recurrence": null,
+				"reminders": [],
+				"sectionId": null,
+				"title": "Fix sink /someday",
+				"tokens": [
+					{
+						"end": 14,
+						"kind": "project",
+						"start": 9,
+						"text": "#Home"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "sections › a section of another project, a slash inside a word, and a path stay text",
+			"input": [
+				"Pick and/later tomorrow",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projectId": "p-home",
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						}
+					],
+					"sections": [
+						{
+							"createdAt": 0,
+							"id": "s-home-later",
+							"name": "Later",
+							"order": 0,
+							"projectId": "p-home"
+						},
+						{
+							"createdAt": 0,
+							"id": "s-home-next",
+							"name": "Next up",
+							"order": 0,
+							"projectId": "p-home"
+						},
+						{
+							"createdAt": 0,
+							"id": "s-side-later",
+							"name": "later",
+							"order": 0,
+							"projectId": "p-side"
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-15",
+					"time": null
+				},
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"sectionId": null,
+				"title": "Pick and/later",
+				"tokens": [
+					{
+						"end": 23,
+						"kind": "due",
+						"start": 15,
+						"text": "tomorrow"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "sections › a section of another project, a slash inside a word, and a path stay text",
+			"input": [
+				"Clean /later/cache",
+				{
+					"labels": [
+						{
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work"
+						},
+						{
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom"
+						}
+					],
+					"now": 1791986400000,
+					"projectId": "p-home",
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project"
+						}
+					],
+					"sections": [
+						{
+							"createdAt": 0,
+							"id": "s-home-later",
+							"name": "Later",
+							"order": 0,
+							"projectId": "p-home"
+						},
+						{
+							"createdAt": 0,
+							"id": "s-home-next",
+							"name": "Next up",
+							"order": 0,
+							"projectId": "p-home"
+						},
+						{
+							"createdAt": 0,
+							"id": "s-side-later",
+							"name": "later",
+							"order": 0,
+							"projectId": "p-side"
+						}
+					]
+				}
+			],
+			"output": {
+				"due": null,
+				"labelIds": [],
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"sectionId": null,
+				"title": "Clean /later/cache",
 				"tokens": []
 			}
 		},
@@ -3518,6 +4265,7 @@
 				"projectId": "p-home",
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Call plumber",
 				"tokens": [
 					{
@@ -3597,6 +4345,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Write spec",
 				"tokens": [
 					{
@@ -3678,6 +4427,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Lunch",
 				"tokens": [
 					{
@@ -3739,6 +4489,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Email bob@calls.com",
 				"tokens": []
 			}
@@ -3793,6 +4544,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Ask x@calls",
 				"tokens": []
 			}
@@ -3847,6 +4599,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Reply @calls.com",
 				"tokens": []
 			}
@@ -3901,6 +4654,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Reply to @callsign",
 				"tokens": []
 			}
@@ -3955,6 +4709,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Ping @garage",
 				"tokens": []
 			}
@@ -4009,6 +4764,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Thank you@calls",
 				"tokens": []
 			}
@@ -4063,6 +4819,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Ask @tomorrow",
 				"tokens": []
 			}
@@ -4117,6 +4874,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Ping @5pm",
 				"tokens": []
 			}
@@ -4171,6 +4929,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "DM @p1",
 				"tokens": []
 			}
@@ -4225,6 +4984,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Ping @urgent",
 				"tokens": []
 			}
@@ -4279,6 +5039,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Meet @fri",
 				"tokens": []
 			}
@@ -4335,6 +5096,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Call mom , then dad",
 				"tokens": [
 					{
@@ -4398,6 +5160,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Call mom .",
 				"tokens": [
 					{
@@ -4438,6 +5201,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Call @calls",
 				"tokens": []
 			}
@@ -4495,6 +5259,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -4559,6 +5324,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -4623,6 +5389,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -4687,6 +5454,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -4751,6 +5519,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -4815,6 +5584,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -4879,6 +5649,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -4943,6 +5714,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -5007,6 +5779,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -5071,6 +5844,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -5135,6 +5909,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -5199,6 +5974,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -5263,6 +6039,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -5327,6 +6104,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -5391,6 +6169,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -5455,6 +6234,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -5519,6 +6299,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -5583,6 +6364,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -5647,6 +6429,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -5711,6 +6494,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -5775,6 +6559,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -5839,6 +6624,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -5903,6 +6689,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -5967,6 +6754,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -6031,6 +6819,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -6095,6 +6884,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -6159,6 +6949,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -6223,6 +7014,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -6287,6 +7079,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -6351,6 +7144,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -6415,6 +7209,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -6479,6 +7274,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -6543,6 +7339,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -6607,6 +7404,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -6671,6 +7469,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -6735,6 +7534,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -6799,6 +7599,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -6863,6 +7664,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -6927,6 +7729,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -6991,6 +7794,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -7055,6 +7859,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -7119,6 +7924,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -7183,6 +7989,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -7247,6 +8054,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -7311,6 +8119,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -7375,6 +8184,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -7439,6 +8249,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -7503,6 +8314,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -7567,6 +8379,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -7631,6 +8444,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -7695,6 +8509,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -7759,6 +8574,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -7823,6 +8639,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -7887,6 +8704,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -7951,6 +8769,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -8015,6 +8834,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -8079,6 +8899,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Stretch",
 				"tokens": [
 					{
@@ -8143,6 +8964,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Stretch",
 				"tokens": [
 					{
@@ -8207,6 +9029,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Stretch",
 				"tokens": [
 					{
@@ -8271,6 +9094,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Stretch",
 				"tokens": [
 					{
@@ -8335,6 +9159,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Stretch",
 				"tokens": [
 					{
@@ -8403,6 +9228,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Call mom",
 				"tokens": [
 					{
@@ -8471,6 +9297,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Call mom",
 				"tokens": [
 					{
@@ -8539,6 +9366,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Call mom",
 				"tokens": [
 					{
@@ -8607,6 +9435,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Call mom",
 				"tokens": [
 					{
@@ -8675,6 +9504,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Call mom",
 				"tokens": [
 					{
@@ -8743,6 +9573,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Call mom",
 				"tokens": [
 					{
@@ -8814,6 +9645,7 @@
 					"unit": "day"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "Water plants",
 				"tokens": [
 					{
@@ -8887,6 +9719,7 @@
 						"time": "09:00"
 					}
 				],
+				"sectionId": null,
 				"title": "Water plants",
 				"tokens": [
 					{
@@ -8951,6 +9784,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Renew passport",
 				"tokens": [
 					{
@@ -9015,6 +9849,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Renew passport",
 				"tokens": [
 					{
@@ -9079,6 +9914,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Renew passport",
 				"tokens": [
 					{
@@ -9143,6 +9979,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Renew passport",
 				"tokens": [
 					{
@@ -9207,6 +10044,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Renew passport",
 				"tokens": [
 					{
@@ -9271,6 +10109,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Renew passport",
 				"tokens": [
 					{
@@ -9335,6 +10174,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Renew passport",
 				"tokens": [
 					{
@@ -9399,6 +10239,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Flight",
 				"tokens": [
 					{
@@ -9463,6 +10304,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Dinner",
 				"tokens": [
 					{
@@ -9524,6 +10366,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Order 2027 calendars",
 				"tokens": []
 			}
@@ -9584,6 +10427,7 @@
 					"unit": "day"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "Water plants",
 				"tokens": [
 					{
@@ -9651,6 +10495,7 @@
 					"unit": "day"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "Water plants",
 				"tokens": [
 					{
@@ -9718,6 +10563,7 @@
 					"unit": "week"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "Water plants",
 				"tokens": [
 					{
@@ -9785,6 +10631,7 @@
 					"unit": "month"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "Water plants",
 				"tokens": [
 					{
@@ -9852,6 +10699,7 @@
 					"unit": "year"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "Water plants",
 				"tokens": [
 					{
@@ -9919,6 +10767,7 @@
 					"unit": "week"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "Water plants",
 				"tokens": [
 					{
@@ -9986,6 +10835,7 @@
 					"unit": "week"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "Water plants",
 				"tokens": [
 					{
@@ -10053,6 +10903,7 @@
 					"unit": "week"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "Water plants",
 				"tokens": [
 					{
@@ -10120,6 +10971,7 @@
 					"unit": "day"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "Water plants",
 				"tokens": [
 					{
@@ -10187,6 +11039,7 @@
 					"unit": "week"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "Water plants",
 				"tokens": [
 					{
@@ -10254,6 +11107,7 @@
 					"unit": "month"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "Water plants",
 				"tokens": [
 					{
@@ -10321,6 +11175,7 @@
 					"unit": "week"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "Water plants",
 				"tokens": [
 					{
@@ -10388,6 +11243,7 @@
 					"unit": "day"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "Water plants",
 				"tokens": [
 					{
@@ -10461,6 +11317,7 @@
 					"unit": "day"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "Water plants",
 				"tokens": [
 					{
@@ -10534,6 +11391,7 @@
 					"unit": "day"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "Water plants",
 				"tokens": [
 					{
@@ -10607,6 +11465,7 @@
 					"unit": "week"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "Water plants",
 				"tokens": [
 					{
@@ -10680,6 +11539,7 @@
 					"unit": "week"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "Water plants",
 				"tokens": [
 					{
@@ -10753,6 +11613,7 @@
 					"unit": "week"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "Water plants",
 				"tokens": [
 					{
@@ -10826,6 +11687,7 @@
 					"unit": "weekday"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "Water plants",
 				"tokens": [
 					{
@@ -10893,6 +11755,7 @@
 					"unit": "weekday"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "Water plants",
 				"tokens": [
 					{
@@ -10960,6 +11823,7 @@
 					"unit": "weekday"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "Water plants",
 				"tokens": [
 					{
@@ -11027,6 +11891,7 @@
 					"unit": "weekday"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "Water plants",
 				"tokens": [
 					{
@@ -11100,6 +11965,7 @@
 					"unit": "year"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "Water plants",
 				"tokens": [
 					{
@@ -11173,6 +12039,7 @@
 					"unit": "year"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "Water plants",
 				"tokens": [
 					{
@@ -11246,6 +12113,7 @@
 					"unit": "year"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "Water plants",
 				"tokens": [
 					{
@@ -11313,6 +12181,7 @@
 					"unit": "year"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "Water plants",
 				"tokens": [
 					{
@@ -11380,6 +12249,7 @@
 					"unit": "year"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "Water plants",
 				"tokens": [
 					{
@@ -11453,6 +12323,7 @@
 					"unit": "year"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "Water plants",
 				"tokens": [
 					{
@@ -11520,6 +12391,7 @@
 					"unit": "week"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "Water every mon",
 				"tokens": [
 					{
@@ -11591,6 +12463,7 @@
 					"unit": "week"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "Water plants",
 				"tokens": [
 					{
@@ -11662,6 +12535,7 @@
 					"unit": "week"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "Water plants",
 				"tokens": [
 					{
@@ -11729,6 +12603,7 @@
 					"unit": "weekday"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "Standup",
 				"tokens": [
 					{
@@ -11802,6 +12677,7 @@
 					"unit": "weekday"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "Standup",
 				"tokens": [
 					{
@@ -11880,6 +12756,7 @@
 					"unit": "week"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "gym",
 				"tokens": [
 					{
@@ -11958,6 +12835,7 @@
 					"unit": "week"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "gym",
 				"tokens": [
 					{
@@ -12036,6 +12914,7 @@
 					"unit": "week"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "gym",
 				"tokens": [
 					{
@@ -12113,6 +12992,7 @@
 					"unit": "week"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "gym",
 				"tokens": [
 					{
@@ -12184,6 +13064,7 @@
 					"unit": "week"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "gym",
 				"tokens": [
 					{
@@ -12256,6 +13137,7 @@
 					"unit": "week"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "gym",
 				"tokens": [
 					{
@@ -12327,6 +13209,7 @@
 					"unit": "week"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "gym",
 				"tokens": [
 					{
@@ -12399,6 +13282,7 @@
 					"unit": "week"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "gym",
 				"tokens": [
 					{
@@ -12476,6 +13360,7 @@
 					"unit": "week"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "gym",
 				"tokens": [
 					{
@@ -12547,6 +13432,7 @@
 					"unit": "week"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "gym",
 				"tokens": [
 					{
@@ -12618,6 +13504,7 @@
 					"unit": "week"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "gym",
 				"tokens": [
 					{
@@ -12695,6 +13582,7 @@
 					"unit": "week"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "gym",
 				"tokens": [
 					{
@@ -12772,6 +13660,7 @@
 					"unit": "week"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "gym",
 				"tokens": [
 					{
@@ -12844,6 +13733,7 @@
 					"unit": "week"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "gym",
 				"tokens": [
 					{
@@ -12921,6 +13811,7 @@
 					"unit": "week"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "workout",
 				"tokens": [
 					{
@@ -12992,6 +13883,7 @@
 					"unit": "week"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "workout",
 				"tokens": [
 					{
@@ -13069,6 +13961,7 @@
 					"unit": "week"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "workout",
 				"tokens": [
 					{
@@ -13140,6 +14033,7 @@
 					"unit": "week"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "workout",
 				"tokens": [
 					{
@@ -13207,6 +14101,7 @@
 					"unit": "week"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "gym",
 				"tokens": [
 					{
@@ -13278,6 +14173,7 @@
 					"unit": "week"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "gym",
 				"tokens": [
 					{
@@ -13359,6 +14255,7 @@
 					"unit": "week"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "gym",
 				"tokens": [
 					{
@@ -13431,6 +14328,7 @@
 					"unit": "week"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "gym",
 				"tokens": [
 					{
@@ -13498,6 +14396,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Discuss mon wed plan",
 				"tokens": []
 			}
@@ -13552,6 +14451,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Discuss mon wed",
 				"tokens": []
 			}
@@ -13606,6 +14506,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "mon wed fri",
 				"tokens": []
 			}
@@ -13660,6 +14561,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Compare sat, sun options",
 				"tokens": []
 			}
@@ -13714,6 +14616,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Swap tue and thu shifts",
 				"tokens": []
 			}
@@ -13771,6 +14674,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Lunch",
 				"tokens": [
 					{
@@ -13832,6 +14736,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Party every feb 30",
 				"tokens": []
 			}
@@ -13892,6 +14797,7 @@
 					"unit": "day"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "Water plants",
 				"tokens": [
 					{
@@ -13967,6 +14873,7 @@
 						"minutes": 5
 					}
 				],
+				"sectionId": null,
 				"title": "Dentist",
 				"tokens": [
 					{
@@ -14042,6 +14949,7 @@
 						"minutes": 30
 					}
 				],
+				"sectionId": null,
 				"title": "Dentist",
 				"tokens": [
 					{
@@ -14117,6 +15025,7 @@
 						"minutes": 60
 					}
 				],
+				"sectionId": null,
 				"title": "Dentist",
 				"tokens": [
 					{
@@ -14192,6 +15101,7 @@
 						"minutes": 2880
 					}
 				],
+				"sectionId": null,
 				"title": "Dentist",
 				"tokens": [
 					{
@@ -14267,6 +15177,7 @@
 						"minutes": 10080
 					}
 				],
+				"sectionId": null,
 				"title": "Dentist",
 				"tokens": [
 					{
@@ -14342,6 +15253,7 @@
 						"minutes": 5
 					}
 				],
+				"sectionId": null,
 				"title": "Dentist",
 				"tokens": [
 					{
@@ -14417,6 +15329,7 @@
 						"minutes": 5
 					}
 				],
+				"sectionId": null,
 				"title": "Dentist",
 				"tokens": [
 					{
@@ -14484,6 +15397,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Call Tom",
 				"tokens": []
 			}
@@ -14538,6 +15452,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Call tom",
 				"tokens": []
 			}
@@ -14592,6 +15507,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Tom birthday gift",
 				"tokens": []
 			}
@@ -14646,6 +15562,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Email the report to tom",
 				"tokens": []
 			}
@@ -14700,6 +15617,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Watch tom hanks movie",
 				"tokens": []
 			}
@@ -14754,6 +15672,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Squeeze lemon",
 				"tokens": []
 			}
@@ -14808,6 +15727,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Buy lemons and salmon",
 				"tokens": []
 			}
@@ -14862,6 +15782,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Buy sun hat",
 				"tokens": []
 			}
@@ -14916,6 +15837,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Fix the chair I sat on",
 				"tokens": []
 			}
@@ -14970,6 +15892,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Get wed invitations printed",
 				"tokens": []
 			}
@@ -15024,6 +15947,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Apt 5p buzzer is broken",
 				"tokens": []
 			}
@@ -15078,6 +16002,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Deliver to 5p Baker St",
 				"tokens": []
 			}
@@ -15132,6 +16057,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Room 1730 projector",
 				"tokens": []
 			}
@@ -15186,6 +16112,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay $1730 deposit",
 				"tokens": []
 			}
@@ -15240,6 +16167,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "File taxes 2026",
 				"tokens": []
 			}
@@ -15294,6 +16222,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "2026 budget review",
 				"tokens": []
 			}
@@ -15348,6 +16277,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Buy 50p coins",
 				"tokens": []
 			}
@@ -15402,6 +16332,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Daily standup notes",
 				"tokens": []
 			}
@@ -15456,6 +16387,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Weekly review",
 				"tokens": []
 			}
@@ -15510,6 +16442,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Weekdays only gym",
 				"tokens": []
 			}
@@ -15564,6 +16497,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Monopoly night",
 				"tokens": []
 			}
@@ -15618,6 +16552,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Read 2.5h audiobook",
 				"tokens": []
 			}
@@ -15672,6 +16607,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Momentum check",
 				"tokens": []
 			}
@@ -15726,6 +16662,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Try ratio 15/14",
 				"tokens": []
 			}
@@ -15780,6 +16717,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "I sat and waited",
 				"tokens": []
 			}
@@ -15834,6 +16772,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Sat and sun bathed",
 				"tokens": []
 			}
@@ -15888,6 +16827,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Plan mon wed fri rota",
 				"tokens": []
 			}
@@ -15942,6 +16882,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Read https://example.com/5m#Home",
 				"tokens": []
 			}
@@ -15996,6 +16937,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Watch https://youtu.be/x?t=10m",
 				"tokens": []
 			}
@@ -16050,6 +16992,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "See https://x.com/@calls/status/1",
 				"tokens": []
 			}
@@ -16104,6 +17047,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Check www.site.com/docs/monday-1pm",
 				"tokens": []
 			}
@@ -16158,6 +17102,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Read [p1 notes](https://blog.dev/p1/every-day)",
 				"tokens": []
 			}
@@ -16215,6 +17160,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Lunch with Tom",
 				"tokens": [
 					{
@@ -16282,6 +17228,7 @@
 					"unit": "day"
 				},
 				"reminders": [],
+				"sectionId": null,
 				"title": "Water plants",
 				"tokens": [
 					{
@@ -16346,6 +17293,7 @@
 				"projectId": "p-home",
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Read https://a.com/5pm",
 				"tokens": [
 					{
@@ -16416,6 +17364,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Renew",
 				"tokens": [
 					{
@@ -16480,6 +17429,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Renew",
 				"tokens": [
 					{
@@ -16549,6 +17499,7 @@
 						"minutes": 60
 					}
 				],
+				"sectionId": null,
 				"title": "Submit report",
 				"tokens": [
 					{
@@ -16629,6 +17580,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "This is urgent call the bank",
 				"tokens": []
 			}
@@ -16684,6 +17636,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Important call the bank",
 				"tokens": []
 			}
@@ -16739,6 +17692,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Call the bank !!!",
 				"tokens": []
 			}
@@ -16794,6 +17748,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Call the bank !!",
 				"tokens": []
 			}
@@ -16849,6 +17804,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Call the bank",
 				"tokens": [
 					{
@@ -16911,6 +17867,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Call 1800 flowers",
 				"tokens": []
 			}
@@ -16966,6 +17923,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Order 1730 widgets",
 				"tokens": []
 			}
@@ -17024,6 +17982,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Call 1800 flowers",
 				"tokens": [
 					{
@@ -17089,6 +18048,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Leave",
 				"tokens": [
 					{
@@ -17154,6 +18114,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Meet",
 				"tokens": [
 					{
@@ -17216,6 +18177,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Order 5M screws",
 				"tokens": []
 			}
@@ -17271,6 +18233,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Run 5m",
 				"tokens": []
 			}
@@ -17326,6 +18289,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Plank 2h",
 				"tokens": []
 			}
@@ -17381,6 +18345,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Rest 2d",
 				"tokens": []
 			}
@@ -17436,6 +18401,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Wait 1w",
 				"tokens": []
 			}
@@ -17491,6 +18457,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Plan 3mo",
 				"tokens": []
 			}
@@ -17546,6 +18513,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Study 5 mins",
 				"tokens": []
 			}
@@ -17601,6 +18569,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Split in 2 groups",
 				"tokens": []
 			}
@@ -17656,6 +18625,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Call mom r5m",
 				"tokens": []
 			}
@@ -17711,6 +18681,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Call mom remind me 30m before",
 				"tokens": []
 			}
@@ -17769,6 +18740,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Call mom",
 				"tokens": [
 					{
@@ -17834,6 +18806,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Call mom",
 				"tokens": [
 					{
@@ -17899,6 +18872,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Call mom",
 				"tokens": [
 					{
@@ -17964,6 +18938,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Call mom",
 				"tokens": [
 					{
@@ -18034,6 +19009,7 @@
 						"minutes": 30
 					}
 				],
+				"sectionId": null,
 				"title": "Call mom",
 				"tokens": [
 					{
@@ -18102,6 +19078,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Review Tuesday's notes",
 				"tokens": []
 			}
@@ -18157,6 +19134,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Review Tuesday’s notes",
 				"tokens": []
 			}
@@ -18212,6 +19190,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Prep today's agenda",
 				"tokens": []
 			}
@@ -18267,6 +19246,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Read tomorrow's brief",
 				"tokens": []
 			}
@@ -18322,6 +19302,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Read the 5th chapter",
 				"tokens": []
 			}
@@ -18380,6 +19361,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Pay rent",
 				"tokens": [
 					{
@@ -18444,6 +19426,7 @@
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
+				"sectionId": null,
 				"title": "Review Tuesday's notes",
 				"tokens": [
 					{

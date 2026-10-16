@@ -28,6 +28,27 @@ import Testing
         #expect(task.priority == .p1)
     }
 
+    @Test func aSectionDefaultStaysOnlyInItsProjectAndSlashPicksAnother() throws {
+        let projects = [Project(id: "p-home", name: "Home", createdAt: 0), Project(id: "p-work", name: "Work", createdAt: 0)]
+        let sections = [
+            ProjectSection(id: "s-next", projectId: "p-home", name: "Next up", createdAt: 0),
+            ProjectSection(id: "s-later", projectId: "p-home", name: "Later", createdAt: 0),
+        ]
+        let parse = { (draft: QuickAddDraft) in
+            draft.parse(now: pinned, projects: projects, sections: sections, labels: [], in: utc)
+        }
+        var draft = QuickAddDraft(defaults: .init(projectId: "p-home", sectionId: "s-next"), today: today)
+        draft.setText("Paint door")
+        #expect(try #require(draft.resolve(parse(draft))).sectionId == "s-next")
+        draft.setText("Paint door /later")
+        let later = try #require(draft.resolve(parse(draft)))
+        #expect([later.title, later.projectId, later.sectionId] == ["Paint door", "p-home", "s-later"])
+        draft.setText("Paint door #Work")
+        let work = try #require(draft.resolve(parse(draft)))
+        #expect(work.projectId == "p-work")
+        #expect(work.sectionId == nil)
+    }
+
     @Test func defaultsApplyAndResetForTheNextTask() {
         var draft = QuickAddDraft(defaults: .init(projectId: "p-work", labelId: "l-calls", today: true), today: today)
         draft.setText("Ping Ana @calls")

@@ -36,6 +36,23 @@
 						}
 					],
 					"remindersCheckedAt": 1791972000000,
+					"sections": [
+						{
+							"createdAt": 1791800000003,
+							"id": "s-next",
+							"name": "Next",
+							"order": 0,
+							"projectId": "p-work"
+						},
+						{
+							"createdAt": 1791800000004,
+							"id": "s-later",
+							"name": "Later",
+							"order": 1,
+							"projectId": "p-work",
+							"sourceKey": "todoist:section:7:Later"
+						}
+					],
 					"spaces": {
 						"u-ana": {
 							"cursor": 3,
@@ -69,6 +86,15 @@
 								"t-ana-2"
 							],
 							"scope": "scope-hash",
+							"sections": [
+								{
+									"createdAt": 1791800000011,
+									"id": "s-ana",
+									"name": "Walls",
+									"order": 0,
+									"projectId": "p-ana"
+								}
+							],
 							"targets": [
 								{
 									"id": "p-ana",
@@ -94,6 +120,7 @@
 									"projectId": "p-ana",
 									"recurrence": null,
 									"reminders": [],
+									"sectionId": null,
 									"title": "Paint"
 								},
 								{
@@ -114,6 +141,898 @@
 									"projectId": "p-ana",
 									"recurrence": null,
 									"reminders": [],
+									"sectionId": null,
+									"title": "t-ana-2"
+								}
+							]
+						}
+					},
+					"sync": {
+						"clock": "1791972000001:0:d-phone",
+						"cursor": 12,
+						"deviceId": "d-phone",
+						"dictation": "native",
+						"epoch": 0,
+						"outbox": [
+							{
+								"fields": {
+									"due": {
+										"date": "2026-10-16",
+										"time": "07:00"
+									},
+									"labelIds": [
+										"l-health"
+									],
+									"title": "Gym"
+								},
+								"hlc": "1791972000000:0:d-phone",
+								"id": "a0d6b1e2-0001-4c1e-9b1e-000000000001",
+								"kind": "task",
+								"opId": "op-1"
+							},
+							{
+								"fields": {
+									"deleted": true
+								},
+								"hlc": "1791972000001:0:d-phone",
+								"id": "l-old",
+								"kind": "label",
+								"opId": "op-2"
+							}
+						],
+						"reset": false,
+						"seed": false,
+						"timeZone": "Europe/Berlin"
+					},
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1791900000000,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-16",
+								"time": "07:00"
+							},
+							"event": null,
+							"id": "a0d6b1e2-0001-4c1e-9b1e-000000000001",
+							"labelIds": [
+								"l-health"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "Leg day",
+							"order": 0,
+							"parentId": null,
+							"priority": 2,
+							"projectId": "p-home",
+							"recurrence": {
+								"days": [
+									1,
+									3,
+									5
+								],
+								"interval": 1,
+								"unit": "week"
+							},
+							"reminders": [
+								{
+									"kind": "before",
+									"minutes": 30
+								},
+								{
+									"date": "2026-10-15",
+									"kind": "at",
+									"time": "21:00"
+								}
+							],
+							"sectionId": null,
+							"title": "Gym"
+						},
+						{
+							"completedAt": 1791950000000,
+							"completedBy": null,
+							"createdAt": 1791900000001,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "a0d6b1e2-0002-4c1e-9b1e-000000000002",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 1.5,
+							"parentId": "a0d6b1e2-0001-4c1e-9b1e-000000000001",
+							"priority": 4,
+							"projectId": "p-home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "Stretch"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1791900000002,
+							"createdBy": null,
+							"due": {
+								"date": "2026-11-01",
+								"time": null
+							},
+							"event": null,
+							"id": "a0d6b1e2-0003-4c1e-9b1e-000000000003",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 1,
+							"projectId": null,
+							"recurrence": {
+								"interval": 1,
+								"unit": "year"
+							},
+							"reminders": [],
+							"sectionId": null,
+							"sourceKey": "todoist:task:42",
+							"title": "Taxes"
+						}
+					]
+				},
+				10
+			],
+			"output": {
+				"labels": [
+					{
+						"createdAt": 1791800000002,
+						"id": "l-health",
+						"name": "health"
+					}
+				],
+				"people": [
+					{
+						"id": "u-ana",
+						"kind": "human",
+						"name": "Ana",
+						"ownerId": null
+					}
+				],
+				"projects": [
+					{
+						"createdAt": 1791800000000,
+						"id": "p-home",
+						"name": "Home"
+					},
+					{
+						"createdAt": 1791800000001,
+						"id": "p-work",
+						"name": "Work",
+						"sourceKey": "todoist:project:7"
+					}
+				],
+				"remindersCheckedAt": 1791972000000,
+				"sections": [
+					{
+						"createdAt": 1791800000003,
+						"id": "s-next",
+						"name": "Next",
+						"order": 0,
+						"projectId": "p-work"
+					},
+					{
+						"createdAt": 1791800000004,
+						"id": "s-later",
+						"name": "Later",
+						"order": 1,
+						"projectId": "p-work",
+						"sourceKey": "todoist:section:7:Later"
+					}
+				],
+				"spaces": {
+					"u-ana": {
+						"cursor": 3,
+						"epoch": 1,
+						"labels": [],
+						"outbox": [
+							{
+								"fields": {
+									"title": "Paint"
+								},
+								"hlc": "1791972000002:0:d-phone",
+								"id": "t-ana-1",
+								"kind": "task",
+								"opId": "op-3"
+							}
+						],
+						"owner": {
+							"id": "u-ana",
+							"kind": "human",
+							"name": "Ana",
+							"ownerId": null
+						},
+						"projects": [
+							{
+								"createdAt": 1791800000010,
+								"id": "p-ana",
+								"name": "Studio"
+							}
+						],
+						"readOnly": [
+							"t-ana-2"
+						],
+						"scope": "scope-hash",
+						"sections": [
+							{
+								"createdAt": 1791800000011,
+								"id": "s-ana",
+								"name": "Walls",
+								"order": 0,
+								"projectId": "p-ana"
+							}
+						],
+						"targets": [
+							{
+								"id": "p-ana",
+								"kind": "project"
+							}
+						],
+						"tasks": [
+							{
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 1791900000010,
+								"createdBy": "u-ana",
+								"due": null,
+								"event": null,
+								"id": "t-ana-1",
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": "p-ana",
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "Paint"
+							},
+							{
+								"completedAt": null,
+								"completedBy": "u-ana",
+								"createdAt": 1791900000011,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"id": "t-ana-2",
+								"labelIds": [],
+								"lastCompletedAt": 1791960000000,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": "p-ana",
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "t-ana-2"
+							}
+						]
+					}
+				},
+				"sync": {
+					"clock": "1791972000001:0:d-phone",
+					"cursor": 12,
+					"deviceId": "d-phone",
+					"dictation": "native",
+					"epoch": 0,
+					"outbox": [
+						{
+							"fields": {
+								"due": {
+									"date": "2026-10-16",
+									"time": "07:00"
+								},
+								"labelIds": [
+									"l-health"
+								],
+								"title": "Gym"
+							},
+							"hlc": "1791972000000:0:d-phone",
+							"id": "a0d6b1e2-0001-4c1e-9b1e-000000000001",
+							"kind": "task",
+							"opId": "op-1"
+						},
+						{
+							"fields": {
+								"deleted": true
+							},
+							"hlc": "1791972000001:0:d-phone",
+							"id": "l-old",
+							"kind": "label",
+							"opId": "op-2"
+						}
+					],
+					"reset": false,
+					"seed": false,
+					"timeZone": "Europe/Berlin"
+				},
+				"tasks": [
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791900000000,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-16",
+							"time": "07:00"
+						},
+						"event": null,
+						"id": "a0d6b1e2-0001-4c1e-9b1e-000000000001",
+						"labelIds": [
+							"l-health"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "Leg day",
+						"order": 0,
+						"parentId": null,
+						"priority": 2,
+						"projectId": "p-home",
+						"recurrence": {
+							"days": [
+								1,
+								3,
+								5
+							],
+							"interval": 1,
+							"unit": "week"
+						},
+						"reminders": [
+							{
+								"kind": "before",
+								"minutes": 30
+							},
+							{
+								"date": "2026-10-15",
+								"kind": "at",
+								"time": "21:00"
+							}
+						],
+						"sectionId": null,
+						"title": "Gym"
+					},
+					{
+						"completedAt": 1791950000000,
+						"completedBy": null,
+						"createdAt": 1791900000001,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "a0d6b1e2-0002-4c1e-9b1e-000000000002",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 1.5,
+						"parentId": "a0d6b1e2-0001-4c1e-9b1e-000000000001",
+						"priority": 4,
+						"projectId": "p-home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Stretch"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791900000002,
+						"createdBy": null,
+						"due": {
+							"date": "2026-11-01",
+							"time": null
+						},
+						"event": null,
+						"id": "a0d6b1e2-0003-4c1e-9b1e-000000000003",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 1,
+						"projectId": null,
+						"recurrence": {
+							"interval": 1,
+							"unit": "year"
+						},
+						"reminders": [],
+						"sectionId": null,
+						"sourceKey": "todoist:task:42",
+						"title": "Taxes"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseSnapshot",
+			"test": "parseSnapshot › a document stored before sharing has no shared spaces",
+			"input": [
+				{
+					"labels": [
+						{
+							"createdAt": 1791800000002,
+							"id": "l-health",
+							"name": "health"
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 1791800000000,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 1791800000001,
+							"id": "p-work",
+							"name": "Work",
+							"sourceKey": "todoist:project:7"
+						}
+					],
+					"remindersCheckedAt": 1791972000000,
+					"sections": [
+						{
+							"createdAt": 1791800000003,
+							"id": "s-next",
+							"name": "Next",
+							"order": 0,
+							"projectId": "p-work"
+						},
+						{
+							"createdAt": 1791800000004,
+							"id": "s-later",
+							"name": "Later",
+							"order": 1,
+							"projectId": "p-work",
+							"sourceKey": "todoist:section:7:Later"
+						}
+					],
+					"sync": {
+						"clock": "1791972000001:0:d-phone",
+						"cursor": 12,
+						"deviceId": "d-phone",
+						"dictation": "native",
+						"epoch": 0,
+						"outbox": [
+							{
+								"fields": {
+									"due": {
+										"date": "2026-10-16",
+										"time": "07:00"
+									},
+									"labelIds": [
+										"l-health"
+									],
+									"title": "Gym"
+								},
+								"hlc": "1791972000000:0:d-phone",
+								"id": "a0d6b1e2-0001-4c1e-9b1e-000000000001",
+								"kind": "task",
+								"opId": "op-1"
+							},
+							{
+								"fields": {
+									"deleted": true
+								},
+								"hlc": "1791972000001:0:d-phone",
+								"id": "l-old",
+								"kind": "label",
+								"opId": "op-2"
+							}
+						],
+						"reset": false,
+						"seed": false,
+						"timeZone": "Europe/Berlin"
+					},
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1791900000000,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-16",
+								"time": "07:00"
+							},
+							"event": null,
+							"id": "a0d6b1e2-0001-4c1e-9b1e-000000000001",
+							"labelIds": [
+								"l-health"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "Leg day",
+							"order": 0,
+							"parentId": null,
+							"priority": 2,
+							"projectId": "p-home",
+							"recurrence": {
+								"days": [
+									1,
+									3,
+									5
+								],
+								"interval": 1,
+								"unit": "week"
+							},
+							"reminders": [
+								{
+									"kind": "before",
+									"minutes": 30
+								},
+								{
+									"date": "2026-10-15",
+									"kind": "at",
+									"time": "21:00"
+								}
+							],
+							"sectionId": null,
+							"title": "Gym"
+						},
+						{
+							"completedAt": 1791950000000,
+							"completedBy": null,
+							"createdAt": 1791900000001,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "a0d6b1e2-0002-4c1e-9b1e-000000000002",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 1.5,
+							"parentId": "a0d6b1e2-0001-4c1e-9b1e-000000000001",
+							"priority": 4,
+							"projectId": "p-home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "Stretch"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1791900000002,
+							"createdBy": null,
+							"due": {
+								"date": "2026-11-01",
+								"time": null
+							},
+							"event": null,
+							"id": "a0d6b1e2-0003-4c1e-9b1e-000000000003",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 1,
+							"projectId": null,
+							"recurrence": {
+								"interval": 1,
+								"unit": "year"
+							},
+							"reminders": [],
+							"sectionId": null,
+							"sourceKey": "todoist:task:42",
+							"title": "Taxes"
+						}
+					]
+				},
+				10
+			],
+			"output": {
+				"labels": [
+					{
+						"createdAt": 1791800000002,
+						"id": "l-health",
+						"name": "health"
+					}
+				],
+				"people": [],
+				"projects": [
+					{
+						"createdAt": 1791800000000,
+						"id": "p-home",
+						"name": "Home"
+					},
+					{
+						"createdAt": 1791800000001,
+						"id": "p-work",
+						"name": "Work",
+						"sourceKey": "todoist:project:7"
+					}
+				],
+				"remindersCheckedAt": 1791972000000,
+				"sections": [
+					{
+						"createdAt": 1791800000003,
+						"id": "s-next",
+						"name": "Next",
+						"order": 0,
+						"projectId": "p-work"
+					},
+					{
+						"createdAt": 1791800000004,
+						"id": "s-later",
+						"name": "Later",
+						"order": 1,
+						"projectId": "p-work",
+						"sourceKey": "todoist:section:7:Later"
+					}
+				],
+				"spaces": {},
+				"sync": {
+					"clock": "1791972000001:0:d-phone",
+					"cursor": 12,
+					"deviceId": "d-phone",
+					"dictation": "native",
+					"epoch": 0,
+					"outbox": [
+						{
+							"fields": {
+								"due": {
+									"date": "2026-10-16",
+									"time": "07:00"
+								},
+								"labelIds": [
+									"l-health"
+								],
+								"title": "Gym"
+							},
+							"hlc": "1791972000000:0:d-phone",
+							"id": "a0d6b1e2-0001-4c1e-9b1e-000000000001",
+							"kind": "task",
+							"opId": "op-1"
+						},
+						{
+							"fields": {
+								"deleted": true
+							},
+							"hlc": "1791972000001:0:d-phone",
+							"id": "l-old",
+							"kind": "label",
+							"opId": "op-2"
+						}
+					],
+					"reset": false,
+					"seed": false,
+					"timeZone": "Europe/Berlin"
+				},
+				"tasks": [
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791900000000,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-16",
+							"time": "07:00"
+						},
+						"event": null,
+						"id": "a0d6b1e2-0001-4c1e-9b1e-000000000001",
+						"labelIds": [
+							"l-health"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "Leg day",
+						"order": 0,
+						"parentId": null,
+						"priority": 2,
+						"projectId": "p-home",
+						"recurrence": {
+							"days": [
+								1,
+								3,
+								5
+							],
+							"interval": 1,
+							"unit": "week"
+						},
+						"reminders": [
+							{
+								"kind": "before",
+								"minutes": 30
+							},
+							{
+								"date": "2026-10-15",
+								"kind": "at",
+								"time": "21:00"
+							}
+						],
+						"sectionId": null,
+						"title": "Gym"
+					},
+					{
+						"completedAt": 1791950000000,
+						"completedBy": null,
+						"createdAt": 1791900000001,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "a0d6b1e2-0002-4c1e-9b1e-000000000002",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 1.5,
+						"parentId": "a0d6b1e2-0001-4c1e-9b1e-000000000001",
+						"priority": 4,
+						"projectId": "p-home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Stretch"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791900000002,
+						"createdBy": null,
+						"due": {
+							"date": "2026-11-01",
+							"time": null
+						},
+						"event": null,
+						"id": "a0d6b1e2-0003-4c1e-9b1e-000000000003",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 1,
+						"projectId": null,
+						"recurrence": {
+							"interval": 1,
+							"unit": "year"
+						},
+						"reminders": [],
+						"sectionId": null,
+						"sourceKey": "todoist:task:42",
+						"title": "Taxes"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseSnapshot",
+			"test": "parseSnapshot › a document stored before sections has none, and its tasks sit in no section",
+			"input": [
+				{
+					"labels": [
+						{
+							"createdAt": 1791800000002,
+							"id": "l-health",
+							"name": "health"
+						}
+					],
+					"people": [
+						{
+							"id": "u-ana",
+							"kind": "human",
+							"name": "Ana",
+							"ownerId": null
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 1791800000000,
+							"id": "p-home",
+							"name": "Home"
+						},
+						{
+							"createdAt": 1791800000001,
+							"id": "p-work",
+							"name": "Work",
+							"sourceKey": "todoist:project:7"
+						}
+					],
+					"remindersCheckedAt": 1791972000000,
+					"spaces": {
+						"u-ana": {
+							"cursor": 3,
+							"epoch": 1,
+							"labels": [],
+							"outbox": [
+								{
+									"fields": {
+										"title": "Paint"
+									},
+									"hlc": "1791972000002:0:d-phone",
+									"id": "t-ana-1",
+									"kind": "task",
+									"opId": "op-3"
+								}
+							],
+							"owner": {
+								"id": "u-ana",
+								"kind": "human",
+								"name": "Ana",
+								"ownerId": null
+							},
+							"projects": [
+								{
+									"createdAt": 1791800000010,
+									"id": "p-ana",
+									"name": "Studio"
+								}
+							],
+							"readOnly": [
+								"t-ana-2"
+							],
+							"scope": "scope-hash",
+							"sections": [
+								{
+									"createdAt": 1791800000011,
+									"id": "s-ana",
+									"name": "Walls",
+									"order": 0,
+									"projectId": "p-ana"
+								}
+							],
+							"targets": [
+								{
+									"id": "p-ana",
+									"kind": "project"
+								}
+							],
+							"tasks": [
+								{
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 1791900000010,
+									"createdBy": "u-ana",
+									"due": null,
+									"event": null,
+									"id": "t-ana-1",
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": "p-ana",
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"title": "Paint"
+								},
+								{
+									"completedAt": null,
+									"completedBy": "u-ana",
+									"createdAt": 1791900000011,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"id": "t-ana-2",
+									"labelIds": [],
+									"lastCompletedAt": 1791960000000,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": "p-ana",
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
 									"title": "t-ana-2"
 								}
 							]
@@ -281,6 +1200,7 @@
 					}
 				],
 				"remindersCheckedAt": 1791972000000,
+				"sections": [],
 				"spaces": {
 					"u-ana": {
 						"cursor": 3,
@@ -314,6 +1234,15 @@
 							"t-ana-2"
 						],
 						"scope": "scope-hash",
+						"sections": [
+							{
+								"createdAt": 1791800000011,
+								"id": "s-ana",
+								"name": "Walls",
+								"order": 0,
+								"projectId": "p-ana"
+							}
+						],
 						"targets": [
 							{
 								"id": "p-ana",
@@ -339,6 +1268,7 @@
 								"projectId": "p-ana",
 								"recurrence": null,
 								"reminders": [],
+								"sectionId": null,
 								"title": "Paint"
 							},
 							{
@@ -359,6 +1289,7 @@
 								"projectId": "p-ana",
 								"recurrence": null,
 								"reminders": [],
+								"sectionId": null,
 								"title": "t-ana-2"
 							}
 						]
@@ -443,6 +1374,7 @@
 								"time": "21:00"
 							}
 						],
+						"sectionId": null,
 						"title": "Gym"
 					},
 					{
@@ -463,6 +1395,7 @@
 						"projectId": "p-home",
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "Stretch"
 					},
 					{
@@ -489,319 +1422,7 @@
 							"unit": "year"
 						},
 						"reminders": [],
-						"sourceKey": "todoist:task:42",
-						"title": "Taxes"
-					}
-				]
-			}
-		},
-		{
-			"fn": "parseSnapshot",
-			"test": "parseSnapshot › a document stored before sharing has no shared spaces",
-			"input": [
-				{
-					"labels": [
-						{
-							"createdAt": 1791800000002,
-							"id": "l-health",
-							"name": "health"
-						}
-					],
-					"projects": [
-						{
-							"createdAt": 1791800000000,
-							"id": "p-home",
-							"name": "Home"
-						},
-						{
-							"createdAt": 1791800000001,
-							"id": "p-work",
-							"name": "Work",
-							"sourceKey": "todoist:project:7"
-						}
-					],
-					"remindersCheckedAt": 1791972000000,
-					"sync": {
-						"clock": "1791972000001:0:d-phone",
-						"cursor": 12,
-						"deviceId": "d-phone",
-						"dictation": "native",
-						"epoch": 0,
-						"outbox": [
-							{
-								"fields": {
-									"due": {
-										"date": "2026-10-16",
-										"time": "07:00"
-									},
-									"labelIds": [
-										"l-health"
-									],
-									"title": "Gym"
-								},
-								"hlc": "1791972000000:0:d-phone",
-								"id": "a0d6b1e2-0001-4c1e-9b1e-000000000001",
-								"kind": "task",
-								"opId": "op-1"
-							},
-							{
-								"fields": {
-									"deleted": true
-								},
-								"hlc": "1791972000001:0:d-phone",
-								"id": "l-old",
-								"kind": "label",
-								"opId": "op-2"
-							}
-						],
-						"reset": false,
-						"seed": false,
-						"timeZone": "Europe/Berlin"
-					},
-					"tasks": [
-						{
-							"completedAt": null,
-							"completedBy": null,
-							"createdAt": 1791900000000,
-							"createdBy": null,
-							"due": {
-								"date": "2026-10-16",
-								"time": "07:00"
-							},
-							"event": null,
-							"id": "a0d6b1e2-0001-4c1e-9b1e-000000000001",
-							"labelIds": [
-								"l-health"
-							],
-							"lastCompletedAt": null,
-							"location": null,
-							"notes": "Leg day",
-							"order": 0,
-							"parentId": null,
-							"priority": 2,
-							"projectId": "p-home",
-							"recurrence": {
-								"days": [
-									1,
-									3,
-									5
-								],
-								"interval": 1,
-								"unit": "week"
-							},
-							"reminders": [
-								{
-									"kind": "before",
-									"minutes": 30
-								},
-								{
-									"date": "2026-10-15",
-									"kind": "at",
-									"time": "21:00"
-								}
-							],
-							"title": "Gym"
-						},
-						{
-							"completedAt": 1791950000000,
-							"completedBy": null,
-							"createdAt": 1791900000001,
-							"createdBy": null,
-							"due": null,
-							"event": null,
-							"id": "a0d6b1e2-0002-4c1e-9b1e-000000000002",
-							"labelIds": [],
-							"lastCompletedAt": null,
-							"location": null,
-							"notes": "",
-							"order": 1.5,
-							"parentId": "a0d6b1e2-0001-4c1e-9b1e-000000000001",
-							"priority": 4,
-							"projectId": "p-home",
-							"recurrence": null,
-							"reminders": [],
-							"title": "Stretch"
-						},
-						{
-							"completedAt": null,
-							"completedBy": null,
-							"createdAt": 1791900000002,
-							"createdBy": null,
-							"due": {
-								"date": "2026-11-01",
-								"time": null
-							},
-							"event": null,
-							"id": "a0d6b1e2-0003-4c1e-9b1e-000000000003",
-							"labelIds": [],
-							"lastCompletedAt": null,
-							"location": null,
-							"notes": "",
-							"order": 0,
-							"parentId": null,
-							"priority": 1,
-							"projectId": null,
-							"recurrence": {
-								"interval": 1,
-								"unit": "year"
-							},
-							"reminders": [],
-							"sourceKey": "todoist:task:42",
-							"title": "Taxes"
-						}
-					]
-				},
-				10
-			],
-			"output": {
-				"labels": [
-					{
-						"createdAt": 1791800000002,
-						"id": "l-health",
-						"name": "health"
-					}
-				],
-				"people": [],
-				"projects": [
-					{
-						"createdAt": 1791800000000,
-						"id": "p-home",
-						"name": "Home"
-					},
-					{
-						"createdAt": 1791800000001,
-						"id": "p-work",
-						"name": "Work",
-						"sourceKey": "todoist:project:7"
-					}
-				],
-				"remindersCheckedAt": 1791972000000,
-				"spaces": {},
-				"sync": {
-					"clock": "1791972000001:0:d-phone",
-					"cursor": 12,
-					"deviceId": "d-phone",
-					"dictation": "native",
-					"epoch": 0,
-					"outbox": [
-						{
-							"fields": {
-								"due": {
-									"date": "2026-10-16",
-									"time": "07:00"
-								},
-								"labelIds": [
-									"l-health"
-								],
-								"title": "Gym"
-							},
-							"hlc": "1791972000000:0:d-phone",
-							"id": "a0d6b1e2-0001-4c1e-9b1e-000000000001",
-							"kind": "task",
-							"opId": "op-1"
-						},
-						{
-							"fields": {
-								"deleted": true
-							},
-							"hlc": "1791972000001:0:d-phone",
-							"id": "l-old",
-							"kind": "label",
-							"opId": "op-2"
-						}
-					],
-					"reset": false,
-					"seed": false,
-					"timeZone": "Europe/Berlin"
-				},
-				"tasks": [
-					{
-						"completedAt": null,
-						"completedBy": null,
-						"createdAt": 1791900000000,
-						"createdBy": null,
-						"due": {
-							"date": "2026-10-16",
-							"time": "07:00"
-						},
-						"event": null,
-						"id": "a0d6b1e2-0001-4c1e-9b1e-000000000001",
-						"labelIds": [
-							"l-health"
-						],
-						"lastCompletedAt": null,
-						"location": null,
-						"notes": "Leg day",
-						"order": 0,
-						"parentId": null,
-						"priority": 2,
-						"projectId": "p-home",
-						"recurrence": {
-							"days": [
-								1,
-								3,
-								5
-							],
-							"interval": 1,
-							"unit": "week"
-						},
-						"reminders": [
-							{
-								"kind": "before",
-								"minutes": 30
-							},
-							{
-								"date": "2026-10-15",
-								"kind": "at",
-								"time": "21:00"
-							}
-						],
-						"title": "Gym"
-					},
-					{
-						"completedAt": 1791950000000,
-						"completedBy": null,
-						"createdAt": 1791900000001,
-						"createdBy": null,
-						"due": null,
-						"event": null,
-						"id": "a0d6b1e2-0002-4c1e-9b1e-000000000002",
-						"labelIds": [],
-						"lastCompletedAt": null,
-						"location": null,
-						"notes": "",
-						"order": 1.5,
-						"parentId": "a0d6b1e2-0001-4c1e-9b1e-000000000001",
-						"priority": 4,
-						"projectId": "p-home",
-						"recurrence": null,
-						"reminders": [],
-						"title": "Stretch"
-					},
-					{
-						"completedAt": null,
-						"completedBy": null,
-						"createdAt": 1791900000002,
-						"createdBy": null,
-						"due": {
-							"date": "2026-11-01",
-							"time": null
-						},
-						"event": null,
-						"id": "a0d6b1e2-0003-4c1e-9b1e-000000000003",
-						"labelIds": [],
-						"lastCompletedAt": null,
-						"location": null,
-						"notes": "",
-						"order": 0,
-						"parentId": null,
-						"priority": 1,
-						"projectId": null,
-						"recurrence": {
-							"interval": 1,
-							"unit": "year"
-						},
-						"reminders": [],
+						"sectionId": null,
 						"sourceKey": "todoist:task:42",
 						"title": "Taxes"
 					}
@@ -842,6 +1463,23 @@
 						}
 					],
 					"remindersCheckedAt": 1791972000000,
+					"sections": [
+						{
+							"createdAt": 1791800000003,
+							"id": "s-next",
+							"name": "Next",
+							"order": 0,
+							"projectId": "p-work"
+						},
+						{
+							"createdAt": 1791800000004,
+							"id": "s-later",
+							"name": "Later",
+							"order": 1,
+							"projectId": "p-work",
+							"sourceKey": "todoist:section:7:Later"
+						}
+					],
 					"spaces": {
 						"u-ana": {
 							"cursor": 3,
@@ -875,6 +1513,15 @@
 								"t-ana-2"
 							],
 							"scope": "scope-hash",
+							"sections": [
+								{
+									"createdAt": 1791800000011,
+									"id": "s-ana",
+									"name": "Walls",
+									"order": 0,
+									"projectId": "p-ana"
+								}
+							],
 							"targets": [
 								{
 									"id": "p-ana",
@@ -900,6 +1547,7 @@
 									"projectId": "p-ana",
 									"recurrence": null,
 									"reminders": [],
+									"sectionId": null,
 									"title": "Paint"
 								},
 								{
@@ -920,6 +1568,7 @@
 									"projectId": "p-ana",
 									"recurrence": null,
 									"reminders": [],
+									"sectionId": null,
 									"title": "t-ana-2"
 								}
 							]
@@ -1007,6 +1656,7 @@
 									"time": "21:00"
 								}
 							],
+							"sectionId": null,
 							"title": "Gym"
 						},
 						{
@@ -1027,6 +1677,7 @@
 							"projectId": "p-home",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"title": "Stretch"
 						},
 						{
@@ -1053,6 +1704,7 @@
 								"unit": "year"
 							},
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:42",
 							"title": "Taxes"
 						}
@@ -1090,6 +1742,23 @@
 					}
 				],
 				"remindersCheckedAt": 1791972000000,
+				"sections": [
+					{
+						"createdAt": 1791800000003,
+						"id": "s-next",
+						"name": "Next",
+						"order": 0,
+						"projectId": "p-work"
+					},
+					{
+						"createdAt": 1791800000004,
+						"id": "s-later",
+						"name": "Later",
+						"order": 1,
+						"projectId": "p-work",
+						"sourceKey": "todoist:section:7:Later"
+					}
+				],
 				"spaces": {
 					"u-ana": {
 						"cursor": 3,
@@ -1123,6 +1792,15 @@
 							"t-ana-2"
 						],
 						"scope": "scope-hash",
+						"sections": [
+							{
+								"createdAt": 1791800000011,
+								"id": "s-ana",
+								"name": "Walls",
+								"order": 0,
+								"projectId": "p-ana"
+							}
+						],
 						"targets": [
 							{
 								"id": "p-ana",
@@ -1148,6 +1826,7 @@
 								"projectId": "p-ana",
 								"recurrence": null,
 								"reminders": [],
+								"sectionId": null,
 								"title": "Paint"
 							},
 							{
@@ -1168,6 +1847,7 @@
 								"projectId": "p-ana",
 								"recurrence": null,
 								"reminders": [],
+								"sectionId": null,
 								"title": "t-ana-2"
 							}
 						]
@@ -1252,6 +1932,7 @@
 								"time": "21:00"
 							}
 						],
+						"sectionId": null,
 						"title": "Gym"
 					},
 					{
@@ -1272,6 +1953,7 @@
 						"projectId": "p-home",
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "Stretch"
 					},
 					{
@@ -1298,6 +1980,7 @@
 							"unit": "year"
 						},
 						"reminders": [],
+						"sectionId": null,
 						"sourceKey": "todoist:task:42",
 						"title": "Taxes"
 					}
@@ -1338,6 +2021,23 @@
 						}
 					],
 					"remindersCheckedAt": 1791972000000,
+					"sections": [
+						{
+							"createdAt": 1791800000003,
+							"id": "s-next",
+							"name": "Next",
+							"order": 0,
+							"projectId": "p-work"
+						},
+						{
+							"createdAt": 1791800000004,
+							"id": "s-later",
+							"name": "Later",
+							"order": 1,
+							"projectId": "p-work",
+							"sourceKey": "todoist:section:7:Later"
+						}
+					],
 					"spaces": {
 						"u-ana": {
 							"cursor": 3,
@@ -1371,6 +2071,15 @@
 								"t-ana-2"
 							],
 							"scope": "scope-hash",
+							"sections": [
+								{
+									"createdAt": 1791800000011,
+									"id": "s-ana",
+									"name": "Walls",
+									"order": 0,
+									"projectId": "p-ana"
+								}
+							],
 							"targets": [
 								{
 									"id": "p-ana",
@@ -1396,6 +2105,7 @@
 									"projectId": "p-ana",
 									"recurrence": null,
 									"reminders": [],
+									"sectionId": null,
 									"title": "Paint"
 								},
 								{
@@ -1416,6 +2126,7 @@
 									"projectId": "p-ana",
 									"recurrence": null,
 									"reminders": [],
+									"sectionId": null,
 									"title": "t-ana-2"
 								},
 								{
@@ -1503,6 +2214,7 @@
 									"time": "21:00"
 								}
 							],
+							"sectionId": null,
 							"title": "Gym"
 						},
 						{
@@ -1523,6 +2235,7 @@
 							"projectId": "p-home",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"title": "Stretch"
 						},
 						{
@@ -1549,6 +2262,7 @@
 								"unit": "year"
 							},
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:42",
 							"title": "Taxes"
 						}
@@ -1586,6 +2300,23 @@
 					}
 				],
 				"remindersCheckedAt": 1791972000000,
+				"sections": [
+					{
+						"createdAt": 1791800000003,
+						"id": "s-next",
+						"name": "Next",
+						"order": 0,
+						"projectId": "p-work"
+					},
+					{
+						"createdAt": 1791800000004,
+						"id": "s-later",
+						"name": "Later",
+						"order": 1,
+						"projectId": "p-work",
+						"sourceKey": "todoist:section:7:Later"
+					}
+				],
 				"spaces": {
 					"u-ana": {
 						"cursor": 3,
@@ -1619,6 +2350,15 @@
 							"t-ana-2"
 						],
 						"scope": "scope-hash",
+						"sections": [
+							{
+								"createdAt": 1791800000011,
+								"id": "s-ana",
+								"name": "Walls",
+								"order": 0,
+								"projectId": "p-ana"
+							}
+						],
 						"targets": [
 							{
 								"id": "p-ana",
@@ -1644,6 +2384,7 @@
 								"projectId": "p-ana",
 								"recurrence": null,
 								"reminders": [],
+								"sectionId": null,
 								"title": "Paint"
 							},
 							{
@@ -1664,6 +2405,7 @@
 								"projectId": "p-ana",
 								"recurrence": null,
 								"reminders": [],
+								"sectionId": null,
 								"title": "t-ana-2"
 							}
 						]
@@ -1748,6 +2490,7 @@
 								"time": "21:00"
 							}
 						],
+						"sectionId": null,
 						"title": "Gym"
 					},
 					{
@@ -1768,6 +2511,7 @@
 						"projectId": "p-home",
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "Stretch"
 					},
 					{
@@ -1794,6 +2538,7 @@
 							"unit": "year"
 						},
 						"reminders": [],
+						"sectionId": null,
 						"sourceKey": "todoist:task:42",
 						"title": "Taxes"
 					}
@@ -1834,6 +2579,23 @@
 						}
 					],
 					"remindersCheckedAt": 1791972000000,
+					"sections": [
+						{
+							"createdAt": 1791800000003,
+							"id": "s-next",
+							"name": "Next",
+							"order": 0,
+							"projectId": "p-work"
+						},
+						{
+							"createdAt": 1791800000004,
+							"id": "s-later",
+							"name": "Later",
+							"order": 1,
+							"projectId": "p-work",
+							"sourceKey": "todoist:section:7:Later"
+						}
+					],
 					"spaces": {
 						"u-ana": {
 							"cursor": 3,
@@ -1867,6 +2629,15 @@
 								"t-ana-2"
 							],
 							"scope": "scope-hash",
+							"sections": [
+								{
+									"createdAt": 1791800000011,
+									"id": "s-ana",
+									"name": "Walls",
+									"order": 0,
+									"projectId": "p-ana"
+								}
+							],
 							"targets": [
 								{
 									"id": "p-ana",
@@ -1892,6 +2663,7 @@
 									"projectId": "p-ana",
 									"recurrence": null,
 									"reminders": [],
+									"sectionId": null,
 									"title": "Paint"
 								},
 								{
@@ -1912,6 +2684,7 @@
 									"projectId": "p-ana",
 									"recurrence": null,
 									"reminders": [],
+									"sectionId": null,
 									"title": "t-ana-2"
 								}
 							]
@@ -1995,6 +2768,7 @@
 									"time": "21:00"
 								}
 							],
+							"sectionId": null,
 							"title": "Gym"
 						},
 						{
@@ -2015,6 +2789,7 @@
 							"projectId": "p-home",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"title": "Stretch"
 						},
 						{
@@ -2041,6 +2816,7 @@
 								"unit": "year"
 							},
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:42",
 							"title": "Taxes"
 						}
@@ -2078,6 +2854,23 @@
 					}
 				],
 				"remindersCheckedAt": 1791972000000,
+				"sections": [
+					{
+						"createdAt": 1791800000003,
+						"id": "s-next",
+						"name": "Next",
+						"order": 0,
+						"projectId": "p-work"
+					},
+					{
+						"createdAt": 1791800000004,
+						"id": "s-later",
+						"name": "Later",
+						"order": 1,
+						"projectId": "p-work",
+						"sourceKey": "todoist:section:7:Later"
+					}
+				],
 				"spaces": {
 					"u-ana": {
 						"cursor": 3,
@@ -2111,6 +2904,15 @@
 							"t-ana-2"
 						],
 						"scope": "scope-hash",
+						"sections": [
+							{
+								"createdAt": 1791800000011,
+								"id": "s-ana",
+								"name": "Walls",
+								"order": 0,
+								"projectId": "p-ana"
+							}
+						],
 						"targets": [
 							{
 								"id": "p-ana",
@@ -2136,6 +2938,7 @@
 								"projectId": "p-ana",
 								"recurrence": null,
 								"reminders": [],
+								"sectionId": null,
 								"title": "Paint"
 							},
 							{
@@ -2156,6 +2959,7 @@
 								"projectId": "p-ana",
 								"recurrence": null,
 								"reminders": [],
+								"sectionId": null,
 								"title": "t-ana-2"
 							}
 						]
@@ -2240,6 +3044,7 @@
 								"time": "21:00"
 							}
 						],
+						"sectionId": null,
 						"title": "Gym"
 					},
 					{
@@ -2260,6 +3065,7 @@
 						"projectId": "p-home",
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "Stretch"
 					},
 					{
@@ -2286,6 +3092,7 @@
 							"unit": "year"
 						},
 						"reminders": [],
+						"sectionId": null,
 						"sourceKey": "todoist:task:42",
 						"title": "Taxes"
 					}
@@ -2326,6 +3133,23 @@
 						}
 					],
 					"remindersCheckedAt": 1791972000000,
+					"sections": [
+						{
+							"createdAt": 1791800000003,
+							"id": "s-next",
+							"name": "Next",
+							"order": 0,
+							"projectId": "p-work"
+						},
+						{
+							"createdAt": 1791800000004,
+							"id": "s-later",
+							"name": "Later",
+							"order": 1,
+							"projectId": "p-work",
+							"sourceKey": "todoist:section:7:Later"
+						}
+					],
 					"spaces": {
 						"u-ana": {
 							"cursor": 3,
@@ -2359,6 +3183,15 @@
 								"t-ana-2"
 							],
 							"scope": "scope-hash",
+							"sections": [
+								{
+									"createdAt": 1791800000011,
+									"id": "s-ana",
+									"name": "Walls",
+									"order": 0,
+									"projectId": "p-ana"
+								}
+							],
 							"targets": [
 								{
 									"id": "p-ana",
@@ -2384,6 +3217,7 @@
 									"projectId": "p-ana",
 									"recurrence": null,
 									"reminders": [],
+									"sectionId": null,
 									"title": "Paint"
 								},
 								{
@@ -2404,6 +3238,7 @@
 									"projectId": "p-ana",
 									"recurrence": null,
 									"reminders": [],
+									"sectionId": null,
 									"title": "t-ana-2"
 								}
 							]
@@ -2451,6 +3286,7 @@
 									"time": "21:00"
 								}
 							],
+							"sectionId": null,
 							"title": "Gym"
 						},
 						{
@@ -2471,6 +3307,7 @@
 							"projectId": "p-home",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"title": "Stretch"
 						},
 						{
@@ -2497,6 +3334,7 @@
 								"unit": "year"
 							},
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:42",
 							"title": "Taxes"
 						}
@@ -2534,6 +3372,23 @@
 					}
 				],
 				"remindersCheckedAt": 1791972000000,
+				"sections": [
+					{
+						"createdAt": 1791800000003,
+						"id": "s-next",
+						"name": "Next",
+						"order": 0,
+						"projectId": "p-work"
+					},
+					{
+						"createdAt": 1791800000004,
+						"id": "s-later",
+						"name": "Later",
+						"order": 1,
+						"projectId": "p-work",
+						"sourceKey": "todoist:section:7:Later"
+					}
+				],
 				"spaces": {
 					"u-ana": {
 						"cursor": 3,
@@ -2567,6 +3422,15 @@
 							"t-ana-2"
 						],
 						"scope": "scope-hash",
+						"sections": [
+							{
+								"createdAt": 1791800000011,
+								"id": "s-ana",
+								"name": "Walls",
+								"order": 0,
+								"projectId": "p-ana"
+							}
+						],
 						"targets": [
 							{
 								"id": "p-ana",
@@ -2592,6 +3456,7 @@
 								"projectId": "p-ana",
 								"recurrence": null,
 								"reminders": [],
+								"sectionId": null,
 								"title": "Paint"
 							},
 							{
@@ -2612,6 +3477,7 @@
 								"projectId": "p-ana",
 								"recurrence": null,
 								"reminders": [],
+								"sectionId": null,
 								"title": "t-ana-2"
 							}
 						]
@@ -2659,6 +3525,7 @@
 								"time": "21:00"
 							}
 						],
+						"sectionId": null,
 						"title": "Gym"
 					},
 					{
@@ -2679,6 +3546,7 @@
 						"projectId": "p-home",
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "Stretch"
 					},
 					{
@@ -2705,6 +3573,7 @@
 							"unit": "year"
 						},
 						"reminders": [],
+						"sectionId": null,
 						"sourceKey": "todoist:task:42",
 						"title": "Taxes"
 					}
@@ -2779,6 +3648,7 @@
 				"people": [],
 				"projects": [],
 				"remindersCheckedAt": 5,
+				"sections": [],
 				"spaces": {},
 				"tasks": [
 					{
@@ -2802,6 +3672,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "b"
 					},
 					{
@@ -2825,6 +3696,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "c"
 					},
 					{
@@ -2848,6 +3720,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "a"
 					}
 				]
@@ -2922,6 +3795,7 @@
 					}
 				],
 				"remindersCheckedAt": 5,
+				"sections": [],
 				"spaces": {},
 				"tasks": [
 					{
@@ -2948,6 +3822,7 @@
 							"unit": "day"
 						},
 						"reminders": [],
+						"sectionId": null,
 						"title": "Good"
 					}
 				]
@@ -3003,6 +3878,7 @@
 				"people": [],
 				"projects": [],
 				"remindersCheckedAt": 5,
+				"sections": [],
 				"spaces": {},
 				"tasks": [
 					{
@@ -3026,6 +3902,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "Kept"
 					}
 				]
@@ -3082,6 +3959,7 @@
 				"people": [],
 				"projects": [],
 				"remindersCheckedAt": 5,
+				"sections": [],
 				"spaces": {},
 				"tasks": [
 					{
@@ -3105,6 +3983,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "Kept"
 					}
 				]
@@ -3157,6 +4036,7 @@
 				"people": [],
 				"projects": [],
 				"remindersCheckedAt": 5,
+				"sections": [],
 				"spaces": {},
 				"tasks": [
 					{
@@ -3180,6 +4060,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "Kept"
 					}
 				]
@@ -3236,6 +4117,7 @@
 				"people": [],
 				"projects": [],
 				"remindersCheckedAt": 5,
+				"sections": [],
 				"spaces": {},
 				"tasks": [
 					{
@@ -3259,6 +4141,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "Kept"
 					}
 				]
@@ -3315,6 +4198,7 @@
 				"people": [],
 				"projects": [],
 				"remindersCheckedAt": 5,
+				"sections": [],
 				"spaces": {},
 				"tasks": [
 					{
@@ -3338,6 +4222,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "Kept"
 					}
 				]
@@ -3394,6 +4279,7 @@
 				"people": [],
 				"projects": [],
 				"remindersCheckedAt": 5,
+				"sections": [],
 				"spaces": {},
 				"tasks": [
 					{
@@ -3417,6 +4303,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "Kept"
 					}
 				]
@@ -3478,6 +4365,7 @@
 				"people": [],
 				"projects": [],
 				"remindersCheckedAt": 5,
+				"sections": [],
 				"spaces": {},
 				"tasks": [
 					{
@@ -3501,6 +4389,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "Kept"
 					}
 				]
@@ -3562,6 +4451,7 @@
 				"people": [],
 				"projects": [],
 				"remindersCheckedAt": 5,
+				"sections": [],
 				"spaces": {},
 				"tasks": [
 					{
@@ -3585,6 +4475,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "Kept"
 					}
 				]
@@ -3646,6 +4537,7 @@
 				"people": [],
 				"projects": [],
 				"remindersCheckedAt": 5,
+				"sections": [],
 				"spaces": {},
 				"tasks": [
 					{
@@ -3669,6 +4561,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "Kept"
 					}
 				]
@@ -3728,6 +4621,7 @@
 				"people": [],
 				"projects": [],
 				"remindersCheckedAt": 5,
+				"sections": [],
 				"spaces": {},
 				"tasks": [
 					{
@@ -3751,6 +4645,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "Kept"
 					}
 				]
@@ -3810,6 +4705,7 @@
 				"people": [],
 				"projects": [],
 				"remindersCheckedAt": 5,
+				"sections": [],
 				"spaces": {},
 				"tasks": [
 					{
@@ -3833,6 +4729,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "Kept"
 					}
 				]
@@ -3896,6 +4793,7 @@
 				"people": [],
 				"projects": [],
 				"remindersCheckedAt": 5,
+				"sections": [],
 				"spaces": {},
 				"tasks": [
 					{
@@ -3919,6 +4817,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "Kept"
 					}
 				]
@@ -3974,6 +4873,7 @@
 				"people": [],
 				"projects": [],
 				"remindersCheckedAt": 5,
+				"sections": [],
 				"spaces": {},
 				"tasks": [
 					{
@@ -3997,6 +4897,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "Kept"
 					}
 				]
@@ -4053,6 +4954,7 @@
 				"people": [],
 				"projects": [],
 				"remindersCheckedAt": 5,
+				"sections": [],
 				"spaces": {},
 				"tasks": [
 					{
@@ -4076,6 +4978,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "Kept"
 					}
 				]
@@ -4096,6 +4999,7 @@
 				"people": [],
 				"projects": [],
 				"remindersCheckedAt": 10,
+				"sections": [],
 				"spaces": {},
 				"tasks": []
 			}
@@ -4122,6 +5026,7 @@
 				"people": [],
 				"projects": [],
 				"remindersCheckedAt": 10,
+				"sections": [],
 				"spaces": {},
 				"tasks": []
 			}
@@ -4147,6 +5052,7 @@
 				"people": [],
 				"projects": [],
 				"remindersCheckedAt": 10,
+				"sections": [],
 				"spaces": {},
 				"tasks": []
 			}
@@ -4166,6 +5072,7 @@
 				"people": [],
 				"projects": [],
 				"remindersCheckedAt": 10,
+				"sections": [],
 				"spaces": {},
 				"tasks": []
 			}
@@ -4193,6 +5100,7 @@
 				"people": [],
 				"projects": [],
 				"remindersCheckedAt": 10,
+				"sections": [],
 				"spaces": {},
 				"tasks": []
 			}
@@ -4228,6 +5136,7 @@
 				"people": [],
 				"projects": [],
 				"remindersCheckedAt": 10,
+				"sections": [],
 				"spaces": {},
 				"tasks": []
 			}
@@ -4246,6 +5155,7 @@
 				"people": [],
 				"projects": [],
 				"remindersCheckedAt": 10,
+				"sections": [],
 				"spaces": {},
 				"tasks": []
 			}
@@ -4262,6 +5172,7 @@
 				"people": [],
 				"projects": [],
 				"remindersCheckedAt": 10,
+				"sections": [],
 				"spaces": {},
 				"tasks": []
 			}
@@ -4300,6 +5211,7 @@
 				"people": [],
 				"projects": [],
 				"remindersCheckedAt": 5,
+				"sections": [],
 				"spaces": {},
 				"tasks": [
 					{
@@ -4323,6 +5235,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "Old"
 					}
 				]
@@ -4378,6 +5291,7 @@
 				"people": [],
 				"projects": [],
 				"remindersCheckedAt": 5,
+				"sections": [],
 				"spaces": {},
 				"tasks": [
 					{
@@ -4403,6 +5317,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "Call"
 					}
 				]
@@ -4574,6 +5489,7 @@
 				"people": [],
 				"projects": [],
 				"remindersCheckedAt": 5,
+				"sections": [],
 				"spaces": {},
 				"tasks": [
 					{
@@ -4605,6 +5521,7 @@
 							"unit": "week"
 						},
 						"reminders": [],
+						"sectionId": null,
 						"title": "Gym"
 					},
 					{
@@ -4631,6 +5548,7 @@
 							"unit": "week"
 						},
 						"reminders": [],
+						"sectionId": null,
 						"title": "Review"
 					},
 					{
@@ -4657,6 +5575,7 @@
 							"unit": "week"
 						},
 						"reminders": [],
+						"sectionId": null,
 						"title": "One day"
 					},
 					{
@@ -4683,6 +5602,7 @@
 							"unit": "day"
 						},
 						"reminders": [],
+						"sectionId": null,
 						"title": "Water"
 					},
 					{
@@ -4706,6 +5626,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "Old"
 					},
 					{
@@ -4732,6 +5653,7 @@
 							"unit": "day"
 						},
 						"reminders": [],
+						"sectionId": null,
 						"title": "Days on a daily repeat"
 					}
 				]
@@ -4771,6 +5693,7 @@
 				"people": [],
 				"projects": [],
 				"remindersCheckedAt": 5,
+				"sections": [],
 				"spaces": {},
 				"tasks": [
 					{
@@ -4794,6 +5717,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "Old"
 					}
 				]
@@ -4891,6 +5815,7 @@
 				"people": [],
 				"projects": [],
 				"remindersCheckedAt": 5,
+				"sections": [],
 				"spaces": {},
 				"tasks": [
 					{
@@ -4914,6 +5839,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "Parent"
 					},
 					{
@@ -4937,6 +5863,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "Kept"
 					},
 					{
@@ -4960,6 +5887,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "Orphan"
 					}
 				]

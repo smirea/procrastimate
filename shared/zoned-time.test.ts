@@ -46,6 +46,7 @@ test('notifications resolve and word their times in the given zone', () => {
 		title: 'Gym',
 		notes: '',
 		projectId: null,
+		sectionId: null,
 		parentId: null,
 		order: 0,
 		labelIds: [],

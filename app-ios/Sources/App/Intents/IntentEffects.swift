@@ -83,7 +83,12 @@ enum IntentEffects {
                 reminders: reminder.map { [IntentRules.reminder(at: $0, in: clock.timeZone)] } ?? []
             )
             guard let task = IntentRules.newTask(
-                request, projects: store.projects, labels: store.labels, now: clock.now, zone: clock.timeZone
+                request,
+                projects: store.projects,
+                sections: store.sections,
+                labels: store.labels,
+                now: clock.now,
+                zone: clock.timeZone
             ) else {
                 note("empty")
                 return "That didn't leave a task name."

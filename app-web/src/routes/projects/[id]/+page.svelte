@@ -1,22 +1,32 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
+	import { flip } from 'svelte/animate';
+	import { fade } from 'svelte/transition';
+	import { cubicOut } from 'svelte/easing';
 	import DotsThree from 'phosphor-svelte/lib/DotsThree';
 	import PencilSimple from 'phosphor-svelte/lib/PencilSimple';
+	import RowsPlusBottom from 'phosphor-svelte/lib/RowsPlusBottom';
 	import Trash from 'phosphor-svelte/lib/Trash';
 	import ShareNetwork from 'phosphor-svelte/lib/ShareNetwork';
 	import View from '#lib/components/View.svelte';
 	import TaskList from '#lib/components/TaskList.svelte';
+	import AddTaskButton from '#lib/components/AddTaskButton.svelte';
+	import ProjectSection from '#lib/components/ProjectSection.svelte';
 	import Popover from '#lib/components/Popover.svelte';
 	import CompletedSection from '#lib/components/CompletedSection.svelte';
 	import CompletedToggle from '#lib/components/CompletedToggle.svelte';
 	import { store } from '#lib/store.svelte.ts';
-	import { sheets } from '#lib/ui.svelte.ts';
+	import { motion, sheets } from '#lib/ui.svelte.ts';
 	import { followMerged } from '#lib/merged.svelte.ts';
-	import { projectTasks } from 'shared/views.ts';
+	import { projectDocument } from 'shared/markdown.ts';
+	import { projectGroups } from 'shared/views.ts';
 
 	const project = $derived(store.project(page.params.id ?? null));
-	const tasks = $derived(project ? projectTasks(store.tasks, project.id) : []);
+	const groups = $derived(project ? projectGroups(store.tasks, store.sections, project.id) : []);
+	const loose = $derived(groups[0]?.tasks ?? []);
+	const sections = $derived(groups.slice(1).map((g) => ({ section: g.section!, tasks: g.tasks })));
+	const tasks = $derived(groups.flatMap((g) => g.tasks));
 	const home = $derived(project ? store.homeOf(project.id) : null);
 	const owner = $derived(home ? store.spaces[home]?.owner : undefined);
 
@@ -24,6 +34,14 @@
 
 	let renaming = $state(false);
 	let confirmingDelete = $state(false);
+	let addingSection = $state(false);
+
+	const canAdd = $derived(!home || tasks.length === 0 || tasks.some((t) => store.canEdit(t.id)));
+
+	function addSection(name: string) {
+		if (project && name.trim()) store.addSection(project.id, name.trim());
+		addingSection = false;
+	}
 
 	function rename(name: string) {
 		if (project && name.trim()) store.renameProject(project.id, name.trim());
@@ -41,13 +59,13 @@
 
 {#if project}
 	<View
-		empty={tasks.length === 0}
+		empty={tasks.length === 0 && sections.length === 0}
 		emptyTitle="No tasks yet"
 		emptyHint={`Add one here, or type #${project.name} in quick add.`}
 		subtitle={owner ? `Shared by ${owner.name}` : undefined}
-		canAdd={!home || tasks.length === 0 || tasks.some((t) => store.canEdit(t.id))}
+		canAdd={false}
 		quickAdd={{ projectId: project.id, labelId: null, today: false }}
-		markdown={() => ({ title: project.name, projectId: project.id, sections: [{ heading: null, tasks }] })}
+		markdown={() => projectDocument(project, groups)}
 	>
 		{#snippet title()}
 			{#if renaming}
@@ -104,7 +122,40 @@
 				</div>
 			{/if}
 		{/snippet}
-		<TaskList {tasks} label={`${project.name} tasks`} />
+		<TaskList tasks={loose} label={`${project.name} tasks`} />
+		{#if canAdd}
+			<AddTaskButton quickAdd={{ projectId: project.id, sectionId: null, labelId: null, today: false }} />
+		{/if}
+		{#each sections as { section, tasks: inSection }, index (section.id)}
+			<div animate:flip={motion({ duration: 260, easing: cubicOut })} transition:fade={motion({ duration: 180 })}>
+				<ProjectSection {section} tasks={inSection} {index} count={sections.length} editable={!home} {canAdd} />
+			</div>
+		{/each}
+		{#if !home}
+			{#if addingSection}
+				<!-- svelte-ignore a11y_autofocus -->
+				<input
+					class="field mt-6 w-full text-[13px] font-semibold"
+					aria-label="New section name"
+					placeholder="Section name"
+					autofocus
+					onblur={(e) => addSection(e.currentTarget.value)}
+					onkeydown={(e) => {
+						if (e.key === 'Enter') addSection(e.currentTarget.value);
+						if (e.key === 'Escape') addingSection = false;
+					}}
+				/>
+			{:else}
+				<button
+					type="button"
+					class="press group mt-4 flex h-10 w-full items-center gap-3 rounded-full px-2 text-[14px] text-muted transition-colors hover:text-accent touch:h-12 touch:text-[15px]"
+					onclick={() => (addingSection = true)}
+				>
+					<RowsPlusBottom size={18} class="text-accent" />
+					Add section
+				</button>
+			{/if}
+		{/if}
 		{#snippet after()}
 			<CompletedSection tasks={store.tasks.filter((t) => t.projectId === project.id)} />
 		{/snippet}

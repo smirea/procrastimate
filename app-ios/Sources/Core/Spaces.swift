@@ -65,6 +65,7 @@ extension SyncEngine {
         var lens = Snapshot(
             tasks: section.tasks,
             projects: section.projects,
+            sections: section.sections,
             labels: section.labels,
             remindersCheckedAt: snapshot.remindersCheckedAt,
             sync: SyncSection(
@@ -80,6 +81,7 @@ extension SyncEngine {
         let result = try body(&lens)
         section.tasks = lens.tasks
         section.projects = lens.projects
+        section.sections = lens.sections
         section.labels = lens.labels
         if let after = lens.sync {
             section.cursor = after.cursor

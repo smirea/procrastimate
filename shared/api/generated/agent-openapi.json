@@ -56,6 +56,9 @@
 								"$ref": "#/components/schemas/ProjectPatch"
 							},
 							{
+								"$ref": "#/components/schemas/SectionPatch"
+							},
+							{
 								"$ref": "#/components/schemas/LabelPatch"
 							},
 							{
@@ -109,6 +112,12 @@
 								"type": "string"
 							},
 							"projectId": {
+								"type": [
+									"string",
+									"null"
+								]
+							},
+							"sectionId": {
 								"type": [
 									"string",
 									"null"
@@ -550,6 +559,51 @@
 					"fields"
 				]
 			},
+			"SectionPatch": {
+				"type": "object",
+				"properties": {
+					"kind": {
+						"type": "string",
+						"const": "section"
+					},
+					"id": {
+						"type": "string"
+					},
+					"fields": {
+						"type": "object",
+						"properties": {
+							"projectId": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"order": {
+								"type": "number"
+							},
+							"createdAt": {
+								"type": "integer",
+								"minimum": -9007199254740991,
+								"maximum": 9007199254740991
+							},
+							"sourceKey": {
+								"type": [
+									"string",
+									"null"
+								]
+							},
+							"deleted": {
+								"type": "boolean"
+							}
+						}
+					}
+				},
+				"required": [
+					"kind",
+					"id",
+					"fields"
+				]
+			},
 			"LabelPatch": {
 				"type": "object",
 				"properties": {
@@ -734,6 +788,9 @@
 								"$ref": "#/components/schemas/ProjectPatchOutput"
 							},
 							{
+								"$ref": "#/components/schemas/SectionPatchOutput"
+							},
+							{
 								"$ref": "#/components/schemas/LabelPatchOutput"
 							},
 							{
@@ -790,6 +847,12 @@
 								"type": "string"
 							},
 							"projectId": {
+								"type": [
+									"string",
+									"null"
+								]
+							},
+							"sectionId": {
 								"type": [
 									"string",
 									"null"
@@ -1186,6 +1249,53 @@
 				],
 				"additionalProperties": false
 			},
+			"SectionPatchOutput": {
+				"type": "object",
+				"properties": {
+					"kind": {
+						"type": "string",
+						"const": "section"
+					},
+					"id": {
+						"type": "string"
+					},
+					"fields": {
+						"type": "object",
+						"properties": {
+							"projectId": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"order": {
+								"type": "number"
+							},
+							"createdAt": {
+								"type": "integer",
+								"minimum": -9007199254740991,
+								"maximum": 9007199254740991
+							},
+							"sourceKey": {
+								"type": [
+									"string",
+									"null"
+								]
+							},
+							"deleted": {
+								"type": "boolean"
+							}
+						},
+						"additionalProperties": false
+					}
+				},
+				"required": [
+					"kind",
+					"id",
+					"fields"
+				],
+				"additionalProperties": false
+			},
 			"LabelPatchOutput": {
 				"type": "object",
 				"properties": {
@@ -1272,6 +1382,12 @@
 							"$ref": "#/components/schemas/Project"
 						}
 					},
+					"sections": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/ProjectSection"
+						}
+					},
 					"labels": {
 						"type": "array",
 						"items": {
@@ -1285,6 +1401,7 @@
 				"required": [
 					"tasks",
 					"projects",
+					"sections",
 					"labels",
 					"settings"
 				],
@@ -1312,6 +1429,12 @@
 						"type": "string"
 					},
 					"projectId": {
+						"type": [
+							"string",
+							"null"
+						]
+					},
+					"sectionId": {
 						"type": [
 							"string",
 							"null"
@@ -1424,6 +1547,7 @@
 					"title",
 					"notes",
 					"projectId",
+					"sectionId",
 					"labelIds",
 					"due",
 					"recurrence",
@@ -1465,6 +1589,40 @@
 				],
 				"additionalProperties": false,
 				"x-table": "projects"
+			},
+			"ProjectSection": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"projectId": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"order": {
+						"type": "number"
+					},
+					"createdAt": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991
+					},
+					"sourceKey": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"id",
+					"projectId",
+					"name",
+					"order",
+					"createdAt"
+				],
+				"additionalProperties": false,
+				"x-table": "sections"
 			},
 			"Label": {
 				"type": "object",
@@ -1634,6 +1792,12 @@
 							"$ref": "#/components/schemas/Project"
 						}
 					},
+					"sections": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/ProjectSection"
+						}
+					},
 					"labels": {
 						"type": "array",
 						"items": {
@@ -1650,6 +1814,7 @@
 				"required": [
 					"tasks",
 					"projects",
+					"sections",
 					"labels",
 					"readOnly"
 				],
@@ -1669,6 +1834,12 @@
 						"type": "string"
 					},
 					"projectId": {
+						"type": [
+							"string",
+							"null"
+						]
+					},
+					"sectionId": {
 						"type": [
 							"string",
 							"null"
@@ -1723,6 +1894,12 @@
 						"type": "string"
 					},
 					"projectId": {
+						"type": [
+							"string",
+							"null"
+						]
+					},
+					"sectionId": {
 						"type": [
 							"string",
 							"null"
@@ -1784,7 +1961,7 @@
 						]
 					}
 				},
-				"description": "The editable fields of a task. A missing field is left alone; for nullable fields, `null` clears the value."
+				"description": "The editable fields of a task. A missing field is left alone; for nullable fields, `null` clears the value. A section moves the task into its project, and a new project without one leaves the task in no section."
 			},
 			"Ok": {
 				"type": "object",

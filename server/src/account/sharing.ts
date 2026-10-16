@@ -143,12 +143,13 @@ export function sharedView(store: AccountStore, space: string, id: string): Shar
 	const share = store.shares().find(s => s.id === id && s.grantee === null);
 	if (!share) throw new ORPCError('NOT_FOUND', { message: 'No such link' });
 	const snapshot = accountSnapshot(store);
-	const { tasks, projects, labels } = filterSnapshot(snapshot, scopeOf(snapshot, [share]));
+	const { tasks, projects, sections, labels } = filterSnapshot(snapshot, scopeOf(snapshot, [share]));
 	return {
 		target: { kind: share.targetKind, id: share.targetId },
 		owner: personOf(store, space),
 		tasks,
 		projects,
+		sections,
 		labels,
 	};
 }

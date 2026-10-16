@@ -17,6 +17,7 @@ describe('diff', () => {
 					title: 't',
 					notes: '',
 					projectId: null,
+					sectionId: null,
 					labelIds: [],
 					due: null,
 					recurrence: null,

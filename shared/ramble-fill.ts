@@ -19,6 +19,7 @@ export function rambleNewTask(task: SpokenFields, defaults: RambleListDefaults |
 	return {
 		title: task.title.trim(),
 		projectId: task.projectId ?? defaults?.projectId ?? null,
+		sectionId: null,
 		labelIds: labelId && !task.labelIds.includes(labelId) ? [labelId, ...task.labelIds] : [...task.labelIds],
 		due: task.due ?? (defaults?.today ? { date: today, time: null } : null),
 		recurrence: task.recurrence,

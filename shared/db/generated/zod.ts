@@ -39,7 +39,7 @@ export const logRowSchema = z.object({
 	userId: z.string(),
 	seq: z.number().int(),
 	opId: z.string(),
-	kind: z.enum(["project","label","task","settings"]),
+	kind: z.enum(["project","section","label","task","settings"]),
 	id: z.string(),
 	fields: COLUMN_VALUES.log.fields,
 	actor: z.string(),
@@ -103,6 +103,19 @@ export const rambleUsageRowSchema = z.object({
 	seconds: z.number(),
 });
 
+/** A `sections` row. */
+export const sectionsRowSchema = z.object({
+	userId: z.string(),
+	id: z.string(),
+	projectId: z.string(),
+	name: z.string(),
+	order: z.number(),
+	createdAt: z.number().int(),
+	sourceKey: z.string().nullable(),
+	deleted: z.boolean(),
+	clocks: COLUMN_VALUES.sections.clocks,
+});
+
 /** A `settings` row. */
 export const settingsRowSchema = z.object({
 	userId: z.string(),
@@ -132,6 +145,7 @@ export const tasksRowSchema = z.object({
 	title: z.string(),
 	notes: z.string(),
 	projectId: z.string().nullable(),
+	sectionId: z.string().nullable(),
 	labelIds: COLUMN_VALUES.tasks.labelIds,
 	due: COLUMN_VALUES.tasks.due.nullable(),
 	recurrence: COLUMN_VALUES.tasks.recurrence.nullable(),

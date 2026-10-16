@@ -147,6 +147,7 @@ public enum SyncEngine {
         let clock = snapshot.sync?.clock ?? "0:0:\(deviceId)"
         snapshot.tasks = []
         snapshot.projects = []
+        snapshot.sections = []
         snapshot.labels = []
         snapshot.spaces = [:]
         snapshot.people = []
@@ -162,10 +163,11 @@ public enum SyncEngine {
         )
     }
 
-    /// Empties tasks, projects, and labels, and asks the next sync to wipe them on the server.
+    /// Empties tasks, projects, sections, and labels, and asks the next sync to wipe them on the server.
     public static func deleteAll(_ snapshot: inout Snapshot) {
         snapshot.tasks = []
         snapshot.projects = []
+        snapshot.sections = []
         snapshot.labels = []
         guard var sync = snapshot.sync else { return }
         sync.cursor = 0
@@ -248,6 +250,7 @@ public enum SyncEngine {
             let local = snapshot.data
             snapshot.tasks = StoreRules.sortTasks(decoded.tasks)
             snapshot.projects = decoded.projects.sorted(by: byCreation)
+            snapshot.sections = decoded.sections.sorted(by: byCreation)
             snapshot.labels = decoded.labels.sorted(by: byCreation)
             sync.dictation = decoded.settings.dictation
             if let zone = decoded.settings.timeZone { sync.timeZone = zone }
@@ -297,6 +300,7 @@ public enum SyncEngine {
             switch kind {
             case "task": snapshot.tasks.removeAll { $0.id == id }
             case "project": snapshot.projects.removeAll { $0.id == id }
+            case "section": snapshot.sections.removeAll { $0.id == id }
             case "label": snapshot.labels.removeAll { $0.id == id }
             default: break
             }
@@ -305,6 +309,9 @@ public enum SyncEngine {
         switch kind {
         case "task": merge(&snapshot.tasks, id: id, fields: fields, defaults: taskDefaults)
         case "project": merge(&snapshot.projects, id: id, fields: fields)
+        case "section":
+            merge(&snapshot.sections, id: id, fields: fields)
+            snapshot.sections.sort(by: byCreation)
         case "label": merge(&snapshot.labels, id: id, fields: fields)
         case "settings":
             guard var sync = snapshot.sync else { break }
@@ -321,6 +328,7 @@ public enum SyncEngine {
 private struct SyncedData {
     var tasks: [TaskItem]
     var projects: [Project]
+    var sections: [ProjectSection]
     var labels: [Label]
     var timeZone: String?
     var dictation: DictationChoice
@@ -334,7 +342,14 @@ public struct SyncPatch: Hashable, Encodable, Sendable {
 }
 
 private func synced(_ data: StoreData, timeZone: String, dictation: DictationChoice) -> SyncedData {
-    SyncedData(tasks: data.tasks, projects: data.projects, labels: data.labels, timeZone: timeZone, dictation: dictation)
+    SyncedData(
+        tasks: data.tasks,
+        projects: data.projects,
+        sections: data.sections,
+        labels: data.labels,
+        timeZone: timeZone,
+        dictation: dictation
+    )
 }
 
 private func afterTimeZone(_ data: StoreData, fallback: String) -> String { fallback }
@@ -342,6 +357,7 @@ private func afterTimeZone(_ data: StoreData, fallback: String) -> String { fall
 private func diff(before: SyncedData, after: SyncedData) -> [SyncPatch] {
     var patches: [SyncPatch] = []
     patches += entityDiff(kind: .project, before: before.projects.map(fieldsOf), after: after.projects.map(fieldsOf))
+    patches += entityDiff(kind: .section, before: before.sections.map(fieldsOf), after: after.sections.map(fieldsOf))
     patches += entityDiff(kind: .label, before: before.labels.map(fieldsOf), after: after.labels.map(fieldsOf))
     patches += entityDiff(kind: .task, before: before.tasks.map(fieldsOf), after: after.tasks.map(fieldsOf))
     let prior = settingsFields(before.timeZone, before.dictation)
@@ -389,6 +405,12 @@ private func fieldsOf(_ task: TaskItem) -> [String: Any] {
 
 private func fieldsOf(_ project: Project) -> [String: Any] {
     var fields = jsonObject(project)
+    if fields["sourceKey"] == nil { fields["sourceKey"] = NSNull() }
+    return fields
+}
+
+private func fieldsOf(_ section: ProjectSection) -> [String: Any] {
+    var fields = jsonObject(section)
     if fields["sourceKey"] == nil { fields["sourceKey"] = NSNull() }
     return fields
 }
@@ -442,7 +464,7 @@ private func sameJSON(_ a: Any, _ b: Any) -> Bool {
 
 /// Task fields added after launch, which a task the server stored before them lacks. They start as `null`, as
 /// `entityFrom` fills them.
-private let taskDefaults = ["location", "event", "createdBy", "completedBy", "lastCompletedAt"]
+private let taskDefaults = ["sectionId", "location", "event", "createdBy", "completedBy", "lastCompletedAt"]
 
 private func merge<T: Codable & Identifiable>(
     _ items: inout [T], id: String, fields: [String: Any], defaults: [String] = []
@@ -472,6 +494,7 @@ private func byCreation<T>(_ a: T, _ b: T) -> Bool where T: Identifiable, T.ID =
 
 private func createdAt<T>(of value: T) -> Int {
     if let project = value as? Project { return project.createdAt }
+    if let section = value as? ProjectSection { return section.createdAt }
     if let label = value as? Label { return label.createdAt }
     return 0
 }

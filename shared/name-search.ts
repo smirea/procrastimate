@@ -3,7 +3,9 @@ import type { Task } from './task.ts';
 
 export type Named = { id: string; name: string };
 
-export const sigilSchema = z.enum(['#', '@']).meta({ id: 'Sigil', 'x-enum-names': ['project', 'label'] });
+export const sigilSchema = z
+	.enum(['#', '/', '@'])
+	.meta({ id: 'Sigil', 'x-enum-names': ['project', 'section', 'label'] });
 export type Sigil = z.infer<typeof sigilSchema>;
 
 const offset = z.number().int();
@@ -11,7 +13,7 @@ const offset = z.number().int();
 export const sigilFragmentSchema = z.object({ start: offset, end: offset, query: z.string() }).meta({
 	id: 'SigilFragment',
 	description:
-		'The `#query` or `@query` the caret sits in. `start` is the sigil, `end` is the end of the word under the caret.',
+		'The `#query`, `/query`, or `@query` the caret sits in. `start` is the sigil, `end` is the end of the word under the caret.',
 });
 export type SigilFragment = z.infer<typeof sigilFragmentSchema>;
 
@@ -89,6 +91,7 @@ export function lastUsed(tasks: readonly Task[], idsOf: (task: Task) => readonly
 }
 
 export const projectIdsOf = (task: Task) => (task.projectId ? [task.projectId] : []);
+export const sectionIdsOf = (task: Task) => (task.sectionId ? [task.sectionId] : []);
 export const labelIdsOf = (task: Task) => task.labelIds;
 
 /** 0 exact, 1 prefix, 2 word prefix, 3 substring, null no match. */

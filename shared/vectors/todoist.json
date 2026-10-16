@@ -281,6 +281,18 @@
 						"sourceKey": "todoist:project:9Xmpl3Zr"
 					}
 				],
+				"sections": [
+					{
+						"name": "Someday",
+						"projectKey": "todoist:project:8Xmpl2Wq",
+						"sourceKey": "todoist:section:8Xmpl2Wq:Someday"
+					},
+					{
+						"name": "Reading",
+						"projectKey": "todoist:project:8Xmpl2Wq",
+						"sourceKey": "todoist:section:8Xmpl2Wq:Reading"
+					}
+				],
 				"tasks": [
 					{
 						"due": {
@@ -299,6 +311,7 @@
 								"minutes": 30
 							}
 						],
+						"sectionKey": null,
 						"sourceKey": "todoist:task:6Xmpl1Fq:Call the dentist",
 						"title": "Call the dentist"
 					},
@@ -314,6 +327,7 @@
 						"projectKey": "todoist:project:6Xmpl1Fq",
 						"recurrence": null,
 						"reminders": [],
+						"sectionKey": null,
 						"sourceKey": "todoist:task:6Xmpl1Fq:cancel [meetup.com](https://meetup.com)",
 						"title": "cancel [meetup.com](https://meetup.com)"
 					},
@@ -332,6 +346,7 @@
 							"unit": "year"
 						},
 						"reminders": [],
+						"sectionKey": null,
 						"sourceKey": "todoist:task:6Xmpl1Fq:Renew passport #Travel",
 						"title": "Renew passport #Travel"
 					},
@@ -352,6 +367,7 @@
 							"unit": "year"
 						},
 						"reminders": [],
+						"sectionKey": null,
 						"sourceKey": "todoist:task:6Xmpl1Fq:Water plants @home",
 						"title": "Water plants"
 					},
@@ -364,6 +380,7 @@
 						"projectKey": "todoist:project:6Xmpl1Fq",
 						"recurrence": null,
 						"reminders": [],
+						"sectionKey": null,
 						"sourceKey": "todoist:task:6Xmpl1Fq:Fix bike",
 						"title": "Fix bike"
 					},
@@ -379,6 +396,7 @@
 						"projectKey": "todoist:project:8Xmpl2Wq",
 						"recurrence": null,
 						"reminders": [],
+						"sectionKey": "todoist:section:8Xmpl2Wq:Someday",
 						"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan",
 						"title": "Visit Japan"
 					},
@@ -400,6 +418,7 @@
 								"time": "09:00"
 							}
 						],
+						"sectionKey": null,
 						"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights",
 						"title": "Book flights"
 					},
@@ -412,6 +431,7 @@
 						"projectKey": "todoist:project:8Xmpl2Wq",
 						"recurrence": null,
 						"reminders": [],
+						"sectionKey": null,
 						"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights › Pack bags",
 						"title": "Pack bags"
 					},
@@ -424,6 +444,7 @@
 						"projectKey": "todoist:project:8Xmpl2Wq",
 						"recurrence": null,
 						"reminders": [],
+						"sectionKey": "todoist:section:8Xmpl2Wq:Reading",
 						"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune",
 						"title": "Read Dune"
 					},
@@ -436,6 +457,7 @@
 						"projectKey": "todoist:project:8Xmpl2Wq",
 						"recurrence": null,
 						"reminders": [],
+						"sectionKey": "todoist:section:8Xmpl2Wq:Reading",
 						"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune#2",
 						"title": "Read Dune"
 					},
@@ -451,6 +473,7 @@
 						"projectKey": "todoist:project:9Xmpl3Zr",
 						"recurrence": null,
 						"reminders": [],
+						"sectionKey": null,
 						"sourceKey": "todoist:task:9Xmpl3Zr:Quarterly review @work @deep-work",
 						"title": "Quarterly review"
 					},
@@ -463,13 +486,13 @@
 						"projectKey": "todoist:project:9Xmpl3Zr",
 						"recurrence": null,
 						"reminders": [],
+						"sectionKey": null,
 						"sourceKey": "todoist:task:9Xmpl3Zr:Email Sam",
 						"title": "Email Sam"
 					}
 				],
 				"warnings": [
 					"Inbox: could not read the date \"every! 3 days\" on \"Fix bike\", kept it in notes",
-					"Long Term: sections are not imported: Someday, Reading",
 					"Job: could not read the date \"jeden Montag\" on \"Email Sam\", kept it in notes"
 				]
 			}
@@ -494,6 +517,7 @@
 						"sourceKey": "todoist:project:42"
 					}
 				],
+				"sections": [],
 				"tasks": [
 					{
 						"due": null,
@@ -504,6 +528,7 @@
 						"projectKey": "todoist:project:42",
 						"recurrence": null,
 						"reminders": [],
+						"sectionKey": null,
 						"sourceKey": "todoist:task:42:Urgent",
 						"title": "Urgent"
 					},
@@ -516,6 +541,7 @@
 						"projectKey": "todoist:project:42",
 						"recurrence": null,
 						"reminders": [],
+						"sectionKey": null,
 						"sourceKey": "todoist:task:42:High",
 						"title": "High"
 					},
@@ -528,6 +554,7 @@
 						"projectKey": "todoist:project:42",
 						"recurrence": null,
 						"reminders": [],
+						"sectionKey": null,
 						"sourceKey": "todoist:task:42:Normal",
 						"title": "Normal"
 					},
@@ -540,6 +567,7 @@
 						"projectKey": "todoist:project:42",
 						"recurrence": null,
 						"reminders": [],
+						"sectionKey": null,
 						"sourceKey": "todoist:task:42:Blank",
 						"title": "Blank"
 					},
@@ -552,6 +580,7 @@
 						"projectKey": "todoist:project:42",
 						"recurrence": null,
 						"reminders": [],
+						"sectionKey": null,
 						"sourceKey": "todoist:task:42:Odd",
 						"title": "Odd"
 					}
@@ -579,6 +608,7 @@
 						"sourceKey": "todoist:project:42"
 					}
 				],
+				"sections": [],
 				"tasks": [
 					{
 						"due": null,
@@ -589,6 +619,7 @@
 						"projectKey": "todoist:project:42",
 						"recurrence": null,
 						"reminders": [],
+						"sectionKey": null,
 						"sourceKey": "todoist:task:42:Buy eggs, milk\nand bread",
 						"title": "Buy eggs, milk\nand bread"
 					}
@@ -616,6 +647,7 @@
 						"sourceKey": "todoist:project:42"
 					}
 				],
+				"sections": [],
 				"tasks": [
 					{
 						"due": null,
@@ -626,6 +658,7 @@
 						"projectKey": "todoist:project:42",
 						"recurrence": null,
 						"reminders": [],
+						"sectionKey": null,
 						"sourceKey": "todoist:task:42:A",
 						"title": "A"
 					},
@@ -638,6 +671,7 @@
 						"projectKey": "todoist:project:42",
 						"recurrence": null,
 						"reminders": [],
+						"sectionKey": null,
 						"sourceKey": "todoist:task:42:A › B",
 						"title": "B"
 					},
@@ -650,6 +684,7 @@
 						"projectKey": "todoist:project:42",
 						"recurrence": null,
 						"reminders": [],
+						"sectionKey": null,
 						"sourceKey": "todoist:task:42:C",
 						"title": "C"
 					},
@@ -662,6 +697,7 @@
 						"projectKey": "todoist:project:42",
 						"recurrence": null,
 						"reminders": [],
+						"sectionKey": null,
 						"sourceKey": "todoist:task:42:C › D",
 						"title": "D"
 					}
@@ -689,6 +725,7 @@
 						"sourceKey": "todoist:project:42"
 					}
 				],
+				"sections": [],
 				"tasks": [
 					{
 						"due": null,
@@ -699,6 +736,7 @@
 						"projectKey": "todoist:project:42",
 						"recurrence": null,
 						"reminders": [],
+						"sectionKey": null,
 						"sourceKey": "todoist:task:42:Gym",
 						"title": "Gym"
 					}
@@ -728,6 +766,7 @@
 						"sourceKey": "todoist:project:42"
 					}
 				],
+				"sections": [],
 				"tasks": [
 					{
 						"due": null,
@@ -738,11 +777,528 @@
 						"projectKey": "todoist:project:42",
 						"recurrence": null,
 						"reminders": [],
+						"sectionKey": null,
 						"sourceKey": "todoist:task:42:Write to bob@site.com",
 						"title": "Write to bob@site.com"
 					}
 				],
 				"warnings": []
+			}
+		},
+		{
+			"fn": "readTodoistBackup",
+			"test": "CSV edge cases › Inbox has no sections, so its section rows are left out with a warning and its tasks stay in Inbox",
+			"input": [
+				[
+					{
+						"name": "Inbox [1].csv",
+						"text": "TYPE,CONTENT,DESCRIPTION,PRIORITY,INDENT,DATE,DATE_LANG\ntask,A,,4,1,,\nsection,Later,,,,,\ntask,B,,4,1,,\n"
+					}
+				],
+				1791986400000
+			],
+			"output": {
+				"projects": [
+					{
+						"inbox": true,
+						"name": "Inbox",
+						"sourceKey": "todoist:project:1"
+					}
+				],
+				"sections": [],
+				"tasks": [
+					{
+						"due": null,
+						"labels": [],
+						"notes": "",
+						"parentKey": null,
+						"priority": 4,
+						"projectKey": "todoist:project:1",
+						"recurrence": null,
+						"reminders": [],
+						"sectionKey": null,
+						"sourceKey": "todoist:task:1:A",
+						"title": "A"
+					},
+					{
+						"due": null,
+						"labels": [],
+						"notes": "",
+						"parentKey": null,
+						"priority": 4,
+						"projectKey": "todoist:project:1",
+						"recurrence": null,
+						"reminders": [],
+						"sectionKey": null,
+						"sourceKey": "todoist:task:1:B",
+						"title": "B"
+					}
+				],
+				"warnings": [
+					"Inbox: Inbox has no sections, so these were left out: Later"
+				]
+			}
+		},
+		{
+			"fn": "readTodoistBackup",
+			"test": "CSV edge cases › a section name that repeats in one project lands in one section, also on a second import",
+			"input": [
+				[
+					{
+						"name": "Errands [42].csv",
+						"text": "TYPE,CONTENT,DESCRIPTION,PRIORITY,INDENT,DATE,DATE_LANG\nsection,Later,,,,,\ntask,A,,4,1,,\nsection,later,,,,,\ntask,B,,4,1,,\n"
+					}
+				],
+				1791986400000
+			],
+			"output": {
+				"projects": [
+					{
+						"inbox": false,
+						"name": "Errands",
+						"sourceKey": "todoist:project:42"
+					}
+				],
+				"sections": [
+					{
+						"name": "Later",
+						"projectKey": "todoist:project:42",
+						"sourceKey": "todoist:section:42:Later"
+					},
+					{
+						"name": "later",
+						"projectKey": "todoist:project:42",
+						"sourceKey": "todoist:section:42:later"
+					}
+				],
+				"tasks": [
+					{
+						"due": null,
+						"labels": [],
+						"notes": "",
+						"parentKey": null,
+						"priority": 4,
+						"projectKey": "todoist:project:42",
+						"recurrence": null,
+						"reminders": [],
+						"sectionKey": "todoist:section:42:Later",
+						"sourceKey": "todoist:task:42:A",
+						"title": "A"
+					},
+					{
+						"due": null,
+						"labels": [],
+						"notes": "",
+						"parentKey": null,
+						"priority": 4,
+						"projectKey": "todoist:project:42",
+						"recurrence": null,
+						"reminders": [],
+						"sectionKey": "todoist:section:42:later",
+						"sourceKey": "todoist:task:42:B",
+						"title": "B"
+					}
+				],
+				"warnings": []
+			}
+		},
+		{
+			"fn": "mergeBackup",
+			"test": "CSV edge cases › a section name that repeats in one project lands in one section, also on a second import",
+			"input": [
+				{
+					"labels": [],
+					"projects": [],
+					"sections": [],
+					"tasks": []
+				},
+				{
+					"projects": [
+						{
+							"inbox": false,
+							"name": "Errands",
+							"sourceKey": "todoist:project:42"
+						}
+					],
+					"sections": [
+						{
+							"name": "Later",
+							"projectKey": "todoist:project:42",
+							"sourceKey": "todoist:section:42:Later"
+						},
+						{
+							"name": "later",
+							"projectKey": "todoist:project:42",
+							"sourceKey": "todoist:section:42:later"
+						}
+					],
+					"tasks": [
+						{
+							"due": null,
+							"labels": [],
+							"notes": "",
+							"parentKey": null,
+							"priority": 4,
+							"projectKey": "todoist:project:42",
+							"recurrence": null,
+							"reminders": [],
+							"sectionKey": "todoist:section:42:Later",
+							"sourceKey": "todoist:task:42:A",
+							"title": "A"
+						},
+						{
+							"due": null,
+							"labels": [],
+							"notes": "",
+							"parentKey": null,
+							"priority": 4,
+							"projectKey": "todoist:project:42",
+							"recurrence": null,
+							"reminders": [],
+							"sectionKey": "todoist:section:42:later",
+							"sourceKey": "todoist:task:42:B",
+							"title": "B"
+						}
+					],
+					"warnings": []
+				},
+				{
+					"now": 1000
+				}
+			],
+			"output": {
+				"state": {
+					"labels": [],
+					"projects": [
+						{
+							"createdAt": 1000,
+							"id": "id-1",
+							"name": "Errands",
+							"sourceKey": "todoist:project:42"
+						}
+					],
+					"sections": [
+						{
+							"createdAt": 1000,
+							"id": "id-2",
+							"name": "Later",
+							"order": 0,
+							"projectId": "id-1",
+							"sourceKey": "todoist:section:42:Later"
+						}
+					],
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1000,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "id-3",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "id-1",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": "id-2",
+							"sourceKey": "todoist:task:42:A",
+							"title": "A"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1001,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "id-4",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "id-1",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": "id-2",
+							"sourceKey": "todoist:task:42:B",
+							"title": "B"
+						}
+					]
+				},
+				"summary": {
+					"labels": 0,
+					"projects": 1,
+					"sections": 1,
+					"skipped": 0,
+					"tasks": 2,
+					"warnings": []
+				}
+			}
+		},
+		{
+			"fn": "mergeBackup",
+			"test": "CSV edge cases › a section name that repeats in one project lands in one section, also on a second import",
+			"input": [
+				{
+					"labels": [],
+					"projects": [
+						{
+							"createdAt": 1000,
+							"id": "id-1",
+							"name": "Errands",
+							"sourceKey": "todoist:project:42"
+						}
+					],
+					"sections": [
+						{
+							"createdAt": 1000,
+							"id": "id-2",
+							"name": "Later",
+							"order": 0,
+							"projectId": "id-1",
+							"sourceKey": "todoist:section:42:Later"
+						}
+					],
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1000,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "id-3",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "id-1",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": "id-2",
+							"sourceKey": "todoist:task:42:A",
+							"title": "A"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1001,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "id-4",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "id-1",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": "id-2",
+							"sourceKey": "todoist:task:42:B",
+							"title": "B"
+						}
+					]
+				},
+				{
+					"projects": [
+						{
+							"inbox": false,
+							"name": "Errands",
+							"sourceKey": "todoist:project:42"
+						}
+					],
+					"sections": [
+						{
+							"name": "Later",
+							"projectKey": "todoist:project:42",
+							"sourceKey": "todoist:section:42:Later"
+						},
+						{
+							"name": "later",
+							"projectKey": "todoist:project:42",
+							"sourceKey": "todoist:section:42:later"
+						}
+					],
+					"tasks": [
+						{
+							"due": null,
+							"labels": [],
+							"notes": "",
+							"parentKey": null,
+							"priority": 4,
+							"projectKey": "todoist:project:42",
+							"recurrence": null,
+							"reminders": [],
+							"sectionKey": "todoist:section:42:Later",
+							"sourceKey": "todoist:task:42:A",
+							"title": "A"
+						},
+						{
+							"due": null,
+							"labels": [],
+							"notes": "",
+							"parentKey": null,
+							"priority": 4,
+							"projectKey": "todoist:project:42",
+							"recurrence": null,
+							"reminders": [],
+							"sectionKey": "todoist:section:42:later",
+							"sourceKey": "todoist:task:42:B",
+							"title": "B"
+						}
+					],
+					"warnings": []
+				},
+				{
+					"now": 2000
+				}
+			],
+			"output": {
+				"state": {
+					"labels": [],
+					"projects": [
+						{
+							"createdAt": 1000,
+							"id": "id-1",
+							"name": "Errands",
+							"sourceKey": "todoist:project:42"
+						}
+					],
+					"sections": [
+						{
+							"createdAt": 1000,
+							"id": "id-2",
+							"name": "Later",
+							"order": 0,
+							"projectId": "id-1",
+							"sourceKey": "todoist:section:42:Later"
+						}
+					],
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1000,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "id-3",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "id-1",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": "id-2",
+							"sourceKey": "todoist:task:42:A",
+							"title": "A"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1001,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "id-4",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "id-1",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": "id-2",
+							"sourceKey": "todoist:task:42:B",
+							"title": "B"
+						}
+					]
+				},
+				"summary": {
+					"labels": 0,
+					"projects": 0,
+					"sections": 0,
+					"skipped": 2,
+					"tasks": 0,
+					"warnings": []
+				}
+			}
+		},
+		{
+			"fn": "readTodoistBackup",
+			"test": "CSV edge cases › a section row ends the nesting above it, in Inbox too",
+			"input": [
+				[
+					{
+						"name": "Inbox [1].csv",
+						"text": "TYPE,CONTENT,DESCRIPTION,PRIORITY,INDENT,DATE,DATE_LANG\ntask,A,,4,1,,\nsection,Later,,,,,\ntask,B,,4,2,,\n"
+					}
+				],
+				1791986400000
+			],
+			"output": {
+				"projects": [
+					{
+						"inbox": true,
+						"name": "Inbox",
+						"sourceKey": "todoist:project:1"
+					}
+				],
+				"sections": [],
+				"tasks": [
+					{
+						"due": null,
+						"labels": [],
+						"notes": "",
+						"parentKey": null,
+						"priority": 4,
+						"projectKey": "todoist:project:1",
+						"recurrence": null,
+						"reminders": [],
+						"sectionKey": null,
+						"sourceKey": "todoist:task:1:A",
+						"title": "A"
+					},
+					{
+						"due": null,
+						"labels": [],
+						"notes": "",
+						"parentKey": null,
+						"priority": 4,
+						"projectKey": "todoist:project:1",
+						"recurrence": null,
+						"reminders": [],
+						"sectionKey": null,
+						"sourceKey": "todoist:task:1:B",
+						"title": "B"
+					}
+				],
+				"warnings": [
+					"Inbox: Inbox has no sections, so these were left out: Later"
+				]
 			}
 		},
 		{
@@ -759,6 +1315,7 @@
 			],
 			"output": {
 				"projects": [],
+				"sections": [],
 				"tasks": [],
 				"warnings": [
 					"budget.csv is not a Todoist project file, skipped"
@@ -772,6 +1329,7 @@
 				{
 					"labels": [],
 					"projects": [],
+					"sections": [],
 					"tasks": []
 				},
 				{
@@ -792,6 +1350,18 @@
 							"sourceKey": "todoist:project:9Xmpl3Zr"
 						}
 					],
+					"sections": [
+						{
+							"name": "Someday",
+							"projectKey": "todoist:project:8Xmpl2Wq",
+							"sourceKey": "todoist:section:8Xmpl2Wq:Someday"
+						},
+						{
+							"name": "Reading",
+							"projectKey": "todoist:project:8Xmpl2Wq",
+							"sourceKey": "todoist:section:8Xmpl2Wq:Reading"
+						}
+					],
 					"tasks": [
 						{
 							"due": {
@@ -810,6 +1380,7 @@
 									"minutes": 30
 								}
 							],
+							"sectionKey": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Call the dentist",
 							"title": "Call the dentist"
 						},
@@ -825,6 +1396,7 @@
 							"projectKey": "todoist:project:6Xmpl1Fq",
 							"recurrence": null,
 							"reminders": [],
+							"sectionKey": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:cancel [meetup.com](https://meetup.com)",
 							"title": "cancel [meetup.com](https://meetup.com)"
 						},
@@ -843,6 +1415,7 @@
 								"unit": "year"
 							},
 							"reminders": [],
+							"sectionKey": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Renew passport #Travel",
 							"title": "Renew passport #Travel"
 						},
@@ -863,6 +1436,7 @@
 								"unit": "year"
 							},
 							"reminders": [],
+							"sectionKey": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Water plants @home",
 							"title": "Water plants"
 						},
@@ -875,6 +1449,7 @@
 							"projectKey": "todoist:project:6Xmpl1Fq",
 							"recurrence": null,
 							"reminders": [],
+							"sectionKey": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Fix bike",
 							"title": "Fix bike"
 						},
@@ -890,6 +1465,7 @@
 							"projectKey": "todoist:project:8Xmpl2Wq",
 							"recurrence": null,
 							"reminders": [],
+							"sectionKey": "todoist:section:8Xmpl2Wq:Someday",
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan",
 							"title": "Visit Japan"
 						},
@@ -911,6 +1487,7 @@
 									"time": "09:00"
 								}
 							],
+							"sectionKey": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights",
 							"title": "Book flights"
 						},
@@ -923,6 +1500,7 @@
 							"projectKey": "todoist:project:8Xmpl2Wq",
 							"recurrence": null,
 							"reminders": [],
+							"sectionKey": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights › Pack bags",
 							"title": "Pack bags"
 						},
@@ -935,6 +1513,7 @@
 							"projectKey": "todoist:project:8Xmpl2Wq",
 							"recurrence": null,
 							"reminders": [],
+							"sectionKey": "todoist:section:8Xmpl2Wq:Reading",
 							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune",
 							"title": "Read Dune"
 						},
@@ -947,6 +1526,7 @@
 							"projectKey": "todoist:project:8Xmpl2Wq",
 							"recurrence": null,
 							"reminders": [],
+							"sectionKey": "todoist:section:8Xmpl2Wq:Reading",
 							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune#2",
 							"title": "Read Dune"
 						},
@@ -962,6 +1542,7 @@
 							"projectKey": "todoist:project:9Xmpl3Zr",
 							"recurrence": null,
 							"reminders": [],
+							"sectionKey": null,
 							"sourceKey": "todoist:task:9Xmpl3Zr:Quarterly review @work @deep-work",
 							"title": "Quarterly review"
 						},
@@ -974,13 +1555,13 @@
 							"projectKey": "todoist:project:9Xmpl3Zr",
 							"recurrence": null,
 							"reminders": [],
+							"sectionKey": null,
 							"sourceKey": "todoist:task:9Xmpl3Zr:Email Sam",
 							"title": "Email Sam"
 						}
 					],
 					"warnings": [
 						"Inbox: could not read the date \"every! 3 days\" on \"Fix bike\", kept it in notes",
-						"Long Term: sections are not imported: Someday, Reading",
 						"Job: could not read the date \"jeden Montag\" on \"Email Sam\", kept it in notes"
 					]
 				},
@@ -993,17 +1574,17 @@
 					"labels": [
 						{
 							"createdAt": 1000,
-							"id": "id-7",
+							"id": "id-9",
 							"name": "home"
 						},
 						{
 							"createdAt": 1000,
-							"id": "id-15",
+							"id": "id-17",
 							"name": "work"
 						},
 						{
 							"createdAt": 1000,
-							"id": "id-16",
+							"id": "id-18",
 							"name": "deep-work"
 						}
 					],
@@ -1021,6 +1602,24 @@
 							"sourceKey": "todoist:project:9Xmpl3Zr"
 						}
 					],
+					"sections": [
+						{
+							"createdAt": 1000,
+							"id": "id-3",
+							"name": "Someday",
+							"order": 0,
+							"projectId": "id-1",
+							"sourceKey": "todoist:section:8Xmpl2Wq:Someday"
+						},
+						{
+							"createdAt": 1000,
+							"id": "id-4",
+							"name": "Reading",
+							"order": 1,
+							"projectId": "id-1",
+							"sourceKey": "todoist:section:8Xmpl2Wq:Reading"
+						}
+					],
 					"tasks": [
 						{
 							"completedAt": null,
@@ -1032,7 +1631,7 @@
 								"time": null
 							},
 							"event": null,
-							"id": "id-3",
+							"id": "id-5",
 							"labelIds": [],
 							"lastCompletedAt": null,
 							"location": null,
@@ -1048,6 +1647,7 @@
 									"minutes": 30
 								}
 							],
+							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Call the dentist",
 							"title": "Call the dentist"
 						},
@@ -1061,7 +1661,7 @@
 								"time": null
 							},
 							"event": null,
-							"id": "id-4",
+							"id": "id-6",
 							"labelIds": [],
 							"lastCompletedAt": null,
 							"location": null,
@@ -1072,6 +1672,7 @@
 							"projectId": null,
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:cancel [meetup.com](https://meetup.com)",
 							"title": "cancel [meetup.com](https://meetup.com)"
 						},
@@ -1085,7 +1686,7 @@
 								"time": "11:00"
 							},
 							"event": null,
-							"id": "id-5",
+							"id": "id-7",
 							"labelIds": [],
 							"lastCompletedAt": null,
 							"location": null,
@@ -1099,6 +1700,7 @@
 								"unit": "year"
 							},
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Renew passport #Travel",
 							"title": "Renew passport #Travel"
 						},
@@ -1112,9 +1714,9 @@
 								"time": "11:00"
 							},
 							"event": null,
-							"id": "id-6",
+							"id": "id-8",
 							"labelIds": [
-								"id-7"
+								"id-9"
 							],
 							"lastCompletedAt": null,
 							"location": null,
@@ -1128,6 +1730,7 @@
 								"unit": "year"
 							},
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Water plants @home",
 							"title": "Water plants"
 						},
@@ -1138,7 +1741,7 @@
 							"createdBy": null,
 							"due": null,
 							"event": null,
-							"id": "id-8",
+							"id": "id-10",
 							"labelIds": [],
 							"lastCompletedAt": null,
 							"location": null,
@@ -1149,6 +1752,7 @@
 							"projectId": null,
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Fix bike",
 							"title": "Fix bike"
 						},
@@ -1162,7 +1766,7 @@
 								"time": null
 							},
 							"event": null,
-							"id": "id-9",
+							"id": "id-11",
 							"labelIds": [],
 							"lastCompletedAt": null,
 							"location": null,
@@ -1173,6 +1777,7 @@
 							"projectId": "id-1",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": "id-3",
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan",
 							"title": "Visit Japan"
 						},
@@ -1186,13 +1791,13 @@
 								"time": null
 							},
 							"event": null,
-							"id": "id-10",
+							"id": "id-12",
 							"labelIds": [],
 							"lastCompletedAt": null,
 							"location": null,
 							"notes": "",
 							"order": 0,
-							"parentId": "id-9",
+							"parentId": "id-11",
 							"priority": 3,
 							"projectId": "id-1",
 							"recurrence": null,
@@ -1203,6 +1808,7 @@
 									"time": "09:00"
 								}
 							],
+							"sectionId": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights",
 							"title": "Book flights"
 						},
@@ -1213,17 +1819,18 @@
 							"createdBy": null,
 							"due": null,
 							"event": null,
-							"id": "id-11",
+							"id": "id-13",
 							"labelIds": [],
 							"lastCompletedAt": null,
 							"location": null,
 							"notes": "",
 							"order": 0,
-							"parentId": "id-10",
+							"parentId": "id-12",
 							"priority": 4,
 							"projectId": "id-1",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights › Pack bags",
 							"title": "Pack bags"
 						},
@@ -1234,7 +1841,7 @@
 							"createdBy": null,
 							"due": null,
 							"event": null,
-							"id": "id-12",
+							"id": "id-14",
 							"labelIds": [],
 							"lastCompletedAt": null,
 							"location": null,
@@ -1245,6 +1852,7 @@
 							"projectId": "id-1",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": "id-4",
 							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune",
 							"title": "Read Dune"
 						},
@@ -1255,7 +1863,7 @@
 							"createdBy": null,
 							"due": null,
 							"event": null,
-							"id": "id-13",
+							"id": "id-15",
 							"labelIds": [],
 							"lastCompletedAt": null,
 							"location": null,
@@ -1266,6 +1874,7 @@
 							"projectId": "id-1",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": "id-4",
 							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune#2",
 							"title": "Read Dune"
 						},
@@ -1276,10 +1885,10 @@
 							"createdBy": null,
 							"due": null,
 							"event": null,
-							"id": "id-14",
+							"id": "id-16",
 							"labelIds": [
-								"id-15",
-								"id-16"
+								"id-17",
+								"id-18"
 							],
 							"lastCompletedAt": null,
 							"location": null,
@@ -1290,6 +1899,7 @@
 							"projectId": "id-2",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:9Xmpl3Zr:Quarterly review @work @deep-work",
 							"title": "Quarterly review"
 						},
@@ -1300,7 +1910,7 @@
 							"createdBy": null,
 							"due": null,
 							"event": null,
-							"id": "id-17",
+							"id": "id-19",
 							"labelIds": [],
 							"lastCompletedAt": null,
 							"location": null,
@@ -1311,6 +1921,7 @@
 							"projectId": "id-2",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:9Xmpl3Zr:Email Sam",
 							"title": "Email Sam"
 						}
@@ -1319,11 +1930,11 @@
 				"summary": {
 					"labels": 3,
 					"projects": 2,
+					"sections": 2,
 					"skipped": 0,
 					"tasks": 12,
 					"warnings": [
 						"Inbox: could not read the date \"every! 3 days\" on \"Fix bike\", kept it in notes",
-						"Long Term: sections are not imported: Someday, Reading",
 						"Job: could not read the date \"jeden Montag\" on \"Email Sam\", kept it in notes"
 					]
 				}
@@ -1336,6 +1947,7 @@
 				{
 					"labels": [],
 					"projects": [],
+					"sections": [],
 					"tasks": []
 				},
 				{
@@ -1356,6 +1968,18 @@
 							"sourceKey": "todoist:project:9Xmpl3Zr"
 						}
 					],
+					"sections": [
+						{
+							"name": "Someday",
+							"projectKey": "todoist:project:8Xmpl2Wq",
+							"sourceKey": "todoist:section:8Xmpl2Wq:Someday"
+						},
+						{
+							"name": "Reading",
+							"projectKey": "todoist:project:8Xmpl2Wq",
+							"sourceKey": "todoist:section:8Xmpl2Wq:Reading"
+						}
+					],
 					"tasks": [
 						{
 							"due": {
@@ -1374,6 +1998,7 @@
 									"minutes": 30
 								}
 							],
+							"sectionKey": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Call the dentist",
 							"title": "Call the dentist"
 						},
@@ -1389,6 +2014,7 @@
 							"projectKey": "todoist:project:6Xmpl1Fq",
 							"recurrence": null,
 							"reminders": [],
+							"sectionKey": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:cancel [meetup.com](https://meetup.com)",
 							"title": "cancel [meetup.com](https://meetup.com)"
 						},
@@ -1407,6 +2033,7 @@
 								"unit": "year"
 							},
 							"reminders": [],
+							"sectionKey": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Renew passport #Travel",
 							"title": "Renew passport #Travel"
 						},
@@ -1427,6 +2054,7 @@
 								"unit": "year"
 							},
 							"reminders": [],
+							"sectionKey": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Water plants @home",
 							"title": "Water plants"
 						},
@@ -1439,6 +2067,7 @@
 							"projectKey": "todoist:project:6Xmpl1Fq",
 							"recurrence": null,
 							"reminders": [],
+							"sectionKey": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Fix bike",
 							"title": "Fix bike"
 						},
@@ -1454,6 +2083,7 @@
 							"projectKey": "todoist:project:8Xmpl2Wq",
 							"recurrence": null,
 							"reminders": [],
+							"sectionKey": "todoist:section:8Xmpl2Wq:Someday",
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan",
 							"title": "Visit Japan"
 						},
@@ -1475,6 +2105,7 @@
 									"time": "09:00"
 								}
 							],
+							"sectionKey": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights",
 							"title": "Book flights"
 						},
@@ -1487,6 +2118,7 @@
 							"projectKey": "todoist:project:8Xmpl2Wq",
 							"recurrence": null,
 							"reminders": [],
+							"sectionKey": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights › Pack bags",
 							"title": "Pack bags"
 						},
@@ -1499,6 +2131,7 @@
 							"projectKey": "todoist:project:8Xmpl2Wq",
 							"recurrence": null,
 							"reminders": [],
+							"sectionKey": "todoist:section:8Xmpl2Wq:Reading",
 							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune",
 							"title": "Read Dune"
 						},
@@ -1511,6 +2144,7 @@
 							"projectKey": "todoist:project:8Xmpl2Wq",
 							"recurrence": null,
 							"reminders": [],
+							"sectionKey": "todoist:section:8Xmpl2Wq:Reading",
 							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune#2",
 							"title": "Read Dune"
 						},
@@ -1526,6 +2160,7 @@
 							"projectKey": "todoist:project:9Xmpl3Zr",
 							"recurrence": null,
 							"reminders": [],
+							"sectionKey": null,
 							"sourceKey": "todoist:task:9Xmpl3Zr:Quarterly review @work @deep-work",
 							"title": "Quarterly review"
 						},
@@ -1538,13 +2173,2207 @@
 							"projectKey": "todoist:project:9Xmpl3Zr",
 							"recurrence": null,
 							"reminders": [],
+							"sectionKey": null,
 							"sourceKey": "todoist:task:9Xmpl3Zr:Email Sam",
 							"title": "Email Sam"
 						}
 					],
 					"warnings": [
 						"Inbox: could not read the date \"every! 3 days\" on \"Fix bike\", kept it in notes",
-						"Long Term: sections are not imported: Someday, Reading",
+						"Job: could not read the date \"jeden Montag\" on \"Email Sam\", kept it in notes"
+					]
+				},
+				{
+					"now": 1000
+				}
+			],
+			"output": {
+				"state": {
+					"labels": [
+						{
+							"createdAt": 1000,
+							"id": "id-9",
+							"name": "home"
+						},
+						{
+							"createdAt": 1000,
+							"id": "id-17",
+							"name": "work"
+						},
+						{
+							"createdAt": 1000,
+							"id": "id-18",
+							"name": "deep-work"
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 1000,
+							"id": "id-1",
+							"name": "Long Term",
+							"sourceKey": "todoist:project:8Xmpl2Wq"
+						},
+						{
+							"createdAt": 1000,
+							"id": "id-2",
+							"name": "Job",
+							"sourceKey": "todoist:project:9Xmpl3Zr"
+						}
+					],
+					"sections": [
+						{
+							"createdAt": 1000,
+							"id": "id-3",
+							"name": "Someday",
+							"order": 0,
+							"projectId": "id-1",
+							"sourceKey": "todoist:section:8Xmpl2Wq:Someday"
+						},
+						{
+							"createdAt": 1000,
+							"id": "id-4",
+							"name": "Reading",
+							"order": 1,
+							"projectId": "id-1",
+							"sourceKey": "todoist:section:8Xmpl2Wq:Reading"
+						}
+					],
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1000,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-22",
+								"time": null
+							},
+							"event": null,
+							"id": "id-5",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 1,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [
+								{
+									"kind": "before",
+									"minutes": 30
+								}
+							],
+							"sectionId": null,
+							"sourceKey": "todoist:task:6Xmpl1Fq:Call the dentist",
+							"title": "Call the dentist"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1001,
+							"createdBy": null,
+							"due": {
+								"date": "2026-12-04",
+								"time": null
+							},
+							"event": null,
+							"id": "id-6",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"sourceKey": "todoist:task:6Xmpl1Fq:cancel [meetup.com](https://meetup.com)",
+							"title": "cancel [meetup.com](https://meetup.com)"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1002,
+							"createdBy": null,
+							"due": {
+								"date": "2027-03-02",
+								"time": "11:00"
+							},
+							"event": null,
+							"id": "id-7",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 2,
+							"projectId": null,
+							"recurrence": {
+								"interval": 1,
+								"unit": "year"
+							},
+							"reminders": [],
+							"sectionId": null,
+							"sourceKey": "todoist:task:6Xmpl1Fq:Renew passport #Travel",
+							"title": "Renew passport #Travel"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1003,
+							"createdBy": null,
+							"due": {
+								"date": "2027-05-13",
+								"time": "11:00"
+							},
+							"event": null,
+							"id": "id-8",
+							"labelIds": [
+								"id-9"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "Ferns first, then \"the big one\"\nUse the blue can\n\nBought a new can, see receipt",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": {
+								"interval": 1,
+								"unit": "year"
+							},
+							"reminders": [],
+							"sectionId": null,
+							"sourceKey": "todoist:task:6Xmpl1Fq:Water plants @home",
+							"title": "Water plants"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1004,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "id-10",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "Todoist date: every! 3 days",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"sourceKey": "todoist:task:6Xmpl1Fq:Fix bike",
+							"title": "Fix bike"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1005,
+							"createdBy": null,
+							"due": {
+								"date": "2027-06-21",
+								"time": null
+							},
+							"event": null,
+							"id": "id-11",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "Duration: 90 minutes\n\nDeadline: 2027-06-01",
+							"order": 0,
+							"parentId": null,
+							"priority": 2,
+							"projectId": "id-1",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": "id-3",
+							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan",
+							"title": "Visit Japan"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1006,
+							"createdBy": null,
+							"due": {
+								"date": "2027-05-23",
+								"time": null
+							},
+							"event": null,
+							"id": "id-12",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "id-11",
+							"priority": 3,
+							"projectId": "id-1",
+							"recurrence": null,
+							"reminders": [
+								{
+									"date": "2027-05-20",
+									"kind": "at",
+									"time": "09:00"
+								}
+							],
+							"sectionId": null,
+							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights",
+							"title": "Book flights"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1007,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "id-13",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "id-12",
+							"priority": 4,
+							"projectId": "id-1",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights › Pack bags",
+							"title": "Pack bags"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1008,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "id-14",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "id-1",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": "id-4",
+							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune",
+							"title": "Read Dune"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1009,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "id-15",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "id-1",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": "id-4",
+							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune#2",
+							"title": "Read Dune"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1010,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "id-16",
+							"labelIds": [
+								"id-17",
+								"id-18"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 1,
+							"projectId": "id-2",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"sourceKey": "todoist:task:9Xmpl3Zr:Quarterly review @work @deep-work",
+							"title": "Quarterly review"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1011,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "id-19",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "Todoist date: jeden Montag",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "id-2",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"sourceKey": "todoist:task:9Xmpl3Zr:Email Sam",
+							"title": "Email Sam"
+						}
+					]
+				},
+				"summary": {
+					"labels": 3,
+					"projects": 2,
+					"sections": 2,
+					"skipped": 0,
+					"tasks": 12,
+					"warnings": [
+						"Inbox: could not read the date \"every! 3 days\" on \"Fix bike\", kept it in notes",
+						"Job: could not read the date \"jeden Montag\" on \"Email Sam\", kept it in notes"
+					]
+				}
+			}
+		},
+		{
+			"fn": "mergeBackup",
+			"test": "merging into the store › importing the same backup again adds nothing",
+			"input": [
+				{
+					"labels": [
+						{
+							"createdAt": 1000,
+							"id": "id-9",
+							"name": "home"
+						},
+						{
+							"createdAt": 1000,
+							"id": "id-17",
+							"name": "work"
+						},
+						{
+							"createdAt": 1000,
+							"id": "id-18",
+							"name": "deep-work"
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 1000,
+							"id": "id-1",
+							"name": "Long Term",
+							"sourceKey": "todoist:project:8Xmpl2Wq"
+						},
+						{
+							"createdAt": 1000,
+							"id": "id-2",
+							"name": "Job",
+							"sourceKey": "todoist:project:9Xmpl3Zr"
+						}
+					],
+					"sections": [
+						{
+							"createdAt": 1000,
+							"id": "id-3",
+							"name": "Someday",
+							"order": 0,
+							"projectId": "id-1",
+							"sourceKey": "todoist:section:8Xmpl2Wq:Someday"
+						},
+						{
+							"createdAt": 1000,
+							"id": "id-4",
+							"name": "Reading",
+							"order": 1,
+							"projectId": "id-1",
+							"sourceKey": "todoist:section:8Xmpl2Wq:Reading"
+						}
+					],
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1000,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-22",
+								"time": null
+							},
+							"event": null,
+							"id": "id-5",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 1,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [
+								{
+									"kind": "before",
+									"minutes": 30
+								}
+							],
+							"sectionId": null,
+							"sourceKey": "todoist:task:6Xmpl1Fq:Call the dentist",
+							"title": "Call the dentist"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1001,
+							"createdBy": null,
+							"due": {
+								"date": "2026-12-04",
+								"time": null
+							},
+							"event": null,
+							"id": "id-6",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"sourceKey": "todoist:task:6Xmpl1Fq:cancel [meetup.com](https://meetup.com)",
+							"title": "cancel [meetup.com](https://meetup.com)"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1002,
+							"createdBy": null,
+							"due": {
+								"date": "2027-03-02",
+								"time": "11:00"
+							},
+							"event": null,
+							"id": "id-7",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 2,
+							"projectId": null,
+							"recurrence": {
+								"interval": 1,
+								"unit": "year"
+							},
+							"reminders": [],
+							"sectionId": null,
+							"sourceKey": "todoist:task:6Xmpl1Fq:Renew passport #Travel",
+							"title": "Renew passport #Travel"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1003,
+							"createdBy": null,
+							"due": {
+								"date": "2027-05-13",
+								"time": "11:00"
+							},
+							"event": null,
+							"id": "id-8",
+							"labelIds": [
+								"id-9"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "Ferns first, then \"the big one\"\nUse the blue can\n\nBought a new can, see receipt",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": {
+								"interval": 1,
+								"unit": "year"
+							},
+							"reminders": [],
+							"sectionId": null,
+							"sourceKey": "todoist:task:6Xmpl1Fq:Water plants @home",
+							"title": "Water plants"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1004,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "id-10",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "Todoist date: every! 3 days",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"sourceKey": "todoist:task:6Xmpl1Fq:Fix bike",
+							"title": "Fix bike"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1005,
+							"createdBy": null,
+							"due": {
+								"date": "2027-06-21",
+								"time": null
+							},
+							"event": null,
+							"id": "id-11",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "Duration: 90 minutes\n\nDeadline: 2027-06-01",
+							"order": 0,
+							"parentId": null,
+							"priority": 2,
+							"projectId": "id-1",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": "id-3",
+							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan",
+							"title": "Visit Japan"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1006,
+							"createdBy": null,
+							"due": {
+								"date": "2027-05-23",
+								"time": null
+							},
+							"event": null,
+							"id": "id-12",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "id-11",
+							"priority": 3,
+							"projectId": "id-1",
+							"recurrence": null,
+							"reminders": [
+								{
+									"date": "2027-05-20",
+									"kind": "at",
+									"time": "09:00"
+								}
+							],
+							"sectionId": null,
+							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights",
+							"title": "Book flights"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1007,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "id-13",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "id-12",
+							"priority": 4,
+							"projectId": "id-1",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights › Pack bags",
+							"title": "Pack bags"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1008,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "id-14",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "id-1",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": "id-4",
+							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune",
+							"title": "Read Dune"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1009,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "id-15",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "id-1",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": "id-4",
+							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune#2",
+							"title": "Read Dune"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1010,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "id-16",
+							"labelIds": [
+								"id-17",
+								"id-18"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 1,
+							"projectId": "id-2",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"sourceKey": "todoist:task:9Xmpl3Zr:Quarterly review @work @deep-work",
+							"title": "Quarterly review"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1011,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "id-19",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "Todoist date: jeden Montag",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "id-2",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"sourceKey": "todoist:task:9Xmpl3Zr:Email Sam",
+							"title": "Email Sam"
+						}
+					]
+				},
+				{
+					"projects": [
+						{
+							"inbox": true,
+							"name": "Inbox",
+							"sourceKey": "todoist:project:6Xmpl1Fq"
+						},
+						{
+							"inbox": false,
+							"name": "Long Term",
+							"sourceKey": "todoist:project:8Xmpl2Wq"
+						},
+						{
+							"inbox": false,
+							"name": "Job",
+							"sourceKey": "todoist:project:9Xmpl3Zr"
+						}
+					],
+					"sections": [
+						{
+							"name": "Someday",
+							"projectKey": "todoist:project:8Xmpl2Wq",
+							"sourceKey": "todoist:section:8Xmpl2Wq:Someday"
+						},
+						{
+							"name": "Reading",
+							"projectKey": "todoist:project:8Xmpl2Wq",
+							"sourceKey": "todoist:section:8Xmpl2Wq:Reading"
+						}
+					],
+					"tasks": [
+						{
+							"due": {
+								"date": "2026-10-22",
+								"time": null
+							},
+							"labels": [],
+							"notes": "",
+							"parentKey": null,
+							"priority": 1,
+							"projectKey": "todoist:project:6Xmpl1Fq",
+							"recurrence": null,
+							"reminders": [
+								{
+									"kind": "before",
+									"minutes": 30
+								}
+							],
+							"sectionKey": null,
+							"sourceKey": "todoist:task:6Xmpl1Fq:Call the dentist",
+							"title": "Call the dentist"
+						},
+						{
+							"due": {
+								"date": "2026-12-04",
+								"time": null
+							},
+							"labels": [],
+							"notes": "",
+							"parentKey": null,
+							"priority": 4,
+							"projectKey": "todoist:project:6Xmpl1Fq",
+							"recurrence": null,
+							"reminders": [],
+							"sectionKey": null,
+							"sourceKey": "todoist:task:6Xmpl1Fq:cancel [meetup.com](https://meetup.com)",
+							"title": "cancel [meetup.com](https://meetup.com)"
+						},
+						{
+							"due": {
+								"date": "2027-03-02",
+								"time": "11:00"
+							},
+							"labels": [],
+							"notes": "",
+							"parentKey": null,
+							"priority": 2,
+							"projectKey": "todoist:project:6Xmpl1Fq",
+							"recurrence": {
+								"interval": 1,
+								"unit": "year"
+							},
+							"reminders": [],
+							"sectionKey": null,
+							"sourceKey": "todoist:task:6Xmpl1Fq:Renew passport #Travel",
+							"title": "Renew passport #Travel"
+						},
+						{
+							"due": {
+								"date": "2027-05-13",
+								"time": "11:00"
+							},
+							"labels": [
+								"home"
+							],
+							"notes": "Ferns first, then \"the big one\"\nUse the blue can\n\nBought a new can, see receipt",
+							"parentKey": null,
+							"priority": 4,
+							"projectKey": "todoist:project:6Xmpl1Fq",
+							"recurrence": {
+								"interval": 1,
+								"unit": "year"
+							},
+							"reminders": [],
+							"sectionKey": null,
+							"sourceKey": "todoist:task:6Xmpl1Fq:Water plants @home",
+							"title": "Water plants"
+						},
+						{
+							"due": null,
+							"labels": [],
+							"notes": "Todoist date: every! 3 days",
+							"parentKey": null,
+							"priority": 4,
+							"projectKey": "todoist:project:6Xmpl1Fq",
+							"recurrence": null,
+							"reminders": [],
+							"sectionKey": null,
+							"sourceKey": "todoist:task:6Xmpl1Fq:Fix bike",
+							"title": "Fix bike"
+						},
+						{
+							"due": {
+								"date": "2027-06-21",
+								"time": null
+							},
+							"labels": [],
+							"notes": "Duration: 90 minutes\n\nDeadline: 2027-06-01",
+							"parentKey": null,
+							"priority": 2,
+							"projectKey": "todoist:project:8Xmpl2Wq",
+							"recurrence": null,
+							"reminders": [],
+							"sectionKey": "todoist:section:8Xmpl2Wq:Someday",
+							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan",
+							"title": "Visit Japan"
+						},
+						{
+							"due": {
+								"date": "2027-05-23",
+								"time": null
+							},
+							"labels": [],
+							"notes": "",
+							"parentKey": "todoist:task:8Xmpl2Wq:Visit Japan",
+							"priority": 3,
+							"projectKey": "todoist:project:8Xmpl2Wq",
+							"recurrence": null,
+							"reminders": [
+								{
+									"date": "2027-05-20",
+									"kind": "at",
+									"time": "09:00"
+								}
+							],
+							"sectionKey": null,
+							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights",
+							"title": "Book flights"
+						},
+						{
+							"due": null,
+							"labels": [],
+							"notes": "",
+							"parentKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights",
+							"priority": 4,
+							"projectKey": "todoist:project:8Xmpl2Wq",
+							"recurrence": null,
+							"reminders": [],
+							"sectionKey": null,
+							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights › Pack bags",
+							"title": "Pack bags"
+						},
+						{
+							"due": null,
+							"labels": [],
+							"notes": "",
+							"parentKey": null,
+							"priority": 4,
+							"projectKey": "todoist:project:8Xmpl2Wq",
+							"recurrence": null,
+							"reminders": [],
+							"sectionKey": "todoist:section:8Xmpl2Wq:Reading",
+							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune",
+							"title": "Read Dune"
+						},
+						{
+							"due": null,
+							"labels": [],
+							"notes": "",
+							"parentKey": null,
+							"priority": 4,
+							"projectKey": "todoist:project:8Xmpl2Wq",
+							"recurrence": null,
+							"reminders": [],
+							"sectionKey": "todoist:section:8Xmpl2Wq:Reading",
+							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune#2",
+							"title": "Read Dune"
+						},
+						{
+							"due": null,
+							"labels": [
+								"work",
+								"deep-work"
+							],
+							"notes": "",
+							"parentKey": null,
+							"priority": 1,
+							"projectKey": "todoist:project:9Xmpl3Zr",
+							"recurrence": null,
+							"reminders": [],
+							"sectionKey": null,
+							"sourceKey": "todoist:task:9Xmpl3Zr:Quarterly review @work @deep-work",
+							"title": "Quarterly review"
+						},
+						{
+							"due": null,
+							"labels": [],
+							"notes": "Todoist date: jeden Montag",
+							"parentKey": null,
+							"priority": 4,
+							"projectKey": "todoist:project:9Xmpl3Zr",
+							"recurrence": null,
+							"reminders": [],
+							"sectionKey": null,
+							"sourceKey": "todoist:task:9Xmpl3Zr:Email Sam",
+							"title": "Email Sam"
+						}
+					],
+					"warnings": [
+						"Inbox: could not read the date \"every! 3 days\" on \"Fix bike\", kept it in notes",
+						"Job: could not read the date \"jeden Montag\" on \"Email Sam\", kept it in notes"
+					]
+				},
+				{
+					"now": 2000
+				}
+			],
+			"output": {
+				"state": {
+					"labels": [
+						{
+							"createdAt": 1000,
+							"id": "id-9",
+							"name": "home"
+						},
+						{
+							"createdAt": 1000,
+							"id": "id-17",
+							"name": "work"
+						},
+						{
+							"createdAt": 1000,
+							"id": "id-18",
+							"name": "deep-work"
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 1000,
+							"id": "id-1",
+							"name": "Long Term",
+							"sourceKey": "todoist:project:8Xmpl2Wq"
+						},
+						{
+							"createdAt": 1000,
+							"id": "id-2",
+							"name": "Job",
+							"sourceKey": "todoist:project:9Xmpl3Zr"
+						}
+					],
+					"sections": [
+						{
+							"createdAt": 1000,
+							"id": "id-3",
+							"name": "Someday",
+							"order": 0,
+							"projectId": "id-1",
+							"sourceKey": "todoist:section:8Xmpl2Wq:Someday"
+						},
+						{
+							"createdAt": 1000,
+							"id": "id-4",
+							"name": "Reading",
+							"order": 1,
+							"projectId": "id-1",
+							"sourceKey": "todoist:section:8Xmpl2Wq:Reading"
+						}
+					],
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1000,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-22",
+								"time": null
+							},
+							"event": null,
+							"id": "id-5",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 1,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [
+								{
+									"kind": "before",
+									"minutes": 30
+								}
+							],
+							"sectionId": null,
+							"sourceKey": "todoist:task:6Xmpl1Fq:Call the dentist",
+							"title": "Call the dentist"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1001,
+							"createdBy": null,
+							"due": {
+								"date": "2026-12-04",
+								"time": null
+							},
+							"event": null,
+							"id": "id-6",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"sourceKey": "todoist:task:6Xmpl1Fq:cancel [meetup.com](https://meetup.com)",
+							"title": "cancel [meetup.com](https://meetup.com)"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1002,
+							"createdBy": null,
+							"due": {
+								"date": "2027-03-02",
+								"time": "11:00"
+							},
+							"event": null,
+							"id": "id-7",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 2,
+							"projectId": null,
+							"recurrence": {
+								"interval": 1,
+								"unit": "year"
+							},
+							"reminders": [],
+							"sectionId": null,
+							"sourceKey": "todoist:task:6Xmpl1Fq:Renew passport #Travel",
+							"title": "Renew passport #Travel"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1003,
+							"createdBy": null,
+							"due": {
+								"date": "2027-05-13",
+								"time": "11:00"
+							},
+							"event": null,
+							"id": "id-8",
+							"labelIds": [
+								"id-9"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "Ferns first, then \"the big one\"\nUse the blue can\n\nBought a new can, see receipt",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": {
+								"interval": 1,
+								"unit": "year"
+							},
+							"reminders": [],
+							"sectionId": null,
+							"sourceKey": "todoist:task:6Xmpl1Fq:Water plants @home",
+							"title": "Water plants"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1004,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "id-10",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "Todoist date: every! 3 days",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"sourceKey": "todoist:task:6Xmpl1Fq:Fix bike",
+							"title": "Fix bike"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1005,
+							"createdBy": null,
+							"due": {
+								"date": "2027-06-21",
+								"time": null
+							},
+							"event": null,
+							"id": "id-11",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "Duration: 90 minutes\n\nDeadline: 2027-06-01",
+							"order": 0,
+							"parentId": null,
+							"priority": 2,
+							"projectId": "id-1",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": "id-3",
+							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan",
+							"title": "Visit Japan"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1006,
+							"createdBy": null,
+							"due": {
+								"date": "2027-05-23",
+								"time": null
+							},
+							"event": null,
+							"id": "id-12",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "id-11",
+							"priority": 3,
+							"projectId": "id-1",
+							"recurrence": null,
+							"reminders": [
+								{
+									"date": "2027-05-20",
+									"kind": "at",
+									"time": "09:00"
+								}
+							],
+							"sectionId": null,
+							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights",
+							"title": "Book flights"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1007,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "id-13",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "id-12",
+							"priority": 4,
+							"projectId": "id-1",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights › Pack bags",
+							"title": "Pack bags"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1008,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "id-14",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "id-1",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": "id-4",
+							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune",
+							"title": "Read Dune"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1009,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "id-15",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "id-1",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": "id-4",
+							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune#2",
+							"title": "Read Dune"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1010,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "id-16",
+							"labelIds": [
+								"id-17",
+								"id-18"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 1,
+							"projectId": "id-2",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"sourceKey": "todoist:task:9Xmpl3Zr:Quarterly review @work @deep-work",
+							"title": "Quarterly review"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1011,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "id-19",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "Todoist date: jeden Montag",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "id-2",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"sourceKey": "todoist:task:9Xmpl3Zr:Email Sam",
+							"title": "Email Sam"
+						}
+					]
+				},
+				"summary": {
+					"labels": 0,
+					"projects": 0,
+					"sections": 0,
+					"skipped": 12,
+					"tasks": 0,
+					"warnings": [
+						"Inbox: could not read the date \"every! 3 days\" on \"Fix bike\", kept it in notes",
+						"Job: could not read the date \"jeden Montag\" on \"Email Sam\", kept it in notes"
+					]
+				}
+			}
+		},
+		{
+			"fn": "mergeBackup",
+			"test": "merging into the store › sections land in their project in Todoist's order, holding their top-level tasks",
+			"input": [
+				{
+					"labels": [],
+					"projects": [],
+					"sections": [],
+					"tasks": []
+				},
+				{
+					"projects": [
+						{
+							"inbox": true,
+							"name": "Inbox",
+							"sourceKey": "todoist:project:6Xmpl1Fq"
+						},
+						{
+							"inbox": false,
+							"name": "Long Term",
+							"sourceKey": "todoist:project:8Xmpl2Wq"
+						},
+						{
+							"inbox": false,
+							"name": "Job",
+							"sourceKey": "todoist:project:9Xmpl3Zr"
+						}
+					],
+					"sections": [
+						{
+							"name": "Someday",
+							"projectKey": "todoist:project:8Xmpl2Wq",
+							"sourceKey": "todoist:section:8Xmpl2Wq:Someday"
+						},
+						{
+							"name": "Reading",
+							"projectKey": "todoist:project:8Xmpl2Wq",
+							"sourceKey": "todoist:section:8Xmpl2Wq:Reading"
+						}
+					],
+					"tasks": [
+						{
+							"due": {
+								"date": "2026-10-22",
+								"time": null
+							},
+							"labels": [],
+							"notes": "",
+							"parentKey": null,
+							"priority": 1,
+							"projectKey": "todoist:project:6Xmpl1Fq",
+							"recurrence": null,
+							"reminders": [
+								{
+									"kind": "before",
+									"minutes": 30
+								}
+							],
+							"sectionKey": null,
+							"sourceKey": "todoist:task:6Xmpl1Fq:Call the dentist",
+							"title": "Call the dentist"
+						},
+						{
+							"due": {
+								"date": "2026-12-04",
+								"time": null
+							},
+							"labels": [],
+							"notes": "",
+							"parentKey": null,
+							"priority": 4,
+							"projectKey": "todoist:project:6Xmpl1Fq",
+							"recurrence": null,
+							"reminders": [],
+							"sectionKey": null,
+							"sourceKey": "todoist:task:6Xmpl1Fq:cancel [meetup.com](https://meetup.com)",
+							"title": "cancel [meetup.com](https://meetup.com)"
+						},
+						{
+							"due": {
+								"date": "2027-03-02",
+								"time": "11:00"
+							},
+							"labels": [],
+							"notes": "",
+							"parentKey": null,
+							"priority": 2,
+							"projectKey": "todoist:project:6Xmpl1Fq",
+							"recurrence": {
+								"interval": 1,
+								"unit": "year"
+							},
+							"reminders": [],
+							"sectionKey": null,
+							"sourceKey": "todoist:task:6Xmpl1Fq:Renew passport #Travel",
+							"title": "Renew passport #Travel"
+						},
+						{
+							"due": {
+								"date": "2027-05-13",
+								"time": "11:00"
+							},
+							"labels": [
+								"home"
+							],
+							"notes": "Ferns first, then \"the big one\"\nUse the blue can\n\nBought a new can, see receipt",
+							"parentKey": null,
+							"priority": 4,
+							"projectKey": "todoist:project:6Xmpl1Fq",
+							"recurrence": {
+								"interval": 1,
+								"unit": "year"
+							},
+							"reminders": [],
+							"sectionKey": null,
+							"sourceKey": "todoist:task:6Xmpl1Fq:Water plants @home",
+							"title": "Water plants"
+						},
+						{
+							"due": null,
+							"labels": [],
+							"notes": "Todoist date: every! 3 days",
+							"parentKey": null,
+							"priority": 4,
+							"projectKey": "todoist:project:6Xmpl1Fq",
+							"recurrence": null,
+							"reminders": [],
+							"sectionKey": null,
+							"sourceKey": "todoist:task:6Xmpl1Fq:Fix bike",
+							"title": "Fix bike"
+						},
+						{
+							"due": {
+								"date": "2027-06-21",
+								"time": null
+							},
+							"labels": [],
+							"notes": "Duration: 90 minutes\n\nDeadline: 2027-06-01",
+							"parentKey": null,
+							"priority": 2,
+							"projectKey": "todoist:project:8Xmpl2Wq",
+							"recurrence": null,
+							"reminders": [],
+							"sectionKey": "todoist:section:8Xmpl2Wq:Someday",
+							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan",
+							"title": "Visit Japan"
+						},
+						{
+							"due": {
+								"date": "2027-05-23",
+								"time": null
+							},
+							"labels": [],
+							"notes": "",
+							"parentKey": "todoist:task:8Xmpl2Wq:Visit Japan",
+							"priority": 3,
+							"projectKey": "todoist:project:8Xmpl2Wq",
+							"recurrence": null,
+							"reminders": [
+								{
+									"date": "2027-05-20",
+									"kind": "at",
+									"time": "09:00"
+								}
+							],
+							"sectionKey": null,
+							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights",
+							"title": "Book flights"
+						},
+						{
+							"due": null,
+							"labels": [],
+							"notes": "",
+							"parentKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights",
+							"priority": 4,
+							"projectKey": "todoist:project:8Xmpl2Wq",
+							"recurrence": null,
+							"reminders": [],
+							"sectionKey": null,
+							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights › Pack bags",
+							"title": "Pack bags"
+						},
+						{
+							"due": null,
+							"labels": [],
+							"notes": "",
+							"parentKey": null,
+							"priority": 4,
+							"projectKey": "todoist:project:8Xmpl2Wq",
+							"recurrence": null,
+							"reminders": [],
+							"sectionKey": "todoist:section:8Xmpl2Wq:Reading",
+							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune",
+							"title": "Read Dune"
+						},
+						{
+							"due": null,
+							"labels": [],
+							"notes": "",
+							"parentKey": null,
+							"priority": 4,
+							"projectKey": "todoist:project:8Xmpl2Wq",
+							"recurrence": null,
+							"reminders": [],
+							"sectionKey": "todoist:section:8Xmpl2Wq:Reading",
+							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune#2",
+							"title": "Read Dune"
+						},
+						{
+							"due": null,
+							"labels": [
+								"work",
+								"deep-work"
+							],
+							"notes": "",
+							"parentKey": null,
+							"priority": 1,
+							"projectKey": "todoist:project:9Xmpl3Zr",
+							"recurrence": null,
+							"reminders": [],
+							"sectionKey": null,
+							"sourceKey": "todoist:task:9Xmpl3Zr:Quarterly review @work @deep-work",
+							"title": "Quarterly review"
+						},
+						{
+							"due": null,
+							"labels": [],
+							"notes": "Todoist date: jeden Montag",
+							"parentKey": null,
+							"priority": 4,
+							"projectKey": "todoist:project:9Xmpl3Zr",
+							"recurrence": null,
+							"reminders": [],
+							"sectionKey": null,
+							"sourceKey": "todoist:task:9Xmpl3Zr:Email Sam",
+							"title": "Email Sam"
+						}
+					],
+					"warnings": [
+						"Inbox: could not read the date \"every! 3 days\" on \"Fix bike\", kept it in notes",
+						"Job: could not read the date \"jeden Montag\" on \"Email Sam\", kept it in notes"
+					]
+				},
+				{
+					"now": 1000
+				}
+			],
+			"output": {
+				"state": {
+					"labels": [
+						{
+							"createdAt": 1000,
+							"id": "id-9",
+							"name": "home"
+						},
+						{
+							"createdAt": 1000,
+							"id": "id-17",
+							"name": "work"
+						},
+						{
+							"createdAt": 1000,
+							"id": "id-18",
+							"name": "deep-work"
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 1000,
+							"id": "id-1",
+							"name": "Long Term",
+							"sourceKey": "todoist:project:8Xmpl2Wq"
+						},
+						{
+							"createdAt": 1000,
+							"id": "id-2",
+							"name": "Job",
+							"sourceKey": "todoist:project:9Xmpl3Zr"
+						}
+					],
+					"sections": [
+						{
+							"createdAt": 1000,
+							"id": "id-3",
+							"name": "Someday",
+							"order": 0,
+							"projectId": "id-1",
+							"sourceKey": "todoist:section:8Xmpl2Wq:Someday"
+						},
+						{
+							"createdAt": 1000,
+							"id": "id-4",
+							"name": "Reading",
+							"order": 1,
+							"projectId": "id-1",
+							"sourceKey": "todoist:section:8Xmpl2Wq:Reading"
+						}
+					],
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1000,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-22",
+								"time": null
+							},
+							"event": null,
+							"id": "id-5",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 1,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [
+								{
+									"kind": "before",
+									"minutes": 30
+								}
+							],
+							"sectionId": null,
+							"sourceKey": "todoist:task:6Xmpl1Fq:Call the dentist",
+							"title": "Call the dentist"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1001,
+							"createdBy": null,
+							"due": {
+								"date": "2026-12-04",
+								"time": null
+							},
+							"event": null,
+							"id": "id-6",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"sourceKey": "todoist:task:6Xmpl1Fq:cancel [meetup.com](https://meetup.com)",
+							"title": "cancel [meetup.com](https://meetup.com)"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1002,
+							"createdBy": null,
+							"due": {
+								"date": "2027-03-02",
+								"time": "11:00"
+							},
+							"event": null,
+							"id": "id-7",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 2,
+							"projectId": null,
+							"recurrence": {
+								"interval": 1,
+								"unit": "year"
+							},
+							"reminders": [],
+							"sectionId": null,
+							"sourceKey": "todoist:task:6Xmpl1Fq:Renew passport #Travel",
+							"title": "Renew passport #Travel"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1003,
+							"createdBy": null,
+							"due": {
+								"date": "2027-05-13",
+								"time": "11:00"
+							},
+							"event": null,
+							"id": "id-8",
+							"labelIds": [
+								"id-9"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "Ferns first, then \"the big one\"\nUse the blue can\n\nBought a new can, see receipt",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": {
+								"interval": 1,
+								"unit": "year"
+							},
+							"reminders": [],
+							"sectionId": null,
+							"sourceKey": "todoist:task:6Xmpl1Fq:Water plants @home",
+							"title": "Water plants"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1004,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "id-10",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "Todoist date: every! 3 days",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"sourceKey": "todoist:task:6Xmpl1Fq:Fix bike",
+							"title": "Fix bike"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1005,
+							"createdBy": null,
+							"due": {
+								"date": "2027-06-21",
+								"time": null
+							},
+							"event": null,
+							"id": "id-11",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "Duration: 90 minutes\n\nDeadline: 2027-06-01",
+							"order": 0,
+							"parentId": null,
+							"priority": 2,
+							"projectId": "id-1",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": "id-3",
+							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan",
+							"title": "Visit Japan"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1006,
+							"createdBy": null,
+							"due": {
+								"date": "2027-05-23",
+								"time": null
+							},
+							"event": null,
+							"id": "id-12",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "id-11",
+							"priority": 3,
+							"projectId": "id-1",
+							"recurrence": null,
+							"reminders": [
+								{
+									"date": "2027-05-20",
+									"kind": "at",
+									"time": "09:00"
+								}
+							],
+							"sectionId": null,
+							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights",
+							"title": "Book flights"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1007,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "id-13",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "id-12",
+							"priority": 4,
+							"projectId": "id-1",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights › Pack bags",
+							"title": "Pack bags"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1008,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "id-14",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "id-1",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": "id-4",
+							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune",
+							"title": "Read Dune"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1009,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "id-15",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "id-1",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": "id-4",
+							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune#2",
+							"title": "Read Dune"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1010,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "id-16",
+							"labelIds": [
+								"id-17",
+								"id-18"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 1,
+							"projectId": "id-2",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"sourceKey": "todoist:task:9Xmpl3Zr:Quarterly review @work @deep-work",
+							"title": "Quarterly review"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1011,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "id-19",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "Todoist date: jeden Montag",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "id-2",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"sourceKey": "todoist:task:9Xmpl3Zr:Email Sam",
+							"title": "Email Sam"
+						}
+					]
+				},
+				"summary": {
+					"labels": 3,
+					"projects": 2,
+					"sections": 2,
+					"skipped": 0,
+					"tasks": 12,
+					"warnings": [
+						"Inbox: could not read the date \"every! 3 days\" on \"Fix bike\", kept it in notes",
+						"Job: could not read the date \"jeden Montag\" on \"Email Sam\", kept it in notes"
+					]
+				}
+			}
+		},
+		{
+			"fn": "mergeBackup",
+			"test": "merging into the store › importing again puts tasks imported before sections existed into their sections",
+			"input": [
+				{
+					"labels": [],
+					"projects": [],
+					"sections": [],
+					"tasks": []
+				},
+				{
+					"projects": [
+						{
+							"inbox": true,
+							"name": "Inbox",
+							"sourceKey": "todoist:project:6Xmpl1Fq"
+						},
+						{
+							"inbox": false,
+							"name": "Long Term",
+							"sourceKey": "todoist:project:8Xmpl2Wq"
+						},
+						{
+							"inbox": false,
+							"name": "Job",
+							"sourceKey": "todoist:project:9Xmpl3Zr"
+						}
+					],
+					"sections": [],
+					"tasks": [
+						{
+							"due": {
+								"date": "2026-10-22",
+								"time": null
+							},
+							"labels": [],
+							"notes": "",
+							"parentKey": null,
+							"priority": 1,
+							"projectKey": "todoist:project:6Xmpl1Fq",
+							"recurrence": null,
+							"reminders": [
+								{
+									"kind": "before",
+									"minutes": 30
+								}
+							],
+							"sectionKey": null,
+							"sourceKey": "todoist:task:6Xmpl1Fq:Call the dentist",
+							"title": "Call the dentist"
+						},
+						{
+							"due": {
+								"date": "2026-12-04",
+								"time": null
+							},
+							"labels": [],
+							"notes": "",
+							"parentKey": null,
+							"priority": 4,
+							"projectKey": "todoist:project:6Xmpl1Fq",
+							"recurrence": null,
+							"reminders": [],
+							"sectionKey": null,
+							"sourceKey": "todoist:task:6Xmpl1Fq:cancel [meetup.com](https://meetup.com)",
+							"title": "cancel [meetup.com](https://meetup.com)"
+						},
+						{
+							"due": {
+								"date": "2027-03-02",
+								"time": "11:00"
+							},
+							"labels": [],
+							"notes": "",
+							"parentKey": null,
+							"priority": 2,
+							"projectKey": "todoist:project:6Xmpl1Fq",
+							"recurrence": {
+								"interval": 1,
+								"unit": "year"
+							},
+							"reminders": [],
+							"sectionKey": null,
+							"sourceKey": "todoist:task:6Xmpl1Fq:Renew passport #Travel",
+							"title": "Renew passport #Travel"
+						},
+						{
+							"due": {
+								"date": "2027-05-13",
+								"time": "11:00"
+							},
+							"labels": [
+								"home"
+							],
+							"notes": "Ferns first, then \"the big one\"\nUse the blue can\n\nBought a new can, see receipt",
+							"parentKey": null,
+							"priority": 4,
+							"projectKey": "todoist:project:6Xmpl1Fq",
+							"recurrence": {
+								"interval": 1,
+								"unit": "year"
+							},
+							"reminders": [],
+							"sectionKey": null,
+							"sourceKey": "todoist:task:6Xmpl1Fq:Water plants @home",
+							"title": "Water plants"
+						},
+						{
+							"due": null,
+							"labels": [],
+							"notes": "Todoist date: every! 3 days",
+							"parentKey": null,
+							"priority": 4,
+							"projectKey": "todoist:project:6Xmpl1Fq",
+							"recurrence": null,
+							"reminders": [],
+							"sectionKey": null,
+							"sourceKey": "todoist:task:6Xmpl1Fq:Fix bike",
+							"title": "Fix bike"
+						},
+						{
+							"due": {
+								"date": "2027-06-21",
+								"time": null
+							},
+							"labels": [],
+							"notes": "Duration: 90 minutes\n\nDeadline: 2027-06-01",
+							"parentKey": null,
+							"priority": 2,
+							"projectKey": "todoist:project:8Xmpl2Wq",
+							"recurrence": null,
+							"reminders": [],
+							"sectionKey": "todoist:section:8Xmpl2Wq:Someday",
+							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan",
+							"title": "Visit Japan"
+						},
+						{
+							"due": {
+								"date": "2027-05-23",
+								"time": null
+							},
+							"labels": [],
+							"notes": "",
+							"parentKey": "todoist:task:8Xmpl2Wq:Visit Japan",
+							"priority": 3,
+							"projectKey": "todoist:project:8Xmpl2Wq",
+							"recurrence": null,
+							"reminders": [
+								{
+									"date": "2027-05-20",
+									"kind": "at",
+									"time": "09:00"
+								}
+							],
+							"sectionKey": null,
+							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights",
+							"title": "Book flights"
+						},
+						{
+							"due": null,
+							"labels": [],
+							"notes": "",
+							"parentKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights",
+							"priority": 4,
+							"projectKey": "todoist:project:8Xmpl2Wq",
+							"recurrence": null,
+							"reminders": [],
+							"sectionKey": null,
+							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights › Pack bags",
+							"title": "Pack bags"
+						},
+						{
+							"due": null,
+							"labels": [],
+							"notes": "",
+							"parentKey": null,
+							"priority": 4,
+							"projectKey": "todoist:project:8Xmpl2Wq",
+							"recurrence": null,
+							"reminders": [],
+							"sectionKey": "todoist:section:8Xmpl2Wq:Reading",
+							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune",
+							"title": "Read Dune"
+						},
+						{
+							"due": null,
+							"labels": [],
+							"notes": "",
+							"parentKey": null,
+							"priority": 4,
+							"projectKey": "todoist:project:8Xmpl2Wq",
+							"recurrence": null,
+							"reminders": [],
+							"sectionKey": "todoist:section:8Xmpl2Wq:Reading",
+							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune#2",
+							"title": "Read Dune"
+						},
+						{
+							"due": null,
+							"labels": [
+								"work",
+								"deep-work"
+							],
+							"notes": "",
+							"parentKey": null,
+							"priority": 1,
+							"projectKey": "todoist:project:9Xmpl3Zr",
+							"recurrence": null,
+							"reminders": [],
+							"sectionKey": null,
+							"sourceKey": "todoist:task:9Xmpl3Zr:Quarterly review @work @deep-work",
+							"title": "Quarterly review"
+						},
+						{
+							"due": null,
+							"labels": [],
+							"notes": "Todoist date: jeden Montag",
+							"parentKey": null,
+							"priority": 4,
+							"projectKey": "todoist:project:9Xmpl3Zr",
+							"recurrence": null,
+							"reminders": [],
+							"sectionKey": null,
+							"sourceKey": "todoist:task:9Xmpl3Zr:Email Sam",
+							"title": "Email Sam"
+						}
+					],
+					"warnings": [
+						"Inbox: could not read the date \"every! 3 days\" on \"Fix bike\", kept it in notes",
 						"Job: could not read the date \"jeden Montag\" on \"Email Sam\", kept it in notes"
 					]
 				},
@@ -1585,6 +4414,7 @@
 							"sourceKey": "todoist:project:9Xmpl3Zr"
 						}
 					],
+					"sections": [],
 					"tasks": [
 						{
 							"completedAt": null,
@@ -1612,6 +4442,7 @@
 									"minutes": 30
 								}
 							],
+							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Call the dentist",
 							"title": "Call the dentist"
 						},
@@ -1636,6 +4467,7 @@
 							"projectId": null,
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:cancel [meetup.com](https://meetup.com)",
 							"title": "cancel [meetup.com](https://meetup.com)"
 						},
@@ -1663,6 +4495,7 @@
 								"unit": "year"
 							},
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Renew passport #Travel",
 							"title": "Renew passport #Travel"
 						},
@@ -1692,6 +4525,7 @@
 								"unit": "year"
 							},
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Water plants @home",
 							"title": "Water plants"
 						},
@@ -1713,6 +4547,7 @@
 							"projectId": null,
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Fix bike",
 							"title": "Fix bike"
 						},
@@ -1737,6 +4572,7 @@
 							"projectId": "id-1",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan",
 							"title": "Visit Japan"
 						},
@@ -1767,6 +4603,7 @@
 									"time": "09:00"
 								}
 							],
+							"sectionId": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights",
 							"title": "Book flights"
 						},
@@ -1788,6 +4625,7 @@
 							"projectId": "id-1",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights › Pack bags",
 							"title": "Pack bags"
 						},
@@ -1809,6 +4647,7 @@
 							"projectId": "id-1",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune",
 							"title": "Read Dune"
 						},
@@ -1830,6 +4669,7 @@
 							"projectId": "id-1",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune#2",
 							"title": "Read Dune"
 						},
@@ -1854,6 +4694,7 @@
 							"projectId": "id-2",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:9Xmpl3Zr:Quarterly review @work @deep-work",
 							"title": "Quarterly review"
 						},
@@ -1875,6 +4716,7 @@
 							"projectId": "id-2",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:9Xmpl3Zr:Email Sam",
 							"title": "Email Sam"
 						}
@@ -1883,11 +4725,11 @@
 				"summary": {
 					"labels": 3,
 					"projects": 2,
+					"sections": 0,
 					"skipped": 0,
 					"tasks": 12,
 					"warnings": [
 						"Inbox: could not read the date \"every! 3 days\" on \"Fix bike\", kept it in notes",
-						"Long Term: sections are not imported: Someday, Reading",
 						"Job: could not read the date \"jeden Montag\" on \"Email Sam\", kept it in notes"
 					]
 				}
@@ -1895,7 +4737,7 @@
 		},
 		{
 			"fn": "mergeBackup",
-			"test": "merging into the store › importing the same backup again adds nothing",
+			"test": "merging into the store › importing again puts tasks imported before sections existed into their sections",
 			"input": [
 				{
 					"labels": [
@@ -1929,6 +4771,7 @@
 							"sourceKey": "todoist:project:9Xmpl3Zr"
 						}
 					],
+					"sections": [],
 					"tasks": [
 						{
 							"completedAt": null,
@@ -1956,6 +4799,7 @@
 									"minutes": 30
 								}
 							],
+							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Call the dentist",
 							"title": "Call the dentist"
 						},
@@ -1980,6 +4824,7 @@
 							"projectId": null,
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:cancel [meetup.com](https://meetup.com)",
 							"title": "cancel [meetup.com](https://meetup.com)"
 						},
@@ -2007,6 +4852,7 @@
 								"unit": "year"
 							},
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Renew passport #Travel",
 							"title": "Renew passport #Travel"
 						},
@@ -2036,6 +4882,7 @@
 								"unit": "year"
 							},
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Water plants @home",
 							"title": "Water plants"
 						},
@@ -2057,6 +4904,7 @@
 							"projectId": null,
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Fix bike",
 							"title": "Fix bike"
 						},
@@ -2081,6 +4929,7 @@
 							"projectId": "id-1",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan",
 							"title": "Visit Japan"
 						},
@@ -2111,6 +4960,7 @@
 									"time": "09:00"
 								}
 							],
+							"sectionId": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights",
 							"title": "Book flights"
 						},
@@ -2132,6 +4982,7 @@
 							"projectId": "id-1",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights › Pack bags",
 							"title": "Pack bags"
 						},
@@ -2153,6 +5004,7 @@
 							"projectId": "id-1",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune",
 							"title": "Read Dune"
 						},
@@ -2174,6 +5026,7 @@
 							"projectId": "id-1",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune#2",
 							"title": "Read Dune"
 						},
@@ -2198,6 +5051,7 @@
 							"projectId": "id-2",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:9Xmpl3Zr:Quarterly review @work @deep-work",
 							"title": "Quarterly review"
 						},
@@ -2219,6 +5073,7 @@
 							"projectId": "id-2",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:9Xmpl3Zr:Email Sam",
 							"title": "Email Sam"
 						}
@@ -2242,6 +5097,18 @@
 							"sourceKey": "todoist:project:9Xmpl3Zr"
 						}
 					],
+					"sections": [
+						{
+							"name": "Someday",
+							"projectKey": "todoist:project:8Xmpl2Wq",
+							"sourceKey": "todoist:section:8Xmpl2Wq:Someday"
+						},
+						{
+							"name": "Reading",
+							"projectKey": "todoist:project:8Xmpl2Wq",
+							"sourceKey": "todoist:section:8Xmpl2Wq:Reading"
+						}
+					],
 					"tasks": [
 						{
 							"due": {
@@ -2260,6 +5127,7 @@
 									"minutes": 30
 								}
 							],
+							"sectionKey": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Call the dentist",
 							"title": "Call the dentist"
 						},
@@ -2275,6 +5143,7 @@
 							"projectKey": "todoist:project:6Xmpl1Fq",
 							"recurrence": null,
 							"reminders": [],
+							"sectionKey": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:cancel [meetup.com](https://meetup.com)",
 							"title": "cancel [meetup.com](https://meetup.com)"
 						},
@@ -2293,6 +5162,7 @@
 								"unit": "year"
 							},
 							"reminders": [],
+							"sectionKey": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Renew passport #Travel",
 							"title": "Renew passport #Travel"
 						},
@@ -2313,6 +5183,7 @@
 								"unit": "year"
 							},
 							"reminders": [],
+							"sectionKey": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Water plants @home",
 							"title": "Water plants"
 						},
@@ -2325,6 +5196,7 @@
 							"projectKey": "todoist:project:6Xmpl1Fq",
 							"recurrence": null,
 							"reminders": [],
+							"sectionKey": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Fix bike",
 							"title": "Fix bike"
 						},
@@ -2340,6 +5212,7 @@
 							"projectKey": "todoist:project:8Xmpl2Wq",
 							"recurrence": null,
 							"reminders": [],
+							"sectionKey": "todoist:section:8Xmpl2Wq:Someday",
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan",
 							"title": "Visit Japan"
 						},
@@ -2361,6 +5234,7 @@
 									"time": "09:00"
 								}
 							],
+							"sectionKey": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights",
 							"title": "Book flights"
 						},
@@ -2373,6 +5247,7 @@
 							"projectKey": "todoist:project:8Xmpl2Wq",
 							"recurrence": null,
 							"reminders": [],
+							"sectionKey": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights › Pack bags",
 							"title": "Pack bags"
 						},
@@ -2385,6 +5260,7 @@
 							"projectKey": "todoist:project:8Xmpl2Wq",
 							"recurrence": null,
 							"reminders": [],
+							"sectionKey": "todoist:section:8Xmpl2Wq:Reading",
 							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune",
 							"title": "Read Dune"
 						},
@@ -2397,6 +5273,7 @@
 							"projectKey": "todoist:project:8Xmpl2Wq",
 							"recurrence": null,
 							"reminders": [],
+							"sectionKey": "todoist:section:8Xmpl2Wq:Reading",
 							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune#2",
 							"title": "Read Dune"
 						},
@@ -2412,6 +5289,7 @@
 							"projectKey": "todoist:project:9Xmpl3Zr",
 							"recurrence": null,
 							"reminders": [],
+							"sectionKey": null,
 							"sourceKey": "todoist:task:9Xmpl3Zr:Quarterly review @work @deep-work",
 							"title": "Quarterly review"
 						},
@@ -2424,13 +5302,13 @@
 							"projectKey": "todoist:project:9Xmpl3Zr",
 							"recurrence": null,
 							"reminders": [],
+							"sectionKey": null,
 							"sourceKey": "todoist:task:9Xmpl3Zr:Email Sam",
 							"title": "Email Sam"
 						}
 					],
 					"warnings": [
 						"Inbox: could not read the date \"every! 3 days\" on \"Fix bike\", kept it in notes",
-						"Long Term: sections are not imported: Someday, Reading",
 						"Job: could not read the date \"jeden Montag\" on \"Email Sam\", kept it in notes"
 					]
 				},
@@ -2471,6 +5349,24 @@
 							"sourceKey": "todoist:project:9Xmpl3Zr"
 						}
 					],
+					"sections": [
+						{
+							"createdAt": 2000,
+							"id": "id-1",
+							"name": "Someday",
+							"order": 0,
+							"projectId": "id-1",
+							"sourceKey": "todoist:section:8Xmpl2Wq:Someday"
+						},
+						{
+							"createdAt": 2000,
+							"id": "id-2",
+							"name": "Reading",
+							"order": 1,
+							"projectId": "id-1",
+							"sourceKey": "todoist:section:8Xmpl2Wq:Reading"
+						}
+					],
 					"tasks": [
 						{
 							"completedAt": null,
@@ -2498,6 +5394,7 @@
 									"minutes": 30
 								}
 							],
+							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Call the dentist",
 							"title": "Call the dentist"
 						},
@@ -2522,6 +5419,7 @@
 							"projectId": null,
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:cancel [meetup.com](https://meetup.com)",
 							"title": "cancel [meetup.com](https://meetup.com)"
 						},
@@ -2549,6 +5447,7 @@
 								"unit": "year"
 							},
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Renew passport #Travel",
 							"title": "Renew passport #Travel"
 						},
@@ -2578,6 +5477,7 @@
 								"unit": "year"
 							},
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Water plants @home",
 							"title": "Water plants"
 						},
@@ -2599,6 +5499,7 @@
 							"projectId": null,
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Fix bike",
 							"title": "Fix bike"
 						},
@@ -2623,6 +5524,7 @@
 							"projectId": "id-1",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": "id-1",
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan",
 							"title": "Visit Japan"
 						},
@@ -2653,6 +5555,7 @@
 									"time": "09:00"
 								}
 							],
+							"sectionId": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights",
 							"title": "Book flights"
 						},
@@ -2674,6 +5577,7 @@
 							"projectId": "id-1",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights › Pack bags",
 							"title": "Pack bags"
 						},
@@ -2695,6 +5599,7 @@
 							"projectId": "id-1",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": "id-2",
 							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune",
 							"title": "Read Dune"
 						},
@@ -2716,6 +5621,7 @@
 							"projectId": "id-1",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": "id-2",
 							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune#2",
 							"title": "Read Dune"
 						},
@@ -2740,6 +5646,7 @@
 							"projectId": "id-2",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:9Xmpl3Zr:Quarterly review @work @deep-work",
 							"title": "Quarterly review"
 						},
@@ -2761,6 +5668,7 @@
 							"projectId": "id-2",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:9Xmpl3Zr:Email Sam",
 							"title": "Email Sam"
 						}
@@ -2769,11 +5677,643 @@
 				"summary": {
 					"labels": 0,
 					"projects": 0,
+					"sections": 2,
 					"skipped": 12,
 					"tasks": 0,
 					"warnings": [
 						"Inbox: could not read the date \"every! 3 days\" on \"Fix bike\", kept it in notes",
-						"Long Term: sections are not imported: Someday, Reading",
+						"Job: could not read the date \"jeden Montag\" on \"Email Sam\", kept it in notes"
+					]
+				}
+			}
+		},
+		{
+			"fn": "mergeBackup",
+			"test": "merging into the store › an existing section with the same name in the project is reused",
+			"input": [
+				{
+					"labels": [],
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-long",
+							"name": "Long Term"
+						}
+					],
+					"sections": [
+						{
+							"createdAt": 0,
+							"id": "s-mine",
+							"name": "someday",
+							"order": 0,
+							"projectId": "p-long"
+						}
+					],
+					"tasks": []
+				},
+				{
+					"projects": [
+						{
+							"inbox": true,
+							"name": "Inbox",
+							"sourceKey": "todoist:project:6Xmpl1Fq"
+						},
+						{
+							"inbox": false,
+							"name": "Long Term",
+							"sourceKey": "todoist:project:8Xmpl2Wq"
+						},
+						{
+							"inbox": false,
+							"name": "Job",
+							"sourceKey": "todoist:project:9Xmpl3Zr"
+						}
+					],
+					"sections": [
+						{
+							"name": "Someday",
+							"projectKey": "todoist:project:8Xmpl2Wq",
+							"sourceKey": "todoist:section:8Xmpl2Wq:Someday"
+						},
+						{
+							"name": "Reading",
+							"projectKey": "todoist:project:8Xmpl2Wq",
+							"sourceKey": "todoist:section:8Xmpl2Wq:Reading"
+						}
+					],
+					"tasks": [
+						{
+							"due": {
+								"date": "2026-10-22",
+								"time": null
+							},
+							"labels": [],
+							"notes": "",
+							"parentKey": null,
+							"priority": 1,
+							"projectKey": "todoist:project:6Xmpl1Fq",
+							"recurrence": null,
+							"reminders": [
+								{
+									"kind": "before",
+									"minutes": 30
+								}
+							],
+							"sectionKey": null,
+							"sourceKey": "todoist:task:6Xmpl1Fq:Call the dentist",
+							"title": "Call the dentist"
+						},
+						{
+							"due": {
+								"date": "2026-12-04",
+								"time": null
+							},
+							"labels": [],
+							"notes": "",
+							"parentKey": null,
+							"priority": 4,
+							"projectKey": "todoist:project:6Xmpl1Fq",
+							"recurrence": null,
+							"reminders": [],
+							"sectionKey": null,
+							"sourceKey": "todoist:task:6Xmpl1Fq:cancel [meetup.com](https://meetup.com)",
+							"title": "cancel [meetup.com](https://meetup.com)"
+						},
+						{
+							"due": {
+								"date": "2027-03-02",
+								"time": "11:00"
+							},
+							"labels": [],
+							"notes": "",
+							"parentKey": null,
+							"priority": 2,
+							"projectKey": "todoist:project:6Xmpl1Fq",
+							"recurrence": {
+								"interval": 1,
+								"unit": "year"
+							},
+							"reminders": [],
+							"sectionKey": null,
+							"sourceKey": "todoist:task:6Xmpl1Fq:Renew passport #Travel",
+							"title": "Renew passport #Travel"
+						},
+						{
+							"due": {
+								"date": "2027-05-13",
+								"time": "11:00"
+							},
+							"labels": [
+								"home"
+							],
+							"notes": "Ferns first, then \"the big one\"\nUse the blue can\n\nBought a new can, see receipt",
+							"parentKey": null,
+							"priority": 4,
+							"projectKey": "todoist:project:6Xmpl1Fq",
+							"recurrence": {
+								"interval": 1,
+								"unit": "year"
+							},
+							"reminders": [],
+							"sectionKey": null,
+							"sourceKey": "todoist:task:6Xmpl1Fq:Water plants @home",
+							"title": "Water plants"
+						},
+						{
+							"due": null,
+							"labels": [],
+							"notes": "Todoist date: every! 3 days",
+							"parentKey": null,
+							"priority": 4,
+							"projectKey": "todoist:project:6Xmpl1Fq",
+							"recurrence": null,
+							"reminders": [],
+							"sectionKey": null,
+							"sourceKey": "todoist:task:6Xmpl1Fq:Fix bike",
+							"title": "Fix bike"
+						},
+						{
+							"due": {
+								"date": "2027-06-21",
+								"time": null
+							},
+							"labels": [],
+							"notes": "Duration: 90 minutes\n\nDeadline: 2027-06-01",
+							"parentKey": null,
+							"priority": 2,
+							"projectKey": "todoist:project:8Xmpl2Wq",
+							"recurrence": null,
+							"reminders": [],
+							"sectionKey": "todoist:section:8Xmpl2Wq:Someday",
+							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan",
+							"title": "Visit Japan"
+						},
+						{
+							"due": {
+								"date": "2027-05-23",
+								"time": null
+							},
+							"labels": [],
+							"notes": "",
+							"parentKey": "todoist:task:8Xmpl2Wq:Visit Japan",
+							"priority": 3,
+							"projectKey": "todoist:project:8Xmpl2Wq",
+							"recurrence": null,
+							"reminders": [
+								{
+									"date": "2027-05-20",
+									"kind": "at",
+									"time": "09:00"
+								}
+							],
+							"sectionKey": null,
+							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights",
+							"title": "Book flights"
+						},
+						{
+							"due": null,
+							"labels": [],
+							"notes": "",
+							"parentKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights",
+							"priority": 4,
+							"projectKey": "todoist:project:8Xmpl2Wq",
+							"recurrence": null,
+							"reminders": [],
+							"sectionKey": null,
+							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights › Pack bags",
+							"title": "Pack bags"
+						},
+						{
+							"due": null,
+							"labels": [],
+							"notes": "",
+							"parentKey": null,
+							"priority": 4,
+							"projectKey": "todoist:project:8Xmpl2Wq",
+							"recurrence": null,
+							"reminders": [],
+							"sectionKey": "todoist:section:8Xmpl2Wq:Reading",
+							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune",
+							"title": "Read Dune"
+						},
+						{
+							"due": null,
+							"labels": [],
+							"notes": "",
+							"parentKey": null,
+							"priority": 4,
+							"projectKey": "todoist:project:8Xmpl2Wq",
+							"recurrence": null,
+							"reminders": [],
+							"sectionKey": "todoist:section:8Xmpl2Wq:Reading",
+							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune#2",
+							"title": "Read Dune"
+						},
+						{
+							"due": null,
+							"labels": [
+								"work",
+								"deep-work"
+							],
+							"notes": "",
+							"parentKey": null,
+							"priority": 1,
+							"projectKey": "todoist:project:9Xmpl3Zr",
+							"recurrence": null,
+							"reminders": [],
+							"sectionKey": null,
+							"sourceKey": "todoist:task:9Xmpl3Zr:Quarterly review @work @deep-work",
+							"title": "Quarterly review"
+						},
+						{
+							"due": null,
+							"labels": [],
+							"notes": "Todoist date: jeden Montag",
+							"parentKey": null,
+							"priority": 4,
+							"projectKey": "todoist:project:9Xmpl3Zr",
+							"recurrence": null,
+							"reminders": [],
+							"sectionKey": null,
+							"sourceKey": "todoist:task:9Xmpl3Zr:Email Sam",
+							"title": "Email Sam"
+						}
+					],
+					"warnings": [
+						"Inbox: could not read the date \"every! 3 days\" on \"Fix bike\", kept it in notes",
+						"Job: could not read the date \"jeden Montag\" on \"Email Sam\", kept it in notes"
+					]
+				},
+				{
+					"now": 1000
+				}
+			],
+			"output": {
+				"state": {
+					"labels": [
+						{
+							"createdAt": 1000,
+							"id": "id-7",
+							"name": "home"
+						},
+						{
+							"createdAt": 1000,
+							"id": "id-15",
+							"name": "work"
+						},
+						{
+							"createdAt": 1000,
+							"id": "id-16",
+							"name": "deep-work"
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-long",
+							"name": "Long Term",
+							"sourceKey": "todoist:project:8Xmpl2Wq"
+						},
+						{
+							"createdAt": 1000,
+							"id": "id-1",
+							"name": "Job",
+							"sourceKey": "todoist:project:9Xmpl3Zr"
+						}
+					],
+					"sections": [
+						{
+							"createdAt": 0,
+							"id": "s-mine",
+							"name": "someday",
+							"order": 0,
+							"projectId": "p-long",
+							"sourceKey": "todoist:section:8Xmpl2Wq:Someday"
+						},
+						{
+							"createdAt": 1000,
+							"id": "id-2",
+							"name": "Reading",
+							"order": 1,
+							"projectId": "p-long",
+							"sourceKey": "todoist:section:8Xmpl2Wq:Reading"
+						}
+					],
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1000,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-22",
+								"time": null
+							},
+							"event": null,
+							"id": "id-3",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 1,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [
+								{
+									"kind": "before",
+									"minutes": 30
+								}
+							],
+							"sectionId": null,
+							"sourceKey": "todoist:task:6Xmpl1Fq:Call the dentist",
+							"title": "Call the dentist"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1001,
+							"createdBy": null,
+							"due": {
+								"date": "2026-12-04",
+								"time": null
+							},
+							"event": null,
+							"id": "id-4",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"sourceKey": "todoist:task:6Xmpl1Fq:cancel [meetup.com](https://meetup.com)",
+							"title": "cancel [meetup.com](https://meetup.com)"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1002,
+							"createdBy": null,
+							"due": {
+								"date": "2027-03-02",
+								"time": "11:00"
+							},
+							"event": null,
+							"id": "id-5",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 2,
+							"projectId": null,
+							"recurrence": {
+								"interval": 1,
+								"unit": "year"
+							},
+							"reminders": [],
+							"sectionId": null,
+							"sourceKey": "todoist:task:6Xmpl1Fq:Renew passport #Travel",
+							"title": "Renew passport #Travel"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1003,
+							"createdBy": null,
+							"due": {
+								"date": "2027-05-13",
+								"time": "11:00"
+							},
+							"event": null,
+							"id": "id-6",
+							"labelIds": [
+								"id-7"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "Ferns first, then \"the big one\"\nUse the blue can\n\nBought a new can, see receipt",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": {
+								"interval": 1,
+								"unit": "year"
+							},
+							"reminders": [],
+							"sectionId": null,
+							"sourceKey": "todoist:task:6Xmpl1Fq:Water plants @home",
+							"title": "Water plants"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1004,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "id-8",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "Todoist date: every! 3 days",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"sourceKey": "todoist:task:6Xmpl1Fq:Fix bike",
+							"title": "Fix bike"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1005,
+							"createdBy": null,
+							"due": {
+								"date": "2027-06-21",
+								"time": null
+							},
+							"event": null,
+							"id": "id-9",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "Duration: 90 minutes\n\nDeadline: 2027-06-01",
+							"order": 0,
+							"parentId": null,
+							"priority": 2,
+							"projectId": "p-long",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": "s-mine",
+							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan",
+							"title": "Visit Japan"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1006,
+							"createdBy": null,
+							"due": {
+								"date": "2027-05-23",
+								"time": null
+							},
+							"event": null,
+							"id": "id-10",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "id-9",
+							"priority": 3,
+							"projectId": "p-long",
+							"recurrence": null,
+							"reminders": [
+								{
+									"date": "2027-05-20",
+									"kind": "at",
+									"time": "09:00"
+								}
+							],
+							"sectionId": null,
+							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights",
+							"title": "Book flights"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1007,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "id-11",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "id-10",
+							"priority": 4,
+							"projectId": "p-long",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights › Pack bags",
+							"title": "Pack bags"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1008,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "id-12",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "p-long",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": "id-2",
+							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune",
+							"title": "Read Dune"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1009,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "id-13",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "p-long",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": "id-2",
+							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune#2",
+							"title": "Read Dune"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1010,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "id-14",
+							"labelIds": [
+								"id-15",
+								"id-16"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 1,
+							"projectId": "id-1",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"sourceKey": "todoist:task:9Xmpl3Zr:Quarterly review @work @deep-work",
+							"title": "Quarterly review"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1011,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "id-17",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "Todoist date: jeden Montag",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "id-1",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"sourceKey": "todoist:task:9Xmpl3Zr:Email Sam",
+							"title": "Email Sam"
+						}
+					]
+				},
+				"summary": {
+					"labels": 3,
+					"projects": 1,
+					"sections": 1,
+					"skipped": 0,
+					"tasks": 12,
+					"warnings": [
+						"Inbox: could not read the date \"every! 3 days\" on \"Fix bike\", kept it in notes",
 						"Job: could not read the date \"jeden Montag\" on \"Email Sam\", kept it in notes"
 					]
 				}
@@ -2799,6 +6339,7 @@
 						"sourceKey": "todoist:project:42"
 					}
 				],
+				"sections": [],
 				"tasks": [
 					{
 						"due": null,
@@ -2809,6 +6350,7 @@
 						"projectKey": "todoist:project:42",
 						"recurrence": null,
 						"reminders": [],
+						"sectionKey": null,
 						"sourceKey": "todoist:task:42:A",
 						"title": "A"
 					},
@@ -2821,6 +6363,7 @@
 						"projectKey": "todoist:project:42",
 						"recurrence": null,
 						"reminders": [],
+						"sectionKey": null,
 						"sourceKey": "todoist:task:42:A › B",
 						"title": "B"
 					},
@@ -2833,6 +6376,7 @@
 						"projectKey": "todoist:project:42",
 						"recurrence": null,
 						"reminders": [],
+						"sectionKey": null,
 						"sourceKey": "todoist:task:42:A › B › C",
 						"title": "C"
 					},
@@ -2845,6 +6389,7 @@
 						"projectKey": "todoist:project:42",
 						"recurrence": null,
 						"reminders": [],
+						"sectionKey": null,
 						"sourceKey": "todoist:task:42:A › D",
 						"title": "D"
 					},
@@ -2857,6 +6402,7 @@
 						"projectKey": "todoist:project:42",
 						"recurrence": null,
 						"reminders": [],
+						"sectionKey": null,
 						"sourceKey": "todoist:task:42:E",
 						"title": "E"
 					}
@@ -2871,6 +6417,7 @@
 				{
 					"labels": [],
 					"projects": [],
+					"sections": [],
 					"tasks": []
 				},
 				{
@@ -2881,6 +6428,7 @@
 							"sourceKey": "todoist:project:42"
 						}
 					],
+					"sections": [],
 					"tasks": [
 						{
 							"due": null,
@@ -2891,6 +6439,7 @@
 							"projectKey": "todoist:project:42",
 							"recurrence": null,
 							"reminders": [],
+							"sectionKey": null,
 							"sourceKey": "todoist:task:42:A",
 							"title": "A"
 						},
@@ -2903,6 +6452,7 @@
 							"projectKey": "todoist:project:42",
 							"recurrence": null,
 							"reminders": [],
+							"sectionKey": null,
 							"sourceKey": "todoist:task:42:A › B",
 							"title": "B"
 						},
@@ -2915,6 +6465,7 @@
 							"projectKey": "todoist:project:42",
 							"recurrence": null,
 							"reminders": [],
+							"sectionKey": null,
 							"sourceKey": "todoist:task:42:A › B › C",
 							"title": "C"
 						},
@@ -2927,6 +6478,7 @@
 							"projectKey": "todoist:project:42",
 							"recurrence": null,
 							"reminders": [],
+							"sectionKey": null,
 							"sourceKey": "todoist:task:42:A › D",
 							"title": "D"
 						},
@@ -2939,6 +6491,7 @@
 							"projectKey": "todoist:project:42",
 							"recurrence": null,
 							"reminders": [],
+							"sectionKey": null,
 							"sourceKey": "todoist:task:42:E",
 							"title": "E"
 						}
@@ -2960,6 +6513,7 @@
 							"sourceKey": "todoist:project:42"
 						}
 					],
+					"sections": [],
 					"tasks": [
 						{
 							"completedAt": null,
@@ -2979,6 +6533,7 @@
 							"projectId": "id-1",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:42:A",
 							"title": "A"
 						},
@@ -3000,6 +6555,7 @@
 							"projectId": "id-1",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:42:A › B",
 							"title": "B"
 						},
@@ -3021,6 +6577,7 @@
 							"projectId": "id-1",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:42:A › B › C",
 							"title": "C"
 						},
@@ -3042,6 +6599,7 @@
 							"projectId": "id-1",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:42:A › D",
 							"title": "D"
 						},
@@ -3063,6 +6621,7 @@
 							"projectId": "id-1",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:42:E",
 							"title": "E"
 						}
@@ -3071,6 +6630,7 @@
 				"summary": {
 					"labels": 0,
 					"projects": 1,
+					"sections": 0,
 					"skipped": 0,
 					"tasks": 5,
 					"warnings": []
@@ -3097,6 +6657,7 @@
 						"sourceKey": "todoist:project:42"
 					}
 				],
+				"sections": [],
 				"tasks": [
 					{
 						"due": null,
@@ -3107,6 +6668,7 @@
 						"projectKey": "todoist:project:42",
 						"recurrence": null,
 						"reminders": [],
+						"sectionKey": null,
 						"sourceKey": "todoist:task:42:A",
 						"title": "A"
 					},
@@ -3119,6 +6681,7 @@
 						"projectKey": "todoist:project:42",
 						"recurrence": null,
 						"reminders": [],
+						"sectionKey": null,
 						"sourceKey": "todoist:task:42:A › B",
 						"title": "B"
 					}
@@ -3133,6 +6696,7 @@
 				{
 					"labels": [],
 					"projects": [],
+					"sections": [],
 					"tasks": []
 				},
 				{
@@ -3143,6 +6707,7 @@
 							"sourceKey": "todoist:project:42"
 						}
 					],
+					"sections": [],
 					"tasks": [
 						{
 							"due": null,
@@ -3153,6 +6718,7 @@
 							"projectKey": "todoist:project:42",
 							"recurrence": null,
 							"reminders": [],
+							"sectionKey": null,
 							"sourceKey": "todoist:task:42:A",
 							"title": "A"
 						},
@@ -3165,6 +6731,7 @@
 							"projectKey": "todoist:project:42",
 							"recurrence": null,
 							"reminders": [],
+							"sectionKey": null,
 							"sourceKey": "todoist:task:42:A › B",
 							"title": "B"
 						}
@@ -3186,6 +6753,7 @@
 							"sourceKey": "todoist:project:42"
 						}
 					],
+					"sections": [],
 					"tasks": [
 						{
 							"completedAt": null,
@@ -3205,6 +6773,7 @@
 							"projectId": "id-1",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:42:A",
 							"title": "A"
 						},
@@ -3226,6 +6795,7 @@
 							"projectId": "id-1",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:42:A › B",
 							"title": "B"
 						}
@@ -3234,6 +6804,7 @@
 				"summary": {
 					"labels": 0,
 					"projects": 1,
+					"sections": 0,
 					"skipped": 0,
 					"tasks": 2,
 					"warnings": []
@@ -3260,6 +6831,7 @@
 						"sourceKey": "todoist:project:42"
 					}
 				],
+				"sections": [],
 				"tasks": [
 					{
 						"due": null,
@@ -3270,6 +6842,7 @@
 						"projectKey": "todoist:project:42",
 						"recurrence": null,
 						"reminders": [],
+						"sectionKey": null,
 						"sourceKey": "todoist:task:42:A",
 						"title": "A"
 					},
@@ -3282,6 +6855,7 @@
 						"projectKey": "todoist:project:42",
 						"recurrence": null,
 						"reminders": [],
+						"sectionKey": null,
 						"sourceKey": "todoist:task:42:A › B",
 						"title": "B"
 					},
@@ -3294,6 +6868,7 @@
 						"projectKey": "todoist:project:42",
 						"recurrence": null,
 						"reminders": [],
+						"sectionKey": null,
 						"sourceKey": "todoist:task:42:A › C",
 						"title": "C"
 					}
@@ -3315,6 +6890,7 @@
 							"sourceKey": "todoist:project:42"
 						}
 					],
+					"sections": [],
 					"tasks": [
 						{
 							"completedAt": null,
@@ -3334,6 +6910,7 @@
 							"projectId": "id-1",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:42:A",
 							"title": "A"
 						},
@@ -3355,6 +6932,7 @@
 							"projectId": "id-1",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:42:A › B",
 							"title": "B"
 						}
@@ -3368,6 +6946,7 @@
 							"sourceKey": "todoist:project:42"
 						}
 					],
+					"sections": [],
 					"tasks": [
 						{
 							"due": null,
@@ -3378,6 +6957,7 @@
 							"projectKey": "todoist:project:42",
 							"recurrence": null,
 							"reminders": [],
+							"sectionKey": null,
 							"sourceKey": "todoist:task:42:A",
 							"title": "A"
 						},
@@ -3390,6 +6970,7 @@
 							"projectKey": "todoist:project:42",
 							"recurrence": null,
 							"reminders": [],
+							"sectionKey": null,
 							"sourceKey": "todoist:task:42:A › B",
 							"title": "B"
 						},
@@ -3402,6 +6983,7 @@
 							"projectKey": "todoist:project:42",
 							"recurrence": null,
 							"reminders": [],
+							"sectionKey": null,
 							"sourceKey": "todoist:task:42:A › C",
 							"title": "C"
 						}
@@ -3423,6 +7005,7 @@
 							"sourceKey": "todoist:project:42"
 						}
 					],
+					"sections": [],
 					"tasks": [
 						{
 							"completedAt": null,
@@ -3442,6 +7025,7 @@
 							"projectId": "id-1",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:42:A",
 							"title": "A"
 						},
@@ -3463,6 +7047,7 @@
 							"projectId": "id-1",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:42:A › B",
 							"title": "B"
 						},
@@ -3484,6 +7069,7 @@
 							"projectId": "id-1",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:42:A › C",
 							"title": "C"
 						}
@@ -3492,6 +7078,7 @@
 				"summary": {
 					"labels": 0,
 					"projects": 0,
+					"sections": 0,
 					"skipped": 2,
 					"tasks": 1,
 					"warnings": []
@@ -3517,6 +7104,7 @@
 							"name": "job"
 						}
 					],
+					"sections": [],
 					"tasks": []
 				},
 				{
@@ -3537,6 +7125,18 @@
 							"sourceKey": "todoist:project:9Xmpl3Zr"
 						}
 					],
+					"sections": [
+						{
+							"name": "Someday",
+							"projectKey": "todoist:project:8Xmpl2Wq",
+							"sourceKey": "todoist:section:8Xmpl2Wq:Someday"
+						},
+						{
+							"name": "Reading",
+							"projectKey": "todoist:project:8Xmpl2Wq",
+							"sourceKey": "todoist:section:8Xmpl2Wq:Reading"
+						}
+					],
 					"tasks": [
 						{
 							"due": {
@@ -3555,6 +7155,7 @@
 									"minutes": 30
 								}
 							],
+							"sectionKey": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Call the dentist",
 							"title": "Call the dentist"
 						},
@@ -3570,6 +7171,7 @@
 							"projectKey": "todoist:project:6Xmpl1Fq",
 							"recurrence": null,
 							"reminders": [],
+							"sectionKey": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:cancel [meetup.com](https://meetup.com)",
 							"title": "cancel [meetup.com](https://meetup.com)"
 						},
@@ -3588,6 +7190,7 @@
 								"unit": "year"
 							},
 							"reminders": [],
+							"sectionKey": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Renew passport #Travel",
 							"title": "Renew passport #Travel"
 						},
@@ -3608,6 +7211,7 @@
 								"unit": "year"
 							},
 							"reminders": [],
+							"sectionKey": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Water plants @home",
 							"title": "Water plants"
 						},
@@ -3620,6 +7224,7 @@
 							"projectKey": "todoist:project:6Xmpl1Fq",
 							"recurrence": null,
 							"reminders": [],
+							"sectionKey": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Fix bike",
 							"title": "Fix bike"
 						},
@@ -3635,6 +7240,7 @@
 							"projectKey": "todoist:project:8Xmpl2Wq",
 							"recurrence": null,
 							"reminders": [],
+							"sectionKey": "todoist:section:8Xmpl2Wq:Someday",
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan",
 							"title": "Visit Japan"
 						},
@@ -3656,6 +7262,7 @@
 									"time": "09:00"
 								}
 							],
+							"sectionKey": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights",
 							"title": "Book flights"
 						},
@@ -3668,6 +7275,7 @@
 							"projectKey": "todoist:project:8Xmpl2Wq",
 							"recurrence": null,
 							"reminders": [],
+							"sectionKey": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights › Pack bags",
 							"title": "Pack bags"
 						},
@@ -3680,6 +7288,7 @@
 							"projectKey": "todoist:project:8Xmpl2Wq",
 							"recurrence": null,
 							"reminders": [],
+							"sectionKey": "todoist:section:8Xmpl2Wq:Reading",
 							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune",
 							"title": "Read Dune"
 						},
@@ -3692,6 +7301,7 @@
 							"projectKey": "todoist:project:8Xmpl2Wq",
 							"recurrence": null,
 							"reminders": [],
+							"sectionKey": "todoist:section:8Xmpl2Wq:Reading",
 							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune#2",
 							"title": "Read Dune"
 						},
@@ -3707,6 +7317,7 @@
 							"projectKey": "todoist:project:9Xmpl3Zr",
 							"recurrence": null,
 							"reminders": [],
+							"sectionKey": null,
 							"sourceKey": "todoist:task:9Xmpl3Zr:Quarterly review @work @deep-work",
 							"title": "Quarterly review"
 						},
@@ -3719,13 +7330,13 @@
 							"projectKey": "todoist:project:9Xmpl3Zr",
 							"recurrence": null,
 							"reminders": [],
+							"sectionKey": null,
 							"sourceKey": "todoist:task:9Xmpl3Zr:Email Sam",
 							"title": "Email Sam"
 						}
 					],
 					"warnings": [
 						"Inbox: could not read the date \"every! 3 days\" on \"Fix bike\", kept it in notes",
-						"Long Term: sections are not imported: Someday, Reading",
 						"Job: could not read the date \"jeden Montag\" on \"Email Sam\", kept it in notes"
 					]
 				},
@@ -3743,12 +7354,12 @@
 						},
 						{
 							"createdAt": 1000,
-							"id": "id-13",
+							"id": "id-15",
 							"name": "work"
 						},
 						{
 							"createdAt": 1000,
-							"id": "id-14",
+							"id": "id-16",
 							"name": "deep-work"
 						}
 					],
@@ -3766,6 +7377,24 @@
 							"sourceKey": "todoist:project:8Xmpl2Wq"
 						}
 					],
+					"sections": [
+						{
+							"createdAt": 1000,
+							"id": "id-2",
+							"name": "Someday",
+							"order": 0,
+							"projectId": "id-1",
+							"sourceKey": "todoist:section:8Xmpl2Wq:Someday"
+						},
+						{
+							"createdAt": 1000,
+							"id": "id-3",
+							"name": "Reading",
+							"order": 1,
+							"projectId": "id-1",
+							"sourceKey": "todoist:section:8Xmpl2Wq:Reading"
+						}
+					],
 					"tasks": [
 						{
 							"completedAt": null,
@@ -3777,7 +7406,7 @@
 								"time": null
 							},
 							"event": null,
-							"id": "id-2",
+							"id": "id-4",
 							"labelIds": [],
 							"lastCompletedAt": null,
 							"location": null,
@@ -3793,6 +7422,7 @@
 									"minutes": 30
 								}
 							],
+							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Call the dentist",
 							"title": "Call the dentist"
 						},
@@ -3806,7 +7436,7 @@
 								"time": null
 							},
 							"event": null,
-							"id": "id-3",
+							"id": "id-5",
 							"labelIds": [],
 							"lastCompletedAt": null,
 							"location": null,
@@ -3817,6 +7447,7 @@
 							"projectId": null,
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:cancel [meetup.com](https://meetup.com)",
 							"title": "cancel [meetup.com](https://meetup.com)"
 						},
@@ -3830,7 +7461,7 @@
 								"time": "11:00"
 							},
 							"event": null,
-							"id": "id-4",
+							"id": "id-6",
 							"labelIds": [],
 							"lastCompletedAt": null,
 							"location": null,
@@ -3844,6 +7475,7 @@
 								"unit": "year"
 							},
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Renew passport #Travel",
 							"title": "Renew passport #Travel"
 						},
@@ -3857,7 +7489,7 @@
 								"time": "11:00"
 							},
 							"event": null,
-							"id": "id-5",
+							"id": "id-7",
 							"labelIds": [
 								"l-home"
 							],
@@ -3873,6 +7505,7 @@
 								"unit": "year"
 							},
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Water plants @home",
 							"title": "Water plants"
 						},
@@ -3883,7 +7516,7 @@
 							"createdBy": null,
 							"due": null,
 							"event": null,
-							"id": "id-6",
+							"id": "id-8",
 							"labelIds": [],
 							"lastCompletedAt": null,
 							"location": null,
@@ -3894,6 +7527,7 @@
 							"projectId": null,
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Fix bike",
 							"title": "Fix bike"
 						},
@@ -3907,7 +7541,7 @@
 								"time": null
 							},
 							"event": null,
-							"id": "id-7",
+							"id": "id-9",
 							"labelIds": [],
 							"lastCompletedAt": null,
 							"location": null,
@@ -3918,6 +7552,7 @@
 							"projectId": "id-1",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": "id-2",
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan",
 							"title": "Visit Japan"
 						},
@@ -3931,13 +7566,13 @@
 								"time": null
 							},
 							"event": null,
-							"id": "id-8",
+							"id": "id-10",
 							"labelIds": [],
 							"lastCompletedAt": null,
 							"location": null,
 							"notes": "",
 							"order": 0,
-							"parentId": "id-7",
+							"parentId": "id-9",
 							"priority": 3,
 							"projectId": "id-1",
 							"recurrence": null,
@@ -3948,6 +7583,7 @@
 									"time": "09:00"
 								}
 							],
+							"sectionId": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights",
 							"title": "Book flights"
 						},
@@ -3958,17 +7594,18 @@
 							"createdBy": null,
 							"due": null,
 							"event": null,
-							"id": "id-9",
+							"id": "id-11",
 							"labelIds": [],
 							"lastCompletedAt": null,
 							"location": null,
 							"notes": "",
 							"order": 0,
-							"parentId": "id-8",
+							"parentId": "id-10",
 							"priority": 4,
 							"projectId": "id-1",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights › Pack bags",
 							"title": "Pack bags"
 						},
@@ -3979,7 +7616,7 @@
 							"createdBy": null,
 							"due": null,
 							"event": null,
-							"id": "id-10",
+							"id": "id-12",
 							"labelIds": [],
 							"lastCompletedAt": null,
 							"location": null,
@@ -3990,6 +7627,7 @@
 							"projectId": "id-1",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": "id-3",
 							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune",
 							"title": "Read Dune"
 						},
@@ -4000,7 +7638,7 @@
 							"createdBy": null,
 							"due": null,
 							"event": null,
-							"id": "id-11",
+							"id": "id-13",
 							"labelIds": [],
 							"lastCompletedAt": null,
 							"location": null,
@@ -4011,6 +7649,7 @@
 							"projectId": "id-1",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": "id-3",
 							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune#2",
 							"title": "Read Dune"
 						},
@@ -4021,10 +7660,10 @@
 							"createdBy": null,
 							"due": null,
 							"event": null,
-							"id": "id-12",
+							"id": "id-14",
 							"labelIds": [
-								"id-13",
-								"id-14"
+								"id-15",
+								"id-16"
 							],
 							"lastCompletedAt": null,
 							"location": null,
@@ -4035,6 +7674,7 @@
 							"projectId": "mine",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:9Xmpl3Zr:Quarterly review @work @deep-work",
 							"title": "Quarterly review"
 						},
@@ -4045,7 +7685,7 @@
 							"createdBy": null,
 							"due": null,
 							"event": null,
-							"id": "id-15",
+							"id": "id-17",
 							"labelIds": [],
 							"lastCompletedAt": null,
 							"location": null,
@@ -4056,6 +7696,7 @@
 							"projectId": "mine",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": "todoist:task:9Xmpl3Zr:Email Sam",
 							"title": "Email Sam"
 						}
@@ -4064,11 +7705,11 @@
 				"summary": {
 					"labels": 2,
 					"projects": 1,
+					"sections": 2,
 					"skipped": 0,
 					"tasks": 12,
 					"warnings": [
 						"Inbox: could not read the date \"every! 3 days\" on \"Fix bike\", kept it in notes",
-						"Long Term: sections are not imported: Someday, Reading",
 						"Job: could not read the date \"jeden Montag\" on \"Email Sam\", kept it in notes"
 					]
 				}

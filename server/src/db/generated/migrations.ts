@@ -61,5 +61,13 @@ export const migrations: { tag: string; when: number; statements: string[] }[] =
 			"ALTER TABLE `user` ADD `kind` text DEFAULT 'human' NOT NULL;",
 			"ALTER TABLE `user` ADD `owner_id` text;"
 		]
+	},
+	{
+		"tag": "0004_unusual_doctor_spectrum",
+		"when": 1792136573055,
+		"statements": [
+			"CREATE TABLE `sections` (\n\t`user_id` text NOT NULL,\n\t`id` text NOT NULL,\n\t`project_id` text NOT NULL,\n\t`name` text NOT NULL,\n\t`order` real DEFAULT 0 NOT NULL,\n\t`created_at` integer NOT NULL,\n\t`source_key` text,\n\t`deleted` integer DEFAULT false NOT NULL,\n\t`clocks` text NOT NULL,\n\tPRIMARY KEY(`user_id`, `id`)\n);",
+			"ALTER TABLE `tasks` ADD `section_id` text;"
+		]
 	}
 ];

@@ -4,6 +4,7 @@ import type { DateKey, Task } from './task.ts';
 import { describe, recorded, test } from './vectors/record.ts';
 
 const toMarkdown = recorded('markdown', markdown.toMarkdown);
+const projectDocument = recorded('markdown', markdown.projectDocument);
 
 let created = 0;
 const task = (id: string, fields: Partial<Task> = {}): Task => ({
@@ -13,6 +14,7 @@ const task = (id: string, fields: Partial<Task> = {}): Task => ({
 	title: id,
 	notes: '',
 	projectId: null,
+	sectionId: null,
 	labelIds: [],
 	due: null,
 	recurrence: null,
@@ -106,6 +108,21 @@ describe('toMarkdown', () => {
 		const context = { tasks: [], projects, labels, today };
 		expect(toMarkdown({ title: 'No date', projectId: null, sections: [{ heading: null, tasks: [] }] }, context)).toBe(
 			'# No date',
+		);
+	});
+
+	test('a project copies its loose tasks first, then each section with tasks under its name', () => {
+		const work = projects[0]!;
+		const section = (id: string, name: string) => ({ id, projectId: 'work', name, order: 0, createdAt: 0 });
+		const loose = task('Inbox zero', { projectId: 'work' });
+		const next = task('Ship it', { projectId: 'work', sectionId: 'next' });
+		const document = projectDocument(work, [
+			{ section: null, tasks: [loose] },
+			{ section: section('next', 'Next up'), tasks: [next] },
+			{ section: section('later', 'Later'), tasks: [] },
+		]);
+		expect(toMarkdown(document, { tasks: [loose, next], projects, labels, today })).toBe(
+			'# Work\n\n- [ ] Inbox zero\n\n## Next up\n\n- [ ] Ship it',
 		);
 	});
 });

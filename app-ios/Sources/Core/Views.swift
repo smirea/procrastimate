@@ -8,6 +8,7 @@ public enum Views {
     public typealias PlaceSection = API.PlaceSection
     public typealias CompletedPreset = API.CompletedPreset
     public typealias CompletedRange = API.CompletedRange
+    public typealias ProjectGroup = API.ProjectGroup
 
     /// An event task sorts by the occurrence it is on, or by its first one where a list has no today.
     static func sortKey(_ task: TaskItem, today: DateKey?, in zone: TimeZone) -> String {
@@ -76,6 +77,22 @@ public enum Views {
 
     public static func projectTasks(_ tasks: [TaskItem], _ projectId: String, in zone: TimeZone) -> [TaskItem] {
         topLevel(tasks).filter { $0.projectId == projectId }.stableSorted(by: compare(today: nil, in: zone))
+    }
+
+    /// A project's open top-level tasks under its sections: the tasks in no section first, then every section in its
+    /// order, empty ones included so each stays a place to add to.
+    public static func projectGroups(
+        _ tasks: [TaskItem],
+        _ sections: [ProjectSection],
+        _ projectId: String,
+        in zone: TimeZone
+    ) -> [ProjectGroup] {
+        let list = projectTasks(tasks, projectId, in: zone)
+        let own = StoreRules.sectionsOf(sections, projectId)
+        let placed = Set(own.map(\.id))
+        let loose = list.filter { task in task.sectionId.map { !placed.contains($0) } ?? true }
+        return [ProjectGroup(section: nil, tasks: loose)]
+            + own.map { section in ProjectGroup(section: section, tasks: list.filter { $0.sectionId == section.id }) }
     }
 
     public static func labelTasks(_ tasks: [TaskItem], _ labelId: String, in zone: TimeZone) -> [TaskItem] {

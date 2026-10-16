@@ -39,11 +39,13 @@ public final class Store {
     public var tasks: [TaskItem] { snapshot.tasks }
     public var projects: [Project] { snapshot.projects }
     public var labels: [Label] { snapshot.labels }
+    public var sections: [ProjectSection] { snapshot.sections }
 
     /// Own data, then each shared space's, for subtasks, details, and shared project and label screens.
     public var allTasks: [TaskItem] { snapshot.tasks + sharedSpaces.flatMap(\.section.tasks) }
     public var allProjects: [Project] { snapshot.projects + sharedSpaces.flatMap(\.section.projects) }
     public var allLabels: [Label] { snapshot.labels + sharedSpaces.flatMap(\.section.labels) }
+    public var allSections: [ProjectSection] { snapshot.sections + sharedSpaces.flatMap(\.section.sections) }
 
     /// Shared spaces by owner name, with their ids.
     public var sharedSpaces: [(id: String, section: SpaceSection)] {
@@ -60,6 +62,15 @@ public final class Store {
         return snapshot.projects.first { $0.id == id }
             ?? snapshot.spaces.values.lazy.compactMap { $0.projects.first { $0.id == id } }.first
     }
+
+    public func section(_ id: String?) -> ProjectSection? {
+        guard let id else { return nil }
+        return snapshot.sections.first { $0.id == id }
+            ?? snapshot.spaces.values.lazy.compactMap { $0.sections.first { $0.id == id } }.first
+    }
+
+    /// A project's sections in their order, from whichever space holds the project.
+    public func sections(of projectId: String) -> [ProjectSection] { StoreRules.sectionsOf(allSections, projectId) }
 
     public func label(_ id: String) -> Label? {
         snapshot.labels.first { $0.id == id }
@@ -83,7 +94,12 @@ public final class Store {
         case .own: return snapshot.data
         case let .shared(id):
             guard let section = snapshot.spaces[id] else { return StoreData() }
-            return StoreData(tasks: section.tasks, projects: section.projects, labels: section.labels)
+            return StoreData(
+                tasks: section.tasks,
+                projects: section.projects,
+                sections: section.sections,
+                labels: section.labels
+            )
         }
     }
 
@@ -137,7 +153,7 @@ public final class Store {
         scheduleWrite()
     }
 
-    /// Empties tasks, projects, and labels here, and asks the next sync to wipe them on the server.
+    /// Empties tasks, projects, sections, and labels here, and asks the next sync to wipe them on the server.
     public func deleteAll() {
         SyncEngine.deleteAll(&snapshot)
         revision += 1
@@ -248,6 +264,7 @@ public final class Store {
         let data = data(in: space)
         var input = input
         input.projectId = input.projectId.flatMap { id in data.projects.contains { $0.id == id } ? id : nil }
+        input.sectionId = input.sectionId.flatMap { id in data.sections.contains { $0.id == id } ? id : nil }
         input.labelIds = input.labelIds.filter { id in data.labels.contains { $0.id == id } }
         let (next, task) = StoreRules.addTask(data, input, parentId: parentId, creation())
         commit(next, in: space)
@@ -269,6 +286,9 @@ public final class Store {
         var patch = patch
         if case let .some(.some(projectId)) = patch.projectId, !data.projects.contains(where: { $0.id == projectId }) {
             patch.projectId = nil
+        }
+        if case let .some(.some(sectionId)) = patch.sectionId, !data.sections.contains(where: { $0.id == sectionId }) {
+            patch.sectionId = nil
         }
         patch.labelIds = patch.labelIds?.filter { id in data.labels.contains { $0.id == id } }
         edit(id) { StoreRules.updateTask($0, id, patch) }
@@ -345,6 +365,30 @@ public final class Store {
     public func deleteProject(_ id: String) {
         guard space(ofProject: id) == .own else { return }
         commit(StoreRules.deleteProject(snapshot.data, id))
+    }
+
+    /// Sections, like projects, are only ever written in the user's own space.
+    @discardableResult
+    public func addSection(_ projectId: String, _ name: String) -> ProjectSection? {
+        guard space(ofProject: projectId) == .own else { return nil }
+        let (data, section) = StoreRules.addSection(snapshot.data, projectId, name, creation())
+        commit(data)
+        return section
+    }
+
+    public func renameSection(_ id: String, _ name: String) {
+        guard snapshot.sections.contains(where: { $0.id == id }) else { return }
+        commit(StoreRules.renameSection(snapshot.data, id, name))
+    }
+
+    public func moveSection(_ id: String, to index: Int) {
+        guard snapshot.sections.contains(where: { $0.id == id }) else { return }
+        commit(StoreRules.moveSection(snapshot.data, id, index))
+    }
+
+    public func deleteSection(_ id: String) {
+        guard snapshot.sections.contains(where: { $0.id == id }) else { return }
+        commit(StoreRules.deleteSection(snapshot.data, id))
     }
 
     @discardableResult

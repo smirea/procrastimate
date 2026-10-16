@@ -36,6 +36,7 @@ export const COLUMN_VALUES = {
 		clocks,
 	},
 	projects: { clocks },
+	sections: { clocks },
 	labels: { clocks },
 	settings: { clocks, dictation: dictationChoiceSchema },
 	log: { fields: z.record(z.string(), z.unknown()) },

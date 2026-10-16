@@ -61,6 +61,7 @@ private struct SharedList: View {
 
     var body: some View {
         let tasks = rows
+        let empty = tasks.isEmpty && sectionGroups.allSatisfy(\.tasks.isEmpty)
         List {
             Section {
                 ForEach(tasks) { task in
@@ -84,11 +85,27 @@ private struct SharedList: View {
                 .textCase(nil)
                 .padding(.bottom, 8)
             }
+            // A shared project shows under its sections, like the project screen.
+            ForEach(sectionGroups, id: \.section.id) { group in
+                Section {
+                    ForEach(group.tasks) { task in
+                        SharedTaskRow(task: task, labels: task.labelIds.compactMap { id in view.labels.first { $0.id == id } })
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
+                    }
+                } header: {
+                    Text(group.section.name)
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(.ink)
+                        .textCase(nil)
+                        .accessibilityAddTraits(.isHeader)
+                }
+            }
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
         .overlay {
-            if tasks.isEmpty {
+            if empty {
                 ListEmptyState(title: "Nothing open here", hint: "Everything shared with this link is done.")
             }
         }
@@ -103,11 +120,19 @@ private struct SharedList: View {
         }
     }
 
-    /// The shared task and its open subtasks, or the open tasks a project or label holds.
+    private var projectGroups: [Views.ProjectGroup] {
+        view.target.kind == .project ? Views.projectGroups(view.tasks, view.sections, view.target.id, in: store.timeZone) : []
+    }
+
+    private var sectionGroups: [(section: ProjectSection, tasks: [TaskItem])] {
+        projectGroups.dropFirst().compactMap { group in group.section.map { ($0, group.tasks) } }
+    }
+
+    /// The shared task and its open subtasks, the open tasks in no section of a project, or the open tasks a label holds.
     private var rows: [TaskItem] {
         let zone = store.timeZone
         switch view.target.kind {
-        case .project: return Views.projectTasks(view.tasks, view.target.id, in: zone).filter { $0.completedAt == nil }
+        case .project: return projectGroups.first?.tasks ?? []
         case .label: return Views.labelTasks(view.tasks, view.target.id, in: zone)
         case .task, .space: return view.tasks.filter { $0.completedAt == nil }
         }

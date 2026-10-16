@@ -1,16 +1,24 @@
 import { z } from 'zod';
 import * as subtasks from './subtasks.ts';
-import { bySiblingOrder } from './sync/order.ts';
-import { labelSchema, projectSchema, taskSchema } from './sync/protocol.ts';
-import { DEFAULT_PRIORITY, type DateKey, type Label, type Project, type Task } from './task.ts';
+import { bySiblingOrder, moveOrders } from './sync/order.ts';
+import { labelSchema, projectSchema, sectionSchema, taskSchema } from './sync/protocol.ts';
+import { DEFAULT_PRIORITY, type DateKey, type Label, type Project, type Section, type Task } from './task.ts';
 
 /**
  * The store's commands as pure functions over its data, so the web store and the Swift store apply the same
  * rules. Each returns new arrays and new objects for what it changes and leaves its input untouched.
  */
 export const storeDataSchema = z
-	.object({ tasks: z.array(taskSchema), projects: z.array(projectSchema), labels: z.array(labelSchema) })
-	.meta({ id: 'StoreData', description: 'Everything the store holds that syncs: tasks, projects, and labels.' });
+	.object({
+		tasks: z.array(taskSchema),
+		projects: z.array(projectSchema),
+		sections: z.array(sectionSchema),
+		labels: z.array(labelSchema),
+	})
+	.meta({
+		id: 'StoreData',
+		description: 'Everything the store holds that syncs: tasks, projects, sections, and labels.',
+	});
 export type StoreData = z.infer<typeof storeDataSchema>;
 
 export const creationSchema = z
@@ -24,6 +32,9 @@ export const newTaskSchema = z
 	.object({
 		title: taskShape.title,
 		projectId: taskShape.projectId,
+		sectionId: taskShape.sectionId
+			.default(null)
+			.meta({ description: 'A section puts the task in its project. A subtask gets none.' }),
 		labelIds: taskShape.labelIds,
 		due: taskShape.due,
 		recurrence: taskShape.recurrence,
@@ -31,13 +42,14 @@ export const newTaskSchema = z
 		reminders: taskShape.reminders,
 	})
 	.meta({ id: 'NewTask' });
-export type NewTask = z.infer<typeof newTaskSchema>;
+export type NewTask = z.input<typeof newTaskSchema>;
 
 export const taskEditSchema = taskSchema
 	.pick({
 		title: true,
 		notes: true,
 		projectId: true,
+		sectionId: true,
 		labelIds: true,
 		due: true,
 		recurrence: true,
@@ -50,7 +62,7 @@ export const taskEditSchema = taskSchema
 	.meta({
 		id: 'TaskEdit',
 		description:
-			'The editable fields of a task. A missing field is left alone; for nullable fields, `null` clears the value.',
+			'The editable fields of a task. A missing field is left alone; for nullable fields, `null` clears the value. A section moves the task into its project, and a new project without one leaves the task in no section.',
 	});
 export type TaskPatch = z.infer<typeof taskEditSchema>;
 
@@ -91,7 +103,16 @@ export const explodeMethodSchema = z.enum(['direct', 'prefix', 'inherit']).meta(
 export type ExplodeMethod = z.infer<typeof explodeMethodSchema>;
 
 export const explodedStateSchema = taskSchema
-	.pick({ id: true, parentId: true, order: true, title: true, labelIds: true, due: true, priority: true })
+	.pick({
+		id: true,
+		parentId: true,
+		order: true,
+		sectionId: true,
+		title: true,
+		labelIds: true,
+		due: true,
+		priority: true,
+	})
 	.meta({
 		id: 'ExplodedState',
 		description: 'The fields exploding subtasks changes, as they were. Undo writes back only these.',
@@ -113,6 +134,7 @@ function put(tasks: readonly Task[], changed: readonly (Partial<Task> & Pick<Tas
 }
 
 /**
+ * A section puts a top-level task in that section and its project, as in `updateTask`.
  * With a `parentId`, adds the task as that parent's last subtask, in its project, and reopens the parent if it is done.
  * Adding rows in their source order with each row's parent reproduces an outline's nesting and order. `createdAt` is
  * at least one past the newest task's, so tasks added within one millisecond, or under a frozen clock, keep the order
@@ -125,13 +147,15 @@ export function addTask(
 	{ id, now }: Creation,
 ): { data: StoreData; task: Task } {
 	const parent = parentId ? data.tasks.find(t => t.id === parentId) : undefined;
+	const section = parent || !input.sectionId ? undefined : data.sections.find(s => s.id === input.sectionId);
 	const task: Task = {
 		id,
 		parentId: parent?.id ?? null,
 		order: parent ? subtasks.nextSiblingOrder(data.tasks, parent.id) : 0,
 		title: input.title,
 		notes: '',
-		projectId: parent ? parent.projectId : input.projectId,
+		projectId: parent ? parent.projectId : (section?.projectId ?? input.projectId),
+		sectionId: section?.id ?? null,
 		labelIds: input.labelIds,
 		due: input.due,
 		recurrence: input.recurrence,
@@ -150,12 +174,24 @@ export function addTask(
 	return { data: { ...data, tasks }, task };
 }
 
-/** A new project applies to every subtask under the task too. */
+/**
+ * A section moves a top-level task into the section's project, and a new project without a section leaves it in none.
+ * Only top-level tasks sit in a section; a subtask shows under its parent. A new project applies to every subtask
+ * under the task too.
+ */
 export function updateTask(data: StoreData, id: string, patch: TaskPatch): StoreData {
-	if (!data.tasks.some(t => t.id === id)) return data;
-	const changed: (Partial<Task> & Pick<Task, 'id'>)[] = [{ ...patch, id }];
-	if (patch.projectId !== undefined) {
-		for (const t of subtasks.descendantsOf(data.tasks, id)) changed.push({ id: t.id, projectId: patch.projectId });
+	const task = data.tasks.find(t => t.id === id);
+	if (!task) return data;
+	let next: Partial<Task> & Pick<Task, 'id'> = { ...patch, id };
+	if (patch.sectionId !== undefined || (patch.projectId !== undefined && patch.projectId !== task.projectId)) {
+		const section = patch.sectionId ? data.sections.find(s => s.id === patch.sectionId) : undefined;
+		const asked = patch.projectId === undefined ? task.projectId : patch.projectId;
+		const projectId = section && task.parentId === null ? section.projectId : asked;
+		next = { ...next, projectId, sectionId: task.parentId === null ? (section?.id ?? null) : null };
+	}
+	const changed = [next];
+	if (next.projectId !== undefined) {
+		for (const t of subtasks.descendantsOf(data.tasks, id)) changed.push({ id: t.id, projectId: next.projectId });
 	}
 	return { ...data, tasks: put(data.tasks, changed) };
 }
@@ -225,7 +261,9 @@ export function explodeSubtasks(
 	const gap = nextOrder === null ? children.length + 1 : nextOrder - parent.order;
 	const orderAt = (index: number) => (parent.parentId ? parent.order + ((index + 1) * gap) / (children.length + 1) : 0);
 	const changed = children.map((child, index): Task => {
-		const moved = { ...child, parentId: parent.parentId, order: orderAt(index) };
+		// Children of a top-level task land beside it, in its section.
+		const sectionId = parent.parentId === null ? parent.sectionId : null;
+		const moved = { ...child, parentId: parent.parentId, order: orderAt(index), sectionId };
 		if (method === 'prefix') return { ...moved, title: `${parent.title}: ${child.title}` };
 		if (method === 'direct') return moved;
 		return {
@@ -235,10 +273,11 @@ export function explodeSubtasks(
 			priority: child.priority === DEFAULT_PRIORITY ? parent.priority : child.priority,
 		};
 	});
-	const previous = children.map(({ id, parentId, order, title, labelIds, due, priority }) => ({
+	const previous = children.map(({ id, parentId, order, sectionId, title, labelIds, due, priority }) => ({
 		id,
 		parentId,
 		order,
+		sectionId,
 		title,
 		labelIds,
 		due,
@@ -250,8 +289,8 @@ export function explodeSubtasks(
 /** A subtask whose parent was deleted since stays where it is, so it never goes unreachable. */
 export function restoreExploded(data: StoreData, previous: readonly ExplodedState[]): StoreData {
 	const ids = new Set(data.tasks.map(t => t.id));
-	const restored = previous.map(({ parentId, order, ...state }) =>
-		parentId === null || ids.has(parentId) ? { ...state, parentId, order } : state,
+	const restored = previous.map(({ parentId, order, sectionId, ...state }) =>
+		parentId === null || ids.has(parentId) ? { ...state, parentId, order, sectionId } : state,
 	);
 	return { ...data, tasks: put(data.tasks, restored) };
 }
@@ -269,12 +308,67 @@ export function renameProject(data: StoreData, id: string, name: string): StoreD
 	return { ...data, projects: data.projects.map(p => (p.id === id ? { ...p, name } : p)) };
 }
 
-/** Deleting a project deletes its tasks, subtasks included, since they share their root's project. */
+/** Deleting a project deletes its sections and tasks, subtasks included, since they share their root's project. */
 export function deleteProject(data: StoreData, id: string): StoreData {
 	return {
 		...data,
 		projects: data.projects.filter(p => p.id !== id),
+		sections: data.sections.filter(s => s.projectId !== id),
 		tasks: data.tasks.filter(t => t.projectId !== id),
+	};
+}
+
+/** A project's sections in their order. */
+export const sectionsOf = (sections: readonly Section[], projectId: string) =>
+	sections.filter(s => s.projectId === projectId).toSorted(bySiblingOrder);
+
+const takenIn = (data: StoreData, projectId: string, name: string, except?: string) =>
+	data.sections.some(s => s.id !== except && s.projectId === projectId && s.name.toLowerCase() === name.toLowerCase());
+
+/**
+ * Adds a section last in its project. Names stay unique in a project ignoring case, since `/name` must resolve to one
+ * section, so a taken name returns the section that has it.
+ */
+export function addSection(
+	data: StoreData,
+	projectId: string,
+	name: string,
+	{ id, now }: Creation,
+): { data: StoreData; section: Section } {
+	const existing = data.sections.find(s => s.projectId === projectId && s.name.toLowerCase() === name.toLowerCase());
+	if (existing) return { data, section: existing };
+	const last = sectionsOf(data.sections, projectId).at(-1);
+	const section: Section = { id, projectId, name, order: last ? last.order + 1 : 0, createdAt: now };
+	return { data: { ...data, sections: [...data.sections, section] }, section };
+}
+
+export function renameSection(data: StoreData, id: string, name: string): StoreData {
+	const section = data.sections.find(s => s.id === id);
+	if (!section || takenIn(data, section.projectId, name, id)) return data;
+	return { ...data, sections: data.sections.map(s => (s.id === id ? { ...s, name } : s)) };
+}
+
+/** Writes only the moved section's `order`, like a subtask move. */
+export function moveSection(data: StoreData, id: string, index: number): StoreData {
+	const section = data.sections.find(s => s.id === id);
+	if (!section) return data;
+	const orders = new Map(moveOrders(sectionsOf(data.sections, section.projectId), id, index).map(o => [o.id, o.order]));
+	if (!orders.size) return data;
+	return { ...data, sections: data.sections.map(s => (orders.has(s.id) ? { ...s, order: orders.get(s.id)! } : s)) };
+}
+
+/** Every task in a section, done ones and subtasks included: what deleting it removes, so its prompt can count them. */
+export function sectionTasks(tasks: readonly Task[], id: string): Task[] {
+	return tasks.filter(t => t.sectionId === id).flatMap(t => [t, ...subtasks.descendantsOf(tasks, t.id)]);
+}
+
+/** Deleting a section deletes its tasks with their subtasks, as Todoist does and as deleting a project does. */
+export function deleteSection(data: StoreData, id: string): StoreData {
+	const removed = new Set(sectionTasks(data.tasks, id).map(t => t.id));
+	return {
+		...data,
+		sections: data.sections.filter(s => s.id !== id),
+		tasks: data.tasks.filter(t => !removed.has(t.id)),
 	};
 }
 

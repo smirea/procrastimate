@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { labelSchema, projectSchema, taskSchema } from './sync/protocol.ts';
+import { labelSchema, projectSchema, sectionSchema, taskSchema } from './sync/protocol.ts';
 import { linkify } from './links.ts';
 import {
 	addDays,
@@ -24,7 +24,7 @@ import {
 } from './task.ts';
 
 export const tokenKindSchema = z
-	.enum(['due', 'recurrence', 'priority', 'reminder', 'project', 'label'])
+	.enum(['due', 'recurrence', 'priority', 'reminder', 'project', 'section', 'label'])
 	.meta({ id: 'TokenKind' });
 export type TokenKind = z.infer<typeof tokenKindSchema>;
 
@@ -47,6 +47,7 @@ export const parsedQuickAddSchema = z
 		priority: taskShape.priority.nullable(),
 		reminders: taskShape.reminders,
 		projectId: taskShape.projectId,
+		sectionId: taskShape.sectionId,
 		labelIds: taskShape.labelIds,
 		tokens: z.array(quickAddTokenSchema),
 	})
@@ -57,7 +58,11 @@ export const parseOptionsSchema = z
 	.object({
 		now: z.date().meta({ 'x-swift-type': 'Date' }),
 		projects: z.array(projectSchema).readonly().default([]),
+		sections: z.array(sectionSchema).readonly().default([]),
 		labels: z.array(labelSchema).readonly().default([]),
+		projectId: taskShape.projectId.default(null).meta({
+			description: 'The project set outside the text, such as the open project, whose sections `/name` reads.',
+		}),
 		due: taskShape.due
 			.default(null)
 			.meta({ description: 'The due date set outside the text, such as by a picker or on an existing task.' }),
@@ -185,6 +190,7 @@ type Match =
 	| { kind: 'recurrence'; recurrence: RecurrencePhrase }
 	| { kind: 'priority'; priority: Priority }
 	| { kind: 'project'; projectId: string }
+	| { kind: 'section'; sectionId: string }
 	| { kind: 'label'; labelId: string }
 	| { kind: 'reminder'; reminder: ReminderDraft };
 
@@ -445,12 +451,12 @@ const RULES: Rule[] = [
 const escapeRegExp = (text: string) => text.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 
 /**
- * `#Name` or `@Name` for a name that exists, at the start of the text or after whitespace, so `a@b.com`
- * never matches. The name must end the word, so `@home.com` and `@homework` do not read as `@home`.
+ * `#Name`, `/Name`, or `@Name` for a name that exists, at the start of the text or after whitespace, so `a@b.com` and
+ * `and/or` never match. The name must end the word, so `@home.com` and `@homework` do not read as `@home`.
  */
 function namedRule(
-	kind: 'project' | 'label',
-	sigil: '#' | '@',
+	kind: 'project' | 'section' | 'label',
+	sigil: '#' | '/' | '@',
 	items: readonly { id: string; name: string }[],
 	read: (id: string) => Match,
 ): Rule | null {
@@ -518,7 +524,7 @@ export function parseQuickAdd(input: string, options: ParseOptions): ParsedQuick
 
 	const tokens: QuickAddToken[] = [];
 	const matches: Match[] = [];
-	for (const rule of rules) {
+	const apply = (rule: Rule) => {
 		const found: Array<{ token: QuickAddToken; match: Match }> = [];
 		const spans: Array<[number, number]> = [];
 		for (const m of (rule.guarded ? guarded : raw).matchAll(rule.pattern)) {
@@ -539,6 +545,16 @@ export function parseQuickAdd(input: string, options: ParseOptions): ParsedQuick
 			raw = claim(raw, start, end);
 			guarded = claim(guarded, start, end);
 		}
+	};
+	for (const rule of rules) {
+		apply(rule);
+		// A section belongs to one project, so `/name` reads the typed `#project`'s sections, else the outside one's.
+		if (rule.kind !== 'project') continue;
+		const typed = matches.findLast(match => match.kind === 'project');
+		const inProject = typed?.kind === 'project' ? typed.projectId : (options.projectId ?? null);
+		const sections = (options.sections ?? []).filter(section => section.projectId === inProject);
+		const sectionRule = namedRule('section', '/', sections, sectionId => ({ kind: 'section', sectionId }));
+		if (sectionRule) apply(sectionRule);
 	}
 	tokens.sort((a, b) => a.start - b.start);
 
@@ -546,6 +562,7 @@ export function parseQuickAdd(input: string, options: ParseOptions): ParsedQuick
 	let repeat: RecurrencePhrase | null = null;
 	let priority: Priority | null = null;
 	let projectId: string | null = null;
+	let sectionId: string | null = null;
 	const labelIds = new Set<string>();
 	const reminderDrafts: ReminderDraft[] = [];
 	for (const match of matches) {
@@ -561,6 +578,9 @@ export function parseQuickAdd(input: string, options: ParseOptions): ParsedQuick
 				break;
 			case 'project':
 				projectId = match.projectId;
+				break;
+			case 'section':
+				sectionId = match.sectionId;
 				break;
 			case 'label':
 				labelIds.add(match.labelId);
@@ -592,6 +612,7 @@ export function parseQuickAdd(input: string, options: ParseOptions): ParsedQuick
 		priority,
 		reminders: reminderDrafts.map(draft => resolveReminder(draft, due ?? outside, ctx)),
 		projectId,
+		sectionId,
 		labelIds: [...labelIds],
 		tokens,
 	};

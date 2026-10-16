@@ -1,7 +1,7 @@
 import { getContext, setContext } from 'svelte';
 import { groupChildren, progressOf, type Progress } from 'shared/subtasks.ts';
 import type { StoreData } from 'shared/store.ts';
-import type { Label, Project, Task } from 'shared/task.ts';
+import type { Label, Project, Section, Task } from 'shared/task.ts';
 import { store } from './store.svelte.ts';
 import { sheets } from './ui.svelte.ts';
 
@@ -11,6 +11,7 @@ import { sheets } from './ui.svelte.ts';
  */
 export type Lookup = {
 	project: (id: string | null) => Project | undefined;
+	section: (id: string | null) => Section | undefined;
 	labelsOf: (task: Pick<Task, 'labelIds'>) => Label[];
 	task: (id: string) => Task | undefined;
 	progress: (id: string) => Progress | null;
@@ -23,6 +24,7 @@ const KEY = Symbol('lookup');
 
 const storeLookup: Lookup = {
 	project: id => store.project(id),
+	section: id => store.section(id),
 	labelsOf: task => store.labelsOf(task),
 	task: id => store.task(id),
 	progress: id => store.progress(id),
@@ -36,6 +38,7 @@ export function provideReadOnlyLookup(data: () => StoreData) {
 	const children = () => groupChildren(data().tasks);
 	setContext<Lookup>(KEY, {
 		project: id => (id ? data().projects.find(p => p.id === id) : undefined),
+		section: id => (id ? data().sections.find(s => s.id === id) : undefined),
 		labelsOf: task => task.labelIds.flatMap(id => data().labels.find(l => l.id === id) ?? []),
 		task: id => data().tasks.find(t => t.id === id),
 		progress: id => progressOf(children().get(id) ?? []),

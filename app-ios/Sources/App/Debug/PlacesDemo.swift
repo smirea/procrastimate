@@ -7,7 +7,7 @@ import UIKit
 /// adds calendar events through EventKit, and opens the screen to screenshot. Release builds omit it.
 ///
 /// Space-separated words: `seed`, `rows` (labeled tasks with long titles, for the two-line row), `move` (shifts the next Standup an hour later, then logs what the task holds),
-/// `browse`, `details:<task title>`, `link:<share token>`, `sharing` (see `SharingDemo`), `sheet:location`, `sheet:event`, and
+/// `browse`, `sections` (see `SectionsDemo`), `details:<task title>`, `link:<share token>`, `sharing` (see `SharingDemo`), `sheet:location`, `sheet:event`, and
 /// `query:<words with + for spaces>` for the location search.
 enum PlacesDemo {
     static var words: [String] {
@@ -39,7 +39,7 @@ enum PlacesDemo {
         }
         // The simulator only hands the app a Universal Link once the domain's association file verifies.
         if let token = value("link") { navigator.sheet = .sharedLink(token: token) }
-        if has("quickadd") { navigator.sheet = .quickAdd(QuickAddDefaults()) }
+        if has("quickadd") { navigator.sheet = .quickAdd(navigator.listDefaults) }
         if has("ramble") { navigator.sheet = .ramble(QuickAddDefaults()) }
         if let text = value("type") { await type(text) }
         #endif

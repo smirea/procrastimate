@@ -18,6 +18,8 @@ export type Scope = {
 	/** The shared projects and labels, plus every one a visible task references. */
 	projects: ReadonlySet<string>;
 	labels: ReadonlySet<string>;
+	/** Every section of a project in `projects`, since a section follows its project's visibility. */
+	sections: ReadonlySet<string>;
 };
 
 export function scopeOf(snapshot: Snapshot, grants: readonly Grant[]): Scope {
@@ -66,7 +68,8 @@ export function scopeOf(snapshot: Snapshot, grants: readonly Grant[]): Scope {
 		if (task.projectId) projects.add(task.projectId);
 		for (const labelId of task.labelIds) labels.add(labelId);
 	}
-	return { tasks, editable, projects, labels };
+	const sections = new Set(snapshot.sections.filter(s => projects.has(s.projectId)).map(s => s.id));
+	return { tasks, editable, projects, labels, sections };
 }
 
 /** The space as the guest sees it. Settings are the owner's own, so the guest gets defaults. */
@@ -74,6 +77,7 @@ export function filterSnapshot(snapshot: Snapshot, scope: Scope): Snapshot {
 	return {
 		tasks: snapshot.tasks.filter(task => scope.tasks.has(task.id)),
 		projects: snapshot.projects.filter(project => scope.projects.has(project.id)),
+		sections: snapshot.sections.filter(section => scope.sections.has(section.id)),
 		labels: snapshot.labels.filter(label => scope.labels.has(label.id)),
 		settings: { ...DEFAULT_SETTINGS },
 	};
@@ -107,15 +111,16 @@ export function scopeHash(view: unknown): string {
 }
 
 /**
- * A guest's op may only point at what the guest can already see: a parent it may edit, and projects and labels in
- * its view, so it cannot graft its task onto the owner's private tree or pull hidden names into its snapshot. It may
+ * A guest's op may only point at what the guest can already see: a parent it may edit, and projects, sections, and
+ * labels in its view, so it cannot graft its task onto the owner's private tree or pull hidden names into its snapshot. It may
  * not set `sourceKey` either, because fixups merge tasks by it and would tombstone the owner's matching task.
  */
 function staysInScope(fields: Partial<FieldsByKind['task']>, scope: Scope): boolean {
-	const { parentId, projectId, labelIds, sourceKey } = fields;
+	const { parentId, projectId, sectionId, labelIds, sourceKey } = fields;
 	if (sourceKey !== undefined && sourceKey !== null) return false;
 	if (parentId && !scope.editable.has(parentId)) return false;
 	if (projectId && !scope.projects.has(projectId)) return false;
+	if (sectionId && !scope.sections.has(sectionId)) return false;
 	return (labelIds ?? []).every(id => scope.labels.has(id));
 }
 
@@ -123,7 +128,7 @@ function staysInScope(fields: Partial<FieldsByKind['task']>, scope: Scope): bool
  * Which of a guest's ops may be written, checked in order against a working copy the admitted ops update. A guest
  * writes tasks only: an existing task must be editable before and after the op, a new one editable after it (under an
  * editable parent, or in an edit-shared project or label). A delete only needs the task editable before. Projects,
- * labels, and settings are never a guest's to write.
+ * sections, labels, and settings are never a guest's to write.
  */
 export function admit(snapshot: Snapshot, grants: readonly Grant[], ops: readonly Op[]) {
 	const admitted: Op[] = [];

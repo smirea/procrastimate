@@ -13,6 +13,11 @@ public enum Browse {
         "Delete \(name) and its \(taskCount) task\(taskCount == 1 ? "" : "s")?"
     }
 
+    /// A section owns its tasks like a project does, so the prompt counts them when it has any.
+    public static func deleteSectionPrompt(_ name: String, taskCount: Int) -> String {
+        taskCount == 0 ? "Delete \(name)?" : "Delete \(name) and its \(taskCount) task\(taskCount == 1 ? "" : "s")?"
+    }
+
     public static func deleteLabelPrompt(_ name: String) -> String { "Delete \(name)?" }
 
     public static let deleteLabelMessage = "Its tasks stay, without the label."

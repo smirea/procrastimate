@@ -34,6 +34,7 @@
 		due: Due | null;
 		priority: Priority | null;
 		projectId: string | null;
+		sectionId: string | null;
 		labelIds: string[];
 		reminders: Reminder[];
 	};
@@ -41,6 +42,7 @@
 		due: defaults.today ? { date: clock.today, time: null } : null,
 		priority: null,
 		projectId: defaults.projectId,
+		sectionId: defaults.sectionId ?? null,
 		labelIds: defaults.labelId ? [defaults.labelId] : [],
 		reminders: [],
 	});
@@ -60,13 +62,22 @@
 	const subtaskParsed = $derived(parseSubtask(subtaskText));
 
 	const parsed = $derived(
-		parseQuickAdd(text, { now: new Date(clock.now), projects: store.projects, labels: store.labels, due: picked.due }),
+		parseQuickAdd(text, {
+			now: new Date(clock.now),
+			projects: store.projects,
+			sections: store.sections,
+			labels: store.labels,
+			projectId: picked.projectId,
+			due: picked.due,
+		}),
 	);
 	const tokenOf = (kind: TokenKind) => parsed.tokens.find((t) => t.kind === kind);
 	const recurrence = $derived(parsed.recurrence);
 	const due = $derived(parsed.due ?? picked.due);
 	const priority = $derived(parsed.priority ?? picked.priority ?? DEFAULT_PRIORITY);
 	const projectId = $derived(parsed.projectId ?? picked.projectId);
+	/** A typed project other than the picked one leaves the picked section behind. */
+	const sectionId = $derived(parsed.sectionId ?? (projectId === picked.projectId ? picked.sectionId : null));
 	const fieldTokens = $derived(parsed.tokens);
 	const reminderTokens = $derived(fieldTokens.filter((t) => t.kind === 'reminder'));
 	const labelTokens = $derived(
@@ -95,7 +106,7 @@
 	function submit() {
 		if (!parsed.title) return;
 		const reminders = [...parsed.reminders, ...picked.reminders];
-		const task = store.addTask({ title: parsed.title, due, recurrence, priority, projectId, labelIds, reminders });
+		const task = store.addTask({ title: parsed.title, due, recurrence, priority, projectId, sectionId, labelIds, reminders });
 		if (!task) return;
 		const typing = subtaskTask(subtaskParsed);
 		for (const child of [...subtasks.map((s) => s.task), ...(typing ? [typing] : [])]) store.addTask(child, task.id);
@@ -168,6 +179,7 @@
 				bind:value={text}
 				bind:listAt
 				tokens={fieldTokens}
+				{projectId}
 				label="Task name"
 				placeholder="Call mom tomorrow 5pm p1 remind me 30m before"
 				autofocus
@@ -319,9 +331,11 @@
 		}} />
 	</div>
 	<div class="flex items-center justify-between gap-2 border-t border-ink/5 px-3 py-2.5">
-		<ProjectPicker {projectId} onchange={(value) => {
+		<ProjectPicker {projectId} {sectionId} onchange={(place) => {
+				clearToken('section');
 				clearToken('project');
-				picked.projectId = value;
+				picked.projectId = place.projectId;
+				picked.sectionId = place.sectionId;
 			}} />
 		<div class="flex gap-1.5">
 			<button type="button" class="btn btn-quiet" onclick={() => sheets.close()}>Cancel</button>

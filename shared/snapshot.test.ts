@@ -30,6 +30,7 @@ const sharedTask = (id: string, createdAt: number) => ({
 	title: id,
 	notes: '',
 	projectId: 'p-ana',
+	sectionId: null,
 	labelIds: [],
 	due: null,
 	recurrence: null,
@@ -53,6 +54,7 @@ const webDocument: snapshot.Snapshot = {
 			title: 'Gym',
 			notes: 'Leg day',
 			projectId: 'p-home',
+			sectionId: null,
 			labelIds: ['l-health'],
 			due: { date: '2026-10-16', time: '07:00' },
 			recurrence: { interval: 1, unit: 'week', days: [1, 3, 5] },
@@ -76,6 +78,7 @@ const webDocument: snapshot.Snapshot = {
 			title: 'Stretch',
 			notes: '',
 			projectId: 'p-home',
+			sectionId: null,
 			labelIds: [],
 			due: null,
 			recurrence: null,
@@ -96,6 +99,7 @@ const webDocument: snapshot.Snapshot = {
 			title: 'Taxes',
 			notes: '',
 			projectId: null,
+			sectionId: null,
 			labelIds: [],
 			due: { date: '2026-11-01', time: null },
 			recurrence: { interval: 1, unit: 'year' },
@@ -114,6 +118,17 @@ const webDocument: snapshot.Snapshot = {
 	projects: [
 		{ id: 'p-home', name: 'Home', createdAt: 1_791_800_000_000 },
 		{ id: 'p-work', name: 'Work', createdAt: 1_791_800_000_001, sourceKey: 'todoist:project:7' },
+	],
+	sections: [
+		{ id: 's-next', projectId: 'p-work', name: 'Next', order: 0, createdAt: 1_791_800_000_003 },
+		{
+			id: 's-later',
+			projectId: 'p-work',
+			name: 'Later',
+			order: 1,
+			createdAt: 1_791_800_000_004,
+			sourceKey: 'todoist:section:7:Later',
+		},
 	],
 	labels: [{ id: 'l-health', name: 'health', createdAt: 1_791_800_000_002 }],
 	remindersCheckedAt: 1_791_972_000_000,
@@ -153,6 +168,7 @@ const webDocument: snapshot.Snapshot = {
 				{ ...sharedTask('t-ana-2', 1_791_900_000_011), completedBy: 'u-ana', lastCompletedAt: 1_791_960_000_000 },
 			],
 			projects: [{ id: 'p-ana', name: 'Studio', createdAt: 1_791_800_000_010 }],
+			sections: [{ id: 's-ana', projectId: 'p-ana', name: 'Walls', order: 0, createdAt: 1_791_800_000_011 }],
 			labels: [],
 		},
 	},
@@ -168,6 +184,13 @@ describe('parseSnapshot', () => {
 		const { spaces: _, people: __, ...stored } = webDocument;
 		const loaded = parseSnapshot(stored, 10);
 		expect([loaded.spaces, loaded.people, loaded.tasks.length]).toEqual([{}, [], 3]);
+	});
+
+	test('a document stored before sections has none, and its tasks sit in no section', () => {
+		const { sections: _, ...stored } = webDocument;
+		const tasks = stored.tasks.map(({ sectionId: __, ...task }) => task);
+		const loaded = parseSnapshot({ ...stored, tasks }, 10);
+		expect([loaded.sections, loaded.tasks.map(t => t.sectionId)]).toEqual([[], [null, null, null]]);
 	});
 
 	test('a shared space that fails validation is dropped and the rest of the document stays', () => {
@@ -280,6 +303,7 @@ describe('parseSnapshot', () => {
 		expect(parseSnapshot(document, 10)).toEqual({
 			tasks: [],
 			projects: [],
+			sections: [],
 			labels: [],
 			remindersCheckedAt: 10,
 			spaces: {},

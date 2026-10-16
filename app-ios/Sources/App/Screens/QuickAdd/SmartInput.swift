@@ -3,7 +3,7 @@ import SwiftUI
 import UIKit
 
 /// The shared smart input of quick add, the details title, and the add-subtask field: a `TextEditor` on an
-/// `AttributedString` that tints each parsed phrase, with `#` and `@` suggestions above it. Return submits instead of
+/// `AttributedString` that tints each parsed phrase, with `#`, `/`, and `@` suggestions above it. Return submits instead of
 /// adding a line. Token offsets are UTF-16, so they are mapped through `String.Index(utf16Offset:in:)`. While the editor
 /// has focus, tints go straight to its text storage through `EditorTints` instead of through the binding.
 struct SmartInput: View {
@@ -15,6 +15,8 @@ struct SmartInput: View {
     let label: String
     var placeholder = ""
     var suggestProjects = true
+    /// The project in effect, whose sections `/` suggests.
+    var projectId: String?
     var listAt: Binding<Int?> = .constant(nil)
     /// The height it grows to before it scrolls: about eight lines of body text.
     var maxHeight: CGFloat = 200
@@ -123,7 +125,14 @@ struct SmartInput: View {
 
     private func match(at caret: Int) -> NameMatch? {
         guard focused.wrappedValue else { return nil }
-        let match = NameMatch.at(caret, in: text, store: store, space: space, kinds:suggestProjects ? [.project, .label] : [.label])
+        let match = NameMatch.at(
+            caret,
+            in: text,
+            store: store,
+            space: space,
+            kinds: suggestProjects ? [.project, .section, .label] : [.label],
+            projectId: projectId
+        )
         guard let match, !match.suggestions.isEmpty, match.fragment.start != dismissed else { return nil }
         return match
     }

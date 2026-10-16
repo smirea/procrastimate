@@ -194,6 +194,7 @@ private struct Occurrence: Decodable {
     case "inboxTasks": return try json(Views.inboxTasks(a(0), a(1), in: a.zone))
     case "noDateTasks": return try json(Views.noDateTasks(a(0), a(1), newestFirst: a(2), in: a.zone))
     case "projectTasks": return try json(Views.projectTasks(a(0), a(1), in: a.zone))
+    case "projectGroups": return try json(Views.projectGroups(a(0), a(1), a(2), in: a.zone))
     case "labelTasks": return try json(Views.labelTasks(a(0), a(1), in: a.zone))
     case "placeTasks": return try json(Views.placeTasks(a(0), a(1), in: a.zone))
     case "eventTasks": return try json(Views.eventTasks(a(0), a(1), a(2), in: a.zone))
@@ -209,6 +210,7 @@ private struct Occurrence: Decodable {
 @Sendable func markdownVector(_ fn: String, _ a: Args) throws -> JSONValue {
     switch fn {
     case "toMarkdown": return try json(Markdown.toMarkdown(a(0), a(1), in: a.zone))
+    case "projectDocument": return try json(Markdown.projectDocument(a(0), a(1)))
     default: throw unknown(fn)
     }
 }
@@ -273,6 +275,7 @@ private func patch(_ value: JSONValue) throws -> TaskPatch {
         case "title": patch.title = try decode(field)
         case "notes": patch.notes = try decode(field)
         case "projectId": patch.projectId = .some(try decode(field))
+        case "sectionId": patch.sectionId = .some(try decode(field))
         case "labelIds": patch.labelIds = try decode(field)
         case "due": patch.due = .some(try decode(field))
         case "recurrence": patch.recurrence = .some(try decode(field))
@@ -333,6 +336,14 @@ private func completion(_ completion: Completion) throws -> JSONValue {
         return object(["data": try json(result.data), "label": try json(result.label)])
     case "renameLabel": return try json(StoreRules.renameLabel(data(), a(1), a(2)))
     case "deleteLabel": return try json(StoreRules.deleteLabel(data(), a(1)))
+    case "sectionsOf": return try json(StoreRules.sectionsOf(a(0), a(1)))
+    case "sectionTasks": return try json(StoreRules.sectionTasks(a(0), a(1)))
+    case "addSection":
+        let result = StoreRules.addSection(try data(), try a(1), try a(2), try a(3, as: CreationInput.self).creation)
+        return object(["data": try json(result.data), "section": try json(result.section)])
+    case "renameSection": return try json(StoreRules.renameSection(data(), a(1), a(2)))
+    case "moveSection": return try json(StoreRules.moveSection(data(), a(1), a(2)))
+    case "deleteSection": return try json(StoreRules.deleteSection(data(), a(1)))
     default: throw unknown(fn)
     }
 }
@@ -349,7 +360,9 @@ private func completion(_ completion: Completion) throws -> JSONValue {
 private struct ParseInput: Decodable {
     let now: Int
     let projects: [Project]?
+    let sections: [ProjectSection]?
     let labels: [Label]?
+    let projectId: String?
     let due: Due?
     let spoken: Bool?
 
@@ -357,7 +370,9 @@ private struct ParseInput: Decodable {
         QuickAdd.Options(
             now: Date(epochMilliseconds: now),
             projects: projects ?? [],
+            sections: sections ?? [],
             labels: labels ?? [],
+            projectId: projectId,
             due: due,
             spoken: spoken ?? false
         )

@@ -14,6 +14,7 @@ extension API.TaskEdit {
         if let title { task.title = title }
         if let notes { task.notes = notes }
         if let projectId { task.projectId = projectId }
+        if let sectionId { task.sectionId = sectionId }
         if let labelIds { task.labelIds = labelIds }
         if let due { task.due = due }
         if let recurrence { task.recurrence = recurrence }
@@ -41,6 +42,7 @@ public enum StoreRules {
         return tasks.map { byId[$0.id] ?? $0 }
     }
 
+    /// A section puts a top-level task in that section and its project, as in `updateTask`.
     /// With a `parentId`, adds the task as that parent's last subtask, in its project, and reopens the parent if it is
     /// done. Adding rows in their source order with each row's parent reproduces an outline's nesting and order.
     /// `createdAt` is at least one past the newest task's, so tasks added within one millisecond, or under a frozen
@@ -52,12 +54,14 @@ public enum StoreRules {
         _ creation: Creation
     ) -> (data: StoreData, task: TaskItem) {
         let parent = parentId.flatMap { id in data.tasks.first { $0.id == id } }
+        let section = parent == nil ? input.sectionId.flatMap { id in data.sections.first { $0.id == id } } : nil
         let task = TaskItem(
             id: creation.id,
             parentId: parent?.id,
             order: parent.map { Subtasks.nextSiblingOrder(data.tasks, $0.id) } ?? 0,
             title: input.title,
-            projectId: parent.map(\.projectId) ?? input.projectId,
+            projectId: parent.map(\.projectId) ?? section?.projectId ?? input.projectId,
+            sectionId: section?.id,
             labelIds: input.labelIds,
             due: input.due,
             recurrence: input.recurrence,
@@ -71,15 +75,24 @@ public enum StoreRules {
         return (next, task)
     }
 
-    /// A new project applies to every subtask under the task too.
+    /// A section moves a top-level task into the section's project, and a new project without a section leaves it in
+    /// none. Only top-level tasks sit in a section; a subtask shows under its parent. A new project applies to every
+    /// subtask under the task too.
     public static func updateTask(_ data: StoreData, _ id: String, _ patch: TaskPatch) -> StoreData {
-        guard var task = data.tasks.first(where: { $0.id == id }) else { return data }
+        guard let original = data.tasks.first(where: { $0.id == id }) else { return data }
+        var task = original
         patch.apply(to: &task)
+        let movesProject = patch.projectId.map { $0 != original.projectId } ?? false
+        if patch.sectionId != nil || movesProject {
+            let section = patch.sectionId.flatMap { $0 }.flatMap { id in data.sections.first { $0.id == id } }
+            if let section, original.parentId == nil { task.projectId = section.projectId }
+            task.sectionId = original.parentId == nil ? section?.id : nil
+        }
         var changed = [task]
-        if let projectId = patch.projectId {
+        if patch.projectId != nil || patch.sectionId != nil {
             changed += Subtasks.descendantsOf(data.tasks, id).map { t in
                 var t = t
-                t.projectId = projectId
+                t.projectId = task.projectId
                 return t
             }
         }
@@ -183,6 +196,8 @@ public enum StoreRules {
             var moved = child
             moved.parentId = parent.parentId
             moved.order = parent.parentId == nil ? 0 : parent.order + Double(index + 1) * gap / (count + 1)
+            // Children of a top-level task land beside it, in its section.
+            moved.sectionId = parent.parentId == nil ? parent.sectionId : nil
             switch method {
             case .direct:
                 break
@@ -197,8 +212,8 @@ public enum StoreRules {
         }
         let previous = children.map {
             ExplodedState(
-                id: $0.id, parentId: $0.parentId, order: $0.order, title: $0.title, labelIds: $0.labelIds, due: $0.due,
-                priority: $0.priority
+                id: $0.id, parentId: $0.parentId, order: $0.order, sectionId: $0.sectionId, title: $0.title,
+                labelIds: $0.labelIds, due: $0.due, priority: $0.priority
             )
         }
         var next = data
@@ -218,6 +233,7 @@ public enum StoreRules {
             if state.parentId.map(ids.contains) ?? true {
                 task.parentId = state.parentId
                 task.order = state.order
+                task.sectionId = state.sectionId
             }
             task.title = state.title
             task.labelIds = state.labelIds
@@ -246,11 +262,109 @@ public enum StoreRules {
         return next
     }
 
-    /// Deleting a project deletes its tasks, subtasks included, since they share their root's project.
+    /// Deleting a project deletes its sections and tasks, subtasks included, since they share their root's project.
     public static func deleteProject(_ data: StoreData, _ id: String) -> StoreData {
         var next = data
         next.projects = data.projects.filter { $0.id != id }
+        next.sections = data.sections.filter { $0.projectId != id }
         next.tasks = data.tasks.filter { $0.projectId != id }
+        return next
+    }
+
+    /// A project's sections in their order: by `order`, then `createdAt`, then `id`, like subtasks.
+    public static func sectionsOf(_ sections: [ProjectSection], _ projectId: String) -> [ProjectSection] {
+        sections.filter { $0.projectId == projectId }.stableSorted { a, b in
+            if a.order != b.order { return a.order < b.order }
+            if a.createdAt != b.createdAt { return a.createdAt < b.createdAt }
+            if a.id != b.id { return a.id.utf16.lexicographicallyPrecedes(b.id.utf16) }
+            return nil
+        }
+    }
+
+    private static func sameName(_ a: String, _ b: String) -> Bool { a.lowercased() == b.lowercased() }
+
+    /// Adds a section last in its project. Names stay unique in a project ignoring case, since `/name` must resolve to
+    /// one section, so a taken name returns the section that has it.
+    public static func addSection(
+        _ data: StoreData,
+        _ projectId: String,
+        _ name: String,
+        _ creation: Creation
+    ) -> (data: StoreData, section: ProjectSection) {
+        if let existing = data.sections.first(where: { $0.projectId == projectId && sameName($0.name, name) }) {
+            return (data, existing)
+        }
+        let last = sectionsOf(data.sections, projectId).last
+        let section = ProjectSection(
+            id: creation.id,
+            projectId: projectId,
+            name: name,
+            order: last.map { $0.order + 1 } ?? 0,
+            createdAt: creation.now
+        )
+        var next = data
+        next.sections.append(section)
+        return (next, section)
+    }
+
+    public static func renameSection(_ data: StoreData, _ id: String, _ name: String) -> StoreData {
+        guard let section = data.sections.first(where: { $0.id == id }),
+              !data.sections.contains(where: { $0.id != id && $0.projectId == section.projectId && sameName($0.name, name) })
+        else { return data }
+        var next = data
+        next.sections = data.sections.map { s in
+            guard s.id == id else { return s }
+            var s = s
+            s.name = name
+            return s
+        }
+        return next
+    }
+
+    /// Writes only the moved section's `order`, like a subtask move, or renumbers the project's sections when the gap
+    /// is too small to split.
+    public static func moveSection(_ data: StoreData, _ id: String, _ index: Int) -> StoreData {
+        guard let section = data.sections.first(where: { $0.id == id }) else { return data }
+        let siblings = sectionsOf(data.sections, section.projectId)
+        let others = siblings.filter { $0.id != id }
+        let at = max(0, min(index, others.count))
+        let previous = at > 0 ? others[at - 1].order : nil
+        let following = at < others.count ? others[at].order : nil
+        var orders: [String: Double] = [:]
+        if let previous, let following, following - previous < Subtasks.minOrderGap {
+            var placed = others
+            placed.insert(section, at: at)
+            for (order, s) in placed.enumerated() where s.order != Double(order) { orders[s.id] = Double(order) }
+        } else if siblings.firstIndex(where: { $0.id == id }) != at {
+            switch (previous, following) {
+            case (nil, nil): orders[id] = 0
+            case let (nil, following?): orders[id] = following - 1
+            case let (previous?, nil): orders[id] = previous + 1
+            case let (previous?, following?): orders[id] = (previous + following) / 2
+            }
+        }
+        guard !orders.isEmpty else { return data }
+        var next = data
+        next.sections = data.sections.map { s in
+            guard let order = orders[s.id] else { return s }
+            var s = s
+            s.order = order
+            return s
+        }
+        return next
+    }
+
+    /// Every task in a section, done ones and subtasks included: what deleting it removes, so its prompt can count them.
+    public static func sectionTasks(_ tasks: [TaskItem], _ id: String) -> [TaskItem] {
+        tasks.filter { $0.sectionId == id }.flatMap { [$0] + Subtasks.descendantsOf(tasks, $0.id) }
+    }
+
+    /// Deleting a section deletes its tasks with their subtasks, as Todoist does and as deleting a project does.
+    public static func deleteSection(_ data: StoreData, _ id: String) -> StoreData {
+        let removed = Set(sectionTasks(data.tasks, id).map(\.id))
+        var next = data
+        next.sections = data.sections.filter { $0.id != id }
+        next.tasks = data.tasks.filter { !removed.contains($0.id) }
         return next
     }
 

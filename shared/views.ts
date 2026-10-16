@@ -1,6 +1,7 @@
 import { z } from 'zod';
-import { taskSchema } from './sync/protocol.ts';
-import { addDays, toDateKey, type DateKey, type Due, type Task } from './task.ts';
+import { sectionsOf } from './store.ts';
+import { sectionSchema, taskSchema } from './sync/protocol.ts';
+import { addDays, toDateKey, type DateKey, type Due, type Section, type Task } from './task.ts';
 import { occurrenceDue, placeKey, scheduledDue } from './triggers.ts';
 import { dateKeySchema } from './values.ts';
 
@@ -16,6 +17,11 @@ export const noDateSchema = z
 	.object({ loose: z.array(taskSchema), places: z.array(placeSectionSchema) })
 	.meta({ id: 'NoDate' });
 export type NoDate = z.infer<typeof noDateSchema>;
+
+export const projectGroupSchema = z
+	.object({ section: sectionSchema.nullable(), tasks: z.array(taskSchema) })
+	.meta({ id: 'ProjectGroup', description: 'One heading of a project view. The group with no section has none.' });
+export type ProjectGroup = z.infer<typeof projectGroupSchema>;
 
 export const todaySchema = z.object({ overdue: z.array(taskSchema), today: z.array(taskSchema) }).meta({ id: 'Today' });
 export type Today = z.infer<typeof todaySchema>;
@@ -79,6 +85,20 @@ export function projectTasks(tasks: readonly Task[], projectId: string) {
 	return topLevel(tasks)
 		.filter(t => t.projectId === projectId)
 		.toSorted((a, b) => compareTasks(a, b));
+}
+
+/**
+ * A project's open top-level tasks under its sections: the tasks in no section first, then every section in its order,
+ * empty ones included so each stays a place to add to.
+ */
+export function projectGroups(tasks: readonly Task[], sections: readonly Section[], projectId: string): ProjectGroup[] {
+	const list = projectTasks(tasks, projectId);
+	const own = sectionsOf(sections, projectId);
+	const placed = new Set(own.map(s => s.id));
+	return [
+		{ section: null, tasks: list.filter(t => t.sectionId === null || !placed.has(t.sectionId)) },
+		...own.map(section => ({ section, tasks: list.filter(t => t.sectionId === section.id) })),
+	];
 }
 
 export function labelTasks(tasks: readonly Task[], labelId: string) {

@@ -7,6 +7,7 @@ const inboxTasks = recorded('views', views.inboxTasks);
 const labelTasks = recorded('views', views.labelTasks);
 const noDateTasks = recorded('views', views.noDateTasks);
 const projectTasks = recorded('views', views.projectTasks);
+const projectGroups = recorded('views', views.projectGroups);
 const todayTasks = recorded('views', views.todayTasks);
 const upcomingGroups = recorded('views', views.upcomingGroups);
 const placeTasks = recorded('views', views.placeTasks);
@@ -23,6 +24,7 @@ const task = (id: string, fields: Partial<Task> = {}): Task => ({
 	title: id,
 	notes: '',
 	projectId: null,
+	sectionId: null,
 	labelIds: [],
 	due: null,
 	recurrence: null,
@@ -70,6 +72,26 @@ describe('task views', () => {
 	test('a project lists its open top-level tasks', () => {
 		expect(ids(projectTasks(tasks, 'home'))).toEqual(['tomorrow', 'after DST', 'home chore']);
 		expect(projectTasks(tasks, 'missing')).toEqual([]);
+	});
+
+	test('a project groups its tasks under its sections, the tasks in no section first and empty sections kept', () => {
+		const section = (id: string, order: number, projectId = 'p') => ({ id, projectId, name: id, order, createdAt: 1 });
+		const sections = [section('later', 2), section('next', 1), section('empty', 3), section('elsewhere', 0, 'q')];
+		const list = [
+			task('loose', { projectId: 'p' }),
+			task('soon', { projectId: 'p', sectionId: 'next', priority: 2 }),
+			task('first', { projectId: 'p', sectionId: 'next', priority: 1 }),
+			task('child', { projectId: 'p', parentId: 'soon' }),
+			task('done', { projectId: 'p', sectionId: 'later', completedAt: 5 }),
+			task('stray', { projectId: 'p', sectionId: 'elsewhere' }),
+			task('someday', { projectId: 'p', sectionId: 'later' }),
+		];
+		expect(projectGroups(list, sections, 'p').map(g => [g.section?.id ?? null, ids(g.tasks)])).toEqual([
+			[null, ['loose', 'stray']],
+			['next', ['first', 'soon']],
+			['later', ['someday']],
+			['empty', []],
+		]);
 	});
 
 	test('a label lists every open task with it, subtasks included', () => {

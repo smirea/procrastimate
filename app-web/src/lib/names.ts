@@ -1,11 +1,12 @@
 import type { Component } from 'svelte';
 import Hash from 'phosphor-svelte/lib/Hash';
+import Rows from 'phosphor-svelte/lib/Rows';
 import Tag from 'phosphor-svelte/lib/Tag';
-import { labelIdsOf, projectIdsOf, type Named, type Sigil } from 'shared/name-search.ts';
+import { labelIdsOf, projectIdsOf, sectionIdsOf, type Named, type Sigil } from 'shared/name-search.ts';
 import type { Task } from 'shared/task.ts';
 import { store } from './store.svelte.ts';
 
-export type NameKind = 'project' | 'label';
+export type NameKind = 'project' | 'section' | 'label';
 
 export type NameSource = {
 	sigil: Sigil;
@@ -17,7 +18,18 @@ export type NameSource = {
 	create: (name: string) => Named;
 };
 
-export const NAME_SOURCES: Record<NameKind, NameSource> = {
+/** A section belongs to one project, so its source lists and creates that project's sections. */
+export const sectionSource = (projectId: string): NameSource => ({
+	sigil: '/',
+	list: 'Sections',
+	noun: 'section',
+	icon: Rows,
+	items: () => store.sectionsOf(projectId),
+	idsOf: sectionIdsOf,
+	create: name => store.addSection(projectId, name)!,
+});
+
+export const NAME_SOURCES: Record<Exclude<NameKind, 'section'>, NameSource> = {
 	project: {
 		sigil: '#',
 		list: 'Projects',

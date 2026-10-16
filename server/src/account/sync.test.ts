@@ -178,7 +178,7 @@ describe.each(storeFactories)('POST /api/sync on the %s store', (_name, createSt
 				labelIds: [errands.id],
 				createdAt,
 			});
-			const base = { tasks: [typed], projects: [home], labels: [errands] };
+			const base = { tasks: [typed], projects: [home], sections: [], labels: [errands] };
 			const { state } = mergeBackup(base, backup, { newId: counter(`${prefix}-`), now: createdAt });
 			return snapshotOf(state);
 		};

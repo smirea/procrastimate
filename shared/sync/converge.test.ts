@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'bun:test';
+import * as rules from '../store.ts';
 import { completeTask, descendantsOf, reopenTask } from '../subtasks.ts';
 import type { Task } from '../task.ts';
 import { diff } from './diff.ts';
@@ -53,6 +54,8 @@ function undo(current: Snapshot, before: Snapshot, after: Snapshot): Snapshot {
 		return withEntities(s, kind, [...kept, ...restored]);
 	}, current);
 }
+
+const onData = (s: Snapshot, rule: (data: rules.StoreData) => rules.StoreData): Snapshot => ({ ...s, ...rule(s) });
 
 function commands(rand: Random, device: string, now: number, ids: () => string): Command[] {
 	const anyTask = (s: Snapshot) => rand.pick(s.tasks);
@@ -198,11 +201,44 @@ function commands(rand: Random, device: string, now: number, ids: () => string):
 			run: s => {
 				const p = rand.pick(s.projects);
 				if (!p) return s;
-				return {
-					...s,
-					projects: s.projects.filter(x => x.id !== p.id),
-					tasks: s.tasks.filter(t => t.projectId !== p.id),
-				};
+				return onData(s, data => rules.deleteProject(data, p.id));
+			},
+		},
+		{
+			name: 'add section',
+			run: s => {
+				const p = rand.pick(s.projects);
+				return p ? onData(s, data => rules.addSection(data, p.id, rand.pick(NAMES)!, { id: ids(), now }).data) : s;
+			},
+		},
+		{
+			name: 'rename section',
+			run: s => {
+				const section = rand.pick(s.sections);
+				return section ? onData(s, data => rules.renameSection(data, section.id, rand.pick(NAMES)!)) : s;
+			},
+		},
+		{
+			name: 'move section',
+			run: s => {
+				const section = rand.pick(s.sections);
+				return section ? onData(s, data => rules.moveSection(data, section.id, rand.int(4))) : s;
+			},
+		},
+		{
+			name: 'move to section',
+			run: s => {
+				const t = anyTask(s);
+				const section = rand.pick([null, ...s.sections]);
+				if (!t || section === undefined) return s;
+				return onData(s, data => rules.updateTask(data, t.id, { sectionId: section?.id ?? null }));
+			},
+		},
+		{
+			name: 'delete section',
+			run: s => {
+				const section = rand.pick(s.sections);
+				return section ? onData(s, data => rules.deleteSection(data, section.id)) : s;
 			},
 		},
 		{
@@ -216,15 +252,29 @@ function commands(rand: Random, device: string, now: number, ids: () => string):
 							...s.projects,
 							(imported = project(ids(), { name: 'Imported', sourceKey: 'todoist:project:1', createdAt: now })),
 						];
+				let sections = s.sections;
+				let later = sections.find(x => x.sourceKey === 'todoist:section:1');
+				if (!later && !sections.some(x => x.projectId === imported!.id && x.name.toLowerCase() === 'later')) {
+					later = {
+						id: ids(),
+						projectId: imported.id,
+						name: 'Later',
+						order: 0,
+						createdAt: now,
+						sourceKey: 'todoist:section:1',
+					};
+					sections = [...sections, later];
+				}
+				const sectionId = later?.projectId === imported.id ? later.id : null;
 				const tasks = [...s.tasks];
 				if (!has('todoist:task:1'))
-					tasks.push(task(ids(), { projectId: imported.id, sourceKey: 'todoist:task:1', createdAt: now }));
+					tasks.push(task(ids(), { projectId: imported.id, sectionId, sourceKey: 'todoist:task:1', createdAt: now }));
 				const root = tasks.find(t => t.sourceKey === 'todoist:task:1')!;
 				if (!has('todoist:task:2'))
 					tasks.push(
 						task(ids(), { parentId: root.id, projectId: root.projectId, sourceKey: 'todoist:task:2', createdAt: now }),
 					);
-				return { ...s, projects, tasks };
+				return { ...s, projects, sections, tasks };
 			},
 		},
 		{
@@ -242,6 +292,7 @@ function invariants(s: Snapshot): string[] {
 	const byId = new Map(s.tasks.map(t => [t.id, t]));
 	const projects = new Set(s.projects.map(p => p.id));
 	const labels = new Set(s.labels.map(l => l.id));
+	const sections = new Map(s.sections.map(x => [x.id, x]));
 	const unique = (what: string, keys: (string | undefined)[]) => {
 		const present = keys.filter(k => k !== undefined);
 		if (new Set(present).size !== present.length) problems.push(`duplicate ${what}`);
@@ -261,6 +312,9 @@ function invariants(s: Snapshot): string[] {
 		if (t.projectId !== root.projectId) problems.push(`${t.id} not in its root's project`);
 		if (t.projectId !== null && !projects.has(t.projectId)) problems.push(`${t.id} in missing project`);
 		if (t.labelIds.some(id => !labels.has(id))) problems.push(`${t.id} has a missing label`);
+		if (t.sectionId !== null && t.parentId !== null) problems.push(`subtask ${t.id} in a section`);
+		if (t.sectionId !== null && sections.get(t.sectionId)?.projectId !== t.projectId)
+			problems.push(`${t.id} in a section outside its project`);
 		unique(`labels on ${t.id}`, t.labelIds);
 	}
 	unique(
@@ -270,6 +324,15 @@ function invariants(s: Snapshot): string[] {
 	unique(
 		'project names',
 		s.projects.map(p => p.name.toLowerCase()),
+	);
+	for (const x of s.sections) if (!projects.has(x.projectId)) problems.push(`section ${x.id} in missing project`);
+	unique(
+		'section names',
+		s.sections.map(x => `${x.projectId} ${x.name.toLowerCase()}`),
+	);
+	unique(
+		'section source keys',
+		s.sections.map(x => x.sourceKey),
 	);
 	unique(
 		'task source keys',
@@ -352,7 +415,11 @@ function simulate(seed: number) {
 			);
 		}
 	}
-	return { steps: steps.length, tasks: truth.tasks.length };
+	return {
+		steps: steps.length,
+		tasks: truth.tasks.length,
+		sectioned: truth.tasks.filter(t => t.sectionId !== null).length,
+	};
 }
 
 describe('convergence', () => {
@@ -362,7 +429,8 @@ describe('convergence', () => {
 	});
 
 	test('the fuzz exercises real work', () => {
-		const sizes = seeds.slice(0, 10).map(seed => simulate(seed).tasks);
-		expect(sizes.some(n => n > 3)).toBe(true);
+		const runs = seeds.slice(0, 10).map(seed => simulate(seed));
+		expect(runs.some(run => run.tasks > 3)).toBe(true);
+		expect(runs.some(run => run.sectioned > 0)).toBe(true);
 	});
 });

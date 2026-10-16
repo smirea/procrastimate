@@ -7,6 +7,7 @@ import {
 	labelSchema,
 	opSchema,
 	projectSchema,
+	sectionSchema,
 	shareTargetSchema,
 	taskSchema as syncedTaskSchema,
 } from './sync/protocol.ts';
@@ -28,6 +29,7 @@ const interval = z.number().int().positive();
 const taskSchema = syncedTaskSchema.extend({
 	parentId: syncedTaskSchema.shape.parentId.default(null),
 	order: syncedTaskSchema.shape.order.default(0),
+	sectionId: syncedTaskSchema.shape.sectionId.default(null),
 	labelIds: syncedTaskSchema.shape.labelIds.default([]),
 	location: syncedTaskSchema.shape.location.default(null),
 	event: syncedTaskSchema.shape.event.default(null),
@@ -100,6 +102,7 @@ const spaceSectionSchema = z
 		targets: z.array(shareTargetSchema).default([]),
 		tasks: tasksSchema,
 		projects: z.array(projectSchema).default([]),
+		sections: z.array(sectionSchema).default([]),
 		labels: z.array(labelSchema).default([]),
 	})
 	// Core decodes the section's tasks with the same loading rules, so it writes its own decoder.
@@ -123,6 +126,7 @@ const snapshotSchema = z
 	.object({
 		tasks: tasksSchema,
 		projects: z.array(projectSchema),
+		sections: z.array(sectionSchema).default([]),
 		labels: z.array(labelSchema).default([]),
 		remindersCheckedAt: z.number().int(),
 		sync: syncSchema.optional(),
@@ -141,6 +145,7 @@ export type Snapshot = z.infer<typeof snapshotSchema>;
 export const emptySnapshot = (now: number): Snapshot => ({
 	tasks: [],
 	projects: [],
+	sections: [],
 	labels: [],
 	remindersCheckedAt: now,
 	spaces: {},
