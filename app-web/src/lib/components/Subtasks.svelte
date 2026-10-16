@@ -17,7 +17,7 @@
 	import TaskRow from './TaskRow.svelte';
 	import { store } from '../store.svelte.ts';
 	import { parseSubtask, subtaskTask } from '../subtask-draft.ts';
-	import { sheets, toasts, motion } from '../ui.svelte.ts';
+	import { leaving, sheets, toasts, motion } from '../ui.svelte.ts';
 	import { Reorder } from '../reorder.svelte.ts';
 	let { task }: { task: Task } = $props();
 
@@ -110,6 +110,7 @@
 	<ul bind:this={list} {@attach reorder.list} class="relative" aria-label={`Subtasks of ${task.title}`}>
 		{#each children as child, index (child.id)}
 			<li
+				{@attach leaving}
 				data-subtask={child.title}
 				data-subtask-id={child.id}
 				class="relative rounded-2xl"
