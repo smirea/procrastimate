@@ -14,7 +14,7 @@
 	import Hash from 'phosphor-svelte/lib/Hash';
 	import Tray from 'phosphor-svelte/lib/Tray';
 	import { formatDue } from 'shared/format.ts';
-	import { formatEvent, formatLocation, scheduledDue } from 'shared/triggers.ts';
+	import { formatEvent, formatLocation, formatRadius, scheduledDue } from 'shared/triggers.ts';
 	import { parseMemoSource } from 'shared/memo-tasks.ts';
 	import { parseQuickAdd } from 'shared/quick-add.ts';
 	import type { Task } from 'shared/task.ts';
@@ -250,6 +250,7 @@
 			<span class="chip" data-active="true" title={`${task.location.address ?? task.location.name} · Set on iPhone`}>
 				<MapPin size={15} weight="fill" />
 				{formatLocation(task.location)}
+				<span class="text-muted">{formatRadius(task.location.radius)}</span>
 			</span>
 		{/if}
 	</div>

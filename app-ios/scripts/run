@@ -154,12 +154,23 @@ async function deploy(target: Target, project: string) {
         await command(existsSync(simulator) ? ["open", "-a", simulator, "--args", "-CurrentDeviceUDID", target.id]
             : ["open", "-a", join(dirname(developer), "Applications/DeviceHub.app"), `devices://device/open?id=${target.id}`]);
         await command(["xcrun", "simctl", "install", target.id, app]);
+        await grantPermissions(target.id, bundle);
         await command(["xcrun", "simctl", "launch", "--terminate-running-process", target.id, bundle]);
     } else {
         await command(["xcrun", "devicectl", "device", "install", "app", "--device", target.id, app]);
         await command(["xcrun", "devicectl", "device", "process", "launch", "--device", target.id, "--terminate-existing", bundle]);
     }
     console.log(`App is running on ${target.name}.`);
+}
+
+/**
+ * Granted before every launch so no permission alert covers the screen in a demo or UI test run. simctl's location and
+ * calendar grants hold only once the app is installed, and simctl cannot grant notifications at all; applesimutils can.
+ */
+async function grantPermissions(udid: string, bundle: string) {
+    await command(["xcrun", "simctl", "privacy", udid, "grant", "location-always", bundle]);
+    await command(["xcrun", "simctl", "privacy", udid, "grant", "calendar", bundle]);
+    await command(["applesimutils", "--byId", udid, "--bundle", bundle, "--setPermissions", "notifications=YES"], true);
 }
 
 async function main() {
@@ -176,6 +187,9 @@ Watching is enabled by default. Saves rebuild and restart the app. Ctrl-C stops 
     if (values.targets) {
         console.table(all.map(({ kind, name, state, runtime, id }) => ({ default: id === target.id ? "*" : "", target: name, kind, state, runtime: runtime ?? "", id })));
         return;
+    }
+    if (target.kind === "simulator" && !Bun.which("applesimutils")) {
+        throw new Error("Simulator runs grant notifications with applesimutils: brew tap wix/brew && brew install applesimutils");
     }
     console.log(`Selected ${target.name} (${target.kind}${target.runtime ? `, ${target.runtime}` : ""}).`);
     const projects = readdirSync(root).filter(file => file.endsWith(".xcodeproj"));

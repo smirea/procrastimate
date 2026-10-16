@@ -130,6 +130,46 @@ public enum Triggers {
         return min((shorter / 2 / 10).rounded() * 10, 100_000, deviceMax ?? .infinity)
     }
 
+    public static func formatRadius(_ meters: Double) -> String {
+        let tens = (meters / 10).rounded() * 10
+        if tens < 1_000 { return "\(Int(tens)) m" }
+        let tenths = (meters / 100).rounded() / 10
+        if tenths < 10 { return tenths == tenths.rounded() ? "\(Int(tenths)) km" : "\(tenths) km" }
+        return "\(Int((meters / 1_000).rounded())) km"
+    }
+
+    public struct RadiusPreset: Hashable, Sendable {
+        public let name: String
+        public let meters: Double
+    }
+
+    public static let radiusPresets = [
+        RadiusPreset(name: "Block", meters: 150),
+        RadiusPreset(name: "Neighborhood", meters: 1_000),
+        RadiusPreset(name: "City", meters: 10_000),
+    ]
+
+    /// Below about 100 m a phone's cell and Wi-Fi fix can't tell inside from outside, so crossings would flicker.
+    public static let minRadius = 100.0
+
+    /// The largest radius the editor offers: 100 km, like a fitted place, or less where the device watches less.
+    public static func maxRadius(deviceMax: Double?) -> Double {
+        max(minRadius, min(100_000, deviceMax ?? .infinity))
+    }
+
+    /// The radius slider runs on a log scale, so its first half spans a block to a neighborhood and its second half
+    /// reaches a city, and it snaps to 10 m below a kilometer, 100 m below 10 km, and whole kilometers above.
+    public static func radius(atSlider position: Double, max upper: Double) -> Double {
+        let raw = minRadius * pow(upper / minRadius, min(1, Swift.max(0, position)))
+        let step: Double = raw < 1_000 ? 10 : raw < 10_000 ? 100 : 1_000
+        return min(upper, Swift.max(minRadius, (raw / step).rounded() * step))
+    }
+
+    public static func sliderPosition(of radius: Double, max upper: Double) -> Double {
+        guard upper > minRadius else { return 1 }
+        return min(1, Swift.max(0, log(radius / minRadius) / log(upper / minRadius)))
+    }
+
     static func fixed4(_ value: Double) -> String { String(format: "%.4f", locale: Locale(identifier: "en_US_POSIX"), value) }
 
     static func open(_ tasks: [TaskItem]) -> [TaskItem] {
