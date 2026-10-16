@@ -1,10 +1,11 @@
 /**
  * Removes an agent's worktree once its PR is merged: `bun scripts/teardown-worktree.ts <branch> [--force]`.
+ * A worktree on a detached HEAD has no branch: pass its directory name with --force instead.
  * Run it from the main checkout. Stops its servers, deletes its simulators, worktree, and branches, and updates master.
  */
 import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 
 function run(cmd: string[], opts: { allowFail?: boolean } = {}): string {
 	const result = spawnSync(cmd[0]!, cmd.slice(1), { encoding: 'utf8' });
@@ -16,7 +17,7 @@ function run(cmd: string[], opts: { allowFail?: boolean } = {}): string {
 const args = process.argv.slice(2);
 const force = args.includes('--force');
 const branch = args.find(arg => !arg.startsWith('-'));
-if (!branch) throw new Error('Usage: bun scripts/teardown-worktree.ts <branch> [--force]');
+if (!branch) throw new Error('Usage: bun scripts/teardown-worktree.ts <branch | worktree directory name> [--force]');
 
 const root = run(['git', 'rev-parse', '--show-toplevel']);
 if (run(['git', 'rev-parse', '--git-dir']) !== run(['git', 'rev-parse', '--git-common-dir'])) {
@@ -34,7 +35,7 @@ const worktree = run(['git', 'worktree', 'list', '--porcelain'])
 		path: block.match(/^worktree (.+)$/m)?.[1],
 		branch: block.match(/^branch refs\/heads\/(.+)$/m)?.[1],
 	}))
-	.find(entry => entry.branch === branch)?.path;
+	.find(entry => entry.branch === branch || (entry.path && basename(entry.path) === branch))?.path;
 
 if (worktree) {
 	const override = join(worktree, '.env.override');

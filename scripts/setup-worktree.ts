@@ -5,7 +5,7 @@
 import { spawnSync } from 'node:child_process';
 import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:net';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 
 function run(cmd: string[], opts: { quiet?: boolean } = {}): string {
 	const result = spawnSync(cmd[0]!, cmd.slice(1), {
@@ -98,14 +98,16 @@ if (/^TURSO_DATABASE_URL='?[^'\s#]/m.test(serverEnv)) {
 
 run(['bun', 'run', 'generate']);
 
+// A detached HEAD (mid-rebase) has no branch; the worktree directory is unique too, and teardown reads the name back from ./sim.
+const branch = git('branch', '--show-current') || basename(root);
 // Restricted to shell-safe characters because ./sim embeds it in single quotes.
-const simulator = git('branch', '--show-current').replaceAll(/[^\w.-]/g, '-');
+const simulator = branch.replaceAll(/[^\w.-]/g, '-');
 const sim = join(root, 'sim');
 writeFileSync(sim, `#!/bin/sh\ncd "$(dirname "$0")" && exec bun scripts/worktree-sim.ts '${simulator}' "$@"\n`);
 chmodSync(sim, 0o755);
 
 console.log(`
-Worktree ready on ${git('branch', '--show-current')}.
+Worktree ready on ${branch}.
   web     http://127.0.0.1:${base}  (bun run start)
   api     ${apiUrl}
   e2e     ports ${base + 10}-${base + 11}  (bun run test:e2e)
