@@ -37,6 +37,12 @@ test('title, notes, and subtask fields grow with their text instead of cutting i
 	await expect(app.quickAdd().getByRole('button', { name: 'Add task', exact: true })).toBeInViewport();
 	await page.evaluate(() => document.documentElement.style.setProperty('--keyboard-inset', '0px'));
 
+	// With the subtask list open, the sheet has to fit it too, so the title goes back to four lines.
+	await app.quickAdd().getByRole('button', { name: 'Add subtask' }).click();
+	const withSubtasks = await box(taskName);
+	expect(withSubtasks.height).toBeLessThanOrEqual(withSubtasks.lineHeight * 4 + 6);
+	await taskName.focus();
+
 	// A pasted line break joins the lines, since the field is one line that wraps.
 	await taskName.fill(`${LONG}\nsecond line`);
 	await expect(taskName).toHaveValue(`${LONG} second line`);

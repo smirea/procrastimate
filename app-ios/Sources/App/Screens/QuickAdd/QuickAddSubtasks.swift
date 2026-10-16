@@ -35,7 +35,7 @@ struct QuickAddSubtasks: View {
                     label: "Add subtask",
                     placeholder: "Add subtask",
                     suggestProjects: false,
-                    maxHeight: 136,
+                    maxHeight: 76,
                     focused: focused,
                     onSubmit: { add(parsed) }
                 )

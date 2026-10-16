@@ -19,7 +19,7 @@ Add a task lets Stefan capture a task in one motion from anywhere in the app. Re
 - `add-dock` attaches quick add to the keyboard on a phone and hides the add button while it is open.
 - `add-chip-row` keeps the attribute chips on one line that scrolls sideways, with a `+` after it whose menu lists every action, opens the picked one's picker in the row, and pins or unpins buttons for every device.
 - `add-subtasks` takes subtask lines under the title from the checklist chip, parses each like `Add subtask`, removes a line with its `×`, and saves them under the new task in order.
-- `add-grow` grows the title with long text, to ten lines on iOS and twelve on the web (less when a phone web screen has no room above the keyboard), and the subtask field to six, then scrolls with the caret kept in view, including after a paste.
+- `add-grow` grows the title with long text, to ten lines on iOS and twelve on the web (less when a phone web screen has no room above the keyboard), or four while the subtask list is open, with the subtask field at three, then scrolls with the caret kept in view, including after a paste.
 - `add-toast` moves a toast to the top of a phone screen while quick add is open, so it never covers the chips.
 
 ## How to get to it (user POV)

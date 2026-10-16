@@ -58,9 +58,9 @@ private struct QuickAddForm: View {
                 placeholder: "Call mom tomorrow 5pm p1 remind me 30m before",
                 projectId: resolved.projectId,
                 listAt: $listAt,
-                // Ten lines, and six in a subtask field: long dictated titles stay readable while the chips and buttons
-                // still fit above the keyboard on the smallest iPhone.
-                maxHeight: 240,
+                // Ten lines, so a long dictated title stays readable. With the subtask list open the card has to fit it
+                // above the keyboard too, so the title goes back to four lines and the subtask field stays at three.
+                maxHeight: subtasksOpen || !subtasks.isEmpty ? 104 : 240,
                 focused: $focused,
                 onSubmit: { submit() }
             )
