@@ -10,6 +10,13 @@ import { DEFAULT_SETTINGS, type FieldsByKind, type Op, type Snapshot, type Task 
 
 export type Grant = Pick<ShareRow, 'targetKind' | 'targetId' | 'role'>;
 
+/**
+ * A whole-space edit share makes its holder a manager of the space, which only AI accounts are offered: it sees every
+ * project and label, writes them and sections like the owner, and makes public links.
+ */
+export const managesSpace = (grants: readonly Grant[]) =>
+	grants.some(grant => grant.targetKind === 'space' && grant.role === 'edit');
+
 export type Scope = {
 	/** Every task the grants reach, directly or as a descendant. */
 	tasks: ReadonlySet<string>;
@@ -62,6 +69,10 @@ export function scopeOf(snapshot: Snapshot, grants: readonly Grant[]): Scope {
 		}
 		if (grant.targetKind === 'project') projects.add(grant.targetId);
 		if (grant.targetKind === 'label') labels.add(grant.targetId);
+		if (grant.targetKind === 'space') {
+			for (const { id } of snapshot.projects) projects.add(id);
+			for (const { id } of snapshot.labels) labels.add(id);
+		}
 	}
 	for (const id of tasks) {
 		const task = byId.get(id)!;
@@ -151,15 +162,27 @@ function admitComment(working: Snapshot, scope: Scope, op: Op, actor: string): O
  * Which of a guest's ops may be written, checked in order against a working copy the admitted ops update. A guest
  * writes tasks and comments only: an existing task must be editable before and after the op, a new one editable
  * after it (under an editable parent, or in an edit-shared project or label). A delete only needs the task editable
- * before. Comments follow `admitComment`. Projects, sections, labels, read markers, and settings are never a guest's
- * to write.
+ * before. Comments follow `admitComment`. Projects, sections, and labels are only a manager's to write, never with a
+ * `sourceKey`, and read markers and settings are never a guest's.
  */
 export function admit(snapshot: Snapshot, grants: readonly Grant[], ops: readonly Op[], actor: string) {
 	const admitted: Op[] = [];
 	const refused: Op[] = [];
 	let working = snapshot;
 	let scope = scopeOf(working, grants);
+	const manager = managesSpace(grants);
 	for (const op of ops) {
+		if (op.kind === 'project' || op.kind === 'section' || op.kind === 'label') {
+			const { sourceKey } = op.fields as { sourceKey?: string | null };
+			if (manager && (sourceKey === undefined || sourceKey === null)) {
+				working = applyPatch(working, op);
+				scope = scopeOf(working, grants);
+				admitted.push(op);
+			} else {
+				refused.push(op);
+			}
+			continue;
+		}
 		if (op.kind === 'comment') {
 			const allowed = admitComment(working, scope, op, actor);
 			if (allowed) {

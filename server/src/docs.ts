@@ -1,4 +1,5 @@
 import agentOpenApi from '../../shared/api/generated/agent-openapi.json';
+import { LABEL_COLORS } from '../../shared/label-colors';
 
 /**
  * The docs an AI agent reads. `/api/docs` is public so an agent that only knows the host finds its way in;
@@ -22,10 +23,14 @@ export type Example = {
 	body?: unknown;
 };
 
-/** Stand in for a real task, comment, and image id in the examples; the docs test swaps in ones it made. */
+/** Stand in for real ids in the examples; the docs test swaps in ones it made. */
 export const TASK_ID = '<task-id>';
 export const COMMENT_ID = '<comment-id>';
 export const IMAGE_ID = '<image-id>';
+export const PROJECT_ID = '<project-id>';
+export const SECTION_ID = '<section-id>';
+export const LABEL_ID = '<label-id>';
+export const LINK_ID = '<link-id>';
 
 /** One per agent route at least. The docs test runs every one against a real space with an AI token. */
 export const agentExamples: readonly Example[] = [
@@ -73,6 +78,51 @@ export const agentExamples: readonly Example[] = [
 		path: '/api/images',
 		query: { id: IMAGE_ID, size: 'thumb' },
 	},
+	{
+		title: 'Publish a task as a read-only link anyone can open',
+		method: 'POST',
+		path: '/api/links',
+		body: { target: { kind: 'task', id: TASK_ID } },
+	},
+	{ title: 'List the public links', method: 'GET', path: '/api/links' },
+	{ title: 'Delete a public link', method: 'DELETE', path: '/api/links', query: { id: LINK_ID } },
+	{ title: 'Add a project', method: 'POST', path: '/api/projects', body: { name: 'Garden' } },
+	{
+		title: 'Rename a project',
+		method: 'PATCH',
+		path: '/api/projects',
+		query: { id: PROJECT_ID },
+		body: { name: 'Home repairs' },
+	},
+	{
+		title: 'Add a section to a project',
+		method: 'POST',
+		path: '/api/sections',
+		body: { projectId: PROJECT_ID, name: 'Next week' },
+	},
+	{
+		title: 'Rename a section and move it first',
+		method: 'PATCH',
+		path: '/api/sections',
+		query: { id: SECTION_ID },
+		body: { name: 'This week', index: 0 },
+	},
+	{ title: 'Add a label', method: 'POST', path: '/api/labels', body: { name: 'waiting', color: 'orange' } },
+	{
+		title: 'Rename and recolor a label',
+		method: 'PATCH',
+		path: '/api/labels',
+		query: { id: LABEL_ID },
+		body: { name: 'blocked', color: 'red' },
+	},
+	{ title: 'Delete a section and its tasks', method: 'DELETE', path: '/api/sections', query: { id: SECTION_ID } },
+	{ title: 'Delete a label', method: 'DELETE', path: '/api/labels', query: { id: LABEL_ID } },
+	{
+		title: 'Delete a project with its sections and tasks',
+		method: 'DELETE',
+		path: '/api/projects',
+		query: { id: PROJECT_ID },
+	},
 	{ title: 'Delete a task and its subtasks', method: 'DELETE', path: '/api/tasks', query: { id: TASK_ID } },
 	{
 		title: 'Sync from scratch, as the apps do',
@@ -101,7 +151,7 @@ function curl(origin: string, example: Example): string {
 export function startDocs(origin: string): string {
 	return `# ProcrastiMate
 
-ProcrastiMate is a personal task manager in the spirit of Todoist: tasks with due dates and times, repeats, priorities, reminders, and subtasks, sorted into projects and labels. Its owner can give an AI agent an account of its own that reads and changes their tasks over this HTTP API. Everything the agent does is credited to it in the owner's apps.
+ProcrastiMate is a personal task manager in the spirit of Todoist: tasks with due dates and times, repeats, priorities, reminders, subtasks, and comments, sorted into projects, sections, and labels. Its owner can give an AI agent an account of its own that reads and changes their tasks, organizes their projects and labels, and publishes read-only links over this HTTP API. Everything the agent does is credited to it in the owner's apps.
 
 ## Get a token
 
@@ -142,7 +192,7 @@ export function agentDocs(origin: string): string {
 	const examples = agentExamples.map(example => `### ${example.title}\n\n\`\`\`\n${curl(origin, example)}\n\`\`\``);
 	return `# ProcrastiMate agent API
 
-Base URL: \`${origin}\`. Send \`Authorization: Bearer <token>\` on every request and \`Content-Type: application/json\` with every body. You act as your AI account in your owner's whole space, and may edit every task in it. The apps show what you create, complete, or change as yours.
+Base URL: \`${origin}\`. Send \`Authorization: Bearer <token>\` on every request and \`Content-Type: application/json\` with every body. You act as your AI account in your owner's whole space. You may edit every task, project, section, and label in it, and publish read-only links to it. The apps show what you create, complete, or change as yours.
 
 The full schemas, as OpenAPI 3.1, are at \`GET ${origin}/api/docs/openapi\`.
 
@@ -152,7 +202,7 @@ These are the only routes a token may call. Every other route answers \`403 FORB
 
 ${routeTable()}
 
-Routes that take a task use \`?id=<task id>\`; editing or deleting a comment takes \`?id=<comment id>\`, and an image \`?id=<image id>\`. Ids come from \`GET /api/view\` or from the task a route returns. \`?space=\` is optional and defaults to the owner's space, the only one an AI account can reach.
+\`?id=\` names what a route acts on: a task on the task routes, a comment on the comment routes, and likewise an image, project, section, label, or link. Ids come from \`GET /api/view\`, \`GET /api/links\`, or what a route returns. \`?space=\` is optional and defaults to the owner's space, the only one an AI account can reach.
 
 ## Tasks
 
@@ -169,11 +219,18 @@ Routes that take a task use \`?id=<task id>\`; editing or deleting a comment tak
 - Comments are how you talk with the people on a task. The owner and anyone the task is shared with see them in the apps, with your name and an \`AI\` badge, and unread ones light up on the task's row.
 - \`body\` is free text; links in it open in the apps. You may edit or delete only your own comments.
 
-## Projects and labels
+## Projects, sections, and labels
 
-Read them from \`GET /api/view\`. Put a task in an existing one with \`#Project\` or \`@label\` in \`text\`, or with \`projectId\` and \`labelIds\`.
+Read them from \`GET /api/view\`. Put a task in one with \`#Project\`, \`/section\`, or \`@label\` in \`text\`, or with \`projectId\`, \`sectionId\`, and \`labelIds\`. A \`#name\` or \`@name\` that matches nothing stays in the task's title, so make the project or label first.
 
-An AI account cannot create, rename, or delete projects or labels: the API has no route for it, and sync drops such ops. Ask the owner to make them in the app. A \`#name\` or \`@name\` that matches nothing stays in the task's title.
+- A project is a list of tasks. Deleting it deletes its sections and every task in it.
+- A section is a heading inside one project. Its name is unique in the project, ignoring case, and \`index\` orders the sections from 0. Deleting it deletes its tasks.
+- A label tags tasks across projects. Its name is unique, ignoring case, and its \`color\` is one of \`${LABEL_COLORS.join('`, `')}\`. Deleting it only takes it off its tasks.
+- Adding a section or label with a name already taken returns the existing one, so a retry never makes a duplicate.
+
+## Public links
+
+\`POST /api/links\` publishes a task, a project, or a label as a read-only page at its \`url\`. Anyone with the URL sees the target's open and completed tasks, their subtasks, and the projects and labels they use, without signing in. Nobody can edit through a link. Asking again for the same target returns the same link. \`DELETE /api/links?id=\` revokes it at once. The owner sees and revokes the same links in the app's share sheet. Publish only what the owner asked you to share.
 
 ## Examples
 
@@ -185,14 +242,14 @@ ${examples.join('\n\n')}
 
 Errors are JSON \`{ "code", "message" }\`:
 
-- \`400 BAD_REQUEST\`: the input does not match the schema, or a new task has no title.
+- \`400 BAD_REQUEST\`: the input does not match the schema, a title or name is blank, or another label, or another section in the project, already has the name.
 - \`401 UNAUTHORIZED\`: the token is missing, wrong, or revoked.
 - \`403 FORBIDDEN\`: the route is not open to AI accounts, or the change touches something you may not edit.
-- \`404 NOT_FOUND\`: no task, comment, or image with that id is visible to you.
+- \`404 NOT_FOUND\`: nothing with that id is visible to you.
 
 ## Sync
 
-\`POST /api/sync\` is how the apps replicate. Most agents never need it, since \`GET /api/view\` and the task routes cover reading and editing. Send \`{ "cursor": 0, "ops": [] }\` to receive the whole visible snapshot with a \`cursor\` and a \`scope\`. Send that \`scope\` back next time to receive no changes while nothing you can see moved. Each op carries a fresh \`opId\` and a hybrid logical clock \`hlc\`; field-level last-writer-wins resolves conflicts. Task ops are applied when the task is editable before and after; project, label, and settings ops are acknowledged and dropped.
+\`POST /api/sync\` is how the apps replicate. Most agents never need it, since \`GET /api/view\` and the task routes cover reading and editing. Send \`{ "cursor": 0, "ops": [] }\` to receive the whole visible snapshot with a \`cursor\` and a \`scope\`. Send that \`scope\` back next time to receive no changes while nothing you can see moved. Each op carries a fresh \`opId\` and a hybrid logical clock \`hlc\`; field-level last-writer-wins resolves conflicts. Task ops are applied when the task is editable before and after, and project, section, and label ops apply too; settings and read-marker ops are acknowledged and dropped.
 `;
 }
 

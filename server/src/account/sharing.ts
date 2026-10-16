@@ -9,7 +9,7 @@ import type {
 	SharedView,
 	Space,
 } from '../../../shared/sharing';
-import { scopeOf, filterSnapshot } from '../../../shared/scope';
+import { filterSnapshot, managesSpace, scopeOf } from '../../../shared/scope';
 import type { Role } from '../../../shared/values';
 import { sha256, type AccountContext } from '../auth';
 import { agentPrompt } from '../docs';
@@ -95,6 +95,34 @@ export function createShare(
 		tellMembership(context, grantee, true);
 	}
 	return shareView(store, space, origin, share);
+}
+
+/**
+ * Public links through the agent API: the owner, and a manager of the space, list, make, and revoke the space's link
+ * shares. Everyone else is refused, so a guest cannot publish what it was shared.
+ */
+function requireManager({ access }: AccountContext) {
+	if (access.role !== 'owner' && !managesSpace(access.shares)) {
+		throw new ORPCError('FORBIDDEN', { message: 'Only the owner or an AI account can manage links' });
+	}
+}
+
+export function listLinks(context: AccountContext): ShareView[] {
+	requireManager(context);
+	return listShares(context).filter(share => share.grantee === null);
+}
+
+export function createLink(context: AccountContext, target: ShareTarget): ShareView {
+	requireManager(context);
+	return createShare(context, target, null, 'view');
+}
+
+export function deleteLink(context: AccountContext, id: string) {
+	requireManager(context);
+	if (!context.store.shares().some(share => share.id === id && share.grantee === null)) {
+		throw new ORPCError('NOT_FOUND', { message: 'No such link' });
+	}
+	deleteShare(context, id);
 }
 
 export function deleteShare(context: AccountContext, id: string) {

@@ -6,7 +6,18 @@ import { authHeaders, registerDevice, TEST_AUTH_SECRET, type DeviceCredentials }
 import { SHARED_ROUTES } from './actor';
 import api from './api';
 import type { Env } from './bindings';
-import { agentExamples, agentRoutes, COMMENT_ID, examplePath, IMAGE_ID, TASK_ID } from './docs';
+import {
+	agentExamples,
+	agentRoutes,
+	COMMENT_ID,
+	examplePath,
+	IMAGE_ID,
+	LABEL_ID,
+	LINK_ID,
+	PROJECT_ID,
+	SECTION_ID,
+	TASK_ID,
+} from './docs';
 
 const ORIGIN = 'https://procrastimate.test';
 
@@ -70,6 +81,18 @@ describe('agent docs', () => {
 			'POST /api/comments',
 			'PATCH /api/comments',
 			'DELETE /api/comments',
+			'POST /api/projects',
+			'PATCH /api/projects',
+			'DELETE /api/projects',
+			'POST /api/sections',
+			'PATCH /api/sections',
+			'DELETE /api/sections',
+			'POST /api/labels',
+			'PATCH /api/labels',
+			'DELETE /api/labels',
+			'GET /api/links',
+			'POST /api/links',
+			'DELETE /api/links',
 			'GET /api/images',
 		];
 		expect([...SHARED_ROUTES].toSorted()).toEqual(routes.toSorted());
@@ -83,7 +106,7 @@ describe('agent docs', () => {
 			.map(line => line.split(' | ').slice(0, 2).join(' ').replace(/^\| /, '').replaceAll('`', ''));
 		expect(tableRows).toEqual(routes);
 		expect(text).toContain('| POST | `/api/tasks` | Add a task. `text` reads like the app’s quick add');
-		expect(text).toContain('cannot create, rename, or delete projects or labels');
+		expect(text).toContain('| POST | `/api/links` | Publish a task, project, or label as a read-only link.');
 
 		const openApi = await asAi('GET', '/api/docs/openapi');
 		expect(openApi.headers.get('content-type')).toBe('application/json; charset=utf-8');
@@ -116,8 +139,21 @@ describe('agent docs', () => {
 			expect(uploaded.status).toBe(200);
 		}
 		await asAi('PATCH', `/api/tasks?id=${target.id}`, { images: [{ id: image, width: 4, height: 3 }] });
+		const made = async (path: string, body: unknown) =>
+			((await (await asAi('POST', path, body)).json()) as { id: string }).id;
+		const projectId = await made('/api/projects', { name: 'Chores' });
+		const sectionId = await made('/api/sections', { projectId, name: 'Later' });
+		const labelId = await made('/api/labels', { name: 'someday' });
+		const linkId = await made('/api/links', { target: { kind: 'project', id: projectId } });
 		const ids = (text: string) =>
-			text.replaceAll(TASK_ID, target.id).replaceAll(COMMENT_ID, comment.id).replaceAll(IMAGE_ID, image);
+			text
+				.replaceAll(TASK_ID, target.id)
+				.replaceAll(COMMENT_ID, comment.id)
+				.replaceAll(IMAGE_ID, image)
+				.replaceAll(PROJECT_ID, projectId)
+				.replaceAll(SECTION_ID, sectionId)
+				.replaceAll(LABEL_ID, labelId)
+				.replaceAll(LINK_ID, linkId);
 		const fill = (value: unknown) => JSON.parse(ids(JSON.stringify(value ?? null)));
 		const statuses = [];
 		for (const example of agentExamples) {

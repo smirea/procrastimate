@@ -4,11 +4,20 @@ import { authenticate, type AccountContext } from '../auth';
 import { taskActivity } from './activity';
 import {
 	createComment,
+	createLabel,
+	createProject,
+	createSection,
 	createTask,
+	editLabel,
+	editProject,
+	editSection,
 	editTask,
 	finishTask,
 	listComments,
 	removeComment,
+	removeLabel,
+	removeProject,
+	removeSection,
 	removeTask,
 	reopen,
 	updateComment,
@@ -17,10 +26,13 @@ import {
 import { deleteMemoTasks, listMemoTasks, putMemoTasks } from './memo-tasks';
 import { pushSchedule, refreshPush, subscribePush, unsubscribePush } from './push';
 import {
+	createLink,
 	createShare,
 	createToken,
+	deleteLink,
 	deleteShare,
 	deleteToken,
+	listLinks,
 	listShares,
 	listSpaces,
 	listTokens,
@@ -139,6 +151,50 @@ export const accountRouter = os.router({
 		),
 		delete: os.comments.delete.handler(async ({ input, context }) => {
 			await moved(context, () => removeComment(commands(context), input.query.id));
+			return { ok: true as const };
+		}),
+	},
+	projects: {
+		create: os.projects.create.handler(({ input, context }) =>
+			moved(context, () => createProject(commands(context), input.body.name)),
+		),
+		update: os.projects.update.handler(({ input, context }) =>
+			moved(context, () => editProject(commands(context), input.query.id, input.body.name)),
+		),
+		delete: os.projects.delete.handler(async ({ input, context }) => {
+			await moved(context, () => removeProject(commands(context), input.query.id));
+			return { ok: true as const };
+		}),
+	},
+	sections: {
+		create: os.sections.create.handler(({ input, context }) =>
+			moved(context, () => createSection(commands(context), input.body)),
+		),
+		update: os.sections.update.handler(({ input, context }) =>
+			moved(context, () => editSection(commands(context), input.query.id, input.body)),
+		),
+		delete: os.sections.delete.handler(async ({ input, context }) => {
+			await moved(context, () => removeSection(commands(context), input.query.id));
+			return { ok: true as const };
+		}),
+	},
+	labels: {
+		create: os.labels.create.handler(({ input, context }) =>
+			moved(context, () => createLabel(commands(context), input.body)),
+		),
+		update: os.labels.update.handler(({ input, context }) =>
+			moved(context, () => editLabel(commands(context), input.query.id, input.body)),
+		),
+		delete: os.labels.delete.handler(async ({ input, context }) => {
+			await moved(context, () => removeLabel(commands(context), input.query.id));
+			return { ok: true as const };
+		}),
+	},
+	links: {
+		list: os.links.list.handler(({ context }) => ({ links: listLinks(context) })),
+		create: os.links.create.handler(({ input, context }) => createLink(context, input.body.target)),
+		delete: os.links.delete.handler(({ input, context }) => {
+			deleteLink(context, input.query.id);
 			return { ok: true as const };
 		}),
 	},
