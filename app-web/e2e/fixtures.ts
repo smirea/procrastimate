@@ -1,5 +1,7 @@
 import { expect, test as base, type BrowserContext, type Page } from '@playwright/test';
 import { strToU8, zipSync } from 'fflate';
+import { randomUUID } from 'node:crypto';
+import type { Patch } from '../../shared/sync/protocol';
 import { todoistBackupFiles } from '../../shared/fixtures/todoist-backup.mts';
 
 /** Wednesday, October 14 2026, 10:00 UTC. The suite runs in the UTC time zone. */
@@ -119,6 +121,47 @@ export class App {
 				);
 			}
 		});
+	}
+
+	async taskId(title: string): Promise<string> {
+		const id = await this.page.evaluate(
+			title =>
+				(JSON.parse(localStorage.getItem('procrastimate')!) as { tasks: { id: string; title: string }[] }).tasks.find(
+					task => task.title === title,
+				)?.id,
+			title,
+		);
+		if (!id) throw new Error(`no task titled ${title}`);
+		return id;
+	}
+
+	/**
+	 * Writes synced fields as a second device of the same account, then reloads so this page pulls them. Use it for
+	 * fields the web cannot set, such as an iOS place. Editing the `procrastimate` localStorage document instead does
+	 * not stick, since this page's next sync replaces it with the server's state.
+	 */
+	async pushFromOtherDevice(...patches: Patch[]) {
+		await expect
+			.poll(() =>
+				this.page.evaluate(
+					() =>
+						(JSON.parse(localStorage.getItem('procrastimate')!) as { sync: { outbox: unknown[] } }).sync.outbox.length,
+				),
+			)
+			.toBe(0);
+		const device = randomUUID();
+		const response = await this.page.request.post('/api/sync', {
+			headers: { 'x-procrastimate-device': device },
+			// A minute ahead of this page's clock, so these writes win over any it made.
+			data: {
+				cursor: 0,
+				ops: patches.map(patch => ({ ...patch, opId: randomUUID(), hlc: `${Date.now() + 60_000}:0:${device}` })),
+			},
+		});
+		expect(response.status()).toBe(200);
+		expect((await response.json()).rejected ?? []).toEqual([]);
+		await this.page.reload();
+		await expect(this.page.getByRole('heading', { level: 1 })).toBeVisible();
 	}
 
 	async setNow(date: Date) {
