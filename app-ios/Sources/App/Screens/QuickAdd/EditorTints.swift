@@ -62,10 +62,13 @@ enum EditorTints {
 
 /// A focused editor that grows past the bottom of the visible area, such as `Add subtask` at the end of a long task's
 /// details, pushes its caret under the keyboard, and UIKit scrolls the caret into view only when the keyboard appears.
+/// One at its height cap keeps its old scroll offset after a paste or dictation, which hides the caret and the text
+/// just inserted, so the editor scrolls to the caret too.
 @MainActor
 enum EditorCaret {
     static func reveal() {
         guard let view = EditorTints.focusedTextView(), let range = view.selectedTextRange else { return }
+        view.scrollRangeToVisible(view.selectedRange)
         var ancestor = view.superview
         while let candidate = ancestor, !(candidate is UIScrollView) { ancestor = candidate.superview }
         guard let scroll = ancestor as? UIScrollView, let window = scroll.window else { return }

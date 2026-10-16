@@ -293,7 +293,7 @@
 				autofocus
 				enterkeyhint="send"
 				reserve={showMic}
-				lines={4}
+				lines={12}
 				class="text-[17px] font-medium"
 				{onkeydown}
 			/>
@@ -362,7 +362,7 @@
 					placeholder="Add subtask"
 					enterkeyhint="enter"
 					suggestProjects={false}
-					lines={3}
+					lines={6}
 					class="-ml-1 min-w-0 flex-1 py-1.5 text-[14px]"
 					onkeydown={onsubtaskkeydown}
 					onblur={() => {

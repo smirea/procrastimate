@@ -8,6 +8,7 @@
 	import NameSuggestions from './NameSuggestions.svelte';
 	import { store } from '../store.svelte.ts';
 	import { NAME_SOURCES, sectionSource, type NameKind, type NameSource } from '../names.ts';
+	import { followCaret } from '../caret.ts';
 
 	let {
 		value = $bindable(),
@@ -38,7 +39,7 @@
 		listAt?: number | null;
 		class?: string;
 		reserve?: boolean;
-		/** How many lines the field grows to before it scrolls. */
+		/** How many lines the field grows to before it scrolls, if the screen above the keyboard has room for them. */
 		lines?: number;
 		oninput?: () => void;
 		onkeydown?: (event: KeyboardEvent) => void;
@@ -216,6 +217,7 @@
 	<textarea
 		bind:this={input}
 		bind:value
+		use:followCaret
 		aria-label={label}
 		aria-autocomplete="list"
 		aria-controls={suggestions.length ? `${uid}-names` : undefined}
@@ -267,11 +269,17 @@
 		padding-right: 2.5rem;
 	}
 
-	/* Wraps and grows with the text up to `lines`, then scrolls, with the tint layer scrolled to match. */
+	/*
+	 * Wraps and grows with the text up to `lines`, then scrolls, with the tint layer scrolled to match. Short of that it
+	 * stops where it would push the sheet's buttons off a phone screen above the keyboard, though never below 3 lines.
+	 */
 	.smart-layer {
 		white-space: pre-wrap;
 		overflow-wrap: anywhere;
-		max-height: calc(1.6em * var(--lines) + 0.25rem);
+		max-height: max(
+			calc(1.6em * min(var(--lines), 3) + 0.25rem),
+			min(calc(1.6em * var(--lines) + 0.25rem), calc(100dvh - var(--keyboard-inset, 0px) - 16rem))
+		);
 		scrollbar-width: none;
 		font: inherit;
 		letter-spacing: inherit;
