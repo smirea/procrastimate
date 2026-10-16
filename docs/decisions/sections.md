@@ -26,7 +26,7 @@ Todoist-style sections: named headings inside one project that group its tasks.
 ## Views
 
 - `projectGroups` in `shared/views.ts` (ported to `Views.projectGroups`) is the project view: the tasks in no section first, under no heading, then every section in order, empty ones included, so each stays a place to add to.
-- Web: each section has a heading with its task count, a copy button, and an actions menu (Rename, Move up, Move down, Delete section), its own `Add task` that opens quick add in that section, and the project ends with `Add section`. Rows elsewhere name their place as `Project / Section`.
+- Web: each section has a heading with its pending count (see [Visual language](visual-language.md)), a copy button, and an actions menu (Rename, Move up, Move down, Delete section), its own `Add task` that opens quick add in that section, and the project ends with `Add section`. Rows elsewhere name their place as `Project / Section`.
 - iOS: section headers in the project screen open a menu on long press (Add task, Copy as Markdown, Rename, Move up, Move down, Delete section). `Add section` is in the project's actions menu. Reordering is Move up and Move down on both clients rather than drag, so the two match and work without precise touch. Projects, a plain list in the sidebar and Browse, drag instead (see [Domain](domain.md)).
 - **Copy as Markdown** of a project is `projectDocument`: the loose tasks first, then `## <section>` with its tasks. Empty sections are left out. A section heading copies just that section.
 

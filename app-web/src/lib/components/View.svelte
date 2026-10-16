@@ -5,11 +5,13 @@
 	import type { MarkdownDocument } from 'shared/markdown.ts';
 	import AddTaskButton from './AddTaskButton.svelte';
 	import CopyButton from './CopyButton.svelte';
+	import PendingCount from './PendingCount.svelte';
 	import { motion, type QuickAddDefaults } from '../ui.svelte.ts';
 
 	let {
 		title,
 		subtitle,
+		open,
 		empty,
 		emptyTitle,
 		emptyHint,
@@ -22,6 +24,8 @@
 	}: {
 		title: Snippet | string;
 		subtitle?: string;
+		/** The open rows the view lists, for the count beside the title. */
+		open?: number;
 		empty: boolean;
 		emptyTitle: string;
 		emptyHint: string;
@@ -38,11 +42,14 @@
 <section in:fly={motion({ y: 6, duration: 220, easing: cubicOut })}>
 	<header class="mb-5 flex items-end justify-between gap-4">
 		<div class="min-w-0">
-			{#if typeof title === 'string'}
-				<h1 class="truncate text-[26px] font-semibold tracking-tight">{title}</h1>
-			{:else}
-				{@render title()}
-			{/if}
+			<div class="flex min-w-0 items-baseline gap-2.5">
+				{#if typeof title === 'string'}
+					<h1 class="truncate text-[26px] font-semibold tracking-tight">{title}</h1>
+				{:else}
+					{@render title()}
+				{/if}
+				{#if open !== undefined}<PendingCount {open} class="text-[15px]" />{/if}
+			</div>
 			{#if subtitle}<p class="mt-0.5 text-[13px] text-muted">{subtitle}</p>{/if}
 		</div>
 		<div class="flex shrink-0 items-center gap-1">

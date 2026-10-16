@@ -33,7 +33,7 @@ struct CompletedScreen: View {
                 Section {
                     ForEach(day.tasks) { CompletedRow(task: $0, showProject: true) }
                 } header: {
-                    ListHeading(text: heading, tasks: day.tasks)
+                    ListHeading(text: heading, tasks: day.tasks, counted: false)
                 }
             }
         }

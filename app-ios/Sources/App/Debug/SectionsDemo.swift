@@ -11,7 +11,7 @@ enum SectionsDemo {
         let home = store.projects.first { $0.name == "Home" } ?? store.addProject("Home")
         if store.sections(of: home.id).isEmpty {
             store.addTask(NewTask(title: "Water plants", projectId: home.id))
-            for (name, titles) in [("Next up", ["Paint door", "Fix fence"]), ("Later", ["Clean gutters"])] {
+            for (name, titles) in [("Next up", ["Paint door", "Fix fence", "Oil hinges", "Patch wall", "Hang shelf"]), ("Later", ["Clean gutters"])] {
                 guard let section = store.addSection(home.id, name) else { continue }
                 for title in titles { store.addTask(NewTask(title: title, projectId: home.id, sectionId: section.id)) }
             }

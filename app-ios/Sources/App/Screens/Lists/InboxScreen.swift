@@ -14,7 +14,8 @@ struct InboxScreen: View {
             isEmpty: due.overdue.isEmpty && due.today.isEmpty && days.isEmpty,
             emptyTitle: "Nothing scheduled",
             emptyHint: "Tasks with a date show up here by day.",
-            root: true
+            root: true,
+            open: due.overdue.count + due.today.count + days.reduce(0) { $0 + $1.tasks.count }
         ) {
             if !due.overdue.isEmpty {
                 Section {
@@ -56,7 +57,8 @@ struct NoDateScreen: View {
             emptyTitle: "Inbox zero",
             emptyHint: "Tap + to capture a task.",
             root: true,
-            newestFirst: $newestFirst
+            newestFirst: $newestFirst,
+            open: view.loose.count + view.places.reduce(0) { $0 + $1.tasks.count }
         ) {
             ForEach(view.loose) { row($0) }
             ForEach(view.places, id: \.key) { place in

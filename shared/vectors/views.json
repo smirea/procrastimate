@@ -6789,6 +6789,46 @@
 					]
 				}
 			]
+		},
+		{
+			"fn": "pendingCount",
+			"test": "pending count › shows only above 4 open rows",
+			"input": [
+				0
+			],
+			"output": null
+		},
+		{
+			"fn": "pendingCount",
+			"test": "pending count › shows only above 4 open rows",
+			"input": [
+				1
+			],
+			"output": null
+		},
+		{
+			"fn": "pendingCount",
+			"test": "pending count › shows only above 4 open rows",
+			"input": [
+				4
+			],
+			"output": null
+		},
+		{
+			"fn": "pendingCount",
+			"test": "pending count › shows only above 4 open rows",
+			"input": [
+				5
+			],
+			"output": 5
+		},
+		{
+			"fn": "pendingCount",
+			"test": "pending count › shows only above 4 open rows",
+			"input": [
+				12
+			],
+			"output": 12
 		}
 	]
 }
