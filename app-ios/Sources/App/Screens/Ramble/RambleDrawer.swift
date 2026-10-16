@@ -412,7 +412,7 @@ struct RambleDrawer: View {
             DueChip(due: entry.task.due) { due in update(entry.id) { $0.due = due } }
             PriorityChip(priority: entry.task.priority ?? .p4) { priority in update(entry.id) { $0.priority = priority } }
             LabelsChip(labelIds: entry.task.labelIds) { ids in update(entry.id) { $0.labelIds = ids } }
-            ProjectChip(projectId: entry.task.projectId) { id in update(entry.id) { $0.projectId = id } }
+            ProjectChip(projectId: entry.task.projectId, showsSections: false) { id, _ in update(entry.id) { $0.projectId = id } }
             if let recurrence = entry.task.recurrence {
                 Button { update(entry.id) { $0.recurrence = nil } } label: {
                     Chip(systemImage: "repeat", text: Format.formatRecurrence(recurrence, entry.task.due), tone: .toneRepeat)

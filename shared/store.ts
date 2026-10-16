@@ -103,7 +103,16 @@ export const explodeMethodSchema = z.enum(['direct', 'prefix', 'inherit']).meta(
 export type ExplodeMethod = z.infer<typeof explodeMethodSchema>;
 
 export const explodedStateSchema = taskSchema
-	.pick({ id: true, parentId: true, order: true, title: true, labelIds: true, due: true, priority: true })
+	.pick({
+		id: true,
+		parentId: true,
+		order: true,
+		sectionId: true,
+		title: true,
+		labelIds: true,
+		due: true,
+		priority: true,
+	})
 	.meta({
 		id: 'ExplodedState',
 		description: 'The fields exploding subtasks changes, as they were. Undo writes back only these.',
@@ -252,7 +261,9 @@ export function explodeSubtasks(
 	const gap = nextOrder === null ? children.length + 1 : nextOrder - parent.order;
 	const orderAt = (index: number) => (parent.parentId ? parent.order + ((index + 1) * gap) / (children.length + 1) : 0);
 	const changed = children.map((child, index): Task => {
-		const moved = { ...child, parentId: parent.parentId, order: orderAt(index) };
+		// Children of a top-level task land beside it, in its section.
+		const sectionId = parent.parentId === null ? parent.sectionId : null;
+		const moved = { ...child, parentId: parent.parentId, order: orderAt(index), sectionId };
 		if (method === 'prefix') return { ...moved, title: `${parent.title}: ${child.title}` };
 		if (method === 'direct') return moved;
 		return {
@@ -262,10 +273,11 @@ export function explodeSubtasks(
 			priority: child.priority === DEFAULT_PRIORITY ? parent.priority : child.priority,
 		};
 	});
-	const previous = children.map(({ id, parentId, order, title, labelIds, due, priority }) => ({
+	const previous = children.map(({ id, parentId, order, sectionId, title, labelIds, due, priority }) => ({
 		id,
 		parentId,
 		order,
+		sectionId,
 		title,
 		labelIds,
 		due,
@@ -277,8 +289,8 @@ export function explodeSubtasks(
 /** A subtask whose parent was deleted since stays where it is, so it never goes unreachable. */
 export function restoreExploded(data: StoreData, previous: readonly ExplodedState[]): StoreData {
 	const ids = new Set(data.tasks.map(t => t.id));
-	const restored = previous.map(({ parentId, order, ...state }) =>
-		parentId === null || ids.has(parentId) ? { ...state, parentId, order } : state,
+	const restored = previous.map(({ parentId, order, sectionId, ...state }) =>
+		parentId === null || ids.has(parentId) ? { ...state, parentId, order, sectionId } : state,
 	);
 	return { ...data, tasks: put(data.tasks, restored) };
 }

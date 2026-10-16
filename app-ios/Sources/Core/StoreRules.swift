@@ -196,6 +196,8 @@ public enum StoreRules {
             var moved = child
             moved.parentId = parent.parentId
             moved.order = parent.parentId == nil ? 0 : parent.order + Double(index + 1) * gap / (count + 1)
+            // Children of a top-level task land beside it, in its section.
+            moved.sectionId = parent.parentId == nil ? parent.sectionId : nil
             switch method {
             case .direct:
                 break
@@ -210,8 +212,8 @@ public enum StoreRules {
         }
         let previous = children.map {
             ExplodedState(
-                id: $0.id, parentId: $0.parentId, order: $0.order, title: $0.title, labelIds: $0.labelIds, due: $0.due,
-                priority: $0.priority
+                id: $0.id, parentId: $0.parentId, order: $0.order, sectionId: $0.sectionId, title: $0.title,
+                labelIds: $0.labelIds, due: $0.due, priority: $0.priority
             )
         }
         var next = data
@@ -231,6 +233,7 @@ public enum StoreRules {
             if state.parentId.map(ids.contains) ?? true {
                 task.parentId = state.parentId
                 task.order = state.order
+                task.sectionId = state.sectionId
             }
             task.title = state.title
             task.labelIds = state.labelIds

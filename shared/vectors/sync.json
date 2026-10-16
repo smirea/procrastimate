@@ -102,6 +102,7 @@
 							"projectId": null,
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": null,
 							"title": ""
 						},
@@ -161,6 +162,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"sourceKey": null,
 						"title": "Milk"
 					},
@@ -272,6 +274,7 @@
 							"projectId": null,
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"sourceKey": null,
 							"title": "t"
 						},
@@ -311,6 +314,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"sourceKey": null,
 						"title": "t"
 					},
@@ -389,6 +393,7 @@
 							"name": "p"
 						}
 					],
+					"sections": [],
 					"settings": {
 						"dictation": "native",
 						"timeZone": null
@@ -414,6 +419,7 @@
 							"projectId": "p",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"title": "t1"
 						},
 						{
@@ -434,6 +440,7 @@
 							"projectId": null,
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"title": "t2"
 						}
 					]
@@ -453,6 +460,7 @@
 							"name": "p"
 						}
 					],
+					"sections": [],
 					"settings": {
 						"dictation": "native",
 						"timeZone": null
@@ -478,6 +486,7 @@
 							"projectId": "p",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"title": "t1"
 						},
 						{
@@ -498,6 +507,7 @@
 							"projectId": null,
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"title": "t2"
 						}
 					]
@@ -518,6 +528,7 @@
 							"name": "p"
 						}
 					],
+					"sections": [],
 					"settings": {
 						"dictation": "elevenlabs",
 						"timeZone": null
@@ -541,6 +552,7 @@
 							"projectId": "p",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"title": "t1"
 						},
 						{
@@ -561,6 +573,7 @@
 							"projectId": null,
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"title": "theirs"
 						}
 					]
@@ -580,6 +593,7 @@
 							"name": "p"
 						}
 					],
+					"sections": [],
 					"settings": {
 						"dictation": "native",
 						"timeZone": "Europe/Paris"
@@ -603,6 +617,7 @@
 							"projectId": "p",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"title": "Renamed offline"
 						}
 					]

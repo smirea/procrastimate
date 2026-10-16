@@ -313,10 +313,12 @@ struct PlaceMenuContent: View {
     @Environment(\.space) private var space
     let selection: Binding<Place>
     @Binding var creating: Bool
+    /// A ramble entry has no section, so its picker lists projects only.
+    var showsSections = true
 
     var body: some View {
         let projects = store.projects(in: space)
-        let sections = store.data(in: space).sections
+        let sections = showsSections ? store.data(in: space).sections : []
         let sectioned = { (project: Project) in sections.contains { $0.projectId == project.id } }
         Picker("Project", selection: selection) {
             SwiftUI.Label("Inbox", systemImage: "tray").tag(Place())
@@ -347,6 +349,7 @@ struct ProjectChip: View {
     @Environment(Store.self) private var store
     let projectId: String?
     var sectionId: String?
+    var showsSections = true
     let onChange: @MainActor (String?, String?) -> Void
 
     @State private var creating = false
@@ -359,7 +362,8 @@ struct ProjectChip: View {
                     get: { Place(projectId: projectId, sectionId: sectionId) },
                     set: { onChange($0.projectId, $0.sectionId) }
                 ),
-                creating: $creating
+                creating: $creating,
+                showsSections: showsSections
             )
         } label: {
             Chip(systemImage: projectId == nil ? "tray" : "number", text: name, tone: projectId == nil ? .muted : .ink)

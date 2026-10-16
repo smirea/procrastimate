@@ -1205,15 +1205,17 @@ extension API {
         public var id: String
         public var parentId: String?
         public var order: Double
+        public var sectionId: String?
         public var title: String
         public var labelIds: [String]
         public var due: Due?
         public var priority: Priority
 
-        public init(id: String, parentId: String? = nil, order: Double, title: String, labelIds: [String] = [], due: Due? = nil, priority: Priority) {
+        public init(id: String, parentId: String? = nil, order: Double, sectionId: String? = nil, title: String, labelIds: [String] = [], due: Due? = nil, priority: Priority) {
             self.id = id
             self.parentId = parentId
             self.order = order
+            self.sectionId = sectionId
             self.title = title
             self.labelIds = labelIds
             self.due = due
@@ -1224,6 +1226,7 @@ extension API {
             case id = "id"
             case parentId = "parentId"
             case order = "order"
+            case sectionId = "sectionId"
             case title = "title"
             case labelIds = "labelIds"
             case due = "due"
@@ -1235,6 +1238,7 @@ extension API {
             id = try container.decode(String.self, forKey: .id)
             parentId = try container.decode(String?.self, forKey: .parentId)
             order = try container.decode(Double.self, forKey: .order)
+            sectionId = try container.decode(String?.self, forKey: .sectionId)
             title = try container.decode(String.self, forKey: .title)
             labelIds = try container.decode([String].self, forKey: .labelIds)
             due = try container.decode(Due?.self, forKey: .due)
@@ -1246,6 +1250,7 @@ extension API {
             try container.encode(self.id, forKey: .id)
             try container.encode(self.parentId, forKey: .parentId)
             try container.encode(self.order, forKey: .order)
+            try container.encode(self.sectionId, forKey: .sectionId)
             try container.encode(self.title, forKey: .title)
             try container.encode(self.labelIds, forKey: .labelIds)
             try container.encode(self.due, forKey: .due)

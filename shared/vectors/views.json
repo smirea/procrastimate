@@ -25,6 +25,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "no date"
 					},
 					{
@@ -45,6 +46,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "urgent, no date"
 					},
 					{
@@ -70,6 +72,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "today 5pm"
 					},
 					{
@@ -93,6 +96,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "today, no time"
 					},
 					{
@@ -116,6 +120,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "today 9am"
 					},
 					{
@@ -139,6 +144,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "today 9am urgent"
 					},
 					{
@@ -164,6 +170,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "overdue"
 					},
 					{
@@ -187,6 +194,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "long overdue"
 					},
 					{
@@ -210,6 +218,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "done today"
 					},
 					{
@@ -233,6 +242,7 @@
 						"projectId": "home",
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "tomorrow"
 					},
 					{
@@ -256,6 +266,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "tomorrow 8am"
 					},
 					{
@@ -281,6 +292,7 @@
 						"projectId": "home",
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "after DST"
 					},
 					{
@@ -301,6 +313,7 @@
 						"projectId": "home",
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "home chore"
 					},
 					{
@@ -321,6 +334,7 @@
 						"projectId": "home",
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "done chore"
 					},
 					{
@@ -346,6 +360,7 @@
 						"projectId": "home",
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "subtask"
 					},
 					{
@@ -369,6 +384,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "inbox subtask"
 					}
 				],
@@ -393,6 +409,7 @@
 					"projectId": null,
 					"recurrence": null,
 					"reminders": [],
+					"sectionId": null,
 					"title": "urgent, no date"
 				},
 				{
@@ -413,6 +430,7 @@
 					"projectId": null,
 					"recurrence": null,
 					"reminders": [],
+					"sectionId": null,
 					"title": "no date"
 				}
 			]
@@ -440,6 +458,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "no date"
 					},
 					{
@@ -460,6 +479,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "urgent, no date"
 					},
 					{
@@ -485,6 +505,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "today 5pm"
 					},
 					{
@@ -508,6 +529,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "today, no time"
 					},
 					{
@@ -531,6 +553,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "today 9am"
 					},
 					{
@@ -554,6 +577,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "today 9am urgent"
 					},
 					{
@@ -579,6 +603,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "overdue"
 					},
 					{
@@ -602,6 +627,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "long overdue"
 					},
 					{
@@ -625,6 +651,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "done today"
 					},
 					{
@@ -648,6 +675,7 @@
 						"projectId": "home",
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "tomorrow"
 					},
 					{
@@ -671,6 +699,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "tomorrow 8am"
 					},
 					{
@@ -696,6 +725,7 @@
 						"projectId": "home",
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "after DST"
 					},
 					{
@@ -716,6 +746,7 @@
 						"projectId": "home",
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "home chore"
 					},
 					{
@@ -736,6 +767,7 @@
 						"projectId": "home",
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "done chore"
 					},
 					{
@@ -761,6 +793,7 @@
 						"projectId": "home",
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "subtask"
 					},
 					{
@@ -784,6 +817,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "inbox subtask"
 					}
 				],
@@ -811,6 +845,7 @@
 					"projectId": "home",
 					"recurrence": null,
 					"reminders": [],
+					"sectionId": null,
 					"title": "tomorrow"
 				},
 				{
@@ -836,6 +871,7 @@
 					"projectId": "home",
 					"recurrence": null,
 					"reminders": [],
+					"sectionId": null,
 					"title": "after DST"
 				},
 				{
@@ -856,6 +892,7 @@
 					"projectId": "home",
 					"recurrence": null,
 					"reminders": [],
+					"sectionId": null,
 					"title": "home chore"
 				}
 			]
@@ -883,6 +920,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "no date"
 					},
 					{
@@ -903,6 +941,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "urgent, no date"
 					},
 					{
@@ -928,6 +967,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "today 5pm"
 					},
 					{
@@ -951,6 +991,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "today, no time"
 					},
 					{
@@ -974,6 +1015,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "today 9am"
 					},
 					{
@@ -997,6 +1039,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "today 9am urgent"
 					},
 					{
@@ -1022,6 +1065,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "overdue"
 					},
 					{
@@ -1045,6 +1089,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "long overdue"
 					},
 					{
@@ -1068,6 +1113,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "done today"
 					},
 					{
@@ -1091,6 +1137,7 @@
 						"projectId": "home",
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "tomorrow"
 					},
 					{
@@ -1114,6 +1161,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "tomorrow 8am"
 					},
 					{
@@ -1139,6 +1187,7 @@
 						"projectId": "home",
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "after DST"
 					},
 					{
@@ -1159,6 +1208,7 @@
 						"projectId": "home",
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "home chore"
 					},
 					{
@@ -1179,6 +1229,7 @@
 						"projectId": "home",
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "done chore"
 					},
 					{
@@ -1204,6 +1255,7 @@
 						"projectId": "home",
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "subtask"
 					},
 					{
@@ -1227,12 +1279,343 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "inbox subtask"
 					}
 				],
 				"missing"
 			],
 			"output": []
+		},
+		{
+			"fn": "projectGroups",
+			"test": "task views › a project groups its tasks under its sections, the tasks in no section first and empty sections kept",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 29,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "loose",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "p",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "loose"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 30,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "soon",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 2,
+						"projectId": "p",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "next",
+						"title": "soon"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 31,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "first",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 1,
+						"projectId": "p",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "next",
+						"title": "first"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 32,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "child",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "soon",
+						"priority": 4,
+						"projectId": "p",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "child"
+					},
+					{
+						"completedAt": 5,
+						"completedBy": null,
+						"createdAt": 33,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "done",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "p",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "later",
+						"title": "done"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 34,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "stray",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "p",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "elsewhere",
+						"title": "stray"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 35,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "someday",
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "p",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "later",
+						"title": "someday"
+					}
+				],
+				[
+					{
+						"createdAt": 1,
+						"id": "later",
+						"name": "later",
+						"order": 2,
+						"projectId": "p"
+					},
+					{
+						"createdAt": 1,
+						"id": "next",
+						"name": "next",
+						"order": 1,
+						"projectId": "p"
+					},
+					{
+						"createdAt": 1,
+						"id": "empty",
+						"name": "empty",
+						"order": 3,
+						"projectId": "p"
+					},
+					{
+						"createdAt": 1,
+						"id": "elsewhere",
+						"name": "elsewhere",
+						"order": 0,
+						"projectId": "q"
+					}
+				],
+				"p"
+			],
+			"output": [
+				{
+					"section": null,
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 29,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "loose",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "p",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "loose"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 34,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "stray",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "p",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": "elsewhere",
+							"title": "stray"
+						}
+					]
+				},
+				{
+					"section": {
+						"createdAt": 1,
+						"id": "next",
+						"name": "next",
+						"order": 1,
+						"projectId": "p"
+					},
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 31,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "first",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 1,
+							"projectId": "p",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": "next",
+							"title": "first"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 30,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "soon",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 2,
+							"projectId": "p",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": "next",
+							"title": "soon"
+						}
+					]
+				},
+				{
+					"section": {
+						"createdAt": 1,
+						"id": "later",
+						"name": "later",
+						"order": 2,
+						"projectId": "p"
+					},
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 35,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "someday",
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "p",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": "later",
+							"title": "someday"
+						}
+					]
+				},
+				{
+					"section": {
+						"createdAt": 1,
+						"id": "empty",
+						"name": "empty",
+						"order": 3,
+						"projectId": "p"
+					},
+					"tasks": []
+				}
+			]
 		},
 		{
 			"fn": "labelTasks",
@@ -1257,6 +1640,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "no date"
 					},
 					{
@@ -1277,6 +1661,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "urgent, no date"
 					},
 					{
@@ -1302,6 +1687,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "today 5pm"
 					},
 					{
@@ -1325,6 +1711,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "today, no time"
 					},
 					{
@@ -1348,6 +1735,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "today 9am"
 					},
 					{
@@ -1371,6 +1759,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "today 9am urgent"
 					},
 					{
@@ -1396,6 +1785,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "overdue"
 					},
 					{
@@ -1419,6 +1809,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "long overdue"
 					},
 					{
@@ -1442,6 +1833,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "done today"
 					},
 					{
@@ -1465,6 +1857,7 @@
 						"projectId": "home",
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "tomorrow"
 					},
 					{
@@ -1488,6 +1881,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "tomorrow 8am"
 					},
 					{
@@ -1513,6 +1907,7 @@
 						"projectId": "home",
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "after DST"
 					},
 					{
@@ -1533,6 +1928,7 @@
 						"projectId": "home",
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "home chore"
 					},
 					{
@@ -1553,6 +1949,7 @@
 						"projectId": "home",
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "done chore"
 					},
 					{
@@ -1578,6 +1975,7 @@
 						"projectId": "home",
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "subtask"
 					},
 					{
@@ -1601,6 +1999,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "inbox subtask"
 					}
 				],
@@ -1630,6 +2029,7 @@
 					"projectId": null,
 					"recurrence": null,
 					"reminders": [],
+					"sectionId": null,
 					"title": "overdue"
 				},
 				{
@@ -1655,6 +2055,7 @@
 					"projectId": null,
 					"recurrence": null,
 					"reminders": [],
+					"sectionId": null,
 					"title": "today 5pm"
 				},
 				{
@@ -1680,6 +2081,7 @@
 					"projectId": "home",
 					"recurrence": null,
 					"reminders": [],
+					"sectionId": null,
 					"title": "subtask"
 				},
 				{
@@ -1705,6 +2107,7 @@
 					"projectId": "home",
 					"recurrence": null,
 					"reminders": [],
+					"sectionId": null,
 					"title": "after DST"
 				}
 			]
@@ -1732,6 +2135,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "no date"
 					},
 					{
@@ -1752,6 +2156,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "urgent, no date"
 					},
 					{
@@ -1777,6 +2182,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "today 5pm"
 					},
 					{
@@ -1800,6 +2206,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "today, no time"
 					},
 					{
@@ -1823,6 +2230,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "today 9am"
 					},
 					{
@@ -1846,6 +2254,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "today 9am urgent"
 					},
 					{
@@ -1871,6 +2280,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "overdue"
 					},
 					{
@@ -1894,6 +2304,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "long overdue"
 					},
 					{
@@ -1917,6 +2328,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "done today"
 					},
 					{
@@ -1940,6 +2352,7 @@
 						"projectId": "home",
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "tomorrow"
 					},
 					{
@@ -1963,6 +2376,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "tomorrow 8am"
 					},
 					{
@@ -1988,6 +2402,7 @@
 						"projectId": "home",
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "after DST"
 					},
 					{
@@ -2008,6 +2423,7 @@
 						"projectId": "home",
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "home chore"
 					},
 					{
@@ -2028,6 +2444,7 @@
 						"projectId": "home",
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "done chore"
 					},
 					{
@@ -2053,6 +2470,7 @@
 						"projectId": "home",
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "subtask"
 					},
 					{
@@ -2076,6 +2494,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "inbox subtask"
 					}
 				],
@@ -2104,6 +2523,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "long overdue"
 					},
 					{
@@ -2129,6 +2549,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "overdue"
 					}
 				],
@@ -2154,6 +2575,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "today 9am urgent"
 					},
 					{
@@ -2177,6 +2599,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "today 9am"
 					},
 					{
@@ -2202,6 +2625,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "today 5pm"
 					},
 					{
@@ -2225,6 +2649,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "today, no time"
 					},
 					{
@@ -2250,6 +2675,7 @@
 						"projectId": "home",
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "subtask"
 					}
 				]
@@ -2278,6 +2704,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "no date"
 					},
 					{
@@ -2298,6 +2725,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "urgent, no date"
 					},
 					{
@@ -2323,6 +2751,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "today 5pm"
 					},
 					{
@@ -2346,6 +2775,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "today, no time"
 					},
 					{
@@ -2369,6 +2799,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "today 9am"
 					},
 					{
@@ -2392,6 +2823,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "today 9am urgent"
 					},
 					{
@@ -2417,6 +2849,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "overdue"
 					},
 					{
@@ -2440,6 +2873,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "long overdue"
 					},
 					{
@@ -2463,6 +2897,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "done today"
 					},
 					{
@@ -2486,6 +2921,7 @@
 						"projectId": "home",
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "tomorrow"
 					},
 					{
@@ -2509,6 +2945,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "tomorrow 8am"
 					},
 					{
@@ -2534,6 +2971,7 @@
 						"projectId": "home",
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "after DST"
 					},
 					{
@@ -2554,6 +2992,7 @@
 						"projectId": "home",
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "home chore"
 					},
 					{
@@ -2574,6 +3013,7 @@
 						"projectId": "home",
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "done chore"
 					},
 					{
@@ -2599,6 +3039,7 @@
 						"projectId": "home",
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "subtask"
 					},
 					{
@@ -2622,6 +3063,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "inbox subtask"
 					}
 				],
@@ -2652,6 +3094,7 @@
 							"projectId": null,
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"title": "tomorrow 8am"
 						},
 						{
@@ -2675,6 +3118,7 @@
 							"projectId": "home",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"title": "tomorrow"
 						}
 					]
@@ -2703,6 +3147,7 @@
 							"projectId": null,
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"title": "inbox subtask"
 						}
 					]
@@ -2733,6 +3178,7 @@
 							"projectId": "home",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"title": "after DST"
 						}
 					]
@@ -2777,7 +3223,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 29,
+						"createdAt": 36,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -2806,12 +3252,13 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "notes"
 					},
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 30,
+						"createdAt": 37,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -2847,12 +3294,13 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "jan"
 					},
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 31,
+						"createdAt": 38,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -2881,12 +3329,13 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "missed"
 					},
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 32,
+						"createdAt": 39,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -2915,12 +3364,13 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "next week"
 					},
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 33,
+						"createdAt": 40,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -2942,6 +3392,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "kite"
 					}
 				],
@@ -2952,7 +3403,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 31,
+						"createdAt": 38,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -2981,6 +3432,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "missed"
 					}
 				],
@@ -2988,7 +3440,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 30,
+						"createdAt": 37,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -3024,12 +3476,13 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "jan"
 					},
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 29,
+						"createdAt": 36,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -3058,6 +3511,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "notes"
 					}
 				]
@@ -3071,7 +3525,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 29,
+						"createdAt": 36,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -3100,12 +3554,13 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "notes"
 					},
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 30,
+						"createdAt": 37,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -3141,12 +3596,13 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "jan"
 					},
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 31,
+						"createdAt": 38,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -3175,12 +3631,13 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "missed"
 					},
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 32,
+						"createdAt": 39,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -3209,12 +3666,13 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "next week"
 					},
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 33,
+						"createdAt": 40,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -3236,6 +3694,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "kite"
 					}
 				],
@@ -3248,7 +3707,7 @@
 						{
 							"completedAt": null,
 							"completedBy": null,
-							"createdAt": 32,
+							"createdAt": 39,
 							"createdBy": null,
 							"due": null,
 							"event": {
@@ -3277,6 +3736,7 @@
 							"projectId": null,
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"title": "next week"
 						}
 					]
@@ -3291,7 +3751,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 29,
+						"createdAt": 36,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -3320,12 +3780,13 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "notes"
 					},
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 30,
+						"createdAt": 37,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -3361,12 +3822,13 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "jan"
 					},
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 31,
+						"createdAt": 38,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -3395,12 +3857,13 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "missed"
 					},
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 32,
+						"createdAt": 39,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -3429,12 +3892,13 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "next week"
 					},
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 33,
+						"createdAt": 40,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -3456,6 +3920,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "kite"
 					}
 				],
@@ -3466,7 +3931,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 31,
+					"createdAt": 38,
 					"createdBy": null,
 					"due": null,
 					"event": {
@@ -3495,12 +3960,13 @@
 					"projectId": null,
 					"recurrence": null,
 					"reminders": [],
+					"sectionId": null,
 					"title": "missed"
 				},
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 30,
+					"createdAt": 37,
 					"createdBy": null,
 					"due": null,
 					"event": {
@@ -3536,12 +4002,13 @@
 					"projectId": null,
 					"recurrence": null,
 					"reminders": [],
+					"sectionId": null,
 					"title": "jan"
 				},
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 29,
+					"createdAt": 36,
 					"createdBy": null,
 					"due": null,
 					"event": {
@@ -3570,12 +4037,13 @@
 					"projectId": null,
 					"recurrence": null,
 					"reminders": [],
+					"sectionId": null,
 					"title": "notes"
 				},
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 32,
+					"createdAt": 39,
 					"createdBy": null,
 					"due": null,
 					"event": {
@@ -3604,6 +4072,7 @@
 					"projectId": null,
 					"recurrence": null,
 					"reminders": [],
+					"sectionId": null,
 					"title": "next week"
 				}
 			]
@@ -3616,7 +4085,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 29,
+						"createdAt": 36,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -3645,12 +4114,13 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "notes"
 					},
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 30,
+						"createdAt": 37,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -3686,12 +4156,13 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "jan"
 					},
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 31,
+						"createdAt": 38,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -3720,12 +4191,13 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "missed"
 					},
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 32,
+						"createdAt": 39,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -3754,12 +4226,13 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "next week"
 					},
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 33,
+						"createdAt": 40,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -3781,6 +4254,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "kite"
 					}
 				],
@@ -3790,7 +4264,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 30,
+					"createdAt": 37,
 					"createdBy": null,
 					"due": null,
 					"event": {
@@ -3826,12 +4300,13 @@
 					"projectId": null,
 					"recurrence": null,
 					"reminders": [],
+					"sectionId": null,
 					"title": "jan"
 				},
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 33,
+					"createdAt": 40,
 					"createdBy": null,
 					"due": null,
 					"event": null,
@@ -3853,6 +4328,7 @@
 					"projectId": null,
 					"recurrence": null,
 					"reminders": [],
+					"sectionId": null,
 					"title": "kite"
 				}
 			]
@@ -3865,7 +4341,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 34,
+						"createdAt": 41,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -3880,12 +4356,13 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "read"
 					},
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 35,
+						"createdAt": 42,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -3907,12 +4384,13 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "milk"
 					},
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 36,
+						"createdAt": 43,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -3934,12 +4412,13 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "coffee"
 					},
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 37,
+						"createdAt": 44,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -3961,12 +4440,13 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "eggs"
 					},
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 38,
+						"createdAt": 45,
 						"createdBy": null,
 						"due": {
 							"date": "2026-10-14",
@@ -3991,12 +4471,13 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "dated at Rewe"
 					},
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 39,
+						"createdAt": 46,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -4018,12 +4499,13 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "beans"
 					},
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 40,
+						"createdAt": 47,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -4045,6 +4527,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "solo"
 					}
 				],
@@ -4056,7 +4539,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 34,
+						"createdAt": 41,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -4071,12 +4554,13 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "read"
 					},
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 40,
+						"createdAt": 47,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -4098,6 +4582,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "solo"
 					}
 				],
@@ -4109,7 +4594,7 @@
 							{
 								"completedAt": null,
 								"completedBy": null,
-								"createdAt": 36,
+								"createdAt": 43,
 								"createdBy": null,
 								"due": null,
 								"event": null,
@@ -4131,12 +4616,13 @@
 								"projectId": null,
 								"recurrence": null,
 								"reminders": [],
+								"sectionId": null,
 								"title": "coffee"
 							},
 							{
 								"completedAt": null,
 								"completedBy": null,
-								"createdAt": 39,
+								"createdAt": 46,
 								"createdBy": null,
 								"due": null,
 								"event": null,
@@ -4158,6 +4644,7 @@
 								"projectId": null,
 								"recurrence": null,
 								"reminders": [],
+								"sectionId": null,
 								"title": "beans"
 							}
 						]
@@ -4169,7 +4656,7 @@
 							{
 								"completedAt": null,
 								"completedBy": null,
-								"createdAt": 35,
+								"createdAt": 42,
 								"createdBy": null,
 								"due": null,
 								"event": null,
@@ -4191,12 +4678,13 @@
 								"projectId": null,
 								"recurrence": null,
 								"reminders": [],
+								"sectionId": null,
 								"title": "milk"
 							},
 							{
 								"completedAt": null,
 								"completedBy": null,
-								"createdAt": 37,
+								"createdAt": 44,
 								"createdBy": null,
 								"due": null,
 								"event": null,
@@ -4218,6 +4706,7 @@
 								"projectId": null,
 								"recurrence": null,
 								"reminders": [],
+								"sectionId": null,
 								"title": "eggs"
 							}
 						]
@@ -4233,7 +4722,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 41,
+						"createdAt": 48,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -4248,12 +4737,13 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "old"
 					},
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 42,
+						"createdAt": 49,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -4268,12 +4758,13 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "mid"
 					},
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 43,
+						"createdAt": 50,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -4288,12 +4779,13 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "new"
 					},
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 44,
+						"createdAt": 51,
 						"createdBy": null,
 						"due": {
 							"date": "2026-10-14",
@@ -4311,6 +4803,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "later"
 					}
 				],
@@ -4322,7 +4815,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 43,
+						"createdAt": 50,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -4337,12 +4830,13 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "new"
 					},
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 42,
+						"createdAt": 49,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -4357,12 +4851,13 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "mid"
 					},
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 41,
+						"createdAt": 48,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -4377,6 +4872,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "old"
 					}
 				],
@@ -4454,6 +4950,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "paid rent"
 					},
 					{
@@ -4474,6 +4971,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "old"
 					},
 					{
@@ -4500,6 +4998,7 @@
 							"unit": "day"
 						},
 						"reminders": [],
+						"sectionId": null,
 						"title": "standup"
 					},
 					{
@@ -4520,6 +5019,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "reopened"
 					},
 					{
@@ -4543,6 +5043,7 @@
 							"unit": "day"
 						},
 						"reminders": [],
+						"sectionId": null,
 						"title": "never done"
 					},
 					{
@@ -4563,6 +5064,7 @@
 						"projectId": "home",
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "trip"
 					},
 					{
@@ -4583,6 +5085,7 @@
 						"projectId": "home",
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "pack"
 					},
 					{
@@ -4603,6 +5106,7 @@
 						"projectId": "home",
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "book"
 					},
 					{
@@ -4623,6 +5127,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "call"
 					},
 					{
@@ -4643,6 +5148,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "tie"
 					},
 					{
@@ -4663,6 +5169,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "chore"
 					},
 					{
@@ -4686,6 +5193,7 @@
 							"unit": "week"
 						},
 						"reminders": [],
+						"sectionId": null,
 						"title": "sweep"
 					}
 				],
@@ -4713,6 +5221,7 @@
 					"projectId": null,
 					"recurrence": null,
 					"reminders": [],
+					"sectionId": null,
 					"title": "call"
 				},
 				{
@@ -4733,6 +5242,7 @@
 					"projectId": null,
 					"recurrence": null,
 					"reminders": [],
+					"sectionId": null,
 					"title": "paid rent"
 				},
 				{
@@ -4753,6 +5263,7 @@
 					"projectId": null,
 					"recurrence": null,
 					"reminders": [],
+					"sectionId": null,
 					"title": "tie"
 				},
 				{
@@ -4779,6 +5290,7 @@
 						"unit": "day"
 					},
 					"reminders": [],
+					"sectionId": null,
 					"title": "standup"
 				},
 				{
@@ -4799,6 +5311,7 @@
 					"projectId": "home",
 					"recurrence": null,
 					"reminders": [],
+					"sectionId": null,
 					"title": "trip"
 				},
 				{
@@ -4822,6 +5335,7 @@
 						"unit": "week"
 					},
 					"reminders": [],
+					"sectionId": null,
 					"title": "sweep"
 				},
 				{
@@ -4842,6 +5356,7 @@
 					"projectId": "home",
 					"recurrence": null,
 					"reminders": [],
+					"sectionId": null,
 					"title": "book"
 				},
 				{
@@ -4862,6 +5377,7 @@
 					"projectId": null,
 					"recurrence": null,
 					"reminders": [],
+					"sectionId": null,
 					"title": "old"
 				}
 			]
@@ -4889,6 +5405,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "paid rent"
 					},
 					{
@@ -4909,6 +5426,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "old"
 					},
 					{
@@ -4935,6 +5453,7 @@
 							"unit": "day"
 						},
 						"reminders": [],
+						"sectionId": null,
 						"title": "standup"
 					},
 					{
@@ -4955,6 +5474,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "reopened"
 					},
 					{
@@ -4978,6 +5498,7 @@
 							"unit": "day"
 						},
 						"reminders": [],
+						"sectionId": null,
 						"title": "never done"
 					},
 					{
@@ -4998,6 +5519,7 @@
 						"projectId": "home",
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "trip"
 					},
 					{
@@ -5018,6 +5540,7 @@
 						"projectId": "home",
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "pack"
 					},
 					{
@@ -5038,6 +5561,7 @@
 						"projectId": "home",
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "book"
 					},
 					{
@@ -5058,6 +5582,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "call"
 					},
 					{
@@ -5078,6 +5603,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "tie"
 					},
 					{
@@ -5098,6 +5624,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "chore"
 					},
 					{
@@ -5121,6 +5648,7 @@
 							"unit": "week"
 						},
 						"reminders": [],
+						"sectionId": null,
 						"title": "sweep"
 					}
 				],
@@ -5154,6 +5682,7 @@
 						"unit": "day"
 					},
 					"reminders": [],
+					"sectionId": null,
 					"title": "standup"
 				},
 				{
@@ -5174,6 +5703,7 @@
 					"projectId": "home",
 					"recurrence": null,
 					"reminders": [],
+					"sectionId": null,
 					"title": "trip"
 				}
 			]
@@ -5213,6 +5743,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "paid rent"
 					},
 					{
@@ -5233,6 +5764,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "old"
 					},
 					{
@@ -5259,6 +5791,7 @@
 							"unit": "day"
 						},
 						"reminders": [],
+						"sectionId": null,
 						"title": "standup"
 					},
 					{
@@ -5279,6 +5812,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "reopened"
 					},
 					{
@@ -5302,6 +5836,7 @@
 							"unit": "day"
 						},
 						"reminders": [],
+						"sectionId": null,
 						"title": "never done"
 					},
 					{
@@ -5322,6 +5857,7 @@
 						"projectId": "home",
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "trip"
 					},
 					{
@@ -5342,6 +5878,7 @@
 						"projectId": "home",
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "pack"
 					},
 					{
@@ -5362,6 +5899,7 @@
 						"projectId": "home",
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "book"
 					},
 					{
@@ -5382,6 +5920,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "call"
 					},
 					{
@@ -5402,6 +5941,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "tie"
 					},
 					{
@@ -5422,6 +5962,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "chore"
 					},
 					{
@@ -5445,6 +5986,7 @@
 							"unit": "week"
 						},
 						"reminders": [],
+						"sectionId": null,
 						"title": "sweep"
 					}
 				],
@@ -5472,6 +6014,7 @@
 					"projectId": null,
 					"recurrence": null,
 					"reminders": [],
+					"sectionId": null,
 					"title": "call"
 				},
 				{
@@ -5492,6 +6035,7 @@
 					"projectId": null,
 					"recurrence": null,
 					"reminders": [],
+					"sectionId": null,
 					"title": "paid rent"
 				},
 				{
@@ -5512,6 +6056,7 @@
 					"projectId": null,
 					"recurrence": null,
 					"reminders": [],
+					"sectionId": null,
 					"title": "tie"
 				}
 			]
@@ -5563,6 +6108,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "paid rent"
 					},
 					{
@@ -5583,6 +6129,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "old"
 					},
 					{
@@ -5609,6 +6156,7 @@
 							"unit": "day"
 						},
 						"reminders": [],
+						"sectionId": null,
 						"title": "standup"
 					},
 					{
@@ -5629,6 +6177,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "reopened"
 					},
 					{
@@ -5652,6 +6201,7 @@
 							"unit": "day"
 						},
 						"reminders": [],
+						"sectionId": null,
 						"title": "never done"
 					},
 					{
@@ -5672,6 +6222,7 @@
 						"projectId": "home",
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "trip"
 					},
 					{
@@ -5692,6 +6243,7 @@
 						"projectId": "home",
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "pack"
 					},
 					{
@@ -5712,6 +6264,7 @@
 						"projectId": "home",
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "book"
 					},
 					{
@@ -5732,6 +6285,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "call"
 					},
 					{
@@ -5752,6 +6306,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "tie"
 					},
 					{
@@ -5772,6 +6327,7 @@
 						"projectId": null,
 						"recurrence": null,
 						"reminders": [],
+						"sectionId": null,
 						"title": "chore"
 					},
 					{
@@ -5795,6 +6351,7 @@
 							"unit": "week"
 						},
 						"reminders": [],
+						"sectionId": null,
 						"title": "sweep"
 					}
 				],
@@ -5825,6 +6382,7 @@
 							"projectId": null,
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"title": "call"
 						},
 						{
@@ -5845,6 +6403,7 @@
 							"projectId": null,
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"title": "paid rent"
 						},
 						{
@@ -5865,6 +6424,7 @@
 							"projectId": null,
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"title": "tie"
 						}
 					]
@@ -5896,6 +6456,7 @@
 								"unit": "day"
 							},
 							"reminders": [],
+							"sectionId": null,
 							"title": "standup"
 						}
 					]
@@ -5921,6 +6482,7 @@
 							"projectId": "home",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"title": "trip"
 						}
 					]
@@ -5949,6 +6511,7 @@
 								"unit": "week"
 							},
 							"reminders": [],
+							"sectionId": null,
 							"title": "sweep"
 						}
 					]
@@ -5974,6 +6537,7 @@
 							"projectId": "home",
 							"recurrence": null,
 							"reminders": [],
+							"sectionId": null,
 							"title": "book"
 						}
 					]

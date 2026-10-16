@@ -210,6 +210,7 @@ describe('exploding subtasks', () => {
 			task('photo', 4, { parentId: 'passport', projectId: 'home' }),
 		],
 		projects: [],
+		sections: [],
 		labels: [],
 	});
 	const shape = (next: StoreData) =>
@@ -242,6 +243,22 @@ describe('exploding subtasks', () => {
 		expect(find(next, 'charger').completedAt).toBe(50);
 		expect(find(next, 'passport').projectId).toBe('home');
 		expect(restoreExploded(next, previous)).toEqual(outline());
+	});
+
+	test("a sectioned parent's subtasks land in its section, and undo takes them back out", () => {
+		const before = {
+			...outline(),
+			sections: [{ id: 'later', projectId: 'home', name: 'Later', order: 0, createdAt: 1 }],
+		};
+		before.tasks = before.tasks.map(t => (t.id === 'trip' ? { ...t, sectionId: 'later' } : t));
+		const { data: next, previous } = explodeSubtasks(before, 'trip', 'direct');
+		expect(next.tasks.map(t => [t.id, t.sectionId])).toEqual([
+			['trip', 'later'],
+			['passport', 'later'],
+			['charger', 'later'],
+			['photo', null],
+		]);
+		expect(restoreExploded(next, previous)).toEqual(before);
 	});
 
 	test("prefix puts the parent's title before each subtask's", () => {
@@ -286,7 +303,16 @@ describe('exploding subtasks', () => {
 			{ id: 'visa', parentId: 'trip', order: 2, title: 'visa', labelIds: [], due: null, priority: 4 },
 		]);
 		expect(previous).toEqual([
-			{ id: 'photo', parentId: 'passport', order: 0, title: 'photo', labelIds: [], due: null, priority: 4 },
+			{
+				id: 'photo',
+				parentId: 'passport',
+				order: 0,
+				sectionId: null,
+				title: 'photo',
+				labelIds: [],
+				due: null,
+				priority: 4,
+			},
 		]);
 	});
 

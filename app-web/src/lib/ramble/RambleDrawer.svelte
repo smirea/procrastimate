@@ -387,7 +387,7 @@
 						<DuePicker due={entry.due} onchange={(due) => (entry.due = due)} />
 						<PriorityPicker priority={entry.priority ?? DEFAULT_PRIORITY} onchange={(priority) => (entry.priority = priority)} />
 						<LabelPicker labelIds={entry.labelIds} onchange={(labelIds) => (entry.labelIds = labelIds)} />
-						<ProjectPicker projectId={entry.projectId} onchange={(projectId) => (entry.projectId = projectId)} />
+						<ProjectPicker projectId={entry.projectId} sections={[]} onchange={(place) => (entry.projectId = place.projectId)} />
 						{#if entry.recurrence}
 							<button type="button" class="chip" data-active="true" style="color: var(--tone-repeat)" aria-label="Remove repeat" onclick={() => (entry.recurrence = null)}>
 								<Repeat size={15} weight="bold" />{formatRecurrence(entry.recurrence, entry.due)}<X size={11} weight="bold" />

@@ -30,6 +30,7 @@ describe('rambleNewTask', () => {
 		expect(rambleNewTask(spoken!, null, '2026-10-14')).toEqual({
 			title: 'Call mom',
 			projectId: null,
+			sectionId: null,
 			labelIds: [],
 			due: { date: '2026-10-15', time: '17:00' },
 			recurrence: null,
@@ -63,6 +64,7 @@ describe('rambleNewTask', () => {
 		expect(saved).toEqual({
 			title: 'Milk',
 			projectId: null,
+			sectionId: null,
 			labelIds: [],
 			due: null,
 			recurrence: null,
