@@ -2,7 +2,9 @@
 const { tool_input } = await Bun.stdin.json();
 const command: string = tool_input?.command ?? '';
 
+// A quoted single word is still an argument to git; only multi-word strings are messages.
 const skips = command
+	.replace(/"([^"\s\\]*)"|'([^'\s]*)'/g, '$1$2')
 	.replace(/"(\\.|[^"\\])*"|'[^']*'/g, "''")
 	.split(/&&|\|\||[;|\n]/)
 	.map(segment => segment.trim())

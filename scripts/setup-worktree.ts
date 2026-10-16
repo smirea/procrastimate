@@ -3,7 +3,7 @@
  * Safe to rerun. Never touches AWS or the shared dev database.
  */
 import { spawnSync } from 'node:child_process';
-import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { join } from 'node:path';
 
@@ -64,9 +64,29 @@ async function pickBlock(): Promise<number> {
 	throw new Error(`No free port block between ${FIRST_BLOCK} and ${LAST_BLOCK}.`);
 }
 
-const base = await pickBlock();
+// Parallel setups would otherwise pick the same unclaimed block; mkdir is atomic, so it serves as the lock.
+const lock = join(git('rev-parse', '--git-common-dir'), 'setup-worktree.lock');
+for (const started = Date.now(); ; await Bun.sleep(100)) {
+	try {
+		mkdirSync(lock);
+		break;
+	} catch {
+		const age = Date.now() - (statSync(lock, { throwIfNoEntry: false })?.mtimeMs ?? Date.now());
+		if (age > 60_000) rmSync(lock, { recursive: true, force: true });
+		if (Date.now() - started > 120_000) throw new Error(`Timed out waiting for ${lock}.`);
+	}
+}
+let base: number;
+try {
+	base = await pickBlock();
+	writeFileSync(
+		join(root, '.env.override'),
+		`CLIENT_PORT=${base}\nAPI_PORT=${base + 1}\nAPI_URL=http://127.0.0.1:${base + 1}\n`,
+	);
+} finally {
+	rmSync(lock, { recursive: true, force: true });
+}
 const apiUrl = `http://127.0.0.1:${base + 1}`;
-writeFileSync(join(root, '.env.override'), `CLIENT_PORT=${base}\nAPI_PORT=${base + 1}\nAPI_URL=${apiUrl}\n`);
 
 // Never `env-manager down`: dev points at the shared Turso database.
 run(['env-manager', 'gen', '--local']);
@@ -76,7 +96,8 @@ if (/^TURSO_DATABASE_URL='?[^'\s#]/m.test(serverEnv)) {
 	throw new Error('server/.env.local points at a Turso database. Worktrees must use the in-memory database.');
 }
 
-const simulator = git('branch', '--show-current').replaceAll('/', '-');
+// Restricted to shell-safe characters because ./sim embeds it in single quotes.
+const simulator = git('branch', '--show-current').replaceAll(/[^\w.-]/g, '-');
 const sim = join(root, 'sim');
 writeFileSync(sim, `#!/bin/sh\ncd "$(dirname "$0")" && exec bun scripts/worktree-sim.ts '${simulator}' "$@"\n`);
 chmodSync(sim, 0o755);
