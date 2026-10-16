@@ -17,4 +17,9 @@ import Testing
     @Test func regionsCapAtAHundredKilometers() {
         #expect(Triggers.placeRadius(latitudeDelta: 3.29, longitudeDelta: 4.8, latitude: 48.9) == 100_000)
     }
+
+    @Test func areasStayWithinWhatTheDeviceCanWatch() {
+        #expect(Triggers.placeRadius(latitudeDelta: 0.3939, longitudeDelta: 0.7968, latitude: 52.52, deviceMax: 10_000) == 10_000)
+        #expect(Triggers.placeRadius(latitudeDelta: 0.0266, longitudeDelta: 0.0845, latitude: 52.5, deviceMax: 10_000) == 1_480)
+    }
 }

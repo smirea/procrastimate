@@ -117,15 +117,17 @@ public enum Triggers {
     /// Meters watched around a picked place, fitted to its Apple Maps extent so a city fires at its edge, not at a
     /// pin in its center. Maps frames every shop, address, or pin in about a kilometer, so an extent whose shorter
     /// side is at most 1.5 km is a spot and keeps 150 m. A park, neighborhood, city, or region gets half its shorter
-    /// side, the circle that fits inside it, capped at 100 km because region monitoring past that is unreliable and a
-    /// crossing that far out says nothing.
-    public static func placeRadius(latitudeDelta: Double, longitudeDelta: Double, latitude: Double) -> Double {
+    /// side, the circle that fits inside it, capped at 100 km because a crossing that far out says nothing, and at
+    /// `deviceMax`, the largest circle the device can watch, because a larger one is never monitored.
+    public static func placeRadius(
+        latitudeDelta: Double, longitudeDelta: Double, latitude: Double, deviceMax: Double? = nil
+    ) -> Double {
         let metersPerDegree = 111_320.0
         let height = latitudeDelta * metersPerDegree
         let width = longitudeDelta * metersPerDegree * cos(latitude * .pi / 180)
         let shorter = min(height, width)
         guard shorter > 1_500 else { return 150 }
-        return min((shorter / 2 / 10).rounded() * 10, 100_000)
+        return min((shorter / 2 / 10).rounded() * 10, 100_000, deviceMax ?? .infinity)
     }
 
     static func fixed4(_ value: Double) -> String { String(format: "%.4f", locale: Locale(identifier: "en_US_POSIX"), value) }

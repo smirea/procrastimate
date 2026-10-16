@@ -174,17 +174,21 @@ private struct LocationSheet: View {
                   let item = response.mapItems.first
             else { return }
             let coordinate = item.location.coordinate
-            let extent = response.boundingRegion
+            // The bounding region encloses every returned item, so only a single result is this place's own extent.
+            let extent = response.mapItems.count == 1 ? response.boundingRegion : nil
             onChange(TaskLocation(
                 name: item.name ?? result.title,
                 address: result.subtitle.isEmpty ? item.address?.shortAddress : result.subtitle,
                 latitude: coordinate.latitude,
                 longitude: coordinate.longitude,
-                radius: Triggers.placeRadius(
-                    latitudeDelta: extent.span.latitudeDelta,
-                    longitudeDelta: extent.span.longitudeDelta,
-                    latitude: extent.center.latitude
-                ),
+                radius: extent.map {
+                    Triggers.placeRadius(
+                        latitudeDelta: $0.span.latitudeDelta,
+                        longitudeDelta: $0.span.longitudeDelta,
+                        latitude: $0.center.latitude,
+                        deviceMax: places.maxRadius
+                    )
+                } ?? 150,
                 trigger: trigger
             ))
             places.requestPermission()
