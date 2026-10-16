@@ -154,3 +154,40 @@ test.describe('on a phone', () => {
 		await expect(page.getByRole('button', { name: 'Open navigation' })).toHaveAttribute('aria-expanded', 'true');
 	});
 });
+
+test('create, assign with #, move, rename, and delete a project', async ({ app, page }) => {
+	await app.createProject('Home');
+	await expect(page.getByText('No tasks yet')).toBeVisible();
+
+	await app.add('Fix sink #home', 'Paint fence');
+	const home = app.list('Home tasks');
+	await expect(home.locator('[data-task]')).toHaveText([/Fix sink/, /Paint fence/]);
+	await expect(home).not.toContainText('#home');
+
+	await app.go('Inbox');
+	await app.add('Buy milk');
+	await app.row('Buy milk').getByRole('button', { name: 'Buy milk', exact: true }).click();
+	await app.details().getByRole('button', { name: 'Project Inbox' }).click();
+	await page.getByRole('dialog', { name: 'Project' }).getByRole('button', { name: 'Home', exact: true }).click();
+	await expect(app.details().getByRole('button', { name: 'Project Home' })).toBeVisible();
+	await page.keyboard.press('Escape');
+	await expect(app.details()).toBeHidden();
+	await expect(app.row('Buy milk')).toHaveCount(0);
+
+	await app.nav('Home').click();
+	await expect(home.locator('[data-task]')).toHaveCount(3);
+	await page.getByRole('button', { name: 'Project actions' }).click();
+	await page.getByRole('button', { name: 'Rename' }).click();
+	await page.getByRole('textbox', { name: 'Project name' }).fill('House');
+	await page.getByRole('textbox', { name: 'Project name' }).press('Enter');
+	await expect(page.getByRole('heading', { level: 1, name: 'House' })).toBeVisible();
+	await expect(sidebarProjects(page)).toHaveText([/House/]);
+
+	await page.getByRole('button', { name: 'Project actions' }).click();
+	await page.getByRole('button', { name: 'Delete project' }).click();
+	await expect(page.getByText('Delete House and its 3 tasks?')).toBeVisible();
+	await page.getByRole('button', { name: 'Delete', exact: true }).click();
+	await expect(page.getByRole('heading', { level: 1, name: 'Inbox' })).toBeVisible();
+	await expect(sidebarProjects(page)).toHaveCount(0);
+	await expect(page.locator('[data-task]')).toHaveCount(0);
+});

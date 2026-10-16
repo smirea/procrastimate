@@ -21,7 +21,7 @@ Inbox lists everything dated by day: Overdue, Today, and each later day with dat
 - Web on a phone: tap `Open navigation`, then Inbox. The drawer closes as the view opens. Tapping outside the drawer closes it.
 - iOS: tap the Inbox or No date tab. The tab bar has Inbox, No date, and Browse, plus the accent `+` circle beside it.
 
-## Driving it with control-ui and XCUITest
+## Driving it with control-ui and the simulator
 
 Preconditions:
 

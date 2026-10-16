@@ -10,13 +10,9 @@ From this folder:
 ./scripts/test   # generates API.swift, then swift test: Core unit tests on macOS or Linux
 ```
 
-UI tests run from Xcode's `App` scheme or with:
+There is no UI-test target. Drive the app in the simulator by hand, as the feature maps in `.cursor/skills/verify-procrastimate/features/` describe.
 
-```sh
-xcodebuild test -project App.xcodeproj -scheme App -destination 'platform=iOS Simulator,name=iPhone 16'
-```
-
-CI runs all of these in `.github/workflows/ios.yml`, plus the paired web tests, and uploads a side-by-side `parity-report`.
+`.github/workflows/ios.yml` runs `swift test` on Linux (`core-linux`) for every pull request and push. Its macOS jobs run on a pull request that touches `app-ios/`, `shared/`, the Swift generator, or the other inputs its `changes` job lists, and on a manual `workflow_dispatch`, never on `master`. `core` runs `swift test`, and `app` checks the Debug and Release API URLs and builds the app.
 
 ## Run
 

@@ -18,25 +18,24 @@ The web client has a light and a dark theme. Stefan picks `System`, `Light`, or 
 - Web phone: tap `Open navigation`, then `Settings`, then the `Theme` control in the sheet.
 - iOS: pick a theme in Settings, or change the simulator's appearance.
 
-## Driving it with control-ui and XCUITest
+## Driving it with control-ui and the simulator
 
 Preconditions:
 
 - The baseline state. The theme key is absent from a fresh profile, so the control starts on `System`.
-- Automated proof for desktop steps: `bun run test:e2e -- e2e/theme.e2e.ts`. Phone steps live in `e2e/mobile.e2e.ts`.
 - Contrast proof: `bun test app-web/src/lib/theme-contrast.test.ts`.
 
-- **System.** Emulate a dark color scheme, then a light one. `<html data-theme>` and the page canvas follow each change while `System` stays checked. Test: `System is the default and follows the color scheme`.
-- **Override and persist.** With a dark device appearance, choose `Light`, then reload. The page stays light and `Light` is still checked. Repeat with `Dark` under a light appearance, then choose `System` and reload. Test: `Light and Dark override the color scheme and persist across reloads`.
-- **Keyboard.** Focus the checked option and press the arrow keys. Selection and focus move together. Test: `arrow keys move the theme selection`.
-- **No flash.** Choose `Dark` and reload. When `<body>` is first parsed, before anything can paint or the app runs, `<html>` already has `data-theme="dark"`, a dark `color-scheme`, and a dark `theme-color` for the browser chrome. Test: `the saved theme applies before the app loads, so it never flashes`.
-- **Phone.** Open the drawer, tap `Settings`, choose `Light` under a dark appearance, and reload. The settings sheet still shows `Light` checked and each option is at least 44 px tall. Tests: `the settings sheet switches the theme and keeps it across reloads` and `the saved theme applies before the app loads on a phone`.
-- **Contrast.** The unit test composites each text token over every surface it can sit on, including the warm and cool canvas glows, dense glass over blurred list text and the accent fill, the solid glass fallback, quick add chips such as the recurrence chip, and parsed phrase highlights, and fails below 4.5:1. Tests: `light theme text meets WCAG AA contrast` and its dark sibling.
-- **Solid glass.** Emulate `contrast: 'more'`. The sidebar loses its backdrop blur and paints the opaque `--glass-solid` color, in light and in dark. Test: `glass turns solid when the device asks for more contrast`.
-- **Reduced motion.** Emulate `reducedMotion: 'reduce'`, open quick add, and open the date picker. The `Due date` popover has no running animation. Test: `popovers open without motion under reduced motion`.
+- **System.** Emulate a dark color scheme, then a light one. `<html data-theme>` and the page canvas follow each change while `System` stays checked.
+- **Override and persist.** With a dark device appearance, choose `Light`, then reload. The page stays light and `Light` is still checked. Repeat with `Dark` under a light appearance, then choose `System` and reload.
+- **Keyboard.** Focus the checked option and press the arrow keys. Selection and focus move together.
+- **No flash.** Choose `Dark` and reload. When `<body>` is first parsed, before anything can paint or the app runs, `<html>` already has `data-theme="dark"`, a dark `color-scheme`, and a dark `theme-color` for the browser chrome.
+- **Phone.** Open the drawer, tap `Settings`, choose `Light` under a dark appearance, and reload. The settings sheet still shows `Light` checked and each option is at least 44 px tall.
+- **Contrast.** The unit test composites each text token over every surface it can sit on, including the warm and cool canvas glows, dense glass over blurred list text and the accent fill, the solid glass fallback, quick add chips such as the recurrence chip, and parsed phrase highlights, and fails below 4.5:1. Tests are in `app-web/src/lib/theme-contrast.test.ts`.
+- **Solid glass.** Emulate `contrast: 'more'`. The sidebar loses its backdrop blur and paints the opaque `--glass-solid` color, in light and in dark.
+- **Reduced motion.** Emulate `reducedMotion: 'reduce'`, open quick add, and open the date picker. The `Due date` popover has no running animation.
 - **Both themes.** Every color with a light value also has a dark value. Test: `every literal light color has a dark value`.
 - **iOS tokens.** The iOS colors are generated from `app-web/src/index.css`, so the contrast checked here holds on iOS too. `bun run generate` writes them (`Palette` in `app-ios/Sources/App/Generated/Tokens.swift` and the `AccentColor` asset) before every iOS build, so they cannot go stale.
-- **iOS.** `System` follows the simulator's appearance live, `Light` and `Dark` override it, the choice survives a relaunch under `procrastimate-theme` in `UserDefaults`, and a relaunch paints its first frame in the saved theme. The tests read the theme from a background pixel. The CI simulator ignores `XCUIDevice.shared.appearance`, so `test_theme_system` checks `System` in light only; to see the live switch, change the simulator's appearance by hand (`xcrun simctl ui booted appearance dark`). Tests: `ThemeParityTests` (`test_theme_system`, `test_theme_override`, `test_theme_persist`, `test_theme_first_paint`), paired with `e2e/parity/theme.e2e.ts`. Run each pair with the iOS workflow (`xcodebuild test` on an iPhone 16 simulator) and `bun run test:e2e --project=parity`; both sides save `<parity-id>.png`. Glass turning solid under Increase Contrast or Reduce Transparency, and instant motion under Reduce Motion, come from the system and have no XCUITest, since a UI test cannot change those settings.
+- **iOS.** `System` follows the simulator's appearance live, `Light` and `Dark` override it, the choice survives a relaunch under `procrastimate-theme` in `UserDefaults`, and a relaunch paints its first frame in the saved theme. To see the live switch, change the simulator's appearance (`xcrun simctl ui booted appearance dark`). Glass turning solid under Increase Contrast or Reduce Transparency, and instant motion under Reduce Motion, come from the system settings, so check them by hand in the simulator's Accessibility settings.
 
 ## Gotchas
 
