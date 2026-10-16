@@ -22,7 +22,7 @@ ProcrastiMate's concepts, goals, paradigms, and high-level system decisions, one
 - [API and database types](api.md): the Drizzle schema, the oRPC contract, and the types generated for every client.
 - [Dev hosting](dev-hosting.md): the dev box, `tailscale serve`, and the single-origin rule.
 - [Production hosting](production-hosting.md): the Cloudflare Worker, deploys, and free-tier fit.
-- [Persistence](persistence.md): local storage, validation, and source keys.
+- [Persistence](persistence.md): local storage, validation, source keys, and how server databases migrate.
 - [Sync](sync.md): the server as source of truth, ops and cursors, field-level conflicts, always-on sync, and server-computed push. Its build slices are in [Sync build slices](../sync-slices.md).
 - [Testing](testing.md): unit tests, end-to-end tests, and the feature map.
 - [iOS app](ios.md): the native SwiftUI app, its architecture, the Swift port and shared test vectors, local notifications, macOS CI, and paired parity tests. Its checklist and thread split are in [iOS parity](../ios-parity.md).

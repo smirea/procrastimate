@@ -31,6 +31,14 @@ jobs:
             exit 1
           fi
 
+      # A push compares with the master it replaced, since origin/master is then the commit under test.
+      - name: Migrations extend master's history
+        env:
+          BASE: ${{ github.event_name == 'push' && github.event.before || 'master' }}
+        run: |
+          git fetch --no-tags --depth=1 origin "+$BASE:refs/remotes/ci/base"
+          bun server/scripts/migration-history.ts ci/base
+
       - name: Typecheck
         run: bun run check
 

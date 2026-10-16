@@ -1,5 +1,6 @@
 import { openRambleBudget } from './account/ramble-budget';
 import { cassetteUpstream } from './account/ramble-cassette';
+import { tursoDatabase } from './db/turso';
 import { bunUpstream, serveDev } from './dev-server';
 import env from './env';
 
@@ -8,6 +9,8 @@ const turso =
 	env.TURSO_DATABASE_URL && env.TURSO_AUTH_TOKEN
 		? { url: env.TURSO_DATABASE_URL, authToken: env.TURSO_AUTH_TOKEN }
 		: undefined;
+// Migrated before listening, so a database with a foreign history stops the server instead of failing each request.
+if (turso) await tursoDatabase(turso);
 const server = serveDev({
 	port: env.API_PORT,
 	turso,

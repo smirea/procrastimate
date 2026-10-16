@@ -3,7 +3,7 @@ import type { BatchItem } from 'drizzle-orm/batch';
 import type { LibSQLDatabase } from 'drizzle-orm/libsql';
 import { drizzle } from 'drizzle-orm/libsql/web';
 import type { Env } from '../bindings';
-import { migrateAsync } from './migrate';
+import { migrateAsync, type MigrateMode } from './migrate';
 
 export type TursoTarget = { url: string; authToken: string };
 export type TursoDatabase = LibSQLDatabase;
@@ -16,11 +16,14 @@ export function tursoTarget(env: Env): TursoTarget | null {
 
 const opened = new Map<string, Promise<TursoDatabase>>();
 
-/** Migrates once per database and isolate, not on every request. A failed open is retried by the next caller. */
+/**
+ * Migrates once per database and isolate, not on every request, and never rebuilds: Turso holds real data. A failed
+ * open is retried by the next caller, and a mismatched history fails every one of them.
+ */
 export function tursoDatabase({ url, authToken }: TursoTarget): Promise<TursoDatabase> {
 	const existing = opened.get(url);
 	if (existing) return existing;
-	const pending = openDatabase(createClient({ url, authToken })).catch(error => {
+	const pending = openDatabase(createClient({ url, authToken }), 'strict').catch(error => {
 		opened.delete(url);
 		throw error;
 	});
@@ -28,9 +31,9 @@ export function tursoDatabase({ url, authToken }: TursoTarget): Promise<TursoDat
 	return pending;
 }
 
-export async function openDatabase(client: Client): Promise<TursoDatabase> {
+export async function openDatabase(client: Client, mode: MigrateMode): Promise<TursoDatabase> {
 	const db = drizzle(client);
-	await migrateAsync(db);
+	await migrateAsync(db, mode);
 	return db;
 }
 
