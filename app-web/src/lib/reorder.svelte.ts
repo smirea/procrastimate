@@ -29,6 +29,8 @@ type Drag = {
 	/** The lifted row's center stays between the first row's top and the last row's bottom, so it can take either end. */
 	minDy: number;
 	maxDy: number;
+	/** How far the lifted row was drawn from its layout place, such as mid-flip, so it starts under the pointer. */
+	drawn: number;
 	startY: number;
 	clientY: number;
 	scroller: Element;
@@ -111,8 +113,10 @@ export class Reorder {
 	#lift() {
 		const press = this.#press;
 		if (!press || !this.#list) return;
-		const rects = this.#rows().map(row => layoutRect(row, this.#list!));
+		const rows = this.#rows();
+		const rects = rows.map(row => layoutRect(row, this.#list!));
 		const own = rects[press.index]!;
+		const drawn = rows[press.index]!.getBoundingClientRect().top - own.top;
 		const mid = own.top + own.height / 2;
 		const gap = rects.length > 1 ? rects[1]!.top - rects[0]!.bottom : 0;
 		const scroller = scrollerOf(this.#list);
@@ -124,11 +128,12 @@ export class Reorder {
 			step: own.height + gap,
 			minDy: rects[0]!.top - mid,
 			maxDy: rects.at(-1)!.bottom - mid,
+			drawn,
 			startY: press.startY,
 			clientY: press.startY,
 			scroller,
 			scrollStart: scroller.scrollTop,
-			dy: 0,
+			dy: drawn,
 		};
 		if (press.touch && this.#options.lift === 'hold') navigator.vibrate?.(8);
 		this.#frame = requestAnimationFrame(this.#autoscroll);
@@ -154,7 +159,7 @@ export class Reorder {
 	#follow() {
 		const drag = this.drag!;
 		const scrolled = drag.scroller.scrollTop - drag.scrollStart;
-		drag.dy = Math.max(drag.minDy, Math.min(drag.clientY - drag.startY + scrolled, drag.maxDy));
+		drag.dy = Math.max(drag.minDy, Math.min(drag.drawn + drag.clientY - drag.startY + scrolled, drag.maxDy));
 		const center = drag.mids[drag.from]! + drag.dy;
 		drag.to = drag.mids.filter((mid, i) => i !== drag.from && mid < center).length;
 	}

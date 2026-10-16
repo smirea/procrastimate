@@ -79,6 +79,17 @@ test('a project lifted while the rows still animate from a move lands where it i
 	await page.mouse.move(start.x, 0, { steps: 12 });
 	await page.mouse.up();
 	await expect(sidebarProjects(page)).toHaveText(['Errands', 'Work', 'Home']);
+
+	await app.nav('Errands').focus();
+	await page.keyboard.press('Alt+ArrowDown');
+	await expect(sidebarProjects(page)).toHaveText(['Work', 'Errands', 'Home']);
+	const drawn = (await app.nav('Errands').boundingBox())!;
+	const grab = { x: drawn.x + drawn.width / 2, y: drawn.y + drawn.height / 2 };
+	await page.mouse.move(grab.x, grab.y);
+	await page.mouse.down();
+	await page.mouse.move(grab.x, grab.y - drawn.height * 0.6, { steps: 6 });
+	await page.mouse.up();
+	await expect(sidebarProjects(page)).toHaveText(['Errands', 'Work', 'Home']);
 });
 
 test.describe('in a short window', () => {
