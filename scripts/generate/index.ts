@@ -1,5 +1,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
+// Imported rather than read so `bun --watch` regenerates when it changes. Read generator inputs the same way.
+import indexCss from '../../app-web/src/index.css' with { type: 'text' };
 import { migrationsModule } from './migrations';
 import { handWrittenModels } from './models';
 import { tokenFiles } from './tokens';
@@ -35,7 +37,7 @@ function write(path: string, next: string) {
 }
 
 write('shared/db/generated/zod.ts', zodModule());
-write('server/src/db/generated/migrations.ts', GENERATED + migrationsModule(join(root, 'server/drizzle')));
+write('server/src/db/generated/migrations.ts', GENERATED + (await migrationsModule()));
 
 // The contract imports the row schemas just written, so it loads only now.
 const { minifyContractRouter } = await import('@orpc/contract');
@@ -51,8 +53,7 @@ write(
 	swiftModule({ components: namedSchemas(), paths: JSON.parse(openApi).paths, tableDefaults: tableDefaults() }),
 );
 
-for (const [path, contents] of Object.entries(tokenFiles(readFileSync(join(root, 'app-web/src/index.css'), 'utf8'))))
-	write(path, contents);
+for (const [path, contents] of Object.entries(tokenFiles(indexCss))) write(path, contents);
 
 const models = handWrittenModels(root, ['app-ios/Sources']);
 if (models.length) {
