@@ -61,6 +61,7 @@ Preconditions:
 ## Gotchas
 
 - Deleting a project deletes its tasks. Deleting a section deletes its tasks too.
+- On iOS a Browse project row also has a context menu. Holding still opens it; start dragging within about half a second to reorder instead. An XCUITest needs `press(forDuration: 0.5, thenDragTo:)`, since 1 s opens the menu.
 - A touch that lands while the drawer is still flinging from a swipe cannot lift a project, since the browser owns that gesture. Let the scroll stop first.
 - `/Name` only reads the sections of the project in effect: the typed `#Project`, else the one quick add opened with. Without a project it stays text. Seed a fresh project for this step, never a shared one.
 - `#Name` is highlighted only for an existing project. An unknown `#word` stays in the title.
