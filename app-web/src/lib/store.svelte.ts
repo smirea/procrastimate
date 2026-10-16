@@ -56,6 +56,11 @@ class Store {
 	#sync = $state.raw<SyncSection | undefined>();
 	#onCommit: (() => void) | undefined;
 	#view = $derived(merged(this.own, this.spaces));
+	#ownProjects = $derived(rules.projectsInOrder(this.own.projects));
+	#projects = $derived([
+		...this.#ownProjects,
+		...Object.values(this.spaces).flatMap(s => rules.projectsInOrder(s.projects)),
+	]);
 	#homes = $derived(homes(this.spaces));
 	#children = $derived(groupChildren(this.#view.tasks));
 	/** Where deleted tasks lived, so undo puts them back into the same space. */
@@ -65,8 +70,13 @@ class Store {
 		return this.#view.tasks;
 	}
 
+	/** Own projects first, then shared ones, each in their order. */
 	get projects(): Project[] {
-		return this.#view.projects;
+		return this.#projects;
+	}
+
+	get ownProjects(): Project[] {
+		return this.#ownProjects;
 	}
 
 	get labels(): Label[] {
@@ -454,6 +464,10 @@ class Store {
 
 	deleteProject(id: string) {
 		if (this.homeOf(id) === null) this.#apply(rules.deleteProject(this.own, id));
+	}
+
+	moveProject(id: string, index: number) {
+		if (this.homeOf(id) === null) this.#apply(rules.moveProject(this.own, id, index));
 	}
 
 	/** Sections, like projects, are only ever written in the user's own space. */

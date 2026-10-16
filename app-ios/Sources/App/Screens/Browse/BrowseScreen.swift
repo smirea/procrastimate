@@ -69,6 +69,10 @@ private struct BrowseList: View {
                     }
                     .accessibilityIdentifier("browse-project-\(project.name)")
                 }
+                .onMove { from, to in
+                    guard let from = from.first else { return }
+                    store.moveProject(store.projects[from].id, to: to > from ? to - 1 : to)
+                }
                 if adding {
                     TextField("Project name", text: $name)
                         .id(Self.newProject)

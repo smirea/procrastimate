@@ -387,6 +387,45 @@
 		pointer-events: none;
 	}
 
+	.nav-link {
+		display: flex;
+		align-items: center;
+		gap: 0.625rem;
+		height: 2.25rem;
+		padding: 0 0.75rem;
+		border-radius: 9999px;
+		font-size: 0.875rem;
+		color: var(--color-ink);
+		transition:
+			background 160ms var(--ease-spring),
+			color 160ms var(--ease-spring),
+			scale 220ms var(--ease-spring);
+	}
+
+	.nav-link:active {
+		scale: 0.97;
+	}
+
+	@media (hover: hover) {
+		.nav-link:hover {
+			background: color-mix(in srgb, var(--color-ink) 6%, transparent);
+		}
+	}
+
+	@media (max-width: 767px), (pointer: coarse) {
+		.nav-link {
+			height: 2.75rem;
+			font-size: 0.9375rem;
+		}
+	}
+
+	.nav-link.active {
+		background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+		box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 10%, transparent);
+		color: var(--color-accent);
+		font-weight: 500;
+	}
+
 	.field {
 		height: 2.25rem;
 		border-radius: 0.75rem;
