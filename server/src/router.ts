@@ -4,7 +4,7 @@ import { namePrefixed, type Person } from '../../shared/sharing';
 import { requireActor, requireHuman } from './actor';
 import { agentDocs, agentOpenApiFor, startDocs } from './docs';
 import { internalClient } from './account/peers';
-import { aiAccounts, authMethods, createAiUser, deleteAccount, deleteUser, userByEmail, userById } from './better-auth';
+import { aiAccounts, authMethods, createAiUser, deleteUser, userByEmail, userById } from './better-auth';
 import type { Env } from './bindings';
 import { classifyDelivery } from './push-schedule';
 import { requireVapid, sendTestPush } from './push';
@@ -33,13 +33,6 @@ export const workerRouter = os.router({
 	status: os.status.handler(() => ({ ok: true as const })),
 	auth: {
 		methods: os.auth.methods.handler(({ context }) => authMethods(context.env)),
-	},
-	account: {
-		delete: os.account.delete.handler(async ({ context }) => {
-			const actor = await requireHuman(context.request, context.env);
-			await deleteAccount(context.request, context.env, actor);
-			return { ok: true as const };
-		}),
 	},
 	push: {
 		key: os.push.key.handler(({ context }) => ({ publicKey: requireVapid(context.env).publicKey })),

@@ -21,6 +21,10 @@ struct RootView: View {
             get: { navigator.quickAdd == nil && navigator.ramble == nil ? navigator.sheet : nil },
             set: { if $0 != nil || (navigator.quickAdd == nil && navigator.ramble == nil) { navigator.sheet = $0 } }
         )) { SheetView(sheet: $0) }
+        // Signing out from Settings, or a rejected token, must not leave a signed-in sheet over the sign-in screen.
+        .onChange(of: session.signedIn) { _, signedIn in
+            if !signedIn, navigator.sheet?.keepsWhenSignedOut != true { navigator.sheet = nil }
+        }
     }
 
     private var signedIn: some View {

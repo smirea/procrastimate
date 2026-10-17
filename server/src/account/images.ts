@@ -38,7 +38,6 @@ export interface ImageStore {
 	states(): Promise<ImageState[]>;
 	/** Applies a `sweepPlan`: marks newly unlisted ids, clears the mark of listed ones, deletes the expired. */
 	sweep(plan: SweepPlan): Promise<void>;
-	clear(): Promise<void>;
 }
 
 /** Both the Durable Object's SQLite and Turso; Drizzle's sync drivers answer `await` too. */
@@ -89,9 +88,6 @@ export function databaseImages(open: () => Database | Promise<Database>, userId:
 			}
 			for (const ids of batches(drop)) await db.delete(images).where(and(own, inArray(images.id, ids)));
 		},
-		async clear() {
-			await (await database()).delete(images).where(own);
-		},
 	};
 }
 
@@ -113,9 +109,6 @@ export function memoryImages(): ImageStore {
 			for (const [, row] of withId(mark)) row.orphanedAt ??= now;
 			for (const [, row] of withId(unmark)) row.orphanedAt = null;
 			for (const [rowKey] of withId(drop)) rows.delete(rowKey);
-		},
-		async clear() {
-			rows.clear();
 		},
 	};
 }

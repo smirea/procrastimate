@@ -12,7 +12,6 @@ export type RambleLedger = {
 	seed(rows: RambleUsage[]): void;
 	seconds(day: string): number;
 	add(day: string, seconds: number): void;
-	clear(): void;
 	snapshot(): RambleUsage[];
 	settled(): Promise<void>;
 };
@@ -35,11 +34,6 @@ export function rambleLedger(persist: () => Promise<void>): RambleLedger {
 		add(day, seconds) {
 			if (!(seconds > 0)) return;
 			usage.set(day, (usage.get(day) ?? 0) + seconds);
-			void schedule();
-		},
-		clear() {
-			usage.clear();
-			seeded = true;
 			void schedule();
 		},
 		snapshot: () => [...usage].map(([day, seconds]) => ({ day, seconds })),

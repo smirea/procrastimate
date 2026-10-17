@@ -119,19 +119,6 @@ class Session {
 		toasts.show('Could not sign out');
 	}
 
-	/** Not optimistic: it cannot be undone, so the account stays until the server confirms. */
-	async deleteAccount(): Promise<boolean> {
-		const deleted = await api.account.delete().catch(() => null);
-		if (!deleted) {
-			toasts.show('Could not delete the account');
-			return false;
-		}
-		store.switchUser();
-		localStorage.removeItem(OWNER_KEY);
-		this.clear();
-		return true;
-	}
-
 	async #submit(path: string, body: object) {
 		this.error = '';
 		let response: Response;

@@ -149,10 +149,6 @@ function withRambleLedger(
 		addRambleSeconds: (day, seconds) => {
 			ledger.add(day, seconds);
 		},
-		clearAccount: () => {
-			store.clearAccount();
-			ledger.clear();
-		},
 		tables: () => ({ ...store.tables(), ramble: ledger.snapshot() }),
 	};
 }

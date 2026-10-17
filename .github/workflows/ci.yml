@@ -14,7 +14,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
+      # Full history: scripts/app-version.mts counts the commits for the version the build shows.
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
       - uses: ./.github/actions/setup
 
       # Stefan's machine runs env-manager from a live checkout, so a reader-format change there dirties every worktree until the pin follows.
@@ -44,7 +47,7 @@ jobs:
         env:
           BASE: ${{ github.event_name == 'push' && github.event.before || 'master' }}
         run: |
-          git fetch --no-tags --depth=1 origin "+$BASE:refs/remotes/ci/base"
+          git fetch --no-tags origin "+$BASE:refs/remotes/ci/base"
           bun server/scripts/migration-history.ts ci/base
 
       - name: Typecheck
@@ -75,7 +78,10 @@ jobs:
     timeout-minutes: 15
     name: e2e
     steps:
+      # Full history: scripts/app-version.mts counts the commits for the version the build shows.
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
       - uses: ./.github/actions/setup
 
       - name: Build

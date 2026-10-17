@@ -11,6 +11,10 @@ enum Sheet: Identifiable, Hashable {
     case sharedLink(token: String)
 
     var id: Self { self }
+
+    var keepsWhenSignedOut: Bool {
+        if case .sharedLink = self { true } else { false }
+    }
 }
 
 typealias QuickAddDefaults = QuickAddDraft.Defaults

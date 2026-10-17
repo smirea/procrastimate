@@ -98,33 +98,6 @@ describe.each(storeFactories)('a session on the %s store', (_name, createStore) 
 		expect(first.token).not.toBe(second.token);
 		expect(store.liveDevices().map(device => device.id)).toEqual([first.deviceId]);
 	});
-
-	test('delete account removes the user and their tasks', async () => {
-		const credentials = await registerDevice(env, 'Mac');
-		const response = await api.fetch(
-			new Request('https://procrastimate.test/api/account/delete', {
-				method: 'POST',
-				headers: { Authorization: `Bearer ${credentials.token}`, [DEVICE_HEADER]: credentials.deviceId },
-			}),
-			env,
-		);
-		expect(response.status).toBe(200);
-		expect(store.liveDevices()).toEqual([]);
-		expect(store.entities()).toEqual([]);
-		const again = await api.fetch(
-			new Request('https://procrastimate.test/api/sync', {
-				method: 'POST',
-				headers: {
-					Authorization: `Bearer ${credentials.token}`,
-					[DEVICE_HEADER]: credentials.deviceId,
-					'content-type': 'application/json',
-				},
-				body: JSON.stringify({ cursor: 0, ops: [] }),
-			}),
-			env,
-		);
-		expect(again.status).toBe(401);
-	});
 });
 
 test('methods hides providers that have no credentials', async () => {

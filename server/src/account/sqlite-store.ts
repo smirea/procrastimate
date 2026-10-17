@@ -146,23 +146,6 @@ export function sqliteStore(db: SyncDatabase, userId: string, mode: MigrateMode)
 		clearTaskData: () => {
 			for (const table of [...Object.values(ENTITY_TABLES), log]) db.delete(table).where(own(table.userId)).run();
 		},
-		clearAccount: () => {
-			for (const table of [
-				...Object.values(ENTITY_TABLES),
-				devices,
-				log,
-				taskClients,
-				push,
-				rambleUsage,
-				meta,
-				shares,
-				memberships,
-				people,
-				apiTokens,
-			]) {
-				db.delete(table).where(own(table.userId)).run();
-			}
-		},
 		epoch: () =>
 			Number(
 				db

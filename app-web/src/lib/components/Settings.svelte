@@ -4,10 +4,9 @@
 	import ArrowSquareIn from 'phosphor-svelte/lib/ArrowSquareIn';
 	import Warning from 'phosphor-svelte/lib/Warning';
 	import type { ImportSummary } from 'shared/todoist.ts';
-	import { toggleButton } from 'shared/quick-add-buttons.ts';
-	import { BUTTON_INFO, WEB_BUTTONS } from '../quick-add-buttons.ts';
 	import AiAccounts from './AiAccounts.svelte';
 	import DictationSwitcher from './DictationSwitcher.svelte';
+	import QuickAddButtonSettings from './QuickAddButtonSettings.svelte';
 	import ThemeSwitcher from './ThemeSwitcher.svelte';
 	import { push } from '../push.svelte.ts';
 	import { session } from '../session.svelte.ts';
@@ -24,8 +23,6 @@
 
 	let status = $state<Status>({ kind: 'idle' });
 	let confirmingDelete = $state(false);
-	let confirmingAccount = $state(false);
-	let deletingAccount = $state(false);
 	let input: HTMLInputElement;
 
 	const notificationLine = $derived(
@@ -36,11 +33,6 @@
 		store.deleteAll();
 		void sync.syncNow();
 		confirmingDelete = false;
-	}
-
-	async function deleteAccount() {
-		deletingAccount = true;
-		if (!(await session.deleteAccount())) deletingAccount = false;
 	}
 
 	const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
@@ -75,23 +67,8 @@
 
 	<section class="flex flex-col gap-2">
 		<h3 class="heading">Quick add buttons</h3>
-		<div class="flex flex-wrap gap-1.5" role="group" aria-label="Quick add buttons">
-			{#each WEB_BUTTONS as button (button)}
-				{@const { name, icon: Icon } = BUTTON_INFO[button]}
-				{@const shown = store.quickAddButtons.includes(button)}
-				<button
-					type="button"
-					class="chip h-8 px-2.5 touch:h-11"
-					data-active={shown}
-					aria-pressed={shown}
-					onclick={() => store.setQuickAddButtons(toggleButton(store.quickAddButtons, button))}
-				>
-					<Icon size={14} weight={shown ? 'fill' : 'regular'} class={shown ? 'text-accent' : ''} />
-					{name}
-				</button>
-			{/each}
-		</div>
-		<p class="px-1.5 text-[12px] text-muted">The rest stay in quick add's + menu.</p>
+		<QuickAddButtonSettings />
+		<p class="px-1.5 text-[12px] text-muted">Drag to order the row. The rest stay in quick add's + menu.</p>
 	</section>
 
 	{#if push.line === 'needs-permission'}
@@ -165,20 +142,9 @@
 		<button type="button" class="menu-item -mx-1.5 w-auto touch:h-11 touch:text-[15px]" onclick={() => session.signOut()}>
 			Sign out
 		</button>
-		{#if confirmingAccount}
-			<p class="px-1.5 text-[13px] text-ink">Delete this account and every task, project, and label?</p>
-			<div class="flex gap-2">
-				<button type="button" class="btn press bg-[var(--tone-overdue)] text-on-accent" disabled={deletingAccount} onclick={deleteAccount}>
-					{deletingAccount ? 'Deleting…' : 'Delete account'}
-				</button>
-				<button type="button" class="btn press" disabled={deletingAccount} onclick={() => (confirmingAccount = false)}>Cancel</button>
-			</div>
-		{:else}
-			<button type="button" class="menu-item -mx-1.5 w-auto text-[var(--tone-overdue)] touch:h-11 touch:text-[15px]" onclick={() => (confirmingAccount = true)}>
-				Delete account
-			</button>
-		{/if}
 	</section>
+
+	<p class="px-1.5 text-center text-[12px] text-faint tabular-nums">Version {__APP_VERSION__}</p>
 </div>
 
 <style>

@@ -437,6 +437,7 @@ private struct ParseInput: Decodable {
     switch fn {
     case "toggleButton": return try json(QuickAddButtons.toggleButton(a(0), a(1)))
     case "rowButtons": return try json(QuickAddButtons.rowButtons(a(0), a(1), a(2)))
+    case "moveButton": return try json(QuickAddButtons.moveButton(a(0), a(1), a(2) as QuickAddButton?))
     default: throw unknown(fn)
     }
 }

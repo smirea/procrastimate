@@ -11,6 +11,11 @@ enum AppEnvironment {
         return url
     }
 
+    /// `<commit count>.<yyyyMMdd>`, set by `scripts/archive` and `scripts/run` from `scripts/app-version.mts`.
+    static var version: String {
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""
+    }
+
     /// The public DSN of Sentry project `procrastimate-ios` in org `self-uo7`. Empty means not provisioned, which a Release
     /// build refuses: `scripts/archive` will not archive it and the app stops at launch.
     static let sentryDSN = "https://b975a641b1c9cd8b96701a6c6b9de1c6@o4512270794817536.ingest.us.sentry.io/4512271645605888"

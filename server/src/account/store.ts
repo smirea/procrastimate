@@ -46,8 +46,6 @@ export interface AccountStore {
 	putTaskClients(row: TaskClientsRow): void;
 	/** Drops every task, project, label, and the log. Devices, push subscriptions, and task clients stay. */
 	clearTaskData(): void;
-	/** Drops the whole account: tasks, task clients, devices, push, Ramble usage, shares, memberships, people, and API tokens. */
-	clearAccount(): void;
 	/** Bumped when task data is wiped, so a client still holding the old copy drops it. */
 	epoch(): number;
 	setEpoch(epoch: number): void;

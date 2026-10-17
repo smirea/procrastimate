@@ -96,7 +96,10 @@ jobs:
       run:
         working-directory: app-ios
     steps:
+      # Full history: scripts/app-version.mts counts the commits for the version Settings shows.
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - uses: oven-sh/setup-bun@v2
         with:

@@ -106,10 +106,6 @@ export const workerContract = {
 	auth: {
 		methods: oc.meta(openapi({ method: 'GET', path: '/api/auth/methods' })).output(authMethodsSchema),
 	},
-	account: {
-		/** Deletes the signed-in user and their tasks. Social accounts have no password, so none is asked for. */
-		delete: signedIn.meta(openapi({ method: 'POST', path: '/api/account/delete' })).output(okSchema),
-	},
 	push: {
 		key: oc
 			.errors({ SERVICE_UNAVAILABLE: {} })
@@ -586,10 +582,6 @@ export const accountContract = {
 
 /** Worker to `Account` only. The Worker never forwards it, so no client can call it. */
 export const internalContract = {
-	wipe: oc
-		.errors({ UNAUTHORIZED: {} })
-		.meta(openapi({ method: 'POST', path: '/api/account/wipe' }))
-		.output(okSchema),
 	/** Owner to guest: the owner's space is shared with this user (`live`), or no longer is. */
 	membership: oc
 		.errors({ UNAUTHORIZED: {} })
