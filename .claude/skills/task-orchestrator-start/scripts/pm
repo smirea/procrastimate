@@ -6,6 +6,9 @@
 #                                                       add a task unless an open one in the project has this title;
 #                                                       prints "<id> <public link>"; safe to rerun
 #   pm link <task id>                                   print the task's public read-only link
+#   pm tasks <project name or id>                       open tasks with section, parent, priority, label names, notes
+#   pm comments <task id>                               the task's comments, oldest first
+#   pm label <task id> +<name>|-<name>...               add or remove labels by name, keeping the others
 set -euo pipefail
 
 # Worktrees have no ignored env files, so read them from the main checkout.
@@ -73,6 +76,39 @@ file)
 	;;
 link)
 	link "$2"
+	;;
+tasks)
+	api GET /view | jq -r --arg p "$2" '
+		([.projects[] | select(.id == $p or .name == $p)] | if length == 1 then .[0].id
+			else error("expected one project named \($p), found \(length)") end) as $pid
+		| (.labels | map({(.id): .name}) | add // {}) as $labels
+		| (.sections | map({(.id): .name}) | add // {}) as $sections
+		| .tasks[] | select(.projectId == $pid and .completedAt == null)
+		| "\(.id) p\(.priority) section=\($sections[.sectionId // ""] // "-") parent=\(.parentId // "-")"
+			+ " labels=\([.labelIds[] | $labels[.]] | join(",")) images=\(.images | length)"
+			+ "\n  \(.title)" + (if .notes then "\n  " + (.notes | gsub("\n"; "\n  ")) else "" end)'
+	;;
+comments)
+	api GET "/comments?id=$2" | jq -r '.comments | sort_by(.createdAt)[]
+		| "[\(.createdAt / 1000 | todate) \(.author.name) (\(.author.kind))] \(.body)"'
+	;;
+label)
+	task=$2
+	shift 2
+	view=$(api GET /view)
+	ids=$(jq -c --arg t "$task" '.tasks[] | select(.id == $t) | .labelIds' <<<"$view")
+	[[ -n $ids ]] || { echo "no task $task" >&2; exit 1; }
+	for change in "$@"; do
+		[[ $change == [+-]?* ]] || { echo "label changes look like +name or -name, got '$change'" >&2; exit 1; }
+		name=${change:1}
+		id=$(jq -r --arg n "$name" '.labels[] | select(.name == $n) | .id' <<<"$view")
+		[[ -n $id ]] || { echo "no label '$name'; the AI account can't create labels, ask Stefan to" >&2; exit 1; }
+		case ${change:0:1} in
+		+) ids=$(jq -c --arg id "$id" '. + [$id] | unique' <<<"$ids") ;;
+		-) ids=$(jq -c --arg id "$id" 'map(select(. != $id))' <<<"$ids") ;;
+		esac
+	done
+	jq -n --argjson ids "$ids" '{labelIds:$ids}' | api PATCH "/tasks?id=$task" -d @- | jq -c '{id,labelIds}'
 	;;
 *)
 	api "$@"
