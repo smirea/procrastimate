@@ -10,6 +10,7 @@ import {
 } from 'shared/sync/protocol.ts';
 import { ORPCError } from '@orpc/client';
 import { api, isUnauthorized } from './api.ts';
+import { reportWarning } from './sentry.ts';
 import { images } from './images/images.svelte.ts';
 import { session } from './session.svelte.ts';
 import { store } from './store.svelte.ts';
@@ -240,6 +241,7 @@ class Sync {
 		const parsed = syncResponseSchema.safeParse(response);
 		if (!parsed.success) {
 			console.warn('sync: unreadable response', parsed.error.issues.slice(0, 5));
+			reportWarning('sync: unreadable response', { issues: parsed.error.issues.slice(0, 20) });
 			return false;
 		}
 		const { seeded, notice } = store.takeResponse(parsed.data);

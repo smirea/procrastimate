@@ -2,6 +2,7 @@ import { replaceState } from '$app/navigation';
 import { page } from '$app/state';
 import { pushSubscriptionSchema, type PushSubscriptionInfo } from 'shared/push.ts';
 import { api, isUnauthorized } from './api.ts';
+import { reportError } from './sentry.ts';
 import { session } from './session.svelte.ts';
 import { store } from './store.svelte.ts';
 import { sheets } from './ui.svelte.ts';
@@ -144,6 +145,7 @@ class Push {
 			await this.#register(info);
 			this.state = { kind: 'on', subscription: info };
 		} catch (error) {
+			reportError(error);
 			this.state = { kind: 'error', message: messageOf(error) };
 		}
 	}

@@ -20,6 +20,7 @@
 	import { fireDueReminders } from '#lib/reminders.ts';
 	import { openTaskFromUrl, push } from '#lib/push.svelte.ts';
 	import { session } from '#lib/session.svelte.ts';
+	import { runSentrySmoke } from '#lib/sentry.ts';
 	import SignIn from '#lib/components/SignIn.svelte';
 	import { sync } from '#lib/sync.svelte.ts';
 	import { applyTheme, theme } from '#lib/theme.svelte.ts';
@@ -84,7 +85,7 @@
 	$effect(() => applyTheme(theme.resolved));
 	$effect(() => clock.start());
 	$effect(() => trackKeyboardInset());
-	$effect(() => untrack(() => void session.start()));
+	$effect(() => untrack(() => void session.start().then(runSentrySmoke)));
 	$effect(() => {
 		if (session.state !== 'in' || !session.confirmed) return;
 		const stopPush = untrack(() => push.start());
