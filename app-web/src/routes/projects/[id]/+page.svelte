@@ -70,7 +70,6 @@
 		emptyHint={`Add one here, or type #${project.name} in quick add.`}
 		subtitle={owner ? `Shared by ${owner.name}` : undefined}
 		canAdd={false}
-		quickAdd={{ projectId: project.id, labelId: null, today: false }}
 		markdown={() => projectDocument(project, groups)}
 	>
 		{#snippet title()}
@@ -133,7 +132,7 @@
 			<CompletedList tasks={doneIn(null)} label={`Completed ${project.name} tasks`} />
 		{/if}
 		{#if canAdd}
-			<AddTaskButton quickAdd={{ projectId: project.id, sectionId: null, labelId: null, today: false }} />
+			<AddTaskButton />
 		{/if}
 		{#each sections as { section, tasks: inSection }, index (section.id)}
 			<div {@attach leaving} animate:flip={motion({ duration: 260, easing: cubicOut })} transition:fade={motion({ duration: 180 })}>

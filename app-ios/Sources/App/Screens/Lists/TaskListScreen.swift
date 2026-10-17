@@ -17,6 +17,9 @@ struct TaskListScreen<Content: View>: View {
     var labelColor: LabelColor?
     /// The open rows the list shows, for the count beside the title.
     var open: Int?
+    /// The whole list as Markdown, for a copy button at the top right. Project and label screens copy from their menu
+    /// instead.
+    var markdown: Markdown.Document?
     @ViewBuilder let content: () -> Content
 
     @Environment(Navigator.self) private var navigator
@@ -46,7 +49,15 @@ struct TaskListScreen<Content: View>: View {
         .listStyle(.plain)
         .refreshable { await accountSync.refresh() }
         .safeAreaInset(edge: .top, spacing: 0) {
-            if let newestFirst { SortButton(newestFirst: newestFirst) }
+            if newestFirst != nil || (floats && markdown != nil) {
+                HStack(spacing: 8) {
+                    if floats, let markdown { FloatingCopyButton(document: markdown) }
+                    if let newestFirst { SortButton(newestFirst: newestFirst) }
+                }
+                .frame(maxWidth: .infinity, alignment: .trailing)
+                .padding(.horizontal, 16)
+                .padding(.bottom, 4)
+            }
         }
         .environment(\.defaultMinListRowHeight, 0)
         .scrollContentBackground(.hidden)
@@ -62,6 +73,9 @@ struct TaskListScreen<Content: View>: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .principal) { compactTitle }
+            if !floats, let markdown {
+                ToolbarItem(placement: .primaryAction) { CopyMarkdownButton(document: markdown) }
+            }
         }
         .toolbarVisibility(floats ? .hidden : .automatic, for: .navigationBar)
         .overlay(alignment: .top) {
@@ -92,6 +106,24 @@ struct TaskListScreen<Content: View>: View {
     }
 }
 
+/// A tab's root list has no bar, so its copy button floats in glass beside the sort button.
+private struct FloatingCopyButton: View {
+    @Environment(TaskActions.self) private var actions
+    let document: Markdown.Document
+
+    var body: some View {
+        Button { actions.copyAsMarkdown(document) } label: {
+            Image(systemName: "doc.on.doc")
+                .font(.subheadline.weight(.medium))
+                .frame(width: 44, height: 44)
+                .contentShape(.circle)
+                .glassEffect(.regular.interactive(), in: .circle)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Copy as Markdown")
+    }
+}
+
 private struct SortButton: View {
     @Binding var newestFirst: Bool
 
@@ -108,9 +140,6 @@ private struct SortButton: View {
                 .glassEffect(.regular.interactive(), in: .capsule)
         }
         .buttonStyle(.plain)
-        .frame(maxWidth: .infinity, alignment: .trailing)
-        .padding(.horizontal, 16)
-        .padding(.bottom, 4)
         .sensoryFeedback(.selection, trigger: newestFirst)
         .accessibilityLabel(newestFirst ? "Sorted newest first" : "Sorted oldest first")
         .accessibilityHint("Flips the sort")
@@ -135,16 +164,25 @@ struct CanvasBackground: View {
 
 struct ListHeading: View {
     @Environment(TaskActions.self) private var actions
+    @Environment(Store.self) private var store
+    @Environment(Navigator.self) private var navigator
 
     let text: String
     var tone: Color = .ink
     let tasks: [TaskItem]
     /// Off for done tasks, which are not pending.
     var counted = true
+    /// The screen this heading's `Add task` opens quick add on, such as its day in Inbox. Nil hides it.
+    var addTo: ListScreen?
 
     var body: some View {
         // A plain List never shows a header's `.contextMenu`, so a long press opens this menu and a tap does nothing.
         Menu {
+            if let addTo {
+                Button("Add task", systemImage: "plus") {
+                    navigator.sheet = .quickAdd(Screens.defaults(addTo, store.tasks))
+                }
+            }
             Button("Copy as Markdown", systemImage: "doc.on.doc") {
                 actions.copyAsMarkdown(Markdown.Document(sections: [.init(heading: text, tasks: tasks)]))
             }

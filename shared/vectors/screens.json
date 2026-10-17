@@ -1,0 +1,1221 @@
+{
+	"module": "screens",
+	"timeZone": "America/New_York",
+	"cases": [
+		{
+			"fn": "screenDefaults",
+			"test": "screenDefaults › an Inbox day heading starts on its day",
+			"input": [
+				{
+					"date": "2026-10-15",
+					"kind": "inbox"
+				},
+				[]
+			],
+			"output": {
+				"date": "2026-10-15",
+				"event": null,
+				"labelId": null,
+				"location": null,
+				"projectId": null,
+				"sectionId": null
+			}
+		},
+		{
+			"fn": "screenDefaults",
+			"test": "screenDefaults › Inbox, No date, Completed, and no screen add a bare task",
+			"input": [
+				{
+					"kind": "inbox"
+				},
+				[]
+			],
+			"output": {
+				"date": null,
+				"event": null,
+				"labelId": null,
+				"location": null,
+				"projectId": null,
+				"sectionId": null
+			}
+		},
+		{
+			"fn": "screenDefaults",
+			"test": "screenDefaults › Inbox, No date, Completed, and no screen add a bare task",
+			"input": [
+				{
+					"kind": "no-date"
+				},
+				[]
+			],
+			"output": {
+				"date": null,
+				"event": null,
+				"labelId": null,
+				"location": null,
+				"projectId": null,
+				"sectionId": null
+			}
+		},
+		{
+			"fn": "screenDefaults",
+			"test": "screenDefaults › Inbox, No date, Completed, and no screen add a bare task",
+			"input": [
+				{
+					"kind": "completed"
+				},
+				[]
+			],
+			"output": {
+				"date": null,
+				"event": null,
+				"labelId": null,
+				"location": null,
+				"projectId": null,
+				"sectionId": null
+			}
+		},
+		{
+			"fn": "screenDefaults",
+			"test": "screenDefaults › Inbox, No date, Completed, and no screen add a bare task",
+			"input": [
+				null,
+				[]
+			],
+			"output": {
+				"date": null,
+				"event": null,
+				"labelId": null,
+				"location": null,
+				"projectId": null,
+				"sectionId": null
+			}
+		},
+		{
+			"fn": "screenDefaults",
+			"test": "screenDefaults › a project starts in the project, and in the section quick add opened from",
+			"input": [
+				{
+					"id": "home",
+					"kind": "project"
+				},
+				[]
+			],
+			"output": {
+				"date": null,
+				"event": null,
+				"labelId": null,
+				"location": null,
+				"projectId": "home",
+				"sectionId": null
+			}
+		},
+		{
+			"fn": "screenDefaults",
+			"test": "screenDefaults › a project starts in the project, and in the section quick add opened from",
+			"input": [
+				{
+					"id": "home",
+					"kind": "project",
+					"sectionId": "kitchen"
+				},
+				[]
+			],
+			"output": {
+				"date": null,
+				"event": null,
+				"labelId": null,
+				"location": null,
+				"projectId": "home",
+				"sectionId": "kitchen"
+			}
+		},
+		{
+			"fn": "screenDefaults",
+			"test": "screenDefaults › a label starts with the label",
+			"input": [
+				{
+					"id": "errands",
+					"kind": "label"
+				},
+				[]
+			],
+			"output": {
+				"date": null,
+				"event": null,
+				"labelId": "errands",
+				"location": null,
+				"projectId": null,
+				"sectionId": null
+			}
+		},
+		{
+			"fn": "screenDefaults",
+			"test": "screenDefaults › a place starts at the place, as its earliest open task names it",
+			"input": [
+				{
+					"key": "52.5000,13.4000",
+					"kind": "place"
+				},
+				[
+					{
+						"completedAt": 1,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "done",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": {
+							"address": null,
+							"latitude": 52.5,
+							"longitude": 13.4,
+							"name": "Old name",
+							"radius": 150,
+							"trigger": "arrive"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "done"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 2,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "first",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": {
+							"address": null,
+							"latitude": 52.5,
+							"longitude": 13.4,
+							"name": "Rewe",
+							"radius": 150,
+							"trigger": "arrive"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "first"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 3,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "second",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": {
+							"address": null,
+							"latitude": 52.5,
+							"longitude": 13.4,
+							"name": "Supermarket",
+							"radius": 150,
+							"trigger": "arrive"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "second"
+					}
+				]
+			],
+			"output": {
+				"date": null,
+				"event": null,
+				"labelId": null,
+				"location": {
+					"address": null,
+					"latitude": 52.5,
+					"longitude": 13.4,
+					"name": "Rewe",
+					"radius": 150,
+					"trigger": "arrive"
+				},
+				"projectId": null,
+				"sectionId": null
+			}
+		},
+		{
+			"fn": "screenDefaults",
+			"test": "screenDefaults › an event starts on the event, as its earliest open task follows it",
+			"input": [
+				{
+					"id": "standup",
+					"kind": "event"
+				},
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 4,
+						"createdBy": null,
+						"due": null,
+						"event": {
+							"allDay": false,
+							"edge": "before",
+							"id": "standup",
+							"minutes": 15,
+							"occurrences": [
+								{
+									"end": 1791991800000,
+									"original": 1791990000000,
+									"start": 1791990000000
+								}
+							],
+							"series": true,
+							"title": "Standup"
+						},
+						"id": "first",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "first"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 5,
+						"createdBy": null,
+						"due": null,
+						"event": {
+							"allDay": false,
+							"edge": "before",
+							"id": "standup",
+							"minutes": 5,
+							"occurrences": [
+								{
+									"end": 1791991800000,
+									"original": 1791990000000,
+									"start": 1791990000000
+								}
+							],
+							"series": true,
+							"title": "Standup"
+						},
+						"id": "second",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "second"
+					}
+				]
+			],
+			"output": {
+				"date": null,
+				"event": {
+					"allDay": false,
+					"edge": "before",
+					"id": "standup",
+					"minutes": 15,
+					"occurrences": [
+						{
+							"end": 1791991800000,
+							"original": 1791990000000,
+							"start": 1791990000000
+						}
+					],
+					"series": true,
+					"title": "Standup"
+				},
+				"labelId": null,
+				"location": null,
+				"projectId": null,
+				"sectionId": null
+			}
+		},
+		{
+			"fn": "screenDefaults",
+			"test": "screenDefaults › a place or event whose tasks are all done keeps the latest done copy",
+			"input": [
+				{
+					"key": "52.5000,13.4000",
+					"kind": "place"
+				},
+				[
+					{
+						"completedAt": 1,
+						"completedBy": null,
+						"createdAt": 6,
+						"createdBy": null,
+						"due": null,
+						"event": {
+							"allDay": false,
+							"edge": "before",
+							"id": "standup",
+							"minutes": 5,
+							"occurrences": [
+								{
+									"end": 1791991800000,
+									"original": 1791990000000,
+									"start": 1791990000000
+								}
+							],
+							"series": true,
+							"title": "Standup"
+						},
+						"id": "older",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": {
+							"address": null,
+							"latitude": 52.5,
+							"longitude": 13.4,
+							"name": "Old name",
+							"radius": 150,
+							"trigger": "arrive"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "older"
+					},
+					{
+						"completedAt": 2,
+						"completedBy": null,
+						"createdAt": 7,
+						"createdBy": null,
+						"due": null,
+						"event": {
+							"allDay": false,
+							"edge": "before",
+							"id": "standup",
+							"minutes": 0,
+							"occurrences": [
+								{
+									"end": 1791991800000,
+									"original": 1791990000000,
+									"start": 1791990000000
+								}
+							],
+							"series": true,
+							"title": "Standup"
+						},
+						"id": "newer",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": {
+							"address": null,
+							"latitude": 52.5,
+							"longitude": 13.4,
+							"name": "Rewe",
+							"radius": 150,
+							"trigger": "arrive"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "newer"
+					}
+				]
+			],
+			"output": {
+				"date": null,
+				"event": null,
+				"labelId": null,
+				"location": {
+					"address": null,
+					"latitude": 52.5,
+					"longitude": 13.4,
+					"name": "Rewe",
+					"radius": 150,
+					"trigger": "arrive"
+				},
+				"projectId": null,
+				"sectionId": null
+			}
+		},
+		{
+			"fn": "screenDefaults",
+			"test": "screenDefaults › a place or event whose tasks are all done keeps the latest done copy",
+			"input": [
+				{
+					"id": "standup",
+					"kind": "event"
+				},
+				[
+					{
+						"completedAt": 1,
+						"completedBy": null,
+						"createdAt": 6,
+						"createdBy": null,
+						"due": null,
+						"event": {
+							"allDay": false,
+							"edge": "before",
+							"id": "standup",
+							"minutes": 5,
+							"occurrences": [
+								{
+									"end": 1791991800000,
+									"original": 1791990000000,
+									"start": 1791990000000
+								}
+							],
+							"series": true,
+							"title": "Standup"
+						},
+						"id": "older",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": {
+							"address": null,
+							"latitude": 52.5,
+							"longitude": 13.4,
+							"name": "Old name",
+							"radius": 150,
+							"trigger": "arrive"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "older"
+					},
+					{
+						"completedAt": 2,
+						"completedBy": null,
+						"createdAt": 7,
+						"createdBy": null,
+						"due": null,
+						"event": {
+							"allDay": false,
+							"edge": "before",
+							"id": "standup",
+							"minutes": 0,
+							"occurrences": [
+								{
+									"end": 1791991800000,
+									"original": 1791990000000,
+									"start": 1791990000000
+								}
+							],
+							"series": true,
+							"title": "Standup"
+						},
+						"id": "newer",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": {
+							"address": null,
+							"latitude": 52.5,
+							"longitude": 13.4,
+							"name": "Rewe",
+							"radius": 150,
+							"trigger": "arrive"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "newer"
+					}
+				]
+			],
+			"output": {
+				"date": null,
+				"event": {
+					"allDay": false,
+					"edge": "before",
+					"id": "standup",
+					"minutes": 0,
+					"occurrences": [
+						{
+							"end": 1791991800000,
+							"original": 1791990000000,
+							"start": 1791990000000
+						}
+					],
+					"series": true,
+					"title": "Standup"
+				},
+				"labelId": null,
+				"location": null,
+				"projectId": null,
+				"sectionId": null
+			}
+		},
+		{
+			"fn": "screenDefaults",
+			"test": "screenDefaults › a place or event no task holds starts bare",
+			"input": [
+				{
+					"key": "52.5000,13.4000",
+					"kind": "place"
+				},
+				[]
+			],
+			"output": {
+				"date": null,
+				"event": null,
+				"labelId": null,
+				"location": null,
+				"projectId": null,
+				"sectionId": null
+			}
+		},
+		{
+			"fn": "screenDefaults",
+			"test": "screenDefaults › a place or event no task holds starts bare",
+			"input": [
+				{
+					"id": "standup",
+					"kind": "event"
+				},
+				[]
+			],
+			"output": {
+				"date": null,
+				"event": null,
+				"labelId": null,
+				"location": null,
+				"projectId": null,
+				"sectionId": null
+			}
+		},
+		{
+			"fn": "screenHolds",
+			"test": "screenHolds › Inbox holds dated tasks from any project",
+			"input": [
+				{
+					"kind": "inbox"
+				},
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 8,
+					"createdBy": null,
+					"due": {
+						"date": "2026-10-14",
+						"time": null
+					},
+					"event": null,
+					"id": "a",
+					"images": [],
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": "home",
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "a"
+				},
+				"2026-10-14"
+			],
+			"output": true
+		},
+		{
+			"fn": "screenHolds",
+			"test": "screenHolds › Inbox holds dated tasks from any project",
+			"input": [
+				{
+					"kind": "inbox"
+				},
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 9,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"id": "b",
+					"images": [],
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "b"
+				},
+				"2026-10-14"
+			],
+			"output": false
+		},
+		{
+			"fn": "screenHolds",
+			"test": "screenHolds › No date holds undated tasks in no project",
+			"input": [
+				{
+					"kind": "no-date"
+				},
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 10,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"id": "a",
+					"images": [],
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "a"
+				},
+				"2026-10-14"
+			],
+			"output": true
+		},
+		{
+			"fn": "screenHolds",
+			"test": "screenHolds › No date holds undated tasks in no project",
+			"input": [
+				{
+					"kind": "no-date"
+				},
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 11,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"id": "b",
+					"images": [],
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": "home",
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "b"
+				},
+				"2026-10-14"
+			],
+			"output": false
+		},
+		{
+			"fn": "screenHolds",
+			"test": "screenHolds › No date holds undated tasks in no project",
+			"input": [
+				{
+					"kind": "no-date"
+				},
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 12,
+					"createdBy": null,
+					"due": {
+						"date": "2026-10-14",
+						"time": null
+					},
+					"event": null,
+					"id": "c",
+					"images": [],
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "c"
+				},
+				"2026-10-14"
+			],
+			"output": false
+		},
+		{
+			"fn": "screenHolds",
+			"test": "screenHolds › a project, label, place, or event holds the tasks it lists",
+			"input": [
+				{
+					"id": "home",
+					"kind": "project"
+				},
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 13,
+					"createdBy": null,
+					"due": null,
+					"event": {
+						"allDay": false,
+						"edge": "before",
+						"id": "standup",
+						"minutes": 0,
+						"occurrences": [
+							{
+								"end": 1791991800000,
+								"original": 1791990000000,
+								"start": 1791990000000
+							}
+						],
+						"series": true,
+						"title": "Standup"
+					},
+					"id": "a",
+					"images": [],
+					"labelIds": [
+						"errands"
+					],
+					"lastCompletedAt": null,
+					"location": {
+						"address": null,
+						"latitude": 52.5,
+						"longitude": 13.4,
+						"name": "Rewe",
+						"radius": 150,
+						"trigger": "arrive"
+					},
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": "home",
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "a"
+				},
+				"2026-10-14"
+			],
+			"output": true
+		},
+		{
+			"fn": "screenHolds",
+			"test": "screenHolds › a project, label, place, or event holds the tasks it lists",
+			"input": [
+				{
+					"id": "work",
+					"kind": "project"
+				},
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 13,
+					"createdBy": null,
+					"due": null,
+					"event": {
+						"allDay": false,
+						"edge": "before",
+						"id": "standup",
+						"minutes": 0,
+						"occurrences": [
+							{
+								"end": 1791991800000,
+								"original": 1791990000000,
+								"start": 1791990000000
+							}
+						],
+						"series": true,
+						"title": "Standup"
+					},
+					"id": "a",
+					"images": [],
+					"labelIds": [
+						"errands"
+					],
+					"lastCompletedAt": null,
+					"location": {
+						"address": null,
+						"latitude": 52.5,
+						"longitude": 13.4,
+						"name": "Rewe",
+						"radius": 150,
+						"trigger": "arrive"
+					},
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": "home",
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "a"
+				},
+				"2026-10-14"
+			],
+			"output": false
+		},
+		{
+			"fn": "screenHolds",
+			"test": "screenHolds › a project, label, place, or event holds the tasks it lists",
+			"input": [
+				{
+					"id": "errands",
+					"kind": "label"
+				},
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 13,
+					"createdBy": null,
+					"due": null,
+					"event": {
+						"allDay": false,
+						"edge": "before",
+						"id": "standup",
+						"minutes": 0,
+						"occurrences": [
+							{
+								"end": 1791991800000,
+								"original": 1791990000000,
+								"start": 1791990000000
+							}
+						],
+						"series": true,
+						"title": "Standup"
+					},
+					"id": "a",
+					"images": [],
+					"labelIds": [
+						"errands"
+					],
+					"lastCompletedAt": null,
+					"location": {
+						"address": null,
+						"latitude": 52.5,
+						"longitude": 13.4,
+						"name": "Rewe",
+						"radius": 150,
+						"trigger": "arrive"
+					},
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": "home",
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "a"
+				},
+				"2026-10-14"
+			],
+			"output": true
+		},
+		{
+			"fn": "screenHolds",
+			"test": "screenHolds › a project, label, place, or event holds the tasks it lists",
+			"input": [
+				{
+					"key": "52.5000,13.4000",
+					"kind": "place"
+				},
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 13,
+					"createdBy": null,
+					"due": null,
+					"event": {
+						"allDay": false,
+						"edge": "before",
+						"id": "standup",
+						"minutes": 0,
+						"occurrences": [
+							{
+								"end": 1791991800000,
+								"original": 1791990000000,
+								"start": 1791990000000
+							}
+						],
+						"series": true,
+						"title": "Standup"
+					},
+					"id": "a",
+					"images": [],
+					"labelIds": [
+						"errands"
+					],
+					"lastCompletedAt": null,
+					"location": {
+						"address": null,
+						"latitude": 52.5,
+						"longitude": 13.4,
+						"name": "Rewe",
+						"radius": 150,
+						"trigger": "arrive"
+					},
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": "home",
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "a"
+				},
+				"2026-10-14"
+			],
+			"output": true
+		},
+		{
+			"fn": "screenHolds",
+			"test": "screenHolds › a project, label, place, or event holds the tasks it lists",
+			"input": [
+				{
+					"key": "0.0000,0.0000",
+					"kind": "place"
+				},
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 13,
+					"createdBy": null,
+					"due": null,
+					"event": {
+						"allDay": false,
+						"edge": "before",
+						"id": "standup",
+						"minutes": 0,
+						"occurrences": [
+							{
+								"end": 1791991800000,
+								"original": 1791990000000,
+								"start": 1791990000000
+							}
+						],
+						"series": true,
+						"title": "Standup"
+					},
+					"id": "a",
+					"images": [],
+					"labelIds": [
+						"errands"
+					],
+					"lastCompletedAt": null,
+					"location": {
+						"address": null,
+						"latitude": 52.5,
+						"longitude": 13.4,
+						"name": "Rewe",
+						"radius": 150,
+						"trigger": "arrive"
+					},
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": "home",
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "a"
+				},
+				"2026-10-14"
+			],
+			"output": false
+		},
+		{
+			"fn": "screenHolds",
+			"test": "screenHolds › a project, label, place, or event holds the tasks it lists",
+			"input": [
+				{
+					"id": "standup",
+					"kind": "event"
+				},
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 13,
+					"createdBy": null,
+					"due": null,
+					"event": {
+						"allDay": false,
+						"edge": "before",
+						"id": "standup",
+						"minutes": 0,
+						"occurrences": [
+							{
+								"end": 1791991800000,
+								"original": 1791990000000,
+								"start": 1791990000000
+							}
+						],
+						"series": true,
+						"title": "Standup"
+					},
+					"id": "a",
+					"images": [],
+					"labelIds": [
+						"errands"
+					],
+					"lastCompletedAt": null,
+					"location": {
+						"address": null,
+						"latitude": 52.5,
+						"longitude": 13.4,
+						"name": "Rewe",
+						"radius": 150,
+						"trigger": "arrive"
+					},
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": "home",
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "a"
+				},
+				"2026-10-14"
+			],
+			"output": true
+		},
+		{
+			"fn": "screenHolds",
+			"test": "screenHolds › Completed and no screen hold no new task",
+			"input": [
+				{
+					"kind": "completed"
+				},
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 14,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"id": "a",
+					"images": [],
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "a"
+				},
+				"2026-10-14"
+			],
+			"output": false
+		},
+		{
+			"fn": "screenHolds",
+			"test": "screenHolds › Completed and no screen hold no new task",
+			"input": [
+				null,
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 15,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"id": "a",
+					"images": [],
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "a"
+				},
+				"2026-10-14"
+			],
+			"output": false
+		}
+	]
+}

@@ -81,16 +81,15 @@ import Testing
     }
 
     @Test func listDefaultsFillWhatTheSpeechLeftEmpty() {
-        let defaults = QuickAddDraft.Defaults(projectId: "p-work", labelId: "l-calls", today: true)
+        let defaults = QuickAddDraft.Defaults(projectId: "p-work", labelId: "l-calls", date: "2026-10-14")
         let spoken = Ramble.newTask(
             RambleTask(segment: RambleSpan(start: 0, end: 8), title: "Call Ana", projectId: "p-home"),
-            defaults: defaults,
-            today: "2026-10-14"
+            defaults: defaults
         )
         #expect(spoken.projectId == "p-home")
         #expect(spoken.labelIds == ["l-calls"])
         #expect(spoken.due == Due(date: "2026-10-14", time: nil))
-        let subtask = Ramble.newTask(RambleTask(segment: RambleSpan(start: 0, end: 16), title: "Bring the slides"), defaults: nil, today: "2026-10-14")
+        let subtask = Ramble.newTask(RambleTask(segment: RambleSpan(start: 0, end: 16), title: "Bring the slides"), defaults: nil)
         #expect(subtask.projectId == nil)
         #expect(subtask.labelIds == [])
         #expect(subtask.due == nil)

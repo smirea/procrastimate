@@ -127,19 +127,25 @@ extension Ramble {
     }
 
     /// The task to save for a spoken task. List defaults fill only what the speech left empty, as in quick add: the
-    /// list's project, its label first, and today's date in Today. Subtasks take neither, since they live in their
-    /// parent's project.
-    public static func newTask(_ task: RambleTask, defaults: QuickAddDraft.Defaults?, today: DateKey) -> NewTask {
+    /// list's project, and its section while the speech names no other project, its label first, its place, and the day
+    /// of an Inbox heading. The list's event stands in for any spoken date or repeat, as a picked event does in quick
+    /// add. Subtasks take none, since they live in their parent's project.
+    public static func newTask(_ task: RambleTask, defaults: QuickAddDraft.Defaults?) -> NewTask {
         var labelIds = task.labelIds
         if let labelId = defaults?.labelId, !labelIds.contains(labelId) { labelIds.insert(labelId, at: 0) }
+        let event = defaults?.event
+        let ownProject = task.projectId == nil || task.projectId == defaults?.projectId
         return NewTask(
             title: task.title.trimmingCharacters(in: .whitespacesAndNewlines),
             projectId: task.projectId ?? defaults?.projectId,
+            sectionId: ownProject ? defaults?.sectionId : nil,
             labelIds: labelIds,
-            due: task.due ?? (defaults?.today == true ? Due(date: today, time: nil) : nil),
-            recurrence: task.recurrence,
+            due: event == nil ? task.due ?? defaults?.date.map { Due(date: $0, time: nil) } : nil,
+            recurrence: event == nil ? task.recurrence : nil,
             priority: task.priority,
-            reminders: task.reminders
+            reminders: task.reminders,
+            location: defaults?.location,
+            event: event
         )
     }
 }

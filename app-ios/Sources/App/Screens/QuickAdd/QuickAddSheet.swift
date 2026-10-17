@@ -6,11 +6,10 @@ import UIKit
 /// the text set, and the project picker. It is an overlay rather than a sheet, because a sheet floats above the
 /// keyboard with a gap. Saving closes it and shows the new task in its list; dismissing discards the draft.
 struct QuickAddSheet: View {
-    @Environment(\.clock) private var clock
     let defaults: QuickAddDefaults
 
     var body: some View {
-        QuickAddForm(defaults: defaults, today: clock.today)
+        QuickAddForm(defaults: defaults)
     }
 }
 
@@ -27,7 +26,7 @@ private struct QuickAddForm: View {
 
     @State private var draft: QuickAddDraft
     @State private var listAt: Int?
-    /// Picked with their chips only; neither has a phrase in the text.
+    /// Picked with their chips, or from a place or event screen; neither has a phrase in the text.
     @State private var location: TaskLocation?
     @State private var event: TaskEvent?
     @State private var subtasks: [DraftSubtask] = []
@@ -41,8 +40,10 @@ private struct QuickAddForm: View {
     @FocusState private var focused: Bool
     @FocusState private var subtaskFocused: Bool
 
-    init(defaults: QuickAddDefaults, today: DateKey) {
-        _draft = State(initialValue: QuickAddDraft(defaults: defaults, today: today))
+    init(defaults: QuickAddDefaults) {
+        _draft = State(initialValue: QuickAddDraft(defaults: defaults))
+        _location = State(initialValue: defaults.location)
+        _event = State(initialValue: defaults.event)
     }
 
     private var showMic: Bool { draft.text.isEmpty }
@@ -326,17 +327,18 @@ private struct QuickAddForm: View {
 
     private func submit() {
         let parsed = draft.parse(now: clock.now, projects: spaceProjects, sections: spaceSections, labels: spaceLabels, in: clock.timeZone)
-        guard let task = draft.resolve(parsed) else { return }
+        guard var task = draft.resolve(parsed) else { return }
+        task.location = location
+        task.event = event
+        if event != nil {
+            task.due = nil
+            task.recurrence = nil
+        }
         let typing = NewTask(subtask: QuickAdd.parseSubtask(subtaskText, now: clock.now, labels: spaceLabels, in: clock.timeZone))
         let children = subtasks.map(\.task) + (typing.map { [$0] } ?? [])
         let added: TaskItem? = withAnimation(.snappy) {
             guard let added = store.addTask(task) else { return nil }
             for child in children { _ = store.addTask(child, parentId: added.id) }
-            if let event {
-                store.updateTask(added.id, TaskPatch(due: .some(nil), recurrence: .some(nil), location: .some(location), event: .some(event)))
-            } else if let location {
-                store.updateTask(added.id, TaskPatch(location: .some(location)))
-            }
             return added
         }
         guard let added else { return }

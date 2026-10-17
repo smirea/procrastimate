@@ -16,6 +16,7 @@
 	import Toasts from '#lib/components/Toasts.svelte';
 	import ImageViewer from '#lib/components/ImageViewer.svelte';
 	import { store } from '#lib/store.svelte.ts';
+	import { quickAddDefaults } from '#lib/screen.ts';
 	import { clock, sheets, trackKeyboardInset, motion } from '#lib/ui.svelte.ts';
 	import { fireDueReminders } from '#lib/reminders.ts';
 	import { openTaskFromUrl, push } from '#lib/push.svelte.ts';
@@ -32,17 +33,9 @@
 	const isPublic = $derived(page.route.id === '/s/[token]');
 	const openTask = $derived(sheets.current.kind === 'task' ? store.task(sheets.current.id) : undefined);
 
-	function listDefaults() {
-		return {
-			projectId: page.route.id === '/projects/[id]' ? (page.params.id ?? null) : null,
-			labelId: page.route.id === '/labels/[id]' ? (page.params.id ?? null) : null,
-			today: false,
-		};
-	}
-
 	function openQuickAdd() {
 		menuOpen = false;
-		sheets.openQuickAdd(listDefaults());
+		sheets.openQuickAdd(quickAddDefaults());
 	}
 
 	function openSearch() {

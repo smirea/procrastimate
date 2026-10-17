@@ -11,6 +11,8 @@
 	import Plus from 'phosphor-svelte/lib/Plus';
 	import Repeat from 'phosphor-svelte/lib/Repeat';
 	import Tag from 'phosphor-svelte/lib/Tag';
+	import MapPin from 'phosphor-svelte/lib/MapPin';
+	import CalendarStar from 'phosphor-svelte/lib/CalendarStar';
 	import { parseQuickAdd, type QuickAddToken, type TokenKind } from 'shared/quick-add.ts';
 	import { unknownNames, type UnknownName } from 'shared/name-search.ts';
 	import { DEFAULT_PRIORITY, type Due, type Priority, type Recurrence, type Reminder } from 'shared/task.ts';
@@ -27,15 +29,18 @@
 	import { store } from '../store.svelte.ts';
 	import { labelStyle } from '../label-colors.ts';
 	import { creationHome } from '../spaces.ts';
-	import { clock, mobile, sheets, type QuickAddDefaults, motion } from '../ui.svelte.ts';
+	import { clock, mobile, sheets, motion } from '../ui.svelte.ts';
 	import { dueTone, formatDue, formatRecurrence, formatReminder } from 'shared/format.ts';
+	import { formatEvent, formatLocation } from 'shared/triggers.ts';
+	import type { ListDefaults } from 'shared/screens.ts';
+	import type { TaskEvent, TaskLocation } from 'shared/values.ts';
 	import type { NewTask } from 'shared/store.ts';
 	import { PRIORITIES } from '../priorities.ts';
 	import { parseSubtask, subtaskTask } from '../subtask-draft.ts';
 	import { NAME_SOURCES } from '../names.ts';
 	import { showAdded } from '../show-added.ts';
 
-	let { defaults }: { defaults: QuickAddDefaults } = $props();
+	let { defaults }: { defaults: ListDefaults } = $props();
 
 	type Picked = {
 		due: Due | null;
@@ -46,15 +51,20 @@
 		reminders: Reminder[];
 		/** Set by the repeat chip or a ramble. A typed repeat wins. */
 		recurrence: Recurrence | null;
+		/** Only a place or event screen sets these on the web, since picking one needs iPhone. */
+		location: TaskLocation | null;
+		event: TaskEvent | null;
 	};
 	const initialPicked = (): Picked => ({
-		due: defaults.today ? { date: clock.today, time: null } : null,
+		due: defaults.date ? { date: defaults.date, time: null } : null,
 		priority: null,
 		projectId: defaults.projectId,
-		sectionId: defaults.sectionId ?? null,
+		sectionId: defaults.sectionId,
 		labelIds: defaults.labelId ? [defaults.labelId] : [],
 		reminders: [],
 		recurrence: null,
+		location: defaults.location,
+		event: defaults.event,
 	});
 
 	let text = $state('');
@@ -115,8 +125,11 @@
 		...(labelIds.length && { labels: store.labelsOf({ labelIds }).map((l) => l.name).join(', ') }),
 		...((subtasksOpen || subtasks.length) && { subtasks: subtasks.length ? `${subtasks.length}` : 'Open' }),
 	});
+	/** An event stands in for the date and the repeat, as in task details. */
 	const buttons = $derived(
-		rowButtons(store.quickAddButtons, [...opened, ...WEB_BUTTONS.filter((b) => values[b])], WEB_BUTTONS) as WebButton[],
+		(rowButtons(store.quickAddButtons, [...opened, ...WEB_BUTTONS.filter((b) => values[b])], WEB_BUTTONS) as WebButton[]).filter(
+			(b) => !picked.event || (b !== 'date' && b !== 'repeat'),
+		),
 	);
 	/** Names to offer creating. The one the suggestion list is open on already offers it there. */
 	const unknown = $derived(
@@ -214,7 +227,19 @@
 	function submit() {
 		if (!parsed.title) return;
 		const reminders = [...parsed.reminders, ...picked.reminders];
-		const task = store.addTask({ title: parsed.title, due, recurrence, priority, projectId, sectionId, labelIds, reminders });
+		const { location, event } = picked;
+		const task = store.addTask({
+			title: parsed.title,
+			due: event ? null : due,
+			recurrence: event ? null : recurrence,
+			priority,
+			projectId,
+			sectionId,
+			labelIds,
+			reminders,
+			location,
+			event,
+		});
 		if (!task) return;
 		const typing = subtaskTask(subtaskParsed);
 		for (const child of [...subtasks.map((s) => s.task), ...(typing ? [typing] : [])]) store.addTask(child, task.id);
@@ -272,6 +297,22 @@
 			? fly(node, motion({ y: '100%', duration: 300, easing: cubicOut, opacity: 1 }))
 			: scale(node, motion({ start: 0.96, duration: 200, easing: cubicOut, opacity: 0 }));
 </script>
+
+{#snippet trigger(Icon: typeof MapPin, name: string, kind: string, clear: () => void)}
+	<span class="chip shrink-0 pr-1" data-active="true" transition:scale={motion({ start: 0.9, duration: 160 })}>
+		<Icon size={15} weight="fill" />
+		{name}
+		<button
+			type="button"
+			class="grid size-6 place-items-center rounded-full text-faint transition-colors hover:text-ink touch:-my-2.5 touch:size-11"
+			aria-label={`Remove ${kind}`}
+			onmousedown={(e) => e.preventDefault()}
+			onclick={clear}
+		>
+			<X size={11} weight="bold" />
+		</button>
+	</span>
+{/snippet}
 
 <div class="fixed inset-0 z-40 bg-scrim backdrop-blur-[2px]" transition:fade={motion({ duration: 160 })} onclick={() => sheets.close()} aria-hidden="true"></div>
 <div
@@ -382,6 +423,12 @@
 			role="group"
 			aria-label="Task attributes"
 		>
+			{#if picked.location}
+				{@render trigger(MapPin, formatLocation(picked.location), 'place', () => (picked.location = null))}
+			{/if}
+			{#if picked.event}
+				{@render trigger(CalendarStar, formatEvent(picked.event), 'event', () => (picked.event = null))}
+			{/if}
 			{#each buttons as button (button)}
 				<div class="flex shrink-0 items-center gap-1.5" data-button={button} animate:flip={motion({ duration: 200, easing: cubicOut })} {@attach intoView} transition:scale={motion({ start: 0.9, duration: 160 })}>
 					{#if button === 'date'}

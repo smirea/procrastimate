@@ -68,6 +68,8 @@ public enum StoreRules {
             recurrence: input.recurrence,
             priority: input.priority ?? .default,
             reminders: input.reminders,
+            location: input.location,
+            event: input.event,
             createdAt: max(creation.now, (data.tasks.last?.createdAt ?? Int.min) &+ 1)
         )
         var next = data

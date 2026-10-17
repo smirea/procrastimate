@@ -29,7 +29,8 @@ test('quick add parses a date, priority, reminder, #project, and @label and save
 
 	await app.taskInput().press('Enter');
 	await expect(quickAdd).toBeHidden();
-	await expect(page.getByRole('heading', { level: 1, name: 'Errands' })).toBeVisible();
+	await expect(page.getByRole('heading', { level: 1, name: 'Inbox' })).toBeVisible();
+	await app.go('Errands');
 	const row = app.list('Errands tasks').locator('[data-task="Call mom"]');
 	await expect(row).toContainText('Tomorrow 5pm');
 	await expect(row).toContainText('phone');

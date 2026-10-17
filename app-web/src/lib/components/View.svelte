@@ -6,7 +6,7 @@
 	import AddTaskButton from './AddTaskButton.svelte';
 	import CopyButton from './CopyButton.svelte';
 	import PendingCount from './PendingCount.svelte';
-	import { motion, type QuickAddDefaults } from '../ui.svelte.ts';
+	import { motion } from '../ui.svelte.ts';
 
 	let {
 		title,
@@ -15,7 +15,6 @@
 		empty,
 		emptyTitle,
 		emptyHint,
-		quickAdd,
 		canAdd = true,
 		actions,
 		markdown,
@@ -29,7 +28,6 @@
 		empty: boolean;
 		emptyTitle: string;
 		emptyHint: string;
-		quickAdd: QuickAddDefaults;
 		canAdd?: boolean;
 		actions?: Snippet;
 		markdown: () => MarkdownDocument;
@@ -61,7 +59,7 @@
 	{@render children()}
 
 	{#if canAdd}
-		<AddTaskButton {quickAdd} />
+		<AddTaskButton />
 	{/if}
 
 	{#if empty}

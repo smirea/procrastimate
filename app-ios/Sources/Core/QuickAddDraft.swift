@@ -4,18 +4,30 @@ import Foundation
 /// kept as text, and the values picked with chips. The text wins over a pick for the same attribute, and picking a
 /// value removes the phrase that set it. Offsets are UTF-16, like the parser's tokens.
 public struct QuickAddDraft: Hashable, Sendable {
-    /// What the sheet opened with, from the list it opened in.
+    /// What the sheet opened with, from the screen it opened on (`Screens.defaults`). An event stands in for the date
+    /// and the repeat.
     public struct Defaults: Hashable, Sendable {
         public var projectId: String?
         public var sectionId: String?
         public var labelId: String?
-        public var today: Bool
+        public var location: TaskLocation?
+        public var event: TaskEvent?
+        public var date: DateKey?
 
-        public init(projectId: String? = nil, sectionId: String? = nil, labelId: String? = nil, today: Bool = false) {
+        public init(
+            projectId: String? = nil,
+            sectionId: String? = nil,
+            labelId: String? = nil,
+            location: TaskLocation? = nil,
+            event: TaskEvent? = nil,
+            date: DateKey? = nil
+        ) {
             self.projectId = projectId
             self.sectionId = sectionId
             self.labelId = labelId
-            self.today = today
+            self.location = location
+            self.event = event
+            self.date = date
         }
     }
 
@@ -35,14 +47,14 @@ public struct QuickAddDraft: Hashable, Sendable {
     public private(set) var text = ""
     public var picked: Picked
 
-    public init(defaults: Defaults, today: DateKey) {
+    public init(defaults: Defaults) {
         self.defaults = defaults
-        picked = Self.initialPicked(defaults, today)
+        picked = Self.initialPicked(defaults)
     }
 
-    private static func initialPicked(_ defaults: Defaults, _ today: DateKey) -> Picked {
+    private static func initialPicked(_ defaults: Defaults) -> Picked {
         Picked(
-            due: defaults.today ? Due(date: today, time: nil) : nil,
+            due: defaults.date.map { Due(date: $0, time: nil) },
             priority: nil,
             projectId: defaults.projectId,
             sectionId: defaults.sectionId,
@@ -136,9 +148,9 @@ public struct QuickAddDraft: Hashable, Sendable {
     }
 
     /// Starts the next task: an empty field with the sheet's defaults.
-    public mutating func reset(today: DateKey) {
+    public mutating func reset() {
         text = ""
-        picked = Self.initialPicked(defaults, today)
+        picked = Self.initialPicked(defaults)
     }
 
     /// Replaces a `#`, `/`, or `@` fragment from `start` to `end` with the picked name and a space, and returns the new text

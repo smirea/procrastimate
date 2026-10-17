@@ -27,7 +27,6 @@
 	empty={view.loose.length + view.places.length === 0}
 	emptyTitle="Inbox zero"
 	emptyHint={mobile.current ? 'Tap + to capture a task.' : 'Press Q to capture a task.'}
-	quickAdd={{ projectId: null, labelId: null, today: false }}
 	markdown={() => ({
 		title: 'No date',
 		sections: [{ heading: null, tasks: view.loose }, ...view.places.map(place => ({ heading: place.name, tasks: place.tasks }))],

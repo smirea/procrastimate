@@ -45,7 +45,7 @@ public enum IntentRules {
         now: Date,
         zone: TimeZone
     ) -> NewTask? {
-        var draft = QuickAddDraft(defaults: .init(), today: Dates.toDateKey(now, in: zone))
+        var draft = QuickAddDraft(defaults: .init())
         draft.setText(request.text)
         draft.picked.projectId = request.projectId
         draft.picked.labelIds = request.labelIds

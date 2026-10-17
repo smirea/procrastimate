@@ -58,7 +58,6 @@
 		emptyHint={`Type @${label.name} in quick add, or pick it in a task's details.`}
 		subtitle={owner ? `Shared by ${owner.name}` : undefined}
 		canAdd={!home || tasks.length === 0 || tasks.some((t) => store.canEdit(t.id))}
-		quickAdd={{ projectId: null, labelId: label.id, today: false }}
 		markdown={() => ({ title: label.name, sections: [{ heading: null, tasks }] })}
 	>
 		{#snippet title()}

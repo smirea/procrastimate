@@ -126,6 +126,7 @@ let handlers: [String: Handler] = [
     "triggers": triggersVector,
     "ramble": rambleVector,
     "ramble-fill": rambleFillVector,
+    "screens": screensVector,
     "memo-tasks": memoTasksVector,
     "links": linksVector,
     "sync": syncVector,
@@ -470,19 +471,74 @@ private struct RambleInput: Decodable {
     }
 }
 
-private struct ListDefaultsInput: Decodable {
+/// `ListDefaults` in TS, which writes every field, null included.
+private struct ListDefaultsJSON: Codable {
     let projectId: String?
+    let sectionId: String?
     let labelId: String?
-    let today: Bool
+    let location: TaskLocation?
+    let event: TaskEvent?
+    let date: DateKey?
+
+    init(_ defaults: QuickAddDraft.Defaults) {
+        projectId = defaults.projectId
+        sectionId = defaults.sectionId
+        labelId = defaults.labelId
+        location = defaults.location
+        event = defaults.event
+        date = defaults.date
+    }
+
+    var defaults: QuickAddDraft.Defaults {
+        .init(projectId: projectId, sectionId: sectionId, labelId: labelId, location: location, event: event, date: date)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(projectId, forKey: .projectId)
+        try container.encode(sectionId, forKey: .sectionId)
+        try container.encode(labelId, forKey: .labelId)
+        try container.encode(location, forKey: .location)
+        try container.encode(event, forKey: .event)
+        try container.encode(date, forKey: .date)
+    }
+}
+
+/// `Screen` in TS: `{ kind, id?, key?, sectionId?, date? }`.
+private struct ScreenInput: Decodable {
+    let kind: String
+    let id: String?
+    let key: String?
+    let sectionId: String?
+    let date: DateKey?
+
+    func screen() throws -> ListScreen {
+        switch kind {
+        case "inbox": .inbox(date: date)
+        case "no-date": .noDate
+        case "completed": .completed
+        case "project": .project(id: id ?? "", sectionId: sectionId)
+        case "label": .label(id: id ?? "")
+        case "place": .place(key: key ?? "")
+        case "event": .event(id: id ?? "")
+        default: throw unknown(kind)
+        }
+    }
+}
+
+@Sendable func screensVector(_ fn: String, _ a: Args) throws -> JSONValue {
+    let screen = try a(0, as: ScreenInput?.self)?.screen()
+    switch fn {
+    case "screenDefaults": return try json(ListDefaultsJSON(Screens.defaults(screen, a(1))))
+    case "screenHolds": return try json(Screens.holds(screen, a(1), a(2), in: a.zone))
+    default: throw unknown(fn)
+    }
 }
 
 @Sendable func rambleFillVector(_ fn: String, _ a: Args) throws -> JSONValue {
     switch fn {
     case "rambleNewTask":
-        let defaults = try a(1, as: ListDefaultsInput?.self).map {
-            QuickAddDraft.Defaults(projectId: $0.projectId, labelId: $0.labelId, today: $0.today)
-        }
-        return try json(Ramble.newTask(try a(0), defaults: defaults, today: try a(2)))
+        return try json(Ramble.newTask(try a(0), defaults: try a(1, as: ListDefaultsJSON?.self)?.defaults))
     default: throw unknown(fn)
     }
 }

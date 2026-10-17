@@ -1,4 +1,5 @@
 import { MediaQuery } from 'svelte/reactivity';
+import type { ListDefaults } from 'shared/screens.ts';
 import type { ShareTarget } from 'shared/sharing.ts';
 import { toDateKey } from 'shared/task.ts';
 
@@ -78,21 +79,14 @@ class Toasts {
 
 export const toasts = new Toasts();
 
-export type QuickAddDefaults = {
-	projectId: string | null;
-	sectionId?: string | null;
-	labelId: string | null;
-	today: boolean;
-};
-
 export type Arrival = 'forward' | 'back' | 'none';
 
 /** Which floating layer is open. Sheets never stack. */
 export type Sheet =
 	| { kind: 'none' }
-	| { kind: 'quick-add'; defaults: QuickAddDefaults }
+	| { kind: 'quick-add'; defaults: ListDefaults }
 	/** The fullscreen voice capture. It opens listening, and saves into the list quick add would have. */
-	| { kind: 'ramble'; defaults: QuickAddDefaults }
+	| { kind: 'ramble'; defaults: ListDefaults }
 	| { kind: 'search' }
 	| { kind: 'settings' }
 	| { kind: 'task'; id: string; arrival: Arrival }
@@ -102,11 +96,11 @@ export type Sheet =
 class Sheets {
 	current = $state<Sheet>({ kind: 'none' });
 
-	openQuickAdd(defaults: QuickAddDefaults) {
+	openQuickAdd(defaults: ListDefaults) {
 		this.current = { kind: 'quick-add', defaults };
 	}
 
-	openRamble(defaults: QuickAddDefaults) {
+	openRamble(defaults: ListDefaults) {
 		this.current = { kind: 'ramble', defaults };
 	}
 

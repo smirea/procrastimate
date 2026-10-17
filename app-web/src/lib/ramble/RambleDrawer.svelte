@@ -21,7 +21,8 @@
 	import LabelPicker from '../components/LabelPicker.svelte';
 	import { store } from '../store.svelte.ts';
 	import { labelStyle } from '../label-colors.ts';
-	import { clock, mobile, motion, sheets, toasts, type QuickAddDefaults } from '../ui.svelte.ts';
+	import { clock, mobile, motion, sheets, toasts } from '../ui.svelte.ts';
+	import type { ListDefaults } from 'shared/screens.ts';
 	import { PRIORITIES } from '../priorities.ts';
 	import { showAdded } from '../show-added.ts';
 	import { listenRamble, type CaptureStop, type RambleListen } from './capture.ts';
@@ -29,7 +30,7 @@
 	import Waveform, { type LevelMeter } from './Waveform.svelte';
 	import { followCaret } from '../caret.ts';
 
-	let { defaults }: { defaults: QuickAddDefaults } = $props();
+	let { defaults }: { defaults: ListDefaults } = $props();
 
 	/** One capture at a time. `review` holds the reviewed list, and talking again appends to it. */
 	type Phase = 'listening' | 'finishing' | 'review';
@@ -149,12 +150,12 @@
 	function save() {
 		if (listening || !saving.length) return;
 		const added = saving.flatMap((entry) => {
-			const task = store.addTask(rambleNewTask(entry, defaults, clock.today));
+			const task = store.addTask(rambleNewTask(entry, defaults));
 			if (!task) return [];
 			if (entry.notes) store.updateTask(task.id, { notes: entry.notes });
 			for (const subtask of entry.subtasks) {
 				if (!subtask.title.trim()) continue;
-				const child = store.addTask(rambleNewTask(subtask, null, clock.today), task.id);
+				const child = store.addTask(rambleNewTask(subtask, null), task.id);
 				if (child && subtask.notes) store.updateTask(child.id, { notes: subtask.notes });
 			}
 			return [task];
