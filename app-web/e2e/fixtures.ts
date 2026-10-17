@@ -115,7 +115,7 @@ export const test = quietTest.extend<{ app: App }>({
 	app: async ({ page }, use) => {
 		await page.clock.setFixedTime(NOW);
 		await page.goto('/inbox');
-		await expect(page.getByRole('heading', { name: 'Inbox' })).toBeVisible({ timeout: 30_000 });
+		await expect(page.getByRole('heading', { name: 'Inbox' })).toBeVisible();
 		// Until the web font arrives, text wraps in the much wider fallback, and specs measure layout.
 		await page.evaluate(() => document.fonts.ready.then(() => undefined));
 		await use(new App(page));

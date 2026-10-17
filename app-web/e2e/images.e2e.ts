@@ -122,7 +122,7 @@ async function device(browser: Browser): Promise<Device> {
 	const page = await context.newPage();
 	await page.clock.setFixedTime(NOW);
 	await page.goto('/no-date');
-	await expect(page.getByRole('heading', { name: 'No date' })).toBeVisible({ timeout: 30_000 });
+	await expect(page.getByRole('heading', { name: 'No date' })).toBeVisible();
 	return { app: new App(page), page, context };
 }
 
