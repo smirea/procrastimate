@@ -19,6 +19,16 @@ enum Telemetry {
             // transactions only see UIKit internals in a SwiftUI app (a text field tap read keyboard plists).
             options.enableCaptureFailedRequests = false
             options.enableUserInteractionTracing = false
+            // sentry-cocoa 9 copies each request's query into its span and breadcrumb, and `GET /api/shared?token=`
+            // carries a public link's token.
+            options.beforeSendSpan = { span in
+                span.removeData(key: "http.query")
+                return span
+            }
+            options.beforeBreadcrumb = { breadcrumb in
+                breadcrumb.data?.removeValue(forKey: "http.query")
+                return breadcrumb
+            }
         }
     }
 
@@ -30,19 +40,26 @@ enum Telemetry {
         SentrySDK.setUser(nil)
     }
 
-    /// Sends a failure the app reported through `ErrorReport`, grouped by its message (and the error's type, when there
-    /// is one). Being offline is expected on a phone, so it is not sent.
-    static func capture(_ message: String, detail: String, error: (any Error)?) {
+    /// Sends a failure the app reported through `ErrorReport`, grouped by its message and the error's kind. Being offline
+    /// is expected on a phone, so it is not sent. `detail` and the error's own description stay on the device: they can
+    /// hold response bodies (an email on a failed sign-in) or URLs with share tokens.
+    static func capture(_ message: String, error: (any Error)?) {
         if let error, isOffline(error) { return }
-        let scope: (Scope) -> Void = { scope in
+        let kind = error.map(kind) ?? "none"
+        SentrySDK.capture(message: message) { scope in
             scope.setTag(value: message, key: "report")
-            scope.setContext(value: ["message": message, "detail": detail], key: "report")
-            scope.setFingerprint(["{{ default }}", message])
+            scope.setTag(value: kind, key: "error.kind")
+            scope.setFingerprint([message, kind])
         }
-        if let error {
-            SentrySDK.capture(error: error, block: scope)
-        } else {
-            SentrySDK.capture(message: message, block: scope)
+    }
+
+    /// The error's type and code, never its associated values.
+    private static func kind(_ error: any Error) -> String {
+        switch error {
+        case let APIFailure.status(status, _): "APIFailure.status(\(status))"
+        case let APIFailure.unreachable(underlying): "APIFailure.unreachable(\(kind(underlying)))"
+        case let error as URLError: "URLError(\(error.code.rawValue))"
+        default: "\(String(reflecting: type(of: error)))(\((error as NSError).domain) \((error as NSError).code))"
         }
     }
 
