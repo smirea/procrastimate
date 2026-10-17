@@ -1,0 +1,231 @@
+{
+	"module": "row-actions",
+	"timeZone": "America/New_York",
+	"cases": [
+		{
+			"fn": "rowActions",
+			"test": "rowActions › an open task offers Complete, Postpone, and Delete",
+			"input": [
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 1,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"id": "milk",
+					"images": [],
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "Buy milk"
+				},
+				false
+			],
+			"output": {
+				"delete": true,
+				"postpone": true,
+				"toggle": "complete"
+			}
+		},
+		{
+			"fn": "rowActions",
+			"test": "rowActions › a completed task offers Reopen and Delete, with nothing to postpone",
+			"input": [
+				{
+					"completedAt": 2,
+					"completedBy": null,
+					"createdAt": 1,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"id": "milk",
+					"images": [],
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "Buy milk"
+				},
+				false
+			],
+			"output": {
+				"delete": true,
+				"postpone": false,
+				"toggle": "reopen"
+			}
+		},
+		{
+			"fn": "rowActions",
+			"test": "rowActions › a task on an event follows the event, so it never postpones",
+			"input": [
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 1,
+					"createdBy": null,
+					"due": null,
+					"event": {
+						"allDay": false,
+						"edge": "before",
+						"id": "standup",
+						"minutes": 10,
+						"occurrences": [
+							{
+								"end": 1791991800000,
+								"original": 1791990000000,
+								"start": 1791990000000
+							}
+						],
+						"series": true,
+						"title": "Standup"
+					},
+					"id": "milk",
+					"images": [],
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "Buy milk"
+				},
+				false
+			],
+			"output": {
+				"delete": true,
+				"postpone": false,
+				"toggle": "complete"
+			}
+		},
+		{
+			"fn": "rowActions",
+			"test": "rowActions › a task the user may only view offers only Copy",
+			"input": [
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 1,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"id": "milk",
+					"images": [],
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "Buy milk"
+				},
+				true
+			],
+			"output": {
+				"delete": false,
+				"postpone": false,
+				"toggle": null
+			}
+		},
+		{
+			"fn": "rowActions",
+			"test": "rowActions › a task the user may only view offers only Copy",
+			"input": [
+				{
+					"completedAt": 2,
+					"completedBy": null,
+					"createdAt": 1,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"id": "milk",
+					"images": [],
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "Buy milk"
+				},
+				true
+			],
+			"output": {
+				"delete": false,
+				"postpone": false,
+				"toggle": null
+			}
+		},
+		{
+			"fn": "rowActions",
+			"test": "rowActions › a repeating task’s past completion offers only Copy, since the task is still open",
+			"input": [
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 1,
+					"createdBy": null,
+					"due": {
+						"date": "2026-10-15",
+						"time": null
+					},
+					"event": null,
+					"id": "milk",
+					"images": [],
+					"labelIds": [],
+					"lastCompletedAt": 2,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": {
+						"interval": 1,
+						"unit": "day"
+					},
+					"reminders": [],
+					"sectionId": null,
+					"title": "Buy milk"
+				},
+				false,
+				true
+			],
+			"output": {
+				"delete": false,
+				"postpone": false,
+				"toggle": null
+			}
+		}
+	]
+}

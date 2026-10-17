@@ -131,6 +131,7 @@ let handlers: [String: Handler] = [
     "links": linksVector,
     "sync": syncVector,
     "comments": commentsVector,
+    "row-actions": rowActionsVector,
 ]
 
 private struct Occurrence: Decodable {
@@ -590,6 +591,19 @@ extension JSONValue: ExpressibleByStringLiteral {
         let settled = try SyncEngine.settle(a(0), acked: a(1), rejected: a(2))
         return try json(["outbox": settled.outbox, "rejected": settled.rejected])
     case "rejectionNotice": return try json(SyncEngine.rejectionNotice(a(0), a(1)))
+    default: throw unknown(fn)
+    }
+}
+
+@Sendable func rowActionsVector(_ fn: String, _ a: Args) throws -> JSONValue {
+    switch fn {
+    case "rowActions":
+        let offered = try RowActions(a(0), readOnly: a(1), rolled: a(2, as: Bool?.self) ?? false)
+        return object([
+            "toggle": offered.toggle.map { .string($0.rawValue) } ?? .null,
+            "postpone": .bool(offered.postpone),
+            "delete": .bool(offered.delete),
+        ])
     default: throw unknown(fn)
     }
 }

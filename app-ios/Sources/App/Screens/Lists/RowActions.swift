@@ -1,38 +1,26 @@
 import Core
 import SwiftUI
 
-/// What a task row offers on every list: Complete or Reopen, Postpone while it is open and not on an event, Delete, and
-/// Copy as Markdown. A shared task this user may only view offers only Copy, and so does a repeating task's past
-/// completion in Completed, since the task itself is still open.
-struct TaskRowActions: Hashable {
-    enum Toggle: Hashable {
-        case complete, reopen
-        var label: String { self == .complete ? "Complete" : "Reopen" }
-        var swipeImage: String { self == .complete ? "checkmark" : "arrow.uturn.backward" }
-        var menuImage: String { self == .complete ? "checkmark.circle" : "arrow.uturn.backward.circle" }
-    }
-
-    let toggle: Toggle?
-    let postpone: Bool
-    let delete: Bool
-
+extension RowActions {
     @MainActor init(_ task: TaskItem, in store: Store, rolled: Bool = false) {
-        let editable = !rolled && !store.isReadOnly(task.id)
-        let done = task.completedAt != nil
-        toggle = editable ? done ? .reopen : .complete : nil
-        postpone = editable && !done && task.event == nil
-        delete = editable
+        self.init(task, readOnly: store.isReadOnly(task.id), rolled: rolled)
     }
 }
 
-/// A row's context menu, from `TaskRowActions`. `toggle` completes or reopens it the way the row animates that.
+extension RowActions.Toggle {
+    var label: String { self == .complete ? "Complete" : "Reopen" }
+    var swipeImage: String { self == .complete ? "checkmark" : "arrow.uturn.backward" }
+    var menuImage: String { self == .complete ? "checkmark.circle" : "arrow.uturn.backward.circle" }
+}
+
+/// A row's context menu, from `RowActions`. `toggle` completes or reopens it the way the row animates that.
 struct TaskMenu: View {
     @Environment(Store.self) private var store
     @Environment(TaskActions.self) private var actions
     @Environment(\.today) private var today
 
     let task: TaskItem
-    let offered: TaskRowActions
+    let offered: RowActions
     let toggle: () -> Void
 
     var body: some View {
@@ -54,11 +42,11 @@ struct TaskMenu: View {
 }
 
 extension View {
-    /// A row's swipes, from `TaskRowActions`: Complete or Reopen from the leading edge, Postpone from the trailing one.
+    /// A row's swipes, from `RowActions`: Complete or Reopen from the leading edge, Postpone from the trailing one.
     /// Postpone's `Pick a date…` calls `pickDate`.
     func taskSwipes(
         _ task: TaskItem,
-        _ offered: TaskRowActions,
+        _ offered: RowActions,
         toggle: @escaping () -> Void,
         pickDate: @escaping () -> Void
     ) -> some View {
@@ -72,7 +60,7 @@ private struct TaskSwipes: ViewModifier {
     @Environment(\.today) private var today
 
     let task: TaskItem
-    let offered: TaskRowActions
+    let offered: RowActions
     let toggle: () -> Void
     let pickDate: () -> Void
 

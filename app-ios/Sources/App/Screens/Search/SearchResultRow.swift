@@ -13,7 +13,7 @@ struct SearchResultRow: View {
 
     var body: some View {
         if case let .task(hit) = row {
-            let offered = TaskRowActions(hit.task, in: store)
+            let offered = RowActions(hit.task, in: store)
             let toggle: () -> Void = {
                 if offered.toggle == .reopen { actions.reopen(hit.task) } else { actions.complete(hit.task) }
             }

@@ -19,6 +19,7 @@
 	import { session } from '../session.svelte.ts';
 	import { store } from '../store.svelte.ts';
 	import { clock } from '../ui.svelte.ts';
+	import { taskMenu } from '../row-menu.svelte.ts';
 
 	let { task, showProject = false }: { task: Task; showProject?: boolean } = $props();
 
@@ -46,7 +47,11 @@
 	}
 </script>
 
-<div class="group flex items-start gap-3 rounded-2xl px-2 hover:bg-surface/60" data-task={task.title}>
+<div
+	class="group flex items-start gap-3 rounded-2xl px-2 hover:bg-surface/60"
+	data-task={task.title}
+	{@attach lookup.open && taskMenu(() => ({ task, rolled, toggle: reopen }))}
+>
 	{#if editable}
 		<Checkbox checked={!reopening} {tone} label={`Reopen ${task.title}`} class="mt-3 touch:mt-3.5" onclick={reopen} />
 	{:else}

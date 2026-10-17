@@ -14,6 +14,7 @@
 	import ShareSheet from '#lib/components/ShareSheet.svelte';
 	import TaskSheet from '#lib/components/TaskSheet.svelte';
 	import Toasts from '#lib/components/Toasts.svelte';
+	import RowMenu from '#lib/components/RowMenu.svelte';
 	import ImageViewer from '#lib/components/ImageViewer.svelte';
 	import { store } from '#lib/store.svelte.ts';
 	import { quickAddDefaults } from '#lib/screen.ts';
@@ -165,6 +166,7 @@
 {/if}
 
 <ImageViewer />
+<RowMenu />
 <Toasts />
 {/if}
 

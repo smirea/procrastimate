@@ -42,7 +42,7 @@ struct CompletedRow: View {
     }
 
     private var rolled: Bool { task.completedAt == nil }
-    private var offered: TaskRowActions { TaskRowActions(task, in: store, rolled: rolled) }
+    private var offered: RowActions { RowActions(task, in: store, rolled: rolled) }
     private var canReopen: Bool { offered.toggle != nil }
     private var parent: TaskItem? { task.parentId.flatMap(store.task) }
     private var project: Project? { store.project(task.projectId) }
