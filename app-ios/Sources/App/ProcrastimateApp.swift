@@ -30,6 +30,7 @@ struct ProcrastimateApp: App {
         let store = Telemetry.trace("Load store", operation: "store.load") {
             Store(file: StoreLocation.snapshotFile(), clock: clock)
         }
+        store.labelColorSuggester = { await LabelColorModel.color(for: $0) }
         let actions = TaskActions(store: store, toasts: toasts, clock: clock)
         let router = IntentRouter()
         // The delegate must be set before launch finishes, so tapping a notification can cold-start into its task.

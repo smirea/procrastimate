@@ -109,6 +109,15 @@
 - **Phrases.** `ProcrastimateShortcuts` registers the shortcuts, each phrase naming the app, and the app calls `updateAppShortcutParameters()` at launch. A phrase can fill an `AppEntity` or an `AppEnum` only, so the task title and the search words are the follow-up question rather than part of the phrase. The system keeps ten shortcuts. Start Ramble takes the suggested slot Delete All Data had; Delete All Data stays an intent, without a suggested phrase.
 - **Tests.** `IntentRulesTests` covers resolution and matching on Linux. Release builds ignore the DEBUG launch key `PROCRASTIMATE_INTENTS`.
 
+## iOS-only features
+
+Every feature ships on web and iOS together unless it is listed here, with the reason the web is excluded. Add a feature to this list when it ships iOS-only, and remove it when the web catches up.
+
+- **Siri, Shortcuts, and Spotlight.** App Intents are iOS system features with no web counterpart. See [Siri, Shortcuts, and Spotlight](#siri-shortcuts-and-spotlight).
+- **Setting a task's place or calendar event.** Location and EventKit live on the phone; the web shows them read-only. See [Places and calendar events](#places-and-calendar-events).
+- **Ramble's model split.** Apple's on-device model splits a ramble into to-dos and their items; the web keeps the grammar's split. See [Ramble](ramble.md).
+- **A new label's color from the on-device model.** Stefan chose to try it on iOS only with Apple's Foundation Models. The web keeps `defaultLabelColor`. See [Labels UI](labels.md).
+
 ## Build and verification
 
 - **Cloud agents have no Xcode.** They write Swift on Linux, run `swift test` for `Core` locally with a Swift toolchain, and rely on a manual iOS workflow run for the app, simulator, and screenshots.
