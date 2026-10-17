@@ -371,7 +371,7 @@
 		},
 		{
 			"fn": "screenDefaults",
-			"test": "screenDefaults › a place or event with no open task left starts bare",
+			"test": "screenDefaults › a place or event whose tasks are all done keeps the latest done copy",
 			"input": [
 				{
 					"key": "52.5000,13.4000",
@@ -388,7 +388,7 @@
 							"allDay": false,
 							"edge": "before",
 							"id": "standup",
-							"minutes": 0,
+							"minutes": 5,
 							"occurrences": [
 								{
 									"end": 1791991800000,
@@ -399,7 +399,7 @@
 							"series": true,
 							"title": "Standup"
 						},
-						"id": "done",
+						"id": "older",
 						"images": [],
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -407,7 +407,7 @@
 							"address": null,
 							"latitude": 52.5,
 							"longitude": 13.4,
-							"name": "Rewe",
+							"name": "Old name",
 							"radius": 150,
 							"trigger": "arrive"
 						},
@@ -419,32 +419,12 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "done"
-					}
-				]
-			],
-			"output": {
-				"date": null,
-				"event": null,
-				"labelId": null,
-				"location": null,
-				"projectId": null,
-				"sectionId": null
-			}
-		},
-		{
-			"fn": "screenDefaults",
-			"test": "screenDefaults › a place or event with no open task left starts bare",
-			"input": [
-				{
-					"id": "standup",
-					"kind": "event"
-				},
-				[
+						"title": "older"
+					},
 					{
-						"completedAt": 1,
+						"completedAt": 2,
 						"completedBy": null,
-						"createdAt": 6,
+						"createdAt": 7,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -462,7 +442,7 @@
 							"series": true,
 							"title": "Standup"
 						},
-						"id": "done",
+						"id": "newer",
 						"images": [],
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -482,9 +462,174 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "done"
+						"title": "newer"
 					}
 				]
+			],
+			"output": {
+				"date": null,
+				"event": null,
+				"labelId": null,
+				"location": {
+					"address": null,
+					"latitude": 52.5,
+					"longitude": 13.4,
+					"name": "Rewe",
+					"radius": 150,
+					"trigger": "arrive"
+				},
+				"projectId": null,
+				"sectionId": null
+			}
+		},
+		{
+			"fn": "screenDefaults",
+			"test": "screenDefaults › a place or event whose tasks are all done keeps the latest done copy",
+			"input": [
+				{
+					"id": "standup",
+					"kind": "event"
+				},
+				[
+					{
+						"completedAt": 1,
+						"completedBy": null,
+						"createdAt": 6,
+						"createdBy": null,
+						"due": null,
+						"event": {
+							"allDay": false,
+							"edge": "before",
+							"id": "standup",
+							"minutes": 5,
+							"occurrences": [
+								{
+									"end": 1791991800000,
+									"original": 1791990000000,
+									"start": 1791990000000
+								}
+							],
+							"series": true,
+							"title": "Standup"
+						},
+						"id": "older",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": {
+							"address": null,
+							"latitude": 52.5,
+							"longitude": 13.4,
+							"name": "Old name",
+							"radius": 150,
+							"trigger": "arrive"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "older"
+					},
+					{
+						"completedAt": 2,
+						"completedBy": null,
+						"createdAt": 7,
+						"createdBy": null,
+						"due": null,
+						"event": {
+							"allDay": false,
+							"edge": "before",
+							"id": "standup",
+							"minutes": 0,
+							"occurrences": [
+								{
+									"end": 1791991800000,
+									"original": 1791990000000,
+									"start": 1791990000000
+								}
+							],
+							"series": true,
+							"title": "Standup"
+						},
+						"id": "newer",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": {
+							"address": null,
+							"latitude": 52.5,
+							"longitude": 13.4,
+							"name": "Rewe",
+							"radius": 150,
+							"trigger": "arrive"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "newer"
+					}
+				]
+			],
+			"output": {
+				"date": null,
+				"event": {
+					"allDay": false,
+					"edge": "before",
+					"id": "standup",
+					"minutes": 0,
+					"occurrences": [
+						{
+							"end": 1791991800000,
+							"original": 1791990000000,
+							"start": 1791990000000
+						}
+					],
+					"series": true,
+					"title": "Standup"
+				},
+				"labelId": null,
+				"location": null,
+				"projectId": null,
+				"sectionId": null
+			}
+		},
+		{
+			"fn": "screenDefaults",
+			"test": "screenDefaults › a place or event no task holds starts bare",
+			"input": [
+				{
+					"key": "52.5000,13.4000",
+					"kind": "place"
+				},
+				[]
+			],
+			"output": {
+				"date": null,
+				"event": null,
+				"labelId": null,
+				"location": null,
+				"projectId": null,
+				"sectionId": null
+			}
+		},
+		{
+			"fn": "screenDefaults",
+			"test": "screenDefaults › a place or event no task holds starts bare",
+			"input": [
+				{
+					"id": "standup",
+					"kind": "event"
+				},
+				[]
 			],
 			"output": {
 				"date": null,
@@ -505,7 +650,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 7,
+					"createdAt": 8,
 					"createdBy": null,
 					"due": {
 						"date": "2026-10-14",
@@ -541,7 +686,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 8,
+					"createdAt": 9,
 					"createdBy": null,
 					"due": null,
 					"event": null,
@@ -574,7 +719,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 9,
+					"createdAt": 10,
 					"createdBy": null,
 					"due": null,
 					"event": null,
@@ -607,7 +752,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 10,
+					"createdAt": 11,
 					"createdBy": null,
 					"due": null,
 					"event": null,
@@ -640,7 +785,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 11,
+					"createdAt": 12,
 					"createdBy": null,
 					"due": {
 						"date": "2026-10-14",
@@ -677,7 +822,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 12,
+					"createdAt": 13,
 					"createdBy": null,
 					"due": null,
 					"event": {
@@ -734,7 +879,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 12,
+					"createdAt": 13,
 					"createdBy": null,
 					"due": null,
 					"event": {
@@ -791,7 +936,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 12,
+					"createdAt": 13,
 					"createdBy": null,
 					"due": null,
 					"event": {
@@ -848,7 +993,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 12,
+					"createdAt": 13,
 					"createdBy": null,
 					"due": null,
 					"event": {
@@ -905,7 +1050,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 12,
+					"createdAt": 13,
 					"createdBy": null,
 					"due": null,
 					"event": {
@@ -962,7 +1107,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 12,
+					"createdAt": 13,
 					"createdBy": null,
 					"due": null,
 					"event": {
@@ -1018,7 +1163,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 13,
+					"createdAt": 14,
 					"createdBy": null,
 					"due": null,
 					"event": null,
@@ -1049,7 +1194,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 14,
+					"createdAt": 15,
 					"createdBy": null,
 					"due": null,
 					"event": null,

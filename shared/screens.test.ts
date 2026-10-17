@@ -101,10 +101,18 @@ describe('screenDefaults', () => {
 		expect(screenDefaults({ kind: 'event', id: 'standup' }, tasks)).toEqual({ ...none, event: standup(15) });
 	});
 
-	test('a place or event with no open task left starts bare', () => {
-		const tasks = [task('done', { location: rewe('Rewe'), event: standup(0), completedAt: 1 })];
-		expect(screenDefaults({ kind: 'place', key: reweKey }, tasks)).toEqual(none);
-		expect(screenDefaults({ kind: 'event', id: 'standup' }, tasks)).toEqual(none);
+	test('a place or event whose tasks are all done keeps the latest done copy', () => {
+		const tasks = [
+			task('older', { location: rewe('Old name'), event: standup(5), completedAt: 1 }),
+			task('newer', { location: rewe('Rewe'), event: standup(0), completedAt: 2 }),
+		];
+		expect(screenDefaults({ kind: 'place', key: reweKey }, tasks)).toEqual({ ...none, location: rewe('Rewe') });
+		expect(screenDefaults({ kind: 'event', id: 'standup' }, tasks)).toEqual({ ...none, event: standup(0) });
+	});
+
+	test('a place or event no task holds starts bare', () => {
+		expect(screenDefaults({ kind: 'place', key: reweKey }, [])).toEqual(none);
+		expect(screenDefaults({ kind: 'event', id: 'standup' }, [])).toEqual(none);
 	});
 });
 

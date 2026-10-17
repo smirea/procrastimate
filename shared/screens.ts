@@ -34,9 +34,15 @@ export const NO_DEFAULTS: ListDefaults = {
 	date: null,
 };
 
-/** The earliest open task's copy, the one a place's or event's name comes from. */
-const earliest = (tasks: readonly Task[], match: (task: Task) => boolean) =>
-	tasks.filter(t => t.completedAt === null && match(t)).toSorted((a, b) => a.createdAt - b.createdAt)[0];
+/**
+ * The earliest open task's copy, the one a place's or event's name comes from. Once every task there is done, the
+ * screen can stay open, so the latest done task's copy keeps quick add on it.
+ */
+const earliest = (tasks: readonly Task[], match: (task: Task) => boolean) => {
+	const matching = tasks.filter(match);
+	const open = matching.filter(t => t.completedAt === null).toSorted((a, b) => a.createdAt - b.createdAt)[0];
+	return open ?? matching.toSorted((a, b) => (b.completedAt ?? 0) - (a.completedAt ?? 0))[0];
+};
 
 /**
  * Quick add inherits the screen it opens from, so the new task lands on that screen: its project and section, its

@@ -54,8 +54,11 @@ public enum Screens {
         }
     }
 
-    /// The earliest open task's copy, the one a place's or event's name comes from.
+    /// The earliest open task's copy, the one a place's or event's name comes from. Once every task there is done, the
+    /// screen can stay open, so the latest done task's copy keeps quick add on it.
     private static func earliest(_ tasks: [TaskItem], _ match: (TaskItem) -> Bool) -> TaskItem? {
-        tasks.filter { $0.completedAt == nil && match($0) }.min { $0.createdAt < $1.createdAt }
+        let matching = tasks.filter(match)
+        return matching.filter { $0.completedAt == nil }.min { $0.createdAt < $1.createdAt }
+            ?? matching.max { ($0.completedAt ?? 0) < ($1.completedAt ?? 0) }
     }
 }
