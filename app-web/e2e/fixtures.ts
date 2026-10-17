@@ -79,18 +79,34 @@ export function watchPageErrors(context: BrowserContext) {
 	};
 }
 
-export const test = base.extend<{ app: App }>({
-	context: async ({ context }, use) => {
+export const test = base.extend<{ app: App; sentryOff: (context: BrowserContext) => BrowserContext }>({
+	context: async ({ context, sentryOff }, use) => {
+		sentryOff(context);
 		await signInAccount(context);
 		const errors = watchPageErrors(context);
-		const reported: string[] = [];
-		context.on('request', request => {
-			if (new URL(request.url()).pathname === SENTRY_TUNNEL_PATH) reported.push(request.url());
-		});
 		await use(context);
 		expect(await errors(), 'uncaught page errors').toEqual([]);
-		expect(reported, 'Sentry is off in tests').toEqual([]);
 	},
+	// Every context, the default one and each spec's own `browser.newContext()`, so a test can never report to Sentry.
+	sentryOff: [
+		async ({ browser }, use) => {
+			const reported: string[] = [];
+			const watch = (watched: BrowserContext) => {
+				// An initialized SDK tags the first API call with `sentry-trace`, long before it posts an envelope.
+				watched.on('request', request => {
+					const { pathname } = new URL(request.url());
+					if (pathname === SENTRY_TUNNEL_PATH || request.headers()['sentry-trace']) reported.push(pathname);
+				});
+				return watched;
+			};
+			const newContext = browser.newContext;
+			browser.newContext = async options => watch(await newContext.call(browser, options));
+			await use(watch);
+			browser.newContext = newContext;
+			expect(reported, 'Sentry is off in tests').toEqual([]);
+		},
+		{ auto: true },
+	],
 	app: async ({ page }, use) => {
 		await page.clock.setFixedTime(NOW);
 		await page.goto('/inbox');
