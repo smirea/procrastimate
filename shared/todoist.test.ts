@@ -398,7 +398,7 @@ describe('merging into the store', () => {
 		expect(merged.state.labels.map(l => [l.name, l.color])).toEqual([
 			['Home', 'gray'],
 			['work', 'blue'],
-			['deep-work', 'blue'],
+			['deep-work', 'indigo'],
 		]);
 	});
 });

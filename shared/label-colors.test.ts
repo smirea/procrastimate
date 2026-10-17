@@ -6,7 +6,18 @@ const defaultLabelColor = recorded('label-colors', labelColors.defaultLabelColor
 
 describe('defaultLabelColor', () => {
 	test('a word with an obvious color picks it, ignoring case and the words around it', () => {
-		const names = ['bug', 'Urgent', 'waiting on', 'calls', 'errands', 'health', 'reading list', 'someday-maybe'];
+		const names = [
+			'bug',
+			'Urgent',
+			'waiting on',
+			'calls',
+			'errands',
+			'health',
+			'reading list',
+			'someday-maybe',
+			'deep work',
+			'creative work',
+		];
 		expect(names.map(name => defaultLabelColor(name))).toEqual([
 			'red',
 			'red',
@@ -16,6 +27,8 @@ describe('defaultLabelColor', () => {
 			'green',
 			'violet',
 			'amber',
+			'indigo',
+			'violet',
 		]);
 	});
 
@@ -27,12 +40,11 @@ describe('defaultLabelColor', () => {
 	});
 
 	test('any other name hashes to a stable color, the same for every case and surrounding space', () => {
-		const names = ['tom', 'home', '  Home  ', 'deep work', 'café', '日本', 'Long Term Goals 🎯', 'v2', ''];
+		const names = ['tom', 'home', '  Home  ', 'café', '日本', 'Long Term Goals 🎯', 'v2', ''];
 		expect(names.map(name => defaultLabelColor(name))).toEqual([
 			'teal',
 			'pink',
 			'pink',
-			'blue',
 			'violet',
 			'orange',
 			'pink',
