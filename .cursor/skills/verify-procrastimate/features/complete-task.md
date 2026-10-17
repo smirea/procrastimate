@@ -13,12 +13,12 @@ Complete a task lets Stefan check off a task with a short, satisfying animation,
 - `complete-range` filters Completed by `Today`, `Last 7 days` (default), `Last 30 days`, `All time`, or a custom range. The choice persists per device.
 - `complete-toggle` is `Show completed` in project and label views. Each project and label keeps its own, per device. A label lists its completed tasks below the open ones under `Completed`. A project shows each completed task under the open ones of its own section, loose ones with the loose tasks, and only tasks whose section is gone under a bottom `Completed` heading.
 - `complete-reopen-row` reopens a task from its filled checkbox in any completed list, with a `Reopened “X”` toast and Undo.
-- `complete-delete-row` deletes a completed task from its row, with a `Deleted “X”` toast and Undo: the trash button at the end of the row on the web (on hover, always shown on touch), `Delete` in the row's context menu on iOS. A task the user may only view, and a repeating task's past completion, have none.
+- `complete-delete-row` deletes a completed task from its row, with a `Deleted “X”` toast and Undo: the trash button at the end of the row on the web (on hover, always shown on touch), and `Delete` in the row menu on both clients (see `edit-row-menu` in [Edit a task](./edit-task.md)). A task the user may only view, and a repeating task's past completion, have none.
 
 ## How to get to it (user POV)
 
 - Web: choose the checkbox next to a task. Its ring is tinted by priority.
-- Web: choose `Complete` in task details.
+- Web: choose `Complete` in task details, or in a row's menu (right click, long press, or Shift+F10).
 - Web on a phone: tap the checkbox. Its tap target is 44 px even though the ring is smaller.
 - Web: choose `Completed` in the sidebar, under No date, or open `/completed`. `Show completed` is the check-circle button in a project or label header.
 - iOS: tap `Completed` at the very bottom of Browse. `Show completed` is in the project or label `…` menu.

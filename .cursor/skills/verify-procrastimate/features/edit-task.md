@@ -11,6 +11,7 @@ Edit a task lets Stefan open a task and change its title, notes, due date, prior
 - `edit-delete` deletes a task, with undo.
 - `edit-floating` floats `Complete` (or `Reopen` once done) at the bottom left of task details and `Delete` at the bottom right. The body scrolls clear of them. The top left project chip shows its icon and name and truncates with an ellipsis. On iOS they are clear Liquid Glass capsules with a green `Complete` and a red `Delete` label, and they hide while the keyboard is up.
 - `edit-links` shows web URLs and Markdown `[label](url)` links in the title and notes as links in rows, subtask rows, search results, and task details until the field is focused. A link opens in a new tab (web) or Safari (iOS) without opening the task.
+- `edit-row-menu` gives every task row the same menu on both clients: open rows, subtask rows in details, completed rows, and search results. It lists `Complete` or `Reopen`, the postpone options while the task is open and not on an event, `Delete` with a `Deleted “X”` toast and Undo, and `Copy as Markdown`. A task the user may only view, and a repeating task's past completion in Completed, list only `Copy as Markdown`. `rowActions` in `shared/row-actions.ts` (Core's `RowActions` on iOS) decides the list. On the web it opens with a right click, a long press on touch (below the row, without opening details), or Shift+F10 or the context menu key on a focused row or in the search field for the selected result. Up, Down, Home, and End move through it, and Escape closes it and gives focus back. Menu Complete on a subtask toggles it in place with no toast, as its checkbox does.
 - `edit-postpone` moves a task to `Today` (overdue or undated only), `Tomorrow`, `This weekend` (the coming Saturday, `Next weekend` on a weekend day), or `Next week` (the coming Monday), skipping its current day, keeping its time, with a `Moved “X” to <day>` toast and `Undo`. Event tasks have no postpone.
 
 ## How to get to it (user POV)
@@ -20,6 +21,7 @@ Edit a task lets Stefan open a task and change its title, notes, due date, prior
 - Web: press Enter with a task selected. Planned: task selection by keyboard is not built yet.
 - iOS: tap a task in any list. The details sheet slides up.
 - Postpone on web: hover a row and choose the calendar-plus `Postpone <title>` button. On touch screens the button is always visible, so a phone taps it directly. A popover lists the options with their weekdays.
+- Row menu on web: right click a row, long press it on touch, or focus it and press Shift+F10. The `Postpone` group lists the options with their weekdays.
 - Postpone on iOS: swipe a row left. A `Postpone “<title>”` dialog lists the options with their weekdays and `Pick a date…`, which opens task details. The row's context menu has a `Postpone` submenu and `Delete`.
 
 ## Driving it with control-ui and the simulator
@@ -28,6 +30,7 @@ Preconditions:
 
 - The baseline state, with Inbox seeded with `Buy milk` through quick add.
 
+- **Row menu.** `a right click on a task row opens its menu, which postpones, completes, deletes, and copies with undo` in `e2e/row-menu.e2e.ts`: right click `Buy milk` in Inbox; the menu lists `Complete`, `Tomorrow Thu`, `This weekend Sat`, `Next week Mon`, `Delete`, and `Copy as Markdown`, and details stay closed. `Tomorrow` moves it out of `Today` with `Moved “Buy milk” to Tomorrow`, and each Undo puts it back. The same spec covers the keyboard (`Shift+F10 opens the focused row’s menu with its first item focused, and Escape gives focus back`), completed and subtask rows (`a completed row’s menu reopens and deletes, and a subtask row’s menu toggles it in place`), search (`a search result has the row menu, by right click and by Shift+F10 from the field`), and touch (`a long press opens the row menu instead of the details, and its items take a tap`). It saves `app-web/test-results/row-menu/desktop-menu.png`, `phone-menu.png`, and `search-menu.png`. On iOS, long press a row in the simulator for the same list as a native context menu.
 - **Open.** Choose `Buy milk`. The `Task details` dialog opens with the title `Buy milk` and empty notes.
 - **Change fields.** Rename it to `Buy oat milk` and press Enter, add the note `2 cartons`, pick `Today` from the date chip, and pick `Priority 1`. The list row shows the new title and note as they change.
 - **Persist.** Reload and reopen the task. Notes read `2 cartons`, the date chip reads `Today`, and the priority chip reads `Priority 1`. The task is under Inbox's `Today` section.

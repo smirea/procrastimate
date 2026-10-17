@@ -11,6 +11,7 @@ Search lets Stefan find any task, project, or label from anywhere by typing a fe
 - `search-keyboard` moves the selection with Up and Down, opens it with Enter, and closes with Escape or Cmd-K or Ctrl-K again.
 - `search-open-result` opens a task in task details, or navigates to a project or a label view.
 - `search-completed` lists matching completed tasks in their own `Completed` group after open tasks, struck through with their completion date. Task details reopen one with `Reopen`.
+- `search-row-menu` gives each task result the row menu (`edit-row-menu` in [Edit a task](./edit-task.md)): right click or long press it, or press Shift+F10 in the field for the selected result. Escape closes the menu and leaves search open with focus in the field.
 - `search-empty` reads `No results for “<query>”` when nothing matches.
 
 ## How to get to it (user POV)

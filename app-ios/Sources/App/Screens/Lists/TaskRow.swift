@@ -121,7 +121,7 @@ struct TaskRow<Trailing: View>: View {
 
     private var done: Bool { task.completedAt != nil }
 
-    private var offered: TaskRowActions { TaskRowActions(task, in: store) }
+    private var offered: RowActions { RowActions(task, in: store) }
     private var project: Project? { store.project(task.projectId) }
     private var labels: [Core.Label] { store.labels(of: task) }
     private var parent: TaskItem? { isSubtask ? nil : task.parentId.flatMap(store.task) }

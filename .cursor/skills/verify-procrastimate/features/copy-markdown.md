@@ -12,7 +12,7 @@ A view, a section, or a task copies to the clipboard as a plain nested list of t
 
 - Web: the copy button in each view header, labelled `Copy <view> as Markdown`, in Inbox, No date, Completed, projects, labels, places, and events.
 - Web: the copy button beside each section heading, labelled `Copy <heading> as Markdown`. It shows on hover or focus with a mouse and always on touch.
-- Web: the copy button in the task details header.
+- Web: the copy button in the task details header, and `Copy as Markdown` in any task row's menu (right click, long press, or Shift+F10).
 - iOS: `Copy as Markdown` in a task row's context menu and in task details.
 - iOS: `Copy as Markdown` in a section heading's context menu in Inbox and No date.
 - Web: a project's section headings carry the same copy button. iOS: a section header's long-press menu has `Copy as Markdown`.

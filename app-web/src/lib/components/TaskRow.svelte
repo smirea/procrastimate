@@ -30,6 +30,7 @@
 	import { PRIORITIES } from '../priorities.ts';
 	import { completeTask, postponeTask } from '../completion.ts';
 	import { progressOf } from 'shared/subtasks.ts';
+	import { taskMenu } from '../row-menu.svelte.ts';
 
 	let {
 		task,
@@ -93,6 +94,7 @@
 	class="group flex items-start gap-3 rounded-2xl px-2 transition-colors duration-500 hover:bg-surface/60"
 	class:revealed
 	data-task={subtask ? undefined : task.title}
+	{@attach lookup.open && taskMenu(() => ({ task, toggle: subtask || !done ? complete : undefined }))}
 >
 	{#if editable}
 		<Checkbox checked={checking || done} tone={PRIORITIES[task.priority].tone} label={`Complete ${task.title}`} class="mt-3 touch:mt-3.5" onclick={complete} />
