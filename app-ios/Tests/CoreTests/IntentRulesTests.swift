@@ -7,6 +7,13 @@ import Testing
     let house = Project(id: "p-house", name: "House", createdAt: 1)
     let calls = Label(id: "l-calls", name: "calls", createdAt: 1)
     let errands = Label(id: "l-errands", name: "Errands", createdAt: 2)
+    let gym = Label(
+        id: "l-gym",
+        name: "Gym",
+        place: SavedPlace(address: "Ring 2", latitude: 52.5, longitude: 13.4, radius: 200),
+        createdAt: 3
+    )
+    let gymLocation = TaskLocation(name: "Gym", address: "Ring 2", latitude: 52.5, longitude: 13.4, radius: 200, trigger: .arrive)
 
     func task(
         _ title: String,
@@ -19,7 +26,7 @@ import Testing
     }
 
     func added(_ request: IntentRules.AddRequest) -> NewTask? {
-        IntentRules.newTask(request, projects: [house], labels: [calls, errands], now: pinned, zone: zone)
+        IntentRules.newTask(request, projects: [house], labels: [calls, errands, gym], now: pinned, zone: zone)
     }
 
     @Test func aSpokenTitleUsesTheQuickAddGrammar() throws {
@@ -69,6 +76,19 @@ import Testing
         #expect(task.projectId == "p-house")
         #expect(task.labelIds == ["l-errands", "l-calls"])
         #expect(task.reminders == [.before(minutes: 5)])
+    }
+
+    @Test func aSavedPlacePickedAsALabelBecomesTheTasksPlace() throws {
+        let task = try #require(added(.init(text: "Stretch", labelIds: ["l-calls", "l-gym"])))
+        #expect(task.labelIds == ["l-calls"])
+        #expect(task.location == gymLocation)
+    }
+
+    @Test func aSavedPlaceInTheTitleBecomesTheTasksPlace() throws {
+        let task = try #require(added(.init(text: "Stretch @Gym", labelIds: ["l-calls"])))
+        #expect(task.title == "Stretch")
+        #expect(task.labelIds == ["l-calls"])
+        #expect(task.location == gymLocation)
     }
 
     @Test func aSpokenReminderReplacesTheShortcutReminder() throws {
