@@ -36,7 +36,7 @@ export type Config = {
 	sentry: SentryTarget | null;
 };
 
-type Key = Exclude<keyof Env, 'ACCOUNT'>;
+type Key = Exclude<keyof Env, 'ACCOUNT' | 'BACKUPS'>;
 
 /** `sentryDsn` is the committed worker DSN; tests pass their own. */
 export function parseConfig(env: Env, sentryDsn: string = SENTRY_DSN.worker): Config {
