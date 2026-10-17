@@ -147,11 +147,15 @@ enum IntentEffects {
         return "Listening"
     }
 
-    static func open(tab: AppTab, name: String) -> String {
+    static func open(_ route: Route?, name: String) -> String {
         guard let session = IntentSession.current else { return "ProcrastiMate isn't ready." }
         session.navigator.sheet = nil
-        session.navigator.paths[tab] = []
-        session.navigator.tab = tab
+        if let route {
+            session.navigator.open(route)
+        } else {
+            session.navigator.paths[.browse] = []
+            session.navigator.tab = .browse
+        }
         note("opened \(name.lowercased())")
         return "Showing \(name)"
     }
@@ -163,8 +167,7 @@ enum IntentEffects {
             return "That project is no longer here."
         }
         session.navigator.sheet = nil
-        session.navigator.tab = .browse
-        session.navigator.paths[.browse] = [.project(id: project.id)]
+        session.navigator.open(.project(id: project.id))
         note("opened-project \(project.name)")
         return "Showing \(project.name)"
     }

@@ -20,7 +20,7 @@ Complete a task lets Stefan check off a task with a short, satisfying animation,
 - Web: choose `Complete` in task details.
 - Web on a phone: tap the checkbox. Its tap target is 44 px even though the ring is smaller.
 - Web: choose `Completed` in the sidebar, under No date, or open `/completed`. `Show completed` is the check-circle button in a project or label header.
-- iOS: tap `Completed` at the top of Browse. `Show completed` is in the project or label `…` menu.
+- iOS: tap `Completed` at the very bottom of Browse. `Show completed` is in the project or label `…` menu.
 - Web: press `e` with a task selected. Planned: task selection by keyboard is not built yet.
 - iOS: tap the checkbox next to a task.
 - iOS: swipe a task right to complete it.
@@ -40,7 +40,7 @@ Preconditions:
 - **Toggle.** Add `Buy milk #Home`, complete it, open `Home`, and choose `Show completed`. A `Completed` section lists it below the open tasks. Reopening it moves it back to the open list.
 - **Someone else.** In the sharing smoke (`a guest completes a task…` in `e2e/sharing.e2e.ts`), the owner's `Show completed` row reads `by Gus`. On iOS, launch with `PROCRASTIMATE_DEMO=sharing`, open Garden, and turn on `Show completed`: `Rake the leaves` reads `by Claude` with the `AI` badge and `Order seeds` `by Ann Lee`.
 - **iOS.** Tap the checkbox of `Pay rent` in the simulator: it fills with a success haptic, the row animates out, and `Completed “Pay rent”` shows with `Undo`, which restores it. A leading swipe completes too. The trailing swipe postpones instead (see Edit a task). `Standup every fri 9am` moves to `Oct 23 9am` with `Completed “Standup”, next due Oct 23 9am`. Drive it with `bun run start:ios -t simulator`.
-- **iOS Completed.** Tap `Completed` at the top of Browse. The same day sections show, the range menu at the top right reads `Last 7 days` and offers the presets and `Custom range…`, which opens From and To pickers. Tap `Reopen Pay rent`; `Reopened “Pay rent”` shows with `Undo`. A leading swipe or the context menu reopens too.
+- **iOS Completed.** Tap `Completed` at the very bottom of Browse. The same day sections show, the range menu at the top right reads `Last 7 days` and offers the presets and `Custom range…`, which opens From and To pickers. Tap `Reopen Pay rent`; `Reopened “Pay rent”` shows with `Undo`. A leading swipe or the context menu reopens too.
 - **Proof.** Planned: record the check and undo on the web as motion proof, then reload and capture Inbox.
 
 ## Gotchas

@@ -26,11 +26,10 @@ struct RootView: View {
     private var signedIn: some View {
         let today = Views.todayTasks(store.tasks, todayKey, in: store.timeZone)
         return TabView(selection: Binding(get: { navigator.tab }, set: { navigator.tab = $0 })) {
-            Tab(value: AppTab.inbox) {
-                TabStack(tab: .inbox) { InboxScreen().tracedScreen("Inbox") }
-            }
-            Tab(value: AppTab.noDate) {
-                TabStack(tab: .noDate) { NoDateScreen().tracedScreen("No date") }
+            ForEach(navigator.pins, id: \.self) { pin in
+                Tab(value: AppTab.pin(pin)) {
+                    TabStack(tab: .pin(pin)) { RouteView(route: pin.route) }
+                }
             }
             Tab(value: AppTab.browse) {
                 TabStack(tab: .browse) { BrowseScreen().tracedScreen("Browse") }
@@ -39,10 +38,7 @@ struct RootView: View {
         // An overlay, not a `safeAreaInset`: the tab view hands its tabs a fresh safe area, so each tab's screens make room
         // with `tabBarClearance()` instead.
         .overlay(alignment: .bottom) {
-            TabBar(
-                inboxBadge: today.overdue.count + today.today.count,
-                hasNoDate: !Views.inboxTasks(store.tasks, todayKey, in: store.timeZone).isEmpty
-            )
+            TabBar(inboxBadge: today.overdue.count + today.today.count)
         }
         .overlay(alignment: .bottom) { QuickAddOverlay() }
         .overlay { RambleOverlay() }
@@ -62,9 +58,35 @@ enum TabBarMetrics {
     static let height: CGFloat = 62
     /// From the screen's bottom edge, where the system tab bar sits, whatever the home indicator inset.
     static let bottomMargin: CGFloat = 21
+    static let sideMargin: CGFloat = 21
+    static let maxWidth: CGFloat = 520
     static let contentGap: CGFloat = 12
-    /// How far above the screen's bottom edge content must end to clear the bar.
-    static let clearance = bottomMargin + height + contentGap
+    static let inset: CGFloat = 4
+    /// The narrowest a tab gets, which still reads a short project name.
+    static let tabMinWidth: CGFloat = 70
+
+    static func barWidth(screen: CGFloat) -> CGFloat { min(screen - 2 * sideMargin, maxWidth) }
+
+    /// Whether the add button moves above the tabs, because `tabs` (Browse included) don't fit beside it. It counts
+    /// every pin, shown or not, so a pin hiding or coming back never moves the button.
+    static func stacked(tabs: Int, screen: CGFloat) -> Bool {
+        CGFloat(tabs) * tabMinWidth + 2 * inset + contentGap + height > barWidth(screen: screen)
+    }
+
+    /// How many pins fit beside Browse in a full-width bar on a screen this wide.
+    static func maxPins(screen: CGFloat) -> Int {
+        max(0, Int((barWidth(screen: screen) - 2 * inset) / tabMinWidth) - 1)
+    }
+
+    /// How far above the screen's bottom edge content must end to clear the bar, and the add button above it.
+    static func clearance(stacked: Bool) -> CGFloat {
+        bottomMargin + height + contentGap + (stacked ? height + contentGap : 0)
+    }
+}
+
+extension Navigator {
+    /// The pins the bar can name. A project or label that is gone keeps its pin stored, out of sight.
+    func barPins(_ store: Store) -> [Pin] { pins.filter { store.label(of: $0) != nil } }
 }
 
 extension View {
@@ -74,16 +96,21 @@ extension View {
 }
 
 private struct TabBarClearance: ViewModifier {
+    @Environment(Navigator.self) private var navigator
+    @Environment(Store.self) private var store
     @State private var bottomInset: CGFloat = 0
+    @State private var width: CGFloat = 0
 
     func body(content: Content) -> some View {
+        let stacked = TabBarMetrics.stacked(tabs: navigator.barPins(store).count + 1, screen: width)
         content
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 Color.clear
-                    .frame(height: max(0, TabBarMetrics.clearance - bottomInset))
+                    .frame(height: max(0, TabBarMetrics.clearance(stacked: stacked) - bottomInset))
                     .allowsHitTesting(false)
             }
             .onGeometryChange(for: CGFloat.self, of: { $0.safeAreaInsets.bottom }) { bottomInset = $0 }
+            .onGeometryChange(for: CGFloat.self, of: { $0.size.width }) { width = $0 }
     }
 }
 
@@ -92,43 +119,37 @@ private struct TabBarClearance: ViewModifier {
 private struct TabBar: View {
     @Environment(Navigator.self) private var navigator
     @Environment(Store.self) private var store
+    @Environment(\.today) private var today
     @Namespace private var selection
     @State private var keyboardShown = false
+    @State private var width: CGFloat = 0
     let inboxBadge: Int
-    let hasNoDate: Bool
 
     var body: some View {
-        GlassEffectContainer(spacing: 12) {
-            HStack(spacing: 12) {
-                HStack(spacing: 0) {
-                    inboxItem
-                    // No date leaves once it is empty, but not while it is open, so finishing its last task keeps the tab.
-                    if hasNoDate || navigator.tab == .noDate {
-                        item(.noDate, "No date", "calendar.badge.minus")
-                            .transition(.scale(scale: 0.6).combined(with: .opacity))
-                    }
-                    item(.browse, "Browse", "square.grid.2x2")
+        let pins = navigator.barPins(store)
+        // A pin with no open tasks leaves the bar, but not while it is open, so finishing its last task keeps the tab.
+        let shown = pins.filter { store.hasOpenTasks($0, today: today) || navigator.tab == .pin($0) }
+        let swaps = store.pinGroups(excluding: navigator.pins, today: today)
+        let stacked = TabBarMetrics.stacked(tabs: pins.count + 1, screen: width)
+        GlassEffectContainer(spacing: TabBarMetrics.contentGap) {
+            if stacked {
+                VStack(alignment: .trailing, spacing: TabBarMetrics.contentGap) {
+                    addButton
+                    tabs(shown, swaps: swaps)
                 }
-                .padding(4)
-                .animation(.snappy(duration: 0.25), value: hasNoDate || navigator.tab == .noDate)
-                .glassEffect(.regular.interactive(), in: .capsule)
-                Button { navigator.sheet = .quickAdd(navigator.listDefaults) } label: {
-                    Image(systemName: "plus")
-                        .font(.title2.weight(.semibold))
-                        .foregroundStyle(.white)
-                        .frame(width: TabBarMetrics.height, height: TabBarMetrics.height)
-                        .contentShape(.circle)
-                        // On the label, not the button: glass around a plain-style button shrinks its tap area to the glyph.
-                        .glassEffect(.regular.tint(.accent).interactive(), in: .circle)
+            } else {
+                HStack(spacing: TabBarMetrics.contentGap) {
+                    tabs(shown, swaps: swaps)
+                    addButton
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Quick add")
             }
         }
-        .frame(maxWidth: 520)
-        .padding(.horizontal, 21)
+        .frame(maxWidth: TabBarMetrics.maxWidth)
+        .padding(.horizontal, TabBarMetrics.sideMargin)
         .padding(.bottom, TabBarMetrics.bottomMargin)
         .ignoresSafeArea(.all, edges: .bottom)
+        .frame(maxWidth: .infinity)
+        .onGeometryChange(for: CGFloat.self, of: { $0.size.width }) { width = $0 }
         .opacity(hidden ? 0 : 1)
         .allowsHitTesting(!hidden)
         .animation(.snappy(duration: 0.2), value: hidden)
@@ -138,47 +159,78 @@ private struct TabBar: View {
 
     private var hidden: Bool { keyboardShown || navigator.quickAdd != nil }
 
-    /// Tapping Inbox again, or long pressing it at any time, lists the projects to jump to. A plain `Menu` opens on tap,
-    /// and one with a primary action opens only on a long press.
-    @ViewBuilder private var inboxItem: some View {
-        let label = itemLabel(.inbox, "Inbox", "tray", badge: inboxBadge)
-        if navigator.tab == .inbox {
-            Menu { projectsMenu } label: { label }
-                .menuStyle(.button)
-                .buttonStyle(.plain)
-                .itemAccessibility("Inbox", badge: inboxBadge, selected: true)
-        } else {
-            Menu { projectsMenu } label: { label } primaryAction: { navigator.tab = .inbox }
-                .menuStyle(.button)
-                .buttonStyle(.plain)
-                .itemAccessibility("Inbox", badge: inboxBadge, selected: false)
+    private func tabs(_ shown: [Pin], swaps: [PinGroup]) -> some View {
+        HStack(spacing: 0) {
+            ForEach(shown, id: \.key) { pin in
+                if let label = store.label(of: pin) {
+                    pinItem(pin, label, swaps: swaps)
+                        .transition(.scale(scale: 0.6).combined(with: .opacity))
+                }
+            }
+            browseItem
         }
+        .padding(TabBarMetrics.inset)
+        .animation(.snappy(duration: 0.25), value: shown)
+        .glassEffect(.regular.interactive(), in: .capsule)
     }
 
-    @ViewBuilder private var projectsMenu: some View {
-        Button("Inbox", systemImage: "tray") {
-            navigator.tab = .inbox
-            navigator.paths[.inbox] = []
+    private var addButton: some View {
+        Button { navigator.sheet = .quickAdd(navigator.listDefaults) } label: {
+            Image(systemName: "plus")
+                .font(.title2.weight(.semibold))
+                .foregroundStyle(.white)
+                .frame(width: TabBarMetrics.height, height: TabBarMetrics.height)
+                .contentShape(.circle)
+                // On the label, not the button: glass around a plain-style button shrinks its tap area to the glyph.
+                .glassEffect(.regular.tint(.accent).interactive(), in: .circle)
         }
-        Section("Projects") {
-            ForEach(store.projects) { project in
-                Button(project.name, systemImage: "number") {
-                    navigator.tab = .inbox
-                    navigator.paths[.inbox] = [.project(id: project.id)]
+        .buttonStyle(.plain)
+        .accessibilityLabel("Quick add")
+    }
+
+    /// Tapping an open pin at its root, or long pressing any pin, lists the screens it can switch to. A plain `Menu`
+    /// opens on tap, and one with a primary action opens only on a long press.
+    @ViewBuilder private func pinItem(_ pin: Pin, _ label: PinLabel, swaps: [PinGroup]) -> some View {
+        let tab = AppTab.pin(pin)
+        let selected = navigator.tab == tab
+        let badge = pin == .inbox ? inboxBadge : 0
+        let item = itemLabel(tab, label.title, label.systemImage, badge: badge)
+        let menu = swapMenu(pin, swaps: swaps)
+        Group {
+            if selected, navigator.paths[tab, default: []].isEmpty {
+                Menu { menu } label: { item }
+            } else {
+                Menu { menu } label: { item } primaryAction: {
+                    if selected { navigator.paths[tab] = [] } else { navigator.tab = tab }
+                }
+            }
+        }
+        .menuStyle(.button)
+        .buttonStyle(.plain)
+        .itemAccessibility(label.title, badge: badge, selected: selected)
+    }
+
+    @ViewBuilder private func swapMenu(_ pin: Pin, swaps: [PinGroup]) -> some View {
+        ForEach(swaps) { group in
+            Section(group.title) {
+                ForEach(group.pins, id: \.key) { next in
+                    if let label = store.label(of: next) {
+                        Button(label.title, systemImage: label.systemImage) { navigator.swap(pin, to: next) }
+                    }
                 }
             }
         }
     }
 
-    private func item(_ tab: AppTab, _ title: String, _ symbol: String, badge: Int = 0) -> some View {
-        let selected = navigator.tab == tab
+    private var browseItem: some View {
+        let selected = navigator.tab == .browse
         return Button {
-            if selected { navigator.paths[tab] = [] } else { navigator.tab = tab }
+            if selected { navigator.paths[.browse] = [] } else { navigator.tab = .browse }
         } label: {
-            itemLabel(tab, title, symbol, badge: badge)
+            itemLabel(.browse, "Browse", "square.grid.2x2")
         }
         .buttonStyle(.plain)
-        .itemAccessibility(title, badge: badge, selected: selected)
+        .itemAccessibility("Browse", badge: 0, selected: selected)
     }
 
     private func itemLabel(_ tab: AppTab, _ title: String, _ symbol: String, badge: Int = 0) -> some View {
@@ -199,7 +251,10 @@ private struct TabBar: View {
                             .offset(x: 12, y: -4)
                     }
                 }
-            Text(title).font(.caption2.weight(.medium))
+            Text(title)
+                .font(.caption2.weight(.medium))
+                .lineLimit(1)
+                .padding(.horizontal, 6)
         }
         .foregroundStyle(selected ? Color.accent : Color.primary)
         .frame(maxWidth: .infinity, minHeight: 54)
@@ -268,6 +323,11 @@ extension Store {
     }
 }
 
+extension EnvironmentValues {
+    /// True for the screen at the bottom of a tab's stack, which has no back button.
+    @Entry var tabRoot = false
+}
+
 private struct TabStack<Content: View>: View {
     @Environment(Navigator.self) private var navigator
     let tab: AppTab
@@ -276,6 +336,7 @@ private struct TabStack<Content: View>: View {
     var body: some View {
         NavigationStack(path: Binding(get: { navigator.paths[tab] ?? [] }, set: { navigator.paths[tab] = $0 })) {
             content()
+                .environment(\.tabRoot, true)
                 .tabBarClearance()
                 .navigationDestination(for: Route.self) { RouteView(route: $0).tabBarClearance() }
         }
@@ -288,6 +349,8 @@ private struct RouteView: View {
 
     var body: some View {
         switch route {
+        case .inbox: InboxScreen().tracedScreen("Inbox")
+        case .noDate: NoDateScreen().tracedScreen("No date")
         case let .project(id): ProjectScreen(projectID: id)
         case let .label(id): LabelScreen(labelID: id)
         case let .place(key): PlaceScreen(key: key)

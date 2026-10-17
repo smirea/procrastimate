@@ -6,14 +6,62 @@ import Observation
 final class Navigator {
     /// Coming to Browse from another tab starts a fresh search, like the web's search sheet. Back from a result keeps
     /// the query, because that never leaves Browse.
-    var tab: AppTab = .inbox {
+    var tab: AppTab {
         didSet { if tab != oldValue, tab == .browse { searchQuery = "" } }
     }
+    /// The tab bar's screens before Browse, in order. Kept per device, since how many fit depends on the screen.
+    private(set) var pins: [Pin]
     var searchQuery = ""
     var paths: [AppTab: [Route]] = [:]
     var sheet: Sheet?
     /// Asks Browse to focus its search field, as Cmd-K does. Browse clears it once focused.
     var focusSearch = false
+
+    static let pinsKey = "procrastimate-pins"
+
+    init() {
+        let stored = UserDefaults.standard.data(forKey: Self.pinsKey)
+            .flatMap { try? JSONDecoder().decode([Pin].self, from: $0) }
+        let pins = stored ?? Pin.defaults
+        self.pins = pins
+        tab = pins.first.map(AppTab.pin) ?? .browse
+    }
+
+    /// The screen on top of the open tab: its pushed route, else the pinned screen at its root. Nil on Browse's root.
+    var currentRoute: Route? {
+        if let route = paths[tab]?.last { return route }
+        if case let .pin(pin) = tab { return pin.route }
+        return nil
+    }
+
+    func setPins(_ next: [Pin]) {
+        let removed = pins.filter { !next.contains($0) }
+        pins = next
+        if let data = try? JSONEncoder().encode(next) { UserDefaults.standard.set(data, forKey: Self.pinsKey) }
+        for pin in removed { paths[.pin(pin)] = nil }
+        if case let .pin(pin) = tab, !next.contains(pin) { tab = next.first.map(AppTab.pin) ?? .browse }
+    }
+
+    /// A tab menu's pick: the tab's place in the bar holds `next` from now on, open at its root.
+    func swap(_ pin: Pin, to next: Pin) {
+        guard let index = pins.firstIndex(of: pin), !pins.contains(next) else { return }
+        var updated = pins
+        updated[index] = next
+        setPins(updated)
+        paths[.pin(next)] = []
+        tab = .pin(next)
+    }
+
+    /// Opens a screen in its own tab when it is pinned, else on top of Browse.
+    func open(_ route: Route) {
+        if let pin = pins.first(where: { $0.route == route }) {
+            paths[.pin(pin)] = []
+            tab = .pin(pin)
+        } else {
+            paths[.browse] = [route]
+            tab = .browse
+        }
+    }
 
     /// Quick add's defaults while it is open. It shows as an overlay attached to the keyboard, not as a sheet.
     var quickAdd: QuickAddDefaults? {
@@ -27,7 +75,7 @@ final class Navigator {
 
     /// Quick add from the tab bar starts in the project or label on screen.
     var listDefaults: QuickAddDefaults {
-        switch paths[tab]?.last {
+        switch currentRoute {
         case let .project(id)?: QuickAddDefaults(projectId: id)
         case let .label(id)?: QuickAddDefaults(labelId: id)
         default: QuickAddDefaults()
@@ -40,17 +88,14 @@ final class Navigator {
     /// Shows the list a new task lands in: the open list when it already shows the task, else its project, else Inbox
     /// when it has a day or No date when it has none.
     func reveal(_ task: TaskItem, today: DateKey, in zone: TimeZone) {
-        let current = paths[tab]?.last
-        switch current {
+        switch currentRoute {
         case let .label(id)? where task.labelIds.contains(id): break
         case let .project(id)? where task.projectId == id: break
         default:
             if let projectId = task.projectId {
-                tab = .browse
-                paths[.browse] = [.project(id: projectId)]
+                open(.project(id: projectId))
             } else {
-                tab = Triggers.scheduledDue(task, today, in: zone) == nil ? .noDate : .inbox
-                paths[tab] = []
+                open(Triggers.scheduledDue(task, today, in: zone) == nil ? .noDate : .inbox)
             }
         }
         revealed = task.id
@@ -60,10 +105,21 @@ final class Navigator {
         }
     }
 
-    /// Swaps a route in every tab's stack, or drops it when `next` is nil.
+    /// Swaps a route in every tab's stack and in the pins, or drops it when `next` is nil.
     func replace(_ route: Route, with next: Route?) {
         for (tab, path) in paths where path.contains(route) {
             paths[tab] = path.compactMap { $0 == route ? next : $0 }
+        }
+        guard let pin = pins.first(where: { $0.route == route }) else { return }
+        let survivor: Pin? = switch next {
+        case let .project(id)?: .project(id: id)
+        case let .label(id)?: .label(id: id)
+        default: nil
+        }
+        if let survivor, !pins.contains(survivor) {
+            swap(pin, to: survivor)
+        } else {
+            setPins(pins.filter { $0 != pin })
         }
     }
 
@@ -86,20 +142,16 @@ final class Navigator {
     func openShared(_ target: API.ShareTarget, in store: Store) -> Bool {
         switch target.kind {
         case .project where store.project(target.id) != nil:
-            show(.project(id: target.id))
+            sheet = nil
+            open(.project(id: target.id))
         case .label where store.label(target.id) != nil:
-            show(.label(id: target.id))
+            sheet = nil
+            open(.label(id: target.id))
         case .task where store.task(target.id) != nil:
             sheet = .details(taskID: target.id)
         default:
             return false
         }
         return true
-    }
-
-    private func show(_ route: Route) {
-        sheet = nil
-        tab = .browse
-        paths[.browse] = [route]
     }
 }

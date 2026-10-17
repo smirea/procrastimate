@@ -60,6 +60,8 @@ struct SettingsSheet: View {
                     Text("The rest stay in quick add’s + menu.")
                 }
 
+                Section { TabsSettingsLink() }
+
                 Section {
                     if notifications.status == .denied {
                         Button("Notifications need permission") {

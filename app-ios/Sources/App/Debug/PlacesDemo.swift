@@ -41,7 +41,7 @@ enum PlacesDemo {
         if has("rows") { seedRows(store: store, clock: clock) }
         if has("move") { await move(store: store, calendar: calendar) }
         if has("browse") { navigator.tab = .browse }
-        if has("nodate") { navigator.tab = .noDate }
+        if has("nodate") { navigator.open(.noDate) }
         if has("search") { navigator.showSearch() }
         if let title = value("details"), let task = store.allTasks.first(where: { $0.title == title }) {
             navigator.sheet = .details(taskID: task.id)

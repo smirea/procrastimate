@@ -7,7 +7,7 @@ Inbox lists everything dated by day: Overdue, Today, and each later day with dat
 - `views-inbox` lists Overdue, Today, and each later day under a heading such as `Tomorrow`. It holds only dated tasks.
 - `views-no-date` lists undated top-level tasks without a project. It is an iOS tab and a web sidebar entry at `/no-date` with its count.
 - `views-no-date-sort` sorts No date by when each task was added, newest first. Each row shows how long ago at its right: `Today`, `Yesterday`, `3 days ago`, `2 weeks ago`, `5 months ago`, `1 year ago`. The `Newest` button at the top right flips it to `Oldest` and back, and the choice persists per device.
-- `views-inbox-menu` (iOS only) opens a menu of `Inbox` and every project from the Inbox tab, on a tap while Inbox is selected or a long press at any time. A project opens on the Inbox tab's stack. The web sidebar already lists projects.
+- `views-pinned-tabs` (iOS only) lets `Settings > Tabs` pin, remove, and reorder Inbox, No date, projects, shared projects and labels, places, events, and labels before Browse, which is always last. Pins persist across relaunches on this device. Tapping the open pin, or long pressing any pin, opens a menu of every screen not already pinned; picking one swaps that tab to it. A pin with no open tasks hides except Inbox and except while open. When the tabs don't fit beside the `+`, the `+` sits above a full-width bar. Unpinned Inbox and No date show as rows at the top of Browse. The web sidebar already lists every screen.
 - `views-today` and `views-upcoming` are removed. Their lists are the Inbox's dated sections.
 - `views-empty` shows `Nothing scheduled` with `Tasks with a date show up here by day.` on an Inbox with nothing dated. An empty No date shows `Inbox zero` with `Press Q to capture a task.`, or `Tap + to capture a task.` on a phone and iOS.
 - `views-counts` shows the Inbox count, overdue plus today, in the web sidebar and as the iOS tab badge. The web sidebar also counts No date. The iOS No date tab has no badge.
@@ -20,7 +20,7 @@ Inbox lists everything dated by day: Overdue, Today, and each later day with dat
 
 - Web: choose Inbox or No date in the sidebar. No date sits under Inbox.
 - Web on a phone: tap `Open navigation`, then Inbox. The drawer closes as the view opens. Tapping outside the drawer closes it.
-- iOS: tap the Inbox or No date tab. The tab bar has Inbox, No date, and Browse, plus the accent `+` circle beside it.
+- iOS: tap the Inbox or No date tab. By default the tab bar has Inbox, No date, and Browse, plus the accent `+` circle beside it.
 
 ## Driving it with control-ui and the simulator
 
@@ -31,10 +31,10 @@ Preconditions:
 
 - **Inbox.** Open Inbox. `Overdue` lists `Overdue task` marked `Yesterday`. `Today` lists `Today task`. `Later task` is under `Saturday`. `Someday task` is not in Inbox. The sidebar count, or the iOS tab badge, reads 2.
 - **No date.** Open No date. It lists `Someday task` with `Today` at its right. The web sidebar count reads 1. Choose `Sorted newest first`; it reads `Oldest` and the oldest task leads. Reload; it still reads `Oldest`.
-- **Inbox menu (iOS).** Create project `Home`. Tap Inbox, then tap it again; a menu lists `Projects` with `Home` and `Inbox`. Choose `Home`; its screen opens with `Home` centered in the bar between back and `Project actions`. Long press `No date`'s neighbor Inbox from another tab; the same menu opens.
+- **Pinned tabs (iOS).** Launch with `PROCRASTIMATE_DEMO="seed rows"` and reset. Browse > Settings > Tabs lists `Inbox`, `No date`, then a muted `Browse`. Tap `Pin Philz Coffee` and `Pin home`; the `+` buttons grey out at 4 pins on a 402 pt iPhone. Close Settings; the bar reads Inbox, No date, Philz Cof…, home, Browse across the full width with the `+` above its trailing end, and Browse scrolls `Completed` clear of the `+`. Relaunch without reset; the pins stay. Tap `Philz Coffee` twice; the menu lists labels `work` and `errands` (not `home`), events, and `Whole Foods Market`. Pick `Whole Foods Market`; that tab now shows it. In Settings > Tabs, delete `No date`; Browse's top gains a `No date` row that pushes the list with a back button. No automated spec; drive it with `./sim test`.
 - **Places in No date.** On iOS, launch with `PROCRASTIMATE_DEMO="seed nodate"`. `Buy oat milk` is at the top, alone at its place. `Try the seasonal blend` and `Ask about decaf beans` sit below under a `Philz Coffee` heading.
 - **Other projects.** Add `Project task tomorrow #Work` after creating `Work`. It shows under `Tomorrow` with its project named, and not in No date.
-- **No date hides when empty.** Start with no tasks; the sidebar and the iOS tab bar show no `No date`. Add `Someday task`; `No date` slides in. Open it and complete `Someday task`; it reads `Inbox zero` and the entry stays until you open Inbox.
+- **No date hides when empty.** Start with no tasks; the sidebar and the iOS tab bar show no `No date` (any iOS pin without open tasks behaves the same, except Inbox). Add `Someday task`; `No date` slides in. Open it and complete `Someday task`; it reads `Inbox zero` and the entry stays until you open Inbox.
 - **Empty.** Complete every task. Inbox shows `Nothing scheduled` with `Tasks with a date show up here by day.`. No date shows `Inbox zero` with `Press Q to capture a task.`, or `Tap + to capture a task.` on a phone.
 - **Phone.** Tap `Open navigation`; the `Main` navigation slides in. Tap outside it; it closes. Open Inbox; the same sections show. Open No date; `Someday task` shows.
 - **iOS.** The Inbox tab lists the same sections as the web and shows `Nothing scheduled` when empty. The No date tab lists `Someday task` and shows `Inbox zero` when empty. Launch with `PROCRASTIMATE_DEMO=nodate` to open it directly. The Inbox tab carries the overdue plus today count as its badge. Rows have no separators. The bar is hidden at the top, and a small `Inbox` title fades in once the list scrolls. Lists sit on the same tinted canvas as the web with transparent rows.
