@@ -1,6 +1,6 @@
 # Offline and sync
 
-ProcrastiMate works fully without a network. Every change applies locally at once and syncs in the background. Sync is always on. Nothing in the UI mentions sync, except a toast when the server rejects a change.
+ProcrastiMate works fully without a network. Every change applies locally at once and syncs in the background. Sync is always on. Nothing in the UI mentions sync, except a toast when the server rejects a change and pull to refresh on iOS.
 
 ## Sub-features
 
@@ -10,6 +10,7 @@ ProcrastiMate works fully without a network. Every change applies locally at onc
 - `sync-reconnect` uploads offline changes after the network returns.
 - `sync-conflict` converges when both clients change the same task offline.
 - `sync-rejected` handles an edit the server refuses: the rest of the push still applies, the edit leaves the outbox, the entity goes back to the server's value, and a toast says "Couldn’t save a change to “Title”". The device keeps syncing.
+- `sync-refresh` on iOS: pulling down any task list (Inbox, No date, a project, label, place, or event, Completed) or Browse runs a full sync round, the shared spaces list included, and the spinner stays until it ends.
 - `sync-delete` wipes tasks, projects, and labels on this device and the server from Settings, `Delete all data`.
 
 ## How to get to it (user POV)
@@ -34,6 +35,7 @@ Preconditions:
 - **Conflict.** Block both clients, rename the same task differently on each, and add notes on B. After both reconnect, both show the same title (the later write wins) and B's notes, since different fields merge. Test: `both devices editing the same task offline converge`.
 - **Delete all.** On A, `Settings`, `Delete all data`, confirm. A's tasks are gone and stay gone after a reload. B's tasks are gone once it syncs, and its waiting edits are dropped. Both devices keep their tokens. Test: `delete all data clears this device and the other`.
 - **First sync.** A new install's first request carries no tasks. Its first snapshot queues only what the server lacks, so a device with the same tasks as the server uploads nothing. `bun test shared/sync/outbox.test.ts` and `swift test --filter OutboxTests` cover it.
+- **Pull to refresh (iOS).** Drag any task list or Browse down past the top. A spinner shows under the bar and stays until the sync round ends, then a change made on the web shows. Without a session (the DEBUG `PROCRASTIMATE_SIGNED_IN` launch) it ends at once.
 - **iOS.** The Core store writes a sync section on first launch and queues local changes, one op per entity field. `swift test` covers that.
 
 ## Gotchas

@@ -191,11 +191,11 @@ private struct TaskDetailsForm: View {
         Button(action: action) {
             SwiftUI.Label(title, systemImage: systemImage)
                 .font(.body.weight(.semibold))
-                .foregroundStyle(.white)
+                .foregroundStyle(tint)
                 .padding(.horizontal, 20)
                 .frame(minHeight: 52)
                 .contentShape(.capsule)
-                .glassEffect(.regular.tint(tint).interactive(), in: .capsule)
+                .glassEffect(.regular.interactive(), in: .capsule)
         }
         .buttonStyle(.plain)
     }

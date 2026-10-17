@@ -5,6 +5,7 @@ import SwiftUI
 /// them. Typing a query swaps the list for search results.
 struct BrowseScreen: View {
     @Environment(Navigator.self) private var navigator
+    @Environment(AccountSync.self) private var accountSync
     @FocusState private var searchFocused: Bool
 
     var body: some View {
@@ -17,6 +18,7 @@ struct BrowseScreen: View {
                 SearchResults(query: query)
             }
         }
+        .refreshable { await accountSync.refresh() }
         .background(.canvas)
         .navigationTitle("Browse")
         .navigationBarTitleDisplayMode(.inline)
