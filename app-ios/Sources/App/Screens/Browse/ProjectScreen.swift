@@ -154,7 +154,9 @@ private struct SectionHeading: View {
             isPresented: $confirmingDelete,
             titleVisibility: .visible
         ) {
-            Button("Delete", role: .destructive) { withAnimation(.snappy) { store.deleteSection(section.id) } }
+            Button("Delete", role: .destructive) {
+                actions.toastDeleted(section.name, withAnimation(.snappy) { store.deleteSection(section.id) })
+            }
         }
     }
 }
