@@ -32,6 +32,17 @@ struct PlaceScreen: View {
         ) {
             ForEach(tasks) { TaskRow(task: $0, showProject: true) }
         }
+        .toolbar {
+            if location != nil {
+                ToolbarItem(placement: .primaryAction) {
+                    Button("Save place", systemImage: "bookmark") { saving = true }
+                        .accessibilityIdentifier("save-place")
+                }
+            }
+        }
+        .sheet(isPresented: $saving) {
+            if let location { PlaceSheet(mode: .save(location)) }
+        }
     }
 }
 

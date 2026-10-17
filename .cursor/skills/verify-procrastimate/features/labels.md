@@ -13,6 +13,7 @@ Labels let Stefan tag a task with any number of names that cross projects, such 
 - `labels-rename` renames a label.
 - `labels-delete` deletes a label and keeps its tasks.
 - `labels-search` finds tasks by label name in search, and a label result opens the label view.
+- `labels-places` lists saved places with the labels under a pin. Their view lists the tasks at the place, and `@name` or the picker sets the task's place instead of adding a label. See Places and events.
 
 ## How to get to it (user POV)
 

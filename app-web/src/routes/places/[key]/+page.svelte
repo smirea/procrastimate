@@ -21,7 +21,7 @@
 
 	// A saved place lives on its label's screen, so a link from before it was saved lands there.
 	$effect(() => {
-		if (saved) void goto(`/labels/${saved.id}`, { replaceState: true });
+		if (saved) void goto(`/labels/${saved.id}`, { replace: true });
 	});
 
 	function save() {
