@@ -1,8 +1,11 @@
 /**
- * Sentry projects in org `self-uo7`. A DSN is public, so it is committed here; an empty one is not provisioned yet.
+ * Sentry projects in org `self-uo7`. A DSN is public, so it is committed here.
  * `web` is `procrastimate-web` and `worker` is `procrastimate-worker`.
  */
-export const SENTRY_DSN = { web: '', worker: '' } as const;
+export const SENTRY_DSN = {
+	web: 'https://d522a14afc3596869ce99ef3feb73756@o4512270794817536.ingest.us.sentry.io/4512271645409280',
+	worker: 'https://18c607fbc421a894140130c69cf20e1c@o4512270794817536.ingest.us.sentry.io/4512271645474816',
+} as const;
 
 /** The browser posts its envelopes to its own origin here, and the Worker forwards them. */
 export const SENTRY_TUNNEL_PATH = '/api/sentry';
