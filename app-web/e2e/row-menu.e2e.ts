@@ -73,6 +73,14 @@ test('Shift+F10 opens the focused row’s menu with its first item focused, and 
 	await expect(open(app, 'Pay rent')).toBeFocused();
 
 	await page.keyboard.press('Shift+F10');
+	await page.keyboard.press('q');
+	await expect(app.quickAdd()).toBeVisible();
+	await expect(menu(page, 'Pay rent')).toBeHidden();
+	await page.keyboard.press('Escape');
+	await expect(app.quickAdd()).toBeHidden();
+	await open(app, 'Pay rent').focus();
+
+	await page.keyboard.press('Shift+F10');
 	await page.keyboard.press('End');
 	await page.keyboard.press('ArrowUp');
 	await expect(items.nth(-2)).toHaveText('Delete');

@@ -15,7 +15,7 @@
 	import { copyMarkdown } from '../copy.ts';
 	import { rowMenu } from '../row-menu.svelte.ts';
 	import { store } from '../store.svelte.ts';
-	import { clock, motion } from '../ui.svelte.ts';
+	import { clock, motion, sheets } from '../ui.svelte.ts';
 
 	const MARGIN = 8;
 
@@ -26,6 +26,12 @@
 
 	$effect(() => {
 		if (opened && !task) rowMenu.close();
+	});
+
+	/** A shortcut such as `q` or `/` can open a sheet past the menu, which would otherwise stay on top of it. */
+	$effect(() => {
+		void sheets.current;
+		untrack(() => rowMenu.close());
 	});
 
 	let menu = $state<HTMLDivElement>();
