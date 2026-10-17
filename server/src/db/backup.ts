@@ -1,4 +1,4 @@
-import { createClient, type Client, type Value } from '@libsql/client/web';
+import { createClient, type Client, type Transaction, type Value } from '@libsql/client/web';
 import type { R2Bucket } from '@cloudflare/workers-types';
 import type { TursoTarget } from './turso';
 
@@ -27,18 +27,27 @@ function literal(value: Value): string {
 }
 
 /**
- * The whole database as SQL that `sqlite3` replays into an empty file, like its `.dump`. Every table is read in one
- * read batch, so the dump is one consistent snapshot. Integers come back as bigints, so none lose precision.
+ * The whole database as SQL that `sqlite3` replays into an empty file, like its `.dump`. The schema and every table
+ * are read in one read transaction, so the dump is one consistent snapshot even while a deploy migrates. Integers come back as bigints, so none lose precision.
  */
 export async function dumpSql(client: Client): Promise<string> {
-	const schema = (await client.execute(SCHEMA)).rows as unknown as SchemaRow[];
+	const transaction = await client.transaction('read');
+	try {
+		return await dumpTransaction(transaction);
+	} finally {
+		transaction.close();
+	}
+}
+
+async function dumpTransaction(transaction: Transaction): Promise<string> {
+	const schema = (await transaction.execute(SCHEMA)).rows as unknown as SchemaRow[];
 	// SQLite creates `sqlite_sequence` with the first AUTOINCREMENT table and bumps it on every insert, so its rows go
 	// last, after a reset, as `sqlite3 .dump` does.
 	const tables = schema.filter(row => row.type === 'table' && row.name !== 'sqlite_sequence');
 	const sequenced = schema.some(row => row.name === 'sqlite_sequence');
 	const reads = tables.map(table => `select * from ${quoteName(table.name)}`);
 	if (sequenced) reads.push('select * from sqlite_sequence');
-	const results = await client.batch(reads, 'read');
+	const results = await transaction.batch(reads);
 
 	const lines = ['PRAGMA foreign_keys=OFF;', 'BEGIN TRANSACTION;'];
 	const inserts = (name: string, index: number) => {
