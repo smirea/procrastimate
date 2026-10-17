@@ -1,14 +1,15 @@
 import { createORPCClient, ORPCError } from '@orpc/client';
 import { OpenAPILink } from '@orpc/openapi/fetch';
 import type { ApiClient, contract } from 'shared/api/contract.ts';
-import { DEVICE_HEADER, DEVICE_NAME_HEADER } from 'shared/auth.ts';
+import { CLIENT_HEADER, DEVICE_HEADER, DEVICE_NAME_HEADER } from 'shared/auth.ts';
+import type { Client } from 'shared/values.ts';
 import routes from './generated/contract.json';
 import { store } from './store.svelte.ts';
 
-/** A name stored with the device, such as `Chrome on macOS`. It is never shown. */
-function deviceName(): string {
+/** The browser and its OS, such as `Chrome` and `macOS`, or an empty OS when the user agent names none. */
+function browser(): { name: string; os: string } {
 	const ua = navigator.userAgent;
-	const browser = /Edg\//.test(ua)
+	const name = /Edg\//.test(ua)
 		? 'Edge'
 		: /Firefox\//.test(ua)
 			? 'Firefox'
@@ -30,14 +31,33 @@ function deviceName(): string {
 						: /Linux/.test(ua)
 							? 'Linux'
 							: '';
-	return os ? `${browser} on ${os}` : browser;
+	return { name, os };
 }
 
-/** The install id and name. The session cookie is the credential; these are not. */
+/** A name stored with the device, such as `Chrome on macOS`. It is never shown. */
+function deviceName(): string {
+	const { name, os } = browser();
+	return os ? `${name} on ${os}` : name;
+}
+
+/** This app, which the server records on every op a request writes. The deploy's commit is the version. */
+function client(): Client {
+	const { name, os } = browser();
+	return {
+		kind: 'web',
+		version: __SENTRY_TARGET__?.release ?? null,
+		device: name,
+		os: os || null,
+		timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+	};
+}
+
+/** The install id and name, and the app. The session cookie is the credential; these are not. */
 export function deviceHeaders(): Record<string, string> {
+	const app = { [CLIENT_HEADER]: JSON.stringify(client()) };
 	const id = store.deviceId();
-	if (!id) return {};
-	return { [DEVICE_HEADER]: id, [DEVICE_NAME_HEADER]: deviceName() };
+	if (!id) return app;
+	return { ...app, [DEVICE_HEADER]: id, [DEVICE_NAME_HEADER]: deviceName() };
 }
 
 /**

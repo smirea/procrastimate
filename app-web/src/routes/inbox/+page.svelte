@@ -28,7 +28,7 @@
 	emptyTitle="Nothing scheduled"
 	emptyHint="Tasks with a date show up here by day."
 	quickAdd={{ projectId: null, labelId: null, today: false }}
-	markdown={() => ({ title: 'Inbox', projectId: null, sections })}
+	markdown={() => ({ title: 'Inbox', sections })}
 >
 	{#if due.overdue.length}
 		<section class="mb-6" aria-label="Overdue">

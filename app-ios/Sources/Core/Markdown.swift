@@ -1,27 +1,21 @@
 import Foundation
 
-/// The Markdown copy of `shared/markdown.ts`. Event times resolve in `zone`.
+/// The Markdown copy of `shared/markdown.ts`.
 public enum Markdown {
     public typealias Document = API.MarkdownDocument
     public typealias Section = API.MarkdownSection
-    public typealias Context = API.MarkdownContext
 
     /// A project view's copy: its loose tasks, then each section under its name.
     public static func projectDocument(_ project: Project, _ groups: [Views.ProjectGroup]) -> Document {
-        Document(
-            title: project.name,
-            projectId: project.id,
-            sections: groups.map { Section(heading: $0.section?.name, tasks: $0.tasks) }
-        )
+        Document(title: project.name, sections: groups.map { Section(heading: $0.section?.name, tasks: $0.tasks) })
     }
 
-    /// A copy as a Markdown checklist. Each task carries its subtasks nested under it, done ones checked, so a subtask
-    /// whose ancestor is also in the copy shows only there.
-    public static func toMarkdown(_ document: Document, _ context: Context, in zone: TimeZone) -> String {
-        let children = Subtasks.groupChildren(context.tasks)
-        let projects = Dictionary(context.projects.map { ($0.id, $0.name) }, uniquingKeysWith: { first, _ in first })
-        let labels = Dictionary(context.labels.map { ($0.id, $0.name) }, uniquingKeysWith: { first, _ in first })
-        let byId = Dictionary(context.tasks.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+    /// A copy as a plain nested list, for a person or an AI to get the gist: each task's title, then its notes and its
+    /// subtasks nested under it, with no checkboxes, dates, or tags. A notes line that is already a list item keeps its
+    /// marker. `tasks` is every task, so a subtask whose ancestor is also in the copy shows only there.
+    public static func toMarkdown(_ document: Document, _ tasks: [TaskItem]) -> String {
+        let children = Subtasks.groupChildren(tasks)
+        let byId = Dictionary(tasks.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         let copied = Set(document.sections.flatMap { $0.tasks.map(\.id) })
 
         func nested(_ task: TaskItem) -> Bool {
@@ -33,30 +27,15 @@ public enum Markdown {
             return false
         }
 
-        func line(_ task: TaskItem) -> String {
-            let due = Triggers.scheduledDue(task, context.today, in: zone)
-            let project = task.parentId == nil && task.projectId != document.projectId
-                ? projects[task.projectId ?? ""]
-                : nil
-            let parts: [String?] = [
-                task.title,
-                due.map { Format.formatDue($0, context.today) },
-                task.recurrence.map { Format.formatRecurrence($0, due) },
-                task.priority < .p4 ? "p\(task.priority.rawValue)" : nil,
-                project.map { "#\($0)" },
-            ] + task.labelIds.map { labels[$0].map { "@\($0)" } }
-            return parts.compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · ")
-        }
-
         func item(_ task: TaskItem, _ depth: Int) -> [String] {
             let indent = String(repeating: "  ", count: depth)
-            let trimmed = task.notes.trimmingCharacters(in: .whitespacesAndNewlines)
-            let notes = trimmed.isEmpty
-                ? []
-                : trimmed.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline).map { note in
-                    String("\(indent)  \(note)".trimmingSuffix(while: \.isWhitespace))
-                }
-            return ["\(indent)- [\(task.completedAt == nil ? " " : "x")] \(line(task))"]
+            let notes = task.notes.components(separatedBy: "\n").compactMap { raw -> String? in
+                let line = raw.hasSuffix("\r") ? String(raw.dropLast()) : raw
+                let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
+                if trimmed.isEmpty { return nil }
+                return "\(indent)  " + (isListItem(trimmed) ? String(line.trimmingSuffix(while: \.isWhitespace)) : "- \(trimmed)")
+            }
+            return ["\(indent)- \(task.title.trimmingCharacters(in: .whitespacesAndNewlines))"]
                 + notes
                 + (children[task.id] ?? []).flatMap { item($0, depth + 1) }
         }
@@ -70,6 +49,11 @@ public enum Markdown {
             blocks.append(list.joined(separator: "\n"))
         }
         return blocks.joined(separator: "\n\n")
+    }
+
+    /// `- `, `* `, `+ `, `1. `, or `1) `, as `LIST_ITEM` in the TypeScript.
+    private static func isListItem(_ line: String) -> Bool {
+        line.firstMatch(of: /^([-*+]|\d+[.)])\s/) != nil
     }
 }
 

@@ -1,5 +1,6 @@
 import { ORPCError } from '@orpc/server';
-import { ACTOR_HEADER, actorSchema, type Actor } from '../../shared/auth';
+import { ACTOR_HEADER, actorSchema, appClientSchema, CLIENT_HEADER, type Actor } from '../../shared/auth';
+import type { Client } from '../../shared/values';
 import { agentContract } from '../../shared/api/contract';
 import { internalClient } from './account/peers';
 import { readSession, userById } from './better-auth';
@@ -87,6 +88,24 @@ export function actorOf(request: Request): Actor | null {
 	if (!header) return null;
 	try {
 		const parsed = actorSchema.safeParse(JSON.parse(header));
+		return parsed.success ? parsed.data : null;
+	} catch {
+		return null;
+	}
+}
+
+/**
+ * The app a request came from. The web and iOS send `x-procrastimate-client`; any other caller is an `api` client known
+ * by its `User-Agent`. A header that does not parse is null, so the request is refused rather than recorded as `api`.
+ */
+export function clientOf(request: Request): Client | null {
+	const header = request.headers.get(CLIENT_HEADER);
+	if (header === null) {
+		const agent = request.headers.get('user-agent');
+		return { kind: 'api', version: null, device: agent ? agent.slice(0, 200) : null, os: null, timeZone: null };
+	}
+	try {
+		const parsed = appClientSchema.safeParse(JSON.parse(header));
 		return parsed.success ? parsed.data : null;
 	} catch {
 		return null;

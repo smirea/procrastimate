@@ -4,6 +4,14 @@ import { queuedRambleLedger } from './ramble-ledger';
 import { serialQueue } from './serial';
 import { accountSession, writeRambleUsage } from './turso';
 
+const IOS = {
+	kind: 'ios',
+	version: '1.4 (212)',
+	device: 'iPhone17,1',
+	os: 'iOS 27.0',
+	timeZone: 'America/New_York',
+} as const;
+
 describe('a Turso session', () => {
 	test('loads what the last flush wrote, including a wiped epoch', async () => {
 		const client = await localTurso();
@@ -23,6 +31,7 @@ describe('a Turso session', () => {
 			id: 't1',
 			fields: { title: 'Buy milk' },
 			actor: 'user-1',
+			client: IOS,
 			at: 5,
 		});
 		first.store.setEpoch(2);
@@ -34,7 +43,16 @@ describe('a Turso session', () => {
 			{ kind: 'task', id: 't1', data: { title: 'Buy milk' }, clocks: { title: '1:0:mac' } },
 		]);
 		expect(second.store.logAfter(0, 10)).toEqual([
-			{ seq: 1, opId: 'op-1', kind: 'task', id: 't1', fields: { title: 'Buy milk' }, actor: 'user-1', at: 5 },
+			{
+				seq: 1,
+				opId: 'op-1',
+				kind: 'task',
+				id: 't1',
+				fields: { title: 'Buy milk' },
+				actor: 'user-1',
+				client: IOS,
+				at: 5,
+			},
 		]);
 		expect(second.store.epoch()).toBe(2);
 

@@ -9,6 +9,8 @@ import { memoryStore } from './memory-store';
 import type { AccountStore } from './store';
 import { sync } from './sync';
 
+const WEB = { kind: 'web', version: null, device: 'Chrome', os: 'macOS', timeZone: 'UTC' } as const;
+
 const NOW = Date.UTC(2026, 9, 14, 18);
 const MINUTE = 60_000;
 const ME = 'user-me';
@@ -42,7 +44,7 @@ function device(store: AccountStore, name: string, snapshot = seed()) {
 		},
 		outbox: (): Op[] => outbox,
 		push(at: number, actor = ME, ops = outbox) {
-			const response = sync(store, { cursor: store.lastSeq(), ops, epoch: 0, scope: '' }, at, actor);
+			const response = sync(store, { cursor: store.lastSeq(), ops, epoch: 0, scope: '' }, at, actor, WEB);
 			const acked = new Set(response.acked);
 			outbox = outbox.filter(op => !acked.has(op.opId));
 		},

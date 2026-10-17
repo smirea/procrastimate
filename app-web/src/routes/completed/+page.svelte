@@ -24,7 +24,6 @@
 	quickAdd={{ projectId: null, labelId: null, today: false }}
 	markdown={() => ({
 		title: 'Completed',
-		projectId: null,
 		sections: days.map((day) => ({ heading: completedHeading(day.date, clock.today), tasks: day.tasks })),
 	})}
 >

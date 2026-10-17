@@ -4,14 +4,10 @@
 	import CopyButton from './CopyButton.svelte';
 	import PendingCount from './PendingCount.svelte';
 
-	/**
-	 * `projectId` names the project a heading sits in, whose rows then copy without their project tag. `counted` is off for
-	 * done tasks, which are not pending.
-	 */
+	/** `counted` is off for done tasks, which are not pending. */
 	let {
 		heading,
 		tasks,
-		projectId = null,
 		counted = true,
 		title,
 		actions,
@@ -19,7 +15,6 @@
 	}: {
 		heading: string;
 		tasks: Task[];
-		projectId?: string | null;
 		counted?: boolean;
 		title?: Snippet;
 		actions?: Snippet;
@@ -38,7 +33,7 @@
 		<span class="flex opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100 touch:opacity-100">
 			<CopyButton
 				label={`Copy ${heading} as Markdown`}
-				markdown={() => ({ title: null, projectId, sections: [{ heading, tasks }] })}
+				markdown={() => ({ title: null, sections: [{ heading, tasks }] })}
 				size={14}
 				class="hit-area size-6!"
 			/>

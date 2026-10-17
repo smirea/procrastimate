@@ -20,7 +20,7 @@ import {
 	type SyncRequest,
 	type SyncResponse,
 } from '../../../shared/sync/protocol';
-import { SERVER_ACTOR } from '../../../shared/values';
+import { SERVER_ACTOR, type Client } from '../../../shared/values';
 import { span } from '../sentry';
 import type { AccountStore, LogRow } from './store';
 
@@ -75,21 +75,36 @@ function stampAuthorship(before: ServerState, ops: readonly Op[], actor: string)
 
 /**
  * Applies ops and the fixups they need, then writes the entities that changed and every log entry. The ops' rows
- * name `actor`, the user id that sent them, and the fixups' rows name the server.
+ * name `actor`, the user id that sent them, and `client`, the app it sent them from. The fixups' rows name the server
+ * and no client.
  */
-export function push(store: AccountStore, before: ServerState, ops: readonly Op[], now: number, actor: string) {
-	return span('merge ops', 'sync.merge', () => merge(store, before, ops, now, actor));
+export function push(
+	store: AccountStore,
+	before: ServerState,
+	ops: readonly Op[],
+	now: number,
+	actor: string,
+	client: Client,
+) {
+	return span('merge ops', 'sync.merge', () => merge(store, before, ops, now, actor, client));
 }
 
-function merge(store: AccountStore, before: ServerState, ops: readonly Op[], now: number, actor: string) {
+function merge(
+	store: AccountStore,
+	before: ServerState,
+	ops: readonly Op[],
+	now: number,
+	actor: string,
+	client: Client,
+) {
 	const ctx = { now, isApplied: (opId: string) => store.hasOp(opId) };
 	const applied = applyOps(before, stampAuthorship(before, ops, actor), ctx);
 	const fixed = applyFixups(applied.state, ctx);
 	for (const [key, entity] of fixed.state.entities) {
 		if (before.entities.get(key) !== entity) store.putEntity(entity);
 	}
-	for (const entry of applied.log) store.appendLog({ ...entry, actor, at: now });
-	for (const entry of fixed.log) store.appendLog({ ...entry, actor: SERVER_ACTOR, at: now });
+	for (const entry of applied.log) store.appendLog({ ...entry, actor, client, at: now });
+	for (const entry of fixed.log) store.appendLog({ ...entry, actor: SERVER_ACTOR, client: null, at: now });
 	return { state: fixed.state, acked: applied.acked };
 }
 
@@ -114,13 +129,19 @@ export function parseOps(raw: readonly unknown[]): { ops: Op[]; rejected: Reject
 	return { ops, rejected };
 }
 
-/** Who wrote a row and when stay on the server; activity reads them, clients never apply them. */
+/** Who wrote a row, from which app, and when stay on the server; clients never apply them. */
 function asChange(row: LogRow): Change {
-	const { actor: _, at: __, ...change } = row;
+	const { actor: _, at: __, client: ___, ...change } = row;
 	return change as Change;
 }
 
-export function sync(store: AccountStore, request: SyncRequest, now: number, actor: string): SyncResponse {
+export function sync(
+	store: AccountStore,
+	request: SyncRequest,
+	now: number,
+	actor: string,
+	client: Client,
+): SyncResponse {
 	return store.transaction(() => {
 		if (request.reset) {
 			store.clearTaskData();
@@ -142,7 +163,7 @@ export function sync(store: AccountStore, request: SyncRequest, now: number, act
 		// A cursor past the end means the log was cleared, as after a wipe or a restarted dev server.
 		const restarted = request.cursor > store.lastSeq();
 		const { ops, rejected } = parseOps(request.ops);
-		const pushed = push(store, loadState(store), ops, now, actor);
+		const pushed = push(store, loadState(store), ops, now, actor, client);
 
 		const head = store.lastSeq();
 		const hlc = serverHlc(pushed.state);
@@ -179,6 +200,7 @@ export function guestSync(
 	request: SyncRequest,
 	now: number,
 	actor: string,
+	client: Client,
 	grants: readonly Grant[],
 ): SyncResponse {
 	return store.transaction(() => {
@@ -186,10 +208,10 @@ export function guestSync(
 		const before = loadState(store);
 		const { ops, rejected } = parseOps(request.ops);
 		const { admitted, refused } = admit(serverSnapshot(before), grants, ops, actor);
-		const pushed = push(store, before, admitted, now, actor);
+		const pushed = push(store, before, admitted, now, actor, client);
 		for (const op of refused) {
 			if (store.hasOp(op.opId)) continue;
-			store.appendLog({ opId: op.opId, kind: op.kind, id: op.id, fields: {}, actor, at: now });
+			store.appendLog({ opId: op.opId, kind: op.kind, id: op.id, fields: {}, actor, client, at: now });
 		}
 		const acked = ops.map(op => op.opId);
 		const { filtered, readOnly } = guestView(serverSnapshot(pushed.state), grants);

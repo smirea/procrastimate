@@ -5,7 +5,8 @@ import { drizzle } from 'drizzle-orm/durable-sqlite';
 import { accountContract, internalContract } from '../../../shared/api/contract';
 import type { Person } from '../../../shared/sharing';
 import { nudgeSchema, repairBooleanNumbers } from '../../../shared/sync/protocol';
-import { actorOf, readActor, SHARED_ROUTES, spaceOf, withActor } from '../actor';
+import { CLIENT_HEADER } from '../../../shared/auth';
+import { actorOf, clientOf, readActor, SHARED_ROUTES, spaceOf, withActor } from '../actor';
 import type { AccountContext, AccountRoute, Access } from '../auth';
 import type { Env, Handler } from '../bindings';
 import { pushSender } from '../push';
@@ -119,6 +120,8 @@ export function accountHandler(
 			const internal = INTERNAL_ROUTES.has(key);
 			const actor = internal ? personOf(store, space) : actorOf(request);
 			if (!actor) return errorResponse('UNAUTHORIZED', 'Not signed in');
+			const client = clientOf(request);
+			if (!client) return errorResponse('BAD_REQUEST', `Invalid ${CLIENT_HEADER} header`);
 			identify(actor);
 			const access = admission(store, space, actor);
 			if (!access) return errorResponse('FORBIDDEN', 'Not shared with you');
@@ -134,6 +137,7 @@ export function accountHandler(
 				ramble: transcription,
 				space,
 				actor,
+				client,
 				access,
 				images,
 				origin: linkOrigin,

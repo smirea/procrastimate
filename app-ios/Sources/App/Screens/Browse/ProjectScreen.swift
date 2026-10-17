@@ -17,8 +17,9 @@ struct ProjectScreen: View {
             let groups = Views.projectGroups(data.tasks, data.sections, project.id, in: store.timeZone)
             let sections = groups.dropFirst().compactMap { group in group.section.map { (section: $0, tasks: group.tasks) } }
             let count = groups.reduce(0) { $0 + $1.tasks.count }
-            let done = showCompleted
-                ? Views.completedTasks(data.tasks.filter { $0.projectId == project.id }, .init(), in: store.timeZone) : []
+            let done = showCompleted ? Views.projectCompleted(data.tasks, data.sections, project.id, in: store.timeZone) : nil
+            let doneIn = { (id: String?) in done?.groups.first { $0.section?.id == id }?.tasks ?? [] }
+            let anyDone = done.map { !$0.gone.isEmpty || $0.groups.contains { !$0.tasks.isEmpty } } ?? false
             // A view-only shared project takes no new tasks, as on the web.
             let canAdd = space == .own || count == 0 || groups.contains { $0.tasks.contains { !store.isReadOnly($0.id) } }
             TaskListScreen(
@@ -29,9 +30,11 @@ struct ProjectScreen: View {
                 open: count
             ) {
                 ForEach(groups.first?.tasks ?? []) { TaskRow(task: $0) }
+                ForEach(doneIn(nil)) { CompletedRow(task: $0) }
                 ForEach(Array(sections.enumerated()), id: \.element.section.id) { index, entry in
                     Section {
                         ForEach(entry.tasks) { TaskRow(task: $0) }
+                        ForEach(doneIn(entry.section.id)) { CompletedRow(task: $0) }
                     } header: {
                         SectionHeading(
                             section: entry.section,
@@ -44,7 +47,7 @@ struct ProjectScreen: View {
                         )
                     }
                 }
-                if showCompleted { CompletedSection(tasks: done) }
+                if let done, !done.gone.isEmpty || !anyDone { CompletedSection(tasks: done.gone) }
             }
             .animation(.snappy, value: showCompleted)
             .animation(.snappy, value: sections.map(\.section))
@@ -100,7 +103,7 @@ private struct SectionHeading: View {
             }
             Button("Copy as Markdown", systemImage: "doc.on.doc") {
                 actions.copyAsMarkdown(
-                    Markdown.Document(projectId: section.projectId, sections: [.init(heading: section.name, tasks: tasks)])
+                    Markdown.Document(sections: [.init(heading: section.name, tasks: tasks)])
                 )
             }
             if editable {

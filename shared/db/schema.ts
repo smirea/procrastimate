@@ -210,6 +210,8 @@ export const log = sqliteTable(
 		actor: text('actor').notNull().default(SERVER_ACTOR),
 		/** Server time when the row was written. */
 		at: integer('at').notNull().default(0),
+		/** The app that sent the op, from the client header. Null for a fixup and for rows from before it was kept. */
+		client: text('client', { mode: 'json' }).$type<ColumnValue<'log', 'client'>>(),
 	},
 	table => [primaryKey({ columns: [table.userId, table.seq] }), index('log_op_id').on(table.userId, table.opId)],
 );

@@ -100,7 +100,9 @@ test('a guest completes a task in a project shared with them, and the owner sees
 		.getByRole('link', { name: new RegExp(project) })
 		.click();
 	await owner.page.getByRole('button', { name: 'Show completed' }).click();
-	const completed = owner.page.getByRole('list', { name: 'Completed tasks' }).locator(`[data-task="${task}"]`);
+	const completed = owner.page
+		.getByRole('list', { name: `Completed ${project} tasks` })
+		.locator(`[data-task="${task}"]`);
 	await expect(completed.getByLabel('Completed by Gus')).toBeVisible();
 	await completed.getByRole('checkbox', { name: `Reopen ${task}` }).click();
 	await expect(

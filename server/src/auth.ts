@@ -1,5 +1,6 @@
 import { DEVICE_HEADER, DEVICE_NAME_HEADER, type Actor } from '../../shared/auth';
 import type { ShareRow } from '../../shared/db/schema';
+import type { Client } from '../../shared/values';
 import { DEVICE_PROTOCOL_PREFIX } from '../../shared/sync/protocol';
 import type { ImageStore } from './account/images';
 import type { InternalClient } from './account/peers';
@@ -29,6 +30,8 @@ export type AccountContext = {
 	/** The space's owner id, which names the object. */
 	space: string;
 	actor: Actor;
+	/** The app the request came from, which the server records on each op it writes. */
+	client: Client;
 	access: Access;
 	/** The space's image bytes, which the account itself never loads. */
 	images: ImageStore;

@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, setSystemTime, test } from 'bun:test';
+import { CLIENT_HEADER } from '../../../shared/auth';
 import type {
 	ActivityEntry,
+	AgentTask,
 	Person,
 	ShareView,
 	SharedView,
@@ -437,6 +439,49 @@ describe('sharing between two users', () => {
 		expect(await json<Ok>(call(owner, 'DELETE', `/api/ai?id=${ai.id}`))).toEqual({ ok: true });
 		expect((await asAi('GET', '/api/view')).status).toBe(401);
 		expect(await json<{ tokens: unknown[] }>(call(owner, 'GET', '/api/ai-tokens'))).toEqual({ tokens: [] });
+	});
+
+	test('the agent API reports which app created each task and which wrote to it last', async () => {
+		const web = { kind: 'web', version: 'abc123', device: 'Chrome', os: 'macOS', timeZone: 'Europe/Lisbon' } as const;
+		await json(
+			call(
+				owner,
+				'POST',
+				'/api/sync',
+				{ cursor: 0, ops: [create(owner, task('rent', { title: 'Pay rent' }))] },
+				{
+					[CLIENT_HEADER]: JSON.stringify(web),
+				},
+			),
+		);
+		const ai = await json<Person>(call(owner, 'POST', '/api/ai', { name: 'Butler' }));
+		const { token } = await json<{ token: string }>(
+			call(owner, 'POST', '/api/ai-tokens', { aiUserId: ai.id, name: 'laptop' }),
+		);
+		const asAi = (method: string, path: string, body?: unknown) =>
+			call(null, method, path, body, { Authorization: `Bearer ${token}`, 'user-agent': 'butler/1.0' });
+		const bot = { kind: 'api', version: null, device: 'butler/1.0', os: null, timeZone: null } as const;
+
+		const added = await json<AgentTask>(asAi('POST', '/api/tasks', { title: 'Call the plumber' }));
+		expect(added.clients).toEqual({ created: { ...bot, at: NOW }, edited: { ...bot, at: NOW } });
+		setSystemTime(NOW + 60_000);
+		const edited = await json<AgentTask>(asAi('PATCH', '/api/tasks?id=rent', { notes: 'By Friday' }));
+		expect(edited.clients).toEqual({ created: { ...web, at: NOW }, edited: { ...bot, at: NOW + 60_000 } });
+
+		const seen = await json<SpaceView>(asAi('GET', '/api/view'));
+		expect(Object.fromEntries(seen.tasks.map(t => [t.title, t.clients.created?.kind]))).toEqual({
+			'Pay rent': 'web',
+			'Call the plumber': 'api',
+		});
+
+		const garbled = await call(
+			owner,
+			'POST',
+			'/api/sync',
+			{ cursor: 0, ops: [] },
+			{ [CLIENT_HEADER]: '{"kind":"api"}' },
+		);
+		expect(garbled.status).toBe(400);
 	});
 
 	test('two spaces shared with each other sync at the same time without waiting on one another', async () => {

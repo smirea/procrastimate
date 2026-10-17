@@ -23,6 +23,14 @@ export const projectGroupSchema = z
 	.meta({ id: 'ProjectGroup', description: 'One heading of a project view. The group with no section has none.' });
 export type ProjectGroup = z.infer<typeof projectGroupSchema>;
 
+export const projectCompletedSchema = z
+	.object({ groups: z.array(projectGroupSchema), gone: z.array(taskSchema) })
+	.meta({
+		id: 'ProjectCompleted',
+		description: "A project's done tasks under the same headings as its open ones, and those whose section is gone.",
+	});
+export type ProjectCompleted = z.infer<typeof projectCompletedSchema>;
+
 export const todaySchema = z.object({ overdue: z.array(taskSchema), today: z.array(taskSchema) }).meta({ id: 'Today' });
 export type Today = z.infer<typeof todaySchema>;
 
@@ -222,4 +230,33 @@ export function completedDays(tasks: readonly Task[], range: CompletedRange): Da
 		groups.set(day, [...(groups.get(day) ?? []), task]);
 	}
 	return [...groups].map(([date, list]) => ({ date, tasks: list }));
+}
+
+/**
+ * A project's completed tasks, all time and newest first, under the same headings as `projectGroups`, so each shows in
+ * its section below the open ones. A subtask goes with its top-level task's section. A done task whose section is not
+ * one of the project's live sections goes in `gone`, which the views show at the bottom.
+ */
+export function projectCompleted(
+	tasks: readonly Task[],
+	sections: readonly Section[],
+	projectId: string,
+): ProjectCompleted {
+	const byId = new Map(tasks.map(t => [t.id, t]));
+	const sectionOf = (task: Task): string | null => {
+		let root = task;
+		for (let parent = byId.get(root.parentId ?? ''); parent; parent = byId.get(root.parentId ?? '')) root = parent;
+		return root.sectionId;
+	};
+	const done = completedTasks(
+		tasks.filter(t => t.projectId === projectId),
+		{ from: null, to: null },
+	).map(task => ({ task, sectionId: sectionOf(task) }));
+	const own = sectionsOf(sections, projectId);
+	const placed = new Set(own.map(s => s.id));
+	const tasksIn = (sectionId: string | null) => done.filter(d => d.sectionId === sectionId).map(d => d.task);
+	return {
+		groups: [{ section: null, tasks: tasksIn(null) }, ...own.map(section => ({ section, tasks: tasksIn(section.id) }))],
+		gone: done.filter(d => d.sectionId !== null && !placed.has(d.sectionId)).map(d => d.task),
+	};
 }

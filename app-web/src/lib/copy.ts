@@ -1,14 +1,9 @@
 import { toMarkdown, type MarkdownDocument } from 'shared/markdown.ts';
 import { store } from './store.svelte.ts';
-import { clock, toasts } from './ui.svelte.ts';
+import { toasts } from './ui.svelte.ts';
 
 export async function copyMarkdown(document: MarkdownDocument): Promise<boolean> {
-	const text = toMarkdown(document, {
-		tasks: store.tasks,
-		projects: store.projects,
-		labels: store.labels,
-		today: clock.today,
-	});
+	const text = toMarkdown(document, store.tasks);
 	try {
 		await navigator.clipboard.writeText(text);
 		toasts.show('Copied as Markdown');

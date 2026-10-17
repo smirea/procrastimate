@@ -53,7 +53,7 @@ test('sections group a project, take tasks from quick add and details, and renam
 
 	await page.getByRole('button', { name: 'Copy Home as Markdown' }).click();
 	expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
-		'# Home\n\n## Later\n\n- [ ] Fix fence\n\n## Next up\n\n- [ ] Water plants\n- [ ] Paint door',
+		'# Home\n\n## Later\n\n- Fix fence\n\n## Next up\n\n- Water plants\n- Paint door',
 	);
 	await page.screenshot({ path: 'test-results/sections/project.png' });
 
@@ -111,4 +111,30 @@ test.describe('on a phone', () => {
 		await app.settle();
 		await page.screenshot({ path: 'test-results/sections/phone.png' });
 	});
+});
+
+test('completed tasks show in their own section when a project shows completed', async ({ app, page }) => {
+	await app.createProject('Home');
+	await app.add('Sweep porch');
+	await page.getByRole('button', { name: 'Add section' }).click();
+	await page.getByRole('textbox', { name: 'New section name' }).fill('Later');
+	await page.getByRole('textbox', { name: 'New section name' }).press('Enter');
+	for (const title of ['Fix fence', 'Oil hinges']) {
+		await page.getByRole('region', { name: 'Later' }).getByRole('button', { name: 'Add task' }).click();
+		await app.taskInput().fill(title);
+		await app.taskInput().press('Enter');
+		await expect(app.quickAdd()).toBeHidden();
+	}
+
+	await page.getByRole('checkbox', { name: 'Complete Fix fence', exact: true }).click();
+	await page.getByRole('checkbox', { name: 'Complete Sweep porch', exact: true }).click();
+	await app.settle();
+	await page.getByRole('button', { name: 'Show completed' }).click();
+	const shown = '[data-task]:not([aria-hidden="true"] *)';
+
+	await expect(page.getByRole('list', { name: 'Later tasks', exact: true }).locator(shown)).toHaveText([/Oil hinges/]);
+	await expect(page.getByRole('list', { name: 'Completed Later tasks' }).locator(shown)).toHaveText([/Fix fence/]);
+	await expect(page.getByRole('list', { name: 'Completed Home tasks' }).locator(shown)).toHaveText([/Sweep porch/]);
+	await expect(page.getByRole('region', { name: 'Completed' })).toHaveCount(0);
+	await page.screenshot({ path: 'test-results/sections/completed.png' });
 });
