@@ -106,6 +106,16 @@
             remoteInfo = Widgets;
         };
         A0000000000000000000003D = { isa = PBXTargetDependency; target = A00000000000000000000032; targetProxy = A0000000000000000000003C; };
+        /* Widgets links nothing from Core; it depends on it so Core's Generate phase writes Version.h before the
+           extension's Info.plist is processed. */
+        A00000000000000000000053 = {
+            isa = PBXContainerItemProxy;
+            containerPortal = A00000000000000000000001;
+            proxyType = 1;
+            remoteGlobalIDString = A00000000000000000000021;
+            remoteInfo = Core;
+        };
+        A00000000000000000000054 = { isa = PBXTargetDependency; target = A00000000000000000000021; targetProxy = A00000000000000000000053; };
 
         /* Sentry, the app's one package dependency (see docs/decisions/ios.md). Only the App target links it; Core stays
            Foundation-only. */
@@ -135,7 +145,7 @@
             buildConfigurationList = A00000000000000000000037;
             buildPhases = (A00000000000000000000034, A00000000000000000000035, A00000000000000000000036);
             buildRules = ();
-            dependencies = ();
+            dependencies = (A00000000000000000000054);
             fileSystemSynchronizedGroups = (A00000000000000000000031, A00000000000000000000030);
             name = Widgets;
             productName = Widgets;
@@ -192,10 +202,11 @@
                 "$(SRCROOT)/Sources/Core/Generated/API.swift",
                 "$(SRCROOT)/Sources/App/Generated/Tokens.swift",
                 "$(SRCROOT)/Sources/App/Assets.xcassets/AccentColor.colorset/Contents.json",
+                "$(PROJECT_DERIVED_FILE_DIR)/Version.h",
             );
             runOnlyForDeploymentPostprocessing = 0;
             shellPath = /bin/sh;
-            shellScript = "\"$SRCROOT/scripts/generate\"\n";
+            shellScript = "\"$SRCROOT/scripts/generate\" \"$PROJECT_DERIVED_FILE_DIR/Version.h\"\n";
         };
 
         /* Project configurations, inherited by every target. */
@@ -212,6 +223,8 @@
                 DEBUG_INFORMATION_FORMAT = dwarf;
                 ENABLE_TESTABILITY = YES;
                 IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+                INFOPLIST_PREFIX_HEADER = "$(PROJECT_DERIVED_FILE_DIR)/Version.h";
+                INFOPLIST_PREPROCESS = YES;
                 ONLY_ACTIVE_ARCH = YES;
                 SDKROOT = iphoneos;
                 SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -228,6 +241,8 @@
                 CLANG_ENABLE_MODULES = YES;
                 DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
                 IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+                INFOPLIST_PREFIX_HEADER = "$(PROJECT_DERIVED_FILE_DIR)/Version.h";
+                INFOPLIST_PREPROCESS = YES;
                 SDKROOT = iphoneos;
                 SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
                 SWIFT_COMPILATION_MODE = wholemodule;
@@ -255,16 +270,8 @@
                 CODE_SIGN_STYLE = Automatic;
                 CURRENT_PROJECT_VERSION = 1;
                 DEVELOPMENT_TEAM = FNYFHG5SV7;
-                GENERATE_INFOPLIST_FILE = YES;
                 INFOPLIST_FILE = Config/Info.plist;
-                INFOPLIST_KEY_CFBundleDisplayName = "ProcrastiMate";
-                INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
-                INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-                INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-                INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-                INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
                 LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-                MARKETING_VERSION = 1.0;
                 PRODUCT_BUNDLE_IDENTIFIER = com.stefan.procrastimate;
                 PRODUCT_NAME = "$(TARGET_NAME)";
             };
@@ -280,16 +287,8 @@
                 CODE_SIGN_STYLE = Automatic;
                 CURRENT_PROJECT_VERSION = 1;
                 DEVELOPMENT_TEAM = FNYFHG5SV7;
-                GENERATE_INFOPLIST_FILE = YES;
                 INFOPLIST_FILE = Config/Info.plist;
-                INFOPLIST_KEY_CFBundleDisplayName = "ProcrastiMate";
-                INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
-                INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-                INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-                INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-                INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
                 LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-                MARKETING_VERSION = 1.0;
                 PRODUCT_BUNDLE_IDENTIFIER = com.stefan.procrastimate;
                 PRODUCT_NAME = "$(TARGET_NAME)";
             };
@@ -309,11 +308,8 @@
                 CODE_SIGN_STYLE = Automatic;
                 CURRENT_PROJECT_VERSION = 1;
                 DEVELOPMENT_TEAM = FNYFHG5SV7;
-                GENERATE_INFOPLIST_FILE = YES;
                 INFOPLIST_FILE = Config/WidgetsInfo.plist;
-                INFOPLIST_KEY_CFBundleDisplayName = "ProcrastiMate";
                 LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
-                MARKETING_VERSION = 1.0;
                 PRODUCT_BUNDLE_IDENTIFIER = com.stefan.procrastimate.widgets;
                 PRODUCT_NAME = "$(TARGET_NAME)";
                 SKIP_INSTALL = YES;
@@ -326,11 +322,8 @@
                 CODE_SIGN_STYLE = Automatic;
                 CURRENT_PROJECT_VERSION = 1;
                 DEVELOPMENT_TEAM = FNYFHG5SV7;
-                GENERATE_INFOPLIST_FILE = YES;
                 INFOPLIST_FILE = Config/WidgetsInfo.plist;
-                INFOPLIST_KEY_CFBundleDisplayName = "ProcrastiMate";
                 LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
-                MARKETING_VERSION = 1.0;
                 PRODUCT_BUNDLE_IDENTIFIER = com.stefan.procrastimate.widgets;
                 PRODUCT_NAME = "$(TARGET_NAME)";
                 SKIP_INSTALL = YES;

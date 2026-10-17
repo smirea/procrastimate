@@ -1,10 +1,19 @@
 #!/bin/sh
 # Writes the app's generated sources (Core's API.swift, the App's Tokens.swift and AccentColor asset) and the repository's
 # other generated files with `bun run generate`. Core's Generate phase calls it, so an Xcode build never compiles stale ones.
+# That phase also passes a header path: it gets `APP_VERSION` from scripts/app-version.mts, which the preprocessed App
+# and Widgets Info.plists use as `CFBundleShortVersionString`. Build settings are read before any phase runs, so a
+# generated xcconfig would lag a build behind; the Info.plist is processed after Core, so this header never does.
 set -eu
 # Xcode runs build phases without the login shell's PATH.
 export PATH="$HOME/.bun/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
 command -v bun >/dev/null || { echo "error: bun is required to generate API.swift. Install it from https://bun.sh." >&2; exit 1; }
+header=${1:-}
 cd "$(dirname "$0")/../.."
 test -d node_modules || { echo "error: Run \`bun install\` at the repository root first." >&2; exit 1; }
-exec bun scripts/generate/index.ts
+bun scripts/generate/index.ts
+if [ -n "$header" ]; then
+    version=$(bun scripts/app-version.mts)
+    mkdir -p "$(dirname "$header")"
+    printf '#define APP_VERSION %s\n' "$version" > "$header"
+fi
