@@ -80,7 +80,8 @@ private struct LabelsPopover: View {
             let checked = labelIds.contains(label.id)
             Button { choose(option) } label: {
                 HStack(spacing: 10) {
-                    Image(systemName: checked ? "tag.fill" : "tag").foregroundStyle(label.color.tone)
+                    Image(systemName: label.place == nil ? checked ? "tag.fill" : "tag" : "mappin.and.ellipse")
+                        .foregroundStyle(label.color.tone)
                     Text(label.name).foregroundStyle(.ink).lineLimit(1)
                     Spacer(minLength: 8)
                     if checked {

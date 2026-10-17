@@ -19,6 +19,7 @@ const HAND_WRITTEN: Record<string, string> = {
 	RambleToken: 'A grammar highlight from the Ramble parse, matched against the vector corpus.',
 	RambleMessage: 'The Ramble socket frame, decoded only inside the capture session.',
 	Pin: "An iOS tab bar pin, kept in this device's UserDefaults and never synced.",
+	RecentPick: "A place picked in the iOS Location sheet, kept in this device's UserDefaults and never synced.",
 };
 
 const DECLARATION =

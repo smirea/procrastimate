@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { labelSchema, projectSchema, sectionSchema, taskSchema } from './sync/protocol.ts';
 import { linkify } from './links.ts';
+import { isSavedPlace, placeLocation } from './triggers.ts';
 import { DATE_KEY_PATTERN, MAX_RECURRENCE_INTERVAL } from './values.ts';
 import {
 	addDays,
@@ -25,7 +26,7 @@ import {
 } from './task.ts';
 
 export const tokenKindSchema = z
-	.enum(['due', 'recurrence', 'priority', 'reminder', 'project', 'section', 'label'])
+	.enum(['due', 'recurrence', 'priority', 'reminder', 'project', 'section', 'label', 'place'])
 	.meta({ id: 'TokenKind' });
 export type TokenKind = z.infer<typeof tokenKindSchema>;
 
@@ -50,6 +51,7 @@ export const parsedQuickAddSchema = z
 		projectId: taskShape.projectId,
 		sectionId: taskShape.sectionId,
 		labelIds: taskShape.labelIds,
+		location: taskShape.location.meta({ description: 'A saved place typed as `@name`, arriving there.' }),
 		tokens: z.array(quickAddTokenSchema),
 	})
 	.meta({ id: 'ParsedQuickAdd' });
@@ -261,6 +263,7 @@ type Match =
 	| { kind: 'project'; projectId: string }
 	| { kind: 'section'; sectionId: string }
 	| { kind: 'label'; labelId: string }
+	| { kind: 'place'; labelId: string }
 	| { kind: 'reminder'; reminder: ReminderDraft };
 
 type Rule = {
@@ -621,7 +624,7 @@ const escapeRegExp = (text: string) => text.replaceAll(/[.*+?^${}()|[\]\\]/g, St
  * `and/or` never match. The name must end the word, so `@home.com` and `@homework` do not read as `@home`.
  */
 function namedRule(
-	kind: 'project' | 'section' | 'label',
+	kind: 'project' | 'section' | 'label' | 'place',
 	sigil: '#' | '/' | '@',
 	items: readonly { id: string; name: string }[],
 	read: (id: string) => Match,
@@ -676,9 +679,17 @@ export function parseQuickAdd(input: string, options: ParseOptions): ParsedQuick
 	const now = options.now;
 	const spoken = options.spoken ?? false;
 	const ctx: Context = { now, today: toDateKey(now), time: toTimeOfDay(now.getHours(), now.getMinutes()), spoken };
+	const labels = options.labels ?? [];
+	// A saved place is a label, so names never collide, and like a project its last `@name` wins, as a task has one place.
 	const named = [
 		namedRule('project', '#', options.projects ?? [], projectId => ({ kind: 'project', projectId })),
-		namedRule('label', '@', options.labels ?? [], labelId => ({ kind: 'label', labelId })),
+		namedRule(
+			'label',
+			'@',
+			labels.filter(l => !isSavedPlace(l)),
+			labelId => ({ kind: 'label', labelId }),
+		),
+		namedRule('place', '@', labels.filter(isSavedPlace), labelId => ({ kind: 'place', labelId })),
 	].filter(rule => rule !== null);
 	const rules = [...RULES.slice(0, 2), ...named, ...RULES.slice(2)];
 	// Every phrase a rule recognizes is masked out of both views, including kept-as-text and
@@ -732,6 +743,7 @@ export function parseQuickAdd(input: string, options: ParseOptions): ParsedQuick
 	let projectId: string | null = null;
 	let sectionId: string | null = null;
 	const labelIds = new Set<string>();
+	let placeId: string | null = null;
 	const reminderDrafts: ReminderDraft[] = [];
 	for (const match of matches) {
 		switch (match.kind) {
@@ -752,6 +764,9 @@ export function parseQuickAdd(input: string, options: ParseOptions): ParsedQuick
 				break;
 			case 'label':
 				labelIds.add(match.labelId);
+				break;
+			case 'place':
+				placeId = match.labelId;
 				break;
 			case 'reminder':
 				reminderDrafts.push(match.reminder);
@@ -780,6 +795,7 @@ export function parseQuickAdd(input: string, options: ParseOptions): ParsedQuick
 	append(input.slice(cursor));
 	title = title.replaceAll(/\s+/g, ' ').trim();
 
+	const place = labels.find(l => l.id === placeId);
 	const outside = options.due ?? null;
 	const due = resolveDue(duePhrase, repeat, outside, ctx);
 	return {
@@ -791,6 +807,7 @@ export function parseQuickAdd(input: string, options: ParseOptions): ParsedQuick
 		projectId,
 		sectionId,
 		labelIds: [...labelIds],
+		location: place && isSavedPlace(place) ? placeLocation(place, 'arrive') : null,
 		tokens,
 	};
 }

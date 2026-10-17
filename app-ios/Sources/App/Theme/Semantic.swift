@@ -78,7 +78,7 @@ extension QuickAdd.TokenKind {
         case .reminder: .tokenReminder
         case .project, .section: .tokenProject
         case .recurrence: .tokenRecurrence
-        case .label: .tokenLabel
+        case .label, .place: .tokenLabel
         }
     }
 }

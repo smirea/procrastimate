@@ -94,9 +94,13 @@ private struct TaskDetailsForm: View {
                     ) {
                         store.updateTask(task.id, TaskPatch(reminders: $0))
                     }
-                    LocationChip(location: task.location) { store.updateTask(task.id, TaskPatch(location: .some($0))) }
+                    LocationChip(location: draft.location) { store.updateTask(task.id, TaskPatch(location: .some($0))) }
                     if task.event == nil { eventChip }
-                    LabelsChip(labelIds: draft.labelIds) { store.updateTask(task.id, TaskPatch(labelIds: $0)) }
+                    let labels = store.labels(in: space)
+                    LabelsChip(labelIds: Triggers.pickedLabels(labels, labelIds: draft.labelIds, location: draft.location)) {
+                        let applied = Triggers.applyPickedLabels(labels, $0, task.location)
+                        store.updateTask(task.id, TaskPatch(labelIds: applied.labelIds, location: .some(applied.location)))
+                    }
                 }
                 .animation(.snappy(duration: 0.16), value: draft)
                 .disabled(locked)

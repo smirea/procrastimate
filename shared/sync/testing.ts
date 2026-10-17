@@ -51,6 +51,7 @@ export const label = (id: string, fields: Partial<Label> = {}): Label => ({
 	id,
 	name: id,
 	color: 'gray',
+	place: null,
 	createdAt: 1,
 	...fields,
 });

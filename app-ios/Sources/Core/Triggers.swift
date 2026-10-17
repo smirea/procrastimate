@@ -1,6 +1,8 @@
 import Foundation
 
 public typealias TaskLocation = API.TaskLocation
+/// Where a saved place is. A label that holds one is a saved place, and its tasks are the open tasks at it.
+public typealias SavedPlace = API.SavedPlace
 public typealias LocationTrigger = API.LocationTrigger
 public typealias TaskEvent = API.TaskEvent
 public typealias EventEdge = API.EventEdge
@@ -117,6 +119,30 @@ public enum Triggers {
         "\(fixed4(location.latitude)),\(fixed4(location.longitude))"
     }
 
+    public static func placeKey(_ place: SavedPlace) -> String {
+        "\(fixed4(place.latitude)),\(fixed4(place.longitude))"
+    }
+
+    /// The saved place at a spot, if one is.
+    public static func savedPlaceAt(_ labels: [Label], _ key: String) -> Label? {
+        labels.first { $0.place.map(placeKey) == key }
+    }
+
+    /// A saved place as a task's place, under its saved name and radius. Nil for a label that is no place.
+    public static func placeLocation(_ label: Label, _ trigger: LocationTrigger) -> TaskLocation? {
+        label.place.map {
+            TaskLocation(
+                name: label.name,
+                address: $0.address,
+                latitude: $0.latitude,
+                longitude: $0.longitude,
+                radius: $0.radius,
+                fittedRadius: $0.fittedRadius,
+                trigger: trigger
+            )
+        }
+    }
+
     /// Meters watched around a picked place, fitted to its Apple Maps extent so a city fires at its edge, not at a
     /// pin in its center. Maps frames every shop, address, or pin in about a kilometer, so an extent whose shorter
     /// side is at most 1.5 km is a spot and keeps 150 m. A park, neighborhood, city, or region gets half its shorter
@@ -188,11 +214,41 @@ public enum Triggers {
         tasks.filter { $0.completedAt == nil }.stableSorted { a, b in a.createdAt == b.createdAt ? nil : a.createdAt < b.createdAt }
     }
 
-    public static func placeGroups(_ tasks: [TaskItem]) -> [PlaceGroup] {
+    /// What a label picker shows checked: the task's labels, then the saved place it sits at.
+    public static func pickedLabels(_ labels: [Label], _ task: TaskItem) -> [String] {
+        pickedLabels(labels, labelIds: task.labelIds, location: task.location)
+    }
+
+    public static func pickedLabels(_ labels: [Label], labelIds: [String], location: TaskLocation?) -> [String] {
+        guard let location, let place = savedPlaceAt(labels, placeKey(location)) else { return labelIds }
+        return labelIds + [place.id]
+    }
+
+    /// What a label picker's checked ids save. Saved places are not kept as labels: the last one checked becomes the
+    /// task's place, keeping its trigger, since a task has one place. With none checked, a task at a saved place leaves
+    /// it, and a place set on iPhone that was never saved stays.
+    public static func applyPickedLabels(
+        _ labels: [Label],
+        _ ids: [String],
+        _ location: TaskLocation?
+    ) -> (labelIds: [String], location: TaskLocation?) {
+        let picked = ids.compactMap { id in labels.first { $0.id == id } }
+        let place = picked.last { $0.place != nil }
+        let kept = location.flatMap { savedPlaceAt(labels, placeKey($0)) == nil ? $0 : nil }
+        return (
+            picked.filter { $0.place == nil }.map(\.id),
+            place.flatMap { placeLocation($0, location?.trigger ?? .arrive) } ?? kept
+        )
+    }
+
+    /// A saved place lists with the labels instead, so it is left out.
+    public static func placeGroups(_ tasks: [TaskItem], _ labels: [Label]) -> [PlaceGroup] {
+        let saved = Set(labels.compactMap { $0.place.map(placeKey) })
         var groups: [PlaceGroup] = []
         for task in open(tasks) {
             guard let location = task.location else { continue }
             let key = placeKey(location)
+            if saved.contains(key) { continue }
             if let i = groups.firstIndex(where: { $0.key == key }) {
                 groups[i].count += 1
             } else {

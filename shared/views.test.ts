@@ -11,6 +11,7 @@ const projectGroups = recorded('views', views.projectGroups);
 const todayTasks = recorded('views', views.todayTasks);
 const upcomingGroups = recorded('views', views.upcomingGroups);
 const placeTasks = recorded('views', views.placeTasks);
+const labelViewTasks = recorded('views', views.labelViewTasks);
 const eventTasks = recorded('views', views.eventTasks);
 const completedRange = recorded('views', views.completedRange);
 const completedTasks = recorded('views', views.completedTasks);
@@ -174,6 +175,12 @@ describe('task views', () => {
 		expect(upcomingGroups(list, today).map(g => [g.date, ids(g.tasks)])).toEqual([['2026-10-21', ['next week']]]);
 		expect(ids(eventTasks(list, 'meetup', today))).toEqual(['missed', 'jan', 'notes', 'next week']);
 		expect(ids(placeTasks(list, '52.5200,13.4050'))).toEqual(['jan', 'kite']);
+		const park = { id: 'park', name: 'Park', color: 'green' as const, createdAt: 0 };
+		const spot = { address: null, latitude: 52.52001, longitude: 13.405, radius: 500 };
+		expect(ids(labelViewTasks(list, { ...park, place: spot }))).toEqual(['jan', 'kite']);
+		expect(ids(labelViewTasks([...list, task('call', { labelIds: ['park'] })], { ...park, place: null }))).toEqual([
+			'call',
+		]);
 	});
 });
 

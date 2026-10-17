@@ -331,10 +331,13 @@ public enum SyncEngine {
             merge(&snapshot.sections, id: id, fields: fields)
             snapshot.sections.sort(by: byCreation)
         case "label":
-            // A label created before colors takes its name's default, as `entityFrom` gives it.
+            // A label created before colors takes its name's default, and one before places is none, as `entityFrom` gives it.
             var fields = fields
-            if fields["color"] == nil, !snapshot.labels.contains(where: { $0.id == id }), let name = fields["name"] as? String {
-                fields["color"] = LabelColors.defaultLabelColor(name).rawValue
+            if !snapshot.labels.contains(where: { $0.id == id }) {
+                if fields["color"] == nil, let name = fields["name"] as? String {
+                    fields["color"] = LabelColors.defaultLabelColor(name).rawValue
+                }
+                if fields["place"] == nil { fields["place"] = NSNull() }
             }
             merge(&snapshot.labels, id: id, fields: fields)
         case "comment": merge(&snapshot.comments, id: id, fields: fields)

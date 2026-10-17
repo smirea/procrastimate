@@ -111,6 +111,11 @@ public enum Views {
         open(tasks).filter { $0.location.map(Triggers.placeKey) == key }.stableSorted(by: compare(today: nil, in: zone))
     }
 
+    /// A label's view: the open tasks carrying it, or for a saved place, the open tasks at it.
+    public static func labelViewTasks(_ tasks: [TaskItem], _ label: Label, in zone: TimeZone) -> [TaskItem] {
+        label.place.map { placeTasks(tasks, Triggers.placeKey($0), in: zone) } ?? labelTasks(tasks, label.id, in: zone)
+    }
+
     /// Every open task on a calendar event, in the order their moments come.
     public static func eventTasks(_ tasks: [TaskItem], _ eventId: String, _ today: DateKey, in zone: TimeZone) -> [TaskItem] {
         open(tasks).filter { $0.event?.id == eventId }.stableSorted(by: compare(today: today, in: zone))

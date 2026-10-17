@@ -14,7 +14,7 @@
 	import Hash from 'phosphor-svelte/lib/Hash';
 	import Tray from 'phosphor-svelte/lib/Tray';
 	import { formatDue } from 'shared/format.ts';
-	import { formatEvent, formatLocation, formatRadius, scheduledDue } from 'shared/triggers.ts';
+	import { applyPickedLabels, formatEvent, formatLocation, formatRadius, pickedLabels, scheduledDue } from 'shared/triggers.ts';
 	import { parseMemoSource } from 'shared/memo-tasks.ts';
 	import { parseQuickAdd } from 'shared/quick-add.ts';
 	import type { Task } from 'shared/task.ts';
@@ -76,6 +76,7 @@
 					sectionId: parsed.sectionId ?? (parsed.projectId && parsed.projectId !== task.projectId ? null : task.sectionId),
 					labelIds: [...new Set([...task.labelIds, ...parsed.labelIds])],
 					reminders: [...task.reminders, ...parsed.reminders],
+					location: parsed.location ? { ...parsed.location, trigger: task.location?.trigger ?? 'arrive' } : task.location,
 				}
 			: task,
 	);
@@ -89,8 +90,8 @@
 			title = task.title;
 			return;
 		}
-		const { title: next, due, recurrence, priority, projectId, sectionId, labelIds, reminders } = draft;
-		update({ title: next, due, recurrence, priority, projectId, sectionId, labelIds, reminders });
+		const { title: next, due, recurrence, priority, projectId, sectionId, labelIds, reminders, location } = draft;
+		update({ title: next, due, recurrence, priority, projectId, sectionId, labelIds, reminders, location });
 		title = next;
 	}
 
@@ -249,16 +250,21 @@
 			reminders={draft.reminders}
 			onchange={(reminders) => update({ reminders })}
 		/>
-		{#if task.location}
-			<span class="chip" data-active="true" title={`${task.location.address ?? task.location.name} · Set on iPhone`}>
+		{#if draft.location}
+			<span class="chip" data-active="true" title={`${draft.location.address ?? draft.location.name} · Set on iPhone or as a saved place`}>
 				<MapPin size={15} weight="fill" />
-				{formatLocation(task.location)}
-				<span class="text-muted">{formatRadius(task.location.radius)}</span>
+				{formatLocation(draft.location)}
+				<span class="text-muted">{formatRadius(draft.location.radius)}</span>
 			</span>
 		{/if}
 	</div>
 	<div class="px-4 pt-3" inert={!editable}>
-		<LabelPicker labelIds={draft.labelIds} labels={space.labels} canCreate={home === null} onchange={(labelIds) => update({ labelIds })} />
+		<LabelPicker
+			labelIds={pickedLabels(space.labels, draft)}
+			labels={space.labels}
+			canCreate={home === null}
+			onchange={(ids) => update(applyPickedLabels(space.labels, ids, task.location))}
+		/>
 	</div>
 	<div
 		bind:this={body}

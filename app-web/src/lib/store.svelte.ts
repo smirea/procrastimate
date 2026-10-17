@@ -2,6 +2,7 @@ import type { DictationChoice } from 'shared/dictation.ts';
 import type { LabelColor } from 'shared/label-colors.ts';
 import { DEFAULT_QUICK_ADD_BUTTONS, type QuickAddButton } from 'shared/quick-add-buttons.ts';
 import type { DateKey, Label, Project, Section, Task } from 'shared/task.ts';
+import type { SavedPlace } from 'shared/values.ts';
 import type { Comment } from 'shared/sync/protocol.ts';
 import { groupChildren, progressOf } from 'shared/subtasks.ts';
 import { newId } from 'shared/id.ts';
@@ -498,6 +499,13 @@ class Store {
 
 	renameLabel(id: string, name: string) {
 		if (this.homeOf(id) === null) this.#apply(rules.renameLabel(this.own, id, name));
+	}
+
+	/** Null when a label already has the name. */
+	savePlace(name: string, place: SavedPlace): Label | null {
+		const { data, label } = rules.savePlace(this.own, name, place, this.#creation());
+		if (label) this.#apply(data);
+		return label;
 	}
 
 	setLabelColor(id: string, color: LabelColor) {

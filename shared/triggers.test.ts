@@ -1,5 +1,5 @@
 import { expect } from 'bun:test';
-import type { Task } from './task.ts';
+import type { Label, Task } from './task.ts';
 import * as triggers from './triggers.ts';
 import type { TaskEvent, TaskLocation } from './values.ts';
 import { describe, recorded, test } from './vectors/record.ts';
@@ -11,6 +11,10 @@ const formatEvent = recorded('triggers', triggers.formatEvent);
 const formatLocation = recorded('triggers', triggers.formatLocation);
 const formatRadius = recorded('triggers', triggers.formatRadius);
 const placeGroups = recorded('triggers', triggers.placeGroups);
+const placeLocation = recorded('triggers', triggers.placeLocation);
+const pickedLabels = recorded('triggers', triggers.pickedLabels);
+const applyPickedLabels = recorded('triggers', triggers.applyPickedLabels);
+const savedPlaceAt = recorded('triggers', triggers.savedPlaceAt);
 const scheduledDue = recorded('triggers', triggers.scheduledDue);
 const taskNotificationTimes = recorded('triggers', triggers.taskNotificationTimes);
 
@@ -216,6 +220,69 @@ describe('labels', () => {
 	});
 });
 
+const home: Label = {
+	id: 'l-home',
+	name: 'Home',
+	color: 'green',
+	place: { address: 'Parkweg 1', latitude: 52.52001, longitude: 13.40501, radius: 500 },
+	createdAt: 1,
+};
+
+describe('saved places', () => {
+	test('a saved place is found by its spot', () => {
+		const calls: Label = { id: 'l-calls', name: 'calls', color: 'blue', place: null, createdAt: 1 };
+		expect(savedPlaceAt([calls, home], '52.5200,13.4050')?.id).toBe('l-home');
+		expect(savedPlaceAt([calls, home], '52.5000,13.4000')).toBeNull();
+	});
+
+	test('a saved place becomes a task place under its name and radius', () => {
+		expect(placeLocation(home as triggers.SavedPlaceLabel, 'leave')).toEqual({
+			name: 'Home',
+			address: 'Parkweg 1',
+			latitude: 52.52001,
+			longitude: 13.40501,
+			radius: 500,
+			trigger: 'leave',
+		});
+	});
+});
+
+describe('label pickers', () => {
+	const calls: Label = { id: 'l-calls', name: 'calls', color: 'blue', place: null, createdAt: 1 };
+	const gym: Label = { ...home, id: 'l-gym', name: 'Gym', place: { ...home.place!, latitude: 52.4 } };
+	const labels = [calls, home, gym];
+
+	test('a task at a saved place shows it checked after its labels', () => {
+		expect(pickedLabels(labels, { labelIds: ['l-calls'], location: park({ trigger: 'leave' }) })).toEqual([
+			'l-calls',
+			'l-home',
+		]);
+		expect(pickedLabels(labels, { labelIds: ['l-calls'], location: park({ latitude: 40 }) })).toEqual(['l-calls']);
+	});
+
+	test('checking a saved place sets it as the place, keeping the trigger, and the last one checked wins', () => {
+		const leaving = park({ name: 'Elsewhere', latitude: 40, trigger: 'leave' });
+		expect(applyPickedLabels(labels, ['l-home', 'l-calls', 'l-gym'], leaving)).toEqual({
+			labelIds: ['l-calls'],
+			location: {
+				name: 'Gym',
+				address: 'Parkweg 1',
+				latitude: 52.4,
+				longitude: 13.40501,
+				radius: 500,
+				trigger: 'leave',
+			},
+		});
+		expect(applyPickedLabels(labels, ['l-home'], null).location?.trigger).toBe('arrive');
+	});
+
+	test('unchecking the saved place clears it, while a place never saved stays', () => {
+		expect(applyPickedLabels(labels, ['l-calls'], park())).toEqual({ labelIds: ['l-calls'], location: null });
+		const rewe = park({ name: 'Rewe', latitude: 40 });
+		expect(applyPickedLabels(labels, [], rewe)).toEqual({ labelIds: [], location: rewe });
+	});
+});
+
 describe('sidebar groups', () => {
 	test('places group open tasks by spot, named after the earliest task', () => {
 		const tasks = [
@@ -225,11 +292,12 @@ describe('sidebar groups', () => {
 			task('done', { location: park(), completedAt: 1 }),
 			task('plain'),
 		];
-		expect(placeGroups(tasks)).toEqual([
+		expect(placeGroups(tasks, [])).toEqual([
 			{ key: '52.5200,13.4050', name: 'Park', count: 1 },
 			{ key: '52.5000,13.4000', name: 'Rewe', count: 2 },
 		]);
-		expect(placeGroups([task('plain')])).toEqual([]);
+		expect(placeGroups([task('plain')], [])).toEqual([]);
+		expect(placeGroups(tasks, [home])).toEqual([{ key: '52.5000,13.4000', name: 'Rewe', count: 2 }]);
 	});
 
 	test('events group open tasks by event, soonest first', () => {

@@ -4,6 +4,8 @@ import * as subtasks from './subtasks.ts';
 import { bySiblingOrder, moveOrders } from './sync/order.ts';
 import { commentSchema, labelSchema, projectSchema, readSchema, sectionSchema, taskSchema } from './sync/protocol.ts';
 import { DEFAULT_PRIORITY, type DateKey, type Label, type Project, type Section, type Task } from './task.ts';
+import { placeKey } from './triggers.ts';
+import type { SavedPlace, TaskLocation } from './values.ts';
 
 /**
  * The store's commands as pure functions over its data, so the web store and the Swift store apply the same
@@ -393,7 +395,7 @@ export function deleteSection(data: StoreData, id: string): StoreData {
 }
 
 export function addLabel(data: StoreData, name: string, { id, now }: Creation): { data: StoreData; label: Label } {
-	const label: Label = { id, name, color: defaultLabelColor(name), createdAt: now };
+	const label: Label = { id, name, color: defaultLabelColor(name), place: null, createdAt: now };
 	return { data: { ...data, labels: [...data.labels, label] }, label };
 }
 
@@ -401,14 +403,58 @@ export function setLabelColor(data: StoreData, id: string, color: LabelColor): S
 	return { ...data, labels: data.labels.map(l => (l.id === id ? { ...l, color } : l)) };
 }
 
-/** Names stay unique ignoring case, since `@name` must resolve to one label. */
-export function renameLabel(data: StoreData, id: string, name: string): StoreData {
-	const taken = data.labels.some(l => l.id !== id && l.name.toLowerCase() === name.toLowerCase());
-	if (taken) return data;
-	return { ...data, labels: data.labels.map(l => (l.id === id ? { ...l, name } : l)) };
+/** Rewrites the place of every open task at `key`, so its rows read the saved name and it watches the saved radius. */
+function relocate(tasks: readonly Task[], key: string, edit: Partial<TaskLocation>): Task[] {
+	return tasks.map(t =>
+		t.completedAt === null && t.location && placeKey(t.location) === key
+			? { ...t, location: { ...t.location, ...edit } }
+			: t,
+	);
 }
 
-/** Unlike a project, a label owns no tasks, so deleting it only takes it off them. */
+/**
+ * Saves a place under a name, as a label that holds it. A name another label has is refused and returns no label,
+ * since `@name` must resolve to one label. The open tasks already at the place take its name and radius.
+ */
+export function savePlace(
+	data: StoreData,
+	name: string,
+	place: SavedPlace,
+	{ id, now }: Creation,
+): { data: StoreData; label: Label | null } {
+	if (data.labels.some(l => l.name.toLowerCase() === name.toLowerCase())) return { data, label: null };
+	const label: Label = { id, name, color: defaultLabelColor(name), place, createdAt: now };
+	const tasks = relocate(data.tasks, placeKey(place), { name, radius: place.radius });
+	return { data: { ...data, labels: [...data.labels, label], tasks }, label };
+}
+
+/** A saved place's new radius reaches the open tasks at it, like saving it did. */
+export function setPlaceRadius(data: StoreData, id: string, radius: number): StoreData {
+	const label = data.labels.find(l => l.id === id);
+	if (!label?.place) return data;
+	return {
+		...data,
+		labels: data.labels.map(l => (l.id === id ? { ...l, place: { ...label.place!, radius } } : l)),
+		tasks: relocate(data.tasks, placeKey(label.place), { radius }),
+	};
+}
+
+/**
+ * Names stay unique ignoring case, since `@name` must resolve to one label. Renaming a saved place renames it on the
+ * open tasks at it.
+ */
+export function renameLabel(data: StoreData, id: string, name: string): StoreData {
+	const taken = data.labels.some(l => l.id !== id && l.name.toLowerCase() === name.toLowerCase());
+	const label = data.labels.find(l => l.id === id);
+	if (taken || !label) return data;
+	return {
+		...data,
+		labels: data.labels.map(l => (l.id === id ? { ...l, name } : l)),
+		tasks: label.place ? relocate(data.tasks, placeKey(label.place), { name }) : data.tasks,
+	};
+}
+
+/** Unlike a project, a label owns no tasks, so deleting it only takes it off them. A deleted place stays on its tasks. */
 export function deleteLabel(data: StoreData, id: string): StoreData {
 	return {
 		...data,

@@ -7,7 +7,8 @@ struct NameActions: ViewModifier {
     let noun: String
     let name: String
     let space: SpaceKey
-    let share: API.ShareTarget
+    /// Nil for a saved place, since sharing goes by the tasks carrying a label and a place's tasks carry none.
+    let share: API.ShareTarget?
     let deletePrompt: String
     var deleteMessage: String?
     let copy: () -> Void
@@ -35,7 +36,7 @@ struct NameActions: ViewModifier {
         content
             .navigationSubtitle(store.owner(of: space).map { "Shared by \($0.name)" } ?? "")
             .toolbar {
-                if space == .own {
+                if space == .own, let share {
                     ToolbarItem(placement: .primaryAction) {
                         ShareButton(target: share, name: name)
                     }
@@ -118,7 +119,7 @@ extension View {
         noun: String,
         name: String,
         space: SpaceKey,
-        share: API.ShareTarget,
+        share: API.ShareTarget?,
         deletePrompt: String,
         deleteMessage: String? = nil,
         copy: @escaping () -> Void,

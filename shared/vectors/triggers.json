@@ -1076,6 +1076,102 @@
 			"output": "100 km"
 		},
 		{
+			"fn": "savedPlaceAt",
+			"test": "saved places › a saved place is found by its spot",
+			"input": [
+				[
+					{
+						"color": "blue",
+						"createdAt": 1,
+						"id": "l-calls",
+						"name": "calls",
+						"place": null
+					},
+					{
+						"color": "green",
+						"createdAt": 1,
+						"id": "l-home",
+						"name": "Home",
+						"place": {
+							"address": "Parkweg 1",
+							"latitude": 52.52001,
+							"longitude": 13.40501,
+							"radius": 500
+						}
+					}
+				],
+				"52.5200,13.4050"
+			],
+			"output": {
+				"color": "green",
+				"createdAt": 1,
+				"id": "l-home",
+				"name": "Home",
+				"place": {
+					"address": "Parkweg 1",
+					"latitude": 52.52001,
+					"longitude": 13.40501,
+					"radius": 500
+				}
+			}
+		},
+		{
+			"fn": "savedPlaceAt",
+			"test": "saved places › a saved place is found by its spot",
+			"input": [
+				[
+					{
+						"color": "blue",
+						"createdAt": 1,
+						"id": "l-calls",
+						"name": "calls",
+						"place": null
+					},
+					{
+						"color": "green",
+						"createdAt": 1,
+						"id": "l-home",
+						"name": "Home",
+						"place": {
+							"address": "Parkweg 1",
+							"latitude": 52.52001,
+							"longitude": 13.40501,
+							"radius": 500
+						}
+					}
+				],
+				"52.5000,13.4000"
+			],
+			"output": null
+		},
+		{
+			"fn": "placeLocation",
+			"test": "saved places › a saved place becomes a task place under its name and radius",
+			"input": [
+				{
+					"color": "green",
+					"createdAt": 1,
+					"id": "l-home",
+					"name": "Home",
+					"place": {
+						"address": "Parkweg 1",
+						"latitude": 52.52001,
+						"longitude": 13.40501,
+						"radius": 500
+					}
+				},
+				"leave"
+			],
+			"output": {
+				"address": "Parkweg 1",
+				"latitude": 52.52001,
+				"longitude": 13.40501,
+				"name": "Home",
+				"radius": 500,
+				"trigger": "leave"
+			}
+		},
+		{
 			"fn": "placeGroups",
 			"test": "sidebar groups › places group open tasks by spot, named after the earliest task",
 			"input": [
@@ -1218,7 +1314,8 @@
 						"sectionId": null,
 						"title": "plain"
 					}
-				]
+				],
+				[]
 			],
 			"output": [
 				{
@@ -1260,9 +1357,177 @@
 						"sectionId": null,
 						"title": "plain"
 					}
-				]
+				],
+				[]
 			],
 			"output": []
+		},
+		{
+			"fn": "placeGroups",
+			"test": "sidebar groups › places group open tasks by spot, named after the earliest task",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 13,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "milk",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": {
+							"address": null,
+							"latitude": 52.5,
+							"longitude": 13.4,
+							"name": "Rewe",
+							"radius": 150,
+							"trigger": "arrive"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "milk"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 14,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "eggs",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": {
+							"address": null,
+							"latitude": 52.50001,
+							"longitude": 13.40001,
+							"name": "Supermarket",
+							"radius": 150,
+							"trigger": "during"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "eggs"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 15,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "jan",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": {
+							"address": null,
+							"latitude": 52.52,
+							"longitude": 13.405,
+							"name": "Park",
+							"radius": 150,
+							"trigger": "during"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "jan"
+					},
+					{
+						"completedAt": 1,
+						"completedBy": null,
+						"createdAt": 16,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "done",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": {
+							"address": null,
+							"latitude": 52.52,
+							"longitude": 13.405,
+							"name": "Park",
+							"radius": 150,
+							"trigger": "during"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "done"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 17,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "plain",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "plain"
+					}
+				],
+				[
+					{
+						"color": "green",
+						"createdAt": 1,
+						"id": "l-home",
+						"name": "Home",
+						"place": {
+							"address": "Parkweg 1",
+							"latitude": 52.52001,
+							"longitude": 13.40501,
+							"radius": 500
+						}
+					}
+				]
+			],
+			"output": [
+				{
+					"count": 2,
+					"key": "52.5000,13.4000",
+					"name": "Rewe"
+				}
+			]
 		},
 		{
 			"fn": "eventGroups",

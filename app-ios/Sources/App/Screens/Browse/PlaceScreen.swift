@@ -1,15 +1,28 @@
 import Core
 import SwiftUI
 
-/// Every open task at one place, each naming its project, like a label screen.
+/// Every open task at one place, each naming its project, like a label screen. A saved place is its label's screen,
+/// so a pin or link from before it was saved shows that.
 struct PlaceScreen: View {
     @Environment(Store.self) private var store
     let key: String
 
+    @State private var saving = false
+
     var body: some View {
+        if let saved = Triggers.savedPlaceAt(store.labels, key) {
+            LabelScreen(labelID: saved.id)
+        } else {
+            unsaved
+        }
+    }
+
+    private var unsaved: some View {
         let tasks = Views.placeTasks(store.tasks, key, in: store.timeZone)
         let title = tasks.first?.location?.name ?? "Place"
-        TaskListScreen(
+        // The earliest task names the place, so its spot and radius are what gets saved.
+        let location = tasks.min { $0.createdAt < $1.createdAt }?.location
+        return TaskListScreen(
             title: title,
             isEmpty: tasks.isEmpty,
             emptyTitle: "No tasks at this place",

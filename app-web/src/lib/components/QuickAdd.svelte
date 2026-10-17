@@ -15,6 +15,7 @@
 	import CalendarStar from 'phosphor-svelte/lib/CalendarStar';
 	import { parseQuickAdd, type QuickAddToken, type TokenKind } from 'shared/quick-add.ts';
 	import { unknownNames, type UnknownName } from 'shared/name-search.ts';
+	import { applyPickedLabels } from 'shared/triggers.ts';
 	import { DEFAULT_PRIORITY, type Due, type Priority, type Recurrence, type Reminder } from 'shared/task.ts';
 	import SmartInput from './SmartInput.svelte';
 	import DuePicker from './DuePicker.svelte';
@@ -111,7 +112,21 @@
 			.filter((t) => t.kind === 'label')
 			.map((token) => ({ token, label: store.labels.find((l) => `@${l.name}`.toLowerCase() === token.text.toLowerCase()) })),
 	);
-	const labelIds = $derived([...new Set([...picked.labelIds, ...parsed.labelIds])]);
+	const labelIdOf = (token: QuickAddToken) =>
+		store.labels.find((l) => `@${l.name}`.toLowerCase() === token.text.toLowerCase())?.id;
+	/** A typed `@place` wins over a picked one, as typed attributes do. */
+	const typedPlaceId = $derived(parsed.tokens.filter((t) => t.kind === 'place').map(labelIdOf).at(-1));
+	const isPlace = (id: string) => !!store.label(id)?.place;
+	/** What the labels picker shows: labels and the saved place, which saves as the task's place. */
+	const labelIds = $derived([
+		...new Set([
+			...picked.labelIds.filter((id) => !typedPlaceId || !isPlace(id)),
+			...parsed.labelIds,
+			...(typedPlaceId ? [typedPlaceId] : []),
+		]),
+	]);
+	/** The labels and place that save. A saved place checked or typed wins over the screen's place. */
+	const applied = $derived(applyPickedLabels(store.labels, labelIds, picked.location));
 	/** The space the task will land in. A shared one offers only its own labels and creates none, as in task details. */
 	const home = $derived(creationHome(store.homeOf, { projectId, labelIds }, null));
 	/** What each attribute holds. One with a value shows in the row even when it is not pinned. */
@@ -156,16 +171,20 @@
 		text = text.replaceAll(/\s{2,}/g, ' ');
 	}
 
-	/** Unchecking a typed label removes its `@name`, so the picker's list is what saves. */
+	/**
+	 * Unchecking a typed label removes its `@name`, so the picker's list is what saves. A task has one place, so
+	 * checking a saved place unchecks any other, typed or picked.
+	 */
 	function setLabels(next: string[]) {
 		const typed = parsed.labelIds;
-		cut(labelTokens.filter(({ token }) => !next.includes(labelIdOf(token) ?? '')).map(({ token }) => token));
+		const place = next.filter(isPlace).at(-1);
+		const placeTokens = parsed.tokens.filter((t) => t.kind === 'place' && labelIdOf(t) !== place);
+		cut([...labelTokens.filter(({ token }) => !next.includes(labelIdOf(token) ?? '')).map(({ token }) => token), ...placeTokens]);
 		// A label the text still types stays the text's, so deleting its `@name` later drops it.
-		picked.labelIds = next.filter((id) => !typed.includes(id) || picked.labelIds.includes(id));
+		picked.labelIds = next.filter(
+			(id) => (isPlace(id) ? id === place && id !== typedPlaceId : !typed.includes(id) || picked.labelIds.includes(id)),
+		);
 	}
-
-	const labelIdOf = (token: QuickAddToken) =>
-		store.labels.find((l) => `@${l.name}`.toLowerCase() === token.text.toLowerCase())?.id;
 
 	function setRecurrence(next: Recurrence | null, start: Due | null) {
 		clearToken('recurrence');
@@ -227,7 +246,7 @@
 	function submit() {
 		if (!parsed.title) return;
 		const reminders = [...parsed.reminders, ...picked.reminders];
-		const { location, event } = picked;
+		const { event } = picked;
 		const task = store.addTask({
 			title: parsed.title,
 			due: event ? null : due,
@@ -235,9 +254,9 @@
 			priority,
 			projectId,
 			sectionId,
-			labelIds,
+			labelIds: applied.labelIds,
 			reminders,
-			location,
+			location: applied.location,
 			event,
 		});
 		if (!task) return;
@@ -423,8 +442,11 @@
 			role="group"
 			aria-label="Task attributes"
 		>
-			{#if picked.location}
-				{@render trigger(MapPin, formatLocation(picked.location), 'place', () => (picked.location = null))}
+			{#if applied.location}
+				{@render trigger(MapPin, formatLocation(applied.location), 'place', () => {
+					setLabels(labelIds.filter((id) => !isPlace(id)));
+					picked.location = null;
+				})}
 			{/if}
 			{#if picked.event}
 				{@render trigger(CalendarStar, formatEvent(picked.event), 'event', () => (picked.event = null))}

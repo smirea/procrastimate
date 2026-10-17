@@ -126,6 +126,13 @@ export const taskLocationSchema = z
 	.meta({ id: 'TaskLocation' });
 export type TaskLocation = z.infer<typeof taskLocationSchema>;
 
+/**
+ * Where a saved place is. A label that holds one is a saved place: its name is the place's name, `@name` attaches it,
+ * and its tasks are the open tasks at it (`placeKey`), not the tasks carrying the label.
+ */
+export const savedPlaceSchema = taskLocationSchema.omit({ name: true, trigger: true }).meta({ id: 'SavedPlace' });
+export type SavedPlace = z.infer<typeof savedPlaceSchema>;
+
 /** Where a task sits relative to its calendar event: `minutes` before the start, at the start, while it runs, or `minutes` after the end. */
 export const eventEdgeSchema = z.enum(['before', 'start', 'during', 'after']).meta({ id: 'EventEdge' });
 export type EventEdge = z.infer<typeof eventEdgeSchema>;

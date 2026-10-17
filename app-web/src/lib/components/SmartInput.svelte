@@ -325,7 +325,8 @@
 	.token-recurrence {
 		--tint: var(--token-recurrence);
 	}
-	.token-label {
+	.token-label,
+	.token-place {
 		--tint: var(--token-label);
 	}
 

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Tag from 'phosphor-svelte/lib/Tag';
+	import MapPin from 'phosphor-svelte/lib/MapPin';
 	import Check from 'phosphor-svelte/lib/Check';
 	import Plus from 'phosphor-svelte/lib/Plus';
 	import { scale } from 'svelte/transition';
@@ -108,7 +109,8 @@
 					onclick={() => choose(option)}
 				>
 					{#if option.kind === 'existing'}
-						<Tag size={15} weight={checked ? 'fill' : 'regular'} class="shrink-0 text-[var(--label-tone)]" style={labelStyle(option.item.color)} />
+						{@const Icon = option.item.place ? MapPin : Tag}
+						<Icon size={15} weight={checked ? 'fill' : 'regular'} class="shrink-0 text-[var(--label-tone)]" style={labelStyle(option.item.color)} />
 						<span class="flex-1 truncate">{option.item.name}</span>
 						{#if checked}<span class="grid" transition:scale={motion({ start: 0.5, duration: 160, easing: cubicOut })}><Check size={14} class="text-accent" /></span>{/if}
 					{:else}

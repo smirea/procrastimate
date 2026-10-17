@@ -389,7 +389,8 @@
 							"color": "gray",
 							"createdAt": 1,
 							"id": "l",
-							"name": "l"
+							"name": "l",
+							"place": null
 						}
 					],
 					"projects": [
@@ -468,7 +469,8 @@
 							"color": "gray",
 							"createdAt": 1,
 							"id": "l",
-							"name": "l"
+							"name": "l",
+							"place": null
 						}
 					],
 					"projects": [
@@ -624,7 +626,8 @@
 							"color": "gray",
 							"createdAt": 1,
 							"id": "mine",
-							"name": "mine"
+							"name": "mine",
+							"place": null
 						}
 					],
 					"projects": [
@@ -679,7 +682,8 @@
 						"color": "gray",
 						"createdAt": 1,
 						"deleted": false,
-						"name": "mine"
+						"name": "mine",
+						"place": null
 					},
 					"id": "mine",
 					"kind": "label"
