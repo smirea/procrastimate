@@ -409,6 +409,17 @@ public enum StoreRules {
         return (next, label)
     }
 
+    /// A suggested color for a label created as `created`, or nil when there is nothing to apply. The label must still
+    /// have the name and color it was created with, so a rename or a color picked meanwhile, here or on another device,
+    /// wins over the suggestion.
+    public static func suggestLabelColor(_ data: StoreData, _ created: Label, _ color: LabelColor) -> StoreData? {
+        guard color != created.color,
+              let current = data.labels.first(where: { $0.id == created.id }),
+              current.name == created.name, current.color == created.color
+        else { return nil }
+        return setLabelColor(data, created.id, color)
+    }
+
     public static func setLabelColor(_ data: StoreData, _ id: String, _ color: LabelColor) -> StoreData {
         var next = data
         next.labels = data.labels.map { l in

@@ -17,6 +17,9 @@ public final class Store {
     @ObservationIgnored private var pendingWrite: Task<Void, Never>?
     /// Where each deleted task lived, so undo puts it back in the same space.
     @ObservationIgnored private var deletedFrom: [String: SpaceKey] = [:]
+    /// Picks a color for a new label from its name after it is created, such as the on-device model on iOS. Nil keeps
+    /// `LabelColors.defaultLabelColor`, which every label starts with so creating one stays instant and offline.
+    @ObservationIgnored public var labelColorSuggester: ((String) async -> LabelColor?)?
 
     public init(file: SnapshotFile?, clock: AppClock, newId: @escaping () -> String = { UUID().uuidString.lowercased() }) {
         self.file = file
@@ -422,7 +425,16 @@ public final class Store {
     public func addLabel(_ name: String) -> Label {
         let (data, label) = StoreRules.addLabel(snapshot.data, name, creation())
         commit(data)
+        if labelColorSuggester != nil { Task { await suggestColor(for: label) } }
         return label
+    }
+
+    /// Applies `labelColorSuggester`'s color to a label created as `label`, per `StoreRules.suggestLabelColor`.
+    public func suggestColor(for label: Label) async {
+        guard let suggester = labelColorSuggester, let color = await suggester(label.name),
+              let next = StoreRules.suggestLabelColor(snapshot.data, label, color)
+        else { return }
+        commit(next)
     }
 
     public func renameLabel(_ id: String, _ name: String) {

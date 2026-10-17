@@ -29,4 +29,24 @@ public enum LabelColors {
         for unit in key.utf16 { hash = (hash ^ UInt32(unit)) &* 0x0100_0193 }
         return hashed[Int(hash % UInt32(hashed.count))]
     }
+
+    /// Instructions for the on-device model that picks a new label's color on iOS, which `LabelColorModel` constrains
+    /// to the palette. The meanings echo the hints above so a name both know gets the same color.
+    public static let modelInstructions = """
+    You pick a color for a label in a personal to-do app, from the label's name. Labels tag tasks across projects, \
+    such as "calls", "waiting", or "groceries". Choose the color most people would associate with the name:
+    red: urgent, problems, bugs, deadlines.
+    orange: errands, shopping, food, cooking.
+    amber: waiting, someday, maybe, later.
+    lime: outdoors, sports, energy.
+    green: money, finance, health, fitness, plants, garden.
+    teal: travel, places, home.
+    cyan: water, cleaning, tech.
+    blue: work, calls, email, meetings, admin.
+    indigo: focus, deep work, night, planning.
+    violet: ideas, reading, learning, creative work.
+    pink: family, friends, kids, people's names, gifts, love.
+    gray: low priority, archive, reference, misc.
+    A name that fits none of these still gets the closest color.
+    """
 }
