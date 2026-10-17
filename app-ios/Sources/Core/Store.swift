@@ -20,6 +20,9 @@ public final class Store {
     /// Picks a color for a new label from its name after it is created, such as the on-device model on iOS. Nil keeps
     /// `LabelColors.defaultLabelColor`, which every label starts with so creating one stays instant and offline.
     @ObservationIgnored public var labelColorSuggester: ((String) async -> LabelColor?)?
+    /// Labels created this session that no local command has renamed or recolored since, because comparing values
+    /// misses a color changed and changed back before the suggestion arrives.
+    @ObservationIgnored private var untouchedLabels: Set<String> = []
 
     public init(file: SnapshotFile?, clock: AppClock, newId: @escaping () -> String = { UUID().uuidString.lowercased() }) {
         self.file = file
@@ -425,6 +428,7 @@ public final class Store {
     public func addLabel(_ name: String) -> Label {
         let (data, label) = StoreRules.addLabel(snapshot.data, name, creation())
         commit(data)
+        untouchedLabels.insert(label.id)
         if labelColorSuggester != nil { Task { await suggestColor(for: label) } }
         return label
     }
@@ -432,6 +436,7 @@ public final class Store {
     /// Applies `labelColorSuggester`'s color to a label created as `label`, per `StoreRules.suggestLabelColor`.
     public func suggestColor(for label: Label) async {
         guard let suggester = labelColorSuggester, let color = await suggester(label.name),
+              untouchedLabels.remove(label.id) != nil,
               let next = StoreRules.suggestLabelColor(snapshot.data, label, color)
         else { return }
         commit(next)
@@ -439,11 +444,13 @@ public final class Store {
 
     public func renameLabel(_ id: String, _ name: String) {
         guard space(ofLabel: id) == .own else { return }
+        untouchedLabels.remove(id)
         commit(StoreRules.renameLabel(snapshot.data, id, name))
     }
 
     public func setLabelColor(_ id: String, _ color: LabelColor) {
         guard space(ofLabel: id) == .own else { return }
+        untouchedLabels.remove(id)
         commit(StoreRules.setLabelColor(snapshot.data, id, color))
     }
 

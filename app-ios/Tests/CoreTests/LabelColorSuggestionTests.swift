@@ -38,6 +38,18 @@ import Testing
         #expect(color(store, "tom") == .orange)
     }
 
+    @Test func aColorPickedAndPutBackWhileTheModelThinksWins() async {
+        let store = Store(file: nil, clock: clock)
+        let label = store.addLabel("tom")
+        store.labelColorSuggester = { _ in
+            store.setLabelColor(label.id, .orange)
+            store.setLabelColor(label.id, .teal)
+            return .pink
+        }
+        await store.suggestColor(for: label)
+        #expect(color(store, "tom") == .teal)
+    }
+
     @Test func aRenameWhileTheModelThinksKeepsTheColor() async {
         let store = Store(file: nil, clock: clock)
         let label = store.addLabel("tom")
