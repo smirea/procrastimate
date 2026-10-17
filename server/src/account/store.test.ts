@@ -30,11 +30,13 @@ describe.each(storeFactories)('%s store', (_name, createStore) => {
 		expect(store.deviceByTokenHash('hash-a')?.revokedAt).toBe(60);
 	});
 
-	test('wipes task data and bumps the epoch without dropping devices', () => {
+	test('wipes task data and bumps the epoch without dropping devices or task clients', () => {
 		const store = createStore();
+		const stamp = { kind: 'web', version: null, device: 'Chrome', os: 'macOS', timeZone: 'UTC', at: 1 } as const;
 		store.addDevice(device('a', 1));
 		store.putEntity({ kind: 'task', id: '1', data: { title: 'A' }, clocks: { title: '1:0:device' } });
-		store.appendLog({ opId: 'op', kind: 'task', id: '1', fields: { title: 'A' }, actor: 'user', client: null, at: 1 });
+		store.appendLog({ opId: 'op', kind: 'task', id: '1', fields: { title: 'A' }, actor: 'user', at: 1 });
+		store.putTaskClients({ id: '1', created: stamp, edited: stamp });
 		expect(store.epoch()).toBe(0);
 		store.clearTaskData();
 		store.setEpoch(store.epoch() + 1);
@@ -43,6 +45,11 @@ describe.each(storeFactories)('%s store', (_name, createStore) => {
 		expect(store.hasOp('op')).toBe(false);
 		expect(store.epoch()).toBe(1);
 		expect(store.liveDevices().map(d => d.id)).toEqual(['a']);
+		expect(store.taskClients('1')).toEqual({ id: '1', created: stamp, edited: stamp });
+		store.putTaskClients({ id: '1', created: stamp, edited: { ...stamp, at: 2 } });
+		expect(store.taskClients('1')?.edited.at).toBe(2);
+		store.clearAccount();
+		expect(store.taskClients('1')).toBeNull();
 	});
 
 	test('stores entities as JSON and replaces them by kind and id', () => {
@@ -64,12 +71,12 @@ describe.each(storeFactories)('%s store', (_name, createStore) => {
 		const store = createStore();
 		expect(store.lastSeq()).toBe(0);
 		const seqs = ['a', 'b', 'c'].map(opId =>
-			store.appendLog({ opId, kind: 'task', id: opId, fields: { n: opId }, actor: 'user', client: null, at: 1 }),
+			store.appendLog({ opId, kind: 'task', id: opId, fields: { n: opId }, actor: 'user', at: 1 }),
 		);
 		expect(seqs).toEqual([1, 2, 3]);
 		expect(store.lastSeq()).toBe(3);
 		expect(store.logAfter(1, 1)).toEqual([
-			{ seq: 2, opId: 'b', kind: 'task', id: 'b', fields: { n: 'b' }, actor: 'user', client: null, at: 1 },
+			{ seq: 2, opId: 'b', kind: 'task', id: 'b', fields: { n: 'b' }, actor: 'user', at: 1 },
 		]);
 		expect(store.logAfter(3, 10)).toEqual([]);
 		expect(store.hasOp('c')).toBe(true);

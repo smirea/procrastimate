@@ -194,6 +194,11 @@ export const clientSchema = z
 	.meta({ id: 'Client' });
 export type Client = z.infer<typeof clientSchema>;
 
+export const clientStampSchema = clientSchema
+	.extend({ at: z.number().int().meta({ description: 'Server time of the op, in epoch milliseconds.' }) })
+	.meta({ id: 'ClientStamp', description: 'The app behind one write to a task, and when the server took it.' });
+export type ClientStamp = z.infer<typeof clientStampSchema>;
+
 /** The actor of a log row the server wrote on its own, such as a fixup. Activity never shows it. */
 export const SERVER_ACTOR = 'server';
 

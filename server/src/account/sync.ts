@@ -6,6 +6,7 @@ import {
 	entityKey,
 	serverHlc,
 	serverSnapshot,
+	type LogEntry,
 	type ServerEntity,
 	type ServerState,
 } from '../../../shared/sync/merge';
@@ -20,7 +21,7 @@ import {
 	type SyncRequest,
 	type SyncResponse,
 } from '../../../shared/sync/protocol';
-import { SERVER_ACTOR, type Client } from '../../../shared/values';
+import { SERVER_ACTOR, type Client, type ClientStamp } from '../../../shared/values';
 import { span } from '../sentry';
 import type { AccountStore, LogRow } from './store';
 
@@ -74,9 +75,8 @@ function stampAuthorship(before: ServerState, ops: readonly Op[], actor: string)
 }
 
 /**
- * Applies ops and the fixups they need, then writes the entities that changed and every log entry. The ops' rows
- * name `actor`, the user id that sent them, and `client`, the app it sent them from. The fixups' rows name the server
- * and no client.
+ * Applies ops and the fixups they need, then writes the entities that changed, every log entry, and the app behind
+ * each task write. The ops' rows name `actor`, the user id that sent them, and the fixups' rows name the server.
  */
 export function push(
 	store: AccountStore,
@@ -103,9 +103,25 @@ function merge(
 	for (const [key, entity] of fixed.state.entities) {
 		if (before.entities.get(key) !== entity) store.putEntity(entity);
 	}
-	for (const entry of applied.log) store.appendLog({ ...entry, actor, client, at: now });
-	for (const entry of fixed.log) store.appendLog({ ...entry, actor: SERVER_ACTOR, client: null, at: now });
+	for (const entry of applied.log) store.appendLog({ ...entry, actor, at: now });
+	for (const entry of fixed.log) store.appendLog({ ...entry, actor: SERVER_ACTOR, at: now });
+	recordClients(store, before, applied.log, { ...client, at: now });
 	return { state: fixed.state, acked: applied.acked };
+}
+
+/**
+ * A task's first write names its `created` app and every write its `edited` one. A write that brings back a task the
+ * state lacks but the table knows is a reset's re-upload, which restores the task rather than writing it, so its row
+ * stays. Fixups are the server's and are not passed in.
+ */
+function recordClients(store: AccountStore, before: ServerState, log: readonly LogEntry[], stamp: ClientStamp) {
+	for (const entry of log) {
+		if (entry.kind !== 'task' || !Object.keys(entry.fields).length) continue;
+		const existed = before.entities.has(entityKey('task', entry.id));
+		const known = store.taskClients(entry.id);
+		if (!known) store.putTaskClients({ id: entry.id, created: existed ? null : stamp, edited: stamp });
+		else if (existed) store.putTaskClients({ ...known, edited: stamp });
+	}
 }
 
 /**
@@ -129,9 +145,9 @@ export function parseOps(raw: readonly unknown[]): { ops: Op[]; rejected: Reject
 	return { ops, rejected };
 }
 
-/** Who wrote a row, from which app, and when stay on the server; clients never apply them. */
+/** Who wrote a row and when stay on the server; clients never apply them. */
 function asChange(row: LogRow): Change {
-	const { actor: _, at: __, client: ___, ...change } = row;
+	const { actor: _, at: __, ...change } = row;
 	return change as Change;
 }
 
@@ -211,7 +227,7 @@ export function guestSync(
 		const pushed = push(store, before, admitted, now, actor, client);
 		for (const op of refused) {
 			if (store.hasOp(op.opId)) continue;
-			store.appendLog({ opId: op.opId, kind: op.kind, id: op.id, fields: {}, actor, client, at: now });
+			store.appendLog({ opId: op.opId, kind: op.kind, id: op.id, fields: {}, actor, at: now });
 		}
 		const acked = ops.map(op => op.opId);
 		const { filtered, readOnly } = guestView(serverSnapshot(pushed.state), grants);

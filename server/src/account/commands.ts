@@ -41,7 +41,7 @@ import {
 import { diff, stamp } from '../../../shared/sync/diff';
 import { serverSnapshot } from '../../../shared/sync/merge';
 import type { Comment, Label, Project, Section, Snapshot, Task } from '../../../shared/sync/protocol';
-import { SERVER_ACTOR, type Client } from '../../../shared/values';
+import type { Client } from '../../../shared/values';
 import { isTimeZone, wallDate, zonedDateKey } from '../../../shared/zoned-time';
 import type { Access } from '../auth';
 import { personOf } from './activity';
@@ -68,27 +68,13 @@ function visibleOf(snapshot: Snapshot, access: Access) {
 
 type Visible = ReturnType<typeof visibleOf>;
 
-/**
- * Each task's first and latest write, read off the log, with the app behind it. A fixup is the server's and a refused
- * guest op wrote nothing, so neither counts.
- */
-function taskClients(store: AccountStore): Map<string, TaskClients> {
-	const result = new Map<string, TaskClients>();
-	for (const row of store.logAfter(0, Number.MAX_SAFE_INTEGER)) {
-		if (row.kind !== 'task' || row.actor === SERVER_ACTOR || !Object.keys(row.fields).length) continue;
-		const stamp = row.client && { ...row.client, at: row.at };
-		const known = result.get(row.id);
-		if (known) known.edited = stamp;
-		else result.set(row.id, { created: stamp, edited: stamp });
-	}
-	return result;
-}
-
 const NO_CLIENTS: TaskClients = { created: null, edited: null };
 
 function withClients(store: AccountStore, tasks: readonly Task[]): AgentTask[] {
-	const clients = taskClients(store);
-	return tasks.map(task => ({ ...task, clients: clients.get(task.id) ?? NO_CLIENTS }));
+	return tasks.map(task => {
+		const row = store.taskClients(task.id);
+		return { ...task, clients: row ? { created: row.created, edited: row.edited } : NO_CLIENTS };
+	});
 }
 
 export function view({ store, access }: Space): SpaceView {

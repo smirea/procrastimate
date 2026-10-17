@@ -44,7 +44,7 @@ export const tasks = sqliteTable(
 		title: text('title').notNull(),
 		notes: text('notes').notNull().default(''),
 		projectId: text('project_id'),
-		/** A section of the task's project. A subtask shares its root task's section, like its project. */
+		/** A section of the task's project. Subtasks never have one. */
 		sectionId: text('section_id'),
 		labelIds: text('label_ids', { mode: 'json' }).$type<ColumnValue<'tasks', 'labelIds'>>().notNull().default([]),
 		due: text('due', { mode: 'json' }).$type<ColumnValue<'tasks', 'due'>>(),
@@ -210,10 +210,24 @@ export const log = sqliteTable(
 		actor: text('actor').notNull().default(SERVER_ACTOR),
 		/** Server time when the row was written. */
 		at: integer('at').notNull().default(0),
-		/** The app that sent the op, from the client header. Null for a fixup and for rows from before it was kept. */
-		client: text('client', { mode: 'json' }).$type<ColumnValue<'log', 'client'>>(),
 	},
 	table => [primaryKey({ columns: [table.userId, table.seq] }), index('log_op_id').on(table.userId, table.opId)],
+);
+
+/**
+ * Which app created each task and which wrote to it last, for the agent API, keyed by task id. It lives outside the
+ * task tables and the log so a sync reset, which clears both, keeps it, and the merge that writes a task writes it.
+ */
+export const taskClients = sqliteTable(
+	'task_clients',
+	{
+		userId: text('user_id').notNull(),
+		id: text('id').notNull(),
+		/** Null for a task that existed before the server recorded apps, so its first edit is not taken for its creation. */
+		created: text('created', { mode: 'json' }).$type<ColumnValue<'taskClients', 'created'>>(),
+		edited: text('edited', { mode: 'json' }).$type<ColumnValue<'taskClients', 'edited'>>().notNull(),
+	},
+	table => [primaryKey({ columns: [table.userId, table.id] })],
 );
 
 /** A registered install. `revokedAt` is set once its token is removed; the row stays so the id is never reused. */
@@ -366,6 +380,7 @@ export const rambleBudget = sqliteTable('ramble_budget', {
 type Row<T extends { $inferSelect: object }> = Omit<T['$inferSelect'], 'userId'>;
 
 export type LogRow = Row<typeof log>;
+export type TaskClientsRow = Row<typeof taskClients>;
 export type Device = Row<typeof devices>;
 export type PushTarget = Row<typeof push>;
 export type RambleUsage = Row<typeof rambleUsage>;

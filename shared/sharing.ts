@@ -9,7 +9,7 @@ import {
 	taskSchema,
 } from './sync/protocol.ts';
 import { labelColorSchema } from './label-colors.ts';
-import { clientSchema, roleSchema, shareTargetKindSchema } from './values.ts';
+import { clientStampSchema, roleSchema, shareTargetKindSchema } from './values.ts';
 
 /**
  * Sharing's shapes. A space is one user's tasks, projects, sections, and labels, served by the `Account` object named by
@@ -135,11 +135,6 @@ export const agentNewTaskSchema = z
 	})
 	.meta({ id: 'AgentNewTask', description: 'A task the agent command API adds. It needs `text` or `title`.' });
 export type AgentNewTask = z.infer<typeof agentNewTaskSchema>;
-
-export const clientStampSchema = clientSchema
-	.extend({ at: z.number().int().meta({ description: 'Server time of the op, in epoch milliseconds.' }) })
-	.meta({ id: 'ClientStamp', description: 'The app behind one write to a task, and when the server took it.' });
-export type ClientStamp = z.infer<typeof clientStampSchema>;
 
 export const taskClientsSchema = z
 	.object({

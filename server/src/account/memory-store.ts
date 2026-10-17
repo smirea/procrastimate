@@ -9,6 +9,7 @@ import type {
 	PersonRow,
 	PushTarget,
 	ShareRow,
+	TaskClientsRow,
 } from './store';
 
 /** The rows a Turso session loads and writes back. `log` is in `seq` order. */
@@ -16,6 +17,7 @@ export type AccountTables = {
 	devices: Device[];
 	entities: Entity[];
 	log: LogRow[];
+	taskClients: TaskClientsRow[];
 	push: PushTarget[];
 	ramble: RambleUsage[];
 	shares: ShareRow[];
@@ -51,6 +53,7 @@ export function memoryStore(seed?: AccountTables): AccountStore & { tables(): Ac
 	const people = keyed(seed?.people, person => person.id);
 	const apiTokens = keyed(seed?.apiTokens, token => token.id);
 	let epoch = seed?.epoch ?? 0;
+	const taskClients = keyed(seed?.taskClients, row => row.id);
 	let nextSeq = log.at(-1)?.seq ?? 0;
 	const entityKey = (kind: string, id: string) => `${kind}\u0000${id}`;
 	for (const entity of seed?.entities ?? []) entities.set(entityKey(entity.kind, entity.id), structuredClone(entity));
@@ -104,6 +107,13 @@ export function memoryStore(seed?: AccountTables): AccountStore & { tables(): Ac
 				.map(entry => structuredClone(entry)),
 		hasOp: opId => log.some(entry => entry.opId === opId),
 		lastSeq: () => nextSeq,
+		taskClients: id => {
+			const row = taskClients.get(id);
+			return row ? structuredClone(row) : null;
+		},
+		putTaskClients: row => {
+			taskClients.set(row.id, structuredClone(row));
+		},
 		clearTaskData: () => {
 			entities.clear();
 			log.length = 0;
@@ -114,6 +124,7 @@ export function memoryStore(seed?: AccountTables): AccountStore & { tables(): Ac
 			entities.clear();
 			log.length = 0;
 			nextSeq = 0;
+			taskClients.clear();
 			pushTargets.clear();
 			rambleUsage.clear();
 			shares.clear();
@@ -181,6 +192,7 @@ export function memoryStore(seed?: AccountTables): AccountStore & { tables(): Ac
 			devices: [...devices.values()].map(device => ({ ...device })),
 			entities: [...entities.values()].map(entity => structuredClone(entity)),
 			log: log.map(entry => structuredClone(entry)),
+			taskClients: [...taskClients.values()].map(row => structuredClone(row)),
 			push: [...pushTargets.values()].map(target => structuredClone(target)),
 			ramble: [...rambleUsage].map(([day, seconds]) => ({ day, seconds })),
 			shares: [...shares.values()].map(share => structuredClone(share)),
