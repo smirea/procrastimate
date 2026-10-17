@@ -533,7 +533,9 @@ public enum StoreRules {
     }
 
     /// Puts back what a delete removed. A task edited since keeps its edits, and gets each removed label back at its
-    /// old place in `labelIds`, or last when the list has since shrunk.
+    /// old place in `labelIds`, or last when the list has since shrunk. A section or task whose project was deleted
+    /// since stays gone, since undoing a section delete after its project's delete must not bring back tasks no view
+    /// shows.
     public static func undelete(_ data: StoreData, _ deleted: Deleted) -> StoreData {
         func missing<T: Created>(_ live: [T], _ gone: [T]) -> [T] {
             let ids = Set(live.map(\.id))
@@ -552,9 +554,11 @@ public enum StoreRules {
         }
         var next = data
         next.projects = restore(data.projects, deleted.projects)
-        next.sections = restore(data.sections, deleted.sections)
+        let live = Set(next.projects.map(\.id))
+        next.sections = restore(data.sections, deleted.sections.filter { live.contains($0.projectId) })
         next.labels = restore(data.labels, deleted.labels)
-        next.tasks = sortTasks((data.tasks + missing(data.tasks, deleted.tasks)).map { t in
+        let returning = deleted.tasks.filter { $0.projectId.map(live.contains) ?? true }
+        next.tasks = sortTasks((data.tasks + missing(data.tasks, returning)).map { t in
             let back = deleted.labelings
                 .filter { $0.taskId == t.id && !t.labelIds.contains($0.labelId) }
                 .stableSorted { a, b in a.index == b.index ? nil : a.index < b.index }

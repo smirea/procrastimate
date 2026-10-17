@@ -438,7 +438,8 @@ export function deletedBetween(before: StoreData, after: StoreData): Deleted {
 
 /**
  * Puts back what a delete removed. A task edited since keeps its edits, and gets each removed label back at its old
- * place in `labelIds`, or last when the list has since shrunk.
+ * place in `labelIds`, or last when the list has since shrunk. A section or task whose project was deleted since stays
+ * gone, since undoing a section delete after its project's delete must not bring back tasks no view shows.
  */
 export function undelete(data: StoreData, deleted: Deleted): StoreData {
 	const missing = <T extends { id: string }>(live: readonly T[], gone: readonly T[]) => {
@@ -454,7 +455,11 @@ export function undelete(data: StoreData, deleted: Deleted): StoreData {
 		}
 		return list;
 	};
-	const tasks = [...data.tasks, ...missing(data.tasks, deleted.tasks)].map(t => {
+	const projects = restore(data.projects, deleted.projects);
+	const live = new Set(projects.map(p => p.id));
+	const sections = deleted.sections.filter(x => live.has(x.projectId));
+	const returning = deleted.tasks.filter(t => t.projectId === null || live.has(t.projectId));
+	const tasks = [...data.tasks, ...missing(data.tasks, returning)].map(t => {
 		const back = deleted.labelings.filter(l => l.taskId === t.id && !t.labelIds.includes(l.labelId));
 		if (!back.length) return t;
 		const labelIds = [...t.labelIds];
@@ -464,8 +469,8 @@ export function undelete(data: StoreData, deleted: Deleted): StoreData {
 	});
 	return {
 		...data,
-		projects: restore(data.projects, deleted.projects),
-		sections: restore(data.sections, deleted.sections),
+		projects,
+		sections: restore(data.sections, sections),
 		labels: restore(data.labels, deleted.labels),
 		tasks: sortTasks(tasks),
 	};
