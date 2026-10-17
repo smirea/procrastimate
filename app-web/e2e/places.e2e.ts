@@ -52,6 +52,13 @@ test('a place saved under a name lists with the labels, and @name or the labels 
 	await expect(labels.getByRole('link', { name: 'Home 1' })).toBeVisible();
 	await expect(page.getByRole('navigation', { name: 'Main' }).getByRole('region', { name: 'Places' })).toHaveCount(0);
 
+	await app.add('Sweep the porch');
+	await expect(page.getByRole('heading', { level: 1, name: 'Home' })).toBeVisible();
+	await expect(app.list('Home tasks').locator('[data-task]')).toHaveText([
+		/Water plants/,
+		/Sweep the porch.*Arriving at Home/,
+	]);
+
 	await app.go('Inbox');
 	await app.openQuickAdd();
 	await app.taskInput().fill('Fix the tap @home');

@@ -232,11 +232,11 @@ public enum Triggers {
         _ ids: [String],
         _ location: TaskLocation?
     ) -> (labelIds: [String], location: TaskLocation?) {
-        let picked = ids.compactMap { id in labels.first { $0.id == id } }
-        let place = picked.last { $0.place != nil }
+        let places = labels.filter { $0.place != nil }
+        let place = ids.compactMap { id in places.first { $0.id == id } }.last
         let kept = location.flatMap { savedPlaceAt(labels, placeKey($0)) == nil ? $0 : nil }
         return (
-            picked.filter { $0.place == nil }.map(\.id),
+            ids.filter { id in !places.contains { $0.id == id } },
             place.flatMap { placeLocation($0, location?.trigger ?? .arrive) } ?? kept
         )
     }

@@ -230,11 +230,11 @@ export function applyPickedLabels(
 	ids: readonly string[],
 	location: TaskLocation | null,
 ): Placed {
-	const picked = ids.map(id => labels.find(l => l.id === id)).filter(l => l !== undefined);
-	const place = picked.filter(isSavedPlace).at(-1);
+	const places = labels.filter(isSavedPlace);
+	const place = ids.flatMap(id => places.filter(l => l.id === id)).at(-1);
 	const kept = location && !savedPlaceAt(labels, placeKey(location)) ? location : null;
 	return {
-		labelIds: picked.filter(l => !isSavedPlace(l)).map(l => l.id),
+		labelIds: ids.filter(id => !places.some(l => l.id === id)),
 		location: place ? placeLocation(place, location?.trigger ?? 'arrive') : kept,
 	};
 }

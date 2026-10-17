@@ -24,7 +24,8 @@
 					"subtasks": [],
 					"title": "Call mom"
 				},
-				null
+				null,
+				[]
 			],
 			"output": {
 				"due": {
@@ -70,7 +71,8 @@
 					"location": null,
 					"projectId": "list-project",
 					"sectionId": null
-				}
+				},
+				[]
 			],
 			"output": {
 				"due": {
@@ -120,7 +122,8 @@
 					"location": null,
 					"projectId": null,
 					"sectionId": null
-				}
+				},
+				[]
 			],
 			"output": {
 				"due": {
@@ -157,7 +160,8 @@
 					"subtasks": [],
 					"title": "Milk"
 				},
-				null
+				null,
+				[]
 			],
 			"output": {
 				"due": null,
@@ -198,7 +202,8 @@
 					"location": null,
 					"projectId": "home",
 					"sectionId": "kitchen"
-				}
+				},
+				[]
 			],
 			"output": {
 				"due": null,
@@ -239,7 +244,8 @@
 					"location": null,
 					"projectId": "home",
 					"sectionId": "kitchen"
-				}
+				},
+				[]
 			],
 			"output": {
 				"due": null,
@@ -280,7 +286,8 @@
 					"location": null,
 					"projectId": "home",
 					"sectionId": "kitchen"
-				}
+				},
+				[]
 			],
 			"output": {
 				"due": null,
@@ -328,7 +335,8 @@
 					},
 					"projectId": null,
 					"sectionId": null
-				}
+				},
+				[]
 			],
 			"output": {
 				"due": null,
@@ -348,6 +356,129 @@
 				"reminders": [],
 				"sectionId": null,
 				"title": "Buy milk"
+			}
+		},
+		{
+			"fn": "rambleNewTask",
+			"test": "rambleNewTask › a saved place picked or as the list's label becomes the task's place, not a label",
+			"input": [
+				{
+					"due": null,
+					"labelIds": [
+						"calls"
+					],
+					"notes": "",
+					"priority": null,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"segment": {
+						"end": 12,
+						"start": 0
+					},
+					"subtasks": [],
+					"title": "Water plants"
+				},
+				{
+					"date": null,
+					"event": null,
+					"labelId": "home",
+					"location": null,
+					"projectId": null,
+					"sectionId": null
+				},
+				[
+					{
+						"color": "green",
+						"createdAt": 0,
+						"id": "home",
+						"name": "Home",
+						"place": {
+							"address": null,
+							"latitude": 52.52,
+							"longitude": 13.405,
+							"radius": 500
+						}
+					}
+				]
+			],
+			"output": {
+				"due": null,
+				"event": null,
+				"labelIds": [
+					"calls"
+				],
+				"location": {
+					"address": null,
+					"latitude": 52.52,
+					"longitude": 13.405,
+					"name": "Home",
+					"radius": 500,
+					"trigger": "arrive"
+				},
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"sectionId": null,
+				"title": "Water plants"
+			}
+		},
+		{
+			"fn": "rambleNewTask",
+			"test": "rambleNewTask › a saved place picked or as the list's label becomes the task's place, not a label",
+			"input": [
+				{
+					"due": null,
+					"labelIds": [
+						"home"
+					],
+					"notes": "",
+					"priority": null,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"segment": {
+						"end": 12,
+						"start": 0
+					},
+					"subtasks": [],
+					"title": "Water plants"
+				},
+				null,
+				[
+					{
+						"color": "green",
+						"createdAt": 0,
+						"id": "home",
+						"name": "Home",
+						"place": {
+							"address": null,
+							"latitude": 52.52,
+							"longitude": 13.405,
+							"radius": 500
+						}
+					}
+				]
+			],
+			"output": {
+				"due": null,
+				"event": null,
+				"labelIds": [],
+				"location": {
+					"address": null,
+					"latitude": 52.52,
+					"longitude": 13.405,
+					"name": "Home",
+					"radius": 500,
+					"trigger": "arrive"
+				},
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"sectionId": null,
+				"title": "Water plants"
 			}
 		},
 		{
@@ -396,7 +527,8 @@
 					"location": null,
 					"projectId": null,
 					"sectionId": null
-				}
+				},
+				[]
 			],
 			"output": {
 				"due": null,

@@ -366,7 +366,7 @@ private struct QuickAddForm: View {
 
     private func close(revealing taskID: String) {
         navigator.sheet = nil
-        if let task = store.task(taskID) { navigator.reveal(task, today: clock.today, in: clock.timeZone) }
+        if let task = store.task(taskID) { navigator.reveal(task, labels: store.labels, today: clock.today, in: clock.timeZone) }
     }
 }
 

@@ -588,10 +588,10 @@ struct RambleDrawer: View {
         let today = clock.today
         let added = withAnimation(.snappy) {
             saving.compactMap { entry -> TaskItem? in
-                guard let added = store.addTask(Ramble.newTask(entry.task, defaults: defaults)) else { return nil }
+                guard let added = store.addTask(Ramble.newTask(entry.task, defaults: defaults, labels: store.labels)) else { return nil }
                 if !entry.task.notes.isEmpty { store.updateTask(added.id, TaskPatch(notes: entry.task.notes)) }
                 for subtask in entry.subtasks where !subtask.task.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    guard let child = store.addTask(Ramble.newTask(subtask.task, defaults: nil), parentId: added.id) else { continue }
+                    guard let child = store.addTask(Ramble.newTask(subtask.task, defaults: nil, labels: store.labels), parentId: added.id) else { continue }
                     if !subtask.task.notes.isEmpty { store.updateTask(child.id, TaskPatch(notes: subtask.task.notes)) }
                 }
                 return added
@@ -599,7 +599,7 @@ struct RambleDrawer: View {
         }
         saved += 1
         navigator.sheet = nil
-        if let first = added.first { navigator.reveal(first, today: today, in: clock.timeZone) }
+        if let first = added.first { navigator.reveal(first, labels: store.labels, today: today, in: clock.timeZone) }
         if added.count > 1 { toasts.show("Added \(added.count) tasks") }
     }
 }

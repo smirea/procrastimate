@@ -556,7 +556,7 @@ private struct ScreenInput: Decodable {
 @Sendable func rambleFillVector(_ fn: String, _ a: Args) throws -> JSONValue {
     switch fn {
     case "rambleNewTask":
-        return try json(Ramble.newTask(try a(0), defaults: try a(1, as: ListDefaultsJSON?.self)?.defaults))
+        return try json(Ramble.newTask(try a(0), defaults: try a(1, as: ListDefaultsJSON?.self)?.defaults, labels: try a(2)))
     default: throw unknown(fn)
     }
 }
