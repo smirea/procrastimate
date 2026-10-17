@@ -1,0 +1,14 @@
+config:
+  edition: 3
+streams:
+  own:
+    auto_subscribe: true
+    queries:
+      - SELECT * FROM tasks WHERE user_id = auth.user_id()
+      - SELECT * FROM access WHERE grantee = auth.user_id()
+  shared:
+    auto_subscribe: true
+    query: |
+      SELECT tasks.* FROM tasks
+        INNER JOIN access ON access.entity_id = tasks.id
+      WHERE access.grantee = auth.user_id() AND access.kind = 'task'
