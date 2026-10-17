@@ -223,7 +223,8 @@ export const taskClients = sqliteTable(
 	{
 		userId: text('user_id').notNull(),
 		id: text('id').notNull(),
-		created: text('created', { mode: 'json' }).$type<ColumnValue<'taskClients', 'created'>>().notNull(),
+		/** Null for a task that existed before the server recorded apps, so its first edit is not taken for its creation. */
+		created: text('created', { mode: 'json' }).$type<ColumnValue<'taskClients', 'created'>>(),
 		edited: text('edited', { mode: 'json' }).$type<ColumnValue<'taskClients', 'edited'>>().notNull(),
 	},
 	table => [primaryKey({ columns: [table.userId, table.id] })],

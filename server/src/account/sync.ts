@@ -117,9 +117,10 @@ function merge(
 function recordClients(store: AccountStore, before: ServerState, log: readonly LogEntry[], stamp: ClientStamp) {
 	for (const entry of log) {
 		if (entry.kind !== 'task' || !Object.keys(entry.fields).length) continue;
+		const existed = before.entities.has(entityKey('task', entry.id));
 		const known = store.taskClients(entry.id);
-		if (!known) store.putTaskClients({ id: entry.id, created: stamp, edited: stamp });
-		else if (before.entities.has(entityKey('task', entry.id))) store.putTaskClients({ ...known, edited: stamp });
+		if (!known) store.putTaskClients({ id: entry.id, created: existed ? null : stamp, edited: stamp });
+		else if (existed) store.putTaskClients({ ...known, edited: stamp });
 	}
 }
 

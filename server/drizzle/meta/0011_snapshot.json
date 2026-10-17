@@ -1,7 +1,7 @@
 {
 	"version": "6",
 	"dialect": "sqlite",
-	"id": "edf28f85-e793-4bb7-bc53-b72f836d9d05",
+	"id": "a553a1eb-4e5a-4806-b3d5-f665a250fb5e",
 	"prevId": "192b654b-091a-4d7c-8848-ad64196da163",
 	"tables": {
 		"api_tokens": {
@@ -1019,7 +1019,7 @@
 					"name": "created",
 					"type": "text",
 					"primaryKey": false,
-					"notNull": true,
+					"notNull": false,
 					"autoincrement": false
 				},
 				"edited": {

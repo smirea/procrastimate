@@ -4,6 +4,7 @@ import { applyResponse, startSync, type ClientSync } from '../../../shared/sync/
 import { formatHlc } from '../../../shared/sync/hlc';
 import { SYNC_PAGE_SIZE, type Op, type Snapshot, type SyncResponse } from '../../../shared/sync/protocol';
 import { counter, createOps, label, project, snapshotOf, task } from '../../../shared/sync/testing';
+import { fieldsOf } from '../../../shared/sync/snapshot';
 import { mergeBackup, readTodoistBackup } from '../../../shared/todoist';
 import api from '../api';
 import type { Env } from '../bindings';
@@ -83,6 +84,19 @@ describe.each(storeFactories)('POST /api/sync on the %s store', (_name, createSt
 			settings('s2', formatHlc({ wall: NOW + 1, counter: 0, node: 'Mac' }), { quickAddButtons: ['date', 'labels'] }),
 		]);
 		expect((await serverSnapshot())?.settings.quickAddButtons).toEqual(['date', 'labels']);
+	});
+
+	test('the first edit to a task from before apps were recorded leaves its creating app unknown', async () => {
+		const cred = await setup();
+		const data = { ...fieldsOf('task', task('old', { title: 'Old' })), deleted: false };
+		const clocks = Object.fromEntries(Object.keys(data).map(field => [field, '1:0:x']));
+		store.putEntity({ kind: 'task', id: 'old', data, clocks });
+		await sync(cred, 0, [op('e1', formatHlc({ wall: NOW, counter: 0, node: 'Mac' }), { title: 'Older' }, 'old')]);
+		expect(store.taskClients('old')).toEqual({
+			id: 'old',
+			created: null,
+			edited: { kind: 'api', version: null, device: null, os: null, timeZone: null, at: NOW },
+		});
 	});
 
 	test('rejects a missing, unknown, or revoked token, and an invalid body', async () => {
