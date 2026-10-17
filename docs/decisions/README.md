@@ -32,4 +32,5 @@ ProcrastiMate's concepts, goals, paradigms, and high-level system decisions, one
 - [Sharing](sharing.md): spaces, actors, shares, public links, AI accounts and their tokens, and who did what.
 - [Comments](comments.md): comments on tasks, who may write them, per-user read markers, row badges, and the agent routes.
 - [Integrations](integrations.md): other apps, starting with Notouroboros, creating and reading tasks through the server, the shared keychain link, and deep links.
+- [Observability](observability.md): Sentry projects for every client, when they report, the browser tunnel, distributed tracing, and releases.
 - [Sync account and auth](sync-auth.md): the `Account` Durable Object, Turso for task data, and the device id.
