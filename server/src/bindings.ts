@@ -1,4 +1,4 @@
-import type { DurableObjectNamespace } from '@cloudflare/workers-types';
+import type { DurableObjectNamespace, R2Bucket } from '@cloudflare/workers-types';
 
 /**
  * Raw Worker bindings. Every field is optional here because Bun serves the same handler without the Cloudflare ones.
@@ -6,6 +6,8 @@ import type { DurableObjectNamespace } from '@cloudflare/workers-types';
  */
 export type Env = {
 	ACCOUNT?: DurableObjectNamespace;
+	/** The daily Turso dumps. See `db/backup.ts`. */
+	BACKUPS?: R2Bucket;
 	VAPID_PUBLIC_KEY?: string;
 	VAPID_PRIVATE_KEY?: string;
 	/** Task storage. Both are Worker secrets. `TURSO_API_TOKEN` is not a Worker binding. */

@@ -1,4 +1,4 @@
-import { setUser, startSpan, type CloudflareOptions } from '@sentry/cloudflare';
+import { cronTriggersIntegration, setUser, startSpan, type CloudflareOptions } from '@sentry/cloudflare';
 import { envelopeUrl, parseDsn, SENTRY_DSN, SENTRY_TUNNEL_PATH } from '../../shared/sentry';
 import type { Env, Handler } from './bindings';
 import { config } from './config';
@@ -26,6 +26,8 @@ export function sentryOptions(env: Env): CloudflareOptions {
 			urlQueryParams: false,
 			databaseQueryData: false,
 		},
+		// A Sentry cron monitor, so a backup that never runs alerts, not only one that throws.
+		integrations: [cronTriggersIntegration({ monitorSlug: () => 'turso-backup' })],
 		// Whole transactions named by method and path; streamed spans are named only by method.
 		traceLifecycle: 'static',
 		// The tunnel's own requests would add a transaction for every envelope the browser sends.
