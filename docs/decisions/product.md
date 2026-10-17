@@ -3,7 +3,7 @@
 - **Personal task manager.** ProcrastiMate is Stefan's personal task manager. Todoist is a rough functional reference for behavior where these decisions are silent. It is never a visual reference.
 - **The name is ProcrastiMate.** Every user-facing string spells it `ProcrastiMate`, never `Procrastimate` or `Procrastinate`. Identifiers such as the domain, bundle id, headers, and env keys stay lowercase or as they are.
 - **Its own visual language, based on Liquid Glass.** ProcrastiMate designs its own look on Apple's Liquid Glass, so the web app and the eventual iOS app look alike and modern. See [Visual language](visual-language.md).
-- **One user.** There is exactly one user. No accounts, sharing, roles, or multi-tenant concerns.
+- **Many users, one today.** ProcrastiMate is a multi-user app with accounts, sharing, and AI accounts. Until it launches Stefan is its only user, so designs may favor one user's numbers but never assume a single user.
 - **Platforms.** Web now, iOS later, Apple Watch after iOS.
 - **Features are in flux.** Never keep backwards compatibility. Change data shapes, routes, and storage freely, and delete old behavior instead of migrating it.
 - **Local first, synced.** Every change applies to local state at once. Remote sync happens in the background and never blocks an interaction.

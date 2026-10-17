@@ -34,3 +34,4 @@ ProcrastiMate's concepts, goals, paradigms, and high-level system decisions, one
 - [Integrations](integrations.md): other apps, starting with Notouroboros, creating and reading tasks through the server, the shared keychain link, and deep links.
 - [Observability](observability.md): Sentry projects for every client, when they report, the browser tunnel, distributed tracing, and releases.
 - [Sync account and auth](sync-auth.md): the `Account` Durable Object, Turso for task data, and the device id.
+- [Postgres and PowerSync](../postgres-powersync.md): the requirements and plan for replacing Turso and the sync engine with Postgres, PowerSync, Drizzle, and GRDB.
