@@ -33,7 +33,7 @@
 </script>
 
 <section class="mt-6" aria-label={section.name}>
-	<SectionHeading heading={section.name} {tasks} projectId={section.projectId}>
+	<SectionHeading heading={section.name} {tasks}>
 		{#snippet title()}
 			{#if renaming}
 				<!-- svelte-ignore a11y_autofocus -->

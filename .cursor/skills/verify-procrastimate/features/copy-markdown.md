@@ -1,6 +1,6 @@
 # Copy as Markdown
 
-A view, a section, or a task copies to the clipboard as a Markdown checklist, ready to paste into notes, a chat, or an LLM. Subtasks nest under their parent, and a toast reads `Copied as Markdown`.
+A view, a section, or a task copies to the clipboard as a plain nested list of titles, ready to paste into notes, a chat, or an LLM. Notes and subtasks nest under their task with no checkboxes, dates, priorities, projects, or labels, and a toast reads `Copied as Markdown`.
 
 ## Sub-features
 
@@ -25,14 +25,14 @@ Preconditions:
 - The baseline state. In quick add, save `Pay rent today #Work p1`, add the subtask `Find checkbook` to it, and save `Call mom tomorrow`.
 - The browser grants clipboard read and write.
 
-- **Task.** Open `Pay rent` and choose `Copy task as Markdown`. The button turns into a check, the toast reads `Copied as Markdown`, and the clipboard holds `- [ ] Pay rent · Today · p1 · #Work` with `  - [ ] Find checkbook` under it.
+- **Task.** Open `Pay rent` and choose `Copy task as Markdown`. The button turns into a check, the toast reads `Copied as Markdown`, and the clipboard holds `- Pay rent` with `  - Find checkbook` under it.
 - **Section.** In Inbox, hover `Today` and choose `Copy Today as Markdown`. The clipboard starts with `## Today`, then a blank line, then the same two lines.
-- **View.** In Inbox, choose `Copy Inbox as Markdown`. The clipboard holds `# Inbox`, the `## Today` section, and `## Tomorrow` with `- [ ] Call mom · Tomorrow`.
-- **Project.** In `Work`, choose `Copy Work as Markdown`. The clipboard starts with `# Work`, and its rows leave out `#Work`. A project with sections copies its loose tasks first, then `## <section>` with each section's tasks, skipping empty ones. Test: `sections group a project, take tasks from quick add and details, and rename, reorder, and delete` in `e2e/sections.e2e.ts`.
+- **View.** In Inbox, choose `Copy Inbox as Markdown`. The clipboard holds `# Inbox`, the `## Today` section, and `## Tomorrow` with `- Call mom`.
+- **Project.** In `Work`, choose `Copy Work as Markdown`. The clipboard starts with `# Work`. A project with sections copies its loose tasks first, then `## <section>` with each section's tasks, skipping empty ones. Test: `sections group a project, take tasks from quick add and details, and rename, reorder, and delete` in `e2e/sections.e2e.ts`.
 - **iOS.** Long-press `Pay rent` and choose `Copy as Markdown`. `xcrun simctl pbpaste booted` prints the same text as the web task copy.
 
 ## Gotchas
 
-- The text comes from `toMarkdown` in `shared/markdown.ts`, and its vectors pin the exact output. Check the clipboard text, not only the toast.
+- The text comes from `toMarkdown` in `shared/markdown.ts`, ported to `Markdown.toMarkdown` in Swift, and the shared vectors in `shared/vectors/markdown.json` pin the exact output on both clients. Check the clipboard text, not only the toast.
 - A subtask whose parent is also copied shows only under the parent, so an Inbox copy can hold fewer top-level rows than the screen.
 - Headless browsers reject `navigator.clipboard.writeText` without the clipboard permission. That shows `Couldn’t copy`, not a bug.

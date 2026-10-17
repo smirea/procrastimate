@@ -214,7 +214,7 @@ private struct Occurrence: Decodable {
 
 @Sendable func markdownVector(_ fn: String, _ a: Args) throws -> JSONValue {
     switch fn {
-    case "toMarkdown": return try json(Markdown.toMarkdown(a(0), a(1), in: a.zone))
+    case "toMarkdown": return try json(Markdown.toMarkdown(a(0), a(1)))
     case "projectDocument": return try json(Markdown.projectDocument(a(0), a(1)))
     default: throw unknown(fn)
     }

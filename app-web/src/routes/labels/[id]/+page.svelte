@@ -52,7 +52,7 @@
 		subtitle={owner ? `Shared by ${owner.name}` : undefined}
 		canAdd={!home || tasks.length === 0 || tasks.some((t) => store.canEdit(t.id))}
 		quickAdd={{ projectId: null, labelId: label.id, today: false }}
-		markdown={() => ({ title: label.name, projectId: null, sections: [{ heading: null, tasks }] })}
+		markdown={() => ({ title: label.name, sections: [{ heading: null, tasks }] })}
 	>
 		{#snippet title()}
 			{#if renaming}

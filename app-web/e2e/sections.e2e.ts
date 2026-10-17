@@ -53,7 +53,7 @@ test('sections group a project, take tasks from quick add and details, and renam
 
 	await page.getByRole('button', { name: 'Copy Home as Markdown' }).click();
 	expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
-		'# Home\n\n## Later\n\n- [ ] Fix fence\n\n## Next up\n\n- [ ] Water plants\n- [ ] Paint door',
+		'# Home\n\n## Later\n\n- Fix fence\n\n## Next up\n\n- Water plants\n- Paint door',
 	);
 	await page.screenshot({ path: 'test-results/sections/project.png' });
 

@@ -100,7 +100,7 @@ private struct SectionHeading: View {
             }
             Button("Copy as Markdown", systemImage: "doc.on.doc") {
                 actions.copyAsMarkdown(
-                    Markdown.Document(projectId: section.projectId, sections: [.init(heading: section.name, tasks: tasks)])
+                    Markdown.Document(sections: [.init(heading: section.name, tasks: tasks)])
                 )
             }
             if editable {

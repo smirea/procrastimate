@@ -207,7 +207,7 @@
 					<ShareNetwork size={16} />
 				</button>
 			{/if}
-			<CopyButton label="Copy task as Markdown" markdown={() => ({ title: null, projectId: null, sections: [{ heading: null, tasks: [task] }] })} />
+			<CopyButton label="Copy task as Markdown" markdown={() => ({ title: null, sections: [{ heading: null, tasks: [task] }] })} />
 			<button type="button" class="icon-btn" aria-label="Close" onclick={() => sheets.close()}>
 				<X size={16} />
 			</button>

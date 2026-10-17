@@ -69,8 +69,7 @@ final class TaskActions {
     }
 
     func copyAsMarkdown(_ document: Markdown.Document) {
-        let context = Markdown.Context(tasks: store.allTasks, projects: store.allProjects, labels: store.allLabels, today: clock.today)
-        UIPasteboard.general.string = Markdown.toMarkdown(document, context, in: store.timeZone)
+        UIPasteboard.general.string = Markdown.toMarkdown(document, store.allTasks)
         toasts.show("Copied as Markdown", for: .seconds(2))
     }
 

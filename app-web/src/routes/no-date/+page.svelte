@@ -30,7 +30,6 @@
 	quickAdd={{ projectId: null, labelId: null, today: false }}
 	markdown={() => ({
 		title: 'No date',
-		projectId: null,
 		sections: [{ heading: null, tasks: view.loose }, ...view.places.map(place => ({ heading: place.name, tasks: place.tasks }))],
 	})}
 >
