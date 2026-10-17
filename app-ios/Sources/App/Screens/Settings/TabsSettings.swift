@@ -87,9 +87,9 @@ private struct TabsSettings: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 
-    /// Keeps the pins this list can't show, such as a shared project not synced yet, after the ones it edits.
+    /// Keeps the pins this list can't show, such as a shared project not synced yet, in their slots.
     private func save(_ next: [Pin], shown: [Pin]) {
-        navigator.setPins(next + navigator.pins.filter { !shown.contains($0) })
+        navigator.setPins(navigator.pins.editing(shown: shown, to: next))
     }
 
     private static var portraitWidth: CGFloat {

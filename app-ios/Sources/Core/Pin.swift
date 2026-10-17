@@ -32,4 +32,15 @@ extension [Pin] {
         if contains(survivor) { return filter { $0 != pin } }
         return map { $0 == pin ? survivor : $0 }
     }
+
+    /// The pins after a list that shows only `shown` of them is edited to `next`. The edited pins fill the shown pins'
+    /// slots in order, and any extra go last, so a hidden pin keeps its place for when its tab comes back.
+    public func editing(shown: [Pin], to next: [Pin]) -> [Pin] {
+        var queue = next[...]
+        var result = compactMap { pin -> Pin? in
+            shown.contains(pin) ? queue.popFirst() : pin
+        }
+        result += queue
+        return result
+    }
 }
