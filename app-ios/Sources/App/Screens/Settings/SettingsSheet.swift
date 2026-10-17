@@ -9,12 +9,9 @@ struct SettingsSheet: View {
     @Environment(Store.self) private var store
     @Environment(LocalNotifications.self) private var notifications
     @Environment(AccountSync.self) private var accountSync
-    @Environment(Toasts.self) private var toasts
 
     @State private var picking = false
     @State private var confirmingDelete = false
-    @State private var confirmingAccount = false
-    @State private var deletingAccount = false
 
     var body: some View {
         NavigationStack {
@@ -45,20 +42,7 @@ struct SettingsSheet: View {
                     .listRowInsets(EdgeInsets())
                 }
 
-                Section {
-                    ForEach(QuickAddButton.allCases) { button in
-                        Toggle(isOn: Binding(
-                            get: { store.quickAddButtons.contains(button) },
-                            set: { _ in store.setQuickAddButtons(QuickAddButtons.toggleButton(store.quickAddButtons, button)) }
-                        )) {
-                            SwiftUI.Label(button.name, systemImage: button.systemImage)
-                        }
-                    }
-                } header: {
-                    Text("Quick add buttons")
-                } footer: {
-                    Text("The rest stay in quick add’s + menu.")
-                }
+                QuickAddButtonsSection()
 
                 Section { TabsSettingsLink() }
 
@@ -80,10 +64,15 @@ struct SettingsSheet: View {
                     Button("Delete all data", role: .destructive) { confirmingDelete = true }
                 }
 
-                Section("Account") {
+                Section {
                     Button("Sign out") { accountSync.signOut() }
-                    Button(deletingAccount ? "Deleting…" : "Delete account", role: .destructive) { confirmingAccount = true }
-                        .disabled(deletingAccount)
+                } header: {
+                    Text("Account")
+                } footer: {
+                    Text("Version \(AppEnvironment.version)")
+                        .monospacedDigit()
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 16)
                 }
             }
             .animation(.snappy, value: importer.status)
@@ -101,14 +90,6 @@ struct SettingsSheet: View {
                 Button("Delete all data", role: .destructive) { store.deleteAll() }
                 Button("Cancel", role: .cancel) {}
             }
-            .confirmationDialog(
-                "Delete this account and every task, project, and label?",
-                isPresented: $confirmingAccount,
-                titleVisibility: .visible
-            ) {
-                Button("Delete account", role: .destructive) { Task { await deleteAccount() } }
-                Button("Cancel", role: .cancel) {}
-            }
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -121,12 +102,45 @@ struct SettingsSheet: View {
         .sensoryFeedback(.selection, trigger: theme.choice)
         .sensoryFeedback(.selection, trigger: store.dictation)
     }
+}
 
-    private func deleteAccount() async {
-        deletingAccount = true
-        if await accountSync.deleteAccount() { return }
-        deletingAccount = false
-        toasts.show("Could not delete the account")
+/// Pinned buttons first, in row order, which a long press and drag reorders; the rest below in the default order.
+private struct QuickAddButtonsSection: View {
+    @Environment(Store.self) private var store
+
+    var body: some View {
+        Section {
+            ForEach(pinned) { toggle($0) }
+                .onMove { from, to in
+                    guard let from = from.first else { return }
+                    let button = pinned[from]
+                    let rest = pinned.filter { $0 != button }
+                    let at = to > from ? to - 1 : to
+                    store.setQuickAddButtons(
+                        QuickAddButtons.moveButton(store.quickAddButtons, button, at < rest.count ? rest[at] : nil)
+                    )
+                }
+            ForEach(QuickAddButton.allCases.filter { !pinned.contains($0) }) { toggle($0) }
+        } header: {
+            Text("Quick add buttons")
+        } footer: {
+            Text("Hold and drag a shown button to order the row. The rest stay in quick add’s + menu.")
+        }
+        .animation(.snappy, value: store.quickAddButtons)
+    }
+
+    /// The shown buttons in row order, which the drag reorders.
+    private var pinned: [QuickAddButton] {
+        QuickAddButtons.rowButtons(store.quickAddButtons, [], QuickAddButton.allCases)
+    }
+
+    private func toggle(_ button: QuickAddButton) -> some View {
+        Toggle(isOn: Binding(
+            get: { store.quickAddButtons.contains(button) },
+            set: { _ in store.setQuickAddButtons(QuickAddButtons.toggleButton(store.quickAddButtons, button)) }
+        )) {
+            SwiftUI.Label(button.name, systemImage: button.systemImage)
+        }
     }
 }
 

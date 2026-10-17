@@ -5,6 +5,7 @@ import { sveltekit } from '@sveltejs/kit/vite';
 import adapter from '@sveltejs/adapter-static';
 import tailwindcss from '@tailwindcss/vite';
 import { sentrySvelteKit } from '@sentry/sveltekit/vite';
+import { appVersion } from '../scripts/app-version.mts';
 import { sentryRelease } from '../scripts/sentry-release.mts';
 import { parseSentryTarget, SENTRY_DSN } from '../shared/sentry.ts';
 import env from './env.ts';
@@ -20,7 +21,7 @@ export default defineConfig({
 	resolve: {
 		alias: { shared: fileURLToPath(new URL('../shared', import.meta.url)) },
 	},
-	define: { __SENTRY_TARGET__: JSON.stringify(sentry.target) },
+	define: { __SENTRY_TARGET__: JSON.stringify(sentry.target), __APP_VERSION__: JSON.stringify(appVersion()) },
 	// The deploy uploads the maps to Sentry and deletes them, so they are never served.
 	build: { sourcemap: sentry.target ? 'hidden' : false },
 	server: {

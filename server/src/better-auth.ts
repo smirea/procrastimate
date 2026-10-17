@@ -1,4 +1,3 @@
-import { ORPCError } from '@orpc/server';
 import { betterAuth } from 'better-auth';
 import { memoryAdapter, type MemoryDB } from '@better-auth/memory-adapter';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
@@ -10,7 +9,6 @@ import { authSchema } from './db/auth-schema';
 import { config, type AppleSecret, type Config } from './config';
 import { tursoDatabase, type TursoDatabase } from './db/turso';
 import { reportError } from './sentry';
-import { internalClient } from './account/peers';
 
 /** A year. Days offline must not sign the account out; a day online extends the session. */
 const SESSION_SECONDS = 60 * 60 * 24 * 365;
@@ -293,15 +291,4 @@ export async function deleteUser(env: Env, userId: string): Promise<void> {
 	await context.internalAdapter.deleteUser(userId);
 	await context.internalAdapter.deleteUserSessions(userId);
 	await context.internalAdapter.deleteAccounts(userId);
-}
-
-/**
- * Deletes the signed-in human, their tasks, and the AI accounts they made. The confirmation lives in Settings.
- * Social accounts have no password, so this does not ask for one.
- */
-export async function deleteAccount(request: Request, env: Env, user: Person): Promise<void> {
-	if (!env.ACCOUNT) throw new ORPCError('SERVICE_UNAVAILABLE', { message: 'Sync is not configured' });
-	await internalClient(env.ACCOUNT, user.id, new URL(request.url).origin).wipe();
-	for (const ai of await aiAccounts(env, user.id)) await deleteUser(env, ai.id);
-	await deleteUser(env, user.id);
 }

@@ -4,18 +4,18 @@
 	"cases": [
 		{
 			"fn": "toggleButton",
-			"test": "toggleButton › pinning a button puts it in row order",
+			"test": "toggleButton › pinning a button puts it last",
 			"input": [
 				[
-					"date",
-					"subtasks"
+					"subtasks",
+					"date"
 				],
 				"labels"
 			],
 			"output": [
+				"subtasks",
 				"date",
-				"labels",
-				"subtasks"
+				"labels"
 			]
 		},
 		{
@@ -38,18 +38,18 @@
 		},
 		{
 			"fn": "toggleButton",
-			"test": "toggleButton › a stored list out of order or with repeats comes back clean",
+			"test": "toggleButton › a stored list with repeats comes back clean, in its order",
 			"input": [
 				[
 					"subtasks",
 					"date",
-					"date"
+					"subtasks"
 				],
 				"event"
 			],
 			"output": [
-				"date",
 				"subtasks",
+				"date",
 				"event"
 			]
 		},
@@ -63,6 +63,82 @@
 				"date"
 			],
 			"output": []
+		},
+		{
+			"fn": "moveButton",
+			"test": "moveButton › moves a button before another",
+			"input": [
+				[
+					"date",
+					"priority",
+					"reminders",
+					"subtasks"
+				],
+				"subtasks",
+				"priority"
+			],
+			"output": [
+				"date",
+				"subtasks",
+				"priority",
+				"reminders"
+			]
+		},
+		{
+			"fn": "moveButton",
+			"test": "moveButton › moves a button down",
+			"input": [
+				[
+					"date",
+					"priority",
+					"reminders"
+				],
+				"date",
+				"reminders"
+			],
+			"output": [
+				"priority",
+				"date",
+				"reminders"
+			]
+		},
+		{
+			"fn": "moveButton",
+			"test": "moveButton › no neighbor moves it to the end",
+			"input": [
+				[
+					"date",
+					"priority",
+					"reminders"
+				],
+				"date",
+				null
+			],
+			"output": [
+				"priority",
+				"reminders",
+				"date"
+			]
+		},
+		{
+			"fn": "moveButton",
+			"test": "moveButton › the web reorders around iOS-only buttons without moving them",
+			"input": [
+				[
+					"location",
+					"date",
+					"event",
+					"labels"
+				],
+				"labels",
+				"date"
+			],
+			"output": [
+				"location",
+				"labels",
+				"date",
+				"event"
+			]
 		},
 		{
 			"fn": "rowButtons",
@@ -95,15 +171,43 @@
 		},
 		{
 			"fn": "rowButtons",
-			"test": "rowButtons › a hidden button with a value still shows, in its place",
+			"test": "rowButtons › pinned buttons keep their stored order",
 			"input": [
 				[
+					"subtasks",
 					"date",
-					"subtasks"
+					"priority"
+				],
+				[],
+				[
+					"date",
+					"priority",
+					"reminders",
+					"repeat",
+					"labels",
+					"subtasks",
+					"location",
+					"event"
+				]
+			],
+			"output": [
+				"subtasks",
+				"date",
+				"priority"
+			]
+		},
+		{
+			"fn": "rowButtons",
+			"test": "rowButtons › a hidden button with a value still shows, after the pinned ones",
+			"input": [
+				[
+					"subtasks",
+					"date"
 				],
 				[
 					"labels",
-					"priority"
+					"priority",
+					"date"
 				],
 				[
 					"date",
@@ -115,9 +219,43 @@
 				]
 			],
 			"output": [
+				"subtasks",
 				"date",
 				"priority",
+				"labels"
+			]
+		},
+		{
+			"fn": "rowButtons",
+			"test": "rowButtons › every supported button, pinned first, for settings and the + menu",
+			"input": [
+				[
+					"labels",
+					"date"
+				],
+				[
+					"date",
+					"priority",
+					"reminders",
+					"repeat",
+					"labels",
+					"subtasks"
+				],
+				[
+					"date",
+					"priority",
+					"reminders",
+					"repeat",
+					"labels",
+					"subtasks"
+				]
+			],
+			"output": [
 				"labels",
+				"date",
+				"priority",
+				"reminders",
+				"repeat",
 				"subtasks"
 			]
 		},

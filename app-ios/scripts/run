@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { closeSync, existsSync, mkdirSync, openSync, readdirSync, readFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { parseArgs } from "node:util";
+import { appVersion } from "../../scripts/app-version.mts";
 
 const root = resolve(import.meta.dir, "..");
 const runCommand = "./scripts/run";
@@ -137,6 +138,7 @@ async function deploy(target: Target, project: string) {
             // Ad hoc signing still embeds the entitlements, so the simulator honors the shared keychain group.
             ...(target.kind === "device" ? ["-allowProvisioningUpdates", "-allowProvisioningDeviceRegistration"] : ["CODE_SIGN_IDENTITY=-"]),
             ...(values.team ? [`DEVELOPMENT_TEAM=${values.team}`] : []),
+            `MARKETING_VERSION=${appVersion()}`,
             // On the command line, so it beats a `development` Debug value from Env.xcconfig.
             ...(values["no-sentry"] ? ["SENTRY_ENVIRONMENT="] : []), "build",
         ], false, fd);

@@ -245,11 +245,6 @@ export const accountRouter = os.router({
 		}),
 	},
 	internal: {
-		wipe: os.internal.wipe.handler(({ context }) => {
-			context.store.clearAccount();
-			context.defer(() => context.images.clear());
-			return { ok: true as const };
-		}),
 		membership: os.internal.membership.handler(({ input, context }) => {
 			recordMembership(context.store, input.spaceId, input.owner, input.live, context.now);
 			// A membership never moves this space's log, so the open clients hear about it here or not until they

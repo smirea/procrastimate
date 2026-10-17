@@ -144,7 +144,5 @@ describe.each(storeFactories)('%s store', (_name, createStore) => {
 
 		store.clearTaskData();
 		expect([store.shares().length, store.memberships().length, store.people().length]).toEqual([1, 1, 2]);
-		store.clearAccount();
-		expect([store.shares(), store.memberships(), store.people(), store.apiTokens()]).toEqual([[], [], [], []]);
 	});
 });
