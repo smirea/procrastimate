@@ -11,6 +11,9 @@ extension API.AuthMethods {
 @MainActor @Observable
 final class Session {
     static let ownerKey = "procrastimate-owner"
+    /// The owner's email and name, kept beside the id so an offline launch names them in Sentry.
+    static let ownerEmailKey = "procrastimate-owner-email"
+    static let ownerNameKey = "procrastimate-owner-name"
 
     private let store: Store
     var signedIn: Bool
@@ -22,8 +25,11 @@ final class Session {
         let token = SessionToken.read()
         signedIn = token != nil || Launch.signedIn
         // The session check that confirms the user needs the network, so an offline launch names them from the last one.
-        if token != nil, let owner = UserDefaults.standard.string(forKey: Self.ownerKey) {
-            Telemetry.signedIn(owner)
+        let defaults = UserDefaults.standard
+        if token != nil, let owner = defaults.string(forKey: Self.ownerKey) {
+            Telemetry.signedIn(
+                owner, email: defaults.string(forKey: Self.ownerEmailKey), name: defaults.string(forKey: Self.ownerNameKey)
+            )
         }
     }
 
@@ -62,18 +68,20 @@ final class Session {
             signedIn = Launch.signedIn
             return
         }
-        adopt(id)
+        adopt(id, email: user["email"] as? String, name: user["name"] as? String)
     }
 
     /// Remembers who the local document belongs to. A different user pulls a fresh snapshot instead of uploading.
-    func adopt(_ id: String) {
+    func adopt(_ id: String, email: String?, name: String?) {
         let owner = UserDefaults.standard.string(forKey: Self.ownerKey)
         if let owner, owner != id {
             store.switchUser()
             TaskImages.clearLocal()
         }
         UserDefaults.standard.set(id, forKey: Self.ownerKey)
-        Telemetry.signedIn(id)
+        UserDefaults.standard.set(email, forKey: Self.ownerEmailKey)
+        UserDefaults.standard.set(name, forKey: Self.ownerNameKey)
+        Telemetry.signedIn(id, email: email, name: name)
         signedIn = true
         error = nil
     }
@@ -138,7 +146,7 @@ final class Session {
         }
         SessionToken.write(token)
         if let user = object["user"] as? [String: Any], let id = user["id"] as? String {
-            adopt(id)
+            adopt(id, email: user["email"] as? String, name: user["name"] as? String)
         } else {
             signedIn = true
             await refresh()

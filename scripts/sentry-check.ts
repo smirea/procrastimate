@@ -138,14 +138,24 @@ async function sourceLine(frame: Frame): Promise<string | null> {
 		const file = repoFiles.find(path => path === suffix || path.endsWith(`/${suffix}`));
 		if (!file) continue;
 		const text = await Bun.file(new URL(`../${file}`, import.meta.url)).text();
-		return text.split('\n')[(frame.lineNo ?? 0) - 1] ?? null;
+		const lines = text.split('\n');
+		const line = frame.lineNo ?? 0;
+		// A native caller frame holds a return address, which can resolve to the line after the call.
+		return lines.slice(Math.max(0, line - 2), line).join('\n');
 	}
 	return null;
 }
 
+/** The exception's frames, or for an iOS exception that was never raised, the capturing thread's. */
 function inAppFrames(event: Event): Frame[] {
-	const exception = event.entries.find(entry => entry.type === 'exception') as Extract<Entry, { type: 'exception' }>;
-	const frames = exception?.data.values.flatMap(value => value.stacktrace?.frames ?? []) ?? [];
+	const stack = (type: 'exception' | 'threads') => {
+		const entry = event.entries.find(item => item.type === type) as Extract<Entry, { type: 'exception' }> | undefined;
+		const values = (entry?.data.values ?? []) as { stacktrace: { frames: Frame[] } | null; current?: boolean }[];
+		return values
+			.filter(value => type === 'exception' || value.current)
+			.flatMap(value => value.stacktrace?.frames ?? []);
+	};
+	const frames = stack('exception').length ? stack('exception') : stack('threads');
 	return frames.filter(frame => frame.inApp).reverse();
 }
 
@@ -183,7 +193,7 @@ for (const smoke of expected) {
 	}
 	check(frames.length > 0 && frames.every(readable), 'top in-app frames name original source files and lines');
 	const thrown = frames[0] ? await sourceLine(frames[0]) : null;
-	console.log(`    line ${frames[0]?.lineNo ?? '?'} in the checkout: ${thrown?.trim() ?? '-'}`);
+	console.log(`    line ${frames[0]?.lineNo ?? '?'} in the checkout: ${thrown?.split('\n').at(-1)?.trim() ?? '-'}`);
 	check(Boolean(thrown?.includes('Sentry smoke test')), "the top frame's line is the smoke's throw in this checkout");
 
 	if (smoke === 'worker' || smoke === 'account') {

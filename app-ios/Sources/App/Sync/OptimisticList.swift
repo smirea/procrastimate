@@ -57,7 +57,7 @@ final class OptimisticList<Value: Equatable & Sendable> {
                 }
                 return value
             } catch {
-                _ = ErrorReport(failure, report: "Could not save a new row", error: error)
+                _ = ErrorReport(failure, error: error)
                 if rows.contains(where: { $0.id == row.id }) { toasts.show(failure) }
                 rows.removeAll { $0.id == row.id }
                 return nil
@@ -88,7 +88,7 @@ final class OptimisticList<Value: Equatable & Sendable> {
         do {
             try await request(value)
         } catch {
-            _ = ErrorReport(failure, report: "Could not delete a row", error: error)
+            _ = ErrorReport(failure, error: error)
             rows.insert(Row(id: row.id, value: value, pending: false), at: min(index, rows.count))
             toasts.show(failure)
         }
