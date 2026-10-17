@@ -7,7 +7,8 @@ import { fixups } from './fixups.ts';
 import { moveOrders } from './order.ts';
 import { KINDS, type Snapshot } from './protocol.ts';
 import { entitiesOf, withEntities } from './snapshot.ts';
-import { label, MemoryClient, MemoryServer, project, snapshotOf, task } from './testing.ts';
+import { compareHlc } from './hlc.ts';
+import { label, MemoryClient, MemoryServer, project, section, snapshotOf, task } from './testing.ts';
 
 /**
  * Two or three clients edit at random, go offline, and sync in random interleavings, some of which lose
@@ -480,52 +481,173 @@ describe('convergence', () => {
 
 /**
  * Seeds reach a race only by luck: a delete losing to another device's undo of delete, with a third device's newer edit
- * in between, showed up in 1 of 1,000 seeds. So three devices also run every interleaving of short scripts on one
- * project and its task, each device's steps in its own order.
+ * in between, showed up in 1 of 1,000 seeds. So three devices also run every interleaving of short scripts, each
+ * device's steps in its own order, on a project with a section, a saved place, and a labeled task.
  */
 describe('every interleaving', () => {
-	type Step = { name: string; run: (client: MemoryClient, server: MemoryServer, now: number) => void };
-	const work = snapshotOf({ projects: [project('p')], tasks: [task('t', { projectId: 'p' })] });
-	const command = (name: string, run: (s: Snapshot, client: MemoryClient) => Snapshot): Step => ({
-		name,
-		run: (client, _, now) => client.run(s => run(s, client), now),
-	});
-	const sync: Step = { name: 'sync', run: (client, server, now) => client.pull(server, now) };
-	const remove = command('delete project', s => onData(s, data => rules.deleteProject(data, 'p')));
-	const restore = command('undo delete', s => onData(s, data => rules.undelete(data, rules.deletedBetween(work, s))));
-	const scripts: Record<string, Step[]> = {
-		delete: [remove, sync],
-		'delete, undo': [remove, restore, sync],
-		rename: [command('rename project', (s, c) => onData(s, data => rules.renameProject(data, 'p', c.name))), sync],
-		edit: [command('edit task', (s, c) => ({ ...s, tasks: s.tasks.map(t => ({ ...t, title: c.name })) })), sync],
-	};
+	type Device = { client: MemoryClient; deleted: rules.Deleted | null };
+	type World = { server: MemoryServer; devices: Device[] };
+	type Step = { name: string; run: (device: Device, server: MemoryServer, now: number) => void };
 
-	function* interleavings(queues: number[]): Generator<number[]> {
-		if (queues.every(q => q === 0)) return yield [];
-		for (const [i, left] of queues.entries()) {
-			if (!left) continue;
-			for (const rest of interleavings(queues.with(i, left - 1))) yield [i, ...rest];
-		}
+	const place = { address: null, latitude: 52.52, longitude: 13.405, radius: 100 };
+	const work = snapshotOf({
+		projects: [project('p', { name: 'Work' })],
+		sections: [section('s', 'p', { name: 'Later' })],
+		labels: [label('home', { name: 'Home', place }), label('l', { name: 'Urgent' })],
+		tasks: [
+			task('t', {
+				projectId: 'p',
+				sectionId: 's',
+				labelIds: ['home'],
+				location: { name: 'Home', ...place, trigger: 'arrive' },
+			}),
+		],
+	});
+
+	const command = (name: string, edit: (data: rules.StoreData, device: string) => rules.StoreData): Step => ({
+		name,
+		run: (device, _, now) => device.client.run(s => onData(s, data => edit(data, device.client.name)), now),
+	});
+	// Like the toast, the undo puts back what the delete removed from the device as it was then.
+	const remove = (name: string, edit: (data: rules.StoreData) => rules.StoreData): Step => ({
+		name,
+		run: (device, _, now) => {
+			const before = device.client.snapshot;
+			device.client.run(s => onData(s, edit), now);
+			device.deleted = rules.deletedBetween(before, device.client.snapshot);
+		},
+	});
+	const restore: Step = {
+		name: 'undo delete',
+		run: (device, _, now) => device.client.run(s => onData(s, data => rules.undelete(data, device.deleted!)), now),
+	};
+	const sync: Step = { name: 'sync', run: (device, server, now) => device.client.pull(server, now) };
+
+	const deletes = [
+		remove('delete project', data => rules.deleteProject(data, 'p')),
+		remove('delete section', data => rules.deleteSection(data, 's')),
+		remove('delete place', data => rules.deleteLabel(data, 'home')),
+	];
+	const edits = [
+		command('rename project', (data, name) => rules.renameProject(data, 'p', name)),
+		command('rename section', (data, name) => rules.renameSection(data, 's', name)),
+		command('rename place', (data, name) => rules.renameLabel(data, 'home', name)),
+		command('edit task', (data, name) => rules.updateTask(data, 't', { title: name })),
+		command('label task', data => {
+			const labelIds = data.tasks.find(t => t.id === 't')?.labelIds ?? [];
+			return rules.updateTask(data, 't', { labelIds: [...labelIds, 'l'] });
+		}),
+		command('unlabel task', data => rules.updateTask(data, 't', { labelIds: [] })),
+		command('move out of section', data => rules.updateTask(data, 't', { sectionId: null })),
+	];
+	const scripts: Record<string, Step[]> = Object.fromEntries([
+		...deletes.flatMap(step => [
+			[step.name, [step, sync]],
+			[`${step.name}, undo`, [step, restore, sync]],
+			[`${step.name}, sync, undo`, [step, sync, restore, sync]],
+		]),
+		...edits.map(step => [step.name, [step, sync]]),
+	]);
+
+	/**
+	 * Every step runs at a later time than all before it, so each new clock is newer than every stored one, and what a
+	 * world does next depends only on the order of its stored clocks. Two interleavings that reach the same world up to
+	 * that order, such as one device's edit before or after another's sync, share every continuation, so only the
+	 * first is explored. Device and server clocks and op counters are left out, since every tick jumps past them, and so
+	 * are the log rows every device has read, since nothing reads them again.
+	 */
+	function key({ server, devices }: World, done: readonly number[]) {
+		const entities = [...server.state.entities.entries()].sort(([a], [b]) => (a < b ? -1 : 1));
+		const clocks = [
+			...new Set([
+				...entities.flatMap(([, e]) => Object.values(e.clocks)),
+				...devices.flatMap(d => d.client.sync.outbox.map(op => op.hlc)),
+			]),
+		].sort(compareHlc);
+		const rank = new Map(clocks.map((hlc, i) => [hlc, i]));
+		const read = Math.min(...devices.map(d => d.client.sync.cursor));
+		return JSON.stringify([
+			done,
+			server.log.slice(read).map(c => [c.opId, c.kind, c.id, c.fields]),
+			entities.map(([id, e]) => [id, e.data, Object.entries(e.clocks).map(([field, hlc]) => [field, rank.get(hlc)])]),
+			devices.map(({ client: { snapshot, sync }, deleted }) => [
+				snapshot,
+				deleted,
+				sync.cursor - read,
+				sync.seed,
+				sync.outbox.map(op => ({ ...op, hlc: rank.get(op.hlc) })),
+			]),
+		]);
 	}
+
+	/** Runs every interleaving of the cast's scripts and returns the server snapshots they end in. */
+	function explore(cast: readonly string[], { prune = true } = {}) {
+		const plans = cast.map(name => scripts[name]!);
+		const server = new MemoryServer();
+		const devices = cast.map((_, i) => ({
+			client: new MemoryClient(`d${i}`, i === 0 ? work : undefined),
+			deleted: null,
+		}));
+		for (const [i, { client }] of devices.entries()) client.pull(server, i + 1);
+		const seen = new Set<string>();
+		const ends = new Set<string>();
+		const visit = (world: World, done: readonly number[], steps: readonly string[]) => {
+			if (prune) {
+				const at = key(world, done);
+				if (seen.has(at)) return;
+				seen.add(at);
+			}
+			if (done.every((n, i) => n === plans[i]!.length)) {
+				const { server, devices } = clone(world);
+				for (const { client } of [...devices, ...devices]) client.pull(server, 1000);
+				for (const { client } of devices) converged(client, server, steps);
+				expect(invariants(server.snapshot), steps.join('\n')).toEqual([]);
+				ends.add(JSON.stringify(server.snapshot));
+				return;
+			}
+			for (const [i, plan] of plans.entries()) {
+				const step = plan[done[i]!];
+				if (!step) continue;
+				const next = clone(world);
+				const device = next.devices[i]!;
+				step.run(device, next.server, 10 * (steps.length + 1));
+				const trace = [...steps, `${device.client.name} ${step.name}`];
+				if (step === sync) converged(device.client, next.server, trace);
+				visit(next, done.with(i, done[i]! + 1), trace);
+			}
+		};
+		visit(
+			{ server, devices },
+			plans.map(() => 0),
+			[],
+		);
+		return [...ends].sort();
+	}
+
+	const clone = ({ server, devices }: World): World => ({
+		server: server.clone(),
+		devices: devices.map(d => ({ ...d, client: d.client.clone() })),
+	});
+	const converged = (client: MemoryClient, server: MemoryServer, steps: readonly string[]) => {
+		if (!Bun.deepEquals(client.snapshot, server.snapshot))
+			expect(client.snapshot, `${client.name} differs after\n${steps.join('\n')}`).toEqual(server.snapshot);
+	};
 
 	const names = Object.keys(scripts);
 	const casts = names.flatMap((a, i) => names.slice(i).flatMap((b, j) => names.slice(i + j).map(c => [a, b, c])));
-	test.each(casts)('%s / %s / %s', (...cast) => {
-		const plans = cast.map(name => scripts[name]!);
-		for (const order of interleavings(plans.map(p => p.length))) {
-			const server = new MemoryServer();
-			const clients = cast.map((_, i) => new MemoryClient(`d${i}`, i === 0 ? work : undefined));
-			for (const [i, client] of clients.entries()) client.pull(server, i + 1);
-			const done = plans.map(() => 0);
-			const steps = order.map((i, at) => {
-				const step = plans[i]![done[i]!++]!;
-				step.run(clients[i]!, server, 10 * (at + 1));
-				return `${clients[i]!.name} ${step.name}`;
-			});
-			for (const client of [...clients, ...clients]) client.pull(server, 1000);
-			for (const client of clients)
-				expect(client.snapshot, `${client.name} differs after\n${steps.join('\n')}`).toEqual(server.snapshot);
-			expect(invariants(server.snapshot)).toEqual([]);
-		}
+	// One device deletes and undoes, another deletes the same entity, and the third does anything else.
+	const raced = (cast: readonly string[]) => {
+		const undone = cast.filter(name => scripts[name]!.includes(restore));
+		return undone.length === 1 && cast.some(name => undone[0]!.startsWith(`${name},`));
+	};
+	test.each(process.env.SYNC_INTERLEAVINGS === 'all' ? casts : casts.filter(raced))('%s / %s / %s', (...cast) => {
+		explore(cast);
+	});
+
+	test('skipping a world already explored reaches the same ends', () => {
+		const cast = ['delete project, sync, undo', 'delete section', 'rename place'];
+		const ends = explore(cast);
+		expect(ends.length).toBeGreaterThan(1);
+		expect(explore(cast, { prune: false })).toEqual(ends);
 	});
 });

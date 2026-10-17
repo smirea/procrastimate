@@ -77,7 +77,8 @@ export class MemoryServer {
 	state: ServerState = createServerState();
 	log: Change[] = [];
 	epoch = 0;
-	private readonly nextOpId = counter('server-op-');
+	private made = 0;
+	private readonly nextOpId = () => `server-op-${++this.made}`;
 
 	sync(cursor: number, ops: ClientSync['outbox'], now: number): SyncResponse {
 		const pushed = applyPush(this.state, ops, {
@@ -101,12 +102,22 @@ export class MemoryServer {
 	get snapshot() {
 		return serverSnapshot(this.state);
 	}
+
+	clone() {
+		return Object.assign(new MemoryServer(), {
+			state: this.state,
+			log: [...this.log],
+			epoch: this.epoch,
+			made: this.made,
+		});
+	}
 }
 
 export class MemoryClient {
 	snapshot: Snapshot;
 	sync: ClientSync;
-	private readonly nextOpId: () => string;
+	private made = 0;
+	private readonly nextOpId = () => `${this.name}-op-${++this.made}`;
 
 	constructor(
 		readonly name: string,
@@ -114,7 +125,6 @@ export class MemoryClient {
 		readonly skew = 0,
 	) {
 		this.snapshot = snapshot;
-		this.nextOpId = counter(`${name}-op-`);
 		this.sync = startSync(snapshot.settings, name, skew, this.nextOpId);
 	}
 
@@ -136,5 +146,9 @@ export class MemoryClient {
 			nextOpId: this.nextOpId,
 		}));
 		if (seeding && !this.sync.seed && this.sync.outbox.length) this.pull(server, now);
+	}
+
+	clone() {
+		return Object.assign(new MemoryClient(this.name, this.snapshot, this.skew), { sync: this.sync, made: this.made });
 	}
 }
