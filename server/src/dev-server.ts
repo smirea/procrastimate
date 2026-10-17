@@ -14,6 +14,7 @@ import { originalRequest } from './actor';
 import api from './api';
 import type { Env } from './bindings';
 import { config } from './config';
+import { reportError } from './sentry';
 
 type SocketData =
 	| { kind: 'nudge'; space: string; deviceId: string }
@@ -160,7 +161,7 @@ export function serveDev({
 				}),
 			),
 		);
-		void Promise.allSettled(deferred.map(task => task()));
+		void Promise.all(deferred.map(task => task().catch(reportError)));
 		return response;
 	};
 	const bindings: Env = {

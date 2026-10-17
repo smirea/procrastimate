@@ -1,42 +1,84 @@
-import { setUser, startSpan, type CloudflareOptions } from '@sentry/cloudflare';
-import { envelopeUrl, parseDsn, SENTRY_DSN, SENTRY_TUNNEL_PATH } from '../../shared/sentry';
+import { COMMON_ERROR_STATUS_MAP, ORPCError, ValidationError } from '@orpc/server';
+import {
+	captureException,
+	httpServerIntegration,
+	setUser,
+	startSpan,
+	type CloudflareOptions,
+	type ErrorEvent,
+	type SeverityLevel,
+} from '@sentry/cloudflare';
+import type { Actor } from '../../shared/auth';
+import { envelopeUrl, parseDsn, SENTRY_DSN, SENTRY_TUNNEL_PATH, type SentryTarget } from '../../shared/sentry';
 import type { Env, Handler } from './bindings';
 import { config } from './config';
 
 /**
- * The Worker's one Sentry module. `worker.ts` wraps the handler and the `Account` object with these options; feature
- * code only calls `span` and `identify`, which do nothing where no client is set up: the Bun dev server, tests, and
- * a Worker without `SENTRY_ENVIRONMENT`.
+ * The server's one Sentry module. `worker.ts` wraps the handler and the `Account` object with `sentryOptions`, and
+ * `index.ts` starts `@sentry/bun` with `serverOptions` for the dev server. Feature code calls `span`, `identify`, and
+ * `reportError`, which go through `@sentry/core`'s global client, so they work under either SDK and do nothing where
+ * no client is set up: tests and any run without `SENTRY_ENVIRONMENT`.
  */
+
+const isTunnel = (url: string | undefined) => {
+	try {
+		return new URL(url ?? '', 'http://x').pathname === SENTRY_TUNNEL_PATH;
+	} catch {
+		return false;
+	}
+};
+
+/** What the Worker and the Bun dev server share. Every request, header, cookie, and body is collected, by default. */
+export function serverOptions({ dsn, environment, release }: SentryTarget) {
+	return {
+		dsn,
+		environment,
+		release,
+		// Whole transactions named by method and path; streamed spans are named only by method.
+		traceLifecycle: 'static' as const,
+		// The tunnel's own requests would add a transaction for every envelope the browser sends.
+		tracesSampler: ({ name, inheritOrSampleWith }: { name: string; inheritOrSampleWith: (rate: number) => number }) =>
+			name === `POST ${SENTRY_TUNNEL_PATH}` ? 0 : inheritOrSampleWith(1),
+		// An error while forwarding an envelope must not carry the envelope as its request body.
+		beforeSend: (event: ErrorEvent) => {
+			if (event.request && isTunnel(event.request.url)) delete event.request.data;
+			return event;
+		},
+	};
+}
 
 export function sentryOptions(env: Env): CloudflareOptions {
 	const { sentry } = config(env);
 	if (!sentry) return { enabled: false };
 	return {
-		dsn: sentry.dsn,
-		environment: sentry.environment,
-		release: sentry.release,
-		// The SDK collects request bodies, cookies, and query values by default. Sync bodies carry task text and sign-in
-		// carries the email, and reading every POST body costs CPU against the 10 ms budget.
-		dataCollection: {
-			userInfo: false,
-			cookies: false,
-			httpHeaders: false,
-			httpBodies: [],
-			urlQueryParams: false,
-			databaseQueryData: false,
-		},
-		// Whole transactions named by method and path; streamed spans are named only by method.
-		traceLifecycle: 'static',
-		// The tunnel's own requests would add a transaction for every envelope the browser sends.
-		tracesSampler: ({ name, inheritOrSampleWith }) =>
-			name === `POST ${SENTRY_TUNNEL_PATH}` ? 0 : inheritOrSampleWith(1),
+		...serverOptions(sentry),
+		// The default caps a body at 10 KB; a sync body is the one worth reading whole.
+		integrations: [httpServerIntegration({ maxRequestBodySize: 'always', ignoreRequestBody: isTunnel })],
 	};
 }
 
 export const span = <T>(name: string, op: string, run: () => T): T => startSpan({ name, op }, run);
 
-export const identify = (id: string) => setUser({ id });
+export const identify = ({ id, name, email }: Actor) => setUser({ id, username: name, ...(email ? { email } : {}) });
+
+/** A failure no request answers with an error, or one the handler already turned into a response. */
+export function reportError(error: unknown, level: SeverityLevel = 'error', extra?: Record<string, unknown>) {
+	captureException(error, { level, extra });
+}
+
+/**
+ * oRPC turns a thrown error into a response, so `withSentry` never sees it. A 5xx, or anything that is not an
+ * `ORPCError`, is a bug; an input that fails the contract is a client sending what it should not, so a warning.
+ */
+export function reportRpcError(error: unknown) {
+	if (!(error instanceof ORPCError)) return reportError(error);
+	const status = COMMON_ERROR_STATUS_MAP[error.code as keyof typeof COMMON_ERROR_STATUS_MAP] ?? 500;
+	if (status >= 500) return reportError(error.cause ?? error);
+	if (error.code === 'BAD_REQUEST' && error.cause instanceof ValidationError) {
+		console.warn('invalid request', JSON.stringify(error.cause.issues).slice(0, 2000));
+		reportError(error, 'warning', { issues: error.cause.issues });
+	}
+}
 
 const decoder = new TextDecoder();
 

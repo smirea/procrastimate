@@ -1,4 +1,5 @@
 import type { RambleUsage } from '../../../shared/db/schema';
+import { reportError } from '../sentry';
 
 export type { RambleUsage };
 
@@ -22,7 +23,7 @@ export function rambleLedger(persist: () => Promise<void>): RambleLedger {
 	let pending = Promise.resolve();
 	const schedule = () => {
 		pending = persist();
-		void pending.catch(() => undefined);
+		void pending.catch(reportError);
 	};
 	return {
 		seed(rows) {

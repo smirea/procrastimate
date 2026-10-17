@@ -3,6 +3,7 @@ import type { PushMessage, PushSubscriptionInfo } from '../../shared/push';
 import type { SendPush } from './account/push';
 import type { Env } from './bindings';
 import { config } from './config';
+import { reportError } from './sentry';
 import { sendPush, type Vapid } from './web-push';
 
 /** Push services are https. Loopback http is the end to end suite's fake push service. */
@@ -16,7 +17,8 @@ async function send(subscription: PushSubscriptionInfo, message: PushMessage, va
 		const response = await sendPush(subscription, message, vapid, ttl);
 		await response.body?.cancel();
 		return response.status;
-	} catch {
+	} catch (error) {
+		reportError(error);
 		return null;
 	}
 }

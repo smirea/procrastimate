@@ -167,6 +167,10 @@ export const workerContract = {
 			.input(newShareSchema)
 			.output(shareViewSchema),
 	},
+	/** Smoke tests for Sentry: each throws, so a 500 and an event in `procrastimate-worker` prove the path. */
+	debug: {
+		error: signedIn.meta(openapi({ method: 'POST', path: '/api/debug/error' })).output(okSchema),
+	},
 	/** Docs for AI agents, generated from `agentContract`. The entry point needs no token; the reference does. */
 	docs: {
 		start: oc
@@ -557,6 +561,10 @@ export const accountContract = {
 		/** What the server will deliver to this device, soonest first. For inspecting a run, not a user path. */
 		schedule: signedIn.meta(openapi({ method: 'GET', path: '/api/push/schedule' })).output(pushScheduleResponseSchema),
 	},
+	/** Throws inside the space's `Account` object, so its event lands in the caller's trace. */
+	debug: {
+		accountError: signedIn.meta(openapi({ method: 'POST', path: '/api/debug/account-error' })).output(okSchema),
+	},
 	/** Notouroboros's tasks. See `docs/decisions/integrations.md`. */
 	memoTasks: {
 		list: signedIn
@@ -626,6 +634,7 @@ export const contract = {
 	...accountContract,
 	push: { ...workerContract.push, ...accountContract.push },
 	shares: { ...workerContract.shares, ...accountContract.shares },
+	debug: { ...workerContract.debug, ...accountContract.debug },
 };
 
 /** OpenAPI carries JSON, so the client's types are the contract's jsonified. */
