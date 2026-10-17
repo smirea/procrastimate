@@ -430,7 +430,7 @@ function simulate(seed: number) {
 }
 
 describe('convergence', () => {
-	test.failing('a delete that loses to an undo of delete on another device comes back', () => {
+	test('a delete that loses to an undo of delete on another device comes back', () => {
 		const server = new MemoryServer();
 		const work = snapshotOf({ projects: [project('p')], tasks: [task('t', { projectId: 'p' })] });
 		const a = new MemoryClient('a', work);

@@ -136,7 +136,18 @@ describe('applyOps', () => {
 			const deleted = apply(seeded(), [edit('delete', '20:0:a', 't', { deleted: true })]).state;
 			const { state, log } = apply(deleted, [{ ...createTask('t', '15:0:b'), opId: 'stale' }]);
 			expect(serverSnapshot(state).tasks).toEqual([]);
-			expect(log.map(e => e.fields)).toEqual([{}]);
+			expect(log.map(e => e.fields)).toEqual([{ deleted: true }]);
+		});
+
+		test('a delete older than an undelete loses and logs all the fields of the task that stays', () => {
+			const restored = apply(seeded(), [
+				edit('delete', '20:0:a', 't', { deleted: true }),
+				{ ...createTask('t', '30:0:a'), opId: 'undo' },
+				edit('rename', '40:0:c', 't', { title: 'Renamed' }),
+			]).state;
+			const { state, log } = apply(restored, [edit('stale', '25:0:b', 't', { deleted: true })]);
+			expect(titleOf(state)).toBe('Renamed');
+			expect(log[0]?.fields).toMatchObject({ deleted: false, title: 'Renamed', createdAt: 1, labelIds: [] });
 		});
 
 		test('a partial edit of an entity the server never had is dropped', () => {

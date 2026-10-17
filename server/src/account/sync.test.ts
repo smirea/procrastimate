@@ -152,6 +152,27 @@ describe.each(storeFactories)('POST /api/sync on the %s store', (_name, createSt
 		expect(await sync(cred, head, ops)).toMatchObject({ acked: first.acked, changes: [], cursor: head });
 	});
 
+	test('a delete that lost restates the task to its device and leaves its last editing app', async () => {
+		const mac = await setup('mac');
+		const phone = await setup('phone');
+		const created = createOps(snapshotOf({ tasks: [task('t1', { title: 'Kept' })] }), 'mac', NOW, counter('op-'));
+		await sync(mac, 0, [created[0]!]);
+		const head = store.lastSeq();
+		setSystemTime(NOW + 10);
+		await sync(mac, head, [
+			{ ...created[0]!, opId: 'undo', hlc: formatHlc({ wall: NOW + 3, counter: 0, node: 'mac' }) },
+		]);
+		const edited = store.taskClients('t1')?.edited;
+		setSystemTime(NOW + 20);
+		const lost = op('lost', formatHlc({ wall: NOW + 2, counter: 0, node: 'phone' }), { deleted: true });
+		const pushed = await sync(phone, store.lastSeq(), [lost]);
+		expect('changes' in pushed && pushed.changes.map(change => [change.opId, change.fields])).toEqual([
+			['lost', expect.objectContaining({ deleted: false, title: 'Kept' })],
+		]);
+		expect(edited?.at).toBe(NOW + 10);
+		expect(store.taskClients('t1')?.edited).toEqual(edited);
+	});
+
 	test('logs every op, even one that won nothing, so a retry with a clamped clock cannot win again', async () => {
 		const mac = await setup('mac');
 		const phone = await setup('phone');

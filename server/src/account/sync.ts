@@ -105,19 +105,26 @@ function merge(
 	}
 	for (const entry of applied.log) store.appendLog({ ...entry, actor, at: now });
 	for (const entry of fixed.log) store.appendLog({ ...entry, actor: SERVER_ACTOR, at: now });
-	recordClients(store, before, applied.log, { ...client, at: now });
+	recordClients(store, before, applied, { ...client, at: now });
 	return { state: fixed.state, acked: applied.acked };
 }
 
 /**
  * A task's first write names its `created` app and every write its `edited` one. A write that brings back a task the
  * state lacks but the table knows is a reset's re-upload, which restores the task rather than writing it, so its row
- * stays. Fixups are the server's and are not passed in.
+ * stays. A delete that lost changed nothing, though its row restates the task. Fixups are the server's and are not
+ * passed in.
  */
-function recordClients(store: AccountStore, before: ServerState, log: readonly LogEntry[], stamp: ClientStamp) {
-	for (const entry of log) {
-		if (entry.kind !== 'task' || !Object.keys(entry.fields).length) continue;
-		const existed = before.entities.has(entityKey('task', entry.id));
+function recordClients(
+	store: AccountStore,
+	before: ServerState,
+	applied: { state: ServerState; log: readonly LogEntry[] },
+	stamp: ClientStamp,
+) {
+	for (const entry of applied.log) {
+		const key = entityKey('task', entry.id);
+		if (entry.kind !== 'task' || applied.state.entities.get(key) === before.entities.get(key)) continue;
+		const existed = before.entities.has(key);
 		const known = store.taskClients(entry.id);
 		if (!known) store.putTaskClients({ id: entry.id, created: existed ? null : stamp, edited: stamp });
 		else if (existed) store.putTaskClients({ ...known, edited: stamp });
