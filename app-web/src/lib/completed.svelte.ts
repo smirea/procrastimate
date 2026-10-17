@@ -7,6 +7,10 @@ import { completedPresetSchema, completedRange, type CompletedRange } from 'shar
 const choiceSchema = z.union([completedPresetSchema, z.object({ from: dateKeySchema, to: dateKeySchema })]);
 export type CompletedChoice = z.infer<typeof choiceSchema>;
 
+/** A project or label view, whose `Show completed` toggle is its own. */
+const shownListSchema = z.templateLiteral([z.enum(['project', 'label']), ':', z.string()]);
+export type ShownList = z.infer<typeof shownListSchema>;
+
 const RANGE_KEY = 'procrastimate.completedRange';
 const SHOW_KEY = 'procrastimate.showCompleted';
 
@@ -18,10 +22,18 @@ function load(): CompletedChoice {
 	}
 }
 
+function loadShown(): ReadonlySet<ShownList> {
+	try {
+		return new Set(z.array(shownListSchema).parse(JSON.parse(localStorage.getItem(SHOW_KEY) ?? '[]')));
+	} catch {
+		return new Set();
+	}
+}
+
 class Completed {
 	choice = $state<CompletedChoice>(load());
-	/** Whether project and label views list their completed tasks under the open ones. */
-	shown = $state(localStorage.getItem(SHOW_KEY) !== null);
+	/** The project and label views that list their completed tasks under the open ones. */
+	#shown = $state.raw(loadShown());
 
 	range(today: DateKey): CompletedRange {
 		return typeof this.choice === 'string' ? completedRange(this.choice, today) : this.choice;
@@ -32,10 +44,15 @@ class Completed {
 		localStorage.setItem(RANGE_KEY, JSON.stringify(choice));
 	}
 
-	toggle() {
-		this.shown = !this.shown;
-		if (this.shown) localStorage.setItem(SHOW_KEY, '1');
-		else localStorage.removeItem(SHOW_KEY);
+	shown(list: ShownList): boolean {
+		return this.#shown.has(list);
+	}
+
+	toggle(list: ShownList) {
+		const next = new Set(this.#shown);
+		if (!next.delete(list)) next.add(list);
+		this.#shown = next;
+		localStorage.setItem(SHOW_KEY, JSON.stringify([...next]));
 	}
 }
 

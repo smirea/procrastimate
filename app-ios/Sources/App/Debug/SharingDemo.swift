@@ -2,7 +2,7 @@ import Core
 import Foundation
 
 /// DEBUG-only. `PROCRASTIMATE_DEMO=sharing` seeds a space Ann Lee shared, through the same response a sync applies,
-/// with two tasks Claude and Ann completed, plus an own project to share, so the sharing screens can be driven without a second account. Release builds omit
+/// with two tasks Claude and Ann completed and a view-only Recipes project, plus an own project to share, so the sharing screens can be driven without a second account. Release builds omit
 /// it.
 enum SharingDemo {
     @MainActor
@@ -30,15 +30,17 @@ enum SharingDemo {
                     id: "seeds", title: "Order seeds", projectId: "garden", createdAt: 6, completedAt: 1_791_968_400_000,
                     createdBy: "ann", completedBy: "ann", lastCompletedAt: 1_791_968_400_000
                 ),
+                TaskItem(id: "shakshuka", title: "Try the shakshuka", projectId: "recipes", createdAt: 7, createdBy: "ann"),
             ],
-            projects: [Project(id: "garden", name: "Garden", createdAt: 1)],
+            projects: [Project(id: "garden", name: "Garden", createdAt: 1), Project(id: "recipes", name: "Recipes", createdAt: 2)],
             labels: [],
             comments: demoComments(me: Session.userID ?? "me"),
             settings: API.Settings()
         )
         _ = store.takeSyncResponse(
-            .snapshot(.init(snapshot: shared, cursor: 1, hlc: "1:0:server", epoch: 0, scope: "demo", readOnly: ["fence"], targets: [
-                API.ShareTarget(kind: .project, id: "garden"), API.ShareTarget(kind: .task, id: "vet"),
+            .snapshot(.init(snapshot: shared, cursor: 1, hlc: "1:0:server", epoch: 0, scope: "demo", readOnly: ["fence", "shakshuka"], targets: [
+                API.ShareTarget(kind: .project, id: "garden"), API.ShareTarget(kind: .project, id: "recipes"),
+                API.ShareTarget(kind: .task, id: "vet"),
             ])),
             space: ann.id
         )

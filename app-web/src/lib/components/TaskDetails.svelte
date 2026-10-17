@@ -34,8 +34,8 @@
 	import PersonName from './PersonName.svelte';
 	import CopyButton from './CopyButton.svelte';
 	import { store, type TaskPatch } from '../store.svelte.ts';
-	import { clock, sheets, toasts, motion, type Arrival } from '../ui.svelte.ts';
-	import { completeTask } from '../completion.ts';
+	import { clock, sheets, motion, type Arrival } from '../ui.svelte.ts';
+	import { completeTask, deleteTask } from '../completion.ts';
 	import { images } from '../images/images.svelte.ts';
 	import { followCaret } from '../caret.ts';
 
@@ -114,9 +114,8 @@
 
 	function remove() {
 		const { parentId } = task;
-		const removed = store.deleteTask(id);
+		deleteTask(task);
 		leave(parentId);
-		toasts.show(`Deleted “${removed[0]!.title}”`, { label: 'Undo', run: () => store.undeleteTasks(removed) });
 	}
 
 	function complete() {

@@ -34,6 +34,22 @@ export const NO_DEFAULTS: ListDefaults = {
 	date: null,
 };
 
+/** A space someone shared with this user: its tasks, and the ones the server marked read only. */
+export type SharedSpace = { tasks: readonly Task[]; readOnly: readonly string[] };
+
+/**
+ * Whether a new task may land on `screen`'s project or label, in `space` when someone shared it with this user. The
+ * user's own lists, and every other screen, always take one. A view-only share marks every task in it read only, so a
+ * shared list takes new tasks once any of its tasks is editable, and while it has none to tell by.
+ */
+export function canAddTo(screen: Screen | null, space: SharedSpace | null): boolean {
+	if (!space || (screen?.kind !== 'project' && screen?.kind !== 'label')) return true;
+	const list = space.tasks.filter(t =>
+		screen.kind === 'project' ? t.projectId === screen.id : t.labelIds.includes(screen.id),
+	);
+	return list.length === 0 || list.some(t => !space.readOnly.includes(t.id));
+}
+
 /**
  * The earliest open task's copy, the one a place's or event's name comes from. Once every task there is done, the
  * screen can stay open, so the latest done task's copy keeps quick add on it.
@@ -47,9 +63,10 @@ const earliest = (tasks: readonly Task[], match: (task: Task) => boolean) => {
 /**
  * Quick add inherits the screen it opens from, so the new task lands on that screen: its project and section, its
  * label, its place, its event, or the day of an Inbox heading. Inbox itself adds an undated task, as capture always
- * has, and so do No date and Completed.
+ * has, and so do No date, Completed, and a shared project or label the user can't add to (`canAddTo`).
  */
-export function screenDefaults(screen: Screen | null, tasks: readonly Task[]): ListDefaults {
+export function screenDefaults(screen: Screen | null, tasks: readonly Task[], space: SharedSpace | null): ListDefaults {
+	if (!canAddTo(screen, space)) return NO_DEFAULTS;
 	switch (screen?.kind) {
 		case undefined:
 		case 'no-date':

@@ -547,10 +547,19 @@ private struct ScreenInput: Decodable {
     }
 }
 
+/// `SharedSpace` in TS: `{ tasks, readOnly }`.
+private struct SharedSpaceInput: Decodable {
+    let tasks: [TaskItem]
+    let readOnly: [String]
+
+    var space: Screens.SharedSpace { Screens.SharedSpace(tasks: tasks, readOnly: readOnly) }
+}
+
 @Sendable func screensVector(_ fn: String, _ a: Args) throws -> JSONValue {
     let screen = try a(0, as: ScreenInput?.self)?.screen()
     switch fn {
-    case "screenDefaults": return try json(ListDefaultsJSON(Screens.defaults(screen, a(1))))
+    case "screenDefaults": return try json(ListDefaultsJSON(Screens.defaults(screen, a(1), a(2, as: SharedSpaceInput?.self)?.space)))
+    case "canAddTo": return try json(Screens.canAdd(to: screen, a(1, as: SharedSpaceInput?.self)?.space))
     case "screenHolds": return try json(Screens.holds(screen, a(1), a(2), in: a.zone))
     default: throw unknown(fn)
     }

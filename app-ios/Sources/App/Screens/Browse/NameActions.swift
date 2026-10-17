@@ -18,6 +18,7 @@ struct NameActions: ViewModifier {
     let delete: () -> Deleted?
     /// A project's screen adds sections from its menu.
     var addSection: ((String) -> Void)?
+    @Binding var showCompleted: Bool
 
     @Environment(Store.self) private var store
     @Environment(TaskActions.self) private var actions
@@ -27,7 +28,6 @@ struct NameActions: ViewModifier {
     @State private var draft = ""
     @State private var confirmingDelete = false
     @State private var deleted = 0
-    @AppStorage("showCompleted") private var showCompleted = false
     @State private var addingSection = false
     @State private var sectionName = ""
 
@@ -128,7 +128,8 @@ extension View {
         color: LabelColor? = nil,
         recolor: ((LabelColor) -> Void)? = nil,
         delete: @escaping () -> Deleted?,
-        addSection: ((String) -> Void)? = nil
+        addSection: ((String) -> Void)? = nil,
+        showCompleted: Binding<Bool>
     ) -> some View {
         modifier(NameActions(
             noun: noun,
@@ -142,7 +143,15 @@ extension View {
             color: color,
             recolor: recolor,
             delete: delete,
-            addSection: addSection
+            addSection: addSection,
+            showCompleted: showCompleted
         ))
+    }
+}
+
+extension AppStorage where Value == Bool {
+    /// `Show completed` is each project's and label's own, so turning it on in one leaves the others as they were.
+    static func showCompleted(_ list: API.ShareTarget) -> AppStorage<Bool> {
+        AppStorage(wrappedValue: false, "showCompleted.\(list.kind.rawValue).\(list.id)")
     }
 }

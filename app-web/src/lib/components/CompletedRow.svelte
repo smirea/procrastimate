@@ -3,6 +3,7 @@
 	import Check from 'phosphor-svelte/lib/Check';
 	import Hash from 'phosphor-svelte/lib/Hash';
 	import Repeat from 'phosphor-svelte/lib/Repeat';
+	import Trash from 'phosphor-svelte/lib/Trash';
 	import Tray from 'phosphor-svelte/lib/Tray';
 	import type { Task } from 'shared/task.ts';
 	import { completedWhen } from 'shared/format.ts';
@@ -14,7 +15,7 @@
 	import SubtaskProgress from './SubtaskProgress.svelte';
 	import { useLookup } from '../lookup.ts';
 	import { PRIORITIES } from '../priorities.ts';
-	import { reopenTask } from '../completion.ts';
+	import { deleteTask, reopenTask } from '../completion.ts';
 	import { session } from '../session.svelte.ts';
 	import { store } from '../store.svelte.ts';
 	import { clock } from '../ui.svelte.ts';
@@ -25,6 +26,7 @@
 	let reopening = $state(false);
 	/** A repeating task is still open after a roll, so there is nothing to reopen. */
 	const rolled = $derived(task.completedAt === null);
+	const editable = $derived(!rolled && lookup.canEdit(task.id));
 	const at = $derived(completedMoment(task)!);
 	/** Null `completedBy` is a completion from before the server stamped them, or one not synced yet, so it names no one. */
 	const other = $derived(task.completedBy !== null && task.completedBy !== session.userId);
@@ -45,7 +47,7 @@
 </script>
 
 <div class="group flex items-start gap-3 rounded-2xl px-2 hover:bg-surface/60" data-task={task.title}>
-	{#if !rolled && lookup.canEdit(task.id)}
+	{#if editable}
 		<Checkbox checked={!reopening} {tone} label={`Reopen ${task.title}`} class="mt-3 touch:mt-3.5" onclick={reopen} />
 	{:else}
 		<span
@@ -93,6 +95,13 @@
 			</div>
 		</div>
 	</div>
+	{#if editable}
+		<div class="mt-1.5 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100 touch:opacity-100">
+			<button type="button" class="grid size-8 place-items-center rounded-full text-muted hover:bg-ink/5" aria-label={`Delete ${task.title}`} onclick={() => deleteTask(task)}>
+				<Trash size={16} />
+			</button>
+		</div>
+	{/if}
 </div>
 
 <style>

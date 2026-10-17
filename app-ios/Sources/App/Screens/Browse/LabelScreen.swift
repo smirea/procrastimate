@@ -9,7 +9,12 @@ struct LabelScreen: View {
 
     @State private var name: String?
     @State private var editingPlace = false
-    @AppStorage("showCompleted") private var showCompleted = false
+    @AppStorage private var showCompleted: Bool
+
+    init(labelID: String) {
+        self.labelID = labelID
+        _showCompleted = .showCompleted(API.ShareTarget(kind: .label, id: labelID))
+    }
 
     var body: some View {
         if let label = store.label(labelID) {
@@ -57,7 +62,8 @@ struct LabelScreen: View {
                 rename: { store.renameLabel(label.id, $0) },
                 color: label.color,
                 recolor: { store.setLabelColor(label.id, $0) },
-                delete: { store.deleteLabel(label.id) }
+                delete: { store.deleteLabel(label.id) },
+                showCompleted: $showCompleted
             )
             .task(id: label.name) { name = label.name }
         } else {
