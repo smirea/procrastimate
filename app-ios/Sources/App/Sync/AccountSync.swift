@@ -103,15 +103,17 @@ final class AccountSync {
     /// The user's own space first, then the list of spaces shared with them when it is due, then each shared space.
     private func sync() async {
         guard let token = SessionToken.read() else { return }
-        store.noteTimeZone(clock.timeZone.identifier)
-        let device = device()
-        APIClient.device.withLock { $0 = device }
-        guard await syncSpace(.own, token: token) else { return }
-        if spacesListedAt.map({ $0.duration(to: .now) > Self.spacesInterval }) ?? true {
-            await listSpaces(token: token)
-        }
-        for (id, _) in store.sharedSpaces {
-            await syncSpace(.shared(id), token: token)
+        await Telemetry.trace("Sync", operation: "sync.cycle", bindToScope: true) {
+            store.noteTimeZone(clock.timeZone.identifier)
+            let device = device()
+            APIClient.device.withLock { $0 = device }
+            guard await syncSpace(.own, token: token) else { return }
+            if spacesListedAt.map({ $0.duration(to: .now) > Self.spacesInterval }) ?? true {
+                await listSpaces(token: token)
+            }
+            for (id, _) in store.sharedSpaces {
+                await syncSpace(.shared(id), token: token)
+            }
         }
     }
 
@@ -128,7 +130,7 @@ final class AccountSync {
             guard let request else { return false }
             body = request
         } catch {
-            print("sync: the request does not fit the contract", error)
+            ErrorReport.log("The sync request does not fit the contract", error: error)
             return false
         }
         // Built before the uploads, so every edit it carries was recorded after its image was queued, and the edits that
@@ -136,7 +138,7 @@ final class AccountSync {
         do {
             try await images.upload(space, token: token)
         } catch {
-            ErrorReport.log("Image upload failed for \(space.query ?? "own space")", detail: String(reflecting: error))
+            ErrorReport.log("Image upload failed for \(space.query ?? "own space")", error: error)
             return false
         }
         let response: API.SyncResponse
@@ -151,7 +153,7 @@ final class AccountSync {
             if let id = space.query { store.dropSpace(id) }
             return false
         } catch {
-            ErrorReport.log("Sync failed for \(space.query ?? "own space")", detail: String(reflecting: error))
+            ErrorReport.log("Sync failed for \(space.query ?? "own space")", error: error)
             return false
         }
         let seeding = space == .own && store.snapshot.sync?.seed == true
@@ -177,7 +179,7 @@ final class AccountSync {
             spacesListedAt = .now
             store.setSpaces(listed.spaces)
         } catch {
-            ErrorReport.log("Could not list shared spaces", detail: String(reflecting: error))
+            ErrorReport.log("Could not list shared spaces", error: error)
         }
     }
 
@@ -281,7 +283,9 @@ enum SessionToken {
         SharedSession.write(token: token)
     }
 
+    /// Every way out of an account (sign-out, a rejected token, deletion) ends here.
     static func clear() {
+        Telemetry.signedOut()
         SharedSession.delete()
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,

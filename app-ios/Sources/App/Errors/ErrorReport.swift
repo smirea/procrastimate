@@ -2,7 +2,8 @@ import OSLog
 import SwiftUI
 
 /// A failure shown to the user as `message`. Every report goes to the unified log (subsystem = bundle id, category
-/// `errors`), so Xcode's console and Console.app show it, and DEBUG builds also print `detail` under the message.
+/// `errors`), so Xcode's console and Console.app show it, and to Sentry through `Telemetry`. DEBUG builds also print
+/// `detail` under the message.
 struct ErrorReport: Equatable {
     let message: String
     let detail: String
@@ -15,17 +16,28 @@ struct ErrorReport: Equatable {
         Self.log(message, detail: detail)
     }
 
+    init(_ message: String, error: any Error) {
+        self.message = message
+        detail = String(reflecting: error)
+        Self.log(message, error: error)
+    }
+
     /// Logs a failure nobody sees on screen, such as a background step that falls back quietly.
     static func log(_ message: String, detail: String) {
+        write(message, detail: detail, error: nil)
+    }
+
+    static func log(_ message: String, error: any Error) {
+        write(message, detail: String(reflecting: error), error: error)
+    }
+
+    private static func write(_ message: String, detail: String, error: (any Error)?) {
         #if DEBUG
         logger.error("\(message, privacy: .public): \(detail, privacy: .public)")
         #else
         logger.error("\(message, privacy: .public): \(detail, privacy: .private)")
         #endif
-    }
-
-    init(_ message: String, error: any Error) {
-        self.init(message, detail: String(reflecting: error))
+        Telemetry.capture(message, detail: detail, error: error)
     }
 }
 

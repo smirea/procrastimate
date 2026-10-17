@@ -508,11 +508,16 @@ public final class Store {
 /// The stored document's file. Writes are atomic, run off the main actor, and skip a snapshot older than one already
 /// written, so a burst of commits ends with the newest on disk.
 public actor SnapshotFile {
+    /// Runs each save, so the app can time it and report a failure without `Core` depending on an SDK.
+    public typealias Trace = @Sendable (_ save: () throws -> Void) throws -> Void
+
     public nonisolated let url: URL
+    private let trace: Trace
     private var written = 0
 
-    public init(url: URL) {
+    public init(url: URL, trace: @escaping Trace = { try $0() }) {
         self.url = url
+        self.trace = trace
     }
 
     public nonisolated func read() -> Data? {
@@ -522,9 +527,11 @@ public actor SnapshotFile {
     func write(_ snapshot: Snapshot, version: Int) {
         guard version > written else { return }
         do {
-            let data = try snapshot.encoded()
-            try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
-            try data.write(to: url, options: .atomic)
+            try trace {
+                let data = try snapshot.encoded()
+                try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+                try data.write(to: url, options: .atomic)
+            }
             written = version
         } catch {
             assertionFailure("Could not save the store: \(error)")
