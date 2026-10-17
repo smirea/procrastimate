@@ -43,12 +43,12 @@ private struct TabsSettings: View {
                 .onMove { from, to in
                     var next = pinned
                     next.move(fromOffsets: from, toOffset: to)
-                    navigator.setPins(next)
+                    save(next, shown: pinned)
                 }
                 .onDelete { offsets in
                     var next = pinned
                     next.remove(atOffsets: offsets)
-                    navigator.setPins(next)
+                    save(next, shown: pinned)
                 }
                 SwiftUI.Label("Browse", systemImage: "square.grid.2x2")
                     .foregroundStyle(.muted)
@@ -63,7 +63,7 @@ private struct TabsSettings: View {
                     ForEach(group.pins, id: \.key) { pin in
                         if let label = store.label(of: pin) {
                             Button {
-                                navigator.setPins(pinned + [pin])
+                                save(pinned + [pin], shown: pinned)
                             } label: {
                                 HStack(spacing: 12) {
                                     Image(systemName: "plus.circle.fill")
@@ -85,6 +85,11 @@ private struct TabsSettings: View {
         .sensoryFeedback(.selection, trigger: pinned)
         .navigationTitle("Tabs")
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    /// Keeps the pins this list can't show, such as a shared project not synced yet, after the ones it edits.
+    private func save(_ next: [Pin], shown: [Pin]) {
+        navigator.setPins(next + navigator.pins.filter { !shown.contains($0) })
     }
 
     private static var portraitWidth: CGFloat {
