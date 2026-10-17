@@ -1,5 +1,5 @@
 import { setUser, startSpan, type CloudflareOptions } from '@sentry/cloudflare';
-import { envelopeUrl, parseDsn, SENTRY_DSN } from '../../shared/sentry';
+import { envelopeUrl, parseDsn, SENTRY_DSN, SENTRY_TUNNEL_PATH } from '../../shared/sentry';
 import type { Env, Handler } from './bindings';
 import { config } from './config';
 
@@ -8,8 +8,6 @@ import { config } from './config';
  * code only calls `span` and `identify`, which do nothing where no client is set up: the Bun dev server, tests, and
  * a Worker without `SENTRY_ENVIRONMENT`.
  */
-
-export const SENTRY_TUNNEL_PATH = '/api/sentry';
 
 export function sentryOptions(env: Env): CloudflareOptions {
 	const { sentry } = config(env);

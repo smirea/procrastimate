@@ -5,7 +5,8 @@ import type { Env } from './bindings';
 import { config } from './config';
 import { errorResponse } from './errors';
 import { workerRouter } from './router';
-import { SENTRY_TUNNEL_PATH, sentryTunnel } from './sentry';
+import { SENTRY_TUNNEL_PATH } from '../../shared/sentry';
+import { sentryTunnel } from './sentry';
 
 const rpc = new OpenAPIHandler(workerRouter);
 

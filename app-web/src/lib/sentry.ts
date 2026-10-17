@@ -1,4 +1,5 @@
 import * as Sentry from '@sentry/sveltekit';
+import { SENTRY_TUNNEL_PATH } from 'shared/sentry.ts';
 
 /**
  * The browser's one Sentry module. `vite.config.ts` bakes the target into the build, null wherever no
@@ -12,8 +13,7 @@ export function initSentry() {
 		dsn,
 		environment,
 		release,
-		// The browser talks only to its own origin; the Worker forwards the envelopes.
-		tunnel: '/api/sentry',
+		tunnel: SENTRY_TUNNEL_PATH,
 		// Whole transactions named by route, like the Worker's.
 		traceLifecycle: 'static',
 		tracesSampleRate: 1,

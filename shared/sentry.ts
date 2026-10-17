@@ -4,6 +4,9 @@
  */
 export const SENTRY_DSN = { web: '', worker: '' } as const;
 
+/** The browser posts its envelopes to its own origin here, and the Worker forwards them. */
+export const SENTRY_TUNNEL_PATH = '/api/sentry';
+
 export const SENTRY_ENVIRONMENTS = ['production', 'development'] as const;
 export type SentryEnvironment = (typeof SENTRY_ENVIRONMENTS)[number];
 
