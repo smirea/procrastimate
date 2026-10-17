@@ -19,6 +19,9 @@ export function initSentry() {
 		// Whole transactions named by route, like the Worker's.
 		traceLifecycle: 'static',
 		tracesSampleRate: 1,
+		beforeSend: import.meta.env.DEV
+			? event => import('./sentry-dev-frames.ts').then(({ mapDevFrames }) => mapDevFrames(event))
+			: undefined,
 	});
 }
 
