@@ -1,6 +1,7 @@
 import { COMMON_ERROR_STATUS_MAP, ORPCError, ValidationError } from '@orpc/server';
 import {
 	captureException,
+	cronTriggersIntegration,
 	httpServerIntegration,
 	setUser,
 	startSpan,
@@ -52,8 +53,12 @@ export function sentryOptions(env: Env): CloudflareOptions {
 	if (!sentry) return { enabled: false };
 	return {
 		...serverOptions(sentry),
-		// The default caps a body at 10 KB; a sync body is the one worth reading whole.
-		integrations: [httpServerIntegration({ maxRequestBodySize: 'always', ignoreRequestBody: isTunnel })],
+		integrations: [
+			// The default caps a body at 10 KB; a sync body is the one worth reading whole.
+			httpServerIntegration({ maxRequestBodySize: 'always', ignoreRequestBody: isTunnel }),
+			// A Sentry cron monitor, so a backup that never runs alerts, not only one that throws.
+			cronTriggersIntegration({ monitorSlug: () => 'turso-backup' }),
+		],
 	};
 }
 
