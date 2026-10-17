@@ -430,6 +430,26 @@ function simulate(seed: number) {
 }
 
 describe('convergence', () => {
+	test.failing('a delete that loses to an undo of delete on another device comes back', () => {
+		const server = new MemoryServer();
+		const work = snapshotOf({ projects: [project('p')], tasks: [task('t', { projectId: 'p' })] });
+		const a = new MemoryClient('a', work);
+		const b = new MemoryClient('b');
+		const c = new MemoryClient('c');
+		a.pull(server, 10);
+		b.pull(server, 20);
+		c.pull(server, 20);
+		b.run(s => onData(s, data => rules.deleteProject(data, 'p')), 30);
+		a.run(s => onData(s, data => rules.deleteProject(data, 'p')), 40);
+		a.run(() => work, 50);
+		c.run(s => onData(s, data => rules.renameProject(data, 'p', 'Renamed')), 60);
+		c.pull(server, 70);
+		a.pull(server, 80);
+		b.pull(server, 90);
+		expect(server.snapshot.projects.map(p => p.name)).toEqual(['Renamed']);
+		expect(b.snapshot).toEqual(server.snapshot);
+	});
+
 	const seeds = Array.from({ length: SEEDS }, (_, i) => i + 1);
 	test.each(seeds)('seed %i converges', seed => {
 		simulate(seed);
