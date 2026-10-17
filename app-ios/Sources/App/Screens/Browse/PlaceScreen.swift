@@ -14,14 +14,10 @@ struct PlaceScreen: View {
             isEmpty: tasks.isEmpty,
             emptyTitle: "No tasks at this place",
             emptyHint: "Set a place from a task's details.",
-            open: tasks.count
+            open: tasks.count,
+            markdown: Markdown.Document(title: title, sections: [.init(tasks: tasks)])
         ) {
             ForEach(tasks) { TaskRow(task: $0, showProject: true) }
-        }
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                CopyMarkdownButton(document: Markdown.Document(title: title, sections: [.init(tasks: tasks)]))
-            }
         }
     }
 }
@@ -40,14 +36,10 @@ struct EventScreen: View {
             isEmpty: tasks.isEmpty,
             emptyTitle: "No tasks on this event",
             emptyHint: "Link an event from a task's details.",
-            open: tasks.count
+            open: tasks.count,
+            markdown: Markdown.Document(title: title, sections: [.init(tasks: tasks)])
         ) {
             ForEach(tasks) { TaskRow(task: $0, showProject: true) }
-        }
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                CopyMarkdownButton(document: Markdown.Document(title: title, sections: [.init(tasks: tasks)]))
-            }
         }
     }
 }

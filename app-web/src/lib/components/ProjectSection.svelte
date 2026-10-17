@@ -114,6 +114,6 @@
 		<CompletedList tasks={done} label={`Completed ${section.name} tasks`} />
 	{/if}
 	{#if canAdd}
-		<AddTaskButton quickAdd={{ projectId: section.projectId, sectionId: section.id, labelId: null, today: false }} />
+		<AddTaskButton {section} />
 	{/if}
 </section>

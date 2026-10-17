@@ -26,7 +26,11 @@ struct CompletedScreen: View {
             title: "Completed",
             isEmpty: days.isEmpty,
             emptyTitle: "Nothing completed",
-            emptyHint: range.from == nil && range.to == nil ? "Tasks you complete show up here." : "Pick a longer range to see more."
+            emptyHint: range.from == nil && range.to == nil ? "Tasks you complete show up here." : "Pick a longer range to see more.",
+            markdown: Markdown.Document(
+                title: "Completed",
+                sections: days.map { .init(heading: Format.completedHeading($0.date, today), tasks: $0.tasks) }
+            )
         ) {
             ForEach(days, id: \.date) { day in
                 let heading = Format.completedHeading(day.date, today)

@@ -73,13 +73,9 @@ final class Navigator {
         if case let .ramble(defaults) = sheet { defaults } else { nil }
     }
 
-    /// Quick add from the tab bar starts in the project or label on screen.
-    var listDefaults: QuickAddDefaults {
-        switch currentRoute {
-        case let .project(id)?: QuickAddDefaults(projectId: id)
-        case let .label(id)?: QuickAddDefaults(labelId: id)
-        default: QuickAddDefaults()
-        }
+    /// Quick add from the tab bar starts with the context of the screen on top, as `Screens.defaults` maps it.
+    func listDefaults(_ tasks: [TaskItem]) -> QuickAddDefaults {
+        Screens.defaults(currentRoute?.screen, tasks)
     }
 
     /// The task just added from quick add. Its list scrolls to it and the row flashes, then this clears.
@@ -88,10 +84,7 @@ final class Navigator {
     /// Shows the list a new task lands in: the open list when it already shows the task, else its project, else Inbox
     /// when it has a day or No date when it has none.
     func reveal(_ task: TaskItem, today: DateKey, in zone: TimeZone) {
-        switch currentRoute {
-        case let .label(id)? where task.labelIds.contains(id): break
-        case let .project(id)? where task.projectId == id: break
-        default:
+        if !Screens.holds(currentRoute?.screen, task, today, in: zone) {
             if let projectId = task.projectId {
                 open(.project(id: projectId))
             } else {

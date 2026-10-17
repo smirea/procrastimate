@@ -21,7 +21,6 @@
 	emptyTitle="Nothing completed"
 	emptyHint={range.from === null && range.to === null ? 'Tasks you complete show up here.' : 'Pick a longer range to see more.'}
 	canAdd={false}
-	quickAdd={{ projectId: null, labelId: null, today: false }}
 	markdown={() => ({
 		title: 'Completed',
 		sections: days.map((day) => ({ heading: completedHeading(day.date, clock.today), tasks: day.tasks })),

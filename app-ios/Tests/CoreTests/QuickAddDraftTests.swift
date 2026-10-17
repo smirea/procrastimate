@@ -12,7 +12,7 @@ import Testing
     }
 
     @Test func textWinsOverAPickAndAPickRemovesThePhrase() throws {
-        var draft = QuickAddDraft(defaults: .init(today: true), today: today)
+        var draft = QuickAddDraft(defaults: .init(date: today))
         draft.setText("Call mom tomorrow  p1 now")
         var parsed = parse(draft)
         #expect(draft.resolved(parsed).due == Due(date: "2026-10-15", time: nil))
@@ -37,7 +37,7 @@ import Testing
         let parse = { (draft: QuickAddDraft) in
             draft.parse(now: pinned, projects: projects, sections: sections, labels: [], in: utc)
         }
-        var draft = QuickAddDraft(defaults: .init(projectId: "p-home", sectionId: "s-next"), today: today)
+        var draft = QuickAddDraft(defaults: .init(projectId: "p-home", sectionId: "s-next"))
         draft.setText("Paint door")
         #expect(try #require(draft.resolve(parse(draft))).sectionId == "s-next")
         draft.setText("Paint door /later")
@@ -50,7 +50,7 @@ import Testing
     }
 
     @Test func defaultsApplyAndResetForTheNextTask() {
-        var draft = QuickAddDraft(defaults: .init(projectId: "p-work", labelId: "l-calls", today: true), today: today)
+        var draft = QuickAddDraft(defaults: .init(projectId: "p-work", labelId: "l-calls", date: today))
         draft.setText("Ping Ana @calls")
         let resolved = draft.resolved(parse(draft))
         #expect(resolved.projectId == "p-work")
@@ -58,14 +58,14 @@ import Testing
         #expect(resolved.due == Due(date: today, time: nil))
 
         draft.picked.priority = .p2
-        draft.reset(today: today)
+        draft.reset()
         #expect(draft.text.isEmpty)
         #expect(draft.picked.priority == nil)
         #expect(draft.picked.projectId == "p-work")
     }
 
     @Test func anEmptyTitleSavesNothing() {
-        var draft = QuickAddDraft(defaults: .init(), today: today)
+        var draft = QuickAddDraft(defaults: .init())
         draft.setText("tomorrow")
         #expect(draft.resolve(parse(draft)) == nil)
     }
@@ -77,21 +77,21 @@ import Testing
     }
 
     @Test func labelChipsNameTheLabelIgnoringCase() throws {
-        var draft = QuickAddDraft(defaults: .init(), today: today)
+        var draft = QuickAddDraft(defaults: .init())
         draft.setText("Ping @CALLS")
         let token = try #require(parse(draft).tokens.first { $0.kind == .label })
         #expect(QuickAddDraft.labelName(token, labels) == "Calls")
     }
 
     @Test func aPickClearsEveryCopyOfARepeatedPhrase() {
-        var draft = QuickAddDraft(defaults: .init(), today: today)
+        var draft = QuickAddDraft(defaults: .init())
         draft.setText("Water every mon every fri p1")
         draft.clearTokens(.recurrence, now: pinned, projects: [], labels: labels, in: utc)
         #expect(draft.text == "Water p1")
     }
 
     @Test func removingSeveralTokensCutsEachPhrase() {
-        var draft = QuickAddDraft(defaults: .init(), today: today)
+        var draft = QuickAddDraft(defaults: .init())
         draft.setText("Ping @calls tomorrow every day p1")
         let tokens = parse(draft).tokens.filter { $0.kind == .label || $0.kind == .recurrence }
         draft.removeTokens(tokens)

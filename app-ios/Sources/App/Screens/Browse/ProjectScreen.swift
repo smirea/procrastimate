@@ -98,7 +98,7 @@ private struct SectionHeading: View {
         Menu {
             if canAdd {
                 Button("Add task", systemImage: "plus") {
-                    navigator.sheet = .quickAdd(QuickAddDefaults(projectId: section.projectId, sectionId: section.id))
+                    navigator.sheet = .quickAdd(Screens.defaults(.project(id: section.projectId, sectionId: section.id), store.tasks))
                 }
             }
             Button("Copy as Markdown", systemImage: "doc.on.doc") {

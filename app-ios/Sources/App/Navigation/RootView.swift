@@ -175,7 +175,7 @@ private struct TabBar: View {
     }
 
     private var addButton: some View {
-        Button { navigator.sheet = .quickAdd(navigator.listDefaults) } label: {
+        Button { navigator.sheet = .quickAdd(navigator.listDefaults(store.tasks)) } label: {
             Image(systemName: "plus")
                 .font(.title2.weight(.semibold))
                 .foregroundStyle(.white)

@@ -1,7 +1,9 @@
 import { goto } from '$app/navigation';
 import { page } from '$app/state';
+import { screenHolds } from 'shared/screens.ts';
 import { scheduledDue } from 'shared/triggers.ts';
 import type { Task } from 'shared/task.ts';
+import { currentScreen } from './screen.ts';
 import { clock, reveal } from './ui.svelte.ts';
 
 /**
@@ -15,8 +17,7 @@ export function showAdded(task: Task) {
 }
 
 function listOf(task: Task) {
-	const [, kind, id] = page.url.pathname.split('/');
-	if (kind === 'labels' && id && task.labelIds.includes(id)) return page.url.pathname;
+	if (screenHolds(currentScreen(), task, clock.today)) return page.url.pathname;
 	if (task.projectId) return `/projects/${task.projectId}`;
 	return scheduledDue(task, clock.today) ? '/inbox' : '/no-date';
 }

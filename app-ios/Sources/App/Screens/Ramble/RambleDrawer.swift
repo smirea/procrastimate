@@ -588,10 +588,10 @@ struct RambleDrawer: View {
         let today = clock.today
         let added = withAnimation(.snappy) {
             saving.compactMap { entry -> TaskItem? in
-                guard let added = store.addTask(Ramble.newTask(entry.task, defaults: defaults, today: today)) else { return nil }
+                guard let added = store.addTask(Ramble.newTask(entry.task, defaults: defaults)) else { return nil }
                 if !entry.task.notes.isEmpty { store.updateTask(added.id, TaskPatch(notes: entry.task.notes)) }
                 for subtask in entry.subtasks where !subtask.task.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    guard let child = store.addTask(Ramble.newTask(subtask.task, defaults: nil, today: today), parentId: added.id) else { continue }
+                    guard let child = store.addTask(Ramble.newTask(subtask.task, defaults: nil), parentId: added.id) else { continue }
                     if !subtask.task.notes.isEmpty { store.updateTask(child.id, TaskPatch(notes: subtask.task.notes)) }
                 }
                 return added

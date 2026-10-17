@@ -45,6 +45,8 @@ export const newTaskSchema = z
 		recurrence: taskShape.recurrence,
 		priority: taskShape.priority.nullable(),
 		reminders: taskShape.reminders,
+		location: taskShape.location.default(null),
+		event: taskShape.event.default(null),
 	})
 	.meta({ id: 'NewTask' });
 export type NewTask = z.input<typeof newTaskSchema>;
@@ -167,8 +169,8 @@ export function addTask(
 		recurrence: input.recurrence,
 		priority: input.priority ?? DEFAULT_PRIORITY,
 		reminders: input.reminders,
-		location: null,
-		event: null,
+		location: input.location ?? null,
+		event: input.event ?? null,
 		images: [],
 		createdAt: Math.max(now, (data.tasks.at(-1)?.createdAt ?? -Infinity) + 1),
 		completedAt: null,

@@ -24,15 +24,16 @@
 					"subtasks": [],
 					"title": "Call mom"
 				},
-				null,
-				"2026-10-14"
+				null
 			],
 			"output": {
 				"due": {
 					"date": "2026-10-15",
 					"time": "17:00"
 				},
+				"event": null,
 				"labelIds": [],
+				"location": null,
 				"priority": 1,
 				"projectId": null,
 				"recurrence": null,
@@ -63,21 +64,25 @@
 					"title": "Pay rent"
 				},
 				{
+					"date": "2026-10-14",
+					"event": null,
 					"labelId": "errands",
+					"location": null,
 					"projectId": "list-project",
-					"today": true
-				},
-				"2026-10-14"
+					"sectionId": null
+				}
 			],
 			"output": {
 				"due": {
 					"date": "2026-10-14",
 					"time": null
 				},
+				"event": null,
 				"labelIds": [
 					"errands",
 					"bills"
 				],
+				"location": null,
 				"priority": null,
 				"projectId": "spoken",
 				"recurrence": null,
@@ -88,7 +93,7 @@
 		},
 		{
 			"fn": "rambleNewTask",
-			"test": "rambleNewTask › a spoken date wins over Today",
+			"test": "rambleNewTask › a spoken date wins over the heading day",
 			"input": [
 				{
 					"due": {
@@ -109,18 +114,22 @@
 					"title": "Pay rent"
 				},
 				{
+					"date": "2026-10-14",
+					"event": null,
 					"labelId": null,
+					"location": null,
 					"projectId": null,
-					"today": true
-				},
-				"2026-10-14"
+					"sectionId": null
+				}
 			],
 			"output": {
 				"due": {
 					"date": "2026-10-20",
 					"time": null
 				},
+				"event": null,
 				"labelIds": [],
+				"location": null,
 				"priority": null,
 				"projectId": null,
 				"recurrence": null,
@@ -148,18 +157,272 @@
 					"subtasks": [],
 					"title": "Milk"
 				},
-				null,
-				"2026-10-14"
+				null
 			],
 			"output": {
 				"due": null,
+				"event": null,
 				"labelIds": [],
+				"location": null,
 				"priority": null,
 				"projectId": null,
 				"recurrence": null,
 				"reminders": [],
 				"sectionId": null,
 				"title": "Milk"
+			}
+		},
+		{
+			"fn": "rambleNewTask",
+			"test": "rambleNewTask › a section list keeps its section unless the speech names another project",
+			"input": [
+				{
+					"due": null,
+					"labelIds": [],
+					"notes": "",
+					"priority": null,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"segment": {
+						"end": 7,
+						"start": 0
+					},
+					"subtasks": [],
+					"title": "Fix tap"
+				},
+				{
+					"date": null,
+					"event": null,
+					"labelId": null,
+					"location": null,
+					"projectId": "home",
+					"sectionId": "kitchen"
+				}
+			],
+			"output": {
+				"due": null,
+				"event": null,
+				"labelIds": [],
+				"location": null,
+				"priority": null,
+				"projectId": "home",
+				"recurrence": null,
+				"reminders": [],
+				"sectionId": "kitchen",
+				"title": "Fix tap"
+			}
+		},
+		{
+			"fn": "rambleNewTask",
+			"test": "rambleNewTask › a section list keeps its section unless the speech names another project",
+			"input": [
+				{
+					"due": null,
+					"labelIds": [],
+					"notes": "",
+					"priority": null,
+					"projectId": "home",
+					"recurrence": null,
+					"reminders": [],
+					"segment": {
+						"end": 7,
+						"start": 0
+					},
+					"subtasks": [],
+					"title": "Fix tap"
+				},
+				{
+					"date": null,
+					"event": null,
+					"labelId": null,
+					"location": null,
+					"projectId": "home",
+					"sectionId": "kitchen"
+				}
+			],
+			"output": {
+				"due": null,
+				"event": null,
+				"labelIds": [],
+				"location": null,
+				"priority": null,
+				"projectId": "home",
+				"recurrence": null,
+				"reminders": [],
+				"sectionId": "kitchen",
+				"title": "Fix tap"
+			}
+		},
+		{
+			"fn": "rambleNewTask",
+			"test": "rambleNewTask › a section list keeps its section unless the speech names another project",
+			"input": [
+				{
+					"due": null,
+					"labelIds": [],
+					"notes": "",
+					"priority": null,
+					"projectId": "work",
+					"recurrence": null,
+					"reminders": [],
+					"segment": {
+						"end": 7,
+						"start": 0
+					},
+					"subtasks": [],
+					"title": "Fix tap"
+				},
+				{
+					"date": null,
+					"event": null,
+					"labelId": null,
+					"location": null,
+					"projectId": "home",
+					"sectionId": "kitchen"
+				}
+			],
+			"output": {
+				"due": null,
+				"event": null,
+				"labelIds": [],
+				"location": null,
+				"priority": null,
+				"projectId": "work",
+				"recurrence": null,
+				"reminders": [],
+				"sectionId": null,
+				"title": "Fix tap"
+			}
+		},
+		{
+			"fn": "rambleNewTask",
+			"test": "rambleNewTask › a place list saves its place",
+			"input": [
+				{
+					"due": null,
+					"labelIds": [],
+					"notes": "",
+					"priority": null,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"segment": {
+						"end": 8,
+						"start": 0
+					},
+					"subtasks": [],
+					"title": "Buy milk"
+				},
+				{
+					"date": null,
+					"event": null,
+					"labelId": null,
+					"location": {
+						"address": null,
+						"latitude": 52.5,
+						"longitude": 13.4,
+						"name": "Rewe",
+						"radius": 150,
+						"trigger": "arrive"
+					},
+					"projectId": null,
+					"sectionId": null
+				}
+			],
+			"output": {
+				"due": null,
+				"event": null,
+				"labelIds": [],
+				"location": {
+					"address": null,
+					"latitude": 52.5,
+					"longitude": 13.4,
+					"name": "Rewe",
+					"radius": 150,
+					"trigger": "arrive"
+				},
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"sectionId": null,
+				"title": "Buy milk"
+			}
+		},
+		{
+			"fn": "rambleNewTask",
+			"test": "rambleNewTask › an event list's event replaces a spoken date and repeat",
+			"input": [
+				{
+					"due": {
+						"date": "2026-10-20",
+						"time": "09:00"
+					},
+					"labelIds": [],
+					"notes": "",
+					"priority": null,
+					"projectId": null,
+					"recurrence": {
+						"interval": 1,
+						"unit": "day"
+					},
+					"reminders": [],
+					"segment": {
+						"end": 11,
+						"start": 0
+					},
+					"subtasks": [],
+					"title": "Share notes"
+				},
+				{
+					"date": null,
+					"event": {
+						"allDay": false,
+						"edge": "start",
+						"id": "standup",
+						"minutes": 0,
+						"occurrences": [
+							{
+								"end": 1791991800000,
+								"original": 1791990000000,
+								"start": 1791990000000
+							}
+						],
+						"series": true,
+						"title": "Standup"
+					},
+					"labelId": null,
+					"location": null,
+					"projectId": null,
+					"sectionId": null
+				}
+			],
+			"output": {
+				"due": null,
+				"event": {
+					"allDay": false,
+					"edge": "start",
+					"id": "standup",
+					"minutes": 0,
+					"occurrences": [
+						{
+							"end": 1791991800000,
+							"original": 1791990000000,
+							"start": 1791990000000
+						}
+					],
+					"series": true,
+					"title": "Standup"
+				},
+				"labelIds": [],
+				"location": null,
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"sectionId": null,
+				"title": "Share notes"
 			}
 		}
 	]
