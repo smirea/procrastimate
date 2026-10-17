@@ -14,6 +14,7 @@
 	import CompletedSection from '#lib/components/CompletedSection.svelte';
 	import CompletedToggle from '#lib/components/CompletedToggle.svelte';
 	import { store } from '#lib/store.svelte.ts';
+	import { toastDeleted } from '#lib/completion.ts';
 	import { sheets } from '#lib/ui.svelte.ts';
 	import { followMerged } from '#lib/merged.svelte.ts';
 	import { completed } from '#lib/completed.svelte.ts';
@@ -50,7 +51,7 @@
 
 	function remove() {
 		if (!label) return;
-		store.deleteLabel(label.id);
+		toastDeleted(label.name, store.deleteLabel(label.id));
 		void goto('/inbox');
 	}
 </script>

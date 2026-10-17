@@ -1,6 +1,6 @@
 import { expect, test } from './fixtures';
 
-test('a label view lists its tasks across projects, and the label renames and deletes while its tasks stay', async ({
+test('a label view lists its tasks across projects, and the label renames and deletes while its tasks stay, and undo puts it back on them', async ({
 	app,
 	page,
 }) => {
@@ -37,6 +37,11 @@ test('a label view lists its tasks across projects, and the label renames and de
 	await app.go('No date');
 	await expect(app.row('Call bank')).toBeVisible();
 	await expect(app.row('Call bank')).not.toContainText('phone');
+
+	await page.getByRole('status').getByRole('button', { name: 'Undo' }).click();
+	await expect(app.row('Call bank')).toContainText('phone');
+	await app.nav('phone').click();
+	await expect(app.list('phone tasks').locator('[data-task]')).toHaveText([/Fix sink.*phone/, /Call bank.*phone/]);
 });
 
 test('a label view names Inbox on an Inbox task that has no date', async ({ app }) => {

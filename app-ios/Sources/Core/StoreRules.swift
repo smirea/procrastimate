@@ -8,6 +8,7 @@ public typealias CompletionState = API.CompletionState
 public typealias Completion = API.Completion
 public typealias ExplodeMethod = API.ExplodeMethod
 public typealias ExplodedState = API.ExplodedState
+public typealias Deleted = API.Deleted
 
 extension API.TaskEdit {
     func apply(to task: inout TaskItem) {
@@ -509,7 +510,77 @@ public enum StoreRules {
         }
         return next
     }
+
+    /// What a delete took out of `before` to leave `after`, for `undelete`.
+    public static func deletedBetween(_ before: StoreData, _ after: StoreData) -> Deleted {
+        func gone<T: Created>(_ was: [T], _ now: [T]) -> [T] {
+            let live = Set(now.map(\.id))
+            return was.filter { !live.contains($0.id) }
+        }
+        let kept = Dictionary(after.tasks.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        return Deleted(
+            projects: gone(before.projects, after.projects),
+            sections: gone(before.sections, after.sections),
+            labels: gone(before.labels, after.labels),
+            tasks: gone(before.tasks, after.tasks),
+            labelings: before.tasks.flatMap { t -> [API.Labeling] in
+                guard let now = kept[t.id] else { return [] }
+                return t.labelIds.enumerated().compactMap { index, labelId in
+                    now.labelIds.contains(labelId) ? nil : API.Labeling(taskId: t.id, labelId: labelId, index: index)
+                }
+            }
+        )
+    }
+
+    /// Puts back what a delete removed. A task edited since keeps its edits, and gets each removed label back at its
+    /// old place in `labelIds`, or last when the list has since shrunk. A section or task whose project was deleted
+    /// since stays gone, since undoing a section delete after its project's delete must not bring back tasks no view
+    /// shows.
+    public static func undelete(_ data: StoreData, _ deleted: Deleted) -> StoreData {
+        func missing<T: Created>(_ live: [T], _ gone: [T]) -> [T] {
+            let ids = Set(live.map(\.id))
+            return gone.filter { !ids.contains($0.id) }
+        }
+        // Synced lists stay in creation order, so each one comes back at its place in it.
+        func restore<T: Created>(_ live: [T], _ gone: [T]) -> [T] {
+            var list = live
+            for e in missing(live, gone) {
+                let at = list.firstIndex { x in
+                    x.createdAt != e.createdAt ? x.createdAt > e.createdAt : e.id.utf16.lexicographicallyPrecedes(x.id.utf16)
+                } ?? list.endIndex
+                list.insert(e, at: at)
+            }
+            return list
+        }
+        var next = data
+        next.projects = restore(data.projects, deleted.projects)
+        let live = Set(next.projects.map(\.id))
+        next.sections = restore(data.sections, deleted.sections.filter { live.contains($0.projectId) })
+        next.labels = restore(data.labels, deleted.labels)
+        let returning = deleted.tasks.filter { $0.projectId.map(live.contains) ?? true }
+        next.tasks = sortTasks((data.tasks + missing(data.tasks, returning)).map { t in
+            let back = deleted.labelings
+                .filter { $0.taskId == t.id && !t.labelIds.contains($0.labelId) }
+                .stableSorted { a, b in a.index == b.index ? nil : a.index < b.index }
+            guard !back.isEmpty else { return t }
+            var t = t
+            for labeling in back { t.labelIds.insert(labeling.labelId, at: min(labeling.index, t.labelIds.count)) }
+            return t
+        })
+        return next
+    }
 }
+
+/// What restoring a deleted record in creation order needs.
+protocol Created {
+    var id: String { get }
+    var createdAt: Int { get }
+}
+
+extension Project: Created {}
+extension ProjectSection: Created {}
+extension Label: Created {}
+extension TaskItem: Created {}
 
 /// What fractional sibling order needs: projects and sections both sort and move by it.
 protocol Ordered {

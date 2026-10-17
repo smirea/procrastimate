@@ -373,6 +373,8 @@ private func completion(_ completion: Completion) throws -> JSONValue {
     case "moveProject": return try json(StoreRules.moveProject(data(), a(1), a(2)))
     case "projectsInOrder": return try json(StoreRules.projectsInOrder(a(0)))
     case "deleteSection": return try json(StoreRules.deleteSection(data(), a(1)))
+    case "deletedBetween": return try json(StoreRules.deletedBetween(data(), a(1)))
+    case "undelete": return try json(StoreRules.undelete(data(), a(1)))
     default: throw unknown(fn)
     }
 }

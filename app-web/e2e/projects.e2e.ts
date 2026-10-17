@@ -184,7 +184,7 @@ test.describe('on a phone', () => {
 	});
 });
 
-test('create, assign with #, move, rename, and delete a project', async ({ app, page }) => {
+test('create, assign with #, move, rename, delete, and undo deleting a project', async ({ app, page }) => {
 	await app.createProject('Home');
 	await expect(page.getByText('No tasks yet')).toBeVisible();
 
@@ -219,4 +219,9 @@ test('create, assign with #, move, rename, and delete a project', async ({ app, 
 	await expect(page.getByRole('heading', { level: 1, name: 'Inbox' })).toBeVisible();
 	await expect(sidebarProjects(page)).toHaveCount(0);
 	await expect(page.locator('[data-task]')).toHaveCount(0);
+
+	await page.getByRole('status').getByRole('button', { name: 'Undo' }).click();
+	await expect(sidebarProjects(page)).toHaveText([/House/]);
+	await app.nav('House').click();
+	await expect(app.list('House tasks').locator('[data-task]')).toHaveText([/Fix sink/, /Paint fence/, /Buy milk/]);
 });

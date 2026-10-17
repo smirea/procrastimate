@@ -15,11 +15,12 @@ struct NameActions: ViewModifier {
     let rename: (String) -> Void
     var color: LabelColor?
     var recolor: ((LabelColor) -> Void)?
-    let delete: () -> Void
+    let delete: () -> Deleted?
     /// A project's screen adds sections from its menu.
     var addSection: ((String) -> Void)?
 
     @Environment(Store.self) private var store
+    @Environment(TaskActions.self) private var actions
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var renaming = false
@@ -104,7 +105,7 @@ struct NameActions: ViewModifier {
                     // Deleting once the pop has played lets the row leave Browse in view instead of under the push.
                     Task {
                         try? await Task.sleep(for: .milliseconds(reduceMotion ? 0 : 350))
-                        withAnimation(.snappy) { delete() }
+                        actions.toastDeleted(name, withAnimation(.snappy) { delete() })
                     }
                 }
             } message: {
@@ -126,7 +127,7 @@ extension View {
         rename: @escaping (String) -> Void,
         color: LabelColor? = nil,
         recolor: ((LabelColor) -> Void)? = nil,
-        delete: @escaping () -> Void,
+        delete: @escaping () -> Deleted?,
         addSection: ((String) -> Void)? = nil
     ) -> some View {
         modifier(NameActions(

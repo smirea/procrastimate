@@ -463,8 +463,9 @@ class Store {
 		if (this.homeOf(id) === null) this.#apply(rules.renameProject(this.own, id, name));
 	}
 
-	deleteProject(id: string) {
-		if (this.homeOf(id) === null) this.#apply(rules.deleteProject(this.own, id));
+	/** Returns what the delete removed, for `undelete`. */
+	deleteProject(id: string): rules.Deleted | undefined {
+		if (this.homeOf(id) === null) return this.#delete(rules.deleteProject(this.own, id));
 	}
 
 	moveProject(id: string, index: number) {
@@ -487,8 +488,8 @@ class Store {
 		if (this.homeOf(id) === null) this.#apply(rules.moveSection(this.own, id, index));
 	}
 
-	deleteSection(id: string) {
-		if (this.homeOf(id) === null) this.#apply(rules.deleteSection(this.own, id));
+	deleteSection(id: string): rules.Deleted | undefined {
+		if (this.homeOf(id) === null) return this.#delete(rules.deleteSection(this.own, id));
 	}
 
 	addLabel(name: string): Label {
@@ -512,8 +513,18 @@ class Store {
 		if (this.homeOf(id) === null) this.#apply(rules.setLabelColor(this.own, id, color));
 	}
 
-	deleteLabel(id: string) {
-		if (this.homeOf(id) === null) this.#apply(rules.deleteLabel(this.own, id));
+	deleteLabel(id: string): rules.Deleted | undefined {
+		if (this.homeOf(id) === null) return this.#delete(rules.deleteLabel(this.own, id));
+	}
+
+	#delete(after: rules.StoreData): rules.Deleted {
+		const deleted = rules.deletedBetween(this.own, after);
+		this.#apply(after);
+		return deleted;
+	}
+
+	undelete(deleted: rules.Deleted) {
+		this.#apply(rules.undelete(this.own, deleted));
 	}
 
 	/** One command and one write for the whole backup, however many tasks it holds. */

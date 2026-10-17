@@ -129,7 +129,27 @@ export const explodedStateSchema = taskSchema
 	});
 export type ExplodedState = z.infer<typeof explodedStateSchema>;
 
-const byCreation = (a: Task, b: Task) => a.createdAt - b.createdAt || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+export const deletedSchema = z
+	.object({
+		projects: z.array(projectSchema),
+		sections: z.array(sectionSchema),
+		labels: z.array(labelSchema),
+		tasks: z.array(taskSchema),
+		labelings: z.array(
+			z.object({ taskId: z.string(), labelId: z.string(), index: z.number().int() }).meta({
+				id: 'Labeling',
+				description: 'A label taken off a task that stayed, with where it sat in `labelIds`.',
+			}),
+		),
+	})
+	.meta({
+		id: 'Deleted',
+		description: 'What deleting a project, section, or label removed, as it was, so undo can put it back.',
+	});
+export type Deleted = z.infer<typeof deletedSchema>;
+
+const byCreation = (a: { id: string; createdAt: number }, b: { id: string; createdAt: number }) =>
+	a.createdAt - b.createdAt || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 
 /** Tasks stay sorted by `createdAt`, then `id`, so every client and the sync server agree on one order. */
 export const sortTasks = (tasks: readonly Task[]) => tasks.toSorted(byCreation);
@@ -391,6 +411,68 @@ export function deleteSection(data: StoreData, id: string): StoreData {
 		...data,
 		sections: data.sections.filter(s => s.id !== id),
 		tasks: data.tasks.filter(t => !removed.has(t.id)),
+	};
+}
+
+/** What a delete took out of `before` to leave `after`, for `undelete`. */
+export function deletedBetween(before: StoreData, after: StoreData): Deleted {
+	const gone = <T extends { id: string }>(was: readonly T[], is: readonly T[]) => {
+		const live = new Set(is.map(e => e.id));
+		return was.filter(e => !live.has(e.id));
+	};
+	const kept = new Map(after.tasks.map(t => [t.id, t]));
+	return {
+		projects: gone(before.projects, after.projects),
+		sections: gone(before.sections, after.sections),
+		labels: gone(before.labels, after.labels),
+		tasks: gone(before.tasks, after.tasks),
+		labelings: before.tasks.flatMap(t => {
+			const now = kept.get(t.id);
+			if (!now) return [];
+			return t.labelIds.flatMap((labelId, index) =>
+				now.labelIds.includes(labelId) ? [] : [{ taskId: t.id, labelId, index }],
+			);
+		}),
+	};
+}
+
+/**
+ * Puts back what a delete removed. A task edited since keeps its edits, and gets each removed label back at its old
+ * place in `labelIds`, or last when the list has since shrunk. A section or task whose project was deleted since stays
+ * gone, since undoing a section delete after its project's delete must not bring back tasks no view shows.
+ */
+export function undelete(data: StoreData, deleted: Deleted): StoreData {
+	const missing = <T extends { id: string }>(live: readonly T[], gone: readonly T[]) => {
+		const ids = new Set(live.map(e => e.id));
+		return gone.filter(e => !ids.has(e.id));
+	};
+	// Synced lists stay in creation order, so each one comes back at its place in it.
+	const restore = <T extends { id: string; createdAt: number }>(live: readonly T[], gone: readonly T[]) => {
+		const list = [...live];
+		for (const e of missing(live, gone)) {
+			const at = list.findIndex(x => byCreation(x, e) > 0);
+			list.splice(at === -1 ? list.length : at, 0, e);
+		}
+		return list;
+	};
+	const projects = restore(data.projects, deleted.projects);
+	const live = new Set(projects.map(p => p.id));
+	const sections = deleted.sections.filter(x => live.has(x.projectId));
+	const returning = deleted.tasks.filter(t => t.projectId === null || live.has(t.projectId));
+	const tasks = [...data.tasks, ...missing(data.tasks, returning)].map(t => {
+		const back = deleted.labelings.filter(l => l.taskId === t.id && !t.labelIds.includes(l.labelId));
+		if (!back.length) return t;
+		const labelIds = [...t.labelIds];
+		for (const { labelId, index } of back.toSorted((a, b) => a.index - b.index))
+			labelIds.splice(Math.min(index, labelIds.length), 0, labelId);
+		return { ...t, labelIds };
+	});
+	return {
+		...data,
+		projects,
+		sections: restore(data.sections, sections),
+		labels: restore(data.labels, deleted.labels),
+		tasks: sortTasks(tasks),
 	};
 }
 

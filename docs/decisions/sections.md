@@ -15,7 +15,7 @@ Todoist-style sections: named headings inside one project that group its tasks.
 `shared/store.ts`, ported to `StoreRules.swift` with vectors:
 
 - `updateTask` with a `sectionId` moves a top-level task into that section's project. A new `projectId` without a `sectionId` leaves the task in no section, `projectId: null` moves it to Inbox, and `sectionId: null` keeps the project. A subtask never takes a section. `addTask` follows the same rule for `NewTask.sectionId`, so the agent API can create a task from a section id alone.
-- **Deleting a section deletes its tasks**, subtasks included, as Todoist does and as deleting a project does. Both clients confirm with `Delete <name> and its N tasks?`, counting done tasks and subtasks (`sectionTasks`), or `Delete <name>?` when it holds none. Moving tasks to `No section` first is how to keep them.
+- **Deleting a section deletes its tasks**, subtasks included, as Todoist does and as deleting a project does. Both clients confirm with `Delete <name> and its N tasks?`, counting done tasks and subtasks (`sectionTasks`), or `Delete <name>?` when it holds none. Moving tasks to `No section` first is how to keep them, and the `Deleted “<name>”` toast's Undo brings the section back with its tasks.
 - Deleting a project deletes its sections too.
 - Exploding a top-level task's subtasks puts them in its section beside it, and undo takes them back out. Ramble entries carry no section; their project picker lists projects only.
 
