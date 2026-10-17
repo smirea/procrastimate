@@ -161,11 +161,11 @@ private struct StoredProject: Decodable {
     }
 }
 
-/// A label stored before colors takes its name's default color, as the server gives it.
+/// A label stored before colors takes its name's default color, as the server gives it, and one before places is none.
 private struct StoredLabel: Decodable {
     let label: Label
 
-    private enum CodingKeys: String, CodingKey { case id, name, color, createdAt }
+    private enum CodingKeys: String, CodingKey { case id, name, color, place, createdAt }
 
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -174,6 +174,7 @@ private struct StoredLabel: Decodable {
             id: try c.decode(String.self, forKey: .id),
             name: name,
             color: try c.decodeAbsent(LabelColor.self, forKey: .color) ?? LabelColors.defaultLabelColor(name),
+            place: try c.decodeAbsent(SavedPlace?.self, forKey: .place) ?? nil,
             createdAt: try c.decode(Int.self, forKey: .createdAt)
         )
     }

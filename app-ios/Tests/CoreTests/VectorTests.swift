@@ -202,6 +202,7 @@ private struct Occurrence: Decodable {
     case "projectGroups": return try json(Views.projectGroups(a(0), a(1), a(2), in: a.zone))
     case "labelTasks": return try json(Views.labelTasks(a(0), a(1), in: a.zone))
     case "placeTasks": return try json(Views.placeTasks(a(0), a(1), in: a.zone))
+    case "labelViewTasks": return try json(Views.labelViewTasks(a(0), a(1), in: a.zone))
     case "eventTasks": return try json(Views.eventTasks(a(0), a(1), a(2), in: a.zone))
     case "todayTasks": return try json(Views.todayTasks(a(0), a(1), in: a.zone))
     case "upcomingGroups": return try json(Views.upcomingGroups(a(0), a(1), in: a.zone))
@@ -356,6 +357,10 @@ private func completion(_ completion: Completion) throws -> JSONValue {
         let result = StoreRules.addLabel(try data(), try a(1), try a(2, as: CreationInput.self).creation)
         return object(["data": try json(result.data), "label": try json(result.label)])
     case "renameLabel": return try json(StoreRules.renameLabel(data(), a(1), a(2)))
+    case "savePlace":
+        let result = StoreRules.savePlace(try data(), try a(1), try a(2), try a(3, as: CreationInput.self).creation)
+        return object(["data": try json(result.data), "label": try json(result.label)])
+    case "setPlaceRadius": return try json(StoreRules.setPlaceRadius(data(), a(1), a(2)))
     case "setLabelColor": return try json(StoreRules.setLabelColor(data(), a(1), a(2)))
     case "deleteLabel": return try json(StoreRules.deleteLabel(data(), a(1)))
     case "sectionsOf": return try json(StoreRules.sectionsOf(a(0), a(1)))
@@ -379,6 +384,11 @@ private func completion(_ completion: Completion) throws -> JSONValue {
         return try json(Snapshot.load(document, now: a(1)))
     default: throw unknown(fn)
     }
+}
+
+private struct PlacedInput: Decodable {
+    let labelIds: [String]
+    let location: TaskLocation?
 }
 
 private struct ParseInput: Decodable {
@@ -418,7 +428,15 @@ private struct ParseInput: Decodable {
     case "formatEvent": return try json(Triggers.formatEvent(a(0)))
     case "formatLocation": return try json(Triggers.formatLocation(a(0)))
     case "formatRadius": return try json(Triggers.formatRadius(a(0)))
-    case "placeGroups": return try json(Triggers.placeGroups(a(0)))
+    case "placeGroups": return try json(Triggers.placeGroups(a(0), a(1)))
+    case "placeLocation": return try json(Triggers.placeLocation(a(0), a(1)))
+    case "pickedLabels":
+        let task = try a(1, as: PlacedInput.self)
+        return try json(Triggers.pickedLabels(a(0), labelIds: task.labelIds, location: task.location))
+    case "applyPickedLabels":
+        let result = Triggers.applyPickedLabels(try a(0), try a(1), try a(2))
+        return object(["labelIds": try json(result.labelIds), "location": try json(result.location)])
+    case "savedPlaceAt": return try json(Triggers.savedPlaceAt(a(0), a(1)))
     case "scheduledDue": return try json(Triggers.scheduledDue(a(0), a(1), in: a.zone))
     case "taskNotificationTimes":
         return try json(Triggers.taskNotificationTimes(a(0), a(1), in: a.zone).map(\.epochMilliseconds))
@@ -539,7 +557,7 @@ private struct ScreenInput: Decodable {
 @Sendable func rambleFillVector(_ fn: String, _ a: Args) throws -> JSONValue {
     switch fn {
     case "rambleNewTask":
-        return try json(Ramble.newTask(try a(0), defaults: try a(1, as: ListDefaultsJSON?.self)?.defaults))
+        return try json(Ramble.newTask(try a(0), defaults: try a(1, as: ListDefaultsJSON?.self)?.defaults, labels: try a(2)))
     default: throw unknown(fn)
     }
 }

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { sectionsOf } from './store.ts';
 import { sectionSchema, taskSchema } from './sync/protocol.ts';
-import { addDays, toDateKey, type DateKey, type Due, type Section, type Task } from './task.ts';
+import { addDays, toDateKey, type DateKey, type Due, type Label, type Section, type Task } from './task.ts';
 import { occurrenceDue, placeKey, scheduledDue } from './triggers.ts';
 import { dateKeySchema } from './values.ts';
 
@@ -157,6 +157,11 @@ export function placeTasks(tasks: readonly Task[], key: string) {
 	return open(tasks)
 		.filter(t => t.location && placeKey(t.location) === key)
 		.toSorted((a, b) => compareTasks(a, b));
+}
+
+/** A label's view: the open tasks carrying it, or for a saved place, the open tasks at it. */
+export function labelViewTasks(tasks: readonly Task[], label: Label) {
+	return label.place ? placeTasks(tasks, placeKey(label.place)) : labelTasks(tasks, label.id);
 }
 
 /** Every open task on a calendar event, in the order their moments come. */

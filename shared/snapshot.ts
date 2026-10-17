@@ -59,11 +59,13 @@ const projectsSchema = z
 	// Core's decoder of the document fills the order the same way.
 	.meta({ 'x-swift-type': '[Project]' });
 
-/** A label stored before colors takes its name's default color, as the server gives it. */
+/** A label stored before colors takes its name's default color, as the server gives it, and one before places is none. */
 const labelsSchema = z
-	.array(labelSchema.extend({ color: labelSchema.shape.color.optional() }))
+	.array(
+		labelSchema.extend({ color: labelSchema.shape.color.optional(), place: labelSchema.shape.place.default(null) }),
+	)
 	.default([])
-	// Core's decoder of the document fills the color the same way.
+	// Core's decoder of the document fills the color and the place the same way.
 	.meta({ 'x-swift-type': '[Label]' })
 	.transform(labels => labels.map(label => ({ ...label, color: label.color ?? defaultLabelColor(label.name) })));
 

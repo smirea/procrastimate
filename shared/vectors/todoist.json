@@ -1618,19 +1618,22 @@
 							"color": "pink",
 							"createdAt": 1000,
 							"id": "id-9",
-							"name": "home"
+							"name": "home",
+							"place": null
 						},
 						{
 							"color": "blue",
 							"createdAt": 1000,
 							"id": "id-17",
-							"name": "work"
+							"name": "work",
+							"place": null
 						},
 						{
 							"color": "indigo",
 							"createdAt": 1000,
 							"id": "id-18",
-							"name": "deep-work"
+							"name": "deep-work",
+							"place": null
 						}
 					],
 					"projects": [
@@ -2257,19 +2260,22 @@
 							"color": "pink",
 							"createdAt": 1000,
 							"id": "id-9",
-							"name": "home"
+							"name": "home",
+							"place": null
 						},
 						{
 							"color": "blue",
 							"createdAt": 1000,
 							"id": "id-17",
-							"name": "work"
+							"name": "work",
+							"place": null
 						},
 						{
 							"color": "indigo",
 							"createdAt": 1000,
 							"id": "id-18",
-							"name": "deep-work"
+							"name": "deep-work",
+							"place": null
 						}
 					],
 					"projects": [
@@ -2650,19 +2656,22 @@
 							"color": "pink",
 							"createdAt": 1000,
 							"id": "id-9",
-							"name": "home"
+							"name": "home",
+							"place": null
 						},
 						{
 							"color": "blue",
 							"createdAt": 1000,
 							"id": "id-17",
-							"name": "work"
+							"name": "work",
+							"place": null
 						},
 						{
 							"color": "indigo",
 							"createdAt": 1000,
 							"id": "id-18",
-							"name": "deep-work"
+							"name": "deep-work",
+							"place": null
 						}
 					],
 					"projects": [
@@ -3264,19 +3273,22 @@
 							"color": "pink",
 							"createdAt": 1000,
 							"id": "id-9",
-							"name": "home"
+							"name": "home",
+							"place": null
 						},
 						{
 							"color": "blue",
 							"createdAt": 1000,
 							"id": "id-17",
-							"name": "work"
+							"name": "work",
+							"place": null
 						},
 						{
 							"color": "indigo",
 							"createdAt": 1000,
 							"id": "id-18",
-							"name": "deep-work"
+							"name": "deep-work",
+							"place": null
 						}
 					],
 					"projects": [
@@ -3903,19 +3915,22 @@
 							"color": "pink",
 							"createdAt": 1000,
 							"id": "id-9",
-							"name": "home"
+							"name": "home",
+							"place": null
 						},
 						{
 							"color": "blue",
 							"createdAt": 1000,
 							"id": "id-17",
-							"name": "work"
+							"name": "work",
+							"place": null
 						},
 						{
 							"color": "indigo",
 							"createdAt": 1000,
 							"id": "id-18",
-							"name": "deep-work"
+							"name": "deep-work",
+							"place": null
 						}
 					],
 					"projects": [
@@ -4531,19 +4546,22 @@
 							"color": "pink",
 							"createdAt": 1000,
 							"id": "id-7",
-							"name": "home"
+							"name": "home",
+							"place": null
 						},
 						{
 							"color": "blue",
 							"createdAt": 1000,
 							"id": "id-15",
-							"name": "work"
+							"name": "work",
+							"place": null
 						},
 						{
 							"color": "indigo",
 							"createdAt": 1000,
 							"id": "id-16",
-							"name": "deep-work"
+							"name": "deep-work",
+							"place": null
 						}
 					],
 					"projects": [
@@ -4907,19 +4925,22 @@
 							"color": "pink",
 							"createdAt": 1000,
 							"id": "id-7",
-							"name": "home"
+							"name": "home",
+							"place": null
 						},
 						{
 							"color": "blue",
 							"createdAt": 1000,
 							"id": "id-15",
-							"name": "work"
+							"name": "work",
+							"place": null
 						},
 						{
 							"color": "indigo",
 							"createdAt": 1000,
 							"id": "id-16",
-							"name": "deep-work"
+							"name": "deep-work",
+							"place": null
 						}
 					],
 					"projects": [
@@ -5504,19 +5525,22 @@
 							"color": "pink",
 							"createdAt": 1000,
 							"id": "id-7",
-							"name": "home"
+							"name": "home",
+							"place": null
 						},
 						{
 							"color": "blue",
 							"createdAt": 1000,
 							"id": "id-15",
-							"name": "work"
+							"name": "work",
+							"place": null
 						},
 						{
 							"color": "indigo",
 							"createdAt": 1000,
 							"id": "id-16",
-							"name": "deep-work"
+							"name": "deep-work",
+							"place": null
 						}
 					],
 					"projects": [
@@ -6158,19 +6182,22 @@
 							"color": "pink",
 							"createdAt": 1000,
 							"id": "id-7",
-							"name": "home"
+							"name": "home",
+							"place": null
 						},
 						{
 							"color": "blue",
 							"createdAt": 1000,
 							"id": "id-15",
-							"name": "work"
+							"name": "work",
+							"place": null
 						},
 						{
 							"color": "indigo",
 							"createdAt": 1000,
 							"id": "id-16",
-							"name": "deep-work"
+							"name": "deep-work",
+							"place": null
 						}
 					],
 					"projects": [
@@ -7345,7 +7372,8 @@
 							"color": "gray",
 							"createdAt": 0,
 							"id": "l-home",
-							"name": "Home"
+							"name": "Home",
+							"place": null
 						}
 					],
 					"projects": [
@@ -7605,19 +7633,22 @@
 							"color": "gray",
 							"createdAt": 0,
 							"id": "l-home",
-							"name": "Home"
+							"name": "Home",
+							"place": null
 						},
 						{
 							"color": "blue",
 							"createdAt": 1000,
 							"id": "id-15",
-							"name": "work"
+							"name": "work",
+							"place": null
 						},
 						{
 							"color": "indigo",
 							"createdAt": 1000,
 							"id": "id-16",
-							"name": "deep-work"
+							"name": "deep-work",
+							"place": null
 						}
 					],
 					"projects": [

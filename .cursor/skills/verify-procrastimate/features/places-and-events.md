@@ -15,15 +15,19 @@ A task can hang off a place or a calendar event, set with the Location and Event
 - `event-replaces-date` hides the date and repeat chips while an event is linked and drops the due date and repeat; the reminder chip offers only presets before the event's moment.
 - `event-sync` rewrites a linked event's times when it moves in the calendar.
 - `rows` show the event line (`15m after Standup`, tinted by its day) and the place line (`Arriving at Whole Foods Market`).
-- `browse-sections` lists Places and Events above Labels while open tasks use them, each opening its tasks.
+- `browse-sections` lists Places and Events above Labels while open tasks use them, each opening its tasks. Saved places list with the labels instead.
+- `place-save` names a place from `Save` (web) or `Save place` (iOS, with the map and radius) in its screen's top right. It then lists with the labels under a pin, opens its label screen (name, radius, address), and its open tasks take the name and radius. iOS `Edit place` on that screen changes the radius. A name a label has is refused.
+- `place-at-name` sets a saved place by typing `@name` in quick add or the task title (a `place` token), or by checking it in the labels picker, on both clients. Unchecking clears the place.
+- `place-choices` lists `Recent` (3), `Saved` (all), and `Other places` (up to 20) in the iOS Location sheet before anything is typed.
 
 ## How to get to it (user POV)
 
 - iOS: open a task, tap `Location` (after the reminder chip), search, pick `Arrive`, `Leave`, or `During`, and tap a result. Tap the chip again to change the trigger or `Remove location`.
 - iOS: open a task, tap `Event`, pick the moment and an upcoming event, and tap `Save`. Tap the chip again to change it or `Remove event`.
 - iOS: Browse tab, `Places` and `Events` sections.
+- Web: open a place in the sidebar's Places section and use `Save` to name it; type `@name` in quick add or check the place in a task's `Labels` picker.
 - Web: shows the place and event lines on rows, read-only `During Walking meetup · Oct 21 6pm` and `While at Tiergarten` chips in task details (the event chip replaces the date and repeat pickers), and `Places` and `Events` sidebar sections above Labels opening `/places/<key>` and `/events/<id>`. It cannot set either.
-- Web check: seed tasks with `location` and `event` from a second device through `/api/sync` (see Baseline preconditions in the README), and reload. Inbox places `Night out` under its day as `<time> (30m before [calendar] Night out)`, and a weekly task at a place due last week shows on its next occurrence instead of overdue. The Inbox placement is manual. Test for the place in task details: `task details show a place with the radius iOS watches` in `e2e/places.e2e.ts`.
+- Web check: seed tasks with `location` and `event` from a second device through `/api/sync` (see Baseline preconditions in the README), and reload. Inbox places `Night out` under its day as `<time> (30m before [calendar] Night out)`, and a weekly task at a place due last week shows on its next occurrence instead of overdue. The Inbox placement is manual. Test for the place in task details: `task details show a place with the radius iOS watches` in `e2e/places.e2e.ts`. Saved places: `a place saved under a name lists with the labels, and @name or the labels picker puts a task there` in the same file.
 
 ## Driving it with simctl
 
@@ -39,6 +43,7 @@ Preconditions:
 - **Sheets.** `details:Buy+oat+milk sheet:location` shows the map of the current place with the radius presets and slider at `150 m`, the not-watched note, and `Remove location`. Tapping `City` widens the circle to `10 km` and saves it. To see `Fitted`, start with `details:Buy+oat+milk sheet:location query:Golden+Gate+Park`, pick the park (it fits 900 m), reopen the chip, tap `Clear` (the demo query refills on every open), and tap `Block`. `details:Try+the+seasonal+blend sheet:location query:philz` lists Philz Coffee results with `During` beside the field. `details:Post+standup+notes sheet:event` shows `After` selected, `Minutes after 15m`, `Only this one`, and upcoming events by day with Standup checked.
 - **Arrive.** `xcrun simctl location $UDID set 37.3349,-122.0090`, launch, wait 15 seconds, then `xcrun simctl location $UDID set 37.3236,-122.0397`. Within about ten seconds the open app shows the toast `Buy oat milk · Arriving at Whole Foods Market` with `Open`.
 - **During.** `xcrun simctl location $UDID set 37.3229,-122.0322` with the app open starts one Live Activity for Philz Coffee; `log show --predicate 'eventMessage CONTAINS "procrastimate.widgets"'` shows the renderer subscribing. Moving away ends it the next time the app runs.
+- **Saved places.** Launch with `seed browse` and tap `Philz Coffee` (`browse-place-Philz Coffee`), then `Save place` (`save-place`). Type a name in `place-name` and tap `Save` (`place-save`). The screen becomes the saved place, its rows read `While at <name>`, and Browse lists it under Labels with a pin while Places keeps only Whole Foods Market. Relaunch with `details:Buy+oat+milk sheet:location`: under the current place, `Recent` lists the saved place first with a bookmark (`place-choice-<name>`). Launch with `quickadd type:Grind+beans+@<name>` and the Location chip reads `Arriving at <name>`. All of this runs through `./sim test`, since the simulator cannot be tapped otherwise.
 - **Moved event.** Launch with `move` and read `PlacesDemo before move` and `after move` from the console: the first occurrence starts an hour later and the series continues.
 
 ## Gotchas

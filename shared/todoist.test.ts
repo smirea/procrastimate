@@ -378,7 +378,7 @@ describe('merging into the store', () => {
 			tasks: [],
 			projects: [{ id: 'mine', name: 'job', order: 0, createdAt: 0 }],
 			sections: [],
-			labels: [{ id: 'l-home', name: 'Home', color: 'gray', createdAt: 0 }],
+			labels: [{ id: 'l-home', name: 'Home', color: 'gray', place: null, createdAt: 0 }],
 			comments: [],
 			reads: [],
 		};

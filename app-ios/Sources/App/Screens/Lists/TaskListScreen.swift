@@ -13,8 +13,9 @@ struct TaskListScreen<Content: View>: View {
     var root = false
     /// Shows a sort button at the top right that flips this.
     var newestFirst: Binding<Bool>?
-    /// A label screen leads its title with the label's tag in its color.
+    /// A label screen leads its title with the label's tag in its color, or a pin for a saved place.
     var labelColor: LabelColor?
+    var labelIcon = "tag.fill"
     /// The open rows the list shows, for the count beside the title.
     var open: Int?
     /// The whole list as Markdown, for a copy button at the top right. Project and label screens copy from their menu
@@ -92,7 +93,7 @@ struct TaskListScreen<Content: View>: View {
             // The navigation title already names the list, so only the count stays for VoiceOver.
             Group {
                 if let labelColor {
-                    Image(systemName: "tag.fill").imageScale(.small).foregroundStyle(labelColor.tone)
+                    Image(systemName: labelIcon).imageScale(.small).foregroundStyle(labelColor.tone)
                 }
                 Text(title)
             }

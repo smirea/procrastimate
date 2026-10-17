@@ -53,7 +53,11 @@ extension LocationTrigger {
 
 private struct LocationSheet: View {
     @Environment(PlaceMonitor.self) private var places
+    @Environment(Store.self) private var store
+    @Environment(\.clock) private var clock
     @Environment(\.dismiss) private var dismiss
+    /// `PlaceChoices.RecentPick`s as JSON, kept on this device only, since only iOS picks places.
+    @AppStorage("recentPlaces") private var recentPlaces = Data()
     let location: TaskLocation?
     let onChange: (TaskLocation?) -> Void
 
@@ -92,6 +96,12 @@ private struct LocationSheet: View {
                         }
                         .foregroundStyle(.toneOverdue)
                     }
+                }
+                if query.isEmpty {
+                    let sections = PlaceChoices.sections(store.tasks, store.labels, picks: picks)
+                    choiceSection("Recent", sections.recent)
+                    choiceSection("Saved", sections.saved)
+                    choiceSection("Other places", sections.other)
                 }
                 Section {
                     ForEach(search.results, id: \.self) { result in
@@ -178,6 +188,52 @@ private struct LocationSheet: View {
         .padding(.vertical, 8)
     }
 
+    private var picks: [PlaceChoices.RecentPick] {
+        (try? JSONDecoder().decode([PlaceChoices.RecentPick].self, from: recentPlaces)) ?? []
+    }
+
+    @ViewBuilder
+    private func choiceSection(_ title: String, _ choices: [PlaceChoices.Choice]) -> some View {
+        if !choices.isEmpty {
+            Section(title) {
+                ForEach(choices) { choice in
+                    let current = location.map(Triggers.placeKey) == choice.id
+                    Button { choose(choice.location) } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: choice.savedID == nil ? "mappin.and.ellipse" : "bookmark.fill")
+                                .foregroundStyle(choice.savedID.flatMap(store.label)?.color.tone ?? .muted)
+                                .frame(width: 22)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(choice.location.name).foregroundStyle(.ink)
+                                Text([choice.location.address, Triggers.formatRadius(choice.location.radius)].compactMap { $0 }.joined(separator: " · "))
+                                    .font(.footnote)
+                                    .foregroundStyle(.muted)
+                                    .lineLimit(1)
+                            }
+                            Spacer(minLength: 8)
+                            if current { Image(systemName: "checkmark").foregroundStyle(.accent) }
+                        }
+                        .contentShape(.rect)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("place-choice-\(choice.location.name)")
+                    .accessibilityAddTraits(current ? .isSelected : [])
+                }
+            }
+        }
+    }
+
+    /// Sets a picked place with the sheet's trigger, and remembers it as used on this device.
+    private func choose(_ picked: TaskLocation) {
+        var picked = picked
+        picked.trigger = trigger
+        onChange(picked)
+        let next = PlaceChoices.record(picked, at: clock.now.epochMilliseconds, in: picks)
+        if let data = try? JSONEncoder().encode(next) { recentPlaces = data }
+        places.requestPermission()
+        dismiss()
+    }
+
     private func saveRadius() {
         guard var location, location.radius != radius else { return }
         location.radius = radius
@@ -205,7 +261,7 @@ private struct LocationSheet: View {
                     deviceMax: places.maxRadius
                 )
             } ?? 150
-            onChange(TaskLocation(
+            choose(TaskLocation(
                 name: item.name ?? result.title,
                 address: result.subtitle.isEmpty ? item.address?.shortAddress : result.subtitle,
                 latitude: coordinate.latitude,
@@ -214,13 +270,11 @@ private struct LocationSheet: View {
                 fittedRadius: fitted,
                 trigger: trigger
             ))
-            places.requestPermission()
-            dismiss()
         }
     }
 }
 
-private struct CurrentPlace: View {
+struct CurrentPlace: View {
     let location: TaskLocation
     let radius: Double
     @State private var position: MapCameraPosition
@@ -264,7 +318,7 @@ private struct CurrentPlace: View {
 
 /// Presets for the common sizes and a log-scale slider between them. The circle follows while dragging, and the radius
 /// is saved when the drag ends, so a drag syncs once.
-private struct RadiusEditor: View {
+struct RadiusEditor: View {
     @Binding var radius: Double
     let presets: [Triggers.RadiusPreset]
     let max: Double

@@ -448,6 +448,19 @@ public final class Store {
         commit(StoreRules.renameLabel(snapshot.data, id, name))
     }
 
+    /// Nil when a label already has the name.
+    @discardableResult
+    public func savePlace(_ name: String, _ place: SavedPlace) -> Label? {
+        let (data, label) = StoreRules.savePlace(snapshot.data, name, place, creation())
+        if label != nil { commit(data) }
+        return label
+    }
+
+    public func setPlaceRadius(_ id: String, _ radius: Double) {
+        guard space(ofLabel: id) == .own else { return }
+        commit(StoreRules.setPlaceRadius(snapshot.data, id, radius))
+    }
+
     public func setLabelColor(_ id: String, _ color: LabelColor) {
         guard space(ofLabel: id) == .own else { return }
         untouchedLabels.remove(id)

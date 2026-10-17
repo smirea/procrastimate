@@ -85,6 +85,13 @@
 			"when": 1792257434316,
 			"tag": "0011_unknown_thor_girl",
 			"breakpoints": true
+		},
+		{
+			"idx": 12,
+			"version": "6",
+			"when": 1792257933995,
+			"tag": "0012_illegal_crystal",
+			"breakpoints": true
 		}
 	]
 }

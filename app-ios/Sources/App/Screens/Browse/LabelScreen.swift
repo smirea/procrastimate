@@ -8,21 +8,29 @@ struct LabelScreen: View {
     let labelID: String
 
     @State private var name: String?
+    @State private var editingPlace = false
     @AppStorage("showCompleted") private var showCompleted = false
 
     var body: some View {
         if let label = store.label(labelID) {
             let space = store.space(ofLabel: label.id) ?? .own
             let all = store.data(in: space).tasks
-            let tasks = Views.labelTasks(all, label.id, in: store.timeZone)
+            let tasks = Views.labelViewTasks(all, label, in: store.timeZone)
+            // A saved place lists the tasks at it, which never carry it as a label.
+            let key = label.place.map(Triggers.placeKey)
             let done = showCompleted
-                ? Views.completedTasks(all.filter { $0.labelIds.contains(label.id) }, .init(), in: store.timeZone) : []
+                ? Views.completedTasks(
+                    all.filter { key == nil ? $0.labelIds.contains(label.id) : $0.location.map(Triggers.placeKey) == key },
+                    .init(),
+                    in: store.timeZone
+                ) : []
             TaskListScreen(
                 title: label.name,
                 isEmpty: tasks.isEmpty && !showCompleted,
-                emptyTitle: "No tasks with this label",
+                emptyTitle: key == nil ? "No tasks with this label" : "No tasks at this place",
                 emptyHint: Browse.labelEmptyHint(label.name),
                 labelColor: label.color,
+                labelIcon: key == nil ? "tag.fill" : "mappin.and.ellipse",
                 open: tasks.count
             ) {
                 ForEach(tasks) { TaskRow(task: $0, showProject: true) }
@@ -30,13 +38,21 @@ struct LabelScreen: View {
             }
             .animation(.snappy, value: showCompleted)
             .environment(\.space, space)
+            .toolbar {
+                if label.place != nil, space == .own {
+                    ToolbarItem(placement: .primaryAction) {
+                        Button("Edit place", systemImage: "mappin.circle") { editingPlace = true }
+                    }
+                }
+            }
+            .sheet(isPresented: $editingPlace) { PlaceSheet(mode: .edit(label)) }
             .nameActions(
-                noun: "label",
+                noun: label.place == nil ? "label" : "place",
                 name: label.name,
                 space: space,
-                share: API.ShareTarget(kind: .label, id: label.id),
+                share: label.place == nil ? API.ShareTarget(kind: .label, id: label.id) : nil,
                 deletePrompt: Browse.deleteLabelPrompt(label.name),
-                deleteMessage: Browse.deleteLabelMessage,
+                deleteMessage: label.place == nil ? Browse.deleteLabelMessage : Browse.deletePlaceMessage,
                 copy: { actions.copyAsMarkdown(Markdown.Document(title: label.name, sections: [.init(tasks: tasks)])) },
                 rename: { store.renameLabel(label.id, $0) },
                 color: label.color,

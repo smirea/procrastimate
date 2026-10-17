@@ -150,12 +150,12 @@
 	function save() {
 		if (listening || !saving.length) return;
 		const added = saving.flatMap((entry) => {
-			const task = store.addTask(rambleNewTask(entry, defaults));
+			const task = store.addTask(rambleNewTask(entry, defaults, store.labels));
 			if (!task) return [];
 			if (entry.notes) store.updateTask(task.id, { notes: entry.notes });
 			for (const subtask of entry.subtasks) {
 				if (!subtask.title.trim()) continue;
-				const child = store.addTask(rambleNewTask(subtask, null), task.id);
+				const child = store.addTask(rambleNewTask(subtask, null, store.labels), task.id);
 				if (child && subtask.notes) store.updateTask(child.id, { notes: subtask.notes });
 			}
 			return [task];

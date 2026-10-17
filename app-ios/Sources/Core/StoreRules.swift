@@ -411,6 +411,54 @@ public enum StoreRules {
         return (next, label)
     }
 
+    /// Rewrites the place of every open task at `key`, so its rows read the saved name and it watches the saved radius.
+    private static func relocate(_ tasks: [TaskItem], _ key: String, name: String? = nil, radius: Double? = nil) -> [TaskItem] {
+        tasks.map { t in
+            guard t.completedAt == nil, var location = t.location, Triggers.placeKey(location) == key else { return t }
+            var t = t
+            if let name { location.name = name }
+            if let radius { location.radius = radius }
+            t.location = location
+            return t
+        }
+    }
+
+    /// Saves a place under a name, as a label that holds it. A name another label has is refused and returns no label,
+    /// since `@name` must resolve to one label. The open tasks already at the place take its name and radius.
+    public static func savePlace(
+        _ data: StoreData,
+        _ name: String,
+        _ place: SavedPlace,
+        _ creation: Creation
+    ) -> (data: StoreData, label: Label?) {
+        if data.labels.contains(where: { $0.name.lowercased() == name.lowercased() }) { return (data, nil) }
+        let label = Label(
+            id: creation.id,
+            name: name,
+            color: LabelColors.defaultLabelColor(name),
+            place: place,
+            createdAt: creation.now
+        )
+        var next = data
+        next.labels.append(label)
+        next.tasks = relocate(data.tasks, Triggers.placeKey(place), name: name, radius: place.radius)
+        return (next, label)
+    }
+
+    /// A saved place's new radius reaches the open tasks at it, like saving it did.
+    public static func setPlaceRadius(_ data: StoreData, _ id: String, _ radius: Double) -> StoreData {
+        guard let place = data.labels.first(where: { $0.id == id })?.place else { return data }
+        var next = data
+        next.labels = data.labels.map { l in
+            guard l.id == id else { return l }
+            var l = l
+            l.place?.radius = radius
+            return l
+        }
+        next.tasks = relocate(data.tasks, Triggers.placeKey(place), radius: radius)
+        return next
+    }
+
     /// A suggested color for a label created as `created`, or nil when there is nothing to apply. The label must still
     /// have the name and color it was created with, so a rename or a color picked meanwhile, here or on another device,
     /// wins over the suggestion.
@@ -433,9 +481,11 @@ public enum StoreRules {
         return next
     }
 
-    /// Names stay unique ignoring case, since `@name` must resolve to one label.
+    /// Names stay unique ignoring case, since `@name` must resolve to one label. Renaming a saved place renames it on
+    /// the open tasks at it.
     public static func renameLabel(_ data: StoreData, _ id: String, _ name: String) -> StoreData {
         if data.labels.contains(where: { $0.id != id && $0.name.lowercased() == name.lowercased() }) { return data }
+        guard let label = data.labels.first(where: { $0.id == id }) else { return data }
         var next = data
         next.labels = data.labels.map { l in
             guard l.id == id else { return l }
@@ -443,10 +493,11 @@ public enum StoreRules {
             l.name = name
             return l
         }
+        if let place = label.place { next.tasks = relocate(data.tasks, Triggers.placeKey(place), name: name) }
         return next
     }
 
-    /// Unlike a project, a label owns no tasks, so deleting it only takes it off them.
+    /// Unlike a project, a label owns no tasks, so deleting it only takes it off them. A deleted place stays on its tasks.
     public static func deleteLabel(_ data: StoreData, _ id: String) -> StoreData {
         var next = data
         next.labels = data.labels.filter { $0.id != id }

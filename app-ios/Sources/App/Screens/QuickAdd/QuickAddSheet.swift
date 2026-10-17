@@ -26,7 +26,7 @@ private struct QuickAddForm: View {
 
     @State private var draft: QuickAddDraft
     @State private var listAt: Int?
-    /// Picked with their chips, or from a place or event screen; neither has a phrase in the text.
+    /// Picked with their chips, or from a place or event screen. A typed `@place` wins over the picked place.
     @State private var location: TaskLocation?
     @State private var event: TaskEvent?
     @State private var subtasks: [DraftSubtask] = []
@@ -116,7 +116,15 @@ private struct QuickAddForm: View {
         .sensoryFeedback(.selection, trigger: draft.picked)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("Quick add")
-        .onAppear { focused = true }
+        .onAppear {
+            focused = true
+            // Quick add from a saved place's screen starts at that place rather than with it as a label.
+            let applied = Triggers.applyPickedLabels(spaceLabels, draft.picked.labelIds, nil)
+            if let place = applied.location {
+                location = place
+                draft.picked.labelIds = draft.picked.labelIds.filter { applied.labelIds.contains($0) }
+            }
+        }
         .onChange(of: subtaskFocused) {
             if !subtaskFocused, subtaskText.isEmpty, subtasks.isEmpty { subtasksOpen = false }
         }
@@ -201,7 +209,7 @@ private struct QuickAddForm: View {
         if parsed.recurrence ?? draft.picked.recurrence != nil { buttons.append(.repeat) }
         if !resolved.labelIds.isEmpty { buttons.append(.labels) }
         if subtasksOpen || !subtasks.isEmpty { buttons.append(.subtasks) }
-        if location != nil { buttons.append(.location) }
+        if (parsed.location ?? location) != nil { buttons.append(.location) }
         if event != nil { buttons.append(.event) }
         return buttons
     }
@@ -254,11 +262,16 @@ private struct QuickAddForm: View {
                 setRecurrence($0, start: $1, due: resolved.due)
             }
         case .labels:
-            LabelsChip(labelIds: resolved.labelIds, openTrigger: trigger) { setLabels($0, parsed) }
+            let place = parsed.location ?? location
+            LabelsChip(labelIds: Triggers.pickedLabels(spaceLabels, labelIds: resolved.labelIds, location: place), openTrigger: trigger) {
+                let applied = Triggers.applyPickedLabels(spaceLabels, $0, place)
+                setLabels(applied.labelIds, parsed)
+                if applied.location != place { setLocation(applied.location) }
+            }
         case .subtasks:
             subtaskChip
         case .location:
-            LocationChip(location: location, openTrigger: trigger) { location = $0 }
+            LocationChip(location: parsed.location ?? location, openTrigger: trigger) { setLocation($0) }
         case .event:
             EventChip(event: event, openTrigger: trigger) { event = $0 }
         }
@@ -284,6 +297,12 @@ private struct QuickAddForm: View {
             draft.picked.due = start
         }
         draft.picked.recurrence = recurrence
+    }
+
+    /// A picked place wins over a typed `@place`.
+    private func setLocation(_ next: TaskLocation?) {
+        clear(.place)
+        location = next
     }
 
     /// Unchecking a typed label removes its `@name`, so the picker's list is what saves.
@@ -328,7 +347,7 @@ private struct QuickAddForm: View {
     private func submit() {
         let parsed = draft.parse(now: clock.now, projects: spaceProjects, sections: spaceSections, labels: spaceLabels, in: clock.timeZone)
         guard var task = draft.resolve(parsed) else { return }
-        task.location = location
+        task.location = parsed.location ?? location
         task.event = event
         if event != nil {
             task.due = nil
@@ -347,7 +366,7 @@ private struct QuickAddForm: View {
 
     private func close(revealing taskID: String) {
         navigator.sheet = nil
-        if let task = store.task(taskID) { navigator.reveal(task, today: clock.today, in: clock.timeZone) }
+        if let task = store.task(taskID) { navigator.reveal(task, labels: store.labels, today: clock.today, in: clock.timeZone) }
     }
 }
 

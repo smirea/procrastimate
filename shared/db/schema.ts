@@ -119,6 +119,8 @@ export const labels = sqliteTable(
 		 * without a color clock takes `defaultLabelColor` of its name instead.
 		 */
 		color: text('color', { enum: LABEL_COLORS }).$type<ColumnValue<'labels', 'color'>>().notNull().default('gray'),
+		/** Set when the label is a saved place, such as `Home`. Its tasks are the open tasks at the place. */
+		place: text('place', { mode: 'json' }).$type<ColumnValue<'labels', 'place'>>(),
 		createdAt: integer('created_at').notNull(),
 		deleted: deleted(),
 		clocks: clocks(),

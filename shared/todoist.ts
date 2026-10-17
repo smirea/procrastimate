@@ -355,7 +355,7 @@ export function mergeBackup(
 	const labelId = (name: string) => {
 		const existing = labels.find(l => sameName(l.name, name));
 		if (existing) return existing.id;
-		const label: Label = { id: newId(), name, color: defaultLabelColor(name), createdAt: now };
+		const label: Label = { id: newId(), name, color: defaultLabelColor(name), place: null, createdAt: now };
 		labels.push(label);
 		summary.labels++;
 		return label.id;

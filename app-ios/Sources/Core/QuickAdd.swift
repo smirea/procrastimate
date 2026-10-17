@@ -202,6 +202,7 @@ public enum QuickAdd {
         case project(String)
         case section(String)
         case label(String)
+        case place(String)
         case reminder(ReminderDraft)
         /// Keeps the phrase in the title but claims it, so no later rule reads part of it.
         case text
@@ -651,7 +652,9 @@ public enum QuickAdd {
         )
         let named = [
             namedRule(.project, "#", options.projects.map { ($0.id, $0.name) }) { .project($0) },
-            namedRule(.label, "@", options.labels.map { ($0.id, $0.name) }) { .label($0) },
+            namedRule(.label, "@", options.labels.filter { $0.place == nil }.map { ($0.id, $0.name) }) { .label($0) },
+            // A saved place is a label, so names never collide, and like a project its last `@name` wins.
+            namedRule(.place, "@", options.labels.filter { $0.place != nil }.map { ($0.id, $0.name) }) { .place($0) },
         ].compactMap { $0 }
         let rules = [reminderRule, recurrenceRule] + named + [priorityRule, dueRule]
         let source = NSString(string: input)
@@ -709,6 +712,7 @@ public enum QuickAdd {
         var projectId: String?
         var sectionId: String?
         var labelIds: [String] = []
+        var placeId: String?
         var reminderDrafts: [ReminderDraft] = []
         for match in matches {
             switch match {
@@ -718,6 +722,7 @@ public enum QuickAdd {
             case let .project(id): projectId = id
             case let .section(id): sectionId = id
             case let .label(id): if !labelIds.contains(id) { labelIds.append(id) }
+            case let .place(id): placeId = id
             case let .reminder(draft): reminderDrafts.append(draft)
             case .text: break
             }
@@ -754,6 +759,7 @@ public enum QuickAdd {
             projectId: projectId,
             sectionId: sectionId,
             labelIds: labelIds,
+            location: options.labels.first { $0.id == placeId }.flatMap { Triggers.placeLocation($0, .arrive) },
             tokens: tokens
         )
     }

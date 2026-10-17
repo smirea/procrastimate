@@ -18,6 +18,8 @@ const moveProject = recorded('store', store.moveProject);
 const moveSection = recorded('store', store.moveSection);
 const moveSubtask = recorded('store', store.moveSubtask);
 const renameLabel = recorded('store', store.renameLabel);
+const savePlace = recorded('store', store.savePlace);
+const setPlaceRadius = recorded('store', store.setPlaceRadius);
 const renameProject = recorded('store', store.renameProject);
 const renameSection = recorded('store', store.renameSection);
 const projectsInOrder = recorded('store', store.projectsInOrder);
@@ -80,8 +82,8 @@ const data = (): StoreData => ({
 		{ id: 'someday', projectId: 'work', name: 'Someday', order: 0, createdAt: 3 },
 	],
 	labels: [
-		{ id: 'calls', name: 'calls', color: 'gray', createdAt: 1 },
-		{ id: 'phone', name: 'Phone', color: 'gray', createdAt: 2 },
+		{ id: 'calls', name: 'calls', color: 'gray', place: null, createdAt: 1 },
+		{ id: 'phone', name: 'Phone', color: 'gray', place: null, createdAt: 2 },
 	],
 	comments: [],
 	reads: [],
@@ -485,14 +487,14 @@ describe('sections', () => {
 describe('labels', () => {
 	test('setting a label color changes only that label', () => {
 		expect(setLabelColor(data(), 'phone', 'violet').labels).toEqual([
-			{ id: 'calls', name: 'calls', color: 'gray', createdAt: 1 },
-			{ id: 'phone', name: 'Phone', color: 'violet', createdAt: 2 },
+			{ id: 'calls', name: 'calls', color: 'gray', place: null, createdAt: 1 },
+			{ id: 'phone', name: 'Phone', color: 'violet', place: null, createdAt: 2 },
 		]);
 	});
 
 	test('adding a label and renaming it, unique ignoring case', () => {
 		const { data: added, label } = addLabel(data(), 'errands', { id: 'errands', now: NOW });
-		expect(label).toEqual({ id: 'errands', name: 'errands', color: 'orange', createdAt: NOW });
+		expect(label).toEqual({ id: 'errands', name: 'errands', color: 'orange', place: null, createdAt: NOW });
 		expect(added.labels.map(l => l.name)).toEqual(['calls', 'Phone', 'errands']);
 		expect(renameLabel(data(), 'calls', 'Calls').labels[0]!.name).toBe('Calls');
 		expect(renameLabel(data(), 'calls', 'phone')).toEqual(data());
@@ -503,6 +505,47 @@ describe('labels', () => {
 		expect(next.labels.map(l => l.id)).toEqual(['phone']);
 		expect(find(next, 'call').labelIds).toEqual(['phone']);
 		expect(next.tasks.length).toBe(5);
+	});
+
+	describe('saved places', () => {
+		const rewe = { name: 'Rewe', address: 'Hauptstr. 1', latitude: 52.5, longitude: 13.4, radius: 150 };
+		const atRewe = (): StoreData => ({
+			...data(),
+			tasks: [
+				task('milk', 1, { location: { ...rewe, trigger: 'arrive' } }),
+				task('eggs', 2, { location: { ...rewe, latitude: 52.50001, fittedRadius: 150, trigger: 'leave' } }),
+				task('old', 3, { location: { ...rewe, trigger: 'arrive' }, completedAt: 9 }),
+				task('park', 4, { location: { ...rewe, name: 'Park', latitude: 52.6, trigger: 'during' } }),
+			],
+		});
+		const place = { address: 'Hauptstr. 1', latitude: 52.5, longitude: 13.4, radius: 500 };
+
+		test('saving a place adds a label holding it, and the open tasks there take its name and radius', () => {
+			const { data: saved, label } = savePlace(atRewe(), 'Groceries', place, { id: 'groceries', now: NOW });
+			expect(label).toEqual({ id: 'groceries', name: 'Groceries', color: 'orange', place, createdAt: NOW });
+			expect(saved.labels.map(l => l.id)).toEqual(['calls', 'phone', 'groceries']);
+			expect(saved.tasks.map(t => [t.id, t.location?.name, t.location?.radius, t.location?.trigger])).toEqual([
+				['milk', 'Groceries', 500, 'arrive'],
+				['eggs', 'Groceries', 500, 'leave'],
+				['old', 'Rewe', 150, 'arrive'],
+				['park', 'Park', 150, 'during'],
+			]);
+		});
+
+		test('a place is never saved under a label name, ignoring case', () => {
+			const before = atRewe();
+			expect(savePlace(before, 'PHONE', place, { id: 'x', now: NOW })).toEqual({ data: before, label: null });
+		});
+
+		test('renaming or resizing a saved place reaches the open tasks at it', () => {
+			const saved = savePlace(atRewe(), 'Groceries', place, { id: 'groceries', now: NOW }).data;
+			const renamed = renameLabel(saved, 'groceries', 'Shop');
+			expect(renamed.tasks.map(t => t.location?.name)).toEqual(['Shop', 'Shop', 'Rewe', 'Park']);
+			const resized = setPlaceRadius(renamed, 'groceries', 1_000);
+			expect(resized.labels.at(-1)?.place?.radius).toBe(1_000);
+			expect(resized.tasks.map(t => t.location?.radius)).toEqual([1_000, 1_000, 150, 150]);
+			expect(setPlaceRadius(resized, 'calls', 5)).toEqual(resized);
+		});
 	});
 
 	test('completing a task on an event series moves it past missed occurrences, and undo moves it back', () => {

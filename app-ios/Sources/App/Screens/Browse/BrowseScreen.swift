@@ -107,7 +107,7 @@ private struct BrowseList: View {
                 }
             }
 
-            let places = Triggers.placeGroups(store.tasks)
+            let places = Triggers.placeGroups(store.tasks, store.labels)
             if !places.isEmpty {
                 Section {
                     ForEach(places, id: \.key) { place in
@@ -141,9 +141,9 @@ private struct BrowseList: View {
                         NavigationLink(value: Route.label(id: label.id)) {
                             BrowseRow(
                                 name: label.name,
-                                systemImage: "tag",
+                                systemImage: label.place == nil ? "tag" : "mappin.and.ellipse",
                                 tone: label.color.tone,
-                                count: Views.labelTasks(store.tasks, label.id, in: store.timeZone).count
+                                count: Views.labelViewTasks(store.tasks, label, in: store.timeZone).count
                             )
                         }
                         .accessibilityIdentifier("browse-label-\(label.name)")

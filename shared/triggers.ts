@@ -7,9 +7,10 @@ import {
 	toTimeOfDay,
 	type DateKey,
 	type Due,
+	type Label,
 	type Task,
 } from './task.ts';
-import type { EventOccurrence, TaskEvent, TaskLocation } from './values.ts';
+import type { EventOccurrence, LocationTrigger, SavedPlace, TaskEvent, TaskLocation } from './values.ts';
 import { zonedDateKey } from './zoned-time.ts';
 
 /**
@@ -197,12 +198,58 @@ export type EventGroup = z.infer<typeof eventGroupSchema>;
 
 const open = (tasks: readonly Task[]) => tasks.filter(t => t.completedAt === null);
 
-/** The places open tasks hang off, by name, each named after its earliest task. Empty hides the sidebar section. */
-export function placeGroups(tasks: readonly Task[]): PlaceGroup[] {
+export type SavedPlaceLabel = Label & { place: SavedPlace };
+
+export const isSavedPlace = (label: Label): label is SavedPlaceLabel => label.place !== null;
+
+/** The saved place at a spot, if one is. */
+export function savedPlaceAt(labels: readonly Label[], key: string): SavedPlaceLabel | null {
+	return labels.filter(isSavedPlace).find(l => placeKey(l.place) === key) ?? null;
+}
+
+/** A saved place as a task's place, under its saved name and radius. */
+export function placeLocation(label: SavedPlaceLabel, trigger: LocationTrigger): TaskLocation {
+	return { name: label.name, ...label.place, trigger };
+}
+
+type Placed = Pick<Task, 'labelIds' | 'location'>;
+
+/** What a label picker shows checked: the task's labels, then the saved place it sits at. */
+export function pickedLabels(labels: readonly Label[], task: Placed): string[] {
+	const place = task.location && savedPlaceAt(labels, placeKey(task.location));
+	return place ? [...task.labelIds, place.id] : task.labelIds;
+}
+
+/**
+ * What a label picker's checked ids save. Saved places are not kept as labels: the last one checked becomes the task's
+ * place, keeping its trigger, since a task has one place. With none checked, a task at a saved place leaves it, and a
+ * place set on iPhone that was never saved stays.
+ */
+export function applyPickedLabels(
+	labels: readonly Label[],
+	ids: readonly string[],
+	location: TaskLocation | null,
+): Placed {
+	const places = labels.filter(isSavedPlace);
+	const place = ids.flatMap(id => places.filter(l => l.id === id)).at(-1);
+	const kept = location && !savedPlaceAt(labels, placeKey(location)) ? location : null;
+	return {
+		labelIds: ids.filter(id => !places.some(l => l.id === id)),
+		location: place ? placeLocation(place, location?.trigger ?? 'arrive') : kept,
+	};
+}
+
+/**
+ * The places open tasks hang off, by name, each named after its earliest task. A saved place lists with the labels
+ * instead, so it is left out. Empty hides the sidebar section.
+ */
+export function placeGroups(tasks: readonly Task[], labels: readonly Label[]): PlaceGroup[] {
+	const saved = new Set(labels.filter(isSavedPlace).map(l => placeKey(l.place)));
 	const groups = new Map<string, PlaceGroup>();
 	for (const task of open(tasks).toSorted((a, b) => a.createdAt - b.createdAt)) {
 		if (!task.location) continue;
 		const key = placeKey(task.location);
+		if (saved.has(key)) continue;
 		const group = groups.get(key) ?? { key, name: task.location.name, count: 0 };
 		group.count++;
 		groups.set(key, group);

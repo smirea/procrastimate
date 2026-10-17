@@ -186,7 +186,9 @@ describe('applyOps', () => {
 			fields: { deleted: false, name: 'urgent', createdAt: 1 },
 		};
 		const { state } = apply(createServerState(), [create]);
-		expect(serverSnapshot(state).labels).toEqual([{ id: 'l', name: 'urgent', color: 'red', createdAt: 1 }]);
+		expect(serverSnapshot(state).labels).toEqual([
+			{ id: 'l', name: 'urgent', color: 'red', place: null, createdAt: 1 },
+		]);
 		const recolored = apply(state, [{ opId: 'c', hlc: '11:0:a', kind: 'label', id: 'l', fields: { color: 'teal' } }]);
 		expect(serverSnapshot(recolored.state).labels[0]?.color).toBe('teal');
 	});
@@ -211,7 +213,7 @@ describe('applyOps', () => {
 			{ opId: 'r', hlc: '11:0:a', kind: 'label', id: 'l', fields: { name: 'tom' } },
 		]);
 		expect(log[0]?.fields).toEqual({ name: 'tom', color: 'red' });
-		expect(serverSnapshot(state).labels).toEqual([{ id: 'l', name: 'tom', color: 'red', createdAt: 1 }]);
+		expect(serverSnapshot(state).labels).toEqual([{ id: 'l', name: 'tom', color: 'red', place: null, createdAt: 1 }]);
 	});
 
 	test('the settings record needs no create and cannot be deleted', () => {

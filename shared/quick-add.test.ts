@@ -13,10 +13,10 @@ const projects = [
 	{ id: 'p-side', name: 'Side Project', order: 0, createdAt: 0 },
 ];
 const labels: Label[] = [
-	{ id: 'l-calls', name: 'calls', color: 'gray', createdAt: 0 },
-	{ id: 'l-waiting', name: 'Waiting', color: 'gray', createdAt: 0 },
-	{ id: 'l-deep', name: 'deep work', color: 'gray', createdAt: 0 },
-	{ id: 'l-tom', name: 'tom', color: 'gray', createdAt: 0 },
+	{ id: 'l-calls', name: 'calls', color: 'gray', place: null, createdAt: 0 },
+	{ id: 'l-waiting', name: 'Waiting', color: 'gray', place: null, createdAt: 0 },
+	{ id: 'l-deep', name: 'deep work', color: 'gray', place: null, createdAt: 0 },
+	{ id: 'l-tom', name: 'tom', color: 'gray', place: null, createdAt: 0 },
 ];
 const parse = (input: string, options: Partial<ParseOptions> = {}) =>
 	parseQuickAdd(input, { now, projects, labels, ...options });
@@ -244,6 +244,47 @@ describe('sections', () => {
 		expect(parse('Fix sink #Home /someday', { sections }).title).toBe('Fix sink /someday');
 		expect(parse('Pick and/later tomorrow', { sections, projectId: 'p-home' }).title).toBe('Pick and/later');
 		expect(parse('Clean /later/cache', { sections, projectId: 'p-home' }).sectionId).toBe(null);
+	});
+});
+
+describe('saved places', () => {
+	const gym: Label = {
+		id: 'l-gym',
+		name: 'gym',
+		color: 'green',
+		place: { address: null, latitude: 52.5, longitude: 13.4, radius: 300 },
+		createdAt: 0,
+	};
+	const home: Label = { ...gym, id: 'l-home', name: 'Home', place: { ...gym.place!, latitude: 52.6, radius: 500 } };
+	const withPlaces = { labels: [...labels, gym, home] };
+
+	test('`@name` of a saved place sets the place, arriving there, not a label', () => {
+		const parsed = parse('Water plants @home @calls tomorrow', withPlaces);
+		expect(parsed.title).toBe('Water plants');
+		expect(parsed.labelIds).toEqual(['l-calls']);
+		expect(parsed.location).toEqual({
+			name: 'Home',
+			address: null,
+			latitude: 52.6,
+			longitude: 13.4,
+			radius: 500,
+			trigger: 'arrive',
+		});
+		expect(parsed.tokens.map(t => [t.kind, t.text])).toEqual([
+			['place', '@home'],
+			['label', '@calls'],
+			['due', 'tomorrow'],
+		]);
+	});
+
+	test('a task has one place, so the last saved place typed wins, like a project', () => {
+		const parsed = parse('Stretch @gym @Home', withPlaces);
+		expect(parsed.title).toBe('Stretch @gym');
+		expect(parsed.location?.name).toBe('Home');
+	});
+
+	test('no saved place leaves the place unset', () => {
+		expect(parse('Ping @calls').location).toBeNull();
 	});
 });
 
@@ -1148,6 +1189,7 @@ test('everything at once', () => {
 		projectId: 'p-home',
 		sectionId: null,
 		labelIds: [],
+		location: null,
 		tokens: [
 			{ kind: 'project', start: 14, end: 19, text: '#Home' },
 			{ kind: 'due', start: 20, end: 27, text: 'fri 4pm' },

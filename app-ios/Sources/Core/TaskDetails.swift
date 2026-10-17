@@ -13,6 +13,7 @@ public enum TaskDetails {
         public var sectionId: String?
         public var labelIds: [String]
         public var reminders: [Reminder]
+        public var location: TaskLocation?
 
         public init(_ task: TaskItem) {
             title = task.title
@@ -23,6 +24,7 @@ public enum TaskDetails {
             sectionId = task.sectionId
             labelIds = task.labelIds
             reminders = task.reminders
+            location = task.location
         }
     }
 
@@ -74,6 +76,11 @@ public enum TaskDetails {
             ?? (parsed.projectId.map { $0 != task.projectId } == true ? nil : task.sectionId)
         for id in parsed.labelIds where !draft.labelIds.contains(id) { draft.labelIds.append(id) }
         draft.reminders = task.reminders + parsed.reminders
+        // A typed saved place keeps the task's trigger, as picking one does.
+        if var location = parsed.location {
+            location.trigger = task.location?.trigger ?? .arrive
+            draft.location = location
+        }
         return draft
     }
 
@@ -89,7 +96,8 @@ public enum TaskDetails {
             due: .some(draft.due),
             recurrence: .some(draft.recurrence),
             priority: draft.priority,
-            reminders: draft.reminders
+            reminders: draft.reminders,
+            location: .some(draft.location)
         )
         return .update(patch, title: draft.title)
     }

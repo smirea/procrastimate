@@ -34,7 +34,7 @@ extension Store {
         case .inbox: PinLabel(title: "Inbox", systemImage: "tray")
         case .noDate: PinLabel(title: "No date", systemImage: "calendar.badge.minus")
         case let .project(id): project(id).map { PinLabel(title: $0.name, systemImage: "number") }
-        case let .label(id): label(id).map { PinLabel(title: $0.name, systemImage: "tag") }
+        case let .label(id): label(id).map { PinLabel(title: $0.name, systemImage: $0.place == nil ? "tag" : "mappin.and.ellipse") }
         case let .place(_, name): PinLabel(title: name, systemImage: "mappin.and.ellipse")
         case let .event(_, title): PinLabel(title: title, systemImage: "calendar")
         }
@@ -48,7 +48,7 @@ extension Store {
         case let .project(id):
             !Views.projectTasks(data(in: space(ofProject: id) ?? .own).tasks, id, in: timeZone).isEmpty
         case let .label(id):
-            !Views.labelTasks(data(in: space(ofLabel: id) ?? .own).tasks, id, in: timeZone).isEmpty
+            label(id).map { !Views.labelViewTasks(data(in: space(ofLabel: id) ?? .own).tasks, $0, in: timeZone).isEmpty } ?? false
         case let .place(key, _): !Views.placeTasks(tasks, key, in: timeZone).isEmpty
         case let .event(id, _): !Views.eventTasks(tasks, id, today, in: timeZone).isEmpty
         }
@@ -68,7 +68,7 @@ extension Store {
             PinGroup(title: "Lists", pins: [.inbox, .noDate]),
             PinGroup(title: "Projects", pins: projects.map { .project(id: $0.id) }),
             PinGroup(title: "Shared with me", pins: shared),
-            PinGroup(title: "Places", pins: Triggers.placeGroups(tasks).map { .place(key: $0.key, name: $0.name) }),
+            PinGroup(title: "Places", pins: Triggers.placeGroups(tasks, labels).map { .place(key: $0.key, name: $0.name) }),
             PinGroup(
                 title: "Events",
                 pins: Triggers.eventGroups(tasks, today, in: timeZone).map { .event(id: $0.id, title: $0.title) }

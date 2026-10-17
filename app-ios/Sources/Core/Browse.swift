@@ -22,6 +22,8 @@ public enum Browse {
 
     public static let deleteLabelMessage = "Its tasks stay, without the label."
 
+    public static let deletePlaceMessage = "Its tasks keep the place."
+
     public static func projectEmptyHint(_ name: String) -> String { "Add one here, or type #\(name) in quick add." }
 
     public static func labelEmptyHint(_ name: String) -> String {

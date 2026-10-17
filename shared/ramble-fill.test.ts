@@ -3,6 +3,7 @@ import { parseRamble } from './ramble.ts';
 import * as fill from './ramble-fill.ts';
 import type { RambleTask } from './ramble.ts';
 import { NO_DEFAULTS } from './screens.ts';
+import type { Label } from './task.ts';
 import type { TaskEvent, TaskLocation } from './values.ts';
 import { describe, recorded, test } from './vectors/record.ts';
 
@@ -29,7 +30,7 @@ function task(title: string, extra: Partial<RambleTask> = {}): RambleTask {
 describe('rambleNewTask', () => {
 	test('keeps the title and every field the grammar read', () => {
 		const [spoken] = parseRamble('Call mom tomorrow at five p.m. priority one', { now }).tasks;
-		expect(rambleNewTask(spoken!, null)).toEqual({
+		expect(rambleNewTask(spoken!, null, [])).toEqual({
 			title: 'Call mom',
 			projectId: null,
 			sectionId: null,
@@ -44,27 +45,35 @@ describe('rambleNewTask', () => {
 	});
 
 	test('list defaults fill only what speech left empty', () => {
-		const saved = rambleNewTask(task('Pay rent', { projectId: 'spoken', labelIds: ['bills'] }), {
-			...NO_DEFAULTS,
-			projectId: 'list-project',
-			labelId: 'errands',
-			date: '2026-10-14',
-		});
+		const saved = rambleNewTask(
+			task('Pay rent', { projectId: 'spoken', labelIds: ['bills'] }),
+			{
+				...NO_DEFAULTS,
+				projectId: 'list-project',
+				labelId: 'errands',
+				date: '2026-10-14',
+			},
+			[],
+		);
 		expect(saved.projectId).toBe('spoken');
 		expect(saved.labelIds).toEqual(['errands', 'bills']);
 		expect(saved.due).toEqual({ date: '2026-10-14', time: null });
 	});
 
 	test('a spoken date wins over the heading day', () => {
-		const saved = rambleNewTask(task('Pay rent', { due: { date: '2026-10-20', time: null } }), {
-			...NO_DEFAULTS,
-			date: '2026-10-14',
-		});
+		const saved = rambleNewTask(
+			task('Pay rent', { due: { date: '2026-10-20', time: null } }),
+			{
+				...NO_DEFAULTS,
+				date: '2026-10-14',
+			},
+			[],
+		);
 		expect(saved.due).toEqual({ date: '2026-10-20', time: null });
 	});
 
 	test('a subtask takes no defaults', () => {
-		const saved = rambleNewTask(task('Milk'), null);
+		const saved = rambleNewTask(task('Milk'), null, []);
 		expect(saved).toEqual({
 			title: 'Milk',
 			projectId: null,
@@ -99,14 +108,37 @@ describe('rambleNewTask', () => {
 
 	test('a section list keeps its section unless the speech names another project', () => {
 		const defaults = { ...NO_DEFAULTS, projectId: 'home', sectionId: 'kitchen' };
-		expect(rambleNewTask(task('Fix tap'), defaults).sectionId).toBe('kitchen');
-		expect(rambleNewTask(task('Fix tap', { projectId: 'home' }), defaults).sectionId).toBe('kitchen');
-		const elsewhere = rambleNewTask(task('Fix tap', { projectId: 'work' }), defaults);
+		expect(rambleNewTask(task('Fix tap'), defaults, []).sectionId).toBe('kitchen');
+		expect(rambleNewTask(task('Fix tap', { projectId: 'home' }), defaults, []).sectionId).toBe('kitchen');
+		const elsewhere = rambleNewTask(task('Fix tap', { projectId: 'work' }), defaults, []);
 		expect([elsewhere.projectId, elsewhere.sectionId]).toEqual(['work', null]);
 	});
 
 	test('a place list saves its place', () => {
-		expect(rambleNewTask(task('Buy milk'), { ...NO_DEFAULTS, location: rewe }).location).toEqual(rewe);
+		expect(rambleNewTask(task('Buy milk'), { ...NO_DEFAULTS, location: rewe }, []).location).toEqual(rewe);
+	});
+
+	test("a saved place picked or as the list's label becomes the task's place, not a label", () => {
+		const home: Label = {
+			id: 'home',
+			name: 'Home',
+			color: 'green',
+			place: { address: null, latitude: 52.52, longitude: 13.405, radius: 500 },
+			createdAt: 0,
+		};
+		const saved = rambleNewTask(task('Water plants', { labelIds: ['calls'] }), { ...NO_DEFAULTS, labelId: 'home' }, [
+			home,
+		]);
+		expect(saved.labelIds).toEqual(['calls']);
+		expect(saved.location).toEqual({
+			name: 'Home',
+			address: null,
+			latitude: 52.52,
+			longitude: 13.405,
+			radius: 500,
+			trigger: 'arrive',
+		});
+		expect(rambleNewTask(task('Water plants', { labelIds: ['home'] }), null, [home]).location?.name).toBe('Home');
 	});
 
 	test("an event list's event replaces a spoken date and repeat", () => {
@@ -114,7 +146,7 @@ describe('rambleNewTask', () => {
 			due: { date: '2026-10-20', time: '09:00' },
 			recurrence: { interval: 1, unit: 'day' },
 		});
-		const saved = rambleNewTask(spoken, { ...NO_DEFAULTS, event: standup });
+		const saved = rambleNewTask(spoken, { ...NO_DEFAULTS, event: standup }, []);
 		expect([saved.event, saved.due, saved.recurrence]).toEqual([standup, null, null]);
 	});
 });

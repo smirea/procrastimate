@@ -83,8 +83,13 @@ final class Navigator {
 
     /// Shows the list a new task lands in: the open list when it already shows the task, else its project, else Inbox
     /// when it has a day or No date when it has none.
-    func reveal(_ task: TaskItem, today: DateKey, in zone: TimeZone) {
-        if !Screens.holds(currentRoute?.screen, task, today, in: zone) {
+    func reveal(_ task: TaskItem, labels: [Label], today: DateKey, in zone: TimeZone) {
+        // A saved place's screen is its label's, but it holds the tasks at the place.
+        var screen = currentRoute?.screen
+        if case let .label(id)? = screen, let place = labels.first(where: { $0.id == id })?.place {
+            screen = .place(key: Triggers.placeKey(place))
+        }
+        if !Screens.holds(screen, task, today, in: zone) {
             if let projectId = task.projectId {
                 open(.project(id: projectId))
             } else {

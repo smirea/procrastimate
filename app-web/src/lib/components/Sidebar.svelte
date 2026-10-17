@@ -22,7 +22,7 @@
 	import { labelStyle } from '../label-colors.ts';
 	import { clock, mobile, motion, sheets } from '../ui.svelte.ts';
 	import { sharedEntries } from '../spaces.ts';
-	import { inboxTasks, labelTasks, todayTasks } from 'shared/views.ts';
+	import { inboxTasks, labelViewTasks, todayTasks } from 'shared/views.ts';
 	import { eventGroups, placeGroups } from 'shared/triggers.ts';
 
 	let { onquickadd, onsearch, onsettings }: { onquickadd: () => void; onsearch: () => void; onsettings: () => void } =
@@ -39,7 +39,7 @@
 
 	const labels = $derived(
 		store.own.labels
-			.map((label) => ({ label, count: labelTasks(store.own.tasks, label.id).length }))
+			.map((label) => ({ label, count: labelViewTasks(store.own.tasks, label).length }))
 			.toSorted((a, b) => a.label.name.localeCompare(b.label.name, undefined, { sensitivity: 'base' })),
 	);
 
@@ -47,7 +47,7 @@
 		{
 			label: 'Places',
 			icon: MapPin,
-			rows: placeGroups(store.own.tasks).map((g) => ({ key: g.key, name: g.name, count: g.count, href: `/places/${encodeURIComponent(g.key)}` })),
+			rows: placeGroups(store.own.tasks, store.own.labels).map((g) => ({ key: g.key, name: g.name, count: g.count, href: `/places/${encodeURIComponent(g.key)}` })),
 		},
 		{
 			label: 'Events',
@@ -189,10 +189,11 @@
 				<ul class="space-y-0.5">
 					{#each labels as { label, count } (label.id)}
 						{@const href = `/labels/${label.id}`}
+						{@const Icon = label.place ? MapPin : Tag}
 						{@const active = page.url.pathname === href}
 						<li transition:slide={motion({ duration: 180, easing: cubicOut })}>
 							<a {href} class="nav-link" class:active aria-current={active ? 'page' : undefined}>
-								<Tag size={18} weight={active ? 'fill' : 'regular'} class="text-[var(--label-tone)]" style={labelStyle(label.color)} />
+								<Icon size={18} weight={active ? 'fill' : 'regular'} class="text-[var(--label-tone)]" style={labelStyle(label.color)} />
 								<span class="flex-1 truncate">{label.name}</span>
 								{#if count}<span class="text-[12px] text-faint">{count}</span>{/if}
 							</a>
