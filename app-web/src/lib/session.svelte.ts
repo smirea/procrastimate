@@ -1,5 +1,6 @@
 import type { AuthMethods } from 'shared/api/contract.ts';
 import { api } from './api.ts';
+import { identify } from './sentry.ts';
 import { store } from './store.svelte.ts';
 import { toasts } from './ui.svelte.ts';
 
@@ -32,6 +33,7 @@ class Session {
 	error = $state('');
 
 	async start() {
+		identify(this.userId);
 		await this.refresh();
 		this.confirmed = true;
 		void this.loadMethods();
@@ -68,6 +70,7 @@ class Session {
 		localStorage.setItem(USER_KEY, id);
 		localStorage.setItem(OWNER_KEY, id);
 		this.userId = id;
+		identify(id);
 		this.state = 'in';
 		this.error = '';
 	}
@@ -76,6 +79,7 @@ class Session {
 	clear() {
 		localStorage.removeItem(USER_KEY);
 		this.userId = null;
+		identify(null);
 		this.state = 'out';
 	}
 
