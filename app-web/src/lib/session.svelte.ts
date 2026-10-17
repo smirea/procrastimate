@@ -1,6 +1,6 @@
 import type { AuthMethods } from 'shared/api/contract.ts';
 import { api } from './api.ts';
-import { identify } from './sentry.ts';
+import { identify, type SentryUser } from './sentry.ts';
 import { store } from './store.svelte.ts';
 import { toasts } from './ui.svelte.ts';
 
@@ -33,7 +33,7 @@ class Session {
 	error = $state('');
 
 	async start() {
-		identify(this.userId);
+		identify(this.userId ? { id: this.userId } : null);
 		await this.refresh();
 		this.confirmed = true;
 		void this.loadMethods();
@@ -55,22 +55,23 @@ class Session {
 			if (!cachedUser()) this.state = 'out';
 			return;
 		}
-		const body = (await response.json().catch(() => null)) as { user?: { id?: string } } | null;
+		const body = (await response.json().catch(() => null)) as { user?: Partial<SentryUser> } | null;
 		if (!body?.user?.id) {
 			this.clear();
 			return;
 		}
-		this.adopt(body.user.id);
+		this.adopt({ ...body.user, id: body.user.id });
 	}
 
 	/** Remembers the user. A different owner replaces the local document with an empty pull, not an upload. */
-	adopt(id: string) {
+	adopt(user: SentryUser) {
+		const { id } = user;
 		const owner = localStorage.getItem(OWNER_KEY);
 		if (owner && owner !== id) store.switchUser();
 		localStorage.setItem(USER_KEY, id);
 		localStorage.setItem(OWNER_KEY, id);
 		this.userId = id;
-		identify(id);
+		identify(user);
 		this.state = 'in';
 		this.error = '';
 	}
@@ -114,7 +115,7 @@ class Session {
 		this.clear();
 		const response = await fetch('/api/auth/sign-out', { method: 'POST', credentials: 'include' }).catch(() => null);
 		if (response?.ok || !id || this.state !== 'out') return;
-		this.adopt(id);
+		this.adopt({ id });
 		toasts.show('Could not sign out');
 	}
 
@@ -149,8 +150,8 @@ class Session {
 			this.error = response.status === 401 ? 'Wrong email or password' : 'Could not sign in';
 			return;
 		}
-		const payload = (await response.json().catch(() => null)) as { user?: { id?: string } } | null;
-		if (payload?.user?.id) this.adopt(payload.user.id);
+		const payload = (await response.json().catch(() => null)) as { user?: Partial<SentryUser> } | null;
+		if (payload?.user?.id) this.adopt({ ...payload.user, id: payload.user.id });
 		else await this.refresh();
 	}
 

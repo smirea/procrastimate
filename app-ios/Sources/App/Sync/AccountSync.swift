@@ -94,7 +94,9 @@ final class AccountSync {
         }
         store.switchUser()
         TaskImages.clearLocal()
-        UserDefaults.standard.removeObject(forKey: Session.ownerKey)
+        for key in [Session.ownerKey, Session.ownerEmailKey, Session.ownerNameKey] {
+            UserDefaults.standard.removeObject(forKey: key)
+        }
         SessionToken.clear()
         session.signedIn = Launch.signedIn
         return true
@@ -138,7 +140,7 @@ final class AccountSync {
         do {
             try await images.upload(space, token: token)
         } catch {
-            ErrorReport.log("Image upload failed for \(space.query ?? "own space")", report: "Image upload failed", error: error)
+            ErrorReport.log("Image upload failed", about: space.query ?? "own space", error: error)
             return false
         }
         let response: API.SyncResponse
@@ -153,7 +155,7 @@ final class AccountSync {
             if let id = space.query { store.dropSpace(id) }
             return false
         } catch {
-            ErrorReport.log("Sync failed for \(space.query ?? "own space")", report: "Sync failed", error: error)
+            ErrorReport.log("Sync failed", about: space.query ?? "own space", error: error)
             return false
         }
         let seeding = space == .own && store.snapshot.sync?.seed == true

@@ -1,3 +1,4 @@
+import Core
 import Foundation
 import Sentry
 import SwiftUI
@@ -7,10 +8,11 @@ import SwiftUI
 enum Telemetry {
     /// Call first thing at launch, so a crash during the rest of launch is still reported.
     @MainActor static func start() {
-        guard let target = AppEnvironment.telemetry else { return }
+        guard let target = AppEnvironment.telemetry, !isHarnessRun else { return }
         SentrySDK.start { options in
             options.dsn = target.dsn
             options.environment = target.environment
+            options.sendDefaultPii = true
             options.tracesSampleRate = 1
             // Only API requests carry `sentry-trace` and `baggage`, so the Worker continues the app's traces and no
             // other host receives them.
@@ -19,48 +21,63 @@ enum Telemetry {
             // transactions only see UIKit internals in a SwiftUI app (a text field tap read keyboard plists).
             options.enableCaptureFailedRequests = false
             options.enableUserInteractionTracing = false
-            // sentry-cocoa 9 copies each request's query into its span and breadcrumb, and `GET /api/shared?token=`
-            // carries a public link's token.
-            options.beforeSendSpan = { span in
-                span.removeData(key: "http.query")
-                return span
-            }
-            options.beforeBreadcrumb = { breadcrumb in
-                breadcrumb.data?.removeValue(forKey: "http.query")
-                return breadcrumb
-            }
         }
     }
 
-    static func signedIn(_ userID: String) {
-        SentrySDK.setUser(User(userId: userID))
+    /// UI tests and demos drive the app through the launch environment, and their failures are not the user's.
+    private static var isHarnessRun: Bool {
+        let environment = ProcessInfo.processInfo.environment
+        let keys = [
+            LaunchOptions.nowKey, LaunchOptions.timeZoneKey, LaunchOptions.resetKey,
+            LaunchOptions.notificationsDeniedKey, LaunchOptions.signedInKey, "PROCRASTIMATE_DEMO",
+        ]
+        return keys.contains { environment[$0] != nil }
+    }
+
+    static func signedIn(_ userID: String, email: String?, name: String?) {
+        let user = User(userId: userID)
+        user.email = email
+        user.username = name
+        SentrySDK.setUser(user)
     }
 
     static func signedOut() {
         SentrySDK.setUser(nil)
     }
 
-    /// Sends a failure the app reported through `ErrorReport`, grouped by its message and the error's kind. Being offline
-    /// is expected on a phone, so it is not sent. `detail` and the error's own description stay on the device: they can
-    /// hold response bodies (an email on a failed sign-in) or URLs with share tokens.
-    static func capture(_ message: String, error: (any Error)?) {
+    /// Sends a failure the app reported through `ErrorReport`, grouped by its message, with the error itself and the
+    /// report's `detail`. Being offline is expected on a phone, so it is not sent.
+    static func capture(_ message: String, detail: String, error: (any Error)?) {
         if let error, isOffline(error) { return }
-        let kind = error.map(kind) ?? "none"
-        SentrySDK.capture(message: message) { scope in
-            scope.setTag(value: message, key: "report")
-            scope.setTag(value: kind, key: "error.kind")
-            scope.setFingerprint([message, kind])
+        let scope: (Scope) -> Void = { scope in
+            scope.setContext(value: ["message": message, "detail": detail], key: "report")
+            scope.setFingerprint(["{{ default }}", message])
+        }
+        if let error {
+            SentrySDK.capture(error: error, block: scope)
+        } else {
+            SentrySDK.capture(message: message, block: scope)
         }
     }
 
-    /// The error's type and code, never its associated values.
-    private static func kind(_ error: any Error) -> String {
-        switch error {
-        case let APIFailure.status(status, _): "APIFailure.status(\(status))"
-        case let APIFailure.unreachable(underlying): "APIFailure.unreachable(\(kind(underlying)))"
-        case let error as URLError: "URLError(\(error.code.rawValue))"
-        default: "\(String(reflecting: type(of: error)))(\((error as NSError).domain) \((error as NSError).code))"
+    /// `PROCRASTIMATE_SENTRY_SMOKE=1`, honored in Release too so production is provable: the Worker and the `Account`
+    /// object throw from debug routes, then the app reports its own error, all in one trace. `scripts/sentry-check.ts
+    /// --expect ios` reads them back.
+    static func smokeIfAsked() async {
+        guard ProcessInfo.processInfo.environment["PROCRASTIMATE_SENTRY_SMOKE"] == "1", SessionToken.read() != nil else {
+            return
         }
+        let transaction = SentrySDK.startTransaction(name: "Sentry smoke", operation: "smoke", bindToScope: true)
+        _ = try? await APIClient.send(API.Endpoints.DebugError.self, NoInput())
+        _ = try? await APIClient.send(API.Endpoints.DebugAccountError.self, NoInput())
+        reportSentrySmoke(in: transaction)
+        transaction.finish()
+    }
+
+    /// Named, so the event's stack trace shows an in-app frame with this file and line.
+    private static func reportSentrySmoke(in transaction: any Span) {
+        let scope: (Scope) -> Void = { $0.span = transaction }
+        SentrySDK.capture(exception: NSException(name: .init("SentrySmoke"), reason: "Sentry smoke test: iOS"), block: scope)
     }
 
     /// Times `body` as its own transaction. A bound transaction collects the SDK's automatic spans (API requests, file

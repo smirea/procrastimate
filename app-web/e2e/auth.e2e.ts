@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, quietTest as test } from './fixtures';
 
 test('email sign-up is the first screen and opens the inbox', async ({ page }) => {
 	await page.goto('/inbox');

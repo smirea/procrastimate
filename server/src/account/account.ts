@@ -1,5 +1,5 @@
 import type { DurableObjectNamespace, DurableObjectState } from '@cloudflare/workers-types';
-import { onError, ORPCError, ValidationError } from '@orpc/server';
+import { onError } from '@orpc/server';
 import { OpenAPIHandler } from '@orpc/openapi/fetch';
 import { drizzle } from 'drizzle-orm/durable-sqlite';
 import { accountContract, internalContract } from '../../../shared/api/contract';
@@ -32,7 +32,7 @@ import { queuedRambleLedger, type RambleLedger, type RambleUsage } from './rambl
 import { durableSockets, noSockets, realtime, realtimeRoutes, type SocketHost } from './realtime';
 import { serialQueue } from './serial';
 import { config } from '../config';
-import { identify, span } from '../sentry';
+import { identify, reportError, reportRpcError, span } from '../sentry';
 import { tursoDatabase } from '../db/turso';
 import { errorResponse } from '../errors';
 import { routeKeys } from '../routes';
@@ -80,15 +80,7 @@ export type AccountHandler = {
 /** A sweep reads every image row's id, so it runs at most this often per space while the object stays up. */
 const SWEEP_INTERVAL = 60 * 60 * 1000;
 
-const rpc = new OpenAPIHandler(accountRouter, {
-	interceptors: [
-		onError(error => {
-			if (!(error instanceof ORPCError) || error.code !== 'BAD_REQUEST') return;
-			const issues = error.cause instanceof ValidationError ? error.cause.issues : error.message;
-			console.warn('account: invalid request', JSON.stringify(issues).slice(0, 2000));
-		}),
-	],
-});
+const rpc = new OpenAPIHandler(accountRouter, { interceptors: [onError(reportRpcError)] });
 
 /**
  * iOS builds up to 2026.1011.235500 sent some numbers as booleans, and their stored outboxes still hold those ops.
@@ -127,6 +119,7 @@ export function accountHandler(
 			const internal = INTERNAL_ROUTES.has(key);
 			const actor = internal ? personOf(store, space) : actorOf(request);
 			if (!actor) return errorResponse('UNAUTHORIZED', 'Not signed in');
+			identify(actor);
 			const access = admission(store, space, actor);
 			if (!access) return errorResponse('FORBIDDEN', 'Not shared with you');
 			if (access.role === 'guest' && !SHARED_ROUTES.has(key)) {
@@ -179,6 +172,7 @@ export function accountHandler(
 		async images(request, { images, space, open }) {
 			const actor = actorOf(request);
 			if (!actor) return errorResponse('UNAUTHORIZED', 'Not signed in');
+			identify(actor);
 			const now = Date.now();
 			if (actor.kind === 'human' && actor.id === space) return imageResponse(request, images, OWNER_ACCESS, now);
 			// Only the check needs the account; the bytes move after the queue releases, so an upload never holds it.
@@ -265,7 +259,7 @@ export class Account {
 		const response = await this.run(() =>
 			this.withStore(store => this.handle.fetch(request, { store, images, space, defer: task => deferred.push(task) })),
 		);
-		this.ctx.waitUntil(Promise.allSettled(deferred.map(task => task())));
+		this.ctx.waitUntil(Promise.all(deferred.map(task => task().catch(reportError))));
 		return response;
 	}
 
@@ -334,7 +328,6 @@ const forward: Handler = async (request, env) => {
 	if (actor.kind === 'ai' && !SHARED_ROUTES.has(`${request.method} ${url.pathname}`)) {
 		return errorResponse('FORBIDDEN', 'Not for AI accounts');
 	}
-	identify(actor.id);
 	const stub = env.ACCOUNT.get(env.ACCOUNT.idFromName(spaceOf(url, actor)));
 	return span(`Account ${request.method} ${url.pathname}`, 'durable_object.fetch', () =>
 		stub.fetch(withActor(request, actor) as never),
@@ -376,7 +369,7 @@ export function memoryAccount(
 				const response = await run(() =>
 					handle.fetch(request, { store: current, images, space: id, defer: task => deferred.push(task) }),
 				);
-				void Promise.allSettled(deferred.map(task => task()));
+				void Promise.all(deferred.map(task => task().catch(reportError)));
 				return response;
 			},
 		}),

@@ -3,6 +3,7 @@ import { strToU8, zipSync } from 'fflate';
 import { randomUUID } from 'node:crypto';
 import type { Patch } from '../../shared/sync/protocol';
 import { todoistBackupFiles } from '../../shared/fixtures/todoist-backup.mts';
+import { SENTRY_TUNNEL_PATH } from '../../shared/sentry';
 
 /** Wednesday, October 14 2026, 10:00 UTC. The suite runs in the UTC time zone. */
 export const NOW = new Date('2026-10-14T10:00:00Z');
@@ -78,8 +79,34 @@ export function watchPageErrors(context: BrowserContext) {
 	};
 }
 
-export const test = base.extend<{ app: App }>({
-	context: async ({ context }, use) => {
+/** Signed out. Every spec imports `test` from here, never from `@playwright/test`, so none can report to Sentry. */
+export const quietTest = base.extend<{ sentryOff: (context: BrowserContext) => BrowserContext }>({
+	// Every context, the default one and each spec's own `browser.newContext()`, so a test can never report to Sentry.
+	sentryOff: [
+		async ({ browser }, use) => {
+			const reported: string[] = [];
+			const watch = (watched: BrowserContext) => {
+				// An initialized SDK tags the first API call with `sentry-trace`, long before it posts an envelope.
+				watched.on('request', request => {
+					const { pathname } = new URL(request.url());
+					if (pathname === SENTRY_TUNNEL_PATH || request.headers()['sentry-trace']) reported.push(pathname);
+				});
+				return watched;
+			};
+			const newContext = browser.newContext;
+			browser.newContext = async options => watch(await newContext.call(browser, options));
+			await use(watch);
+			browser.newContext = newContext;
+			expect(reported, 'Sentry is off in tests').toEqual([]);
+		},
+		{ auto: true },
+	],
+});
+
+/** Signed in, with uncaught page errors failing the test. */
+export const test = quietTest.extend<{ app: App }>({
+	context: async ({ context, sentryOff }, use) => {
+		sentryOff(context);
 		await signInAccount(context);
 		const errors = watchPageErrors(context);
 		await use(context);

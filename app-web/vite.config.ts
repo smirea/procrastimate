@@ -1,16 +1,18 @@
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 import { sveltekit } from '@sveltejs/kit/vite';
 import adapter from '@sveltejs/adapter-static';
 import tailwindcss from '@tailwindcss/vite';
 import { sentrySvelteKit } from '@sentry/sveltekit/vite';
+import { sentryRelease } from '../scripts/sentry-release.mts';
 import { parseSentryTarget, SENTRY_DSN } from '../shared/sentry.ts';
 import env from './env.ts';
 
 const allowedHosts = env.CLIENT_HOST ? [env.CLIENT_HOST] : undefined;
 const sentry = parseSentryTarget(SENTRY_DSN.web, {
 	environment: env.SENTRY_ENVIRONMENT,
-	release: env.SENTRY_RELEASE,
+	release: sentryRelease(env.SENTRY_ENVIRONMENT, env.SENTRY_RELEASE),
 });
 if (sentry.problem) throw new Error(`Invalid web Sentry configuration: ${sentry.problem}`);
 
@@ -36,6 +38,15 @@ export default defineConfig({
 		},
 	},
 	plugins: [
+		{
+			// `E2E_WORKER=1` reads it, since a build with Sentry baked in fails every test's Sentry guard.
+			name: 'sentry-build-marker',
+			apply: 'build',
+			buildStart() {
+				mkdirSync('.svelte-kit', { recursive: true });
+				writeFileSync('.svelte-kit/sentry-target.json', JSON.stringify(sentry.target));
+			},
+		},
 		// Only for the SvelteKit 3 navigation spans. The deploy uploads source maps with sentry-cli, and there is no
 		// server code to instrument.
 		sentrySvelteKit({ autoUploadSourceMaps: false, autoInstrument: false }),

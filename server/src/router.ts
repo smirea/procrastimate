@@ -21,6 +21,11 @@ function ownSpace(env: Env, request: Request, actor: Person) {
 // Behind Vite's dev proxy only the browser's `Origin` names the app's port; a bot's request has none.
 const originOf = (request: Request) => request.headers.get('origin') ?? new URL(request.url).origin;
 
+/** Named, so the smoke test's stack trace shows an in-app frame with this file and line. */
+function throwSentrySmoke(): never {
+	throw new Error('Sentry smoke test: Worker');
+}
+
 const markdown = (name: string, text: string) => new File([text], name, { type: MARKDOWN });
 
 /** The contract's procedures the Worker serves itself. The rest run in the space's `Account` object. */
@@ -99,6 +104,12 @@ export const workerRouter = os.router({
 			const [ownerId, id, ...rest] = input.query.token.split('.');
 			if (!ownerId || !id || rest.length) throw new ORPCError('NOT_FOUND', { message: 'No such link' });
 			return internalClient(env.ACCOUNT, ownerId, new URL(request.url).origin).sharedView({ id });
+		}),
+	},
+	debug: {
+		error: os.debug.error.handler(async ({ context }) => {
+			await requireActor(context.request, context.env);
+			throwSentrySmoke();
 		}),
 	},
 	docs: {

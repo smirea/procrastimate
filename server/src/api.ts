@@ -1,4 +1,5 @@
 import { OpenAPIHandler } from '@orpc/openapi/fetch';
+import { onError } from '@orpc/server';
 import { accountApiRoutes } from './account/account';
 import { authHandler } from './better-auth';
 import type { Env } from './bindings';
@@ -6,9 +7,9 @@ import { config } from './config';
 import { errorResponse } from './errors';
 import { workerRouter } from './router';
 import { SENTRY_TUNNEL_PATH } from '../../shared/sentry';
-import { sentryTunnel } from './sentry';
+import { reportRpcError, sentryTunnel } from './sentry';
 
-const rpc = new OpenAPIHandler(workerRouter);
+const rpc = new OpenAPIHandler(workerRouter, { interceptors: [onError(reportRpcError)] });
 
 /**
  * The Worker's procedures first, then the user's `Account` object, whose bodies it forwards unread, then Better

@@ -95,6 +95,8 @@ struct ProcrastimateApp: App {
                 .task { await notifications.run() }
                 .task {
                     await auth.start()
+                    // Before sync, whose bound transaction would otherwise take the smoke's API calls.
+                    await Telemetry.smokeIfAsked()
                     accountSync.start()
                 }
                 .onChange(of: store.revision) { _, _ in accountSync.syncSoon() }

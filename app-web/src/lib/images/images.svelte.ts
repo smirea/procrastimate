@@ -1,6 +1,7 @@
 import { imageUrl, type ImageSize } from 'shared/images.ts';
 import { newId } from 'shared/id.ts';
 import type { ImageRef } from 'shared/values.ts';
+import { reportError } from '../sentry.ts';
 import { store } from '../store.svelte.ts';
 import { toasts } from '../ui.svelte.ts';
 import { encodeImage } from './encode.ts';
@@ -79,7 +80,8 @@ class Images {
 				this.#show(imageKey(id, 'thumb'), sizes.thumb);
 				const task = store.task(taskId);
 				if (task) store.updateTask(taskId, { images: [...task.images, { id, width, height }] });
-			} catch {
+			} catch (error) {
+				reportError(error);
 				toasts.show('Could not attach that image');
 			} finally {
 				this.adding = { ...this.adding, [taskId]: (this.adding[taskId] ?? 1) - 1 };

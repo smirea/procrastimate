@@ -10,48 +10,39 @@ struct ErrorReport: Equatable {
 
     private static let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "ProcrastiMate", category: "errors")
 
-    /// `report` names the failure in Sentry. It is a `StaticString` so a name, a title, or a share token in `message`
-    /// can never leave the device: a message built at runtime needs a constant `report` beside it.
-    init(_ message: StaticString, detail: String) {
-        self.init("\(message)", report: message, detail: detail)
-    }
-
-    init(_ message: StaticString, error: any Error) {
-        self.init("\(message)", report: message, error: error)
-    }
-
-    init(_ message: String, report: StaticString, detail: String) {
+    init(_ message: String, detail: String) {
         self.message = message
         self.detail = detail
-        Self.write(message, report: report, detail: detail, error: nil)
+        Self.write(message, detail: detail, error: nil)
     }
 
-    init(_ message: String, report: StaticString, error: any Error) {
+    init(_ message: String, error: any Error) {
         self.message = message
         detail = String(reflecting: error)
-        Self.write(message, report: report, detail: detail, error: error)
+        Self.write(message, detail: detail, error: error)
     }
 
     /// Logs a failure nobody sees on screen, such as a background step that falls back quietly.
-    static func log(_ message: StaticString, detail: String) {
-        write("\(message)", report: message, detail: detail, error: nil)
+    static func log(_ message: String, detail: String) {
+        write(message, detail: detail, error: nil)
     }
 
-    static func log(_ message: StaticString, error: any Error) {
-        log("\(message)", report: message, error: error)
+    static func log(_ message: String, error: any Error) {
+        write(message, detail: String(reflecting: error), error: error)
     }
 
-    static func log(_ message: String, report: StaticString, error: any Error) {
-        write(message, report: report, detail: String(reflecting: error), error: error)
+    /// Sentry groups reports by message, so what varies, such as which space, goes in `subject` rather than the message.
+    static func log(_ message: String, about subject: String, error: any Error) {
+        write(message, detail: "\(subject): \(String(reflecting: error))", error: error)
     }
 
-    private static func write(_ message: String, report: StaticString, detail: String, error: (any Error)?) {
+    private static func write(_ message: String, detail: String, error: (any Error)?) {
         #if DEBUG
         logger.error("\(message, privacy: .public): \(detail, privacy: .public)")
         #else
         logger.error("\(message, privacy: .public): \(detail, privacy: .private)")
         #endif
-        Telemetry.capture("\(report)", error: error)
+        Telemetry.capture(message, detail: detail, error: error)
     }
 }
 

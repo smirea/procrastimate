@@ -1,6 +1,7 @@
 import { implement, ORPCError } from '@orpc/server';
 import { accountContract, internalContract } from '../../../shared/api/contract';
 import { authenticate, type AccountContext } from '../auth';
+import { reportError } from '../sentry';
 import { taskActivity } from './activity';
 import {
 	createComment,
@@ -60,6 +61,11 @@ const owner = os.middleware(async ({ context, next }) => {
 	return next({ context: { deviceId } });
 });
 
+/** Named, so the smoke test's stack trace shows an in-app frame with this file and line. */
+function throwAccountSmoke(): never {
+	throw new Error('Sentry smoke test: Account');
+}
+
 const commands = (context: AccountContext) => ({
 	store: context.store,
 	now: context.now,
@@ -87,7 +93,10 @@ export const accountRouter = os.router({
 		} else {
 			response = guestSync(store, input.body, now, actor.id, access.shares);
 		}
-		if (response.rejected.length) console.warn('sync: rejected ops', JSON.stringify(response.rejected).slice(0, 2000));
+		if (response.rejected.length) {
+			console.warn('sync: rejected ops', JSON.stringify(response.rejected).slice(0, 2000));
+			reportError(new Error('sync: rejected ops'), 'warning', { rejected: response.rejected });
+		}
 		if (input.body.ops.length) await refreshPush(context);
 		return response;
 	}),
@@ -214,6 +223,9 @@ export const accountRouter = os.router({
 		get: os.images.get.handler(() => {
 			throw new ORPCError('NOT_FOUND', { message: 'Image requests never reach the router' });
 		}),
+	},
+	debug: {
+		accountError: os.debug.accountError.handler(() => throwAccountSmoke()),
 	},
 	memoTasks: {
 		list: os.memoTasks.list

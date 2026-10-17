@@ -6,7 +6,6 @@ import type { InternalClient } from './account/peers';
 import type { Ramble } from './account/ramble';
 import type { Realtime } from './account/realtime';
 import type { AccountStore } from './account/store';
-import { identify } from './sentry';
 
 /**
  * Sync auth. The Worker has already checked the session or API token and set `x-procrastimate-actor`. The device
@@ -71,7 +70,6 @@ export async function authenticate(
 	const deviceId = deviceIdFrom(request);
 	if (access.role !== 'owner' || !deviceId) return null;
 	const userId = actor.id;
-	identify(userId);
 	const live = store.liveDevices().find(device => device.id === deviceId);
 	if (live) {
 		store.touchDevice(deviceId, now);

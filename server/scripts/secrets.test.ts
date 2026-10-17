@@ -53,18 +53,31 @@ test('workerSecrets refuses half a VAPID pair', () => {
 
 const schema = await Bun.file(new URL('../../.env', import.meta.url)).text();
 
-test('the iOS target is API_URL, and Debug and Release take dev and prod', () => {
-	expect(appIosKeys(schema).map(key => key.name)).toEqual(['API_URL']);
-	const text = iosXcconfig(schema, { API_URL: 'http://192.168.1.9:6121' }, { API_URL: PROD_API_URL });
+test('the iOS targets are API_URL and SENTRY_ENVIRONMENT, and Debug and Release take dev and prod', () => {
+	expect(appIosKeys(schema).map(key => key.name)).toEqual(['API_URL', 'SENTRY_ENVIRONMENT']);
+	const text = iosXcconfig(
+		schema,
+		{ API_URL: 'http://192.168.1.9:6121', SENTRY_ENVIRONMENT: 'development' },
+		{ API_URL: PROD_API_URL, SENTRY_ENVIRONMENT: 'production' },
+	);
 	expect(text).toContain('API_URL[config=Debug] = http:/$()/192.168.1.9:6121');
 	expect(text).toContain(`API_URL[config=Release] = https:/$()/procrastimate.stf.lol`);
+	expect(text).toContain('SENTRY_ENVIRONMENT[config=Debug] = development');
+	expect(text).toContain('SENTRY_ENVIRONMENT[config=Release] = production');
 	expect(text).not.toContain('ELEVENLABS');
 });
 
-test('an offline iOS config uses the dev schema default and the pinned prod URL', () => {
+test('an offline iOS config uses the dev schema default and the pinned prod URL, and reports nothing', () => {
 	const text = iosXcconfig(schema, {}, {});
 	expect(text).toContain('API_URL[config=Debug] = http:/$()/127.0.0.1:6121');
 	expect(text).toContain(`API_URL[config=Release] = https:/$()/procrastimate.stf.lol`);
+	expect(text).toContain('SENTRY_ENVIRONMENT[config=Debug] = \n');
+});
+
+test('a required iOS key without a value fails', () => {
+	expect(() => iosXcconfig('# env-manager targets: app-ios\nREQUIRED= # {string}\n', {}, {})).toThrow(
+		'REQUIRED has no value for dev',
+	);
 });
 
 test('wrangler.jsonc declares no vars that a deploy would write over a secret', async () => {

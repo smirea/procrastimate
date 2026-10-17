@@ -5,6 +5,7 @@ import { internalClient } from './account/peers';
 import { readSession, userById } from './better-auth';
 import type { Env } from './bindings';
 import { routeKeys } from './routes';
+import { identify } from './sentry';
 
 /**
  * Who a request is from. The Worker resolves a Better Auth session, or an AI account's `pm.<ownerId>.<secret>`
@@ -29,11 +30,14 @@ async function tokenActor(token: string, request: Request, env: Env): Promise<Ac
 	return ai?.kind === 'ai' && ai.ownerId === ownerId ? ai : null;
 }
 
+/** Also names the caller in Sentry, for the rest of the request. */
 export async function readActor(request: Request, env: Env): Promise<Actor | null> {
 	const token = bearer(request);
-	if (token?.startsWith(TOKEN_PREFIX)) return tokenActor(token, request, env);
-	const user = await readSession(request, env);
-	return user ? { id: user.id, name: user.name, kind: user.kind, ownerId: user.ownerId } : null;
+	const actor = token?.startsWith(TOKEN_PREFIX)
+		? await tokenActor(token, request, env)
+		: await readSession(request, env);
+	if (actor) identify(actor);
+	return actor;
 }
 
 export async function requireActor(request: Request, env: Env): Promise<Actor> {

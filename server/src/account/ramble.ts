@@ -15,6 +15,7 @@ import type { Snapshot } from '../../../shared/sync/protocol';
 import { addDays, type DateKey } from '../../../shared/task';
 import { isTimeZone, zonedDateKey, zonedTime } from '../../../shared/zoned-time';
 import { authenticate, type AccountRoute } from '../auth';
+import { reportError } from '../sentry';
 import type { RambleBudget } from './ramble-budget';
 import { listenWorkerSocket, type Socket, type SocketHost, type StreamEvents, type WorkerSocket } from './realtime';
 import type { AccountStore } from './store';
@@ -241,7 +242,9 @@ function session({
 		if (grant && unused !== null && unused > 0 && ramble.budget) {
 			try {
 				await ramble.budget.release(grant.day, unused);
-			} catch {}
+			} catch (error) {
+				reportError(error);
+			}
 		}
 		attempt(() => upstream?.close());
 		if (!reason) return;
@@ -253,8 +256,9 @@ function session({
 		void shutdown(reason);
 	}
 
-	function fail(message: string) {
+	function fail(message: string, cause?: unknown) {
 		if (ended) return;
+		reportError(cause ?? new Error(`ramble: ${message}`));
 		send({ type: 'error', code: 'upstream', message });
 		end('error');
 	}
@@ -366,7 +370,7 @@ function session({
 			upstream = socket;
 			flush();
 		},
-		() => fail('Could not reach the transcription service'),
+		error => fail('Could not reach the transcription service', error),
 	);
 
 	return {
@@ -427,7 +431,8 @@ export const rambleRoutes: Record<string, AccountRoute> = {
 			let granted = 0;
 			try {
 				granted = await ramble.budget.reserve(utcDay, want);
-			} catch {
+			} catch (error) {
+				reportError(error);
 				return fail(503, 'Ramble is unavailable');
 			}
 			if (granted <= 0) return refuseDaily(ramble, request, zonedTime(addDays(utcDay, 1), '00:00', 'UTC'));

@@ -13,7 +13,7 @@ export const SENTRY_TUNNEL_PATH = '/api/sentry';
 export const SENTRY_ENVIRONMENTS = ['production', 'development'] as const;
 export type SentryEnvironment = (typeof SENTRY_ENVIRONMENTS)[number];
 
-/** Where and as what a runtime reports. Null everywhere no `SENTRY_ENVIRONMENT` is set: local, PR CI, end to end. */
+/** Where and as what a runtime reports. Null wherever no `SENTRY_ENVIRONMENT` is set: PR CI, tests, a fresh checkout. */
 export type SentryTarget = { dsn: string; environment: SentryEnvironment; release: string };
 
 export type Dsn = { protocol: 'http' | 'https'; publicKey: string; host: string; projectId: string };

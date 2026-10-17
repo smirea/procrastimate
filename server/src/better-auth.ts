@@ -9,6 +9,7 @@ import type { Env } from './bindings';
 import { authSchema } from './db/auth-schema';
 import { config, type AppleSecret, type Config } from './config';
 import { tursoDatabase, type TursoDatabase } from './db/turso';
+import { reportError } from './sentry';
 import { internalClient } from './account/peers';
 
 /** A year. Days offline must not sign the account out; a day online extends the session. */
@@ -163,6 +164,15 @@ function authOptions(secret: string, database: unknown, providers: Record<string
 		// Memory counters reset with each isolate. The Turso table survives, which is what production has.
 		rateLimit: durableLimits ? { enabled: true, storage: 'database' as const } : { enabled: false },
 		telemetry: { enabled: false },
+		// Better Auth answers its own failures, a 500 included, so they reach Sentry only through its logger.
+		logger: {
+			log: (level: 'debug' | 'info' | 'warn' | 'error', message: string, ...args: unknown[]) => {
+				console[level](`better-auth: ${message}`, ...args);
+				if (level !== 'error') return;
+				const error = args.find(arg => arg instanceof Error) ?? new Error(`better-auth: ${message}`);
+				reportError(error, 'error', { message, args });
+			},
+		},
 	};
 }
 

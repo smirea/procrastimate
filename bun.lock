@@ -12,6 +12,7 @@
         "@orpc/openapi": "2.0.0-beta.43",
         "@orpc/server": "2.0.0-beta.43",
         "@orpc/zod": "2.0.0-beta.43",
+        "@sentry/bun": "11.8.0",
         "@sentry/cloudflare": "11.8.0",
         "@tailwindcss/vite": "^4.3.3",
         "@types/bun": "^1.4.2",
@@ -437,6 +438,8 @@
     "@sentry/browser": ["@sentry/browser@11.8.0", "", { "dependencies": { "@sentry/browser-utils": "11.8.0", "@sentry/conventions": "^0.27.0", "@sentry/core": "11.8.0", "@sentry/feedback": "11.8.0", "@sentry/replay": "11.8.0", "@sentry/replay-canvas": "11.8.0" } }, "sha512-uBC1k2ESZErHv+RfG6p9siHrtxv+QErDxL/jvEBZnoMV6OcWdZyWTGKcqrW7EjwlBiWkgVve1W7z8tNDDuVQxw=="],
 
     "@sentry/browser-utils": ["@sentry/browser-utils@11.8.0", "", { "dependencies": { "@sentry/conventions": "^0.27.0", "@sentry/core": "11.8.0", "web-vitals": "^6.2.3" } }, "sha512-tTqJmnfuJaQy9LyInCWJtJ0L+VnOq+L9+lTMkQH+pptXBAuHfdJyEl2IhGqO4QmsfKyZpHa2GVd3HKpEQsVYeg=="],
+
+    "@sentry/bun": ["@sentry/bun@11.8.0", "", { "dependencies": { "@sentry/conventions": "^0.27.0", "@sentry/core": "11.8.0", "@sentry/node": "11.8.0", "@sentry/server-utils": "11.8.0" } }, "sha512-wZUgSakXhxLvw71qY0u3SAZ8rF4jzyWlNGGThU9ASLnirS1PZD8hnFdyO8eHvGxxc+sypLyDDpH9kvj0nfVRlw=="],
 
     "@sentry/bundler-plugins": ["@sentry/bundler-plugins@11.8.0", "", { "dependencies": { "@sentry/core": "11.8.0", "dotenv": "^17.4.2", "glob": "^13.0.6", "magic-string": "~0.30.8 || ^1.0.0", "oxc-parser": "^0.152.0", "sentry": "^0.45.0", "supports-color": "^8.1.1" }, "peerDependencies": { "@babel/core": "^7.18.5", "rollup": ">=3.2.0", "webpack": ">=5.1.0" }, "optionalPeers": ["@babel/core", "rollup", "webpack"] }, "sha512-rQrbL2lYPyiiO6ngdpbbfPKyEzVVQsz1FG+aE8jUiUYs72gvmDmZmRyl9VDCGLrHZfIEwaQMT1t6WQH5nopu5A=="],
 
