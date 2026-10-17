@@ -14,6 +14,7 @@ import type {
 	TaskComment,
 } from '../../../shared/sharing';
 import { newId } from '../../../shared/id';
+import { applyPickedLabels, isSavedPlace } from '../../../shared/triggers';
 import { parseQuickAdd } from '../../../shared/quick-add';
 import { admit, managesSpace, type Grant } from '../../../shared/scope';
 import {
@@ -32,7 +33,9 @@ import {
 	renameProject,
 	renameSection,
 	reopenTask,
+	savePlace,
 	setLabelColor,
+	setPlaceRadius,
 	updateTask,
 	type Creation,
 	type StoreData,
@@ -132,17 +135,19 @@ export function createTask(space: Space, input: AgentNewTask): AgentTask {
 		if (!title) throw new ORPCError('BAD_REQUEST', { message: 'A task needs a title' });
 		if (input.parentId) visibleTask(visible, input.parentId);
 		const creation: Creation = { id, now: space.now };
+		const placed = applyPickedLabels(visible.labels, input.labelIds ?? parsed?.labelIds ?? [], null);
 		const added = addTask(
 			data,
 			{
 				title,
 				projectId: input.projectId ?? parsed?.projectId ?? null,
 				sectionId: input.sectionId ?? parsed?.sectionId ?? null,
-				labelIds: input.labelIds ?? parsed?.labelIds ?? [],
+				labelIds: placed.labelIds,
 				due: parsed?.due ?? null,
 				recurrence: parsed?.recurrence ?? null,
 				priority: input.priority ?? parsed?.priority ?? null,
 				reminders: parsed?.reminders ?? [],
+				location: placed.location ?? parsed?.location ?? null,
 			},
 			input.parentId ?? null,
 			creation,
@@ -152,10 +157,15 @@ export function createTask(space: Space, input: AgentNewTask): AgentTask {
 	return taskAfter(space.store, snapshot, id);
 }
 
+/** A saved place in `labelIds` becomes the task's place, as in the apps. Ids without one leave its place alone. */
 export function editTask(space: Space, id: string, patch: TaskPatch): AgentTask {
 	const snapshot = run(space, (data, visible) => {
-		visibleTask(visible, id);
-		return updateTask(data, id, patch);
+		const task = visibleTask(visible, id);
+		const ids = patch.labelIds ?? [];
+		const placed = visible.labels.some(l => isSavedPlace(l) && ids.includes(l.id))
+			? applyPickedLabels(visible.labels, ids, patch.location ?? task.location)
+			: {};
+		return updateTask(data, id, { ...patch, ...placed });
 	});
 	return taskAfter(space.store, snapshot, id);
 }
@@ -349,9 +359,15 @@ export function createLabel(space: Space, input: NewLabel): Label {
 	let id = newId();
 	const snapshot = run(space, data => {
 		const existing = sameName(data.labels, name);
-		const added = existing ? { data, label: existing } : addLabel(data, name, { id, now: space.now });
-		id = added.label.id;
-		return input.color ? setLabelColor(added.data, id, input.color) : added.data;
+		if (existing && input.place && !existing.place)
+			throw new ORPCError('BAD_REQUEST', { message: 'A label that is not a place has that name' });
+		if (existing) id = existing.id;
+		const next = existing
+			? data
+			: input.place
+				? savePlace(data, name, input.place, { id, now: space.now }).data
+				: addLabel(data, name, { id, now: space.now }).data;
+		return input.color ? setLabelColor(next, id, input.color) : next;
 	});
 	return visibleIn(snapshot.labels, id, 'label');
 }
@@ -360,12 +376,15 @@ export function editLabel(space: Space, id: string, edit: LabelEdit): Label {
 	requireManager(space.access);
 	const name = edit.name === undefined ? undefined : named(edit.name, 'label');
 	const snapshot = run(space, (data, visible) => {
-		visibleIn(visible.labels, id, 'label');
+		const label = visibleIn(visible.labels, id, 'label');
+		if (edit.radius !== undefined && !label.place)
+			throw new ORPCError('BAD_REQUEST', { message: 'Only a saved place has a radius' });
 		let next = data;
 		if (name !== undefined) {
 			next = renameLabel(next, id, name);
 			if (next === data) throw new ORPCError('BAD_REQUEST', { message: 'Another label has that name' });
 		}
+		if (edit.radius !== undefined) next = setPlaceRadius(next, id, edit.radius);
 		return edit.color ? setLabelColor(next, id, edit.color) : next;
 	});
 	return visibleIn(snapshot.labels, id, 'label');

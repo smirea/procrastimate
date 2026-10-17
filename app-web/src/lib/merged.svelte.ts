@@ -18,6 +18,6 @@ export function followMerged(base: string, id: () => string | undefined, items: 
 		if (!last || last.id !== current) return;
 		const name = last.name.toLowerCase();
 		const survivor = items().find(i => i.name.toLowerCase() === name);
-		void goto(survivor ? `${base}/${survivor.id}` : '/inbox', { replaceState: true });
+		void goto(survivor ? `${base}/${survivor.id}` : '/inbox', { replace: true });
 	});
 }

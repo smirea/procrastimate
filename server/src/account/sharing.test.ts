@@ -12,7 +12,14 @@ import type {
 } from '../../../shared/sharing';
 import { projectsInOrder } from '../../../shared/store';
 import { formatHlc } from '../../../shared/sync/hlc';
-import { DEFAULT_SETTINGS, type Op, type Snapshot, type SyncResponse, type Task } from '../../../shared/sync/protocol';
+import {
+	DEFAULT_SETTINGS,
+	type Label,
+	type Op,
+	type Snapshot,
+	type SyncResponse,
+	type Task,
+} from '../../../shared/sync/protocol';
 import { fieldsOf } from '../../../shared/sync/snapshot';
 import { label, project, section, task } from '../../../shared/sync/testing';
 import api from '../api';
@@ -703,6 +710,52 @@ describe('sharing between two users', () => {
 		expect(after.sections).toEqual([]);
 		expect(after.labels.map(l => l.name)).toEqual(['Urgent']);
 		expect(after.tasks.some(t => t.title === 'Plant seeds')).toBe(false);
+	});
+
+	test('an AI account saves a place, resizes it, and puts tasks at it with @name', async () => {
+		await seedOwner();
+		const ai = await json<Person>(call(owner, 'POST', '/api/ai', { name: 'Butler' }));
+		const { token } = await json<{ token: string }>(
+			call(owner, 'POST', '/api/ai-tokens', { aiUserId: ai.id, name: 'laptop' }),
+		);
+		const asAi = (method: string, path: string, body?: unknown) =>
+			call(null, method, path, body, { Authorization: `Bearer ${token}` });
+		const spot = { address: '1 Main St', latitude: 52.52, longitude: 13.405 };
+
+		expect(
+			(await asAi('POST', '/api/labels', { name: 'gym', place: { ...spot, latitude: 95, radius: 100 } })).status,
+		).toBe(400);
+		expect((await asAi('POST', '/api/labels', { name: 'gym', place: { ...spot, radius: 0 } })).status).toBe(400);
+		expect((await asAi('POST', '/api/labels', { name: 'urgent', place: { ...spot, radius: 100 } })).status).toBe(400);
+		const gym = await json<Label>(asAi('POST', '/api/labels', { name: 'Gym', place: { ...spot, radius: 100 } }));
+		expect(gym.place).toEqual({ ...spot, radius: 100 });
+		expect(await json(asAi('POST', '/api/labels', { name: 'gym', place: { ...spot, radius: 5 } }))).toMatchObject({
+			id: gym.id,
+			place: { radius: 100 },
+		});
+
+		const stretch = await json<Task>(asAi('POST', '/api/tasks', { text: 'Stretch @gym' }));
+		expect(stretch).toMatchObject({
+			title: 'Stretch',
+			labelIds: [],
+			location: { name: 'Gym', ...spot, radius: 100, trigger: 'arrive' },
+		});
+		const lift = await json<Task>(asAi('POST', '/api/tasks', { title: 'Lift' }));
+		expect(await json(asAi('PATCH', `/api/tasks?id=${lift.id}`, { labelIds: ['urgent', gym.id] }))).toMatchObject({
+			labelIds: ['urgent'],
+			location: { name: 'Gym', radius: 100 },
+		});
+
+		expect(await json(asAi('PATCH', `/api/labels?id=${gym.id}`, { radius: 250 }))).toMatchObject({
+			place: { radius: 250 },
+		});
+		expect((await asAi('PATCH', '/api/labels?id=urgent', { radius: 250 })).status).toBe(400);
+		expect((await asAi('PATCH', `/api/labels?id=${gym.id}`, { radius: -1 })).status).toBe(400);
+		const after = await snapshotOf(sync(owner));
+		expect(after.tasks.filter(t => t.location).map(t => [t.title, t.location?.radius])).toEqual([
+			['Stretch', 250],
+			['Lift', 250],
+		]);
 	});
 
 	test('a stranger is turned away from a space, and a guest from its owner-only routes', async () => {

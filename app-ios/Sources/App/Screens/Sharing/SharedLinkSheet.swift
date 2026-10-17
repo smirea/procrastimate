@@ -180,7 +180,7 @@ private struct SharedTaskRow: View {
                         }
                         ForEach(labels) { label in
                             HStack(spacing: 3) {
-                                Image(systemName: "tag").imageScale(.small)
+                                Image(systemName: label.systemImage()).imageScale(.small)
                                 Text(label.name)
                             }
                             .foregroundStyle(.toneLabel)

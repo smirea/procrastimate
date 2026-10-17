@@ -9,7 +9,7 @@ import {
 	taskSchema,
 } from './sync/protocol.ts';
 import { labelColorSchema } from './label-colors.ts';
-import { clientStampSchema, roleSchema, shareTargetKindSchema } from './values.ts';
+import { clientStampSchema, roleSchema, savedPlaceSchema, shareTargetKindSchema } from './values.ts';
 
 /**
  * Sharing's shapes. A space is one user's tasks, projects, sections, and labels, served by the `Account` object named by
@@ -215,15 +215,33 @@ export const sectionEditSchema = z
 	.meta({ id: 'SectionEdit', description: 'Renames a section, moves it among its project’s sections, or both.' });
 export type SectionEdit = z.infer<typeof sectionEditSchema>;
 
-export const newLabelSchema = z.object({ name: labelSchema.shape.name, color: labelColorSchema.optional() }).meta({
-	id: 'NewLabel',
-	description: 'A label the agent command API adds. A name already taken, ignoring case, returns that label.',
-});
+export const newLabelSchema = z
+	.object({
+		name: labelSchema.shape.name,
+		color: labelColorSchema.optional(),
+		place: savedPlaceSchema
+			.optional()
+			.meta({ description: 'Makes the label a saved place: `@name` then sets a task’s `location` to it.' }),
+	})
+	.meta({
+		id: 'NewLabel',
+		description:
+			'A label or saved place the agent command API adds. A name already taken, ignoring case, returns that label.',
+	});
 export type NewLabel = z.infer<typeof newLabelSchema>;
 
-export const labelEditSchema = newLabelSchema
-	.partial()
-	.meta({ id: 'LabelEdit', description: 'Renames a label, recolors it, or both. Names stay unique ignoring case.' });
+export const labelEditSchema = z
+	.object({
+		name: labelSchema.shape.name.optional(),
+		color: labelColorSchema.optional(),
+		radius: savedPlaceSchema.shape.radius
+			.optional()
+			.meta({ description: 'A saved place’s new radius in meters. The open tasks at the place take it too.' }),
+	})
+	.meta({
+		id: 'LabelEdit',
+		description: 'Renames a label, recolors it, or changes a saved place’s radius. Names stay unique ignoring case.',
+	});
 export type LabelEdit = z.infer<typeof labelEditSchema>;
 
 export const newLinkSchema = z

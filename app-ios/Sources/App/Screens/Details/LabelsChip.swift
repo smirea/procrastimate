@@ -18,7 +18,7 @@ struct LabelsChip: View {
             open = true
         } label: {
             Chip(
-                systemImage: chosen.isEmpty ? "tag" : "tag.fill",
+                systemImage: chosen.first?.systemImage(filled: true) ?? "tag",
                 text: chosen.isEmpty ? "Labels" : names,
                 tone: chosen.isEmpty ? .muted : .ink,
                 iconTone: chosen.first?.color.tone ?? .toneLabel
@@ -80,7 +80,7 @@ private struct LabelsPopover: View {
             let checked = labelIds.contains(label.id)
             Button { choose(option) } label: {
                 HStack(spacing: 10) {
-                    Image(systemName: label.place == nil ? checked ? "tag.fill" : "tag" : "mappin.and.ellipse")
+                    Image(systemName: label.systemImage(filled: checked))
                         .foregroundStyle(label.color.tone)
                     Text(label.name).foregroundStyle(.ink).lineLimit(1)
                     Spacer(minLength: 8)

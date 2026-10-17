@@ -30,7 +30,7 @@ struct LabelScreen: View {
                 emptyTitle: key == nil ? "No tasks with this label" : "No tasks at this place",
                 emptyHint: Browse.labelEmptyHint(label.name),
                 labelColor: label.color,
-                labelIcon: key == nil ? "tag.fill" : "mappin.and.ellipse",
+                labelIcon: label.systemImage(filled: true),
                 open: tasks.count
             ) {
                 ForEach(tasks) { TaskRow(task: $0, showProject: true) }

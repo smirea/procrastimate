@@ -6,7 +6,7 @@ import UIKit
 /// DEBUG-only. The simulator has no way to tap, so `PROCRASTIMATE_DEMO` seeds place and event tasks through the store,
 /// adds calendar events through EventKit, and opens the screen to screenshot. Release builds omit it.
 ///
-/// Space-separated words: `seed`, `rows` (labeled tasks with long titles, for the two-line row, and a parent with open subtasks), `move` (shifts the next Standup an hour later, then logs what the task holds),
+/// Space-separated words: `seed`, `rows` (labeled tasks with long titles, for the two-line row, a parent with open subtasks, and a saved place `gym`), `move` (shifts the next Standup an hour later, then logs what the task holds),
 /// `browse`, `sections` (see `SectionsDemo`), `details:<task title>`, `link:<share token>`, `sharing` (see `SharingDemo`), `sheet:location`, `sheet:event`, and
 /// `query:<words with + for spaces>` for the first location search.
 enum PlacesDemo {
@@ -141,6 +141,7 @@ enum PlacesDemo {
     private static func seedRows(store: Store, clock: AppClock) {
         guard !store.tasks.contains(where: { $0.title == "Buy milk" }) else { return }
         let home = store.addLabel("home"), errands = store.addLabel("errands"), work = store.addLabel("work")
+        _ = store.savePlace("gym", SavedPlace(address: "10123 N Wolfe Rd, Cupertino", latitude: 37.3236, longitude: -122.0149, radius: 100))
         let today = Due(date: clock.today)
         let rows: [NewTask] = [
             NewTask(title: "Short task", labelIds: [home.id], due: today),

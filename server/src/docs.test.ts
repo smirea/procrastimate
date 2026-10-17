@@ -14,6 +14,7 @@ import {
 	IMAGE_ID,
 	LABEL_ID,
 	LINK_ID,
+	PLACE_ID,
 	PROJECT_ID,
 	SECTION_ID,
 	TASK_ID,
@@ -144,6 +145,8 @@ describe('agent docs', () => {
 		const projectId = await made('/api/projects', { name: 'Chores' });
 		const sectionId = await made('/api/sections', { projectId, name: 'Later' });
 		const labelId = await made('/api/labels', { name: 'someday' });
+		const place = { address: null, latitude: 52.5, longitude: 13.4, radius: 80 };
+		const placeId = await made('/api/labels', { name: 'office', place });
 		const linkId = await made('/api/links', { target: { kind: 'project', id: projectId } });
 		const ids = (text: string) =>
 			text
@@ -153,6 +156,7 @@ describe('agent docs', () => {
 				.replaceAll(PROJECT_ID, projectId)
 				.replaceAll(SECTION_ID, sectionId)
 				.replaceAll(LABEL_ID, labelId)
+				.replaceAll(PLACE_ID, placeId)
 				.replaceAll(LINK_ID, linkId);
 		const fill = (value: unknown) => JSON.parse(ids(JSON.stringify(value ?? null)));
 		const statuses = [];
