@@ -32,7 +32,9 @@ export const WORKER_SECRETS = [
 const CLOUDFLARE_SECRETS = ['CLOUDFLARE_API_TOKEN', 'CLOUDFLARE_ACCOUNT_ID'] as const;
 /** The App Store Connect API key the `testflight` workflow archives and uploads with. The `.p8` is stored base64 on one line. */
 const ASC_SECRETS = ['ASC_KEY_ID', 'ASC_ISSUER_ID', 'ASC_PRIVATE_KEY_B64'] as const;
-export const GITHUB_SECRETS = [...CLOUDFLARE_SECRETS, ...ASC_SECRETS] as const;
+/** The deploy uploads source maps and creates releases in Sentry org `self-uo7` with it. */
+const SENTRY_SECRETS = ['SENTRY_AUTH_TOKEN'] as const;
+export const GITHUB_SECRETS = [...CLOUDFLARE_SECRETS, ...ASC_SECRETS, ...SENTRY_SECRETS] as const;
 const REPO = 'smirea/procrastimate';
 const PROJECT = 'procrastimate';
 

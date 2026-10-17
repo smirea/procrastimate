@@ -19,7 +19,12 @@ final class Session {
 
     init(store: Store) {
         self.store = store
-        signedIn = SessionToken.read() != nil || Launch.signedIn
+        let token = SessionToken.read()
+        signedIn = token != nil || Launch.signedIn
+        // The session check that confirms the user needs the network, so an offline launch names them from the last one.
+        if token != nil, let owner = UserDefaults.standard.string(forKey: Self.ownerKey) {
+            Telemetry.signedIn(owner)
+        }
     }
 
     func start() async {
@@ -68,6 +73,7 @@ final class Session {
             TaskImages.clearLocal()
         }
         UserDefaults.standard.set(id, forKey: Self.ownerKey)
+        Telemetry.signedIn(id)
         signedIn = true
         error = nil
     }

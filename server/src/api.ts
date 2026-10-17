@@ -5,14 +5,14 @@ import type { Env } from './bindings';
 import { config } from './config';
 import { errorResponse } from './errors';
 import { workerRouter } from './router';
-
-export { Account } from './account/account';
+import { SENTRY_TUNNEL_PATH } from '../../shared/sentry';
+import { sentryTunnel } from './sentry';
 
 const rpc = new OpenAPIHandler(workerRouter);
 
 /**
  * The Worker's procedures first, then the user's `Account` object, whose bodies it forwards unread, then Better
- * Auth for the rest of `/api/auth/*`.
+ * Auth for the rest of `/api/auth/*`. `worker.ts` serves it on Cloudflare with Sentry around it.
  */
 export default {
 	async fetch(request, env) {
@@ -20,6 +20,7 @@ export default {
 		// requests that reach the feature.
 		config(env);
 		const url = new URL(request.url);
+		if (request.method === 'POST' && url.pathname === SENTRY_TUNNEL_PATH) return sentryTunnel(request, env);
 		const forward = accountApiRoutes[`${request.method} ${url.pathname}`];
 		if (forward) return forward(request, env);
 		const { matched, response } = await rpc.handle(request, { context: { env, request } });

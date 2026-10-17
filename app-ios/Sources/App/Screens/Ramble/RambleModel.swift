@@ -36,7 +36,7 @@ enum RambleModel {
                 )
                 return response.content.tasks.map { RambleSplit(text: $0.text, subtasks: $0.subtasks) }
             } catch {
-                ErrorReport.log("Ramble model split failed", detail: String(reflecting: error))
+                ErrorReport.log("Ramble model split failed", error: error)
                 return nil
             }
         }

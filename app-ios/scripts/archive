@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Archives the Release app and uploads it to App Store Connect (TestFlight) with an App Store Connect API key.
 # Usage: ./scripts/archive [--export-only]
-# Needs ASC_KEY_ID, ASC_ISSUER_ID, and ASC_KEY_PATH (the AuthKey_<id>.p8 file, kept outside the repo).
+# Needs ASC_KEY_ID, ASC_ISSUER_ID, and ASC_KEY_PATH (the AuthKey_<id>.p8 file, kept outside the repo), and
+# SENTRY_AUTH_TOKEN to upload the archive's dSYMs to Sentry project procrastimate-ios before anything ships.
 # BUILD_NUMBER overrides the build number, which defaults to the current UTC time as year.MMdd.HHmmss: always higher,
 # and within CFBundleVersion's three period-separated integers with a first integer of at most four digits.
 set -euo pipefail
@@ -17,6 +18,10 @@ esac
 : "${ASC_KEY_ID:?Set ASC_KEY_ID to the App Store Connect API key id}"
 : "${ASC_ISSUER_ID:?Set ASC_ISSUER_ID to the App Store Connect issuer id}"
 : "${ASC_KEY_PATH:?Set ASC_KEY_PATH to the AuthKey_<id>.p8 path}"
+: "${SENTRY_AUTH_TOKEN:?Set SENTRY_AUTH_TOKEN so the dSYMs reach Sentry; crashes are unreadable without them}"
+# A Release build with no DSN stops at launch (AppEnvironment.telemetry), so refuse to archive one.
+dsn=$(sed -n 's/^ *static let sentryDSN = "\(.*\)"$/\1/p' Sources/App/Environment.swift)
+test -n "$dsn" || { echo "AppEnvironment.sentryDSN in Sources/App/Environment.swift is empty; set the procrastimate-ios DSN" >&2; exit 1; }
 test -f "$ASC_KEY_PATH" || { echo "No key at $ASC_KEY_PATH" >&2; exit 1; }
 key_path=$(cd "$(dirname "$ASC_KEY_PATH")" && pwd)/$(basename "$ASC_KEY_PATH")
 repo=$(git rev-parse --show-toplevel)
@@ -68,6 +73,9 @@ xcodebuild archive -project App.xcodeproj -scheme App -configuration Release \
     CODE_SIGNING_ALLOWED=NO \
     CODE_SIGNING_REQUIRED=NO \
     CODE_SIGN_IDENTITY=""
+
+echo "Uploading dSYMs to Sentry"
+bunx @sentry/cli@3.8.0 debug-files upload --org self-uo7 --project procrastimate-ios "$archive/dSYMs"
 
 xcodebuild -exportArchive -archivePath "$archive" -exportOptionsPlist "$options" \
     -exportPath "$out/export" "${auth[@]}"

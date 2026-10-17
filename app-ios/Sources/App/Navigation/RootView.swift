@@ -27,13 +27,13 @@ struct RootView: View {
         let today = Views.todayTasks(store.tasks, todayKey, in: store.timeZone)
         return TabView(selection: Binding(get: { navigator.tab }, set: { navigator.tab = $0 })) {
             Tab(value: AppTab.inbox) {
-                TabStack(tab: .inbox) { InboxScreen() }
+                TabStack(tab: .inbox) { InboxScreen().tracedScreen("Inbox") }
             }
             Tab(value: AppTab.noDate) {
-                TabStack(tab: .noDate) { NoDateScreen() }
+                TabStack(tab: .noDate) { NoDateScreen().tracedScreen("No date") }
             }
             Tab(value: AppTab.browse) {
-                TabStack(tab: .browse) { BrowseScreen() }
+                TabStack(tab: .browse) { BrowseScreen().tracedScreen("Browse") }
             }
         }
         // An overlay, not a `safeAreaInset`: the tab view hands its tabs a fresh safe area, so each tab's screens make room

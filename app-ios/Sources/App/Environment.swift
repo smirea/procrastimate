@@ -10,4 +10,19 @@ enum AppEnvironment {
         }
         return url
     }
+
+    /// The public DSN of Sentry project `procrastimate-ios` in org `self-uo7`. Empty means not provisioned, which a Release
+    /// build refuses: `scripts/archive` will not archive it and the app stops at launch.
+    static let sentryDSN = "https://b975a641b1c9cd8b96701a6c6b9de1c6@o4512270794817536.ingest.us.sentry.io/4512271645605888"
+
+    /// Where this build reports crashes, errors, and traces, or nil when it reports nothing. Only Release sets
+    /// `SENTRY_ENVIRONMENT` (in `Config/Base.xcconfig`), so simulator, launcher, and UI test builds never send.
+    static var telemetry: (dsn: String, environment: String)? {
+        let environment = Bundle.main.object(forInfoDictionaryKey: "SENTRY_ENVIRONMENT") as? String ?? ""
+        guard !environment.isEmpty else { return nil }
+        guard !sentryDSN.isEmpty else {
+            fatalError("SENTRY_ENVIRONMENT is \(environment) but AppEnvironment.sentryDSN is empty.")
+        }
+        return (sentryDSN, environment)
+    }
 }

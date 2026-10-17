@@ -7,7 +7,7 @@ enum IntentEffects {
         if let session = IntentSession.current { return (session.store.snapshot, session.clock) }
         let clock = fallbackClock()
         let now = clock.now.epochMilliseconds
-        let loaded = SnapshotFile(url: StoreLocation.file).read().map { Snapshot.load($0, now: now) }
+        let loaded = StoreLocation.snapshotFile().read().map { Snapshot.load($0, now: now) }
         return (loaded ?? .empty(now: now), clock)
     }
 
@@ -259,7 +259,7 @@ enum IntentEffects {
             return result
         }
         let clock = fallbackClock()
-        let store = Store(file: SnapshotFile(url: StoreLocation.file), clock: clock)
+        let store = Store(file: StoreLocation.snapshotFile(), clock: clock)
         let before = store.tasks
         let result = body(store, clock, nil)
         await store.flush()

@@ -26,6 +26,9 @@ export type Env = {
 	RAMBLE_UPSTREAM?: string;
 	/** See `Config.ephemeral`. */
 	EPHEMERAL?: string;
+	/** Plain vars `wrangler deploy --var` sets, never secrets. See `Config.sentry`. */
+	SENTRY_ENVIRONMENT?: string;
+	SENTRY_RELEASE?: string;
 };
 
 export type Handler = (request: Request, env: Env) => Response | Promise<Response>;

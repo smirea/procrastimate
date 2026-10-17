@@ -62,7 +62,7 @@ final class SpeechDictation {
                     onText(String((result.isFinal ? finalized : finalized + result.text).characters))
                 }
             } catch {
-                ErrorReport.log("Dictation stopped", detail: String(reflecting: error))
+                ErrorReport.log("Dictation stopped", error: error)
             }
         }
         try await analyzer.start(inputSequence: stream)

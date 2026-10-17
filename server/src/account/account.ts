@@ -32,6 +32,7 @@ import { queuedRambleLedger, type RambleLedger, type RambleUsage } from './rambl
 import { durableSockets, noSockets, realtime, realtimeRoutes, type SocketHost } from './realtime';
 import { serialQueue } from './serial';
 import { config } from '../config';
+import { identify, span } from '../sentry';
 import { tursoDatabase } from '../db/turso';
 import { errorResponse } from '../errors';
 import { routeKeys } from '../routes';
@@ -39,7 +40,7 @@ import { accountRouter } from './router';
 import { liveGuests, rememberPerson } from './sharing';
 import { accountSnapshot } from './sync';
 import { sqliteStore } from './sqlite-store';
-import type { AccountStore } from './store';
+import { tracedStore, type AccountStore } from './store';
 import { tursoSession, writeUserRamble, type AccountSession } from './turso';
 
 /** The WebSocket upgrades, which the contract cannot describe. */
@@ -272,7 +273,10 @@ export class Account {
 		if (!this.space) return;
 		await this.run(() =>
 			this.withStore(async store => {
-				await this.setAlarm(await deliverDue(store, Date.now(), pushSender(this.env)));
+				const next = await span('deliver due pushes', 'push.deliver', () =>
+					deliverDue(store, Date.now(), pushSender(this.env)),
+				);
+				await this.setAlarm(next);
 			}),
 		);
 	}
@@ -293,7 +297,7 @@ export class Account {
 	private async withStore<T>(use: (store: AccountStore) => Promise<T>): Promise<T> {
 		const session = await this.open();
 		try {
-			return await use(session.store);
+			return await use(tracedStore(session.store));
 		} finally {
 			await session.flush();
 		}
@@ -330,8 +334,11 @@ const forward: Handler = async (request, env) => {
 	if (actor.kind === 'ai' && !SHARED_ROUTES.has(`${request.method} ${url.pathname}`)) {
 		return errorResponse('FORBIDDEN', 'Not for AI accounts');
 	}
+	identify(actor.id);
 	const stub = env.ACCOUNT.get(env.ACCOUNT.idFromName(spaceOf(url, actor)));
-	return stub.fetch(withActor(request, actor) as never) as unknown as Promise<Response>;
+	return span(`Account ${request.method} ${url.pathname}`, 'durable_object.fetch', () =>
+		stub.fetch(withActor(request, actor) as never),
+	) as unknown as Promise<Response>;
 };
 
 /** The Worker's routes for the account, mounted by `api.ts`. The internal contract stays off this map. */

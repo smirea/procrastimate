@@ -1,8 +1,9 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "procrastimate",
-	"main": "server/src/api.ts",
+	"main": "server/src/worker.ts",
 	"compatibility_date": "2026-10-01",
+	"compatibility_flags": ["nodejs_als"],
 	"routes": [{ "pattern": "procrastimate.stf.lol", "custom_domain": true }],
 	"workers_dev": true,
 	"preview_urls": false,

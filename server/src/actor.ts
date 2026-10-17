@@ -59,13 +59,16 @@ export function spaceOf(url: URL, actor: Actor): string {
 
 /**
  * Cloning the request sets the actor header. Bun's WebSocket upgrade still needs the request the server received,
- * so the clone remembers it.
+ * so the clone remembers it. The browser's trace headers come off, so the Durable Object stub sets the Worker's own
+ * and the object's spans nest under the Worker's instead of beside them.
  */
 const originals = new WeakMap<Request, Request>();
 
 export function withActor(request: Request, actor: Actor): Request {
 	const headers = new Headers(request.headers);
 	headers.set(ACTOR_HEADER, JSON.stringify(actor));
+	headers.delete('sentry-trace');
+	headers.delete('baggage');
 	const next = new Request(request, { headers });
 	originals.set(next, originals.get(request) ?? request);
 	return next;
