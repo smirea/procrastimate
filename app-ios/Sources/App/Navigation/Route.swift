@@ -1,3 +1,5 @@
+import Core
+
 /// A pinned screen's tab, or Browse, which always sits last.
 enum AppTab: Hashable {
     case pin(Pin)

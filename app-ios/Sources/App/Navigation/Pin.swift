@@ -1,30 +1,7 @@
 import Core
 import Foundation
 
-/// A screen the floating tab bar can hold. Anything Browse lists can be pinned except Completed. A place or an event
-/// keeps its name, since it only exists while open tasks point at it.
-enum Pin: Hashable, Codable {
-    case inbox
-    case noDate
-    case project(id: String)
-    case label(id: String)
-    case place(key: String, name: String)
-    case event(id: String, title: String)
-
-    static let defaults: [Pin] = [.inbox, .noDate]
-
-    /// Identity without the stored names, so a renamed event still counts as the pin it was.
-    var key: String {
-        switch self {
-        case .inbox: "inbox"
-        case .noDate: "noDate"
-        case let .project(id): "project:\(id)"
-        case let .label(id): "label:\(id)"
-        case let .place(key, _): "place:\(key)"
-        case let .event(id, _): "event:\(id)"
-        }
-    }
-
+extension Pin {
     var route: Route {
         switch self {
         case .inbox: .inbox
