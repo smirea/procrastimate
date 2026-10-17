@@ -10,7 +10,6 @@
 	import Microphone from 'phosphor-svelte/lib/Microphone';
 	import Plus from 'phosphor-svelte/lib/Plus';
 	import Repeat from 'phosphor-svelte/lib/Repeat';
-	import Tag from 'phosphor-svelte/lib/Tag';
 	import MapPin from 'phosphor-svelte/lib/MapPin';
 	import CalendarStar from 'phosphor-svelte/lib/CalendarStar';
 	import { parseQuickAdd, type QuickAddToken, type TokenKind } from 'shared/quick-add.ts';
@@ -29,6 +28,7 @@
 	import { WEB_BUTTONS, type WebButton } from '../quick-add-buttons.ts';
 	import { store } from '../store.svelte.ts';
 	import { labelStyle } from '../label-colors.ts';
+	import { labelIcon } from '../label-icon.ts';
 	import { creationHome } from '../spaces.ts';
 	import { clock, mobile, sheets, motion } from '../ui.svelte.ts';
 	import { dueTone, formatDue, formatRecurrence, formatReminder } from 'shared/format.ts';
@@ -395,7 +395,8 @@
 										<span class="flex items-center gap-1" style="color: var(--tone-repeat)"><Repeat size={12} />{formatRecurrence(task.recurrence, task.due)}</span>
 									{/if}
 									{#each store.labelsOf(task) as label (label.id)}
-										<span class="flex items-center gap-1" style={labelStyle(label.color)}><Tag size={12} weight="fill" class="text-[var(--label-tone)]" />{label.name}</span>
+										{@const Icon = labelIcon(label)}
+										<span class="flex items-center gap-1" style={labelStyle(label.color)}><Icon size={12} weight="fill" class="text-[var(--label-tone)]" />{label.name}</span>
 									{/each}
 								</div>
 							{/if}

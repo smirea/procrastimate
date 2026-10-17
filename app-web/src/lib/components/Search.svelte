@@ -6,7 +6,6 @@
 	import MagnifyingGlass from 'phosphor-svelte/lib/MagnifyingGlass';
 	import Hash from 'phosphor-svelte/lib/Hash';
 	import Tray from 'phosphor-svelte/lib/Tray';
-	import Tag from 'phosphor-svelte/lib/Tag';
 	import Check from 'phosphor-svelte/lib/Check';
 	import X from 'phosphor-svelte/lib/X';
 	import CalendarBlank from 'phosphor-svelte/lib/CalendarBlank';
@@ -18,6 +17,7 @@
 	import TitleFlow from './TitleFlow.svelte';
 	import { store } from '../store.svelte.ts';
 	import { labelStyle } from '../label-colors.ts';
+	import { labelIcon } from '../label-icon.ts';
 	import { clock, mobile, sheets, motion } from '../ui.svelte.ts';
 	import { dueTone, formatDate, formatDue } from 'shared/format.ts';
 	import { PRIORITIES } from '../priorities.ts';
@@ -205,7 +205,8 @@
 									<Highlighted highlight={row.hit.name} />
 								</span>
 							{:else if row.kind === 'label'}
-								<Tag size={18} class="mt-px shrink-0 text-[var(--label-tone)]" style={labelStyle(row.hit.item.color)} />
+								{@const Icon = labelIcon(row.hit.item)}
+								<Icon size={18} class="mt-px shrink-0 text-[var(--label-tone)]" style={labelStyle(row.hit.item.color)} />
 								<span class="min-w-0 flex-1 truncate text-[14px] leading-5 touch:text-[15px]">
 									<Highlighted highlight={row.hit.name} />
 								</span>

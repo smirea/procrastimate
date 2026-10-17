@@ -34,7 +34,7 @@ extension Store {
         case .inbox: PinLabel(title: "Inbox", systemImage: "tray")
         case .noDate: PinLabel(title: "No date", systemImage: "calendar.badge.minus")
         case let .project(id): project(id).map { PinLabel(title: $0.name, systemImage: "number") }
-        case let .label(id): label(id).map { PinLabel(title: $0.name, systemImage: $0.place == nil ? "tag" : "mappin.and.ellipse") }
+        case let .label(id): label(id).map { PinLabel(title: $0.name, systemImage: $0.systemImage()) }
         case let .place(_, name): PinLabel(title: name, systemImage: "mappin.and.ellipse")
         case let .event(_, title): PinLabel(title: title, systemImage: "calendar")
         }

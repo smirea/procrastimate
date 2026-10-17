@@ -30,6 +30,7 @@ export const IMAGE_ID = '<image-id>';
 export const PROJECT_ID = '<project-id>';
 export const SECTION_ID = '<section-id>';
 export const LABEL_ID = '<label-id>';
+export const PLACE_ID = '<place-id>';
 export const LINK_ID = '<link-id>';
 
 /** One per agent route at least. The docs test runs every one against a real space with an AI token. */
@@ -121,6 +122,20 @@ export const agentExamples: readonly Example[] = [
 		path: '/api/labels',
 		query: { id: LABEL_ID },
 		body: { name: 'blocked', color: 'red' },
+	},
+	{
+		title: 'Save a place',
+		method: 'POST',
+		path: '/api/labels',
+		body: { name: 'gym', place: { address: '1 Main St', latitude: 52.52, longitude: 13.405, radius: 100 } },
+	},
+	{ title: 'Add a task at a saved place', method: 'POST', path: '/api/tasks', body: { text: 'Stretch @gym' } },
+	{
+		title: 'Widen a saved place',
+		method: 'PATCH',
+		path: '/api/labels',
+		query: { id: PLACE_ID },
+		body: { radius: 250 },
 	},
 	{ title: 'Delete a section and its tasks', method: 'DELETE', path: '/api/sections', query: { id: SECTION_ID } },
 	{ title: 'Delete a label', method: 'DELETE', path: '/api/labels', query: { id: LABEL_ID } },
@@ -234,6 +249,7 @@ Read them from \`GET /api/view\`. Put a task in one with \`#Project\`, \`/sectio
 - A project is a list of tasks. Its name is unique, ignoring case. The apps list projects by \`order\`, then \`createdAt\`, and \`index\` moves one to that place from 0. Deleting it deletes its sections and every task in it.
 - A section is a heading inside one project. Its name is unique in the project, ignoring case, and \`index\` orders the sections from 0. Deleting it deletes its tasks.
 - A label tags tasks across projects. Its name is unique, ignoring case, and its \`color\` is one of \`${LABEL_COLORS.join('`, `')}\`. Deleting it only takes it off its tasks.
+- A saved place is a label with a \`place\`: its \`address\`, \`latitude\`, \`longitude\`, and \`radius\` in meters. \`@name\` in \`text\`, or its id in \`labelIds\`, sets the task's \`location\` to it instead of tagging the task. Its tasks are the open tasks at that spot. \`PATCH\` with \`radius\` resizes it, and its open tasks take the new radius. Renaming it renames the place on them. Deleting it leaves the place on its tasks.
 - Adding a project, section, or label with a name already taken returns the existing one, so a retry never makes a duplicate.
 
 ## Public links

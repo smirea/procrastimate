@@ -113,6 +113,7 @@ extension NameMatch.Suggestion {
 }
 
 struct NameSuggestionList: View {
+    @Environment(Store.self) private var store
     let match: NameMatch
     let active: Int
     let onPick: (NameMatch.Suggestion) -> Void
@@ -151,9 +152,9 @@ struct NameSuggestionList: View {
 
     @ViewBuilder private func row(_ suggestion: NameMatch.Suggestion) -> some View {
         switch suggestion {
-        case let .existing(_, name):
+        case let .existing(id, name):
             HStack(spacing: 10) {
-                Image(systemName: match.kind.systemImage).foregroundStyle(.muted)
+                Image(systemName: systemImage(id)).foregroundStyle(.muted)
                 highlighted(name).foregroundStyle(.ink).lineLimit(1)
             }
         case let .create(name):
@@ -162,6 +163,10 @@ struct NameSuggestionList: View {
                 Text("Create \(match.kind.noun) “\(name)”").foregroundStyle(.ink).lineLimit(1)
             }
         }
+    }
+
+    private func systemImage(_ id: String) -> String {
+        match.kind == .label ? store.label(id)?.systemImage() ?? match.kind.systemImage : match.kind.systemImage
     }
 
     private func highlighted(_ name: String) -> Text {

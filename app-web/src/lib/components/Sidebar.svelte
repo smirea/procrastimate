@@ -7,7 +7,6 @@
 	import CalendarMinus from 'phosphor-svelte/lib/CalendarMinus';
 	import Hash from 'phosphor-svelte/lib/Hash';
 	import Plus from 'phosphor-svelte/lib/Plus';
-	import Tag from 'phosphor-svelte/lib/Tag';
 	import MapPin from 'phosphor-svelte/lib/MapPin';
 	import CalendarStar from 'phosphor-svelte/lib/CalendarStar';
 	import PlusCircle from 'phosphor-svelte/lib/PlusCircle';
@@ -20,6 +19,7 @@
 	import Settings from './Settings.svelte';
 	import { store } from '../store.svelte.ts';
 	import { labelStyle } from '../label-colors.ts';
+	import { labelIcon } from '../label-icon.ts';
 	import { clock, mobile, motion, sheets } from '../ui.svelte.ts';
 	import { sharedEntries } from '../spaces.ts';
 	import { inboxTasks, labelViewTasks, todayTasks } from 'shared/views.ts';
@@ -164,7 +164,7 @@
 					{#each shared as entry (entry.id)}
 						{@const href = entry.kind === 'task' ? null : `/${entry.kind}s/${entry.id}`}
 						{@const active = href !== null && page.url.pathname === href}
-						{@const Icon = entry.kind === 'project' ? Hash : entry.kind === 'label' ? Tag : CheckCircle}
+						{@const Icon = entry.kind === 'project' ? Hash : entry.kind === 'label' ? labelIcon(store.label(entry.id)) : CheckCircle}
 						{#snippet row()}
 							{@const color = entry.kind === 'label' ? store.label(entry.id)?.color : undefined}
 							<Icon size={18} weight={active ? 'fill' : 'regular'} class={color ? 'text-[var(--label-tone)]' : active ? '' : 'text-muted'} style={color ? labelStyle(color) : undefined} />
@@ -189,7 +189,7 @@
 				<ul class="space-y-0.5">
 					{#each labels as { label, count } (label.id)}
 						{@const href = `/labels/${label.id}`}
-						{@const Icon = label.place ? MapPin : Tag}
+						{@const Icon = labelIcon(label)}
 						{@const active = page.url.pathname === href}
 						<li transition:slide={motion({ duration: 180, easing: cubicOut })}>
 							<a {href} class="nav-link" class:active aria-current={active ? 'page' : undefined}>

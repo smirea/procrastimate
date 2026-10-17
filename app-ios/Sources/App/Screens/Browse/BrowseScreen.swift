@@ -141,7 +141,7 @@ private struct BrowseList: View {
                         NavigationLink(value: Route.label(id: label.id)) {
                             BrowseRow(
                                 name: label.name,
-                                systemImage: label.place == nil ? "tag" : "mappin.and.ellipse",
+                                systemImage: label.systemImage(),
                                 tone: label.color.tone,
                                 count: Views.labelViewTasks(store.tasks, label, in: store.timeZone).count
                             )
@@ -243,7 +243,8 @@ private struct SharedRow: View {
         case .project:
             NavigationLink(value: Route.project(id: entry.id)) { label("number", .muted) }
         case .label:
-            NavigationLink(value: Route.label(id: entry.id)) { label("tag", store.label(entry.id)?.color.tone ?? .toneLabel) }
+            let shared = store.label(entry.id)
+            NavigationLink(value: Route.label(id: entry.id)) { label(shared?.systemImage() ?? "tag", shared?.color.tone ?? .toneLabel) }
         case .task:
             Button { navigator.sheet = .details(taskID: entry.id) } label: { label("checkmark.circle", .muted) }
         }

@@ -86,7 +86,7 @@ struct QuickAddSubtasks: View {
                                 .foregroundStyle(.toneRepeat)
                         }
                         ForEach(labels) { label in
-                            SwiftUI.Label(label.name, systemImage: "tag.fill").foregroundStyle(label.color.tone)
+                            SwiftUI.Label(label.name, systemImage: label.systemImage(filled: true)).foregroundStyle(label.color.tone)
                         }
                     }
                     .font(.caption)

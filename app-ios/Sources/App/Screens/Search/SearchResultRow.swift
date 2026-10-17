@@ -54,7 +54,7 @@ struct SearchResultRow: View {
         case let .project(hit):
             NameResult(systemImage: "number", tone: .muted, name: hit.name)
         case let .label(hit):
-            NameResult(systemImage: "tag", tone: hit.item.color.tone, name: hit.name)
+            NameResult(systemImage: hit.item.systemImage(), tone: hit.item.color.tone, name: hit.name)
         case let .task(hit):
             TaskResult(hit: hit)
         }

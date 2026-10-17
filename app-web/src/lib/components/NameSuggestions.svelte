@@ -47,7 +47,8 @@
 		>
 			{#if suggestion.kind === 'existing'}
 				{@const parts = split(suggestion.item.name)}
-				<source.icon size={15} class="shrink-0 text-muted" />
+				{@const Icon = source.icon(suggestion.item.id)}
+				<Icon size={15} class="shrink-0 text-muted" />
 				<span class="truncate">{parts.head}<strong class="font-semibold">{parts.match}</strong>{parts.tail}</span>
 			{:else}
 				<Plus size={15} class="shrink-0 text-accent" />

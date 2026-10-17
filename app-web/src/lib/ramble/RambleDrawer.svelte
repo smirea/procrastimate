@@ -9,7 +9,6 @@
 	import Hash from 'phosphor-svelte/lib/Hash';
 	import Microphone from 'phosphor-svelte/lib/Microphone';
 	import Repeat from 'phosphor-svelte/lib/Repeat';
-	import Tag from 'phosphor-svelte/lib/Tag';
 	import X from 'phosphor-svelte/lib/X';
 	import { parseRamble, type RambleToken } from 'shared/ramble.ts';
 	import { rambleNewTask } from 'shared/ramble-fill.ts';
@@ -21,6 +20,7 @@
 	import LabelPicker from '../components/LabelPicker.svelte';
 	import { store } from '../store.svelte.ts';
 	import { labelStyle } from '../label-colors.ts';
+	import { labelIcon } from '../label-icon.ts';
 	import { clock, mobile, motion, sheets, toasts } from '../ui.svelte.ts';
 	import type { ListDefaults } from 'shared/screens.ts';
 	import { PRIORITIES } from '../priorities.ts';
@@ -490,7 +490,8 @@
 				<span class="token" in:pop><Hash size={13} weight="bold" />{project.name}</span>
 			{/if}
 			{#each labels as label (label.id)}
-				<span class="token" in:pop><Tag size={13} weight="fill" class="text-[var(--label-tone)]" style={labelStyle(label.color)} />{label.name}</span>
+				{@const Icon = labelIcon(label)}
+				<span class="token" in:pop><Icon size={13} weight="fill" class="text-[var(--label-tone)]" style={labelStyle(label.color)} />{label.name}</span>
 			{/each}
 		</div>
 	{/if}

@@ -1,6 +1,4 @@
 <script lang="ts">
-	import Tag from 'phosphor-svelte/lib/Tag';
-	import MapPin from 'phosphor-svelte/lib/MapPin';
 	import Check from 'phosphor-svelte/lib/Check';
 	import Plus from 'phosphor-svelte/lib/Plus';
 	import { scale } from 'svelte/transition';
@@ -10,6 +8,7 @@
 	import Popover from './Popover.svelte';
 	import { store } from '../store.svelte.ts';
 	import { labelStyle } from '../label-colors.ts';
+	import { labelIcon } from '../label-icon.ts';
 	import { mobile, motion } from '../ui.svelte.ts';
 
 	/** A shared task passes its space's labels, and cannot create one: labels made here are always the user's own. */
@@ -70,6 +69,7 @@
 
 <Popover label="Labels" bind:open>
 	{#snippet trigger({ toggle })}
+		{@const Chosen = labelIcon(chosen[0])}
 		<button
 			type="button"
 			class="chip max-w-64"
@@ -78,7 +78,7 @@
 			aria-label={chosen.length ? `Labels ${chosen.map((l) => l.name).join(', ')}` : 'Add labels'}
 			onclick={toggle}
 		>
-			<Tag size={15} weight={chosen.length ? 'fill' : 'regular'} class="shrink-0 {chosen.length ? 'text-[var(--label-tone)]' : 'text-[var(--tone-label)]'}" />
+			<Chosen size={15} weight={chosen.length ? 'fill' : 'regular'} class="shrink-0 {chosen.length ? 'text-[var(--label-tone)]' : 'text-[var(--tone-label)]'}" />
 			<span class="truncate">{chosen.length ? chosen.map((l) => l.name).join(', ') : 'Labels'}</span>
 		</button>
 	{/snippet}
@@ -109,7 +109,7 @@
 					onclick={() => choose(option)}
 				>
 					{#if option.kind === 'existing'}
-						{@const Icon = option.item.place ? MapPin : Tag}
+						{@const Icon = labelIcon(option.item)}
 						<Icon size={15} weight={checked ? 'fill' : 'regular'} class="shrink-0 text-[var(--label-tone)]" style={labelStyle(option.item.color)} />
 						<span class="flex-1 truncate">{option.item.name}</span>
 						{#if checked}<span class="grid" transition:scale={motion({ start: 0.5, duration: 160, easing: cubicOut })}><Check size={14} class="text-accent" /></span>{/if}

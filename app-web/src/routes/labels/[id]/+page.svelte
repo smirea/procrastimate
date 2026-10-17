@@ -5,8 +5,6 @@
 	import PencilSimple from 'phosphor-svelte/lib/PencilSimple';
 	import Trash from 'phosphor-svelte/lib/Trash';
 	import Check from 'phosphor-svelte/lib/Check';
-	import Tag from 'phosphor-svelte/lib/Tag';
-	import MapPin from 'phosphor-svelte/lib/MapPin';
 	import ShareNetwork from 'phosphor-svelte/lib/ShareNetwork';
 	import View from '#lib/components/View.svelte';
 	import TaskList from '#lib/components/TaskList.svelte';
@@ -22,6 +20,7 @@
 	import { LABEL_COLORS } from 'shared/label-colors.ts';
 	import type { Task } from 'shared/task.ts';
 	import { labelColorName, labelStyle } from '#lib/label-colors.ts';
+	import { labelIcon } from '#lib/label-icon.ts';
 
 	const label = $derived(store.label(page.params.id ?? ''));
 	/** A saved place lists the open tasks at it, which never carry it as a label. */
@@ -82,7 +81,7 @@
 					}}
 				/>
 			{:else}
-				{@const Icon = place ? MapPin : Tag}
+				{@const Icon = labelIcon(label)}
 				<h1 class="flex min-w-0 items-center gap-2 text-[26px] font-semibold tracking-tight" style={labelStyle(label.color)}>
 					<Icon size={22} weight="fill" class="shrink-0 text-[var(--label-tone)] transition-colors" />
 					<span class="truncate">{label.name}</span>
