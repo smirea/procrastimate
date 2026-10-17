@@ -1683,6 +1683,327 @@
 			]
 		},
 		{
+			"fn": "projectCompleted",
+			"test": "task views › a project's done tasks keep their section, newest first, and those whose section is gone come last",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 36,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "open",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "p",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "next",
+						"title": "open"
+					},
+					{
+						"completedAt": 10,
+						"completedBy": null,
+						"createdAt": 37,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "shipped",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "p",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "next",
+						"title": "shipped"
+					},
+					{
+						"completedAt": 30,
+						"completedBy": null,
+						"createdAt": 38,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "filed",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "p",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "next",
+						"title": "filed"
+					},
+					{
+						"completedAt": 20,
+						"completedBy": null,
+						"createdAt": 39,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "loose done",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "p",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "loose done"
+					},
+					{
+						"completedAt": 40,
+						"completedBy": null,
+						"createdAt": 40,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "step",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "open",
+						"priority": 4,
+						"projectId": "p",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "step"
+					},
+					{
+						"completedAt": 50,
+						"completedBy": null,
+						"createdAt": 41,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "orphan",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "p",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "deleted",
+						"title": "orphan"
+					},
+					{
+						"completedAt": 60,
+						"completedBy": null,
+						"createdAt": 42,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "other project",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "q",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "next",
+						"title": "other project"
+					}
+				],
+				[
+					{
+						"createdAt": 1,
+						"id": "later",
+						"name": "later",
+						"order": 2,
+						"projectId": "p"
+					},
+					{
+						"createdAt": 1,
+						"id": "next",
+						"name": "next",
+						"order": 1,
+						"projectId": "p"
+					}
+				],
+				"p"
+			],
+			"output": {
+				"gone": [
+					{
+						"completedAt": 50,
+						"completedBy": null,
+						"createdAt": 41,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "orphan",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "p",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "deleted",
+						"title": "orphan"
+					}
+				],
+				"groups": [
+					{
+						"section": null,
+						"tasks": [
+							{
+								"completedAt": 20,
+								"completedBy": null,
+								"createdAt": 39,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"id": "loose done",
+								"images": [],
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": "p",
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "loose done"
+							}
+						]
+					},
+					{
+						"section": {
+							"createdAt": 1,
+							"id": "next",
+							"name": "next",
+							"order": 1,
+							"projectId": "p"
+						},
+						"tasks": [
+							{
+								"completedAt": 40,
+								"completedBy": null,
+								"createdAt": 40,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"id": "step",
+								"images": [],
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": "open",
+								"priority": 4,
+								"projectId": "p",
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "step"
+							},
+							{
+								"completedAt": 30,
+								"completedBy": null,
+								"createdAt": 38,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"id": "filed",
+								"images": [],
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": "p",
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": "next",
+								"title": "filed"
+							},
+							{
+								"completedAt": 10,
+								"completedBy": null,
+								"createdAt": 37,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"id": "shipped",
+								"images": [],
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": "p",
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": "next",
+								"title": "shipped"
+							}
+						]
+					},
+					{
+						"section": {
+							"createdAt": 1,
+							"id": "later",
+							"name": "later",
+							"order": 2,
+							"projectId": "p"
+						},
+						"tasks": []
+					}
+				]
+			}
+		},
+		{
 			"fn": "labelTasks",
 			"test": "task views › a label lists every open task with it, subtasks included",
 			"input": [
@@ -3351,7 +3672,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 36,
+						"createdAt": 43,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -3387,7 +3708,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 37,
+						"createdAt": 44,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -3430,7 +3751,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 38,
+						"createdAt": 45,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -3466,7 +3787,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 39,
+						"createdAt": 46,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -3502,7 +3823,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 40,
+						"createdAt": 47,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -3536,7 +3857,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 38,
+						"createdAt": 45,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -3574,7 +3895,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 37,
+						"createdAt": 44,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -3617,7 +3938,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 36,
+						"createdAt": 43,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -3661,7 +3982,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 36,
+						"createdAt": 43,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -3697,7 +4018,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 37,
+						"createdAt": 44,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -3740,7 +4061,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 38,
+						"createdAt": 45,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -3776,7 +4097,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 39,
+						"createdAt": 46,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -3812,7 +4133,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 40,
+						"createdAt": 47,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -3848,7 +4169,7 @@
 						{
 							"completedAt": null,
 							"completedBy": null,
-							"createdAt": 39,
+							"createdAt": 46,
 							"createdBy": null,
 							"due": null,
 							"event": {
@@ -3893,7 +4214,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 36,
+						"createdAt": 43,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -3929,7 +4250,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 37,
+						"createdAt": 44,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -3972,7 +4293,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 38,
+						"createdAt": 45,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -4008,7 +4329,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 39,
+						"createdAt": 46,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -4044,7 +4365,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 40,
+						"createdAt": 47,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -4078,7 +4399,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 38,
+					"createdAt": 45,
 					"createdBy": null,
 					"due": null,
 					"event": {
@@ -4114,7 +4435,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 37,
+					"createdAt": 44,
 					"createdBy": null,
 					"due": null,
 					"event": {
@@ -4157,7 +4478,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 36,
+					"createdAt": 43,
 					"createdBy": null,
 					"due": null,
 					"event": {
@@ -4193,7 +4514,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 39,
+					"createdAt": 46,
 					"createdBy": null,
 					"due": null,
 					"event": {
@@ -4236,7 +4557,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 36,
+						"createdAt": 43,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -4272,7 +4593,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 37,
+						"createdAt": 44,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -4315,7 +4636,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 38,
+						"createdAt": 45,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -4351,7 +4672,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 39,
+						"createdAt": 46,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -4387,7 +4708,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 40,
+						"createdAt": 47,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -4420,7 +4741,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 37,
+					"createdAt": 44,
 					"createdBy": null,
 					"due": null,
 					"event": {
@@ -4463,7 +4784,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 40,
+					"createdAt": 47,
 					"createdBy": null,
 					"due": null,
 					"event": null,
@@ -4499,7 +4820,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 41,
+						"createdAt": 48,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -4521,7 +4842,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 42,
+						"createdAt": 49,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -4550,7 +4871,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 43,
+						"createdAt": 50,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -4579,7 +4900,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 44,
+						"createdAt": 51,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -4608,7 +4929,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 45,
+						"createdAt": 52,
 						"createdBy": null,
 						"due": {
 							"date": "2026-10-14",
@@ -4640,7 +4961,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 46,
+						"createdAt": 53,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -4669,7 +4990,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 47,
+						"createdAt": 54,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -4704,7 +5025,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 41,
+						"createdAt": 48,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -4726,7 +5047,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 47,
+						"createdAt": 54,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -4761,7 +5082,7 @@
 							{
 								"completedAt": null,
 								"completedBy": null,
-								"createdAt": 43,
+								"createdAt": 50,
 								"createdBy": null,
 								"due": null,
 								"event": null,
@@ -4790,7 +5111,7 @@
 							{
 								"completedAt": null,
 								"completedBy": null,
-								"createdAt": 46,
+								"createdAt": 53,
 								"createdBy": null,
 								"due": null,
 								"event": null,
@@ -4825,7 +5146,7 @@
 							{
 								"completedAt": null,
 								"completedBy": null,
-								"createdAt": 42,
+								"createdAt": 49,
 								"createdBy": null,
 								"due": null,
 								"event": null,
@@ -4854,7 +5175,7 @@
 							{
 								"completedAt": null,
 								"completedBy": null,
-								"createdAt": 44,
+								"createdAt": 51,
 								"createdBy": null,
 								"due": null,
 								"event": null,
@@ -4893,7 +5214,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 48,
+						"createdAt": 55,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -4915,7 +5236,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 49,
+						"createdAt": 56,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -4937,7 +5258,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 50,
+						"createdAt": 57,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -4959,7 +5280,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 51,
+						"createdAt": 58,
 						"createdBy": null,
 						"due": {
 							"date": "2026-10-14",
@@ -4990,7 +5311,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 50,
+						"createdAt": 57,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -5012,7 +5333,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 49,
+						"createdAt": 56,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -5034,7 +5355,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 48,
+						"createdAt": 55,
 						"createdBy": null,
 						"due": null,
 						"event": null,

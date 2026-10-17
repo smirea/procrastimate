@@ -9,6 +9,7 @@ public enum Views {
     public typealias CompletedPreset = API.CompletedPreset
     public typealias CompletedRange = API.CompletedRange
     public typealias ProjectGroup = API.ProjectGroup
+    public typealias ProjectCompleted = API.ProjectCompleted
 
     /// An event task sorts by the occurrence it is on, or by its first one where a list has no today.
     static func sortKey(_ task: TaskItem, today: DateKey?, in zone: TimeZone) -> String {
@@ -191,5 +192,32 @@ public enum Views {
             }
         }
         return groups
+    }
+
+    /// A project's completed tasks, all time and newest first, under the same headings as `projectGroups`, so each
+    /// shows in its section below the open ones. A subtask goes with its top-level task's section. A done task whose
+    /// section is not one of the project's live sections goes in `gone`, which the views show at the bottom.
+    public static func projectCompleted(
+        _ tasks: [TaskItem],
+        _ sections: [ProjectSection],
+        _ projectId: String,
+        in zone: TimeZone
+    ) -> ProjectCompleted {
+        let byID = Dictionary(tasks.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        func sectionOf(_ task: TaskItem) -> String? {
+            var root = task
+            while let parent = root.parentId.flatMap({ byID[$0] }) { root = parent }
+            return root.sectionId
+        }
+        let done = completedTasks(tasks.filter { $0.projectId == projectId }, .init(), in: zone)
+            .map { (task: $0, sectionId: sectionOf($0)) }
+        let own = StoreRules.sectionsOf(sections, projectId)
+        let placed = Set(own.map(\.id))
+        func tasksIn(_ sectionId: String?) -> [TaskItem] { done.filter { $0.sectionId == sectionId }.map(\.task) }
+        return ProjectCompleted(
+            groups: [ProjectGroup(section: nil, tasks: tasksIn(nil))]
+                + own.map { ProjectGroup(section: $0, tasks: tasksIn($0.id)) },
+            gone: done.filter { $0.sectionId.map { !placed.contains($0) } ?? false }.map(\.task)
+        )
     }
 }

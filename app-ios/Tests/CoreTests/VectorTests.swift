@@ -207,6 +207,7 @@ private struct Occurrence: Decodable {
     case "completedRange": return try json(Views.completedRange(a(0), a(1)))
     case "completedTasks": return try json(Views.completedTasks(a(0), a(1), in: a.zone))
     case "completedDays": return try json(Views.completedDays(a(0), a(1), in: a.zone))
+    case "projectCompleted": return try json(Views.projectCompleted(a(0), a(1), a(2), in: a.zone))
     case "pendingCount": return try json(Views.pendingCount(a(0)))
     default: throw unknown(fn)
     }

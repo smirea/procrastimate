@@ -7,20 +7,25 @@
 	import { sectionTasks } from 'shared/store.ts';
 	import type { Section, Task } from 'shared/task.ts';
 	import AddTaskButton from './AddTaskButton.svelte';
+	import CompletedList from './CompletedList.svelte';
 	import Popover from './Popover.svelte';
 	import SectionHeading from './SectionHeading.svelte';
 	import TaskList from './TaskList.svelte';
 	import { store } from '../store.svelte.ts';
 
-	/** `editable` is the owner's own project, whose sections can be renamed, moved, and deleted. */
+	/**
+	 * `done` are the section's completed tasks when the view shows them, under its open ones. `editable` is the owner's
+	 * own project, whose sections can be renamed, moved, and deleted.
+	 */
 	let {
 		section,
 		tasks,
+		done,
 		index,
 		count,
 		editable,
 		canAdd,
-	}: { section: Section; tasks: Task[]; index: number; count: number; editable: boolean; canAdd: boolean } = $props();
+	}: { section: Section; tasks: Task[]; done: Task[]; index: number; count: number; editable: boolean; canAdd: boolean } = $props();
 
 	const removing = $derived(sectionTasks(store.tasks, section.id).length);
 	let renaming = $state(false);
@@ -105,6 +110,9 @@
 		{/snippet}
 	</SectionHeading>
 	<TaskList {tasks} label={`${section.name} tasks`} />
+	{#if done.length}
+		<CompletedList tasks={done} label={`Completed ${section.name} tasks`} />
+	{/if}
 	{#if canAdd}
 		<AddTaskButton quickAdd={{ projectId: section.projectId, sectionId: section.id, labelId: null, today: false }} />
 	{/if}

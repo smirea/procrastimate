@@ -119,7 +119,7 @@ struct CompletedRow: View {
     }
 }
 
-/// A project's or label's completed tasks under its open ones, all time and newest first.
+/// A label's completed tasks under its open ones, all time and newest first, or a project's whose section is gone.
 struct CompletedSection: View {
     let tasks: [TaskItem]
     var showProject = false

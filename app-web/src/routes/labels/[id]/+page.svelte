@@ -15,12 +15,19 @@
 	import { store } from '#lib/store.svelte.ts';
 	import { sheets } from '#lib/ui.svelte.ts';
 	import { followMerged } from '#lib/merged.svelte.ts';
-	import { labelTasks } from 'shared/views.ts';
+	import { completed } from '#lib/completed.svelte.ts';
+	import { completedTasks, labelTasks } from 'shared/views.ts';
 	import { LABEL_COLORS } from 'shared/label-colors.ts';
 	import { labelColorName, labelStyle } from '#lib/label-colors.ts';
 
 	const label = $derived(store.label(page.params.id ?? ''));
 	const tasks = $derived(label ? labelTasks(store.tasks, label.id) : []);
+	/** The label's own slice, open and done, so a subtask finished with its parent stays under it. */
+	const done = $derived(
+		label && completed.shown
+			? completedTasks(store.tasks.filter((t) => t.labelIds.includes(label.id)), { from: null, to: null })
+			: [],
+	);
 	const home = $derived(label ? store.homeOf(label.id) : null);
 	const owner = $derived(home ? store.spaces[home]?.owner : undefined);
 
@@ -132,7 +139,7 @@
 		{/snippet}
 		<TaskList {tasks} showProject label={`${label.name} tasks`} />
 		{#snippet after()}
-			<CompletedSection tasks={store.tasks.filter((t) => t.labelIds.includes(label.id))} showProject />
+			<CompletedSection tasks={done} showProject />
 		{/snippet}
 	</View>
 {:else}

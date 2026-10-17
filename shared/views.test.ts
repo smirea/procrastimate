@@ -15,6 +15,7 @@ const eventTasks = recorded('views', views.eventTasks);
 const completedRange = recorded('views', views.completedRange);
 const completedTasks = recorded('views', views.completedTasks);
 const completedDays = recorded('views', views.completedDays);
+const projectCompleted = recorded('views', views.projectCompleted);
 const pendingCount = recorded('views', views.pendingCount);
 
 let created = 0;
@@ -94,6 +95,27 @@ describe('task views', () => {
 			['later', ['someday']],
 			['empty', []],
 		]);
+	});
+
+	test("a project's done tasks keep their section, newest first, and those whose section is gone come last", () => {
+		const section = (id: string, order: number) => ({ id, projectId: 'p', name: id, order, createdAt: 1 });
+		const sections = [section('later', 2), section('next', 1)];
+		const list = [
+			task('open', { projectId: 'p', sectionId: 'next' }),
+			task('shipped', { projectId: 'p', sectionId: 'next', completedAt: 10 }),
+			task('filed', { projectId: 'p', sectionId: 'next', completedAt: 30 }),
+			task('loose done', { projectId: 'p', completedAt: 20 }),
+			task('step', { projectId: 'p', parentId: 'open', completedAt: 40 }),
+			task('orphan', { projectId: 'p', sectionId: 'deleted', completedAt: 50 }),
+			task('other project', { projectId: 'q', sectionId: 'next', completedAt: 60 }),
+		];
+		const { groups, gone } = projectCompleted(list, sections, 'p');
+		expect(groups.map(g => [g.section?.id ?? null, ids(g.tasks)])).toEqual([
+			[null, ['loose done']],
+			['next', ['step', 'filed', 'shipped']],
+			['later', []],
+		]);
+		expect(ids(gone)).toEqual(['orphan']);
 	});
 
 	test('a label lists every open task with it, subtasks included', () => {

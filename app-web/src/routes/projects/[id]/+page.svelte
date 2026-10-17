@@ -20,13 +20,18 @@
 	import { leaving, motion, sheets } from '#lib/ui.svelte.ts';
 	import { followMerged } from '#lib/merged.svelte.ts';
 	import { projectDocument } from 'shared/markdown.ts';
-	import { projectGroups } from 'shared/views.ts';
+	import { completed } from '#lib/completed.svelte.ts';
+	import { projectCompleted, projectGroups } from 'shared/views.ts';
+	import CompletedList from '#lib/components/CompletedList.svelte';
 
 	const project = $derived(store.project(page.params.id ?? null));
 	const groups = $derived(project ? projectGroups(store.tasks, store.sections, project.id) : []);
 	const loose = $derived(groups[0]?.tasks ?? []);
 	const sections = $derived(groups.slice(1).map((g) => ({ section: g.section!, tasks: g.tasks })));
 	const tasks = $derived(groups.flatMap((g) => g.tasks));
+	const done = $derived(project && completed.shown ? projectCompleted(store.tasks, store.sections, project.id) : null);
+	const doneIn = (id: string | null) => done?.groups.find((g) => (g.section?.id ?? null) === id)?.tasks ?? [];
+	const anyDone = $derived(!!done && (done.gone.length > 0 || done.groups.some((g) => g.tasks.length > 0)));
 	const home = $derived(project ? store.homeOf(project.id) : null);
 	const owner = $derived(home ? store.spaces[home]?.owner : undefined);
 
@@ -60,7 +65,7 @@
 {#if project}
 	<View
 		open={tasks.length}
-		empty={tasks.length === 0 && sections.length === 0}
+		empty={tasks.length === 0 && sections.length === 0 && !anyDone}
 		emptyTitle="No tasks yet"
 		emptyHint={`Add one here, or type #${project.name} in quick add.`}
 		subtitle={owner ? `Shared by ${owner.name}` : undefined}
@@ -124,12 +129,15 @@
 			{/if}
 		{/snippet}
 		<TaskList tasks={loose} label={`${project.name} tasks`} />
+		{#if doneIn(null).length}
+			<CompletedList tasks={doneIn(null)} label={`Completed ${project.name} tasks`} />
+		{/if}
 		{#if canAdd}
 			<AddTaskButton quickAdd={{ projectId: project.id, sectionId: null, labelId: null, today: false }} />
 		{/if}
 		{#each sections as { section, tasks: inSection }, index (section.id)}
 			<div {@attach leaving} animate:flip={motion({ duration: 260, easing: cubicOut })} transition:fade={motion({ duration: 180 })}>
-				<ProjectSection {section} tasks={inSection} {index} count={sections.length} editable={!home} {canAdd} />
+				<ProjectSection {section} tasks={inSection} done={doneIn(section.id)} {index} count={sections.length} editable={!home} {canAdd} />
 			</div>
 		{/each}
 		{#if !home}
@@ -158,7 +166,9 @@
 			{/if}
 		{/if}
 		{#snippet after()}
-			<CompletedSection tasks={store.tasks.filter((t) => t.projectId === project.id)} />
+			{#if done && (done.gone.length || !anyDone)}
+				<CompletedSection tasks={done.gone} />
+			{/if}
 		{/snippet}
 	</View>
 {:else}

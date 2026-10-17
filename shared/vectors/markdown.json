@@ -1,6 +1,6 @@
 {
 	"module": "markdown",
-	"timeZone": "UTC",
+	"timeZone": "America/New_York",
 	"cases": [
 		{
 			"fn": "toMarkdown",
