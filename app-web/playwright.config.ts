@@ -56,8 +56,10 @@ export default defineConfig({
 							...NO_SENTRY,
 						},
 					},
+					// A prebuilt bundle, not the dev server: each fresh browser context made Vite serve ~600 modules, and
+					// eight cold contexts at once on a busy machine took past the 5 s assertion timeout to render.
 					{
-						command: 'bun --bun run vite',
+						command: `bun --bun run vite build && bun --bun run vite preview --host 127.0.0.1 --port ${PORT} --strictPort`,
 						url: `http://127.0.0.1:${PORT}/inbox`,
 						reuseExistingServer: false,
 						env: { API_URL: `http://127.0.0.1:${API_PORT}`, CLIENT_PORT: String(PORT), ...NO_SENTRY },
