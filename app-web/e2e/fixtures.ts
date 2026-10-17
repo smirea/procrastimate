@@ -3,6 +3,7 @@ import { strToU8, zipSync } from 'fflate';
 import { randomUUID } from 'node:crypto';
 import type { Patch } from '../../shared/sync/protocol';
 import { todoistBackupFiles } from '../../shared/fixtures/todoist-backup.mts';
+import { SENTRY_TUNNEL_PATH } from '../../shared/sentry';
 
 /** Wednesday, October 14 2026, 10:00 UTC. The suite runs in the UTC time zone. */
 export const NOW = new Date('2026-10-14T10:00:00Z');
@@ -82,8 +83,13 @@ export const test = base.extend<{ app: App }>({
 	context: async ({ context }, use) => {
 		await signInAccount(context);
 		const errors = watchPageErrors(context);
+		const reported: string[] = [];
+		context.on('request', request => {
+			if (new URL(request.url()).pathname === SENTRY_TUNNEL_PATH) reported.push(request.url());
+		});
 		await use(context);
 		expect(await errors(), 'uncaught page errors').toEqual([]);
+		expect(reported, 'Sentry is off in tests').toEqual([]);
 	},
 	app: async ({ page }, use) => {
 		await page.clock.setFixedTime(NOW);

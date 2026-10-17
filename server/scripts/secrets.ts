@@ -48,7 +48,8 @@ const iosConfigPath = join(rootPath, 'app-ios/Config/Env.xcconfig');
 /** Release and TestFlight call this. `Config/Base.xcconfig` pins the same URL. */
 export const PROD_API_URL = 'https://procrastimate.stf.lol';
 
-export type IosKey = { name: string; fallback: string };
+/** `optional` keys, like `SENTRY_ENVIRONMENT`, may stay empty: CI's `--generate-only` has no dev or prod values. */
+export type IosKey = { name: string; fallback: string; optional: boolean };
 
 export function appIosKeys(schema: string): IosKey[] {
 	let ios = false;
@@ -63,7 +64,8 @@ export function appIosKeys(schema: string): IosKey[] {
 		if (!ios || !line || line.startsWith('#')) continue;
 		const match = /^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/.exec(line);
 		if (!match) continue;
-		keys.push({ name: match[1], fallback: match[2].replace(/\s+#.*$/, '').trim() });
+		const [value, comment = ''] = match[2].split(/\s+#/, 2);
+		keys.push({ name: match[1], fallback: value.trim(), optional: /\{\s*optional\b/.test(comment) });
 	}
 	return keys;
 }
@@ -80,7 +82,8 @@ export function iosXcconfig(schema: string, dev: Values, prod: Values): string {
 	for (const key of appIosKeys(schema)) {
 		const devValue = dev[key.name] || key.fallback;
 		const prodValue = prod[key.name] || (key.name === 'API_URL' ? PROD_API_URL : key.fallback);
-		if (!devValue || !prodValue) throw new Error(`${key.name} has no value for ${devValue ? 'prod' : 'dev'}`);
+		if (!key.optional && (!devValue || !prodValue))
+			throw new Error(`${key.name} has no value for ${devValue ? 'prod' : 'dev'}`);
 		const setting = (config: 'Debug' | 'Release', value: string) =>
 			`${key.name}[config=${config}] = ${value.replaceAll('//', '/$()/')}`;
 		lines.push(setting('Debug', devValue), setting('Release', prodValue));
