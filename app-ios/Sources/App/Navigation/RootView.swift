@@ -186,6 +186,8 @@ private struct TabBar: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Quick add")
+        // The open quick add card's identifier is also `Quick add`, so a test matching the label can hit the card.
+        .accessibilityIdentifier("quick-add-button")
     }
 
     /// Tapping an open pin at its root, or long pressing any pin, lists the screens it can switch to. A plain `Menu`

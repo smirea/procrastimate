@@ -27,7 +27,7 @@ Add a task lets Stefan capture a task in one motion from anywhere in the app. Re
 - Web: choose `Add task` in the sidebar or at the bottom of any task list.
 - Web: press `q` while focus is outside a text field.
 - Web on a phone: tap the floating `Quick add` button. Quick add opens as a bottom sheet docked above the on-screen keyboard.
-- iOS: tap `Quick add`, the accent `+` circle beside the tab bar. It opens quick add without switching tabs. Lists have no inline `Add task` row and no floating button (see `docs/decisions/ios.md`).
+- iOS: tap `Quick add`, the accent `+` circle beside the tab bar. It opens quick add without switching tabs. In an XCUITest, tap it as `app.buttons["quick-add-button"]`, its identifier: the quick add card carries the identifier `Quick add`, so matching that string can resolve to the card instead. Lists have no inline `Add task` row and no floating button (see `docs/decisions/ios.md`).
 
 ## Driving it with control-ui and the simulator
 
