@@ -32,7 +32,7 @@ import { queuedRambleLedger, type RambleLedger, type RambleUsage } from './rambl
 import { durableSockets, noSockets, realtime, realtimeRoutes, type SocketHost } from './realtime';
 import { serialQueue } from './serial';
 import { config } from '../config';
-import { span } from '../sentry';
+import { identify, span } from '../sentry';
 import { tursoDatabase } from '../db/turso';
 import { errorResponse } from '../errors';
 import { routeKeys } from '../routes';
@@ -334,8 +334,11 @@ const forward: Handler = async (request, env) => {
 	if (actor.kind === 'ai' && !SHARED_ROUTES.has(`${request.method} ${url.pathname}`)) {
 		return errorResponse('FORBIDDEN', 'Not for AI accounts');
 	}
+	identify(actor.id);
 	const stub = env.ACCOUNT.get(env.ACCOUNT.idFromName(spaceOf(url, actor)));
-	return stub.fetch(withActor(request, actor) as never) as unknown as Promise<Response>;
+	return span(`Account ${request.method} ${url.pathname}`, 'durable_object.fetch', () =>
+		stub.fetch(withActor(request, actor) as never),
+	) as unknown as Promise<Response>;
 };
 
 /** The Worker's routes for the account, mounted by `api.ts`. The internal contract stays off this map. */
