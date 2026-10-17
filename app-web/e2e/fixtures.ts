@@ -79,14 +79,8 @@ export function watchPageErrors(context: BrowserContext) {
 	};
 }
 
-export const test = base.extend<{ app: App; sentryOff: (context: BrowserContext) => BrowserContext }>({
-	context: async ({ context, sentryOff }, use) => {
-		sentryOff(context);
-		await signInAccount(context);
-		const errors = watchPageErrors(context);
-		await use(context);
-		expect(await errors(), 'uncaught page errors').toEqual([]);
-	},
+/** Signed out. Every spec imports `test` from here, never from `@playwright/test`, so none can report to Sentry. */
+export const quietTest = base.extend<{ sentryOff: (context: BrowserContext) => BrowserContext }>({
 	// Every context, the default one and each spec's own `browser.newContext()`, so a test can never report to Sentry.
 	sentryOff: [
 		async ({ browser }, use) => {
@@ -107,6 +101,17 @@ export const test = base.extend<{ app: App; sentryOff: (context: BrowserContext)
 		},
 		{ auto: true },
 	],
+});
+
+/** Signed in, with uncaught page errors failing the test. */
+export const test = quietTest.extend<{ app: App }>({
+	context: async ({ context, sentryOff }, use) => {
+		sentryOff(context);
+		await signInAccount(context);
+		const errors = watchPageErrors(context);
+		await use(context);
+		expect(await errors(), 'uncaught page errors').toEqual([]);
+	},
 	app: async ({ page }, use) => {
 		await page.clock.setFixedTime(NOW);
 		await page.goto('/inbox');

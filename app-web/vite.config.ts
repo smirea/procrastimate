@@ -1,3 +1,4 @@
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 import { sveltekit } from '@sveltejs/kit/vite';
@@ -37,6 +38,15 @@ export default defineConfig({
 		},
 	},
 	plugins: [
+		{
+			// `E2E_WORKER=1` reads it, since a build with Sentry baked in fails every test's Sentry guard.
+			name: 'sentry-build-marker',
+			apply: 'build',
+			buildStart() {
+				mkdirSync('.svelte-kit', { recursive: true });
+				writeFileSync('.svelte-kit/sentry-target.json', JSON.stringify(sentry.target));
+			},
+		},
 		// Only for the SvelteKit 3 navigation spans. The deploy uploads source maps with sentry-cli, and there is no
 		// server code to instrument.
 		sentrySvelteKit({ autoUploadSourceMaps: false, autoInstrument: false }),

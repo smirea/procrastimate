@@ -140,7 +140,7 @@ final class AccountSync {
         do {
             try await images.upload(space, token: token)
         } catch {
-            ErrorReport.log("Image upload failed for \(space.query ?? "own space")", error: error)
+            ErrorReport.log("Image upload failed", about: space.query ?? "own space", error: error)
             return false
         }
         let response: API.SyncResponse
@@ -155,7 +155,7 @@ final class AccountSync {
             if let id = space.query { store.dropSpace(id) }
             return false
         } catch {
-            ErrorReport.log("Sync failed for \(space.query ?? "own space")", error: error)
+            ErrorReport.log("Sync failed", about: space.query ?? "own space", error: error)
             return false
         }
         let seeding = space == .own && store.snapshot.sync?.seed == true

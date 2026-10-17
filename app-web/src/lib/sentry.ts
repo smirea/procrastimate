@@ -15,7 +15,8 @@ export function initSentry() {
 		release,
 		tunnel: SENTRY_TUNNEL_PATH,
 		// A 5xx from the API becomes a browser event in the same trace as the server's own.
-		integrations: [Sentry.httpClientIntegration({ failedRequestTargets: [/\/api\//] })],
+		// The tunnel is left out: a 5xx it forwards from Sentry would send another event through it.
+		integrations: [Sentry.httpClientIntegration({ failedRequestTargets: [/\/api\/(?!sentry$)/] })],
 		// Whole transactions named by route, like the Worker's.
 		traceLifecycle: 'static',
 		tracesSampleRate: 1,

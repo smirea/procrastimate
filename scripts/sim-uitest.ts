@@ -167,7 +167,7 @@ export async function runUITests(device: Device, root: string, argv: string[]): 
 			console.log(`Building and installing the app on ${device.name}…`);
 			const log = join(dir, 'logs', `${stamp}-app.log`);
 			const app = await run(
-				['bun', 'app-ios/scripts/run', '-t', device.udid, '--no-watch', '--headless'],
+				['bun', 'app-ios/scripts/run', '-t', device.udid, '--no-watch', '--headless', '--no-sentry'],
 				log,
 				deadline,
 			);

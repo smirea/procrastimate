@@ -31,6 +31,11 @@ struct ErrorReport: Equatable {
         write(message, detail: String(reflecting: error), error: error)
     }
 
+    /// Sentry groups reports by message, so what varies, such as which space, goes in `subject` rather than the message.
+    static func log(_ message: String, about subject: String, error: any Error) {
+        write(message, detail: "\(subject): \(String(reflecting: error))", error: error)
+    }
+
     private static func write(_ message: String, detail: String, error: (any Error)?) {
         #if DEBUG
         logger.error("\(message, privacy: .public): \(detail, privacy: .public)")
