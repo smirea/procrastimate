@@ -124,6 +124,9 @@ jobs:
       RELEASE: ${{ github.sha }}
     steps:
       - uses: actions/checkout@v6
+        # Full history, so set-commits can list the commits since the previous release.
+        with:
+          fetch-depth: 0
       - uses: ./.github/actions/setup
 
       - name: Sentry auth token

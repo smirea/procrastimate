@@ -14,6 +14,14 @@ export function initSentry() {
 		environment,
 		release,
 		tunnel: SENTRY_TUNNEL_PATH,
+		// Sync bodies carry task text; events name the user by id alone.
+		dataCollection: {
+			userInfo: false,
+			cookies: false,
+			httpHeaders: false,
+			httpBodies: [],
+			urlQueryParams: false,
+		},
 		// Whole transactions named by route, like the Worker's.
 		traceLifecycle: 'static',
 		tracesSampleRate: 1,

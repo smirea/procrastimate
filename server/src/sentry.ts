@@ -16,6 +16,16 @@ export function sentryOptions(env: Env): CloudflareOptions {
 		dsn: sentry.dsn,
 		environment: sentry.environment,
 		release: sentry.release,
+		// The SDK collects request bodies, cookies, and query values by default. Sync bodies carry task text and sign-in
+		// carries the email, and reading every POST body costs CPU against the 10 ms budget.
+		dataCollection: {
+			userInfo: false,
+			cookies: false,
+			httpHeaders: false,
+			httpBodies: [],
+			urlQueryParams: false,
+			databaseQueryData: false,
+		},
 		// Whole transactions named by method and path; streamed spans are named only by method.
 		traceLifecycle: 'static',
 		// The tunnel's own requests would add a transaction for every envelope the browser sends.
