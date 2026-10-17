@@ -23,10 +23,13 @@ struct ProcrastimateApp: App {
     private let session: IntentSession
 
     init() {
+        Telemetry.start()
         let clock = Launch.prepare()
         let navigator = Navigator()
         let toasts = Toasts()
-        let store = Store(file: SnapshotFile(url: StoreLocation.file), clock: clock)
+        let store = Telemetry.trace("Load store", operation: "store.load") {
+            Store(file: StoreLocation.snapshotFile(), clock: clock)
+        }
         let actions = TaskActions(store: store, toasts: toasts, clock: clock)
         let router = IntentRouter()
         // The delegate must be set before launch finishes, so tapping a notification can cold-start into its task.

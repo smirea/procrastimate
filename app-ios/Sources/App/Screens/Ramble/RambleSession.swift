@@ -110,7 +110,7 @@ final class RambleSession {
         } catch SpeechDictation.Failure.denied {
             onEnd(.failed("The microphone is off. You can type the ramble instead."))
         } catch {
-            ErrorReport.log("Dictation could not start", detail: String(reflecting: error))
+            ErrorReport.log("Dictation could not start", error: error)
             onEnd(.typed)
         }
     }

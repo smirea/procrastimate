@@ -3,5 +3,7 @@
 
 // After the include so archives ship the production API whatever the dev value is. `$()` keeps `//` from starting a comment.
 API_URL[config=Release] = https:/$()/procrastimate.stf.lol
+// Only archives report to Sentry. Debug leaves it empty, which turns reporting off.
+SENTRY_ENVIRONMENT[config=Release] = production
 // Used when Env.xcconfig has not set one. A real iOS client id replaces this with the reversed Google scheme.
 GOOGLE_URL_SCHEME = com.stefan.procrastimate

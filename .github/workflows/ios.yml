@@ -149,6 +149,13 @@ jobs:
           test "$debug" = http://127.0.0.1:6121
           test "$release" = https://procrastimate.stf.lol
 
+      - name: Only Release reports to Sentry, with dSYMs
+        run: |
+          settings() { xcodebuild -showBuildSettings -project App.xcodeproj -target App -configuration "$1" | awk -v key="$2" '$1 == key { print $3 }'; }
+          test -z "$(settings Debug SENTRY_ENVIRONMENT)"
+          test "$(settings Release SENTRY_ENVIRONMENT)" = production
+          test "$(settings Release DEBUG_INFORMATION_FORMAT)" = dwarf-with-dsym
+
       - name: Build
         run: >
           xcodebuild build -quiet -project App.xcodeproj -scheme App
