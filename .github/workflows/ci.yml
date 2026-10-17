@@ -119,12 +119,26 @@ jobs:
     timeout-minutes: 15
     env:
       HAS_CLOUDFLARE: ${{ secrets.CLOUDFLARE_API_TOKEN != '' && secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
+      HAS_SENTRY: ${{ secrets.SENTRY_AUTH_TOKEN != '' }}
+      SENTRY_ORG: self-uo7
+      RELEASE: ${{ github.sha }}
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/setup
 
+      - name: Sentry auth token
+        if: env.HAS_CLOUDFLARE == 'true' && env.HAS_SENTRY != 'true'
+        run: |
+          echo "::error::Add the SENTRY_AUTH_TOKEN repository secret: set it in env-manager prod, then run 'bun run secrets:github'. The deploy uploads source maps to Sentry with it."
+          exit 1
+
+      # SENTRY_ENVIRONMENT turns reporting on; the build fails while shared/sentry.ts has no web DSN.
       - name: Build
+        if: env.HAS_CLOUDFLARE == 'true'
         run: bun run build
+        env:
+          SENTRY_ENVIRONMENT: production
+          SENTRY_RELEASE: ${{ github.sha }}
 
       - name: Required Worker secrets
         if: env.HAS_CLOUDFLARE == 'true'
@@ -133,12 +147,40 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
+      # Bundled first and deployed with --no-bundle, so the code Sentry's debug ids are injected into is the code that runs.
+      - name: Bundle the Worker
+        if: env.HAS_CLOUDFLARE == 'true'
+        run: bunx wrangler deploy --dry-run --outdir .wrangler/deploy
+
+      # The web maps are deleted after the upload so the Worker never serves them.
+      - name: Sentry release and source maps
+        if: env.HAS_CLOUDFLARE == 'true'
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        run: |
+          bunx sentry-cli releases new -p procrastimate-web -p procrastimate-worker "$RELEASE"
+          bunx sentry-cli releases set-commits "$RELEASE" --auto --ignore-missing
+          bunx sentry-cli sourcemaps inject app-web/build .wrangler/deploy
+          bunx sentry-cli sourcemaps upload -p procrastimate-web --release "$RELEASE" app-web/build
+          bunx sentry-cli sourcemaps upload -p procrastimate-worker --release "$RELEASE" .wrangler/deploy
+          find app-web/build -name '*.map' -delete
+
       - name: Deploy
         if: env.HAS_CLOUDFLARE == 'true'
-        run: bunx wrangler deploy
+        run: >-
+          bunx wrangler deploy -c wrangler.jsonc --no-bundle .wrangler/deploy/worker.js
+          --var SENTRY_ENVIRONMENT:production --var "SENTRY_RELEASE:$RELEASE"
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      - name: Sentry deploy
+        if: env.HAS_CLOUDFLARE == 'true'
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        run: |
+          bunx sentry-cli releases finalize "$RELEASE"
+          bunx sentry-cli deploys new --release "$RELEASE" -e production
 
       - name: Deploy skipped
         if: env.HAS_CLOUDFLARE != 'true'
