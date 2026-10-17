@@ -39,7 +39,7 @@ jobs:
           if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then
             echo "app=true" >> "$GITHUB_OUTPUT"
           elif [ "$GITHUB_EVENT_NAME" = pull_request ]; then
-            touched=$(git diff --name-only "$BASE" HEAD | grep -e '^app-ios/' -e '^shared/' -e '^scripts/generate/' -e '^app-web/src/index\.css$' -e '^package\.json$' -e '^bun\.lock$' -e '^\.github/workflows/ios\.yml$' || true)
+            touched=$(git diff --name-only "$BASE" HEAD | grep -e '^app-ios/' -e '^shared/' -e '^scripts/generate/' -e '^scripts/app-version\.mts$' -e '^app-web/src/index\.css$' -e '^package\.json$' -e '^bun\.lock$' -e '^\.github/workflows/ios\.yml$' || true)
             printf '%s\n' "$touched"
             echo "app=$([ -n "$touched" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
           else
@@ -120,7 +120,10 @@ jobs:
       run:
         working-directory: app-ios
     steps:
+      # Full history: Core's Generate phase counts the commits for the version the Info.plist carries.
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - uses: oven-sh/setup-bun@v2
         with:
@@ -166,3 +169,10 @@ jobs:
           app=$(find DerivedData/Build/Products -name App.app -type d | head -1)
           test -n "$app"
           plutil -lint "$app/PrivacyInfo.xcprivacy"
+
+      - name: App and widgets carry this commit's version
+        run: |
+          app=$(find DerivedData/Build/Products -name App.app -type d | head -1)
+          version=$(bun ../scripts/app-version.mts)
+          test "$(plutil -extract CFBundleShortVersionString raw "$app/Info.plist")" = "$version"
+          test "$(plutil -extract CFBundleShortVersionString raw "$app/PlugIns/Widgets.appex/Info.plist")" = "$version"

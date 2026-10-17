@@ -17,6 +17,7 @@ on:
       - shared/**
       - app-web/src/index.css
       - scripts/generate/**
+      - scripts/app-version.mts
       - package.json
       - bun.lock
       - .github/workflows/testflight.yml
@@ -75,7 +76,7 @@ jobs:
           # First-parent diffs, so a merge commit counts the files it brought onto master.
           # A web or server commit does not start this workflow, so it must not skip the archive.
           files=$(git log --first-parent --diff-merges=first-parent --name-only --pretty=format: "${GITHUB_SHA}..${head}")
-          touched=$(printf '%s\n' "$files" | grep -e '^app-ios/' -e '^shared/' -e '^scripts/generate/' -e '^app-web/src/index\.css$' -e '^package\.json$' -e '^bun\.lock$' -e '^\.github/workflows/testflight\.yml$' || true)
+          touched=$(printf '%s\n' "$files" | grep -e '^app-ios/' -e '^shared/' -e '^scripts/generate/' -e '^scripts/app-version\.mts$' -e '^app-web/src/index\.css$' -e '^package\.json$' -e '^bun\.lock$' -e '^\.github/workflows/testflight\.yml$' || true)
           if [ -n "$touched" ]; then
             echo "master is ${head}. A newer commit touches TestFlight paths, so that run archives:"
             printf '%s\n' "$touched"
