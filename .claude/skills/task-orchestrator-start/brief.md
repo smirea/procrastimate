@@ -23,7 +23,7 @@ You own this job end to end, through the merge. Stefan authorized you to merge y
 
 ## PR
 
-- Open one PR whose description starts with a `# Tasks being addressed` section that lists each task's content and public read-only link.
+- Open one PR whose description starts with a `# Tasks being addressed` section: one bullet per task, `- [<task content>](<public read-only link>)`. The task's text is the link, with no task id, quotes, or code formatting.
 - Then loop `bun scripts/pr-ship.ts --merge` in the foreground with a 600000 ms tool timeout, and act on its exit code:
   - `0`: merged.
   - `1`: fix the failing checks, or fix or answer each review thread and resolve it. Then push and rerun.
