@@ -32,7 +32,7 @@ Preconditions:
 - **Phone sheet.** Open the drawer and tap `Settings`. The drawer closes and the `Settings` sheet docks to the bottom of the screen, with each theme option at least 44 px tall. `Close settings` dismisses it.
 - **Automated.** The sheet's 8 px inset from the bottom and sides at 393 by 852, the 44 px theme options, and `Light` surviving a reload: `the settings sheet floats at the bottom edge and keeps a theme across a reload` in `e2e/phone.e2e.ts`. Dictation and the `Labels` quick add button surviving a reload: `settings keep the dictation choice and the pinned quick add buttons across a reload` in `e2e/settings.e2e.ts`.
 - **Delete all.** Open `Settings`, choose `Delete all data`, and confirm `Delete every task, project, and label on this device and the server?`. The list is empty. `Cancel` leaves the list as it was. Driven in [Offline and sync](./offline-sync.md).
-- **iOS.** `Settings` in Browse opens a sheet with the `Theme` segmented control (`System`, `Light`, `Dark`), the `Dictation` segmented control (`Native`, `ElevenLabs`), the notifications line, `Import from Todoist`, and `Delete all data`. There is no `Set up sync`. `Done` closes it.
+- **iOS.** `Settings` in Browse opens a sheet with the `Theme` segmented control (`System`, `Light`, `Dark`), the `Dictation` segmented control (`Native`, `ElevenLabs`), a `Tabs` row (see `views-pinned-tabs` in task-views), the notifications line, `Import from Todoist`, and `Delete all data`. There is no `Set up sync`. `Done` closes it.
 
 ## Gotchas
 

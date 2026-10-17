@@ -8,7 +8,8 @@ struct TaskListScreen<Content: View>: View {
     let isEmpty: Bool
     let emptyTitle: String
     let emptyHint: String
-    /// A tab's root list has no back button, so it drops the bar and floats the title over the scroll edge instead.
+    /// At a tab's root this list has no back button, so it drops the bar and floats the title over the scroll edge
+    /// instead. Pushed from Browse it keeps the bar.
     var root = false
     /// Shows a sort button at the top right that flips this.
     var newestFirst: Binding<Bool>?
@@ -20,7 +21,10 @@ struct TaskListScreen<Content: View>: View {
 
     @Environment(Navigator.self) private var navigator
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.tabRoot) private var tabRoot
     @State private var scrolled = false
+
+    private var floats: Bool { root && tabRoot }
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -57,9 +61,9 @@ struct TaskListScreen<Content: View>: View {
         .toolbar {
             ToolbarItem(placement: .principal) { compactTitle }
         }
-        .toolbarVisibility(root ? .hidden : .automatic, for: .navigationBar)
+        .toolbarVisibility(floats ? .hidden : .automatic, for: .navigationBar)
         .overlay(alignment: .top) {
-            if root { compactTitle.offset(y: -6) }
+            if floats { compactTitle.offset(y: -6) }
         }
         .onScrollGeometryChange(for: Bool.self) { $0.contentOffset.y + $0.contentInsets.top > 4 } action: { _, value in
             scrolled = value
@@ -81,7 +85,7 @@ struct TaskListScreen<Content: View>: View {
         }
             .font(.subheadline.weight(.semibold))
             .lineLimit(1)
-            .opacity(scrolled || !root ? 1 : 0)
+            .opacity(scrolled || !floats ? 1 : 0)
             .animation(.snappy(duration: 0.2), value: scrolled)
     }
 }

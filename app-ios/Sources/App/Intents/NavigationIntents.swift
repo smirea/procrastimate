@@ -13,11 +13,12 @@ enum TaskListKind: String, AppEnum {
         ]
     }
 
-    var tab: AppTab {
+    /// Nil for Browse, which is a tab of its own rather than a screen.
+    var route: Route? {
         switch self {
         case .inbox: .inbox
         case .noDate: .noDate
-        case .browse: .browse
+        case .browse: nil
         }
     }
 
@@ -53,7 +54,7 @@ struct OpenViewIntent: AppIntent {
     }
 
     func perform() async throws -> some IntentResult & ProvidesDialog {
-        let dialog = await IntentEffects.open(tab: list.tab, name: list.name)
+        let dialog = await IntentEffects.open(list.route, name: list.name)
         return .result(dialog: IntentDialog(stringLiteral: dialog))
     }
 }

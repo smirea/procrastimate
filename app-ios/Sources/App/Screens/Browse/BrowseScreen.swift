@@ -46,11 +46,18 @@ private struct BrowseList: View {
     var body: some View {
         let labels = Browse.labelsByName(store.labels)
         List {
-            Section {
-                NavigationLink(value: Route.completed) {
-                    BrowseRow(name: "Completed", systemImage: "checkmark.circle", tone: .toneSoon, count: 0)
+            let lists = [Pin.inbox, .noDate].filter { !navigator.pins.contains($0) }
+            if !lists.isEmpty {
+                Section {
+                    ForEach(lists, id: \.key) { pin in
+                        if let label = store.label(of: pin) {
+                            NavigationLink(value: pin.route) {
+                                BrowseRow(name: label.title, systemImage: label.systemImage, tone: .accent, count: count(pin))
+                            }
+                            .accessibilityIdentifier("browse-\(pin.key)")
+                        }
+                    }
                 }
-                .accessibilityIdentifier("browse-completed")
             }
 
             Section {
@@ -152,6 +159,13 @@ private struct BrowseList: View {
                 }
                 .foregroundStyle(.ink)
             }
+
+            Section {
+                NavigationLink(value: Route.completed) {
+                    BrowseRow(name: "Completed", systemImage: "checkmark.circle", tone: .toneSoon, count: 0)
+                }
+                .accessibilityIdentifier("browse-completed")
+            }
         }
         .scrollContentBackground(.hidden)
         .animation(.snappy, value: store.projects)
@@ -167,6 +181,13 @@ private struct BrowseList: View {
     }
 
     private static let newProject = "new-project"
+
+    /// Inbox counts what its tab badge counts, No date its undated tasks.
+    private func count(_ pin: Pin) -> Int {
+        guard pin == .inbox else { return Views.inboxTasks(store.tasks, today, in: store.timeZone).count }
+        let due = Views.todayTasks(store.tasks, today, in: store.timeZone)
+        return due.overdue.count + due.today.count
+    }
 
     private func createProject() {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
