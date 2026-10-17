@@ -28,7 +28,8 @@ export const LABEL_COLOR_HINTS: Partial<Record<LabelColor, readonly string[]>> =
 	amber: ['waiting', 'wait', 'someday', 'maybe', 'later'],
 	green: ['money', 'finance', 'bills', 'health', 'gym', 'fitness', 'garden'],
 	blue: ['work', 'call', 'calls', 'phone', 'email', 'meeting', 'meetings'],
-	violet: ['idea', 'ideas', 'read', 'reading', 'learn'],
+	indigo: ['deep'],
+	violet: ['idea', 'ideas', 'read', 'reading', 'learn', 'creative'],
 	pink: ['family', 'kids', 'gift', 'gifts', 'friends'],
 };
 

@@ -68,6 +68,22 @@
 		},
 		{
 			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › a word with an obvious color picks it, ignoring case and the words around it",
+			"input": [
+				"deep work"
+			],
+			"output": "indigo"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › a word with an obvious color picks it, ignoring case and the words around it",
+			"input": [
+				"creative work"
+			],
+			"output": "violet"
+		},
+		{
+			"fn": "defaultLabelColor",
 			"test": "defaultLabelColor › every hint word picks its color, so the Swift table must list the same words",
 			"input": [
 				"bug"
@@ -302,6 +318,14 @@
 			"fn": "defaultLabelColor",
 			"test": "defaultLabelColor › every hint word picks its color, so the Swift table must list the same words",
 			"input": [
+				"deep"
+			],
+			"output": "indigo"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › every hint word picks its color, so the Swift table must list the same words",
+			"input": [
 				"idea"
 			],
 			"output": "violet"
@@ -335,6 +359,14 @@
 			"test": "defaultLabelColor › every hint word picks its color, so the Swift table must list the same words",
 			"input": [
 				"learn"
+			],
+			"output": "violet"
+		},
+		{
+			"fn": "defaultLabelColor",
+			"test": "defaultLabelColor › every hint word picks its color, so the Swift table must list the same words",
+			"input": [
+				"creative"
 			],
 			"output": "violet"
 		},
@@ -409,14 +441,6 @@
 				"  Home  "
 			],
 			"output": "pink"
-		},
-		{
-			"fn": "defaultLabelColor",
-			"test": "defaultLabelColor › any other name hashes to a stable color, the same for every case and surrounding space",
-			"input": [
-				"deep work"
-			],
-			"output": "blue"
 		},
 		{
 			"fn": "defaultLabelColor",
