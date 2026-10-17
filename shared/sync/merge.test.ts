@@ -150,6 +150,16 @@ describe('applyOps', () => {
 			expect(log[0]?.fields).toMatchObject({ deleted: false, title: 'Renamed', createdAt: 1, labelIds: [] });
 		});
 
+		test('a delete that loses still restates the task when another of its fields wins', () => {
+			const restored = apply(seeded(), [
+				edit('delete', '20:0:a', 't', { deleted: true }),
+				edit('undo', '30:0:a', 't', { deleted: false }),
+			]).state;
+			const { state, log } = apply(restored, [edit('mixed', '25:0:b', 't', { deleted: true, title: 'Won' })]);
+			expect(titleOf(state)).toBe('Won');
+			expect(log[0]?.fields).toMatchObject({ deleted: false, title: 'Won', createdAt: 1 });
+		});
+
 		test('a partial edit of an entity the server never had is dropped', () => {
 			const { state, log } = apply(createServerState(), [edit('e', '20:0:a', 'ghost', { title: 'Ghost' })]);
 			expect(serverSnapshot(state).tasks).toEqual([]);

@@ -52,7 +52,7 @@ const isLive = (kind: Kind, data: Fields | undefined) => kind === 'settings' || 
  * Writes the fields that beat their stored clocks and returns them as the op's log entry. While an entity is not live only `deleted` can change,
  * so edits to a tombstone are dropped. When it turns live, the row carries all its fields, so a client that never had it can build it.
  * A delete or undelete that loses gets the server's answer instead: all the fields of an entity that stays live, or `deleted: true`. Its
- * device already shows the opposite, and the fields that won, none, would never correct it.
+ * device already shows the opposite, and the fields that won would never correct it.
  */
 function write(entities: Map<string, ServerEntity>, { kind, id, fields, opId }: LogEntry, hlc: Hlc): LogEntry {
 	const key = entityKey(kind, id);
@@ -70,10 +70,9 @@ function write(entities: Map<string, ServerEntity>, { kind, id, fields, opId }: 
 	const { deleted, ...values } = fields as Fields;
 	if (kind !== 'settings') take('deleted', deleted);
 	if (isLive(kind, data)) for (const [name, value] of Object.entries(values)) take(name, value);
-	if (!Object.keys(won).length) {
-		if (deleted === undefined || data.deleted === deleted) return { kind, id, opId, fields: {} };
-		return { kind, id, opId, fields: isLive(kind, data) ? { ...data } : { deleted: true } } as LogEntry;
-	}
+	const lost = deleted !== undefined && data.deleted !== deleted;
+	const answer = () => ({ kind, id, opId, fields: isLive(kind, data) ? { ...data } : { deleted: true } }) as LogEntry;
+	if (!Object.keys(won).length) return lost ? answer() : { kind, id, opId, fields: {} };
 	// A label from before colors shows its name's default. The first write stores that color with a clock, taken from
 	// the name every replica showed it under, so a rename cannot leave a fresh replica deriving a different one.
 	const shown = current?.data.name ?? data.name;
@@ -81,6 +80,7 @@ function write(entities: Map<string, ServerEntity>, { kind, id, fields, opId }: 
 		take('color', defaultLabelColor(shown));
 	}
 	entities.set(key, { kind, id, data, clocks });
+	if (lost) return answer();
 	const appeared = !isLive(kind, current?.data) && isLive(kind, data);
 	return { kind, id, opId, fields: appeared ? { ...data } : won } as LogEntry;
 }
