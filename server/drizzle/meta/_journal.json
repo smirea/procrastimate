@@ -71,6 +71,13 @@
 			"when": 1792162739119,
 			"tag": "0009_milky_thunderbolts",
 			"breakpoints": true
+		},
+		{
+			"idx": 10,
+			"version": "6",
+			"when": 1792255184275,
+			"tag": "0010_shocking_redwing",
+			"breakpoints": true
 		}
 	]
 }

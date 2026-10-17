@@ -7,6 +7,7 @@ import { pushSubscriptionSchema, subscribeRequestSchema } from '../push.ts';
 import {
 	activityEntrySchema,
 	agentNewTaskSchema,
+	agentTaskSchema,
 	apiTokenSchema,
 	createdApiTokenSchema,
 	labelEditSchema,
@@ -36,7 +37,6 @@ import {
 	sectionSchema,
 	syncRequestSchema,
 	syncResponseSchema,
-	taskSchema,
 } from '../sync/protocol.ts';
 
 /**
@@ -231,7 +231,7 @@ export const agentContract = {
 				}),
 			)
 			.input(z.object({ query: spaceQuery, body: agentNewTaskSchema }))
-			.output(taskSchema),
+			.output(agentTaskSchema),
 		update: found
 			.meta(
 				openapi({
@@ -243,7 +243,7 @@ export const agentContract = {
 				}),
 			)
 			.input(z.object({ query: taskQuery, body: taskEditSchema }))
-			.output(taskSchema),
+			.output(agentTaskSchema),
 		complete: found
 			.meta(
 				openapi({
@@ -255,7 +255,7 @@ export const agentContract = {
 				}),
 			)
 			.input(z.object({ query: taskQuery }))
-			.output(taskSchema),
+			.output(agentTaskSchema),
 		reopen: found
 			.meta(
 				openapi({
@@ -266,7 +266,7 @@ export const agentContract = {
 				}),
 			)
 			.input(z.object({ query: taskQuery }))
-			.output(taskSchema),
+			.output(agentTaskSchema),
 		delete: found
 			.meta(
 				openapi({

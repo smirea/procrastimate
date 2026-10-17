@@ -70,6 +70,7 @@ const commands = (context: AccountContext) => ({
 	store: context.store,
 	now: context.now,
 	actor: context.actor.id,
+	client: context.client,
 	access: context.access,
 });
 
@@ -89,9 +90,9 @@ export const accountRouter = os.router({
 			if (actor.kind === 'human' && !(await authenticate(context.request, context))) {
 				throw new ORPCError('UNAUTHORIZED', { message: 'Not signed in' });
 			}
-			response = sync(store, input.body, now, actor.id);
+			response = sync(store, input.body, now, actor.id, context.client);
 		} else {
-			response = guestSync(store, input.body, now, actor.id, access.shares);
+			response = guestSync(store, input.body, now, actor.id, context.client, access.shares);
 		}
 		if (response.rejected.length) {
 			console.warn('sync: rejected ops', JSON.stringify(response.rejected).slice(0, 2000));
@@ -234,10 +235,12 @@ export const accountRouter = os.router({
 		put: os.memoTasks.put
 			.use(owner)
 			.handler(({ input, context }) =>
-				moved(context, () => putMemoTasks(context.store, input, context.now, context.actor.id)),
+				moved(context, () => putMemoTasks(context.store, input, context.now, context.actor.id, context.client)),
 			),
 		delete: os.memoTasks.delete.use(owner).handler(async ({ input, context }) => {
-			await moved(context, () => deleteMemoTasks(context.store, input.query.memoId, context.now, context.actor.id));
+			await moved(context, () =>
+				deleteMemoTasks(context.store, input.query.memoId, context.now, context.actor.id, context.client),
+			);
 			return { ok: true as const };
 		}),
 	},

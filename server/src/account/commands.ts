@@ -2,6 +2,7 @@ import { ORPCError } from '@orpc/server';
 import { addComment, commentsOn, deleteComment, editComment } from '../../../shared/comments';
 import type {
 	AgentNewTask,
+	AgentTask,
 	LabelEdit,
 	NewComment,
 	NewLabel,
@@ -9,6 +10,7 @@ import type {
 	ProjectEdit,
 	SectionEdit,
 	SpaceView,
+	TaskClients,
 	TaskComment,
 } from '../../../shared/sharing';
 import { newId } from '../../../shared/id';
@@ -39,6 +41,7 @@ import {
 import { diff, stamp } from '../../../shared/sync/diff';
 import { serverSnapshot } from '../../../shared/sync/merge';
 import type { Comment, Label, Project, Section, Snapshot, Task } from '../../../shared/sync/protocol';
+import { SERVER_ACTOR, type Client } from '../../../shared/values';
 import { isTimeZone, wallDate, zonedDateKey } from '../../../shared/zoned-time';
 import type { Access } from '../auth';
 import { personOf } from './activity';
@@ -51,29 +54,57 @@ import { guestView, loadState, push } from './sync';
  * Notouroboros.
  */
 
-type Space = { store: AccountStore; now: number; actor: string; access: Access };
+type Space = { store: AccountStore; now: number; actor: string; client: Client; access: Access };
 
 const grantsOf = (access: Access): readonly Grant[] | null => (access.role === 'owner' ? null : access.shares);
 
 /** What the actor sees of the space. Owners see everything and may edit it all. */
-export function viewOf(snapshot: Snapshot, access: Access): SpaceView {
+function visibleOf(snapshot: Snapshot, access: Access) {
 	const grants = grantsOf(access);
 	const { filtered, readOnly } = grants ? guestView(snapshot, grants) : { filtered: snapshot, readOnly: [] };
 	const { tasks, projects, sections, labels } = filtered;
 	return { tasks, projects, sections, labels, readOnly };
 }
 
-export const view = ({ store, access }: Space): SpaceView => viewOf(serverSnapshot(loadState(store)), access);
+type Visible = ReturnType<typeof visibleOf>;
+
+/**
+ * Each task's first and latest write, read off the log, with the app behind it. A fixup is the server's and a refused
+ * guest op wrote nothing, so neither counts.
+ */
+function taskClients(store: AccountStore): Map<string, TaskClients> {
+	const result = new Map<string, TaskClients>();
+	for (const row of store.logAfter(0, Number.MAX_SAFE_INTEGER)) {
+		if (row.kind !== 'task' || row.actor === SERVER_ACTOR || !Object.keys(row.fields).length) continue;
+		const stamp = row.client && { ...row.client, at: row.at };
+		const known = result.get(row.id);
+		if (known) known.edited = stamp;
+		else result.set(row.id, { created: stamp, edited: stamp });
+	}
+	return result;
+}
+
+const NO_CLIENTS: TaskClients = { created: null, edited: null };
+
+function withClients(store: AccountStore, tasks: readonly Task[]): AgentTask[] {
+	const clients = taskClients(store);
+	return tasks.map(task => ({ ...task, clients: clients.get(task.id) ?? NO_CLIENTS }));
+}
+
+export function view({ store, access }: Space): SpaceView {
+	const visible = visibleOf(serverSnapshot(loadState(store)), access);
+	return { ...visible, tasks: withClients(store, visible.tasks) };
+}
 
 const zoneOf = (snapshot: Snapshot) =>
 	snapshot.settings.timeZone && isTimeZone(snapshot.settings.timeZone) ? snapshot.settings.timeZone : 'UTC';
 
-function run(space: Space, command: (data: StoreData, visible: SpaceView, zone: string) => StoreData): Snapshot {
-	const { store, now, actor, access } = space;
+function run(space: Space, command: (data: StoreData, visible: Visible, zone: string) => StoreData): Snapshot {
+	const { store, now, actor, client, access } = space;
 	return store.transaction(() => {
 		const before = loadState(store);
 		const snapshot = serverSnapshot(before);
-		const visible = viewOf(snapshot, access);
+		const visible = visibleOf(snapshot, access);
 		const { settings: _, ...data } = snapshot;
 		const next = command(data, visible, zoneOf(snapshot));
 		const patches = diff(snapshot, { ...snapshot, ...next });
@@ -82,24 +113,24 @@ function run(space: Space, command: (data: StoreData, visible: SpaceView, zone: 
 		if (grants && admit(snapshot, grants, ops, actor).refused.length) {
 			throw new ORPCError('FORBIDDEN', { message: 'Not editable in this share' });
 		}
-		return serverSnapshot(push(store, before, ops, now, actor).state);
+		return serverSnapshot(push(store, before, ops, now, actor, client).state);
 	});
 }
 
-function visibleTask(visible: SpaceView, id: string): Task {
+function visibleTask(visible: Visible, id: string): Task {
 	const task = visible.tasks.find(task => task.id === id);
 	if (!task) throw new ORPCError('NOT_FOUND', { message: 'No such task' });
 	return task;
 }
 
-function taskAfter(snapshot: Snapshot, id: string): Task {
+function taskAfter(store: AccountStore, snapshot: Snapshot, id: string): AgentTask {
 	const task = snapshot.tasks.find(task => task.id === id);
 	if (!task) throw new ORPCError('NOT_FOUND', { message: 'No such task' });
-	return task;
+	return withClients(store, [task])[0]!;
 }
 
 /** `text` is read like the app's quick add, against the space's projects and labels; explicit fields win over it. */
-export function createTask(space: Space, input: AgentNewTask): Task {
+export function createTask(space: Space, input: AgentNewTask): AgentTask {
 	const id = newId();
 	const snapshot = run(space, (data, visible, zone) => {
 		const parsed = input.text
@@ -132,31 +163,31 @@ export function createTask(space: Space, input: AgentNewTask): Task {
 		);
 		return input.notes ? updateTask(added.data, id, { notes: input.notes }) : added.data;
 	});
-	return taskAfter(snapshot, id);
+	return taskAfter(space.store, snapshot, id);
 }
 
-export function editTask(space: Space, id: string, patch: TaskPatch): Task {
+export function editTask(space: Space, id: string, patch: TaskPatch): AgentTask {
 	const snapshot = run(space, (data, visible) => {
 		visibleTask(visible, id);
 		return updateTask(data, id, patch);
 	});
-	return taskAfter(snapshot, id);
+	return taskAfter(space.store, snapshot, id);
 }
 
-export function finishTask(space: Space, id: string): Task {
+export function finishTask(space: Space, id: string): AgentTask {
 	const snapshot = run(space, (data, visible, zone) => {
 		visibleTask(visible, id);
 		return completeTask(data, id, zonedDateKey(space.now, zone), space.now)?.data ?? data;
 	});
-	return taskAfter(snapshot, id);
+	return taskAfter(space.store, snapshot, id);
 }
 
-export function reopen(space: Space, id: string): Task {
+export function reopen(space: Space, id: string): AgentTask {
 	const snapshot = run(space, (data, visible) => {
 		visibleTask(visible, id);
 		return reopenTask(data, id);
 	});
-	return taskAfter(snapshot, id);
+	return taskAfter(space.store, snapshot, id);
 }
 
 export function removeTask(space: Space, id: string): void {
@@ -173,7 +204,7 @@ const withAuthor = (store: AccountStore, comment: Comment): TaskComment => ({
 
 export function listComments(space: Space, taskId: string): TaskComment[] {
 	const snapshot = serverSnapshot(loadState(space.store));
-	visibleTask(viewOf(snapshot, space.access), taskId);
+	visibleTask(visibleOf(snapshot, space.access), taskId);
 	return commentsOn(snapshot.comments, taskId).map(comment => withAuthor(space.store, comment));
 }
 
@@ -184,7 +215,7 @@ function commentAfter(space: Space, snapshot: Snapshot, id: string): TaskComment
 }
 
 /** The caller's own comment on a task it can see. Someone else's is refused; a hidden one is not found. */
-function ownComment(data: StoreData, visible: SpaceView, id: string, actor: string): Comment {
+function ownComment(data: StoreData, visible: Visible, id: string, actor: string): Comment {
 	const comment = data.comments.find(comment => comment.id === id);
 	if (!comment || !visible.tasks.some(task => task.id === comment.taskId)) {
 		throw new ORPCError('NOT_FOUND', { message: 'No such comment' });

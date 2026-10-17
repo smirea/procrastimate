@@ -9,7 +9,7 @@ import {
 	taskSchema,
 } from './sync/protocol.ts';
 import { labelColorSchema } from './label-colors.ts';
-import { roleSchema, shareTargetKindSchema } from './values.ts';
+import { clientSchema, roleSchema, shareTargetKindSchema } from './values.ts';
 
 /**
  * Sharing's shapes. A space is one user's tasks, projects, sections, and labels, served by the `Account` object named by
@@ -136,9 +136,33 @@ export const agentNewTaskSchema = z
 	.meta({ id: 'AgentNewTask', description: 'A task the agent command API adds. It needs `text` or `title`.' });
 export type AgentNewTask = z.infer<typeof agentNewTaskSchema>;
 
+export const clientStampSchema = clientSchema
+	.extend({ at: z.number().int().meta({ description: 'Server time of the op, in epoch milliseconds.' }) })
+	.meta({ id: 'ClientStamp', description: 'The app behind one write to a task, and when the server took it.' });
+export type ClientStamp = z.infer<typeof clientStampSchema>;
+
+export const taskClientsSchema = z
+	.object({
+		created: clientStampSchema.nullable(),
+		edited: clientStampSchema
+			.nullable()
+			.meta({ description: 'The latest write, which is the creation until another.' }),
+	})
+	.meta({
+		id: 'TaskClients',
+		description:
+			'Which app created a task and which wrote to it last. Null for writes from before the server recorded apps.',
+	});
+export type TaskClients = z.infer<typeof taskClientsSchema>;
+
+export const agentTaskSchema = taskSchema
+	.extend({ clients: taskClientsSchema })
+	.meta({ id: 'AgentTask', description: 'A task with the apps that created and last changed it, for the agent API.' });
+export type AgentTask = z.infer<typeof agentTaskSchema>;
+
 export const spaceViewSchema = z
 	.object({
-		tasks: z.array(taskSchema),
+		tasks: z.array(agentTaskSchema),
 		projects: z.array(projectSchema),
 		sections: z.array(sectionSchema),
 		labels: z.array(labelSchema),

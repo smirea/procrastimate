@@ -38,6 +38,7 @@ enum APIClient {
         var request = URLRequest(url: url)
         request.httpMethod = E.method
         if let token { request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization") }
+        request.setValue(AppClient.value, forHTTPHeaderField: AppClient.header)
         if let device {
             request.setValue(device.id, forHTTPHeaderField: "x-procrastimate-device")
             request.setValue(device.name, forHTTPHeaderField: "x-procrastimate-device-name")

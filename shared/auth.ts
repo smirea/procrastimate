@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { personSchema } from './sharing.ts';
+import { clientSchema } from './values.ts';
 
 export { SERVER_ACTOR } from './values.ts';
 
@@ -16,6 +17,13 @@ export type Actor = z.infer<typeof actorSchema>;
 
 /** This install's id. It is not a secret: the session is the credential. */
 export const DEVICE_HEADER = 'x-procrastimate-device';
+
+/**
+ * The app sending the request, as JSON (`Client`). The web and iOS send it on every request, and a request without
+ * it is an `api` client. The server records it on each op the request writes.
+ */
+export const CLIENT_HEADER = 'x-procrastimate-client';
+export const appClientSchema = clientSchema.extend({ kind: z.enum(['web', 'ios']) });
 
 /** A display name stored with the device. It is never shown. */
 export const DEVICE_NAME_HEADER = 'x-procrastimate-device-name';

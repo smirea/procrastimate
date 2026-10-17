@@ -11,7 +11,7 @@ import { descendantsOf } from '../../../shared/subtasks';
 import { diff, stamp } from '../../../shared/sync/diff';
 import { serverSnapshot, type ServerState } from '../../../shared/sync/merge';
 import type { Snapshot, Task } from '../../../shared/sync/protocol';
-import { DEFAULT_PRIORITY } from '../../../shared/values';
+import { DEFAULT_PRIORITY, type Client } from '../../../shared/values';
 import { wallDate } from '../../../shared/zoned-time';
 import type { AccountStore } from './store';
 import { loadState, push } from './sync';
@@ -48,7 +48,13 @@ function schedule({ when, event }: MemoTaskInput, recordedAt: number, zone: stri
 	return { due, recurrence };
 }
 
-export function putMemoTasks(store: AccountStore, request: MemoTasksRequest, now: number, actor: string): MemoTasks {
+export function putMemoTasks(
+	store: AccountStore,
+	request: MemoTasksRequest,
+	now: number,
+	actor: string,
+	client: Client,
+): MemoTasks {
 	return store.transaction(() => {
 		const before = loadState(store);
 		const snapshot = serverSnapshot(before);
@@ -88,11 +94,11 @@ export function putMemoTasks(store: AccountStore, request: MemoTasksRequest, now
 		const opIds = added.map(task => task.sourceKey!).values();
 		const patches = diff(snapshot, { ...snapshot, tasks: [...snapshot.tasks, ...added] });
 		const { ops } = stamp(patches, before.clock, now, () => opIds.next().value!);
-		return memoTasks(serverSnapshot(push(store, before, ops, now, actor).state), request.memoId);
+		return memoTasks(serverSnapshot(push(store, before, ops, now, actor, client).state), request.memoId);
 	});
 }
 
-export function deleteMemoTasks(store: AccountStore, memoId: string, now: number, actor: string): void {
+export function deleteMemoTasks(store: AccountStore, memoId: string, now: number, actor: string, client: Client): void {
 	store.transaction(() => {
 		const before = loadState(store);
 		const snapshot = serverSnapshot(before);
@@ -104,6 +110,6 @@ export function deleteMemoTasks(store: AccountStore, memoId: string, now: number
 		}
 		if (!gone.size) return;
 		const patches = diff(snapshot, { ...snapshot, tasks: snapshot.tasks.filter(task => !gone.has(task.id)) });
-		push(store, before, stamp(patches, before.clock, now).ops, now, actor);
+		push(store, before, stamp(patches, before.clock, now).ops, now, actor, client);
 	});
 }

@@ -173,6 +173,27 @@ export const ACTOR_KINDS = ['human', 'ai'] as const;
 export const actorKindSchema = z.enum(ACTOR_KINDS).meta({ id: 'ActorKind' });
 export type ActorKind = z.infer<typeof actorKindSchema>;
 
+export const CLIENT_KINDS = ['web', 'ios', 'api'] as const;
+export const clientKindSchema = z
+	.enum(CLIENT_KINDS)
+	.meta({ id: 'ClientKind', description: '`api` is anything but the apps: the agent API, curl, or an integration.' });
+export type ClientKind = z.infer<typeof clientKindSchema>;
+
+/**
+ * The app, version, device, OS, and time zone that sent a request, which the server records on every op it writes.
+ * `api` callers fill only `device`, from their `User-Agent`.
+ */
+export const clientSchema = z
+	.object({
+		kind: clientKindSchema,
+		version: z.string().max(100).nullable().meta({ description: 'The app version and build, such as `1.4 (212)`.' }),
+		device: z.string().max(200).nullable().meta({ description: 'Such as `iPhone17,1` or `Chrome`.' }),
+		os: z.string().max(100).nullable().meta({ description: 'Such as `iOS 27.0` or `macOS`.' }),
+		timeZone: z.string().max(100).nullable().meta({ description: "The device's IANA time zone." }),
+	})
+	.meta({ id: 'Client' });
+export type Client = z.infer<typeof clientSchema>;
+
 /** The actor of a log row the server wrote on its own, such as a fixup. Activity never shows it. */
 export const SERVER_ACTOR = 'server';
 
