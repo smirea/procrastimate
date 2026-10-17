@@ -10,6 +10,7 @@ import {
 	push,
 	rambleUsage,
 	shares,
+	taskClients,
 } from '../../../shared/db/schema';
 import { KINDS } from '../../../shared/sync/kinds';
 import { ENTITY_TABLES, entityRow, rowEntity } from '../db/entities';
@@ -21,6 +22,7 @@ import {
 	personColumns,
 	pushColumns,
 	shareColumns,
+	taskClientsColumns,
 } from '../db/columns';
 import { migrateSync, type MigrateMode, type SyncDatabase } from '../db/migrate';
 import type { AccountStore } from './store';
@@ -128,6 +130,19 @@ export function sqliteStore(db: SyncDatabase, userId: string, mode: MigrateMode)
 				.limit(1)
 				.get() !== undefined,
 		lastSeq: () => lastSeq(),
+		taskClients: id =>
+			db
+				.select(taskClientsColumns)
+				.from(taskClients)
+				.where(and(own(taskClients.userId), eq(taskClients.id, id)))
+				.get() ?? null,
+		putTaskClients: row => {
+			const { id: _, ...set } = row;
+			db.insert(taskClients)
+				.values({ ...row, userId })
+				.onConflictDoUpdate({ target: [taskClients.userId, taskClients.id], set })
+				.run();
+		},
 		clearTaskData: () => {
 			for (const table of [...Object.values(ENTITY_TABLES), log]) db.delete(table).where(own(table.userId)).run();
 		},
@@ -136,6 +151,7 @@ export function sqliteStore(db: SyncDatabase, userId: string, mode: MigrateMode)
 				...Object.values(ENTITY_TABLES),
 				devices,
 				log,
+				taskClients,
 				push,
 				rambleUsage,
 				meta,

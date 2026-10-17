@@ -31,9 +31,9 @@ describe('a Turso session', () => {
 			id: 't1',
 			fields: { title: 'Buy milk' },
 			actor: 'user-1',
-			client: IOS,
 			at: 5,
 		});
+		first.store.putTaskClients({ id: 't1', created: { ...IOS, at: 5 }, edited: { ...IOS, at: 5 } });
 		first.store.setEpoch(2);
 		await first.flush();
 
@@ -50,7 +50,6 @@ describe('a Turso session', () => {
 				id: 't1',
 				fields: { title: 'Buy milk' },
 				actor: 'user-1',
-				client: IOS,
 				at: 5,
 			},
 		]);
@@ -65,6 +64,7 @@ describe('a Turso session', () => {
 		expect(third.store.lastSeq()).toBe(0);
 		expect(third.store.liveDevices()).toHaveLength(1);
 		expect(third.store.epoch()).toBe(3);
+		expect(third.store.taskClients('t1')).toEqual({ id: 't1', created: { ...IOS, at: 5 }, edited: { ...IOS, at: 5 } });
 	});
 
 	test('loads the sharing rows the last flush wrote', async () => {

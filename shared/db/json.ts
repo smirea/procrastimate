@@ -6,7 +6,7 @@ import { pushSubscriptionSchema, scheduledPushSchema } from '../push.ts';
 import { isHlc } from '../sync/hlc.ts';
 import {
 	actorKindSchema,
-	clientSchema,
+	clientStampSchema,
 	dueSchema,
 	imageRefSchema,
 	prioritySchema,
@@ -46,7 +46,8 @@ export const COLUMN_VALUES = {
 	comments: { clocks },
 	reads: { clocks },
 	settings: { clocks, dictation: dictationChoiceSchema, quickAddButtons: z.array(quickAddButtonSchema) },
-	log: { fields: z.record(z.string(), z.unknown()), client: clientSchema },
+	log: { fields: z.record(z.string(), z.unknown()) },
+	taskClients: { created: clientStampSchema, edited: clientStampSchema },
 	push: { subscription: pushSubscriptionSchema, notifications: z.array(scheduledPushSchema) },
 	shares: { targetKind: shareTargetKindSchema, role: roleSchema },
 	people: { kind: actorKindSchema },

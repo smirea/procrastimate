@@ -10,6 +10,7 @@ import {
 	push,
 	rambleUsage,
 	shares,
+	taskClients,
 } from '../../../shared/db/schema';
 import { KINDS } from '../../../shared/sync/kinds';
 import { ENTITY_TABLES, entityRow, rowEntity } from '../db/entities';
@@ -22,6 +23,7 @@ import {
 	pushColumns,
 	rambleColumns,
 	shareColumns,
+	taskClientsColumns,
 } from '../db/columns';
 import { batch, tursoDatabase, type TursoDatabase, type TursoTarget } from '../db/turso';
 import { memoryStore, type AccountTables } from './memory-store';
@@ -51,6 +53,7 @@ const USER_TABLES = [
 	...Object.values(ENTITY_TABLES),
 	devices,
 	log,
+	taskClients,
 	push,
 	rambleUsage,
 	meta,
@@ -71,6 +74,7 @@ function writes(db: TursoDatabase, userId: string, tables: AccountTables): Batch
 			return chunks(rows).map(chunk => db.insert(ENTITY_TABLES[kind]).values(chunk));
 		}),
 		...scoped(tables.log).map(rows => db.insert(log).values(rows)),
+		...scoped(tables.taskClients).map(rows => db.insert(taskClients).values(rows)),
 		...scoped(tables.push).map(rows => db.insert(push).values(rows)),
 		...scoped(tables.ramble).map(rows => db.insert(rambleUsage).values(rows)),
 		...scoped(tables.shares).map(rows => db.insert(shares).values(rows)),
@@ -92,6 +96,7 @@ async function readTables(db: TursoDatabase, userId: string): Promise<AccountTab
 		entityRows,
 		deviceRows,
 		logRows,
+		taskClientRows,
 		pushRows,
 		rambleRows,
 		epochRows,
@@ -103,6 +108,7 @@ async function readTables(db: TursoDatabase, userId: string): Promise<AccountTab
 		loadEntities,
 		db.select(deviceColumns).from(devices).where(eq(devices.userId, userId)),
 		db.select(logColumns).from(log).where(eq(log.userId, userId)).orderBy(asc(log.seq)),
+		db.select(taskClientsColumns).from(taskClients).where(eq(taskClients.userId, userId)),
 		db.select(pushColumns).from(push).where(eq(push.userId, userId)),
 		db.select(rambleColumns).from(rambleUsage).where(eq(rambleUsage.userId, userId)),
 		db
@@ -118,6 +124,7 @@ async function readTables(db: TursoDatabase, userId: string): Promise<AccountTab
 		devices: deviceRows,
 		entities: entityRows.flat(),
 		log: logRows,
+		taskClients: taskClientRows,
 		push: pushRows,
 		ramble: rambleRows,
 		shares: shareRows,

@@ -484,6 +484,51 @@ describe('sharing between two users', () => {
 		expect(garbled.status).toBe(400);
 	});
 
+	test('a reset re-upload keeps which app created and last changed each task', async () => {
+		const web = { kind: 'web', version: 'abc123', device: 'Chrome', os: 'macOS', timeZone: 'Europe/Lisbon' } as const;
+		const ios = { kind: 'ios', version: '1.4 (212)', device: 'iPhone17,1', os: 'iOS 27.0', timeZone: 'UTC' } as const;
+		const rent = task('rent', { title: 'Pay rent' });
+		await json(
+			call(
+				owner,
+				'POST',
+				'/api/sync',
+				{ cursor: 0, ops: [create(owner, rent)] },
+				{ [CLIENT_HEADER]: JSON.stringify(web) },
+			),
+		);
+		setSystemTime(NOW + 60_000);
+		await json(
+			call(
+				owner,
+				'POST',
+				'/api/sync',
+				{ cursor: 0, epoch: 0, reset: true, ops: [create(owner, rent), create(owner, task('gym', { title: 'Gym' }))] },
+				{ [CLIENT_HEADER]: JSON.stringify(ios) },
+			),
+		);
+		setSystemTime(NOW + 120_000);
+		await json(
+			call(
+				owner,
+				'POST',
+				'/api/sync',
+				{ cursor: 0, epoch: 1, ops: [op(owner, 'gym', { notes: 'Legs' })] },
+				{ [CLIENT_HEADER]: JSON.stringify(ios) },
+			),
+		);
+
+		const ai = await json<Person>(call(owner, 'POST', '/api/ai', { name: 'Butler' }));
+		const { token } = await json<{ token: string }>(
+			call(owner, 'POST', '/api/ai-tokens', { aiUserId: ai.id, name: 'laptop' }),
+		);
+		const seen = await json<SpaceView>(call(null, 'GET', '/api/view', undefined, { Authorization: `Bearer ${token}` }));
+		expect(Object.fromEntries(seen.tasks.map(t => [t.title, t.clients]))).toEqual({
+			'Pay rent': { created: { ...web, at: NOW }, edited: { ...web, at: NOW } },
+			Gym: { created: { ...ios, at: NOW + 60_000 }, edited: { ...ios, at: NOW + 120_000 } },
+		});
+	});
+
 	test('two spaces shared with each other sync at the same time without waiting on one another', async () => {
 		await setUp(40);
 		await seedOwner();

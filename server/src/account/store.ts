@@ -7,11 +7,12 @@ import type {
 	PersonRow,
 	PushTarget,
 	ShareRow,
+	TaskClientsRow,
 } from '../../../shared/db/schema';
 import type { ServerEntity as Entity } from '../../../shared/sync/merge';
 import { span } from '../sentry';
 
-export type { ApiTokenRow, Device, Entity, LogRow, Membership, PersonRow, PushTarget, ShareRow };
+export type { ApiTokenRow, Device, Entity, LogRow, Membership, PersonRow, PushTarget, ShareRow, TaskClientsRow };
 
 /**
  * Everything the `Account` object keeps. Methods are synchronous, like Durable Object SQLite, so a request that
@@ -40,9 +41,12 @@ export interface AccountStore {
 	hasOp(opId: string): boolean;
 	/** The highest `seq`, or 0 when the log is empty. */
 	lastSeq(): number;
-	/** Drops every task, project, label, and the log. Devices and push subscriptions stay. */
+	taskClients(id: string): TaskClientsRow | null;
+	/** Inserts or replaces by id. */
+	putTaskClients(row: TaskClientsRow): void;
+	/** Drops every task, project, label, and the log. Devices, push subscriptions, and task clients stay. */
 	clearTaskData(): void;
-	/** Drops the whole account: tasks, devices, push, Ramble usage, shares, memberships, people, and API tokens. */
+	/** Drops the whole account: tasks, task clients, devices, push, Ramble usage, shares, memberships, people, and API tokens. */
 	clearAccount(): void;
 	/** Bumped when task data is wiped, so a client still holding the old copy drops it. */
 	epoch(): number;
@@ -80,7 +84,15 @@ export interface AccountStore {
 }
 
 /** Called once per op or entity, so a span each would cost a big sync more CPU than its own work. */
-const PER_ITEM: ReadonlySet<keyof AccountStore> = new Set(['entity', 'putEntity', 'appendLog', 'hasOp', 'hasDevice']);
+const PER_ITEM: ReadonlySet<keyof AccountStore> = new Set([
+	'entity',
+	'putEntity',
+	'appendLog',
+	'hasOp',
+	'hasDevice',
+	'taskClients',
+	'putTaskClients',
+]);
 
 /** `store` with a `db` span around every call except the per-item ones. */
 export function tracedStore(store: AccountStore): AccountStore {
