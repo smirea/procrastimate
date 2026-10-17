@@ -38,6 +38,17 @@ jobs:
     outputs:
       build: ${{ steps.gate.outputs.build }}
     steps:
+      # Checked before the ten-minute wait and the archive: a build whose dSYMs never reach Sentry ships crashes nobody
+      # can read.
+      - name: Sentry auth token
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        run: |
+          if [ -z "$SENTRY_AUTH_TOKEN" ]; then
+            echo "::error::SENTRY_AUTH_TOKEN is not set; run bun run secrets:github"
+            exit 1
+          fi
+
       # Full history so the gate can see commits that landed on master during the wait.
       - uses: actions/checkout@v6
         with:
@@ -108,11 +119,14 @@ jobs:
           umask 077
           echo "$ASC_PRIVATE_KEY_B64" | base64 --decode > "$RUNNER_TEMP/AuthKey.p8"
 
+      # The script uploads the archive's dSYMs to Sentry (org self-uo7, project procrastimate-ios) before App Store
+      # Connect, so every TestFlight build symbolicates.
       - name: Archive and upload
         env:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           ASC_KEY_PATH: ${{ runner.temp }}/AuthKey.p8
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         run: ./scripts/archive
 
       - name: Remove the key
