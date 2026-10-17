@@ -37,22 +37,13 @@ struct CompletedRow: View {
             .accessibilityIdentifier("completed-\(task.title)")
             .accessibilityAction { navigator.sheet = .details(taskID: task.id) }
         }
-        .swipeActions(edge: .leading, allowsFullSwipe: true) {
-            if canReopen {
-                Button("Reopen", systemImage: "arrow.uturn.backward") { actions.reopen(task) }
-                    .tint(.accent)
-            }
-        }
-        .contextMenu {
-            if canReopen {
-                Button("Reopen", systemImage: "arrow.uturn.backward.circle") { actions.reopen(task) }
-            }
-            Button("Copy as Markdown", systemImage: "doc.on.doc") { actions.copyAsMarkdown(task) }
-        }
+        .taskSwipes(task, offered, toggle: { actions.reopen(task) }, pickDate: {})
+        .contextMenu { TaskMenu(task: task, offered: offered, toggle: { actions.reopen(task) }) }
     }
 
     private var rolled: Bool { task.completedAt == nil }
-    private var canReopen: Bool { !rolled && !store.isReadOnly(task.id) }
+    private var offered: TaskRowActions { TaskRowActions(task, in: store, rolled: rolled) }
+    private var canReopen: Bool { offered.toggle != nil }
     private var parent: TaskItem? { task.parentId.flatMap(store.task) }
     private var project: Project? { store.project(task.projectId) }
     private var progress: Subtasks.Progress? {

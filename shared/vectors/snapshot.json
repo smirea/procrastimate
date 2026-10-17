@@ -129,7 +129,8 @@
 							"targets": [
 								{
 									"id": "p-ana",
-									"kind": "project"
+									"kind": "project",
+									"role": "edit"
 								}
 							],
 							"tasks": [
@@ -445,7 +446,8 @@
 						"targets": [
 							{
 								"id": "p-ana",
-								"kind": "project"
+								"kind": "project",
+								"role": "edit"
 							}
 						],
 						"tasks": [
@@ -1154,7 +1156,8 @@
 							"targets": [
 								{
 									"id": "p-ana",
-									"kind": "project"
+									"kind": "project",
+									"role": "edit"
 								}
 							],
 							"tasks": [
@@ -1451,7 +1454,8 @@
 						"targets": [
 							{
 								"id": "p-ana",
-								"kind": "project"
+								"kind": "project",
+								"role": "edit"
 							}
 						],
 						"tasks": [
@@ -1770,7 +1774,8 @@
 							"targets": [
 								{
 									"id": "p-ana",
-									"kind": "project"
+									"kind": "project",
+									"role": "edit"
 								}
 							],
 							"tasks": [
@@ -2089,7 +2094,8 @@
 						"targets": [
 							{
 								"id": "p-ana",
-								"kind": "project"
+								"kind": "project",
+								"role": "edit"
 							}
 						],
 						"tasks": [
@@ -2408,7 +2414,8 @@
 							"targets": [
 								{
 									"id": "p-ana",
-									"kind": "project"
+									"kind": "project",
+									"role": "edit"
 								}
 							],
 							"tasks": [
@@ -2727,7 +2734,8 @@
 						"targets": [
 							{
 								"id": "p-ana",
-								"kind": "project"
+								"kind": "project",
+								"role": "edit"
 							}
 						],
 						"tasks": [
@@ -3046,7 +3054,8 @@
 							"targets": [
 								{
 									"id": "p-ana",
-									"kind": "project"
+									"kind": "project",
+									"role": "edit"
 								}
 							],
 							"tasks": [
@@ -3361,7 +3370,8 @@
 						"targets": [
 							{
 								"id": "p-ana",
-								"kind": "project"
+								"kind": "project",
+								"role": "edit"
 							}
 						],
 						"tasks": [
@@ -3680,7 +3690,8 @@
 							"targets": [
 								{
 									"id": "p-ana",
-									"kind": "project"
+									"kind": "project",
+									"role": "edit"
 								}
 							],
 							"tasks": [
@@ -3992,7 +4003,8 @@
 						"targets": [
 							{
 								"id": "p-ana",
-								"kind": "project"
+								"kind": "project",
+								"role": "edit"
 							}
 						],
 						"tasks": [
@@ -4313,7 +4325,8 @@
 							"targets": [
 								{
 									"id": "p-ana",
-									"kind": "project"
+									"kind": "project",
+									"role": "edit"
 								}
 							],
 							"tasks": [
@@ -4588,7 +4601,8 @@
 						"targets": [
 							{
 								"id": "p-ana",
-								"kind": "project"
+								"kind": "project",
+								"role": "edit"
 							}
 						],
 						"tasks": [

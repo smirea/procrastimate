@@ -91,6 +91,24 @@ public final class Store {
     public func space(ofProject id: String) -> SpaceKey? { space { $0.projects.contains { $0.id == id } } }
     public func space(ofLabel id: String) -> SpaceKey? { space { $0.labels.contains { $0.id == id } } }
 
+    /// This user's shares in the space someone shared with them that `screen`'s project or label lives in, if any.
+    public func grants(of screen: ListScreen?) -> [API.SpaceGrant]? {
+        let space: SpaceKey? = switch screen {
+        case let .project(id, _)?: self.space(ofProject: id)
+        case let .label(id)?: self.space(ofLabel: id)
+        default: nil
+        }
+        return space?.query.flatMap { snapshot.spaces[$0]?.targets }
+    }
+
+    /// Whether `screen` takes new tasks. A project or label shared with this user to view only takes none.
+    public func canAdd(to screen: ListScreen?) -> Bool { Screens.canAdd(to: screen, grants(of: screen)) }
+
+    /// What quick add starts with on `screen`, as `Screens.defaults` maps it.
+    public func quickAddDefaults(_ screen: ListScreen?) -> QuickAddDraft.Defaults {
+        Screens.defaults(screen, tasks, grants(of: screen))
+    }
+
     private func space(where holds: (StoreData) -> Bool) -> SpaceKey? {
         if holds(snapshot.data) { return .own }
         return snapshot.spaces.keys.first { holds(data(in: .shared($0))) }.map { .shared($0) }

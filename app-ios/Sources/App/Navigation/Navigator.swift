@@ -74,8 +74,8 @@ final class Navigator {
     }
 
     /// Quick add from the tab bar starts with the context of the screen on top, as `Screens.defaults` maps it.
-    func listDefaults(_ tasks: [TaskItem]) -> QuickAddDefaults {
-        Screens.defaults(currentRoute?.screen, tasks)
+    func listDefaults(_ store: Store) -> QuickAddDefaults {
+        store.quickAddDefaults(currentRoute?.screen)
     }
 
     /// The task just added from quick add. Its list scrolls to it and the row flashes, then this clears.

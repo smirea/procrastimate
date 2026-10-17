@@ -16,6 +16,7 @@
 	import { sheets } from '#lib/ui.svelte.ts';
 	import { followMerged } from '#lib/merged.svelte.ts';
 	import { completed } from '#lib/completed.svelte.ts';
+	import { canAddHere } from '#lib/screen.ts';
 	import { completedTasks, labelViewTasks } from 'shared/views.ts';
 	import { formatRadius, placeKey } from 'shared/triggers.ts';
 	import { LABEL_COLORS } from 'shared/label-colors.ts';
@@ -31,7 +32,7 @@
 	const noun = $derived(place ? 'place' : 'label');
 	/** The label's own slice, open and done, so a subtask finished with its parent stays under it. */
 	const done = $derived(
-		label && completed.shown
+		label && completed.shown(`label:${label.id}`)
 			? completedTasks(store.tasks.filter((t) => (place ? atPlace(t) : t.labelIds.includes(label.id))), { from: null, to: null })
 			: [],
 	);
@@ -64,7 +65,7 @@
 		emptyTitle={place ? 'No tasks at this place' : 'No tasks with this label'}
 		emptyHint={`Type @${label.name} in quick add, or pick it in a task's details.`}
 		subtitle={owner ? `Shared by ${owner.name}` : place ? [formatRadius(place.radius), place.address].filter(Boolean).join(' · ') : undefined}
-		canAdd={!home || tasks.length === 0 || tasks.some((t) => store.canEdit(t.id))}
+		canAdd={canAddHere({ kind: 'label', id: label.id })}
 		markdown={() => ({ title: label.name, sections: [{ heading: null, tasks }] })}
 	>
 		{#snippet title()}
@@ -90,7 +91,7 @@
 			{/if}
 		{/snippet}
 		{#snippet actions()}
-			<CompletedToggle />
+			<CompletedToggle list={`label:${label.id}`} />
 			{#if !home}
 				<div class="flex items-center gap-1">
 					<!-- Sharing goes by the tasks carrying a label, and a saved place's tasks carry none. -->
@@ -149,7 +150,7 @@
 		{/snippet}
 		<TaskList {tasks} showProject label={`${label.name} tasks`} />
 		{#snippet after()}
-			<CompletedSection tasks={done} showProject />
+			<CompletedSection tasks={done} list={`label:${label.id}`} showProject />
 		{/snippet}
 	</View>
 {:else}

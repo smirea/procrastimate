@@ -8,7 +8,12 @@ struct ProjectScreen: View {
     let projectID: String
 
     @State private var name: String?
-    @AppStorage("showCompleted") private var showCompleted = false
+    @AppStorage private var showCompleted: Bool
+
+    init(projectID: String) {
+        self.projectID = projectID
+        _showCompleted = .showCompleted(API.ShareTarget(kind: .project, id: projectID))
+    }
 
     var body: some View {
         if let project = store.project(projectID) {
@@ -20,8 +25,7 @@ struct ProjectScreen: View {
             let done = showCompleted ? Views.projectCompleted(data.tasks, data.sections, project.id, in: store.timeZone) : nil
             let doneIn = { (id: String?) in done?.groups.first { $0.section?.id == id }?.tasks ?? [] }
             let anyDone = done.map { !$0.gone.isEmpty || $0.groups.contains { !$0.tasks.isEmpty } } ?? false
-            // A view-only shared project takes no new tasks, as on the web.
-            let canAdd = space == .own || count == 0 || groups.contains { $0.tasks.contains { !store.isReadOnly($0.id) } }
+            let canAdd = store.canAdd(to: .project(id: project.id))
             TaskListScreen(
                 title: project.name,
                 isEmpty: count == 0 && sections.isEmpty && !showCompleted,
@@ -61,7 +65,8 @@ struct ProjectScreen: View {
                 copy: { actions.copyAsMarkdown(project: project) },
                 rename: { store.renameProject(project.id, $0) },
                 delete: { store.deleteProject(project.id) },
-                addSection: { _ = store.addSection(project.id, $0) }
+                addSection: { _ = store.addSection(project.id, $0) },
+                showCompleted: $showCompleted
             )
             .task(id: project.name) { name = project.name }
         } else {
@@ -98,7 +103,7 @@ private struct SectionHeading: View {
         Menu {
             if canAdd {
                 Button("Add task", systemImage: "plus") {
-                    navigator.sheet = .quickAdd(Screens.defaults(.project(id: section.projectId, sectionId: section.id), store.tasks))
+                    navigator.sheet = .quickAdd(store.quickAddDefaults(.project(id: section.projectId, sectionId: section.id)))
                 }
             }
             Button("Copy as Markdown", systemImage: "doc.on.doc") {

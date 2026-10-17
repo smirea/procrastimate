@@ -547,10 +547,16 @@ private struct ScreenInput: Decodable {
     }
 }
 
+/// `SharedSpace` in TS: `{ targets }`.
+private struct SharedSpaceInput: Decodable {
+    let targets: [API.SpaceGrant]
+}
+
 @Sendable func screensVector(_ fn: String, _ a: Args) throws -> JSONValue {
     let screen = try a(0, as: ScreenInput?.self)?.screen()
     switch fn {
-    case "screenDefaults": return try json(ListDefaultsJSON(Screens.defaults(screen, a(1))))
+    case "screenDefaults": return try json(ListDefaultsJSON(Screens.defaults(screen, a(1), a(2, as: SharedSpaceInput?.self)?.targets)))
+    case "canAddTo": return try json(Screens.canAdd(to: screen, a(1, as: SharedSpaceInput?.self)?.targets))
     case "screenHolds": return try json(Screens.holds(screen, a(1), a(2), in: a.zone))
     default: throw unknown(fn)
     }

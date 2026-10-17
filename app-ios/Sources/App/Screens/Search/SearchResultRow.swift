@@ -12,6 +12,20 @@ struct SearchResultRow: View {
     let open: () -> Void
 
     var body: some View {
+        if case let .task(hit) = row {
+            let offered = TaskRowActions(hit.task, in: store)
+            let toggle: () -> Void = {
+                if offered.toggle == .reopen { actions.reopen(hit.task) } else { actions.complete(hit.task) }
+            }
+            result
+                .taskSwipes(hit.task, offered, toggle: toggle, pickDate: open)
+                .contextMenu { TaskMenu(task: hit.task, offered: offered, toggle: toggle) }
+        } else {
+            result
+        }
+    }
+
+    private var result: some View {
         // A tap gesture rather than a Button, which would swallow taps on a link in the text.
         content
             .frame(maxWidth: .infinity, minHeight: 32, alignment: .leading)
@@ -21,8 +35,6 @@ struct SearchResultRow: View {
             .accessibilityAddTraits(.isButton)
             .accessibilityAction { open() }
             .listRowBackground(selected ? Color.ink.opacity(0.07) : Color.clear)
-            .swipeActions(edge: .leading, allowsFullSwipe: true) { taskAction }
-            .contextMenu { taskAction }
             .accessibilityLabel(spokenLabel)
             .accessibilityIdentifier(identifier)
             .accessibilityValue(matchReadout)
@@ -57,24 +69,6 @@ struct SearchResultRow: View {
             NameResult(systemImage: hit.item.systemImage(), tone: hit.item.color.tone, name: hit.name)
         case let .task(hit):
             TaskResult(hit: hit)
-        }
-    }
-
-    @ViewBuilder private var taskAction: some View {
-        if case let .task(hit) = row {
-            taskAction(hit.task)
-        }
-    }
-
-    @ViewBuilder private func taskAction(_ task: TaskItem) -> some View {
-        if task.completedAt == nil {
-            Button("Complete", systemImage: "checkmark") { actions.complete(task) }
-                .tint(.toneSoon)
-        } else {
-            Button("Reopen", systemImage: "arrow.uturn.backward") {
-                withAnimation(.snappy) { store.reopenTask(task.id) }
-            }
-            .tint(.accent)
         }
     }
 
