@@ -12,7 +12,8 @@ import { label, MemoryClient, MemoryServer, project, snapshotOf, task } from './
 /**
  * Two or three clients edit at random, go offline, and sync in random interleavings, some of which lose
  * the server's answer. After everyone syncs, every replica must equal the server and the invariants must
- * hold. `SYNC_SEEDS=<n>` runs more seeds, and a failure prints the seed and the steps that led to it.
+ * hold. Undo comes both as a generic restore of the last command before a sync and as the app's `undelete` of the
+ * last delete, which survives syncs. `SYNC_SEEDS=<n>` runs more seeds, and a failure prints the seed and the steps that led to it.
  */
 
 const SEEDS = Number(process.env.SYNC_SEEDS ?? 40);
@@ -368,11 +369,21 @@ function simulate(seed: number) {
 	);
 	const offline = new Set<MemoryClient>();
 	const history = new Map<MemoryClient, { before: Snapshot; after: Snapshot } | null>();
+	// The app's undo toast after a delete still works after a sync, unlike `undo`, so each client keeps its last delete.
+	const deletions = new Map<MemoryClient, rules.Deleted>();
 	let now = 1_000_000;
 	let made = 0;
 
 	const fail = (message: string) => {
 		throw new Error(`seed ${seed}: ${message}\n${steps.join('\n')}`);
+	};
+	const expectConverged = (client: MemoryClient) => {
+		const truth = server.snapshot;
+		if (!Bun.deepEquals(client.snapshot, truth)) {
+			expect(client.snapshot, `seed ${seed}: ${client.name} differs from the server\n${steps.join('\n')}`).toEqual(
+				truth,
+			);
+		}
 	};
 	const pull = (client: MemoryClient, lost = false) => {
 		steps.push(`${now} ${client.name} sync${lost ? ' (answer lost)' : ''}`);
@@ -380,6 +391,7 @@ function simulate(seed: number) {
 		history.set(client, null);
 		const problems = invariants(server.snapshot);
 		if (problems.length) fail(problems.join(', '));
+		if (!lost) expectConverged(client);
 	};
 
 	for (let step = 0; step < STEPS; step++) {
@@ -388,17 +400,27 @@ function simulate(seed: number) {
 		const roll = rand.next();
 		if (roll < 0.65) {
 			const options = commands(rand, client.name, now + client.skew, () => `${client.name}-${++made}`);
-			const command = rand.next() < 0.08 ? null : rand.pick(options)!;
+			const undoing = rand.next();
+			const command = undoing < 0.12 ? null : rand.pick(options)!;
 			const last = history.get(client);
-			if (!command && last) {
+			const deleted = deletions.get(client);
+			if (!command && undoing < 0.08 && last) {
 				steps.push(`${now} ${client.name} undo`);
 				client.run(s => undo(s, last.before, last.after), now);
+				history.set(client, null);
+			} else if (!command && undoing >= 0.08 && deleted) {
+				steps.push(`${now} ${client.name} undo delete`);
+				client.run(s => onData(s, data => rules.undelete(data, deleted)), now);
+				deletions.delete(client);
 				history.set(client, null);
 			} else if (command) {
 				steps.push(`${now} ${client.name} ${command.name}`);
 				const before = client.snapshot;
 				client.run(command.run, now);
 				history.set(client, { before, after: client.snapshot });
+				const gone = rules.deletedBetween(before, client.snapshot);
+				if (gone.projects.length || gone.sections.length || gone.labels.length || gone.tasks.length)
+					deletions.set(client, gone);
 			}
 		} else if (roll < 0.92) {
 			if (!offline.has(client)) pull(client, rand.next() < 0.1);
@@ -415,13 +437,7 @@ function simulate(seed: number) {
 	}
 	const truth = server.snapshot;
 	if (!Bun.deepEquals(fixups(truth), truth)) fail('fixups changed a fixed state');
-	for (const client of clients) {
-		if (!Bun.deepEquals(client.snapshot, truth)) {
-			expect(client.snapshot, `seed ${seed}: ${client.name} differs from the server\n${steps.join('\n')}`).toEqual(
-				truth,
-			);
-		}
-	}
+	for (const client of clients) expectConverged(client);
 	return {
 		steps: steps.length,
 		tasks: truth.tasks.length,
@@ -459,5 +475,57 @@ describe('convergence', () => {
 		const runs = seeds.slice(0, 10).map(seed => simulate(seed));
 		expect(runs.some(run => run.tasks > 3)).toBe(true);
 		expect(runs.some(run => run.sectioned > 0)).toBe(true);
+	});
+});
+
+/**
+ * Seeds reach a race only by luck: a delete losing to another device's undo of delete, with a third device's newer edit
+ * in between, showed up in 1 of 1,000 seeds. So three devices also run every interleaving of short scripts on one
+ * project and its task, each device's steps in its own order.
+ */
+describe('every interleaving', () => {
+	type Step = { name: string; run: (client: MemoryClient, server: MemoryServer, now: number) => void };
+	const work = snapshotOf({ projects: [project('p')], tasks: [task('t', { projectId: 'p' })] });
+	const command = (name: string, run: (s: Snapshot, client: MemoryClient) => Snapshot): Step => ({
+		name,
+		run: (client, _, now) => client.run(s => run(s, client), now),
+	});
+	const sync: Step = { name: 'sync', run: (client, server, now) => client.pull(server, now) };
+	const remove = command('delete project', s => onData(s, data => rules.deleteProject(data, 'p')));
+	const restore = command('undo delete', s => onData(s, data => rules.undelete(data, rules.deletedBetween(work, s))));
+	const scripts: Record<string, Step[]> = {
+		delete: [remove, sync],
+		'delete, undo': [remove, restore, sync],
+		rename: [command('rename project', (s, c) => onData(s, data => rules.renameProject(data, 'p', c.name))), sync],
+		edit: [command('edit task', (s, c) => ({ ...s, tasks: s.tasks.map(t => ({ ...t, title: c.name })) })), sync],
+	};
+
+	function* interleavings(queues: number[]): Generator<number[]> {
+		if (queues.every(q => q === 0)) return yield [];
+		for (const [i, left] of queues.entries()) {
+			if (!left) continue;
+			for (const rest of interleavings(queues.with(i, left - 1))) yield [i, ...rest];
+		}
+	}
+
+	const names = Object.keys(scripts);
+	const casts = names.flatMap((a, i) => names.slice(i).flatMap((b, j) => names.slice(i + j).map(c => [a, b, c])));
+	test.each(casts)('%s / %s / %s', (...cast) => {
+		const plans = cast.map(name => scripts[name]!);
+		for (const order of interleavings(plans.map(p => p.length))) {
+			const server = new MemoryServer();
+			const clients = cast.map((_, i) => new MemoryClient(`d${i}`, i === 0 ? work : undefined));
+			for (const [i, client] of clients.entries()) client.pull(server, i + 1);
+			const done = plans.map(() => 0);
+			const steps = order.map((i, at) => {
+				const step = plans[i]![done[i]!++]!;
+				step.run(clients[i]!, server, 10 * (at + 1));
+				return `${clients[i]!.name} ${step.name}`;
+			});
+			for (const client of [...clients, ...clients]) client.pull(server, 1000);
+			for (const client of clients)
+				expect(client.snapshot, `${client.name} differs after\n${steps.join('\n')}`).toEqual(server.snapshot);
+			expect(invariants(server.snapshot)).toEqual([]);
+		}
 	});
 });
