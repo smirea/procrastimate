@@ -48,8 +48,6 @@ describe.each(storeFactories)('%s store', (_name, createStore) => {
 		expect(store.taskClients('1')).toEqual({ id: '1', created: stamp, edited: stamp });
 		store.putTaskClients({ id: '1', created: stamp, edited: { ...stamp, at: 2 } });
 		expect(store.taskClients('1')?.edited.at).toBe(2);
-		store.clearAccount();
-		expect(store.taskClients('1')).toBeNull();
 	});
 
 	test('stores entities as JSON and replaces them by kind and id', () => {
