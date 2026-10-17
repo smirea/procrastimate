@@ -390,9 +390,11 @@ public final class Store {
         commit(StoreRules.renameProject(snapshot.data, id, name))
     }
 
-    public func deleteProject(_ id: String) {
-        guard space(ofProject: id) == .own else { return }
-        commit(StoreRules.deleteProject(snapshot.data, id))
+    /// Returns what the delete removed, for `undelete`.
+    @discardableResult
+    public func deleteProject(_ id: String) -> Deleted? {
+        guard space(ofProject: id) == .own else { return nil }
+        return delete(StoreRules.deleteProject(snapshot.data, id))
     }
 
     public func moveProject(_ id: String, to index: Int) {
@@ -419,9 +421,10 @@ public final class Store {
         commit(StoreRules.moveSection(snapshot.data, id, index))
     }
 
-    public func deleteSection(_ id: String) {
-        guard snapshot.sections.contains(where: { $0.id == id }) else { return }
-        commit(StoreRules.deleteSection(snapshot.data, id))
+    @discardableResult
+    public func deleteSection(_ id: String) -> Deleted? {
+        guard snapshot.sections.contains(where: { $0.id == id }) else { return nil }
+        return delete(StoreRules.deleteSection(snapshot.data, id))
     }
 
     @discardableResult
@@ -467,9 +470,20 @@ public final class Store {
         commit(StoreRules.setLabelColor(snapshot.data, id, color))
     }
 
-    public func deleteLabel(_ id: String) {
-        guard space(ofLabel: id) == .own else { return }
-        commit(StoreRules.deleteLabel(snapshot.data, id))
+    @discardableResult
+    public func deleteLabel(_ id: String) -> Deleted? {
+        guard space(ofLabel: id) == .own else { return nil }
+        return delete(StoreRules.deleteLabel(snapshot.data, id))
+    }
+
+    private func delete(_ after: StoreData) -> Deleted {
+        let deleted = StoreRules.deletedBetween(snapshot.data, after)
+        commit(after)
+        return deleted
+    }
+
+    public func undelete(_ deleted: Deleted) {
+        commit(StoreRules.undelete(snapshot.data, deleted))
     }
 
     /// Adds a Todoist backup in one command and one write, skipping tasks an earlier import already added.

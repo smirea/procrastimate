@@ -13,6 +13,7 @@ const deleteLabel = recorded('store', store.deleteLabel);
 const deleteProject = recorded('store', store.deleteProject);
 const deleteSection = recorded('store', store.deleteSection);
 const deleteTask = recorded('store', store.deleteTask);
+const deletedBetween = recorded('store', store.deletedBetween);
 const explodeSubtasks = recorded('store', store.explodeSubtasks);
 const moveProject = recorded('store', store.moveProject);
 const moveSection = recorded('store', store.moveSection);
@@ -30,6 +31,7 @@ const restoreExploded = recorded('store', store.restoreExploded);
 const sectionsOf = recorded('store', store.sectionsOf);
 const sectionTasks = recorded('store', store.sectionTasks);
 const sortTasks = recorded('store', store.sortTasks);
+const undelete = recorded('store', store.undelete);
 const undeleteTasks = recorded('store', store.undeleteTasks);
 const updateTask = recorded('store', store.updateTask);
 
@@ -424,6 +426,24 @@ describe('sections', () => {
 		expect(ids(deleteSection(data(), 'next').tasks)).toEqual(ids(data().tasks));
 	});
 
+	test('undoing a project delete brings back its sections and tasks as they were', () => {
+		const removed = deletedBetween(sectioned(), deleteProject(sectioned(), 'home'));
+		expect(removed.projects.map(p => p.id)).toEqual(['home']);
+		expect(undelete(deleteProject(sectioned(), 'home'), removed)).toEqual(sectioned());
+	});
+
+	test('undoing a section delete brings back the section and its tasks', () => {
+		const after = deleteSection(sectioned(), 'next');
+		expect(undelete(after, deletedBetween(sectioned(), after))).toEqual(sectioned());
+	});
+
+	test("undoing a section delete after its project's delete brings back nothing", () => {
+		const after = deleteSection(sectioned(), 'next');
+		const removed = deletedBetween(sectioned(), after);
+		const gone = deleteProject(after, 'home');
+		expect(undelete(gone, removed)).toEqual(gone);
+	});
+
 	test('a section moves a task into its project, and its subtasks follow the project but sit in no section', () => {
 		const next = updateTask(data(), 'call', { sectionId: 'someday' });
 		expect([find(next, 'call').projectId, find(next, 'call').sectionId]).toEqual(['work', 'someday']);
@@ -546,6 +566,23 @@ describe('labels', () => {
 			expect(resized.tasks.map(t => t.location?.radius)).toEqual([1_000, 1_000, 150, 150]);
 			expect(setPlaceRadius(resized, 'calls', 5)).toEqual(resized);
 		});
+
+		test('undoing a saved place delete brings back its place and its tasks keep their locations', () => {
+			const saved = savePlace(atRewe(), 'Groceries', place, { id: 'groceries', now: NOW }).data;
+			const before = updateTask(saved, 'milk', { labelIds: ['groceries'] });
+			const after = deleteLabel(before, 'groceries');
+			expect(undelete(after, deletedBetween(before, after))).toEqual(before);
+		});
+	});
+
+	test('undoing a label delete puts the label back where it sat on each task, keeping later edits', () => {
+		const before = updateTask(data(), 'call', { labelIds: ['phone', 'calls'] });
+		const after = deleteLabel(before, 'calls');
+		const removed = deletedBetween(before, after);
+		expect(removed.labelings).toEqual([{ taskId: 'call', labelId: 'calls', index: 1 }]);
+		expect(undelete(after, removed)).toEqual(before);
+		const edited = updateTask(after, 'call', { labelIds: [], title: 'Call mom' });
+		expect(find(undelete(edited, removed), 'call')).toMatchObject({ title: 'Call mom', labelIds: ['calls'] });
 	});
 
 	test('completing a task on an event series moves it past missed occurrences, and undo moves it back', () => {

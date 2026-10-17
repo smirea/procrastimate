@@ -1,5 +1,6 @@
 import { completedToast, formatDate, reopenedToast } from 'shared/format.ts';
 import { ancestorsOf } from 'shared/subtasks.ts';
+import type { Deleted } from 'shared/store.ts';
 import type { DateKey, Task } from 'shared/task.ts';
 import { store } from './store.svelte.ts';
 import { clock, toasts } from './ui.svelte.ts';
@@ -43,4 +44,10 @@ export function postponeTask(task: Task, date: DateKey) {
 		label: 'Undo',
 		run: () => store.updateTask(task.id, { due: previous }),
 	});
+}
+
+/** Deleting a project, section, or label offers undo, which brings back its tasks and label assignments as they were. */
+export function toastDeleted(name: string, deleted: Deleted | undefined) {
+	if (!deleted) return;
+	toasts.show(`Deleted “${name}”`, { label: 'Undo', run: () => store.undelete(deleted) });
 }

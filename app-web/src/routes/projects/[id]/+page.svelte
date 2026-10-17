@@ -17,6 +17,7 @@
 	import CompletedSection from '#lib/components/CompletedSection.svelte';
 	import CompletedToggle from '#lib/components/CompletedToggle.svelte';
 	import { store } from '#lib/store.svelte.ts';
+	import { toastDeleted } from '#lib/completion.ts';
 	import { leaving, motion, sheets } from '#lib/ui.svelte.ts';
 	import { followMerged } from '#lib/merged.svelte.ts';
 	import { projectDocument } from 'shared/markdown.ts';
@@ -55,7 +56,7 @@
 
 	function remove() {
 		if (!project) return;
-		store.deleteProject(project.id);
+		toastDeleted(project.name, store.deleteProject(project.id));
 		void goto('/inbox');
 	}
 </script>

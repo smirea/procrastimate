@@ -59,6 +59,15 @@ final class TaskActions {
         )
     }
 
+    /// Deleting a project, section, or label offers undo, which brings back its tasks and label assignments as they were.
+    func toastDeleted(_ name: String, _ deleted: Deleted?) {
+        guard let deleted else { return }
+        toasts.show(
+            "Deleted “\(name)”",
+            action: .init(label: "Undo") { [store] in withAnimation(.snappy) { store.undelete(deleted) } }
+        )
+    }
+
     func explode(_ task: TaskItem, _ method: ExplodeMethod) {
         let previous = withAnimation(.snappy) { store.explodeSubtasks(task.id, method) }
         guard !previous.isEmpty else { return }

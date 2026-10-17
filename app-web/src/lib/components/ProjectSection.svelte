@@ -11,6 +11,7 @@
 	import Popover from './Popover.svelte';
 	import SectionHeading from './SectionHeading.svelte';
 	import TaskList from './TaskList.svelte';
+	import { toastDeleted } from '../completion.ts';
 	import { store } from '../store.svelte.ts';
 
 	/**
@@ -84,7 +85,7 @@
 										class="btn press bg-[var(--tone-overdue)] text-on-accent"
 										onclick={() => {
 											close();
-											store.deleteSection(section.id);
+											toastDeleted(section.name, store.deleteSection(section.id));
 										}}>Delete</button
 									>
 								</div>
