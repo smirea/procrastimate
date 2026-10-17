@@ -11,7 +11,7 @@ enum AppEnvironment {
         return url
     }
 
-    /// `<commit count>.<yyyyMMdd>`, set by `scripts/archive` and `scripts/run` from `scripts/app-version.mts`.
+    /// `<commit count>.<yyyyMMdd>` from `scripts/app-version.mts`, which every Xcode build writes into the Info.plist.
     static var version: String {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""
     }

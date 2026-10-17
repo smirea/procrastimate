@@ -120,7 +120,10 @@ jobs:
       run:
         working-directory: app-ios
     steps:
+      # Full history: Core's Generate phase counts the commits for the version the Info.plist carries.
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - uses: oven-sh/setup-bun@v2
         with:
@@ -166,3 +169,10 @@ jobs:
           app=$(find DerivedData/Build/Products -name App.app -type d | head -1)
           test -n "$app"
           plutil -lint "$app/PrivacyInfo.xcprivacy"
+
+      - name: App and widgets carry this commit's version
+        run: |
+          app=$(find DerivedData/Build/Products -name App.app -type d | head -1)
+          version=$(bun ../scripts/app-version.mts)
+          test "$(plutil -extract CFBundleShortVersionString raw "$app/Info.plist")" = "$version"
+          test "$(plutil -extract CFBundleShortVersionString raw "$app/PlugIns/Widgets.appex/Info.plist")" = "$version"

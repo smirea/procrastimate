@@ -31,8 +31,6 @@ esac
 
 read -r year monthday time < <(date -u '+%Y %m%d %H%M%S')
 build_number=${BUILD_NUMBER:-$year.$((10#$monthday)).$((10#$time))}
-# The version Settings shows, the same as the web deploy of this commit (scripts/app-version.mts).
-version=$(bun ../scripts/app-version.mts)
 out=build/archive
 archive=$out/App.xcarchive
 options=$out/ExportOptions.plist
@@ -66,12 +64,11 @@ PLIST
 
 ./scripts/generate
 
-echo "Archiving version $version build $build_number"
+echo "Archiving version $(bun ../scripts/app-version.mts) build $build_number"
 # Unsigned archive. Automatic signing here asks for an iOS App Development certificate, and a
 # fresh runner creates another "Created via API" one. Export signs with Apple Distribution.
 xcodebuild archive -project App.xcodeproj -scheme App -configuration Release \
     -destination 'generic/platform=iOS' -archivePath "$archive" \
-    MARKETING_VERSION="$version" \
     CURRENT_PROJECT_VERSION="$build_number" \
     CODE_SIGNING_ALLOWED=NO \
     CODE_SIGNING_REQUIRED=NO \
