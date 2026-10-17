@@ -124,7 +124,7 @@ extension API.SpaceSection {
         try check(epoch >= 0, CodingKeys.epoch, in: c, "epoch >= 0")
         scope = try c.decodeAbsent(String.self, forKey: .scope) ?? ""
         readOnly = try c.decodeAbsent([String].self, forKey: .readOnly) ?? []
-        targets = try c.decodeAbsent([API.ShareTarget].self, forKey: .targets) ?? []
+        targets = try c.decodeAbsent([API.SpaceGrant].self, forKey: .targets) ?? []
         let loaded = try c.decode([Lenient<StoredTask>].self, forKey: .tasks).compactMap { $0.value?.task }
         tasks = StoreRules.sortTasks(Subtasks.detachOrphans(loaded))
         projects = try c.decodeAbsent([StoredProject].self, forKey: .projects)?.map(\.project) ?? []

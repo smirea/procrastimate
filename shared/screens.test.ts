@@ -117,13 +117,23 @@ describe('screenDefaults', () => {
 	});
 
 	test('a shared project or label the user can only view starts bare', () => {
-		const space = { tasks: [task('mine', { projectId: 'garden', labelIds: ['weekend'] })], readOnly: ['mine'] };
+		const space = {
+			targets: [
+				{ kind: 'project', id: 'garden', role: 'view' },
+				{ kind: 'label', id: 'weekend', role: 'view' },
+			],
+		} as const;
 		expect(screenDefaults({ kind: 'project', id: 'garden', sectionId: 'beds' }, [], space)).toEqual(none);
 		expect(screenDefaults({ kind: 'label', id: 'weekend' }, [], space)).toEqual(none);
 	});
 
 	test('a shared project or label the user can edit starts on it', () => {
-		const space = { tasks: [task('mine', { projectId: 'garden', labelIds: ['weekend'] })], readOnly: [] };
+		const space = {
+			targets: [
+				{ kind: 'project', id: 'garden', role: 'edit' },
+				{ kind: 'label', id: 'weekend', role: 'edit' },
+			],
+		} as const;
 		expect(screenDefaults({ kind: 'project', id: 'garden' }, [], space)).toEqual({ ...none, projectId: 'garden' });
 		expect(screenDefaults({ kind: 'label', id: 'weekend' }, [], space)).toEqual({ ...none, labelId: 'weekend' });
 	});
@@ -131,13 +141,13 @@ describe('screenDefaults', () => {
 
 describe('canAddTo', () => {
 	const space = {
-		tasks: [
-			task('locked', { projectId: 'garden', labelIds: ['weekend'] }),
-			task('open', { projectId: 'garden' }),
-			task('other', { projectId: 'shed', labelIds: ['errands'] }),
+		targets: [
+			{ kind: 'project', id: 'garden', role: 'edit' },
+			{ kind: 'project', id: 'shed', role: 'view' },
+			{ kind: 'label', id: 'weekend', role: 'view' },
+			{ kind: 'task', id: 'fence', role: 'edit' },
 		],
-		readOnly: ['locked', 'other'],
-	};
+	} as const;
 
 	test('the user’s own lists and the other screens always take a task', () => {
 		expect(canAddTo({ kind: 'project', id: 'home' }, null)).toBe(true);
@@ -145,16 +155,17 @@ describe('canAddTo', () => {
 		expect(canAddTo(null, space)).toBe(true);
 	});
 
-	test('a shared list takes a task once any of its tasks is editable', () => {
+	test('a shared project or label takes a task only through an edit share on it', () => {
 		expect(canAddTo({ kind: 'project', id: 'garden' }, space)).toBe(true);
 		expect(canAddTo({ kind: 'project', id: 'shed' }, space)).toBe(false);
 		expect(canAddTo({ kind: 'label', id: 'weekend' }, space)).toBe(false);
-		expect(canAddTo({ kind: 'label', id: 'errands' }, space)).toBe(false);
+		expect(canAddTo({ kind: 'project', id: 'fence-project' }, space)).toBe(false);
 	});
 
-	test('a shared list with no tasks to tell by takes one', () => {
-		expect(canAddTo({ kind: 'project', id: 'empty' }, space)).toBe(true);
-		expect(canAddTo({ kind: 'label', id: 'empty' }, space)).toBe(true);
+	test('an edit share on the whole space takes a task on any of its lists', () => {
+		const managed = { targets: [{ kind: 'space', id: '', role: 'edit' }] } as const;
+		expect(canAddTo({ kind: 'project', id: 'shed' }, managed)).toBe(true);
+		expect(canAddTo({ kind: 'label', id: 'weekend' }, managed)).toBe(true);
 	});
 });
 

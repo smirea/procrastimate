@@ -183,9 +183,9 @@ import Testing
             owner: ann,
             cursor: 1,
             targets: [
-                API.ShareTarget(kind: .project, id: "house"),
-                API.ShareTarget(kind: .task, id: "b"),
-                API.ShareTarget(kind: .label, id: "gone"),
+                API.SpaceGrant(kind: .project, id: "house", role: .edit),
+                API.SpaceGrant(kind: .task, id: "b", role: .view),
+                API.SpaceGrant(kind: .label, id: "gone", role: .edit),
             ],
             tasks: [
                 TaskItem(id: "a", title: "Paint", projectId: "house", labelIds: ["urgent"], createdAt: 1),
@@ -199,7 +199,7 @@ import Testing
         #expect(entries.map(\.kind) == [.project, .task])
 
         var whole = section
-        whole.targets = [API.ShareTarget(kind: .space, id: "")]
+        whole.targets = [API.SpaceGrant(kind: .space, id: "", role: .edit)]
         #expect(Browse.sharedEntries([(id: "ann", section: whole)]).map(\.name) == ["House", "Pets"])
     }
 

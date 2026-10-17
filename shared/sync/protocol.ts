@@ -11,7 +11,7 @@ import {
 } from '../db/generated/zod.ts';
 import { hlcSchema } from '../db/json.ts';
 import { KINDS, type Kind } from './kinds.ts';
-import { shareTargetKindSchema } from '../values.ts';
+import { roleSchema, shareTargetKindSchema } from '../values.ts';
 import { DEFAULT_QUICK_ADD_BUTTONS } from '../quick-add-buttons.ts';
 
 export { KINDS, type Kind } from './kinds.ts';
@@ -164,6 +164,12 @@ export const shareTargetSchema = z
 	.meta({ id: 'ShareTarget', description: 'What a share reaches. `id` is empty for the whole space.' });
 export type ShareTarget = z.infer<typeof shareTargetSchema>;
 
+export const spaceGrantSchema = shareTargetSchema.extend({ role: roleSchema }).meta({
+	id: 'SpaceGrant',
+	description: 'A share someone made to the caller: what it reaches, and whether it lets them edit.',
+});
+export type SpaceGrant = z.infer<typeof spaceGrantSchema>;
+
 /** A guest's sync of a shared space answers with the hash of what it may see. An owner's sync has none. */
 const scope = z.string().optional();
 
@@ -190,8 +196,8 @@ export const syncResponseSchema = z
 			scope,
 			/** In a shared space, the visible task ids the caller may not edit. */
 			readOnly: z.array(z.string()).optional(),
-			/** In a shared space, what the owner shared with the caller. */
-			targets: z.array(shareTargetSchema).optional(),
+			/** In a shared space, what the owner shared with the caller, and with which role. */
+			targets: z.array(spaceGrantSchema).optional(),
 		}),
 	])
 	.meta({ id: 'SyncResponse' });

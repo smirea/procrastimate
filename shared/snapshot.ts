@@ -12,7 +12,7 @@ import {
 	projectSchema,
 	sectionSchema,
 	readSchema,
-	shareTargetSchema,
+	spaceGrantSchema,
 	taskSchema as syncedTaskSchema,
 } from './sync/protocol.ts';
 import { personSchema } from './sharing.ts';
@@ -112,7 +112,7 @@ const syncSchema = z
  * A space someone shared with this user, kept apart from the user's own data and synced on its own: `cursor`,
  * `outbox`, and `epoch` work as in the sync section, `scope` is the hash of what the server last let it see, and
  * `readOnly` lists the visible tasks it may not edit, and `targets`
- * what the owner shared with this user. The device clock in the sync section serves every space.
+ * what the owner shared with this user and with which role. The device clock in the sync section serves every space.
  */
 const spaceSectionSchema = z
 	.object({
@@ -122,7 +122,7 @@ const spaceSectionSchema = z
 		epoch: z.number().int().nonnegative().default(0),
 		scope: z.string().default(''),
 		readOnly: z.array(z.string()).default([]),
-		targets: z.array(shareTargetSchema).default([]),
+		targets: z.array(spaceGrantSchema).default([]),
 		tasks: tasksSchema,
 		projects: projectsSchema.default([]),
 		sections: z.array(sectionSchema).default([]),

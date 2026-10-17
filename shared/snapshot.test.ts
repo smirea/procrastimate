@@ -179,7 +179,7 @@ const webDocument: snapshot.Snapshot = {
 			epoch: 1,
 			scope: 'scope-hash',
 			readOnly: ['t-ana-2'],
-			targets: [{ kind: 'project', id: 'p-ana' }],
+			targets: [{ kind: 'project', id: 'p-ana', role: 'edit' }],
 			tasks: [
 				{ ...sharedTask('t-ana-1', 1_791_900_000_010), title: 'Paint', createdBy: 'u-ana' },
 				{ ...sharedTask('t-ana-2', 1_791_900_000_011), completedBy: 'u-ana', lastCompletedAt: 1_791_960_000_000 },

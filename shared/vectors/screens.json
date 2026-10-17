@@ -169,7 +169,7 @@
 					{
 						"completedAt": 1,
 						"completedBy": null,
-						"createdAt": 4,
+						"createdAt": 1,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -198,7 +198,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 5,
+						"createdAt": 2,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -227,7 +227,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 6,
+						"createdAt": 3,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -284,7 +284,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 7,
+						"createdAt": 4,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -320,7 +320,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 8,
+						"createdAt": 5,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -391,7 +391,7 @@
 					{
 						"completedAt": 1,
 						"completedBy": null,
-						"createdAt": 9,
+						"createdAt": 6,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -434,7 +434,7 @@
 					{
 						"completedAt": 2,
 						"completedBy": null,
-						"createdAt": 10,
+						"createdAt": 7,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -505,7 +505,7 @@
 					{
 						"completedAt": 1,
 						"completedBy": null,
-						"createdAt": 9,
+						"createdAt": 6,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -548,7 +548,7 @@
 					{
 						"completedAt": 2,
 						"completedBy": null,
-						"createdAt": 10,
+						"createdAt": 7,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -665,33 +665,16 @@
 				},
 				[],
 				{
-					"readOnly": [
-						"mine"
-					],
-					"tasks": [
+					"targets": [
 						{
-							"completedAt": null,
-							"completedBy": null,
-							"createdAt": 11,
-							"createdBy": null,
-							"due": null,
-							"event": null,
-							"id": "mine",
-							"images": [],
-							"labelIds": [
-								"weekend"
-							],
-							"lastCompletedAt": null,
-							"location": null,
-							"notes": "",
-							"order": 0,
-							"parentId": null,
-							"priority": 4,
-							"projectId": "garden",
-							"recurrence": null,
-							"reminders": [],
-							"sectionId": null,
-							"title": "mine"
+							"id": "garden",
+							"kind": "project",
+							"role": "view"
+						},
+						{
+							"id": "weekend",
+							"kind": "label",
+							"role": "view"
 						}
 					]
 				}
@@ -715,33 +698,16 @@
 				},
 				[],
 				{
-					"readOnly": [
-						"mine"
-					],
-					"tasks": [
+					"targets": [
 						{
-							"completedAt": null,
-							"completedBy": null,
-							"createdAt": 11,
-							"createdBy": null,
-							"due": null,
-							"event": null,
-							"id": "mine",
-							"images": [],
-							"labelIds": [
-								"weekend"
-							],
-							"lastCompletedAt": null,
-							"location": null,
-							"notes": "",
-							"order": 0,
-							"parentId": null,
-							"priority": 4,
-							"projectId": "garden",
-							"recurrence": null,
-							"reminders": [],
-							"sectionId": null,
-							"title": "mine"
+							"id": "garden",
+							"kind": "project",
+							"role": "view"
+						},
+						{
+							"id": "weekend",
+							"kind": "label",
+							"role": "view"
 						}
 					]
 				}
@@ -765,31 +731,16 @@
 				},
 				[],
 				{
-					"readOnly": [],
-					"tasks": [
+					"targets": [
 						{
-							"completedAt": null,
-							"completedBy": null,
-							"createdAt": 12,
-							"createdBy": null,
-							"due": null,
-							"event": null,
-							"id": "mine",
-							"images": [],
-							"labelIds": [
-								"weekend"
-							],
-							"lastCompletedAt": null,
-							"location": null,
-							"notes": "",
-							"order": 0,
-							"parentId": null,
-							"priority": 4,
-							"projectId": "garden",
-							"recurrence": null,
-							"reminders": [],
-							"sectionId": null,
-							"title": "mine"
+							"id": "garden",
+							"kind": "project",
+							"role": "edit"
+						},
+						{
+							"id": "weekend",
+							"kind": "label",
+							"role": "edit"
 						}
 					]
 				}
@@ -813,31 +764,16 @@
 				},
 				[],
 				{
-					"readOnly": [],
-					"tasks": [
+					"targets": [
 						{
-							"completedAt": null,
-							"completedBy": null,
-							"createdAt": 12,
-							"createdBy": null,
-							"due": null,
-							"event": null,
-							"id": "mine",
-							"images": [],
-							"labelIds": [
-								"weekend"
-							],
-							"lastCompletedAt": null,
-							"location": null,
-							"notes": "",
-							"order": 0,
-							"parentId": null,
-							"priority": 4,
-							"projectId": "garden",
-							"recurrence": null,
-							"reminders": [],
-							"sectionId": null,
-							"title": "mine"
+							"id": "garden",
+							"kind": "project",
+							"role": "edit"
+						},
+						{
+							"id": "weekend",
+							"kind": "label",
+							"role": "edit"
 						}
 					]
 				}
@@ -871,80 +807,26 @@
 					"kind": "inbox"
 				},
 				{
-					"readOnly": [
-						"locked",
-						"other"
-					],
-					"tasks": [
+					"targets": [
 						{
-							"completedAt": null,
-							"completedBy": null,
-							"createdAt": 1,
-							"createdBy": null,
-							"due": null,
-							"event": null,
-							"id": "locked",
-							"images": [],
-							"labelIds": [
-								"weekend"
-							],
-							"lastCompletedAt": null,
-							"location": null,
-							"notes": "",
-							"order": 0,
-							"parentId": null,
-							"priority": 4,
-							"projectId": "garden",
-							"recurrence": null,
-							"reminders": [],
-							"sectionId": null,
-							"title": "locked"
+							"id": "garden",
+							"kind": "project",
+							"role": "edit"
 						},
 						{
-							"completedAt": null,
-							"completedBy": null,
-							"createdAt": 2,
-							"createdBy": null,
-							"due": null,
-							"event": null,
-							"id": "open",
-							"images": [],
-							"labelIds": [],
-							"lastCompletedAt": null,
-							"location": null,
-							"notes": "",
-							"order": 0,
-							"parentId": null,
-							"priority": 4,
-							"projectId": "garden",
-							"recurrence": null,
-							"reminders": [],
-							"sectionId": null,
-							"title": "open"
+							"id": "shed",
+							"kind": "project",
+							"role": "view"
 						},
 						{
-							"completedAt": null,
-							"completedBy": null,
-							"createdAt": 3,
-							"createdBy": null,
-							"due": null,
-							"event": null,
-							"id": "other",
-							"images": [],
-							"labelIds": [
-								"errands"
-							],
-							"lastCompletedAt": null,
-							"location": null,
-							"notes": "",
-							"order": 0,
-							"parentId": null,
-							"priority": 4,
-							"projectId": "shed",
-							"recurrence": null,
-							"reminders": [],
-							"sectionId": null,
-							"title": "other"
+							"id": "weekend",
+							"kind": "label",
+							"role": "view"
+						},
+						{
+							"id": "fence",
+							"kind": "task",
+							"role": "edit"
 						}
 					]
 				}
@@ -957,80 +839,26 @@
 			"input": [
 				null,
 				{
-					"readOnly": [
-						"locked",
-						"other"
-					],
-					"tasks": [
+					"targets": [
 						{
-							"completedAt": null,
-							"completedBy": null,
-							"createdAt": 1,
-							"createdBy": null,
-							"due": null,
-							"event": null,
-							"id": "locked",
-							"images": [],
-							"labelIds": [
-								"weekend"
-							],
-							"lastCompletedAt": null,
-							"location": null,
-							"notes": "",
-							"order": 0,
-							"parentId": null,
-							"priority": 4,
-							"projectId": "garden",
-							"recurrence": null,
-							"reminders": [],
-							"sectionId": null,
-							"title": "locked"
+							"id": "garden",
+							"kind": "project",
+							"role": "edit"
 						},
 						{
-							"completedAt": null,
-							"completedBy": null,
-							"createdAt": 2,
-							"createdBy": null,
-							"due": null,
-							"event": null,
-							"id": "open",
-							"images": [],
-							"labelIds": [],
-							"lastCompletedAt": null,
-							"location": null,
-							"notes": "",
-							"order": 0,
-							"parentId": null,
-							"priority": 4,
-							"projectId": "garden",
-							"recurrence": null,
-							"reminders": [],
-							"sectionId": null,
-							"title": "open"
+							"id": "shed",
+							"kind": "project",
+							"role": "view"
 						},
 						{
-							"completedAt": null,
-							"completedBy": null,
-							"createdAt": 3,
-							"createdBy": null,
-							"due": null,
-							"event": null,
-							"id": "other",
-							"images": [],
-							"labelIds": [
-								"errands"
-							],
-							"lastCompletedAt": null,
-							"location": null,
-							"notes": "",
-							"order": 0,
-							"parentId": null,
-							"priority": 4,
-							"projectId": "shed",
-							"recurrence": null,
-							"reminders": [],
-							"sectionId": null,
-							"title": "other"
+							"id": "weekend",
+							"kind": "label",
+							"role": "view"
+						},
+						{
+							"id": "fence",
+							"kind": "task",
+							"role": "edit"
 						}
 					]
 				}
@@ -1039,87 +867,33 @@
 		},
 		{
 			"fn": "canAddTo",
-			"test": "canAddTo › a shared list takes a task once any of its tasks is editable",
+			"test": "canAddTo › a shared project or label takes a task only through an edit share on it",
 			"input": [
 				{
 					"id": "garden",
 					"kind": "project"
 				},
 				{
-					"readOnly": [
-						"locked",
-						"other"
-					],
-					"tasks": [
+					"targets": [
 						{
-							"completedAt": null,
-							"completedBy": null,
-							"createdAt": 1,
-							"createdBy": null,
-							"due": null,
-							"event": null,
-							"id": "locked",
-							"images": [],
-							"labelIds": [
-								"weekend"
-							],
-							"lastCompletedAt": null,
-							"location": null,
-							"notes": "",
-							"order": 0,
-							"parentId": null,
-							"priority": 4,
-							"projectId": "garden",
-							"recurrence": null,
-							"reminders": [],
-							"sectionId": null,
-							"title": "locked"
+							"id": "garden",
+							"kind": "project",
+							"role": "edit"
 						},
 						{
-							"completedAt": null,
-							"completedBy": null,
-							"createdAt": 2,
-							"createdBy": null,
-							"due": null,
-							"event": null,
-							"id": "open",
-							"images": [],
-							"labelIds": [],
-							"lastCompletedAt": null,
-							"location": null,
-							"notes": "",
-							"order": 0,
-							"parentId": null,
-							"priority": 4,
-							"projectId": "garden",
-							"recurrence": null,
-							"reminders": [],
-							"sectionId": null,
-							"title": "open"
+							"id": "shed",
+							"kind": "project",
+							"role": "view"
 						},
 						{
-							"completedAt": null,
-							"completedBy": null,
-							"createdAt": 3,
-							"createdBy": null,
-							"due": null,
-							"event": null,
-							"id": "other",
-							"images": [],
-							"labelIds": [
-								"errands"
-							],
-							"lastCompletedAt": null,
-							"location": null,
-							"notes": "",
-							"order": 0,
-							"parentId": null,
-							"priority": 4,
-							"projectId": "shed",
-							"recurrence": null,
-							"reminders": [],
-							"sectionId": null,
-							"title": "other"
+							"id": "weekend",
+							"kind": "label",
+							"role": "view"
+						},
+						{
+							"id": "fence",
+							"kind": "task",
+							"role": "edit"
 						}
 					]
 				}
@@ -1128,87 +902,33 @@
 		},
 		{
 			"fn": "canAddTo",
-			"test": "canAddTo › a shared list takes a task once any of its tasks is editable",
+			"test": "canAddTo › a shared project or label takes a task only through an edit share on it",
 			"input": [
 				{
 					"id": "shed",
 					"kind": "project"
 				},
 				{
-					"readOnly": [
-						"locked",
-						"other"
-					],
-					"tasks": [
+					"targets": [
 						{
-							"completedAt": null,
-							"completedBy": null,
-							"createdAt": 1,
-							"createdBy": null,
-							"due": null,
-							"event": null,
-							"id": "locked",
-							"images": [],
-							"labelIds": [
-								"weekend"
-							],
-							"lastCompletedAt": null,
-							"location": null,
-							"notes": "",
-							"order": 0,
-							"parentId": null,
-							"priority": 4,
-							"projectId": "garden",
-							"recurrence": null,
-							"reminders": [],
-							"sectionId": null,
-							"title": "locked"
+							"id": "garden",
+							"kind": "project",
+							"role": "edit"
 						},
 						{
-							"completedAt": null,
-							"completedBy": null,
-							"createdAt": 2,
-							"createdBy": null,
-							"due": null,
-							"event": null,
-							"id": "open",
-							"images": [],
-							"labelIds": [],
-							"lastCompletedAt": null,
-							"location": null,
-							"notes": "",
-							"order": 0,
-							"parentId": null,
-							"priority": 4,
-							"projectId": "garden",
-							"recurrence": null,
-							"reminders": [],
-							"sectionId": null,
-							"title": "open"
+							"id": "shed",
+							"kind": "project",
+							"role": "view"
 						},
 						{
-							"completedAt": null,
-							"completedBy": null,
-							"createdAt": 3,
-							"createdBy": null,
-							"due": null,
-							"event": null,
-							"id": "other",
-							"images": [],
-							"labelIds": [
-								"errands"
-							],
-							"lastCompletedAt": null,
-							"location": null,
-							"notes": "",
-							"order": 0,
-							"parentId": null,
-							"priority": 4,
-							"projectId": "shed",
-							"recurrence": null,
-							"reminders": [],
-							"sectionId": null,
-							"title": "other"
+							"id": "weekend",
+							"kind": "label",
+							"role": "view"
+						},
+						{
+							"id": "fence",
+							"kind": "task",
+							"role": "edit"
 						}
 					]
 				}
@@ -1217,87 +937,33 @@
 		},
 		{
 			"fn": "canAddTo",
-			"test": "canAddTo › a shared list takes a task once any of its tasks is editable",
+			"test": "canAddTo › a shared project or label takes a task only through an edit share on it",
 			"input": [
 				{
 					"id": "weekend",
 					"kind": "label"
 				},
 				{
-					"readOnly": [
-						"locked",
-						"other"
-					],
-					"tasks": [
+					"targets": [
 						{
-							"completedAt": null,
-							"completedBy": null,
-							"createdAt": 1,
-							"createdBy": null,
-							"due": null,
-							"event": null,
-							"id": "locked",
-							"images": [],
-							"labelIds": [
-								"weekend"
-							],
-							"lastCompletedAt": null,
-							"location": null,
-							"notes": "",
-							"order": 0,
-							"parentId": null,
-							"priority": 4,
-							"projectId": "garden",
-							"recurrence": null,
-							"reminders": [],
-							"sectionId": null,
-							"title": "locked"
+							"id": "garden",
+							"kind": "project",
+							"role": "edit"
 						},
 						{
-							"completedAt": null,
-							"completedBy": null,
-							"createdAt": 2,
-							"createdBy": null,
-							"due": null,
-							"event": null,
-							"id": "open",
-							"images": [],
-							"labelIds": [],
-							"lastCompletedAt": null,
-							"location": null,
-							"notes": "",
-							"order": 0,
-							"parentId": null,
-							"priority": 4,
-							"projectId": "garden",
-							"recurrence": null,
-							"reminders": [],
-							"sectionId": null,
-							"title": "open"
+							"id": "shed",
+							"kind": "project",
+							"role": "view"
 						},
 						{
-							"completedAt": null,
-							"completedBy": null,
-							"createdAt": 3,
-							"createdBy": null,
-							"due": null,
-							"event": null,
-							"id": "other",
-							"images": [],
-							"labelIds": [
-								"errands"
-							],
-							"lastCompletedAt": null,
-							"location": null,
-							"notes": "",
-							"order": 0,
-							"parentId": null,
-							"priority": 4,
-							"projectId": "shed",
-							"recurrence": null,
-							"reminders": [],
-							"sectionId": null,
-							"title": "other"
+							"id": "weekend",
+							"kind": "label",
+							"role": "view"
+						},
+						{
+							"id": "fence",
+							"kind": "task",
+							"role": "edit"
 						}
 					]
 				}
@@ -1306,176 +972,53 @@
 		},
 		{
 			"fn": "canAddTo",
-			"test": "canAddTo › a shared list takes a task once any of its tasks is editable",
+			"test": "canAddTo › a shared project or label takes a task only through an edit share on it",
 			"input": [
 				{
-					"id": "errands",
-					"kind": "label"
-				},
-				{
-					"readOnly": [
-						"locked",
-						"other"
-					],
-					"tasks": [
-						{
-							"completedAt": null,
-							"completedBy": null,
-							"createdAt": 1,
-							"createdBy": null,
-							"due": null,
-							"event": null,
-							"id": "locked",
-							"images": [],
-							"labelIds": [
-								"weekend"
-							],
-							"lastCompletedAt": null,
-							"location": null,
-							"notes": "",
-							"order": 0,
-							"parentId": null,
-							"priority": 4,
-							"projectId": "garden",
-							"recurrence": null,
-							"reminders": [],
-							"sectionId": null,
-							"title": "locked"
-						},
-						{
-							"completedAt": null,
-							"completedBy": null,
-							"createdAt": 2,
-							"createdBy": null,
-							"due": null,
-							"event": null,
-							"id": "open",
-							"images": [],
-							"labelIds": [],
-							"lastCompletedAt": null,
-							"location": null,
-							"notes": "",
-							"order": 0,
-							"parentId": null,
-							"priority": 4,
-							"projectId": "garden",
-							"recurrence": null,
-							"reminders": [],
-							"sectionId": null,
-							"title": "open"
-						},
-						{
-							"completedAt": null,
-							"completedBy": null,
-							"createdAt": 3,
-							"createdBy": null,
-							"due": null,
-							"event": null,
-							"id": "other",
-							"images": [],
-							"labelIds": [
-								"errands"
-							],
-							"lastCompletedAt": null,
-							"location": null,
-							"notes": "",
-							"order": 0,
-							"parentId": null,
-							"priority": 4,
-							"projectId": "shed",
-							"recurrence": null,
-							"reminders": [],
-							"sectionId": null,
-							"title": "other"
-						}
-					]
-				}
-			],
-			"output": false
-		},
-		{
-			"fn": "canAddTo",
-			"test": "canAddTo › a shared list with no tasks to tell by takes one",
-			"input": [
-				{
-					"id": "empty",
+					"id": "fence-project",
 					"kind": "project"
 				},
 				{
-					"readOnly": [
-						"locked",
-						"other"
-					],
-					"tasks": [
+					"targets": [
 						{
-							"completedAt": null,
-							"completedBy": null,
-							"createdAt": 1,
-							"createdBy": null,
-							"due": null,
-							"event": null,
-							"id": "locked",
-							"images": [],
-							"labelIds": [
-								"weekend"
-							],
-							"lastCompletedAt": null,
-							"location": null,
-							"notes": "",
-							"order": 0,
-							"parentId": null,
-							"priority": 4,
-							"projectId": "garden",
-							"recurrence": null,
-							"reminders": [],
-							"sectionId": null,
-							"title": "locked"
+							"id": "garden",
+							"kind": "project",
+							"role": "edit"
 						},
 						{
-							"completedAt": null,
-							"completedBy": null,
-							"createdAt": 2,
-							"createdBy": null,
-							"due": null,
-							"event": null,
-							"id": "open",
-							"images": [],
-							"labelIds": [],
-							"lastCompletedAt": null,
-							"location": null,
-							"notes": "",
-							"order": 0,
-							"parentId": null,
-							"priority": 4,
-							"projectId": "garden",
-							"recurrence": null,
-							"reminders": [],
-							"sectionId": null,
-							"title": "open"
+							"id": "shed",
+							"kind": "project",
+							"role": "view"
 						},
 						{
-							"completedAt": null,
-							"completedBy": null,
-							"createdAt": 3,
-							"createdBy": null,
-							"due": null,
-							"event": null,
-							"id": "other",
-							"images": [],
-							"labelIds": [
-								"errands"
-							],
-							"lastCompletedAt": null,
-							"location": null,
-							"notes": "",
-							"order": 0,
-							"parentId": null,
-							"priority": 4,
-							"projectId": "shed",
-							"recurrence": null,
-							"reminders": [],
-							"sectionId": null,
-							"title": "other"
+							"id": "weekend",
+							"kind": "label",
+							"role": "view"
+						},
+						{
+							"id": "fence",
+							"kind": "task",
+							"role": "edit"
+						}
+					]
+				}
+			],
+			"output": false
+		},
+		{
+			"fn": "canAddTo",
+			"test": "canAddTo › an edit share on the whole space takes a task on any of its lists",
+			"input": [
+				{
+					"id": "shed",
+					"kind": "project"
+				},
+				{
+					"targets": [
+						{
+							"id": "",
+							"kind": "space",
+							"role": "edit"
 						}
 					]
 				}
@@ -1484,87 +1027,18 @@
 		},
 		{
 			"fn": "canAddTo",
-			"test": "canAddTo › a shared list with no tasks to tell by takes one",
+			"test": "canAddTo › an edit share on the whole space takes a task on any of its lists",
 			"input": [
 				{
-					"id": "empty",
+					"id": "weekend",
 					"kind": "label"
 				},
 				{
-					"readOnly": [
-						"locked",
-						"other"
-					],
-					"tasks": [
+					"targets": [
 						{
-							"completedAt": null,
-							"completedBy": null,
-							"createdAt": 1,
-							"createdBy": null,
-							"due": null,
-							"event": null,
-							"id": "locked",
-							"images": [],
-							"labelIds": [
-								"weekend"
-							],
-							"lastCompletedAt": null,
-							"location": null,
-							"notes": "",
-							"order": 0,
-							"parentId": null,
-							"priority": 4,
-							"projectId": "garden",
-							"recurrence": null,
-							"reminders": [],
-							"sectionId": null,
-							"title": "locked"
-						},
-						{
-							"completedAt": null,
-							"completedBy": null,
-							"createdAt": 2,
-							"createdBy": null,
-							"due": null,
-							"event": null,
-							"id": "open",
-							"images": [],
-							"labelIds": [],
-							"lastCompletedAt": null,
-							"location": null,
-							"notes": "",
-							"order": 0,
-							"parentId": null,
-							"priority": 4,
-							"projectId": "garden",
-							"recurrence": null,
-							"reminders": [],
-							"sectionId": null,
-							"title": "open"
-						},
-						{
-							"completedAt": null,
-							"completedBy": null,
-							"createdAt": 3,
-							"createdBy": null,
-							"due": null,
-							"event": null,
-							"id": "other",
-							"images": [],
-							"labelIds": [
-								"errands"
-							],
-							"lastCompletedAt": null,
-							"location": null,
-							"notes": "",
-							"order": 0,
-							"parentId": null,
-							"priority": 4,
-							"projectId": "shed",
-							"recurrence": null,
-							"reminders": [],
-							"sectionId": null,
-							"title": "other"
+							"id": "",
+							"kind": "space",
+							"role": "edit"
 						}
 					]
 				}
@@ -1581,7 +1055,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 13,
+					"createdAt": 8,
 					"createdBy": null,
 					"due": {
 						"date": "2026-10-14",
@@ -1617,7 +1091,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 14,
+					"createdAt": 9,
 					"createdBy": null,
 					"due": null,
 					"event": null,
@@ -1650,7 +1124,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 15,
+					"createdAt": 10,
 					"createdBy": null,
 					"due": null,
 					"event": null,
@@ -1683,7 +1157,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 16,
+					"createdAt": 11,
 					"createdBy": null,
 					"due": null,
 					"event": null,
@@ -1716,7 +1190,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 17,
+					"createdAt": 12,
 					"createdBy": null,
 					"due": {
 						"date": "2026-10-14",
@@ -1753,7 +1227,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 18,
+					"createdAt": 13,
 					"createdBy": null,
 					"due": null,
 					"event": {
@@ -1810,7 +1284,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 18,
+					"createdAt": 13,
 					"createdBy": null,
 					"due": null,
 					"event": {
@@ -1867,7 +1341,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 18,
+					"createdAt": 13,
 					"createdBy": null,
 					"due": null,
 					"event": {
@@ -1924,7 +1398,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 18,
+					"createdAt": 13,
 					"createdBy": null,
 					"due": null,
 					"event": {
@@ -1981,7 +1455,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 18,
+					"createdAt": 13,
 					"createdBy": null,
 					"due": null,
 					"event": {
@@ -2038,7 +1512,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 18,
+					"createdAt": 13,
 					"createdBy": null,
 					"due": null,
 					"event": {
@@ -2094,7 +1568,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 19,
+					"createdAt": 14,
 					"createdBy": null,
 					"due": null,
 					"event": null,
@@ -2125,7 +1599,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 20,
+					"createdAt": 15,
 					"createdBy": null,
 					"due": null,
 					"event": null,

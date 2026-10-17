@@ -39,8 +39,9 @@ enum SharingDemo {
         )
         _ = store.takeSyncResponse(
             .snapshot(.init(snapshot: shared, cursor: 1, hlc: "1:0:server", epoch: 0, scope: "demo", readOnly: ["fence", "shakshuka"], targets: [
-                API.ShareTarget(kind: .project, id: "garden"), API.ShareTarget(kind: .project, id: "recipes"),
-                API.ShareTarget(kind: .task, id: "vet"),
+                API.SpaceGrant(kind: .project, id: "garden", role: .edit),
+                API.SpaceGrant(kind: .project, id: "recipes", role: .view),
+                API.SpaceGrant(kind: .task, id: "vet", role: .edit),
             ])),
             space: ann.id
         )

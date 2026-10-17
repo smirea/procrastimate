@@ -1,5 +1,6 @@
 import type { DateKey, Task } from './task.ts';
 import { placeKey, scheduledDue } from './triggers.ts';
+import type { SpaceGrant } from './sync/protocol.ts';
 import type { TaskEvent, TaskLocation } from './values.ts';
 
 /**
@@ -34,20 +35,20 @@ export const NO_DEFAULTS: ListDefaults = {
 	date: null,
 };
 
-/** A space someone shared with this user: its tasks, and the ones the server marked read only. */
-export type SharedSpace = { tasks: readonly Task[]; readOnly: readonly string[] };
+/** A space someone shared with this user, as far as adding goes: its shares to them. */
+export type SharedSpace = { targets: readonly SpaceGrant[] };
 
 /**
  * Whether a new task may land on `screen`'s project or label, in `space` when someone shared it with this user. The
- * user's own lists, and every other screen, always take one. A view-only share marks every task in it read only, so a
- * shared list takes new tasks once any of its tasks is editable, and while it has none to tell by.
+ * user's own lists, and every other screen, always take one. In a shared space the server only admits a new task an
+ * edit share reaches, so the list takes one when the user can edit the whole space or that project or label.
  */
 export function canAddTo(screen: Screen | null, space: SharedSpace | null): boolean {
 	if (!space || (screen?.kind !== 'project' && screen?.kind !== 'label')) return true;
-	const list = space.tasks.filter(t =>
-		screen.kind === 'project' ? t.projectId === screen.id : t.labelIds.includes(screen.id),
+	return space.targets.some(
+		grant =>
+			grant.role === 'edit' && (grant.kind === 'space' || (grant.kind === screen.kind && grant.id === screen.id)),
 	);
-	return list.length === 0 || list.some(t => !space.readOnly.includes(t.id));
 }
 
 /**

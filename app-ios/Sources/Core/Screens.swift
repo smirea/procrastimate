@@ -14,36 +14,26 @@ public enum ListScreen: Hashable, Sendable {
 
 /// Ports `shared/screens.ts`.
 public enum Screens {
-    /// A space someone shared with this user: its tasks, and the ones the server marked read only.
-    public struct SharedSpace: Sendable {
-        public let tasks: [TaskItem]
-        public let readOnly: [String]
-
-        public init(tasks: [TaskItem], readOnly: [String]) {
-            self.tasks = tasks
-            self.readOnly = readOnly
-        }
-    }
-
-    /// Whether a new task may land on `screen`'s project or label, in `space` when someone shared it with this user. The
-    /// user's own lists, and every other screen, always take one. A view-only share marks every task in it read only,
-    /// so a shared list takes new tasks once any of its tasks is editable, and while it has none to tell by.
-    public static func canAdd(to screen: ListScreen?, _ space: SharedSpace?) -> Bool {
-        guard let space else { return true }
-        let list: [TaskItem]
+    /// Whether a new task may land on `screen`'s project or label, in a space someone shared with this user through
+    /// `grants`. The user's own lists (nil grants), and every other screen, always take one. In a shared space the server
+    /// only admits a new task an edit share reaches, so the list takes one when the user can edit the whole space or
+    /// that project or label.
+    public static func canAdd(to screen: ListScreen?, _ grants: [API.SpaceGrant]?) -> Bool {
+        guard let grants else { return true }
+        let list: (kind: API.ShareTargetKind, id: String)
         switch screen {
-        case let .project(id, _)?: list = space.tasks.filter { $0.projectId == id }
-        case let .label(id)?: list = space.tasks.filter { $0.labelIds.contains(id) }
+        case let .project(id, _)?: list = (.project, id)
+        case let .label(id)?: list = (.label, id)
         default: return true
         }
-        return list.isEmpty || list.contains { !space.readOnly.contains($0.id) }
+        return grants.contains { $0.role == .edit && ($0.kind == .space || ($0.kind == list.kind && $0.id == list.id)) }
     }
 
     /// Quick add inherits the screen it opens from, so the new task lands on that screen: its project and section, its
     /// label, its place, its event, or the day of an Inbox heading. Inbox itself adds an undated task, as capture
     /// always has, and so do No date, Completed, and a shared project or label the user can't add to (`canAdd`).
-    public static func defaults(_ screen: ListScreen?, _ tasks: [TaskItem], _ space: SharedSpace?) -> QuickAddDraft.Defaults {
-        guard canAdd(to: screen, space) else { return QuickAddDraft.Defaults() }
+    public static func defaults(_ screen: ListScreen?, _ tasks: [TaskItem], _ grants: [API.SpaceGrant]?) -> QuickAddDraft.Defaults {
+        guard canAdd(to: screen, grants) else { return QuickAddDraft.Defaults() }
         return switch screen {
         case nil, .noDate?, .completed?:
             QuickAddDraft.Defaults()
