@@ -9,6 +9,7 @@ import type {
 	ShareRow,
 } from '../../../shared/db/schema';
 import type { ServerEntity as Entity } from '../../../shared/sync/merge';
+import { span } from '../sentry';
 
 export type { ApiTokenRow, Device, Entity, LogRow, Membership, PersonRow, PushTarget, ShareRow };
 
@@ -76,4 +77,18 @@ export interface AccountStore {
 	deleteApiToken(id: string): void;
 	apiTokenByHash(tokenHash: string): ApiTokenRow | null;
 	touchApiToken(id: string, at: number): void;
+}
+
+/** Called once per op or entity, so a span each would cost a big sync more CPU than its own work. */
+const PER_ITEM: ReadonlySet<keyof AccountStore> = new Set(['entity', 'putEntity', 'appendLog', 'hasOp', 'hasDevice']);
+
+/** `store` with a `db` span around every call except the per-item ones. */
+export function tracedStore(store: AccountStore): AccountStore {
+	return new Proxy(store, {
+		get(target, key, receiver) {
+			const value = Reflect.get(target, key, receiver);
+			if (typeof value !== 'function' || PER_ITEM.has(key as keyof AccountStore)) return value;
+			return (...args: unknown[]) => span(`AccountStore.${String(key)}`, 'db', () => value.apply(target, args));
+		},
+	});
 }

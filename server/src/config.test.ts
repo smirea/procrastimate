@@ -31,6 +31,7 @@ test('a production Worker with its secrets has Turso, push, and no optional prov
 		google: { web: null, iosClientId: null },
 		apple: null,
 		ramble: null,
+		sentry: null,
 	});
 });
 
@@ -43,6 +44,7 @@ test('an ephemeral run needs no secrets and ignores Turso', () => {
 		google: { web: null, iosClientId: null },
 		apple: null,
 		ramble: null,
+		sentry: null,
 	});
 	expect(() => parseConfig({ EPHEMERAL: 'true' })).toThrow('EPHEMERAL must be 1 or unset, not "true"');
 	expect(() => parseConfig({ EPHEMERAL: '1', VAPID_PUBLIC_KEY: 'public' })).toThrow(
@@ -92,4 +94,28 @@ test('the deploy check and the parser require the same secrets', () => {
 	for (const name of REQUIRED_WORKER_SECRETS) {
 		expect(() => parseConfig({ ...production, [name]: undefined })).toThrow(name);
 	}
+});
+
+const WORKER_DSN = 'https://0123abcd@o42.ingest.us.sentry.io/7';
+
+test('Sentry reports only where the deploy names an environment and a release', () => {
+	expect(parseConfig(production, WORKER_DSN).sentry).toBeNull();
+	expect(
+		parseConfig({ ...production, SENTRY_ENVIRONMENT: 'production', SENTRY_RELEASE: 'abc123' }, WORKER_DSN).sentry,
+	).toEqual({ dsn: WORKER_DSN, environment: 'production', release: 'abc123' });
+});
+
+test('a half-set or unknown Sentry environment, or one without a DSN, fails', () => {
+	expect(() => parseConfig({ ...production, SENTRY_ENVIRONMENT: 'production' }, WORKER_DSN)).toThrow(
+		'- Set both SENTRY_ENVIRONMENT and SENTRY_RELEASE or neither',
+	);
+	expect(() => parseConfig({ ...production, SENTRY_RELEASE: 'abc123' }, WORKER_DSN)).toThrow(
+		'- Set both SENTRY_ENVIRONMENT and SENTRY_RELEASE or neither',
+	);
+	expect(() =>
+		parseConfig({ ...production, SENTRY_ENVIRONMENT: 'staging', SENTRY_RELEASE: 'abc123' }, WORKER_DSN),
+	).toThrow('- SENTRY_ENVIRONMENT must be production or development, not "staging"');
+	expect(() => parseConfig({ ...production, SENTRY_ENVIRONMENT: 'production', SENTRY_RELEASE: 'abc123' }, '')).toThrow(
+		'- SENTRY_ENVIRONMENT is set, but the Sentry DSN is not provisioned',
+	);
 });

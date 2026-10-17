@@ -26,6 +26,7 @@ import {
 import { batch, tursoDatabase, type TursoDatabase, type TursoTarget } from '../db/turso';
 import { memoryStore, type AccountTables } from './memory-store';
 import type { RambleLedger, RambleUsage } from './ramble-ledger';
+import { span } from '../sentry';
 import type { AccountStore } from './store';
 
 /**
@@ -167,12 +168,12 @@ export async function accountSession(
 	userId: string,
 	ledger?: RambleLedger,
 ): Promise<AccountSession> {
-	const loaded = await readTables(db, userId);
+	const loaded = await span('load account', 'db', () => readTables(db, userId));
 	ledger?.seed(loaded.ramble);
 	const store = ledger ? withRambleLedger(memoryStore(loaded), ledger) : memoryStore(loaded);
 	return {
 		store,
-		flush: () => batch(db, writes(db, userId, store.tables())),
+		flush: () => span('flush account', 'db', () => batch(db, writes(db, userId, store.tables()))),
 	};
 }
 

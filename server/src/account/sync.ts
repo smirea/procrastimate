@@ -21,6 +21,7 @@ import {
 	type SyncResponse,
 } from '../../../shared/sync/protocol';
 import { SERVER_ACTOR } from '../../../shared/values';
+import { span } from '../sentry';
 import type { AccountStore, LogRow } from './store';
 
 /**
@@ -77,6 +78,10 @@ function stampAuthorship(before: ServerState, ops: readonly Op[], actor: string)
  * name `actor`, the user id that sent them, and the fixups' rows name the server.
  */
 export function push(store: AccountStore, before: ServerState, ops: readonly Op[], now: number, actor: string) {
+	return span('merge ops', 'sync.merge', () => merge(store, before, ops, now, actor));
+}
+
+function merge(store: AccountStore, before: ServerState, ops: readonly Op[], now: number, actor: string) {
 	const ctx = { now, isApplied: (opId: string) => store.hasOp(opId) };
 	const applied = applyOps(before, stampAuthorship(before, ops, actor), ctx);
 	const fixed = applyFixups(applied.state, ctx);

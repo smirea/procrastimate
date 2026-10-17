@@ -1,3 +1,4 @@
+import { parseSentryTarget, SENTRY_DSN, type SentryTarget } from '../../shared/sentry';
 import type { Env } from './bindings';
 import type { TursoTarget } from './db/turso';
 import { VAPID_SUBJECT, type Vapid } from './web-push';
@@ -31,11 +32,14 @@ export type Config = {
 	google: { web: { clientId: string; clientSecret: string } | null; iosClientId: string | null };
 	apple: { servicesId: string | null; secret: AppleSecret } | null;
 	ramble: { kind: 'cassette' } | { kind: 'elevenlabs'; apiKey: string } | null;
+	/** Reporting to `procrastimate-worker`, on only where the deploy passes `SENTRY_ENVIRONMENT` and `SENTRY_RELEASE`. */
+	sentry: SentryTarget | null;
 };
 
 type Key = Exclude<keyof Env, 'ACCOUNT'>;
 
-export function parseConfig(env: Env): Config {
+/** `sentryDsn` is the committed worker DSN; tests pass their own. */
+export function parseConfig(env: Env, sentryDsn: string = SENTRY_DSN.worker): Config {
 	const problems: string[] = [];
 	const read = (key: Key) => env[key]?.trim() || null;
 	const group = <K extends Key>(keys: readonly K[], required: boolean): Record<K, string> | null => {
@@ -81,6 +85,12 @@ export function parseConfig(env: Env): Config {
 		problems.push(`RAMBLE_UPSTREAM must be cassette or unset, not "${upstream}"`);
 	const elevenLabsKey = read('ELEVENLABS_API_KEY');
 
+	const sentry = parseSentryTarget(sentryDsn, {
+		environment: read('SENTRY_ENVIRONMENT'),
+		release: read('SENTRY_RELEASE'),
+	});
+	if (sentry.problem) problems.push(sentry.problem);
+
 	if (problems.length || !authSecret) {
 		throw new Error(`Invalid server configuration:\n${problems.map(problem => `- ${problem}`).join('\n')}`);
 	}
@@ -104,6 +114,7 @@ export function parseConfig(env: Env): Config {
 				: elevenLabsKey
 					? { kind: 'elevenlabs', apiKey: elevenLabsKey }
 					: null,
+		sentry: sentry.target,
 	};
 }
 
