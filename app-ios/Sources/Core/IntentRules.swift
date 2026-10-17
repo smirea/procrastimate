@@ -36,7 +36,8 @@ public enum IntentRules {
         case reopen
     }
 
-    /// The task to save, or nil when the title is empty after parsing.
+    /// The task to save, or nil when the title is empty after parsing. A saved place, typed or picked as a label, becomes
+    /// the task's place, as in quick add.
     public static func newTask(
         _ request: AddRequest,
         projects: [Project],
@@ -54,7 +55,11 @@ public enum IntentRules {
         let parsed = draft.parse(now: now, projects: projects, sections: sections, labels: labels, in: zone)
         // The quick-add draft keeps a typed reminder and a picked one. A shortcut field fills the gap only.
         if parsed.reminders.isEmpty { draft.picked.reminders = request.reminders }
-        return draft.resolve(parsed)
+        guard var task = draft.resolve(parsed) else { return nil }
+        let picked = Triggers.applyPickedLabels(labels, task.labelIds, nil)
+        task.labelIds = picked.labelIds
+        task.location = parsed.location ?? picked.location
+        return task
     }
 
     /// A Shortcuts date becomes a due date in the clock's zone, time included.

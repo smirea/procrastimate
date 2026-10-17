@@ -48,6 +48,7 @@ Preconditions:
 
 - The phrases above only work when they include the app name, `ProcrastiMate`.
 - `#Project` and `@label` match records that already exist. They do not create one.
+- A saved place, typed as `@gym` or picked in the labels field, becomes the task's place instead of a label, as in quick add. The rules are covered by `aSavedPlacePickedAsALabelBecomesTheTasksPlace` and `aSavedPlaceInTheTitleBecomesTheTasksPlace`. Shortcuts and Spotlight show a saved place with a pin instead of a tag.
 - Words in the title win over a Shortcuts field for the same detail. A field applies only when the title did not set it.
 - A spoken title ignores case and accents. When several open tasks share it, the newest one is first.
 - Dates follow the device clock. With the clock at Wednesday, October 14 2026, 10:00 UTC, `Tomorrow 5pm` is October 15.

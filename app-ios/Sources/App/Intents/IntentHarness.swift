@@ -92,7 +92,7 @@ enum IntentHarness {
                     IntentEffects.note("missing-label \(name)")
                     return
                 }
-                labels.append(LabelEntity(id: label.id, name: label.name))
+                labels.append(LabelEntity(label))
             }
             intent.labels = labels
         }

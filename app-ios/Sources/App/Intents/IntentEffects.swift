@@ -50,19 +50,19 @@ enum IntentEffects {
     static func labels(ids: [String]) -> [LabelEntity] {
         let (snapshot, _) = snapshot()
         return ids.compactMap { id in
-            snapshot.labels.first { $0.id == id }.map { LabelEntity(id: $0.id, name: $0.name) }
+            snapshot.labels.first { $0.id == id }.map(LabelEntity.init)
         }
     }
 
     static func labels(matching query: String) -> [LabelEntity] {
         let (snapshot, _) = snapshot()
         return IntentRules.rankedNames(Browse.labelsByName(snapshot.labels), query, name: \.name)
-            .map { LabelEntity(id: $0.id, name: $0.name) }
+            .map(LabelEntity.init)
     }
 
     static func suggestedLabels() -> [LabelEntity] {
         let (snapshot, _) = snapshot()
-        return Browse.labelsByName(snapshot.labels).map { LabelEntity(id: $0.id, name: $0.name) }
+        return Browse.labelsByName(snapshot.labels).map(LabelEntity.init)
     }
 
     static func add(
