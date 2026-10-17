@@ -9,7 +9,7 @@ Edit a task lets Stefan open a task and change its title, notes, due date, prior
 - `edit-nl` applies phrases typed into the title, such as `fri 6pm !! remind me 1h before`.
 - `edit-config-row` shows the timing, priority, project, and labels the title will apply in the chips below it before Enter or blur commits them.
 - `edit-delete` deletes a task, with undo.
-- `edit-floating` floats `Complete` (or `Reopen` once done) at the bottom left of task details and `Delete` at the bottom right. The body scrolls clear of them. The top left project chip shows its icon and name and truncates with an ellipsis. On iOS they hide while the keyboard is up.
+- `edit-floating` floats `Complete` (or `Reopen` once done) at the bottom left of task details and `Delete` at the bottom right. The body scrolls clear of them. The top left project chip shows its icon and name and truncates with an ellipsis. On iOS they are clear Liquid Glass capsules with a green `Complete` and a red `Delete` label, and they hide while the keyboard is up.
 - `edit-links` shows web URLs and Markdown `[label](url)` links in the title and notes as links in rows, subtask rows, search results, and task details until the field is focused. A link opens in a new tab (web) or Safari (iOS) without opening the task.
 - `edit-postpone` moves a task to `Today` (overdue or undated only), `Tomorrow`, `This weekend` (the coming Saturday, `Next weekend` on a weekend day), or `Next week` (the coming Monday), skipping its current day, keeping its time, with a `Moved “X” to <day>` toast and `Undo`. Event tasks have no postpone.
 

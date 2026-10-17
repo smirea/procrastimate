@@ -160,7 +160,7 @@ async function deploy(target: Target, project: string) {
                 : ["open", "-a", join(dirname(developer), "Applications/DeviceHub.app"), `devices://device/open?id=${target.id}`]);
         }
         await command(["xcrun", "simctl", "install", target.id, app]);
-        await grantPermissions(target.id, bundle);
+        await grantPermissions(target.id, bundle, plist);
         await command(["xcrun", "simctl", "launch", "--terminate-running-process", target.id, bundle]);
     } else {
         await command(["xcrun", "devicectl", "device", "install", "app", "--device", target.id, app]);
@@ -170,13 +170,31 @@ async function deploy(target: Target, project: string) {
 }
 
 /**
- * Granted before every launch so no permission alert covers the screen in a demo or UI test run. simctl's location and
- * calendar grants hold only once the app is installed, and simctl cannot grant notifications at all; applesimutils can.
+ * Granted before every launch so no permission alert covers the screen in a demo or UI test run: an alert raised once
+ * survives later grants and relaunches until the simulator reboots. Every usage description in the app's Info.plist
+ * needs a grant here, so a new permission fails the launch instead of bringing an alert back. simctl's grants hold only
+ * once the app is installed. simctl cannot grant notifications, the camera, or speech recognition; applesimutils can.
  */
-async function grantPermissions(udid: string, bundle: string) {
-    await command(["xcrun", "simctl", "privacy", udid, "grant", "location-always", bundle]);
-    await command(["xcrun", "simctl", "privacy", udid, "grant", "calendar", bundle]);
-    await command(["applesimutils", "--byId", udid, "--bundle", bundle, "--setPermissions", "notifications=YES"], true);
+const grants: Record<string, { simctl: string } | { applesimutils: string }> = {
+    NSCameraUsageDescription: { applesimutils: "camera=YES" },
+    NSMicrophoneUsageDescription: { simctl: "microphone" },
+    NSSpeechRecognitionUsageDescription: { applesimutils: "speech=YES" },
+    NSLocationWhenInUseUsageDescription: { simctl: "location-always" },
+    NSLocationAlwaysAndWhenInUseUsageDescription: { simctl: "location-always" },
+    NSCalendarsFullAccessUsageDescription: { simctl: "calendar" },
+};
+
+async function grantPermissions(udid: string, bundle: string, plist: string) {
+    const info = JSON.parse(await command(["plutil", "-convert", "json", "-o", "-", plist], true)) as Record<string, unknown>;
+    const keys = Object.keys(info).filter(key => key.endsWith("UsageDescription"));
+    const missing = keys.filter(key => !grants[key]);
+    if (missing.length) throw new Error(`Add a simulator grant for ${missing.join(", ")} to grantPermissions in app-ios/scripts/run.`);
+    const picked = keys.map(key => grants[key]!);
+    for (const service of new Set(picked.flatMap(grant => "simctl" in grant ? [grant.simctl] : []))) {
+        await command(["xcrun", "simctl", "privacy", udid, "grant", service, bundle]);
+    }
+    const permissions = ["notifications=YES", ...picked.flatMap(grant => "applesimutils" in grant ? [grant.applesimutils] : [])];
+    await command(["applesimutils", "--byId", udid, "--bundle", bundle, "--setPermissions", permissions.join(", ")], true);
 }
 
 async function main() {

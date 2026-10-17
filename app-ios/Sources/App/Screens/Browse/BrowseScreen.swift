@@ -34,6 +34,7 @@ struct BrowseScreen: View {
 
 private struct BrowseList: View {
     @Environment(Navigator.self) private var navigator
+    @Environment(AccountSync.self) private var accountSync
     @Environment(Store.self) private var store
     @Environment(\.today) private var today
 
@@ -153,6 +154,7 @@ private struct BrowseList: View {
                 .foregroundStyle(.ink)
             }
         }
+        .refreshable { await accountSync.refresh() }
         .scrollContentBackground(.hidden)
         .animation(.snappy, value: store.projects)
         .animation(.snappy, value: labels)

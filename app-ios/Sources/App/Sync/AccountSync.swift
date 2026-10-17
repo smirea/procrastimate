@@ -59,6 +59,14 @@ final class AccountSync {
         await sync()
     }
 
+    /// Pull to refresh: a full round now, the shared spaces list included, then the socket again if it dropped.
+    func refresh() async {
+        soon?.cancel()
+        spacesListedAt = nil
+        await sync()
+        connect()
+    }
+
     /// Syncs one second after a local edit, so a burst is one request.
     func syncSoon() {
         soon?.cancel()

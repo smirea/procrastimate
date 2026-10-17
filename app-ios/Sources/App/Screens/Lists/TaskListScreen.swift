@@ -19,6 +19,7 @@ struct TaskListScreen<Content: View>: View {
     @ViewBuilder let content: () -> Content
 
     @Environment(Navigator.self) private var navigator
+    @Environment(AccountSync.self) private var accountSync
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var scrolled = false
 
@@ -39,6 +40,7 @@ struct TaskListScreen<Content: View>: View {
             }
         }
         .listStyle(.plain)
+        .refreshable { await accountSync.refresh() }
         .safeAreaInset(edge: .top, spacing: 0) {
             if let newestFirst { SortButton(newestFirst: newestFirst) }
         }
