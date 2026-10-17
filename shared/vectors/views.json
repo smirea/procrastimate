@@ -4813,6 +4813,525 @@
 			]
 		},
 		{
+			"fn": "labelViewTasks",
+			"test": "task views › event tasks sit on their occurrence and place tasks list by place",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 43,
+						"createdBy": null,
+						"due": null,
+						"event": {
+							"allDay": false,
+							"edge": "after",
+							"id": "meetup",
+							"minutes": 30,
+							"occurrences": [
+								{
+									"end": 1792018800000,
+									"original": 1792015200000,
+									"start": 1792015200000
+								}
+							],
+							"series": false,
+							"title": "Walking meetup"
+						},
+						"id": "notes",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "notes"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 44,
+						"createdBy": null,
+						"due": null,
+						"event": {
+							"allDay": false,
+							"edge": "before",
+							"id": "meetup",
+							"minutes": 30,
+							"occurrences": [
+								{
+									"end": 1792018800000,
+									"original": 1792015200000,
+									"start": 1792015200000
+								}
+							],
+							"series": false,
+							"title": "Walking meetup"
+						},
+						"id": "jan",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": {
+							"address": null,
+							"latitude": 52.52,
+							"longitude": 13.405,
+							"name": "Park",
+							"radius": 150,
+							"trigger": "during"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "jan"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 45,
+						"createdBy": null,
+						"due": null,
+						"event": {
+							"allDay": false,
+							"edge": "before",
+							"id": "meetup",
+							"minutes": 30,
+							"occurrences": [
+								{
+									"end": 1791846000000,
+									"original": 1791842400000,
+									"start": 1791842400000
+								}
+							],
+							"series": false,
+							"title": "Walking meetup"
+						},
+						"id": "missed",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "missed"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 46,
+						"createdBy": null,
+						"due": null,
+						"event": {
+							"allDay": false,
+							"edge": "before",
+							"id": "meetup",
+							"minutes": 30,
+							"occurrences": [
+								{
+									"end": 1792623600000,
+									"original": 1792620000000,
+									"start": 1792620000000
+								}
+							],
+							"series": false,
+							"title": "Walking meetup"
+						},
+						"id": "next week",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "next week"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 47,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "kite",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": {
+							"address": null,
+							"latitude": 52.52,
+							"longitude": 13.405,
+							"name": "Park",
+							"radius": 150,
+							"trigger": "during"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "kite"
+					}
+				],
+				{
+					"color": "green",
+					"createdAt": 0,
+					"id": "park",
+					"name": "Park",
+					"place": {
+						"address": null,
+						"latitude": 52.52001,
+						"longitude": 13.405,
+						"radius": 500
+					}
+				}
+			],
+			"output": [
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 44,
+					"createdBy": null,
+					"due": null,
+					"event": {
+						"allDay": false,
+						"edge": "before",
+						"id": "meetup",
+						"minutes": 30,
+						"occurrences": [
+							{
+								"end": 1792018800000,
+								"original": 1792015200000,
+								"start": 1792015200000
+							}
+						],
+						"series": false,
+						"title": "Walking meetup"
+					},
+					"id": "jan",
+					"images": [],
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": {
+						"address": null,
+						"latitude": 52.52,
+						"longitude": 13.405,
+						"name": "Park",
+						"radius": 150,
+						"trigger": "during"
+					},
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "jan"
+				},
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 47,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"id": "kite",
+					"images": [],
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": {
+						"address": null,
+						"latitude": 52.52,
+						"longitude": 13.405,
+						"name": "Park",
+						"radius": 150,
+						"trigger": "during"
+					},
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "kite"
+				}
+			]
+		},
+		{
+			"fn": "labelViewTasks",
+			"test": "task views › event tasks sit on their occurrence and place tasks list by place",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 43,
+						"createdBy": null,
+						"due": null,
+						"event": {
+							"allDay": false,
+							"edge": "after",
+							"id": "meetup",
+							"minutes": 30,
+							"occurrences": [
+								{
+									"end": 1792018800000,
+									"original": 1792015200000,
+									"start": 1792015200000
+								}
+							],
+							"series": false,
+							"title": "Walking meetup"
+						},
+						"id": "notes",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "notes"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 44,
+						"createdBy": null,
+						"due": null,
+						"event": {
+							"allDay": false,
+							"edge": "before",
+							"id": "meetup",
+							"minutes": 30,
+							"occurrences": [
+								{
+									"end": 1792018800000,
+									"original": 1792015200000,
+									"start": 1792015200000
+								}
+							],
+							"series": false,
+							"title": "Walking meetup"
+						},
+						"id": "jan",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": {
+							"address": null,
+							"latitude": 52.52,
+							"longitude": 13.405,
+							"name": "Park",
+							"radius": 150,
+							"trigger": "during"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "jan"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 45,
+						"createdBy": null,
+						"due": null,
+						"event": {
+							"allDay": false,
+							"edge": "before",
+							"id": "meetup",
+							"minutes": 30,
+							"occurrences": [
+								{
+									"end": 1791846000000,
+									"original": 1791842400000,
+									"start": 1791842400000
+								}
+							],
+							"series": false,
+							"title": "Walking meetup"
+						},
+						"id": "missed",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "missed"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 46,
+						"createdBy": null,
+						"due": null,
+						"event": {
+							"allDay": false,
+							"edge": "before",
+							"id": "meetup",
+							"minutes": 30,
+							"occurrences": [
+								{
+									"end": 1792623600000,
+									"original": 1792620000000,
+									"start": 1792620000000
+								}
+							],
+							"series": false,
+							"title": "Walking meetup"
+						},
+						"id": "next week",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "next week"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 47,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "kite",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": {
+							"address": null,
+							"latitude": 52.52,
+							"longitude": 13.405,
+							"name": "Park",
+							"radius": 150,
+							"trigger": "during"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "kite"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 48,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "call",
+						"images": [],
+						"labelIds": [
+							"park"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "call"
+					}
+				],
+				{
+					"color": "green",
+					"createdAt": 0,
+					"id": "park",
+					"name": "Park",
+					"place": null
+				}
+			],
+			"output": [
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 48,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"id": "call",
+					"images": [],
+					"labelIds": [
+						"park"
+					],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "call"
+				}
+			]
+		},
+		{
 			"fn": "noDateTasks",
 			"test": "no date › places with two or more undated tasks get their own sections below the rest",
 			"input": [
@@ -4820,7 +5339,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 48,
+						"createdAt": 49,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -4842,7 +5361,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 49,
+						"createdAt": 50,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -4871,7 +5390,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 50,
+						"createdAt": 51,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -4900,7 +5419,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 51,
+						"createdAt": 52,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -4929,7 +5448,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 52,
+						"createdAt": 53,
 						"createdBy": null,
 						"due": {
 							"date": "2026-10-14",
@@ -4961,7 +5480,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 53,
+						"createdAt": 54,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -4990,7 +5509,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 54,
+						"createdAt": 55,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -5025,7 +5544,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 48,
+						"createdAt": 49,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -5047,7 +5566,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 54,
+						"createdAt": 55,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -5082,7 +5601,7 @@
 							{
 								"completedAt": null,
 								"completedBy": null,
-								"createdAt": 50,
+								"createdAt": 51,
 								"createdBy": null,
 								"due": null,
 								"event": null,
@@ -5111,7 +5630,7 @@
 							{
 								"completedAt": null,
 								"completedBy": null,
-								"createdAt": 53,
+								"createdAt": 54,
 								"createdBy": null,
 								"due": null,
 								"event": null,
@@ -5146,7 +5665,7 @@
 							{
 								"completedAt": null,
 								"completedBy": null,
-								"createdAt": 49,
+								"createdAt": 50,
 								"createdBy": null,
 								"due": null,
 								"event": null,
@@ -5175,7 +5694,7 @@
 							{
 								"completedAt": null,
 								"completedBy": null,
-								"createdAt": 51,
+								"createdAt": 52,
 								"createdBy": null,
 								"due": null,
 								"event": null,
@@ -5214,7 +5733,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 55,
+						"createdAt": 56,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -5236,7 +5755,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 56,
+						"createdAt": 57,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -5258,7 +5777,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 57,
+						"createdAt": 58,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -5280,7 +5799,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 58,
+						"createdAt": 59,
 						"createdBy": null,
 						"due": {
 							"date": "2026-10-14",
@@ -5311,7 +5830,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 57,
+						"createdAt": 58,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -5333,7 +5852,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 56,
+						"createdAt": 57,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -5355,7 +5874,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 55,
+						"createdAt": 56,
 						"createdBy": null,
 						"due": null,
 						"event": null,

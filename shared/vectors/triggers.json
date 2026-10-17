@@ -1172,6 +1172,351 @@
 			}
 		},
 		{
+			"fn": "pickedLabels",
+			"test": "label pickers › a task at a saved place shows it checked after its labels",
+			"input": [
+				[
+					{
+						"color": "blue",
+						"createdAt": 1,
+						"id": "l-calls",
+						"name": "calls",
+						"place": null
+					},
+					{
+						"color": "green",
+						"createdAt": 1,
+						"id": "l-home",
+						"name": "Home",
+						"place": {
+							"address": "Parkweg 1",
+							"latitude": 52.52001,
+							"longitude": 13.40501,
+							"radius": 500
+						}
+					},
+					{
+						"color": "green",
+						"createdAt": 1,
+						"id": "l-gym",
+						"name": "Gym",
+						"place": {
+							"address": "Parkweg 1",
+							"latitude": 52.4,
+							"longitude": 13.40501,
+							"radius": 500
+						}
+					}
+				],
+				{
+					"labelIds": [
+						"l-calls"
+					],
+					"location": {
+						"address": null,
+						"latitude": 52.52,
+						"longitude": 13.405,
+						"name": "Park",
+						"radius": 150,
+						"trigger": "leave"
+					}
+				}
+			],
+			"output": [
+				"l-calls",
+				"l-home"
+			]
+		},
+		{
+			"fn": "pickedLabels",
+			"test": "label pickers › a task at a saved place shows it checked after its labels",
+			"input": [
+				[
+					{
+						"color": "blue",
+						"createdAt": 1,
+						"id": "l-calls",
+						"name": "calls",
+						"place": null
+					},
+					{
+						"color": "green",
+						"createdAt": 1,
+						"id": "l-home",
+						"name": "Home",
+						"place": {
+							"address": "Parkweg 1",
+							"latitude": 52.52001,
+							"longitude": 13.40501,
+							"radius": 500
+						}
+					},
+					{
+						"color": "green",
+						"createdAt": 1,
+						"id": "l-gym",
+						"name": "Gym",
+						"place": {
+							"address": "Parkweg 1",
+							"latitude": 52.4,
+							"longitude": 13.40501,
+							"radius": 500
+						}
+					}
+				],
+				{
+					"labelIds": [
+						"l-calls"
+					],
+					"location": {
+						"address": null,
+						"latitude": 40,
+						"longitude": 13.405,
+						"name": "Park",
+						"radius": 150,
+						"trigger": "during"
+					}
+				}
+			],
+			"output": [
+				"l-calls"
+			]
+		},
+		{
+			"fn": "applyPickedLabels",
+			"test": "label pickers › checking a saved place sets it as the place, keeping the trigger, and the last one checked wins",
+			"input": [
+				[
+					{
+						"color": "blue",
+						"createdAt": 1,
+						"id": "l-calls",
+						"name": "calls",
+						"place": null
+					},
+					{
+						"color": "green",
+						"createdAt": 1,
+						"id": "l-home",
+						"name": "Home",
+						"place": {
+							"address": "Parkweg 1",
+							"latitude": 52.52001,
+							"longitude": 13.40501,
+							"radius": 500
+						}
+					},
+					{
+						"color": "green",
+						"createdAt": 1,
+						"id": "l-gym",
+						"name": "Gym",
+						"place": {
+							"address": "Parkweg 1",
+							"latitude": 52.4,
+							"longitude": 13.40501,
+							"radius": 500
+						}
+					}
+				],
+				[
+					"l-home",
+					"l-calls",
+					"l-gym"
+				],
+				{
+					"address": null,
+					"latitude": 40,
+					"longitude": 13.405,
+					"name": "Elsewhere",
+					"radius": 150,
+					"trigger": "leave"
+				}
+			],
+			"output": {
+				"labelIds": [
+					"l-calls"
+				],
+				"location": {
+					"address": "Parkweg 1",
+					"latitude": 52.4,
+					"longitude": 13.40501,
+					"name": "Gym",
+					"radius": 500,
+					"trigger": "leave"
+				}
+			}
+		},
+		{
+			"fn": "applyPickedLabels",
+			"test": "label pickers › checking a saved place sets it as the place, keeping the trigger, and the last one checked wins",
+			"input": [
+				[
+					{
+						"color": "blue",
+						"createdAt": 1,
+						"id": "l-calls",
+						"name": "calls",
+						"place": null
+					},
+					{
+						"color": "green",
+						"createdAt": 1,
+						"id": "l-home",
+						"name": "Home",
+						"place": {
+							"address": "Parkweg 1",
+							"latitude": 52.52001,
+							"longitude": 13.40501,
+							"radius": 500
+						}
+					},
+					{
+						"color": "green",
+						"createdAt": 1,
+						"id": "l-gym",
+						"name": "Gym",
+						"place": {
+							"address": "Parkweg 1",
+							"latitude": 52.4,
+							"longitude": 13.40501,
+							"radius": 500
+						}
+					}
+				],
+				[
+					"l-home"
+				],
+				null
+			],
+			"output": {
+				"labelIds": [],
+				"location": {
+					"address": "Parkweg 1",
+					"latitude": 52.52001,
+					"longitude": 13.40501,
+					"name": "Home",
+					"radius": 500,
+					"trigger": "arrive"
+				}
+			}
+		},
+		{
+			"fn": "applyPickedLabels",
+			"test": "label pickers › unchecking the saved place clears it, while a place never saved stays",
+			"input": [
+				[
+					{
+						"color": "blue",
+						"createdAt": 1,
+						"id": "l-calls",
+						"name": "calls",
+						"place": null
+					},
+					{
+						"color": "green",
+						"createdAt": 1,
+						"id": "l-home",
+						"name": "Home",
+						"place": {
+							"address": "Parkweg 1",
+							"latitude": 52.52001,
+							"longitude": 13.40501,
+							"radius": 500
+						}
+					},
+					{
+						"color": "green",
+						"createdAt": 1,
+						"id": "l-gym",
+						"name": "Gym",
+						"place": {
+							"address": "Parkweg 1",
+							"latitude": 52.4,
+							"longitude": 13.40501,
+							"radius": 500
+						}
+					}
+				],
+				[
+					"l-calls"
+				],
+				{
+					"address": null,
+					"latitude": 52.52,
+					"longitude": 13.405,
+					"name": "Park",
+					"radius": 150,
+					"trigger": "during"
+				}
+			],
+			"output": {
+				"labelIds": [
+					"l-calls"
+				],
+				"location": null
+			}
+		},
+		{
+			"fn": "applyPickedLabels",
+			"test": "label pickers › unchecking the saved place clears it, while a place never saved stays",
+			"input": [
+				[
+					{
+						"color": "blue",
+						"createdAt": 1,
+						"id": "l-calls",
+						"name": "calls",
+						"place": null
+					},
+					{
+						"color": "green",
+						"createdAt": 1,
+						"id": "l-home",
+						"name": "Home",
+						"place": {
+							"address": "Parkweg 1",
+							"latitude": 52.52001,
+							"longitude": 13.40501,
+							"radius": 500
+						}
+					},
+					{
+						"color": "green",
+						"createdAt": 1,
+						"id": "l-gym",
+						"name": "Gym",
+						"place": {
+							"address": "Parkweg 1",
+							"latitude": 52.4,
+							"longitude": 13.40501,
+							"radius": 500
+						}
+					}
+				],
+				[],
+				{
+					"address": null,
+					"latitude": 40,
+					"longitude": 13.405,
+					"name": "Rewe",
+					"radius": 150,
+					"trigger": "during"
+				}
+			],
+			"output": {
+				"labelIds": [],
+				"location": {
+					"address": null,
+					"latitude": 40,
+					"longitude": 13.405,
+					"name": "Rewe",
+					"radius": 150,
+					"trigger": "during"
+				}
+			}
+		},
+		{
 			"fn": "placeGroups",
 			"test": "sidebar groups › places group open tasks by spot, named after the earliest task",
 			"input": [

@@ -57,6 +57,7 @@ test('a place saved under a name lists with the labels, and @name or the labels 
 	await app.taskInput().fill('Fix the tap @home');
 	await expect(app.quickAdd().locator('[data-token="place"]')).toHaveText('@home');
 	await app.taskInput().press('Enter');
+	await expect(app.quickAdd()).toBeHidden();
 	await expect(app.row('Fix the tap')).toContainText('Arriving at Home');
 
 	await app.add('Bring keys');
