@@ -496,6 +496,8 @@ describe('AI accounts', () => {
 		expect((await edit(outside)).status).toBe(404);
 		const [row] = await app.db.select({ title: tasks.title }).from(tasks).where(eq(tasks.id, inside));
 		expect(row).toEqual({ title: 'Edited by the bot' });
+		expect((await call(owner, 'DELETE', `/api/ai?id=${ai.id}`)).status).toBe(200);
+		expect(await accessRows(ai.id)).toEqual([]);
 	});
 });
 

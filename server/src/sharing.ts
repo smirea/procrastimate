@@ -224,7 +224,10 @@ export async function deleteToken(db: Db, owner: string, id: string): Promise<vo
 }
 
 /** An AI account was deleted: its tokens and shares go. It never had `access` rows. */
-export async function revokeAi(db: Db, owner: string, aiUserId: string): Promise<void> {
-	await db.delete(apiTokens).where(and(eq(apiTokens.userId, owner), eq(apiTokens.aiUserId, aiUserId)));
-	await db.delete(shares).where(and(eq(shares.userId, owner), eq(shares.grantee, aiUserId)));
+export function revokeAi(db: Db, owner: string, aiUserId: string): Promise<void> {
+	return withSpaceLocked(db, owner, async tx => {
+		await tx.delete(apiTokens).where(and(eq(apiTokens.userId, owner), eq(apiTokens.aiUserId, aiUserId)));
+		await tx.delete(shares).where(and(eq(shares.userId, owner), eq(shares.grantee, aiUserId)));
+		await syncAccess(tx, owner, aiUserId);
+	});
 }
