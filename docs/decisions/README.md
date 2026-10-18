@@ -25,7 +25,7 @@ ProcrastiMate's concepts, goals, paradigms, and high-level system decisions, one
 - [Dev hosting](dev-hosting.md): the Docker Postgres and PowerSync every worktree runs, the dev box, `tailscale serve`, and the single-origin rule.
 - [Production hosting](production-hosting.md): the Cloudflare Worker, Supabase, PowerSync Cloud, Hyperdrive, the crons, secrets, deploys, and free-tier fit.
 - [Persistence](persistence.md): the clients' PowerSync databases, source keys, and how the Postgres database migrates.
-- [Sync](sync.md): Postgres as the truth, PowerSync streaming rows down, the one upload route applying row writes, last-write conflicts, and the repairs.
+- [Sync](sync.md): Postgres as the truth, PowerSync streaming rows down, the one upload route applying row writes as single statements, last-write conflicts, and how readers resolve dangling references.
 - [Testing](testing.md): unit tests, end-to-end tests, and the feature map.
 - [iOS app](ios.md): the native SwiftUI app, its architecture, the Swift port and shared test vectors, local notifications, macOS CI, and paired parity tests. Its checklist and thread split are in [iOS parity](../ios-parity.md).
 - [Auth](auth.md): Better Auth sessions, Google and Apple, and per-user data.

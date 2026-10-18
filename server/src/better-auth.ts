@@ -50,6 +50,7 @@ type UserRow = { id: string; email: string; name: string; kind?: 'human' | 'ai' 
 
 export type Auth = {
 	handler: (request: Request) => Promise<Response>;
+	api: { getSession: (input: { headers: Headers }) => Promise<{ user: UserRow } | null> };
 	$context: Promise<{
 		adapter: {
 			create: <T>(data: { model: string; data: Record<string, unknown> }) => Promise<T>;
@@ -208,24 +209,16 @@ const asPerson = (row: UserRow): Person => ({
 });
 
 export async function readSession(request: Request, { auth }: App): Promise<SessionUser | null> {
-	const url = new URL('/api/auth/get-session', request.url);
-	const response = await auth.handler(new Request(url, { method: 'GET', headers: request.headers }));
-	if (!response.ok) return null;
-	const body = (await response.json().catch(() => null)) as { user?: Partial<UserRow> } | null;
-	if (!body?.user?.id) return null;
-	const { id, email = '', name = '', kind, ownerId } = body.user;
-	return { ...asPerson({ id, email, name, kind, ownerId }), email };
+	// Better Auth throws where its handler would answer an error, and a failed read is no session either way.
+	const session = await auth.api.getSession({ headers: request.headers }).catch(() => null);
+	if (!session?.user.id) return null;
+	return { ...asPerson(session.user), email: session.user.email ?? '' };
 }
 
 const users = async ({ auth }: App) => (await auth.$context).adapter;
 
 export async function userById(app: App, id: string): Promise<Person | null> {
 	const row = await (await users(app)).findOne<UserRow>({ model: 'user', where: [{ field: 'id', value: id }] });
-	return row ? asPerson(row) : null;
-}
-
-export async function userByEmail(app: App, email: string): Promise<Person | null> {
-	const row = await (await users(app)).findOne<UserRow>({ model: 'user', where: [{ field: 'email', value: email }] });
 	return row ? asPerson(row) : null;
 }
 

@@ -9,13 +9,15 @@ import {
 	pgTable,
 	primaryKey,
 	text,
+	uniqueIndex,
 } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
 import { IMAGE_SIZES, IMAGE_TYPES } from '../images.ts';
 import { DICTATION_CHOICES } from '../dictation.ts';
 import { DEFAULT_QUICK_ADD_BUTTONS } from '../quick-add-buttons.ts';
 import { KINDS } from '../kinds.ts';
 import { LABEL_COLORS } from '../label-colors.ts';
-import { ACTOR_KINDS, DEFAULT_PRIORITY, ROLES, SERVER_ACTOR, SHARE_TARGET_KINDS } from '../values.ts';
+import { DEFAULT_PRIORITY, ROLES, SERVER_ACTOR, SHARE_TARGET_KINDS } from '../values.ts';
 import type { ColumnValue } from './json.ts';
 
 /**
@@ -60,7 +62,11 @@ export const tasks = pgTable(
 		/** Where an imported task came from, such as `todoist:task:…`, so importing the same backup again skips it. */
 		sourceKey: text('source_key'),
 	},
-	table => [index('tasks_user_id').on(table.userId)],
+	table => [
+		index('tasks_user_id').on(table.userId),
+		// Pattern ops, so a memo's tasks are a `LIKE 'voicememo:<memoId>:%'` range scan.
+		index('tasks_source_key').on(table.userId, table.sourceKey.op('text_pattern_ops')),
+	],
 ).enableRLS();
 
 export const projects = pgTable(
@@ -192,8 +198,9 @@ export const ENTITY_TABLES = {
 export const SYNCED_TABLES = { ...ENTITY_TABLES, access } as const;
 
 /**
- * Every write the server applied, for activity: the fields it set, who sent it (a user id, or `server` for a
- * repair), and when. Clients never read it.
+ * Every write the server applied, for activity and for the apps behind a task: the fields it set, who sent it, the
+ * app it came from, and when. `op_id` is the client's id for the write, unique per space, so a retried batch inserts
+ * no second row. Clients never read it.
  */
 export const log = pgTable(
 	'log',
@@ -206,22 +213,22 @@ export const log = pgTable(
 		op: text('op', { enum: ['put', 'patch', 'delete'] }).notNull(),
 		fields: jsonb('fields').$type<ColumnValue<'log', 'fields'>>().notNull(),
 		actor: text('actor').notNull().default(SERVER_ACTOR),
+		/** Null for rows from before the server recorded apps. */
+		client: jsonb('client').$type<ColumnValue<'log', 'client'>>(),
 		at: millis('at').notNull(),
 	},
-	table => [index('log_entity').on(table.userId, table.kind, table.id)],
-).enableRLS();
-
-/** Which app created each task and which wrote to it last, for the agent API, keyed by task id. */
-export const taskClients = pgTable(
-	'task_clients',
-	{
-		userId: text('user_id').notNull(),
-		id: text('id').notNull(),
-		/** Null for a task that existed before the server recorded apps, so its first edit is not taken for its creation. */
-		created: jsonb('created').$type<ColumnValue<'taskClients', 'created'>>(),
-		edited: jsonb('edited').$type<ColumnValue<'taskClients', 'edited'>>().notNull(),
-	},
-	table => [primaryKey({ columns: [table.userId, table.id] })],
+	table => [
+		index('log_entity').on(table.userId, table.kind, table.id),
+		uniqueIndex('log_op').on(table.userId, table.opId),
+		// Every source key a task held, deleted tasks' included, so a memo's re-sent task is found without a scan.
+		index('log_source_key')
+			.on(table.userId, sql`(${table.fields}->>'sourceKey')`)
+			.where(sql`${table.kind} = 'task' and ${table.fields} ? 'sourceKey'`),
+		// A task's comments, for its activity.
+		index('log_comment_task')
+			.on(table.userId, sql`(${table.fields}->>'taskId')`)
+			.where(sql`${table.kind} = 'comment' and ${table.op} = 'put'`),
+	],
 ).enableRLS();
 
 /**
@@ -270,20 +277,6 @@ export const shares = pgTable(
 		createdAt: millis('created_at').notNull(),
 	},
 	table => [primaryKey({ columns: [table.userId, table.id] }), index('shares_grantee').on(table.grantee)],
-).enableRLS();
-
-/** Everyone this space has met, so activity and share lists can name them. `seenAt` is the last time it did. */
-export const people = pgTable(
-	'people',
-	{
-		userId: text('user_id').notNull(),
-		id: text('id').notNull(),
-		name: text('name').notNull(),
-		kind: text('kind', { enum: ACTOR_KINDS }).$type<ColumnValue<'people', 'kind'>>().notNull(),
-		ownerId: text('owner_id'),
-		seenAt: millis('seen_at').notNull(),
-	},
-	table => [primaryKey({ columns: [table.userId, table.id] })],
 ).enableRLS();
 
 /** An AI account's API token, kept by its owner. Only the secret's SHA-256 is stored. */
@@ -335,11 +328,9 @@ export const rambleBudget = pgTable('ramble_budget', {
 type Row<T extends { $inferSelect: object }> = Omit<T['$inferSelect'], 'userId'>;
 
 export type LogRow = Row<typeof log>;
-export type TaskClientsRow = Row<typeof taskClients>;
 export type PushTarget = Row<typeof push>;
 export type RambleUsage = Row<typeof rambleUsage>;
 export type ShareRow = Row<typeof shares>;
-export type PersonRow = Row<typeof people>;
 export type ApiTokenRow = Row<typeof apiTokens>;
 export type ImageRow = Row<typeof images>;
 export type AccessRow = typeof access.$inferSelect;

@@ -8,6 +8,7 @@ import { BACKUP_CRON } from './crons';
 import { backupDatabase } from './db/backup';
 import { migrate } from './db/migrate';
 import { connect, type Db } from './db/postgres';
+import { sweepImages } from './images';
 import { deliverDue, pushSender } from './push';
 import { Ramble as RambleObject, RAMBLE_ACTOR_HEADER } from './ramble-object';
 import { sentryOptions } from './sentry';
@@ -50,7 +51,10 @@ async function fetch(request: Request, env: Env, ctx: ExecutionContext): Promise
 	}
 }
 
-/** Every minute the due pushes go out; at 09:00 UTC the database is dumped to R2. A throw marks the cron check-in failed. */
+/**
+ * Every minute the due pushes go out; at 09:00 UTC the database is dumped to R2 and the orphaned image bytes are
+ * swept. A throw marks the cron check-in failed.
+ */
 async function scheduled(controller: ScheduledController, env: Env, ctx: ExecutionContext) {
 	const settings = config(env);
 	const { db, end } = connect(settings.database);
@@ -60,6 +64,7 @@ async function scheduled(controller: ScheduledController, env: Env, ctx: Executi
 		if (controller.cron === BACKUP_CRON) {
 			if (!env.BACKUPS) throw new Error('The BACKUPS R2 binding is missing');
 			console.log(`Backed up Postgres to ${await backupDatabase(db, env.BACKUPS, at)}`);
+			await sweepImages(db, at.getTime());
 			return;
 		}
 		const sent = await deliverDue(db, at.getTime(), pushSender(env));

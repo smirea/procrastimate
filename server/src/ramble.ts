@@ -20,7 +20,7 @@ import type { Db } from './db/postgres';
 import type { RambleBudget } from './ramble-budget';
 import { reportError } from './sentry';
 import { listenWorkerSocket, type Socket, type StreamEvents, type StreamHost, type WorkerSocket } from './sockets';
-import { loadSpace } from './space';
+import { loadTree, storedTimeZone } from './space';
 
 /**
  * Ramble's transcription proxy. A signed-in client streams PCM over `RAMBLE_SOCKET_PATH`, and the server forwards it
@@ -449,18 +449,22 @@ function refuseDaily(ramble: Ramble, request: Request, resetsAt: number) {
 	});
 }
 
+/** What a session reads of the user's space: the names for keyterms and the zone its daily cap counts in. */
+export type RambleSpace = { tree: Pick<Snapshot, 'tasks' | 'projects' | 'labels'>; timeZone: string | null };
+
 /** The upgrade for one signed-in human's session, after the caller authenticated the request. */
 export async function rambleSocket(
 	request: Request,
 	ramble: Ramble,
 	usage: RambleUsage,
-	snapshot: Snapshot,
+	space: () => Promise<RambleSpace>,
 	now: number,
 ): Promise<Response> {
 	if (request.headers.get('Upgrade')?.toLowerCase() !== 'websocket') return fail(426, 'Expected a WebSocket');
 	const { connect } = ramble;
 	if (!connect) return fail(503, 'Ramble is not configured');
-	const zone = accountZone(snapshot.settings.timeZone);
+	const { tree, timeZone } = await space();
+	const zone = accountZone(timeZone);
 	const day = zonedDateKey(now, zone);
 	const storedToday = await usage.stored(day);
 	const remaining = ramble.limits.dailySeconds - storedToday - liveSeconds(ramble.live, day);
@@ -479,7 +483,7 @@ export async function rambleSocket(
 		if (granted <= 0) return refuseDaily(ramble, request, zonedTime(addDays(utcDay, 1), '00:00', 'UTC'));
 		grant = { day: utcDay, seconds: granted };
 	}
-	const keyterms = rambleKeyterms(snapshot);
+	const keyterms = rambleKeyterms(tree);
 	const cassette = new URL(request.url).searchParams.get('cassette');
 	return ramble.stream(request, RAMBLE_SOCKET_PROTOCOL, client =>
 		session({ client, connect, ramble, usage, storedToday, day, zone, keyterms, cassette, grant }),
@@ -491,7 +495,10 @@ export type RambleRoute = (request: Request, actor: Actor) => Promise<Response>;
 /** An in-process host over one database, for Bun and for the Durable Object itself. */
 export function rambleRoute(db: Db, host: Ramble): RambleRoute {
 	return async (request, actor) => {
-		const { snapshot } = await loadSpace(db, actor.id);
-		return rambleSocket(request, host, pgRambleUsage(db, actor.id), snapshot, Date.now());
+		const space = async () => {
+			const [tree, timeZone] = await Promise.all([loadTree(db, actor.id), storedTimeZone(db, actor.id)]);
+			return { tree, timeZone };
+		};
+		return rambleSocket(request, host, pgRambleUsage(db, actor.id), space, Date.now());
 	};
 }

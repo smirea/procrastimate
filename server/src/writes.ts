@@ -1,44 +1,51 @@
-import { and, eq, getTableColumns, inArray, sql } from 'drizzle-orm';
+import { and, eq, getTableColumns, inArray, sql, type SQL } from 'drizzle-orm';
 import type { PgColumn, PgTable } from 'drizzle-orm/pg-core';
 import type { Actor } from '../../shared/auth';
-import { ENTITY_TABLES, log, people, taskClients } from '../../shared/db/schema';
-import { fixups } from '../../shared/fixups';
-import { KINDS, type FieldsByKind, type Kind, type Snapshot } from '../../shared/model';
-import { applyWrite, coalesce, rowWrites, sameValue, TABLE_OF, type RowWrite } from '../../shared/rows';
-import { admit } from '../../shared/scope';
+import { comments, ENTITY_TABLES, log, tasks } from '../../shared/db/schema';
+import type { FieldsByKind, Kind } from '../../shared/model';
+import { coalesce, TABLE_OF, type RowWrite } from '../../shared/rows';
 import type { Fields } from '../../shared/snapshot';
-import { SERVER_ACTOR, type Client, type ClientStamp } from '../../shared/values';
-import { syncAccess } from './access';
+import { guestRefusal, type GuestRows, type StoredComment } from '../../shared/scope';
+import type { Client } from '../../shared/values';
+import { guestRows, recomputeAccess, touchesAccess } from './access';
 import type { Db } from './db/postgres';
-import { sweepImages } from './images';
-import { replan } from './push';
-import { accessOf, withSpaceLocked, type Space } from './space';
+import { replan, touchesPush } from './push';
 
 /**
- * The one way rows change: `applyWrites` takes an actor's row writes and applies them to the spaces they name in
- * one transaction. The upload route and the agent commands both end here. Per space it takes an advisory lock,
- * loads the snapshot, admits a guest's writes with `admit`, stamps authorship, applies the writes in memory, runs
- * `fixups` and turns the repairs into the server's own writes, then writes the rows, the log, the task clients, the
- * people row, the `access` table, and the push plan.
+ * The one way rows change. Every write is one single-row statement with the ownership check and the authorship
+ * stamps inside it, so it needs no transaction, no lock, and no read of the space: Postgres makes the row atomic, and
+ * every write converges when replayed (a put upserts, a patch sets values, a delete removes), so PowerSync resending
+ * a batch is harmless. A batch's statements run without waiting on each other. Afterwards one `log` insert records
+ * the writes that changed a row, and the `access` rows and the push plan are recomputed only when a write touched
+ * what they derive from.
  */
 
-export type Write = RowWrite & { opId?: string };
+export type Write = RowWrite & { opId: string };
 /** A write with the space it names: a `put` carries its `user_id`; a `patch` or `delete` learns it from the row. */
 export type OwnedWrite = Write & { owner: string | null };
 export type Rejected = { table: string; id: string; reason: string };
 export type WriteContext = { actor: Actor; client: Client; now: number };
-export type Applied = { rejected: Rejected[]; spaces: Map<string, Snapshot> };
+export type Applied = { rejected: Rejected[] };
 
-/** The tables whose rows are keyed by `(user_id, id)`; the rest by `id` alone. */
+/**
+ * The actor's standing in one space, which the agent API decides from the loaded space before it writes: the owner,
+ * an AI manager with the owner's rights, or a guest whose writes are checked against their `access` rows, with
+ * `comment` answering what the server holds for a comment they write to.
+ */
+export type Authority =
+	| { role: 'owner' }
+	| { role: 'manager' }
+	| { role: 'guest'; rows: GuestRows; comment: (id: string) => StoredComment | undefined };
+
+const OTHER_SPACE = 'Belongs to another space';
+const DB_REFUSED = 'The database refused the write';
+const authorOnly = (op: RowWrite['op']) =>
+	op === 'delete' ? 'Only the author can delete a comment' : 'Only the author can edit a comment';
+
+/** The tables whose rows are keyed by `(user_id, id)` and always the actor's own; the rest are keyed by `id` alone. */
 const PER_USER: ReadonlySet<Kind> = new Set<Kind>(['read', 'settings']);
 
-type Keyed = { table: PgTable; columns: Record<string, PgColumn>; key: PgColumn[] };
-
-function keyed(kind: Kind): Keyed {
-	const table: PgTable = ENTITY_TABLES[kind];
-	const columns = getTableColumns(table) as Record<string, PgColumn>;
-	return { table, columns, key: PER_USER.has(kind) ? [columns.userId!, columns.id!] : [columns.id!] };
-}
+const columnsOf = (kind: Kind) => getTableColumns(ENTITY_TABLES[kind] as PgTable) as Record<string, PgColumn>;
 
 const rowKey = (write: Pick<RowWrite, 'kind' | 'id'>) => `${write.kind}:${write.id}`;
 const reject = (write: Pick<RowWrite, 'kind' | 'id'>, reason: string): Rejected => ({
@@ -47,273 +54,341 @@ const reject = (write: Pick<RowWrite, 'kind' | 'id'>, reason: string): Rejected 
 	reason,
 });
 
-/** Who owns each stored row the writes name, one query per table. Per-user rows are the actor's or nobody's. */
-async function storedOwners(db: Db, actor: string, writes: readonly OwnedWrite[]): Promise<Map<string, string>> {
-	const found = new Map<string, string>();
-	const byKind = Map.groupBy(writes, write => write.kind);
-	await Promise.all(
-		[...byKind].map(async ([kind, group]) => {
-			const { table, columns } = keyed(kind);
-			const ids = [...new Set(group.map(write => write.id))];
-			const where = PER_USER.has(kind)
-				? and(eq(columns.userId!, actor), inArray(columns.id!, ids))
-				: inArray(columns.id!, ids);
-			const rows = await db.select({ id: columns.id!, userId: columns.userId! }).from(table).where(where);
-			for (const row of rows) found.set(`${kind}:${row.id}`, row.userId as string);
-		}),
+/** `excluded.<column>` for each named field, which an upsert's update reads from the row it tried to insert. */
+function excluded(columns: Record<string, PgColumn>, names: readonly string[]): Record<string, SQL> {
+	return Object.fromEntries(
+		names.filter(name => columns[name]).map(name => [name, sql`excluded.${sql.identifier(columns[name]!.name)}`]),
 	);
-	return found;
 }
 
 type TaskFields = Partial<FieldsByKind['task']>;
 type CommentFields = Partial<FieldsByKind['comment']>;
 
 /**
- * The server's authorship stamps, which overwrite whatever a client sent. A task's `createdBy` is set when it first
- * appears and kept after; `completedBy` follows `completedAt`, a recurring roll included through `lastCompletedAt`,
- * and clears when the task reopens. A comment's `authorId` is whoever sent it, and only the author changes it after.
+ * `completed_by` follows `completed_at`, a recurring roll included through `last_completed_at`: the actor when either
+ * moves, null when `completed_at` clears, and otherwise what the row holds. `completedAt` and `lastCompletedAt` are
+ * the new values as SQL (`excluded.*` in an upsert, the parameter in a patch), present when the write sets them.
  */
-function stamp(snapshot: Snapshot, write: Write, actor: string): { write: Write } | { rejected: Rejected } {
-	if (write.op === 'delete') {
-		if (write.kind !== 'comment') return { write };
-		const existing = snapshot.comments.find(comment => comment.id === write.id);
-		return existing && existing.authorId !== actor
-			? { rejected: reject(write, 'Only the author can delete a comment') }
-			: { write };
+function completedBy(actor: string, completedAt: { value: SQL; cleared: SQL } | null, lastCompletedAt: SQL | null) {
+	const cases: SQL[] = [];
+	if (completedAt) {
+		cases.push(
+			sql`WHEN ${tasks.completedAt} IS DISTINCT FROM ${completedAt.value} THEN CASE WHEN ${completedAt.cleared} THEN NULL ELSE ${actor} END`,
+		);
 	}
+	if (lastCompletedAt) cases.push(sql`WHEN ${tasks.lastCompletedAt} IS DISTINCT FROM ${lastCompletedAt} THEN ${actor}`);
+	return sql`CASE ${sql.join(cases, sql` `)} ELSE ${tasks.completedBy} END`;
+}
+
+type Outcome = 'changed' | 'unchanged' | 'refused';
+
+/**
+ * One row, one statement, in `owner`'s space. A put inserts with the stamps and otherwise updates the row only while
+ * it is in that space; a patch or a delete names the space in its `WHERE`. A comment's author is stamped on insert,
+ * and its edits and deletes only ever match the author's own row. Answers whether a row changed, or `refused` for a
+ * data or integrity error (SQLSTATE 22xxx or 23xxx), which is the client's data's fault.
+ */
+async function writeRow(db: Db, owner: string, actor: string, write: Write): Promise<Outcome> {
+	try {
+		return (await statement(db, owner, actor, write)) ? 'changed' : 'unchanged';
+	} catch (error) {
+		if (refusedByDatabase(error)) return 'refused';
+		throw error;
+	}
+}
+
+async function statement(db: Db, owner: string, actor: string, write: Write): Promise<boolean> {
+	const table: PgTable = ENTITY_TABLES[write.kind];
+	const columns = columnsOf(write.kind);
+	const own = PER_USER.has(write.kind)
+		? and(eq(columns.userId!, actor), eq(columns.id!, write.id))
+		: and(eq(columns.userId!, owner), eq(columns.id!, write.id));
+	const returning = { id: columns.id! };
+
+	if (write.op === 'delete') {
+		const where = write.kind === 'comment' ? and(own, eq(comments.authorId, actor)) : own;
+		return (await db.delete(table).where(where).returning(returning)).length > 0;
+	}
+
 	if (write.kind === 'task') {
 		const { createdBy: _, completedBy: __, ...fields } = write.values as TaskFields;
-		const prev = snapshot.tasks.find(task => task.id === write.id);
-		const values: TaskFields = { ...fields };
-		if (!prev) values.createdBy = actor;
-		else if (write.op === 'put') values.createdBy = prev.createdBy ?? null;
-		const completedChanged =
-			fields.completedAt !== undefined && !sameValue(prev?.completedAt ?? null, fields.completedAt);
-		const rolled =
-			fields.lastCompletedAt !== undefined && !sameValue(prev?.lastCompletedAt ?? null, fields.lastCompletedAt);
-		if (completedChanged) values.completedBy = fields.completedAt === null ? null : actor;
-		else if (rolled) values.completedBy = actor;
-		else if (write.op === 'put') values.completedBy = prev?.completedBy ?? null;
-		return { write: { ...write, values: values as Fields } };
+		const names = Object.keys(fields);
+		if (write.op === 'put') {
+			const completed = (fields.completedAt ?? null) !== null || (fields.lastCompletedAt ?? null) !== null;
+			const rows = await db
+				.insert(tasks)
+				.values({
+					...(fields as typeof tasks.$inferInsert),
+					id: write.id,
+					userId: owner,
+					createdBy: actor,
+					completedBy: completed ? actor : null,
+				})
+				.onConflictDoUpdate({
+					target: tasks.id,
+					set: {
+						...excluded(columns, names),
+						completedBy: completedBy(
+							actor,
+							{ value: sql`excluded.completed_at`, cleared: sql`excluded.completed_at IS NULL` },
+							sql`excluded.last_completed_at`,
+						),
+					},
+					setWhere: eq(tasks.userId, sql`excluded.user_id`),
+				})
+				.returning(returning);
+			return rows.length > 0;
+		}
+		if (!names.length) return false;
+		const stamps =
+			'completedAt' in fields || 'lastCompletedAt' in fields
+				? {
+						completedBy: completedBy(
+							actor,
+							'completedAt' in fields
+								? { value: sql`${fields.completedAt}`, cleared: sql`${fields.completedAt === null}` }
+								: null,
+							'lastCompletedAt' in fields ? sql`${fields.lastCompletedAt}` : null,
+						),
+					}
+				: {};
+		return (
+			(
+				await db
+					.update(tasks)
+					.set({ ...fields, ...stamps })
+					.where(own)
+					.returning(returning)
+			).length > 0
+		);
 	}
+
 	if (write.kind === 'comment') {
 		const { authorId: _, taskId, createdAt, ...fields } = write.values as CommentFields;
-		const prev = snapshot.comments.find(comment => comment.id === write.id);
-		if (!prev) {
-			if (write.op === 'patch') return { write };
-			return { write: { ...write, values: { ...fields, taskId, createdAt, authorId: actor } as Fields } };
+		if (write.op === 'put') {
+			const rows = await db
+				.insert(comments)
+				.values({
+					...(fields as typeof comments.$inferInsert),
+					taskId: taskId!,
+					createdAt: createdAt!,
+					id: write.id,
+					userId: owner,
+					authorId: actor,
+				})
+				.onConflictDoUpdate({
+					target: comments.id,
+					set: excluded(columns, Object.keys(fields)),
+					setWhere: and(eq(comments.userId, sql`excluded.user_id`), eq(comments.authorId, actor)),
+				})
+				.returning(returning);
+			return rows.length > 0;
 		}
-		if (prev.authorId !== actor) return { rejected: reject(write, 'Only the author can edit a comment') };
-		const values: CommentFields =
-			write.op === 'put' ? { ...fields, taskId: prev.taskId, createdAt: prev.createdAt, authorId: actor } : fields;
-		return { write: { ...write, values: values as Fields } };
+		if (!Object.keys(fields).length) return false;
+		const where = and(own, eq(comments.authorId, actor));
+		return (await db.update(comments).set(fields).where(where).returning(returning)).length > 0;
 	}
-	return { write };
+
+	const values = write.values ?? {};
+	if (write.op === 'put') {
+		const row = { ...values, id: write.id, userId: PER_USER.has(write.kind) ? actor : owner };
+		const insert = db.insert(table).values(row);
+		const upsert =
+			write.kind === 'settings'
+				? insert.onConflictDoNothing()
+				: PER_USER.has(write.kind)
+					? insert.onConflictDoUpdate({
+							target: [columns.userId!, columns.id!],
+							set: excluded(columns, Object.keys(values)),
+						})
+					: insert.onConflictDoUpdate({
+							target: columns.id!,
+							set: excluded(columns, Object.keys(values)),
+							setWhere: eq(columns.userId!, sql`excluded.user_id`),
+						});
+		return (await upsert.returning(returning)).length > 0;
+	}
+	if (!Object.keys(values).length) return false;
+	return (await db.update(table).set(values).where(own).returning(returning)).length > 0;
 }
 
-/** `changedTasks` are the tasks the admitted writes changed: a replay or a patch to a missing row changes nothing. */
-type Outcome = {
-	admitted: Write[];
-	repairs: RowWrite[];
-	rejected: Rejected[];
-	fixed: Snapshot;
-	changedTasks: string[];
-};
+type Stored = { userId: string } & Partial<StoredComment>;
 
-/** The pure half: which writes land in the space, what the server repairs after them, and the snapshot that results. */
-export function planSpace(space: Space, actor: Actor, writes: readonly Write[]): Outcome {
-	const access = accessOf(space, actor);
-	if (!access) {
-		return {
-			admitted: [],
-			repairs: [],
-			fixed: space.snapshot,
-			rejected: writes.map(w => reject(w, 'Not shared with you')),
-			changedTasks: [],
-		};
-	}
+/** The stored row behind each write, for the writes whose first statement changed nothing: one select per table. */
+async function storedRows(db: Db, writes: readonly Write[]): Promise<Map<string, Stored>> {
+	const found = new Map<string, Stored>();
+	await Promise.all(
+		[...Map.groupBy(writes, write => write.kind)].map(async ([kind, group]) => {
+			const ids = [...new Set(group.map(write => write.id))];
+			if (kind === 'comment') {
+				const rows = await db
+					.select({ id: comments.id, userId: comments.userId, taskId: comments.taskId, authorId: comments.authorId })
+					.from(comments)
+					.where(inArray(comments.id, ids));
+				for (const { id, ...rest } of rows) found.set(`${kind}:${id}`, rest);
+				return;
+			}
+			const columns = columnsOf(kind);
+			const rows = await db
+				.select({ id: columns.id!, userId: columns.userId! })
+				.from(ENTITY_TABLES[kind] as PgTable)
+				.where(inArray(columns.id!, ids));
+			for (const row of rows) found.set(`${kind}:${row.id as string}`, { userId: row.userId as string });
+		}),
+	);
+	return found;
+}
+
+type Landed = { owner: string; write: Write };
+
+/** Runs one write in a space and files the outcome, with `missing` for a put that found its row elsewhere. */
+async function land(
+	db: Db,
+	owner: string,
+	actor: string,
+	write: Write,
+	landed: Landed[],
+	rejected: Rejected[],
+	missing: (write: Write) => void,
+): Promise<void> {
+	const outcome = await writeRow(db, owner, actor, write);
+	if (outcome === 'refused') rejected.push(reject(write, DB_REFUSED));
+	else if (outcome === 'changed') landed.push({ owner, write });
+	else missing(write);
+}
+
+/**
+ * The upload route's writes, to whichever spaces they name. A write to the actor's own space runs at once. A put
+ * that then changed nothing names a row stored in another space. A patch or a delete that changed nothing is looked
+ * up: gone, which is how a delete beats an edit that arrives after it, or stored in another space, which makes it a
+ * guest's write. A guest's writes are checked against the guest's `access` rows in that space, one query per space.
+ */
+export async function applyWrites(db: Db, ctx: WriteContext, writes: readonly OwnedWrite[]): Promise<Applied> {
+	const actor = ctx.actor.id;
 	const rejected: Rejected[] = [];
-	let candidates: Write[] = [...writes];
-	if (access.role === 'guest') {
-		const opIds = new Map(writes.map(write => [rowKey(write), write.opId]));
-		const { admitted, refused } = admit(space.snapshot, access.shares, writes, actor.id);
-		rejected.push(...refused.map(write => reject(write, 'Not editable in this share')));
-		candidates = admitted.map(write => ({ ...write, opId: opIds.get(rowKey(write)) }));
+	const landed: Landed[] = [];
+	const unresolved: Write[] = [];
+	const foreign: (Write & { owner: string; stored?: StoredComment })[] = [];
+
+	await Promise.all(
+		coalesce(writes).map(({ owner, ...write }) => {
+			if (write.op === 'put' && !PER_USER.has(write.kind) && owner !== actor) {
+				foreign.push({ ...write, owner: owner! });
+				return;
+			}
+			return land(db, actor, actor, write, landed, rejected, missed => {
+				// A settings put that found the row changed nothing on purpose; a comment put may have met another's row.
+				if (missed.op !== 'put' || missed.kind === 'comment') unresolved.push(missed);
+				else if (!PER_USER.has(missed.kind)) rejected.push(reject(missed, OTHER_SPACE));
+			});
+		}),
+	);
+
+	const stored = await storedRows(
+		db,
+		unresolved.filter(write => !PER_USER.has(write.kind)),
+	);
+	for (const write of unresolved) {
+		const row = stored.get(rowKey(write));
+		if (!row) continue;
+		if (row.userId === actor) rejected.push(reject(write, authorOnly(write.op)));
+		else
+			foreign.push({
+				...write,
+				owner: row.userId,
+				stored: row.taskId ? { taskId: row.taskId, authorId: row.authorId ?? null } : undefined,
+			});
 	}
-	const admitted: Write[] = [];
-	let after = space.snapshot;
-	for (const candidate of candidates) {
-		// Settings exist from sign-up and clients patch them; a put only ever fills in a missing row.
-		if (candidate.kind === 'settings' && candidate.op === 'put' && space.settingsStored) continue;
-		const result = stamp(after, candidate, actor.id);
-		if ('rejected' in result) {
-			rejected.push(result.rejected);
+
+	for (const [owner, group] of Map.groupBy(foreign, write => write.owner)) {
+		const rows = await guestRows(db, actor, owner);
+		if (!rows.length) {
+			rejected.push(...group.map(write => reject(write, 'Not shared with you')));
 			continue;
 		}
-		admitted.push(result.write);
-		after = applyWrite(after, result.write);
+		await Promise.all(
+			group.map(entry => {
+				const { owner: space, stored, ...write } = entry;
+				const reason = guestRefusal(rows, write, actor, stored);
+				if (reason) return rejected.push(reject(write, reason));
+				return land(db, space, actor, write, landed, rejected, missedPut(rejected));
+			}),
+		);
 	}
-	const fixed = fixups(after);
-	const changedTasks = rowWrites(space.snapshot, after)
-		.filter(write => write.kind === 'task')
-		.map(write => write.id);
-	return { admitted, repairs: rowWrites(after, fixed), rejected, fixed, changedTasks };
+
+	await finish(db, ctx, landed);
+	return { rejected };
 }
 
-/** Writes rows for one space, batched: one upsert per table for the puts, one delete per table, a patch per row. */
-async function writeRows(db: Db, owner: string, writes: readonly RowWrite[]): Promise<void> {
-	const byKind = Map.groupBy(coalesce(writes), write => write.kind);
-	for (const kind of KINDS) {
-		const group = byKind.get(kind);
-		if (!group) continue;
-		const { table, columns, key } = keyed(kind);
-		const own = eq(columns.userId!, owner);
-		const puts = group.filter(write => write.op === 'put');
-		if (puts.length) {
-			const names = new Set(puts.flatMap(write => Object.keys(write.values ?? {})));
-			const set = Object.fromEntries(
-				[...names]
-					.filter(name => columns[name])
-					.map(name => [name, sql`excluded.${sql.identifier(columns[name]!.name)}`]),
-			);
-			await db
-				.insert(table)
-				.values(puts.map(write => ({ id: write.id, userId: owner, ...write.values })))
-				.onConflictDoUpdate({ target: key, set });
-		}
-		for (const write of group) {
-			if (write.op !== 'patch' || !Object.keys(write.values ?? {}).length) continue;
-			await db
-				.update(table)
-				.set(write.values!)
-				.where(and(own, eq(columns.id!, write.id)));
-		}
-		const deleted = group.filter(write => write.op === 'delete').map(write => write.id);
-		if (deleted.length) await db.delete(table).where(and(own, inArray(columns.id!, deleted)));
-	}
+/** A put into a known space that changed nothing met a row it may not rewrite; a patch or delete met none. */
+const missedPut = (rejected: Rejected[]) => (missed: Write) => {
+	if (missed.op !== 'put' || PER_USER.has(missed.kind)) return;
+	rejected.push(reject(missed, missed.kind === 'comment' ? authorOnly('put') : OTHER_SPACE));
+};
+
+/**
+ * The agent API's writes to one space, whose authority the caller decided from the loaded space. A write that
+ * changed nothing names a row that is gone, or a comment that is not the actor's, which the agent rules already
+ * refused in memory.
+ */
+export async function applyAs(
+	db: Db,
+	ctx: WriteContext,
+	owner: string,
+	authority: Authority,
+	writes: readonly Write[],
+): Promise<Applied> {
+	const actor = ctx.actor.id;
+	const rejected: Rejected[] = [];
+	const landed: Landed[] = [];
+	await Promise.all(
+		coalesce(writes).map(write => {
+			if (authority.role === 'guest' && !PER_USER.has(write.kind)) {
+				const reason = guestRefusal(authority.rows, write, actor, authority.comment(write.id));
+				if (reason) return rejected.push(reject(write, reason));
+			}
+			return land(db, owner, actor, write, landed, rejected, missedPut(rejected));
+		}),
+	);
+	await finish(db, ctx, landed);
+	return { rejected };
 }
 
-const logRow = (owner: string, write: Write, actor: string, at: number): typeof log.$inferInsert => ({
+const logRow = ({ owner, write }: Landed, { actor, client, now }: WriteContext): typeof log.$inferInsert => ({
 	userId: owner,
-	opId: write.opId ?? null,
+	opId: write.opId,
 	kind: write.kind,
 	id: write.id,
 	op: write.op,
-	fields: write.values ?? {},
-	actor,
-	at,
+	fields: (write.values ?? {}) as Fields,
+	actor: actor.id,
+	client,
+	at: now,
 });
 
 /**
- * A task's first write names its `created` app and every write that changed it its `edited` one. The row is written
- * in one upsert that only ever replaces `edited`, so a task's creator app is never overwritten. Fixups are the
- * server's and are not recorded.
+ * One log insert for the writes that changed a row, which a retried batch's op ids make a no-op, then the derived
+ * work each space needs: the `access` rows when a write moved what a guest may see, the push plan when a write moved
+ * when a notification is due.
  */
-async function recordClients(db: Db, owner: string, before: Snapshot, ids: readonly string[], stamp: ClientStamp) {
-	if (!ids.length) return;
-	const existed = new Set(before.tasks.map(task => task.id));
-	await db
-		.insert(taskClients)
-		.values(ids.map(id => ({ userId: owner, id, created: existed.has(id) ? null : stamp, edited: stamp })))
-		.onConflictDoUpdate({ target: [taskClients.userId, taskClients.id], set: { edited: sql`excluded.edited` } });
-}
-
-/** Everyone who acted in a space is remembered there, so activity and share lists can name them. */
-export async function rememberPerson(db: Db, owner: string, actor: Actor, now: number): Promise<void> {
-	await db
-		.insert(people)
-		.values({ userId: owner, id: actor.id, name: actor.name, kind: actor.kind, ownerId: actor.ownerId, seenAt: now })
-		.onConflictDoUpdate({
-			target: [people.userId, people.id],
-			set: { name: actor.name, kind: actor.kind, ownerId: actor.ownerId, seenAt: now },
-		});
-}
-
-async function commitSpace(db: Db, space: Space, ctx: WriteContext, outcome: Outcome): Promise<void> {
-	const { admitted, repairs, fixed, changedTasks } = outcome;
-	const { actor, client, now } = ctx;
-	await writeRows(db, space.owner, admitted);
-	await writeRows(db, space.owner, repairs);
+async function finish(db: Db, ctx: WriteContext, landed: readonly Landed[]): Promise<void> {
+	if (!landed.length) return;
 	await db
 		.insert(log)
-		.values([
-			...admitted.map(write => logRow(space.owner, write, actor.id, now)),
-			...repairs.map(write => logRow(space.owner, write, SERVER_ACTOR, now)),
-		]);
-	await recordClients(db, space.owner, space.snapshot, changedTasks, { ...client, at: now });
-	await rememberPerson(db, space.owner, actor, now);
-	await syncAccess(db, { ...space, snapshot: fixed });
-	await replan(db, space.owner, fixed, now);
-	await sweepImages(db, space.owner, fixed, now);
+		.values(landed.map(entry => logRow(entry, ctx)))
+		.onConflictDoNothing({ target: [log.userId, log.opId] });
+	await Promise.all(
+		[...Map.groupBy(landed, entry => entry.owner)].flatMap(([owner, group]) => {
+			const writes = group.map(entry => entry.write);
+			return [
+				writes.some(touchesAccess) ? recomputeAccess(db, owner) : null,
+				writes.some(touchesPush) ? replan(db, owner, ctx.now) : null,
+			].filter(work => work !== null);
+		}),
+	);
 }
 
-/**
- * One space's writes from the agent API, which decides them from the space it locks: `make` sees the loaded space
- * and the transaction, and answers the writes, or throws to apply nothing. Returns what was refused and the space as
- * it stands after. Reads inside `make` must use the transaction: PGlite has one connection, and a query on another
- * waits for the transaction forever.
- */
-export async function transact(
-	db: Db,
-	owner: string,
-	ctx: WriteContext,
-	make: (space: Space, tx: Db) => Write[] | Promise<Write[]>,
-): Promise<{ space: Space; rejected: Rejected[]; fixed: Snapshot }> {
-	return withSpaceLocked(db, owner, async (tx, space) => {
-		const outcome = planSpace(space, ctx.actor, await make(space, tx));
-		if (outcome.admitted.length) await commitSpace(tx, space, ctx, outcome);
-		return { space, rejected: outcome.rejected, fixed: outcome.fixed };
-	});
-}
-
-/**
- * Applies the actor's writes to the spaces they name. A patch or delete of a row that no longer exists changes
- * nothing, which is how a delete beats an edit that arrives after it. Each space is locked for the transaction, so
- * two uploads to one space apply one after the other and both see the repairs the other made.
- */
-export async function applyWrites(db: Db, ctx: WriteContext, writes: readonly OwnedWrite[]): Promise<Applied> {
-	const rejected: Rejected[] = [];
-	const spaces = new Map<string, Snapshot>();
-	// Folded first, so a put and the patches that follow it in one batch land as one row, not a put and no-ops.
-	const folded = coalesce(writes);
-	await db.transaction(async tx => {
-		const stored = await storedOwners(tx, ctx.actor.id, folded);
-		const bySpace = new Map<string, Write[]>();
-		for (const write of folded) {
-			const current = stored.get(rowKey(write));
-			// Entity tables are keyed by id alone, so a put naming a stored row stays in that row's space whatever it claims.
-			if (write.op === 'put' && current !== undefined && current !== write.owner) {
-				rejected.push(reject(write, 'Belongs to another space'));
-				continue;
-			}
-			const owner = write.op === 'put' ? write.owner : current;
-			if (owner === undefined || owner === null) continue;
-			const { owner: _, ...rest } = write;
-			bySpace.set(owner, [...(bySpace.get(owner) ?? []), rest]);
-		}
-		// Spaces lock in one order, so two uploads touching the same two spaces never deadlock.
-		for (const [owner, group] of [...bySpace].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) {
-			try {
-				await withSpaceLocked(tx, owner, async (savepoint, space) => {
-					const outcome = planSpace(space, ctx.actor, group);
-					if (outcome.admitted.length) await commitSpace(savepoint, space, ctx, outcome);
-					rejected.push(...outcome.rejected);
-					spaces.set(owner, outcome.fixed);
-				});
-			} catch (error) {
-				if (!refusedByDatabase(error)) throw error;
-				rejected.push(...group.map(write => reject(write, 'The database refused the write')));
-			}
-		}
-	});
-	return { rejected, spaces };
-}
-
-/**
- * A data or integrity error (SQLSTATE classes 22 and 23) is the client's data's fault, so the space's writes are
- * rejected and the rest of the batch still lands. Anything else, a lost connection or a deadlock, is the request's
- * failure and PowerSync retries the whole batch. Drizzle wraps the driver's error, which holds the code, as `cause`.
- */
+/** Drizzle wraps the driver's error, which holds the SQLSTATE, as `cause`. */
 function refusedByDatabase(error: unknown): boolean {
 	const wrapped = error as { code?: unknown; cause?: { code?: unknown } } | null;
 	const code = wrapped?.code ?? wrapped?.cause?.code;

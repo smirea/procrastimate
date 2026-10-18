@@ -1,12 +1,13 @@
-import { and, asc, eq, or, sql } from 'drizzle-orm';
-import { log, people } from '../../shared/db/schema';
+import { and, asc, eq, inArray, or, sql } from 'drizzle-orm';
+import type { PgColumn } from 'drizzle-orm/pg-core';
+import { labels, log, projects, tasks } from '../../shared/db/schema';
 import { formatRecurrence, formatTime, shortDate } from '../../shared/format';
-import type { Snapshot, Task } from '../../shared/model';
+import type { Task } from '../../shared/model';
 import { sameValue } from '../../shared/rows';
-import type { ActivityAction, ActivityEntry, Person } from '../../shared/sharing';
+import type { ActivityAction, ActivityEntry } from '../../shared/sharing';
 import { SERVER_ACTOR, type DateKey } from '../../shared/values';
-import { unknownPerson } from './commands';
 import type { Db } from './db/postgres';
+import { peopleById, unknownPerson } from './people';
 
 /**
  * One task's history, read off the log rather than kept in a table of its own. The log has a row per applied write,
@@ -87,16 +88,11 @@ async function rowsOn(db: Db, owner: string, taskId: string): Promise<LogRow[]> 
 
 export function foldActivity(rows: readonly LogRow[]): Draft[] {
 	const drafts: Draft[] = [];
-	const seen = new Set<string>();
 	const commented = new Set<string>();
 	let data: Fields = {};
 	let live = false;
 	let everLive = false;
 	for (const row of rows) {
-		if (row.opId !== null) {
-			if (seen.has(row.opId)) continue;
-			seen.add(row.opId);
-		}
 		const fields = row.fields;
 		if (row.kind === 'comment') {
 			// Undoing a comment's delete makes it appear again, which is not a new comment.
@@ -156,35 +152,47 @@ export function foldActivity(rows: readonly LogRow[]): Draft[] {
 	return drafts;
 }
 
-export async function taskActivity(
-	db: Db,
-	owner: string,
-	snapshot: Snapshot,
-	taskId: string,
-): Promise<ActivityEntry[]> {
-	const [rows, known] = await Promise.all([
-		rowsOn(db, owner, taskId),
-		db.select().from(people).where(eq(people.userId, owner)),
+/** The tasks, projects, and labels the summaries name, read by id once the drafts say which. */
+async function namesFor(db: Db, owner: string, drafts: readonly Draft[]): Promise<NameOf> {
+	const wanted = { task: new Set<string>(), project: new Set<string>(), label: new Set<string>() };
+	for (const { action, before, after } of drafts) {
+		if (action !== 'edited') continue;
+		if (typeof after.projectId === 'string') wanted.project.add(after.projectId);
+		if (typeof after.parentId === 'string') wanted.task.add(after.parentId);
+		for (const id of [before.labelIds, after.labelIds].flat()) if (typeof id === 'string') wanted.label.add(id);
+	}
+	const own = <T extends { userId: PgColumn; id: PgColumn }>(table: T, ids: Set<string>) =>
+		and(eq(table.userId, owner), inArray(table.id, [...ids]));
+	const [taskNames, projectNames, labelNames] = await Promise.all([
+		wanted.task.size ? db.select({ id: tasks.id, name: tasks.title }).from(tasks).where(own(tasks, wanted.task)) : [],
+		wanted.project.size
+			? db.select({ id: projects.id, name: projects.name }).from(projects).where(own(projects, wanted.project))
+			: [],
+		wanted.label.size
+			? db.select({ id: labels.id, name: labels.name }).from(labels).where(own(labels, wanted.label))
+			: [],
 	]);
-	const drafts = foldActivity(rows);
-	const byId = new Map(known.map(row => [row.id, row]));
-	const nameOf: NameOf = (kind, id) => {
-		switch (kind) {
-			case 'task':
-				return snapshot.tasks.find(task => task.id === id)?.title ?? null;
-			case 'project':
-				return snapshot.projects.find(project => project.id === id)?.name ?? null;
-			case 'label':
-				return snapshot.labels.find(label => label.id === id)?.name ?? null;
-		}
+	const byKind = {
+		task: new Map(taskNames.map(row => [row.id, row.name])),
+		project: new Map(projectNames.map(row => [row.id, row.name])),
+		label: new Map(labelNames.map(row => [row.id, row.name])),
 	};
+	return (kind, id) => byKind[kind].get(id) ?? null;
+}
+
+export async function taskActivity(db: Db, owner: string, taskId: string): Promise<ActivityEntry[]> {
+	const drafts = foldActivity(await rowsOn(db, owner, taskId));
+	const [people, nameOf] = await Promise.all([
+		peopleById(
+			db,
+			drafts.map(draft => draft.actor),
+		),
+		namesFor(db, owner, drafts),
+	]);
 	return drafts.flatMap(draft => {
 		const summary = summarize(draft, nameOf);
 		if (!summary) return [];
-		const person = byId.get(draft.actor);
-		const actor: Person = person
-			? { id: person.id, name: person.name, kind: person.kind, ownerId: person.ownerId }
-			: unknownPerson(draft.actor);
+		const actor = people.get(draft.actor) ?? unknownPerson(draft.actor);
 		return [{ at: draft.at, actor, action: draft.action, summary }];
 	});
 }

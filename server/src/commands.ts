@@ -1,13 +1,22 @@
 import { ORPCError } from '@orpc/server';
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray } from 'drizzle-orm';
 import type { Actor } from '../../shared/auth';
 import { addComment, commentsOn, deleteComment, editComment } from '../../shared/comments';
-import { people, taskClients } from '../../shared/db/schema';
+import { comments as commentTable, log, tasks as taskTable } from '../../shared/db/schema';
 import { newId } from '../../shared/id';
-import type { Comment, Label, Project, Section, Snapshot, Task } from '../../shared/model';
+import type { Entities } from '../../shared/dangling';
+import {
+	DEFAULT_SETTINGS,
+	type Comment,
+	type Label,
+	type Project,
+	type Section,
+	type Snapshot,
+	type Task,
+} from '../../shared/model';
 import { parseQuickAdd } from '../../shared/quick-add';
 import { rowWrites } from '../../shared/rows';
-import { filterSnapshot, managesSpace, scopeOf, type Grant } from '../../shared/scope';
+import { filterTree, managesSpace, scopeOf } from '../../shared/scope';
 import type {
 	AgentNewTask,
 	AgentTask,
@@ -15,7 +24,6 @@ import type {
 	NewComment,
 	NewLabel,
 	NewSection,
-	Person,
 	ProjectEdit,
 	SectionEdit,
 	SpaceView,
@@ -47,40 +55,36 @@ import {
 	type TaskPatch,
 } from '../../shared/store';
 import { applyPickedLabels, isSavedPlace } from '../../shared/triggers';
-import type { Client } from '../../shared/values';
+import type { Client, ClientStamp } from '../../shared/values';
 import { wallDate, zonedDateKey } from '../../shared/zoned-time';
+import { guestRows } from './access';
 import type { Access } from './auth';
 import type { Db } from './db/postgres';
+import { peopleById, personOf, unknownPerson } from './people';
 import { zoneOf } from './push';
-import { accessOf, loadSpace, type Space } from './space';
-import { transact, type Write } from './writes';
+import { accessIn, entity, loadTree, seesTask, sightOf, storedTimeZone } from './space';
+import { applyAs, type Authority, type Write } from './writes';
 
 /**
  * The agent command API: the store's rules run on the server over the space's snapshot, the before and after are
- * diffed into row writes, and those go through `transact`, the same admission, stamps, and repairs a client's upload
- * meets. `memo-tasks.ts` is the same shape for Notouroboros.
+ * diffed into row writes, and those go through `applyAs`, the same single-statement writes a client's upload meets,
+ * with the caller's standing in the space decided here from the caller's own grants. `memo-tasks.ts` writes the same
+ * way for Notouroboros.
  */
 
 export type Command = { db: Db; owner: string; actor: Actor; client: Client; now: number };
 
 /** The owner, or a guest the space is shared with. Anyone else is turned away before reading anything. */
-export function requireAccess(space: Space, actor: Actor): Access {
-	const access = accessOf(space, actor);
+export async function requireAccess(db: Db, owner: string, actor: Actor): Promise<Access> {
+	const access = await accessIn(db, owner, actor);
 	if (!access) throw new ORPCError('FORBIDDEN', { message: 'Not shared with you' });
 	return access;
 }
 
-export function guestView(snapshot: Snapshot, grants: readonly Grant[]) {
-	const scope = scopeOf(snapshot, grants);
-	const filtered = filterSnapshot(snapshot, scope);
-	const readOnly = filtered.tasks.filter(task => !scope.editable.has(task.id)).map(task => task.id);
-	return { scope, filtered, readOnly };
-}
-
-function visibleOf(snapshot: Snapshot, access: Access) {
-	const { filtered, readOnly } =
-		access.role === 'owner' ? { filtered: snapshot, readOnly: [] } : guestView(snapshot, access.shares);
-	const { tasks, projects, sections, labels } = filtered;
+function visibleOf(tree: Entities, access: Access) {
+	const scope = access.role === 'owner' ? null : scopeOf(tree, access.shares);
+	const { tasks, projects, sections, labels } = scope ? filterTree(tree, scope) : tree;
+	const readOnly = scope ? tasks.filter(task => !scope.editable.has(task.id)).map(task => task.id) : [];
 	return { tasks, projects, sections, labels, readOnly };
 }
 
@@ -88,58 +92,93 @@ type Visible = ReturnType<typeof visibleOf>;
 
 const NO_CLIENTS: TaskClients = { created: null, edited: null };
 
+/**
+ * The app behind a task's first write and its latest, read off the log: the first row is its creation, the newest
+ * its last change. A row from before the server recorded apps reads `null`.
+ */
 async function withClients(db: Db, owner: string, tasks: readonly Task[]): Promise<AgentTask[]> {
 	if (!tasks.length) return [];
-	const rows = await db
-		.select()
-		.from(taskClients)
-		.where(
-			and(
-				eq(taskClients.userId, owner),
-				inArray(
-					taskClients.id,
-					tasks.map(task => task.id),
-				),
-			),
-		);
-	const byId = new Map(rows.map(row => [row.id, { created: row.created, edited: row.edited }]));
-	return tasks.map(task => ({ ...task, clients: byId.get(task.id) ?? NO_CLIENTS }));
-}
-
-export function unknownPerson(id: string): Person {
-	return { id, name: '', kind: 'human', ownerId: null };
-}
-
-export async function personOf(db: Db, owner: string, id: string): Promise<Person> {
-	const [row] = await db
-		.select()
-		.from(people)
-		.where(and(eq(people.userId, owner), eq(people.id, id)));
-	return row ? { id: row.id, name: row.name, kind: row.kind, ownerId: row.ownerId } : unknownPerson(id);
+	const ids = tasks.map(task => task.id);
+	const on = and(eq(log.userId, owner), eq(log.kind, 'task'), inArray(log.id, ids));
+	const stamp = (row: { client: Client | null; at: number }): ClientStamp | null =>
+		row.client ? { ...row.client, at: row.at } : null;
+	const [first, latest] = await Promise.all([
+		db
+			.selectDistinctOn([log.id], { id: log.id, client: log.client, at: log.at })
+			.from(log)
+			.where(on)
+			.orderBy(log.id, asc(log.seq)),
+		db
+			.selectDistinctOn([log.id], { id: log.id, client: log.client, at: log.at })
+			.from(log)
+			.where(on)
+			.orderBy(log.id, desc(log.seq)),
+	]);
+	const created = new Map(first.map(row => [row.id, stamp(row)]));
+	const edited = new Map(latest.map(row => [row.id, stamp(row)]));
+	return tasks.map(task => ({
+		...task,
+		clients: created.has(task.id) ? { created: created.get(task.id)!, edited: edited.get(task.id)! } : NO_CLIENTS,
+	}));
 }
 
 export async function view({ db, owner, actor }: Command): Promise<SpaceView> {
-	const space = await loadSpace(db, owner);
-	const visible = visibleOf(space.snapshot, requireAccess(space, actor));
+	const access = await requireAccess(db, owner, actor);
+	const visible = visibleOf(await loadTree(db, owner), access);
 	return { ...visible, tasks: await withClients(db, owner, visible.tasks) };
 }
 
-/** A guest's write outside their share is refused. */
+/** The caller's standing for `applyAs`: a human guest's writes are checked against their `access` rows. */
+async function authorityOf(
+	db: Db,
+	owner: string,
+	actor: Actor,
+	access: Access,
+	comments: Comment[],
+): Promise<Authority> {
+	if (access.role === 'owner') return { role: 'owner' };
+	if (managesSpace(access.shares)) return { role: 'manager' };
+	const rows = await guestRows(db, actor.id, owner);
+	return { role: 'guest', rows, comment: id => comments.find(comment => comment.id === id) };
+}
+
+/**
+ * The rows a store rule reads: the tree, the one comment a comment command names, and the time zone. No agent
+ * command changes read markers or settings, so neither is loaded and the diff writes neither.
+ */
+async function loadSnapshot(db: Db, owner: string, comment: string | undefined) {
+	const [tree, commentRows, timeZone] = await Promise.all([
+		loadTree(db, owner),
+		comment
+			? db
+					.select()
+					.from(commentTable)
+					.where(and(eq(commentTable.userId, owner), eq(commentTable.id, comment)))
+			: Promise.resolve<(typeof commentTable.$inferSelect)[]>([]),
+		storedTimeZone(db, owner),
+	]);
+	const snapshot: Snapshot = { ...tree, comments: commentRows.map(entity), reads: [], settings: DEFAULT_SETTINGS };
+	return { snapshot, zone: zoneOf(timeZone) };
+}
+
+/** A guest's write outside their share is refused. `comment` names the stored comment the change reads, if any. */
 async function run(
 	command: Command,
 	change: (data: StoreData, visible: Visible, zone: string, access: Access) => StoreData,
+	comment?: string,
 ): Promise<Snapshot> {
 	const { db, owner, actor, client, now } = command;
-	const { rejected, fixed } = await transact(db, owner, { actor, client, now }, space => {
-		const access = requireAccess(space, actor);
-		const { snapshot } = space;
-		const visible = visibleOf(snapshot, access);
-		const { settings: _, ...data } = snapshot;
-		const next = change(data, visible, zoneOf(snapshot), access);
-		return rowWrites(snapshot, { ...snapshot, ...next }) as Write[];
-	});
-	if (rejected.length) throw new ORPCError('FORBIDDEN', { message: 'Not editable in this share' });
-	return fixed;
+	const access = await requireAccess(db, owner, actor);
+	const { snapshot, zone } = await loadSnapshot(db, owner, comment);
+	const visible = visibleOf(snapshot, access);
+	const { settings: _, ...data } = snapshot;
+	const after = { ...snapshot, ...change(data, visible, zone, access) };
+	const writes: Write[] = rowWrites(snapshot, after).map(write => ({ ...write, opId: newId() }));
+	if (!writes.length) return after;
+	const authority = await authorityOf(db, owner, actor, access, snapshot.comments);
+	const { rejected } = await applyAs(db, { actor, client, now }, owner, authority, writes);
+	if (rejected.length) throw new ORPCError('FORBIDDEN', { message: rejected[0]!.reason });
+	return after;
 }
 
 function visibleTask(visible: Visible, id: string): Task {
@@ -148,16 +187,20 @@ function visibleTask(visible: Visible, id: string): Task {
 	return task;
 }
 
-async function taskAfter({ db, owner }: Command, snapshot: Snapshot, id: string): Promise<AgentTask> {
-	const task = snapshot.tasks.find(task => task.id === id);
-	if (!task) throw new ORPCError('NOT_FOUND', { message: 'No such task' });
-	return (await withClients(db, owner, [task]))[0]!;
+/** The row as stored, since the statement stamped `createdBy` and `completedBy`, which the rule in memory did not. */
+async function taskAfter({ db, owner }: Command, id: string): Promise<AgentTask> {
+	const [row] = await db
+		.select()
+		.from(taskTable)
+		.where(and(eq(taskTable.userId, owner), eq(taskTable.id, id)));
+	if (!row) throw new ORPCError('NOT_FOUND', { message: 'No such task' });
+	return (await withClients(db, owner, [entity(row) as Task]))[0]!;
 }
 
 /** `text` is read like the app's quick add, against the space's projects and labels; explicit fields win over it. */
 export async function createTask(command: Command, input: AgentNewTask): Promise<AgentTask> {
 	const id = newId();
-	const snapshot = await run(command, (data, visible, zone) => {
+	await run(command, (data, visible, zone) => {
 		const parsed = input.text
 			? parseQuickAdd(input.text, {
 					now: wallDate(command.now, zone),
@@ -190,12 +233,12 @@ export async function createTask(command: Command, input: AgentNewTask): Promise
 		);
 		return input.notes ? updateTask(added.data, id, { notes: input.notes }) : added.data;
 	});
-	return taskAfter(command, snapshot, id);
+	return taskAfter(command, id);
 }
 
 /** A saved place in `labelIds` becomes the task's place, as in the apps. Ids without one leave its place alone. */
 export async function editTask(command: Command, id: string, patch: TaskPatch): Promise<AgentTask> {
-	const snapshot = await run(command, (data, visible) => {
+	await run(command, (data, visible) => {
 		const task = visibleTask(visible, id);
 		const ids = patch.labelIds ?? [];
 		const placed = visible.labels.some(l => isSavedPlace(l) && ids.includes(l.id))
@@ -203,23 +246,23 @@ export async function editTask(command: Command, id: string, patch: TaskPatch): 
 			: {};
 		return updateTask(data, id, { ...patch, ...placed });
 	});
-	return taskAfter(command, snapshot, id);
+	return taskAfter(command, id);
 }
 
 export async function finishTask(command: Command, id: string): Promise<AgentTask> {
-	const snapshot = await run(command, (data, visible, zone) => {
+	await run(command, (data, visible, zone) => {
 		visibleTask(visible, id);
 		return completeTask(data, id, zonedDateKey(command.now, zone), command.now)?.data ?? data;
 	});
-	return taskAfter(command, snapshot, id);
+	return taskAfter(command, id);
 }
 
 export async function reopen(command: Command, id: string): Promise<AgentTask> {
-	const snapshot = await run(command, (data, visible) => {
+	await run(command, (data, visible) => {
 		visibleTask(visible, id);
 		return reopenTask(data, id);
 	});
-	return taskAfter(command, snapshot, id);
+	return taskAfter(command, id);
 }
 
 export async function removeTask(command: Command, id: string): Promise<void> {
@@ -229,21 +272,37 @@ export async function removeTask(command: Command, id: string): Promise<void> {
 	});
 }
 
-const withAuthor = async (db: Db, owner: string, comment: Comment): Promise<TaskComment> => ({
+const withAuthor = async (db: Db, comment: Comment): Promise<TaskComment> => ({
 	...comment,
-	author: await personOf(db, owner, comment.authorId ?? ''),
+	author: await personOf(db, comment.authorId ?? ''),
 });
 
 export async function listComments({ db, owner, actor }: Command, taskId: string): Promise<TaskComment[]> {
-	const space = await loadSpace(db, owner);
-	visibleTask(visibleOf(space.snapshot, requireAccess(space, actor)), taskId);
-	return Promise.all(commentsOn(space.snapshot.comments, taskId).map(comment => withAuthor(db, owner, comment)));
+	const access = await requireAccess(db, owner, actor);
+	const sight = await sightOf(db, owner, actor, access);
+	const [seen, rows] = await Promise.all([
+		seesTask(db, owner, sight, taskId),
+		db
+			.select()
+			.from(commentTable)
+			.where(and(eq(commentTable.userId, owner), eq(commentTable.taskId, taskId))),
+	]);
+	if (!seen) throw new ORPCError('NOT_FOUND', { message: 'No such task' });
+	const comments = commentsOn(rows.map(entity), taskId);
+	const authors = await peopleById(
+		db,
+		comments.flatMap(comment => (comment.authorId ? [comment.authorId] : [])),
+	);
+	return comments.map(comment => ({
+		...comment,
+		author: authors.get(comment.authorId ?? '') ?? unknownPerson(comment.authorId ?? ''),
+	}));
 }
 
-async function commentAfter({ db, owner }: Command, snapshot: Snapshot, id: string): Promise<TaskComment> {
+async function commentAfter({ db }: Command, snapshot: Snapshot, id: string): Promise<TaskComment> {
 	const comment = snapshot.comments.find(comment => comment.id === id);
 	if (!comment) throw new ORPCError('NOT_FOUND', { message: 'No such comment' });
-	return withAuthor(db, owner, comment);
+	return withAuthor(db, comment);
 }
 
 /** The caller's own comment on a task it can see. Someone else's is refused; a hidden one is not found. */
@@ -269,18 +328,26 @@ export async function createComment(command: Command, input: NewComment): Promis
 
 export async function updateComment(command: Command, id: string, body: string): Promise<TaskComment> {
 	if (!body.trim()) throw new ORPCError('BAD_REQUEST', { message: 'A comment needs a body' });
-	const snapshot = await run(command, (data, visible) => {
-		ownComment(data, visible, id, command.actor.id);
-		return editComment(data, id, body, command.actor.id, command.now);
-	});
+	const snapshot = await run(
+		command,
+		(data, visible) => {
+			ownComment(data, visible, id, command.actor.id);
+			return editComment(data, id, body, command.actor.id, command.now);
+		},
+		id,
+	);
 	return commentAfter(command, snapshot, id);
 }
 
 export async function removeComment(command: Command, id: string): Promise<void> {
-	await run(command, (data, visible) => {
-		ownComment(data, visible, id, command.actor.id);
-		return deleteComment(data, id, command.actor.id);
-	});
+	await run(
+		command,
+		(data, visible) => {
+			ownComment(data, visible, id, command.actor.id);
+			return deleteComment(data, id, command.actor.id);
+		},
+		id,
+	);
 }
 
 /**
@@ -294,8 +361,9 @@ export function requireManager(access: Access) {
 }
 
 /**
- * The fixups merge projects that share a name ignoring case, as they do sections in a project and labels, so a taken
- * name returns the existing one on create and is refused on rename. A name is trimmed and may not be blank.
+ * Names are unique ignoring case, in the space for projects and labels and in the project for sections, because
+ * quick add resolves `#name`, `/name`, and `@name` to one: a taken name returns the existing one on create, so an
+ * agent's retry never duplicates it, and is refused on rename. A name is trimmed and may not be blank.
  */
 
 function named(name: string, what: string): string {

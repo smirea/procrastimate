@@ -43,12 +43,15 @@ export async function testEnv(overrides: Partial<Env> = {}): Promise<Env> {
 export type TestApp = App & {
 	fetch: (path: string, init?: RequestInit) => Promise<Response>;
 	close: () => Promise<void>;
+	/** Every SQL statement Drizzle ran since the last `statements.length = 0`, for the write-cost tests. */
+	statements: string[];
 };
 
 /** A fresh PGlite database, migrated, with the app on top. Sockets are refused; Ramble tests pass their own config. */
 export async function testApp(options: { env?: Partial<Env>; ramble?: RambleConfig } = {}): Promise<TestApp> {
 	const client = new PGlite();
-	const db: Db = drizzle(client);
+	const statements: string[] = [];
+	const db: Db = drizzle(client, { logger: { logQuery: query => void statements.push(query) } });
 	await migrate(db);
 	const env = await testEnv(options.env);
 	const stream = () => Response.json({ ok: false, error: 'No sockets in tests' }, { status: 501 });
@@ -57,6 +60,7 @@ export async function testApp(options: { env?: Partial<Env>; ramble?: RambleConf
 		...app,
 		fetch: (path, init) => handle(new Request(`${ORIGIN}${path}`, init), app),
 		close: () => client.close(),
+		statements,
 	};
 }
 

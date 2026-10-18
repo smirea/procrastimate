@@ -21,7 +21,7 @@ Todoist-style sections: named headings inside one project that group its tasks.
 
 ## Concurrent edits
 
-`fixups` repairs, in this order: project merges carry their sections to the surviving project, and a section whose project is gone is deleted. Sections then merge by `sourceKey` (one Todoist import on two devices), then by name within a project, into the oldest. Last, a task keeps its `sectionId` only while it is top level and the section is a live one of its project; otherwise it stays in its project in no section. So a task moved into a section that another device deleted survives, and a task moved to another project leaves its old section. The convergence fuzz adds, renames, moves, and deletes sections and checks these invariants.
+The server repairs nothing. Readers resolve what concurrent edits leave behind (`resolveDangling` in `shared/dangling.ts`, see [Sync](sync.md)): a section whose project is gone is dropped, and a task keeps its `sectionId` only while it is top level and the section is a live one of its project; otherwise it reads as in its project in no section. So a task moved into a section that another device deleted survives, undoing that delete puts it back in the section, and a task moved to another project leaves its old section. Two devices that add one section name to a project offline keep both; nothing merges them.
 
 ## Views
 

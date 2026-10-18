@@ -1,8 +1,8 @@
 import { z } from 'zod';
-import { apiTokensRowSchema, peopleRowSchema, sharesRowSchema } from './db/generated/zod.ts';
+import { apiTokensRowSchema, sharesRowSchema } from './db/generated/zod.ts';
 import { commentSchema, labelSchema, projectSchema, sectionSchema, taskSchema } from './model.ts';
 import { labelColorSchema } from './label-colors.ts';
-import { clientStampSchema, roleSchema, savedPlaceSchema, shareTargetKindSchema } from './values.ts';
+import { actorKindSchema, clientStampSchema, roleSchema, savedPlaceSchema, shareTargetKindSchema } from './values.ts';
 
 /**
  * Sharing's shapes. A space is one user's tasks, projects, sections, and labels, whose rows carry
@@ -10,10 +10,10 @@ import { clientStampSchema, roleSchema, savedPlaceSchema, shareTargetKindSchema 
  * link. See `docs/decisions/sharing.md`.
  */
 
-export const personSchema = peopleRowSchema.pick({ id: true, name: true, kind: true, ownerId: true }).meta({
-	id: 'Person',
-	description: 'A human, or an AI account with the human who owns it.',
-});
+/** A Better Auth user as the clients name people: the server reads it from the `user` table. */
+export const personSchema = z
+	.object({ id: z.string(), name: z.string(), kind: actorKindSchema, ownerId: z.string().nullable() })
+	.meta({ id: 'Person', description: 'A human, or an AI account with the human who owns it.' });
 export type Person = z.infer<typeof personSchema>;
 
 export const shareTargetSchema = z

@@ -1,6 +1,8 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import type { MemoTasks } from '../../shared/memo-tasks';
-import { json, signUp, testApp, upload, type Session, type TestApp } from './test-app';
+import { inArray } from 'drizzle-orm';
+import { tasks } from '../../shared/db/schema';
+import { json, signUp, taskRow, testApp, upload, type Session, type TestApp } from './test-app';
 
 let app: TestApp;
 let owner: Session;
@@ -52,5 +54,28 @@ describe('/api/memo-tasks', () => {
 		expect(await upload(app, owner, [{ op: 'delete', table: 'tasks', id: added.tasks[0]!.id }])).toEqual([]);
 		const again = await put({ ...request([{ key: other, title: 'Water plants' }]), memoId: crypto.randomUUID() });
 		expect(again.tasks.map(task => task.title)).toEqual(['Water plants']);
+	});
+
+	test('deleting a memo takes the subtasks under its tasks, and nothing else', async () => {
+		const memo = crypto.randomUUID();
+		const added = await put({ ...request([{ key: crypto.randomUUID(), title: 'Move house' }]), memoId: memo });
+		const parent = added.tasks[0]!.id;
+		const subtask = crypto.randomUUID();
+		const other = crypto.randomUUID();
+		await upload(app, owner, [
+			{
+				op: 'put',
+				table: 'tasks',
+				id: subtask,
+				values: taskRow(subtask, owner.person.id, 'Pack boxes', { parentId: parent }),
+			},
+			{ op: 'put', table: 'tasks', id: other, values: taskRow(other, owner.person.id, 'Unrelated') },
+		]);
+		await app.fetch(`/api/memo-tasks?memoId=${memo}`, { method: 'DELETE', headers: owner.headers });
+		const left = await app.db
+			.select({ id: tasks.id })
+			.from(tasks)
+			.where(inArray(tasks.id, [parent, subtask, other]));
+		expect(left.map(row => row.id)).toEqual([other]);
 	});
 });

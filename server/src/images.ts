@@ -1,5 +1,5 @@
-import { and, eq, inArray, isNull } from 'drizzle-orm';
-import { images, type ImageRow, type ShareRow } from '../../shared/db/schema';
+import { and, eq, exists, inArray, isNull, sql } from 'drizzle-orm';
+import { images, tasks, type ImageRow } from '../../shared/db/schema';
 import {
 	IMAGE_LIMITS,
 	IMAGES_PATH,
@@ -9,14 +9,13 @@ import {
 	type ImageSize,
 	type ImageType,
 } from '../../shared/images';
-import type { Snapshot } from '../../shared/model';
-import { scopeOf } from '../../shared/scope';
+import type { Task } from '../../shared/model';
 import { readActor, spaceOf } from './actor';
 import type { App } from './app';
 import type { Db } from './db/postgres';
 import { errorResponse } from './errors';
 import { identify } from './sentry';
-import { accessOf, loadSpace } from './space';
+import { accessIn, seenBy, sightOf, type Sight } from './space';
 
 /**
  * Image bytes, apart from sync. A task lists its images' ids in its synced `images` field; the bytes sit in the
@@ -37,11 +36,38 @@ export async function putImage(db: Db, owner: string, id: string, size: ImageSiz
 		.onConflictDoNothing();
 }
 
-export async function getImage(db: Db, owner: string, id: string, size: ImageSize): Promise<StoredImage | null> {
+/**
+ * Which of the space's images a caller reads: the owner every one stored, anyone else the ones a task they see lists,
+ * checked in the same select as the bytes.
+ */
+export type ImageReader = { kind: 'owner' } | { kind: 'guest'; sight: Sight };
+
+export async function getImage(
+	db: Db,
+	owner: string,
+	id: string,
+	size: ImageSize,
+	reader: ImageReader,
+): Promise<StoredImage | null> {
+	const listed =
+		reader.kind === 'guest'
+			? exists(
+					db
+						.select({ one: sql`1` })
+						.from(tasks)
+						.where(
+							and(
+								eq(tasks.userId, owner),
+								sql`${tasks.images} @> ${JSON.stringify([{ id }])}::jsonb`,
+								seenBy(db, reader.sight, owner, tasks.id),
+							),
+						),
+				)
+			: undefined;
 	const [row] = await db
 		.select({ type: images.type, bytes: images.bytes })
 		.from(images)
-		.where(and(eq(images.userId, owner), eq(images.id, id), eq(images.size, size)));
+		.where(and(eq(images.userId, owner), eq(images.id, id), eq(images.size, size), listed));
 	return row ?? null;
 }
 
@@ -50,12 +76,11 @@ export async function getImage(db: Db, owner: string, id: string, size: ImageSiz
  * and then restored it, and an upload whose write has not synced yet, which reaches the server first.
  */
 export const IMAGE_GRACE_MS = 2 * 24 * 60 * 60 * 1000;
-const SWEEP_INTERVAL_MS = 60 * 60 * 1000;
 
 export type SweepPlan = { mark: string[]; unmark: string[]; drop: string[]; now: number };
 
-export const referencedImages = (snapshot: Snapshot) =>
-	new Set(snapshot.tasks.flatMap(task => task.images.map(image => image.id)));
+export const imageIds = (tasks: readonly Pick<Task, 'images'>[]) =>
+	new Set(tasks.flatMap(task => task.images.map(image => image.id)));
 
 export function sweepPlan(referenced: ReadonlySet<string>, states: readonly ImageState[], now: number): SweepPlan {
 	const mark = new Set<string>();
@@ -86,33 +111,31 @@ export async function applySweep(db: Db, owner: string, { mark, unmark, drop, no
 	if (drop.length) await db.delete(images).where(and(own, inArray(images.id, drop)));
 }
 
-const swept = new Map<string, number>();
-
-export async function sweepImages(db: Db, owner: string, snapshot: Snapshot, now: number): Promise<void> {
-	if (now - (swept.get(owner) ?? 0) < SWEEP_INTERVAL_MS) return;
-	swept.set(owner, now);
-	const states = await db
-		.select({ id: images.id, orphanedAt: images.orphanedAt })
-		.from(images)
-		.where(eq(images.userId, owner));
-	if (!states.length) return;
-	await applySweep(db, owner, sweepPlan(referencedImages(snapshot), states, now));
+/**
+ * The daily cron's sweep over every user: reads which images exist and which a live task lists, two queries, then
+ * marks, unmarks, and drops per user. Nothing on the write path reads the `images` table.
+ */
+export async function sweepImages(db: Db, now: number): Promise<void> {
+	const [states, listed] = await Promise.all([
+		db.select({ userId: images.userId, id: images.id, orphanedAt: images.orphanedAt }).from(images),
+		db
+			.select({ userId: tasks.userId, images: tasks.images })
+			.from(tasks)
+			.where(sql`jsonb_array_length(${tasks.images}) > 0`),
+	]);
+	const referenced = Map.groupBy(listed, row => row.userId);
+	for (const [owner, rows] of Map.groupBy(states, row => row.userId)) {
+		await applySweep(db, owner, sweepPlan(imageIds(referenced.get(owner) ?? []), rows, now));
+	}
 }
-
-export type ImageAccess = { read: (id: string) => boolean; write: boolean };
-
-export const OWNER_ACCESS: ImageAccess = { read: () => true, write: true };
 
 /**
- * A guest reads the images of the tasks it may see, as `scopeOf` decides from the owner's whole snapshot, and
- * uploads with any edit share. An upload reaches the server before the write that lists it, often for a task the
- * server has not seen yet, so it cannot be tied to one; the write itself still goes through `admit`.
+ * A guest uploads with any edit share. An upload reaches the server before the write that lists it, often for a task
+ * the server has not seen yet, so it cannot be tied to one; the write itself is still checked.
  */
-export function guestImageAccess(snapshot: Snapshot, shares: readonly ShareRow[]): ImageAccess {
-	const scope = scopeOf(snapshot, shares);
-	const visible = referencedImages({ ...snapshot, tasks: snapshot.tasks.filter(task => scope.tasks.has(task.id)) });
-	return { read: id => visible.has(id), write: shares.some(share => share.role === 'edit') };
-}
+export type ImageAccess = { read: ImageReader; write: boolean };
+
+export const OWNER_ACCESS: ImageAccess = { read: { kind: 'owner' }, write: true };
 
 const IMAGE_ID = /^[A-Za-z0-9_-]{8,80}$/;
 
@@ -129,7 +152,7 @@ export async function imageResponse(
 	const size = imageSizeSchema.safeParse(query.get('size'));
 	if (!IMAGE_ID.test(id) || !size.success) return errorResponse('BAD_REQUEST', 'Needs an image id and size');
 	if (request.method === 'GET') {
-		const image = access.read(id) ? await getImage(db, owner, id, size.data) : null;
+		const image = await getImage(db, owner, id, size.data, access.read);
 		if (!image) return errorResponse('NOT_FOUND', 'No such image');
 		return new Response(image.bytes, {
 			headers: {
@@ -163,8 +186,9 @@ export async function imagesRoute(request: Request, app: App): Promise<Response>
 	const now = Date.now();
 	const owner = spaceOf(actor, new URL(request.url).searchParams.get('space'));
 	if (actor.kind === 'human' && actor.id === owner) return imageResponse(request, app.db, owner, OWNER_ACCESS, now);
-	const space = await loadSpace(app.db, owner);
-	const access = accessOf(space, actor);
+	const access = await accessIn(app.db, owner, actor);
 	if (access?.role !== 'guest') return errorResponse('FORBIDDEN', 'Not shared with you');
-	return imageResponse(request, app.db, owner, guestImageAccess(space.snapshot, access.shares), now);
+	const sight = await sightOf(app.db, owner, actor, access);
+	const write = access.shares.some(share => share.role === 'edit');
+	return imageResponse(request, app.db, owner, { read: { kind: 'guest', sight }, write }, now);
 }

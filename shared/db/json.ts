@@ -4,8 +4,7 @@ import { labelColorSchema } from '../label-colors.ts';
 import { quickAddButtonSchema } from '../quick-add-buttons.ts';
 import { pushSubscriptionSchema, scheduledPushSchema } from '../push.ts';
 import {
-	actorKindSchema,
-	clientStampSchema,
+	clientSchema,
 	dueSchema,
 	imageRefSchema,
 	prioritySchema,
@@ -38,11 +37,9 @@ export const COLUMN_VALUES = {
 	labels: { color: labelColorSchema, place: savedPlaceSchema },
 	settings: { dictation: dictationChoiceSchema, quickAddButtons: z.array(quickAddButtonSchema) },
 	access: { role: roleSchema },
-	log: { fields: z.record(z.string(), z.unknown()) },
-	taskClients: { created: clientStampSchema, edited: clientStampSchema },
+	log: { fields: z.record(z.string(), z.unknown()), client: clientSchema },
 	push: { subscription: pushSubscriptionSchema, notifications: z.array(scheduledPushSchema) },
 	shares: { targetKind: shareTargetKindSchema, role: roleSchema },
-	people: { kind: actorKindSchema },
 	images: { bytes: z.instanceof(Uint8Array) },
 } as const;
 

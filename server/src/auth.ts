@@ -1,12 +1,10 @@
-import { DEVICE_HEADER } from '../../shared/auth';
+import { DEVICE_HEADER, DEVICE_PROTOCOL_PREFIX } from '../../shared/auth';
 import type { ShareRow } from '../../shared/db/schema';
 
 export type Access = { role: 'owner' } | { role: 'guest'; shares: ShareRow[] };
 
 const encoder = new TextEncoder();
 const DEVICE_ID = /^[A-Za-z0-9_-]{8,80}$/;
-/** A browser WebSocket cannot set headers, so Ramble's socket names the install in a `device.<id>` subprotocol. */
-const DEVICE_PROTOCOL_PREFIX = 'device.';
 
 export async function sha256(value: string): Promise<string> {
 	const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', encoder.encode(value)));

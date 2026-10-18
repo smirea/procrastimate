@@ -2,6 +2,7 @@ import { getTableColumns, is, SQL } from 'drizzle-orm';
 import type { Actor } from '../../shared/auth';
 import { ENTITY_TABLES } from '../../shared/db/schema';
 import { FIELDS_SCHEMAS, KINDS, SETTINGS_ID, type Kind } from '../../shared/model';
+import { newId } from '../../shared/id';
 import { KIND_OF, TABLE_OF, type SyncedTable } from '../../shared/rows';
 import type { Fields } from '../../shared/snapshot';
 import type { Client } from '../../shared/values';
@@ -103,7 +104,8 @@ export function parseWrite(raw: unknown): { write: OwnedWrite } | { rejected: Re
 		return { rejected: { table: String(isRecord(raw) ? raw.table : ''), id: '', reason: 'Malformed write' } };
 	}
 	const { table, id, op } = raw;
-	const opId = typeof raw.opId === 'string' ? raw.opId : undefined;
+	// A client's op id makes a retried batch log nothing twice; a write without one is logged on every try.
+	const opId = typeof raw.opId === 'string' ? raw.opId : newId();
 	const reject = (reason: string) => ({ rejected: { table, id, reason } });
 	const kind = KIND_OF[table as SyncedTable];
 	if (!kind) return reject(`Unknown table ${table}`);

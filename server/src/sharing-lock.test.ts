@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test';
 import { eq, inArray, sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
-import { access, log, people, settings, shares, tasks } from '../../shared/db/schema';
+import { access, log, settings, shares, tasks } from '../../shared/db/schema';
 import type { ShareView } from '../../shared/sharing';
 import { handle } from './api';
 import { createApp } from './app';
@@ -11,7 +11,7 @@ import { ramble, rambleRoute } from './ramble';
 import { ORIGIN, signUp, taskRow, testEnv, upload, type TestApp } from './test-app';
 
 /**
- * A share change must wait for the space's advisory lock, which an upload holds while it recomputes `access`. PGlite
+ * A share change must wait for the space's advisory lock, which the `access` recompute after an upload holds. PGlite
  * has one connection and cannot hold a lock on one while another waits, so this runs only against the local Postgres
  * (`DATABASE_URL` from the worktree's `.env.override`) and is skipped elsewhere.
  */
@@ -37,6 +37,7 @@ test.skipIf(!url)(
 			...base,
 			fetch: (path, init) => handle(new Request(`${ORIGIN}${path}`, init), base),
 			close: () => client.end(),
+			statements: [],
 		};
 		const owner = await signUp(app, 'Lockowner');
 		const guest = await signUp(app, 'Lockguest');
@@ -72,7 +73,7 @@ test.skipIf(!url)(
 			expect((await revoking!).status).toBe(200);
 			expect(await accessRows()).toHaveLength(0);
 		} finally {
-			for (const table of [tasks, shares, people, access, log, settings]) {
+			for (const table of [tasks, shares, access, log, settings]) {
 				const column = table === access ? access.owner : (table as typeof tasks).userId;
 				await db.delete(table).where(inArray(column, ids));
 			}

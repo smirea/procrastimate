@@ -1,8 +1,8 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import { eq } from 'drizzle-orm';
-import { access, tasks } from '../../shared/db/schema';
+import { access, comments, tasks } from '../../shared/db/schema';
 import type { Person, ShareView, SpaceView } from '../../shared/sharing';
-import { json, signUp, taskRow, testApp, tokenHeaders, upload, type Session, type TestApp } from './test-app';
+import { json, ORIGIN, signUp, taskRow, testApp, tokenHeaders, upload, type Session, type TestApp } from './test-app';
 
 let app: TestApp;
 let owner: Session;
@@ -110,6 +110,67 @@ describe('sharing a task', () => {
 				{ op: 'put', table: 'tasks', id, values: taskRow(id, owner.person.id, 'Graft', { parentId: hidden }) },
 			]),
 		).toEqual([{ table: 'tasks', id, reason: 'Not editable in this share' }]);
+		const refused = await upload(app, guest, [
+			{ op: 'patch', table: 'tasks', id: shared, values: { project_id: crypto.randomUUID() } },
+			{ op: 'patch', table: 'tasks', id: shared, values: { source_key: 'todoist:task:1' } },
+			{ op: 'delete', table: 'tasks', id: hidden },
+		]);
+		expect(refused.map(entry => entry.reason)).toEqual(['Not editable in this share', 'Not editable in this share']);
+		expect((await app.db.select().from(tasks).where(eq(tasks.id, hidden))).length).toBe(1);
+	});
+
+	test('a guest’s re-put of the owner’s task keeps created_by, and a view-only guest cannot comment', async () => {
+		const id = await newTask('Keep the author');
+		await share({ kind: 'task', id }, guest, 'edit');
+		expect(
+			await upload(app, guest, [
+				{ op: 'put', table: 'tasks', id, values: taskRow(id, owner.person.id, 'Re-put by the guest') },
+			]),
+		).toEqual([]);
+		const [row] = await app.db.select().from(tasks).where(eq(tasks.id, id));
+		expect(row).toMatchObject({ title: 'Re-put by the guest', createdBy: owner.person.id });
+
+		const viewed = await newTask('Read only');
+		await share({ kind: 'task', id: viewed }, guest, 'view');
+		const comment = crypto.randomUUID();
+		expect(
+			await upload(app, guest, [
+				{
+					op: 'put',
+					table: 'comments',
+					id: comment,
+					values: { id: comment, user_id: owner.person.id, task_id: viewed, body: 'psst', created_at: 1 },
+				},
+			]),
+		).toEqual([{ table: 'comments', id: comment, reason: 'Not editable in this share' }]);
+		expect(await app.db.select().from(comments).where(eq(comments.id, comment))).toEqual([]);
+	});
+
+	test('a guest deletes only its own comment, and the owner’s stays', async () => {
+		const id = await newTask('Talk');
+		await share({ kind: 'task', id }, guest, 'edit');
+		const theirs = crypto.randomUUID();
+		const mine = crypto.randomUUID();
+		const row = (commentId: string, body: string) => ({
+			id: commentId,
+			user_id: owner.person.id,
+			task_id: id,
+			body,
+			created_at: 1,
+		});
+		expect(
+			await upload(app, owner, [{ op: 'put', table: 'comments', id: theirs, values: row(theirs, 'owner') }]),
+		).toEqual([]);
+		expect(await upload(app, guest, [{ op: 'put', table: 'comments', id: mine, values: row(mine, 'guest') }])).toEqual(
+			[],
+		);
+		expect(
+			await upload(app, guest, [
+				{ op: 'delete', table: 'comments', id: theirs },
+				{ op: 'delete', table: 'comments', id: mine },
+			]),
+		).toEqual([{ table: 'comments', id: theirs, reason: 'Only the author can delete a comment' }]);
+		expect((await app.db.select().from(comments).where(eq(comments.taskId, id))).map(c => c.id)).toEqual([theirs]);
 	});
 
 	test('revoking the share removes the access rows, and the guest sees nothing', async () => {
@@ -206,6 +267,24 @@ describe('sharing a list', () => {
 
 		await share({ kind: 'label', id: weekend }, guest, 'edit');
 		expect(await accessRows(guest.person.id)).toContain(`label:${weekend}:edit`);
+		const labelled = crypto.randomUUID();
+		expect(
+			await upload(app, guest, [
+				{
+					op: 'put',
+					table: 'tasks',
+					id: labelled,
+					values: taskRow(labelled, me, 'Rake', { labelIds: JSON.stringify([weekend]) }),
+				},
+			]),
+		).toEqual([]);
+		expect(await accessRows(guest.person.id)).toContain(`task:${labelled}:edit`);
+
+		// Moving the task out of every shared place leaves the guest's view: the access rows follow the move.
+		expect(
+			await upload(app, owner, [{ op: 'patch', table: 'tasks', id: labelled, values: { label_ids: '[]' } }]),
+		).toEqual([]);
+		expect(await accessRows(guest.person.id)).not.toContain(`task:${labelled}:edit`);
 	});
 });
 
@@ -286,5 +365,53 @@ describe('AI accounts', () => {
 		const task = view.tasks.find(t => t.id === id)!;
 		expect(task.clients.created).toMatchObject({ kind: 'web', device: 'test' });
 		expect(task.clients.edited).toMatchObject({ kind: 'api', device: 'curl/8.1' });
+	});
+
+	test('an AI account with only a task shared sees that task and its activity, and nothing else', async () => {
+		const shown = await newTask('For the bot');
+		const hidden = await newTask('Not for the bot');
+		const ai = await json<Person>(call(owner, 'POST', '/api/ai', { name: 'Narrow' }));
+		const { token } = await json<{ token: string }>(
+			call(owner, 'POST', '/api/ai-tokens', { aiUserId: ai.id, name: 'laptop' }),
+		);
+		const { shares } = await json<{ shares: ShareView[] }>(call(owner, 'GET', '/api/shares'));
+		const whole = shares.find(s => s.grantee?.id === ai.id && s.target.kind === 'space')!;
+		expect((await call(owner, 'DELETE', `/api/shares?id=${whole.id}`)).status).toBe(200);
+		await json<ShareView>(
+			call(owner, 'POST', '/api/shares', {
+				target: { kind: 'task', id: shown },
+				audience: { kind: 'user', userId: ai.id, role: 'view' },
+			}),
+		);
+		const headers = tokenHeaders(token);
+		const view = await json<SpaceView>(app.fetch('/api/view', { headers }));
+		expect(view.tasks.map(task => task.id)).toEqual([shown]);
+		expect((await app.fetch(`/api/activity?id=${shown}`, { headers })).status).toBe(200);
+		expect((await app.fetch(`/api/activity?id=${hidden}`, { headers })).status).toBe(404);
+		expect((await app.fetch(`/api/comments?id=${hidden}`, { headers })).status).toBe(404);
+	});
+});
+
+describe('people search', () => {
+	test('an exact email finds anyone, a name prefix only people the caller knows, and never the caller', async () => {
+		const email = `stranger-${crypto.randomUUID()}@procrastimate.test`;
+		const signedUp = await app.fetch('/api/auth/sign-up/email', {
+			method: 'POST',
+			headers: { 'content-type': 'application/json', origin: ORIGIN },
+			body: JSON.stringify({ email, password: 'test-password-1', name: 'Stranger' }),
+		});
+		const { user: stranger } = (await signedUp.json()) as { user: { id: string } };
+		const search = async (q: string) =>
+			(await json<{ people: Person[] }>(call(owner, 'GET', `/api/people?q=${encodeURIComponent(q)}`))).people.map(
+				person => person.name,
+			);
+		expect(await search(email.toUpperCase())).toEqual(['Stranger']);
+		expect(await search('Stra')).toEqual([]);
+		const known = await search('');
+		expect(known).toContain('Guest');
+		expect(known).toContain('Mapper');
+		expect(known).not.toContain('Owner');
+		expect(known).not.toContain('Stranger');
+		expect(stranger.id).not.toBe(owner.person.id);
 	});
 });

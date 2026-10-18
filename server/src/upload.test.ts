@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
-import { eq, sql } from 'drizzle-orm';
-import { log, settings, taskClients, tasks } from '../../shared/db/schema';
-import type { Person } from '../../shared/sharing';
+import { and, eq, sql } from 'drizzle-orm';
+import { log, reads, settings, tasks } from '../../shared/db/schema';
+import type { Person, SpaceView } from '../../shared/sharing';
 import {
 	json,
 	signUp,
@@ -25,6 +25,10 @@ const upload = (session: Session, writes: unknown[]) => uploadAs(app, session, w
 type Rejected = { table: string; id: string; reason: string }[];
 
 const stored = async (id: string) => (await app.db.select().from(tasks).where(eq(tasks.id, id)))[0] ?? null;
+/** The task as every reader sees it, with dangling references resolved, which the server never writes back. */
+const shown = async (id: string) =>
+	(await json<SpaceView>(app.fetch('/api/view', { headers: owner.headers }))).tasks.find(task => task.id === id) ??
+	null;
 
 describe('POST /api/upload', () => {
 	test('a put lands as the actor’s row, with created_by stamped and the client’s value ignored', async () => {
@@ -181,7 +185,8 @@ describe('POST /api/upload', () => {
 		).toEqual([]);
 
 		// A deletes the section, which takes its task along as `deleteSection` does. B, still showing the section, adds
-		// a task into it and labels the first one: the new task lands in the project with no section, the patch nothing.
+		// a task into it and labels the first one: the new task is stored as sent and reads as in the project with no
+		// section, the patch changes nothing.
 		expect(
 			await upload(owner, [
 				{ op: 'delete', table: 'sections', id: sectionId },
@@ -199,10 +204,12 @@ describe('POST /api/upload', () => {
 				{ op: 'patch', table: 'tasks', id: taskId, values: { label_ids: JSON.stringify([homeId, urgentId]) } },
 			]),
 		).toEqual([]);
-		expect(await stored(lateId)).toMatchObject({ projectId, sectionId: null });
+		expect(await stored(lateId)).toMatchObject({ projectId, sectionId });
+		expect(await shown(lateId)).toMatchObject({ projectId, sectionId: null });
 		expect(await stored(taskId)).toBeNull();
 
-		// A undoes, as the toast does, by putting the section and task back as they were.
+		// A undoes, as the toast does, by putting the section and task back as they were, and B's task reads as in the
+		// section again.
 		expect(
 			await upload(owner, [
 				{ op: 'put', table: 'sections', id: sectionId, values: section },
@@ -210,8 +217,10 @@ describe('POST /api/upload', () => {
 			]),
 		).toEqual([]);
 		expect(await stored(taskId)).toMatchObject({ sectionId, labelIds: [homeId] });
+		expect(await shown(lateId)).toMatchObject({ projectId, sectionId });
 
-		// C deletes the Home place while B, offline since before, puts it on the task again next to Urgent.
+		// C deletes the Home place while B, offline since before, puts it on the task again next to Urgent: the row keeps
+		// both, and readers drop the deleted one.
 		expect(
 			await upload(owner, [
 				{ op: 'patch', table: 'tasks', id: taskId, values: { label_ids: '[]' } },
@@ -223,7 +232,8 @@ describe('POST /api/upload', () => {
 				{ op: 'patch', table: 'tasks', id: taskId, values: { label_ids: JSON.stringify([homeId, urgentId]) } },
 			]),
 		).toEqual([]);
-		expect(await stored(taskId)).toMatchObject({ labelIds: [urgentId] });
+		expect(await stored(taskId)).toMatchObject({ labelIds: [homeId, urgentId] });
+		expect(await shown(taskId)).toMatchObject({ labelIds: [urgentId] });
 
 		// A deletes the whole project, B edits the task meanwhile, and A undoes after B's edit landed: the delete made the
 		// edit a no-op, and the undo's put brings the task back as A last saw it.
@@ -269,7 +279,7 @@ describe('POST /api/upload', () => {
 		expect(await stored(id)).toMatchObject({ title: 'Second', priority: 3 });
 	});
 
-	test('fixups repair what the client sent: a subtask with its own project takes its parent’s', async () => {
+	test('the server repairs nothing: a subtask stored with its own project reads with its root’s', async () => {
 		const parent = crypto.randomUUID();
 		const projectId = crypto.randomUUID();
 		const child = crypto.randomUUID();
@@ -278,14 +288,7 @@ describe('POST /api/upload', () => {
 				op: 'put',
 				table: 'projects',
 				id: projectId,
-				values: {
-					id: projectId,
-					user_id: owner.person.id,
-					name: 'Home',
-					order: 0,
-					created_at: 1_700_000_000_000,
-					source_key: null,
-				},
+				values: { id: projectId, user_id: owner.person.id, name: 'Home', created_at: 1_700_000_000_000 },
 			},
 			{ op: 'put', table: 'tasks', id: parent, values: taskRow(parent, owner.person.id, 'Parent', { projectId }) },
 			{
@@ -295,12 +298,12 @@ describe('POST /api/upload', () => {
 				values: taskRow(child, owner.person.id, 'Child', { parentId: parent, projectId: null }),
 			},
 		]);
-		expect(await stored(child)).toMatchObject({ parentId: parent, projectId });
-		const repairs = await app.db.select().from(log).where(eq(log.actor, 'server'));
-		expect(repairs.some(row => row.id === child && row.op === 'patch')).toBe(true);
+		expect(await stored(child)).toMatchObject({ parentId: parent, projectId: null });
+		expect(await shown(child)).toMatchObject({ parentId: parent, projectId });
+		expect(await app.db.select().from(log).where(eq(log.actor, 'server'))).toEqual([]);
 	});
 
-	test('every applied write is logged with its actor, op, fields, and the client’s op id', async () => {
+	test('every applied write is logged with its actor, op, fields, the client, and the client’s op id', async () => {
 		const id = crypto.randomUUID();
 		await upload(owner, [
 			{ op: 'put', table: 'tasks', id, values: taskRow(id, owner.person.id, 'Logged'), opId: 'client-op-7' },
@@ -313,27 +316,49 @@ describe('POST /api/upload', () => {
 			op: 'put',
 			actor: owner.person.id,
 			opId: 'client-op-7',
+			client: { kind: 'web', device: 'test' },
 		});
-		expect(rows[0]!.fields).toMatchObject({ title: 'Logged', createdBy: owner.person.id });
+		expect(rows[0]!.fields).toMatchObject({ title: 'Logged' });
 	});
 
-	test('task_clients records the creating app and the last editing app', async () => {
+	test('a retried batch converges and adds no second log row', async () => {
 		const id = crypto.randomUUID();
-		await upload(owner, [{ op: 'put', table: 'tasks', id, values: taskRow(id, owner.person.id, 'Clients') }]);
-		const api = { ...owner.headers, 'user-agent': 'curl/8' };
-		delete (api as Record<string, string>)['x-procrastimate-client'];
-		await app.fetch('/api/upload', {
-			method: 'POST',
-			headers: api,
-			body: JSON.stringify({ writes: [{ op: 'patch', table: 'tasks', id, values: { title: 'Edited by api' } }] }),
-		});
-		const [row] = await app.db.select().from(taskClients).where(eq(taskClients.id, id));
-		expect(row?.created).toMatchObject({ kind: 'web' });
-		expect(row?.edited).toMatchObject({ kind: 'api', device: 'curl/8' });
+		const other = crypto.randomUUID();
+		const batch = [
+			{ op: 'put', table: 'tasks', id, values: taskRow(id, owner.person.id, 'Retried'), opId: `${id}:1` },
+			{ op: 'patch', table: 'tasks', id: other, values: { title: 'nobody' }, opId: `${id}:2` },
+			{
+				op: 'put',
+				table: 'reads',
+				id: other,
+				values: { id: other, user_id: owner.person.id, read_at: 5 },
+				opId: `${id}:3`,
+			},
+		];
+		expect(await upload(owner, batch)).toEqual([]);
+		expect(await upload(owner, batch)).toEqual([]);
+		expect(await stored(id)).toMatchObject({ title: 'Retried', createdBy: owner.person.id });
+		const rows = await app.db
+			.select({ kind: log.kind, id: log.id })
+			.from(log)
+			.where(and(eq(log.userId, owner.person.id), sql`${log.opId} LIKE ${`${id}:%`}`));
+		expect(rows.toSorted((a, b) => a.kind.localeCompare(b.kind))).toEqual([
+			{ kind: 'read', id: other },
+			{ kind: 'task', id },
+		]);
 	});
 
 	test('settings and reads live in the actor’s own space, keyed by the fixed id and the task id', async () => {
 		const taskId = crypto.randomUUID();
+		const reader = await signUp(app, 'Reader');
+		expect(
+			await upload(reader, [
+				{ op: 'put', table: 'reads', id: taskId, values: { id: taskId, user_id: owner.person.id, read_at: 7 } },
+			]),
+		).toEqual([]);
+		expect(await app.db.select().from(reads).where(eq(reads.id, taskId))).toEqual([
+			{ userId: reader.person.id, id: taskId, readAt: 7 },
+		]);
 		expect(
 			await upload(owner, [
 				{
@@ -389,7 +414,7 @@ describe('POST /api/upload', () => {
 		expect(await stored(id)).toBeNull();
 	});
 
-	test('a write the database refuses rejects that space’s writes alone, with a 200, and the other space still applies', async () => {
+	test('a write the database refuses is rejected alone, with a 200, and the rest of the batch still applies', async () => {
 		await app.db.execute(sql`ALTER TABLE tasks ADD CONSTRAINT refused CHECK (title <> 'refused by the database')`);
 		const host = await signUp(app, 'Host');
 		const theirs = crypto.randomUUID();
@@ -452,28 +477,6 @@ describe('POST /api/upload', () => {
 			{ table: 'settings', id: 'settings', reason: 'Settings cannot be deleted' },
 		]);
 		expect(await row()).toMatchObject({ timeZone: 'Europe/Madrid' });
-	});
-
-	test('a replayed write that changes nothing, or a patch to a missing task, leaves task_clients alone', async () => {
-		const id = crypto.randomUUID();
-		const values = taskRow(id, owner.person.id, 'Replayed');
-		await upload(owner, [{ op: 'put', table: 'tasks', id, values }]);
-		const ghost = crypto.randomUUID();
-		const api = { ...owner.headers, 'user-agent': 'curl/8' };
-		delete (api as Record<string, string>)['x-procrastimate-client'];
-		await app.fetch('/api/upload', {
-			method: 'POST',
-			headers: api,
-			body: JSON.stringify({
-				writes: [
-					{ op: 'put', table: 'tasks', id, values },
-					{ op: 'patch', table: 'tasks', id: ghost, values: { title: 'ghost' } },
-				],
-			}),
-		});
-		const [row] = await app.db.select().from(taskClients).where(eq(taskClients.id, id));
-		expect(row?.edited).toMatchObject({ kind: 'web' });
-		expect(await app.db.select().from(taskClients).where(eq(taskClients.id, ghost))).toEqual([]);
 	});
 
 	test('an AI token may not upload', async () => {

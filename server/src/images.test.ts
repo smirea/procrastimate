@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import { and, eq } from 'drizzle-orm';
 import { images } from '../../shared/db/schema';
 import type { Person, ShareView } from '../../shared/sharing';
-import { applySweep, IMAGE_GRACE_MS, sweepPlan } from './images';
+import { applySweep, IMAGE_GRACE_MS, sweepImages, sweepPlan } from './images';
 import { json, signUp, taskRow, testApp, tokenHeaders, upload, type Session, type TestApp } from './test-app';
 
 let app: TestApp;
@@ -161,5 +161,36 @@ describe('/api/images', () => {
 				.from(images)
 				.where(and(eq(images.userId, owner.person.id), eq(images.id, orphan))),
 		).toEqual([]);
+	});
+
+	test('the cron’s sweep covers every user from two reads: listed images stay, unlisted ones are marked', async () => {
+		const other = await signUp(app, 'Sweeper');
+		const kept = crypto.randomUUID();
+		const loose = crypto.randomUUID();
+		await put(other, kept, 'thumb', JPEG);
+		await put(other, loose, 'thumb', JPEG);
+		const taskId = crypto.randomUUID();
+		await upload(app, other, [
+			{
+				op: 'put',
+				table: 'tasks',
+				id: taskId,
+				values: taskRow(taskId, other.person.id, 'Pictured', {
+					images: JSON.stringify([{ id: kept, width: 10, height: 10 }]),
+				}),
+			},
+		]);
+		const now = 1_800_000_000_000;
+		app.statements.length = 0;
+		await sweepImages(app.db, now);
+		expect(app.statements.map(statement => statement.trim().split(/\s+/)[0]!.toLowerCase()).slice(0, 2)).toEqual([
+			'select',
+			'select',
+		]);
+		const states = await app.db
+			.select({ id: images.id, orphanedAt: images.orphanedAt })
+			.from(images)
+			.where(eq(images.userId, other.person.id));
+		expect(Object.fromEntries(states.map(row => [row.id, row.orphanedAt]))).toEqual({ [kept]: null, [loose]: now });
 	});
 });

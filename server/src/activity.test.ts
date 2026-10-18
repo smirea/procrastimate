@@ -99,4 +99,58 @@ describe('GET /api/activity', () => {
 			(await app.fetch(`/api/activity?id=${id}&space=${owner.person.id}`, { headers: stranger.headers })).status,
 		).toBe(403);
 	});
+
+	test('an edit names the project, label, and parent it points at, and a guest reads only what it sees', async () => {
+		const project = crypto.randomUUID();
+		const label = crypto.randomUUID();
+		const parent = crypto.randomUUID();
+		const id = crypto.randomUUID();
+		const hidden = crypto.randomUUID();
+		await upload(app, owner, [
+			{
+				op: 'put',
+				table: 'projects',
+				id: project,
+				values: { id: project, user_id: owner.person.id, name: 'Errands', created_at: 1 },
+			},
+			{
+				op: 'put',
+				table: 'labels',
+				id: label,
+				values: { id: label, user_id: owner.person.id, name: 'home', created_at: 1 },
+			},
+			{ op: 'put', table: 'tasks', id: parent, values: taskRow(parent, owner.person.id, 'Trip') },
+			{ op: 'put', table: 'tasks', id, values: taskRow(id, owner.person.id, 'Pack') },
+			{ op: 'put', table: 'tasks', id: hidden, values: taskRow(hidden, owner.person.id, 'Hidden') },
+		]);
+		const step = async (n: number, values: Record<string, unknown>) => {
+			later(n * (COALESCE_WINDOW + 1000));
+			expect(await upload(app, owner, [{ op: 'patch', table: 'tasks', id, values }])).toEqual([]);
+		};
+		await step(1, { project_id: project });
+		await step(2, { label_ids: JSON.stringify([label]) });
+		await step(3, { parent_id: parent });
+		const named = [
+			'Owner created: added this task',
+			'Owner edited: moved it to Errands',
+			'Owner edited: added label home',
+			'Owner edited: made it a subtask of “Trip”',
+		];
+		expect(await activity(id)).toEqual(named);
+		await json<ShareView>(
+			app.fetch('/api/shares', {
+				method: 'POST',
+				headers: owner.headers,
+				body: JSON.stringify({
+					target: { kind: 'task', id },
+					audience: { kind: 'user', userId: guest.person.id, role: 'view' },
+				}),
+			}),
+		);
+		const asGuest = (task: string) =>
+			app.fetch(`/api/activity?id=${task}&space=${owner.person.id}`, { headers: guest.headers });
+		const seen = await json<{ entries: ActivityEntry[] }>(asGuest(id));
+		expect(seen.entries.map(entry => `${entry.actor.name} ${entry.action}: ${entry.summary}`)).toEqual(named);
+		expect((await asGuest(hidden)).status).toBe(404);
+	});
 });

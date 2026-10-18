@@ -2,7 +2,7 @@ import { OpenAPIHandler } from '@orpc/openapi/fetch';
 import { onError } from '@orpc/server';
 import { RAMBLE_SOCKET_PATH } from '../../shared/ramble/protocol';
 import { SENTRY_TUNNEL_PATH } from '../../shared/sentry';
-import { readActor } from './actor';
+import { forgetSession, readActor } from './actor';
 import type { App } from './app';
 import { errorResponse } from './errors';
 import { imagesRoute, isImageRoute } from './images';
@@ -32,6 +32,7 @@ export async function handle(request: Request, app: App): Promise<Response> {
 	if (url.pathname === RAMBLE_SOCKET_PATH) return rambleRoute(request, app);
 	const { matched, response } = await rpc.handle(request, { context: { app, request } });
 	if (matched) return response;
+	if (url.pathname === '/api/auth/sign-out') forgetSession(request);
 	if (url.pathname.startsWith('/api/auth/')) return app.auth.handler(request);
 	return errorResponse('NOT_FOUND', 'Not found');
 }

@@ -1,12 +1,11 @@
 import { implement, ORPCError } from '@orpc/server';
 import { contract, JSON_UTF8, MARKDOWN } from '../../shared/api/contract';
-import { CLIENT_HEADER, DEVICE_HEADER, type Actor } from '../../shared/auth';
-import { namePrefixed, type Person } from '../../shared/sharing';
+import { CLIENT_HEADER, DEVICE_HEADER } from '../../shared/auth';
 import { taskActivity } from './activity';
 import { clientOf, requireActor, requireHuman, spaceOf } from './actor';
 import { originOf, type App } from './app';
 import { deviceIdFrom } from './auth';
-import { aiAccounts, authMethods, createAiUser, deleteUser, userByEmail, userById } from './better-auth';
+import { aiAccounts, authMethods, createAiUser, deleteUser, userById } from './better-auth';
 import {
 	createComment,
 	createLabel,
@@ -18,7 +17,6 @@ import {
 	editSection,
 	editTask,
 	finishTask,
-	guestView,
 	listComments,
 	removeComment,
 	removeLabel,
@@ -45,12 +43,11 @@ import {
 	listLinks,
 	listShares,
 	listTokens,
-	ownersSharingWith,
-	peopleOf,
 	revokeAi,
 	sharedView,
 } from './sharing';
-import { loadSpace } from './space';
+import { searchPeople } from './people';
+import { seesTask, sightOf } from './space';
 import { POWERSYNC_PATH, signSyncToken } from './sync';
 import { upload } from './upload';
 
@@ -79,8 +76,7 @@ async function command({ app, request }: Ctx, space?: string): Promise<Command> 
 
 async function shared(ctx: Ctx, space?: string) {
 	const cmd = await command(ctx, space);
-	const loaded = await loadSpace(cmd.db, cmd.owner);
-	return { ...cmd, space: loaded, access: requireAccess(loaded, cmd.actor), origin: originOf(ctx.request) };
+	return { ...cmd, access: await requireAccess(cmd.db, cmd.owner, cmd.actor), origin: originOf(ctx.request) };
 }
 
 async function own({ app, request }: Ctx) {
@@ -127,24 +123,13 @@ export const router = os.router({
 	},
 	people: {
 		/**
-		 * The people the caller knows: everyone their space has met, the owners of the spaces shared with them, and
-		 * their AI accounts. An empty query lists them all, which is how a guest's device learns an owner's name; a query
-		 * filters on a name prefix and adds an exact email match over every user.
+		 * The people the caller knows: everyone they shared with, the owners of the spaces shared with them, and their
+		 * AI accounts, all read from Better Auth's users. An empty query lists them all, which is how a guest's device
+		 * learns an owner's name; a query filters on a name prefix and adds an exact email match over every user.
 		 */
 		search: os.people.search.handler(async ({ input, context }) => {
 			const actor = await requireHuman(context.request, context.app);
-			const q = input.query.q.trim();
-			const matches = (person: Person) => person.id !== actor.id && (!q || namePrefixed(person.name, q));
-			const found = new Map<string, Person>();
-			const byEmail = q.includes('@') ? await userByEmail(context.app, q.toLowerCase()) : null;
-			if (byEmail && byEmail.id !== actor.id) found.set(byEmail.id, byEmail);
-			const known = await Promise.all([
-				peopleOf(context.app.db, actor.id),
-				ownersSharingWith(context.app.db, actor.id),
-				aiAccounts(context.app, actor.id),
-			]);
-			for (const person of known.flat()) if (matches(person)) found.set(person.id, person);
-			return { people: [...found.values()] };
+			return { people: await searchPeople(context.app.db, actor.id, input.query.q) };
 		}),
 	},
 	me: os.me.handler(({ context }) => requireHuman(context.request, context.app)),
@@ -198,7 +183,7 @@ export const router = os.router({
 		}),
 		list: os.shares.list.handler(async ({ context }) => {
 			const { app, actor, origin } = await own(context);
-			return { shares: await listShares(app.db, await loadSpace(app.db, actor.id), origin) };
+			return { shares: await listShares(app.db, actor.id, origin) };
 		}),
 		delete: os.shares.delete.handler(async ({ input, context }) => {
 			const { app, actor } = await own(context);
@@ -213,7 +198,7 @@ export const router = os.router({
 		}),
 		create: os.tokens.create.handler(async ({ input, context }) => {
 			const { app, actor, origin, now } = await own(context);
-			return createToken(app.db, await loadSpace(app.db, actor.id), origin, input.aiUserId, input.name, now);
+			return createToken(app.db, actor.id, origin, input.aiUserId, input.name, now);
 		}),
 		delete: os.tokens.delete.handler(async ({ input, context }) => {
 			const actor = await requireHuman(context.request, context.app);
@@ -274,13 +259,14 @@ export const router = os.router({
 	},
 	activity: {
 		list: os.activity.list.handler(async ({ input, context }) => {
-			const { db, owner, space, access } = await shared(context, input.query.space);
-			const visible =
-				access.role === 'owner' ? space.snapshot.tasks : guestView(space.snapshot, access.shares).filtered.tasks;
-			if (!visible.some(task => task.id === input.query.id)) {
-				throw new ORPCError('NOT_FOUND', { message: 'No such task' });
-			}
-			return { entries: await taskActivity(db, owner, space.snapshot, input.query.id) };
+			const { db, owner, actor, access } = await shared(context, input.query.space);
+			const sight = await sightOf(db, owner, actor, access);
+			const [seen, entries] = await Promise.all([
+				seesTask(db, owner, sight, input.query.id),
+				taskActivity(db, owner, input.query.id),
+			]);
+			if (!seen) throw new ORPCError('NOT_FOUND', { message: 'No such task' });
+			return { entries };
 		}),
 	},
 	comments: {
@@ -336,16 +322,16 @@ export const router = os.router({
 	},
 	links: {
 		list: os.links.list.handler(async ({ input, context }) => {
-			const { db, space, access, origin } = await shared(context, input.query.space);
-			return { links: await listLinks(db, space, access, origin) };
+			const { db, owner, access, origin } = await shared(context, input.query.space);
+			return { links: await listLinks(db, owner, access, origin) };
 		}),
 		create: os.links.create.handler(async ({ input, context }) => {
-			const { db, space, access, origin, now } = await shared(context, input.query.space);
-			return createLink(db, space, access, origin, input.body.target, now);
+			const { db, owner, access, origin, now } = await shared(context, input.query.space);
+			return createLink(db, owner, access, origin, input.body.target, now);
 		}),
 		delete: os.links.delete.handler(async ({ input, context }) => {
-			const { db, space, access } = await shared(context, input.query.space);
-			await deleteLink(db, space, access, input.query.id);
+			const { db, owner, access } = await shared(context, input.query.space);
+			await deleteLink(db, owner, access, input.query.id);
 			return ok;
 		}),
 	},

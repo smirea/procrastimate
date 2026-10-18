@@ -2,18 +2,43 @@ import { ORPCError } from '@orpc/server';
 import { and, eq } from 'drizzle-orm';
 import { appClientSchema, CLIENT_HEADER, type Actor } from '../../shared/auth';
 import { apiTokens } from '../../shared/db/schema';
+import { user } from './db/auth-schema';
 import type { Client } from '../../shared/values';
 import type { App } from './app';
 import { sha256 } from './auth';
-import { readSession, userById } from './better-auth';
+import { readSession } from './better-auth';
 import { identify } from './sentry';
 
 /**
  * Who a request is from: a Better Auth session, or an AI account's `pm.<ownerId>.<secret>` bearer, which names the
- * owner whose `api_tokens` row holds the secret's hash.
+ * owner whose `api_tokens` row holds the secret's hash. A session bearer, which iOS sends, is resolved once a minute
+ * per isolate, the same trust the web's signed cookie cache gives, so a revoked token works for at most a minute.
  */
 
 const TOKEN_PREFIX = 'pm.';
+const SESSION_CACHE_MS = 60_000;
+const SESSION_CACHE_ROWS = 1000;
+
+const sessions = new Map<string, { actor: Actor; until: number }>();
+
+async function sessionActor(token: string, request: Request, app: App): Promise<Actor | null> {
+	const cached = sessions.get(token);
+	if (cached && cached.until > Date.now()) return cached.actor;
+	const actor = await readSession(request, app);
+	if (!actor) {
+		sessions.delete(token);
+		return null;
+	}
+	if (sessions.size >= SESSION_CACHE_ROWS) sessions.clear();
+	sessions.set(token, { actor, until: Date.now() + SESSION_CACHE_MS });
+	return actor;
+}
+
+/** Sign-out drops the token from this isolate's cache, so the signed-out device is refused at once. */
+export function forgetSession(request: Request): void {
+	const token = bearer(request);
+	if (token) sessions.delete(token);
+}
 
 function bearer(request: Request): string | null {
 	const header = request.headers.get('authorization') ?? '';
@@ -23,19 +48,29 @@ function bearer(request: Request): string | null {
 async function tokenActor(token: string, app: App): Promise<Actor | null> {
 	const [ownerId, secret, ...rest] = token.slice(TOKEN_PREFIX.length).split('.');
 	if (!ownerId || !secret || rest.length) return null;
-	const [row] = await app.db
-		.select({ aiUserId: apiTokens.aiUserId })
+	const [ai] = await app.db
+		.select({ id: user.id, name: user.name, kind: user.kind, ownerId: user.ownerId })
 		.from(apiTokens)
-		.where(and(eq(apiTokens.userId, ownerId), eq(apiTokens.tokenHash, await sha256(secret))));
-	if (!row) return null;
-	const ai = await userById(app, row.aiUserId);
-	return ai?.kind === 'ai' && ai.ownerId === ownerId ? ai : null;
+		.innerJoin(user, eq(user.id, apiTokens.aiUserId))
+		.where(
+			and(
+				eq(apiTokens.userId, ownerId),
+				eq(apiTokens.tokenHash, await sha256(secret)),
+				eq(user.kind, 'ai'),
+				eq(user.ownerId, ownerId),
+			),
+		);
+	return ai ?? null;
 }
 
 /** Also names the caller in Sentry, for the rest of the request. */
 export async function readActor(request: Request, app: App): Promise<Actor | null> {
 	const token = bearer(request);
-	const actor = token?.startsWith(TOKEN_PREFIX) ? await tokenActor(token, app) : await readSession(request, app);
+	const actor = token
+		? token.startsWith(TOKEN_PREFIX)
+			? await tokenActor(token, app)
+			: await sessionActor(token, request, app)
+		: await readSession(request, app);
 	if (actor) identify(actor);
 	return actor;
 }

@@ -15,7 +15,7 @@ Tasks can hold images. Web attaches them from a file picker, a paste, or a drop 
 
 ## Routes
 
-- **Reading is in the agent contract; uploading is not.** `GET /api/images?id=&size=&space=` is `agentContract.images.get`, so AI accounts read images and the agent docs show an example. `PUT /api/images` takes raw bytes with the image's `Content-Type`, which the JSON contract does not describe, so it stays outside it, like the WebSocket. `server/src/api.ts` answers both before the router. The owner of the space reads and writes with one row read or written; a guest's or an AI account's request loads the space, because only `scopeOf` over the owner's snapshot knows which tasks it may see. It reads an image only when a task it may see lists the id. It uploads with any edit share, since an upload reaches the server before the write that lists it, often for a task the server has not seen; the write itself still goes through `admit`.
+- **Reading is in the agent contract; uploading is not.** `GET /api/images?id=&size=&space=` is `agentContract.images.get`, so AI accounts read images and the agent docs show an example. `PUT /api/images` takes raw bytes with the image's `Content-Type`, which the JSON contract does not describe, so it stays outside it, like the WebSocket. `server/src/api.ts` answers both before the router. The owner of the space reads and writes with one row read or written. A guest or an AI account reads its grants, then the image in one select that also checks a task it may see lists the id: a human guest's `access` rows say which tasks those are, a whole-space grant sees them all, and only an AI account with narrower grants has the tree loaded for `scopeOf` (`sightOf` in `server/src/space.ts`). It uploads with any edit share, since an upload reaches the server before the write that lists it, often for a task the server has not seen; the write itself still goes through `guestRefusal`.
 - **Bytes are cached for good.** An id's bytes never change, so `GET` answers `Cache-Control: private, max-age=31536000, immutable`, and `PUT` of an existing id is a retry that keeps the stored bytes.
 - **Public links show the row count, not the images.** A link viewer has no session, and the image routes need one.
 
@@ -31,7 +31,7 @@ Tasks can hold images. Web attaches them from a file picker, a paste, or a drop 
 ## Deleting
 
 - **Deleting removes the id from the task.** There is no delete route. Bytes are garbage once no live task lists their id.
-- **A sweep collects them after a grace period.** After a write to a space, at most once an hour per space and process (`sweepImages`), the server marks the rows no live task lists with `orphaned_at` and clears the mark of rows listed again. A row marked two days ago or more is deleted. The grace period covers undo, an offline device restoring a task, and an upload whose edit has not synced yet. A deleted task's row is gone, so its images go too.
+- **A sweep collects them after a grace period.** The daily cron (`0 9 * * *`, after the backup) runs `sweepImages` over every user from two reads, the image rows and the tasks that list images: it marks the rows no live task lists with `orphaned_at` and clears the mark of rows listed again. A row marked two days ago or more is deleted. Nothing on the write path reads the `images` table. The grace period covers undo, an offline device restoring a task, and an upload whose edit has not synced yet. A deleted task's row is gone, so its images go too.
 
 ## Not built yet
 
