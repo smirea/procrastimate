@@ -219,7 +219,10 @@ async function devVars(env: string, generateOnly: boolean) {
 		secrets.VAPID_PRIVATE_KEY = keys.privateKey;
 		console.log('Generated a new VAPID key pair');
 	}
-	const lines = Object.entries(secrets).map(([name, value]) => `${name}=${JSON.stringify(value)}\n`);
+	// wrangler's dotenv takes a single-quoted value literally but keeps the backslashes of `\"` in a double-quoted one,
+	// which broke the JSON signing key.
+	const quoted = (value: string) => (/['\n]/.test(value) ? JSON.stringify(value) : `'${value}'`);
+	const lines = Object.entries(secrets).map(([name, value]) => `${name}=${quoted(value)}\n`);
 	await Bun.write(file, lines.join(''));
 	console.log(`Wrote .dev.vars: ${Object.keys(secrets).join(', ')}`);
 }

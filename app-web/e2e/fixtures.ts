@@ -77,10 +77,20 @@ export async function signInAccount(context: BrowserContext) {
  * Error counts too. The app never logs an Error itself, and the browser's own lines, such as `Failed to load
  * resource`, carry no arguments.
  */
+/**
+ * WebKit's words for a request it cancelled because the page navigated, such as PowerSync's token fetch during a
+ * reload. PowerSync logs it and tries again after the reload, so it is not a crash. The single-origin spec still fails
+ * on any request that really leaves the origin.
+ */
+const NAVIGATION_ABORT = /due to access control checks\.$/;
+
 export function watchPageErrors(context: BrowserContext) {
 	const errors: string[] = [];
+	const record = (error: string) => {
+		if (!NAVIGATION_ABORT.test(error)) errors.push(error);
+	};
 	const pending: Promise<void>[] = [];
-	context.on('weberror', error => errors.push(String(error.error())));
+	context.on('weberror', error => record(String(error.error())));
 	context.on('console', message => {
 		const [first] = message.type() === 'error' ? message.args() : [];
 		if (!first) return;
@@ -89,11 +99,11 @@ export function watchPageErrors(context: BrowserContext) {
 				.evaluate(value => (value instanceof Error ? String(value) : null))
 				.then(
 					error => {
-						if (error) errors.push(error);
+						if (error) record(error);
 					},
 					// The page navigated before the argument could be read, so judge by the logged text.
 					() => {
-						if (/^\w*Error\b/.test(message.text())) errors.push(message.text());
+						if (/^\w*Error\b/.test(message.text())) record(message.text());
 					},
 				),
 		);

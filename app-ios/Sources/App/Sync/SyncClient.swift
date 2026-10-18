@@ -201,6 +201,9 @@ final class SyncClient {
             var request = URLRequest(url: AppEnvironment.apiURL.appending(path: "api/auth/sign-out"))
             request.httpMethod = "POST"
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            // The Worker sees an empty body even without one, and Better Auth refuses a body with no content type.
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.httpBody = Data("{}".utf8)
             Task { _ = try? await APIClient.session.data(for: request) }
         }
         SessionToken.clear()

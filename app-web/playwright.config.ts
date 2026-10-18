@@ -7,6 +7,12 @@ const API_PORT = PORT + 1;
 // An empty variable in the process env wins over `--env-file`, so a developer's `development` never reports a test.
 const NO_SENTRY = { SENTRY_ENVIRONMENT: '', SENTRY_RELEASE: '' };
 
+// The e2e servers run on the worktree's own e2e database and PowerSync, never the dev ones.
+const { E2E_DATABASE_URL, E2E_POWERSYNC_URL } = process.env;
+if (!E2E_DATABASE_URL || !E2E_POWERSYNC_URL) {
+	throw new Error('E2E_DATABASE_URL and E2E_POWERSYNC_URL are missing. Run `bun scripts/setup-worktree.ts` first.');
+}
+
 // Before any server starts, so a build with Sentry on fails once with the fix instead of in every test.
 if (process.env.E2E_WORKER === '1') {
 	const marker = new URL('.svelte-kit/sentry-target.json', import.meta.url);
@@ -44,7 +50,7 @@ export default defineConfig({
 	webServer:
 		process.env.E2E_WORKER === '1'
 			? {
-					command: `bunx wrangler dev --port ${PORT} --var RAMBLE_UPSTREAM:cassette --var EPHEMERAL:1`,
+					command: `bun scripts/wrangler-dev.ts --e2e --port ${PORT} --var RAMBLE_UPSTREAM:cassette`,
 					cwd: '..',
 					url: `http://127.0.0.1:${PORT}/api/status`,
 					reuseExistingServer: false,
@@ -57,15 +63,19 @@ export default defineConfig({
 						reuseExistingServer: false,
 						env: {
 							API_PORT: String(API_PORT),
+							DATABASE_URL: E2E_DATABASE_URL,
+							POWERSYNC_URL: E2E_POWERSYNC_URL,
+							AUTH_RATE_LIMIT: 'off',
 							RAMBLE_UPSTREAM: 'cassette',
-							EPHEMERAL: '1',
 							...NO_SENTRY,
 						},
 					},
 					// A prebuilt bundle, not the dev server: each fresh browser context made Vite serve ~600 modules, and
-					// eight cold contexts at once on a busy machine took past the 5 s assertion timeout to render.
+					// eight cold contexts at once on a busy machine took past the 5 s assertion timeout to render. The
+					// preview runs on Node: under Bun its proxy crashed the server with ERR_STREAM_WRITE_AFTER_END when a
+					// browser dropped a streaming PowerSync response.
 					{
-						command: `bun --bun run vite build && bun --bun run vite preview --host 127.0.0.1 --port ${PORT} --strictPort`,
+						command: `bun --bun run vite build && bun run vite preview --host 127.0.0.1 --port ${PORT} --strictPort`,
 						url: `http://127.0.0.1:${PORT}/inbox`,
 						reuseExistingServer: false,
 						env: { API_URL: `http://127.0.0.1:${API_PORT}`, CLIENT_PORT: String(PORT), ...NO_SENTRY },

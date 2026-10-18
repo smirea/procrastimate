@@ -110,7 +110,13 @@ class Session {
 	async signOut() {
 		const id = this.userId;
 		this.clear();
-		const response = await fetch('/api/auth/sign-out', { method: 'POST', credentials: 'include' }).catch(() => null);
+		// The Worker sees an empty body even without one, and Better Auth refuses a body with no content type (415).
+		const response = await fetch('/api/auth/sign-out', {
+			method: 'POST',
+			credentials: 'include',
+			headers: { 'content-type': 'application/json' },
+			body: '{}',
+		}).catch(() => null);
 		if (response?.ok || !id || this.state !== 'out') return;
 		this.adopt({ id });
 		toasts.show('Could not sign out');

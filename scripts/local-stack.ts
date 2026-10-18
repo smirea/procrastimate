@@ -177,7 +177,7 @@ export function readOverride(worktree: string): Record<string, string> | null {
 	return Object.fromEntries(
 		readFileSync(file, 'utf8')
 			.split('\n')
-			.map(line => line.match(/^([A-Z_]+)=(.*)$/))
+			.map(line => line.match(/^([A-Z0-9_]+)=(.*)$/))
 			.filter((match): match is RegExpMatchArray => match !== null)
 			.map(match => [match[1]!, match[2]!]),
 	);
