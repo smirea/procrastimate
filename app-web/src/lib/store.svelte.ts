@@ -314,6 +314,11 @@ class Store {
 		return Object.keys(this.#heldSettings).length > 0;
 	}
 
+	/** Whether a command's rows are still on their way into the local database. */
+	get writing(): boolean {
+		return this.#writing > 0;
+	}
+
 	deleteAll() {
 		this.#apply(emptyData());
 	}
