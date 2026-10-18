@@ -333,7 +333,28 @@ test('signing out keeps this device’s data, and signing in as someone else sta
 
 	await signOut();
 	await signIn(`other-${crypto.randomUUID().slice(0, 8)}@procrastimate.test`, true);
+	const probe = () =>
+		a.page.evaluate(async () => {
+			const session = await fetch('/api/auth/get-session', { credentials: 'include' })
+				.then(r => r.json())
+				.catch(e => String(e));
+			return JSON.stringify({
+				user: localStorage.getItem('procrastimate-user'),
+				owner: localStorage.getItem('procrastimate-owner'),
+				session: (session as { user?: { id: string } })?.user?.id ?? session,
+				reads: (window as { procrastimate?: { reads(): unknown } }).procrastimate?.reads(),
+				heading: !!document.querySelector('h1'),
+				text: document.body.innerText.slice(0, 120),
+			});
+		});
+	console.log('DBG181 before goto', await probe());
+	a.page.on('console', message => console.log('DBG181 console', message.type(), message.text().slice(0, 200)));
+	a.page.on('pageerror', error => console.log('DBG181 pageerror', String(error).slice(0, 200)));
 	await a.page.goto('/no-date');
+	for (let i = 0; i < 10; i++) {
+		console.log('DBG181 after goto', i, await probe().catch(e => String(e)));
+		await a.page.waitForTimeout(2000);
+	}
 	await expect(a.page.getByRole('heading', { name: 'No date' })).toBeVisible();
 	await expect(a.app.row(title)).toHaveCount(0);
 	const other = unique('Theirs');
