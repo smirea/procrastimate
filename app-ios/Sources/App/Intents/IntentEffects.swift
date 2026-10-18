@@ -251,20 +251,24 @@ enum IntentEffects {
         return (keep, drop)
     }
 
+    /// Returns once the local database holds the command, since the system may suspend the process as soon as the
+    /// intent returns, even with the app open.
     private static func withStore<T>(_ body: (Store, AppClock, IntentSession?) -> T) async -> T {
         if let session = IntentSession.current {
             let before = session.store.tasks
             let result = body(session.store, session.clock, session)
             SpotlightIndex.schedule(session)
             await followUp(session.store, session.clock, notifications: session.notifications, before: before)
+            await SyncClient.shared(clock: session.clock).saved()
             return result
         }
         let clock = fallbackClock()
-        let store = SyncClient.shared(clock: clock).store
-        let before = store.tasks
-        let result = body(store, clock, nil)
-        SpotlightIndex.schedule(store: store, clock: clock, router: nil)
-        await followUp(store, clock, notifications: nil, before: before)
+        let sync = SyncClient.shared(clock: clock)
+        let before = sync.store.tasks
+        let result = body(sync.store, clock, nil)
+        SpotlightIndex.schedule(store: sync.store, clock: clock, router: nil)
+        await followUp(sync.store, clock, notifications: nil, before: before)
+        await sync.saved()
         return result
     }
 

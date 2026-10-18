@@ -9,7 +9,7 @@ import PowerSync
 /// store. App Intents and Spotlight use the same instance.
 @MainActor @Observable
 final class SyncClient {
-    /// The owner of rows written before anyone signs in, as under the DEBUG launch flag without a session.
+    /// The owner of rows written without a session token, as under the DEBUG launch flag. It never syncs.
     static let localOwner = "local"
 
     private static var current: SyncClient?
@@ -29,6 +29,11 @@ final class SyncClient {
     @ObservationIgnored private let writes: AsyncStream<RowBatch>.Continuation
     @ObservationIgnored private var observation: AnyDatabaseCancellable?
     @ObservationIgnored private var askedForPeople: Set<String> = []
+    @ObservationIgnored private var connecting: Task<Void, Never>?
+    #if DEBUG
+    /// The `access` rows the sharing demo shows. The client never writes the `access` table, so they live here.
+    @ObservationIgnored private var demoAccess: [Access] = []
+    #endif
     @ObservationIgnored weak var session: Session?
     @ObservationIgnored weak var toasts: Toasts?
 
@@ -41,11 +46,13 @@ final class SyncClient {
             fatalError("Could not open the local database at \(LocalDatabase.url.path): \(error)")
         }
         self.database = database
-        let me = Session.userID ?? Self.localOwner
+        // A token without a known owner, as after a reinstall that kept the Keychain, leaves `me` nil: the store reads
+        // nothing and writes nothing until the session check names the owner, so no row is filed under the wrong one.
+        let me = Session.userID ?? (SessionToken.read() == nil ? Self.localOwner : nil)
         // The views exist from the last launch, so the first frame shows the data. A fresh file has none yet.
-        let rows = (try? database.pool.read(LocalDatabase.rows)) ?? StoredRows()
+        let spaces = me.map { me in Spaces((try? database.pool.read(LocalDatabase.rows)) ?? StoredRows(), me: me) }
         store = Telemetry.trace("Load store", operation: "store.load") {
-            Store(me: me, spaces: Spaces(rows, me: me), people: DeviceDefaults.people, clock: clock)
+            Store(me: me, spaces: spaces ?? Spaces(), people: DeviceDefaults.people, clock: clock)
         }
         ready = Task { try await database.ready() }
         let (batches, writes) = AsyncStream.makeStream(of: RowBatch.self)
@@ -90,7 +97,12 @@ final class SyncClient {
     }
 
     private func reload(_ rows: StoredRows) {
-        store.reload(Spaces(rows, me: store.me))
+        guard let me = store.me else { return }
+        var spaces = Spaces(rows, me: me)
+        #if DEBUG
+        spaces.access += demoAccess
+        #endif
+        store.reload(spaces)
         let unknown = Set(store.spaces.keys).subtracting(store.people.map(\.id)).subtracting(askedForPeople)
         if !unknown.isEmpty {
             askedForPeople.formUnion(unknown)
@@ -105,10 +117,15 @@ final class SyncClient {
         )
     }
 
-    /// Connects while a real session token is in the Keychain. The DEBUG launch flag is not a token.
+    /// Whether this device knows whose database it holds, which sync and writes wait for when a token exists.
+    var ownerPending: Bool { store.me == nil }
+
+    /// Connects while a real session token is in the Keychain and its owner is known. The DEBUG launch flag is not a
+    /// token. Until PowerSync reports the attempt, a second call joins it rather than connecting again.
     func start() {
-        guard SessionToken.read() != nil, !Launch.offline else { return }
-        Task { await connect() }
+        guard SessionToken.read() != nil, !Launch.offline, let me = store.me, me != Self.localOwner,
+              connecting == nil else { return }
+        connecting = Task { await connect() }
     }
 
     private func connect() async {
@@ -117,7 +134,9 @@ final class SyncClient {
             try await database.powerSync.connect(
                 connector: connector, options: ConnectOptions(crudThrottle: 0.2, retryDelay: 2)
             )
+            connecting = nil
         } catch {
+            connecting = nil
             ErrorReport.log("Could not start sync", error: error)
             return
         }
@@ -134,14 +153,19 @@ final class SyncClient {
     /// Back in the foreground: reconnects when the stream dropped while the app was away.
     func resume() {
         let status = database.powerSync.currentStatus
-        guard SessionToken.read() != nil, !Launch.offline, !status.connected, !status.connecting else { return }
-        Task { await connect() }
+        guard !status.connected, !status.connecting else { return }
+        start()
     }
 
     /// Pull to refresh: reconnects if needed and waits, up to five seconds, for the stream to catch up.
     func refresh() async {
         guard !Launch.offline else { return }
-        if !database.powerSync.currentStatus.connected { await connect() }
+        if ownerPending { await session?.refresh() }
+        guard !ownerPending else { return }
+        if !database.powerSync.currentStatus.connected {
+            start()
+            await connecting?.value
+        }
         await loadPeople()
         await waitUntil(.seconds(5)) { status, _ in status.connected && !status.downloading && !status.uploading }
     }
@@ -149,7 +173,18 @@ final class SyncClient {
     /// Waits, up to ten seconds, until this device's queued writes reached the server, for a request the server can only
     /// answer once it has them, like sharing a task just created.
     func flush() async {
+        guard !ownerPending else { return }
+        await store.saved()
         await waitUntil(.seconds(10)) { _, pending in !pending }
+    }
+
+    /// Waits until the local database holds every commit made so far. While the owner is unknown, commits stay in
+    /// memory, so this asks the server once (a background launch never ran `Session.start`) and returns if it can't
+    /// answer.
+    func saved() async {
+        if ownerPending { await session?.refresh() }
+        guard !ownerPending else { return }
+        await store.saved()
     }
 
     private func waitUntil(_ limit: Duration, _ done: (any SyncStatusData, Bool) -> Bool) async {
@@ -173,8 +208,23 @@ final class SyncClient {
         session?.signedIn = Launch.signedIn
     }
 
-    /// Another user signed in on this device: none of the previous one's rows, images, or names stay or upload.
-    func switchUser(to id: String) async {
+    /// The session belongs to `id`. A device that did not know whose database it held keeps it, writes what it held
+    /// as `id`'s, and connects. Any other previous owner is another user, whose rows, images, and names neither stay
+    /// nor upload.
+    func adopt(_ id: String) async {
+        switch store.me {
+        case id:
+            return
+        case nil:
+            store.adopt(id)
+            await reloadNow()
+            start()
+        default:
+            await switchUser(to: id)
+        }
+    }
+
+    private func switchUser(to id: String) async {
         try? await ready.value
         do {
             try await database.powerSync.disconnectAndClear()
@@ -201,18 +251,19 @@ final class SyncClient {
     }
 
     #if DEBUG
-    /// Writes another user's space straight into the local database, with the `access` rows the server would add,
-    /// for the DEBUG demos that show sharing without a second account.
+    /// Writes another user's space straight into the local database, unless an earlier launch did, and shows it with
+    /// the `access` rows the server would add, for the DEBUG demos that show sharing without a second account.
     func seed(space owner: String, _ data: Snapshot, access: [Access]) async {
+        demoAccess = access
         do {
             try await ready.value
-            try await database.write(RowBatch(version: 0, owner: owner, writes: Rows.rowWrites(.empty, data)))
-            try await database.pool.write { db in
-                for row in access { try SyncedRow(id: row.id, owner: nil, value: row).insert(db) }
+            if store.spaces[owner] == nil {
+                try await database.write(RowBatch(version: 0, owner: owner, writes: Rows.rowWrites(.empty, data)))
             }
         } catch {
             ErrorReport.log("Could not seed the demo space", error: error)
         }
+        await reloadNow()
     }
     #endif
 

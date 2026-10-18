@@ -33,8 +33,8 @@ final class SyncConnector: PowerSyncBackendConnectorProtocol {
     func uploadData(database: PowerSyncDatabaseProtocol) async throws {
         guard let token = SessionToken.read() else { return }
         try await TaskImages.uploadQueued(token: token)
-        guard let batch = try await database.getCrudBatch(limit: 500) else { return }
-        let writes = try Rows.coalesce(batch.crud.map(Self.rowWrite))
+        guard let batch = try await database.getCrudBatch(limit: 1000) else { return }
+        let writes = try Rows.coalesce(batch.crud.compactMap(Self.rowWrite))
         let body = API.UploadRequest(writes: writes.map(Self.wire))
         let response: API.UploadResponse
         do {
@@ -52,10 +52,12 @@ final class SyncConnector: PowerSyncBackendConnectorProtocol {
     }
 
     /// A queued entry as a row write. `values` stay PowerSync's columns as the server reads them: snake_case names,
-    /// JSON columns as JSON text, numbers as numbers.
-    private static func rowWrite(_ entry: CrudEntry) throws -> RowWrite {
+    /// JSON columns as JSON text, numbers as numbers. Only the server writes `access`, so an entry for it, or for any
+    /// table the client does not write, is dropped: thrown, it would stall every upload behind it.
+    private static func rowWrite(_ entry: CrudEntry) throws -> RowWrite? {
         guard let kind = Rows.kind(ofTable: entry.table) else {
-            throw RowCodingError(description: "Upload from an unknown table \(entry.table)")
+            ErrorReport.log("Dropped a local write to a table the server owns", detail: "\(entry.op) \(entry.table) \(entry.id)")
+            return nil
         }
         let op: RowWrite.Op = switch entry.op {
         case .put: .put

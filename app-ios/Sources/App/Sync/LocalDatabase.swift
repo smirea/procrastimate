@@ -84,11 +84,9 @@ final class LocalDatabase: Sendable {
             base = try JSONValue.encoded(existing.value)
         } else if write.op == .put {
             base = .object([:])
-        } else if write.kind == .settings {
-            // Settings exist for every user, so a change before the server's row arrived starts from the defaults.
-            base = try JSONValue.encoded(API.Settings())
         } else {
-            // A patch of a row that is gone changes nothing, as on the server.
+            // A patch of a row that is gone changes nothing, as on the server. The store holds a settings change until
+            // the server's row arrives, so no settings row is ever made here.
             return
         }
         guard case var .object(fields) = base else { return }

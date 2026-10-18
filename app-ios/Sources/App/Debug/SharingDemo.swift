@@ -9,7 +9,7 @@ enum SharingDemo {
     static func run(sync: SyncClient) async {
         #if DEBUG
         let store = sync.store
-        guard PlacesDemo.has("sharing"), store.spaces["ann"] == nil else { return }
+        guard PlacesDemo.has("sharing"), let me = store.me else { return }
         let ann = Person(id: "ann", name: "Ann Lee", kind: .human)
         let claude = Person(id: "claude", name: "Claude", kind: .ai, ownerId: "ann")
         store.rememberPeople([ann, claude])
@@ -32,10 +32,9 @@ enum SharingDemo {
                 ),
             ],
             projects: [Project(id: "garden", name: "Garden", createdAt: 1)],
-            comments: demoComments(me: store.me),
+            comments: demoComments(me: me),
             settings: API.Settings()
         )
-        let me = store.me
         let access = [("project", "garden", API.Role.edit)]
             + shared.tasks.map { ("task", $0.id, $0.id == "fence" ? API.Role.view : .edit) }
         await sync.seed(space: ann.id, shared, access: access.map { kind, id, role in

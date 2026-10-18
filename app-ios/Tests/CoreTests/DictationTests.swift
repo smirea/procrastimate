@@ -15,7 +15,7 @@ import Testing
     }
 
     @Test func setDictationPatchesOnlyTheChoice() {
-        let (store, written) = recordingStore()
+        let (store, written) = recordingStore(rows: settingsRows())
         store.setDictation(.elevenlabs)
         #expect(store.dictation == .elevenlabs)
         #expect(written.writes == [patch(.settings, "settings", ["dictation": .string("elevenlabs")])])

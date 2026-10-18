@@ -21,8 +21,9 @@ public struct RowBatch: Hashable, Sendable {
 /// again and calls `reload`.
 @MainActor @Observable
 public final class Store {
-    /// The signed-in user: the owner of the own space and the `user_id` of every row written to it.
-    public private(set) var me: String
+    /// The signed-in user: the owner of the own space and the `user_id` of every row written to it. Nil while a session
+    /// token's owner is not known yet, when every commit waits in memory until `adopt` names them.
+    public private(set) var me: String?
     /// The user's own data and settings.
     public private(set) var snapshot: Snapshot
     /// Every space shared with the user, by owner id.
@@ -38,6 +39,13 @@ public final class Store {
     @ObservationIgnored private var version = 0
     @ObservationIgnored private var writtenVersion = 0
     @ObservationIgnored private var reloadDeferred = false
+    /// Commits made while `me` was unknown, in order, for `adopt` to hand to the writer.
+    @ObservationIgnored private var held: [(version: Int, space: SpaceKey, writes: [RowWrite])] = []
+    @ObservationIgnored private var savedWaiters: [(version: Int, resume: CheckedContinuation<Void, Never>)] = []
+    /// Whether the local database holds the user's settings row. Until it does, a settings change waits in
+    /// `unsavedSettings`, so no client ever writes a settings row of its own.
+    @ObservationIgnored private var settingsStored: Bool
+    @ObservationIgnored private var unsavedSettings: [String: JSONValue] = [:]
     @ObservationIgnored private var readOnly: Set<String> = []
     /// Where each deleted task lived, so undo puts it back in the same space.
     @ObservationIgnored private var deletedFrom: [String: SpaceKey] = [:]
@@ -49,7 +57,7 @@ public final class Store {
     @ObservationIgnored private var untouchedLabels: Set<String> = []
 
     public init(
-        me: String,
+        me: String?,
         spaces: Spaces = Spaces(),
         people: [Person] = [],
         clock: AppClock,
@@ -63,6 +71,7 @@ public final class Store {
         self.spaces = spaces.shared
         access = spaces.access
         readOnly = Self.readOnly(spaces.access)
+        settingsStored = spaces.settingsStored
     }
 
     /// Replaces the data with what the local database holds. A reload read while a local commit was still on its way
@@ -72,7 +81,15 @@ public final class Store {
             reloadDeferred = true
             return
         }
-        if snapshot != next.own { snapshot = next.own }
+        settingsStored = next.settingsStored
+        var own = next.own
+        if !unsavedSettings.isEmpty, let settings = try? own.settings.merging(unsavedSettings) { own.settings = settings }
+        if settingsStored, !unsavedSettings.isEmpty {
+            unsavedSettings = [:]
+            write(own, over: next.own, in: .own)
+        } else if snapshot != own {
+            snapshot = own
+        }
         if spaces != next.shared { spaces = next.shared }
         if access != next.access {
             access = next.access
@@ -84,9 +101,30 @@ public final class Store {
     /// reads the database again.
     public func written(_ version: Int) -> Bool {
         writtenVersion = max(writtenVersion, version)
+        let done = savedWaiters.filter { $0.version <= writtenVersion }
+        savedWaiters.removeAll { $0.version <= writtenVersion }
+        for waiter in done { waiter.resume.resume() }
         guard writtenVersion == self.version, reloadDeferred else { return false }
         reloadDeferred = false
         return true
+    }
+
+    /// Returns once the writer finished every commit made before the call, for work the process may not outlive, like
+    /// an App Intent the system runs without the app on screen.
+    public func saved() async {
+        let target = version
+        guard writtenVersion < target else { return }
+        await withCheckedContinuation { savedWaiters.append((target, $0)) }
+    }
+
+    /// Names the owner of a store that started without one. The data stays, and every held commit goes to the writer
+    /// as `id`'s, in order.
+    public func adopt(_ id: String) {
+        guard me == nil else { return }
+        me = id
+        let held = self.held
+        self.held = []
+        for batch in held { send(batch.version, batch.space, batch.writes) }
     }
 
     /// Starts over empty for another user, after the app cleared the local database.
@@ -98,6 +136,9 @@ public final class Store {
         people = []
         readOnly = []
         deletedFrom = [:]
+        held = []
+        settingsStored = false
+        unsavedSettings = [:]
     }
 
     private static func readOnly(_ access: [Access]) -> Set<String> {
@@ -224,9 +265,17 @@ public final class Store {
         case let .shared(id): spaces[id] = after
         }
         let writes = Rows.rowWrites(before, after)
-        guard let writer, !writes.isEmpty else { return }
+        guard writer != nil, !writes.isEmpty else { return }
         version += 1
-        writer(RowBatch(version: version, owner: space.query ?? me, writes: writes))
+        send(version, space, writes)
+    }
+
+    private func send(_ version: Int, _ space: SpaceKey, _ writes: [RowWrite]) {
+        guard let me else {
+            held.append((version, space, writes))
+            return
+        }
+        writer?(RowBatch(version: version, owner: space.query ?? me, writes: writes))
     }
 
     /// Deletes every row of the user's own space. Settings stay, since every user has them.
@@ -234,10 +283,16 @@ public final class Store {
         commit(StoreData())
     }
 
+    /// A change before the settings row arrived shows at once and patches the row once a reload brings it.
     private func setSettings(_ change: (inout API.Settings) -> Void) {
         var after = snapshot
         change(&after.settings)
         guard after != snapshot else { return }
+        guard settingsStored else {
+            for write in Rows.rowWrites(snapshot, after) { unsavedSettings.merge(write.values ?? [:]) { _, new in new } }
+            snapshot = after
+            return
+        }
         write(after, over: snapshot, in: .own)
     }
 

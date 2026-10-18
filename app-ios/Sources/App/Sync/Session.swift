@@ -38,6 +38,22 @@ final class Session {
         if let token = SessionToken.read() { SharedSession.write(token: token) }
         await refresh()
         await loadMethods()
+        await confirmOwner()
+    }
+
+    /// Sync and writes wait while a token's owner is unknown, so the session check repeats, backing off to 30 seconds,
+    /// until the server names the owner or refuses the token.
+    private func confirmOwner() async {
+        var delay = Duration.seconds(1)
+        while sync.ownerPending, SessionToken.read() != nil {
+            do {
+                try await Task.sleep(for: delay)
+            } catch {
+                return
+            }
+            await refresh()
+            delay = min(delay * 2, .seconds(30))
+        }
     }
 
     func refresh() async {
@@ -74,7 +90,8 @@ final class Session {
     /// Remembers who the local database belongs to. Anyone else starts from an empty one that sync fills, so nothing
     /// of the previous user's uploads into the new account.
     func adopt(_ id: String, email: String?, name: String?) async {
-        if Self.userID != id { await sync.switchUser(to: id) }
+        await sync.adopt(id)
+        SessionToken.remember(user: id)
         UserDefaults.standard.set(id, forKey: Self.ownerKey)
         UserDefaults.standard.set(email, forKey: Self.ownerEmailKey)
         UserDefaults.standard.set(name, forKey: Self.ownerNameKey)

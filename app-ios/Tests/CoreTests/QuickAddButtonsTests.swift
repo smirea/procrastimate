@@ -4,7 +4,7 @@ import Testing
 
 @MainActor @Suite struct QuickAddButtonsTests {
     @Test func setQuickAddButtonsPatchesOnlyTheButtons() {
-        let (store, written) = recordingStore()
+        let (store, written) = recordingStore(rows: settingsRows())
         store.setQuickAddButtons([.date, .labels])
         #expect(store.quickAddButtons == [.date, .labels])
         #expect(written.writes == [patch(.settings, "settings", ["quickAddButtons": .array([.string("date"), .string("labels")])])])

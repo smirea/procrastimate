@@ -93,7 +93,7 @@ import Testing
     }
 
     @Test func settingsChangesPatchTheSettingsRow() {
-        let (store, written) = recordingStore()
+        let (store, written) = recordingStore(rows: settingsRows())
         store.setDictation(.elevenlabs)
         store.setDictation(.elevenlabs)
         store.setQuickAddButtons([.date, .labels])

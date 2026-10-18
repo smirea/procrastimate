@@ -16,13 +16,14 @@ func sequentialIds() -> () -> String {
 }
 
 /// A store for `me` over `rows`, recording every batch it writes and finishing each at once, like an idle database.
+/// A nil `me` is a device that does not know whose database it holds yet.
 @MainActor func recordingStore(
-    me: String = "me",
+    me: String? = "me",
     rows: StoredRows = StoredRows(),
     clock: AppClock = .fixed(pinned, timeZone: TimeZone(identifier: "UTC")!),
     newId: @escaping () -> String = sequentialIds()
 ) -> (Store, WrittenRows) {
-    let store = Store(me: me, spaces: Spaces(rows, me: me), clock: clock, newId: newId)
+    let store = Store(me: me, spaces: me.map { Spaces(rows, me: $0) } ?? Spaces(), clock: clock, newId: newId)
     let written = WrittenRows()
     store.writer = { [weak store] batch in
         written.batches.append(batch)
@@ -40,3 +41,10 @@ func patch(_ kind: EntityKind, _ id: String, _ values: [String: JSONValue]) -> R
 }
 
 let pinnedMs = JSONValue.number(Double(pinned.epochMilliseconds))
+
+/// Rows holding `me`'s settings row, as every user has once the first sync arrived.
+func settingsRows(_ settings: API.Settings = API.Settings(), owner: String = "me") -> StoredRows {
+    var rows = StoredRows()
+    rows.settings = [Owned(owner: owner, value: settings)]
+    return rows
+}

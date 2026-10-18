@@ -45,11 +45,14 @@ public struct Spaces: Hashable, Sendable {
     public var own: Snapshot
     public var shared: [String: Snapshot]
     public var access: [Access]
+    /// Whether the rows hold the user's settings row, which the server creates and the first sync brings.
+    public var settingsStored: Bool
 
-    public init(own: Snapshot = .empty, shared: [String: Snapshot] = [:], access: [Access] = []) {
+    public init(own: Snapshot = .empty, shared: [String: Snapshot] = [:], access: [Access] = [], settingsStored: Bool = false) {
         self.own = own
         self.shared = shared
         self.access = access
+        self.settingsStored = settingsStored
     }
 
     public init(_ rows: StoredRows, me: String) {
@@ -70,7 +73,9 @@ public struct Spaces: Hashable, Sendable {
         add(rows.labels, \.labels)
         add(rows.comments, \.comments)
         own.reads = rows.reads.filter { $0.owner == me }.map(\.value)
-        if let settings = rows.settings.first(where: { $0.owner == me }) { own.settings = settings.value }
+        let settings = rows.settings.first { $0.owner == me }
+        if let settings { own.settings = settings.value }
+        settingsStored = settings != nil
         self.own = Spaces.sorted(own)
         self.shared = shared.mapValues(Spaces.sorted)
         access = rows.access
