@@ -90,3 +90,14 @@ The proof of concept lived in `poc/` until the migration landed. Its answers are
 9. The area files under `docs/decisions/` and the feature map.
 10. A one-time import of production data from Turso, kept out of git, that compares every row after it copies.
 11. Deleting `poc/`.
+
+## Cutover
+
+Production keeps running on Turso until this merges. The new Supabase and PowerSync instances already run the schema and hold a verified copy of production from 2026-10-18.
+
+1. Let every device sync on the current app, so no edit waits in an old outbox: open the web app and the iOS app online once.
+2. Push the Worker secrets from env-manager `prod` with `bun run secrets:push`. The deploy's check fails without `POWERSYNC_JWT_PRIVATE_KEY`.
+3. Merge. CI deploys the Worker, and TestFlight builds the iOS app.
+4. Copy production again so nothing written since the first copy is lost: `bun scripts/import-turso.ts --replace` with `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`, and `DATABASE_URL` from env-manager `prod`. The script is not in git: copy `~/.config/procrastimate-setup/import-turso.ts` on Stefan's Mac into `scripts/` first. It exits non-zero unless every row matches.
+5. Open the web app and the new iOS build. Each starts from an empty local database and syncs.
+6. A week later, delete the Turso databases, the `TURSO_*` keys in env-manager, and the `turso/` backups in R2.
