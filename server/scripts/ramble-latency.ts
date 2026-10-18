@@ -7,7 +7,7 @@ import {
 	RAMBLE_SOCKET_PATH,
 	RAMBLE_SOCKET_PROTOCOL,
 } from '../../shared/ramble/protocol';
-import { KEYTERM_TRIGGERS, upstreamUrl } from '../src/account/ramble';
+import { KEYTERM_TRIGGERS, upstreamUrl } from '../src/ramble';
 
 /**
  * Measures Ramble's transcription latency with real speech. It streams a 16 kHz mono WAV in real time, 100 ms

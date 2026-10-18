@@ -1,18 +1,19 @@
 import { betterAuth } from 'better-auth';
-import { memoryAdapter, type MemoryDB } from '@better-auth/memory-adapter';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { bearer } from 'better-auth/plugins';
 import type { AuthMethods } from '../../shared/api/contract';
 import type { Person } from '../../shared/sharing';
-import type { Env } from './bindings';
+import type { App } from './app';
 import { authSchema } from './db/auth-schema';
-import { config, type AppleSecret, type Config } from './config';
-import { tursoDatabase, type TursoDatabase } from './db/turso';
+import type { Db } from './db/postgres';
+import type { AppleSecret, Config } from './config';
 import { reportError } from './sentry';
 
 /** A year. Days offline must not sign the account out; a day online extends the session. */
 const SESSION_SECONDS = 60 * 60 * 24 * 365;
 const SESSION_UPDATE_SECONDS = 60 * 60 * 24;
+/** How long a request trusts the signed session cookie before reading the session row again. */
+const COOKIE_CACHE_SECONDS = 60 * 5;
 const APPLE_BUNDLE_ID = 'com.stefan.procrastimate';
 const ALLOWED_HOSTS = [
 	'procrastimate.stf.lol',
@@ -43,10 +44,10 @@ function trustedOrigins(request?: Request): string[] {
 
 type Where = { field: string; value: string };
 
-/** A `user` row with the sharing fields. Rows from before them read as humans. */
+/** A `user` row with the sharing fields. */
 type UserRow = { id: string; email: string; name: string; kind?: 'human' | 'ai' | null; ownerId?: string | null };
 
-type Auth = {
+export type Auth = {
 	handler: (request: Request) => Promise<Response>;
 	$context: Promise<{
 		adapter: {
@@ -62,12 +63,8 @@ type Auth = {
 	}>;
 };
 
-const memoryDatabases = new Map<string, MemoryDB>();
-const auths = new Map<string, Promise<Auth>>();
-
 /** What the sign-in screen may offer. A provider without credentials is hidden, so CI boots without them. */
-export function authMethods(env: Env): AuthMethods {
-	const { google, apple } = config(env);
+export function authMethods({ google, apple }: Config): AuthMethods {
 	return {
 		email: true,
 		google: google.web !== null,
@@ -136,17 +133,28 @@ async function socialProviders({ google, apple }: Config) {
 	return providers;
 }
 
-function authOptions(secret: string, database: unknown, providers: Record<string, unknown>, durableLimits: boolean) {
-	return {
+/** Signing Apple's secret is a WebCrypto call, so the providers are built once per config, not per request. */
+const providersByConfig = new WeakMap<Config, Promise<Record<string, unknown>>>();
+function cachedProviders(settings: Config) {
+	const existing = providersByConfig.get(settings);
+	if (existing) return existing;
+	const created = socialProviders(settings);
+	providersByConfig.set(settings, created);
+	return created;
+}
+
+/** Better Auth on the app database, whose migrations create its tables. */
+export async function createAuth(settings: Config, db: Db): Promise<Auth> {
+	const options = {
 		appName: 'procrastimate',
-		secret,
+		secret: settings.authSecret,
 		baseURL: {
 			allowedHosts: ALLOWED_HOSTS,
 			protocol: 'auto' as const,
 			fallback: 'https://procrastimate.stf.lol',
 		},
 		trustedOrigins,
-		database,
+		database: drizzleAdapter(db, { provider: 'pg', schema: authSchema, transaction: true }),
 		emailAndPassword: { enabled: true },
 		// `input: false` keeps sign-up from claiming to be an AI account or naming an owner.
 		user: {
@@ -155,12 +163,16 @@ function authOptions(secret: string, database: unknown, providers: Record<string
 				ownerId: { type: 'string', required: false, input: false },
 			},
 		},
-		socialProviders: providers,
-		session: { expiresIn: SESSION_SECONDS, updateAge: SESSION_UPDATE_SECONDS },
+		socialProviders: await cachedProviders(settings),
+		session: {
+			expiresIn: SESSION_SECONDS,
+			updateAge: SESSION_UPDATE_SECONDS,
+			cookieCache: { enabled: true, maxAge: COOKIE_CACHE_SECONDS },
+		},
 		plugins: [bearer()],
 		advanced: { trustedProxyHeaders: true, cookiePrefix: 'procrastimate' },
-		// Memory counters reset with each isolate. The Turso table survives, which is what production has.
-		rateLimit: durableLimits ? { enabled: true, storage: 'database' as const } : { enabled: false },
+		// Counters in the database, so every Worker isolate enforces the same limits.
+		rateLimit: settings.authRateLimit ? { enabled: true, storage: 'database' as const } : { enabled: false },
 		telemetry: { enabled: false },
 		// Better Auth answers its own failures, a 500 included, so they reach Sentry only through its logger.
 		logger: {
@@ -172,58 +184,7 @@ function authOptions(secret: string, database: unknown, providers: Record<string
 			},
 		},
 	};
-}
-
-/** Better Auth on the account database, whose migrations create its tables. */
-const drizzleDatabase = (db: TursoDatabase) =>
-	drizzleAdapter(db, { provider: 'sqlite', schema: authSchema, transaction: true });
-
-async function buildAuth(settings: Config, db: TursoDatabase | null): Promise<Auth> {
-	const providers = await socialProviders(settings);
-	const { authSecret } = settings;
-	const database = db ? drizzleDatabase(db) : memoryAdapter(memoryDb(authSecret));
-	return betterAuth(authOptions(authSecret, database, providers, Boolean(db)) as never) as Auth;
-}
-
-function memoryDb(secret: string): MemoryDB {
-	const existing = memoryDatabases.get(secret);
-	if (existing) return existing;
-	const created: MemoryDB = { user: [], session: [], account: [], verification: [] };
-	memoryDatabases.set(secret, created);
-	return created;
-}
-
-/** One auth instance per secret and database. The account binding is not part of the key. */
-export function getAuth(env: Env): Promise<Auth> {
-	const settings = config(env);
-	const { authSecret, turso, google, apple } = settings;
-	const key = [
-		authSecret,
-		turso?.url ?? 'memory',
-		google.web?.clientId,
-		google.iosClientId,
-		apple?.servicesId,
-		apple?.secret.kind === 'key' ? apple.secret.keyId : apple?.secret.kind,
-	].join('|');
-	const existing = auths.get(key);
-	if (existing) return existing;
-	const database = turso ? tursoDatabase(turso) : Promise.resolve(null);
-	const pending = database
-		.then(db => buildAuth(settings, db))
-		.catch(error => {
-			auths.delete(key);
-			throw error;
-		});
-	auths.set(key, pending);
-	return pending;
-}
-
-export function authOnDatabase(secret: string, db: TursoDatabase): Auth {
-	return betterAuth(authOptions(secret, drizzleDatabase(db), {}, true) as never) as Auth;
-}
-
-export async function authHandler(request: Request, env: Env): Promise<Response> {
-	return (await getAuth(env)).handler(request);
+	return betterAuth(options as never) as Auth;
 }
 
 export type SessionUser = Person & { email: string };
@@ -235,8 +196,7 @@ const asPerson = (row: UserRow): Person => ({
 	ownerId: row.ownerId ?? null,
 });
 
-export async function readSession(request: Request, env: Env): Promise<SessionUser | null> {
-	const auth = await getAuth(env);
+export async function readSession(request: Request, { auth }: App): Promise<SessionUser | null> {
 	const url = new URL('/api/auth/get-session', request.url);
 	const response = await auth.handler(new Request(url, { method: 'GET', headers: request.headers }));
 	if (!response.ok) return null;
@@ -246,31 +206,31 @@ export async function readSession(request: Request, env: Env): Promise<SessionUs
 	return { ...asPerson({ id, email, name, kind, ownerId }), email };
 }
 
-const users = async (env: Env) => (await (await getAuth(env)).$context).adapter;
+const users = async ({ auth }: App) => (await auth.$context).adapter;
 
-export async function userById(env: Env, id: string): Promise<Person | null> {
-	const row = await (await users(env)).findOne<UserRow>({ model: 'user', where: [{ field: 'id', value: id }] });
+export async function userById(app: App, id: string): Promise<Person | null> {
+	const row = await (await users(app)).findOne<UserRow>({ model: 'user', where: [{ field: 'id', value: id }] });
 	return row ? asPerson(row) : null;
 }
 
-export async function userByEmail(env: Env, email: string): Promise<Person | null> {
-	const row = await (await users(env)).findOne<UserRow>({ model: 'user', where: [{ field: 'email', value: email }] });
+export async function userByEmail(app: App, email: string): Promise<Person | null> {
+	const row = await (await users(app)).findOne<UserRow>({ model: 'user', where: [{ field: 'email', value: email }] });
 	return row ? asPerson(row) : null;
 }
 
 /** The AI accounts `ownerId` made, oldest first. */
-export async function aiAccounts(env: Env, ownerId: string): Promise<Person[]> {
+export async function aiAccounts(app: App, ownerId: string): Promise<Person[]> {
 	const rows = await (
-		await users(env)
+		await users(app)
 	).findMany<UserRow>({ model: 'user', where: [{ field: 'ownerId', value: ownerId }] });
 	return rows.filter(row => row.kind === 'ai').map(asPerson);
 }
 
 /** A user that can never sign in: no credential row, and an email nobody receives. */
-export async function createAiUser(env: Env, ownerId: string, name: string): Promise<Person> {
+export async function createAiUser(app: App, ownerId: string, name: string): Promise<Person> {
 	const now = new Date();
 	const row = await (
-		await users(env)
+		await users(app)
 	).create<UserRow>({
 		model: 'user',
 		data: {
@@ -286,8 +246,8 @@ export async function createAiUser(env: Env, ownerId: string, name: string): Pro
 	return asPerson(row);
 }
 
-export async function deleteUser(env: Env, userId: string): Promise<void> {
-	const context = await (await getAuth(env)).$context;
+export async function deleteUser({ auth }: App, userId: string): Promise<void> {
+	const context = await auth.$context;
 	await context.internalAdapter.deleteUser(userId);
 	await context.internalAdapter.deleteUserSessions(userId);
 	await context.internalAdapter.deleteAccounts(userId);

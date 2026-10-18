@@ -1,0 +1,46 @@
+import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
+import { json, ORIGIN, signUp, testApp, type Session, type TestApp } from './test-app';
+import { TOKEN_SECONDS } from './sync';
+
+let app: TestApp;
+let owner: Session;
+beforeAll(async () => {
+	app = await testApp();
+	owner = await signUp(app, 'Owner');
+});
+afterAll(() => app.close());
+
+const claims = (token: string) =>
+	token
+		.split('.')
+		.slice(0, 2)
+		.map(part => JSON.parse(Buffer.from(part, 'base64url').toString()) as Record<string, unknown>);
+
+describe('GET /api/sync/token', () => {
+	test('signs an EdDSA token for the user and names the proxy on the request’s own origin, without an Origin header', async () => {
+		const { origin: _, ...headers } = owner.headers;
+		const { token, endpoint } = await json<{ token: string; endpoint: string }>(
+			app.fetch('/api/sync/token', { headers }),
+		);
+		expect(endpoint).toBe(`${ORIGIN}/api/powersync`);
+		const [header, payload] = claims(token);
+		expect(header).toMatchObject({ alg: 'EdDSA', typ: 'JWT', kid: 'insecure-local-dev-5d7cc3c8' });
+		expect(payload).toMatchObject({ sub: owner.person.id, aud: 'powersync' });
+		expect(Number(payload!.exp) - Number(payload!.iat)).toBe(TOKEN_SECONDS);
+	});
+
+	test('an AI account gets no token', async () => {
+		const ai = await json<{ id: string }>(
+			app.fetch('/api/ai', { method: 'POST', headers: owner.headers, body: JSON.stringify({ name: 'Bot' }) }),
+		);
+		const { token } = await json<{ token: string }>(
+			app.fetch('/api/ai-tokens', {
+				method: 'POST',
+				headers: owner.headers,
+				body: JSON.stringify({ aiUserId: ai.id, name: 'x' }),
+			}),
+		);
+		expect((await app.fetch('/api/sync/token', { headers: { authorization: `Bearer ${token}` } })).status).toBe(403);
+		expect((await app.fetch('/api/sync/token')).status).toBe(401);
+	});
+});

@@ -1,32 +1,38 @@
 import { OpenAPIHandler } from '@orpc/openapi/fetch';
 import { onError } from '@orpc/server';
-import { accountApiRoutes } from './account/account';
-import { authHandler } from './better-auth';
-import type { Env } from './bindings';
-import { config } from './config';
-import { errorResponse } from './errors';
-import { workerRouter } from './router';
+import { RAMBLE_SOCKET_PATH } from '../../shared/ramble/protocol';
 import { SENTRY_TUNNEL_PATH } from '../../shared/sentry';
-import { reportRpcError, sentryTunnel } from './sentry';
+import { readActor } from './actor';
+import type { App } from './app';
+import { errorResponse } from './errors';
+import { imagesRoute, isImageRoute } from './images';
+import { router } from './router';
+import { identify, reportRpcError, sentryTunnel } from './sentry';
+import { POWERSYNC_PATH, powersyncProxy } from './sync';
 
-const rpc = new OpenAPIHandler(workerRouter, { interceptors: [onError(reportRpcError)] });
+const rpc = new OpenAPIHandler(router, { interceptors: [onError(reportRpcError)] });
+
+/** The transcription socket is a human's, on their own space. */
+async function rambleRoute(request: Request, app: App): Promise<Response> {
+	const actor = await readActor(request, app);
+	if (!actor || actor.kind !== 'human') return Response.json({ ok: false, error: 'Not signed in' }, { status: 401 });
+	identify(actor);
+	return app.ramble(request, actor);
+}
 
 /**
- * The Worker's procedures first, then the user's `Account` object, whose bodies it forwards unread, then Better
- * Auth for the rest of `/api/auth/*`. `worker.ts` serves it on Cloudflare with Sentry around it.
+ * One fetch handler for `/api/*`: the Sentry tunnel, the PowerSync proxy, image bytes, Ramble's socket, the
+ * contract's procedures, then Better Auth for the rest of `/api/auth/*`. `index.ts` serves it with Bun and
+ * `worker.ts` on Cloudflare with Sentry around it, so it stays free of Bun and Node APIs.
  */
-export default {
-	async fetch(request, env) {
-		// Before routing, so a misconfigured deploy fails every request with the missing key named, not only the
-		// requests that reach the feature.
-		config(env);
-		const url = new URL(request.url);
-		if (request.method === 'POST' && url.pathname === SENTRY_TUNNEL_PATH) return sentryTunnel(request, env);
-		const forward = accountApiRoutes[`${request.method} ${url.pathname}`];
-		if (forward) return forward(request, env);
-		const { matched, response } = await rpc.handle(request, { context: { env, request } });
-		if (matched) return response;
-		if (url.pathname.startsWith('/api/auth/')) return authHandler(request, env);
-		return errorResponse('NOT_FOUND', 'Not found');
-	},
-} satisfies { fetch: (request: Request, env: Env) => Response | Promise<Response> };
+export async function handle(request: Request, app: App): Promise<Response> {
+	const url = new URL(request.url);
+	if (request.method === 'POST' && url.pathname === SENTRY_TUNNEL_PATH) return sentryTunnel(request, app.env);
+	if (url.pathname.startsWith(`${POWERSYNC_PATH}/`)) return powersyncProxy(request, app.config.powersync.url);
+	if (isImageRoute(request)) return imagesRoute(request, app);
+	if (url.pathname === RAMBLE_SOCKET_PATH) return rambleRoute(request, app);
+	const { matched, response } = await rpc.handle(request, { context: { app, request } });
+	if (matched) return response;
+	if (url.pathname.startsWith('/api/auth/')) return app.auth.handler(request);
+	return errorResponse('NOT_FOUND', 'Not found');
+}

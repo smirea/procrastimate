@@ -13,6 +13,7 @@ import type { Actor } from '../../shared/auth';
 import { envelopeUrl, parseDsn, SENTRY_DSN, SENTRY_TUNNEL_PATH, type SentryTarget } from '../../shared/sentry';
 import type { Env, Handler } from './bindings';
 import { config } from './config';
+import { BACKUP_CRON } from './crons';
 
 /**
  * The server's one Sentry module. `worker.ts` wraps the handler and the `Account` object with `sentryOptions`, and
@@ -56,8 +57,8 @@ export function sentryOptions(env: Env): CloudflareOptions {
 		integrations: [
 			// The default caps a body at 10 KB; a sync body is the one worth reading whole.
 			httpServerIntegration({ maxRequestBodySize: 'always', ignoreRequestBody: isTunnel }),
-			// A Sentry cron monitor, so a backup that never runs alerts, not only one that throws.
-			cronTriggersIntegration({ monitorSlug: () => 'turso-backup' }),
+			// A Sentry cron monitor per trigger, so a cron that never runs alerts, not only one that throws.
+			cronTriggersIntegration({ monitorSlug: cron => (cron === BACKUP_CRON ? 'postgres-backup' : 'push-delivery') }),
 		],
 	};
 }

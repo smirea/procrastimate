@@ -146,12 +146,6 @@ export const agentExamples: readonly Example[] = [
 		query: { id: PROJECT_ID },
 	},
 	{ title: 'Delete a task and its subtasks', method: 'DELETE', path: '/api/tasks', query: { id: TASK_ID } },
-	{
-		title: 'Sync from scratch, as the apps do',
-		method: 'POST',
-		path: '/api/sync',
-		body: { cursor: 0, ops: [] },
-	},
 ];
 
 /** Unencoded, so the `<task-id>` placeholder reads as one. Real ids are URL safe. */
@@ -270,10 +264,6 @@ Errors are JSON \`{ "code", "message" }\`:
 - \`401 UNAUTHORIZED\`: the token is missing, wrong, or revoked.
 - \`403 FORBIDDEN\`: the route is not open to AI accounts, or the change touches something you may not edit.
 - \`404 NOT_FOUND\`: nothing with that id is visible to you.
-
-## Sync
-
-\`POST /api/sync\` is how the apps replicate. Most agents never need it, since \`GET /api/view\` and the task routes cover reading and editing. Send \`{ "cursor": 0, "ops": [] }\` to receive the whole visible snapshot with a \`cursor\` and a \`scope\`. Send that \`scope\` back next time to receive no changes while nothing you can see moved. Each op carries a fresh \`opId\` and a hybrid logical clock \`hlc\`; field-level last-writer-wins resolves conflicts. Task ops are applied when the task is editable before and after, and project, section, and label ops apply too; settings and read-marker ops are acknowledged and dropped.
 `;
 }
 

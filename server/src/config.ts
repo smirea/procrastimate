@@ -1,34 +1,27 @@
 import { parseSentryTarget, SENTRY_DSN, type SentryTarget } from '../../shared/sentry';
 import type { Env } from './bindings';
-import type { TursoTarget } from './db/turso';
 import { VAPID_SUBJECT, type Vapid } from './web-push';
-
-/** Ephemeral runs keep their users in memory, so a public secret signs nothing that outlives the process. */
-export const EPHEMERAL_AUTH_SECRET = 'ephemeral-better-auth-secret-0123456789';
 
 /** A deploy without any of these fails every request. `secrets.ts verify` checks them before `wrangler deploy`. */
 export const REQUIRED_WORKER_SECRETS = [
 	'BETTER_AUTH_SECRET',
-	'TURSO_DATABASE_URL',
-	'TURSO_AUTH_TOKEN',
+	'POWERSYNC_JWT_PRIVATE_KEY',
 	'VAPID_PUBLIC_KEY',
 	'VAPID_PRIVATE_KEY',
 ] as const;
 
 export type AppleSecret = { kind: 'stored'; jwt: string } | { kind: 'key'; teamId: string; keyId: string; pem: string };
 
+/** An Ed25519 private key as PowerSync and WebCrypto both read it. `kid` names it in the token header. */
+export type SigningKey = { kty: 'OKP'; crv: 'Ed25519'; kid: string; x: string; d: string };
+
 export type Config = {
-	/**
-	 * `EPHEMERAL=1`, set by unit tests, the end-to-end runs, and the Bun dev server without Turso. Data lives in
-	 * memory or the Durable Object, Turso is never touched even when the shell has its secrets, and only the
-	 * production secrets become optional. Production never sets it.
-	 */
-	ephemeral: boolean;
 	authSecret: string;
-	/** Null only when ephemeral. */
-	turso: TursoTarget | null;
-	/** Null only when ephemeral. */
-	vapid: Vapid | null;
+	authRateLimit: boolean;
+	/** A postgres.js connection string: the Hyperdrive binding's on the Worker, `DATABASE_URL` elsewhere. */
+	database: string;
+	powersync: { url: string; key: SigningKey };
+	vapid: Vapid;
 	google: { web: { clientId: string; clientSecret: string } | null; iosClientId: string | null };
 	apple: { servicesId: string | null; secret: AppleSecret } | null;
 	ramble: { kind: 'cassette' } | { kind: 'elevenlabs'; apiKey: string } | null;
@@ -36,7 +29,22 @@ export type Config = {
 	sentry: SentryTarget | null;
 };
 
-type Key = Exclude<keyof Env, 'ACCOUNT' | 'BACKUPS'>;
+type Key = Exclude<keyof Env, 'HYPERDRIVE' | 'RAMBLE' | 'BACKUPS'>;
+
+function parseSigningKey(json: string): SigningKey | string {
+	let parsed: unknown;
+	try {
+		parsed = JSON.parse(json);
+	} catch {
+		return 'POWERSYNC_JWT_PRIVATE_KEY is not JSON';
+	}
+	const key = parsed as Partial<SigningKey> | null;
+	if (key?.kty !== 'OKP' || key.crv !== 'Ed25519') return 'POWERSYNC_JWT_PRIVATE_KEY must be an Ed25519 OKP JWK';
+	for (const field of ['kid', 'x', 'd'] as const) {
+		if (typeof key[field] !== 'string' || !key[field]) return `POWERSYNC_JWT_PRIVATE_KEY lacks ${field}`;
+	}
+	return { kty: 'OKP', crv: 'Ed25519', kid: key.kid!, x: key.x!, d: key.d! };
+}
 
 /** `sentryDsn` is the committed worker DSN; tests pass their own. */
 export function parseConfig(env: Env, sentryDsn: string = SENTRY_DSN.worker): Config {
@@ -51,18 +59,21 @@ export function parseConfig(env: Env, sentryDsn: string = SENTRY_DSN.worker): Co
 		return null;
 	};
 
-	const mode = read('EPHEMERAL');
-	if (mode && mode !== '1') problems.push(`EPHEMERAL must be 1 or unset, not "${mode}"`);
-	const ephemeral = mode === '1';
+	const authSecret = group(['BETTER_AUTH_SECRET'], true)?.BETTER_AUTH_SECRET;
+	const rateLimit = read('AUTH_RATE_LIMIT');
+	if (rateLimit && rateLimit !== 'off') problems.push(`AUTH_RATE_LIMIT must be off or unset, not "${rateLimit}"`);
 
-	const authSecret = ephemeral
-		? (read('BETTER_AUTH_SECRET') ?? EPHEMERAL_AUTH_SECRET)
-		: group(['BETTER_AUTH_SECRET'], true)?.BETTER_AUTH_SECRET;
+	const database = env.HYPERDRIVE?.connectionString ?? read('DATABASE_URL');
+	if (!database) problems.push('Missing the HYPERDRIVE binding or DATABASE_URL');
 
-	const tursoKeys = ephemeral ? null : group(['TURSO_DATABASE_URL', 'TURSO_AUTH_TOKEN'], true);
-	if (tursoKeys && !URL.canParse(tursoKeys.TURSO_DATABASE_URL)) problems.push('TURSO_DATABASE_URL is not a URL');
+	const powersyncUrl = read('POWERSYNC_URL');
+	if (!powersyncUrl) problems.push('Missing POWERSYNC_URL');
+	else if (!URL.canParse(powersyncUrl)) problems.push('POWERSYNC_URL is not a URL');
+	const keyJson = read('POWERSYNC_JWT_PRIVATE_KEY');
+	const key = keyJson ? parseSigningKey(keyJson) : 'Missing POWERSYNC_JWT_PRIVATE_KEY';
+	if (typeof key === 'string') problems.push(key);
 
-	const vapidKeys = group(['VAPID_PUBLIC_KEY', 'VAPID_PRIVATE_KEY'], !ephemeral);
+	const vapidKeys = group(['VAPID_PUBLIC_KEY', 'VAPID_PRIVATE_KEY'], true);
 
 	const googleWeb = group(['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET'], false);
 
@@ -91,18 +102,15 @@ export function parseConfig(env: Env, sentryDsn: string = SENTRY_DSN.worker): Co
 	});
 	if (sentry.problem) problems.push(sentry.problem);
 
-	if (problems.length || !authSecret) {
+	if (problems.length || !authSecret || !database || !powersyncUrl || typeof key === 'string' || !vapidKeys) {
 		throw new Error(`Invalid server configuration:\n${problems.map(problem => `- ${problem}`).join('\n')}`);
 	}
 	return {
-		ephemeral,
 		authSecret,
-		turso: tursoKeys && { url: tursoKeys.TURSO_DATABASE_URL, authToken: tursoKeys.TURSO_AUTH_TOKEN },
-		vapid: vapidKeys && {
-			publicKey: vapidKeys.VAPID_PUBLIC_KEY,
-			privateKey: vapidKeys.VAPID_PRIVATE_KEY,
-			subject: VAPID_SUBJECT,
-		},
+		authRateLimit: rateLimit !== 'off',
+		database,
+		powersync: { url: powersyncUrl.replace(/\/$/, ''), key },
+		vapid: { publicKey: vapidKeys.VAPID_PUBLIC_KEY, privateKey: vapidKeys.VAPID_PRIVATE_KEY, subject: VAPID_SUBJECT },
 		google: {
 			web: googleWeb && { clientId: googleWeb.GOOGLE_CLIENT_ID, clientSecret: googleWeb.GOOGLE_CLIENT_SECRET },
 			iosClientId: read('GOOGLE_IOS_CLIENT_ID'),

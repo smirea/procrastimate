@@ -10,15 +10,18 @@
 import { chmod, copyFile, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import devJwtKey from '../../powersync/local/INSECURE-dev-jwt-key.json' with { type: 'json' };
 import { REQUIRED_WORKER_SECRETS } from '../src/config';
 import { generateVapidKeys } from '../src/web-push';
+
+/** The Bun dev server's stand-in; `wrangler dev` gets the same through `.dev.vars`, so the local PowerSync trusts both. */
+const INSECURE_DEV_AUTH_SECRET = 'insecure-local-dev-better-auth-secret-0123456789';
 
 export const WORKER_SECRETS = [
 	'VAPID_PUBLIC_KEY',
 	'VAPID_PRIVATE_KEY',
 	'ELEVENLABS_API_KEY',
-	'TURSO_DATABASE_URL',
-	'TURSO_AUTH_TOKEN',
+	'POWERSYNC_JWT_PRIVATE_KEY',
 	'BETTER_AUTH_SECRET',
 	'GOOGLE_CLIENT_ID',
 	'GOOGLE_CLIENT_SECRET',
@@ -194,7 +197,10 @@ async function github(env: string) {
 	}
 }
 
-/** Writes `.dev.vars` for `wrangler dev`, which must exist so wrangler never falls back to the root `.env` schema. */
+/**
+ * Writes `.dev.vars` for `wrangler dev`, which must exist so wrangler never falls back to the root `.env` schema. Secrets
+ * env-manager lacks get the local stand-ins: the committed dev signing key, a fixed auth secret, and a VAPID pair.
+ */
 async function devVars(env: string, generateOnly: boolean) {
 	let values: Values = {};
 	if (!generateOnly) {
@@ -207,6 +213,8 @@ async function devVars(env: string, generateOnly: boolean) {
 	const file = Bun.file(devVarsPath);
 	const existing = parseDotenv((await file.exists()) ? await file.text() : '');
 	const secrets: Values = { ...existing, ...workerSecrets(values) };
+	secrets.POWERSYNC_JWT_PRIVATE_KEY ||= JSON.stringify(devJwtKey);
+	secrets.BETTER_AUTH_SECRET ||= INSECURE_DEV_AUTH_SECRET;
 	if (!secrets.VAPID_PUBLIC_KEY || !secrets.VAPID_PRIVATE_KEY) {
 		const keys = await generateVapidKeys();
 		secrets.VAPID_PUBLIC_KEY = keys.publicKey;
