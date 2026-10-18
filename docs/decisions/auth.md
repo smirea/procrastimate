@@ -1,6 +1,6 @@
 # Auth
 
-Sign-in is Better Auth, inside the Worker. The signed-in user owns the tasks. An install id only names the install.
+Sign-in is Better Auth, inside the Worker. It stayed through the move to Postgres because leaving it would mean moving scrypt password hashes and Google and Apple identities, which nothing here can test, and it runs in-process with nothing to host. The signed-in user owns the tasks. An install id only names the install.
 
 - **Sessions, not device tokens.** Email and password sign-up and sign-in. No password reset, because the app does not send email. Google and Apple sign-in use the web redirect on the web and a native sheet on iOS. iOS posts the identity token to `POST /api/auth/sign-in/social`. Sessions last a year and extend after a day online, so days offline do not sign anyone out.
 - **Where the session lives.** The web keeps the Better Auth cookie. It also caches the user id in `localStorage` under `procrastimate-user`, because the cookie is httpOnly and the app must open offline. iOS keeps the bearer token from `set-auth-token` in the Keychain under `procrastimate-session`. It keeps no cookies: every API request goes through `APIClient.session`, which neither stores nor sends them, because Better Auth refuses a request that carries its cookie without an `Origin` (`403 MISSING_OR_NULL_ORIGIN`), and native requests send no `Origin`. A cached session opens the app. A network failure keeps it. A `401`, or a session response with no user, clears it and shows sign-in.
