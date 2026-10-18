@@ -235,8 +235,6 @@ class Store {
 				},
 				error => {
 					reportError(error);
-					// Memory shows the command the database refused, and nothing else will trigger a read: a refused
-					// transaction logs no change. So the read is asked for here, and it takes every table whole.
 					this.#cursor = null;
 					this.#stale = true;
 				},

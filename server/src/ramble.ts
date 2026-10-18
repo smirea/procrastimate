@@ -55,14 +55,12 @@ export const KEYTERM_TRIGGERS = ['subtask', 'priority', 'remind', 'project', 'la
 export const MAX_KEYTERMS = 50;
 export const MAX_KEYTERM_LENGTH = 20;
 
-/** What the keyterms are read from: three columns of each task, and the names. */
 export type KeytermSource = {
 	tasks: readonly { projectId: string | null; labelIds: string[]; createdAt: number }[];
 	projects: readonly Named[];
 	labels: readonly Named[];
 };
 
-/** The columns `rambleKeyterms` reads, not the whole space. */
 export async function loadKeytermSource(db: Db, owner: string): Promise<KeytermSource> {
 	const [taskRows, projectRows, labelRows] = await Promise.all([
 		db
@@ -155,14 +153,8 @@ export function rambleConfig(
 
 type RambleGrant = { day: string; seconds: number };
 
-/** The audio seconds one open session has streamed on its current day and not yet stored. */
 type Tally = { seconds: number };
 
-/**
- * One user's day as every session of it charges it: the seconds the table holds, kept current as sessions end, and
- * the open sessions' tallies, which the table does not count yet. One object per user and day, so a session never
- * holds a stale copy of what the sessions that closed after it opened have stored.
- */
 type Day = { key: DateKey; stored: number; live: Set<Tally>; loaded: Promise<void> };
 
 export type Ramble = {
@@ -182,7 +174,6 @@ export function ramble(stream: StreamHost, config: RambleConfig): Ramble {
 	};
 }
 
-/** The user's day, loaded from the table the first time it is asked for. The user's days without sessions are dropped. */
 function dayOf(ramble: Ramble, usage: RambleUsage, userId: string, key: DateKey): Day {
 	const id = `${userId}:${key}`;
 	const existing = ramble.days.get(id);
@@ -198,10 +189,8 @@ function dayOf(ramble: Ramble, usage: RambleUsage, userId: string, key: DateKey)
 	return day;
 }
 
-/** Seconds streamed so far on the day by sessions still open, which the table does not count until each ends or rolls. */
 const liveSeconds = (day: Day) => [...day.live].reduce((sum, tally) => sum + tally.seconds, 0);
 
-/** Charges `seconds` to the day at once, and to the table once the day's own count has been read. */
 function charge(usage: RambleUsage, day: Day, seconds: number) {
 	if (seconds <= 0) return;
 	day.stored += seconds;
@@ -497,10 +486,7 @@ function refuseDaily(ramble: Ramble, request: Request, resetsAt: number) {
 
 export type RambleRoute = (request: Request, actor: Actor) => Promise<Response>;
 
-/**
- * The upgrade for one signed-in human's session, after the caller authenticated the request, over one database. The
- * caps are checked before anything else is read, so a used-up day costs one query.
- */
+/** The upgrade for one signed-in human's session, after the caller authenticated the request, over one database. */
 export function rambleRoute(db: Db, ramble: Ramble): RambleRoute {
 	return async (request, actor) => {
 		if (request.headers.get('Upgrade')?.toLowerCase() !== 'websocket') return fail(426, 'Expected a WebSocket');

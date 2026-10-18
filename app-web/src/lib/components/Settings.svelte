@@ -36,7 +36,6 @@
 
 	const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
-	/** The server stops pushing to this device before the session that names it goes. */
 	async function signOut() {
 		await push.forget();
 		await session.signOut();

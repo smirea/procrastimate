@@ -291,7 +291,6 @@ public enum QuickAdd {
 
     /// JavaScript's `new Date(year, month, day)` for a zero-based month that may overflow into later years, or nil
     /// when the day does not exist in that month.
-    /// A year under 1000 stays text: a date key has four digits.
     static func calendarDate(_ year: Int, _ month: Int, _ day: Int) -> DateKey? {
         guard month >= 0, year >= 1000 else { return nil }
         let y = year + month / 12
@@ -300,7 +299,6 @@ public enum QuickAdd {
         return Dates.key(days: Dates.days(year: y, month: m, day: day))
     }
 
-    /// A month and day without a year means the next one, counting today, which for Feb 29 is the next leap year.
     static func monthDay(_ today: DateKey, _ month: Int, _ day: Int, _ yearText: String?) -> DateKey? {
         if let yearText, let year = Int(yearText) {
             return calendarDate(yearText.utf16.count == 2 ? 2000 + year : year, month, day)

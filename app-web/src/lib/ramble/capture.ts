@@ -193,11 +193,9 @@ function socket(options: {
 	};
 }
 
-/** The user refused the microphone, or the device has none; anything else is the page's own failure. */
 const isPermissionError = (error: unknown) =>
 	error instanceof DOMException && (error.name === 'NotAllowedError' || error.name === 'NotFoundError');
 
-/** The stream is open before the audio graph is; a graph that fails to build must not leave the mic recording. */
 async function startMic(socket: WebSocket, onLevel?: (level: number) => void) {
 	const stream = await navigator.mediaDevices.getUserMedia({
 		audio: { echoCancellation: true, noiseSuppression: true },

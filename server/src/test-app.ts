@@ -48,7 +48,6 @@ export type TestApp = App & {
 
 let template: Promise<PGlite> | undefined;
 
-/** One migrated database per test process; each app clones it, which costs a fraction of migrating again. */
 async function migrated(): Promise<PGlite> {
 	const client = new PGlite();
 	await migrate(drizzle(client));

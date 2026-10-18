@@ -49,7 +49,6 @@ class Push {
 		for (const [target, type, listener] of listeners) target.addEventListener(type, listener);
 		return () => {
 			for (const [target, type, listener] of listeners) target.removeEventListener(type, listener);
-			// The next account in this tab registers the same endpoint afresh.
 			this.#registered = null;
 		};
 	}
@@ -164,7 +163,6 @@ class Push {
 		}
 	}
 
-	/** `off` only changes through a prompt, so refetching the key on every focus would find nothing new. */
 	#retry() {
 		if (this.state.kind === 'unavailable' || this.state.kind === 'error') void this.detect();
 		else if (this.state.kind === 'on') void this.#register(this.state.subscription);

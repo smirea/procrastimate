@@ -40,14 +40,11 @@ final class Session {
         await loadMethods()
     }
 
-    /// Only the server's own verdict ends the session: a `401`, or a session with no user. A network failure, a 5xx,
-    /// or a captive portal's page keeps it, so an outage never shows sign-in.
     func refresh() async {
         guard let token = SessionToken.read() else {
             signedIn = Launch.signedIn
             return
         }
-        // A background relaunch while the phone was locked could not read the token; now it can.
         signedIn = true
         var request = URLRequest(url: AppEnvironment.apiURL.appending(path: "api/auth/get-session"))
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
@@ -72,7 +69,6 @@ final class Session {
         await adopt(id, email: user["email"] as? String, name: user["name"] as? String)
     }
 
-    /// Every way out of the account: the token goes, the sync stream stops, and sign-in shows.
     func end() {
         SessionToken.clear()
         sync.disconnect()

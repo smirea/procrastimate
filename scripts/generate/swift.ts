@@ -115,7 +115,6 @@ const camel = (value: string) => {
 	const name = pascal(value);
 	return name[0]!.toLowerCase() + name.slice(1);
 };
-/** A name Swift accepts, backticked when reserved. `24h` or `+` cannot be one; a string enum names such cases with `x-enum-names`. */
 function identifier(name: string): string {
 	if (!/^[A-Za-z_]\w*$/.test(name))
 		throw new Error(`${JSON.stringify(name)} is not a Swift identifier; add x-enum-names`);

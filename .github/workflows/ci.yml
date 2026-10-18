@@ -217,7 +217,6 @@ jobs:
           bunx sentry-cli releases finalize "$RELEASE"
           bunx sentry-cli deploys new --release "$RELEASE" -e production
 
-      # Every push to master deploys; a master that silently did not must show red, not a warning nobody reads.
       - name: Deploy skipped
         if: env.HAS_CLOUDFLARE != 'true'
         run: |

@@ -49,7 +49,6 @@ function parseSigningKey(json: string): SigningKey | string {
 	return { kty: 'OKP', crv: 'Ed25519', kid: key.kid!, x: key.x!, d: key.d! };
 }
 
-/** The byte length of a base64url value, or null when it does not decode. */
 function decodedLength(text: string): number | null {
 	try {
 		return base64urlDecode(text).length;
@@ -58,7 +57,6 @@ function decodedLength(text: string): number | null {
 	}
 }
 
-/** The uncompressed P-256 point (65 bytes starting with 0x04) and the 32-byte scalar, checked here, not at first push. */
 function vapidProblems(publicKey: string, privateKey: string): string[] {
 	const problems: string[] = [];
 	const point = (() => {

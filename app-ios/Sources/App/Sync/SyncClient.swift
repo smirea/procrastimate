@@ -231,7 +231,6 @@ final class SyncClient {
     private func waitUntil(_ limit: Duration, _ done: (any SyncStatusData, Bool) -> Bool) async {
         let deadline = ContinuousClock.now + limit
         while ContinuousClock.now < deadline {
-            // A queue that cannot be read counts as pending; "nothing to upload" must be a real answer.
             let pending: Bool
             do {
                 pending = try await database.powerSync.getCrudBatch(limit: 1) != nil

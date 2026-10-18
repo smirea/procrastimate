@@ -12,10 +12,6 @@ export type TimeOfDay = `${number}:${number}`;
 export const DATE_KEY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 export const TIME_OF_DAY_PATTERN = /^\d{2}:\d{2}$/;
 
-/**
- * Custom so the parsed type is the template literal. The metadata is their JSON Schema. Every `id` names the type in
- * the OpenAPI document and in Swift, and `x-` keys tell the Swift generator how to shape it.
- */
 /** `2026-02-31` has the shape but names no day; `Date` would roll it over to March. */
 const isCalendarDate = (value: string) => {
 	const [y, m, d] = value.split('-').map(Number) as [number, number, number];
@@ -23,6 +19,10 @@ const isCalendarDate = (value: string) => {
 	return date.getMonth() === m - 1 && date.getDate() === d;
 };
 
+/**
+ * Custom so the parsed type is the template literal. The metadata is their JSON Schema. Every `id` names the type in
+ * the OpenAPI document and in Swift, and `x-` keys tell the Swift generator how to shape it.
+ */
 export const dateKeySchema = z
 	.custom<DateKey>(v => typeof v === 'string' && DATE_KEY_PATTERN.test(v) && isCalendarDate(v))
 	.meta({

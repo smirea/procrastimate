@@ -52,9 +52,8 @@
 	const project = $derived(store.project(task.projectId));
 	const section = $derived(store.section(task.sectionId));
 
-	/** The title as typed, until it is committed; otherwise the task's, so a rename from elsewhere shows at once. */
-	let edit = $state<string | null>(null);
-	const title = $derived(edit ?? task.title);
+	let typed = $state<string | null>(null);
+	const title = $derived(typed ?? task.title);
 	const parsed = $derived(
 		parseQuickAdd(title, {
 			now: new Date(clock.now),
@@ -87,17 +86,17 @@
 	const eventDue = $derived(task.event ? scheduledDue(task, clock.today) : null);
 
 	function commitTitle() {
-		if (edit === null || title === task.title) {
-			edit = null;
+		if (typed === null || title === task.title) {
+			typed = null;
 			return;
 		}
 		if (!parsed.title) {
-			edit = null;
+			typed = null;
 			return;
 		}
 		const { title: next, due, recurrence, priority, projectId, sectionId, labelIds, reminders, location } = draft;
 		update({ title: next, due, recurrence, priority, projectId, sectionId, labelIds, reminders, location });
-		edit = null;
+		typed = null;
 	}
 
 	function onkeydown(event: KeyboardEvent) {
@@ -106,7 +105,7 @@
 			commitTitle();
 		} else if (event.key === 'Escape') {
 			event.preventDefault();
-			edit = null;
+			typed = null;
 			sheets.close();
 		}
 	}
@@ -222,7 +221,7 @@
 		{/if}
 		{#if editable}
 			<LinkedField text={title} class="px-1 py-0.5 text-[19px] leading-[1.6] font-semibold whitespace-pre-wrap [overflow-wrap:anywhere]">
-				<SmartInput bind:value={() => title, (value) => (edit = value)} tokens={parsed.tokens} projectId={draft.projectId} label="Title" enterkeyhint="done" suggestProjects={!parent} class="text-[19px] font-semibold" {onkeydown} onblur={commitTitle} />
+				<SmartInput bind:value={() => title, (value) => (typed = value)} tokens={parsed.tokens} projectId={draft.projectId} label="Title" enterkeyhint="done" suggestProjects={!parent} class="text-[19px] font-semibold" {onkeydown} onblur={commitTitle} />
 			</LinkedField>
 		{:else}
 			<h2 class="text-[19px] font-semibold break-words"><LinkedText text={task.title} /></h2>

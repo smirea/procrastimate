@@ -90,12 +90,6 @@ type Visible = ReturnType<typeof visibleOf>;
 
 const NO_CLIENTS: TaskClients = { created: null, edited: null };
 
-/**
- * The app behind a task's first write and its latest, read off the log with the stored row: the first log row is its
- * creation, the newest its last change. One select whose two lateral reads per task each take one row off the
- * `log_entity` index, however long the task's history. A task with no row, or a row from before the server recorded
- * apps, reads `null`.
- */
 async function clientRows(db: Db, owner: string, ids: readonly string[]) {
 	const end = (order: typeof asc, name: string) =>
 		db
@@ -125,7 +119,6 @@ async function clientRows(db: Db, owner: string, ids: readonly string[]) {
 	}));
 }
 
-/** `tasks` as the agent view shows them, with the clients of each. */
 async function withClients(db: Db, owner: string, tasks: readonly Task[]): Promise<AgentTask[]> {
 	if (!tasks.length) return [];
 	const rows = await clientRows(

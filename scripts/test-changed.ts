@@ -44,7 +44,6 @@ function resolveImport(from: string, specifier: string): string | null {
 	return null;
 }
 
-/** A Svelte file's imports are in its script blocks; the transpiler reads TypeScript. */
 function source(file: string): string {
 	const text = readFileSync(file, 'utf8');
 	if (!file.endsWith('.svelte')) return text;
@@ -61,7 +60,6 @@ for (const file of sources) {
 	}
 }
 
-/** Every source that reaches one of `changed` through its imports, `changed` included. */
 function dependents(changed: readonly string[]): Set<string> {
 	const seen = new Set(changed);
 	const queue = [...changed];

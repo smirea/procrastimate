@@ -24,8 +24,6 @@ private struct TaskDetailsForm: View {
     let navigation: DetailsNavigation
 
     @State private var title: String
-    /// The title editing started from: a rename from elsewhere replaces it while nobody types, and a title nobody
-    /// changed is never committed over one.
     @State private var base: String
     @FocusState private var titleFocused: Bool
     @State private var keyboardShown = false

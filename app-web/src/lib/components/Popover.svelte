@@ -64,7 +64,11 @@
 		node.showPopover();
 		place(node);
 		node.querySelector<HTMLElement>('[data-autofocus]')?.focus();
-		// Listened to only while open, so a list of rows with a popover each costs nothing until one opens.
+	}
+
+	/** Listened to only while open, and detached before the outro, so a closing panel never swallows a key. */
+	$effect(() => {
+		if (!open) return;
 		window.addEventListener('keydown', onWindowKeydown, true);
 		window.addEventListener('pointerdown', onWindowPointerdown, true);
 		window.addEventListener('scroll', onWindowMove, true);
@@ -75,7 +79,7 @@
 			window.removeEventListener('scroll', onWindowMove, true);
 			window.removeEventListener('resize', onWindowMove);
 		};
-	}
+	});
 
 	/**
 	 * Focus inside the panel returns to where it was on close, so Tab continues from the trigger instead of the page.
@@ -92,9 +96,8 @@
 		if (panel) place(panel);
 	}
 
-	// The listeners stay through the panel's outro, when the panel is already closed and keys belong to the page.
 	function onWindowKeydown(event: KeyboardEvent) {
-		if (open && event.key === 'Escape') {
+		if (event.key === 'Escape') {
 			event.stopImmediatePropagation();
 			event.preventDefault();
 			close();
@@ -102,7 +105,7 @@
 	}
 
 	function onWindowPointerdown(event: PointerEvent) {
-		if (open && !root.contains(event.target as Node)) close();
+		if (!root.contains(event.target as Node)) close();
 	}
 </script>
 

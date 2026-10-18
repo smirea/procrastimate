@@ -14,7 +14,6 @@
 	let listening = false;
 	let frame = 0;
 	let start = () => {};
-	/** The loop stops once the bars have settled flat, and starts again when listening resumes. */
 	$effect(() => {
 		listening = active;
 		if (active) start();

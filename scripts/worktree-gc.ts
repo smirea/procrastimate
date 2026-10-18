@@ -17,16 +17,11 @@ import { devices, owner, remove, shutdown } from './simulators';
 const dryRun = process.argv.includes('--dry-run');
 const IDLE_MS = 15 * 60_000;
 
-/** A tool that may answer nothing: `plutil` on a plist without the key, `gh` on a branch without a PR. */
-function run(cmd: string[]): string {
+function tryRun(cmd: string[]): string {
 	const result = spawnSync(cmd[0]!, cmd.slice(1), { encoding: 'utf8' });
 	return result.status === 0 ? result.stdout.trim() : '';
 }
 
-/**
- * The worktree list decides what is deleted, so a `git` that fails must stop the run: an empty list would read as
- * "every worktree is gone". The repository is this script's own, whatever the working directory.
- */
 function worktreeList(): string {
 	const result = spawnSync('git', ['-C', import.meta.dir, 'worktree', 'list', '--porcelain'], { encoding: 'utf8' });
 	if (result.status !== 0) throw new Error(`git worktree list failed\n${result.stderr}`);
@@ -47,7 +42,7 @@ const worktrees = worktreeList()
 	.filter((entry): entry is { path: string; branch: string | undefined } => Boolean(entry.path));
 const live = new Set(worktrees.map(entry => entry.path));
 // A booted simulator's own processes carry its UDID in their paths, so only processes outside CoreSimulator count.
-const processes = run(['ps', '-axww', '-o', 'command='])
+const processes = tryRun(['ps', '-axww', '-o', 'command='])
 	.split('\n')
 	.filter(line => !line.includes('/CoreSimulator/'));
 const inUse = (udid: string, name: string) =>
@@ -67,7 +62,7 @@ for (const device of devices()) {
 const derivedData = join(homedir(), 'Library/Developer/Xcode/DerivedData');
 for (const entry of existsSync(derivedData) ? readdirSync(derivedData) : []) {
 	if (!entry.startsWith('App-')) continue;
-	const workspace = run(['plutil', '-extract', 'WorkspacePath', 'raw', join(derivedData, entry, 'info.plist')]);
+	const workspace = tryRun(['plutil', '-extract', 'WorkspacePath', 'raw', join(derivedData, entry, 'info.plist')]);
 	if (!workspace || existsSync(workspace)) continue;
 	await act(`Deleting DerivedData ${entry} of the removed ${workspace}.`, () =>
 		rmSync(join(derivedData, entry), { recursive: true, force: true }),
@@ -89,6 +84,6 @@ if (dockerRunning()) {
 
 for (const { path, branch } of worktrees.slice(1)) {
 	if (!branch) continue;
-	const state = run(['gh', 'pr', 'view', branch, '--json', 'state', '-q', '.state']);
+	const state = tryRun(['gh', 'pr', 'view', branch, '--json', 'state', '-q', '.state']);
 	if (state === 'MERGED') console.log(`Merged, ready for teardown: bun scripts/teardown-worktree.ts ${path}`);
 }

@@ -224,7 +224,6 @@ enum RambleNormalize {
         return Mapped(text: text, starts: offsets, ends: offsets)
     }
 
-    /// Copies UTF-16 units, as the web copies code units, and decodes them once at the end so surrogate pairs rejoin.
     static func rewrite(_ source: Mapped, _ pattern: RambleRegex, _ replace: (RambleRegex.Found) -> String?) -> Mapped {
         var units: [UInt16] = []
         var starts: [Int] = []
@@ -264,7 +263,6 @@ enum RambleNormalize {
         return mapped
     }
 
-    /// Compiled once: `normalize` runs on every transcript update.
     static let steps: [(RambleRegex, @Sendable (RambleRegex.Found) -> String?)] = [
             (RambleRegex("[’‘]"), { _ in "'" }),
             (RambleRegex(#"\bthe day after tomorrow\b"#, ignoreCase: true), { _ in "in 2 days" }),
@@ -322,7 +320,6 @@ enum RambleNormalize {
                 ),
                 { _ in "" }
             ),
-            // Spoken levels become quick add's `p1` to `p4`, so one grammar reads priorities.
             (RambleRegex(#"\bpriority\s+(?:number\s+|level\s+)?(one|two|three|four|[1-4])\b(?![.:,]?\d)"#, ignoreCase: true), { match in
                 match[1].flatMap { priorityLevels[rambleFold($0)] }.map { "p\($0)" }
             }),

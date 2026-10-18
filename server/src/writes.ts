@@ -258,18 +258,12 @@ const inLockOrder = <T extends Pick<RowWrite, 'kind' | 'id'>>(writes: readonly T
 
 type GuestWrite = Write & { stored?: StoredRow };
 
-/** A guest never writes `sourceKey`, which only imports set: the stored value stays, and a new task gets none. */
 function withoutSourceKey<T extends Write>(write: T): T {
 	if (write.kind !== 'task' || !write.values || !('sourceKey' in write.values)) return write;
 	const { sourceKey: _, ...values } = write.values;
 	return { ...write, values };
 }
 
-/**
- * The writes of a guest's batch that `guestRefusal` lets through, checked in batch order so that a task the batch
- * adds under an editable parent is an editable parent for the writes after it, as the recompute will store it. The
- * refused ones are filed in `rejected`.
- */
 function admit(rows: GuestRows, group: readonly GuestWrite[], actor: string, rejected: Rejected[]): Write[] {
 	const seen = [...rows];
 	const admitted: Write[] = [];
@@ -288,8 +282,7 @@ function admit(rows: GuestRows, group: readonly GuestWrite[], actor: string, rej
 	return admitted;
 }
 
-/** `Promise.all` that keeps every settled result, so the derived work runs for what landed before the first failure. */
-async function landAll(work: readonly Promise<void>[]): Promise<unknown> {
+async function firstRejection(work: readonly Promise<void>[]): Promise<unknown> {
 	const settled = await Promise.allSettled(work);
 	return settled.find(result => result.status === 'rejected')?.reason;
 }
@@ -313,7 +306,7 @@ export async function applyWrites(db: Db, ctx: WriteContext, writes: readonly Ow
 		else own.push(write);
 	}
 
-	const failure = await landAll(
+	const failure = await firstRejection(
 		own.map(write =>
 			land(db, actor, actor, write, results).then(missed => {
 				if (!missed) return;
@@ -426,7 +419,7 @@ export async function applyAs(
 	const coalesced = coalesce(writes);
 	let failure: unknown;
 	if (authority.role !== 'guest') {
-		failure = await landAll(
+		failure = await firstRejection(
 			coalesced.map(async write => {
 				if (await land(db, owner, actor, write, results)) missedPut(rejected, write);
 			}),

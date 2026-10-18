@@ -591,7 +591,6 @@ struct RambleGrammar {
             while span.end > span.start, UTF16Text.isWhitespace(source.unit(span.end - 1)) { span.end -= 1 }
             tokens.append(RambleToken(kind: kind, start: span.start, end: span.end, text: source.slice(span.start, span.end)))
         }
-        // The root's fate first: a root without a title gives its subtasks up to be built as roots, once.
         func build(_ item: RambleItem, _ isRoot: Bool) -> RambleTask? {
             let read = item.main.isEmpty ? nil : sliceOf(item, isRoot).attributes
             let title = read.map { RambleTitles.build(transcript, mapped, item.main, $0.tokens, omit: item.cues) } ?? ""

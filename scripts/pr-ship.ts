@@ -58,7 +58,6 @@ function exit(code: number, message: string): never {
 const head = run(['git', 'rev-parse', 'HEAD']);
 const [owner, repo] = run(['gh', 'repo', 'view', '--json', 'nameWithOwner', '-q', '.nameWithOwner']).split('/');
 
-/** Only "no pull requests found" means there is no PR; an expired login or a network error must not read as that. */
 function view(): Pr {
 	try {
 		return JSON.parse(

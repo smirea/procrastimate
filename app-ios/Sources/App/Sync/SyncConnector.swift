@@ -27,11 +27,6 @@ final class SyncConnector: PowerSyncBackendConnectorProtocol {
         }
     }
 
-    /// The batch is read first and the image queue drained after it, so every image an entry lists is on the server
-    /// before the entry: an entry exists only once its image was queued, and an image queued after the read would
-    /// otherwise be missed by this pass and its edit posted without the bytes. Writes to one row fold into one, each
-    /// named by this database and its queue id so a retried batch logs nothing twice, and a write the server refuses
-    /// comes back in `rejected` rather than failing the batch.
     func uploadData(database: PowerSyncDatabaseProtocol) async throws {
         guard let token = SessionToken.read() else { return }
         guard let batch = try await database.getCrudBatch(limit: 1000) else {

@@ -232,7 +232,6 @@ const REWRITES: Array<[RegExp, (m: RegExpExecArray) => string | null]> = [
 		),
 		() => '',
 	],
-	// Spoken levels become quick add's `p1` to `p4`, so one grammar reads priorities.
 	[
 		/\bpriority\s+(?:number\s+|level\s+)?(one|two|three|four|[1-4])\b(?![.:,]?\d)/gi,
 		m => `p${PRIORITY_LEVELS[m[1]!.toLowerCase()]}`,
@@ -922,7 +921,6 @@ export function parseRamble(transcript: string, options: RambleOptions): RambleD
 		tokens.push({ kind, start, end, text: transcript.slice(start, end) });
 	};
 
-	// The root's fate first: a root without a title gives its subtasks up to be built as roots, once.
 	const build = (item: Item, isRoot: boolean): RambleTask | null => {
 		const attributes = item.main.length ? sliceOf(item, isRoot).attributes : null;
 		const title =

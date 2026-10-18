@@ -205,7 +205,6 @@ private extension Data {
     }
 }
 
-/// Google's answer when the code exchange fails, kept whole so the DEBUG error text says what went wrong.
 private struct ExchangeFailure: Error, CustomStringConvertible {
     let detail: String
     var description: String { detail }

@@ -44,7 +44,6 @@
 		return `${view.owner.name}’s tasks`;
 	});
 
-	/** Only the server's NOT_FOUND means the link stopped; a failed request is retried, not blamed on the owner. */
 	async function load() {
 		state = { kind: 'loading' };
 		try {

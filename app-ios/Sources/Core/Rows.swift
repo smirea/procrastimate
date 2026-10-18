@@ -86,9 +86,6 @@ public enum Rows {
         return changed.isEmpty ? [] : [RowWrite(op: .patch, kind: kind, id: id, values: changed)]
     }
 
-    /// Every synced field of an entity without its id, with an absent `sourceKey` as `null`. An entity that does not
-    /// encode, such as a location with a non-finite coordinate, stops here: read as "no fields" it would be a change
-    /// the screen shows and the database never gets.
     static func fields(_ entity: some Encodable) -> [String: JSONValue] {
         let encoded: JSONValue
         do {
@@ -144,7 +141,6 @@ public enum Rows {
 }
 
 extension JSONValue {
-    /// A Codable value as JSON.
     public static func encoded(_ value: some Encodable) throws -> JSONValue {
         try JSONDecoder().decode(JSONValue.self, from: JSONEncoder().encode(value))
     }
