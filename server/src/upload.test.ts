@@ -1,16 +1,17 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import { and, eq, sql } from 'drizzle-orm';
 import { log, reads, settings, tasks } from '../../shared/db/schema';
-import type { Person, SpaceView } from '../../shared/sharing';
+import type { SpaceView } from '../../shared/sharing';
 import {
+	aiAccount,
 	json,
+	type Session,
+	shareWith,
 	signUp,
 	taskRow,
 	testApp,
-	tokenHeaders,
-	upload as uploadAs,
-	type Session,
 	type TestApp,
+	upload as uploadAs,
 } from './test-app';
 
 let app: TestApp;
@@ -388,6 +389,14 @@ describe('POST /api/upload', () => {
 				},
 			]),
 		).toEqual([{ table: 'settings', id: 'other-id', reason: 'Settings rows are named settings' }]);
+		expect(await app.db.select().from(reads).where(eq(reads.id, taskId)).orderBy(reads.readAt)).toEqual([
+			{ userId: owner.person.id, id: taskId, readAt: 5 },
+			{ userId: reader.person.id, id: taskId, readAt: 7 },
+		]);
+		// The row exists from sign-up, and a settings put only ever creates a missing one.
+		expect(
+			await app.db.select({ timeZone: settings.timeZone }).from(settings).where(eq(settings.userId, owner.person.id)),
+		).toEqual([{ timeZone: null }]);
 	});
 
 	test('a put that names another user’s row is refused, whatever user_id it claims', async () => {
@@ -420,16 +429,7 @@ describe('POST /api/upload', () => {
 		const [theirs, refusedTheirs] = [crypto.randomUUID(), crypto.randomUUID()];
 		for (const id of [theirs, refusedTheirs]) {
 			await upload(host, [{ op: 'put', table: 'tasks', id, values: taskRow(id, host.person.id, 'Theirs') }]);
-			await json(
-				app.fetch('/api/shares', {
-					method: 'POST',
-					headers: host.headers,
-					body: JSON.stringify({
-						target: { kind: 'task', id },
-						audience: { kind: 'user', userId: owner.person.id, role: 'edit' },
-					}),
-				}),
-			);
+			await shareWith(app, host, { kind: 'task', id }, owner.person.id, 'edit');
 		}
 		const mine = crypto.randomUUID();
 		const response = await app.fetch('/api/upload', {
@@ -489,19 +489,10 @@ describe('POST /api/upload', () => {
 	});
 
 	test('an AI token may not upload', async () => {
-		const ai = await json<Person>(
-			app.fetch('/api/ai', { method: 'POST', headers: owner.headers, body: JSON.stringify({ name: 'Bot' }) }),
-		);
-		const { token } = await json<{ token: string }>(
-			app.fetch('/api/ai-tokens', {
-				method: 'POST',
-				headers: owner.headers,
-				body: JSON.stringify({ aiUserId: ai.id, name: 'laptop' }),
-			}),
-		);
+		const { headers } = await aiAccount(app, owner);
 		const response = await app.fetch('/api/upload', {
 			method: 'POST',
-			headers: tokenHeaders(token),
+			headers,
 			body: JSON.stringify({ writes: [] }),
 		});
 		expect(response.status).toBe(403);

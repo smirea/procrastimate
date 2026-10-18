@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
-import { memoryRambleBudget, pgRambleBudget, type RambleBudget } from './ramble-budget';
+import { pgRambleBudget, type RambleBudget } from './ramble-budget';
 import { testApp, type TestApp } from './test-app';
 
 let app: TestApp;
@@ -29,5 +29,4 @@ function budgetRules(name: string, make: () => RambleBudget) {
 	});
 }
 
-budgetRules('memory', () => memoryRambleBudget(100));
 budgetRules('postgres', () => pgRambleBudget(app.db, 100));

@@ -5,7 +5,7 @@ import { taskActivity } from './activity';
 import { clientOf, requireActor, requireHuman, spaceOf } from './actor';
 import { originOf, type App } from './app';
 import { deviceIdFrom } from './auth';
-import { aiAccounts, authMethods, createAiUser, deleteUser, userById } from './better-auth';
+import { aiAccounts, authMethods, createAiUser, deleteUser } from './better-auth';
 import {
 	createComment,
 	createLabel,
@@ -46,7 +46,7 @@ import {
 	revokeAi,
 	sharedView,
 } from './sharing';
-import { searchPeople } from './people';
+import { personById, searchPeople } from './people';
 import { seesTask, sightOf } from './space';
 import { POWERSYNC_PATH, signSyncToken } from './sync';
 import { upload } from './upload';
@@ -148,7 +148,7 @@ export const router = os.router({
 		}),
 		delete: os.ai.delete.handler(async ({ input, context }) => {
 			const actor = await requireHuman(context.request, context.app);
-			const ai = await userById(context.app, input.query.id);
+			const ai = await personById(context.app.db, input.query.id);
 			if (!ai || ai.kind !== 'ai' || ai.ownerId !== actor.id) {
 				throw new ORPCError('NOT_FOUND', { message: 'No such AI account' });
 			}
@@ -168,7 +168,7 @@ export const router = os.router({
 		create: os.shares.create.handler(async ({ input, context }) => {
 			const { app, actor, origin, now } = await own(context);
 			const { audience, target } = input;
-			const grantee = audience.kind === 'user' ? await userById(app, audience.userId) : null;
+			const grantee = audience.kind === 'user' ? await personById(app.db, audience.userId) : null;
 			if (audience.kind === 'user' && (!grantee || grantee.id === actor.id)) {
 				throw new ORPCError('NOT_FOUND', { message: 'No such user' });
 			}

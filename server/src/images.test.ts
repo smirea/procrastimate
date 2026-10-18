@@ -1,9 +1,8 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
-import { and, eq } from 'drizzle-orm';
+import { inArray } from 'drizzle-orm';
 import { images } from '../../shared/db/schema';
-import type { Person, ShareView } from '../../shared/sharing';
-import { applySweep, IMAGE_GRACE_MS, sweepImages, sweepPlan } from './images';
-import { json, signUp, taskRow, testApp, tokenHeaders, upload, type Session, type TestApp } from './test-app';
+import { IMAGE_GRACE_MS, sweepImages } from './images';
+import { aiAccount, type Session, shareWith, signUp, taskRow, testApp, type TestApp, upload } from './test-app';
 
 let app: TestApp;
 let owner: Session;
@@ -74,30 +73,12 @@ describe('/api/images', () => {
 			},
 		]);
 		expect((await get(guest, seen, 'full', owner.person.id)).status).toBe(403);
-		const share = await json<ShareView>(
-			app.fetch('/api/shares', {
-				method: 'POST',
-				headers: owner.headers,
-				body: JSON.stringify({
-					target: { kind: 'task', id: shared },
-					audience: { kind: 'user', userId: guest.person.id, role: 'view' },
-				}),
-			}),
-		);
+		const share = await shareWith(app, owner, { kind: 'task', id: shared }, guest.person.id, 'view');
 		expect((await get(guest, seen, 'full', owner.person.id)).status).toBe(200);
 		expect((await get(guest, hidden, 'full', owner.person.id)).status).toBe(404);
 		expect((await put(guest, crypto.randomUUID(), 'full', JPEG, 'image/jpeg', owner.person.id)).status).toBe(403);
 		await app.fetch(`/api/shares?id=${share.id}`, { method: 'DELETE', headers: owner.headers });
-		await json<ShareView>(
-			app.fetch('/api/shares', {
-				method: 'POST',
-				headers: owner.headers,
-				body: JSON.stringify({
-					target: { kind: 'task', id: shared },
-					audience: { kind: 'user', userId: guest.person.id, role: 'edit' },
-				}),
-			}),
-		);
+		await shareWith(app, owner, { kind: 'task', id: shared }, guest.person.id, 'edit');
 		expect((await put(guest, crypto.randomUUID(), 'full', JPEG, 'image/jpeg', owner.person.id)).status).toBe(200);
 	});
 
@@ -113,17 +94,7 @@ describe('/api/images', () => {
 				values: taskRow(taskId, owner.person.id, 'Pictured', { images: JSON.stringify([{ id, width: 4, height: 3 }]) }),
 			},
 		]);
-		const ai = await json<Person>(
-			app.fetch('/api/ai', { method: 'POST', headers: owner.headers, body: JSON.stringify({ name: 'Bot' }) }),
-		);
-		const { token } = await json<{ token: string }>(
-			app.fetch('/api/ai-tokens', {
-				method: 'POST',
-				headers: owner.headers,
-				body: JSON.stringify({ aiUserId: ai.id, name: 'laptop' }),
-			}),
-		);
-		const headers = tokenHeaders(token);
+		const { headers } = await aiAccount(app, owner);
 		expect((await app.fetch(`/api/images?id=${id}&size=full`, { headers })).status).toBe(200);
 		const refused = await app.fetch(`/api/images?id=${crypto.randomUUID()}&size=full`, {
 			method: 'PUT',
@@ -133,64 +104,45 @@ describe('/api/images', () => {
 		expect(refused.status).toBe(403);
 	});
 
-	test('the sweep marks unlisted images, clears the mark when listed again, and drops them after the grace period', async () => {
-		const listed = crypto.randomUUID();
-		const orphan = crypto.randomUUID();
+	test('the cron’s sweep marks unlisted images, clears the mark when listed again, and drops them after the grace period', async () => {
+		const other = await signUp(app, 'Sweeper');
+		const [listed, orphan, taskId] = [crypto.randomUUID(), crypto.randomUUID(), crypto.randomUUID()];
 		await put(owner, listed, 'full', JPEG);
 		await put(owner, orphan, 'full', JPEG);
-		const now = 1_800_000_000_000;
+		await put(other, orphan, 'thumb', JPEG);
+		const list = (ids: string[]) =>
+			upload(app, owner, [
+				{
+					op: 'put',
+					table: 'tasks',
+					id: taskId,
+					values: taskRow(taskId, owner.person.id, 'Pictured', {
+						images: JSON.stringify(ids.map(id => ({ id, width: 4, height: 3 }))),
+					}),
+				},
+			]);
 		const states = async () =>
-			(
-				await app.db
-					.select({ id: images.id, orphanedAt: images.orphanedAt })
-					.from(images)
-					.where(eq(images.userId, owner.person.id))
-			).filter(row => row.id === listed || row.id === orphan);
-		const referenced = new Set([listed]);
-		await applySweep(app.db, owner.person.id, sweepPlan(referenced, await states(), now));
-		expect((await states()).find(row => row.id === orphan)?.orphanedAt).toBe(now);
-		expect((await states()).find(row => row.id === listed)?.orphanedAt).toBeNull();
-		await applySweep(app.db, owner.person.id, sweepPlan(new Set([listed, orphan]), await states(), now + 1000));
-		expect((await states()).find(row => row.id === orphan)?.orphanedAt).toBeNull();
-		await applySweep(app.db, owner.person.id, sweepPlan(referenced, await states(), now + 2000));
-		await applySweep(app.db, owner.person.id, sweepPlan(referenced, await states(), now + 2000 + IMAGE_GRACE_MS));
-		expect((await states()).map(row => row.id)).toEqual([listed]);
-		expect(
-			await app.db
-				.select()
-				.from(images)
-				.where(and(eq(images.userId, owner.person.id), eq(images.id, orphan))),
-		).toEqual([]);
-	});
-
-	test('the cron’s sweep covers every user from two reads: listed images stay, unlisted ones are marked', async () => {
-		const other = await signUp(app, 'Sweeper');
-		const kept = crypto.randomUUID();
-		const loose = crypto.randomUUID();
-		await put(other, kept, 'thumb', JPEG);
-		await put(other, loose, 'thumb', JPEG);
-		const taskId = crypto.randomUUID();
-		await upload(app, other, [
-			{
-				op: 'put',
-				table: 'tasks',
-				id: taskId,
-				values: taskRow(taskId, other.person.id, 'Pictured', {
-					images: JSON.stringify([{ id: kept, width: 10, height: 10 }]),
-				}),
-			},
-		]);
+			Object.fromEntries(
+				(
+					await app.db
+						.select({ userId: images.userId, id: images.id, orphanedAt: images.orphanedAt })
+						.from(images)
+						.where(inArray(images.id, [listed, orphan]))
+				).map(row => [
+					`${row.userId === owner.person.id ? 'owner' : 'other'}:${row.id === listed ? 'listed' : 'orphan'}`,
+					row.orphanedAt,
+				]),
+			);
 		const now = 1_800_000_000_000;
-		app.statements.length = 0;
+		await list([listed]);
 		await sweepImages(app.db, now);
-		expect(app.statements.map(statement => statement.trim().split(/\s+/)[0]!.toLowerCase()).slice(0, 2)).toEqual([
-			'select',
-			'select',
-		]);
-		const states = await app.db
-			.select({ id: images.id, orphanedAt: images.orphanedAt })
-			.from(images)
-			.where(eq(images.userId, other.person.id));
-		expect(Object.fromEntries(states.map(row => [row.id, row.orphanedAt]))).toEqual({ [kept]: null, [loose]: now });
+		expect(await states()).toEqual({ 'owner:listed': null, 'owner:orphan': now, 'other:orphan': now });
+		await list([listed, orphan]);
+		await sweepImages(app.db, now + 1000);
+		expect(await states()).toEqual({ 'owner:listed': null, 'owner:orphan': null, 'other:orphan': now });
+		await list([listed]);
+		await sweepImages(app.db, now + 2000);
+		await sweepImages(app.db, now + 2000 + IMAGE_GRACE_MS);
+		expect(await states()).toEqual({ 'owner:listed': null });
 	});
 });

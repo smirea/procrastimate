@@ -4,9 +4,7 @@ import { createApp } from './app';
 import type { Env } from './bindings';
 import { config } from './config';
 import type { Db } from './db/postgres';
-import { ramble, rambleRoute, upstreamUrl, type ConnectUpstream, type RambleConfig } from './ramble';
-import { pgRambleBudget, RAMBLE_GLOBAL_DAILY_SECONDS } from './ramble-budget';
-import { cassetteUpstream } from './ramble-cassette';
+import { ramble, rambleConfig, rambleRoute, upstreamUrl, type ConnectUpstream } from './ramble';
 import type { Socket, StreamEvents, StreamHost } from './sockets';
 
 type SocketData = { start: (socket: Socket) => StreamEvents; events?: StreamEvents };
@@ -28,18 +26,6 @@ export function bunUpstream(apiKey: string): ConnectUpstream {
 		});
 }
 
-function bunRambleConfig(env: Env, db: Db): RambleConfig {
-	const settings = config(env).ramble;
-	switch (settings?.kind) {
-		case 'elevenlabs':
-			return { connect: bunUpstream(settings.apiKey), budget: pgRambleBudget(db, RAMBLE_GLOBAL_DAILY_SECONDS) };
-		case 'cassette':
-			return { connect: cassetteUpstream() };
-		default:
-			return { connect: null };
-	}
-}
-
 /**
  * The Bun dev server: the Worker's handler on Bun's HTTP server, with Ramble's socket on Bun's WebSocket server.
  * Bun upgrades through `server.upgrade` and needs the fetch handler to answer nothing, so an accepted upgrade
@@ -56,7 +42,17 @@ export async function serveDev(port: number, env: Env, db: Db): Promise<Server<S
 		upgraded.add(marker);
 		return marker;
 	};
-	const app = await createApp(env, db, rambleRoute(db, ramble(stream, bunRambleConfig(env, db))));
+	const app = await createApp(
+		env,
+		db,
+		rambleRoute(
+			db,
+			ramble(
+				stream,
+				rambleConfig(config(env).ramble, () => db, bunUpstream),
+			),
+		),
+	);
 	server = Bun.serve<SocketData>({
 		development: true,
 		idleTimeout: 0,

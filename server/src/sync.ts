@@ -1,4 +1,5 @@
 import type { SigningKey } from './config';
+import { base64urlEncode } from './web-push';
 
 /**
  * PowerSync's two server halves. The token tells PowerSync which user a device is: an EdDSA JWT the Worker signs
@@ -11,12 +12,7 @@ export const TOKEN_SECONDS = 5 * 60;
 export const POWERSYNC_PATH = '/api/powersync';
 
 const encoder = new TextEncoder();
-const base64url = (bytes: Uint8Array) =>
-	btoa(String.fromCharCode(...bytes))
-		.replaceAll('+', '-')
-		.replaceAll('/', '_')
-		.replaceAll('=', '');
-const encodeJson = (value: unknown) => base64url(encoder.encode(JSON.stringify(value)));
+const encodeJson = (value: unknown) => base64urlEncode(encoder.encode(JSON.stringify(value)));
 
 const imported = new WeakMap<SigningKey, Promise<CryptoKey>>();
 function cryptoKey(key: SigningKey): Promise<CryptoKey> {
@@ -35,7 +31,7 @@ export async function signSyncToken(key: SigningKey, userId: string, now = Date.
 	const payload = encodeJson({ sub: userId, aud: TOKEN_AUDIENCE, iat, exp: iat + TOKEN_SECONDS });
 	const input = `${header}.${payload}`;
 	const signature = await crypto.subtle.sign('Ed25519', await cryptoKey(key), encoder.encode(input));
-	return `${input}.${base64url(new Uint8Array(signature))}`;
+	return `${input}.${base64urlEncode(new Uint8Array(signature))}`;
 }
 
 /**

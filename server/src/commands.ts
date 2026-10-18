@@ -60,8 +60,7 @@ import { wallDate, zonedDateKey } from '../../shared/zoned-time';
 import type { Access } from './auth';
 import type { Db } from './db/postgres';
 import { peopleById, personOf, unknownPerson } from './people';
-import { zoneOf } from './push';
-import { accessIn, entity, loadTree, seesTask, sightOf, storedTimeZone } from './space';
+import { accessIn, entity, loadTree, seesTask, sightOf, storedZone } from './space';
 import { applyAs, type Authority, type Write } from './writes';
 
 /**
@@ -150,7 +149,7 @@ function authorityOf(access: Access, comments: Comment[]): Authority {
  * command changes read markers or settings, so neither is loaded and the diff writes neither.
  */
 async function loadSnapshot(db: Db, owner: string, comment: string | undefined) {
-	const [tree, commentRows, timeZone] = await Promise.all([
+	const [tree, commentRows, zone] = await Promise.all([
 		loadTree(db, owner),
 		comment
 			? db
@@ -158,10 +157,10 @@ async function loadSnapshot(db: Db, owner: string, comment: string | undefined) 
 					.from(commentTable)
 					.where(and(eq(commentTable.userId, owner), eq(commentTable.id, comment)))
 			: Promise.resolve<(typeof commentTable.$inferSelect)[]>([]),
-		storedTimeZone(db, owner),
+		storedZone(db, owner),
 	]);
 	const snapshot: Snapshot = { ...tree, comments: commentRows.map(entity), reads: [], settings: DEFAULT_SETTINGS };
-	return { snapshot, zone: zoneOf(timeZone) };
+	return { snapshot, zone };
 }
 
 /** A guest's write outside their share is refused. `comment` names the stored comment the change reads, if any. */
@@ -275,11 +274,6 @@ export async function removeTask(command: Command, id: string): Promise<void> {
 	});
 }
 
-const withAuthor = async (db: Db, comment: Comment): Promise<TaskComment> => ({
-	...comment,
-	author: await personOf(db, comment.authorId ?? ''),
-});
-
 export async function listComments({ db, owner, actor }: Command, taskId: string): Promise<TaskComment[]> {
 	const access = await requireAccess(db, owner, actor);
 	const sight = await sightOf(db, owner, actor, access);
@@ -305,7 +299,7 @@ export async function listComments({ db, owner, actor }: Command, taskId: string
 async function commentAfter({ db }: Command, snapshot: Snapshot, id: string): Promise<TaskComment> {
 	const comment = snapshot.comments.find(comment => comment.id === id);
 	if (!comment) throw new ORPCError('NOT_FOUND', { message: 'No such comment' });
-	return withAuthor(db, comment);
+	return { ...comment, author: await personOf(db, comment.authorId ?? '') };
 }
 
 /** The caller's own comment on a task it can see. Someone else's is refused; a hidden one is not found. */

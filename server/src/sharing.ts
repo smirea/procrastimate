@@ -10,12 +10,12 @@ import type { App } from './app';
 import { sha256 } from './auth';
 import { user } from './db/auth-schema';
 import type { Db } from './db/postgres';
-import { userById } from './better-auth';
 import { requireManager } from './commands';
 import { agentPrompt } from './docs';
-import { peopleById, unknownPerson } from './people';
+import { peopleById, personById, unknownPerson } from './people';
 import { entity, loadTree, withSpaceLocked } from './space';
 import type { Access } from './auth';
+import { base64urlEncode } from './web-push';
 
 /**
  * Shares, public links, and API tokens, all rows in the owner's space. Every share change recomputes the owner's
@@ -26,11 +26,7 @@ import type { Access } from './auth';
 export const linkUrl = (origin: string, ownerId: string, id: string) => `${origin}/s/${ownerId}.${id}`;
 
 function randomSecret(): string {
-	const bytes = crypto.getRandomValues(new Uint8Array(24));
-	return btoa(String.fromCharCode(...bytes))
-		.replaceAll('+', '-')
-		.replaceAll('/', '_')
-		.replaceAll('=', '');
+	return base64urlEncode(crypto.getRandomValues(new Uint8Array(24)));
 }
 
 function shareView(owner: string, origin: string, share: ShareRow, grantee: Person | null): ShareView {
@@ -166,7 +162,7 @@ export async function deleteLink(db: Db, owner: string, access: Access, id: stri
 export async function sharedView(app: App, ownerId: string, id: string): Promise<SharedView> {
 	const [share] = await sharesOf(app.db, ownerId, and(eq(shares.id, id), isNull(shares.grantee)));
 	if (!share) throw new ORPCError('NOT_FOUND', { message: 'No such link' });
-	const [owner, tree] = await Promise.all([userById(app, ownerId), loadTree(app.db, ownerId)]);
+	const [owner, tree] = await Promise.all([personById(app.db, ownerId), loadTree(app.db, ownerId)]);
 	if (!owner) throw new ORPCError('NOT_FOUND', { message: 'No such link' });
 	const { tasks, projects, sections, labels } = filterTree(tree, scopeOf(tree, [share]));
 	return { target: { kind: share.targetKind, id: share.targetId }, owner, tasks, projects, sections, labels };

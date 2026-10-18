@@ -4,7 +4,7 @@ import { drizzle } from 'drizzle-orm/pglite';
 import devJwtKey from '../../powersync/local/INSECURE-dev-jwt-key.json' with { type: 'json' };
 import { CLIENT_HEADER, DEVICE_HEADER } from '../../shared/auth';
 import { tasks } from '../../shared/db/schema';
-import type { Person } from '../../shared/sharing';
+import type { Person, ShareView } from '../../shared/sharing';
 import { handle } from './api';
 import { createApp, type App } from './app';
 import type { Env } from './bindings';
@@ -20,7 +20,6 @@ import { generateVapidKeys } from './web-push';
  */
 
 export const ORIGIN = 'https://procrastimate.test';
-export const TEST_POWERSYNC_URL = 'http://127.0.0.1:1';
 
 let vapid: Promise<{ publicKey: string; privateKey: string }> | undefined;
 
@@ -29,7 +28,7 @@ export async function testEnv(overrides: Partial<Env> = {}): Promise<Env> {
 	const keys = await vapid;
 	return {
 		DATABASE_URL: 'postgres://pglite',
-		POWERSYNC_URL: TEST_POWERSYNC_URL,
+		POWERSYNC_URL: 'http://127.0.0.1:1',
 		POWERSYNC_JWT_PRIVATE_KEY: JSON.stringify(devJwtKey),
 		BETTER_AUTH_SECRET: 'test-better-auth-secret-0123456789abcdef',
 		AUTH_RATE_LIMIT: 'off',
@@ -105,6 +104,31 @@ export async function json<T>(pending: Response | Promise<Response>): Promise<T>
 	const response = await pending;
 	if (!response.ok) throw new Error(`${response.status} ${await response.text()}`);
 	return (await response.json()) as T;
+}
+
+/** `owner` shares `target` with `userId`, as the share sheet does. */
+export const shareWith = (
+	app: TestApp,
+	owner: Session,
+	target: { kind: string; id: string },
+	userId: string,
+	role: 'view' | 'edit',
+) =>
+	json<ShareView>(
+		app.fetch('/api/shares', {
+			method: 'POST',
+			headers: owner.headers,
+			body: JSON.stringify({ target, audience: { kind: 'user', userId, role } }),
+		}),
+	);
+
+/** A new AI account of `owner`'s, which starts with the whole space shared, and a token for it. */
+export async function aiAccount(app: TestApp, owner: Session, name = 'Bot') {
+	const post = (path: string, body: unknown) =>
+		app.fetch(path, { method: 'POST', headers: owner.headers, body: JSON.stringify(body) });
+	const person = await json<Person>(post('/api/ai', { name }));
+	const { token } = await json<{ token: string }>(post('/api/ai-tokens', { aiUserId: person.id, name: 'laptop' }));
+	return { person, token, headers: tokenHeaders(token) };
 }
 
 const taskColumns = getTableColumns(tasks);

@@ -15,13 +15,9 @@ import {
 import { SETTINGS_ID } from '../../shared/model';
 import { managesSpace, scopeOf, type Scope } from '../../shared/scope';
 import { byCreation } from '../../shared/snapshot';
+import { isTimeZone } from '../../shared/zoned-time';
 import type { Access } from './auth';
 import type { Db } from './db/postgres';
-
-/**
- * Reads of one user's space, each sized to what its caller needs: the tree of tasks, projects, sections, and labels
- * that scopes and views are computed from, the caller's standing, and which tasks the caller sees.
- */
 
 /** A row without its owner column, and without a `null` `sourceKey`, which the entity schemas leave out. */
 export function entity<T extends { userId: string }>(row: T): Omit<T, 'userId'> {
@@ -69,12 +65,13 @@ export async function loadLinks(db: Db, owner: string): Promise<Links> {
 	return resolveDangling({ tasks: taskRows, projects: projectRows, sections: sectionRows, labels: labelRows });
 }
 
-export async function storedTimeZone(db: Db, owner: string): Promise<string | null> {
+/** The owner's time zone, or UTC while none is set or the setting names no zone, since any device can write it. */
+export async function storedZone(db: Db, owner: string): Promise<string> {
 	const [row] = await db
 		.select({ timeZone: settings.timeZone })
 		.from(settings)
 		.where(and(eq(settings.userId, owner), eq(settings.id, SETTINGS_ID)));
-	return row?.timeZone ?? null;
+	return row?.timeZone && isTimeZone(row.timeZone) ? row.timeZone : 'UTC';
 }
 
 /**

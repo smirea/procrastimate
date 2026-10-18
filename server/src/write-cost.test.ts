@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
-import { json, signUp, taskRow, testApp, upload, type Session, type TestApp } from './test-app';
+import { json, type Session, shareWith, signUp, taskRow, testApp, type TestApp, upload } from './test-app';
 
 /**
  * What one upload costs in SQL statements, counted by the test app's Drizzle logger. Sessions are warmed first, so
@@ -74,16 +74,7 @@ describe('statements per upload', () => {
 	});
 
 	test('a guest’s edit tries the own space, looks the row up, locks the space shared, reads the guest’s access rows, writes in a savepoint, and logs', async () => {
-		await json(
-			app.fetch('/api/shares', {
-				method: 'POST',
-				headers: owner.headers,
-				body: JSON.stringify({
-					target: { kind: 'task', id },
-					audience: { kind: 'user', userId: guest.person.id, role: 'edit' },
-				}),
-			}),
-		);
+		await shareWith(app, owner, { kind: 'task', id }, guest.person.id, 'edit');
 		expect(await statementsOf(guest, patch({ title: 'By the guest' }))).toEqual([
 			'update',
 			'select',

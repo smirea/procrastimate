@@ -1,7 +1,7 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, setSystemTime, test } from 'bun:test';
-import type { ActivityEntry, Person, ShareView } from '../../shared/sharing';
+import type { ActivityEntry, ShareView } from '../../shared/sharing';
 import { COALESCE_WINDOW } from './activity';
-import { json, signUp, taskRow, testApp, tokenHeaders, upload, type Session, type TestApp } from './test-app';
+import { aiAccount, json, type Session, shareWith, signUp, taskRow, testApp, type TestApp, upload } from './test-app';
 
 const START = Date.UTC(2026, 9, 14, 18, 0);
 beforeEach(() => setSystemTime(START));
@@ -28,16 +28,7 @@ describe('GET /api/activity', () => {
 	test('creation, a guest’s edits folded within the window, a completion, and a comment', async () => {
 		const id = crypto.randomUUID();
 		await upload(app, owner, [{ op: 'put', table: 'tasks', id, values: taskRow(id, owner.person.id, 'Draft') }]);
-		await json<ShareView>(
-			app.fetch('/api/shares', {
-				method: 'POST',
-				headers: owner.headers,
-				body: JSON.stringify({
-					target: { kind: 'task', id },
-					audience: { kind: 'user', userId: guest.person.id, role: 'edit' },
-				}),
-			}),
-		);
+		await shareWith(app, owner, { kind: 'task', id }, guest.person.id, 'edit');
 		later(60_000);
 		await upload(app, guest, [{ op: 'patch', table: 'tasks', id, values: { title: 'Draft the plan' } }]);
 		later(120_000);
@@ -171,14 +162,7 @@ describe('GET /api/activity', () => {
 			'Owner edited: removed a label',
 			'Owner edited: made it a subtask',
 		];
-		const share = (userId: string) =>
-			json<ShareView>(
-				app.fetch('/api/shares', {
-					method: 'POST',
-					headers: owner.headers,
-					body: JSON.stringify({ target: { kind: 'task', id }, audience: { kind: 'user', userId, role: 'view' } }),
-				}),
-			);
+		const share = (userId: string) => shareWith(app, owner, { kind: 'task', id }, userId, 'view');
 		await share(guest.person.id);
 		const read = async (headers: Record<string, string>, task: string) =>
 			app.fetch(`/api/activity?id=${task}&space=${owner.person.id}`, { headers });
@@ -189,20 +173,11 @@ describe('GET /api/activity', () => {
 		expect(await entries(guest.headers)).toEqual(seen);
 		expect((await read(guest.headers, trip)).status).toBe(404);
 
-		const ai = await json<Person>(
-			app.fetch('/api/ai', { method: 'POST', headers: owner.headers, body: JSON.stringify({ name: 'Narrow' }) }),
-		);
-		const { token } = await json<{ token: string }>(
-			app.fetch('/api/ai-tokens', {
-				method: 'POST',
-				headers: owner.headers,
-				body: JSON.stringify({ aiUserId: ai.id, name: 'laptop' }),
-			}),
-		);
+		const { person: ai, headers: asAi } = await aiAccount(app, owner, 'Narrow');
 		const { shares } = await json<{ shares: ShareView[] }>(app.fetch('/api/shares', { headers: owner.headers }));
 		const whole = shares.find(row => row.grantee?.id === ai.id && row.target.kind === 'space')!;
 		await app.fetch(`/api/shares?id=${whole.id}`, { method: 'DELETE', headers: owner.headers });
 		await share(ai.id);
-		expect(await entries(tokenHeaders(token))).toEqual(seen);
+		expect(await entries(asAi)).toEqual(seen);
 	});
 });

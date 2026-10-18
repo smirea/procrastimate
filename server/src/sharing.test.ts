@@ -2,7 +2,18 @@ import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import { and, eq } from 'drizzle-orm';
 import { access, comments, log, tasks } from '../../shared/db/schema';
 import type { Person, ShareView, SpaceView } from '../../shared/sharing';
-import { json, ORIGIN, signUp, taskRow, testApp, tokenHeaders, upload, type Session, type TestApp } from './test-app';
+import {
+	aiAccount,
+	json,
+	ORIGIN,
+	type Session,
+	signUp,
+	taskRow,
+	testApp,
+	type TestApp,
+	tokenHeaders,
+	upload,
+} from './test-app';
 
 let app: TestApp;
 let owner: Session;
@@ -380,10 +391,7 @@ describe('public links', () => {
 
 describe('AI accounts', () => {
 	test('an AI account acts in its owner’s whole space through a token and is gone with its account', async () => {
-		const ai = await json<Person>(call(owner, 'POST', '/api/ai', { name: 'Butler' }));
-		const { token } = await json<{ token: string }>(
-			call(owner, 'POST', '/api/ai-tokens', { aiUserId: ai.id, name: 'laptop' }),
-		);
+		const { person: ai, token } = await aiAccount(app, owner, 'Butler');
 		const headers = tokenHeaders(token);
 		const me = await app.fetch('/api/me', { headers });
 		expect(me.status).toBe(403);
@@ -400,10 +408,7 @@ describe('AI accounts', () => {
 	});
 
 	test('an AI account saves a place, resizes it, and puts tasks at it with @name', async () => {
-		const ai = await json<Person>(call(owner, 'POST', '/api/ai', { name: 'Mapper' }));
-		const { token } = await json<{ token: string }>(
-			call(owner, 'POST', '/api/ai-tokens', { aiUserId: ai.id, name: 'laptop' }),
-		);
+		const { token } = await aiAccount(app, owner, 'Mapper');
 		const headers = tokenHeaders(token);
 		const asAi = (method: string, path: string, body?: unknown) =>
 			app.fetch(path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
@@ -425,10 +430,7 @@ describe('AI accounts', () => {
 
 	test('the agent API reports which app created each task and which wrote to it last', async () => {
 		const id = await newTask('Clients');
-		const ai = await json<Person>(call(owner, 'POST', '/api/ai', { name: 'Editor' }));
-		const { token } = await json<{ token: string }>(
-			call(owner, 'POST', '/api/ai-tokens', { aiUserId: ai.id, name: 'laptop' }),
-		);
+		const { token } = await aiAccount(app, owner, 'Editor');
 		const headers = { ...tokenHeaders(token), 'user-agent': 'curl/8.1' };
 		await app.fetch(`/api/tasks?id=${id}`, {
 			method: 'PATCH',
@@ -444,10 +446,7 @@ describe('AI accounts', () => {
 	test('an AI account with only a task shared sees that task and its activity, and nothing else', async () => {
 		const shown = await newTask('For the bot');
 		const hidden = await newTask('Not for the bot');
-		const ai = await json<Person>(call(owner, 'POST', '/api/ai', { name: 'Narrow' }));
-		const { token } = await json<{ token: string }>(
-			call(owner, 'POST', '/api/ai-tokens', { aiUserId: ai.id, name: 'laptop' }),
-		);
+		const { person: ai, token } = await aiAccount(app, owner, 'Narrow');
 		const { shares } = await json<{ shares: ShareView[] }>(call(owner, 'GET', '/api/shares'));
 		const whole = shares.find(s => s.grantee?.id === ai.id && s.target.kind === 'space')!;
 		expect((await call(owner, 'DELETE', `/api/shares?id=${whole.id}`)).status).toBe(200);
@@ -474,7 +473,8 @@ describe('people search', () => {
 			headers: { 'content-type': 'application/json', origin: ORIGIN },
 			body: JSON.stringify({ email, password: 'test-password-1', name: 'Stranger' }),
 		});
-		const { user: stranger } = (await signedUp.json()) as { user: { id: string } };
+		expect(signedUp.status).toBe(200);
+		await aiAccount(app, owner, 'Scout');
 		const search = async (q: string) =>
 			(await json<{ people: Person[] }>(call(owner, 'GET', `/api/people?q=${encodeURIComponent(q)}`))).people.map(
 				person => person.name,
@@ -483,9 +483,8 @@ describe('people search', () => {
 		expect(await search('Stra')).toEqual([]);
 		const known = await search('');
 		expect(known).toContain('Guest');
-		expect(known).toContain('Mapper');
+		expect(known).toContain('Scout');
 		expect(known).not.toContain('Owner');
 		expect(known).not.toContain('Stranger');
-		expect(stranger.id).not.toBe(owner.person.id);
 	});
 });

@@ -1,18 +1,17 @@
 import { ORPCError } from '@orpc/server';
-import { and, eq, inArray, isNull, lte, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNull, lte } from 'drizzle-orm';
 import type { PushScheduleResponse } from '../../shared/api/contract';
 import { push, tasks } from '../../shared/db/schema';
 import type { Task } from '../../shared/model';
 import { upcomingNotifications } from '../../shared/notifications';
 import type { RowWrite } from '../../shared/rows';
 import { pushTag, type PushMessage, type PushSubscriptionInfo } from '../../shared/push';
-import { isTimeZone } from '../../shared/zoned-time';
 import type { Env } from './bindings';
 import { config } from './config';
 import type { Db } from './db/postgres';
 import { classifyDelivery, isRetryable, nextAlarm, planSchedule, splitDue, STALE_AFTER_MS } from './push-schedule';
 import { reportError } from './sentry';
-import { storedTimeZone } from './space';
+import { storedZone, withSpaceLocked } from './space';
 import { sendPush, type Vapid } from './web-push';
 
 /**
@@ -23,11 +22,6 @@ import { sendPush, type Vapid } from './web-push';
 
 /** Sends one push and returns the push service's status, or null when it never answered. */
 export type SendPush = (subscription: PushSubscriptionInfo, message: PushMessage) => Promise<number | null>;
-
-/** Zones are validated where they are used, since any device can write the setting. */
-const FALLBACK_ZONE = 'UTC';
-
-export const zoneOf = (timeZone: string | null) => (timeZone && isTimeZone(timeZone) ? timeZone : FALLBACK_ZONE);
 
 /**
  * Every notification the open tasks make from ten minutes ago on. Uncapped, because `planSchedule` caps each install
@@ -50,14 +44,14 @@ type PushRow = typeof push.$inferSelect;
 
 /** Every notification the owner's open tasks make, in their time zone: the two reads a plan needs. */
 async function openNotifications(db: Db, owner: string, now: number) {
-	const [open, timeZone] = await Promise.all([
+	const [open, zone] = await Promise.all([
 		db
 			.select()
 			.from(tasks)
 			.where(and(eq(tasks.userId, owner), isNull(tasks.completedAt))),
-		storedTimeZone(db, owner),
+		storedZone(db, owner),
 	]);
-	return computeNotifications(open as Task[], zoneOf(timeZone), now);
+	return computeNotifications(open as Task[], zone, now);
 }
 
 const planOf = (computed: ReturnType<typeof computeNotifications>, row: PushRow, now: number) => {
@@ -155,15 +149,6 @@ export async function subscribePush(
 		.insert(push)
 		.values(row)
 		.onConflictDoUpdate({ target: [push.userId, push.deviceId], set });
-	const others = rows.filter(other => other.deviceId !== deviceId && !replaced.includes(other));
-	await Promise.all(
-		others.map(other =>
-			db
-				.update(push)
-				.set(planOf(computed, other, now))
-				.where(and(eq(push.userId, owner), eq(push.deviceId, other.deviceId))),
-		),
-	);
 }
 
 export async function unsubscribePush(db: Db, owner: string, deviceId: string): Promise<void> {
@@ -219,8 +204,7 @@ export async function deliverDue(db: Db, now: number, send: SendPush): Promise<n
 				}
 			}
 		}
-		await db.transaction(async tx => {
-			await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${owner}))`);
+		await withSpaceLocked(db, owner, async tx => {
 			// An upload or a new subscription can land while sends are in flight, so settle against what is stored now.
 			const stored = await tx.select().from(push).where(eq(push.userId, owner));
 			const kept = stored.filter(row => !outcomeOf(outcomes, row)?.gone);

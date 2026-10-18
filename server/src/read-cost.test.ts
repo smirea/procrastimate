@@ -183,8 +183,8 @@ describe('statements per read', () => {
 		]);
 		expect(await statementsOf(`/api/shared?token=${owner.person.id}.${linkId}`)).toEqual([
 			'select shares',
-			...tree,
 			'select user',
+			...tree,
 		]);
 		expect(await statementsOf(`/api/links?id=${linkId}`, { method: 'DELETE', headers: owner.headers })).toEqual([
 			'delete shares',

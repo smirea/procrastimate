@@ -10,6 +10,7 @@ import { authSchema } from './db/auth-schema';
 import type { Db } from './db/postgres';
 import type { AppleSecret, Config } from './config';
 import { reportError } from './sentry';
+import { base64urlEncode } from './web-push';
 
 /** A year. Days offline must not sign the account out; a day online extends the session. */
 const SESSION_SECONDS = 60 * 60 * 24 * 365;
@@ -76,12 +77,6 @@ export function authMethods({ google, apple }: Config): AuthMethods {
 	};
 }
 
-const bytesToBase64Url = (bytes: Uint8Array) =>
-	btoa(String.fromCharCode(...bytes))
-		.replaceAll('+', '-')
-		.replaceAll('/', '_')
-		.replaceAll('=', '');
-
 /** Apple's client secret is an ES256 JWT. A stored JWT wins; otherwise the Worker mints one from the .p8. */
 export async function appleClientSecret(secret: AppleSecret, servicesId: string | null): Promise<string> {
 	if (secret.kind === 'stored') return secret.jwt;
@@ -94,8 +89,8 @@ export async function appleClientSecret(secret: AppleSecret, servicesId: string 
 	const der = Uint8Array.from(atob(body), char => char.charCodeAt(0));
 	const key = await crypto.subtle.importKey('pkcs8', der, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign']);
 	const now = Math.floor(Date.now() / 1000);
-	const header = bytesToBase64Url(new TextEncoder().encode(JSON.stringify({ alg: 'ES256', kid: keyId, typ: 'JWT' })));
-	const payload = bytesToBase64Url(
+	const header = base64urlEncode(new TextEncoder().encode(JSON.stringify({ alg: 'ES256', kid: keyId, typ: 'JWT' })));
+	const payload = base64urlEncode(
 		new TextEncoder().encode(
 			JSON.stringify({
 				iss: teamId,
@@ -110,7 +105,7 @@ export async function appleClientSecret(secret: AppleSecret, servicesId: string 
 	const signature = new Uint8Array(
 		await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, key, new TextEncoder().encode(signingInput)),
 	);
-	return `${signingInput}.${bytesToBase64Url(signature)}`;
+	return `${signingInput}.${base64urlEncode(signature)}`;
 }
 
 async function socialProviders({ google, apple }: Config) {
@@ -216,11 +211,6 @@ export async function readSession(request: Request, { auth }: App): Promise<Sess
 }
 
 const users = async ({ auth }: App) => (await auth.$context).adapter;
-
-export async function userById(app: App, id: string): Promise<Person | null> {
-	const row = await (await users(app)).findOne<UserRow>({ model: 'user', where: [{ field: 'id', value: id }] });
-	return row ? asPerson(row) : null;
-}
 
 export async function aiAccounts(app: App, ownerId: string): Promise<Person[]> {
 	const rows = await (

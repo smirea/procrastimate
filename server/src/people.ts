@@ -23,8 +23,12 @@ export async function peopleById(db: Db, ids: readonly string[]): Promise<Map<st
 	return new Map(rows.map(row => [row.id, asPerson(row)]));
 }
 
+export async function personById(db: Db, id: string): Promise<Person | null> {
+	return (await peopleById(db, [id])).get(id) ?? null;
+}
+
 export async function personOf(db: Db, id: string): Promise<Person> {
-	return (await peopleById(db, [id])).get(id) ?? unknownPerson(id);
+	return (await personById(db, id)) ?? unknownPerson(id);
 }
 
 /**

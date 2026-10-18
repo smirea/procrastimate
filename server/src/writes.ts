@@ -80,36 +80,34 @@ function completedBy(actor: string, completedAt: { value: SQL; cleared: SQL } | 
 	return sql`CASE ${sql.join(cases, sql` `)} ELSE ${tasks.completedBy} END`;
 }
 
-type Outcome = 'changed' | 'unchanged' | 'refused';
+/** What a write's results are filed into, for the log and derived work or for the client's notice. */
+type Results = { landed: Landed[]; rejected: Rejected[] };
+
+/**
+ * Runs one write in `owner`'s space, files a change in `landed` and a data or integrity error (SQLSTATE 22xxx or
+ * 23xxx, the client's data's fault) in `rejected`, and answers whether it changed nothing. Inside a transaction a
+ * refused statement would abort the rest, so there each write gets a savepoint of its own.
+ */
+async function land(db: Db, owner: string, actor: string, write: Write, results: Results, inTransaction = false) {
+	let changed: boolean;
+	try {
+		changed = inTransaction
+			? await db.transaction(savepoint => statement(savepoint, owner, actor, write))
+			: await statement(db, owner, actor, write);
+	} catch (error) {
+		if (!refusedByDatabase(error)) throw error;
+		results.rejected.push(reject(write, DB_REFUSED));
+		return false;
+	}
+	if (changed) results.landed.push({ owner, write });
+	return !changed;
+}
 
 /**
  * One row, one statement, in `owner`'s space. A put inserts with the stamps and otherwise updates the row only while
  * it is in that space; a patch or a delete names the space in its `WHERE`. A comment's author is stamped on insert,
- * and its edits and deletes only ever match the author's own row. Answers whether a row changed, or `refused` for a
- * data or integrity error (SQLSTATE 22xxx or 23xxx), which is the client's data's fault.
+ * and its edits and deletes only ever match the author's own row. Answers whether a row changed.
  */
-type WriteRow = (owner: string, actor: string, write: Write) => Promise<Outcome>;
-
-async function outcomeOf(run: () => Promise<boolean>): Promise<Outcome> {
-	try {
-		return (await run()) ? 'changed' : 'unchanged';
-	} catch (error) {
-		if (refusedByDatabase(error)) return 'refused';
-		throw error;
-	}
-}
-
-const writeRow =
-	(db: Db): WriteRow =>
-	(owner, actor, write) =>
-		outcomeOf(() => statement(db, owner, actor, write));
-
-/** Inside a transaction a refused statement would abort the rest, so each write gets a savepoint of its own. */
-const writeRowIn =
-	(tx: Db): WriteRow =>
-	(owner, actor, write) =>
-		outcomeOf(() => tx.transaction(savepoint => statement(savepoint, owner, actor, write)));
-
 async function statement(db: Db, owner: string, actor: string, write: Write): Promise<boolean> {
 	const table: PgTable = ENTITY_TABLES[write.kind];
 	const columns = columnsOf(write.kind);
@@ -258,22 +256,6 @@ type Landed = { owner: string; write: Write };
 const inLockOrder = <T extends Pick<RowWrite, 'kind' | 'id'>>(writes: readonly T[]) =>
 	writes.toSorted((a, b) => rowKey(a).localeCompare(rowKey(b)));
 
-/** Runs one write in a space and files the outcome, with `missing` for a put that found its row elsewhere. */
-async function land(
-	writeIn: WriteRow,
-	owner: string,
-	actor: string,
-	write: Write,
-	landed: Landed[],
-	rejected: Rejected[],
-	missing: (write: Write) => void,
-): Promise<void> {
-	const outcome = await writeIn(owner, actor, write);
-	if (outcome === 'refused') rejected.push(reject(write, DB_REFUSED));
-	else if (outcome === 'changed') landed.push({ owner, write });
-	else missing(write);
-}
-
 /**
  * The upload route's writes, to whichever spaces they name. A write to the actor's own space runs at once. A put
  * that then changed nothing names a row stored in another space. A patch or a delete that changed nothing is looked
@@ -282,8 +264,8 @@ async function land(
  */
 export async function applyWrites(db: Db, ctx: WriteContext, writes: readonly OwnedWrite[]): Promise<Applied> {
 	const actor = ctx.actor.id;
-	const rejected: Rejected[] = [];
-	const landed: Landed[] = [];
+	const results: Results = { landed: [], rejected: [] };
+	const { landed, rejected } = results;
 	const unresolved: Write[] = [];
 	const foreign: (Write & { owner: string; stored?: StoredComment })[] = [];
 
@@ -293,10 +275,11 @@ export async function applyWrites(db: Db, ctx: WriteContext, writes: readonly Ow
 				foreign.push({ ...write, owner: owner! });
 				return;
 			}
-			return land(writeRow(db), actor, actor, write, landed, rejected, missed => {
+			return land(db, actor, actor, write, results).then(missed => {
+				if (!missed) return;
 				// A settings put that found the row changed nothing on purpose; a comment put may have met another's row.
-				if (missed.op !== 'put' || missed.kind === 'comment') unresolved.push(missed);
-				else if (!PER_USER.has(missed.kind)) rejected.push(reject(missed, OTHER_SPACE));
+				if (write.op !== 'put' || write.kind === 'comment') unresolved.push(write);
+				else if (!PER_USER.has(write.kind)) rejected.push(reject(write, OTHER_SPACE));
 			});
 		}),
 	);
@@ -328,7 +311,7 @@ export async function applyWrites(db: Db, ctx: WriteContext, writes: readonly Ow
 			for (const { owner: space, stored, ...write } of inLockOrder(group)) {
 				const reason = guestRefusal(rows, write, actor, stored);
 				if (reason) rejected.push(reject(write, reason));
-				else await land(writeRowIn(tx), space, actor, write, landed, rejected, missedPut(rejected));
+				else if (await land(tx, space, actor, write, results, true)) missedPut(rejected, write);
 			}
 		});
 	}
@@ -382,10 +365,10 @@ async function spacesOfGone(db: Db, actor: string, gone: readonly Write[]): Prom
 }
 
 /** A put into a known space that changed nothing met a row it may not rewrite; a patch or delete met none. */
-const missedPut = (rejected: Rejected[]) => (missed: Write) => {
+function missedPut(rejected: Rejected[], missed: Write) {
 	if (missed.op !== 'put' || PER_USER.has(missed.kind)) return;
 	rejected.push(reject(missed, missed.kind === 'comment' ? authorOnly('put') : OTHER_SPACE));
-};
+}
 
 /**
  * The agent API's writes to one space, whose authority the caller decided from the loaded space. A write that
@@ -400,19 +383,21 @@ export async function applyAs(
 	writes: readonly Write[],
 ): Promise<Applied> {
 	const actor = ctx.actor.id;
-	const rejected: Rejected[] = [];
-	const landed: Landed[] = [];
+	const results: Results = { landed: [], rejected: [] };
+	const { landed, rejected } = results;
 	const coalesced = coalesce(writes);
 	if (authority.role !== 'guest') {
 		await Promise.all(
-			coalesced.map(write => land(writeRow(db), owner, actor, write, landed, rejected, missedPut(rejected))),
+			coalesced.map(async write => {
+				if (await land(db, owner, actor, write, results)) missedPut(rejected, write);
+			}),
 		);
 	} else {
 		await asGuest(db, actor, owner, async (tx, rows) => {
 			for (const write of inLockOrder(coalesced)) {
 				const reason = PER_USER.has(write.kind) ? null : guestRefusal(rows, write, actor, authority.comment(write.id));
 				if (reason) rejected.push(reject(write, reason));
-				else await land(writeRowIn(tx), owner, actor, write, landed, rejected, missedPut(rejected));
+				else if (await land(tx, owner, actor, write, results, true)) missedPut(rejected, write);
 			}
 		});
 	}

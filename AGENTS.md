@@ -62,7 +62,7 @@ Full rules in [`docs/decisions/workflow.md`](docs/decisions/workflow.md).
 
 # Sentry
 
-- Org `self-uo7`, one project per runtime: `procrastimate-web` (4512271645409280), `procrastimate-worker` (4512271645474816, the Worker, the `Account` object, and the Bun dev server), `procrastimate-ios` (4512271645605888). Environments are `production` (deploys, TestFlight) and `development` (Stefan's local dev); tests never report.
+- Org `self-uo7`, one project per runtime: `procrastimate-web` (4512271645409280), `procrastimate-worker` (4512271645474816, the Worker, the `Ramble` object, and the Bun dev server), `procrastimate-ios` (4512271645605888). Environments are `production` (deploys, TestFlight) and `development` (Stefan's local dev); tests never report.
 - Code: `server/src/sentry.ts`, `app-web/src/lib/sentry.ts`, `app-ios/Sources/App/Support/Telemetry.swift`. Rules live in `docs/decisions/observability.md`.
 - Read data through the Sentry MCP (`plugin:sentry`) when it is authorized; it needs `/mcp` auth in an interactive session. Otherwise use the REST API with `SENTRY_AUTH_TOKEN` from the `scripts` target in the root `.env.local`, loaded like `APP_BOT_TOKEN`. With `S=https://sentry.io/api/0/organizations/self-uo7` and `-H "Authorization: Bearer $SENTRY_AUTH_TOKEN"`:
   - Issues: `curl -s "$S/issues/?query=Sentry%20smoke%20test&environment=development&statsPeriod=24h"`, then the newest event with `curl -s "$S/issues/<id>/events/latest/"` (user, `contexts.trace.trace_id`, frames, request).

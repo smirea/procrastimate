@@ -17,22 +17,6 @@ export type RambleBudget = {
 	release(day: string, seconds: number): Promise<void>;
 };
 
-export function memoryRambleBudget(limit: number): RambleBudget {
-	const used = new Map<string, number>();
-	return {
-		async reserve(day, seconds) {
-			const current = used.get(day) ?? 0;
-			const granted = Math.max(0, Math.min(seconds, limit - current));
-			if (granted > 0) used.set(day, current + granted);
-			return granted;
-		},
-		async release(day, seconds) {
-			if (!(seconds > 0)) return;
-			used.set(day, Math.max(0, (used.get(day) ?? 0) - seconds));
-		},
-	};
-}
-
 /** One row per UTC day. The reservation locks the row, so two accounts reserving at once cannot both read the same remainder. */
 export function pgRambleBudget(db: Db, limit: number): RambleBudget {
 	return {

@@ -15,12 +15,14 @@ import {
 	type RambleServerMessage,
 } from '../../shared/ramble/protocol';
 import { addDays, type DateKey } from '../../shared/task';
-import { isTimeZone, zonedDateKey, zonedTime } from '../../shared/zoned-time';
+import { zonedDateKey, zonedTime } from '../../shared/zoned-time';
 import type { Db } from './db/postgres';
-import type { RambleBudget } from './ramble-budget';
+import { pgRambleBudget, RAMBLE_GLOBAL_DAILY_SECONDS, type RambleBudget } from './ramble-budget';
+import { cassetteUpstream } from './ramble-cassette';
+import type { Config } from './config';
 import { reportError } from './sentry';
 import { listenWorkerSocket, type Socket, type StreamEvents, type StreamHost, type WorkerSocket } from './sockets';
-import { loadTree, storedTimeZone } from './space';
+import { loadTree, storedZone } from './space';
 
 /**
  * Ramble's transcription proxy. A signed-in client streams PCM over `RAMBLE_SOCKET_PATH`, and the server forwards it
@@ -112,22 +114,30 @@ export function workerUpstream(apiKey: string): ConnectUpstream {
 	};
 }
 
-export type RambleLimits = { sessionSeconds: number; dailySeconds: number; idleMs?: number };
-
-export const DEFAULT_LIMITS: RambleLimits = {
-	sessionSeconds: RAMBLE_SESSION_SECONDS,
-	dailySeconds: RAMBLE_DAILY_SECONDS,
-};
-
 /** How the server reaches ElevenLabs: null without a key, which turns Ramble off. */
-export type RambleConfig = { connect: ConnectUpstream | null; limits?: RambleLimits; budget?: RambleBudget | null };
+export type RambleConfig = { connect: ConnectUpstream | null; budget?: RambleBudget };
+
+/** The configured upstream, with the deployment's shared budget for the real one. */
+export function rambleConfig(
+	settings: Config['ramble'],
+	db: () => Db,
+	upstream: (apiKey: string) => ConnectUpstream,
+): RambleConfig {
+	switch (settings?.kind) {
+		case 'elevenlabs':
+			return { connect: upstream(settings.apiKey), budget: pgRambleBudget(db(), RAMBLE_GLOBAL_DAILY_SECONDS) };
+		case 'cassette':
+			return { connect: cassetteUpstream() };
+		default:
+			return { connect: null };
+	}
+}
 
 type RambleGrant = { day: string; seconds: number };
 
 export type Ramble = {
 	stream: StreamHost;
 	connect: ConnectUpstream | null;
-	limits: RambleLimits;
 	/** Open sessions, with the audio seconds each has streamed on its current day and not yet stored. */
 	live: Set<{ day: string; seconds: number }>;
 	budget: RambleBudget | null;
@@ -137,7 +147,6 @@ export function ramble(stream: StreamHost, config: RambleConfig): Ramble {
 	return {
 		stream,
 		connect: config.connect,
-		limits: config.limits ?? DEFAULT_LIMITS,
 		live: new Set(),
 		budget: config.budget ?? null,
 	};
@@ -242,7 +251,7 @@ function session({
 	cassette,
 	grant,
 }: SessionOptions): StreamEvents {
-	const { limits, live } = ramble;
+	const { live } = ramble;
 	const tally = { day, seconds: 0 };
 	let stored = storedToday;
 	let sessionSeconds = 0;
@@ -351,8 +360,8 @@ function session({
 			return end('error');
 		}
 		roll();
-		const sessionLeft = limits.sessionSeconds - sessionSeconds;
-		const dailyLeft = limits.dailySeconds - stored - liveSeconds(live, tally.day);
+		const sessionLeft = RAMBLE_SESSION_SECONDS - sessionSeconds;
+		const dailyLeft = RAMBLE_DAILY_SECONDS - stored - liveSeconds(live, tally.day);
 		const budgetCap = budgetLeft ?? Number.POSITIVE_INFINITY;
 		const allowed = Math.max(
 			0,
@@ -373,14 +382,13 @@ function session({
 		}
 	}
 
-	const idleMs = limits.idleMs ?? IDLE_MS;
 	let idleTimer: ReturnType<typeof setTimeout> | undefined;
 	function armIdle() {
 		if (idleTimer) {
 			clearTimeout(idleTimer);
 			timers.delete(idleTimer);
 		}
-		idleTimer = setTimeout(() => finish('idle'), idleMs);
+		idleTimer = setTimeout(() => finish('idle'), IDLE_MS);
 		timers.add(idleTimer);
 	}
 	/** Stores the seconds streamed before midnight on that day, so later frames count against the new one. */
@@ -428,10 +436,6 @@ function session({
 	};
 }
 
-function accountZone(timeZone: string | null): string {
-	return timeZone && isTimeZone(timeZone) ? timeZone : 'UTC';
-}
-
 const fail = (status: number, error: string) => Response.json({ ok: false, error }, { status });
 
 /** A browser cannot read a refused upgrade, so a used-up day still opens and then closes with this error. */
@@ -449,56 +453,39 @@ function refuseDaily(ramble: Ramble, request: Request, resetsAt: number) {
 	});
 }
 
-/** What a session reads of the user's space: the names for keyterms and the zone its daily cap counts in. */
-export type RambleSpace = { tree: Pick<Snapshot, 'tasks' | 'projects' | 'labels'>; timeZone: string | null };
-
-/** The upgrade for one signed-in human's session, after the caller authenticated the request. */
-export async function rambleSocket(
-	request: Request,
-	ramble: Ramble,
-	usage: RambleUsage,
-	space: () => Promise<RambleSpace>,
-	now: number,
-): Promise<Response> {
-	if (request.headers.get('Upgrade')?.toLowerCase() !== 'websocket') return fail(426, 'Expected a WebSocket');
-	const { connect } = ramble;
-	if (!connect) return fail(503, 'Ramble is not configured');
-	const { tree, timeZone } = await space();
-	const zone = accountZone(timeZone);
-	const day = zonedDateKey(now, zone);
-	const storedToday = await usage.stored(day);
-	const remaining = ramble.limits.dailySeconds - storedToday - liveSeconds(ramble.live, day);
-	if (remaining <= 0) return refuseDaily(ramble, request, zonedTime(addDays(day, 1), '00:00', zone));
-	let grant: RambleGrant | null = null;
-	if (ramble.budget) {
-		const utcDay = zonedDateKey(now, 'UTC');
-		const want = Math.min(ramble.limits.sessionSeconds, remaining);
-		let granted = 0;
-		try {
-			granted = await ramble.budget.reserve(utcDay, want);
-		} catch (error) {
-			reportError(error);
-			return fail(503, 'Ramble is unavailable');
-		}
-		if (granted <= 0) return refuseDaily(ramble, request, zonedTime(addDays(utcDay, 1), '00:00', 'UTC'));
-		grant = { day: utcDay, seconds: granted };
-	}
-	const keyterms = rambleKeyterms(tree);
-	const cassette = new URL(request.url).searchParams.get('cassette');
-	return ramble.stream(request, RAMBLE_SOCKET_PROTOCOL, client =>
-		session({ client, connect, ramble, usage, storedToday, day, zone, keyterms, cassette, grant }),
-	);
-}
-
 export type RambleRoute = (request: Request, actor: Actor) => Promise<Response>;
 
-/** An in-process host over one database, for Bun and for the Durable Object itself. */
-export function rambleRoute(db: Db, host: Ramble): RambleRoute {
+/** The upgrade for one signed-in human's session, after the caller authenticated the request, over one database. */
+export function rambleRoute(db: Db, ramble: Ramble): RambleRoute {
 	return async (request, actor) => {
-		const space = async () => {
-			const [tree, timeZone] = await Promise.all([loadTree(db, actor.id), storedTimeZone(db, actor.id)]);
-			return { tree, timeZone };
-		};
-		return rambleSocket(request, host, pgRambleUsage(db, actor.id), space, Date.now());
+		if (request.headers.get('Upgrade')?.toLowerCase() !== 'websocket') return fail(426, 'Expected a WebSocket');
+		const { connect } = ramble;
+		if (!connect) return fail(503, 'Ramble is not configured');
+		const now = Date.now();
+		const usage = pgRambleUsage(db, actor.id);
+		const [tree, zone] = await Promise.all([loadTree(db, actor.id), storedZone(db, actor.id)]);
+		const day = zonedDateKey(now, zone);
+		const storedToday = await usage.stored(day);
+		const remaining = RAMBLE_DAILY_SECONDS - storedToday - liveSeconds(ramble.live, day);
+		if (remaining <= 0) return refuseDaily(ramble, request, zonedTime(addDays(day, 1), '00:00', zone));
+		let grant: RambleGrant | null = null;
+		if (ramble.budget) {
+			const utcDay = zonedDateKey(now, 'UTC');
+			const want = Math.min(RAMBLE_SESSION_SECONDS, remaining);
+			let granted = 0;
+			try {
+				granted = await ramble.budget.reserve(utcDay, want);
+			} catch (error) {
+				reportError(error);
+				return fail(503, 'Ramble is unavailable');
+			}
+			if (granted <= 0) return refuseDaily(ramble, request, zonedTime(addDays(utcDay, 1), '00:00', 'UTC'));
+			grant = { day: utcDay, seconds: granted };
+		}
+		const keyterms = rambleKeyterms(tree);
+		const cassette = new URL(request.url).searchParams.get('cassette');
+		return ramble.stream(request, RAMBLE_SOCKET_PROTOCOL, client =>
+			session({ client, connect, ramble, usage, storedToday, day, zone, keyterms, cassette, grant }),
+		);
 	};
 }

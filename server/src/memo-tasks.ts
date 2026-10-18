@@ -17,8 +17,7 @@ import { DEFAULT_PRIORITY } from '../../shared/values';
 import { wallDate } from '../../shared/zoned-time';
 import type { Command } from './commands';
 import type { Db } from './db/postgres';
-import { zoneOf } from './push';
-import { entity, storedTimeZone } from './space';
+import { entity, storedZone } from './space';
 import { applyAs, type Write } from './writes';
 
 /**
@@ -99,14 +98,13 @@ export async function putMemoTasks(command: Command, request: MemoTasksRequest):
 		return true;
 	});
 	if (!fresh.length) return memoTasks(live);
-	const [timeZone, [newest]] = await Promise.all([
-		storedTimeZone(db, owner),
+	const [zone, [newest]] = await Promise.all([
+		storedZone(db, owner),
 		db
 			.select({ createdAt: max(tasks.createdAt) })
 			.from(tasks)
 			.where(eq(tasks.userId, owner)),
 	]);
-	const zone = zoneOf(timeZone);
 	// Past the newest task, like `addTask`, so the memo's tasks keep the order they were sent in.
 	let createdAt = Math.max(now, (newest?.createdAt ?? -Infinity) + 1);
 	const ids = await Promise.all(fresh.map(input => memoTaskId(owner, request.memoId, input.key)));

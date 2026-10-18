@@ -3,11 +3,10 @@ import { eq, inArray, sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { access, log, settings, shares, tasks } from '../../shared/db/schema';
-import type { ShareView } from '../../shared/sharing';
 import { handle } from './api';
 import { createApp } from './app';
 import { ramble, rambleRoute } from './ramble';
-import { ORIGIN, signUp, taskRow, testEnv, upload, type Session, type TestApp } from './test-app';
+import { ORIGIN, shareWith, signUp, taskRow, type TestApp, testEnv, upload } from './test-app';
 
 /**
  * A share change must wait for the space's advisory lock, which the `access` recompute after an upload holds, and a
@@ -52,15 +51,6 @@ async function cleanUp(db: ReturnType<typeof drizzle>, ids: string[]) {
 	);
 }
 
-const shareTask = async (app: TestApp, owner: Session, taskId: string, grantee: string, role: 'view' | 'edit') =>
-	(await (
-		await app.fetch('/api/shares', {
-			method: 'POST',
-			headers: owner.headers,
-			body: JSON.stringify({ target: { kind: 'task', id: taskId }, audience: { kind: 'user', userId: grantee, role } }),
-		})
-	).json()) as ShareView;
-
 test.skipIf(!url)(
 	'a share change waits for the space lock an upload holds, and lands once it is released',
 	async () => {
@@ -76,7 +66,7 @@ test.skipIf(!url)(
 					{ op: 'put', table: 'tasks', id: taskId, values: taskRow(taskId, owner.person.id, 'Locked') },
 				]),
 			).toEqual([]);
-			const share = await shareTask(app, owner, taskId, guest.person.id, 'view');
+			const share = await shareWith(app, owner, { kind: 'task', id: taskId }, guest.person.id, 'view');
 			const accessRows = () => db.select().from(access).where(eq(access.grantee, guest.person.id));
 			expect(await accessRows()).toHaveLength(1);
 
@@ -113,10 +103,12 @@ test.skipIf(!url)(
 					{ op: 'put', table: 'tasks', id: taskId, values: taskRow(taskId, owner.person.id, 'Shared') },
 				]),
 			).toEqual([]);
-			await shareTask(app, owner, taskId, guest.person.id, 'edit');
+			await shareWith(app, owner, { kind: 'task', id: taskId }, guest.person.id, 'edit');
 
 			let writing: Promise<unknown> | undefined;
+			// A downgrade as the share routes run it: under the space's lock, rewriting the guest's rows.
 			await holder.begin(async tx => {
+				await tx`SELECT pg_advisory_xact_lock(hashtext(${owner.person.id}))`;
 				await tx`UPDATE access SET role = 'view' WHERE grantee = ${guest.person.id}`;
 				writing = upload(app, guest, [{ op: 'patch', table: 'tasks', id: taskId, values: { title: 'Mine' } }]);
 				const outcome = await Promise.race([writing.then(() => 'written'), Bun.sleep(500).then(() => 'waiting')]);

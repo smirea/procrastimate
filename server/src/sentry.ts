@@ -16,7 +16,7 @@ import { config } from './config';
 import { BACKUP_CRON } from './crons';
 
 /**
- * The server's one Sentry module. `worker.ts` wraps the handler and the `Account` object with `sentryOptions`, and
+ * The server's one Sentry module. `worker.ts` wraps the handler and the `Ramble` object with `sentryOptions`, and
  * `index.ts` starts `@sentry/bun` with `serverOptions` for the dev server. Feature code calls `span`, `identify`, and
  * `reportError`, which go through `@sentry/core`'s global client, so they work under either SDK and do nothing where
  * no client is set up: tests and any run without `SENTRY_ENVIRONMENT`.

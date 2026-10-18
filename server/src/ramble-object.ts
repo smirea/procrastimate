@@ -1,26 +1,10 @@
 import type { DurableObjectState } from '@cloudflare/workers-types';
 import type { Env } from './bindings';
-import { config, type Config } from './config';
+import { config } from './config';
 import { connect, type Connection } from './db/postgres';
 import { errorResponse } from './errors';
-import { ramble, rambleRoute, workerUpstream, type RambleConfig, type RambleRoute } from './ramble';
-import { pgRambleBudget, RAMBLE_GLOBAL_DAILY_SECONDS } from './ramble-budget';
-import { cassetteUpstream } from './ramble-cassette';
+import { ramble, rambleConfig, rambleRoute, workerUpstream, type RambleRoute } from './ramble';
 import { workerStream } from './sockets';
-
-export function workerRambleConfig(settings: Config, connection: () => Connection): RambleConfig {
-	switch (settings.ramble?.kind) {
-		case 'elevenlabs':
-			return {
-				connect: workerUpstream(settings.ramble.apiKey),
-				budget: pgRambleBudget(connection().db, RAMBLE_GLOBAL_DAILY_SECONDS),
-			};
-		case 'cassette':
-			return { connect: cassetteUpstream() };
-		default:
-			return { connect: null };
-	}
-}
 
 /** The user's actor, set by the Worker after it authenticated the upgrade. The object trusts only this header. */
 export const RAMBLE_ACTOR_HEADER = 'x-procrastimate-ramble-actor';
@@ -50,7 +34,7 @@ export class Ramble {
 			this.open().db,
 			ramble(
 				workerStream(),
-				workerRambleConfig(config(this.env), () => this.open()),
+				rambleConfig(config(this.env).ramble, () => this.open().db, workerUpstream),
 			),
 		);
 		return this.route(request, JSON.parse(actor));

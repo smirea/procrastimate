@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
-import { json, ORIGIN, signUp, testApp, type Session, type TestApp } from './test-app';
+import { aiAccount, json, ORIGIN, type Session, signUp, testApp, type TestApp } from './test-app';
 import { TOKEN_SECONDS } from './sync';
 
 let app: TestApp;
@@ -61,16 +61,7 @@ describe('GET /api/sync/token', () => {
 	});
 
 	test('an AI account gets no token', async () => {
-		const ai = await json<{ id: string }>(
-			app.fetch('/api/ai', { method: 'POST', headers: owner.headers, body: JSON.stringify({ name: 'Bot' }) }),
-		);
-		const { token } = await json<{ token: string }>(
-			app.fetch('/api/ai-tokens', {
-				method: 'POST',
-				headers: owner.headers,
-				body: JSON.stringify({ aiUserId: ai.id, name: 'x' }),
-			}),
-		);
+		const { token } = await aiAccount(app, owner);
 		expect((await app.fetch('/api/sync/token', { headers: { authorization: `Bearer ${token}` } })).status).toBe(403);
 		expect((await app.fetch('/api/sync/token')).status).toBe(401);
 	});
