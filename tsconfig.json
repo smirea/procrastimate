@@ -28,5 +28,5 @@
 			"shared/*": ["./shared/*"]
 		}
 	},
-	"exclude": ["node_modules", "app-web", "app-ios", "poc"]
+	"exclude": ["node_modules", "app-web", "app-ios"]
 }

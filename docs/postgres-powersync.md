@@ -65,7 +65,7 @@ web (Drizzle)┘     │ upload queue  └─ Worker POST /api/upload ─→ Dri
 
 ## Questions the proof of concept answers
 
-The proof of concept lived in `poc/` until the migration landed, and its answers are in that commit's `poc/README.md`.
+The proof of concept lived in `poc/` until the migration landed. Its answers are in `poc/README.md` and `poc/ios/RESULTS.md` at commit b54d7d2.
 
 1. Does PowerSync accept a token the server signs, locally and in the cloud?
 2. Do the PowerSync web SDK and `@powersync/drizzle-driver` run in the SvelteKit build in Chromium and WebKit, and can Drizzle with the `sqlite-core` tables read and write them?
