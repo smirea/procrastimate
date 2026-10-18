@@ -1,5 +1,5 @@
-# One PowerSync service per worktree, written to the worktree's git-ignored `.powersync/service.yaml` by
-# `scripts/setup-worktree.ts`, which fills in the worktree's database. The public key is the committed
+# One PowerSync service per stack, written to the worktree's git-ignored `.powersync/<stack>.yaml` by
+# `scripts/local-stack.ts`, which fills in the worktree's database. The public key is the committed
 # `INSECURE-dev-jwt-key.json`; production lists its own in `powersync/<env>/service.yaml`.
 replication:
   connections:

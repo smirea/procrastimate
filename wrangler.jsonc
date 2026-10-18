@@ -24,7 +24,6 @@
 		{
 			"binding": "HYPERDRIVE",
 			"id": "612c9ca80e5a4c90ace80c20648903c6",
-			"localConnectionString": "postgres://postgres:postgres@127.0.0.1:5440/procrastimate",
 		},
 	],
 	"r2_buckets": [{ "binding": "BACKUPS", "bucket_name": "procrastimate-backups" }],

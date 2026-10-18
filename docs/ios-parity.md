@@ -269,7 +269,7 @@ One PR per slice, each off `master`, never stacked. A slice starts once the slic
 | S9     | iOS sync client                                     | S8, Y3, Y4                  | Y5, Y6                |
 | Polish | Quick add and list polish from the side-by-side run | S5                          | S6, S8                |
 
-Critical path: S1 → S2 → S3 → S5 → S6, S7, and S8 together, then S9. The sync slices `Y1` to `Y6` interleave with these as listed in [Sync build slices](sync-slices.md): Y1 and Y2 run alongside S1 and S2, and the web client Y4 waits for S2.
+Critical path: S1 → S2 → S3 → S5 → S6, S7, and S8 together, then S9.
 
 **Conflict rules.** S1 creates every shared seam up front: the `Core`, `CoreTests`, `App`, and `AppUITests` targets, `RootView` with every tab, a `Route` enum for every destination, a `Sheet` enum for quick add, details, search, and settings, and one placeholder file per screen. Later slices replace the placeholder files they own and add files under their own folders, so no two parallel slices edit the same file. `project.pbxproj` only changes in S1, because every target is a synchronized folder. Each slice edits only its own rows here and its own feature map files. Workflows change only in S1 and S2, which run one after the other.
 
@@ -295,5 +295,5 @@ Critical path: S1 → S2 → S3 → S5 → S6, S7, and S8 together, then S9. The
 - **S8: Settings, theme, import, notifications.**
   - The Settings screen with the theme control and accessibility fallbacks, and Todoist import (the `Compression`-based zip reader plus the picker), using the fixture CI copies in.
   - Local notifications: the scheduler with a 60-request window, background refresh, the foreground toast, the permission screen, the nudge, a test notification, and opening a task from its notification.
-- **S9: iOS sync client.** The client half of [Sync](decisions/sync.md) on top of S5's store, as scoped in [Sync build slices](sync-slices.md).
+- **S9: iOS sync client.** The client half of [Sync](decisions/sync.md) on top of S5's store.
 - **Polish: Quick add and list polish.** Fixes from the side-by-side run: the typed-token tint on iOS, `Create #name` and `Create @name` chips on both clients, the iOS card attached to the keyboard with the add button hidden, the tinted list canvas on iOS, and phone toasts that no longer cover the quick add chips.

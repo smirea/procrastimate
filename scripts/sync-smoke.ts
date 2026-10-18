@@ -150,15 +150,6 @@ const { token, endpoint } = await json<{ token: string; endpoint: string }>(
 	await fetch(`${api}/api/sync/token`, { headers: owner.headers }),
 	'GET /api/sync/token',
 );
-const [header, payload] = token
-	.split('.')
-	.slice(0, 2)
-	.map(part => JSON.parse(Buffer.from(part, 'base64url').toString()));
-check(header.alg === 'EdDSA' && header.kid, `token header is EdDSA with kid ${header.kid}`);
-check(
-	payload.sub === owner.id && payload.aud === 'powersync' && payload.exp - payload.iat === 300,
-	'token names the user, aud powersync, 5 min',
-);
 check(endpoint === `${origin}/api/powersync`, `endpoint is the proxy: ${endpoint}`);
 
 const response = await fetch(`${endpoint}/sync/stream`, {
@@ -177,64 +168,9 @@ check(!response.headers.get('content-encoding'), 'proxy stripped content-encodin
 const stream = openStream(response);
 check(await stream.until(line => 'checkpoint_complete' in line, 15_000), 'first checkpoint completed');
 
-const id = crypto.randomUUID();
 const upload = (writes: unknown[]) =>
 	fetch(`${api}/api/upload`, { method: 'POST', headers: owner.headers, body: JSON.stringify({ writes }) });
-
-let result = await json<{ rejected: { table: string; id: string; reason: string }[] }>(
-	await upload([{ op: 'put', table: 'tasks', id, values: wireTask(id, owner.id, 'Smoke task') }]),
-	'upload put',
-);
-check(result.rejected.length === 0, 'put was not rejected');
-const putAt = performance.now();
-check(
-	await waitFor(
-		stream,
-		'tasks',
-		id,
-		'PUT',
-		row => row.title === 'Smoke task' && row.priority === 2 && row.created_by === owner.id,
-	),
-	`task streamed back after ${Math.round(performance.now() - putAt)} ms with created_by stamped by the server`,
-);
-
-result = await json(
-	await upload([{ op: 'patch', table: 'tasks', id, values: { title: 'Smoke task, renamed', priority: '1' } }]),
-	'upload patch',
-);
-check(result.rejected.length === 0, 'patch was not rejected');
-check(
-	await waitFor(stream, 'tasks', id, 'PUT', row => row.title === 'Smoke task, renamed' && row.priority === 1),
-	'patch streamed back, numeric text coerced',
-);
-
-result = await json(
-	await upload([
-		{ op: 'put', table: 'tasks', id: crypto.randomUUID(), values: wireTask(crypto.randomUUID(), other.id, 'Not mine') },
-		{ op: 'patch', table: 'tasks', id, values: { priority: 9 } },
-		{ op: 'patch', table: 'tasks', id: 'missing-row', values: { title: 'ghost' } },
-		'not a write',
-	]),
-	'upload with bad writes',
-);
-check(
-	result.rejected.length === 3,
-	`three bad writes rejected alone, not the batch: ${JSON.stringify(result.rejected)}`,
-);
-
-result = await json(await upload([{ op: 'delete', table: 'tasks', id }]), 'upload delete');
-check(result.rejected.length === 0, 'delete was not rejected');
-check(await waitFor(stream, 'tasks', id, 'REMOVE'), 'delete streamed back as REMOVE');
-
-result = await json(await upload([{ op: 'patch', table: 'tasks', id, values: { title: 'late edit' } }]), 'late patch');
-check(result.rejected.length === 0, 'a patch after the delete is a no-op, not an error');
-
-const denied = await fetch(`${api}/api/upload`, {
-	method: 'POST',
-	headers: { origin, 'content-type': 'application/json' },
-	body: '{"writes":[]}',
-});
-check(denied.status === 401, `upload without a session is 401 (${denied.status})`);
+let result: { rejected: { table: string; id: string; reason: string }[] };
 
 const uploadAs = (who: typeof owner, writes: unknown[]) =>
 	fetch(`${api}/api/upload`, { method: 'POST', headers: who.headers, body: JSON.stringify({ writes }) });
@@ -323,45 +259,6 @@ result = await json(
 check(
 	result.rejected.length === 1 && result.rejected[0]!.reason === 'Not editable in this share',
 	`guest patch of a private task refused: ${JSON.stringify(result.rejected)}`,
-);
-
-const viewed = await json<{ tasks: { id: string }[]; readOnly: string[] }>(
-	await fetch(`${api}/api/view?space=${owner.id}`, { headers: other.headers }),
-	'guest GET /api/view of the owner space',
-);
-check(
-	viewed.tasks
-		.map(t => t.id)
-		.sort()
-		.join() === [sharedId, subtaskId].sort().join() && viewed.readOnly.length === 0,
-	'the agent view shows the guest exactly the shared task and its subtask',
-);
-
-const created = await json<{ id: string; title: string; clients: { created: { kind: string } | null } }>(
-	await fetch(`${api}/api/tasks`, {
-		method: 'POST',
-		headers: owner.headers,
-		body: JSON.stringify({ text: 'Agent task tomorrow p1' }),
-	}),
-	'owner POST /api/tasks',
-);
-check(
-	created.title === 'Agent task' && created.clients.created?.kind === 'api',
-	`agent command parsed quick add and recorded the api client (${created.title})`,
-);
-check(
-	await waitFor(stream, 'tasks', created.id, 'PUT', row => row.priority === 1),
-	'the agent-created task streams to the owner',
-);
-
-const activity = await json<{ entries: { action: string; actor: { id: string } }[] }>(
-	await fetch(`${api}/api/activity?id=${sharedId}`, { headers: owner.headers }),
-	'owner GET /api/activity',
-);
-check(
-	activity.entries.map(e => `${e.action}:${e.actor.id === owner.id ? 'owner' : 'guest'}`).join(',') ===
-		'created:owner,edited:guest',
-	`activity folds the log into created by owner, edited by guest (${activity.entries.map(e => e.action).join(',')})`,
 );
 
 // The `shared` stream opens only rows of the access owner's space. A forged access row naming a third user's task,

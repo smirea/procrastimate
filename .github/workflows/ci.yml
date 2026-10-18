@@ -113,10 +113,6 @@ jobs:
       - name: Postgres and PowerSync
         run: bun scripts/ci-stack.ts
 
-      # CI has no AWS access, so this writes the local stand-ins: the dev signing key, a fixed auth secret, a VAPID pair.
-      - name: .dev.vars for wrangler dev
-        run: bun server/scripts/secrets.ts dev-vars --generate-only
-
       - name: End to end against the Worker, desktop Chromium
         run: bun run test:e2e --project desktop
         env:

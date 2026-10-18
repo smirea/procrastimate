@@ -22,9 +22,9 @@ function run(cmd: string[]): string {
 	return result.status === 0 ? result.stdout.trim() : '';
 }
 
-function act(message: string, action: () => void) {
+async function act(message: string, action: () => unknown) {
 	console.log(`${dryRun ? '[dry run] ' : ''}${message}`);
-	if (!dryRun) action();
+	if (!dryRun) await action();
 }
 
 const worktrees = run(['git', 'worktree', 'list', '--porcelain'])
@@ -46,10 +46,10 @@ for (const device of devices()) {
 	const claim = owner(device);
 	if (!claim) continue;
 	if (!live.has(claim.worktree)) {
-		act(`Deleting simulator ${device.name}; its worktree ${claim.worktree} is gone.`, () => remove(device));
+		await act(`Deleting simulator ${device.name}; its worktree ${claim.worktree} is gone.`, () => remove(device));
 	} else if (device.state === 'Booted' && Date.now() - claim.lastUsed > IDLE_MS && !inUse(device.udid, device.name)) {
 		const minutes = Math.round((Date.now() - claim.lastUsed) / 60_000);
-		act(`Shutting down ${device.name}, idle ${minutes} minutes.`, () => shutdown(device));
+		await act(`Shutting down ${device.name}, idle ${minutes} minutes.`, () => shutdown(device));
 	}
 }
 
@@ -58,7 +58,7 @@ for (const entry of existsSync(derivedData) ? readdirSync(derivedData) : []) {
 	if (!entry.startsWith('App-')) continue;
 	const workspace = run(['plutil', '-extract', 'WorkspacePath', 'raw', join(derivedData, entry, 'info.plist')]);
 	if (!workspace || existsSync(workspace)) continue;
-	act(`Deleting DerivedData ${entry} of the removed ${workspace}.`, () =>
+	await act(`Deleting DerivedData ${entry} of the removed ${workspace}.`, () =>
 		rmSync(join(derivedData, entry), { recursive: true, force: true }),
 	);
 }
@@ -66,13 +66,13 @@ for (const entry of existsSync(derivedData) ? readdirSync(derivedData) : []) {
 if (dockerRunning()) {
 	for (const container of powerSyncContainers()) {
 		if (live.has(container.worktree)) continue;
-		act(`Removing ${container.name}; its worktree ${container.worktree} is gone.`, () =>
+		await act(`Removing ${container.name}; its worktree ${container.worktree} is gone.`, () =>
 			removeContainer(container.name),
 		);
 	}
 	for (const { database, worktree } of await worktreeDatabases().catch(() => [])) {
 		if (live.has(worktree)) continue;
-		act(`Dropping database ${database}; its worktree ${worktree} is gone.`, () => void dropDatabases(database));
+		await act(`Dropping database ${database}; its worktree ${worktree} is gone.`, () => dropDatabases(database));
 	}
 }
 
