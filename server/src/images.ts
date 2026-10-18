@@ -164,6 +164,7 @@ export async function imagesRoute(request: Request, app: App): Promise<Response>
 	if (request.method !== 'GET' && request.method !== 'PUT') return errorResponse('NOT_FOUND', 'Not found');
 	const actor = await readActor(request, app);
 	if (!actor) return errorResponse('UNAUTHORIZED', 'Not signed in');
+	if (request.method === 'PUT' && actor.kind !== 'human') return errorResponse('FORBIDDEN', 'Not for AI accounts');
 	identify(actor);
 	const now = Date.now();
 	const owner = spaceOf(new URL(request.url), actor);

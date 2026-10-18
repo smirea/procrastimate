@@ -7,6 +7,8 @@ export const VAPID_SUBJECT = 'https://procrastimate.stf.lol';
 
 const RECORD_SIZE = 4096;
 const JWT_LIFETIME_SECONDS = 12 * 60 * 60;
+/** A push service that hangs would otherwise hold the cron past its next minute and send everything twice. */
+export const PUSH_TIMEOUT_MS = 10_000;
 
 type Bytes = Uint8Array<ArrayBuffer>;
 
@@ -116,10 +118,12 @@ export async function sendPush(
 	message: PushMessage,
 	vapid: Vapid,
 	ttlSeconds = 86_400,
+	timeoutMs = PUSH_TIMEOUT_MS,
 ): Promise<Response> {
 	const body = await encrypt(subscription, utf8(JSON.stringify(message)));
 	return fetch(subscription.endpoint, {
 		method: 'POST',
+		signal: AbortSignal.timeout(timeoutMs),
 		headers: {
 			Authorization: await vapidAuthorization(subscription.endpoint, vapid),
 			'Content-Encoding': 'aes128gcm',

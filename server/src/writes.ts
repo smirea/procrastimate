@@ -12,7 +12,7 @@ import { syncAccess } from './access';
 import type { Db } from './db/postgres';
 import { sweepImages } from './images';
 import { replan } from './push';
-import { accessOf, loadSpace, type Space } from './space';
+import { accessOf, withSpaceLocked, type Space } from './space';
 
 /**
  * The one way rows change: `applyWrites` takes an actor's row writes and applies them to the spaces they name in
@@ -48,13 +48,10 @@ const reject = (write: Pick<RowWrite, 'kind' | 'id'>, reason: string): Rejected 
 	reason,
 });
 
-/** Who owns each stored row a patch or delete names, one query per table. Per-user rows are the actor's or nobody's. */
+/** Who owns each stored row the writes name, one query per table. Per-user rows are the actor's or nobody's. */
 async function storedOwners(db: Db, actor: string, writes: readonly OwnedWrite[]): Promise<Map<string, string>> {
 	const found = new Map<string, string>();
-	const byKind = Map.groupBy(
-		writes.filter(write => write.op !== 'put'),
-		write => write.kind,
-	);
+	const byKind = Map.groupBy(writes, write => write.kind);
 	await Promise.all(
 		[...byKind].map(async ([kind, group]) => {
 			const { table, columns } = keyed(kind);
@@ -115,7 +112,14 @@ function stamp(snapshot: Snapshot, write: Write, actor: string): { write: Write 
 	return { write };
 }
 
-type Outcome = { admitted: Write[]; repairs: RowWrite[]; rejected: Rejected[]; fixed: Snapshot };
+/** `changedTasks` are the tasks the admitted writes changed: a replay or a patch to a missing row changes nothing. */
+type Outcome = {
+	admitted: Write[];
+	repairs: RowWrite[];
+	rejected: Rejected[];
+	fixed: Snapshot;
+	changedTasks: string[];
+};
 
 /** The pure half: which writes land in the space, what the server repairs after them, and the snapshot that results. */
 export function planSpace(space: Space, actor: Actor, writes: readonly Write[]): Outcome {
@@ -126,6 +130,7 @@ export function planSpace(space: Space, actor: Actor, writes: readonly Write[]):
 			repairs: [],
 			fixed: space.snapshot,
 			rejected: writes.map(w => reject(w, 'Not shared with you')),
+			changedTasks: [],
 		};
 	}
 	const rejected: Rejected[] = [];
@@ -139,6 +144,8 @@ export function planSpace(space: Space, actor: Actor, writes: readonly Write[]):
 	const admitted: Write[] = [];
 	let after = space.snapshot;
 	for (const candidate of candidates) {
+		// Settings exist from sign-up and clients patch them; a put only ever fills in a missing row.
+		if (candidate.kind === 'settings' && candidate.op === 'put' && space.settingsStored) continue;
 		const result = stamp(after, candidate, actor.id);
 		if ('rejected' in result) {
 			rejected.push(result.rejected);
@@ -148,7 +155,10 @@ export function planSpace(space: Space, actor: Actor, writes: readonly Write[]):
 		after = applyWrite(after, result.write);
 	}
 	const fixed = fixups(after);
-	return { admitted, repairs: rowWrites(after, fixed), rejected, fixed };
+	const changedTasks = rowWrites(space.snapshot, after)
+		.filter(write => write.kind === 'task')
+		.map(write => write.id);
+	return { admitted, repairs: rowWrites(after, fixed), rejected, fixed, changedTasks };
 }
 
 /** Writes rows for one space, batched: one upsert per table for the puts, one delete per table, a patch per row. */
@@ -196,12 +206,11 @@ const logRow = (owner: string, write: Write, actor: string, at: number): typeof 
 });
 
 /**
- * A task's first write names its `created` app and every write its `edited` one. The row is written in one upsert
- * that only ever replaces `edited`, so a task's creator app is never overwritten. Fixups are the server's and are
- * not recorded.
+ * A task's first write names its `created` app and every write that changed it its `edited` one. The row is written
+ * in one upsert that only ever replaces `edited`, so a task's creator app is never overwritten. Fixups are the
+ * server's and are not recorded.
  */
-async function recordClients(db: Db, owner: string, before: Snapshot, writes: readonly Write[], stamp: ClientStamp) {
-	const ids = [...new Set(writes.filter(write => write.kind === 'task').map(write => write.id))];
+async function recordClients(db: Db, owner: string, before: Snapshot, ids: readonly string[], stamp: ClientStamp) {
 	if (!ids.length) return;
 	const existed = new Set(before.tasks.map(task => task.id));
 	await db
@@ -223,7 +232,7 @@ export async function rememberPerson(db: Db, owner: string, actor: Actor, now: n
 
 /** Everything that follows a space's writes: the rows, the log, the clients, the person, `access`, and push. */
 async function commitSpace(db: Db, space: Space, ctx: WriteContext, outcome: Outcome): Promise<void> {
-	const { admitted, repairs, fixed } = outcome;
+	const { admitted, repairs, fixed, changedTasks } = outcome;
 	const { actor, client, now } = ctx;
 	await writeRows(db, space.owner, admitted);
 	await writeRows(db, space.owner, repairs);
@@ -233,7 +242,7 @@ async function commitSpace(db: Db, space: Space, ctx: WriteContext, outcome: Out
 			...admitted.map(write => logRow(space.owner, write, actor.id, now)),
 			...repairs.map(write => logRow(space.owner, write, SERVER_ACTOR, now)),
 		]);
-	await recordClients(db, space.owner, space.snapshot, admitted, { ...client, at: now });
+	await recordClients(db, space.owner, space.snapshot, changedTasks, { ...client, at: now });
 	await rememberPerson(db, space.owner, actor, now);
 	await syncAccess(db, { ...space, snapshot: fixed });
 	await replan(db, space.owner, fixed, now);
@@ -252,9 +261,7 @@ export async function transact(
 	ctx: WriteContext,
 	make: (space: Space, tx: Db) => Write[] | Promise<Write[]>,
 ): Promise<{ space: Space; rejected: Rejected[]; fixed: Snapshot }> {
-	return db.transaction(async tx => {
-		await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${owner}))`);
-		const space = await loadSpace(tx, owner);
+	return withSpaceLocked(db, owner, async (tx, space) => {
 		const outcome = planSpace(space, ctx.actor, await make(space, tx));
 		if (outcome.admitted.length) await commitSpace(tx, space, ctx, outcome);
 		return { space, rejected: outcome.rejected, fixed: outcome.fixed };
@@ -275,19 +282,42 @@ export async function applyWrites(db: Db, ctx: WriteContext, writes: readonly Ow
 		const stored = await storedOwners(tx, ctx.actor.id, folded);
 		const bySpace = new Map<string, Write[]>();
 		for (const write of folded) {
-			const owner = write.op === 'put' ? write.owner : stored.get(rowKey(write));
+			const current = stored.get(rowKey(write));
+			// Entity tables are keyed by id alone, so a put naming a stored row stays in that row's space whatever it claims.
+			if (write.op === 'put' && current !== undefined && current !== write.owner) {
+				rejected.push(reject(write, 'Belongs to another space'));
+				continue;
+			}
+			const owner = write.op === 'put' ? write.owner : current;
 			if (owner === undefined || owner === null) continue;
 			const { owner: _, ...rest } = write;
 			bySpace.set(owner, [...(bySpace.get(owner) ?? []), rest]);
 		}
-		for (const [owner, group] of bySpace) {
-			await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${owner}))`);
-			const space = await loadSpace(tx, owner);
-			const outcome = planSpace(space, ctx.actor, group);
-			rejected.push(...outcome.rejected);
-			if (outcome.admitted.length) await commitSpace(tx, space, ctx, outcome);
-			spaces.set(owner, outcome.fixed);
+		// Spaces lock in one order, so two uploads touching the same two spaces never deadlock.
+		for (const [owner, group] of [...bySpace].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) {
+			try {
+				await withSpaceLocked(tx, owner, async (savepoint, space) => {
+					const outcome = planSpace(space, ctx.actor, group);
+					if (outcome.admitted.length) await commitSpace(savepoint, space, ctx, outcome);
+					rejected.push(...outcome.rejected);
+					spaces.set(owner, outcome.fixed);
+				});
+			} catch (error) {
+				if (!refusedByDatabase(error)) throw error;
+				rejected.push(...group.map(write => reject(write, 'The database refused the write')));
+			}
 		}
 	});
 	return { rejected, spaces };
+}
+
+/**
+ * A data or integrity error (SQLSTATE classes 22 and 23) is the client's data's fault, so the space's writes are
+ * rejected and the rest of the batch still lands. Anything else, a lost connection or a deadlock, is the request's
+ * failure and PowerSync retries the whole batch. Drizzle wraps the driver's error, which holds the code, as `cause`.
+ */
+function refusedByDatabase(error: unknown): boolean {
+	const wrapped = error as { code?: unknown; cause?: { code?: unknown } } | null;
+	const code = wrapped?.code ?? wrapped?.cause?.code;
+	return typeof code === 'string' && (code.startsWith('22') || code.startsWith('23'));
 }

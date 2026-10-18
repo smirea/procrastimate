@@ -13,7 +13,7 @@ import type { Db } from './db/postgres';
 import { userById } from './better-auth';
 import { personOf, requireManager } from './commands';
 import { agentPrompt } from './docs';
-import { loadSpace, type Space } from './space';
+import { loadSpace, withSpaceLocked, type Space } from './space';
 import type { Access } from './auth';
 import { rememberPerson } from './writes';
 
@@ -56,49 +56,54 @@ function checkTarget({ snapshot }: Space, target: ShareTarget) {
 }
 
 /**
- * Writes the share and remembers the grantee. A link is always read only. Sharing the same target with the same
- * audience again keeps the row, so a link's URL stays stable and a user's role is simply updated.
+ * Writes the share and remembers the grantee, under the space's lock so an upload in flight cannot recompute `access`
+ * from the shares it read before. A link is always read only. Sharing the same target with the same audience again
+ * keeps the row, so a link's URL stays stable and a user's role is simply updated.
  */
-export async function createShare(
+export function createShare(
 	db: Db,
-	space: Space,
+	owner: string,
 	origin: string,
 	target: ShareTarget,
 	grantee: Person | null,
 	role: Role,
 	now: number,
 ): Promise<ShareView> {
-	checkTarget(space, target);
-	const existing = space.shares.find(
-		s => s.targetKind === target.kind && s.targetId === target.id && s.grantee === (grantee?.id ?? null),
-	);
-	const share: ShareRow = existing
-		? { ...existing, role: grantee ? role : 'view' }
-		: {
-				id: grantee ? newId() : randomSecret(),
-				targetKind: target.kind,
-				targetId: target.id,
-				grantee: grantee?.id ?? null,
-				role: grantee ? role : 'view',
-				createdAt: now,
-			};
-	await db
-		.insert(shares)
-		.values({ userId: space.owner, ...share })
-		.onConflictDoUpdate({ target: [shares.userId, shares.id], set: { role: share.role } });
-	const next = { ...space, shares: [...space.shares.filter(s => s.id !== share.id), share] };
-	if (grantee) {
-		await rememberPerson(db, space.owner, grantee, now);
-		await syncAccess(db, next);
-	}
-	return shareView(db, next, origin, share);
+	return withSpaceLocked(db, owner, async (tx, space) => {
+		checkTarget(space, target);
+		const existing = space.shares.find(
+			s => s.targetKind === target.kind && s.targetId === target.id && s.grantee === (grantee?.id ?? null),
+		);
+		const share: ShareRow = existing
+			? { ...existing, role: grantee ? role : 'view' }
+			: {
+					id: grantee ? newId() : randomSecret(),
+					targetKind: target.kind,
+					targetId: target.id,
+					grantee: grantee?.id ?? null,
+					role: grantee ? role : 'view',
+					createdAt: now,
+				};
+		await tx
+			.insert(shares)
+			.values({ userId: owner, ...share })
+			.onConflictDoUpdate({ target: [shares.userId, shares.id], set: { role: share.role } });
+		const next = { ...space, shares: [...space.shares.filter(s => s.id !== share.id), share] };
+		if (grantee) {
+			await rememberPerson(tx, owner, grantee, now);
+			await syncAccess(tx, next);
+		}
+		return shareView(tx, next, origin, share);
+	});
 }
 
-export async function deleteShare(db: Db, space: Space, id: string): Promise<void> {
-	const share = space.shares.find(s => s.id === id);
-	if (!share) throw new ORPCError('NOT_FOUND', { message: 'No such share' });
-	await db.delete(shares).where(and(eq(shares.userId, space.owner), eq(shares.id, id)));
-	if (share.grantee) await syncAccess(db, { ...space, shares: space.shares.filter(s => s.id !== id) });
+export function deleteShare(db: Db, owner: string, id: string): Promise<void> {
+	return withSpaceLocked(db, owner, async (tx, space) => {
+		const share = space.shares.find(s => s.id === id);
+		if (!share) throw new ORPCError('NOT_FOUND', { message: 'No such share' });
+		await tx.delete(shares).where(and(eq(shares.userId, owner), eq(shares.id, id)));
+		if (share.grantee) await syncAccess(tx, { ...space, shares: space.shares.filter(s => s.id !== id) });
+	});
 }
 
 /** Public links through the agent API, so a guest cannot publish what it was shared. */
@@ -110,7 +115,7 @@ export function listLinks(db: Db, space: Space, access: Access, origin: string) 
 
 export function createLink(db: Db, space: Space, access: Access, origin: string, target: ShareTarget, now: number) {
 	requireManager(access);
-	return createShare(db, space, origin, target, null, 'view', now);
+	return createShare(db, space.owner, origin, target, null, 'view', now);
 }
 
 export async function deleteLink(db: Db, space: Space, access: Access, id: string) {
@@ -118,7 +123,7 @@ export async function deleteLink(db: Db, space: Space, access: Access, id: strin
 	if (!space.shares.some(share => share.id === id && share.grantee === null)) {
 		throw new ORPCError('NOT_FOUND', { message: 'No such link' });
 	}
-	await deleteShare(db, space, id);
+	await deleteShare(db, space.owner, id);
 }
 
 /** What a public link shows: the target as `scopeOf` sees it, with the owner's name from Better Auth. */

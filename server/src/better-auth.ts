@@ -2,6 +2,8 @@ import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { bearer } from 'better-auth/plugins';
 import type { AuthMethods } from '../../shared/api/contract';
+import { settings } from '../../shared/db/schema';
+import { SETTINGS_ID } from '../../shared/model';
 import type { Person } from '../../shared/sharing';
 import type { App } from './app';
 import { authSchema } from './db/auth-schema';
@@ -135,19 +137,19 @@ async function socialProviders({ google, apple }: Config) {
 
 /** Signing Apple's secret is a WebCrypto call, so the providers are built once per config, not per request. */
 const providersByConfig = new WeakMap<Config, Promise<Record<string, unknown>>>();
-function cachedProviders(settings: Config) {
-	const existing = providersByConfig.get(settings);
+function cachedProviders(config: Config) {
+	const existing = providersByConfig.get(config);
 	if (existing) return existing;
-	const created = socialProviders(settings);
-	providersByConfig.set(settings, created);
+	const created = socialProviders(config);
+	providersByConfig.set(config, created);
 	return created;
 }
 
 /** Better Auth on the app database, whose migrations create its tables. */
-export async function createAuth(settings: Config, db: Db): Promise<Auth> {
+export async function createAuth(config: Config, db: Db): Promise<Auth> {
 	const options = {
 		appName: 'procrastimate',
-		secret: settings.authSecret,
+		secret: config.authSecret,
 		baseURL: {
 			allowedHosts: ALLOWED_HOSTS,
 			protocol: 'auto' as const,
@@ -163,7 +165,17 @@ export async function createAuth(settings: Config, db: Db): Promise<Auth> {
 				ownerId: { type: 'string', required: false, input: false },
 			},
 		},
-		socialProviders: await cachedProviders(settings),
+		socialProviders: await cachedProviders(config),
+		// Settings exist for every user from sign-up; clients only ever patch them.
+		databaseHooks: {
+			user: {
+				create: {
+					after: async (user: { id: string }) => {
+						await db.insert(settings).values({ userId: user.id, id: SETTINGS_ID }).onConflictDoNothing();
+					},
+				},
+			},
+		},
 		session: {
 			expiresIn: SESSION_SECONDS,
 			updateAge: SESSION_UPDATE_SECONDS,
@@ -172,7 +184,7 @@ export async function createAuth(settings: Config, db: Db): Promise<Auth> {
 		plugins: [bearer()],
 		advanced: { trustedProxyHeaders: true, cookiePrefix: 'procrastimate' },
 		// Counters in the database, so every Worker isolate enforces the same limits.
-		rateLimit: settings.authRateLimit ? { enabled: true, storage: 'database' as const } : { enabled: false },
+		rateLimit: config.authRateLimit ? { enabled: true, storage: 'database' as const } : { enabled: false },
 		telemetry: { enabled: false },
 		// Better Auth answers its own failures, a 500 included, so they reach Sentry only through its logger.
 		logger: {

@@ -3,11 +3,9 @@ import { and, eq } from 'drizzle-orm';
 import { appClientSchema, CLIENT_HEADER, type Actor } from '../../shared/auth';
 import { apiTokens } from '../../shared/db/schema';
 import type { Client } from '../../shared/values';
-import { agentContract } from '../../shared/api/contract';
 import type { App } from './app';
 import { sha256 } from './auth';
 import { readSession, userById } from './better-auth';
-import { routeKeys } from './routes';
 import { identify } from './sentry';
 
 /**
@@ -48,15 +46,12 @@ export async function requireActor(request: Request, app: App): Promise<Actor> {
 	return actor;
 }
 
-/** The human-only routes. An AI account acts only through the routes in `SHARED_ROUTES`. */
+/** The human-only routes: sync, uploads, shares, tokens, push. An AI account acts through the agent API. */
 export async function requireHuman(request: Request, app: App): Promise<Actor> {
 	const actor = await requireActor(request, app);
 	if (actor.kind !== 'human') throw new ORPCError('FORBIDDEN', { message: 'Not for AI accounts' });
 	return actor;
 }
-
-/** The routes an AI account, or a guest of a space, may call. Everything else is the human owner's. */
-export const SHARED_ROUTES: ReadonlySet<string> = new Set(routeKeys(agentContract));
 
 /** The space a request is for: `?space=`, else the actor's own, which for an AI is its owner's. */
 export function spaceOf(url: URL, actor: Actor): string {

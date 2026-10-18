@@ -14,9 +14,17 @@ const TABLES: PgTable[] = [
 	...Object.values(authSchema),
 ];
 
+/** Spreading a whole image into `fromCharCode` overflows the call stack past about 125 KB on V8, so it goes in slices. */
+function base64(bytes: Uint8Array): string {
+	let binary = '';
+	for (let offset = 0; offset < bytes.length; offset += 0x8000) {
+		binary += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000));
+	}
+	return btoa(binary);
+}
+
 /** Bytes become base64 so the dump stays JSON; everything else is what the driver returns. */
-const encode = (_key: string, value: unknown) =>
-	value instanceof Uint8Array ? { $bytes: btoa(String.fromCharCode(...value)) } : value;
+const encode = (_key: string, value: unknown) => (value instanceof Uint8Array ? { $bytes: base64(value) } : value);
 
 /** The whole database as one JSON document, one read transaction, so the dump is one consistent snapshot. */
 export async function dumpJson(db: Db, at: Date): Promise<string> {

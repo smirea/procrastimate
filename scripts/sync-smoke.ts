@@ -1,13 +1,17 @@
 /**
- * Proves the sync loop against a running server: `bun scripts/sync-smoke.ts [--api http://127.0.0.1:6281]`.
- * Signs up a user, gets a PowerSync token, opens the sync stream through `/api/powersync`, uploads a task through
- * `/api/upload` as PowerSync's queue would, and waits for the row to stream back, then the same for a patch and a
- * delete. A write into another user's space must come back in `rejected`. Exits non-zero on the first failure.
- * The API defaults to the worktree's `.env.override`.
+ * Proves the sync loop against a running server: `bun scripts/sync-smoke.ts [--api http://127.0.0.1:6281]
+ * [--database postgres://…]`. Signs up a user, gets a PowerSync token, opens the sync stream through
+ * `/api/powersync`, uploads a task through `/api/upload` as PowerSync's queue would, and waits for the row to stream
+ * back, then the same for a patch and a delete. A write into another user's space must come back in `rejected`.
+ * With the database reachable it also forges an `access` row and proves the `shared` stream opens no row outside the
+ * access owner's space. Exits non-zero on the first failure. The API and database default to the worktree's
+ * `.env.override`.
  */
-import { getTableColumns } from 'drizzle-orm';
+import { eq, getTableColumns } from 'drizzle-orm';
+import { drizzle } from 'drizzle-orm/postgres-js';
 import { join } from 'node:path';
-import { tasks } from '../shared/db/schema';
+import postgres from 'postgres';
+import { access, tasks } from '../shared/db/schema';
 import { readOverride } from './local-stack';
 
 const args = process.argv.slice(2);
@@ -15,7 +19,9 @@ const flag = (name: string) => {
 	const index = args.indexOf(name);
 	return index === -1 ? undefined : args[index + 1];
 };
-const api = flag('--api') ?? readOverride(join(import.meta.dir, '..'))?.API_URL ?? 'http://127.0.0.1:6121';
+const override = readOverride(join(import.meta.dir, '..'));
+const api = flag('--api') ?? override?.API_URL ?? 'http://127.0.0.1:6121';
+const databaseUrl = flag('--database') ?? override?.DATABASE_URL;
 const origin = api;
 
 function check(condition: unknown, message: string): asserts condition {
@@ -65,6 +71,8 @@ function openStream(response: Response) {
 	let buffer = '';
 	let pending: ReturnType<typeof reader.read> | null = null;
 	return {
+		/** Whether any line so far matches, without reading more. */
+		seen: (matches: (line: StreamLine) => boolean) => history.some(matches),
 		async until(matches: (line: StreamLine) => boolean, timeoutMs: number): Promise<boolean> {
 			const deadline = Date.now() + timeoutMs;
 			let scanned = 0;
@@ -85,6 +93,18 @@ function openStream(response: Response) {
 }
 type SyncStream = ReturnType<typeof openStream>;
 
+const rowLine =
+	(table: string, id: string, op: 'PUT' | 'REMOVE', predicate?: (row: Record<string, unknown>) => boolean) =>
+	(line: StreamLine) =>
+		'data' in line &&
+		line.data.data.some(
+			entry =>
+				entry.object_type === table &&
+				entry.object_id === id &&
+				entry.op === op &&
+				(!predicate || predicate(JSON.parse(entry.data ?? '{}') as Record<string, unknown>)),
+		);
+
 /** Waits for the stream to report `table`/`id` with `op`, like a device applying the next checkpoint. */
 function waitFor(
 	stream: SyncStream,
@@ -93,18 +113,7 @@ function waitFor(
 	op: 'PUT' | 'REMOVE',
 	predicate?: (row: Record<string, unknown>) => boolean,
 ) {
-	return stream.until(
-		line =>
-			'data' in line &&
-			line.data.data.some(
-				entry =>
-					entry.object_type === table &&
-					entry.object_id === id &&
-					entry.op === op &&
-					(!predicate || predicate(JSON.parse(entry.data ?? '{}') as Record<string, unknown>)),
-			),
-		15_000,
-	);
+	return stream.until(rowLine(table, id, op, predicate), 15_000);
 }
 
 const columns = getTableColumns(tasks);
@@ -361,6 +370,45 @@ check(
 		'created:owner,edited:guest',
 	`activity folds the log into created by owner, edited by guest (${activity.entries.map(e => e.action).join(',')})`,
 );
+
+// The `shared` stream opens only rows of the access owner's space. A forged access row naming a third user's task,
+// which an upload bug once could produce, reaches the guest as an access row and streams no task with it.
+if (databaseUrl) {
+	const victim = await signUp('victim');
+	const victimTask = crypto.randomUUID();
+	result = await json(
+		await uploadAs(victim, [
+			{ op: 'put', table: 'tasks', id: victimTask, values: wireTask(victimTask, victim.id, 'Victim task') },
+		]),
+		'victim put of a private task',
+	);
+	check(result.rejected.length === 0, 'victim task put accepted');
+	const sql = postgres(databaseUrl, { max: 1, onnotice: () => {} });
+	const db = drizzle(sql);
+	const forgedId = `${other.id}:task:${victimTask}`;
+	await db
+		.insert(access)
+		.values({ id: forgedId, grantee: other.id, owner: owner.id, kind: 'task', entityId: victimTask, role: 'edit' });
+	try {
+		check(
+			await waitFor(otherStream, 'access', forgedId, 'PUT'),
+			'the forged access row itself streams to the guest, so its checkpoint has been applied',
+		);
+		check(
+			!otherStream.seen(rowLine('tasks', victimTask, 'PUT')),
+			'the forged access row opens no task outside the access owner’s space',
+		);
+	} finally {
+		await db.delete(access).where(eq(access.id, forgedId));
+		await sql.end();
+	}
+	check(
+		await waitFor(otherStream, 'access', forgedId, 'REMOVE'),
+		'the forged access row is gone again from the guest stream',
+	);
+} else {
+	console.log('skip forged access row check: no database URL (pass --database or run from a worktree)');
+}
 
 const revoked = await fetch(`${api}/api/shares?id=${share.id}`, { method: 'DELETE', headers: owner.headers });
 check(revoked.ok, 'owner revoked the share');

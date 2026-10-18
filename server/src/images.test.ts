@@ -1,9 +1,9 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import { and, eq } from 'drizzle-orm';
 import { images } from '../../shared/db/schema';
-import type { ShareView } from '../../shared/sharing';
+import type { Person, ShareView } from '../../shared/sharing';
 import { applySweep, IMAGE_GRACE_MS, sweepPlan } from './images';
-import { json, signUp, taskRow, testApp, upload, type Session, type TestApp } from './test-app';
+import { json, signUp, taskRow, testApp, tokenHeaders, upload, type Session, type TestApp } from './test-app';
 
 /** Image bytes through `PUT` and `GET /api/images`, their access for guests, and the orphan sweep. */
 
@@ -101,6 +101,38 @@ describe('/api/images', () => {
 			}),
 		);
 		expect((await put(guest, crypto.randomUUID(), 'full', JPEG, 'image/jpeg', owner.person.id)).status).toBe(200);
+	});
+
+	test('an AI token reads the images of its owner’s space and may not upload', async () => {
+		const id = crypto.randomUUID();
+		await put(owner, id, 'full', JPEG);
+		const taskId = crypto.randomUUID();
+		await upload(app, owner, [
+			{
+				op: 'put',
+				table: 'tasks',
+				id: taskId,
+				values: taskRow(taskId, owner.person.id, 'Pictured', { images: JSON.stringify([{ id, width: 4, height: 3 }]) }),
+			},
+		]);
+		const ai = await json<Person>(
+			app.fetch('/api/ai', { method: 'POST', headers: owner.headers, body: JSON.stringify({ name: 'Bot' }) }),
+		);
+		const { token } = await json<{ token: string }>(
+			app.fetch('/api/ai-tokens', {
+				method: 'POST',
+				headers: owner.headers,
+				body: JSON.stringify({ aiUserId: ai.id, name: 'laptop' }),
+			}),
+		);
+		const headers = tokenHeaders(token);
+		expect((await app.fetch(`/api/images?id=${id}&size=full`, { headers })).status).toBe(200);
+		const refused = await app.fetch(`/api/images?id=${crypto.randomUUID()}&size=full`, {
+			method: 'PUT',
+			headers: { ...headers, 'content-type': 'image/jpeg' },
+			body: new Blob([JPEG]),
+		});
+		expect(refused.status).toBe(403);
 	});
 
 	test('the sweep marks unlisted images, clears the mark when listed again, and drops them after the grace period', async () => {

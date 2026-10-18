@@ -29,6 +29,37 @@ describe('GET /api/sync/token', () => {
 		expect(Number(payload!.exp) - Number(payload!.iat)).toBe(TOKEN_SECONDS);
 	});
 
+	test('the proxy only ever reaches the configured PowerSync origin, whatever the path says', async () => {
+		const hits: string[] = [];
+		const upstream = Bun.serve({
+			port: 0,
+			fetch: request => {
+				hits.push(`upstream ${new URL(request.url).pathname}`);
+				return new Response('powersync');
+			},
+		});
+		const evil = Bun.serve({
+			port: 0,
+			fetch: request => {
+				hits.push(`evil ${new URL(request.url).pathname}`);
+				return new Response('<script>alert(1)</script>', { headers: { 'content-type': 'text/html' } });
+			},
+		});
+		const proxied = await testApp({ env: { POWERSYNC_URL: `http://127.0.0.1:${upstream.port}` } });
+		try {
+			const response = await proxied.fetch(`/api/powersync//127.0.0.1:${evil.port}/x`);
+			expect(await response.text()).toBe('powersync');
+			expect(hits.map(hit => hit.split(' ')[0])).toEqual(['upstream']);
+			hits.length = 0;
+			await proxied.fetch('/api/powersync/sync/stream?x=1');
+			expect(hits).toEqual(['upstream /sync/stream']);
+		} finally {
+			await proxied.close();
+			upstream.stop(true);
+			evil.stop(true);
+		}
+	});
+
 	test('an AI account gets no token', async () => {
 		const ai = await json<{ id: string }>(
 			app.fetch('/api/ai', { method: 'POST', headers: owner.headers, body: JSON.stringify({ name: 'Bot' }) }),

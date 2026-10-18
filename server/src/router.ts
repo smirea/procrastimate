@@ -90,7 +90,7 @@ async function shared(ctx: Ctx, space?: string) {
 /** An owner-only route: a signed-in human, on their own space. */
 async function own({ app, request }: Ctx) {
 	const actor = await requireHuman(request, app);
-	return { app, actor, request, space: await loadSpace(app.db, actor.id), origin: originOf(request), now: Date.now() };
+	return { app, actor, request, origin: originOf(request), now: Date.now() };
 }
 
 /** Named, so the smoke test's stack trace shows an in-app frame with this file and line. */
@@ -159,11 +159,11 @@ export const router = os.router({
 			return { accounts: await aiAccounts(context.app, actor.id) };
 		}),
 		create: os.ai.create.handler(async ({ input, context }) => {
-			const { app, actor, space, origin, now } = await own(context);
+			const { app, actor, origin, now } = await own(context);
 			const name = input.name.trim();
 			if (!name) throw new ORPCError('BAD_REQUEST', { message: 'An AI account needs a name' });
 			const ai = await createAiUser(app, actor.id, name);
-			await createShare(app.db, space, origin, { kind: 'space', id: '' }, ai, 'edit', now);
+			await createShare(app.db, actor.id, origin, { kind: 'space', id: '' }, ai, 'edit', now);
 			return ai;
 		}),
 		delete: os.ai.delete.handler(async ({ input, context }) => {
@@ -186,7 +186,7 @@ export const router = os.router({
 	},
 	shares: {
 		create: os.shares.create.handler(async ({ input, context }) => {
-			const { app, actor, space, origin, now } = await own(context);
+			const { app, actor, origin, now } = await own(context);
 			const { audience, target } = input;
 			const grantee = audience.kind === 'user' ? await userById(app, audience.userId) : null;
 			if (audience.kind === 'user' && (!grantee || grantee.id === actor.id)) {
@@ -199,15 +199,15 @@ export const router = os.router({
 				throw new ORPCError('BAD_REQUEST', { message: 'Only an AI account can be given the whole space' });
 			}
 			const role = audience.kind === 'user' ? audience.role : 'view';
-			return createShare(app.db, space, origin, target, grantee, role, now);
+			return createShare(app.db, actor.id, origin, target, grantee, role, now);
 		}),
 		list: os.shares.list.handler(async ({ context }) => {
-			const { app, space, origin } = await own(context);
-			return { shares: await listShares(app.db, space, origin) };
+			const { app, actor, origin } = await own(context);
+			return { shares: await listShares(app.db, await loadSpace(app.db, actor.id), origin) };
 		}),
 		delete: os.shares.delete.handler(async ({ input, context }) => {
-			const { app, space } = await own(context);
-			await deleteShare(app.db, space, input.query.id);
+			const { app, actor } = await own(context);
+			await deleteShare(app.db, actor.id, input.query.id);
 			return ok;
 		}),
 	},
@@ -217,8 +217,8 @@ export const router = os.router({
 			return { tokens: await listTokens(context.app.db, actor.id) };
 		}),
 		create: os.tokens.create.handler(async ({ input, context }) => {
-			const { app, space, origin, now } = await own(context);
-			return createToken(app.db, space, origin, input.aiUserId, input.name, now);
+			const { app, actor, origin, now } = await own(context);
+			return createToken(app.db, await loadSpace(app.db, actor.id), origin, input.aiUserId, input.name, now);
 		}),
 		delete: os.tokens.delete.handler(async ({ input, context }) => {
 			const actor = await requireHuman(context.request, context.app);
@@ -254,7 +254,7 @@ export const router = os.router({
 			};
 		}),
 		upload: os.sync.upload.handler(async ({ input, context }) => {
-			const actor = await requireActor(context.request, context.app);
+			const actor = await requireHuman(context.request, context.app);
 			return upload(context.app.db, actor, requireClient(context.request), input.writes);
 		}),
 	},

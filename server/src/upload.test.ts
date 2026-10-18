@@ -1,7 +1,17 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
-import { eq } from 'drizzle-orm';
-import { log, taskClients, tasks } from '../../shared/db/schema';
-import { signUp, taskRow, testApp, upload as uploadAs, type Session, type TestApp } from './test-app';
+import { eq, sql } from 'drizzle-orm';
+import { log, settings, taskClients, tasks } from '../../shared/db/schema';
+import type { Person } from '../../shared/sharing';
+import {
+	json,
+	signUp,
+	taskRow,
+	testApp,
+	tokenHeaders,
+	upload as uploadAs,
+	type Session,
+	type TestApp,
+} from './test-app';
 
 /**
  * `POST /api/upload` through the route, as a client's PowerSync queue sends it: snake_case columns and JSON as text.
@@ -249,6 +259,136 @@ describe('POST /api/upload', () => {
 				},
 			]),
 		).toEqual([{ table: 'settings', id: 'other-id', reason: 'Settings rows are named settings' }]);
+	});
+
+	test('a put that names another user’s row is refused, whatever user_id it claims', async () => {
+		const other = await signUp(app, 'Other');
+		const id = crypto.randomUUID();
+		await upload(owner, [{ op: 'put', table: 'tasks', id, values: taskRow(id, owner.person.id, 'Mine') }]);
+		expect(
+			await upload(other, [{ op: 'put', table: 'tasks', id, values: taskRow(id, other.person.id, 'PWNED') }]),
+		).toEqual([{ table: 'tasks', id, reason: 'Belongs to another space' }]);
+		expect(await stored(id)).toMatchObject({ userId: owner.person.id, title: 'Mine', createdBy: owner.person.id });
+	});
+
+	test('text with U+0000 is refused at the boundary, not by the database', async () => {
+		const id = crypto.randomUUID();
+		expect(
+			await upload(owner, [
+				{ op: 'put', table: 'tasks', id, values: taskRow(id, owner.person.id, 'a\u0000b') },
+				{ op: 'patch', table: 'tasks', id, values: { label_ids: JSON.stringify(['x\u0000']) } },
+			]),
+		).toEqual([
+			{ table: 'tasks', id, reason: 'Text cannot contain U+0000' },
+			{ table: 'tasks', id, reason: 'Text cannot contain U+0000' },
+		]);
+		expect(await stored(id)).toBeNull();
+	});
+
+	test('a write the database refuses rejects that space’s writes alone, with a 200, and the other space still applies', async () => {
+		await app.db.execute(sql`ALTER TABLE tasks ADD CONSTRAINT refused CHECK (title <> 'refused by the database')`);
+		const host = await signUp(app, 'Host');
+		const theirs = crypto.randomUUID();
+		await upload(host, [{ op: 'put', table: 'tasks', id: theirs, values: taskRow(theirs, host.person.id, 'Theirs') }]);
+		await json(
+			app.fetch('/api/shares', {
+				method: 'POST',
+				headers: host.headers,
+				body: JSON.stringify({
+					target: { kind: 'task', id: theirs },
+					audience: { kind: 'user', userId: owner.person.id, role: 'edit' },
+				}),
+			}),
+		);
+		const mine = crypto.randomUUID();
+		const response = await app.fetch('/api/upload', {
+			method: 'POST',
+			headers: owner.headers,
+			body: JSON.stringify({
+				writes: [
+					{ op: 'patch', table: 'tasks', id: theirs, values: { title: 'Theirs, edited by the guest' } },
+					{ op: 'put', table: 'tasks', id: mine, values: taskRow(mine, owner.person.id, 'refused by the database') },
+				],
+			}),
+		});
+		expect(response.status).toBe(200);
+		const { rejected } = (await response.json()) as { rejected: Rejected };
+		expect(rejected).toEqual([{ table: 'tasks', id: mine, reason: 'The database refused the write' }]);
+		expect(await stored(theirs)).toMatchObject({ title: 'Theirs, edited by the guest' });
+		expect(await stored(mine)).toBeNull();
+		await app.db.execute(sql`ALTER TABLE tasks DROP CONSTRAINT refused`);
+	});
+
+	test('settings exist from sign-up, a put never overwrites them, a patch changes them, and a delete is refused', async () => {
+		const me = await signUp(app, 'Settled');
+		const row = async () => (await app.db.select().from(settings).where(eq(settings.userId, me.person.id)))[0] ?? null;
+		expect(await row()).toMatchObject({ id: 'settings', timeZone: null, dictation: 'native' });
+		expect(
+			await upload(me, [
+				{
+					op: 'put',
+					table: 'settings',
+					id: 'settings',
+					values: {
+						id: 'settings',
+						user_id: me.person.id,
+						time_zone: 'Europe/Madrid',
+						dictation: 'elevenlabs',
+						quick_add_buttons: '[]',
+					},
+				},
+			]),
+		).toEqual([]);
+		expect(await row()).toMatchObject({ timeZone: null, dictation: 'native' });
+		expect(
+			await upload(me, [{ op: 'patch', table: 'settings', id: 'settings', values: { time_zone: 'Europe/Madrid' } }]),
+		).toEqual([]);
+		expect(await row()).toMatchObject({ timeZone: 'Europe/Madrid', dictation: 'native' });
+		expect(await upload(me, [{ op: 'delete', table: 'settings', id: 'settings' }])).toEqual([
+			{ table: 'settings', id: 'settings', reason: 'Settings cannot be deleted' },
+		]);
+		expect(await row()).toMatchObject({ timeZone: 'Europe/Madrid' });
+	});
+
+	test('a replayed write that changes nothing, or a patch to a missing task, leaves task_clients alone', async () => {
+		const id = crypto.randomUUID();
+		const values = taskRow(id, owner.person.id, 'Replayed');
+		await upload(owner, [{ op: 'put', table: 'tasks', id, values }]);
+		const ghost = crypto.randomUUID();
+		const api = { ...owner.headers, 'user-agent': 'curl/8' };
+		delete (api as Record<string, string>)['x-procrastimate-client'];
+		await app.fetch('/api/upload', {
+			method: 'POST',
+			headers: api,
+			body: JSON.stringify({
+				writes: [
+					{ op: 'put', table: 'tasks', id, values },
+					{ op: 'patch', table: 'tasks', id: ghost, values: { title: 'ghost' } },
+				],
+			}),
+		});
+		const [row] = await app.db.select().from(taskClients).where(eq(taskClients.id, id));
+		expect(row?.edited).toMatchObject({ kind: 'web' });
+		expect(await app.db.select().from(taskClients).where(eq(taskClients.id, ghost))).toEqual([]);
+	});
+
+	test('an AI token may not upload', async () => {
+		const ai = await json<Person>(
+			app.fetch('/api/ai', { method: 'POST', headers: owner.headers, body: JSON.stringify({ name: 'Bot' }) }),
+		);
+		const { token } = await json<{ token: string }>(
+			app.fetch('/api/ai-tokens', {
+				method: 'POST',
+				headers: owner.headers,
+				body: JSON.stringify({ aiUserId: ai.id, name: 'laptop' }),
+			}),
+		);
+		const response = await app.fetch('/api/upload', {
+			method: 'POST',
+			headers: tokenHeaders(token),
+			body: JSON.stringify({ writes: [] }),
+		});
+		expect(response.status).toBe(403);
 	});
 
 	test('without a session the route is 401, the one status PowerSync may see', async () => {

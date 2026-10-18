@@ -93,6 +93,12 @@ function fieldsOf(kind: Kind, values: Record<string, unknown>): { owner: string 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
 	typeof value === 'object' && value !== null && !Array.isArray(value);
 
+/** Postgres `text` and `jsonb` refuse U+0000, so it is refused here instead of failing the transaction. */
+const hasNul = (value: unknown): boolean =>
+	typeof value === 'string'
+		? value.includes('\u0000')
+		: typeof value === 'object' && value !== null && Object.values(value).some(hasNul);
+
 /** One wire write parsed, or why it was refused. */
 export function parseWrite(raw: unknown): { write: OwnedWrite } | { rejected: Rejected } {
 	if (!isRecord(raw) || typeof raw.table !== 'string' || typeof raw.id !== 'string') {
@@ -103,18 +109,20 @@ export function parseWrite(raw: unknown): { write: OwnedWrite } | { rejected: Re
 	const reject = (reason: string) => ({ rejected: { table, id, reason } });
 	const kind = KIND_OF[table as SyncedTable];
 	if (!kind) return reject(`Unknown table ${table}`);
+	if (kind === 'settings' && id !== SETTINGS_ID) return reject(`Settings rows are named ${SETTINGS_ID}`);
+	if (kind === 'settings' && op === 'delete') return reject('Settings cannot be deleted');
 	if (op === 'delete') return { write: { op, kind, id, opId, owner: null } };
 	if (op !== 'put' && op !== 'patch') return reject(`Unknown op ${String(op)}`);
 	if (!isRecord(raw.values)) return reject('A put or patch needs values');
 	const { owner, fields } = fieldsOf(kind, raw.values);
 	if (op === 'put' && !owner) return reject('A put needs user_id');
-	if (kind === 'settings' && id !== SETTINGS_ID) return reject(`Settings rows are named ${SETTINGS_ID}`);
 	const schema = op === 'put' ? FIELDS_SCHEMAS[kind] : FIELDS_SCHEMAS[kind].partial();
 	const parsed = schema.safeParse(op === 'put' ? { ...PUT_DEFAULTS[kind], ...fields } : fields);
 	if (!parsed.success) {
 		const issue = parsed.error.issues[0]!;
 		return reject(`${issue.path.join('.') || 'values'}: ${issue.message}`);
 	}
+	if (hasNul(parsed.data)) return reject('Text cannot contain U+0000');
 	const values = Object.fromEntries(Object.entries(parsed.data).filter(([, value]) => value !== undefined));
 	return { write: { op, kind, id, opId, owner, values } };
 }

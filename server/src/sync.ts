@@ -42,11 +42,14 @@ export async function signSyncToken(key: SigningKey, userId: string, now = Date.
  * Forwards `/api/powersync/<path>` to the PowerSync service, the streaming sync response included. PowerSync is
  * asked for an identity encoding and the response loses `content-encoding` and `content-length`: the runtime
  * decompresses the body but keeps the headers, and a browser then closes every stream. The cookie never leaves the
- * app's origin; PowerSync reads only the `Authorization` token.
+ * app's origin; PowerSync reads only the `Authorization` token. The path is appended to the upstream's, never
+ * resolved against it: `//evil.example/x` would otherwise name another host.
  */
 export async function powersyncProxy(request: Request, upstream: string): Promise<Response> {
 	const url = new URL(request.url);
-	const target = new URL(url.pathname.slice(POWERSYNC_PATH.length) + url.search, `${upstream}/`);
+	const target = new URL(upstream);
+	target.pathname = `${target.pathname.replace(/\/$/, '')}${url.pathname.slice(POWERSYNC_PATH.length)}`;
+	target.search = url.search;
 	const headers = new Headers(request.headers);
 	headers.delete('host');
 	headers.delete('cookie');

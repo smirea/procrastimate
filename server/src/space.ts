@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import type { Person } from '../../shared/sharing';
 import {
 	comments,
@@ -20,7 +20,7 @@ import type { Db } from './db/postgres';
  * One user's space as the store rules read it: every synced row the owner holds, plus the owner's shares. Loaded
  * with parallel selects, which postgres.js pipelines on one connection, so a space costs one round trip.
  */
-export type Space = { owner: string; snapshot: Snapshot; shares: ShareRow[] };
+export type Space = { owner: string; snapshot: Snapshot; shares: ShareRow[]; settingsStored: boolean };
 
 /** A row without its owner column, and without a `null` `sourceKey`, which the entity schemas leave out. */
 function entity<T extends { userId: string }>(row: T): Omit<T, 'userId'> {
@@ -52,7 +52,19 @@ export async function loadSpace(db: Db, owner: string): Promise<Space> {
 		reads: readRows.map(entity),
 		settings: ownSettings,
 	});
-	return { owner, snapshot, shares: shareRows.map(entity) };
+	return { owner, snapshot, shares: shareRows.map(entity), settingsStored: stored !== undefined };
+}
+
+/**
+ * Runs `use` in a transaction that holds the space's advisory lock, with the space loaded under it. Every writer to a
+ * space (uploads, agent commands, share changes) goes through here, so each sees the rows the last one left and the
+ * `access` rows it recomputes are never from a stale read. Inside a transaction this is a savepoint.
+ */
+export function withSpaceLocked<T>(db: Db, owner: string, use: (tx: Db, space: Space) => Promise<T>): Promise<T> {
+	return db.transaction(async tx => {
+		await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${owner}))`);
+		return use(tx, await loadSpace(tx, owner));
+	});
 }
 
 /** The owner's shares to one grantee, which `scopeOf` and `admit` read. */

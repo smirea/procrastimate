@@ -34,6 +34,22 @@ test('decryptPush recovers the RFC 8291 example message', async () => {
 	);
 });
 
+test('a push service that never answers is given up after the timeout', async () => {
+	const { keys } = await createReceiverKeys();
+	const vapid = { ...(await generateVapidKeys()), subject: VAPID_SUBJECT };
+	const hanging = Bun.serve({ port: 0, fetch: () => new Promise<Response>(() => {}) });
+	try {
+		const message = { title: 'Stretch', body: 'Due now', tag: 'task-1:1', taskId: 'task-1' };
+		const started = performance.now();
+		await expect(
+			sendPush({ endpoint: `http://127.0.0.1:${hanging.port}/send`, keys }, message, vapid, 60, 100),
+		).rejects.toMatchObject({ name: 'TimeoutError' });
+		expect(performance.now() - started).toBeLessThan(2000);
+	} finally {
+		hanging.stop(true);
+	}
+});
+
 test('sendPush posts an aes128gcm body the subscriber decrypts, signed with a VAPID JWT for the push origin', async () => {
 	const { receiver, keys } = await createReceiverKeys();
 	const vapid = { ...(await generateVapidKeys()), subject: VAPID_SUBJECT };
