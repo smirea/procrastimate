@@ -49,6 +49,29 @@ describe('push', () => {
 		expect((await rows())[0]?.nextAt).toBeNull();
 	});
 
+	test('a browser that subscribes after the reminders exist gets them planned at once', async () => {
+		const late = await signUp(app, 'Late', 'install-late-0000');
+		const id = crypto.randomUUID();
+		const due = { date: '2026-10-14', time: '19:15' };
+		await upload(app, late, [
+			{
+				op: 'put',
+				table: 'tasks',
+				id,
+				values: taskRow(id, late.person.id, 'Water plants', { due: JSON.stringify(due) }),
+			},
+		]);
+		const subscribed = await app.fetch('/api/push/subscription', {
+			method: 'PUT',
+			headers: late.headers,
+			body: JSON.stringify({ subscription: subscription('https://push.example/late') }),
+		});
+		expect(subscribed.status).toBe(200);
+		const [row] = await app.db.select().from(push).where(eq(push.userId, late.person.id));
+		expect(row?.notifications.map(n => n.taskId)).toEqual([id]);
+		expect(row?.nextAt).toBe(Date.UTC(2026, 9, 14, 19, 15));
+	});
+
 	test('the cron sends what is due, settles it, retries a failure, and drops a gone subscription', async () => {
 		const id = crypto.randomUUID();
 		const due = { date: '2026-10-14', time: '18:45' };

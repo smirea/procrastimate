@@ -10,7 +10,7 @@ import type { Env } from './bindings';
 import { config } from './config';
 import type { Db } from './db/postgres';
 import { classifyDelivery, isRetryable, nextAlarm, planSchedule, splitDue, STALE_AFTER_MS } from './push-schedule';
-import { loadSpace } from './space';
+import { loadSpace, withSpaceLocked } from './space';
 import { reportError } from './sentry';
 import { sendPush, type Vapid } from './web-push';
 
@@ -97,7 +97,9 @@ export async function subscribePush(
 ): Promise<void> {
 	if (!isAllowedEndpoint(subscription.endpoint))
 		throw new ORPCError('BAD_REQUEST', { message: 'Invalid subscription' });
-	await db.transaction(async tx => {
+	// Planned at once and under the space lock: the cron only selects rows with a `nextAt`, so a subscription that
+	// waited for the next write would miss every reminder already due before then.
+	await withSpaceLocked(db, owner, async (tx, space) => {
 		const rows = await tx.select().from(push).where(eq(push.userId, owner));
 		const current = rows.find(row => row.deviceId === deviceId);
 		const replaced = rows.filter(
@@ -126,6 +128,7 @@ export async function subscribePush(
 					nextAt: kept?.nextAt ?? null,
 				},
 			});
+		await replan(tx, owner, space.snapshot, now);
 	});
 }
 
