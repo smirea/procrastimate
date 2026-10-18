@@ -5,22 +5,8 @@
 		{
 			"idx": 0,
 			"version": "7",
-			"when": 1792274979539,
+			"when": 1792335790281,
 			"tag": "0000_baseline",
-			"breakpoints": true
-		},
-		{
-			"idx": 1,
-			"version": "7",
-			"when": 1792274980409,
-			"tag": "0001_powersync_publication",
-			"breakpoints": true
-		},
-		{
-			"idx": 2,
-			"version": "7",
-			"when": 1792313772804,
-			"tag": "0002_minimal_writes",
 			"breakpoints": true
 		}
 	]

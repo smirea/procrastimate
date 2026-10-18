@@ -37,12 +37,8 @@ export function databaseName(branch: string): string {
 /** The compose project and container suffix: the worktree directory, which outlives a branch rename. */
 export const worktreeKey = (worktree: string) => basename(worktree).replaceAll(/[^A-Za-z0-9_.-]/g, '-');
 
-/** Each worktree runs two stacks: `dev` for `bun run start`, `e2e` for the API server Playwright starts. */
-export type Stack = 'dev' | 'e2e';
-export const STACKS: readonly Stack[] = ['dev', 'e2e'];
-const suffix = (stack: Stack) => (stack === 'dev' ? '' : '_e2e');
-const containerName = (worktree: string, stack: Stack) =>
-	`procrastimate-powersync-${worktreeKey(worktree)}${stack === 'dev' ? '' : '-e2e'}`;
+/** One stack per worktree serves `bun run start` and the API server Playwright starts alike. */
+const containerName = (worktree: string) => `procrastimate-powersync-${worktreeKey(worktree)}`;
 
 function run(cmd: string[], env: Record<string, string> = {}): string {
 	const result = spawnSync(cmd[0]!, cmd.slice(1), {
@@ -76,10 +72,7 @@ async function withAdmin<T>(use: (sql: postgres.Sql) => Promise<T>): Promise<T> 
 	}
 }
 
-const databasesOf = (database: string, stack: Stack) => [
-	`${database}${suffix(stack)}`,
-	`${database}${suffix(stack)}_powersync`,
-];
+const databasesOf = (database: string) => [database, `${database}_powersync`];
 
 /** A replication slot outlives its PowerSync container and blocks `DROP DATABASE`, so it goes first. */
 async function dropDatabase(sql: postgres.Sql, name: string): Promise<void> {
@@ -87,9 +80,9 @@ async function dropDatabase(sql: postgres.Sql, name: string): Promise<void> {
 	await sql.unsafe(`DROP DATABASE IF EXISTS "${name}" WITH (FORCE)`);
 }
 
-export async function ensureDatabases(database: string, stack: Stack, worktree: string, reset = false): Promise<void> {
+export async function ensureDatabases(database: string, worktree: string, reset = false): Promise<void> {
 	await withAdmin(async sql => {
-		for (const name of databasesOf(database, stack)) {
+		for (const name of databasesOf(database)) {
 			const exists = (await sql`SELECT 1 FROM pg_database WHERE datname = ${name}`).length > 0;
 			if (exists && reset) await dropDatabase(sql, name);
 			if (!exists || reset) await sql.unsafe(`CREATE DATABASE "${name}"`);
@@ -100,7 +93,7 @@ export async function ensureDatabases(database: string, stack: Stack, worktree: 
 
 export async function dropDatabases(database: string): Promise<void> {
 	await withAdmin(async sql => {
-		for (const name of STACKS.flatMap(stack => databasesOf(database, stack))) await dropDatabase(sql, name);
+		for (const name of databasesOf(database)) await dropDatabase(sql, name);
 	});
 }
 
@@ -109,22 +102,17 @@ export async function worktreeDatabases(): Promise<{ database: string; worktree:
 		const rows = await sql<{ datname: string; comment: string | null }[]>`
 			SELECT datname, shobj_description(oid, 'pg_database') AS comment FROM pg_database`;
 		return rows
-			.filter(
-				row =>
-					row.comment?.startsWith(COMMENT_PREFIX) &&
-					!row.datname.endsWith('_powersync') &&
-					!row.datname.endsWith('_e2e'),
-			)
+			.filter(row => row.comment?.startsWith(COMMENT_PREFIX) && !row.datname.endsWith('_powersync'))
 			.map(row => ({ database: row.datname, worktree: row.comment!.slice(COMMENT_PREFIX.length) }));
 	});
 }
 
-function writeServiceConfig(worktree: string, database: string, stack: Stack): string {
+function writeServiceConfig(worktree: string, database: string): string {
 	const template = readFileSync(join(root, 'powersync/local/service.template.yaml'), 'utf8');
 	const dir = join(worktree, '.powersync');
 	mkdirSync(dir, { recursive: true });
-	const file = join(dir, `${stack}.yaml`);
-	writeFileSync(file, template.replaceAll('{{DATABASE}}', `${database}${suffix(stack)}`));
+	const file = join(dir, 'service.yaml');
+	writeFileSync(file, template.replaceAll('{{DATABASE}}', database));
 	return file;
 }
 
@@ -133,10 +121,10 @@ function writeServiceConfig(worktree: string, database: string, stack: Stack): s
  * create. In Worker mode those run on the first request, so a run that started its tests at once lost its first
  * syncs. So the stack migrates first and waits for the replication stream before anything uses it.
  */
-async function migrateApp(database: string, stack: Stack): Promise<void> {
+async function migrateApp(database: string): Promise<void> {
 	const { connect } = await import('../server/src/db/postgres');
 	const { migrate } = await import('../server/src/db/migrate');
-	const connection = connect(databaseUrl(`${database}${suffix(stack)}`));
+	const connection = connect(databaseUrl(database));
 	try {
 		await migrate(connection.db);
 	} finally {
@@ -160,29 +148,27 @@ async function waitForReplication(name: string, storage: string): Promise<void> 
 	throw new Error(`PowerSync did not start replicating within 60 s. See \`docker logs ${name}\`.`);
 }
 
-export async function startPowerSync(worktree: string, database: string, stack: Stack, port: number): Promise<void> {
-	await migrateApp(database, stack);
-	const name = containerName(worktree, stack);
+export async function startPowerSync(worktree: string, database: string, port: number): Promise<void> {
+	await migrateApp(database);
+	const name = containerName(worktree);
 	const project = name.replace('procrastimate-powersync-', 'procrastimate-');
 	run(['docker', 'compose', '-f', compose, '-p', project, 'up', '-d', '--wait', 'powersync'], {
 		WORKTREE: name.slice('procrastimate-powersync-'.length),
 		WORKTREE_PATH: worktree,
 		POWERSYNC_PORT: String(port),
-		POWERSYNC_SERVICE_CONFIG: writeServiceConfig(worktree, database, stack),
+		POWERSYNC_SERVICE_CONFIG: writeServiceConfig(worktree, database),
 	});
 	const deadline = Date.now() + 60_000;
 	while (Date.now() < deadline) {
 		const alive = await fetch(`http://127.0.0.1:${port}/probes/liveness`).catch(() => null);
-		if (alive?.ok) return waitForReplication(name, `${database}${suffix(stack)}_powersync`);
+		if (alive?.ok) return waitForReplication(name, `${database}_powersync`);
 		await Bun.sleep(500);
 	}
 	throw new Error(`PowerSync did not answer on port ${port} within 60 s. See \`docker logs ${name}\`.`);
 }
 
 export function stopPowerSync(worktree: string): void {
-	for (const stack of STACKS) {
-		spawnSync('docker', ['rm', '-f', containerName(worktree, stack)], { stdio: 'ignore' });
-	}
+	spawnSync('docker', ['rm', '-f', containerName(worktree)], { stdio: 'ignore' });
 }
 
 export function powerSyncContainers(): { name: string; worktree: string }[] {

@@ -63,21 +63,11 @@ CREATE TABLE "log" (
 	"op" text NOT NULL,
 	"fields" jsonb NOT NULL,
 	"actor" text DEFAULT 'server' NOT NULL,
+	"client" jsonb,
 	"at" bigint NOT NULL
 );
 --> statement-breakpoint
 ALTER TABLE "log" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
-CREATE TABLE "people" (
-	"user_id" text NOT NULL,
-	"id" text NOT NULL,
-	"name" text NOT NULL,
-	"kind" text NOT NULL,
-	"owner_id" text,
-	"seen_at" bigint NOT NULL,
-	CONSTRAINT "people_user_id_id_pk" PRIMARY KEY("user_id","id")
-);
---> statement-breakpoint
-ALTER TABLE "people" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
 CREATE TABLE "projects" (
 	"id" text PRIMARY KEY NOT NULL,
 	"user_id" text NOT NULL,
@@ -154,15 +144,6 @@ CREATE TABLE "shares" (
 );
 --> statement-breakpoint
 ALTER TABLE "shares" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
-CREATE TABLE "task_clients" (
-	"user_id" text NOT NULL,
-	"id" text NOT NULL,
-	"created" jsonb,
-	"edited" jsonb NOT NULL,
-	CONSTRAINT "task_clients_user_id_id_pk" PRIMARY KEY("user_id","id")
-);
---> statement-breakpoint
-ALTER TABLE "task_clients" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
 CREATE TABLE "tasks" (
 	"id" text PRIMARY KEY NOT NULL,
 	"user_id" text NOT NULL,
@@ -259,12 +240,19 @@ CREATE INDEX "access_owner" ON "access" USING btree ("owner");--> statement-brea
 CREATE INDEX "comments_user_id" ON "comments" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "comments_task_id" ON "comments" USING btree ("task_id");--> statement-breakpoint
 CREATE INDEX "labels_user_id" ON "labels" USING btree ("user_id");--> statement-breakpoint
-CREATE INDEX "log_entity" ON "log" USING btree ("user_id","kind","id");--> statement-breakpoint
+CREATE INDEX "log_entity" ON "log" USING btree ("kind","id","seq");--> statement-breakpoint
+CREATE UNIQUE INDEX "log_op" ON "log" USING btree ("user_id","op_id");--> statement-breakpoint
+CREATE INDEX "log_source_key" ON "log" USING btree ("user_id",("fields"->>'sourceKey')) WHERE "log"."kind" = 'task' and "log"."fields" ? 'sourceKey';--> statement-breakpoint
+CREATE INDEX "log_comment_task" ON "log" USING btree ("user_id",("fields"->>'taskId')) WHERE "log"."kind" = 'comment' and "log"."op" = 'put';--> statement-breakpoint
 CREATE INDEX "projects_user_id" ON "projects" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "push_next_at" ON "push" USING btree ("next_at");--> statement-breakpoint
 CREATE INDEX "sections_user_id" ON "sections" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "shares_grantee" ON "shares" USING btree ("grantee");--> statement-breakpoint
-CREATE INDEX "tasks_user_id" ON "tasks" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "tasks_user_created" ON "tasks" USING btree ("user_id","created_at");--> statement-breakpoint
+CREATE INDEX "tasks_images" ON "tasks" USING gin ("images" jsonb_path_ops);--> statement-breakpoint
+CREATE INDEX "tasks_source_key" ON "tasks" USING btree ("user_id","source_key" text_pattern_ops);--> statement-breakpoint
 CREATE INDEX "account_userId_idx" ON "account" USING btree ("userId");--> statement-breakpoint
 CREATE INDEX "session_userId_idx" ON "session" USING btree ("userId");--> statement-breakpoint
-CREATE INDEX "verification_identifier_idx" ON "verification" USING btree ("identifier");
+CREATE INDEX "verification_identifier_idx" ON "verification" USING btree ("identifier");--> statement-breakpoint
+-- PowerSync replicates exactly these tables. A new synced table needs its own `ALTER PUBLICATION powersync ADD TABLE`.
+CREATE PUBLICATION powersync FOR TABLE "tasks", "projects", "sections", "labels", "comments", "reads", "settings", "access";

@@ -1,21 +1,16 @@
-/**
- * `wrangler dev` against this worktree's local stack: `bun scripts/wrangler-dev.ts [--e2e] [wrangler dev args]`.
- * `--e2e` uses the e2e database and PowerSync instead of the dev ones.
- */
+/** `wrangler dev` against this worktree's local stack: `bun scripts/wrangler-dev.ts [wrangler dev args]`. */
 import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { readOverride } from './local-stack';
 
 const root = join(import.meta.dir, '..');
-const args = process.argv.slice(2);
-const e2e = args.includes('--e2e');
-const passthrough = args.filter(arg => arg !== '--e2e');
+const passthrough = process.argv.slice(2);
 
 const override = readOverride(root);
 if (!override) throw new Error('No .env.override. Run `bun scripts/setup-worktree.ts` first.');
-const database = e2e ? override.E2E_DATABASE_URL : override.DATABASE_URL;
-const powersync = e2e ? override.E2E_POWERSYNC_URL : override.POWERSYNC_URL;
+const database = override.DATABASE_URL;
+const powersync = override.POWERSYNC_URL;
 if (!database || !powersync)
 	throw new Error('.env.override lacks the database or PowerSync URL. Rerun setup-worktree.');
 

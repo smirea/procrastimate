@@ -67,9 +67,9 @@ function portFree(port: number): Promise<boolean> {
 	});
 }
 
-// Each block holds dev web/api/powersync at +0/+1/+2 and e2e web/api/powersync at +10/+11/+12 (playwright.config.ts
-// derives its ports from CLIENT_PORT and its database and PowerSync from E2E_DATABASE_URL and E2E_POWERSYNC_URL).
-const OFFSETS = [0, 1, 2, 10, 11, 12];
+// Each block holds web/api/powersync at +0/+1/+2 and the e2e web/api at +10/+11 (playwright.config.ts derives its ports
+// from CLIENT_PORT), which share the worktree's database and PowerSync with `bun run start`.
+const OFFSETS = [0, 1, 2, 10, 11];
 async function pickBlock(): Promise<number> {
 	const previous = readPort(root);
 	if (previous) return previous;
@@ -114,8 +114,6 @@ try {
 			`API_URL=http://127.0.0.1:${base + 1}`,
 			`DATABASE_URL=${databaseUrl(database)}`,
 			`POWERSYNC_URL=http://127.0.0.1:${base + 2}`,
-			`E2E_DATABASE_URL=${databaseUrl(`${database}_e2e`)}`,
-			`E2E_POWERSYNC_URL=http://127.0.0.1:${base + 12}`,
 			'',
 		].join('\n'),
 	);
@@ -139,9 +137,8 @@ run(['bun', 'run', 'generate']);
 ensurePostgres();
 // PowerSync holds its slot open, and a reset drops the databases it replicates.
 if (resetDb) stopPowerSync(root);
-await ensureDatabases(database, 'dev', root, resetDb);
-await ensureDatabases(database, 'e2e', root, resetDb);
-await Promise.all([startPowerSync(root, database, 'dev', base + 2), startPowerSync(root, database, 'e2e', base + 12)]);
+await ensureDatabases(database, root, resetDb);
+await startPowerSync(root, database, base + 2);
 
 // Restricted to shell-safe characters because ./sim embeds it in single quotes.
 const simulator = branch.replaceAll(/[^\w.-]/g, '-');
@@ -155,5 +152,5 @@ Worktree ready on ${branch}.
   api        ${apiUrl}
   powersync  http://127.0.0.1:${base + 2}  (container procrastimate-powersync-${basename(root)})
   database   ${databaseUrl(database)}${resetDb ? '  (reset)' : ''}
-  e2e        ports ${base + 10}-${base + 12}, database ${database}_e2e  (bun run test:e2e)
+  e2e        ports ${base + 10}-${base + 11}, same database and PowerSync  (bun run test:e2e)
   ios        ./sim  (simulator "${simulator}", created on first run; ./sim 2 for a second one)`);

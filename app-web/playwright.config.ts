@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { defineConfig, devices } from '@playwright/test';
 
 // Offset from the dev ports so the suite runs beside `bun run start`; worktrees move CLIENT_PORT via .env.override.
@@ -7,10 +7,14 @@ const API_PORT = PORT + 1;
 // An empty variable in the process env wins over `--env-file`, so a developer's `development` never reports a test.
 const NO_SENTRY = { SENTRY_ENVIRONMENT: '', SENTRY_RELEASE: '' };
 
-// The e2e servers run on the worktree's own e2e database and PowerSync, never the dev ones.
-const { E2E_DATABASE_URL, E2E_POWERSYNC_URL } = process.env;
-if (!E2E_DATABASE_URL || !E2E_POWERSYNC_URL) {
-	throw new Error('E2E_DATABASE_URL and E2E_POWERSYNC_URL are missing. Run `bun scripts/setup-worktree.ts` first.');
+// The e2e servers share the worktree's database and PowerSync with `bun run start`; every test signs up its own users.
+const overrideFile = new URL('../.env.override', import.meta.url);
+const override = existsSync(overrideFile) ? readFileSync(overrideFile, 'utf8') : '';
+const [DATABASE_URL, POWERSYNC_URL] = ['DATABASE_URL', 'POWERSYNC_URL'].map(
+	key => override.match(new RegExp(`^${key}=(.*)$`, 'm'))?.[1],
+);
+if (!DATABASE_URL || !POWERSYNC_URL) {
+	throw new Error('.env.override has no DATABASE_URL or POWERSYNC_URL. Run `bun scripts/setup-worktree.ts` first.');
 }
 
 // Before any server starts, so a build with Sentry on fails once with the fix instead of in every test.
@@ -53,7 +57,7 @@ export default defineConfig({
 	webServer:
 		process.env.E2E_WORKER === '1'
 			? {
-					command: `bun scripts/wrangler-dev.ts --e2e --port ${PORT} --var RAMBLE_UPSTREAM:cassette`,
+					command: `bun scripts/wrangler-dev.ts --port ${PORT} --var RAMBLE_UPSTREAM:cassette`,
 					cwd: '..',
 					url: `http://127.0.0.1:${PORT}/api/status`,
 					reuseExistingServer: false,
@@ -66,8 +70,8 @@ export default defineConfig({
 						reuseExistingServer: false,
 						env: {
 							API_PORT: String(API_PORT),
-							DATABASE_URL: E2E_DATABASE_URL,
-							POWERSYNC_URL: E2E_POWERSYNC_URL,
+							DATABASE_URL,
+							POWERSYNC_URL,
 							AUTH_RATE_LIMIT: 'off',
 							RAMBLE_UPSTREAM: 'cassette',
 							...NO_SENTRY,

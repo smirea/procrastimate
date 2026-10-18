@@ -1,6 +1,6 @@
 /**
  * The local Postgres and PowerSync for CI's end to end job: `bun scripts/ci-stack.ts`. Runs on the main checkout's
- * default ports, so the e2e API is 6131 and its PowerSync 6132.
+ * default ports, so PowerSync is on 6122 and the e2e API on 6131.
  */
 import { spawnSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
@@ -13,16 +13,12 @@ const database = 'ci';
 
 requireDocker();
 ensurePostgres();
-await ensureDatabases(database, 'e2e', root);
-await startPowerSync(root, database, 'e2e', CLIENT_PORT + 12);
+await ensureDatabases(database, root);
+await startPowerSync(root, database, CLIENT_PORT + 2);
 writeFileSync(
 	join(root, '.env.override'),
-	[
-		`E2E_DATABASE_URL=${databaseUrl(`${database}_e2e`)}`,
-		`E2E_POWERSYNC_URL=http://127.0.0.1:${CLIENT_PORT + 12}`,
-		'',
-	].join('\n'),
+	[`DATABASE_URL=${databaseUrl(database)}`, `POWERSYNC_URL=http://127.0.0.1:${CLIENT_PORT + 2}`, ''].join('\n'),
 );
 const generated = spawnSync('env-manager', ['gen', '--local'], { cwd: root, stdio: 'inherit' });
 if (generated.status !== 0) process.exit(generated.status ?? 1);
-console.log(`CI stack ready: database ${database}_e2e, PowerSync on ${CLIENT_PORT + 12}`);
+console.log(`CI stack ready: database ${database}, PowerSync on ${CLIENT_PORT + 2}`);
