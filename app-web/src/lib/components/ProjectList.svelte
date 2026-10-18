@@ -5,7 +5,7 @@
 	import { slide } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import Hash from 'phosphor-svelte/lib/Hash';
-	import { projectTasks } from 'shared/views.ts';
+	import { openCounts } from 'shared/views.ts';
 	import { store } from '../store.svelte.ts';
 	import { motion } from '../ui.svelte.ts';
 	import { Reorder } from '../reorder.svelte.ts';
@@ -26,13 +26,15 @@
 		await tick();
 		list.querySelector<HTMLElement>(`[data-project-id="${id}"] a`)?.focus();
 	}
+
+	const counts = $derived(openCounts(store.own.tasks, store.own.labels));
 </script>
 
 <ul bind:this={list} {@attach reorder.list} class="relative space-y-0.5">
 	{#each projects as project, index (project.id)}
 		{@const href = `/projects/${project.id}`}
 		{@const active = page.url.pathname === href}
-		{@const count = projectTasks(store.own.tasks, project.id).length}
+		{@const count = counts.projects.get(project.id) ?? 0}
 		<li
 			data-project-id={project.id}
 			class="relative rounded-full"

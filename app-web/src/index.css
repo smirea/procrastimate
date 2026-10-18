@@ -412,13 +412,6 @@
 		}
 	}
 
-	@media (max-width: 767px), (pointer: coarse) {
-		.nav-link {
-			height: 2.75rem;
-			font-size: 0.9375rem;
-		}
-	}
-
 	.nav-link.active {
 		background: color-mix(in srgb, var(--color-accent) 8%, transparent);
 		box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 10%, transparent);
@@ -462,6 +455,11 @@
 	}
 
 	@media (max-width: 767px), (pointer: coarse) {
+		.nav-link {
+			height: 2.75rem;
+			font-size: 0.9375rem;
+		}
+
 		.chip,
 		.btn,
 		.field,

@@ -22,7 +22,7 @@
 <svelte:head><title>No date · ProcrastiMate</title></svelte:head>
 
 <View
-	title="No date"
+	name="No date"
 	open={view.loose.length + view.places.reduce((n, p) => n + p.tasks.length, 0)}
 	empty={view.loose.length + view.places.length === 0}
 	emptyTitle="Inbox zero"

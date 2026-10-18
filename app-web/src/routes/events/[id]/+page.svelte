@@ -14,6 +14,6 @@
 
 <svelte:head><title>{event?.title ?? 'Event'} · ProcrastiMate</title></svelte:head>
 
-<View title={event?.title ?? 'Event'} open={tasks.length} empty={tasks.length === 0} emptyTitle="Nothing left for this event" emptyHint="Link a task to a calendar event on iPhone." markdown={() => ({ title: event?.title ?? 'Event', sections: [{ heading: null, tasks }] })}>
+<View name={event?.title ?? 'Event'} open={tasks.length} empty={tasks.length === 0} emptyTitle="Nothing left for this event" emptyHint="Link a task to a calendar event on iPhone." markdown={() => ({ title: event?.title ?? 'Event', sections: [{ heading: null, tasks }] })}>
 	<TaskList {tasks} showProject label={`Tasks for ${event?.title ?? 'this event'}`} />
 </View>

@@ -133,10 +133,13 @@ async function refreshPeople() {
 
 export function startSync(userId: string): () => void {
 	let stopped = false;
-	void store.open(userId).then(() => {
-		if (!stopped)
-			return powerSync.connect(connector, { crudUploadThrottleMs: UPLOAD_THROTTLE, retryDelayMs: RETRY_DELAY });
-	});
+	store
+		.open(userId)
+		.then(() => {
+			if (!stopped)
+				return powerSync.connect(connector, { crudUploadThrottleMs: UPLOAD_THROTTLE, retryDelayMs: RETRY_DELAY });
+		})
+		.catch(reportError);
 	void refreshPeople();
 	const asked = new Set<string>();
 	const stopEffects = $effect.root(() => {

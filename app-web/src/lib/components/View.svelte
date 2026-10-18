@@ -9,6 +9,7 @@
 	import { motion } from '../ui.svelte.ts';
 
 	let {
+		name,
 		title,
 		subtitle,
 		open,
@@ -21,7 +22,9 @@
 		children,
 		after,
 	}: {
-		title: Snippet | string;
+		/** What the view is called: the heading, unless `title` renders one, and the copy button's label. */
+		name: string;
+		title?: Snippet;
 		subtitle?: string;
 		/** The open rows the view lists, for the count beside the title. */
 		open?: number;
@@ -41,17 +44,17 @@
 	<header class="mb-5 flex items-end justify-between gap-4">
 		<div class="min-w-0">
 			<div class="flex min-w-0 items-baseline gap-2.5">
-				{#if typeof title === 'string'}
-					<h1 class="truncate text-[26px] font-semibold tracking-tight">{title}</h1>
-				{:else}
+				{#if title}
 					{@render title()}
+				{:else}
+					<h1 class="truncate text-[26px] font-semibold tracking-tight">{name}</h1>
 				{/if}
 				{#if open !== undefined}<PendingCount {open} class="text-[15px]" />{/if}
 			</div>
 			{#if subtitle}<p class="mt-0.5 text-[13px] text-muted">{subtitle}</p>{/if}
 		</div>
 		<div class="flex shrink-0 items-center gap-1">
-			<CopyButton label={`Copy ${markdown().title} as Markdown`} {markdown} />
+			<CopyButton label={`Copy ${name} as Markdown`} {markdown} />
 			{@render actions?.()}
 		</div>
 	</header>

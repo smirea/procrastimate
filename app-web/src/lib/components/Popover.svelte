@@ -64,6 +64,17 @@
 		node.showPopover();
 		place(node);
 		node.querySelector<HTMLElement>('[data-autofocus]')?.focus();
+		// Listened to only while open, so a list of rows with a popover each costs nothing until one opens.
+		window.addEventListener('keydown', onWindowKeydown, true);
+		window.addEventListener('pointerdown', onWindowPointerdown, true);
+		window.addEventListener('scroll', onWindowMove, true);
+		window.addEventListener('resize', onWindowMove);
+		return () => {
+			window.removeEventListener('keydown', onWindowKeydown, true);
+			window.removeEventListener('pointerdown', onWindowPointerdown, true);
+			window.removeEventListener('scroll', onWindowMove, true);
+			window.removeEventListener('resize', onWindowMove);
+		};
 	}
 
 	/**
@@ -81,6 +92,7 @@
 		if (panel) place(panel);
 	}
 
+	// The listeners stay through the panel's outro, when the panel is already closed and keys belong to the page.
 	function onWindowKeydown(event: KeyboardEvent) {
 		if (open && event.key === 'Escape') {
 			event.stopImmediatePropagation();
@@ -93,13 +105,6 @@
 		if (open && !root.contains(event.target as Node)) close();
 	}
 </script>
-
-<svelte:window
-	onkeydowncapture={onWindowKeydown}
-	onpointerdowncapture={onWindowPointerdown}
-	onscrollcapture={onWindowMove}
-	onresize={onWindowMove}
-/>
 
 <div class="relative min-w-0" bind:this={root}>
 	{@render trigger({ open, toggle })}

@@ -213,7 +213,7 @@
 		<div class="mt-1.5 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100 touch:opacity-100">
 			<Popover label="Postpone" align="end">
 				{#snippet trigger({ toggle })}
-					<button type="button" class="grid size-8 place-items-center rounded-full text-muted hover:bg-ink/5" aria-label={`Postpone ${task.title}`} onclick={toggle}>
+					<button type="button" class="hit-area relative grid size-8 place-items-center rounded-full text-muted hover:bg-ink/5" aria-label={`Postpone ${task.title}`} onclick={toggle}>
 						<CalendarPlus size={16} />
 					</button>
 				{/snippet}

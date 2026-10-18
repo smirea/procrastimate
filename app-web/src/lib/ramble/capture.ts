@@ -92,7 +92,7 @@ function speech(options: {
 		},
 		(reason: DictationEnd) => {
 			level?.stop();
-			options.onStop(reason === 'stopped' ? 'stopped' : reason);
+			options.onStop(reason);
 		},
 	);
 	dictation.start(() => {
@@ -174,7 +174,11 @@ function socket(options: {
 			audio = opened.audio;
 			stream = opened.stream;
 		},
-		() => finish('denied', 'The microphone is off. You can type the ramble instead.'),
+		(error: unknown) => {
+			if (isPermissionError(error)) return finish('denied', 'The microphone is off. You can type the ramble instead.');
+			reportError(error);
+			finish('error', 'Could not open the microphone');
+		},
 	);
 	return {
 		typed: false,
@@ -189,26 +193,38 @@ function socket(options: {
 	};
 }
 
+/** The user refused the microphone, or the device has none; anything else is the page's own failure. */
+const isPermissionError = (error: unknown) =>
+	error instanceof DOMException && (error.name === 'NotAllowedError' || error.name === 'NotFoundError');
+
+/** The stream is open before the audio graph is; a graph that fails to build must not leave the mic recording. */
 async function startMic(socket: WebSocket, onLevel?: (level: number) => void) {
 	const stream = await navigator.mediaDevices.getUserMedia({
 		audio: { echoCancellation: true, noiseSuppression: true },
 	});
-	const audio = new AudioContext();
-	const url = URL.createObjectURL(new Blob([WORKLET], { type: 'text/javascript' }));
+	let audio: AudioContext | null = null;
 	try {
-		await audio.audioWorklet.addModule(url);
-	} finally {
-		URL.revokeObjectURL(url);
+		audio = new AudioContext();
+		const url = URL.createObjectURL(new Blob([WORKLET], { type: 'text/javascript' }));
+		try {
+			await audio.audioWorklet.addModule(url);
+		} finally {
+			URL.revokeObjectURL(url);
+		}
+		const source = audio.createMediaStreamSource(stream);
+		const node = new AudioWorkletNode(audio, 'ramble-pcm');
+		node.port.onmessage = (event: MessageEvent<ArrayBuffer | { level: number }>) => {
+			if (socket.readyState !== WebSocket.OPEN) return;
+			if (event.data instanceof ArrayBuffer) socket.send(event.data);
+			else onLevel?.(event.data.level);
+		};
+		source.connect(node);
+		return { audio, stream };
+	} catch (error) {
+		stream.getTracks().forEach(track => track.stop());
+		void audio?.close();
+		throw error;
 	}
-	const source = audio.createMediaStreamSource(stream);
-	const node = new AudioWorkletNode(audio, 'ramble-pcm');
-	node.port.onmessage = (event: MessageEvent<ArrayBuffer | { level: number }>) => {
-		if (socket.readyState !== WebSocket.OPEN) return;
-		if (event.data instanceof ArrayBuffer) socket.send(event.data);
-		else onLevel?.(event.data.level);
-	};
-	source.connect(node);
-	return { audio, stream };
 }
 
 /**
@@ -246,12 +262,13 @@ function meter(onLevel: (level: number) => void): () => void {
 	void navigator.mediaDevices
 		?.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } })
 		.then(stream => {
+			close = () => stream.getTracks().forEach(track => track.stop());
+			if (stopped) return close();
 			const audio = new AudioContext();
 			close = () => {
 				stream.getTracks().forEach(track => track.stop());
 				void audio.close();
 			};
-			if (stopped) return close();
 			const analyser = audio.createAnalyser();
 			analyser.fftSize = 1024;
 			audio.createMediaStreamSource(stream).connect(analyser);

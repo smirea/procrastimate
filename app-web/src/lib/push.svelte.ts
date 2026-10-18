@@ -49,7 +49,16 @@ class Push {
 		for (const [target, type, listener] of listeners) target.addEventListener(type, listener);
 		return () => {
 			for (const [target, type, listener] of listeners) target.removeEventListener(type, listener);
+			// The next account in this tab registers the same endpoint afresh.
+			this.#registered = null;
 		};
+	}
+
+	/** Tells the server to stop pushing to this device, before the cookie goes. Best effort. */
+	async forget() {
+		if (!this.#registered) return;
+		this.#registered = null;
+		await api.push.unsubscribe().catch(() => {});
 	}
 
 	async detect() {
@@ -78,11 +87,6 @@ class Push {
 		if (!registration || (!subscription && !rekeying)) {
 			await this.#subscribe(Promise.resolve('granted' as NotificationPermission), key);
 			return this.state;
-		}
-		if (Notification.permission !== 'granted') {
-			localStorage.removeItem(REKEY_KEY);
-			await subscription?.unsubscribe();
-			return { kind: 'off' };
 		}
 		const current =
 			subscription && sameKey(subscription.options.applicationServerKey, key)
@@ -156,12 +160,13 @@ class Push {
 			this.#registered = subscription.endpoint;
 		} catch (error) {
 			if (isUnauthorized(error)) session.clear();
+			else reportError(error);
 		}
 	}
 
+	/** `off` only changes through a prompt, so refetching the key on every focus would find nothing new. */
 	#retry() {
-		if (this.state.kind === 'unavailable' || this.state.kind === 'error' || this.state.kind === 'off')
-			void this.detect();
+		if (this.state.kind === 'unavailable' || this.state.kind === 'error') void this.detect();
 		else if (this.state.kind === 'on') void this.#register(this.state.subscription);
 	}
 }

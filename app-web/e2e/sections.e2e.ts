@@ -65,6 +65,12 @@ test('sections group a project, take tasks from quick add and details, and renam
 	await page.getByRole('button', { name: 'Later actions' }).click();
 	await page.getByRole('button', { name: 'Rename' }).click();
 	const name = page.getByRole('textbox', { name: 'Section name' });
+	await name.fill('Dropped');
+	await name.press('Escape');
+	await expect(page.getByRole('region', { name: 'Later' })).toBeVisible();
+	await expect(page.getByRole('region', { name: 'Dropped' })).toHaveCount(0);
+	await page.getByRole('button', { name: 'Later actions' }).click();
+	await page.getByRole('button', { name: 'Rename' }).click();
 	await name.fill('Someday');
 	await name.press('Enter');
 	await expect(page.getByRole('region', { name: 'Someday' })).toBeVisible();

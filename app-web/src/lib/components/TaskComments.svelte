@@ -107,10 +107,10 @@
 							{#if comment.editedAt !== null}<span class="text-[12px] text-faint">edited</span>{/if}
 							{#if mine && editable && editing?.id !== comment.id}
 								<span class="ml-auto flex shrink-0 gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100 touch:opacity-100">
-									<button type="button" class="icon-btn size-7" aria-label="Edit comment" onclick={() => (editing = { id: comment.id, body: comment.body })}>
+									<button type="button" class="icon-btn hit-area relative size-7!" aria-label="Edit comment" onclick={() => (editing = { id: comment.id, body: comment.body })}>
 										<PencilSimple size={14} />
 									</button>
-									<button type="button" class="icon-btn size-7" aria-label="Delete comment" onclick={() => remove(comment.id)}>
+									<button type="button" class="icon-btn hit-area relative size-7!" aria-label="Delete comment" onclick={() => remove(comment.id)}>
 										<Trash size={14} />
 									</button>
 								</span>

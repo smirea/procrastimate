@@ -16,7 +16,7 @@
 <svelte:head><title>Completed · ProcrastiMate</title></svelte:head>
 
 <View
-	title="Completed"
+	name="Completed"
 	empty={days.length === 0}
 	emptyTitle="Nothing completed"
 	emptyHint={range.from === null && range.to === null ? 'Tasks you complete show up here.' : 'Pick a longer range to see more.'}

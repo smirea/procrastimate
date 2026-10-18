@@ -10,11 +10,11 @@
 	import TaskList from '#lib/components/TaskList.svelte';
 	import PersonName from '#lib/components/PersonName.svelte';
 	import PendingCount from '#lib/components/PendingCount.svelte';
-	import { api } from '#lib/api.ts';
+	import { api, isNotFound } from '#lib/api.ts';
 	import { provideReadOnlyLookup } from '#lib/lookup.ts';
 	import { motion } from '#lib/ui.svelte.ts';
 
-	type State = { kind: 'loading' } | { kind: 'gone' } | { kind: 'ready'; view: SharedView };
+	type State = { kind: 'loading' } | { kind: 'gone' } | { kind: 'failed' } | { kind: 'ready'; view: SharedView };
 
 	let state = $state<State>({ kind: 'loading' });
 	const view = $derived(state.kind === 'ready' ? state.view : null);
@@ -44,10 +44,17 @@
 		return `${view.owner.name}’s tasks`;
 	});
 
-	onMount(async () => {
-		const result = await api.shared.view({ query: { token: page.params.token ?? '' } }).catch(() => null);
-		state = result ? { kind: 'ready', view: result } : { kind: 'gone' };
-	});
+	/** Only the server's NOT_FOUND means the link stopped; a failed request is retried, not blamed on the owner. */
+	async function load() {
+		state = { kind: 'loading' };
+		try {
+			state = { kind: 'ready', view: await api.shared.view({ query: { token: page.params.token ?? '' } }) };
+		} catch (error) {
+			state = { kind: isNotFound(error) ? 'gone' : 'failed' };
+		}
+	}
+
+	onMount(load);
 </script>
 
 <svelte:head><title>{title} · ProcrastiMate</title></svelte:head>
@@ -81,6 +88,12 @@
 		<div class="mt-24 text-center" in:fade={motion({ duration: 240 })}>
 			<p class="text-[15px] font-medium">This link no longer works</p>
 			<p class="mt-1 text-[13px] text-muted">Its owner stopped sharing it, or it was copied wrong.</p>
+		</div>
+	{:else if state.kind === 'failed'}
+		<div class="mt-24 text-center" in:fade={motion({ duration: 240 })}>
+			<p class="text-[15px] font-medium">Couldn’t load this link</p>
+			<p class="mt-1 text-[13px] text-muted">Check the connection and try again.</p>
+			<button type="button" class="btn btn-primary mt-4" onclick={load}>Retry</button>
 		</div>
 	{/if}
 </main>

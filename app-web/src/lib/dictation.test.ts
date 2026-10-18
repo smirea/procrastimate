@@ -1,7 +1,11 @@
 import { describe, expect, test } from 'bun:test';
-import { dictationText, startVoiceInput, type SpeechPiece, type SpeechSession } from './dictation.ts';
-
-const now = new Date('2026-10-14T10:00:00Z');
+import {
+	dictationText,
+	NativeDictation,
+	type DictationEnd,
+	type SpeechPiece,
+	type SpeechSession,
+} from './dictation.ts';
 
 class FakeRecognition implements SpeechSession {
 	lang = '';
@@ -36,6 +40,22 @@ class FakeRecognition implements SpeechSession {
 	}
 }
 
+function listen() {
+	const texts: string[] = [];
+	const ends: DictationEnd[] = [];
+	const sessions: FakeRecognition[] = [];
+	const dictation = new NativeDictation(
+		text => texts.push(text),
+		reason => ends.push(reason),
+	);
+	dictation.start(() => {
+		const session = new FakeRecognition();
+		sessions.push(session);
+		return session;
+	});
+	return { dictation, texts, ends, sessions };
+}
+
 describe('dictationText', () => {
 	test('keeps committed text and prefers a final piece over the interim one', () => {
 		const next = dictationText('Buy milk. ', [
@@ -48,85 +68,56 @@ describe('dictationText', () => {
 	});
 });
 
-describe('startVoiceInput', () => {
-	test('native speech runs the ramble grammar on the transcript', () => {
-		const recognition = new FakeRecognition();
-		const drafts: string[] = [];
-		const input = startVoiceInput({
-			choice: 'native',
-			online: true,
-			nativeSpeech: true,
-			createRecognition: () => recognition,
-			ramble: { now },
-			onDraft: draft => drafts.push(draft.tasks.map(task => task.title).join('|')),
-		});
-		expect(input.plan).toEqual({ engine: 'native', capture: 'speech' });
-		expect(recognition.lang).toBe('en-US');
-		expect(recognition.continuous).toBe(true);
-		recognition.say([{ transcript: 'Buy milk', isFinal: true }]);
-		expect(drafts).toEqual(['Buy milk']);
-		input.stop();
-		expect(recognition.stopped).toBe(1);
+describe('NativeDictation', () => {
+	test('a continuous English session reports each transcript and stops on request', () => {
+		const { dictation, texts, ends, sessions } = listen();
+		const [session] = sessions;
+		expect([session!.lang, session!.continuous, session!.interimResults, session!.started]).toEqual([
+			'en-US',
+			true,
+			true,
+			1,
+		]);
+		session!.say([{ transcript: 'Buy milk', isFinal: true }]);
+		session!.say([
+			{ transcript: 'Buy milk', isFinal: true },
+			{ transcript: ' and', isFinal: false },
+		]);
+		expect(texts).toEqual(['Buy milk', 'Buy milk and']);
+		dictation.stop();
+		expect([session!.stopped, ends]).toEqual([1, ['stopped']]);
 	});
 
-	test('elevenlabs is the socket only while online, and does not start the recognizer', () => {
-		let created = 0;
-		const online = startVoiceInput({
-			choice: 'elevenlabs',
-			online: true,
-			nativeSpeech: true,
-			createRecognition: () => {
-				created += 1;
-				return new FakeRecognition();
-			},
-			ramble: { now },
-			onDraft: () => {},
-		});
-		expect(online.plan).toEqual({ engine: 'elevenlabs', capture: 'socket' });
-		expect(created).toBe(0);
-
-		const recognition = new FakeRecognition();
-		const offline = startVoiceInput({
-			choice: 'elevenlabs',
-			online: false,
-			nativeSpeech: true,
-			createRecognition: () => recognition,
-			ramble: { now },
-			onDraft: () => {},
-		});
-		expect(offline.plan).toEqual({ engine: 'native', capture: 'speech' });
-		expect(recognition.started).toBe(1);
+	test('a session the browser ends on its own restarts and keeps the committed text', () => {
+		const { texts, sessions } = listen();
+		sessions[0]!.say([{ transcript: 'Buy milk', isFinal: true }]);
+		sessions[0]!.onend?.();
+		expect(sessions.length).toBe(2);
+		sessions[1]!.say([{ transcript: ' Call mom', isFinal: true }]);
+		expect(texts.at(-1)).toBe('Buy milk Call mom');
 	});
 
-	test('a browser without SpeechRecognition types, and does not open ElevenLabs', () => {
-		const input = startVoiceInput({
-			choice: 'native',
-			online: true,
-			nativeSpeech: false,
-			ramble: { now },
-			onDraft: () => {
-				throw new Error('typed dictation does not start a session');
-			},
-		});
-		expect(input.plan).toEqual({ engine: 'native', capture: 'typed' });
+	test('a refused microphone ends with denied, and a network error with error', () => {
+		const denied = listen();
+		denied.sessions[0]!.fail('not-allowed');
+		expect(denied.ends).toEqual(['denied']);
+		const failed = listen();
+		failed.sessions[0]!.fail('network');
+		expect(failed.ends).toEqual(['error']);
 	});
 
-	test('a network error stays on native and keeps the transcript', () => {
-		const recognition = new FakeRecognition();
-		const titles: string[] = [];
-		const ends: string[] = [];
-		startVoiceInput({
-			choice: 'native',
-			online: false,
-			nativeSpeech: true,
-			createRecognition: () => recognition,
-			ramble: { now },
-			onDraft: draft => titles.push(...draft.tasks.map(task => task.title)),
-			onEnd: reason => ends.push(reason),
-		});
-		recognition.say([{ transcript: 'Buy milk', isFinal: true }]);
-		recognition.fail('network');
-		expect(titles).toEqual(['Buy milk']);
-		expect(ends).toEqual(['error']);
+	test('three sessions that end at once in a row give up with error', () => {
+		const { ends, sessions } = listen();
+		for (let i = 0; i < 3; i++) sessions[i]!.onend?.();
+		expect([sessions.length, ends]).toEqual([3, ['error']]);
+	});
+
+	test('a browser without a recognizer ends with unsupported', () => {
+		const ends: DictationEnd[] = [];
+		new NativeDictation(
+			() => {},
+			reason => ends.push(reason),
+		).start(() => null);
+		expect(ends).toEqual(['unsupported']);
 	});
 });

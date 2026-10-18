@@ -34,7 +34,7 @@
 
 <svelte:head><title>{place?.name ?? 'Place'} · ProcrastiMate</title></svelte:head>
 
-<View title={place?.name ?? 'Place'} open={tasks.length} empty={tasks.length === 0} emptyTitle="Nothing left here" emptyHint="Add a place to a task on iPhone." markdown={() => ({ title: place?.name ?? 'Place', sections: [{ heading: null, tasks }] })}>
+<View name={place?.name ?? 'Place'} open={tasks.length} empty={tasks.length === 0} emptyTitle="Nothing left here" emptyHint="Add a place to a task on iPhone." markdown={() => ({ title: place?.name ?? 'Place', sections: [{ heading: null, tasks }] })}>
 	{#snippet actions()}
 		{#if location}
 			<Popover label="Save place" align="end">

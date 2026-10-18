@@ -12,6 +12,7 @@
 	import { session } from '../session.svelte.ts';
 	import { store } from '../store.svelte.ts';
 	import { motion } from '../ui.svelte.ts';
+	import { reportError } from '../sentry.ts';
 	import { readBackupZip } from '../todoist-import.ts';
 
 	type Status =
@@ -35,19 +36,33 @@
 
 	const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
+	/** The server stops pushing to this device before the session that names it goes. */
+	async function signOut() {
+		await push.forget();
+		await session.signOut();
+	}
+
 	async function onchange() {
 		const file = input.files?.[0];
 		input.value = '';
 		if (!file) return;
 		status = { kind: 'reading' };
+		let backup;
 		try {
-			const backup = await readBackupZip(file, new Date());
-			status =
-				backup.projects.length === 0
-					? { kind: 'failed', message: 'No Todoist projects in this file.' }
-					: { kind: 'done', summary: store.importBackup(backup) };
+			backup = await readBackupZip(file, new Date());
 		} catch {
 			status = { kind: 'failed', message: 'This is not a Todoist backup zip.' };
+			return;
+		}
+		if (backup.projects.length === 0) {
+			status = { kind: 'failed', message: 'No Todoist projects in this file.' };
+			return;
+		}
+		try {
+			status = { kind: 'done', summary: store.importBackup(backup) };
+		} catch (error) {
+			reportError(error);
+			status = { kind: 'failed', message: 'Could not import this backup.' };
 		}
 	}
 </script>
@@ -81,7 +96,7 @@
 
 	<section class="flex flex-col gap-1.5">
 		<h3 class="heading">Data</h3>
-		<button type="button" class="menu-item -mx-1.5 w-auto touch:h-11 touch:text-[15px]" onclick={() => input.click()}>
+		<button type="button" class="menu-item -mx-1.5 w-auto touch:h-11 touch:text-[15px]" disabled={status.kind === 'reading'} onclick={() => input.click()}>
 			<ArrowSquareIn size={18} class="text-muted" />
 			Import from Todoist
 		</button>
@@ -137,7 +152,7 @@
 
 	<section class="flex flex-col gap-1.5">
 		<h3 class="heading">Account</h3>
-		<button type="button" class="menu-item -mx-1.5 w-auto touch:h-11 touch:text-[15px]" onclick={() => session.signOut()}>
+		<button type="button" class="menu-item -mx-1.5 w-auto touch:h-11 touch:text-[15px]" onclick={signOut}>
 			Sign out
 		</button>
 	</section>

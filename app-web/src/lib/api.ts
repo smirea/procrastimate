@@ -72,3 +72,4 @@ export const api: ApiClient = createORPCClient(
 );
 
 export const isUnauthorized = (error: unknown) => error instanceof ORPCError && error.code === 'UNAUTHORIZED';
+export const isNotFound = (error: unknown) => error instanceof ORPCError && error.code === 'NOT_FOUND';

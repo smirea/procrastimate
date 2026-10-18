@@ -210,7 +210,9 @@ export class Reorder {
 		const lifted = row()?.getBoundingClientRect().top ?? 0;
 		this.settling = true;
 		this.drag = null;
-		if (commit && ended.to !== ended.from) this.#options.move(ended.id, ended.to);
+		// A sync that added or removed a row mid-drag moved every index; the drop then names the wrong place.
+		const same = this.#rows().length === ended.mids.length;
+		if (commit && same && ended.to !== ended.from) this.#options.move(ended.id, ended.to);
 		await tick();
 		const landed = row();
 		const residual = lifted - (landed?.getBoundingClientRect().top ?? lifted);

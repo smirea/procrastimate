@@ -215,6 +215,9 @@ private struct Occurrence: Decodable {
     case "completedDays": return try json(Views.completedDays(a(0), a(1), in: a.zone))
     case "projectCompleted": return try json(Views.projectCompleted(a(0), a(1), a(2), in: a.zone))
     case "pendingCount": return try json(Views.pendingCount(a(0)))
+    case "openCounts":
+        let counts = Views.openCounts(try a(0), try a(1))
+        return object(["projects": try json(counts.projects), "labels": try json(counts.labels)])
     default: throw unknown(fn)
     }
 }

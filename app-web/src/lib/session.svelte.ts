@@ -47,7 +47,7 @@ class Session {
 			if (!cachedUser()) this.state = 'out';
 			return;
 		}
-		if (response.status === 401 || response.status === 503) {
+		if (response.status === 401) {
 			this.clear();
 			return;
 		}

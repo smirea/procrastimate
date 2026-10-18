@@ -5,7 +5,7 @@
 	import { sheets } from '../ui.svelte.ts';
 
 	/** A section's row adds to that section, and any other row to the screen it sits on. */
-	let { section, label = 'Add task' }: { section?: Section; label?: string } = $props();
+	let { section }: { section?: Section } = $props();
 </script>
 
 <button
@@ -16,5 +16,5 @@
 	<span class="grid size-[18px] place-items-center rounded-full text-accent transition-colors group-hover:bg-accent group-hover:text-on-accent">
 		<Plus size={13} weight="bold" />
 	</span>
-	{label}
+	Add task
 </button>

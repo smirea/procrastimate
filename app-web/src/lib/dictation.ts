@@ -1,12 +1,9 @@
-import { voiceCapture, type DictationChoice, type VoiceCapture } from 'shared/dictation.ts';
-import { parseRamble, type RambleDraft, type RambleOptions } from 'shared/ramble.ts';
-
 /** Why a native session stopped. `unsupported` means the browser has no SpeechRecognition. */
 export type DictationEnd = 'stopped' | 'unsupported' | 'denied' | 'error';
 
 export type SpeechPiece = { transcript: string; isFinal: boolean };
 
-/** The recognizer surface `startVoiceInput` drives. The browser's SpeechRecognition satisfies it. */
+/** The recognizer surface `NativeDictation` drives. The browser's SpeechRecognition satisfies it. */
 export type SpeechSession = {
 	lang: string;
 	continuous: boolean;
@@ -115,38 +112,4 @@ export class NativeDictation {
 		session.start();
 		return true;
 	}
-}
-
-export type VoiceInput = { plan: VoiceCapture; stop: () => void };
-
-/**
- * Starts the voice path Ramble and any other speech input use. Each transcript is parsed by the Ramble grammar.
- * `socket` is the ElevenLabs path, left for the Ramble client to open. `typed` means the platform has no
- * recognizer the page can start, so the transcript field stays the input.
- */
-export function startVoiceInput(options: {
-	choice: DictationChoice;
-	online: boolean;
-	/** Defaults to whether this browser has SpeechRecognition. */
-	nativeSpeech?: boolean;
-	createRecognition?: () => SpeechSession | null;
-	ramble: RambleOptions;
-	onDraft: (draft: RambleDraft, text: string) => void;
-	onEnd?: (reason: DictationEnd) => void;
-}): VoiceInput {
-	const nativeSpeech = options.nativeSpeech ?? speechRecognitionConstructor() !== null;
-	const plan = voiceCapture(options.choice, options.online, nativeSpeech);
-	if (plan.capture !== 'speech') return { plan, stop() {} };
-	const dictation = new NativeDictation(
-		text => options.onDraft(parseRamble(text, options.ramble), text),
-		reason => options.onEnd?.(reason),
-	);
-	dictation.start(
-		options.createRecognition ??
-			(() => {
-				const Ctor = speechRecognitionConstructor();
-				return Ctor ? new Ctor() : null;
-			}),
-	);
-	return { plan, stop: () => dictation.stop() };
 }
