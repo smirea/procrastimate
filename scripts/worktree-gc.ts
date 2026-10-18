@@ -4,12 +4,14 @@
  *   - deletes simulators claimed by a worktree that no longer exists
  *   - shuts down claimed simulators unused for 15 minutes that no running process names
  *   - deletes Xcode DerivedData of the App project at paths that no longer exist
+ *   - removes PowerSync containers and drops databases of worktrees that no longer exist
  *   - lists worktrees whose PR merged, for teardown-worktree.ts
  */
 import { spawnSync } from 'node:child_process';
 import { existsSync, readdirSync, rmSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
+import { dockerRunning, dropDatabases, powerSyncContainers, removeContainer, worktreeDatabases } from './local-stack';
 import { devices, owner, remove, shutdown } from './simulators';
 
 const dryRun = process.argv.includes('--dry-run');
@@ -59,6 +61,19 @@ for (const entry of existsSync(derivedData) ? readdirSync(derivedData) : []) {
 	act(`Deleting DerivedData ${entry} of the removed ${workspace}.`, () =>
 		rmSync(join(derivedData, entry), { recursive: true, force: true }),
 	);
+}
+
+if (dockerRunning()) {
+	for (const container of powerSyncContainers()) {
+		if (live.has(container.worktree)) continue;
+		act(`Removing ${container.name}; its worktree ${container.worktree} is gone.`, () =>
+			removeContainer(container.name),
+		);
+	}
+	for (const { database, worktree } of await worktreeDatabases().catch(() => [])) {
+		if (live.has(worktree)) continue;
+		act(`Dropping database ${database}; its worktree ${worktree} is gone.`, () => void dropDatabases(database));
+	}
 }
 
 for (const { path, branch } of worktrees.slice(1)) {

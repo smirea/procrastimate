@@ -42,3 +42,6 @@ app-web/src/lib/generated
 server/src/db/generated
 shared/api/generated
 shared/db/generated
+
+# per-worktree PowerSync config written by scripts/setup-worktree.ts
+.powersync

@@ -97,26 +97,35 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-chromium-${{ steps.playwright.outputs.version }}
+          key: playwright-${{ runner.os }}-chromium-webkit-${{ steps.playwright.outputs.version }}
 
       - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: bunx playwright install --with-deps chromium
+        run: bunx playwright install --with-deps chromium webkit
         working-directory: app-web
 
       - name: Install Playwright system dependencies
         if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: bunx playwright install-deps chromium
+        run: bunx playwright install-deps chromium webkit
         working-directory: app-web
 
-      # CI has no AWS access, so this only generates a throwaway VAPID pair.
+      # The same Postgres and PowerSync containers a worktree runs, on the main checkout's e2e ports.
+      - name: Postgres and PowerSync
+        run: bun scripts/ci-stack.ts
+
+      # CI has no AWS access, so this writes the local stand-ins: the dev signing key, a fixed auth secret, a VAPID pair.
       - name: .dev.vars for wrangler dev
         run: bun server/scripts/secrets.ts dev-vars --generate-only
 
+      # Both projects: `desktop` in Chromium and `mobile` in WebKit.
       - name: End to end against the Worker
-        run: bun run test:e2e --project=desktop
+        run: bun run test:e2e
         env:
           E2E_WORKER: '1'
+
+      - name: PowerSync logs
+        if: failure()
+        run: docker ps -a --filter label=procrastimate.worktree --format '{{.Names}}' | xargs -rn1 docker logs
 
   deploy:
     needs: [checks, e2e]

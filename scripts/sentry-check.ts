@@ -2,7 +2,7 @@
  * Proves the Sentry smoke path end to end: reads back the latest `Sentry smoke test: <runtime>` events and checks
  * each one names its user, sits in a trace that another project also reported into, and has readable in-app frames.
  *
- * bun scripts/sentry-check.ts [--environment development] [--since 30m] [--expect web,worker,account,ios]
+ * bun scripts/sentry-check.ts [--environment development] [--since 30m] [--expect web,worker,ios]
  *
  * Trigger the events first: `/inbox?sentry-smoke` on the web, `PROCRASTIMATE_SENTRY_SMOKE=1` on iOS. Exits non-zero
  * when an expected event is missing or fails a check. Needs `SENTRY_AUTH_TOKEN` (env-manager `scripts` target).
@@ -24,7 +24,6 @@ type Project = keyof typeof PROJECTS;
 const SMOKES = {
 	web: { title: 'Sentry smoke test: web', project: 'procrastimate-web' },
 	worker: { title: 'Sentry smoke test: Worker', project: 'procrastimate-worker' },
-	account: { title: 'Sentry smoke test: Account', project: 'procrastimate-worker' },
 	ios: { title: 'Sentry smoke test: iOS', project: 'procrastimate-ios' },
 } as const satisfies Record<string, { title: string; project: Project }>;
 type Smoke = keyof typeof SMOKES;
@@ -33,7 +32,7 @@ const { values: args } = parseArgs({
 	options: {
 		environment: { type: 'string', default: 'development' },
 		since: { type: 'string', default: '30m' },
-		expect: { type: 'string', default: 'web,worker,account' },
+		expect: { type: 'string', default: 'web,worker' },
 	},
 });
 const expected = args.expect.split(',').map(name => {
@@ -196,7 +195,7 @@ for (const smoke of expected) {
 	console.log(`    line ${frames[0]?.lineNo ?? '?'} in the checkout: ${thrown?.split('\n').at(-1)?.trim() ?? '-'}`);
 	check(Boolean(thrown?.includes('Sentry smoke test')), "the top frame's line is the smoke's throw in this checkout");
 
-	if (smoke === 'worker' || smoke === 'account') {
+	if (smoke === 'worker') {
 		const request = event.entries.find(entry => entry.type === 'request') as Extract<Entry, { type: 'request' }>;
 		console.log(`    request headers: ${(request?.data.headers ?? []).map(([name]) => name).join(', ') || '-'}`);
 		check(Boolean(request?.data.headers?.length), 'carries the request headers');

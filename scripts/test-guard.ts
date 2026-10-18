@@ -1,19 +1,21 @@
 /**
- * Preloaded by `bun test`. Tests that find Turso credentials in the environment write to that database, so a shell
- * with the prod env loaded once filled prod with test users. Refuse to start instead.
+ * Preloaded by `bun test`. Unit tests run on PGlite and never need `DATABASE_URL`, but a shell with a cloud
+ * environment loaded once filled a shared database with test users. Refuse to start unless the database is local.
  */
-export function productionTursoReason(env: Record<string, string | undefined>): string | null {
-	const url = env.TURSO_DATABASE_URL ?? '';
-	const marker = [env.NODE_ENV, env.ENV, env.ENVIRONMENT, env.ENV_MANAGER_ENV]
-		.map(value => value?.toLowerCase())
-		.find(value => value === 'prod' || value === 'production');
-	if (url.includes('-prod') || (marker && url)) {
-		return `Refusing to run tests against a production Turso database (${url || marker}). Unset TURSO_* first.`;
+export function remoteDatabaseReason(env: Record<string, string | undefined>): string | null {
+	const url = env.DATABASE_URL ?? '';
+	if (!url) return null;
+	let host: string;
+	try {
+		host = new URL(url).hostname;
+	} catch {
+		return `Refusing to run tests: DATABASE_URL is not a URL (${url}).`;
 	}
-	return null;
+	if (host === '127.0.0.1' || host === 'localhost' || host === '::1') return null;
+	return `Refusing to run tests against a remote database (${host}). Unset DATABASE_URL or point it at the local Docker Postgres.`;
 }
 
-const reason = productionTursoReason(process.env);
+const reason = remoteDatabaseReason(process.env);
 if (reason) {
 	console.error(reason);
 	process.exit(1);
