@@ -1362,6 +1362,27 @@
 			}
 		},
 		{
+			"fn": "readTodoistBackup",
+			"test": "CSV edge cases › a file with a quote that is never closed is skipped with a warning instead of becoming one task",
+			"input": [
+				[
+					{
+						"name": "Errands [42].csv",
+						"text": "TYPE,CONTENT,DESCRIPTION,PRIORITY,INDENT,DATE,DATE_LANG\ntask,\"Buy milk,,4,1,,\ntask,Call mom,,4,1,,\n"
+					}
+				],
+				1791986400000
+			],
+			"output": {
+				"projects": [],
+				"sections": [],
+				"tasks": [],
+				"warnings": [
+					"Errands [42].csv has a quote that is never closed, skipped"
+				]
+			}
+		},
+		{
 			"fn": "mergeBackup",
 			"test": "merging into the store › adds projects, labels, and tasks, with Inbox tasks in our Inbox",
 			"input": [

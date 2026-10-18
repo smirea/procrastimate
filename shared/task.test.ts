@@ -2,7 +2,7 @@ import { expect } from 'bun:test';
 import * as dates from './task.ts';
 import type { Due, Recurrence, Reminder, Weekday } from './task.ts';
 import { describe, recorded, test } from './vectors/record.ts';
-import { recurrenceSchema } from './values.ts';
+import { dateKeySchema, recurrenceSchema, timeOfDaySchema } from './values.ts';
 
 const addDays = recorded('task', dates.addDays);
 const addInterval = recorded('task', dates.addInterval);
@@ -306,6 +306,24 @@ test('a monthly repeat sets a day or a weekday of the month, not both', () => {
 	expect(recurrenceSchema.safeParse({ interval: 1, unit: 'month', day: 15, nth }).success).toBe(false);
 	expect(recurrenceSchema.safeParse({ interval: 1, unit: 'month', nth }).success).toBe(true);
 	expect(recurrenceSchema.safeParse({ interval: 1000, unit: 'day' }).success).toBe(false);
+});
+
+test('weekly days are sorted Monday first and each once, as stepping assumes', () => {
+	const weekly = (days: number[]) => recurrenceSchema.safeParse({ interval: 1, unit: 'week', days }).success;
+	expect(weekly([1, 3, 5])).toBe(true);
+	expect(weekly([1, 0])).toBe(true);
+	expect(weekly([5, 3, 1])).toBe(false);
+	expect(weekly([1, 1])).toBe(false);
+	expect(weekly([0, 1])).toBe(false);
+});
+
+test('a date or time with the right shape but no such moment is refused', () => {
+	expect(dateKeySchema.safeParse('2026-02-31').success).toBe(false);
+	expect(dateKeySchema.safeParse('2026-13-01').success).toBe(false);
+	expect(dateKeySchema.safeParse('2028-02-29').success).toBe(true);
+	expect(timeOfDaySchema.safeParse('25:99').success).toBe(false);
+	expect(timeOfDaySchema.safeParse('23:59').success).toBe(true);
+	expect(timeOfDaySchema.safeParse('24:00').success).toBe(false);
 });
 
 describe('a repeat never leaves the valid date range', () => {

@@ -72,7 +72,8 @@ function fold(text: string): Folded {
 	let out = '';
 	const map: number[] = [];
 	for (let i = 0; i < text.length; i++) {
-		const folded = text[i]!.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
+		const ch = text[i]!;
+		const folded = ch.charCodeAt(0) < 128 ? ch.toLowerCase() : ch.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
 		out += folded;
 		for (let j = 0; j < folded.length; j++) map.push(i);
 	}
@@ -117,8 +118,7 @@ export function searchTerms(query: string): string[] {
 	return fold(query.trim()).text.split(/\s+/).filter(Boolean);
 }
 
-function scoreTexts(texts: readonly string[], terms: readonly string[]) {
-	const folded = texts.map(fold);
+function scoreTexts(texts: readonly string[], terms: readonly string[], folded = texts.map(fold)) {
 	const ranges = texts.map((): Range[] => []);
 	const best = terms.map(term => {
 		let quality = 0;
@@ -137,12 +137,12 @@ const FIELDS = Object.entries(TASK_FIELDS) as [TaskField, (typeof TASK_FIELDS)[T
 
 function scoreTask(task: Task, terms: readonly string[], context: FieldContext): TaskHit | null {
 	const values = FIELDS.map(([, spec]) => spec.values(task, context));
-	const haystack = fold(values.flat().join('\n')).text;
-	if (!terms.every(term => haystack.includes(term))) return null;
+	const folded = values.map(texts => texts.map(fold));
+	if (!terms.every(term => folded.some(texts => texts.some(value => value.text.includes(term))))) return null;
 	const best = terms.map(() => 0);
 	const matches: TaskHit['matches'] = {};
 	for (const [i, [field, spec]] of FIELDS.entries()) {
-		const scored = scoreTexts(values[i]!, terms);
+		const scored = scoreTexts(values[i]!, terms, folded[i]!);
 		scored.best.forEach((quality, i) => (best[i] = Math.max(best[i]!, quality * spec.weight)));
 		if (scored.highlights.length) matches[field] = scored.highlights;
 	}

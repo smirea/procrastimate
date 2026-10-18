@@ -1,9 +1,12 @@
 import Foundation
 
 public enum CSV {
+    public enum Failure: Error { case unterminatedQuote }
+
     /// Rows of an RFC 4180 CSV document. Quoted fields hold commas, doubled quotes, and line breaks. Line endings
-    /// become `\n`, inside fields too, and a leading byte order mark is dropped.
-    public static func parseCsv(_ text: String) -> [[String]] {
+    /// become `\n`, inside fields too, and a leading byte order mark is dropped. A quote that is never closed would
+    /// swallow the rest of the document into one field, so it throws instead.
+    public static func parseCsv(_ text: String) throws -> [[String]] {
         var input = Array(text.unicodeScalars)
         if input.first == "\u{FEFF}" { input.removeFirst() }
         var rows: [[String]] = []
@@ -41,6 +44,7 @@ public enum CSV {
             }
             i += 1
         }
+        if quoted { throw Failure.unterminatedQuote }
         if !field.isEmpty || !row.isEmpty { rows.append(row + [String(field)]) }
         return rows
     }

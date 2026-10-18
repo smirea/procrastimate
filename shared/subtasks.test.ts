@@ -48,6 +48,18 @@ const trip = () => [
 const ids = (tasks: readonly Task[]) => tasks.map(t => t.id);
 const NOW = 1_000;
 
+describe('completing on an event series in a zone', () => {
+	test('the server passes the account’s zone, so the occurrence’s day is the account’s, not the process’s', () => {
+		const berlin = (d: number, h: number) => Date.UTC(2026, 9, d, h - 2);
+		const occurrences = [19, 20, 21].map(d => ({ start: berlin(d, 1), end: berlin(d, 2), original: berlin(d, 1) }));
+		const event = { id: 'early', title: 'Early call', allDay: false, series: true, edge: 'start' as const, minutes: 0 };
+		const tasks = [task('call', { event: { ...event, occurrences } })];
+		const inZone = completeTask(tasks, 'call', '2026-10-19', NOW, 'Europe/Berlin')!;
+		expect(inZone.kind === 'rolled' && inZone.next).toEqual({ date: '2026-10-20', time: '01:00' });
+		expect(inZone.changed[0]!.event!.occurrences).toEqual(occurrences.slice(1));
+	});
+});
+
 describe('subtask tree', () => {
 	test('children come in sibling order and descendants reach every level', () => {
 		expect(ids(groupChildren(trip()).get('trip')!)).toEqual(['passport', 'charger', 'socks']);

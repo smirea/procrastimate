@@ -320,18 +320,22 @@ function daysToNextMonday(today: DateKey): number {
 	return (8 - fromDateKey(today).getDay()) % 7 || 7;
 }
 
+/** A year under 1000 stays text: `Date` would read 50 as 1950, and a date key has four digits. */
 function calendarDate(year: number, month: number, day: number): DateKey | null {
+	if (year < 1000) return null;
 	const candidate = new Date(year, month, day);
 	return month >= 0 && candidate.getDate() === day ? toDateKey(candidate) : null;
 }
 
-/** A month and day without a year means the next one, counting today. */
+/** A month and day without a year means the next one, counting today, which for Feb 29 is the next leap year. */
 function monthDay(today: DateKey, month: number, day: number, yearText?: string): DateKey | null {
 	if (yearText) return calendarDate(yearText.length === 2 ? 2000 + Number(yearText) : Number(yearText), month, day);
 	const year = Number(today.slice(0, 4));
-	const key = calendarDate(year, month, day);
-	if (!key) return null;
-	return key < today ? calendarDate(year + 1, month, day) : key;
+	for (let candidate = year; candidate <= year + 4; candidate++) {
+		const key = calendarDate(candidate, month, day);
+		if (key && key >= today) return key;
+	}
+	return null;
 }
 
 type Day = { date: DateKey; time: TimeOfDay | null };

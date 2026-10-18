@@ -1901,6 +1901,224 @@
 		},
 		{
 			"fn": "parseQuickAdd",
+			"test": "due dates › feb 29 without a year is the next leap day, and a year under 1000 stays text",
+			"input": [
+				"Leap party feb 29",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom",
+							"place": null
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2028-02-29",
+					"time": null
+				},
+				"labelIds": [],
+				"location": null,
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"sectionId": null,
+				"title": "Leap party",
+				"tokens": [
+					{
+						"end": 17,
+						"kind": "due",
+						"start": 11,
+						"text": "feb 29"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "due dates › feb 29 without a year is the next leap day, and a year under 1000 stays text",
+			"input": [
+				"Leap party feb 29",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom",
+							"place": null
+						}
+					],
+					"now": 1835535600000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2032-02-29",
+					"time": null
+				},
+				"labelIds": [],
+				"location": null,
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"sectionId": null,
+				"title": "Leap party",
+				"tokens": [
+					{
+						"end": 17,
+						"kind": "due",
+						"start": 11,
+						"text": "feb 29"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "due dates › feb 29 without a year is the next leap day, and a year under 1000 stays text",
+			"input": [
+				"Pay rent 1/2/0050",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom",
+							"place": null
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"due": null,
+				"labelIds": [],
+				"location": null,
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"sectionId": null,
+				"title": "Pay rent 1/2/0050",
+				"tokens": []
+			}
+		},
+		{
+			"fn": "parseQuickAdd",
 			"test": "priority › File taxes p1",
 			"input": [
 				"File taxes p1",

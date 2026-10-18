@@ -232,14 +232,15 @@ const REWRITES: Array<[RegExp, (m: RegExpExecArray) => string | null]> = [
 		),
 		() => '',
 	],
+	// Spoken levels become quick add's `p1` to `p4`, so one grammar reads priorities.
 	[
 		/\bpriority\s+(?:number\s+|level\s+)?(one|two|three|four|[1-4])\b(?![.:,]?\d)/gi,
-		m => `priority ${PRIORITY_LEVELS[m[1]!.toLowerCase()]}`,
+		m => `p${PRIORITY_LEVELS[m[1]!.toLowerCase()]}`,
 	],
 	// Homophones only directly after `priority` and at the end of a clause, so `priority to finish` stays text.
 	[
 		new RegExp(String.raw`\bpriority\s+(won|to|too|for|fore)\b(?=\s*(?:[.,;!?]|$|(?:${SEPARATOR})\b))`, 'gi'),
-		m => `priority ${PRIORITY_LEVELS[m[1]!.toLowerCase()]}`,
+		m => `p${PRIORITY_LEVELS[m[1]!.toLowerCase()]}`,
 	],
 	[
 		/\b(?:pee\s+(?:one|two|three|four|[1-4])|p\s+(?:one|two|three|four)|p-[1-4])\b/gi,
@@ -329,8 +330,6 @@ function labelMatchers(
 	};
 }
 
-const PRIORITY_PHRASE = /\bpriority\s+([1-4])\b|(?<![\w#@])p([1-4])\b/gi;
-
 type Grammar = { now: Date; project: Named | null; labels: ReturnType<typeof labelMatchers> };
 
 /** Reads `text`, a slice of the normalized transcript starting at `base`, where `;` masks text that is not this task's. */
@@ -378,23 +377,14 @@ function readAttributes(text: string, base: number, grammar: Grammar, allowProje
 		for (const m of Array.from(work.matchAll(labels.suffix))) take(m, m.index, m.index + m[0].length);
 	}
 
-	let priority: Priority | null = null;
-	const priorities = [...work.matchAll(PRIORITY_PHRASE)];
-	const lastPriority = priorities.at(-1);
-	if (lastPriority) {
-		priority = Number(lastPriority[1] ?? lastPriority[2]) as Priority;
-		add('priority', lastPriority.index, lastPriority.index + lastPriority[0].length);
-	}
-	for (const m of priorities) claim(m.index, m.index + m[0].length);
-
 	const parsed = parseQuickAdd(work, { now: grammar.now, spoken: true });
-	for (const token of parsed.tokens) if (token.kind !== 'priority') add(token.kind, token.start, token.end);
+	for (const token of parsed.tokens) add(token.kind, token.start, token.end);
 
 	return {
 		tokens: tokens.toSorted((a, b) => a.start - b.start),
 		projectId,
 		labelIds: [...new Set(labelHits.toSorted((a, b) => a.at - b.at).map(hit => hit.id))],
-		priority,
+		priority: parsed.priority,
 		due: parsed.due,
 		recurrence: parsed.recurrence,
 		reminders: parsed.reminders,
@@ -932,12 +922,13 @@ export function parseRamble(transcript: string, options: RambleOptions): RambleD
 		tokens.push({ kind, start, end, text: transcript.slice(start, end) });
 	};
 
+	// The root's fate first: a root without a title gives its subtasks up to be built as roots, once.
 	const build = (item: Item, isRoot: boolean): RambleTask | null => {
-		const subtasks = isRoot ? item.subtasks.map(s => build(s, false)).filter(s => s !== null) : [];
 		const attributes = item.main.length ? sliceOf(item, isRoot).attributes : null;
 		const title =
 			item.main.length && attributes ? buildTitle(transcript, mapped, item.main, attributes.tokens, item.cues) : '';
 		if (!title) return null;
+		const subtasks = isRoot ? item.subtasks.map(s => build(s, false)).filter(s => s !== null) : [];
 		for (const token of attributes?.tokens ?? []) pushToken(token.kind, token);
 		const notes = item.notes
 			.map(r => transcript.slice(mapped.starts[r.start], mapped.ends[r.end]).trim())

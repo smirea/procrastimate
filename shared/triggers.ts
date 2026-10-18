@@ -4,14 +4,13 @@ import {
 	notificationTimes,
 	reminderFiresAt,
 	stepRecurrence,
-	toTimeOfDay,
 	type DateKey,
 	type Due,
 	type Label,
 	type Task,
 } from './task.ts';
 import type { EventOccurrence, LocationTrigger, SavedPlace, TaskEvent, TaskLocation } from './values.ts';
-import { zonedDateKey } from './zoned-time.ts';
+import { zonedDateKey, zonedTimeOfDay } from './zoned-time.ts';
 
 /**
  * Tasks that hang off a place or a calendar event. Only iOS sets them, since only it can watch places and read the
@@ -48,27 +47,10 @@ export function currentOccurrence(event: TaskEvent, today: DateKey, zone?: strin
 	return event.occurrences.find(o => zonedDateKey(eventAnchor(event, o), zone) >= today) ?? event.occurrences.at(-1)!;
 }
 
-function wallTime(at: number, zone?: string) {
-	if (zone === undefined) {
-		const date = new Date(at);
-		return toTimeOfDay(date.getHours(), date.getMinutes());
-	}
-	const parts = new Intl.DateTimeFormat('en-US', {
-		timeZone: zone,
-		hourCycle: 'h23',
-		hour: 'numeric',
-		minute: 'numeric',
-	})
-		.formatToParts(at)
-		.filter(p => p.type === 'hour' || p.type === 'minute')
-		.map(p => Number(p.value));
-	return toTimeOfDay(parts[0]!, parts[1]!);
-}
-
 /** An occurrence's moment as a due date, without a time for an all-day event. */
 export function occurrenceDue(event: TaskEvent, occurrence: EventOccurrence, zone?: string): Due {
 	const at = eventAnchor(event, occurrence);
-	return { date: zonedDateKey(at, zone), time: event.allDay ? null : wallTime(at, zone) };
+	return { date: zonedDateKey(at, zone), time: event.allDay ? null : zonedTimeOfDay(at, zone) };
 }
 
 /**

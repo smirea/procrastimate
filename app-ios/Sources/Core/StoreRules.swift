@@ -393,7 +393,8 @@ public enum StoreRules {
 
     /// Every task in a section, done ones and subtasks included: what deleting it removes, so its prompt can count them.
     public static func sectionTasks(_ tasks: [TaskItem], _ id: String) -> [TaskItem] {
-        tasks.filter { $0.sectionId == id }.flatMap { [$0] + Subtasks.descendantsOf(tasks, $0.id) }
+        let children = Subtasks.groupChildren(tasks)
+        return tasks.filter { $0.sectionId == id }.flatMap { [$0] + Subtasks.descendantsOf(tasks, $0.id, children: children) }
     }
 
     /// Deleting a section deletes its tasks with their subtasks, as Todoist does and as deleting a project does.

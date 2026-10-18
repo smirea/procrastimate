@@ -270,7 +270,7 @@ export async function editTask(command: Command, id: string, patch: TaskPatch): 
 export async function finishTask(command: Command, id: string): Promise<AgentTask> {
 	await run(command, (data, visible, zone) => {
 		visibleTask(visible, id);
-		return completeTask(data, id, zonedDateKey(command.now, zone), command.now)?.data ?? data;
+		return completeTask(data, id, zonedDateKey(command.now, zone), command.now, zone)?.data ?? data;
 	});
 	return taskAfter(command, id);
 }

@@ -171,9 +171,9 @@ struct JSString {
         return ns.substring(with: NSRange(location: lower, length: upper - lower))
     }
 
-    func char(_ index: Int) -> String {
-        guard index >= 0, index < count else { return "" }
-        return ns.substring(with: NSRange(location: index, length: 1))
+    /// One UTF-16 unit, which may be half of a surrogate pair: a `String` cannot hold it, so callers collect units.
+    func unit(_ index: Int) -> UInt16 {
+        ns.character(at: index)
     }
 }
 
@@ -181,8 +181,11 @@ func rambleFold(_ text: String) -> String {
     text.lowercased(with: Locale(identifier: "en_US_POSIX"))
 }
 
+/// Like JavaScript's `charAt(0).toUpperCase() + slice(1)`: a first unit that is half of a surrogate pair stays as it is.
 func rambleCapitalize(_ text: String) -> String {
     let js = JSString(text)
     guard js.count > 0 else { return "" }
-    return js.char(0).uppercased(with: Locale(identifier: "en_US_POSIX")) + js.slice(1, js.count)
+    let first = js.unit(0)
+    if UTF16.isLeadSurrogate(first) || UTF16.isTrailSurrogate(first) { return text }
+    return js.slice(0, 1).uppercased(with: Locale(identifier: "en_US_POSIX")) + js.slice(1, js.count)
 }

@@ -232,8 +232,9 @@ export function completeTask(
 	id: string,
 	today: DateKey,
 	now: number,
+	zone?: string,
 ): { data: StoreData; completion: Completion } | null {
-	const result = subtasks.completeTask(data.tasks, id, today, now);
+	const result = subtasks.completeTask(data.tasks, id, today, now, zone);
 	if (!result) return null;
 	const byId = new Map(data.tasks.map(t => [t.id, t]));
 	const previous = result.changed.map(({ id }) => {
@@ -397,7 +398,8 @@ export function moveSection(data: StoreData, id: string, index: number): StoreDa
 
 /** Every task in a section, done ones and subtasks included: what deleting it removes, so its prompt can count them. */
 export function sectionTasks(tasks: readonly Task[], id: string): Task[] {
-	return tasks.filter(t => t.sectionId === id).flatMap(t => [t, ...subtasks.descendantsOf(tasks, t.id)]);
+	const children = subtasks.groupChildren(tasks);
+	return tasks.filter(t => t.sectionId === id).flatMap(t => [t, ...subtasks.descendantsOf(tasks, t.id, children)]);
 }
 
 /** Deleting a section deletes its tasks with their subtasks, as Todoist does and as deleting a project does. */

@@ -75,6 +75,12 @@ struct Args {
     }
 
     func date(_ index: Int) throws -> Date { Date(epochMilliseconds: try self(index)) }
+
+    func timeZone(_ index: Int) throws -> TimeZone {
+        let name: String = try self(index)
+        guard let zone = TimeZone(identifier: name) else { throw unknown("time zone \(name)") }
+        return zone
+    }
 }
 
 private let encoder: JSONEncoder = {
@@ -178,7 +184,7 @@ private struct Occurrence: Decodable {
     case "reopenTask": return try json(Subtasks.reopenTask(a(0), a(1)))
     case "completeTask":
         guard let completion = Subtasks.completeTask(
-            try a(0), try a(1), today: try a(2), now: try a(3), in: a.zone
+            try a(0), try a(1), today: try a(2), now: try a(3), in: a.values.count > 4 ? try a.timeZone(4) : a.zone
         ) else {
             return .null
         }

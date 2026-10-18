@@ -163,7 +163,10 @@ public enum Todoist {
         let named = base.wholeMatch(of: fileName)
         let name = named.map { String($0.1) } ?? (isCSV(base) ? String(base.dropLast(4)) : base)
         let id = named.map { String($0.2) } ?? name
-        let table = CSV.parseCsv(file.text)
+        guard let table = try? CSV.parseCsv(file.text) else {
+            backup.warnings.append("\(base) has a quote that is never closed, skipped")
+            return
+        }
         var columns: [String: Int] = [:]
         for (i, column) in (table.first ?? []).enumerated() { columns[UTF16Text.trim(column)] = i }
         guard columns["TYPE"] != nil, columns["CONTENT"] != nil else {

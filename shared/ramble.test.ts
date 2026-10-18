@@ -275,6 +275,25 @@ describe('draft details', () => {
 		expect(draft.ended).toBe(true);
 	});
 
+	test('a root without a title gives its subtasks up as roots, each token once', () => {
+		const draft = parseRamble('Tomorrow at 5pm. Subtask buy milk tomorrow at 6pm.', options);
+		expect(draft.tasks.map(task => task.title)).toEqual(['Buy milk']);
+		expect(draft.tokens.map(token => [token.kind, token.start, token.end])).toEqual([
+			['subtask', 17, 24],
+			['due', 34, 49],
+		]);
+		for (const { transcript } of CORPUS) {
+			const tokens = ramble.parseRamble(transcript, options).tokens;
+			const spans = tokens.map(token => `${token.kind}:${token.start}-${token.end}`);
+			expect(new Set(spans).size).toBe(spans.length);
+		}
+	});
+
+	test('a character outside the BMP survives at the start of a title', () => {
+		const draft = parseRamble('😀 call mom tomorrow', options);
+		expect(draft.tasks.map(shape)).toEqual([expectedShape({ title: '😀 call mom', due: '2026-10-15' })]);
+	});
+
 	test('a subtask segment lies inside its parent segment', () => {
 		const draft = parseRamble('Plan the party with subtasks invitations and cake. Call mom.', options);
 		const [party, call] = draft.tasks;

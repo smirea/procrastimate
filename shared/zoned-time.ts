@@ -74,6 +74,15 @@ export function wallDate(at: number, zone: string): Date {
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
+export function zonedTimeOfDay(at: number, zone?: string): TimeOfDay {
+	if (zone === undefined) {
+		const date = new Date(at);
+		return `${pad(date.getHours())}:${pad(date.getMinutes())}` as TimeOfDay;
+	}
+	const wall = wallClock(at, zone);
+	return `${pad(wall.hour)}:${pad(wall.minute)}` as TimeOfDay;
+}
+
 export function zonedDateKey(at: number, zone?: string): DateKey {
 	if (zone === undefined) {
 		const date = new Date(at);

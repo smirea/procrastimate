@@ -44,8 +44,9 @@ export function rowWrites(before: Snapshot, after: Snapshot): RowWrite[] {
 		const previous = new Map(entitiesOf(before, kind).map(e => [e.id, e]));
 		const current = entitiesOf(after, kind);
 		for (const entity of current) {
-			const next = fieldsOf(kind, entity);
 			const old = previous.get(entity.id);
+			if (old === entity) continue;
+			const next = fieldsOf(kind, entity);
 			if (!old) {
 				writes.push({ op: 'put', kind, id: entity.id, values: next });
 				continue;

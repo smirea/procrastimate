@@ -257,6 +257,12 @@ describe('CSV edge cases', () => {
 		expect(backup.projects).toEqual([]);
 		expect(backup.warnings).toEqual(['budget.csv is not a Todoist project file, skipped']);
 	});
+
+	test('a file with a quote that is never closed is skipped with a warning instead of becoming one task', () => {
+		const backup = read(`${HEADER}\ntask,"Buy milk,,4,1,,\ntask,Call mom,,4,1,,\n`);
+		expect(backup.tasks).toEqual([]);
+		expect(backup.warnings).toEqual(['Errands [42].csv has a quote that is never closed, skipped']);
+	});
 });
 
 describe('merging into the store', () => {
