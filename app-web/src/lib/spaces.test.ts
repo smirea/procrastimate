@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'bun:test';
+import { expect, test } from 'bun:test';
 import { label, project, section, task } from 'shared/testing.ts';
 import { emptyData, homes, merged, sharedSpace, type SharedSpace } from './spaces.ts';
 
