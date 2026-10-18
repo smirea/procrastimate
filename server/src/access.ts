@@ -1,6 +1,5 @@
-import { and, eq, inArray, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNotNull, not, sql } from 'drizzle-orm';
 import { access, shares, type AccessRow } from '../../shared/db/schema';
-import { user } from './db/auth-schema';
 import type { Links } from '../../shared/dangling';
 import type { RowWrite } from '../../shared/rows';
 import { managesSpace, scopeOf, type Grant, type GuestRows } from '../../shared/scope';
@@ -8,10 +7,10 @@ import type { Db } from './db/postgres';
 import { loadLinks, withSpaceLocked } from './space';
 
 /**
- * The `access` table: one row per entity a human grantee may see in another user's space, which PowerSync's
- * `shared` stream reads and `guestRefusal` checks a guest's writes against. Recomputed from the owner's shares with
- * `scopeOf` after every share change, and after an upload only when a write moved what a guest may see in a space
- * that has human grantees. AI accounts never sync, so they get no rows.
+ * The `access` table: one row per entity a grantee, a person or an AI account alike, may see in another user's space.
+ * Every read and write of a grantee checks it, and PowerSync's `shared` stream reads it for the people who sync.
+ * Recomputed from the owner's shares with `scopeOf` after every share change, and after an upload only when a write
+ * moved what a grantee may see. A manager of the whole space sees everything and needs none, and links have no grantee.
  */
 
 const rowId = (grantee: string, kind: AccessRow['kind'], entityId: string) => `${grantee}:${kind}:${entityId}`;
@@ -41,21 +40,19 @@ export function accessRows(owner: string, grantee: string, snapshot: Links, gran
 }
 
 /**
- * Rewrites the space's `access` rows from its shares to humans: link shares have no grantee, and AI accounts read
- * through the API. A share change names its `grantee`, whose rows alone it can move; a recompute after an upload
- * names none and rewrites every grantee's. The tree is read only when someone human is shared with. Callers hold the
- * space's lock.
+ * Rewrites the space's `access` rows from its shares. A share change names its `grantee`, whose rows alone it can move;
+ * a recompute after an upload names none and rewrites every grantee's. The tree is read only when a grantee needs rows.
+ * Callers hold the space's lock.
  */
 export async function syncAccess(db: Db, owner: string, grantee?: string): Promise<void> {
-	const [granted, existing] = await Promise.all([
+	const [shared, existing] = await Promise.all([
 		db
 			.select({ grantee: shares.grantee, targetKind: shares.targetKind, targetId: shares.targetId, role: shares.role })
 			.from(shares)
-			.innerJoin(user, eq(user.id, shares.grantee))
 			.where(
 				and(
 					eq(shares.userId, owner),
-					eq(user.kind, 'human'),
+					isNotNull(shares.grantee),
 					grantee === undefined ? undefined : eq(shares.grantee, grantee),
 				),
 			),
@@ -64,10 +61,11 @@ export async function syncAccess(db: Db, owner: string, grantee?: string): Promi
 			.from(access)
 			.where(and(eq(access.owner, owner), grantee === undefined ? undefined : eq(access.grantee, grantee))),
 	]);
+	const granted = [...Map.groupBy(shared, share => share.grantee!)].filter(([, grants]) => !managesSpace(grants));
 	const wanted = new Map<string, AccessRow>();
 	if (granted.length) {
 		const tree = await loadLinks(db, owner);
-		for (const [id, grants] of Map.groupBy(granted, share => share.grantee!)) {
+		for (const [id, grants] of granted) {
 			for (const row of accessRows(owner, id, tree, grants)) wanted.set(row.id, row);
 		}
 	}
@@ -129,16 +127,21 @@ export function touchesAccess(write: RowWrite): boolean {
 }
 
 /**
- * Recomputes a space's rows after an upload. The common case, a space with no human grantee, costs one query and
- * stops. The rest runs under the space's advisory lock, the same one the share routes take, so a share change and a
+ * Recomputes a space's rows after an upload. The common case, a space shared with nobody but managers, costs one query
+ * and stops. The rest runs under the space's advisory lock, the same one the share routes take, so a share change and a
  * recompute never read shares the other is changing.
  */
 export async function recomputeAccess(db: Db, owner: string): Promise<void> {
 	const [shared] = await db
 		.select({ id: shares.id })
 		.from(shares)
-		.innerJoin(user, eq(user.id, shares.grantee))
-		.where(and(eq(shares.userId, owner), eq(user.kind, 'human')))
+		.where(
+			and(
+				eq(shares.userId, owner),
+				isNotNull(shares.grantee),
+				not(and(eq(shares.targetKind, 'space'), eq(shares.role, 'edit'))!),
+			),
+		)
 		.limit(1);
 	if (!shared) return;
 	await withSpaceLocked(db, owner, tx => syncAccess(tx, owner));

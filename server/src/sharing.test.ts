@@ -7,6 +7,7 @@ import {
 	json,
 	ORIGIN,
 	type Session,
+	shareWith,
 	signUp,
 	taskRow,
 	testApp,
@@ -462,6 +463,39 @@ describe('AI accounts', () => {
 		expect((await app.fetch(`/api/activity?id=${shown}`, { headers })).status).toBe(200);
 		expect((await app.fetch(`/api/activity?id=${hidden}`, { headers })).status).toBe(404);
 		expect((await app.fetch(`/api/comments?id=${hidden}`, { headers })).status).toBe(404);
+	});
+
+	test('an AI account checks access like a person: rows for a narrowed share, none as the whole space’s manager', async () => {
+		const project = crypto.randomUUID();
+		expect(
+			await upload(app, owner, [
+				{
+					op: 'put',
+					table: 'projects',
+					id: project,
+					values: { id: project, user_id: owner.person.id, name: 'Errands', created_at: 1 },
+				},
+			]),
+		).toEqual([]);
+		const inside = await newTask('Buy stamps', { projectId: project });
+		const outside = await newTask('Not the bot’s');
+		const { person: ai, headers } = await aiAccount(app, owner, 'Errand bot');
+		expect(await accessRows(ai.id)).toEqual([]);
+		const { shares } = await json<{ shares: ShareView[] }>(call(owner, 'GET', '/api/shares'));
+		const whole = shares.find(s => s.grantee?.id === ai.id && s.target.kind === 'space')!;
+		await call(owner, 'DELETE', `/api/shares?id=${whole.id}`);
+		await shareWith(app, owner, { kind: 'project', id: project }, ai.id, 'edit');
+		expect(await accessRows(ai.id)).toEqual([`project:${project}:edit`, `task:${inside}:edit`]);
+		const edit = (id: string) =>
+			app.fetch(`/api/tasks?id=${id}&space=${owner.person.id}`, {
+				method: 'PATCH',
+				headers,
+				body: JSON.stringify({ title: 'Edited by the bot' }),
+			});
+		expect((await edit(inside)).status).toBe(200);
+		expect((await edit(outside)).status).toBe(404);
+		const [row] = await app.db.select({ title: tasks.title }).from(tasks).where(eq(tasks.id, inside));
+		expect(row).toEqual({ title: 'Edited by the bot' });
 	});
 });
 

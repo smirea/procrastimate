@@ -1,4 +1,4 @@
-import { and, eq, exists, inArray, sql, type SQL } from 'drizzle-orm';
+import { and, eq, exists, sql, type SQL } from 'drizzle-orm';
 import type { PgColumn } from 'drizzle-orm/pg-core';
 import type { Actor } from '../../shared/auth';
 import { resolveDangling, type Entities, type Links } from '../../shared/dangling';
@@ -13,7 +13,7 @@ import {
 	type AccessRow,
 } from '../../shared/db/schema';
 import { SETTINGS_ID } from '../../shared/model';
-import { managesSpace, scopeOf, type Scope } from '../../shared/scope';
+import { managesSpace } from '../../shared/scope';
 import { byCreation } from '../../shared/snapshot';
 import { isTimeZone } from '../../shared/zoned-time';
 import type { Access } from './auth';
@@ -103,15 +103,13 @@ export async function accessIn(db: Db, owner: string, actor: Actor): Promise<Acc
  * rows name, which the server keeps equal to `scopeOf`. Any other AI account has no `access` rows, so its scope is
  * worked out from the tree.
  */
-export type Sight = { kind: 'all' } | { kind: 'rows'; grantee: string } | { kind: 'scope'; scope: Scope };
+/** What a caller sees: everything (the owner, or a manager of the whole space), or what its `access` rows name. */
+export type Sight = { kind: 'all' } | { kind: 'rows'; grantee: string };
 
 export async function sightOf(db: Db, owner: string, actor: Actor, access: Access): Promise<Sight> {
 	if (access.role === 'owner' || managesSpace(access.shares)) return { kind: 'all' };
-	if (actor.kind === 'human') return { kind: 'rows', grantee: actor.id };
-	return { kind: 'scope', scope: scopeOf(await loadLinks(db, owner), access.shares) };
+	return { kind: 'rows', grantee: actor.id };
 }
-
-const SCOPE_SETS = { task: 'tasks', project: 'projects', section: 'sections', label: 'labels' } as const;
 
 /** A condition on an id column of `owner`'s space, of rows of `kind`, that holds for the rows `sight` sees. */
 export function seenBy(
@@ -138,8 +136,6 @@ export function seenBy(
 						),
 					),
 			);
-		case 'scope':
-			return inArray(id, [...sight.scope[SCOPE_SETS[kind]]]);
 	}
 }
 
