@@ -11,11 +11,10 @@ import type { Person } from 'shared/sharing.ts';
 import * as comments from 'shared/comments.ts';
 import * as rules from 'shared/store.ts';
 import { mergeBackup, type ImportSummary, type TodoistBackup } from 'shared/todoist.ts';
-import { CHANGE_LOG, powerSync, readSince, trimChanges, writeRows } from './database.ts';
+import { CHANGE_LOG, powerSync, readSince, storedOwner, storeOwner, trimChanges, writeRows } from './database.ts';
 import {
 	forgetDatabaseId,
 	forgetLegacyDocument,
-	loadOwner,
 	onOwnerChange,
 	loadPeople,
 	loadRemindersCheckedAt,
@@ -179,16 +178,21 @@ class Store {
 		this.#switching = this.#switching
 			.then(() => this.#queue)
 			.then(async () => {
-				const previous = loadOwner();
+				const previous = await storedOwner();
 				if (previous !== null && previous !== userId) {
 					await clearUntilDone();
 					forgetDatabaseId();
 				}
 				if (this.#owner !== userId) return;
+				await storeOwner(userId);
 				saveOwner(userId);
 				this.#opening = false;
 				for (const entry of loadUnwritten(userId)) this.#write(entry);
 				this.#reload();
+			})
+			.catch(error => {
+				reportError(error);
+				if (this.#owner === userId) this.unreadable = true;
 			});
 		return this.#switching;
 	}

@@ -4,7 +4,7 @@ import { and, eq, getTableName, gt, inArray, lte, max, min } from 'drizzle-orm';
 import type { RowsRead, StoredRow, TableRead } from 'shared/local-rows.ts';
 import type { Kind } from 'shared/model.ts';
 import { KIND_OF, TABLE_OF, type RowWrite, type SyncedTable } from 'shared/rows.ts';
-import { AppSchema, CHANGE_LOG_STATEMENTS, changeLog, localTables } from './generated/tables.ts';
+import { AppSchema, changeLog, databaseOwner, localTables, SETUP_STATEMENTS } from './generated/tables.ts';
 
 export const powerSync = new PowerSyncDatabase({ schema: AppSchema, database: { dbFilename: 'procrastimate.db' } });
 const db = wrapPowerSyncWithDrizzle(powerSync, { schema: localTables });
@@ -21,19 +21,39 @@ const KEPT_CHANGES = 1000;
 /** Past this many changed ids a table is read whole, which also keeps its query under SQLite's variable limit. */
 const WHOLE_TABLE_ABOVE = 500;
 
-let logging: Promise<void> | null = null;
+let settingUp: Promise<void> | null = null;
 
-/** Creates the change log and its triggers (`CHANGE_LOG_STATEMENTS`) once per database; every tab may, harmlessly. */
-function logChanges(): Promise<void> {
-	logging ??= powerSync
+/** Creates the change log, its triggers, and the owner table (`SETUP_STATEMENTS`) once per database; every tab may. */
+function setUp(): Promise<void> {
+	settingUp ??= powerSync
 		.writeTransaction(async tx => {
-			for (const statement of CHANGE_LOG_STATEMENTS) await tx.execute(statement);
+			for (const statement of SETUP_STATEMENTS) await tx.execute(statement);
 		})
 		.catch(error => {
-			logging = null;
+			settingUp = null;
 			throw error;
 		});
-	return logging;
+	return settingUp;
+}
+
+/** Whose rows the database holds, or null for a database no account opened yet. */
+export async function storedOwner(): Promise<string | null> {
+	await setUp();
+	const [row] = await db.select().from(databaseOwner);
+	return row?.owner ?? null;
+}
+
+/**
+ * Names the database `owner`'s, inside the database rather than in `localStorage`: the browser's storage may drop the
+ * last commits when a page closes right after them, but never out of order, so this lands only with the clear before it.
+ * A name in `localStorage` outlived a lost clear and showed the previous account's rows.
+ */
+export async function storeOwner(owner: string): Promise<void> {
+	await setUp();
+	await db.transaction(async tx => {
+		await tx.delete(databaseOwner);
+		await tx.insert(databaseOwner).values({ owner });
+	});
 }
 
 const READ_TABLES = [...Object.values(TABLE_OF), 'access'] as const satisfies readonly (SyncedTable | 'access')[];
@@ -46,7 +66,7 @@ const kindOf = (table: ReadTable): Kind | 'access' => (table === 'access' ? 'acc
  * the log no longer reaches back to it.
  */
 export async function readSince(cursor: number | null): Promise<Read> {
-	await logChanges();
+	await setUp();
 	return db.transaction(
 		async tx => {
 			const [bounds] = await tx.select({ first: min(changeLog.seq), last: max(changeLog.seq) }).from(changeLog);

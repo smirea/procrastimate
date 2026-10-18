@@ -2,7 +2,7 @@ import { z } from 'zod';
 import type { RowWrite } from 'shared/rows.ts';
 import { personSchema, type Person } from 'shared/sharing.ts';
 
-/** Whose rows this browser's database holds. It outlives sign-out, so only a different account clears them. */
+/** The account this browser's database was last opened for, so other tabs reload when it changes. */
 const OWNER_KEY = 'procrastimate-owner';
 const INSTALL_KEY = 'procrastimate-install';
 const DATABASE_KEY = 'procrastimate-database';
@@ -16,8 +16,6 @@ const peopleSchema = z.array(personSchema);
 export function forgetLegacyDocument() {
 	localStorage.removeItem(LEGACY_DOCUMENT_KEY);
 }
-
-export const loadOwner = () => localStorage.getItem(OWNER_KEY);
 
 export function saveOwner(id: string) {
 	localStorage.setItem(OWNER_KEY, id);

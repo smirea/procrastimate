@@ -450,6 +450,34 @@ test('this browser belongs to a new account only once the previous one’s rows 
 	await expect(a.app.row(title)).toHaveCount(0);
 });
 
+test('a switch whose clear the browser lost still clears before the next account reads', async ({ browser }) => {
+	const a = await device(browser);
+	const title = unique('Previous account’s');
+	await a.app.add(title);
+	await settled(a);
+	await signOutOf(a);
+	const origin = new URL(a.page.url()).origin;
+	const email = `other-${crypto.randomUUID().slice(0, 8)}@procrastimate.test`;
+	const outside = await browser.newContext();
+	const created = await outside.request.post(`${origin}/api/auth/sign-up/email`, {
+		headers: { origin },
+		data: { email, password: E2E_PASSWORD, name: 'Other' },
+	});
+	const { user } = (await created.json()) as { user: { id: string } };
+	await outside.close();
+	// What a page closed right after a switch can leave: the browser kept `localStorage`, which already names the new
+	// account, and dropped the database's last commits, the clear among them.
+	await a.page.evaluate(id => localStorage.setItem('procrastimate-owner', id), user.id);
+	// Without sync, since the new account's first checkpoint would drop the other account's rows anyway.
+	await a.context.route('**/api/sync/token', route => route.abort());
+
+	await signInTo(a, email, false);
+	await a.page.goto('/no-date');
+	await expect.poll(() => a.page.evaluate(() => window.procrastimate?.reads().reloads ?? 0)).toBeGreaterThan(0);
+	expect(await a.page.evaluate(t => window.procrastimate.taskId(t), title)).toBeUndefined();
+	await expect(a.app.row(title)).toHaveCount(0);
+});
+
 function refuseDatabase() {
 	if (!sessionStorage.getItem('e2e-no-database')) return;
 	const refuse = function () {

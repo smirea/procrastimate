@@ -45,6 +45,7 @@ const camel = (name: string) => name.replace(/_(\w)/g, (_, c: string) => c.toUpp
  * here, loudly, with "no such table".
  */
 const CHANGE_LOG = 'procrastimate_changes';
+const DATABASE_OWNER = 'procrastimate_owner';
 
 export function changeLogStatements(): string[] {
 	const events = [
@@ -99,7 +100,16 @@ export function webTablesModule(): string {
 		"\tid: text('id').notNull(),",
 		'});',
 		'',
-		`export const CHANGE_LOG_STATEMENTS = ${JSON.stringify(changeLogStatements(), null, '\t')};`,
+		'/** Whose rows the database holds. Local only, like `changeLog`. */',
+		`export const databaseOwner = sqliteTable('${DATABASE_OWNER}', {`,
+		"\towner: text('owner').primaryKey(),",
+		'});',
+		'',
+		`export const SETUP_STATEMENTS = ${JSON.stringify(
+			[...changeLogStatements(), `CREATE TABLE IF NOT EXISTS ${DATABASE_OWNER} (owner TEXT PRIMARY KEY)`],
+			null,
+			'\t',
+		)};`,
 		'',
 	].join('\n');
 }
