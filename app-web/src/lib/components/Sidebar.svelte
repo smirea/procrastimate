@@ -22,7 +22,7 @@
 	import { labelIcon } from '../label-icon.ts';
 	import { clock, mobile, motion, sheets } from '../ui.svelte.ts';
 	import { sharedEntries } from 'shared/space-routing.ts';
-	import { inboxTasks, labelViewTasks, todayTasks } from 'shared/views.ts';
+	import { inboxTasks, openCounts, todayTasks } from 'shared/views.ts';
 	import { eventGroups, placeGroups } from 'shared/triggers.ts';
 
 	let { onquickadd, onsearch, onsettings }: { onquickadd: () => void; onsearch: () => void; onsettings: () => void } =
@@ -37,9 +37,10 @@
 		{ href: '/completed', label: 'Completed', icon: CheckCircle, count: 0 },
 	]);
 
+	const counts = $derived(openCounts(store.own.tasks, store.own.labels));
 	const labels = $derived(
 		store.own.labels
-			.map((label) => ({ label, count: labelViewTasks(store.own.tasks, label).length }))
+			.map((label) => ({ label, count: counts.labels.get(label.id) ?? 0 }))
 			.toSorted((a, b) => a.label.name.localeCompare(b.label.name, undefined, { sensitivity: 'base' })),
 	);
 

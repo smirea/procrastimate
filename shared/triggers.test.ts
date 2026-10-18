@@ -3,6 +3,7 @@ import type { Label, Task } from './task.ts';
 import * as triggers from './triggers.ts';
 import type { TaskEvent, TaskLocation } from './values.ts';
 import { describe, recorded, test } from './vectors/record.ts';
+import { task as base } from './testing.ts';
 
 const currentOccurrence = recorded('triggers', triggers.currentOccurrence);
 const eventGroups = recorded('triggers', triggers.eventGroups);
@@ -43,29 +44,7 @@ const park = (patch: Partial<TaskLocation> = {}): TaskLocation => ({
 });
 
 let created = 0;
-const task = (id: string, fields: Partial<Task> = {}): Task => ({
-	id,
-	parentId: null,
-	order: 0,
-	title: id,
-	notes: '',
-	projectId: null,
-	sectionId: null,
-	labelIds: [],
-	due: null,
-	recurrence: null,
-	priority: 4,
-	reminders: [],
-	location: null,
-	event: null,
-	images: [],
-	createdAt: ++created,
-	completedAt: null,
-	createdBy: null,
-	completedBy: null,
-	lastCompletedAt: null,
-	...fields,
-});
+const task = (id: string, fields: Partial<Task> = {}): Task => base(id, { createdAt: ++created, ...fields });
 
 describe('scheduledDue', () => {
 	test('an event task sits on its edge', () => {

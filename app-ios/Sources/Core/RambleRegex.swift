@@ -171,9 +171,8 @@ struct JSString {
         return ns.substring(with: NSRange(location: lower, length: upper - lower))
     }
 
-    func char(_ index: Int) -> String {
-        guard index >= 0, index < count else { return "" }
-        return ns.substring(with: NSRange(location: index, length: 1))
+    func unit(_ index: Int) -> UInt16 {
+        ns.character(at: index)
     }
 }
 
@@ -184,5 +183,7 @@ func rambleFold(_ text: String) -> String {
 func rambleCapitalize(_ text: String) -> String {
     let js = JSString(text)
     guard js.count > 0 else { return "" }
-    return js.char(0).uppercased(with: Locale(identifier: "en_US_POSIX")) + js.slice(1, js.count)
+    let first = js.unit(0)
+    if UTF16.isLeadSurrogate(first) || UTF16.isTrailSurrogate(first) { return text }
+    return js.slice(0, 1).uppercased(with: Locale(identifier: "en_US_POSIX")) + js.slice(1, js.count)
 }

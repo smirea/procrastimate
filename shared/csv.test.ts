@@ -28,3 +28,7 @@ test('reads CRLF line endings, empty fields, and a last row without a newline', 
 test('a quote inside an unquoted field is literal', () => {
 	expect(parseCsv('say 5" nails,ok')).toEqual([['say 5" nails', 'ok']]);
 });
+
+test('a quoted field that is never closed is an error, not one field holding the rest of the file', () => {
+	expect(() => csv.parseCsv('task,"Buy milk,,4\ntask,Call mom,,4\n')).toThrow('never closed');
+});

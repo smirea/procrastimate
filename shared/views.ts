@@ -162,6 +162,30 @@ export function labelViewTasks(tasks: readonly Task[], label: Label) {
 	return label.place ? placeTasks(tasks, placeKey(label.place)) : labelTasks(tasks, label.id);
 }
 
+/**
+ * How many open tasks each project and label view lists, in one pass, for the sidebar's counts: a project counts its
+ * top-level tasks, a label every task carrying it, and a saved place every task at it, as the views do.
+ */
+export function openCounts(
+	tasks: readonly Task[],
+	labels: readonly Label[],
+): { projects: Map<string, number>; labels: Map<string, number> } {
+	const projects = new Map<string, number>();
+	const byLabel = new Map<string, number>();
+	const byPlace = new Map<string, number>();
+	const bump = (map: Map<string, number>, key: string) => map.set(key, (map.get(key) ?? 0) + 1);
+	for (const task of open(tasks)) {
+		if (task.parentId === null && task.projectId) bump(projects, task.projectId);
+		for (const id of task.labelIds) bump(byLabel, id);
+		if (task.location) bump(byPlace, placeKey(task.location));
+	}
+	const counts = new Map<string, number>();
+	for (const label of labels) {
+		counts.set(label.id, (label.place ? byPlace.get(placeKey(label.place)) : byLabel.get(label.id)) ?? 0);
+	}
+	return { projects, labels: counts };
+}
+
 export function eventTasks(tasks: readonly Task[], eventId: string, today: DateKey) {
 	return open(tasks)
 		.filter(t => t.event?.id === eventId)

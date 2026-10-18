@@ -14,6 +14,7 @@
 	import AddTaskButton from '#lib/components/AddTaskButton.svelte';
 	import ProjectSection from '#lib/components/ProjectSection.svelte';
 	import Popover from '#lib/components/Popover.svelte';
+	import InlineEdit from '#lib/components/InlineEdit.svelte';
 	import CompletedSection from '#lib/components/CompletedSection.svelte';
 	import CompletedToggle from '#lib/components/CompletedToggle.svelte';
 	import { store } from '#lib/store.svelte.ts';
@@ -42,16 +43,6 @@
 
 	const canAdd = $derived(!!project && canAddHere({ kind: 'project', id: project.id }));
 
-	function addSection(name: string) {
-		if (project && name.trim()) store.addSection(project.id, name.trim());
-		addingSection = false;
-	}
-
-	function rename(name: string) {
-		if (project && name.trim()) store.renameProject(project.id, name.trim());
-		renaming = false;
-	}
-
 	function remove() {
 		if (!project) return;
 		toastDeleted(project.name, store.deleteProject(project.id));
@@ -63,6 +54,7 @@
 
 {#if project}
 	<View
+		name={project.name}
 		open={tasks.length}
 		empty={tasks.length === 0 && sections.length === 0 && !anyDone}
 		emptyTitle="No tasks yet"
@@ -73,17 +65,12 @@
 	>
 		{#snippet title()}
 			{#if renaming}
-				<!-- svelte-ignore a11y_autofocus -->
-				<input
+				<InlineEdit
 					class="w-full rounded-xl bg-ink/[0.05] px-1.5 text-[26px] font-semibold tracking-tight outline-none"
-					aria-label="Project name"
+					label="Project name"
 					value={project.name}
-					autofocus
-					onblur={(e) => rename(e.currentTarget.value)}
-					onkeydown={(e) => {
-						if (e.key === 'Enter') rename(e.currentTarget.value);
-						if (e.key === 'Escape') renaming = false;
-					}}
+					oncommit={(name) => store.renameProject(project.id, name)}
+					onclose={() => (renaming = false)}
 				/>
 			{:else}
 				<h1 class="truncate text-[26px] font-semibold tracking-tight">{project.name}</h1>
@@ -140,17 +127,12 @@
 		{/each}
 		{#if !home}
 			{#if addingSection}
-				<!-- svelte-ignore a11y_autofocus -->
-				<input
+				<InlineEdit
 					class="field mt-6 w-full text-[13px] font-semibold"
-					aria-label="New section name"
+					label="New section name"
 					placeholder="Section name"
-					autofocus
-					onblur={(e) => addSection(e.currentTarget.value)}
-					onkeydown={(e) => {
-						if (e.key === 'Enter') addSection(e.currentTarget.value);
-						if (e.key === 'Escape') addingSection = false;
-					}}
+					oncommit={(name) => store.addSection(project.id, name)}
+					onclose={() => (addingSection = false)}
 				/>
 			{:else}
 				<button

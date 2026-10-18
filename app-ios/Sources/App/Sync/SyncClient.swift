@@ -94,6 +94,7 @@ final class SyncClient {
                 if store.written(batch.version) { await reloadNow() }
             } catch {
                 ErrorReport.log("Could not save a change", error: error)
+                toasts?.show("Couldn’t save that change")
                 _ = store.written(batch.version)
                 await reloadNow()
             }
@@ -230,14 +231,22 @@ final class SyncClient {
     private func waitUntil(_ limit: Duration, _ done: (any SyncStatusData, Bool) -> Bool) async {
         let deadline = ContinuousClock.now + limit
         while ContinuousClock.now < deadline {
-            let pending = ((try? await database.powerSync.getCrudBatch(limit: 1)) ?? nil) != nil
+            let pending: Bool
+            do {
+                pending = try await database.powerSync.getCrudBatch(limit: 1) != nil
+            } catch {
+                pending = true
+            }
             if done(database.powerSync.currentStatus, pending) { return }
             try? await Task.sleep(for: .milliseconds(100))
         }
     }
 
-    func signOut() {
+    func disconnect() {
         Task { try? await database.powerSync.disconnect() }
+    }
+
+    func signOut() {
         if let token = SessionToken.read() {
             var request = URLRequest(url: AppEnvironment.apiURL.appending(path: "api/auth/sign-out"))
             request.httpMethod = "POST"
@@ -247,8 +256,7 @@ final class SyncClient {
             request.httpBody = Data("{}".utf8)
             Task { _ = try? await APIClient.session.data(for: request) }
         }
-        SessionToken.clear()
-        session?.signedIn = Launch.signedIn
+        session?.end()
     }
 
     /// The session belongs to `id`. Any other previous owner is another user, whose rows, images, and names neither
@@ -287,9 +295,7 @@ final class SyncClient {
     }
 
     private func reject() {
-        Task { try? await database.powerSync.disconnect() }
-        SessionToken.clear()
-        session?.signedIn = Launch.signedIn
+        session?.end()
     }
 
     private func rejected(_ rows: [(kind: EntityKind, id: String)]) {

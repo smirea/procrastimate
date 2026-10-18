@@ -12,12 +12,19 @@ export type TimeOfDay = `${number}:${number}`;
 export const DATE_KEY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 export const TIME_OF_DAY_PATTERN = /^\d{2}:\d{2}$/;
 
+/** `2026-02-31` has the shape but names no day; `Date` would roll it over to March. */
+const isCalendarDate = (value: string) => {
+	const [y, m, d] = value.split('-').map(Number) as [number, number, number];
+	const date = new Date(y, m - 1, d);
+	return date.getMonth() === m - 1 && date.getDate() === d;
+};
+
 /**
  * Custom so the parsed type is the template literal. The metadata is their JSON Schema. Every `id` names the type in
  * the OpenAPI document and in Swift, and `x-` keys tell the Swift generator how to shape it.
  */
 export const dateKeySchema = z
-	.custom<DateKey>(v => typeof v === 'string' && DATE_KEY_PATTERN.test(v))
+	.custom<DateKey>(v => typeof v === 'string' && DATE_KEY_PATTERN.test(v) && isCalendarDate(v))
 	.meta({
 		id: 'DateKey',
 		description: 'Local calendar date, `YYYY-MM-DD`.',
@@ -25,7 +32,7 @@ export const dateKeySchema = z
 		pattern: DATE_KEY_PATTERN.source,
 	});
 export const timeOfDaySchema = z
-	.custom<TimeOfDay>(v => typeof v === 'string' && TIME_OF_DAY_PATTERN.test(v))
+	.custom<TimeOfDay>(v => typeof v === 'string' && TIME_OF_DAY_PATTERN.test(v) && v < '24' && v.slice(3) < '60')
 	.meta({
 		id: 'TimeOfDay',
 		description: 'Local wall-clock time, `HH:mm`.',
@@ -80,7 +87,19 @@ export const recurrenceUnitSchema = z.enum(['day', 'weekday', 'week', 'month', '
 export const recurrenceSchema = z
 	.discriminatedUnion('unit', [
 		z.object({ interval, unit: recurrenceUnitSchema.exclude(['week', 'month']) }),
-		z.object({ interval, unit: z.literal('week'), days: z.array(weekdaySchema).min(2).readonly().optional() }),
+		z.object({
+			interval,
+			unit: z.literal('week'),
+			days: z
+				.array(weekdaySchema)
+				.min(2)
+				.readonly()
+				.refine(
+					days => days.every((day, i) => i === 0 || (day + 6) % 7 > (days[i - 1]! + 6) % 7),
+					'`days` are sorted Monday first, each once',
+				)
+				.optional(),
+		}),
 		z
 			.object({
 				interval,

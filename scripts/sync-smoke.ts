@@ -21,10 +21,7 @@ const databaseUrl = flag('--database') ?? override?.DATABASE_URL;
 const origin = api;
 
 function check(condition: unknown, message: string): asserts condition {
-	if (!condition) {
-		console.error(`FAIL ${message}`);
-		process.exit(1);
-	}
+	if (!condition) throw new Error(`FAIL ${message}`);
 	console.log(`ok   ${message}`);
 }
 

@@ -24,16 +24,22 @@ public enum Subtasks {
         return groups.mapValues { $0.stableSorted(by: siblingOrder) }
     }
 
-    public static func descendantsOf(_ tasks: [TaskItem], _ id: String) -> [TaskItem] {
-        let children = groupChildren(tasks)
+    /// Pass `children` from `groupChildren` when walking several roots of one list, so the index is built once.
+    public static func descendantsOf(
+        _ tasks: [TaskItem],
+        _ id: String,
+        children: [String: [TaskItem]]? = nil
+    ) -> [TaskItem] {
+        let children = children ?? groupChildren(tasks)
         var out: [TaskItem] = []
         var queue = [id]
-        while !queue.isEmpty {
-            let next = queue.removeFirst()
-            for child in children[next] ?? [] {
+        var i = 0
+        while i < queue.count {
+            for child in children[queue[i]] ?? [] {
                 out.append(child)
                 queue.append(child.id)
             }
+            i += 1
         }
         return out
     }

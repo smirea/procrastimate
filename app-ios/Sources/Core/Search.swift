@@ -33,6 +33,11 @@ public enum Search {
         var out: [UInt16] = []
         var map: [Int] = []
         for (i, unit) in units.enumerated() {
+            if unit < 0x80 {
+                out.append((0x41...0x5A).contains(unit) ? unit + 0x20 : unit)
+                map.append(i)
+                continue
+            }
             var folded = [unit]
             if let scalar = Unicode.Scalar(unit) {
                 let base = String(scalar).decomposedStringWithCanonicalMapping.unicodeScalars.filter { !UTF16Text.isMark($0) }

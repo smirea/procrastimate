@@ -1,4 +1,5 @@
 import { betterAuth } from 'better-auth';
+import { APIError } from 'better-auth/api';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { bearer } from 'better-auth/plugins';
 import type { AuthMethods } from '../../shared/api/contract';
@@ -203,9 +204,16 @@ const asPerson = (row: UserRow): Person => ({
 	ownerId: row.ownerId ?? null,
 });
 
+/**
+ * Better Auth throws where its handler would answer an error. A refused credential is no session; anything else, a
+ * database that cannot be read above all, stays an error, so the request answers 5xx and the clients keep their
+ * session instead of signing out on the 401 a swallowed failure would turn into.
+ */
 export async function readSession(request: Request, { auth }: App): Promise<SessionUser | null> {
-	// Better Auth throws where its handler would answer an error, and a failed read is no session either way.
-	const session = await auth.api.getSession({ headers: request.headers }).catch(() => null);
+	const session = await auth.api.getSession({ headers: request.headers }).catch((error: unknown) => {
+		if (error instanceof APIError && error.statusCode === 401) return null;
+		throw error;
+	});
 	if (!session?.user.id) return null;
 	return { ...asPerson(session.user), email: session.user.email ?? '' };
 }

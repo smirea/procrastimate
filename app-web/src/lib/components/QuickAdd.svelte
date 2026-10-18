@@ -360,7 +360,7 @@
 			{#if showMic}
 				<button
 					type="button"
-					class="mic absolute top-1/2 right-1 grid size-8 -translate-y-1/2 place-items-center rounded-full bg-accent text-on-accent transition-transform active:scale-90"
+					class="mic hit-area absolute top-1/2 right-1 grid size-8 -translate-y-1/2 place-items-center rounded-full bg-accent text-on-accent transition-transform active:scale-90"
 					aria-label="Ramble"
 					onmousedown={(e) => e.preventDefault()}
 					onclick={() => sheets.openRamble(defaults)}

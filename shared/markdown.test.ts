@@ -2,34 +2,13 @@ import { expect } from 'bun:test';
 import * as markdown from './markdown.ts';
 import type { Task } from './task.ts';
 import { describe, recorded, test } from './vectors/record.ts';
+import { task as base } from './testing.ts';
 
 const toMarkdown = recorded('markdown', markdown.toMarkdown);
 const projectDocument = recorded('markdown', markdown.projectDocument);
 
 let created = 0;
-const task = (id: string, fields: Partial<Task> = {}): Task => ({
-	id,
-	parentId: null,
-	order: 0,
-	title: id,
-	notes: '',
-	projectId: null,
-	sectionId: null,
-	labelIds: [],
-	due: null,
-	recurrence: null,
-	priority: 4,
-	reminders: [],
-	location: null,
-	event: null,
-	images: [],
-	createdAt: ++created,
-	completedAt: null,
-	createdBy: null,
-	completedBy: null,
-	lastCompletedAt: null,
-	...fields,
-});
+const task = (id: string, fields: Partial<Task> = {}): Task => base(id, { createdAt: ++created, ...fields });
 
 describe('toMarkdown', () => {
 	test('a task is its title with its notes nested under it, and none of its dates, priority, project, or labels', () => {

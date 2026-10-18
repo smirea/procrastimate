@@ -58,6 +58,7 @@ private struct LocationSheet: View {
     @Environment(\.dismiss) private var dismiss
     /// `PlaceChoices.RecentPick`s as JSON, kept on this device only, since only iOS picks places.
     @AppStorage("recentPlaces") private var recentPlaces = Data()
+    @Environment(Toasts.self) private var toasts
     let location: TaskLocation?
     let onChange: (TaskLocation?) -> Void
 
@@ -247,9 +248,18 @@ private struct LocationSheet: View {
         resolving = result
         Task {
             defer { resolving = nil }
-            guard let response = try? await MKLocalSearch(request: MKLocalSearch.Request(completion: result)).start(),
-                  let item = response.mapItems.first
-            else { return }
+            let response: MKLocalSearch.Response
+            do {
+                response = try await MKLocalSearch(request: MKLocalSearch.Request(completion: result)).start()
+            } catch {
+                ErrorReport.log("Could not look up a place", error: error)
+                toasts.show("Couldn’t find that place")
+                return
+            }
+            guard let item = response.mapItems.first else {
+                toasts.show("Couldn’t find that place")
+                return
+            }
             let coordinate = item.location.coordinate
             // The bounding region encloses every returned item, so only a single result is this place's own extent.
             let extent = response.mapItems.count == 1 ? response.boundingRegion : nil

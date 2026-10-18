@@ -45,6 +45,7 @@ final class Session {
             signedIn = Launch.signedIn
             return
         }
+        signedIn = true
         var request = URLRequest(url: AppEnvironment.apiURL.appending(path: "api/auth/get-session"))
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         let data: Data
@@ -55,20 +56,23 @@ final class Session {
             return
         }
         guard let http = response as? HTTPURLResponse else { return }
-        if http.statusCode == 401 || http.statusCode == 503 {
-            SessionToken.clear()
-            signedIn = Launch.signedIn
+        if http.statusCode == 401 {
+            end()
             return
         }
         guard http.statusCode == 200,
-              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let user = object["user"] as? [String: Any],
-              let id = user["id"] as? String else {
-            SessionToken.clear()
-            signedIn = Launch.signedIn
+              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return }
+        guard let user = object["user"] as? [String: Any], let id = user["id"] as? String else {
+            end()
             return
         }
         await adopt(id, email: user["email"] as? String, name: user["name"] as? String)
+    }
+
+    func end() {
+        SessionToken.clear()
+        sync.disconnect()
+        signedIn = Launch.signedIn
     }
 
     /// Remembers who the local database belongs to. Anyone else starts from an empty one that sync fills, so nothing

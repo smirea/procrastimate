@@ -1,7 +1,6 @@
 import { and, eq, sql } from 'drizzle-orm';
 import type { Actor } from '../../shared/auth';
-import { rambleUsage } from '../../shared/db/schema';
-import type { Snapshot } from '../../shared/model';
+import { labels, projects, rambleUsage, tasks } from '../../shared/db/schema';
 import { labelIdsOf, lastUsed, projectIdsOf, type Named } from '../../shared/name-search';
 import {
 	RAMBLE_BYTES_PER_SECOND,
@@ -22,14 +21,15 @@ import { cassetteUpstream } from './ramble-cassette';
 import type { Config } from './config';
 import { reportError } from './sentry';
 import { listenWorkerSocket, type Socket, type StreamEvents, type StreamHost, type WorkerSocket } from './sockets';
-import { loadTree, storedZone } from './space';
+import { storedZone } from './space';
 
 /**
  * Ramble's transcription proxy. A signed-in client streams PCM over `RAMBLE_SOCKET_PATH`, and the server forwards it
  * to ElevenLabs Scribe v2 Realtime with the key, keyterms, and session settings it holds, relaying the transcript
  * back. On Cloudflare it runs in the `Ramble` Durable Object, keyed by user, because the object's CPU budget resets
- * with every incoming message while a Worker's covers a whole socket, and because the object's `live` set counts the
- * seconds of the user's open sessions. Caps on audio seconds per session and per day bound what a leaked token costs.
+ * with every incoming message while a Worker's covers a whole socket, and because the object holds the one count of
+ * the user's day that every open session charges. Caps on audio seconds per session and per day bound what a leaked
+ * token costs.
  */
 
 export const ELEVENLABS_REALTIME_URL = 'wss://api.elevenlabs.io/v1/speech-to-text/realtime';
@@ -55,13 +55,31 @@ export const KEYTERM_TRIGGERS = ['subtask', 'priority', 'remind', 'project', 'la
 export const MAX_KEYTERMS = 50;
 export const MAX_KEYTERM_LENGTH = 20;
 
+export type KeytermSource = {
+	tasks: readonly { projectId: string | null; labelIds: string[]; createdAt: number }[];
+	projects: readonly Named[];
+	labels: readonly Named[];
+};
+
+export async function loadKeytermSource(db: Db, owner: string): Promise<KeytermSource> {
+	const [taskRows, projectRows, labelRows] = await Promise.all([
+		db
+			.select({ projectId: tasks.projectId, labelIds: tasks.labelIds, createdAt: tasks.createdAt })
+			.from(tasks)
+			.where(eq(tasks.userId, owner)),
+		db.select({ id: projects.id, name: projects.name }).from(projects).where(eq(projects.userId, owner)),
+		db.select({ id: labels.id, name: labels.name }).from(labels).where(eq(labels.userId, owner)),
+	]);
+	return { tasks: taskRows, projects: projectRows, labels: labelRows };
+}
+
 /**
  * Trigger words, then project and label names by the recency `#` and `@` autocomplete uses, then alphabetically.
  * ElevenLabs takes at most 50 terms of at most 20 characters, so longer names are skipped.
  */
-export function rambleKeyterms(snapshot: Pick<Snapshot, 'tasks' | 'projects' | 'labels'>): string[] {
+export function rambleKeyterms(snapshot: KeytermSource): string[] {
 	const used = new Map([...lastUsed(snapshot.tasks, projectIdsOf), ...lastUsed(snapshot.tasks, labelIdsOf)]);
-	const names = ([...snapshot.projects, ...snapshot.labels] as Named[])
+	const names = [...snapshot.projects, ...snapshot.labels]
 		.toSorted(
 			(a, b) =>
 				(used.get(b.id) ?? 0) - (used.get(a.id) ?? 0) || a.name.localeCompare(b.name, 'en-US', { sensitivity: 'base' }),
@@ -135,11 +153,15 @@ export function rambleConfig(
 
 type RambleGrant = { day: string; seconds: number };
 
+type Tally = { seconds: number };
+
+type Day = { key: DateKey; stored: number; live: Set<Tally>; loaded: Promise<void> };
+
 export type Ramble = {
 	stream: StreamHost;
 	connect: ConnectUpstream | null;
-	/** Open sessions, with the audio seconds each has streamed on its current day and not yet stored. */
-	live: Set<{ day: string; seconds: number }>;
+	/** The days with sessions, keyed `${userId}:${day}`. */
+	days: Map<string, Day>;
 	budget: RambleBudget | null;
 };
 
@@ -147,9 +169,42 @@ export function ramble(stream: StreamHost, config: RambleConfig): Ramble {
 	return {
 		stream,
 		connect: config.connect,
-		live: new Set(),
+		days: new Map(),
 		budget: config.budget ?? null,
 	};
+}
+
+function dayOf(ramble: Ramble, usage: RambleUsage, userId: string, key: DateKey): Day {
+	const id = `${userId}:${key}`;
+	const existing = ramble.days.get(id);
+	if (existing) return existing;
+	for (const [other, past] of ramble.days) {
+		if (other.startsWith(`${userId}:`) && !past.live.size) ramble.days.delete(other);
+	}
+	const day: Day = { key, stored: 0, live: new Set(), loaded: Promise.resolve() };
+	day.loaded = usage.stored(key).then(
+		seconds => {
+			day.stored += seconds;
+		},
+		(error: unknown) => {
+			// Forgotten, so the next open reads the table again instead of failing on this read forever.
+			if (ramble.days.get(id) === day) ramble.days.delete(id);
+			throw error;
+		},
+	);
+	ramble.days.set(id, day);
+	return day;
+}
+
+const liveSeconds = (day: Day) => [...day.live].reduce((sum, tally) => sum + tally.seconds, 0);
+
+function charge(usage: RambleUsage, day: Day, seconds: number) {
+	if (seconds <= 0) return;
+	day.stored += seconds;
+	day.loaded
+		.catch(() => {})
+		.then(() => usage.add(day.key, seconds))
+		.catch(reportError);
 }
 
 export type RambleUsage = { stored(day: string): Promise<number>; add(day: string, seconds: number): Promise<void> };
@@ -213,18 +268,13 @@ const audioChunk = (bytes: Uint8Array, commit: boolean) =>
 		sample_rate: RAMBLE_SAMPLE_RATE,
 	});
 
-/** Seconds streamed so far today by sessions still open, which the table does not count until each day rolls or ends. */
-const liveSeconds = (live: Ramble['live'], day: string) =>
-	[...live].reduce((sum, tally) => (tally.day === day ? sum + tally.seconds : sum), 0);
-
 type SessionOptions = {
 	client: Socket;
 	connect: ConnectUpstream;
 	ramble: Ramble;
 	usage: RambleUsage;
-	/** The seconds the table already holds for `day`, read before the session opened. */
-	storedToday: number;
-	day: DateKey;
+	userId: string;
+	day: Day;
 	zone: string;
 	keyterms: string[];
 	cassette: string | null;
@@ -237,26 +287,25 @@ type SessionOptions = {
  * account's time zone is charged to the new day, and the seconds before it are stored on the old one. Ending sends
  * a final commit when audio went out since the last committed text, waits for that text, then records the seconds,
  * returns any reserved budget it did not stream, sends `ended`, and closes both sockets. A socket that sends
- * nothing for a minute ends on its own. The day's stored seconds are read once per day, not per frame.
+ * nothing for a minute ends on its own.
  */
 function session({
 	client,
 	connect,
 	ramble,
 	usage,
-	storedToday,
-	day,
+	userId,
+	day: first,
 	zone,
 	keyterms,
 	cassette,
 	grant,
 }: SessionOptions): StreamEvents {
-	const { live } = ramble;
-	const tally = { day, seconds: 0 };
-	let stored = storedToday;
+	let day = first;
+	const tally: Tally = { seconds: 0 };
 	let sessionSeconds = 0;
 	let budgetLeft: number | null = grant ? grant.seconds : null;
-	live.add(tally);
+	day.live.add(tally);
 	const buffered: Uint8Array[] = [];
 	let upstream: Upstream | null = null;
 	let started = false;
@@ -266,16 +315,13 @@ function session({
 	const timers = new Set<ReturnType<typeof setTimeout>>();
 	const later = (ms: number, run: () => void) => timers.add(setTimeout(run, ms));
 	const send = (message: RambleServerMessage) => attempt(() => client.send(JSON.stringify(message)));
-	const record = (forDay: string, seconds: number) => {
-		if (seconds > 0) usage.add(forDay, seconds).catch(reportError);
-	};
 
 	async function shutdown(reason: RambleEndReason | null) {
 		if (ended) return;
 		ended = true;
 		for (const timer of timers) clearTimeout(timer);
-		live.delete(tally);
-		record(tally.day, tally.seconds);
+		day.live.delete(tally);
+		charge(usage, day, tally.seconds);
 		const unused = budgetLeft;
 		budgetLeft = null;
 		if (grant && unused !== null && unused > 0 && ramble.budget) {
@@ -361,7 +407,7 @@ function session({
 		}
 		roll();
 		const sessionLeft = RAMBLE_SESSION_SECONDS - sessionSeconds;
-		const dailyLeft = RAMBLE_DAILY_SECONDS - stored - liveSeconds(live, tally.day);
+		const dailyLeft = RAMBLE_DAILY_SECONDS - day.stored - liveSeconds(day);
 		const budgetCap = budgetLeft ?? Number.POSITIVE_INFINITY;
 		const allowed = Math.max(
 			0,
@@ -394,17 +440,12 @@ function session({
 	/** Stores the seconds streamed before midnight on that day, so later frames count against the new one. */
 	function roll() {
 		const today = zonedDateKey(Date.now(), zone);
-		if (today === tally.day) return;
-		record(tally.day, tally.seconds);
-		tally.day = today;
+		if (today === day.key) return;
+		day.live.delete(tally);
+		charge(usage, day, tally.seconds);
 		tally.seconds = 0;
-		stored = 0;
-		usage.stored(today).then(
-			seconds => {
-				if (tally.day === today) stored = seconds;
-			},
-			error => reportError(error),
-		);
+		day = dayOf(ramble, usage, userId, today);
+		day.live.add(tally);
 	}
 
 	armIdle();
@@ -463,11 +504,11 @@ export function rambleRoute(db: Db, ramble: Ramble): RambleRoute {
 		if (!connect) return fail(503, 'Ramble is not configured');
 		const now = Date.now();
 		const usage = pgRambleUsage(db, actor.id);
-		const [tree, zone] = await Promise.all([loadTree(db, actor.id), storedZone(db, actor.id)]);
-		const day = zonedDateKey(now, zone);
-		const storedToday = await usage.stored(day);
-		const remaining = RAMBLE_DAILY_SECONDS - storedToday - liveSeconds(ramble.live, day);
-		if (remaining <= 0) return refuseDaily(ramble, request, zonedTime(addDays(day, 1), '00:00', zone));
+		const zone = await storedZone(db, actor.id);
+		const day = dayOf(ramble, usage, actor.id, zonedDateKey(now, zone));
+		await day.loaded;
+		const remaining = RAMBLE_DAILY_SECONDS - day.stored - liveSeconds(day);
+		if (remaining <= 0) return refuseDaily(ramble, request, zonedTime(addDays(day.key, 1), '00:00', zone));
 		let grant: RambleGrant | null = null;
 		if (ramble.budget) {
 			const utcDay = zonedDateKey(now, 'UTC');
@@ -482,10 +523,10 @@ export function rambleRoute(db: Db, ramble: Ramble): RambleRoute {
 			if (granted <= 0) return refuseDaily(ramble, request, zonedTime(addDays(utcDay, 1), '00:00', 'UTC'));
 			grant = { day: utcDay, seconds: granted };
 		}
-		const keyterms = rambleKeyterms(tree);
+		const keyterms = rambleKeyterms(await loadKeytermSource(db, actor.id));
 		const cassette = new URL(request.url).searchParams.get('cassette');
 		return ramble.stream(request, RAMBLE_SOCKET_PROTOCOL, client =>
-			session({ client, connect, ramble, usage, storedToday, day, zone, keyterms, cassette, grant }),
+			session({ client, connect, ramble, usage, userId: actor.id, day, zone, keyterms, cassette, grant }),
 		);
 	};
 }

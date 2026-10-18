@@ -2,6 +2,7 @@ import { expect } from 'bun:test';
 import type { Task } from './task.ts';
 import * as views from './views.ts';
 import { describe, recorded, test } from './vectors/record.ts';
+import { task as base } from './testing.ts';
 
 const inboxTasks = recorded('views', views.inboxTasks);
 const labelTasks = recorded('views', views.labelTasks);
@@ -18,31 +19,10 @@ const completedTasks = recorded('views', views.completedTasks);
 const completedDays = recorded('views', views.completedDays);
 const projectCompleted = recorded('views', views.projectCompleted);
 const pendingCount = recorded('views', views.pendingCount);
+const openCounts = recorded('views', views.openCounts);
 
 let created = 0;
-const task = (id: string, fields: Partial<Task> = {}): Task => ({
-	id,
-	parentId: null,
-	order: 0,
-	title: id,
-	notes: '',
-	projectId: null,
-	sectionId: null,
-	labelIds: [],
-	due: null,
-	recurrence: null,
-	priority: 4,
-	reminders: [],
-	location: null,
-	event: null,
-	images: [],
-	createdAt: ++created,
-	completedAt: null,
-	createdBy: null,
-	completedBy: null,
-	lastCompletedAt: null,
-	...fields,
-});
+const task = (id: string, fields: Partial<Task> = {}): Task => base(id, { createdAt: ++created, ...fields });
 
 // Wednesday, October 14 2026.
 const today = '2026-10-14';
@@ -279,6 +259,35 @@ describe('completed', () => {
 			['2026-10-12', ['trip']],
 			['2026-10-11', ['sweep']],
 			['2026-10-10', ['book']],
+		]);
+	});
+});
+
+describe('open counts', () => {
+	test('counts what each project and label view lists, in one pass', () => {
+		const location = {
+			name: 'Park',
+			address: null,
+			latitude: 52.52,
+			longitude: 13.405,
+			radius: 150,
+			trigger: 'during' as const,
+		};
+		const list = [...tasks, task('kite', { location }), task('done kite', { location, completedAt: 5 })];
+		const park = { id: 'park', name: 'Park', color: 'green' as const, createdAt: 0 };
+		const calls = { id: 'calls', name: 'Calls', color: 'green' as const, createdAt: 0, place: null };
+		const spot = { address: null, latitude: 52.52001, longitude: 13.405, radius: 500 };
+		const labels = [{ ...park, place: spot }, calls];
+		const counts = openCounts(list, labels);
+		expect(counts.projects.get('home')).toBe(projectTasks(list, 'home').length);
+		expect(counts.labels.get('park')).toBe(labelViewTasks(list, labels[0]!).length);
+		expect(counts.labels.get('calls')).toBe(labelViewTasks(list, calls).length);
+		expect([[...counts.projects], [...counts.labels]]).toEqual([
+			[['home', 3]],
+			[
+				['park', 1],
+				['calls', 4],
+			],
 		]);
 	});
 });

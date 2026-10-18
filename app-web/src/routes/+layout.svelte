@@ -33,6 +33,9 @@
 	/** A public link renders for anyone, signed in or not, outside the app's chrome. */
 	const isPublic = $derived(page.route.id === '/s/[token]');
 	const openTask = $derived(sheets.current.kind === 'task' ? store.task(sheets.current.id) : undefined);
+	$effect(() => {
+		if (sheets.current.kind === 'task' && store.loaded && !openTask) untrack(() => sheets.close());
+	});
 
 	function openQuickAdd() {
 		menuOpen = false;

@@ -3,6 +3,7 @@ import * as store from './store.ts';
 import type { StoreData } from './store.ts';
 import type { Task } from './task.ts';
 import { describe, recorded, test } from './vectors/record.ts';
+import { task as base } from './testing.ts';
 
 const addLabel = recorded('store', store.addLabel);
 const addProject = recorded('store', store.addProject);
@@ -35,29 +36,7 @@ const undelete = recorded('store', store.undelete);
 const undeleteTasks = recorded('store', store.undeleteTasks);
 const updateTask = recorded('store', store.updateTask);
 
-const task = (id: string, createdAt: number, fields: Partial<Task> = {}): Task => ({
-	id,
-	parentId: null,
-	order: 0,
-	title: id,
-	notes: '',
-	projectId: null,
-	sectionId: null,
-	labelIds: [],
-	due: null,
-	recurrence: null,
-	priority: 4,
-	reminders: [],
-	location: null,
-	event: null,
-	images: [],
-	createdAt,
-	completedAt: null,
-	createdBy: null,
-	completedBy: null,
-	lastCompletedAt: null,
-	...fields,
-});
+const task = (id: string, createdAt: number, fields: Partial<Task> = {}): Task => base(id, { createdAt, ...fields });
 
 const NOW = 1_000;
 const today = '2026-10-14';

@@ -3,6 +3,114 @@
 	"timeZone": "America/New_York",
 	"cases": [
 		{
+			"fn": "completeTask",
+			"test": "completing on an event series in a zone › the server passes the account’s zone, so the occurrence’s day is the account’s, not the process’s",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": null,
+						"due": null,
+						"event": {
+							"allDay": false,
+							"edge": "start",
+							"id": "early",
+							"minutes": 0,
+							"occurrences": [
+								{
+									"end": 1792368000000,
+									"original": 1792364400000,
+									"start": 1792364400000
+								},
+								{
+									"end": 1792454400000,
+									"original": 1792450800000,
+									"start": 1792450800000
+								},
+								{
+									"end": 1792540800000,
+									"original": 1792537200000,
+									"start": 1792537200000
+								}
+							],
+							"series": true,
+							"title": "Early call"
+						},
+						"id": "call",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "call"
+					}
+				],
+				"call",
+				"2026-10-19",
+				1000,
+				"Europe/Berlin"
+			],
+			"output": {
+				"changed": [
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": null,
+						"due": null,
+						"event": {
+							"allDay": false,
+							"edge": "start",
+							"id": "early",
+							"minutes": 0,
+							"occurrences": [
+								{
+									"end": 1792454400000,
+									"original": 1792450800000,
+									"start": 1792450800000
+								},
+								{
+									"end": 1792540800000,
+									"original": 1792537200000,
+									"start": 1792537200000
+								}
+							],
+							"series": true,
+							"title": "Early call"
+						},
+						"id": "call",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": 1000,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "call"
+					}
+				],
+				"kind": "rolled",
+				"next": {
+					"date": "2026-10-20",
+					"time": "01:00"
+				}
+			}
+		},
+		{
 			"fn": "groupChildren",
 			"test": "subtask tree › children come in sibling order and descendants reach every level",
 			"input": [

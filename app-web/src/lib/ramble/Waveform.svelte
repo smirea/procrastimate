@@ -12,8 +12,11 @@
 	let canvas: HTMLCanvasElement;
 	/** The frame loop reads a copy, since the prop goes stale while the drawer animates out. */
 	let listening = false;
+	let frame = 0;
+	let start = () => {};
 	$effect(() => {
 		listening = active;
+		if (active) start();
 	});
 
 	onMount(() => {
@@ -22,7 +25,6 @@
 		let smoothed = 0;
 		let presence = 0;
 		let color = '';
-		let frame = 0;
 		let tick = 0;
 
 		const draw = () => {
@@ -50,10 +52,17 @@
 				context.roundRect(i * step + step / 2 - 2, (height - size) / 2, 4, size, 2);
 				context.fill();
 			});
-			frame = requestAnimationFrame(draw);
+			const settled = !listening && presence < 0.005 && smoothed < 0.001;
+			frame = settled ? 0 : requestAnimationFrame(draw);
 		};
-		draw();
-		return () => cancelAnimationFrame(frame);
+		start = () => {
+			if (!frame) frame = requestAnimationFrame(draw);
+		};
+		start();
+		return () => {
+			cancelAnimationFrame(frame);
+			frame = 0;
+		};
 	});
 </script>
 

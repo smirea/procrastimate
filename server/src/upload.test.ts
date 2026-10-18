@@ -425,6 +425,14 @@ describe('POST /api/upload', () => {
 
 	test('a write the database refuses is rejected alone, with a 200, and the rest of the batch still applies', async () => {
 		await app.db.execute(sql`ALTER TABLE tasks ADD CONSTRAINT refused CHECK (title <> 'refused by the database')`);
+		try {
+			await refusedWrite();
+		} finally {
+			await app.db.execute(sql`ALTER TABLE tasks DROP CONSTRAINT refused`);
+		}
+	});
+
+	async function refusedWrite() {
 		const host = await signUp(app, 'Host');
 		const [theirs, refusedTheirs] = [crypto.randomUUID(), crypto.randomUUID()];
 		for (const id of [theirs, refusedTheirs]) {
@@ -454,8 +462,7 @@ describe('POST /api/upload', () => {
 		expect(await stored(theirs)).toMatchObject({ title: 'Theirs, edited by the guest' });
 		expect(await stored(refusedTheirs)).toMatchObject({ title: 'Theirs' });
 		expect(await stored(mine)).toBeNull();
-		await app.db.execute(sql`ALTER TABLE tasks DROP CONSTRAINT refused`);
-	});
+	}
 
 	test('settings exist from sign-up, a put never overwrites them, a patch changes them, and a delete is refused', async () => {
 		const me = await signUp(app, 'Settled');

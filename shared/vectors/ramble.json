@@ -49481,6 +49481,218 @@
 		},
 		{
 			"fn": "parseRamble",
+			"test": "draft details › a root without a title gives its subtasks up as roots, each token once",
+			"input": [
+				"Tomorrow at 5pm. Subtask buy milk tomorrow at 6pm.",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-errands",
+							"name": "errands",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "waiting",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work",
+							"place": null
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-work",
+							"name": "Work",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-indonesia",
+							"name": "Indonesia",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-finance",
+							"name": "Finance",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"ended": false,
+				"tasks": [
+					{
+						"due": {
+							"date": "2026-10-15",
+							"time": "18:00"
+						},
+						"labelIds": [],
+						"notes": "",
+						"priority": null,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"segment": {
+							"end": 49,
+							"start": 25
+						},
+						"subtasks": [],
+						"title": "Buy milk"
+					}
+				],
+				"tokens": [
+					{
+						"end": 24,
+						"kind": "subtask",
+						"start": 17,
+						"text": "Subtask"
+					},
+					{
+						"end": 49,
+						"kind": "due",
+						"start": 34,
+						"text": "tomorrow at 6pm"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseRamble",
+			"test": "draft details › a character outside the BMP survives at the start of a title",
+			"input": [
+				"😀 call mom tomorrow",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-errands",
+							"name": "errands",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "waiting",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work",
+							"place": null
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-work",
+							"name": "Work",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-indonesia",
+							"name": "Indonesia",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"id": "p-finance",
+							"name": "Finance",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"ended": false,
+				"tasks": [
+					{
+						"due": {
+							"date": "2026-10-15",
+							"time": null
+						},
+						"labelIds": [],
+						"notes": "",
+						"priority": null,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"segment": {
+							"end": 20,
+							"start": 0
+						},
+						"subtasks": [],
+						"title": "😀 call mom"
+					}
+				],
+				"tokens": [
+					{
+						"end": 20,
+						"kind": "due",
+						"start": 12,
+						"text": "tomorrow"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseRamble",
 			"test": "draft details › a subtask segment lies inside its parent segment",
 			"input": [
 				"Plan the party with subtasks invitations and cake. Call mom.",

@@ -6,7 +6,7 @@
  * Builds Debug reporting as `development` with a dSYM, uploads the dSYM to `procrastimate-ios` (Debug builds keep
  * their DWARF in object files, so Sentry cannot symbolicate them otherwise), installs over the existing app, which
  * keeps its Keychain session, and relaunches it with `PROCRASTIMATE_SENTRY_SMOKE=1`. Then run
- * `bun scripts/sentry-check.ts --expect ios,worker,account`. Needs `SENTRY_AUTH_TOKEN`.
+ * `bun scripts/sentry-check.ts --expect ios,worker`. Needs `SENTRY_AUTH_TOKEN`.
  */
 import { spawnSync } from 'node:child_process';
 import { parseArgs } from 'node:util';

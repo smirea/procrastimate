@@ -128,7 +128,14 @@ function readProject(file: BackupFile, now: Date, backup: TodoistBackup) {
 	const named = FILE_NAME.exec(base)?.groups;
 	const name = named?.name ?? base.replace(/\.csv$/i, '');
 	const id = named?.id ?? name;
-	const [header = [], ...rows] = parseCsv(file.text);
+	let table: string[][];
+	try {
+		table = parseCsv(file.text);
+	} catch {
+		backup.warnings.push(`${base} has a quote that is never closed, skipped`);
+		return;
+	}
+	const [header = [], ...rows] = table;
 	const columns = new Map(header.map((column, i) => [column.trim(), i]));
 	if (!columns.has('TYPE') || !columns.has('CONTENT')) {
 		backup.warnings.push(`${base} is not a Todoist project file, skipped`);

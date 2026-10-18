@@ -116,6 +116,24 @@ public enum Views {
         label.place.map { placeTasks(tasks, Triggers.placeKey($0), in: zone) } ?? labelTasks(tasks, label.id, in: zone)
     }
 
+    /// How many open tasks each project and label view lists, in one pass, for the browse counts: a project counts
+    /// its top-level tasks, a label every task carrying it, and a saved place every task at it, as the views do.
+    public static func openCounts(_ tasks: [TaskItem], _ labels: [Label]) -> (projects: [String: Int], labels: [String: Int]) {
+        var projects: [String: Int] = [:]
+        var byLabel: [String: Int] = [:]
+        var byPlace: [String: Int] = [:]
+        for task in open(tasks) {
+            if task.parentId == nil, let projectId = task.projectId { projects[projectId, default: 0] += 1 }
+            for id in task.labelIds { byLabel[id, default: 0] += 1 }
+            if let location = task.location { byPlace[Triggers.placeKey(location), default: 0] += 1 }
+        }
+        var counts: [String: Int] = [:]
+        for label in labels {
+            counts[label.id] = label.place.map { byPlace[Triggers.placeKey($0)] ?? 0 } ?? byLabel[label.id] ?? 0
+        }
+        return (projects, counts)
+    }
+
     /// Every open task on a calendar event, in the order their moments come.
     public static func eventTasks(_ tasks: [TaskItem], _ eventId: String, _ today: DateKey, in zone: TimeZone) -> [TaskItem] {
         open(tasks).filter { $0.event?.id == eventId }.stableSorted(by: compare(today: today, in: zone))

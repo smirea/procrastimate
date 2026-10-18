@@ -80,7 +80,10 @@ export function unknownNames(
 	return found;
 }
 
-export function lastUsed(tasks: readonly Task[], idsOf: (task: Task) => readonly string[]): Map<string, number> {
+export function lastUsed<T extends Pick<Task, 'createdAt'>>(
+	tasks: readonly T[],
+	idsOf: (task: T) => readonly string[],
+): Map<string, number> {
 	const used = new Map<string, number>();
 	for (const task of tasks) {
 		for (const id of idsOf(task)) {
@@ -90,9 +93,9 @@ export function lastUsed(tasks: readonly Task[], idsOf: (task: Task) => readonly
 	return used;
 }
 
-export const projectIdsOf = (task: Task) => (task.projectId ? [task.projectId] : []);
-export const sectionIdsOf = (task: Task) => (task.sectionId ? [task.sectionId] : []);
-export const labelIdsOf = (task: Task) => task.labelIds;
+export const projectIdsOf = (task: Pick<Task, 'projectId'>) => (task.projectId ? [task.projectId] : []);
+export const sectionIdsOf = (task: Pick<Task, 'sectionId'>) => (task.sectionId ? [task.sectionId] : []);
+export const labelIdsOf = (task: Pick<Task, 'labelIds'>) => task.labelIds;
 
 /** 0 exact, 1 prefix, 2 word prefix, 3 substring, null no match. */
 function matchTier(name: string, query: string): number | null {

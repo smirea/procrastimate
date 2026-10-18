@@ -99,18 +99,27 @@ class Store {
 	/** Until the database belongs to the signed-in user, a read could show another account's rows as theirs. */
 	#opening = false;
 	#view = $derived(merged(this.own, this.spaces));
-	#ownProjects = $derived(rules.projectsInOrder(this.own.projects));
+	/**
+	 * One derived per list, so a command that replaced only the tasks does not rerun everything that reads the
+	 * labels, sections, or comments: Svelte tracks the `#view` signal, not its fields.
+	 */
+	#tasks = $derived(this.#view.tasks);
+	#labels = $derived(this.#view.labels);
+	#sections = $derived(this.#view.sections);
+	#comments = $derived(this.#view.comments);
+	#ownProjectRows = $derived(this.own.projects);
+	#ownProjects = $derived(rules.projectsInOrder(this.#ownProjectRows));
 	#projects = $derived([
 		...this.#ownProjects,
 		...Object.values(this.spaces).flatMap(s => rules.projectsInOrder(s.data.projects)),
 	]);
 	#homes = $derived(homes(this.spaces));
-	#children = $derived(groupChildren(this.#view.tasks));
+	#children = $derived(groupChildren(this.#tasks));
 	/** Where deleted tasks lived, so undo puts them back into the same space. */
 	#deletedFrom = new Map<string, Home>();
 
 	get tasks(): Task[] {
-		return this.#view.tasks;
+		return this.#tasks;
 	}
 
 	get projects(): Project[] {
@@ -122,15 +131,15 @@ class Store {
 	}
 
 	get labels(): Label[] {
-		return this.#view.labels;
+		return this.#labels;
 	}
 
 	get sections(): Section[] {
-		return this.#view.sections;
+		return this.#sections;
 	}
 
 	get comments(): Comment[] {
-		return this.#view.comments;
+		return this.#comments;
 	}
 
 	constructor() {
@@ -226,8 +235,8 @@ class Store {
 				},
 				error => {
 					reportError(error);
-					// Memory shows the command the database refused, so the next read takes all of it back.
 					this.#cursor = null;
+					this.#stale = true;
 				},
 			)
 			.finally(() => {

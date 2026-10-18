@@ -86,9 +86,14 @@ public enum Rows {
         return changed.isEmpty ? [] : [RowWrite(op: .patch, kind: kind, id: id, values: changed)]
     }
 
-    /// Every synced field of an entity without its id, with an absent `sourceKey` as `null`.
     static func fields(_ entity: some Encodable) -> [String: JSONValue] {
-        guard case var .object(fields) = JSONValue.encoding(entity) else { return [:] }
+        let encoded: JSONValue
+        do {
+            encoded = try JSONValue.encoded(entity)
+        } catch {
+            preconditionFailure("A \(type(of: entity)) does not encode: \(error)")
+        }
+        guard case var .object(fields) = encoded else { return [:] }
         fields["id"] = nil
         if entity is TaskItem || entity is Project || entity is ProjectSection, fields["sourceKey"] == nil {
             fields["sourceKey"] = .null
@@ -136,11 +141,8 @@ public enum Rows {
 }
 
 extension JSONValue {
-    /// A Codable value as JSON, or null when it does not encode.
-    public static func encoding(_ value: some Encodable) -> JSONValue {
-        guard let data = try? JSONEncoder().encode(value),
-              let json = try? JSONDecoder().decode(JSONValue.self, from: data) else { return .null }
-        return json
+    public static func encoded(_ value: some Encodable) throws -> JSONValue {
+        try JSONDecoder().decode(JSONValue.self, from: JSONEncoder().encode(value))
     }
 
     public func decoded<T: Decodable>(as _: T.Type = T.self) throws -> T {

@@ -65,7 +65,7 @@
 				/>
 			</label>
 			<button type="submit" class="btn press bg-accent text-on-accent" disabled={busy}>{submitLabel}</button>
-			<button type="button" class="text-[13px] text-muted" onclick={() => (creating = !creating)}>
+			<button type="button" class="text-[13px] text-muted touch:h-11" onclick={() => (creating = !creating)}>
 				{creating ? 'Already have an account' : 'Create an account'}
 			</button>
 		{/if}

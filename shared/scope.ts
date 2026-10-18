@@ -113,11 +113,10 @@ const roleOf = (rows: GuestRows, kind: AccessRow['kind'], id: string) =>
 /**
  * A guest's write may only point at what the guest can already see: a parent it may edit, and projects, sections, and
  * labels among its rows, so it cannot graft its task onto the owner's private tree or pull hidden names into its
- * view. It may not set `sourceKey` either, which only imports write.
+ * view.
  */
 function pointsOutside(fields: TaskFields, rows: GuestRows): boolean {
-	const { parentId, projectId, sectionId, labelIds, sourceKey } = fields;
-	if (sourceKey !== undefined && sourceKey !== null) return true;
+	const { parentId, projectId, sectionId, labelIds } = fields;
 	if (parentId && roleOf(rows, 'task', parentId) !== 'edit') return true;
 	if (projectId && !roleOf(rows, 'project', projectId)) return true;
 	if (sectionId && !roleOf(rows, 'section', sectionId)) return true;
@@ -132,37 +131,45 @@ function mayAdd(fields: TaskFields, rows: GuestRows): boolean {
 	return (labelIds ?? []).some(id => roleOf(rows, 'label', id) === 'edit');
 }
 
-/** What the server knows of a stored comment a guest writes to, read with the row's owner. */
-export type StoredComment = Pick<FieldsByKind['comment'], 'taskId' | 'authorId'>;
+/**
+ * What the server holds for the row a guest writes to, read with the row's owner: a task's presence, or a comment's
+ * task and author. Undefined for a row the server does not hold.
+ */
+export type StoredRow = Partial<Pick<FieldsByKind['comment'], 'taskId' | 'authorId'>>;
+
+const NOT_EDITABLE = 'Not editable in this share';
 
 /**
  * Why a guest's write is refused, or null when it may run. The rows are the guest's `access` rows in the space the
- * write names, and they decide everything: an existing task needs an `edit` row, a new task a place the guest may add
- * to, and every project, section, label, and parent the write names must be among the rows. A comment needs an
- * editable task, and only its author edits or deletes it; `stored` is the comment as the server holds it, or
- * undefined for one it does not. Projects, sections, labels, read markers, and settings are never a guest's to
- * write: managers are AI accounts, which act through the agent API with the owner's own rights.
+ * write names, and they decide everything: a task the space holds needs an `edit` row, whatever the op, a new task a
+ * place the guest may add to, and every project, section, label, and parent the write names must be among the rows.
+ * A comment needs an editable task, and only its author edits or deletes it. Projects, sections, labels, read
+ * markers, and settings are never a guest's to write: managers are AI accounts, which act through the agent API with
+ * the owner's own rights.
  */
-export function guestRefusal(rows: GuestRows, write: RowWrite, actor: string, stored?: StoredComment): string | null {
+export function guestRefusal(rows: GuestRows, write: RowWrite, actor: string, stored?: StoredRow): string | null {
 	if (write.kind === 'task') {
 		const role = roleOf(rows, 'task', write.id);
-		if (write.op === 'delete') return role === 'edit' ? null : 'Not editable in this share';
+		if (write.op === 'delete') return role === 'edit' ? null : NOT_EDITABLE;
 		const fields = (write.values ?? {}) as TaskFields;
-		if (role !== undefined && role !== 'edit') return 'Not editable in this share';
-		if (role === undefined && !mayAdd(fields, rows)) return 'Not editable in this share';
-		return pointsOutside(fields, rows) ? 'Not editable in this share' : null;
+		if (role !== undefined) {
+			if (role !== 'edit') return NOT_EDITABLE;
+		} else if (write.op === 'patch' || stored || !mayAdd(fields, rows)) {
+			return NOT_EDITABLE;
+		}
+		return pointsOutside(fields, rows) ? NOT_EDITABLE : null;
 	}
 	if (write.kind === 'comment') {
 		const { taskId } = (write.values ?? {}) as CommentFields;
-		if (!stored) {
-			if (write.op !== 'put' || !taskId) return 'Not editable in this share';
-			return roleOf(rows, 'task', taskId) === 'edit' ? null : 'Not editable in this share';
+		if (!stored?.taskId) {
+			if (write.op !== 'put' || !taskId) return NOT_EDITABLE;
+			return roleOf(rows, 'task', taskId) === 'edit' ? null : NOT_EDITABLE;
 		}
 		if (stored.authorId !== actor) {
 			return write.op === 'delete' ? 'Only the author can delete a comment' : 'Only the author can edit a comment';
 		}
-		if (roleOf(rows, 'task', stored.taskId) !== 'edit') return 'Not editable in this share';
-		return taskId === undefined || taskId === stored.taskId ? null : 'Not editable in this share';
+		if (roleOf(rows, 'task', stored.taskId) !== 'edit') return NOT_EDITABLE;
+		return taskId === undefined || taskId === stored.taskId ? null : NOT_EDITABLE;
 	}
-	return 'Not editable in this share';
+	return NOT_EDITABLE;
 }

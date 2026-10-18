@@ -27,13 +27,13 @@ final class SyncConnector: PowerSyncBackendConnectorProtocol {
         }
     }
 
-    /// Images go first, so the server has every image's bytes before an edit that lists it. Writes to one row fold
-    /// into one, each named by this database and its queue id so a retried batch logs nothing twice, and a write the
-    /// server refuses comes back in `rejected` rather than failing the batch.
     func uploadData(database: PowerSyncDatabaseProtocol) async throws {
         guard let token = SessionToken.read() else { return }
+        guard let batch = try await database.getCrudBatch(limit: 1000) else {
+            try await TaskImages.uploadQueued(token: token)
+            return
+        }
         try await TaskImages.uploadQueued(token: token)
-        guard let batch = try await database.getCrudBatch(limit: 1000) else { return }
         let databaseID = DeviceDefaults.databaseID
         let writes = try Rows.coalesce(batch.crud.compactMap { try Self.rowWrite($0, databaseID: databaseID) })
         let body = API.UploadRequest(writes: writes.map(Self.wire))

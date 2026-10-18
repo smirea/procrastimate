@@ -114,6 +114,10 @@ jobs:
       - name: Postgres and PowerSync
         run: bun scripts/ci-stack.ts
 
+      # The lock tests need two connections, which PGlite cannot give the unit run; this is the one job with a Postgres.
+      - name: Advisory lock tests
+        run: DATABASE_URL="$(grep '^DATABASE_URL=' .env.override | cut -d= -f2-)" REQUIRE_DATABASE=1 bun test server/src/sharing-lock.test.ts
+
       - name: End to end against the Worker, desktop Chromium
         run: bun run test:e2e --project desktop
         env:
@@ -215,4 +219,6 @@ jobs:
 
       - name: Deploy skipped
         if: env.HAS_CLOUDFLARE != 'true'
-        run: echo "::warning::Not deployed. Add the CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID repository secrets."
+        run: |
+          echo "::error::Not deployed. Add the CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID repository secrets with 'bun run secrets:github'."
+          exit 1

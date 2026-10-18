@@ -24,6 +24,7 @@ private struct TaskDetailsForm: View {
     let navigation: DetailsNavigation
 
     @State private var title: String
+    @State private var base: String
     @FocusState private var titleFocused: Bool
     @State private var keyboardShown = false
     @FocusState private var notesFocused: Bool
@@ -32,6 +33,7 @@ private struct TaskDetailsForm: View {
         self.task = task
         self.navigation = navigation
         _title = State(initialValue: task.title)
+        _base = State(initialValue: task.title)
     }
 
     private var parent: TaskItem? { task.parentId.flatMap(store.task) }
@@ -169,6 +171,11 @@ private struct TaskDetailsForm: View {
         .toolbar { toolbar(draft) }
         .sensoryFeedback(.selection, trigger: Picks(task))
         .onChange(of: titleFocused) { if !titleFocused { commitTitle() } }
+        .onChange(of: task.title) {
+            guard title == base else { return }
+            title = task.title
+            base = task.title
+        }
         .onDisappear { commitTitle() }
     }
 
@@ -249,7 +256,7 @@ private struct TaskDetailsForm: View {
     }
 
     private func commitTitle() {
-        guard !locked else { return }
+        guard !locked, title != base else { return }
         let parsed = TaskDetails.parse(
             title,
             task,
@@ -264,9 +271,11 @@ private struct TaskDetailsForm: View {
             break
         case .revert:
             title = task.title
+            base = task.title
         case let .update(patch, next):
             withAnimation(.snappy) { store.updateTask(task.id, patch) }
             title = next
+            base = next
         }
     }
 

@@ -2,6 +2,7 @@ import { expect } from 'bun:test';
 import * as subtasks from './subtasks.ts';
 import type { Task } from './task.ts';
 import { describe, recorded, test } from './vectors/record.ts';
+import { task as base } from './testing.ts';
 
 const ancestorsOf = recorded('subtasks', subtasks.ancestorsOf);
 const completeTask = recorded('subtasks', subtasks.completeTask);
@@ -13,29 +14,7 @@ const nextSiblingOrder = recorded('subtasks', subtasks.nextSiblingOrder);
 const progressOf = recorded('subtasks', subtasks.progressOf);
 const reopenTask = recorded('subtasks', subtasks.reopenTask);
 
-const task = (id: string, fields: Partial<Task> = {}): Task => ({
-	id,
-	parentId: null,
-	order: 0,
-	title: id,
-	notes: '',
-	projectId: null,
-	sectionId: null,
-	labelIds: [],
-	due: null,
-	recurrence: null,
-	priority: 4,
-	reminders: [],
-	location: null,
-	event: null,
-	images: [],
-	createdAt: 1,
-	completedAt: null,
-	createdBy: null,
-	completedBy: null,
-	lastCompletedAt: null,
-	...fields,
-});
+const task = (id: string, fields: Partial<Task> = {}): Task => base(id, fields);
 
 const trip = () => [
 	task('trip'),
@@ -47,6 +26,18 @@ const trip = () => [
 
 const ids = (tasks: readonly Task[]) => tasks.map(t => t.id);
 const NOW = 1_000;
+
+describe('completing on an event series in a zone', () => {
+	test('the server passes the account’s zone, so the occurrence’s day is the account’s, not the process’s', () => {
+		const berlin = (d: number, h: number) => Date.UTC(2026, 9, d, h - 2);
+		const occurrences = [19, 20, 21].map(d => ({ start: berlin(d, 1), end: berlin(d, 2), original: berlin(d, 1) }));
+		const event = { id: 'early', title: 'Early call', allDay: false, series: true, edge: 'start' as const, minutes: 0 };
+		const tasks = [task('call', { event: { ...event, occurrences } })];
+		const inZone = completeTask(tasks, 'call', '2026-10-19', NOW, 'Europe/Berlin')!;
+		expect(inZone.kind === 'rolled' && inZone.next).toEqual({ date: '2026-10-20', time: '01:00' });
+		expect(inZone.changed[0]!.event!.occurrences).toEqual(occurrences.slice(1));
+	});
+});
 
 describe('subtask tree', () => {
 	test('children come in sibling order and descendants reach every level', () => {

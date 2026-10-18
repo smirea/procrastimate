@@ -131,6 +131,128 @@ describe('sharing a task', () => {
 		expect((await app.db.select().from(tasks).where(eq(tasks.id, hidden))).length).toBe(1);
 	});
 
+	test('a guest cannot rewrite or move a task it holds no edit row for, whatever id it knows', async () => {
+		const project = crypto.randomUUID();
+		await upload(app, owner, [
+			{
+				op: 'put',
+				table: 'projects',
+				id: project,
+				values: { id: project, user_id: owner.person.id, name: 'Garden', order: 0, created_at: 1 },
+			},
+		]);
+		const hidden = await newTask('Private diary');
+		await share({ kind: 'project', id: project }, guest, 'edit');
+		const refused = { table: 'tasks', id: hidden, reason: 'Not editable in this share' };
+		expect(
+			await upload(app, guest, [
+				{ op: 'patch', table: 'tasks', id: hidden, values: { project_id: project, title: 'Overwritten' } },
+			]),
+		).toEqual([refused]);
+		expect(
+			await upload(app, guest, [
+				{
+					op: 'put',
+					table: 'tasks',
+					id: hidden,
+					values: taskRow(hidden, owner.person.id, 'Put by guest', { projectId: project }),
+				},
+			]),
+		).toEqual([refused]);
+		const [row] = await app.db.select().from(tasks).where(eq(tasks.id, hidden));
+		expect([row!.title, row!.projectId]).toEqual(['Private diary', null]);
+	});
+
+	test('a guest’s own comment on a task downgraded to view cannot be rewritten by a put naming another task', async () => {
+		const first = await newTask('First');
+		const second = await newTask('Second');
+		await share({ kind: 'task', id: first }, guest, 'edit');
+		await share({ kind: 'task', id: second }, guest, 'edit');
+		const id = crypto.randomUUID();
+		const row = (taskId: string, body: string) => ({
+			id,
+			user_id: owner.person.id,
+			task_id: taskId,
+			body,
+			created_at: 1,
+		});
+		expect(await upload(app, guest, [{ op: 'put', table: 'comments', id, values: row(first, 'hello') }])).toEqual([]);
+		await share({ kind: 'task', id: first }, guest, 'view');
+		expect(await upload(app, guest, [{ op: 'put', table: 'comments', id, values: row(second, 'moved') }])).toEqual([
+			{ table: 'comments', id, reason: 'Not editable in this share' },
+		]);
+		const [stored] = await app.db.select().from(comments).where(eq(comments.id, id));
+		expect([stored!.body, stored!.taskId]).toEqual(['hello', first]);
+	});
+
+	test('a guest’s batch admits a subtask’s own subtask and comment in the same batch', async () => {
+		const parent = await newTask('Parent');
+		await share({ kind: 'task', id: parent }, guest, 'edit');
+		const sub = crypto.randomUUID();
+		const subSub = crypto.randomUUID();
+		const comment = crypto.randomUUID();
+		expect(
+			await upload(app, guest, [
+				{ op: 'put', table: 'tasks', id: sub, values: taskRow(sub, owner.person.id, 'Sub', { parentId: parent }) },
+				{
+					op: 'put',
+					table: 'tasks',
+					id: subSub,
+					values: taskRow(subSub, owner.person.id, 'Sub sub', { parentId: sub }),
+				},
+				{
+					op: 'put',
+					table: 'comments',
+					id: comment,
+					values: { id: comment, user_id: owner.person.id, task_id: sub, body: 'hi', created_at: 1 },
+				},
+			]),
+		).toEqual([]);
+		expect(await accessRows(guest.person.id)).toContain(`task:${subSub}:edit`);
+	});
+
+	test('a guest’s undo of deleting an imported task restores it without its import key', async () => {
+		const project = crypto.randomUUID();
+		await upload(app, owner, [
+			{
+				op: 'put',
+				table: 'projects',
+				id: project,
+				values: { id: project, user_id: owner.person.id, name: 'Imported', order: 0, created_at: 1 },
+			},
+		]);
+		const id = await newTask('From Todoist', { projectId: project, sourceKey: 'todoist:task:1' });
+		await share({ kind: 'project', id: project }, guest, 'edit');
+		expect(await upload(app, guest, [{ op: 'delete', table: 'tasks', id }])).toEqual([]);
+		const restored = taskRow(id, owner.person.id, 'From Todoist', { projectId: project, sourceKey: 'todoist:task:1' });
+		expect(await upload(app, guest, [{ op: 'put', table: 'tasks', id, values: restored }])).toEqual([]);
+		const [row] = await app.db.select().from(tasks).where(eq(tasks.id, id));
+		expect([row!.title, row!.sourceKey]).toEqual(['From Todoist', null]);
+		const kept = await newTask('Keeps its key', { projectId: project, sourceKey: 'todoist:task:2' });
+		expect(
+			await upload(app, guest, [
+				{
+					op: 'put',
+					table: 'tasks',
+					id: kept,
+					values: taskRow(kept, owner.person.id, 'Keeps its key', { projectId: project }),
+				},
+			]),
+		).toEqual([]);
+		expect((await app.db.select().from(tasks).where(eq(tasks.id, kept)))[0]!.sourceKey).toBe('todoist:task:2');
+	});
+
+	test('an agent command a guest may only partly do is refused whole', async () => {
+		const parent = await newTask('Parent');
+		const child = await newTask('Child', { parentId: parent });
+		await share({ kind: 'task', id: parent }, guest, 'view');
+		await share({ kind: 'task', id: child }, guest, 'edit');
+		const response = await call(guest, 'DELETE', `/api/tasks?space=${owner.person.id}&id=${parent}`);
+		expect(response.status).toBe(403);
+		const left = await app.db.select({ id: tasks.id }).from(tasks).where(eq(tasks.id, child));
+		expect(left.length).toBe(1);
+	});
+
 	test('a guest’s re-put of the owner’s task keeps created_by, and a view-only guest cannot comment', async () => {
 		const id = await newTask('Keep the author');
 		await share({ kind: 'task', id }, guest, 'edit');

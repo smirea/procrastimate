@@ -4,6 +4,7 @@ import type { AccessRow } from './db/schema.ts';
 import type { Task } from './task.ts';
 import type { TaskEvent, TaskLocation } from './values.ts';
 import { describe, recorded, test } from './vectors/record.ts';
+import { task as base } from './testing.ts';
 
 const screenDefaults = recorded('screens', screens.screenDefaults);
 const screenHolds = recorded('screens', screens.screenHolds);
@@ -22,29 +23,7 @@ const granted = (kind: AccessRow['kind'], entityId: string, role: AccessRow['rol
 });
 
 let created = 0;
-const task = (id: string, fields: Partial<Task> = {}): Task => ({
-	id,
-	parentId: null,
-	order: 0,
-	title: id,
-	notes: '',
-	projectId: null,
-	sectionId: null,
-	labelIds: [],
-	due: null,
-	recurrence: null,
-	priority: 4,
-	reminders: [],
-	location: null,
-	event: null,
-	images: [],
-	createdAt: ++created,
-	completedAt: null,
-	createdBy: null,
-	completedBy: null,
-	lastCompletedAt: null,
-	...fields,
-});
+const task = (id: string, fields: Partial<Task> = {}): Task => base(id, { createdAt: ++created, ...fields });
 
 const rewe = (name: string): TaskLocation => ({
 	name,

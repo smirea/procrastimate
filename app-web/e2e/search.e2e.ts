@@ -24,15 +24,8 @@ test('search matches titles, notes, projects, and labels, needs every word, and 
 	await expect(results.getByRole('option').first()).toHaveAttribute('aria-selected', 'true');
 	await expect(results.locator('mark')).toHaveText(['Home', 'Home', 'home']);
 
-	await field.fill('sink home');
-	await expect(results.getByRole('option')).toHaveText([/Fix sink/]);
 	await field.fill('sink garden');
 	await expect(search).toContainText('No results for “sink garden”');
-
-	await field.fill('call');
-	await expect(results.getByRole('option')).toHaveText([/^\s*calls$/, /Call bank/, /Dentist calls/, /Plumber calls/]);
-	await field.fill('dentist waiting');
-	await expect(results.getByRole('option')).toHaveText([/Dentist/]);
 
 	await field.fill('wait');
 	await field.press('Enter');

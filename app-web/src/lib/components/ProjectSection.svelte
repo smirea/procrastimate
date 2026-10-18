@@ -8,6 +8,7 @@
 	import type { Section, Task } from 'shared/task.ts';
 	import AddTaskButton from './AddTaskButton.svelte';
 	import CompletedList from './CompletedList.svelte';
+	import InlineEdit from './InlineEdit.svelte';
 	import Popover from './Popover.svelte';
 	import SectionHeading from './SectionHeading.svelte';
 	import TaskList from './TaskList.svelte';
@@ -28,31 +29,20 @@
 		canAdd,
 	}: { section: Section; tasks: Task[]; done: Task[]; index: number; count: number; editable: boolean; canAdd: boolean } = $props();
 
-	const removing = $derived(sectionTasks(store.tasks, section.id).length);
 	let renaming = $state(false);
 	let confirmingDelete = $state(false);
-
-	function rename(name: string) {
-		if (name.trim()) store.renameSection(section.id, name.trim());
-		renaming = false;
-	}
 </script>
 
 <section class="mt-6" aria-label={section.name}>
 	<SectionHeading heading={section.name} {tasks}>
 		{#snippet title()}
 			{#if renaming}
-				<!-- svelte-ignore a11y_autofocus -->
-				<input
+				<InlineEdit
 					class="-my-1 min-w-0 flex-1 rounded-lg bg-ink/[0.05] px-1 py-0.5 text-[13px] font-semibold outline-none"
-					aria-label="Section name"
+					label="Section name"
 					value={section.name}
-					autofocus
-					onblur={(e) => rename(e.currentTarget.value)}
-					onkeydown={(e) => {
-						if (e.key === 'Enter') rename(e.currentTarget.value);
-						if (e.key === 'Escape') renaming = false;
-					}}
+					oncommit={(name) => store.renameSection(section.id, name)}
+					onclose={() => (renaming = false)}
 				/>
 			{:else}
 				<h2 class="min-w-0 truncate text-[13px] font-semibold">{section.name}</h2>
@@ -76,6 +66,7 @@
 					{/snippet}
 					{#snippet children({ close })}
 						{#if confirmingDelete}
+							{@const removing = sectionTasks(store.tasks, section.id).length}
 							<div class="w-60 p-1.5 text-[13px]">
 								<p>Delete <strong>{section.name}</strong>{removing ? ` and its ${removing} task${removing === 1 ? '' : 's'}` : ''}?</p>
 								<div class="mt-2 flex justify-end gap-1.5">

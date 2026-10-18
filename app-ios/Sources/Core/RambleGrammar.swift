@@ -88,7 +88,6 @@ private enum RambleNames {
 }
 
 private enum RambleFields {
-    static let priorityPhrase = RambleRegex(#"\bpriority\s+([1-4])\b|(?<![\w#@])p([1-4])\b"#, ignoreCase: true)
 
     static func read(
         _ text: String,
@@ -141,16 +140,8 @@ private enum RambleFields {
             for match in labels.suffix.matches(in: work) { take(match, match.start, match.end) }
         }
 
-        var priority: Priority?
-        let priorities = priorityPhrase.matches(in: work)
-        if let last = priorities.last, let level = Int(last[1] ?? last[2] ?? ""), let value = Priority(rawValue: level) {
-            priority = value
-            add("priority", last.start, last.end)
-        }
-        for match in priorities { claim(match.start, match.end) }
-
         let parsed = QuickAdd.parse(work, QuickAdd.Options(now: now, spoken: true), in: zone)
-        for token in parsed.tokens where token.kind != .priority {
+        for token in parsed.tokens {
             add(token.kind.rawValue, token.start, token.end)
         }
         let ordered = labelHits.sorted { $0.at < $1.at }
@@ -161,7 +152,7 @@ private enum RambleFields {
             tokens: tokens.sorted { $0.start < $1.start },
             projectId: projectId,
             labelIds: labelIds,
-            priority: priority,
+            priority: parsed.priority,
             due: parsed.due,
             recurrence: parsed.recurrence,
             reminders: parsed.reminders
@@ -338,7 +329,7 @@ struct RambleGrammar {
         ignoreCase: true
     )
     static let letters = RambleRegex(#"[\p{L}\p{N}]"#)
-    static let jsSpace = RambleRegex(#"\s"#)
+    static let leadingSpace = RambleRegex(#"^\s+"#)
     static let words = RambleRegex(#"\s+"#)
     static let leftTrim = RambleRegex(#"^[\s,;]+"#)
 
@@ -379,14 +370,14 @@ struct RambleGrammar {
     func sliceOf(_ item: RambleItem, _ allowProject: Bool) -> (attributes: Attributes, start: Int) {
         let start = item.main.map(\.start).min() ?? 0
         let end = item.main.map(\.end).max() ?? start
-        var masked = Array(repeating: ";", count: max(0, end - start))
+        var masked = [UInt16](repeating: 0x3B, count: max(0, end - start))
         let normalized = JSString(mapped.text)
         for range in item.main {
             for index in range.start..<range.end where index - start < masked.count {
-                masked[index - start] = normalized.char(index)
+                masked[index - start] = normalized.unit(index)
             }
         }
-        return (attributes(masked.joined(), start, allowProject), start)
+        return (attributes(String(decoding: masked, as: UTF16.self), start, allowProject), start)
     }
 
     func titleOf(_ ranges: [RambleSpan], _ allowProject: Bool) -> (title: String, attributes: Attributes) {
@@ -472,7 +463,7 @@ struct RambleGrammar {
 
     func leadingCue(_ range: RambleSpan) -> RambleSpan? {
         let clause = span(range)
-        let skip = JSString(clause).count - JSString(RambleRegex(#"^\s+"#).replaceFirst(clause) { _ in "" }).count
+        let skip = JSString(clause).count - JSString(Self.leadingSpace.replaceFirst(clause) { _ in "" }).count
         guard let match = Self.cue.first(in: JSString(clause).slice(skip, JSString(clause).count)) else { return nil }
         let start = range.start + skip
         return RambleSpan(start: start, end: start + match.end)
@@ -596,15 +587,15 @@ struct RambleGrammar {
         func push(_ kind: String, _ range: RambleSpan) {
             var span = original(range)
             let source = JSString(transcript)
-            while span.start < span.end, Self.jsSpace.test(source.char(span.start)) { span.start += 1 }
-            while span.end > span.start, Self.jsSpace.test(source.char(span.end - 1)) { span.end -= 1 }
+            while span.start < span.end, UTF16Text.isWhitespace(source.unit(span.start)) { span.start += 1 }
+            while span.end > span.start, UTF16Text.isWhitespace(source.unit(span.end - 1)) { span.end -= 1 }
             tokens.append(RambleToken(kind: kind, start: span.start, end: span.end, text: source.slice(span.start, span.end)))
         }
         func build(_ item: RambleItem, _ isRoot: Bool) -> RambleTask? {
-            let subtasks = isRoot ? item.subtasks.compactMap { build($0, false) } : []
             let read = item.main.isEmpty ? nil : sliceOf(item, isRoot).attributes
             let title = read.map { RambleTitles.build(transcript, mapped, item.main, $0.tokens, omit: item.cues) } ?? ""
             if title.isEmpty { return nil }
+            let subtasks = isRoot ? item.subtasks.compactMap { build($0, false) } : []
             for token in read?.tokens ?? [] { push(token.kind, RambleSpan(start: token.start, end: token.end)) }
             let notes = item.notes
                 .map { sourceSlice($0).trimmingCharacters(in: .whitespacesAndNewlines) }
@@ -618,7 +609,6 @@ struct RambleGrammar {
                 segment.start = min(segment.start, subtask.segment.start)
                 segment.end = max(segment.end, subtask.segment.end)
             }
-            _ = covered
             return RambleTask(
                 segment: segment,
                 title: title,

@@ -37,6 +37,22 @@ describe('parseConfig', () => {
 		);
 	});
 
+	test('a key that does not decode to the right bytes fails at boot, not at first use', async () => {
+		const env = await testEnv({
+			VAPID_PUBLIC_KEY: 'not-a-key',
+			VAPID_PRIVATE_KEY: 'nope',
+			POWERSYNC_JWT_PRIVATE_KEY: JSON.stringify({ kty: 'OKP', crv: 'Ed25519', kid: 'k', x: 'x', d: 'd' }),
+		});
+		expect(() => parseConfig(env, DSN)).toThrow(
+			[
+				'Invalid server configuration:',
+				"- POWERSYNC_JWT_PRIVATE_KEY's x is not a 32-byte Ed25519 key",
+				'- VAPID_PUBLIC_KEY is not an uncompressed P-256 point',
+				'- VAPID_PRIVATE_KEY is not a 32-byte P-256 scalar',
+			].join('\n'),
+		);
+	});
+
 	test('the Hyperdrive binding stands in for DATABASE_URL', async () => {
 		const env = await testEnv({ DATABASE_URL: '' });
 		const settings = parseConfig(

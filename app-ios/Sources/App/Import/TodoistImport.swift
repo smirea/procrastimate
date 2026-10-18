@@ -30,7 +30,11 @@ final class TodoistImport {
             status = .failed("Couldn’t open this file.")
             return
         }
-        guard let entries = try? ZipReader.entries(of: archive, include: { $0.lowercased().hasSuffix(".csv") }) else {
+        let entries: [ZipReader.Entry]
+        do {
+            entries = try ZipReader.entries(of: archive, include: { $0.lowercased().hasSuffix(".csv") })
+        } catch {
+            ErrorReport.log("Could not read a Todoist backup zip", error: error)
             status = .failed("This is not a Todoist backup zip.")
             return
         }

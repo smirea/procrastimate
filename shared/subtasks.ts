@@ -39,12 +39,16 @@ export function groupChildren<T extends Linked>(tasks: readonly T[]): Map<string
 	return groups;
 }
 
-export function descendantsOf<T extends Linked>(tasks: readonly T[], id: string): T[] {
-	const children = groupChildren(tasks);
+/** Pass `children` from `groupChildren` when walking several roots of one list, so the index is built once. */
+export function descendantsOf<T extends Linked>(
+	tasks: readonly T[],
+	id: string,
+	children: ReadonlyMap<string, readonly T[]> = groupChildren(tasks),
+): T[] {
 	const out: T[] = [];
 	const queue = [id];
-	for (let next = queue.shift(); next !== undefined; next = queue.shift()) {
-		for (const child of children.get(next) ?? []) {
+	for (let i = 0; i < queue.length; i++) {
+		for (const child of children.get(queue[i]!) ?? []) {
 			out.push(child);
 			queue.push(child.id);
 		}
@@ -74,25 +78,36 @@ export function nextSiblingOrder(tasks: readonly Task[], parentId: string): numb
  * A task on an event series moves past the occurrence it is on, and any missed before it, to the next one the
  * calendar listed. With none left it completes, until iOS lists more.
  */
-function nextEventOccurrence(task: Task, today: DateKey): { next: Due; fields: Pick<Task, 'event'> } | null {
+function nextEventOccurrence(
+	task: Task,
+	today: DateKey,
+	zone?: string,
+): { next: Due; fields: Pick<Task, 'event'> } | null {
 	const event = task.event;
 	if (!event?.series) return null;
-	const rest = event.occurrences.slice(event.occurrences.indexOf(currentOccurrence(event, today)) + 1);
+	const rest = event.occurrences.slice(event.occurrences.indexOf(currentOccurrence(event, today, zone)) + 1);
 	if (!rest.length) return null;
-	return { next: occurrenceDue(event, rest[0]!), fields: { event: { ...event, occurrences: rest } } };
+	return { next: occurrenceDue(event, rest[0]!, zone), fields: { event: { ...event, occurrences: rest } } };
 }
 
 /**
  * Completing a task completes every open subtask under it. A recurring task, or one on an event series, moves to its
  * next occurrence instead, and every subtask under it reopens, so each occurrence starts with a fresh checklist.
- * Either way the task's `lastCompletedAt` becomes `now`, which is what tells a roll apart from a postpone.
+ * Either way the task's `lastCompletedAt` becomes `now`, which is what tells a roll apart from a postpone. `zone`
+ * is the account's time zone on the server, whose process zone is not the user's; clients leave it out.
  */
-export function completeTask(tasks: readonly Task[], id: string, today: DateKey, now: number): Completion | null {
+export function completeTask(
+	tasks: readonly Task[],
+	id: string,
+	today: DateKey,
+	now: number,
+	zone?: string,
+): Completion | null {
 	const task = tasks.find(t => t.id === id);
 	if (!task) return null;
 	const descendants = descendantsOf(tasks, id);
 	const occurrence = nextOccurrence(task, today);
-	const series = nextEventOccurrence(task, today);
+	const series = nextEventOccurrence(task, today, zone);
 	const next = occurrence ? { next: occurrence.due, fields: occurrence } : series;
 	if (!next) {
 		const changed = [task, ...descendants]

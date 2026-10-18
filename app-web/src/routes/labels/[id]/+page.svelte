@@ -9,6 +9,7 @@
 	import View from '#lib/components/View.svelte';
 	import TaskList from '#lib/components/TaskList.svelte';
 	import Popover from '#lib/components/Popover.svelte';
+	import InlineEdit from '#lib/components/InlineEdit.svelte';
 	import CompletedSection from '#lib/components/CompletedSection.svelte';
 	import CompletedToggle from '#lib/components/CompletedToggle.svelte';
 	import { store } from '#lib/store.svelte.ts';
@@ -41,11 +42,6 @@
 	let renaming = $state(false);
 	let confirmingDelete = $state(false);
 
-	function rename(name: string) {
-		if (label && name.trim()) store.renameLabel(label.id, name.trim());
-		renaming = false;
-	}
-
 	function remove() {
 		if (!label) return;
 		toastDeleted(label.name, store.deleteLabel(label.id));
@@ -57,6 +53,7 @@
 
 {#if label}
 	<View
+		name={label.name}
 		open={tasks.length}
 		empty={tasks.length === 0}
 		emptyTitle={place ? 'No tasks at this place' : 'No tasks with this label'}
@@ -67,17 +64,12 @@
 	>
 		{#snippet title()}
 			{#if renaming}
-				<!-- svelte-ignore a11y_autofocus -->
-				<input
+				<InlineEdit
 					class="w-full rounded-xl bg-ink/[0.05] px-1.5 text-[26px] font-semibold tracking-tight outline-none"
-					aria-label={place ? 'Place name' : 'Label name'}
+					label={place ? 'Place name' : 'Label name'}
 					value={label.name}
-					autofocus
-					onblur={(e) => rename(e.currentTarget.value)}
-					onkeydown={(e) => {
-						if (e.key === 'Enter') rename(e.currentTarget.value);
-						if (e.key === 'Escape') renaming = false;
-					}}
+					oncommit={(name) => store.renameLabel(label.id, name)}
+					onclose={() => (renaming = false)}
 				/>
 			{:else}
 				{@const Icon = labelIcon(label)}

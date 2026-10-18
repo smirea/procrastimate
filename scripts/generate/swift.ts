@@ -41,6 +41,8 @@ export type Schema = {
 	exclusiveMinimum?: number;
 	exclusiveMaximum?: number;
 	minItems?: number;
+	minLength?: number;
+	maxLength?: number;
 	pattern?: string;
 	'x-enum-names'?: string[];
 	'x-flatten'?: Record<string, string>;
@@ -67,6 +69,7 @@ export type Input = {
 type Check =
 	| { kind: 'min' | 'max'; value: number; exclusive: boolean }
 	| { kind: 'minItems'; value: number }
+	| { kind: 'length'; min?: number; max?: number }
 	| { kind: 'pattern'; value: string }
 	| { kind: 'member'; values: number[] }
 	| { kind: 'validate'; fn: string };
@@ -95,21 +98,13 @@ type Decl =
 	| { kind: 'inline'; name: string; tag: string; variants: { value: string; props: Prop[] }[]; doc?: string }
 	| { kind: 'untagged'; name: string; variants: { name: string; type: string }[]; doc?: string };
 
-const KEYWORDS = new Set([
-	'default',
-	'in',
-	'is',
-	'as',
-	'case',
-	'class',
-	'enum',
-	'func',
-	'let',
-	'var',
-	'self',
-	'Type',
-	'repeat',
-]);
+/** Swift's reserved words, which a property or case name must backtick. `open` and the like are contextual and need none. */
+const KEYWORDS = new Set(
+	`associatedtype class deinit enum extension fileprivate func import init inout internal let operator private
+	precedencegroup protocol public rethrows static struct subscript typealias var break case catch continue default
+	defer do else fallthrough for guard if in repeat return throw switch where while Any as false is nil self Self
+	super throws true try Type`.split(/\s+/),
+);
 const pascal = (value: string) =>
 	value
 		.split(/[^A-Za-z0-9]+/)
@@ -120,7 +115,11 @@ const camel = (value: string) => {
 	const name = pascal(value);
 	return name[0]!.toLowerCase() + name.slice(1);
 };
-const identifier = (name: string) => (KEYWORDS.has(name) ? `\`${name}\`` : name);
+function identifier(name: string): string {
+	if (!/^[A-Za-z_]\w*$/.test(name))
+		throw new Error(`${JSON.stringify(name)} is not a Swift identifier; add x-enum-names`);
+	return KEYWORDS.has(name) ? `\`${name}\`` : name;
+}
 const bare = (name: string) => name.replaceAll('`', '');
 /** Zod's integer bounds, which every Swift `Int` already meets. */
 const SAFE = 9_007_199_254_740_991;
@@ -249,6 +248,9 @@ class Generator {
 			checks.push({ kind: 'max', value: schema.exclusiveMaximum, exclusive: true });
 		}
 		if (schema.minItems !== undefined && schema.minItems > 0) checks.push({ kind: 'minItems', value: schema.minItems });
+		if (schema.minLength !== undefined || schema.maxLength !== undefined) {
+			checks.push({ kind: 'length', min: schema.minLength, max: schema.maxLength });
+		}
 		if (schema.pattern) checks.push({ kind: 'pattern', value: schema.pattern });
 		if (schema.enum?.every(value => typeof value === 'number') && !schema['x-enum-names']) {
 			checks.push({ kind: 'member', values: schema.enum as number[] });
@@ -518,6 +520,11 @@ function condition(check: Check, value: string): string {
 			return `${value} ${check.exclusive ? '<' : '<='} ${check.value}`;
 		case 'minItems':
 			return `${value}.count >= ${check.value}`;
+		case 'length':
+			return [
+				...(check.min === undefined ? [] : [`${value}.count >= ${check.min}`]),
+				...(check.max === undefined ? [] : [`${value}.count <= ${check.max}`]),
+			].join(' && ');
 		case 'pattern':
 			return `${value}.range(of: #"${swiftPattern(check.value)}"#, options: .regularExpression) != nil`;
 		case 'member':
@@ -535,6 +542,11 @@ function rule(check: Check): string {
 			return `${check.exclusive ? 'below' : 'at most'} ${check.value}`;
 		case 'minItems':
 			return `at least ${check.value} items`;
+		case 'length':
+			return [
+				...(check.min === undefined ? [] : [`at least ${check.min} characters`]),
+				...(check.max === undefined ? [] : [`at most ${check.max} characters`]),
+			].join(' and ');
 		case 'pattern':
 			return `matching ${check.value.replaceAll('\\', '\\\\')}`;
 		case 'member':

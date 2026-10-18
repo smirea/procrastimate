@@ -56,9 +56,16 @@ struct ImageStrip: View {
                 guard !items.isEmpty else { return }
                 Task {
                     var sources: [Data] = []
+                    var failed = 0
                     for item in items {
-                        if let data = try? await item.loadTransferable(type: Data.self) { sources.append(data) }
+                        do {
+                            if let data = try await item.loadTransferable(type: Data.self) { sources.append(data) } else { failed += 1 }
+                        } catch {
+                            ErrorReport.log("Could not load a picked photo", error: error)
+                            failed += 1
+                        }
                     }
+                    if failed > 0 { toasts.show("Couldn’t add \(failed) image\(failed == 1 ? "" : "s")") }
                     await images.attach(task.id, sources)
                 }
             }

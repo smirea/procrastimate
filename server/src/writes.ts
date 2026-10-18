@@ -5,7 +5,7 @@ import { access, comments, ENTITY_TABLES, log, tasks } from '../../shared/db/sch
 import type { FieldsByKind, Kind } from '../../shared/model';
 import { coalesce, TABLE_OF, type RowWrite } from '../../shared/rows';
 import type { Fields } from '../../shared/snapshot';
-import { guestRefusal, type StoredComment } from '../../shared/scope';
+import { guestRefusal, type GuestRows, type StoredRow } from '../../shared/scope';
 import type { Client } from '../../shared/values';
 import { asGuest, recomputeAccess, touchesAccess } from './access';
 import type { Db } from './db/postgres';
@@ -30,12 +30,12 @@ export type Applied = { rejected: Rejected[] };
 /**
  * The actor's standing in one space, which the agent API decides from the loaded space before it writes: the owner,
  * an AI manager with the owner's rights, or a guest whose writes are checked against their `access` rows, read with
- * the writes by `asGuest`, with `comment` answering what the server holds for a comment they write to.
+ * the writes by `asGuest`, with `stored` answering what the space holds for a row they write to.
  */
 export type Authority =
 	| { role: 'owner' }
 	| { role: 'manager' }
-	| { role: 'guest'; comment: (id: string) => StoredComment | undefined };
+	| { role: 'guest'; stored: (write: Pick<RowWrite, 'kind' | 'id'>) => StoredRow | undefined };
 
 const OTHER_SPACE = 'Belongs to another space';
 const DB_REFUSED = 'The database refused the write';
@@ -223,7 +223,7 @@ async function statement(db: Db, owner: string, actor: string, write: Write): Pr
 	return (await db.update(table).set(values).where(own).returning(returning)).length > 0;
 }
 
-type Stored = { userId: string } & Partial<StoredComment>;
+type Stored = { userId: string } & StoredRow;
 
 /** The stored row behind each write, for the writes whose first statement changed nothing: one select per table. */
 async function storedRows(db: Db, writes: readonly Write[]): Promise<Map<string, Stored>> {
@@ -256,50 +256,81 @@ type Landed = { owner: string; write: Write };
 const inLockOrder = <T extends Pick<RowWrite, 'kind' | 'id'>>(writes: readonly T[]) =>
 	writes.toSorted((a, b) => rowKey(a).localeCompare(rowKey(b)));
 
+type GuestWrite = Write & { stored?: StoredRow };
+
+function withoutSourceKey<T extends Write>(write: T): T {
+	if (write.kind !== 'task' || !write.values || !('sourceKey' in write.values)) return write;
+	const { sourceKey: _, ...values } = write.values;
+	return { ...write, values };
+}
+
+function admit(rows: GuestRows, group: readonly GuestWrite[], actor: string, rejected: Rejected[]): Write[] {
+	const seen = [...rows];
+	const admitted: Write[] = [];
+	for (const { stored, ...raw } of group) {
+		const write = withoutSourceKey(raw);
+		const reason = PER_USER.has(write.kind) ? null : guestRefusal(seen, write, actor, stored);
+		if (reason) {
+			rejected.push(reject(write, reason));
+			continue;
+		}
+		if (write.kind === 'task' && write.op === 'put' && !stored) {
+			seen.push({ kind: 'task', entityId: write.id, role: 'edit' });
+		}
+		admitted.push(write);
+	}
+	return admitted;
+}
+
+async function firstRejection(work: readonly Promise<void>[]): Promise<unknown> {
+	const settled = await Promise.allSettled(work);
+	return settled.find(result => result.status === 'rejected')?.reason;
+}
+
 /**
  * The upload route's writes, to whichever spaces they name. A write to the actor's own space runs at once. A put
  * that then changed nothing names a row stored in another space. A patch or a delete that changed nothing is looked
  * up: gone, which is how a delete beats an edit that arrives after it, or stored in another space, which makes it a
- * guest's write. A guest's writes are checked against the guest's `access` rows in that space, one query per space.
+ * guest's write. A put into another space is looked up too, so a guest cannot rewrite a row it holds no `edit` row
+ * for. A guest's writes are checked against the guest's `access` rows in that space, one query per space.
  */
 export async function applyWrites(db: Db, ctx: WriteContext, writes: readonly OwnedWrite[]): Promise<Applied> {
 	const actor = ctx.actor.id;
 	const results: Results = { landed: [], rejected: [] };
 	const { landed, rejected } = results;
 	const unresolved: Write[] = [];
-	const foreign: (Write & { owner: string; stored?: StoredComment })[] = [];
+	const puts: (Write & { owner: string })[] = [];
+	const own: Write[] = [];
+	for (const { owner, ...write } of coalesce(writes)) {
+		if (write.op === 'put' && !PER_USER.has(write.kind) && owner !== actor) puts.push({ ...write, owner: owner! });
+		else own.push(write);
+	}
 
-	await Promise.all(
-		coalesce(writes).map(({ owner, ...write }) => {
-			if (write.op === 'put' && !PER_USER.has(write.kind) && owner !== actor) {
-				foreign.push({ ...write, owner: owner! });
-				return;
-			}
-			return land(db, actor, actor, write, results).then(missed => {
+	const failure = await firstRejection(
+		own.map(write =>
+			land(db, actor, actor, write, results).then(missed => {
 				if (!missed) return;
 				// A settings put that found the row changed nothing on purpose; a comment put may have met another's row.
 				if (write.op !== 'put' || write.kind === 'comment') unresolved.push(write);
 				else if (!PER_USER.has(write.kind)) rejected.push(reject(write, OTHER_SPACE));
-			});
-		}),
+			}),
+		),
 	);
 
-	const stored = await storedRows(
-		db,
-		unresolved.filter(write => !PER_USER.has(write.kind)),
-	);
+	const stored = await storedRows(db, [...puts, ...unresolved.filter(write => !PER_USER.has(write.kind))]);
 	const gone = unresolved.filter(write => write.op === 'delete' && !stored.has(rowKey(write)));
 	if (gone.length) landed.push(...(await spacesOfGone(db, actor, gone)));
+	const foreign: (GuestWrite & { owner: string })[] = [];
+	for (const write of puts) {
+		const row = stored.get(rowKey(write));
+		if (row && row.userId !== write.owner) rejected.push(reject(write, OTHER_SPACE));
+		else foreign.push({ ...write, stored: row });
+	}
 	for (const write of unresolved) {
 		const row = stored.get(rowKey(write));
 		if (!row) continue;
 		if (row.userId === actor) rejected.push(reject(write, authorOnly(write.op)));
-		else
-			foreign.push({
-				...write,
-				owner: row.userId,
-				stored: row.taskId ? { taskId: row.taskId, authorId: row.authorId ?? null } : undefined,
-			});
+		else foreign.push({ ...write, owner: row.userId, stored: row });
 	}
 
 	for (const [owner, group] of Map.groupBy(foreign, write => write.owner)) {
@@ -308,15 +339,14 @@ export async function applyWrites(db: Db, ctx: WriteContext, writes: readonly Ow
 				rejected.push(...group.map(write => reject(write, 'Not shared with you')));
 				return;
 			}
-			for (const { owner: space, stored, ...write } of inLockOrder(group)) {
-				const reason = guestRefusal(rows, write, actor, stored);
-				if (reason) rejected.push(reject(write, reason));
-				else if (await land(tx, space, actor, write, results, true)) missedPut(rejected, write);
+			for (const write of inLockOrder(admit(rows, group, actor, rejected))) {
+				if (await land(tx, owner, actor, write, results, true)) missedPut(rejected, write);
 			}
 		});
 	}
 
 	await finish(db, ctx, landed);
+	if (failure) throw failure;
 	return { rejected };
 }
 
@@ -373,7 +403,8 @@ function missedPut(rejected: Rejected[], missed: Write) {
 /**
  * The agent API's writes to one space, whose authority the caller decided from the loaded space. A write that
  * changed nothing names a row that is gone, or a comment that is not the actor's, which the agent rules already
- * refused in memory.
+ * refused in memory. A guest's command lands whole or not at all: one refused write rejects the command, and nothing
+ * of it is written.
  */
 export async function applyAs(
 	db: Db,
@@ -386,22 +417,25 @@ export async function applyAs(
 	const results: Results = { landed: [], rejected: [] };
 	const { landed, rejected } = results;
 	const coalesced = coalesce(writes);
+	let failure: unknown;
 	if (authority.role !== 'guest') {
-		await Promise.all(
+		failure = await firstRejection(
 			coalesced.map(async write => {
 				if (await land(db, owner, actor, write, results)) missedPut(rejected, write);
 			}),
 		);
 	} else {
 		await asGuest(db, actor, owner, async (tx, rows) => {
-			for (const write of inLockOrder(coalesced)) {
-				const reason = PER_USER.has(write.kind) ? null : guestRefusal(rows, write, actor, authority.comment(write.id));
-				if (reason) rejected.push(reject(write, reason));
-				else if (await land(tx, owner, actor, write, results, true)) missedPut(rejected, write);
+			const group = coalesced.map(write => ({ ...write, stored: authority.stored(write) }));
+			const admitted = admit(rows, group, actor, rejected);
+			if (admitted.length < group.length) return;
+			for (const write of inLockOrder(admitted)) {
+				if (await land(tx, owner, actor, write, results, true)) missedPut(rejected, write);
 			}
 		});
 	}
 	await finish(db, ctx, landed);
+	if (failure) throw failure;
 	return { rejected };
 }
 

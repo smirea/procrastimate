@@ -105,9 +105,19 @@ function audit(page: Page, keyboard: number) {
 	}, keyboard);
 }
 
+/** Waits for the animations an inset change starts, the way `App.settle` does, since the audit has only the page. */
+async function settled(page: Page) {
+	await page.evaluate(async () => {
+		const running = () => document.getAnimations().filter(animation => animation.playState === 'running');
+		for (let busy = running(); busy.length; busy = running()) {
+			await Promise.race(busy.map(animation => animation.finished.catch(() => {})));
+		}
+	});
+}
+
 async function check(page: Page, findings: Finding[], screen: string, keyboard = 0) {
 	await page.evaluate(inset => document.documentElement.style.setProperty('--keyboard-inset', `${inset}px`), keyboard);
-	await page.waitForTimeout(350);
+	await settled(page);
 	for (const problem of await audit(page, keyboard)) findings.push({ screen, problem });
 	if (shots) await page.screenshot({ path: `${shots}/${test.info().project.name}-${screen}.png` });
 }

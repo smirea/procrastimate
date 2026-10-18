@@ -66,6 +66,21 @@
 		node.querySelector<HTMLElement>('[data-autofocus]')?.focus();
 	}
 
+	/** Listened to only while open, and detached before the outro, so a closing panel never swallows a key. */
+	$effect(() => {
+		if (!open) return;
+		window.addEventListener('keydown', onWindowKeydown, true);
+		window.addEventListener('pointerdown', onWindowPointerdown, true);
+		window.addEventListener('scroll', onWindowMove, true);
+		window.addEventListener('resize', onWindowMove);
+		return () => {
+			window.removeEventListener('keydown', onWindowKeydown, true);
+			window.removeEventListener('pointerdown', onWindowPointerdown, true);
+			window.removeEventListener('scroll', onWindowMove, true);
+			window.removeEventListener('resize', onWindowMove);
+		};
+	});
+
 	/**
 	 * Focus inside the panel returns to where it was on close, so Tab continues from the trigger instead of the page.
 	 * This runs before the outro, which makes the panel inert and drops its focus to the body.
@@ -82,7 +97,7 @@
 	}
 
 	function onWindowKeydown(event: KeyboardEvent) {
-		if (open && event.key === 'Escape') {
+		if (event.key === 'Escape') {
 			event.stopImmediatePropagation();
 			event.preventDefault();
 			close();
@@ -90,16 +105,9 @@
 	}
 
 	function onWindowPointerdown(event: PointerEvent) {
-		if (open && !root.contains(event.target as Node)) close();
+		if (!root.contains(event.target as Node)) close();
 	}
 </script>
-
-<svelte:window
-	onkeydowncapture={onWindowKeydown}
-	onpointerdowncapture={onWindowPointerdown}
-	onscrollcapture={onWindowMove}
-	onresize={onWindowMove}
-/>
 
 <div class="relative min-w-0" bind:this={root}>
 	{@render trigger({ open, toggle })}

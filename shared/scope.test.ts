@@ -50,9 +50,11 @@ describe('guestRefusal', () => {
 		expect(guestRefusal(rows, put('new', { parentId: 'editable', projectId: 'hidden' }), 'me')).toBe(REFUSED);
 	});
 
-	test('a guest never sets a sourceKey', () => {
-		expect(guestRefusal(rows, patch('editable', { sourceKey: 'todoist:task:1' }), 'me')).toBe(REFUSED);
-		expect(guestRefusal(rows, patch('editable', { sourceKey: null }), 'me')).toBeNull();
+	test('a task the space holds needs an edit row, whatever the op, and a patch never creates one', () => {
+		expect(guestRefusal(rows, patch('unknown', { projectId: 'addable' }), 'me')).toBe(REFUSED);
+		expect(guestRefusal(rows, put('unknown', { projectId: 'addable' }), 'me', {})).toBe(REFUSED);
+		expect(guestRefusal(rows, put('unknown', { projectId: 'addable' }), 'me')).toBeNull();
+		expect(guestRefusal(rows, put('editable', { projectId: 'visible' }), 'me', {})).toBeNull();
 	});
 
 	test('a new comment needs an editable task', () => {

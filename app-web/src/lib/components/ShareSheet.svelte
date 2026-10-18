@@ -261,9 +261,9 @@
 		box-shadow: 0 1px 3px color-mix(in srgb, var(--glass-shadow) 50%, transparent);
 	}
 
-	@media (pointer: coarse) {
+	@media (max-width: 767px), (pointer: coarse) {
 		.role-option {
-			height: 2.5rem;
+			height: 2.75rem;
 		}
 	}
 </style>

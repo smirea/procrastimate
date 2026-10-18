@@ -37,11 +37,13 @@ enum SessionToken {
         return String(data: data, encoding: .utf8)
     }
 
+    /// Readable after the first unlock, like the shared item, so a background relaunch on a locked phone still reads it.
     private static func add(_ service: String, _ value: String) {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
             kSecValueData as String: Data(value.utf8),
+            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlock,
         ]
         SecItemAdd(query as CFDictionary, nil)
     }

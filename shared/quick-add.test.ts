@@ -88,6 +88,15 @@ describe('due dates', () => {
 		expect(parsed.title).toBe('Buy gift feb 30 at 13pm');
 		expect(parsed.due).toBe(null);
 	});
+
+	test('feb 29 without a year is the next leap day, and a year under 1000 stays text', () => {
+		expect(parse('Leap party feb 29')).toMatchObject({ title: 'Leap party', due: { date: '2028-02-29', time: null } });
+		expect(parse('Leap party feb 29', { now: new Date(2028, 2, 1, 10, 0) }).due).toEqual({
+			date: '2032-02-29',
+			time: null,
+		});
+		expect(parse('Pay rent 1/2/0050')).toMatchObject({ title: 'Pay rent 1/2/0050', due: null });
+	});
 });
 
 describe('priority', () => {

@@ -63,7 +63,9 @@ final class PlaceMonitor: NSObject {
         Task {
             do {
                 for try await event in await monitor.events { await handle(event) }
-            } catch {}
+            } catch {
+                ErrorReport.log("Place monitoring stopped", error: error)
+            }
         }
         await sync()
     }

@@ -225,14 +225,14 @@ enum RambleNormalize {
     }
 
     static func rewrite(_ source: Mapped, _ pattern: RambleRegex, _ replace: (RambleRegex.Found) -> String?) -> Mapped {
-        var text = ""
+        var units: [UInt16] = []
         var starts: [Int] = []
         var ends = [source.ends[0]]
         var cursor = 0
         let src = JSString(source.text)
         func copy(to limit: Int) {
             while cursor < limit {
-                text += src.char(cursor)
+                units.append(src.unit(cursor))
                 starts.append(source.starts[cursor])
                 ends.append(source.ends[cursor + 1])
                 cursor += 1
@@ -244,7 +244,7 @@ enum RambleNormalize {
             copy(to: match.start)
             let written = JSString(replacement)
             for index in 0..<written.count {
-                text += written.char(index)
+                units.append(written.unit(index))
                 starts.append(source.starts[match.start])
                 ends.append(source.ends[match.end])
             }
@@ -252,12 +252,18 @@ enum RambleNormalize {
         }
         copy(to: src.count)
         starts.append(source.starts[src.count])
-        return Mapped(text: text, starts: starts, ends: ends)
+        return Mapped(text: String(decoding: units, as: UTF16.self), starts: starts, ends: ends)
     }
+
+    static let leadingOh = RambleRegex(#"^oh\s+"#, ignoreCase: true)
 
     static func normalize(_ transcript: String) -> Mapped {
         var mapped = identity(transcript)
-        let steps: [(RambleRegex, (RambleRegex.Found) -> String?)] = [
+        for (pattern, replace) in steps { mapped = rewrite(mapped, pattern, replace) }
+        return mapped
+    }
+
+    static let steps: [(RambleRegex, @Sendable (RambleRegex.Found) -> String?)] = [
             (RambleRegex("[’‘]"), { _ in "'" }),
             (RambleRegex(#"\bthe day after tomorrow\b"#, ignoreCase: true), { _ in "in 2 days" }),
             (RambleRegex(#"\b(?:(?:at|by)\s+)?(?:the\s+)?end of (?:the )?day\b"#, ignoreCase: true), { _ in "eod" }),
@@ -281,7 +287,7 @@ enum RambleNormalize {
                 guard let hourText = match[1] else { return nil }
                 let hour = numberValue(hourText)
                 guard let minutesText = match[2] else { return String(hour) }
-                let minutes = numberValue(RambleRegex(#"^oh\s+"#, ignoreCase: true).replaceFirst(minutesText) { _ in "" })
+                let minutes = numberValue(leadingOh.replaceFirst(minutesText) { _ in "" })
                 return minutes < 60 ? "\(hour):\(minutes < 10 ? "0\(minutes)" : "\(minutes)")" : nil
             }),
             (RambleRegex(#"\b(\d{1,2}(?::\d{2})?)\s*([ap])(?:\.\s?m\.?|\s?m\b)"#, ignoreCase: true), { match in
@@ -315,10 +321,10 @@ enum RambleNormalize {
                 { _ in "" }
             ),
             (RambleRegex(#"\bpriority\s+(?:number\s+|level\s+)?(one|two|three|four|[1-4])\b(?![.:,]?\d)"#, ignoreCase: true), { match in
-                match[1].flatMap { priorityLevels[rambleFold($0)] }.map { "priority \($0)" }
+                match[1].flatMap { priorityLevels[rambleFold($0)] }.map { "p\($0)" }
             }),
             (RambleRegex("\\bpriority\\s+(won|to|too|for|fore)\\b(?=\\s*(?:[.,;!?]|$|(?:\(separator))\\b))", ignoreCase: true), { match in
-                match[1].flatMap { priorityLevels[rambleFold($0)] }.map { "priority \($0)" }
+                match[1].flatMap { priorityLevels[rambleFold($0)] }.map { "p\($0)" }
             }),
             (RambleRegex(#"\b(?:pee\s+(?:one|two|three|four|[1-4])|p\s+(?:one|two|three|four)|p-[1-4])\b"#, ignoreCase: true), { match in
                 let parts = wordSplit.split(match.value)
@@ -332,9 +338,4 @@ enum RambleNormalize {
             (RambleRegex("\\b\(when)\(corrected)(\(when))\\b", ignoreCase: true), { match in match[1] }),
             (RambleRegex("\\b\(priorityWords)\(corrected)(\(priorityWords))\\b", ignoreCase: true), { match in match[1] }),
         ]
-        for (pattern, replace) in steps {
-            mapped = rewrite(mapped, pattern, replace)
-        }
-        return mapped
-    }
 }

@@ -45,6 +45,7 @@ private struct BrowseList: View {
 
     var body: some View {
         let labels = Browse.labelsByName(store.labels)
+        let counts = Views.openCounts(store.tasks, store.labels)
         List {
             let lists = [Pin.inbox, .noDate].filter { !navigator.pins.contains($0) }
             if !lists.isEmpty {
@@ -67,7 +68,7 @@ private struct BrowseList: View {
                             name: project.name,
                             systemImage: "number",
                             tone: .muted,
-                            count: Views.projectTasks(store.tasks, project.id, in: store.timeZone).count
+                            count: counts.projects[project.id] ?? 0
                         )
                     }
                     .accessibilityIdentifier("browse-project-\(project.name)")
@@ -141,7 +142,7 @@ private struct BrowseList: View {
                                 name: label.name,
                                 systemImage: label.systemImage(),
                                 tone: label.color.tone,
-                                count: Views.labelViewTasks(store.tasks, label, in: store.timeZone).count
+                                count: counts.labels[label.id] ?? 0
                             )
                         }
                         .accessibilityIdentifier("browse-label-\(label.name)")
