@@ -2,7 +2,12 @@ import { describe, expect, test } from 'bun:test';
 import { historyProblems, type History } from './migration-history';
 
 const entry = (idx: number, when: number, tag = `000${idx}_m`) => ({ idx, when, tag });
-const history = (entries: ReturnType<typeof entry>[], sql: Record<string, string> = {}): History => ({
+const history = (
+	entries: ReturnType<typeof entry>[],
+	sql: Record<string, string> = {},
+	dialect = 'postgresql',
+): History => ({
+	dialect,
 	entries,
 	sql: tag => sql[tag] ?? `-- ${tag}`,
 });
@@ -12,6 +17,12 @@ describe('a branch migration history', () => {
 	test('equal to master, or with new entries appended in order, is fine', () => {
 		expect(historyProblems(master, master)).toEqual([]);
 		expect(historyProblems(master, history([entry(0, 100), entry(1, 200), entry(2, 300), entry(3, 400)]))).toEqual([]);
+	});
+
+	test('a new dialect starts a new history, since it migrates a new database', () => {
+		expect(historyProblems(history([entry(0, 100), entry(1, 200)], {}, 'sqlite'), history([entry(0, 900)]))).toEqual(
+			[],
+		);
 	});
 
 	test('missing an entry of master fails', () => {

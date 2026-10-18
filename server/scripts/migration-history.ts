@@ -4,18 +4,21 @@ import { isDeepStrictEqual } from 'node:util';
 /**
  * Fails unless this branch's `server/drizzle` history strictly extends the base's: every entry the base has, unchanged
  * and in order, with its SQL untouched, then only new entries, each later than the one before. A database's history
- * is the `when` of each applied entry, so anything else makes the migrator refuse every persistent database.
+ * is the `when` of each applied entry, so anything else makes the migrator refuse every persistent database. A
+ * branch that changes the dialect starts a new history for a new database, as the move from Turso to Postgres did, so
+ * there is nothing to extend.
  *
  * Usage: bun server/scripts/migration-history.ts [base ref, default origin/master]
  */
 
 type Entry = { idx: number; when: number; tag: string };
-export type History = { entries: Entry[]; sql: (tag: string) => string | null };
+export type History = { dialect: string; entries: Entry[]; sql: (tag: string) => string | null };
 
 const describe = (entry: Entry) => `${entry.tag} (idx ${entry.idx}, when ${entry.when})`;
 
 export function historyProblems(base: History, head: History): string[] {
 	const problems: string[] = [];
+	if (base.dialect !== head.dialect) return problems;
 	base.entries.forEach((kept, index) => {
 		const entry = head.entries[index];
 		if (!entry) problems.push(`${describe(kept)} is missing.`);
@@ -43,15 +46,15 @@ async function fromRef(ref: string): Promise<History> {
 	};
 	const journal = await show(JOURNAL);
 	if (journal === null) throw new Error(`${ref} has no ${JOURNAL}. Fetch it first: git fetch origin master`);
-	const entries: Entry[] = JSON.parse(journal).entries;
+	const { dialect, entries } = JSON.parse(journal) as { dialect: string; entries: Entry[] };
 	const files = new Map(
 		await Promise.all(entries.map(async entry => [entry.tag, await show(sqlPath(entry.tag))] as const)),
 	);
-	return { entries, sql: tag => files.get(tag) ?? null };
+	return { dialect, entries, sql: tag => files.get(tag) ?? null };
 }
 
 async function fromWorkingTree(): Promise<History> {
-	const entries: Entry[] = (await Bun.file(JOURNAL).json()).entries;
+	const { dialect, entries } = (await Bun.file(JOURNAL).json()) as { dialect: string; entries: Entry[] };
 	const files = new Map(
 		await Promise.all(
 			entries.map(async entry => {
@@ -60,7 +63,7 @@ async function fromWorkingTree(): Promise<History> {
 			}),
 		),
 	);
-	return { entries, sql: tag => files.get(tag) ?? null };
+	return { dialect, entries, sql: tag => files.get(tag) ?? null };
 }
 
 if (import.meta.main) {
