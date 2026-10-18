@@ -1,162 +1,270 @@
-CREATE TABLE `devices` (
-	`user_id` text NOT NULL,
-	`id` text NOT NULL,
-	`name` text NOT NULL,
-	`token_hash` text NOT NULL,
-	`created_at` integer NOT NULL,
-	`last_seen_at` integer NOT NULL,
-	`revoked_at` integer,
-	PRIMARY KEY(`user_id`, `id`)
+CREATE TABLE "access" (
+	"id" text PRIMARY KEY NOT NULL,
+	"grantee" text NOT NULL,
+	"owner" text NOT NULL,
+	"kind" text NOT NULL,
+	"entity_id" text NOT NULL,
+	"role" text NOT NULL
 );
 --> statement-breakpoint
-CREATE UNIQUE INDEX `devices_token_hash_unique` ON `devices` (`token_hash`);--> statement-breakpoint
-CREATE TABLE `labels` (
-	`user_id` text NOT NULL,
-	`id` text NOT NULL,
-	`name` text NOT NULL,
-	`created_at` integer NOT NULL,
-	`deleted` integer DEFAULT false NOT NULL,
-	`clocks` text NOT NULL,
-	PRIMARY KEY(`user_id`, `id`)
+ALTER TABLE "access" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+CREATE TABLE "api_tokens" (
+	"user_id" text NOT NULL,
+	"id" text NOT NULL,
+	"ai_user_id" text NOT NULL,
+	"name" text NOT NULL,
+	"token_hash" text NOT NULL,
+	"created_at" bigint NOT NULL,
+	"last_used_at" bigint,
+	CONSTRAINT "api_tokens_user_id_id_pk" PRIMARY KEY("user_id","id"),
+	CONSTRAINT "api_tokens_token_hash_unique" UNIQUE("token_hash")
 );
 --> statement-breakpoint
-CREATE TABLE `log` (
-	`user_id` text NOT NULL,
-	`seq` integer NOT NULL,
-	`op_id` text NOT NULL,
-	`kind` text NOT NULL,
-	`id` text NOT NULL,
-	`fields` text NOT NULL,
-	PRIMARY KEY(`user_id`, `seq`)
+ALTER TABLE "api_tokens" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+CREATE TABLE "comments" (
+	"id" text PRIMARY KEY NOT NULL,
+	"user_id" text NOT NULL,
+	"task_id" text NOT NULL,
+	"body" text NOT NULL,
+	"author_id" text,
+	"created_at" bigint NOT NULL,
+	"edited_at" bigint
 );
 --> statement-breakpoint
-CREATE INDEX `log_op_id` ON `log` (`user_id`,`op_id`);--> statement-breakpoint
-CREATE TABLE `meta` (
-	`user_id` text NOT NULL,
-	`key` text NOT NULL,
-	`value` text NOT NULL,
-	PRIMARY KEY(`user_id`, `key`)
+ALTER TABLE "comments" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+CREATE TABLE "images" (
+	"user_id" text NOT NULL,
+	"id" text NOT NULL,
+	"size" text NOT NULL,
+	"type" text NOT NULL,
+	"bytes" "bytea" NOT NULL,
+	"created_at" bigint NOT NULL,
+	"orphaned_at" bigint,
+	CONSTRAINT "images_user_id_id_size_pk" PRIMARY KEY("user_id","id","size")
 );
 --> statement-breakpoint
-CREATE TABLE `projects` (
-	`user_id` text NOT NULL,
-	`id` text NOT NULL,
-	`name` text NOT NULL,
-	`created_at` integer NOT NULL,
-	`source_key` text,
-	`deleted` integer DEFAULT false NOT NULL,
-	`clocks` text NOT NULL,
-	PRIMARY KEY(`user_id`, `id`)
+ALTER TABLE "images" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+CREATE TABLE "labels" (
+	"id" text PRIMARY KEY NOT NULL,
+	"user_id" text NOT NULL,
+	"name" text NOT NULL,
+	"color" text DEFAULT 'gray' NOT NULL,
+	"place" jsonb,
+	"created_at" bigint NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE `push` (
-	`user_id` text NOT NULL,
-	`device_id` text NOT NULL,
-	`subscription` text NOT NULL,
-	`notifications` text NOT NULL,
-	`delivered_through` integer NOT NULL,
-	PRIMARY KEY(`user_id`, `device_id`)
+ALTER TABLE "labels" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+CREATE TABLE "log" (
+	"seq" bigserial PRIMARY KEY NOT NULL,
+	"user_id" text NOT NULL,
+	"op_id" text,
+	"kind" text NOT NULL,
+	"id" text NOT NULL,
+	"op" text NOT NULL,
+	"fields" jsonb NOT NULL,
+	"actor" text DEFAULT 'server' NOT NULL,
+	"at" bigint NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE `ramble_budget` (
-	`day` text PRIMARY KEY NOT NULL,
-	`seconds` real NOT NULL
+ALTER TABLE "log" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+CREATE TABLE "people" (
+	"user_id" text NOT NULL,
+	"id" text NOT NULL,
+	"name" text NOT NULL,
+	"kind" text NOT NULL,
+	"owner_id" text,
+	"seen_at" bigint NOT NULL,
+	CONSTRAINT "people_user_id_id_pk" PRIMARY KEY("user_id","id")
 );
 --> statement-breakpoint
-CREATE TABLE `ramble_usage` (
-	`user_id` text NOT NULL,
-	`day` text NOT NULL,
-	`seconds` real NOT NULL,
-	PRIMARY KEY(`user_id`, `day`)
+ALTER TABLE "people" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+CREATE TABLE "projects" (
+	"id" text PRIMARY KEY NOT NULL,
+	"user_id" text NOT NULL,
+	"name" text NOT NULL,
+	"order" double precision DEFAULT 0 NOT NULL,
+	"created_at" bigint NOT NULL,
+	"source_key" text
 );
 --> statement-breakpoint
-CREATE TABLE `settings` (
-	`user_id` text NOT NULL,
-	`id` text NOT NULL,
-	`time_zone` text,
-	`clocks` text NOT NULL,
-	PRIMARY KEY(`user_id`, `id`)
+ALTER TABLE "projects" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+CREATE TABLE "push" (
+	"user_id" text NOT NULL,
+	"device_id" text NOT NULL,
+	"subscription" jsonb NOT NULL,
+	"notifications" jsonb NOT NULL,
+	"delivered_through" bigint NOT NULL,
+	"next_at" bigint,
+	CONSTRAINT "push_user_id_device_id_pk" PRIMARY KEY("user_id","device_id")
 );
 --> statement-breakpoint
-CREATE TABLE `tasks` (
-	`user_id` text NOT NULL,
-	`id` text NOT NULL,
-	`parent_id` text,
-	`order` real DEFAULT 0 NOT NULL,
-	`title` text NOT NULL,
-	`notes` text DEFAULT '' NOT NULL,
-	`project_id` text,
-	`label_ids` text DEFAULT '[]' NOT NULL,
-	`due` text,
-	`recurrence` text,
-	`priority` integer DEFAULT 4 NOT NULL,
-	`reminders` text DEFAULT '[]' NOT NULL,
-	`created_at` integer NOT NULL,
-	`completed_at` integer,
-	`source_key` text,
-	`deleted` integer DEFAULT false NOT NULL,
-	`clocks` text NOT NULL,
-	PRIMARY KEY(`user_id`, `id`)
+ALTER TABLE "push" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+CREATE TABLE "ramble_budget" (
+	"day" text PRIMARY KEY NOT NULL,
+	"seconds" double precision NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE `account` (
-	`id` text PRIMARY KEY NOT NULL,
-	`accountId` text NOT NULL,
-	`providerId` text NOT NULL,
-	`userId` text NOT NULL,
-	`accessToken` text,
-	`refreshToken` text,
-	`idToken` text,
-	`accessTokenExpiresAt` integer,
-	`refreshTokenExpiresAt` integer,
-	`scope` text,
-	`password` text,
-	`createdAt` integer NOT NULL,
-	`updatedAt` integer NOT NULL,
-	FOREIGN KEY (`userId`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE cascade
+ALTER TABLE "ramble_budget" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+CREATE TABLE "ramble_usage" (
+	"user_id" text NOT NULL,
+	"day" text NOT NULL,
+	"seconds" double precision NOT NULL,
+	CONSTRAINT "ramble_usage_user_id_day_pk" PRIMARY KEY("user_id","day")
 );
 --> statement-breakpoint
-CREATE INDEX `account_userId_idx` ON `account` (`userId`);--> statement-breakpoint
-CREATE TABLE `rateLimit` (
-	`id` text PRIMARY KEY NOT NULL,
-	`key` text NOT NULL,
-	`count` integer NOT NULL,
-	`lastRequest` integer NOT NULL
+ALTER TABLE "ramble_usage" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+CREATE TABLE "reads" (
+	"user_id" text NOT NULL,
+	"id" text NOT NULL,
+	"read_at" bigint NOT NULL,
+	CONSTRAINT "reads_user_id_id_pk" PRIMARY KEY("user_id","id")
 );
 --> statement-breakpoint
-CREATE UNIQUE INDEX `rateLimit_key_unique` ON `rateLimit` (`key`);--> statement-breakpoint
-CREATE TABLE `session` (
-	`id` text PRIMARY KEY NOT NULL,
-	`expiresAt` integer NOT NULL,
-	`token` text NOT NULL,
-	`createdAt` integer NOT NULL,
-	`updatedAt` integer NOT NULL,
-	`ipAddress` text,
-	`userAgent` text,
-	`userId` text NOT NULL,
-	FOREIGN KEY (`userId`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE cascade
+ALTER TABLE "reads" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+CREATE TABLE "sections" (
+	"id" text PRIMARY KEY NOT NULL,
+	"user_id" text NOT NULL,
+	"project_id" text NOT NULL,
+	"name" text NOT NULL,
+	"order" double precision DEFAULT 0 NOT NULL,
+	"created_at" bigint NOT NULL,
+	"source_key" text
 );
 --> statement-breakpoint
-CREATE UNIQUE INDEX `session_token_unique` ON `session` (`token`);--> statement-breakpoint
-CREATE INDEX `session_userId_idx` ON `session` (`userId`);--> statement-breakpoint
-CREATE TABLE `user` (
-	`id` text PRIMARY KEY NOT NULL,
-	`name` text NOT NULL,
-	`email` text NOT NULL,
-	`emailVerified` integer NOT NULL,
-	`image` text,
-	`createdAt` integer NOT NULL,
-	`updatedAt` integer NOT NULL
+ALTER TABLE "sections" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+CREATE TABLE "settings" (
+	"user_id" text NOT NULL,
+	"id" text NOT NULL,
+	"time_zone" text,
+	"dictation" text DEFAULT 'native' NOT NULL,
+	"quick_add_buttons" jsonb DEFAULT '["date","priority","reminders","subtasks"]'::jsonb NOT NULL,
+	CONSTRAINT "settings_user_id_id_pk" PRIMARY KEY("user_id","id")
 );
 --> statement-breakpoint
-CREATE UNIQUE INDEX `user_email_unique` ON `user` (`email`);--> statement-breakpoint
-CREATE TABLE `verification` (
-	`id` text PRIMARY KEY NOT NULL,
-	`identifier` text NOT NULL,
-	`value` text NOT NULL,
-	`expiresAt` integer NOT NULL,
-	`createdAt` integer NOT NULL,
-	`updatedAt` integer NOT NULL
+ALTER TABLE "settings" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+CREATE TABLE "shares" (
+	"user_id" text NOT NULL,
+	"id" text NOT NULL,
+	"target_kind" text NOT NULL,
+	"target_id" text NOT NULL,
+	"grantee" text,
+	"role" text NOT NULL,
+	"created_at" bigint NOT NULL,
+	CONSTRAINT "shares_user_id_id_pk" PRIMARY KEY("user_id","id")
 );
 --> statement-breakpoint
-CREATE INDEX `verification_identifier_idx` ON `verification` (`identifier`);
+ALTER TABLE "shares" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+CREATE TABLE "task_clients" (
+	"user_id" text NOT NULL,
+	"id" text NOT NULL,
+	"created" jsonb,
+	"edited" jsonb NOT NULL,
+	CONSTRAINT "task_clients_user_id_id_pk" PRIMARY KEY("user_id","id")
+);
+--> statement-breakpoint
+ALTER TABLE "task_clients" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+CREATE TABLE "tasks" (
+	"id" text PRIMARY KEY NOT NULL,
+	"user_id" text NOT NULL,
+	"parent_id" text,
+	"order" double precision DEFAULT 0 NOT NULL,
+	"title" text NOT NULL,
+	"notes" text DEFAULT '' NOT NULL,
+	"project_id" text,
+	"section_id" text,
+	"label_ids" jsonb DEFAULT '[]'::jsonb NOT NULL,
+	"due" jsonb,
+	"recurrence" jsonb,
+	"priority" integer DEFAULT 4 NOT NULL,
+	"reminders" jsonb DEFAULT '[]'::jsonb NOT NULL,
+	"location" jsonb,
+	"event" jsonb,
+	"images" jsonb DEFAULT '[]'::jsonb NOT NULL,
+	"created_at" bigint NOT NULL,
+	"completed_at" bigint,
+	"created_by" text,
+	"completed_by" text,
+	"last_completed_at" bigint,
+	"source_key" text
+);
+--> statement-breakpoint
+ALTER TABLE "tasks" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+CREATE TABLE "account" (
+	"id" text PRIMARY KEY NOT NULL,
+	"accountId" text NOT NULL,
+	"providerId" text NOT NULL,
+	"userId" text NOT NULL,
+	"accessToken" text,
+	"refreshToken" text,
+	"idToken" text,
+	"accessTokenExpiresAt" timestamp with time zone,
+	"refreshTokenExpiresAt" timestamp with time zone,
+	"scope" text,
+	"password" text,
+	"createdAt" timestamp with time zone NOT NULL,
+	"updatedAt" timestamp with time zone NOT NULL
+);
+--> statement-breakpoint
+ALTER TABLE "account" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+CREATE TABLE "rateLimit" (
+	"id" text PRIMARY KEY NOT NULL,
+	"key" text NOT NULL,
+	"count" integer NOT NULL,
+	"lastRequest" bigint NOT NULL,
+	CONSTRAINT "rateLimit_key_unique" UNIQUE("key")
+);
+--> statement-breakpoint
+ALTER TABLE "rateLimit" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+CREATE TABLE "session" (
+	"id" text PRIMARY KEY NOT NULL,
+	"expiresAt" timestamp with time zone NOT NULL,
+	"token" text NOT NULL,
+	"createdAt" timestamp with time zone NOT NULL,
+	"updatedAt" timestamp with time zone NOT NULL,
+	"ipAddress" text,
+	"userAgent" text,
+	"userId" text NOT NULL,
+	CONSTRAINT "session_token_unique" UNIQUE("token")
+);
+--> statement-breakpoint
+ALTER TABLE "session" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+CREATE TABLE "user" (
+	"id" text PRIMARY KEY NOT NULL,
+	"name" text NOT NULL,
+	"email" text NOT NULL,
+	"emailVerified" boolean NOT NULL,
+	"image" text,
+	"createdAt" timestamp with time zone NOT NULL,
+	"updatedAt" timestamp with time zone NOT NULL,
+	"kind" text DEFAULT 'human' NOT NULL,
+	"owner_id" text,
+	CONSTRAINT "user_email_unique" UNIQUE("email")
+);
+--> statement-breakpoint
+ALTER TABLE "user" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+CREATE TABLE "verification" (
+	"id" text PRIMARY KEY NOT NULL,
+	"identifier" text NOT NULL,
+	"value" text NOT NULL,
+	"expiresAt" timestamp with time zone NOT NULL,
+	"createdAt" timestamp with time zone NOT NULL,
+	"updatedAt" timestamp with time zone NOT NULL
+);
+--> statement-breakpoint
+ALTER TABLE "verification" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "account" ADD CONSTRAINT "account_userId_user_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "session" ADD CONSTRAINT "session_userId_user_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+CREATE INDEX "access_grantee" ON "access" USING btree ("grantee");--> statement-breakpoint
+CREATE INDEX "access_owner" ON "access" USING btree ("owner");--> statement-breakpoint
+CREATE INDEX "comments_user_id" ON "comments" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "comments_task_id" ON "comments" USING btree ("task_id");--> statement-breakpoint
+CREATE INDEX "labels_user_id" ON "labels" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "log_entity" ON "log" USING btree ("user_id","kind","id");--> statement-breakpoint
+CREATE INDEX "projects_user_id" ON "projects" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "push_next_at" ON "push" USING btree ("next_at");--> statement-breakpoint
+CREATE INDEX "sections_user_id" ON "sections" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "shares_grantee" ON "shares" USING btree ("grantee");--> statement-breakpoint
+CREATE INDEX "tasks_user_id" ON "tasks" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "account_userId_idx" ON "account" USING btree ("userId");--> statement-breakpoint
+CREATE INDEX "session_userId_idx" ON "session" USING btree ("userId");--> statement-breakpoint
+CREATE INDEX "verification_identifier_idx" ON "verification" USING btree ("identifier");

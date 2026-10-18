@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { defaultLabelColor, type LabelColor } from './label-colors.ts';
 import * as subtasks from './subtasks.ts';
-import { bySiblingOrder, moveOrders } from './sync/order.ts';
-import { commentSchema, labelSchema, projectSchema, readSchema, sectionSchema, taskSchema } from './sync/protocol.ts';
+import { bySiblingOrder, moveOrders } from './order.ts';
+import { commentSchema, labelSchema, projectSchema, readSchema, sectionSchema, taskSchema } from './model.ts';
 import { DEFAULT_PRIORITY, type DateKey, type Label, type Project, type Section, type Task } from './task.ts';
 import { placeKey } from './triggers.ts';
 import type { SavedPlace, TaskLocation } from './values.ts';

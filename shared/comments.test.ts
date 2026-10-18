@@ -1,7 +1,7 @@
 import { expect } from 'bun:test';
 import * as rules from './comments.ts';
 import type { StoreData } from './store.ts';
-import type { Comment } from './sync/protocol.ts';
+import type { Comment } from './model.ts';
 import { describe, recorded, test } from './vectors/record.ts';
 
 const addComment = recorded('comments', rules.addComment);

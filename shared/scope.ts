@@ -1,11 +1,11 @@
 import type { ShareRow } from './db/schema.ts';
 import { groupChildren } from './subtasks.ts';
-import { applyPatch } from './sync/apply.ts';
-import { DEFAULT_SETTINGS, type FieldsByKind, type Op, type Snapshot, type Task } from './sync/protocol.ts';
+import { DEFAULT_SETTINGS, type FieldsByKind, type Snapshot, type Task } from './model.ts';
+import { applyWrite, type RowWrite } from './rows.ts';
 
 /**
- * What a guest reaches in a space, from the owner's shares to them. Server only, never ported: the client only ever
- * sees the filtered snapshot. See `docs/decisions/sharing.md`.
+ * What a guest reaches in a space, from the owner's shares to them. Server only, never ported: clients see only the
+ * rows the server's `access` table lets PowerSync stream them. See `docs/decisions/sharing.md`.
  */
 
 export type Grant = Pick<ShareRow, 'targetKind' | 'targetId' | 'role'>;
@@ -100,35 +100,8 @@ export function filterSnapshot(snapshot: Snapshot, scope: Scope): Snapshot {
 	};
 }
 
-function stableJson(value: unknown): string {
-	if (Array.isArray(value)) return `[${value.map(stableJson).join(',')}]`;
-	if (value && typeof value === 'object') {
-		const entries = Object.entries(value as Record<string, unknown>)
-			.filter(([, v]) => v !== undefined)
-			.sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
-			.map(([k, v]) => `${JSON.stringify(k)}:${stableJson(v)}`);
-		return `{${entries.join(',')}}`;
-	}
-	return JSON.stringify(value);
-}
-
-/** cyrb53 over the stable JSON, so the hash is the same whichever process computes it. */
-export function scopeHash(view: unknown): string {
-	const text = stableJson(view);
-	let h1 = 0xdeadbeef;
-	let h2 = 0x41c6ce57;
-	for (let i = 0; i < text.length; i++) {
-		const ch = text.charCodeAt(i);
-		h1 = Math.imul(h1 ^ ch, 2654435761);
-		h2 = Math.imul(h2 ^ ch, 1597334677);
-	}
-	h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
-	h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
-	return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(16);
-}
-
 /**
- * A guest's op may only point at what the guest can already see: a parent it may edit, and projects, sections, and
+ * A guest's write may only point at what the guest can already see: a parent it may edit, and projects, sections, and
  * labels in its view, so it cannot graft its task onto the owner's private tree or pull hidden names into its snapshot. It may
  * not set `sourceKey` either, because fixups merge tasks by it and would tombstone the owner's matching task.
  */
@@ -146,87 +119,75 @@ function staysInScope(fields: Partial<FieldsByKind['task']>, scope: Scope): bool
  * on its task. So a view-only guest reads the comments but cannot write one. The author of a new comment is `actor`,
  * which the server stamps again when it writes it.
  */
-function admitComment(working: Snapshot, scope: Scope, op: Op, actor: string): Op | null {
-	const existing = working.comments.find(comment => comment.id === op.id);
-	// The intersection type does not narrow `fields` by `op.kind`, which the caller checked.
-	const fields = op.fields as Partial<FieldsByKind['comment']> & { deleted?: boolean };
-	const { taskId } = fields;
+function admitComment(working: Snapshot, scope: Scope, write: RowWrite, actor: string): RowWrite | null {
+	const existing = working.comments.find(comment => comment.id === write.id);
+	const { taskId } = (write.values ?? {}) as Partial<FieldsByKind['comment']>;
 	if (existing) {
 		const own = existing.authorId === actor && scope.editable.has(existing.taskId);
-		return own && (taskId === undefined || taskId === existing.taskId) ? op : null;
+		return own && (taskId === undefined || taskId === existing.taskId) ? write : null;
 	}
-	if (fields.deleted !== false || taskId === undefined || !scope.editable.has(taskId)) return null;
-	return { ...op, fields: { ...fields, authorId: actor } } as Op;
+	if (write.op !== 'put' || taskId === undefined || !scope.editable.has(taskId)) return null;
+	return { ...write, values: { ...write.values, authorId: actor } };
 }
 
 /**
- * Which of a guest's ops may be written, checked in order against a working copy the admitted ops update. A guest
- * writes tasks and comments only: an existing task must be editable before and after the op, a new one editable
- * after it (under an editable parent, or in an edit-shared project or label). A delete only needs the task editable
- * before. Comments follow `admitComment`. Projects, sections, and labels are only a manager's to write, never with a
- * `sourceKey`, and read markers and settings are never a guest's.
+ * Which of a guest's writes may be applied, checked in order against a working copy the admitted writes update. A
+ * guest writes tasks and comments only: an existing task must be editable before and after the write, a new one
+ * editable after it (under an editable parent, or in an edit-shared project or label). A delete only needs the task
+ * editable before. Comments follow `admitComment`, whose admitted write carries the author. Projects, sections, and
+ * labels are only a manager's to write, never with a `sourceKey`, and read markers and settings are never a guest's.
  */
-export function admit(snapshot: Snapshot, grants: readonly Grant[], ops: readonly Op[], actor: string) {
-	const admitted: Op[] = [];
-	const refused: Op[] = [];
+export function admit(snapshot: Snapshot, grants: readonly Grant[], writes: readonly RowWrite[], actor: string) {
+	const admitted: RowWrite[] = [];
+	const refused: RowWrite[] = [];
 	let working = snapshot;
 	let scope = scopeOf(working, grants);
 	const manager = managesSpace(grants);
-	for (const op of ops) {
-		if (op.kind === 'project' || op.kind === 'section' || op.kind === 'label') {
-			const { sourceKey } = op.fields as { sourceKey?: string | null };
-			if (manager && (sourceKey === undefined || sourceKey === null)) {
-				working = applyPatch(working, op);
-				scope = scopeOf(working, grants);
-				admitted.push(op);
-			} else {
-				refused.push(op);
-			}
+	const accept = (write: RowWrite) => {
+		working = applyWrite(working, write);
+		scope = scopeOf(working, grants);
+		admitted.push(write);
+	};
+	for (const write of writes) {
+		if (write.kind === 'project' || write.kind === 'section' || write.kind === 'label') {
+			const { sourceKey } = (write.values ?? {}) as { sourceKey?: string | null };
+			if (manager && (sourceKey === undefined || sourceKey === null)) accept(write);
+			else refused.push(write);
 			continue;
 		}
-		if (op.kind === 'comment') {
-			const allowed = admitComment(working, scope, op, actor);
-			if (allowed) {
-				working = applyPatch(working, allowed);
-				admitted.push(op);
-			} else {
-				refused.push(op);
-			}
+		if (write.kind === 'comment') {
+			const allowed = admitComment(working, scope, write, actor);
+			if (allowed) accept(allowed);
+			else refused.push(write);
 			continue;
 		}
-		if (op.kind !== 'task') {
-			refused.push(op);
+		if (write.kind !== 'task') {
+			refused.push(write);
 			continue;
 		}
-		const exists = working.tasks.some(task => task.id === op.id);
-		if (exists && !scope.editable.has(op.id)) {
-			refused.push(op);
+		const exists = working.tasks.some(task => task.id === write.id);
+		if (exists && !scope.editable.has(write.id)) {
+			refused.push(write);
 			continue;
 		}
-		if (op.fields.deleted === true) {
-			if (!exists) {
-				refused.push(op);
-				continue;
-			}
-			working = applyPatch(working, op);
-			scope = scopeOf(working, grants);
-			admitted.push(op);
+		if (write.op === 'delete') {
+			if (exists) accept(write);
+			else refused.push(write);
 			continue;
 		}
-		// `op.kind` is checked above; the intersection type does not narrow `fields` with it.
-		if (!staysInScope(op.fields as Partial<FieldsByKind['task']>, scope)) {
-			refused.push(op);
+		if (!staysInScope((write.values ?? {}) as Partial<FieldsByKind['task']>, scope)) {
+			refused.push(write);
 			continue;
 		}
-		const next = applyPatch(working, op);
+		const next = applyWrite(working, write);
 		const nextScope = scopeOf(next, grants);
-		if (!nextScope.editable.has(op.id)) {
-			refused.push(op);
+		if (!nextScope.editable.has(write.id)) {
+			refused.push(write);
 			continue;
 		}
 		working = next;
 		scope = nextScope;
-		admitted.push(op);
+		admitted.push(write);
 	}
 	return { admitted, refused };
 }

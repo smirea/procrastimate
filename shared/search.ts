@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { labelSchema, projectSchema, taskSchema } from './sync/protocol.ts';
+import { labelSchema, projectSchema, taskSchema } from './model.ts';
 import type { Label, Project, Task } from './task.ts';
 
 /** A half-open `[start, end)` span of the original text. */

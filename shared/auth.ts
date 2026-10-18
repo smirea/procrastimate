@@ -17,6 +17,8 @@ export type Actor = z.infer<typeof actorSchema>;
 
 /** This install's id. It is not a secret: the session is the credential. */
 export const DEVICE_HEADER = 'x-procrastimate-device';
+/** The install id on a WebSocket, as a subprotocol, since a browser cannot set headers on one. */
+export const DEVICE_PROTOCOL_PREFIX = 'device.';
 
 /**
  * The app sending the request, as JSON (`Client`). The web and iOS send it on every request, and a request without

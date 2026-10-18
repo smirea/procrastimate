@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { taskSchema } from './sync/protocol.ts';
+import { taskSchema } from './model.ts';
 import { groupChildren } from './subtasks.ts';
 import type { Project, Task } from './task.ts';
 import type { ProjectGroup } from './views.ts';

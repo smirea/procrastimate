@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { sectionsOf } from './store.ts';
-import { sectionSchema, taskSchema } from './sync/protocol.ts';
+import { sectionSchema, taskSchema } from './model.ts';
 import { addDays, toDateKey, type DateKey, type Due, type Label, type Section, type Task } from './task.ts';
 import { occurrenceDue, placeKey, scheduledDue } from './triggers.ts';
 import { dateKeySchema } from './values.ts';

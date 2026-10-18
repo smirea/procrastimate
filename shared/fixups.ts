@@ -1,6 +1,6 @@
-import { detachOrphans } from '../subtasks.ts';
-import type { Section, Task } from '../task.ts';
-import type { Snapshot } from './protocol.ts';
+import { detachOrphans } from './subtasks.ts';
+import type { Section, Task } from './task.ts';
+import type { Snapshot } from './model.ts';
 import { byCreation } from './snapshot.ts';
 
 /**

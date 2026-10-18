@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { labelSchema, projectSchema, sectionSchema, taskSchema } from './sync/protocol.ts';
+import { labelSchema, projectSchema, sectionSchema, taskSchema } from './model.ts';
 import { linkify } from './links.ts';
 import { isSavedPlace, placeLocation } from './triggers.ts';
 import { DATE_KEY_PATTERN, MAX_RECURRENCE_INTERVAL } from './values.ts';

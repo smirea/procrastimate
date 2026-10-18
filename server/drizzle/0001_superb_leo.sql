@@ -1,1 +1,0 @@
-ALTER TABLE `settings` ADD `dictation` text DEFAULT 'native' NOT NULL;

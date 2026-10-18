@@ -4,7 +4,7 @@ import { defaultLabelColor } from './label-colors.ts';
 import { parseQuickAdd } from './quick-add.ts';
 import { projectsInOrder, sectionsOf, type StoreData } from './store.ts';
 import { nextSiblingOrder } from './subtasks.ts';
-import { taskSchema } from './sync/protocol.ts';
+import { taskSchema } from './model.ts';
 import {
 	DEFAULT_PRIORITY,
 	toDateKey,

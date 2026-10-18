@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { Creation, StoreData } from './store.ts';
-import type { Comment, CommentRead } from './sync/protocol.ts';
-import { byCreation } from './sync/snapshot.ts';
+import type { Comment, CommentRead } from './model.ts';
+import { byCreation } from './snapshot.ts';
 
 /**
  * Comments on tasks and who has read them, as pure rules both clients share. A comment lives in its task's space; a

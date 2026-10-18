@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { bySiblingOrder, moveOrders } from './sync/order.ts';
-import { taskSchema } from './sync/protocol.ts';
+import { bySiblingOrder, moveOrders } from './order.ts';
+import { taskSchema } from './model.ts';
 import { dueSchema } from './values.ts';
 import { nextOccurrence, type DateKey, type Due, type Task } from './task.ts';
 import { currentOccurrence, occurrenceDue } from './triggers.ts';

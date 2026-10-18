@@ -7,13 +7,7 @@ import { join, relative } from 'node:path';
  */
 const HAND_WRITTEN: Record<string, string> = {
 	JSONValue: 'Any JSON value, which no schema names.',
-	SyncOp: "An outbox op, whose fields Core's diff handles as JSON values.",
-	SyncPatch: 'An op before its clock and id, with the same JSON-valued fields as `SyncOp`.',
 	NameHit: 'Generic over the matched item, which JSON Schema cannot express.',
-	Lenient: 'A decoding helper that drops one bad array element.',
-	StoredTask: "The stored document's loading rules in front of the generated task.",
-	StoredLabel: "The stored document's loading rule in front of the generated label.",
-	StoredProject: "The stored document's loading rule in front of the generated project.",
 	ContentState: "A Live Activity's state, which ActivityKit encodes on the device and never syncs.",
 	RambleSpan: 'A transcript offset from the Ramble grammar, matched against the vector corpus.',
 	RambleToken: 'A grammar highlight from the Ramble parse, matched against the vector corpus.',

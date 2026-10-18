@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { taskSchema } from './sync/protocol.ts';
+import { taskSchema } from './model.ts';
 import { taskEventSchema } from './values.ts';
 
 /**

@@ -1,96 +1,19 @@
 {
 	"version": "7",
-	"dialect": "sqlite",
+	"dialect": "postgresql",
 	"entries": [
 		{
 			"idx": 0,
-			"version": "6",
-			"when": 1791803336945,
+			"version": "7",
+			"when": 1792274979539,
 			"tag": "0000_baseline",
 			"breakpoints": true
 		},
 		{
 			"idx": 1,
-			"version": "6",
-			"when": 1791824898941,
-			"tag": "0001_superb_leo",
-			"breakpoints": true
-		},
-		{
-			"idx": 2,
-			"version": "6",
-			"when": 1791915205024,
-			"tag": "0002_fluffy_thing",
-			"breakpoints": true
-		},
-		{
-			"idx": 3,
-			"version": "6",
-			"when": 1792093674133,
-			"tag": "0003_small_frank_castle",
-			"breakpoints": true
-		},
-		{
-			"idx": 4,
-			"version": "6",
-			"when": 1792136573055,
-			"tag": "0004_unusual_doctor_spectrum",
-			"breakpoints": true
-		},
-		{
-			"idx": 5,
-			"version": "6",
-			"when": 1792137216220,
-			"tag": "0005_past_jack_murdock",
-			"breakpoints": true
-		},
-		{
-			"idx": 6,
-			"version": "6",
-			"when": 1792137786085,
-			"tag": "0006_purple_brood",
-			"breakpoints": true
-		},
-		{
-			"idx": 7,
-			"version": "6",
-			"when": 1792138640130,
-			"tag": "0007_complex_mockingbird",
-			"breakpoints": true
-		},
-		{
-			"idx": 8,
-			"version": "6",
-			"when": 1792139912412,
-			"tag": "0008_clever_lady_bullseye",
-			"breakpoints": true
-		},
-		{
-			"idx": 9,
-			"version": "6",
-			"when": 1792162739119,
-			"tag": "0009_milky_thunderbolts",
-			"breakpoints": true
-		},
-		{
-			"idx": 10,
-			"version": "6",
-			"when": 1792255184275,
-			"tag": "0010_shocking_redwing",
-			"breakpoints": true
-		},
-		{
-			"idx": 11,
-			"version": "6",
-			"when": 1792257434316,
-			"tag": "0011_unknown_thor_girl",
-			"breakpoints": true
-		},
-		{
-			"idx": 12,
-			"version": "6",
-			"when": 1792257933995,
-			"tag": "0012_illegal_crystal",
+			"version": "7",
+			"when": 1792274980409,
+			"tag": "0001_powersync_publication",
 			"breakpoints": true
 		}
 	]
