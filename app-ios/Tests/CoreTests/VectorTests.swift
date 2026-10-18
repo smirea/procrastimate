@@ -114,7 +114,6 @@ let handlers: [String: Handler] = [
     "markdown": markdownVector,
     "notifications": notificationsVector,
     "store": storeVector,
-    "snapshot": snapshotVector,
     "quick-add": quickAddVector,
     "csv": csvVector,
     "search": searchVector,
@@ -129,7 +128,7 @@ let handlers: [String: Handler] = [
     "screens": screensVector,
     "memo-tasks": memoTasksVector,
     "links": linksVector,
-    "sync": syncVector,
+    "rows": rowsVector,
     "comments": commentsVector,
 ]
 
@@ -379,15 +378,6 @@ private func completion(_ completion: Completion) throws -> JSONValue {
     }
 }
 
-@Sendable func snapshotVector(_ fn: String, _ a: Args) throws -> JSONValue {
-    switch fn {
-    case "parseSnapshot":
-        let document = try JSONEncoder().encode(a.values[0])
-        return try json(Snapshot.load(document, now: a(1)))
-    default: throw unknown(fn)
-    }
-}
-
 private struct PlacedInput: Decodable {
     let labelIds: [String]
     let location: TaskLocation?
@@ -576,14 +566,35 @@ extension JSONValue: ExpressibleByStringLiteral {
     }
 }
 
-@Sendable func syncVector(_ fn: String, _ a: Args) throws -> JSONValue {
+private struct RowWriteInput: Decodable {
+    let op: String
+    let kind: EntityKind
+    let id: String
+    let values: [String: JSONValue]?
+
+    var write: RowWrite { RowWrite(op: RowWrite.Op(rawValue: op)!, kind: kind, id: id, values: values) }
+}
+
+private func rowWritesJSON(_ writes: [RowWrite]) -> JSONValue {
+    .array(writes.map { write in
+        var fields: [String: JSONValue] = ["op": .string(write.op.rawValue), "kind": .string(write.kind.rawValue), "id": .string(write.id)]
+        if let values = write.values { fields["values"] = .object(values) }
+        return .object(fields)
+    })
+}
+
+private struct RejectedInput: Decodable {
+    let kind: EntityKind
+    let id: String
+}
+
+@Sendable func rowsVector(_ fn: String, _ a: Args) throws -> JSONValue {
     switch fn {
-    case "enqueue": return try json(SyncEngine.enqueue(a(0), a(1)))
-    case "seedPatches": return try json(SyncEngine.seedPatches(server: a(0), local: a(1)))
-    case "settle":
-        let settled = try SyncEngine.settle(a(0), acked: a(1), rejected: a(2))
-        return try json(["outbox": settled.outbox, "rejected": settled.rejected])
-    case "rejectionNotice": return try json(SyncEngine.rejectionNotice(a(0), a(1)))
+    case "rowWrites": return rowWritesJSON(Rows.rowWrites(try a(0), try a(1)))
+    case "coalesce": return rowWritesJSON(Rows.coalesce(try a(0, as: [RowWriteInput].self).map(\.write)))
+    case "rejectionNotice":
+        let rejected = try a(1, as: [RejectedInput].self).map { (kind: $0.kind, id: $0.id) }
+        return try json(Rows.rejectionNotice(try a(0), rejected))
     default: throw unknown(fn)
     }
 }

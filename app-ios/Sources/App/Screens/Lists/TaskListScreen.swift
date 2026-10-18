@@ -24,7 +24,7 @@ struct TaskListScreen<Content: View>: View {
     @ViewBuilder let content: () -> Content
 
     @Environment(Navigator.self) private var navigator
-    @Environment(AccountSync.self) private var accountSync
+    @Environment(SyncClient.self) private var sync
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.tabRoot) private var tabRoot
     @State private var scrolled = false
@@ -48,7 +48,7 @@ struct TaskListScreen<Content: View>: View {
             }
         }
         .listStyle(.plain)
-        .refreshable { await accountSync.refresh() }
+        .refreshable { await sync.refresh() }
         .safeAreaInset(edge: .top, spacing: 0) {
             if newestFirst != nil || (floats && markdown != nil) {
                 HStack(spacing: 8) {

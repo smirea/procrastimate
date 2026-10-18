@@ -11,6 +11,97 @@ public enum SpaceKey: Hashable, Sendable {
     }
 }
 
+public typealias Access = API.Access
+
+/// A row of the local database with the `user_id` of the space it lives in.
+public struct Owned<Value: Hashable & Sendable>: Hashable, Sendable {
+    public var owner: String
+    public var value: Value
+
+    public init(owner: String, value: Value) {
+        self.owner = owner
+        self.value = value
+    }
+}
+
+/// Everything the local database holds, as PowerSync streamed it: the user's own rows, the rows other users share with
+/// them, and the `access` rows that say which shared entities they may edit.
+public struct StoredRows: Hashable, Sendable {
+    public var tasks: [Owned<TaskItem>] = []
+    public var projects: [Owned<Project>] = []
+    public var sections: [Owned<ProjectSection>] = []
+    public var labels: [Owned<Label>] = []
+    public var comments: [Owned<Comment>] = []
+    public var reads: [Owned<CommentRead>] = []
+    public var settings: [Owned<API.Settings>] = []
+    public var access: [Access] = []
+
+    public init() {}
+}
+
+/// The stored rows grouped into spaces by their `user_id`: the signed-in user's own, and one per owner who shares with
+/// them. Read markers and settings are only ever the user's own.
+public struct Spaces: Hashable, Sendable {
+    public var own: Snapshot
+    public var shared: [String: Snapshot]
+    public var access: [Access]
+
+    public init(own: Snapshot = .empty, shared: [String: Snapshot] = [:], access: [Access] = []) {
+        self.own = own
+        self.shared = shared
+        self.access = access
+    }
+
+    public init(_ rows: StoredRows, me: String) {
+        var own = Snapshot.empty
+        var shared: [String: Snapshot] = [:]
+        func add<T>(_ items: [Owned<T>], _ path: WritableKeyPath<Snapshot, [T]>) {
+            for item in items {
+                if item.owner == me {
+                    own[keyPath: path].append(item.value)
+                } else {
+                    shared[item.owner, default: .empty][keyPath: path].append(item.value)
+                }
+            }
+        }
+        add(rows.tasks, \.tasks)
+        add(rows.projects, \.projects)
+        add(rows.sections, \.sections)
+        add(rows.labels, \.labels)
+        add(rows.comments, \.comments)
+        own.reads = rows.reads.filter { $0.owner == me }.map(\.value)
+        if let settings = rows.settings.first(where: { $0.owner == me }) { own.settings = settings.value }
+        self.own = Spaces.sorted(own)
+        self.shared = shared.mapValues(Spaces.sorted)
+        access = rows.access
+    }
+
+    /// The order both clients list entities in, oldest first, with orphaned subtasks detached.
+    static func sorted(_ snapshot: Snapshot) -> Snapshot {
+        var sorted = snapshot
+        sorted.tasks = StoreRules.sortTasks(Subtasks.detachOrphans(snapshot.tasks))
+        sorted.projects = snapshot.projects.sorted { ($0.createdAt, $0.id) < ($1.createdAt, $1.id) }
+        sorted.sections = snapshot.sections.sorted { ($0.createdAt, $0.id) < ($1.createdAt, $1.id) }
+        sorted.labels = snapshot.labels.sorted { ($0.createdAt, $0.id) < ($1.createdAt, $1.id) }
+        sorted.comments = snapshot.comments.sorted { ($0.createdAt, $0.id) < ($1.createdAt, $1.id) }
+        sorted.reads = snapshot.reads.sorted { $0.id < $1.id }
+        return sorted
+    }
+}
+
+/// A space another user shares with this one, with its owner's name when the people cache has it.
+public struct SharedSpace: Hashable, Sendable, Identifiable {
+    public let id: String
+    public let owner: Person
+    public let data: Snapshot
+
+    public init(id: String, owner: Person, data: Snapshot) {
+        self.id = id
+        self.owner = owner
+        self.data = data
+    }
+}
+
 public enum SharedLinks {
     /// The token of a public share link, `https://procrastimate.stf.lol/s/<token>`, which Universal Links open in the
     /// app.
@@ -32,121 +123,18 @@ extension Browse {
         public let owner: Person
     }
 
-    /// What Browse lists under "Shared with me", as the web sidebar does: each thing its owner shared with this user
-    /// that is still there. A whole-space share lists the space's projects.
-    public static func sharedEntries(_ spaces: [(id: String, section: SpaceSection)]) -> [SharedEntry] {
-        spaces.flatMap { _, section in
-            let owner = section.owner
-            return section.targets.flatMap { target -> [SharedEntry] in
-                switch target.kind {
-                case .project:
-                    section.projects.filter { $0.id == target.id }
-                        .map { SharedEntry(kind: .project, id: $0.id, name: $0.name, owner: owner) }
-                case .label:
-                    section.labels.filter { $0.id == target.id }
-                        .map { SharedEntry(kind: .label, id: $0.id, name: $0.name, owner: owner) }
-                case .task:
-                    section.tasks.filter { $0.id == target.id }
-                        .map { SharedEntry(kind: .task, id: $0.id, name: $0.title, owner: owner) }
-                case .space:
-                    section.projects.map { SharedEntry(kind: .project, id: $0.id, name: $0.name, owner: owner) }
-                }
-            }
-        }
-    }
-}
-
-extension SyncEngine {
-    /// Runs `body` on one shared space dressed as a document: the space's data, cursor, outbox, and epoch with this
-    /// device's id and clock. Commits and responses then go through the same code as the user's own space, and the
-    /// one device clock keeps advancing across every space.
-    static func inSpace<R>(_ snapshot: inout Snapshot, _ id: String, _ body: (inout Snapshot) throws -> R) rethrows -> R? {
-        guard var section = snapshot.spaces[id], let sync = snapshot.sync else { return nil }
-        var lens = Snapshot(
-            tasks: section.tasks,
-            projects: section.projects,
-            sections: section.sections,
-            labels: section.labels,
-            comments: section.comments,
-            remindersCheckedAt: snapshot.remindersCheckedAt,
-            sync: SyncSection(
-                deviceId: sync.deviceId,
-                cursor: section.cursor,
-                outbox: section.outbox,
-                clock: sync.clock,
-                timeZone: sync.timeZone,
-                dictation: sync.dictation,
-                quickAddButtons: sync.quickAddButtons,
-                epoch: section.epoch
-            )
-        )
-        let result = try body(&lens)
-        section.tasks = lens.tasks
-        section.projects = lens.projects
-        section.sections = lens.sections
-        section.labels = lens.labels
-        section.comments = lens.comments
-        if let after = lens.sync {
-            section.cursor = after.cursor
-            section.outbox = after.outbox
-            section.epoch = after.epoch
-            snapshot.sync?.clock = after.clock
-        }
-        snapshot.spaces[id] = section
-        return result
-    }
-
-    /// The body of `POST /api/sync?space=<id>`, with the scope hash the space last applied.
-    public static func request(_ snapshot: Snapshot, space id: String) throws -> API.SyncRequest? {
-        guard let section = snapshot.spaces[id] else { return nil }
-        var copy = snapshot
-        guard var body = try inSpace(&copy, id, { try request($0) }) ?? nil else { return nil }
-        // An edit the server refuses can leave the view's hash as it was, and the empty answer would then keep the
-        // refused edit on screen. Pending edits always ask for a fresh snapshot, as on the web.
-        body.scope = section.outbox.isEmpty ? section.scope : ""
-        return body
-    }
-
-    /// Applies a shared space's sync response, keeping the scope hash and the read-only ids it carries, and returns
-    /// the ops the server rejected, or nil when it could not apply.
-    public static func apply(_ snapshot: inout Snapshot, space id: String, response: API.SyncResponse, now: Int, nextOpId: () -> String) -> [SyncOp]? {
-        let rejected = inSpace(&snapshot, id) { lens in apply(&lens, response: response, now: now, nextOpId: nextOpId) } ?? nil
-        guard let rejected, var section = snapshot.spaces[id] else { return nil }
-        switch response {
-        case let .changes(page):
-            if let scope = page.scope { section.scope = scope }
-        case let .snapshot(full):
-            section.scope = full.scope ?? ""
-            section.readOnly = full.readOnly ?? []
-            section.targets = full.targets ?? []
-        }
-        snapshot.spaces[id] = section
-        return rejected
-    }
-
-    /// Adds a section for each space now shared with this user and drops the ones no longer shared. Owners join the
-    /// people cache so their names show offline.
-    public static func setSpaces(_ snapshot: inout Snapshot, _ spaces: [API.Space]) {
-        let listed = Set(spaces.map(\.id))
-        snapshot.spaces = snapshot.spaces.filter { listed.contains($0.key) }
-        for space in spaces {
-            if snapshot.spaces[space.id] == nil {
-                snapshot.spaces[space.id] = SpaceSection(owner: space.owner, cursor: 0)
-            } else {
-                snapshot.spaces[space.id]?.owner = space.owner
-            }
-        }
-        rememberPeople(&snapshot, spaces.map(\.owner))
-    }
-
-    /// Adds or renames people in the cache, keyed by id.
-    public static func rememberPeople(_ snapshot: inout Snapshot, _ people: [Person]) {
-        for person in people {
-            if let index = snapshot.people.firstIndex(where: { $0.id == person.id }) {
-                snapshot.people[index] = person
-            } else {
-                snapshot.people.append(person)
-            }
+    /// What Browse lists under "Shared with me": each shared space's projects, then its labels, then its top-level
+    /// tasks outside any project. The `access` rows name every entity a share reaches rather than the shares
+    /// themselves, so a label carried by a shared project's task lists too.
+    public static func sharedEntries(_ spaces: [SharedSpace]) -> [SharedEntry] {
+        spaces.flatMap { space in
+            let data = space.data
+            let tasks = Set(data.tasks.map(\.id))
+            return StoreRules.projectsInOrder(data.projects)
+                .map { SharedEntry(kind: .project, id: $0.id, name: $0.name, owner: space.owner) }
+                + labelsByName(data.labels).map { SharedEntry(kind: .label, id: $0.id, name: $0.name, owner: space.owner) }
+                + data.tasks.filter { $0.projectId == nil && !tasks.contains($0.parentId ?? "") }
+                .map { SharedEntry(kind: .task, id: $0.id, name: $0.title, owner: space.owner) }
         }
     }
 }

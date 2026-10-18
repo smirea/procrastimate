@@ -215,7 +215,8 @@ final class LocalNotifications: NSObject {
     /// Shows `Reminder: <title>` with `Open` for every moment that came up since the last check, like the web.
     func fireDueReminders() {
         let now = clock.now.epochMilliseconds
-        let since = store.snapshot.remindersCheckedAt
+        let since = DeviceDefaults.remindersCheckedAt ?? now
+        DeviceDefaults.remindersCheckedAt = now
         guard now > since else { return }
         for task in Notifications.dueReminders(store.tasks, since: since, now: now, in: clock.timeZone) {
             let id = task.id
@@ -225,7 +226,6 @@ final class LocalNotifications: NSObject {
                 for: .seconds(12)
             )
         }
-        store.markRemindersChecked(at: now)
     }
 
     /// A place crossing while the app is open, which no schedule knows about, shows like a reminder toast.

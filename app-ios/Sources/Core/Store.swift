@@ -1,20 +1,44 @@
 import Foundation
 import Observation
 
-/// The app's one store: the stored document in memory, with every command from `StoreRules`. Each command applies at
-/// once and goes through `commit`, which keeps tasks in their sync order and schedules one coalesced write, so the
-/// sync client can diff a commit into its outbox later without touching the commands.
+/// The batch of row writes one command produced, for the space it ran on. `version` counts commits, so the database
+/// writer can say which one it has finished.
+public struct RowBatch: Hashable, Sendable {
+    public let version: Int
+    public let owner: String
+    public let writes: [RowWrite]
+
+    public init(version: Int, owner: String, writes: [RowWrite]) {
+        self.version = version
+        self.owner = owner
+        self.writes = writes
+    }
+}
+
+/// The app's one store: the local database's rows in memory, grouped into spaces, with every command from
+/// `StoreRules`. A command applies to memory at once, and `commit` hands the rows it changed to `writer`, which writes
+/// them to the local database in order. When the database changes, from a local write or from sync, the app reads it
+/// again and calls `reload`.
 @MainActor @Observable
 public final class Store {
+    /// The signed-in user: the owner of the own space and the `user_id` of every row written to it.
+    public private(set) var me: String
+    /// The user's own data and settings.
     public private(set) var snapshot: Snapshot
-    /// Bumps when a local command changes the document, so sync can wait a moment and ignore server applies.
-    public private(set) var revision = 0
+    /// Every space shared with the user, by owner id.
+    public private(set) var spaces: [String: Snapshot]
+    public private(set) var access: [Access]
+    /// Names for the ids in shares, comments, and activity. Kept on the device, never synced.
+    public private(set) var people: [Person]
 
-    @ObservationIgnored private let file: SnapshotFile?
+    /// Writes each commit's rows to the local database, one batch after another, then calls `written`.
+    @ObservationIgnored public var writer: ((RowBatch) -> Void)?
     @ObservationIgnored private let clock: AppClock
     @ObservationIgnored private let newId: () -> String
     @ObservationIgnored private var version = 0
-    @ObservationIgnored private var pendingWrite: Task<Void, Never>?
+    @ObservationIgnored private var writtenVersion = 0
+    @ObservationIgnored private var reloadDeferred = false
+    @ObservationIgnored private var readOnly: Set<String> = []
     /// Where each deleted task lived, so undo puts it back in the same space.
     @ObservationIgnored private var deletedFrom: [String: SpaceKey] = [:]
     /// Picks a color for a new label from its name after it is created, such as the on-device model on iOS. Nil keeps
@@ -24,21 +48,60 @@ public final class Store {
     /// misses a color changed and changed back before the suggestion arrives.
     @ObservationIgnored private var untouchedLabels: Set<String> = []
 
-    public init(file: SnapshotFile?, clock: AppClock, newId: @escaping () -> String = { UUID().uuidString.lowercased() }) {
-        self.file = file
+    public init(
+        me: String,
+        spaces: Spaces = Spaces(),
+        people: [Person] = [],
+        clock: AppClock,
+        newId: @escaping () -> String = { UUID().uuidString.lowercased() }
+    ) {
+        self.me = me
         self.clock = clock
         self.newId = newId
-        let now = clock.now.epochMilliseconds
-        snapshot = file?.read().map { Snapshot.load($0, now: now) } ?? .empty(now: now)
-        let hadSync = snapshot.sync != nil
-        SyncEngine.ensure(
-            &snapshot,
-            deviceId: UUID().uuidString.lowercased(),
-            now: now,
-            timeZone: clock.timeZone.identifier,
-            nextOpId: newId
-        )
-        if !hadSync { scheduleWrite() }
+        self.people = people
+        snapshot = spaces.own
+        self.spaces = spaces.shared
+        access = spaces.access
+        readOnly = Self.readOnly(spaces.access)
+    }
+
+    /// Replaces the data with what the local database holds. A reload read while a local commit was still on its way
+    /// to the database would undo that commit on screen, so it waits until the writer catches up.
+    public func reload(_ next: Spaces) {
+        guard writtenVersion == version else {
+            reloadDeferred = true
+            return
+        }
+        if snapshot != next.own { snapshot = next.own }
+        if spaces != next.shared { spaces = next.shared }
+        if access != next.access {
+            access = next.access
+            readOnly = Self.readOnly(next.access)
+        }
+    }
+
+    /// The writer finished every batch up to `version`. True when a reload was held back meanwhile, so the caller
+    /// reads the database again.
+    public func written(_ version: Int) -> Bool {
+        writtenVersion = max(writtenVersion, version)
+        guard writtenVersion == self.version, reloadDeferred else { return false }
+        reloadDeferred = false
+        return true
+    }
+
+    /// Starts over empty for another user, after the app cleared the local database.
+    public func switchUser(to me: String) {
+        self.me = me
+        snapshot = .empty
+        spaces = [:]
+        access = []
+        people = []
+        readOnly = []
+        deletedFrom = [:]
+    }
+
+    private static func readOnly(_ access: [Access]) -> Set<String> {
+        Set(access.filter { $0.kind == .task && $0.role == .view }.map(\.entityId))
     }
 
     /// The user's own tasks, projects (in their order), and labels, which the personal views (Inbox, Today, No date,
@@ -48,32 +111,37 @@ public final class Store {
     public var labels: [Label] { snapshot.labels }
     public var sections: [ProjectSection] { snapshot.sections }
 
-    /// Own data, then each shared space's, for subtasks, details, and shared project and label screens.
-    public var allTasks: [TaskItem] { snapshot.tasks + sharedSpaces.flatMap(\.section.tasks) }
-    public var allProjects: [Project] { snapshot.projects + sharedSpaces.flatMap(\.section.projects) }
-    public var allLabels: [Label] { snapshot.labels + sharedSpaces.flatMap(\.section.labels) }
-    public var allSections: [ProjectSection] { snapshot.sections + sharedSpaces.flatMap(\.section.sections) }
+    private var sharedData: [Snapshot] { spaces.keys.sorted().compactMap { spaces[$0] } }
 
-    /// Shared spaces by owner name, with their ids.
-    public var sharedSpaces: [(id: String, section: SpaceSection)] {
-        snapshot.spaces.map { ($0.key, $0.value) }.sorted { ($0.section.owner.name, $0.id) < ($1.section.owner.name, $1.id) }
+    /// Own data, then each shared space's, for subtasks, details, and shared project and label screens.
+    public var allTasks: [TaskItem] { snapshot.tasks + sharedData.flatMap(\.tasks) }
+    public var allProjects: [Project] { snapshot.projects + sharedData.flatMap(\.projects) }
+    public var allLabels: [Label] { snapshot.labels + sharedData.flatMap(\.labels) }
+    public var allSections: [ProjectSection] { snapshot.sections + sharedData.flatMap(\.sections) }
+
+    /// Shared spaces by owner name, with their ids. An owner the people cache does not know yet shows as `Someone`.
+    public var sharedSpaces: [SharedSpace] {
+        spaces.map { id, data in
+            SharedSpace(id: id, owner: person(id) ?? Person(id: id, name: "Someone", kind: .human), data: data)
+        }
+        .sorted { ($0.owner.name, $0.id) < ($1.owner.name, $1.id) }
     }
 
     public func task(_ id: String) -> TaskItem? {
         snapshot.tasks.first { $0.id == id }
-            ?? snapshot.spaces.values.lazy.compactMap { $0.tasks.first { $0.id == id } }.first
+            ?? spaces.values.lazy.compactMap { $0.tasks.first { $0.id == id } }.first
     }
 
     public func project(_ id: String?) -> Project? {
         guard let id else { return nil }
         return snapshot.projects.first { $0.id == id }
-            ?? snapshot.spaces.values.lazy.compactMap { $0.projects.first { $0.id == id } }.first
+            ?? spaces.values.lazy.compactMap { $0.projects.first { $0.id == id } }.first
     }
 
     public func section(_ id: String?) -> ProjectSection? {
         guard let id else { return nil }
         return snapshot.sections.first { $0.id == id }
-            ?? snapshot.spaces.values.lazy.compactMap { $0.sections.first { $0.id == id } }.first
+            ?? spaces.values.lazy.compactMap { $0.sections.first { $0.id == id } }.first
     }
 
     /// A project's sections in their order, from whichever space holds the project.
@@ -81,7 +149,7 @@ public final class Store {
 
     public func label(_ id: String) -> Label? {
         snapshot.labels.first { $0.id == id }
-            ?? snapshot.spaces.values.lazy.compactMap { $0.labels.first { $0.id == id } }.first
+            ?? spaces.values.lazy.compactMap { $0.labels.first { $0.id == id } }.first
     }
 
     /// A task's labels in the order they were added, skipping any that were deleted.
@@ -91,23 +159,15 @@ public final class Store {
     public func space(ofProject id: String) -> SpaceKey? { space { $0.projects.contains { $0.id == id } } }
     public func space(ofLabel id: String) -> SpaceKey? { space { $0.labels.contains { $0.id == id } } }
 
-    private func space(where holds: (StoreData) -> Bool) -> SpaceKey? {
-        if holds(snapshot.data) { return .own }
-        return snapshot.spaces.keys.first { holds(data(in: .shared($0))) }.map { .shared($0) }
+    private func space(where holds: (Snapshot) -> Bool) -> SpaceKey? {
+        if holds(snapshot) { return .own }
+        return spaces.first { holds($0.value) }.map { .shared($0.key) }
     }
 
     public func data(in space: SpaceKey) -> StoreData {
         switch space {
-        case .own: return snapshot.data
-        case let .shared(id):
-            guard let section = snapshot.spaces[id] else { return StoreData() }
-            return StoreData(
-                tasks: section.tasks,
-                projects: section.projects,
-                sections: section.sections,
-                labels: section.labels,
-                comments: section.comments
-            )
+        case .own: snapshot.data
+        case let .shared(id): spaces[id]?.data ?? StoreData()
         }
     }
 
@@ -117,165 +177,81 @@ public final class Store {
 
     /// The owner of a shared space, or nil for the user's own.
     public func owner(of space: SpaceKey) -> Person? {
-        space.query.flatMap { snapshot.spaces[$0]?.owner }
+        space.query.map { person($0) ?? Person(id: $0, name: "Someone", kind: .human) }
     }
 
     /// A shared task this user may see but not change.
-    public func isReadOnly(_ taskID: String) -> Bool {
-        snapshot.spaces.values.contains { $0.readOnly.contains(taskID) }
-    }
+    public func isReadOnly(_ taskID: String) -> Bool { readOnly.contains(taskID) }
 
     public func person(_ id: String?) -> Person? {
         guard let id else { return nil }
-        return snapshot.people.first { $0.id == id }
+        return people.first { $0.id == id }
+    }
+
+    /// Adds or renames people in the cache, keyed by id.
+    public func rememberPeople(_ known: [Person]) {
+        var next = people
+        for person in known {
+            if let index = next.firstIndex(where: { $0.id == person.id }) {
+                next[index] = person
+            } else {
+                next.append(person)
+            }
+        }
+        if next != people { people = next }
     }
 
     public func commit(_ next: StoreData) { commit(next, in: .own) }
 
-    /// Commits into the space the command ran on, so its ops queue in that space's outbox.
+    /// Commits into the space the command ran on, so its rows keep that space's owner.
     public func commit(_ next: StoreData, in space: SpaceKey) {
-        var data = next
-        data.tasks = StoreRules.sortTasks(next.tasks)
-        let now = clock.now.epochMilliseconds
+        let before: Snapshot
         switch space {
-        case .own:
-            let before = snapshot.data
-            snapshot.data = data
-            SyncEngine.record(&snapshot, before: before, after: data, now: now, nextOpId: newId)
+        case .own: before = snapshot
         case let .shared(id):
-            let recorded: Void? = SyncEngine.inSpace(&snapshot, id) { lens in
-                let before = lens.data
-                lens.data = data
-                SyncEngine.record(&lens, before: before, after: data, now: now, nextOpId: newId)
-            }
-            guard recorded != nil else { return }
+            guard let shared = spaces[id] else { return }
+            before = shared
         }
-        revision += 1
-        scheduleWrite()
+        var after = before
+        after.data = next
+        after.tasks = StoreRules.sortTasks(next.tasks)
+        write(after, over: before, in: space)
     }
 
-    /// Drops local tasks for a different user without recording deletes, so they are not uploaded.
-    public func switchUser() {
-        SyncEngine.replaceForNewUser(&snapshot)
-        revision += 1
-        scheduleWrite()
+    private func write(_ after: Snapshot, over before: Snapshot, in space: SpaceKey) {
+        switch space {
+        case .own: snapshot = after
+        case let .shared(id): spaces[id] = after
+        }
+        let writes = Rows.rowWrites(before, after)
+        guard let writer, !writes.isEmpty else { return }
+        version += 1
+        writer(RowBatch(version: version, owner: space.query ?? me, writes: writes))
     }
 
-    /// Empties tasks, projects, sections, and labels here, and asks the next sync to wipe them on the server.
+    /// Deletes every row of the user's own space. Settings stay, since every user has them.
     public func deleteAll() {
-        SyncEngine.deleteAll(&snapshot)
-        revision += 1
-        scheduleWrite()
+        commit(StoreData())
     }
 
-    /// The body of `POST /api/sync`.
-    public func syncRequest() throws -> API.SyncRequest? { try SyncEngine.request(snapshot) }
-
-    /// What applying a sync response left to tell the user: the notice for edits the server rejected, if any.
-    public struct SyncApplied: Sendable {
-        public var notice: String?
+    private func setSettings(_ change: (inout API.Settings) -> Void) {
+        var after = snapshot
+        change(&after.settings)
+        guard after != snapshot else { return }
+        write(after, over: snapshot, in: .own)
     }
 
-    /// Applies one sync response onto the document. Nil when the response was unreadable.
-    public func takeSyncResponse(_ response: API.SyncResponse) -> SyncApplied? {
-        let before = snapshot.data
-        guard let rejected = SyncEngine.apply(
-            &snapshot, response: response, now: clock.now.epochMilliseconds, nextOpId: newId
-        ) else { return nil }
-        scheduleWrite()
-        return SyncApplied(notice: SyncEngine.rejectionNotice(before, rejected))
-    }
+    public var dictation: DictationChoice { snapshot.settings.dictation }
 
-    /// The body of `POST /api/sync?space=<id>` for a shared space.
-    public func syncRequest(space id: String) throws -> API.SyncRequest? { try SyncEngine.request(snapshot, space: id) }
-
-    public func takeSyncResponse(_ response: API.SyncResponse, space id: String) -> SyncApplied? {
-        guard let section = snapshot.spaces[id], let rejected = SyncEngine.apply(
-            &snapshot, space: id, response: response, now: clock.now.epochMilliseconds, nextOpId: newId
-        ) else { return nil }
-        scheduleWrite()
-        let before = StoreData(
-            tasks: section.tasks, projects: section.projects, sections: section.sections, labels: section.labels
-        )
-        return SyncApplied(notice: SyncEngine.rejectionNotice(before, rejected))
-    }
-
-    /// Matches the sections to the spaces the server says are shared with this user.
-    public func setSpaces(_ spaces: [API.Space]) {
-        var next = snapshot
-        SyncEngine.setSpaces(&next, spaces)
-        guard next != snapshot else { return }
-        snapshot = next
-        scheduleWrite()
-    }
-
-    /// Forgets a space whose sync was refused, as when its last share was revoked.
-    public func dropSpace(_ id: String) {
-        guard snapshot.spaces[id] != nil else { return }
-        snapshot.spaces[id] = nil
-        scheduleWrite()
-    }
-
-    public func rememberPeople(_ people: [Person]) {
-        var next = snapshot
-        SyncEngine.rememberPeople(&next, people)
-        guard next != snapshot else { return }
-        snapshot = next
-        scheduleWrite()
-    }
-
-    /// Keeps the outbox when the server stores this install under a different id.
-    public func adoptDevice(_ deviceId: String) {
-        guard var sync = snapshot.sync, sync.deviceId != deviceId else { return }
-        sync.deviceId = deviceId
-        snapshot.sync = sync
-        scheduleWrite()
-    }
-
-    /// The dictation choice last applied here, including one that arrived from another device.
-    public var dictation: DictationChoice { snapshot.sync?.dictation ?? .native }
-
-    /// Remembers the choice and queues it for sync.
-    public func setDictation(_ choice: DictationChoice) {
-        guard dictation != choice else { return }
-        SyncEngine.setDictation(&snapshot, choice, now: clock.now.epochMilliseconds, nextOpId: newId)
-        scheduleWrite()
-    }
+    public func setDictation(_ choice: DictationChoice) { setSettings { $0.dictation = choice } }
 
     /// The quick add buttons pinned to the chip row, including a change from another device.
-    public var quickAddButtons: [QuickAddButton] { snapshot.sync?.quickAddButtons ?? API.Settings().quickAddButtons }
+    public var quickAddButtons: [QuickAddButton] { snapshot.settings.quickAddButtons }
 
-    public func setQuickAddButtons(_ buttons: [QuickAddButton]) {
-        guard quickAddButtons != buttons else { return }
-        SyncEngine.setQuickAddButtons(&snapshot, buttons, now: clock.now.epochMilliseconds, nextOpId: newId)
-        scheduleWrite()
-    }
+    public func setQuickAddButtons(_ buttons: [QuickAddButton]) { setSettings { $0.quickAddButtons = buttons } }
 
-    /// Writes this device's zone when it has moved since the last sync.
-    public func noteTimeZone(_ timeZone: String) {
-        guard snapshot.sync?.timeZone != timeZone else { return }
-        SyncEngine.noteTimeZone(&snapshot, timeZone, now: clock.now.epochMilliseconds, nextOpId: newId)
-        scheduleWrite()
-    }
-
-    /// Waits for the latest commit to reach the file.
-    public func flush() async {
-        await pendingWrite?.value
-    }
-
-    private func scheduleWrite() {
-        version += 1
-        guard let file, pendingWrite == nil else { return }
-        pendingWrite = Task {
-            await Task.yield()
-            var written: Int
-            repeat {
-                written = version
-                await file.write(snapshot, version: written)
-            } while written != version
-            pendingWrite = nil
-        }
-    }
+    /// Writes this device's zone into the settings when it differs, so the server plans notifications in it.
+    public func noteTimeZone(_ timeZone: String) { setSettings { $0.timeZone = timeZone } }
 
     private func creation() -> Creation { Creation(id: newId(), now: clock.now.epochMilliseconds) }
 
@@ -494,7 +470,7 @@ public final class Store {
     }
 
     /// Every comment this user can see, own and shared.
-    public var allComments: [Comment] { snapshot.comments + snapshot.spaces.values.flatMap(\.comments) }
+    public var allComments: [Comment] { snapshot.comments + sharedData.flatMap(\.comments) }
 
     /// One task's comments, oldest first.
     public func comments(on taskID: String) -> [Comment] { Comments.commentsOn(allComments, taskID) }
@@ -542,45 +518,5 @@ public final class Store {
         let next = Comments.markRead(snapshot.data, taskID, allComments, me, clock.now.epochMilliseconds)
         guard next != snapshot.data else { return }
         commit(next)
-    }
-
-    /// Device-local, so it changes the document without being a synced change.
-    public func markRemindersChecked(at time: Int) {
-        snapshot.remindersCheckedAt = time
-        scheduleWrite()
-    }
-}
-
-/// The stored document's file. Writes are atomic, run off the main actor, and skip a snapshot older than one already
-/// written, so a burst of commits ends with the newest on disk.
-public actor SnapshotFile {
-    /// Runs each save, so the app can time it and report a failure without `Core` depending on an SDK.
-    public typealias Trace = @Sendable (_ save: () throws -> Void) throws -> Void
-
-    public nonisolated let url: URL
-    private let trace: Trace
-    private var written = 0
-
-    public init(url: URL, trace: @escaping Trace = { try $0() }) {
-        self.url = url
-        self.trace = trace
-    }
-
-    public nonisolated func read() -> Data? {
-        try? Data(contentsOf: url)
-    }
-
-    func write(_ snapshot: Snapshot, version: Int) {
-        guard version > written else { return }
-        do {
-            try trace {
-                let data = try snapshot.encoded()
-                try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
-                try data.write(to: url, options: .atomic)
-            }
-            written = version
-        } catch {
-            assertionFailure("Could not save the store: \(error)")
-        }
     }
 }

@@ -8,7 +8,7 @@ struct SettingsSheet: View {
     @Environment(TodoistImport.self) private var importer
     @Environment(Store.self) private var store
     @Environment(LocalNotifications.self) private var notifications
-    @Environment(AccountSync.self) private var accountSync
+    @Environment(SyncClient.self) private var sync
 
     @State private var picking = false
     @State private var confirmingDelete = false
@@ -65,7 +65,7 @@ struct SettingsSheet: View {
                 }
 
                 Section {
-                    Button("Sign out") { accountSync.signOut() }
+                    Button("Sign out") { sync.signOut() }
                 } header: {
                     Text("Account")
                 } footer: {

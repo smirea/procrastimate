@@ -2,7 +2,7 @@ import Core
 import Foundation
 import Testing
 
-@Suite struct DictationTests {
+@MainActor @Suite struct DictationTests {
     @Test func offlineIsNativeEvenWhenElevenLabsIsSelected() {
         let capture = Dictation.voiceCapture(.elevenlabs, online: false, nativeSpeech: true)
         #expect(capture.engine == .native)
@@ -14,36 +14,23 @@ import Testing
         #expect(capture == VoiceCapture(engine: .native, capture: .typed))
     }
 
-    @Test func setDictationQueuesOneSettingsOp() {
-        var snapshot = Snapshot.empty(now: 0)
-        SyncEngine.ensure(&snapshot, deviceId: "device", now: 0, timeZone: "UTC") { "op-1" }
-        SyncEngine.setDictation(&snapshot, .elevenlabs, now: 1) { "op-2" }
-        let op = snapshot.sync?.outbox.last
-        #expect(op?.kind == .settings)
-        #expect(op?.id == "settings")
-        #expect(op?.fields["dictation"] == .string("elevenlabs"))
-        #expect(op?.fields["timeZone"] == nil)
-        #expect(snapshot.sync?.dictation == .elevenlabs)
+    @Test func setDictationPatchesOnlyTheChoice() {
+        let (store, written) = recordingStore()
+        store.setDictation(.elevenlabs)
+        #expect(store.dictation == .elevenlabs)
+        #expect(written.writes == [patch(.settings, "settings", ["dictation": .string("elevenlabs")])])
     }
 
-    @Test func aSyncChangeAdoptsTheOtherDevicesChoice() {
-        var snapshot = Snapshot.empty(now: 0)
-        SyncEngine.ensure(&snapshot, deviceId: "device", now: 0, timeZone: "UTC") { "op-1" }
-        let body = Data(
-            #"{"rejected":[],"acked":["op-1"],"cursor":1,"hlc":"2:0:server","epoch":0,"changes":[{"seq":1,"opId":"op-2","kind":"settings","id":"settings","fields":{"dictation":"elevenlabs"}}]}"#
-                .utf8
-        )
-        #expect(SyncEngine.apply(&snapshot, response: body, now: 3) { "op-3" } != nil)
-        #expect(snapshot.sync?.dictation == .elevenlabs)
-        #expect(snapshot.sync?.timeZone == "UTC")
+    @Test func aReloadAdoptsTheOtherDevicesChoice() {
+        let (store, _) = recordingStore()
+        var rows = StoredRows()
+        rows.settings = [Owned(owner: "me", value: API.Settings(timeZone: "UTC", dictation: .elevenlabs))]
+        store.reload(Spaces(rows, me: "me"))
+        #expect(store.dictation == .elevenlabs)
     }
 
-    @Test func aDocumentFromBeforeDictationDefaultsToNative() throws {
-        let json = Data(
-            #"{"tasks":[],"projects":[],"labels":[],"remindersCheckedAt":1,"sync":{"deviceId":"d","cursor":0,"outbox":[],"clock":"0:0:d","timeZone":"UTC","epoch":0,"reset":false}}"#
-                .utf8
-        )
-        let loaded = Snapshot.load(json, now: 1)
-        #expect(try #require(loaded.sync).dictation == .native)
+    @Test func aUserWithoutSettingsRowsDictatesNatively() {
+        let (store, _) = recordingStore()
+        #expect(store.dictation == .native)
     }
 }

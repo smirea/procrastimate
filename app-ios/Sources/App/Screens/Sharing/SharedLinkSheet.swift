@@ -44,7 +44,7 @@ struct SharedLinkSheet: View {
         do {
             let shared = try await APIClient.send(API.Endpoints.SharedView.self, NoInput(), query: ["token": token], token: nil)
             store.rememberPeople([shared.owner])
-            if store.snapshot.spaces[shared.owner.id] != nil || shared.owner.id == Session.userID,
+            if store.spaces[shared.owner.id] != nil || shared.owner.id == Session.userID,
                navigator.openShared(shared.target, in: store) {
                 return
             }

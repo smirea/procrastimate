@@ -19,7 +19,7 @@
             hasScannedForEncodings = 0;
             knownRegions = (en, Base);
             mainGroup = A00000000000000000000002;
-            packageReferences = (A00000000000000000000050);
+            packageReferences = (A00000000000000000000050, A00000000000000000000063);
             preferredProjectObjectVersion = 77;
             productRefGroup = A00000000000000000000003;
             projectDirPath = "";
@@ -47,11 +47,14 @@
         A00000000000000000000043 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/App/Generated/Tokens.swift; sourceTree = "<group>"; };
         A00000000000000000000044 = { isa = PBXBuildFile; fileRef = A00000000000000000000043; };
         A00000000000000000000045 = { isa = PBXFileSystemSynchronizedBuildFileExceptionSet; membershipExceptions = (Generated/Tokens.swift); target = A00000000000000000000005; };
+        A00000000000000000000060 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/App/Generated/SyncedTables.swift; sourceTree = "<group>"; };
+        A00000000000000000000061 = { isa = PBXBuildFile; fileRef = A00000000000000000000060; };
+        A00000000000000000000062 = { isa = PBXFileSystemSynchronizedBuildFileExceptionSet; membershipExceptions = (Generated/SyncedTables.swift); target = A00000000000000000000005; };
 
         /* App */
         A00000000000000000000004 = {
             isa = PBXFileSystemSynchronizedRootGroup;
-            exceptions = (A00000000000000000000045);
+            exceptions = (A00000000000000000000045, A00000000000000000000062);
             path = Sources/App;
             sourceTree = "<group>";
         };
@@ -63,7 +66,7 @@
             dependencies = (A00000000000000000000029, A0000000000000000000003D);
             fileSystemSynchronizedGroups = (A00000000000000000000004, A00000000000000000000030);
             name = App;
-            packageProductDependencies = (A00000000000000000000051);
+            packageProductDependencies = (A00000000000000000000051, A00000000000000000000064, A00000000000000000000065);
             productName = App;
             productReference = A00000000000000000000006;
             productType = "com.apple.product-type.application";
@@ -75,8 +78,8 @@
             path = App.app;
             sourceTree = BUILT_PRODUCTS_DIR;
         };
-        A00000000000000000000007 = { isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A00000000000000000000044); runOnlyForDeploymentPostprocessing = 0; };
-        A00000000000000000000008 = { isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (A0000000000000000000002A, A00000000000000000000052); runOnlyForDeploymentPostprocessing = 0; };
+        A00000000000000000000007 = { isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A00000000000000000000044, A00000000000000000000061); runOnlyForDeploymentPostprocessing = 0; };
+        A00000000000000000000008 = { isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (A0000000000000000000002A, A00000000000000000000052, A00000000000000000000066, A00000000000000000000067); runOnlyForDeploymentPostprocessing = 0; };
         A00000000000000000000009 = { isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
         A0000000000000000000002A = { isa = PBXBuildFile; fileRef = A00000000000000000000022; };
         A00000000000000000000028 = {
@@ -117,8 +120,8 @@
         };
         A00000000000000000000054 = { isa = PBXTargetDependency; target = A00000000000000000000021; targetProxy = A00000000000000000000053; };
 
-        /* Sentry, the app's one package dependency (see docs/decisions/ios.md). Only the App target links it; Core stays
-           Foundation-only. */
+        /* The app's package dependencies, Sentry and PowerSync with GRDB (see docs/decisions/ios.md). Only the App target
+           links them; Core stays Foundation-only. */
         A00000000000000000000050 = {
             isa = XCRemoteSwiftPackageReference;
             repositoryURL = "https://github.com/getsentry/sentry-cocoa";
@@ -126,6 +129,15 @@
         };
         A00000000000000000000051 = { isa = XCSwiftPackageProductDependency; package = A00000000000000000000050; productName = "Sentry-Dynamic"; };
         A00000000000000000000052 = { isa = PBXBuildFile; productRef = A00000000000000000000051; };
+        A00000000000000000000063 = {
+            isa = XCRemoteSwiftPackageReference;
+            repositoryURL = "https://github.com/powersync-ja/powersync-swift";
+            requirement = { kind = exactVersion; version = 1.16.4; };
+        };
+        A00000000000000000000064 = { isa = XCSwiftPackageProductDependency; package = A00000000000000000000063; productName = PowerSync; };
+        A00000000000000000000065 = { isa = XCSwiftPackageProductDependency; package = A00000000000000000000063; productName = PowerSyncGRDB; };
+        A00000000000000000000066 = { isa = PBXBuildFile; productRef = A00000000000000000000064; };
+        A00000000000000000000067 = { isa = PBXBuildFile; productRef = A00000000000000000000065; };
 
         /* Activity: the Live Activity attributes, built into both the app and the widget extension. */
         A00000000000000000000030 = {
@@ -201,6 +213,7 @@
             outputPaths = (
                 "$(SRCROOT)/Sources/Core/Generated/API.swift",
                 "$(SRCROOT)/Sources/App/Generated/Tokens.swift",
+                "$(SRCROOT)/Sources/App/Generated/SyncedTables.swift",
                 "$(SRCROOT)/Sources/App/Assets.xcassets/AccentColor.colorset/Contents.json",
                 "$(PROJECT_DERIVED_FILE_DIR)/Version.h",
             );

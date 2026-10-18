@@ -4,7 +4,7 @@ import SwiftUI
 
 struct SignInView: View {
     @Environment(Session.self) private var session
-    @Environment(AccountSync.self) private var accountSync
+    @Environment(SyncClient.self) private var sync
     @Environment(\.webAuthenticationSession) private var webAuthenticationSession
 
     @State private var email = ""
@@ -125,7 +125,7 @@ struct SignInView: View {
     private func finish(_ work: () async -> Void) async {
         busy = true
         await work()
-        if session.signedIn { accountSync.start() }
+        if session.signedIn { sync.start() }
         busy = false
     }
 }

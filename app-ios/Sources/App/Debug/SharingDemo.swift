@@ -1,19 +1,19 @@
 import Core
 import Foundation
 
-/// DEBUG-only. `PROCRASTIMATE_DEMO=sharing` seeds a space Ann Lee shared, through the same response a sync applies,
-/// with two tasks Claude and Ann completed, plus an own project to share, so the sharing screens can be driven without a second account. Release builds omit
-/// it.
+/// DEBUG-only. `PROCRASTIMATE_DEMO=sharing` seeds a space Ann Lee shared straight into the local database, with
+/// two tasks Claude and Ann completed, plus an own project to share, so the sharing screens can be driven without a
+/// second account. Release builds omit it.
 enum SharingDemo {
     @MainActor
-    static func run(store: Store) {
+    static func run(sync: SyncClient) async {
         #if DEBUG
-        guard PlacesDemo.has("sharing"), store.snapshot.spaces["ann"] == nil else { return }
+        let store = sync.store
+        guard PlacesDemo.has("sharing"), store.spaces["ann"] == nil else { return }
         let ann = Person(id: "ann", name: "Ann Lee", kind: .human)
         let claude = Person(id: "claude", name: "Claude", kind: .ai, ownerId: "ann")
-        store.setSpaces([API.Space(id: ann.id, owner: ann)])
-        store.rememberPeople([claude])
-        let shared = API.SyncSnapshot(
+        store.rememberPeople([ann, claude])
+        let shared = Snapshot(
             tasks: [
                 TaskItem(id: "fence", title: "Fix the fence gate", projectId: "garden", createdAt: 1, createdBy: "ann"),
                 TaskItem(
@@ -32,16 +32,15 @@ enum SharingDemo {
                 ),
             ],
             projects: [Project(id: "garden", name: "Garden", createdAt: 1)],
-            labels: [],
-            comments: demoComments(me: Session.userID ?? "me"),
+            comments: demoComments(me: store.me),
             settings: API.Settings()
         )
-        _ = store.takeSyncResponse(
-            .snapshot(.init(snapshot: shared, cursor: 1, hlc: "1:0:server", epoch: 0, scope: "demo", readOnly: ["fence"], targets: [
-                API.ShareTarget(kind: .project, id: "garden"), API.ShareTarget(kind: .task, id: "vet"),
-            ])),
-            space: ann.id
-        )
+        let me = store.me
+        let access = [("project", "garden", API.Role.edit)]
+            + shared.tasks.map { ("task", $0.id, $0.id == "fence" ? API.Role.view : .edit) }
+        await sync.seed(space: ann.id, shared, access: access.map { kind, id, role in
+            Access(id: "\(me):\(kind):\(id)", grantee: me, owner: ann.id, kind: API.AccessKind(rawValue: kind)!, entityId: id, role: role)
+        })
         if !store.projects.contains(where: { $0.name == "Trip to Lisbon" }) {
             let trip = store.addProject("Trip to Lisbon")
             store.addTask(NewTask(title: "Book the flights", projectId: trip.id))

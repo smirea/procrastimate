@@ -525,7 +525,7 @@ struct RambleDrawer: View {
             finish(token: token)
         }
         let choice = store.dictation
-        let deviceId = store.snapshot.sync?.deviceId
+        let deviceId = DeviceDefaults.installID
         Task { await session.start(choice: choice, deviceId: deviceId) }
     }
 

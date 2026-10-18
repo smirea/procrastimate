@@ -6,6 +6,8 @@ enum Launch {
     /// DEBUG UI tests set this so the app opens without a Keychain session. Release never reads it.
     /// Written once in `prepare()` before the first frame, then only read.
     nonisolated(unsafe) static var signedIn = false
+    /// DEBUG UI tests set this to keep sync disconnected. Written once in `prepare()`, like `signedIn`.
+    nonisolated(unsafe) static var offline = false
 
     /// Applies the DEBUG launch environment before the first frame and returns the clock the app runs on.
     static func prepare() -> AppClock {
@@ -17,6 +19,7 @@ enum Launch {
             fatalError(error.description)
         }
         signedIn = options.signedIn
+        offline = options.offline
         if options.reset { StoreLocation.reset() }
         return options.clock(system: .system)
         #else

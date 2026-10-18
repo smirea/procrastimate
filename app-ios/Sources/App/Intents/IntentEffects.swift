@@ -6,9 +6,7 @@ enum IntentEffects {
     static func snapshot() -> (Snapshot, AppClock) {
         if let session = IntentSession.current { return (session.store.snapshot, session.clock) }
         let clock = fallbackClock()
-        let now = clock.now.epochMilliseconds
-        let loaded = StoreLocation.snapshotFile().read().map { Snapshot.load($0, now: now) }
-        return (loaded ?? .empty(now: now), clock)
+        return (SyncClient.shared(clock: clock).store.snapshot, clock)
     }
 
     static func tasks(ids: [String]) -> [TaskEntity] {
@@ -262,10 +260,9 @@ enum IntentEffects {
             return result
         }
         let clock = fallbackClock()
-        let store = Store(file: StoreLocation.snapshotFile(), clock: clock)
+        let store = SyncClient.shared(clock: clock).store
         let before = store.tasks
         let result = body(store, clock, nil)
-        await store.flush()
         SpotlightIndex.schedule(store: store, clock: clock, router: nil)
         await followUp(store, clock, notifications: nil, before: before)
         return result
