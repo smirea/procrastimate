@@ -138,10 +138,17 @@ export async function view({ db, owner, actor }: Command): Promise<SpaceView> {
 }
 
 /** The caller's standing for `applyAs`: a human guest's writes are checked against their `access` rows. */
-function authorityOf(access: Access, comments: Comment[]): Authority {
+function authorityOf(access: Access, snapshot: Snapshot): Authority {
 	if (access.role === 'owner') return { role: 'owner' };
 	if (managesSpace(access.shares)) return { role: 'manager' };
-	return { role: 'guest', comment: id => comments.find(comment => comment.id === id) };
+	return {
+		role: 'guest',
+		stored: ({ kind, id }) => {
+			if (kind === 'task') return snapshot.tasks.some(task => task.id === id) ? {} : undefined;
+			if (kind === 'comment') return snapshot.comments.find(comment => comment.id === id);
+			return undefined;
+		},
+	};
 }
 
 /**
@@ -177,7 +184,7 @@ async function run(
 	const after = { ...snapshot, ...change(data, visible, zone, access) };
 	const writes: Write[] = rowWrites(snapshot, after).map(write => ({ ...write, opId: newId() }));
 	if (!writes.length) return after;
-	const authority = authorityOf(access, snapshot.comments);
+	const authority = authorityOf(access, snapshot);
 	const { rejected } = await applyAs(db, { actor, client, now }, owner, authority, writes);
 	if (rejected.length) throw new ORPCError('FORBIDDEN', { message: rejected[0]!.reason });
 	return after;
