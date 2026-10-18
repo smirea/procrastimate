@@ -75,7 +75,8 @@ jobs:
 
   e2e:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # Desktop Chromium takes about 6 minutes and mobile WebKit on one worker about 8, so 15 left no room.
+    timeout-minutes: 25
     name: e2e
     steps:
       # Full history: scripts/app-version.mts counts the commits for the version the build shows.
