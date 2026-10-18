@@ -50,12 +50,10 @@ export async function getImage(db: Db, owner: string, id: string, size: ImageSiz
  * and then restored it, and an upload whose write has not synced yet, which reaches the server first.
  */
 export const IMAGE_GRACE_MS = 2 * 24 * 60 * 60 * 1000;
-/** A space's images are swept at most this often, after a write. */
 const SWEEP_INTERVAL_MS = 60 * 60 * 1000;
 
 export type SweepPlan = { mark: string[]; unmark: string[]; drop: string[]; now: number };
 
-/** The ids every live task lists. A deleted task's images go after the grace period. */
 export const referencedImages = (snapshot: Snapshot) =>
 	new Set(snapshot.tasks.flatMap(task => task.images.map(image => image.id)));
 
@@ -72,7 +70,6 @@ export function sweepPlan(referenced: ReadonlySet<string>, states: readonly Imag
 	return { mark: [...mark], unmark: [...unmark], drop: [...drop], now };
 }
 
-/** Applies a plan: marks newly unlisted ids, clears the mark of listed ones, deletes the expired. */
 export async function applySweep(db: Db, owner: string, { mark, unmark, drop, now }: SweepPlan): Promise<void> {
 	const own = eq(images.userId, owner);
 	if (mark.length) {
@@ -91,7 +88,6 @@ export async function applySweep(db: Db, owner: string, { mark, unmark, drop, no
 
 const swept = new Map<string, number>();
 
-/** After a write to a space, at most hourly per process: a select of ids and marks, then the plan. */
 export async function sweepImages(db: Db, owner: string, snapshot: Snapshot, now: number): Promise<void> {
 	if (now - (swept.get(owner) ?? 0) < SWEEP_INTERVAL_MS) return;
 	swept.set(owner, now);
@@ -103,7 +99,6 @@ export async function sweepImages(db: Db, owner: string, snapshot: Snapshot, now
 	await applySweep(db, owner, sweepPlan(referencedImages(snapshot), states, now));
 }
 
-/** Who may read which image and whether they may upload. */
 export type ImageAccess = { read: (id: string) => boolean; write: boolean };
 
 export const OWNER_ACCESS: ImageAccess = { read: () => true, write: true };
@@ -159,7 +154,6 @@ export async function imageResponse(
 	return Response.json({ ok: true });
 }
 
-/** `GET` and `PUT /api/images`, for the owner of the space or a guest the space is shared with. */
 export async function imagesRoute(request: Request, app: App): Promise<Response> {
 	if (request.method !== 'GET' && request.method !== 'PUT') return errorResponse('NOT_FOUND', 'Not found');
 	const actor = await readActor(request, app);
@@ -167,7 +161,7 @@ export async function imagesRoute(request: Request, app: App): Promise<Response>
 	if (request.method === 'PUT' && actor.kind !== 'human') return errorResponse('FORBIDDEN', 'Not for AI accounts');
 	identify(actor);
 	const now = Date.now();
-	const owner = spaceOf(new URL(request.url), actor);
+	const owner = spaceOf(actor, new URL(request.url).searchParams.get('space'));
 	if (actor.kind === 'human' && actor.id === owner) return imageResponse(request, app.db, owner, OWNER_ACCESS, now);
 	const space = await loadSpace(app.db, owner);
 	const access = accessOf(space, actor);

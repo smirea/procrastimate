@@ -46,7 +46,7 @@ export async function requireActor(request: Request, app: App): Promise<Actor> {
 	return actor;
 }
 
-/** The human-only routes: sync, uploads, shares, tokens, push. An AI account acts through the agent API. */
+/** An AI account acts through the agent API. */
 export async function requireHuman(request: Request, app: App): Promise<Actor> {
 	const actor = await requireActor(request, app);
 	if (actor.kind !== 'human') throw new ORPCError('FORBIDDEN', { message: 'Not for AI accounts' });
@@ -54,8 +54,8 @@ export async function requireHuman(request: Request, app: App): Promise<Actor> {
 }
 
 /** The space a request is for: `?space=`, else the actor's own, which for an AI is its owner's. */
-export function spaceOf(url: URL, actor: Actor): string {
-	return url.searchParams.get('space') || actor.ownerId || actor.id;
+export function spaceOf(actor: Actor, space?: string | null): string {
+	return space || actor.ownerId || actor.id;
 }
 
 /**

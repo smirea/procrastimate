@@ -3,7 +3,7 @@ import { contract, JSON_UTF8, MARKDOWN } from '../../shared/api/contract';
 import { CLIENT_HEADER, DEVICE_HEADER, type Actor } from '../../shared/auth';
 import { namePrefixed, type Person } from '../../shared/sharing';
 import { taskActivity } from './activity';
-import { clientOf, requireActor, requireHuman } from './actor';
+import { clientOf, requireActor, requireHuman, spaceOf } from './actor';
 import { originOf, type App } from './app';
 import { deviceIdFrom } from './auth';
 import { aiAccounts, authMethods, createAiUser, deleteUser, userByEmail, userById } from './better-auth';
@@ -71,23 +71,18 @@ function requireDevice(request: Request): string {
 	return deviceId;
 }
 
-/** The space a request is for: `?space=`, else the actor's own, which for an AI is its owner's. */
-const ownerOf = (actor: Actor, space?: string) => space || actor.ownerId || actor.id;
-
 /** An agent route: any signed-in actor, on the space the query names. Access is checked where the space loads. */
 async function command({ app, request }: Ctx, space?: string): Promise<Command> {
 	const actor = await requireActor(request, app);
-	return { db: app.db, owner: ownerOf(actor, space), actor, client: requireClient(request), now: Date.now() };
+	return { db: app.db, owner: spaceOf(actor, space), actor, client: requireClient(request), now: Date.now() };
 }
 
-/** An agent route that needs the loaded space and the actor's access to it. */
 async function shared(ctx: Ctx, space?: string) {
 	const cmd = await command(ctx, space);
 	const loaded = await loadSpace(cmd.db, cmd.owner);
 	return { ...cmd, space: loaded, access: requireAccess(loaded, cmd.actor), origin: originOf(ctx.request) };
 }
 
-/** An owner-only route: a signed-in human, on their own space. */
 async function own({ app, request }: Ctx) {
 	const actor = await requireHuman(request, app);
 	return { app, actor, request, origin: originOf(request), now: Date.now() };
