@@ -1,0 +1,1027 @@
+{
+	"module": "dangling",
+	"timeZone": "America/New_York",
+	"cases": [
+		{
+			"fn": "resolveDangling",
+			"test": "resolveDangling › leaves consistent data alone, as the same object",
+			"input": [
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 1,
+							"id": "l",
+							"name": "l",
+							"place": null
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 1,
+							"id": "p",
+							"name": "p",
+							"order": 0
+						}
+					],
+					"sections": [
+						{
+							"createdAt": 1,
+							"id": "s",
+							"name": "s",
+							"order": 0,
+							"projectId": "p"
+						}
+					],
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "a",
+							"images": [],
+							"labelIds": [
+								"l"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "p",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": "s",
+							"title": "a"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "b",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "a",
+							"priority": 4,
+							"projectId": "p",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "b"
+						}
+					]
+				}
+			],
+			"output": {
+				"labels": [
+					{
+						"color": "gray",
+						"createdAt": 1,
+						"id": "l",
+						"name": "l",
+						"place": null
+					}
+				],
+				"projects": [
+					{
+						"createdAt": 1,
+						"id": "p",
+						"name": "p",
+						"order": 0
+					}
+				],
+				"sections": [
+					{
+						"createdAt": 1,
+						"id": "s",
+						"name": "s",
+						"order": 0,
+						"projectId": "p"
+					}
+				],
+				"tasks": [
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "a",
+						"images": [],
+						"labelIds": [
+							"l"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "p",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "s",
+						"title": "a"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "b",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "a",
+						"priority": 4,
+						"projectId": "p",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "b"
+					}
+				]
+			}
+		},
+		{
+			"fn": "resolveDangling",
+			"test": "resolveDangling › a subtask whose parent is gone, or whose parents loop, reads as top level",
+			"input": [
+				{
+					"labels": [],
+					"projects": [],
+					"sections": [],
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "orphan",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "deleted",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "orphan"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "x",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "y",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "x"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "y",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "x",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "y"
+						}
+					]
+				}
+			],
+			"output": {
+				"labels": [],
+				"projects": [],
+				"sections": [],
+				"tasks": [
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "orphan",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "orphan"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "x",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "x"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "y",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "y"
+					}
+				]
+			}
+		},
+		{
+			"fn": "resolveDangling",
+			"test": "resolveDangling › a task in a deleted project reads as in Inbox",
+			"input": [
+				{
+					"labels": [],
+					"projects": [],
+					"sections": [],
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "a",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "gone",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "a"
+						}
+					]
+				}
+			],
+			"output": {
+				"labels": [],
+				"projects": [],
+				"sections": [],
+				"tasks": [
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "a",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "a"
+					}
+				]
+			}
+		},
+		{
+			"fn": "resolveDangling",
+			"test": "resolveDangling › a subtask takes its root’s project, also when its own project is gone",
+			"input": [
+				{
+					"labels": [],
+					"projects": [
+						{
+							"createdAt": 1,
+							"id": "work",
+							"name": "work",
+							"order": 0
+						},
+						{
+							"createdAt": 1,
+							"id": "home",
+							"name": "home",
+							"order": 0
+						}
+					],
+					"sections": [],
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "root",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "work",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "root"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "child",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "root",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "child"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "grandchild",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "child",
+							"priority": 4,
+							"projectId": "gone",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "grandchild"
+						}
+					]
+				}
+			],
+			"output": {
+				"labels": [],
+				"projects": [
+					{
+						"createdAt": 1,
+						"id": "work",
+						"name": "work",
+						"order": 0
+					},
+					{
+						"createdAt": 1,
+						"id": "home",
+						"name": "home",
+						"order": 0
+					}
+				],
+				"sections": [],
+				"tasks": [
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "root",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "work",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "root"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "child",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "root",
+						"priority": 4,
+						"projectId": "work",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "child"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "grandchild",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "child",
+						"priority": 4,
+						"projectId": "work",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "grandchild"
+					}
+				]
+			}
+		},
+		{
+			"fn": "resolveDangling",
+			"test": "resolveDangling › a section of a deleted project is dropped, and its tasks read as in no section",
+			"input": [
+				{
+					"labels": [],
+					"projects": [
+						{
+							"createdAt": 1,
+							"id": "p",
+							"name": "p",
+							"order": 0
+						}
+					],
+					"sections": [
+						{
+							"createdAt": 1,
+							"id": "live",
+							"name": "live",
+							"order": 0,
+							"projectId": "p"
+						},
+						{
+							"createdAt": 1,
+							"id": "dead",
+							"name": "dead",
+							"order": 0,
+							"projectId": "gone"
+						}
+					],
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "a",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "gone",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": "dead",
+							"title": "a"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "b",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "p",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": "live",
+							"title": "b"
+						}
+					]
+				}
+			],
+			"output": {
+				"labels": [],
+				"projects": [
+					{
+						"createdAt": 1,
+						"id": "p",
+						"name": "p",
+						"order": 0
+					}
+				],
+				"sections": [
+					{
+						"createdAt": 1,
+						"id": "live",
+						"name": "live",
+						"order": 0,
+						"projectId": "p"
+					}
+				],
+				"tasks": [
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "a",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "a"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "b",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "p",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "live",
+						"title": "b"
+					}
+				]
+			}
+		},
+		{
+			"fn": "resolveDangling",
+			"test": "resolveDangling › a task keeps its section only while it is top level and the section is in its project",
+			"input": [
+				{
+					"labels": [],
+					"projects": [
+						{
+							"createdAt": 1,
+							"id": "p",
+							"name": "p",
+							"order": 0
+						},
+						{
+							"createdAt": 1,
+							"id": "q",
+							"name": "q",
+							"order": 0
+						}
+					],
+					"sections": [
+						{
+							"createdAt": 1,
+							"id": "s",
+							"name": "s",
+							"order": 0,
+							"projectId": "p"
+						}
+					],
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "moved",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "q",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": "s",
+							"title": "moved"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "parent",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "p",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "parent"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "child",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "parent",
+							"priority": 4,
+							"projectId": "p",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": "s",
+							"title": "child"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "missing",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "p",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": "deleted",
+							"title": "missing"
+						}
+					]
+				}
+			],
+			"output": {
+				"labels": [],
+				"projects": [
+					{
+						"createdAt": 1,
+						"id": "p",
+						"name": "p",
+						"order": 0
+					},
+					{
+						"createdAt": 1,
+						"id": "q",
+						"name": "q",
+						"order": 0
+					}
+				],
+				"sections": [
+					{
+						"createdAt": 1,
+						"id": "s",
+						"name": "s",
+						"order": 0,
+						"projectId": "p"
+					}
+				],
+				"tasks": [
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "moved",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "q",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "moved"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "parent",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "p",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "parent"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "child",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "parent",
+						"priority": 4,
+						"projectId": "p",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "child"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "missing",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "p",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "missing"
+					}
+				]
+			}
+		},
+		{
+			"fn": "resolveDangling",
+			"test": "resolveDangling › a deleted label leaves every labelIds",
+			"input": [
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 1,
+							"id": "kept",
+							"name": "kept",
+							"place": null
+						}
+					],
+					"projects": [],
+					"sections": [],
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "a",
+							"images": [],
+							"labelIds": [
+								"gone",
+								"kept",
+								"other"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "a"
+						}
+					]
+				}
+			],
+			"output": {
+				"labels": [
+					{
+						"color": "gray",
+						"createdAt": 1,
+						"id": "kept",
+						"name": "kept",
+						"place": null
+					}
+				],
+				"projects": [],
+				"sections": [],
+				"tasks": [
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "a",
+						"images": [],
+						"labelIds": [
+							"kept"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "a"
+					}
+				]
+			}
+		}
+	]
+}

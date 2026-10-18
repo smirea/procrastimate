@@ -1,11 +1,9 @@
 import Core
 import SwiftUI
 
-/// Search at the top, then projects, places, events, and labels. Places and calendar events show while open tasks use
-/// them. Typing a query swaps the list for search results.
 struct BrowseScreen: View {
     @Environment(Navigator.self) private var navigator
-    @Environment(AccountSync.self) private var accountSync
+    @Environment(SyncClient.self) private var sync
     @FocusState private var searchFocused: Bool
 
     var body: some View {
@@ -18,7 +16,7 @@ struct BrowseScreen: View {
                 SearchResults(query: query)
             }
         }
-        .refreshable { await accountSync.refresh() }
+        .refreshable { await sync.refresh() }
         .background(.canvas)
         .navigationTitle("Browse")
         .navigationBarTitleDisplayMode(.inline)
@@ -96,7 +94,7 @@ private struct BrowseList: View {
                 }
             }
 
-            let shared = Browse.sharedEntries(store.sharedSpaces)
+            let shared = SpaceRouting.sharedEntries(store.sharedSpaces)
             if !shared.isEmpty {
                 Section {
                     ForEach(shared) { entry in
@@ -232,11 +230,10 @@ private struct BrowseRow: View {
     }
 }
 
-/// A project, label, or task someone shared, with its owner's name where a project row has its count.
 private struct SharedRow: View {
     @Environment(Navigator.self) private var navigator
     @Environment(Store.self) private var store
-    let entry: Browse.SharedEntry
+    let entry: SpaceRouting.SharedEntry
 
     var body: some View {
         switch entry.kind {

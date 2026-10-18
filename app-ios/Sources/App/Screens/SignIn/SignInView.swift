@@ -4,7 +4,7 @@ import SwiftUI
 
 struct SignInView: View {
     @Environment(Session.self) private var session
-    @Environment(AccountSync.self) private var accountSync
+    @Environment(SyncClient.self) private var sync
     @Environment(\.webAuthenticationSession) private var webAuthenticationSession
 
     @State private var email = ""
@@ -92,7 +92,6 @@ struct SignInView: View {
         .glassEffect(.regular, in: .rect(cornerRadius: 28))
     }
 
-    /// Only the server knows whether the password is right, so the button says it is asking.
     private var submitLabel: String {
         switch (busy, creating) {
         case (true, true): "Creating account…"
@@ -125,7 +124,7 @@ struct SignInView: View {
     private func finish(_ work: () async -> Void) async {
         busy = true
         await work()
-        if session.signedIn { accountSync.start() }
+        if session.signedIn { sync.start() }
         busy = false
     }
 }

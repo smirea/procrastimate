@@ -114,8 +114,8 @@ public enum Dates {
         return Recurrence(interval: interval, unit: .week, days: sorted.count > 1 ? sorted : nil)
     }
 
-    /// A date past 9999-12-31 is not a `DateKey`, and the server rejects the op that carries it along with the rest of
-    /// the outbox. Every date a repeat computes passes through here.
+    /// A date past 9999-12-31 is not a `DateKey`, and the server rejects the write that carries it. Every date a repeat
+    /// computes passes through here.
     static func inRange(_ key: DateKey) -> DateKey? { parts(key).year <= 9999 ? key : nil }
 
     static func nthWeekday(_ monthStart: DateKey, _ nth: NthWeekday) -> DateKey {

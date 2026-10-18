@@ -7,7 +7,6 @@ struct ProjectScreen: View {
     @Environment(TaskActions.self) private var actions
     let projectID: String
 
-    @State private var name: String?
     @AppStorage private var showCompleted: Bool
 
     init(projectID: String) {
@@ -68,13 +67,8 @@ struct ProjectScreen: View {
                 addSection: { _ = store.addSection(project.id, $0) },
                 showCompleted: $showCompleted
             )
-            .task(id: project.name) { name = project.name }
         } else {
-            // Sync merges a project into the oldest one with its name, so the screen follows the name there.
-            Color.clear.task {
-                let survivor = name.flatMap { name in store.projects.first { $0.name.lowercased() == name.lowercased() } }
-                navigator.replace(.project(id: projectID), with: survivor.map { .project(id: $0.id) })
-            }
+            Color.clear.task { navigator.drop(.project(id: projectID)) }
         }
     }
 }

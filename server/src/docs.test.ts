@@ -1,11 +1,6 @@
-import { afterEach, beforeEach, describe, expect, setSystemTime, test } from 'bun:test';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, setSystemTime, test } from 'bun:test';
 import type { Person } from '../../shared/sharing';
-import type { Task } from '../../shared/sync/protocol';
-import { memoryAccount } from './account/account';
-import { authHeaders, registerDevice, type DeviceCredentials } from './account/test-device';
-import { SHARED_ROUTES } from './actor';
-import api from './api';
-import type { Env } from './bindings';
+import type { Task } from '../../shared/model';
 import {
 	agentExamples,
 	agentRoutes,
@@ -19,37 +14,34 @@ import {
 	SECTION_ID,
 	TASK_ID,
 } from './docs';
-
-const ORIGIN = 'https://procrastimate.test';
+import { json, ORIGIN, signUp, testApp, tokenHeaders, type Session, type TestApp } from './test-app';
 
 beforeEach(() => setSystemTime(Date.UTC(2026, 9, 14, 18)));
 afterEach(() => setSystemTime());
 
 describe('agent docs', () => {
-	let env: Env;
-	let owner: DeviceCredentials;
+	let app: TestApp;
+	let owner: Session;
 	let token: string;
 	let prompt: string;
 
 	const call = (method: string, path: string, headers: Record<string, string> = {}, body?: unknown) =>
-		api.fetch(
-			new Request(`${ORIGIN}${path}`, {
-				method,
-				headers: { 'content-type': 'application/json', ...headers },
-				body: body === undefined ? undefined : JSON.stringify(body),
-			}),
-			env,
-		);
-	const asAi = (method: string, path: string, body?: unknown) =>
-		call(method, path, { Authorization: `Bearer ${token}` }, body);
+		app.fetch(path, {
+			method,
+			headers: { 'content-type': 'application/json', ...headers },
+			body: body === undefined ? undefined : JSON.stringify(body),
+		});
+	const asAi = (method: string, path: string, body?: unknown) => call(method, path, tokenHeaders(token), body);
 
-	beforeEach(async () => {
-		env = { ACCOUNT: memoryAccount(), EPHEMERAL: '1' };
-		owner = await registerDevice(env, 'Owner Mac');
-		const ai = (await (await call('POST', '/api/ai', authHeaders(owner), { name: 'Butler' })).json()) as Person;
-		const created = await call('POST', '/api/ai-tokens', authHeaders(owner), { aiUserId: ai.id, name: 'laptop' });
-		({ token, prompt } = (await created.json()) as { token: string; prompt: string });
+	beforeAll(async () => {
+		app = await testApp();
+		owner = await signUp(app, 'Owner');
+		const ai = await json<Person>(call('POST', '/api/ai', owner.headers, { name: 'Butler' }));
+		({ token, prompt } = await json<{ token: string; prompt: string }>(
+			call('POST', '/api/ai-tokens', owner.headers, { aiUserId: ai.id, name: 'laptop' }),
+		));
 	});
+	afterAll(() => app.close());
 
 	test('the entry point is public and tells an agent how to get in', async () => {
 		const response = await call('GET', '/api/docs');
@@ -64,13 +56,12 @@ describe('agent docs', () => {
 	test('the reference needs a valid token', async () => {
 		expect((await call('GET', '/api/docs/agent')).status).toBe(401);
 		expect((await call('GET', '/api/docs/openapi')).status).toBe(401);
-		const forged = { Authorization: `Bearer ${token.slice(0, -2)}xx` };
+		const forged = { authorization: `Bearer ${token.slice(0, -2)}xx` };
 		expect((await call('GET', '/api/docs/agent', forged)).status).toBe(401);
 	});
 
 	test('the reference covers exactly the routes an AI token may call', async () => {
 		const routes = [
-			'POST /api/sync',
 			'GET /api/view',
 			'POST /api/tasks',
 			'PATCH /api/tasks',
@@ -96,7 +87,7 @@ describe('agent docs', () => {
 			'DELETE /api/links',
 			'GET /api/images',
 		];
-		expect([...SHARED_ROUTES].toSorted()).toEqual(routes.toSorted());
+		expect(agentRoutes.map(route => `${route.method} ${route.path}`).toSorted()).toEqual(routes.toSorted());
 
 		const guide = await asAi('GET', '/api/docs/agent');
 		expect(guide.status).toBe(200);
@@ -123,25 +114,20 @@ describe('agent docs', () => {
 		const exampled = new Set(agentExamples.map(example => `${example.method} ${example.path}`));
 		expect(agentRoutes.filter(route => !exampled.has(`${route.method} ${route.path}`))).toEqual([]);
 
-		const target = (await (await asAi('POST', '/api/tasks', { title: 'Fix the sink' })).json()) as Task;
-		const posted = await asAi('POST', '/api/comments', { taskId: target.id, body: 'On it' });
-		const comment = (await posted.json()) as { id: string };
+		const target = await json<Task>(asAi('POST', '/api/tasks', { title: 'Fix the sink' }));
+		const comment = await json<{ id: string }>(asAi('POST', '/api/comments', { taskId: target.id, body: 'On it' }));
 		const image = crypto.randomUUID();
 		const jpeg = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3]);
 		for (const size of ['full', 'thumb']) {
-			const uploaded = await api.fetch(
-				new Request(`${ORIGIN}/api/images?id=${image}&size=${size}`, {
-					method: 'PUT',
-					headers: { ...authHeaders(owner), 'content-type': 'image/jpeg' },
-					body: jpeg,
-				}),
-				env,
-			);
+			const uploaded = await app.fetch(`/api/images?id=${image}&size=${size}`, {
+				method: 'PUT',
+				headers: { ...owner.headers, 'content-type': 'image/jpeg' },
+				body: jpeg,
+			});
 			expect(uploaded.status).toBe(200);
 		}
 		await asAi('PATCH', `/api/tasks?id=${target.id}`, { images: [{ id: image, width: 4, height: 3 }] });
-		const made = async (path: string, body: unknown) =>
-			((await (await asAi('POST', path, body)).json()) as { id: string }).id;
+		const made = async (path: string, body: unknown) => (await json<{ id: string }>(asAi('POST', path, body))).id;
 		const projectId = await made('/api/projects', { name: 'Chores' });
 		const sectionId = await made('/api/sections', { projectId, name: 'Later' });
 		const labelId = await made('/api/labels', { name: 'someday' });

@@ -4,12 +4,14 @@
  *   - deletes simulators claimed by a worktree that no longer exists
  *   - shuts down claimed simulators unused for 15 minutes that no running process names
  *   - deletes Xcode DerivedData of the App project at paths that no longer exist
+ *   - removes PowerSync containers and drops databases of worktrees that no longer exist
  *   - lists worktrees whose PR merged, for teardown-worktree.ts
  */
 import { spawnSync } from 'node:child_process';
 import { existsSync, readdirSync, rmSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
+import { dockerRunning, dropDatabases, powerSyncContainers, removeContainer, worktreeDatabases } from './local-stack';
 import { devices, owner, remove, shutdown } from './simulators';
 
 const dryRun = process.argv.includes('--dry-run');
@@ -20,9 +22,9 @@ function run(cmd: string[]): string {
 	return result.status === 0 ? result.stdout.trim() : '';
 }
 
-function act(message: string, action: () => void) {
+async function act(message: string, action: () => unknown) {
 	console.log(`${dryRun ? '[dry run] ' : ''}${message}`);
-	if (!dryRun) action();
+	if (!dryRun) await action();
 }
 
 const worktrees = run(['git', 'worktree', 'list', '--porcelain'])
@@ -44,10 +46,10 @@ for (const device of devices()) {
 	const claim = owner(device);
 	if (!claim) continue;
 	if (!live.has(claim.worktree)) {
-		act(`Deleting simulator ${device.name}; its worktree ${claim.worktree} is gone.`, () => remove(device));
+		await act(`Deleting simulator ${device.name}; its worktree ${claim.worktree} is gone.`, () => remove(device));
 	} else if (device.state === 'Booted' && Date.now() - claim.lastUsed > IDLE_MS && !inUse(device.udid, device.name)) {
 		const minutes = Math.round((Date.now() - claim.lastUsed) / 60_000);
-		act(`Shutting down ${device.name}, idle ${minutes} minutes.`, () => shutdown(device));
+		await act(`Shutting down ${device.name}, idle ${minutes} minutes.`, () => shutdown(device));
 	}
 }
 
@@ -56,9 +58,22 @@ for (const entry of existsSync(derivedData) ? readdirSync(derivedData) : []) {
 	if (!entry.startsWith('App-')) continue;
 	const workspace = run(['plutil', '-extract', 'WorkspacePath', 'raw', join(derivedData, entry, 'info.plist')]);
 	if (!workspace || existsSync(workspace)) continue;
-	act(`Deleting DerivedData ${entry} of the removed ${workspace}.`, () =>
+	await act(`Deleting DerivedData ${entry} of the removed ${workspace}.`, () =>
 		rmSync(join(derivedData, entry), { recursive: true, force: true }),
 	);
+}
+
+if (dockerRunning()) {
+	for (const container of powerSyncContainers()) {
+		if (live.has(container.worktree)) continue;
+		await act(`Removing ${container.name}; its worktree ${container.worktree} is gone.`, () =>
+			removeContainer(container.name),
+		);
+	}
+	for (const { database, worktree } of await worktreeDatabases().catch(() => [])) {
+		if (live.has(worktree)) continue;
+		await act(`Dropping database ${database}; its worktree ${worktree} is gone.`, () => dropDatabases(database));
+	}
 }
 
 for (const { path, branch } of worktrees.slice(1)) {

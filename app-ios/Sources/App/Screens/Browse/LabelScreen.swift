@@ -7,7 +7,6 @@ struct LabelScreen: View {
     @Environment(TaskActions.self) private var actions
     let labelID: String
 
-    @State private var name: String?
     @State private var editingPlace = false
     @AppStorage private var showCompleted: Bool
 
@@ -65,13 +64,8 @@ struct LabelScreen: View {
                 delete: { store.deleteLabel(label.id) },
                 showCompleted: $showCompleted
             )
-            .task(id: label.name) { name = label.name }
         } else {
-            // Sync merges a label into the oldest one with its name, so the screen follows the name there.
-            Color.clear.task {
-                let survivor = name.flatMap { name in store.labels.first { $0.name.lowercased() == name.lowercased() } }
-                navigator.replace(.label(id: labelID), with: survivor.map { .label(id: $0.id) })
-            }
+            Color.clear.task { navigator.drop(.label(id: labelID)) }
         }
     }
 }

@@ -55,8 +55,6 @@ jobs:
 
       - name: Unit tests
         run: bun test
-        env:
-          SYNC_INTERLEAVINGS: all
 
       # porcelain also lists new, untracked vector files, which git diff would miss.
       - name: Test vectors are up to date
@@ -77,7 +75,8 @@ jobs:
 
   e2e:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # Desktop Chromium takes about 6 minutes and mobile WebKit on one worker about 8, so 15 left no room.
+    timeout-minutes: 25
     name: e2e
     steps:
       # Full history: scripts/app-version.mts counts the commits for the version the build shows.
@@ -99,26 +98,47 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-chromium-${{ steps.playwright.outputs.version }}
+          key: playwright-${{ runner.os }}-chromium-webkit-${{ steps.playwright.outputs.version }}
 
       - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: bunx playwright install --with-deps chromium
+        run: bunx playwright install --with-deps chromium webkit
         working-directory: app-web
 
       - name: Install Playwright system dependencies
         if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: bunx playwright install-deps chromium
+        run: bunx playwright install-deps chromium webkit
         working-directory: app-web
 
-      # CI has no AWS access, so this only generates a throwaway VAPID pair.
-      - name: .dev.vars for wrangler dev
-        run: bun server/scripts/secrets.ts dev-vars --generate-only
+      # The same Postgres and PowerSync containers a worktree runs, on the main checkout's e2e ports.
+      - name: Postgres and PowerSync
+        run: bun scripts/ci-stack.ts
 
-      - name: End to end against the Worker
-        run: bun run test:e2e --project=desktop
+      - name: End to end against the Worker, desktop Chromium
+        run: bun run test:e2e --project desktop
         env:
           E2E_WORKER: '1'
+
+      # One worker: each WebKit spec drives two or three pages, and Linux WebKit on two cores beside a second worker's
+      # pages rendered so slowly that the longest specs crossed their limits in 3 of 3 runs, a different spec each time.
+      - name: End to end against the Worker, mobile WebKit
+        if: success() || failure()
+        run: bun run test:e2e --project mobile --workers 1 --output test-results/mobile
+        env:
+          E2E_WORKER: '1'
+
+      - name: PowerSync logs
+        if: failure()
+        run: docker ps -a --filter label=procrastimate.worktree --format '{{.Names}}' | xargs -rn1 docker logs
+
+      # Traces of the failed specs. They hold only the throwaway accounts each spec signs up.
+      - name: Playwright results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-results
+          path: app-web/test-results
+          retention-days: 7
 
   deploy:
     needs: [checks, e2e]

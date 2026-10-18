@@ -4,14 +4,13 @@ import Observation
 import UIKit
 
 /// Task images on iOS, as on the web: a task's `images` field syncs like any other and the bytes stay out of it.
-/// Attaching writes the new image's bytes to the upload queue and the cache before the edit is recorded, and each sync
-/// uploads a space's queue before it pushes, so the server never hears of an image it cannot serve. See
+/// Attaching writes the new image's bytes to the upload queue and the cache before the edit is recorded, and every upload
+/// drains that queue before PowerSync sends the edits, so the server never hears of an image it cannot serve. See
 /// `docs/decisions/images.md`.
 @MainActor @Observable
 final class TaskImages {
     enum Size: String { case full, thumb }
 
-    /// The image open full screen.
     struct Viewing: Identifiable, Hashable {
         let taskID: String
         let imageID: String
@@ -30,7 +29,7 @@ final class TaskImages {
     /// How long a missing image waits before it is asked for again, as when another device has not uploaded it yet.
     static let retryMissing = Duration.seconds(30)
     /// The server answered for good: the request was bad, no longer allowed, or the bytes will never fit.
-    private static let permanent: Set<Int> = [400, 403, 404, 413, 415]
+    private nonisolated static let permanent: Set<Int> = [400, 403, 404, 413, 415]
 
     init(store: Store, toasts: Toasts) {
         self.store = store
@@ -57,7 +56,6 @@ final class TaskImages {
         return true
     }
 
-    /// Encodes each image and appends it to the task.
     func attach(_ taskID: String, _ sources: [Data]) async {
         guard let space = store.space(ofTask: taskID) else { return }
         for source in sources {
@@ -94,16 +92,16 @@ final class TaskImages {
         })
     }
 
-    /// Uploads what `space` has queued, before its sync pushes the edits that list them. Throws when the server cannot be
-    /// reached, so the sync waits too; an upload the server refuses for good is dropped instead of blocking sync.
-    func upload(_ space: SpaceKey, token: String) async throws {
-        for file in Files.queued(space) {
+    /// Uploads every queued image, before PowerSync uploads the edits that list them. Throws when the server cannot be
+    /// reached, so the upload waits too; an upload the server refuses for good is dropped instead of blocking it.
+    nonisolated static func uploadQueued(token: String) async throws {
+        for (space, file) in Files.queued() {
             let name = file.lastPathComponent
             guard let separator = name.lastIndex(of: "-"), let size = Size(rawValue: String(name[name.index(after: separator)...])) else {
                 try? FileManager.default.removeItem(at: file)
                 continue
             }
-            // A failed read, as while the device is locked, stops the sync and keeps the only copy.
+            // A failed read, as while the device is locked, stops the upload and keeps the only copy.
             let data = try Data(contentsOf: file)
             var request = URLRequest(url: Self.url(String(name[..<separator]), size, space: space))
             request.httpMethod = "PUT"
@@ -125,9 +123,9 @@ final class TaskImages {
         try? FileManager.default.removeItem(at: Files.queue)
     }
 
-    private static func key(_ id: String, _ size: Size) -> String { "\(id)-\(size.rawValue)" }
+    private nonisolated static func key(_ id: String, _ size: Size) -> String { "\(id)-\(size.rawValue)" }
 
-    private static func url(_ id: String, _ size: Size, space: SpaceKey) -> URL {
+    private nonisolated static func url(_ id: String, _ size: Size, space: SpaceKey) -> URL {
         var items = [URLQueryItem(name: "id", value: id), URLQueryItem(name: "size", value: size.rawValue)]
         if let owner = space.query { items.append(URLQueryItem(name: "space", value: owner)) }
         return AppEnvironment.apiURL.appending(path: "api/images").appending(queryItems: items)
@@ -153,8 +151,15 @@ final class TaskImages {
 
         static func pending(_ space: SpaceKey, _ key: String) -> URL { folder(space).appending(path: key) }
 
-        static func queued(_ space: SpaceKey) -> [URL] {
-            (try? FileManager.default.contentsOfDirectory(at: folder(space), includingPropertiesForKeys: nil)) ?? []
+        /// Every queued file with the space it belongs to: `own`, or a shared space's owner id.
+        static func queued() -> [(SpaceKey, URL)] {
+            let folders = (try? FileManager.default.contentsOfDirectory(at: queue, includingPropertiesForKeys: nil)) ?? []
+            return folders.flatMap { folder -> [(SpaceKey, URL)] in
+                let name = folder.lastPathComponent
+                let space: SpaceKey = name == "own" ? .own : .shared(name)
+                let files = (try? FileManager.default.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil)) ?? []
+                return files.map { (space, $0) }
+            }
         }
 
         static func write(_ data: Data, to url: URL) throws {

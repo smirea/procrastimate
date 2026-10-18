@@ -6,9 +6,7 @@ enum IntentEffects {
     static func snapshot() -> (Snapshot, AppClock) {
         if let session = IntentSession.current { return (session.store.snapshot, session.clock) }
         let clock = fallbackClock()
-        let now = clock.now.epochMilliseconds
-        let loaded = StoreLocation.snapshotFile().read().map { Snapshot.load($0, now: now) }
-        return (loaded ?? .empty(now: now), clock)
+        return (SyncClient.shared(clock: clock).store.snapshot, clock)
     }
 
     static func tasks(ids: [String]) -> [TaskEntity] {
@@ -237,7 +235,6 @@ enum IntentEffects {
         return IntentRules.indexedTasks(snapshot.tasks).map { entity($0, snapshot, clock) }
     }
 
-    /// The requested tasks that are still open, and the ids Spotlight should drop.
     static func spotlightEntities(ids: [String]) -> (keep: [TaskEntity], drop: [String]) {
         let (snapshot, clock) = snapshot()
         let open = Dictionary(uniqueKeysWithValues: IntentRules.indexedTasks(snapshot.tasks).map { ($0.id, $0) })
@@ -253,21 +250,24 @@ enum IntentEffects {
         return (keep, drop)
     }
 
+    /// Returns once the local database holds the command, since the system may suspend the process as soon as the
+    /// intent returns, even with the app open.
     private static func withStore<T>(_ body: (Store, AppClock, IntentSession?) -> T) async -> T {
         if let session = IntentSession.current {
             let before = session.store.tasks
             let result = body(session.store, session.clock, session)
             SpotlightIndex.schedule(session)
             await followUp(session.store, session.clock, notifications: session.notifications, before: before)
+            await SyncClient.shared(clock: session.clock).saved()
             return result
         }
         let clock = fallbackClock()
-        let store = Store(file: StoreLocation.snapshotFile(), clock: clock)
-        let before = store.tasks
-        let result = body(store, clock, nil)
-        await store.flush()
-        SpotlightIndex.schedule(store: store, clock: clock, router: nil)
-        await followUp(store, clock, notifications: nil, before: before)
+        let sync = SyncClient.shared(clock: clock)
+        let before = sync.store.tasks
+        let result = body(sync.store, clock, nil)
+        SpotlightIndex.schedule(store: sync.store, clock: clock, router: nil)
+        await followUp(sync.store, clock, notifications: nil, before: before)
+        await sync.saved()
         return result
     }
 

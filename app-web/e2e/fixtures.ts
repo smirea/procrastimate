@@ -1,22 +1,26 @@
-import { expect, test as base, type BrowserContext, type Page } from '@playwright/test';
+import { expect, test as base, type Browser, type BrowserContext, type Page } from '@playwright/test';
 import { strToU8, zipSync } from 'fflate';
-import { randomUUID } from 'node:crypto';
-import type { Patch } from '../../shared/sync/protocol';
+import { getTableColumns } from 'drizzle-orm';
+import { ENTITY_TABLES } from '../../shared/db/schema';
+import type { Kind } from '../../shared/model';
+import { TABLE_OF } from '../../shared/rows';
 import { todoistBackupFiles } from '../../shared/fixtures/todoist-backup.mts';
 import { SENTRY_TUNNEL_PATH } from '../../shared/sentry';
 
-/** Wednesday, October 14 2026, 10:00 UTC. The suite runs in the UTC time zone. */
 export const NOW = new Date('2026-10-14T10:00:00Z');
 
 export const E2E_PASSWORD = 'e2e-password-1';
+
+/** Each worker process's own, so a test's account is new on every run of a database that outlives the run. */
+const RUN = crypto.randomUUID().slice(0, 8);
 
 /** One user per test. A second context signs in as the same email, so the two devices share an account. */
 export function e2eEmail(): string {
 	const id = test
 		.info()
 		.testId.replace(/[^A-Za-z0-9]/g, '')
-		.slice(0, 48);
-	return `e2e-${id}@procrastimate.test`;
+		.slice(0, 40);
+	return `e2e-${id}-${RUN}@procrastimate.test`;
 }
 
 /**
@@ -24,6 +28,36 @@ export function e2eEmail(): string {
  * so quick add never reads it as a token: a bare hex id such as `3929284d` is a due date 3,929,284 days away.
  */
 export const unique = (name: string) => `${name} x${crypto.randomUUID().slice(0, 8)}`;
+
+/**
+ * A new context like the project's own, so the mobile project's extra devices are phones too. Its service worker is
+ * blocked: WebKit sends a page's requests through it, where `context.route` never sees them.
+ */
+export async function deviceContext(browser: Browser, { timezoneId }: { timezoneId?: string } = {}) {
+	const { baseURL, viewport, isMobile, hasTouch, userAgent, deviceScaleFactor, ...use } = test.info().project.use;
+	return browser.newContext({
+		baseURL,
+		timezoneId: timezoneId ?? use.timezoneId,
+		viewport,
+		isMobile,
+		hasTouch,
+		userAgent,
+		deviceScaleFactor,
+		serviceWorkers: 'block',
+	});
+}
+
+const SYNC_ROUTES = /\/api\/(powersync\/|upload|sync\/token)/;
+
+export async function goOffline(context: BrowserContext) {
+	await context.route(SYNC_ROUTES, route => route.abort('internetdisconnected'));
+	await context.setOffline(true);
+}
+
+export async function goOnline(context: BrowserContext) {
+	await context.setOffline(false);
+	await context.unroute(SYNC_ROUTES);
+}
 
 export async function signInAccount(context: BrowserContext) {
 	const email = e2eEmail();
@@ -37,25 +71,26 @@ export async function signInAccount(context: BrowserContext) {
 	if (!signIn.ok()) throw new Error(`sign-in failed: ${signIn.status()} ${await signIn.text()}`);
 }
 
-export async function deviceHeader(page: Page): Promise<Record<string, string>> {
-	const deviceId = await page.evaluate(() => {
-		const raw = localStorage.getItem('procrastimate');
-		const sync = raw ? (JSON.parse(raw) as { sync?: { deviceId?: string } }).sync : undefined;
-		return sync?.deviceId ?? '';
-	});
-	return { 'x-procrastimate-device': deviceId };
-}
-
 /**
  * Collects every uncaught error in the context's pages. The pinned clock runs timer callbacks itself and logs what
  * they throw with `console.error(error)` instead of letting it escape, so a console error whose first argument is an
  * Error counts too. The app never logs an Error itself, and the browser's own lines, such as `Failed to load
  * resource`, carry no arguments.
  */
+/**
+ * WebKit's words for a request it cancelled because the page navigated, such as PowerSync's token fetch during a
+ * reload. PowerSync logs it and tries again after the reload, so it is not a crash. The single-origin spec still fails
+ * on any request that really leaves the origin.
+ */
+const NAVIGATION_ABORT = /due to access control checks\.$/;
+
 export function watchPageErrors(context: BrowserContext) {
 	const errors: string[] = [];
+	const record = (error: string) => {
+		if (!NAVIGATION_ABORT.test(error)) errors.push(error);
+	};
 	const pending: Promise<void>[] = [];
-	context.on('weberror', error => errors.push(String(error.error())));
+	context.on('weberror', error => record(String(error.error())));
 	context.on('console', message => {
 		const [first] = message.type() === 'error' ? message.args() : [];
 		if (!first) return;
@@ -64,11 +99,11 @@ export function watchPageErrors(context: BrowserContext) {
 				.evaluate(value => (value instanceof Error ? String(value) : null))
 				.then(
 					error => {
-						if (error) errors.push(error);
+						if (error) record(error);
 					},
 					// The page navigated before the argument could be read, so judge by the logged text.
 					() => {
-						if (/^\w*Error\b/.test(message.text())) errors.push(message.text());
+						if (/^\w*Error\b/.test(message.text())) record(message.text());
 					},
 				),
 		);
@@ -81,7 +116,6 @@ export function watchPageErrors(context: BrowserContext) {
 
 /** Signed out. Every spec imports `test` from here, never from `@playwright/test`, so none can report to Sentry. */
 export const quietTest = base.extend<{ sentryOff: (context: BrowserContext) => BrowserContext }>({
-	// Every context, the default one and each spec's own `browser.newContext()`, so a test can never report to Sentry.
 	sentryOff: [
 		async ({ browser }, use) => {
 			const reported: string[] = [];
@@ -103,7 +137,6 @@ export const quietTest = base.extend<{ sentryOff: (context: BrowserContext) => B
 	],
 });
 
-/** Signed in, with uncaught page errors failing the test. */
 export const test = quietTest.extend<{ app: App }>({
 	context: async ({ context, sentryOff }, use) => {
 		sentryOff(context);
@@ -135,7 +168,6 @@ export class App {
 	list = (name: string) => this.page.getByRole('list', { name });
 	nav = (name: string) => this.page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name });
 
-	/** A phone has no keyboard shortcut, so it uses the floating button. */
 	async openQuickAdd() {
 		if (this.page.viewportSize()!.width < 768) {
 			await this.page.getByRole('button', { name: 'Quick add' }).click();
@@ -146,7 +178,6 @@ export class App {
 		await expect(this.taskInput()).toBeFocused();
 	}
 
-	/** Saving closes quick add, so each task opens it again. */
 	async add(...titles: string[]) {
 		for (const title of titles) {
 			await this.openQuickAdd();
@@ -157,11 +188,11 @@ export class App {
 	}
 
 	async openNavigation() {
+		if (await this.page.getByRole('navigation', { name: 'Main' }).isVisible()) return;
 		await this.page.getByRole('button', { name: 'Open navigation' }).tap();
 		await expect(this.page.getByRole('navigation', { name: 'Main' })).toBeInViewport();
 	}
 
-	/** Like `add`, but first creates each unknown #project and @label from its chip, as a person would. */
 	async addCreating(title: string) {
 		await this.openQuickAdd();
 		await this.taskInput().fill(title);
@@ -182,12 +213,26 @@ export class App {
 		await expect(this.details()).toBeHidden();
 	}
 
+	async openSearch() {
+		if (this.page.viewportSize()!.width < 768) {
+			await this.openNavigation();
+			await this.page
+				.getByRole('navigation', { name: 'Main' })
+				.getByRole('button', { name: /^Search/ })
+				.click();
+		} else {
+			await this.page.keyboard.press('/');
+		}
+		await expect(this.page.getByRole('combobox', { name: 'Search' })).toBeFocused();
+	}
+
 	async go(view: string) {
 		await this.nav(view).click();
 		await expect(this.page.getByRole('heading', { level: 1, name: view })).toBeVisible();
 	}
 
 	async createProject(name: string) {
+		if (this.page.viewportSize()!.width < 768) await this.openNavigation();
 		await this.page.getByRole('button', { name: 'Add project' }).click();
 		const input = this.page.getByRole('textbox', { name: 'Project name' });
 		await input.fill(name);
@@ -218,44 +263,39 @@ export class App {
 	}
 
 	async taskId(title: string): Promise<string> {
-		const id = await this.page.evaluate(
-			title =>
-				(JSON.parse(localStorage.getItem('procrastimate')!) as { tasks: { id: string; title: string }[] }).tasks.find(
-					task => task.title === title,
-				)?.id,
-			title,
-		);
+		const id = await this.page.evaluate(title => window.procrastimate.taskId(title), title);
 		if (!id) throw new Error(`no task titled ${title}`);
 		return id;
 	}
 
+	pending() {
+		return this.page.evaluate(() => window.procrastimate.pending());
+	}
+
 	/**
-	 * Writes synced fields as a second device of the same account, then reloads so this page pulls them. Use it for
-	 * fields the web cannot set, such as an iOS place. Editing the `procrastimate` localStorage document instead does
-	 * not stick, since this page's next sync replaces it with the server's state.
+	 * Patches rows as another device of the same account would. Use it for fields the web cannot set, such as an iOS
+	 * place.
 	 */
-	async pushFromOtherDevice(...patches: Patch[]) {
-		await expect
-			.poll(() =>
-				this.page.evaluate(
-					() =>
-						(JSON.parse(localStorage.getItem('procrastimate')!) as { sync: { outbox: unknown[] } }).sync.outbox.length,
-				),
-			)
-			.toBe(0);
-		const device = randomUUID();
-		const response = await this.page.request.post('/api/sync', {
-			headers: { 'x-procrastimate-device': device },
-			// A minute ahead of this page's clock, so these writes win over any it made.
-			data: {
-				cursor: 0,
-				ops: patches.map(patch => ({ ...patch, opId: randomUUID(), hlc: `${Date.now() + 60_000}:0:${device}` })),
-			},
+	async pushFromOtherDevice(...patches: { kind: Kind; id: string; fields: Record<string, unknown> }[]) {
+		await expect.poll(() => this.pending(), { timeout: 15_000 }).toBe(0);
+		const writes = patches.map(({ kind, id, fields }) => {
+			const columns = getTableColumns(ENTITY_TABLES[kind]) as Record<string, { name: string; dataType: string }>;
+			const values = Object.fromEntries(
+				Object.entries(fields).map(([key, value]) => [
+					columns[key]!.name,
+					value !== null && typeof value === 'object' ? JSON.stringify(value) : value,
+				]),
+			);
+			return { op: 'patch', table: TABLE_OF[kind], id, values };
 		});
+		const response = await this.page.request.post('/api/upload', { data: { writes } });
 		expect(response.status()).toBe(200);
-		expect((await response.json()).rejected ?? []).toEqual([]);
-		await this.page.reload();
-		await expect(this.page.getByRole('heading', { level: 1 })).toBeVisible();
+		expect((await response.json()).rejected).toEqual([]);
+		for (const { kind, id, fields } of patches) {
+			await expect
+				.poll(() => this.page.evaluate(([kind, id]) => window.procrastimate.entity(kind!, id!), [kind, id]))
+				.toMatchObject(fields);
+		}
 	}
 
 	async setNow(date: Date) {
@@ -266,6 +306,7 @@ export class App {
 	importSummary = () => this.settings().getByRole('status', { name: 'Import summary' });
 
 	async openSettings() {
+		if (this.page.viewportSize()!.width < 768) await this.openNavigation();
 		await this.page.getByRole('navigation', { name: 'Main' }).getByRole('button', { name: 'Settings' }).click();
 		await expect(this.settings()).toBeVisible();
 	}

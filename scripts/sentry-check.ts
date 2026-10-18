@@ -2,7 +2,7 @@
  * Proves the Sentry smoke path end to end: reads back the latest `Sentry smoke test: <runtime>` events and checks
  * each one names its user, sits in a trace that another project also reported into, and has readable in-app frames.
  *
- * bun scripts/sentry-check.ts [--environment development] [--since 30m] [--expect web,worker,account,ios]
+ * bun scripts/sentry-check.ts [--environment development] [--since 30m] [--expect web,worker,ios]
  *
  * Trigger the events first: `/inbox?sentry-smoke` on the web, `PROCRASTIMATE_SENTRY_SMOKE=1` on iOS. Exits non-zero
  * when an expected event is missing or fails a check. Needs `SENTRY_AUTH_TOKEN` (env-manager `scripts` target).
@@ -20,11 +20,9 @@ const PROJECTS = {
 } as const;
 type Project = keyof typeof PROJECTS;
 
-/** Each smoke trigger, by the name in its error message, and the project it reports to. */
 const SMOKES = {
 	web: { title: 'Sentry smoke test: web', project: 'procrastimate-web' },
 	worker: { title: 'Sentry smoke test: Worker', project: 'procrastimate-worker' },
-	account: { title: 'Sentry smoke test: Account', project: 'procrastimate-worker' },
 	ios: { title: 'Sentry smoke test: iOS', project: 'procrastimate-ios' },
 } as const satisfies Record<string, { title: string; project: Project }>;
 type Smoke = keyof typeof SMOKES;
@@ -33,7 +31,7 @@ const { values: args } = parseArgs({
 	options: {
 		environment: { type: 'string', default: 'development' },
 		since: { type: 'string', default: '30m' },
-		expect: { type: 'string', default: 'web,worker,account' },
+		expect: { type: 'string', default: 'web,worker' },
 	},
 });
 const expected = args.expect.split(',').map(name => {
@@ -90,7 +88,6 @@ async function latestEvent(smoke: Smoke): Promise<Event | null> {
 	return issue ? get<Event>(`/issues/${issue.id}/events/latest/`, { environment: args.environment }) : null;
 }
 
-/** What else reported into the trace: other projects' errors and transactions. */
 async function traceNeighbors(traceId: string): Promise<string[]> {
 	const found = new Set<string>();
 	const errors = await get<{ data: { project: string; title: string }[] }>('/events/', {
@@ -115,7 +112,6 @@ async function traceNeighbors(traceId: string): Promise<string[]> {
 	return [...found];
 }
 
-/** Original source: a path into `src/`, `server/src/`, or a Swift file, with a line. Bundles and addresses fail. */
 function readable(frame: Frame): boolean {
 	const name = frame.filename ?? frame.absPath ?? '';
 	if (!frame.lineNo || /_app\/immutable|\.js$|^0x|^native$|^<unknown>/.test(name)) return false;
@@ -125,8 +121,8 @@ function readable(frame: Frame): boolean {
 const repoFiles = (await Bun.$`git ls-files`.cwd(new URL('..', import.meta.url).pathname).text()).split('\n');
 
 /**
- * The repository file a frame names, by the longest path suffix, and the text on its line. A line that does not hold
- * the smoke's `throw` means the frame was not mapped back to source, as with the Vite dev server's transformed modules.
+ * A line that does not hold the smoke's `throw` means the frame was not mapped back to source, as with the Vite dev
+ * server's transformed modules.
  */
 async function sourceLine(frame: Frame): Promise<string | null> {
 	const parts = (frame.filename ?? frame.absPath ?? '')
@@ -196,7 +192,7 @@ for (const smoke of expected) {
 	console.log(`    line ${frames[0]?.lineNo ?? '?'} in the checkout: ${thrown?.split('\n').at(-1)?.trim() ?? '-'}`);
 	check(Boolean(thrown?.includes('Sentry smoke test')), "the top frame's line is the smoke's throw in this checkout");
 
-	if (smoke === 'worker' || smoke === 'account') {
+	if (smoke === 'worker') {
 		const request = event.entries.find(entry => entry.type === 'request') as Extract<Entry, { type: 'request' }>;
 		console.log(`    request headers: ${(request?.data.headers ?? []).map(([name]) => name).join(', ') || '-'}`);
 		check(Boolean(request?.data.headers?.length), 'carries the request headers');

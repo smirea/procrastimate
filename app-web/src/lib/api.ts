@@ -4,9 +4,8 @@ import type { ApiClient, contract } from 'shared/api/contract.ts';
 import { CLIENT_HEADER, DEVICE_HEADER, DEVICE_NAME_HEADER } from 'shared/auth.ts';
 import type { Client } from 'shared/values.ts';
 import routes from './generated/contract.json';
-import { store } from './store.svelte.ts';
+import { installId } from './device.ts';
 
-/** The browser and its OS, such as `Chrome` and `macOS`, or an empty OS when the user agent names none. */
 function browser(): { name: string; os: string } {
 	const ua = navigator.userAgent;
 	const name = /Edg\//.test(ua)
@@ -34,7 +33,6 @@ function browser(): { name: string; os: string } {
 	return { name, os };
 }
 
-/** A name stored with the device, such as `Chrome on macOS`. It is never shown. */
 function deviceName(): string {
 	const { name, os } = browser();
 	return os ? `${name} on ${os}` : name;
@@ -52,21 +50,23 @@ function client(): Client {
 	};
 }
 
-/** The install id and name, and the app. The session cookie is the credential; these are not. */
-export function deviceHeaders(): Record<string, string> {
+/**
+ * Push routes also carry the install id, since their subscription belongs to this browser. The session cookie is the
+ * credential; these are not.
+ */
+export function deviceHeaders(path: readonly string[] = []): Record<string, string> {
 	const app = { [CLIENT_HEADER]: JSON.stringify(client()) };
-	const id = store.deviceId();
-	if (!id) return app;
-	return { ...app, [DEVICE_HEADER]: id, [DEVICE_NAME_HEADER]: deviceName() };
+	if (path[0] !== 'push') return app;
+	return { ...app, [DEVICE_HEADER]: installId(), [DEVICE_NAME_HEADER]: deviceName() };
 }
 
 /**
- * The typed client for every endpoint in the contract. It ships the contract's routes without their schemas, which
- * `scripts/generate` writes from the same contract, so the bundle carries no validators it does not use.
+ * Ships the contract's routes without their schemas, which `scripts/generate` writes from the same contract, so the
+ * bundle carries no validators it does not use.
  */
 export const api: ApiClient = createORPCClient(
 	new OpenAPILink(routes as unknown as typeof contract, {
-		headers: deviceHeaders,
+		headers: (_options, path) => deviceHeaders(path),
 		fetch: (url, init) => fetch(url, { ...init, credentials: 'include' }),
 	}),
 );

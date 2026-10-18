@@ -19,7 +19,6 @@
 	import { store } from '#lib/store.svelte.ts';
 	import { toastDeleted } from '#lib/completion.ts';
 	import { leaving, motion, sheets } from '#lib/ui.svelte.ts';
-	import { followMerged } from '#lib/merged.svelte.ts';
 	import { projectDocument } from 'shared/markdown.ts';
 	import { completed } from '#lib/completed.svelte.ts';
 	import { canAddHere } from '#lib/screen.ts';
@@ -35,9 +34,7 @@
 	const doneIn = (id: string | null) => done?.groups.find((g) => (g.section?.id ?? null) === id)?.tasks ?? [];
 	const anyDone = $derived(!!done && (done.gone.length > 0 || done.groups.some((g) => g.tasks.length > 0)));
 	const home = $derived(project ? store.homeOf(project.id) : null);
-	const owner = $derived(home ? store.spaces[home]?.owner : undefined);
-
-	followMerged('/projects', () => page.params.id, () => store.projects);
+	const owner = $derived(home ? store.ownerOf(home) : undefined);
 
 	let renaming = $state(false);
 	let confirmingDelete = $state(false);

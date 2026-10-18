@@ -1,35 +1,37 @@
 import type { DictationChoice } from 'shared/dictation.ts';
 import type { LabelColor } from 'shared/label-colors.ts';
-import { DEFAULT_QUICK_ADD_BUTTONS, type QuickAddButton } from 'shared/quick-add-buttons.ts';
+import type { QuickAddButton } from 'shared/quick-add-buttons.ts';
 import type { DateKey, Label, Project, Section, Task } from 'shared/task.ts';
 import type { SavedPlace } from 'shared/values.ts';
-import type { Comment } from 'shared/sync/protocol.ts';
+import { DEFAULT_SETTINGS, type Comment, type Settings, type Snapshot } from 'shared/model.ts';
+import { rowWrites, sameValue } from 'shared/rows.ts';
 import { groupChildren, progressOf } from 'shared/subtasks.ts';
 import { newId } from 'shared/id.ts';
-import type { Person, Space } from 'shared/sharing.ts';
-import type { SpaceSection, SyncSection } from 'shared/snapshot.ts';
+import type { Person } from 'shared/sharing.ts';
 import * as comments from 'shared/comments.ts';
 import * as rules from 'shared/store.ts';
-import { applyResponse, commit, rejectionNotice, startSync, type ClientSync } from 'shared/sync/apply.ts';
-import { formatHlc, parseHlc } from 'shared/sync/hlc.ts';
-import {
-	DEFAULT_SETTINGS,
-	type Settings,
-	type Snapshot as SyncedData,
-	type SyncRequest,
-	type SyncResponse,
-} from 'shared/sync/protocol.ts';
 import { mergeBackup, type ImportSummary, type TodoistBackup } from 'shared/todoist.ts';
+import { CHANGE_LOG, powerSync, readSince, storedOwner, storeOwner, trimChanges, writeRows } from './database.ts';
+import {
+	forgetDatabaseId,
+	forgetLegacyDocument,
+	onOwnerChange,
+	loadPeople,
+	loadRemindersCheckedAt,
+	loadUnwritten,
+	saveOwner,
+	savePeople,
+	saveRemindersCheckedAt,
+	saveUnwritten,
+	type Unwritten,
+} from './device.ts';
 import { clearLocalImages } from './images/local.ts';
-import { loadSnapshot, saveSnapshot, STORAGE_KEY } from './persistence.ts';
-import { creationHome, emptySection, fitToSpace, homes, merged, sectionStore, type Home } from './spaces.ts';
+import { LocalRows } from 'shared/local-rows.ts';
+import { reportError } from './sentry.ts';
+import { emptyData, homes, merged, sharedSpace, type SharedSpace, type Spaces } from './spaces.ts';
+import { creationHome, fitPatch, fitToSpace, type Home, type Homes } from 'shared/space-routing.ts';
 
 export type { Completion, CompletionState, NewTask, TaskPatch } from 'shared/store.ts';
-
-const empty = (): rules.StoreData => ({ tasks: [], projects: [], sections: [], labels: [], comments: [], reads: [] });
-
-/** A shared section's data has no settings of its own, so both sides of its diff carry the same placeholder. */
-const sectionData = (data: rules.StoreData): SyncedData => ({ ...data, settings: DEFAULT_SETTINGS });
 
 const storeData = ({ tasks, projects, sections, labels, comments, reads }: rules.StoreData): rules.StoreData => ({
 	tasks,
@@ -41,26 +43,66 @@ const storeData = ({ tasks, projects, sections, labels, comments, reads }: rules
 });
 
 /**
- * Every mutation is a discrete command from `shared/store.ts` that persists synchronously. The rules return new
- * arrays and objects for what they change, so the arrays are raw state that each command replaces. Sync is always
- * on: each command diffs into the outbox, which leaves on its own.
- *
- * `own` is the signed-in user's space and `spaces` the sections shared with them. `tasks`, `projects`, `sections`,
- * and `labels` are the merged view. Each command finds the space that holds its target and runs its rule on that
- * space's data only, so personal views read `own` and nothing ever crosses spaces.
+ * Clears the previous account's rows, upload queue, and local images, and tries again until it works: the database
+ * never belongs to the signed-in user while it may hold someone else's rows.
+ */
+async function clearUntilDone() {
+	for (let wait = 1000; ; wait = Math.min(wait * 2, 30_000)) {
+		try {
+			await Promise.all([powerSync.disconnectAndClear(), clearLocalImages()]);
+			return;
+		} catch (error) {
+			reportError(error);
+			await new Promise(resolve => setTimeout(resolve, wait));
+		}
+	}
+}
+
+/**
+ * The rules in `shared/store.ts` return new arrays and objects for what they change, so the arrays are raw state that
+ * each command replaces at once. When the database changes, from this tab, another tab, or the server, the store reads
+ * back only the rows that changed. Each command runs its rule on one space's data only, so nothing ever crosses spaces.
  */
 class Store {
-	own = $state.raw<rules.StoreData>(empty());
-	remindersCheckedAt = $state(0);
-	spaces = $state.raw<Record<string, SpaceSection>>({});
+	own = $state.raw<rules.StoreData>(emptyData());
+	settings = $state.raw<Settings>(DEFAULT_SETTINGS);
+	spaces = $state.raw<Spaces>({});
 	people = $state.raw<Person[]>([]);
-	#sync = $state.raw<SyncSection | undefined>();
-	#onCommit: (() => void) | undefined;
+	remindersCheckedAt = $state(0);
+	loaded = $state(false);
+	/**
+	 * True when the first read of the local database failed. The app says so rather than show an empty list whose
+	 * edits would never be written.
+	 */
+	unreadable = $state(false);
+	#owner: string | null = null;
+	/**
+	 * Whether the local database holds the settings row, which the server makes for every user and the first sync
+	 * brings. Until then a settings change waits in `#heldSettings`, because only a patch of an existing row may write
+	 * settings: a client never makes the row, so it can never write defaults over the user's choices.
+	 */
+	#hasSettings = false;
+	#heldSettings: Partial<Settings> = {};
+	/** Commands issued so far. A read that started before the newest one would undo it, so it is discarded. */
+	#commands = 0;
+	#writing = 0;
+	#queue: Promise<void> = Promise.resolve();
+	#unwritten: Unwritten[] = [];
+	#reading = false;
+	#stale = false;
+	#rows = new LocalRows('');
+	/** The newest change in the database's log that memory reflects; null reads everything next. */
+	#cursor: number | null = null;
+	/** What the reads cost so far, for the end-to-end specs. */
+	readStats = { reloads: 0, rows: 0, ms: 0 };
+	#switching: Promise<void> = Promise.resolve();
+	/** Until the database belongs to the signed-in user, a read could show another account's rows as theirs. */
+	#opening = false;
 	#view = $derived(merged(this.own, this.spaces));
 	#ownProjects = $derived(rules.projectsInOrder(this.own.projects));
 	#projects = $derived([
 		...this.#ownProjects,
-		...Object.values(this.spaces).flatMap(s => rules.projectsInOrder(s.projects)),
+		...Object.values(this.spaces).flatMap(s => rules.projectsInOrder(s.data.projects)),
 	]);
 	#homes = $derived(homes(this.spaces));
 	#children = $derived(groupChildren(this.#view.tasks));
@@ -71,7 +113,6 @@ class Store {
 		return this.#view.tasks;
 	}
 
-	/** Own projects first, then shared ones, each in their order. */
 	get projects(): Project[] {
 		return this.#projects;
 	}
@@ -88,253 +129,263 @@ class Store {
 		return this.#view.sections;
 	}
 
-	/** Every comment this user can see, own and shared. */
 	get comments(): Comment[] {
 		return this.#view.comments;
 	}
 
 	constructor() {
 		if (typeof localStorage === 'undefined') return;
-		this.#load();
-		if (!this.#sync) {
-			this.#sync = this.#fresh(crypto.randomUUID());
-			this.#commit();
-		}
-		// Every tab saves the whole document, so one left open in the background would save its old copy over
-		// what this tab synced, and the next launch would start from it.
-		window.addEventListener('storage', event => {
-			if (event.key !== STORAGE_KEY) return;
-			this.#load();
-			// The writing tab may be offline, so this one uploads what it left in the outbox.
-			if (this.#sync?.outbox.length || this.#sync?.reset || Object.values(this.spaces).some(s => s.outbox.length))
-				this.#onCommit?.();
-		});
-	}
-
-	#load() {
-		const snapshot = loadSnapshot(Date.now());
-		this.own = storeData(snapshot);
-		this.remindersCheckedAt = snapshot.remindersCheckedAt;
-		this.spaces = snapshot.spaces;
-		this.people = snapshot.people;
-		this.#sync = snapshot.sync;
-	}
-
-	/** A first launch seeds: its first snapshot queues whatever stored data the server lacks, so an existing list joins. */
-	#fresh(deviceId: string): SyncSection {
-		const settings = { ...DEFAULT_SETTINGS, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone };
-		return sectionOf(startSync(settings, deviceId, Date.now()), {
-			...settings,
-			deviceId,
-			reset: false,
-		});
-	}
-
-	get #data(): rules.StoreData {
-		return this.own;
+		forgetLegacyDocument();
+		this.people = loadPeople();
+		this.remindersCheckedAt = loadRemindersCheckedAt(Date.now());
+		powerSync.onChange({ onChange: () => this.#reload() }, { tables: [CHANGE_LOG], throttleMs: 10 });
+		onOwnerChange(() => location.reload());
 	}
 
 	/**
-	 * The zone on the settings record is the one this device last wrote, so a commit never rewrites another's.
-	 * The other settings are the choices last applied here, including ones that arrived from another device.
+	 * Opens the database for `userId`, the moment the session names them. A database that holds another account's rows
+	 * is cleared first, with its upload queue and local images, so nothing of that account shows or uploads; it becomes
+	 * `userId`'s only once that worked, so a launch that finds it still named after the other account clears it again.
+	 * Then the tab's unwritten copy is written and the database read. Resolves once it is safe to connect.
 	 */
-	#synced(sync: SyncSection): SyncedData {
-		return { ...this.#data, settings: settingsOf(sync) };
+	open(userId: string): Promise<void> {
+		if (this.#owner === userId) return this.#switching;
+		if (this.#owner !== null) {
+			this.own = emptyData();
+			this.settings = DEFAULT_SETTINGS;
+			this.spaces = {};
+			this.people = [];
+			savePeople([]);
+			this.loaded = false;
+		}
+		this.#owner = userId;
+		this.#rows = new LocalRows(userId);
+		this.#cursor = null;
+		this.unreadable = false;
+		this.#hasSettings = false;
+		this.#heldSettings = {};
+		this.#opening = true;
+		this.#unwritten = [];
+		this.#switching = this.#switching
+			.then(() => this.#queue)
+			.then(async () => {
+				const previous = await storedOwner();
+				if (previous !== null && previous !== userId) {
+					await clearUntilDone();
+					forgetDatabaseId();
+				}
+				if (this.#owner !== userId) return;
+				await storeOwner(userId);
+				saveOwner(userId);
+				this.#opening = false;
+				for (const entry of loadUnwritten(userId)) this.#write(entry);
+				this.#reload();
+			})
+			.catch(error => {
+				reportError(error);
+				if (this.#owner === userId) this.unreadable = true;
+			});
+		return this.#switching;
+	}
+
+	/** Resolves once every command so far is in the local database, and so in PowerSync's upload queue. */
+	written(): Promise<void> {
+		return this.#queue;
 	}
 
 	#apply(data: rules.StoreData) {
-		const before = this.#sync && this.#synced(this.#sync);
+		const before = this.own;
 		this.own = storeData(data);
-		if (this.#sync && before) this.#record(this.#sync, before, this.#synced(this.#sync));
-		this.#commit();
+		if (this.#owner)
+			this.#persist(this.#owner, { ...before, settings: this.settings }, { ...this.own, settings: this.settings });
 	}
 
-	#record(sync: SyncSection, before: SyncedData, after: SyncedData) {
-		const current = clientSync(sync);
-		const next = commit(current, before, after, Date.now());
-		if (next === current) return;
-		this.#sync = sectionOf(next, {
-			...sync,
-			...after.settings,
-			timeZone: after.settings.timeZone ?? sync.timeZone,
-		});
-		this.#onCommit?.();
-	}
-
-	#commit() {
-		saveSnapshot({
-			...this.#data,
-			remindersCheckedAt: this.remindersCheckedAt,
-			sync: this.#sync,
-			spaces: this.spaces,
-			people: this.people,
-		});
-	}
-
-	deviceId() {
-		return this.#sync?.deviceId;
-	}
-
-	get ready() {
-		return this.#sync !== undefined;
-	}
-
-	get pending() {
-		return this.#sync?.outbox.length ?? 0;
-	}
-
-	/** Calls `listener` after each command that added ops to the outbox. */
-	onCommit(listener: () => void) {
-		this.#onCommit = listener;
-		return () => (this.#onCommit = undefined);
+	#persist(owner: string, before: Snapshot, after: Snapshot) {
+		const writes = rowWrites(before, after);
+		if (!writes.length) return;
+		this.#commands++;
+		this.#write({ owner, writes });
 	}
 
 	/**
-	 * Keeps the section the constructor started, or adopts the id the server stored when the one we sent was taken.
-	 * A new id does not re-upload: the outbox and cursor stay.
+	 * Writes one command's rows in its turn, keeping a copy in the tab until they are in the database. Each write
+	 * converges, so the copy a reload replays is harmless when its rows did land. A write that failed keeps its copy,
+	 * which the next launch writes again.
 	 */
-	adoptDevice(deviceId: string) {
-		if (!this.#sync) this.#sync = this.#fresh(deviceId);
-		else if (this.#sync.deviceId !== deviceId) this.#sync = { ...this.#sync, deviceId };
-		this.#commit();
+	#write(entry: Unwritten) {
+		const user = this.#owner!;
+		if (!this.#unwritten.includes(entry)) this.#unwritten.push(entry);
+		saveUnwritten(user, this.#unwritten);
+		this.#writing++;
+		this.#queue = this.#queue
+			.then(() => writeRows(entry.owner, entry.writes))
+			.then(
+				() => {
+					this.#unwritten = this.#unwritten.filter(other => other !== entry);
+					if (this.#owner === user) saveUnwritten(user, this.#unwritten);
+				},
+				error => {
+					reportError(error);
+					// Memory shows the command the database refused, so the next read takes all of it back.
+					this.#cursor = null;
+				},
+			)
+			.finally(() => {
+				this.#writing--;
+				if (this.#stale) this.#reload();
+			});
 	}
 
-	/**
-	 * Drops this document for a different signed-in user. The device id stays. Cursor 0 and an empty outbox make the
-	 * next sync a snapshot pull, so the previous user's tasks are not uploaded.
-	 */
-	switchUser() {
-		const deviceId = this.#sync?.deviceId ?? crypto.randomUUID();
-		const timeZone = this.#sync?.timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
-		const clock = this.#sync?.clock ?? `0:0:${deviceId}`;
-		this.own = empty();
-		this.spaces = {};
-		this.people = [];
-		this.#sync = {
-			...DEFAULT_SETTINGS,
-			deviceId,
-			cursor: 0,
-			outbox: [],
-			clock,
-			timeZone,
-			epoch: 0,
-			reset: false,
-			seed: false,
-		};
-		this.#commit();
-		void clearLocalImages().catch(() => undefined);
+	#reload() {
+		if (this.#writing > 0 || this.#reading || this.#opening || !this.#owner) {
+			this.#stale = true;
+			return;
+		}
+		this.#stale = false;
+		this.#reading = true;
+		void this.#read().finally(() => {
+			this.#reading = false;
+			if (this.#stale) this.#reload();
+		});
 	}
 
-	/** Empties tasks, projects, sections, and labels here, and asks the next sync to wipe them on the server too. */
+	async #read() {
+		const owner = this.#owner!;
+		const rows = this.#rows;
+		const commands = this.#commands;
+		const started = performance.now();
+		let read;
+		try {
+			read = await readSince(this.#cursor);
+		} catch (error) {
+			reportError(error);
+			if (owner === this.#owner && !this.loaded) this.unreadable = true;
+			return;
+		}
+		if (owner !== this.#owner) return;
+		if (commands !== this.#commands) {
+			this.#stale = true;
+			return;
+		}
+		this.#cursor = read.cursor;
+		const touched = new Set(rows.apply(read.changes));
+		if (read.full) touched.add(owner);
+		this.#take(touched);
+		this.readStats.reloads++;
+		this.readStats.rows += Object.values(read.changes).reduce((sum, { rows }) => sum + rows.length, 0);
+		this.readStats.ms += performance.now() - started;
+		this.unreadable = false;
+		// In the same step as `loaded`, so nothing that waits for the store to load can see it before the zone is noted.
+		if (!this.loaded) this.noteTimeZone(Intl.DateTimeFormat().resolvedOptions().timeZone);
+		this.loaded = true;
+		trimChanges(read).catch(reportError);
+	}
+
+	/** Builds again only the spaces whose rows changed, and keeps every entity that did not, so nothing else re-renders. */
+	#take(touched: ReadonlySet<string>) {
+		const me = this.#owner!;
+		if (touched.has(me)) this.own = keepSame(this.own, this.#rows.own());
+		this.#takeSettings(this.#rows.settings());
+		let spaces: Record<string, SharedSpace> | null = null;
+		for (const owner of touched) {
+			if (owner === me) continue;
+			const previous = this.spaces[owner];
+			const rows = this.#rows.space(owner);
+			const kept = rows ? keepSpace(previous, sharedSpace(owner, rows)) : undefined;
+			if (kept === previous) continue;
+			spaces ??= { ...this.spaces };
+			if (kept) spaces[owner] = kept;
+			else delete spaces[owner];
+		}
+		if (spaces) this.spaces = spaces;
+	}
+
+	#takeSettings(stored: Settings | null) {
+		this.#hasSettings = stored !== null;
+		const next = { ...(stored ?? DEFAULT_SETTINGS), ...this.#heldSettings };
+		if (stored && Object.keys(this.#heldSettings).length) {
+			this.#heldSettings = {};
+			this.#persist(this.#owner!, { ...this.own, settings: stored }, { ...this.own, settings: next });
+		}
+		if (!sameValue(this.settings, next)) this.settings = next;
+	}
+
+	get holdsSettings(): boolean {
+		return Object.keys(this.#heldSettings).length > 0;
+	}
+
+	/** Whether a command's rows are still on their way into the local database. */
+	get writing(): boolean {
+		return this.#writing > 0;
+	}
+
 	deleteAll() {
-		this.own = empty();
-		if (this.#sync) this.#sync = { ...this.#sync, cursor: 0, outbox: [], reset: true };
-		this.#commit();
-		this.#onCommit?.();
+		this.#apply(emptyData());
 	}
 
-	/** The dictation choice last applied here. Native until a document has loaded. */
 	get dictation(): DictationChoice {
-		return this.#sync?.dictation ?? 'native';
+		return this.settings.dictation;
 	}
 
-	/** Remembers the choice and queues it for sync. Offline voice still uses native. */
+	/** Offline voice still uses native. */
 	setDictation(dictation: DictationChoice) {
 		this.#setSettings({ dictation });
 	}
 
-	/** The quick add buttons pinned to the chip row. The defaults until a document has loaded. */
 	get quickAddButtons(): QuickAddButton[] {
-		return this.#sync?.quickAddButtons ?? DEFAULT_QUICK_ADD_BUTTONS;
+		return this.settings.quickAddButtons;
 	}
 
 	setQuickAddButtons(quickAddButtons: QuickAddButton[]) {
 		this.#setSettings({ quickAddButtons });
 	}
 
-	/** Writes the synced time zone only when this device's own zone changed since it last wrote it. */
+	/** The zone push notifications are planned in. */
 	noteTimeZone(timeZone: string) {
 		this.#setSettings({ timeZone });
 	}
 
 	#setSettings(patch: Partial<Settings>) {
-		if (!this.#sync) return;
-		const before = settingsOf(this.#sync);
+		if (!this.#owner) return;
+		const before = this.settings;
 		const after = { ...before, ...patch };
-		if (JSON.stringify(after) === JSON.stringify(before)) return;
-		this.#record(this.#sync, this.#synced(this.#sync), { ...this.#data, settings: after });
-		this.#commit();
-	}
-
-	syncRequest(): SyncRequest | undefined {
-		if (!this.#sync) return;
-		return {
-			cursor: this.#sync.cursor,
-			ops: this.#sync.outbox,
-			epoch: this.#sync.epoch,
-			scope: '',
-			...(this.#sync.reset ? { reset: true } : {}),
-		};
-	}
-
-	/**
-	 * Drops the acknowledged and rejected ops, applies the server's changes, and replays the rest of the outbox on top.
-	 * `seeded` is set when the first snapshot queued local data the server lacks, so another round is due, and
-	 * `notice` names what the server refused to save.
-	 */
-	takeResponse(response: SyncResponse): { seeded: boolean; notice: string | null } {
-		if (!this.#sync) return { seeded: false, notice: null };
-		const before = this.#synced(this.#sync);
-		const { snapshot, sync, rejected } = applyResponse(before, clientSync(this.#sync), response, Date.now(), {
-			sentReset: this.#sync.reset,
-		});
-		const seeded = this.#sync.seed && !sync.seed && sync.outbox.length > 0;
-		this.own = storeData(snapshot);
-		const { dictation, quickAddButtons } = snapshot.settings;
-		this.#sync = sectionOf(sync, { ...this.#sync, reset: false, dictation, quickAddButtons });
-		this.#commit();
-		return { seeded, notice: rejectionNotice(before, rejected) };
+		if (sameValue(after, before)) return;
+		this.settings = after;
+		if (this.#hasSettings)
+			this.#persist(this.#owner, { ...this.own, settings: before }, { ...this.own, settings: after });
+		else this.#heldSettings = { ...this.#heldSettings, ...patch };
 	}
 
 	#creation = (): rules.Creation => ({ id: newId(), now: Date.now() });
 
-	homeOf = (id: string): Home => this.#homes.get(id) ?? null;
+	/** Every shared entity's owner, which decides the space a command runs in. */
+	get homes(): Homes {
+		return this.#homes;
+	}
+
+	homeOf = (id: string): Home => this.#homes[id] ?? null;
 
 	/** The data of one space, whose projects and labels are the only ones its tasks may use. */
 	dataOf(home: Home): rules.StoreData {
-		const section = home === null ? undefined : this.spaces[home];
-		return home === null ? this.own : section ? sectionStore(section) : empty();
+		return home === null ? this.own : (this.spaces[home]?.data ?? emptyData());
 	}
 
-	/** False for a shared task the server marked read only, and for one in a space this user no longer reaches. */
+	/** False for a shared task its owner shared read only, and for one in a space this user no longer reaches. */
 	canEdit(id: string): boolean {
 		const home = this.homeOf(id);
 		if (home === null) return true;
-		const section = this.spaces[home];
-		return !!section && !section.readOnly.includes(id);
+		const space = this.spaces[home];
+		return !!space && !space.readOnly.has(id);
 	}
 
-	/**
-	 * Runs one rule on one space. A shared section's ops go into its own outbox, stamped by the one device clock,
-	 * so a shared space never sees the user's own data and the clock stays ahead of every space's edits.
-	 */
+	/** A shared space never sees the user's own data, and its settings and read markers stay out of the diff. */
 	#run(home: Home, rule: (data: rules.StoreData) => rules.StoreData) {
 		if (home === null) return this.#apply(rule(this.own));
-		const section = this.spaces[home];
-		if (!section || !this.#sync) return;
-		const before = sectionStore(section);
-		const after = rule(before);
-		const current = spaceSync(section, this.#sync);
-		const next = commit(current, sectionData(before), sectionData({ ...after, reads: [] }), Date.now());
-		if (next === current) return;
-		const { tasks, projects, sections, labels, comments } = after;
-		this.spaces = {
-			...this.spaces,
-			[home]: { ...section, tasks, projects, sections, labels, comments, outbox: next.outbox },
-		};
-		this.#sync = { ...this.#sync, clock: formatHlc(next.clock) };
-		this.#commit();
-		this.#onCommit?.();
+		const space = this.spaces[home];
+		if (!space) return;
+		const after = { ...storeData(rule(space.data)), reads: [] };
+		this.spaces = { ...this.spaces, [home]: { ...space, data: after } };
+		this.#persist(home, { ...space.data, settings: DEFAULT_SETTINGS }, { ...after, settings: DEFAULT_SETTINGS });
 	}
 
 	#onTask(id: string, rule: (data: rules.StoreData) => rules.StoreData) {
@@ -365,7 +416,6 @@ class Store {
 		return id ? this.sections.find(s => s.id === id) : undefined;
 	}
 
-	/** A project's sections in their order. */
 	sectionsOf(projectId: string): Section[] {
 		return rules.sectionsOf(this.sections, projectId);
 	}
@@ -374,13 +424,12 @@ class Store {
 		return task.labelIds.map(id => this.label(id)).filter(label => label !== undefined);
 	}
 
-	/** Lands in the parent's space, else the project's, else a shared label's, else the user's own. */
 	addTask(input: rules.NewTask, parentId: string | null = null): Task | undefined {
 		if (parentId && !this.canEdit(parentId)) return;
-		const home = creationHome(this.homeOf, input, parentId);
+		const home = creationHome(this.#homes, input, parentId);
 		let task: Task | undefined;
 		this.#run(home, data => {
-			const result = rules.addTask(data, home === null ? input : fitToSpace(data, input), parentId, this.#creation());
+			const result = rules.addTask(data, fitToSpace(data, input), parentId, this.#creation());
 			task = result.task;
 			return result.data;
 		});
@@ -388,7 +437,7 @@ class Store {
 	}
 
 	updateTask(id: string, patch: rules.TaskPatch) {
-		this.#onTask(id, data => rules.updateTask(data, id, patch));
+		this.#onTask(id, data => rules.updateTask(data, id, fitPatch(data, patch)));
 	}
 
 	completeTask(id: string, today: DateKey): rules.Completion | undefined {
@@ -415,8 +464,8 @@ class Store {
 	}
 
 	/**
-	 * Turns the task's subtasks into tasks of their own, and returns them as they were for undo. Only in the user's own
-	 * space: moving a subtask up can carry it out of what a share grants, and the server would refuse the edit.
+	 * Only in the user's own space: moving a subtask up can carry it out of what a share grants, and the server would
+	 * refuse the edit.
 	 */
 	explodeSubtasks(id: string, method: rules.ExplodeMethod): rules.ExplodedState[] {
 		let previous: rules.ExplodedState[] = [];
@@ -434,7 +483,6 @@ class Store {
 		if (first) this.#onTask(first.id, data => rules.restoreExploded(data, previous));
 	}
 
-	/** Deletes the task with every subtask under it, and returns them for undo. */
 	deleteTask(id: string): Task[] {
 		const home = this.homeOf(id);
 		let removed: Task[] = [];
@@ -463,7 +511,6 @@ class Store {
 		if (this.homeOf(id) === null) this.#apply(rules.renameProject(this.own, id, name));
 	}
 
-	/** Returns what the delete removed, for `undelete`. */
 	deleteProject(id: string): rules.Deleted | undefined {
 		if (this.homeOf(id) === null) return this.#delete(rules.deleteProject(this.own, id));
 	}
@@ -472,7 +519,6 @@ class Store {
 		if (this.homeOf(id) === null) this.#apply(rules.moveProject(this.own, id, index));
 	}
 
-	/** Sections, like projects, are only ever written in the user's own space. */
 	addSection(projectId: string, name: string): Section | undefined {
 		if (this.homeOf(projectId) !== null) return;
 		const { data, section } = rules.addSection(this.own, projectId, name, this.#creation());
@@ -534,65 +580,6 @@ class Store {
 		return summary;
 	}
 
-	/** Adds a section for each new shared space and drops the ones no longer shared. */
-	setSpaces(list: readonly Space[]) {
-		this.spaces = Object.fromEntries(
-			list.map(({ id, owner }) => [id, { ...(this.spaces[id] ?? emptySection(owner)), owner }] as const),
-		);
-		this.rememberPeople(list.map(space => space.owner));
-		this.#commit();
-	}
-
-	dropSpace(owner: string) {
-		if (!this.spaces[owner]) return;
-		const { [owner]: _, ...rest } = this.spaces;
-		this.spaces = rest;
-		this.#commit();
-	}
-
-	/**
-	 * Sending ops always asks for a fresh snapshot (`scope: ''`): an op the server refuses leaves what this user may
-	 * see unchanged, so the scope hash alone would keep the refused edit showing here.
-	 */
-	spaceRequest(owner: string): SyncRequest | undefined {
-		const section = this.spaces[owner];
-		if (!section) return;
-		return {
-			cursor: section.cursor,
-			ops: section.outbox,
-			epoch: section.epoch,
-			scope: section.outbox.length ? '' : section.scope,
-		};
-	}
-
-	/** Applies a shared space's answer like `takeResponse`, and returns the notice for what the server refused. */
-	takeSpaceResponse(owner: string, response: SyncResponse): string | null {
-		const section = this.spaces[owner];
-		if (!section || !this.#sync) return null;
-		const before = sectionData(sectionStore(section));
-		const { snapshot, sync, rejected } = applyResponse(before, spaceSync(section, this.#sync), response, Date.now());
-		this.spaces = {
-			...this.spaces,
-			[owner]: {
-				...section,
-				tasks: snapshot.tasks,
-				projects: snapshot.projects,
-				sections: snapshot.sections,
-				labels: snapshot.labels,
-				comments: snapshot.comments,
-				cursor: sync.cursor,
-				outbox: sync.outbox,
-				epoch: sync.epoch,
-				scope: response.scope ?? section.scope,
-				readOnly: 'snapshot' in response ? (response.readOnly ?? []) : section.readOnly,
-				targets: 'snapshot' in response ? (response.targets ?? []) : section.targets,
-			},
-		};
-		this.#sync = { ...this.#sync, clock: formatHlc(sync.clock) };
-		this.#commit();
-		return rejectionNotice(before, rejected);
-	}
-
 	/** Comments are written in the task's space, so only someone who may edit the task can comment on it. */
 	addComment(taskId: string, body: string, me: string): Comment | undefined {
 		let comment: Comment | null = null;
@@ -611,7 +598,7 @@ class Store {
 
 	/** Deletes `me`'s own comment and returns it for undo. */
 	deleteComment(id: string, me: string): Comment | undefined {
-		const comment = this.comments.find(c => c.id === id);
+		const comment = this.comments.find(c => c.id === id && c.authorId === me);
 		if (comment) this.#onTask(comment.taskId, data => comments.deleteComment(data, id, me));
 		return comment;
 	}
@@ -632,6 +619,10 @@ class Store {
 		return id ? this.people.find(p => p.id === id) : undefined;
 	}
 
+	ownerOf(home: string): Person {
+		return this.person(home) ?? { id: home, name: 'Someone', kind: 'human', ownerId: null };
+	}
+
 	/** Keeps the latest name and kind of everyone seen, so authorship shows offline. */
 	rememberPeople(people: readonly Person[]) {
 		const byId = new Map(this.people.map(p => [p.id, p]));
@@ -645,52 +636,44 @@ class Store {
 		}
 		if (!changed) return;
 		this.people = [...byId.values()];
-		this.#commit();
+		savePeople(this.people);
 	}
 
 	markRemindersChecked(at: number) {
 		this.remindersCheckedAt = at;
-		this.#commit();
+		saveRemindersCheckedAt(at);
 	}
 }
 
-const clientSync = ({ cursor, outbox, clock, epoch, seed }: SyncSection): ClientSync => ({
-	cursor,
-	outbox,
-	clock: parseHlc(clock),
-	epoch,
-	seed,
-});
+function keepSpace(previous: SharedSpace | undefined, next: SharedSpace): SharedSpace {
+	const data = keepSame(previous?.data ?? emptyData(), next.data);
+	const readOnly =
+		previous && sameValue([...previous.readOnly].sort(), [...next.readOnly].sort()) ? previous.readOnly : next.readOnly;
+	const access = previous && sameValue(previous.access, next.access) ? previous.access : next.access;
+	return previous && data === previous.data && readOnly === previous.readOnly && access === previous.access
+		? previous
+		: { ...next, data, readOnly, access };
+}
 
-/** A shared space only ever holds what its owner synced, so it has nothing to seed. */
-const spaceSync = ({ cursor, outbox, epoch }: SpaceSection, sync: SyncSection): ClientSync => ({
-	cursor,
-	outbox,
-	clock: parseHlc(sync.clock),
-	epoch,
-	seed: false,
-});
-
-const settingsOf = ({ timeZone, dictation, quickAddButtons }: SyncSection): Settings => ({
-	timeZone,
-	dictation,
-	quickAddButtons,
-});
-
-const sectionOf = (
-	{ cursor, outbox, clock, epoch, seed }: ClientSync,
-	previous: Pick<SyncSection, 'deviceId' | 'timeZone' | 'dictation' | 'quickAddButtons' | 'reset'>,
-): SyncSection => ({
-	deviceId: previous.deviceId,
-	cursor,
-	outbox,
-	clock: formatHlc(clock),
-	timeZone: previous.timeZone,
-	dictation: previous.dictation,
-	quickAddButtons: previous.quickAddButtons,
-	epoch,
-	reset: previous.reset,
-	seed,
-});
+/** `next` with every entity, list, and the whole data that equal `previous`'s replaced by `previous`'s own. */
+function keepSame(previous: rules.StoreData, next: rules.StoreData): rules.StoreData {
+	const keep = <T extends { id: string }>(before: readonly T[], after: readonly T[]): T[] => {
+		const byId = new Map(before.map(entity => [entity.id, entity]));
+		const kept = after.map(entity => {
+			const old = byId.get(entity.id);
+			return old && sameValue(old, entity) ? old : entity;
+		});
+		return kept.length === before.length && kept.every((entity, i) => entity === before[i]) ? (before as T[]) : kept;
+	};
+	const data: rules.StoreData = {
+		tasks: keep(previous.tasks, next.tasks),
+		projects: keep(previous.projects, next.projects),
+		sections: keep(previous.sections, next.sections),
+		labels: keep(previous.labels, next.labels),
+		comments: keep(previous.comments, next.comments),
+		reads: keep(previous.reads, next.reads),
+	};
+	return (Object.keys(data) as (keyof rules.StoreData)[]).every(key => data[key] === previous[key]) ? previous : data;
+}
 
 export const store = new Store();

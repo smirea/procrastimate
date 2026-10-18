@@ -1,5 +1,6 @@
 import { expect } from 'bun:test';
 import * as screens from './screens.ts';
+import type { AccessRow } from './db/schema.ts';
 import type { Task } from './task.ts';
 import type { TaskEvent, TaskLocation } from './values.ts';
 import { describe, recorded, test } from './vectors/record.ts';
@@ -9,6 +10,16 @@ const screenHolds = recorded('screens', screens.screenHolds);
 const canAddTo = recorded('screens', screens.canAddTo);
 
 const today = '2026-10-14';
+
+/** An `access` row of Ann's space to this user, as the server writes it. */
+const granted = (kind: AccessRow['kind'], entityId: string, role: AccessRow['role']): AccessRow => ({
+	id: `me:${kind}:${entityId}`,
+	grantee: 'me',
+	owner: 'ann',
+	kind,
+	entityId,
+	role,
+});
 
 let created = 0;
 const task = (id: string, fields: Partial<Task> = {}): Task => ({
@@ -117,37 +128,31 @@ describe('screenDefaults', () => {
 	});
 
 	test('a shared project or label the user can only view starts bare', () => {
-		const space = {
-			targets: [
-				{ kind: 'project', id: 'garden', role: 'view' },
-				{ kind: 'label', id: 'weekend', role: 'view' },
-			],
-		} as const;
+		const space = { access: [granted('project', 'garden', 'view'), granted('label', 'weekend', 'view')] };
 		expect(screenDefaults({ kind: 'project', id: 'garden', sectionId: 'beds' }, [], space)).toEqual(none);
 		expect(screenDefaults({ kind: 'label', id: 'weekend' }, [], space)).toEqual(none);
 	});
 
 	test('a shared project or label the user can edit starts on it', () => {
-		const space = {
-			targets: [
-				{ kind: 'project', id: 'garden', role: 'edit' },
-				{ kind: 'label', id: 'weekend', role: 'edit' },
-			],
-		} as const;
+		const space = { access: [granted('project', 'garden', 'edit'), granted('label', 'weekend', 'edit')] };
 		expect(screenDefaults({ kind: 'project', id: 'garden' }, [], space)).toEqual({ ...none, projectId: 'garden' });
 		expect(screenDefaults({ kind: 'label', id: 'weekend' }, [], space)).toEqual({ ...none, labelId: 'weekend' });
 	});
 });
 
 describe('canAddTo', () => {
+	// Garden is shared to edit, Shed and the Weekend label to view, and Fence is a task shared to edit on its own, so
+	// its project is in view only through it.
 	const space = {
-		targets: [
-			{ kind: 'project', id: 'garden', role: 'edit' },
-			{ kind: 'project', id: 'shed', role: 'view' },
-			{ kind: 'label', id: 'weekend', role: 'view' },
-			{ kind: 'task', id: 'fence', role: 'edit' },
+		access: [
+			granted('project', 'garden', 'edit'),
+			granted('section', 'beds', 'edit'),
+			granted('project', 'shed', 'view'),
+			granted('label', 'weekend', 'view'),
+			granted('task', 'fence', 'edit'),
+			granted('project', 'fence-project', 'view'),
 		],
-	} as const;
+	};
 
 	test('the user’s own lists and the other screens always take a task', () => {
 		expect(canAddTo({ kind: 'project', id: 'home' }, null)).toBe(true);
@@ -155,17 +160,17 @@ describe('canAddTo', () => {
 		expect(canAddTo(null, space)).toBe(true);
 	});
 
-	test('a shared project or label takes a task only through an edit share on it', () => {
+	test('a shared project or label takes a task only when its access row says edit', () => {
 		expect(canAddTo({ kind: 'project', id: 'garden' }, space)).toBe(true);
+		expect(canAddTo({ kind: 'project', id: 'garden', sectionId: 'beds' }, space)).toBe(true);
 		expect(canAddTo({ kind: 'project', id: 'shed' }, space)).toBe(false);
 		expect(canAddTo({ kind: 'label', id: 'weekend' }, space)).toBe(false);
 		expect(canAddTo({ kind: 'project', id: 'fence-project' }, space)).toBe(false);
 	});
 
-	test('an edit share on the whole space takes a task on any of its lists', () => {
-		const managed = { targets: [{ kind: 'space', id: '', role: 'edit' }] } as const;
-		expect(canAddTo({ kind: 'project', id: 'shed' }, managed)).toBe(true);
-		expect(canAddTo({ kind: 'label', id: 'weekend' }, managed)).toBe(true);
+	test('a list the rows do not name takes none', () => {
+		expect(canAddTo({ kind: 'project', id: 'unknown' }, space)).toBe(false);
+		expect(canAddTo({ kind: 'label', id: 'unknown' }, space)).toBe(false);
 	});
 });
 

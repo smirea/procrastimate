@@ -121,8 +121,6 @@ struct RambleDrawer: View {
         }
     }
 
-    // MARK: Chrome
-
     private var header: some View {
         HStack {
             Button { close() } label: {
@@ -274,7 +272,6 @@ struct RambleDrawer: View {
         .frame(maxWidth: 600)
     }
 
-    /// The end of the transcript with each recognized phrase tinted: metadata by its kind, spoken commands faded.
     private var caption: Text {
         let text = transcript as NSString
         var from = max(0, text.length - 140)
@@ -300,8 +297,6 @@ struct RambleDrawer: View {
         if cursor < text.length { out += AttributedString(text.substring(from: cursor)) }
         return Text(out)
     }
-
-    // MARK: Rows
 
     private var arrival: AnyTransition {
         .asymmetric(insertion: .modifier(active: Arrive(progress: 0), identity: Arrive(progress: 1)), removal: .opacity)
@@ -461,8 +456,6 @@ struct RambleDrawer: View {
         }
     }
 
-    // MARK: Editing
-
     private func binding(_ id: String, _ field: WritableKeyPath<RambleTask, String>) -> Binding<String> {
         Binding(
             get: { find(id)?.task[keyPath: field] ?? "" },
@@ -496,8 +489,6 @@ struct RambleDrawer: View {
         if open == id { open = nil }
     }
 
-    // MARK: Capture
-
     private func start() {
         generation += 1
         let token = generation
@@ -525,7 +516,7 @@ struct RambleDrawer: View {
             finish(token: token)
         }
         let choice = store.dictation
-        let deviceId = store.snapshot.sync?.deviceId
+        let deviceId = DeviceDefaults.installID
         Task { await session.start(choice: choice, deviceId: deviceId) }
     }
 
@@ -604,7 +595,6 @@ struct RambleDrawer: View {
     }
 }
 
-/// Rows rise into place out of a soft blur, like a thought coming into focus.
 private struct Arrive: ViewModifier {
     let progress: Double
 
@@ -616,8 +606,6 @@ private struct Arrive: ViewModifier {
     }
 }
 
-/// A live title, word by word, so each new word fades in out of a blur and a word the grammar turns into a field
-/// leaves the title as its chip arrives.
 private struct Words: View {
     let text: String
 
@@ -635,7 +623,6 @@ private struct Words: View {
     }
 }
 
-/// A quiet capsule tinted by its field, for a value the grammar read.
 private struct Token: View {
     let systemImage: String
     let text: String

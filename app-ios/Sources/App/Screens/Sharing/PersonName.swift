@@ -1,7 +1,6 @@
 import Core
 import SwiftUI
 
-/// A person's name, with the `AI` badge wherever an AI account shows.
 struct PersonName: View {
     let person: Person
     var you = false
@@ -28,6 +27,7 @@ struct AIBadge: View {
 }
 
 extension Session {
-    /// The signed-in user's id, which the store's document belongs to.
-    static var userID: String? { UserDefaults.standard.string(forKey: ownerKey) }
+    /// Whose local database this is. After a reinstall `UserDefaults` is empty and so is the database, which then
+    /// belongs to the user the Keychain token names.
+    static var userID: String? { UserDefaults.standard.string(forKey: ownerKey) ?? SessionToken.user() }
 }

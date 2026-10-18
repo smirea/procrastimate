@@ -1,49 +1,54 @@
 # Offline and sync
 
-ProcrastiMate works fully without a network. Every change applies locally at once and syncs in the background. Sync is always on. Nothing in the UI mentions sync, except a toast when the server rejects a change and pull to refresh on iOS.
+ProcrastiMate works fully without a network. Every change applies locally at once and syncs in the background. Sync is always on and live. Nothing in the UI mentions sync, except a toast when the server rejects a change and pull to refresh on iOS.
 
 ## Sub-features
 
-- `sync-offline` keeps every feature working with no network. Changes wait in the outbox until the network returns.
+- `sync-offline` keeps every feature working with no network. Changes wait in PowerSync's upload queue in the local database until the network returns, and the data survives a reload.
 - `sync-propagate` shows a change from one client on the other.
-- `sync-realtime` brings that change over at once while the other client is open and visible, through the server's nudge socket, with no focus or timer.
+- `sync-realtime` brings that change over at once while both clients are open: PowerSync streams it, with no focus, timer, or reload.
 - `sync-reconnect` uploads offline changes after the network returns.
-- `sync-conflict` converges when both clients change the same task offline.
-- `sync-rejected` handles an edit the server refuses: the rest of the push still applies, the edit leaves the outbox, the entity goes back to the server's value, and a toast says "Couldn’t save a change to “Title”". The device keeps syncing.
-- `sync-refresh` on iOS: pulling down any task list (Inbox, No date, a project, label, place, or event, Completed) or Browse runs a full sync round, the shared spaces list included, and the spinner stays until it ends.
+- `sync-conflict` converges when both clients change the same task offline: each field keeps the write that reached the server last.
+- `sync-delete-wins` keeps a deleted task deleted when an edit made before the delete reaches the server after it.
+- `sync-rejected` handles a write the server refuses: the rest of the upload still applies, the row goes back to the server's value at the next checkpoint, and a toast says "Couldn’t save a change to “Title”". The device keeps syncing.
+- `sync-refresh` on iOS: pulling down any task list (Inbox, No date, a project, label, place, or event, Completed) or Browse reconnects PowerSync if its stream dropped, reloads the people cache, and the spinner stays until the stream is idle, at most five seconds.
 - `sync-delete` wipes tasks, projects, and labels on this device and the server from Settings, `Delete all data`.
 
 ## How to get to it (user POV)
 
-- There is no Sync screen. Stefan uses any feature on either client and expects the other client to match. A client syncs on launch, on focus or foreground, when the network returns, one second after each change, every minute while visible, and as soon as the server's realtime socket says another device changed something.
+- There is no Sync screen. Stefan uses any feature on either client and expects the other client to match. The web connects while signed in and streams every change both ways; there is no focus trigger, timer, or pull to refresh.
 - `Settings`, then `Delete all data`, then confirm, to empty tasks, projects, and labels on this device and the server.
 
 ## Driving it with control-ui and the simulator
 
 Preconditions:
 
-- Two clients: on Linux, two separate browser profiles. The iOS sync client is in Core.
-- Automated proof: `bun run test:e2e -- e2e/sync.e2e.ts`. It opens two browser contexts against the dev server's in-memory account, or the Worker's with `E2E_WORKER=1`. Each context registers on its own.
+- Two clients: on Linux, two separate browser profiles. The iOS store and its row writes are in Core; the PowerSync client is `app-ios/Sources/App/Sync`.
+- Automated proof: `bun run test:e2e -- e2e/sync.e2e.ts`, in the `desktop` (Chromium) and `mobile` (iPhone-sized WebKit) projects. It opens two browser contexts on one new account, against the worktree's Postgres and PowerSync, or the Worker with `E2E_WORKER=1`.
 
-- **Propagate.** Add a task on A. It appears on B after B regains focus or within a minute. Completing it on B removes it from A's Inbox. Test: `a change on one device shows on the other`.
-- **Realtime.** With A and B both open and nothing focusing B, add a task on A. B shows it within a couple of seconds. Completing it on B removes it from A the same way. In devtools, B's Network tab shows one WebSocket to `/api/sync/socket` with a `{"cursor":N}` frame per change. Test: `a change on one device shows on the other at once, without focus or the minute timer`.
-- **Tabs.** With two tabs of the same browser open, the background one offline, add a task in the first and let it sync, then add one in the background tab. The `procrastimate` document still holds the first task, and reloading opens on it without waiting for sync. Test: `a stale tab in the same browser never saves over what another tab synced, and its edits still upload`.
-- **Offline.** Block A's `/api/sync` requests. Add and rename tasks on A. Each change applies at once and survives a reload. Test: `changes made offline apply at once and upload when the network returns`.
-- **Reconnect.** Let A's requests through again. B shows the new and renamed tasks. Same test.
-- **Typing.** Open a synced task on A, block A's `/api/sync`, and type into Notes. Each keystroke shows at once, and the `procrastimate` document's `sync.outbox` holds one op with the full text. After A reconnects, B shows the notes. Test: `typing notes shows each keystroke at once and queues one op with the last value`.
-- **Rejected.** Make A's next push carry an op the contract refuses: the test rewrites a rename's op in flight to `priority: 99`. A shows "Couldn’t save a change to “<new title>”", the row goes back to the old title, the outbox empties, and A's next new task reaches B. The server's console logs `sync: rejected ops` with the reason. Test: `an edit the server rejects goes back to the server value with a notice, and the device keeps syncing`. Server and client halves: `bun test server/src/account/sync.test.ts shared/sync/outbox.test.ts`; iOS: `swift test` (`VectorTests`, `APITests`).
-- **Conflict.** Block both clients, rename the same task differently on each, and add notes on B. After both reconnect, both show the same title (the later write wins) and B's notes, since different fields merge. Test: `both devices editing the same task offline converge`.
-- **Delete all.** On A, `Settings`, `Delete all data`, confirm. A's tasks are gone and stay gone after a reload. B's tasks are gone once it syncs, and its waiting edits are dropped. Both devices keep their tokens. Test: `delete all data clears this device and the other`.
-- **First sync.** A new install's first request carries no tasks. Its first snapshot queues only what the server lacks, so a device with the same tasks as the server uploads nothing. `bun test shared/sync/outbox.test.ts` and `swift test --filter OutboxTests` cover it.
-- **Pull to refresh (iOS).** Drag any task list or Browse down past the top. A spinner shows under the bar and stays until the sync round ends, then a change made on the web shows. Without a session (the DEBUG `PROCRASTIMATE_SIGNED_IN` launch) it ends at once.
-- **iOS.** The Core store writes a sync section on first launch and queues local changes, one op per entity field. `swift test` covers that.
+- **Propagate.** Add a task on A. It appears on B at once, locally in about 70 to 190 ms in Chromium and 120 to 170 ms in WebKit. Completing it on B removes it from A's Inbox the same way. Test: `a change on one device shows on the other at once, both ways`.
+- **Reloaded at once.** Add a task and reload in the same moment, before the local database could write it. It is there after the reload and reaches B. Test: `a task added the moment before the page goes away is there after the reload`.
+- **Tabs.** Two tabs of one browser share one local database. A task added in one shows in the other at once, and both reach B. Test: `two tabs of one browser share one database, and both upload`.
+- **Offline.** Take A offline (Playwright's `context.setOffline(true)`, plus refusing `/api/powersync`, `/api/upload`, and `/api/sync/token`). Add and rename tasks on A. Each change applies at once and survives a reload while the sync routes stay refused. Test: `changes made offline apply at once, survive a reload, and upload when the network returns`.
+- **Reconnect.** Bring A back. B shows the new and renamed tasks. Same test.
+- **Typing.** Open a synced task on A, take A offline, and type into Notes. Each keystroke shows at once and queues one write. On reconnect the upload folds them into one patch with the full text, and B shows the notes. Test: `typing notes shows each keystroke at once and uploads one write with the last value`.
+- **Rejected.** Make A's next upload carry a write the schema refuses: the test rewrites a rename's write in flight to `priority: 99`. A shows "Couldn’t save a change to “<new title>”", the row goes back to the old title, and A's next new task reaches B. Test: `an edit the server rejects goes back to the server value with a notice, and the device keeps syncing`. A guest's refusal is in [Sharing](./sharing.md). Server half: `bun test server/src/upload.test.ts`; iOS: `swift test` (`VectorTests` for `rejectionNotice`).
+- **Conflict.** Take both clients offline, rename the same task differently on each, and add notes on B. After A and then B reconnect, both show B's title, since its write reached the server last, and B's notes. Test: `both devices editing the same task offline converge, each field to the last write`.
+- **Delete wins.** Take B offline and rename a task there. Delete the task on A. When B reconnects, its rename changes nothing and the task is gone on both. Test: `a delete beats an edit that reaches the server after it`.
+- **Switch users.** Sign out on A and sign back in with the sync routes refused: A's tasks are there, from the local database. Sign out and create another account: the list is empty, and what it adds never reaches A's account. Sign in as A again: A's tasks come back from the server. Test: `signing out keeps this device’s data, and signing in as someone else starts from an empty list`.
+- **Switch interrupted.** Make the browser refuse to empty the local images (the test patches `IDBObjectStore.prototype.clear`), sign out on A, and create another account. The app stays blank, tries the clear again, and `procrastimate-owner` keeps naming A's account, through a reload too. Once the clear works, the new account's empty list shows. Test: `this browser belongs to a new account only once the previous one’s rows are gone, and a refused clear is tried again`.
+- **New device settings.** Choose ElevenLabs on A. Open a fresh profile B in another zone with the sync routes refused, and pin `Labels` in quick add's buttons. Once B's sync runs, both show ElevenLabs and `Labels`, and the settings name B's zone: B patched only what it changed and never wrote defaults. Test: `a new device holds its settings changes until the account’s settings arrive, then writes only those`.
+- **Database won't open.** Add a task and reload in one moment while the page cannot start the database's workers. The app shows `Couldn’t open your tasks` with `Reload` instead of an empty list. Once the database opens, the task is there and reaches B. Test: `a database that cannot open says so, and an edit it could not write is written at the next launch`.
+- **Big command.** Import a Todoist backup of 150 tasks offline, then reconnect: the project and its 150 tasks upload in one request. Test: `one command’s writes upload in one request, however many rows it changes`.
+- **Reads only what changed.** With 150 tasks on both devices, rename one on A. A reads back at most 2 rows from its local database (its own write, then the server's copy of it) and B reads 1, where a reload used to read every row of every table. `window.procrastimate.reads()` counts them. Test: `an edit reads back only the row it changed, on this device and the other`.
+- **Delete all.** On A, `Settings`, `Delete all data`, confirm. A's tasks are gone and stay gone after a reload. B's are gone at once. Both stay signed in. Test: `delete all data clears this device and the other`.
+- **Pull to refresh (iOS).** Drag any task list or Browse down past the top. A spinner shows under the bar and stays until the stream is idle; a change made on the web shows without it, about 0.1 s after the server takes it. Without a session (the DEBUG `PROCRASTIMATE_SIGNED_IN` launch) it ends at once.
+- **iOS.** Each command hands its row writes to one serial writer into the PowerSync database, and every database change reads back only the rows it changed from the change log (`StoreTests`, `SpaceTests`, and the `rows` and `local-rows` vectors in `swift test`). `PROCRASTIMATE_OFFLINE=1` keeps sync disconnected for a launch: add a task, relaunch without it, and the task reaches the server. After a reinstall that kept the Keychain token, or `PROCRASTIMATE_RESET=1` with a session, the app opens signed in as the Keychain's owner with an empty database that sync fills: the user's own tasks land in Inbox (never under `Shared with me`), and what is added offline uploads as theirs.
 
 ## Gotchas
 
-- The e2e tests block only `/api/sync` to go offline. Browser offline mode also cuts the page off from the dev server. The `**/api/sync` route does not match `/api/sync/socket`, so an "offline" device still hears nudges and its syncs fail.
-- The socket goes through Vite's `/api` proxy with `ws: true` in dev. The socket only triggers syncs, so a change that shows only after focus means the socket is down.
-- The tests share one in-memory account, so they run one at a time. `--repeat-each` needs `--workers=1`.
-- The pinned e2e clock is days ahead of the server, which then replaces the clients' clocks with its own, so the write that reaches the server last wins a conflict. The test only asserts that both clients agree.
-- Completing a task commits 260 ms after the click, after the check animation.
-- A change that shows only on the client that made it proves local state, not sync.
-- The token lives under the `procrastimate-device` `localStorage` key, outside the `procrastimate` document. The document always has a `sync` section.
+- Playwright's `context.route` never sees PowerSync's stream in Chromium, which runs it in a shared worker, so offline also uses `context.setOffline(true)`. A page cannot reload while the context is offline, so a reload test turns the network back on and keeps refusing the sync routes.
+- Playwright contexts get `serviceWorkers: 'block'`: WebKit sends the page's requests through the push service worker, where `context.route` does not see them.
+- The local database belongs to one account. Signing in as someone else clears it; signing out keeps it.
+- The copy that saves an edit across a reload is per tab (`sessionStorage`), so closing the tab a moment after an edit can lose it.
+- A change that shows only on the client that made it proves local state, not sync. `window.procrastimate.pending()` counts the writes not on the server yet. `window.procrastimate.reads()` counts the reloads, the rows they read, and their milliseconds.

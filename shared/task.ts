@@ -1,6 +1,6 @@
 import { zonedTime } from './zoned-time.ts';
 
-import type { Task } from './sync/protocol.ts';
+import type { Task } from './model.ts';
 import { DATE_KEY_PATTERN, MAX_RECURRENCE_INTERVAL } from './values.ts';
 
 import type { DateKey, Due, NthWeekday, Recurrence, RecurrenceUnit, Reminder, TimeOfDay, Weekday } from './values.ts';
@@ -17,7 +17,7 @@ export type {
 	Weekday,
 } from './values.ts';
 export { DEFAULT_PRIORITY, MAX_RECURRENCE_INTERVAL } from './values.ts';
-export type { Label, Project, Section, Task } from './sync/protocol.ts';
+export type { Label, Project, Section, Task } from './model.ts';
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
@@ -118,8 +118,8 @@ export function weeklyOn(interval: number, days: Iterable<Weekday>): Recurrence 
 }
 
 /**
- * A date past 9999-12-31, or `NaN` from one past JavaScript's range, is not a `DateKey`, and the server rejects the op
- * that carries it along with the rest of the outbox. Every date a repeat computes passes through here.
+ * A date past 9999-12-31, or `NaN` from one past JavaScript's range, is not a `DateKey`, and the server rejects the
+ * write that carries it. Every date a repeat computes passes through here.
  */
 const inRange = (key: DateKey): DateKey | null => (DATE_KEY_PATTERN.test(key) ? key : null);
 

@@ -1,6 +1,6 @@
+import type { AccessRow } from './db/schema.ts';
 import type { DateKey, Task } from './task.ts';
 import { placeKey, scheduledDue } from './triggers.ts';
-import type { SpaceGrant } from './sync/protocol.ts';
 import type { TaskEvent, TaskLocation } from './values.ts';
 
 /**
@@ -35,20 +35,18 @@ export const NO_DEFAULTS: ListDefaults = {
 	date: null,
 };
 
-/** A space someone shared with this user, as far as adding goes: its shares to them. */
-export type SharedSpace = { targets: readonly SpaceGrant[] };
+/** A space someone shared with this user, as far as adding goes: its `access` rows to them. */
+export type SharedSpace = { access: readonly AccessRow[] };
 
 /**
  * Whether a new task may land on `screen`'s project or label, in `space` when someone shared it with this user. The
  * user's own lists, and every other screen, always take one. In a shared space the server only admits a new task an
- * edit share reaches, so the list takes one when the user can edit the whole space or that project or label.
+ * edit share on that project or label, or on the whole space, reaches, and writes `edit` on the list's `access` row
+ * exactly then (`server/src/access.ts`), so the list takes one when its row says so.
  */
 export function canAddTo(screen: Screen | null, space: SharedSpace | null): boolean {
 	if (!space || (screen?.kind !== 'project' && screen?.kind !== 'label')) return true;
-	return space.targets.some(
-		grant =>
-			grant.role === 'edit' && (grant.kind === 'space' || (grant.kind === screen.kind && grant.id === screen.id)),
-	);
+	return space.access.some(row => row.kind === screen.kind && row.entityId === screen.id && row.role === 'edit');
 }
 
 /**

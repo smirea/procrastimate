@@ -85,10 +85,10 @@ import Testing
 
     @Test func importingTheSameBackupTwiceAddsNothing() {
         var next = 0
-        let store = Store(file: nil, clock: AppClock.fixed(pinned, timeZone: utc), newId: {
+        let store = recordingStore(clock: AppClock.fixed(pinned, timeZone: utc), newId: {
             next += 1
             return "id-\(next)"
-        })
+        }).0
         let files = [Todoist.BackupFile(
             name: "Home [123].csv",
             text: "\u{FEFF}TYPE,CONTENT,PRIORITY,INDENT\r\ntask,Water plants @home,1,1\r\ntask,Repot fern,4,2\r\n"

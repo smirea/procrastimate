@@ -1,121 +1,57 @@
-import { expect, test } from 'bun:test';
-import { EPHEMERAL_AUTH_SECRET, parseConfig, REQUIRED_WORKER_SECRETS } from './config';
-import { VAPID_SUBJECT } from './web-push';
+import { describe, expect, test } from 'bun:test';
+import { parseConfig } from './config';
+import { testEnv } from './test-app';
 
-const production = {
-	BETTER_AUTH_SECRET: 'secret',
-	TURSO_DATABASE_URL: 'libsql://procrastimate-prod.turso.io',
-	TURSO_AUTH_TOKEN: 'token',
-	VAPID_PUBLIC_KEY: 'public',
-	VAPID_PRIVATE_KEY: 'private',
-};
+const DSN = 'https://key@o1.ingest.sentry.io/2';
 
-test('a production Worker names every missing secret', () => {
-	expect(() => parseConfig({})).toThrow(
-		[
-			'Invalid server configuration:',
-			'- Missing BETTER_AUTH_SECRET',
-			'- Missing TURSO_DATABASE_URL, TURSO_AUTH_TOKEN',
-			'- Missing VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY',
-		].join('\n'),
-	);
-	expect(() => parseConfig({ ...production, TURSO_AUTH_TOKEN: ' ' })).toThrow('- Missing TURSO_AUTH_TOKEN');
-});
-
-test('a production Worker with its secrets has Turso, push, and no optional providers', () => {
-	expect(parseConfig(production)).toEqual({
-		ephemeral: false,
-		authSecret: 'secret',
-		turso: { url: 'libsql://procrastimate-prod.turso.io', authToken: 'token' },
-		vapid: { publicKey: 'public', privateKey: 'private', subject: VAPID_SUBJECT },
-		google: { web: null, iosClientId: null },
-		apple: null,
-		ramble: null,
-		sentry: null,
+describe('parseConfig', () => {
+	test('a complete environment parses, with the key’s kid and the PowerSync URL trimmed', async () => {
+		const settings = parseConfig(await testEnv({ POWERSYNC_URL: 'http://127.0.0.1:1/' }), DSN);
+		expect(settings.powersync).toMatchObject({
+			url: 'http://127.0.0.1:1',
+			key: { kid: 'insecure-local-dev-5d7cc3c8' },
+		});
+		expect(settings.authRateLimit).toBe(false);
+		expect(settings.sentry).toBeNull();
 	});
-});
 
-test('an ephemeral run needs no secrets and ignores Turso', () => {
-	expect(parseConfig({ EPHEMERAL: '1', TURSO_DATABASE_URL: 'libsql://dev.turso.io', TURSO_AUTH_TOKEN: 't' })).toEqual({
-		ephemeral: true,
-		authSecret: EPHEMERAL_AUTH_SECRET,
-		turso: null,
-		vapid: null,
-		google: { web: null, iosClientId: null },
-		apple: null,
-		ramble: null,
-		sentry: null,
+	test('names every missing or malformed key at once', async () => {
+		const env = await testEnv({
+			DATABASE_URL: '',
+			POWERSYNC_URL: 'not a url',
+			POWERSYNC_JWT_PRIVATE_KEY: '{"kty":"RSA"}',
+			BETTER_AUTH_SECRET: '',
+			VAPID_PRIVATE_KEY: '',
+			AUTH_RATE_LIMIT: 'maybe',
+		});
+		expect(() => parseConfig(env, DSN)).toThrow(
+			[
+				'Invalid server configuration:',
+				'- Missing BETTER_AUTH_SECRET',
+				'- AUTH_RATE_LIMIT must be off or unset, not "maybe"',
+				'- Missing the HYPERDRIVE binding or DATABASE_URL',
+				'- POWERSYNC_URL is not a URL',
+				'- POWERSYNC_JWT_PRIVATE_KEY must be an Ed25519 OKP JWK',
+				'- Missing VAPID_PRIVATE_KEY',
+			].join('\n'),
+		);
 	});
-	expect(() => parseConfig({ EPHEMERAL: 'true' })).toThrow('EPHEMERAL must be 1 or unset, not "true"');
-	expect(() => parseConfig({ EPHEMERAL: '1', VAPID_PUBLIC_KEY: 'public' })).toThrow(
-		'- Set all of VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY or none (missing VAPID_PRIVATE_KEY)',
-	);
-});
 
-test('optional providers are all or nothing', () => {
-	expect(() => parseConfig({ ...production, GOOGLE_CLIENT_ID: 'web' })).toThrow(
-		'- Set all of GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET or none (missing GOOGLE_CLIENT_SECRET)',
-	);
-	expect(() => parseConfig({ ...production, APPLE_CLIENT_ID: 'services' })).toThrow(
-		'- APPLE_CLIENT_ID needs APPLE_CLIENT_SECRET, or APPLE_TEAM_ID, APPLE_KEY_ID, and APPLE_PRIVATE_KEY',
-	);
-	expect(() =>
-		parseConfig({ ...production, APPLE_TEAM_ID: 'team', APPLE_KEY_ID: 'key', APPLE_PRIVATE_KEY: 'x' }),
-	).toThrow('- APPLE_PRIVATE_KEY is not a PKCS8 PEM');
-	expect(() => parseConfig({ ...production, RAMBLE_UPSTREAM: 'elevenlabs' })).toThrow(
-		'- RAMBLE_UPSTREAM must be cassette or unset, not "elevenlabs"',
-	);
-	expect(
-		parseConfig({
-			...production,
-			GOOGLE_IOS_CLIENT_ID: 'ios',
-			APPLE_TEAM_ID: 'team',
-			APPLE_KEY_ID: 'key',
-			APPLE_PRIVATE_KEY: '-----BEGIN PRIVATE KEY-----\\nabc\\n-----END PRIVATE KEY-----',
-			ELEVENLABS_API_KEY: 'eleven',
-		}),
-	).toMatchObject({
-		google: { web: null, iosClientId: 'ios' },
-		apple: {
-			servicesId: null,
-			secret: {
-				kind: 'key',
-				teamId: 'team',
-				keyId: 'key',
-				pem: '-----BEGIN PRIVATE KEY-----\nabc\n-----END PRIVATE KEY-----',
-			},
-		},
-		ramble: { kind: 'elevenlabs', apiKey: 'eleven' },
+	test('the Hyperdrive binding stands in for DATABASE_URL', async () => {
+		const env = await testEnv({ DATABASE_URL: '' });
+		const settings = parseConfig(
+			{ ...env, HYPERDRIVE: { connectionString: 'postgres://hyperdrive/db' } as never },
+			DSN,
+		);
+		expect(settings.database).toBe('postgres://hyperdrive/db');
 	});
-});
 
-test('the deploy check and the parser require the same secrets', () => {
-	expect(Object.keys(production).sort()).toEqual([...REQUIRED_WORKER_SECRETS].sort());
-	for (const name of REQUIRED_WORKER_SECRETS) {
-		expect(() => parseConfig({ ...production, [name]: undefined })).toThrow(name);
-	}
-});
-
-const WORKER_DSN = 'https://0123abcd@o42.ingest.us.sentry.io/7';
-
-test('Sentry reports only where the deploy names an environment and a release', () => {
-	expect(parseConfig(production, WORKER_DSN).sentry).toBeNull();
-	expect(
-		parseConfig({ ...production, SENTRY_ENVIRONMENT: 'production', SENTRY_RELEASE: 'abc123' }, WORKER_DSN).sentry,
-	).toEqual({ dsn: WORKER_DSN, environment: 'production', release: 'abc123' });
-});
-
-test('a half-set or unknown Sentry environment, or one without a DSN, fails', () => {
-	expect(() => parseConfig({ ...production, SENTRY_ENVIRONMENT: 'production' }, WORKER_DSN)).toThrow(
-		'- Set both SENTRY_ENVIRONMENT and SENTRY_RELEASE or neither',
-	);
-	expect(() => parseConfig({ ...production, SENTRY_RELEASE: 'abc123' }, WORKER_DSN)).toThrow(
-		'- Set both SENTRY_ENVIRONMENT and SENTRY_RELEASE or neither',
-	);
-	expect(() =>
-		parseConfig({ ...production, SENTRY_ENVIRONMENT: 'staging', SENTRY_RELEASE: 'abc123' }, WORKER_DSN),
-	).toThrow('- SENTRY_ENVIRONMENT must be production or development, not "staging"');
-	expect(() => parseConfig({ ...production, SENTRY_ENVIRONMENT: 'production', SENTRY_RELEASE: 'abc123' }, '')).toThrow(
-		'- SENTRY_ENVIRONMENT is set, but the Sentry DSN is not provisioned',
-	);
+	test('Ramble reads the cassette switch or the ElevenLabs key', async () => {
+		expect(parseConfig(await testEnv({ RAMBLE_UPSTREAM: 'cassette' }), DSN).ramble).toEqual({ kind: 'cassette' });
+		expect(parseConfig(await testEnv({ ELEVENLABS_API_KEY: 'xi' }), DSN).ramble).toEqual({
+			kind: 'elevenlabs',
+			apiKey: 'xi',
+		});
+		expect(parseConfig(await testEnv(), DSN).ramble).toBeNull();
+	});
 });

@@ -10,15 +10,18 @@
 import { chmod, copyFile, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import devJwtKey from '../../powersync/local/INSECURE-dev-jwt-key.json' with { type: 'json' };
 import { REQUIRED_WORKER_SECRETS } from '../src/config';
 import { generateVapidKeys } from '../src/web-push';
+
+/** The Bun dev server's stand-in; `wrangler dev` gets the same through `.dev.vars`, so the local PowerSync trusts both. */
+const INSECURE_DEV_AUTH_SECRET = 'insecure-local-dev-better-auth-secret-0123456789';
 
 export const WORKER_SECRETS = [
 	'VAPID_PUBLIC_KEY',
 	'VAPID_PRIVATE_KEY',
 	'ELEVENLABS_API_KEY',
-	'TURSO_DATABASE_URL',
-	'TURSO_AUTH_TOKEN',
+	'POWERSYNC_JWT_PRIVATE_KEY',
 	'BETTER_AUTH_SECRET',
 	'GOOGLE_CLIENT_ID',
 	'GOOGLE_CLIENT_SECRET',
@@ -30,9 +33,7 @@ export const WORKER_SECRETS = [
 	'APPLE_PRIVATE_KEY',
 ] as const;
 const CLOUDFLARE_SECRETS = ['CLOUDFLARE_API_TOKEN', 'CLOUDFLARE_ACCOUNT_ID'] as const;
-/** The App Store Connect API key the `testflight` workflow archives and uploads with. The `.p8` is stored base64 on one line. */
 const ASC_SECRETS = ['ASC_KEY_ID', 'ASC_ISSUER_ID', 'ASC_PRIVATE_KEY_B64'] as const;
-/** The deploy uploads source maps and creates releases in Sentry org `self-uo7` with it. */
 const SENTRY_SECRETS = ['SENTRY_AUTH_TOKEN'] as const;
 export const GITHUB_SECRETS = [...CLOUDFLARE_SECRETS, ...ASC_SECRETS, ...SENTRY_SECRETS] as const;
 const REPO = 'smirea/procrastimate';
@@ -45,7 +46,7 @@ const rootPath = new URL('../../', import.meta.url).pathname;
 const devVarsPath = join(rootPath, '.dev.vars');
 const iosConfigPath = join(rootPath, 'app-ios/Config/Env.xcconfig');
 
-/** Release and TestFlight call this. `Config/Base.xcconfig` pins the same URL. */
+/** `Config/Base.xcconfig` pins the same URL. */
 export const PROD_API_URL = 'https://procrastimate.stf.lol';
 
 /** `optional` keys, like `SENTRY_ENVIRONMENT`, may stay empty: CI's `--generate-only` has no dev or prod values. */
@@ -76,7 +77,7 @@ export function googleUrlScheme(clientId: string | undefined): string {
 	return match ? `com.googleusercontent.apps.${match[1]}` : 'com.stefan.procrastimate';
 }
 
-/** Debug takes `dev`, Release takes `prod`. A missing prod `API_URL` uses the pinned production URL. */
+/** A missing prod `API_URL` uses the pinned production URL. */
 export function iosXcconfig(schema: string, dev: Values, prod: Values): string {
 	const lines = ['// Generated from env-manager dev and prod. Do not edit.'];
 	for (const key of appIosKeys(schema)) {
@@ -94,7 +95,7 @@ export function iosXcconfig(schema: string, dev: Values, prod: Values): string {
 	return `${lines.join('\n')}\n`;
 }
 
-/** Parses dotenv text. Empty values count as unset and are left out. */
+/** Empty values count as unset and are left out. */
 export function parseDotenv(text: string): Values {
 	const values: Values = {};
 	for (const raw of text.split('\n')) {
@@ -115,7 +116,7 @@ export function parseDotenv(text: string): Values {
 	return values;
 }
 
-/** The Worker secrets that have a value. Unset ones are skipped, so a push never deletes a Worker secret. */
+/** Skips unset secrets, so a push never deletes a Worker secret. */
 export function workerSecrets(values: Values): Partial<Record<WorkerSecret, string>> {
 	const selected: Partial<Record<WorkerSecret, string>> = {};
 	for (const name of WORKER_SECRETS) if (values[name]) selected[name] = values[name];
@@ -194,7 +195,10 @@ async function github(env: string) {
 	}
 }
 
-/** Writes `.dev.vars` for `wrangler dev`, which must exist so wrangler never falls back to the root `.env` schema. */
+/**
+ * Writes `.dev.vars` for `wrangler dev`, which must exist so wrangler never falls back to the root `.env` schema. Secrets
+ * env-manager lacks get the local stand-ins: the committed dev signing key, a fixed auth secret, and a VAPID pair.
+ */
 async function devVars(env: string, generateOnly: boolean) {
 	let values: Values = {};
 	if (!generateOnly) {
@@ -207,13 +211,18 @@ async function devVars(env: string, generateOnly: boolean) {
 	const file = Bun.file(devVarsPath);
 	const existing = parseDotenv((await file.exists()) ? await file.text() : '');
 	const secrets: Values = { ...existing, ...workerSecrets(values) };
+	secrets.POWERSYNC_JWT_PRIVATE_KEY ||= JSON.stringify(devJwtKey);
+	secrets.BETTER_AUTH_SECRET ||= INSECURE_DEV_AUTH_SECRET;
 	if (!secrets.VAPID_PUBLIC_KEY || !secrets.VAPID_PRIVATE_KEY) {
 		const keys = await generateVapidKeys();
 		secrets.VAPID_PUBLIC_KEY = keys.publicKey;
 		secrets.VAPID_PRIVATE_KEY = keys.privateKey;
 		console.log('Generated a new VAPID key pair');
 	}
-	const lines = Object.entries(secrets).map(([name, value]) => `${name}=${JSON.stringify(value)}\n`);
+	// wrangler's dotenv takes a single-quoted value literally but keeps the backslashes of `\"` in a double-quoted one,
+	// which broke the JSON signing key.
+	const quoted = (value: string) => (/['\n]/.test(value) ? JSON.stringify(value) : `'${value}'`);
+	const lines = Object.entries(secrets).map(([name, value]) => `${name}=${quoted(value)}\n`);
 	await Bun.write(file, lines.join(''));
 	console.log(`Wrote .dev.vars: ${Object.keys(secrets).join(', ')}`);
 }
@@ -253,7 +262,6 @@ const workerSecretNames = (env: Values) =>
 		parseJsonArray(run(['bunx', 'wrangler', 'secret', 'list', '--format', 'json'], { env })).map(secret => secret.name),
 	);
 
-/** The required secrets that `names` lacks. */
 export function missingRequired(names: Set<string>): string[] {
 	return REQUIRED_WORKER_SECRETS.filter(name => !names.has(name));
 }

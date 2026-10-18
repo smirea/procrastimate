@@ -1,1 +1,0 @@
-ALTER TABLE `labels` ADD `place` text;

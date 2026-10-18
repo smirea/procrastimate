@@ -14,7 +14,6 @@
 	import { store } from '#lib/store.svelte.ts';
 	import { toastDeleted } from '#lib/completion.ts';
 	import { sheets } from '#lib/ui.svelte.ts';
-	import { followMerged } from '#lib/merged.svelte.ts';
 	import { completed } from '#lib/completed.svelte.ts';
 	import { canAddHere } from '#lib/screen.ts';
 	import { completedTasks, labelViewTasks } from 'shared/views.ts';
@@ -37,9 +36,7 @@
 			: [],
 	);
 	const home = $derived(label ? store.homeOf(label.id) : null);
-	const owner = $derived(home ? store.spaces[home]?.owner : undefined);
-
-	followMerged('/labels', () => page.params.id, () => store.labels);
+	const owner = $derived(home ? store.ownerOf(home) : undefined);
 
 	let renaming = $state(false);
 	let confirmingDelete = $state(false);

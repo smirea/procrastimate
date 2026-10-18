@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { taskSchema } from './sync/protocol.ts';
+import { taskSchema } from './model.ts';
 import { taskEventSchema } from './values.ts';
 
 /**
@@ -17,7 +17,6 @@ export type MemoSource = z.infer<typeof memoSourceSchema>;
 
 export const memoSourceKey = ({ memoId, taskKey }: MemoSource) => `${PREFIX}${memoId}:${taskKey}`;
 
-/** The memo a task came from, or null for a task the memo app did not send. */
 export function parseMemoSource(sourceKey: string | null | undefined): MemoSource | null {
 	if (!sourceKey?.startsWith(PREFIX)) return null;
 	const [memoId, taskKey, ...rest] = sourceKey.slice(PREFIX.length).split(':');

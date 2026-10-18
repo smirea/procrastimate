@@ -1,22 +1,12 @@
 import type { Browser, BrowserContext, Page } from '@playwright/test';
-import { App, E2E_PASSWORD, expect, NOW, test, unique } from './fixtures.ts';
-
-/**
- * Two people, each with their own account in their own browser context. The owner shares a project with the
- * guest's email; a public link opens read only for a visitor who never signed in.
- */
+import { App, deviceContext, E2E_PASSWORD, expect, goOffline, goOnline, NOW, test, unique } from './fixtures.ts';
 
 type Person = { app: App; page: Page; context: BrowserContext; email: string; name: string };
 
 test.describe.configure({ mode: 'serial' });
 
-async function newContext(browser: Browser) {
-	const { baseURL, timezoneId, viewport } = test.info().project.use;
-	return browser.newContext({ baseURL, timezoneId, viewport });
-}
-
 async function person(browser: Browser, name: string): Promise<Person> {
-	const context = await newContext(browser);
+	const context = await deviceContext(browser);
 	const email = `e2e-${crypto.randomUUID()}@procrastimate.test`;
 	const signUp = await context.request.post('/api/auth/sign-up/email', {
 		data: { email, password: E2E_PASSWORD, name },
@@ -29,9 +19,28 @@ async function person(browser: Browser, name: string): Promise<Person> {
 	return { app: new App(page), page, context, email, name };
 }
 
-const focus = (page: Page) => page.evaluate(() => window.dispatchEvent(new Event('focus')));
 const sidebar = (page: Page) => page.getByRole('navigation', { name: 'Main' });
 const shareSheet = (page: Page) => page.getByRole('dialog', { name: 'Share' });
+
+async function sharedWithMe({ app, page }: Person) {
+	if (page.viewportSize()!.width < 768) await app.openNavigation();
+	return sidebar(page).getByRole('region', { name: 'Shared with me' });
+}
+
+async function shareWith(owner: Person, guest: Person, role: 'Can edit' | 'Can view' = 'Can edit') {
+	await owner.page.getByRole('button', { name: 'Share project' }).click();
+	const sheet = shareSheet(owner.page);
+	await sheet.getByRole('textbox', { name: 'Email or name' }).fill(guest.email);
+	await sheet.getByRole('radiogroup', { name: 'Access' }).getByRole('radio', { name: role }).click();
+	const created = owner.page.waitForResponse(r => r.url().includes('/api/shares') && r.request().method() === 'POST');
+	await sheet
+		.getByRole('list', { name: 'People found' })
+		.getByRole('button', { name: new RegExp(guest.name) })
+		.click();
+	await expect(sheet.getByRole('region', { name: 'People with access' })).toContainText(guest.name);
+	expect((await created).ok()).toBe(true);
+	await sheet.getByRole('button', { name: 'Close share' }).click();
+}
 
 async function ownerWithProject(browser: Browser) {
 	const owner = await person(browser, 'Olive');
@@ -51,19 +60,10 @@ test('a guest completes a task in a project shared with them, and the owner sees
 	const guest = await person(browser, 'Gus');
 	const { owner, project, task } = await ownerWithProject(browser);
 
-	await owner.page.getByRole('button', { name: 'Share project' }).click();
-	await shareSheet(owner.page).getByRole('textbox', { name: 'Email or name' }).fill(guest.email);
-	// The row shows before the server has the share, so wait for the share itself before the guest looks.
-	const created = owner.page.waitForResponse(r => r.url().includes('/api/shares') && r.request().method() === 'POST');
-	await shareSheet(owner.page).getByRole('list', { name: 'People found' }).getByRole('button', { name: /Gus/ }).click();
-	await expect(shareSheet(owner.page).getByRole('region', { name: 'People with access' })).toContainText('Gus');
-	expect((await created).ok()).toBe(true);
-	await owner.page.keyboard.press('Escape');
+	await shareWith(owner, guest);
 
-	// The guest's tab learned its spaces at launch, before the share existed, so a reload is the launch that sees it.
-	await guest.page.reload();
-	const shared = sidebar(guest.page).getByRole('region', { name: 'Shared with me' });
-	await expect(shared.getByRole('link', { name: new RegExp(project) })).toBeVisible({ timeout: 15_000 });
+	const shared = await sharedWithMe(guest);
+	await expect(shared.getByRole('link', { name: new RegExp(project) })).toBeVisible({ timeout: 10_000 });
 	await expect(shared).toContainText('Olive');
 	await shared.getByRole('link', { name: new RegExp(project) }).click();
 	await expect(guest.page.getByRole('heading', { level: 1, name: project })).toBeVisible();
@@ -80,9 +80,8 @@ test('a guest completes a task in a project shared with them, and the owner sees
 		.click();
 	await expect(guest.app.row(task)).toHaveCount(0);
 
-	await focus(owner.page);
-	await expect(owner.app.row(task)).toHaveCount(0, { timeout: 15_000 });
-	await owner.page.keyboard.press('/');
+	await expect(owner.app.row(task)).toHaveCount(0, { timeout: 10_000 });
+	await owner.app.openSearch();
 	await owner.page.getByRole('combobox', { name: 'Search' }).fill(task);
 	await owner.page.getByRole('option', { name: new RegExp(task) }).click();
 	const details = owner.app.details();
@@ -96,9 +95,8 @@ test('a guest completes a task in a project shared with them, and the owner sees
 	]);
 	await owner.page.keyboard.press('Escape');
 
-	await sidebar(owner.page)
-		.getByRole('link', { name: new RegExp(project) })
-		.click();
+	if (owner.page.viewportSize()!.width < 768) await owner.app.openNavigation();
+	await owner.app.go(project);
 	await owner.page.getByRole('button', { name: 'Show completed' }).click();
 	const completed = owner.page
 		.getByRole('list', { name: `Completed ${project} tasks` })
@@ -116,19 +114,9 @@ test('a guest who can only view a shared project gets no add row, and quick add 
 	const guest = await person(browser, 'Vera');
 	const { owner, project, task } = await ownerWithProject(browser);
 
-	await owner.page.getByRole('button', { name: 'Share project' }).click();
-	await shareSheet(owner.page).getByRole('radio', { name: 'Can view' }).click();
-	await shareSheet(owner.page).getByRole('textbox', { name: 'Email or name' }).fill(guest.email);
-	const created = owner.page.waitForResponse(r => r.url().includes('/api/shares') && r.request().method() === 'POST');
-	await shareSheet(owner.page)
-		.getByRole('list', { name: 'People found' })
-		.getByRole('button', { name: /Vera/ })
-		.click();
-	expect((await created).ok()).toBe(true);
-	await owner.page.keyboard.press('Escape');
+	await shareWith(owner, guest, 'Can view');
 
-	await guest.page.reload();
-	const shared = sidebar(guest.page).getByRole('region', { name: 'Shared with me' });
+	const shared = await sharedWithMe(guest);
 	await shared.getByRole('link', { name: new RegExp(project) }).click({ timeout: 15_000 });
 	await expect(guest.app.row(task)).toBeVisible();
 	await expect(guest.page.getByRole('button', { name: 'Add task', exact: true })).toHaveCount(0);
@@ -142,17 +130,10 @@ test('a guest who can only view a shared project gets no add row, and quick add 
 test('a guest comments on a shared task, and the owner sees it unread until they open it', async ({ browser }) => {
 	const guest = await person(browser, 'Gus');
 	const { owner, project, task } = await ownerWithProject(browser);
-	await owner.page.getByRole('button', { name: 'Share project' }).click();
-	await shareSheet(owner.page).getByRole('textbox', { name: 'Email or name' }).fill(guest.email);
-	const created = owner.page.waitForResponse(r => r.url().includes('/api/shares') && r.request().method() === 'POST');
-	await shareSheet(owner.page).getByRole('list', { name: 'People found' }).getByRole('button', { name: /Gus/ }).click();
-	await expect(shareSheet(owner.page).getByRole('region', { name: 'People with access' })).toContainText('Gus');
-	expect((await created).ok()).toBe(true);
-	await owner.page.keyboard.press('Escape');
+	await shareWith(owner, guest);
 
-	await guest.page.reload();
-	const shared = sidebar(guest.page).getByRole('region', { name: 'Shared with me' });
-	await shared.getByRole('link', { name: new RegExp(project) }).click({ timeout: 15_000 });
+	const shared = await sharedWithMe(guest);
+	await shared.getByRole('link', { name: new RegExp(project) }).click({ timeout: 10_000 });
 	await guest.app.row(task).getByRole('button', { name: task, exact: true }).click();
 	const composer = guest.app.details().getByRole('textbox', { name: 'Add a comment' });
 	await composer.fill('Oat milk? https://example.com/oat');
@@ -164,7 +145,7 @@ test('a guest comments on a shared task, and the owner sees it unread until they
 	await expect(guest.app.row(task).locator('[data-comments="read"]')).toHaveText('1');
 
 	const unread = owner.app.row(task).locator('[data-comments="unread"]');
-	await expect(unread).toHaveText('1', { timeout: 15_000 });
+	await expect(unread).toHaveText('1', { timeout: 10_000 });
 	await expect(unread).toHaveAccessibleName('1 unread of 1 comments');
 	await owner.app.row(task).getByRole('button', { name: task, exact: true }).click();
 	const list = owner.app.details().getByRole('list', { name: 'Comment list' });
@@ -177,6 +158,43 @@ test('a guest comments on a shared task, and the owner sees it unread until they
 	await expect(owner.app.row(task).locator('[data-comments="read"]')).toHaveText('1');
 	await expect(owner.app.row(task).locator('[data-comments="unread"]')).toHaveCount(0);
 });
+test('an edit a guest made offline, after the owner made the share read only, goes back with a notice', async ({
+	browser,
+}) => {
+	const guest = await person(browser, 'Gus');
+	const { owner, project, task } = await ownerWithProject(browser);
+	await shareWith(owner, guest);
+	const shared = await sharedWithMe(guest);
+	await shared.getByRole('link', { name: new RegExp(project) }).click({ timeout: 10_000 });
+	await expect(guest.app.row(task)).toBeVisible();
+
+	await goOffline(guest.context);
+	const edited = `${task} by Gus`;
+	await guest.app.row(task).getByRole('button', { name: task, exact: true }).click();
+	const title = guest.app.details().getByRole('textbox', { name: 'Title' });
+	await title.fill(edited);
+	await title.press('Enter');
+	await guest.app.closeDetails();
+	await expect(guest.app.row(edited)).toBeVisible();
+
+	await owner.page.getByRole('button', { name: 'Share project' }).click();
+	const removed = owner.page.waitForResponse(r => r.url().includes('/api/shares') && r.request().method() === 'DELETE');
+	await shareSheet(owner.page).getByRole('button', { name: 'Remove Gus' }).click();
+	expect((await removed).ok()).toBe(true);
+	await shareSheet(owner.page).getByRole('button', { name: 'Close share' }).click();
+	await shareWith(owner, guest, 'Can view');
+
+	await goOnline(guest.context);
+	await expect(guest.page.getByRole('status').filter({ hasText: `Couldn’t save a change to “${edited}”` })).toBeVisible(
+		{
+			timeout: 15_000,
+		},
+	);
+	await expect(guest.app.row(task)).toBeVisible({ timeout: 10_000 });
+	await expect(guest.app.row(edited)).toHaveCount(0);
+	await expect(owner.app.row(task)).toBeVisible();
+});
+
 test('a public link opens read only for someone who is not signed in', async ({ browser }) => {
 	const { owner, project, task } = await ownerWithProject(browser);
 
@@ -186,7 +204,7 @@ test('a public link opens read only for someone who is not signed in', async ({ 
 	await expect(link).toHaveText(/\/s\/.+/);
 	const url = new URL((await link.textContent())!);
 
-	const visitor = await newContext(browser);
+	const visitor = await deviceContext(browser);
 	const page = await visitor.newPage();
 	await page.goto(url.pathname);
 	await expect(page.getByRole('heading', { level: 1, name: project })).toBeVisible({ timeout: 15_000 });

@@ -54,8 +54,8 @@ export const dueSchema = z.object({ date: dateKeySchema, time: timeOfDaySchema.n
 export type Due = z.infer<typeof dueSchema>;
 
 /**
- * The longest repeat. Larger intervals stepped dates past 9999-12-31, or to `NaN`, which the server rejects along with
- * the rest of the device's outbox, and overflowed Swift's month math.
+ * The longest repeat. Larger intervals stepped dates past 9999-12-31, or to `NaN`, which the server rejects, and
+ * overflowed Swift's month math.
  */
 export const MAX_RECURRENCE_INTERVAL = 999;
 

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { labelSchema, projectSchema, taskSchema } from './sync/protocol.ts';
+import { labelSchema, projectSchema, taskSchema } from './model.ts';
 import type { Label, Project, Task } from './task.ts';
 
 /** A half-open `[start, end)` span of the original text. */
@@ -112,7 +112,7 @@ function mergeRanges(ranges: Range[]): Range[] {
 	return out;
 }
 
-/** Splits a query into folded terms. Every term must match somewhere for a result to count. */
+/** Every term must match somewhere for a result to count. */
 export function searchTerms(query: string): string[] {
 	return fold(query.trim()).text.split(/\s+/).filter(Boolean);
 }

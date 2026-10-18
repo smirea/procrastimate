@@ -1,29 +1,25 @@
 import { z } from 'zod';
-import { apiTokensRowSchema, peopleRowSchema, sharesRowSchema } from './db/generated/zod.ts';
-import {
-	commentSchema,
-	labelSchema,
-	projectSchema,
-	sectionSchema,
-	shareTargetSchema,
-	taskSchema,
-} from './sync/protocol.ts';
+import { apiTokensRowSchema, sharesRowSchema } from './db/generated/zod.ts';
+import { commentSchema, labelSchema, projectSchema, sectionSchema, taskSchema } from './model.ts';
 import { labelColorSchema } from './label-colors.ts';
-import { clientStampSchema, roleSchema, savedPlaceSchema, shareTargetKindSchema } from './values.ts';
+import { actorKindSchema, clientStampSchema, roleSchema, savedPlaceSchema, shareTargetKindSchema } from './values.ts';
 
 /**
- * Sharing's shapes. A space is one user's tasks, projects, sections, and labels, served by the `Account` object named by
+ * Sharing's shapes. A space is one user's tasks, projects, sections, and labels, whose rows carry
  * that user's id. The owner shares the whole space, a project, a label, or a task, with a person or as a public
  * link. See `docs/decisions/sharing.md`.
  */
 
-export const personSchema = peopleRowSchema.pick({ id: true, name: true, kind: true, ownerId: true }).meta({
-	id: 'Person',
-	description: 'A human, or an AI account with the human who owns it.',
-});
+/** A Better Auth user as the clients name people: the server reads it from the `user` table. */
+export const personSchema = z
+	.object({ id: z.string(), name: z.string(), kind: actorKindSchema, ownerId: z.string().nullable() })
+	.meta({ id: 'Person', description: 'A human, or an AI account with the human who owns it.' });
 export type Person = z.infer<typeof personSchema>;
 
-export { shareTargetSchema, type ShareTarget } from './sync/protocol.ts';
+export const shareTargetSchema = z
+	.object({ kind: shareTargetKindSchema, id: z.string() })
+	.meta({ id: 'ShareTarget', description: 'What a share reaches. `id` is empty for the whole space.' });
+export type ShareTarget = z.infer<typeof shareTargetSchema>;
 
 export const shareAudienceSchema = z
 	.discriminatedUnion('kind', [

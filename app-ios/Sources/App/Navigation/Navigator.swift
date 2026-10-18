@@ -103,27 +103,14 @@ final class Navigator {
         }
     }
 
-    /// Swaps a route in every tab's stack and in the pins, or drops it from the stacks when `next` is nil. A pin with
-    /// no `next` stays, hidden, and its tab moves to the first other pin.
-    func replace(_ route: Route, with next: Route?) {
+    /// Drops a route that is gone from every tab's stack. Its pin stays, hidden, and when its tab is open the first
+    /// other pin opens.
+    func drop(_ route: Route) {
         for (tab, path) in paths where path.contains(route) {
-            paths[tab] = path.compactMap { $0 == route ? next : $0 }
+            paths[tab] = path.filter { $0 != route }
         }
-        guard let pin = pins.first(where: { $0.route == route }) else { return }
-        let survivor: Pin? = switch next {
-        case let .project(id)?: .project(id: id)
-        case let .label(id)?: .label(id: id)
-        default: nil
-        }
-        let wasOpen = tab == .pin(pin)
-        let updated = pins.following(pin, to: survivor)
-        setPins(updated)
-        guard wasOpen else { return }
-        if let survivor, updated.contains(survivor) {
-            tab = .pin(survivor)
-        } else {
-            tab = updated.first { $0 != pin }.map(AppTab.pin) ?? .browse
-        }
+        guard let pin = pins.first(where: { $0.route == route }), tab == .pin(pin) else { return }
+        tab = pins.first { $0 != pin }.map(AppTab.pin) ?? .browse
     }
 
     func showSearch(query: String = "") {

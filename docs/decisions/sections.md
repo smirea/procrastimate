@@ -5,7 +5,7 @@ Todoist-style sections: named headings inside one project that group its tasks.
 ## Model
 
 - **A synced entity of its own.** A section is `{ id, projectId, name, order, createdAt, sourceKey? }`, its own sync kind (`section`) and its own `sections` table, with a clock per field like every other kind. Sections are not a JSON list on the project, because arrays are single last-writer-wins fields here: two devices adding or renaming sections offline would drop one device's change, and a stale list could bring back a deleted section.
-- **Order is fractional.** Sections sort by `order`, then `createdAt`, then `id`, like subtasks. Moving one writes only its own `order` (`moveSection`, built on `moveOrders` in `shared/sync/order.ts`). A new section goes last in its project.
+- **Order is fractional.** Sections sort by `order`, then `createdAt`, then `id`, like subtasks. Moving one writes only its own `order` (`moveSection`, built on `moveOrders` in `shared/order.ts`). A new section goes last in its project.
 - **A task's `sectionId`.** A top-level task can sit in one section of its own project. Subtasks never have a section: they show under their parent, so moving a parent never rewrites its subtree. Tasks inside a section keep the project view's usual sort (due, then priority, then creation); there is no manual task order.
 - **Names are unique within a project, ignoring case**, because `/name` in quick add must resolve to one section. `addSection` with a taken name returns the existing section, and `renameSection` refuses a taken name. The same name may repeat across projects.
 - **Swift calls it `ProjectSection`.** SwiftUI already has `Section`, so the schema's id is `ProjectSection` and Core aliases `ProjectSection = API.ProjectSection`. TypeScript keeps `Section`, as it keeps `Task` where Swift has `TaskItem`.
@@ -21,7 +21,7 @@ Todoist-style sections: named headings inside one project that group its tasks.
 
 ## Concurrent edits
 
-`fixups` repairs, in this order: project merges carry their sections to the surviving project, and a section whose project is gone is deleted. Sections then merge by `sourceKey` (one Todoist import on two devices), then by name within a project, into the oldest. Last, a task keeps its `sectionId` only while it is top level and the section is a live one of its project; otherwise it stays in its project in no section. So a task moved into a section that another device deleted survives, and a task moved to another project leaves its old section. The convergence fuzz adds, renames, moves, and deletes sections and checks these invariants.
+The server repairs nothing. Readers resolve what concurrent edits leave behind (`resolveDangling` in `shared/dangling.ts`, see [Sync](sync.md)): a section whose project is gone is dropped, and a task keeps its `sectionId` only while it is top level and the section is a live one of its project; otherwise it reads as in its project in no section. So a task moved into a section that another device deleted survives, undoing that delete puts it back in the section, and a task moved to another project leaves its old section. Two devices that add one section name to a project offline keep both; nothing merges them.
 
 ## Views
 

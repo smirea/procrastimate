@@ -44,7 +44,7 @@ struct SharedLinkSheet: View {
         do {
             let shared = try await APIClient.send(API.Endpoints.SharedView.self, NoInput(), query: ["token": token], token: nil)
             store.rememberPeople([shared.owner])
-            if store.snapshot.spaces[shared.owner.id] != nil || shared.owner.id == Session.userID,
+            if store.spaces[shared.owner.id] != nil || shared.owner.id == Session.userID,
                navigator.openShared(shared.target, in: store) {
                 return
             }
@@ -86,7 +86,6 @@ private struct SharedList: View {
                 .textCase(nil)
                 .padding(.bottom, 8)
             }
-            // A shared project shows under its sections, like the project screen.
             ForEach(sectionGroups, id: \.section.id) { group in
                 Section {
                     ForEach(group.tasks) { task in
@@ -121,7 +120,6 @@ private struct SharedList: View {
         }
     }
 
-    /// Each task's open subtasks, leaving out any the list already shows as rows of their own, as a task share does.
     private func pendingTitles(listed: [TaskItem]) -> [String: [String]] {
         let shown = Set(listed.map(\.id))
         return Subtasks.groupChildren(view.tasks).mapValues { children in
@@ -137,7 +135,6 @@ private struct SharedList: View {
         projectGroups.dropFirst().compactMap { group in group.section.map { ($0, group.tasks) } }
     }
 
-    /// The shared task and its open subtasks, the open tasks in no section of a project, or the open tasks a label holds.
     private var rows: [TaskItem] {
         let zone = store.timeZone
         switch view.target.kind {

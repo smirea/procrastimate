@@ -1,14 +1,17 @@
-import type { ShareRow } from './db/schema.ts';
-import { groupChildren } from './subtasks.ts';
-import { applyPatch } from './sync/apply.ts';
-import { DEFAULT_SETTINGS, type FieldsByKind, type Op, type Snapshot, type Task } from './sync/protocol.ts';
+import type { Entities, Links } from './dangling.ts';
+import type { AccessRow, ShareRow } from './db/schema.ts';
+import type { FieldsByKind } from './model.ts';
+import type { RowWrite } from './rows.ts';
 
 /**
- * What a guest reaches in a space, from the owner's shares to them. Server only, never ported: the client only ever
- * sees the filtered snapshot. See `docs/decisions/sharing.md`.
+ * What a guest reaches in a space: `scopeOf` computes it from the owner's shares and rows, and the server stores the
+ * result as `access` rows, which `guestRefusal` then checks a guest's write against. Server only, never ported:
+ * clients see only the rows the `access` table lets PowerSync stream them. See `docs/decisions/sharing.md`.
  */
 
 export type Grant = Pick<ShareRow, 'targetKind' | 'targetId' | 'role'>;
+
+type LinkedTask = Links['tasks'][number];
 
 /**
  * A whole-space edit share makes its holder a manager of the space. Only AI accounts can hold one; `shares.create`
@@ -30,10 +33,10 @@ export type Scope = {
 	sections: ReadonlySet<string>;
 };
 
-export function scopeOf(snapshot: Snapshot, grants: readonly Grant[]): Scope {
+export function scopeOf(snapshot: Links, grants: readonly Grant[]): Scope {
 	const byId = new Map(snapshot.tasks.map(task => [task.id, task]));
-	const children = groupChildren(snapshot.tasks);
-	const rootProject = (task: Task): string | null => {
+	const children = Map.groupBy(snapshot.tasks, task => task.parentId);
+	const rootProject = (task: LinkedTask): string | null => {
 		let current = task;
 		const seen = new Set<string>();
 		while (current.parentId && !seen.has(current.id)) {
@@ -44,7 +47,7 @@ export function scopeOf(snapshot: Snapshot, grants: readonly Grant[]): Scope {
 		}
 		return current.projectId;
 	};
-	const reaches = ({ targetKind, targetId }: Grant, task: Task) => {
+	const reaches = ({ targetKind, targetId }: Grant, task: LinkedTask) => {
 		switch (targetKind) {
 			case 'space':
 				return true;
@@ -55,6 +58,10 @@ export function scopeOf(snapshot: Snapshot, grants: readonly Grant[]): Scope {
 			case 'task':
 				return task.id === targetId;
 		}
+	};
+	const live = {
+		projects: new Set(snapshot.projects.map(project => project.id)),
+		labels: new Set(snapshot.labels.map(label => label.id)),
 	};
 	const tasks = new Set<string>();
 	const editable = new Set<string>();
@@ -68,8 +75,8 @@ export function scopeOf(snapshot: Snapshot, grants: readonly Grant[]): Scope {
 			for (const set of into) set.add(task.id);
 			queue.push(...(children.get(task.id) ?? []));
 		}
-		if (grant.targetKind === 'project') projects.add(grant.targetId);
-		if (grant.targetKind === 'label') labels.add(grant.targetId);
+		if (grant.targetKind === 'project' && live.projects.has(grant.targetId)) projects.add(grant.targetId);
+		if (grant.targetKind === 'label' && live.labels.has(grant.targetId)) labels.add(grant.targetId);
 		if (grant.targetKind === 'space' && grant.role === 'edit') {
 			for (const { id } of snapshot.projects) projects.add(id);
 			for (const { id } of snapshot.labels) labels.add(id);
@@ -84,149 +91,78 @@ export function scopeOf(snapshot: Snapshot, grants: readonly Grant[]): Scope {
 	return { tasks, editable, projects, labels, sections };
 }
 
-/**
- * The space as the guest sees it. Comments follow their task. Settings and read markers are the owner's own, so the
- * guest gets defaults and none.
- */
-export function filterSnapshot(snapshot: Snapshot, scope: Scope): Snapshot {
+/** The tree as the guest sees it. */
+export function filterTree(tree: Entities, scope: Scope): Entities {
 	return {
-		tasks: snapshot.tasks.filter(task => scope.tasks.has(task.id)),
-		projects: snapshot.projects.filter(project => scope.projects.has(project.id)),
-		sections: snapshot.sections.filter(section => scope.sections.has(section.id)),
-		labels: snapshot.labels.filter(label => scope.labels.has(label.id)),
-		comments: snapshot.comments.filter(comment => scope.tasks.has(comment.taskId)),
-		reads: [],
-		settings: { ...DEFAULT_SETTINGS },
+		tasks: tree.tasks.filter(task => scope.tasks.has(task.id)),
+		projects: tree.projects.filter(project => scope.projects.has(project.id)),
+		sections: tree.sections.filter(section => scope.sections.has(section.id)),
+		labels: tree.labels.filter(label => scope.labels.has(label.id)),
 	};
 }
 
-function stableJson(value: unknown): string {
-	if (Array.isArray(value)) return `[${value.map(stableJson).join(',')}]`;
-	if (value && typeof value === 'object') {
-		const entries = Object.entries(value as Record<string, unknown>)
-			.filter(([, v]) => v !== undefined)
-			.sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
-			.map(([k, v]) => `${JSON.stringify(k)}:${stableJson(v)}`);
-		return `{${entries.join(',')}}`;
-	}
-	return JSON.stringify(value);
-}
+/** The guest's `access` rows in one space, as `guestRefusal` reads them. */
+export type GuestRows = readonly Pick<AccessRow, 'kind' | 'entityId' | 'role'>[];
 
-/** cyrb53 over the stable JSON, so the hash is the same whichever process computes it. */
-export function scopeHash(view: unknown): string {
-	const text = stableJson(view);
-	let h1 = 0xdeadbeef;
-	let h2 = 0x41c6ce57;
-	for (let i = 0; i < text.length; i++) {
-		const ch = text.charCodeAt(i);
-		h1 = Math.imul(h1 ^ ch, 2654435761);
-		h2 = Math.imul(h2 ^ ch, 1597334677);
-	}
-	h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
-	h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
-	return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(16);
-}
+type TaskFields = Partial<FieldsByKind['task']>;
+type CommentFields = Partial<FieldsByKind['comment']>;
+
+const roleOf = (rows: GuestRows, kind: AccessRow['kind'], id: string) =>
+	rows.find(row => row.kind === kind && row.entityId === id)?.role;
 
 /**
- * A guest's op may only point at what the guest can already see: a parent it may edit, and projects, sections, and
- * labels in its view, so it cannot graft its task onto the owner's private tree or pull hidden names into its snapshot. It may
- * not set `sourceKey` either, because fixups merge tasks by it and would tombstone the owner's matching task.
+ * A guest's write may only point at what the guest can already see: a parent it may edit, and projects, sections, and
+ * labels among its rows, so it cannot graft its task onto the owner's private tree or pull hidden names into its
+ * view. It may not set `sourceKey` either, which only imports write.
  */
-function staysInScope(fields: Partial<FieldsByKind['task']>, scope: Scope): boolean {
+function pointsOutside(fields: TaskFields, rows: GuestRows): boolean {
 	const { parentId, projectId, sectionId, labelIds, sourceKey } = fields;
-	if (sourceKey !== undefined && sourceKey !== null) return false;
-	if (parentId && !scope.editable.has(parentId)) return false;
-	if (projectId && !scope.projects.has(projectId)) return false;
-	if (sectionId && !scope.sections.has(sectionId)) return false;
-	return (labelIds ?? []).every(id => scope.labels.has(id));
+	if (sourceKey !== undefined && sourceKey !== null) return true;
+	if (parentId && roleOf(rows, 'task', parentId) !== 'edit') return true;
+	if (projectId && !roleOf(rows, 'project', projectId)) return true;
+	if (sectionId && !roleOf(rows, 'section', sectionId)) return true;
+	return (labelIds ?? []).some(id => !roleOf(rows, 'label', id));
 }
 
-/**
- * A comment needs its task editable: a new one names such a task, and an existing one must be `actor`'s own and stay
- * on its task. So a view-only guest reads the comments but cannot write one. The author of a new comment is `actor`,
- * which the server stamps again when it writes it.
- */
-function admitComment(working: Snapshot, scope: Scope, op: Op, actor: string): Op | null {
-	const existing = working.comments.find(comment => comment.id === op.id);
-	// The intersection type does not narrow `fields` by `op.kind`, which the caller checked.
-	const fields = op.fields as Partial<FieldsByKind['comment']> & { deleted?: boolean };
-	const { taskId } = fields;
-	if (existing) {
-		const own = existing.authorId === actor && scope.editable.has(existing.taskId);
-		return own && (taskId === undefined || taskId === existing.taskId) ? op : null;
-	}
-	if (fields.deleted !== false || taskId === undefined || !scope.editable.has(taskId)) return null;
-	return { ...op, fields: { ...fields, authorId: actor } } as Op;
+/** A new task lands where the guest may add: under an editable parent, or in a project or label shared to edit. */
+function mayAdd(fields: TaskFields, rows: GuestRows): boolean {
+	const { parentId, projectId, labelIds } = fields;
+	if (parentId) return roleOf(rows, 'task', parentId) === 'edit';
+	if (projectId && roleOf(rows, 'project', projectId) === 'edit') return true;
+	return (labelIds ?? []).some(id => roleOf(rows, 'label', id) === 'edit');
 }
 
+/** What the server knows of a stored comment a guest writes to, read with the row's owner. */
+export type StoredComment = Pick<FieldsByKind['comment'], 'taskId' | 'authorId'>;
+
 /**
- * Which of a guest's ops may be written, checked in order against a working copy the admitted ops update. A guest
- * writes tasks and comments only: an existing task must be editable before and after the op, a new one editable
- * after it (under an editable parent, or in an edit-shared project or label). A delete only needs the task editable
- * before. Comments follow `admitComment`. Projects, sections, and labels are only a manager's to write, never with a
- * `sourceKey`, and read markers and settings are never a guest's.
+ * Why a guest's write is refused, or null when it may run. The rows are the guest's `access` rows in the space the
+ * write names, and they decide everything: an existing task needs an `edit` row, a new task a place the guest may add
+ * to, and every project, section, label, and parent the write names must be among the rows. A comment needs an
+ * editable task, and only its author edits or deletes it; `stored` is the comment as the server holds it, or
+ * undefined for one it does not. Projects, sections, labels, read markers, and settings are never a guest's to
+ * write: managers are AI accounts, which act through the agent API with the owner's own rights.
  */
-export function admit(snapshot: Snapshot, grants: readonly Grant[], ops: readonly Op[], actor: string) {
-	const admitted: Op[] = [];
-	const refused: Op[] = [];
-	let working = snapshot;
-	let scope = scopeOf(working, grants);
-	const manager = managesSpace(grants);
-	for (const op of ops) {
-		if (op.kind === 'project' || op.kind === 'section' || op.kind === 'label') {
-			const { sourceKey } = op.fields as { sourceKey?: string | null };
-			if (manager && (sourceKey === undefined || sourceKey === null)) {
-				working = applyPatch(working, op);
-				scope = scopeOf(working, grants);
-				admitted.push(op);
-			} else {
-				refused.push(op);
-			}
-			continue;
-		}
-		if (op.kind === 'comment') {
-			const allowed = admitComment(working, scope, op, actor);
-			if (allowed) {
-				working = applyPatch(working, allowed);
-				admitted.push(op);
-			} else {
-				refused.push(op);
-			}
-			continue;
-		}
-		if (op.kind !== 'task') {
-			refused.push(op);
-			continue;
-		}
-		const exists = working.tasks.some(task => task.id === op.id);
-		if (exists && !scope.editable.has(op.id)) {
-			refused.push(op);
-			continue;
-		}
-		if (op.fields.deleted === true) {
-			if (!exists) {
-				refused.push(op);
-				continue;
-			}
-			working = applyPatch(working, op);
-			scope = scopeOf(working, grants);
-			admitted.push(op);
-			continue;
-		}
-		// `op.kind` is checked above; the intersection type does not narrow `fields` with it.
-		if (!staysInScope(op.fields as Partial<FieldsByKind['task']>, scope)) {
-			refused.push(op);
-			continue;
-		}
-		const next = applyPatch(working, op);
-		const nextScope = scopeOf(next, grants);
-		if (!nextScope.editable.has(op.id)) {
-			refused.push(op);
-			continue;
-		}
-		working = next;
-		scope = nextScope;
-		admitted.push(op);
+export function guestRefusal(rows: GuestRows, write: RowWrite, actor: string, stored?: StoredComment): string | null {
+	if (write.kind === 'task') {
+		const role = roleOf(rows, 'task', write.id);
+		if (write.op === 'delete') return role === 'edit' ? null : 'Not editable in this share';
+		const fields = (write.values ?? {}) as TaskFields;
+		if (role !== undefined && role !== 'edit') return 'Not editable in this share';
+		if (role === undefined && !mayAdd(fields, rows)) return 'Not editable in this share';
+		return pointsOutside(fields, rows) ? 'Not editable in this share' : null;
 	}
-	return { admitted, refused };
+	if (write.kind === 'comment') {
+		const { taskId } = (write.values ?? {}) as CommentFields;
+		if (!stored) {
+			if (write.op !== 'put' || !taskId) return 'Not editable in this share';
+			return roleOf(rows, 'task', taskId) === 'edit' ? null : 'Not editable in this share';
+		}
+		if (stored.authorId !== actor) {
+			return write.op === 'delete' ? 'Only the author can delete a comment' : 'Only the author can edit a comment';
+		}
+		if (roleOf(rows, 'task', stored.taskId) !== 'edit') return 'Not editable in this share';
+		return taskId === undefined || taskId === stored.taskId ? null : 'Not editable in this share';
+	}
+	return 'Not editable in this share';
 }

@@ -2,8 +2,8 @@ import * as Sentry from '@sentry/sveltekit';
 import { SENTRY_TUNNEL_PATH } from 'shared/sentry.ts';
 
 /**
- * The browser's one Sentry module. `vite.config.ts` bakes the target into the build, null wherever no
- * `SENTRY_ENVIRONMENT` is set, and then nothing is initialized and every call here does nothing.
+ * `vite.config.ts` bakes the target into the build, null wherever no `SENTRY_ENVIRONMENT` is set, and then nothing is
+ * initialized and every call here does nothing.
  */
 
 export function initSentry() {
@@ -41,15 +41,14 @@ export const reportWarning = (message: string, extra?: Record<string, unknown>) 
 export const handleError = Sentry.handleErrorWithSentry();
 
 /**
- * `?sentry-smoke` on any page, once the session has named the user: the Worker and the `Account` object throw from debug
- * routes, then this throws, so each project gets an event in one trace. `scripts/sentry-check.ts` reads them back.
+ * `?sentry-smoke` on any page, once the session has named the user: the Worker throws from a debug route, then this
+ * throws, so each project gets an event in one trace. `scripts/sentry-check.ts` reads them back.
  */
 export async function runSentrySmoke() {
 	if (!new URL(location.href).searchParams.has('sentry-smoke')) return;
 	// Loaded here, so this module, which `hooks.client.ts` imports first, does not pull in the store.
 	const { api } = await import('./api.ts');
 	await api.debug.error().catch(() => undefined);
-	await api.debug.accountError().catch(() => undefined);
 	throwSentrySmoke();
 }
 

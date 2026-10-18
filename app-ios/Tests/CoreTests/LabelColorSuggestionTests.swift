@@ -10,7 +10,7 @@ import Testing
     }
 
     @Test func aNewLabelKeepsTheDefaultWhenTheModelHasNoAnswer() async {
-        let store = Store(file: nil, clock: clock)
+        let store = recordingStore(clock: clock).0
         let label = store.addLabel("tom")
         store.labelColorSuggester = { _ in nil }
         await store.suggestColor(for: label)
@@ -18,17 +18,16 @@ import Testing
     }
 
     @Test func aNewLabelTakesTheSuggestedColorAndSyncsIt() async {
-        let store = Store(file: nil, clock: clock)
+        let (store, written) = recordingStore(clock: clock)
         let label = store.addLabel("tom")
         store.labelColorSuggester = { _ in .pink }
         await store.suggestColor(for: label)
         #expect(color(store, "tom") == .pink)
-        let fields = store.snapshot.sync?.outbox.last { $0.kind == .label && $0.id == label.id }?.fields
-        #expect(fields?["color"] == .string("pink"))
+        #expect(written.writes.last == patch(.label, label.id, ["color": .string("pink")]))
     }
 
     @Test func aColorPickedWhileTheModelThinksWins() async {
-        let store = Store(file: nil, clock: clock)
+        let store = recordingStore(clock: clock).0
         let label = store.addLabel("tom")
         store.labelColorSuggester = { _ in
             store.setLabelColor(label.id, .orange)
@@ -39,7 +38,7 @@ import Testing
     }
 
     @Test func aColorPickedAndPutBackWhileTheModelThinksWins() async {
-        let store = Store(file: nil, clock: clock)
+        let store = recordingStore(clock: clock).0
         let label = store.addLabel("tom")
         store.labelColorSuggester = { _ in
             store.setLabelColor(label.id, .orange)
@@ -51,7 +50,7 @@ import Testing
     }
 
     @Test func aRenameWhileTheModelThinksKeepsTheColor() async {
-        let store = Store(file: nil, clock: clock)
+        let store = recordingStore(clock: clock).0
         let label = store.addLabel("tom")
         store.labelColorSuggester = { _ in
             store.renameLabel(label.id, "bills")
@@ -62,7 +61,7 @@ import Testing
     }
 
     @Test func aLabelDeletedWhileTheModelThinksStaysDeleted() async {
-        let store = Store(file: nil, clock: clock)
+        let store = recordingStore(clock: clock).0
         let label = store.addLabel("tom")
         store.labelColorSuggester = { _ in
             store.deleteLabel(label.id)

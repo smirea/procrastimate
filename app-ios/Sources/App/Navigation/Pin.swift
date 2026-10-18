@@ -57,7 +57,7 @@ extension Store {
     /// Every pinnable screen in Browse's order, leaving out the ones already pinned.
     func pinGroups(excluding pinned: [Pin], today: DateKey) -> [PinGroup] {
         let taken = Set(pinned.map(\.key))
-        let shared = Browse.sharedEntries(sharedSpaces).compactMap { entry -> Pin? in
+        let shared = SpaceRouting.sharedEntries(sharedSpaces).compactMap { entry -> Pin? in
             switch entry.kind {
             case .project: .project(id: entry.id)
             case .label: .label(id: entry.id)

@@ -1,16 +1,10 @@
 import type { Browser, BrowserContext, Page } from '@playwright/test';
-import { App, expect, NOW, signInAccount, test } from './fixtures.ts';
-
-/**
- * Task images: attach by picker, paste, or drop; thumbnails in details, a count on the row, the full-screen viewer,
- * delete with undo, and the bytes reaching another device, also when the image was added offline.
- */
+import { App, deviceContext, expect, goOffline, goOnline, NOW, signInAccount, test } from './fixtures.ts';
 
 type Device = { app: App; page: Page; context: BrowserContext };
 
 const unique = (name: string) => `${name} ${crypto.randomUUID().slice(0, 8)}`;
 
-/** A PNG drawn in the page, `width` by `height`, as a file Playwright can pick. */
 async function png(page: Page, width: number, height: number) {
 	const base64 = await page.evaluate(
 		([w, h]) => {
@@ -58,10 +52,8 @@ test('an image picked in details shows as a thumbnail and on the row, opens full
 	await expect(thumbnails(app).first().locator('img')).toHaveAttribute('src', /^blob:/);
 	await expect(app.row(title).getByRole('img', { name: '1 image' })).toBeVisible();
 
-	const stored = await page.evaluate(() => {
-		const raw = JSON.parse(localStorage.getItem('procrastimate')!) as { tasks: { images: unknown[] }[] };
-		return raw.tasks.flatMap(task => task.images);
-	});
+	const id = await app.taskId(title);
+	const stored = await page.evaluate(id => window.procrastimate.entity('task', id)?.images, id);
 	expect(stored).toEqual([{ id: expect.any(String), width: 2048, height: 1365 }]);
 
 	await thumbnails(app).first().click();
@@ -116,8 +108,7 @@ test('pasting or dropping an image into details attaches it', async ({ app, page
 });
 
 async function device(browser: Browser): Promise<Device> {
-	const { baseURL, timezoneId, viewport } = test.info().project.use;
-	const context = await browser.newContext({ baseURL, timezoneId, viewport });
+	const context = await deviceContext(browser);
 	await signInAccount(context);
 	const page = await context.newPage();
 	await page.clock.setFixedTime(NOW);
@@ -126,34 +117,25 @@ async function device(browser: Browser): Promise<Device> {
 	return { app: new App(page), page, context };
 }
 
-const focus = (page: Page) => page.evaluate(() => window.dispatchEvent(new Event('focus')));
-
 test('an image added offline uploads when the network returns and shows on the other device', async ({ browser }) => {
 	const a = await device(browser);
 	const b = await device(browser);
 	const title = unique('Broken hinge');
 	await a.app.add(title);
-	await focus(b.page);
 	await expect(b.app.row(title)).toBeVisible({ timeout: 10_000 });
 
-	const offline = (route: { abort: (reason: string) => Promise<void> }) => route.abort('internetdisconnected');
-	await a.context.route('**/api/sync', offline);
-	await a.context.route('**/api/images**', offline);
+	await goOffline(a.context);
 	await openDetails(a.app, title);
 	await a.app
 		.details()
 		.locator('input[type="file"]')
 		.setInputFiles(await png(a.page, 1200, 900));
 	await expect(thumbnails(a.app)).toHaveCount(1);
-	await focus(a.page);
-	await focus(b.page);
+	await expect.poll(() => a.app.pending()).toBeGreaterThan(0);
 	await expect(b.app.row(title).getByRole('img', { name: '1 image' })).toHaveCount(0);
 
-	await a.context.unroute('**/api/sync', offline);
-	await a.context.unroute('**/api/images**', offline);
-	await focus(a.page);
-	await focus(b.page);
-	await expect(b.app.row(title).getByRole('img', { name: '1 image' })).toBeVisible({ timeout: 10_000 });
+	await goOnline(a.context);
+	await expect(b.app.row(title).getByRole('img', { name: '1 image' })).toBeVisible({ timeout: 15_000 });
 	await openDetails(b.app, title);
 	await expect(thumbnails(b.app).first().locator('img')).toHaveAttribute('src', /^blob:/, { timeout: 10_000 });
 	const size = await thumbnails(b.app)

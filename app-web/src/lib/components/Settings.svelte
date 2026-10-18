@@ -11,7 +11,6 @@
 	import { push } from '../push.svelte.ts';
 	import { session } from '../session.svelte.ts';
 	import { store } from '../store.svelte.ts';
-	import { sync } from '../sync.svelte.ts';
 	import { motion } from '../ui.svelte.ts';
 	import { readBackupZip } from '../todoist-import.ts';
 
@@ -31,7 +30,6 @@
 
 	function deleteAll() {
 		store.deleteAll();
-		void sync.syncNow();
 		confirmingDelete = false;
 	}
 

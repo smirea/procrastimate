@@ -1,0 +1,1727 @@
+{
+	"module": "local-rows",
+	"timeZone": "America/New_York",
+	"cases": [
+		{
+			"fn": "replayReads",
+			"test": "LocalRows › splits rows by owner and sorts them by creation, keeping read markers only for the user",
+			"input": [
+				"me",
+				[
+					{
+						"access": {
+							"ids": "all",
+							"rows": [
+								{
+									"entityId": "hers",
+									"grantee": "me",
+									"id": "me:task:hers",
+									"kind": "task",
+									"owner": "ann",
+									"role": "view"
+								}
+							]
+						},
+						"comment": {
+							"ids": "all",
+							"rows": []
+						},
+						"label": {
+							"ids": "all",
+							"rows": []
+						},
+						"project": {
+							"ids": "all",
+							"rows": [
+								{
+									"createdAt": 1,
+									"id": "groceries",
+									"name": "groceries",
+									"order": 0,
+									"sourceKey": null,
+									"userId": "ann"
+								}
+							]
+						},
+						"read": {
+							"ids": "all",
+							"rows": [
+								{
+									"id": "hers",
+									"readAt": 4,
+									"sourceKey": null,
+									"userId": "me"
+								},
+								{
+									"id": "theirs",
+									"readAt": 5,
+									"sourceKey": null,
+									"userId": "ann"
+								}
+							]
+						},
+						"section": {
+							"ids": "all",
+							"rows": []
+						},
+						"settings": {
+							"ids": "all",
+							"rows": []
+						},
+						"task": {
+							"ids": "all",
+							"rows": [
+								{
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 9,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"id": "later",
+									"images": [],
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"sourceKey": null,
+									"title": "later",
+									"userId": "me"
+								},
+								{
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 2,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"id": "hers",
+									"images": [],
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"sourceKey": null,
+									"title": "hers",
+									"userId": "ann"
+								},
+								{
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 1,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"id": "first",
+									"images": [],
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"sourceKey": null,
+									"title": "first",
+									"userId": "me"
+								}
+							]
+						}
+					}
+				]
+			],
+			"output": [
+				{
+					"own": {
+						"comments": [],
+						"labels": [],
+						"projects": [],
+						"reads": [
+							{
+								"id": "hers",
+								"readAt": 4
+							}
+						],
+						"sections": [],
+						"tasks": [
+							{
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 1,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"id": "first",
+								"images": [],
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "first"
+							},
+							{
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 9,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"id": "later",
+								"images": [],
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "later"
+							}
+						]
+					},
+					"settings": null,
+					"spaces": {
+						"ann": {
+							"access": [
+								{
+									"entityId": "hers",
+									"grantee": "me",
+									"id": "me:task:hers",
+									"kind": "task",
+									"owner": "ann",
+									"role": "view"
+								}
+							],
+							"data": {
+								"comments": [],
+								"labels": [],
+								"projects": [
+									{
+										"createdAt": 1,
+										"id": "groceries",
+										"name": "groceries",
+										"order": 0
+									}
+								],
+								"reads": [],
+								"sections": [],
+								"tasks": [
+									{
+										"completedAt": null,
+										"completedBy": null,
+										"createdAt": 2,
+										"createdBy": null,
+										"due": null,
+										"event": null,
+										"id": "hers",
+										"images": [],
+										"labelIds": [],
+										"lastCompletedAt": null,
+										"location": null,
+										"notes": "",
+										"order": 0,
+										"parentId": null,
+										"priority": 4,
+										"projectId": null,
+										"recurrence": null,
+										"reminders": [],
+										"sectionId": null,
+										"title": "hers"
+									}
+								]
+							}
+						}
+					},
+					"touched": [
+						"ann",
+						"me"
+					]
+				}
+			]
+		},
+		{
+			"fn": "replayReads",
+			"test": "LocalRows › reads the own settings row, and drops a row that does not parse instead of the load",
+			"input": [
+				"me",
+				[
+					{
+						"access": {
+							"ids": "all",
+							"rows": []
+						},
+						"comment": {
+							"ids": "all",
+							"rows": []
+						},
+						"label": {
+							"ids": "all",
+							"rows": []
+						},
+						"project": {
+							"ids": "all",
+							"rows": []
+						},
+						"read": {
+							"ids": "all",
+							"rows": []
+						},
+						"section": {
+							"ids": "all",
+							"rows": []
+						},
+						"settings": {
+							"ids": "all",
+							"rows": [
+								{
+									"dictation": "elevenlabs",
+									"id": "settings",
+									"quickAddButtons": [
+										"date",
+										"priority",
+										"reminders",
+										"subtasks"
+									],
+									"timeZone": null,
+									"userId": "me"
+								}
+							]
+						},
+						"task": {
+							"ids": "all",
+							"rows": [
+								{
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 1,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"id": "kept",
+									"images": [],
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"sourceKey": null,
+									"title": "kept",
+									"userId": "me"
+								},
+								{
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 1,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"id": "broken",
+									"images": [],
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": "urgent",
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"sourceKey": null,
+									"title": "broken",
+									"userId": "me"
+								}
+							]
+						}
+					}
+				]
+			],
+			"output": [
+				{
+					"own": {
+						"comments": [],
+						"labels": [],
+						"projects": [],
+						"reads": [],
+						"sections": [],
+						"tasks": [
+							{
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 1,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"id": "kept",
+								"images": [],
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "kept"
+							}
+						]
+					},
+					"settings": {
+						"dictation": "elevenlabs",
+						"quickAddButtons": [
+							"date",
+							"priority",
+							"reminders",
+							"subtasks"
+						],
+						"timeZone": null
+					},
+					"spaces": {},
+					"touched": [
+						"me"
+					]
+				}
+			]
+		},
+		{
+			"fn": "replayReads",
+			"test": "LocalRows › an owner who shares nothing visible yet still has a space",
+			"input": [
+				"me",
+				[
+					{
+						"access": {
+							"ids": "all",
+							"rows": [
+								{
+									"entityId": "p",
+									"grantee": "me",
+									"id": "me:project:p",
+									"kind": "project",
+									"owner": "ann",
+									"role": "edit"
+								}
+							]
+						},
+						"comment": {
+							"ids": "all",
+							"rows": []
+						},
+						"label": {
+							"ids": "all",
+							"rows": []
+						},
+						"project": {
+							"ids": "all",
+							"rows": []
+						},
+						"read": {
+							"ids": "all",
+							"rows": []
+						},
+						"section": {
+							"ids": "all",
+							"rows": []
+						},
+						"settings": {
+							"ids": "all",
+							"rows": []
+						},
+						"task": {
+							"ids": "all",
+							"rows": []
+						}
+					}
+				]
+			],
+			"output": [
+				{
+					"own": {
+						"comments": [],
+						"labels": [],
+						"projects": [],
+						"reads": [],
+						"sections": [],
+						"tasks": []
+					},
+					"settings": null,
+					"spaces": {
+						"ann": {
+							"access": [
+								{
+									"entityId": "p",
+									"grantee": "me",
+									"id": "me:project:p",
+									"kind": "project",
+									"owner": "ann",
+									"role": "edit"
+								}
+							],
+							"data": {
+								"comments": [],
+								"labels": [],
+								"projects": [],
+								"reads": [],
+								"sections": [],
+								"tasks": []
+							}
+						}
+					},
+					"touched": [
+						"ann"
+					]
+				}
+			]
+		},
+		{
+			"fn": "replayReads",
+			"test": "LocalRows › a later read changes only the rows it names and reports only their owners",
+			"input": [
+				"me",
+				[
+					{
+						"access": {
+							"ids": "all",
+							"rows": [
+								{
+									"entityId": "hers",
+									"grantee": "me",
+									"id": "me:task:hers",
+									"kind": "task",
+									"owner": "ann",
+									"role": "view"
+								}
+							]
+						},
+						"comment": {
+							"ids": "all",
+							"rows": []
+						},
+						"label": {
+							"ids": "all",
+							"rows": []
+						},
+						"project": {
+							"ids": "all",
+							"rows": []
+						},
+						"read": {
+							"ids": "all",
+							"rows": []
+						},
+						"section": {
+							"ids": "all",
+							"rows": []
+						},
+						"settings": {
+							"ids": "all",
+							"rows": []
+						},
+						"task": {
+							"ids": "all",
+							"rows": [
+								{
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 1,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"id": "mine",
+									"images": [],
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"sourceKey": null,
+									"title": "Old",
+									"userId": "me"
+								},
+								{
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 1,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"id": "other",
+									"images": [],
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"sourceKey": null,
+									"title": "other",
+									"userId": "me"
+								},
+								{
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 1,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"id": "hers",
+									"images": [],
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"sourceKey": null,
+									"title": "hers",
+									"userId": "ann"
+								}
+							]
+						}
+					},
+					{
+						"task": {
+							"ids": [
+								"mine"
+							],
+							"rows": [
+								{
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 1,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"id": "mine",
+									"images": [],
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"sourceKey": null,
+									"title": "New",
+									"userId": "me"
+								}
+							]
+						}
+					}
+				]
+			],
+			"output": [
+				{
+					"own": {
+						"comments": [],
+						"labels": [],
+						"projects": [],
+						"reads": [],
+						"sections": [],
+						"tasks": [
+							{
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 1,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"id": "mine",
+								"images": [],
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "Old"
+							},
+							{
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 1,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"id": "other",
+								"images": [],
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "other"
+							}
+						]
+					},
+					"settings": null,
+					"spaces": {
+						"ann": {
+							"access": [
+								{
+									"entityId": "hers",
+									"grantee": "me",
+									"id": "me:task:hers",
+									"kind": "task",
+									"owner": "ann",
+									"role": "view"
+								}
+							],
+							"data": {
+								"comments": [],
+								"labels": [],
+								"projects": [],
+								"reads": [],
+								"sections": [],
+								"tasks": [
+									{
+										"completedAt": null,
+										"completedBy": null,
+										"createdAt": 1,
+										"createdBy": null,
+										"due": null,
+										"event": null,
+										"id": "hers",
+										"images": [],
+										"labelIds": [],
+										"lastCompletedAt": null,
+										"location": null,
+										"notes": "",
+										"order": 0,
+										"parentId": null,
+										"priority": 4,
+										"projectId": null,
+										"recurrence": null,
+										"reminders": [],
+										"sectionId": null,
+										"title": "hers"
+									}
+								]
+							}
+						}
+					},
+					"touched": [
+						"ann",
+						"me"
+					]
+				},
+				{
+					"own": {
+						"comments": [],
+						"labels": [],
+						"projects": [],
+						"reads": [],
+						"sections": [],
+						"tasks": [
+							{
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 1,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"id": "mine",
+								"images": [],
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "New"
+							},
+							{
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 1,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"id": "other",
+								"images": [],
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "other"
+							}
+						]
+					},
+					"settings": null,
+					"spaces": {
+						"ann": {
+							"access": [
+								{
+									"entityId": "hers",
+									"grantee": "me",
+									"id": "me:task:hers",
+									"kind": "task",
+									"owner": "ann",
+									"role": "view"
+								}
+							],
+							"data": {
+								"comments": [],
+								"labels": [],
+								"projects": [],
+								"reads": [],
+								"sections": [],
+								"tasks": [
+									{
+										"completedAt": null,
+										"completedBy": null,
+										"createdAt": 1,
+										"createdBy": null,
+										"due": null,
+										"event": null,
+										"id": "hers",
+										"images": [],
+										"labelIds": [],
+										"lastCompletedAt": null,
+										"location": null,
+										"notes": "",
+										"order": 0,
+										"parentId": null,
+										"priority": 4,
+										"projectId": null,
+										"recurrence": null,
+										"reminders": [],
+										"sectionId": null,
+										"title": "hers"
+									}
+								]
+							}
+						}
+					},
+					"touched": [
+						"me"
+					]
+				}
+			]
+		},
+		{
+			"fn": "replayReads",
+			"test": "LocalRows › a row that is gone leaves, and a space goes once nothing of it reaches this user",
+			"input": [
+				"me",
+				[
+					{
+						"access": {
+							"ids": "all",
+							"rows": [
+								{
+									"entityId": "hers",
+									"grantee": "me",
+									"id": "me:task:hers",
+									"kind": "task",
+									"owner": "ann",
+									"role": "view"
+								}
+							]
+						},
+						"comment": {
+							"ids": "all",
+							"rows": []
+						},
+						"label": {
+							"ids": "all",
+							"rows": []
+						},
+						"project": {
+							"ids": "all",
+							"rows": []
+						},
+						"read": {
+							"ids": "all",
+							"rows": []
+						},
+						"section": {
+							"ids": "all",
+							"rows": []
+						},
+						"settings": {
+							"ids": "all",
+							"rows": []
+						},
+						"task": {
+							"ids": "all",
+							"rows": [
+								{
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 1,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"id": "mine",
+									"images": [],
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"sourceKey": null,
+									"title": "mine",
+									"userId": "me"
+								},
+								{
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 1,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"id": "hers",
+									"images": [],
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"sourceKey": null,
+									"title": "hers",
+									"userId": "ann"
+								}
+							]
+						}
+					},
+					{
+						"task": {
+							"ids": [
+								"mine"
+							],
+							"rows": []
+						}
+					},
+					{
+						"access": {
+							"ids": [
+								"me:task:hers"
+							],
+							"rows": []
+						},
+						"task": {
+							"ids": [
+								"hers"
+							],
+							"rows": []
+						}
+					}
+				]
+			],
+			"output": [
+				{
+					"own": {
+						"comments": [],
+						"labels": [],
+						"projects": [],
+						"reads": [],
+						"sections": [],
+						"tasks": [
+							{
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 1,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"id": "mine",
+								"images": [],
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "mine"
+							}
+						]
+					},
+					"settings": null,
+					"spaces": {
+						"ann": {
+							"access": [
+								{
+									"entityId": "hers",
+									"grantee": "me",
+									"id": "me:task:hers",
+									"kind": "task",
+									"owner": "ann",
+									"role": "view"
+								}
+							],
+							"data": {
+								"comments": [],
+								"labels": [],
+								"projects": [],
+								"reads": [],
+								"sections": [],
+								"tasks": [
+									{
+										"completedAt": null,
+										"completedBy": null,
+										"createdAt": 1,
+										"createdBy": null,
+										"due": null,
+										"event": null,
+										"id": "hers",
+										"images": [],
+										"labelIds": [],
+										"lastCompletedAt": null,
+										"location": null,
+										"notes": "",
+										"order": 0,
+										"parentId": null,
+										"priority": 4,
+										"projectId": null,
+										"recurrence": null,
+										"reminders": [],
+										"sectionId": null,
+										"title": "hers"
+									}
+								]
+							}
+						}
+					},
+					"touched": [
+						"ann",
+						"me"
+					]
+				},
+				{
+					"own": {
+						"comments": [],
+						"labels": [],
+						"projects": [],
+						"reads": [],
+						"sections": [],
+						"tasks": []
+					},
+					"settings": null,
+					"spaces": {
+						"ann": {
+							"access": [
+								{
+									"entityId": "hers",
+									"grantee": "me",
+									"id": "me:task:hers",
+									"kind": "task",
+									"owner": "ann",
+									"role": "view"
+								}
+							],
+							"data": {
+								"comments": [],
+								"labels": [],
+								"projects": [],
+								"reads": [],
+								"sections": [],
+								"tasks": [
+									{
+										"completedAt": null,
+										"completedBy": null,
+										"createdAt": 1,
+										"createdBy": null,
+										"due": null,
+										"event": null,
+										"id": "hers",
+										"images": [],
+										"labelIds": [],
+										"lastCompletedAt": null,
+										"location": null,
+										"notes": "",
+										"order": 0,
+										"parentId": null,
+										"priority": 4,
+										"projectId": null,
+										"recurrence": null,
+										"reminders": [],
+										"sectionId": null,
+										"title": "hers"
+									}
+								]
+							}
+						}
+					},
+					"touched": [
+						"me"
+					]
+				},
+				{
+					"own": {
+						"comments": [],
+						"labels": [],
+						"projects": [],
+						"reads": [],
+						"sections": [],
+						"tasks": []
+					},
+					"settings": null,
+					"spaces": {},
+					"touched": [
+						"ann"
+					]
+				}
+			]
+		},
+		{
+			"fn": "replayReads",
+			"test": "LocalRows › a deleted project reads as Inbox until it comes back, and then holds its tasks again",
+			"input": [
+				"me",
+				[
+					{
+						"access": {
+							"ids": "all",
+							"rows": []
+						},
+						"comment": {
+							"ids": "all",
+							"rows": []
+						},
+						"label": {
+							"ids": "all",
+							"rows": []
+						},
+						"project": {
+							"ids": "all",
+							"rows": [
+								{
+									"createdAt": 1,
+									"id": "work",
+									"name": "work",
+									"order": 0,
+									"sourceKey": null,
+									"userId": "me"
+								}
+							]
+						},
+						"read": {
+							"ids": "all",
+							"rows": []
+						},
+						"section": {
+							"ids": "all",
+							"rows": [
+								{
+									"createdAt": 1,
+									"id": "later",
+									"name": "later",
+									"order": 0,
+									"projectId": "work",
+									"sourceKey": null,
+									"userId": "me"
+								}
+							]
+						},
+						"settings": {
+							"ids": "all",
+							"rows": []
+						},
+						"task": {
+							"ids": "all",
+							"rows": [
+								{
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 1,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"id": "report",
+									"images": [],
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": "work",
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": "later",
+									"sourceKey": null,
+									"title": "report",
+									"userId": "me"
+								}
+							]
+						}
+					},
+					{
+						"project": {
+							"ids": [
+								"work"
+							],
+							"rows": []
+						}
+					},
+					{
+						"project": {
+							"ids": [
+								"work"
+							],
+							"rows": [
+								{
+									"createdAt": 1,
+									"id": "work",
+									"name": "work",
+									"order": 0,
+									"sourceKey": null,
+									"userId": "me"
+								}
+							]
+						}
+					}
+				]
+			],
+			"output": [
+				{
+					"own": {
+						"comments": [],
+						"labels": [],
+						"projects": [
+							{
+								"createdAt": 1,
+								"id": "work",
+								"name": "work",
+								"order": 0
+							}
+						],
+						"reads": [],
+						"sections": [
+							{
+								"createdAt": 1,
+								"id": "later",
+								"name": "later",
+								"order": 0,
+								"projectId": "work"
+							}
+						],
+						"tasks": [
+							{
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 1,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"id": "report",
+								"images": [],
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": "work",
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": "later",
+								"title": "report"
+							}
+						]
+					},
+					"settings": null,
+					"spaces": {},
+					"touched": [
+						"me"
+					]
+				},
+				{
+					"own": {
+						"comments": [],
+						"labels": [],
+						"projects": [],
+						"reads": [],
+						"sections": [],
+						"tasks": [
+							{
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 1,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"id": "report",
+								"images": [],
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "report"
+							}
+						]
+					},
+					"settings": null,
+					"spaces": {},
+					"touched": [
+						"me"
+					]
+				},
+				{
+					"own": {
+						"comments": [],
+						"labels": [],
+						"projects": [
+							{
+								"createdAt": 1,
+								"id": "work",
+								"name": "work",
+								"order": 0
+							}
+						],
+						"reads": [],
+						"sections": [
+							{
+								"createdAt": 1,
+								"id": "later",
+								"name": "later",
+								"order": 0,
+								"projectId": "work"
+							}
+						],
+						"tasks": [
+							{
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 1,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"id": "report",
+								"images": [],
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": "work",
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": "later",
+								"title": "report"
+							}
+						]
+					},
+					"settings": null,
+					"spaces": {},
+					"touched": [
+						"me"
+					]
+				}
+			]
+		},
+		{
+			"fn": "replayReads",
+			"test": "LocalRows › reading everything again drops what the database no longer holds",
+			"input": [
+				"me",
+				[
+					{
+						"access": {
+							"ids": "all",
+							"rows": [
+								{
+									"entityId": "hers",
+									"grantee": "me",
+									"id": "me:task:hers",
+									"kind": "task",
+									"owner": "ann",
+									"role": "view"
+								}
+							]
+						},
+						"comment": {
+							"ids": "all",
+							"rows": []
+						},
+						"label": {
+							"ids": "all",
+							"rows": [
+								{
+									"color": "gray",
+									"createdAt": 1,
+									"id": "home",
+									"name": "home",
+									"place": null,
+									"sourceKey": null,
+									"userId": "me"
+								}
+							]
+						},
+						"project": {
+							"ids": "all",
+							"rows": []
+						},
+						"read": {
+							"ids": "all",
+							"rows": []
+						},
+						"section": {
+							"ids": "all",
+							"rows": []
+						},
+						"settings": {
+							"ids": "all",
+							"rows": []
+						},
+						"task": {
+							"ids": "all",
+							"rows": [
+								{
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 1,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"id": "mine",
+									"images": [],
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"sourceKey": null,
+									"title": "mine",
+									"userId": "me"
+								},
+								{
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 1,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"id": "hers",
+									"images": [],
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"sourceKey": null,
+									"title": "hers",
+									"userId": "ann"
+								}
+							]
+						}
+					},
+					{
+						"access": {
+							"ids": "all",
+							"rows": []
+						},
+						"comment": {
+							"ids": "all",
+							"rows": []
+						},
+						"label": {
+							"ids": "all",
+							"rows": []
+						},
+						"project": {
+							"ids": "all",
+							"rows": []
+						},
+						"read": {
+							"ids": "all",
+							"rows": []
+						},
+						"section": {
+							"ids": "all",
+							"rows": []
+						},
+						"settings": {
+							"ids": "all",
+							"rows": []
+						},
+						"task": {
+							"ids": "all",
+							"rows": [
+								{
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 1,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"id": "fresh",
+									"images": [],
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"sourceKey": null,
+									"title": "fresh",
+									"userId": "me"
+								}
+							]
+						}
+					}
+				]
+			],
+			"output": [
+				{
+					"own": {
+						"comments": [],
+						"labels": [
+							{
+								"color": "gray",
+								"createdAt": 1,
+								"id": "home",
+								"name": "home",
+								"place": null
+							}
+						],
+						"projects": [],
+						"reads": [],
+						"sections": [],
+						"tasks": [
+							{
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 1,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"id": "mine",
+								"images": [],
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "mine"
+							}
+						]
+					},
+					"settings": null,
+					"spaces": {
+						"ann": {
+							"access": [
+								{
+									"entityId": "hers",
+									"grantee": "me",
+									"id": "me:task:hers",
+									"kind": "task",
+									"owner": "ann",
+									"role": "view"
+								}
+							],
+							"data": {
+								"comments": [],
+								"labels": [],
+								"projects": [],
+								"reads": [],
+								"sections": [],
+								"tasks": [
+									{
+										"completedAt": null,
+										"completedBy": null,
+										"createdAt": 1,
+										"createdBy": null,
+										"due": null,
+										"event": null,
+										"id": "hers",
+										"images": [],
+										"labelIds": [],
+										"lastCompletedAt": null,
+										"location": null,
+										"notes": "",
+										"order": 0,
+										"parentId": null,
+										"priority": 4,
+										"projectId": null,
+										"recurrence": null,
+										"reminders": [],
+										"sectionId": null,
+										"title": "hers"
+									}
+								]
+							}
+						}
+					},
+					"touched": [
+						"ann",
+						"me"
+					]
+				},
+				{
+					"own": {
+						"comments": [],
+						"labels": [],
+						"projects": [],
+						"reads": [],
+						"sections": [],
+						"tasks": [
+							{
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 1,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"id": "fresh",
+								"images": [],
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "fresh"
+							}
+						]
+					},
+					"settings": null,
+					"spaces": {},
+					"touched": [
+						"ann",
+						"me"
+					]
+				}
+			]
+		}
+	]
+}

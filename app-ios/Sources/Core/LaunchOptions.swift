@@ -7,6 +7,7 @@ public struct LaunchOptions: Equatable, Sendable {
     public static let resetKey = "PROCRASTIMATE_RESET"
     public static let notificationsDeniedKey = "PROCRASTIMATE_NOTIFICATIONS_DENIED"
     public static let signedInKey = "PROCRASTIMATE_SIGNED_IN"
+    public static let offlineKey = "PROCRASTIMATE_OFFLINE"
 
     /// Freezes the clock at this moment.
     public var now: Date?
@@ -18,19 +19,23 @@ public struct LaunchOptions: Equatable, Sendable {
     public var notificationsDenied: Bool
     /// DEBUG only. UI tests set this so the app opens without a Keychain session.
     public var signedIn: Bool
+    /// DEBUG only. Keeps sync disconnected, so a UI test can edit offline and prove the edit uploads on the next launch.
+    public var offline: Bool
 
     public init(
         now: Date? = nil,
         timeZone: TimeZone? = nil,
         reset: Bool = false,
         notificationsDenied: Bool = false,
-        signedIn: Bool = false
+        signedIn: Bool = false,
+        offline: Bool = false
     ) {
         self.now = now
         self.timeZone = timeZone
         self.reset = reset
         self.notificationsDenied = notificationsDenied
         self.signedIn = signedIn
+        self.offline = offline
     }
 
     public enum Failure: Error, Equatable, CustomStringConvertible {
@@ -57,6 +62,7 @@ public struct LaunchOptions: Equatable, Sendable {
         options.reset = try flag(environment, resetKey)
         options.notificationsDenied = try flag(environment, notificationsDeniedKey)
         options.signedIn = try flag(environment, signedInKey)
+        options.offline = try flag(environment, offlineKey)
         return options
     }
 

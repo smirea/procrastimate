@@ -37,7 +37,7 @@
   - A bare `19xx` or `20xx` is a year. Write `at 2030` for 8:30pm.
   - A number after `$`, `€`, or `£`, or after a decimal point, is not a time or an offset.
   - `1/2` always reads as January 2.
-  - A date or reminder that lands after 9999-12-31, as in `3929284d` or `in 8000 years`, stays text. Such a date is not a valid date key, and the server would reject the op and, with it, the rest of the device's outbox.
+  - A date or reminder that lands after 9999-12-31, as in `3929284d` or `in 8000 years`, stays text. Such a date is not a valid date key, and the server would reject the write.
   - A repeat longer than 999 units, as in `every 1000 days` or `every 99999999mo`, stays text, and its words are claimed so no other rule reads them: `1000` is not a time, and `x every 99999999mo 9am` saves `x every 99999999mo` due at the next 9am. A repeat whose first occurrence would land after 9999-12-31 starts on the date it would otherwise align from, such as today.
   - A word right after `#` or `@` is a name or a handle, so `@5pm`, `@tomorrow`, `@p1`, and `@urgent` stay text.
   - A link is never a phrase, so `5m`, `p1`, `3pm`, `#anchor`, or `@user` inside a URL or a Markdown link stays part of it. The parser masks every link `linkify` finds (see Links in [Domain](domain.md)) before any rule runs.

@@ -3,9 +3,6 @@ import Foundation
 import Testing
 
 /// Checks the Swift port against `shared/vectors/*.json`, which `bun run vectors` records from the TypeScript tests.
-/// Every case must produce the recorded output, and a module or function without a Swift handler fails, so a TS
-/// change that alters behavior turns this red until the port matches. `pendingPorts` is the exception: those
-/// modules are recorded ahead of their port, and their cases start running as soon as a handler exists.
 @Suite struct VectorTests {
     @Test(arguments: VectorFile.all)
     func matchesTypeScript(_ file: VectorFile) throws {
@@ -31,8 +28,6 @@ import Testing
         #expect(Set(VectorFile.all.map(\.module)).isSuperset(of: handlers.keys))
     }
 
-    /// A module stays pending only until its handler lands. Adding the handler without removing the name fails here,
-    /// and a new vector file without a port fails `matchesTypeScript`.
     @Test func onlyPendingModulesLackAPort() {
         let missing = Set(VectorFile.all.map(\.module)).subtracting(handlers.keys)
         #expect(missing == pendingPorts)
@@ -114,7 +109,6 @@ let handlers: [String: Handler] = [
     "markdown": markdownVector,
     "notifications": notificationsVector,
     "store": storeVector,
-    "snapshot": snapshotVector,
     "quick-add": quickAddVector,
     "csv": csvVector,
     "search": searchVector,
@@ -129,9 +123,12 @@ let handlers: [String: Handler] = [
     "screens": screensVector,
     "memo-tasks": memoTasksVector,
     "links": linksVector,
-    "sync": syncVector,
+    "rows": rowsVector,
     "comments": commentsVector,
     "row-actions": rowActionsVector,
+    "dangling": danglingVector,
+    "local-rows": localRowsVector,
+    "space-routing": spaceRoutingVector,
 ]
 
 private struct Occurrence: Decodable {
@@ -380,15 +377,6 @@ private func completion(_ completion: Completion) throws -> JSONValue {
     }
 }
 
-@Sendable func snapshotVector(_ fn: String, _ a: Args) throws -> JSONValue {
-    switch fn {
-    case "parseSnapshot":
-        let document = try JSONEncoder().encode(a.values[0])
-        return try json(Snapshot.load(document, now: a(1)))
-    default: throw unknown(fn)
-    }
-}
-
 private struct PlacedInput: Decodable {
     let labelIds: [String]
     let location: TaskLocation?
@@ -526,7 +514,6 @@ private struct ListDefaultsJSON: Codable {
     }
 }
 
-/// `Screen` in TS: `{ kind, id?, key?, sectionId?, date? }`.
 private struct ScreenInput: Decodable {
     let kind: String
     let id: String?
@@ -548,16 +535,16 @@ private struct ScreenInput: Decodable {
     }
 }
 
-/// `SharedSpace` in TS: `{ targets }`.
+/// `SharedSpace` in TS: `{ access }`.
 private struct SharedSpaceInput: Decodable {
-    let targets: [API.SpaceGrant]
+    let access: [Access]
 }
 
 @Sendable func screensVector(_ fn: String, _ a: Args) throws -> JSONValue {
     let screen = try a(0, as: ScreenInput?.self)?.screen()
     switch fn {
-    case "screenDefaults": return try json(ListDefaultsJSON(Screens.defaults(screen, a(1), a(2, as: SharedSpaceInput?.self)?.targets)))
-    case "canAddTo": return try json(Screens.canAdd(to: screen, a(1, as: SharedSpaceInput?.self)?.targets))
+    case "screenDefaults": return try json(ListDefaultsJSON(Screens.defaults(screen, a(1), a(2, as: SharedSpaceInput?.self)?.access)))
+    case "canAddTo": return try json(Screens.canAdd(to: screen, a(1, as: SharedSpaceInput?.self)?.access))
     case "screenHolds": return try json(Screens.holds(screen, a(1), a(2), in: a.zone))
     default: throw unknown(fn)
     }
@@ -583,14 +570,35 @@ extension JSONValue: ExpressibleByStringLiteral {
     }
 }
 
-@Sendable func syncVector(_ fn: String, _ a: Args) throws -> JSONValue {
+private struct RowWriteInput: Decodable {
+    let op: String
+    let kind: EntityKind
+    let id: String
+    let values: [String: JSONValue]?
+
+    var write: RowWrite { RowWrite(op: RowWrite.Op(rawValue: op)!, kind: kind, id: id, values: values) }
+}
+
+private func rowWritesJSON(_ writes: [RowWrite]) -> JSONValue {
+    .array(writes.map { write in
+        var fields: [String: JSONValue] = ["op": .string(write.op.rawValue), "kind": .string(write.kind.rawValue), "id": .string(write.id)]
+        if let values = write.values { fields["values"] = .object(values) }
+        return .object(fields)
+    })
+}
+
+private struct RejectedInput: Decodable {
+    let kind: EntityKind
+    let id: String
+}
+
+@Sendable func rowsVector(_ fn: String, _ a: Args) throws -> JSONValue {
     switch fn {
-    case "enqueue": return try json(SyncEngine.enqueue(a(0), a(1)))
-    case "seedPatches": return try json(SyncEngine.seedPatches(server: a(0), local: a(1)))
-    case "settle":
-        let settled = try SyncEngine.settle(a(0), acked: a(1), rejected: a(2))
-        return try json(["outbox": settled.outbox, "rejected": settled.rejected])
-    case "rejectionNotice": return try json(SyncEngine.rejectionNotice(a(0), a(1)))
+    case "rowWrites": return rowWritesJSON(Rows.rowWrites(try a(0), try a(1)))
+    case "coalesce": return rowWritesJSON(Rows.coalesce(try a(0, as: [RowWriteInput].self).map(\.write)))
+    case "rejectionNotice":
+        let rejected = try a(1, as: [RejectedInput].self).map { (kind: $0.kind, id: $0.id) }
+        return try json(Rows.rejectionNotice(try a(0), rejected))
     default: throw unknown(fn)
     }
 }
@@ -604,6 +612,156 @@ extension JSONValue: ExpressibleByStringLiteral {
             "postpone": .bool(offered.postpone),
             "delete": .bool(offered.delete),
         ])
+    default: throw unknown(fn)
+    }
+}
+
+private struct EntitiesInput: Decodable {
+    let tasks: [TaskItem]
+    let projects: [Project]
+    let sections: [ProjectSection]
+    let labels: [Label]
+}
+
+@Sendable func danglingVector(_ fn: String, _ a: Args) throws -> JSONValue {
+    switch fn {
+    case "resolveDangling":
+        let input = try a(0, as: EntitiesInput.self)
+        let resolved = Dangling.resolveDangling(
+            Snapshot(tasks: input.tasks, projects: input.projects, sections: input.sections, labels: input.labels, settings: API.Settings())
+        )
+        return object([
+            "tasks": try json(resolved.tasks), "projects": try json(resolved.projects),
+            "sections": try json(resolved.sections), "labels": try json(resolved.labels),
+        ])
+    default: throw unknown(fn)
+    }
+}
+
+private struct RowOwner: Decodable {
+    let userId: String
+}
+
+private func tableRead<Row>(_ value: JSONValue?, _ row: (JSONValue) -> Row?) throws -> TableRead<Row>? {
+    guard case let .object(fields)? = value, case let .array(rows)? = fields["rows"] else { return nil }
+    let ids: ReadIds = fields["ids"] == .string("all") ? .all : .some(try decode(fields["ids"] ?? .null))
+    return TableRead(ids: ids, rows: rows.compactMap(row))
+}
+
+/// A row the TypeScript side would drop as unparseable decodes to nil here, as `LocalDatabase` drops it on the device.
+/// Like `SyncedRow`, a null `sourceKey` is left out, which Core reads only as absent.
+private func ownedRow<V: Decodable>(_ row: JSONValue) -> Owned<V>? {
+    guard case var .object(fields) = row, let owner: RowOwner = try? decode(row) else { return nil }
+    if fields["sourceKey"] == .null { fields["sourceKey"] = nil }
+    guard let value: V = try? decode(.object(fields)) else { return nil }
+    return Owned(owner: owner.userId, value: value)
+}
+
+private func rowsRead(_ value: JSONValue) throws -> RowsRead {
+    guard case let .object(tables) = value else { throw VectorError(description: "A read is not an object") }
+    var read = RowsRead()
+    read.tasks = try tableRead(tables["task"], ownedRow)
+    read.projects = try tableRead(tables["project"], ownedRow)
+    read.sections = try tableRead(tables["section"], ownedRow)
+    read.labels = try tableRead(tables["label"], ownedRow)
+    read.comments = try tableRead(tables["comment"], ownedRow)
+    read.reads = try tableRead(tables["read"], ownedRow)
+    read.settings = try tableRead(tables["settings"], ownedRow)
+    read.access = try tableRead(tables["access"]) { try? decode($0) as Access }
+    return read
+}
+
+private func storeData(_ snapshot: Snapshot) throws -> JSONValue {
+    object([
+        "tasks": try json(snapshot.tasks), "projects": try json(snapshot.projects),
+        "sections": try json(snapshot.sections), "labels": try json(snapshot.labels),
+        "comments": try json(snapshot.comments), "reads": try json(snapshot.reads),
+    ])
+}
+
+@Sendable func localRowsVector(_ fn: String, _ a: Args) throws -> JSONValue {
+    switch fn {
+    case "replayReads":
+        let rows = LocalRows(me: try a(0))
+        let reads: [JSONValue] = try a(1)
+        return .array(try reads.map { read in
+            let touched = rows.apply(try rowsRead(read))
+            let spaces = rows.spaces
+            var shared: [String: JSONValue] = [:]
+            for owner in rows.sharers {
+                shared[owner] = object([
+                    "data": try storeData(spaces.shared[owner] ?? .empty),
+                    "access": try json(spaces.access.filter { $0.owner == owner }),
+                ])
+            }
+            return object([
+                "touched": try json(touched),
+                "own": try storeData(spaces.own),
+                "settings": spaces.settingsStored ? try json(spaces.own.settings) : .null,
+                "spaces": .object(shared),
+            ])
+        })
+    default: throw unknown(fn)
+    }
+}
+
+private struct PlacementInput: Decodable {
+    let title: String?
+    let projectId: String?
+    let sectionId: String?
+    let labelIds: [String]
+}
+
+private struct ListsInput: Decodable {
+    let projects: [Project]
+    let sections: [ProjectSection]
+    let labels: [Label]
+
+    var data: StoreData { StoreData(projects: projects, sections: sections, labels: labels) }
+}
+
+private struct SharedSpaceDataInput: Decodable {
+    struct Data: Decodable {
+        let tasks: [TaskItem]
+        let projects: [Project]
+        let labels: [Label]
+    }
+
+    let owner: Person
+    let data: Data
+}
+
+@Sendable func spaceRoutingVector(_ fn: String, _ a: Args) throws -> JSONValue {
+    switch fn {
+    case "creationHome":
+        let input: PlacementInput = try a(1)
+        return try json(SpaceRouting.creationHome(a(0), projectId: input.projectId, labelIds: input.labelIds, parentId: a(2)))
+    case "fitToSpace":
+        let input: PlacementInput = try a(1)
+        let fitted = SpaceRouting.fitToSpace(
+            try a(0, as: ListsInput.self).data,
+            NewTask(title: input.title ?? "", projectId: input.projectId, sectionId: input.sectionId, labelIds: input.labelIds)
+        )
+        var fields: [String: JSONValue] = [
+            "projectId": try json(fitted.projectId), "sectionId": try json(fitted.sectionId), "labelIds": try json(fitted.labelIds),
+        ]
+        if let title = input.title { fields["title"] = .string(title) }
+        return object(fields)
+    case "fitPatch":
+        return try json(SpaceRouting.fitPatch(try a(0, as: ListsInput.self).data, a(1)))
+    case "sharedEntries":
+        let spaces = try a(0, as: [SharedSpaceDataInput].self).map { space in
+            SharedSpace(
+                id: space.owner.id, owner: space.owner,
+                data: Snapshot(tasks: space.data.tasks, projects: space.data.projects, labels: space.data.labels, settings: API.Settings())
+            )
+        }
+        return .array(try SpaceRouting.sharedEntries(spaces).map { entry in
+            object([
+                "kind": .string(entry.kind.rawValue), "id": .string(entry.id), "name": .string(entry.name),
+                "owner": try json(entry.owner),
+            ])
+        })
     default: throw unknown(fn)
     }
 }

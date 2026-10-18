@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { taskSchema } from './sync/protocol.ts';
+import { taskSchema } from './model.ts';
 import { groupChildren } from './subtasks.ts';
 import type { Project, Task } from './task.ts';
 import type { ProjectGroup } from './views.ts';
@@ -15,7 +15,6 @@ export const markdownDocumentSchema = z
 	.meta({ id: 'MarkdownDocument' });
 export type MarkdownDocument = z.infer<typeof markdownDocumentSchema>;
 
-/** A project view's copy: its loose tasks, then each section under its name. */
 export function projectDocument(project: Project, groups: readonly ProjectGroup[]): MarkdownDocument {
 	return {
 		title: project.name,

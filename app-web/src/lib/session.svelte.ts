@@ -4,14 +4,9 @@ import { identify, type SentryUser } from './sentry.ts';
 import { store } from './store.svelte.ts';
 import { toasts } from './ui.svelte.ts';
 
-/**
- * The signed-in user. The session cookie is httpOnly, so a cached user id is what lets the app open offline.
- * `procrastimate-owner` is who the local document belongs to, and it stays after sign-out so the next account
- * does not upload the previous one's tasks.
- */
+/** The session cookie is httpOnly, so a cached user id is what lets the app open offline. */
 
 const USER_KEY = 'procrastimate-user';
-const OWNER_KEY = 'procrastimate-owner';
 
 type State = 'checking' | 'in' | 'out';
 
@@ -21,7 +16,7 @@ class Session {
 	/** `in` immediately when a user id is cached, so a day offline never shows the sign-in screen. */
 	state = $state<State>(cachedUser() ? 'in' : 'checking');
 	userId = $state(cachedUser());
-	/** True once the session check has settled, so sync does not upload before a user switch clears the document. */
+	/** True once the session check has settled, so sync does not connect before a user switch clears the database. */
 	confirmed = $state(false);
 	methods = $state<AuthMethods>({
 		email: false,
@@ -31,6 +26,11 @@ class Session {
 		appleNative: false,
 	});
 	error = $state('');
+
+	/** Opens the cached user's database at once, so the first frame needs no network. */
+	constructor() {
+		if (this.userId) void store.open(this.userId);
+	}
 
 	async start() {
 		identify(this.userId ? { id: this.userId } : null);
@@ -63,20 +63,17 @@ class Session {
 		this.adopt({ ...body.user, id: body.user.id });
 	}
 
-	/** Remembers the user. A different owner replaces the local document with an empty pull, not an upload. */
 	adopt(user: SentryUser) {
 		const { id } = user;
-		const owner = localStorage.getItem(OWNER_KEY);
-		if (owner && owner !== id) store.switchUser();
+		void store.open(id);
 		localStorage.setItem(USER_KEY, id);
-		localStorage.setItem(OWNER_KEY, id);
 		this.userId = id;
 		identify(user);
 		this.state = 'in';
 		this.error = '';
 	}
 
-	/** Drops the cached session. The owner id stays, and so does the local document. */
+	/** The local database stays, with its owner. */
 	clear() {
 		localStorage.removeItem(USER_KEY);
 		this.userId = null;
@@ -113,7 +110,13 @@ class Session {
 	async signOut() {
 		const id = this.userId;
 		this.clear();
-		const response = await fetch('/api/auth/sign-out', { method: 'POST', credentials: 'include' }).catch(() => null);
+		// The Worker sees an empty body even without one, and Better Auth refuses a body with no content type (415).
+		const response = await fetch('/api/auth/sign-out', {
+			method: 'POST',
+			credentials: 'include',
+			headers: { 'content-type': 'application/json' },
+			body: '{}',
+		}).catch(() => null);
 		if (response?.ok || !id || this.state !== 'out') return;
 		this.adopt({ id });
 		toasts.show('Could not sign out');

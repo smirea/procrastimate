@@ -1,0 +1,26 @@
+# Which rows PowerSync streams to each signed-in user. Shared by local Docker, dev, and prod. The `access` table is
+# the server's: it names every entity a grantee may see, recomputed from the owner's shares, so the rules here stay
+# simple and the scope logic stays in `shared/scope.ts`. Every shared row must belong to the access row's owner: an
+# `access` row can only ever open rows of the space whose owner wrote it, never a row of the same id elsewhere.
+config:
+  edition: 3
+streams:
+  own:
+    auto_subscribe: true
+    queries:
+      - SELECT * FROM tasks WHERE user_id = auth.user_id()
+      - SELECT * FROM projects WHERE user_id = auth.user_id()
+      - SELECT * FROM sections WHERE user_id = auth.user_id()
+      - SELECT * FROM labels WHERE user_id = auth.user_id()
+      - SELECT * FROM comments WHERE user_id = auth.user_id()
+      - SELECT * FROM reads WHERE user_id = auth.user_id()
+      - SELECT * FROM settings WHERE user_id = auth.user_id()
+      - SELECT * FROM access WHERE grantee = auth.user_id()
+  shared:
+    auto_subscribe: true
+    queries:
+      - SELECT tasks.* FROM tasks INNER JOIN access ON access.entity_id = tasks.id AND access.owner = tasks.user_id WHERE access.grantee = auth.user_id() AND access.kind = 'task'
+      - SELECT projects.* FROM projects INNER JOIN access ON access.entity_id = projects.id AND access.owner = projects.user_id WHERE access.grantee = auth.user_id() AND access.kind = 'project'
+      - SELECT sections.* FROM sections INNER JOIN access ON access.entity_id = sections.id AND access.owner = sections.user_id WHERE access.grantee = auth.user_id() AND access.kind = 'section'
+      - SELECT labels.* FROM labels INNER JOIN access ON access.entity_id = labels.id AND access.owner = labels.user_id WHERE access.grantee = auth.user_id() AND access.kind = 'label'
+      - SELECT comments.* FROM comments INNER JOIN access ON access.entity_id = comments.task_id AND access.owner = comments.user_id WHERE access.grantee = auth.user_id() AND access.kind = 'task'

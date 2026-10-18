@@ -14,7 +14,7 @@
 	import { OptimisticList, type Row } from '../optimistic.svelte.ts';
 	import { session } from '../session.svelte.ts';
 	import { store } from '../store.svelte.ts';
-	import { sync } from '../sync.svelte.ts';
+	import { settled } from '../powersync.svelte.ts';
 	import { sheets, motion } from '../ui.svelte.ts';
 
 	let { target, name }: { target: ShareTarget; name: string } = $props();
@@ -33,7 +33,6 @@
 	const people = $derived(
 		shares.rows.filter((row): row is Row<ShareView & { grantee: Person }> => row.value.grantee !== null),
 	);
-	/** The people this space has met match at once; the server adds exact email matches when it answers. */
 	const suggestions = $derived.by(() => {
 		const q = query.trim();
 		if (!q) return [];
@@ -67,7 +66,7 @@
 
 	/** The server shares only what it holds, so a project made a moment ago has to arrive before its share. */
 	async function create(audience: ShareAudience) {
-		if (store.pending) await sync.syncNow();
+		await settled();
 		return api.shares.create({ target, audience });
 	}
 

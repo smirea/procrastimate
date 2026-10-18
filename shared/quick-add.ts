@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { labelSchema, projectSchema, sectionSchema, taskSchema } from './sync/protocol.ts';
+import { labelSchema, projectSchema, sectionSchema, taskSchema } from './model.ts';
 import { linkify } from './links.ts';
 import { isSavedPlace, placeLocation } from './triggers.ts';
 import { DATE_KEY_PATTERN, MAX_RECURRENCE_INTERVAL } from './values.ts';
@@ -247,7 +247,7 @@ function maskGuarded(input: string, spoken: boolean): string {
 
 type Context = { now: Date; today: DateKey; time: TimeOfDay; spoken: boolean };
 
-/** A due phrase. A null date means only a time was typed. */
+/** A null date means only a time was typed. */
 type DuePhrase = { date: DateKey | null; time: TimeOfDay | null };
 
 /** A weekday repeat such as `every mon` anchors the first occurrence to that weekday. */
@@ -452,8 +452,8 @@ function resolveMoment(text: string, ctx: Context): DuePhrase | null {
 }
 
 /**
- * A date past 9999-12-31 is not a `DateKey`, and the server rejects the op that carries it along with the rest of
- * the outbox, so such a phrase, as in `3929284d`, stays text.
+ * A date past 9999-12-31 is not a `DateKey`, and the server rejects the write that carries it, so such a phrase, as in
+ * `3929284d`, stays text.
  */
 function readDateTime(groups: Record<string, string | undefined>, ctx: Context): DuePhrase | null {
 	const phrase = readPhrase(groups, ctx);
@@ -480,7 +480,6 @@ const RECURRENCE_ADVERBS: Record<string, RecurrenceUnit> = {
 	annually: 'year',
 };
 
-/** A repeat as typed, before the recurrence rule checks its interval. */
 function readRecurrence(groups: Record<string, string | undefined>, ctx: Context): RecurrencePhrase | null {
 	const {
 		months,

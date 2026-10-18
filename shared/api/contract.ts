@@ -22,22 +22,14 @@ import {
 	sharedViewSchema,
 	shareTargetSchema,
 	shareViewSchema,
-	spaceSchema,
 	sectionEditSchema,
 	spaceViewSchema,
 	taskCommentSchema,
 } from '../sharing.ts';
 import { taskEditSchema } from '../store.ts';
 import { imageSizeSchema } from '../images.ts';
-import { roleSchema } from '../values.ts';
-import {
-	labelSchema,
-	nudgeSchema,
-	projectSchema,
-	sectionSchema,
-	syncRequestSchema,
-	syncResponseSchema,
-} from '../sync/protocol.ts';
+import { labelSchema, projectSchema, sectionSchema } from '../model.ts';
+import { ROW_OPS, TABLE_OF } from '../rows.ts';
 
 /**
  * Every HTTP endpoint the clients call, as one oRPC contract. The server implements it, the web client calls it
@@ -88,7 +80,28 @@ const taskQuery = spaceQuery.extend(byId.shape);
 
 export const peopleSchema = z.object({ people: z.array(personSchema) }).meta({ id: 'People' });
 export const aiAccountsSchema = z.object({ accounts: z.array(personSchema) }).meta({ id: 'AiAccounts' });
-export const spacesSchema = z.object({ spaces: z.array(spaceSchema) }).meta({ id: 'Spaces' });
+export const syncTokenSchema = z
+	.object({ token: z.string(), endpoint: z.string() })
+	.meta({ id: 'SyncToken', description: 'A PowerSync token and the URL the client connects to with it.' });
+
+/** One row write from a client's PowerSync queue, as PowerSync reports it: snake_case columns, JSON as text. */
+export const uploadWriteSchema = z
+	.object({
+		op: z.enum(ROW_OPS),
+		table: z.enum(Object.values(TABLE_OF) as [string, ...string[]]),
+		id: z.string(),
+		values: z.record(z.string(), z.unknown()).optional(),
+		/** The client's id for this queued write, kept on the server's log row. */
+		opId: z.string().optional(),
+	})
+	.meta({ id: 'UploadWrite' });
+export type UploadWrite = z.infer<typeof uploadWriteSchema>;
+
+/** Writes are a list of unknown values here and parsed one by one, so one malformed write is refused alone. */
+export const uploadRequestSchema = z.object({ writes: z.array(z.unknown()) }).meta({ id: 'UploadRequest' });
+export const uploadResponseSchema = z
+	.object({ rejected: z.array(z.object({ table: z.string(), id: z.string(), reason: z.string() })) })
+	.meta({ id: 'UploadResponse' });
 export const sharesSchema = z.object({ shares: z.array(shareViewSchema) }).meta({ id: 'Shares' });
 export const newShareSchema = z
 	.object({ target: shareTargetSchema, audience: shareAudienceSchema })
@@ -131,7 +144,6 @@ export const workerContract = {
 			.output(peopleSchema),
 	},
 	me: signedIn.meta(openapi({ method: 'GET', path: '/api/me' })).output(personSchema),
-	/** The signed-in human's AI accounts. */
 	ai: {
 		list: allowed.meta(openapi({ method: 'GET', path: '/api/ai' })).output(aiAccountsSchema),
 		/** Also shares the owner's whole space with it, to edit. */
@@ -154,10 +166,7 @@ export const workerContract = {
 			.output(sharedViewSchema),
 	},
 	shares: {
-		/**
-		 * Shares the caller's own space. The Worker serves it because a user audience needs the grantee's name from
-		 * Better Auth; the share itself lands in the owner's object, which also writes the guest's membership.
-		 */
+		/** Shares the caller's own space with a user, by role, or with anyone holding the link, read only. */
 		create: found
 			.meta(openapi({ method: 'POST', path: '/api/shares' }))
 			.input(newShareSchema)
@@ -167,7 +176,7 @@ export const workerContract = {
 	debug: {
 		error: signedIn.meta(openapi({ method: 'POST', path: '/api/debug/error' })).output(okSchema),
 	},
-	/** Docs for AI agents, generated from `agentContract`. The entry point needs no token; the reference does. */
+	/** Docs for AI agents, generated from `agentContract`. */
 	docs: {
 		start: oc
 			.meta(openapi({ method: 'GET', path: '/api/docs', summary: 'What ProcrastiMate is and how an agent gets in' }))
@@ -182,25 +191,12 @@ export const workerContract = {
 };
 
 /**
- * What an AI account, or a guest of a space, may call: sync, view, the task, project, section, label, and link commands,
+ * What an AI account, or a guest of a space, may call: view, the task, project, section, label, and link commands,
  * comments, and activity. Projects, sections, labels, and links are only the owner's and an AI account's, which holds
  * a whole-space edit share. Everything else is the human owner's. The agent docs and their OpenAPI subset are generated from it, so each `summary` and
  * `description` here is what an agent reads.
  */
 export const agentContract = {
-	sync: allowed
-		.meta(
-			openapi({
-				method: 'POST',
-				path: '/api/sync',
-				inputStructure: 'detailed',
-				summary: 'Sync the space',
-				description:
-					'The apps’ replication protocol. `{ "cursor": 0, "ops": [] }` answers with the whole visible snapshot. A task op is applied when the task is editable before and after it, a comment op when its task is editable and the comment is new or the caller’s own, and a project, section, or label op only for the owner or an AI account; other ops are acknowledged and dropped. Each op is validated on its own: one that fails is listed in `rejected` with the reason and never applies, the rest still do, and the answer is the whole snapshot.',
-			}),
-		)
-		.input(z.object({ query: spaceQuery, body: syncRequestSchema }))
-		.output(syncResponseSchema),
 	view: allowed
 		.meta(
 			openapi({
@@ -495,10 +491,7 @@ export const agentContract = {
 			.input(z.object({ query: taskQuery }))
 			.output(okSchema),
 	},
-	/**
-	 * The `Account` object answers it before its router, so the owner's reads skip the space's queue. Uploading,
-	 * `PUT /api/images`, stays outside the contract: its body is raw bytes, and AI accounts do not upload.
-	 */
+	/** Uploading, `PUT /api/images`, stays outside the contract: its body is raw bytes, and AI accounts do not upload. */
 	images: {
 		get: found
 			.meta(
@@ -516,15 +509,19 @@ export const agentContract = {
 	},
 };
 
-/**
- * Served by a space's `Account` Durable Object: the caller's own unless `?space=` names one shared with them. The
- * Worker routes on that query alone and forwards the body unread.
- */
-export const accountContract = {
+const spaceContract = {
 	...agentContract,
-	spaces: {
-		/** The spaces shared with the caller. Served by the caller's own object. */
-		list: signedIn.meta(openapi({ method: 'GET', path: '/api/spaces' })).output(spacesSchema),
+	sync: {
+		/** Short-lived. Human users only. */
+		token: signedIn.meta(openapi({ method: 'GET', path: '/api/sync/token' })).output(syncTokenSchema),
+		/**
+		 * The client's queued PowerSync writes. Each is checked and applied on its own: one the server refuses is listed in
+		 * `rejected` and the rest still apply, so a bad write never stalls the queue.
+		 */
+		upload: allowed
+			.meta(openapi({ method: 'POST', path: '/api/upload' }))
+			.input(uploadRequestSchema)
+			.output(uploadResponseSchema),
 	},
 	/** The owner's shares of their own space. Human owners only. */
 	shares: {
@@ -557,10 +554,6 @@ export const accountContract = {
 		/** What the server will deliver to this device, soonest first. For inspecting a run, not a user path. */
 		schedule: signedIn.meta(openapi({ method: 'GET', path: '/api/push/schedule' })).output(pushScheduleResponseSchema),
 	},
-	/** Throws inside the space's `Account` object, so its event lands in the caller's trace. */
-	debug: {
-		accountError: signedIn.meta(openapi({ method: 'POST', path: '/api/debug/account-error' })).output(okSchema),
-	},
 	/** Notouroboros's tasks. See `docs/decisions/integrations.md`. */
 	memoTasks: {
 		list: signedIn
@@ -580,54 +573,11 @@ export const accountContract = {
 	},
 };
 
-/** Worker to `Account` only. The Worker never forwards it, so no client can call it. */
-export const internalContract = {
-	/** Owner to guest: the owner's space is shared with this user (`live`), or no longer is. */
-	membership: oc
-		.errors({ UNAUTHORIZED: {} })
-		.meta(openapi({ method: 'POST', path: '/api/account/membership' }))
-		.input(z.object({ spaceId: z.string(), owner: personSchema, live: z.boolean() }))
-		.output(okSchema),
-	/** Owner to guest: `space` moved to `cursor`, which the guest's sockets hear as is. Skips the serial queue. */
-	nudge: oc
-		.errors({ UNAUTHORIZED: {} })
-		.meta(openapi({ method: 'POST', path: '/api/account/nudge' }))
-		.input(nudgeSchema.required({ space: true }))
-		.output(okSchema),
-	/** Worker to owner: a share the Worker resolved the grantee of. `grantee` is null for a link. */
-	share: oc
-		.errors({ NOT_FOUND: {} })
-		.meta(openapi({ method: 'POST', path: '/api/account/share' }))
-		.input(z.object({ target: shareTargetSchema, grantee: personSchema.nullable(), role: roleSchema }))
-		.output(shareViewSchema),
-	/** Worker to owner: an AI account was deleted, so its tokens, shares, and people row go. */
-	revokeAi: oc
-		.meta(openapi({ method: 'POST', path: '/api/account/revoke-ai' }))
-		.input(z.object({ aiUserId: z.string() }))
-		.output(okSchema),
-	/** Worker to owner: everyone the space has met, for people search. */
-	people: oc.meta(openapi({ method: 'POST', path: '/api/account/people' })).output(peopleSchema),
-	/** Worker to owner: what the link share `id` shows, for anyone holding its token. */
-	sharedView: oc
-		.errors({ NOT_FOUND: {} })
-		.meta(openapi({ method: 'POST', path: '/api/account/shared-view' }))
-		.input(byId)
-		.output(sharedViewSchema),
-	/** Worker to owner: the AI account a `pm.<ownerId>.<secret>` token belongs to, or null. */
-	resolveToken: oc
-		.errors({ UNAUTHORIZED: {} })
-		.meta(openapi({ method: 'POST', path: '/api/account/resolve-token' }))
-		.input(z.object({ secret: z.string() }))
-		.output(z.object({ aiUserId: z.string().nullable() })),
-};
-
 export const contract = {
 	...workerContract,
-	...accountContract,
-	push: { ...workerContract.push, ...accountContract.push },
-	shares: { ...workerContract.shares, ...accountContract.shares },
-	debug: { ...workerContract.debug, ...accountContract.debug },
+	...spaceContract,
+	push: { ...workerContract.push, ...spaceContract.push },
+	shares: { ...workerContract.shares, ...spaceContract.shares },
 };
 
-/** OpenAPI carries JSON, so the client's types are the contract's jsonified. */
 export type ApiClient = JsonifiedClient<RouterContractClient<typeof contract>>;

@@ -665,15 +665,21 @@
 				},
 				[],
 				{
-					"targets": [
+					"access": [
 						{
-							"id": "garden",
+							"entityId": "garden",
+							"grantee": "me",
+							"id": "me:project:garden",
 							"kind": "project",
+							"owner": "ann",
 							"role": "view"
 						},
 						{
-							"id": "weekend",
+							"entityId": "weekend",
+							"grantee": "me",
+							"id": "me:label:weekend",
 							"kind": "label",
+							"owner": "ann",
 							"role": "view"
 						}
 					]
@@ -698,15 +704,21 @@
 				},
 				[],
 				{
-					"targets": [
+					"access": [
 						{
-							"id": "garden",
+							"entityId": "garden",
+							"grantee": "me",
+							"id": "me:project:garden",
 							"kind": "project",
+							"owner": "ann",
 							"role": "view"
 						},
 						{
-							"id": "weekend",
+							"entityId": "weekend",
+							"grantee": "me",
+							"id": "me:label:weekend",
 							"kind": "label",
+							"owner": "ann",
 							"role": "view"
 						}
 					]
@@ -731,15 +743,21 @@
 				},
 				[],
 				{
-					"targets": [
+					"access": [
 						{
-							"id": "garden",
+							"entityId": "garden",
+							"grantee": "me",
+							"id": "me:project:garden",
 							"kind": "project",
+							"owner": "ann",
 							"role": "edit"
 						},
 						{
-							"id": "weekend",
+							"entityId": "weekend",
+							"grantee": "me",
+							"id": "me:label:weekend",
 							"kind": "label",
+							"owner": "ann",
 							"role": "edit"
 						}
 					]
@@ -764,15 +782,21 @@
 				},
 				[],
 				{
-					"targets": [
+					"access": [
 						{
-							"id": "garden",
+							"entityId": "garden",
+							"grantee": "me",
+							"id": "me:project:garden",
 							"kind": "project",
+							"owner": "ann",
 							"role": "edit"
 						},
 						{
-							"id": "weekend",
+							"entityId": "weekend",
+							"grantee": "me",
+							"id": "me:label:weekend",
 							"kind": "label",
+							"owner": "ann",
 							"role": "edit"
 						}
 					]
@@ -807,26 +831,54 @@
 					"kind": "inbox"
 				},
 				{
-					"targets": [
+					"access": [
 						{
-							"id": "garden",
+							"entityId": "garden",
+							"grantee": "me",
+							"id": "me:project:garden",
 							"kind": "project",
+							"owner": "ann",
 							"role": "edit"
 						},
 						{
-							"id": "shed",
+							"entityId": "beds",
+							"grantee": "me",
+							"id": "me:section:beds",
+							"kind": "section",
+							"owner": "ann",
+							"role": "edit"
+						},
+						{
+							"entityId": "shed",
+							"grantee": "me",
+							"id": "me:project:shed",
 							"kind": "project",
+							"owner": "ann",
 							"role": "view"
 						},
 						{
-							"id": "weekend",
+							"entityId": "weekend",
+							"grantee": "me",
+							"id": "me:label:weekend",
 							"kind": "label",
+							"owner": "ann",
 							"role": "view"
 						},
 						{
-							"id": "fence",
+							"entityId": "fence",
+							"grantee": "me",
+							"id": "me:task:fence",
 							"kind": "task",
+							"owner": "ann",
 							"role": "edit"
+						},
+						{
+							"entityId": "fence-project",
+							"grantee": "me",
+							"id": "me:project:fence-project",
+							"kind": "project",
+							"owner": "ann",
+							"role": "view"
 						}
 					]
 				}
@@ -839,26 +891,54 @@
 			"input": [
 				null,
 				{
-					"targets": [
+					"access": [
 						{
-							"id": "garden",
+							"entityId": "garden",
+							"grantee": "me",
+							"id": "me:project:garden",
 							"kind": "project",
+							"owner": "ann",
 							"role": "edit"
 						},
 						{
-							"id": "shed",
+							"entityId": "beds",
+							"grantee": "me",
+							"id": "me:section:beds",
+							"kind": "section",
+							"owner": "ann",
+							"role": "edit"
+						},
+						{
+							"entityId": "shed",
+							"grantee": "me",
+							"id": "me:project:shed",
 							"kind": "project",
+							"owner": "ann",
 							"role": "view"
 						},
 						{
-							"id": "weekend",
+							"entityId": "weekend",
+							"grantee": "me",
+							"id": "me:label:weekend",
 							"kind": "label",
+							"owner": "ann",
 							"role": "view"
 						},
 						{
-							"id": "fence",
+							"entityId": "fence",
+							"grantee": "me",
+							"id": "me:task:fence",
 							"kind": "task",
+							"owner": "ann",
 							"role": "edit"
+						},
+						{
+							"entityId": "fence-project",
+							"grantee": "me",
+							"id": "me:project:fence-project",
+							"kind": "project",
+							"owner": "ann",
+							"role": "view"
 						}
 					]
 				}
@@ -867,33 +947,61 @@
 		},
 		{
 			"fn": "canAddTo",
-			"test": "canAddTo › a shared project or label takes a task only through an edit share on it",
+			"test": "canAddTo › a shared project or label takes a task only when its access row says edit",
 			"input": [
 				{
 					"id": "garden",
 					"kind": "project"
 				},
 				{
-					"targets": [
+					"access": [
 						{
-							"id": "garden",
+							"entityId": "garden",
+							"grantee": "me",
+							"id": "me:project:garden",
 							"kind": "project",
+							"owner": "ann",
 							"role": "edit"
 						},
 						{
-							"id": "shed",
+							"entityId": "beds",
+							"grantee": "me",
+							"id": "me:section:beds",
+							"kind": "section",
+							"owner": "ann",
+							"role": "edit"
+						},
+						{
+							"entityId": "shed",
+							"grantee": "me",
+							"id": "me:project:shed",
 							"kind": "project",
+							"owner": "ann",
 							"role": "view"
 						},
 						{
-							"id": "weekend",
+							"entityId": "weekend",
+							"grantee": "me",
+							"id": "me:label:weekend",
 							"kind": "label",
+							"owner": "ann",
 							"role": "view"
 						},
 						{
-							"id": "fence",
+							"entityId": "fence",
+							"grantee": "me",
+							"id": "me:task:fence",
 							"kind": "task",
+							"owner": "ann",
 							"role": "edit"
+						},
+						{
+							"entityId": "fence-project",
+							"grantee": "me",
+							"id": "me:project:fence-project",
+							"kind": "project",
+							"owner": "ann",
+							"role": "view"
 						}
 					]
 				}
@@ -902,33 +1010,125 @@
 		},
 		{
 			"fn": "canAddTo",
-			"test": "canAddTo › a shared project or label takes a task only through an edit share on it",
+			"test": "canAddTo › a shared project or label takes a task only when its access row says edit",
+			"input": [
+				{
+					"id": "garden",
+					"kind": "project",
+					"sectionId": "beds"
+				},
+				{
+					"access": [
+						{
+							"entityId": "garden",
+							"grantee": "me",
+							"id": "me:project:garden",
+							"kind": "project",
+							"owner": "ann",
+							"role": "edit"
+						},
+						{
+							"entityId": "beds",
+							"grantee": "me",
+							"id": "me:section:beds",
+							"kind": "section",
+							"owner": "ann",
+							"role": "edit"
+						},
+						{
+							"entityId": "shed",
+							"grantee": "me",
+							"id": "me:project:shed",
+							"kind": "project",
+							"owner": "ann",
+							"role": "view"
+						},
+						{
+							"entityId": "weekend",
+							"grantee": "me",
+							"id": "me:label:weekend",
+							"kind": "label",
+							"owner": "ann",
+							"role": "view"
+						},
+						{
+							"entityId": "fence",
+							"grantee": "me",
+							"id": "me:task:fence",
+							"kind": "task",
+							"owner": "ann",
+							"role": "edit"
+						},
+						{
+							"entityId": "fence-project",
+							"grantee": "me",
+							"id": "me:project:fence-project",
+							"kind": "project",
+							"owner": "ann",
+							"role": "view"
+						}
+					]
+				}
+			],
+			"output": true
+		},
+		{
+			"fn": "canAddTo",
+			"test": "canAddTo › a shared project or label takes a task only when its access row says edit",
 			"input": [
 				{
 					"id": "shed",
 					"kind": "project"
 				},
 				{
-					"targets": [
+					"access": [
 						{
-							"id": "garden",
+							"entityId": "garden",
+							"grantee": "me",
+							"id": "me:project:garden",
 							"kind": "project",
+							"owner": "ann",
 							"role": "edit"
 						},
 						{
-							"id": "shed",
+							"entityId": "beds",
+							"grantee": "me",
+							"id": "me:section:beds",
+							"kind": "section",
+							"owner": "ann",
+							"role": "edit"
+						},
+						{
+							"entityId": "shed",
+							"grantee": "me",
+							"id": "me:project:shed",
 							"kind": "project",
+							"owner": "ann",
 							"role": "view"
 						},
 						{
-							"id": "weekend",
+							"entityId": "weekend",
+							"grantee": "me",
+							"id": "me:label:weekend",
 							"kind": "label",
+							"owner": "ann",
 							"role": "view"
 						},
 						{
-							"id": "fence",
+							"entityId": "fence",
+							"grantee": "me",
+							"id": "me:task:fence",
 							"kind": "task",
+							"owner": "ann",
 							"role": "edit"
+						},
+						{
+							"entityId": "fence-project",
+							"grantee": "me",
+							"id": "me:project:fence-project",
+							"kind": "project",
+							"owner": "ann",
+							"role": "view"
 						}
 					]
 				}
@@ -937,33 +1137,61 @@
 		},
 		{
 			"fn": "canAddTo",
-			"test": "canAddTo › a shared project or label takes a task only through an edit share on it",
+			"test": "canAddTo › a shared project or label takes a task only when its access row says edit",
 			"input": [
 				{
 					"id": "weekend",
 					"kind": "label"
 				},
 				{
-					"targets": [
+					"access": [
 						{
-							"id": "garden",
+							"entityId": "garden",
+							"grantee": "me",
+							"id": "me:project:garden",
 							"kind": "project",
+							"owner": "ann",
 							"role": "edit"
 						},
 						{
-							"id": "shed",
+							"entityId": "beds",
+							"grantee": "me",
+							"id": "me:section:beds",
+							"kind": "section",
+							"owner": "ann",
+							"role": "edit"
+						},
+						{
+							"entityId": "shed",
+							"grantee": "me",
+							"id": "me:project:shed",
 							"kind": "project",
+							"owner": "ann",
 							"role": "view"
 						},
 						{
-							"id": "weekend",
+							"entityId": "weekend",
+							"grantee": "me",
+							"id": "me:label:weekend",
 							"kind": "label",
+							"owner": "ann",
 							"role": "view"
 						},
 						{
-							"id": "fence",
+							"entityId": "fence",
+							"grantee": "me",
+							"id": "me:task:fence",
 							"kind": "task",
+							"owner": "ann",
 							"role": "edit"
+						},
+						{
+							"entityId": "fence-project",
+							"grantee": "me",
+							"id": "me:project:fence-project",
+							"kind": "project",
+							"owner": "ann",
+							"role": "view"
 						}
 					]
 				}
@@ -972,33 +1200,61 @@
 		},
 		{
 			"fn": "canAddTo",
-			"test": "canAddTo › a shared project or label takes a task only through an edit share on it",
+			"test": "canAddTo › a shared project or label takes a task only when its access row says edit",
 			"input": [
 				{
 					"id": "fence-project",
 					"kind": "project"
 				},
 				{
-					"targets": [
+					"access": [
 						{
-							"id": "garden",
+							"entityId": "garden",
+							"grantee": "me",
+							"id": "me:project:garden",
 							"kind": "project",
+							"owner": "ann",
 							"role": "edit"
 						},
 						{
-							"id": "shed",
+							"entityId": "beds",
+							"grantee": "me",
+							"id": "me:section:beds",
+							"kind": "section",
+							"owner": "ann",
+							"role": "edit"
+						},
+						{
+							"entityId": "shed",
+							"grantee": "me",
+							"id": "me:project:shed",
 							"kind": "project",
+							"owner": "ann",
 							"role": "view"
 						},
 						{
-							"id": "weekend",
+							"entityId": "weekend",
+							"grantee": "me",
+							"id": "me:label:weekend",
 							"kind": "label",
+							"owner": "ann",
 							"role": "view"
 						},
 						{
-							"id": "fence",
+							"entityId": "fence",
+							"grantee": "me",
+							"id": "me:task:fence",
 							"kind": "task",
+							"owner": "ann",
 							"role": "edit"
+						},
+						{
+							"entityId": "fence-project",
+							"grantee": "me",
+							"id": "me:project:fence-project",
+							"kind": "project",
+							"owner": "ann",
+							"role": "view"
 						}
 					]
 				}
@@ -1007,43 +1263,129 @@
 		},
 		{
 			"fn": "canAddTo",
-			"test": "canAddTo › an edit share on the whole space takes a task on any of its lists",
+			"test": "canAddTo › a list the rows do not name takes none",
 			"input": [
 				{
-					"id": "shed",
+					"id": "unknown",
 					"kind": "project"
 				},
 				{
-					"targets": [
+					"access": [
 						{
-							"id": "",
-							"kind": "space",
+							"entityId": "garden",
+							"grantee": "me",
+							"id": "me:project:garden",
+							"kind": "project",
+							"owner": "ann",
 							"role": "edit"
+						},
+						{
+							"entityId": "beds",
+							"grantee": "me",
+							"id": "me:section:beds",
+							"kind": "section",
+							"owner": "ann",
+							"role": "edit"
+						},
+						{
+							"entityId": "shed",
+							"grantee": "me",
+							"id": "me:project:shed",
+							"kind": "project",
+							"owner": "ann",
+							"role": "view"
+						},
+						{
+							"entityId": "weekend",
+							"grantee": "me",
+							"id": "me:label:weekend",
+							"kind": "label",
+							"owner": "ann",
+							"role": "view"
+						},
+						{
+							"entityId": "fence",
+							"grantee": "me",
+							"id": "me:task:fence",
+							"kind": "task",
+							"owner": "ann",
+							"role": "edit"
+						},
+						{
+							"entityId": "fence-project",
+							"grantee": "me",
+							"id": "me:project:fence-project",
+							"kind": "project",
+							"owner": "ann",
+							"role": "view"
 						}
 					]
 				}
 			],
-			"output": true
+			"output": false
 		},
 		{
 			"fn": "canAddTo",
-			"test": "canAddTo › an edit share on the whole space takes a task on any of its lists",
+			"test": "canAddTo › a list the rows do not name takes none",
 			"input": [
 				{
-					"id": "weekend",
+					"id": "unknown",
 					"kind": "label"
 				},
 				{
-					"targets": [
+					"access": [
 						{
-							"id": "",
-							"kind": "space",
+							"entityId": "garden",
+							"grantee": "me",
+							"id": "me:project:garden",
+							"kind": "project",
+							"owner": "ann",
 							"role": "edit"
+						},
+						{
+							"entityId": "beds",
+							"grantee": "me",
+							"id": "me:section:beds",
+							"kind": "section",
+							"owner": "ann",
+							"role": "edit"
+						},
+						{
+							"entityId": "shed",
+							"grantee": "me",
+							"id": "me:project:shed",
+							"kind": "project",
+							"owner": "ann",
+							"role": "view"
+						},
+						{
+							"entityId": "weekend",
+							"grantee": "me",
+							"id": "me:label:weekend",
+							"kind": "label",
+							"owner": "ann",
+							"role": "view"
+						},
+						{
+							"entityId": "fence",
+							"grantee": "me",
+							"id": "me:task:fence",
+							"kind": "task",
+							"owner": "ann",
+							"role": "edit"
+						},
+						{
+							"entityId": "fence-project",
+							"grantee": "me",
+							"id": "me:project:fence-project",
+							"kind": "project",
+							"owner": "ann",
+							"role": "view"
 						}
 					]
 				}
 			],
-			"output": true
+			"output": false
 		},
 		{
 			"fn": "screenHolds",

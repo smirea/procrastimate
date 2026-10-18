@@ -5,13 +5,12 @@ import indexCss from '../../app-web/src/index.css' with { type: 'text' };
 import { migrationsModule } from './migrations';
 import { handWrittenModels } from './models';
 import { tokenFiles } from './tokens';
+import { swiftRowsModule, webTablesModule, type SwiftModel } from './tables';
 import { tableDefaults, zodModule } from './zod';
 
 /**
- * Writes every generated file: the row schemas and bundled migrations from the Drizzle schema, then the OpenAPI
- * document, the web client's contract, and the Swift API types from the contract, and the iOS colors from the web's CSS. A file is rewritten only when
- * its content changes, so watchers do not loop. The outputs are git-ignored: every start, build, check, and test entry
- * point runs this first.
+ * A file is rewritten only when its content changes, so watchers do not loop. The outputs are git-ignored: every
+ * start, build, check, and test entry point runs this first.
  */
 
 const root = join(import.meta.dir, '../..');
@@ -38,6 +37,7 @@ function write(path: string, next: string) {
 
 write('shared/db/generated/zod.ts', zodModule());
 write('server/src/db/generated/migrations.ts', GENERATED + (await migrationsModule()));
+write('app-web/src/lib/generated/tables.ts', webTablesModule());
 
 // The contract imports the row schemas just written, so it loads only now.
 const { minifyContractRouter } = await import('@orpc/contract');
@@ -45,12 +45,30 @@ const { contract } = await import('../../shared/api/contract');
 const { agentOpenApiDocument, namedSchemas, openApiDocument } = await import('./openapi');
 const { swiftModule } = await import('./swift');
 const openApi = json(await openApiDocument());
+const components = namedSchemas();
 write('shared/api/generated/openapi.json', openApi);
 write('shared/api/generated/agent-openapi.json', json(await agentOpenApiDocument()));
 write('app-web/src/lib/generated/contract.json', json(minifyContractRouter(contract)));
 write(
 	'app-ios/Sources/Core/Generated/API.swift',
-	swiftModule({ components: namedSchemas(), paths: JSON.parse(openApi).paths, tableDefaults: tableDefaults() }),
+	swiftModule({ components, paths: JSON.parse(openApi).paths, tableDefaults: tableDefaults() }),
+);
+write(
+	'app-ios/Sources/App/Generated/SyncedTables.swift',
+	swiftRowsModule(
+		Object.fromEntries(
+			Object.entries(components)
+				.filter(([, schema]) => typeof schema['x-table'] === 'string')
+				.map(([name, schema]) => [
+					schema['x-table'] as string,
+					{
+						name,
+						properties: Object.keys(schema.properties ?? {}),
+						required: schema.required ?? [],
+					} satisfies SwiftModel,
+				]),
+		),
+	),
 );
 
 for (const [path, contents] of Object.entries(tokenFiles(indexCss))) write(path, contents);

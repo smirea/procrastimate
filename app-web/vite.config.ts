@@ -24,6 +24,9 @@ export default defineConfig({
 	define: { __SENTRY_TARGET__: JSON.stringify(sentry.target), __APP_VERSION__: JSON.stringify(appVersion()) },
 	// The deploy uploads the maps to Sentry and deletes them, so they are never served.
 	build: { sourcemap: sentry.target ? 'hidden' : false },
+	// PowerSync runs SQLite in a worker built from its own ES module, and the prebundler would break its wasm imports.
+	worker: { format: 'es' },
+	optimizeDeps: { exclude: ['@journeyapps/wa-sqlite', '@powersync/web'] },
 	server: {
 		host: '127.0.0.1',
 		allowedHosts,

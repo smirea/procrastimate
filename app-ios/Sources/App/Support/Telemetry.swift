@@ -60,8 +60,8 @@ enum Telemetry {
         }
     }
 
-    /// `PROCRASTIMATE_SENTRY_SMOKE=1`, honored in Release too so production is provable: the Worker and the `Account`
-    /// object throw from debug routes, then the app reports its own error, all in one trace. `scripts/sentry-check.ts
+    /// `PROCRASTIMATE_SENTRY_SMOKE=1`, honored in Release too so production is provable: the Worker throws from its
+    /// debug route, then the app reports its own error, all in one trace. `scripts/sentry-check.ts
     /// --expect ios` reads them back.
     static func smokeIfAsked() async {
         guard ProcessInfo.processInfo.environment["PROCRASTIMATE_SENTRY_SMOKE"] == "1", SessionToken.read() != nil else {
@@ -69,7 +69,6 @@ enum Telemetry {
         }
         let transaction = SentrySDK.startTransaction(name: "Sentry smoke", operation: "smoke", bindToScope: true)
         _ = try? await APIClient.send(API.Endpoints.DebugError.self, NoInput())
-        _ = try? await APIClient.send(API.Endpoints.DebugAccountError.self, NoInput())
         reportSentrySmoke(in: transaction)
         transaction.finish()
     }

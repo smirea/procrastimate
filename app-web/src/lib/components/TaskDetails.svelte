@@ -47,7 +47,7 @@
 	const parent = $derived(task.parentId ? store.task(task.parentId) : undefined);
 	const home = $derived(store.homeOf(id));
 	const space = $derived(store.dataOf(home));
-	const owner = $derived(home ? store.spaces[home]?.owner : undefined);
+	const owner = $derived(home ? store.ownerOf(home) : undefined);
 	const editable = $derived(store.canEdit(id));
 	const project = $derived(store.project(task.projectId));
 	const section = $derived(store.section(task.sectionId));
@@ -106,7 +106,6 @@
 		}
 	}
 
-	/** A subtask's details return to its parent once the subtask is done or gone. */
 	function leave(parentId: string | null) {
 		if (parentId) sheets.openTask(parentId, 'back');
 		else sheets.close();
@@ -135,7 +134,6 @@
 	const imageFiles = (data: DataTransfer | null) => [...(data?.files ?? [])].filter(file => file.type.startsWith('image/'));
 	const carriesFiles = (event: DragEvent) => editable && !!event.dataTransfer?.types.includes('Files');
 
-	/** Pasting an image anywhere in details attaches it; pasting text into the title or notes still pastes text. */
 	function onpaste(event: ClipboardEvent) {
 		const files = imageFiles(event.clipboardData);
 		if (!editable || !files.length) return;

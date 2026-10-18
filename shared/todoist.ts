@@ -4,7 +4,7 @@ import { defaultLabelColor } from './label-colors.ts';
 import { parseQuickAdd } from './quick-add.ts';
 import { projectsInOrder, sectionsOf, type StoreData } from './store.ts';
 import { nextSiblingOrder } from './subtasks.ts';
-import { taskSchema } from './sync/protocol.ts';
+import { taskSchema } from './model.ts';
 import {
 	DEFAULT_PRIORITY,
 	toDateKey,
@@ -257,7 +257,7 @@ function readProject(file: BackupFile, now: Date, backup: TodoistBackup) {
 	}
 }
 
-/** Reads every project CSV in a Todoist backup. Other files, such as macOS metadata, are ignored. */
+/** Files other than project CSVs, such as macOS metadata, are ignored. */
 export function readTodoistBackup(files: readonly BackupFile[], now: Date): TodoistBackup {
 	const backup: TodoistBackup = { projects: [], sections: [], tasks: [], warnings: [] };
 	for (const file of files) {

@@ -433,8 +433,8 @@ public enum QuickAdd {
         return DuePhrase(date: Dates.toDateKey(at, in: ctx.zone), time: clock(at, in: ctx.zone))
     }
 
-    /// A date past 9999-12-31 is not a `DateKey`, and the server rejects the op that carries it along with the rest
-    /// of the outbox, so such a phrase, as in `3929284d`, stays text.
+    /// A date past 9999-12-31 is not a `DateKey`, and the server rejects the write that carries it, so such a phrase, as
+    /// in `3929284d`, stays text.
     static func readDateTime(_ m: Found, _ ctx: Context) -> DuePhrase? {
         guard let phrase = readPhrase(m, ctx) else { return nil }
         if let date = phrase.date, Dates.parts(date).year > 9999 { return nil }

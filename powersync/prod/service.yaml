@@ -1,0 +1,24 @@
+# PowerSync Cloud instance procrastimate-prod. Deployed with the PowerSync CLI from `cli.yaml`; the streams are the
+# shared `../sync-config.yaml`. The database password comes from env-manager's `POWERSYNC_DATABASE_PASSWORD` (prod).
+_type: cloud
+name: procrastimate-prod
+region: us
+replication:
+  connections:
+    - type: postgresql
+      hostname: db.pbfeblbuzsijooytrzxy.supabase.co
+      port: 5432
+      database: postgres
+      username: powersync_role
+      password:
+        secret: !env POWERSYNC_DATABASE_PASSWORD
+      sslmode: verify-full
+client_auth:
+  jwks:
+    keys:
+      - kty: OKP
+        kid: procrastimate-prod-2026-10-17
+        crv: Ed25519
+        x: nUNPEun2l_PyjTCj40ZAN_ODrtOduhw5xAUfon8fjIs
+        alg: EdDSA
+  additional_audiences: ['powersync']

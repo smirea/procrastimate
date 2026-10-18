@@ -11,7 +11,7 @@
 	import LinkedText from './LinkedText.svelte';
 	import PersonName from './PersonName.svelte';
 	import { api } from '../api.ts';
-	import type { Home } from '../spaces.ts';
+	import type { Home } from 'shared/space-routing.ts';
 	import { session } from '../session.svelte.ts';
 	import { store } from '../store.svelte.ts';
 	import { clock, motion, toasts } from '../ui.svelte.ts';

@@ -20,12 +20,10 @@ struct ShareButton: View {
     }
 }
 
-/// Who can see a project, label, or task: a public link to copy or send, people added by email or from those the
-/// space has met, each removable.
 struct ShareSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(Store.self) private var store
-    @Environment(AccountSync.self) private var accountSync
+    @Environment(SyncClient.self) private var sync
     @Environment(Toasts.self) private var toasts
     let target: API.ShareTarget
     let name: String
@@ -50,7 +48,7 @@ struct ShareSheet: View {
         let q = trimmedQuery.lowercased()
         guard !q.isEmpty else { return [] }
         let me = UserDefaults.standard.string(forKey: Session.ownerKey)
-        let known = store.snapshot.people.filter { $0.id != me && $0.name.lowercased().hasPrefix(q) }
+        let known = store.people.filter { $0.id != me && $0.name.lowercased().hasPrefix(q) }
         let remote = searched == trimmedQuery ? found : []
         let granted = Set(people.compactMap(\.value.grantee?.id))
         let all = known + remote.filter { person in !known.contains { $0.id == person.id } }
@@ -219,7 +217,7 @@ struct ShareSheet: View {
 
     /// The server shares only a target it holds, so one made a moment ago uploads first.
     private func create(_ audience: API.ShareAudience) async throws -> API.ShareView {
-        await accountSync.flush()
+        await sync.flush()
         return try await APIClient.send(API.Endpoints.SharesCreate.self, API.NewShare(target: target, audience: audience))
     }
 

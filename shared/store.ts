@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { defaultLabelColor, type LabelColor } from './label-colors.ts';
 import * as subtasks from './subtasks.ts';
-import { bySiblingOrder, moveOrders } from './sync/order.ts';
-import { commentSchema, labelSchema, projectSchema, readSchema, sectionSchema, taskSchema } from './sync/protocol.ts';
+import { bySiblingOrder, moveOrders } from './order.ts';
+import { commentSchema, labelSchema, projectSchema, readSchema, sectionSchema, taskSchema } from './model.ts';
 import { DEFAULT_PRIORITY, type DateKey, type Label, type Project, type Section, type Task } from './task.ts';
 import { placeKey } from './triggers.ts';
 import type { SavedPlace, TaskLocation } from './values.ts';
@@ -257,7 +257,6 @@ export function moveSubtask(data: StoreData, id: string, index: number): StoreDa
 	return { ...data, tasks: put(data.tasks, subtasks.moveSubtask(data.tasks, id, index)) };
 }
 
-/** Deletes the task with every subtask under it, and returns them for undo. */
 export function deleteTask(data: StoreData, id: string): { data: StoreData; removed: Task[] } {
 	const task = data.tasks.find(t => t.id === id);
 	if (!task) return { data, removed: [] };
@@ -336,10 +335,9 @@ export function addProject(
 	return { data: { ...data, projects: [...data.projects, project] }, project };
 }
 
-/** Projects as the user ordered them. The stored list stays in creation order, like every synced list. */
+/** The stored list stays in creation order, like every synced list. */
 export const projectsInOrder = (projects: readonly Project[]) => projects.toSorted(bySiblingOrder);
 
-/** Writes only the moved project's `order`, like a section move. */
 export function moveProject(data: StoreData, id: string, index: number): StoreData {
 	const orders = new Map(moveOrders(data.projects, id, index).map(o => [o.id, o.order]));
 	if (!orders.size) return data;
@@ -360,7 +358,6 @@ export function deleteProject(data: StoreData, id: string): StoreData {
 	};
 }
 
-/** A project's sections in their order. */
 export const sectionsOf = (sections: readonly Section[], projectId: string) =>
 	sections.filter(s => s.projectId === projectId).toSorted(bySiblingOrder);
 
@@ -390,7 +387,6 @@ export function renameSection(data: StoreData, id: string, name: string): StoreD
 	return { ...data, sections: data.sections.map(s => (s.id === id ? { ...s, name } : s)) };
 }
 
-/** Writes only the moved section's `order`, like a subtask move. */
 export function moveSection(data: StoreData, id: string, index: number): StoreData {
 	const section = data.sections.find(s => s.id === id);
 	if (!section) return data;
@@ -414,7 +410,6 @@ export function deleteSection(data: StoreData, id: string): StoreData {
 	};
 }
 
-/** What a delete took out of `before` to leave `after`, for `undelete`. */
 export function deletedBetween(before: StoreData, after: StoreData): Deleted {
 	const gone = <T extends { id: string }>(was: readonly T[], is: readonly T[]) => {
 		const live = new Set(is.map(e => e.id));
@@ -485,7 +480,6 @@ export function setLabelColor(data: StoreData, id: string, color: LabelColor): S
 	return { ...data, labels: data.labels.map(l => (l.id === id ? { ...l, color } : l)) };
 }
 
-/** Rewrites the place of every open task at `key`, so its rows read the saved name and it watches the saved radius. */
 function relocate(tasks: readonly Task[], key: string, edit: Partial<TaskLocation>): Task[] {
 	return tasks.map(t =>
 		t.completedAt === null && t.location && placeKey(t.location) === key

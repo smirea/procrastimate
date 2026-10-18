@@ -11,7 +11,7 @@ struct ProcrastimateApp: App {
     @State private var theme: ThemeSettings
     @State private var notifications: LocalNotifications
     @State private var importer: TodoistImport
-    @State private var accountSync: AccountSync
+    @State private var sync: SyncClient
     @State private var images: TaskImages
     @State private var auth: Session
     @State private var router: IntentRouter
@@ -27,17 +27,17 @@ struct ProcrastimateApp: App {
         let clock = Launch.prepare()
         let navigator = Navigator()
         let toasts = Toasts()
-        let store = Telemetry.trace("Load store", operation: "store.load") {
-            Store(file: StoreLocation.snapshotFile(), clock: clock)
-        }
+        let sync = SyncClient.shared(clock: clock)
+        let store = sync.store
         store.labelColorSuggester = { await LabelColorModel.color(for: $0) }
         let actions = TaskActions(store: store, toasts: toasts, clock: clock)
         let router = IntentRouter()
         // The delegate must be set before launch finishes, so tapping a notification can cold-start into its task.
         let notifications = LocalNotifications(store: store, toasts: toasts, navigator: navigator, clock: clock)
-        let auth = Session(store: store)
+        let auth = Session(sync: sync)
+        sync.session = auth
+        sync.toasts = toasts
         let images = TaskImages(store: store, toasts: toasts)
-        let accountSync = AccountSync(store: store, clock: clock, session: auth, images: images, toasts: toasts)
         let session = IntentSession(
             store: store,
             navigator: navigator,
@@ -66,7 +66,7 @@ struct ProcrastimateApp: App {
         _notifications = State(initialValue: notifications)
         _importer = State(initialValue: TodoistImport(store: store, clock: clock))
         _auth = State(initialValue: auth)
-        _accountSync = State(initialValue: accountSync)
+        _sync = State(initialValue: sync)
         _images = State(initialValue: images)
     }
 
@@ -81,7 +81,7 @@ struct ProcrastimateApp: App {
                 .environment(notifications)
                 .environment(importer)
                 .environment(auth)
-                .environment(accountSync)
+                .environment(sync)
                 .environment(images)
                 .environment(router)
                 .environment(places)
@@ -98,9 +98,9 @@ struct ProcrastimateApp: App {
                     await auth.start()
                     // Before sync, whose bound transaction would otherwise take the smoke's API calls.
                     await Telemetry.smokeIfAsked()
-                    accountSync.start()
+                    sync.start()
                 }
-                .onChange(of: store.revision) { _, _ in accountSync.syncSoon() }
+                .onChange(of: store.people) { _, people in DeviceDefaults.people = people }
                 .onChange(of: store.tasks) { old, new in notifications.tasksChanged(from: old, to: new) }
                 .onChange(of: store.tasks) { _, _ in places.tasksChanged() }
                 .task {
@@ -112,7 +112,7 @@ struct ProcrastimateApp: App {
                 .onChange(of: store.labels) { _, _ in SpotlightIndex.schedule(session) }
                 .task { SpotlightIndex.schedule(session) }
                 .task { await IntentHarness.run() }
-                .task { SharingDemo.run(store: store) }
+                .task { await SharingDemo.run(sync: sync) }
                 .task {
                     SectionsDemo.run(store: store, navigator: navigator)
                     await PlacesDemo.run(store: store, calendar: calendar, navigator: navigator, clock: clock)
@@ -132,7 +132,7 @@ struct ProcrastimateApp: App {
                     guard scenePhase == .active else { return }
                     today = clock.today
                     notifications.fireDueReminders()
-                    accountSync.syncNow()
+                    sync.resume()
                     calendar.sync()
                     Task { await notifications.detect() }
                     Task { await places.sync() }

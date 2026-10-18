@@ -21,7 +21,7 @@
 	import { labelStyle } from '../label-colors.ts';
 	import { labelIcon } from '../label-icon.ts';
 	import { clock, mobile, motion, sheets } from '../ui.svelte.ts';
-	import { sharedEntries } from '../spaces.ts';
+	import { sharedEntries } from 'shared/space-routing.ts';
 	import { inboxTasks, labelViewTasks, todayTasks } from 'shared/views.ts';
 	import { eventGroups, placeGroups } from 'shared/triggers.ts';
 
@@ -56,7 +56,7 @@
 		},
 	]);
 
-	const shared = $derived(sharedEntries(store.spaces));
+	const shared = $derived(sharedEntries(Object.values(store.spaces).map(space => ({ owner: store.ownerOf(space.owner), data: space.data }))));
 
 	let adding = $state(false);
 	let name = $state('');

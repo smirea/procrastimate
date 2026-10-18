@@ -1,12 +1,13 @@
 /**
  * Removes an agent's worktree once its PR is merged: `bun scripts/teardown-worktree.ts <worktree path | branch> [--force]`.
  * A worktree on a detached HEAD has no branch: pass its path or directory name with --force instead.
- * Run it from the main checkout. Stops its servers, deletes its simulators, worktree, and branches, and
- * updates master.
+ * Run it from the main checkout. Stops its servers, removes its PowerSync container and databases, deletes its
+ * simulators, worktree, and branches, and updates master.
  */
 import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { basename, join, resolve } from 'node:path';
+import { databaseOf, dockerRunning, dropDatabases, readOverride, stopPowerSync } from './local-stack';
 import { devices, owner, remove } from './simulators';
 
 function run(cmd: string[], opts: { allowFail?: boolean } = {}): string {
@@ -58,6 +59,17 @@ if (worktree) {
 			.split('\n')
 			.filter(Boolean);
 		if (pids.length) run(['kill', ...new Set(pids)], { allowFail: true });
+	}
+
+	const database = readOverride(worktree)?.DATABASE_URL;
+	if (!dockerRunning()) {
+		console.warn(
+			'Docker is not running; the PowerSync container and databases stay. `bun scripts/worktree-gc.ts` removes them later.',
+		);
+	} else {
+		stopPowerSync(worktree);
+		if (database) await dropDatabases(databaseOf(database));
+		console.log(`Removed the PowerSync container${database ? ` and database ${databaseOf(database)}` : ''}.`);
 	}
 
 	const sim = join(worktree, 'sim');

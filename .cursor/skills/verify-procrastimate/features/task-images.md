@@ -35,5 +35,6 @@ Preconditions:
 
 - A thumbnail shows a gray placeholder until its bytes arrive. Another device that has not uploaded yet keeps it gray, and the tile asks again 30 seconds later, so wait or reopen details.
 - Safari and iOS store JPEG, Chromium stores WebP. Assert sizes, not the format.
-- The web keeps images in IndexedDB, not `localStorage`; clearing site data clears them, and they download again.
+- The web keeps images in IndexedDB, outside the synced database; clearing site data clears them, and they download again. It stores each as an `ArrayBuffer` with its type, because WebKit refuses a `Blob` in IndexedDB in a private window, as Playwright's WebKit contexts are.
+- The web uploads every queued image at the start of each upload of queued writes, so a batch never names an image the server lacks.
 - On iOS, an image picked offline stays in the upload queue until a sync reaches the server. Signing in as another user clears the queue.

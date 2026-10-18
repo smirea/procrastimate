@@ -1,14 +1,13 @@
-import { DEVICE_PROTOCOL_PREFIX } from 'shared/sync/protocol.ts';
+import { DEVICE_PROTOCOL_PREFIX } from 'shared/auth.ts';
 import { RAMBLE_SOCKET_PATH, RAMBLE_SOCKET_PROTOCOL, type RambleServerMessage } from 'shared/ramble/protocol.ts';
 import { voiceCapture, type DictationChoice } from 'shared/dictation.ts';
 import { NativeDictation, speechRecognitionConstructor, type DictationEnd } from '../dictation.ts';
-import { store } from '../store.svelte.ts';
+import { installId } from '../device.ts';
 import { joinTranscript } from './transcript.ts';
 
 export type CaptureStop = 'stopped' | 'denied' | 'unsupported' | 'error' | 'unavailable' | 'limit';
 
 export type RambleListen = {
-	/** `typed` leaves the transcript editable and starts no recognizer. */
 	typed: boolean;
 	stop: () => void;
 };
@@ -46,10 +45,6 @@ class RamblePCM extends AudioWorkletProcessor {
 registerProcessor('ramble-pcm', RamblePCM);
 `;
 
-/**
- * Starts the capture `voiceCapture` picked. Native speech uses the browser recognizer. ElevenLabs streams PCM to
- * the ramble socket. Offline never opens that socket. A browser with no recognizer leaves the transcript editable.
- */
 export function listenRamble(options: {
 	choice: DictationChoice;
 	online: boolean;
@@ -112,11 +107,7 @@ function socket(options: {
 	onStop: (reason: CaptureStop, message?: string) => void;
 	onLevel?: (level: number) => void;
 }): RambleListen {
-	const id = store.deviceId();
-	if (!id) {
-		options.onStop('unavailable', 'Ramble needs a connection');
-		return { typed: true, stop() {} };
-	}
+	const id = installId();
 	let stopped = false;
 	let userStop = false;
 	let heard = false;

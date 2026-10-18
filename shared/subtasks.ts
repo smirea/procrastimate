@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { bySiblingOrder, moveOrders } from './sync/order.ts';
-import { taskSchema } from './sync/protocol.ts';
+import { bySiblingOrder, moveOrders } from './order.ts';
+import { taskSchema } from './model.ts';
 import { dueSchema } from './values.ts';
 import { nextOccurrence, type DateKey, type Due, type Task } from './task.ts';
 import { currentOccurrence, occurrenceDue } from './triggers.ts';
@@ -24,8 +24,11 @@ export const subtaskCompletionSchema = z
 	.meta({ id: 'SubtaskCompletion', 'x-inline': true });
 export type Completion = z.infer<typeof subtaskCompletionSchema>;
 
-export function groupChildren(tasks: readonly Task[]): Map<string, Task[]> {
-	const groups = new Map<string, Task[]>();
+/** What the parent links read of a task, so a server read of only these columns can walk them. */
+type Linked = Pick<Task, 'id' | 'parentId' | 'order' | 'createdAt'>;
+
+export function groupChildren<T extends Linked>(tasks: readonly T[]): Map<string, T[]> {
+	const groups = new Map<string, T[]>();
 	for (const task of tasks) {
 		if (task.parentId === null) continue;
 		const siblings = groups.get(task.parentId) ?? [];
@@ -36,9 +39,9 @@ export function groupChildren(tasks: readonly Task[]): Map<string, Task[]> {
 	return groups;
 }
 
-export function descendantsOf(tasks: readonly Task[], id: string): Task[] {
+export function descendantsOf<T extends Linked>(tasks: readonly T[], id: string): T[] {
 	const children = groupChildren(tasks);
-	const out: Task[] = [];
+	const out: T[] = [];
 	const queue = [id];
 	for (let next = queue.shift(); next !== undefined; next = queue.shift()) {
 		for (const child of children.get(next) ?? []) {
@@ -58,7 +61,6 @@ export function ancestorsOf(tasks: readonly Task[], id: string): Task[] {
 	return out;
 }
 
-/** Counts direct children, or null for a task without any. */
 export function progressOf(children: readonly Task[]): Progress | null {
 	if (!children.length) return null;
 	return { done: children.filter(c => c.completedAt !== null).length, total: children.length };
@@ -125,9 +127,9 @@ export function moveSubtask(tasks: readonly Task[], id: string, index: number): 
 }
 
 /** Makes a task whose parent is missing, or whose parents loop back to it, a top-level task, so it never goes unreachable. */
-export function detachOrphans(tasks: readonly Task[]): Task[] {
+export function detachOrphans<T extends Pick<Task, 'id' | 'parentId'>>(tasks: readonly T[]): T[] {
 	const byId = new Map(tasks.map(t => [t.id, t]));
-	const reachesRoot = (task: Task) => {
+	const reachesRoot = (task: T) => {
 		const seen = new Set([task.id]);
 		for (let id = task.parentId; id !== null; id = byId.get(id)!.parentId) {
 			if (!byId.has(id) || seen.has(id)) return false;

@@ -15,13 +15,13 @@ final class Session {
     static let ownerEmailKey = "procrastimate-owner-email"
     static let ownerNameKey = "procrastimate-owner-name"
 
-    private let store: Store
+    private let sync: SyncClient
     var signedIn: Bool
     var error: ErrorReport?
     var methods = API.AuthMethods.none
 
-    init(store: Store) {
-        self.store = store
+    init(sync: SyncClient) {
+        self.sync = sync
         let token = SessionToken.read()
         signedIn = token != nil || Launch.signedIn
         // The session check that confirms the user needs the network, so an offline launch names them from the last one.
@@ -68,16 +68,14 @@ final class Session {
             signedIn = Launch.signedIn
             return
         }
-        adopt(id, email: user["email"] as? String, name: user["name"] as? String)
+        await adopt(id, email: user["email"] as? String, name: user["name"] as? String)
     }
 
-    /// Remembers who the local document belongs to. A different user pulls a fresh snapshot instead of uploading.
-    func adopt(_ id: String, email: String?, name: String?) {
-        let owner = UserDefaults.standard.string(forKey: Self.ownerKey)
-        if let owner, owner != id {
-            store.switchUser()
-            TaskImages.clearLocal()
-        }
+    /// Remembers who the local database belongs to. Anyone else starts from an empty one that sync fills, so nothing
+    /// of the previous user's uploads into the new account.
+    func adopt(_ id: String, email: String?, name: String?) async {
+        await sync.adopt(id)
+        SessionToken.remember(user: id)
         UserDefaults.standard.set(id, forKey: Self.ownerKey)
         UserDefaults.standard.set(email, forKey: Self.ownerEmailKey)
         UserDefaults.standard.set(name, forKey: Self.ownerNameKey)
@@ -146,7 +144,7 @@ final class Session {
         }
         SessionToken.write(token)
         if let user = object["user"] as? [String: Any], let id = user["id"] as? String {
-            adopt(id, email: user["email"] as? String, name: user["name"] as? String)
+            await adopt(id, email: user["email"] as? String, name: user["name"] as? String)
         } else {
             signedIn = true
             await refresh()

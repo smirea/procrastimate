@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { sectionsOf } from './store.ts';
-import { sectionSchema, taskSchema } from './sync/protocol.ts';
+import { sectionSchema, taskSchema } from './model.ts';
 import { addDays, toDateKey, type DateKey, type Due, type Label, type Section, type Task } from './task.ts';
 import { occurrenceDue, placeKey, scheduledDue } from './triggers.ts';
 import { dateKeySchema } from './values.ts';
@@ -152,19 +152,16 @@ export function upcomingGroups(tasks: readonly Task[], today: DateKey): DayGroup
 	return [...groups].map(([date, list]) => ({ date, tasks: list }));
 }
 
-/** Every open task at a place, subtasks included, like a label view. */
 export function placeTasks(tasks: readonly Task[], key: string) {
 	return open(tasks)
 		.filter(t => t.location && placeKey(t.location) === key)
 		.toSorted((a, b) => compareTasks(a, b));
 }
 
-/** A label's view: the open tasks carrying it, or for a saved place, the open tasks at it. */
 export function labelViewTasks(tasks: readonly Task[], label: Label) {
 	return label.place ? placeTasks(tasks, placeKey(label.place)) : labelTasks(tasks, label.id);
 }
 
-/** Every open task on a calendar event, in the order their moments come. */
 export function eventTasks(tasks: readonly Task[], eventId: string, today: DateKey) {
 	return open(tasks)
 		.filter(t => t.event?.id === eventId)
@@ -179,7 +176,6 @@ export const completedRangeSchema = z
 	.meta({ id: 'CompletedRange', description: 'Local days, both ends included. A null end is open.' });
 export type CompletedRange = z.infer<typeof completedRangeSchema>;
 
-/** Today, the last 7 days, or the last 30 days, each counting today, or all time. */
 export function completedRange(preset: CompletedPreset, today: DateKey): CompletedRange {
 	switch (preset) {
 		case 'today':
@@ -227,7 +223,6 @@ export function completedTasks(tasks: readonly Task[], range: CompletedRange): T
 		.map(entry => entry.task);
 }
 
-/** Completed tasks in `range` under the local day each was completed, newest day first. */
 export function completedDays(tasks: readonly Task[], range: CompletedRange): DayGroup[] {
 	const groups = new Map<DateKey, Task[]>();
 	for (const task of completedTasks(tasks, range)) {
