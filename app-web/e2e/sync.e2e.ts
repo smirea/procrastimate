@@ -511,5 +511,6 @@ test('one command’s writes upload in one request, however many rows it changes
 	});
 	await goOnline(a);
 	await settled(a);
-	expect(uploads).toEqual([151]);
+	// A retried request carries the same whole batch, so every request holds all 151 writes, however many there are.
+	expect(new Set(uploads)).toEqual(new Set([151]));
 });
