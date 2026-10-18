@@ -9,6 +9,8 @@ import { createServer } from 'node:net';
 import { basename, join } from 'node:path';
 import {
 	databaseName,
+	databaseOf,
+	readOverride,
 	databaseUrl,
 	ensureDatabases,
 	ensurePostgres,
@@ -89,7 +91,10 @@ async function pickBlock(): Promise<number> {
 
 // A detached HEAD (mid-rebase) has no branch; the worktree directory is unique too, and teardown reads the name back from ./sim.
 const branch = git('branch', '--show-current') || basename(root);
-const database = databaseName(branch);
+// A rerun keeps the names the first run recorded: T3 renames a thread's branch seconds after setup starts, and naming
+// them from the new branch would hand the worktree an empty database and orphan the old one and its simulator.
+const recordedDatabase = readOverride(root)?.DATABASE_URL;
+const database = recordedDatabase ? databaseOf(recordedDatabase) : databaseName(branch);
 
 // Parallel setups would otherwise pick the same unclaimed block; mkdir is atomic, so it serves as the lock.
 const lock = join(git('rev-parse', '--git-common-dir'), 'setup-worktree.lock');
@@ -140,9 +145,11 @@ if (resetDb) stopPowerSync(root);
 await ensureDatabases(database, root, resetDb);
 await startPowerSync(root, database, base + 2);
 
-// Restricted to shell-safe characters because ./sim embeds it in single quotes.
-const simulator = branch.replaceAll(/[^\w.-]/g, '-');
 const sim = join(root, 'sim');
+// Restricted to shell-safe characters because ./sim embeds it in single quotes.
+const simulator =
+	(existsSync(sim) && readFileSync(sim, 'utf8').match(/worktree-sim\.ts '([^']+)'/)?.[1]) ||
+	branch.replaceAll(/[^\w.-]/g, '-');
 writeFileSync(sim, `#!/bin/sh\ncd "$(dirname "$0")" && exec bun scripts/worktree-sim.ts '${simulator}' "$@"\n`);
 chmodSync(sim, 0o755);
 
