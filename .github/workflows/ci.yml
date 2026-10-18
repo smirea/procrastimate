@@ -116,7 +116,7 @@ jobs:
 
       # The lock tests need two connections, which PGlite cannot give the unit run; this is the one job with a Postgres.
       - name: Advisory lock tests
-        run: DATABASE_URL="$(grep '^DATABASE_URL=' .env.override | cut -d= -f2-)" bun test server/src/sharing-lock.test.ts
+        run: DATABASE_URL="$(grep '^DATABASE_URL=' .env.override | cut -d= -f2-)" REQUIRE_DATABASE=1 bun test server/src/sharing-lock.test.ts
 
       - name: End to end against the Worker, desktop Chromium
         run: bun run test:e2e --project desktop
