@@ -226,12 +226,22 @@ final class SyncClient {
         }
     }
 
+    /// The previous user's commits still on their way to the database are written first, so none lands after the
+    /// clear. The store becomes `id`'s only once the clear worked: a database still holding the previous user's rows
+    /// would show them as a space shared with `id` and upload their queue under `id`'s session.
     private func switchUser(to id: String) async {
         try? await ready.value
-        do {
-            try await database.powerSync.disconnectAndClear()
-        } catch {
-            ErrorReport.log("Could not clear the previous user's data", error: error)
+        await store.saved()
+        var delay = Duration.seconds(1)
+        while true {
+            do {
+                try await database.powerSync.disconnectAndClear()
+                break
+            } catch {
+                ErrorReport.log("Could not clear the previous user's data", error: error)
+                try? await Task.sleep(for: delay)
+                delay = min(delay * 2, .seconds(30))
+            }
         }
         store.switchUser(to: id)
         askedForPeople = []
