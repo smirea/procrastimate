@@ -11,6 +11,7 @@ import { localTables } from './generated/tables.ts';
 import { images } from './images/images.svelte.ts';
 import { session } from './session.svelte.ts';
 import { store } from './store.svelte.ts';
+import { reportWarning } from './sentry.ts';
 import { toasts } from './ui.svelte.ts';
 
 const OPS: Record<UpdateType, RowOp> = {
@@ -20,6 +21,8 @@ const OPS: Record<UpdateType, RowOp> = {
 };
 /** Short enough that an edit reaches another device within about a second, long enough to fold a burst of keys. */
 const UPLOAD_THROTTLE = 100;
+/** A failed upload or a dropped stream tries again this soon, as on iOS. */
+const RETRY_DELAY = 2000;
 /**
  * The store writes a command in one transaction, and PowerSync's default of 100 would split a big one, such as an
  * import or deleting everything, so another device could see half a command for a moment.
@@ -70,8 +73,17 @@ const connector: PowerSyncBackendConnector = {
 		if (!batch) return;
 		await images.upload();
 		const local = databaseId();
+		// Only the server writes `access`, so an entry for a table the client does not write is dropped: thrown, it would
+		// stall every upload behind it.
+		const entries = batch.crud.filter(entry => {
+			if (entry.table in KIND_OF) return true;
+			reportWarning('Dropped a local write to a table the server owns', {
+				entry: `${entry.op} ${entry.table} ${entry.id}`,
+			});
+			return false;
+		});
 		const writes = coalesce(
-			batch.crud.map(entry => ({
+			entries.map(entry => ({
 				op: OPS[entry.op],
 				kind: KIND_OF[entry.table as SyncedTable],
 				id: entry.id,
@@ -88,6 +100,11 @@ const connector: PowerSyncBackendConnector = {
 		} catch (error) {
 			if (isUnauthorized(error)) session.clear();
 			throw error;
+		}
+		if (rejected.length) {
+			reportWarning('The server refused writes', {
+				rejected: rejected.map(({ table, id, reason }) => `${table} ${id}: ${reason}`).join('\n'),
+			});
 		}
 		const notice = rejectionNotice(
 			{ ...viewOf(), reads: [], settings: store.settings },
@@ -119,7 +136,8 @@ async function refreshPeople() {
 export function startSync(userId: string): () => void {
 	let stopped = false;
 	void store.open(userId).then(() => {
-		if (!stopped) return powerSync.connect(connector, { crudUploadThrottleMs: UPLOAD_THROTTLE });
+		if (!stopped)
+			return powerSync.connect(connector, { crudUploadThrottleMs: UPLOAD_THROTTLE, retryDelayMs: RETRY_DELAY });
 	});
 	void refreshPeople();
 	const asked = new Set<string>();

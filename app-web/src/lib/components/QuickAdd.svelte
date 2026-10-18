@@ -29,7 +29,7 @@
 	import { store } from '../store.svelte.ts';
 	import { labelStyle } from '../label-colors.ts';
 	import { labelIcon } from '../label-icon.ts';
-	import { creationHome } from '../spaces.ts';
+	import { creationHome } from 'shared/space-routing.ts';
 	import { clock, mobile, sheets, motion } from '../ui.svelte.ts';
 	import { dueTone, formatDue, formatRecurrence, formatReminder } from 'shared/format.ts';
 	import { formatEvent, formatLocation } from 'shared/triggers.ts';
@@ -128,7 +128,7 @@
 	/** The labels and place that save. A saved place checked or typed wins over the screen's place. */
 	const applied = $derived(applyPickedLabels(store.labels, labelIds, picked.location));
 	/** The space the task will land in. A shared one offers only its own labels and creates none, as in task details. */
-	const home = $derived(creationHome(store.homeOf, { projectId, labelIds }, null));
+	const home = $derived(creationHome(store.homes, { projectId, labelIds }, null));
 	/** What each attribute holds. One with a value shows in the row even when it is not pinned. */
 	const values = $derived<Partial<Record<WebButton, string>>>({
 		...(due && { date: formatDue(due, clock.today) }),

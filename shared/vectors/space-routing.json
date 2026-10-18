@@ -1,0 +1,600 @@
+{
+	"module": "space-routing",
+	"timeZone": "America/New_York",
+	"cases": [
+		{
+			"fn": "creationHome",
+			"test": "creationHome › a subtask goes where its parent is, whatever its project or labels say",
+			"input": [
+				{
+					"ann-label": "ann",
+					"ann-project": "ann",
+					"ann-task": "ann",
+					"bo-label": "bo"
+				},
+				{
+					"labelIds": [
+						"bo-label"
+					],
+					"projectId": null
+				},
+				"ann-task"
+			],
+			"output": "ann"
+		},
+		{
+			"fn": "creationHome",
+			"test": "creationHome › a subtask goes where its parent is, whatever its project or labels say",
+			"input": [
+				{
+					"ann-label": "ann",
+					"ann-project": "ann",
+					"ann-task": "ann",
+					"bo-label": "bo"
+				},
+				{
+					"labelIds": [],
+					"projectId": "ann-project"
+				},
+				"mine"
+			],
+			"output": null
+		},
+		{
+			"fn": "creationHome",
+			"test": "creationHome › a top-level task goes to its project’s space, else its first shared label’s, else the user’s own",
+			"input": [
+				{
+					"ann-label": "ann",
+					"ann-project": "ann",
+					"ann-task": "ann",
+					"bo-label": "bo"
+				},
+				{
+					"labelIds": [
+						"bo-label"
+					],
+					"projectId": "ann-project"
+				},
+				null
+			],
+			"output": "ann"
+		},
+		{
+			"fn": "creationHome",
+			"test": "creationHome › a top-level task goes to its project’s space, else its first shared label’s, else the user’s own",
+			"input": [
+				{
+					"ann-label": "ann",
+					"ann-project": "ann",
+					"ann-task": "ann",
+					"bo-label": "bo"
+				},
+				{
+					"labelIds": [
+						"mine",
+						"bo-label",
+						"ann-label"
+					],
+					"projectId": null
+				},
+				null
+			],
+			"output": "bo"
+		},
+		{
+			"fn": "creationHome",
+			"test": "creationHome › a top-level task goes to its project’s space, else its first shared label’s, else the user’s own",
+			"input": [
+				{
+					"ann-label": "ann",
+					"ann-project": "ann",
+					"ann-task": "ann",
+					"bo-label": "bo"
+				},
+				{
+					"labelIds": [
+						"bo-label"
+					],
+					"projectId": "work"
+				},
+				null
+			],
+			"output": null
+		},
+		{
+			"fn": "creationHome",
+			"test": "creationHome › a top-level task goes to its project’s space, else its first shared label’s, else the user’s own",
+			"input": [
+				{
+					"ann-label": "ann",
+					"ann-project": "ann",
+					"ann-task": "ann",
+					"bo-label": "bo"
+				},
+				{
+					"labelIds": [],
+					"projectId": null
+				},
+				null
+			],
+			"output": null
+		},
+		{
+			"fn": "fitToSpace",
+			"test": "fitToSpace › a new task keeps only the project, section, and labels of its space",
+			"input": [
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 1,
+							"id": "home",
+							"name": "home",
+							"place": null
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 1,
+							"id": "work",
+							"name": "work",
+							"order": 0
+						}
+					],
+					"sections": [
+						{
+							"createdAt": 1,
+							"id": "later",
+							"name": "later",
+							"order": 0,
+							"projectId": "work"
+						}
+					]
+				},
+				{
+					"labelIds": [
+						"home",
+						"theirs"
+					],
+					"projectId": "elsewhere",
+					"sectionId": "later",
+					"title": "Plan"
+				}
+			],
+			"output": {
+				"labelIds": [
+					"home"
+				],
+				"projectId": null,
+				"sectionId": "later",
+				"title": "Plan"
+			}
+		},
+		{
+			"fn": "fitToSpace",
+			"test": "fitToSpace › a new task keeps only the project, section, and labels of its space",
+			"input": [
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 1,
+							"id": "home",
+							"name": "home",
+							"place": null
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 1,
+							"id": "work",
+							"name": "work",
+							"order": 0
+						}
+					],
+					"sections": [
+						{
+							"createdAt": 1,
+							"id": "later",
+							"name": "later",
+							"order": 0,
+							"projectId": "work"
+						}
+					]
+				},
+				{
+					"labelIds": [],
+					"projectId": "work",
+					"sectionId": "gone",
+					"title": "Plan"
+				}
+			],
+			"output": {
+				"labelIds": [],
+				"projectId": "work",
+				"sectionId": null,
+				"title": "Plan"
+			}
+		},
+		{
+			"fn": "fitPatch",
+			"test": "fitPatch › a move into another space’s project or section leaves the task where it is, and its labels drop",
+			"input": [
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 1,
+							"id": "home",
+							"name": "home",
+							"place": null
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 1,
+							"id": "work",
+							"name": "work",
+							"order": 0
+						}
+					],
+					"sections": [
+						{
+							"createdAt": 1,
+							"id": "later",
+							"name": "later",
+							"order": 0,
+							"projectId": "work"
+						}
+					]
+				},
+				{
+					"labelIds": [
+						"home",
+						"x"
+					],
+					"projectId": "theirs",
+					"sectionId": "theirs",
+					"title": "Moved"
+				}
+			],
+			"output": {
+				"labelIds": [
+					"home"
+				],
+				"title": "Moved"
+			}
+		},
+		{
+			"fn": "fitPatch",
+			"test": "fitPatch › a move within the space, or out of every project, applies",
+			"input": [
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 1,
+							"id": "home",
+							"name": "home",
+							"place": null
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 1,
+							"id": "work",
+							"name": "work",
+							"order": 0
+						}
+					],
+					"sections": [
+						{
+							"createdAt": 1,
+							"id": "later",
+							"name": "later",
+							"order": 0,
+							"projectId": "work"
+						}
+					]
+				},
+				{
+					"projectId": "work",
+					"sectionId": "later"
+				}
+			],
+			"output": {
+				"projectId": "work",
+				"sectionId": "later"
+			}
+		},
+		{
+			"fn": "fitPatch",
+			"test": "fitPatch › a move within the space, or out of every project, applies",
+			"input": [
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 1,
+							"id": "home",
+							"name": "home",
+							"place": null
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 1,
+							"id": "work",
+							"name": "work",
+							"order": 0
+						}
+					],
+					"sections": [
+						{
+							"createdAt": 1,
+							"id": "later",
+							"name": "later",
+							"order": 0,
+							"projectId": "work"
+						}
+					]
+				},
+				{
+					"priority": 1,
+					"projectId": null,
+					"sectionId": null
+				}
+			],
+			"output": {
+				"priority": 1,
+				"projectId": null,
+				"sectionId": null
+			}
+		},
+		{
+			"fn": "sharedEntries",
+			"test": "sharedEntries › spaces by owner name, then projects in order, labels by name, and the tasks no project or label leads to",
+			"input": [
+				[
+					{
+						"data": {
+							"labels": [],
+							"projects": [],
+							"tasks": [
+								{
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 1,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"id": "z",
+									"images": [],
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"title": "Zed’s"
+								}
+							]
+						},
+						"owner": {
+							"id": "a-zed",
+							"kind": "human",
+							"name": "Zed",
+							"ownerId": null
+						}
+					},
+					{
+						"data": {
+							"labels": [
+								{
+									"color": "gray",
+									"createdAt": 1,
+									"id": "errands",
+									"name": "errands",
+									"place": null
+								},
+								{
+									"color": "gray",
+									"createdAt": 1,
+									"id": "book",
+									"name": "Books",
+									"place": null
+								}
+							],
+							"projects": [
+								{
+									"createdAt": 1,
+									"id": "second",
+									"name": "Second",
+									"order": 2
+								},
+								{
+									"createdAt": 1,
+									"id": "first",
+									"name": "First",
+									"order": 1
+								}
+							],
+							"tasks": [
+								{
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 1,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"id": "in-project",
+									"images": [],
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": "first",
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"title": "in-project"
+								},
+								{
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 1,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"id": "labelled",
+									"images": [],
+									"labelIds": [
+										"errands"
+									],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"title": "labelled"
+								},
+								{
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 1,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"id": "alone",
+									"images": [],
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"title": "Call mum"
+								},
+								{
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 1,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"id": "sub",
+									"images": [],
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": "alone",
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"title": "sub"
+								}
+							]
+						},
+						"owner": {
+							"id": "ann",
+							"kind": "human",
+							"name": "Ann",
+							"ownerId": null
+						}
+					}
+				]
+			],
+			"output": [
+				{
+					"id": "first",
+					"kind": "project",
+					"name": "First",
+					"owner": {
+						"id": "ann",
+						"kind": "human",
+						"name": "Ann",
+						"ownerId": null
+					}
+				},
+				{
+					"id": "second",
+					"kind": "project",
+					"name": "Second",
+					"owner": {
+						"id": "ann",
+						"kind": "human",
+						"name": "Ann",
+						"ownerId": null
+					}
+				},
+				{
+					"id": "book",
+					"kind": "label",
+					"name": "Books",
+					"owner": {
+						"id": "ann",
+						"kind": "human",
+						"name": "Ann",
+						"ownerId": null
+					}
+				},
+				{
+					"id": "errands",
+					"kind": "label",
+					"name": "errands",
+					"owner": {
+						"id": "ann",
+						"kind": "human",
+						"name": "Ann",
+						"ownerId": null
+					}
+				},
+				{
+					"id": "alone",
+					"kind": "task",
+					"name": "Call mum",
+					"owner": {
+						"id": "ann",
+						"kind": "human",
+						"name": "Ann",
+						"ownerId": null
+					}
+				},
+				{
+					"id": "z",
+					"kind": "task",
+					"name": "Zed’s",
+					"owner": {
+						"id": "a-zed",
+						"kind": "human",
+						"name": "Zed",
+						"ownerId": null
+					}
+				}
+			]
+		}
+	]
+}

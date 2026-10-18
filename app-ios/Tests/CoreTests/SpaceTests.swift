@@ -142,23 +142,6 @@ import Testing
         #expect(written.writes.map(\.op) == [.delete, .put])
     }
 
-    @Test func sharedWithMeListsProjectsLabelsAndLooseTasks() {
-        let data = Snapshot(
-            tasks: [
-                TaskItem(id: "a", title: "Paint", projectId: "house", labelIds: ["urgent"], createdAt: 1),
-                TaskItem(id: "b", title: "Book the vet", createdAt: 2),
-                TaskItem(id: "c", parentId: "b", title: "Call first", createdAt: 3),
-            ],
-            projects: [Project(id: "pets", name: "Pets", order: 2, createdAt: 2), Project(id: "house", name: "House", order: 1, createdAt: 1)],
-            labels: [Label(id: "urgent", name: "urgent", createdAt: 1)],
-            settings: API.Settings()
-        )
-        let entries = Browse.sharedEntries([SharedSpace(id: "ann", owner: ann, data: data)])
-        #expect(entries.map(\.name) == ["House", "Pets", "urgent", "Book the vet"])
-        #expect(entries.map(\.kind) == [.project, .project, .label, .task])
-        #expect(Set(entries.map(\.owner)) == [ann])
-    }
-
     @Test func onlyAShareLinkOnTheAppsDomainNamesAToken() {
         func token(_ link: String) -> String? { SharedLinks.token(in: URL(string: link)!) }
         #expect(token("https://procrastimate.stf.lol/s/u1.abc") == "u1.abc")

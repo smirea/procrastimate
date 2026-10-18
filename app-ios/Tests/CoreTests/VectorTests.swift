@@ -128,6 +128,7 @@ let handlers: [String: Handler] = [
     "row-actions": rowActionsVector,
     "dangling": danglingVector,
     "local-rows": localRowsVector,
+    "space-routing": spaceRoutingVector,
 ]
 
 private struct Occurrence: Decodable {
@@ -698,6 +699,67 @@ private func storeData(_ snapshot: Snapshot) throws -> JSONValue {
                 "own": try storeData(spaces.own),
                 "settings": spaces.settingsStored ? try json(spaces.own.settings) : .null,
                 "spaces": .object(shared),
+            ])
+        })
+    default: throw unknown(fn)
+    }
+}
+
+private struct PlacementInput: Decodable {
+    let title: String?
+    let projectId: String?
+    let sectionId: String?
+    let labelIds: [String]
+}
+
+private struct ListsInput: Decodable {
+    let projects: [Project]
+    let sections: [ProjectSection]
+    let labels: [Label]
+
+    var data: StoreData { StoreData(projects: projects, sections: sections, labels: labels) }
+}
+
+private struct SharedSpaceDataInput: Decodable {
+    struct Data: Decodable {
+        let tasks: [TaskItem]
+        let projects: [Project]
+        let labels: [Label]
+    }
+
+    let owner: Person
+    let data: Data
+}
+
+@Sendable func spaceRoutingVector(_ fn: String, _ a: Args) throws -> JSONValue {
+    switch fn {
+    case "creationHome":
+        let input: PlacementInput = try a(1)
+        return try json(SpaceRouting.creationHome(a(0), projectId: input.projectId, labelIds: input.labelIds, parentId: a(2)))
+    case "fitToSpace":
+        let input: PlacementInput = try a(1)
+        let fitted = SpaceRouting.fitToSpace(
+            try a(0, as: ListsInput.self).data,
+            NewTask(title: input.title ?? "", projectId: input.projectId, sectionId: input.sectionId, labelIds: input.labelIds)
+        )
+        var fields: [String: JSONValue] = [
+            "projectId": try json(fitted.projectId), "sectionId": try json(fitted.sectionId), "labelIds": try json(fitted.labelIds),
+        ]
+        if let title = input.title { fields["title"] = .string(title) }
+        return object(fields)
+    case "fitPatch":
+        return try json(SpaceRouting.fitPatch(try a(0, as: ListsInput.self).data, a(1)))
+    case "sharedEntries":
+        let spaces = try a(0, as: [SharedSpaceDataInput].self).map { space in
+            SharedSpace(
+                id: space.owner.id, owner: space.owner,
+                data: Snapshot(tasks: space.data.tasks, projects: space.data.projects, labels: space.data.labels, settings: API.Settings())
+            )
+        }
+        return .array(try SpaceRouting.sharedEntries(spaces).map { entry in
+            object([
+                "kind": .string(entry.kind.rawValue), "id": .string(entry.id), "name": .string(entry.name),
+                "owner": try json(entry.owner),
             ])
         })
     default: throw unknown(fn)

@@ -5,12 +5,21 @@ struct RootView: View {
     @Environment(Navigator.self) private var navigator
     @Environment(Store.self) private var store
     @Environment(Session.self) private var session
+    @Environment(SyncClient.self) private var sync
     @Environment(TaskActions.self) private var actions
     @Environment(\.today) private var todayKey
 
     var body: some View {
         Group {
-            if session.signedIn {
+            if session.signedIn, sync.unreadable {
+                ContentUnavailableView {
+                    SwiftUI.Label("Couldn’t open your tasks", systemImage: "externaldrive.badge.exclamationmark")
+                } description: {
+                    Text("This device could not read its copy of your tasks. Nothing you change would be saved until it can.")
+                } actions: {
+                    Button("Try again") { sync.retryRead() }.buttonStyle(.borderedProminent)
+                }
+            } else if session.signedIn {
                 signedIn
             } else {
                 SignInView()

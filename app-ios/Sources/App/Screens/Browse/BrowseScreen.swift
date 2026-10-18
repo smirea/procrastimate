@@ -94,7 +94,7 @@ private struct BrowseList: View {
                 }
             }
 
-            let shared = Browse.sharedEntries(store.sharedSpaces)
+            let shared = SpaceRouting.sharedEntries(store.sharedSpaces)
             if !shared.isEmpty {
                 Section {
                     ForEach(shared) { entry in
@@ -233,7 +233,7 @@ private struct BrowseRow: View {
 private struct SharedRow: View {
     @Environment(Navigator.self) private var navigator
     @Environment(Store.self) private var store
-    let entry: Browse.SharedEntry
+    let entry: SpaceRouting.SharedEntry
 
     var body: some View {
         switch entry.kind {

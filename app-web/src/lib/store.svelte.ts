@@ -28,17 +28,8 @@ import {
 import { clearLocalImages } from './images/local.ts';
 import { LocalRows } from 'shared/local-rows.ts';
 import { reportError } from './sentry.ts';
-import {
-	creationHome,
-	emptyData,
-	fitToSpace,
-	homes,
-	merged,
-	sharedSpace,
-	type Home,
-	type SharedSpace,
-	type Spaces,
-} from './spaces.ts';
+import { emptyData, homes, merged, sharedSpace, type SharedSpace, type Spaces } from './spaces.ts';
+import { creationHome, fitPatch, fitToSpace, type Home, type Homes } from 'shared/space-routing.ts';
 
 export type { Completion, CompletionState, NewTask, TaskPatch } from 'shared/store.ts';
 
@@ -360,7 +351,12 @@ class Store {
 
 	#creation = (): rules.Creation => ({ id: newId(), now: Date.now() });
 
-	homeOf = (id: string): Home => this.#homes.get(id) ?? null;
+	/** Every shared entity's owner, which decides the space a command runs in. */
+	get homes(): Homes {
+		return this.#homes;
+	}
+
+	homeOf = (id: string): Home => this.#homes[id] ?? null;
 
 	/** The data of one space, whose projects and labels are the only ones its tasks may use. */
 	dataOf(home: Home): rules.StoreData {
@@ -423,10 +419,10 @@ class Store {
 
 	addTask(input: rules.NewTask, parentId: string | null = null): Task | undefined {
 		if (parentId && !this.canEdit(parentId)) return;
-		const home = creationHome(this.homeOf, input, parentId);
+		const home = creationHome(this.#homes, input, parentId);
 		let task: Task | undefined;
 		this.#run(home, data => {
-			const result = rules.addTask(data, home === null ? input : fitToSpace(data, input), parentId, this.#creation());
+			const result = rules.addTask(data, fitToSpace(data, input), parentId, this.#creation());
 			task = result.task;
 			return result.data;
 		});
@@ -434,7 +430,7 @@ class Store {
 	}
 
 	updateTask(id: string, patch: rules.TaskPatch) {
-		this.#onTask(id, data => rules.updateTask(data, id, patch));
+		this.#onTask(id, data => rules.updateTask(data, id, fitPatch(data, patch)));
 	}
 
 	completeTask(id: string, today: DateKey): rules.Completion | undefined {
@@ -593,8 +589,9 @@ class Store {
 		if (comment) this.#onTask(comment.taskId, data => comments.editComment(data, id, body, me, Date.now()));
 	}
 
+	/** Deletes `me`'s own comment and returns it for undo. */
 	deleteComment(id: string, me: string): Comment | undefined {
-		const comment = this.comments.find(c => c.id === id);
+		const comment = this.comments.find(c => c.id === id && c.authorId === me);
 		if (comment) this.#onTask(comment.taskId, data => comments.deleteComment(data, id, me));
 		return comment;
 	}

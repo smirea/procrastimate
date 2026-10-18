@@ -97,29 +97,3 @@ public enum SharedLinks {
         return path[2]
     }
 }
-
-extension Browse {
-    public struct SharedEntry: Hashable, Sendable, Identifiable {
-        public enum Kind: Hashable, Sendable { case project, label, task }
-
-        public let kind: Kind
-        public let id: String
-        public let name: String
-        public let owner: Person
-    }
-
-    /// What Browse lists under "Shared with me": each shared space's projects, then its labels, then its top-level
-    /// tasks outside any project. The `access` rows name every entity a share reaches rather than the shares
-    /// themselves, so a label carried by a shared project's task lists too.
-    public static func sharedEntries(_ spaces: [SharedSpace]) -> [SharedEntry] {
-        spaces.flatMap { space in
-            let data = space.data
-            let tasks = Set(data.tasks.map(\.id))
-            return StoreRules.projectsInOrder(data.projects)
-                .map { SharedEntry(kind: .project, id: $0.id, name: $0.name, owner: space.owner) }
-                + labelsByName(data.labels).map { SharedEntry(kind: .label, id: $0.id, name: $0.name, owner: space.owner) }
-                + data.tasks.filter { $0.projectId == nil && !tasks.contains($0.parentId ?? "") }
-                .map { SharedEntry(kind: .task, id: $0.id, name: $0.title, owner: space.owner) }
-        }
-    }
-}

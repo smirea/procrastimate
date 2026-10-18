@@ -35,6 +35,10 @@ final class SyncClient {
     /// covers every change that asks for another.
     @ObservationIgnored private var lastRead: Task<Void, Never>?
     @ObservationIgnored private var readQueued = false
+    /// True while the local database cannot be read and no read ever worked, so the screen says so instead of showing
+    /// an empty list nothing could be saved to.
+    private(set) var unreadable = false
+    @ObservationIgnored private var loaded = false
     @ObservationIgnored private var askedForPeople: Set<String> = []
     @ObservationIgnored private var connecting: Task<Void, Never>?
     #if DEBUG
@@ -62,6 +66,7 @@ final class SyncClient {
         if let read = try? database.pool.read({ try LocalDatabase.read(since: nil, $0) }) {
             rows.apply(read.changes)
             cursor = read.cursor
+            loaded = true
         }
         self.rows = rows
         store = Telemetry.trace("Load store", operation: "store.load") {
@@ -81,6 +86,8 @@ final class SyncClient {
             fatalError("Could not set up the local database: \(error)")
         }
         observe()
+        // The store holds the change until the server's settings row is here, so the zone only ever patches it.
+        store.noteTimeZone(clock.timeZone.identifier)
         for await batch in batches {
             do {
                 try await database.write(batch)
@@ -103,6 +110,11 @@ final class SyncClient {
 
     private func reloadNow() async {
         await reload().value
+    }
+
+    /// Reads the local database again, after it could not be read.
+    func retryRead() {
+        reload()
     }
 
     @discardableResult
@@ -128,9 +140,12 @@ final class SyncClient {
             read = try await database.pool.read { try LocalDatabase.read(since: cursor, $0) }
         } catch {
             ErrorReport.log("Could not read the local database", error: error)
+            if !loaded { unreadable = true }
             return
         }
         guard self.rows === rows else { return }
+        loaded = true
+        unreadable = false
         self.cursor = read.cursor
         rows.apply(read.changes)
         var spaces = rows.spaces
@@ -170,8 +185,9 @@ final class SyncClient {
     private func connect() async {
         do {
             try await ready.value
+            // The web's values: an edit reaches another device within about a second, and a failed upload retries soon.
             try await database.powerSync.connect(
-                connector: connector, options: ConnectOptions(crudThrottle: 0.2, retryDelay: 2)
+                connector: connector, options: ConnectOptions(crudThrottle: 0.1, retryDelay: 2)
             )
             connecting = nil
         } catch {
@@ -179,13 +195,6 @@ final class SyncClient {
             ErrorReport.log("Could not start sync", error: error)
             return
         }
-        do {
-            try await database.powerSync.waitForFirstSync()
-        } catch {
-            return
-        }
-        // After the first sync, so the server's settings row is here and the zone only patches it.
-        store.noteTimeZone(clock.timeZone.identifier)
         await loadPeople()
     }
 
@@ -267,6 +276,7 @@ final class SyncClient {
         }
         DeviceDefaults.forgetDatabaseID()
         store.switchUser(to: id)
+        store.noteTimeZone(clock.timeZone.identifier)
         rows = LocalRows(me: id)
         cursor = nil
         reload()

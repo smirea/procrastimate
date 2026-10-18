@@ -203,6 +203,17 @@ public final class Store {
         Screens.defaults(screen, tasks, access(of: screen))
     }
 
+    /// Every shared entity's owner, for `SpaceRouting`.
+    private var homes: SpaceRouting.Homes {
+        var homes: SpaceRouting.Homes = [:]
+        for (owner, data) in spaces {
+            for id in data.tasks.map(\.id) + data.projects.map(\.id) + data.sections.map(\.id) + data.labels.map(\.id) {
+                homes[id] = owner
+            }
+        }
+        return homes
+    }
+
     private func space(where holds: (Snapshot) -> Bool) -> SpaceKey? {
         if holds(snapshot) { return .own }
         return spaces.first { holds($0.value) }.map { .shared($0.key) }
@@ -308,16 +319,10 @@ public final class Store {
     @discardableResult
     public func addTask(_ input: NewTask, parentId: String? = nil) -> TaskItem? {
         if let parentId, isReadOnly(parentId) { return nil }
-        let space = parentId.flatMap { space(ofTask: $0) }
-            ?? input.projectId.flatMap { space(ofProject: $0) }
-            ?? input.labelIds.lazy.compactMap { self.space(ofLabel: $0) }.first { $0 != .own }
-            ?? .own
+        let home = SpaceRouting.creationHome(homes, projectId: input.projectId, labelIds: input.labelIds, parentId: parentId)
+        let space: SpaceKey = home.map { .shared($0) } ?? .own
         let data = data(in: space)
-        var input = input
-        input.projectId = input.projectId.flatMap { id in data.projects.contains { $0.id == id } ? id : nil }
-        input.sectionId = input.sectionId.flatMap { id in data.sections.contains { $0.id == id } ? id : nil }
-        input.labelIds = input.labelIds.filter { id in data.labels.contains { $0.id == id } }
-        let (next, task) = StoreRules.addTask(data, input, parentId: parentId, creation())
+        let (next, task) = StoreRules.addTask(data, SpaceRouting.fitToSpace(data, input), parentId: parentId, creation())
         commit(next, in: space)
         return task
     }
@@ -332,15 +337,7 @@ public final class Store {
 
     public func updateTask(_ id: String, _ patch: TaskPatch) {
         guard let space = space(ofTask: id) else { return }
-        let data = data(in: space)
-        var patch = patch
-        if case let .some(.some(projectId)) = patch.projectId, !data.projects.contains(where: { $0.id == projectId }) {
-            patch.projectId = nil
-        }
-        if case let .some(.some(sectionId)) = patch.sectionId, !data.sections.contains(where: { $0.id == sectionId }) {
-            patch.sectionId = nil
-        }
-        patch.labelIds = patch.labelIds?.filter { id in data.labels.contains { $0.id == id } }
+        let patch = SpaceRouting.fitPatch(data(in: space), patch)
         edit(id) { StoreRules.updateTask($0, id, patch) }
     }
 
