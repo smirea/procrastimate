@@ -81,15 +81,15 @@ public struct Spaces: Hashable, Sendable {
         access = rows.access
     }
 
-    /// The order both clients list entities in, oldest first, with orphaned subtasks detached.
+    /// The order both clients list entities in, oldest first, with references to rows that are gone read as empty.
     static func sorted(_ snapshot: Snapshot) -> Snapshot {
-        var sorted = snapshot
-        sorted.tasks = StoreRules.sortTasks(Subtasks.detachOrphans(snapshot.tasks))
-        sorted.projects = snapshot.projects.sorted { ($0.createdAt, $0.id) < ($1.createdAt, $1.id) }
-        sorted.sections = snapshot.sections.sorted { ($0.createdAt, $0.id) < ($1.createdAt, $1.id) }
-        sorted.labels = snapshot.labels.sorted { ($0.createdAt, $0.id) < ($1.createdAt, $1.id) }
-        sorted.comments = snapshot.comments.sorted { ($0.createdAt, $0.id) < ($1.createdAt, $1.id) }
-        sorted.reads = snapshot.reads.sorted { $0.id < $1.id }
+        var sorted = Dangling.resolveDangling(snapshot)
+        sorted.tasks = StoreRules.sortTasks(sorted.tasks)
+        sorted.projects = sorted.projects.sorted { ($0.createdAt, $0.id) < ($1.createdAt, $1.id) }
+        sorted.sections = sorted.sections.sorted { ($0.createdAt, $0.id) < ($1.createdAt, $1.id) }
+        sorted.labels = sorted.labels.sorted { ($0.createdAt, $0.id) < ($1.createdAt, $1.id) }
+        sorted.comments = sorted.comments.sorted { ($0.createdAt, $0.id) < ($1.createdAt, $1.id) }
+        sorted.reads = sorted.reads.sorted { $0.id < $1.id }
         return sorted
     }
 }

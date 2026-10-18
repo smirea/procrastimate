@@ -243,6 +243,7 @@ final class SyncClient {
                 delay = min(delay * 2, .seconds(30))
             }
         }
+        DeviceDefaults.forgetDatabaseID()
         store.switchUser(to: id)
         askedForPeople = []
         TaskImages.clearLocal()
@@ -294,6 +295,7 @@ enum DeviceDefaults {
     private static let peopleKey = "procrastimate-people"
     private static let remindersCheckedKey = "procrastimate-reminders-checked-at"
     private static let installKey = "procrastimate-install-id"
+    private static let databaseKey = "procrastimate-database"
 
     /// The people cache, so names show offline.
     static var people: [Person] {
@@ -316,4 +318,15 @@ enum DeviceDefaults {
         UserDefaults.standard.set(id, forKey: installKey)
         return id
     }
+
+    /// Names this local database, so an upload's op ids (`<database>:<queue id>`) never repeat. PowerSync's queue ids
+    /// can restart when the database is cleared, so a cleared database gets a new name.
+    static var databaseID: String {
+        if let id = UserDefaults.standard.string(forKey: databaseKey) { return id }
+        let id = UUID().uuidString.lowercased()
+        UserDefaults.standard.set(id, forKey: databaseKey)
+        return id
+    }
+
+    static func forgetDatabaseID() { UserDefaults.standard.removeObject(forKey: databaseKey) }
 }

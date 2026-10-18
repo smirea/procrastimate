@@ -126,6 +126,7 @@ let handlers: [String: Handler] = [
     "rows": rowsVector,
     "comments": commentsVector,
     "row-actions": rowActionsVector,
+    "dangling": danglingVector,
 ]
 
 private struct Occurrence: Decodable {
@@ -608,6 +609,28 @@ private struct RejectedInput: Decodable {
             "toggle": offered.toggle.map { .string($0.rawValue) } ?? .null,
             "postpone": .bool(offered.postpone),
             "delete": .bool(offered.delete),
+        ])
+    default: throw unknown(fn)
+    }
+}
+
+private struct EntitiesInput: Decodable {
+    let tasks: [TaskItem]
+    let projects: [Project]
+    let sections: [ProjectSection]
+    let labels: [Label]
+}
+
+@Sendable func danglingVector(_ fn: String, _ a: Args) throws -> JSONValue {
+    switch fn {
+    case "resolveDangling":
+        let input = try a(0, as: EntitiesInput.self)
+        let resolved = Dangling.resolveDangling(
+            Snapshot(tasks: input.tasks, projects: input.projects, sections: input.sections, labels: input.labels, settings: API.Settings())
+        )
+        return object([
+            "tasks": try json(resolved.tasks), "projects": try json(resolved.projects),
+            "sections": try json(resolved.sections), "labels": try json(resolved.labels),
         ])
     default: throw unknown(fn)
     }

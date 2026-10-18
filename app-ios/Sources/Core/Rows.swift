@@ -11,12 +11,16 @@ public struct RowWrite: Hashable, Sendable {
     public var kind: EntityKind
     public var id: String
     public var values: [String: JSONValue]?
+    /// Names an upload's write so a retried batch logs nothing twice: `<database id>:<PowerSync queue id>`. The store's
+    /// own writes have none.
+    public var opId: String?
 
-    public init(op: Op, kind: EntityKind, id: String, values: [String: JSONValue]? = nil) {
+    public init(op: Op, kind: EntityKind, id: String, values: [String: JSONValue]? = nil, opId: String? = nil) {
         self.op = op
         self.kind = kind
         self.id = id
         self.values = values
+        self.opId = opId
     }
 }
 

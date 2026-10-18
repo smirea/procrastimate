@@ -24,15 +24,6 @@ public enum Pin: Hashable, Codable, Sendable {
 }
 
 extension [Pin] {
-    /// The pins once `pin`'s project or label is gone from the store. Sync merging it into `survivor` moves the pin
-    /// there for good, or drops it when the survivor is already pinned. With no survivor the pin stays, hidden until
-    /// its project or label comes back from an undo or a restored share.
-    public func following(_ pin: Pin, to survivor: Pin?) -> [Pin] {
-        guard let survivor else { return self }
-        if contains(survivor) { return filter { $0 != pin } }
-        return map { $0 == pin ? survivor : $0 }
-    }
-
     /// The pins after a list that shows only `shown` of them is edited to `next`. The edited pins fill the shown pins'
     /// slots in order, and any extra go last, so a hidden pin keeps its place for when its tab comes back.
     public func editing(shown: [Pin], to next: [Pin]) -> [Pin] {

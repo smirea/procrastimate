@@ -28,12 +28,14 @@ final class SyncConnector: PowerSyncBackendConnectorProtocol {
     }
 
     /// Images go first, so the server has every image's bytes before an edit that lists it. Writes to one row fold
-    /// into one, and a write the server refuses comes back in `rejected` rather than failing the batch.
+    /// into one, each named by this database and its queue id so a retried batch logs nothing twice, and a write the
+    /// server refuses comes back in `rejected` rather than failing the batch.
     func uploadData(database: PowerSyncDatabaseProtocol) async throws {
         guard let token = SessionToken.read() else { return }
         try await TaskImages.uploadQueued(token: token)
         guard let batch = try await database.getCrudBatch(limit: 1000) else { return }
-        let writes = try Rows.coalesce(batch.crud.compactMap(Self.rowWrite))
+        let databaseID = DeviceDefaults.databaseID
+        let writes = try Rows.coalesce(batch.crud.compactMap { try Self.rowWrite($0, databaseID: databaseID) })
         let body = API.UploadRequest(writes: writes.map(Self.wire))
         let response: API.UploadResponse
         do {
@@ -53,7 +55,7 @@ final class SyncConnector: PowerSyncBackendConnectorProtocol {
     /// A queued entry as a row write. `values` stay PowerSync's columns as the server reads them: snake_case names,
     /// JSON columns as JSON text, numbers as numbers. Only the server writes `access`, so an entry for it, or for any
     /// table the client does not write, is dropped: thrown, it would stall every upload behind it.
-    private static func rowWrite(_ entry: CrudEntry) throws -> RowWrite? {
+    private static func rowWrite(_ entry: CrudEntry, databaseID: String) throws -> RowWrite? {
         guard let kind = Rows.kind(ofTable: entry.table) else {
             ErrorReport.log("Dropped a local write to a table the server owns", detail: "\(entry.op) \(entry.table) \(entry.id)")
             return nil
@@ -73,7 +75,9 @@ final class SyncConnector: PowerSyncBackendConnectorProtocol {
                 values[column.name] = .null
             }
         }
-        return RowWrite(op: op, kind: kind, id: entry.id, values: op == .delete ? nil : values)
+        return RowWrite(
+            op: op, kind: kind, id: entry.id, values: op == .delete ? nil : values, opId: "\(databaseID):\(entry.clientId)"
+        )
     }
 
     private static func wire(_ write: RowWrite) -> JSONValue {
@@ -81,6 +85,7 @@ final class SyncConnector: PowerSyncBackendConnectorProtocol {
             "op": .string(write.op.rawValue), "table": .string(Rows.table(of: write.kind)), "id": .string(write.id),
         ]
         if let values = write.values { fields["values"] = .object(values) }
+        if let opId = write.opId { fields["opId"] = .string(opId) }
         return .object(fields)
     }
 }
