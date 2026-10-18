@@ -45,8 +45,6 @@ const NULLS = Object.fromEntries(
 	]),
 ) as Record<string, Record<string, null>>;
 
-const zone = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
-
 const connector: PowerSyncBackendConnector = {
 	/** Null signs the user out, which stops sync; a thrown error is a network failure PowerSync retries. */
 	async fetchCredentials() {
@@ -142,9 +140,6 @@ export function startSync(userId: string): () => void {
 	void refreshPeople();
 	const asked = new Set<string>();
 	const stopEffects = $effect.root(() => {
-		$effect(() => {
-			if (store.loaded) untrack(() => store.noteTimeZone(zone()));
-		});
 		// A space whose owner this device has not met yet needs their name for its byline.
 		$effect(() => {
 			const unknown = Object.keys(store.spaces).filter(owner => !store.person(owner) && !asked.has(owner));

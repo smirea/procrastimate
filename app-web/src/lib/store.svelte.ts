@@ -275,6 +275,8 @@ class Store {
 		this.readStats.rows += Object.values(read.changes).reduce((sum, { rows }) => sum + rows.length, 0);
 		this.readStats.ms += performance.now() - started;
 		this.unreadable = false;
+		// In the same step as `loaded`, so nothing that waits for the store to load can see it before the zone is noted.
+		if (!this.loaded) this.noteTimeZone(Intl.DateTimeFormat().resolvedOptions().timeZone);
 		this.loaded = true;
 		trimChanges(read).catch(reportError);
 	}
