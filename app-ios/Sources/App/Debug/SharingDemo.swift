@@ -9,7 +9,8 @@ enum SharingDemo {
     static func run(sync: SyncClient) async {
         #if DEBUG
         let store = sync.store
-        guard PlacesDemo.has("sharing"), let me = store.me else { return }
+        guard PlacesDemo.has("sharing") else { return }
+        let me = store.me
         let ann = Person(id: "ann", name: "Ann Lee", kind: .human)
         let claude = Person(id: "claude", name: "Claude", kind: .ai, ownerId: "ann")
         store.rememberPeople([ann, claude])

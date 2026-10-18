@@ -41,10 +41,9 @@ final class LocalDatabase: Sendable {
         static let id = Column("id")
     }
 
-    /// `cursor` is the newest change the read covers, nil while the log does not exist yet, and `logged` how many
-    /// changes the log holds.
+    /// `cursor` is the newest change the read covers, and `logged` how many changes the log holds.
     struct Read: Sendable {
-        let cursor: Int64?
+        let cursor: Int64
         let logged: Int64
         let changes: RowsRead
 
@@ -68,9 +67,6 @@ final class LocalDatabase: Sendable {
     /// there is no cursor yet or the log no longer reaches back to it. GRDB reads in one transaction, so a sync applying
     /// between two tables cannot tear the result.
     static func read(since cursor: Int64?, _ db: Database) throws -> Read {
-        guard try db.tableExists(changeLogTable) else {
-            return Read(cursor: nil, logged: 0, changes: RowsRead(everything: try rows(db)))
-        }
         let bounds = try Row.fetchOne(db, Change.select(min(Change.seq), max(Change.seq)))
         let first: Int64? = bounds?[0]
         let last: Int64 = bounds?[1] ?? 0
@@ -100,8 +96,8 @@ final class LocalDatabase: Sendable {
 
     /// Trims the log once it is long; trimming twice is harmless.
     func trim(after read: Read) async throws {
-        guard read.long, let cursor = read.cursor else { return }
-        _ = try await pool.write { try Change.filter(Change.seq <= cursor - Self.keptChanges).deleteAll($0) }
+        guard read.long else { return }
+        _ = try await pool.write { try Change.filter(Change.seq <= read.cursor - Self.keptChanges).deleteAll($0) }
     }
 
     /// Every synced row. A row that does not decode is left out and logged, so one bad row never hides the rest.

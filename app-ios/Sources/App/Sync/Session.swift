@@ -38,22 +38,6 @@ final class Session {
         if let token = SessionToken.read() { SharedSession.write(token: token) }
         await refresh()
         await loadMethods()
-        await confirmOwner()
-    }
-
-    /// Sync and writes wait while a token's owner is unknown, so the session check repeats, backing off to 30 seconds,
-    /// until the server names the owner or refuses the token.
-    private func confirmOwner() async {
-        var delay = Duration.seconds(1)
-        while sync.ownerPending, SessionToken.read() != nil {
-            do {
-                try await Task.sleep(for: delay)
-            } catch {
-                return
-            }
-            await refresh()
-            delay = min(delay * 2, .seconds(30))
-        }
     }
 
     func refresh() async {

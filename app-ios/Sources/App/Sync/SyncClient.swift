@@ -29,7 +29,7 @@ final class SyncClient {
     @ObservationIgnored private let writes: AsyncStream<RowBatch>.Continuation
     @ObservationIgnored private var observation: AnyDatabaseCancellable?
     /// The local database as last read, for the user the store belongs to, and the newest change that read covered.
-    @ObservationIgnored private var rows: LocalRows?
+    @ObservationIgnored private var rows: LocalRows
     @ObservationIgnored private var cursor: Int64?
     /// Reads run one after another, so an older read never lands after a newer one. A read still waiting to start
     /// covers every change that asks for another.
@@ -53,18 +53,19 @@ final class SyncClient {
             fatalError("Could not open the local database at \(LocalDatabase.url.path): \(error)")
         }
         self.database = database
-        // A token without a known owner, as after a reinstall that kept the Keychain, leaves `me` nil: the store reads
-        // nothing and writes nothing until the session check names the owner, so no row is filed under the wrong one.
-        let me = Session.userID ?? (SessionToken.read() == nil ? Self.localOwner : nil)
+        // The Keychain keeps the owner beside the token, so only an app killed between storing the token and the session
+        // check that names the owner leaves a token without one. Signing in again is simpler than filing rows under no one.
+        if SessionToken.read() != nil, Session.userID == nil { SessionToken.clear() }
+        let me = Session.userID ?? Self.localOwner
         // The views exist from the last launch, so the first frame shows the data. A fresh file has none yet.
-        let rows = me.map(LocalRows.init)
-        if let rows, let read = try? database.pool.read({ try LocalDatabase.read(since: nil, $0) }) {
+        let rows = LocalRows(me: me)
+        if let read = try? database.pool.read({ try LocalDatabase.read(since: nil, $0) }) {
             rows.apply(read.changes)
             cursor = read.cursor
         }
         self.rows = rows
         store = Telemetry.trace("Load store", operation: "store.load") {
-            Store(me: me, spaces: rows?.spaces ?? Spaces(), people: DeviceDefaults.people, clock: clock)
+            Store(me: me, spaces: rows.spaces, people: DeviceDefaults.people, clock: clock)
         }
         ready = Task { try await database.ready() }
         let (batches, writes) = AsyncStream.makeStream(of: RowBatch.self)
@@ -120,7 +121,7 @@ final class SyncClient {
 
     /// Applies what changed since the last read, then hands the store every space, which keeps whatever is equal.
     private func readChanges() async {
-        guard let rows else { return }
+        let rows = self.rows
         let cursor = self.cursor
         let read: LocalDatabase.Read
         do {
@@ -159,14 +160,10 @@ final class SyncClient {
         )
     }
 
-    /// Whether this device knows whose database it holds, which sync and writes wait for when a token exists.
-    var ownerPending: Bool { store.me == nil }
-
-    /// Connects while a real session token is in the Keychain and its owner is known. The DEBUG launch flag is not a
-    /// token. Until PowerSync reports the attempt, a second call joins it rather than connecting again.
+    /// Connects while a real session token is in the Keychain. The DEBUG launch flag is not a token. Until PowerSync
+    /// reports the attempt, a second call joins it rather than connecting again.
     func start() {
-        guard SessionToken.read() != nil, !Launch.offline, let me = store.me, me != Self.localOwner,
-              connecting == nil else { return }
+        guard SessionToken.read() != nil, !Launch.offline, store.me != Self.localOwner, connecting == nil else { return }
         connecting = Task { await connect() }
     }
 
@@ -201,8 +198,6 @@ final class SyncClient {
     /// Pull to refresh: reconnects if needed and waits, up to five seconds, for the stream to catch up.
     func refresh() async {
         guard !Launch.offline else { return }
-        if ownerPending { await session?.refresh() }
-        guard !ownerPending else { return }
         if !database.powerSync.currentStatus.connected {
             start()
             await connecting?.value
@@ -214,17 +209,12 @@ final class SyncClient {
     /// Waits, up to ten seconds, until this device's queued writes reached the server, for a request the server can only
     /// answer once it has them, like sharing a task just created.
     func flush() async {
-        guard !ownerPending else { return }
         await store.saved()
         await waitUntil(.seconds(10)) { _, pending in !pending }
     }
 
-    /// Waits until the local database holds every commit made so far. While the owner is unknown, commits stay in
-    /// memory, so this asks the server once (a background launch never ran `Session.start`) and returns if it can't
-    /// answer.
+    /// Waits until the local database holds every commit made so far.
     func saved() async {
-        if ownerPending { await session?.refresh() }
-        guard !ownerPending else { return }
         await store.saved()
     }
 
@@ -252,22 +242,10 @@ final class SyncClient {
         session?.signedIn = Launch.signedIn
     }
 
-    /// The session belongs to `id`. A device that did not know whose database it held keeps it, writes what it held
-    /// as `id`'s, and connects. Any other previous owner is another user, whose rows, images, and names neither stay
-    /// nor upload.
+    /// The session belongs to `id`. Any other previous owner is another user, whose rows, images, and names neither
+    /// stay nor upload.
     func adopt(_ id: String) async {
-        switch store.me {
-        case id:
-            return
-        case nil:
-            store.adopt(id)
-            rows = LocalRows(me: id)
-            cursor = nil
-            await reloadNow()
-            start()
-        default:
-            await switchUser(to: id)
-        }
+        if store.me != id { await switchUser(to: id) }
     }
 
     /// The previous user's commits still on their way to the database are written first, so none lands after the

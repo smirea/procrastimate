@@ -13,8 +13,6 @@ import { session } from './session.svelte.ts';
 import { store } from './store.svelte.ts';
 import { toasts } from './ui.svelte.ts';
 
-/** A write the server refused goes back to the server's value at the next checkpoint. See `docs/decisions/sync.md`. */
-
 const OPS: Record<UpdateType, RowOp> = {
 	[UpdateType.PUT]: 'put',
 	[UpdateType.PATCH]: 'patch',
@@ -164,8 +162,7 @@ export async function settled(): Promise<void> {
 	}
 }
 
-/** Read by the end-to-end specs. */
-/** A store that has not read the database yet still owes the time zone it notes on loading, so it counts as pending. */
+/** Read by the end-to-end specs. A store that has not read the database yet still owes the time zone it notes on loading, so it counts as pending. */
 async function pending(): Promise<number> {
 	if (!store.loaded) return 1;
 	await store.written();

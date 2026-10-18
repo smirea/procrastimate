@@ -1,15 +1,7 @@
 import type { z } from 'zod';
 import { resolveDangling } from './dangling.ts';
-import {
-	DEFAULT_SETTINGS,
-	KINDS,
-	SETTINGS_ID,
-	type accessSchema,
-	type Kind,
-	type Settings,
-	type Snapshot,
-} from './model.ts';
-import { entityFrom, sortSnapshot, withEntities, type Entity, type Fields } from './snapshot.ts';
+import { KINDS, SETTINGS_ID, type accessSchema, type Kind, type Settings, type Snapshot } from './model.ts';
+import { byId, emptySnapshot, entityFrom, sortSnapshot, withEntities, type Entity, type Fields } from './snapshot.ts';
 import type { StoreData } from './store.ts';
 
 /**
@@ -37,18 +29,6 @@ const ownerRows = (): OwnerRows => ({
 	...(Object.fromEntries(KINDS.map(kind => [kind, new Map()])) as Record<Kind, Map<string, Entity>>),
 	access: new Map(),
 });
-
-const emptySnapshot = (): Snapshot => ({
-	tasks: [],
-	projects: [],
-	sections: [],
-	labels: [],
-	comments: [],
-	reads: [],
-	settings: DEFAULT_SETTINGS,
-});
-
-const byId = (a: { id: string }, b: { id: string }) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 
 export class LocalRows {
 	#owners = new Map<string, OwnerRows>();
@@ -125,18 +105,4 @@ export class LocalRows {
 		const { settings: _, ...data } = this.#snapshot(owner);
 		return { data: { ...data, reads: [] }, access: [...this.#owners.get(owner)!.access.values()].sort(byId) };
 	}
-}
-
-/** What a client holds after each of `reads`, for the recorded vectors that keep the Swift port identical. */
-export function replayReads(me: string, reads: readonly RowsRead[]) {
-	const rows = new LocalRows(me);
-	return reads.map(read => {
-		const touched = rows.apply(read);
-		return {
-			touched,
-			own: rows.own(),
-			settings: rows.settings(),
-			spaces: Object.fromEntries(rows.sharers().map(owner => [owner, rows.space(owner)])),
-		};
-	});
 }

@@ -118,8 +118,8 @@ export function weeklyOn(interval: number, days: Iterable<Weekday>): Recurrence 
 }
 
 /**
- * A date past 9999-12-31, or `NaN` from one past JavaScript's range, is not a `DateKey`, and the server rejects the op
- * that carries it along with the rest of the outbox. Every date a repeat computes passes through here.
+ * A date past 9999-12-31, or `NaN` from one past JavaScript's range, is not a `DateKey`, and the server rejects the
+ * write that carries it. Every date a repeat computes passes through here.
  */
 const inRange = (key: DateKey): DateKey | null => (DATE_KEY_PATTERN.test(key) ? key : null);
 

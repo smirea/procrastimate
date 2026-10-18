@@ -9,7 +9,6 @@ import { AppSchema, CHANGE_LOG_STATEMENTS, changeLog, localTables } from './gene
 export const powerSync = new PowerSyncDatabase({ schema: AppSchema, database: { dbFilename: 'procrastimate.db' } });
 const db = wrapPowerSyncWithDrizzle(powerSync, { schema: localTables });
 
-export type Row = StoredRow;
 /** The change log's table, which `onChange` watches instead of every synced table. */
 export const CHANGE_LOG = getTableName(changeLog);
 export type AccessRow = typeof localTables.access.$inferSelect;

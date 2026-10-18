@@ -4,7 +4,21 @@ import { DEFAULT_SETTINGS } from './model.ts';
 import { label, project, section, task } from './testing.ts';
 import { describe, recorded, test } from './vectors/record.ts';
 
-const replayReads = recorded('local-rows', local.replayReads);
+/** What a client holds after each of `reads`, for the recorded vectors that keep the Swift port identical. */
+function replayReads(me: string, reads: readonly local.RowsRead[]) {
+	const rows = new local.LocalRows(me);
+	return reads.map(read => {
+		const touched = rows.apply(read);
+		return {
+			touched,
+			own: rows.own(),
+			settings: rows.settings(),
+			spaces: Object.fromEntries(rows.sharers().map(owner => [owner, rows.space(owner)])),
+		};
+	});
+}
+
+const replay = recorded('local-rows', replayReads);
 
 const row = <T extends { id: string }>(userId: string, entity: T) => ({ ...entity, userId, sourceKey: null });
 const KINDS = ['task', 'project', 'section', 'label', 'comment', 'read', 'settings', 'access'] as const;
@@ -17,7 +31,7 @@ const empty = { tasks: [], projects: [], sections: [], labels: [], comments: [],
 
 describe('LocalRows', () => {
 	test('splits rows by owner and sorts them by creation, keeping read markers only for the user', () => {
-		const [after] = replayReads('me', [
+		const [after] = replay('me', [
 			everything({
 				task: [
 					row('me', task('later', { createdAt: 9 })),
@@ -41,7 +55,7 @@ describe('LocalRows', () => {
 	});
 
 	test('reads the own settings row, and drops a row that does not parse instead of the load', () => {
-		const [after] = replayReads('me', [
+		const [after] = replay('me', [
 			everything({
 				task: [row('me', task('kept')), row('me', { ...task('broken'), priority: 'urgent' })],
 				settings: [{ userId: 'me', id: 'settings', ...DEFAULT_SETTINGS, dictation: 'elevenlabs' }],
@@ -52,7 +66,7 @@ describe('LocalRows', () => {
 	});
 
 	test('an owner who shares nothing visible yet still has a space', () => {
-		const [after] = replayReads('me', [
+		const [after] = replay('me', [
 			everything({
 				access: [{ id: 'me:project:p', grantee: 'me', owner: 'ann', kind: 'project', entityId: 'p', role: 'edit' }],
 			}),
@@ -61,7 +75,7 @@ describe('LocalRows', () => {
 	});
 
 	test('a later read changes only the rows it names and reports only their owners', () => {
-		const [, after] = replayReads('me', [
+		const [, after] = replay('me', [
 			everything({
 				task: [row('me', task('mine', { title: 'Old' })), row('me', task('other')), row('ann', task('hers'))],
 				access: [view('hers')],
@@ -77,7 +91,7 @@ describe('LocalRows', () => {
 	});
 
 	test('a row that is gone leaves, and a space goes once nothing of it reaches this user', () => {
-		const [, mineGone, hersGone] = replayReads('me', [
+		const [, mineGone, hersGone] = replay('me', [
 			everything({ task: [row('me', task('mine')), row('ann', task('hers'))], access: [view('hers')] }),
 			{ task: changed(['mine'], []) },
 			{ task: changed(['hers'], []), access: changed([view('hers').id], []) },
@@ -89,7 +103,7 @@ describe('LocalRows', () => {
 	});
 
 	test('a deleted project reads as Inbox until it comes back, and then holds its tasks again', () => {
-		const [, deleted, restored] = replayReads('me', [
+		const [, deleted, restored] = replay('me', [
 			everything({
 				project: [row('me', project('work'))],
 				section: [row('me', section('later', 'work'))],
@@ -105,7 +119,7 @@ describe('LocalRows', () => {
 	});
 
 	test('reading everything again drops what the database no longer holds', () => {
-		const [, after] = replayReads('me', [
+		const [, after] = replay('me', [
 			everything({
 				task: [row('me', task('mine')), row('ann', task('hers'))],
 				access: [view('hers')],

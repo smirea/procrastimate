@@ -5,7 +5,7 @@ Comments let the people on a task talk about it: the owner, guests who can edit 
 ## Data
 
 - **Comments are a synced kind.** `comments` has `taskId`, `body`, `authorId`, `createdAt`, and `editedAt`, a clock per field, and `deleted`, like tasks. They travel in the same ops, log, cursors, and nudges, so a comment works offline and arrives in real time like any other change. `KINDS` lists `comment` after `task`, so a diff names the task before its comments.
-- **A comment lives in its task's space.** A comment on a shared task goes into that space's section and outbox. It never moves, because its task never does.
+- **A comment lives in its task's space.** A comment on a shared task goes into that space. It never moves, because its task never does.
 - **A comment outlives its task.** Deleting a task leaves its comments in place, so undoing the delete brings them back. Nobody sees a comment whose task is gone.
 - **Read state is a per-user marker.** `reads` holds one row per task, keyed by the task id, with `readAt`. It always lives in the reader's own space, also for a task in a space shared with them. So each user's read state syncs across their own devices and stays private. A guest never sees the owner's markers, and an AI account has none.
 - **Unread means someone else wrote after the marker.** A comment is unread when its author is someone else and its `createdAt` is past the marker for its task. A comment that is still waiting for the server's author stamp counts as the reader's own.

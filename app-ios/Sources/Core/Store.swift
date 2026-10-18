@@ -21,9 +21,8 @@ public struct RowBatch: Hashable, Sendable {
 /// again and calls `reload`.
 @MainActor @Observable
 public final class Store {
-    /// The signed-in user: the owner of the own space and the `user_id` of every row written to it. Nil while a session
-    /// token's owner is not known yet, when every commit waits in memory until `adopt` names them.
-    public private(set) var me: String?
+    /// The signed-in user: the owner of the own space and the `user_id` of every row written to it.
+    public private(set) var me: String
     /// The user's own data and settings.
     public private(set) var snapshot: Snapshot
     /// Every space shared with the user, by owner id.
@@ -39,8 +38,6 @@ public final class Store {
     @ObservationIgnored private var version = 0
     @ObservationIgnored private var writtenVersion = 0
     @ObservationIgnored private var reloadDeferred = false
-    /// Commits made while `me` was unknown, in order, for `adopt` to hand to the writer.
-    @ObservationIgnored private var held: [(version: Int, space: SpaceKey, writes: [RowWrite])] = []
     @ObservationIgnored private var savedWaiters: [(version: Int, resume: CheckedContinuation<Void, Never>)] = []
     /// Whether the local database holds the user's settings row. Until it does, a settings change waits in
     /// `unsavedSettings`, so no client ever writes a settings row of its own.
@@ -57,7 +54,7 @@ public final class Store {
     @ObservationIgnored private var untouchedLabels: Set<String> = []
 
     public init(
-        me: String?,
+        me: String,
         spaces: Spaces = Spaces(),
         people: [Person] = [],
         clock: AppClock,
@@ -117,16 +114,6 @@ public final class Store {
         await withCheckedContinuation { savedWaiters.append((target, $0)) }
     }
 
-    /// Names the owner of a store that started without one. The data stays, and every held commit goes to the writer
-    /// as `id`'s, in order.
-    public func adopt(_ id: String) {
-        guard me == nil else { return }
-        me = id
-        let held = self.held
-        self.held = []
-        for batch in held { send(batch.version, batch.space, batch.writes) }
-    }
-
     /// Starts over empty for another user, after the app cleared the local database.
     public func switchUser(to me: String) {
         self.me = me
@@ -136,7 +123,6 @@ public final class Store {
         people = []
         readOnly = []
         deletedFrom = [:]
-        held = []
         settingsStored = false
         unsavedSettings = [:]
     }
@@ -282,14 +268,6 @@ public final class Store {
         let writes = Rows.rowWrites(before, after)
         guard writer != nil, !writes.isEmpty else { return }
         version += 1
-        send(version, space, writes)
-    }
-
-    private func send(_ version: Int, _ space: SpaceKey, _ writes: [RowWrite]) {
-        guard let me else {
-            held.append((version, space, writes))
-            return
-        }
         writer?(RowBatch(version: version, owner: space.query ?? me, writes: writes))
     }
 

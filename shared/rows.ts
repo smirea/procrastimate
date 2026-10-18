@@ -1,5 +1,5 @@
 import { KINDS, type Kind, type Snapshot } from './model.ts';
-import { entitiesOf, entityFrom, fieldsOf, withEntities, type Fields } from './snapshot.ts';
+import { entitiesOf, fieldsOf, type Fields } from './snapshot.ts';
 
 /**
  * The bridge between the in-memory store and a database. Every store rule stays a function from one snapshot to the
@@ -104,18 +104,4 @@ export function rejectionNotice(snapshot: Snapshot, rejected: readonly Pick<RowW
 	if (rows.length > 1) return `Couldn’t save changes to ${rows.length} items`;
 	const name = nameOf(snapshot, rows[0]!);
 	return name ? `Couldn’t save a change to “${name}”` : 'Couldn’t save a change';
-}
-
-export function applyWrite(snapshot: Snapshot, write: RowWrite): Snapshot {
-	const entities = entitiesOf(snapshot, write.kind);
-	const index = entities.findIndex(entity => entity.id === write.id);
-	if (write.op === 'delete') {
-		if (write.kind === 'settings' || index < 0) return snapshot;
-		return withEntities(snapshot, write.kind, entities.toSpliced(index, 1));
-	}
-	const base = write.op === 'patch' ? entities[index] : undefined;
-	if (write.op === 'patch' && !base) return snapshot;
-	const entity = entityFrom(write.kind, write.id, { ...(base && fieldsOf(write.kind, base)), ...write.values });
-	if (!entity) return snapshot;
-	return withEntities(snapshot, write.kind, index < 0 ? [...entities, entity] : entities.toSpliced(index, 1, entity));
 }

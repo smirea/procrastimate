@@ -333,9 +333,7 @@ export const rambleBudget = pgTable('ramble_budget', {
 type Row<T extends { $inferSelect: object }> = Omit<T['$inferSelect'], 'userId'>;
 
 export type LogRow = Row<typeof log>;
-export type PushTarget = Row<typeof push>;
 export type RambleUsage = Row<typeof rambleUsage>;
 export type ShareRow = Row<typeof shares>;
-export type ApiTokenRow = Row<typeof apiTokens>;
 export type ImageRow = Row<typeof images>;
 export type AccessRow = typeof access.$inferSelect;

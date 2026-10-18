@@ -3,24 +3,6 @@ import Foundation
 import Testing
 
 @MainActor @Suite struct WriterTests {
-    @Test func aStoreThatDoesNotKnowItsOwnerHoldsEveryWriteUntilItDoes() {
-        let (store, written) = recordingStore(me: nil)
-        store.addTask(NewTask(title: "Buy milk"))
-        store.addProject("Home")
-        #expect(store.tasks.map(\.title) == ["Buy milk"])
-        #expect(written.batches.isEmpty)
-
-        store.adopt("u1")
-        #expect(store.me == "u1")
-        #expect(store.tasks.map(\.title) == ["Buy milk"])
-        #expect(written.batches.map(\.owner) == ["u1", "u1"])
-        #expect(written.batches.map(\.version) == [1, 2])
-        #expect(written.writes.map(\.kind) == [.task, .project])
-
-        store.addTask(NewTask(title: "Pay rent"))
-        #expect(written.batches.map(\.owner) == ["u1", "u1", "u1"])
-    }
-
     @Test func aSettingsChangeBeforeTheRowArrivesStaysInMemoryAndPatchesTheRowOnceItDoes() {
         let (store, written) = recordingStore()
         store.setDictation(.elevenlabs)

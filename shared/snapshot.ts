@@ -28,7 +28,7 @@ export const emptySnapshot = (): Snapshot => ({
 export const byCreation = (a: { createdAt: number; id: string }, b: { createdAt: number; id: string }) =>
 	a.createdAt - b.createdAt || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 
-const byId = (a: { id: string }, b: { id: string }) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+export const byId = (a: { id: string }, b: { id: string }) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 
 export function sortSnapshot(snapshot: Snapshot): Snapshot {
 	return {

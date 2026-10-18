@@ -15,12 +15,12 @@ func sequentialIds() -> () -> String {
 }
 
 @MainActor func recordingStore(
-    me: String? = "me",
+    me: String = "me",
     rows: StoredRows = StoredRows(),
     clock: AppClock = .fixed(pinned, timeZone: TimeZone(identifier: "UTC")!),
     newId: @escaping () -> String = sequentialIds()
 ) -> (Store, WrittenRows) {
-    let store = Store(me: me, spaces: me.map { Spaces(rows, me: $0) } ?? Spaces(), clock: clock, newId: newId)
+    let store = Store(me: me, spaces: Spaces(rows, me: me), clock: clock, newId: newId)
     let written = WrittenRows()
     store.writer = { [weak store] batch in
         written.batches.append(batch)

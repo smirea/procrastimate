@@ -59,8 +59,3 @@ export const snapshotOf = (
 	...fields,
 	settings: { ...emptySnapshot().settings, ...fields.settings },
 });
-
-export const counter = (prefix: string) => {
-	let n = 0;
-	return () => `${prefix}${++n}`;
-};

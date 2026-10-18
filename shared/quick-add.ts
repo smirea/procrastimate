@@ -452,8 +452,8 @@ function resolveMoment(text: string, ctx: Context): DuePhrase | null {
 }
 
 /**
- * A date past 9999-12-31 is not a `DateKey`, and the server rejects the op that carries it along with the rest of
- * the outbox, so such a phrase, as in `3929284d`, stays text.
+ * A date past 9999-12-31 is not a `DateKey`, and the server rejects the write that carries it, so such a phrase, as in
+ * `3929284d`, stays text.
  */
 function readDateTime(groups: Record<string, string | undefined>, ctx: Context): DuePhrase | null {
 	const phrase = readPhrase(groups, ctx);
