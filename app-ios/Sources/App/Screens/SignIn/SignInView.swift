@@ -185,7 +185,10 @@ enum GoogleNativeSignIn {
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let http = response as? HTTPURLResponse, http.statusCode == 200,
               let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let token = object["id_token"] as? String else { throw URLError(.badServerResponse) }
+              let token = object["id_token"] as? String else {
+            let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+            throw ExchangeFailure(detail: "Google token exchange answered \(status): \(String(decoding: data, as: UTF8.self))")
+        }
         return token
     }
 
@@ -200,4 +203,10 @@ private extension Data {
     func base64URLEncodedString() -> String {
         base64EncodedString().replacingOccurrences(of: "+", with: "-").replacingOccurrences(of: "/", with: "_").replacingOccurrences(of: "=", with: "")
     }
+}
+
+/// Google's answer when the code exchange fails, kept whole so the DEBUG error text says what went wrong.
+private struct ExchangeFailure: Error, CustomStringConvertible {
+    let detail: String
+    var description: String { detail }
 }

@@ -111,7 +111,4 @@ extension JSONValue {
         return encoder
     }
 
-    static func encoded(_ value: some Encodable) throws -> JSONValue {
-        try JSONDecoder().decode(JSONValue.self, from: JSONEncoder().encode(value))
-    }
 }

@@ -22,7 +22,7 @@ extension API.Snapshot {
 extension API.Settings {
     /// These settings with some fields replaced, given as a settings row write's camelCase values.
     func merging(_ fields: [String: JSONValue]) throws -> API.Settings {
-        guard case var .object(current) = JSONValue.encoding(self) else { return self }
+        guard case var .object(current) = try JSONValue.encoded(self) else { return self }
         current.merge(fields) { _, new in new }
         return try JSONValue.object(current).decoded()
     }

@@ -429,8 +429,8 @@ struct RambleDrawer: View {
     @ViewBuilder
     private func chips(_ task: RambleTask) -> some View {
         let today = clock.today
-        let project = task.projectId.flatMap { id in store.projects.first { $0.id == id } }
-        let labels = store.labels.filter { task.labelIds.contains($0.id) }
+        let project = task.projectId.flatMap { id in spaceProjects.first { $0.id == id } }
+        let labels = spaceLabels.filter { task.labelIds.contains($0.id) }
         if task.due != nil || task.recurrence != nil || !task.reminders.isEmpty || (task.priority ?? .p4) != .p4 || project != nil || !labels.isEmpty {
             FlowLayout(spacing: 6) {
                 if let due = task.due {
@@ -579,10 +579,10 @@ struct RambleDrawer: View {
         let today = clock.today
         let added = withAnimation(.snappy) {
             saving.compactMap { entry -> TaskItem? in
-                guard let added = store.addTask(Ramble.newTask(entry.task, defaults: defaults, labels: store.labels)) else { return nil }
+                guard let added = store.addTask(Ramble.newTask(entry.task, defaults: defaults, labels: spaceLabels)) else { return nil }
                 if !entry.task.notes.isEmpty { store.updateTask(added.id, TaskPatch(notes: entry.task.notes)) }
                 for subtask in entry.subtasks where !subtask.task.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    guard let child = store.addTask(Ramble.newTask(subtask.task, defaults: nil, labels: store.labels), parentId: added.id) else { continue }
+                    guard let child = store.addTask(Ramble.newTask(subtask.task, defaults: nil, labels: spaceLabels), parentId: added.id) else { continue }
                     if !subtask.task.notes.isEmpty { store.updateTask(child.id, TaskPatch(notes: subtask.task.notes)) }
                 }
                 return added
