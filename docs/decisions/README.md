@@ -17,15 +17,15 @@ ProcrastiMate's concepts, goals, paradigms, and high-level system decisions, one
 - [Recurring tasks](recurrence.md): completing, next occurrences, and editing repeats.
 - [Search](search.md): matching, ranking, grouping, and the search sheet.
 - [Sections](sections.md): Todoist-style headings inside a project, their order, delete rule, quick add `/name`, sharing, and import.
-- [Task images](images.md): images on tasks, their bytes in Turso outside the synced data, the image routes, upload order, offline, and the sweep.
+- [Task images](images.md): images on tasks, their bytes in Postgres outside the synced data, the image routes, upload order, offline, and the sweep.
 - [Subtasks](subtasks.md): nested child tasks, where they show, completion, reorder, and delete rules.
 - [Push notifications](push-notifications.md): Web Push scheduling, delivery, keys, and permission.
 - [Stack](stack.md): tooling, client and server frameworks, and shared code.
 - [API and database types](api.md): the Drizzle schema, the oRPC contract, and the types generated for every client.
-- [Dev hosting](dev-hosting.md): the dev box, `tailscale serve`, and the single-origin rule.
-- [Production hosting](production-hosting.md): the Cloudflare Worker, deploys, and free-tier fit.
-- [Persistence](persistence.md): local storage, validation, source keys, and how server databases migrate.
-- [Sync](sync.md): the server as source of truth, ops and cursors, field-level conflicts, always-on sync, and server-computed push. Its build slices are in [Sync build slices](../sync-slices.md).
+- [Dev hosting](dev-hosting.md): the Docker Postgres and PowerSync every worktree runs, the dev box, `tailscale serve`, and the single-origin rule.
+- [Production hosting](production-hosting.md): the Cloudflare Worker, Supabase, PowerSync Cloud, Hyperdrive, the crons, secrets, deploys, and free-tier fit.
+- [Persistence](persistence.md): the clients' PowerSync databases, source keys, and how the Postgres database migrates.
+- [Sync](sync.md): Postgres as the truth, PowerSync streaming rows down, the one upload route applying row writes, last-write conflicts, and the repairs.
 - [Testing](testing.md): unit tests, end-to-end tests, and the feature map.
 - [iOS app](ios.md): the native SwiftUI app, its architecture, the Swift port and shared test vectors, local notifications, macOS CI, and paired parity tests. Its checklist and thread split are in [iOS parity](../ios-parity.md).
 - [Auth](auth.md): Better Auth sessions, Google and Apple, and per-user data.
@@ -33,5 +33,5 @@ ProcrastiMate's concepts, goals, paradigms, and high-level system decisions, one
 - [Comments](comments.md): comments on tasks, who may write them, per-user read markers, row badges, and the agent routes.
 - [Integrations](integrations.md): other apps, starting with Notouroboros, creating and reading tasks through the server, the shared keychain link, and deep links.
 - [Observability](observability.md): Sentry projects for every client, when they report, the browser tunnel, distributed tracing, and releases.
-- [Sync account and auth](sync-auth.md): the `Account` Durable Object, Turso for task data, and the device id.
+- [Sync tokens and access](sync-auth.md): the PowerSync token the Worker signs, the `access` table, admission on upload, and the install id.
 - [Postgres and PowerSync](../postgres-powersync.md): the requirements and plan for replacing Turso and the sync engine with Postgres, PowerSync, Drizzle, and GRDB.

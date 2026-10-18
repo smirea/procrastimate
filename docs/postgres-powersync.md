@@ -44,7 +44,7 @@ web (Drizzle)┘     │ upload queue  └─ Worker POST /api/upload ─→ Dri
 - **PowerSync Cloud syncs.** It reads Postgres through logical replication and streams each user's rows to the device. Sync Streams in `powersync/sync-config.yaml` say which rows each user gets. The browser and iOS reach it through `/api/powersync/*` on the Worker, which forwards the stream, so the single-origin rule holds.
 - **Writes go up through one route.** Each client's PowerSync upload queue sends its pending changes to `POST /api/upload`. The route checks each change against the actor's access, stamps authorship and the editing app, applies the changes in one Drizzle transaction, runs the repairs that keep the data valid (`fixups`), records activity, and replans push notifications. PowerSync then streams the result back to every device, the writer's included.
 - **Conflicts are the last write to arrive.** A change carries only the columns it changed, so edits to different fields of one task both survive. Two edits to the same field keep whichever reached the server last. A delete removes the row, so a later edit to it changes nothing, and undoing a delete inserts the row again. Per-field clocks are gone.
-- **Auth stays Better Auth.** Moving users to another provider would mean moving scrypt password hashes and Google and Apple identities, which nothing here can test. Better Auth's JWT plugin signs a short-lived RS256 token, and PowerSync checks it against the Worker's JWKS endpoint.
+- **Auth stays Better Auth.** Moving users to another provider would mean moving scrypt password hashes and Google and Apple identities, which nothing here can test. The Worker signs a short-lived EdDSA token for PowerSync with its own key, and each PowerSync config lists the public key, so PowerSync never calls back into the Worker.
 - **Clients keep their synchronous store.** Both clients render from an in-memory snapshot, and every store command stays a synchronous function from one snapshot to the next. After a command, the client writes the rows that changed to the local database through its ORM, and PowerSync queues them for upload. When PowerSync applies changes from the server, the client reloads the snapshot from the local database. The local database replaces the `localStorage` document on the web and the JSON file on iOS.
 - **Shared spaces are rows, not sections.** Every row keeps `user_id`, the owner of its space. A device's database holds its own rows and the rows other spaces share with it, and the client groups them by owner. The server keeps an `access` table, the ids each grantee may see and whether they may edit, recomputed with `scopeOf` whenever a space's data or shares change. Sync Streams read it, so the stream rules stay simple and the scope logic stays in TypeScript.
 - **The Durable Object keeps only Ramble.** The realtime nudge, the account store, and the per-space queue go away. A Worker cron sends due Web Push notifications every minute from schedules the upload route writes. Ramble keeps its object, because a Durable Object's CPU budget resets per WebSocket message.
@@ -65,9 +65,9 @@ web (Drizzle)┘     │ upload queue  └─ Worker POST /api/upload ─→ Dri
 
 ## Questions the proof of concept answers
 
-The proof of concept lives in `poc/` until the migration lands. Each question ends in a recorded result.
+The proof of concept lived in `poc/` until the migration landed, and its answers are in that commit's `poc/README.md`.
 
-1. Does PowerSync accept Better Auth's RS256 token from its JWKS endpoint, locally and in the cloud?
+1. Does PowerSync accept a token the server signs, locally and in the cloud?
 2. Do the PowerSync web SDK and `@powersync/drizzle-driver` run in the SvelteKit build in Chromium and WebKit, and can Drizzle with the `sqlite-core` tables read and write them?
 3. Does the PowerSync Swift SDK with GRDB build for the iOS simulator, do GRDB records insert, update, and delete through PowerSync's views, and does a watch fire when changes sync in?
 4. Can the Worker forward `/api/powersync/*` to PowerSync, streaming included?
