@@ -45,6 +45,9 @@ export default defineConfig({
 			name: 'mobile',
 			testMatch: ['sync.e2e.ts', 'sharing.e2e.ts', 'images.e2e.ts', 'single-origin.e2e.ts'],
 			use: { ...devices['iPhone 15'], viewport: { width: 393, height: 852 } },
+			// Linux WebKit on CI's two cores runs these specs about five times slower than a Mac (10 to 20 s a test against
+			// 2 to 4 s), so the longer ones crossed the default limits there.
+			...(process.env.CI && { timeout: 60_000, expect: { timeout: 10_000 } }),
 		},
 	],
 	webServer:
