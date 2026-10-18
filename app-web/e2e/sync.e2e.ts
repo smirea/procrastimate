@@ -1,4 +1,5 @@
 import type { Browser, BrowserContext, Page } from '@playwright/test';
+import { strToU8, zipSync } from 'fflate';
 import {
 	App,
 	deviceContext,
@@ -24,8 +25,8 @@ type Device = { app: App; page: Page; context: BrowserContext };
 
 test.describe.configure({ mode: 'serial' });
 
-async function device(browser: Browser): Promise<Device> {
-	const context = await deviceContext(browser);
+async function device(browser: Browser, options?: { timezoneId?: string }): Promise<Device> {
+	const context = await deviceContext(browser, options);
 	await signInAccount(context);
 	const page = await context.newPage();
 	await page.clock.setFixedTime(NOW);
@@ -42,6 +43,20 @@ const settled = ({ app }: Device) => expect.poll(() => app.pending(), { timeout:
 
 async function devices(browser: Browser): Promise<[Device, Device]> {
 	return [await device(browser), await device(browser)];
+}
+
+async function signOutOf({ app, page }: Device) {
+	await app.openSettings();
+	await app.settings().getByRole('button', { name: 'Sign out' }).click();
+	await expect(page.getByRole('form', { name: 'Sign in' })).toBeVisible();
+}
+
+async function signInTo({ page }: Device, email: string, create: boolean) {
+	if (create) await page.getByRole('button', { name: 'Create an account' }).click();
+	await page.getByLabel('Email').fill(email);
+	await page.getByLabel('Password').fill(E2E_PASSWORD);
+	await page.getByRole('button', { name: create ? 'Create account' : 'Sign in', exact: true }).click();
+	await expect(page.getByRole('form', { name: 'Sign in' })).toBeHidden();
 }
 
 async function rename(app: App, from: string, to: string) {
@@ -308,18 +323,8 @@ test('signing out keeps this device’s data, and signing in as someone else sta
 	const title = unique('Mine only');
 	await a.app.add(title);
 	await settled(a);
-	const signOut = async () => {
-		await a.app.openSettings();
-		await a.app.settings().getByRole('button', { name: 'Sign out' }).click();
-		await expect(a.page.getByRole('form', { name: 'Sign in' })).toBeVisible();
-	};
-	const signIn = async (email: string, create: boolean) => {
-		if (create) await a.page.getByRole('button', { name: 'Create an account' }).click();
-		await a.page.getByLabel('Email').fill(email);
-		await a.page.getByLabel('Password').fill(E2E_PASSWORD);
-		await a.page.getByRole('button', { name: create ? 'Create account' : 'Sign in', exact: true }).click();
-		await expect(a.page.getByRole('form', { name: 'Sign in' })).toBeHidden();
-	};
+	const signOut = () => signOutOf(a);
+	const signIn = (email: string, create: boolean) => signInTo(a, email, create);
 
 	// Signing back in with the sync routes refused shows what stayed in this browser.
 	await signOut();
@@ -345,4 +350,177 @@ test('signing out keeps this device’s data, and signing in as someone else sta
 	await a.page.goto('/no-date');
 	await expect(a.app.row(title)).toBeVisible({ timeout: 10_000 });
 	await expect(a.app.row(other)).toHaveCount(0);
+});
+
+test('another tab follows when this browser switches to another account', async ({ browser }) => {
+	const [a] = await devices(browser);
+	const mine = unique('Before the switch');
+	await a.app.add(mine);
+	await settled(a);
+	const other = await a.context.newPage();
+	await other.clock.setFixedTime(NOW);
+	await other.goto('/no-date');
+	const tab = new App(other);
+	await expect(tab.row(mine)).toBeVisible({ timeout: 10_000 });
+
+	await signOutOf(a);
+	await signInTo(a, `other-${crypto.randomUUID().slice(0, 8)}@procrastimate.test`, true);
+	await a.page.goto('/no-date');
+	await expect(a.app.row(mine)).toHaveCount(0);
+	await expect(tab.row(mine)).toHaveCount(0, { timeout: 10_000 });
+	// The other tab must read the new account's rows as its own, so they show in its personal lists.
+	const theirs = unique('After the switch');
+	await a.app.add(theirs);
+	await expect(tab.row(theirs)).toBeVisible({ timeout: 10_000 });
+});
+
+test('a new device holds its settings changes until the account’s settings arrive, then writes only those', async ({
+	browser,
+}) => {
+	const a = await device(browser);
+	await a.app.openSettings();
+	await a.app.dictationOption('ElevenLabs').click();
+	await expect(a.app.dictationOption('ElevenLabs')).toHaveAttribute('aria-checked', 'true');
+	await settled(a);
+
+	// A fresh browser profile in another zone, whose first read finds no settings row because sync cannot reach the
+	// server yet. It notes its zone and pins a button before the row arrives.
+	const context = await deviceContext(browser, { timezoneId: 'Europe/Berlin' });
+	await signInAccount(context);
+	await cut(context);
+	await context.setOffline(false);
+	const page = await context.newPage();
+	await page.clock.setFixedTime(NOW);
+	await page.goto('/no-date');
+	await expect(page.getByRole('heading', { name: 'No date' })).toBeVisible({ timeout: 30_000 });
+	const b: Device = { app: new App(page), page, context };
+	await b.app.openSettings();
+	const labels = (app: App) =>
+		app.settings().getByRole('group', { name: 'Quick add buttons' }).getByRole('button').filter({ hasText: 'Labels' });
+	await labels(b.app).click();
+	await expect(labels(b.app)).toHaveAttribute('aria-pressed', 'true');
+
+	await restore(context);
+	await expect(b.app.dictationOption('ElevenLabs')).toHaveAttribute('aria-checked', 'true', { timeout: 10_000 });
+	await expect(labels(b.app)).toHaveAttribute('aria-pressed', 'true');
+	await settled(b);
+	await expect(labels(a.app)).toHaveAttribute('aria-pressed', 'true', { timeout: 10_000 });
+	await expect(a.app.dictationOption('ElevenLabs')).toHaveAttribute('aria-checked', 'true');
+	expect(await a.page.evaluate(() => window.procrastimate.entity('settings', 'settings'))).toMatchObject({
+		timeZone: 'Europe/Berlin',
+		dictation: 'elevenlabs',
+	});
+});
+
+/**
+ * Stands in for a browser that will not empty the local images while `e2e-refuse-clear` is set, counting each try in
+ * `e2e-clear-tries`.
+ */
+function refuseClears() {
+	const clear = IDBObjectStore.prototype.clear;
+	IDBObjectStore.prototype.clear = function (this: IDBObjectStore) {
+		if (!sessionStorage.getItem('e2e-refuse-clear')) return clear.call(this);
+		if (this.name === 'bytes')
+			sessionStorage.setItem('e2e-clear-tries', String(Number(sessionStorage.getItem('e2e-clear-tries')) + 1));
+		throw new DOMException('Refused', 'UnknownError');
+	};
+}
+
+test('this browser belongs to a new account only once the previous one’s rows are gone, and a refused clear is tried again', async ({
+	browser,
+}) => {
+	const a = await device(browser);
+	const title = unique('First account’s');
+	await a.app.add(title);
+	await settled(a);
+	const owner = () => a.page.evaluate(() => localStorage.getItem('procrastimate-owner'));
+	const tries = () => a.page.evaluate(() => Number(sessionStorage.getItem('e2e-clear-tries')));
+	const first = await owner();
+	expect(first).toBeTruthy();
+	await a.context.addInitScript(refuseClears);
+	await a.page.evaluate(refuseClears);
+	await a.page.evaluate(() => sessionStorage.setItem('e2e-refuse-clear', '1'));
+
+	await signOutOf(a);
+	await signInTo(a, `other-${crypto.randomUUID().slice(0, 8)}@procrastimate.test`, true);
+	await expect.poll(tries, { timeout: 10_000 }).toBeGreaterThanOrEqual(2);
+	expect(await owner()).toBe(first);
+
+	await a.page.evaluate(() => sessionStorage.setItem('e2e-clear-tries', '0'));
+	await a.page.goto('/no-date');
+	await expect.poll(tries, { timeout: 10_000 }).toBeGreaterThanOrEqual(1);
+	expect(await owner()).toBe(first);
+	await expect(a.app.row(title)).toHaveCount(0);
+
+	await a.page.evaluate(() => sessionStorage.removeItem('e2e-refuse-clear'));
+	await expect(a.page.getByRole('heading', { name: 'No date' })).toBeVisible({ timeout: 15_000 });
+	expect(await owner()).toBe(await a.page.evaluate(() => localStorage.getItem('procrastimate-user')));
+	expect(await owner()).not.toBe(first);
+	await expect(a.app.row(title)).toHaveCount(0);
+});
+
+/** Stands in for a browser that cannot open the local database while `e2e-no-database` is set: its workers never start. */
+function refuseDatabase() {
+	if (!sessionStorage.getItem('e2e-no-database')) return;
+	const refuse = function () {
+		throw new DOMException('Refused', 'SecurityError');
+	};
+	Object.defineProperty(window, 'SharedWorker', { value: refuse });
+	Object.defineProperty(window, 'Worker', { value: refuse });
+}
+
+test('a database that cannot open says so, and an edit it could not write is written at the next launch', async ({
+	browser,
+}) => {
+	const [a, b] = await devices(browser);
+	await a.context.addInitScript(refuseDatabase);
+	const title = unique('Kept for later');
+	await a.app.openQuickAdd();
+	await a.app.taskInput().fill(title);
+	// The command and the reload run in one task, so only the copy holds it when the reloaded page cannot write it.
+	await a.page.evaluate(() => {
+		sessionStorage.setItem('e2e-no-database', '1');
+		const input = document.querySelector<HTMLElement>('[aria-label="Task name"]')!;
+		input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+		location.reload();
+	});
+	const alert = a.page.getByRole('alert').filter({ hasText: 'Couldn’t open your tasks' });
+	await expect(alert).toBeVisible({ timeout: 15_000 });
+	await expect(a.page.getByRole('heading', { name: 'No date' })).toHaveCount(0);
+
+	await a.page.evaluate(() => sessionStorage.removeItem('e2e-no-database'));
+	await alert.getByRole('button', { name: 'Reload' }).click();
+	await expect(a.page.getByRole('heading', { name: 'No date' })).toBeVisible();
+	await expect(a.app.row(title)).toBeVisible();
+	await expect(b.app.row(title)).toBeVisible({ timeout: 10_000 });
+});
+
+/** A Todoist backup of one project with `count` tasks, which imports as one command. */
+function backupOf(count: number) {
+	const rows = Array.from({ length: count }, (_, i) => `task,Imported ${i + 1},,,4,1,,,,,,,,,,,,,`);
+	const csv = `\uFEFFTYPE,CONTENT,DESCRIPTION,IS_COLLAPSED,PRIORITY,INDENT,AUTHOR,RESPONSIBLE,DATE,DATE_LANG,TIMEZONE,DURATION,DURATION_UNIT,DEADLINE,DEADLINE_LANG,REMINDER_TYPE,REMINDER_OFFSET,REMINDER_DATE,REMINDER_DATE_LANG\r\n${rows.join('\r\n')}\r\n`;
+	return {
+		name: 'todoist-backup.zip',
+		mimeType: 'application/zip',
+		buffer: Buffer.from(zipSync({ 'Big [1].csv': strToU8(csv) })),
+	};
+}
+
+test('one command’s writes upload in one request, however many rows it changes', async ({ browser }) => {
+	const a = await device(browser);
+	await settled(a);
+	await goOffline(a);
+	await a.app.openSettings();
+	const chooser = a.page.waitForEvent('filechooser');
+	await a.app.settings().getByRole('button', { name: 'Import from Todoist' }).click();
+	await (await chooser).setFiles(backupOf(150));
+	await expect(a.app.importSummary()).toContainText('150 tasks');
+
+	const uploads: number[] = [];
+	a.page.on('request', request => {
+		if (request.url().endsWith('/api/upload')) uploads.push((request.postDataJSON() as { writes: [] }).writes.length);
+	});
+	await goOnline(a);
+	await settled(a);
+	expect(uploads).toEqual([151]);
 });

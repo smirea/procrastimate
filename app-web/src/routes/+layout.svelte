@@ -113,6 +113,14 @@
 	{@render children()}
 {:else if session.state === 'out'}
 	<SignIn />
+{:else if session.state === 'in' && store.unreadable}
+<main class="grid min-h-dvh place-items-center p-4">
+	<div role="alert" class="glass-strong flex w-full max-w-sm flex-col gap-3 rounded-3xl p-6">
+		<h1 class="text-[22px] font-semibold tracking-tight text-ink">Couldn’t open your tasks</h1>
+		<p class="text-[15px] text-muted">This browser could not read its copy of your tasks. Nothing you change would be saved until it can.</p>
+		<button type="button" class="btn press bg-accent text-on-accent" onclick={() => location.reload()}>Reload</button>
+	</div>
+</main>
 {:else if session.state === 'in' && store.loaded}
 <div class="app flex min-h-dvh gap-3">
 	<div class="sticky top-3 hidden h-[calc(100dvh-1.5rem)] w-64 shrink-0 md:block">

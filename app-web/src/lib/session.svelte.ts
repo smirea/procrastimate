@@ -1,6 +1,5 @@
 import type { AuthMethods } from 'shared/api/contract.ts';
 import { api } from './api.ts';
-import { saveOwner } from './device.ts';
 import { identify, type SentryUser } from './sentry.ts';
 import { store } from './store.svelte.ts';
 import { toasts } from './ui.svelte.ts';
@@ -31,6 +30,11 @@ class Session {
 		appleNative: false,
 	});
 	error = $state('');
+
+	/** Opens the cached user's database at once, so the first frame needs no network. */
+	constructor() {
+		if (this.userId) void store.open(this.userId);
+	}
 
 	async start() {
 		identify(this.userId ? { id: this.userId } : null);
@@ -68,7 +72,6 @@ class Session {
 		const { id } = user;
 		void store.open(id);
 		localStorage.setItem(USER_KEY, id);
-		saveOwner(id);
 		this.userId = id;
 		identify(user);
 		this.state = 'in';

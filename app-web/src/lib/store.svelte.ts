@@ -3,9 +3,8 @@ import type { LabelColor } from 'shared/label-colors.ts';
 import type { QuickAddButton } from 'shared/quick-add-buttons.ts';
 import type { DateKey, Label, Project, Section, Task } from 'shared/task.ts';
 import type { SavedPlace } from 'shared/values.ts';
-import { DEFAULT_SETTINGS, SETTINGS_ID, type Comment, type Settings, type Snapshot } from 'shared/model.ts';
-import { rowWrites, sameValue, type RowWrite } from 'shared/rows.ts';
-import { fieldsOf } from 'shared/snapshot.ts';
+import { DEFAULT_SETTINGS, type Comment, type Settings, type Snapshot } from 'shared/model.ts';
+import { rowWrites, sameValue } from 'shared/rows.ts';
 import { groupChildren, progressOf } from 'shared/subtasks.ts';
 import { newId } from 'shared/id.ts';
 import type { Person } from 'shared/sharing.ts';
@@ -16,9 +15,11 @@ import { powerSync, readRows, WATCHED_TABLES, writeRows } from './database.ts';
 import {
 	forgetLegacyDocument,
 	loadOwner,
+	onOwnerChange,
 	loadPeople,
 	loadRemindersCheckedAt,
 	loadUnwritten,
+	saveOwner,
 	savePeople,
 	saveRemindersCheckedAt,
 	saveUnwritten,
@@ -50,6 +51,22 @@ const storeData = ({ tasks, projects, sections, labels, comments, reads }: rules
 });
 
 /**
+ * Clears the previous account's rows, upload queue, and local images, and tries again until it works: the database
+ * never belongs to the signed-in user while it may hold someone else's rows.
+ */
+async function clearUntilDone() {
+	for (let wait = 1000; ; wait = Math.min(wait * 2, 30_000)) {
+		try {
+			await Promise.all([powerSync.disconnectAndClear(), clearLocalImages()]);
+			return;
+		} catch (error) {
+			reportError(error);
+			await new Promise(resolve => setTimeout(resolve, wait));
+		}
+	}
+}
+
+/**
  * Every mutation is a discrete command from `shared/store.ts`. The rules return new arrays and objects for what they
  * change, so the arrays are raw state that each command replaces at once. The command then writes the rows that
  * changed to the local database, in order through one queue, and PowerSync uploads them. When the database changes,
@@ -67,10 +84,20 @@ class Store {
 	remindersCheckedAt = $state(0);
 	/** True once the local database has been read for the signed-in user, so the first frame shows their data. */
 	loaded = $state(false);
-	/** Whose rows `own` holds, and whose this browser's database is. */
+	/**
+	 * True when the first read of the local database failed. The app says so rather than show an empty list whose
+	 * edits would never be written.
+	 */
+	unreadable = $state(false);
+	/** The signed-in user, whose rows `own` holds once their database is open. */
 	#owner: string | null = null;
-	/** Whether the settings row exists, so the first settings change creates it and later ones patch it. */
+	/**
+	 * Whether the local database holds the settings row, which the server makes for every user and the first sync
+	 * brings. Until then a settings change waits in `#heldSettings`, because only a patch of an existing row may write
+	 * settings: a client never makes the row, so it can never write defaults over the user's choices.
+	 */
 	#hasSettings = false;
+	#heldSettings: Partial<Settings> = {};
 	/** Commands issued so far. A read that started before the newest one would undo it, so it is discarded. */
 	#commands = 0;
 	#writing = 0;
@@ -80,8 +107,8 @@ class Store {
 	/** The database changed while a read or a write was in flight, so another read is due once both finish. */
 	#stale = false;
 	#switching: Promise<void> = Promise.resolve();
-	/** While the previous account's rows are being cleared, a read would show them as the new user's shared spaces. */
-	#clearing = false;
+	/** Until the database belongs to the signed-in user, a read could show another account's rows as theirs. */
+	#opening = false;
 	#view = $derived(merged(this.own, this.spaces));
 	#ownProjects = $derived(rules.projectsInOrder(this.own.projects));
 	#projects = $derived([
@@ -125,60 +152,40 @@ class Store {
 		this.people = loadPeople();
 		this.remindersCheckedAt = loadRemindersCheckedAt(Date.now());
 		powerSync.onChange({ onChange: () => this.#reload() }, { tables: WATCHED_TABLES, throttleMs: 10 });
-		this.#owner = loadOwner();
-		const unwritten = loadUnwritten();
-		if (this.#owner && unwritten.length) this.#replay(unwritten);
-		else saveUnwritten([]);
-		if (this.#owner) this.#reload();
-	}
-
-	/** Writes what the last session queued but never wrote. Each write converges, so one written already is harmless. */
-	#replay(unwritten: readonly Unwritten[]) {
-		this.#unwritten = [...unwritten];
-		this.#writing++;
-		this.#queue = (async () => {
-			for (const { owner, writes } of unwritten) await writeRows(owner, writes);
-		})()
-			.catch(error => void reportError(error))
-			.finally(() => {
-				this.#unwritten = this.#unwritten.filter(entry => !unwritten.includes(entry));
-				saveUnwritten(this.#unwritten);
-				this.#writing--;
-				if (this.#stale) this.#reload();
-			});
+		onOwnerChange(() => location.reload());
 	}
 
 	/**
-	 * Opens the database for `userId`. A different user than the one whose rows are here clears it first, with its
-	 * upload queue and local images, so nothing of the previous account shows or uploads. Resolves once it is safe to
-	 * connect.
+	 * Opens the database for `userId`, the moment the session names them. A database that holds another account's rows
+	 * is cleared first, with its upload queue and local images, so nothing of that account shows or uploads; it becomes
+	 * `userId`'s only once that worked, so a launch that finds it still named after the other account clears it again.
+	 * Then the tab's unwritten copy is written and the database read. Resolves once it is safe to connect.
 	 */
 	open(userId: string): Promise<void> {
 		if (this.#owner === userId) return this.#switching;
-		const previous = this.#owner;
-		this.#owner = userId;
-		if (previous === null) {
-			this.#reload();
-			return this.#switching;
+		if (this.#owner !== null) {
+			this.own = emptyData();
+			this.settings = DEFAULT_SETTINGS;
+			this.spaces = {};
+			this.people = [];
+			savePeople([]);
+			this.loaded = false;
 		}
-		this.own = emptyData();
-		this.settings = DEFAULT_SETTINGS;
-		this.spaces = {};
-		this.people = [];
-		savePeople([]);
+		this.#owner = userId;
+		this.unreadable = false;
 		this.#hasSettings = false;
-		this.loaded = false;
-		this.#clearing = true;
+		this.#heldSettings = {};
+		this.#opening = true;
 		this.#unwritten = [];
-		saveUnwritten([]);
-		this.#switching = this.#queue
-			.then(() => Promise.all([powerSync.disconnectAndClear(), clearLocalImages()]))
-			.then(
-				() => undefined,
-				error => void reportError(error),
-			)
-			.finally(() => {
-				this.#clearing = false;
+		this.#switching = this.#switching
+			.then(() => this.#queue)
+			.then(async () => {
+				const previous = loadOwner();
+				if (previous !== null && previous !== userId) await clearUntilDone();
+				if (this.#owner !== userId) return;
+				saveOwner(userId);
+				this.#opening = false;
+				for (const entry of loadUnwritten(userId)) this.#write(entry);
 				this.#reload();
 			});
 		return this.#switching;
@@ -198,39 +205,40 @@ class Store {
 
 	/** Queues the rows that changed between two states of `owner`'s space. */
 	#persist(owner: string, before: Snapshot, after: Snapshot) {
-		const writes = rowWrites(before, after).map(write => this.#settingsWrite(write, after.settings));
+		const writes = rowWrites(before, after);
 		if (!writes.length) return;
 		this.#commands++;
-		const entry = { owner, writes };
-		this.#unwritten.push(entry);
-		saveUnwritten(this.#unwritten);
+		this.#write({ owner, writes });
+	}
+
+	/**
+	 * Writes one command's rows in its turn, keeping a copy in the tab until they are in the database. Each write
+	 * converges, so the copy a reload replays is harmless when its rows did land. A write that failed keeps its copy,
+	 * which the next launch writes again.
+	 */
+	#write(entry: Unwritten) {
+		const user = this.#owner!;
+		if (!this.#unwritten.includes(entry)) this.#unwritten.push(entry);
+		saveUnwritten(user, this.#unwritten);
 		this.#writing++;
 		this.#queue = this.#queue
-			.then(() => writeRows(owner, writes))
-			.catch(error => void reportError(error))
+			.then(() => writeRows(entry.owner, entry.writes))
+			.then(
+				() => {
+					this.#unwritten = this.#unwritten.filter(other => other !== entry);
+					if (this.#owner === user) saveUnwritten(user, this.#unwritten);
+				},
+				error => void reportError(error),
+			)
 			.finally(() => {
-				this.#unwritten = this.#unwritten.filter(other => other !== entry);
-				saveUnwritten(this.#unwritten);
 				this.#writing--;
 				if (this.#stale) this.#reload();
 			});
 	}
 
-	/** The first settings change creates the row, with every field. */
-	#settingsWrite(write: RowWrite, settings: Settings): RowWrite {
-		if (write.kind !== 'settings' || this.#hasSettings) return write;
-		this.#hasSettings = true;
-		return {
-			op: 'put',
-			kind: 'settings',
-			id: SETTINGS_ID,
-			values: fieldsOf('settings', { id: SETTINGS_ID, ...settings }),
-		};
-	}
-
 	/** Reads the database into memory, unless a write is queued: then once the queue drains. */
 	#reload() {
-		if (this.#writing > 0 || this.#reading || this.#clearing || !this.#owner) {
+		if (this.#writing > 0 || this.#reading || this.#opening || !this.#owner) {
 			this.#stale = true;
 			return;
 		}
@@ -250,7 +258,7 @@ class Store {
 			rows = await readRows();
 		} catch (error) {
 			reportError(error);
-			this.loaded = true;
+			if (owner === this.#owner && !this.loaded) this.unreadable = true;
 			return;
 		}
 		if (owner !== this.#owner) return;
@@ -259,15 +267,14 @@ class Store {
 			return;
 		}
 		this.#take(group(rows, owner));
+		this.unreadable = false;
 		this.loaded = true;
 	}
 
 	/** Keeps every entity that did not change, so a read that matches memory re-renders nothing. */
 	#take({ own, settings, spaces }: Grouped) {
 		this.own = keepSame(this.own, own);
-		this.#hasSettings = settings !== null;
-		const next = settings ?? DEFAULT_SETTINGS;
-		if (!sameValue(this.settings, next)) this.settings = next;
+		this.#takeSettings(settings);
 		const kept: Record<string, Spaces[string]> = {};
 		let changed = Object.keys(spaces).length !== Object.keys(this.spaces).length;
 		for (const [owner, space] of Object.entries(spaces)) {
@@ -282,6 +289,22 @@ class Store {
 			if (kept[owner] !== previous) changed = true;
 		}
 		if (changed) this.spaces = kept;
+	}
+
+	/** The settings row as read, with the changes held until it arrived, which are written now as a patch. */
+	#takeSettings(stored: Settings | null) {
+		this.#hasSettings = stored !== null;
+		const next = { ...(stored ?? DEFAULT_SETTINGS), ...this.#heldSettings };
+		if (stored && Object.keys(this.#heldSettings).length) {
+			this.#heldSettings = {};
+			this.#persist(this.#owner!, { ...this.own, settings: stored }, { ...this.own, settings: next });
+		}
+		if (!sameValue(this.settings, next)) this.settings = next;
+	}
+
+	/** Settings changes waiting for the settings row to arrive, which have not reached the server either. */
+	get holdsSettings(): boolean {
+		return Object.keys(this.#heldSettings).length > 0;
 	}
 
 	/** Empties tasks, projects, sections, and labels; their deletes upload like any other. Settings stay. */
@@ -319,7 +342,9 @@ class Store {
 		const after = { ...before, ...patch };
 		if (sameValue(after, before)) return;
 		this.settings = after;
-		this.#persist(this.#owner, { ...this.own, settings: before }, { ...this.own, settings: after });
+		if (this.#hasSettings)
+			this.#persist(this.#owner, { ...this.own, settings: before }, { ...this.own, settings: after });
+		else this.#heldSettings = { ...this.#heldSettings, ...patch };
 	}
 
 	#creation = (): rules.Creation => ({ id: newId(), now: Date.now() });

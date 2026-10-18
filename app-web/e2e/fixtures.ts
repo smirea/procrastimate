@@ -34,11 +34,11 @@ export const unique = (name: string) => `${name} x${crypto.randomUUID().slice(0,
  * A new context like the project's own, so the mobile project's extra devices are phones too. Its service worker is
  * blocked: WebKit sends a page's requests through it, where `context.route` never sees them.
  */
-export async function deviceContext(browser: Browser) {
-	const { baseURL, timezoneId, viewport, isMobile, hasTouch, userAgent, deviceScaleFactor } = test.info().project.use;
+export async function deviceContext(browser: Browser, { timezoneId }: { timezoneId?: string } = {}) {
+	const { baseURL, viewport, isMobile, hasTouch, userAgent, deviceScaleFactor, ...use } = test.info().project.use;
 	return browser.newContext({
 		baseURL,
-		timezoneId,
+		timezoneId: timezoneId ?? use.timezoneId,
 		viewport,
 		isMobile,
 		hasTouch,

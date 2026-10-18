@@ -26,6 +26,11 @@ const OPS: Record<UpdateType, RowOp> = {
 };
 /** Short enough that an edit reaches another device within about a second, long enough to fold a burst of keys. */
 const UPLOAD_THROTTLE = 100;
+/**
+ * Rows per upload. The store writes a command in one transaction, and PowerSync's default of 100 would split a big
+ * one, such as an import or deleting everything, so the server would repair and log a half-applied command.
+ */
+const UPLOAD_BATCH = 1000;
 const SETTLE_TIMEOUT = 10_000;
 
 /**
@@ -66,7 +71,7 @@ const connector: PowerSyncBackendConnector = {
 	 * Throwing leaves the batch queued for PowerSync's next try.
 	 */
 	async uploadData(database: AbstractPowerSyncDatabase) {
-		const batch = await database.getCrudBatch();
+		const batch = await database.getCrudBatch(UPLOAD_BATCH);
 		if (!batch) return;
 		await images.upload();
 		const writes = coalesce(
@@ -169,7 +174,8 @@ export async function settled(): Promise<void> {
 /** What end-to-end specs read: the writes not yet on the server, a task's id by its title, and an entity by id. */
 async function pending(): Promise<number> {
 	await store.written();
-	return (await powerSync.getCrudBatch(Number.MAX_SAFE_INTEGER))?.crud.length ?? 0;
+	const queued = (await powerSync.getCrudBatch(Number.MAX_SAFE_INTEGER))?.crud.length ?? 0;
+	return queued + (store.holdsSettings ? 1 : 0);
 }
 
 if (typeof window !== 'undefined') {

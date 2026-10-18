@@ -28,6 +28,16 @@ export function saveOwner(id: string) {
 	localStorage.setItem(OWNER_KEY, id);
 }
 
+/**
+ * Calls `changed` when another tab makes this browser's database another account's. That tab cleared the rows this
+ * one shows, so this tab must not keep reading or uploading as the previous account.
+ */
+export function onOwnerChange(changed: () => void) {
+	window.addEventListener('storage', event => {
+		if (event.key === OWNER_KEY && event.oldValue !== null && event.newValue !== event.oldValue) changed();
+	});
+}
+
 /** This install's id, made on first use. Push subscriptions and Ramble name the device by it; it is not a secret. */
 export function installId(): string {
 	const known = localStorage.getItem(INSTALL_KEY);
@@ -52,22 +62,25 @@ export function savePeople(people: readonly Person[]) {
 /**
  * Commands whose rows are not in the local database yet. The database writes in the background, so a reload a moment
  * after an edit would lose it; this synchronous copy lets the reloaded page write it first. It lives in
- * `sessionStorage`, one per tab, so two tabs never overwrite or replay each other's copy.
+ * `sessionStorage`, one per tab, so two tabs never overwrite or replay each other's copy, and it names the signed-in
+ * user, so a tab never writes one account's edits into the database of the next.
  */
 export type Unwritten = { owner: string; writes: RowWrite[] };
+type Copy = { user: string; commands: Unwritten[] };
 
-export function loadUnwritten(): Unwritten[] {
+export function loadUnwritten(user: string): Unwritten[] {
 	try {
-		return JSON.parse(sessionStorage.getItem(UNWRITTEN_KEY) ?? '[]') as Unwritten[];
+		const copy = JSON.parse(sessionStorage.getItem(UNWRITTEN_KEY) ?? 'null') as Copy | null;
+		return copy?.user === user ? copy.commands : [];
 	} catch {
 		return [];
 	}
 }
 
-/** A copy too large to store is skipped: the edit is still written, it is only not safe from a close until then. */
-export function saveUnwritten(unwritten: readonly Unwritten[]) {
+/** A copy too large to store is skipped: the edit is still written, it is only not safe from a reload until then. */
+export function saveUnwritten(user: string, commands: readonly Unwritten[]) {
 	try {
-		if (unwritten.length) sessionStorage.setItem(UNWRITTEN_KEY, JSON.stringify(unwritten));
+		if (commands.length) sessionStorage.setItem(UNWRITTEN_KEY, JSON.stringify({ user, commands }));
 		else sessionStorage.removeItem(UNWRITTEN_KEY);
 	} catch {
 		sessionStorage.removeItem(UNWRITTEN_KEY);
