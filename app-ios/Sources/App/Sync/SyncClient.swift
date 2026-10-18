@@ -35,8 +35,8 @@ final class SyncClient {
     /// covers every change that asks for another.
     @ObservationIgnored private var lastRead: Task<Void, Never>?
     @ObservationIgnored private var readQueued = false
-    /// True while the local database cannot be read and no read ever worked, so the screen says so instead of showing
-    /// an empty list nothing could be saved to.
+    /// True while the local database cannot be read and no read for the current user ever worked, so the screen says so
+    /// instead of showing an empty list nothing could be saved to.
     private(set) var unreadable = false
     @ObservationIgnored private var loaded = false
     @ObservationIgnored private var askedForPeople: Set<String> = []
@@ -279,6 +279,8 @@ final class SyncClient {
         store.noteTimeZone(clock.timeZone.identifier)
         rows = LocalRows(me: id)
         cursor = nil
+        loaded = false
+        unreadable = false
         reload()
         askedForPeople = []
         TaskImages.clearLocal()
