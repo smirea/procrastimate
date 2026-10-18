@@ -1,7 +1,10 @@
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
-import postgres from 'postgres';
+// Loaded where it connects: `setup-worktree.ts` imports this file before its `bun install` has run in a new worktree.
+import type postgres from 'postgres';
+
+const connectTo = async (url: string) => (await import('postgres')).default(url, { max: 1, onnotice: () => {} });
 
 /**
  * The local Postgres and PowerSync in `docker/compose.yaml`, as the worktree scripts drive them. One Postgres
@@ -64,7 +67,7 @@ export function ensurePostgres(): void {
 }
 
 async function withAdmin<T>(use: (sql: postgres.Sql) => Promise<T>): Promise<T> {
-	const sql = postgres(ADMIN_URL, { max: 1, onnotice: () => {} });
+	const sql = await connectTo(ADMIN_URL);
 	try {
 		return await use(sql);
 	} finally {
@@ -134,7 +137,7 @@ async function migrateApp(database: string): Promise<void> {
 
 /** PowerSync marks its sync config `ACTIVE` in its storage database once the first replication finished. */
 async function waitForReplication(name: string, storage: string): Promise<void> {
-	const sql = postgres(databaseUrl(storage), { max: 1, onnotice: () => {} });
+	const sql = await connectTo(databaseUrl(storage));
 	try {
 		const deadline = Date.now() + 60_000;
 		while (Date.now() < deadline) {

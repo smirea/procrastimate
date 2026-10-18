@@ -223,7 +223,7 @@ export async function deleteToken(db: Db, owner: string, id: string): Promise<vo
 	if (!deleted.length) throw new ORPCError('NOT_FOUND', { message: 'No such token' });
 }
 
-/** An AI account was deleted: its tokens and shares go. It never had `access` rows. */
+/** An AI account was deleted: its tokens, shares, and `access` rows go. */
 export function revokeAi(db: Db, owner: string, aiUserId: string): Promise<void> {
 	return withSpaceLocked(db, owner, async tx => {
 		await tx.delete(apiTokens).where(and(eq(apiTokens.userId, owner), eq(apiTokens.aiUserId, aiUserId)));
