@@ -175,7 +175,7 @@ struct ListHeading: View {
         Menu {
             if let addTo {
                 Button("Add task", systemImage: "plus") {
-                    navigator.sheet = .quickAdd(Screens.defaults(addTo, store.tasks))
+                    navigator.sheet = .quickAdd(store.quickAddDefaults(addTo))
                 }
             }
             Button("Copy as Markdown", systemImage: "doc.on.doc") {

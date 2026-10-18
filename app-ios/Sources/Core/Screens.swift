@@ -14,11 +14,27 @@ public enum ListScreen: Hashable, Sendable {
 
 /// Ports `shared/screens.ts`.
 public enum Screens {
+    /// Whether a new task may land on `screen`'s project or label. `access` is the rows of the space someone shared
+    /// with this user, nil on the user's own lists, which always take one, as does every other screen. The server
+    /// admits a new task only through an edit share on the list or on the whole space, and writes `edit` on the list's
+    /// row exactly then, so the list takes one when its row says so.
+    public static func canAdd(to screen: ListScreen?, _ access: [Access]?) -> Bool {
+        guard let access else { return true }
+        let list: (kind: API.AccessKind, id: String)
+        switch screen {
+        case let .project(id, _)?: list = (.project, id)
+        case let .label(id)?: list = (.label, id)
+        default: return true
+        }
+        return access.contains { $0.kind == list.kind && $0.entityId == list.id && $0.role == .edit }
+    }
+
     /// Quick add inherits the screen it opens from, so the new task lands on that screen: its project and section, its
     /// label, its place, its event, or the day of an Inbox heading. Inbox itself adds an undated task, as capture
-    /// always has, and so do No date and Completed.
-    public static func defaults(_ screen: ListScreen?, _ tasks: [TaskItem]) -> QuickAddDraft.Defaults {
-        switch screen {
+    /// always has, and so do No date, Completed, and a shared project or label the user can't add to (`canAdd`).
+    public static func defaults(_ screen: ListScreen?, _ tasks: [TaskItem], _ access: [Access]?) -> QuickAddDraft.Defaults {
+        guard canAdd(to: screen, access) else { return QuickAddDraft.Defaults() }
+        return switch screen {
         case nil, .noDate?, .completed?:
             QuickAddDraft.Defaults()
         case let .inbox(date)?:

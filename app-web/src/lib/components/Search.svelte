@@ -21,6 +21,7 @@
 	import { clock, mobile, sheets, motion } from '../ui.svelte.ts';
 	import { dueTone, formatDate, formatDue } from 'shared/format.ts';
 	import { PRIORITIES } from '../priorities.ts';
+	import { isMenuKey, rowMenu, taskMenu } from '../row-menu.svelte.ts';
 
 	/** Rendering is the cost that grows with matches, so each section shows only its best rows. */
 	const LIMIT = { projects: 5, labels: 5, open: 30, completed: 15 };
@@ -107,6 +108,12 @@
 		} else if (event.key === 'Enter') {
 			event.preventDefault();
 			open(rows[active]);
+		} else if (isMenuKey(event)) {
+			const row = rows[active];
+			const option = row && list?.querySelector(`#${CSS.escape(optionId(row))}`);
+			if (row?.kind !== 'task' || !option) return;
+			event.preventDefault();
+			rowMenu.openBelow({ task: row.hit.task }, option);
 		} else if (event.key === 'Escape' || ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k')) {
 			event.preventDefault();
 			sheets.close();
@@ -198,6 +205,7 @@
 							onmousedown={(e) => e.preventDefault()}
 							onpointermove={(e) => e.pointerType === 'mouse' && (active = i)}
 							onclick={() => open(row)}
+							{@attach row.kind === 'task' && taskMenu(() => ({ task: row.hit.task }))}
 						>
 							{#if row.kind === 'project'}
 								<Hash size={18} class="mt-px shrink-0 text-muted" />

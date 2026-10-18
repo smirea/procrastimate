@@ -148,6 +148,115 @@ describe('POST /api/upload', () => {
 		expect(await stored(id)).toMatchObject({ title: 'Undo me', createdBy: owner.person.id });
 	});
 
+	test('three devices race: a put into a deleted section, a label put back after its delete, and an undo after another device’s edit', async () => {
+		const me = owner.person.id;
+		const projectId = crypto.randomUUID();
+		const sectionId = crypto.randomUUID();
+		const homeId = crypto.randomUUID();
+		const urgentId = crypto.randomUUID();
+		const taskId = crypto.randomUUID();
+		const lateId = crypto.randomUUID();
+		const project = { id: projectId, user_id: me, name: 'Work', created_at: 1 };
+		const section = { id: sectionId, user_id: me, project_id: projectId, name: 'Later', created_at: 1 };
+		const place = JSON.stringify({ address: null, latitude: 52.52, longitude: 13.405, radius: 100 });
+		const task = taskRow(taskId, me, 'Water the plants', { projectId, sectionId, labelIds: JSON.stringify([homeId]) });
+		expect(
+			await upload(owner, [
+				{ op: 'put', table: 'projects', id: projectId, values: project },
+				{ op: 'put', table: 'sections', id: sectionId, values: section },
+				{
+					op: 'put',
+					table: 'labels',
+					id: homeId,
+					values: { id: homeId, user_id: me, name: 'Home', place, created_at: 1 },
+				},
+				{
+					op: 'put',
+					table: 'labels',
+					id: urgentId,
+					values: { id: urgentId, user_id: me, name: 'Urgent', created_at: 1 },
+				},
+				{ op: 'put', table: 'tasks', id: taskId, values: task },
+			]),
+		).toEqual([]);
+
+		// A deletes the section, which takes its task along as `deleteSection` does. B, still showing the section, adds
+		// a task into it and labels the first one: the new task lands in the project with no section, the patch nothing.
+		expect(
+			await upload(owner, [
+				{ op: 'delete', table: 'sections', id: sectionId },
+				{ op: 'delete', table: 'tasks', id: taskId },
+			]),
+		).toEqual([]);
+		expect(
+			await upload(owner, [
+				{
+					op: 'put',
+					table: 'tasks',
+					id: lateId,
+					values: taskRow(lateId, me, 'Added into Later', { projectId, sectionId }),
+				},
+				{ op: 'patch', table: 'tasks', id: taskId, values: { label_ids: JSON.stringify([homeId, urgentId]) } },
+			]),
+		).toEqual([]);
+		expect(await stored(lateId)).toMatchObject({ projectId, sectionId: null });
+		expect(await stored(taskId)).toBeNull();
+
+		// A undoes, as the toast does, by putting the section and task back as they were.
+		expect(
+			await upload(owner, [
+				{ op: 'put', table: 'sections', id: sectionId, values: section },
+				{ op: 'put', table: 'tasks', id: taskId, values: task },
+			]),
+		).toEqual([]);
+		expect(await stored(taskId)).toMatchObject({ sectionId, labelIds: [homeId] });
+
+		// C deletes the Home place while B, offline since before, puts it on the task again next to Urgent.
+		expect(
+			await upload(owner, [
+				{ op: 'patch', table: 'tasks', id: taskId, values: { label_ids: '[]' } },
+				{ op: 'delete', table: 'labels', id: homeId },
+			]),
+		).toEqual([]);
+		expect(
+			await upload(owner, [
+				{ op: 'patch', table: 'tasks', id: taskId, values: { label_ids: JSON.stringify([homeId, urgentId]) } },
+			]),
+		).toEqual([]);
+		expect(await stored(taskId)).toMatchObject({ labelIds: [urgentId] });
+
+		// A deletes the whole project, B edits the task meanwhile, and A undoes after B's edit landed: the delete made the
+		// edit a no-op, and the undo's put brings the task back as A last saw it.
+		expect(
+			await upload(owner, [
+				{ op: 'delete', table: 'projects', id: projectId },
+				{ op: 'delete', table: 'sections', id: sectionId },
+				{ op: 'delete', table: 'tasks', id: taskId },
+				{ op: 'delete', table: 'tasks', id: lateId },
+			]),
+		).toEqual([]);
+		expect(
+			await upload(owner, [{ op: 'patch', table: 'tasks', id: taskId, values: { title: 'Water the ferns' } }]),
+		).toEqual([]);
+		expect(await stored(taskId)).toBeNull();
+		const restored = { ...task, label_ids: JSON.stringify([urgentId]) };
+		expect(
+			await upload(owner, [
+				{ op: 'put', table: 'projects', id: projectId, values: project },
+				{ op: 'put', table: 'sections', id: sectionId, values: section },
+				{ op: 'put', table: 'tasks', id: taskId, values: restored },
+				{ op: 'put', table: 'tasks', id: lateId, values: taskRow(lateId, me, 'Added into Later', { projectId }) },
+			]),
+		).toEqual([]);
+		expect(await stored(taskId)).toMatchObject({
+			title: 'Water the plants',
+			projectId,
+			sectionId,
+			labelIds: [urgentId],
+		});
+		expect(await stored(lateId)).toMatchObject({ projectId, sectionId: null });
+	});
+
 	test('a batch with several writes to one row folds them, so the last value wins', async () => {
 		const id = crypto.randomUUID();
 		expect(

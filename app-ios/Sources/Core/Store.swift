@@ -197,6 +197,26 @@ public final class Store {
     public func space(ofProject id: String) -> SpaceKey? { space { $0.projects.contains { $0.id == id } } }
     public func space(ofLabel id: String) -> SpaceKey? { space { $0.labels.contains { $0.id == id } } }
 
+    /// This user's `access` rows in the space someone shared with them that `screen`'s project or label lives in. Nil
+    /// on the user's own lists and on every other screen, which always take a task.
+    public func access(of screen: ListScreen?) -> [Access]? {
+        let space: SpaceKey? = switch screen {
+        case let .project(id, _)?: self.space(ofProject: id)
+        case let .label(id)?: self.space(ofLabel: id)
+        default: nil
+        }
+        guard case let .shared(owner)? = space else { return nil }
+        return access.filter { $0.owner == owner }
+    }
+
+    /// Whether `screen` takes new tasks. A project or label shared with this user to view only takes none.
+    public func canAdd(to screen: ListScreen?) -> Bool { Screens.canAdd(to: screen, access(of: screen)) }
+
+    /// What quick add starts with on `screen`, as `Screens.defaults` maps it.
+    public func quickAddDefaults(_ screen: ListScreen?) -> QuickAddDraft.Defaults {
+        Screens.defaults(screen, tasks, access(of: screen))
+    }
+
     private func space(where holds: (Snapshot) -> Bool) -> SpaceKey? {
         if holds(snapshot) { return .own }
         return spaces.first { holds($0.value) }.map { .shared($0.key) }

@@ -18,6 +18,7 @@ const spaces: Record<string, SharedSpace> = {
 	ann: {
 		owner: 'ann',
 		readOnly: new Set(),
+		access: [],
 		data: {
 			...emptyData(),
 			tasks: [task('shared-task', { projectId: 'groceries', createdAt: 5 })],
@@ -150,6 +151,7 @@ test('sharedEntries lists every shared project and label, and only the tasks nei
 	const space: SharedSpace = {
 		owner: 'ann',
 		readOnly: new Set(),
+		access: [],
 		data: {
 			...emptyData(),
 			projects: [project('groceries', { name: 'Groceries' })],

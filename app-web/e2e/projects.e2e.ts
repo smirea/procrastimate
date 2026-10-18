@@ -225,3 +225,34 @@ test('create, assign with #, move, rename, delete, and undo deleting a project',
 	await app.nav('House').click();
 	await expect(app.list('House tasks').locator('[data-task]')).toHaveText([/Fix sink/, /Paint fence/, /Buy milk/]);
 });
+
+test('Show completed is per project, and a completed task deletes with undo', async ({ app, page }) => {
+	await app.createProject('Home');
+	await app.add('Sweep porch');
+	await app.createProject('Garden');
+	await app.add('Rake leaves');
+	await app.row('Rake leaves').getByRole('checkbox', { name: 'Complete Rake leaves' }).click();
+	await expect(app.row('Rake leaves')).toHaveCount(0);
+
+	await page.getByRole('button', { name: 'Show completed' }).click();
+	const done = app.list('Completed Garden tasks').locator('[data-task="Rake leaves"]');
+	await expect(done).toBeVisible();
+	await app.nav('Home').click();
+	await expect(page.getByRole('button', { name: 'Show completed' })).toHaveAttribute('aria-pressed', 'false');
+	await app.nav('Garden').click();
+	await expect(page.getByRole('button', { name: 'Show completed' })).toHaveAttribute('aria-pressed', 'true');
+
+	await done.hover();
+	await app.settle();
+	await page.screenshot({ path: 'test-results/projects/completed-row.png' });
+	await page.getByRole('button', { name: 'Delete Rake leaves' }).click();
+	const toast = page.getByRole('status').filter({ hasText: 'Deleted “Rake leaves”' });
+	await expect(toast).toBeVisible();
+	await expect(app.row('Rake leaves')).toHaveCount(0);
+	await toast.getByRole('button', { name: 'Undo' }).click();
+	await expect(done).toBeVisible();
+
+	await page.reload();
+	await expect(page.getByRole('button', { name: 'Show completed' })).toHaveAttribute('aria-pressed', 'true');
+	await expect(done).toBeVisible();
+});

@@ -1,14 +1,17 @@
 <script lang="ts">
 	import CheckCircle from 'phosphor-svelte/lib/CheckCircle';
-	import { completed } from '../completed.svelte.ts';
+	import { completed, type ShownList } from '../completed.svelte.ts';
+
+	let { list }: { list: ShownList } = $props();
+	const shown = $derived(completed.shown(list));
 </script>
 
 <button
 	type="button"
-	class="icon-btn touch:size-11 {completed.shown ? 'text-accent!' : ''}"
+	class="icon-btn touch:size-11 {shown ? 'text-accent!' : ''}"
 	aria-label="Show completed"
-	aria-pressed={completed.shown}
-	onclick={() => completed.toggle()}
+	aria-pressed={shown}
+	onclick={() => completed.toggle(list)}
 >
-	<CheckCircle size={19} weight={completed.shown ? 'fill' : 'regular'} />
+	<CheckCircle size={19} weight={shown ? 'fill' : 'regular'} />
 </button>

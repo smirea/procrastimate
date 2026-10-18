@@ -272,8 +272,11 @@ class Store {
 				previous && sameValue([...previous.readOnly].sort(), [...space.readOnly].sort())
 					? previous.readOnly
 					: space.readOnly;
+			const access = previous && sameValue(previous.access, space.access) ? previous.access : space.access;
 			kept[owner] =
-				previous && data === previous.data && readOnly === previous.readOnly ? previous : { owner, data, readOnly };
+				previous && data === previous.data && readOnly === previous.readOnly && access === previous.access
+					? previous
+					: { owner, data, readOnly, access };
 			if (kept[owner] !== previous) changed = true;
 		}
 		if (changed) this.spaces = kept;

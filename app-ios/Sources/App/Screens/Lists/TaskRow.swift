@@ -26,34 +26,13 @@ struct TaskRow<Trailing: View>: View {
     @ViewBuilder var trailing: Trailing
 
     @State private var checking = false
-    @State private var postponing = false
 
     var body: some View {
         HStack(alignment: .top, spacing: 0) {
             row
             trailing
         }
-        .swipeActions(edge: .leading, when: swipes.toggle != nil) {
-            if let toggle = swipes.toggle {
-                Button(toggle.label, systemImage: toggle.systemImage) { completeNow() }
-                    .tint(.toneSoon)
-            }
-        }
-        .swipeActions(edge: .trailing, when: swipes.postpone) {
-            Button("Postpone", systemImage: "calendar.badge.clock") { postponing = true }
-                .tint(.toneWeek)
-        }
-        .confirmationDialog("Postpone “\(task.title)”", isPresented: $postponing, titleVisibility: .visible) {
-            ForEach(Format.postponeOptions(due, today), id: \.date) { option in
-                Button("\(option.label) · \(Format.weekdayNames[Dates.weekdayOf(option.date)])") {
-                    actions.postpone(task, to: option.date)
-                }
-            }
-            Button("Pick a date…") { open() }
-        }
-        // Outside a `List`, as in task details, swipe actions keep the buttons and closures they were first built with,
-        // so the row rebuilds whenever what they offer changes.
-        .id(swipes)
+        .taskSwipes(task, offered, toggle: completeNow, pickDate: open)
     }
 
     private var row: some View {
@@ -62,7 +41,7 @@ struct TaskRow<Trailing: View>: View {
                 .accessibilityLabel("Complete \(task.title)")
                 .accessibilityValue(Format.priorityLabel(task.priority))
                 .accessibilityAddTraits(done ? .isSelected : [])
-                .disabled(locked)
+                .disabled(offered.toggle == nil)
             VStack(alignment: .leading, spacing: 2) {
                 TitleFlow(
                     title: Links.attributed(task.title),
@@ -104,20 +83,7 @@ struct TaskRow<Trailing: View>: View {
                 .padding(.horizontal, -8)
                 .animation(.easeOut(duration: 0.6), value: navigator.revealed == task.id)
         }
-        .contextMenu {
-            if !locked {
-                Button(done ? "Reopen" : "Complete", systemImage: done ? "arrow.uturn.backward.circle" : "checkmark.circle") { completeNow() }
-                if task.event == nil && !done {
-                    Menu("Postpone", systemImage: "calendar.badge.clock") {
-                        ForEach(Format.postponeOptions(due, today), id: \.date) { option in
-                            Button(option.label) { actions.postpone(task, to: option.date) }
-                        }
-                    }
-                }
-                Button("Delete", systemImage: "trash", role: .destructive) { actions.delete(task) }
-            }
-            Button("Copy as Markdown", systemImage: "doc.on.doc") { actions.copyAsMarkdown(task) }
-        }
+        .contextMenu { TaskMenu(task: task, offered: offered, toggle: completeNow) }
     }
 
     /// A list row's checkbox fills on the first frame, then the row leaves once the fill has played.
@@ -155,23 +121,7 @@ struct TaskRow<Trailing: View>: View {
 
     private var done: Bool { task.completedAt != nil }
 
-    /// Everything the swipe buttons show and do, so the row's identity can follow it.
-    private struct Swipes: Hashable {
-        enum Toggle: Hashable {
-            case complete, reopen
-            var label: String { self == .complete ? "Complete" : "Reopen" }
-            var systemImage: String { self == .complete ? "checkmark" : "arrow.uturn.backward" }
-        }
-
-        let toggle: Toggle?
-        let postpone: Bool
-    }
-
-    /// An event task's day comes from its calendar event, so there is nothing to postpone.
-    private var swipes: Swipes {
-        Swipes(toggle: locked ? nil : done ? .reopen : .complete, postpone: task.event == nil && !locked && !done)
-    }
-    private var locked: Bool { store.isReadOnly(task.id) }
+    private var offered: RowActions { RowActions(task, in: store) }
     private var project: Project? { store.project(task.projectId) }
     private var labels: [Core.Label] { store.labels(of: task) }
     private var parent: TaskItem? { isSubtask ? nil : task.parentId.flatMap(store.task) }
@@ -251,14 +201,6 @@ struct TaskRow<Trailing: View>: View {
             .foregroundStyle(.muted)
             .lineLimit(1)
         }
-    }
-}
-
-private extension View {
-    /// Outside a `List`, an edge whose builder is empty still swipes open, to nothing, and the next swipe the other way
-    /// only closes it. So an edge with no button is left off.
-    @ViewBuilder func swipeActions(edge: HorizontalEdge, when present: Bool, @ViewBuilder content: () -> some View) -> some View {
-        if present { swipeActions(edge: edge, allowsFullSwipe: true, content: content) } else { self }
     }
 }
 

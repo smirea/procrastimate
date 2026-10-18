@@ -312,7 +312,7 @@ public enum StoreRules {
     }
 
     /// The orders to write to move `id` to `index`: only the moved one's, or every sibling's new position when the gap
-    /// is too small to split. `moveOrders` in `shared/sync/order.ts`.
+    /// is too small to split. `moveOrders` in `shared/order.ts`.
     private static func moveOrders<T: Ordered>(_ items: [T], _ id: String, _ index: Int) -> [String: Double] {
         guard let moved = items.first(where: { $0.id == id }) else { return [:] }
         let siblings = siblingOrder(items)

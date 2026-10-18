@@ -2,8 +2,8 @@ import Core
 import Foundation
 
 /// DEBUG-only. `PROCRASTIMATE_DEMO=sharing` seeds a space Ann Lee shared straight into the local database, with
-/// two tasks Claude and Ann completed, plus an own project to share, so the sharing screens can be driven without a
-/// second account. Release builds omit it.
+/// two tasks Claude and Ann completed and a view-only Recipes project, plus an own project to share, so the sharing
+/// screens can be driven without a second account. Release builds omit it.
 enum SharingDemo {
     @MainActor
     static func run(sync: SyncClient) async {
@@ -30,13 +30,15 @@ enum SharingDemo {
                     id: "seeds", title: "Order seeds", projectId: "garden", createdAt: 6, completedAt: 1_791_968_400_000,
                     createdBy: "ann", completedBy: "ann", lastCompletedAt: 1_791_968_400_000
                 ),
+                TaskItem(id: "shakshuka", title: "Try the shakshuka", projectId: "recipes", createdAt: 7, createdBy: "ann"),
             ],
-            projects: [Project(id: "garden", name: "Garden", createdAt: 1)],
+            projects: [Project(id: "garden", name: "Garden", createdAt: 1), Project(id: "recipes", name: "Recipes", createdAt: 2)],
             comments: demoComments(me: me),
             settings: API.Settings()
         )
-        let access = [("project", "garden", API.Role.edit)]
-            + shared.tasks.map { ("task", $0.id, $0.id == "fence" ? API.Role.view : .edit) }
+        let viewOnly: Set<String> = ["fence", "shakshuka"]
+        let access = [("project", "garden", API.Role.edit), ("project", "recipes", .view)]
+            + shared.tasks.map { ("task", $0.id, viewOnly.contains($0.id) ? API.Role.view : .edit) }
         await sync.seed(space: ann.id, shared, access: access.map { kind, id, role in
             Access(id: "\(me):\(kind):\(id)", grantee: me, owner: ann.id, kind: API.AccessKind(rawValue: kind)!, entityId: id, role: role)
         })

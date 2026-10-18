@@ -108,6 +108,25 @@ test('a guest completes a task in a project shared with them, and the owner sees
 	).toBeVisible();
 });
 
+test('a guest who can only view a shared project gets no add row, and quick add there starts in Inbox', async ({
+	browser,
+}) => {
+	const guest = await person(browser, 'Vera');
+	const { owner, project, task } = await ownerWithProject(browser);
+
+	await shareWith(owner, guest, 'Can view');
+
+	const shared = await sharedWithMe(guest);
+	await shared.getByRole('link', { name: new RegExp(project) }).click({ timeout: 15_000 });
+	await expect(guest.app.row(task)).toBeVisible();
+	await expect(guest.page.getByRole('button', { name: 'Add task', exact: true })).toHaveCount(0);
+
+	await guest.app.openQuickAdd();
+	await expect(guest.app.quickAdd().getByText(project)).toHaveCount(0);
+	await expect(guest.app.quickAdd().getByText('Inbox')).toBeVisible();
+	await guest.page.screenshot({ path: 'test-results/sharing/view-only-quick-add.png' });
+});
+
 test('a guest comments on a shared task, and the owner sees it unread until they open it', async ({ browser }) => {
 	const guest = await person(browser, 'Gus');
 	const { owner, project, task } = await ownerWithProject(browser);

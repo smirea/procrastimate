@@ -73,14 +73,16 @@ struct LabelEntity: AppEntity {
 
     var id: String
     var name: String
+    var systemImage: String
 
     var displayRepresentation: DisplayRepresentation {
-        DisplayRepresentation(title: "\(name)", image: .init(systemName: "tag"))
+        DisplayRepresentation(title: "\(name)", image: .init(systemName: systemImage))
     }
 
-    init(id: String, name: String) {
-        self.id = id
-        self.name = name
+    init(_ label: Core.Label) {
+        id = label.id
+        name = label.name
+        systemImage = label.systemImage()
     }
 }
 

@@ -14,16 +14,27 @@ import type { Space } from './space';
 
 const rowId = (grantee: string, kind: AccessRow['kind'], entityId: string) => `${grantee}:${kind}:${entityId}`;
 
+/**
+ * A task's role is whether the grantee may edit it. A project's, section's, or label's is whether a new task of theirs
+ * may land there, which `admit` allows only through an edit share on it or on the whole space, so clients decide
+ * `canAddTo` from the row alone.
+ */
 export function accessRows(owner: string, grantee: string, snapshot: Snapshot, grants: readonly Grant[]): AccessRow[] {
 	const scope = scopeOf(snapshot, grants);
 	const manager = managesSpace(grants);
+	const addsTo = (kind: 'project' | 'label', id: string): AccessRow['role'] =>
+		manager || grants.some(grant => grant.targetKind === kind && grant.targetId === id && grant.role === 'edit')
+			? 'edit'
+			: 'view';
 	const rows: AccessRow[] = [];
 	const add = (kind: AccessRow['kind'], entityId: string, role: AccessRow['role']) =>
 		rows.push({ id: rowId(grantee, kind, entityId), grantee, owner, kind, entityId, role });
 	for (const id of scope.tasks) add('task', id, scope.editable.has(id) ? 'edit' : 'view');
-	for (const id of scope.projects) add('project', id, manager ? 'edit' : 'view');
-	for (const id of scope.sections) add('section', id, manager ? 'edit' : 'view');
-	for (const id of scope.labels) add('label', id, manager ? 'edit' : 'view');
+	for (const id of scope.projects) add('project', id, addsTo('project', id));
+	for (const section of snapshot.sections) {
+		if (scope.sections.has(section.id)) add('section', section.id, addsTo('project', section.projectId));
+	}
+	for (const id of scope.labels) add('label', id, addsTo('label', id));
 	return rows;
 }
 

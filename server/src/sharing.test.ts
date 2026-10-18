@@ -139,6 +139,76 @@ describe('sharing a task', () => {
 	});
 });
 
+describe('sharing a list', () => {
+	test('a project’s, section’s, or label’s access row says edit exactly where the guest may add a task', async () => {
+		const garden = crypto.randomUUID();
+		const beds = crypto.randomUUID();
+		const weekend = crypto.randomUUID();
+		const shed = crypto.randomUUID();
+		const me = owner.person.id;
+		expect(
+			await upload(app, owner, [
+				{
+					op: 'put',
+					table: 'projects',
+					id: garden,
+					values: { id: garden, user_id: me, name: 'Garden', created_at: 1 },
+				},
+				{ op: 'put', table: 'projects', id: shed, values: { id: shed, user_id: me, name: 'Shed', created_at: 2 } },
+				{
+					op: 'put',
+					table: 'sections',
+					id: beds,
+					values: { id: beds, user_id: me, project_id: garden, name: 'Beds', created_at: 1 },
+				},
+				{
+					op: 'put',
+					table: 'labels',
+					id: weekend,
+					values: { id: weekend, user_id: me, name: 'Weekend', created_at: 1 },
+				},
+			]),
+		).toEqual([]);
+		const tulips = await newTask('Plant tulips', {
+			projectId: garden,
+			sectionId: beds,
+			labelIds: JSON.stringify([weekend]),
+		});
+		const hinges = await newTask('Oil the hinges', { projectId: shed });
+		await share({ kind: 'project', id: garden }, guest, 'edit');
+		await share({ kind: 'project', id: shed }, guest, 'view');
+
+		const rows = await accessRows(guest.person.id);
+		expect(rows).toContain(`project:${garden}:edit`);
+		expect(rows).toContain(`section:${beds}:edit`);
+		expect(rows).toContain(`task:${tulips}:edit`);
+		expect(rows).toContain(`project:${shed}:view`);
+		expect(rows).toContain(`task:${hinges}:view`);
+		expect(rows).toContain(`label:${weekend}:view`);
+
+		const watered = crypto.randomUUID();
+		expect(
+			await upload(app, guest, [
+				{
+					op: 'put',
+					table: 'tasks',
+					id: watered,
+					values: taskRow(watered, me, 'Water', { projectId: garden, sectionId: beds }),
+				},
+			]),
+		).toEqual([]);
+		const swept = crypto.randomUUID();
+		expect(
+			await upload(app, guest, [
+				{ op: 'put', table: 'tasks', id: swept, values: taskRow(swept, me, 'Sweep', { projectId: shed }) },
+			]),
+		).toEqual([{ table: 'tasks', id: swept, reason: 'Not editable in this share' }]);
+
+		await share({ kind: 'label', id: weekend }, guest, 'edit');
+		expect(await accessRows(guest.person.id)).toContain(`label:${weekend}:edit`);
+	});
+});
+
 describe('public links', () => {
 	test('a link shows the target without signing in and stops working when deleted', async () => {
 		const id = await newTask('Public');

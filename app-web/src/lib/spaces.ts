@@ -2,7 +2,7 @@ import { DEFAULT_SETTINGS, KINDS, SETTINGS_ID, type Settings, type Snapshot } fr
 import type { Person } from 'shared/sharing.ts';
 import { entityFrom, sortSnapshot, withEntities, type Entity } from 'shared/snapshot.ts';
 import { projectsInOrder, sortTasks, type NewTask, type StoreData } from 'shared/store.ts';
-import type { Rows } from './database.ts';
+import type { AccessRow, Rows } from './database.ts';
 
 /**
  * Which space each entity lives in. `null` is the signed-in user's own space; a string is the owner id of a
@@ -10,7 +10,13 @@ import type { Rows } from './database.ts';
  */
 export type Home = string | null;
 
-export type SharedSpace = { owner: string; data: StoreData; readOnly: ReadonlySet<string> };
+/** `readOnly` is the tasks whose `access` row says `view`; `access` is every row of the space to this user, by id. */
+export type SharedSpace = {
+	owner: string;
+	data: StoreData;
+	readOnly: ReadonlySet<string>;
+	access: readonly AccessRow[];
+};
 export type Spaces = Readonly<Record<string, SharedSpace>>;
 
 /** `settings` is null until the row exists. */
@@ -42,19 +48,17 @@ export function group(rows: Rows, me: string): Grouped {
 			snapshots.set(owner, withEntities(of(owner), kind, entities));
 		}
 	}
-	const readOnly = new Map<string, Set<string>>();
-	for (const row of rows.access) {
-		of(row.owner);
-		if (row.kind === 'task' && row.role === 'view')
-			readOnly.set(row.owner, (readOnly.get(row.owner) ?? new Set()).add(row.entityId));
-	}
+	const accessByOwner = Map.groupBy(rows.access, row => row.owner);
+	for (const owner of accessByOwner.keys()) of(owner);
 	const { settings, ...own } = sortSnapshot(snapshots.get(me) ?? empty());
 	const hasSettings = rows.settings.some(row => row.userId === me && row.id === SETTINGS_ID);
 	snapshots.delete(me);
 	const spaces: Record<string, SharedSpace> = {};
 	for (const [owner, snapshot] of snapshots) {
 		const { settings: _, ...data } = sortSnapshot(snapshot);
-		spaces[owner] = { owner, data: { ...data, reads: [] }, readOnly: readOnly.get(owner) ?? new Set() };
+		const access = (accessByOwner.get(owner) ?? []).toSorted((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+		const readOnly = new Set(access.filter(row => row.kind === 'task' && row.role === 'view').map(row => row.entityId));
+		spaces[owner] = { owner, data: { ...data, reads: [] }, readOnly, access };
 	}
 	return { own, settings: hasSettings ? settings : null, spaces };
 }

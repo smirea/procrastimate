@@ -1,3 +1,4 @@
+import type { AccessRow } from './db/schema.ts';
 import type { DateKey, Task } from './task.ts';
 import { placeKey, scheduledDue } from './triggers.ts';
 import type { TaskEvent, TaskLocation } from './values.ts';
@@ -34,6 +35,20 @@ export const NO_DEFAULTS: ListDefaults = {
 	date: null,
 };
 
+/** A space someone shared with this user, as far as adding goes: its `access` rows to them. */
+export type SharedSpace = { access: readonly AccessRow[] };
+
+/**
+ * Whether a new task may land on `screen`'s project or label, in `space` when someone shared it with this user. The
+ * user's own lists, and every other screen, always take one. In a shared space the server only admits a new task an
+ * edit share on that project or label, or on the whole space, reaches, and writes `edit` on the list's `access` row
+ * exactly then (`server/src/access.ts`), so the list takes one when its row says so.
+ */
+export function canAddTo(screen: Screen | null, space: SharedSpace | null): boolean {
+	if (!space || (screen?.kind !== 'project' && screen?.kind !== 'label')) return true;
+	return space.access.some(row => row.kind === screen.kind && row.entityId === screen.id && row.role === 'edit');
+}
+
 /**
  * The earliest open task's copy, the one a place's or event's name comes from. Once every task there is done, the
  * screen can stay open, so the latest done task's copy keeps quick add on it.
@@ -47,9 +62,10 @@ const earliest = (tasks: readonly Task[], match: (task: Task) => boolean) => {
 /**
  * Quick add inherits the screen it opens from, so the new task lands on that screen: its project and section, its
  * label, its place, its event, or the day of an Inbox heading. Inbox itself adds an undated task, as capture always
- * has, and so do No date and Completed.
+ * has, and so do No date, Completed, and a shared project or label the user can't add to (`canAddTo`).
  */
-export function screenDefaults(screen: Screen | null, tasks: readonly Task[]): ListDefaults {
+export function screenDefaults(screen: Screen | null, tasks: readonly Task[], space: SharedSpace | null): ListDefaults {
+	if (!canAddTo(screen, space)) return NO_DEFAULTS;
 	switch (screen?.kind) {
 		case undefined:
 		case 'no-date':

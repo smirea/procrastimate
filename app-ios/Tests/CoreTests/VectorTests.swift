@@ -125,6 +125,7 @@ let handlers: [String: Handler] = [
     "links": linksVector,
     "rows": rowsVector,
     "comments": commentsVector,
+    "row-actions": rowActionsVector,
 ]
 
 private struct Occurrence: Decodable {
@@ -531,10 +532,16 @@ private struct ScreenInput: Decodable {
     }
 }
 
+/// `SharedSpace` in TS: `{ access }`.
+private struct SharedSpaceInput: Decodable {
+    let access: [Access]
+}
+
 @Sendable func screensVector(_ fn: String, _ a: Args) throws -> JSONValue {
     let screen = try a(0, as: ScreenInput?.self)?.screen()
     switch fn {
-    case "screenDefaults": return try json(ListDefaultsJSON(Screens.defaults(screen, a(1))))
+    case "screenDefaults": return try json(ListDefaultsJSON(Screens.defaults(screen, a(1), a(2, as: SharedSpaceInput?.self)?.access)))
+    case "canAddTo": return try json(Screens.canAdd(to: screen, a(1, as: SharedSpaceInput?.self)?.access))
     case "screenHolds": return try json(Screens.holds(screen, a(1), a(2), in: a.zone))
     default: throw unknown(fn)
     }
@@ -589,6 +596,19 @@ private struct RejectedInput: Decodable {
     case "rejectionNotice":
         let rejected = try a(1, as: [RejectedInput].self).map { (kind: $0.kind, id: $0.id) }
         return try json(Rows.rejectionNotice(try a(0), rejected))
+    default: throw unknown(fn)
+    }
+}
+
+@Sendable func rowActionsVector(_ fn: String, _ a: Args) throws -> JSONValue {
+    switch fn {
+    case "rowActions":
+        let offered = try RowActions(a(0), readOnly: a(1), rolled: a(2, as: Bool?.self) ?? false)
+        return object([
+            "toggle": offered.toggle.map { .string($0.rawValue) } ?? .null,
+            "postpone": .bool(offered.postpone),
+            "delete": .bool(offered.delete),
+        ])
     default: throw unknown(fn)
     }
 }

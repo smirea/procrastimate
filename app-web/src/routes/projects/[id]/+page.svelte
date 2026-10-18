@@ -22,6 +22,7 @@
 	import { followMerged } from '#lib/merged.svelte.ts';
 	import { projectDocument } from 'shared/markdown.ts';
 	import { completed } from '#lib/completed.svelte.ts';
+	import { canAddHere } from '#lib/screen.ts';
 	import { projectCompleted, projectGroups } from 'shared/views.ts';
 	import CompletedList from '#lib/components/CompletedList.svelte';
 
@@ -30,7 +31,7 @@
 	const loose = $derived(groups[0]?.tasks ?? []);
 	const sections = $derived(groups.slice(1).map((g) => ({ section: g.section!, tasks: g.tasks })));
 	const tasks = $derived(groups.flatMap((g) => g.tasks));
-	const done = $derived(project && completed.shown ? projectCompleted(store.tasks, store.sections, project.id) : null);
+	const done = $derived(project && completed.shown(`project:${project.id}`) ? projectCompleted(store.tasks, store.sections, project.id) : null);
 	const doneIn = (id: string | null) => done?.groups.find((g) => (g.section?.id ?? null) === id)?.tasks ?? [];
 	const anyDone = $derived(!!done && (done.gone.length > 0 || done.groups.some((g) => g.tasks.length > 0)));
 	const home = $derived(project ? store.homeOf(project.id) : null);
@@ -42,7 +43,7 @@
 	let confirmingDelete = $state(false);
 	let addingSection = $state(false);
 
-	const canAdd = $derived(!home || tasks.length === 0 || tasks.some((t) => store.canEdit(t.id)));
+	const canAdd = $derived(!!project && canAddHere({ kind: 'project', id: project.id }));
 
 	function addSection(name: string) {
 		if (project && name.trim()) store.addSection(project.id, name.trim());
@@ -92,7 +93,7 @@
 			{/if}
 		{/snippet}
 		{#snippet actions()}
-			<CompletedToggle />
+			<CompletedToggle list={`project:${project.id}`} />
 			{#if !home}
 				<div class="flex items-center gap-1">
 					<button type="button" class="icon-btn touch:size-11" aria-label="Share project" onclick={() => sheets.openShare({ kind: 'project', id: project.id }, project.name)}>
@@ -167,7 +168,7 @@
 		{/if}
 		{#snippet after()}
 			{#if done && (done.gone.length || !anyDone)}
-				<CompletedSection tasks={done.gone} />
+				<CompletedSection tasks={done.gone} list={`project:${project.id}`} />
 			{/if}
 		{/snippet}
 	</View>

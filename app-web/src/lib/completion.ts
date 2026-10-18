@@ -51,3 +51,10 @@ export function toastDeleted(name: string, deleted: Deleted | undefined) {
 	if (!deleted) return;
 	toasts.show(`Deleted “${name}”`, { label: 'Undo', run: () => store.undelete(deleted) });
 }
+
+/** Deletes the task with its subtasks. Undo puts every one of them back. */
+export function deleteTask(task: Task) {
+	const removed = store.deleteTask(task.id);
+	if (!removed.length) return;
+	toasts.show(`Deleted “${task.title}”`, { label: 'Undo', run: () => store.undeleteTasks(removed) });
+}
