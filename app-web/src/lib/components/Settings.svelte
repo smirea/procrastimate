@@ -36,9 +36,9 @@
 
 	const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
-	async function signOut() {
-		await push.forget();
-		await session.signOut();
+	function signOut() {
+		void push.forget();
+		void session.signOut();
 	}
 
 	async function onchange() {

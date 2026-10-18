@@ -182,9 +182,16 @@ function dayOf(ramble: Ramble, usage: RambleUsage, userId: string, key: DateKey)
 		if (other.startsWith(`${userId}:`) && !past.live.size) ramble.days.delete(other);
 	}
 	const day: Day = { key, stored: 0, live: new Set(), loaded: Promise.resolve() };
-	day.loaded = usage.stored(key).then(seconds => {
-		day.stored += seconds;
-	});
+	day.loaded = usage.stored(key).then(
+		seconds => {
+			day.stored += seconds;
+		},
+		(error: unknown) => {
+			// Forgotten, so the next open reads the table again instead of failing on this read forever.
+			if (ramble.days.get(id) === day) ramble.days.delete(id);
+			throw error;
+		},
+	);
 	ramble.days.set(id, day);
 	return day;
 }
@@ -194,7 +201,10 @@ const liveSeconds = (day: Day) => [...day.live].reduce((sum, tally) => sum + tal
 function charge(usage: RambleUsage, day: Day, seconds: number) {
 	if (seconds <= 0) return;
 	day.stored += seconds;
-	day.loaded.then(() => usage.add(day.key, seconds)).catch(reportError);
+	day.loaded
+		.catch(() => {})
+		.then(() => usage.add(day.key, seconds))
+		.catch(reportError);
 }
 
 export type RambleUsage = { stored(day: string): Promise<number>; add(day: string, seconds: number): Promise<void> };

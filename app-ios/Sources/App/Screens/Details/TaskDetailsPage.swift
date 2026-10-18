@@ -172,7 +172,7 @@ private struct TaskDetailsForm: View {
         .sensoryFeedback(.selection, trigger: Picks(task))
         .onChange(of: titleFocused) { if !titleFocused { commitTitle() } }
         .onChange(of: task.title) {
-            guard !titleFocused, title == base else { return }
+            guard title == base else { return }
             title = task.title
             base = task.title
         }
