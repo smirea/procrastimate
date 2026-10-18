@@ -68,12 +68,14 @@ beforeAll(async () => {
 });
 afterAll(() => app.close());
 
-/** `select tasks`, `insert log`, `lock`: the verb and the first table each statement names. */
+/** `select tasks`, `insert log`, `lock`: the verb and the first table each statement names, then any lateral read's. */
 function named(statement: string): string {
 	if (statement.startsWith('SELECT pg_advisory_xact_lock')) return 'lock';
+	if (/^(savepoint|release)/i.test(statement)) return statement.split(' ')[0]!.toLowerCase();
 	const verb = /^\(*(select|insert|update|delete)\b/.exec(statement)?.[1];
 	const table = /\b(?:from|into|update)\s+"(\w+)"/.exec(statement)?.[1];
-	return `${verb} ${table}`;
+	const lateral = [...statement.matchAll(/join lateral \(select .*? from "(\w+)"/g)].map(match => match[1]);
+	return [`${verb} ${table}`, ...lateral].join(' + ');
 }
 
 async function statementsOf(path: string, init: RequestInit = {}): Promise<string[]> {
@@ -111,13 +113,19 @@ describe('statements per read', () => {
 		]);
 	});
 
-	test('activity checks the task is seen, reads its log rows, and names the actors', async () => {
+	test('activity checks the task is seen, reads its log rows and live comments, and names the actors', async () => {
 		const path = `/api/activity?id=${taskId}`;
-		expect(await statementsOf(path, { headers: owner.headers })).toEqual(['select tasks', 'select log', 'select user']);
+		expect(await statementsOf(path, { headers: owner.headers })).toEqual([
+			'select tasks',
+			'select log',
+			'select comments',
+			'select user',
+		]);
 		expect(await statementsOf(`${path}&${space}`, { headers: guest.headers })).toEqual([
 			'select shares',
 			'select tasks',
 			'select log',
+			'select comments',
 			'select user',
 		]);
 	});
@@ -131,7 +139,7 @@ describe('statements per read', () => {
 	});
 
 	test('the agent view is the tree and the task clients, after the caller’s grants', async () => {
-		const clients = ['select log', 'select log'];
+		const clients = ['select tasks + log + log'];
 		expect(await statementsOf('/api/view', { headers: owner.headers })).toEqual([...tree, ...clients]);
 		expect(await statementsOf(`/api/view?${space}`, { headers: guest.headers })).toEqual([
 			'select shares',
@@ -143,7 +151,7 @@ describe('statements per read', () => {
 
 	test('an agent edit loads the tree and the time zone, writes, and reads the task back', async () => {
 		const edit = (title: string) => ({ method: 'PATCH', body: JSON.stringify({ title }) });
-		const after = ['update tasks', 'insert log', 'select tasks', 'select log', 'select log'];
+		const after = ['update tasks', 'insert log', 'select tasks', 'select tasks + log + log'];
 		expect(await statementsOf(`/api/tasks?id=${taskId}`, { ...edit('By the agent'), headers: owner.headers })).toEqual([
 			...tree,
 			'select settings',
@@ -151,7 +159,17 @@ describe('statements per read', () => {
 		]);
 		expect(
 			await statementsOf(`/api/tasks?id=${taskId}&${space}`, { ...edit('By the guest'), headers: guest.headers }),
-		).toEqual(['select shares', ...tree, 'select settings', 'select access', ...after]);
+		).toEqual([
+			'select shares',
+			...tree,
+			'select settings',
+			'lock',
+			'select access',
+			'savepoint',
+			'update tasks',
+			'release',
+			...after.slice(1),
+		]);
 	});
 
 	test('links are the space’s link shares, and a link changes one row', async () => {
@@ -173,7 +191,7 @@ describe('statements per read', () => {
 		]);
 	});
 
-	test('a share to a person recomputes access from the shares to humans and the tree', async () => {
+	test('a share to a person recomputes that grantee’s access from its shares and the space’s links', async () => {
 		const body = JSON.stringify({
 			target: { kind: 'task', id: taskId },
 			audience: { kind: 'user', userId: guest.person.id, role: 'view' },
@@ -189,6 +207,8 @@ describe('statements per read', () => {
 			...tree,
 			'insert access',
 		]);
+		const taskColumns = app.statements.flatMap(statement => /^select (.*?) from "tasks"/.exec(statement)?.[1] ?? []);
+		expect(taskColumns).toEqual(['"id"', '"id", "parent_id", "project_id", "section_id", "label_ids"']);
 	});
 
 	test('memo tasks are found by their source key prefix, and a re-sent memo writes nothing', async () => {

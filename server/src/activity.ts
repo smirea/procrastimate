@@ -1,6 +1,5 @@
 import { and, asc, eq, inArray, or, sql } from 'drizzle-orm';
-import type { PgColumn } from 'drizzle-orm/pg-core';
-import { labels, log, projects, tasks } from '../../shared/db/schema';
+import { comments, labels, log, projects, sections, tasks } from '../../shared/db/schema';
 import { formatRecurrence, formatTime, shortDate } from '../../shared/format';
 import type { Task } from '../../shared/model';
 import { sameValue } from '../../shared/rows';
@@ -8,6 +7,7 @@ import type { ActivityAction, ActivityEntry } from '../../shared/sharing';
 import { SERVER_ACTOR, type DateKey } from '../../shared/values';
 import type { Db } from './db/postgres';
 import { peopleById, unknownPerson } from './people';
+import { seenBy, type Sight } from './space';
 
 /**
  * One task's history, read off the log rather than kept in a table of its own. The log has a row per applied write,
@@ -70,20 +70,29 @@ function changedFields(row: Fields, prev: Fields): string[] {
 	return Object.keys(row).filter(name => !SILENT.has(name) && !sameValue(prev[name], row[name]));
 }
 
+/** The task's rows and the first row of each of its comments still there: a deleted comment is no longer quoted. */
 async function rowsOn(db: Db, owner: string, taskId: string): Promise<LogRow[]> {
-	return db
-		.select()
-		.from(log)
-		.where(
-			and(
-				eq(log.userId, owner),
-				or(
-					and(eq(log.kind, 'task'), eq(log.id, taskId)),
-					and(eq(log.kind, 'comment'), eq(log.op, 'put'), sql`${log.fields}->>'taskId' = ${taskId}`),
+	const [rows, live] = await Promise.all([
+		db
+			.select()
+			.from(log)
+			.where(
+				and(
+					eq(log.userId, owner),
+					or(
+						and(eq(log.kind, 'task'), eq(log.id, taskId)),
+						and(eq(log.kind, 'comment'), eq(log.op, 'put'), sql`${log.fields}->>'taskId' = ${taskId}`),
+					),
 				),
-			),
-		)
-		.orderBy(asc(log.seq));
+			)
+			.orderBy(asc(log.seq)),
+		db
+			.select({ id: comments.id })
+			.from(comments)
+			.where(and(eq(comments.userId, owner), eq(comments.taskId, taskId))),
+	]);
+	const kept = new Set(live.map(comment => comment.id));
+	return rows.filter(row => row.kind !== 'comment' || kept.has(row.id));
 }
 
 export function foldActivity(rows: readonly LogRow[]): Draft[] {
@@ -152,42 +161,55 @@ export function foldActivity(rows: readonly LogRow[]): Draft[] {
 	return drafts;
 }
 
-/** The tasks, projects, and labels the summaries name, read by id once the drafts say which. */
-async function namesFor(db: Db, owner: string, drafts: readonly Draft[]): Promise<NameOf> {
-	const wanted = { task: new Set<string>(), project: new Set<string>(), label: new Set<string>() };
+const NAMED = {
+	task: { table: tasks, name: tasks.title },
+	project: { table: projects, name: projects.name },
+	section: { table: sections, name: sections.name },
+	label: { table: labels, name: labels.name },
+};
+
+type Named = keyof typeof NAMED;
+
+/** The tasks, projects, sections, and labels the summaries name, read by id once the drafts say which. */
+async function namesFor(db: Db, owner: string, sight: Sight, drafts: readonly Draft[]): Promise<NameOf> {
+	const wanted: Record<Named, Set<string>> = {
+		task: new Set(),
+		project: new Set(),
+		section: new Set(),
+		label: new Set(),
+	};
 	for (const { action, before, after } of drafts) {
 		if (action !== 'edited') continue;
 		if (typeof after.projectId === 'string') wanted.project.add(after.projectId);
+		if (typeof after.sectionId === 'string') wanted.section.add(after.sectionId);
 		if (typeof after.parentId === 'string') wanted.task.add(after.parentId);
 		for (const id of [before.labelIds, after.labelIds].flat()) if (typeof id === 'string') wanted.label.add(id);
 	}
-	const own = <T extends { userId: PgColumn; id: PgColumn }>(table: T, ids: Set<string>) =>
-		and(eq(table.userId, owner), inArray(table.id, [...ids]));
-	const [taskNames, projectNames, labelNames] = await Promise.all([
-		wanted.task.size ? db.select({ id: tasks.id, name: tasks.title }).from(tasks).where(own(tasks, wanted.task)) : [],
-		wanted.project.size
-			? db.select({ id: projects.id, name: projects.name }).from(projects).where(own(projects, wanted.project))
-			: [],
-		wanted.label.size
-			? db.select({ id: labels.id, name: labels.name }).from(labels).where(own(labels, wanted.label))
-			: [],
-	]);
-	const byKind = {
-		task: new Map(taskNames.map(row => [row.id, row.name])),
-		project: new Map(projectNames.map(row => [row.id, row.name])),
-		label: new Map(labelNames.map(row => [row.id, row.name])),
-	};
-	return (kind, id) => byKind[kind].get(id) ?? null;
+	const kinds = Object.keys(NAMED) as Named[];
+	const found = await Promise.all(
+		kinds.map(kind => {
+			const { table, name } = NAMED[kind];
+			const ids = [...wanted[kind]];
+			if (!ids.length) return [];
+			return db
+				.select({ id: table.id, name })
+				.from(table)
+				.where(and(eq(table.userId, owner), inArray(table.id, ids), seenBy(db, sight, owner, table.id, kind)));
+		}),
+	);
+	const byKind = new Map(kinds.map((kind, index) => [kind, new Map(found[index]!.map(row => [row.id, row.name]))]));
+	return (kind, id) => byKind.get(kind)!.get(id) ?? null;
 }
 
-export async function taskActivity(db: Db, owner: string, taskId: string): Promise<ActivityEntry[]> {
+/** The task's entries, naming only the projects, sections, labels, and parents `sight` sees. */
+export async function taskActivity(db: Db, owner: string, sight: Sight, taskId: string): Promise<ActivityEntry[]> {
 	const drafts = foldActivity(await rowsOn(db, owner, taskId));
 	const [people, nameOf] = await Promise.all([
 		peopleById(
 			db,
 			drafts.map(draft => draft.actor),
 		),
-		namesFor(db, owner, drafts),
+		namesFor(db, owner, sight, drafts),
 	]);
 	return drafts.flatMap(draft => {
 		const summary = summarize(draft, nameOf);
@@ -197,7 +219,7 @@ export async function taskActivity(db: Db, owner: string, taskId: string): Promi
 	});
 }
 
-type NameOf = (kind: 'project' | 'label' | 'task', id: string) => string | null;
+type NameOf = (kind: Named, id: string) => string | null;
 
 const ACTION_SUMMARIES: Record<Exclude<ActivityAction, 'edited' | 'commented'>, string> = {
 	created: 'added this task',
@@ -213,12 +235,22 @@ function listOf(names: string[]) {
 	return names.length < 2 ? names.join('') : `${names.slice(0, -1).join(', ')} and ${names.at(-1)}`;
 }
 
+/** Names the labels the reader sees and counts the rest: `added labels home and another label`. */
+function labelChange(verb: string, ids: string[], nameOf: NameOf): string {
+	if (!ids.length) return '';
+	const names = ids.flatMap(id => nameOf('label', id) ?? []);
+	const unnamed = ids.length - names.length;
+	if (!names.length) return unnamed === 1 ? `${verb} a label` : `${verb} ${unnamed} labels`;
+	if (unnamed) names.push(unnamed === 1 ? 'another label' : `${unnamed} other labels`);
+	return `${verb} ${ids.length > 1 ? 'labels' : 'label'} ${listOf(names)}`;
+}
+
 function summarize(draft: Draft, nameOf: NameOf): string | null {
 	if (draft.action === 'commented') return `commented ${quoted(String(draft.after.body))}`;
 	if (draft.action !== 'edited') return ACTION_SUMMARIES[draft.action];
 	const today = new Date(draft.at).toISOString().slice(0, 10) as DateKey;
 	const parts = Object.keys(draft.after).flatMap(name => {
-		const part = describeField(name, draft.before[name], draft.after[name], today, draft.state, nameOf);
+		const part = describeField(name, draft.before[name], draft.after[name], today, draft.state, draft.after, nameOf);
 		return part ? [part] : [];
 	});
 	return parts.length ? listOf(parts) : null;
@@ -230,6 +262,7 @@ function describeField(
 	after: unknown,
 	today: DateKey,
 	task: Fields,
+	changed: Fields,
 	nameOf: NameOf,
 ): string | null {
 	switch (name) {
@@ -253,16 +286,30 @@ function describeField(
 		case 'priority':
 			return `changed priority to P${String(after)}`;
 		case 'projectId':
-			return after === null ? 'moved it to Inbox' : `moved it to ${nameOf('project', String(after)) ?? 'a project'}`;
+			return after === null
+				? 'moved it to Inbox'
+				: `moved it to ${nameOf('project', String(after)) ?? 'another project'}`;
+		case 'sectionId':
+			if (after !== null) {
+				const section = nameOf('section', String(after));
+				return section ? `put it in section ${section}` : 'put it in a section';
+			}
+			// Moving a task to another project leaves its section, which the move already says.
+			return 'projectId' in changed ? null : 'took it out of its section';
 		case 'labelIds': {
 			const old = new Set((before as string[] | undefined) ?? []);
 			const next = new Set((after as string[] | undefined) ?? []);
-			const names = (ids: string[]) => ids.map(id => nameOf('label', id) ?? 'a label');
-			const added = names([...next].filter(id => !old.has(id)));
-			const removed = names([...old].filter(id => !next.has(id)));
 			const parts = [
-				added.length ? `added ${added.length > 1 ? 'labels' : 'label'} ${listOf(added)}` : '',
-				removed.length ? `removed ${removed.length > 1 ? 'labels' : 'label'} ${listOf(removed)}` : '',
+				labelChange(
+					'added',
+					[...next].filter(id => !old.has(id)),
+					nameOf,
+				),
+				labelChange(
+					'removed',
+					[...old].filter(id => !next.has(id)),
+					nameOf,
+				),
 			].filter(Boolean);
 			return parts.length ? parts.join(' and ') : null;
 		}

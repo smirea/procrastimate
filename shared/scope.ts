@@ -1,7 +1,6 @@
-import type { Entities } from './dangling.ts';
+import type { Entities, Links } from './dangling.ts';
 import type { AccessRow, ShareRow } from './db/schema.ts';
-import { groupChildren } from './subtasks.ts';
-import type { FieldsByKind, Task } from './model.ts';
+import type { FieldsByKind } from './model.ts';
 import type { RowWrite } from './rows.ts';
 
 /**
@@ -11,6 +10,8 @@ import type { RowWrite } from './rows.ts';
  */
 
 export type Grant = Pick<ShareRow, 'targetKind' | 'targetId' | 'role'>;
+
+type LinkedTask = Links['tasks'][number];
 
 /**
  * A whole-space edit share makes its holder a manager of the space. Only AI accounts can hold one; `shares.create`
@@ -32,10 +33,10 @@ export type Scope = {
 	sections: ReadonlySet<string>;
 };
 
-export function scopeOf(snapshot: Entities, grants: readonly Grant[]): Scope {
+export function scopeOf(snapshot: Links, grants: readonly Grant[]): Scope {
 	const byId = new Map(snapshot.tasks.map(task => [task.id, task]));
-	const children = groupChildren(snapshot.tasks);
-	const rootProject = (task: Task): string | null => {
+	const children = Map.groupBy(snapshot.tasks, task => task.parentId);
+	const rootProject = (task: LinkedTask): string | null => {
 		let current = task;
 		const seen = new Set<string>();
 		while (current.parentId && !seen.has(current.id)) {
@@ -46,7 +47,7 @@ export function scopeOf(snapshot: Entities, grants: readonly Grant[]): Scope {
 		}
 		return current.projectId;
 	};
-	const reaches = ({ targetKind, targetId }: Grant, task: Task) => {
+	const reaches = ({ targetKind, targetId }: Grant, task: LinkedTask) => {
 		switch (targetKind) {
 			case 'space':
 				return true;
@@ -57,6 +58,10 @@ export function scopeOf(snapshot: Entities, grants: readonly Grant[]): Scope {
 			case 'task':
 				return task.id === targetId;
 		}
+	};
+	const live = {
+		projects: new Set(snapshot.projects.map(project => project.id)),
+		labels: new Set(snapshot.labels.map(label => label.id)),
 	};
 	const tasks = new Set<string>();
 	const editable = new Set<string>();
@@ -70,8 +75,8 @@ export function scopeOf(snapshot: Entities, grants: readonly Grant[]): Scope {
 			for (const set of into) set.add(task.id);
 			queue.push(...(children.get(task.id) ?? []));
 		}
-		if (grant.targetKind === 'project') projects.add(grant.targetId);
-		if (grant.targetKind === 'label') labels.add(grant.targetId);
+		if (grant.targetKind === 'project' && live.projects.has(grant.targetId)) projects.add(grant.targetId);
+		if (grant.targetKind === 'label' && live.labels.has(grant.targetId)) labels.add(grant.targetId);
 		if (grant.targetKind === 'space' && grant.role === 'edit') {
 			for (const { id } of snapshot.projects) projects.add(id);
 			for (const { id } of snapshot.labels) labels.add(id);

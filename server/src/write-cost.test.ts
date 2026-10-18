@@ -4,7 +4,8 @@ import { json, signUp, taskRow, testApp, upload, type Session, type TestApp } fr
 /**
  * What one upload costs in SQL statements, counted by the test app's Drizzle logger. Sessions are warmed first, so
  * the counts are the write path's alone: the bearer session cache answers the auth. Every count is literal on
- * purpose, so a statement that creeps back in fails here.
+ * purpose, so a statement that creeps back in fails here. The logger sees no `BEGIN` or `COMMIT`, so a guest's
+ * transaction costs two more round trips than its list shows.
  */
 
 let app: TestApp;
@@ -24,11 +25,14 @@ beforeAll(async () => {
 });
 afterAll(() => app.close());
 
-/** The statements an upload ran, as their first word, so a failure names what ran. */
+/** The statements an upload ran, as their first word or `lock` for an advisory lock, so a failure names what ran. */
 async function statementsOf(session: Session, writes: unknown[]): Promise<string[]> {
 	app.statements.length = 0;
 	expect(await upload(app, session, writes)).toEqual([]);
-	return app.statements.map(statement => statement.trim().split(/\s+/)[0]!.toLowerCase());
+	return app.statements.map(statement => {
+		if (statement.startsWith('SELECT pg_advisory_xact_lock')) return 'lock';
+		return statement.trim().split(/\s+/)[0]!.toLowerCase();
+	});
 }
 
 const patch = (values: Record<string, unknown>, opId = crypto.randomUUID()) => [
@@ -69,7 +73,7 @@ describe('statements per upload', () => {
 		expect(await statementsOf(owner, settings({ time_zone: 'Europe/Madrid' }))).toEqual(['update', 'insert', 'select']);
 	});
 
-	test('a guest’s edit tries the own space, looks the row up, reads the guest’s access rows, writes, and logs', async () => {
+	test('a guest’s edit tries the own space, looks the row up, locks the space shared, reads the guest’s access rows, writes in a savepoint, and logs', async () => {
 		await json(
 			app.fetch('/api/shares', {
 				method: 'POST',
@@ -83,8 +87,11 @@ describe('statements per upload', () => {
 		expect(await statementsOf(guest, patch({ title: 'By the guest' }))).toEqual([
 			'update',
 			'select',
+			'lock',
 			'select',
+			'savepoint',
 			'update',
+			'release',
 			'insert',
 		]);
 	});
@@ -104,7 +111,7 @@ describe('statements per upload', () => {
 			'update',
 			'insert',
 			'select',
-			'select',
+			'lock',
 			'select',
 			'select',
 			'select',

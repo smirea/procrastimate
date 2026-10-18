@@ -263,7 +263,7 @@ export const router = os.router({
 			const sight = await sightOf(db, owner, actor, access);
 			const [seen, entries] = await Promise.all([
 				seesTask(db, owner, sight, input.query.id),
-				taskActivity(db, owner, input.query.id),
+				taskActivity(db, owner, sight, input.query.id),
 			]);
 			if (!seen) throw new ORPCError('NOT_FOUND', { message: 'No such task' });
 			return { entries };

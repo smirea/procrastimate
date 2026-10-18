@@ -124,7 +124,7 @@ export function createShare(
 			.insert(shares)
 			.values({ userId: owner, ...share })
 			.onConflictDoUpdate({ target: [shares.userId, shares.id], set: { role: share.role } });
-		if (grantee) await syncAccess(tx, owner);
+		if (grantee) await syncAccess(tx, owner, grantee.id);
 		return shareView(owner, origin, share, grantee);
 	});
 }
@@ -136,7 +136,7 @@ export function deleteShare(db: Db, owner: string, id: string): Promise<void> {
 			.where(and(eq(shares.userId, owner), eq(shares.id, id)))
 			.returning({ grantee: shares.grantee });
 		if (!share) throw new ORPCError('NOT_FOUND', { message: 'No such share' });
-		if (share.grantee) await syncAccess(tx, owner);
+		if (share.grantee) await syncAccess(tx, owner, share.grantee);
 	});
 }
 

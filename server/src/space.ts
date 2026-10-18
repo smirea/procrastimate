@@ -1,10 +1,19 @@
 import { and, eq, exists, inArray, sql, type SQL } from 'drizzle-orm';
 import type { PgColumn } from 'drizzle-orm/pg-core';
 import type { Actor } from '../../shared/auth';
-import { resolveDangling, type Entities } from '../../shared/dangling';
-import { access as accessTable, labels, projects, sections, settings, shares, tasks } from '../../shared/db/schema';
+import { resolveDangling, type Entities, type Links } from '../../shared/dangling';
+import {
+	access as accessTable,
+	labels,
+	projects,
+	sections,
+	settings,
+	shares,
+	tasks,
+	type AccessRow,
+} from '../../shared/db/schema';
 import { SETTINGS_ID } from '../../shared/model';
-import { scopeOf } from '../../shared/scope';
+import { managesSpace, scopeOf, type Scope } from '../../shared/scope';
 import { byCreation } from '../../shared/snapshot';
 import type { Access } from './auth';
 import type { Db } from './db/postgres';
@@ -40,6 +49,26 @@ export async function loadTree(db: Db, owner: string): Promise<Entities> {
 	});
 }
 
+/** The links between the space's rows, which is all `scopeOf` reads, resolved like `loadTree`: a few columns each. */
+export async function loadLinks(db: Db, owner: string): Promise<Links> {
+	const [taskRows, projectRows, sectionRows, labelRows] = await Promise.all([
+		db
+			.select({
+				id: tasks.id,
+				parentId: tasks.parentId,
+				projectId: tasks.projectId,
+				sectionId: tasks.sectionId,
+				labelIds: tasks.labelIds,
+			})
+			.from(tasks)
+			.where(eq(tasks.userId, owner)),
+		db.select({ id: projects.id }).from(projects).where(eq(projects.userId, owner)),
+		db.select({ id: sections.id, projectId: sections.projectId }).from(sections).where(eq(sections.userId, owner)),
+		db.select({ id: labels.id }).from(labels).where(eq(labels.userId, owner)),
+	]);
+	return resolveDangling({ tasks: taskRows, projects: projectRows, sections: sectionRows, labels: labelRows });
+}
+
 export async function storedTimeZone(db: Db, owner: string): Promise<string | null> {
 	const [row] = await db
 		.select({ timeZone: settings.timeZone })
@@ -73,20 +102,28 @@ export async function accessIn(db: Db, owner: string, actor: Actor): Promise<Acc
 }
 
 /**
- * Which of the space's tasks the caller sees. The owner and a whole-space grant see every one. A human guest sees what
- * its `access` rows name, which the server keeps equal to `scopeOf`. An AI account has no `access` rows, so one with
- * narrower grants gets its scope worked out from the tree.
+ * What of the space the caller sees. The owner and an AI manager see every row. A human guest sees what its `access`
+ * rows name, which the server keeps equal to `scopeOf`. Any other AI account has no `access` rows, so its scope is
+ * worked out from the tree.
  */
-export type Sight = { kind: 'all' } | { kind: 'rows'; grantee: string } | { kind: 'tasks'; ids: ReadonlySet<string> };
+export type Sight = { kind: 'all' } | { kind: 'rows'; grantee: string } | { kind: 'scope'; scope: Scope };
 
 export async function sightOf(db: Db, owner: string, actor: Actor, access: Access): Promise<Sight> {
-	if (access.role === 'owner' || access.shares.some(share => share.targetKind === 'space')) return { kind: 'all' };
+	if (access.role === 'owner' || managesSpace(access.shares)) return { kind: 'all' };
 	if (actor.kind === 'human') return { kind: 'rows', grantee: actor.id };
-	return { kind: 'tasks', ids: scopeOf(await loadTree(db, owner), access.shares).tasks };
+	return { kind: 'scope', scope: scopeOf(await loadLinks(db, owner), access.shares) };
 }
 
-/** A condition on a task id column of `owner`'s space that holds for the tasks `sight` sees. */
-export function seenBy(db: Db, sight: Sight, owner: string, taskId: PgColumn): SQL | undefined {
+const SCOPE_SETS = { task: 'tasks', project: 'projects', section: 'sections', label: 'labels' } as const;
+
+/** A condition on an id column of `owner`'s space, of rows of `kind`, that holds for the rows `sight` sees. */
+export function seenBy(
+	db: Db,
+	sight: Sight,
+	owner: string,
+	id: PgColumn,
+	kind: AccessRow['kind'] = 'task',
+): SQL | undefined {
 	switch (sight.kind) {
 		case 'all':
 			return undefined;
@@ -99,13 +136,13 @@ export function seenBy(db: Db, sight: Sight, owner: string, taskId: PgColumn): S
 						and(
 							eq(accessTable.grantee, sight.grantee),
 							eq(accessTable.owner, owner),
-							eq(accessTable.kind, 'task'),
-							eq(accessTable.entityId, taskId),
+							eq(accessTable.kind, kind),
+							eq(accessTable.entityId, id),
 						),
 					),
 			);
-		case 'tasks':
-			return inArray(taskId, [...sight.ids]);
+		case 'scope':
+			return inArray(id, [...sight.scope[SCOPE_SETS[kind]]]);
 	}
 }
 

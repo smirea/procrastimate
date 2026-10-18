@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
-import { eq } from 'drizzle-orm';
-import { access, comments, tasks } from '../../shared/db/schema';
+import { and, eq } from 'drizzle-orm';
+import { access, comments, log, tasks } from '../../shared/db/schema';
 import type { Person, ShareView, SpaceView } from '../../shared/sharing';
 import { json, ORIGIN, signUp, taskRow, testApp, tokenHeaders, upload, type Session, type TestApp } from './test-app';
 
@@ -198,6 +198,42 @@ describe('sharing a task', () => {
 		const stranger = await signUp(app, 'Stranger');
 		expect((await call(stranger, 'GET', `/api/view?space=${owner.person.id}`)).status).toBe(403);
 	});
+
+	test('a guest’s delete retried after its row went still lands in the owner’s log and access', async () => {
+		const helper = await signUp(app, 'Helper');
+		const id = await newTask('Return the drill');
+		await share({ kind: 'task', id }, helper, 'edit');
+		expect(await accessRows(helper.person.id)).toEqual([`task:${id}:edit`]);
+		// The state a crash between the delete and its bookkeeping leaves: the row gone, nothing else changed.
+		await app.db.delete(tasks).where(eq(tasks.id, id));
+		const retry = [{ op: 'delete', table: 'tasks', id, opId: `${id}:delete` }];
+		expect(await upload(app, helper, retry)).toEqual([]);
+		const logged = await app.db
+			.select({ owner: log.userId, actor: log.actor, op: log.op })
+			.from(log)
+			.where(and(eq(log.id, id), eq(log.op, 'delete')));
+		expect(logged).toEqual([{ owner: owner.person.id, actor: helper.person.id, op: 'delete' }]);
+		expect(await accessRows(helper.person.id)).toEqual([]);
+	});
+
+	test('a guest’s delete that fully landed, retried, logs nothing more in either space', async () => {
+		const helper = await signUp(app, 'Helper');
+		const id = await newTask('Lend the ladder');
+		await share({ kind: 'task', id }, helper, 'edit');
+		const remove = [{ op: 'delete', table: 'tasks', id, opId: `${id}:delete` }];
+		expect(await upload(app, helper, remove)).toEqual([]);
+		expect(await accessRows(helper.person.id)).toEqual([]);
+		expect(await upload(app, helper, remove)).toEqual([]);
+		const logged = await app.db
+			.select({ owner: log.userId, actor: log.actor, op: log.op })
+			.from(log)
+			.where(eq(log.id, id))
+			.orderBy(log.seq);
+		expect(logged).toEqual([
+			{ owner: owner.person.id, actor: owner.person.id, op: 'put' },
+			{ owner: owner.person.id, actor: helper.person.id, op: 'delete' },
+		]);
+	});
 });
 
 describe('sharing a list', () => {
@@ -285,6 +321,44 @@ describe('sharing a list', () => {
 			await upload(app, owner, [{ op: 'patch', table: 'tasks', id: labelled, values: { label_ids: '[]' } }]),
 		).toEqual([]);
 		expect(await accessRows(guest.person.id)).not.toContain(`task:${labelled}:edit`);
+	});
+
+	test('deleting a shared project or label takes away what its share reached, and restoring it gives it back', async () => {
+		const lister = await signUp(app, 'Lister');
+		const me = owner.person.id;
+		const [porch, rainy] = [crypto.randomUUID(), crypto.randomUUID()];
+		const porchRow = { id: porch, user_id: me, name: 'Porch', created_at: 1 };
+		const rainyRow = { id: rainy, user_id: me, name: 'Rainy', created_at: 1 };
+		expect(
+			await upload(app, owner, [
+				{ op: 'put', table: 'projects', id: porch, values: porchRow },
+				{ op: 'put', table: 'labels', id: rainy, values: rainyRow },
+			]),
+		).toEqual([]);
+		const paint = await newTask('Paint the porch', { projectId: porch });
+		const mop = await newTask('Mop', { labelIds: JSON.stringify([rainy]) });
+		const guestRows = await accessRows(guest.person.id);
+		await share({ kind: 'project', id: porch }, lister, 'view');
+		await share({ kind: 'label', id: rainy }, lister, 'view');
+		const shared = [`label:${rainy}:view`, `project:${porch}:view`, `task:${mop}:view`, `task:${paint}:view`];
+		expect(await accessRows(lister.person.id)).toEqual(shared.toSorted());
+		expect(await accessRows(guest.person.id)).toEqual(guestRows);
+
+		expect(
+			await upload(app, owner, [
+				{ op: 'delete', table: 'projects', id: porch },
+				{ op: 'delete', table: 'labels', id: rainy },
+			]),
+		).toEqual([]);
+		expect(await accessRows(lister.person.id)).toEqual([]);
+
+		expect(
+			await upload(app, owner, [
+				{ op: 'put', table: 'projects', id: porch, values: porchRow },
+				{ op: 'put', table: 'labels', id: rainy, values: rainyRow },
+			]),
+		).toEqual([]);
+		expect(await accessRows(lister.person.id)).toEqual(shared.toSorted());
 	});
 });
 

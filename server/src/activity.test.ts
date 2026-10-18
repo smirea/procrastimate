@@ -1,7 +1,7 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, setSystemTime, test } from 'bun:test';
-import type { ActivityEntry, ShareView } from '../../shared/sharing';
+import type { ActivityEntry, Person, ShareView } from '../../shared/sharing';
 import { COALESCE_WINDOW } from './activity';
-import { json, signUp, taskRow, testApp, upload, type Session, type TestApp } from './test-app';
+import { json, signUp, taskRow, testApp, tokenHeaders, upload, type Session, type TestApp } from './test-app';
 
 const START = Date.UTC(2026, 9, 14, 18, 0);
 beforeEach(() => setSystemTime(START));
@@ -70,6 +70,29 @@ describe('GET /api/activity', () => {
 		]);
 	});
 
+	test('a comment its author deleted is no longer quoted', async () => {
+		const id = crypto.randomUUID();
+		await upload(app, owner, [{ op: 'put', table: 'tasks', id, values: taskRow(id, owner.person.id, 'Plan') }]);
+		const [kept, removed] = [crypto.randomUUID(), crypto.randomUUID()];
+		const comment = (commentId: string, body: string) => ({
+			op: 'put',
+			table: 'comments',
+			id: commentId,
+			values: {
+				id: commentId,
+				user_id: owner.person.id,
+				task_id: id,
+				body,
+				author_id: null,
+				created_at: 1,
+				edited_at: null,
+			},
+		});
+		await upload(app, owner, [comment(kept, 'Booked'), comment(removed, 'Call me at 555-0100')]);
+		await upload(app, owner, [{ op: 'delete', table: 'comments', id: removed }]);
+		expect(await activity(id)).toEqual(['Owner created: added this task', 'Owner commented: commented “Booked”']);
+	});
+
 	test('a completion undone at once by the same actor shows neither, and a re-upload of the same values shows nothing', async () => {
 		const id = crypto.randomUUID();
 		await upload(app, owner, [{ op: 'put', table: 'tasks', id, values: taskRow(id, owner.person.id, 'Flip') }]);
@@ -100,57 +123,86 @@ describe('GET /api/activity', () => {
 		).toBe(403);
 	});
 
-	test('an edit names the project, label, and parent it points at, and a guest reads only what it sees', async () => {
-		const project = crypto.randomUUID();
-		const label = crypto.randomUUID();
-		const parent = crypto.randomUUID();
-		const id = crypto.randomUUID();
-		const hidden = crypto.randomUUID();
+	test('an edit names the project, section, label, and parent it points at, and a guest only the ones it sees', async () => {
+		const [errands, secret, shelf, vault, home, hidden, trip, id] = Array.from({ length: 8 }, () =>
+			crypto.randomUUID(),
+		);
+		const named = (table: string, rowId: string, name: string, extra: Record<string, unknown> = {}) => ({
+			op: 'put',
+			table,
+			id: rowId,
+			values: { id: rowId, user_id: owner.person.id, name, created_at: 1, ...extra },
+		});
 		await upload(app, owner, [
-			{
-				op: 'put',
-				table: 'projects',
-				id: project,
-				values: { id: project, user_id: owner.person.id, name: 'Errands', created_at: 1 },
-			},
-			{
-				op: 'put',
-				table: 'labels',
-				id: label,
-				values: { id: label, user_id: owner.person.id, name: 'home', created_at: 1 },
-			},
-			{ op: 'put', table: 'tasks', id: parent, values: taskRow(parent, owner.person.id, 'Trip') },
+			named('projects', errands, 'Errands'),
+			named('projects', secret, 'Secret'),
+			named('sections', shelf, 'Shelf', { project_id: errands }),
+			named('sections', vault, 'Vault', { project_id: secret }),
+			named('labels', home, 'home'),
+			named('labels', hidden, 'private'),
+			{ op: 'put', table: 'tasks', id: trip, values: taskRow(trip, owner.person.id, 'Trip', { projectId: errands }) },
 			{ op: 'put', table: 'tasks', id, values: taskRow(id, owner.person.id, 'Pack') },
-			{ op: 'put', table: 'tasks', id: hidden, values: taskRow(hidden, owner.person.id, 'Hidden') },
 		]);
 		const step = async (n: number, values: Record<string, unknown>) => {
 			later(n * (COALESCE_WINDOW + 1000));
 			expect(await upload(app, owner, [{ op: 'patch', table: 'tasks', id, values }])).toEqual([]);
 		};
-		await step(1, { project_id: project });
-		await step(2, { label_ids: JSON.stringify([label]) });
-		await step(3, { parent_id: parent });
-		const named = [
+		await step(1, { project_id: secret, section_id: vault });
+		await step(2, { project_id: errands, section_id: shelf });
+		await step(3, { section_id: null });
+		await step(4, { label_ids: JSON.stringify([home, hidden]) });
+		await step(5, { label_ids: JSON.stringify([home]) });
+		await step(6, { parent_id: trip });
+		expect(await activity(id)).toEqual([
 			'Owner created: added this task',
-			'Owner edited: moved it to Errands',
-			'Owner edited: added label home',
+			'Owner edited: moved it to Secret and put it in section Vault',
+			'Owner edited: moved it to Errands and put it in section Shelf',
+			'Owner edited: took it out of its section',
+			'Owner edited: added labels home and private',
+			'Owner edited: removed label private',
 			'Owner edited: made it a subtask of “Trip”',
+		]);
+		const seen = [
+			'Owner created: added this task',
+			'Owner edited: moved it to another project and put it in a section',
+			'Owner edited: moved it to Errands and put it in section Shelf',
+			'Owner edited: took it out of its section',
+			'Owner edited: added labels home and another label',
+			'Owner edited: removed a label',
+			'Owner edited: made it a subtask',
 		];
-		expect(await activity(id)).toEqual(named);
-		await json<ShareView>(
-			app.fetch('/api/shares', {
+		const share = (userId: string) =>
+			json<ShareView>(
+				app.fetch('/api/shares', {
+					method: 'POST',
+					headers: owner.headers,
+					body: JSON.stringify({ target: { kind: 'task', id }, audience: { kind: 'user', userId, role: 'view' } }),
+				}),
+			);
+		await share(guest.person.id);
+		const read = async (headers: Record<string, string>, task: string) =>
+			app.fetch(`/api/activity?id=${task}&space=${owner.person.id}`, { headers });
+		const entries = async (headers: Record<string, string>) =>
+			(await json<{ entries: ActivityEntry[] }>(read(headers, id))).entries.map(
+				entry => `${entry.actor.name} ${entry.action}: ${entry.summary}`,
+			);
+		expect(await entries(guest.headers)).toEqual(seen);
+		expect((await read(guest.headers, trip)).status).toBe(404);
+
+		const ai = await json<Person>(
+			app.fetch('/api/ai', { method: 'POST', headers: owner.headers, body: JSON.stringify({ name: 'Narrow' }) }),
+		);
+		const { token } = await json<{ token: string }>(
+			app.fetch('/api/ai-tokens', {
 				method: 'POST',
 				headers: owner.headers,
-				body: JSON.stringify({
-					target: { kind: 'task', id },
-					audience: { kind: 'user', userId: guest.person.id, role: 'view' },
-				}),
+				body: JSON.stringify({ aiUserId: ai.id, name: 'laptop' }),
 			}),
 		);
-		const asGuest = (task: string) =>
-			app.fetch(`/api/activity?id=${task}&space=${owner.person.id}`, { headers: guest.headers });
-		const seen = await json<{ entries: ActivityEntry[] }>(asGuest(id));
-		expect(seen.entries.map(entry => `${entry.actor.name} ${entry.action}: ${entry.summary}`)).toEqual(named);
-		expect((await asGuest(hidden)).status).toBe(404);
+		const { shares } = await json<{ shares: ShareView[] }>(app.fetch('/api/shares', { headers: owner.headers }));
+		const whole = shares.find(row => row.grantee?.id === ai.id && row.target.kind === 'space')!;
+		await app.fetch(`/api/shares?id=${whole.id}`, { method: 'DELETE', headers: owner.headers });
+		await share(ai.id);
+		expect(await entries(tokenHeaders(token))).toEqual(seen);
 	});
 });

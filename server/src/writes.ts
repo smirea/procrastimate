@@ -1,13 +1,13 @@
-import { and, eq, getTableColumns, inArray, sql, type SQL } from 'drizzle-orm';
+import { and, desc, eq, getTableColumns, inArray, sql, type SQL } from 'drizzle-orm';
 import type { PgColumn, PgTable } from 'drizzle-orm/pg-core';
 import type { Actor } from '../../shared/auth';
-import { comments, ENTITY_TABLES, log, tasks } from '../../shared/db/schema';
+import { access, comments, ENTITY_TABLES, log, tasks } from '../../shared/db/schema';
 import type { FieldsByKind, Kind } from '../../shared/model';
 import { coalesce, TABLE_OF, type RowWrite } from '../../shared/rows';
 import type { Fields } from '../../shared/snapshot';
-import { guestRefusal, type GuestRows, type StoredComment } from '../../shared/scope';
+import { guestRefusal, type StoredComment } from '../../shared/scope';
 import type { Client } from '../../shared/values';
-import { guestRows, recomputeAccess, touchesAccess } from './access';
+import { asGuest, recomputeAccess, touchesAccess } from './access';
 import type { Db } from './db/postgres';
 import { replan, touchesPush } from './push';
 
@@ -29,13 +29,13 @@ export type Applied = { rejected: Rejected[] };
 
 /**
  * The actor's standing in one space, which the agent API decides from the loaded space before it writes: the owner,
- * an AI manager with the owner's rights, or a guest whose writes are checked against their `access` rows, with
- * `comment` answering what the server holds for a comment they write to.
+ * an AI manager with the owner's rights, or a guest whose writes are checked against their `access` rows, read with
+ * the writes by `asGuest`, with `comment` answering what the server holds for a comment they write to.
  */
 export type Authority =
 	| { role: 'owner' }
 	| { role: 'manager' }
-	| { role: 'guest'; rows: GuestRows; comment: (id: string) => StoredComment | undefined };
+	| { role: 'guest'; comment: (id: string) => StoredComment | undefined };
 
 const OTHER_SPACE = 'Belongs to another space';
 const DB_REFUSED = 'The database refused the write';
@@ -88,14 +88,27 @@ type Outcome = 'changed' | 'unchanged' | 'refused';
  * and its edits and deletes only ever match the author's own row. Answers whether a row changed, or `refused` for a
  * data or integrity error (SQLSTATE 22xxx or 23xxx), which is the client's data's fault.
  */
-async function writeRow(db: Db, owner: string, actor: string, write: Write): Promise<Outcome> {
+type WriteRow = (owner: string, actor: string, write: Write) => Promise<Outcome>;
+
+async function outcomeOf(run: () => Promise<boolean>): Promise<Outcome> {
 	try {
-		return (await statement(db, owner, actor, write)) ? 'changed' : 'unchanged';
+		return (await run()) ? 'changed' : 'unchanged';
 	} catch (error) {
 		if (refusedByDatabase(error)) return 'refused';
 		throw error;
 	}
 }
+
+const writeRow =
+	(db: Db): WriteRow =>
+	(owner, actor, write) =>
+		outcomeOf(() => statement(db, owner, actor, write));
+
+/** Inside a transaction a refused statement would abort the rest, so each write gets a savepoint of its own. */
+const writeRowIn =
+	(tx: Db): WriteRow =>
+	(owner, actor, write) =>
+		outcomeOf(() => tx.transaction(savepoint => statement(savepoint, owner, actor, write)));
 
 async function statement(db: Db, owner: string, actor: string, write: Write): Promise<boolean> {
 	const table: PgTable = ENTITY_TABLES[write.kind];
@@ -241,9 +254,13 @@ async function storedRows(db: Db, writes: readonly Write[]): Promise<Map<string,
 
 type Landed = { owner: string; write: Write };
 
+/** A guest's writes lock their rows in one transaction; running them in id order keeps two batches from deadlocking. */
+const inLockOrder = <T extends Pick<RowWrite, 'kind' | 'id'>>(writes: readonly T[]) =>
+	writes.toSorted((a, b) => rowKey(a).localeCompare(rowKey(b)));
+
 /** Runs one write in a space and files the outcome, with `missing` for a put that found its row elsewhere. */
 async function land(
-	db: Db,
+	writeIn: WriteRow,
 	owner: string,
 	actor: string,
 	write: Write,
@@ -251,7 +268,7 @@ async function land(
 	rejected: Rejected[],
 	missing: (write: Write) => void,
 ): Promise<void> {
-	const outcome = await writeRow(db, owner, actor, write);
+	const outcome = await writeIn(owner, actor, write);
 	if (outcome === 'refused') rejected.push(reject(write, DB_REFUSED));
 	else if (outcome === 'changed') landed.push({ owner, write });
 	else missing(write);
@@ -276,7 +293,7 @@ export async function applyWrites(db: Db, ctx: WriteContext, writes: readonly Ow
 				foreign.push({ ...write, owner: owner! });
 				return;
 			}
-			return land(db, actor, actor, write, landed, rejected, missed => {
+			return land(writeRow(db), actor, actor, write, landed, rejected, missed => {
 				// A settings put that found the row changed nothing on purpose; a comment put may have met another's row.
 				if (missed.op !== 'put' || missed.kind === 'comment') unresolved.push(missed);
 				else if (!PER_USER.has(missed.kind)) rejected.push(reject(missed, OTHER_SPACE));
@@ -288,6 +305,8 @@ export async function applyWrites(db: Db, ctx: WriteContext, writes: readonly Ow
 		db,
 		unresolved.filter(write => !PER_USER.has(write.kind)),
 	);
+	const gone = unresolved.filter(write => write.op === 'delete' && !stored.has(rowKey(write)));
+	if (gone.length) landed.push(...(await spacesOfGone(db, actor, gone)));
 	for (const write of unresolved) {
 		const row = stored.get(rowKey(write));
 		if (!row) continue;
@@ -301,23 +320,65 @@ export async function applyWrites(db: Db, ctx: WriteContext, writes: readonly Ow
 	}
 
 	for (const [owner, group] of Map.groupBy(foreign, write => write.owner)) {
-		const rows = await guestRows(db, actor, owner);
-		if (!rows.length) {
-			rejected.push(...group.map(write => reject(write, 'Not shared with you')));
-			continue;
-		}
-		await Promise.all(
-			group.map(entry => {
-				const { owner: space, stored, ...write } = entry;
+		await asGuest(db, actor, owner, async (tx, rows) => {
+			if (!rows.length) {
+				rejected.push(...group.map(write => reject(write, 'Not shared with you')));
+				return;
+			}
+			for (const { owner: space, stored, ...write } of inLockOrder(group)) {
 				const reason = guestRefusal(rows, write, actor, stored);
-				if (reason) return rejected.push(reject(write, reason));
-				return land(db, space, actor, write, landed, rejected, missedPut(rejected));
-			}),
-		);
+				if (reason) rejected.push(reject(write, reason));
+				else await land(writeRowIn(tx), space, actor, write, landed, rejected, missedPut(rejected));
+			}
+		});
 	}
 
 	await finish(db, ctx, landed);
 	return { rejected };
+}
+
+/**
+ * A delete whose row is already gone may be the retry of one that removed it and then failed before its log row and
+ * derived work, so it counts as landed: the log insert ignores an op id it already holds, and the derived work
+ * converges. The row was in the space where the actor last wrote it, which a retry of a delete that did reach the log
+ * finds even after its recompute dropped the actor's `access` row; else in the space of a task the actor holds an
+ * `edit` row for; else in the actor's own.
+ */
+async function spacesOfGone(db: Db, actor: string, gone: readonly Write[]): Promise<Landed[]> {
+	const taskIds = gone.filter(write => write.kind === 'task').map(write => write.id);
+	const [written, shared] = await Promise.all([
+		db
+			.selectDistinctOn([log.kind, log.id], { kind: log.kind, id: log.id, owner: log.userId })
+			.from(log)
+			.where(
+				and(
+					inArray(
+						log.id,
+						gone.map(write => write.id),
+					),
+					eq(log.actor, actor),
+				),
+			)
+			.orderBy(log.kind, log.id, desc(log.seq)),
+		taskIds.length
+			? db
+					.select({ id: access.entityId, owner: access.owner })
+					.from(access)
+					.where(
+						and(
+							eq(access.grantee, actor),
+							eq(access.kind, 'task'),
+							eq(access.role, 'edit'),
+							inArray(access.entityId, taskIds),
+						),
+					)
+			: [],
+	]);
+	const ownerOf = new Map<string, string>([
+		...shared.map(row => [`task:${row.id}`, row.owner] as const),
+		...written.map(row => [`${row.kind}:${row.id}`, row.owner] as const),
+	]);
+	return gone.map(write => ({ owner: ownerOf.get(rowKey(write)) ?? actor, write }));
 }
 
 /** A put into a known space that changed nothing met a row it may not rewrite; a patch or delete met none. */
@@ -341,15 +402,20 @@ export async function applyAs(
 	const actor = ctx.actor.id;
 	const rejected: Rejected[] = [];
 	const landed: Landed[] = [];
-	await Promise.all(
-		coalesce(writes).map(write => {
-			if (authority.role === 'guest' && !PER_USER.has(write.kind)) {
-				const reason = guestRefusal(authority.rows, write, actor, authority.comment(write.id));
-				if (reason) return rejected.push(reject(write, reason));
+	const coalesced = coalesce(writes);
+	if (authority.role !== 'guest') {
+		await Promise.all(
+			coalesced.map(write => land(writeRow(db), owner, actor, write, landed, rejected, missedPut(rejected))),
+		);
+	} else {
+		await asGuest(db, actor, owner, async (tx, rows) => {
+			for (const write of inLockOrder(coalesced)) {
+				const reason = PER_USER.has(write.kind) ? null : guestRefusal(rows, write, actor, authority.comment(write.id));
+				if (reason) rejected.push(reject(write, reason));
+				else await land(writeRowIn(tx), owner, actor, write, landed, rejected, missedPut(rejected));
 			}
-			return land(db, owner, actor, write, landed, rejected, missedPut(rejected));
-		}),
-	);
+		});
+	}
 	await finish(db, ctx, landed);
 	return { rejected };
 }
@@ -378,12 +444,10 @@ async function finish(db: Db, ctx: WriteContext, landed: readonly Landed[]): Pro
 		.values(landed.map(entry => logRow(entry, ctx)))
 		.onConflictDoNothing({ target: [log.userId, log.opId] });
 	await Promise.all(
-		[...Map.groupBy(landed, entry => entry.owner)].flatMap(([owner, group]) => {
+		[...Map.groupBy(landed, entry => entry.owner)].map(async ([owner, group]) => {
 			const writes = group.map(entry => entry.write);
-			return [
-				writes.some(touchesAccess) ? recomputeAccess(db, owner) : null,
-				writes.some(touchesPush) ? replan(db, owner, ctx.now) : null,
-			].filter(work => work !== null);
+			if (writes.some(touchesPush)) await replan(db, owner, ctx.now);
+			if (writes.some(touchesAccess)) await recomputeAccess(db, owner);
 		}),
 	);
 }

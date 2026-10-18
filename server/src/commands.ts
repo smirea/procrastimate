@@ -57,7 +57,6 @@ import {
 import { applyPickedLabels, isSavedPlace } from '../../shared/triggers';
 import type { Client, ClientStamp } from '../../shared/values';
 import { wallDate, zonedDateKey } from '../../shared/zoned-time';
-import { guestRows } from './access';
 import type { Access } from './auth';
 import type { Db } from './db/postgres';
 import { peopleById, personOf, unknownPerson } from './people';
@@ -93,33 +92,44 @@ type Visible = ReturnType<typeof visibleOf>;
 const NO_CLIENTS: TaskClients = { created: null, edited: null };
 
 /**
- * The app behind a task's first write and its latest, read off the log: the first row is its creation, the newest
- * its last change. A row from before the server recorded apps reads `null`.
+ * The app behind a task's first write and its latest, read off the log: the first row is its creation, the newest its
+ * last change. One select whose two lateral reads per task each take one row off the `log_entity` index, however long
+ * the task's history. A task with no row, or a row from before the server recorded apps, reads `null`.
  */
 async function withClients(db: Db, owner: string, tasks: readonly Task[]): Promise<AgentTask[]> {
 	if (!tasks.length) return [];
-	const ids = tasks.map(task => task.id);
-	const on = and(eq(log.userId, owner), eq(log.kind, 'task'), inArray(log.id, ids));
-	const stamp = (row: { client: Client | null; at: number }): ClientStamp | null =>
-		row.client ? { ...row.client, at: row.at } : null;
-	const [first, latest] = await Promise.all([
+	const end = (order: typeof asc, name: string) =>
 		db
-			.selectDistinctOn([log.id], { id: log.id, client: log.client, at: log.at })
+			.select({ client: log.client, at: log.at })
 			.from(log)
-			.where(on)
-			.orderBy(log.id, asc(log.seq)),
-		db
-			.selectDistinctOn([log.id], { id: log.id, client: log.client, at: log.at })
-			.from(log)
-			.where(on)
-			.orderBy(log.id, desc(log.seq)),
-	]);
-	const created = new Map(first.map(row => [row.id, stamp(row)]));
-	const edited = new Map(latest.map(row => [row.id, stamp(row)]));
-	return tasks.map(task => ({
-		...task,
-		clients: created.has(task.id) ? { created: created.get(task.id)!, edited: edited.get(task.id)! } : NO_CLIENTS,
-	}));
+			.where(and(eq(log.userId, owner), eq(log.kind, 'task'), eq(log.id, taskTable.id)))
+			.orderBy(order(log.seq))
+			.limit(1)
+			.as(name);
+	const first = end(asc, 'first');
+	const latest = end(desc, 'latest');
+	const rows = await db
+		.select({
+			id: taskTable.id,
+			created: { client: first.client, at: first.at },
+			edited: { client: latest.client, at: latest.at },
+		})
+		.from(taskTable)
+		.crossJoinLateral(first)
+		.crossJoinLateral(latest)
+		.where(
+			and(
+				eq(taskTable.userId, owner),
+				inArray(
+					taskTable.id,
+					tasks.map(task => task.id),
+				),
+			),
+		);
+	const stamp = ({ client, at }: { client: Client | null; at: number }): ClientStamp | null =>
+		client ? { ...client, at } : null;
+	const clients = new Map(rows.map(row => [row.id, { created: stamp(row.created), edited: stamp(row.edited) }]));
+	return tasks.map(task => ({ ...task, clients: clients.get(task.id) ?? NO_CLIENTS }));
 }
 
 export async function view({ db, owner, actor }: Command): Promise<SpaceView> {
@@ -129,17 +139,10 @@ export async function view({ db, owner, actor }: Command): Promise<SpaceView> {
 }
 
 /** The caller's standing for `applyAs`: a human guest's writes are checked against their `access` rows. */
-async function authorityOf(
-	db: Db,
-	owner: string,
-	actor: Actor,
-	access: Access,
-	comments: Comment[],
-): Promise<Authority> {
+function authorityOf(access: Access, comments: Comment[]): Authority {
 	if (access.role === 'owner') return { role: 'owner' };
 	if (managesSpace(access.shares)) return { role: 'manager' };
-	const rows = await guestRows(db, actor.id, owner);
-	return { role: 'guest', rows, comment: id => comments.find(comment => comment.id === id) };
+	return { role: 'guest', comment: id => comments.find(comment => comment.id === id) };
 }
 
 /**
@@ -175,7 +178,7 @@ async function run(
 	const after = { ...snapshot, ...change(data, visible, zone, access) };
 	const writes: Write[] = rowWrites(snapshot, after).map(write => ({ ...write, opId: newId() }));
 	if (!writes.length) return after;
-	const authority = await authorityOf(db, owner, actor, access, snapshot.comments);
+	const authority = authorityOf(access, snapshot.comments);
 	const { rejected } = await applyAs(db, { actor, client, now }, owner, authority, writes);
 	if (rejected.length) throw new ORPCError('FORBIDDEN', { message: rejected[0]!.reason });
 	return after;

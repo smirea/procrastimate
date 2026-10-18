@@ -63,7 +63,10 @@ export const tasks = pgTable(
 		sourceKey: text('source_key'),
 	},
 	table => [
-		index('tasks_user_id').on(table.userId),
+		// Leads with the owner for every space read, and ends with the creation time so the newest is one probe.
+		index('tasks_user_created').on(table.userId, table.createdAt),
+		// Path ops, so the image route finds the tasks that list an image (`images @> [{ id }]`) without a scan.
+		index('tasks_images').using('gin', table.images.op('jsonb_path_ops')),
 		// Pattern ops, so a memo's tasks are a `LIKE 'voicememo:<memoId>:%'` range scan.
 		index('tasks_source_key').on(table.userId, table.sourceKey.op('text_pattern_ops')),
 	],
@@ -218,7 +221,9 @@ export const log = pgTable(
 		at: millis('at').notNull(),
 	},
 	table => [
-		index('log_entity').on(table.userId, table.kind, table.id),
+		// In write order, so a task's first and latest rows are each one probe and its activity needs no sort. Ids are
+		// unique across spaces, so it also finds which space last held a row that is gone.
+		index('log_entity').on(table.kind, table.id, table.seq),
 		uniqueIndex('log_op').on(table.userId, table.opId),
 		// Every source key a task held, deleted tasks' included, so a memo's re-sent task is found without a scan.
 		index('log_source_key')

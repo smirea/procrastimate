@@ -1,11 +1,11 @@
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import { access, shares, type AccessRow } from '../../shared/db/schema';
 import { user } from './db/auth-schema';
-import type { Entities } from '../../shared/dangling';
+import type { Links } from '../../shared/dangling';
 import type { RowWrite } from '../../shared/rows';
 import { managesSpace, scopeOf, type Grant, type GuestRows } from '../../shared/scope';
 import type { Db } from './db/postgres';
-import { loadTree, withSpaceLocked } from './space';
+import { loadLinks, withSpaceLocked } from './space';
 
 /**
  * The `access` table: one row per entity a human grantee may see in another user's space, which PowerSync's
@@ -21,7 +21,7 @@ const rowId = (grantee: string, kind: AccessRow['kind'], entityId: string) => `$
  * may land there, which `guestRefusal` allows only through an edit share on it or on the whole space, so clients
  * decide `canAddTo` from the row alone.
  */
-export function accessRows(owner: string, grantee: string, snapshot: Entities, grants: readonly Grant[]): AccessRow[] {
+export function accessRows(owner: string, grantee: string, snapshot: Links, grants: readonly Grant[]): AccessRow[] {
 	const scope = scopeOf(snapshot, grants);
 	const manager = managesSpace(grants);
 	const addsTo = (kind: 'project' | 'label', id: string): AccessRow['role'] =>
@@ -42,22 +42,33 @@ export function accessRows(owner: string, grantee: string, snapshot: Entities, g
 
 /**
  * Rewrites the space's `access` rows from its shares to humans: link shares have no grantee, and AI accounts read
- * through the API. The tree is read only when someone human is shared with. Callers hold the space's lock.
+ * through the API. A share change names its `grantee`, whose rows alone it can move; a recompute after an upload
+ * names none and rewrites every grantee's. The tree is read only when someone human is shared with. Callers hold the
+ * space's lock.
  */
-export async function syncAccess(db: Db, owner: string): Promise<void> {
+export async function syncAccess(db: Db, owner: string, grantee?: string): Promise<void> {
 	const [granted, existing] = await Promise.all([
 		db
 			.select({ grantee: shares.grantee, targetKind: shares.targetKind, targetId: shares.targetId, role: shares.role })
 			.from(shares)
 			.innerJoin(user, eq(user.id, shares.grantee))
-			.where(and(eq(shares.userId, owner), eq(user.kind, 'human'))),
-		db.select().from(access).where(eq(access.owner, owner)),
+			.where(
+				and(
+					eq(shares.userId, owner),
+					eq(user.kind, 'human'),
+					grantee === undefined ? undefined : eq(shares.grantee, grantee),
+				),
+			),
+		db
+			.select()
+			.from(access)
+			.where(and(eq(access.owner, owner), grantee === undefined ? undefined : eq(access.grantee, grantee))),
 	]);
 	const wanted = new Map<string, AccessRow>();
 	if (granted.length) {
-		const tree = await loadTree(db, owner);
-		for (const [grantee, grants] of Map.groupBy(granted, share => share.grantee!)) {
-			for (const row of accessRows(owner, grantee, tree, grants)) wanted.set(row.id, row);
+		const tree = await loadLinks(db, owner);
+		for (const [id, grants] of Map.groupBy(granted, share => share.grantee!)) {
+			for (const row of accessRows(owner, id, tree, grants)) wanted.set(row.id, row);
 		}
 	}
 	const roles = new Map(existing.map(row => [row.id, row.role]));
@@ -72,22 +83,49 @@ export async function syncAccess(db: Db, owner: string): Promise<void> {
 	}
 }
 
-/** One guest's rows in one space: what `guestRefusal` reads. */
-export function guestRows(db: Db, grantee: string, owner: string): Promise<GuestRows> {
-	return db
-		.select({ kind: access.kind, entityId: access.entityId, role: access.role })
-		.from(access)
-		.where(and(eq(access.grantee, grantee), eq(access.owner, owner)));
+/**
+ * Runs a guest's writes in one space in a transaction that holds the space's advisory lock shared, then reads the
+ * guest's rows there, which is what `guestRefusal` checks them against. Share changes and recomputes hold it exclusive
+ * (`withSpaceLocked`), so a revoke or downgrade waits for the writes to commit, and writes that start after it see the
+ * new rows: no write lands on a share that was already taken away. Guests' writes still run side by side, and a lock
+ * on the space rather than on its rows cannot deadlock against a recompute rewriting them.
+ */
+export function asGuest<T>(
+	db: Db,
+	grantee: string,
+	owner: string,
+	use: (tx: Db, rows: GuestRows) => Promise<T>,
+): Promise<T> {
+	return db.transaction(async tx => {
+		await tx.execute(sql`SELECT pg_advisory_xact_lock_shared(hashtext(${owner}))`);
+		const rows = await tx
+			.select({ kind: access.kind, entityId: access.entityId, role: access.role })
+			.from(access)
+			.where(and(eq(access.grantee, grantee), eq(access.owner, owner)));
+		return use(tx, rows);
+	});
 }
 
 const SCOPE_FIELDS = ['parentId', 'projectId', 'sectionId', 'labelIds'];
 
-/** Whether a write can move what a guest sees: a task created, deleted, or moved, or a section created, moved, or deleted. */
+/**
+ * Whether a write can move what a guest sees: a task created, deleted, or moved, a section created, moved, or deleted,
+ * or a project or label created or deleted, since a share reaches only live ones and a task in a deleted project or
+ * with a deleted label reads without it.
+ */
 export function touchesAccess(write: RowWrite): boolean {
 	const fields = write.values ?? {};
-	if (write.kind === 'section') return write.op !== 'patch' || 'projectId' in fields;
-	if (write.kind !== 'task') return false;
-	return write.op !== 'patch' || SCOPE_FIELDS.some(field => field in fields);
+	switch (write.kind) {
+		case 'task':
+			return write.op !== 'patch' || SCOPE_FIELDS.some(field => field in fields);
+		case 'section':
+			return write.op !== 'patch' || 'projectId' in fields;
+		case 'project':
+		case 'label':
+			return write.op !== 'patch';
+		default:
+			return false;
+	}
 }
 
 /**

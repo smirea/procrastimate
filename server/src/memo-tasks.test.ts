@@ -38,6 +38,19 @@ describe('/api/memo-tasks', () => {
 		expect((await list()).tasks).toHaveLength(2);
 	});
 
+	test('two overlapping sends of one memo add each of its tasks once', async () => {
+		const overlapping = {
+			...request([{ key: crypto.randomUUID(), title: 'Fix the gate' }]),
+			memoId: crypto.randomUUID(),
+		};
+		const [a, b] = await Promise.all([put(overlapping), put(overlapping)]);
+		expect(a.tasks.map(task => task.id)).toEqual(b.tasks.map(task => task.id));
+		const listed = await json<MemoTasks>(
+			app.fetch(`/api/memo-tasks?memoId=${overlapping.memoId}`, { headers: owner.headers }),
+		);
+		expect(listed.tasks.map(task => task.title)).toEqual(['Fix the gate']);
+	});
+
 	test('a deleted memo task never comes back, even when the memo is sent again', async () => {
 		const { tasks } = await list();
 		expect(

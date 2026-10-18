@@ -417,18 +417,20 @@ describe('POST /api/upload', () => {
 	test('a write the database refuses is rejected alone, with a 200, and the rest of the batch still applies', async () => {
 		await app.db.execute(sql`ALTER TABLE tasks ADD CONSTRAINT refused CHECK (title <> 'refused by the database')`);
 		const host = await signUp(app, 'Host');
-		const theirs = crypto.randomUUID();
-		await upload(host, [{ op: 'put', table: 'tasks', id: theirs, values: taskRow(theirs, host.person.id, 'Theirs') }]);
-		await json(
-			app.fetch('/api/shares', {
-				method: 'POST',
-				headers: host.headers,
-				body: JSON.stringify({
-					target: { kind: 'task', id: theirs },
-					audience: { kind: 'user', userId: owner.person.id, role: 'edit' },
+		const [theirs, refusedTheirs] = [crypto.randomUUID(), crypto.randomUUID()];
+		for (const id of [theirs, refusedTheirs]) {
+			await upload(host, [{ op: 'put', table: 'tasks', id, values: taskRow(id, host.person.id, 'Theirs') }]);
+			await json(
+				app.fetch('/api/shares', {
+					method: 'POST',
+					headers: host.headers,
+					body: JSON.stringify({
+						target: { kind: 'task', id },
+						audience: { kind: 'user', userId: owner.person.id, role: 'edit' },
+					}),
 				}),
-			}),
-		);
+			);
+		}
 		const mine = crypto.randomUUID();
 		const response = await app.fetch('/api/upload', {
 			method: 'POST',
@@ -436,14 +438,21 @@ describe('POST /api/upload', () => {
 			body: JSON.stringify({
 				writes: [
 					{ op: 'patch', table: 'tasks', id: theirs, values: { title: 'Theirs, edited by the guest' } },
+					{ op: 'patch', table: 'tasks', id: refusedTheirs, values: { title: 'refused by the database' } },
 					{ op: 'put', table: 'tasks', id: mine, values: taskRow(mine, owner.person.id, 'refused by the database') },
 				],
 			}),
 		});
 		expect(response.status).toBe(200);
 		const { rejected } = (await response.json()) as { rejected: Rejected };
-		expect(rejected).toEqual([{ table: 'tasks', id: mine, reason: 'The database refused the write' }]);
+		expect(rejected.toSorted((a, b) => a.id.localeCompare(b.id))).toEqual(
+			[
+				{ table: 'tasks', id: mine, reason: 'The database refused the write' },
+				{ table: 'tasks', id: refusedTheirs, reason: 'The database refused the write' },
+			].toSorted((a, b) => a.id.localeCompare(b.id)),
+		);
 		expect(await stored(theirs)).toMatchObject({ title: 'Theirs, edited by the guest' });
+		expect(await stored(refusedTheirs)).toMatchObject({ title: 'Theirs' });
 		expect(await stored(mine)).toBeNull();
 		await app.db.execute(sql`ALTER TABLE tasks DROP CONSTRAINT refused`);
 	});

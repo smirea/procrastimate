@@ -1,5 +1,5 @@
 {
-	"id": "e4e9d511-8c7f-4dc7-b363-de7e0b69d641",
+	"id": "9a36d0a9-9daf-4a03-b552-bcb399c521e4",
 	"prevId": "e1612020-2589-47b7-b1d9-3ce6c00be72f",
 	"version": "7",
 	"dialect": "postgresql",
@@ -433,12 +433,6 @@
 					"name": "log_entity",
 					"columns": [
 						{
-							"expression": "user_id",
-							"isExpression": false,
-							"asc": true,
-							"nulls": "last"
-						},
-						{
 							"expression": "kind",
 							"isExpression": false,
 							"asc": true,
@@ -446,6 +440,12 @@
 						},
 						{
 							"expression": "id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						},
+						{
+							"expression": "seq",
 							"isExpression": false,
 							"asc": true,
 							"nulls": "last"
@@ -1104,11 +1104,17 @@
 				}
 			},
 			"indexes": {
-				"tasks_user_id": {
-					"name": "tasks_user_id",
+				"tasks_user_created": {
+					"name": "tasks_user_created",
 					"columns": [
 						{
 							"expression": "user_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						},
+						{
+							"expression": "created_at",
 							"isExpression": false,
 							"asc": true,
 							"nulls": "last"
@@ -1117,6 +1123,22 @@
 					"isUnique": false,
 					"concurrently": false,
 					"method": "btree",
+					"with": {}
+				},
+				"tasks_images": {
+					"name": "tasks_images",
+					"columns": [
+						{
+							"expression": "images",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last",
+							"opclass": "jsonb_path_ops"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "gin",
 					"with": {}
 				},
 				"tasks_source_key": {

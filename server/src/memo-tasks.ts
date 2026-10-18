@@ -68,6 +68,16 @@ async function loggedSourceKeys(db: Db, owner: string, keys: readonly string[]):
 	return rows.map(row => row.key);
 }
 
+/** A memo task's id, the same for every send of the memo, as a version 8 UUID of a SHA-256 of what names it. */
+async function memoTaskId(owner: string, memoId: string, taskKey: string): Promise<string> {
+	const named = new TextEncoder().encode(JSON.stringify([owner, memoId, taskKey]));
+	const bytes = new Uint8Array(await crypto.subtle.digest('SHA-256', named)).slice(0, 16);
+	bytes[6] = (bytes[6]! & 0x0f) | 0x80;
+	bytes[8] = (bytes[8]! & 0x3f) | 0x80;
+	const hex = Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
+	return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
+
 /** The spoken phrase read as of the recording, in the account's zone. An event replaces the date and repeat. */
 function schedule({ when, event }: MemoTaskInput, recordedAt: number, zone: string): Pick<Task, 'due' | 'recurrence'> {
 	if (event || !when) return { due: null, recurrence: null };
@@ -99,8 +109,9 @@ export async function putMemoTasks(command: Command, request: MemoTasksRequest):
 	const zone = zoneOf(timeZone);
 	// Past the newest task, like `addTask`, so the memo's tasks keep the order they were sent in.
 	let createdAt = Math.max(now, (newest?.createdAt ?? -Infinity) + 1);
-	const added: Task[] = fresh.map(input => ({
-		id: newId(),
+	const ids = await Promise.all(fresh.map(input => memoTaskId(owner, request.memoId, input.key)));
+	const added: Task[] = fresh.map((input, index) => ({
+		id: ids[index]!,
 		parentId: null,
 		order: 0,
 		title: input.title,
@@ -121,7 +132,8 @@ export async function putMemoTasks(command: Command, request: MemoTasksRequest):
 		lastCompletedAt: null,
 		sourceKey: memoSourceKey({ memoId: request.memoId, taskKey: input.key }),
 	}));
-	// The source key names the write in the log, so a memo re-sent after a crash dedupes there too.
+	// Two overlapping sends both find a key fresh, and their puts of the one id converge on one task; the source key
+	// names the write in the log, so the log keeps one row too.
 	const writes: Write[] = added.map(task => ({
 		op: 'put',
 		kind: 'task',

@@ -15,7 +15,15 @@ import { detachOrphans } from './subtasks.ts';
 
 export type Entities = { tasks: Task[]; projects: Project[]; sections: Section[]; labels: Label[] };
 
-export function resolveDangling<T extends Entities>(data: T): T {
+/** The links between a space's rows, which is all `resolveDangling` and `scopeOf` read. */
+export type Links = {
+	tasks: Pick<Task, 'id' | 'parentId' | 'projectId' | 'sectionId' | 'labelIds'>[];
+	projects: Pick<Project, 'id'>[];
+	sections: Pick<Section, 'id' | 'projectId'>[];
+	labels: Pick<Label, 'id'>[];
+};
+
+export function resolveDangling<T extends Links>(data: T): T {
 	const projects = new Set(data.projects.map(project => project.id));
 	const sections = data.sections.filter(section => projects.has(section.projectId));
 	const sectionProject = new Map(sections.map(section => [section.id, section.projectId]));
@@ -29,7 +37,7 @@ export function resolveDangling<T extends Entities>(data: T): T {
 	});
 	const rootProject = new Map<string, string | null>();
 	const byId = new Map(placed.map(task => [task.id, task]));
-	const projectOf = (task: Task): string | null => {
+	const projectOf = (task: Links['tasks'][number]): string | null => {
 		let root = task;
 		while (root.parentId !== null) root = byId.get(root.parentId)!;
 		return root.projectId;
