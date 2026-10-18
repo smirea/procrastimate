@@ -117,9 +117,16 @@ jobs:
       - name: .dev.vars for wrangler dev
         run: bun server/scripts/secrets.ts dev-vars --generate-only
 
-      # Both projects: `desktop` in Chromium and `mobile` in WebKit.
-      - name: End to end against the Worker
-        run: bun run test:e2e
+      - name: End to end against the Worker, desktop Chromium
+        run: bun run test:e2e --project desktop
+        env:
+          E2E_WORKER: '1'
+
+      # One worker: each WebKit spec drives two or three pages, and Linux WebKit on two cores beside a second worker's
+      # pages rendered so slowly that the longest specs crossed their limits in 3 of 3 runs, a different spec each time.
+      - name: End to end against the Worker, mobile WebKit
+        if: success() || failure()
+        run: bun run test:e2e --project mobile --workers 1 --output test-results/mobile
         env:
           E2E_WORKER: '1'
 
