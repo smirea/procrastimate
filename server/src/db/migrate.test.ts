@@ -2,9 +2,6 @@ import { PGlite } from '@electric-sql/pglite';
 import { describe, expect, test } from 'bun:test';
 import { sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/pglite';
-import type { ClientStamp } from '../../../shared/values';
-import { handle } from '../api';
-import { json, ORIGIN, signUp, testEnv, type TestApp } from '../test-app';
 import { migrations } from './generated/migrations';
 import { migrate, MigrationHistoryError, pending } from './migrate';
 
