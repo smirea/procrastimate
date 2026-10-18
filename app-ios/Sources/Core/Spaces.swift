@@ -39,8 +39,8 @@ public struct StoredRows: Hashable, Sendable {
     public init() {}
 }
 
-/// The stored rows grouped into spaces by their `user_id`: the signed-in user's own, and one per owner who shares with
-/// them. Read markers and settings are only ever the user's own.
+/// The stored rows grouped into spaces by their `user_id` (`LocalRows`): the signed-in user's own, and one per owner who
+/// shares with them. Read markers and settings are only ever the user's own.
 public struct Spaces: Hashable, Sendable {
     public var own: Snapshot
     public var shared: [String: Snapshot]
@@ -56,29 +56,9 @@ public struct Spaces: Hashable, Sendable {
     }
 
     public init(_ rows: StoredRows, me: String) {
-        var own = Snapshot.empty
-        var shared: [String: Snapshot] = [:]
-        func add<T>(_ items: [Owned<T>], _ path: WritableKeyPath<Snapshot, [T]>) {
-            for item in items {
-                if item.owner == me {
-                    own[keyPath: path].append(item.value)
-                } else {
-                    shared[item.owner, default: .empty][keyPath: path].append(item.value)
-                }
-            }
-        }
-        add(rows.tasks, \.tasks)
-        add(rows.projects, \.projects)
-        add(rows.sections, \.sections)
-        add(rows.labels, \.labels)
-        add(rows.comments, \.comments)
-        own.reads = rows.reads.filter { $0.owner == me }.map(\.value)
-        let settings = rows.settings.first { $0.owner == me }
-        if let settings { own.settings = settings.value }
-        settingsStored = settings != nil
-        self.own = Spaces.sorted(own)
-        self.shared = shared.mapValues(Spaces.sorted)
-        access = rows.access
+        let local = LocalRows(me: me)
+        local.apply(RowsRead(everything: rows))
+        self = local.spaces
     }
 
     /// The order both clients list entities in, oldest first, with references to rows that are gone read as empty.

@@ -1,15 +1,13 @@
 import { describe, expect, test } from 'bun:test';
-import { DEFAULT_SETTINGS } from 'shared/model.ts';
 import { label, project, section, task } from 'shared/testing.ts';
-import type { Rows } from './database.ts';
 import {
 	creationHome,
 	emptyData,
 	fitToSpace,
-	group,
 	homes,
 	merged,
 	sharedEntries,
+	sharedSpace,
 	type SharedSpace,
 } from './spaces.ts';
 
@@ -76,75 +74,14 @@ test('merged lists own data first and keeps tasks in creation order', () => {
 	expect(view.labels.map(l => l.id)).toEqual(['home', 'errands']);
 });
 
-const row = <T extends { id: string }>(userId: string, entity: T) => ({ ...entity, userId, sourceKey: null });
-const rows = (fields: Partial<Rows>): Rows => ({
-	task: [],
-	project: [],
-	section: [],
-	label: [],
-	comment: [],
-	read: [],
-	settings: [],
-	access: [],
-	...fields,
-});
-
-describe('group', () => {
-	test('splits rows by owner, sorts them by creation, and marks the tasks shared read only', () => {
-		const grouped = group(
-			rows({
-				task: [
-					row('me', task('later', { createdAt: 9 })),
-					row('ann', task('hers', { createdAt: 2 })),
-					row('me', task('first', { createdAt: 1 })),
-				],
-				project: [row('ann', project('groceries'))],
-				read: [row('me', { id: 'hers', readAt: 4 })],
-				access: [
-					{ id: 'me:task:hers', grantee: 'me', owner: 'ann', kind: 'task', entityId: 'hers', role: 'view' },
-					{
-						id: 'me:project:groceries',
-						grantee: 'me',
-						owner: 'ann',
-						kind: 'project',
-						entityId: 'groceries',
-						role: 'edit',
-					},
-				],
-			}),
-			'me',
-		);
-		expect(grouped.own.tasks.map(t => t.id)).toEqual(['first', 'later']);
-		expect(grouped.own.reads).toEqual([{ id: 'hers', readAt: 4 }]);
-		expect(grouped.own.tasks[0]).toEqual(task('first', { createdAt: 1 }));
-		expect(grouped.settings).toBeNull();
-		expect(Object.keys(grouped.spaces)).toEqual(['ann']);
-		expect(grouped.spaces.ann!.data.tasks.map(t => t.id)).toEqual(['hers']);
-		expect(grouped.spaces.ann!.data.projects.map(p => p.id)).toEqual(['groceries']);
-		expect([...grouped.spaces.ann!.readOnly]).toEqual(['hers']);
-	});
-
-	test('reads the own settings row, and drops a row that does not parse instead of the load', () => {
-		const grouped = group(
-			rows({
-				task: [row('me', task('kept')), row('me', { ...task('broken'), priority: 'urgent' })],
-				settings: [{ userId: 'me', id: 'settings', ...DEFAULT_SETTINGS, dictation: 'elevenlabs' }],
-			}),
-			'me',
-		);
-		expect(grouped.own.tasks.map(t => t.id)).toEqual(['kept']);
-		expect(grouped.settings).toEqual({ ...DEFAULT_SETTINGS, dictation: 'elevenlabs' });
-	});
-
-	test('an owner who shares nothing visible yet still has a space', () => {
-		const grouped = group(
-			rows({
-				access: [{ id: 'me:project:p', grantee: 'me', owner: 'ann', kind: 'project', entityId: 'p', role: 'edit' }],
-			}),
-			'me',
-		);
-		expect(grouped.spaces.ann!.data).toEqual(emptyData());
-	});
+test('sharedSpace marks the tasks whose access row says view as read only', () => {
+	const access = [
+		{ id: 'me:task:hers', grantee: 'me', owner: 'ann', kind: 'task', entityId: 'hers', role: 'view' },
+		{ id: 'me:task:ours', grantee: 'me', owner: 'ann', kind: 'task', entityId: 'ours', role: 'edit' },
+		{ id: 'me:project:p', grantee: 'me', owner: 'ann', kind: 'project', entityId: 'p', role: 'view' },
+	] as const;
+	const space = sharedSpace('ann', { data: emptyData(), access: [...access] });
+	expect([...space.readOnly]).toEqual(['hers']);
 });
 
 test('sharedEntries lists every shared project and label, and only the tasks neither leads to', () => {

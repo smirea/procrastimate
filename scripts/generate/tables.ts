@@ -38,6 +38,31 @@ export function syncedTables(): SyncedTable[] {
 
 const camel = (name: string) => name.replace(/_(\w)/g, (_, c: string) => c.toUpperCase());
 
+/**
+ * A local-only table outside PowerSync's schema, so it never syncs, and triggers on the tables under PowerSync's views
+ * that note every row any writer changes: this client, another tab, a sync, or a clear. Both clients read it to reload
+ * only what changed. Creating it is setup, run once per database; a PowerSync release that renamed its tables fails
+ * here, loudly, with "no such table".
+ */
+const CHANGE_LOG = 'procrastimate_changes';
+
+export function changeLogStatements(): string[] {
+	const events = [
+		['insert', 'NEW'],
+		['update', 'NEW'],
+		['delete', 'OLD'],
+	] as const;
+	return [
+		`CREATE TABLE IF NOT EXISTS ${CHANGE_LOG} (seq INTEGER PRIMARY KEY AUTOINCREMENT, tbl TEXT NOT NULL, id TEXT NOT NULL)`,
+		...syncedTables().flatMap(({ name }) =>
+			events.map(
+				([event, row]) =>
+					`CREATE TRIGGER IF NOT EXISTS ${CHANGE_LOG}_${name}_${event} AFTER ${event.toUpperCase()} ON ps_data__${name} BEGIN INSERT INTO ${CHANGE_LOG} (tbl, id) VALUES ('${name}', ${row}.id); END`,
+			),
+		),
+	];
+}
+
 export function webTablesModule(): string {
 	const tables = syncedTables().map(table => {
 		const values = valuesOf(camel(table.name));
@@ -66,6 +91,15 @@ export function webTablesModule(): string {
 		'',
 		`export const localTables = { ${names.join(', ')} };`,
 		'export const AppSchema = new DrizzleAppSchema(localTables);',
+		'',
+		'/** Every row change any writer made, in order. Local only: it is not in `AppSchema`, so it never syncs. */',
+		`export const changeLog = sqliteTable('${CHANGE_LOG}', {`,
+		"\tseq: integer('seq').primaryKey({ autoIncrement: true }),",
+		"\ttbl: text('tbl').notNull(),",
+		"\tid: text('id').notNull(),",
+		'});',
+		'',
+		`export const CHANGE_LOG_STATEMENTS = ${JSON.stringify(changeLogStatements(), null, '\t')};`,
 		'',
 	].join('\n');
 }
@@ -118,6 +152,14 @@ export function swiftRowsModule(models: Record<string, SwiftModel>): string {
 		'',
 		'/// The Core type of each synced table, by table name.',
 		`let syncedValues: [String: any SyncedValue.Type] = [\n${values.join('\n')}\n]`,
+		'',
+		'/// Every row change any writer made, in order. Local only: it is not in `syncSchema`, so it never syncs.',
+		`let changeLogTable = "${CHANGE_LOG}"`,
+		'',
+		'/// Creates the change log and the triggers that fill it. Setup, run once per database.',
+		`let changeLogStatements: [String] = [\n${changeLogStatements()
+			.map(statement => `\t${JSON.stringify(statement)},`)
+			.join('\n')}\n]`,
 		'',
 	]
 		.join('\n')

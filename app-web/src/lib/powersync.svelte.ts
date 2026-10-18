@@ -165,7 +165,9 @@ export async function settled(): Promise<void> {
 }
 
 /** Read by the end-to-end specs. */
+/** A store that has not read the database yet still owes the time zone it notes on loading, so it counts as pending. */
 async function pending(): Promise<number> {
+	if (!store.loaded) return 1;
 	await store.written();
 	const queued = (await powerSync.getCrudBatch(Number.MAX_SAFE_INTEGER))?.crud.length ?? 0;
 	return queued + (store.holdsSettings ? 1 : 0);
@@ -175,6 +177,7 @@ if (typeof window !== 'undefined') {
 	Object.assign(window, {
 		procrastimate: {
 			pending,
+			reads: () => ({ ...store.readStats }),
 			taskId: (title: string) => store.tasks.find(task => task.title === title)?.id,
 			entity: (kind: Kind, id: string) =>
 				entitiesOf({ ...viewOf(), reads: [], settings: store.settings }, kind).find(e => e.id === id),

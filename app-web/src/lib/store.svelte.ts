@@ -11,7 +11,7 @@ import type { Person } from 'shared/sharing.ts';
 import * as comments from 'shared/comments.ts';
 import * as rules from 'shared/store.ts';
 import { mergeBackup, type ImportSummary, type TodoistBackup } from 'shared/todoist.ts';
-import { powerSync, readRows, WATCHED_TABLES, writeRows } from './database.ts';
+import { CHANGE_LOG, powerSync, readSince, trimChanges, writeRows } from './database.ts';
 import {
 	forgetDatabaseId,
 	forgetLegacyDocument,
@@ -27,16 +27,17 @@ import {
 	type Unwritten,
 } from './device.ts';
 import { clearLocalImages } from './images/local.ts';
+import { LocalRows } from 'shared/local-rows.ts';
 import { reportError } from './sentry.ts';
 import {
 	creationHome,
 	emptyData,
 	fitToSpace,
-	group,
 	homes,
 	merged,
-	type Grouped,
+	sharedSpace,
 	type Home,
+	type SharedSpace,
 	type Spaces,
 } from './spaces.ts';
 
@@ -70,7 +71,7 @@ async function clearUntilDone() {
 /**
  * The rules in `shared/store.ts` return new arrays and objects for what they change, so the arrays are raw state that
  * each command replaces at once. When the database changes, from this tab, another tab, or the server, the store reads
- * it back whole. Each command runs its rule on one space's data only, so nothing ever crosses spaces.
+ * back only the rows that changed. Each command runs its rule on one space's data only, so nothing ever crosses spaces.
  */
 class Store {
 	own = $state.raw<rules.StoreData>(emptyData());
@@ -99,6 +100,11 @@ class Store {
 	#unwritten: Unwritten[] = [];
 	#reading = false;
 	#stale = false;
+	#rows = new LocalRows('');
+	/** The newest change in the database's log that memory reflects; null reads everything next. */
+	#cursor: number | null = null;
+	/** What the reads cost so far, for the end-to-end specs. */
+	readStats = { reloads: 0, rows: 0, ms: 0 };
 	#switching: Promise<void> = Promise.resolve();
 	/** Until the database belongs to the signed-in user, a read could show another account's rows as theirs. */
 	#opening = false;
@@ -142,7 +148,7 @@ class Store {
 		forgetLegacyDocument();
 		this.people = loadPeople();
 		this.remindersCheckedAt = loadRemindersCheckedAt(Date.now());
-		powerSync.onChange({ onChange: () => this.#reload() }, { tables: WATCHED_TABLES, throttleMs: 10 });
+		powerSync.onChange({ onChange: () => this.#reload() }, { tables: [CHANGE_LOG], throttleMs: 10 });
 		onOwnerChange(() => location.reload());
 	}
 
@@ -163,6 +169,8 @@ class Store {
 			this.loaded = false;
 		}
 		this.#owner = userId;
+		this.#rows = new LocalRows(userId);
+		this.#cursor = null;
 		this.unreadable = false;
 		this.#hasSettings = false;
 		this.#heldSettings = {};
@@ -221,7 +229,11 @@ class Store {
 					this.#unwritten = this.#unwritten.filter(other => other !== entry);
 					if (this.#owner === user) saveUnwritten(user, this.#unwritten);
 				},
-				error => void reportError(error),
+				error => {
+					reportError(error);
+					// Memory shows the command the database refused, so the next read takes all of it back.
+					this.#cursor = null;
+				},
 			)
 			.finally(() => {
 				this.#writing--;
@@ -244,10 +256,12 @@ class Store {
 
 	async #read() {
 		const owner = this.#owner!;
+		const rows = this.#rows;
 		const commands = this.#commands;
-		let rows;
+		const started = performance.now();
+		let read;
 		try {
-			rows = await readRows();
+			read = await readSince(this.#cursor);
 		} catch (error) {
 			reportError(error);
 			if (owner === this.#owner && !this.loaded) this.unreadable = true;
@@ -258,32 +272,35 @@ class Store {
 			this.#stale = true;
 			return;
 		}
-		this.#take(group(rows, owner));
+		this.#cursor = read.cursor;
+		const touched = new Set(rows.apply(read.changes));
+		if (read.full) touched.add(owner);
+		this.#take(touched);
+		this.readStats.reloads++;
+		this.readStats.rows += Object.values(read.changes).reduce((sum, { rows }) => sum + rows.length, 0);
+		this.readStats.ms += performance.now() - started;
 		this.unreadable = false;
 		this.loaded = true;
+		trimChanges(read).catch(reportError);
 	}
 
-	/** Keeps every entity that did not change, so a read that matches memory re-renders nothing. */
-	#take({ own, settings, spaces }: Grouped) {
-		this.own = keepSame(this.own, own);
-		this.#takeSettings(settings);
-		const kept: Record<string, Spaces[string]> = {};
-		let changed = Object.keys(spaces).length !== Object.keys(this.spaces).length;
-		for (const [owner, space] of Object.entries(spaces)) {
+	/** Builds again only the spaces whose rows changed, and keeps every entity that did not, so nothing else re-renders. */
+	#take(touched: ReadonlySet<string>) {
+		const me = this.#owner!;
+		if (touched.has(me)) this.own = keepSame(this.own, this.#rows.own());
+		this.#takeSettings(this.#rows.settings());
+		let spaces: Record<string, SharedSpace> | null = null;
+		for (const owner of touched) {
+			if (owner === me) continue;
 			const previous = this.spaces[owner];
-			const data = keepSame(previous?.data ?? emptyData(), space.data);
-			const readOnly =
-				previous && sameValue([...previous.readOnly].sort(), [...space.readOnly].sort())
-					? previous.readOnly
-					: space.readOnly;
-			const access = previous && sameValue(previous.access, space.access) ? previous.access : space.access;
-			kept[owner] =
-				previous && data === previous.data && readOnly === previous.readOnly && access === previous.access
-					? previous
-					: { owner, data, readOnly, access };
-			if (kept[owner] !== previous) changed = true;
+			const rows = this.#rows.space(owner);
+			const kept = rows ? keepSpace(previous, sharedSpace(owner, rows)) : undefined;
+			if (kept === previous) continue;
+			spaces ??= { ...this.spaces };
+			if (kept) spaces[owner] = kept;
+			else delete spaces[owner];
 		}
-		if (changed) this.spaces = kept;
+		if (spaces) this.spaces = spaces;
 	}
 
 	#takeSettings(stored: Settings | null) {
@@ -618,6 +635,16 @@ class Store {
 		this.remindersCheckedAt = at;
 		saveRemindersCheckedAt(at);
 	}
+}
+
+function keepSpace(previous: SharedSpace | undefined, next: SharedSpace): SharedSpace {
+	const data = keepSame(previous?.data ?? emptyData(), next.data);
+	const readOnly =
+		previous && sameValue([...previous.readOnly].sort(), [...next.readOnly].sort()) ? previous.readOnly : next.readOnly;
+	const access = previous && sameValue(previous.access, next.access) ? previous.access : next.access;
+	return previous && data === previous.data && readOnly === previous.readOnly && access === previous.access
+		? previous
+		: { ...next, data, readOnly, access };
 }
 
 /** `next` with every entity, list, and the whole data that equal `previous`'s replaced by `previous`'s own. */

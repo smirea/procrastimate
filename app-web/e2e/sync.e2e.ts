@@ -514,3 +514,33 @@ test('one command’s writes upload in one request, however many rows it changes
 	// A retried request carries the same whole batch, so every request holds all 151 writes, however many there are.
 	expect(new Set(uploads)).toEqual(new Set([151]));
 });
+
+test('an edit reads back only the row it changed, on this device and the other', async ({ browser }) => {
+	const [a, b] = await devices(browser);
+	await a.app.openSettings();
+	const chooser = a.page.waitForEvent('filechooser');
+	await a.app.settings().getByRole('button', { name: 'Import from Todoist' }).click();
+	await (await chooser).setFiles(backupOf(150));
+	await expect(a.app.importSummary()).toContainText('150 tasks');
+	await a.page.keyboard.press('Escape');
+	await settled(a);
+	const has = (device: Device, title: string) =>
+		expect.poll(() => device.page.evaluate(t => window.procrastimate.taskId(t) !== undefined, title), {
+			timeout: 10_000,
+		});
+	await has(b, 'Imported 150').toBe(true);
+	await a.app.openNavigation();
+	await a.app.nav('Big').click();
+	await expect(a.app.row('Imported 1')).toBeVisible();
+	const rowsRead = ({ page }: Device) => page.evaluate(() => window.procrastimate.reads().rows);
+	const [before, beforeOther] = [await rowsRead(a), await rowsRead(b)];
+
+	const title = unique('Renamed');
+	await rename(a.app, 'Imported 1', title);
+	await settled(a);
+	await has(b, title).toBe(true);
+	// This device reads its own write back, and the server's copy of it once it streams down.
+	await expect.poll(async () => (await rowsRead(a)) - before).toBeGreaterThan(0);
+	expect((await rowsRead(a)) - before).toBeLessThanOrEqual(2);
+	expect((await rowsRead(b)) - beforeOther).toBe(1);
+});

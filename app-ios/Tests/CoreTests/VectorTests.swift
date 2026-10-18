@@ -127,6 +127,7 @@ let handlers: [String: Handler] = [
     "comments": commentsVector,
     "row-actions": rowActionsVector,
     "dangling": danglingVector,
+    "local-rows": localRowsVector,
 ]
 
 private struct Occurrence: Decodable {
@@ -632,6 +633,73 @@ private struct EntitiesInput: Decodable {
             "tasks": try json(resolved.tasks), "projects": try json(resolved.projects),
             "sections": try json(resolved.sections), "labels": try json(resolved.labels),
         ])
+    default: throw unknown(fn)
+    }
+}
+
+private struct RowOwner: Decodable {
+    let userId: String
+}
+
+private func tableRead<Row>(_ value: JSONValue?, _ row: (JSONValue) -> Row?) throws -> TableRead<Row>? {
+    guard case let .object(fields)? = value, case let .array(rows)? = fields["rows"] else { return nil }
+    let ids: ReadIds = fields["ids"] == .string("all") ? .all : .some(try decode(fields["ids"] ?? .null))
+    return TableRead(ids: ids, rows: rows.compactMap(row))
+}
+
+/// A row the TypeScript side would drop as unparseable decodes to nil here, as `LocalDatabase` drops it on the device.
+/// Like `SyncedRow`, a null `sourceKey` is left out, which Core reads only as absent.
+private func ownedRow<V: Decodable>(_ row: JSONValue) -> Owned<V>? {
+    guard case var .object(fields) = row, let owner: RowOwner = try? decode(row) else { return nil }
+    if fields["sourceKey"] == .null { fields["sourceKey"] = nil }
+    guard let value: V = try? decode(.object(fields)) else { return nil }
+    return Owned(owner: owner.userId, value: value)
+}
+
+private func rowsRead(_ value: JSONValue) throws -> RowsRead {
+    guard case let .object(tables) = value else { throw VectorError(description: "A read is not an object") }
+    var read = RowsRead()
+    read.tasks = try tableRead(tables["task"], ownedRow)
+    read.projects = try tableRead(tables["project"], ownedRow)
+    read.sections = try tableRead(tables["section"], ownedRow)
+    read.labels = try tableRead(tables["label"], ownedRow)
+    read.comments = try tableRead(tables["comment"], ownedRow)
+    read.reads = try tableRead(tables["read"], ownedRow)
+    read.settings = try tableRead(tables["settings"], ownedRow)
+    read.access = try tableRead(tables["access"]) { try? decode($0) as Access }
+    return read
+}
+
+private func storeData(_ snapshot: Snapshot) throws -> JSONValue {
+    object([
+        "tasks": try json(snapshot.tasks), "projects": try json(snapshot.projects),
+        "sections": try json(snapshot.sections), "labels": try json(snapshot.labels),
+        "comments": try json(snapshot.comments), "reads": try json(snapshot.reads),
+    ])
+}
+
+@Sendable func localRowsVector(_ fn: String, _ a: Args) throws -> JSONValue {
+    switch fn {
+    case "replayReads":
+        let rows = LocalRows(me: try a(0))
+        let reads: [JSONValue] = try a(1)
+        return .array(try reads.map { read in
+            let touched = rows.apply(try rowsRead(read))
+            let spaces = rows.spaces
+            var shared: [String: JSONValue] = [:]
+            for owner in rows.sharers {
+                shared[owner] = object([
+                    "data": try storeData(spaces.shared[owner] ?? .empty),
+                    "access": try json(spaces.access.filter { $0.owner == owner }),
+                ])
+            }
+            return object([
+                "touched": try json(touched),
+                "own": try storeData(spaces.own),
+                "settings": spaces.settingsStored ? try json(spaces.own.settings) : .null,
+                "spaces": .object(shared),
+            ])
+        })
     default: throw unknown(fn)
     }
 }

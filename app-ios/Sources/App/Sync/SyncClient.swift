@@ -5,8 +5,8 @@ import Observation
 import PowerSync
 
 /// The store over the local database, and PowerSync's connection while a session token exists. Commits reach the
-/// database through one serial queue, in order; every change to the synced tables, local or streamed, reloads the
-/// store. App Intents and Spotlight use the same instance.
+/// database through one serial queue, in order. Every change to the synced tables, local or streamed, lands in the change
+/// log, and each read of it rebuilds only the spaces whose rows changed. App Intents and Spotlight use the same instance.
 @MainActor @Observable
 final class SyncClient {
     /// The owner of rows written without a session token, as under the DEBUG launch flag. It never syncs.
@@ -28,6 +28,13 @@ final class SyncClient {
     @ObservationIgnored private let ready: Task<Void, any Error>
     @ObservationIgnored private let writes: AsyncStream<RowBatch>.Continuation
     @ObservationIgnored private var observation: AnyDatabaseCancellable?
+    /// The local database as last read, for the user the store belongs to, and the newest change that read covered.
+    @ObservationIgnored private var rows: LocalRows?
+    @ObservationIgnored private var cursor: Int64?
+    /// Reads run one after another, so an older read never lands after a newer one. A read still waiting to start
+    /// covers every change that asks for another.
+    @ObservationIgnored private var lastRead: Task<Void, Never>?
+    @ObservationIgnored private var readQueued = false
     @ObservationIgnored private var askedForPeople: Set<String> = []
     @ObservationIgnored private var connecting: Task<Void, Never>?
     #if DEBUG
@@ -50,9 +57,14 @@ final class SyncClient {
         // nothing and writes nothing until the session check names the owner, so no row is filed under the wrong one.
         let me = Session.userID ?? (SessionToken.read() == nil ? Self.localOwner : nil)
         // The views exist from the last launch, so the first frame shows the data. A fresh file has none yet.
-        let spaces = me.map { me in Spaces((try? database.pool.read(LocalDatabase.rows)) ?? StoredRows(), me: me) }
+        let rows = me.map(LocalRows.init)
+        if let rows, let read = try? database.pool.read({ try LocalDatabase.read(since: nil, $0) }) {
+            rows.apply(read.changes)
+            cursor = read.cursor
+        }
+        self.rows = rows
         store = Telemetry.trace("Load store", operation: "store.load") {
-            Store(me: me, spaces: spaces ?? Spaces(), people: DeviceDefaults.people, clock: clock)
+            Store(me: me, spaces: rows?.spaces ?? Spaces(), people: DeviceDefaults.people, clock: clock)
         }
         ready = Task { try await database.ready() }
         let (batches, writes) = AsyncStream.makeStream(of: RowBatch.self)
@@ -81,24 +93,46 @@ final class SyncClient {
     }
 
     private func observe() {
-        observation = ValueObservation.tracking(LocalDatabase.rows).start(
+        observation = ValueObservation.tracking(LocalDatabase.lastChange).removeDuplicates().start(
             in: database.pool,
             onError: { ErrorReport.log("The local database stopped updating", error: $0) },
-            onChange: { [weak self] rows in self?.reload(rows) }
+            onChange: { [weak self] _ in self?.reload() }
         )
     }
 
     private func reloadNow() async {
-        do {
-            reload(try await database.pool.read(LocalDatabase.rows))
-        } catch {
-            ErrorReport.log("Could not read the local database", error: error)
-        }
+        await reload().value
     }
 
-    private func reload(_ rows: StoredRows) {
-        guard let me = store.me else { return }
-        var spaces = Spaces(rows, me: me)
+    @discardableResult
+    private func reload() -> Task<Void, Never> {
+        if readQueued, let lastRead { return lastRead }
+        readQueued = true
+        let previous = lastRead
+        let read = Task {
+            await previous?.value
+            readQueued = false
+            await readChanges()
+        }
+        lastRead = read
+        return read
+    }
+
+    /// Applies what changed since the last read, then hands the store every space, which keeps whatever is equal.
+    private func readChanges() async {
+        guard let rows else { return }
+        let cursor = self.cursor
+        let read: LocalDatabase.Read
+        do {
+            read = try await database.pool.read { try LocalDatabase.read(since: cursor, $0) }
+        } catch {
+            ErrorReport.log("Could not read the local database", error: error)
+            return
+        }
+        guard self.rows === rows else { return }
+        self.cursor = read.cursor
+        rows.apply(read.changes)
+        var spaces = rows.spaces
         #if DEBUG
         spaces.access += demoAccess
         #endif
@@ -107,6 +141,14 @@ final class SyncClient {
         if !unknown.isEmpty {
             askedForPeople.formUnion(unknown)
             Task { await loadPeople() }
+        }
+        guard read.long else { return }
+        Task { [database] in
+            do {
+                try await database.trim(after: read)
+            } catch {
+                ErrorReport.log("Could not trim the change log", error: error)
+            }
         }
     }
 
@@ -219,6 +261,8 @@ final class SyncClient {
             return
         case nil:
             store.adopt(id)
+            rows = LocalRows(me: id)
+            cursor = nil
             await reloadNow()
             start()
         default:
@@ -245,6 +289,9 @@ final class SyncClient {
         }
         DeviceDefaults.forgetDatabaseID()
         store.switchUser(to: id)
+        rows = LocalRows(me: id)
+        cursor = nil
+        reload()
         askedForPeople = []
         TaskImages.clearLocal()
     }

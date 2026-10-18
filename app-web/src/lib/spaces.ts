@@ -1,9 +1,6 @@
-import { resolveDangling } from 'shared/dangling.ts';
-import { DEFAULT_SETTINGS, KINDS, SETTINGS_ID, type Settings, type Snapshot } from 'shared/model.ts';
+import type { Access, SpaceRows } from 'shared/local-rows.ts';
 import type { Person } from 'shared/sharing.ts';
-import { entityFrom, sortSnapshot, withEntities, type Entity } from 'shared/snapshot.ts';
 import { projectsInOrder, sortTasks, type NewTask, type StoreData } from 'shared/store.ts';
-import type { AccessRow, Rows } from './database.ts';
 
 /**
  * Which space each entity lives in. `null` is the signed-in user's own space; a string is the owner id of a
@@ -16,12 +13,9 @@ export type SharedSpace = {
 	owner: string;
 	data: StoreData;
 	readOnly: ReadonlySet<string>;
-	access: readonly AccessRow[];
+	access: readonly Access[];
 };
 export type Spaces = Readonly<Record<string, SharedSpace>>;
-
-/** `settings` is null until the row exists. */
-export type Grouped = { own: StoreData; settings: Settings | null; spaces: Spaces };
 
 export const emptyData = (): StoreData => ({
 	tasks: [],
@@ -32,36 +26,10 @@ export const emptyData = (): StoreData => ({
 	reads: [],
 });
 
-/**
- * A row that does not parse is left out rather than failing the whole load, and a reference to a row that is gone
- * reads as empty (`resolveDangling`). Read markers and settings only ever sync for their owner.
- */
-export function group(rows: Rows, me: string): Grouped {
-	const empty = (): Snapshot => ({ ...emptyData(), settings: DEFAULT_SETTINGS });
-	const snapshots = new Map<string, Snapshot>();
-	const of = (owner: string) => snapshots.get(owner) ?? snapshots.set(owner, empty()).get(owner)!;
-	for (const kind of KINDS) {
-		const byOwner = Map.groupBy(rows[kind], row => row.userId);
-		for (const [owner, list] of byOwner) {
-			if (owner !== me && (kind === 'read' || kind === 'settings')) continue;
-			const entities = list.map(row => entityFrom(kind, row.id, row)).filter((e): e is Entity => e !== null);
-			if (kind === 'settings' && !entities.some(e => e.id === SETTINGS_ID)) continue;
-			snapshots.set(owner, withEntities(of(owner), kind, entities));
-		}
-	}
-	const accessByOwner = Map.groupBy(rows.access, row => row.owner);
-	for (const owner of accessByOwner.keys()) of(owner);
-	const { settings, ...own } = sortSnapshot(resolveDangling(snapshots.get(me) ?? empty()));
-	const hasSettings = rows.settings.some(row => row.userId === me && row.id === SETTINGS_ID);
-	snapshots.delete(me);
-	const spaces: Record<string, SharedSpace> = {};
-	for (const [owner, snapshot] of snapshots) {
-		const { settings: _, ...data } = sortSnapshot(resolveDangling(snapshot));
-		const access = (accessByOwner.get(owner) ?? []).toSorted((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
-		const readOnly = new Set(access.filter(row => row.kind === 'task' && row.role === 'view').map(row => row.entityId));
-		spaces[owner] = { owner, data: { ...data, reads: [] }, readOnly, access };
-	}
-	return { own, settings: hasSettings ? settings : null, spaces };
+/** The web's view of one shared space: the rows `LocalRows` holds for it, and the tasks it may only view. */
+export function sharedSpace(owner: string, { data, access }: SpaceRows): SharedSpace {
+	const readOnly = new Set(access.filter(row => row.kind === 'task' && row.role === 'view').map(row => row.entityId));
+	return { owner, data, readOnly, access };
 }
 
 /** Ids are UUIDs, so one map serves every kind. */
