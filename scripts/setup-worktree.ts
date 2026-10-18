@@ -14,6 +14,7 @@ import {
 	ensurePostgres,
 	requireDocker,
 	startPowerSync,
+	stopPowerSync,
 } from './local-stack';
 
 function run(cmd: string[], opts: { quiet?: boolean } = {}): string {
@@ -132,12 +133,15 @@ if (!serverDatabase || !/^postgres:\/\/[^@]*@(127\.0\.0\.1|localhost):/.test(ser
 	throw new Error(`server/.env.local must point DATABASE_URL at the local Docker Postgres, not ${serverDatabase}.`);
 }
 
+// The stack migrates with the bundled migrations, which generate writes.
+run(['bun', 'run', 'generate']);
+
 ensurePostgres();
+// PowerSync holds its slot open, and a reset drops the databases it replicates.
+if (resetDb) stopPowerSync(root);
 await ensureDatabases(database, 'dev', root, resetDb);
 await ensureDatabases(database, 'e2e', root, resetDb);
 await Promise.all([startPowerSync(root, database, 'dev', base + 2), startPowerSync(root, database, 'e2e', base + 12)]);
-
-run(['bun', 'run', 'generate']);
 
 // Restricted to shell-safe characters because ./sim embeds it in single quotes.
 const simulator = branch.replaceAll(/[^\w.-]/g, '-');

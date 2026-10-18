@@ -81,11 +81,17 @@ const databasesOf = (database: string, stack: Stack) => [
 	`${database}${suffix(stack)}_powersync`,
 ];
 
+/** A replication slot outlives its PowerSync container and blocks `DROP DATABASE`, so it goes first. */
+async function dropDatabase(sql: postgres.Sql, name: string): Promise<void> {
+	await sql`SELECT pg_drop_replication_slot(slot_name) FROM pg_replication_slots WHERE database = ${name}`;
+	await sql.unsafe(`DROP DATABASE IF EXISTS "${name}" WITH (FORCE)`);
+}
+
 export async function ensureDatabases(database: string, stack: Stack, worktree: string, reset = false): Promise<void> {
 	await withAdmin(async sql => {
 		for (const name of databasesOf(database, stack)) {
 			const exists = (await sql`SELECT 1 FROM pg_database WHERE datname = ${name}`).length > 0;
-			if (exists && reset) await sql.unsafe(`DROP DATABASE "${name}" WITH (FORCE)`);
+			if (exists && reset) await dropDatabase(sql, name);
 			if (!exists || reset) await sql.unsafe(`CREATE DATABASE "${name}"`);
 			await sql.unsafe(`COMMENT ON DATABASE "${name}" IS '${COMMENT_PREFIX}${worktree.replaceAll("'", "''")}'`);
 		}
@@ -94,9 +100,7 @@ export async function ensureDatabases(database: string, stack: Stack, worktree: 
 
 export async function dropDatabases(database: string): Promise<void> {
 	await withAdmin(async sql => {
-		for (const name of STACKS.flatMap(stack => databasesOf(database, stack))) {
-			await sql.unsafe(`DROP DATABASE IF EXISTS "${name}" WITH (FORCE)`);
-		}
+		for (const name of STACKS.flatMap(stack => databasesOf(database, stack))) await dropDatabase(sql, name);
 	});
 }
 
@@ -124,7 +128,40 @@ function writeServiceConfig(worktree: string, database: string, stack: Stack): s
 	return file;
 }
 
+/**
+ * PowerSync answers `No sync config available` until it has replicated the publication, which the app's migrations
+ * create. In Worker mode those run on the first request, so a run that started its tests at once lost its first
+ * syncs. So the stack migrates first and waits for the replication stream before anything uses it.
+ */
+async function migrateApp(database: string, stack: Stack): Promise<void> {
+	const { connect } = await import('../server/src/db/postgres');
+	const { migrate } = await import('../server/src/db/migrate');
+	const connection = connect(databaseUrl(`${database}${suffix(stack)}`));
+	try {
+		await migrate(connection.db);
+	} finally {
+		await connection.end();
+	}
+}
+
+/** PowerSync marks its sync config `ACTIVE` in its storage database once the first replication finished. */
+async function waitForReplication(name: string, storage: string): Promise<void> {
+	const sql = postgres(databaseUrl(storage), { max: 1, onnotice: () => {} });
+	try {
+		const deadline = Date.now() + 60_000;
+		while (Date.now() < deadline) {
+			const active = await sql`SELECT 1 FROM powersync.sync_rules WHERE state = 'ACTIVE'`.catch(() => []);
+			if (active.length) return;
+			await Bun.sleep(500);
+		}
+	} finally {
+		await sql.end();
+	}
+	throw new Error(`PowerSync did not start replicating within 60 s. See \`docker logs ${name}\`.`);
+}
+
 export async function startPowerSync(worktree: string, database: string, stack: Stack, port: number): Promise<void> {
+	await migrateApp(database, stack);
 	const name = containerName(worktree, stack);
 	const project = name.replace('procrastimate-powersync-', 'procrastimate-');
 	run(['docker', 'compose', '-f', compose, '-p', project, 'up', '-d', '--wait', 'powersync'], {
@@ -136,7 +173,7 @@ export async function startPowerSync(worktree: string, database: string, stack: 
 	const deadline = Date.now() + 60_000;
 	while (Date.now() < deadline) {
 		const alive = await fetch(`http://127.0.0.1:${port}/probes/liveness`).catch(() => null);
-		if (alive?.ok) return;
+		if (alive?.ok) return waitForReplication(name, `${database}${suffix(stack)}_powersync`);
 		await Bun.sleep(500);
 	}
 	throw new Error(`PowerSync did not answer on port ${port} within 60 s. See \`docker logs ${name}\`.`);
