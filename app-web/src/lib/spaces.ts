@@ -1,3 +1,4 @@
+import { resolveDangling } from 'shared/dangling.ts';
 import { DEFAULT_SETTINGS, KINDS, SETTINGS_ID, type Settings, type Snapshot } from 'shared/model.ts';
 import type { Person } from 'shared/sharing.ts';
 import { entityFrom, sortSnapshot, withEntities, type Entity } from 'shared/snapshot.ts';
@@ -32,8 +33,8 @@ export const emptyData = (): StoreData => ({
 });
 
 /**
- * A row that does not parse is left out rather than failing the whole load. Read markers and settings only ever sync
- * for their owner.
+ * A row that does not parse is left out rather than failing the whole load, and a reference to a row that is gone
+ * reads as empty (`resolveDangling`). Read markers and settings only ever sync for their owner.
  */
 export function group(rows: Rows, me: string): Grouped {
 	const empty = (): Snapshot => ({ ...emptyData(), settings: DEFAULT_SETTINGS });
@@ -50,12 +51,12 @@ export function group(rows: Rows, me: string): Grouped {
 	}
 	const accessByOwner = Map.groupBy(rows.access, row => row.owner);
 	for (const owner of accessByOwner.keys()) of(owner);
-	const { settings, ...own } = sortSnapshot(snapshots.get(me) ?? empty());
+	const { settings, ...own } = sortSnapshot(resolveDangling(snapshots.get(me) ?? empty()));
 	const hasSettings = rows.settings.some(row => row.userId === me && row.id === SETTINGS_ID);
 	snapshots.delete(me);
 	const spaces: Record<string, SharedSpace> = {};
 	for (const [owner, snapshot] of snapshots) {
-		const { settings: _, ...data } = sortSnapshot(snapshot);
+		const { settings: _, ...data } = sortSnapshot(resolveDangling(snapshot));
 		const access = (accessByOwner.get(owner) ?? []).toSorted((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
 		const readOnly = new Set(access.filter(row => row.kind === 'task' && row.role === 'view').map(row => row.entityId));
 		spaces[owner] = { owner, data: { ...data, reads: [] }, readOnly, access };

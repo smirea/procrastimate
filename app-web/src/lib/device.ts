@@ -5,6 +5,7 @@ import { personSchema, type Person } from 'shared/sharing.ts';
 /** Whose rows this browser's database holds. It outlives sign-out, so only a different account clears them. */
 const OWNER_KEY = 'procrastimate-owner';
 const INSTALL_KEY = 'procrastimate-install';
+const DATABASE_KEY = 'procrastimate-database';
 const PEOPLE_KEY = 'procrastimate-people';
 const REMINDERS_KEY = 'procrastimate-reminders-checked-at';
 const UNWRITTEN_KEY = 'procrastimate-unwritten';
@@ -39,6 +40,22 @@ export function installId(): string {
 	const id = crypto.randomUUID();
 	localStorage.setItem(INSTALL_KEY, id);
 	return id;
+}
+
+/**
+ * Names this local database, so an upload's op ids (`<database>:<queue id>`) never repeat: PowerSync's queue ids
+ * restart when the database is cleared, so a cleared database gets a new name.
+ */
+export function databaseId(): string {
+	const known = localStorage.getItem(DATABASE_KEY);
+	if (known) return known;
+	const id = crypto.randomUUID();
+	localStorage.setItem(DATABASE_KEY, id);
+	return id;
+}
+
+export function forgetDatabaseId() {
+	localStorage.removeItem(DATABASE_KEY);
 }
 
 export function loadPeople(): Person[] {

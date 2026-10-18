@@ -13,6 +13,7 @@ import * as rules from 'shared/store.ts';
 import { mergeBackup, type ImportSummary, type TodoistBackup } from 'shared/todoist.ts';
 import { powerSync, readRows, WATCHED_TABLES, writeRows } from './database.ts';
 import {
+	forgetDatabaseId,
 	forgetLegacyDocument,
 	loadOwner,
 	onOwnerChange,
@@ -171,7 +172,10 @@ class Store {
 			.then(() => this.#queue)
 			.then(async () => {
 				const previous = loadOwner();
-				if (previous !== null && previous !== userId) await clearUntilDone();
+				if (previous !== null && previous !== userId) {
+					await clearUntilDone();
+					forgetDatabaseId();
+				}
 				if (this.#owner !== userId) return;
 				saveOwner(userId);
 				this.#opening = false;

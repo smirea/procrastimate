@@ -199,7 +199,7 @@ test('typing notes shows each keystroke at once and uploads one write with the l
 	await goOnline(a);
 	await settled(a);
 	expect(writes.filter(write => write.id === id)).toEqual([
-		{ op: 'patch', table: 'tasks', id, values: { notes: 'Buy oat milk' } },
+		{ op: 'patch', table: 'tasks', id, values: { notes: 'Buy oat milk' }, opId: expect.any(String) },
 	]);
 	await b.app
 		.row(title)

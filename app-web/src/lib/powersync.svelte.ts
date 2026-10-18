@@ -6,6 +6,7 @@ import { entitiesOf } from 'shared/snapshot.ts';
 import { coalesce, KIND_OF, rejectionNotice, TABLE_OF, type RowOp, type SyncedTable } from 'shared/rows.ts';
 import { api, isUnauthorized } from './api.ts';
 import { powerSync } from './database.ts';
+import { databaseId } from './device.ts';
 import { localTables } from './generated/tables.ts';
 import { images } from './images/images.svelte.ts';
 import { session } from './session.svelte.ts';
@@ -23,7 +24,7 @@ const OPS: Record<UpdateType, RowOp> = {
 const UPLOAD_THROTTLE = 100;
 /**
  * The store writes a command in one transaction, and PowerSync's default of 100 would split a big one, such as an
- * import or deleting everything, so the server would repair and log a half-applied command.
+ * import or deleting everything, so another device could see half a command for a moment.
  */
 const UPLOAD_BATCH = 1000;
 const SETTLE_TIMEOUT = 10_000;
@@ -61,19 +62,22 @@ const connector: PowerSyncBackendConnector = {
 	},
 
 	/**
-	 * Sends one batch of queued writes, folded to one write per row. The image bytes the batch names go first: an
-	 * entry exists only after its image was queued, so draining the image queue after reading the batch covers it.
-	 * Throwing leaves the batch queued for PowerSync's next try.
+	 * Sends one batch of queued writes, folded to one write per row, each named by this database and its queue id so
+	 * a retried batch logs nothing twice. The image bytes the batch names go first: an entry exists only after its
+	 * image was queued, so draining the image queue after reading the batch covers it. Throwing leaves the batch
+	 * queued for PowerSync's next try.
 	 */
 	async uploadData(database: AbstractPowerSyncDatabase) {
 		const batch = await database.getCrudBatch(UPLOAD_BATCH);
 		if (!batch) return;
 		await images.upload();
+		const local = databaseId();
 		const writes = coalesce(
 			batch.crud.map(entry => ({
 				op: OPS[entry.op],
 				kind: KIND_OF[entry.table as SyncedTable],
 				id: entry.id,
+				opId: `${local}:${entry.clientId}`,
 				...(entry.opData ? { values: entry.opData } : {}),
 			})),
 		).map(({ kind, ...write }) => {
@@ -105,17 +109,13 @@ const viewOf = () => ({
 	comments: store.comments,
 });
 
+/** An empty search lists everyone the user shared with, the owners sharing with them, and their AI accounts. */
 async function refreshPeople() {
-	const [me, shares, people] = await Promise.all([
+	const [me, people] = await Promise.all([
 		api.me().catch(() => null),
-		api.shares.list().catch(() => null),
 		api.people.search({ query: { q: '' } }).catch(() => null),
 	]);
-	store.rememberPeople([
-		...(me ? [me] : []),
-		...(shares?.shares.flatMap(share => (share.grantee ? [share.grantee] : [])) ?? []),
-		...(people?.people ?? []),
-	]);
+	store.rememberPeople([...(me ? [me] : []), ...(people?.people ?? [])]);
 }
 
 export function startSync(userId: string): () => void {
