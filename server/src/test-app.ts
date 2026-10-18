@@ -46,12 +46,21 @@ export type TestApp = App & {
 	statements: string[];
 };
 
+let template: Promise<PGlite> | undefined;
+
+/** One migrated database per test process; each app clones it, which costs a fraction of migrating again. */
+async function migrated(): Promise<PGlite> {
+	const client = new PGlite();
+	await migrate(drizzle(client));
+	return client;
+}
+
 /** A fresh PGlite database, migrated, with the app on top. Sockets are refused; Ramble tests pass their own config. */
 export async function testApp(options: { env?: Partial<Env>; ramble?: RambleConfig } = {}): Promise<TestApp> {
-	const client = new PGlite();
+	template ??= migrated();
+	const client = (await (await template).clone()) as PGlite;
 	const statements: string[] = [];
 	const db: Db = drizzle(client, { logger: { logQuery: query => void statements.push(query) } });
-	await migrate(db);
 	const env = await testEnv(options.env);
 	const stream = () => Response.json({ ok: false, error: 'No sockets in tests' }, { status: 501 });
 	const app = await createApp(env, db, rambleRoute(db, ramble(stream, options.ramble ?? { connect: null })));

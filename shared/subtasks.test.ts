@@ -2,6 +2,7 @@ import { expect } from 'bun:test';
 import * as subtasks from './subtasks.ts';
 import type { Task } from './task.ts';
 import { describe, recorded, test } from './vectors/record.ts';
+import { task as base } from './testing.ts';
 
 const ancestorsOf = recorded('subtasks', subtasks.ancestorsOf);
 const completeTask = recorded('subtasks', subtasks.completeTask);
@@ -13,29 +14,7 @@ const nextSiblingOrder = recorded('subtasks', subtasks.nextSiblingOrder);
 const progressOf = recorded('subtasks', subtasks.progressOf);
 const reopenTask = recorded('subtasks', subtasks.reopenTask);
 
-const task = (id: string, fields: Partial<Task> = {}): Task => ({
-	id,
-	parentId: null,
-	order: 0,
-	title: id,
-	notes: '',
-	projectId: null,
-	sectionId: null,
-	labelIds: [],
-	due: null,
-	recurrence: null,
-	priority: 4,
-	reminders: [],
-	location: null,
-	event: null,
-	images: [],
-	createdAt: 1,
-	completedAt: null,
-	createdBy: null,
-	completedBy: null,
-	lastCompletedAt: null,
-	...fields,
-});
+const task = (id: string, fields: Partial<Task> = {}): Task => base(id, fields);
 
 const trip = () => [
 	task('trip'),

@@ -62,11 +62,10 @@ describe('/api/memo-tasks', () => {
 	});
 
 	test('a task the user deleted from the app stays gone too', async () => {
-		const other = crypto.randomUUID();
-		const added = await put({ ...request([{ key: other, title: 'Water plants' }]), memoId: crypto.randomUUID() });
+		const memo = { ...request([{ key: crypto.randomUUID(), title: 'Water plants' }]), memoId: crypto.randomUUID() };
+		const added = await put(memo);
 		expect(await upload(app, owner, [{ op: 'delete', table: 'tasks', id: added.tasks[0]!.id }])).toEqual([]);
-		const again = await put({ ...request([{ key: other, title: 'Water plants' }]), memoId: crypto.randomUUID() });
-		expect(again.tasks.map(task => task.title)).toEqual(['Water plants']);
+		expect((await put(memo)).tasks).toEqual([]);
 	});
 
 	test('deleting a memo takes the subtasks under its tasks, and nothing else', async () => {

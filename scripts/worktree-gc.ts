@@ -17,9 +17,20 @@ import { devices, owner, remove, shutdown } from './simulators';
 const dryRun = process.argv.includes('--dry-run');
 const IDLE_MS = 15 * 60_000;
 
+/** A tool that may answer nothing: `plutil` on a plist without the key, `gh` on a branch without a PR. */
 function run(cmd: string[]): string {
 	const result = spawnSync(cmd[0]!, cmd.slice(1), { encoding: 'utf8' });
 	return result.status === 0 ? result.stdout.trim() : '';
+}
+
+/**
+ * The worktree list decides what is deleted, so a `git` that fails must stop the run: an empty list would read as
+ * "every worktree is gone". The repository is this script's own, whatever the working directory.
+ */
+function worktreeList(): string {
+	const result = spawnSync('git', ['-C', import.meta.dir, 'worktree', 'list', '--porcelain'], { encoding: 'utf8' });
+	if (result.status !== 0) throw new Error(`git worktree list failed\n${result.stderr}`);
+	return result.stdout.trim();
 }
 
 async function act(message: string, action: () => unknown) {
@@ -27,7 +38,7 @@ async function act(message: string, action: () => unknown) {
 	if (!dryRun) await action();
 }
 
-const worktrees = run(['git', 'worktree', 'list', '--porcelain'])
+const worktrees = worktreeList()
 	.split('\n\n')
 	.map(block => ({
 		path: block.match(/^worktree (.+)$/m)?.[1],
@@ -70,7 +81,7 @@ if (dockerRunning()) {
 			removeContainer(container.name),
 		);
 	}
-	for (const { database, worktree } of await worktreeDatabases().catch(() => [])) {
+	for (const { database, worktree } of await worktreeDatabases()) {
 		if (live.has(worktree)) continue;
 		await act(`Dropping database ${database}; its worktree ${worktree} is gone.`, () => dropDatabases(database));
 	}

@@ -11,7 +11,7 @@ export function remoteDatabaseReason(env: Record<string, string | undefined>): s
 	} catch {
 		return `Refusing to run tests: DATABASE_URL is not a URL (${url}).`;
 	}
-	if (host === '127.0.0.1' || host === 'localhost' || host === '::1') return null;
+	if (host === '127.0.0.1' || host === 'localhost' || host === '[::1]') return null;
 	return `Refusing to run tests against a remote database (${host}). Unset DATABASE_URL or point it at the local Docker Postgres.`;
 }
 

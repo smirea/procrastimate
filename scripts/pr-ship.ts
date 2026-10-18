@@ -16,7 +16,10 @@ import { parseArgs } from 'node:util';
 const { values } = parseArgs({
 	options: { merge: { type: 'boolean' }, budget: { type: 'string', default: '540' } },
 });
-const deadline = Date.now() + Number(values.budget) * 1000;
+const budget = Number(values.budget);
+if (!Number.isFinite(budget) || budget <= 0)
+	throw new Error(`--budget must be a number of seconds, not "${values.budget}"`);
+const deadline = Date.now() + budget * 1000;
 const CODEX_NUDGE_MS = 15 * 60_000;
 const POLL_MS = 20_000;
 
@@ -55,13 +58,17 @@ function exit(code: number, message: string): never {
 const head = run(['git', 'rev-parse', 'HEAD']);
 const [owner, repo] = run(['gh', 'repo', 'view', '--json', 'nameWithOwner', '-q', '.nameWithOwner']).split('/');
 
+/** Only "no pull requests found" means there is no PR; an expired login or a network error must not read as that. */
 function view(): Pr {
 	try {
 		return JSON.parse(
 			run(['gh', 'pr', 'view', '--json', 'number,url,state,createdAt,headRefOid,mergeable,statusCheckRollup,comments']),
 		);
-	} catch {
-		exit(1, 'This branch has no PR. Push it and open one with `gh pr create`, then rerun.');
+	} catch (error) {
+		if (error instanceof Error && error.message.includes('no pull requests found')) {
+			exit(1, 'This branch has no PR. Push it and open one with `gh pr create`, then rerun.');
+		}
+		throw error;
 	}
 }
 

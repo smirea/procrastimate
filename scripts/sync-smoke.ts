@@ -20,11 +20,9 @@ const api = flag('--api') ?? override?.API_URL ?? 'http://127.0.0.1:6121';
 const databaseUrl = flag('--database') ?? override?.DATABASE_URL;
 const origin = api;
 
+/** Throws rather than exiting, so a `finally` that removes a forged row still runs. */
 function check(condition: unknown, message: string): asserts condition {
-	if (!condition) {
-		console.error(`FAIL ${message}`);
-		process.exit(1);
-	}
+	if (!condition) throw new Error(`FAIL ${message}`);
 	console.log(`ok   ${message}`);
 }
 

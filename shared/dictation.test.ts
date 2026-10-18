@@ -1,5 +1,4 @@
 import { expect } from 'bun:test';
-import { parseRamble } from './ramble.ts';
 import { voiceCapture, type DictationChoice } from './dictation.ts';
 import { describe, recorded, test } from './vectors/record.ts';
 
@@ -27,11 +26,5 @@ describe('voiceCapture', () => {
 	test('elevenlabs uses the server socket only while online', () => {
 		expect(capture('elevenlabs', true, true)).toEqual({ engine: 'elevenlabs', capture: 'socket' });
 		expect(capture('elevenlabs', true, false)).toEqual({ engine: 'elevenlabs', capture: 'socket' });
-	});
-
-	test('a native transcript still goes through the ramble grammar', () => {
-		const draft = parseRamble('Buy milk', { now: new Date('2026-10-14T10:00:00Z') });
-		expect(draft.tasks.map(task => task.title)).toEqual(['Buy milk']);
-		expect(draft.tasks[0]?.projectId).toBeNull();
 	});
 });

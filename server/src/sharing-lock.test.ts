@@ -16,6 +16,7 @@ import { ORIGIN, shareWith, signUp, taskRow, type TestApp, testEnv, upload } fro
  */
 
 const url = process.env.DATABASE_URL;
+if (!url && process.env.CI) throw new Error('The lock tests need DATABASE_URL in CI; the e2e job passes the stack’s.');
 
 async function postgresApp() {
 	// More than one connection, or a blocked statement would hold the one the reads need.
