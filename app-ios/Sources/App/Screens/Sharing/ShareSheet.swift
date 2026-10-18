@@ -20,8 +20,6 @@ struct ShareButton: View {
     }
 }
 
-/// Who can see a project, label, or task: a public link to copy or send, people added by email or from those the
-/// space has met, each removable.
 struct ShareSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(Store.self) private var store

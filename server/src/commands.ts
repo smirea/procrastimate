@@ -70,7 +70,6 @@ export function requireAccess(space: Space, actor: Actor): Access {
 	return access;
 }
 
-/** The visible snapshot of a space for a guest, with the tasks they may only read. */
 export function guestView(snapshot: Snapshot, grants: readonly Grant[]) {
 	const scope = scopeOf(snapshot, grants);
 	const filtered = filterSnapshot(snapshot, scope);
@@ -78,7 +77,6 @@ export function guestView(snapshot: Snapshot, grants: readonly Grant[]) {
 	return { scope, filtered, readOnly };
 }
 
-/** What the actor sees of the space. Owners see everything and may edit it all. */
 function visibleOf(snapshot: Snapshot, access: Access) {
 	const { filtered, readOnly } =
 		access.role === 'owner' ? { filtered: snapshot, readOnly: [] } : guestView(snapshot, access.shares);
@@ -112,7 +110,6 @@ export function unknownPerson(id: string): Person {
 	return { id, name: '', kind: 'human', ownerId: null };
 }
 
-/** Someone the space has met, by the `people` row the space keeps of them. */
 export async function personOf(db: Db, owner: string, id: string): Promise<Person> {
 	const [row] = await db
 		.select()
@@ -127,7 +124,7 @@ export async function view({ db, owner, actor }: Command): Promise<SpaceView> {
 	return { ...visible, tasks: await withClients(db, owner, visible.tasks) };
 }
 
-/** Runs one store command over the space and applies what changed. A guest's write outside their share is refused. */
+/** A guest's write outside their share is refused. */
 async function run(
 	command: Command,
 	change: (data: StoreData, visible: Visible, zone: string, access: Access) => StoreData,

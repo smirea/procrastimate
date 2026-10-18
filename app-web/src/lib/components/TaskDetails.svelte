@@ -106,7 +106,6 @@
 		}
 	}
 
-	/** A subtask's details return to its parent once the subtask is done or gone. */
 	function leave(parentId: string | null) {
 		if (parentId) sheets.openTask(parentId, 'back');
 		else sheets.close();
@@ -136,7 +135,6 @@
 	const imageFiles = (data: DataTransfer | null) => [...(data?.files ?? [])].filter(file => file.type.startsWith('image/'));
 	const carriesFiles = (event: DragEvent) => editable && !!event.dataTransfer?.types.includes('Files');
 
-	/** Pasting an image anywhere in details attaches it; pasting text into the title or notes still pastes text. */
 	function onpaste(event: ClipboardEvent) {
 		const files = imageFiles(event.clipboardData);
 		if (!editable || !files.length) return;

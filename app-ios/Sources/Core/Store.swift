@@ -154,7 +154,6 @@ public final class Store {
 
     private var sharedData: [Snapshot] { spaces.keys.sorted().compactMap { spaces[$0] } }
 
-    /// Own data, then each shared space's, for subtasks, details, and shared project and label screens.
     public var allTasks: [TaskItem] { snapshot.tasks + sharedData.flatMap(\.tasks) }
     public var allProjects: [Project] { snapshot.projects + sharedData.flatMap(\.projects) }
     public var allLabels: [Label] { snapshot.labels + sharedData.flatMap(\.labels) }
@@ -185,7 +184,6 @@ public final class Store {
             ?? spaces.values.lazy.compactMap { $0.sections.first { $0.id == id } }.first
     }
 
-    /// A project's sections in their order, from whichever space holds the project.
     public func sections(of projectId: String) -> [ProjectSection] { StoreRules.sectionsOf(allSections, projectId) }
 
     public func label(_ id: String) -> Label? {
@@ -193,7 +191,6 @@ public final class Store {
             ?? spaces.values.lazy.compactMap { $0.labels.first { $0.id == id } }.first
     }
 
-    /// A task's labels in the order they were added, skipping any that were deleted.
     public func labels(of task: TaskItem) -> [Label] { task.labelIds.compactMap(label) }
 
     public func space(ofTask id: String) -> SpaceKey? { space { $0.tasks.contains { $0.id == id } } }
@@ -221,7 +218,6 @@ public final class Store {
         space.query.map { person($0) ?? Person(id: $0, name: "Someone", kind: .human) }
     }
 
-    /// A shared task this user may see but not change.
     public func isReadOnly(_ taskID: String) -> Bool { readOnly.contains(taskID) }
 
     public func person(_ id: String?) -> Person? {
@@ -229,7 +225,6 @@ public final class Store {
         return people.first { $0.id == id }
     }
 
-    /// Adds or renames people in the cache, keyed by id.
     public func rememberPeople(_ known: [Person]) {
         var next = people
         for person in known {
@@ -300,7 +295,6 @@ public final class Store {
 
     public func setDictation(_ choice: DictationChoice) { setSettings { $0.dictation = choice } }
 
-    /// The quick add buttons pinned to the chip row, including a change from another device.
     public var quickAddButtons: [QuickAddButton] { snapshot.settings.quickAddButtons }
 
     public func setQuickAddButtons(_ buttons: [QuickAddButton]) { setSettings { $0.quickAddButtons = buttons } }
@@ -336,7 +330,6 @@ public final class Store {
         commit(command(data(in: space)), in: space)
     }
 
-    /// The zone lists resolve event times in.
     public var timeZone: TimeZone { clock.timeZone }
 
     public func updateTask(_ id: String, _ patch: TaskPatch) {
@@ -524,7 +517,6 @@ public final class Store {
         return summary
     }
 
-    /// Every comment this user can see, own and shared.
     public var allComments: [Comment] { snapshot.comments + sharedData.flatMap(\.comments) }
 
     /// One task's comments, oldest first.

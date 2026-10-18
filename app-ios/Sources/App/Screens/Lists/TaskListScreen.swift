@@ -1,8 +1,6 @@
 import Core
 import SwiftUI
 
-/// A task list on the tinted canvas with its empty state. The title stays out of the way until the list scrolls, then
-/// shows small in the bar. Quick add opens from the tab bar's add button with the list's defaults.
 struct TaskListScreen<Content: View>: View {
     let title: String
     let isEmpty: Bool
@@ -11,12 +9,9 @@ struct TaskListScreen<Content: View>: View {
     /// At a tab's root this list has no back button, so it drops the bar and floats the title over the scroll edge
     /// instead. Pushed from Browse it keeps the bar.
     var root = false
-    /// Shows a sort button at the top right that flips this.
     var newestFirst: Binding<Bool>?
-    /// A label screen leads its title with the label's tag in its color, or a pin for a saved place.
     var labelColor: LabelColor?
     var labelIcon = "tag.fill"
-    /// The open rows the list shows, for the count beside the title.
     var open: Int?
     /// The whole list as Markdown, for a copy button at the top right. Project and label screens copy from their menu
     /// instead.
@@ -87,7 +82,6 @@ struct TaskListScreen<Content: View>: View {
         }
     }
 
-    /// A pushed list always names itself between the back and actions buttons; a root list only once scrolled.
     private var compactTitle: some View {
         HStack(spacing: 5) {
             // The navigation title already names the list, so only the count stays for VoiceOver.
@@ -213,8 +207,6 @@ struct CopyMarkdownButton: View {
     }
 }
 
-/// A list's open rows as small faint text, shown only when `Views.pendingCount` says the list is long enough. The number
-/// rolls to its new value, and its digits keep one width so nothing beside it moves.
 struct PendingCount: View {
     let open: Int
     var font: Font = .caption

@@ -94,7 +94,6 @@ final class LocalNotifications: NSObject {
         await UIApplication.shared.open(url)
     }
 
-    /// Call after every change to the tasks. Recomputes the schedule once a burst of changes settles.
     func tasksChanged(from _: [TaskItem], to _: [TaskItem]) {
         resync?.cancel()
         resync = Task {
@@ -138,7 +137,6 @@ final class LocalNotifications: NSObject {
         }
     }
 
-    /// The system said no. Not-yet-asked stays as it is.
     private static func notificationsBlocked() async -> Bool {
         await UNUserNotificationCenter.current().notificationSettings().authorizationStatus == .denied
     }
@@ -212,7 +210,6 @@ final class LocalNotifications: NSObject {
         Task { try? await BGTaskScheduler.shared.submitTaskRequest(request) }
     }
 
-    /// Shows `Reminder: <title>` with `Open` for every moment that came up since the last check, like the web.
     func fireDueReminders() {
         let now = clock.now.epochMilliseconds
         let since = DeviceDefaults.remindersCheckedAt ?? now

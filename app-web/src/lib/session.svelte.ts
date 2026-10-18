@@ -4,11 +4,7 @@ import { identify, type SentryUser } from './sentry.ts';
 import { store } from './store.svelte.ts';
 import { toasts } from './ui.svelte.ts';
 
-/**
- * The signed-in user. The session cookie is httpOnly, so a cached user id is what lets the app open offline. The
- * local database keeps its owner after sign-out, so signing back in finds everything there, and a different account
- * starts from an empty one.
- */
+/** The session cookie is httpOnly, so a cached user id is what lets the app open offline. */
 
 const USER_KEY = 'procrastimate-user';
 
@@ -67,7 +63,6 @@ class Session {
 		this.adopt({ ...body.user, id: body.user.id });
 	}
 
-	/** Remembers the user and opens their database, which clears it when it held another account's rows. */
 	adopt(user: SentryUser) {
 		const { id } = user;
 		void store.open(id);
@@ -78,7 +73,7 @@ class Session {
 		this.error = '';
 	}
 
-	/** Drops the cached session. The local database stays, with its owner. */
+	/** The local database stays, with its owner. */
 	clear() {
 		localStorage.removeItem(USER_KEY);
 		this.userId = null;

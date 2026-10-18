@@ -1,7 +1,5 @@
 /**
  * `wrangler dev` against this worktree's local stack: `bun scripts/wrangler-dev.ts [--e2e] [wrangler dev args]`.
- * Reads `.env.override`, points the Hyperdrive binding at the worktree's database through the environment variable
- * wrangler honors, passes its PowerSync as a var, turns the sign-in rate limit off, and makes sure `.dev.vars` exists.
  * `--e2e` uses the e2e database and PowerSync instead of the dev ones.
  */
 import { spawnSync } from 'node:child_process';

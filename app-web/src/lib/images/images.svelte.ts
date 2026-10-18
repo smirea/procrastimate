@@ -8,33 +8,26 @@ import { encodeImage } from './encode.ts';
 import { imageKey, keepNew, pendingUploads, readBytes, uploaded, writeBytes } from './local.ts';
 
 /**
- * Task images on the web. A task's `images` field syncs like any other; the bytes stay out of it. Attaching keeps
- * the new image's bytes on this device and queues their upload before the edit is written, and every upload of
- * queued writes sends the queued images first, so the server never hears of an image it cannot serve. See
- * `docs/decisions/images.md`.
+ * Every upload of queued writes sends the queued images first, so the server never hears of an image it cannot serve.
+ * See `docs/decisions/images.md`.
  */
 
 /** How long a missing image waits before it is asked for again, as when another device has not uploaded it yet. */
 const RETRY_MISSING = 30_000;
 const MAX_RETRIES = 20;
-/** The server answered for good: the request was bad, no longer allowed, or the bytes will never fit. */
 const PERMANENT = new Set([400, 403, 404, 413, 415]);
 
 class Images {
 	#urls = $state<Record<string, string>>({});
 	#misses = new Map<string, number>();
 	#loading = new Set<string>();
-	/** How many images each task is still encoding, so details can show where they will land. */
 	adding = $state<Record<string, number>>({});
-	/** The image open full screen. */
 	viewing = $state<{ taskId: string; id: string } | null>(null);
 
-	/** The object URL of an image's bytes once this device has them. `load` fetches them. */
 	url(id: string, size: ImageSize): string | undefined {
 		return this.#urls[imageKey(id, size)];
 	}
 
-	/** Fetches an image's bytes unless this device has them. A miss asks again a while later, a bounded number of times. */
 	async load(space: string | null, id: string, size: ImageSize): Promise<void> {
 		const key = imageKey(id, size);
 		if (this.#urls[key] || this.#loading.has(key)) return;
@@ -66,7 +59,6 @@ class Images {
 		this.#urls = { ...this.#urls, [key]: URL.createObjectURL(blob) };
 	}
 
-	/** Encodes each image file and appends it to the task. Files that are not images are skipped. */
 	async attach(taskId: string, files: Iterable<File>) {
 		const space = store.homeOf(taskId);
 		for (const file of files) {

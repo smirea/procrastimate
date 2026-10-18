@@ -19,7 +19,6 @@ struct RowLayout: Sendable {
     let columns: [Column]
 }
 
-/// A Core type that is the value of a synced table's rows.
 protocol SyncedValue: Codable, Hashable, Sendable {
     static var layout: RowLayout { get }
 }

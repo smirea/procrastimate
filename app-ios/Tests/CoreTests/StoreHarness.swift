@@ -1,7 +1,6 @@
 import Core
 import Foundation
 
-/// What a store handed its writer, in order, as the app's database writer would receive it.
 @MainActor final class WrittenRows {
     var batches: [RowBatch] = []
     var writes: [RowWrite] { batches.flatMap(\.writes) }
@@ -15,8 +14,6 @@ func sequentialIds() -> () -> String {
     }
 }
 
-/// A store for `me` over `rows`, recording every batch it writes and finishing each at once, like an idle database.
-/// A nil `me` is a device that does not know whose database it holds yet.
 @MainActor func recordingStore(
     me: String? = "me",
     rows: StoredRows = StoredRows(),
@@ -42,7 +39,6 @@ func patch(_ kind: EntityKind, _ id: String, _ values: [String: JSONValue]) -> R
 
 let pinnedMs = JSONValue.number(Double(pinned.epochMilliseconds))
 
-/// Rows holding `me`'s settings row, as every user has once the first sync arrived.
 func settingsRows(_ settings: API.Settings = API.Settings(), owner: String = "me") -> StoredRows {
     var rows = StoredRows()
     rows.settings = [Owned(owner: owner, value: settings)]

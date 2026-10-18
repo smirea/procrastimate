@@ -104,7 +104,6 @@ struct SettingsSheet: View {
     }
 }
 
-/// Pinned buttons first, in row order, which a long press and drag reorders; the rest below in the default order.
 private struct QuickAddButtonsSection: View {
     @Environment(Store.self) private var store
 
@@ -129,7 +128,6 @@ private struct QuickAddButtonsSection: View {
         .animation(.snappy, value: store.quickAddButtons)
     }
 
-    /// The shown buttons in row order, which the drag reorders.
     private var pinned: [QuickAddButton] {
         QuickAddButtons.rowButtons(store.quickAddButtons, [], QuickAddButton.allCases)
     }
@@ -144,7 +142,6 @@ private struct QuickAddButtonsSection: View {
     }
 }
 
-/// The import summary with its counts and warnings, or the error for a file that is not a backup.
 private struct ImportOutcome: View {
     let status: TodoistImport.Status
 

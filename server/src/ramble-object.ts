@@ -8,7 +8,6 @@ import { pgRambleBudget, RAMBLE_GLOBAL_DAILY_SECONDS } from './ramble-budget';
 import { cassetteUpstream } from './ramble-cassette';
 import { workerStream } from './sockets';
 
-/** The Worker's Ramble upstream: ElevenLabs with the shared budget, the cassette for `wrangler dev`, or off. */
 export function workerRambleConfig(settings: Config, connection: () => Connection): RambleConfig {
 	switch (settings.ramble?.kind) {
 		case 'elevenlabs':

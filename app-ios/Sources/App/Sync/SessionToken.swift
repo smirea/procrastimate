@@ -1,7 +1,7 @@
 import Foundation
 import Security
 
-/// The Better Auth bearer token. It is the credential every request carries.
+/// The Better Auth bearer token.
 enum SessionToken {
     private static let service = "procrastimate-session"
     /// The id of the user the token belongs to. The Keychain outlives a reinstall while `UserDefaults` does not, so
@@ -11,7 +11,6 @@ enum SessionToken {
 
     static func read() -> String? { item(service) }
 
-    /// The user the token belongs to, once a session check has named them.
     static func user() -> String? { item(userService) }
 
     static func remember(user id: String) {

@@ -10,14 +10,10 @@ import type { Rows } from './database.ts';
  */
 export type Home = string | null;
 
-/** A space shared with the signed-in user: its owner's rows this user may see, and the tasks shared read only. */
 export type SharedSpace = { owner: string; data: StoreData; readOnly: ReadonlySet<string> };
 export type Spaces = Readonly<Record<string, SharedSpace>>;
 
-/**
- * The local database as the store holds it: the user's own data, their settings (null until the row exists), and
- * every space shared with them.
- */
+/** `settings` is null until the row exists. */
 export type Grouped = { own: StoreData; settings: Settings | null; spaces: Spaces };
 
 export const emptyData = (): StoreData => ({
@@ -30,8 +26,8 @@ export const emptyData = (): StoreData => ({
 });
 
 /**
- * Groups rows by the space they belong to: `me`'s own, and one shared space per other owner. A row that does not
- * parse is left out rather than failing the whole load. Read markers and settings only ever sync for their owner.
+ * A row that does not parse is left out rather than failing the whole load. Read markers and settings only ever sync
+ * for their owner.
  */
 export function group(rows: Rows, me: string): Grouped {
 	const empty = (): Snapshot => ({ ...emptyData(), settings: DEFAULT_SETTINGS });
@@ -63,7 +59,7 @@ export function group(rows: Rows, me: string): Grouped {
 	return { own, settings: hasSettings ? settings : null, spaces };
 }
 
-/** The owner of every entity in a shared space, by id. Ids are UUIDs, so one map serves every kind. */
+/** Ids are UUIDs, so one map serves every kind. */
 export function homes(spaces: Spaces): Map<string, string> {
 	const map = new Map<string, string>();
 	for (const { owner, data } of Object.values(spaces)) {
@@ -72,10 +68,6 @@ export function homes(spaces: Spaces): Map<string, string> {
 	return map;
 }
 
-/**
- * A new task takes its parent's space, else its project's, else the space of a label it carries from a label
- * view, else the creator's own.
- */
 export function creationHome(
 	homeOf: (id: string) => Home,
 	input: Pick<NewTask, 'projectId' | 'labelIds'>,
@@ -101,10 +93,7 @@ export function fitToSpace<T extends Pick<NewTask, 'projectId' | 'sectionId' | '
 	return { ...input, projectId, sectionId, labelIds };
 }
 
-/**
- * Own data first, then each shared space, as one list for lookups, details, children, and shared pages. The read
- * markers are the user's own, which cover every space's tasks.
- */
+/** The read markers are the user's own, which cover every space's tasks. */
 export function merged(own: StoreData, spaces: Spaces): StoreData {
 	const shared = Object.values(spaces).map(space => space.data);
 	if (shared.length === 0) return own;

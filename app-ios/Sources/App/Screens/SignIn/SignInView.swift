@@ -92,7 +92,6 @@ struct SignInView: View {
         .glassEffect(.regular, in: .rect(cornerRadius: 28))
     }
 
-    /// Only the server knows whether the password is right, so the button says it is asking.
     private var submitLabel: String {
         switch (busy, creating) {
         case (true, true): "Creating account…"

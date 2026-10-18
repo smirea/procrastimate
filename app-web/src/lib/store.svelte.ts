@@ -67,14 +67,9 @@ async function clearUntilDone() {
 }
 
 /**
- * Every mutation is a discrete command from `shared/store.ts`. The rules return new arrays and objects for what they
- * change, so the arrays are raw state that each command replaces at once. The command then writes the rows that
- * changed to the local database, in order through one queue, and PowerSync uploads them. When the database changes,
- * from this tab, another tab, or the server, the store reads it back whole.
- *
- * `own` is the signed-in user's space and `spaces` the spaces shared with them, one per owner. `tasks`, `projects`,
- * `sections`, and `labels` are the merged view. Each command finds the space that holds its target and runs its rule
- * on that space's data only, so personal views read `own` and nothing ever crosses spaces.
+ * The rules in `shared/store.ts` return new arrays and objects for what they change, so the arrays are raw state that
+ * each command replaces at once. When the database changes, from this tab, another tab, or the server, the store reads
+ * it back whole. Each command runs its rule on one space's data only, so nothing ever crosses spaces.
  */
 class Store {
 	own = $state.raw<rules.StoreData>(emptyData());
@@ -82,14 +77,12 @@ class Store {
 	spaces = $state.raw<Spaces>({});
 	people = $state.raw<Person[]>([]);
 	remindersCheckedAt = $state(0);
-	/** True once the local database has been read for the signed-in user, so the first frame shows their data. */
 	loaded = $state(false);
 	/**
 	 * True when the first read of the local database failed. The app says so rather than show an empty list whose
 	 * edits would never be written.
 	 */
 	unreadable = $state(false);
-	/** The signed-in user, whose rows `own` holds once their database is open. */
 	#owner: string | null = null;
 	/**
 	 * Whether the local database holds the settings row, which the server makes for every user and the first sync
@@ -104,7 +97,6 @@ class Store {
 	#queue: Promise<void> = Promise.resolve();
 	#unwritten: Unwritten[] = [];
 	#reading = false;
-	/** The database changed while a read or a write was in flight, so another read is due once both finish. */
 	#stale = false;
 	#switching: Promise<void> = Promise.resolve();
 	/** Until the database belongs to the signed-in user, a read could show another account's rows as theirs. */
@@ -124,7 +116,6 @@ class Store {
 		return this.#view.tasks;
 	}
 
-	/** Own projects first, then shared ones, each in their order. */
 	get projects(): Project[] {
 		return this.#projects;
 	}
@@ -141,7 +132,6 @@ class Store {
 		return this.#view.sections;
 	}
 
-	/** Every comment this user can see, own and shared. */
 	get comments(): Comment[] {
 		return this.#view.comments;
 	}
@@ -203,7 +193,6 @@ class Store {
 			this.#persist(this.#owner, { ...before, settings: this.settings }, { ...this.own, settings: this.settings });
 	}
 
-	/** Queues the rows that changed between two states of `owner`'s space. */
 	#persist(owner: string, before: Snapshot, after: Snapshot) {
 		const writes = rowWrites(before, after);
 		if (!writes.length) return;
@@ -236,7 +225,6 @@ class Store {
 			});
 	}
 
-	/** Reads the database into memory, unless a write is queued: then once the queue drains. */
 	#reload() {
 		if (this.#writing > 0 || this.#reading || this.#opening || !this.#owner) {
 			this.#stale = true;
@@ -291,7 +279,6 @@ class Store {
 		if (changed) this.spaces = kept;
 	}
 
-	/** The settings row as read, with the changes held until it arrived, which are written now as a patch. */
 	#takeSettings(stored: Settings | null) {
 		this.#hasSettings = stored !== null;
 		const next = { ...(stored ?? DEFAULT_SETTINGS), ...this.#heldSettings };
@@ -302,27 +289,23 @@ class Store {
 		if (!sameValue(this.settings, next)) this.settings = next;
 	}
 
-	/** Settings changes waiting for the settings row to arrive, which have not reached the server either. */
 	get holdsSettings(): boolean {
 		return Object.keys(this.#heldSettings).length > 0;
 	}
 
-	/** Empties tasks, projects, sections, and labels; their deletes upload like any other. Settings stay. */
 	deleteAll() {
 		this.#apply(emptyData());
 	}
 
-	/** The dictation choice. Native until the settings have loaded. */
 	get dictation(): DictationChoice {
 		return this.settings.dictation;
 	}
 
-	/** Remembers the choice for every device. Offline voice still uses native. */
+	/** Offline voice still uses native. */
 	setDictation(dictation: DictationChoice) {
 		this.#setSettings({ dictation });
 	}
 
-	/** The quick add buttons pinned to the chip row. */
 	get quickAddButtons(): QuickAddButton[] {
 		return this.settings.quickAddButtons;
 	}
@@ -331,7 +314,7 @@ class Store {
 		this.#setSettings({ quickAddButtons });
 	}
 
-	/** The zone push notifications are planned in: this device's, written only when it changed. */
+	/** The zone push notifications are planned in. */
 	noteTimeZone(timeZone: string) {
 		this.#setSettings({ timeZone });
 	}
@@ -364,10 +347,7 @@ class Store {
 		return !!space && !space.readOnly.has(id);
 	}
 
-	/**
-	 * Runs one rule on one space and writes the rows it changed, each with that space's owner. A shared space never
-	 * sees the user's own data, and its settings and read markers stay out of the diff.
-	 */
+	/** A shared space never sees the user's own data, and its settings and read markers stay out of the diff. */
 	#run(home: Home, rule: (data: rules.StoreData) => rules.StoreData) {
 		if (home === null) return this.#apply(rule(this.own));
 		const space = this.spaces[home];
@@ -405,7 +385,6 @@ class Store {
 		return id ? this.sections.find(s => s.id === id) : undefined;
 	}
 
-	/** A project's sections in their order. */
 	sectionsOf(projectId: string): Section[] {
 		return rules.sectionsOf(this.sections, projectId);
 	}
@@ -414,7 +393,6 @@ class Store {
 		return task.labelIds.map(id => this.label(id)).filter(label => label !== undefined);
 	}
 
-	/** Lands in the parent's space, else the project's, else a shared label's, else the user's own. */
 	addTask(input: rules.NewTask, parentId: string | null = null): Task | undefined {
 		if (parentId && !this.canEdit(parentId)) return;
 		const home = creationHome(this.homeOf, input, parentId);
@@ -455,8 +433,8 @@ class Store {
 	}
 
 	/**
-	 * Turns the task's subtasks into tasks of their own, and returns them as they were for undo. Only in the user's own
-	 * space: moving a subtask up can carry it out of what a share grants, and the server would refuse the edit.
+	 * Only in the user's own space: moving a subtask up can carry it out of what a share grants, and the server would
+	 * refuse the edit.
 	 */
 	explodeSubtasks(id: string, method: rules.ExplodeMethod): rules.ExplodedState[] {
 		let previous: rules.ExplodedState[] = [];
@@ -474,7 +452,6 @@ class Store {
 		if (first) this.#onTask(first.id, data => rules.restoreExploded(data, previous));
 	}
 
-	/** Deletes the task with every subtask under it, and returns them for undo. */
 	deleteTask(id: string): Task[] {
 		const home = this.homeOf(id);
 		let removed: Task[] = [];
@@ -503,7 +480,6 @@ class Store {
 		if (this.homeOf(id) === null) this.#apply(rules.renameProject(this.own, id, name));
 	}
 
-	/** Returns what the delete removed, for `undelete`. */
 	deleteProject(id: string): rules.Deleted | undefined {
 		if (this.homeOf(id) === null) return this.#delete(rules.deleteProject(this.own, id));
 	}
@@ -512,7 +488,6 @@ class Store {
 		if (this.homeOf(id) === null) this.#apply(rules.moveProject(this.own, id, index));
 	}
 
-	/** Sections, like projects, are only ever written in the user's own space. */
 	addSection(projectId: string, name: string): Section | undefined {
 		if (this.homeOf(projectId) !== null) return;
 		const { data, section } = rules.addSection(this.own, projectId, name, this.#creation());
@@ -590,7 +565,6 @@ class Store {
 		if (comment) this.#onTask(comment.taskId, data => comments.editComment(data, id, body, me, Date.now()));
 	}
 
-	/** Deletes `me`'s own comment and returns it for undo. */
 	deleteComment(id: string, me: string): Comment | undefined {
 		const comment = this.comments.find(c => c.id === id);
 		if (comment) this.#onTask(comment.taskId, data => comments.deleteComment(data, id, me));
@@ -613,7 +587,6 @@ class Store {
 		return id ? this.people.find(p => p.id === id) : undefined;
 	}
 
-	/** The person who owns a shared space, named once this device has met them. */
 	ownerOf(home: string): Person {
 		return this.person(home) ?? { id: home, name: 'Someone', kind: 'human', ownerId: null };
 	}

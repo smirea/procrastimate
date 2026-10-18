@@ -15,10 +15,8 @@ import {
 } from './fixtures.ts';
 
 /**
- * Two browser contexts are two devices on this test's account. Sync starts on its own and streams every change,
- * locally within a few hundred milliseconds; the waits allow ten seconds for a machine busy with other agents.
- * Offline cuts the context's network and refuses the sync routes, so PowerSync's stream drops and its uploads fail
- * until the network returns. Each test has its own account, so titles only need to be unique inside the test.
+ * Sync streams locally within a few hundred milliseconds; the waits allow ten seconds for a machine busy with other
+ * agents.
  */
 
 type Device = { app: App; page: Page; context: BrowserContext };
@@ -38,7 +36,6 @@ async function device(browser: Browser, options?: { timezoneId?: string }): Prom
 const goOffline = ({ context }: Device) => cut(context);
 const goOnline = ({ context }: Device) => restore(context);
 
-/** Waits until every write this device made is on the server. */
 const settled = ({ app }: Device) => expect.poll(() => app.pending(), { timeout: 15_000 }).toBe(0);
 
 async function devices(browser: Browser): Promise<[Device, Device]> {
@@ -326,7 +323,6 @@ test('signing out keeps this device’s data, and signing in as someone else sta
 	const signOut = () => signOutOf(a);
 	const signIn = (email: string, create: boolean) => signInTo(a, email, create);
 
-	// Signing back in with the sync routes refused shows what stayed in this browser.
 	await signOut();
 	await goOffline(a);
 	await a.context.setOffline(false);
@@ -368,7 +364,6 @@ test('another tab follows when this browser switches to another account', async 
 	await a.page.goto('/no-date');
 	await expect(a.app.row(mine)).toHaveCount(0);
 	await expect(tab.row(mine)).toHaveCount(0, { timeout: 10_000 });
-	// The other tab must read the new account's rows as its own, so they show in its personal lists.
 	const theirs = unique('After the switch');
 	await a.app.add(theirs);
 	await expect(tab.row(theirs)).toBeVisible({ timeout: 10_000 });
@@ -412,10 +407,6 @@ test('a new device holds its settings changes until the account’s settings arr
 	});
 });
 
-/**
- * Stands in for a browser that will not empty the local images while `e2e-refuse-clear` is set, counting each try in
- * `e2e-clear-tries`.
- */
 function refuseClears() {
 	const clear = IDBObjectStore.prototype.clear;
 	IDBObjectStore.prototype.clear = function (this: IDBObjectStore) {
@@ -459,7 +450,6 @@ test('this browser belongs to a new account only once the previous one’s rows 
 	await expect(a.app.row(title)).toHaveCount(0);
 });
 
-/** Stands in for a browser that cannot open the local database while `e2e-no-database` is set: its workers never start. */
 function refuseDatabase() {
 	if (!sessionStorage.getItem('e2e-no-database')) return;
 	const refuse = function () {
@@ -495,7 +485,6 @@ test('a database that cannot open says so, and an edit it could not write is wri
 	await expect(b.app.row(title)).toBeVisible({ timeout: 10_000 });
 });
 
-/** A Todoist backup of one project with `count` tasks, which imports as one command. */
 function backupOf(count: number) {
 	const rows = Array.from({ length: count }, (_, i) => `task,Imported ${i + 1},,,4,1,,,,,,,,,,,,,`);
 	const csv = `\uFEFFTYPE,CONTENT,DESCRIPTION,IS_COLLAPSED,PRIORITY,INDENT,AUTHOR,RESPONSIBLE,DATE,DATE_LANG,TIMEZONE,DURATION,DURATION_UNIT,DEADLINE,DEADLINE_LANG,REMINDER_TYPE,REMINDER_OFFSET,REMINDER_DATE,REMINDER_DATE_LANG\r\n${rows.join('\r\n')}\r\n`;

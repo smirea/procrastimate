@@ -130,7 +130,6 @@ export type Ramble = {
 	limits: RambleLimits;
 	/** Open sessions, with the audio seconds each has streamed on its current day and not yet stored. */
 	live: Set<{ day: string; seconds: number }>;
-	/** Shared ElevenLabs budget, or null when Ramble is not calling ElevenLabs. */
 	budget: RambleBudget | null;
 };
 
@@ -144,7 +143,6 @@ export function ramble(stream: StreamHost, config: RambleConfig): Ramble {
 	};
 }
 
-/** One user's `ramble_usage` rows: the seconds stored for a day, and an atomic add. */
 export type RambleUsage = { stored(day: string): Promise<number>; add(day: string, seconds: number): Promise<void> };
 
 export function pgRambleUsage(db: Db, owner: string): RambleUsage {
@@ -169,7 +167,6 @@ export function pgRambleUsage(db: Db, owner: string): RambleUsage {
 }
 
 const FINAL_COMMIT_MS = 3000;
-/** How long ElevenLabs has to start a session. */
 const CONNECT_MS = 10_000;
 /** A socket that stops sending anything ends after this, so a dropped client does not hold the object open. */
 const IDLE_MS = 60_000;
@@ -489,7 +486,6 @@ export async function rambleSocket(
 	);
 }
 
-/** How the API handler reaches a user's Ramble: the Durable Object on the Worker, the in-process host in Bun. */
 export type RambleRoute = (request: Request, actor: Actor) => Promise<Response>;
 
 /** An in-process host over one database, for Bun and for the Durable Object itself. */

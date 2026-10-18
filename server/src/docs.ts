@@ -10,7 +10,6 @@ import { LABEL_COLORS } from '../../shared/label-colors';
 type Operation = { summary?: string; description?: string };
 const paths = agentOpenApi.paths as Record<string, Record<string, Operation>>;
 
-/** Every route the agent may call, as `METHOD /path`, in the generated document's order. */
 export const agentRoutes = Object.entries(paths).flatMap(([path, methods]) =>
 	Object.entries(methods).map(([method, operation]) => ({ method: method.toUpperCase(), path, ...operation })),
 );

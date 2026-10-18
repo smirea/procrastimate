@@ -126,7 +126,6 @@ export async function deleteLink(db: Db, space: Space, access: Access, id: strin
 	await deleteShare(db, space.owner, id);
 }
 
-/** What a public link shows: the target as `scopeOf` sees it, with the owner's name from Better Auth. */
 export async function sharedView(app: App, ownerId: string, id: string): Promise<SharedView> {
 	const space = await loadSpace(app.db, ownerId);
 	const share = space.shares.find(s => s.id === id && s.grantee === null);
@@ -137,7 +136,6 @@ export async function sharedView(app: App, ownerId: string, id: string): Promise
 	return { target: { kind: share.targetKind, id: share.targetId }, owner, tasks, projects, sections, labels };
 }
 
-/** Everyone the space has met. */
 export async function peopleOf(db: Db, owner: string): Promise<Person[]> {
 	const rows = await db.select().from(people).where(eq(people.userId, owner));
 	return rows.map(({ id, name, kind, ownerId }) => ({ id, name, kind, ownerId }));

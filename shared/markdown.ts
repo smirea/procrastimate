@@ -15,7 +15,6 @@ export const markdownDocumentSchema = z
 	.meta({ id: 'MarkdownDocument' });
 export type MarkdownDocument = z.infer<typeof markdownDocumentSchema>;
 
-/** A project view's copy: its loose tasks, then each section under its name. */
 export function projectDocument(project: Project, groups: readonly ProjectGroup[]): MarkdownDocument {
 	return {
 		title: project.name,

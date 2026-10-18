@@ -247,7 +247,7 @@ function maskGuarded(input: string, spoken: boolean): string {
 
 type Context = { now: Date; today: DateKey; time: TimeOfDay; spoken: boolean };
 
-/** A due phrase. A null date means only a time was typed. */
+/** A null date means only a time was typed. */
 type DuePhrase = { date: DateKey | null; time: TimeOfDay | null };
 
 /** A weekday repeat such as `every mon` anchors the first occurrence to that weekday. */
@@ -480,7 +480,6 @@ const RECURRENCE_ADVERBS: Record<string, RecurrenceUnit> = {
 	annually: 'year',
 };
 
-/** A repeat as typed, before the recurrence rule checks its interval. */
 function readRecurrence(groups: Record<string, string | undefined>, ctx: Context): RecurrencePhrase | null {
 	const {
 		months,

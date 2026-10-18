@@ -5,11 +5,6 @@ import type { PushMessage } from '../../shared/push';
 import { deliverDue } from './push';
 import { json, signUp, taskRow, testApp, upload, type Session, type TestApp } from './test-app';
 
-/**
- * Push through the routes and the cron: a subscription, tasks that notify, `replan` after every upload, and
- * `deliverDue` sending, retrying, and dropping gone subscriptions.
- */
-
 const NOW = Date.UTC(2026, 9, 14, 18, 0);
 beforeEach(() => setSystemTime(NOW));
 afterEach(() => setSystemTime());

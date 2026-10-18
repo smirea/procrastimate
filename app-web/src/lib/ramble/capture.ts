@@ -8,7 +8,6 @@ import { joinTranscript } from './transcript.ts';
 export type CaptureStop = 'stopped' | 'denied' | 'unsupported' | 'error' | 'unavailable' | 'limit';
 
 export type RambleListen = {
-	/** `typed` leaves the transcript editable and starts no recognizer. */
 	typed: boolean;
 	stop: () => void;
 };
@@ -46,10 +45,6 @@ class RamblePCM extends AudioWorkletProcessor {
 registerProcessor('ramble-pcm', RamblePCM);
 `;
 
-/**
- * Starts the capture `voiceCapture` picked. Native speech uses the browser recognizer. ElevenLabs streams PCM to
- * the ramble socket. Offline never opens that socket. A browser with no recognizer leaves the transcript editable.
- */
 export function listenRamble(options: {
 	choice: DictationChoice;
 	online: boolean;

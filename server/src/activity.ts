@@ -39,7 +39,6 @@ type Draft = {
 	at: number;
 	actor: string;
 	action: ActivityAction;
-	/** For an edit, each changed field's value before the run and after it. */
 	before: Fields;
 	after: Fields;
 	/** The whole task after the run, for fields a summary reads but the run left alone. */
@@ -70,7 +69,6 @@ function changedFields(row: Fields, prev: Fields): string[] {
 	return Object.keys(row).filter(name => !SILENT.has(name) && !sameValue(prev[name], row[name]));
 }
 
-/** The task's own rows and the first appearance of each comment on it, oldest first. */
 async function rowsOn(db: Db, owner: string, taskId: string): Promise<LogRow[]> {
 	return db
 		.select()

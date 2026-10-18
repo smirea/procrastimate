@@ -19,7 +19,7 @@ export type PushState =
 	| { kind: 'on'; subscription: PushSubscriptionInfo }
 	| { kind: 'error'; message: string };
 
-/** The one settings line. `needs-permission` is the only one that does anything when tapped. */
+/** `needs-permission` is the only one that does anything when tapped. */
 export type NotificationLine = 'on' | 'off' | 'needs-permission';
 
 const pushSupported = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
@@ -29,10 +29,8 @@ class Push {
 
 	#key: Uint8Array<ArrayBuffer> | null = null;
 	#asked = false;
-	/** The subscription the server has for this device's token, or null until it confirms one. */
 	#registered: string | null = null;
 
-	/** `On` when subscribed, `Notifications need permission` when blocked, otherwise `Off`. */
 	get line(): NotificationLine {
 		if (this.state.kind === 'on') return 'on';
 		if (this.state.kind === 'denied') return 'needs-permission';

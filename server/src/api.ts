@@ -12,7 +12,6 @@ import { POWERSYNC_PATH, powersyncProxy } from './sync';
 
 const rpc = new OpenAPIHandler(router, { interceptors: [onError(reportRpcError)] });
 
-/** The transcription socket is a human's, on their own space. */
 async function rambleRoute(request: Request, app: App): Promise<Response> {
 	const actor = await readActor(request, app);
 	if (!actor || actor.kind !== 'human') return Response.json({ ok: false, error: 'Not signed in' }, { status: 401 });

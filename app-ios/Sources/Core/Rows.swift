@@ -139,7 +139,6 @@ extension JSONValue {
         return json
     }
 
-    /// The value as a Codable type, through its JSON.
     public func decoded<T: Decodable>(as _: T.Type = T.self) throws -> T {
         try JSONDecoder().decode(T.self, from: JSONEncoder().encode(self))
     }

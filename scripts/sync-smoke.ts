@@ -1,10 +1,6 @@
 /**
  * Proves the sync loop against a running server: `bun scripts/sync-smoke.ts [--api http://127.0.0.1:6281]
- * [--database postgres://…]`. Signs up a user, gets a PowerSync token, opens the sync stream through
- * `/api/powersync`, uploads a task through `/api/upload` as PowerSync's queue would, and waits for the row to stream
- * back, then the same for a patch and a delete. A write into another user's space must come back in `rejected`.
- * With the database reachable it also forges an `access` row and proves the `shared` stream opens no row outside the
- * access owner's space. Exits non-zero on the first failure. The API and database default to the worktree's
+ * [--database postgres://…]`. Exits non-zero on the first failure. The API and database default to the worktree's
  * `.env.override`.
  */
 import { eq, getTableColumns } from 'drizzle-orm';
@@ -71,7 +67,6 @@ function openStream(response: Response) {
 	let buffer = '';
 	let pending: ReturnType<typeof reader.read> | null = null;
 	return {
-		/** Whether any line so far matches, without reading more. */
 		seen: (matches: (line: StreamLine) => boolean) => history.some(matches),
 		async until(matches: (line: StreamLine) => boolean, timeoutMs: number): Promise<boolean> {
 			const deadline = Date.now() + timeoutMs;
@@ -105,7 +100,6 @@ const rowLine =
 				(!predicate || predicate(JSON.parse(entry.data ?? '{}') as Record<string, unknown>)),
 		);
 
-/** Waits for the stream to report `table`/`id` with `op`, like a device applying the next checkpoint. */
 function waitFor(
 	stream: SyncStream,
 	table: string,
@@ -242,7 +236,6 @@ const denied = await fetch(`${api}/api/upload`, {
 });
 check(denied.status === 401, `upload without a session is 401 (${denied.status})`);
 
-// Sharing: the owner shares one task with `other`, who syncs it through the `shared` stream and may edit it.
 const uploadAs = (who: typeof owner, writes: unknown[]) =>
 	fetch(`${api}/api/upload`, { method: 'POST', headers: who.headers, body: JSON.stringify({ writes }) });
 const sharedId = crypto.randomUUID();

@@ -67,7 +67,6 @@ export function withSpaceLocked<T>(db: Db, owner: string, use: (tx: Db, space: S
 	});
 }
 
-/** The owner's shares to one grantee, which `scopeOf` and `admit` read. */
 export const grantsFor = (space: Space, grantee: string): ShareRow[] =>
 	space.shares.filter(share => share.grantee === grantee);
 

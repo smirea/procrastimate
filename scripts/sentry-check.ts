@@ -20,7 +20,6 @@ const PROJECTS = {
 } as const;
 type Project = keyof typeof PROJECTS;
 
-/** Each smoke trigger, by the name in its error message, and the project it reports to. */
 const SMOKES = {
 	web: { title: 'Sentry smoke test: web', project: 'procrastimate-web' },
 	worker: { title: 'Sentry smoke test: Worker', project: 'procrastimate-worker' },
@@ -89,7 +88,6 @@ async function latestEvent(smoke: Smoke): Promise<Event | null> {
 	return issue ? get<Event>(`/issues/${issue.id}/events/latest/`, { environment: args.environment }) : null;
 }
 
-/** What else reported into the trace: other projects' errors and transactions. */
 async function traceNeighbors(traceId: string): Promise<string[]> {
 	const found = new Set<string>();
 	const errors = await get<{ data: { project: string; title: string }[] }>('/events/', {
@@ -114,7 +112,6 @@ async function traceNeighbors(traceId: string): Promise<string[]> {
 	return [...found];
 }
 
-/** Original source: a path into `src/`, `server/src/`, or a Swift file, with a line. Bundles and addresses fail. */
 function readable(frame: Frame): boolean {
 	const name = frame.filename ?? frame.absPath ?? '';
 	if (!frame.lineNo || /_app\/immutable|\.js$|^0x|^native$|^<unknown>/.test(name)) return false;
@@ -124,8 +121,8 @@ function readable(frame: Frame): boolean {
 const repoFiles = (await Bun.$`git ls-files`.cwd(new URL('..', import.meta.url).pathname).text()).split('\n');
 
 /**
- * The repository file a frame names, by the longest path suffix, and the text on its line. A line that does not hold
- * the smoke's `throw` means the frame was not mapped back to source, as with the Vite dev server's transformed modules.
+ * A line that does not hold the smoke's `throw` means the frame was not mapped back to source, as with the Vite dev
+ * server's transformed modules.
  */
 async function sourceLine(frame: Frame): Promise<string | null> {
 	const parts = (frame.filename ?? frame.absPath ?? '')

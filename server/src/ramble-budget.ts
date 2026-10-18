@@ -17,7 +17,6 @@ export type RambleBudget = {
 	release(day: string, seconds: number): Promise<void>;
 };
 
-/** In-process budget for tests. */
 export function memoryRambleBudget(limit: number): RambleBudget {
 	const used = new Map<string, number>();
 	return {

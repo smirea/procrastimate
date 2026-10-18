@@ -4,11 +4,6 @@ import { access, tasks } from '../../shared/db/schema';
 import type { Person, ShareView, SpaceView } from '../../shared/sharing';
 import { json, signUp, taskRow, testApp, tokenHeaders, upload, type Session, type TestApp } from './test-app';
 
-/**
- * Sharing through the routes: what a guest may see and write, how the `access` table follows the shares, public
- * links, AI accounts and their tokens. Every write goes through `POST /api/upload` or the agent API, as clients do.
- */
-
 let app: TestApp;
 let owner: Session;
 let guest: Session;

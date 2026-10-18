@@ -192,7 +192,6 @@
 		}
 	}
 
-	/* iOS-style scroll edge: content blurs out under the status bar instead of colliding with it. */
 	.scroll-edge {
 		margin: 0 -0.75rem;
 		padding: max(0.75rem, env(safe-area-inset-top)) 0.75rem 0.75rem;

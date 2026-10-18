@@ -1,16 +1,10 @@
 import type { Browser, BrowserContext, Page } from '@playwright/test';
 import { App, deviceContext, expect, goOffline, goOnline, NOW, signInAccount, test } from './fixtures.ts';
 
-/**
- * Task images: attach by picker, paste, or drop; thumbnails in details, a count on the row, the full-screen viewer,
- * delete with undo, and the bytes reaching another device, also when the image was added offline.
- */
-
 type Device = { app: App; page: Page; context: BrowserContext };
 
 const unique = (name: string) => `${name} ${crypto.randomUUID().slice(0, 8)}`;
 
-/** A PNG drawn in the page, `width` by `height`, as a file Playwright can pick. */
 async function png(page: Page, width: number, height: number) {
 	const base64 = await page.evaluate(
 		([w, h]) => {

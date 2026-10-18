@@ -28,7 +28,6 @@ export function bunUpstream(apiKey: string): ConnectUpstream {
 		});
 }
 
-/** The Bun dev server's Ramble upstream: ElevenLabs with the shared budget, the cassette, or off. */
 function bunRambleConfig(env: Env, db: Db): RambleConfig {
 	const settings = config(env).ramble;
 	switch (settings?.kind) {

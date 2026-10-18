@@ -1,6 +1,5 @@
 import { expect, test, unique } from './fixtures.ts';
 
-/** The browser talks only to the page's origin: the app, its fonts, `/api`, and PowerSync's stream through the proxy. */
 test('single-origin: no request leaves the page’s origin, sync included', async ({ context, page, app }) => {
 	const origins = new Set<string>();
 	const paths = new Set<string>();

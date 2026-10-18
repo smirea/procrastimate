@@ -7,13 +7,11 @@ export type Socket = { send(message: string): void; close(code: number, reason: 
 
 export type StreamEvents = { message(data: string | Uint8Array): void; close(): void };
 
-/** Answers an upgrade with a socket driven by the handlers `start` returns. */
 export type StreamHost = (request: Request, protocol: string, start: (socket: Socket) => StreamEvents) => Response;
 
 /** A Workers runtime socket, which must be accepted before it carries messages. */
 export type WorkerSocket = WebSocket & { accept(): void };
 
-/** Globals of the Workers runtime, absent from Bun. */
 type WorkersRuntime = { WebSocketPair: new () => Record<0 | 1, WorkerSocket> };
 
 /**

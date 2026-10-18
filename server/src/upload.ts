@@ -76,7 +76,6 @@ function coerce(column: Column, value: unknown): unknown {
 	return value;
 }
 
-/** Wire columns to domain fields, dropping the keys (`id`, `user_id`) and anything the table lacks. */
 function fieldsOf(kind: Kind, values: Record<string, unknown>): { owner: string | null; fields: Fields } {
 	const fields: Fields = {};
 	let owner: string | null = null;
@@ -99,7 +98,6 @@ const hasNul = (value: unknown): boolean =>
 		? value.includes('\u0000')
 		: typeof value === 'object' && value !== null && Object.values(value).some(hasNul);
 
-/** One wire write parsed, or why it was refused. */
 export function parseWrite(raw: unknown): { write: OwnedWrite } | { rejected: Rejected } {
 	if (!isRecord(raw) || typeof raw.table !== 'string' || typeof raw.id !== 'string') {
 		return { rejected: { table: String(isRecord(raw) ? raw.table : ''), id: '', reason: 'Malformed write' } };
@@ -127,7 +125,6 @@ export function parseWrite(raw: unknown): { write: OwnedWrite } | { rejected: Re
 	return { write: { op, kind, id, opId, owner, values } };
 }
 
-/** The whole route after authentication: parse every write alone, then apply what parsed. */
 export async function upload(
 	db: Db,
 	actor: Actor,

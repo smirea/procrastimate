@@ -7,7 +7,6 @@ import { TABLE_OF } from '../../shared/rows';
 import { todoistBackupFiles } from '../../shared/fixtures/todoist-backup.mts';
 import { SENTRY_TUNNEL_PATH } from '../../shared/sentry';
 
-/** Wednesday, October 14 2026, 10:00 UTC. The suite runs in the UTC time zone. */
 export const NOW = new Date('2026-10-14T10:00:00Z');
 
 export const E2E_PASSWORD = 'e2e-password-1';
@@ -50,7 +49,6 @@ export async function deviceContext(browser: Browser, { timezoneId }: { timezone
 
 const SYNC_ROUTES = /\/api\/(powersync\/|upload|sync\/token)/;
 
-/** Cuts the context's network and refuses the sync routes, so PowerSync's stream drops and its uploads fail. */
 export async function goOffline(context: BrowserContext) {
 	await context.route(SYNC_ROUTES, route => route.abort('internetdisconnected'));
 	await context.setOffline(true);
@@ -108,7 +106,6 @@ export function watchPageErrors(context: BrowserContext) {
 
 /** Signed out. Every spec imports `test` from here, never from `@playwright/test`, so none can report to Sentry. */
 export const quietTest = base.extend<{ sentryOff: (context: BrowserContext) => BrowserContext }>({
-	// Every context, the default one and each spec's own `browser.newContext()`, so a test can never report to Sentry.
 	sentryOff: [
 		async ({ browser }, use) => {
 			const reported: string[] = [];
@@ -130,7 +127,6 @@ export const quietTest = base.extend<{ sentryOff: (context: BrowserContext) => B
 	],
 });
 
-/** Signed in, with uncaught page errors failing the test. */
 export const test = quietTest.extend<{ app: App }>({
 	context: async ({ context, sentryOff }, use) => {
 		sentryOff(context);
@@ -162,7 +158,6 @@ export class App {
 	list = (name: string) => this.page.getByRole('list', { name });
 	nav = (name: string) => this.page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name });
 
-	/** A phone has no keyboard shortcut, so it uses the floating button. */
 	async openQuickAdd() {
 		if (this.page.viewportSize()!.width < 768) {
 			await this.page.getByRole('button', { name: 'Quick add' }).click();
@@ -173,7 +168,6 @@ export class App {
 		await expect(this.taskInput()).toBeFocused();
 	}
 
-	/** Saving closes quick add, so each task opens it again. */
 	async add(...titles: string[]) {
 		for (const title of titles) {
 			await this.openQuickAdd();
@@ -183,14 +177,12 @@ export class App {
 		}
 	}
 
-	/** Opens the phone's drawer, unless it is open already. */
 	async openNavigation() {
 		if (await this.page.getByRole('navigation', { name: 'Main' }).isVisible()) return;
 		await this.page.getByRole('button', { name: 'Open navigation' }).tap();
 		await expect(this.page.getByRole('navigation', { name: 'Main' })).toBeInViewport();
 	}
 
-	/** Like `add`, but first creates each unknown #project and @label from its chip, as a person would. */
 	async addCreating(title: string) {
 		await this.openQuickAdd();
 		await this.taskInput().fill(title);
@@ -211,7 +203,6 @@ export class App {
 		await expect(this.details()).toBeHidden();
 	}
 
-	/** A phone has no keyboard shortcut, so it opens search from the drawer. */
 	async openSearch() {
 		if (this.page.viewportSize()!.width < 768) {
 			await this.openNavigation();
@@ -267,15 +258,13 @@ export class App {
 		return id;
 	}
 
-	/** Writes that have not reached the server yet, the local queue included. */
 	pending() {
 		return this.page.evaluate(() => window.procrastimate.pending());
 	}
 
 	/**
-	 * Patches rows as another device of the same account would, through the upload route, once this page's own writes
-	 * are on the server, and waits for PowerSync to stream them back here. Use it for fields the web cannot set, such
-	 * as an iOS place.
+	 * Patches rows as another device of the same account would. Use it for fields the web cannot set, such as an iOS
+	 * place.
 	 */
 	async pushFromOtherDevice(...patches: { kind: Kind; id: string; fields: Record<string, unknown> }[]) {
 		await expect.poll(() => this.pending(), { timeout: 15_000 }).toBe(0);

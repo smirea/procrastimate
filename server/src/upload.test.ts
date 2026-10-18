@@ -13,11 +13,6 @@ import {
 	type TestApp,
 } from './test-app';
 
-/**
- * `POST /api/upload` through the route, as a client's PowerSync queue sends it: snake_case columns and JSON as text.
- * Every case asserts what another device would then see in Postgres.
- */
-
 let app: TestApp;
 let owner: Session;
 beforeAll(async () => {

@@ -58,7 +58,6 @@ export function ancestorsOf(tasks: readonly Task[], id: string): Task[] {
 	return out;
 }
 
-/** Counts direct children, or null for a task without any. */
 export function progressOf(children: readonly Task[]): Progress | null {
 	if (!children.length) return null;
 	return { done: children.filter(c => c.completedAt !== null).length, total: children.length };

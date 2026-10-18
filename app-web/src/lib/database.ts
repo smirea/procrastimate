@@ -6,16 +6,9 @@ import { TABLE_OF, type RowWrite } from 'shared/rows.ts';
 import type { Fields } from 'shared/snapshot.ts';
 import { AppSchema, localTables } from './generated/tables.ts';
 
-/**
- * This browser profile's SQLite database, which PowerSync keeps in sync with the server. It holds the signed-in
- * user's rows and the rows other spaces share with them, each carrying its owner in `user_id`. The store reads it
- * whole into memory and writes the rows its commands change; PowerSync queues those writes for upload.
- */
-
 export const powerSync = new PowerSyncDatabase({ schema: AppSchema, database: { dbFilename: 'procrastimate.db' } });
 const db = wrapPowerSyncWithDrizzle(powerSync, { schema: localTables });
 
-/** The tables a reload reads, which are the ones whose changes trigger one. */
 export const WATCHED_TABLES = [...KINDS.map(kind => TABLE_OF[kind]), 'access'];
 
 export type Row = { userId: string; id: string } & Fields;
@@ -35,8 +28,8 @@ export function readRows(): Promise<Rows> {
 }
 
 /**
- * Applies one command's row writes in one transaction. PowerSync's tables are views that refuse an upsert, so a put
- * of a row that is already here, as after a reload raced the command, updates it instead.
+ * PowerSync's tables are views that refuse an upsert, so a put of a row that is already here, as after a reload raced
+ * the command, updates it instead.
  */
 export function writeRows(owner: string, writes: readonly RowWrite[]): Promise<void> {
 	return db.transaction(async tx => {

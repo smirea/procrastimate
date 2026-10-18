@@ -1,13 +1,7 @@
 import type { ImageSize } from 'shared/images.ts';
 
-/**
- * Image bytes on this device, in IndexedDB, outside the synced database, which never holds them. `bytes` caches
- * every image this device made or fetched; `uploads` lists the ones the server does not have yet, with the space
- * they belong to (null for the user's own). Bytes are stored as an `ArrayBuffer` with their type, because WebKit
- * refuses a `Blob` in IndexedDB in a private window.
- */
-
 export type Upload = { key: string; space: string | null; id: string; size: ImageSize };
+/** An `ArrayBuffer` with its type, because WebKit refuses a `Blob` in IndexedDB in a private window. */
 type Stored = { type: string; bytes: ArrayBuffer };
 
 const stored = async (blob: Blob): Promise<Stored> => ({ type: blob.type, bytes: await blob.arrayBuffer() });
@@ -90,7 +84,6 @@ export async function uploaded(key: string): Promise<void> {
 	await done(transaction);
 }
 
-/** For a different signed-in user: nothing of the previous one's stays or uploads. */
 export async function clearLocalImages(): Promise<void> {
 	const transaction = (await database()).transaction([BYTES, UPLOADS], 'readwrite');
 	transaction.objectStore(BYTES).clear();

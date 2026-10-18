@@ -144,7 +144,6 @@ export const workerContract = {
 			.output(peopleSchema),
 	},
 	me: signedIn.meta(openapi({ method: 'GET', path: '/api/me' })).output(personSchema),
-	/** The signed-in human's AI accounts. */
 	ai: {
 		list: allowed.meta(openapi({ method: 'GET', path: '/api/ai' })).output(aiAccountsSchema),
 		/** Also shares the owner's whole space with it, to edit. */
@@ -177,7 +176,7 @@ export const workerContract = {
 	debug: {
 		error: signedIn.meta(openapi({ method: 'POST', path: '/api/debug/error' })).output(okSchema),
 	},
-	/** Docs for AI agents, generated from `agentContract`. The entry point needs no token; the reference does. */
+	/** Docs for AI agents, generated from `agentContract`. */
 	docs: {
 		start: oc
 			.meta(openapi({ method: 'GET', path: '/api/docs', summary: 'What ProcrastiMate is and how an agent gets in' }))
@@ -510,11 +509,10 @@ export const agentContract = {
 	},
 };
 
-/** The rest of the contract: the space routes every client calls on the Worker. */
 const spaceContract = {
 	...agentContract,
 	sync: {
-		/** A short-lived token for PowerSync, and where the client reaches it. Human users only. */
+		/** Short-lived. Human users only. */
 		token: signedIn.meta(openapi({ method: 'GET', path: '/api/sync/token' })).output(syncTokenSchema),
 		/**
 		 * The client's queued PowerSync writes. Each is checked and applied on its own: one the server refuses is listed in
@@ -575,7 +573,6 @@ const spaceContract = {
 	},
 };
 
-/** Every endpoint, one contract. The server implements all of it on the Worker. */
 export const contract = {
 	...workerContract,
 	...spaceContract,
@@ -583,5 +580,4 @@ export const contract = {
 	shares: { ...workerContract.shares, ...spaceContract.shares },
 };
 
-/** OpenAPI carries JSON, so the client's types are the contract's jsonified. */
 export type ApiClient = JsonifiedClient<RouterContractClient<typeof contract>>;

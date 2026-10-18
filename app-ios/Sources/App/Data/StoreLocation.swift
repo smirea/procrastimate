@@ -6,7 +6,6 @@ enum StoreLocation {
         URL.applicationSupportDirectory.appending(path: "procrastimate", directoryHint: .isDirectory)
     }
 
-    /// Deletes all local data and preferences, so the app starts like a fresh install.
     static func reset() {
         do {
             try FileManager.default.removeItem(at: directory)

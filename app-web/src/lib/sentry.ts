@@ -2,8 +2,8 @@ import * as Sentry from '@sentry/sveltekit';
 import { SENTRY_TUNNEL_PATH } from 'shared/sentry.ts';
 
 /**
- * The browser's one Sentry module. `vite.config.ts` bakes the target into the build, null wherever no
- * `SENTRY_ENVIRONMENT` is set, and then nothing is initialized and every call here does nothing.
+ * `vite.config.ts` bakes the target into the build, null wherever no `SENTRY_ENVIRONMENT` is set, and then nothing is
+ * initialized and every call here does nothing.
  */
 
 export function initSentry() {

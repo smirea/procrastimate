@@ -235,7 +235,6 @@ enum IntentEffects {
         return IntentRules.indexedTasks(snapshot.tasks).map { entity($0, snapshot, clock) }
     }
 
-    /// The requested tasks that are still open, and the ids Spotlight should drop.
     static func spotlightEntities(ids: [String]) -> (keep: [TaskEntity], drop: [String]) {
         let (snapshot, clock) = snapshot()
         let open = Dictionary(uniqueKeysWithValues: IntentRules.indexedTasks(snapshot.tasks).map { ($0.id, $0) })

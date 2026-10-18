@@ -6,7 +6,6 @@ import type { Client } from 'shared/values.ts';
 import routes from './generated/contract.json';
 import { installId } from './device.ts';
 
-/** The browser and its OS, such as `Chrome` and `macOS`, or an empty OS when the user agent names none. */
 function browser(): { name: string; os: string } {
 	const ua = navigator.userAgent;
 	const name = /Edg\//.test(ua)
@@ -34,7 +33,6 @@ function browser(): { name: string; os: string } {
 	return { name, os };
 }
 
-/** A name stored with the device, such as `Chrome on macOS`. It is never shown. */
 function deviceName(): string {
 	const { name, os } = browser();
 	return os ? `${name} on ${os}` : name;
@@ -53,8 +51,8 @@ function client(): Client {
 }
 
 /**
- * The app on every request, and the install id and name on the push routes, whose subscription belongs to this
- * browser. The session cookie is the credential; these are not.
+ * Push routes also carry the install id, since their subscription belongs to this browser. The session cookie is the
+ * credential; these are not.
  */
 export function deviceHeaders(path: readonly string[] = []): Record<string, string> {
 	const app = { [CLIENT_HEADER]: JSON.stringify(client()) };
@@ -63,8 +61,8 @@ export function deviceHeaders(path: readonly string[] = []): Record<string, stri
 }
 
 /**
- * The typed client for every endpoint in the contract. It ships the contract's routes without their schemas, which
- * `scripts/generate` writes from the same contract, so the bundle carries no validators it does not use.
+ * Ships the contract's routes without their schemas, which `scripts/generate` writes from the same contract, so the
+ * bundle carries no validators it does not use.
  */
 export const api: ApiClient = createORPCClient(
 	new OpenAPILink(routes as unknown as typeof contract, {

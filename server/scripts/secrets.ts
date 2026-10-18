@@ -33,9 +33,7 @@ export const WORKER_SECRETS = [
 	'APPLE_PRIVATE_KEY',
 ] as const;
 const CLOUDFLARE_SECRETS = ['CLOUDFLARE_API_TOKEN', 'CLOUDFLARE_ACCOUNT_ID'] as const;
-/** The App Store Connect API key the `testflight` workflow archives and uploads with. The `.p8` is stored base64 on one line. */
 const ASC_SECRETS = ['ASC_KEY_ID', 'ASC_ISSUER_ID', 'ASC_PRIVATE_KEY_B64'] as const;
-/** The deploy uploads source maps and creates releases in Sentry org `self-uo7` with it. */
 const SENTRY_SECRETS = ['SENTRY_AUTH_TOKEN'] as const;
 export const GITHUB_SECRETS = [...CLOUDFLARE_SECRETS, ...ASC_SECRETS, ...SENTRY_SECRETS] as const;
 const REPO = 'smirea/procrastimate';
@@ -48,7 +46,7 @@ const rootPath = new URL('../../', import.meta.url).pathname;
 const devVarsPath = join(rootPath, '.dev.vars');
 const iosConfigPath = join(rootPath, 'app-ios/Config/Env.xcconfig');
 
-/** Release and TestFlight call this. `Config/Base.xcconfig` pins the same URL. */
+/** `Config/Base.xcconfig` pins the same URL. */
 export const PROD_API_URL = 'https://procrastimate.stf.lol';
 
 /** `optional` keys, like `SENTRY_ENVIRONMENT`, may stay empty: CI's `--generate-only` has no dev or prod values. */
@@ -79,7 +77,7 @@ export function googleUrlScheme(clientId: string | undefined): string {
 	return match ? `com.googleusercontent.apps.${match[1]}` : 'com.stefan.procrastimate';
 }
 
-/** Debug takes `dev`, Release takes `prod`. A missing prod `API_URL` uses the pinned production URL. */
+/** A missing prod `API_URL` uses the pinned production URL. */
 export function iosXcconfig(schema: string, dev: Values, prod: Values): string {
 	const lines = ['// Generated from env-manager dev and prod. Do not edit.'];
 	for (const key of appIosKeys(schema)) {
@@ -97,7 +95,7 @@ export function iosXcconfig(schema: string, dev: Values, prod: Values): string {
 	return `${lines.join('\n')}\n`;
 }
 
-/** Parses dotenv text. Empty values count as unset and are left out. */
+/** Empty values count as unset and are left out. */
 export function parseDotenv(text: string): Values {
 	const values: Values = {};
 	for (const raw of text.split('\n')) {
@@ -118,7 +116,7 @@ export function parseDotenv(text: string): Values {
 	return values;
 }
 
-/** The Worker secrets that have a value. Unset ones are skipped, so a push never deletes a Worker secret. */
+/** Skips unset secrets, so a push never deletes a Worker secret. */
 export function workerSecrets(values: Values): Partial<Record<WorkerSecret, string>> {
 	const selected: Partial<Record<WorkerSecret, string>> = {};
 	for (const name of WORKER_SECRETS) if (values[name]) selected[name] = values[name];
@@ -261,7 +259,6 @@ const workerSecretNames = (env: Values) =>
 		parseJsonArray(run(['bunx', 'wrangler', 'secret', 'list', '--format', 'json'], { env })).map(secret => secret.name),
 	);
 
-/** The required secrets that `names` lacks. */
 export function missingRequired(names: Set<string>): string[] {
 	return REQUIRED_WORKER_SECRETS.filter(name => !names.has(name));
 }

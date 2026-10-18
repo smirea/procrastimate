@@ -3,8 +3,6 @@ import type { ActivityEntry, ShareView } from '../../shared/sharing';
 import { COALESCE_WINDOW } from './activity';
 import { json, signUp, taskRow, testApp, upload, type Session, type TestApp } from './test-app';
 
-/** `GET /api/activity` folds the log into entries, through the same uploads and commands that write the log. */
-
 const START = Date.UTC(2026, 9, 14, 18, 0);
 beforeEach(() => setSystemTime(START));
 afterEach(() => setSystemTime());

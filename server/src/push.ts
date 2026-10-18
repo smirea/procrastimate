@@ -66,7 +66,6 @@ async function send(subscription: PushSubscriptionInfo, message: PushMessage, va
 	}
 }
 
-/** Sends with the Worker's VAPID keys. */
 export function pushSender(env: Env): SendPush {
 	const { vapid } = config(env);
 	return (subscription, message) => send(subscription, message, vapid);
@@ -79,7 +78,6 @@ const TEST_MESSAGE = {
 	taskId: null,
 };
 
-/** Sends the settings check push and returns the push service's status, or null when it never answered. */
 export function sendTestPush(subscription: PushSubscriptionInfo, vapid: Vapid): Promise<number | null> {
 	if (!isAllowedEndpoint(subscription.endpoint))
 		throw new ORPCError('BAD_REQUEST', { message: 'Invalid subscription' });

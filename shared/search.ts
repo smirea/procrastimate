@@ -112,7 +112,7 @@ function mergeRanges(ranges: Range[]): Range[] {
 	return out;
 }
 
-/** Splits a query into folded terms. Every term must match somewhere for a result to count. */
+/** Every term must match somewhere for a result to count. */
 export function searchTerms(query: string): string[] {
 	return fold(query.trim()).text.split(/\s+/).filter(Boolean);
 }

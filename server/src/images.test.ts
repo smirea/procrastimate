@@ -5,8 +5,6 @@ import type { Person, ShareView } from '../../shared/sharing';
 import { applySweep, IMAGE_GRACE_MS, sweepPlan } from './images';
 import { json, signUp, taskRow, testApp, tokenHeaders, upload, type Session, type TestApp } from './test-app';
 
-/** Image bytes through `PUT` and `GET /api/images`, their access for guests, and the orphan sweep. */
-
 let app: TestApp;
 let owner: Session;
 beforeAll(async () => {

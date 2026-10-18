@@ -14,7 +14,6 @@ import type { Space } from './space';
 
 const rowId = (grantee: string, kind: AccessRow['kind'], entityId: string) => `${grantee}:${kind}:${entityId}`;
 
-/** Every row one grantee should have, from the owner's snapshot and the grants to them. */
 export function accessRows(owner: string, grantee: string, snapshot: Snapshot, grants: readonly Grant[]): AccessRow[] {
 	const scope = scopeOf(snapshot, grants);
 	const manager = managesSpace(grants);
@@ -28,7 +27,7 @@ export function accessRows(owner: string, grantee: string, snapshot: Snapshot, g
 	return rows;
 }
 
-/** The human grantees of a space. Link shares have no grantee and AI accounts read through the API. */
+/** Link shares have no grantee, and AI accounts read through the API. */
 async function humanGrantees(db: Db, space: Space): Promise<string[]> {
 	const ids = [...new Set(space.shares.map(share => share.grantee).filter((id): id is string => id !== null))];
 	if (!ids.length) return [];
@@ -39,10 +38,7 @@ async function humanGrantees(db: Db, space: Space): Promise<string[]> {
 	return rows.map(row => row.id);
 }
 
-/**
- * Brings the owner's `access` rows to what the snapshot and shares say: inserts the new, updates a changed role,
- * deletes the rest. A space nobody human is shared with has no rows and costs one query.
- */
+/** A space nobody human is shared with has no rows and costs one query. */
 export async function syncAccess(db: Db, space: Space): Promise<void> {
 	const grantees = await humanGrantees(db, space);
 	const wanted = new Map<string, AccessRow>();

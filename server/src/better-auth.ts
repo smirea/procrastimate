@@ -46,7 +46,6 @@ function trustedOrigins(request?: Request): string[] {
 
 type Where = { field: string; value: string };
 
-/** A `user` row with the sharing fields. */
 type UserRow = { id: string; email: string; name: string; kind?: 'human' | 'ai' | null; ownerId?: string | null };
 
 export type Auth = {
@@ -65,7 +64,7 @@ export type Auth = {
 	}>;
 };
 
-/** What the sign-in screen may offer. A provider without credentials is hidden, so CI boots without them. */
+/** A provider without credentials is hidden, so CI boots without them. */
 export function authMethods({ google, apple }: Config): AuthMethods {
 	return {
 		email: true,
@@ -230,7 +229,6 @@ export async function userByEmail(app: App, email: string): Promise<Person | nul
 	return row ? asPerson(row) : null;
 }
 
-/** The AI accounts `ownerId` made, oldest first. */
 export async function aiAccounts(app: App, ownerId: string): Promise<Person[]> {
 	const rows = await (
 		await users(app)

@@ -2,18 +2,12 @@ import { z } from 'zod';
 import type { RowWrite } from 'shared/rows.ts';
 import { personSchema, type Person } from 'shared/sharing.ts';
 
-/**
- * What belongs to this browser rather than the account, each under its own `localStorage` key. None of it syncs.
- * The theme keeps its own key in `theme.svelte.ts`, and the session its cached user in `session.svelte.ts`.
- */
-
 /** Whose rows this browser's database holds. It outlives sign-out, so only a different account clears them. */
 const OWNER_KEY = 'procrastimate-owner';
 const INSTALL_KEY = 'procrastimate-install';
 const PEOPLE_KEY = 'procrastimate-people';
 const REMINDERS_KEY = 'procrastimate-reminders-checked-at';
 const UNWRITTEN_KEY = 'procrastimate-unwritten';
-/** The document that held everything before the local database. Nothing reads it any more. */
 const LEGACY_DOCUMENT_KEY = 'procrastimate';
 
 const peopleSchema = z.array(personSchema);
@@ -38,7 +32,7 @@ export function onOwnerChange(changed: () => void) {
 	});
 }
 
-/** This install's id, made on first use. Push subscriptions and Ramble name the device by it; it is not a secret. */
+/** Push subscriptions and Ramble name the device by it; it is not a secret. */
 export function installId(): string {
 	const known = localStorage.getItem(INSTALL_KEY);
 	if (known) return known;

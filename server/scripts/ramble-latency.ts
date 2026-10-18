@@ -65,7 +65,6 @@ async function readWav(path: string): Promise<Uint8Array<ArrayBuffer>> {
 	throw new Error(`${path} has no data chunk`);
 }
 
-/** Runs of 100 ms frames louder than a whisper, joined across pauses shorter than 400 ms. */
 function utterances(frames: Uint8Array[]): { first: number; last: number }[] {
 	const voiced = frames.map(frame => {
 		const samples = new Int16Array(frame.buffer, frame.byteOffset, frame.byteLength / 2);

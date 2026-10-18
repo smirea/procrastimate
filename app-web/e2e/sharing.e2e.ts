@@ -1,12 +1,6 @@
 import type { Browser, BrowserContext, Page } from '@playwright/test';
 import { App, deviceContext, E2E_PASSWORD, expect, goOffline, goOnline, NOW, test, unique } from './fixtures.ts';
 
-/**
- * Two people, each with their own account in their own browser context. The owner shares a project with the
- * guest's email, and the guest's device streams it in without a reload; a public link opens read only for a visitor
- * who never signed in.
- */
-
 type Person = { app: App; page: Page; context: BrowserContext; email: string; name: string };
 
 test.describe.configure({ mode: 'serial' });
@@ -28,13 +22,11 @@ async function person(browser: Browser, name: string): Promise<Person> {
 const sidebar = (page: Page) => page.getByRole('navigation', { name: 'Main' });
 const shareSheet = (page: Page) => page.getByRole('dialog', { name: 'Share' });
 
-/** The sidebar's "Shared with me", from the drawer on a phone. */
 async function sharedWithMe({ app, page }: Person) {
 	if (page.viewportSize()!.width < 768) await app.openNavigation();
 	return sidebar(page).getByRole('region', { name: 'Shared with me' });
 }
 
-/** Shares the open project with `guest`, and waits for the server to have the share. */
 async function shareWith(owner: Person, guest: Person, role: 'Can edit' | 'Can view' = 'Can edit') {
 	await owner.page.getByRole('button', { name: 'Share project' }).click();
 	const sheet = shareSheet(owner.page);

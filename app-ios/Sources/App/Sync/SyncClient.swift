@@ -150,7 +150,6 @@ final class SyncClient {
         await loadPeople()
     }
 
-    /// Back in the foreground: reconnects when the stream dropped while the app was away.
     func resume() {
         let status = database.powerSync.currentStatus
         guard !status.connected, !status.connecting else { return }
@@ -267,7 +266,6 @@ final class SyncClient {
     }
     #endif
 
-    /// Names for the owners of shared spaces and the people the user's space has met.
     private func loadPeople() async {
         guard SessionToken.read() != nil else { return }
         do {
@@ -279,7 +277,6 @@ final class SyncClient {
     }
 }
 
-/// What the app keeps on this device only, outside the synced database.
 enum DeviceDefaults {
     private static let peopleKey = "procrastimate-people"
     private static let remindersCheckedKey = "procrastimate-reminders-checked-at"

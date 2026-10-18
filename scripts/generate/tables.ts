@@ -4,9 +4,8 @@ import { COLUMN_VALUES } from '../../shared/db/json';
 import { SYNCED_TABLES } from '../../shared/db/schema';
 
 /**
- * The client side of every synced table, from the server's `pg-core` schema: the web's `sqlite-core` tables and
- * PowerSync schema, and the Swift row types with their GRDB conformances and PowerSync schema. PowerSync stores only
- * text, integer, and real, so JSON columns become JSON text and every client keeps the server's column names.
+ * PowerSync stores only text, integer, and real, so JSON columns become JSON text and every client keeps the
+ * server's column names.
  */
 
 type Column = { name: string; columnType: string; notNull: boolean; primary: boolean; enumValues?: readonly string[] };
@@ -71,7 +70,6 @@ export function webTablesModule(): string {
 	].join('\n');
 }
 
-/** A named Swift model type's name and its JSON Schema keys, for the table its `x-table` names. */
 export type SwiftModel = { name: string; properties: string[]; required: string[] };
 
 const POWERSYNC_TYPE: Record<Kind, string> = { text: 'text', integer: 'integer', real: 'real', json: 'text' };

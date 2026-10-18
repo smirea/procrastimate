@@ -64,7 +64,6 @@ export type Session = { person: Person; token: string; headers: Record<string, s
 
 const webClient = JSON.stringify({ kind: 'web', version: '1.0', device: 'test', os: 'test', timeZone: 'UTC' });
 
-/** Signs up a human through Better Auth and returns the bearer headers routes expect, with a web client and an install id. */
 export async function signUp(app: TestApp, name = 'Test', deviceId: string = crypto.randomUUID()): Promise<Session> {
 	const response = await app.fetch('/api/auth/sign-up/email', {
 		method: 'POST',
@@ -92,7 +91,6 @@ export async function signUp(app: TestApp, name = 'Test', deviceId: string = cry
 	};
 }
 
-/** Headers for a `pm.` API token, which routes treat as the token's AI account. */
 export const tokenHeaders = (token: string): Record<string, string> => ({
 	authorization: `Bearer ${token}`,
 	origin: ORIGIN,
@@ -141,7 +139,6 @@ export function taskRow(id: string, userId: string, title: string, extra: Record
 
 type Rejected = { table: string; id: string; reason: string }[];
 
-/** `POST /api/upload` as `session`, answering what was rejected. */
 export const upload = (app: TestApp, session: Session, writes: unknown[]) =>
 	json<{ rejected: Rejected }>(
 		app.fetch('/api/upload', { method: 'POST', headers: session.headers, body: JSON.stringify({ writes }) }),

@@ -27,7 +27,6 @@ export type Write = RowWrite & { opId?: string };
 export type OwnedWrite = Write & { owner: string | null };
 export type Rejected = { table: string; id: string; reason: string };
 export type WriteContext = { actor: Actor; client: Client; now: number };
-/** What was refused, and each touched space as it stands after the writes and repairs. */
 export type Applied = { rejected: Rejected[]; spaces: Map<string, Snapshot> };
 
 /** The tables whose rows are keyed by `(user_id, id)`; the rest by `id` alone. */
@@ -230,7 +229,6 @@ export async function rememberPerson(db: Db, owner: string, actor: Actor, now: n
 		});
 }
 
-/** Everything that follows a space's writes: the rows, the log, the clients, the person, `access`, and push. */
 async function commitSpace(db: Db, space: Space, ctx: WriteContext, outcome: Outcome): Promise<void> {
 	const { admitted, repairs, fixed, changedTasks } = outcome;
 	const { actor, client, now } = ctx;

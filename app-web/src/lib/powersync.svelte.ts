@@ -12,12 +12,7 @@ import { session } from './session.svelte.ts';
 import { store } from './store.svelte.ts';
 import { toasts } from './ui.svelte.ts';
 
-/**
- * Connects this browser's database to the server while the user is signed in. PowerSync streams every change down
- * as it happens and uploads the local writes through `uploadData`; nothing about it is shown, except a toast for a
- * write the server refused, which goes back to the server's value at the next checkpoint. See
- * `docs/decisions/sync.md`.
- */
+/** A write the server refused goes back to the server's value at the next checkpoint. See `docs/decisions/sync.md`. */
 
 const OPS: Record<UpdateType, RowOp> = {
 	[UpdateType.PUT]: 'put',
@@ -27,8 +22,8 @@ const OPS: Record<UpdateType, RowOp> = {
 /** Short enough that an edit reaches another device within about a second, long enough to fold a burst of keys. */
 const UPLOAD_THROTTLE = 100;
 /**
- * Rows per upload. The store writes a command in one transaction, and PowerSync's default of 100 would split a big
- * one, such as an import or deleting everything, so the server would repair and log a half-applied command.
+ * The store writes a command in one transaction, and PowerSync's default of 100 would split a big one, such as an
+ * import or deleting everything, so the server would repair and log a half-applied command.
  */
 const UPLOAD_BATCH = 1000;
 const SETTLE_TIMEOUT = 10_000;
@@ -110,7 +105,6 @@ const viewOf = () => ({
 	comments: store.comments,
 });
 
-/** Who the people the device has met are: the user, those they share with, and those a space has met. */
 async function refreshPeople() {
 	const [me, shares, people] = await Promise.all([
 		api.me().catch(() => null),
@@ -124,7 +118,6 @@ async function refreshPeople() {
 	]);
 }
 
-/** Connects for the signed-in user once their database is open, and disconnects when stopped. */
 export function startSync(userId: string): () => void {
 	let stopped = false;
 	void store.open(userId).then(() => {
@@ -171,7 +164,7 @@ export async function settled(): Promise<void> {
 	}
 }
 
-/** What end-to-end specs read: the writes not yet on the server, a task's id by its title, and an entity by id. */
+/** Read by the end-to-end specs. */
 async function pending(): Promise<number> {
 	await store.written();
 	const queued = (await powerSync.getCrudBatch(Number.MAX_SAFE_INTEGER))?.crud.length ?? 0;

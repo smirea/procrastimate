@@ -13,7 +13,6 @@ export type RowOp = (typeof ROW_OPS)[number];
 
 export type RowWrite = { op: RowOp; kind: Kind; id: string; values?: Fields };
 
-/** Each kind's table, the name PowerSync and both databases use. */
 export const TABLE_OF = {
 	task: 'tasks',
 	project: 'projects',
@@ -107,7 +106,6 @@ export function rejectionNotice(snapshot: Snapshot, rejected: readonly Pick<RowW
 	return name ? `Couldn’t save a change to “${name}”` : 'Couldn’t save a change';
 }
 
-/** `snapshot` with one write applied: a put replaces the entity, a patch merges into it, a delete removes it. */
 export function applyWrite(snapshot: Snapshot, write: RowWrite): Snapshot {
 	const entities = entitiesOf(snapshot, write.kind);
 	const index = entities.findIndex(entity => entity.id === write.id);

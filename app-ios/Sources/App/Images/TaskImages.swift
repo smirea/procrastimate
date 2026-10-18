@@ -11,7 +11,6 @@ import UIKit
 final class TaskImages {
     enum Size: String { case full, thumb }
 
-    /// The image open full screen.
     struct Viewing: Identifiable, Hashable {
         let taskID: String
         let imageID: String
@@ -57,7 +56,6 @@ final class TaskImages {
         return true
     }
 
-    /// Encodes each image and appends it to the task.
     func attach(_ taskID: String, _ sources: [Data]) async {
         guard let space = store.space(ofTask: taskID) else { return }
         for source in sources {

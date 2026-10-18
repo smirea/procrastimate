@@ -58,7 +58,6 @@ final class LocalDatabase: Sendable {
         }
     }
 
-    /// Writes one commit's rows in one transaction, in order.
     func write(_ batch: RowBatch) async throws {
         try await pool.write { db in
             for write in batch.writes {

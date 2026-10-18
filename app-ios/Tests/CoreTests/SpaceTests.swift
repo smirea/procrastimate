@@ -2,8 +2,6 @@ import Core
 import Foundation
 import Testing
 
-/// A store whose user has their own Errands project and a space Ann shared: her House project with Paint (editable)
-/// and Fix roof (read only), and her urgent label.
 @MainActor @Suite struct SpaceTests {
     let ann = Person(id: "ann", name: "Ann", kind: .human)
 

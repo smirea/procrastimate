@@ -9,10 +9,8 @@ import { swiftRowsModule, webTablesModule, type SwiftModel } from './tables';
 import { tableDefaults, zodModule } from './zod';
 
 /**
- * Writes every generated file: the row schemas and bundled migrations from the Drizzle schema, then the OpenAPI
- * document, the web client's contract, and the Swift API types from the contract, and the iOS colors from the web's CSS. A file is rewritten only when
- * its content changes, so watchers do not loop. The outputs are git-ignored: every start, build, check, and test entry
- * point runs this first.
+ * A file is rewritten only when its content changes, so watchers do not loop. The outputs are git-ignored: every
+ * start, build, check, and test entry point runs this first.
  */
 
 const root = join(import.meta.dir, '../..');

@@ -2,8 +2,6 @@ import Core
 import Foundation
 import Testing
 
-/// What reaches the database writer, and when: before the owner is known, before the settings row arrived, and how a
-/// caller waits for the writer to catch up.
 @MainActor @Suite struct WriterTests {
     @Test func aStoreThatDoesNotKnowItsOwnerHoldsEveryWriteUntilItDoes() {
         let (store, written) = recordingStore(me: nil)

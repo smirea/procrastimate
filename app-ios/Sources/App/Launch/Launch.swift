@@ -9,7 +9,6 @@ enum Launch {
     /// DEBUG UI tests set this to keep sync disconnected. Written once in `prepare()`, like `signedIn`.
     nonisolated(unsafe) static var offline = false
 
-    /// Applies the DEBUG launch environment before the first frame and returns the clock the app runs on.
     static func prepare() -> AppClock {
         #if DEBUG
         let options: LaunchOptions

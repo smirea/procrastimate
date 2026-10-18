@@ -6,7 +6,6 @@ import PowerSync
 final class SyncConnector: PowerSyncBackendConnectorProtocol {
     /// The server refused a write; the next checkpoint puts its row back.
     private let rejected: @Sendable ([(kind: EntityKind, id: String)]) async -> Void
-    /// The bearer token is gone or no longer valid.
     private let signedOut: @Sendable () async -> Void
 
     init(

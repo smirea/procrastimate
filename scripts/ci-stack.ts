@@ -1,8 +1,6 @@
 /**
- * The local Postgres and PowerSync for CI's end to end job: `bun scripts/ci-stack.ts`. The same containers a
- * worktree runs, through the same module, on the main checkout's default ports (CLIENT_PORT 6120, so the e2e API
- * is 6131 and its PowerSync 6132). Writes `.env.override` with the e2e database and PowerSync URLs, then
- * `env-manager gen --local` carries them into `app-web/.env.local` for Playwright.
+ * The local Postgres and PowerSync for CI's end to end job: `bun scripts/ci-stack.ts`. Runs on the main checkout's
+ * default ports, so the e2e API is 6131 and its PowerSync 6132.
  */
 import { spawnSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';

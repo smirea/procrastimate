@@ -76,13 +76,11 @@ async function withAdmin<T>(use: (sql: postgres.Sql) => Promise<T>): Promise<T> 
 	}
 }
 
-/** The app database of one stack and the PowerSync storage database next to it. */
 const databasesOf = (database: string, stack: Stack) => [
 	`${database}${suffix(stack)}`,
 	`${database}${suffix(stack)}_powersync`,
 ];
 
-/** Creates a stack's two databases, or recreates them with `reset`. Safe to rerun. */
 export async function ensureDatabases(database: string, stack: Stack, worktree: string, reset = false): Promise<void> {
 	await withAdmin(async sql => {
 		for (const name of databasesOf(database, stack)) {
@@ -94,7 +92,6 @@ export async function ensureDatabases(database: string, stack: Stack, worktree: 
 	});
 }
 
-/** Drops every database of the worktree, closing PowerSync's replication connections with them. Missing ones are fine. */
 export async function dropDatabases(database: string): Promise<void> {
 	await withAdmin(async sql => {
 		for (const name of STACKS.flatMap(stack => databasesOf(database, stack))) {
@@ -103,7 +100,6 @@ export async function dropDatabases(database: string): Promise<void> {
 	});
 }
 
-/** Every database a worktree script created, with the worktree it was created for. */
 export async function worktreeDatabases(): Promise<{ database: string; worktree: string }[]> {
 	return withAdmin(async sql => {
 		const rows = await sql<{ datname: string; comment: string | null }[]>`
@@ -119,7 +115,6 @@ export async function worktreeDatabases(): Promise<{ database: string; worktree:
 	});
 }
 
-/** A stack's `.powersync/<stack>.yaml` from the template, pointed at its database. */
 function writeServiceConfig(worktree: string, database: string, stack: Stack): string {
 	const template = readFileSync(join(root, 'powersync/local/service.template.yaml'), 'utf8');
 	const dir = join(worktree, '.powersync');
@@ -129,7 +124,6 @@ function writeServiceConfig(worktree: string, database: string, stack: Stack): s
 	return file;
 }
 
-/** Starts (or restarts with a changed config) one stack's PowerSync container and waits until it answers. */
 export async function startPowerSync(worktree: string, database: string, stack: Stack, port: number): Promise<void> {
 	const name = containerName(worktree, stack);
 	const project = name.replace('procrastimate-powersync-', 'procrastimate-');
@@ -148,14 +142,12 @@ export async function startPowerSync(worktree: string, database: string, stack: 
 	throw new Error(`PowerSync did not answer on port ${port} within 60 s. See \`docker logs ${name}\`.`);
 }
 
-/** Removes the worktree's PowerSync containers. Nothing to remove is fine. */
 export function stopPowerSync(worktree: string): void {
 	for (const stack of STACKS) {
 		spawnSync('docker', ['rm', '-f', containerName(worktree, stack)], { stdio: 'ignore' });
 	}
 }
 
-/** Every PowerSync container a worktree script started, with its worktree. */
 export function powerSyncContainers(): { name: string; worktree: string }[] {
 	const out = run([
 		'docker',
@@ -179,7 +171,6 @@ export function removeContainer(name: string): void {
 	run(['docker', 'rm', '-f', name]);
 }
 
-/** The `.env.override` a worktree's scripts wrote, or null before setup ran. */
 export function readOverride(worktree: string): Record<string, string> | null {
 	const file = join(worktree, '.env.override');
 	if (!existsSync(file)) return null;

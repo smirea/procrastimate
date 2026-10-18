@@ -8,7 +8,6 @@ import type { Db } from './postgres';
 export const BACKUP_PREFIX = 'postgres/';
 export const BACKUPS_KEPT = 30;
 
-/** Every table, the app's and Better Auth's, read through Drizzle. */
 const TABLES: PgTable[] = [
 	...Object.values(schema as Record<string, unknown>).filter((value): value is PgTable => value instanceof PgTable),
 	...Object.values(authSchema),

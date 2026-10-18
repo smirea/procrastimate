@@ -257,7 +257,7 @@ function readProject(file: BackupFile, now: Date, backup: TodoistBackup) {
 	}
 }
 
-/** Reads every project CSV in a Todoist backup. Other files, such as macOS metadata, are ignored. */
+/** Files other than project CSVs, such as macOS metadata, are ignored. */
 export function readTodoistBackup(files: readonly BackupFile[], now: Date): TodoistBackup {
 	const backup: TodoistBackup = { projects: [], sections: [], tasks: [], warnings: [] };
 	for (const file of files) {

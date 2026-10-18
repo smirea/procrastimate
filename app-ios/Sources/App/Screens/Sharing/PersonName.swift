@@ -1,7 +1,6 @@
 import Core
 import SwiftUI
 
-/// A person's name, with the `AI` badge wherever an AI account shows.
 struct PersonName: View {
     let person: Person
     var you = false

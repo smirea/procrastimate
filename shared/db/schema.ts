@@ -98,7 +98,6 @@ export const labels = pgTable(
 		id: text('id').primaryKey(),
 		userId: text('user_id').notNull(),
 		name: text('name').notNull(),
-		/** A palette key. */
 		color: text('color', { enum: LABEL_COLORS }).$type<ColumnValue<'labels', 'color'>>().notNull().default('gray'),
 		/** Set when the label is a saved place, such as `Home`. Its tasks are the open tasks at the place. */
 		place: jsonb('place').$type<ColumnValue<'labels', 'place'>>(),
@@ -179,7 +178,6 @@ export const access = pgTable(
 	table => [index('access_grantee').on(table.grantee), index('access_owner').on(table.owner)],
 ).enableRLS();
 
-/** Each kind's table, so code that handles every kind finds its columns in one place. */
 export const ENTITY_TABLES = {
 	task: tasks,
 	project: projects,

@@ -3,9 +3,6 @@ import Foundation
 import Testing
 
 /// Checks the Swift port against `shared/vectors/*.json`, which `bun run vectors` records from the TypeScript tests.
-/// Every case must produce the recorded output, and a module or function without a Swift handler fails, so a TS
-/// change that alters behavior turns this red until the port matches. `pendingPorts` is the exception: those
-/// modules are recorded ahead of their port, and their cases start running as soon as a handler exists.
 @Suite struct VectorTests {
     @Test(arguments: VectorFile.all)
     func matchesTypeScript(_ file: VectorFile) throws {
@@ -31,8 +28,6 @@ import Testing
         #expect(Set(VectorFile.all.map(\.module)).isSuperset(of: handlers.keys))
     }
 
-    /// A module stays pending only until its handler lands. Adding the handler without removing the name fails here,
-    /// and a new vector file without a port fails `matchesTypeScript`.
     @Test func onlyPendingModulesLackAPort() {
         let missing = Set(VectorFile.all.map(\.module)).subtracting(handlers.keys)
         #expect(missing == pendingPorts)
@@ -515,7 +510,6 @@ private struct ListDefaultsJSON: Codable {
     }
 }
 
-/// `Screen` in TS: `{ kind, id?, key?, sectionId?, date? }`.
 private struct ScreenInput: Decodable {
     let kind: String
     let id: String?

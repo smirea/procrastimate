@@ -2,8 +2,6 @@ import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import type { MemoTasks } from '../../shared/memo-tasks';
 import { json, signUp, testApp, upload, type Session, type TestApp } from './test-app';
 
-/** Notouroboros's routes: tasks keyed by memo and task key, never re-added once deleted. */
-
 let app: TestApp;
 let owner: Session;
 beforeAll(async () => {

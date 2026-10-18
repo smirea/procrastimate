@@ -8,9 +8,7 @@ export type Env = {
 	/** Postgres on the Worker. The Bun dev server, scripts, and tests set `DATABASE_URL` instead. */
 	HYPERDRIVE?: Hyperdrive;
 	DATABASE_URL?: string;
-	/** Ramble's transcription socket. See `account/ramble.ts`. */
 	RAMBLE?: DurableObjectNamespace;
-	/** The daily JSON dumps. */
 	BACKUPS?: R2Bucket;
 	/** Where `/api/powersync/*` is forwarded. A plain var, not a secret. */
 	POWERSYNC_URL?: string;

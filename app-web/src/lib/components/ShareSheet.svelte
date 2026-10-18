@@ -33,7 +33,6 @@
 	const people = $derived(
 		shares.rows.filter((row): row is Row<ShareView & { grantee: Person }> => row.value.grantee !== null),
 	);
-	/** The people this space has met match at once; the server adds exact email matches when it answers. */
 	const suggestions = $derived.by(() => {
 		const q = query.trim();
 		if (!q) return [];

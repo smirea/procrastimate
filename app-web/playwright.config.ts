@@ -41,7 +41,6 @@ export default defineConfig({
 			use: { ...devices['iPhone 15'], viewport: { width: 393, height: 852 } },
 		},
 	],
-	// E2E_WORKER=1 tests the deployable Worker against an existing `bun run build` instead of the dev server.
 	webServer:
 		process.env.E2E_WORKER === '1'
 			? {
