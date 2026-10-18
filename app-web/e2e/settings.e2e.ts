@@ -39,10 +39,11 @@ test('dragging a shown quick add button reorders the row', async ({ app, page })
 
 	const handle = group.getByRole('button', { name: 'Reorder Subtasks' });
 	const target = group.getByRole('button', { name: 'Date', exact: true });
+	// Hovering waits for the handle to stop moving, since the dialog can still shift as the first sync lands.
+	await handle.hover();
+	await page.mouse.down();
 	const from = (await handle.boundingBox())!;
 	const to = (await target.boundingBox())!;
-	await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
-	await page.mouse.down();
 	await page.mouse.move(from.x + from.width / 2, to.y + 2, { steps: 12 });
 	await page.mouse.up();
 	await expect.poll(pressed).toEqual(['Subtasks', 'Date', 'Priority', 'Reminders']);
