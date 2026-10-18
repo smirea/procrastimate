@@ -7,8 +7,9 @@
 	"routes": [{ "pattern": "procrastimate.stf.lol", "custom_domain": true }],
 	"workers_dev": true,
 	"preview_urls": false,
-	// Next to Postgres in us-east-1: an upload is a run of sequential queries, and each one crosses this distance.
-	"placement": { "mode": "smart" },
+	// Pinned next to Supabase in us-east-1: an upload is a run of sequential queries, and each one crosses the distance
+	// between the Worker and the database. Smart placement only moves a Worker after analysing its traffic.
+	"placement": { "region": "aws:us-east-1" },
 	"assets": {
 		"directory": "app-web/build",
 		"not_found_handling": "single-page-application",
