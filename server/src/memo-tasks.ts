@@ -1,3 +1,4 @@
+import { ORPCError } from '@orpc/server';
 import { and, eq, inArray, like, max, sql } from 'drizzle-orm';
 import { log, tasks } from '../../shared/db/schema';
 import { newId } from '../../shared/id';
@@ -139,7 +140,8 @@ export async function putMemoTasks(command: Command, request: MemoTasksRequest):
 		values: fieldsOf('task', task),
 		opId: task.sourceKey!,
 	}));
-	await applyAs(db, { actor, client, now }, owner, { role: 'owner' }, writes);
+	const { rejected } = await applyAs(db, { actor, client, now }, owner, { role: 'owner' }, writes);
+	if (rejected.length) throw new ORPCError('BAD_REQUEST', { message: rejected[0]!.reason });
 	return memoTasks([...live, ...added]);
 }
 
@@ -164,5 +166,7 @@ export async function deleteMemoTasks(command: Command, memoId: string): Promise
 		for (const subtask of descendantsOf(tree, task.id)) gone.add(subtask.id);
 	}
 	const writes: Write[] = [...gone].map(id => ({ op: 'delete', kind: 'task', id, opId: newId() }));
-	if (writes.length) await applyAs(db, { actor, client, now }, owner, { role: 'owner' }, writes);
+	if (!writes.length) return;
+	const { rejected } = await applyAs(db, { actor, client, now }, owner, { role: 'owner' }, writes);
+	if (rejected.length) throw new ORPCError('BAD_REQUEST', { message: rejected[0]!.reason });
 }

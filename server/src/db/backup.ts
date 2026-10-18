@@ -25,13 +25,19 @@ function base64(bytes: Uint8Array): string {
 /** Bytes become base64 so the dump stays JSON; everything else is what the driver returns. */
 const encode = (_key: string, value: unknown) => (value instanceof Uint8Array ? { $bytes: base64(value) } : value);
 
-/** The whole database as one JSON document, one read transaction, so the dump is one consistent snapshot. */
+/**
+ * The whole database as one JSON document, read in one repeatable-read transaction, so every table comes from the
+ * same snapshot: the default read-committed level would give each select its own.
+ */
 export async function dumpJson(db: Db, at: Date): Promise<string> {
-	return db.transaction(async tx => {
-		const tables: Record<string, unknown[]> = {};
-		for (const table of TABLES) tables[getTableName(table)] = await tx.select().from(table);
-		return JSON.stringify({ at: at.toISOString(), tables }, encode);
-	});
+	return db.transaction(
+		async tx => {
+			const tables: Record<string, unknown[]> = {};
+			for (const table of TABLES) tables[getTableName(table)] = await tx.select().from(table);
+			return JSON.stringify({ at: at.toISOString(), tables }, encode);
+		},
+		{ isolationLevel: 'repeatable read', accessMode: 'read only' },
+	);
 }
 
 /** `postgres/2026-10-17.json`, so a lexicographic listing is oldest first and a rerun the same day overwrites. */

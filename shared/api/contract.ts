@@ -114,82 +114,6 @@ export const taskCommentsSchema = z.object({ comments: z.array(taskCommentSchema
 export const activitySchema = z.object({ entries: z.array(activityEntrySchema) }).meta({ id: 'Activity' });
 export const linksSchema = z.object({ links: z.array(shareViewSchema) }).meta({ id: 'Links' });
 
-export const workerContract = {
-	status: oc.meta(openapi({ method: 'GET', path: '/api/status' })).output(okSchema),
-	auth: {
-		methods: oc.meta(openapi({ method: 'GET', path: '/api/auth/methods' })).output(authMethodsSchema),
-	},
-	push: {
-		key: oc
-			.errors({ SERVICE_UNAVAILABLE: {} })
-			.meta(openapi({ method: 'GET', path: '/api/push/key' }))
-			.output(pushKeySchema),
-		test: signedIn
-			.errors({
-				GONE: { data: pushStatusSchema },
-				BAD_GATEWAY: { data: pushStatusSchema },
-			})
-			.meta(openapi({ method: 'POST', path: '/api/push/test' }))
-			.input(z.object({ subscription: pushSubscriptionSchema }))
-			.output(okSchema),
-	},
-	people: {
-		/**
-		 * An exact email match over every user, plus the caller's AI accounts and the people its space has met,
-		 * matched on a name prefix. There is no prefix search over every user, so nobody can list them.
-		 */
-		search: signedIn
-			.meta(openapi({ method: 'GET', path: '/api/people', inputStructure: 'detailed' }))
-			.input(z.object({ query: z.object({ q: z.string() }) }))
-			.output(peopleSchema),
-	},
-	me: signedIn.meta(openapi({ method: 'GET', path: '/api/me' })).output(personSchema),
-	ai: {
-		list: allowed.meta(openapi({ method: 'GET', path: '/api/ai' })).output(aiAccountsSchema),
-		/** Also shares the owner's whole space with it, to edit. */
-		create: allowed
-			.meta(openapi({ method: 'POST', path: '/api/ai' }))
-			.input(z.object({ name: personSchema.shape.name }))
-			.output(personSchema),
-		/** Deletes the account, its tokens, and its share. */
-		delete: found
-			.meta(openapi({ method: 'DELETE', path: '/api/ai', inputStructure: 'detailed' }))
-			.input(z.object({ query: byId }))
-			.output(okSchema),
-	},
-	shared: {
-		/** What a public link shows. Needs no session; the token names the owner. */
-		view: oc
-			.errors({ NOT_FOUND: {}, SERVICE_UNAVAILABLE: {} })
-			.meta(openapi({ method: 'GET', path: '/api/shared', inputStructure: 'detailed' }))
-			.input(z.object({ query: z.object({ token: z.string() }) }))
-			.output(sharedViewSchema),
-	},
-	shares: {
-		/** Shares the caller's own space with a user, by role, or with anyone holding the link, read only. */
-		create: found
-			.meta(openapi({ method: 'POST', path: '/api/shares' }))
-			.input(newShareSchema)
-			.output(shareViewSchema),
-	},
-	/** Smoke tests for Sentry: each throws, so a 500 and an event in `procrastimate-worker` prove the path. */
-	debug: {
-		error: signedIn.meta(openapi({ method: 'POST', path: '/api/debug/error' })).output(okSchema),
-	},
-	/** Docs for AI agents, generated from `agentContract`. */
-	docs: {
-		start: oc
-			.meta(openapi({ method: 'GET', path: '/api/docs', summary: 'What ProcrastiMate is and how an agent gets in' }))
-			.output(markdownSchema),
-		agent: signedIn
-			.meta(openapi({ method: 'GET', path: '/api/docs/agent', summary: 'The guide to every route the caller may use' }))
-			.output(markdownSchema),
-		openapi: signedIn
-			.meta(openapi({ method: 'GET', path: '/api/docs/openapi', summary: 'The OpenAPI subset the caller may use' }))
-			.output(z.file().mime(JSON_UTF8)),
-	},
-};
-
 /**
  * What an AI account, or a guest of a space, may call: view, the task, project, section, label, and link commands,
  * comments, and activity. Projects, sections, labels, and links are only the owner's and an AI account's, which holds
@@ -509,8 +433,95 @@ export const agentContract = {
 	},
 };
 
-const spaceContract = {
+export const contract = {
 	...agentContract,
+	status: oc.meta(openapi({ method: 'GET', path: '/api/status' })).output(okSchema),
+	auth: {
+		methods: oc.meta(openapi({ method: 'GET', path: '/api/auth/methods' })).output(authMethodsSchema),
+	},
+	push: {
+		key: oc
+			.errors({ SERVICE_UNAVAILABLE: {} })
+			.meta(openapi({ method: 'GET', path: '/api/push/key' }))
+			.output(pushKeySchema),
+		test: signedIn
+			.errors({
+				GONE: { data: pushStatusSchema },
+				BAD_GATEWAY: { data: pushStatusSchema },
+			})
+			.meta(openapi({ method: 'POST', path: '/api/push/test' }))
+			.input(z.object({ subscription: pushSubscriptionSchema }))
+			.output(okSchema),
+		/** Registers this device's subscription. A browser that paired again as a new device replaces its old entry. */
+		subscribe: signedIn
+			.meta(openapi({ method: 'PUT', path: '/api/push/subscription' }))
+			.input(subscribeRequestSchema)
+			.output(okSchema),
+		unsubscribe: signedIn.meta(openapi({ method: 'DELETE', path: '/api/push/subscription' })).output(okSchema),
+		/** What the server will deliver to this device, soonest first. For inspecting a run, not a user path. */
+		schedule: signedIn.meta(openapi({ method: 'GET', path: '/api/push/schedule' })).output(pushScheduleResponseSchema),
+	},
+	people: {
+		/**
+		 * An exact email match over every user, plus the caller's AI accounts and the people its space has met,
+		 * matched on a name prefix. There is no prefix search over every user, so nobody can list them.
+		 */
+		search: signedIn
+			.meta(openapi({ method: 'GET', path: '/api/people', inputStructure: 'detailed' }))
+			.input(z.object({ query: z.object({ q: z.string() }) }))
+			.output(peopleSchema),
+	},
+	me: signedIn.meta(openapi({ method: 'GET', path: '/api/me' })).output(personSchema),
+	ai: {
+		list: allowed.meta(openapi({ method: 'GET', path: '/api/ai' })).output(aiAccountsSchema),
+		/** Also shares the owner's whole space with it, to edit. */
+		create: allowed
+			.meta(openapi({ method: 'POST', path: '/api/ai' }))
+			.input(z.object({ name: personSchema.shape.name }))
+			.output(personSchema),
+		/** Deletes the account, its tokens, and its share. */
+		delete: found
+			.meta(openapi({ method: 'DELETE', path: '/api/ai', inputStructure: 'detailed' }))
+			.input(z.object({ query: byId }))
+			.output(okSchema),
+	},
+	shared: {
+		/** What a public link shows. Needs no session; the token names the owner. */
+		view: oc
+			.errors({ NOT_FOUND: {}, SERVICE_UNAVAILABLE: {} })
+			.meta(openapi({ method: 'GET', path: '/api/shared', inputStructure: 'detailed' }))
+			.input(z.object({ query: z.object({ token: z.string() }) }))
+			.output(sharedViewSchema),
+	},
+	/** The owner's shares of their own space. Human owners only. */
+	shares: {
+		/** Shares the caller's own space with a user, by role, or with anyone holding the link, read only. */
+		create: found
+			.meta(openapi({ method: 'POST', path: '/api/shares' }))
+			.input(newShareSchema)
+			.output(shareViewSchema),
+		list: allowed.meta(openapi({ method: 'GET', path: '/api/shares' })).output(sharesSchema),
+		delete: found
+			.meta(openapi({ method: 'DELETE', path: '/api/shares', inputStructure: 'detailed' }))
+			.input(z.object({ query: byId }))
+			.output(okSchema),
+	},
+	/** Smoke tests for Sentry: each throws, so a 500 and an event in `procrastimate-worker` prove the path. */
+	debug: {
+		error: signedIn.meta(openapi({ method: 'POST', path: '/api/debug/error' })).output(okSchema),
+	},
+	/** Docs for AI agents, generated from `agentContract`. */
+	docs: {
+		start: oc
+			.meta(openapi({ method: 'GET', path: '/api/docs', summary: 'What ProcrastiMate is and how an agent gets in' }))
+			.output(markdownSchema),
+		agent: signedIn
+			.meta(openapi({ method: 'GET', path: '/api/docs/agent', summary: 'The guide to every route the caller may use' }))
+			.output(markdownSchema),
+		openapi: signedIn
+			.meta(openapi({ method: 'GET', path: '/api/docs/openapi', summary: 'The OpenAPI subset the caller may use' }))
+			.output(z.file().mime(JSON_UTF8)),
+	},
 	sync: {
 		/** Short-lived. Human users only. */
 		token: signedIn.meta(openapi({ method: 'GET', path: '/api/sync/token' })).output(syncTokenSchema),
@@ -522,14 +533,6 @@ const spaceContract = {
 			.meta(openapi({ method: 'POST', path: '/api/upload' }))
 			.input(uploadRequestSchema)
 			.output(uploadResponseSchema),
-	},
-	/** The owner's shares of their own space. Human owners only. */
-	shares: {
-		list: allowed.meta(openapi({ method: 'GET', path: '/api/shares' })).output(sharesSchema),
-		delete: found
-			.meta(openapi({ method: 'DELETE', path: '/api/shares', inputStructure: 'detailed' }))
-			.input(z.object({ query: byId }))
-			.output(okSchema),
 	},
 	/** API tokens for the owner's AI accounts. Human owners only. */
 	tokens: {
@@ -543,16 +546,6 @@ const spaceContract = {
 			.meta(openapi({ method: 'DELETE', path: '/api/ai-tokens', inputStructure: 'detailed' }))
 			.input(z.object({ query: byId }))
 			.output(okSchema),
-	},
-	push: {
-		/** Registers this device's subscription. A browser that paired again as a new device replaces its old entry. */
-		subscribe: signedIn
-			.meta(openapi({ method: 'PUT', path: '/api/push/subscription' }))
-			.input(subscribeRequestSchema)
-			.output(okSchema),
-		unsubscribe: signedIn.meta(openapi({ method: 'DELETE', path: '/api/push/subscription' })).output(okSchema),
-		/** What the server will deliver to this device, soonest first. For inspecting a run, not a user path. */
-		schedule: signedIn.meta(openapi({ method: 'GET', path: '/api/push/schedule' })).output(pushScheduleResponseSchema),
 	},
 	/** Notouroboros's tasks. See `docs/decisions/integrations.md`. */
 	memoTasks: {
@@ -571,13 +564,6 @@ const spaceContract = {
 			.input(memoQuerySchema)
 			.output(okSchema),
 	},
-};
-
-export const contract = {
-	...workerContract,
-	...spaceContract,
-	push: { ...workerContract.push, ...spaceContract.push },
-	shares: { ...workerContract.shares, ...spaceContract.shares },
 };
 
 export type ApiClient = JsonifiedClient<RouterContractClient<typeof contract>>;

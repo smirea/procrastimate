@@ -1,5 +1,5 @@
 import { ORPCError } from '@orpc/server';
-import { and, asc, desc, eq, inArray } from 'drizzle-orm';
+import { and, asc, desc, eq, getTableColumns, inArray } from 'drizzle-orm';
 import type { Actor } from '../../shared/auth';
 import { addComment, commentsOn, deleteComment, editComment } from '../../shared/comments';
 import { comments as commentTable, log, tasks as taskTable } from '../../shared/db/schema';
@@ -91,12 +91,12 @@ type Visible = ReturnType<typeof visibleOf>;
 const NO_CLIENTS: TaskClients = { created: null, edited: null };
 
 /**
- * The app behind a task's first write and its latest, read off the log: the first row is its creation, the newest its
- * last change. One select whose two lateral reads per task each take one row off the `log_entity` index, however long
- * the task's history. A task with no row, or a row from before the server recorded apps, reads `null`.
+ * The app behind a task's first write and its latest, read off the log with the stored row: the first log row is its
+ * creation, the newest its last change. One select whose two lateral reads per task each take one row off the
+ * `log_entity` index, however long the task's history. A task with no row, or a row from before the server recorded
+ * apps, reads `null`.
  */
-async function withClients(db: Db, owner: string, tasks: readonly Task[]): Promise<AgentTask[]> {
-	if (!tasks.length) return [];
+async function clientRows(db: Db, owner: string, ids: readonly string[]) {
 	const end = (order: typeof asc, name: string) =>
 		db
 			.select({ client: log.client, at: log.at })
@@ -107,27 +107,33 @@ async function withClients(db: Db, owner: string, tasks: readonly Task[]): Promi
 			.as(name);
 	const first = end(asc, 'first');
 	const latest = end(desc, 'latest');
+	const stamp = ({ client, at }: { client: Client | null; at: number }): ClientStamp | null =>
+		client ? { ...client, at } : null;
 	const rows = await db
 		.select({
-			id: taskTable.id,
+			row: getTableColumns(taskTable),
 			created: { client: first.client, at: first.at },
 			edited: { client: latest.client, at: latest.at },
 		})
 		.from(taskTable)
 		.crossJoinLateral(first)
 		.crossJoinLateral(latest)
-		.where(
-			and(
-				eq(taskTable.userId, owner),
-				inArray(
-					taskTable.id,
-					tasks.map(task => task.id),
-				),
-			),
-		);
-	const stamp = ({ client, at }: { client: Client | null; at: number }): ClientStamp | null =>
-		client ? { ...client, at } : null;
-	const clients = new Map(rows.map(row => [row.id, { created: stamp(row.created), edited: stamp(row.edited) }]));
+		.where(and(eq(taskTable.userId, owner), inArray(taskTable.id, [...ids])));
+	return rows.map(({ row, created, edited }) => ({
+		row,
+		clients: { created: stamp(created), edited: stamp(edited) } satisfies TaskClients,
+	}));
+}
+
+/** `tasks` as the agent view shows them, with the clients of each. */
+async function withClients(db: Db, owner: string, tasks: readonly Task[]): Promise<AgentTask[]> {
+	if (!tasks.length) return [];
+	const rows = await clientRows(
+		db,
+		owner,
+		tasks.map(task => task.id),
+	);
+	const clients = new Map(rows.map(({ row, clients }) => [row.id, clients]));
 	return tasks.map(task => ({ ...task, clients: clients.get(task.id) ?? NO_CLIENTS }));
 }
 
@@ -198,12 +204,9 @@ function visibleTask(visible: Visible, id: string): Task {
 
 /** The row as stored, since the statement stamped `createdBy` and `completedBy`, which the rule in memory did not. */
 async function taskAfter({ db, owner }: Command, id: string): Promise<AgentTask> {
-	const [row] = await db
-		.select()
-		.from(taskTable)
-		.where(and(eq(taskTable.userId, owner), eq(taskTable.id, id)));
-	if (!row) throw new ORPCError('NOT_FOUND', { message: 'No such task' });
-	return (await withClients(db, owner, [entity(row) as Task]))[0]!;
+	const [found] = await clientRows(db, owner, [id]);
+	if (!found) throw new ORPCError('NOT_FOUND', { message: 'No such task' });
+	return { ...(entity(found.row) as Task), clients: found.clients };
 }
 
 /** `text` is read like the app's quick add, against the space's projects and labels; explicit fields win over it. */
@@ -245,10 +248,16 @@ export async function createTask(command: Command, input: AgentNewTask): Promise
 	return taskAfter(command, id);
 }
 
-/** A saved place in `labelIds` becomes the task's place, as in the apps. Ids without one leave its place alone. */
+/**
+ * A saved place in `labelIds` becomes the task's place, as in the apps. Ids without one leave its place alone. A
+ * subtask follows its root's project, so a project on one is refused rather than written and then ignored.
+ */
 export async function editTask(command: Command, id: string, patch: TaskPatch): Promise<AgentTask> {
 	await run(command, (data, visible) => {
 		const task = visibleTask(visible, id);
+		if (task.parentId && patch.projectId !== undefined) {
+			throw new ORPCError('BAD_REQUEST', { message: 'A subtask follows its parent’s project' });
+		}
 		const ids = patch.labelIds ?? [];
 		const placed = visible.labels.some(l => isSavedPlace(l) && ids.includes(l.id))
 			? applyPickedLabels(visible.labels, ids, patch.location ?? task.location)

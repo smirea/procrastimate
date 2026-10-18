@@ -1,6 +1,6 @@
 import { parseSentryTarget, SENTRY_DSN, type SentryTarget } from '../../shared/sentry';
 import type { Env } from './bindings';
-import { VAPID_SUBJECT, type Vapid } from './web-push';
+import { base64urlDecode, VAPID_SUBJECT, type Vapid } from './web-push';
 
 /** A deploy without any of these fails every request. `secrets.ts verify` checks them before `wrangler deploy`. */
 export const REQUIRED_WORKER_SECRETS = [
@@ -43,7 +43,34 @@ function parseSigningKey(json: string): SigningKey | string {
 	for (const field of ['kid', 'x', 'd'] as const) {
 		if (typeof key[field] !== 'string' || !key[field]) return `POWERSYNC_JWT_PRIVATE_KEY lacks ${field}`;
 	}
+	for (const field of ['x', 'd'] as const) {
+		if (decodedLength(key[field]!) !== 32) return `POWERSYNC_JWT_PRIVATE_KEY's ${field} is not a 32-byte Ed25519 key`;
+	}
 	return { kty: 'OKP', crv: 'Ed25519', kid: key.kid!, x: key.x!, d: key.d! };
+}
+
+/** The byte length of a base64url value, or null when it does not decode. */
+function decodedLength(text: string): number | null {
+	try {
+		return base64urlDecode(text).length;
+	} catch {
+		return null;
+	}
+}
+
+/** The uncompressed P-256 point (65 bytes starting with 0x04) and the 32-byte scalar, checked here, not at first push. */
+function vapidProblems(publicKey: string, privateKey: string): string[] {
+	const problems: string[] = [];
+	const point = (() => {
+		try {
+			return base64urlDecode(publicKey);
+		} catch {
+			return null;
+		}
+	})();
+	if (point?.length !== 65 || point[0] !== 0x04) problems.push('VAPID_PUBLIC_KEY is not an uncompressed P-256 point');
+	if (decodedLength(privateKey) !== 32) problems.push('VAPID_PRIVATE_KEY is not a 32-byte P-256 scalar');
+	return problems;
 }
 
 /** `sentryDsn` is the committed worker DSN; tests pass their own. */
@@ -74,6 +101,7 @@ export function parseConfig(env: Env, sentryDsn: string = SENTRY_DSN.worker): Co
 	if (typeof key === 'string') problems.push(key);
 
 	const vapidKeys = group(['VAPID_PUBLIC_KEY', 'VAPID_PRIVATE_KEY'], true);
+	if (vapidKeys) problems.push(...vapidProblems(vapidKeys.VAPID_PUBLIC_KEY, vapidKeys.VAPID_PRIVATE_KEY));
 
 	const googleWeb = group(['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET'], false);
 

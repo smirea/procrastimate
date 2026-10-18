@@ -23,3 +23,20 @@ describe('the bearer session cache', () => {
 		expect((await app.fetch('/api/me', { headers: me.headers })).status).toBe(401);
 	});
 });
+
+describe('reading a session', () => {
+	test('a database that cannot be read answers 5xx, not the 401 that signs the device out', async () => {
+		const me = await signUp(app, 'Blipped');
+		const select = app.db.select;
+		(app.db as { select: unknown }).select = () => {
+			throw new Error('connection reset');
+		};
+		try {
+			const response = await app.fetch('/api/sync/token', { headers: me.headers });
+			expect(response.status).toBe(500);
+		} finally {
+			app.db.select = select;
+		}
+		expect((await app.fetch('/api/sync/token', { headers: me.headers })).status).toBe(200);
+	});
+});

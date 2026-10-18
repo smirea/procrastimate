@@ -151,7 +151,7 @@ describe('statements per read', () => {
 
 	test('an agent edit loads the tree and the time zone, writes, and reads the task back', async () => {
 		const edit = (title: string) => ({ method: 'PATCH', body: JSON.stringify({ title }) });
-		const after = ['update tasks', 'insert log', 'select tasks', 'select tasks + log + log'];
+		const after = ['update tasks', 'insert log', 'select tasks + log + log'];
 		expect(await statementsOf(`/api/tasks?id=${taskId}`, { ...edit('By the agent'), headers: owner.headers })).toEqual([
 			...tree,
 			'select settings',

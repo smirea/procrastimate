@@ -11,7 +11,7 @@ export const RAMBLE_ACTOR_HEADER = 'x-procrastimate-ramble-actor';
 
 /**
  * One user's Ramble sessions, in a Durable Object named by the user id. It hosts only the transcription socket: the
- * object's CPU budget resets per message, and its `live` set counts the user's open sessions against the daily cap.
+ * object's CPU budget resets per message, and it holds the one count of the user's day that the daily cap reads.
  */
 export class Ramble {
 	private connection: Connection | null = null;
