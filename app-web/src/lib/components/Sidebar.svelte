@@ -56,7 +56,7 @@
 		},
 	]);
 
-	const shared = $derived(sharedEntries(store.spaces));
+	const shared = $derived(sharedEntries(store.spaces, id => store.ownerOf(id)));
 
 	let adding = $state(false);
 	let name = $state('');

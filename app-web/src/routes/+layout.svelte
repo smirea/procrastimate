@@ -23,7 +23,7 @@
 	import { session } from '#lib/session.svelte.ts';
 	import { runSentrySmoke } from '#lib/sentry.ts';
 	import SignIn from '#lib/components/SignIn.svelte';
-	import { sync } from '#lib/sync.svelte.ts';
+	import { startSync } from '#lib/powersync.svelte.ts';
 	import { applyTheme, theme } from '#lib/theme.svelte.ts';
 
 	let { children }: { children: Snippet } = $props();
@@ -80,10 +80,10 @@
 	$effect(() => trackKeyboardInset());
 	$effect(() => untrack(() => void session.start().then(runSentrySmoke)));
 	$effect(() => {
-		if (session.state !== 'in' || !session.confirmed) return;
+		const userId = session.userId;
+		if (session.state !== 'in' || !session.confirmed || !userId) return;
 		const stopPush = untrack(() => push.start());
-		const stopSync = untrack(() => sync.start());
-		untrack(openTaskFromUrl);
+		const stopSync = untrack(() => startSync(userId));
 		return () => {
 			stopPush();
 			stopSync();
@@ -91,8 +91,13 @@
 	});
 
 	$effect(() => {
+		if (session.state === 'in' && session.confirmed && store.loaded) untrack(openTaskFromUrl);
+	});
+
+	// Only once the local database is read, or the check would pass every reminder that came up while closed.
+	$effect(() => {
 		const now = clock.now;
-		untrack(() => fireDueReminders(now));
+		if (store.loaded) untrack(() => fireDueReminders(now));
 	});
 
 	$effect(() => {
@@ -108,7 +113,7 @@
 	{@render children()}
 {:else if session.state === 'out'}
 	<SignIn />
-{:else if session.state === 'in'}
+{:else if session.state === 'in' && store.loaded}
 <div class="app flex min-h-dvh gap-3">
 	<div class="sticky top-3 hidden h-[calc(100dvh-1.5rem)] w-64 shrink-0 md:block">
 		<Sidebar onquickadd={openQuickAdd} onsearch={openSearch} onsettings={openSettings} />

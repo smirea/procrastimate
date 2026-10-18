@@ -36,7 +36,7 @@
 			: [],
 	);
 	const home = $derived(label ? store.homeOf(label.id) : null);
-	const owner = $derived(home ? store.spaces[home]?.owner : undefined);
+	const owner = $derived(home ? store.ownerOf(home) : undefined);
 
 	followMerged('/labels', () => page.params.id, () => store.labels);
 

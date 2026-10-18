@@ -33,6 +33,13 @@ export default defineConfig({
 			name: 'desktop',
 			use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } },
 		},
+		// The local database is SQLite in WebAssembly on IndexedDB, which WebKit runs its own way, so the specs that
+		// sync also run on an iPhone-sized WebKit.
+		{
+			name: 'mobile',
+			testMatch: ['sync.e2e.ts', 'sharing.e2e.ts', 'images.e2e.ts', 'single-origin.e2e.ts'],
+			use: { ...devices['iPhone 15'], viewport: { width: 393, height: 852 } },
+		},
 	],
 	// E2E_WORKER=1 tests the deployable Worker against an existing `bun run build` instead of the dev server.
 	webServer:

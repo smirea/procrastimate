@@ -34,7 +34,7 @@
 	const doneIn = (id: string | null) => done?.groups.find((g) => (g.section?.id ?? null) === id)?.tasks ?? [];
 	const anyDone = $derived(!!done && (done.gone.length > 0 || done.groups.some((g) => g.tasks.length > 0)));
 	const home = $derived(project ? store.homeOf(project.id) : null);
-	const owner = $derived(home ? store.spaces[home]?.owner : undefined);
+	const owner = $derived(home ? store.ownerOf(home) : undefined);
 
 	followMerged('/projects', () => page.params.id, () => store.projects);
 

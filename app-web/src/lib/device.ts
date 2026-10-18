@@ -1,0 +1,85 @@
+import { z } from 'zod';
+import type { RowWrite } from 'shared/rows.ts';
+import { personSchema, type Person } from 'shared/sharing.ts';
+
+/**
+ * What belongs to this browser rather than the account, each under its own `localStorage` key. None of it syncs.
+ * The theme keeps its own key in `theme.svelte.ts`, and the session its cached user in `session.svelte.ts`.
+ */
+
+/** Whose rows this browser's database holds. It outlives sign-out, so only a different account clears them. */
+const OWNER_KEY = 'procrastimate-owner';
+const INSTALL_KEY = 'procrastimate-install';
+const PEOPLE_KEY = 'procrastimate-people';
+const REMINDERS_KEY = 'procrastimate-reminders-checked-at';
+const UNWRITTEN_KEY = 'procrastimate-unwritten';
+/** The document that held everything before the local database. Nothing reads it any more. */
+const LEGACY_DOCUMENT_KEY = 'procrastimate';
+
+const peopleSchema = z.array(personSchema);
+
+export function forgetLegacyDocument() {
+	localStorage.removeItem(LEGACY_DOCUMENT_KEY);
+}
+
+export const loadOwner = () => localStorage.getItem(OWNER_KEY);
+
+export function saveOwner(id: string) {
+	localStorage.setItem(OWNER_KEY, id);
+}
+
+/** This install's id, made on first use. Push subscriptions and Ramble name the device by it; it is not a secret. */
+export function installId(): string {
+	const known = localStorage.getItem(INSTALL_KEY);
+	if (known) return known;
+	const id = crypto.randomUUID();
+	localStorage.setItem(INSTALL_KEY, id);
+	return id;
+}
+
+export function loadPeople(): Person[] {
+	try {
+		return peopleSchema.parse(JSON.parse(localStorage.getItem(PEOPLE_KEY) ?? '[]'));
+	} catch {
+		return [];
+	}
+}
+
+export function savePeople(people: readonly Person[]) {
+	localStorage.setItem(PEOPLE_KEY, JSON.stringify(people));
+}
+
+/**
+ * Commands whose rows are not in the local database yet. The database writes in the background, so a reload a moment
+ * after an edit would lose it; this synchronous copy lets the reloaded page write it first. It lives in
+ * `sessionStorage`, one per tab, so two tabs never overwrite or replay each other's copy.
+ */
+export type Unwritten = { owner: string; writes: RowWrite[] };
+
+export function loadUnwritten(): Unwritten[] {
+	try {
+		return JSON.parse(sessionStorage.getItem(UNWRITTEN_KEY) ?? '[]') as Unwritten[];
+	} catch {
+		return [];
+	}
+}
+
+/** A copy too large to store is skipped: the edit is still written, it is only not safe from a close until then. */
+export function saveUnwritten(unwritten: readonly Unwritten[]) {
+	try {
+		if (unwritten.length) sessionStorage.setItem(UNWRITTEN_KEY, JSON.stringify(unwritten));
+		else sessionStorage.removeItem(UNWRITTEN_KEY);
+	} catch {
+		sessionStorage.removeItem(UNWRITTEN_KEY);
+	}
+}
+
+/** A first launch starts from now, so it never announces every reminder that came up before it. */
+export function loadRemindersCheckedAt(now: number): number {
+	const stored = Number(localStorage.getItem(REMINDERS_KEY));
+	return Number.isFinite(stored) && stored > 0 ? stored : now;
+}
+
+export function saveRemindersCheckedAt(at: number) {
+	localStorage.setItem(REMINDERS_KEY, String(at));
+}

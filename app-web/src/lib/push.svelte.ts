@@ -68,7 +68,7 @@ class Push {
 		const key = await fetchKey();
 		if (!key) return { kind: 'unavailable' };
 		this.#key = key;
-		if (session.state !== 'in' || !store.deviceId()) return { kind: 'off' };
+		if (session.state !== 'in') return { kind: 'off' };
 		if (Notification.permission === 'denied') return { kind: 'denied' };
 		if (Notification.permission === 'default') {
 			this.#askOnFirstGesture(key);
@@ -152,7 +152,7 @@ class Push {
 
 	async #register(subscription: PushSubscriptionInfo) {
 		if (this.#registered === subscription.endpoint) return;
-		if (session.state !== 'in' || !store.deviceId()) return;
+		if (session.state !== 'in') return;
 		try {
 			await api.push.subscribe({ subscription });
 			this.#registered = subscription.endpoint;

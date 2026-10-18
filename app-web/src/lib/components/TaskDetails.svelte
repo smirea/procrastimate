@@ -47,7 +47,7 @@
 	const parent = $derived(task.parentId ? store.task(task.parentId) : undefined);
 	const home = $derived(store.homeOf(id));
 	const space = $derived(store.dataOf(home));
-	const owner = $derived(home ? store.spaces[home]?.owner : undefined);
+	const owner = $derived(home ? store.ownerOf(home) : undefined);
 	const editable = $derived(store.canEdit(id));
 	const project = $derived(store.project(task.projectId));
 	const section = $derived(store.section(task.sectionId));

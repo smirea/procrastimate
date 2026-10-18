@@ -1,22 +1,73 @@
+import { DEFAULT_SETTINGS, KINDS, SETTINGS_ID, type Settings, type Snapshot } from 'shared/model.ts';
 import type { Person } from 'shared/sharing.ts';
-import type { SpaceSection } from 'shared/snapshot.ts';
-import type { NewTask, StoreData } from 'shared/store.ts';
-import { sortTasks } from 'shared/store.ts';
+import { entityFrom, sortSnapshot, withEntities, type Entity } from 'shared/snapshot.ts';
+import { projectsInOrder, sortTasks, type NewTask, type StoreData } from 'shared/store.ts';
+import type { Rows } from './database.ts';
 
 /**
  * Which space each entity lives in. `null` is the signed-in user's own space; a string is the owner id of a
- * shared section. Every command runs on exactly one space's data, so these decide where it goes.
+ * shared one. Every command runs on exactly one space's data, so these decide where it goes.
  */
 export type Home = string | null;
 
-export type Sections = Readonly<Record<string, SpaceSection>>;
+/** A space shared with the signed-in user: its owner's rows this user may see, and the tasks shared read only. */
+export type SharedSpace = { owner: string; data: StoreData; readOnly: ReadonlySet<string> };
+export type Spaces = Readonly<Record<string, SharedSpace>>;
 
-/** The owner of every entity in a shared section, by id. Ids are UUIDs, so one map serves every kind. */
-export function homes(spaces: Sections): Map<string, string> {
+/**
+ * The local database as the store holds it: the user's own data, their settings (null until the row exists), and
+ * every space shared with them.
+ */
+export type Grouped = { own: StoreData; settings: Settings | null; spaces: Spaces };
+
+export const emptyData = (): StoreData => ({
+	tasks: [],
+	projects: [],
+	sections: [],
+	labels: [],
+	comments: [],
+	reads: [],
+});
+
+/**
+ * Groups rows by the space they belong to: `me`'s own, and one shared space per other owner. A row that does not
+ * parse is left out rather than failing the whole load. Read markers and settings only ever sync for their owner.
+ */
+export function group(rows: Rows, me: string): Grouped {
+	const empty = (): Snapshot => ({ ...emptyData(), settings: DEFAULT_SETTINGS });
+	const snapshots = new Map<string, Snapshot>();
+	const of = (owner: string) => snapshots.get(owner) ?? snapshots.set(owner, empty()).get(owner)!;
+	for (const kind of KINDS) {
+		const byOwner = Map.groupBy(rows[kind], row => row.userId);
+		for (const [owner, list] of byOwner) {
+			if (owner !== me && (kind === 'read' || kind === 'settings')) continue;
+			const entities = list.map(row => entityFrom(kind, row.id, row)).filter((e): e is Entity => e !== null);
+			if (kind === 'settings' && !entities.some(e => e.id === SETTINGS_ID)) continue;
+			snapshots.set(owner, withEntities(of(owner), kind, entities));
+		}
+	}
+	const readOnly = new Map<string, Set<string>>();
+	for (const row of rows.access) {
+		of(row.owner);
+		if (row.kind === 'task' && row.role === 'view')
+			readOnly.set(row.owner, (readOnly.get(row.owner) ?? new Set()).add(row.entityId));
+	}
+	const { settings, ...own } = sortSnapshot(snapshots.get(me) ?? empty());
+	const hasSettings = rows.settings.some(row => row.userId === me && row.id === SETTINGS_ID);
+	snapshots.delete(me);
+	const spaces: Record<string, SharedSpace> = {};
+	for (const [owner, snapshot] of snapshots) {
+		const { settings: _, ...data } = sortSnapshot(snapshot);
+		spaces[owner] = { owner, data: { ...data, reads: [] }, readOnly: readOnly.get(owner) ?? new Set() };
+	}
+	return { own, settings: hasSettings ? settings : null, spaces };
+}
+
+/** The owner of every entity in a shared space, by id. Ids are UUIDs, so one map serves every kind. */
+export function homes(spaces: Spaces): Map<string, string> {
 	const map = new Map<string, string>();
-	for (const [owner, section] of Object.entries(spaces)) {
-		for (const entity of [...section.tasks, ...section.projects, ...section.sections, ...section.labels])
-			map.set(entity.id, owner);
+	for (const { owner, data } of Object.values(spaces)) {
+		for (const entity of [...data.tasks, ...data.projects, ...data.sections, ...data.labels]) map.set(entity.id, owner);
 	}
 	return map;
 }
@@ -50,58 +101,46 @@ export function fitToSpace<T extends Pick<NewTask, 'projectId' | 'sectionId' | '
 	return { ...input, projectId, sectionId, labelIds };
 }
 
-/** A shared section as store data. Read markers live only in the user's own space, so a section has none. */
-export const sectionStore = ({ tasks, projects, sections, labels, comments }: SpaceSection): StoreData => ({
-	tasks,
-	projects,
-	sections,
-	labels,
-	comments,
-	reads: [],
-});
-
 /**
- * Own data first, then each section, as one list for lookups, details, children, and shared pages. The read markers
- * are the user's own, which cover every space's tasks.
+ * Own data first, then each shared space, as one list for lookups, details, children, and shared pages. The read
+ * markers are the user's own, which cover every space's tasks.
  */
-export function merged(own: StoreData, spaces: Sections): StoreData {
-	const sections = Object.values(spaces);
-	if (sections.length === 0) return own;
+export function merged(own: StoreData, spaces: Spaces): StoreData {
+	const shared = Object.values(spaces).map(space => space.data);
+	if (shared.length === 0) return own;
 	return {
-		tasks: sortTasks([...own.tasks, ...sections.flatMap(s => s.tasks)]),
-		projects: [...own.projects, ...sections.flatMap(s => s.projects)],
-		sections: [...own.sections, ...sections.flatMap(s => s.sections)],
-		labels: [...own.labels, ...sections.flatMap(s => s.labels)],
-		comments: [...own.comments, ...sections.flatMap(s => s.comments)],
+		tasks: sortTasks([...own.tasks, ...shared.flatMap(s => s.tasks)]),
+		projects: [...own.projects, ...shared.flatMap(s => s.projects)],
+		sections: [...own.sections, ...shared.flatMap(s => s.sections)],
+		labels: [...own.labels, ...shared.flatMap(s => s.labels)],
+		comments: [...own.comments, ...shared.flatMap(s => s.comments)],
 		reads: own.reads,
 	};
 }
 
 export type SharedEntry = { kind: 'project' | 'label' | 'task'; id: string; name: string; owner: Person };
 
-/** What the sidebar lists under "Shared with me": each thing its owner shared with this user that is still there. */
-export function sharedEntries(spaces: Sections): SharedEntry[] {
-	return Object.values(spaces).flatMap(({ owner, targets, tasks, projects, labels }) =>
-		targets.flatMap(({ kind, id }): SharedEntry[] => {
-			if (kind === 'project') return projects.filter(p => p.id === id).map(p => ({ kind, id, name: p.name, owner }));
-			if (kind === 'label') return labels.filter(l => l.id === id).map(l => ({ kind, id, name: l.name, owner }));
-			if (kind === 'task') return tasks.filter(t => t.id === id).map(t => ({ kind, id, name: t.title, owner }));
-			return projects.map(p => ({ kind: 'project' as const, id: p.id, name: p.name, owner }));
-		}),
-	);
+/**
+ * What the sidebar lists under "Shared with me". A space holds only what its owner shared with this user, so every
+ * project and label in it is listed, and each task that neither of them leads to: a top-level task outside every
+ * visible project and label.
+ */
+export function sharedEntries(spaces: Spaces, person: (id: string) => Person): SharedEntry[] {
+	return Object.values(spaces).flatMap(({ owner: ownerId, data }) => {
+		const owner = person(ownerId);
+		const projects = new Set(data.projects.map(p => p.id));
+		const labels = new Set(data.labels.map(l => l.id));
+		const tasks = new Set(data.tasks.map(t => t.id));
+		const loose = data.tasks.filter(
+			t =>
+				!(t.parentId && tasks.has(t.parentId)) &&
+				!(t.projectId && projects.has(t.projectId)) &&
+				!t.labelIds.some(id => labels.has(id)),
+		);
+		return [
+			...projectsInOrder(data.projects).map(p => ({ kind: 'project' as const, id: p.id, name: p.name, owner })),
+			...data.labels.map(l => ({ kind: 'label' as const, id: l.id, name: l.name, owner })),
+			...loose.map(t => ({ kind: 'task' as const, id: t.id, name: t.title, owner })),
+		];
+	});
 }
-
-export const emptySection = (owner: SpaceSection['owner']): SpaceSection => ({
-	owner,
-	cursor: 0,
-	outbox: [],
-	epoch: 0,
-	scope: '',
-	readOnly: [],
-	targets: [],
-	tasks: [],
-	projects: [],
-	sections: [],
-	labels: [],
-	comments: [],
-});

@@ -9,8 +9,8 @@ import { imageKey, keepNew, pendingUploads, readBytes, uploaded, writeBytes } fr
 
 /**
  * Task images on the web. A task's `images` field syncs like any other; the bytes stay out of it. Attaching keeps
- * the new image's bytes on this device and queues their upload before the edit is recorded, and each sync uploads a
- * space's queue before it pushes, so the server never hears of an image it cannot serve. See
+ * the new image's bytes on this device and queues their upload before the edit is written, and every upload of
+ * queued writes sends the queued images first, so the server never hears of an image it cannot serve. See
  * `docs/decisions/images.md`.
  */
 
@@ -107,13 +107,14 @@ class Images {
 	}
 
 	/**
-	 * Uploads what `space` has queued, before its sync pushes the edits that list them. Throws when the server cannot
-	 * be reached, so the sync waits too; an upload the server refuses for good is dropped instead of blocking sync.
+	 * Uploads every queued image, each to its own space, before the writes that list them. Throws when the server
+	 * cannot be reached, so those writes wait too; an upload the server refuses for good is dropped instead of
+	 * blocking them.
 	 */
-	async upload(space: string | null) {
-		const pending = await pendingUploads(space).catch(() => []);
-		for (const { key, id, size } of pending) {
-			// A failed read throws and stops the sync; only bytes that are truly gone leave the queue unsent.
+	async upload() {
+		const pending = await pendingUploads().catch(() => []);
+		for (const { key, space, id, size } of pending) {
+			// A failed read throws and stops the upload; only bytes that are truly gone leave the queue unsent.
 			const blob = await readBytes(id, size);
 			if (blob) {
 				const response = await fetch(imageUrl(space, id, size), {

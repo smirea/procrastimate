@@ -1,17 +1,17 @@
 import type { AuthMethods } from 'shared/api/contract.ts';
 import { api } from './api.ts';
+import { saveOwner } from './device.ts';
 import { identify, type SentryUser } from './sentry.ts';
 import { store } from './store.svelte.ts';
 import { toasts } from './ui.svelte.ts';
 
 /**
- * The signed-in user. The session cookie is httpOnly, so a cached user id is what lets the app open offline.
- * `procrastimate-owner` is who the local document belongs to, and it stays after sign-out so the next account
- * does not upload the previous one's tasks.
+ * The signed-in user. The session cookie is httpOnly, so a cached user id is what lets the app open offline. The
+ * local database keeps its owner after sign-out, so signing back in finds everything there, and a different account
+ * starts from an empty one.
  */
 
 const USER_KEY = 'procrastimate-user';
-const OWNER_KEY = 'procrastimate-owner';
 
 type State = 'checking' | 'in' | 'out';
 
@@ -21,7 +21,7 @@ class Session {
 	/** `in` immediately when a user id is cached, so a day offline never shows the sign-in screen. */
 	state = $state<State>(cachedUser() ? 'in' : 'checking');
 	userId = $state(cachedUser());
-	/** True once the session check has settled, so sync does not upload before a user switch clears the document. */
+	/** True once the session check has settled, so sync does not connect before a user switch clears the database. */
 	confirmed = $state(false);
 	methods = $state<AuthMethods>({
 		email: false,
@@ -63,20 +63,19 @@ class Session {
 		this.adopt({ ...body.user, id: body.user.id });
 	}
 
-	/** Remembers the user. A different owner replaces the local document with an empty pull, not an upload. */
+	/** Remembers the user and opens their database, which clears it when it held another account's rows. */
 	adopt(user: SentryUser) {
 		const { id } = user;
-		const owner = localStorage.getItem(OWNER_KEY);
-		if (owner && owner !== id) store.switchUser();
+		void store.open(id);
 		localStorage.setItem(USER_KEY, id);
-		localStorage.setItem(OWNER_KEY, id);
+		saveOwner(id);
 		this.userId = id;
 		identify(user);
 		this.state = 'in';
 		this.error = '';
 	}
 
-	/** Drops the cached session. The owner id stays, and so does the local document. */
+	/** Drops the cached session. The local database stays, with its owner. */
 	clear() {
 		localStorage.removeItem(USER_KEY);
 		this.userId = null;
