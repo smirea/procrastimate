@@ -39,7 +39,8 @@
 	const total = $derived(allGroups.reduce((n, g) => n + g.tasks.length, 0));
 	const done = $derived(project && completed.shown(`project:${project.id}`) ? projectCompleted(store.tasks, store.sections, project.id) : null);
 	const doneIn = (id: string | null) => shown(done?.groups.find((g) => (g.section?.id ?? null) === id)?.tasks ?? []);
-	const anyDone = $derived(!!done && (done.gone.length > 0 || done.groups.some((g) => g.tasks.length > 0)));
+	const gone = $derived(shown(done?.gone ?? []));
+	const anyDone = $derived(!!done && (gone.length > 0 || done.groups.some((g) => g.tasks.length > 0)));
 	const home = $derived(project ? store.homeOf(project.id) : null);
 	const owner = $derived(home ? store.ownerOf(home) : undefined);
 
@@ -135,8 +136,8 @@
 			{/if}
 		{/if}
 		{#snippet after()}
-			{#if done && (done.gone.length || !anyDone)}
-				<CompletedSection tasks={done.gone} list={`project:${project.id}`} />
+			{#if done && (gone.length || !anyDone)}
+				<CompletedSection tasks={gone} list={`project:${project.id}`} />
 			{/if}
 		{/snippet}
 	</View>

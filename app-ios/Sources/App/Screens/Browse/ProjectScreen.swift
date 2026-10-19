@@ -28,7 +28,8 @@ struct ProjectScreen: View {
             let count = groups.reduce(0) { $0 + $1.tasks.count }
             let done = showCompleted ? Views.projectCompleted(data.tasks, data.sections, project.id, in: store.timeZone) : nil
             let doneIn = { (id: String?) in shown(done?.groups.first { $0.section?.id == id }?.tasks ?? []) }
-            let anyDone = done.map { !$0.gone.isEmpty || $0.groups.contains { !$0.tasks.isEmpty } } ?? false
+            let gone = shown(done?.gone ?? [])
+            let anyDone = done.map { done in !gone.isEmpty || done.groups.contains { !$0.tasks.isEmpty } } ?? false
             let canAdd = store.canAdd(to: .project(id: project.id))
             TaskListScreen(
                 title: project.name,
@@ -76,7 +77,7 @@ struct ProjectScreen: View {
                         )
                     }
                 }
-                if let done, !done.gone.isEmpty || !anyDone { CompletedSection(tasks: done.gone) }
+                if done != nil, !gone.isEmpty || !anyDone { CompletedSection(tasks: gone) }
             }
             .animation(.snappy, value: showCompleted)
             .animation(.snappy, value: sections.map(\.section))
