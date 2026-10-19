@@ -8,20 +8,29 @@ export type RowMenuTarget = {
 	toggle?: () => void;
 };
 
-type Opened = { id: string; rolled: boolean; toggle?: () => void; x: number; y: number; keyboard: boolean };
+type Opened = {
+	id: string;
+	rolled: boolean;
+	toggle?: () => void;
+	x: number;
+	y: number;
+	keyboard: boolean;
+	/** The row's postpone button opens the menu with its postpone group alone. */
+	only?: 'postpone';
+};
 
 /** One menu for every row, mounted once at the root, so a long list pays nothing per row until one opens. */
 class RowMenu {
 	current = $state<Opened | null>(null);
 
-	open({ task, rolled = false, toggle }: RowMenuTarget, x: number, y: number, keyboard = false) {
-		this.current = { id: task.id, rolled, toggle, x, y, keyboard };
+	open({ task, rolled = false, toggle }: RowMenuTarget, x: number, y: number, keyboard = false, only?: 'postpone') {
+		this.current = { id: task.id, rolled, toggle, x, y, keyboard, only };
 	}
 
-	/** From the keyboard the menu drops below the focused row, with its first item focused. */
-	openBelow(target: RowMenuTarget, anchor: Element) {
+	/** From the keyboard or a row's button the menu drops below the anchor, with its first item focused. */
+	openBelow(target: RowMenuTarget, anchor: Element, only?: 'postpone') {
 		const rect = anchor.getBoundingClientRect();
-		this.open(target, rect.left + 24, rect.bottom, true);
+		this.open(target, rect.left + 24, rect.bottom, true, only);
 	}
 
 	close() {

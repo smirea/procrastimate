@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { DEVICE_KEYS } from './device.ts';
 import type { DateKey } from 'shared/task.ts';
 import { dateKeySchema } from 'shared/values.ts';
 import { completedPresetSchema, completedRange, type CompletedRange } from 'shared/views.ts';
@@ -11,8 +12,8 @@ export type CompletedChoice = z.infer<typeof choiceSchema>;
 const shownListSchema = z.templateLiteral([z.enum(['project', 'label']), ':', z.string()]);
 export type ShownList = z.infer<typeof shownListSchema>;
 
-const RANGE_KEY = 'procrastimate.completedRange';
-const SHOW_KEY = 'procrastimate.showCompleted';
+const RANGE_KEY = DEVICE_KEYS.completedRange;
+const SHOW_KEY = DEVICE_KEYS.showCompleted;
 
 function load(): CompletedChoice {
 	try {

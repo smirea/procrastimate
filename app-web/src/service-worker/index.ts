@@ -1,8 +1,117 @@
+import { version } from '$app/env';
+import { assets, immutable } from '$app/manifest';
 import { self } from '$app/service-worker';
+import { DEVICE_HEADER } from 'shared/auth.ts';
 import type { PushMessage } from 'shared/push.ts';
+import { cachedInstallId } from '../lib/install-cache.ts';
 
-self.addEventListener('install', () => void self.skipWaiting());
-self.addEventListener('activate', event => event.waitUntil(self.clients.claim()));
+/**
+ * The app shell, so a cold launch offline opens the local tasks: the one HTML (`/`, since the host redirects
+ * `/index.html`), the built scripts without the wasm variants, which are large and cached on first use instead,
+ * and the static files. A new deploy takes over at once (`skipWaiting` and `claim`) and drops the old shells.
+ */
+const SHELL = `shell-${version}`;
+// The manifest's paths have no leading slash. `_headers` and `.well-known` are the host's, not served as files.
+const PRECACHED = [
+	'/',
+	...immutable.map(file => `/${file.path}`).filter(path => !path.endsWith('.wasm')),
+	...assets.map(file => `/${file.path}`).filter(path => !path.startsWith('/.well-known/') && path !== '/_headers'),
+];
+
+/**
+ * The host sends the shell compressed, with `Vary: Accept-Encoding`, and the Cache API keeps those headers on a body
+ * it has already decoded. A script load's request carries `Accept-Encoding` where a page's `fetch` does not, so the
+ * `Vary` check misses the entry and Chromium cannot load a module from the cache: stored without the encoding
+ * headers, and matched ignoring `Vary`.
+ */
+async function decoded(response: Response): Promise<Response> {
+	const headers = new Headers(response.headers);
+	headers.delete('content-encoding');
+	headers.delete('content-length');
+	headers.delete('vary');
+	return new Response(await response.arrayBuffer(), {
+		status: response.status,
+		statusText: response.statusText,
+		headers,
+	});
+}
+
+async function precache(): Promise<void> {
+	const cache = await caches.open(SHELL);
+	await Promise.all(
+		PRECACHED.map(async path => {
+			const response = await fetch(path);
+			if (!response.ok) throw new Error(`${path} answered ${response.status}`);
+			await cache.put(path, await decoded(response));
+		}),
+	);
+}
+
+self.addEventListener('install', event => {
+	event.waitUntil(precache().then(() => self.skipWaiting()));
+});
+
+self.addEventListener('activate', event => {
+	event.waitUntil(
+		caches
+			.keys()
+			.then(keys =>
+				Promise.all(keys.filter(key => key.startsWith('shell-') && key !== SHELL).map(key => caches.delete(key))),
+			)
+			.then(() => self.clients.claim()),
+	);
+});
+
+self.addEventListener('fetch', event => {
+	const { request } = event;
+	if (request.method !== 'GET') return;
+	const url = new URL(request.url);
+	if (url.origin !== self.location.origin || url.pathname.startsWith('/api/')) return;
+	if (request.mode === 'navigate') {
+		event.respondWith(
+			fetch(request).catch(() => caches.match('/', { ignoreVary: true }).then(shell => shell ?? Response.error())),
+		);
+		return;
+	}
+	const immutable = url.pathname.startsWith('/_app/immutable/');
+	if (!immutable && !PRECACHED.includes(url.pathname)) return;
+	event.respondWith(
+		caches.match(request, { ignoreVary: true }).then(
+			cached =>
+				cached ??
+				fetch(request).then(async response => {
+					if (immutable && response.ok) await (await caches.open(SHELL)).put(request, await decoded(response.clone()));
+					return response;
+				}),
+		),
+	);
+});
+
+/** The browser rotated the subscription while the app was closed, so the server learns the new one here. */
+self.addEventListener('pushsubscriptionchange', event => {
+	const change = event as Event & {
+		oldSubscription: PushSubscription | null;
+		newSubscription: PushSubscription | null;
+	};
+	event.waitUntil(
+		(async () => {
+			const subscription =
+				change.newSubscription ??
+				(await self.registration.pushManager.subscribe({
+					userVisibleOnly: true,
+					applicationServerKey: change.oldSubscription?.options.applicationServerKey ?? undefined,
+				}));
+			const installId = await cachedInstallId();
+			if (!installId) return;
+			await fetch('/api/push/subscription', {
+				method: 'PUT',
+				credentials: 'include',
+				headers: { 'content-type': 'application/json', [DEVICE_HEADER]: installId },
+				body: JSON.stringify({ subscription: subscription.toJSON() }),
+			});
+		})(),
+	);
+});
 
 // iOS revokes the subscription of a site whose push shows nothing, so every push shows a notification.
 self.addEventListener('push', event => {

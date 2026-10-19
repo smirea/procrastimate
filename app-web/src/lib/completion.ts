@@ -1,5 +1,4 @@
 import { completedToast, formatDate, reopenedToast } from 'shared/format.ts';
-import { ancestorsOf } from 'shared/subtasks.ts';
 import type { Deleted } from 'shared/store.ts';
 import type { DateKey, Task } from 'shared/task.ts';
 import { store } from './store.svelte.ts';

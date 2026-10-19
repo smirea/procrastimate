@@ -115,6 +115,11 @@ class Store {
 	]);
 	#homes = $derived(homes(this.spaces));
 	#children = $derived(groupChildren(this.#tasks));
+	#taskById = $derived(new Map(this.#tasks.map(t => [t.id, t])));
+	#projectById = $derived(new Map(this.#projects.map(p => [p.id, p])));
+	#labelById = $derived(new Map(this.#labels.map(l => [l.id, l])));
+	#sectionById = $derived(new Map(this.#sections.map(s => [s.id, s])));
+	#commentById = $derived(new Map(this.#comments.map(c => [c.id, c])));
 	/** Where deleted tasks lived, so undo puts them back into the same space. */
 	#deletedFrom = new Map<string, Home>();
 
@@ -402,7 +407,7 @@ class Store {
 	}
 
 	task(id: string) {
-		return this.tasks.find(t => t.id === id);
+		return this.#taskById.get(id);
 	}
 
 	children(id: string): Task[] {
@@ -414,15 +419,15 @@ class Store {
 	}
 
 	project(id: string | null) {
-		return id ? this.projects.find(p => p.id === id) : undefined;
+		return id ? this.#projectById.get(id) : undefined;
 	}
 
 	label(id: string) {
-		return this.labels.find(l => l.id === id);
+		return this.#labelById.get(id);
 	}
 
 	section(id: string | null) {
-		return id ? this.sections.find(s => s.id === id) : undefined;
+		return id ? this.#sectionById.get(id) : undefined;
 	}
 
 	sectionsOf(projectId: string): Section[] {
@@ -607,14 +612,15 @@ class Store {
 	}
 
 	editComment(id: string, body: string, me: string) {
-		const comment = this.comments.find(c => c.id === id);
+		const comment = this.#commentById.get(id);
 		if (comment) this.#onTask(comment.taskId, data => comments.editComment(data, id, body, me, Date.now()));
 	}
 
 	/** Deletes `me`'s own comment and returns it for undo. */
 	deleteComment(id: string, me: string): Comment | undefined {
-		const comment = this.comments.find(c => c.id === id && c.authorId === me);
-		if (comment) this.#onTask(comment.taskId, data => comments.deleteComment(data, id, me));
+		const comment = this.#commentById.get(id);
+		if (comment?.authorId !== me) return undefined;
+		this.#onTask(comment.taskId, data => comments.deleteComment(data, id, me));
 		return comment;
 	}
 

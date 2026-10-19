@@ -16,6 +16,7 @@
 	import { formatDue } from 'shared/format.ts';
 	import { applyPickedLabels, formatEvent, formatLocation, formatRadius, pickedLabels, scheduledDue } from 'shared/triggers.ts';
 	import { parseMemoSource } from 'shared/memo-tasks.ts';
+	import { typedOver } from 'shared/quick-add-merge.ts';
 	import { parseQuickAdd } from 'shared/quick-add.ts';
 	import type { Task } from 'shared/task.ts';
 	import SmartInput from './SmartInput.svelte';
@@ -69,12 +70,7 @@
 		title !== task.title && parsed.title
 			? {
 					title: parsed.title,
-					// An event stands in for the date and repeat, so a typed one is ignored on an event task.
-					due: task.event ? null : (parsed.due ?? task.due),
-					recurrence: task.event ? null : (parsed.recurrence ?? task.recurrence),
-					priority: parsed.priority ?? task.priority,
-					projectId: parsed.projectId ?? task.projectId,
-					sectionId: parsed.sectionId ?? (parsed.projectId && parsed.projectId !== task.projectId ? null : task.sectionId),
+					...typedOver(task, parsed, task.event),
 					labelIds: [...new Set([...task.labelIds, ...parsed.labelIds])],
 					reminders: [...task.reminders, ...parsed.reminders],
 					location: parsed.location ? { ...parsed.location, trigger: task.location?.trigger ?? 'arrive' } : task.location,

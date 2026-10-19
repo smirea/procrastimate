@@ -20,7 +20,7 @@ Edit a task lets Stefan open a task and change its title, notes, due date, prior
 - Web on a phone: tap a task. The details sheet slides up from the bottom.
 - Web: press Enter with a task selected. Planned: task selection by keyboard is not built yet.
 - iOS: tap a task in any list. The details sheet slides up.
-- Postpone on web: hover a row and choose the calendar-plus `Postpone <title>` button. On touch screens the button is always visible, so a phone taps it directly. A popover lists the options with their weekdays.
+- Postpone on web: hover a row and choose the calendar-plus `Postpone <title>` button. On touch screens the button is always visible, so a phone taps it directly. The row menu opens below the button with only its `Postpone` group, the options with their weekdays.
 - Row menu on web: right click a row, long press it on touch, or focus it and press Shift+F10. The `Postpone` group lists the options with their weekdays.
 - Postpone on iOS: swipe a row left. A `Postpone “<title>”` dialog lists the options with their weekdays and `Pick a date…`, which opens task details. The row's context menu has a `Postpone` submenu and `Delete`.
 

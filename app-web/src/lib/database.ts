@@ -110,16 +110,38 @@ export async function trimChanges({ cursor, logged }: Read): Promise<void> {
  */
 export function writeRows(owner: string, writes: readonly RowWrite[]): Promise<void> {
 	return db.transaction(async tx => {
+		// One select per kind says which puts update, kept current as the batch inserts and deletes.
+		const stored = new Map<Kind, Set<string>>();
+		for (const [kind, group] of Map.groupBy(
+			writes.filter(write => write.op === 'put'),
+			write => write.kind,
+		)) {
+			const table = localTables[TABLE_OF[kind]];
+			const ids = [...new Set(group.map(write => write.id))];
+			const found = new Set<string>();
+			for (let at = 0; at < ids.length; at += WHOLE_TABLE_ABOVE) {
+				const rows = await tx
+					.select({ id: table.id })
+					.from(table)
+					.where(inArray(table.id, ids.slice(at, at + WHOLE_TABLE_ABOVE)));
+				for (const row of rows) found.add(row.id);
+			}
+			stored.set(kind, found);
+		}
 		for (const { op, kind, id, values } of writes) {
 			const table = localTables[TABLE_OF[kind]];
 			const where = eq(table.id, id);
 			if (op === 'delete') {
 				await tx.delete(table).where(where);
+				stored.get(kind)?.delete(id);
 				continue;
 			}
-			const exists = op === 'patch' || (await tx.select({ id: table.id }).from(table).where(where)).length > 0;
-			if (exists) await tx.update(table).set(values!).where(where);
-			else await tx.insert(table).values({ ...values, id, userId: owner } as never);
+			if (op === 'patch' || stored.get(kind)?.has(id)) {
+				await tx.update(table).set(values!).where(where);
+			} else {
+				await tx.insert(table).values({ ...values, id, userId: owner } as never);
+				stored.get(kind)?.add(id);
+			}
 		}
 	});
 }

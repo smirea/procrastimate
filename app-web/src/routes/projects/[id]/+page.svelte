@@ -4,16 +4,13 @@
 	import { flip } from 'svelte/animate';
 	import { fade } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
-	import DotsThree from 'phosphor-svelte/lib/DotsThree';
-	import PencilSimple from 'phosphor-svelte/lib/PencilSimple';
 	import RowsPlusBottom from 'phosphor-svelte/lib/RowsPlusBottom';
-	import Trash from 'phosphor-svelte/lib/Trash';
 	import ShareNetwork from 'phosphor-svelte/lib/ShareNetwork';
 	import View from '#lib/components/View.svelte';
 	import TaskList from '#lib/components/TaskList.svelte';
 	import AddTaskButton from '#lib/components/AddTaskButton.svelte';
 	import ProjectSection from '#lib/components/ProjectSection.svelte';
-	import Popover from '#lib/components/Popover.svelte';
+	import EntityActions from '#lib/components/EntityActions.svelte';
 	import InlineEdit from '#lib/components/InlineEdit.svelte';
 	import CompletedSection from '#lib/components/CompletedSection.svelte';
 	import CompletedToggle from '#lib/components/CompletedToggle.svelte';
@@ -38,7 +35,6 @@
 	const owner = $derived(home ? store.ownerOf(home) : undefined);
 
 	let renaming = $state(false);
-	let confirmingDelete = $state(false);
 	let addingSection = $state(false);
 
 	const canAdd = $derived(!!project && canAddHere({ kind: 'project', id: project.id }));
@@ -83,33 +79,11 @@
 					<button type="button" class="icon-btn touch:size-11" aria-label="Share project" onclick={() => sheets.openShare({ kind: 'project', id: project.id }, project.name)}>
 						<ShareNetwork size={19} />
 					</button>
-					<Popover label="Project actions" align="end">
-						{#snippet trigger({ toggle })}
-							<button type="button" class="icon-btn touch:size-11" aria-label="Project actions" onclick={() => {
-								confirmingDelete = false;
-								toggle();
-							}}>
-								<DotsThree size={20} weight="bold" />
-							</button>
+					<EntityActions label="Project actions" triggerLabel="Project actions" deleteLabel="Delete project" ondelete={remove} onrename={() => (renaming = true)}>
+						{#snippet confirm()}
+							Delete <strong>{project.name}</strong> and its {tasks.length} task{tasks.length === 1 ? '' : 's'}?
 						{/snippet}
-						{#snippet children({ close })}
-							{#if confirmingDelete}
-								<div class="w-60 p-1.5 text-[13px]">
-									<p>Delete <strong>{project.name}</strong> and its {tasks.length} task{tasks.length === 1 ? '' : 's'}?</p>
-									<div class="mt-2 flex justify-end gap-1.5">
-										<button type="button" class="btn btn-quiet" onclick={close}>Cancel</button>
-										<button type="button" class="btn press bg-[var(--tone-overdue)] text-on-accent" onclick={remove}>Delete</button>
-									</div>
-								</div>
-							{:else}
-								<button type="button" class="menu-item" onclick={() => {
-									renaming = true;
-									close();
-								}}><PencilSimple size={15} />Rename</button>
-								<button type="button" class="menu-item text-[var(--tone-overdue)]" onclick={() => (confirmingDelete = true)}><Trash size={15} />Delete project</button>
-							{/if}
-						{/snippet}
-					</Popover>
+					</EntityActions>
 				</div>
 			{/if}
 		{/snippet}

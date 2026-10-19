@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { fade, fly, scale } from 'svelte/transition';
+	import { fade, scale } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
 	import { cubicOut } from 'svelte/easing';
 	import MagnifyingGlass from 'phosphor-svelte/lib/MagnifyingGlass';
@@ -14,11 +14,12 @@
 	import { toDateKey, type Label, type Project } from 'shared/task.ts';
 	import Highlighted from './Highlighted.svelte';
 	import LinkedText from './LinkedText.svelte';
+	import Sheet from './Sheet.svelte';
 	import TitleFlow from './TitleFlow.svelte';
 	import { store } from '../store.svelte.ts';
 	import { labelStyle } from '../label-colors.ts';
 	import { labelIcon } from '../label-icon.ts';
-	import { clock, mobile, sheets, motion } from '../ui.svelte.ts';
+	import { clock, sheets, motion } from '../ui.svelte.ts';
 	import { dueTone, formatDate, formatDue } from 'shared/format.ts';
 	import { PRIORITIES } from '../priorities.ts';
 	import { isMenuKey, rowMenu, taskMenu } from '../row-menu.svelte.ts';
@@ -120,22 +121,11 @@
 		}
 	}
 
-	const enter = (node: Element) =>
-		mobile.current
-			? fly(node, motion({ y: '100%', duration: 300, easing: cubicOut, opacity: 1 }))
-			: scale(node, motion({ start: 0.96, duration: 200, easing: cubicOut, opacity: 0 }));
-
 	const projectOf = (hit: TaskHit) => store.project(hit.task.projectId);
 	const labelColorOf = (name: string) => store.own.labels.find((l) => l.name === name)?.color ?? 'gray';
 </script>
 
-<div class="fixed inset-0 z-40 bg-scrim backdrop-blur-[2px]" transition:fade={motion({ duration: 160 })} onclick={() => sheets.close()} aria-hidden="true"></div>
-<div
-	role="dialog"
-	aria-label="Search"
-	class="glass-strong sheet fixed z-50 flex flex-col-reverse overflow-hidden md:top-[14vh] md:left-1/2 md:max-h-[min(560px,72vh)] md:w-[min(640px,calc(100vw-2rem))] md:-translate-x-1/2 md:flex-col md:rounded-panel"
-	transition:enter
->
+<Sheet label="Search" desktop="scale" class="flex-col-reverse overflow-hidden md:top-[14vh] md:left-1/2 md:max-h-[min(560px,72vh)] md:w-[min(640px,calc(100vw-2rem))] md:-translate-x-1/2 md:flex-col md:rounded-panel">
 	<div class="flex shrink-0 items-center gap-2.5 px-4 py-3 touch:py-2">
 		<MagnifyingGlass size={18} class="shrink-0 text-muted" />
 		<input
@@ -277,7 +267,7 @@
 			{/each}
 		</div>
 	{/if}
-</div>
+</Sheet>
 
 <style>
 	.result {

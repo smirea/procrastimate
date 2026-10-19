@@ -1,15 +1,12 @@
 <script lang="ts">
 	import ArrowDown from 'phosphor-svelte/lib/ArrowDown';
 	import ArrowUp from 'phosphor-svelte/lib/ArrowUp';
-	import DotsThree from 'phosphor-svelte/lib/DotsThree';
-	import PencilSimple from 'phosphor-svelte/lib/PencilSimple';
-	import Trash from 'phosphor-svelte/lib/Trash';
 	import { sectionTasks } from 'shared/store.ts';
 	import type { Section, Task } from 'shared/task.ts';
 	import AddTaskButton from './AddTaskButton.svelte';
 	import CompletedList from './CompletedList.svelte';
 	import InlineEdit from './InlineEdit.svelte';
-	import Popover from './Popover.svelte';
+	import EntityActions from './EntityActions.svelte';
 	import SectionHeading from './SectionHeading.svelte';
 	import TaskList from './TaskList.svelte';
 	import { toastDeleted } from '../completion.ts';
@@ -30,7 +27,6 @@
 	}: { section: Section; tasks: Task[]; done: Task[]; index: number; count: number; editable: boolean; canAdd: boolean } = $props();
 
 	let renaming = $state(false);
-	let confirmingDelete = $state(false);
 </script>
 
 <section class="mt-6" aria-label={section.name}>
@@ -50,54 +46,30 @@
 		{/snippet}
 		{#snippet actions()}
 			{#if editable}
-				<Popover label="Section actions" align="end">
-					{#snippet trigger({ toggle })}
-						<button
-							type="button"
-							class="icon-btn hit-area size-6!"
-							aria-label={`${section.name} actions`}
-							onclick={() => {
-								confirmingDelete = false;
-								toggle();
-							}}
-						>
-							<DotsThree size={16} weight="bold" />
-						</button>
+				<EntityActions
+					label="Section actions"
+					triggerLabel={`${section.name} actions`}
+					triggerClass="icon-btn hit-area size-6!"
+					iconSize={16}
+					deleteLabel="Delete section"
+					ondelete={() => toastDeleted(section.name, store.deleteSection(section.id))}
+					onrename={() => (renaming = true)}
+				>
+					{#snippet confirm()}
+						{@const removing = sectionTasks(store.tasks, section.id).length}
+						Delete <strong>{section.name}</strong>{removing ? ` and its ${removing} task${removing === 1 ? '' : 's'}` : ''}?
 					{/snippet}
-					{#snippet children({ close })}
-						{#if confirmingDelete}
-							{@const removing = sectionTasks(store.tasks, section.id).length}
-							<div class="w-60 p-1.5 text-[13px]">
-								<p>Delete <strong>{section.name}</strong>{removing ? ` and its ${removing} task${removing === 1 ? '' : 's'}` : ''}?</p>
-								<div class="mt-2 flex justify-end gap-1.5">
-									<button type="button" class="btn btn-quiet" onclick={close}>Cancel</button>
-									<button
-										type="button"
-										class="btn press bg-[var(--tone-overdue)] text-on-accent"
-										onclick={() => {
-											close();
-											toastDeleted(section.name, store.deleteSection(section.id));
-										}}>Delete</button
-									>
-								</div>
-							</div>
-						{:else}
-							<button type="button" class="menu-item" onclick={() => {
-								renaming = true;
-								close();
-							}}><PencilSimple size={15} />Rename</button>
-							<button type="button" class="menu-item" disabled={index === 0} onclick={() => {
-								store.moveSection(section.id, index - 1);
-								close();
-							}}><ArrowUp size={15} />Move up</button>
-							<button type="button" class="menu-item" disabled={index === count - 1} onclick={() => {
-								store.moveSection(section.id, index + 1);
-								close();
-							}}><ArrowDown size={15} />Move down</button>
-							<button type="button" class="menu-item text-[var(--tone-overdue)]" onclick={() => (confirmingDelete = true)}><Trash size={15} />Delete section</button>
-						{/if}
+					{#snippet after({ close })}
+						<button type="button" class="menu-item" disabled={index === 0} onclick={() => {
+							store.moveSection(section.id, index - 1);
+							close();
+						}}><ArrowUp size={15} />Move up</button>
+						<button type="button" class="menu-item" disabled={index === count - 1} onclick={() => {
+							store.moveSection(section.id, index + 1);
+							close();
+						}}><ArrowDown size={15} />Move down</button>
 					{/snippet}
-				</Popover>
+				</EntityActions>
 			{/if}
 		{/snippet}
 	</SectionHeading>

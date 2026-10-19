@@ -14,7 +14,6 @@
 	import ArrowElbowDownRight from 'phosphor-svelte/lib/ArrowElbowDownRight';
 	import CalendarPlus from 'phosphor-svelte/lib/CalendarPlus';
 	import type { Snippet } from 'svelte';
-	import Popover from './Popover.svelte';
 	import type { Task } from 'shared/task.ts';
 	import Checkbox from './Checkbox.svelte';
 	import LinkedText from './LinkedText.svelte';
@@ -23,14 +22,14 @@
 	import { useLookup } from '../lookup.ts';
 	import { clock, reveal, motion, sheets } from '../ui.svelte.ts';
 	import { store } from '../store.svelte.ts';
-	import { WEEKDAY_NAMES, addedAgo, dueTone, formatDue, formatTime, postponeOptions, repeatLabel } from 'shared/format.ts';
-	import { toDateKey, weekdayOf } from 'shared/task.ts';
+	import { addedAgo, dueTone, formatDue, formatTime, repeatLabel } from 'shared/format.ts';
+	import { toDateKey } from 'shared/task.ts';
 	import { eventLabel, formatLocation, scheduledDue } from 'shared/triggers.ts';
 	import { parseMemoSource } from 'shared/memo-tasks.ts';
 	import { PRIORITIES } from '../priorities.ts';
-	import { completeTask, postponeTask } from '../completion.ts';
+	import { completeTask } from '../completion.ts';
 	import { progressOf } from 'shared/subtasks.ts';
-	import { taskMenu } from '../row-menu.svelte.ts';
+	import { rowMenu, taskMenu } from '../row-menu.svelte.ts';
 
 	let {
 		task,
@@ -211,27 +210,14 @@
 	{/if}
 	{#if !task.event && editable && !done}
 		<div class="mt-1.5 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100 touch:opacity-100">
-			<Popover label="Postpone" align="end">
-				{#snippet trigger({ toggle })}
-					<button type="button" class="hit-area relative grid size-8 place-items-center rounded-full text-muted hover:bg-ink/5" aria-label={`Postpone ${task.title}`} onclick={toggle}>
-						<CalendarPlus size={16} />
-					</button>
-				{/snippet}
-				{#snippet children({ close })}
-					{#each postponeOptions(due, clock.today) as option (option.date)}
-						<button
-							type="button"
-							class="menu-item flex justify-between gap-6"
-							onclick={() => {
-								postponeTask(task, option.date);
-								close();
-							}}
-						>
-							{option.label}<span class="text-muted">{WEEKDAY_NAMES[weekdayOf(option.date)]}</span>
-						</button>
-					{/each}
-				{/snippet}
-			</Popover>
+			<button
+				type="button"
+				class="hit-area relative grid size-8 place-items-center rounded-full text-muted hover:bg-ink/5"
+				aria-label={`Postpone ${task.title}`}
+				onclick={(event) => rowMenu.openBelow({ task }, event.currentTarget, 'postpone')}
+			>
+				<CalendarPlus size={16} />
+			</button>
 		</div>
 	{/if}
 	{@render trailing?.()}

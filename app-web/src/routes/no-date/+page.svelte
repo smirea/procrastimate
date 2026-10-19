@@ -7,8 +7,9 @@
 	import { store } from '#lib/store.svelte.ts';
 	import { clock, mobile } from '#lib/ui.svelte.ts';
 	import { noDateTasks } from 'shared/views.ts';
+	import { DEVICE_KEYS } from '#lib/device.ts';
 
-	const SORT_KEY = 'procrastimate.noDateOldestFirst';
+	const SORT_KEY = DEVICE_KEYS.noDateOldestFirst;
 	let newestFirst = $state(localStorage.getItem(SORT_KEY) === null);
 	const view = $derived(noDateTasks(store.own.tasks, clock.today, newestFirst));
 

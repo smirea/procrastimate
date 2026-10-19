@@ -1,14 +1,11 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import DotsThree from 'phosphor-svelte/lib/DotsThree';
-	import PencilSimple from 'phosphor-svelte/lib/PencilSimple';
-	import Trash from 'phosphor-svelte/lib/Trash';
 	import Check from 'phosphor-svelte/lib/Check';
 	import ShareNetwork from 'phosphor-svelte/lib/ShareNetwork';
 	import View from '#lib/components/View.svelte';
 	import TaskList from '#lib/components/TaskList.svelte';
-	import Popover from '#lib/components/Popover.svelte';
+	import EntityActions from '#lib/components/EntityActions.svelte';
 	import InlineEdit from '#lib/components/InlineEdit.svelte';
 	import CompletedSection from '#lib/components/CompletedSection.svelte';
 	import CompletedToggle from '#lib/components/CompletedToggle.svelte';
@@ -40,7 +37,6 @@
 	const owner = $derived(home ? store.ownerOf(home) : undefined);
 
 	let renaming = $state(false);
-	let confirmingDelete = $state(false);
 
 	function remove() {
 		if (!label) return;
@@ -89,25 +85,17 @@
 							<ShareNetwork size={19} />
 						</button>
 					{/if}
-					<Popover label={place ? 'Place actions' : 'Label actions'} align="end">
-						{#snippet trigger({ toggle })}
-							<button type="button" class="icon-btn touch:size-11" aria-label={place ? 'Place actions' : 'Label actions'} onclick={() => {
-								confirmingDelete = false;
-								toggle();
-							}}>
-								<DotsThree size={20} weight="bold" />
-							</button>
+					<EntityActions
+						label={place ? 'Place actions' : 'Label actions'}
+						triggerLabel={place ? 'Place actions' : 'Label actions'}
+						deleteLabel={`Delete ${noun}`}
+						ondelete={remove}
+						onrename={() => (renaming = true)}
+					>
+						{#snippet confirm()}
+							Delete <strong>{label.name}</strong>? {place ? 'Its tasks keep the place.' : 'Its tasks stay, without the label.'}
 						{/snippet}
-						{#snippet children({ close })}
-							{#if confirmingDelete}
-								<div class="w-60 p-1.5 text-[13px]">
-									<p>Delete <strong>{label.name}</strong>? {place ? 'Its tasks keep the place.' : 'Its tasks stay, without the label.'}</p>
-									<div class="mt-2 flex justify-end gap-1.5">
-										<button type="button" class="btn btn-quiet" onclick={close}>Cancel</button>
-										<button type="button" class="btn press bg-[var(--tone-overdue)] text-on-accent" onclick={remove}>Delete</button>
-									</div>
-								</div>
-							{:else}
+						{#snippet before()}
 								<div role="radiogroup" aria-label={place ? 'Place color' : 'Label color'} class="grid w-max grid-cols-6 gap-0.5 p-1">
 									{#each LABEL_COLORS as color (color)}
 										{@const checked = label.color === color}
@@ -126,14 +114,8 @@
 										</button>
 									{/each}
 								</div>
-								<button type="button" class="menu-item" onclick={() => {
-									renaming = true;
-									close();
-								}}><PencilSimple size={15} />Rename</button>
-								<button type="button" class="menu-item text-[var(--tone-overdue)]" onclick={() => (confirmingDelete = true)}><Trash size={15} />Delete {noun}</button>
-							{/if}
 						{/snippet}
-					</Popover>
+					</EntityActions>
 				</div>
 			{/if}
 		{/snippet}

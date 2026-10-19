@@ -6,46 +6,38 @@ import type { Client } from 'shared/values.ts';
 import routes from './generated/contract.json';
 import { installId } from './device.ts';
 
-function browser(): { name: string; os: string } {
-	const ua = navigator.userAgent;
-	const name = /Edg\//.test(ua)
-		? 'Edge'
-		: /Firefox\//.test(ua)
-			? 'Firefox'
-			: /Chrome\//.test(ua)
-				? 'Chrome'
-				: /Safari\//.test(ua)
-					? 'Safari'
-					: 'Browser';
-	const os = /iPhone/.test(ua)
-		? 'iPhone'
-		: /iPad/.test(ua)
-			? 'iPad'
-			: /Android/.test(ua)
-				? 'Android'
-				: /Mac OS X/.test(ua)
-					? 'macOS'
-					: /Windows/.test(ua)
-						? 'Windows'
-						: /Linux/.test(ua)
-							? 'Linux'
-							: '';
-	return { name, os };
-}
+/** In order: Edge and Chrome both say `Chrome/`, and every WebKit browser says `Safari/`. */
+const BROWSERS: [RegExp, string][] = [
+	[/Edg\//, 'Edge'],
+	[/Firefox\//, 'Firefox'],
+	[/Chrome\//, 'Chrome'],
+	[/Safari\//, 'Safari'],
+];
+const SYSTEMS: [RegExp, string][] = [
+	[/iPhone/, 'iPhone'],
+	[/iPad/, 'iPad'],
+	[/Android/, 'Android'],
+	[/Mac OS X/, 'macOS'],
+	[/Windows/, 'Windows'],
+	[/Linux/, 'Linux'],
+];
+const match = (table: [RegExp, string][], ua: string) => table.find(([pattern]) => pattern.test(ua))?.[1];
 
-function deviceName(): string {
-	const { name, os } = browser();
-	return os ? `${name} on ${os}` : name;
-}
+/** Read once: the user agent does not change while the page lives. */
+const browser = {
+	name: match(BROWSERS, navigator.userAgent) ?? 'Browser',
+	os: match(SYSTEMS, navigator.userAgent) ?? '',
+};
+
+const deviceName = browser.os ? `${browser.name} on ${browser.os}` : browser.name;
 
 /** This app, which the server records on every op a request writes. The deploy's commit is the version. */
 function client(): Client {
-	const { name, os } = browser();
 	return {
 		kind: 'web',
 		version: __SENTRY_TARGET__?.release ?? null,
-		device: name,
-		os: os || null,
+		device: browser.name,
+		os: browser.os || null,
 		timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
 	};
 }
@@ -57,7 +49,7 @@ function client(): Client {
 export function deviceHeaders(path: readonly string[] = []): Record<string, string> {
 	const app = { [CLIENT_HEADER]: JSON.stringify(client()) };
 	if (path[0] !== 'push') return app;
-	return { ...app, [DEVICE_HEADER]: installId(), [DEVICE_NAME_HEADER]: deviceName() };
+	return { ...app, [DEVICE_HEADER]: installId(), [DEVICE_NAME_HEADER]: deviceName };
 }
 
 /**

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { fitVertical, GAP, MARGIN, viewportHeight } from '../placement.ts';
 	import { motion } from '../ui.svelte.ts';
 	import { tick } from 'svelte';
 	import { scale } from 'svelte/transition';
@@ -46,8 +47,6 @@
 		onblur?: () => void;
 	} = $props();
 
-	const GAP = 6;
-	const MARGIN = 8;
 	const uid = $props.id();
 
 	let root: HTMLDivElement;
@@ -168,11 +167,8 @@
 	/** Prefers the space above the input, the only room on a phone with the keyboard open, and flips below when that is too short. */
 	function place(node: HTMLDivElement) {
 		const anchor = root.getBoundingClientRect();
-		const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
-		const above = anchor.top - GAP - MARGIN;
-		const below = viewportHeight - anchor.bottom - GAP - MARGIN;
-		const flip = node.scrollHeight > above && below > above;
-		placement = { above: !flip, maxHeight: flip ? below : above };
+		const room = { above: anchor.top - GAP - MARGIN, below: viewportHeight() - anchor.bottom - GAP - MARGIN };
+		placement = fitVertical(room, node.scrollHeight, 'above');
 	}
 
 	$effect(() => {

@@ -1,11 +1,12 @@
 import { MediaQuery } from 'svelte/reactivity';
+import { DEVICE_KEYS } from './device.ts';
 import { themeChoices, type ThemeChoice } from 'shared/theme.ts';
 
 export { themeChoices, type ThemeChoice };
 export type Theme = Exclude<ThemeChoice, 'system'>;
 
 /** The pre-paint script in `app.html` repeats the key and these colors, which match `--canvas` in `index.css`. */
-const STORAGE_KEY = 'procrastimate-theme';
+const STORAGE_KEY = DEVICE_KEYS.theme;
 const CHROME: Record<Theme, string> = { light: '#f6f6f7', dark: '#0e0e10' };
 
 const prefersDark = new MediaQuery('prefers-color-scheme: dark');

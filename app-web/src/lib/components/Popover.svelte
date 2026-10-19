@@ -2,6 +2,7 @@
 	import type { Snippet } from 'svelte';
 	import { scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
+	import { fitVertical, GAP, MARGIN, viewportHeight } from '../placement.ts';
 	import { motion } from '../ui.svelte.ts';
 
 	let {
@@ -18,8 +19,6 @@
 		open?: boolean;
 	} = $props();
 
-	const GAP = 6;
-	const MARGIN = 8;
 
 	let root: HTMLDivElement;
 	let panel = $state<HTMLDivElement>();
@@ -37,20 +36,13 @@
 	function place(panel: HTMLDivElement) {
 		const anchor = root.getBoundingClientRect();
 		const viewportWidth = document.documentElement.clientWidth;
-		const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
 		const top = root.closest('.sheet')?.querySelector(':scope > header')?.getBoundingClientRect().bottom ?? 0;
 		const width = panel.offsetWidth;
 		const left = align === 'end' ? anchor.right - width : anchor.left;
 		const shift = Math.max(MARGIN - left, Math.min(0, viewportWidth - MARGIN - (left + width)));
-		const below = viewportHeight - anchor.bottom - GAP - MARGIN;
-		const above = anchor.top - top - GAP - MARGIN;
-		const flip = panel.scrollHeight > below && above > below;
-		placement = {
-			above: flip,
-			left: left + shift,
-			top: flip ? anchor.top - GAP : anchor.bottom + GAP,
-			maxHeight: flip ? above : below,
-		};
+		const room = { above: anchor.top - top - GAP - MARGIN, below: viewportHeight() - anchor.bottom - GAP - MARGIN };
+		const { above, maxHeight } = fitVertical(room, panel.scrollHeight, 'below');
+		placement = { above, left: left + shift, top: above ? anchor.top - GAP : anchor.bottom + GAP, maxHeight };
 	}
 
 	let returnFocus: HTMLElement | null = null;
