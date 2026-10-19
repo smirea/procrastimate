@@ -13,6 +13,7 @@ struct TaskRow<Trailing: View>: View {
     @Environment(Store.self) private var store
     @Environment(TaskActions.self) private var actions
     @Environment(Navigator.self) private var navigator
+    @Environment(SyncClient.self) private var sync
     @Environment(\.today) private var today
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -76,7 +77,17 @@ struct TaskRow<Trailing: View>: View {
                     .padding(.top, 9)
                     .accessibilityLabel("Added \(added.lowercased())")
             }
+            if sync.isUnsynced(task.id) {
+                Image(systemName: "icloud.and.arrow.up")
+                    .font(.caption)
+                    .foregroundStyle(.faint)
+                    .padding(.top, 9)
+                    .transition(.scale(scale: 0.6).combined(with: .opacity))
+                    .accessibilityLabel("Not synced yet")
+                    .accessibilityIdentifier("unsynced-\(task.title)")
+            }
         }
+        .animation(.snappy(duration: 0.18), value: sync.isUnsynced(task.id))
         .background {
             RoundedRectangle(cornerRadius: 14)
                 .fill(.accent.opacity(navigator.revealed == task.id ? 0.14 : 0))

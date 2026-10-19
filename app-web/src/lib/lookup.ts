@@ -6,6 +6,7 @@ import type { Label, Project, Section, Task } from 'shared/task.ts';
 import { comments } from './comments.svelte.ts';
 import { store } from './store.svelte.ts';
 import { sheets } from './ui.svelte.ts';
+import { unsynced } from './unsynced.svelte.ts';
 
 /**
  * What a task row reads besides the task. Inside the app it is the store. A public link's page provides its own,
@@ -21,6 +22,8 @@ export type Lookup = {
 	canEdit: (id: string) => boolean;
 	/** Undefined for a task without comments. */
 	commentBadge: (id: string) => CommentBadge | undefined;
+	/** A change to the task waits in this device's upload queue. */
+	unsynced: (id: string) => boolean;
 	/** Null where rows do not open details. */
 	open: ((id: string) => void) | null;
 };
@@ -35,6 +38,7 @@ const storeLookup: Lookup = {
 	subtasks: id => store.children(id),
 	canEdit: id => store.canEdit(id),
 	commentBadge: id => comments.badge(id),
+	unsynced: id => unsynced.has(id),
 	open: id => sheets.openTask(id),
 };
 
@@ -76,6 +80,7 @@ export function provideReadOnlyLookup(data: () => Pick<StoreData, 'tasks' | 'pro
 		subtasks: id => index().children.get(id) ?? [],
 		canEdit: () => false,
 		commentBadge: () => undefined,
+		unsynced: () => false,
 		open: null,
 	});
 }

@@ -29,6 +29,7 @@ struct TaskDetailsPage: View {
 
 private struct TaskDetailsForm: View {
     @Environment(Store.self) private var store
+    @Environment(SyncClient.self) private var sync
     @Environment(TaskActions.self) private var actions
     @Environment(\.clock) private var clock
     @Environment(\.space) private var space
@@ -91,6 +92,20 @@ private struct TaskDetailsForm: View {
                     .disabled(locked)
                 }
                 .font(.title3.weight(.semibold))
+                // Floats in the field's own top inset, so the title never moves when the notice comes or goes.
+                .overlay(alignment: .topLeading) {
+                    if sync.isUnsynced(task.id) {
+                        SwiftUI.Label("Not saved yet. Will sync when online.", systemImage: "icloud.and.arrow.up")
+                            .font(.caption2)
+                            .foregroundStyle(.muted)
+                            .padding(.leading, 5)
+                            .offset(y: -9)
+                            .transition(.opacity)
+                            .accessibilityElement(children: .combine)
+                            .accessibilityIdentifier("unsynced-notice")
+                    }
+                }
+                .animation(.easeOut(duration: 0.15), value: sync.isUnsynced(task.id))
 
                 FlowLayout(spacing: 6) {
                     if task.event != nil {

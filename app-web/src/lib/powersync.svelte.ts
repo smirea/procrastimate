@@ -13,6 +13,7 @@ import { session } from './session.svelte.ts';
 import { store } from './store.svelte.ts';
 import { reportWarning } from './sentry.ts';
 import { toasts } from './ui.svelte.ts';
+import { unsynced } from './unsynced.svelte.ts';
 
 const OPS: Record<UpdateType, RowOp> = {
 	[UpdateType.PUT]: 'put',
@@ -141,6 +142,7 @@ export function startSync(userId: string): () => void {
 		})
 		.catch(reportError);
 	void refreshPeople();
+	const stopUnsynced = unsynced.start();
 	const asked = new Set<string>();
 	const stopEffects = $effect.root(() => {
 		// A space whose owner this device has not met yet needs their name for its byline.
@@ -154,6 +156,7 @@ export function startSync(userId: string): () => void {
 	return () => {
 		stopped = true;
 		stopEffects();
+		stopUnsynced();
 		void powerSync.disconnect();
 	};
 }

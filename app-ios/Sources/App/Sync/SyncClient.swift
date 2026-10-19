@@ -24,6 +24,7 @@ final class SyncClient {
 
     let store: Store
     @ObservationIgnored let database: LocalDatabase
+    private let unsynced = UnsyncedTasks()
     @ObservationIgnored private let clock: AppClock
     @ObservationIgnored private let ready: Task<Void, any Error>
     @ObservationIgnored private let writes: AsyncStream<RowBatch>.Continuation
@@ -88,6 +89,7 @@ final class SyncClient {
             fatalError("Could not set up the local database: \(error)")
         }
         observe()
+        unsynced.start(in: database.pool, offline: Launch.offline)
         // The store holds the change until the server's settings row is here, so the zone only ever patches it.
         store.noteTimeZone(clock.timeZone.identifier)
         for await batch in batches {
@@ -209,6 +211,12 @@ final class SyncClient {
             return
         }
         await loadPeople()
+    }
+
+    /// A change to the task waits in this device's upload queue. Rows written without a session never sync, so they
+    /// say nothing, except under the DEBUG offline launch, which stands in for a session without a network.
+    func isUnsynced(_ taskID: String) -> Bool {
+        (store.me != Self.localOwner || Launch.offline) && unsynced.contains(taskID)
     }
 
     func resume() {
