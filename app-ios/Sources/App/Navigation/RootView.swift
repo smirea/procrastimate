@@ -294,7 +294,6 @@ private extension View {
 
 private struct QuickAddOverlay: View {
     @Environment(Navigator.self) private var navigator
-    @Environment(Store.self) private var store
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -305,15 +304,10 @@ private struct QuickAddOverlay: View {
                     .accessibilityHidden(true)
                     .transition(.opacity)
                 QuickAddSheet(defaults: defaults)
-                    .environment(\.space, space(of: defaults))
                     .transition(.move(edge: .bottom))
             }
         }
         .animation(.snappy(duration: 0.3), value: navigator.quickAdd)
-    }
-
-    private func space(of defaults: QuickAddDefaults) -> SpaceKey {
-        store.space(of: defaults)
     }
 }
 

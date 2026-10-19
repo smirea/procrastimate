@@ -42,6 +42,13 @@ function spaceOf(screen: Screen | null) {
 /** Whether `screen` takes new tasks. A project or label shared with this user to view only takes none. */
 export const canAddHere = (screen: Screen) => canAddTo(screen, spaceOf(screen));
 
+/**
+ * The projects and labels a new task may land on, in every space, which quick add offers. One shared to view only is
+ * left out, because the server refuses a task there.
+ */
+export const addableProjects = () => store.projects.filter(p => canAddHere({ kind: 'project', id: p.id }));
+export const addableLabels = () => store.labels.filter(l => canAddHere({ kind: 'label', id: l.id }));
+
 /** Where the last quick add saved to, reused while the list it saved from stays open. */
 let reused: { path: string; defaults: ListDefaults } | null = null;
 

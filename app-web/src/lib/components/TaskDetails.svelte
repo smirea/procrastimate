@@ -14,6 +14,7 @@
 	import ProjectGlyph from './ProjectGlyph.svelte';
 	import Tray from 'phosphor-svelte/lib/Tray';
 	import CloudArrowUp from 'phosphor-svelte/lib/CloudArrowUp';
+	import { projectsInOrder } from 'shared/store.ts';
 	import { formatDue } from 'shared/format.ts';
 	import { applyPickedLabels, formatEvent, formatLocation, formatRadius, pickedLabels, scheduledDue } from 'shared/triggers.ts';
 	import { parseMemoSource } from 'shared/memo-tasks.ts';
@@ -186,7 +187,7 @@
 			<ProjectPicker
 				projectId={draft.projectId}
 				sectionId={draft.sectionId}
-				projects={space.projects}
+				projects={projectsInOrder(space.projects)}
 				sections={space.sections}
 				canCreate={home === null}
 				onchange={(place) => update(place)}

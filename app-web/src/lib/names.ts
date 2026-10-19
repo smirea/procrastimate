@@ -4,6 +4,7 @@ import { labelIdsOf, projectIdsOf, sectionIdsOf, type Named, type Sigil } from '
 import type { Task } from 'shared/task.ts';
 import { labelIcon } from './label-icon.ts';
 import { projectIcon } from './project-icon.ts';
+import { addableLabels, addableProjects } from './screen.ts';
 import { store } from './store.svelte.ts';
 
 export type NameKind = 'project' | 'section' | 'label';
@@ -35,7 +36,7 @@ export const NAME_SOURCES: Record<Exclude<NameKind, 'section'>, NameSource> = {
 		list: 'Projects',
 		noun: 'project',
 		icon: id => projectIcon(store.project(id)),
-		items: () => store.projects,
+		items: addableProjects,
 		idsOf: projectIdsOf,
 		create: name => store.addProject(name),
 	},
@@ -44,7 +45,7 @@ export const NAME_SOURCES: Record<Exclude<NameKind, 'section'>, NameSource> = {
 		list: 'Labels',
 		noun: 'label',
 		icon: id => labelIcon(store.labels.find(l => l.id === id)),
-		items: () => store.labels,
+		items: addableLabels,
 		idsOf: labelIdsOf,
 		create: name => store.addLabel(name),
 	},

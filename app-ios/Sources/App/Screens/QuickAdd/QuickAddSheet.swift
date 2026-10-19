@@ -10,13 +10,12 @@ struct QuickAddSheet: View {
     @Environment(Store.self) private var store
     @Environment(Navigator.self) private var navigator
     @Environment(\.clock) private var clock
-    @Environment(\.space) private var space
     @Environment(TaskImages.self) private var images
 
-    /// Quick add from a shared project or label names only that space's projects and labels.
-    private var spaceProjects: [Project] { store.projects(in: space) }
-    private var spaceSections: [ProjectSection] { store.data(in: space).sections }
-    private var spaceLabels: [Core.Label] { store.labels(in: space) }
+    /// Quick add names every space's projects and labels a task may land on, and a picked one moves the task there.
+    private var spaceProjects: [Project] { store.everySpace.projects }
+    private var spaceSections: [ProjectSection] { store.everySpace.sections }
+    private var spaceLabels: [Core.Label] { store.everySpace.labels }
 
     @State private var draft: QuickAddDraft
     @State private var listAt: Int?
@@ -124,6 +123,9 @@ struct QuickAddSheet: View {
         // A tap between controls, or just beside the plain mic glyph, would otherwise reach the scrim and close the card.
         .contentShape(.rect)
         .offset(y: lift)
+        // The labels picker lists, and creates in, the space the task will land in, as the web's draft home does.
+        .environment(\.space, store.creationSpace(projectId: resolved.projectId, labelIds: resolved.labelIds))
+        .environment(\.namesFromEverySpace, true)
         .sensoryFeedback(.selection, trigger: draft.picked)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("Quick add")
@@ -335,7 +337,7 @@ struct QuickAddSheet: View {
             chip(button, parsed, resolved).id(button)
         }
         // The name the suggestion list is open on already offers to create it there.
-        ForEach(NameSearch.unknownNames(draft.text, parsed.tokens, spaceProjects, spaceLabels).filter { $0.start != listAt && space == .own }, id: \.self) { name in
+        ForEach(NameSearch.unknownNames(draft.text, parsed.tokens, spaceProjects, spaceLabels).filter { $0.start != listAt }, id: \.self) { name in
             let title = "Create \(name.sigil.rawValue)\(name.name)"
             Button { create(name) } label: {
                 Chip(systemImage: "plus", text: title, tone: .accent)

@@ -105,6 +105,25 @@ test('a guest who can only view a shared project gets no add row, and quick add 
 	await expect(guest.app.quickAdd().getByText(project)).toHaveCount(0);
 	await expect(guest.app.quickAdd().getByText('Inbox')).toBeVisible();
 	await guest.page.screenshot({ path: 'test-results/sharing/view-only-quick-add.png' });
+	await guest.app.taskInput().fill('Pick up bread #Groceries');
+	await expect(guest.app.quickAdd().getByRole('listbox')).not.toContainText(project);
+});
+
+test('quick add on any screen files into a project shared to edit', async ({ devices }) => {
+	const guest = await devices.open({ person: 'Quinn', path: '/inbox', heading: 'Inbox' });
+	const { owner, project } = await ownerWithProject(devices);
+	await shareWith(owner, guest);
+	const shared = await sharedWithMe(guest);
+	await expect(shared.getByRole('link', { name: new RegExp(project) })).toBeVisible({ timeout: 15_000 });
+	await guest.page.keyboard.press('Escape');
+
+	await guest.app.openQuickAdd();
+	await guest.app.taskInput().fill('Pick up bread #Groceries');
+	await expect(guest.app.quickAdd().getByRole('listbox')).toContainText(project);
+	await guest.app.taskInput().press('Tab');
+	await expect(guest.app.quickAdd().getByRole('button', { name: `Project ${project}` })).toBeVisible();
+	await guest.app.taskInput().press('Enter');
+	await expect(owner.app.row('Pick up bread')).toBeVisible({ timeout: 15_000 });
 });
 
 test('a guest comments on a shared task, and the owner sees it unread until they open it', async ({ devices }) => {

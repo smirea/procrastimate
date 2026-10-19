@@ -206,6 +206,24 @@ public final class Store {
         }
     }
 
+    /// Every space's rows that a new task may land on, which quick add parses and suggests from, since its task can
+    /// land in any space. A project or label shared to view only is left out, because the server refuses a task there.
+    public var everySpace: StoreData {
+        let projects = allProjects.filter { Screens.canAdd(to: .project(id: $0.id), access(of: .project(id: $0.id))) }
+        let ids = Set(projects.map(\.id))
+        return StoreData(
+            tasks: allTasks,
+            projects: projects,
+            sections: allSections.filter { ids.contains($0.projectId) },
+            labels: allLabels.filter { Screens.canAdd(to: .label(id: $0.id), access(of: .label(id: $0.id))) }
+        )
+    }
+
+    /// The space a new task with this project and these labels lands in, as `addTask` routes it.
+    public func creationSpace(projectId: String?, labelIds: [String]) -> SpaceKey {
+        SpaceRouting.creationHome(homes, projectId: projectId, labelIds: labelIds, parentId: nil).map { .shared($0) } ?? .own
+    }
+
     /// The projects and labels a task in this space can pick. A task never leaves its space.
     public func projects(in space: SpaceKey) -> [Project] { StoreRules.projectsInOrder(data(in: space).projects) }
     public func labels(in space: SpaceKey) -> [Label] { data(in: space).labels }

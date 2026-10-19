@@ -135,14 +135,16 @@ extension Store {
 struct PlaceMenuContent: View {
     @Environment(Store.self) private var store
     @Environment(\.space) private var space
+    @Environment(\.namesFromEverySpace) private var everySpace
     let selection: Binding<Place>
     @Binding var creating: Bool
     /// A ramble entry has no section, so its picker lists projects only.
     var showsSections = true
 
     var body: some View {
-        let projects = store.projects(in: space)
-        let sections = showsSections ? store.data(in: space).sections : []
+        let data = everySpace ? store.everySpace : store.data(in: space)
+        let projects = everySpace ? data.projects : store.projects(in: space)
+        let sections = showsSections ? data.sections : []
         let sectioned = { (project: Project) in sections.contains { $0.projectId == project.id } }
         Picker("Project", selection: selection) {
             SwiftUI.Label("Inbox", systemImage: "tray").tag(Place())
@@ -165,7 +167,7 @@ struct PlaceMenuContent: View {
                 SwiftUI.Label(project.name, systemImage: selection.wrappedValue.projectId == project.id ? "checkmark" : project.systemImage)
             }
         }
-        if space == .own { Button("New project…", systemImage: "plus") { creating = true } }
+        if everySpace || space == .own { Button("New project…", systemImage: "plus") { creating = true } }
     }
 }
 

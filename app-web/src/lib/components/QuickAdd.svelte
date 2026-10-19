@@ -476,7 +476,7 @@
 		<QuickAddMenu {values} onrun={run} />
 	</div>
 	<div class="flex items-center justify-between gap-2 border-t border-ink/5 px-3 py-2.5">
-		<ProjectPicker {projectId} {sectionId} onchange={(place) => pick(() => draft.pickPlace(place.projectId, place.sectionId))} />
+		<ProjectPicker {projectId} {sectionId} projects={draft.projects} sections={draft.sections} onchange={(place) => pick(() => draft.pickPlace(place.projectId, place.sectionId))} />
 		<div class="flex items-center gap-1.5">
 			<button
 				type="button"

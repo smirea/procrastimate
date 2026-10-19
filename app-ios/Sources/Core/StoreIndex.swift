@@ -13,6 +13,7 @@ struct StoreIndex {
     /// Every shared entity's owner, for `SpaceRouting`.
     private(set) var homes: SpaceRouting.Homes = [:]
     private(set) var allTasks: [TaskItem] = []
+    /// The user's own projects first, then each shared space's, each in its order, as the web lists them.
     private(set) var allProjects: [Project] = []
     private(set) var allLabels: [Label] = []
     private(set) var allSections: [ProjectSection] = []
@@ -52,7 +53,7 @@ struct StoreIndex {
             }
         }
         allTasks += data.tasks
-        allProjects += data.projects
+        allProjects += StoreRules.projectsInOrder(data.projects)
         allLabels += data.labels
         allSections += data.sections
         allComments += data.comments
