@@ -17,15 +17,15 @@ enum SpotlightIndex {
             guard !Task.isCancelled else { return }
             let entities = listed(in: session.store, today: session.clock.today, router: session.router)
             let next = Dictionary(uniqueKeysWithValues: entities.map { ($0.id, $0) })
-            defer { indexed = next }
+            // The snapshot advances only once Spotlight took the update; a failed pass is retried whole next time.
             guard let previous = indexed else {
-                try? await replaceAll(entities)
+                if (try? await replaceAll(entities)) != nil { indexed = next }
                 return
             }
             let changed = entities.filter { previous[$0.id] != $0 }
             let gone = previous.keys.filter { next[$0] == nil }
             guard !changed.isEmpty || !gone.isEmpty else { return }
-            try? await replace(changed, removing: gone)
+            if (try? await replace(changed, removing: gone)) != nil { indexed = next }
         }
     }
 
