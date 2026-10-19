@@ -45,7 +45,7 @@ struct ImageStrip: View {
             }
             .animation(.snappy, value: task.images)
             .animation(.snappy, value: adding)
-            .imageSource($source) { sources in Task { await images.attach(task.id, sources) } }
+            .imageSource($source) { load in Task { await images.attach(task.id, await load()) } }
         }
     }
 

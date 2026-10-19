@@ -88,7 +88,7 @@ private struct TaskDetailsForm: View {
                         suggestProjects: parent == nil,
                         projectId: draft.projectId,
                         focused: $titleFocused,
-                        onPasteImages: { sources in Task { await images.attach(task.id, sources) } },
+                        onPasteImages: { load in Task { await images.attach(task.id, await load()) } },
                         onSubmit: { commitTitle() }
                     )
                     .disabled(locked)

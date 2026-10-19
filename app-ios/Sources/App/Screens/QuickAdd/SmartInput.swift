@@ -22,7 +22,7 @@ struct SmartInput: View {
     var maxHeight: CGFloat = 200
     var focused: FocusState<Bool>.Binding
     /// Images pasted into the text. Without it a pasted image is dropped, since a title holds only text.
-    var onPasteImages: (([Data]) -> Void)?
+    var onPasteImages: ((@escaping ImageLoad) -> Void)?
     let onSubmit: () -> Void
 
 
@@ -194,19 +194,20 @@ struct SmartInput: View {
     private static let attachment: Character = "\u{FFFC}"
 
     /// A pasted image reaches the editor as a bare U+FFFC: the text view keeps the character and drops the image. The
-    /// character and the space the paste put before it leave the text, and the image is read from the pasteboard the
+    /// character and any spacing the paste put around it leave the text, and the image is read from the pasteboard the
     /// paste came from.
     private func takeImages(_ plain: String) {
+        let before = plain.prefix { $0 != Self.attachment }.filter { $0 != Self.attachment }
         var stripped = plain.filter { $0 != Self.attachment }
-        if stripped.trimmingCharacters(in: .whitespaces) == written.trimmingCharacters(in: .whitespaces) { stripped = written }
-        let caret = max(0, caret - (plain.utf16.count - stripped.utf16.count))
+        var caret = before.utf16.count
+        let squeezed = { (text: String) in text.filter { !$0.isWhitespace } }
+        if squeezed(stripped) == squeezed(written) {
+            stripped = written
+            caret = min(before.utf16.count, written.utf16.count)
+        }
         write(stripped)
         replace(with: stripped, caret: caret)
-        guard let onPasteImages else { return }
-        Task {
-            let sources = await PastedImages.fromPasteboard()
-            if !sources.isEmpty { onPasteImages(sources) }
-        }
+        onPasteImages? { await PastedImages.fromPasteboard() }
     }
 
     /// Return inserts one line break right before the caret; anything else that brings one is a paste.

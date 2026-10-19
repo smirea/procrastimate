@@ -31,6 +31,8 @@ struct QuickAddSheet: View {
     /// Images wait here until the task exists, then attach through task details' offline upload path.
     @State private var drafted: [DraftImage] = []
     @State private var imageSource: ImageSource?
+    /// Images still loading or making their thumbnail. Saving waits for them, so none is lost.
+    @State private var loadingImages = 0
     @FocusState private var focused: Bool
     @FocusState private var subtaskFocused: Bool
 
@@ -67,7 +69,7 @@ struct QuickAddSheet: View {
                 if showMic { micButton.transition(.scale(scale: 0.6).combined(with: .opacity)) }
             }
             .animation(.snappy(duration: 0.16), value: showMic)
-            if !drafted.isEmpty {
+            if !drafted.isEmpty || loadingImages > 0 {
                 draftedImages.transition(.opacity.combined(with: .move(edge: .top)))
             }
             if subtasksOpen || !subtasks.isEmpty {
@@ -99,7 +101,7 @@ struct QuickAddSheet: View {
                 Button("Add task") { submit() }
                     .buttonStyle(.borderedProminent)
                     .buttonBorderShape(.capsule)
-                    .disabled(parsed.title.isEmpty)
+                    .disabled(parsed.title.isEmpty || loadingImages > 0)
             }
         }
         .animation(.snappy(duration: 0.2), value: subtasksOpen)
@@ -189,6 +191,13 @@ struct QuickAddSheet: View {
                     }
                     .transition(.scale(scale: 0.85).combined(with: .opacity))
                 }
+                ForEach(0 ..< loadingImages, id: \.self) { _ in
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(.ink.opacity(0.06))
+                        .frame(width: 56, height: 56)
+                        .overlay { ProgressView() }
+                        .accessibilityLabel("Adding image")
+                }
             }
             .padding(.vertical, 8)
             .padding(.trailing, 8)
@@ -199,10 +208,12 @@ struct QuickAddSheet: View {
         .accessibilityLabel("Images to attach")
     }
 
-    private func addImages(_ sources: [Data]) {
+    private func addImages(_ load: @escaping ImageLoad) {
         focused = true
+        loadingImages += 1
         Task {
-            for data in sources {
+            defer { loadingImages -= 1 }
+            for data in await load() {
                 let preview = await Task.detached(priority: .userInitiated) { DraftImage.preview(data) }.value
                 drafted.append(DraftImage(data: data, preview: preview.map(UIImage.init)))
             }
@@ -367,6 +378,7 @@ struct QuickAddSheet: View {
     }
 
     private func submit() {
+        guard loadingImages == 0 else { return }
         guard let task = draft.resolve(draft.parse(context)) else { return }
         let typing = NewTask(subtask: QuickAdd.parseSubtask(subtaskText, now: clock.now, labels: spaceLabels, in: clock.timeZone))
         let children = subtasks.map(\.task) + (typing.map { [$0] } ?? [])

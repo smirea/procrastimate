@@ -6,6 +6,10 @@ import UniformTypeIdentifiers
 /// Where a new image comes from. Task details and quick add offer the same three.
 enum ImageSource { case library, camera, paste }
 
+/// Reads the images a source gave. A source hands this over as soon as it is chosen, so the receiver can show a
+/// placeholder, and quick add can hold the save, while slow bytes such as an iCloud photo load.
+typealias ImageLoad = @MainActor () async -> [Data]
+
 /// The image sources as menu items. The camera shows only on a device that has one.
 struct ImageSourceButtons: View {
     let pick: (ImageSource) -> Void
@@ -21,8 +25,8 @@ struct ImageSourceButtons: View {
 }
 
 extension View {
-    /// Presents the source `source` names, then hands over the bytes of each image it gave.
-    func imageSource(_ source: Binding<ImageSource?>, onImages: @escaping ([Data]) -> Void) -> some View {
+    /// Presents the source `source` names, then hands over a load of the images it gave.
+    func imageSource(_ source: Binding<ImageSource?>, onImages: @escaping (@escaping ImageLoad) -> Void) -> some View {
         modifier(ImageSourcePresenter(source: source, onImages: onImages))
     }
 
@@ -48,29 +52,35 @@ enum PastedImages {
 private struct ImageSourcePresenter: ViewModifier {
     @Environment(Toasts.self) private var toasts
     @Binding var source: ImageSource?
-    let onImages: ([Data]) -> Void
+    let onImages: (@escaping ImageLoad) -> Void
     @State private var picked: [PhotosPickerItem] = []
 
     func body(content: Content) -> some View {
         content
             .photosPicker(isPresented: presenting(.library), selection: $picked, maxSelectionCount: 10, matching: .images)
             .fullScreenCover(isPresented: presenting(.camera)) {
-                CameraPicker { onImages([$0]) }
+                CameraPicker { image in
+                    onImages {
+                        let data = await Task.detached(priority: .userInitiated) { image.jpegData(compressionQuality: 0.95) }.value
+                        return data.map { [$0] } ?? []
+                    }
+                }
                     .ignoresSafeArea()
             }
             .onChange(of: source) {
                 guard source == .paste else { return }
                 source = nil
-                Task {
-                    let sources = await PastedImages.fromPasteboard()
-                    if sources.isEmpty { toasts.show("No image to paste", for: .seconds(2)) } else { onImages(sources) }
+                guard UIPasteboard.general.hasImages else {
+                    toasts.show("No image to paste", for: .seconds(2))
+                    return
                 }
+                onImages { await PastedImages.fromPasteboard() }
             }
             .onChange(of: picked) {
                 let items = picked
                 picked = []
                 guard !items.isEmpty else { return }
-                Task {
+                onImages { [toasts] in
                     var sources: [Data] = []
                     var failed = 0
                     for item in items {
@@ -82,7 +92,7 @@ private struct ImageSourcePresenter: ViewModifier {
                         }
                     }
                     if failed > 0 { toasts.show("Couldn’t add \(failed) image\(failed == 1 ? "" : "s")") }
-                    if !sources.isEmpty { onImages(sources) }
+                    return sources
                 }
             }
     }
@@ -94,7 +104,7 @@ private struct ImageSourcePresenter: ViewModifier {
 
 /// The system camera, which SwiftUI has no view for.
 private struct CameraPicker: UIViewControllerRepresentable {
-    let onShot: (Data) -> Void
+    let onShot: (UIImage) -> Void
     @Environment(\.dismiss) private var dismiss
 
     func makeUIViewController(context: Context) -> UIImagePickerController {
@@ -114,13 +124,7 @@ private struct CameraPicker: UIViewControllerRepresentable {
         init(_ parent: CameraPicker) { self.parent = parent }
 
         func imagePickerController(_: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
-            if let image = info[.originalImage] as? UIImage {
-                let onShot = parent.onShot
-                Task {
-                    let data = await Task.detached(priority: .userInitiated) { image.jpegData(compressionQuality: 0.95) }.value
-                    if let data { onShot(data) }
-                }
-            }
+            if let image = info[.originalImage] as? UIImage { parent.onShot(image) }
             parent.dismiss()
         }
 
