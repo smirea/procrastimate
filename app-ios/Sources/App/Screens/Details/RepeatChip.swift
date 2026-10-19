@@ -11,35 +11,27 @@ struct RepeatChip: View {
     var openTrigger = 0
     let onChange: (Recurrence?, Due?) -> Void
 
-    @State private var open = false
     @State private var opened: Due?
 
     var body: some View {
         let anchor = RepeatMenu.anchor(due, today: clock.today)
-        Button {
-            opened = anchor
-            open = true
-        } label: {
+        PickerChip(
+            label: recurrence.map { Format.repeatLabel($0, due) } ?? "Set repeat",
+            openTrigger: openTrigger,
+            onOpen: { opened = anchor }
+        ) {
             Chip(
                 systemImage: "repeat",
                 text: recurrence.map { Format.formatRecurrence($0, due) } ?? "Repeat",
                 tone: recurrence == nil ? .muted : .toneRepeat
             )
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(recurrence.map { Format.repeatLabel($0, due) } ?? "Set repeat")
-        .onChange(of: openTrigger) {
-            opened = anchor
-            open = true
-        }
-        .popover(isPresented: $open) {
+        } content: { close in
             RepeatPopover(recurrence: recurrence, anchor: anchor) { next in
                 let set = RepeatMenu.set(next, opened: opened ?? anchor, due: due)
                 onChange(set.recurrence, set.due)
             } close: {
-                open = false
+                close()
             }
-            .presentationCompactAdaptation(.popover)
         }
     }
 }

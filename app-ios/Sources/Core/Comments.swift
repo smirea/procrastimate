@@ -9,11 +9,7 @@ public typealias CommentBadge = API.CommentBadge
 public enum Comments {
     /// One task's comments, oldest first.
     public static func commentsOn(_ comments: [Comment], _ taskId: String) -> [Comment] {
-        comments.filter { $0.taskId == taskId }.stableSorted { a, b in
-            if a.createdAt != b.createdAt { return a.createdAt < b.createdAt }
-            if a.id != b.id { return a.id.utf16.lexicographicallyPrecedes(b.id.utf16) }
-            return nil
-        }
+        comments.filter { $0.taskId == taskId }.stableSorted(by: byCreation)
     }
 
     /// Each commented task's badge, by task id. A comment is unread when someone other than `me` wrote it after the

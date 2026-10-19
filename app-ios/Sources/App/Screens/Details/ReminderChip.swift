@@ -11,27 +11,18 @@ struct ReminderChip: View {
     var openTrigger = 0
     let onChange: ([Reminder]) -> Void
 
-    @State private var open = false
-
     var body: some View {
-        Button {
-            open = true
-        } label: {
+        PickerChip(label: ReminderMenu.chipLabel(reminders.count), openTrigger: openTrigger) {
             Chip(
                 systemImage: reminders.isEmpty ? "bell" : "bell.fill",
                 text: reminders.isEmpty ? "Remind" : "\(reminders.count)",
                 tone: reminders.isEmpty ? .muted : .ink,
                 iconTone: reminders.isEmpty ? nil : .toneWeek
             )
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(ReminderMenu.chipLabel(reminders.count))
-        .onChange(of: openTrigger) { open = true }
-        .popover(isPresented: $open) {
+        } content: { close in
             ReminderPopover(
-                reminders: reminders, due: due, today: clock.today, relativeOnly: relativeOnly, onChange: onChange
-            ) { open = false }
-                .presentationCompactAdaptation(.popover)
+                reminders: reminders, due: due, today: clock.today, relativeOnly: relativeOnly, onChange: onChange, close: close
+            )
         }
     }
 }

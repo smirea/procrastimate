@@ -1,25 +1,6 @@
 import Core
 import SwiftUI
 
-/// A spoken task in the drawer. Its id survives reparsing and the move from live to reviewed, so rows never jump.
-/// `task.subtasks` is unused; `subtasks` holds them with their own ids.
-struct RambleEntry: Identifiable, Hashable {
-    let id: String
-    var task: RambleTask
-    var subtasks: [RambleEntry]
-
-    /// The grammar reparses the whole transcript on each update and a ramble only grows at its end, so the task at
-    /// a given position is the same task from one update to the next.
-    static func keyed(_ tasks: [RambleTask], base: Int) -> [RambleEntry] {
-        func entry(_ task: RambleTask, _ id: String) -> RambleEntry {
-            var bare = task
-            bare.subtasks = []
-            return RambleEntry(id: id, task: bare, subtasks: task.subtasks.enumerated().map { entry($1, "\(id).\($0)") })
-        }
-        return tasks.enumerated().map { entry($1, String(base + $0)) }
-    }
-}
-
 /// Ramble: a fullscreen drawer that listens, shows the waveform of the real mic level, and lets the spoken tasks,
 /// their subtasks, and their fields arrive as they are recognized. After stop the on-device model picks the
 /// structure, every task stays editable and removable, and one button saves them all. Nothing saves before that.
@@ -33,34 +14,16 @@ struct RambleDrawer: View {
 
     let defaults: QuickAddDefaults
 
-    /// One capture at a time. `review` holds the reviewed list, and talking again appends to it.
-    enum Phase: Equatable {
-        case listening
-        case finishing
-        case structuring
-        case review
-    }
-
-    @State private var phase = Phase.listening
-    @State private var session = RambleSession()
-    @State private var entries: [RambleEntry] = []
-    @State private var live: [RambleEntry] = []
-    @State private var transcript = ""
-    @State private var tokens: [RambleToken] = []
+    @State private var capture = RambleCapture()
     @State private var open: String?
-    @State private var notice: String?
-    @State private var startedAt = Date.now
-    @State private var nextKey = 0
-    @State private var generation = 0
-    @State private var liveParse: Task<Void, Never>?
     @State private var saved = 0
     @FocusState private var focusedTitle: String?
 
     private var spaceProjects: [Project] { store.projects(in: space) }
     private var spaceLabels: [Core.Label] { store.labels(in: space) }
-    private var items: [RambleEntry] { entries + live }
-    private var saving: [RambleEntry] { entries.filter { !$0.task.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty } }
-    private var busy: Bool { phase != .review }
+    private var items: [RambleEntry] { capture.items }
+    private var saving: [RambleEntry] { capture.saving }
+    private var phase: RambleCapture.Phase { capture.phase }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -76,7 +39,7 @@ struct RambleDrawer: View {
                                 .id(entry.id)
                                 .transition(arrival)
                         }
-                        if let notice {
+                        if let notice = capture.notice {
                             Text(notice)
                                 .font(.footnote)
                                 .foregroundStyle(.muted)
@@ -92,8 +55,8 @@ struct RambleDrawer: View {
                 }
                 .scrollDismissesKeyboard(.interactively)
                 .defaultScrollAnchor(.top)
-                .onChange(of: live.count) {
-                    guard let last = live.last else { return }
+                .onChange(of: capture.live.count) {
+                    guard let last = capture.live.last else { return }
                     withAnimation(.smooth) { proxy.scrollTo(last.id, anchor: .bottom) }
                 }
             }
@@ -114,11 +77,7 @@ struct RambleDrawer: View {
         .accessibilityIdentifier("Ramble")
         .accessibilityAddTraits(.isModal)
         .onAppear { start() }
-        .onDisappear {
-            generation += 1
-            liveParse?.cancel()
-            session.stop()
-        }
+        .onDisappear { capture.end() }
     }
 
     private var header: some View {
@@ -148,8 +107,8 @@ struct RambleDrawer: View {
                 HStack(spacing: 8) {
                     PulseDot()
                     Text("Listening")
-                    TimelineView(.periodic(from: startedAt, by: 1)) { context in
-                        let seconds = max(0, Int(context.date.timeIntervalSince(startedAt)))
+                    TimelineView(.periodic(from: capture.startedAt, by: 1)) { context in
+                        let seconds = max(0, Int(context.date.timeIntervalSince(capture.startedAt)))
                         Text("\(seconds / 60):\(String(format: "%02d", seconds % 60))").foregroundStyle(.faint)
                     }
                 }
@@ -201,7 +160,7 @@ struct RambleDrawer: View {
 
     private var footer: some View {
         VStack(spacing: 4) {
-            if busy, !transcript.isEmpty {
+            if capture.busy, !capture.transcript.isEmpty {
                 caption
                     .font(.subheadline)
                     .foregroundStyle(.faint)
@@ -211,7 +170,7 @@ struct RambleDrawer: View {
                     .transition(.opacity)
             }
             if focusedTitle == nil {
-                RambleWaveform(meter: session.meter, active: phase == .listening)
+                RambleWaveform(meter: capture.session.meter, active: phase == .listening)
                     .frame(height: 64)
                     .transition(.opacity)
             }
@@ -247,7 +206,7 @@ struct RambleDrawer: View {
                         .transition(.move(edge: .trailing).combined(with: .opacity))
                     }
                 } else {
-                    Button { stop() } label: {
+                    Button { capture.stop() } label: {
                         ZStack {
                             if phase == .listening {
                                 RoundedRectangle(cornerRadius: 5, style: .continuous).frame(width: 20, height: 20)
@@ -273,7 +232,7 @@ struct RambleDrawer: View {
     }
 
     private var caption: Text {
-        let text = transcript as NSString
+        let text = capture.transcript as NSString
         var from = max(0, text.length - 140)
         if from > 0 {
             let space = text.range(of: " ", range: NSRange(location: from, length: text.length - from))
@@ -281,7 +240,7 @@ struct RambleDrawer: View {
         }
         var out = AttributedString(from > 0 ? "… " : "")
         var cursor = from
-        for token in tokens.sorted(by: { $0.start < $1.start }) where token.end > cursor {
+        for token in capture.tokens.sorted(by: { $0.start < $1.start }) where token.end > cursor {
             let start = max(token.start, cursor)
             if start > cursor { out += AttributedString(text.substring(with: NSRange(location: cursor, length: start - cursor))) }
             var piece = AttributedString(text.substring(with: NSRange(location: start, length: token.end - start)))
@@ -303,7 +262,7 @@ struct RambleDrawer: View {
     }
 
     private func editable(_ entry: RambleEntry) -> Bool {
-        phase == .review && !live.contains { $0.id == entry.id }
+        phase == .review && !capture.live.contains { $0.id == entry.id }
     }
 
     private func row(_ entry: RambleEntry) -> some View {
@@ -404,19 +363,19 @@ struct RambleDrawer: View {
 
     private func editor(_ entry: RambleEntry) -> some View {
         FlowLayout(spacing: 6) {
-            DueChip(due: entry.task.due) { due in update(entry.id) { $0.due = due } }
-            PriorityChip(priority: entry.task.priority ?? .p4) { priority in update(entry.id) { $0.priority = priority } }
-            LabelsChip(labelIds: entry.task.labelIds) { ids in update(entry.id) { $0.labelIds = ids } }
-            ProjectChip(projectId: entry.task.projectId, showsSections: false) { id, _ in update(entry.id) { $0.projectId = id } }
+            DueChip(due: entry.task.due) { due in capture.update(entry.id) { $0.due = due } }
+            PriorityChip(priority: entry.task.priority ?? .p4) { priority in capture.update(entry.id) { $0.priority = priority } }
+            LabelsChip(labelIds: entry.task.labelIds) { ids in capture.update(entry.id) { $0.labelIds = ids } }
+            ProjectChip(projectId: entry.task.projectId, showsSections: false) { id, _ in capture.update(entry.id) { $0.projectId = id } }
             if let recurrence = entry.task.recurrence {
-                Button { update(entry.id) { $0.recurrence = nil } } label: {
+                Button { capture.update(entry.id) { $0.recurrence = nil } } label: {
                     Chip(systemImage: "repeat", text: Format.formatRecurrence(recurrence, entry.task.due), tone: .toneRepeat)
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Remove repeat")
             }
             ForEach(Array(entry.task.reminders.enumerated()), id: \.offset) { index, reminder in
-                Button { update(entry.id) { $0.reminders.remove(at: index) } } label: {
+                Button { capture.update(entry.id) { $0.reminders.remove(at: index) } } label: {
                     Chip(systemImage: "bell.fill", text: Format.formatReminder(reminder, clock.today), tone: .toneWeek)
                 }
                 .buttonStyle(.plain)
@@ -458,124 +417,32 @@ struct RambleDrawer: View {
 
     private func binding(_ id: String, _ field: WritableKeyPath<RambleTask, String>) -> Binding<String> {
         Binding(
-            get: { find(id)?.task[keyPath: field] ?? "" },
-            set: { value in update(id) { $0[keyPath: field] = value } }
+            get: { capture.find(id)?.task[keyPath: field] ?? "" },
+            set: { value in capture.update(id) { $0[keyPath: field] = value } }
         )
     }
 
-    private func find(_ id: String) -> RambleEntry? {
-        for entry in entries {
-            if entry.id == id { return entry }
-            if let subtask = entry.subtasks.first(where: { $0.id == id }) { return subtask }
-        }
-        return nil
-    }
-
-    private func update(_ id: String, _ change: (inout RambleTask) -> Void) {
-        for index in entries.indices {
-            if entries[index].id == id { return change(&entries[index].task) }
-            if let sub = entries[index].subtasks.firstIndex(where: { $0.id == id }) { return change(&entries[index].subtasks[sub].task) }
-        }
-    }
-
-    private func remove(_ id: String) {
-        entries = entries
-            .filter { $0.id != id }
-            .map { entry in
-                var entry = entry
-                entry.subtasks.removeAll { $0.id == id }
-                return entry
-            }
-        if open == id { open = nil }
-    }
-
     private func start() {
-        generation += 1
-        let token = generation
-        phase = .listening
-        transcript = ""
-        tokens = []
-        live = []
-        notice = nil
         open = nil
         focusedTitle = nil
-        startedAt = .now
-        RambleModel.prewarm()
-        session.onText = { spoken, _ in
-            guard token == generation, phase == .listening || phase == .finishing else { return }
-            transcript = spoken
-            parseLive(spoken, token: token)
+        let clock = clock, store = store, space = space
+        capture.start(choice: store.dictation, deviceId: DeviceDefaults.installID) {
+            RambleCapture.Context(now: clock.now, projects: store.projects(in: space), labels: store.labels(in: space), zone: clock.timeZone)
         }
-        session.onEnd = { end in
-            guard token == generation else { return }
-            switch end {
-            case .stopped: notice = nil
-            case .typed: notice = "Dictation is not available here. You can type the tasks instead."
-            case let .failed(message): notice = message
-            }
-            finish(token: token)
-        }
-        let choice = store.dictation
-        let deviceId = DeviceDefaults.installID
-        Task { await session.start(choice: choice, deviceId: deviceId) }
-    }
-
-    private func stop() {
-        guard phase == .listening else { return }
-        phase = .finishing
-        session.stop()
     }
 
     private func close() {
-        generation += 1
-        session.stop()
+        capture.end()
         navigator.sheet = nil
     }
 
-    /// The grammar runs off the main thread on every transcript update, so a long ramble never stalls the drawer.
-    private func parseLive(_ text: String, token: Int) {
-        liveParse?.cancel()
-        let now = clock.now, projects = spaceProjects, labels = spaceLabels, zone = clock.timeZone, base = nextKey
-        liveParse = Task {
-            let draft = await Task.detached(priority: .userInitiated) {
-                Ramble.parse(text, now: now, projects: projects, labels: labels, in: zone)
-            }.value
-            guard !Task.isCancelled, token == generation, phase == .listening || phase == .finishing else { return }
-            tokens = draft.tokens
-            live = RambleEntry.keyed(draft.tasks, base: base)
-            if draft.ended { stop() }
-        }
-    }
-
-    /// The final transcript decides the tasks. The on-device model then picks the structure where the transcript backs
-    /// it up; spoken commands keep the grammar's split.
-    private func finish(token: Int) {
-        liveParse?.cancel()
-        let transcript = transcript, now = clock.now, projects = spaceProjects, labels = spaceLabels, zone = clock.timeZone
-        let ramble = Ramble.parse(transcript, now: now, projects: projects, labels: labels, in: zone)
-        guard !ramble.tasks.isEmpty, !Ramble.usesCommands(ramble) else { return settle(ramble.tasks) }
-        phase = .structuring
-        live = RambleEntry.keyed(ramble.tasks, base: nextKey)
-        Task {
-            let split = await RambleModel.split(transcript)
-            guard token == generation else { return }
-            let structured = split.flatMap {
-                Ramble.structured($0, transcript: transcript, draft: ramble, now: now, projects: projects, labels: labels, in: zone)
-            }
-            settle(structured ?? ramble.tasks)
-        }
-    }
-
-    private func settle(_ tasks: [RambleTask]) {
-        let settled = RambleEntry.keyed(tasks, base: nextKey)
-        nextKey += settled.count
-        live = []
-        entries += settled
-        phase = .review
+    private func remove(_ id: String) {
+        capture.remove(id)
+        if open == id { open = nil }
     }
 
     private func save() {
-        guard !busy, !saving.isEmpty else { return }
+        guard !capture.busy, !saving.isEmpty else { return }
         let today = clock.today
         let added = withAnimation(.snappy) {
             saving.compactMap { entry -> TaskItem? in

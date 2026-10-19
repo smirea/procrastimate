@@ -1,7 +1,7 @@
 import Foundation
 
 /// The quick add parser of `shared/quick-add.ts`: one line of text becomes a title plus a due date, repeat, priority,
-/// reminders, project, and labels. The patterns are the TS source's, translated by `QuickAdd.Pattern`, so a rule change
+/// reminders, project, and labels. The patterns are the TS source's, translated by `JSRegex`, so a rule change
 /// on either side reads the same. The rules and their reasons are in `docs/decisions/quick-add.md`.
 public enum QuickAdd {
     public typealias TokenKind = API.TokenKind
@@ -18,8 +18,8 @@ public enum QuickAdd {
     /// Two or more weekdays joined by spaces, commas, slashes, `and`, or `&`, as in `mon, wed and fri`.
     static let weekdaySeparator = #"(?:\s*[,/&]\s*(?:and\s+)?|\s+(?:and\s+)?)"#
     static let weekdayList = #"\#(weekday)\b(?:\#(weekdaySeparator)\#(weekday)\b)+"#
-    static let slashedWeekdays = Pattern(#"^\#(weekday)(?:\s*/\s*\#(weekday))+$"#, ignoreCase: true)
-    static let weekdayWord = Pattern(weekday, ignoreCase: true)
+    static let slashedWeekdays = JSRegex(#"^\#(weekday)(?:\s*/\s*\#(weekday))+$"#, ignoreCase: true)
+    static let weekdayWord = JSRegex(weekday, ignoreCase: true)
     static let month =
         #"(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)"#
     static let ordinal = #"\d{1,2}(?:st|nd|rd|th)?"#
@@ -31,7 +31,7 @@ public enum QuickAdd {
     /// A day number as dictation sometimes writes it, from `first` to `thirty-first`.
     static let spelledOrdinal =
         #"(?:(?:twenty|thirty)(?:-|\s*)(?:\#(ordinalWords.prefix(9).joined(separator: "|")))|\#(ordinalWords.joined(separator: "|"))|thirtieth)"#
-    static let spelledOrdinalWord = Pattern(
+    static let spelledOrdinalWord = JSRegex(
         #"(?:(twenty|thirty)[-\s]*)?\b(\#(ordinalWords.joined(separator: "|"))|thirtieth)\b"#
     )
     /// Which weekday of the month, as in `every 3rd Monday` or `every last Friday`.
@@ -91,21 +91,21 @@ public enum QuickAdd {
 
     /// Context guards for words that are also ordinary title text. Each match is masked out before the date,
     /// recurrence, and reminder rules run, so those rules never see it.
-    static let guards: [Pattern] = [
-        Pattern(#"\b(?!tom\b)[Tt][Oo][Mm]\b"#),
-        Pattern(#"(?<=\b(?:\#(nameContext))\s+)tom\b"#, ignoreCase: true),
-        Pattern(
+    static let guards: [JSRegex] = [
+        JSRegex(#"\b(?!tom\b)[Tt][Oo][Mm]\b"#),
+        JSRegex(#"(?<=\b(?:\#(nameContext))\s+)tom\b"#, ignoreCase: true),
+        JSRegex(
             #"(?<!\#(weekday)\b\#(weekdaySeparator))\b(?:tom|sun|sat|wed|daily|weekdays|weekly|monthly|yearly)\b(?=\s+(?!(?:\#(phraseWords)|and\s+\#(weekday))\b|(?:on\s+)?the\s+(?:\d|last\b|\#(spelledOrdinal)))[a-z]+(?![\w'’]))"#,
             ignoreCase: true
         ),
-        Pattern(#"(?<=\b(?:\#(address))\.?\s+)\d[\w:/]*"#, ignoreCase: true),
-        Pattern(#"(?<!\w)\d[\w:/]*(?=\s+(?:[\w.]+\s+)?(?:\#(street))\b)"#, ignoreCase: true),
-        Pattern(#"(?<!\b(?:[Ee]very|[Ee]ach|EVERY|EACH)\s+)\b(?:may|march)(?=\s+(?:the\s+)?\#(spelledOrdinal)\b)"#),
-        Pattern(
+        JSRegex(#"(?<=\b(?:\#(address))\.?\s+)\d[\w:/]*"#, ignoreCase: true),
+        JSRegex(#"(?<!\w)\d[\w:/]*(?=\s+(?:[\w.]+\s+)?(?:\#(street))\b)"#, ignoreCase: true),
+        JSRegex(#"(?<!\b(?:[Ee]very|[Ee]ach|EVERY|EACH)\s+)\b(?:may|march)(?=\s+(?:the\s+)?\#(spelledOrdinal)\b)"#),
+        JSRegex(
             #"(?<=\bthe\s+)\#(spelledOrdinal)(?=\s+(?!(?:at|(?:of\s+)?\#(month)|of\s+the\s+month|\#(weekday)|p[1-4]|remind)\b)[a-z])"#,
             ignoreCase: true
         ),
-        Pattern(
+        JSRegex(
             #"(?<=\bthe\s+)(?<!\b(?:months?|monthly)\s+(?:on\s+)?the\s+)(?:\#(anyOrdinal)|last)\s+\#(weekday)\b(?=\s+(?!(?:\#(phraseWords)|of)\b)[a-z]+(?![\w'’]))"#,
             ignoreCase: true
         ),
@@ -115,28 +115,28 @@ public enum QuickAdd {
     /// `2d` are typing shorthands, `Tuesday's` and `today's` name something rather than set a date, `the 5th chapter`
     /// is an ordinal, not a date, and a weekday inside a name or before an event stays text. A 12-hour clock time
     /// without am or pm, such as `3:30`, is ambiguous in speech and stays text.
-    static let spokenGuards: [Pattern] = [
-        Pattern(
+    static let spokenGuards: [JSRegex] = [
+        JSRegex(
             #"(?<![\w#@!$€£:/.])(?<!\bat\s+)(?<!(?:\#(month)\.?\s+(?:\#(spelledOrdinal)|\#(ordinal))|\s\#(month)),?\s)\d{4}(?![\w:/])"#,
             ignoreCase: true
         ),
-        Pattern(
+        JSRegex(
             #"(?<![\w#@!$€£.])r?\d+(?:mos?|m(?:ins?)?|h(?:rs?)?|d|w(?:ks?)?|y(?:rs?)?)(?![\w!])"#,
             ignoreCase: true
         ),
-        Pattern(#"(?<!\bin\s+)(?<![\w.])\d+\s+(?:mins?|hrs?)\b(?!\s+before)"#, ignoreCase: true),
-        Pattern(#"\b(?:\#(weekday)|today|tonight|tomorrow|tom)(?=['’]s\b)"#, ignoreCase: true),
-        Pattern(
+        JSRegex(#"(?<!\bin\s+)(?<![\w.])\d+\s+(?:mins?|hrs?)\b(?!\s+before)"#, ignoreCase: true),
+        JSRegex(#"\b(?:\#(weekday)|today|tonight|tomorrow|tom)(?=['’]s\b)"#, ignoreCase: true),
+        JSRegex(
             #"(?<=\bthe\s+)\d{1,2}(?:st|nd|rd|th)(?=\s+(?!(?:at|of|\#(month)|\#(weekday))\b)[a-z]+)"#,
             ignoreCase: true
         ),
-        Pattern(#"\b(?:Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)day(?=\s+(?!\#(month)\b)[A-Z][a-z])"#),
-        Pattern(
+        JSRegex(#"\b(?:Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)day(?=\s+(?!\#(month)\b)[A-Z][a-z])"#),
+        JSRegex(
             #"\b\#(weekday)(?=\s+(?:lunch|dinner|breakfast|brunch|drinks|meeting|meetings|standup|stand-up|service|game|match|party|class|shift|market|plans|practice|session|show)\b)"#,
             ignoreCase: true
         ),
-        Pattern(#"(?<![\w:/.$€£])(?:0?\d|1[0-2]):\d{2}(?![\w:]|\s*[ap]m?\b)"#, ignoreCase: true),
-        Pattern(
+        JSRegex(#"(?<![\w:/.$€£])(?:0?\d|1[0-2]):\d{2}(?![\w:]|\s*[ap]m?\b)"#, ignoreCase: true),
+        JSRegex(
             #"(?<=\b(?:black|good|cyber|ash|easter|holy|casual|fat|super)\s+)(?:mon|tues|wednes|thurs|fri|satur|sun)day\b"#,
             ignoreCase: true
         ),
@@ -144,12 +144,12 @@ public enum QuickAdd {
 
     /// A weekday list repeats after `every`, next to a time, or when slashed, as in `tue/thu`. Anywhere else, as in
     /// `discuss mon wed plan`, the whole list stays text, since no single day is meant.
-    static let weekdayListContext = Pattern(
+    static let weekdayListContext = JSRegex(
         #"(?<lead>\b(?:every|each)\s+|\bevery\s+other\s+|(?<![\w:/.$€£])(?:\#(at))?(?:\#(time))\s+(?:on\s+)?)?(?<![\w#!$€£]|\d[/:.])(?<list>\#(weekdayList))(?<trail>\s+(?:\#(at))?(?:\#(time))(?![\w!]|[/:]\d))?"#,
         ignoreCase: true
     )
 
-    static let whitespace = Pattern(#"\s+"#)
+    static let whitespace = JSRegex(#"\s+"#)
 
     static func mask(_ text: String) -> String { String(repeating: "_", count: text.utf16.count) }
 
@@ -210,10 +210,10 @@ public enum QuickAdd {
 
     struct Rule: Sendable {
         let kind: TokenKind
-        let pattern: Pattern
+        let pattern: JSRegex
         let repeatable: Bool
         let guarded: Bool
-        let read: @Sendable (Found, Context) -> Match?
+        let read: @Sendable (JSRegex.Found, Context) -> Match?
     }
 
     enum DurationUnit {
@@ -250,8 +250,8 @@ public enum QuickAdd {
 
     static func number(_ text: String?) -> Int? { text.flatMap { Int($0) } }
 
-    static let timeShape = Pattern(#"^(\d{1,2}):?(\d{2})?(?:([ap])m?)?$"#)
-    static let bareHour = Pattern(#"^\d{1,2}$"#)
+    static let timeShape = JSRegex(#"^(\d{1,2}):?(\d{2})?(?:([ap])m?)?$"#)
+    static let bareHour = JSRegex(#"^\d{1,2}$"#)
 
     static func resolveTime(_ text: String) -> TimeOfDay? {
         let t = whitespace.replace(text.lowercased()) { _ in "" }
@@ -341,19 +341,19 @@ public enum QuickAdd {
         return date < today ? inYear(year + 1) : date
     }
 
-    static let dateReaders: [(Pattern, @Sendable (Found, DateKey) -> DateKey?)] = [
-        (Pattern(#"^the (\d{1,2}|last)(?:st|nd|rd|th)? ([a-z]+)(?: of (?:the month|([a-z]+)))?$"#), { m, today in
+    static let dateReaders: [(JSRegex, @Sendable (JSRegex.Found, DateKey) -> DateKey?)] = [
+        (JSRegex(#"^the (\d{1,2}|last)(?:st|nd|rd|th)? ([a-z]+)(?: of (?:the month|([a-z]+)))?$"#), { m, today in
             nthWeekdayDate(today, m[1]!, m[2]!, m[3])
         }),
-        (Pattern(#"^(?:next|nxt) week$"#), { _, today in Dates.addDays(today, daysToNextMonday(today)) }),
-        (Pattern(#"^(?:next|nxt) ([a-z]+)$"#), { m, today in
+        (JSRegex(#"^(?:next|nxt) week$"#), { _, today in Dates.addDays(today, daysToNextMonday(today)) }),
+        (JSRegex(#"^(?:next|nxt) ([a-z]+)$"#), { m, today in
             Dates.addDays(today, daysToNextMonday(today) + (weekdayIndex(m[1]!) + 6) % 7)
         }),
-        (Pattern(#"^([a-z]+)$"#), { m, today in
+        (JSRegex(#"^([a-z]+)$"#), { m, today in
             let day = weekdayIndex(m[1]!)
             return day == -1 ? nil : nextWeekday(today, day)
         }),
-        (Pattern(#"^(?:in )?(\d+) ?([a-z]+)$"#), { m, today in
+        (JSRegex(#"^(?:in )?(\d+) ?([a-z]+)$"#), { m, today in
             // Any count of days, weeks, months, or years this large is past 9999, and a larger one would trap
             // on overflow in the date arithmetic.
             guard let amount = number(m[1]), amount <= 3_660_000, let unit = unitOf(m[2]!)?.recurrenceUnit else {
@@ -361,7 +361,7 @@ public enum QuickAdd {
             }
             return Dates.addInterval(today, amount, unit)
         }),
-        (Pattern(#"^the (\d{1,2})(?:st|nd|rd|th)?(?: of the month)?$"#), { m, today in
+        (JSRegex(#"^the (\d{1,2})(?:st|nd|rd|th)?(?: of the month)?$"#), { m, today in
             let day = number(m[1])!
             let (year, month, _) = Dates.parts(today)
             for months in 0...12 {
@@ -369,7 +369,7 @@ public enum QuickAdd {
             }
             return nil
         }),
-        (Pattern(#"^(\d{1,2})\/(\d{1,2})(?:\/(\d{2}|\d{4}))?$"#), { m, today in
+        (JSRegex(#"^(\d{1,2})\/(\d{1,2})(?:\/(\d{2}|\d{4}))?$"#), { m, today in
             let first = number(m[1])!
             let second = number(m[2])!
             let dayFirst = first > 12 && second <= 12
@@ -377,16 +377,16 @@ public enum QuickAdd {
             if month < 1 || month > 12 { return nil }
             return monthDay(today, month - 1, dayFirst ? first : second, m[3])
         }),
-        (Pattern(#"^(?:\#(weekday),? )?([a-z]+)(?:\. ?| )(?:the )?(\d{1,2})(?:st|nd|rd|th)?(?:,? (\d{4}))?$"#), { m, today in
+        (JSRegex(#"^(?:\#(weekday),? )?([a-z]+)(?:\. ?| )(?:the )?(\d{1,2})(?:st|nd|rd|th)?(?:,? (\d{4}))?$"#), { m, today in
             monthDay(today, monthIndex(m[1]!), number(m[2])!, m[3])
         }),
-        (Pattern(#"^(?:\#(weekday),? )?(?:the )?(\d{1,2})(?:st|nd|rd|th)?(?: of)? ([a-z]+)(?:,? (\d{4}))?$"#), { m, today in
+        (JSRegex(#"^(?:\#(weekday),? )?(?:the )?(\d{1,2})(?:st|nd|rd|th)?(?: of)? ([a-z]+)(?:,? (\d{4}))?$"#), { m, today in
             monthDay(today, monthIndex(m[2]!), number(m[1])!, m[3])
         }),
     ]
 
-    static let edges = Pattern(#"^\s+|\s+$"#)
-    static let trailing = Pattern(#"\s+$"#)
+    static let edges = JSRegex(#"^\s+|\s+$"#)
+    static let trailing = JSRegex(#"\s+$"#)
 
     static func trimEnd(_ text: String) -> String { trailing.replace(text) { _ in "" } }
 
@@ -403,7 +403,7 @@ public enum QuickAdd {
         }
     }
 
-    static let leadingNumber = Pattern(#"\d+"#)
+    static let leadingNumber = JSRegex(#"\d+"#)
 
     static func resolveDate(_ text: String, _ today: DateKey) -> Day? {
         let t = digitOrdinals(text)
@@ -414,7 +414,7 @@ public enum QuickAdd {
         return nil
     }
 
-    static let momentShape = Pattern(#"^(?:in\s+)?(\d+)\s*([a-z]*)$"#, ignoreCase: true)
+    static let momentShape = JSRegex(#"^(?:in\s+)?(\d+)\s*([a-z]*)$"#, ignoreCase: true)
 
     static func clock(_ date: Date, in zone: TimeZone) -> TimeOfDay {
         let local = Int((date.timeIntervalSince1970 + Double(zone.secondsFromGMT(for: date))).rounded(.down))
@@ -435,13 +435,13 @@ public enum QuickAdd {
 
     /// A date past 9999-12-31 is not a `DateKey`, and the server rejects the write that carries it, so such a phrase, as
     /// in `3929284d`, stays text.
-    static func readDateTime(_ m: Found, _ ctx: Context) -> DuePhrase? {
+    static func readDateTime(_ m: JSRegex.Found, _ ctx: Context) -> DuePhrase? {
         guard let phrase = readPhrase(m, ctx) else { return nil }
         if let date = phrase.date, Dates.parts(date).year > 9999 { return nil }
         return phrase
     }
 
-    static func readPhrase(_ m: Found, _ ctx: Context) -> DuePhrase? {
+    static func readPhrase(_ m: JSRegex.Found, _ ctx: Context) -> DuePhrase? {
         if let moment = m["moment"] { return resolveMoment(moment, ctx) }
         let dateText = m["date1"] ?? m["date2"]
         let timeText = m["time1"] ?? m["time2"]
@@ -464,7 +464,7 @@ public enum QuickAdd {
 
     static let reminderRule = Rule(
         kind: .reminder,
-        pattern: Pattern(
+        pattern: JSRegex(
             #"\#(before)(?:remind(?:\s+me)?\s+(?:(?<amount>\d+)\s*(?<unit>\#(beforeUnit))\s+before|\#(dateTime))|r(?<short>\d+)(?<shortUnit>[mhdw]))\#(after)"#,
             ignoreCase: true
         ),
@@ -483,7 +483,7 @@ public enum QuickAdd {
 
     static let recurrenceRule = Rule(
         kind: .recurrence,
-        pattern: Pattern(
+        pattern: JSRegex(
             #"\#(before)(?:(?:(?:every|each)\s+(?:(?<months>\d+|other)\s+)?months?|monthly)\s+(?:on\s+)?the\s+(?:(?<monthNth>\#(nth))\s+(?<monthNthDay>\#(weekday))\b|(?<monthNoNth>\#(anyOrdinal)\s+\#(weekday))\b|(?<monthDay>\#(ordinal)|\#(spelledOrdinal)))|(?:every|each)\s+(?:(?<yearDay>\#(monthDay))|(?<nth>\#(nth))\s+(?<nthDay>\#(weekday))\b(?:\s+of\s+(?:the|each|every)\s+month)?|(?<noNth>\#(anyOrdinal)\s+\#(weekday))\b(?:\s+of\s+(?:the|each|every)\s+month)?|(?<dayOfMonth>(?:\d{1,2}(?:st|nd|rd|th)|\#(spelledOrdinal))\s+of\s+(?:the|each|every)\s+month|\d{1,2}(?:st|nd|rd|th)(?!\s+(?!(?:at|p[1-4]|remind)\b)[a-z]))|(?<other>other)\s+(?:(?<otherUnit>day|week|month|year)|(?<=\bevery\s+other\s+)(?<otherDays>\#(weekdayList)|\#(weekday)))|(?<interval>\d+)\s*(?<intervalUnit>\#(dayUnit))|(?<unit>day|week|month|year)|(?<workday>weekday|workday)|(?<weekdays>\#(weekdayList)|\#(weekday)))|(?<listed>\#(weekdayList))|(?<adverb>daily|weekdays|weekly|monthly|yearly|annually))\#(after)"#,
             ignoreCase: true
         ),
@@ -500,7 +500,7 @@ public enum QuickAdd {
     )
 
     /// A repeat as typed, before the recurrence rule checks its interval. A number too large for `Int` is out of range.
-    static func readRecurrence(_ m: Found, _ ctx: Context) -> RecurrencePhrase? {
+    static func readRecurrence(_ m: JSRegex.Found, _ ctx: Context) -> RecurrencePhrase? {
         let everyMonths = m["months"]?.lowercased() == "other" ? 2 : number(m["months"] ?? "1") ?? Int.max
         let nthText = (m["monthNth"] ?? m["nth"])?.lowercased()
         let dayText = m["monthDay"] ?? m["dayOfMonth"]
@@ -549,7 +549,7 @@ public enum QuickAdd {
 
     static let priorityRule = Rule(
         kind: .priority,
-        pattern: Pattern(
+        pattern: JSRegex(
             #"(?<![\w#@])p([1-4])(?!\w)|(?<!\S)(!!!?)(?!\S)|(?<![\w#@])(urgent|important)\b"#,
             ignoreCase: true
         ),
@@ -566,13 +566,13 @@ public enum QuickAdd {
 
     static let dueRule = Rule(
         kind: .due,
-        pattern: Pattern(#"\#(before)\#(dateTime)\#(after)"#, ignoreCase: true),
+        pattern: JSRegex(#"\#(before)\#(dateTime)\#(after)"#, ignoreCase: true),
         repeatable: false,
         guarded: true,
         read: { m, ctx in readDateTime(m, ctx).map(Match.due) }
     )
 
-    static let special = Pattern(#"[.*+?^${}()|[\]\\]"#)
+    static let special = JSRegex(#"[.*+?^${}()|[\]\\]"#)
 
     static func escapeRegExp(_ text: String) -> String { special.replace(text) { "\\" + $0.value } }
 
@@ -600,7 +600,7 @@ public enum QuickAdd {
         let ids = byName
         return Rule(
             kind: kind,
-            pattern: Pattern(#"(?<!\S)\#(sigil)(\#(names.joined(separator: "|")))(?![\w#@]|[./:]\w)"#, ignoreCase: true),
+            pattern: JSRegex(#"(?<!\S)\#(sigil)(\#(names.joined(separator: "|")))(?![\w#@]|[./:]\w)"#, ignoreCase: true),
             repeatable: kind == .label,
             guarded: false,
             // ICU folds case more widely than JavaScript, as with `ſ` for `s`, so a match may name nothing.

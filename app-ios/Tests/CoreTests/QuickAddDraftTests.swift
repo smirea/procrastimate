@@ -98,6 +98,50 @@ import Testing
         #expect(draft.text == "Ping tomorrow p1")
     }
 
+    @Test func aPickReplacesItsTypedPhraseAndAnEventStandsInForTheDate() throws {
+        let context = QuickAddDraft.Context(now: pinned, projects: [], labels: labels, zone: utc)
+        var draft = QuickAddDraft(defaults: .init())
+        draft.setText("Call mom tomorrow p2 every day @calls")
+        draft.pick(priority: .p1, context)
+        draft.pick(due: Due(date: "2026-10-20", time: nil), context)
+        draft.pick(recurrence: Recurrence(interval: 1, unit: .week, days: [1]), start: Due(date: "2026-10-26", time: nil), due: Due(date: "2026-10-20", time: nil), context)
+        #expect(draft.text == "Call mom @calls")
+        var parsed = draft.parse(context)
+        var task = try #require(draft.resolve(parsed))
+        #expect(task.priority == .p1)
+        #expect(task.due == Due(date: "2026-10-26", time: nil))
+        #expect(task.recurrence == Recurrence(interval: 1, unit: .week, days: [1]))
+        #expect(task.labelIds == ["l-calls"])
+
+        draft.pick(labelIds: [], parsed, context)
+        #expect(draft.text == "Call mom ")
+        parsed = draft.parse(context)
+        #expect(draft.resolve(parsed)?.labelIds == [])
+
+        draft.picked.event = TaskEvent(id: "e", title: "Dinner", allDay: false, series: false, edge: .during, minutes: 0, occurrences: [])
+        task = try #require(draft.resolve(parsed))
+        #expect(task.due == nil)
+        #expect(task.recurrence == nil)
+        #expect(task.event?.id == "e")
+    }
+
+    @Test func aPickedPlaceWinsOverATypedOneAndAPlaceScreenStartsAtItsPlace() throws {
+        let gym = Label(
+            id: "l-gym", name: "Gym", place: SavedPlace(address: nil, latitude: 52.5, longitude: 13.4, radius: 200), createdAt: 0
+        )
+        let context = QuickAddDraft.Context(now: pinned, projects: [], labels: [gym], zone: utc)
+        var draft = QuickAddDraft(defaults: .init(labelId: "l-gym"))
+        draft.startAtPlace([gym])
+        #expect(draft.picked.labelIds == [])
+        #expect(draft.picked.location?.name == "Gym")
+        draft.setText("Stretch @gym")
+        let picked = TaskLocation(name: "Pool", address: nil, latitude: 1, longitude: 2, radius: 100, trigger: .arrive)
+        draft.pick(location: picked, context)
+        #expect(draft.text == "Stretch ")
+        let task = try #require(draft.resolve(draft.parse(context)))
+        #expect(task.location?.name == "Pool")
+    }
+
     @Test func nextWeekIsTheComingMonday() {
         #expect(QuickAddDraft.datePresets(today).map(\.date) == ["2026-10-14", "2026-10-15", "2026-10-19"])
         #expect(QuickAddDraft.datePresets("2026-10-19").last?.date == "2026-10-26")

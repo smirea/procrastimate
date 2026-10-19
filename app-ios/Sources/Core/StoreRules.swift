@@ -31,18 +31,9 @@ extension API.TaskEdit {
 /// apply the same rules.
 public enum StoreRules {
     /// Tasks stay sorted by `createdAt`, then `id`, so every client and the sync server agree on one order.
-    public static func sortTasks(_ tasks: [TaskItem]) -> [TaskItem] {
-        tasks.stableSorted { a, b in
-            if a.createdAt != b.createdAt { return a.createdAt < b.createdAt }
-            if a.id != b.id { return a.id.utf16.lexicographicallyPrecedes(b.id.utf16) }
-            return nil
-        }
-    }
+    public static func sortTasks(_ tasks: [TaskItem]) -> [TaskItem] { tasks.stableSorted(by: byCreation) }
 
-    static func put(_ tasks: [TaskItem], _ changed: [TaskItem]) -> [TaskItem] {
-        let byId = Dictionary(changed.map { ($0.id, $0) }, uniquingKeysWith: { _, last in last })
-        return tasks.map { byId[$0.id] ?? $0 }
-    }
+    static func put(_ tasks: [TaskItem], _ changed: [TaskItem]) -> [TaskItem] { tasks.put(changed) }
 
     /// A section puts a top-level task in that section and its project, as in `updateTask`.
     /// With a `parentId`, adds the task as that parent's last subtask, in its project, and reopens the parent if it is
@@ -190,8 +181,8 @@ public enum StoreRules {
         else { return (data, []) }
         let nextOrder = parent.parentId.flatMap { grandparent in
             data.tasks
-                .filter { $0.parentId == grandparent && $0.id != id && Subtasks.siblingOrder(parent, $0) == true }
-                .stableSorted(by: Subtasks.siblingOrder)
+                .filter { $0.parentId == grandparent && $0.id != id && Order.siblings(parent, $0) == true }
+                .stableSorted(by: Order.siblings)
                 .first?.order
         }
         let count = Double(children.count)
@@ -262,12 +253,7 @@ public enum StoreRules {
 
     public static func renameProject(_ data: StoreData, _ id: String, _ name: String) -> StoreData {
         var next = data
-        next.projects = data.projects.map { p in
-            guard p.id == id else { return p }
-            var p = p
-            p.name = name
-            return p
-        }
+        next.projects = data.projects.updating(id) { $0.name = name }
         return next
     }
 
@@ -281,59 +267,20 @@ public enum StoreRules {
     }
 
     /// Projects as the user ordered them. The stored list stays in creation order, like every synced list.
-    public static func projectsInOrder(_ projects: [Project]) -> [Project] { siblingOrder(projects) }
+    public static func projectsInOrder(_ projects: [Project]) -> [Project] { Order.sorted(projects) }
 
     /// Writes only the moved project's `order`, like a section move.
     public static func moveProject(_ data: StoreData, _ id: String, _ index: Int) -> StoreData {
-        let orders = moveOrders(data.projects, id, index)
-        guard !orders.isEmpty else { return data }
+        let moved = Order.moved(data.projects, Order.moveOrders(data.projects, id, index))
+        guard !moved.isEmpty else { return data }
         var next = data
-        next.projects = data.projects.map { p in
-            guard let order = orders[p.id] else { return p }
-            var p = p
-            p.order = order
-            return p
-        }
+        next.projects = data.projects.put(moved)
         return next
     }
 
     /// A project's sections in their order: by `order`, then `createdAt`, then `id`, like subtasks.
     public static func sectionsOf(_ sections: [ProjectSection], _ projectId: String) -> [ProjectSection] {
-        siblingOrder(sections.filter { $0.projectId == projectId })
-    }
-
-    private static func siblingOrder<T: Ordered>(_ items: [T]) -> [T] {
-        items.stableSorted { a, b in
-            if a.order != b.order { return a.order < b.order }
-            if a.createdAt != b.createdAt { return a.createdAt < b.createdAt }
-            if a.id != b.id { return a.id.utf16.lexicographicallyPrecedes(b.id.utf16) }
-            return nil
-        }
-    }
-
-    /// The orders to write to move `id` to `index`: only the moved one's, or every sibling's new position when the gap
-    /// is too small to split. `moveOrders` in `shared/order.ts`.
-    private static func moveOrders<T: Ordered>(_ items: [T], _ id: String, _ index: Int) -> [String: Double] {
-        guard let moved = items.first(where: { $0.id == id }) else { return [:] }
-        let siblings = siblingOrder(items)
-        let others = siblings.filter { $0.id != id }
-        let at = max(0, min(index, others.count))
-        let previous = at > 0 ? others[at - 1].order : nil
-        let following = at < others.count ? others[at].order : nil
-        var orders: [String: Double] = [:]
-        if let previous, let following, following - previous < Subtasks.minOrderGap {
-            var placed = others
-            placed.insert(moved, at: at)
-            for (order, s) in placed.enumerated() where s.order != Double(order) { orders[s.id] = Double(order) }
-        } else if siblings.firstIndex(where: { $0.id == id }) != at {
-            switch (previous, following) {
-            case (nil, nil): orders[id] = 0
-            case let (nil, following?): orders[id] = following - 1
-            case let (previous?, nil): orders[id] = previous + 1
-            case let (previous?, following?): orders[id] = (previous + following) / 2
-            }
-        }
-        return orders
+        Order.sorted(sections.filter { $0.projectId == projectId })
     }
 
     private static func sameName(_ a: String, _ b: String) -> Bool { a.lowercased() == b.lowercased() }
@@ -367,27 +314,18 @@ public enum StoreRules {
               !data.sections.contains(where: { $0.id != id && $0.projectId == section.projectId && sameName($0.name, name) })
         else { return data }
         var next = data
-        next.sections = data.sections.map { s in
-            guard s.id == id else { return s }
-            var s = s
-            s.name = name
-            return s
-        }
+        next.sections = data.sections.updating(id) { $0.name = name }
         return next
     }
 
     /// Writes only the moved section's `order`, like a subtask move.
     public static func moveSection(_ data: StoreData, _ id: String, _ index: Int) -> StoreData {
         guard let section = data.sections.first(where: { $0.id == id }) else { return data }
-        let orders = moveOrders(data.sections.filter { $0.projectId == section.projectId }, id, index)
-        guard !orders.isEmpty else { return data }
+        let siblings = data.sections.filter { $0.projectId == section.projectId }
+        let moved = Order.moved(siblings, Order.moveOrders(siblings, id, index))
+        guard !moved.isEmpty else { return data }
         var next = data
-        next.sections = data.sections.map { s in
-            guard let order = orders[s.id] else { return s }
-            var s = s
-            s.order = order
-            return s
-        }
+        next.sections = data.sections.put(moved)
         return next
     }
 
@@ -451,12 +389,7 @@ public enum StoreRules {
     public static func setPlaceRadius(_ data: StoreData, _ id: String, _ radius: Double) -> StoreData {
         guard let place = data.labels.first(where: { $0.id == id })?.place else { return data }
         var next = data
-        next.labels = data.labels.map { l in
-            guard l.id == id else { return l }
-            var l = l
-            l.place?.radius = radius
-            return l
-        }
+        next.labels = data.labels.updating(id) { $0.place?.radius = radius }
         next.tasks = relocate(data.tasks, Triggers.placeKey(place), radius: radius)
         return next
     }
@@ -474,12 +407,7 @@ public enum StoreRules {
 
     public static func setLabelColor(_ data: StoreData, _ id: String, _ color: LabelColor) -> StoreData {
         var next = data
-        next.labels = data.labels.map { l in
-            guard l.id == id else { return l }
-            var l = l
-            l.color = color
-            return l
-        }
+        next.labels = data.labels.updating(id) { $0.color = color }
         return next
     }
 
@@ -489,12 +417,7 @@ public enum StoreRules {
         if data.labels.contains(where: { $0.id != id && $0.name.lowercased() == name.lowercased() }) { return data }
         guard let label = data.labels.first(where: { $0.id == id }) else { return data }
         var next = data
-        next.labels = data.labels.map { l in
-            guard l.id == id else { return l }
-            var l = l
-            l.name = name
-            return l
-        }
+        next.labels = data.labels.updating(id) { $0.name = name }
         if let place = label.place { next.tasks = relocate(data.tasks, Triggers.placeKey(place), name: name) }
         return next
     }
@@ -546,9 +469,7 @@ public enum StoreRules {
         func restore<T: Created>(_ live: [T], _ gone: [T]) -> [T] {
             var list = live
             for e in missing(live, gone) {
-                let at = list.firstIndex { x in
-                    x.createdAt != e.createdAt ? x.createdAt > e.createdAt : e.id.utf16.lexicographicallyPrecedes(x.id.utf16)
-                } ?? list.endIndex
+                let at = list.firstIndex { byCreation(e, $0) == true } ?? list.endIndex
                 list.insert(e, at: at)
             }
             return list
@@ -572,7 +493,7 @@ public enum StoreRules {
     }
 }
 
-/// What restoring a deleted record in creation order needs.
+/// What listing records in creation order needs.
 protocol Created {
     var id: String { get }
     var createdAt: Int { get }
@@ -582,13 +503,11 @@ extension Project: Created {}
 extension ProjectSection: Created {}
 extension Label: Created {}
 extension TaskItem: Created {}
+extension Comment: Created {}
 
-/// What fractional sibling order needs: projects and sections both sort and move by it.
-protocol Ordered {
-    var id: String { get }
-    var order: Double { get }
-    var createdAt: Int { get }
+/// Oldest first, ties by id in UTF-16 order, so every client and the sync server agree on one order.
+func byCreation<T: Created>(_ a: T, _ b: T) -> Bool? {
+    if a.createdAt != b.createdAt { return a.createdAt < b.createdAt }
+    if a.id != b.id { return a.id.utf16.lexicographicallyPrecedes(b.id.utf16) }
+    return nil
 }
-
-extension Project: Ordered {}
-extension ProjectSection: Ordered {}

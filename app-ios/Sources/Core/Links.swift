@@ -6,7 +6,7 @@ public enum Links {
 
     /// A Markdown `[label](url)`, as Todoist exports links, or a bare `http(s)://` or `www.` address. Only web URLs
     /// count, and bare domains such as `example.com` do not, since `file.txt` or `v1.2` would read as one.
-    static let link = QuickAdd.Pattern(
+    static let link = JSRegex(
         #"\[([^\[\]\n]+)\]\((https?:\/\/(?:[^\s()]|\([^\s()]*\))+)\)|(?<![\w.@/])(?:https?:\/\/|www\.)[^\s<>"]+"#,
         ignoreCase: true
     )

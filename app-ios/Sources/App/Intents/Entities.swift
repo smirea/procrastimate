@@ -2,7 +2,7 @@ import AppIntents
 import Core
 import CoreSpotlight
 
-struct TaskEntity: AppEntity, IndexedEntity {
+struct TaskEntity: AppEntity, IndexedEntity, Equatable {
     static let typeDisplayRepresentation = TypeDisplayRepresentation(name: "Task")
     static let defaultQuery = TaskEntityQuery()
 
@@ -30,6 +30,11 @@ struct TaskEntity: AppEntity, IndexedEntity {
         self.title = title
         self.details = details
         self.keywords = keywords
+    }
+
+    /// `@Property` keeps the synthesized conformance away; the index compares what it sends.
+    static func == (a: TaskEntity, b: TaskEntity) -> Bool {
+        a.id == b.id && a.title == b.title && a.details == b.details && a.keywords == b.keywords
     }
 
     static func make(_ task: TaskItem, projects: [Project], labels: [Label], today: DateKey) -> TaskEntity {

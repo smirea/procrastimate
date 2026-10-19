@@ -17,21 +17,21 @@ struct Attributes {
 }
 
 struct NamedPattern {
-    var pattern: RambleRegex
+    var pattern: JSRegex
     var ids: [String: String]
 }
 
 struct LabelPatterns {
-    var lead: RambleRegex
-    var more: RambleRegex
-    var suffix: RambleRegex
+    var lead: JSRegex
+    var more: JSRegex
+    var suffix: JSRegex
     var ids: [String: String]
 }
 
 private enum RambleNames {
-    static let letters = RambleRegex(#"[^\p{L}\p{N}]+"#)
-    static let possessive = RambleRegex(#"(?<=\w) ?'?s$"#)
-    static let endsWithProject = RambleRegex(#"\bproject$"#, ignoreCase: true)
+    static let letters = JSRegex(#"[^\p{L}\p{N}]+"#)
+    static let possessive = JSRegex(#"(?<=\w) ?'?s$"#)
+    static let endsWithProject = JSRegex(#"\bproject$"#, ignoreCase: true)
 
     static func escape(_ text: String) -> String {
         var out = ""
@@ -70,7 +70,7 @@ private enum RambleNames {
         }
         var ids: [String: String] = [:]
         for project in projects { ids[key(project.name)] = project.id }
-        return NamedPattern(pattern: RambleRegex(alternatives.joined(separator: "|"), ignoreCase: true), ids: ids)
+        return NamedPattern(pattern: JSRegex(alternatives.joined(separator: "|"), ignoreCase: true), ids: ids)
     }
 
     static func labels(_ labels: [Label]) -> LabelPatterns? {
@@ -79,9 +79,9 @@ private enum RambleNames {
         var ids: [String: String] = [:]
         for label in labels { ids[key(label.name)] = label.id }
         return LabelPatterns(
-            lead: RambleRegex("\\b(?:labels?|tag(?:ged)?(?:\\s+it)?(?:\\s+(?:with|as))?)\\s+(?<name>\(name))(?![\\p{L}\\p{N}])", ignoreCase: true),
-            more: RambleRegex("^(?:\\s*,\\s*(?:and\\s+)?|\\s+and\\s+)(?<name>\(name))(?![\\p{L}\\p{N}])", ignoreCase: true),
-            suffix: RambleRegex("\\b(?:(?:with|and)\\s+)?(?:the\\s+|a\\s+)?(?<name>\(name))\\s+(?:label|tag)\\b", ignoreCase: true),
+            lead: JSRegex("\\b(?:labels?|tag(?:ged)?(?:\\s+it)?(?:\\s+(?:with|as))?)\\s+(?<name>\(name))(?![\\p{L}\\p{N}])", ignoreCase: true),
+            more: JSRegex("^(?:\\s*,\\s*(?:and\\s+)?|\\s+and\\s+)(?<name>\(name))(?![\\p{L}\\p{N}])", ignoreCase: true),
+            suffix: JSRegex("\\b(?:(?:with|and)\\s+)?(?:the\\s+|a\\s+)?(?<name>\(name))\\s+(?:label|tag)\\b", ignoreCase: true),
             ids: ids
         )
     }
@@ -122,7 +122,7 @@ private enum RambleFields {
 
         var labelHits: [(at: Int, id: String)] = []
         if let labels {
-            func take(_ match: RambleRegex.Found, _ start: Int, _ end: Int) {
+            func take(_ match: JSRegex.Found, _ start: Int, _ end: Int) {
                 guard let name = match.named("name"), let id = labels.ids[RambleNames.key(name)] else { return }
                 labelHits.append((start, id))
                 add("label", start, end)
@@ -165,24 +165,24 @@ private enum RambleTitles {
         "(?:(?:i|we)\\s+(?:also\\s+|still\\s+|really\\s+|definitely\\s+|probably\\s+)*(?:(?:need|have|want|got|ought)\\s+to|'ve\\s+got\\s+to|gotta|should|must|will|'ll|'d\\s+like\\s+to|would\\s+like\\s+to|am\\s+going\\s+to|'m\\s+going\\s+to)(?:\\s+(?:probably|really|also|still|definitely))?|i'll|we'll|(?:also\\s+)?(?:need|have|got)\\s+to|gotta|don't\\s+forget\\s+to|do\\s+not\\s+forget\\s+to|remember\\s+to|remind\\s+me\\s+to|make\\s+sure\\s+(?:to|i|we)|let's|let\\s+me|please)"
     static let filler =
         "(?:let's\\s+see|let\\s+me\\s+(?:think|see)|hmm+|and|also|then|so|oh|hey|plus|okay|ok|um|uh|er|well|actually|wait|sorry|alright|anyway|maybe|probably|possibly)"
-    static let leadingJoiners = RambleRegex(
+    static let leadingJoiners = JSRegex(
         "^(?:(?:\(filler)|\(intent))\\b|(?:first|firstly|second|secondly|next|lastly|finally)\\s*,)[\\s,]*",
         ignoreCase: true
     )
-    static let trailingJoiners = RambleRegex(#"[\s,]*\b(?:and|also|then|so|please|as well)$"#, ignoreCase: true)
-    static let leftoverOnly = RambleRegex(
+    static let trailingJoiners = JSRegex(#"[\s,]*\b(?:and|also|then|so|please|as well)$"#, ignoreCase: true)
+    static let leftoverOnly = JSRegex(
         #"^(?:make it|set it|it's|it is|it|that's|that is|that|this|which is|do it|is|and|the|for it)$"#,
         ignoreCase: true
     )
-    static let beforeDate = RambleRegex(
+    static let beforeDate = JSRegex(
         #"(?:\b(?:(?:it's|it\s+is|is|are|'s|it)\s+)?due|\bby|\bon|\bat|\bfor|\bstarting|\bbeginning|,?\s*\b(?:it's|it\s+is|which\s+is|that's)|,\s*(?:[\w']+\s+){1,4}(?:is|are))\s*$"#,
         ignoreCase: true
     )
-    static let spaces = RambleRegex(#"\s+"#)
-    static let spaceBeforePunct = RambleRegex(#" (?=[,;:.!?])"#)
-    static let edgePunct = RambleRegex(#"^[\s,;:.!?—–-]+|[\s,;:.!?—–-]+$"#)
-    static let thisWeek = RambleRegex(#"^(?:this|next)\s+week\s+(?=(?:i|we)\b)"#, ignoreCase: true)
-    static let weveGot = RambleRegex(#"^(?:i|we)'ve\s+got\s+(?:a|an)\s+"#, ignoreCase: true)
+    static let spaces = JSRegex(#"\s+"#)
+    static let spaceBeforePunct = JSRegex(#" (?=[,;:.!?])"#)
+    static let edgePunct = JSRegex(#"^[\s,;:.!?—–-]+|[\s,;:.!?—–-]+$"#)
+    static let thisWeek = JSRegex(#"^(?:this|next)\s+week\s+(?=(?:i|we)\b)"#, ignoreCase: true)
+    static let weveGot = JSRegex(#"^(?:i|we)'ve\s+got\s+(?:a|an)\s+"#, ignoreCase: true)
 
     static func clean(_ text: String) -> String {
         var title = spaceBeforePunct.replace(spaces.replace(text) { _ in " " }) { _ in "" }
@@ -285,53 +285,53 @@ struct RambleGrammar {
         "assemble", "build", "cook", "fetch", "measure", "prune", "rake", "recycle", "remove", "rsvp", "scan", "shred",
         "sweep", "tune", "wipe", "pay", "notify", "warn", "remember", "apply", "enroll", "sign", "share", "archive",
     ]
-    static let particles = RambleRegex(#"\b(?:up|off|out|in|down|over|back|on|away)$"#, ignoreCase: true)
-    static let leadFillers = RambleRegex(
+    static let particles = JSRegex(#"\b(?:up|off|out|in|down|over|back|on|away)$"#, ignoreCase: true)
+    static let leadFillers = JSRegex(
         #"^(?:(?:and|then|also|plus|oh|hey|so|um|uh|okay|ok|well|first|maybe|probably|possibly)[\s,]+)*"#,
         ignoreCase: true
     )
-    static let intentStart = RambleRegex("^\(RambleTitles.intent)\\b", ignoreCase: true)
-    static let dueClause = RambleRegex(#"^(?:the|my|our|this|that)\s+[\w' ]{1,30}?(?:'s|\s+is|\s+are)\s+due\b"#, ignoreCase: true)
-    static let word = RambleRegex(#"^[a-z'-]+"#, ignoreCase: true)
-    static let verbTail = RambleRegex(#"^\S+\s+\S"#)
-    static let clauseSplit = RambleRegex(#"\s*,\s*|\s+(?=(?:and|then|also|plus|oh)\s)"#)
-    static let connectorsPattern = RambleRegex(#"^(?:(?:and|then|also|plus|oh|so|maybe|probably)[\s,]+)*"#, ignoreCase: true)
-    static let strongConnector = RambleRegex(#"\b(?:then|also|plus|oh)\b"#)
-    static let ohAnd = RambleRegex(#"\boh\s+and\b"#)
-    static let determiner = RambleRegex(#"^(?:the|a|an|some|my|our|his|her|its|that|this)\b"#, ignoreCase: true)
-    static let intentLater = RambleRegex("^(?:\\S+\\s+){1,3}\(RambleTitles.intent)\\b", ignoreCase: true)
-    static let abbreviation = RambleRegex(#"\b(?:mr|mrs|ms|dr|st|jr|sr|vs|etc|e\.g|i\.e|approx|no|mt|ft)$"#, ignoreCase: true)
-    static let boundary = RambleRegex(
+    static let intentStart = JSRegex("^\(RambleTitles.intent)\\b", ignoreCase: true)
+    static let dueClause = JSRegex(#"^(?:the|my|our|this|that)\s+[\w' ]{1,30}?(?:'s|\s+is|\s+are)\s+due\b"#, ignoreCase: true)
+    static let word = JSRegex(#"^[a-z'-]+"#, ignoreCase: true)
+    static let verbTail = JSRegex(#"^\S+\s+\S"#)
+    static let clauseSplit = JSRegex(#"\s*,\s*|\s+(?=(?:and|then|also|plus|oh)\s)"#)
+    static let connectorsPattern = JSRegex(#"^(?:(?:and|then|also|plus|oh|so|maybe|probably)[\s,]+)*"#, ignoreCase: true)
+    static let strongConnector = JSRegex(#"\b(?:then|also|plus|oh)\b"#)
+    static let ohAnd = JSRegex(#"\boh\s+and\b"#)
+    static let determiner = JSRegex(#"^(?:the|a|an|some|my|our|his|her|its|that|this)\b"#, ignoreCase: true)
+    static let intentLater = JSRegex("^(?:\\S+\\s+){1,3}\(RambleTitles.intent)\\b", ignoreCase: true)
+    static let abbreviation = JSRegex(#"\b(?:mr|mrs|ms|dr|st|jr|sr|vs|etc|e\.g|i\.e|approx|no|mt|ft)$"#, ignoreCase: true)
+    static let boundary = JSRegex(
         "(?<separator>\\b(?:\(RambleNormalize.separator))\\b[\\s,:]*)|(?<correction>\\b(?:scratch\\s+that|remove\\s+that|delete\\s+that|never\\s?mind)\\b[.,!]*)|(?<sentence>[.!?]+(?=\\s|$))",
         ignoreCase: true
     )
-    static let correctionFollow = RambleRegex(
+    static let correctionFollow = JSRegex(
         "^\\s*(?:[.,;!?]|$|(?:\(RambleNormalize.separator))\\b|i\\b|\(RambleTitles.intent)\\b)",
         ignoreCase: true
     )
-    static let toBefore = RambleRegex(#"\bto\s+$"#, ignoreCase: true)
-    static let ending = RambleRegex(
+    static let toBefore = JSRegex(#"\bto\s+$"#, ignoreCase: true)
+    static let ending = JSRegex(
         #"(?:^|[\s,.;!?])(?:that's|thats|that\s+is)\s+(?:all|it)(?:\s+for\s+now)?[\s.!?]*$"#,
         ignoreCase: true
     )
-    static let leadingPunct = RambleRegex(#"^[\s,.;!?]"#)
-    static let noteAtStart = RambleRegex(
+    static let leadingPunct = JSRegex(#"^[\s,.;!?]"#)
+    static let noteAtStart = JSRegex(
         #"^\s*(?:and\s+)?(?:add\s+a\s+note|the\s+notes?\s+(?:is|are|says?)|notes?|details)(?!\s+to\s+self\b)\b[\s:,-]*"#,
         ignoreCase: true
     )
-    static let structure = RambleRegex(
+    static let structure = JSRegex(
         "(?<note>\\b(?:with\\s+(?:a|the)\\s+note(?:\\s+that)?|add\\s+a\\s+note|the\\s+note\\s+is)\\b[\\s:,-]*|(?<=[,;:]\\s*)(?:and\\s+)?(?:notes?|details)(?!\\s+to\\s+self\\b)\\b[\\s:,-]*)|(?<list>\\b(?:with\\s+(?:the\\s+)?|and\\s+)?sub[\\s-]?tasks\\b[\\s:,-]*|[\\s,]*\\b(?:the\\s+steps\\s+are|steps\\s+are|which\\s+means|that\\s+means|the\\s+list\\s+is)\\b[\\s:,-]*|(?<=[a-z])\\s*:\\s+(?=[a-z]))|(?<one>\\b(?:and\\s+|with\\s+)?(?:add\\s+)?(?:a\\s+|another\\s+)?sub[\\s-]?task\\b[\\s:,-]*)",
         ignoreCase: true
     )
-    static let listSplit = RambleRegex(#"\s*,\s*(?:and\s+)?|\s+and\s+"#, ignoreCase: true)
-    static let cue = RambleRegex(
+    static let listSplit = JSRegex(#"\s*,\s*(?:and\s+)?|\s+and\s+"#, ignoreCase: true)
+    static let cue = JSRegex(
         #"^(?:(?:and|also|oh)\s+)?(?:remind\s+me(?!\s+to\b)|priority|p[1-4]\b|project|in\s+(?:the\s+|my\s+)?project|labels?|tag(?:ged)?|it'?s\s+due|it\s+is\s+due|due|make\s+it(?:\s+to)?|set\s+it(?:\s+to)?|every|each|add\s+it|put\s+it|move\s+it|(?:for|in|to)\s+(?:the|my)\s)"#,
         ignoreCase: true
     )
-    static let letters = RambleRegex(#"[\p{L}\p{N}]"#)
-    static let leadingSpace = RambleRegex(#"^\s+"#)
-    static let words = RambleRegex(#"\s+"#)
-    static let leftTrim = RambleRegex(#"^[\s,;]+"#)
+    static let letters = JSRegex(#"[\p{L}\p{N}]"#)
+    static let leadingSpace = JSRegex(#"^\s+"#)
+    static let words = JSRegex(#"\s+"#)
+    static let leftTrim = JSRegex(#"^[\s,;]+"#)
 
     init(transcript: String, now: Date, projects: [Project], labels: [Label], zone: TimeZone) {
         self.transcript = transcript

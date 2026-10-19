@@ -1,8 +1,12 @@
 import Foundation
 
-/// A JavaScript regular expression from `shared/ramble.ts`, run on ICU. `\w`, `\d`, `\s`, and `\b` match like
-/// JavaScript, and `\p{…}` stays a Unicode property, including inside a class. Offsets are UTF-16.
-struct RambleRegex: @unchecked Sendable {
+/// A JavaScript regular expression, as the shared parsers write it, run on ICU through `NSRegularExpression`. `\w`,
+/// `\d`, `\s`, and `\b` match like JavaScript without the `u` flag, `\p{…}` stays a Unicode property, including
+/// inside a class, and `$` is the end of the input. ICU rejects an unbounded lookbehind, so a `+` or `*` inside one is
+/// capped at `lookbehindLimit` characters, which a title never reaches. Offsets are UTF-16, like JavaScript indices.
+struct JSRegex: @unchecked Sendable {
+    static let lookbehindLimit = 64
+
     struct Found {
         let text: NSString
         let result: NSTextCheckingResult
@@ -37,19 +41,19 @@ struct RambleRegex: @unchecked Sendable {
         }
     }
 
-    func matches(in text: String) -> [Found] {
+    func matches(in text: String) -> [JSRegex.Found] {
         let ns = text as NSString
-        return regex.matches(in: text, range: NSRange(location: 0, length: ns.length)).map { Found(text: ns, result: $0) }
+        return regex.matches(in: text, range: NSRange(location: 0, length: ns.length)).map { JSRegex.Found(text: ns, result: $0) }
     }
 
-    func first(in text: String) -> Found? {
+    func first(in text: String) -> JSRegex.Found? {
         let ns = text as NSString
-        return regex.firstMatch(in: text, range: NSRange(location: 0, length: ns.length)).map { Found(text: ns, result: $0) }
+        return regex.firstMatch(in: text, range: NSRange(location: 0, length: ns.length)).map { JSRegex.Found(text: ns, result: $0) }
     }
 
     func test(_ text: String) -> Bool { first(in: text) != nil }
 
-    func replace(_ text: String, _ transform: (Found) -> String) -> String {
+    func replace(_ text: String, _ transform: (JSRegex.Found) -> String) -> String {
         let ns = text as NSString
         var out = ""
         var cursor = 0
@@ -63,7 +67,7 @@ struct RambleRegex: @unchecked Sendable {
     }
 
     /// `String.replace` without the `g` flag: the first match only.
-    func replaceFirst(_ text: String, _ transform: (Found) -> String) -> String {
+    func replaceFirst(_ text: String, _ transform: (JSRegex.Found) -> String) -> String {
         guard let found = first(in: text) else { return text }
         let ns = text as NSString
         return ns.substring(to: found.start) + transform(found) + ns.substring(from: found.end)
@@ -115,6 +119,7 @@ struct RambleRegex: @unchecked Sendable {
                     }
                     continue
                 }
+                precondition(!inClass || !"WDSb".contains(escaped), "\\\(escaped) inside a class: \(source)")
                 switch escaped {
                 case "w": out += inClass ? word : "[\(word)]"
                 case "d": out += inClass ? "0-9" : "[0-9]"
@@ -146,8 +151,8 @@ struct RambleRegex: @unchecked Sendable {
             case ")":
                 if groups.popLast() == true { lookbehinds -= 1 }
                 out.append(c)
-            case "+" where lookbehinds > 0: out += "{1,64}"
-            case "*" where lookbehinds > 0: out += "{0,64}"
+            case "+" where lookbehinds > 0: out += "{1,\(lookbehindLimit)}"
+            case "*" where lookbehinds > 0: out += "{0,\(lookbehindLimit)}"
             case "$": out += #"\z"#
             default: out.append(c)
             }

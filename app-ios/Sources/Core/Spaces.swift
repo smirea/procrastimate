@@ -65,10 +65,10 @@ public struct Spaces: Hashable, Sendable {
     static func sorted(_ snapshot: Snapshot) -> Snapshot {
         var sorted = Dangling.resolveDangling(snapshot)
         sorted.tasks = StoreRules.sortTasks(sorted.tasks)
-        sorted.projects = sorted.projects.sorted { ($0.createdAt, $0.id) < ($1.createdAt, $1.id) }
-        sorted.sections = sorted.sections.sorted { ($0.createdAt, $0.id) < ($1.createdAt, $1.id) }
-        sorted.labels = sorted.labels.sorted { ($0.createdAt, $0.id) < ($1.createdAt, $1.id) }
-        sorted.comments = sorted.comments.sorted { ($0.createdAt, $0.id) < ($1.createdAt, $1.id) }
+        sorted.projects = sorted.projects.stableSorted(by: byCreation)
+        sorted.sections = sorted.sections.stableSorted(by: byCreation)
+        sorted.labels = sorted.labels.stableSorted(by: byCreation)
+        sorted.comments = sorted.comments.stableSorted(by: byCreation)
         sorted.reads = sorted.reads.sorted { $0.id < $1.id }
         return sorted
     }
