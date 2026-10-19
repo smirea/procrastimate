@@ -70,7 +70,10 @@ test('quick add reuses the last task’s project, section, and labels while the 
 	await app.quickAdd().getByRole('button', { name: 'Add task' }).click();
 	await expect(page.getByRole('list', { name: 'Later tasks' }).locator('[data-task="Paint shed"]')).toBeVisible();
 
-	await app.openQuickAdd();
+	const sidebarAdd = page.getByRole('navigation', { name: 'Main' }).getByRole('button', { name: 'Add task' });
+	await expect(app.quickAdd()).toBeHidden();
+	await sidebarAdd.click();
+	await expect(app.taskInput()).toBeFocused();
 	await expect(app.quickAdd().getByRole('button', { name: 'Project Home / Later' })).toBeVisible();
 	await expect(app.quickAdd().getByRole('button', { name: 'Labels weekend' })).toBeVisible();
 	await app.taskInput().fill('Fix gate');
@@ -80,7 +83,8 @@ test('quick add reuses the last task’s project, section, and labels while the 
 
 	await app.go('Inbox');
 	await app.nav('Home').click();
-	await app.openQuickAdd();
+	await sidebarAdd.click();
+	await expect(app.taskInput()).toBeFocused();
 	await expect(app.quickAdd().getByRole('button', { name: 'Project Home', exact: true })).toBeVisible();
 	await expect(app.quickAdd().getByRole('button', { name: /^Labels/ })).toBeHidden();
 });
