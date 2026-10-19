@@ -12,11 +12,7 @@ struct DueScreen: View {
 
     init(list: Views.DueList) {
         self.list = list
-        _filter = StoredFilter(switch list {
-        case .inbox: .inbox()
-        case .tomorrow: .tomorrow
-        case .thisWeek: .thisWeek()
-        })
+        _filter = StoredFilter(list.screen)
     }
 
     var body: some View {
@@ -42,11 +38,7 @@ struct DueScreen: View {
             emptyHint: empty.hint,
             root: true,
             open: due.overdue.count + due.today.count + due.days.reduce(0) { $0 + $1.tasks.count },
-            header: ListHeaders.listHeader(switch list {
-            case .inbox: .inbox
-            case .tomorrow: .tomorrow
-            case .thisWeek: .thisWeek
-            }),
+            header: ListHeaders.listHeader(list.header),
             actions: ListActions(noun: title, name: title, copy: {
                 actions.copyAsMarkdown(Markdown.Document(title: title, sections: sections.filter { !$0.tasks.isEmpty }))
             }),
@@ -139,5 +131,23 @@ struct NoDateScreen: View {
 
     private func row(_ task: TaskItem) -> some View {
         TaskRow(task: task, added: Format.addedAgo(Dates.toDateKey(Date(timeIntervalSince1970: Double(task.createdAt) / 1000), in: store.timeZone), today))
+    }
+}
+
+private extension Views.DueList {
+    var screen: ListScreen {
+        switch self {
+        case .inbox: .inbox()
+        case .tomorrow: .tomorrow
+        case .thisWeek: .thisWeek()
+        }
+    }
+
+    var header: ListHeaders.List {
+        switch self {
+        case .inbox: .inbox
+        case .tomorrow: .tomorrow
+        case .thisWeek: .thisWeek
+        }
     }
 }
