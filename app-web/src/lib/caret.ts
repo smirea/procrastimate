@@ -93,21 +93,28 @@ function follow(field: Field) {
 	let following = true;
 	let placed = outer?.scrollTop ?? 0;
 	const reveal = () => {
-		if (document.activeElement !== field) return;
-		if (field instanceof HTMLTextAreaElement) scrollInside(field);
-		if (!outer || !following) return;
+		// Browsers other than Chrome fire no focusout for a focused field that leaves the page.
+		if (!field.isConnected) return stop();
+		if (document.activeElement !== field || !outer || !following) return;
 		const delta = overflow(field, outer);
 		if (Math.abs(delta) < 1) return;
 		outer.scrollTop += delta;
 		placed = outer.scrollTop;
 	};
+	// Only an edit scrolls inside the field, so text the user scrolled up to read inside it stays put.
 	const edited = () => {
 		following = true;
+		if (field instanceof HTMLTextAreaElement) scrollInside(field);
 		reveal();
 	};
 	// Only a scroll this code didn't make is the user's, and one that leaves the caret out of view stops the following.
+	// Measuring the caret lays out a copy of the text, so it runs at most once a frame while the page scrolls.
+	let frame = 0;
 	const scrolled = () => {
-		if (outer && Math.abs(outer.scrollTop - placed) > 1) following = overflow(field, outer) === 0;
+		frame ||= requestAnimationFrame(() => {
+			frame = 0;
+			if (outer && Math.abs(outer.scrollTop - placed) > 1) following = overflow(field, outer) === 0;
+		});
 	};
 	const resized = new ResizeObserver(reveal);
 	resized.observe(field);
@@ -115,12 +122,14 @@ function follow(field: Field) {
 	field.addEventListener('input', edited);
 	outer?.addEventListener('scroll', scrolled);
 	window.visualViewport?.addEventListener('resize', reveal);
-	return () => {
+	function stop() {
 		resized.disconnect();
+		cancelAnimationFrame(frame);
 		field.removeEventListener('input', edited);
 		outer?.removeEventListener('scroll', scrolled);
 		window.visualViewport?.removeEventListener('resize', reveal);
-	};
+	}
+	return stop;
 }
 
 /**

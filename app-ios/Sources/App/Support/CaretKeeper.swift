@@ -16,6 +16,10 @@ final class CaretKeeper {
     /// The keyboard's frame in screen coordinates, or `.null` while it is down.
     private var keyboard = CGRect.null
     private var following = true
+    /// The offset this keeper last set. Any other scroll, a drag, a status bar tap, or a `scrollTo`, is someone else's.
+    private var placed: CGFloat = 0
+    /// Only an edit scrolls inside the field, so text the user scrolled up to read inside it stays put.
+    private var edited = false
     private var scheduled = false
 
     func start() {
@@ -53,6 +57,7 @@ final class CaretKeeper {
         while let candidate = ancestor, !(candidate is UIScrollView) { ancestor = candidate.superview }
         scroll = ancestor as? UIScrollView
         guard let scroll else { return schedule() }
+        placed = scroll.contentOffset.y
         observations = [
             // SwiftUI sets the size on every layout pass, and each reveal would restart the scroll animation.
             scroll.observe(\.contentSize, options: [.old, .new]) { [weak self] _, change in
@@ -61,7 +66,8 @@ final class CaretKeeper {
             },
             scroll.observe(\.contentOffset) { [weak self] scroll, _ in
                 MainActor.assumeIsolated {
-                    guard let self, scroll.isTracking || scroll.isDecelerating else { return }
+                    guard let self, abs(scroll.contentOffset.y - self.placed) > 0.5 else { return }
+                    self.placed = scroll.contentOffset.y
                     self.following = self.overflow() == 0
                 }
             },
@@ -79,6 +85,7 @@ final class CaretKeeper {
     private func changed(_ view: UIView?) {
         guard view === field else { return }
         following = true
+        edited = true
         schedule()
     }
 
@@ -94,7 +101,8 @@ final class CaretKeeper {
     }
 
     private func reveal() {
-        if let text = field as? UITextView { text.scrollRangeToVisible(text.selectedRange) }
+        if edited, let text = field as? UITextView { text.scrollRangeToVisible(text.selectedRange) }
+        edited = false
         guard following, let scroll else { return }
         let delta = overflow()
         guard delta != 0 else { return }
@@ -103,6 +111,7 @@ final class CaretKeeper {
         let limit = max(top, scroll.contentSize.height + inset.bottom - scroll.bounds.height)
         let y = min(max(scroll.contentOffset.y + delta, top), limit)
         guard abs(y - scroll.contentOffset.y) > 0.5 else { return }
+        placed = y
         scroll.setContentOffset(CGPoint(x: scroll.contentOffset.x, y: y), animated: false)
     }
 
