@@ -1,0 +1,1739 @@
+{
+	"module": "list-filters",
+	"timeZone": "America/New_York",
+	"cases": [
+		{
+			"fn": "filterTasks",
+			"test": "filterTasks › no filter keeps every task",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": "me",
+						"due": null,
+						"event": null,
+						"id": "mine",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 1,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "mine"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "imported",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "imported"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": "bot",
+						"due": null,
+						"event": null,
+						"id": "bot-1",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 1,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "bot-1"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": "bot",
+						"due": null,
+						"event": null,
+						"id": "bot-2",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "bot-2"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": "ann",
+						"due": null,
+						"event": null,
+						"id": "ann",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 2,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "ann"
+					}
+				],
+				{
+					"people": null,
+					"priorities": null
+				},
+				"me"
+			],
+			"output": [
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 1,
+					"createdBy": "me",
+					"due": null,
+					"event": null,
+					"id": "mine",
+					"images": [],
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 1,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "mine"
+				},
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 1,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"id": "imported",
+					"images": [],
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "imported"
+				},
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 1,
+					"createdBy": "bot",
+					"due": null,
+					"event": null,
+					"id": "bot-1",
+					"images": [],
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 1,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "bot-1"
+				},
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 1,
+					"createdBy": "bot",
+					"due": null,
+					"event": null,
+					"id": "bot-2",
+					"images": [],
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "bot-2"
+				},
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 1,
+					"createdBy": "ann",
+					"due": null,
+					"event": null,
+					"id": "ann",
+					"images": [],
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 2,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "ann"
+				}
+			]
+		},
+		{
+			"fn": "filterTasks",
+			"test": "filterTasks › a task with no creator is the user’s",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": "me",
+						"due": null,
+						"event": null,
+						"id": "mine",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 1,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "mine"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "imported",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "imported"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": "bot",
+						"due": null,
+						"event": null,
+						"id": "bot-1",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 1,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "bot-1"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": "bot",
+						"due": null,
+						"event": null,
+						"id": "bot-2",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "bot-2"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": "ann",
+						"due": null,
+						"event": null,
+						"id": "ann",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 2,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "ann"
+					}
+				],
+				{
+					"people": [
+						"me"
+					],
+					"priorities": null
+				},
+				"me"
+			],
+			"output": [
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 1,
+					"createdBy": "me",
+					"due": null,
+					"event": null,
+					"id": "mine",
+					"images": [],
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 1,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "mine"
+				},
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 1,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"id": "imported",
+					"images": [],
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "imported"
+				}
+			]
+		},
+		{
+			"fn": "filterTasks",
+			"test": "filterTasks › both groups must match",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": "me",
+						"due": null,
+						"event": null,
+						"id": "mine",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 1,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "mine"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "imported",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "imported"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": "bot",
+						"due": null,
+						"event": null,
+						"id": "bot-1",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 1,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "bot-1"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": "bot",
+						"due": null,
+						"event": null,
+						"id": "bot-2",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "bot-2"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": "ann",
+						"due": null,
+						"event": null,
+						"id": "ann",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 2,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "ann"
+					}
+				],
+				{
+					"people": [
+						"me",
+						"bot"
+					],
+					"priorities": [
+						1
+					]
+				},
+				"me"
+			],
+			"output": [
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 1,
+					"createdBy": "me",
+					"due": null,
+					"event": null,
+					"id": "mine",
+					"images": [],
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 1,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "mine"
+				},
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 1,
+					"createdBy": "bot",
+					"due": null,
+					"event": null,
+					"id": "bot-1",
+					"images": [],
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 1,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "bot-1"
+				}
+			]
+		},
+		{
+			"fn": "filterOptions",
+			"test": "filterOptions › counts each choice, the user first, then by count",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": "me",
+						"due": null,
+						"event": null,
+						"id": "mine",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 1,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "mine"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "imported",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "imported"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": "bot",
+						"due": null,
+						"event": null,
+						"id": "bot-1",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 1,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "bot-1"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": "bot",
+						"due": null,
+						"event": null,
+						"id": "bot-2",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "bot-2"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": "ann",
+						"due": null,
+						"event": null,
+						"id": "ann",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 2,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "ann"
+					}
+				],
+				{
+					"people": null,
+					"priorities": null
+				},
+				"me"
+			],
+			"output": {
+				"people": [
+					{
+						"count": 2,
+						"selected": false,
+						"value": "me"
+					},
+					{
+						"count": 2,
+						"selected": false,
+						"value": "bot"
+					},
+					{
+						"count": 1,
+						"selected": false,
+						"value": "ann"
+					}
+				],
+				"priorities": [
+					{
+						"count": 2,
+						"selected": false,
+						"value": 1
+					},
+					{
+						"count": 1,
+						"selected": false,
+						"value": 2
+					},
+					{
+						"count": 2,
+						"selected": false,
+						"value": 4
+					}
+				]
+			}
+		},
+		{
+			"fn": "filterOptions",
+			"test": "filterOptions › a group counts over what the other group shows",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": "me",
+						"due": null,
+						"event": null,
+						"id": "mine",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 1,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "mine"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "imported",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "imported"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": "bot",
+						"due": null,
+						"event": null,
+						"id": "bot-1",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 1,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "bot-1"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": "bot",
+						"due": null,
+						"event": null,
+						"id": "bot-2",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "bot-2"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": "ann",
+						"due": null,
+						"event": null,
+						"id": "ann",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 2,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "ann"
+					}
+				],
+				{
+					"people": [
+						"bot"
+					],
+					"priorities": null
+				},
+				"me"
+			],
+			"output": {
+				"people": [
+					{
+						"count": 2,
+						"selected": false,
+						"value": "me"
+					},
+					{
+						"count": 2,
+						"selected": true,
+						"value": "bot"
+					},
+					{
+						"count": 1,
+						"selected": false,
+						"value": "ann"
+					}
+				],
+				"priorities": [
+					{
+						"count": 1,
+						"selected": false,
+						"value": 1
+					},
+					{
+						"count": 1,
+						"selected": false,
+						"value": 4
+					}
+				]
+			}
+		},
+		{
+			"fn": "filterOptions",
+			"test": "filterOptions › a picked choice stays while it counts nothing",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": "me",
+						"due": null,
+						"event": null,
+						"id": "mine",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 1,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "mine"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "imported",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "imported"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": "bot",
+						"due": null,
+						"event": null,
+						"id": "bot-1",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 1,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "bot-1"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": "bot",
+						"due": null,
+						"event": null,
+						"id": "bot-2",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "bot-2"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": "ann",
+						"due": null,
+						"event": null,
+						"id": "ann",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 2,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "ann"
+					}
+				],
+				{
+					"people": [
+						"ann"
+					],
+					"priorities": [
+						1
+					]
+				},
+				"me"
+			],
+			"output": {
+				"people": [
+					{
+						"count": 1,
+						"selected": false,
+						"value": "me"
+					},
+					{
+						"count": 1,
+						"selected": false,
+						"value": "bot"
+					},
+					{
+						"count": 0,
+						"selected": true,
+						"value": "ann"
+					}
+				],
+				"priorities": [
+					{
+						"count": 0,
+						"selected": true,
+						"value": 1
+					},
+					{
+						"count": 1,
+						"selected": false,
+						"value": 2
+					}
+				]
+			}
+		},
+		{
+			"fn": "filterOptions",
+			"test": "filterOptions › a group with one choice is left out",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": "me",
+						"due": null,
+						"event": null,
+						"id": "a",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "a"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "b",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "b"
+					}
+				],
+				{
+					"people": null,
+					"priorities": null
+				},
+				"me"
+			],
+			"output": {
+				"people": [],
+				"priorities": []
+			}
+		},
+		{
+			"fn": "filterOptions",
+			"test": "filterOptions › a turned-on group stays with one choice, so it can be turned off",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": "me",
+						"due": null,
+						"event": null,
+						"id": "a",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "a"
+					}
+				],
+				{
+					"people": null,
+					"priorities": [
+						4
+					]
+				},
+				"me"
+			],
+			"output": {
+				"people": [],
+				"priorities": [
+					{
+						"count": 1,
+						"selected": true,
+						"value": 4
+					}
+				]
+			}
+		},
+		{
+			"fn": "filterOptions",
+			"test": "toggles › turning a group on picks every choice it offers",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": "me",
+						"due": null,
+						"event": null,
+						"id": "mine",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 1,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "mine"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "imported",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "imported"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": "bot",
+						"due": null,
+						"event": null,
+						"id": "bot-1",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 1,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "bot-1"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": "bot",
+						"due": null,
+						"event": null,
+						"id": "bot-2",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "bot-2"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": "ann",
+						"due": null,
+						"event": null,
+						"id": "ann",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 2,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "ann"
+					}
+				],
+				{
+					"people": null,
+					"priorities": null
+				},
+				"me"
+			],
+			"output": {
+				"people": [
+					{
+						"count": 2,
+						"selected": false,
+						"value": "me"
+					},
+					{
+						"count": 2,
+						"selected": false,
+						"value": "bot"
+					},
+					{
+						"count": 1,
+						"selected": false,
+						"value": "ann"
+					}
+				],
+				"priorities": [
+					{
+						"count": 2,
+						"selected": false,
+						"value": 1
+					},
+					{
+						"count": 1,
+						"selected": false,
+						"value": 2
+					},
+					{
+						"count": 2,
+						"selected": false,
+						"value": 4
+					}
+				]
+			}
+		},
+		{
+			"fn": "toggleGroup",
+			"test": "toggles › turning a group on picks every choice it offers",
+			"input": [
+				{
+					"people": null,
+					"priorities": null
+				},
+				"people",
+				{
+					"people": [
+						{
+							"count": 2,
+							"selected": false,
+							"value": "me"
+						},
+						{
+							"count": 2,
+							"selected": false,
+							"value": "bot"
+						},
+						{
+							"count": 1,
+							"selected": false,
+							"value": "ann"
+						}
+					],
+					"priorities": [
+						{
+							"count": 2,
+							"selected": false,
+							"value": 1
+						},
+						{
+							"count": 1,
+							"selected": false,
+							"value": 2
+						},
+						{
+							"count": 2,
+							"selected": false,
+							"value": 4
+						}
+					]
+				}
+			],
+			"output": {
+				"people": [
+					"me",
+					"bot",
+					"ann"
+				],
+				"priorities": null
+			}
+		},
+		{
+			"fn": "filterOptions",
+			"test": "toggles › turning a group off shows everything again",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": "me",
+						"due": null,
+						"event": null,
+						"id": "mine",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 1,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "mine"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "imported",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "imported"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": "bot",
+						"due": null,
+						"event": null,
+						"id": "bot-1",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 1,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "bot-1"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": "bot",
+						"due": null,
+						"event": null,
+						"id": "bot-2",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "bot-2"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": "ann",
+						"due": null,
+						"event": null,
+						"id": "ann",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 2,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "ann"
+					}
+				],
+				{
+					"people": [
+						"me"
+					],
+					"priorities": [
+						1
+					]
+				},
+				"me"
+			],
+			"output": {
+				"people": [
+					{
+						"count": 1,
+						"selected": true,
+						"value": "me"
+					},
+					{
+						"count": 1,
+						"selected": false,
+						"value": "bot"
+					}
+				],
+				"priorities": [
+					{
+						"count": 1,
+						"selected": true,
+						"value": 1
+					},
+					{
+						"count": 1,
+						"selected": false,
+						"value": 4
+					}
+				]
+			}
+		},
+		{
+			"fn": "toggleGroup",
+			"test": "toggles › turning a group off shows everything again",
+			"input": [
+				{
+					"people": [
+						"me"
+					],
+					"priorities": [
+						1
+					]
+				},
+				"people",
+				{
+					"people": [
+						{
+							"count": 1,
+							"selected": true,
+							"value": "me"
+						},
+						{
+							"count": 1,
+							"selected": false,
+							"value": "bot"
+						}
+					],
+					"priorities": [
+						{
+							"count": 1,
+							"selected": true,
+							"value": 1
+						},
+						{
+							"count": 1,
+							"selected": false,
+							"value": 4
+						}
+					]
+				}
+			],
+			"output": {
+				"people": null,
+				"priorities": [
+					1
+				]
+			}
+		},
+		{
+			"fn": "toggleOption",
+			"test": "toggles › picking a choice with the group off shows only it",
+			"input": [
+				{
+					"people": null,
+					"priorities": null
+				},
+				"priorities",
+				2
+			],
+			"output": {
+				"people": null,
+				"priorities": [
+					2
+				]
+			}
+		},
+		{
+			"fn": "toggleOption",
+			"test": "toggles › toggling a picked choice drops it",
+			"input": [
+				{
+					"people": [
+						"me",
+						"bot"
+					],
+					"priorities": null
+				},
+				"people",
+				"bot"
+			],
+			"output": {
+				"people": [
+					"me"
+				],
+				"priorities": null
+			}
+		},
+		{
+			"fn": "toggleOption",
+			"test": "toggles › dropping the last choice turns the group off",
+			"input": [
+				{
+					"people": null,
+					"priorities": [
+						2
+					]
+				},
+				"priorities",
+				2
+			],
+			"output": {
+				"people": null,
+				"priorities": null
+			}
+		},
+		{
+			"fn": "filterActive",
+			"test": "toggles › a filter is active while any group is on",
+			"input": [
+				{
+					"people": null,
+					"priorities": null
+				}
+			],
+			"output": false
+		},
+		{
+			"fn": "filterActive",
+			"test": "toggles › a filter is active while any group is on",
+			"input": [
+				{
+					"people": null,
+					"priorities": [
+						4
+					]
+				}
+			],
+			"output": true
+		},
+		{
+			"fn": "filterKey",
+			"test": "filterKey › each list keeps its own, and Inbox’s days share Inbox’s",
+			"input": [
+				{
+					"date": "2026-10-15",
+					"kind": "inbox"
+				}
+			],
+			"output": "inbox"
+		},
+		{
+			"fn": "filterKey",
+			"test": "filterKey › each list keeps its own, and Inbox’s days share Inbox’s",
+			"input": [
+				{
+					"date": "2026-10-16",
+					"kind": "this-week"
+				}
+			],
+			"output": "this-week"
+		},
+		{
+			"fn": "filterKey",
+			"test": "filterKey › each list keeps its own, and Inbox’s days share Inbox’s",
+			"input": [
+				{
+					"kind": "no-date"
+				}
+			],
+			"output": "no-date"
+		},
+		{
+			"fn": "filterKey",
+			"test": "filterKey › each list keeps its own, and Inbox’s days share Inbox’s",
+			"input": [
+				{
+					"id": "p1",
+					"kind": "project",
+					"sectionId": "s1"
+				}
+			],
+			"output": "project:p1"
+		},
+		{
+			"fn": "filterKey",
+			"test": "filterKey › each list keeps its own, and Inbox’s days share Inbox’s",
+			"input": [
+				{
+					"id": "l1",
+					"kind": "label"
+				}
+			],
+			"output": "label:l1"
+		},
+		{
+			"fn": "filterKey",
+			"test": "filterKey › each list keeps its own, and Inbox’s days share Inbox’s",
+			"input": [
+				{
+					"key": "52.5,13.4",
+					"kind": "place"
+				}
+			],
+			"output": "place:52.5,13.4"
+		},
+		{
+			"fn": "filterKey",
+			"test": "filterKey › each list keeps its own, and Inbox’s days share Inbox’s",
+			"input": [
+				{
+					"id": "standup",
+					"kind": "event"
+				}
+			],
+			"output": "event:standup"
+		}
+	]
+}

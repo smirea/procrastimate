@@ -1,31 +1,42 @@
 import Core
 import SwiftUI
 
+/// Every top-level list: its rows, the filter menu at the top left when the list has one, and the `…` menu at the top
+/// right, both laid out by the list's `ListHeader`.
 struct TaskListScreen<Content: View>: View {
     let title: String
     let isEmpty: Bool
     let emptyTitle: String
     let emptyHint: String
     /// At a tab's root this list has no back button, so it drops the bar and floats the title over the scroll edge
-    /// instead. Pushed from Browse it keeps the bar.
+    /// instead, with its menus in glass beside it. Pushed from Browse it keeps the bar.
     var root = false
-    var newestFirst: Binding<Bool>?
     var labelColor: LabelColor?
     var labelIcon = "tag.fill"
     var projectIcon: ProjectIcon?
     var open: Int?
-    /// The whole list as Markdown, for a copy button at the top right. Project and label screens copy from their menu
-    /// instead.
-    var markdown: Markdown.Document?
+    let header: ListHeader
+    let actions: ListActions
+    var filter: Binding<ListFilter>?
+    /// The list's open rows before filtering, which the filter menu counts.
+    var unfiltered: [TaskItem] = []
     @ViewBuilder let content: () -> Content
 
     @Environment(Navigator.self) private var navigator
     @Environment(SyncClient.self) private var sync
+    @Environment(Store.self) private var store
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.tabRoot) private var tabRoot
     @State private var scrolled = false
+    @State private var dialog: ListDialog?
 
     private var floats: Bool { root && tabRoot }
+
+    /// The filter hid every row, which reads differently from a list with nothing in it.
+    private var filteredOut: Bool {
+        guard let filter = filter?.wrappedValue, filter.active, !unfiltered.isEmpty else { return false }
+        return ListFilters.filterTasks(unfiltered, filter, me: store.me).isEmpty
+    }
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -46,12 +57,12 @@ struct TaskListScreen<Content: View>: View {
         .listStyle(.plain)
         .refreshable { await sync.refresh() }
         .safeAreaInset(edge: .top, spacing: 0) {
-            if newestFirst != nil || (floats && markdown != nil) {
+            if floats {
                 HStack(spacing: 8) {
-                    if floats, let markdown { FloatingCopyButton(document: markdown) }
-                    if let newestFirst { SortButton(newestFirst: newestFirst) }
+                    if header.filters, let filter { FilterMenu(filter: filter, tasks: unfiltered, floating: true) }
+                    Spacer(minLength: 0)
+                    ListActionsMenu(header: header, actions: actions, dialog: $dialog, floating: true)
                 }
-                .frame(maxWidth: .infinity, alignment: .trailing)
                 .padding(.horizontal, 16)
                 .padding(.bottom, 4)
             }
@@ -60,18 +71,29 @@ struct TaskListScreen<Content: View>: View {
         .scrollContentBackground(.hidden)
         .background { CanvasBackground() }
         .overlay {
-            if isEmpty {
+            if filteredOut {
+                VStack(spacing: 12) {
+                    Text("No tasks match the filters").font(.headline)
+                    Button("Clear filters") { withAnimation(.snappy) { filter?.wrappedValue = .none } }
+                        .buttonStyle(.glass)
+                }
+                .transition(.opacity)
+            } else if isEmpty {
                 ListEmptyState(title: emptyTitle, hint: emptyHint)
                     .transition(.opacity)
             }
         }
         .animation(.snappy, value: isEmpty)
+        .animation(.snappy, value: filteredOut)
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .principal) { compactTitle }
-            if !floats, let markdown {
-                ToolbarItem(placement: .primaryAction) { CopyMarkdownButton(document: markdown) }
+            if !floats {
+                if header.filters, let filter {
+                    ToolbarItem(placement: .topBarLeading) { FilterMenu(filter: filter, tasks: unfiltered) }
+                }
+                ToolbarItem(placement: .primaryAction) { ListActionsMenu(header: header, actions: actions, dialog: $dialog) }
             }
         }
         .toolbarVisibility(floats ? .hidden : .automatic, for: .navigationBar)
@@ -81,6 +103,7 @@ struct TaskListScreen<Content: View>: View {
         .onScrollGeometryChange(for: Bool.self) { $0.contentOffset.y + $0.contentInsets.top > 4 } action: { _, value in
             scrolled = value
         }
+        .modifier(ListDialogs(actions: actions, dialog: $dialog))
     }
 
     private var compactTitle: some View {
@@ -101,46 +124,6 @@ struct TaskListScreen<Content: View>: View {
             .lineLimit(1)
             .opacity(scrolled || !floats ? 1 : 0)
             .animation(.snappy(duration: 0.2), value: scrolled)
-    }
-}
-
-/// A tab's root list has no bar, so its copy button floats in glass beside the sort button.
-private struct FloatingCopyButton: View {
-    @Environment(TaskActions.self) private var actions
-    let document: Markdown.Document
-
-    var body: some View {
-        Button { actions.copyAsMarkdown(document) } label: {
-            Image(systemName: "doc.on.doc")
-                .font(.subheadline.weight(.medium))
-                .frame(width: 44, height: 44)
-                .contentShape(.circle)
-                .glassEffect(.regular.interactive(), in: .circle)
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel("Copy as Markdown")
-    }
-}
-
-private struct SortButton: View {
-    @Binding var newestFirst: Bool
-
-    var body: some View {
-        Button {
-            newestFirst.toggle()
-        } label: {
-            SwiftUI.Label(newestFirst ? "Newest" : "Oldest", systemImage: newestFirst ? "arrow.down" : "arrow.up")
-                .font(.subheadline.weight(.medium))
-                .contentTransition(.symbolEffect(.replace))
-                .padding(.horizontal, 14)
-                .frame(minHeight: 44)
-                .contentShape(.capsule)
-                .glassEffect(.regular.interactive(), in: .capsule)
-        }
-        .buttonStyle(.plain)
-        .sensoryFeedback(.selection, trigger: newestFirst)
-        .accessibilityLabel(newestFirst ? "Sorted newest first" : "Sorted oldest first")
-        .accessibilityHint("Flips the sort")
     }
 }
 
@@ -228,15 +211,6 @@ struct GroupAddRow: View {
         .buttonStyle(.plain)
         .accessibilityLabel("Add task to \(group)")
         .accessibilityIdentifier("add-task-\(group)")
-    }
-}
-
-struct CopyMarkdownButton: View {
-    @Environment(TaskActions.self) private var actions
-    let document: Markdown.Document
-
-    var body: some View {
-        Button("Copy as Markdown", systemImage: "doc.on.doc") { actions.copyAsMarkdown(document) }
     }
 }
 

@@ -51,7 +51,7 @@ test('sections group a project, take tasks from quick add and details, and renam
 	]);
 	await expect(page.getByRole('list', { name: 'Home tasks' }).locator('[data-task]')).toHaveCount(0);
 
-	await page.getByRole('button', { name: 'Copy Home as Markdown' }).click();
+	await (await app.listMenu()).getByRole('button', { name: 'Copy as Markdown' }).click();
 	expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
 		'# Home\n\n## Later\n\n- Fix fence\n\n## Next up\n\n- Water plants\n- Paint door',
 	);
@@ -135,7 +135,8 @@ test('completed tasks show in their own section when a project shows completed',
 	await page.getByRole('checkbox', { name: 'Complete Fix fence', exact: true }).click();
 	await page.getByRole('checkbox', { name: 'Complete Sweep porch', exact: true }).click();
 	await app.settle();
-	await page.getByRole('button', { name: 'Show completed' }).click();
+	await (await app.listMenu()).getByRole('menuitemcheckbox', { name: 'Show completed' }).click();
+	await page.keyboard.press('Escape');
 	const shown = '[data-task]:not([aria-hidden="true"] *)';
 
 	await expect(page.getByRole('list', { name: 'Later tasks', exact: true }).locator(shown)).toHaveText([/Oil hinges/]);

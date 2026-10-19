@@ -158,7 +158,10 @@ final class SyncClient {
         spaces.access += demoAccess
         #endif
         store.reload(spaces)
-        let unknown = Set(store.spaces.keys).subtracting(store.people.map(\.id)).subtracting(askedForPeople)
+        // A space's owner, or whoever made or finished a task, names a byline, so someone this device has not met yet
+        // sends it to ask.
+        let named = Set(store.spaces.keys).union(store.allTasks.flatMap { [$0.createdBy, $0.completedBy].compactMap(\.self) })
+        let unknown = named.subtracting(store.people.map(\.id)).subtracting(askedForPeople)
         if !unknown.isEmpty {
             askedForPeople.formUnion(unknown)
             Task { await loadPeople() }

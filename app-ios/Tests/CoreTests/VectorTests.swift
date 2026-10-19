@@ -136,6 +136,8 @@ let handlers: [String: Handler] = [
     "dangling": danglingVector,
     "local-rows": localRowsVector,
     "space-routing": spaceRoutingVector,
+    "list-filters": listFiltersVector,
+    "list-header": listHeaderVector,
 ]
 
 private struct Occurrence: Decodable {
@@ -593,6 +595,52 @@ private struct ListSourceInput: Decodable {
             today: a(1),
             in: a.zone
         ))
+    default: throw unknown(fn)
+    }
+}
+
+@Sendable func listFiltersVector(_ fn: String, _ a: Args) throws -> JSONValue {
+    switch fn {
+    case "filterTasks": return try json(ListFilters.filterTasks(a(0), a(1), me: a(2)))
+    case "filterOptions": return try json(ListFilters.filterOptions(a(0), a(1), me: a(2)))
+    case "toggleGroup": return try json(ListFilters.toggleGroup(a(0), a(1), a(2)))
+    case "toggleOption":
+        let filter: ListFilter = try a(0)
+        return switch try a(1, as: FilterGroup.self) {
+        case .people: try json(ListFilters.toggleOption(filter, person: a(2)))
+        case .priorities: try json(ListFilters.toggleOption(filter, priority: a(2)))
+        }
+    case "filterActive": return try json(a(0, as: ListFilter.self).active)
+    case "filterKey": return try json(ListFilters.filterKey(a(0, as: ScreenInput.self).screen()))
+    default: throw unknown(fn)
+    }
+}
+
+private struct HeaderListInput: Decodable {
+    let kind: String
+    let own: Bool?
+    let place: Bool?
+    let saveable: Bool?
+
+    func list() throws -> ListHeaders.List {
+        switch kind {
+        case "inbox": .inbox
+        case "tomorrow": .tomorrow
+        case "this-week": .thisWeek
+        case "no-date": .noDate
+        case "completed": .completed
+        case "event": .event
+        case "project": .project(own: own ?? false)
+        case "label": .label(own: own ?? false, place: place ?? false)
+        case "place": .place(saveable: saveable ?? false)
+        default: throw unknown(kind)
+        }
+    }
+}
+
+@Sendable func listHeaderVector(_ fn: String, _ a: Args) throws -> JSONValue {
+    switch fn {
+    case "listHeader": return try json(ListHeaders.listHeader(a(0, as: HeaderListInput.self).list()))
     default: throw unknown(fn)
     }
 }

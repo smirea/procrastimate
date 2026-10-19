@@ -12,7 +12,7 @@ async function sharedWithMe({ app, page }: Device) {
 }
 
 async function shareWith(owner: Device, guest: Device, role: 'Can edit' | 'Can view' = 'Can edit') {
-	await owner.page.getByRole('button', { name: 'Share project' }).click();
+	await (await owner.app.listMenu()).getByRole('button', { name: 'Share' }).click();
 	const sheet = shareSheet(owner.page);
 	await sheet.getByRole('textbox', { name: 'Email or name' }).fill(guest.email);
 	await sheet.getByRole('radiogroup', { name: 'Access' }).getByRole('radio', { name: role }).click();
@@ -77,7 +77,8 @@ test('a guest completes a task in a project shared with them, and the owner sees
 
 	if (owner.page.viewportSize()!.width < 768) await owner.app.openNavigation();
 	await owner.app.go(project);
-	await owner.page.getByRole('button', { name: 'Show completed' }).click();
+	await (await owner.app.listMenu()).getByRole('menuitemcheckbox', { name: 'Show completed' }).click();
+	await owner.page.keyboard.press('Escape');
 	const completed = owner.page
 		.getByRole('list', { name: `Completed ${project} tasks` })
 		.locator(`[data-task="${task}"]`);
@@ -157,7 +158,7 @@ test('an edit a guest made offline, after the owner made the share read only, go
 	await guest.app.closeDetails();
 	await expect(guest.app.row(edited)).toBeVisible();
 
-	await owner.page.getByRole('button', { name: 'Share project' }).click();
+	await (await owner.app.listMenu()).getByRole('button', { name: 'Share' }).click();
 	const removed = owner.page.waitForResponse(r => r.url().includes('/api/shares') && r.request().method() === 'DELETE');
 	await shareSheet(owner.page).getByRole('button', { name: 'Remove Gus' }).click();
 	expect((await removed).ok()).toBe(true);
@@ -178,7 +179,7 @@ test('an edit a guest made offline, after the owner made the share read only, go
 test('a public link opens read only for someone who is not signed in', async ({ browser, devices }) => {
 	const { owner, project, task } = await ownerWithProject(devices);
 
-	await owner.page.getByRole('button', { name: 'Share project' }).click();
+	await (await owner.app.listMenu()).getByRole('button', { name: 'Share' }).click();
 	await shareSheet(owner.page).getByRole('button', { name: 'Copy link' }).click();
 	const link = shareSheet(owner.page).getByLabel('Link');
 	await expect(link).toHaveText(/\/s\/.+/);

@@ -1,0 +1,249 @@
+{
+	"module": "list-header",
+	"timeZone": "America/New_York",
+	"cases": [
+		{
+			"fn": "listHeader",
+			"test": "listHeader › every menu leads with share, copy, and show completed, in that order",
+			"input": [
+				{
+					"kind": "project",
+					"own": true
+				}
+			],
+			"output": {
+				"common": [
+					"share",
+					"copy",
+					"show-completed"
+				],
+				"filters": true,
+				"specific": [
+					"add-section",
+					"rename",
+					"icon",
+					"delete"
+				]
+			}
+		},
+		{
+			"fn": "listHeader",
+			"test": "listHeader › every menu leads with share, copy, and show completed, in that order",
+			"input": [
+				{
+					"kind": "label",
+					"own": true,
+					"place": false
+				}
+			],
+			"output": {
+				"common": [
+					"share",
+					"copy",
+					"show-completed"
+				],
+				"filters": true,
+				"specific": [
+					"rename",
+					"color",
+					"delete"
+				]
+			}
+		},
+		{
+			"fn": "listHeader",
+			"test": "listHeader › a shared project or label only copies and shows completed",
+			"input": [
+				{
+					"kind": "project",
+					"own": false
+				}
+			],
+			"output": {
+				"common": [
+					"copy",
+					"show-completed"
+				],
+				"filters": true,
+				"specific": []
+			}
+		},
+		{
+			"fn": "listHeader",
+			"test": "listHeader › a shared project or label only copies and shows completed",
+			"input": [
+				{
+					"kind": "label",
+					"own": false,
+					"place": false
+				}
+			],
+			"output": {
+				"common": [
+					"copy",
+					"show-completed"
+				],
+				"filters": true,
+				"specific": []
+			}
+		},
+		{
+			"fn": "listHeader",
+			"test": "listHeader › a saved place has no share and edits its spot",
+			"input": [
+				{
+					"kind": "label",
+					"own": true,
+					"place": true
+				}
+			],
+			"output": {
+				"common": [
+					"copy",
+					"show-completed"
+				],
+				"filters": true,
+				"specific": [
+					"rename",
+					"color",
+					"edit-place",
+					"delete"
+				]
+			}
+		},
+		{
+			"fn": "listHeader",
+			"test": "listHeader › an unsaved place offers to save it while its tasks name a spot",
+			"input": [
+				{
+					"kind": "place",
+					"saveable": true
+				}
+			],
+			"output": {
+				"common": [
+					"copy"
+				],
+				"filters": true,
+				"specific": [
+					"save-place"
+				]
+			}
+		},
+		{
+			"fn": "listHeader",
+			"test": "listHeader › an unsaved place offers to save it while its tasks name a spot",
+			"input": [
+				{
+					"kind": "place",
+					"saveable": false
+				}
+			],
+			"output": {
+				"common": [
+					"copy"
+				],
+				"filters": true,
+				"specific": []
+			}
+		},
+		{
+			"fn": "listHeader",
+			"test": "listHeader › Inbox, Tomorrow, This week, No date, and events copy; No date also sorts",
+			"input": [
+				{
+					"kind": "inbox"
+				}
+			],
+			"output": {
+				"common": [
+					"copy"
+				],
+				"filters": true,
+				"specific": []
+			}
+		},
+		{
+			"fn": "listHeader",
+			"test": "listHeader › Inbox, Tomorrow, This week, No date, and events copy; No date also sorts",
+			"input": [
+				{
+					"kind": "event"
+				}
+			],
+			"output": {
+				"common": [
+					"copy"
+				],
+				"filters": true,
+				"specific": []
+			}
+		},
+		{
+			"fn": "listHeader",
+			"test": "listHeader › Inbox, Tomorrow, This week, No date, and events copy; No date also sorts",
+			"input": [
+				{
+					"kind": "tomorrow"
+				}
+			],
+			"output": {
+				"common": [
+					"copy"
+				],
+				"filters": true,
+				"specific": []
+			}
+		},
+		{
+			"fn": "listHeader",
+			"test": "listHeader › Inbox, Tomorrow, This week, No date, and events copy; No date also sorts",
+			"input": [
+				{
+					"kind": "this-week"
+				}
+			],
+			"output": {
+				"common": [
+					"copy"
+				],
+				"filters": true,
+				"specific": []
+			}
+		},
+		{
+			"fn": "listHeader",
+			"test": "listHeader › Inbox, Tomorrow, This week, No date, and events copy; No date also sorts",
+			"input": [
+				{
+					"kind": "no-date"
+				}
+			],
+			"output": {
+				"common": [
+					"copy"
+				],
+				"filters": true,
+				"specific": [
+					"sort"
+				]
+			}
+		},
+		{
+			"fn": "listHeader",
+			"test": "listHeader › Completed has no filters",
+			"input": [
+				{
+					"kind": "completed"
+				}
+			],
+			"output": {
+				"common": [
+					"copy"
+				],
+				"filters": false,
+				"specific": []
+			}
+		}
+	]
+}

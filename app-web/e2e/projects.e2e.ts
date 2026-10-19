@@ -228,13 +228,22 @@ test('Show completed is per project, and a completed task deletes with undo', as
 	await app.row('Rake leaves').getByRole('checkbox', { name: 'Complete Rake leaves' }).click();
 	await expect(app.row('Rake leaves')).toHaveCount(0);
 
-	await page.getByRole('button', { name: 'Show completed' }).click();
+	await (await app.listMenu()).getByRole('menuitemcheckbox', { name: 'Show completed' }).click();
+	await page.keyboard.press('Escape');
 	const done = app.list('Completed Garden tasks').locator('[data-task="Rake leaves"]');
 	await expect(done).toBeVisible();
 	await app.nav('Home').click();
-	await expect(page.getByRole('button', { name: 'Show completed' })).toHaveAttribute('aria-pressed', 'false');
+	await expect((await app.listMenu()).getByRole('menuitemcheckbox', { name: 'Show completed' })).toHaveAttribute(
+		'aria-checked',
+		'false',
+	);
+	await page.keyboard.press('Escape');
 	await app.nav('Garden').click();
-	await expect(page.getByRole('button', { name: 'Show completed' })).toHaveAttribute('aria-pressed', 'true');
+	await expect((await app.listMenu()).getByRole('menuitemcheckbox', { name: 'Show completed' })).toHaveAttribute(
+		'aria-checked',
+		'true',
+	);
+	await page.keyboard.press('Escape');
 
 	await done.hover();
 	await app.settle();
@@ -247,7 +256,11 @@ test('Show completed is per project, and a completed task deletes with undo', as
 	await expect(done).toBeVisible();
 
 	await page.reload();
-	await expect(page.getByRole('button', { name: 'Show completed' })).toHaveAttribute('aria-pressed', 'true');
+	await expect((await app.listMenu()).getByRole('menuitemcheckbox', { name: 'Show completed' })).toHaveAttribute(
+		'aria-checked',
+		'true',
+	);
+	await page.keyboard.press('Escape');
 	await expect(done).toBeVisible();
 });
 

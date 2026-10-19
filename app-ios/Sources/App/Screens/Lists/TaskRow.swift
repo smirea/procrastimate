@@ -141,13 +141,19 @@ struct TaskRow<Trailing: View>: View {
     private var pending: [TaskItem] { subtasks.filter { $0.completedAt == nil } }
     private var commentBadge: CommentBadge? { store.commentBadge(task.id, me: Session.userID) }
 
+    /// A nil `createdBy` is a task the user made before the server stamped it, or an import, so it names no one.
+    private var createdBy: Person? {
+        guard let id = task.createdBy, id != store.me else { return nil }
+        return store.person(id) ?? Person(id: id, name: "Someone", kind: .human)
+    }
+
     /// The day the task sits on, which for an event or a repeat at a place is not its stored due date.
     private var due: Due? { done ? nil : Triggers.scheduledDue(task, today, in: store.timeZone) }
 
     private var hasDetails: Bool {
         due != nil || task.location != nil || task.recurrence != nil || !task.reminders.isEmpty || !task.images.isEmpty
             || progress != nil || parent != nil || showProject || task.memoSource != nil
-            || commentBadge != nil
+            || commentBadge != nil || createdBy != nil
     }
 
     @ViewBuilder private var details: some View {
@@ -194,6 +200,14 @@ struct TaskRow<Trailing: View>: View {
                     Image(systemName: "waveform")
                         .imageScale(.small)
                         .accessibilityLabel("From Notouroboros")
+                }
+                if let createdBy {
+                    HStack(spacing: 3) {
+                        Text("by")
+                        PersonName(person: createdBy).foregroundStyle(.ink)
+                    }
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel("Created by \(createdBy.name)")
                 }
                 if let parent {
                     Detail(systemImage: "arrow.turn.down.right", text: parent.title)

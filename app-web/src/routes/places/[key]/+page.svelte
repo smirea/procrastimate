@@ -1,20 +1,27 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import BookmarkSimple from 'phosphor-svelte/lib/BookmarkSimple';
+	import { untrack } from 'svelte';
 	import View from '#lib/components/View.svelte';
 	import TaskList from '#lib/components/TaskList.svelte';
-	import Popover from '#lib/components/Popover.svelte';
+	import ListMenu from '#lib/components/ListMenu.svelte';
 	import { store } from '#lib/store.svelte.ts';
+	import { listFilters } from '#lib/list-filters.svelte.ts';
+	import { session } from '#lib/session.svelte.ts';
 	import { formatRadius, placeGroups, savedPlaceAt } from 'shared/triggers.ts';
 	import { placeTasks } from 'shared/views.ts';
+	import { filterKey, filterTasks } from 'shared/list-filters.ts';
+	import { listHeader } from 'shared/list-header.ts';
 
 	const key = $derived(page.params.key ?? '');
 	const place = $derived(placeGroups(store.own.tasks, []).find((g) => g.key === key));
-	const tasks = $derived(placeTasks(store.own.tasks, key));
+	const all = $derived(placeTasks(store.own.tasks, key));
+	const list = $derived(filterKey({ kind: 'place', key }));
+	const tasks = $derived(filterTasks(all, listFilters.get(list), session.userId ?? ''));
+	const title = $derived(place?.name ?? 'Place');
 	const saved = $derived(savedPlaceAt(store.own.labels, key));
 	/** The earliest task names the place, so its spot and radius are what gets saved. */
-	const location = $derived(tasks.toSorted((a, b) => a.createdAt - b.createdAt)[0]?.location ?? null);
+	const location = $derived(all.toSorted((a, b) => a.createdAt - b.createdAt)[0]?.location ?? null);
 
 	let name = $state('');
 	let taken = $state(false);
@@ -32,21 +39,17 @@
 	}
 </script>
 
-<svelte:head><title>{place?.name ?? 'Place'} · ProcrastiMate</title></svelte:head>
+<svelte:head><title>{title} · ProcrastiMate</title></svelte:head>
 
-<View name={place?.name ?? 'Place'} open={tasks.length} empty={tasks.length === 0} emptyTitle="Nothing left here" emptyHint="Add a place to a task on iPhone." markdown={() => ({ title: place?.name ?? 'Place', sections: [{ heading: null, tasks }] })}>
+<View name={title} open={tasks.length} empty={all.length === 0} emptyTitle="Nothing left here" emptyHint="Add a place to a task on iPhone." filter={{ list, tasks: all }}>
 	{#snippet actions()}
-		{#if location}
-			<Popover label="Save place" align="end">
-				{#snippet trigger({ toggle })}
-					<button type="button" class="btn btn-quiet touch:min-h-11" onclick={() => {
+		<ListMenu header={listHeader({ kind: 'place', saveable: !!location })} label="Place actions" markdown={() => ({ title, sections: [{ heading: null, tasks }] })}>
+			{#snippet savePlace()}
+				{#if location}
+					<form class="w-64 space-y-2 p-1.5" {@attach () => untrack(() => {
 						name = place?.name ?? '';
 						taken = false;
-						toggle();
-					}}><BookmarkSimple size={17} />Save</button>
-				{/snippet}
-				{#snippet children()}
-					<form class="w-64 space-y-2 p-1.5" onsubmit={(e) => {
+					})} onsubmit={(e) => {
 						e.preventDefault();
 						save();
 					}}>
@@ -58,9 +61,9 @@
 							<button type="submit" class="btn btn-primary" disabled={!name.trim()}>Save place</button>
 						</div>
 					</form>
-				{/snippet}
-			</Popover>
-		{/if}
+				{/if}
+			{/snippet}
+		</ListMenu>
 	{/snippet}
 	<TaskList {tasks} showProject label={`Tasks at ${place?.name ?? 'this place'}`} />
 </View>

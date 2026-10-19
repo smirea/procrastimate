@@ -60,7 +60,7 @@ test('a new link holds a place until the server makes it, and a refused stop put
 	await app.createProject('Errands');
 	await slow(page, '/api/shares*', 'POST');
 	await refuse(page, '/api/shares*', 'DELETE');
-	await page.getByRole('button', { name: 'Share project' }).click();
+	await (await app.listMenu()).getByRole('button', { name: 'Share' }).click();
 	const sheet = page.getByRole('dialog', { name: 'Share' });
 	await sheet.getByRole('button', { name: 'Copy link' }).click();
 	await expect(sheet.getByRole('status', { name: 'Making the link' })).toBeVisible(INSTANT);
@@ -75,7 +75,7 @@ test('a new link holds a place until the server makes it, and a refused stop put
 test('a link stopped while it is made stays stopped once the server makes it', async ({ app, page }) => {
 	await app.createProject('Errands');
 	await slow(page, '/api/shares*', 'POST');
-	await page.getByRole('button', { name: 'Share project' }).click();
+	await (await app.listMenu()).getByRole('button', { name: 'Share' }).click();
 	const sheet = page.getByRole('dialog', { name: 'Share' });
 	await sheet.getByRole('button', { name: 'Copy link' }).click();
 	await expect(sheet.getByRole('status', { name: 'Making the link' })).toBeVisible(INSTANT);
@@ -106,7 +106,7 @@ test('people the space has met match before the server answers, and adding one i
 	await app.createProject('Errands');
 	await slow(page, '/api/people*', 'GET');
 	await slow(page, '/api/shares*', 'POST');
-	await page.getByRole('button', { name: 'Share project' }).click();
+	await (await app.listMenu()).getByRole('button', { name: 'Share' }).click();
 	const sheet = page.getByRole('dialog', { name: 'Share' });
 	await sheet.getByRole('textbox', { name: 'Email or name' }).fill('Ro');
 	await sheet.getByRole('list', { name: 'People found' }).getByRole('button', { name: /Robo/ }).click(INSTANT);
