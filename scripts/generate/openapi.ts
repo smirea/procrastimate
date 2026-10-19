@@ -18,6 +18,7 @@ import '../../shared/snapshot';
 import '../../shared/store';
 import '../../shared/subtasks';
 import '../../shared/theme';
+import '../../shared/accents';
 import '../../shared/todoist';
 import '../../shared/triggers';
 import '../../shared/views';

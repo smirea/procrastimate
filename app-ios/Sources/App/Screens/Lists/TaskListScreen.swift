@@ -146,7 +146,7 @@ private struct SortButton: View {
 struct CanvasBackground: View {
     var body: some View {
         Color.canvas
-            .overlay { glow(.canvasGlowWarm, at: UnitPoint(x: 0.1, y: -0.1), width: 1200, height: 600) }
+            .overlay { glow(.accentGlow, at: UnitPoint(x: 0.1, y: -0.1), width: 1200, height: 600) }
             .overlay { glow(.canvasGlowCool, at: UnitPoint(x: 1, y: 0), width: 900, height: 500) }
             .ignoresSafeArea()
     }

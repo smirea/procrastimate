@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import '@fontsource-variable/google-sans-flex';
+@import './lib/generated/accents.css';
 
 /* Phones and touch screens: larger targets, no hover-only affordances. */
 @custom-variant touch {
@@ -12,8 +13,8 @@
 	--font-sans:
 		'Google Sans Flex Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial,
 		sans-serif;
-	--color-accent: #bf3820;
-	--color-on-accent: #ffffff;
+	--color-accent: var(--accent);
+	--color-on-accent: var(--on-accent);
 	--color-ink: #18181b;
 	--color-muted: #56565f;
 	--color-faint: #67676f;
@@ -28,12 +29,12 @@
 
 /*
  * Every color is a semantic token with one value per theme, so components never branch on the theme.
- * `theme-contrast.test.ts` checks text tokens against these surfaces for WCAG AA in both themes.
+ * `theme-contrast.test.ts` checks text tokens against these surfaces for WCAG AA in both themes. The accent tokens come
+ * from the chosen theme color through `<html data-accent>`, generated from `shared/accents.ts` into `accents.css`.
  */
 :root {
 	color-scheme: light;
 	--canvas: #f6f6f7;
-	--canvas-glow-warm: rgb(255 228 214 / 0.6);
 	--canvas-glow-cool: rgb(220 228 255 / 0.7);
 	--glass-bg: rgb(255 255 255 / 0.72);
 	--glass-strong-bg: rgb(250 250 252 / 0.94);
@@ -94,15 +95,12 @@
 
 :root[data-theme='dark'] {
 	color-scheme: dark;
-	--color-accent: #ff7a61;
-	--color-on-accent: #1c0a06;
 	--color-ink: #ececef;
 	--color-muted: #a8a8b1;
 	--color-faint: #96969f;
 	--color-surface: #3a3a41;
 	--color-scrim: rgb(0 0 0 / 0.45);
 	--canvas: #0e0e10;
-	--canvas-glow-warm: rgb(232 73 47 / 0.11);
 	--canvas-glow-cool: rgb(80 110 255 / 0.11);
 	--glass-bg: rgb(44 44 50 / 0.72);
 	--glass-strong-bg: rgb(30 30 36 / 0.94);
@@ -170,7 +168,7 @@
 
 	body {
 		background:
-			radial-gradient(1200px 600px at 10% -10%, var(--canvas-glow-warm), transparent 60%),
+			radial-gradient(1200px 600px at 10% -10%, var(--accent-glow), transparent 60%),
 			radial-gradient(900px 500px at 100% 0%, var(--canvas-glow-cool), transparent 60%), var(--canvas);
 		background-attachment: fixed;
 	}

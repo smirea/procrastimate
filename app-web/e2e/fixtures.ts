@@ -394,6 +394,10 @@ export class App {
 		await expect(this.settings()).toBeVisible();
 	}
 
+	accentOption = (name: string) =>
+		this.settings().getByRole('radiogroup', { name: 'Theme color' }).getByRole('radio', { name, exact: true });
+	accent = () =>
+		this.page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--color-accent').trim());
 	themeOption = (name: 'System' | 'Light' | 'Dark') =>
 		this.settings().getByRole('radiogroup', { name: 'Theme' }).getByRole('radio', { name });
 

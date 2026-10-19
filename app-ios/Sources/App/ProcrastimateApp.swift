@@ -57,7 +57,7 @@ struct ProcrastimateApp: App {
         self.clock = clock
         self.session = session
         _today = State(initialValue: clock.today)
-        _theme = State(initialValue: ThemeSettings())
+        _theme = State(initialValue: ThemeSettings.shared)
         _navigator = State(initialValue: navigator)
         _toasts = State(initialValue: toasts)
         _store = State(initialValue: store)

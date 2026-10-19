@@ -16,12 +16,14 @@
 		<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
 		<title>ProcrastiMate</title>
 		<script>
-			// Runs before first paint so the page never flashes the other theme. `src/lib/theme.svelte.ts` owns the key, the choice,
-			// and the theme-color values.
+			// Runs before first paint so the page never flashes the other theme. `src/lib/theme.svelte.ts` owns the keys, the choices,
+			// and the theme-color values. Without a saved accent, `accents.css` paints the default one.
 			try {
 				const choice = localStorage.getItem('procrastimate-theme');
 				const dark = choice === 'dark' || (choice !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
 				document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+				const accent = localStorage.getItem('procrastimate-accent');
+				if (accent) document.documentElement.dataset.accent = accent;
 				document.querySelector('meta[name="theme-color"]').content = dark ? '#0e0e10' : '#f6f6f7';
 			} catch {}
 		</script>
