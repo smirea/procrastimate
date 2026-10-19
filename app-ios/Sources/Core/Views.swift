@@ -24,16 +24,21 @@ public enum Views {
     }
 
     /// By due date and time (a date without a time after every timed task that day, no date last), then priority, then
-    /// creation.
-    static func compare(today: DateKey?, in zone: TimeZone) -> (TaskItem, TaskItem) -> Bool? {
-        { a, b in
-            let aDue = sortKey(a, today: today, in: zone)
-            let bDue = sortKey(b, today: today, in: zone)
-            if aDue != bDue { return aDue < bDue }
-            if a.priority != b.priority { return a.priority < b.priority }
-            if a.createdAt != b.createdAt { return a.createdAt < b.createdAt }
-            return nil
-        }
+    /// creation. Each key is built once: a comparator building both sides' keys cost n log n key builds per sort.
+    static func byDue<T>(_ items: [T], task: (T) -> TaskItem, today: DateKey?, in zone: TimeZone) -> [T] {
+        items.map { (item: $0, key: sortKey(task($0), today: today, in: zone)) }
+            .stableSorted { a, b in
+                if a.key != b.key { return a.key < b.key }
+                let (x, y) = (task(a.item), task(b.item))
+                if x.priority != y.priority { return x.priority < y.priority }
+                if x.createdAt != y.createdAt { return x.createdAt < y.createdAt }
+                return nil
+            }
+            .map(\.item)
+    }
+
+    static func byDue(_ tasks: [TaskItem], today: DateKey?, in zone: TimeZone) -> [TaskItem] {
+        byDue(tasks, task: { $0 }, today: today, in: zone)
     }
 
     static func open(_ tasks: [TaskItem]) -> [TaskItem] { tasks.filter { $0.completedAt == nil } }
@@ -50,8 +55,7 @@ public enum Views {
 
     /// Inbox tasks with no day. The Inbox view lists dated tasks from every project under their day instead.
     public static func inboxTasks(_ tasks: [TaskItem], _ today: DateKey, in zone: TimeZone) -> [TaskItem] {
-        topLevel(tasks).filter { $0.projectId == nil && Triggers.scheduledDue($0, today, in: zone) == nil }
-            .stableSorted(by: compare(today: nil, in: zone))
+        byDue(topLevel(tasks).filter { $0.projectId == nil && Triggers.scheduledDue($0, today, in: zone) == nil }, today: nil, in: zone)
     }
 
     /// Undated inbox tasks, with each place that has two or more of them in its own section below the rest, named after
@@ -83,7 +87,7 @@ public enum Views {
     }
 
     public static func projectTasks(_ tasks: [TaskItem], _ projectId: String, in zone: TimeZone) -> [TaskItem] {
-        topLevel(tasks).filter { $0.projectId == projectId }.stableSorted(by: compare(today: nil, in: zone))
+        byDue(topLevel(tasks).filter { $0.projectId == projectId }, today: nil, in: zone)
     }
 
     /// A project's open top-level tasks under its sections: the tasks in no section first, then every section in its
@@ -103,12 +107,12 @@ public enum Views {
     }
 
     public static func labelTasks(_ tasks: [TaskItem], _ labelId: String, in zone: TimeZone) -> [TaskItem] {
-        open(tasks).filter { $0.labelIds.contains(labelId) }.stableSorted(by: compare(today: nil, in: zone))
+        byDue(open(tasks).filter { $0.labelIds.contains(labelId) }, today: nil, in: zone)
     }
 
     /// Every open task at a place, subtasks included, like a label view.
     public static func placeTasks(_ tasks: [TaskItem], _ key: String, in zone: TimeZone) -> [TaskItem] {
-        open(tasks).filter { $0.location.map(Triggers.placeKey) == key }.stableSorted(by: compare(today: nil, in: zone))
+        byDue(open(tasks).filter { $0.location.map(Triggers.placeKey) == key }, today: nil, in: zone)
     }
 
     /// A label's view: the open tasks carrying it, or for a saved place, the open tasks at it.
@@ -136,7 +140,7 @@ public enum Views {
 
     /// Every open task on a calendar event, in the order their moments come.
     public static func eventTasks(_ tasks: [TaskItem], _ eventId: String, _ today: DateKey, in zone: TimeZone) -> [TaskItem] {
-        open(tasks).filter { $0.event?.id == eventId }.stableSorted(by: compare(today: today, in: zone))
+        byDue(open(tasks).filter { $0.event?.id == eventId }, today: today, in: zone)
     }
 
     /// Dated tasks with the day each sits on, which for an event or a repeat at a place is not its stored due date.
@@ -145,8 +149,7 @@ public enum Views {
     }
 
     public static func todayTasks(_ tasks: [TaskItem], _ today: DateKey, in zone: TimeZone) -> Today {
-        let order = compare(today: today, in: zone)
-        let due = dated(tasks, today, in: zone).filter { $0.date <= today }.stableSorted { order($0.task, $1.task) }
+        let due = byDue(dated(tasks, today, in: zone).filter { $0.date <= today }, task: \.task, today: today, in: zone)
         return Today(
             overdue: due.filter { $0.date < today }.map(\.task),
             today: due.filter { $0.date == today }.map(\.task)
@@ -154,16 +157,16 @@ public enum Views {
     }
 
     public static func upcomingGroups(_ tasks: [TaskItem], _ today: DateKey, in zone: TimeZone) -> [DayGroup] {
-        let order = compare(today: today, in: zone)
         var groups: [DayGroup] = []
-        for (task, date) in dated(tasks, today, in: zone).filter({ $0.date > today }).stableSorted(by: { order($0.task, $1.task) }) {
-            if let i = groups.firstIndex(where: { $0.date == date }) {
-                groups[i].tasks.append(task)
+        // Sorted by the day each sits on, so a group is always the last one or a new one.
+        for (task, date) in byDue(dated(tasks, today, in: zone).filter { $0.date > today }, task: \.task, today: today, in: zone) {
+            if groups.last?.date == date {
+                groups[groups.count - 1].tasks.append(task)
             } else {
                 groups.append(DayGroup(date: date, tasks: [task]))
             }
         }
-        return groups.stableSorted { a, b in a.date == b.date ? nil : a.date < b.date }
+        return groups
     }
 
     /// Today, the last 7 days, or the last 30 days, each counting today, or all time.
@@ -208,8 +211,8 @@ public enum Views {
         var groups: [DayGroup] = []
         for task in completedTasks(tasks, range, in: zone) {
             let day = Dates.toDateKey(Date(epochMilliseconds: completedMoment(task)!), in: zone)
-            if let i = groups.firstIndex(where: { $0.date == day }) {
-                groups[i].tasks.append(task)
+            if groups.last?.date == day {
+                groups[groups.count - 1].tasks.append(task)
             } else {
                 groups.append(DayGroup(date: day, tasks: [task]))
             }

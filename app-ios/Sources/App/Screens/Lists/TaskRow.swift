@@ -125,10 +125,7 @@ struct TaskRow<Trailing: View>: View {
     private var project: Project? { store.project(task.projectId) }
     private var labels: [Core.Label] { store.labels(of: task) }
     private var parent: TaskItem? { isSubtask ? nil : task.parentId.flatMap(store.task) }
-    /// Grouping only this task's children keeps the cost per row at one pass over the tasks.
-    private var subtasks: [TaskItem] {
-        Subtasks.groupChildren(store.allTasks.filter { $0.parentId == task.id })[task.id] ?? []
-    }
+    private var subtasks: [TaskItem] { store.children(of: task.id) }
     private var progress: Subtasks.Progress? { Subtasks.progressOf(subtasks) }
     private var pending: [TaskItem] { subtasks.filter { $0.completedAt == nil } }
     private var commentBadge: CommentBadge? { store.commentBadge(task.id, me: Session.userID) }

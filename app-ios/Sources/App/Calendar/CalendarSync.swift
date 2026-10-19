@@ -106,9 +106,11 @@ final class CalendarSync {
     private func refreshed(_ event: TaskEvent, _ upcoming: [EKEvent]) -> TaskEvent? {
         let current = event.occurrences[0].original
         let found: [EKEvent]
+        let listed = { upcoming.first { Self.matches($0, event.id) && $0.occurrenceDate.epochMilliseconds == current } }
         if event.series {
             found = upcoming.filter { Self.matches($0, event.id) && $0.occurrenceDate.epochMilliseconds >= current }
-        } else if let occurrence = occurrence(event.id, current) {
+        } else if let occurrence = listed() ?? occurrence(event.id, current) {
+            // The upcoming window already read once answers for most tasks; the wider per-task query is the fallback.
             found = [occurrence]
         } else {
             found = plainEvent(event.id).flatMap { Self.repeats($0) ? nil : [$0] } ?? []

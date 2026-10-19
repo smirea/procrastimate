@@ -9,9 +9,9 @@ struct DeleteAllDataIntent: AppIntent {
 
     @MainActor
     func perform() async throws -> some IntentResult {
-        guard let session = IntentSession.current else { return .result() }
+        let session = IntentSession.current!
         session.store.deleteAll()
-        await LocalNotifications.applySchedule(store: session.store, clock: session.clock)
+        await session.notifications.resync()
         return .result()
     }
 }

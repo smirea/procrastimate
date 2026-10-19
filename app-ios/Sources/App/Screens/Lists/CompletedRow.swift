@@ -46,9 +46,7 @@ struct CompletedRow: View {
     private var canReopen: Bool { offered.toggle != nil }
     private var parent: TaskItem? { task.parentId.flatMap(store.task) }
     private var project: Project? { store.project(task.projectId) }
-    private var progress: Subtasks.Progress? {
-        Subtasks.progressOf(store.allTasks.filter { $0.parentId == task.id })
-    }
+    private var progress: Subtasks.Progress? { Subtasks.progressOf(store.children(of: task.id)) }
 
     /// A null `completedBy` is a completion from before the server stamped them, or one not synced yet, so it names no one.
     private var completedBy: Person? {

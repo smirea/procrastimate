@@ -24,9 +24,15 @@ public final class Store {
     /// The signed-in user: the owner of the own space and the `user_id` of every row written to it.
     public private(set) var me: String
     /// The user's own data and settings.
-    public private(set) var snapshot: Snapshot
+    public private(set) var snapshot: Snapshot {
+        didSet { index = StoreIndex(own: snapshot, shared: spaces) }
+    }
     /// Every space shared with the user, by owner id.
-    public private(set) var spaces: [String: Snapshot]
+    public private(set) var spaces: [String: Snapshot] {
+        didSet { index = StoreIndex(own: snapshot, shared: spaces) }
+    }
+    /// Observed, not ignored, so a view reading a lookup re-renders with the snapshot.
+    private var index = StoreIndex()
     public private(set) var access: [Access]
     /// Names for the ids in shares, comments, and activity. Kept on the device, never synced.
     public private(set) var people: [Person]
@@ -66,6 +72,7 @@ public final class Store {
         self.people = people
         snapshot = spaces.own
         self.spaces = spaces.shared
+        index = StoreIndex(own: spaces.own, shared: spaces.shared)
         access = spaces.access
         readOnly = Self.readOnly(spaces.access)
         settingsStored = spaces.settingsStored
@@ -138,12 +145,10 @@ public final class Store {
     public var labels: [Label] { snapshot.labels }
     public var sections: [ProjectSection] { snapshot.sections }
 
-    private var sharedData: [Snapshot] { spaces.keys.sorted().compactMap { spaces[$0] } }
-
-    public var allTasks: [TaskItem] { snapshot.tasks + sharedData.flatMap(\.tasks) }
-    public var allProjects: [Project] { snapshot.projects + sharedData.flatMap(\.projects) }
-    public var allLabels: [Label] { snapshot.labels + sharedData.flatMap(\.labels) }
-    public var allSections: [ProjectSection] { snapshot.sections + sharedData.flatMap(\.sections) }
+    public var allTasks: [TaskItem] { index.allTasks }
+    public var allProjects: [Project] { index.allProjects }
+    public var allLabels: [Label] { index.allLabels }
+    public var allSections: [ProjectSection] { index.allSections }
 
     /// Shared spaces by owner name, with their ids. An owner the people cache does not know yet shows as `Someone`.
     public var sharedSpaces: [SharedSpace] {
@@ -153,35 +158,24 @@ public final class Store {
         .sorted { ($0.owner.name, $0.id) < ($1.owner.name, $1.id) }
     }
 
-    public func task(_ id: String) -> TaskItem? {
-        snapshot.tasks.first { $0.id == id }
-            ?? spaces.values.lazy.compactMap { $0.tasks.first { $0.id == id } }.first
-    }
+    public func task(_ id: String) -> TaskItem? { index.tasks[id] }
 
-    public func project(_ id: String?) -> Project? {
-        guard let id else { return nil }
-        return snapshot.projects.first { $0.id == id }
-            ?? spaces.values.lazy.compactMap { $0.projects.first { $0.id == id } }.first
-    }
+    public func project(_ id: String?) -> Project? { id.flatMap { index.projects[$0] } }
 
-    public func section(_ id: String?) -> ProjectSection? {
-        guard let id else { return nil }
-        return snapshot.sections.first { $0.id == id }
-            ?? spaces.values.lazy.compactMap { $0.sections.first { $0.id == id } }.first
-    }
+    public func section(_ id: String?) -> ProjectSection? { id.flatMap { index.sections[$0] } }
 
     public func sections(of projectId: String) -> [ProjectSection] { StoreRules.sectionsOf(allSections, projectId) }
 
-    public func label(_ id: String) -> Label? {
-        snapshot.labels.first { $0.id == id }
-            ?? spaces.values.lazy.compactMap { $0.labels.first { $0.id == id } }.first
-    }
+    public func label(_ id: String) -> Label? { index.labels[id] }
 
     public func labels(of task: TaskItem) -> [Label] { task.labelIds.compactMap(label) }
 
-    public func space(ofTask id: String) -> SpaceKey? { space { $0.tasks.contains { $0.id == id } } }
-    public func space(ofProject id: String) -> SpaceKey? { space { $0.projects.contains { $0.id == id } } }
-    public func space(ofLabel id: String) -> SpaceKey? { space { $0.labels.contains { $0.id == id } } }
+    /// A task's subtasks in sibling order, from the index, so a row never groups the whole list.
+    public func children(of taskID: String) -> [TaskItem] { index.children[taskID] ?? [] }
+
+    public func space(ofTask id: String) -> SpaceKey? { index.tasks[id] == nil ? nil : index.spaces[id] }
+    public func space(ofProject id: String) -> SpaceKey? { index.projects[id] == nil ? nil : index.spaces[id] }
+    public func space(ofLabel id: String) -> SpaceKey? { index.labels[id] == nil ? nil : index.spaces[id] }
 
     /// This user's `access` rows in the space someone shared with them that `screen`'s project or label lives in. Nil
     /// on the user's own lists and on every other screen, which always take a task.
@@ -203,21 +197,7 @@ public final class Store {
         Screens.defaults(screen, tasks, access(of: screen))
     }
 
-    /// Every shared entity's owner, for `SpaceRouting`.
-    private var homes: SpaceRouting.Homes {
-        var homes: SpaceRouting.Homes = [:]
-        for (owner, data) in spaces {
-            for id in data.tasks.map(\.id) + data.projects.map(\.id) + data.sections.map(\.id) + data.labels.map(\.id) {
-                homes[id] = owner
-            }
-        }
-        return homes
-    }
-
-    private func space(where holds: (Snapshot) -> Bool) -> SpaceKey? {
-        if holds(snapshot) { return .own }
-        return spaces.first { holds($0.value) }.map { .shared($0.key) }
-    }
+    private var homes: SpaceRouting.Homes { index.homes }
 
     public func data(in space: SpaceKey) -> StoreData {
         switch space {
@@ -512,14 +492,15 @@ public final class Store {
         return summary
     }
 
-    public var allComments: [Comment] { snapshot.comments + sharedData.flatMap(\.comments) }
+    public var allComments: [Comment] { index.allComments }
 
     /// One task's comments, oldest first.
-    public func comments(on taskID: String) -> [Comment] { Comments.commentsOn(allComments, taskID) }
+    public func comments(on taskID: String) -> [Comment] { index.comments[taskID] ?? [] }
 
     /// A task's comment count and how many of them someone else wrote since `me` last read it, or nil without any.
     public func commentBadge(_ taskID: String, me: String?) -> CommentBadge? {
-        Comments.commentBadges(allComments.filter { $0.taskId == taskID }, snapshot.reads, me)[taskID]
+        guard let comments = index.comments[taskID] else { return nil }
+        return Comments.commentBadges(comments, snapshot.reads, me)[taskID]
     }
 
     /// Comments are written in the task's space, so only someone who may edit the task can comment on it.

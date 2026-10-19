@@ -2,23 +2,30 @@ import AppIntents
 import Core
 import CoreSpotlight
 
-/// Keeps Spotlight in step with open tasks. Completed and deleted tasks are removed, and a burst of edits is one index.
+/// Keeps Spotlight in step with open tasks. Completed and deleted tasks are removed, and a burst of edits is one index,
+/// built after the debounce from what the store holds then, and sent as the entities that changed since the last one.
 @MainActor
 enum SpotlightIndex {
     private static var pending: Task<Void, Never>?
+    private static var indexed: [String: TaskEntity]?
 
+    /// Indexes the store's open tasks. `router` receives the titles the UI test reads back.
     static func schedule(_ session: IntentSession) {
-        schedule(store: session.store, clock: session.clock, router: session.router)
-    }
-
-    /// Indexes the store's open tasks. `router` receives the titles the UI test reads back; a background intent has none.
-    static func schedule(store: Store, clock: AppClock, router: IntentRouter?) {
-        let entities = listed(in: store, today: clock.today, router: router)
         pending?.cancel()
         pending = Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(300))
             guard !Task.isCancelled else { return }
-            try? await replaceAll(entities)
+            let entities = listed(in: session.store, today: session.clock.today, router: session.router)
+            let next = Dictionary(uniqueKeysWithValues: entities.map { ($0.id, $0) })
+            defer { indexed = next }
+            guard let previous = indexed else {
+                try? await replaceAll(entities)
+                return
+            }
+            let changed = entities.filter { previous[$0.id] != $0 }
+            let gone = previous.keys.filter { next[$0] == nil }
+            guard !changed.isEmpty || !gone.isEmpty else { return }
+            try? await replace(changed, removing: gone)
         }
     }
 
@@ -38,11 +45,10 @@ enum SpotlightIndex {
         try await spotlight.indexAppEntities(entities, priority: 0)
     }
 
-    private static func listed(in store: Store, today: DateKey, router: IntentRouter?) -> [TaskEntity] {
+    private static func listed(in store: Store, today: DateKey, router: IntentRouter) -> [TaskEntity] {
         let open = IntentRules.indexedTasks(store.tasks)
-        router?.spotlight = open.map(\.title).sorted().joined(separator: ", ")
-        return open.map {
-            TaskEntity.make($0, projects: store.projects, labels: store.labels, today: today)
-        }
+        router.spotlight = open.map(\.title).sorted().joined(separator: ", ")
+        let projects = store.snapshot.projects
+        return open.map { TaskEntity.make($0, projects: projects, labels: store.labels, today: today) }
     }
 }

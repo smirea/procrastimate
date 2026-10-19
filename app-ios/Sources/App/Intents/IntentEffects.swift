@@ -4,9 +4,8 @@ import SwiftUI
 @MainActor
 enum IntentEffects {
     static func snapshot() -> (Snapshot, AppClock) {
-        if let session = IntentSession.current { return (session.store.snapshot, session.clock) }
-        let clock = fallbackClock()
-        return (SyncClient.shared(clock: clock).store.snapshot, clock)
+        let session = IntentSession.current!
+        return (session.store.snapshot, session.clock)
     }
 
     static func tasks(ids: [String]) -> [TaskEntity] {
@@ -109,7 +108,7 @@ enum IntentEffects {
                 return "No open task named “\(entity.title)”"
             }
             let message: String
-            if let session, let spoken = session.actions.complete(target) {
+            if let spoken = session.actions.complete(target) {
                 message = spoken
             } else if let completion = store.completeTask(target.id) {
                 message = Format.completedToast(target.title, completion.next, clock.today)
@@ -132,21 +131,21 @@ enum IntentEffects {
             }
             withAnimation(.snappy) { store.reopenTask(target.id) }
             let message = "Reopened “\(target.title)”"
-            session?.toasts.show(message)
+            session.toasts.show(message)
             note("reopened \(target.title)")
             return message
         }
     }
 
     static func startRamble() -> String {
-        guard let session = IntentSession.current else { return "ProcrastiMate isn't ready." }
+        let session = IntentSession.current!
         session.navigator.sheet = .ramble(QuickAddDefaults())
         note("ramble")
         return "Listening"
     }
 
     static func open(_ route: Route?, name: String) -> String {
-        guard let session = IntentSession.current else { return "ProcrastiMate isn't ready." }
+        let session = IntentSession.current!
         session.navigator.sheet = nil
         if let route {
             session.navigator.open(route)
@@ -159,7 +158,7 @@ enum IntentEffects {
     }
 
     static func open(project: ProjectEntity) -> String {
-        guard let session = IntentSession.current else { return "ProcrastiMate isn't ready." }
+        let session = IntentSession.current!
         guard session.store.project(project.id) != nil else {
             note("gone \(project.name)")
             return "That project is no longer here."
@@ -171,7 +170,7 @@ enum IntentEffects {
     }
 
     static func open(task: TaskEntity) -> String {
-        guard let session = IntentSession.current else { return "ProcrastiMate isn't ready." }
+        let session = IntentSession.current!
         guard let stored = session.store.task(task.id) else {
             note("gone \(task.title)")
             return "That task is no longer here."
@@ -184,9 +183,7 @@ enum IntentEffects {
     static func search(query: String) -> (dialog: String, entities: [TaskEntity]) {
         let (snapshot, clock) = snapshot()
         let tasks = IntentRules.searchTasks(query, snapshot.tasks, projects: snapshot.projects, labels: snapshot.labels)
-        if let session = IntentSession.current {
-            session.navigator.showSearch(query: query)
-        }
+        IntentSession.current.navigator.showSearch(query: query)
         let titles = tasks.map(\.title).joined(separator: ", ")
         note("search \(query): \(titles)")
         let dialog = tasks.isEmpty
@@ -204,7 +201,7 @@ enum IntentEffects {
     }
 
     static func note(_ line: String) {
-        IntentSession.current?.router.note(line)
+        IntentSession.current.router.note(line)
     }
 
     private static func list(overdue: Bool) -> (dialog: String, entities: [TaskEntity]) {
@@ -252,39 +249,14 @@ enum IntentEffects {
 
     /// Returns once the local database holds the command, since the system may suspend the process as soon as the
     /// intent returns, even with the app open.
-    private static func withStore<T>(_ body: (Store, AppClock, IntentSession?) -> T) async -> T {
-        if let session = IntentSession.current {
-            let before = session.store.tasks
-            let result = body(session.store, session.clock, session)
-            SpotlightIndex.schedule(session)
-            await followUp(session.store, session.clock, notifications: session.notifications, before: before)
-            await SyncClient.shared(clock: session.clock).saved()
-            return result
-        }
-        let clock = fallbackClock()
-        let sync = SyncClient.shared(clock: clock)
-        let before = sync.store.tasks
-        let result = body(sync.store, clock, nil)
-        SpotlightIndex.schedule(store: sync.store, clock: clock, router: nil)
-        await followUp(sync.store, clock, notifications: nil, before: before)
-        await sync.saved()
+    /// Runs the change, then writes the notification schedule before answering: the open app's view does that on the
+    /// next frame, which is too late when the intent ran first, and never when the app is not showing.
+    private static func withStore<T>(_ body: (Store, AppClock, IntentSession) -> T) async -> T {
+        let session = IntentSession.current!
+        let result = body(session.store, session.clock, session)
+        SpotlightIndex.schedule(session)
+        await session.notifications.resync()
+        await SyncClient.shared(clock: session.clock).saved()
         return result
-    }
-
-    /// Recomputes the notification schedule. The open app's view does this on the next frame, which is too late when
-    /// the intent ran first, and absent when the app was not showing.
-    private static func followUp(
-        _ store: Store,
-        _ clock: AppClock,
-        notifications: LocalNotifications?,
-        before: [TaskItem]
-    ) async {
-        await LocalNotifications.applySchedule(store: store, clock: clock)
-        notifications?.tasksChanged(from: before, to: store.tasks)
-    }
-
-    private static func fallbackClock() -> AppClock {
-        let options = (try? LaunchOptions.parse(ProcessInfo.processInfo.environment)) ?? LaunchOptions()
-        return options.clock(system: .system)
     }
 }
