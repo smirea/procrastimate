@@ -1,7 +1,9 @@
-/// A screen the floating tab bar can hold. Anything Browse lists can be pinned except Completed. A place or an event
-/// keeps its name, since it only exists while open tasks point at it.
+/// A screen the floating tab bar can hold: any top-level list (`Lists.catalog`). A place or an event keeps its name,
+/// since it only exists while open tasks point at it.
 public enum Pin: Hashable, Codable, Sendable {
     case inbox
+    case tomorrow
+    case thisWeek
     case noDate
     case project(id: String)
     case label(id: String)
@@ -14,11 +16,29 @@ public enum Pin: Hashable, Codable, Sendable {
     public var key: String {
         switch self {
         case .inbox: "inbox"
+        case .tomorrow: "tomorrow"
+        case .thisWeek: "thisWeek"
         case .noDate: "noDate"
         case let .project(id): "project:\(id)"
         case let .label(id): "label:\(id)"
         case let .place(key, _): "place:\(key)"
         case let .event(id, _): "event:\(id)"
+        }
+    }
+}
+
+extension Pin {
+    /// The pin for a list from the catalog.
+    public init(_ entry: Lists.Entry) {
+        self = switch entry.kind {
+        case .inbox: .inbox
+        case .tomorrow: .tomorrow
+        case .thisWeek: .thisWeek
+        case .noDate: .noDate
+        case .project: .project(id: entry.id)
+        case .label: .label(id: entry.id)
+        case .place: .place(key: entry.id, name: entry.name)
+        case .event: .event(id: entry.id, title: entry.name)
         }
     }
 }

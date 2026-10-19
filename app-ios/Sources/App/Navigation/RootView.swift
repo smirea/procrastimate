@@ -139,20 +139,19 @@ private struct TabBar: View {
     let inboxBadge: Int
 
     var body: some View {
+        // Every pin keeps its tab while its list is empty, so the bar never changes under the user.
         let pins = navigator.barPins(store)
-        // A pin with no open tasks leaves the bar, but not while it is open, so finishing its last task keeps the tab.
-        let shown = pins.filter { store.hasOpenTasks($0, today: today) || navigator.tab == .pin($0) }
         let swaps = store.pinGroups(excluding: navigator.pins, today: today)
         let stacked = TabBarMetrics.stacked(tabs: pins.count + 1, screen: width)
         GlassEffectContainer(spacing: TabBarMetrics.contentGap) {
             if stacked {
                 VStack(alignment: .trailing, spacing: TabBarMetrics.contentGap) {
                     addButton
-                    tabs(shown, swaps: swaps)
+                    tabs(pins, swaps: swaps)
                 }
             } else {
                 HStack(spacing: TabBarMetrics.contentGap) {
-                    tabs(shown, swaps: swaps)
+                    tabs(pins, swaps: swaps)
                     addButton
                 }
             }
@@ -172,9 +171,9 @@ private struct TabBar: View {
 
     private var hidden: Bool { keyboardShown || navigator.quickAdd != nil }
 
-    private func tabs(_ shown: [Pin], swaps: [PinGroup]) -> some View {
+    private func tabs(_ pins: [Pin], swaps: [PinGroup]) -> some View {
         HStack(spacing: 0) {
-            ForEach(shown, id: \.key) { pin in
+            ForEach(pins, id: \.key) { pin in
                 if let label = store.label(of: pin) {
                     pinItem(pin, label, swaps: swaps)
                         .transition(.scale(scale: 0.6).combined(with: .opacity))
@@ -183,7 +182,7 @@ private struct TabBar: View {
             browseItem
         }
         .padding(TabBarMetrics.inset)
-        .animation(.snappy(duration: 0.25), value: shown)
+        .animation(.snappy(duration: 0.25), value: pins)
         .glassEffect(.regular.interactive(), in: .capsule)
     }
 
@@ -221,6 +220,8 @@ private struct TabBar: View {
             }
         }
         .menuStyle(.button)
+        // A menu opening up from the bar would put its first rows nearest the tab, so the fixed lists stay on top.
+        .menuOrder(.fixed)
         .buttonStyle(.plain)
         .itemAccessibility(label.title, badge: badge, selected: selected)
     }
@@ -364,7 +365,9 @@ private struct RouteView: View {
 
     var body: some View {
         switch route {
-        case .inbox: InboxScreen().tracedScreen("Inbox")
+        case .inbox: DueScreen(list: .inbox).tracedScreen("Inbox")
+        case .tomorrow: DueScreen(list: .tomorrow).tracedScreen("Tomorrow")
+        case .thisWeek: DueScreen(list: .thisWeek).tracedScreen("This week")
         case .noDate: NoDateScreen().tracedScreen("No date")
         case let .project(id): ProjectScreen(projectID: id)
         case let .label(id): LabelScreen(labelID: id)

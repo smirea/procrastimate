@@ -1,23 +1,23 @@
 import { z } from 'zod';
 import { sectionsOf } from './store.ts';
 import { sectionSchema, taskSchema } from './model.ts';
-import { addDays, toDateKey, type DateKey, type Due, type Label, type Section, type Task } from './task.ts';
+import {
+	addDays,
+	mondayIndex,
+	toDateKey,
+	weekdayOf,
+	type DateKey,
+	type Due,
+	type Label,
+	type Section,
+	type Task,
+} from './task.ts';
 import { compareIds } from './order.ts';
 import { occurrenceDue, openTasks, placeKey, scheduledDue } from './triggers.ts';
 import { dateKeySchema } from './values.ts';
 
 export const dayGroupSchema = z.object({ date: dateKeySchema, tasks: z.array(taskSchema) }).meta({ id: 'DayGroup' });
 export type DayGroup = z.infer<typeof dayGroupSchema>;
-
-export const placeSectionSchema = z
-	.object({ key: z.string(), name: z.string(), tasks: z.array(taskSchema) })
-	.meta({ id: 'PlaceSection' });
-export type PlaceSection = z.infer<typeof placeSectionSchema>;
-
-export const noDateSchema = z
-	.object({ loose: z.array(taskSchema), places: z.array(placeSectionSchema) })
-	.meta({ id: 'NoDate' });
-export type NoDate = z.infer<typeof noDateSchema>;
 
 export const projectGroupSchema = z
 	.object({ section: sectionSchema.nullable(), tasks: z.array(taskSchema) })
@@ -34,6 +34,14 @@ export type ProjectCompleted = z.infer<typeof projectCompletedSchema>;
 
 export const todaySchema = z.object({ overdue: z.array(taskSchema), today: z.array(taskSchema) }).meta({ id: 'Today' });
 export type Today = z.infer<typeof todaySchema>;
+
+export const dueListSchema = z.enum(['inbox', 'tomorrow', 'this-week']).meta({ id: 'DueList' });
+export type DueList = z.infer<typeof dueListSchema>;
+
+export const dueDaysSchema = z
+	.object({ overdue: z.array(taskSchema), today: z.array(taskSchema), days: z.array(dayGroupSchema) })
+	.meta({ id: 'DueDays', description: "A dated list's tasks: overdue, today's, then each later day it covers." });
+export type DueDays = z.infer<typeof dueDaysSchema>;
 
 /** An event task sorts by the occurrence it is on, or by its first one where a list has no today. */
 const sortKey = (task: Task, today?: DateKey) => {
@@ -72,29 +80,11 @@ export function inboxTasks(tasks: readonly Task[], today: DateKey) {
 		.toSorted((a, b) => compareTasks(a, b));
 }
 
-/**
- * The No date view: undated inbox tasks, with each place that has two or more of them in its own section below the
- * rest. A section is named after its earliest task's place, and sections sort by name. Tasks sort by when they were
- * added.
- */
-export function noDateTasks(tasks: readonly Task[], today: DateKey, newestFirst: boolean): NoDate {
-	const list = inboxTasks(tasks, today).toSorted(
+/** The No date view: undated inbox tasks in one list, by when they were added, with no sections. */
+export function noDateTasks(tasks: readonly Task[], today: DateKey, newestFirst: boolean): Task[] {
+	return inboxTasks(tasks, today).toSorted(
 		(a, b) => (newestFirst ? b.createdAt - a.createdAt : a.createdAt - b.createdAt) || compareIds(a.id, b.id),
 	);
-	const byPlace = new Map<string, Task[]>();
-	for (const task of list) {
-		if (task.location) byPlace.set(placeKey(task.location), [...(byPlace.get(placeKey(task.location)) ?? []), task]);
-	}
-	const places = [...byPlace]
-		.filter(([, group]) => group.length > 1)
-		.map(([key, group]) => ({
-			key,
-			name: group.toSorted((a, b) => a.createdAt - b.createdAt)[0]!.location!.name,
-			tasks: group,
-		}))
-		.toSorted((a, b) => a.name.localeCompare(b.name) || (a.key < b.key ? -1 : 1));
-	const grouped = new Set(places.map(p => p.key));
-	return { loose: list.filter(t => !t.location || !grouped.has(placeKey(t.location))), places };
 }
 
 export function projectTasks(tasks: readonly Task[], projectId: string) {
@@ -150,6 +140,30 @@ export function upcomingGroups(tasks: readonly Task[], today: DateKey): DayGroup
 		groups.set(date, list);
 	}
 	return [...groups].map(([date, list]) => ({ date, tasks: list }));
+}
+
+/** The last day This week lists: the coming Sunday, or today on a Sunday, since weeks start on Monday. */
+export const weekEnd = (today: DateKey): DateKey => addDays(today, 6 - mondayIndex(weekdayOf(today)));
+
+/**
+ * The days a dated list covers. Inbox lists every dated task, This week the overdue ones through the end of the week,
+ * and Tomorrow only tomorrow's, since overdue tasks are already today's business.
+ */
+export function dueDays(tasks: readonly Task[], today: DateKey, list: DueList): DueDays {
+	const due = todayTasks(tasks, today);
+	const days = upcomingGroups(tasks, today);
+	switch (list) {
+		case 'inbox':
+			return { ...due, days };
+		case 'this-week':
+			return { ...due, days: days.filter(g => g.date <= weekEnd(today)) };
+		case 'tomorrow':
+			return { overdue: [], today: [], days: days.filter(g => g.date === addDays(today, 1)) };
+		default: {
+			const never: never = list;
+			return never;
+		}
+	}
 }
 
 export function placeTasks(tasks: readonly Task[], key: string) {

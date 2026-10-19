@@ -4,6 +4,8 @@ import Foundation
 /// from that section's or day's heading.
 public enum ListScreen: Hashable, Sendable {
     case inbox(date: DateKey? = nil)
+    case tomorrow
+    case thisWeek(date: DateKey? = nil)
     case noDate
     case completed
     case project(id: String, sectionId: String? = nil)
@@ -30,15 +32,25 @@ public enum Screens {
     }
 
     /// Quick add inherits the screen it opens from, so the new task lands on that screen: its project and section, its
-    /// label, its place, its event, or the day of an Inbox heading. Inbox itself adds an undated task, as capture
-    /// always has, and so do No date, Completed, and a shared project or label the user can't add to (`canAdd`).
-    public static func defaults(_ screen: ListScreen?, _ tasks: [TaskItem], _ access: [Access]?) -> QuickAddDraft.Defaults {
+    /// label, its place, its event, or the day of a day heading. Tomorrow starts tomorrow and This week today, the one
+    /// day the week always holds. Inbox itself adds an undated task, as capture always has, and so do No date,
+    /// Completed, and a shared project or label the user can't add to (`canAdd`).
+    public static func defaults(
+        _ screen: ListScreen?,
+        _ tasks: [TaskItem],
+        _ access: [Access]?,
+        today: DateKey
+    ) -> QuickAddDraft.Defaults {
         guard canAdd(to: screen, access) else { return QuickAddDraft.Defaults() }
         return switch screen {
         case nil, .noDate?, .completed?:
             QuickAddDraft.Defaults()
         case let .inbox(date)?:
             QuickAddDraft.Defaults(date: date)
+        case .tomorrow?:
+            QuickAddDraft.Defaults(date: Dates.addDays(today, 1))
+        case let .thisWeek(date)?:
+            QuickAddDraft.Defaults(date: date ?? today)
         case let .project(id, sectionId)?:
             QuickAddDraft.Defaults(projectId: id, sectionId: sectionId)
         case let .label(id)?:
@@ -57,6 +69,10 @@ public enum Screens {
             false
         case .inbox?:
             Triggers.scheduledDue(task, today, in: zone) != nil
+        case .tomorrow?:
+            Triggers.scheduledDue(task, today, in: zone)?.date == Dates.addDays(today, 1)
+        case .thisWeek?:
+            Triggers.scheduledDue(task, today, in: zone).map { $0.date <= Views.weekEnd(today) } ?? false
         case .noDate?:
             task.projectId == nil && task.parentId == nil && Triggers.scheduledDue(task, today, in: zone) == nil
         case let .project(id, _)?:

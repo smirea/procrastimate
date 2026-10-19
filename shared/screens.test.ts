@@ -1,7 +1,7 @@
 import { expect } from 'bun:test';
 import * as screens from './screens.ts';
 import type { AccessRow } from './db/schema.ts';
-import type { Task } from './task.ts';
+import type { DateKey, Task } from './task.ts';
 import type { TaskEvent, TaskLocation } from './values.ts';
 import { describe, recorded, test } from './vectors/record.ts';
 import { task as base } from './testing.ts';
@@ -55,27 +55,39 @@ const none = {
 
 describe('screenDefaults', () => {
 	test('an Inbox day heading starts on its day', () => {
-		expect(screenDefaults({ kind: 'inbox', date: '2026-10-15' }, [], null)).toEqual({ ...none, date: '2026-10-15' });
+		expect(screenDefaults({ kind: 'inbox', date: '2026-10-15' }, [], null, today)).toEqual({
+			...none,
+			date: '2026-10-15',
+		});
 	});
 
 	test('Inbox, No date, Completed, and no screen add a bare task', () => {
-		expect(screenDefaults({ kind: 'inbox' }, [], null)).toEqual(none);
-		expect(screenDefaults({ kind: 'no-date' }, [], null)).toEqual(none);
-		expect(screenDefaults({ kind: 'completed' }, [], null)).toEqual(none);
-		expect(screenDefaults(null, [], null)).toEqual(none);
+		expect(screenDefaults({ kind: 'inbox' }, [], null, today)).toEqual(none);
+		expect(screenDefaults({ kind: 'no-date' }, [], null, today)).toEqual(none);
+		expect(screenDefaults({ kind: 'completed' }, [], null, today)).toEqual(none);
+		expect(screenDefaults(null, [], null, today)).toEqual(none);
 	});
 
 	test('a project starts in the project, and in the section quick add opened from', () => {
-		expect(screenDefaults({ kind: 'project', id: 'home' }, [], null)).toEqual({ ...none, projectId: 'home' });
-		expect(screenDefaults({ kind: 'project', id: 'home', sectionId: 'kitchen' }, [], null)).toEqual({
+		expect(screenDefaults({ kind: 'project', id: 'home' }, [], null, today)).toEqual({ ...none, projectId: 'home' });
+		expect(screenDefaults({ kind: 'project', id: 'home', sectionId: 'kitchen' }, [], null, today)).toEqual({
 			...none,
 			projectId: 'home',
 			sectionId: 'kitchen',
 		});
 	});
 
+	test('Tomorrow starts tomorrow, and This week today or the day heading quick add opened from', () => {
+		expect(screenDefaults({ kind: 'tomorrow' }, [], null, today)).toEqual({ ...none, date: '2026-10-15' });
+		expect(screenDefaults({ kind: 'this-week' }, [], null, today)).toEqual({ ...none, date: today });
+		expect(screenDefaults({ kind: 'this-week', date: '2026-10-17' }, [], null, today)).toEqual({
+			...none,
+			date: '2026-10-17',
+		});
+	});
+
 	test('a label starts with the label', () => {
-		expect(screenDefaults({ kind: 'label', id: 'errands' }, [], null)).toEqual({ ...none, labelId: 'errands' });
+		expect(screenDefaults({ kind: 'label', id: 'errands' }, [], null, today)).toEqual({ ...none, labelId: 'errands' });
 	});
 
 	test('a place starts at the place, as its earliest open task names it', () => {
@@ -84,12 +96,18 @@ describe('screenDefaults', () => {
 			task('first', { location: rewe('Rewe') }),
 			task('second', { location: rewe('Supermarket') }),
 		];
-		expect(screenDefaults({ kind: 'place', key: reweKey }, tasks, null)).toEqual({ ...none, location: rewe('Rewe') });
+		expect(screenDefaults({ kind: 'place', key: reweKey }, tasks, null, today)).toEqual({
+			...none,
+			location: rewe('Rewe'),
+		});
 	});
 
 	test('an event starts on the event, as its earliest open task follows it', () => {
 		const tasks = [task('first', { event: standup(15) }), task('second', { event: standup(5) })];
-		expect(screenDefaults({ kind: 'event', id: 'standup' }, tasks, null)).toEqual({ ...none, event: standup(15) });
+		expect(screenDefaults({ kind: 'event', id: 'standup' }, tasks, null, today)).toEqual({
+			...none,
+			event: standup(15),
+		});
 	});
 
 	test('a place or event whose tasks are all done keeps the latest done copy', () => {
@@ -97,25 +115,34 @@ describe('screenDefaults', () => {
 			task('older', { location: rewe('Old name'), event: standup(5), completedAt: 1 }),
 			task('newer', { location: rewe('Rewe'), event: standup(0), completedAt: 2 }),
 		];
-		expect(screenDefaults({ kind: 'place', key: reweKey }, tasks, null)).toEqual({ ...none, location: rewe('Rewe') });
-		expect(screenDefaults({ kind: 'event', id: 'standup' }, tasks, null)).toEqual({ ...none, event: standup(0) });
+		expect(screenDefaults({ kind: 'place', key: reweKey }, tasks, null, today)).toEqual({
+			...none,
+			location: rewe('Rewe'),
+		});
+		expect(screenDefaults({ kind: 'event', id: 'standup' }, tasks, null, today)).toEqual({
+			...none,
+			event: standup(0),
+		});
 	});
 
 	test('a place or event no task holds starts bare', () => {
-		expect(screenDefaults({ kind: 'place', key: reweKey }, [], null)).toEqual(none);
-		expect(screenDefaults({ kind: 'event', id: 'standup' }, [], null)).toEqual(none);
+		expect(screenDefaults({ kind: 'place', key: reweKey }, [], null, today)).toEqual(none);
+		expect(screenDefaults({ kind: 'event', id: 'standup' }, [], null, today)).toEqual(none);
 	});
 
 	test('a shared project or label the user can only view starts bare', () => {
 		const space = { access: [granted('project', 'garden', 'view'), granted('label', 'weekend', 'view')] };
-		expect(screenDefaults({ kind: 'project', id: 'garden', sectionId: 'beds' }, [], space)).toEqual(none);
-		expect(screenDefaults({ kind: 'label', id: 'weekend' }, [], space)).toEqual(none);
+		expect(screenDefaults({ kind: 'project', id: 'garden', sectionId: 'beds' }, [], space, today)).toEqual(none);
+		expect(screenDefaults({ kind: 'label', id: 'weekend' }, [], space, today)).toEqual(none);
 	});
 
 	test('a shared project or label the user can edit starts on it', () => {
 		const space = { access: [granted('project', 'garden', 'edit'), granted('label', 'weekend', 'edit')] };
-		expect(screenDefaults({ kind: 'project', id: 'garden' }, [], space)).toEqual({ ...none, projectId: 'garden' });
-		expect(screenDefaults({ kind: 'label', id: 'weekend' }, [], space)).toEqual({ ...none, labelId: 'weekend' });
+		expect(screenDefaults({ kind: 'project', id: 'garden' }, [], space, today)).toEqual({
+			...none,
+			projectId: 'garden',
+		});
+		expect(screenDefaults({ kind: 'label', id: 'weekend' }, [], space, today)).toEqual({ ...none, labelId: 'weekend' });
 	});
 });
 
@@ -159,6 +186,16 @@ describe('screenHolds', () => {
 			screenHolds({ kind: 'inbox' }, task('a', { due: { date: today, time: null }, projectId: 'home' }), today),
 		).toBe(true);
 		expect(screenHolds({ kind: 'inbox' }, task('b'), today)).toBe(false);
+	});
+
+	test('Tomorrow holds tomorrow, and This week every day through Sunday', () => {
+		const on = (date: DateKey) => task(date, { due: { date, time: null } });
+		expect(screenHolds({ kind: 'tomorrow' }, on('2026-10-15'), today)).toBe(true);
+		expect(screenHolds({ kind: 'tomorrow' }, on(today), today)).toBe(false);
+		expect(screenHolds({ kind: 'this-week' }, on('2026-10-01'), today)).toBe(true);
+		expect(screenHolds({ kind: 'this-week' }, on('2026-10-18'), today)).toBe(true);
+		expect(screenHolds({ kind: 'this-week' }, on('2026-10-19'), today)).toBe(false);
+		expect(screenHolds({ kind: 'this-week' }, task('undated'), today)).toBe(false);
 	});
 
 	test('No date holds undated tasks in no project', () => {

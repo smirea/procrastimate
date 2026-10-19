@@ -4,8 +4,8 @@ import Foundation
 public enum Views {
     public typealias DayGroup = API.DayGroup
     public typealias Today = API.Today
-    public typealias NoDate = API.NoDate
-    public typealias PlaceSection = API.PlaceSection
+    public typealias DueList = API.DueList
+    public typealias DueDays = API.DueDays
     public typealias CompletedPreset = API.CompletedPreset
     public typealias CompletedRange = API.CompletedRange
     public typealias ProjectGroup = API.ProjectGroup
@@ -58,32 +58,12 @@ public enum Views {
         byDue(topLevel(tasks).filter { $0.projectId == nil && Triggers.scheduledDue($0, today, in: zone) == nil }, today: nil, in: zone)
     }
 
-    /// Undated inbox tasks, with each place that has two or more of them in its own section below the rest, named after
-    /// its earliest task's place and sorted by name. Tasks sort by when they were added.
-    public static func noDateTasks(_ tasks: [TaskItem], _ today: DateKey, newestFirst: Bool, in zone: TimeZone) -> NoDate {
-        let list = inboxTasks(tasks, today, in: zone).stableSorted { a, b in
+    /// The No date view: undated inbox tasks in one list, by when they were added, with no sections.
+    public static func noDateTasks(_ tasks: [TaskItem], _ today: DateKey, newestFirst: Bool, in zone: TimeZone) -> [TaskItem] {
+        inboxTasks(tasks, today, in: zone).stableSorted { a, b in
             if a.createdAt != b.createdAt { return newestFirst ? a.createdAt > b.createdAt : a.createdAt < b.createdAt }
             return a.id == b.id ? nil : a.id < b.id
         }
-        var order: [String] = []
-        var byPlace: [String: [TaskItem]] = [:]
-        for task in list {
-            guard let location = task.location else { continue }
-            let key = Triggers.placeKey(location)
-            if byPlace[key] == nil { order.append(key) }
-            byPlace[key, default: []].append(task)
-        }
-        let places = order.compactMap { key -> PlaceSection? in
-            guard let group = byPlace[key], group.count > 1 else { return nil }
-            let earliest = group.stableSorted { a, b in a.createdAt == b.createdAt ? nil : a.createdAt < b.createdAt }[0]
-            return PlaceSection(key: key, name: earliest.location!.name, tasks: group)
-        }.stableSorted { a, b in
-            let order = a.name.compare(b.name, locale: Locale(identifier: "en"))
-            if order != .orderedSame { return order == .orderedAscending }
-            return a.key == b.key ? nil : a.key < b.key
-        }
-        let grouped = Set(places.map(\.key))
-        return NoDate(loose: list.filter { $0.location.map { !grouped.contains(Triggers.placeKey($0)) } ?? true }, places: places)
     }
 
     public static func projectTasks(_ tasks: [TaskItem], _ projectId: String, in zone: TimeZone) -> [TaskItem] {
@@ -167,6 +147,23 @@ public enum Views {
             }
         }
         return groups
+    }
+
+    /// The last day This week lists: the coming Sunday, or today on a Sunday, since weeks start on Monday.
+    public static func weekEnd(_ today: DateKey) -> DateKey {
+        Dates.addDays(today, 6 - Dates.mondayIndex(Dates.weekdayOf(today)))
+    }
+
+    /// The days a dated list covers. Inbox lists every dated task, This week the overdue ones through the end of the
+    /// week, and Tomorrow only tomorrow's, since overdue tasks are already today's business.
+    public static func dueDays(_ tasks: [TaskItem], _ today: DateKey, _ list: DueList, in zone: TimeZone) -> DueDays {
+        let due = todayTasks(tasks, today, in: zone)
+        let days = upcomingGroups(tasks, today, in: zone)
+        return switch list {
+        case .inbox: DueDays(overdue: due.overdue, today: due.today, days: days)
+        case .thisWeek: DueDays(overdue: due.overdue, today: due.today, days: days.filter { $0.date <= weekEnd(today) })
+        case .tomorrow: DueDays(overdue: [], today: [], days: days.filter { $0.date == Dates.addDays(today, 1) })
+        }
     }
 
     /// Today, the last 7 days, or the last 30 days, each counting today, or all time.

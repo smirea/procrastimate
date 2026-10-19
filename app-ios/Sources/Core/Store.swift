@@ -194,7 +194,7 @@ public final class Store {
 
     /// What quick add starts with on `screen`, as `Screens.defaults` maps it.
     public func quickAddDefaults(_ screen: ListScreen?) -> QuickAddDraft.Defaults {
-        Screens.defaults(screen, tasks, access(of: screen))
+        Screens.defaults(screen, tasks, access(of: screen), today: clock.today)
     }
 
     private var homes: SpaceRouting.Homes { index.homes }

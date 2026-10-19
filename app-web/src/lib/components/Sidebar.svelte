@@ -21,43 +21,29 @@
 	import { labelIcon } from '../label-icon.ts';
 	import { projectIcon } from '../project-icon.ts';
 	import { clock, mobile, motion, sheets } from '../ui.svelte.ts';
+	import SunHorizon from 'phosphor-svelte/lib/SunHorizon';
+	import CalendarDots from 'phosphor-svelte/lib/CalendarDots';
 	import { sharedEntries } from 'shared/space-routing.ts';
-	import { inboxTasks, openCounts, todayTasks } from 'shared/views.ts';
-	import { eventGroups, placeGroups } from 'shared/triggers.ts';
+	import { listCatalog, type ListGroupKind, type ListKind } from 'shared/lists.ts';
+	import { listHref } from '../screen.ts';
 
 	let { onquickadd, onsearch, onsettings }: { onquickadd: () => void; onsearch: () => void; onsettings: () => void } =
 		$props();
 
-	const today = $derived(todayTasks(store.own.tasks, clock.today));
-	const noDate = $derived(inboxTasks(store.own.tasks, clock.today).length);
-	/** No date leaves the list once it is empty, but not while it is open, so finishing its last task keeps the page's link. */
+	const ICONS: Partial<Record<ListKind, typeof Tray>> = { inbox: Tray, tomorrow: SunHorizon, 'this-week': CalendarDots, 'no-date': CalendarMinus };
+	const shared = $derived(Object.values(store.spaces).map(space => ({ owner: store.ownerOf(space.owner), data: space.data })));
+	const catalog = $derived(listCatalog({ own: store.own, shared }, clock.today));
+	const group = (kind: ListGroupKind) => catalog.find(g => g.kind === kind)!;
 	const views = $derived([
-		{ href: '/inbox', label: 'Inbox', icon: Tray, count: today.overdue.length + today.today.length },
-		...(noDate || page.url.pathname === '/no-date' ? [{ href: '/no-date', label: 'No date', icon: CalendarMinus, count: noDate }] : []),
+		...group('lists').entries.map(entry => ({ href: listHref(entry), label: entry.name, icon: ICONS[entry.kind] ?? Tray, count: entry.count })),
 		{ href: '/completed', label: 'Completed', icon: CheckCircle, count: 0 },
 	]);
-
-	const counts = $derived(openCounts(store.own.tasks, store.own.labels));
-	const labels = $derived(
-		store.own.labels
-			.map((label) => ({ label, count: counts.labels.get(label.id) ?? 0 }))
-			.toSorted((a, b) => a.label.name.localeCompare(b.label.name, undefined, { sensitivity: 'base' })),
-	);
-
 	const sections = $derived([
-		{
-			label: 'Places',
-			icon: MapPin,
-			rows: placeGroups(store.own.tasks, store.own.labels).map((g) => ({ key: g.key, name: g.name, count: g.count, href: `/places/${encodeURIComponent(g.key)}` })),
-		},
-		{
-			label: 'Events',
-			icon: CalendarStar,
-			rows: eventGroups(store.own.tasks, clock.today).map((g) => ({ key: g.id, name: g.title, count: g.count, href: `/events/${encodeURIComponent(g.id)}` })),
-		},
+		{ group: group('places'), icon: MapPin },
+		{ group: group('events'), icon: CalendarStar },
 	]);
-
-	const shared = $derived(sharedEntries(Object.values(store.spaces).map(space => ({ owner: store.ownerOf(space.owner), data: space.data }))));
+	/** Shared tasks no shared list leads to are not lists, so they follow the shared lists. */
+	const sharedTasks = $derived(sharedEntries(shared).filter(entry => entry.kind === 'task'));
 
 	let adding = $state(false);
 	let name = $state('');
@@ -114,7 +100,7 @@
 					<Plus size={14} weight="bold" />
 				</button>
 			</div>
-			<ProjectList>
+			<ProjectList projects={group('projects').entries}>
 				{#if adding}
 					<li transition:slide={motion({ duration: 180, easing: cubicOut })}>
 						<!-- svelte-ignore a11y_autofocus -->
@@ -138,39 +124,19 @@
 			</ProjectList>
 		</section>
 
-		{#each sections as section (section.label)}
-			{#if section.rows.length}
-				<section aria-label={section.label} transition:slide={motion({ duration: 180, easing: cubicOut })}>
-					<h2 class="px-2 pb-1 text-[12px] font-medium tracking-wide text-faint uppercase">{section.label}</h2>
-					<ul class="space-y-0.5">
-						{#each section.rows as row (row.key)}
-							{@const active = page.url.pathname === row.href}
-							<li transition:slide={motion({ duration: 180, easing: cubicOut })}>
-								<a href={row.href} class="nav-link" class:active aria-current={active ? 'page' : undefined}>
-									<section.icon size={18} weight={active ? 'fill' : 'regular'} class={active ? '' : 'text-muted'} />
-									<span class="flex-1 truncate">{row.name}</span>
-									<span class="text-[12px] text-faint">{row.count}</span>
-								</a>
-							</li>
-						{/each}
-					</ul>
-				</section>
-			{/if}
-		{/each}
-
-		{#if shared.length}
+		{#if group('shared').entries.length || sharedTasks.length}
 			<section aria-label="Shared with me" transition:slide={motion({ duration: 180, easing: cubicOut })}>
-				<h2 class="px-2 pb-1 text-[12px] font-medium tracking-wide text-faint uppercase">Shared with me</h2>
+				<h2 class="px-2 pb-1 text-[12px] font-medium tracking-wide text-faint uppercase">{group('shared').title}</h2>
 				<ul class="space-y-0.5">
-					{#each shared as entry (entry.id)}
-						{@const href = entry.kind === 'task' ? null : `/${entry.kind}s/${entry.id}`}
+					{#each [...group('shared').entries, ...sharedTasks] as entry (entry.id)}
+						{@const href = entry.kind === 'task' ? null : listHref({ kind: entry.kind, id: entry.id })}
 						{@const active = href !== null && page.url.pathname === href}
 						{@const Icon = entry.kind === 'project' ? projectIcon(store.project(entry.id)) : entry.kind === 'label' ? labelIcon(store.label(entry.id)) : CheckCircle}
 						{#snippet row()}
 							{@const color = entry.kind === 'label' ? store.label(entry.id)?.color : undefined}
 							<Icon size={18} weight={active ? 'fill' : 'regular'} class={color ? 'text-[var(--label-tone)]' : active ? '' : 'text-muted'} style={color ? labelStyle(color) : undefined} />
 							<span class="min-w-0 flex-1 truncate">{entry.name}</span>
-							<PersonName person={entry.owner} class="max-w-[45%] text-[12px] text-faint" />
+							<PersonName person={entry.owner!} class="max-w-[45%] text-[12px] text-faint" />
 						{/snippet}
 						<li transition:slide={motion({ duration: 180, easing: cubicOut })}>
 							{#if href}
@@ -184,19 +150,41 @@
 			</section>
 		{/if}
 
-		{#if labels.length}
+		{#each sections as { group, icon: Icon } (group.kind)}
+			{#if group.entries.length}
+				<section aria-label={group.title} transition:slide={motion({ duration: 180, easing: cubicOut })}>
+					<h2 class="px-2 pb-1 text-[12px] font-medium tracking-wide text-faint uppercase">{group.title}</h2>
+					<ul class="space-y-0.5">
+						{#each group.entries as entry (entry.id)}
+							{@const href = listHref(entry)}
+							{@const active = page.url.pathname === href}
+							<li transition:slide={motion({ duration: 180, easing: cubicOut })}>
+								<a {href} class="nav-link" class:active aria-current={active ? 'page' : undefined}>
+									<Icon size={18} weight={active ? 'fill' : 'regular'} class={active ? '' : 'text-muted'} />
+									<span class="flex-1 truncate">{entry.name}</span>
+									<span class="text-[12px] text-faint">{entry.count}</span>
+								</a>
+							</li>
+						{/each}
+					</ul>
+				</section>
+			{/if}
+		{/each}
+
+		{#if group('labels').entries.length}
 			<section aria-label="Labels" transition:slide={motion({ duration: 180, easing: cubicOut })}>
-				<h2 class="px-2 pb-1 text-[12px] font-medium tracking-wide text-faint uppercase">Labels</h2>
+				<h2 class="px-2 pb-1 text-[12px] font-medium tracking-wide text-faint uppercase">{group('labels').title}</h2>
 				<ul class="space-y-0.5">
-					{#each labels as { label, count } (label.id)}
-						{@const href = `/labels/${label.id}`}
+					{#each group('labels').entries as entry (entry.id)}
+						{@const href = listHref(entry)}
+						{@const label = store.label(entry.id)}
 						{@const Icon = labelIcon(label)}
 						{@const active = page.url.pathname === href}
 						<li transition:slide={motion({ duration: 180, easing: cubicOut })}>
 							<a {href} class="nav-link" class:active aria-current={active ? 'page' : undefined}>
-								<Icon size={18} weight={active ? 'fill' : 'regular'} class="text-[var(--label-tone)]" style={labelStyle(label.color)} />
-								<span class="flex-1 truncate">{label.name}</span>
-								{#if count}<span class="text-[12px] text-faint">{count}</span>{/if}
+								<Icon size={18} weight={active ? 'fill' : 'regular'} class="text-[var(--label-tone)]" style={label ? labelStyle(label.color) : undefined} />
+								<span class="flex-1 truncate">{entry.name}</span>
+								{#if entry.count}<span class="text-[12px] text-faint">{entry.count}</span>{/if}
 							</a>
 						</li>
 					{/each}

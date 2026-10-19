@@ -1,6 +1,8 @@
 import { page } from '$app/state';
 import { canAddTo, screenDefaults, type Screen } from 'shared/screens.ts';
+import type { ListEntry } from 'shared/lists.ts';
 import { store } from './store.svelte.ts';
+import { clock } from './ui.svelte.ts';
 
 /** The list screen the route shows. Nil on a page that lists no tasks, such as a public link. */
 export function currentScreen(): Screen | null {
@@ -8,6 +10,10 @@ export function currentScreen(): Screen | null {
 	switch (page.route.id) {
 		case '/inbox':
 			return { kind: 'inbox' };
+		case '/tomorrow':
+			return { kind: 'tomorrow' };
+		case '/this-week':
+			return { kind: 'this-week' };
 		case '/no-date':
 			return { kind: 'no-date' };
 		case '/completed':
@@ -37,4 +43,27 @@ export const canAddHere = (screen: Screen) => canAddTo(screen, spaceOf(screen));
 
 /** What quick add starts with on `screen`, the open one unless a section's add row names its own. */
 export const quickAddDefaults = (screen: Screen | null = currentScreen()) =>
-	screenDefaults(screen, store.own.tasks, spaceOf(screen));
+	screenDefaults(screen, store.own.tasks, spaceOf(screen), clock.today);
+
+/** Where a top-level list from the catalog opens. */
+export function listHref(entry: Pick<ListEntry, 'kind' | 'id'>): string {
+	switch (entry.kind) {
+		case 'inbox':
+		case 'tomorrow':
+		case 'this-week':
+		case 'no-date':
+			return `/${entry.kind}`;
+		case 'project':
+			return `/projects/${entry.id}`;
+		case 'label':
+			return `/labels/${entry.id}`;
+		case 'place':
+			return `/places/${encodeURIComponent(entry.id)}`;
+		case 'event':
+			return `/events/${encodeURIComponent(entry.id)}`;
+		default: {
+			const never: never = entry.kind;
+			return never;
+		}
+	}
+}

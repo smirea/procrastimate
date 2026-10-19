@@ -7,6 +7,7 @@ import '../../shared/comments';
 import '../../shared/dictation';
 import '../../shared/format';
 import '../../shared/links';
+import '../../shared/lists';
 import '../../shared/markdown';
 import '../../shared/quick-add-buttons';
 import '../../shared/name-search';

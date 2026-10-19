@@ -5333,7 +5333,7 @@
 		},
 		{
 			"fn": "noDateTasks",
-			"test": "no date › places with two or more undated tasks get their own sections below the rest",
+			"test": "no date › lists undated inbox tasks in one list, places included, oldest first",
 			"input": [
 				[
 					{
@@ -5394,44 +5394,15 @@
 						"createdBy": null,
 						"due": null,
 						"event": null,
-						"id": "coffee",
-						"images": [],
-						"labelIds": [],
-						"lastCompletedAt": null,
-						"location": {
-							"address": "",
-							"latitude": 52.6,
-							"longitude": 13.4,
-							"name": "Philz",
-							"radius": 150,
-							"trigger": "arrive"
-						},
-						"notes": "",
-						"order": 0,
-						"parentId": null,
-						"priority": 4,
-						"projectId": null,
-						"recurrence": null,
-						"reminders": [],
-						"sectionId": null,
-						"title": "coffee"
-					},
-					{
-						"completedAt": null,
-						"completedBy": null,
-						"createdAt": 52,
-						"createdBy": null,
-						"due": null,
-						"event": null,
 						"id": "eggs",
 						"images": [],
 						"labelIds": [],
 						"lastCompletedAt": null,
 						"location": {
 							"address": "",
-							"latitude": 52.50001,
+							"latitude": 52.5,
 							"longitude": 13.4,
-							"name": "Supermarket",
+							"name": "Rewe",
 							"radius": 150,
 							"trigger": "arrive"
 						},
@@ -5448,7 +5419,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 53,
+						"createdAt": 52,
 						"createdBy": null,
 						"due": {
 							"date": "2026-10-14",
@@ -5480,7 +5451,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 54,
+						"createdAt": 53,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -5488,14 +5459,7 @@
 						"images": [],
 						"labelIds": [],
 						"lastCompletedAt": null,
-						"location": {
-							"address": "",
-							"latitude": 52.6,
-							"longitude": 13.4,
-							"name": "Philz",
-							"radius": 150,
-							"trigger": "arrive"
-						},
+						"location": null,
 						"notes": "",
 						"order": 0,
 						"parentId": null,
@@ -5509,46 +5473,11 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 55,
+						"createdAt": 54,
 						"createdBy": null,
 						"due": null,
 						"event": null,
-						"id": "solo",
-						"images": [],
-						"labelIds": [],
-						"lastCompletedAt": null,
-						"location": {
-							"address": "",
-							"latitude": 52.7,
-							"longitude": 13.4,
-							"name": "Park",
-							"radius": 150,
-							"trigger": "arrive"
-						},
-						"notes": "",
-						"order": 0,
-						"parentId": null,
-						"priority": 4,
-						"projectId": null,
-						"recurrence": null,
-						"reminders": [],
-						"sectionId": null,
-						"title": "solo"
-					}
-				],
-				"2026-10-14",
-				false
-			],
-			"output": {
-				"loose": [
-					{
-						"completedAt": null,
-						"completedBy": null,
-						"createdAt": 49,
-						"createdBy": null,
-						"due": null,
-						"event": null,
-						"id": "read",
+						"id": "chore",
 						"images": [],
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -5557,183 +5486,130 @@
 						"order": 0,
 						"parentId": null,
 						"priority": 4,
-						"projectId": null,
+						"projectId": "home",
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "read"
-					},
-					{
-						"completedAt": null,
-						"completedBy": null,
-						"createdAt": 55,
-						"createdBy": null,
-						"due": null,
-						"event": null,
-						"id": "solo",
-						"images": [],
-						"labelIds": [],
-						"lastCompletedAt": null,
-						"location": {
-							"address": "",
-							"latitude": 52.7,
-							"longitude": 13.4,
-							"name": "Park",
-							"radius": 150,
-							"trigger": "arrive"
-						},
-						"notes": "",
-						"order": 0,
-						"parentId": null,
-						"priority": 4,
-						"projectId": null,
-						"recurrence": null,
-						"reminders": [],
-						"sectionId": null,
-						"title": "solo"
+						"title": "chore"
 					}
 				],
-				"places": [
-					{
-						"key": "52.6000,13.4000",
-						"name": "Philz",
-						"tasks": [
-							{
-								"completedAt": null,
-								"completedBy": null,
-								"createdAt": 51,
-								"createdBy": null,
-								"due": null,
-								"event": null,
-								"id": "coffee",
-								"images": [],
-								"labelIds": [],
-								"lastCompletedAt": null,
-								"location": {
-									"address": "",
-									"latitude": 52.6,
-									"longitude": 13.4,
-									"name": "Philz",
-									"radius": 150,
-									"trigger": "arrive"
-								},
-								"notes": "",
-								"order": 0,
-								"parentId": null,
-								"priority": 4,
-								"projectId": null,
-								"recurrence": null,
-								"reminders": [],
-								"sectionId": null,
-								"title": "coffee"
-							},
-							{
-								"completedAt": null,
-								"completedBy": null,
-								"createdAt": 54,
-								"createdBy": null,
-								"due": null,
-								"event": null,
-								"id": "beans",
-								"images": [],
-								"labelIds": [],
-								"lastCompletedAt": null,
-								"location": {
-									"address": "",
-									"latitude": 52.6,
-									"longitude": 13.4,
-									"name": "Philz",
-									"radius": 150,
-									"trigger": "arrive"
-								},
-								"notes": "",
-								"order": 0,
-								"parentId": null,
-								"priority": 1,
-								"projectId": null,
-								"recurrence": null,
-								"reminders": [],
-								"sectionId": null,
-								"title": "beans"
-							}
-						]
-					},
-					{
-						"key": "52.5000,13.4000",
+				"2026-10-14",
+				false
+			],
+			"output": [
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 49,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"id": "read",
+					"images": [],
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "read"
+				},
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 50,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"id": "milk",
+					"images": [],
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": {
+						"address": "",
+						"latitude": 52.5,
+						"longitude": 13.4,
 						"name": "Rewe",
-						"tasks": [
-							{
-								"completedAt": null,
-								"completedBy": null,
-								"createdAt": 50,
-								"createdBy": null,
-								"due": null,
-								"event": null,
-								"id": "milk",
-								"images": [],
-								"labelIds": [],
-								"lastCompletedAt": null,
-								"location": {
-									"address": "",
-									"latitude": 52.5,
-									"longitude": 13.4,
-									"name": "Rewe",
-									"radius": 150,
-									"trigger": "arrive"
-								},
-								"notes": "",
-								"order": 0,
-								"parentId": null,
-								"priority": 4,
-								"projectId": null,
-								"recurrence": null,
-								"reminders": [],
-								"sectionId": null,
-								"title": "milk"
-							},
-							{
-								"completedAt": null,
-								"completedBy": null,
-								"createdAt": 52,
-								"createdBy": null,
-								"due": null,
-								"event": null,
-								"id": "eggs",
-								"images": [],
-								"labelIds": [],
-								"lastCompletedAt": null,
-								"location": {
-									"address": "",
-									"latitude": 52.50001,
-									"longitude": 13.4,
-									"name": "Supermarket",
-									"radius": 150,
-									"trigger": "arrive"
-								},
-								"notes": "",
-								"order": 0,
-								"parentId": null,
-								"priority": 4,
-								"projectId": null,
-								"recurrence": null,
-								"reminders": [],
-								"sectionId": null,
-								"title": "eggs"
-							}
-						]
-					}
-				]
-			}
+						"radius": 150,
+						"trigger": "arrive"
+					},
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "milk"
+				},
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 51,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"id": "eggs",
+					"images": [],
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": {
+						"address": "",
+						"latitude": 52.5,
+						"longitude": 13.4,
+						"name": "Rewe",
+						"radius": 150,
+						"trigger": "arrive"
+					},
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "eggs"
+				},
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 53,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"id": "beans",
+					"images": [],
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 1,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "beans"
+				}
+			]
 		},
 		{
 			"fn": "noDateTasks",
-			"test": "no date › newest first flips the order within the list and each place",
+			"test": "no date › newest first flips the order",
 			"input": [
 				[
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 56,
+						"createdAt": 55,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -5755,7 +5631,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 57,
+						"createdAt": 56,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -5777,7 +5653,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 58,
+						"createdAt": 57,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -5799,7 +5675,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 59,
+						"createdAt": 58,
 						"createdBy": null,
 						"due": {
 							"date": "2026-10-14",
@@ -5825,16 +5701,88 @@
 				"2026-10-14",
 				true
 			],
-			"output": {
-				"loose": [
+			"output": [
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 57,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"id": "new",
+					"images": [],
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "new"
+				},
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 56,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"id": "mid",
+					"images": [],
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 1,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "mid"
+				},
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 55,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"id": "old",
+					"images": [],
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "old"
+				}
+			]
+		},
+		{
+			"fn": "dueDays",
+			"test": "due days › Inbox lists every dated task",
+			"input": [
+				[
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 58,
+						"createdAt": 1,
 						"createdBy": null,
 						"due": null,
 						"event": null,
-						"id": "new",
+						"id": "no date",
 						"images": [],
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -5847,16 +5795,16 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "new"
+						"title": "no date"
 					},
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 57,
+						"createdAt": 2,
 						"createdBy": null,
 						"due": null,
 						"event": null,
-						"id": "mid",
+						"id": "urgent, no date",
 						"images": [],
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -5869,16 +5817,46 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "mid"
+						"title": "urgent, no date"
 					},
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 56,
+						"createdAt": 3,
 						"createdBy": null,
-						"due": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": "17:00"
+						},
 						"event": null,
-						"id": "old",
+						"id": "today 5pm",
+						"images": [],
+						"labelIds": [
+							"calls"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "today 5pm"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 4,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
+						"id": "today, no time",
 						"images": [],
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -5891,10 +5869,1965 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "old"
+						"title": "today, no time"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 5,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": "09:00"
+						},
+						"event": null,
+						"id": "today 9am",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 3,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "today 9am"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 6,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": "09:00"
+						},
+						"event": null,
+						"id": "today 9am urgent",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 1,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "today 9am urgent"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 7,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-12",
+							"time": null
+						},
+						"event": null,
+						"id": "overdue",
+						"images": [],
+						"labelIds": [
+							"calls"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "overdue"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 8,
+						"createdBy": null,
+						"due": {
+							"date": "2026-09-30",
+							"time": "08:00"
+						},
+						"event": null,
+						"id": "long overdue",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "long overdue"
+					},
+					{
+						"completedAt": 5,
+						"completedBy": null,
+						"createdAt": 9,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
+						"id": "done today",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "done today"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 10,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-15",
+							"time": null
+						},
+						"event": null,
+						"id": "tomorrow",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "tomorrow"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 11,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-15",
+							"time": "08:00"
+						},
+						"event": null,
+						"id": "tomorrow 8am",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "tomorrow 8am"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 12,
+						"createdBy": null,
+						"due": {
+							"date": "2026-11-02",
+							"time": "09:00"
+						},
+						"event": null,
+						"id": "after DST",
+						"images": [],
+						"labelIds": [
+							"calls"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "after DST"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 13,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "home chore",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "home chore"
+					},
+					{
+						"completedAt": 5,
+						"completedBy": null,
+						"createdAt": 14,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "done chore",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "done chore"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 15,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
+						"id": "subtask",
+						"images": [],
+						"labelIds": [
+							"calls"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "home chore",
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "subtask"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 16,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-16",
+							"time": null
+						},
+						"event": null,
+						"id": "inbox subtask",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "no date",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "inbox subtask"
 					}
 				],
-				"places": []
+				"2026-10-14",
+				"inbox"
+			],
+			"output": {
+				"days": [
+					{
+						"date": "2026-10-15",
+						"tasks": [
+							{
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 11,
+								"createdBy": null,
+								"due": {
+									"date": "2026-10-15",
+									"time": "08:00"
+								},
+								"event": null,
+								"id": "tomorrow 8am",
+								"images": [],
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "tomorrow 8am"
+							},
+							{
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 10,
+								"createdBy": null,
+								"due": {
+									"date": "2026-10-15",
+									"time": null
+								},
+								"event": null,
+								"id": "tomorrow",
+								"images": [],
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": "home",
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "tomorrow"
+							}
+						]
+					},
+					{
+						"date": "2026-10-16",
+						"tasks": [
+							{
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 16,
+								"createdBy": null,
+								"due": {
+									"date": "2026-10-16",
+									"time": null
+								},
+								"event": null,
+								"id": "inbox subtask",
+								"images": [],
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": "no date",
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "inbox subtask"
+							}
+						]
+					},
+					{
+						"date": "2026-11-02",
+						"tasks": [
+							{
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 12,
+								"createdBy": null,
+								"due": {
+									"date": "2026-11-02",
+									"time": "09:00"
+								},
+								"event": null,
+								"id": "after DST",
+								"images": [],
+								"labelIds": [
+									"calls"
+								],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": "home",
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "after DST"
+							}
+						]
+					}
+				],
+				"overdue": [
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 8,
+						"createdBy": null,
+						"due": {
+							"date": "2026-09-30",
+							"time": "08:00"
+						},
+						"event": null,
+						"id": "long overdue",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "long overdue"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 7,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-12",
+							"time": null
+						},
+						"event": null,
+						"id": "overdue",
+						"images": [],
+						"labelIds": [
+							"calls"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "overdue"
+					}
+				],
+				"today": [
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 6,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": "09:00"
+						},
+						"event": null,
+						"id": "today 9am urgent",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 1,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "today 9am urgent"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 5,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": "09:00"
+						},
+						"event": null,
+						"id": "today 9am",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 3,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "today 9am"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 3,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": "17:00"
+						},
+						"event": null,
+						"id": "today 5pm",
+						"images": [],
+						"labelIds": [
+							"calls"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "today 5pm"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 4,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
+						"id": "today, no time",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "today, no time"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 15,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
+						"id": "subtask",
+						"images": [],
+						"labelIds": [
+							"calls"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "home chore",
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "subtask"
+					}
+				]
+			}
+		},
+		{
+			"fn": "dueDays",
+			"test": "due days › This week stops at Sunday, overdue included",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "no date",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "no date"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 2,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "urgent, no date",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 1,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "urgent, no date"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 3,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": "17:00"
+						},
+						"event": null,
+						"id": "today 5pm",
+						"images": [],
+						"labelIds": [
+							"calls"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "today 5pm"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 4,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
+						"id": "today, no time",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "today, no time"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 5,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": "09:00"
+						},
+						"event": null,
+						"id": "today 9am",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 3,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "today 9am"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 6,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": "09:00"
+						},
+						"event": null,
+						"id": "today 9am urgent",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 1,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "today 9am urgent"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 7,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-12",
+							"time": null
+						},
+						"event": null,
+						"id": "overdue",
+						"images": [],
+						"labelIds": [
+							"calls"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "overdue"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 8,
+						"createdBy": null,
+						"due": {
+							"date": "2026-09-30",
+							"time": "08:00"
+						},
+						"event": null,
+						"id": "long overdue",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "long overdue"
+					},
+					{
+						"completedAt": 5,
+						"completedBy": null,
+						"createdAt": 9,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
+						"id": "done today",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "done today"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 10,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-15",
+							"time": null
+						},
+						"event": null,
+						"id": "tomorrow",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "tomorrow"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 11,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-15",
+							"time": "08:00"
+						},
+						"event": null,
+						"id": "tomorrow 8am",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "tomorrow 8am"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 12,
+						"createdBy": null,
+						"due": {
+							"date": "2026-11-02",
+							"time": "09:00"
+						},
+						"event": null,
+						"id": "after DST",
+						"images": [],
+						"labelIds": [
+							"calls"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "after DST"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 13,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "home chore",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "home chore"
+					},
+					{
+						"completedAt": 5,
+						"completedBy": null,
+						"createdAt": 14,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "done chore",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "done chore"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 15,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
+						"id": "subtask",
+						"images": [],
+						"labelIds": [
+							"calls"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "home chore",
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "subtask"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 16,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-16",
+							"time": null
+						},
+						"event": null,
+						"id": "inbox subtask",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "no date",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "inbox subtask"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 59,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-18",
+							"time": null
+						},
+						"event": null,
+						"id": "sunday",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "sunday"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 60,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-19",
+							"time": null
+						},
+						"event": null,
+						"id": "monday",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "monday"
+					}
+				],
+				"2026-10-14",
+				"this-week"
+			],
+			"output": {
+				"days": [
+					{
+						"date": "2026-10-15",
+						"tasks": [
+							{
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 11,
+								"createdBy": null,
+								"due": {
+									"date": "2026-10-15",
+									"time": "08:00"
+								},
+								"event": null,
+								"id": "tomorrow 8am",
+								"images": [],
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "tomorrow 8am"
+							},
+							{
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 10,
+								"createdBy": null,
+								"due": {
+									"date": "2026-10-15",
+									"time": null
+								},
+								"event": null,
+								"id": "tomorrow",
+								"images": [],
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": "home",
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "tomorrow"
+							}
+						]
+					},
+					{
+						"date": "2026-10-16",
+						"tasks": [
+							{
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 16,
+								"createdBy": null,
+								"due": {
+									"date": "2026-10-16",
+									"time": null
+								},
+								"event": null,
+								"id": "inbox subtask",
+								"images": [],
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": "no date",
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "inbox subtask"
+							}
+						]
+					},
+					{
+						"date": "2026-10-18",
+						"tasks": [
+							{
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 59,
+								"createdBy": null,
+								"due": {
+									"date": "2026-10-18",
+									"time": null
+								},
+								"event": null,
+								"id": "sunday",
+								"images": [],
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "sunday"
+							}
+						]
+					}
+				],
+				"overdue": [
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 8,
+						"createdBy": null,
+						"due": {
+							"date": "2026-09-30",
+							"time": "08:00"
+						},
+						"event": null,
+						"id": "long overdue",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "long overdue"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 7,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-12",
+							"time": null
+						},
+						"event": null,
+						"id": "overdue",
+						"images": [],
+						"labelIds": [
+							"calls"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "overdue"
+					}
+				],
+				"today": [
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 6,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": "09:00"
+						},
+						"event": null,
+						"id": "today 9am urgent",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 1,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "today 9am urgent"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 5,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": "09:00"
+						},
+						"event": null,
+						"id": "today 9am",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 3,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "today 9am"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 3,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": "17:00"
+						},
+						"event": null,
+						"id": "today 5pm",
+						"images": [],
+						"labelIds": [
+							"calls"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "today 5pm"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 4,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
+						"id": "today, no time",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "today, no time"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 15,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
+						"id": "subtask",
+						"images": [],
+						"labelIds": [
+							"calls"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "home chore",
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "subtask"
+					}
+				]
+			}
+		},
+		{
+			"fn": "dueDays",
+			"test": "due days › This week on a Sunday is only today and what is overdue",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 61,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-18",
+							"time": null
+						},
+						"event": null,
+						"id": "sunday",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "sunday"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 62,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-19",
+							"time": null
+						},
+						"event": null,
+						"id": "monday",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "monday"
+					}
+				],
+				"2026-10-18",
+				"this-week"
+			],
+			"output": {
+				"days": [],
+				"overdue": [],
+				"today": [
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 61,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-18",
+							"time": null
+						},
+						"event": null,
+						"id": "sunday",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "sunday"
+					}
+				]
+			}
+		},
+		{
+			"fn": "weekEnd",
+			"test": "due days › This week on a Sunday is only today and what is overdue",
+			"input": [
+				"2026-10-18"
+			],
+			"output": "2026-10-18"
+		},
+		{
+			"fn": "weekEnd",
+			"test": "due days › This week on a Sunday is only today and what is overdue",
+			"input": [
+				"2026-10-19"
+			],
+			"output": "2026-10-25"
+		},
+		{
+			"fn": "dueDays",
+			"test": "due days › Tomorrow lists only tomorrow",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "no date",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "no date"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 2,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "urgent, no date",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 1,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "urgent, no date"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 3,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": "17:00"
+						},
+						"event": null,
+						"id": "today 5pm",
+						"images": [],
+						"labelIds": [
+							"calls"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "today 5pm"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 4,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
+						"id": "today, no time",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "today, no time"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 5,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": "09:00"
+						},
+						"event": null,
+						"id": "today 9am",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 3,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "today 9am"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 6,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": "09:00"
+						},
+						"event": null,
+						"id": "today 9am urgent",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 1,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "today 9am urgent"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 7,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-12",
+							"time": null
+						},
+						"event": null,
+						"id": "overdue",
+						"images": [],
+						"labelIds": [
+							"calls"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "overdue"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 8,
+						"createdBy": null,
+						"due": {
+							"date": "2026-09-30",
+							"time": "08:00"
+						},
+						"event": null,
+						"id": "long overdue",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "long overdue"
+					},
+					{
+						"completedAt": 5,
+						"completedBy": null,
+						"createdAt": 9,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
+						"id": "done today",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "done today"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 10,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-15",
+							"time": null
+						},
+						"event": null,
+						"id": "tomorrow",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "tomorrow"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 11,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-15",
+							"time": "08:00"
+						},
+						"event": null,
+						"id": "tomorrow 8am",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "tomorrow 8am"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 12,
+						"createdBy": null,
+						"due": {
+							"date": "2026-11-02",
+							"time": "09:00"
+						},
+						"event": null,
+						"id": "after DST",
+						"images": [],
+						"labelIds": [
+							"calls"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "after DST"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 13,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "home chore",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "home chore"
+					},
+					{
+						"completedAt": 5,
+						"completedBy": null,
+						"createdAt": 14,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "done chore",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "done chore"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 15,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
+						"id": "subtask",
+						"images": [],
+						"labelIds": [
+							"calls"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "home chore",
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "subtask"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 16,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-16",
+							"time": null
+						},
+						"event": null,
+						"id": "inbox subtask",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "no date",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "inbox subtask"
+					}
+				],
+				"2026-10-14",
+				"tomorrow"
+			],
+			"output": {
+				"days": [
+					{
+						"date": "2026-10-15",
+						"tasks": [
+							{
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 11,
+								"createdBy": null,
+								"due": {
+									"date": "2026-10-15",
+									"time": "08:00"
+								},
+								"event": null,
+								"id": "tomorrow 8am",
+								"images": [],
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "tomorrow 8am"
+							},
+							{
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 10,
+								"createdBy": null,
+								"due": {
+									"date": "2026-10-15",
+									"time": null
+								},
+								"event": null,
+								"id": "tomorrow",
+								"images": [],
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": "home",
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "tomorrow"
+							}
+						]
+					}
+				],
+				"overdue": [],
+				"today": []
+			}
+		},
+		{
+			"fn": "dueDays",
+			"test": "due days › Tomorrow lists only tomorrow",
+			"input": [
+				[],
+				"2026-10-14",
+				"tomorrow"
+			],
+			"output": {
+				"days": [],
+				"overdue": [],
+				"today": []
 			}
 		},
 		{
@@ -8034,7 +9967,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 60,
+						"createdAt": 63,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -8063,7 +9996,7 @@
 					{
 						"completedAt": 5,
 						"completedBy": null,
-						"createdAt": 61,
+						"createdAt": 64,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -8526,7 +10459,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 60,
+						"createdAt": 63,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -8555,7 +10488,7 @@
 					{
 						"completedAt": 5,
 						"completedBy": null,
-						"createdAt": 61,
+						"createdAt": 64,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -9065,7 +10998,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 60,
+						"createdAt": 63,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -9094,7 +11027,7 @@
 					{
 						"completedAt": 5,
 						"completedBy": null,
-						"createdAt": 61,
+						"createdAt": 64,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -9138,7 +11071,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 60,
+					"createdAt": 63,
 					"createdBy": null,
 					"due": null,
 					"event": null,
@@ -9570,7 +11503,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 60,
+						"createdAt": 63,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -9599,7 +11532,7 @@
 					{
 						"completedAt": 5,
 						"completedBy": null,
-						"createdAt": 61,
+						"createdAt": 64,
 						"createdBy": null,
 						"due": null,
 						"event": null,

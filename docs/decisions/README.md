@@ -8,6 +8,7 @@ ProcrastiMate's concepts, goals, paradigms, and high-level system decisions, one
 - [Visual language](visual-language.md): the Liquid Glass materials, shapes, motion, accessibility fallbacks, and rendering pick.
 - [Theming](theming.md): System, Light, and Dark themes, semantic tokens, and contrast.
 - [Domain](domain.md): tasks, views, projects, labels, priorities, and reminders.
+- [Lists](lists.md): the one catalog of top-level lists every menu reads, why empty lists stay, and the Tomorrow and This week views.
 - [Quick add and natural language](quick-add.md): the quick add parser, its phrases, guards, and autocomplete.
 - [Ramble](ramble.md): voice capture with ElevenLabs Scribe, the spoken grammar, precision rules, and the proxy. Its research, test plan, cost, and build slices are in [Ramble design](../ramble-design.md).
 - [Labels UI](labels.md): how labels show and are edited in rows, the sidebar, and pickers.

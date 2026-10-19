@@ -11,6 +11,8 @@ const projectTasks = recorded('views', views.projectTasks);
 const projectGroups = recorded('views', views.projectGroups);
 const todayTasks = recorded('views', views.todayTasks);
 const upcomingGroups = recorded('views', views.upcomingGroups);
+const dueDays = recorded('views', views.dueDays);
+const weekEnd = recorded('views', views.weekEnd);
 const placeTasks = recorded('views', views.placeTasks);
 const labelViewTasks = recorded('views', views.labelViewTasks);
 const eventTasks = recorded('views', views.eventTasks);
@@ -174,32 +176,74 @@ describe('no date', () => {
 		trigger: 'arrive' as const,
 	});
 
-	test('places with two or more undated tasks get their own sections below the rest', () => {
+	test('lists undated inbox tasks in one list, places included, oldest first', () => {
 		const list = [
 			task('read'),
 			task('milk', { location: at('Rewe', 52.5) }),
-			task('coffee', { location: at('Philz', 52.6) }),
-			task('eggs', { location: at('Supermarket', 52.50001) }),
+			task('eggs', { location: at('Rewe', 52.5) }),
 			task('dated at Rewe', { location: at('Rewe', 52.5), due: { date: today, time: null } }),
-			task('beans', { location: at('Philz', 52.6), priority: 1 }),
-			task('solo', { location: at('Park', 52.7) }),
+			task('beans', { priority: 1 }),
+			task('chore', { projectId: 'home' }),
 		];
-		const view = noDateTasks(list, today, false);
-		expect(ids(view.loose)).toEqual(['read', 'solo']);
-		expect(view.places.map(p => [p.name, ids(p.tasks)])).toEqual([
-			['Philz', ['coffee', 'beans']],
-			['Rewe', ['milk', 'eggs']],
-		]);
+		expect(ids(noDateTasks(list, today, false))).toEqual(['read', 'milk', 'eggs', 'beans']);
 	});
 
-	test('newest first flips the order within the list and each place', () => {
+	test('newest first flips the order', () => {
 		const list = [
 			task('old'),
 			task('mid', { priority: 1 }),
 			task('new'),
 			task('later', { due: { date: today, time: null } }),
 		];
-		expect(ids(noDateTasks(list, today, true).loose)).toEqual(['new', 'mid', 'old']);
+		expect(ids(noDateTasks(list, today, true))).toEqual(['new', 'mid', 'old']);
+	});
+});
+
+describe('due days', () => {
+	const days = (due: views.DueDays) => [ids(due.overdue), ids(due.today), due.days.map(g => [g.date, ids(g.tasks)])];
+
+	test('Inbox lists every dated task', () => {
+		expect(days(dueDays(tasks, today, 'inbox'))).toEqual([
+			['long overdue', 'overdue'],
+			['today 9am urgent', 'today 9am', 'today 5pm', 'today, no time', 'subtask'],
+			[
+				['2026-10-15', ['tomorrow 8am', 'tomorrow']],
+				['2026-10-16', ['inbox subtask']],
+				['2026-11-02', ['after DST']],
+			],
+		]);
+	});
+
+	test('This week stops at Sunday, overdue included', () => {
+		const list = [
+			...tasks,
+			task('sunday', { due: { date: '2026-10-18', time: null } }),
+			task('monday', { due: { date: '2026-10-19', time: null } }),
+		];
+		expect(days(dueDays(list, today, 'this-week'))).toEqual([
+			['long overdue', 'overdue'],
+			['today 9am urgent', 'today 9am', 'today 5pm', 'today, no time', 'subtask'],
+			[
+				['2026-10-15', ['tomorrow 8am', 'tomorrow']],
+				['2026-10-16', ['inbox subtask']],
+				['2026-10-18', ['sunday']],
+			],
+		]);
+	});
+
+	test('This week on a Sunday is only today and what is overdue', () => {
+		const list = [
+			task('sunday', { due: { date: '2026-10-18', time: null } }),
+			task('monday', { due: { date: '2026-10-19', time: null } }),
+		];
+		expect(days(dueDays(list, '2026-10-18', 'this-week'))).toEqual([[], ['sunday'], []]);
+		expect(weekEnd('2026-10-18')).toBe('2026-10-18');
+		expect(weekEnd('2026-10-19')).toBe('2026-10-25');
+	});
+
+	test('Tomorrow lists only tomorrow', () => {
+		expect(days(dueDays(tasks, today, 'tomorrow'))).toEqual([[], [], [['2026-10-15', ['tomorrow 8am', 'tomorrow']]]]);
+		expect(days(dueDays([], today, 'tomorrow'))).toEqual([[], [], []]);
 	});
 });
 

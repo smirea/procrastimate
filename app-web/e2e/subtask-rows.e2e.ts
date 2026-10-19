@@ -35,20 +35,6 @@ test('a subtask row in task details shows what a list row shows and toggles in p
 	await expect(passport.getByRole('checkbox', { name: 'Complete Passport' })).toHaveAttribute('aria-checked', 'false');
 });
 
-test('No date leaves the sidebar while it has no tasks, but not while it is open', async ({ app }) => {
-	await expect(app.nav('Inbox')).toBeVisible();
-	await expect(app.nav('No date')).toHaveCount(0);
-
-	await app.add('Someday task');
-	await app.go('No date');
-	await app.row('Someday task').getByRole('checkbox', { name: 'Complete Someday task' }).click();
-	await expect(app.page.getByText('Inbox zero')).toBeVisible();
-	await expect(app.nav('No date')).toBeVisible();
-
-	await app.go('Inbox');
-	await expect(app.nav('No date')).toHaveCount(0);
-});
-
 test('dragging a subtask by its handle reorders it, and the arrow keys move it back', async ({ app, page }) => {
 	await app.add('Pack for trip');
 	await app.row('Pack for trip').getByRole('button', { name: 'Pack for trip', exact: true }).click();
