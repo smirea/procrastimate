@@ -8,64 +8,80 @@ import { reportError } from './sentry.ts';
  */
 const UNSYNCED_GRACE = 3000;
 
-const QUEUED_TASKS = `SELECT DISTINCT json_extract(data, '$.id') AS id FROM ps_crud WHERE json_extract(data, '$.type') = 'tasks'`;
+/** Each queued task with its oldest queued write, which is what has been waiting. */
+const QUEUED_TASKS = `SELECT json_extract(data, '$.id') AS id, MIN(id) AS row FROM ps_crud WHERE json_extract(data, '$.type') = 'tasks' GROUP BY 1`;
+
+type Queued = { row: number; ripe: boolean };
 
 /**
  * The tasks with a write in PowerSync's upload queue that has not reached the server, read from the queue itself. The
- * grace runs on timers rather than clock readings, since the end-to-end specs pin the clock.
+ * grace runs from a task's oldest queued write, so typing that uploads keystroke by keystroke, each one queued before
+ * the last lands, never shows it. It runs on timers rather than clock readings, since the end-to-end specs pin the
+ * clock.
  */
 class Unsynced {
 	#shown = new SvelteSet<string>();
-	/** Each queued task, with the timer of its grace while it runs, from the first write seen queued. */
-	#queued = new Map<string, ReturnType<typeof setTimeout> | null>();
-	#running = false;
+	#queued = new Map<string, Queued>();
+	#run: object | null = null;
+	#timers = new Set<ReturnType<typeof setTimeout>>();
 
 	has(taskId: string): boolean {
 		return this.#shown.has(taskId);
 	}
 
 	start(): () => void {
-		const refresh = () => void this.#read().catch(reportError);
+		const run = {};
+		this.#run = run;
+		const refresh = () => void this.#read(run).catch(reportError);
 		const show = () => this.#show();
 		const dispose = powerSync.onChange({ onChange: refresh }, { tables: ['ps_crud'], throttleMs: 50 });
 		addEventListener('online', show);
 		addEventListener('offline', show);
-		this.#running = true;
 		refresh();
 		return () => {
-			this.#running = false;
+			this.#run = null;
 			dispose();
 			removeEventListener('online', show);
 			removeEventListener('offline', show);
-			for (const timer of this.#queued.values()) clearTimeout(timer ?? undefined);
+			for (const timer of this.#timers) clearTimeout(timer);
+			this.#timers.clear();
 			this.#queued.clear();
 			this.#shown.clear();
 		};
 	}
 
-	async #read() {
-		const queued = new Set((await powerSync.getAll<{ id: string }>(QUEUED_TASKS)).map(row => row.id));
-		if (!this.#running) return;
-		for (const [id, timer] of this.#queued) {
-			if (queued.has(id)) continue;
-			clearTimeout(timer ?? undefined);
-			this.#queued.delete(id);
+	async #read(run: object) {
+		const rows = await powerSync.getAll<{ id: string; row: number }>(QUEUED_TASKS);
+		if (this.#run !== run) return;
+		const queued = new Map<string, Queued>();
+		const waiting: Queued[] = [];
+		for (const { id, row } of rows) {
+			const known = this.#queued.get(id);
+			if (known?.row === row) {
+				queued.set(id, known);
+				continue;
+			}
+			const entry = { row, ripe: false };
+			queued.set(id, entry);
+			waiting.push(entry);
+			this.#shown.delete(id);
 		}
-		for (const id of queued) {
-			if (this.#queued.has(id)) continue;
+		this.#queued = queued;
+		if (waiting.length) {
 			const timer = setTimeout(() => {
-				this.#queued.set(id, null);
+				this.#timers.delete(timer);
+				for (const entry of waiting) entry.ripe = true;
 				this.#show();
 			}, UNSYNCED_GRACE);
-			this.#queued.set(id, timer);
+			this.#timers.add(timer);
 		}
 		this.#show();
 	}
 
-	/** A task once shown stays until its writes leave the queue, so coming back online never hides it for a moment. */
+	/** A shown task stays until its oldest write leaves the queue, so coming back online never hides it for a moment. */
 	#show() {
 		for (const id of this.#shown) if (!this.#queued.has(id)) this.#shown.delete(id);
-		for (const [id, timer] of this.#queued) if (timer === null || !navigator.onLine) this.#shown.add(id);
+		for (const [id, { ripe }] of this.#queued) if (ripe || !navigator.onLine) this.#shown.add(id);
 	}
 }
 

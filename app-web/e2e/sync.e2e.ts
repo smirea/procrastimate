@@ -149,6 +149,34 @@ test('a change waiting to upload shows a cloud on its row and a notice in its de
 	await expect(unsynced(`${title} offline`)).toHaveCount(0, { timeout: 15_000 });
 });
 
+test('typing notes online for longer than the grace never marks the task unsynced', async ({ devices }) => {
+	const a = await devices.open();
+	const title = unique('Typed online');
+	await a.app.add(title);
+	await settled(a);
+	await a.page.evaluate(() => {
+		const seen = { unsynced: false };
+		Object.assign(window, { seen });
+		new MutationObserver(() => {
+			if (document.querySelector('[data-unsynced]')) seen.unsynced = true;
+		}).observe(document.body, { subtree: true, childList: true });
+	});
+	// A real network's round trip, so each keystroke is queued before the previous upload lands.
+	await a.context.route('**/api/upload', async route => {
+		await new Promise(resolve => setTimeout(resolve, 400));
+		await route.continue();
+	});
+	await a.app
+		.row(title)
+		.getByRole('button', { name: new RegExp(`^${title}`) })
+		.click();
+	const notes = a.app.details().getByRole('textbox', { name: 'Notes' });
+	await notes.pressSequentially('Each keystroke uploads before the next one lands', { delay: 100 });
+	await settled(a);
+	await a.context.unroute('**/api/upload');
+	expect(await a.page.evaluate(() => (window as unknown as { seen: { unsynced: boolean } }).seen.unsynced)).toBe(false);
+});
+
 test('a task added the moment before the page goes away is there after the reload', async ({ devices }) => {
 	const [a, b] = [await devices.open(), await devices.open()];
 	const title = unique('Saved in time');

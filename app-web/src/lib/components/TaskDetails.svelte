@@ -214,7 +214,7 @@
 	</header>
 	<div class="relative px-4 pt-4">
 		{#if unsynced.has(id)}
-			<p class="absolute top-0 left-5 flex items-center gap-1 text-[11px] leading-4 text-muted" role="status" transition:fade={motion({ duration: 150 })}>
+			<p class="absolute top-0 left-5 flex items-center gap-1 text-[11px] leading-4 text-muted" role="status" data-unsynced transition:fade={motion({ duration: 150 })}>
 				<CloudArrowUp size={12} />Not saved yet. Will sync when online.
 			</p>
 		{/if}
