@@ -10,6 +10,7 @@ import { migrate } from './db/migrate';
 import { connect, type Db } from './db/postgres';
 import { sweepImages } from './images';
 import { deliverDue, pushSender } from './push';
+import type { RambleRoute } from './ramble';
 import { Ramble as RambleObject, RAMBLE_ACTOR_HEADER } from './ramble-object';
 import { sentryOptions } from './sentry';
 
@@ -29,12 +30,12 @@ function migrateOnce(db: Db) {
 }
 
 /** The request goes to the user's `Ramble` object unread, with the actor the Worker resolved. */
-function rambleForward(env: Env) {
-	return async (request: Request, actor: object): Promise<Response> => {
+function rambleForward(env: Env): RambleRoute {
+	return async (request, actor) => {
 		if (!env.RAMBLE) return Response.json({ ok: false, error: 'Ramble is not configured' }, { status: 503 });
 		const headers = new Headers(request.headers);
 		headers.set(RAMBLE_ACTOR_HEADER, JSON.stringify(actor));
-		const stub = env.RAMBLE.get(env.RAMBLE.idFromName((actor as { id: string }).id));
+		const stub = env.RAMBLE.get(env.RAMBLE.idFromName(actor.id));
 		return stub.fetch(new Request(request, { headers }) as never) as unknown as Promise<Response>;
 	};
 }

@@ -1,7 +1,5 @@
-import type { Browser, BrowserContext, Page } from '@playwright/test';
-import { App, deviceContext, expect, goOffline, goOnline, NOW, signInAccount, test, unique } from './fixtures.ts';
-
-type Device = { app: App; page: Page; context: BrowserContext };
+import type { Page } from '@playwright/test';
+import { type App, expect, goOffline, goOnline, test, unique } from './fixtures.ts';
 
 async function png(page: Page, width: number, height: number) {
 	const base64 = await page.evaluate(
@@ -30,10 +28,6 @@ async function openDetails(app: App, title: string) {
 }
 
 const thumbnails = (app: App) => app.details().getByRole('button', { name: /^Open image/ });
-
-test.afterEach(async ({ browser }) => {
-	for (const context of browser.contexts()) await context.close();
-});
 
 test('an image picked in details shows as a thumbnail and on the row, opens full screen, and deletes with undo', async ({
 	app,
@@ -105,19 +99,9 @@ test('pasting or dropping an image into details attaches it', async ({ app, page
 	await expect(app.details().getByRole('textbox', { name: 'Notes' })).toHaveValue('');
 });
 
-async function device(browser: Browser): Promise<Device> {
-	const context = await deviceContext(browser);
-	await signInAccount(context);
-	const page = await context.newPage();
-	await page.clock.setFixedTime(NOW);
-	await page.goto('/no-date');
-	await expect(page.getByRole('heading', { name: 'No date' })).toBeVisible();
-	return { app: new App(page), page, context };
-}
-
-test('an image added offline uploads when the network returns and shows on the other device', async ({ browser }) => {
-	const a = await device(browser);
-	const b = await device(browser);
+test('an image added offline uploads when the network returns and shows on the other device', async ({ devices }) => {
+	const a = await devices.open();
+	const b = await devices.open();
 	const title = unique('Broken hinge');
 	await a.app.add(title);
 	await expect(b.app.row(title)).toBeVisible({ timeout: 10_000 });

@@ -13,6 +13,7 @@ import { join } from 'node:path';
 import devJwtKey from '../../powersync/local/INSECURE-dev-jwt-key.json' with { type: 'json' };
 import { REQUIRED_WORKER_SECRETS } from '../src/config';
 import { generateVapidKeys } from '../src/web-push';
+import { parseDotenv, type Values } from '../../scripts/lib';
 
 /** The Bun dev server's stand-in; `wrangler dev` gets the same through `.dev.vars`, so the local PowerSync trusts both. */
 const INSECURE_DEV_AUTH_SECRET = 'insecure-local-dev-better-auth-secret-0123456789';
@@ -39,7 +40,6 @@ export const GITHUB_SECRETS = [...CLOUDFLARE_SECRETS, ...ASC_SECRETS, ...SENTRY_
 const REPO = 'smirea/procrastimate';
 const PROJECT = 'procrastimate';
 
-type Values = Record<string, string>;
 type WorkerSecret = (typeof WORKER_SECRETS)[number];
 
 const rootPath = new URL('../../', import.meta.url).pathname;
@@ -93,27 +93,6 @@ export function iosXcconfig(schema: string, dev: Values, prod: Values): string {
 		`GOOGLE_URL_SCHEME[config=${config}] = ${googleUrlScheme(clientId)}`;
 	lines.push(scheme('Debug', dev.GOOGLE_IOS_CLIENT_ID), scheme('Release', prod.GOOGLE_IOS_CLIENT_ID));
 	return `${lines.join('\n')}\n`;
-}
-
-/** Empty values count as unset and are left out. */
-export function parseDotenv(text: string): Values {
-	const values: Values = {};
-	for (const raw of text.split('\n')) {
-		const line = raw.trim();
-		if (!line || line.startsWith('#')) continue;
-		const match = /^(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/.exec(line);
-		if (!match) continue;
-		const [, key, rest] = match as unknown as [string, string, string];
-		let value: string;
-		const quote = rest[0];
-		if ((quote === '"' || quote === "'") && rest.indexOf(quote, 1) > 0) {
-			value = rest.slice(1, rest.indexOf(quote, 1));
-		} else {
-			value = rest.replace(/(^|\s+)#.*$/, '').trim();
-		}
-		if (value) values[key] = value;
-	}
-	return values;
 }
 
 /** Skips unset secrets, so a push never deletes a Worker secret. */

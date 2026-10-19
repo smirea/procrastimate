@@ -294,7 +294,6 @@ export const apiTokens = pgTable(
 		name: text('name').notNull(),
 		tokenHash: text('token_hash').notNull().unique(),
 		createdAt: millis('created_at').notNull(),
-		lastUsedAt: millis('last_used_at'),
 	},
 	table => [primaryKey({ columns: [table.userId, table.id] })],
 ).enableRLS();
@@ -323,12 +322,6 @@ export const images = pgTable(
 	},
 	table => [primaryKey({ columns: [table.userId, table.id, table.size] })],
 ).enableRLS();
-
-/** Ramble audio seconds reserved across every account on one UTC day. */
-export const rambleBudget = pgTable('ramble_budget', {
-	day: text('day').primaryKey(),
-	seconds: doublePrecision('seconds').notNull(),
-}).enableRLS();
 
 type Row<T extends { $inferSelect: object }> = Omit<T['$inferSelect'], 'userId'>;
 

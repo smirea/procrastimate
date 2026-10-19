@@ -28,12 +28,14 @@ export function formatTime(time: TimeOfDay): string {
 }
 
 export function formatDate(date: DateKey, today: DateKey): string {
-	if (date === today) return 'Today';
-	if (date === addDays(today, 1)) return 'Tomorrow';
-	if (date === addDays(today, -1)) return 'Yesterday';
-	const d = fromDateKey(date);
-	if (date > today && date < addDays(today, 7)) return d.toLocaleDateString('en-US', { weekday: 'long' });
-	return shortDate(date, today);
+	return relativeDay(date, today) ?? weekdayWithinWeek(date, today) ?? shortDate(date, today);
+}
+
+/** `Friday` for a day in the coming week, which a weekday name alone tells apart. */
+function weekdayWithinWeek(date: DateKey, today: DateKey): string | null {
+	if (date > today && date < addDays(today, 7))
+		return fromDateKey(date).toLocaleDateString('en-US', { weekday: 'long' });
+	return null;
 }
 
 /** `Oct 21`, with the year when it differs from today's. */
@@ -85,7 +87,7 @@ export function formatRecurrence(recurrence: Recurrence, due: Due | null): strin
 }
 
 /** `1st`, `2nd`, `11th`, `22nd`. */
-function ordinal(n: number): string {
+export function ordinal(n: number): string {
 	const teen = n % 100 >= 11 && n % 100 <= 13;
 	return `${n}${teen ? 'th' : (['th', 'st', 'nd', 'rd'][n % 10] ?? 'th')}`;
 }
@@ -146,10 +148,12 @@ export function formatReminder(reminder: Reminder, today: DateKey): string {
 /** A day heading in Inbox with only what today leaves ambiguous: `Tomorrow`, `Friday` within the week, then `Tue, Oct 31`, with the year when it differs. */
 export function dayHeading(date: DateKey, today: DateKey): string {
 	if (date === addDays(today, 1)) return 'Tomorrow';
-	const d = fromDateKey(date);
-	if (date > today && date < addDays(today, 7)) return d.toLocaleDateString('en-US', { weekday: 'long' });
-	return `${WEEKDAY_NAMES[weekdayOf(date)]}, ${shortDate(date, today)}`;
+	return weekdayWithinWeek(date, today) ?? weekdayAndDate(date, today);
 }
+
+/** `Tue, Oct 31`, with the year when it differs. */
+const weekdayAndDate = (date: DateKey, today: DateKey) =>
+	`${WEEKDAY_NAMES[weekdayOf(date)]}, ${shortDate(date, today)}`;
 
 /** When a task was completed, in local time: `Today 3:04pm`, `Yesterday 9am`, `Oct 12 3:04pm`. */
 export function completedWhen(at: number, today: DateKey): string {
@@ -159,9 +163,8 @@ export function completedWhen(at: number, today: DateKey): string {
 
 /** A day heading in the Completed view: `Today`, `Yesterday`, then `Mon, Oct 12`, with the year when it differs. */
 export function completedHeading(date: DateKey, today: DateKey): string {
-	if (date === today) return 'Today';
-	if (date === addDays(today, -1)) return 'Yesterday';
-	return `${WEEKDAY_NAMES[weekdayOf(date)]}, ${shortDate(date, today)}`;
+	if (date === addDays(today, 1)) return weekdayAndDate(date, today);
+	return relativeDay(date, today) ?? weekdayAndDate(date, today);
 }
 
 /** `Today`, `Last 7 days`, `Last 30 days`, `All time`, or the custom days, such as `Oct 1 – Oct 12`. */

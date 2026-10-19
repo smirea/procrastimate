@@ -69,3 +69,21 @@ test('Labels in task details opens with focus in its search field and gives it b
 	await expect(page.getByRole('dialog', { name: 'Labels' })).toBeHidden();
 	await expect(chip).toBeFocused();
 });
+
+test('a rename from another device reaches an open, untouched title field, and closing writes nothing back', async ({
+	app,
+}) => {
+	await app.add('Buy milk');
+	const id = await app.taskId('Buy milk');
+	await app.row('Buy milk').getByRole('button', { name: 'Buy milk', exact: true }).click();
+	const title = app.details().getByRole('textbox', { name: 'Title' });
+	await title.focus();
+	await app.pushFromOtherDevice({ kind: 'task', id, fields: { title: 'Buy oat milk' } });
+	await expect(title).toHaveValue('Buy oat milk');
+	await title.press('Enter');
+	await app.closeDetails();
+	await expect.poll(() => app.pending()).toBe(0);
+	await expect
+		.poll(() => app.page.evaluate(id => window.procrastimate.entity('task', id), id))
+		.toMatchObject({ title: 'Buy oat milk' });
+});

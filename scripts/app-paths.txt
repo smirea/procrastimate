@@ -1,0 +1,7 @@
+^app-ios/
+^shared/
+^scripts/generate/
+^scripts/app-version\.mts$
+^app-web/src/index\.css$
+^package\.json$
+^bun\.lock$

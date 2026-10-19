@@ -10,6 +10,7 @@ import {
 	type Task,
 } from './task.ts';
 import type { EventOccurrence, LocationTrigger, SavedPlace, TaskEvent, TaskLocation } from './values.ts';
+import { compareIds } from './order.ts';
 import { zonedDateKey, zonedTimeOfDay } from './zoned-time.ts';
 
 /**
@@ -178,7 +179,8 @@ export const eventGroupSchema = z
 	.meta({ id: 'EventGroup' });
 export type EventGroup = z.infer<typeof eventGroupSchema>;
 
-const open = (tasks: readonly Task[]) => tasks.filter(t => t.completedAt === null);
+export const openTasks = (tasks: readonly Task[]) => tasks.filter(t => t.completedAt === null);
+const open = openTasks;
 
 export type SavedPlaceLabel = Label & { place: SavedPlace };
 
@@ -251,6 +253,6 @@ export function eventGroups(tasks: readonly Task[], today: DateKey): EventGroup[
 		groups.set(task.event.id, group);
 	}
 	return [...groups.values()]
-		.toSorted((a, b) => a.at - b.at || (a.id < b.id ? -1 : 1))
+		.toSorted((a, b) => a.at - b.at || compareIds(a.id, b.id))
 		.map(({ id, title, count }) => ({ id, title, count }));
 }

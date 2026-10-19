@@ -10,6 +10,15 @@ const PEOPLE_KEY = 'procrastimate-people';
 const REMINDERS_KEY = 'procrastimate-reminders-checked-at';
 const UNWRITTEN_KEY = 'procrastimate-unwritten';
 const LEGACY_DOCUMENT_KEY = 'procrastimate';
+/** The view choices and the cached account, also device-local, read by their own modules. */
+export const DEVICE_KEYS = {
+	user: 'procrastimate-user',
+	theme: 'procrastimate-theme',
+	pushRekey: 'procrastimate-push-rekey',
+	completedRange: 'procrastimate.completedRange',
+	showCompleted: 'procrastimate.showCompleted',
+	noDateOldestFirst: 'procrastimate.noDateOldestFirst',
+} as const;
 
 const peopleSchema = z.array(personSchema);
 

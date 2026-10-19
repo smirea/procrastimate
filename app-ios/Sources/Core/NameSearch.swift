@@ -41,17 +41,8 @@ public enum NameSearch {
 
     public typealias UnknownName = API.UnknownName
 
-    /// `SIGIL_WORD` from `name-search.ts`, written for ICU: `\s` is JavaScript's whitespace set and `$` is the end of
-    /// the input. `QuickAdd.Pattern` would escape the braces of `\p{L}` inside a class, so this is ICU syntax directly.
-    private static let sigilWord: NSRegularExpression = {
-        let space = #"\t\n\u000B\f\r \u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF"#
-        let source = #"(?<![^\#(space)])([#@])([\p{L}\p{N}_\-]+)(?=[,.;:!?)]*(?:[\#(space)]|\z))"#
-        do {
-            return try NSRegularExpression(pattern: source)
-        } catch {
-            preconditionFailure("Invalid pattern \(source): \(error)")
-        }
-    }()
+    /// `SIGIL_WORD` from `name-search.ts`.
+    private static let sigilWord = JSRegex(#"(?<![^\s])([#@])([\p{L}\p{N}_\-]+)(?=[,.;:!?)]*(?:\s|$))"#)
 
     /// Every `#name` and `@name` that quick add could offer to create: a sigil at the start of the text or after
     /// whitespace, then a word of letters, digits, `_`, or `-` that ends at whitespace or the end, after any sentence
@@ -64,14 +55,12 @@ public enum NameSearch {
         _ projects: [some NamedItem],
         _ labels: [some NamedItem]
     ) -> [UnknownName] {
-        let ns = NSString(string: value)
         var found: [UnknownName] = []
         var seen = Set<String>()
-        for match in sigilWord.matches(in: value, range: NSRange(location: 0, length: ns.length)) {
-            let sigil: Sigil = ns.substring(with: match.range(at: 1)) == "#" ? .project : .label
-            let nameRange = match.range(at: 2)
-            let name = ns.substring(with: nameRange)
-            let start = match.range.location
+        for match in sigilWord.matches(in: value) {
+            let sigil: Sigil = match[1] == "#" ? .project : .label
+            let name = match[2]!
+            let start = match.start
             if tokens.contains(where: { start >= $0.start && start < $0.end }) { continue }
             let lower = name.lowercased()
             let exists = switch sigil {
@@ -80,7 +69,7 @@ public enum NameSearch {
             case .section: true
             }
             if exists || !seen.insert(sigil.rawValue + lower).inserted { continue }
-            found.append(UnknownName(sigil: sigil, name: name, start: start, end: nameRange.location + nameRange.length))
+            found.append(UnknownName(sigil: sigil, name: name, start: start, end: match.end))
         }
         return found
     }

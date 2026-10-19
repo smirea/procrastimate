@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { scheduledNotificationSchema, type ScheduledNotification } from './notifications.ts';
+import type { ScheduledNotification } from './notifications.ts';
 
 export const MAX_SCHEDULED = 500;
 
@@ -13,12 +13,9 @@ export const pushSubscriptionSchema = z
 /** A browser push subscription, as `PushSubscription.toJSON()` returns it. */
 export type PushSubscriptionInfo = z.infer<typeof pushSubscriptionSchema>;
 
-export const scheduledPushSchema = scheduledNotificationSchema;
-export type ScheduledPush = ScheduledNotification;
-
 export const subscribeRequestSchema = z.object({ subscription: pushSubscriptionSchema });
 
 /** The decrypted push payload the service worker shows. Notifications with the same `tag` replace each other. */
 export type PushMessage = { title: string; body: string; tag: string; taskId: string | null };
 
-export const pushTag = (push: Pick<ScheduledPush, 'taskId' | 'at'>) => `${push.taskId}:${push.at}`;
+export const pushTag = (push: Pick<ScheduledNotification, 'taskId' | 'at'>) => `${push.taskId}:${push.at}`;

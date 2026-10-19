@@ -2,6 +2,8 @@ import { replaceState } from '$app/navigation';
 import { page } from '$app/state';
 import { pushSubscriptionSchema, type PushSubscriptionInfo } from 'shared/push.ts';
 import { api, isUnauthorized } from './api.ts';
+import { DEVICE_KEYS, installId } from './device.ts';
+import { forgetInstallId, rememberInstallId } from './install-cache.ts';
 import { reportError } from './sentry.ts';
 import { session } from './session.svelte.ts';
 import { store } from './store.svelte.ts';
@@ -57,7 +59,7 @@ class Push {
 	async forget() {
 		if (!this.#registered) return;
 		this.#registered = null;
-		await api.push.unsubscribe().catch(() => {});
+		await Promise.all([api.push.unsubscribe().catch(() => {}), forgetInstallId().catch(() => {})]);
 	}
 
 	async detect() {
@@ -155,7 +157,7 @@ class Push {
 		if (this.#registered === subscription.endpoint) return;
 		if (session.state !== 'in') return;
 		try {
-			await api.push.subscribe({ subscription });
+			await Promise.all([api.push.subscribe({ subscription }), rememberInstallId(installId())]);
 			this.#registered = subscription.endpoint;
 		} catch (error) {
 			if (isUnauthorized(error)) session.clear();
@@ -202,7 +204,7 @@ async function fetchKey(): Promise<Uint8Array<ArrayBuffer> | null> {
 }
 
 /** Set while a rekey has dropped the old subscription but not made the new one, so a retry or relaunch finishes it. */
-const REKEY_KEY = 'procrastimate-push-rekey';
+const REKEY_KEY = DEVICE_KEYS.pushRekey;
 
 /**
  * Moves a subscription made for a rotated server key to the current one. Permission is already granted, so this

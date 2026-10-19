@@ -64,12 +64,7 @@ public enum IntentRules {
 
     /// A Shortcuts date becomes a due date in the clock's zone, time included.
     public static func due(from date: Date, in zone: TimeZone) -> Due {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = zone
-        let parts = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: date)
-        let key = String(format: "%04d-%02d-%02d", parts.year ?? 1970, parts.month ?? 1, parts.day ?? 1)
-        let time = String(format: "%02d:%02d", parts.hour ?? 0, parts.minute ?? 0)
-        return Due(date: key, time: time)
+        Due(date: Dates.toDateKey(date, in: zone), time: Triggers.wallTime(date.epochMilliseconds, in: zone))
     }
 
     /// A Shortcuts date becomes a reminder at that moment.

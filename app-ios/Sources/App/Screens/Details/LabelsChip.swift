@@ -9,14 +9,10 @@ struct LabelsChip: View {
     var openTrigger = 0
     let onChange: ([String]) -> Void
 
-    @State private var open = false
-
     var body: some View {
         let chosen = labelIds.compactMap(store.label)
         let names = chosen.map(\.name).joined(separator: ", ")
-        Button {
-            open = true
-        } label: {
+        PickerChip(label: chosen.isEmpty ? "Add labels" : "Labels \(names)", openTrigger: openTrigger) {
             Chip(
                 systemImage: chosen.first?.systemImage(filled: true) ?? "tag",
                 text: chosen.isEmpty ? "Labels" : names,
@@ -24,13 +20,8 @@ struct LabelsChip: View {
                 iconTone: chosen.first?.color.tone ?? .toneLabel
             )
             .frame(maxWidth: 260, alignment: .leading)
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(chosen.isEmpty ? "Add labels" : "Labels \(names)")
-        .onChange(of: openTrigger) { open = true }
-        .popover(isPresented: $open) {
+        } content: { _ in
             LabelsPopover(labelIds: labelIds, onChange: onChange)
-                .presentationCompactAdaptation(.popover)
         }
     }
 }

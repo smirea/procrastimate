@@ -1,4 +1,5 @@
 import { and, eq, sql } from 'drizzle-orm';
+import { base64Encode } from './jwt';
 import type { Actor } from '../../shared/auth';
 import { labels, projects, rambleUsage, tasks } from '../../shared/db/schema';
 import { labelIdsOf, lastUsed, projectIdsOf, type Named } from '../../shared/name-search';
@@ -16,7 +17,6 @@ import {
 import { addDays, type DateKey } from '../../shared/task';
 import { zonedDateKey, zonedTime } from '../../shared/zoned-time';
 import type { Db } from './db/postgres';
-import { pgRambleBudget, RAMBLE_GLOBAL_DAILY_SECONDS, type RambleBudget } from './ramble-budget';
 import { cassetteUpstream } from './ramble-cassette';
 import type { Config } from './config';
 import { reportError } from './sentry';
@@ -133,46 +133,29 @@ export function workerUpstream(apiKey: string): ConnectUpstream {
 }
 
 /** How the server reaches ElevenLabs: null without a key, which turns Ramble off. */
-export type RambleConfig = { connect: ConnectUpstream | null; budget?: RambleBudget };
-
-/** The configured upstream, with the deployment's shared budget for the real one. */
-export function rambleConfig(
+export function upstreamOf(
 	settings: Config['ramble'],
-	db: () => Db,
 	upstream: (apiKey: string) => ConnectUpstream,
-): RambleConfig {
+): ConnectUpstream | null {
 	switch (settings?.kind) {
 		case 'elevenlabs':
-			return { connect: upstream(settings.apiKey), budget: pgRambleBudget(db(), RAMBLE_GLOBAL_DAILY_SECONDS) };
+			return upstream(settings.apiKey);
 		case 'cassette':
-			return { connect: cassetteUpstream() };
+			return cassetteUpstream();
 		default:
-			return { connect: null };
+			return null;
 	}
 }
-
-type RambleGrant = { day: string; seconds: number };
 
 type Tally = { seconds: number };
 
 type Day = { key: DateKey; stored: number; live: Set<Tally>; loaded: Promise<void> };
 
-export type Ramble = {
+type Ramble = {
 	stream: StreamHost;
-	connect: ConnectUpstream | null;
 	/** The days with sessions, keyed `${userId}:${day}`. */
 	days: Map<string, Day>;
-	budget: RambleBudget | null;
 };
-
-export function ramble(stream: StreamHost, config: RambleConfig): Ramble {
-	return {
-		stream,
-		connect: config.connect,
-		days: new Map(),
-		budget: config.budget ?? null,
-	};
-}
 
 function dayOf(ramble: Ramble, usage: RambleUsage, userId: string, key: DateKey): Day {
 	const id = `${userId}:${key}`;
@@ -254,16 +237,10 @@ const UPSTREAM_ERRORS = new Set([
 
 type UpstreamMessage = { message_type?: string; text?: string; error?: string };
 
-function toBase64(bytes: Uint8Array): string {
-	let binary = '';
-	for (let i = 0; i < bytes.length; i += 0x8000) binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
-	return btoa(binary);
-}
-
 const audioChunk = (bytes: Uint8Array, commit: boolean) =>
 	JSON.stringify({
 		message_type: 'input_audio_chunk',
-		audio_base_64: toBase64(bytes),
+		audio_base_64: base64Encode(bytes),
 		commit,
 		sample_rate: RAMBLE_SAMPLE_RATE,
 	});
@@ -278,7 +255,6 @@ type SessionOptions = {
 	zone: string;
 	keyterms: string[];
 	cassette: string | null;
-	grant: RambleGrant | null;
 };
 
 /**
@@ -286,7 +262,7 @@ type SessionOptions = {
  * daily caps, and the frame that reaches one is cut at the cap and ends the session. A frame after midnight in the
  * account's time zone is charged to the new day, and the seconds before it are stored on the old one. Ending sends
  * a final commit when audio went out since the last committed text, waits for that text, then records the seconds,
- * returns any reserved budget it did not stream, sends `ended`, and closes both sockets. A socket that sends
+ * sends `ended`, and closes both sockets. A socket that sends
  * nothing for a minute ends on its own.
  */
 function session({
@@ -299,12 +275,10 @@ function session({
 	zone,
 	keyterms,
 	cassette,
-	grant,
 }: SessionOptions): StreamEvents {
 	let day = first;
 	const tally: Tally = { seconds: 0 };
 	let sessionSeconds = 0;
-	let budgetLeft: number | null = grant ? grant.seconds : null;
 	day.live.add(tally);
 	const buffered: Uint8Array[] = [];
 	let upstream: Upstream | null = null;
@@ -322,15 +296,6 @@ function session({
 		for (const timer of timers) clearTimeout(timer);
 		day.live.delete(tally);
 		charge(usage, day, tally.seconds);
-		const unused = budgetLeft;
-		budgetLeft = null;
-		if (grant && unused !== null && unused > 0 && ramble.budget) {
-			try {
-				await ramble.budget.release(grant.day, unused);
-			} catch (error) {
-				reportError(error);
-			}
-		}
 		attempt(() => upstream?.close());
 		if (!reason) return;
 		send({ type: 'ended', seconds: Math.round(sessionSeconds * 10) / 10, reason });
@@ -408,23 +373,20 @@ function session({
 		roll();
 		const sessionLeft = RAMBLE_SESSION_SECONDS - sessionSeconds;
 		const dailyLeft = RAMBLE_DAILY_SECONDS - day.stored - liveSeconds(day);
-		const budgetCap = budgetLeft ?? Number.POSITIVE_INFINITY;
 		const allowed = Math.max(
 			0,
-			Math.floor(Math.round(Math.min(sessionLeft, dailyLeft, budgetCap) * RAMBLE_BYTES_PER_SECOND) / 2) * 2,
+			Math.floor(Math.round(Math.min(sessionLeft, dailyLeft) * RAMBLE_BYTES_PER_SECOND) / 2) * 2,
 		);
 		const chunk = bytes.byteLength > allowed ? bytes.subarray(0, allowed) : bytes;
 		const streamed = chunk.byteLength / RAMBLE_BYTES_PER_SECOND;
 		sessionSeconds += streamed;
 		tally.seconds += streamed;
-		if (budgetLeft !== null) budgetLeft = Math.max(0, budgetLeft - streamed);
 		if (chunk.byteLength) {
 			if (started && upstream) forward(chunk);
 			else buffered.push(chunk.slice());
 		}
 		if (chunk.byteLength === allowed) {
-			const cappedBySession = sessionLeft <= dailyLeft && sessionLeft <= budgetCap;
-			finish(cappedBySession ? 'session-limit' : 'daily-limit');
+			finish(sessionLeft <= dailyLeft ? 'session-limit' : 'daily-limit');
 		}
 	}
 
@@ -477,7 +439,7 @@ function session({
 	};
 }
 
-const fail = (status: number, error: string) => Response.json({ ok: false, error }, { status });
+const refuse = (status: number, error: string) => Response.json({ ok: false, error }, { status });
 
 /** A browser cannot read a refused upgrade, so a used-up day still opens and then closes with this error. */
 function refuseDaily(ramble: Ramble, request: Request, resetsAt: number) {
@@ -496,12 +458,15 @@ function refuseDaily(ramble: Ramble, request: Request, resetsAt: number) {
 
 export type RambleRoute = (request: Request, actor: Actor) => Promise<Response>;
 
-/** The upgrade for one signed-in human's session, after the caller authenticated the request, over one database. */
-export function rambleRoute(db: Db, ramble: Ramble): RambleRoute {
+/**
+ * The upgrade for one signed-in human's session, after the caller authenticated the request, over one database. The
+ * route holds the users' days, so one route serves every session of a host.
+ */
+export function rambleRoute(db: Db, stream: StreamHost, connect: ConnectUpstream | null): RambleRoute {
+	const ramble: Ramble = { stream, days: new Map() };
 	return async (request, actor) => {
-		if (request.headers.get('Upgrade')?.toLowerCase() !== 'websocket') return fail(426, 'Expected a WebSocket');
-		const { connect } = ramble;
-		if (!connect) return fail(503, 'Ramble is not configured');
+		if (request.headers.get('Upgrade')?.toLowerCase() !== 'websocket') return refuse(426, 'Expected a WebSocket');
+		if (!connect) return refuse(503, 'Ramble is not configured');
 		const now = Date.now();
 		const usage = pgRambleUsage(db, actor.id);
 		const zone = await storedZone(db, actor.id);
@@ -509,24 +474,10 @@ export function rambleRoute(db: Db, ramble: Ramble): RambleRoute {
 		await day.loaded;
 		const remaining = RAMBLE_DAILY_SECONDS - day.stored - liveSeconds(day);
 		if (remaining <= 0) return refuseDaily(ramble, request, zonedTime(addDays(day.key, 1), '00:00', zone));
-		let grant: RambleGrant | null = null;
-		if (ramble.budget) {
-			const utcDay = zonedDateKey(now, 'UTC');
-			const want = Math.min(RAMBLE_SESSION_SECONDS, remaining);
-			let granted = 0;
-			try {
-				granted = await ramble.budget.reserve(utcDay, want);
-			} catch (error) {
-				reportError(error);
-				return fail(503, 'Ramble is unavailable');
-			}
-			if (granted <= 0) return refuseDaily(ramble, request, zonedTime(addDays(utcDay, 1), '00:00', 'UTC'));
-			grant = { day: utcDay, seconds: granted };
-		}
 		const keyterms = rambleKeyterms(await loadKeytermSource(db, actor.id));
 		const cassette = new URL(request.url).searchParams.get('cassette');
 		return ramble.stream(request, RAMBLE_SOCKET_PROTOCOL, client =>
-			session({ client, connect, ramble, usage, userId: actor.id, day, zone, keyterms, cassette, grant }),
+			session({ client, connect, ramble, usage, userId: actor.id, day, zone, keyterms, cassette }),
 		);
 	};
 }

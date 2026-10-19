@@ -4,7 +4,7 @@ import { CLIENT_HEADER, DEVICE_HEADER } from '../../shared/auth';
 import { taskActivity } from './activity';
 import { clientOf, requireActor, requireHuman, spaceOf } from './actor';
 import { originOf, type App } from './app';
-import { deviceIdFrom } from './auth';
+import { deviceIdFrom } from './actor';
 import { aiAccounts, authMethods, createAiUser, deleteUser } from './better-auth';
 import {
 	createComment,
@@ -260,7 +260,7 @@ export const router = os.router({
 	activity: {
 		list: os.activity.list.handler(async ({ input, context }) => {
 			const { db, owner, actor, access } = await shared(context, input.query.space);
-			const sight = await sightOf(db, owner, actor, access);
+			const sight = sightOf(actor, access);
 			const [seen, entries] = await Promise.all([
 				seesTask(db, owner, sight, input.query.id),
 				taskActivity(db, owner, sight, input.query.id),

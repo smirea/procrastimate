@@ -8,7 +8,7 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import { join } from 'node:path';
 import postgres from 'postgres';
 import { access, tasks } from '../shared/db/schema';
-import { readOverride } from './local-stack';
+import { readOverride } from './lib';
 
 const args = process.argv.slice(2);
 const flag = (name: string) => {

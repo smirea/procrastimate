@@ -118,6 +118,24 @@ describe('tasks', () => {
 		expect(updateTask(data(), 'missing', { title: 'x' })).toEqual(data());
 	});
 
+	test('linking an event drops the date and the repeat, since the event stands in for them', () => {
+		const event = {
+			id: 'e',
+			title: 'Standup',
+			allDay: false,
+			series: false,
+			edge: 'start' as const,
+			minutes: 0,
+			occurrences: [],
+		};
+		const next = updateTask(data(), 'standup', { event });
+		expect([find(next, 'standup').due, find(next, 'standup').recurrence, find(next, 'standup').event?.id]).toEqual([
+			null,
+			null,
+			'e',
+		]);
+	});
+
 	test('completing a task and its subtasks keeps what undo needs', () => {
 		const { data: next, completion } = completeTask(data(), 'trip', today, NOW)!;
 		expect(completion).toEqual({
@@ -164,8 +182,12 @@ describe('tasks', () => {
 
 	test('reopening a subtask reopens its parent', () => {
 		const { data: done } = completeTask(data(), 'trip', today, NOW)!;
-		const next = reopenTask(done, 'passport');
+		const { data: next, reopened } = reopenTask(done, 'passport');
 		expect(ids(next.tasks.filter(t => t.completedAt === null))).toEqual(['trip', 'passport', 'standup', 'call']);
+		expect(reopened).toEqual([
+			{ id: 'trip', completedAt: NOW },
+			{ id: 'passport', completedAt: NOW },
+		]);
 	});
 
 	test('moving a subtask writes only its own order', () => {
@@ -338,6 +360,11 @@ describe('projects', () => {
 		expect(project).toEqual({ id: 'errands', name: 'Errands', order: 1, createdAt: NOW });
 		expect(added.projects.map(p => p.name)).toEqual(['Home', 'Work', 'Errands']);
 		expect(renameProject(data(), 'home', 'House').projects[0]!.name).toBe('House');
+		expect(renameProject(data(), 'home', 'WORK')).toEqual(data());
+		expect(addProject(data(), 'work', { id: 'again', now: NOW })).toEqual({
+			data: data(),
+			project: data().projects[1],
+		});
 		const deleted = deleteProject(data(), 'home');
 		expect(deleted.projects.map(p => p.id)).toEqual(['work']);
 		expect(ids(deleted.tasks)).toEqual(['standup', 'call']);
@@ -497,6 +524,7 @@ describe('labels', () => {
 		expect(added.labels.map(l => l.name)).toEqual(['calls', 'Phone', 'errands']);
 		expect(renameLabel(data(), 'calls', 'Calls').labels[0]!.name).toBe('Calls');
 		expect(renameLabel(data(), 'calls', 'phone')).toEqual(data());
+		expect(addLabel(data(), 'CALLS', { id: 'again', now: NOW })).toEqual({ data: data(), label: data().labels[0] });
 	});
 
 	test('deleting a label takes it off its tasks and keeps them', () => {

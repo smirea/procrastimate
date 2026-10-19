@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import type { Person, ShareView } from '../../shared/sharing';
 import { deliverDue } from './push';
-import { json, signUp, taskRow, testApp, tokenHeaders, upload, type Session, type TestApp } from './test-app';
+import { json, named, signUp, taskRow, testApp, tokenHeaders, upload, type Session, type TestApp } from './test-app';
 
 /**
  * What the routes that read a space cost in SQL statements, counted like `write-cost.test.ts`. Each statement is named
@@ -67,16 +67,6 @@ beforeAll(async () => {
 	linkId = ((await post(owner, '/api/links', { target: { kind: 'task', id: taskId } })) as ShareView).id;
 });
 afterAll(() => app.close());
-
-/** `select tasks`, `insert log`, `lock`: the verb and the first table each statement names, then any lateral read's. */
-function named(statement: string): string {
-	if (statement.startsWith('SELECT pg_advisory_xact_lock')) return 'lock';
-	if (/^(savepoint|release)/i.test(statement)) return statement.split(' ')[0]!.toLowerCase();
-	const verb = /^\(*(select|insert|update|delete)\b/.exec(statement)?.[1];
-	const table = /\b(?:from|into|update)\s+"(\w+)"/.exec(statement)?.[1];
-	const lateral = [...statement.matchAll(/join lateral \(select .*? from "(\w+)"/g)].map(match => match[1]);
-	return [`${verb} ${table}`, ...lateral].join(' + ');
-}
 
 async function statementsOf(path: string, init: RequestInit = {}): Promise<string[]> {
 	app.statements.length = 0;
@@ -185,6 +175,7 @@ describe('statements per read', () => {
 			'select shares',
 			'select user',
 			...tree,
+			'select tasks',
 		]);
 		expect(await statementsOf(`/api/links?id=${linkId}`, { method: 'DELETE', headers: owner.headers })).toEqual([
 			'delete shares',

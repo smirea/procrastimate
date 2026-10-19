@@ -87,7 +87,7 @@ const SLASHED_WEEKDAYS = new RegExp(String.raw`^${WEEKDAY}(?:\s*/\s*${WEEKDAY})+
 const WEEKDAY_WORD = new RegExp(WEEKDAY, 'gi');
 const MONTH = String.raw`(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)`;
 const ORDINAL = String.raw`\d{1,2}(?:st|nd|rd|th)?`;
-const ORDINAL_WORDS = [
+export const ORDINAL_WORDS = [
 	'first',
 	'second',
 	'third',
@@ -618,7 +618,7 @@ const RULES: Rule[] = [
 	},
 ];
 
-const escapeRegExp = (text: string) => text.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
+export const escapeRegExp = (text: string) => text.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 
 /**
  * `#Name`, `/Name`, or `@Name` for a name that exists, at the start of the text or after whitespace, so `a@b.com` and

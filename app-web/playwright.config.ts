@@ -37,6 +37,7 @@ export default defineConfig({
 		baseURL: `http://127.0.0.1:${PORT}`,
 		timezoneId: 'UTC',
 		trace: 'retain-on-failure',
+		serviceWorkers: 'block',
 	},
 	projects: [
 		{

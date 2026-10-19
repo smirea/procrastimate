@@ -33,26 +33,18 @@ export type Scope = {
 	sections: ReadonlySet<string>;
 };
 
+/**
+ * `snapshot` is read as `resolveDangling` leaves it, which every loader applies: a subtask carries its root's
+ * project, so a project share reaches it by its own `projectId`.
+ */
 export function scopeOf(snapshot: Links, grants: readonly Grant[]): Scope {
-	const byId = new Map(snapshot.tasks.map(task => [task.id, task]));
 	const children = Map.groupBy(snapshot.tasks, task => task.parentId);
-	const rootProject = (task: LinkedTask): string | null => {
-		let current = task;
-		const seen = new Set<string>();
-		while (current.parentId && !seen.has(current.id)) {
-			seen.add(current.id);
-			const parent = byId.get(current.parentId);
-			if (!parent) break;
-			current = parent;
-		}
-		return current.projectId;
-	};
 	const reaches = ({ targetKind, targetId }: Grant, task: LinkedTask) => {
 		switch (targetKind) {
 			case 'space':
 				return true;
 			case 'project':
-				return rootProject(task) === targetId;
+				return task.projectId === targetId;
 			case 'label':
 				return task.labelIds.includes(targetId);
 			case 'task':
@@ -82,8 +74,8 @@ export function scopeOf(snapshot: Links, grants: readonly Grant[]): Scope {
 			for (const { id } of snapshot.labels) labels.add(id);
 		}
 	}
-	for (const id of tasks) {
-		const task = byId.get(id)!;
+	for (const task of snapshot.tasks) {
+		if (!tasks.has(task.id)) continue;
 		if (task.projectId) projects.add(task.projectId);
 		for (const labelId of task.labelIds) labels.add(labelId);
 	}
@@ -104,8 +96,12 @@ export function filterTree(tree: Entities, scope: Scope): Entities {
 /** The guest's `access` rows in one space, as `guestRefusal` reads them. */
 export type GuestRows = readonly Pick<AccessRow, 'kind' | 'entityId' | 'role'>[];
 
-type TaskFields = Partial<FieldsByKind['task']>;
-type CommentFields = Partial<FieldsByKind['comment']>;
+export type TaskFields = Partial<FieldsByKind['task']>;
+export type CommentFields = Partial<FieldsByKind['comment']>;
+
+/** Why someone else's comment is refused: only its author edits or deletes it. */
+export const authorOnly = (op: RowWrite['op']) =>
+	op === 'delete' ? 'Only the author can delete a comment' : 'Only the author can edit a comment';
 
 const roleOf = (rows: GuestRows, kind: AccessRow['kind'], id: string) =>
 	rows.find(row => row.kind === kind && row.entityId === id)?.role;
@@ -132,17 +128,26 @@ function mayAdd(fields: TaskFields, rows: GuestRows): boolean {
 }
 
 /**
- * What the server holds for the row a guest writes to, read with the row's owner: a task's presence, or a comment's
+ * What the server holds for the row a guest writes to, read with the row's owner: a task's place, or a comment's
  * task and author. Undefined for a row the server does not hold.
  */
-export type StoredRow = Partial<Pick<FieldsByKind['comment'], 'taskId' | 'authorId'>>;
+export type StoredRow = Partial<
+	Pick<FieldsByKind['comment'], 'taskId' | 'authorId'> & Pick<FieldsByKind['task'], 'projectId' | 'parentId'>
+>;
 
 const NOT_EDITABLE = 'Not editable in this share';
+const NOT_REMOVABLE = 'A guest cannot take a task out of its project or parent';
+
+/** A guest clearing the project or parent of the owner's task would move it to the owner's Inbox, out of the share. */
+function clearsPlace(fields: TaskFields, stored: StoredRow | undefined): boolean {
+	return (fields.projectId === null && !!stored?.projectId) || (fields.parentId === null && !!stored?.parentId);
+}
 
 /**
  * Why a guest's write is refused, or null when it may run. The rows are the guest's `access` rows in the space the
- * write names, and they decide everything: a task the space holds needs an `edit` row, whatever the op, a new task a
- * place the guest may add to, and every project, section, label, and parent the write names must be among the rows.
+ * write names, and they decide everything: a task the space holds needs an `edit` row, whatever the op, and keeps its
+ * project and parent, a new task a place the guest may add to, and every project, section, label, and parent the
+ * write names must be among the rows.
  * A comment needs an editable task, and only its author edits or deletes it. Projects, sections, labels, read
  * markers, and settings are never a guest's to write: managers are AI accounts, which act through the agent API with
  * the owner's own rights.
@@ -154,6 +159,7 @@ export function guestRefusal(rows: GuestRows, write: RowWrite, actor: string, st
 		const fields = (write.values ?? {}) as TaskFields;
 		if (role !== undefined) {
 			if (role !== 'edit') return NOT_EDITABLE;
+			if (clearsPlace(fields, stored)) return NOT_REMOVABLE;
 		} else if (write.op === 'patch' || stored || !mayAdd(fields, rows)) {
 			return NOT_EDITABLE;
 		}
@@ -165,9 +171,7 @@ export function guestRefusal(rows: GuestRows, write: RowWrite, actor: string, st
 			if (write.op !== 'put' || !taskId) return NOT_EDITABLE;
 			return roleOf(rows, 'task', taskId) === 'edit' ? null : NOT_EDITABLE;
 		}
-		if (stored.authorId !== actor) {
-			return write.op === 'delete' ? 'Only the author can delete a comment' : 'Only the author can edit a comment';
-		}
+		if (stored.authorId !== actor) return authorOnly(write.op);
 		if (roleOf(rows, 'task', stored.taskId) !== 'edit') return NOT_EDITABLE;
 		return taskId === undefined || taskId === stored.taskId ? null : NOT_EDITABLE;
 	}

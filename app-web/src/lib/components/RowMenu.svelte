@@ -13,11 +13,11 @@
 	import { scheduledDue } from 'shared/triggers.ts';
 	import { completeTask, deleteTask, postponeTask, reopenTask } from '../completion.ts';
 	import { copyMarkdown } from '../copy.ts';
+	import { MARGIN, viewportHeight } from '../placement.ts';
 	import { rowMenu } from '../row-menu.svelte.ts';
 	import { store } from '../store.svelte.ts';
 	import { clock, motion, sheets } from '../ui.svelte.ts';
 
-	const MARGIN = 8;
 
 	const opened = $derived(rowMenu.current);
 	const task = $derived(opened ? store.task(opened.id) : undefined);
@@ -48,9 +48,8 @@
 		const width = node.offsetWidth;
 		const height = node.offsetHeight;
 		const viewportWidth = document.documentElement.clientWidth;
-		const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
 		const flipX = x + width > viewportWidth - MARGIN;
-		const flipY = y + height > viewportHeight - MARGIN;
+		const flipY = y + height > viewportHeight() - MARGIN;
 		placement = {
 			left: Math.max(MARGIN, flipX ? x - width : x),
 			top: Math.max(MARGIN, flipY ? y - height : y),
@@ -135,7 +134,7 @@
 		oncontextmenu={(e) => e.preventDefault()}
 		{onkeydown}
 	>
-		{#if offered.toggle}
+		{#if offered.toggle && !opened.only}
 			<button type="button" role="menuitem" class="menu-item" onclick={() => run(toggle)}>
 				{#if offered.toggle === 'complete'}
 					<CheckCircle size={16} class="shrink-0" />Complete
@@ -156,19 +155,21 @@
 				{/each}
 			</div>
 		{/if}
-		{#if offered.delete}
+		{#if offered.delete && !opened.only}
 			<button type="button" role="menuitem" class="menu-item text-[var(--tone-overdue)]!" onclick={() => run(deleteTask)}>
 				<Trash size={16} class="shrink-0" />Delete
 			</button>
 		{/if}
-		<button
-			type="button"
-			role="menuitem"
-			class="menu-item"
-			onclick={() => run((target) => void copyMarkdown({ title: null, sections: [{ heading: null, tasks: [target] }] }))}
-		>
-			<Copy size={16} class="shrink-0" />Copy as Markdown
-		</button>
+		{#if !opened.only}
+			<button
+				type="button"
+				role="menuitem"
+				class="menu-item"
+				onclick={() => run((target) => void copyMarkdown({ title: null, sections: [{ heading: null, tasks: [target] }] }))}
+			>
+				<Copy size={16} class="shrink-0" />Copy as Markdown
+			</button>
+		{/if}
 	</div>
 {/if}
 

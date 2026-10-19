@@ -9,7 +9,7 @@ import { pushTag, type PushMessage, type PushSubscriptionInfo } from '../../shar
 import type { Env } from './bindings';
 import { config } from './config';
 import type { Db } from './db/postgres';
-import { classifyDelivery, isRetryable, nextAlarm, planSchedule, splitDue, STALE_AFTER_MS } from './push-schedule';
+import { classifyDelivery, isRetryable, nextAlarm, planSchedule, STALE_AFTER_MS } from './push-schedule';
 import { reportError } from './sentry';
 import { storedZone, withSpaceLocked } from './space';
 import { sendPush, type Vapid } from './web-push';
@@ -74,10 +74,16 @@ export async function replan(db: Db, owner: string, now: number): Promise<void> 
 	);
 }
 
-/** Push services are https. Loopback http is the end to end suite's fake push service. */
+/**
+ * The browsers' push services, so a subscription cannot point the Worker at any other host: Chrome and Edge, Apple,
+ * Firefox, and Windows. Tests use a `push.example` host, which no browser hands out.
+ */
+const PUSH_HOSTS =
+	/(^|\.)(fcm\.googleapis\.com|push\.apple\.com|push\.services\.mozilla\.com|notify\.windows\.com|push\.example)$/;
+
 export function isAllowedEndpoint(endpoint: string) {
 	const url = new URL(endpoint);
-	return url.protocol === 'https:' || url.hostname === '127.0.0.1' || url.hostname === 'localhost';
+	return url.protocol === 'https:' && PUSH_HOSTS.test(url.hostname);
 }
 
 async function send(subscription: PushSubscriptionInfo, message: PushMessage, vapid: Vapid, ttl?: number) {
@@ -182,12 +188,24 @@ export async function deliverDue(db: Db, now: number, send: SendPush): Promise<n
 	const due = await db.selectDistinct({ owner: push.userId }).from(push).where(lte(push.nextAt, now));
 	let sent = 0;
 	for (const { owner } of due) {
+		try {
+			sent += await deliverTo(db, owner, now, send);
+		} catch (error) {
+			reportError(error);
+		}
+	}
+	return sent;
+}
+
+async function deliverTo(db: Db, owner: string, now: number, send: SendPush): Promise<number> {
+	let sent = 0;
+	{
 		const rows = await db.select().from(push).where(eq(push.userId, owner));
 		const outcomes = new Map<string, Outcome>();
 		for (const row of rows) {
 			const outcome: Outcome = { endpoint: row.subscription.endpoint, gone: false, settled: new Set() };
 			outcomes.set(row.deviceId, outcome);
-			for (const pending of splitDue(row.notifications, now).due) {
+			for (const pending of row.notifications.filter(pending => pending.at <= now)) {
 				if (!isRetryable(pending, now)) {
 					outcome.settled.add(pushTag(pending));
 					continue;

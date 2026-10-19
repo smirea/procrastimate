@@ -1,6 +1,7 @@
 import { afterEach, expect, mock, spyOn, test } from 'bun:test';
 import { createReceiverKeys, decryptPush, verifyVapid } from './push-receiver';
-import { base64urlDecode, base64urlEncode, concat, generateVapidKeys, sendPush, VAPID_SUBJECT } from './web-push';
+import { base64urlDecode, base64urlEncode } from './jwt';
+import { concat, generateVapidKeys, sendPush, VAPID_SUBJECT } from './web-push';
 
 afterEach(() => mock.restore());
 

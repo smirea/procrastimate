@@ -1,4 +1,5 @@
-import { MAX_SCHEDULED, pushTag, type ScheduledPush } from '../../shared/push';
+import type { ScheduledNotification } from '../../shared/notifications';
+import { MAX_SCHEDULED, pushTag } from '../../shared/push';
 
 /** Pushes older than this are dropped instead of delivered late. */
 export const STALE_AFTER_MS = 10 * 60_000;
@@ -13,13 +14,13 @@ export type Delivery = 'sent' | 'gone' | 'retry';
  * notifies, and completing or deleting a task drops its pushes even mid-retry.
  */
 export function planSchedule(
-	computed: readonly ScheduledPush[],
-	stored: readonly ScheduledPush[],
+	computed: readonly ScheduledNotification[],
+	stored: readonly ScheduledNotification[],
 	deliveredThrough: number,
 	now: number,
-): ScheduledPush[] {
+): ScheduledNotification[] {
 	const pending = new Set(stored.map(pushTag));
-	const byTag = new Map<string, ScheduledPush>();
+	const byTag = new Map<string, ScheduledNotification>();
 	for (const push of computed) {
 		const tag = pushTag(push);
 		if (push.at < now - STALE_AFTER_MS) continue;
@@ -28,19 +29,12 @@ export function planSchedule(
 	return [...byTag.values()].sort((a, b) => a.at - b.at).slice(0, MAX_SCHEDULED);
 }
 
-export function splitDue(notifications: readonly ScheduledPush[], now: number) {
-	return {
-		due: notifications.filter(push => push.at <= now),
-		pending: notifications.filter(push => push.at > now),
-	};
-}
-
 /**
  * When the alarm should next fire for one device, or null when nothing is pending. A due push the last alarm at
  * `deliveredThrough` already tried is a retry a minute after that try. One it has not tried is due now.
  */
 export function nextAlarm(
-	notifications: readonly ScheduledPush[],
+	notifications: readonly ScheduledNotification[],
 	deliveredThrough: number,
 	now: number,
 ): number | null {
@@ -59,4 +53,4 @@ export function classifyDelivery(status: number | null): Delivery {
 	return 'sent';
 }
 
-export const isRetryable = (push: ScheduledPush, now: number) => push.at >= now - STALE_AFTER_MS;
+export const isRetryable = (push: ScheduledNotification, now: number) => push.at >= now - STALE_AFTER_MS;

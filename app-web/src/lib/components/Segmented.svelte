@@ -1,28 +1,39 @@
-<script lang="ts">
-	import { DICTATION_CHOICES, type DictationChoice } from 'shared/dictation.ts';
-	import { store } from '../store.svelte.ts';
+<script lang="ts" generics="T extends string">
+	import type { Component } from 'svelte';
 
-	const labels: Record<DictationChoice, string> = { native: 'Native', elevenlabs: 'ElevenLabs' };
+	/** A radio group drawn as one row of segments with a sliding thumb; arrow keys move the choice. */
+	let {
+		label,
+		choices,
+		value,
+		options,
+		onchange,
+	}: {
+		label: string;
+		choices: readonly T[];
+		value: T;
+		options: Record<T, { label: string; icon?: Component<{ size?: number; weight?: 'regular' | 'fill' }> }>;
+		onchange: (choice: T) => void;
+	} = $props();
 
-	const selected = $derived(DICTATION_CHOICES.indexOf(store.dictation));
+	const selected = $derived(choices.indexOf(value));
 	let buttons: HTMLButtonElement[] = $state([]);
 
 	function onkeydown(event: KeyboardEvent) {
 		const step = { ArrowLeft: -1, ArrowUp: -1, ArrowRight: 1, ArrowDown: 1 }[event.key];
 		if (!step) return;
 		event.preventDefault();
-		const next = (selected + step + DICTATION_CHOICES.length) % DICTATION_CHOICES.length;
-		const choice = DICTATION_CHOICES[next];
-		if (!choice) return;
-		store.setDictation(choice);
+		const next = (selected + step + choices.length) % choices.length;
+		onchange(choices[next]!);
 		buttons[next]?.focus();
 	}
 </script>
 
-<div class="segmented" role="radiogroup" aria-label="Dictation" tabindex="-1" style:--selected={selected} {onkeydown}>
+<div class="segmented" role="radiogroup" aria-label={label} tabindex="-1" style:--selected={selected} style:--count={choices.length} {onkeydown}>
 	<span class="thumb" aria-hidden="true"></span>
-	{#each DICTATION_CHOICES as choice, i (choice)}
-		{@const checked = store.dictation === choice}
+	{#each choices as choice, i (choice)}
+		{@const option = options[choice]}
+		{@const checked = value === choice}
 		<button
 			type="button"
 			role="radio"
@@ -30,9 +41,10 @@
 			tabindex={checked ? 0 : -1}
 			class="segment"
 			bind:this={buttons[i]}
-			onclick={() => store.setDictation(choice)}
+			onclick={() => onchange(choice)}
 		>
-			{labels[choice]}
+			{#if option.icon}<option.icon size={14} weight={checked ? 'fill' : 'regular'} />{/if}
+			{option.label}
 		</button>
 	{/each}
 </div>
@@ -41,7 +53,7 @@
 	.segmented {
 		position: relative;
 		display: grid;
-		grid-template-columns: repeat(2, 1fr);
+		grid-template-columns: repeat(var(--count), 1fr);
 		padding: 0.125rem;
 		border-radius: 0.625rem;
 		background: color-mix(in srgb, var(--color-ink) 6%, transparent);
@@ -50,7 +62,7 @@
 	.thumb {
 		position: absolute;
 		inset: 0.125rem auto 0.125rem 0.125rem;
-		width: calc((100% - 0.25rem) / 2);
+		width: calc((100% - 0.25rem) / var(--count));
 		border-radius: 0.5rem;
 		background: var(--color-surface);
 		box-shadow:
@@ -67,6 +79,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		gap: 0.3125rem;
 		height: 1.75rem;
 		border-radius: 0.5rem;
 		font-size: 0.75rem;

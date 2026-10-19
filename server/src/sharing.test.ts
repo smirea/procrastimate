@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { access, comments, log, tasks } from '../../shared/db/schema';
 import type { Person, ShareView, SpaceView } from '../../shared/sharing';
 import {
@@ -129,6 +129,42 @@ describe('sharing a task', () => {
 		]);
 		expect(refused.map(entry => entry.reason)).toEqual(['Not editable in this share', 'Not editable in this share']);
 		expect((await app.db.select().from(tasks).where(eq(tasks.id, hidden))).length).toBe(1);
+	});
+
+	test('a guest cannot clear the project or parent of the owner’s task', async () => {
+		const project = crypto.randomUUID();
+		await upload(app, owner, [
+			{
+				op: 'put',
+				table: 'projects',
+				id: project,
+				values: { id: project, user_id: owner.person.id, name: 'Yard', order: 0, created_at: 1 },
+			},
+		]);
+		const parent = await newTask('Mow', { projectId: project });
+		const child = await newTask('Fuel', { projectId: project, parentId: parent });
+		await share({ kind: 'project', id: project }, guest, 'edit');
+		const reason = 'A guest cannot take a task out of its project or parent';
+		expect(
+			await upload(app, guest, [
+				{ op: 'patch', table: 'tasks', id: parent, values: { project_id: null } },
+				{ op: 'patch', table: 'tasks', id: child, values: { parent_id: null } },
+			]),
+		).toEqual([
+			{ table: 'tasks', id: parent, reason },
+			{ table: 'tasks', id: child, reason },
+		]);
+		expect(await upload(app, guest, [{ op: 'patch', table: 'tasks', id: child, values: { title: 'Petrol' } }])).toEqual(
+			[],
+		);
+		const rows = await app.db
+			.select()
+			.from(tasks)
+			.where(inArray(tasks.id, [parent, child]));
+		expect(rows.map(row => [row.title, row.projectId, row.parentId]).toSorted()).toEqual([
+			['Mow', project, null],
+			['Petrol', project, parent],
+		]);
 	});
 
 	test('a guest cannot rewrite or move a task it holds no edit row for, whatever id it knows', async () => {
@@ -549,6 +585,37 @@ describe('AI accounts', () => {
 		);
 		expect(task.labelIds).toEqual([]);
 		expect(task.location?.name).toBe('office');
+	});
+
+	test('the agent API refuses a date or a repeat beside an event, which stands in for both', async () => {
+		const { token } = await aiAccount(app, owner, 'Planner');
+		const headers = tokenHeaders(token);
+		const asAi = (method: string, path: string, body?: unknown) =>
+			app.fetch(path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
+		const task = await json<{ id: string }>(asAi('POST', '/api/tasks', { text: 'Prepare the standup notes' }));
+		const occurrence = {
+			start: Date.UTC(2026, 9, 20, 9),
+			end: Date.UTC(2026, 9, 20, 10),
+			original: Date.UTC(2026, 9, 20, 9),
+		};
+		const event = {
+			id: 'standup',
+			title: 'Standup',
+			allDay: false,
+			series: false,
+			edge: 'start',
+			minutes: 0,
+			occurrences: [occurrence],
+		};
+		const together = await asAi('PATCH', `/api/tasks?id=${task.id}`, {
+			event,
+			recurrence: { interval: 1, unit: 'day' },
+		});
+		expect(together.status).toBe(400);
+		const linked = await json<{ event: { id: string } | null }>(asAi('PATCH', `/api/tasks?id=${task.id}`, { event }));
+		expect(linked.event?.id).toBe('standup');
+		const dated = await asAi('PATCH', `/api/tasks?id=${task.id}`, { due: { date: '2026-10-20', time: null } });
+		expect(await dated.json()).toMatchObject({ message: 'An event stands in for the date and the repeat' });
 	});
 
 	test('the agent API reports which app created each task and which wrote to it last', async () => {

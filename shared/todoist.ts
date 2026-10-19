@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { parseCsv } from './csv.ts';
 import { defaultLabelColor } from './label-colors.ts';
 import { parseQuickAdd } from './quick-add.ts';
-import { projectsInOrder, sectionsOf, type StoreData } from './store.ts';
+import { sameName, projectsInOrder, sectionsOf, type StoreData } from './store.ts';
 import { nextSiblingOrder } from './subtasks.ts';
 import { taskSchema } from './model.ts';
 import {
@@ -300,7 +300,6 @@ export function mergeBackup(
 		skipped: 0,
 		warnings: backup.warnings,
 	};
-	const sameName = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
 
 	const projectIds = new Map<string, string | null>();
 	for (const source of backup.projects) {

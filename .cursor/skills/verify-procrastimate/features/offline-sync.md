@@ -4,7 +4,7 @@ ProcrastiMate works fully without a network. Every change applies locally at onc
 
 ## Sub-features
 
-- `sync-offline` keeps every feature working with no network. Changes wait in PowerSync's upload queue in the local database until the network returns, and the data survives a reload.
+- `sync-offline` keeps every feature working with no network. Changes wait in PowerSync's upload queue in the local database until the network returns, and the data survives a reload. On the web a reload or cold launch with no network opens from the cached shell. Test: `a cold launch offline opens the app from the cached shell`.
 - `sync-propagate` shows a change from one client on the other.
 - `sync-realtime` brings that change over at once while both clients are open: PowerSync streams it, with no focus, timer, or reload.
 - `sync-reconnect` uploads offline changes after the network returns.

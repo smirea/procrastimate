@@ -4,18 +4,11 @@
  * Run it from the main checkout. Stops its servers, removes its PowerSync container and databases, deletes its
  * simulators, worktree, and branches, and updates master.
  */
-import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { basename, join, resolve } from 'node:path';
-import { databaseOf, dockerRunning, dropDatabases, readOverride, stopPowerSync } from './local-stack';
+import { readOverride, run, worktrees } from './lib';
+import { databaseOf, dockerRunning, dropDatabases, stopPowerSync } from './local-stack';
 import { devices, owner, remove } from './simulators';
-
-function run(cmd: string[], opts: { allowFail?: boolean } = {}): string {
-	const result = spawnSync(cmd[0]!, cmd.slice(1), { encoding: 'utf8' });
-	if (result.status !== 0 && !opts.allowFail)
-		throw new Error(`\`${cmd.join(' ')}\` failed\n${result.stderr}${result.stdout}`);
-	return result.stdout.trim();
-}
 
 const args = process.argv.slice(2);
 const force = args.includes('--force');
@@ -27,16 +20,11 @@ if (run(['git', 'rev-parse', '--git-dir']) !== run(['git', 'rev-parse', '--git-c
 	throw new Error('Run this from the main checkout, not from a worktree.');
 }
 
-const worktrees = run(['git', 'worktree', 'list', '--porcelain'])
-	.split('\n\n')
-	.map(block => ({
-		path: block.match(/^worktree (.+)$/m)?.[1],
-		branch: block.match(/^branch refs\/heads\/(.+)$/m)?.[1],
-	}));
+const known = worktrees(root);
 const entry =
-	worktrees.find(entry => entry.path === resolve(target)) ??
-	worktrees.find(entry => entry.branch === target) ??
-	worktrees.find(entry => entry.path && basename(entry.path) === target);
+	known.find(entry => entry.path === resolve(target)) ??
+	known.find(entry => entry.branch === target) ??
+	known.find(entry => basename(entry.path) === target);
 const worktree = entry?.path;
 const branch = entry ? entry.branch : target;
 const detached = Boolean(entry && !entry.branch);
@@ -49,10 +37,7 @@ if (!pr.startsWith('MERGED') && !force) {
 }
 
 if (worktree) {
-	const override = join(worktree, '.env.override');
-	const base = existsSync(override)
-		? Number(readFileSync(override, 'utf8').match(/^CLIENT_PORT=(\d+)/m)?.[1])
-		: undefined;
+	const base = Number(readOverride(worktree)?.CLIENT_PORT) || undefined;
 	if (base) {
 		const ports = [base, base + 1, base + 10, base + 11].map(port => `-iTCP:${port}`);
 		const pids = run(['lsof', '-t', '-sTCP:LISTEN', ...ports], { allowFail: true })

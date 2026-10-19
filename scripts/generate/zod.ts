@@ -2,6 +2,7 @@ import { getTableColumns, getTableName, is, SQL } from 'drizzle-orm';
 import { PgTable } from 'drizzle-orm/pg-core';
 import { COLUMN_VALUES } from '../../shared/db/json';
 import * as schema from '../../shared/db/schema';
+import { COLUMN_TYPES } from './columns';
 
 /**
  * One Zod schema per table, `<table>RowSchema`, written as plain code. Deriving them at runtime with drizzle-zod
@@ -9,21 +10,15 @@ import * as schema from '../../shared/db/schema';
  * comes from its SQL type, or from `COLUMN_VALUES` when that says more, as for JSON columns.
  */
 
-const BY_TYPE: Record<string, string> = {
-	PgText: 'z.string()',
-	PgInteger: 'z.number().int()',
-	PgBigInt53: 'z.number().int()',
-	PgBigSerial53: 'z.number().int()',
-	PgDoublePrecision: 'z.number()',
-	PgBoolean: 'z.boolean()',
-};
-
 type Column = { columnType: string; notNull: boolean; enumValues?: readonly string[] };
 
-export function zodModule(): string {
-	const tables = Object.entries(schema as Record<string, unknown>).filter(
+export const pgTables = () =>
+	Object.entries(schema as Record<string, unknown>).filter(
 		(entry): entry is [string, PgTable] => entry[1] instanceof PgTable,
 	);
+
+export function zodModule(): string {
+	const tables = pgTables();
 	const blocks = tables.map(([name, table]) => {
 		const values: Record<string, unknown> = (COLUMN_VALUES as Record<string, Record<string, unknown>>)[name] ?? {};
 		const fields = Object.entries(getTableColumns(table) as Record<string, Column>).map(([key, column]) => {
@@ -31,7 +26,7 @@ export function zodModule(): string {
 			if (key in values) code = `COLUMN_VALUES.${name}.${key}`;
 			else if (column.columnType === 'PgText' && column.enumValues?.length) {
 				code = `z.enum(${JSON.stringify(column.enumValues)})`;
-			} else if (BY_TYPE[column.columnType]) code = BY_TYPE[column.columnType]!;
+			} else if (COLUMN_TYPES[column.columnType]?.zod) code = COLUMN_TYPES[column.columnType]!.zod!;
 			else throw new Error(`${getTableName(table)}.${key}: add its ${column.columnType} values to COLUMN_VALUES`);
 			return `\t${key}: ${code}${column.notNull ? '' : '.nullable()'},`;
 		});
@@ -56,9 +51,7 @@ export function zodModule(): string {
 }
 
 export function tableDefaults(): Record<string, Record<string, unknown>> {
-	const tables = Object.entries(schema as Record<string, unknown>).filter(
-		(entry): entry is [string, PgTable] => entry[1] instanceof PgTable,
-	);
+	const tables = pgTables();
 	return Object.fromEntries(
 		tables.map(([name, table]) => [
 			name,

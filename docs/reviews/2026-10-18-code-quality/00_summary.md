@@ -2,7 +2,7 @@
 
 Commit reviewed: `ad9437e` (master after the Postgres and PowerSync move). Thirteen reviewers each read one slice of the code in full, traced callers, and reproduced what they claimed with scratch tests before writing it down. Their reports are the numbered files beside this one; each names its scope, what it ran, and marks every finding `CONFIRMED` (reproduced or traced end to end) or `PLAUSIBLE` (a strong reading). Scratch scripts under `/tmp` that the reports cite were the reviewers' working files and are not kept.
 
-The fixes this review led to are in the PR that adds this folder. Each finding below says whether it is **fixed** there, **filed** as a task in the `app` project for a later thread, or **noted** as a product question for Stefan.
+The fixes this review led to are in the PR that adds this folder. Each finding below says whether it is **fixed** there, **filed** as a task in the `app` project for a later thread, or **noted** as a product question for Stefan. The filed items and the product questions were then addressed together in the follow-up PR, except the quick add date grammar (01 F6), which stays as it is, and the global ElevenLabs budget, which was removed rather than fixed.
 
 ## Verdict
 

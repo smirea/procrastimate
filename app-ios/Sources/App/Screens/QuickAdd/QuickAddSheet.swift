@@ -6,14 +6,6 @@ import UIKit
 /// the text set, and the project picker. It is an overlay rather than a sheet, because a sheet floats above the
 /// keyboard with a gap. Saving closes it and shows the new task in its list; dismissing discards the draft.
 struct QuickAddSheet: View {
-    let defaults: QuickAddDefaults
-
-    var body: some View {
-        QuickAddForm(defaults: defaults)
-    }
-}
-
-private struct QuickAddForm: View {
     @Environment(Store.self) private var store
     @Environment(Navigator.self) private var navigator
     @Environment(\.clock) private var clock
@@ -26,9 +18,6 @@ private struct QuickAddForm: View {
 
     @State private var draft: QuickAddDraft
     @State private var listAt: Int?
-    /// Picked with their chips, or from a place or event screen. A typed `@place` wins over the picked place.
-    @State private var location: TaskLocation?
-    @State private var event: TaskEvent?
     @State private var subtasks: [DraftSubtask] = []
     @State private var subtaskText = ""
     @State private var subtasksOpen = false
@@ -42,14 +31,15 @@ private struct QuickAddForm: View {
 
     init(defaults: QuickAddDefaults) {
         _draft = State(initialValue: QuickAddDraft(defaults: defaults))
-        _location = State(initialValue: defaults.location)
-        _event = State(initialValue: defaults.event)
     }
 
     private var showMic: Bool { draft.text.isEmpty }
+    private var context: QuickAddDraft.Context {
+        QuickAddDraft.Context(now: clock.now, projects: spaceProjects, sections: spaceSections, labels: spaceLabels, zone: clock.timeZone)
+    }
 
     var body: some View {
-        let parsed = draft.parse(now: clock.now, projects: spaceProjects, sections: spaceSections, labels: spaceLabels, in: clock.timeZone)
+        let parsed = draft.parse(context)
         let resolved = draft.resolved(parsed)
         VStack(alignment: .leading, spacing: 12) {
             SmartInput(
@@ -77,16 +67,13 @@ private struct QuickAddForm: View {
             }
             HStack(spacing: 6) {
                 chipRow(parsed, resolved)
-                QuickAddMenu(buttons: supported, priority: resolved.priority, onPriority: { setPriority($0) }, run: { run($0) })
+                QuickAddMenu(buttons: supported, priority: resolved.priority, onPriority: { draft.pick(priority: $0, context) }, run: { run($0) })
             }
             .animation(.snappy(duration: 0.16), value: parsed.tokens)
 
             HStack(spacing: 8) {
                 ProjectChip(projectId: resolved.projectId, sectionId: resolved.sectionId) { projectId, sectionId in
-                    clear(.section)
-                    clear(.project)
-                    draft.picked.projectId = projectId
-                    draft.picked.sectionId = sectionId
+                    draft.pick(projectId: projectId, sectionId: sectionId, context)
                 }
                 Spacer(minLength: 0)
                 Button("Cancel") { navigator.sheet = nil }
@@ -118,12 +105,7 @@ private struct QuickAddForm: View {
         .accessibilityIdentifier("Quick add")
         .onAppear {
             focused = true
-            // Quick add from a saved place's screen starts at that place rather than with it as a label.
-            let applied = Triggers.applyPickedLabels(spaceLabels, draft.picked.labelIds, nil)
-            if let place = applied.location {
-                location = place
-                draft.picked.labelIds = draft.picked.labelIds.filter { applied.labelIds.contains($0) }
-            }
+            draft.startAtPlace(spaceLabels)
         }
         .onChange(of: subtaskFocused) {
             if !subtaskFocused, subtaskText.isEmpty, subtasks.isEmpty { subtasksOpen = false }
@@ -209,14 +191,14 @@ private struct QuickAddForm: View {
         if parsed.recurrence ?? draft.picked.recurrence != nil { buttons.append(.repeat) }
         if !resolved.labelIds.isEmpty { buttons.append(.labels) }
         if subtasksOpen || !subtasks.isEmpty { buttons.append(.subtasks) }
-        if (parsed.location ?? location) != nil { buttons.append(.location) }
-        if event != nil { buttons.append(.event) }
+        if (parsed.location ?? draft.picked.location) != nil { buttons.append(.location) }
+        if draft.picked.event != nil { buttons.append(.event) }
         return buttons
     }
 
     /// An event stands in for the date and the repeat, as in task details.
     private var supported: [QuickAddButton] {
-        event == nil ? QuickAddButton.allCases : QuickAddButton.allCases.filter { $0 != .date && $0 != .repeat }
+        draft.picked.event == nil ? QuickAddButton.allCases : QuickAddButton.allCases.filter { $0 != .date && $0 != .repeat }
     }
 
     @ViewBuilder
@@ -243,12 +225,9 @@ private struct QuickAddForm: View {
         let trigger = openTriggers[button, default: 0]
         switch button {
         case .date:
-            DueChip(due: resolved.due, openTrigger: trigger) { due in
-                clear(.due)
-                draft.picked.due = due
-            }
+            DueChip(due: resolved.due, openTrigger: trigger) { draft.pick(due: $0, context) }
         case .priority:
-            PriorityChip(priority: resolved.priority, iconOnly: true) { setPriority($0) }
+            PriorityChip(priority: resolved.priority, iconOnly: true) { draft.pick(priority: $0, context) }
         case .reminders:
             ReminderChip(reminders: draft.picked.reminders, due: resolved.due, openTrigger: trigger) {
                 draft.picked.reminders = $0
@@ -259,63 +238,22 @@ private struct QuickAddForm: View {
             }
         case .repeat:
             RepeatChip(recurrence: parsed.recurrence ?? draft.picked.recurrence, due: resolved.due, openTrigger: trigger) {
-                setRecurrence($0, start: $1, due: resolved.due)
+                draft.pick(recurrence: $0, start: $1, due: resolved.due, context)
             }
         case .labels:
-            let place = parsed.location ?? location
+            let place = parsed.location ?? draft.picked.location
             LabelsChip(labelIds: Triggers.pickedLabels(spaceLabels, labelIds: resolved.labelIds, location: place), openTrigger: trigger) {
                 let applied = Triggers.applyPickedLabels(spaceLabels, $0, place)
-                setLabels(applied.labelIds, parsed)
-                if applied.location != place { setLocation(applied.location) }
+                draft.pick(labelIds: applied.labelIds, parsed, context)
+                if applied.location != place { draft.pick(location: applied.location, context) }
             }
         case .subtasks:
             subtaskChip
         case .location:
-            LocationChip(location: parsed.location ?? location, openTrigger: trigger) { setLocation($0) }
+            LocationChip(location: parsed.location ?? draft.picked.location, openTrigger: trigger) { draft.pick(location: $0, context) }
         case .event:
-            EventChip(event: event, openTrigger: trigger) { event = $0 }
+            EventChip(event: draft.picked.event, openTrigger: trigger) { draft.picked.event = $0 }
         }
-    }
-
-    /// A pick wins over every typed copy of its phrase.
-    private func clear(_ kind: QuickAdd.TokenKind) {
-        draft.clearTokens(
-            kind, now: clock.now, projects: spaceProjects, sections: spaceSections, labels: spaceLabels, in: clock.timeZone
-        )
-    }
-
-    private func setPriority(_ priority: Priority) {
-        clear(.priority)
-        draft.picked.priority = priority
-    }
-
-    /// A repeat picked here replaces a typed one, and moves the date when the repeat starts on another day.
-    private func setRecurrence(_ recurrence: Recurrence?, start: Due?, due: Due?) {
-        clear(.recurrence)
-        if start != due {
-            clear(.due)
-            draft.picked.due = start
-        }
-        draft.picked.recurrence = recurrence
-    }
-
-    /// A picked place wins over a typed `@place`.
-    private func setLocation(_ next: TaskLocation?) {
-        clear(.place)
-        location = next
-    }
-
-    /// Unchecking a typed label removes its `@name`, so the picker's list is what saves.
-    private func setLabels(_ labelIds: [String], _ parsed: QuickAdd.Parsed) {
-        let dropped = parsed.tokens.filter { token in
-            token.kind == .label && !labelIds.contains { id in
-                spaceLabels.first { $0.id == id }.map { "@\($0.name)".lowercased() == token.text.lowercased() } ?? false
-            }
-        }
-        draft.removeTokens(dropped)
-        // A label the text still types stays the text's, so deleting its `@name` later drops it.
-        let picked = draft.picked.labelIds
-        draft.picked.labelIds = labelIds.filter { !parsed.labelIds.contains($0) || picked.contains($0) }
     }
 
     /// Runs a `+` menu action: the checklist opens its field, and every other button opens its picker in the row.
@@ -345,14 +283,7 @@ private struct QuickAddForm: View {
     }
 
     private func submit() {
-        let parsed = draft.parse(now: clock.now, projects: spaceProjects, sections: spaceSections, labels: spaceLabels, in: clock.timeZone)
-        guard var task = draft.resolve(parsed) else { return }
-        task.location = parsed.location ?? location
-        task.event = event
-        if event != nil {
-            task.due = nil
-            task.recurrence = nil
-        }
+        guard let task = draft.resolve(draft.parse(context)) else { return }
         let typing = NewTask(subtask: QuickAdd.parseSubtask(subtaskText, now: clock.now, labels: spaceLabels, in: clock.timeZone))
         let children = subtasks.map(\.task) + (typing.map { [$0] } ?? [])
         let added: TaskItem? = withAnimation(.snappy) {
@@ -379,181 +310,4 @@ private struct RowFade: Equatable {
 private struct ParsedReminder: Hashable {
     let token: QuickAdd.Token
     let reminder: Reminder
-}
-
-/// A capsule with a quiet fill, since quick add is already glass.
-struct Chip: View {
-    let systemImage: String
-    let text: String
-    var tone: Color = .muted
-    var iconTone: Color?
-    /// Tints the capsule, as a set priority does.
-    var fill: Color?
-    /// Replaces the capsule's color outright, as a label's fill does.
-    var background: Color?
-
-    var body: some View {
-        HStack(spacing: 5) {
-            Image(systemName: systemImage).imageScale(.small).foregroundStyle(iconTone ?? tone)
-            if !text.isEmpty { Text(text).lineLimit(1) }
-        }
-        .font(.subheadline.weight(.medium))
-        .foregroundStyle(tone)
-        .padding(.horizontal, 10)
-        .frame(minHeight: 32)
-        .background(background ?? fill.map { $0.opacity(0.18) } ?? Color.ink.opacity(0.06), in: .capsule)
-        .contentShape(.capsule)
-        .transition(.scale(scale: 0.9).combined(with: .opacity))
-    }
-}
-
-struct PriorityChip: View {
-    let priority: Priority
-    var iconOnly = false
-    let onChange: @MainActor (Priority) -> Void
-
-    var body: some View {
-        Menu {
-            Picker("Priority", selection: Binding(get: { priority }, set: onChange)) {
-                ForEach(Priority.allCases, id: \.self) { level in
-                    SwiftUI.Label { Text(Format.priorityLabel(level)) } icon: { level.flag }.tag(level)
-                }
-            }
-            .pickerStyle(.inline)
-        } label: {
-            Chip(
-                systemImage: priority == .p4 ? "flag" : "flag.fill",
-                text: iconOnly ? "" : priority == .p4 ? "Priority" : "P\(priority.rawValue)",
-                tone: priority == .p4 ? .muted : .ink,
-                iconTone: priority == .p4 ? nil : priority.tone,
-                fill: iconOnly && priority != .p4 ? priority.tone : nil
-            )
-        }
-        .menuOrder(.fixed)
-        .accessibilityLabel(Format.priorityLabel(priority))
-    }
-}
-
-/// Where a task sits: a project, or Inbox, and a section of that project.
-struct Place: Hashable {
-    var projectId: String?
-    var sectionId: String?
-}
-
-extension Store {
-    /// `Project / Section`, the project alone, or `Inbox`.
-    func placeName(_ projectId: String?, _ sectionId: String?) -> String {
-        guard let project = project(projectId) else { return "Inbox" }
-        guard let section = section(sectionId), section.projectId == project.id else { return project.name }
-        return "\(project.name) / \(section.name)"
-    }
-}
-
-/// The rows of a project menu. A project with sections opens a submenu that lists `No section` and each section,
-/// since a menu cannot indent rows.
-struct PlaceMenuContent: View {
-    @Environment(Store.self) private var store
-    @Environment(\.space) private var space
-    let selection: Binding<Place>
-    @Binding var creating: Bool
-    /// A ramble entry has no section, so its picker lists projects only.
-    var showsSections = true
-
-    var body: some View {
-        let projects = store.projects(in: space)
-        let sections = showsSections ? store.data(in: space).sections : []
-        let sectioned = { (project: Project) in sections.contains { $0.projectId == project.id } }
-        Picker("Project", selection: selection) {
-            SwiftUI.Label("Inbox", systemImage: "tray").tag(Place())
-            ForEach(projects.filter { !sectioned($0) }) { project in
-                SwiftUI.Label(project.name, systemImage: "number").tag(Place(projectId: project.id))
-            }
-        }
-        .pickerStyle(.inline)
-        ForEach(projects.filter(sectioned)) { project in
-            Menu {
-                Picker(project.name, selection: selection) {
-                    SwiftUI.Label("No section", systemImage: "number").tag(Place(projectId: project.id))
-                    ForEach(StoreRules.sectionsOf(sections, project.id)) { section in
-                        SwiftUI.Label(section.name, systemImage: "rectangle.split.1x2")
-                            .tag(Place(projectId: project.id, sectionId: section.id))
-                    }
-                }
-                .pickerStyle(.inline)
-            } label: {
-                SwiftUI.Label(project.name, systemImage: selection.wrappedValue.projectId == project.id ? "checkmark" : "number")
-            }
-        }
-        if space == .own { Button("New project…", systemImage: "plus") { creating = true } }
-    }
-}
-
-struct ProjectChip: View {
-    @Environment(Store.self) private var store
-    let projectId: String?
-    var sectionId: String?
-    var showsSections = true
-    let onChange: @MainActor (String?, String?) -> Void
-
-    @State private var creating = false
-
-    var body: some View {
-        let name = store.placeName(projectId, sectionId)
-        Menu {
-            PlaceMenuContent(
-                selection: Binding(
-                    get: { Place(projectId: projectId, sectionId: sectionId) },
-                    set: { onChange($0.projectId, $0.sectionId) }
-                ),
-                creating: $creating,
-                showsSections: showsSections
-            )
-        } label: {
-            Chip(systemImage: projectId == nil ? "tray" : "number", text: name, tone: projectId == nil ? .muted : .ink)
-        }
-        .accessibilityLabel("Project \(name)")
-        .newProjectPrompt(isPresented: $creating) { onChange($0, nil) }
-    }
-}
-
-struct FlowLayout: Layout {
-    var spacing: CGFloat
-
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let rows = arrange(proposal.width ?? .infinity, subviews)
-        return CGSize(width: proposal.width ?? rows.width, height: rows.height)
-    }
-
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        let rows = arrange(bounds.width, subviews)
-        for (index, origin) in rows.origins.enumerated() {
-            subviews[index].place(at: CGPoint(x: bounds.minX + origin.x, y: bounds.minY + origin.y), proposal: .unspecified)
-        }
-    }
-
-    private func arrange(_ width: CGFloat, _ subviews: Subviews) -> (origins: [CGPoint], width: CGFloat, height: CGFloat) {
-        var origins: [CGPoint] = []
-        var x: CGFloat = 0, y: CGFloat = 0, rowHeight: CGFloat = 0, widest: CGFloat = 0
-        for subview in subviews {
-            let size = subview.sizeThatFits(.unspecified)
-            if x > 0, x + size.width > width {
-                x = 0
-                y += rowHeight + spacing
-                rowHeight = 0
-            }
-            origins.append(CGPoint(x: x, y: y))
-            x += size.width + spacing
-            rowHeight = max(rowHeight, size.height)
-            widest = max(widest, x - spacing)
-        }
-        return (origins, widest, y + rowHeight)
-    }
-}
-
-extension Priority {
-    /// Menus draw SF Symbols as templates in the app's tint, so the flag is pre-colored to keep each level's color.
-    var flag: Image {
-        let symbol = UIImage(systemName: self == .p4 ? "flag" : "flag.fill")!
-        return Image(uiImage: symbol.withTintColor(UIColor(tone), renderingMode: .alwaysOriginal))
-    }
 }

@@ -8,9 +8,9 @@
  * keeps its Keychain session, and relaunches it with `PROCRASTIMATE_SENTRY_SMOKE=1`. Then run
  * `bun scripts/sentry-check.ts --expect ios,worker`. Needs `SENTRY_AUTH_TOKEN`.
  */
-import { spawnSync } from 'node:child_process';
 import { parseArgs } from 'node:util';
 import env from './env.ts';
+import { run as runCommand } from './lib';
 
 const { values } = parseArgs({
 	options: { udid: { type: 'string' }, api: { type: 'string', default: 'http://127.0.0.1:6121' } },
@@ -24,10 +24,7 @@ const root = new URL('..', import.meta.url).pathname;
 const derived = `${root}app-ios/DerivedData/sentry-smoke`;
 const products = `${derived}/Build/Products/Debug-iphonesimulator`;
 
-function run(command: string[], extraEnv: Record<string, string> = {}) {
-	const result = spawnSync(command[0]!, command.slice(1), { stdio: 'inherit', env: { ...process.env, ...extraEnv } });
-	if (result.status !== 0) throw new Error(`\`${command.join(' ')}\` failed`);
-}
+const run = (command: string[], env?: Record<string, string>) => runCommand(command, { stdio: 'inherit', env });
 
 run([
 	'xcodebuild',
@@ -60,6 +57,6 @@ run([
 	`${products}/App.app.dSYM`,
 ]);
 run(['xcrun', 'simctl', 'install', udid, `${products}/App.app`]);
-spawnSync('xcrun', ['simctl', 'terminate', udid, 'com.stefan.procrastimate']);
+runCommand(['xcrun', 'simctl', 'terminate', udid, 'com.stefan.procrastimate'], { allowFail: true });
 run(['xcrun', 'simctl', 'launch', udid, 'com.stefan.procrastimate'], { SIMCTL_CHILD_PROCRASTIMATE_SENTRY_SMOKE: '1' });
 console.log('Launched with PROCRASTIMATE_SENTRY_SMOKE=1. Give it a minute, then run scripts/sentry-check.ts.');

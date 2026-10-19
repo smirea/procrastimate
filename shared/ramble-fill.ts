@@ -1,3 +1,4 @@
+import { typedOver } from './quick-add-merge.ts';
 import type { RambleTask } from './ramble.ts';
 import type { NewTask } from './store.ts';
 import type { ListDefaults } from './screens.ts';
@@ -19,20 +20,22 @@ export type SpokenFields = Pick<
 export function rambleNewTask(task: SpokenFields, defaults: ListDefaults | null, labels: readonly Label[]): NewTask {
 	const labelId = defaults?.labelId;
 	const event = defaults?.event ?? null;
-	const ownProject = task.projectId === null || task.projectId === defaults?.projectId;
 	const placed = applyPickedLabels(
 		labels,
 		labelId && !task.labelIds.includes(labelId) ? [labelId, ...task.labelIds] : task.labelIds,
 		defaults?.location ?? null,
 	);
+	const base = {
+		due: defaults?.date ? { date: defaults.date, time: null } : null,
+		recurrence: null,
+		priority: null,
+		projectId: defaults?.projectId ?? null,
+		sectionId: defaults?.sectionId ?? null,
+	};
 	return {
 		title: task.title.trim(),
-		projectId: task.projectId ?? defaults?.projectId ?? null,
-		sectionId: ownProject ? (defaults?.sectionId ?? null) : null,
+		...typedOver(base, task, event),
 		labelIds: placed.labelIds,
-		due: event ? null : (task.due ?? (defaults?.date ? { date: defaults.date, time: null } : null)),
-		recurrence: event ? null : task.recurrence,
-		priority: task.priority,
 		reminders: task.reminders,
 		location: placed.location,
 		event,

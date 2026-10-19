@@ -10,24 +10,21 @@ struct LocationChip: View {
     var openTrigger = 0
     let onChange: (TaskLocation?) -> Void
 
-    @State private var open = PlacesDemo.has("sheet:location")
-
     var body: some View {
         let unwatched = location.flatMap(places.unwatched)
-        Button {
-            open = true
-        } label: {
+        PickerChip(
+            label: location.map { "Location: \(Triggers.formatLocation($0))\(unwatched == nil ? "" : ", not watched")" } ?? "Add location",
+            openTrigger: openTrigger,
+            presentation: .sheet,
+            startsOpen: PlacesDemo.has("sheet:location")
+        ) {
             Chip(
                 systemImage: location == nil ? "mappin" : unwatched == nil ? "mappin.and.ellipse" : "exclamationmark.triangle",
                 text: location.map(Triggers.formatLocation) ?? "Location",
                 tone: location == nil ? .muted : .ink,
                 iconTone: location == nil ? nil : unwatched == nil ? .accent : .toneToday
             )
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(location.map { "Location: \(Triggers.formatLocation($0))\(unwatched == nil ? "" : ", not watched")" } ?? "Add location")
-        .onChange(of: openTrigger) { open = true }
-        .sheet(isPresented: $open) {
+        } content: { _ in
             LocationSheet(location: location, onChange: onChange)
         }
     }

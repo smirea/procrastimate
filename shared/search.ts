@@ -12,7 +12,12 @@ export const highlightSchema = z
 	.meta({ id: 'Highlight', description: 'One matched text and the half-open spans to highlight in it.' });
 export type Highlight = z.infer<typeof highlightSchema>;
 
-type FieldContext = { projects: ReadonlyMap<string, Project>; labels: ReadonlyMap<string, Label> };
+type FieldContext = {
+	projects: ReadonlyMap<string, Project>;
+	labels: ReadonlyMap<string, Label>;
+	/** Each project and label name folded once per search, since a task does not own them. */
+	folded: ReadonlyMap<string, Folded>;
+};
 
 /**
  * Every searchable text on a task, with how much a match in it counts. A field returns a list so that
@@ -135,9 +140,24 @@ function scoreTexts(texts: readonly string[], terms: readonly string[], folded =
 
 const FIELDS = Object.entries(TASK_FIELDS) as [TaskField, (typeof TASK_FIELDS)[TaskField]][];
 
+/** A task's own texts, folded once per task row: a row is replaced, never mutated, so the cache follows it. */
+const ownFolds = new WeakMap<Task, { title: Folded[]; notes: Folded[] }>();
+
+function foldedField(task: Task, field: TaskField, texts: readonly string[], context: FieldContext): Folded[] {
+	if (field === 'title' || field === 'notes') {
+		let own = ownFolds.get(task);
+		if (!own) {
+			own = { title: [fold(task.title)], notes: [fold(task.notes)] };
+			ownFolds.set(task, own);
+		}
+		return own[field];
+	}
+	return texts.map(text => context.folded.get(text) ?? fold(text));
+}
+
 function scoreTask(task: Task, terms: readonly string[], context: FieldContext): TaskHit | null {
 	const values = FIELDS.map(([, spec]) => spec.values(task, context));
-	const folded = values.map(texts => texts.map(fold));
+	const folded = FIELDS.map(([field], i) => foldedField(task, field, values[i]!, context));
 	if (!terms.every(term => folded.some(texts => texts.some(value => value.text.includes(term))))) return null;
 	const best = terms.map(() => 0);
 	const matches: TaskHit['matches'] = {};
@@ -170,6 +190,7 @@ export function search(
 	const context: FieldContext = {
 		projects: new Map(projects.map(p => [p.id, p])),
 		labels: new Map(labels.map(l => [l.id, l])),
+		folded: new Map([...projects, ...labels].map(item => [item.name, fold(item.name)])),
 	};
 	const hits = tasks.map(task => scoreTask(task, terms, context)).filter(hit => hit !== null);
 	return {

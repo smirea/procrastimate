@@ -1,6 +1,7 @@
 import { parseSentryTarget, SENTRY_DSN, type SentryTarget } from '../../shared/sentry';
 import type { Env } from './bindings';
-import { base64urlDecode, VAPID_SUBJECT, type Vapid } from './web-push';
+import { base64urlDecode } from './jwt';
+import { VAPID_SUBJECT, type Vapid } from './web-push';
 
 /** A deploy without any of these fails every request. `secrets.ts verify` checks them before `wrangler deploy`. */
 export const REQUIRED_WORKER_SECRETS = [

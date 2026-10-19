@@ -1,4 +1,5 @@
-import { base64urlDecode, base64urlEncode, deriveContentKey, ecdhSecret, importEcdhPublic, utf8 } from './web-push';
+import { base64urlDecode, base64urlEncode, utf8 } from './jwt';
+import { deriveContentKey, ecdhSecret, importEcdhPublic } from './web-push';
 
 export type PushReceiver = { privateKey: CryptoKey; publicKey: Uint8Array<ArrayBuffer>; auth: Uint8Array<ArrayBuffer> };
 

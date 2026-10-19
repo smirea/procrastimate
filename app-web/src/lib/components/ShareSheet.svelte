@@ -10,6 +10,7 @@
 	import { namePrefixed, type Person, type ShareAudience, type ShareTarget, type ShareView } from 'shared/sharing.ts';
 	import type { Role } from 'shared/values.ts';
 	import PersonName from './PersonName.svelte';
+	import Sheet from './Sheet.svelte';
 	import { api } from '../api.ts';
 	import { OptimisticList, type Row } from '../optimistic.svelte.ts';
 	import { session } from '../session.svelte.ts';
@@ -133,13 +134,7 @@
 	}
 </script>
 
-<div class="fixed inset-0 z-40 bg-scrim backdrop-blur-[2px]" transition:fade={motion({ duration: 160 })} onclick={() => sheets.close()} aria-hidden="true"></div>
-<div
-	role="dialog"
-	aria-label="Share"
-	class="glass-strong sheet fixed z-50 flex flex-col gap-4 overflow-y-auto overscroll-contain p-3 md:top-[14vh] md:left-1/2 md:w-96 md:-translate-x-1/2 md:rounded-panel"
-	transition:fly={motion({ y: '100%', duration: 300, easing: cubicOut, opacity: 1 })}
->
+<Sheet label="Share" desktop="fly" class="flex-col gap-4 overflow-y-auto overscroll-contain p-3 md:top-[14vh] md:left-1/2 md:w-96 md:-translate-x-1/2 md:rounded-panel">
 	<header class="flex items-center justify-between gap-2 pl-1.5">
 		<div class="min-w-0">
 			<h2 class="text-[17px] font-semibold">Share</h2>
@@ -229,7 +224,7 @@
 	{#if error}
 		<p role="alert" class="px-1.5 text-[13px] text-[var(--tone-overdue)]" in:fly={motion({ y: 4, duration: 160 })}>{error}</p>
 	{/if}
-</div>
+</Sheet>
 
 <style>
 	.heading {

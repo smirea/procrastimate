@@ -57,7 +57,17 @@ export async function sweepImages(db: Db, now: number): Promise<void> {
 				.update(images)
 				.set({ orphanedAt: null })
 				.where(and(own, inArray(images.id, unmark)));
-		if (drop.length) await db.delete(images).where(and(own, inArray(images.id, drop)));
+		// An undo can relist an image between the read and the delete, so the delete checks the tasks again.
+		if (drop.length)
+			await db
+				.delete(images)
+				.where(
+					and(
+						own,
+						inArray(images.id, drop),
+						sql`NOT EXISTS (SELECT 1 FROM ${tasks} WHERE ${tasks.userId} = ${owner} AND ${tasks.images} @> jsonb_build_array(jsonb_build_object('id', ${images.id})))`,
+					),
+				);
 	}
 }
 
@@ -83,7 +93,7 @@ export async function imagesRoute(request: Request, app: App): Promise<Response>
 	if (actor.kind !== 'human' || actor.id !== owner) {
 		const access = await accessIn(db, owner, actor);
 		if (access?.role !== 'guest') return errorResponse('FORBIDDEN', 'Not shared with you');
-		sight = await sightOf(db, owner, actor, access);
+		sight = sightOf(actor, access);
 		write = access.shares.some(share => share.role === 'edit');
 	}
 	const id = query.get('id') ?? '';

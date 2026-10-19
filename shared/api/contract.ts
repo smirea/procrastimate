@@ -90,7 +90,7 @@ export const uploadWriteSchema = z
 		op: z.enum(ROW_OPS),
 		table: z.enum(Object.values(TABLE_OF) as [string, ...string[]]),
 		id: z.string(),
-		values: z.record(z.string(), z.unknown()).optional(),
+		values: z.record(z.string(), z.unknown().meta({ 'x-swift-type': 'JSONValue' })).optional(),
 		/** The client's id for this queued write, kept on the server's log row. */
 		opId: z.string().optional(),
 	})
@@ -98,7 +98,9 @@ export const uploadWriteSchema = z
 export type UploadWrite = z.infer<typeof uploadWriteSchema>;
 
 /** Writes are a list of unknown values here and parsed one by one, so one malformed write is refused alone. */
-export const uploadRequestSchema = z.object({ writes: z.array(z.unknown()) }).meta({ id: 'UploadRequest' });
+export const uploadRequestSchema = z
+	.object({ writes: z.array(z.unknown().meta({ 'x-swift-type': 'JSONValue' })) })
+	.meta({ id: 'UploadRequest' });
 export const uploadResponseSchema = z
 	.object({ rejected: z.array(z.object({ table: z.string(), id: z.string(), reason: z.string() })) })
 	.meta({ id: 'UploadResponse' });

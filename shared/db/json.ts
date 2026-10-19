@@ -2,7 +2,8 @@ import { z } from 'zod';
 import { dictationChoiceSchema } from '../dictation.ts';
 import { labelColorSchema } from '../label-colors.ts';
 import { quickAddButtonSchema } from '../quick-add-buttons.ts';
-import { pushSubscriptionSchema, scheduledPushSchema } from '../push.ts';
+import { scheduledNotificationSchema } from '../notifications.ts';
+import { pushSubscriptionSchema } from '../push.ts';
 import {
 	clientSchema,
 	dueSchema,
@@ -38,7 +39,7 @@ export const COLUMN_VALUES = {
 	settings: { dictation: dictationChoiceSchema, quickAddButtons: z.array(quickAddButtonSchema) },
 	access: { role: roleSchema },
 	log: { fields: z.record(z.string(), z.unknown()), client: clientSchema },
-	push: { subscription: pushSubscriptionSchema, notifications: z.array(scheduledPushSchema) },
+	push: { subscription: pushSubscriptionSchema, notifications: z.array(scheduledNotificationSchema) },
 	shares: { targetKind: shareTargetKindSchema, role: roleSchema },
 	images: { bytes: z.instanceof(Uint8Array) },
 } as const;

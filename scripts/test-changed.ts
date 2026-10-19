@@ -1,7 +1,7 @@
 /**
  * Runs the unit tests related to the files lefthook passes in: every `*.test.ts` whose imports reach a changed file,
  * followed through the import graph, plus the colocated test of a changed file. Web end-to-end specs are skipped.
- * `swift test` runs when the iOS app's inputs changed: `app-ios`, `shared`, or the Swift generator.
+ * `swift test` runs when the iOS app's inputs changed, as `scripts/app-paths.txt` lists them.
  */
 import { spawnSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
@@ -9,7 +9,11 @@ import { dirname, join, relative, resolve } from 'node:path';
 
 const root = join(import.meta.dir, '..');
 const SOURCE_DIRS = ['shared', 'server', 'app-web/src', 'scripts'];
-const IOS_INPUTS = ['app-ios/', 'shared/', 'scripts/generate/'];
+/** What changes the iOS app, one anchored pattern per line, shared with the iOS and TestFlight workflows' greps. */
+const APP_PATHS = readFileSync(join(import.meta.dir, 'app-paths.txt'), 'utf8')
+	.split('\n')
+	.filter(Boolean)
+	.map(pattern => new RegExp(pattern));
 
 const files = process.argv
 	.slice(2)
@@ -76,7 +80,7 @@ function dependents(changed: readonly string[]): Set<string> {
 
 const changed = files.filter(file => !isE2E(file) && /\.(ts|mts|svelte)$/.test(file)).map(file => join(root, file));
 const selected = [...dependents(changed)].filter(file => file.endsWith('.test.ts') && !isE2E(relative(root, file)));
-const ios = files.some(file => IOS_INPUTS.some(prefix => file.startsWith(prefix)) && !file.endsWith('.md'));
+const ios = files.some(file => APP_PATHS.some(pattern => pattern.test(file)) && !file.endsWith('.md'));
 
 if (selected.length > 0) {
 	const result = spawnSync('bun', ['test', ...selected.toSorted()], { cwd: root, stdio: 'inherit' });

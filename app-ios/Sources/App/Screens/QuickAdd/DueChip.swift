@@ -10,25 +10,16 @@ struct DueChip: View {
     var openTrigger = 0
     let onChange: (Due?) -> Void
 
-    @State private var open = false
-
     var body: some View {
         let today = clock.today
-        Button {
-            open = true
-        } label: {
+        PickerChip(label: due.map { "Due \(Format.formatDue($0, today))" } ?? "Set due date", openTrigger: openTrigger) {
             Chip(
                 systemImage: due == nil ? "calendar" : "calendar.circle.fill",
                 text: due.map { Format.formatDue($0, today) } ?? "Date",
                 tone: due.map { Format.dueTone($0, today).color } ?? .muted
             )
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(due.map { "Due \(Format.formatDue($0, today))" } ?? "Set due date")
-        .onChange(of: openTrigger) { open = true }
-        .popover(isPresented: $open) {
-            DuePopover(due: due, onChange: onChange) { open = false }
-                .presentationCompactAdaptation(.popover)
+        } content: { close in
+            DuePopover(due: due, onChange: onChange, close: close)
         }
     }
 }

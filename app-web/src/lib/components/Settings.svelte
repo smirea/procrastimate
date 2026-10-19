@@ -5,9 +5,13 @@
 	import Warning from 'phosphor-svelte/lib/Warning';
 	import type { ImportSummary } from 'shared/todoist.ts';
 	import AiAccounts from './AiAccounts.svelte';
-	import DictationSwitcher from './DictationSwitcher.svelte';
+	import Desktop from 'phosphor-svelte/lib/Desktop';
+	import Moon from 'phosphor-svelte/lib/Moon';
+	import Sun from 'phosphor-svelte/lib/Sun';
+	import { DICTATION_CHOICES } from 'shared/dictation.ts';
 	import QuickAddButtonSettings from './QuickAddButtonSettings.svelte';
-	import ThemeSwitcher from './ThemeSwitcher.svelte';
+	import Segmented from './Segmented.svelte';
+	import { theme, themeChoices } from '../theme.svelte.ts';
 	import { push } from '../push.svelte.ts';
 	import { session } from '../session.svelte.ts';
 	import { store } from '../store.svelte.ts';
@@ -69,12 +73,24 @@
 <div class="flex flex-col gap-4 p-1.5 md:w-72">
 	<section class="flex flex-col gap-2">
 		<h3 class="heading">Theme</h3>
-		<ThemeSwitcher />
+		<Segmented
+			label="Theme"
+			choices={themeChoices}
+			value={theme.choice}
+			options={{ system: { label: 'System', icon: Desktop }, light: { label: 'Light', icon: Sun }, dark: { label: 'Dark', icon: Moon } }}
+			onchange={(choice) => theme.choose(choice)}
+		/>
 	</section>
 
 	<section class="flex flex-col gap-2">
 		<h3 class="heading">Dictation</h3>
-		<DictationSwitcher />
+		<Segmented
+			label="Dictation"
+			choices={DICTATION_CHOICES}
+			value={store.dictation}
+			options={{ native: { label: 'Native' }, elevenlabs: { label: 'ElevenLabs' } }}
+			onchange={(choice) => store.setDictation(choice)}
+		/>
 	</section>
 
 	<section class="flex flex-col gap-2">

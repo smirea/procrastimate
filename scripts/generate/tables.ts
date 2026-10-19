@@ -1,4 +1,5 @@
 import { getTableColumns, getTableName } from 'drizzle-orm';
+import { COLUMN_TYPES, type LocalKind } from './columns';
 import type { PgTable } from 'drizzle-orm/pg-core';
 import { COLUMN_VALUES } from '../../shared/db/json';
 import { SYNCED_TABLES } from '../../shared/db/schema';
@@ -9,17 +10,8 @@ import { SYNCED_TABLES } from '../../shared/db/schema';
  */
 
 type Column = { name: string; columnType: string; notNull: boolean; primary: boolean; enumValues?: readonly string[] };
-type Kind = 'text' | 'integer' | 'real' | 'json';
-type SyncedColumn = { key: string; name: string; kind: Kind; notNull: boolean; enumValues?: readonly string[] };
+type SyncedColumn = { key: string; name: string; kind: LocalKind; notNull: boolean; enumValues?: readonly string[] };
 export type SyncedTable = { name: string; columns: SyncedColumn[] };
-
-const KIND: Record<string, Kind> = {
-	PgText: 'text',
-	PgInteger: 'integer',
-	PgBigInt53: 'integer',
-	PgDoublePrecision: 'real',
-	PgJsonb: 'json',
-};
 
 const valuesOf = (table: string): Record<string, unknown> =>
 	(COLUMN_VALUES as Record<string, Record<string, unknown>>)[table] ?? {};
@@ -28,7 +20,7 @@ export function syncedTables(): SyncedTable[] {
 	return Object.values(SYNCED_TABLES).map(table => {
 		const name = getTableName(table as PgTable);
 		const columns = Object.entries(getTableColumns(table as PgTable) as Record<string, Column>).map(([key, column]) => {
-			const kind = KIND[column.columnType];
+			const kind = COLUMN_TYPES[column.columnType]?.local;
 			if (!kind) throw new Error(`${name}.${key}: PowerSync has no type for ${column.columnType}`);
 			return { key, name: column.name, kind, notNull: column.notNull, enumValues: column.enumValues };
 		});
@@ -116,7 +108,7 @@ export function webTablesModule(): string {
 
 export type SwiftModel = { name: string; properties: string[]; required: string[] };
 
-const POWERSYNC_TYPE: Record<Kind, string> = { text: 'text', integer: 'integer', real: 'real', json: 'text' };
+const POWERSYNC_TYPE: Record<LocalKind, string> = { text: 'text', integer: 'integer', real: 'real', json: 'text' };
 
 /**
  * The iOS side of every synced table: the PowerSync schema, and each table's layout on the Core type that holds its

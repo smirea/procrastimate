@@ -10,23 +10,20 @@ struct EventChip: View {
     var openTrigger = 0
     let onChange: (TaskEvent?) -> Void
 
-    @State private var open = PlacesDemo.has("sheet:event")
-
     var body: some View {
-        Button {
-            open = true
-        } label: {
+        PickerChip(
+            label: event.map { "Event: \(Triggers.formatEvent($0))" } ?? "Add event",
+            openTrigger: openTrigger,
+            presentation: .sheet,
+            startsOpen: PlacesDemo.has("sheet:event")
+        ) {
             Chip(
                 systemImage: event == nil ? "calendar.badge.plus" : "calendar.badge.clock",
                 text: event.map(Triggers.formatEvent) ?? "Event",
                 tone: event == nil ? .muted : .ink,
                 iconTone: event == nil ? nil : .toneWeek
             )
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(event.map { "Event: \(Triggers.formatEvent($0))" } ?? "Add event")
-        .onChange(of: openTrigger) { open = true }
-        .sheet(isPresented: $open) {
+        } content: { _ in
             EventSheet(event: event, onChange: onChange)
         }
     }

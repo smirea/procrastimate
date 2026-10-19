@@ -6,11 +6,24 @@ struct TaskDetailsPage: View {
     let taskID: String
     let navigation: DetailsNavigation
 
+    @State private var parentID: String?
+    @State private var left = false
+
     var body: some View {
         if let task = store.task(taskID) {
-            TaskDetailsForm(task: task, navigation: navigation)
+            TaskDetailsForm(task: task, navigation: navigation, leave: leave)
                 .environment(\.space, store.space(ofTask: task.id) ?? .own)
+                .onChange(of: task.parentId, initial: true) { _, parent in parentID = parent }
+        } else {
+            // Deleted on another device, or by a parent's deletion: the page returns where a local delete would.
+            Color.clear.onAppear { leave(parentID) }
         }
+    }
+
+    private func leave(_ parentID: String?) {
+        guard !left else { return }
+        left = true
+        navigation.leave(parentID)
     }
 }
 
@@ -22,6 +35,7 @@ private struct TaskDetailsForm: View {
 
     let task: TaskItem
     let navigation: DetailsNavigation
+    let leave: (_ parentID: String?) -> Void
 
     @State private var title: String
     @State private var base: String
@@ -29,9 +43,10 @@ private struct TaskDetailsForm: View {
     @State private var keyboardShown = false
     @FocusState private var notesFocused: Bool
 
-    init(task: TaskItem, navigation: DetailsNavigation) {
+    init(task: TaskItem, navigation: DetailsNavigation, leave: @escaping (_ parentID: String?) -> Void) {
         self.task = task
         self.navigation = navigation
+        self.leave = leave
         _title = State(initialValue: task.title)
         _base = State(initialValue: task.title)
     }
@@ -81,27 +96,27 @@ private struct TaskDetailsForm: View {
                     if task.event != nil {
                         eventChip
                     } else {
-                        DueChip(due: draft.due) { store.updateTask(task.id, TaskDetails.setDue(task, $0)) }
+                        DueChip(due: draft.due) { due in pick { TaskDetails.setDue($0, due) } }
                         RepeatChip(recurrence: draft.recurrence, due: draft.due) { recurrence, due in
-                            store.updateTask(task.id, TaskPatch(due: .some(due), recurrence: .some(recurrence)))
+                            pick { _ in TaskPatch(due: .some(due), recurrence: .some(recurrence)) }
                         }
                     }
-                    PriorityChip(priority: draft.priority) {
-                        store.updateTask(task.id, TaskPatch(priority: $0))
-                    }
+                    PriorityChip(priority: draft.priority) { priority in pick { _ in TaskPatch(priority: priority) } }
                     ReminderChip(
                         reminders: draft.reminders,
                         due: task.event == nil ? draft.due : Triggers.scheduledDue(task, clock.today, in: clock.timeZone),
                         relativeOnly: task.event != nil
-                    ) {
-                        store.updateTask(task.id, TaskPatch(reminders: $0))
+                    ) { reminders in
+                        pick { _ in TaskPatch(reminders: reminders) }
                     }
-                    LocationChip(location: draft.location) { store.updateTask(task.id, TaskPatch(location: .some($0))) }
+                    LocationChip(location: draft.location) { location in pick { _ in TaskPatch(location: .some(location)) } }
                     if task.event == nil { eventChip }
                     let labels = store.labels(in: space)
-                    LabelsChip(labelIds: Triggers.pickedLabels(labels, labelIds: draft.labelIds, location: draft.location)) {
-                        let applied = Triggers.applyPickedLabels(labels, $0, task.location)
-                        store.updateTask(task.id, TaskPatch(labelIds: applied.labelIds, location: .some(applied.location)))
+                    LabelsChip(labelIds: Triggers.pickedLabels(labels, labelIds: draft.labelIds, location: draft.location)) { picked in
+                        pick { current in
+                            let applied = Triggers.applyPickedLabels(labels, picked, current.location)
+                            return TaskPatch(labelIds: applied.labelIds, location: .some(applied.location))
+                        }
                     }
                 }
                 .animation(.snappy(duration: 0.16), value: draft)
@@ -215,10 +230,9 @@ private struct TaskDetailsForm: View {
     /// repeat.
     private var eventChip: some View {
         EventChip(event: task.event) { event in
-            store.updateTask(
-                task.id,
+            pick { _ in
                 event == nil ? TaskPatch(event: .some(nil)) : TaskPatch(due: .some(nil), recurrence: .some(nil), event: .some(event))
-            )
+            }
         }
     }
 
@@ -238,7 +252,7 @@ private struct TaskDetailsForm: View {
                 .accessibilityLabel("Back to \(parent.title)")
             } else {
                 ProjectMenu(projectId: draft.projectId, sectionId: draft.sectionId) { projectId, sectionId in
-                    store.updateTask(task.id, TaskPatch(projectId: .some(projectId), sectionId: .some(sectionId)))
+                    pick { _ in TaskPatch(projectId: .some(projectId), sectionId: .some(sectionId)) }
                 }
                 .disabled(locked)
             }
@@ -279,16 +293,24 @@ private struct TaskDetailsForm: View {
         }
     }
 
+    /// A chip shows the draft, title phrases included, so the title lands first: a patch built on the stale task would
+    /// write the typed reminder or repeat a second time, or wipe a just-committed place.
+    private func pick(_ patch: (TaskItem) -> TaskPatch) {
+        commitTitle()
+        guard let current = store.task(task.id) else { return }
+        store.updateTask(task.id, patch(current))
+    }
+
     private func complete() {
         commitTitle()
         let parentID = task.parentId
         actions.complete(task)
-        navigation.leave(parentID)
+        leave(parentID)
     }
 
     private func delete() {
         let parentID = task.parentId
-        navigation.leave(parentID)
+        leave(parentID)
         actions.delete(task)
     }
 }

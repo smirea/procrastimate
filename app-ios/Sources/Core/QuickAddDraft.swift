@@ -41,6 +41,27 @@ public struct QuickAddDraft: Hashable, Sendable {
         public var reminders: [Reminder]
         /// Set by the repeat chip. A typed repeat wins.
         public var recurrence: Recurrence? = nil
+        /// Picked with its chip, or from a place screen. A typed `@place` wins.
+        public var location: TaskLocation? = nil
+        /// Picked with its chip, or from an event screen. It stands in for the date and the repeat.
+        public var event: TaskEvent? = nil
+    }
+
+    /// What a parse reads: the clock and the names of the space the sheet opened on.
+    public struct Context: Sendable {
+        public let now: Date
+        public let projects: [Project]
+        public let sections: [ProjectSection]
+        public let labels: [Label]
+        public let zone: TimeZone
+
+        public init(now: Date, projects: [Project], sections: [ProjectSection] = [], labels: [Label], zone: TimeZone) {
+            self.now = now
+            self.projects = projects
+            self.sections = sections
+            self.labels = labels
+            self.zone = zone
+        }
     }
 
     public let defaults: Defaults
@@ -59,8 +80,70 @@ public struct QuickAddDraft: Hashable, Sendable {
             projectId: defaults.projectId,
             sectionId: defaults.sectionId,
             labelIds: defaults.labelId.map { [$0] } ?? [],
-            reminders: []
+            reminders: [],
+            location: defaults.location,
+            event: defaults.event
         )
+    }
+
+    /// Quick add from a saved place's screen starts at that place rather than with it as a label.
+    public mutating func startAtPlace(_ labels: [Label]) {
+        let applied = Triggers.applyPickedLabels(labels, picked.labelIds, nil)
+        guard let place = applied.location else { return }
+        picked.location = place
+        picked.labelIds = picked.labelIds.filter { applied.labelIds.contains($0) }
+    }
+
+    public func parse(_ context: Context) -> QuickAdd.Parsed {
+        parse(now: context.now, projects: context.projects, sections: context.sections, labels: context.labels, in: context.zone)
+    }
+
+    /// A pick wins over every typed copy of its phrase.
+    public mutating func clearTokens(_ kind: QuickAdd.TokenKind, _ context: Context) {
+        clearTokens(kind, now: context.now, projects: context.projects, sections: context.sections, labels: context.labels, in: context.zone)
+    }
+
+    public mutating func pick(priority: Priority, _ context: Context) {
+        clearTokens(.priority, context)
+        picked.priority = priority
+    }
+
+    public mutating func pick(due: Due?, _ context: Context) {
+        clearTokens(.due, context)
+        picked.due = due
+    }
+
+    /// A repeat picked here replaces a typed one, and moves the date when the repeat starts on another day.
+    public mutating func pick(recurrence: Recurrence?, start: Due?, due: Due?, _ context: Context) {
+        clearTokens(.recurrence, context)
+        if start != due { pick(due: start, context) }
+        picked.recurrence = recurrence
+    }
+
+    /// A picked place wins over a typed `@place`.
+    public mutating func pick(location: TaskLocation?, _ context: Context) {
+        clearTokens(.place, context)
+        picked.location = location
+    }
+
+    public mutating func pick(projectId: String?, sectionId: String?, _ context: Context) {
+        clearTokens(.section, context)
+        clearTokens(.project, context)
+        picked.projectId = projectId
+        picked.sectionId = sectionId
+    }
+
+    /// Unchecking a typed label removes its `@name`, so the picker's list is what saves.
+    public mutating func pick(labelIds: [String], _ parsed: QuickAdd.Parsed, _ context: Context) {
+        let dropped = parsed.tokens.filter { token in
+            token.kind == .label && !labelIds.contains { id in
+                context.labels.first { $0.id == id }.map { "@\($0.name)".lowercased() == token.text.lowercased() } ?? false
+            }
+        }
+        removeTokens(dropped)
+        // A label the text still types stays the text's, so deleting its `@name` later drops it.
+        let kept = picked.labelIds
+        picked.labelIds = labelIds.filter { !parsed.labelIds.contains($0) || kept.contains($0) }
     }
 
     public mutating func setText(_ value: String) {
@@ -114,20 +197,24 @@ public struct QuickAddDraft: Hashable, Sendable {
         text = Self.runsOfWhitespace.replace(Self.string(units[...])) { _ in " " }
     }
 
-    /// The task to save, or nil while the title is empty.
+    /// The task to save, or nil while the title is empty. An event stands in for the date and the repeat, as in
+    /// task details.
     public func resolve(_ parsed: QuickAdd.Parsed) -> NewTask? {
         guard !parsed.title.isEmpty else { return nil }
         let resolved = resolved(parsed)
-        return NewTask(
+        var task = NewTask(
             title: parsed.title,
             projectId: resolved.projectId,
             sectionId: resolved.sectionId,
             labelIds: resolved.labelIds,
-            due: resolved.due,
-            recurrence: parsed.recurrence ?? picked.recurrence,
+            due: picked.event == nil ? resolved.due : nil,
+            recurrence: picked.event == nil ? parsed.recurrence ?? picked.recurrence : nil,
             priority: resolved.priority,
             reminders: parsed.reminders + picked.reminders
         )
+        task.location = parsed.location ?? picked.location
+        task.event = picked.event
+        return task
     }
 
     /// The values the chips show: the text's when it has one, else the pick's. A typed project other than the picked
@@ -183,8 +270,8 @@ public struct QuickAddDraft: Hashable, Sendable {
         ]
     }
 
-    private static let runsOfWhitespace = QuickAdd.Pattern(#"\s{2,}"#)
-    private static let leadingWhitespace = QuickAdd.Pattern(#"^\s+"#)
+    private static let runsOfWhitespace = JSRegex(#"\s{2,}"#)
+    private static let leadingWhitespace = JSRegex(#"^\s+"#)
 
     private static func string(_ units: ArraySlice<UInt16>) -> String { String(decoding: units, as: UTF16.self) }
 }

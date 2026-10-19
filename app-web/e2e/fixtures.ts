@@ -3,7 +3,7 @@ import { strToU8, zipSync } from 'fflate';
 import { getTableColumns } from 'drizzle-orm';
 import { ENTITY_TABLES } from '../../shared/db/schema';
 import type { Kind } from '../../shared/model';
-import { TABLE_OF } from '../../shared/rows';
+import { KIND_OF, TABLE_OF } from '../../shared/rows';
 import { todoistBackupFiles } from '../../shared/fixtures/todoist-backup.mts';
 import { SENTRY_TUNNEL_PATH } from '../../shared/sentry';
 
@@ -137,7 +137,50 @@ export const quietTest = base.extend<{ sentryOff: (context: BrowserContext) => B
 	],
 });
 
-export const test = quietTest.extend<{ app: App }>({
+export type Device = { app: App; page: Page; context: BrowserContext; email: string; name: string };
+
+type DeviceOptions = {
+	timezoneId?: string;
+	/** A new account with this name, instead of the project's shared account. */
+	person?: string;
+	/** The view to open, `/no-date` unless told otherwise, since a fresh account's Inbox is empty either way. */
+	path?: string;
+	heading?: string;
+};
+
+/** Opens devices as other browsers of the same account, or as other people, and closes them with the test. */
+export class Devices {
+	readonly #opened: BrowserContext[] = [];
+
+	constructor(private readonly browser: Browser) {}
+
+	async open({ timezoneId, person, path = '/no-date', heading = 'No date' }: DeviceOptions = {}): Promise<Device> {
+		const context = await deviceContext(this.browser, { timezoneId });
+		this.#opened.push(context);
+		let email = '';
+		if (person) {
+			email = `e2e-${crypto.randomUUID()}@procrastimate.test`;
+			const signUp = await context.request.post('/api/auth/sign-up/email', {
+				data: { email, password: E2E_PASSWORD, name: person },
+			});
+			expect(signUp.ok(), await signUp.text()).toBe(true);
+		} else {
+			await signInAccount(context);
+		}
+		const page = await context.newPage();
+		await page.clock.setFixedTime(NOW);
+		await page.goto(path);
+		// WebKit on the mobile project takes longer to bring the first page up.
+		await expect(page.getByRole('heading', { name: heading })).toBeVisible({ timeout: 30_000 });
+		return { app: new App(page), page, context, email, name: person ?? 'E2E' };
+	}
+
+	async close() {
+		for (const context of this.#opened.splice(0)) await context.close();
+	}
+}
+
+export const test = quietTest.extend<{ app: App; devices: Devices }>({
 	context: async ({ context, sentryOff }, use) => {
 		sentryOff(context);
 		await signInAccount(context);
@@ -153,9 +196,25 @@ export const test = quietTest.extend<{ app: App }>({
 		await page.evaluate(() => document.fonts.ready.then(() => undefined));
 		await use(new App(page));
 	},
+	devices: async ({ browser }, use) => {
+		const devices = new Devices(browser);
+		await use(devices);
+		await devices.close();
+	},
 });
 
 export { expect };
+
+/** Column names and JSON-encoded objects, as the upload route reads a row. */
+function rowValues(kind: Kind, fields: Record<string, unknown>) {
+	const columns = getTableColumns(ENTITY_TABLES[kind]) as Record<string, { name: string }>;
+	return Object.fromEntries(
+		Object.entries(fields).map(([key, value]) => [
+			columns[key]!.name,
+			value !== null && typeof value === 'object' ? JSON.stringify(value) : value,
+		]),
+	);
+}
 
 export class App {
 	constructor(readonly page: Page) {}
@@ -278,24 +337,48 @@ export class App {
 	 */
 	async pushFromOtherDevice(...patches: { kind: Kind; id: string; fields: Record<string, unknown> }[]) {
 		await expect.poll(() => this.pending(), { timeout: 15_000 }).toBe(0);
-		const writes = patches.map(({ kind, id, fields }) => {
-			const columns = getTableColumns(ENTITY_TABLES[kind]) as Record<string, { name: string; dataType: string }>;
-			const values = Object.fromEntries(
-				Object.entries(fields).map(([key, value]) => [
-					columns[key]!.name,
-					value !== null && typeof value === 'object' ? JSON.stringify(value) : value,
-				]),
-			);
-			return { op: 'patch', table: TABLE_OF[kind], id, values };
-		});
-		const response = await this.page.request.post('/api/upload', { data: { writes } });
-		expect(response.status()).toBe(200);
-		expect((await response.json()).rejected).toEqual([]);
+		await this.#upload(
+			patches.map(({ kind, id, fields }) => ({
+				op: 'patch',
+				table: TABLE_OF[kind],
+				id,
+				values: rowValues(kind, fields),
+			})),
+		);
 		for (const { kind, id, fields } of patches) {
 			await expect
 				.poll(() => this.page.evaluate(([kind, id]) => window.procrastimate.entity(kind!, id!), [kind, id]))
 				.toMatchObject(fields);
 		}
+	}
+
+	/**
+	 * Writes whole rows as another device of the account would, for a spec that needs many tasks and not the typing.
+	 * Each row's `id` and the account's `userId` are filled in; the rest is the row as `shared/testing.ts` shapes it.
+	 */
+	async seed(...rows: { kind: Kind; fields: Record<string, unknown> }[]) {
+		const me = (await (await this.page.request.get('/api/me')).json()) as { id: string };
+		const writes = rows.map(({ kind, fields }) => {
+			const id = (fields.id as string | undefined) ?? crypto.randomUUID();
+			return { op: 'put', table: TABLE_OF[kind], id, values: rowValues(kind, { ...fields, id, userId: me.id }) };
+		});
+		await this.#upload(writes);
+		const last = writes.at(-1)!;
+		await expect
+			.poll(
+				() =>
+					this.page.evaluate(([kind, id]) => window.procrastimate.entity(kind!, id!), [KIND_OF[last.table], last.id]),
+				{
+					timeout: 15_000,
+				},
+			)
+			.toMatchObject({ id: last.id });
+	}
+
+	async #upload(writes: unknown[]) {
+		const response = await this.page.request.post('/api/upload', { data: { writes } });
+		expect(response.status()).toBe(200);
+		expect((await response.json()).rejected).toEqual([]);
 	}
 
 	async setNow(date: Date) {

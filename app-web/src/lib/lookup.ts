@@ -42,13 +42,38 @@ export const useLookup = (): Lookup => getContext<Lookup | undefined>(KEY) ?? st
 
 /** A public link carries no comments, so its rows show none. */
 export function provideReadOnlyLookup(data: () => Pick<StoreData, 'tasks' | 'projects' | 'sections' | 'labels'>) {
-	const children = () => groupChildren(data().tasks);
+	const byId = <T extends { id: string }>(list: readonly T[]) => new Map(list.map(item => [item.id, item]));
+	type Data = ReturnType<typeof data>;
+	// This module is not compiled with runes, so the index is memoized on the view's identity, which the page keeps.
+	let built: {
+		source: Data;
+		tasks: Map<string, Task>;
+		projects: Map<string, Project>;
+		sections: Map<string, Section>;
+		labels: Map<string, Label>;
+		children: Map<string, Task[]>;
+	} | null = null;
+	const index = () => {
+		const source = data();
+		if (built?.source !== source) {
+			const { tasks, projects, sections, labels } = source;
+			built = {
+				source,
+				tasks: byId(tasks),
+				projects: byId(projects),
+				sections: byId(sections),
+				labels: byId(labels),
+				children: groupChildren(tasks),
+			};
+		}
+		return built;
+	};
 	setContext<Lookup>(KEY, {
-		project: id => (id ? data().projects.find(p => p.id === id) : undefined),
-		section: id => (id ? data().sections.find(s => s.id === id) : undefined),
-		labelsOf: task => task.labelIds.flatMap(id => data().labels.find(l => l.id === id) ?? []),
-		task: id => data().tasks.find(t => t.id === id),
-		subtasks: id => children().get(id) ?? [],
+		project: id => (id ? index().projects.get(id) : undefined),
+		section: id => (id ? index().sections.get(id) : undefined),
+		labelsOf: task => task.labelIds.flatMap(id => index().labels.get(id) ?? []),
+		task: id => index().tasks.get(id),
+		subtasks: id => index().children.get(id) ?? [],
 		canEdit: () => false,
 		commentBadge: () => undefined,
 		open: null,

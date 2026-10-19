@@ -2,8 +2,9 @@ import { z } from 'zod';
 import { defaultLabelColor, type LabelColor } from './label-colors.ts';
 import * as subtasks from './subtasks.ts';
 import { bySiblingOrder, moveOrders } from './order.ts';
-import { commentSchema, labelSchema, projectSchema, readSchema, sectionSchema, taskSchema } from './model.ts';
+import { labelSchema, projectSchema, sectionSchema, snapshotSchema, taskSchema } from './model.ts';
 import { DEFAULT_PRIORITY, type DateKey, type Label, type Project, type Section, type Task } from './task.ts';
+import { byCreation } from './snapshot.ts';
 import { placeKey } from './triggers.ts';
 import type { SavedPlace, TaskLocation } from './values.ts';
 
@@ -11,21 +12,10 @@ import type { SavedPlace, TaskLocation } from './values.ts';
  * The store's commands as pure functions over its data, so the web store and the Swift store apply the same
  * rules. Each returns new arrays and new objects for what it changes and leaves its input untouched.
  */
-export const storeDataSchema = z
-	.object({
-		tasks: z.array(taskSchema),
-		projects: z.array(projectSchema),
-		sections: z.array(sectionSchema),
-		labels: z.array(labelSchema),
-		comments: z.array(commentSchema),
-		/** Only the user's own space holds read markers; a shared space's stay empty. */
-		reads: z.array(readSchema),
-	})
-	.meta({
-		id: 'StoreData',
-		description:
-			'Everything the store holds that syncs: tasks, projects, sections, labels, comments, and read markers.',
-	});
+export const storeDataSchema = snapshotSchema.omit({ settings: true }).meta({
+	id: 'StoreData',
+	description: 'Everything the store holds that syncs: tasks, projects, sections, labels, comments, and read markers.',
+});
 export type StoreData = z.infer<typeof storeDataSchema>;
 
 export const creationSchema = z
@@ -69,6 +59,9 @@ export const taskEditSchema = taskSchema
 		images: true,
 	})
 	.partial()
+	.refine(patch => !(patch.event && (patch.due || patch.recurrence)), {
+		message: 'An event stands in for the date and the repeat',
+	})
 	.meta({
 		id: 'TaskEdit',
 		description:
@@ -148,9 +141,6 @@ export const deletedSchema = z
 	});
 export type Deleted = z.infer<typeof deletedSchema>;
 
-const byCreation = (a: { id: string; createdAt: number }, b: { id: string; createdAt: number }) =>
-	a.createdAt - b.createdAt || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
-
 /** Tasks stay sorted by `createdAt`, then `id`, so every client and the sync server agree on one order. */
 export const sortTasks = (tasks: readonly Task[]) => tasks.toSorted(byCreation);
 
@@ -214,6 +204,7 @@ export function updateTask(data: StoreData, id: string, patch: TaskPatch): Store
 	const task = data.tasks.find(t => t.id === id);
 	if (!task) return data;
 	let next: Partial<Task> & Pick<Task, 'id'> = { ...patch, id };
+	if (patch.event) next = { ...next, due: null, recurrence: null };
 	if (patch.sectionId !== undefined || (patch.projectId !== undefined && patch.projectId !== task.projectId)) {
 		const section = patch.sectionId ? data.sections.find(s => s.id === patch.sectionId) : undefined;
 		const asked = patch.projectId === undefined ? task.projectId : patch.projectId;
@@ -246,8 +237,20 @@ export function completeTask(
 	return { data: { ...data, tasks: put(data.tasks, result.changed) }, completion };
 }
 
-export function reopenTask(data: StoreData, id: string): StoreData {
-	return { ...data, tasks: put(data.tasks, subtasks.reopenTask(data.tasks, id)) };
+export const reopenedTaskSchema = taskSchema.pick({ id: true, completedAt: true }).meta({
+	id: 'ReopenedTask',
+	description: 'A task a reopen cleared, with the `completedAt` it had, so undo can put it back.',
+});
+export type ReopenedTask = z.infer<typeof reopenedTaskSchema>;
+
+/** `reopened` is each task that was completed, with its `completedAt`, so undo can put the completions back. */
+export function reopenTask(data: StoreData, id: string): { data: StoreData; reopened: ReopenedTask[] } {
+	const changed = subtasks.reopenTask(data.tasks, id);
+	const before = new Map(data.tasks.map(t => [t.id, t.completedAt]));
+	return {
+		data: { ...data, tasks: put(data.tasks, changed) },
+		reopened: changed.map(t => ({ id: t.id, completedAt: before.get(t.id)! })),
+	};
 }
 
 export function restoreCompletion(data: StoreData, previous: readonly CompletionState[]): StoreData {
@@ -326,11 +329,14 @@ export function restoreExploded(data: StoreData, previous: readonly ExplodedStat
 	return { ...data, tasks: put(data.tasks, restored) };
 }
 
+/** A taken name, ignoring case, returns the project that has it, since `#name` must resolve to one project. */
 export function addProject(
 	data: StoreData,
 	name: string,
 	{ id, now }: Creation,
 ): { data: StoreData; project: Project } {
+	const existing = data.projects.find(p => sameName(p.name, name));
+	if (existing) return { data, project: existing };
 	const last = projectsInOrder(data.projects).at(-1);
 	const project: Project = { id, name, order: last ? last.order + 1 : 0, createdAt: now };
 	return { data: { ...data, projects: [...data.projects, project] }, project };
@@ -345,7 +351,9 @@ export function moveProject(data: StoreData, id: string, index: number): StoreDa
 	return { ...data, projects: data.projects.map(p => (orders.has(p.id) ? { ...p, order: orders.get(p.id)! } : p)) };
 }
 
+/** A rename to another project's name, ignoring case, changes nothing. */
 export function renameProject(data: StoreData, id: string, name: string): StoreData {
+	if (data.projects.some(p => p.id !== id && sameName(p.name, name))) return data;
 	return { ...data, projects: data.projects.map(p => (p.id === id ? { ...p, name } : p)) };
 }
 
@@ -362,8 +370,11 @@ export function deleteProject(data: StoreData, id: string): StoreData {
 export const sectionsOf = (sections: readonly Section[], projectId: string) =>
 	sections.filter(s => s.projectId === projectId).toSorted(bySiblingOrder);
 
+/** Names are unique ignoring case, since `#name`, `/name`, and `@name` must each resolve to one record. */
+export const sameName = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
+
 const takenIn = (data: StoreData, projectId: string, name: string, except?: string) =>
-	data.sections.some(s => s.id !== except && s.projectId === projectId && s.name.toLowerCase() === name.toLowerCase());
+	data.sections.some(s => s.id !== except && s.projectId === projectId && sameName(s.name, name));
 
 /**
  * Adds a section last in its project. Names stay unique in a project ignoring case, since `/name` must resolve to one
@@ -375,7 +386,7 @@ export function addSection(
 	name: string,
 	{ id, now }: Creation,
 ): { data: StoreData; section: Section } {
-	const existing = data.sections.find(s => s.projectId === projectId && s.name.toLowerCase() === name.toLowerCase());
+	const existing = data.sections.find(s => s.projectId === projectId && sameName(s.name, name));
 	if (existing) return { data, section: existing };
 	const last = sectionsOf(data.sections, projectId).at(-1);
 	const section: Section = { id, projectId, name, order: last ? last.order + 1 : 0, createdAt: now };
@@ -473,7 +484,10 @@ export function undelete(data: StoreData, deleted: Deleted): StoreData {
 	};
 }
 
+/** A taken name, ignoring case, returns the label that has it, since `@name` must resolve to one label. */
 export function addLabel(data: StoreData, name: string, { id, now }: Creation): { data: StoreData; label: Label } {
+	const existing = data.labels.find(l => sameName(l.name, name));
+	if (existing) return { data, label: existing };
 	const label: Label = { id, name, color: defaultLabelColor(name), place: null, createdAt: now };
 	return { data: { ...data, labels: [...data.labels, label] }, label };
 }
@@ -500,7 +514,7 @@ export function savePlace(
 	place: SavedPlace,
 	{ id, now }: Creation,
 ): { data: StoreData; label: Label | null } {
-	if (data.labels.some(l => l.name.toLowerCase() === name.toLowerCase())) return { data, label: null };
+	if (data.labels.some(l => sameName(l.name, name))) return { data, label: null };
 	const label: Label = { id, name, color: defaultLabelColor(name), place, createdAt: now };
 	const tasks = relocate(data.tasks, placeKey(place), { name, radius: place.radius });
 	return { data: { ...data, labels: [...data.labels, label], tasks }, label };
@@ -522,7 +536,7 @@ export function setPlaceRadius(data: StoreData, id: string, radius: number): Sto
  * open tasks at it.
  */
 export function renameLabel(data: StoreData, id: string, name: string): StoreData {
-	const taken = data.labels.some(l => l.id !== id && l.name.toLowerCase() === name.toLowerCase());
+	const taken = data.labels.some(l => l.id !== id && sameName(l.name, name));
 	const label = data.labels.find(l => l.id === id);
 	if (taken || !label) return data;
 	return {

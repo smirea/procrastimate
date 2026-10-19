@@ -1,9 +1,10 @@
 import Core
 
-/// The live store, navigation, and clock the intents use. Registered from `ProcrastimateApp.init` before any intent runs.
+/// The live store, navigation, and clock the intents use. `ProcrastimateApp.init` installs it before any intent can run,
+/// since the system launches the app to run one.
 @MainActor
 final class IntentSession {
-    static var current: IntentSession?
+    static var current: IntentSession!
 
     let store: Store
     let navigator: Navigator

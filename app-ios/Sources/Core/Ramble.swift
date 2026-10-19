@@ -1,133 +1,10 @@
 import Foundation
 
-/// One drafted task from a ramble. Fields stay empty unless a spoken phrase set them. Subtasks nest under the task
-/// they were spoken with, and `segment` is the transcript span the task came from, in UTF-16 offsets.
-public struct RambleTask: Hashable, Sendable {
-    public var segment: RambleSpan
-    public var title: String
-    public var notes: String
-    public var due: Due?
-    public var recurrence: Recurrence?
-    public var priority: Priority?
-    public var reminders: [Reminder]
-    public var projectId: String?
-    public var labelIds: [String]
-    public var subtasks: [RambleTask]
-
-    public init(
-        segment: RambleSpan,
-        title: String,
-        notes: String = "",
-        due: Due? = nil,
-        recurrence: Recurrence? = nil,
-        priority: Priority? = nil,
-        reminders: [Reminder] = [],
-        projectId: String? = nil,
-        labelIds: [String] = [],
-        subtasks: [RambleTask] = []
-    ) {
-        self.segment = segment
-        self.title = title
-        self.notes = notes
-        self.due = due
-        self.recurrence = recurrence
-        self.priority = priority
-        self.reminders = reminders
-        self.projectId = projectId
-        self.labelIds = labelIds
-        self.subtasks = subtasks
-    }
-}
-
-public struct RambleSpan: Codable, Hashable, Sendable {
-    public var start: Int
-    public var end: Int
-
-    public init(start: Int, end: Int) {
-        self.start = start
-        self.end = end
-    }
-}
-
-public struct RambleToken: Codable, Hashable, Sendable {
-    public var kind: String
-    public var start: Int
-    public var end: Int
-    public var text: String
-
-    public init(kind: String, start: Int, end: Int, text: String) {
-        self.kind = kind
-        self.start = start
-        self.end = end
-        self.text = text
-    }
-}
-
-public struct RambleDraft: Hashable, Sendable {
-    public var tasks: [RambleTask]
-    public var tokens: [RambleToken]
-    public var ended: Bool
-
-    public init(tasks: [RambleTask], tokens: [RambleToken], ended: Bool) {
-        self.tasks = tasks
-        self.tokens = tokens
-        self.ended = ended
-    }
-}
-
-extension RambleTask: Codable {
-    enum CodingKeys: String, CodingKey {
-        case segment, title, notes, due, recurrence, priority, reminders, projectId, labelIds, subtasks
-    }
-
-    public init(from decoder: Decoder) throws {
-        let c = try decoder.container(keyedBy: CodingKeys.self)
-        segment = try c.decode(RambleSpan.self, forKey: .segment)
-        title = try c.decode(String.self, forKey: .title)
-        notes = try c.decode(String.self, forKey: .notes)
-        due = try c.decode(Due?.self, forKey: .due)
-        recurrence = try c.decode(Recurrence?.self, forKey: .recurrence)
-        priority = try c.decode(Priority?.self, forKey: .priority)
-        reminders = try c.decode([Reminder].self, forKey: .reminders)
-        projectId = try c.decode(String?.self, forKey: .projectId)
-        labelIds = try c.decode([String].self, forKey: .labelIds)
-        subtasks = try c.decode([RambleTask].self, forKey: .subtasks)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var c = encoder.container(keyedBy: CodingKeys.self)
-        try c.encode(segment, forKey: .segment)
-        try c.encode(title, forKey: .title)
-        try c.encode(notes, forKey: .notes)
-        try c.encode(due, forKey: .due)
-        try c.encode(recurrence, forKey: .recurrence)
-        try c.encode(priority, forKey: .priority)
-        try c.encode(reminders, forKey: .reminders)
-        try c.encode(projectId, forKey: .projectId)
-        try c.encode(labelIds, forKey: .labelIds)
-        try c.encode(subtasks, forKey: .subtasks)
-    }
-}
-
-extension RambleDraft: Codable {
-    enum CodingKeys: String, CodingKey {
-        case tasks, tokens, ended
-    }
-
-    public init(from decoder: Decoder) throws {
-        let c = try decoder.container(keyedBy: CodingKeys.self)
-        tasks = try c.decode([RambleTask].self, forKey: .tasks)
-        tokens = try c.decode([RambleToken].self, forKey: .tokens)
-        ended = try c.decode(Bool.self, forKey: .ended)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var c = encoder.container(keyedBy: CodingKeys.self)
-        try c.encode(tasks, forKey: .tasks)
-        try c.encode(tokens, forKey: .tokens)
-        try c.encode(ended, forKey: .ended)
-    }
-}
+public typealias RambleTask = API.RambleTask
+public typealias RambleSpan = API.RambleSpan
+public typealias RambleToken = API.RambleToken
+public typealias RambleTokenKind = API.RambleTokenKind
+public typealias RambleDraft = API.RambleDraft
 
 public enum Ramble {
     public static func parse(
@@ -185,10 +62,10 @@ enum RambleNormalize {
         "one": 1, "two": 2, "three": 3, "four": 4, "won": 1, "to": 2, "too": 2, "for": 4, "fore": 4,
         "1": 1, "2": 2, "3": 3, "4": 4,
     ]
-    static let sentencePeriod = RambleRegex(#"^(?:\s+[A-Z]|\s*$)"#)
-    static let wordSplit = RambleRegex(#"[\s-]+"#)
-    static let digitsOnly = RambleRegex(#"^\d+$"#)
-    static let startsWithDigit = RambleRegex(#"^\d"#)
+    static let sentencePeriod = JSRegex(#"^(?:\s+[A-Z]|\s*$)"#)
+    static let wordSplit = JSRegex(#"[\s-]+"#)
+    static let digitsOnly = JSRegex(#"^\d+$"#)
+    static let startsWithDigit = JSRegex(#"^\d"#)
 
     static func numberValue(_ text: String) -> Int {
         wordSplit.split(rambleFold(text)).reduce(0) { sum, word in
@@ -224,7 +101,7 @@ enum RambleNormalize {
         return Mapped(text: text, starts: offsets, ends: offsets)
     }
 
-    static func rewrite(_ source: Mapped, _ pattern: RambleRegex, _ replace: (RambleRegex.Found) -> String?) -> Mapped {
+    static func rewrite(_ source: Mapped, _ pattern: JSRegex, _ replace: (JSRegex.Found) -> String?) -> Mapped {
         var units: [UInt16] = []
         var starts: [Int] = []
         var ends = [source.ends[0]]
@@ -255,7 +132,7 @@ enum RambleNormalize {
         return Mapped(text: String(decoding: units, as: UTF16.self), starts: starts, ends: ends)
     }
 
-    static let leadingOh = RambleRegex(#"^oh\s+"#, ignoreCase: true)
+    static let leadingOh = JSRegex(#"^oh\s+"#, ignoreCase: true)
 
     static func normalize(_ transcript: String) -> Mapped {
         var mapped = identity(transcript)
@@ -263,19 +140,19 @@ enum RambleNormalize {
         return mapped
     }
 
-    static let steps: [(RambleRegex, @Sendable (RambleRegex.Found) -> String?)] = [
-            (RambleRegex("[’‘]"), { _ in "'" }),
-            (RambleRegex(#"\bthe day after tomorrow\b"#, ignoreCase: true), { _ in "in 2 days" }),
-            (RambleRegex(#"\b(?:(?:at|by)\s+)?(?:the\s+)?end of (?:the )?day\b"#, ignoreCase: true), { _ in "eod" }),
-            (RambleRegex(#"\b(?:(?:at|by)\s+)?(?:the\s+)?end of (?:the )?week\b"#, ignoreCase: true), { _ in "eow" }),
-            (RambleRegex(#"\bthis (?:morning|afternoon)\b"#, ignoreCase: true), { _ in "today" }),
-            (RambleRegex(#"\bthis evening\b"#, ignoreCase: true), { _ in "tonight" }),
-            (RambleRegex("\\b(today|tomorrow|\(dayName))\\s+(morning|afternoon|evening|night)\\b", ignoreCase: true), { match in
+    static let steps: [(JSRegex, @Sendable (JSRegex.Found) -> String?)] = [
+            (JSRegex("[’‘]"), { _ in "'" }),
+            (JSRegex(#"\bthe day after tomorrow\b"#, ignoreCase: true), { _ in "in 2 days" }),
+            (JSRegex(#"\b(?:(?:at|by)\s+)?(?:the\s+)?end of (?:the )?day\b"#, ignoreCase: true), { _ in "eod" }),
+            (JSRegex(#"\b(?:(?:at|by)\s+)?(?:the\s+)?end of (?:the )?week\b"#, ignoreCase: true), { _ in "eow" }),
+            (JSRegex(#"\bthis (?:morning|afternoon)\b"#, ignoreCase: true), { _ in "today" }),
+            (JSRegex(#"\bthis evening\b"#, ignoreCase: true), { _ in "tonight" }),
+            (JSRegex("\\b(today|tomorrow|\(dayName))\\s+(morning|afternoon|evening|night)\\b", ignoreCase: true), { match in
                 guard let second = match[2], let first = match[1] else { return nil }
                 return second.first?.isUppercase == true ? nil : first
             }),
-            (RambleRegex("\\b(?:this\\s+(?:coming\\s+)?|coming\\s+)(\(dayName))\\b", ignoreCase: true), { $0[1] }),
-            (RambleRegex("\\b(half past|quarter past|quarter to)\\s+(\(hour))\\b\(meridiemAhead)", ignoreCase: true), { match in
+            (JSRegex("\\b(?:this\\s+(?:coming\\s+)?|coming\\s+)(\(dayName))\\b", ignoreCase: true), { $0[1] }),
+            (JSRegex("\\b(half past|quarter past|quarter to)\\s+(\(hour))\\b\(meridiemAhead)", ignoreCase: true), { match in
                 guard let phrase = match[1], let hourText = match[2] else { return nil }
                 let hour = hourValue(hourText)
                 if hour < 1 || hour > 12 { return nil }
@@ -283,59 +160,59 @@ enum RambleNormalize {
                 if name == "quarter to" { return "\(hour == 1 ? 12 : hour - 1):45" }
                 return "\(hour):\(name == "half past" ? "30" : "15")"
             }),
-            (RambleRegex("\\b(\(hourWord))(?:\\s+(oh\\s+(?:\(digitWord))|\(numberWord)))?\\b\(meridiemAhead)", ignoreCase: true), { match in
+            (JSRegex("\\b(\(hourWord))(?:\\s+(oh\\s+(?:\(digitWord))|\(numberWord)))?\\b\(meridiemAhead)", ignoreCase: true), { match in
                 guard let hourText = match[1] else { return nil }
                 let hour = numberValue(hourText)
                 guard let minutesText = match[2] else { return String(hour) }
                 let minutes = numberValue(leadingOh.replaceFirst(minutesText) { _ in "" })
                 return minutes < 60 ? "\(hour):\(minutes < 10 ? "0\(minutes)" : "\(minutes)")" : nil
             }),
-            (RambleRegex(#"\b(\d{1,2}(?::\d{2})?)\s*([ap])(?:\.\s?m\.?|\s?m\b)"#, ignoreCase: true), { match in
+            (JSRegex(#"\b(\d{1,2}(?::\d{2})?)\s*([ap])(?:\.\s?m\.?|\s?m\b)"#, ignoreCase: true), { match in
                 guard let clock = match[1], let meridiem = match[2] else { return nil }
                 let period = match.value.hasSuffix(".") && sentencePeriod.test(match.rest) ? "." : ""
                 return "\(clock)\(rambleFold(meridiem))m\(period)"
             }),
-            (RambleRegex(#"\bhalf an? hour\b"#, ignoreCase: true), { _ in "30 minutes" }),
-            (RambleRegex("\\b(\(numberWord))(?=[\\s-]+\(unitWord)\\b)", ignoreCase: true), { match in
+            (JSRegex(#"\bhalf an? hour\b"#, ignoreCase: true), { _ in "30 minutes" }),
+            (JSRegex("\\b(\(numberWord))(?=[\\s-]+\(unitWord)\\b)", ignoreCase: true), { match in
                 match[1].map { String(numberValue($0)) }
             }),
-            (RambleRegex(#"(?<=\bin\s+)an?(?=\s+(?:minute|hour|day|week|month|year)\b)"#, ignoreCase: true), { _ in "1" }),
-            (RambleRegex(#"\ban?(?=\s+(?:minute|hour|day|week)\s+before\b)"#, ignoreCase: true), { _ in "1" }),
-            (RambleRegex("\\b(\(monthName))\\s+(?:the\\s+)?(\(ordinalWord)|\\d{1,2}(?:st|nd|rd|th)?)\\b", ignoreCase: true), { match in
+            (JSRegex(#"(?<=\bin\s+)an?(?=\s+(?:minute|hour|day|week|month|year)\b)"#, ignoreCase: true), { _ in "1" }),
+            (JSRegex(#"\ban?(?=\s+(?:minute|hour|day|week)\s+before\b)"#, ignoreCase: true), { _ in "1" }),
+            (JSRegex("\\b(\(monthName))\\s+(?:the\\s+)?(\(ordinalWord)|\\d{1,2}(?:st|nd|rd|th)?)\\b", ignoreCase: true), { match in
                 guard let month = match[1], let day = match[2] else { return nil }
                 let written = digitsOnly.test(day) ? day : ordinal(ordinalValue(day))
                 return "\(month) \(written)"
             }),
-            (RambleRegex("\\b(?:the\\s+)?(\(ordinalWord)|\\d{1,2}(?:st|nd|rd|th))\\s+of\\s+(\(monthName))\\b", ignoreCase: true), { match in
+            (JSRegex("\\b(?:the\\s+)?(\(ordinalWord)|\\d{1,2}(?:st|nd|rd|th))\\s+of\\s+(\(monthName))\\b", ignoreCase: true), { match in
                 guard let day = match[1], let month = match[2] else { return nil }
                 return "\(ordinal(ordinalValue(day))) \(month)"
             }),
-            (RambleRegex("(?<=\\bthe\\s+)(\(ordinalWord))\\b", ignoreCase: true), { match in
+            (JSRegex("(?<=\\bthe\\s+)(\(ordinalWord))\\b", ignoreCase: true), { match in
                 match[1].map { ordinal(ordinalValue($0)) }
             }),
             (
-                RambleRegex(
+                JSRegex(
                     "(?<=\\b(?:today|tomorrow|tonight|\(dayName)|\\d(?:st|nd|rd|th)?))\\s*,(?=\\s+(?:at\\s+)?(?:\\d{1,2}(?::\\d{2})?[ap]m\\b|noon\\b|midnight\\b|\\d{1,2}:\\d{2}\\b))",
                     ignoreCase: true
                 ),
                 { _ in "" }
             ),
-            (RambleRegex(#"\bpriority\s+(?:number\s+|level\s+)?(one|two|three|four|[1-4])\b(?![.:,]?\d)"#, ignoreCase: true), { match in
+            (JSRegex(#"\bpriority\s+(?:number\s+|level\s+)?(one|two|three|four|[1-4])\b(?![.:,]?\d)"#, ignoreCase: true), { match in
                 match[1].flatMap { priorityLevels[rambleFold($0)] }.map { "p\($0)" }
             }),
-            (RambleRegex("\\bpriority\\s+(won|to|too|for|fore)\\b(?=\\s*(?:[.,;!?]|$|(?:\(separator))\\b))", ignoreCase: true), { match in
+            (JSRegex("\\bpriority\\s+(won|to|too|for|fore)\\b(?=\\s*(?:[.,;!?]|$|(?:\(separator))\\b))", ignoreCase: true), { match in
                 match[1].flatMap { priorityLevels[rambleFold($0)] }.map { "p\($0)" }
             }),
-            (RambleRegex(#"\b(?:pee\s+(?:one|two|three|four|[1-4])|p\s+(?:one|two|three|four)|p-[1-4])\b"#, ignoreCase: true), { match in
+            (JSRegex(#"\b(?:pee\s+(?:one|two|three|four|[1-4])|p\s+(?:one|two|three|four)|p-[1-4])\b"#, ignoreCase: true), { match in
                 let parts = wordSplit.split(match.value)
                 guard parts.count > 1, let level = priorityLevels[rambleFold(parts[1])] else { return nil }
                 return "p\(level)"
             }),
             // A spoken correction keeps only the phrase it switches to: `Thursday, actually make that Friday` becomes `Friday`.
-            (RambleRegex("\\b(?:at\\s+)?\(time)\(corrected)(?:at\\s+)?(\(time))(?![\\w:])", ignoreCase: true), { match in
+            (JSRegex("\\b(?:at\\s+)?\(time)\(corrected)(?:at\\s+)?(\(time))(?![\\w:])", ignoreCase: true), { match in
                 match[1].map { "at \($0)" }
             }),
-            (RambleRegex("\\b\(when)\(corrected)(\(when))\\b", ignoreCase: true), { match in match[1] }),
-            (RambleRegex("\\b\(priorityWords)\(corrected)(\(priorityWords))\\b", ignoreCase: true), { match in match[1] }),
+            (JSRegex("\\b\(when)\(corrected)(\(when))\\b", ignoreCase: true), { match in match[1] }),
+            (JSRegex("\\b\(priorityWords)\(corrected)(\(priorityWords))\\b", ignoreCase: true), { match in match[1] }),
         ]
 }

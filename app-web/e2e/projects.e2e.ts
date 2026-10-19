@@ -1,5 +1,5 @@
 import type { Locator, Page } from '@playwright/test';
-import { App, expect, NOW, signInAccount, test } from './fixtures';
+import { App, expect, test } from './fixtures';
 
 const sidebarProjects = (page: Page) =>
 	page.getByRole('navigation', { name: 'Main' }).getByRole('region', { name: 'Projects' }).getByRole('link');
@@ -139,21 +139,15 @@ test.describe('in a short window', () => {
 	});
 });
 
-test('the new order shows on another device', async ({ app, page, browser }) => {
+test('the new order shows on another device', async ({ app, page, devices }) => {
 	for (const name of ['Home', 'Work']) await app.createProject(name);
 	await mouseDrag(page, app.nav('Work'), app.nav('Home'));
 	await expect(sidebarProjects(page)).toHaveText(['Work', 'Home']);
 
-	const { baseURL, timezoneId, viewport } = test.info().project.use;
-	const context = await browser.newContext({ baseURL, timezoneId, viewport });
-	await signInAccount(context);
-	const other = await context.newPage();
-	await other.clock.setFixedTime(NOW);
-	await other.goto('/inbox');
-	await expect(sidebarProjects(other)).toHaveText(['Work', 'Home'], { timeout: 10_000 });
-	await mouseDrag(other, new App(other).nav('Home'), new App(other).nav('Work'));
+	const other = await devices.open({ path: '/inbox', heading: 'Inbox' });
+	await expect(sidebarProjects(other.page)).toHaveText(['Work', 'Home'], { timeout: 10_000 });
+	await mouseDrag(other.page, other.app.nav('Home'), other.app.nav('Work'));
 	await expect(sidebarProjects(page)).toHaveText(['Home', 'Work'], { timeout: 10_000 });
-	await context.close();
 });
 
 test.describe('on a phone', () => {

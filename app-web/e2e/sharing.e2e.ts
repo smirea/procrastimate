@@ -1,33 +1,17 @@
-import type { Browser, BrowserContext, Page } from '@playwright/test';
-import { App, deviceContext, E2E_PASSWORD, expect, goOffline, goOnline, NOW, test, unique } from './fixtures.ts';
-
-type Person = { app: App; page: Page; context: BrowserContext; email: string; name: string };
+import type { Page } from '@playwright/test';
+import { type Device, type Devices, deviceContext, expect, goOffline, goOnline, test, unique } from './fixtures.ts';
 
 test.describe.configure({ mode: 'serial' });
-
-async function person(browser: Browser, name: string): Promise<Person> {
-	const context = await deviceContext(browser);
-	const email = `e2e-${crypto.randomUUID()}@procrastimate.test`;
-	const signUp = await context.request.post('/api/auth/sign-up/email', {
-		data: { email, password: E2E_PASSWORD, name },
-	});
-	expect(signUp.ok(), await signUp.text()).toBe(true);
-	const page = await context.newPage();
-	await page.clock.setFixedTime(NOW);
-	await page.goto('/inbox');
-	await expect(page.getByRole('heading', { name: 'Inbox' })).toBeVisible({ timeout: 30_000 });
-	return { app: new App(page), page, context, email, name };
-}
 
 const sidebar = (page: Page) => page.getByRole('navigation', { name: 'Main' });
 const shareSheet = (page: Page) => page.getByRole('dialog', { name: 'Share' });
 
-async function sharedWithMe({ app, page }: Person) {
+async function sharedWithMe({ app, page }: Device) {
 	if (page.viewportSize()!.width < 768) await app.openNavigation();
 	return sidebar(page).getByRole('region', { name: 'Shared with me' });
 }
 
-async function shareWith(owner: Person, guest: Person, role: 'Can edit' | 'Can view' = 'Can edit') {
+async function shareWith(owner: Device, guest: Device, role: 'Can edit' | 'Can view' = 'Can edit') {
 	await owner.page.getByRole('button', { name: 'Share project' }).click();
 	const sheet = shareSheet(owner.page);
 	await sheet.getByRole('textbox', { name: 'Email or name' }).fill(guest.email);
@@ -42,8 +26,8 @@ async function shareWith(owner: Person, guest: Person, role: 'Can edit' | 'Can v
 	await sheet.getByRole('button', { name: 'Close share' }).click();
 }
 
-async function ownerWithProject(browser: Browser) {
-	const owner = await person(browser, 'Olive');
+async function ownerWithProject(devices: Devices) {
+	const owner = await devices.open({ person: 'Olive', path: '/inbox', heading: 'Inbox' });
 	const project = unique('Groceries');
 	const task = unique('Buy milk');
 	await owner.app.createProject(project);
@@ -52,13 +36,9 @@ async function ownerWithProject(browser: Browser) {
 	return { owner, project, task };
 }
 
-test.afterEach(async ({ browser }) => {
-	for (const context of browser.contexts()) await context.close();
-});
-
-test('a guest completes a task in a project shared with them, and the owner sees who did it', async ({ browser }) => {
-	const guest = await person(browser, 'Gus');
-	const { owner, project, task } = await ownerWithProject(browser);
+test('a guest completes a task in a project shared with them, and the owner sees who did it', async ({ devices }) => {
+	const guest = await devices.open({ person: 'Gus', path: '/inbox', heading: 'Inbox' });
+	const { owner, project, task } = await ownerWithProject(devices);
 
 	await shareWith(owner, guest);
 
@@ -109,10 +89,10 @@ test('a guest completes a task in a project shared with them, and the owner sees
 });
 
 test('a guest who can only view a shared project gets no add row, and quick add there starts in Inbox', async ({
-	browser,
+	devices,
 }) => {
-	const guest = await person(browser, 'Vera');
-	const { owner, project, task } = await ownerWithProject(browser);
+	const guest = await devices.open({ person: 'Vera', path: '/inbox', heading: 'Inbox' });
+	const { owner, project, task } = await ownerWithProject(devices);
 
 	await shareWith(owner, guest, 'Can view');
 
@@ -127,9 +107,9 @@ test('a guest who can only view a shared project gets no add row, and quick add 
 	await guest.page.screenshot({ path: 'test-results/sharing/view-only-quick-add.png' });
 });
 
-test('a guest comments on a shared task, and the owner sees it unread until they open it', async ({ browser }) => {
-	const guest = await person(browser, 'Gus');
-	const { owner, project, task } = await ownerWithProject(browser);
+test('a guest comments on a shared task, and the owner sees it unread until they open it', async ({ devices }) => {
+	const guest = await devices.open({ person: 'Gus', path: '/inbox', heading: 'Inbox' });
+	const { owner, project, task } = await ownerWithProject(devices);
 	await shareWith(owner, guest);
 
 	const shared = await sharedWithMe(guest);
@@ -159,10 +139,10 @@ test('a guest comments on a shared task, and the owner sees it unread until they
 	await expect(owner.app.row(task).locator('[data-comments="unread"]')).toHaveCount(0);
 });
 test('an edit a guest made offline, after the owner made the share read only, goes back with a notice', async ({
-	browser,
+	devices,
 }) => {
-	const guest = await person(browser, 'Gus');
-	const { owner, project, task } = await ownerWithProject(browser);
+	const guest = await devices.open({ person: 'Gus', path: '/inbox', heading: 'Inbox' });
+	const { owner, project, task } = await ownerWithProject(devices);
 	await shareWith(owner, guest);
 	const shared = await sharedWithMe(guest);
 	await shared.getByRole('link', { name: new RegExp(project) }).click({ timeout: 10_000 });
@@ -195,8 +175,8 @@ test('an edit a guest made offline, after the owner made the share read only, go
 	await expect(owner.app.row(task)).toBeVisible();
 });
 
-test('a public link opens read only for someone who is not signed in', async ({ browser }) => {
-	const { owner, project, task } = await ownerWithProject(browser);
+test('a public link opens read only for someone who is not signed in', async ({ browser, devices }) => {
+	const { owner, project, task } = await ownerWithProject(devices);
 
 	await owner.page.getByRole('button', { name: 'Share project' }).click();
 	await shareSheet(owner.page).getByRole('button', { name: 'Copy link' }).click();

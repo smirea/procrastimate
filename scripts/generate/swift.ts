@@ -1,8 +1,9 @@
 /**
  * Swift types for every named shared schema, plus one descriptor per operation, from JSON Schema. It covers what the
  * shared Zod produces: objects, arrays, `$ref`, nullable branches, unions told apart by a constant tag or tried in
- * order, `allOf` over a union, string and integer enums, and constants. Anything else fails the run, so a new kind
- * of schema cannot slip through as an untyped value.
+ * order, `allOf` over a union, string and integer enums, and constants. Anything else fails the run, a keyword it
+ * does not read included, so a new kind of schema or constraint cannot slip through as an untyped value: a schema
+ * that means any JSON says so with `x-swift-type: 'JSONValue'`.
  *
  * The generated types replace hand-written models, so they follow the rules the Zod schemas check: a decoder made
  * with `JSONDecoder.validating()` enforces bounds, patterns, sizes, enum members, and named validators, and fails
@@ -21,6 +22,46 @@
  * - `x-decode: custom`: no `init(from:)`, because Core decodes the type with rules of its own.
  * - `x-epoch-ms`: epoch milliseconds in JSON, a `Date` in Swift.
  */
+
+/** Every key `Schema` names, plus the ones JSON Schema emits that change no Swift. */
+const HANDLED = new Set([
+	'$ref',
+	'type',
+	'properties',
+	'required',
+	'additionalProperties',
+	'items',
+	'anyOf',
+	'oneOf',
+	'allOf',
+	'enum',
+	'const',
+	'description',
+	'default',
+	'minimum',
+	'maximum',
+	'exclusiveMinimum',
+	'exclusiveMaximum',
+	'minItems',
+	'minLength',
+	'maxLength',
+	'pattern',
+	'format',
+	'propertyNames',
+	'readOnly',
+	'title',
+	'$defs',
+	'$schema',
+	'$id',
+	'x-enum-names',
+	'x-flatten',
+	'x-inline',
+	'x-table',
+	'x-validate',
+	'x-swift-type',
+	'x-decode',
+	'x-epoch-ms',
+]);
 
 export type Schema = {
 	$ref?: string;
@@ -44,6 +85,8 @@ export type Schema = {
 	minLength?: number;
 	maxLength?: number;
 	pattern?: string;
+	/** Read by nothing: `z.url()` emits `uri`, which Core does not check. */
+	format?: string;
 	'x-enum-names'?: string[];
 	'x-flatten'?: Record<string, string>;
 	'x-inline'?: boolean;
@@ -206,6 +249,7 @@ class Generator {
 
 	type(input: Schema, hint: string): string {
 		if (input['x-swift-type']) return input['x-swift-type'];
+		this.assertHandled(input, hint);
 		if (input.$ref) return this.component(this.refName(input.$ref));
 		const existing = this.named.get(input);
 		if (existing) return existing;
@@ -221,8 +265,13 @@ class Generator {
 		if (type === 'object' && typeof schema.additionalProperties === 'object') {
 			return `[String: ${this.type(schema.additionalProperties, `${hint}Value`)}]`;
 		}
-		if (type === 'object' || Object.keys(schema).every(key => key === 'description')) return 'JSONValue';
 		throw new Error(`Unsupported schema for ${hint}: ${JSON.stringify(schema).slice(0, 200)}`);
+	}
+
+	/** A keyword the generator does not read would be a constraint Swift silently drops. */
+	private assertHandled(schema: Schema, hint: string) {
+		const unknown = Object.keys(schema).filter(key => !HANDLED.has(key));
+		if (unknown.length) throw new Error(`${hint}: the Swift generator does not read ${unknown.join(', ')}`);
 	}
 
 	private declare(schema: Schema, decl: Decl): string {

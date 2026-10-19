@@ -10,8 +10,8 @@
  *
  * Codex reviews only when a PR opens, so after the first review it never waits for another.
  */
-import { spawnSync } from 'node:child_process';
 import { parseArgs } from 'node:util';
+import { run } from './lib';
 
 const { values } = parseArgs({
 	options: { merge: { type: 'boolean' }, budget: { type: 'string', default: '540' } },
@@ -22,12 +22,6 @@ if (!Number.isFinite(budget) || budget <= 0)
 const deadline = Date.now() + budget * 1000;
 const CODEX_NUDGE_MS = 15 * 60_000;
 const POLL_MS = 20_000;
-
-function run(cmd: string[]): string {
-	const result = spawnSync(cmd[0]!, cmd.slice(1), { encoding: 'utf8' });
-	if (result.status !== 0) throw new Error(`\`${cmd.join(' ')}\` failed\n${result.stderr}${result.stdout}`);
-	return result.stdout.trim();
-}
 
 type Check = {
 	__typename: string;
