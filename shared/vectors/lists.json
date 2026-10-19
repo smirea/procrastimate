@@ -27,12 +27,14 @@
 						"projects": [
 							{
 								"createdAt": 1,
+								"icon": null,
 								"id": "work",
 								"name": "Work",
 								"order": 2
 							},
 							{
 								"createdAt": 1,
+								"icon": null,
 								"id": "home",
 								"name": "Home",
 								"order": 1
@@ -292,6 +294,7 @@
 								"projects": [
 									{
 										"createdAt": 1,
+										"icon": null,
 										"id": "garden",
 										"name": "Garden",
 										"order": 0
