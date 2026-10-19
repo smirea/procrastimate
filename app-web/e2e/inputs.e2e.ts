@@ -94,3 +94,31 @@ test('search opens with an empty query each time', async ({ app, page }) => {
 	await expect(search).toBeFocused();
 	await expect(search).toHaveValue('');
 });
+
+test('Add subtask keeps its caret above the keyboard while each Return inserts a row above it', async ({
+	app,
+	page,
+}) => {
+	await page.setViewportSize({ width: 393, height: 852 });
+	await app.add('Pack for trip');
+	await app
+		.row('Pack for trip')
+		.getByRole('button', { name: /^Pack for trip/ })
+		.click();
+	const add = app.details().getByRole('textbox', { name: 'Add subtask' });
+	for (let i = 1; i <= 12; i++) {
+		await add.fill(`Item ${i}`);
+		await add.press('Enter');
+	}
+	const keyboard = 336;
+	await page.evaluate(inset => document.documentElement.style.setProperty('--keyboard-inset', `${inset}px`), keyboard);
+	const hidden = () =>
+		add.evaluate((el, inset) => Math.round(el.getBoundingClientRect().bottom - (innerHeight - inset)), keyboard);
+	await add.focus();
+	for (let i = 1; i <= 4; i++) {
+		await page.keyboard.type(`More ${i}`);
+		await page.keyboard.press('Enter');
+		await expect(app.details().getByRole('button', { name: new RegExp(`^More ${i}`) })).toBeVisible();
+		await expect.poll(hidden).toBeLessThanOrEqual(0);
+	}
+});

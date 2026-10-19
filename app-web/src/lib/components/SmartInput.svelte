@@ -9,7 +9,6 @@
 	import NameSuggestions from './NameSuggestions.svelte';
 	import { store } from '../store.svelte.ts';
 	import { NAME_SOURCES, sectionSource, type NameKind, type NameSource } from '../names.ts';
-	import { followCaret } from '../caret.ts';
 
 	let {
 		value = $bindable(),
@@ -213,7 +212,6 @@
 	<textarea
 		bind:this={input}
 		bind:value
-		use:followCaret
 		aria-label={label}
 		aria-autocomplete="list"
 		aria-controls={suggestions.length ? `${uid}-names` : undefined}

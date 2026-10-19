@@ -17,12 +17,27 @@ struct QuickAddSubtasks: View {
     var focused: FocusState<Bool>.Binding
     let save: () -> Void
 
+    @State private var rowsHeight: CGFloat = 0
+
     var body: some View {
         let parsed = QuickAdd.parseSubtask(text, now: clock.now, labels: spaceLabels, in: clock.timeZone)
         VStack(alignment: .leading, spacing: 2) {
-            ForEach(subtasks) { subtask in
-                row(subtask)
-                    .transition(.asymmetric(insertion: .offset(y: -6).combined(with: .opacity), removal: .opacity))
+            if !subtasks.isEmpty {
+                // The card is docked to the keyboard, so a long list scrolls here, kept at its newest row, instead of
+                // pushing the title off the top of the screen.
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 2) {
+                        ForEach(subtasks) { subtask in
+                            row(subtask)
+                                .transition(.asymmetric(insertion: .offset(y: -6).combined(with: .opacity), removal: .opacity))
+                        }
+                    }
+                    .onGeometryChange(for: CGFloat.self, of: { ceil($0.size.height) }) { rowsHeight = $0 }
+                }
+                .frame(maxHeight: rowsHeight)
+                .defaultScrollAnchor(.bottom)
+                .defaultScrollAnchor(.bottom, for: .sizeChanges)
+                .scrollBounceBehavior(.basedOnSize)
             }
             HStack(spacing: 10) {
                 Image(systemName: "plus")

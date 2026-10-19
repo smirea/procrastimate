@@ -28,7 +28,6 @@
 	import { listenRamble, type CaptureStop, type RambleListen } from './capture.ts';
 	import { caption, keyed, type RambleEntry } from './entries.ts';
 	import Waveform, { type LevelMeter } from './Waveform.svelte';
-	import { followCaret } from '../caret.ts';
 
 	let { defaults }: { defaults: ListDefaults } = $props();
 
@@ -356,7 +355,6 @@
 			<div class="min-w-0 flex-1">
 				{#if editable}
 					<textarea
-						use:followCaret
 						rows="1"
 						class="title block w-full resize-none [field-sizing:content] bg-transparent text-[17px] leading-6 font-semibold outline-none"
 						aria-label="Task title"
@@ -429,7 +427,6 @@
 						<div class="min-w-0 flex-1">
 							{#if editable}
 								<textarea
-									use:followCaret
 									rows="1"
 									class="title block w-full resize-none [field-sizing:content] bg-transparent text-[15px] leading-[22px] outline-none"
 									aria-label="Subtask title"

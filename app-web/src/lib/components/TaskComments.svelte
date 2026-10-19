@@ -15,7 +15,6 @@
 	import { session } from '../session.svelte.ts';
 	import { store } from '../store.svelte.ts';
 	import { clock, motion, toasts } from '../ui.svelte.ts';
-	import { followCaret } from '../caret.ts';
 
 	let { task, home }: { task: Task; home: Home } = $props();
 
@@ -124,7 +123,6 @@
 								autofocus
 								class="mt-1 block max-h-72 w-full resize-none [field-sizing:content] rounded-xl border border-ink/15 bg-surface/60 px-3 py-2 text-[14px] outline-none touch:text-base"
 								bind:value={editing.body}
-								use:followCaret
 								onkeydown={(e) => onkeydown(e, save, () => (editing = null))}
 							></textarea>
 							<div class="mt-1.5 flex justify-end gap-1.5">
@@ -146,7 +144,6 @@
 					rows="1"
 					class="block max-h-72 min-h-11 w-full resize-none [field-sizing:content] rounded-2xl border border-transparent bg-ink/[0.04] px-3.5 py-2.5 text-[14px] outline-none transition-colors touch:text-base placeholder:text-faint focus:border-ink/15 focus:bg-surface/60"
 					bind:value={draft}
-					use:followCaret
 					onkeydown={(e) => onkeydown(e, send)}
 				></textarea>
 				<button

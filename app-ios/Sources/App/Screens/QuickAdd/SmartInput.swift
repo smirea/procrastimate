@@ -59,16 +59,7 @@ struct SmartInput: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .fixedSize(horizontal: false, vertical: true)
                         .hidden()
-                        .onGeometryChange(for: CGFloat.self, of: { $0.size.height }) { height in
-                            let grew = ceil(height) > textHeight
-                            textHeight = ceil(height)
-                            guard grew, focused.wrappedValue else { return }
-                            Task {
-                                // After the editor has taken its new height.
-                                try? await Task.sleep(for: .milliseconds(60))
-                                EditorCaret.reveal()
-                            }
-                        }
+                        .onGeometryChange(for: CGFloat.self, of: { ceil($0.size.height) }) { textHeight = $0 }
                         .accessibilityHidden(true)
                 }
                 .overlay(alignment: .topLeading) {

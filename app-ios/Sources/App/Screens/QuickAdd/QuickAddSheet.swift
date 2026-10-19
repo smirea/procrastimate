@@ -93,10 +93,11 @@ struct QuickAddSheet: View {
         .padding(.bottom, 8)
         .frame(maxWidth: .infinity)
         .background {
-            // Runs under the home indicator when the keyboard is down, and meets the keyboard's top edge when it is up.
+            // Runs under the home indicator when the keyboard is down, and on behind the keyboard when it is up, so the
+            // keyboard's rounded top corners show the card instead of the scrim.
             Color.clear
                 .glassEffect(.regular, in: UnevenRoundedRectangle(topLeadingRadius: 32, topTrailingRadius: 32, style: .continuous))
-                .ignoresSafeArea(.container, edges: .bottom)
+                .ignoresSafeArea(edges: .bottom)
         }
         // A tap between controls, or just beside the plain mic glyph, would otherwise reach the scrim and close the card.
         .contentShape(.rect)
