@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { calendarDay, clockTime, relativeDay } from './format.ts';
-import type { Due, Task } from './task.ts';
+import type { DateKey, Due, Task } from './task.ts';
 import { formatEvent, scheduledDue, taskNotificationTimes } from './triggers.ts';
-import { zonedDateKey, zonedTime } from './zoned-time.ts';
+import { zonedDateKey } from './zoned-time.ts';
 
 export const scheduledNotificationSchema = z
 	.object({
@@ -34,22 +34,22 @@ export function upcomingNotifications(
 					at: at.getTime(),
 					taskId: task.id,
 					title: task.title.slice(0, 300),
-					body: task.event
-						? formatEvent(task.event)
-						: notificationBody(scheduledDue(task, today, zone), at.getTime(), zone),
+					body: taskNotificationBody(task, at.getTime(), today, zone),
 				})),
 		)
 		.sort((a, b) => a.at - b.at)
 		.slice(0, limit);
 }
 
+/** An event task names its event; any other names its due day and time. */
+export function taskNotificationBody(task: Task, at: number, today: DateKey, zone?: string): string {
+	return task.event ? formatEvent(task.event) : notificationBody(scheduledDue(task, today, zone), at, zone);
+}
+
+/** The due day and time, such as `Today 3:00 PM` or `Tue Oct 20`, with days named relative to the moment it shows. */
 export function notificationBody(due: Due | null, at: number, zone?: string): string {
 	if (!due) return 'Reminder';
-	const day = zonedDateKey(at, zone);
-	if (!due.time) return `Due ${relativeDay(due.date, day)?.toLowerCase() ?? calendarDay(due.date, day)}`;
-	if (zonedTime(due.date, due.time, zone) === at) return 'Due now';
-	const time = clockTime(due.time);
-	return due.date === day
-		? `Due at ${time}`
-		: `Due ${relativeDay(due.date, day) ?? calendarDay(due.date, day)} at ${time}`;
+	const today = zonedDateKey(at, zone);
+	const day = relativeDay(due.date, today) ?? calendarDay(due.date, today);
+	return due.time ? `${day} ${clockTime(due.time)}` : day;
 }

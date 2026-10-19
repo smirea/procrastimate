@@ -15,6 +15,7 @@ export const DEVICE_KEYS = {
 	user: 'procrastimate-user',
 	theme: 'procrastimate-theme',
 	pushRekey: 'procrastimate-push-rekey',
+	pushRefusedAt: 'procrastimate-push-refused-at',
 	completedRange: 'procrastimate.completedRange',
 	showCompleted: 'procrastimate.showCompleted',
 	noDateOldestFirst: 'procrastimate.noDateOldestFirst',

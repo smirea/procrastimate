@@ -101,7 +101,7 @@ macOS `core` and `app` stay off until a release ([Workflow](decisions/workflow.m
 | ------------------------------------------------------------------------------------------------------- | --- | ----- | ----- | ---------------------------------------------- | -------------------------------- | ------------------------ |
 | `reminders-nl`: `remind me 30m before`, `r5m`, `remind me at 4pm`, …                                    | ✓   | Built | S3→S5 | `QuickAddParityTests.test_reminders_nl`        | `quick-add › reminders-nl`       | `reminders-nl.png`       |
 | `reminders-picker`: presets, custom date and time, remove                                               | ✓   | Built | S6    | `DetailsParityTests.test_reminders_picker`     | `details › reminders-picker`     | `reminders-picker.png`   |
-| `reminders-fire`: `Reminder: <title>` toast with `Open` while the app is open                           | ✓   | Built | S8    | `RemindersParityTests.test_reminders_fire`     | `reminders › reminders-fire`     | `reminders-fire.png`     |
+| `reminders-fire`: a system notification, never an in-app toast, with the banner in the foreground too   | ✓   | Built | S8    | `RemindersParityTests.test_reminders_fire`     | `reminders › reminders-fire`     | `reminders-fire.png`     |
 | `reminders-due-time`: the due time notifies alone, a date alone never does, one notification per moment | ✓   | Built | S2→S8 | `RemindersParityTests.test_reminders_due_time` | `reminders › reminders-due-time` | `reminders-due-time.png` |
 | `reminders-notify`: system notifications while closed (Web Push on web, local notifications on iOS)     | ✓   | Built | S8    | see Notifications                              | see Notifications                | —                        |
 
@@ -113,7 +113,7 @@ The web's Web Push rows map to native local notifications. Permission is asked o
 | `push-permission`: the app asks on first launch; a denial is the tappable settings line | ✓ | Built | S8 | `NotificationsParityTests.test_push_permission` | `notifications › push-permission` | `push-permission.png` |
 | `push-install`: no Add to Home Screen prompt | — | n/a | — | — | — | — |
 | `push-schedule`: the device schedule equals future due times and reminders of open tasks, at most 60 pending on iOS | ✓ | Built | S8 | `NotificationsParityTests.test_push_schedule` | `notifications › push-schedule` | `push-schedule.png` |
-| `push-deliver`: one notification per moment, titled with the task, body such as `Due now` | ✓ | Built | S8 | `NotificationsParityTests.test_push_deliver` | `notifications › push-deliver` | `push-deliver.png` |
+| `push-deliver`: one notification per moment, titled with the task, body such as `Today 3:00 PM`, time-sensitive on iOS | ✓ | Built | S8 | `NotificationsParityTests.test_push_deliver` | `notifications › push-deliver` | `push-deliver.png` |
 | `push-test`: settings has the notifications line and no turn-on prompt | ✓ | Built | S8 | — | `notifications › push-test` | `push-test.png` |
 | `push-nudge`: saving a timed task shows no turn-on toast | ✓ | Built | S8 | `NotificationsParityTests.test_push_nudge` | `notifications › push-nudge` | — |
 | `push-open`: tapping a notification opens its task | ✓ | Built (opens the details sheet; S6 fills it in) | S8 | `NotificationsParityTests.test_push_open` | `notifications › push-open` | `push-open.png` |

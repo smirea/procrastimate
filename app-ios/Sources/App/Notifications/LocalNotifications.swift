@@ -23,17 +23,14 @@ enum NotificationStatus: Equatable {
 
 /// Local notifications: the device schedules the soonest moments of open tasks from `Core`'s notification times, with
 /// the same `<taskId>:<epoch ms>` identifiers as the web's push tags, and replaces the schedule after every change.
-/// The open app shows reminders as toasts instead of banners.
 @MainActor @Observable
 final class LocalNotifications: NSObject {
     nonisolated static let refreshTaskID = "com.stefan.procrastimate.refresh"
-    nonisolated static let testID = "test"
 
     private(set) var status: NotificationStatus = .checking
     private(set) var pending: [String] = []
 
     @ObservationIgnored private let store: Store
-    @ObservationIgnored private let toasts: Toasts
     @ObservationIgnored private let navigator: Navigator
     @ObservationIgnored private let clock: AppClock
     @ObservationIgnored private let center = UNUserNotificationCenter.current()
@@ -42,9 +39,8 @@ final class LocalNotifications: NSObject {
     @ObservationIgnored private var debounce: Task<Void, Never>?
     @ObservationIgnored private var running: Task<Void, Never>?
 
-    init(store: Store, toasts: Toasts, navigator: Navigator, clock: AppClock) {
+    init(store: Store, navigator: Navigator, clock: AppClock) {
         self.store = store
-        self.toasts = toasts
         self.navigator = navigator
         self.clock = clock
         #if DEBUG
@@ -65,12 +61,6 @@ final class LocalNotifications: NSObject {
             }
         }
         await detect()
-        fireDueReminders()
-        while !Task.isCancelled {
-            let seconds = 60 - clock.now.timeIntervalSince1970.truncatingRemainder(dividingBy: 60)
-            try? await Task.sleep(for: .seconds(seconds))
-            fireDueReminders()
-        }
     }
 
     /// Re-reads the permission, which can change in Settings while the app is away.
@@ -130,6 +120,7 @@ final class LocalNotifications: NSObject {
         content.title = item.title
         content.body = item.body
         content.sound = .default
+        content.interruptionLevel = .timeSensitive
         content.threadIdentifier = item.taskId
         content.userInfo = ["taskId": item.taskId]
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: max(1, item.at.timeIntervalSince(now)), repeats: false)
@@ -186,30 +177,6 @@ final class LocalNotifications: NSObject {
         Task { try? await BGTaskScheduler.shared.submitTaskRequest(request) }
     }
 
-    func fireDueReminders() {
-        let now = clock.now.epochMilliseconds
-        let since = DeviceDefaults.remindersCheckedAt ?? now
-        DeviceDefaults.remindersCheckedAt = now
-        guard now > since else { return }
-        for task in Notifications.dueReminders(store.tasks, since: since, now: now, in: clock.timeZone) {
-            let id = task.id
-            toasts.show(
-                Format.reminderToast(task.title),
-                action: .init(label: "Open") { [navigator] in navigator.openTask(id) },
-                for: .seconds(12)
-            )
-        }
-    }
-
-    /// A place crossing while the app is open, which no schedule knows about, shows like a reminder toast.
-    fileprivate func showPlaceToast(_ taskId: String, title: String, body: String) {
-        toasts.show(
-            "\(title) · \(body)",
-            action: .init(label: "Open") { [navigator] in navigator.openTask(taskId) },
-            for: .seconds(12)
-        )
-    }
-
     fileprivate func open(_ taskId: String) {
         guard store.task(taskId) != nil else { return }
         navigator.openTask(taskId)
@@ -217,21 +184,12 @@ final class LocalNotifications: NSObject {
 }
 
 extension LocalNotifications: UNUserNotificationCenterDelegate {
-    /// In the foreground a task's moment shows as the reminder toast, never a banner. The test notification still shows,
-    /// since it is what `Send a test notification` asked for.
+    /// The open app shows the system banner too, so a reminder looks the same in the foreground as in the background.
     nonisolated func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         willPresent notification: UNNotification
     ) async -> UNNotificationPresentationOptions {
-        let request = notification.request
-        let isTest = request.identifier == Self.testID
-        let place = request.identifier.hasPrefix(PlaceMonitor.notificationPrefix)
-            ? (request.content.userInfo["taskId"] as? String, request.content.title, request.content.body) : nil
-        await MainActor.run {
-            self.fireDueReminders()
-            if let place, let taskId = place.0 { self.showPlaceToast(taskId, title: place.1, body: place.2) }
-        }
-        return isTest ? [.banner, .sound] : []
+        [.banner, .list, .sound]
     }
 
     /// UIKit asserts when this completion runs off the main thread, which the `async` form of this method does.

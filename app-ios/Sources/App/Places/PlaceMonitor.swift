@@ -247,6 +247,7 @@ final class PlaceMonitor: NSObject {
         content.title = task.title
         content.body = Triggers.formatLocation(location)
         content.sound = .default
+        content.interruptionLevel = .timeSensitive
         content.threadIdentifier = task.id
         content.userInfo = ["taskId": task.id]
         let id = "\(Self.notificationPrefix)\(task.id):\(clock.now.epochMilliseconds)"

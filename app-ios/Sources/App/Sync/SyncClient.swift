@@ -349,7 +349,6 @@ final class SyncClient {
 
 enum DeviceDefaults {
     private static let peopleKey = "procrastimate-people"
-    private static let remindersCheckedKey = "procrastimate-reminders-checked-at"
     private static let installKey = "procrastimate-install-id"
     private static let databaseKey = "procrastimate-database"
 
@@ -359,12 +358,6 @@ enum DeviceDefaults {
             UserDefaults.standard.data(forKey: peopleKey).flatMap { try? JSONDecoder().decode([Person].self, from: $0) } ?? []
         }
         set { UserDefaults.standard.set(try? JSONEncoder().encode(newValue), forKey: peopleKey) }
-    }
-
-    /// When the app last showed due reminders, so each shows once.
-    static var remindersCheckedAt: Int? {
-        get { UserDefaults.standard.object(forKey: remindersCheckedKey) as? Int }
-        set { UserDefaults.standard.set(newValue, forKey: remindersCheckedKey) }
     }
 
     /// This install's id, which Ramble names the device by. Created on first use.

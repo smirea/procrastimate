@@ -31,8 +31,24 @@ test('completing a recurring task moves it and its reminder to the next occurren
 
 	await checkbox.click();
 	await expect(row).toContainText('Friday 9am');
+	await page.addInitScript(() => {
+		const shown: string[] = [];
+		Object.assign(window, { shownNotifications: shown });
+		// Without push the open app shows the system notification itself.
+		delete (window as { PushManager?: unknown }).PushManager;
+		window.Notification = class {
+			static permission = 'granted';
+			static requestPermission = async () => 'granted';
+			onclick = null;
+			constructor(title: string, options?: NotificationOptions) {
+				shown.push(`${title}: ${options?.body}`);
+			}
+		} as unknown as typeof Notification;
+	});
 	await app.setNow(new Date('2026-10-16T08:51:00Z'));
 	await page.reload();
-	await expect(page.getByText('Reminder: Standup')).toBeVisible();
+	await expect
+		.poll(() => page.evaluate(() => (window as unknown as { shownNotifications: string[] }).shownNotifications))
+		.toEqual(['Standup: Today 9:00 AM']);
 	await expect(page.getByRole('region', { name: 'Today' }).locator('[data-task="Standup"]')).toContainText('9am');
 });

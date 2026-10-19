@@ -1,29 +1,33 @@
-import { reminderToast } from 'shared/format.ts';
+import { taskNotificationBody } from 'shared/notifications.ts';
 import { pushTag } from 'shared/push.ts';
 import { toDateKey } from 'shared/task.ts';
 import { taskNotificationTimes } from 'shared/triggers.ts';
 import { push } from './push.svelte.ts';
 import { store } from './store.svelte.ts';
-import { sheets, toasts } from './ui.svelte.ts';
+import { sheets } from './ui.svelte.ts';
 
-/** Notifies once for every task whose due time or reminder came up since the last check, while the app is open. */
-export function fireDueReminders(now: number) {
+/**
+ * Shows a system notification for every task whose due time or reminder came up since the last check, while the app is
+ * open and no push can deliver it: push is off, or the browser is offline. Offline it shows under the push's tag, so a
+ * push delivered on reconnect replaces it instead of showing twice.
+ */
+export function notifyDueReminders(now: number) {
 	const since = store.remindersCheckedAt;
+	store.markRemindersChecked(now);
+	if (push.state.kind === 'on' && navigator.onLine) return;
+	if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
 	const today = toDateKey(new Date(now));
 	for (const task of store.own.tasks) {
 		if (task.completedAt !== null) continue;
 		const due = taskNotificationTimes(task, today).find(t => t.getTime() > since && t.getTime() <= now);
 		if (!due) continue;
-		toasts.show(reminderToast(task.title), { label: 'Open', run: () => sheets.openTask(task.id) }, 12_000);
-		// With push on, the pushed notification is the system one, so a local one would show it twice. Offline no push
-		// can arrive, so this one shows under the push's tag, and a push delivered on reconnect replaces it.
-		const pushed = push.state.kind === 'on' && navigator.onLine;
-		if (!pushed && typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-			new Notification(task.title, {
-				body: 'ProcrastiMate reminder',
-				tag: pushTag({ taskId: task.id, at: due.getTime() }),
-			});
-		}
+		const notification = new Notification(task.title, {
+			body: taskNotificationBody(task, due.getTime(), today),
+			tag: pushTag({ taskId: task.id, at: due.getTime() }),
+		});
+		notification.onclick = () => {
+			window.focus();
+			sheets.openTask(task.id);
+		};
 	}
-	store.markRemindersChecked(now);
 }

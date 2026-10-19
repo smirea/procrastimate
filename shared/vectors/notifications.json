@@ -194,7 +194,7 @@
 			"output": [
 				{
 					"at": 1791988200000,
-					"body": "Due now",
+					"body": "Today 10:30 AM",
 					"taskId": "Call mom",
 					"title": "Call mom"
 				},
@@ -206,43 +206,43 @@
 				},
 				{
 					"at": 1792011600000,
-					"body": "Due Tomorrow at 5:00 PM",
+					"body": "Tomorrow 5:00 PM",
 					"taskId": "Gym",
 					"title": "Gym"
 				},
 				{
 					"at": 1792065600000,
-					"body": "Due today",
+					"body": "Today",
 					"taskId": "Rent",
 					"title": "Rent"
 				},
 				{
 					"at": 1792069200000,
-					"body": "Due Sat Oct 17",
+					"body": "Sat Oct 17",
 					"taskId": "Taxes",
 					"title": "Taxes"
 				},
 				{
 					"at": 1792096200000,
-					"body": "Due at 5:00 PM",
+					"body": "Today 5:00 PM",
 					"taskId": "Gym",
 					"title": "Gym"
 				},
 				{
 					"at": 1792098000000,
-					"body": "Due now",
+					"body": "Today 5:00 PM",
 					"taskId": "Gym",
 					"title": "Gym"
 				},
 				{
 					"at": 1792512000000,
-					"body": "Due Tomorrow at 12:00 PM",
+					"body": "Tomorrow 12:00 PM",
 					"taskId": "Lunch",
 					"title": "Lunch"
 				},
 				{
 					"at": 1792598400000,
-					"body": "Due now",
+					"body": "Today 12:00 PM",
 					"taskId": "Lunch",
 					"title": "Lunch"
 				}
@@ -451,7 +451,7 @@
 			"output": [
 				{
 					"at": 1791987300000,
-					"body": "Due now",
+					"body": "Today 10:15 AM",
 					"taskId": "Standup",
 					"title": "Standup"
 				}
@@ -504,7 +504,7 @@
 			"output": [
 				{
 					"at": 1791989100000,
-					"body": "Due now",
+					"body": "Today 10:45 AM",
 					"taskId": "Standup",
 					"title": "Standup"
 				}
@@ -599,13 +599,13 @@
 			"output": [
 				{
 					"at": 1792152000000,
-					"body": "Due at 9:00 AM",
+					"body": "Today 9:00 AM",
 					"taskId": "Water plants",
 					"title": "Water plants"
 				},
 				{
 					"at": 1792155600000,
-					"body": "Due now",
+					"body": "Today 9:00 AM",
 					"taskId": "Water plants",
 					"title": "Water plants"
 				}
@@ -790,7 +790,7 @@
 			"output": [
 				{
 					"at": 1791990000000,
-					"body": "Due now",
+					"body": "Today 11:00 AM",
 					"taskId": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
 					"title": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 				}
@@ -815,7 +815,7 @@
 				},
 				1792011600000
 			],
-			"output": "Due now"
+			"output": "Today 5:00 PM"
 		},
 		{
 			"fn": "notificationBody",
@@ -827,7 +827,7 @@
 				},
 				1792009800000
 			],
-			"output": "Due at 5:00 PM"
+			"output": "Today 5:00 PM"
 		},
 		{
 			"fn": "notificationBody",
@@ -839,7 +839,7 @@
 				},
 				1791982800000
 			],
-			"output": "Due Tomorrow at 9:00 AM"
+			"output": "Tomorrow 9:00 AM"
 		},
 		{
 			"fn": "notificationBody",
@@ -851,7 +851,7 @@
 				},
 				1791982800000
 			],
-			"output": "Due Tue Oct 20 at 9:00 AM"
+			"output": "Tue Oct 20 9:00 AM"
 		},
 		{
 			"fn": "notificationBody",
@@ -863,7 +863,7 @@
 				},
 				1791984600000
 			],
-			"output": "Due at 9:00 AM"
+			"output": "Today 9:00 AM"
 		},
 		{
 			"fn": "notificationBody",
@@ -875,7 +875,7 @@
 				},
 				1792065600000
 			],
-			"output": "Due today"
+			"output": "Today"
 		},
 		{
 			"fn": "notificationBody",
@@ -887,7 +887,7 @@
 				},
 				1792022400000
 			],
-			"output": "Due tomorrow"
+			"output": "Tomorrow"
 		},
 		{
 			"fn": "notificationBody",
@@ -899,7 +899,7 @@
 				},
 				1792065600000
 			],
-			"output": "Due yesterday"
+			"output": "Yesterday"
 		},
 		{
 			"fn": "notificationBody",
@@ -911,7 +911,7 @@
 				},
 				1792069200000
 			],
-			"output": "Due Sat Oct 17"
+			"output": "Sat Oct 17"
 		},
 		{
 			"fn": "notificationBody",
@@ -923,7 +923,7 @@
 				},
 				1793538000000
 			],
-			"output": "Due Tomorrow at 9:00 AM"
+			"output": "Tomorrow 9:00 AM"
 		},
 		{
 			"fn": "notificationBody",
@@ -935,7 +935,7 @@
 				},
 				1798639200000
 			],
-			"output": "Due Tue Jan 5, 2027"
+			"output": "Tue Jan 5, 2027"
 		}
 	]
 }

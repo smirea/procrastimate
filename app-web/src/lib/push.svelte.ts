@@ -85,15 +85,13 @@ class Push {
 		const registration = await navigator.serviceWorker.getRegistration();
 		const subscription = await registration?.pushManager.getSubscription();
 		const rekeying = localStorage.getItem(REKEY_KEY) !== null;
+		const current = subscription && sameKey(subscription.options.applicationServerKey, key) ? subscription : null;
+		if (!current && refusedRecently()) return { kind: 'off' };
 		if (!registration || (!subscription && !rekeying)) {
 			await this.#subscribe(Promise.resolve('granted' as NotificationPermission), key);
 			return this.state;
 		}
-		const current =
-			subscription && sameKey(subscription.options.applicationServerKey, key)
-				? subscription
-				: await rekey(registration, subscription, key);
-		const info = pushSubscriptionSchema.parse(current.toJSON());
+		const info = pushSubscriptionSchema.parse((current ?? (await rekey(registration, subscription, key))).toJSON());
 		await this.#register(info);
 		return { kind: 'on', subscription: info };
 	}
@@ -139,11 +137,7 @@ class Push {
 				this.state = { kind: granted === 'denied' ? 'denied' : 'off' };
 				return;
 			}
-			const registration = await navigator.serviceWorker.ready;
-			const subscription = await registration.pushManager.subscribe({
-				userVisibleOnly: true,
-				applicationServerKey: key,
-			});
+			const subscription = await subscribe(await navigator.serviceWorker.ready, key);
 			const info = pushSubscriptionSchema.parse(subscription.toJSON());
 			await this.#register(info);
 			this.state = { kind: 'on', subscription: info };
@@ -218,9 +212,33 @@ async function rekey(
 ): Promise<PushSubscription> {
 	localStorage.setItem(REKEY_KEY, '1');
 	await stale?.unsubscribe();
-	const fresh = await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key });
+	const fresh = await subscribe(registration, key);
 	localStorage.removeItem(REKEY_KEY);
 	return fresh;
+}
+
+const REFUSED_KEY = DEVICE_KEYS.pushRefusedAt;
+const REFUSED_BACKOFF_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Chrome answers `AbortError: Registration failed - push service error` when its push service will not register the
+ * browser, which no retry from the page fixes. Launches and tab switches then wait a day before asking again, instead
+ * of failing and reporting on each one.
+ */
+async function subscribe(registration: ServiceWorkerRegistration, key: Uint8Array<ArrayBuffer>) {
+	try {
+		const subscription = await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key });
+		localStorage.removeItem(REFUSED_KEY);
+		return subscription;
+	} catch (error) {
+		if (error instanceof DOMException && error.name === 'AbortError')
+			localStorage.setItem(REFUSED_KEY, String(Date.now()));
+		throw error;
+	}
+}
+
+function refusedRecently() {
+	return Date.now() - Number(localStorage.getItem(REFUSED_KEY)) < REFUSED_BACKOFF_MS;
 }
 
 function sameKey(current: ArrayBuffer | null, key: Uint8Array) {

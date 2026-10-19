@@ -1,15 +1,16 @@
 # Push notifications
 
-Stefan gets a system notification at each task's due time and at each reminder, even when ProcrastiMate is closed, for tasks changed on any device. The server computes the times from the synced tasks. The app asks for permission on first load (web) and first launch (iOS). If the browser still needs a gesture, the first click or keypress asks, with no prompt copy. Settings has one line: `Notifications: On`, `Notifications: Off`, or `Notifications need permission`. The last one is tappable: the web asks again, and iOS opens system Settings. Tapping a notification opens its task. A date with no time never notifies, and a moment notifies once even when a reminder lands on the due time. A reminder toast while the app is open stays.
+Stefan gets a system notification at each task's due time and at each reminder, even when ProcrastiMate is closed, for tasks changed on any device. The server computes the times from the synced tasks. The app asks for permission on first load (web) and first launch (iOS). If the browser still needs a gesture, the first click or keypress asks, with no prompt copy. Settings has one line: `Notifications: On`, `Notifications: Off`, or `Notifications need permission`. The last one is tappable: the web asks again, and iOS opens system Settings. Tapping a notification opens its task. A date with no time never notifies, and a moment notifies once even when a reminder lands on the due time. There is no in-app reminder toast; the system notification shows whether the app is open or closed, and iOS marks it time-sensitive.
 
 ## Sub-features
 
 - `push-sheet` is the settings line: `Notifications: On`, `Notifications: Off`, or `Notifications need permission`. There is no Notifications panel and no sidebar row.
 - `push-permission` asks on first launch or first load. A denial is the tappable line `Notifications need permission`.
 - `push-schedule` keeps each subscribed device's schedule on the server equal to the future due times and reminders of the account's incomplete tasks, in the synced time zone. Adding, editing, completing, deleting, or restoring a task on any device updates it after that device syncs. Completing a repeating task schedules its next occurrence.
-- `push-deliver` sends each scheduled moment once at its time to every subscribed device, as a notification titled with the task and a short body such as `Due now` or `Due at 6:00 PM`.
+- `push-deliver` sends each scheduled moment once at its time to every subscribed device, as a notification titled with the task and the due day and time as its body, such as `Today 3:00 PM`. iOS notifications are time-sensitive and show their banner in the foreground too.
 - `push-nudge` does not exist. Saving a timed task shows no `Turn on` toast.
 - `push-open` opens a task's details when its notification is tapped.
+- `push-refused` waits a day after the push service refuses to subscribe (Chrome's `push service error`) before trying again on a launch or tab switch. `e2e/push.e2e.ts`.
 - `push-rekey` moves a subscription made for an old server key to the current one on launch, with no prompt, so a VAPID rotation leaves push `On`.
 
 ## How to get to it (user POV)

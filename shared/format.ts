@@ -185,8 +185,6 @@ export function completedToast(title: string, next: Due | null, today: DateKey):
 	return next ? `Completed “${title}”, next due ${formatDue(next, today)}` : `Completed “${title}”`;
 }
 
-export const reminderToast = (title: string) => `Reminder: ${title}`;
-
 export const postponeOptionSchema = z.object({ label: z.string(), date: dateKeySchema }).meta({ id: 'PostponeOption' });
 export type PostponeOption = z.infer<typeof postponeOptionSchema>;
 

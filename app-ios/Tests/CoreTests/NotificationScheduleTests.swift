@@ -30,12 +30,12 @@ import Testing
             in: utc
         )
         #expect(schedule.map(\.tag) == ["call:\(minutes(10))", "call:\(minutes(30))", "gym:\(minutes(480))"])
-        #expect(schedule.map(\.body) == ["Due at 10:30 AM", "Due now", "Due now"])
+        #expect(schedule.map(\.body) == ["Today 10:30 AM", "Today 10:30 AM", "Today 6:00 PM"])
 
         let pending = [
-            Notifications.Pending(id: "call:\(minutes(10))", title: "call", body: "Due at 10:30 AM"),
-            Notifications.Pending(id: "call:\(minutes(30))", title: "old title", body: "Due now"),
-            Notifications.Pending(id: "done:\(minutes(5))", title: "done", body: "Due now"),
+            Notifications.Pending(id: "call:\(minutes(10))", title: "call", body: "Today 10:30 AM"),
+            Notifications.Pending(id: "call:\(minutes(30))", title: "old title", body: "Today 10:30 AM"),
+            Notifications.Pending(id: "done:\(minutes(5))", title: "done", body: "Today 10:05 AM"),
             Notifications.Pending(id: "test", title: "Notifications are on", body: ""),
         ]
         let change = Notifications.scheduleChange(schedule, pending: pending)
@@ -52,35 +52,6 @@ import Testing
         #expect(!Notifications.isTaskTag("test"))
         #expect(!Notifications.isTaskTag(":1"))
         #expect(!Notifications.isTaskTag("task:soon"))
-    }
-
-    @Test func dueRemindersAreTheMomentsSinceTheLastCheck() {
-        let tasks = [
-            task("Call mom", Due(date: "2026-10-14", time: "10:30")),
-            task("Taxes", Due(date: "2026-10-14", time: nil)),
-            task("Standup", Due(date: "2026-10-14", time: "10:45"), reminders: [.at(date: "2026-10-14", time: "10:45")]),
-            task("Gym", Due(date: "2026-10-14", time: "11:00"), reminders: [.before(minutes: 30)]),
-            task("Done", Due(date: "2026-10-14", time: "10:15"), completedAt: 1),
-        ]
-        let titles = { (since: Double, now: Double) in
-            Notifications.dueReminders(tasks, since: minutes(since), now: minutes(now), in: utc).map(\.title)
-        }
-        #expect(titles(0, 31) == ["Call mom", "Gym"])
-        #expect(titles(31, 46) == ["Standup"])
-        #expect(titles(46, 61) == ["Gym"])
-        #expect(titles(61, 600) == [])
-    }
-
-    @Test func dueRemindersFollowEventsAndSkipDueTimesAtAPlace() {
-        var meetup = task("Talk to Jan", nil)
-        meetup.event = TaskEvent(
-            id: "meetup", title: "Walking meetup", allDay: false, series: false, edge: .before, minutes: 15,
-            occurrences: [EventOccurrence(start: minutes(30), end: minutes(90), original: minutes(30))]
-        )
-        var milk = task("Buy milk", Due(date: "2026-10-14", time: "10:30"))
-        milk.location = TaskLocation(name: "Rewe", address: nil, latitude: 52.5, longitude: 13.4, radius: 150, trigger: .arrive)
-        let titles = Notifications.dueReminders([meetup, milk], since: minutes(0), now: minutes(31), in: utc).map(\.title)
-        #expect(titles == ["Talk to Jan"])
     }
 
     @Test func importingTheSameBackupTwiceAddsNothing() {
