@@ -24,19 +24,13 @@ public enum Notifications {
             .sorted()
     }
 
-    /// `Due now`, `Due at 5:00 PM`, `Due Tomorrow at 5:00 PM`, `Due today`, or `Reminder`. Days are named relative to the
+    /// The due day and time, such as `Today 3:00 PM` or `Tue Oct 20`, or `Reminder`. Days are named relative to the
     /// moment it shows.
     public static func notificationBody(_ due: Due?, at: Date, in zone: TimeZone) -> String {
         guard let due else { return "Reminder" }
-        let day = Dates.toDateKey(at, in: zone)
-        guard let time = due.time else {
-            return "Due \(Format.relativeDay(due.date, day)?.lowercased() ?? Format.calendarDay(due.date, day))"
-        }
-        if Dates.fromDateKey(due.date, time, in: zone).epochMilliseconds == at.epochMilliseconds { return "Due now" }
-        let clock = Format.clockTime(time)
-        return due.date == day
-            ? "Due at \(clock)"
-            : "Due \(Format.relativeDay(due.date, day) ?? Format.calendarDay(due.date, day)) at \(clock)"
+        let today = Dates.toDateKey(at, in: zone)
+        let day = Format.relativeDay(due.date, today) ?? Format.calendarDay(due.date, today)
+        return due.time.map { "\(day) \(Format.clockTime($0))" } ?? day
     }
 
     /// Every future moment an open task notifies, soonest first, with an event task's body naming its event, keeping the soonest `limit`.

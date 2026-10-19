@@ -65,8 +65,8 @@ test('notifications resolve and word their times in the given zone', () => {
 	};
 	const now = Date.parse('2026-10-14T00:00:00Z');
 	expect(upcomingNotifications([task], now, 10, 'America/New_York')).toEqual([
-		{ at: Date.parse('2026-10-14T22:00:00Z'), taskId: 'gym', title: 'Gym', body: 'Due Tomorrow at 6:00 PM' },
-		{ at: Date.parse('2026-10-15T22:00:00Z'), taskId: 'gym', title: 'Gym', body: 'Due now' },
+		{ at: Date.parse('2026-10-14T22:00:00Z'), taskId: 'gym', title: 'Gym', body: 'Tomorrow 6:00 PM' },
+		{ at: Date.parse('2026-10-15T22:00:00Z'), taskId: 'gym', title: 'Gym', body: 'Today 6:00 PM' },
 	]);
 	expect(upcomingNotifications([task], now, 10, 'Asia/Tokyo').map(n => n.at)).toEqual([
 		Date.parse('2026-10-14T09:00:00Z'),

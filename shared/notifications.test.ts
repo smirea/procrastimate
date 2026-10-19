@@ -60,15 +60,15 @@ describe('upcomingNotifications', () => {
 			}),
 		];
 		expect(pushSchedule(tasks, NOW)).toEqual([
-			{ at: local(2026, 10, 14, 10, 30), taskId: 'Call mom', title: 'Call mom', body: 'Due now' },
+			{ at: local(2026, 10, 14, 10, 30), taskId: 'Call mom', title: 'Call mom', body: 'Today 10:30 AM' },
 			{ at: local(2026, 10, 14, 12), taskId: 'Passport', title: 'Passport', body: 'Reminder' },
-			{ at: local(2026, 10, 14, 17), taskId: 'Gym', title: 'Gym', body: 'Due Tomorrow at 5:00 PM' },
-			{ at: local(2026, 10, 15, 8), taskId: 'Rent', title: 'Rent', body: 'Due today' },
-			{ at: local(2026, 10, 15, 9), taskId: 'Taxes', title: 'Taxes', body: 'Due Sat Oct 17' },
-			{ at: local(2026, 10, 15, 16, 30), taskId: 'Gym', title: 'Gym', body: 'Due at 5:00 PM' },
-			{ at: local(2026, 10, 15, 17), taskId: 'Gym', title: 'Gym', body: 'Due now' },
-			{ at: local(2026, 10, 20, 12), taskId: 'Lunch', title: 'Lunch', body: 'Due Tomorrow at 12:00 PM' },
-			{ at: local(2026, 10, 21, 12), taskId: 'Lunch', title: 'Lunch', body: 'Due now' },
+			{ at: local(2026, 10, 14, 17), taskId: 'Gym', title: 'Gym', body: 'Tomorrow 5:00 PM' },
+			{ at: local(2026, 10, 15, 8), taskId: 'Rent', title: 'Rent', body: 'Today' },
+			{ at: local(2026, 10, 15, 9), taskId: 'Taxes', title: 'Taxes', body: 'Sat Oct 17' },
+			{ at: local(2026, 10, 15, 16, 30), taskId: 'Gym', title: 'Gym', body: 'Today 5:00 PM' },
+			{ at: local(2026, 10, 15, 17), taskId: 'Gym', title: 'Gym', body: 'Today 5:00 PM' },
+			{ at: local(2026, 10, 20, 12), taskId: 'Lunch', title: 'Lunch', body: 'Tomorrow 12:00 PM' },
+			{ at: local(2026, 10, 21, 12), taskId: 'Lunch', title: 'Lunch', body: 'Today 12:00 PM' },
 		]);
 	});
 
@@ -105,7 +105,7 @@ describe('upcomingNotifications', () => {
 			task('Earlier', { due: { date: '2026-10-14', time: '10:00' } }),
 		];
 		expect(pushSchedule(tasks, NOW)).toEqual([
-			{ at: local(2026, 10, 14, 10, 15), taskId: 'Standup', title: 'Standup', body: 'Due now' },
+			{ at: local(2026, 10, 14, 10, 15), taskId: 'Standup', title: 'Standup', body: 'Today 10:15 AM' },
 		]);
 	});
 
@@ -120,7 +120,7 @@ describe('upcomingNotifications', () => {
 			}),
 		];
 		expect(pushSchedule(tasks, NOW)).toEqual([
-			{ at: local(2026, 10, 14, 10, 45), taskId: 'Standup', title: 'Standup', body: 'Due now' },
+			{ at: local(2026, 10, 14, 10, 45), taskId: 'Standup', title: 'Standup', body: 'Today 10:45 AM' },
 		]);
 	});
 
@@ -133,8 +133,8 @@ describe('upcomingNotifications', () => {
 		expect(pushSchedule([water], NOW)).toEqual([]);
 		const rolled = { ...water, ...nextOccurrence(water, '2026-10-14')! };
 		expect(pushSchedule([rolled], NOW)).toEqual([
-			{ at: local(2026, 10, 16, 8), taskId: 'Water plants', title: 'Water plants', body: 'Due at 9:00 AM' },
-			{ at: local(2026, 10, 16, 9), taskId: 'Water plants', title: 'Water plants', body: 'Due now' },
+			{ at: local(2026, 10, 16, 8), taskId: 'Water plants', title: 'Water plants', body: 'Today 9:00 AM' },
+			{ at: local(2026, 10, 16, 9), taskId: 'Water plants', title: 'Water plants', body: 'Today 9:00 AM' },
 		]);
 	});
 
@@ -155,22 +155,17 @@ describe('upcomingNotifications', () => {
 describe('notificationBody', () => {
 	test.each([
 		['a task with no due date', null, local(2026, 10, 14, 12), 'Reminder'],
-		['the due moment', { date: '2026-10-14', time: '17:00' }, local(2026, 10, 14, 17), 'Due now'],
-		['earlier the same day', { date: '2026-10-14', time: '17:00' }, local(2026, 10, 14, 16, 30), 'Due at 5:00 PM'],
-		['the day before', { date: '2026-10-15', time: '09:00' }, local(2026, 10, 14, 9), 'Due Tomorrow at 9:00 AM'],
-		['days before', { date: '2026-10-20', time: '09:00' }, local(2026, 10, 14, 9), 'Due Tue Oct 20 at 9:00 AM'],
-		['after the due time', { date: '2026-10-14', time: '09:00' }, local(2026, 10, 14, 9, 30), 'Due at 9:00 AM'],
-		['a date with no time, that day', { date: '2026-10-15', time: null }, local(2026, 10, 15, 8), 'Due today'],
-		[
-			'a date with no time, the day before',
-			{ date: '2026-10-15', time: null },
-			local(2026, 10, 14, 20),
-			'Due tomorrow',
-		],
-		['a date with no time, the day after', { date: '2026-10-14', time: null }, local(2026, 10, 15, 8), 'Due yesterday'],
-		['a date with no time, days before', { date: '2026-10-17', time: null }, local(2026, 10, 15, 9), 'Due Sat Oct 17'],
-		['across the DST change', { date: '2026-11-02', time: '09:00' }, local(2026, 11, 1, 8), 'Due Tomorrow at 9:00 AM'],
-		['next year', { date: '2027-01-05', time: null }, local(2026, 12, 30, 9), 'Due Tue Jan 5, 2027'],
+		['the due moment', { date: '2026-10-14', time: '17:00' }, local(2026, 10, 14, 17), 'Today 5:00 PM'],
+		['earlier the same day', { date: '2026-10-14', time: '17:00' }, local(2026, 10, 14, 16, 30), 'Today 5:00 PM'],
+		['the day before', { date: '2026-10-15', time: '09:00' }, local(2026, 10, 14, 9), 'Tomorrow 9:00 AM'],
+		['days before', { date: '2026-10-20', time: '09:00' }, local(2026, 10, 14, 9), 'Tue Oct 20 9:00 AM'],
+		['after the due time', { date: '2026-10-14', time: '09:00' }, local(2026, 10, 14, 9, 30), 'Today 9:00 AM'],
+		['a date with no time, that day', { date: '2026-10-15', time: null }, local(2026, 10, 15, 8), 'Today'],
+		['a date with no time, the day before', { date: '2026-10-15', time: null }, local(2026, 10, 14, 20), 'Tomorrow'],
+		['a date with no time, the day after', { date: '2026-10-14', time: null }, local(2026, 10, 15, 8), 'Yesterday'],
+		['a date with no time, days before', { date: '2026-10-17', time: null }, local(2026, 10, 15, 9), 'Sat Oct 17'],
+		['across the DST change', { date: '2026-11-02', time: '09:00' }, local(2026, 11, 1, 8), 'Tomorrow 9:00 AM'],
+		['next year', { date: '2027-01-05', time: null }, local(2026, 12, 30, 9), 'Tue Jan 5, 2027'],
 	] as const)('%s', (_, due, at, expected) => {
 		expect(notificationBody(due, at)).toBe(expected);
 	});

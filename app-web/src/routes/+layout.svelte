@@ -19,7 +19,7 @@
 	import { store } from '#lib/store.svelte.ts';
 	import { quickAddDefaults } from '#lib/screen.ts';
 	import { clock, sheets, trackKeyboardInset, motion } from '#lib/ui.svelte.ts';
-	import { fireDueReminders } from '#lib/reminders.ts';
+	import { notifyDueReminders } from '#lib/reminders.ts';
 	import { openTaskFromUrl, push } from '#lib/push.svelte.ts';
 	import { session } from '#lib/session.svelte.ts';
 	import { runSentrySmoke } from '#lib/sentry.ts';
@@ -103,7 +103,7 @@
 	// Only once the local database is read, or the check would pass every reminder that came up while closed.
 	$effect(() => {
 		const now = clock.now;
-		if (store.loaded) untrack(() => fireDueReminders(now));
+		if (store.loaded) untrack(() => notifyDueReminders(now));
 	});
 
 	$effect(() => {

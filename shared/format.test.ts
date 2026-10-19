@@ -17,7 +17,6 @@ const postponeOptions = recorded('format', format.postponeOptions);
 const priorityLabel = recorded('format', format.priorityLabel);
 const relativeDay = recorded('format', format.relativeDay);
 const addedAgo = recorded('format', format.addedAgo);
-const reminderToast = recorded('format', format.reminderToast);
 const repeatLabel = recorded('format', format.repeatLabel);
 const completedWhen = recorded('format', format.completedWhen);
 const completedHeading = recorded('format', format.completedHeading);
@@ -185,10 +184,6 @@ describe('labels and toasts', () => {
 		expect(completedToast('Standup', { date: '2026-10-16', time: '09:00' }, today)).toBe(
 			'Completed “Standup”, next due Friday 9am',
 		);
-	});
-
-	test('a reminder toast names the task', () => {
-		expect(reminderToast('Call mom')).toBe('Reminder: Call mom');
 	});
 
 	test('reopening names the task', () => {

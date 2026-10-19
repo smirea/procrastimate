@@ -33,7 +33,7 @@ struct ProcrastimateApp: App {
         let actions = TaskActions(store: store, toasts: toasts, clock: clock)
         let router = IntentRouter()
         // The delegate must be set before launch finishes, so tapping a notification can cold-start into its task.
-        let notifications = LocalNotifications(store: store, toasts: toasts, navigator: navigator, clock: clock)
+        let notifications = LocalNotifications(store: store, navigator: navigator, clock: clock)
         let auth = Session(sync: sync)
         sync.session = auth
         sync.toasts = toasts
@@ -131,7 +131,6 @@ struct ProcrastimateApp: App {
                 .onChange(of: scenePhase) {
                     guard scenePhase == .active else { return }
                     today = clock.today
-                    notifications.fireDueReminders()
                     sync.resume()
                     calendar.sync()
                     Task { await notifications.detect() }

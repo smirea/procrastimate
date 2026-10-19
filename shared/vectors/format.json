@@ -964,14 +964,6 @@
 			"output": "Completed “Standup”, next due Friday 9am"
 		},
 		{
-			"fn": "reminderToast",
-			"test": "labels and toasts › a reminder toast names the task",
-			"input": [
-				"Call mom"
-			],
-			"output": "Reminder: Call mom"
-		},
-		{
 			"fn": "reopenedToast",
 			"test": "labels and toasts › reopening names the task",
 			"input": [

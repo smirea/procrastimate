@@ -145,8 +145,6 @@ public enum Format {
         next.map { "Completed “\(title)”, next due \(formatDue($0, today))" } ?? "Completed “\(title)”"
     }
 
-    public static func reminderToast(_ title: String) -> String { "Reminder: \(title)" }
-
     /// `Today`, `Last 7 days`, `Last 30 days`, `All time`, or the custom days, such as `Oct 1 – Oct 12`.
     public static func completedRangeLabel(_ range: Views.CompletedRange, _ today: DateKey) -> String {
         switch (range.from, range.to) {
