@@ -69,7 +69,8 @@ export default defineConfig({
 				const dir = join(out, WORKERS_DIR);
 				if (!existsSync(dir)) throw new Error(`No database worker build in ${dir}`);
 				const files = readdirSync(dir, { recursive: true, withFileTypes: true })
-					.filter(entry => entry.isFile())
+					// The deploy deletes the source maps after uploading them, and a precache of a missing file fails.
+					.filter(entry => entry.isFile() && /\.(js|wasm)$/.test(entry.name))
 					.map(entry => `/${relative(out, join(entry.parentPath, entry.name))}`);
 				// The service worker precaches only this variant, so a PowerSync upgrade that renames it fails here.
 				if (!files.some(file => /\/wa-sqlite-async-[\w-]+\.wasm$/.test(file))) {
