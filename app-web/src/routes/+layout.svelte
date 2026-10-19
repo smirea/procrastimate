@@ -19,6 +19,7 @@
 	import { store } from '#lib/store.svelte.ts';
 	import { quickAddDefaults } from '#lib/screen.ts';
 	import { clock, sheets, trackKeyboardInset, motion } from '#lib/ui.svelte.ts';
+	import { keepCaretInView } from '#lib/caret.ts';
 	import { notifyDueReminders } from '#lib/reminders.ts';
 	import { openTaskFromUrl, push } from '#lib/push.svelte.ts';
 	import { session } from '#lib/session.svelte.ts';
@@ -83,6 +84,7 @@
 	$effect(() => applyTheme(theme.resolved, theme.accent));
 	$effect(() => clock.start());
 	$effect(() => trackKeyboardInset());
+	$effect(() => keepCaretInView());
 	$effect(() => untrack(() => void session.start().then(runSentrySmoke)));
 	$effect(() => {
 		const userId = session.userId;

@@ -24,6 +24,7 @@ struct ProcrastimateApp: App {
 
     init() {
         Telemetry.start()
+        CaretKeeper.shared.start()
         let clock = Launch.prepare()
         let navigator = Navigator()
         let toasts = Toasts()
