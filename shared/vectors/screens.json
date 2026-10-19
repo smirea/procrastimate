@@ -158,7 +158,7 @@
 			"output": {
 				"date": "2026-10-15",
 				"event": null,
-				"labelId": null,
+				"labelIds": [],
 				"location": null,
 				"projectId": null,
 				"sectionId": null
@@ -178,7 +178,7 @@
 			"output": {
 				"date": "2026-10-14",
 				"event": null,
-				"labelId": null,
+				"labelIds": [],
 				"location": null,
 				"projectId": null,
 				"sectionId": null
@@ -199,7 +199,7 @@
 			"output": {
 				"date": "2026-10-17",
 				"event": null,
-				"labelId": null,
+				"labelIds": [],
 				"location": null,
 				"projectId": null,
 				"sectionId": null
@@ -2267,7 +2267,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 16,
+					"createdAt": 22,
 					"createdBy": null,
 					"due": {
 						"date": "2026-10-14",
@@ -2327,7 +2327,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 17,
+					"createdAt": 23,
 					"createdBy": null,
 					"due": null,
 					"event": null,
@@ -2396,7 +2396,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 18,
+					"createdAt": 24,
 					"createdBy": null,
 					"due": null,
 					"event": {
