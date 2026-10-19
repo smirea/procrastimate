@@ -127,6 +127,7 @@ let handlers: [String: Handler] = [
     "ramble": rambleVector,
     "ramble-fill": rambleFillVector,
     "screens": screensVector,
+    "lists": listsVector,
     "memo-tasks": memoTasksVector,
     "links": linksVector,
     "rows": rowsVector,
@@ -210,6 +211,8 @@ private struct Occurrence: Decodable {
     case "eventTasks": return try json(Views.eventTasks(a(0), a(1), a(2), in: a.zone))
     case "todayTasks": return try json(Views.todayTasks(a(0), a(1), in: a.zone))
     case "upcomingGroups": return try json(Views.upcomingGroups(a(0), a(1), in: a.zone))
+    case "dueDays": return try json(Views.dueDays(a(0), a(1), a(2), in: a.zone))
+    case "weekEnd": return try json(Views.weekEnd(a(0)))
     case "completedRange": return try json(Views.completedRange(a(0), a(1)))
     case "completedTasks": return try json(Views.completedTasks(a(0), a(1), in: a.zone))
     case "completedDays": return try json(Views.completedDays(a(0), a(1), in: a.zone))
@@ -535,6 +538,8 @@ private struct ScreenInput: Decodable {
     func screen() throws -> ListScreen {
         switch kind {
         case "inbox": .inbox(date: date)
+        case "tomorrow": .tomorrow
+        case "this-week": .thisWeek(date: date)
         case "no-date": .noDate
         case "completed": .completed
         case "project": .project(id: id ?? "", sectionId: sectionId)
@@ -554,9 +559,40 @@ private struct SharedSpaceInput: Decodable {
 @Sendable func screensVector(_ fn: String, _ a: Args) throws -> JSONValue {
     let screen = try a(0, as: ScreenInput?.self)?.screen()
     switch fn {
-    case "screenDefaults": return try json(ListDefaultsJSON(Screens.defaults(screen, a(1), a(2, as: SharedSpaceInput?.self)?.access)))
+    case "screenDefaults": return try json(ListDefaultsJSON(Screens.defaults(screen, a(1), a(2, as: SharedSpaceInput?.self)?.access, today: a(3))))
     case "canAddTo": return try json(Screens.canAdd(to: screen, a(1, as: SharedSpaceInput?.self)?.access))
     case "screenHolds": return try json(Screens.holds(screen, a(1), a(2), in: a.zone))
+    default: throw unknown(fn)
+    }
+}
+
+/// `ListSource` in TS: the user's own lists and the spaces shared with them.
+private struct ListSourceInput: Decodable {
+    struct Own: Decodable {
+        let tasks: [TaskItem]
+        let projects: [Project]
+        let labels: [Label]
+    }
+
+    let own: Own
+    let shared: [SharedSpaceDataInput]
+}
+
+@Sendable func listsVector(_ fn: String, _ a: Args) throws -> JSONValue {
+    switch fn {
+    case "listCatalog":
+        let source = try a(0, as: ListSourceInput.self)
+        return try json(Lists.catalog(
+            own: (source.own.tasks, source.own.projects, source.own.labels),
+            shared: source.shared.map { space in
+                SharedSpace(
+                    id: space.owner.id, owner: space.owner,
+                    data: Snapshot(tasks: space.data.tasks, projects: space.data.projects, labels: space.data.labels, settings: API.Settings())
+                )
+            },
+            today: a(1),
+            in: a.zone
+        ))
     default: throw unknown(fn)
     }
 }

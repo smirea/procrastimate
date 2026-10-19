@@ -1,0 +1,549 @@
+{
+	"module": "lists",
+	"timeZone": "America/New_York",
+	"cases": [
+		{
+			"fn": "listCatalog",
+			"test": "listCatalog › lists every list in one order, with each count its screen lists",
+			"input": [
+				{
+					"own": {
+						"labels": [
+							{
+								"color": "gray",
+								"createdAt": 1,
+								"id": "calls",
+								"name": "calls",
+								"place": null
+							},
+							{
+								"color": "gray",
+								"createdAt": 1,
+								"id": "errands",
+								"name": "Errands",
+								"place": null
+							}
+						],
+						"projects": [
+							{
+								"createdAt": 1,
+								"icon": null,
+								"id": "work",
+								"name": "Work",
+								"order": 2
+							},
+							{
+								"createdAt": 1,
+								"icon": null,
+								"id": "home",
+								"name": "Home",
+								"order": 1
+							}
+						],
+						"tasks": [
+							{
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 1,
+								"createdBy": null,
+								"due": {
+									"date": "2026-10-12",
+									"time": null
+								},
+								"event": null,
+								"id": "overdue",
+								"images": [],
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "overdue"
+							},
+							{
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 1,
+								"createdBy": null,
+								"due": {
+									"date": "2026-10-14",
+									"time": null
+								},
+								"event": null,
+								"id": "today",
+								"images": [],
+								"labelIds": [
+									"calls"
+								],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": "work",
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "today"
+							},
+							{
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 1,
+								"createdBy": null,
+								"due": {
+									"date": "2026-10-15",
+									"time": null
+								},
+								"event": null,
+								"id": "tomorrow",
+								"images": [],
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "tomorrow"
+							},
+							{
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 1,
+								"createdBy": null,
+								"due": {
+									"date": "2026-10-18",
+									"time": null
+								},
+								"event": null,
+								"id": "sunday",
+								"images": [],
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "sunday"
+							},
+							{
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 1,
+								"createdBy": null,
+								"due": {
+									"date": "2026-10-20",
+									"time": null
+								},
+								"event": null,
+								"id": "next week",
+								"images": [],
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "next week"
+							},
+							{
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 1,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"id": "undated",
+								"images": [],
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "undated"
+							},
+							{
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 1,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"id": "at the park",
+								"images": [],
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": {
+									"address": null,
+									"latitude": 52.52,
+									"longitude": 13.405,
+									"name": "Park",
+									"radius": 150,
+									"trigger": "arrive"
+								},
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": "home",
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "at the park"
+							},
+							{
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 1,
+								"createdBy": null,
+								"due": null,
+								"event": {
+									"allDay": false,
+									"edge": "before",
+									"id": "standup",
+									"minutes": 15,
+									"occurrences": [
+										{
+											"end": 1792001800000,
+											"original": 1792000000000,
+											"start": 1792000000000
+										}
+									],
+									"series": false,
+									"title": "Standup"
+								},
+								"id": "at standup",
+								"images": [],
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": "work",
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "at standup"
+							},
+							{
+								"completedAt": 5,
+								"completedBy": null,
+								"createdAt": 1,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"id": "done",
+								"images": [],
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "done"
+							}
+						]
+					},
+					"shared": [
+						{
+							"data": {
+								"labels": [
+									{
+										"color": "gray",
+										"createdAt": 1,
+										"id": "weekend",
+										"name": "Weekend",
+										"place": null
+									}
+								],
+								"projects": [
+									{
+										"createdAt": 1,
+										"icon": null,
+										"id": "garden",
+										"name": "Garden",
+										"order": 0
+									}
+								],
+								"tasks": [
+									{
+										"completedAt": null,
+										"completedBy": null,
+										"createdAt": 1,
+										"createdBy": null,
+										"due": null,
+										"event": null,
+										"id": "loose",
+										"images": [],
+										"labelIds": [],
+										"lastCompletedAt": null,
+										"location": null,
+										"notes": "",
+										"order": 0,
+										"parentId": null,
+										"priority": 4,
+										"projectId": null,
+										"recurrence": null,
+										"reminders": [],
+										"sectionId": null,
+										"title": "Loose"
+									}
+								]
+							},
+							"owner": {
+								"id": "ann",
+								"kind": "human",
+								"name": "Ann",
+								"ownerId": null
+							}
+						}
+					]
+				},
+				"2026-10-14"
+			],
+			"output": [
+				{
+					"entries": [
+						{
+							"count": 3,
+							"id": "inbox",
+							"kind": "inbox",
+							"name": "Inbox",
+							"owner": null
+						},
+						{
+							"count": 1,
+							"id": "tomorrow",
+							"kind": "tomorrow",
+							"name": "Tomorrow",
+							"owner": null
+						},
+						{
+							"count": 5,
+							"id": "this-week",
+							"kind": "this-week",
+							"name": "This week",
+							"owner": null
+						},
+						{
+							"count": 1,
+							"id": "no-date",
+							"kind": "no-date",
+							"name": "No date",
+							"owner": null
+						}
+					],
+					"kind": "lists",
+					"title": "Lists"
+				},
+				{
+					"entries": [
+						{
+							"count": 1,
+							"id": "home",
+							"kind": "project",
+							"name": "Home",
+							"owner": null
+						},
+						{
+							"count": 2,
+							"id": "work",
+							"kind": "project",
+							"name": "Work",
+							"owner": null
+						}
+					],
+					"kind": "projects",
+					"title": "Projects"
+				},
+				{
+					"entries": [
+						{
+							"count": 0,
+							"id": "garden",
+							"kind": "project",
+							"name": "Garden",
+							"owner": {
+								"id": "ann",
+								"kind": "human",
+								"name": "Ann",
+								"ownerId": null
+							}
+						},
+						{
+							"count": 0,
+							"id": "weekend",
+							"kind": "label",
+							"name": "Weekend",
+							"owner": {
+								"id": "ann",
+								"kind": "human",
+								"name": "Ann",
+								"ownerId": null
+							}
+						}
+					],
+					"kind": "shared",
+					"title": "Shared with me"
+				},
+				{
+					"entries": [
+						{
+							"count": 1,
+							"id": "52.5200,13.4050",
+							"kind": "place",
+							"name": "Park",
+							"owner": null
+						}
+					],
+					"kind": "places",
+					"title": "Places"
+				},
+				{
+					"entries": [
+						{
+							"count": 1,
+							"id": "standup",
+							"kind": "event",
+							"name": "Standup",
+							"owner": null
+						}
+					],
+					"kind": "events",
+					"title": "Events"
+				},
+				{
+					"entries": [
+						{
+							"count": 1,
+							"id": "calls",
+							"kind": "label",
+							"name": "calls",
+							"owner": null
+						},
+						{
+							"count": 0,
+							"id": "errands",
+							"kind": "label",
+							"name": "Errands",
+							"owner": null
+						}
+					],
+					"kind": "labels",
+					"title": "Labels"
+				}
+			]
+		},
+		{
+			"fn": "listCatalog",
+			"test": "listCatalog › keeps every fixed list and every group when there is nothing to list",
+			"input": [
+				{
+					"own": {
+						"labels": [],
+						"projects": [],
+						"tasks": []
+					},
+					"shared": []
+				},
+				"2026-10-14"
+			],
+			"output": [
+				{
+					"entries": [
+						{
+							"count": 0,
+							"id": "inbox",
+							"kind": "inbox",
+							"name": "Inbox",
+							"owner": null
+						},
+						{
+							"count": 0,
+							"id": "tomorrow",
+							"kind": "tomorrow",
+							"name": "Tomorrow",
+							"owner": null
+						},
+						{
+							"count": 0,
+							"id": "this-week",
+							"kind": "this-week",
+							"name": "This week",
+							"owner": null
+						},
+						{
+							"count": 0,
+							"id": "no-date",
+							"kind": "no-date",
+							"name": "No date",
+							"owner": null
+						}
+					],
+					"kind": "lists",
+					"title": "Lists"
+				},
+				{
+					"entries": [],
+					"kind": "projects",
+					"title": "Projects"
+				},
+				{
+					"entries": [],
+					"kind": "shared",
+					"title": "Shared with me"
+				},
+				{
+					"entries": [],
+					"kind": "places",
+					"title": "Places"
+				},
+				{
+					"entries": [],
+					"kind": "events",
+					"title": "Events"
+				},
+				{
+					"entries": [],
+					"kind": "labels",
+					"title": "Labels"
+				}
+			]
+		}
+	]
+}

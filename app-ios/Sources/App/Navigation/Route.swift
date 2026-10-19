@@ -7,8 +7,10 @@ enum AppTab: Hashable {
 }
 
 enum Route: Hashable {
-    /// Inbox and No date push from Browse while they are not pinned.
+    /// The fixed lists push from Browse while they are not pinned.
     case inbox
+    case tomorrow
+    case thisWeek
     case noDate
     case project(id: String)
     case label(id: String)
@@ -19,6 +21,8 @@ enum Route: Hashable {
     var screen: ListScreen {
         switch self {
         case .inbox: .inbox()
+        case .tomorrow: .tomorrow
+        case .thisWeek: .thisWeek()
         case .noDate: .noDate
         case let .project(id): .project(id: id)
         case let .label(id): .label(id: id)

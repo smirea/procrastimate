@@ -55,7 +55,7 @@ private struct TabsSettings: View {
             } header: {
                 Text("Tabs")
             } footer: {
-                Text("Browse always comes last. Up to \(limit) more fit across this screen. A tab with no open tasks hides until it has some, except Inbox.")
+                Text("Browse always comes last. Up to \(limit) more fit across this screen.")
             }
 
             ForEach(store.pinGroups(excluding: navigator.pins, today: today)) { group in

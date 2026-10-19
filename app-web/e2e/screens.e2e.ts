@@ -79,19 +79,3 @@ test("an Inbox day's add row adds a task on that day", async ({ app, page }) => 
 	await expect(page.getByRole('heading', { level: 1, name: 'Inbox' })).toBeVisible();
 	await expect(page.getByRole('region', { name: 'Tomorrow' }).locator('[data-task="Water the plants"]')).toBeVisible();
 });
-
-test("a No date place group's add row adds a task at that place", async ({ app, page }) => {
-	await seed(app, 'Walk the loop', { location: tiergarten });
-	await seed(app, 'Bring bread', { location: tiergarten });
-	await page.goto('/no-date');
-	await page
-		.getByRole('region', { name: 'Tiergarten' })
-		.getByRole('button', { name: 'Add task to Tiergarten' })
-		.click();
-	await expect(app.quickAdd().getByText('Tiergarten')).toBeVisible();
-	await app.taskInput().fill('Feed the ducks');
-	await app.taskInput().press('Enter');
-
-	await expect(page.getByRole('heading', { level: 1, name: 'No date' })).toBeVisible();
-	await expect(app.list('Tasks at Tiergarten').locator('[data-task="Feed the ducks"]')).toBeVisible();
-});

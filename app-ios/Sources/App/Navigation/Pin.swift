@@ -5,6 +5,8 @@ extension Pin {
     var route: Route {
         switch self {
         case .inbox: .inbox
+        case .tomorrow: .tomorrow
+        case .thisWeek: .thisWeek
         case .noDate: .noDate
         case let .project(id): .project(id: id)
         case let .label(id): .label(id: id)
@@ -20,7 +22,7 @@ struct PinLabel {
     let systemImage: String
 }
 
-/// Pins grouped the way Browse lists them, for the tab menus and Settings.
+/// The catalog's groups as pins, for the tab menus and Settings.
 struct PinGroup: Identifiable {
     let title: String
     let pins: [Pin]
@@ -31,8 +33,10 @@ extension Store {
     /// Nil for a project or label that is gone, or not synced to this device yet; its pin stays stored but hidden.
     func label(of pin: Pin) -> PinLabel? {
         switch pin {
-        case .inbox: PinLabel(title: "Inbox", systemImage: "tray")
-        case .noDate: PinLabel(title: "No date", systemImage: "calendar.badge.minus")
+        case .inbox: PinLabel(title: "Inbox", systemImage: Pin.inbox.systemImage)
+        case .tomorrow: PinLabel(title: "Tomorrow", systemImage: Pin.tomorrow.systemImage)
+        case .thisWeek: PinLabel(title: "This week", systemImage: Pin.thisWeek.systemImage)
+        case .noDate: PinLabel(title: "No date", systemImage: Pin.noDate.systemImage)
         case let .project(id): project(id).map { PinLabel(title: $0.name, systemImage: $0.systemImage) }
         case let .label(id): label(id).map { PinLabel(title: $0.name, systemImage: $0.systemImage()) }
         case let .place(_, name): PinLabel(title: name, systemImage: "mappin.and.ellipse")
@@ -40,43 +44,42 @@ extension Store {
         }
     }
 
-    /// Whether the pin's screen has open tasks. Inbox always counts, so the bar never loses its first tab.
-    func hasOpenTasks(_ pin: Pin, today: DateKey) -> Bool {
+    /// Whether the pin's list exists. A place or an event exists only while open tasks point at it; every other list
+    /// exists while its project or label does, which `label(of:)` already checks.
+    func exists(_ pin: Pin, today: DateKey) -> Bool {
         switch pin {
-        case .inbox: true
-        case .noDate: !Views.inboxTasks(tasks, today, in: timeZone).isEmpty
-        case let .project(id):
-            !Views.projectTasks(data(in: space(ofProject: id) ?? .own).tasks, id, in: timeZone).isEmpty
-        case let .label(id):
-            label(id).map { !Views.labelViewTasks(data(in: space(ofLabel: id) ?? .own).tasks, $0, in: timeZone).isEmpty } ?? false
         case let .place(key, _): !Views.placeTasks(tasks, key, in: timeZone).isEmpty
         case let .event(id, _): !Views.eventTasks(tasks, id, today, in: timeZone).isEmpty
+        case .inbox, .tomorrow, .thisWeek, .noDate, .project, .label: true
         }
     }
 
-    /// Every pinnable screen in Browse's order, leaving out the ones already pinned.
+    /// Every top-level list, from the one catalog Browse and the tab menus share.
+    func listCatalog(today: DateKey) -> [Lists.Group] {
+        Lists.catalog(own: (tasks, snapshot.projects, labels), shared: sharedSpaces, today: today, in: timeZone)
+    }
+
+    /// Every list in the catalog's order, leaving out the ones already pinned.
     func pinGroups(excluding pinned: [Pin], today: DateKey) -> [PinGroup] {
         let taken = Set(pinned.map(\.key))
-        let shared = SpaceRouting.sharedEntries(sharedSpaces).compactMap { entry -> Pin? in
-            switch entry.kind {
-            case .project: .project(id: entry.id)
-            case .label: .label(id: entry.id)
-            case .task: nil
-            }
-        }
-        let groups = [
-            PinGroup(title: "Lists", pins: [.inbox, .noDate]),
-            PinGroup(title: "Projects", pins: projects.map { .project(id: $0.id) }),
-            PinGroup(title: "Shared with me", pins: shared),
-            PinGroup(title: "Places", pins: Triggers.placeGroups(tasks, labels).map { .place(key: $0.key, name: $0.name) }),
-            PinGroup(
-                title: "Events",
-                pins: Triggers.eventGroups(tasks, today, in: timeZone).map { .event(id: $0.id, title: $0.title) }
-            ),
-            PinGroup(title: "Labels", pins: Browse.labelsByName(labels).map { .label(id: $0.id) }),
-        ]
-        return groups
-            .map { PinGroup(title: $0.title, pins: $0.pins.filter { !taken.contains($0.key) }) }
+        return listCatalog(today: today)
+            .map { group in PinGroup(title: group.title, pins: group.entries.map(Pin.init).filter { !taken.contains($0.key) }) }
             .filter { !$0.pins.isEmpty }
+    }
+}
+
+extension Pin {
+    /// The symbol of a list that always exists, shared by its tab and its Browse row.
+    var systemImage: String {
+        switch self {
+        case .inbox: "tray"
+        case .tomorrow: "sunrise"
+        case .thisWeek: "calendar.day.timeline.left"
+        case .noDate: "calendar.badge.minus"
+        case .project: "number"
+        case .label: "tag"
+        case .place: "mappin.and.ellipse"
+        case .event: "calendar"
+        }
     }
 }

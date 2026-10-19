@@ -1,7 +1,8 @@
 import type { AccessRow } from './db/schema.ts';
-import type { DateKey, Task } from './task.ts';
+import { addDays, type DateKey, type Task } from './task.ts';
 import { placeKey, scheduledDue } from './triggers.ts';
 import type { TaskEvent, TaskLocation } from './values.ts';
+import { weekEnd } from './views.ts';
 
 /**
  * A list screen, on any client. A project screen names a section, and Inbox a day, when quick add opens from that
@@ -9,6 +10,8 @@ import type { TaskEvent, TaskLocation } from './values.ts';
  */
 export type Screen =
 	| { kind: 'inbox'; date?: DateKey | null }
+	| { kind: 'tomorrow' }
+	| { kind: 'this-week'; date?: DateKey | null }
 	| { kind: 'no-date' }
 	| { kind: 'completed' }
 	| { kind: 'project'; id: string; sectionId?: string | null }
@@ -61,10 +64,16 @@ const earliest = (tasks: readonly Task[], match: (task: Task) => boolean) => {
 
 /**
  * Quick add inherits the screen it opens from, so the new task lands on that screen: its project and section, its
- * label, its place, its event, or the day of an Inbox heading. Inbox itself adds an undated task, as capture always
- * has, and so do No date, Completed, and a shared project or label the user can't add to (`canAddTo`).
+ * label, its place, its event, or the day of a day heading. Tomorrow starts tomorrow and This week today, the one day
+ * the week always holds. Inbox itself adds an undated task, as capture always has, and so do No date, Completed, and a
+ * shared project or label the user can't add to (`canAddTo`).
  */
-export function screenDefaults(screen: Screen | null, tasks: readonly Task[], space: SharedSpace | null): ListDefaults {
+export function screenDefaults(
+	screen: Screen | null,
+	tasks: readonly Task[],
+	space: SharedSpace | null,
+	today: DateKey,
+): ListDefaults {
 	if (!canAddTo(screen, space)) return NO_DEFAULTS;
 	switch (screen?.kind) {
 		case undefined:
@@ -73,6 +82,10 @@ export function screenDefaults(screen: Screen | null, tasks: readonly Task[], sp
 			return NO_DEFAULTS;
 		case 'inbox':
 			return { ...NO_DEFAULTS, date: screen.date ?? null };
+		case 'tomorrow':
+			return { ...NO_DEFAULTS, date: addDays(today, 1) };
+		case 'this-week':
+			return { ...NO_DEFAULTS, date: screen.date ?? today };
 		case 'project':
 			return { ...NO_DEFAULTS, projectId: screen.id, sectionId: screen.sectionId ?? null };
 		case 'label':
@@ -98,6 +111,12 @@ export function screenHolds(screen: Screen | null, task: Task, today: DateKey, z
 			return false;
 		case 'inbox':
 			return scheduledDue(task, today, zone) !== null;
+		case 'tomorrow':
+			return scheduledDue(task, today, zone)?.date === addDays(today, 1);
+		case 'this-week': {
+			const day = scheduledDue(task, today, zone)?.date;
+			return day !== undefined && day <= weekEnd(today);
+		}
 		case 'no-date':
 			return task.projectId === null && task.parentId === null && scheduledDue(task, today, zone) === null;
 		case 'project':

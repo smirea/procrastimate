@@ -146,6 +146,8 @@ enum IntentHarness {
     private static func open(_ name: String) async {
         let list: TaskListKind? = switch name.lowercased() {
         case "inbox": .inbox
+        case "tomorrow": .tomorrow
+        case "this week": .thisWeek
         case "no date": .noDate
         case "browse": .browse
         default: nil

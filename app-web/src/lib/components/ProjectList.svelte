@@ -5,14 +5,13 @@
 	import { slide } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import ProjectGlyph from './ProjectGlyph.svelte';
-	import { openCounts } from 'shared/views.ts';
+	import type { ListEntry } from 'shared/lists.ts';
 	import { store } from '../store.svelte.ts';
 	import { motion } from '../ui.svelte.ts';
 	import { Reorder } from '../reorder.svelte.ts';
 
-	let { children }: { children?: Snippet } = $props();
+	let { projects, children }: { projects: readonly ListEntry[]; children?: Snippet } = $props();
 
-	const projects = $derived(store.ownProjects);
 	let list: HTMLUListElement;
 	const reorder = new Reorder({ key: 'data-project-id', lift: 'hold', count: () => projects.length, move: (id, to) => store.moveProject(id, to) });
 
@@ -26,15 +25,12 @@
 		await tick();
 		list.querySelector<HTMLElement>(`[data-project-id="${id}"] a`)?.focus();
 	}
-
-	const counts = $derived(openCounts(store.own.tasks, store.own.labels));
 </script>
 
 <ul bind:this={list} {@attach reorder.list} class="relative space-y-0.5">
 	{#each projects as project, index (project.id)}
 		{@const href = `/projects/${project.id}`}
 		{@const active = page.url.pathname === href}
-		{@const count = counts.projects.get(project.id) ?? 0}
 		<li
 			data-project-id={project.id}
 			class="relative rounded-full"
@@ -57,9 +53,9 @@
 					if (reorder.busy) e.preventDefault();
 				}}
 			>
-				<ProjectGlyph {project} size={18} weight={active ? 'fill' : 'regular'} />
+				<ProjectGlyph project={store.project(project.id)} size={18} weight={active ? 'fill' : 'regular'} />
 				<span class="flex-1 truncate">{project.name}</span>
-				{#if count}<span class="text-[12px] text-faint">{count}</span>{/if}
+				{#if project.count}<span class="text-[12px] text-faint">{project.count}</span>{/if}
 			</a>
 		</li>
 	{/each}

@@ -44,38 +44,38 @@ private struct BrowseList: View {
     let scroll: ScrollViewProxy
 
     var body: some View {
-        let labels = Browse.labelsByName(store.labels)
-        let counts = Views.openCounts(store.tasks, store.labels)
+        let catalog = Dictionary(uniqueKeysWithValues: store.listCatalog(today: today).map { ($0.kind, $0) })
+        let projects = catalog[.projects]!.entries
+        let labels = catalog[.labels]!.entries
         List {
-            let lists = [Pin.inbox, .noDate].filter { !navigator.pins.contains($0) }
+            let lists = catalog[.lists]!.entries.filter { !navigator.pins.contains(Pin($0)) }
             if !lists.isEmpty {
                 Section {
-                    ForEach(lists, id: \.key) { pin in
-                        if let label = store.label(of: pin) {
-                            NavigationLink(value: pin.route) {
-                                BrowseRow(name: label.title, systemImage: label.systemImage, tone: .accent, count: count(pin))
-                            }
-                            .accessibilityIdentifier("browse-\(pin.key)")
+                    ForEach(lists) { entry in
+                        let pin = Pin(entry)
+                        NavigationLink(value: pin.route) {
+                            BrowseRow(name: entry.name, systemImage: pin.systemImage, tone: .accent, count: entry.count)
                         }
+                        .accessibilityIdentifier("browse-\(pin.key)")
                     }
                 }
             }
 
             Section {
-                ForEach(store.projects) { project in
+                ForEach(projects) { project in
                     NavigationLink(value: Route.project(id: project.id)) {
                         BrowseRow(
                             name: project.name,
-                            systemImage: project.systemImage,
+                            systemImage: store.project(project.id)?.systemImage ?? "number",
                             tone: .muted,
-                            count: counts.projects[project.id] ?? 0
+                            count: project.count
                         )
                     }
                     .accessibilityIdentifier("browse-project-\(project.name)")
                 }
                 .onMove { from, to in
                     guard let from = from.first else { return }
-                    store.moveProject(store.projects[from].id, to: to > from ? to - 1 : to)
+                    store.moveProject(projects[from].id, to: to > from ? to - 1 : to)
                 }
                 if adding {
                     TextField("Project name", text: $name)
@@ -95,60 +95,61 @@ private struct BrowseList: View {
                 }
             }
 
-            let shared = SpaceRouting.sharedEntries(store.sharedSpaces)
+            // Shared tasks no shared list leads to are not lists, so they follow the shared lists.
+            let sharedTasks = SpaceRouting.sharedEntries(store.sharedSpaces).filter { $0.kind == .task }
+            let shared = catalog[.shared]!.entries.map { SharedRow(list: $0) } + sharedTasks.map { SharedRow(task: $0) }
             if !shared.isEmpty {
                 Section {
-                    ForEach(shared) { entry in
-                        SharedRow(entry: entry)
-                    }
+                    ForEach(shared, id: \.id) { $0 }
                 } header: {
-                    SectionHeader(title: "Shared with me") { EmptyView() }
+                    SectionHeader(title: catalog[.shared]!.title) { EmptyView() }
                 }
             }
 
-            let places = Triggers.placeGroups(store.tasks, store.labels)
-            if !places.isEmpty {
+            let places = catalog[.places]!
+            if !places.entries.isEmpty {
                 Section {
-                    ForEach(places, id: \.key) { place in
-                        NavigationLink(value: Route.place(key: place.key)) {
+                    ForEach(places.entries) { place in
+                        NavigationLink(value: Route.place(key: place.id)) {
                             BrowseRow(name: place.name, systemImage: "mappin.and.ellipse", tone: .accent, count: place.count)
                         }
                         .accessibilityIdentifier("browse-place-\(place.name)")
                     }
                 } header: {
-                    SectionHeader(title: "Places") { EmptyView() }
+                    SectionHeader(title: places.title) { EmptyView() }
                 }
             }
 
-            let events = Triggers.eventGroups(store.tasks, today, in: store.timeZone)
-            if !events.isEmpty {
+            let events = catalog[.events]!
+            if !events.entries.isEmpty {
                 Section {
-                    ForEach(events) { event in
+                    ForEach(events.entries) { event in
                         NavigationLink(value: Route.event(id: event.id)) {
-                            BrowseRow(name: event.title, systemImage: "calendar", tone: .toneWeek, count: event.count)
+                            BrowseRow(name: event.name, systemImage: "calendar", tone: .toneWeek, count: event.count)
                         }
-                        .accessibilityIdentifier("browse-event-\(event.title)")
+                        .accessibilityIdentifier("browse-event-\(event.name)")
                     }
                 } header: {
-                    SectionHeader(title: "Events") { EmptyView() }
+                    SectionHeader(title: events.title) { EmptyView() }
                 }
             }
 
             if !labels.isEmpty {
                 Section {
-                    ForEach(labels) { label in
-                        NavigationLink(value: Route.label(id: label.id)) {
+                    ForEach(labels) { entry in
+                        let label = store.label(entry.id)
+                        NavigationLink(value: Route.label(id: entry.id)) {
                             BrowseRow(
-                                name: label.name,
-                                systemImage: label.systemImage(),
-                                tone: label.color.tone,
-                                count: counts.labels[label.id] ?? 0
+                                name: entry.name,
+                                systemImage: label?.systemImage() ?? "tag",
+                                tone: label?.color.tone ?? .toneLabel,
+                                count: entry.count
                             )
                         }
-                        .accessibilityIdentifier("browse-label-\(label.name)")
+                        .accessibilityIdentifier("browse-label-\(entry.name)")
                     }
                 } header: {
-                    SectionHeader(title: "Labels") { EmptyView() }
+                    SectionHeader(title: catalog[.labels]!.title) { EmptyView() }
                 }
             }
 
@@ -169,8 +170,8 @@ private struct BrowseList: View {
             }
         }
         .scrollContentBackground(.hidden)
-        .animation(.snappy, value: store.projects)
-        .animation(.snappy, value: labels)
+        .animation(.snappy, value: projects.map(\.id))
+        .animation(.snappy, value: labels.map(\.id))
         .onChange(of: nameFocused) {
             if !nameFocused, adding { createProject() }
         }
@@ -182,13 +183,6 @@ private struct BrowseList: View {
     }
 
     private static let newProject = "new-project"
-
-    /// Inbox counts what its tab badge counts, No date its undated tasks.
-    private func count(_ pin: Pin) -> Int {
-        guard pin == .inbox else { return Views.inboxTasks(store.tasks, today, in: store.timeZone).count }
-        let due = Views.todayTasks(store.tasks, today, in: store.timeZone)
-        return due.overdue.count + due.today.count
-    }
 
     private func createProject() {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -234,17 +228,34 @@ private struct BrowseRow: View {
 private struct SharedRow: View {
     @Environment(Navigator.self) private var navigator
     @Environment(Store.self) private var store
-    let entry: SpaceRouting.SharedEntry
+    let kind: SpaceRouting.SharedEntry.Kind
+    let id: String
+    let name: String
+    let owner: Person
+
+    init(list: Lists.Entry) {
+        kind = list.kind == .label ? .label : .project
+        id = list.id
+        name = list.name
+        owner = list.owner!
+    }
+
+    init(task: SpaceRouting.SharedEntry) {
+        kind = task.kind
+        id = task.id
+        name = task.name
+        owner = task.owner
+    }
 
     var body: some View {
-        switch entry.kind {
+        switch kind {
         case .project:
-            NavigationLink(value: Route.project(id: entry.id)) { label(store.project(entry.id)?.systemImage ?? "number", .muted) }
+            NavigationLink(value: Route.project(id: id)) { label(store.project(id)?.systemImage ?? "number", .muted) }
         case .label:
-            let shared = store.label(entry.id)
-            NavigationLink(value: Route.label(id: entry.id)) { label(shared?.systemImage() ?? "tag", shared?.color.tone ?? .toneLabel) }
+            let shared = store.label(id)
+            NavigationLink(value: Route.label(id: id)) { label(shared?.systemImage() ?? "tag", shared?.color.tone ?? .toneLabel) }
         case .task:
-            Button { navigator.sheet = .details(taskID: entry.id) } label: { label("checkmark.circle", .muted) }
+            Button { navigator.sheet = .details(taskID: id) } label: { label("checkmark.circle", .muted) }
         }
     }
 
@@ -253,18 +264,18 @@ private struct SharedRow: View {
             Image(systemName: systemImage)
                 .foregroundStyle(tone)
                 .frame(width: 22)
-            Text(entry.name)
+            Text(name)
                 .foregroundStyle(.ink)
                 .lineLimit(1)
             Spacer(minLength: 8)
-            PersonName(person: entry.owner)
+            PersonName(person: owner)
                 .font(.subheadline)
                 .foregroundStyle(.faint)
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(entry.name)
-        .accessibilityValue("Shared by \(entry.owner.name)")
-        .accessibilityIdentifier("browse-shared-\(entry.name)")
+        .accessibilityLabel(name)
+        .accessibilityValue("Shared by \(owner.name)")
+        .accessibilityIdentifier("browse-shared-\(name)")
     }
 }
 

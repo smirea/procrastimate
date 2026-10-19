@@ -3,7 +3,6 @@
 	import ArrowUp from 'phosphor-svelte/lib/ArrowUp';
 	import View from '#lib/components/View.svelte';
 	import TaskList from '#lib/components/TaskList.svelte';
-	import SectionHeading from '#lib/components/SectionHeading.svelte';
 	import AddTaskButton from '#lib/components/AddTaskButton.svelte';
 	import { store } from '#lib/store.svelte.ts';
 	import { clock, mobile } from '#lib/ui.svelte.ts';
@@ -12,7 +11,7 @@
 
 	const SORT_KEY = DEVICE_KEYS.noDateOldestFirst;
 	let newestFirst = $state(localStorage.getItem(SORT_KEY) === null);
-	const view = $derived(noDateTasks(store.own.tasks, clock.today, newestFirst));
+	const tasks = $derived(noDateTasks(store.own.tasks, clock.today, newestFirst));
 
 	function flip() {
 		newestFirst = !newestFirst;
@@ -25,14 +24,14 @@
 
 <View
 	name="No date"
-	open={view.loose.length + view.places.reduce((n, p) => n + p.tasks.length, 0)}
-	empty={view.loose.length + view.places.length === 0}
+	open={tasks.length}
+	empty={tasks.length === 0}
 	emptyTitle="Inbox zero"
 	emptyHint={mobile.current ? 'Tap + to capture a task.' : 'Press Q to capture a task.'}
 	canAdd={false}
 	markdown={() => ({
 		title: 'No date',
-		sections: [{ heading: null, tasks: view.loose }, ...view.places.map(place => ({ heading: place.name, tasks: place.tasks }))],
+		sections: [{ heading: null, tasks }],
 	})}
 >
 	{#snippet actions()}
@@ -40,13 +39,6 @@
 			{#if newestFirst}<ArrowDown size={14} weight="bold" />Newest{:else}<ArrowUp size={14} weight="bold" />Oldest{/if}
 		</button>
 	{/snippet}
-	<TaskList tasks={view.loose} label="Tasks without a date" showAdded />
+	<TaskList {tasks} label="Tasks without a date" showAdded />
 	<AddTaskButton />
-	{#each view.places as place (place.key)}
-		<section class="mt-6" aria-label={place.name}>
-			<SectionHeading heading={place.name} tasks={place.tasks} />
-			<TaskList tasks={place.tasks} label={`Tasks at ${place.name}`} showAdded />
-			<AddTaskButton to={{ kind: 'place', key: place.key }} group={place.name} />
-		</section>
-	{/each}
 </View>
