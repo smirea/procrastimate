@@ -258,39 +258,45 @@ test('delete all data clears this device and the other', async ({ devices }) => 
 	expect(await a.page.evaluate(() => localStorage.getItem('procrastimate-user'))).toBeTruthy();
 });
 
-test('subtasks turned into tasks show as tasks on the other device, and undo nests them again', async ({ devices }) => {
-	const [a, b] = [await devices.open(), await devices.open()];
-	const parent = unique('Pack');
-	await a.app.add(parent);
-	await a.app
+async function explodeSubtasks({ app, page }: Device, parent: string) {
+	await app.add(parent);
+	await app
 		.row(parent)
 		.getByRole('button', { name: new RegExp(`^${parent}`) })
 		.click();
-	const subtask = a.app.details().getByRole('textbox', { name: 'Add subtask' });
+	const subtask = app.details().getByRole('textbox', { name: 'Add subtask' });
 	for (const title of ['Passport', 'Charger']) {
 		await subtask.fill(title);
 		await subtask.press('Enter');
 	}
-	await a.app.details().getByRole('button', { name: 'Subtask actions' }).click();
-	await a.page.getByRole('button', { name: `Start with “${parent}:”` }).click();
+	await app.details().getByRole('button', { name: 'Subtask actions' }).click();
+	await page.getByRole('button', { name: `Start with “${parent}:”` }).click();
 	await expect(
-		a.app
+		app
 			.details()
 			.getByRole('list', { name: `Subtasks of ${parent}` })
 			.getByRole('listitem'),
 	).toHaveCount(0);
-	await a.app.details().getByRole('button', { name: 'Close' }).click();
-	await expect(a.app.row(`${parent}: Passport`)).toBeVisible();
+	await app.details().getByRole('button', { name: 'Close' }).click();
+	await expect(app.row(`${parent}: Passport`)).toBeVisible();
+}
 
-	await expect(b.app.row(`${parent}: Passport`)).toBeVisible({ timeout: 10_000 });
-	await expect(b.app.row(`${parent}: Charger`)).toBeVisible();
-	await expect(b.app.row(parent)).toBeVisible();
+test('subtasks turned into tasks show as tasks on the other device, and undo nests them again', async ({ devices }) => {
+	const [a, b] = [await devices.open(), await devices.open()];
+	const kept = unique('Pack');
+	await explodeSubtasks(a, kept);
+	await expect(b.app.row(`${kept}: Passport`)).toBeVisible({ timeout: 10_000 });
+	await expect(b.app.row(`${kept}: Charger`)).toBeVisible();
+	await expect(b.app.row(kept)).toBeVisible();
 
-	await a.page.getByRole('button', { name: 'Undo' }).click();
-	await expect(a.app.row(`${parent}: Passport`)).toHaveCount(0);
-	await expect(a.app.row(parent).getByRole('img', { name: '0 of 2 subtasks done' })).toBeVisible();
-	await expect(b.app.row(`${parent}: Passport`)).toHaveCount(0, { timeout: 10_000 });
-	await expect(b.app.row(parent).getByRole('img', { name: '0 of 2 subtasks done' })).toBeVisible();
+	// The Undo toast lasts 5s, shorter than a slow sync to b, so undo gets its own parent.
+	const undone = unique('Pack');
+	await explodeSubtasks(a, undone);
+	await a.page.getByRole('button', { name: 'Undo' }).last().click();
+	await expect(a.app.row(`${undone}: Passport`)).toHaveCount(0);
+	await expect(a.app.row(undone).getByRole('img', { name: '0 of 2 subtasks done' })).toBeVisible();
+	await expect(b.app.row(undone).getByRole('img', { name: '0 of 2 subtasks done' })).toBeVisible({ timeout: 10_000 });
+	await expect(b.app.row(`${undone}: Passport`)).toHaveCount(0);
 });
 
 test('signing out keeps this device’s data, and signing in as someone else starts from an empty list', async ({
