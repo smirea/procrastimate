@@ -50,7 +50,7 @@ import Testing
     }
 
     @Test func defaultsApplyAndResetForTheNextTask() {
-        var draft = QuickAddDraft(defaults: .init(projectId: "p-work", labelId: "l-calls", date: today))
+        var draft = QuickAddDraft(defaults: .init(projectId: "p-work", labelIds: ["l-calls"], date: today))
         draft.setText("Ping Ana @calls")
         let resolved = draft.resolved(parse(draft))
         #expect(resolved.projectId == "p-work")
@@ -130,7 +130,7 @@ import Testing
             id: "l-gym", name: "Gym", place: SavedPlace(address: nil, latitude: 52.5, longitude: 13.4, radius: 200), createdAt: 0
         )
         let context = QuickAddDraft.Context(now: pinned, projects: [], labels: [gym], zone: utc)
-        var draft = QuickAddDraft(defaults: .init(labelId: "l-gym"))
+        var draft = QuickAddDraft(defaults: .init(labelIds: ["l-gym"]))
         draft.startAtPlace([gym])
         #expect(draft.picked.labelIds == [])
         #expect(draft.picked.location?.name == "Gym")

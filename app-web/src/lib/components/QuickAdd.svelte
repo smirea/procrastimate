@@ -9,6 +9,7 @@
 	import X from 'phosphor-svelte/lib/X';
 	import Microphone from 'phosphor-svelte/lib/Microphone';
 	import Plus from 'phosphor-svelte/lib/Plus';
+	import ArrowsOutSimple from 'phosphor-svelte/lib/ArrowsOutSimple';
 	import Repeat from 'phosphor-svelte/lib/Repeat';
 	import MapPin from 'phosphor-svelte/lib/MapPin';
 	import CalendarStar from 'phosphor-svelte/lib/CalendarStar';
@@ -40,6 +41,8 @@
 	import { NAME_SOURCES } from '../names.ts';
 	import { showAdded } from '../show-added.ts';
 	import { imageFiles, images } from '../images/images.svelte.ts';
+	import { reuseAdded } from '../screen.ts';
+	import { page } from '$app/state';
 
 	let { defaults }: { defaults: ListDefaults } = $props();
 
@@ -151,16 +154,29 @@
 		return () => observer.disconnect();
 	});
 
-	function submit() {
+	/** Saves the task and its subtasks, closes quick add, and shows the task in its list. */
+	function save() {
 		const next = draft.task();
-		if (!next) return;
+		if (!next) return null;
 		const task = store.addTask(next);
-		if (!task) return;
+		if (!task) return null;
 		const typing = subtaskTask(subtaskParsed);
 		for (const child of [...subtasks.map((s) => s.task), ...(typing ? [typing] : [])]) store.addTask(child, task.id);
 		if (drafted.length) void images.attach(task.id, drafted.map((d) => d.file));
 		sheets.close();
-		showAdded(task);
+		const from = page.url.pathname;
+		if (showAdded(task) === from) reuseAdded(from, task);
+		return task;
+	}
+
+	function submit() {
+		save();
+	}
+
+	/** The full editor is task details, so expanding saves the draft and opens it there. */
+	function expand() {
+		const task = save();
+		if (task) sheets.openTask(task.id);
 	}
 
 	function addImages(files: File[]) {
@@ -285,7 +301,7 @@
 			{#if showMic}
 				<button
 					type="button"
-					class="mic hit-area absolute top-1/2 right-1 grid size-8 -translate-y-1/2 place-items-center rounded-full bg-accent text-on-accent transition-transform active:scale-90"
+					class="mic hit-area absolute top-1/2 right-0 grid size-9 -translate-y-1/2 place-items-center rounded-full bg-accent text-on-accent transition-transform active:scale-90"
 					aria-label="Ramble"
 					onmousedown={(e) => e.preventDefault()}
 					onclick={() => sheets.openRamble(defaults)}
@@ -381,7 +397,7 @@
 			</div>
 		</div>
 	{/if}
-	<div class="flex items-center gap-1.5 pb-3 pl-4 pr-3">
+	<div class="flex items-center gap-1.5 px-4 pb-3">
 		<div
 			bind:this={row}
 			class="chip-row -my-1 flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto py-1"
@@ -461,7 +477,18 @@
 	</div>
 	<div class="flex items-center justify-between gap-2 border-t border-ink/5 px-3 py-2.5">
 		<ProjectPicker {projectId} {sectionId} onchange={(place) => pick(() => draft.pickPlace(place.projectId, place.sectionId))} />
-		<div class="flex gap-1.5">
+		<div class="flex items-center gap-1.5">
+			<button
+				type="button"
+				class="icon-btn hit-area disabled:opacity-40"
+				aria-label="Open in task details"
+				title="Open in task details"
+				disabled={!parsed.title}
+				onmousedown={(e) => e.preventDefault()}
+				onclick={expand}
+			>
+				<ArrowsOutSimple size={16} weight="bold" />
+			</button>
 			<button type="button" class="btn btn-quiet" onclick={() => sheets.close()}>Cancel</button>
 			<button type="button" class="btn btn-primary" disabled={!parsed.title} onclick={submit}>Add task</button>
 		</div>

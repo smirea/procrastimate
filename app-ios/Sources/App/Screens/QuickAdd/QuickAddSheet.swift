@@ -33,6 +33,8 @@ struct QuickAddSheet: View {
     @State private var imageSource: ImageSource?
     /// Images still loading or making their thumbnail. Saving waits for them, so none is lost.
     @State private var loadingImages = 0
+    /// How far the grabber's drag has pulled the card up, rubber-banded.
+    @State private var lift: CGFloat = 0
     @FocusState private var focused: Bool
     @FocusState private var subtaskFocused: Bool
 
@@ -64,7 +66,7 @@ struct QuickAddSheet: View {
                 onSubmit: { submit() }
             )
             .font(.body.weight(.medium))
-            .padding(.trailing, showMic ? 36 : 0)
+            .padding(.trailing, showMic ? QuickAddMetrics.cornerButton + 4 : 0)
             .overlay(alignment: .trailing) {
                 if showMic { micButton.transition(.scale(scale: 0.6).combined(with: .opacity)) }
             }
@@ -111,6 +113,7 @@ struct QuickAddSheet: View {
         .padding(.top, 20)
         .padding(.bottom, 8)
         .frame(maxWidth: .infinity)
+        .overlay(alignment: .top) { grabber(canExpand: !parsed.title.isEmpty) }
         .background {
             // Runs under the home indicator when the keyboard is down, and on behind the keyboard when it is up, so the
             // keyboard's rounded top corners show the card instead of the scrim.
@@ -120,6 +123,7 @@ struct QuickAddSheet: View {
         }
         // A tap between controls, or just beside the plain mic glyph, would otherwise reach the scrim and close the card.
         .contentShape(.rect)
+        .offset(y: lift)
         .sensoryFeedback(.selection, trigger: draft.picked)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("Quick add")
@@ -220,6 +224,35 @@ struct QuickAddSheet: View {
         }
     }
 
+    /// Dragging the grabber up, or tapping it, opens the draft in task details, the full editor.
+    private func grabber(canExpand: Bool) -> some View {
+        Capsule()
+            .fill(Color.ink.opacity(canExpand ? 0.25 : 0.12))
+            .frame(width: 36, height: 5)
+            .frame(maxWidth: .infinity, minHeight: 20)
+            .contentShape(.rect)
+            .gesture(
+                DragGesture(minimumDistance: 4)
+                    .onChanged { value in
+                        let pull = -value.translation.height
+                        // Without a title there is nothing to open, so the card only gives a little.
+                        let reach: CGFloat = canExpand ? 1 : 0.3
+                        lift = pull > 0 ? -pow(pull, 0.7) * reach : min(-pull, 40) * 0.25
+                    }
+                    .onEnded { value in
+                        let opens = canExpand && (value.translation.height < -60 || value.predictedEndTranslation.height < -160)
+                        withAnimation(.snappy) { lift = 0 }
+                        if opens { expand() }
+                    }
+            )
+            .onTapGesture { expand() }
+            .accessibilityElement()
+            .accessibilityLabel("Open in task details")
+            .accessibilityAddTraits(.isButton)
+            .accessibilityAction { expand() }
+            .accessibilityIdentifier("Quick add grabber")
+    }
+
     private var micButton: some View {
         Button {
             navigator.sheet = .ramble(draft.defaults)
@@ -227,9 +260,10 @@ struct QuickAddSheet: View {
             Image(systemName: "mic.fill")
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(.white)
-                .frame(width: 32, height: 32)
+                .frame(width: QuickAddMetrics.cornerButton, height: QuickAddMetrics.cornerButton)
                 .glassEffect(.regular.tint(.accent).interactive(), in: .circle)
-                .frame(width: 44, height: 44)
+                // Flush right, so it sits on the same edge as the `+` below it.
+                .frame(width: 44, height: 44, alignment: .trailing)
                 .contentShape(.rect)
         }
         .buttonStyle(.plain)
@@ -377,9 +411,11 @@ struct QuickAddSheet: View {
         focused = true
     }
 
-    private func submit() {
-        guard loadingImages == 0 else { return }
-        guard let task = draft.resolve(draft.parse(context)) else { return }
+    /// Saves the task, its subtasks, and its images, closes quick add, and shows the task in its list.
+    @discardableResult
+    private func submit() -> String? {
+        guard loadingImages == 0 else { return nil }
+        guard let task = draft.resolve(draft.parse(context)) else { return nil }
         let typing = NewTask(subtask: QuickAdd.parseSubtask(subtaskText, now: clock.now, labels: spaceLabels, in: clock.timeZone))
         let children = subtasks.map(\.task) + (typing.map { [$0] } ?? [])
         let added: TaskItem? = withAnimation(.snappy) {
@@ -387,15 +423,25 @@ struct QuickAddSheet: View {
             for child in children { _ = store.addTask(child, parentId: added.id) }
             return added
         }
-        guard let added else { return }
+        guard let added else { return nil }
         let sources = drafted.map(\.data)
         if !sources.isEmpty { Task { [images] in await images.attach(added.id, sources) } }
         close(revealing: added.id)
+        return added.id
+    }
+
+    /// The full editor is task details, so expanding saves the draft and opens it there.
+    private func expand() {
+        guard let id = submit() else { return }
+        navigator.sheet = .details(taskID: id)
     }
 
     private func close(revealing taskID: String) {
         navigator.sheet = nil
-        if let task = store.task(taskID) { navigator.reveal(task, labels: store.labels, today: clock.today, in: clock.timeZone) }
+        guard let task = store.task(taskID) else { return }
+        let from = (navigator.tab, navigator.currentRoute)
+        navigator.reveal(task, labels: store.labels, today: clock.today, in: clock.timeZone)
+        if from == (navigator.tab, navigator.currentRoute) { navigator.reuseAdded(task, labels: store.labels) }
     }
 }
 
@@ -417,6 +463,11 @@ private struct DraftImage: Identifiable, Equatable {
     }
 
     static func == (a: DraftImage, b: DraftImage) -> Bool { a.id == b.id }
+}
+
+/// The mic and the `+` are one size, so the two read as a column on the card's right edge.
+enum QuickAddMetrics {
+    static let cornerButton: CGFloat = 32
 }
 
 private struct RowFade: Equatable {

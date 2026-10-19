@@ -499,7 +499,7 @@ private struct RambleInput: Decodable {
 private struct ListDefaultsJSON: Codable {
     let projectId: String?
     let sectionId: String?
-    let labelId: String?
+    let labelIds: [String]
     let location: TaskLocation?
     let event: TaskEvent?
     let date: DateKey?
@@ -507,21 +507,21 @@ private struct ListDefaultsJSON: Codable {
     init(_ defaults: QuickAddDraft.Defaults) {
         projectId = defaults.projectId
         sectionId = defaults.sectionId
-        labelId = defaults.labelId
+        labelIds = defaults.labelIds
         location = defaults.location
         event = defaults.event
         date = defaults.date
     }
 
     var defaults: QuickAddDraft.Defaults {
-        .init(projectId: projectId, sectionId: sectionId, labelId: labelId, location: location, event: event, date: date)
+        .init(projectId: projectId, sectionId: sectionId, labelIds: labelIds, location: location, event: event, date: date)
     }
 
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(projectId, forKey: .projectId)
         try container.encode(sectionId, forKey: .sectionId)
-        try container.encode(labelId, forKey: .labelId)
+        try container.encode(labelIds, forKey: .labelIds)
         try container.encode(location, forKey: .location)
         try container.encode(event, forKey: .event)
         try container.encode(date, forKey: .date)
@@ -557,6 +557,7 @@ private struct SharedSpaceInput: Decodable {
 }
 
 @Sendable func screensVector(_ fn: String, _ a: Args) throws -> JSONValue {
+    if fn == "reusedDefaults" { return try json(ListDefaultsJSON(Screens.reusedDefaults(a(0), a(1)))) }
     let screen = try a(0, as: ScreenInput?.self)?.screen()
     switch fn {
     case "screenDefaults": return try json(ListDefaultsJSON(Screens.defaults(screen, a(1), a(2, as: SharedSpaceInput?.self)?.access, today: a(3))))

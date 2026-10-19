@@ -336,7 +336,7 @@ private struct RambleOverlay: View {
 extension Store {
     /// The space quick add or Ramble saves into: the shared project's or label's, else the user's own.
     func space(of defaults: QuickAddDefaults) -> SpaceKey {
-        defaults.projectId.flatMap(space(ofProject:)) ?? defaults.labelId.flatMap(space(ofLabel:)) ?? .own
+        defaults.projectId.flatMap(space(ofProject:)) ?? defaults.labelIds.first.flatMap(space(ofLabel:)) ?? .own
     }
 }
 

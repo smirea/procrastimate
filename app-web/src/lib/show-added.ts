@@ -9,12 +9,13 @@ import { clock, reveal } from './ui.svelte.ts';
 
 /**
  * Shows a task just added from quick add or Ramble: the open list when it already shows the task, else its project,
- * else Inbox when it has a day or No date when it has none. The row then flashes.
+ * else Inbox when it has a day or No date when it has none. The row then flashes. Returns the list's path.
  */
 export function showAdded(task: Task) {
 	const path = listOf(task);
 	if (path !== page.url.pathname) void goto(path);
 	reveal.show(task.id);
+	return path;
 }
 
 /** A saved place's screen is its label's, but it holds the tasks at the place. */

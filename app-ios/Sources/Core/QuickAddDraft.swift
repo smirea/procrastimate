@@ -9,7 +9,7 @@ public struct QuickAddDraft: Hashable, Sendable {
     public struct Defaults: Hashable, Sendable {
         public var projectId: String?
         public var sectionId: String?
-        public var labelId: String?
+        public var labelIds: [String]
         public var location: TaskLocation?
         public var event: TaskEvent?
         public var date: DateKey?
@@ -17,14 +17,14 @@ public struct QuickAddDraft: Hashable, Sendable {
         public init(
             projectId: String? = nil,
             sectionId: String? = nil,
-            labelId: String? = nil,
+            labelIds: [String] = [],
             location: TaskLocation? = nil,
             event: TaskEvent? = nil,
             date: DateKey? = nil
         ) {
             self.projectId = projectId
             self.sectionId = sectionId
-            self.labelId = labelId
+            self.labelIds = labelIds
             self.location = location
             self.event = event
             self.date = date
@@ -79,7 +79,7 @@ public struct QuickAddDraft: Hashable, Sendable {
             priority: nil,
             projectId: defaults.projectId,
             sectionId: defaults.sectionId,
-            labelIds: defaults.labelId.map { [$0] } ?? [],
+            labelIds: defaults.labelIds,
             reminders: [],
             location: defaults.location,
             event: defaults.event
@@ -88,7 +88,7 @@ public struct QuickAddDraft: Hashable, Sendable {
 
     /// Quick add from a saved place's screen starts at that place rather than with it as a label.
     public mutating func startAtPlace(_ labels: [Label]) {
-        let applied = Triggers.applyPickedLabels(labels, picked.labelIds, nil)
+        let applied = Triggers.applyPickedLabels(labels, picked.labelIds, picked.location)
         guard let place = applied.location else { return }
         picked.location = place
         picked.labelIds = picked.labelIds.filter { applied.labelIds.contains($0) }

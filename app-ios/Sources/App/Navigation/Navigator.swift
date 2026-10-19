@@ -7,12 +7,17 @@ final class Navigator {
     /// Coming to Browse from another tab starts a fresh search, like the web's search sheet. Back from a result keeps
     /// the query, because that never leaves Browse.
     var tab: AppTab {
-        didSet { if tab != oldValue, tab == .browse { searchQuery = "" } }
+        didSet {
+            if tab != oldValue, tab == .browse { searchQuery = "" }
+            forgetAddedElsewhere()
+        }
     }
     /// The tab bar's screens before Browse, in order. Kept per device, since how many fit depends on the screen.
     private(set) var pins: [Pin]
     var searchQuery = ""
-    var paths: [AppTab: [Route]] = [:]
+    var paths: [AppTab: [Route]] = [:] {
+        didSet { forgetAddedElsewhere() }
+    }
     var sheet: Sheet?
     /// Asks Browse to focus its search field, as Cmd-K does. Browse clears it once focused.
     var focusSearch = false
@@ -73,9 +78,24 @@ final class Navigator {
         if case let .ramble(defaults) = sheet { defaults } else { nil }
     }
 
-    /// Quick add from the tab bar starts with the context of the screen on top, as `Screens.defaults` maps it.
+    /// Where the last quick add saved to, reused while the list it saved from, and showed the task on, stays open.
+    @ObservationIgnored private var reused: (tab: AppTab, route: Route?, defaults: QuickAddDefaults)?
+
+    /// Quick add from the tab bar starts with the context of the screen on top, as `Screens.defaults` maps it, or
+    /// with what the last quick add saved while that screen is still open.
     func listDefaults(_ store: Store) -> QuickAddDefaults {
-        store.quickAddDefaults(currentRoute?.screen)
+        if let reused, reused.tab == tab, reused.route == currentRoute { return reused.defaults }
+        return store.quickAddDefaults(currentRoute?.screen)
+    }
+
+    /// Quick add just saved `task` and showed it on the screen it opened on.
+    func reuseAdded(_ task: TaskItem, labels: [Label]) {
+        reused = (tab, currentRoute, Screens.reusedDefaults(task, labels))
+    }
+
+    private func forgetAddedElsewhere() {
+        guard let reused, reused.tab != tab || reused.route != currentRoute else { return }
+        self.reused = nil
     }
 
     /// The task just added from quick add. Its list scrolls to it and the row flashes, then this clears.

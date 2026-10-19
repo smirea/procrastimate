@@ -46,3 +46,57 @@ test('quick add parses a date, priority, reminder, #project, and @label and save
 	await details.getByRole('button', { name: '1 reminder' }).click();
 	await expect(page.getByRole('dialog', { name: 'Reminders' })).toContainText('30m before');
 });
+
+test('the mic and the + are one size on one right edge', async ({ app }) => {
+	await app.openQuickAdd();
+	await app.settle();
+	const mic = (await app.quickAdd().getByRole('button', { name: 'Ramble' }).boundingBox())!;
+	const plus = (await app.quickAdd().getByRole('button', { name: 'More quick add actions' }).boundingBox())!;
+	expect([mic.width, mic.height]).toEqual([plus.width, plus.height]);
+	expect(Math.abs(mic.x + mic.width - (plus.x + plus.width))).toBeLessThan(1);
+});
+
+test('quick add reuses the last task’s project, section, and labels while the list it saved from stays open', async ({
+	app,
+	page,
+}) => {
+	await app.addCreating('Mow @weekend lawn');
+	await app.createProject('Home');
+	await page.getByRole('button', { name: 'Add section' }).click();
+	await page.getByRole('textbox', { name: 'New section name' }).fill('Later');
+	await page.getByRole('textbox', { name: 'New section name' }).press('Enter');
+	await app.openQuickAdd();
+	await app.taskInput().fill('Paint shed /Later @weekend');
+	await app.quickAdd().getByRole('button', { name: 'Add task' }).click();
+	await expect(page.getByRole('list', { name: 'Later tasks' }).locator('[data-task="Paint shed"]')).toBeVisible();
+
+	await app.openQuickAdd();
+	await expect(app.quickAdd().getByRole('button', { name: 'Project Home / Later' })).toBeVisible();
+	await expect(app.quickAdd().getByRole('button', { name: 'Labels weekend' })).toBeVisible();
+	await app.taskInput().fill('Fix gate');
+	await app.taskInput().press('Enter');
+	await expect(page.getByRole('list', { name: 'Later tasks' }).locator('[data-task="Fix gate"]')).toBeVisible();
+	await expect(app.row('Fix gate')).toContainText('weekend');
+
+	await app.go('Inbox');
+	await app.nav('Home').click();
+	await app.openQuickAdd();
+	await expect(app.quickAdd().getByRole('button', { name: 'Project Home', exact: true })).toBeVisible();
+	await expect(app.quickAdd().getByRole('button', { name: /^Labels/ })).toBeHidden();
+});
+
+test('expanding quick add saves the draft and opens it in task details', async ({ app, page }) => {
+	await app.openQuickAdd();
+	const expand = app.quickAdd().getByRole('button', { name: 'Open in task details' });
+	await expect(expand).toBeDisabled();
+	await app.taskInput().fill('Call mom tomorrow p1');
+	await app.quickAdd().getByRole('button', { name: 'Add subtask' }).click();
+	await app.quickAdd().getByRole('textbox', { name: 'Add subtask' }).fill('Ask about dinner');
+	await expand.click();
+	await expect(app.quickAdd()).toBeHidden();
+	await expect(app.details().getByRole('textbox', { name: 'Title' })).toHaveValue('Call mom');
+	await expect(app.details().getByRole('button', { name: /^Due Tomorrow/ })).toBeVisible();
+	await expect(app.details().getByRole('button', { name: /Priority 1/ })).toBeVisible();
+	await expect(app.details().getByText('Ask about dinner')).toBeVisible();
+	await page.screenshot({ path: 'test-results/quick-add/expanded.png' });
+});

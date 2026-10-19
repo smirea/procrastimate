@@ -14,7 +14,7 @@
 	{#snippet trigger({ open, toggle })}
 		<button
 			type="button"
-			class="chip px-2.5"
+			class="chip size-9 px-0"
 			data-active={open}
 			aria-label="More quick add actions"
 			aria-expanded={open}

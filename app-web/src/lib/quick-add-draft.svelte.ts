@@ -19,7 +19,7 @@ import { clock } from './ui.svelte.ts';
 export class QuickAddDraft {
 	text = $state('');
 	picked: Picked = $state(
-		initialPicked({ projectId: null, sectionId: null, labelId: null, location: null, event: null, date: null }),
+		initialPicked({ projectId: null, sectionId: null, labelIds: [], location: null, event: null, date: null }),
 	);
 
 	constructor(readonly defaults: ListDefaults) {
