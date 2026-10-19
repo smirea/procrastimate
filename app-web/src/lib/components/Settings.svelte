@@ -4,6 +4,7 @@
 	import ArrowSquareIn from 'phosphor-svelte/lib/ArrowSquareIn';
 	import Warning from 'phosphor-svelte/lib/Warning';
 	import type { ImportSummary } from 'shared/todoist.ts';
+	import AccentPicker from './AccentPicker.svelte';
 	import AiAccounts from './AiAccounts.svelte';
 	import Desktop from 'phosphor-svelte/lib/Desktop';
 	import Moon from 'phosphor-svelte/lib/Moon';
@@ -80,6 +81,11 @@
 			options={{ system: { label: 'System', icon: Desktop }, light: { label: 'Light', icon: Sun }, dark: { label: 'Dark', icon: Moon } }}
 			onchange={(choice) => theme.choose(choice)}
 		/>
+	</section>
+
+	<section class="flex flex-col gap-2">
+		<h3 class="heading">Theme color</h3>
+		<AccentPicker />
 	</section>
 
 	<section class="flex flex-col gap-2">

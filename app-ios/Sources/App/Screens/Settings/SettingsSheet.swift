@@ -28,6 +28,12 @@ struct SettingsSheet: View {
                     .listRowInsets(EdgeInsets())
                 }
 
+                Section("Theme color") {
+                    AccentPicker()
+                        .listRowBackground(Color.clear)
+                        .listRowInsets(EdgeInsets())
+                }
+
                 Section("Dictation") {
                     Picker("Dictation", selection: Binding(get: { store.dictation }, set: { store.setDictation($0) })) {
                         ForEach(DictationChoice.allCases) { choice in
@@ -101,6 +107,7 @@ struct SettingsSheet: View {
         .overlay(alignment: .bottom) { ToastStack() }
         .sensoryFeedback(.selection, trigger: theme.choice)
         .sensoryFeedback(.selection, trigger: store.dictation)
+        .sensoryFeedback(.selection, trigger: theme.accent)
     }
 }
 

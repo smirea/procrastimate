@@ -4,7 +4,7 @@ import SwiftUI
 extension Links {
     /// The text with each link tappable in the accent color and each highlight mark on `tokenMatch`. A tap on a link
     /// opens it through `openURL` and never reaches the row's own tap.
-    static func attributed(_ text: String, _ ranges: [Range<Int>] = []) -> AttributedString {
+    @MainActor static func attributed(_ text: String, _ ranges: [Range<Int>] = []) -> AttributedString {
         var out = AttributedString()
         for segment in linkify(text, ranges) {
             var piece = Search.Highlight(text: segment.text, ranges: segment.marks).attributed

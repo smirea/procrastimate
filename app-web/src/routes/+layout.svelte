@@ -80,7 +80,7 @@
 		}
 	}
 
-	$effect(() => applyTheme(theme.resolved));
+	$effect(() => applyTheme(theme.resolved, theme.accent));
 	$effect(() => clock.start());
 	$effect(() => trackKeyboardInset());
 	$effect(() => untrack(() => void session.start().then(runSentrySmoke)));

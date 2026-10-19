@@ -1,5 +1,6 @@
 import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
+import { ACCENTS, accentProperties, deriveAccent } from 'shared/accents.ts';
 import { LABEL_COLORS } from 'shared/label-colors.ts';
 
 type Rgba = [number, number, number, number];
@@ -17,7 +18,17 @@ function block(selector: string): Tokens {
 }
 
 const light = { ...block('@theme'), ...block(':root') };
-const themes: Record<string, Tokens> = { light, dark: { ...light, ...block(":root[data-theme='dark']") } };
+const dark = { ...light, ...block(":root[data-theme='dark']") };
+/** Every theme color in both themes, since the accent tokens and the canvas glow come from the chosen one. */
+const themes: Record<string, Tokens> = Object.fromEntries(
+	Object.entries(ACCENTS).flatMap(([key, { base }]) => {
+		const derived = deriveAccent(base);
+		return [
+			[`${key} light`, { ...light, ...accentProperties(derived.light) }],
+			[`${key} dark`, { ...dark, ...accentProperties(derived.dark) }],
+		];
+	}),
+);
 
 function color(tokens: Tokens, value: string): Rgba {
 	const reference = value.match(/^var\((--[\w-]+)\)$/);
@@ -54,7 +65,7 @@ function contrast(text: Rgba, background: Rgba) {
 function pairs(tokens: Tokens) {
 	const c = (name: string) => color(tokens, `var(${name})`);
 	const canvas = c('--canvas');
-	const canvases = [canvas, over(c('--canvas-glow-warm'), canvas), over(c('--canvas-glow-cool'), canvas)];
+	const canvases = [canvas, over(c('--accent-glow'), canvas), over(c('--canvas-glow-cool'), canvas)];
 	/**
 	 * What dense glass can float over: sheets, popovers, and the drawer cover the task list, where blur averages
 	 * text into a darker wash, and the accent of a primary button or the add button sliding underneath.

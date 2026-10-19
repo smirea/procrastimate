@@ -14,6 +14,7 @@ const LEGACY_DOCUMENT_KEY = 'procrastimate';
 export const DEVICE_KEYS = {
 	user: 'procrastimate-user',
 	theme: 'procrastimate-theme',
+	accent: 'procrastimate-accent',
 	pushRekey: 'procrastimate-push-rekey',
 	completedRange: 'procrastimate.completedRange',
 	showCompleted: 'procrastimate.showCompleted',
