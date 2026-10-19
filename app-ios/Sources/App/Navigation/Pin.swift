@@ -44,6 +44,16 @@ extension Store {
         }
     }
 
+    /// Whether the pin's list exists. A place or an event exists only while open tasks point at it; every other list
+    /// exists while its project or label does, which `label(of:)` already checks.
+    func exists(_ pin: Pin, today: DateKey) -> Bool {
+        switch pin {
+        case let .place(key, _): !Views.placeTasks(tasks, key, in: timeZone).isEmpty
+        case let .event(id, _): !Views.eventTasks(tasks, id, today, in: timeZone).isEmpty
+        case .inbox, .tomorrow, .thisWeek, .noDate, .project, .label: true
+        }
+    }
+
     /// Every top-level list, from the one catalog Browse and the tab menus share.
     func listCatalog(today: DateKey) -> [Lists.Group] {
         Lists.catalog(own: (tasks, snapshot.projects, labels), shared: sharedSpaces, today: today, in: timeZone)

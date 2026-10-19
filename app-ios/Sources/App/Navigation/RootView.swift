@@ -139,10 +139,11 @@ private struct TabBar: View {
     let inboxBadge: Int
 
     var body: some View {
-        // Every pin keeps its tab while its list is empty, so the bar never changes under the user.
-        let pins = navigator.barPins(store)
+        // Every list keeps its tab while it is empty, so the bar never changes under the user. A place or an event stops
+        // existing with its last open task, so its pin hides then, but not while it is open.
+        let pins = navigator.barPins(store).filter { store.exists($0, today: today) || navigator.tab == .pin($0) }
         let swaps = store.pinGroups(excluding: navigator.pins, today: today)
-        let stacked = TabBarMetrics.stacked(tabs: pins.count + 1, screen: width)
+        let stacked = TabBarMetrics.stacked(tabs: navigator.barPins(store).count + 1, screen: width)
         GlassEffectContainer(spacing: TabBarMetrics.contentGap) {
             if stacked {
                 VStack(alignment: .trailing, spacing: TabBarMetrics.contentGap) {
