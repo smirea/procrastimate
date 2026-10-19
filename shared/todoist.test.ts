@@ -335,7 +335,7 @@ describe('merging into the store', () => {
 	test('an existing section with the same name in the project is reused', () => {
 		const state: ImportState = {
 			tasks: [],
-			projects: [{ id: 'p-long', name: 'Long Term', order: 0, createdAt: 0 }],
+			projects: [{ id: 'p-long', name: 'Long Term', order: 0, icon: null, createdAt: 0 }],
 			sections: [{ id: 's-mine', projectId: 'p-long', name: 'someday', order: 0, createdAt: 0 }],
 			labels: [],
 			comments: [],
@@ -382,7 +382,7 @@ describe('merging into the store', () => {
 		const backup = readFixture();
 		const state: ImportState = {
 			tasks: [],
-			projects: [{ id: 'mine', name: 'job', order: 0, createdAt: 0 }],
+			projects: [{ id: 'mine', name: 'job', order: 0, icon: null, createdAt: 0 }],
 			sections: [],
 			labels: [{ id: 'l-home', name: 'Home', color: 'gray', place: null, createdAt: 0 }],
 			comments: [],
@@ -395,6 +395,7 @@ describe('merging into the store', () => {
 			id: 'mine',
 			name: 'job',
 			order: 0,
+			icon: null,
 			createdAt: 0,
 			sourceKey: 'todoist:project:9Xmpl3Zr',
 		});

@@ -191,7 +191,7 @@ struct TaskRow<Trailing: View>: View {
                 }
                 if showProject {
                     Spacer(minLength: 0)
-                    Detail(systemImage: project == nil ? "tray" : "number", text: store.placeName(task.projectId, task.sectionId))
+                    Detail(systemImage: project?.systemImage ?? "tray", text: store.placeName(task.projectId, task.sectionId))
                 }
             }
             .font(.caption)

@@ -11,7 +11,7 @@
 	import MapPin from 'phosphor-svelte/lib/MapPin';
 	import Waveform from 'phosphor-svelte/lib/Waveform';
 	import ShareNetwork from 'phosphor-svelte/lib/ShareNetwork';
-	import Hash from 'phosphor-svelte/lib/Hash';
+	import ProjectGlyph from './ProjectGlyph.svelte';
 	import Tray from 'phosphor-svelte/lib/Tray';
 	import { formatDue } from 'shared/format.ts';
 	import { applyPickedLabels, formatEvent, formatLocation, formatRadius, pickedLabels, scheduledDue } from 'shared/triggers.ts';
@@ -193,7 +193,7 @@
 			/>
 		{:else}
 			<span class="chip min-w-0" data-active={!!project}>
-				{#if project}<Hash size={15} class="shrink-0" />{:else}<Tray size={15} class="shrink-0" />{/if}<span class="truncate">{project?.name ?? 'Inbox'}{#if section}{` / ${section.name}`}{/if}</span>
+				{#if project}<ProjectGlyph {project} size={15} class="shrink-0" />{:else}<Tray size={15} class="shrink-0" />{/if}<span class="truncate">{project?.name ?? 'Inbox'}{#if section}{` / ${section.name}`}{/if}</span>
 			</span>
 		{/if}
 		<div class="flex shrink-0 items-center gap-1">

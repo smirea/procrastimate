@@ -269,6 +269,12 @@ public enum StoreRules {
         return next
     }
 
+    public static func setProjectIcon(_ data: StoreData, _ id: String, _ icon: ProjectIcon?) -> StoreData {
+        var next = data
+        next.projects = data.projects.updating(id) { $0.icon = icon }
+        return next
+    }
+
     /// Deleting a project deletes its sections and tasks, subtasks included, since they share their root's project.
     public static func deleteProject(_ data: StoreData, _ id: String) -> StoreData {
         var next = data

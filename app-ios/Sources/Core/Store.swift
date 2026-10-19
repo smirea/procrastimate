@@ -396,6 +396,11 @@ public final class Store {
         commit(StoreRules.renameProject(snapshot.data, id, name))
     }
 
+    public func setProjectIcon(_ id: String, _ icon: ProjectIcon?) {
+        guard space(ofProject: id) == .own else { return }
+        commit(StoreRules.setProjectIcon(snapshot.data, id, icon))
+    }
+
     /// Returns what the delete removed, for `undelete`.
     @discardableResult
     public func deleteProject(_ id: String) -> Deleted? {

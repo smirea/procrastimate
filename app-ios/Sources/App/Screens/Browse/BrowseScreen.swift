@@ -66,7 +66,7 @@ private struct BrowseList: View {
                     NavigationLink(value: Route.project(id: project.id)) {
                         BrowseRow(
                             name: project.name,
-                            systemImage: "number",
+                            systemImage: project.systemImage,
                             tone: .muted,
                             count: counts.projects[project.id] ?? 0
                         )
@@ -239,7 +239,7 @@ private struct SharedRow: View {
     var body: some View {
         switch entry.kind {
         case .project:
-            NavigationLink(value: Route.project(id: entry.id)) { label("number", .muted) }
+            NavigationLink(value: Route.project(id: entry.id)) { label(store.project(entry.id)?.systemImage ?? "number", .muted) }
         case .label:
             let shared = store.label(entry.id)
             NavigationLink(value: Route.label(id: entry.id)) { label(shared?.systemImage() ?? "tag", shared?.color.tone ?? .toneLabel) }

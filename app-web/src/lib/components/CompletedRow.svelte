@@ -1,7 +1,7 @@
 <script lang="ts">
 	import ArrowElbowDownRight from 'phosphor-svelte/lib/ArrowElbowDownRight';
 	import Check from 'phosphor-svelte/lib/Check';
-	import Hash from 'phosphor-svelte/lib/Hash';
+	import ProjectGlyph from './ProjectGlyph.svelte';
 	import Repeat from 'phosphor-svelte/lib/Repeat';
 	import Trash from 'phosphor-svelte/lib/Trash';
 	import Tray from 'phosphor-svelte/lib/Tray';
@@ -94,7 +94,7 @@
 				{/if}
 				{#if showProject}
 					<span class="ml-auto flex shrink-0 items-center gap-1">
-						{#if project}<Hash size={12} />{project.name}{:else}<Tray size={12} />Inbox{/if}
+						{#if project}<ProjectGlyph {project} size={12} />{project.name}{:else}<Tray size={12} />Inbox{/if}
 					</span>
 				{/if}
 			</div>

@@ -319,6 +319,7 @@ export function mergeBackup(
 			id: newId(),
 			name: source.name,
 			order: last ? last.order + 1 : 0,
+			icon: null,
 			createdAt: now,
 			sourceKey: source.sourceKey,
 		};

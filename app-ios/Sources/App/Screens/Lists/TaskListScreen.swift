@@ -12,6 +12,7 @@ struct TaskListScreen<Content: View>: View {
     var newestFirst: Binding<Bool>?
     var labelColor: LabelColor?
     var labelIcon = "tag.fill"
+    var projectIcon: ProjectIcon?
     var open: Int?
     /// The whole list as Markdown, for a copy button at the top right. Project and label screens copy from their menu
     /// instead.
@@ -88,6 +89,8 @@ struct TaskListScreen<Content: View>: View {
             Group {
                 if let labelColor {
                     Image(systemName: labelIcon).imageScale(.small).foregroundStyle(labelColor.tone)
+                } else if let projectIcon {
+                    Image(systemName: projectIcon.systemImage).imageScale(.small).foregroundStyle(.muted)
                 }
                 Text(title)
             }

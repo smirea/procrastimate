@@ -250,3 +250,39 @@ test('Show completed is per project, and a completed task deletes with undo', as
 	await expect(page.getByRole('button', { name: 'Show completed' })).toHaveAttribute('aria-pressed', 'true');
 	await expect(done).toBeVisible();
 });
+
+test('a project icon shows in the sidebar, header, and chips, syncs, and clears back to #', async ({
+	app,
+	page,
+	devices,
+}) => {
+	await app.createProject('Home');
+	await app.add('Fix sink');
+	const icon = (scope: Locator) => scope.locator('[data-icon]').first();
+	await expect(icon(app.nav('Home'))).toHaveAttribute('data-icon', 'none');
+
+	await page.getByRole('button', { name: 'Project actions' }).click();
+	const picker = page.getByRole('radiogroup', { name: 'Project icon' });
+	await expect(picker.getByRole('radio')).toHaveCount(38);
+	await expect(picker.getByRole('radio', { name: 'No icon' })).toHaveAttribute('aria-checked', 'true');
+	await picker.getByRole('radio', { name: 'Home' }).click();
+	await expect(picker.getByRole('radio', { name: 'Home' })).toHaveAttribute('aria-checked', 'true');
+	await app.settle();
+	await page.screenshot({ path: 'test-results/projects/icon-picker.png' });
+	await page.keyboard.press('Escape');
+
+	await expect(icon(app.nav('Home'))).toHaveAttribute('data-icon', 'home');
+	await expect(icon(page.getByRole('heading', { level: 1, name: 'Home' }))).toHaveAttribute('data-icon', 'home');
+	await app.row('Fix sink').getByRole('button', { name: 'Fix sink', exact: true }).click();
+	await expect(icon(app.details().getByRole('button', { name: 'Project Home' }))).toHaveAttribute('data-icon', 'home');
+	await page.keyboard.press('Escape');
+
+	const other = await devices.open({ path: '/inbox', heading: 'Inbox' });
+	await expect(icon(other.app.nav('Home'))).toHaveAttribute('data-icon', 'home', { timeout: 10_000 });
+
+	await app.nav('Home').click();
+	await page.getByRole('button', { name: 'Project actions' }).click();
+	await picker.getByRole('radio', { name: 'No icon' }).click();
+	await expect(icon(app.nav('Home'))).toHaveAttribute('data-icon', 'none');
+	await expect(icon(other.app.nav('Home'))).toHaveAttribute('data-icon', 'none', { timeout: 10_000 });
+});

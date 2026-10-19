@@ -345,6 +345,7 @@
 			"input": [
 				{
 					"createdAt": 0,
+					"icon": null,
 					"id": "work",
 					"name": "Work",
 					"order": 0

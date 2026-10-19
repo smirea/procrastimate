@@ -30,6 +30,7 @@ export const project = (id: string, fields: Partial<Project> = {}): Project => (
 	id,
 	name: id,
 	order: 0,
+	icon: null,
 	createdAt: 1,
 	...fields,
 });

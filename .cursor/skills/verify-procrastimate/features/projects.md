@@ -11,6 +11,7 @@ Projects let Stefan group tasks, open a project to see its tasks, and move a tas
 - `projects-move` moves a task to another project or back to Inbox.
 - `projects-reorder` drags a project to a new place in the list, and the order syncs.
 - `projects-rename` renames a project.
+- `projects-icon` gives a project an icon from the shared set, or none for `#`.
 - `projects-delete` deletes a project, its sections, and its tasks after confirmation.
 - `sections-create` adds a section to a project.
 - `sections-group` lists a project's tasks in no section first, then each section with its tasks.
@@ -25,11 +26,11 @@ Projects let Stefan group tasks, open a project to see its tasks, and move a tas
 - Web on a phone: tap `Open navigation` to reach the projects section.
 - Web: pick a project in quick add or in task details, or type `#Name` in quick add or the task details title.
 - Web: type `#` in quick add or the task details title to open project suggestions above the field.
-- Web: use `Project actions` in a project's header to rename or delete it.
+- Web: use `Project actions` in a project's header to rename or delete it, or to pick its icon from the `Project icon` grid.
 - Web: drag a project in the sidebar with the mouse, or long-press then drag on touch. With a project link focused, Alt+Up and Alt+Down move it.
 - iOS: long-press a project in Browse and drag it.
 - iOS: open the Browse tab. `Add project` in the Projects header creates one.
-- iOS: use `Project actions` in a project's toolbar to rename or delete it.
+- iOS: use `Project actions` in a project's toolbar to rename or delete it, or its `Icon` submenu to pick an icon.
 - Web: `Add section` at the end of a project. Each section heading has `<name> actions` (Rename, Move up, Move down, Delete section) and its own `Add task`.
 - iOS: `Add section` in `Project actions`. Long-press a section header for Add task, Copy as Markdown, Rename, Move up, Move down, and Delete section.
 
@@ -51,6 +52,7 @@ Preconditions:
 - **Reorder.** Create `Home`, `Work`, and `Errands`. Drag `Errands` onto `Home`; the sidebar reads `Errands`, `Home`, `Work`, and the project that was open stays open. A plain click on `Work` still opens it. Focus `Home` and press Alt+Down; it moves below `Work` and keeps focus. Drag a project right after Alt+Down, while the rows still slide; it lands where it is dropped. The order survives a reload and shows in quick add's project picker. A second device signed in to the account shows the same order, and a drag there moves it back on the first. On a phone, open the drawer, hold `Errands` until it lifts, and drag it up; the drawer stays open. In a window too short for the sidebar, drag the first of twenty projects to the bottom edge and hold; the sidebar scrolls to the end and the project drops last. Tests: `bun run test:e2e -- e2e/projects.e2e.ts`, which saves `app-web/test-results/projects/desktop-lifted.png`, `phone-lifted.png`, and `desktop-autoscroll.png`. On iOS, long-press `Errands` in Browse, drag it above `Home`, and release; the quick add project menu lists the same order. Core rules run in `swift test` (`VectorTests` store).
 - **Rename.** Choose `Project actions`, then `Rename`, and enter `House`. The heading and sidebar show `House`.
 - **Delete.** Choose `Project actions`, then `Delete project`. The prompt reads `Delete House and its 3 tasks?`. Confirm. The app returns to Inbox, `House` is gone from the sidebar, and `Buy milk` is in no view. The toast reads `Deleted “House”`; its `Undo` brings `House` back with its sections and all 3 tasks. Deleting a section shows the same toast and undo.
+- **Icon.** In `Home`, open `Project actions`; the `Project icon` grid has 38 choices with `No icon` checked. Pick `Home`; the sidebar link, the header before `Home`, and the task details project chip draw a house, and a second signed-in device shows it within seconds. Pick `No icon`; every place draws `#` again. Test: `a project icon shows in the sidebar, header, and chips, syncs, and clears back to #`, which saves `app-web/test-results/projects/icon-picker.png`. On iOS (`PROCRASTIMATE_DEMO=sections`), `Project actions`, `Icon`, `Home` puts a house before the bar title `Home` and on its Browse row; `No icon` takes it off.
 - **Phone.** Tap `Open navigation`, `Add project`, type `Home`, and press return. `Home` opens and the drawer closes. Add `Fix sink #home p3` and `Paint fence fri`. Open Inbox, then `Home` from the drawer; `Home tasks` lists `Paint fence` then `Fix sink`.
 - **Phone drawer, automated.** At 393 px, `Open navigation`, `Add project` `Errands`, quick add `Fix sink` into it, then `Inbox` from the drawer; the drawer closes after each. Test: `the drawer creates a project, switches views, and quick add saves into the open project` in `e2e/phone.e2e.ts`.
 - **Phone autocomplete.** Create `Home` and `Errands` from the drawer, tap `Quick add`, and type `Fix sink #h` with the keyboard open. The `Projects` list sits above the field, fully on screen, with `Home` and `Create project “h”`. Tap `Home`; the field reads `Fix sink #Home ` and keeps focus. Type `#Garden` and tap `Create project “Garden”`; the project chip reads `Garden`.

@@ -6,7 +6,7 @@
 	import CalendarBlank from 'phosphor-svelte/lib/CalendarBlank';
 	import CalendarStar from 'phosphor-svelte/lib/CalendarStar';
 	import MapPin from 'phosphor-svelte/lib/MapPin';
-	import Hash from 'phosphor-svelte/lib/Hash';
+	import ProjectGlyph from './ProjectGlyph.svelte';
 	import Tray from 'phosphor-svelte/lib/Tray';
 	import Repeat from 'phosphor-svelte/lib/Repeat';
 	import Waveform from 'phosphor-svelte/lib/Waveform';
@@ -198,7 +198,7 @@
 					{/if}
 					{#if showProject}
 						<span class="ml-auto flex shrink-0 items-center gap-1">
-							{#if project}<Hash size={12} />{project.name}{#if section}{` / ${section.name}`}{/if}{:else}<Tray size={12} />Inbox{/if}
+							{#if project}<ProjectGlyph {project} size={12} />{project.name}{#if section}{` / ${section.name}`}{/if}{:else}<Tray size={12} />Inbox{/if}
 						</span>
 					{/if}
 				</div>

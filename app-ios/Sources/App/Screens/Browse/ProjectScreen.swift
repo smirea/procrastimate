@@ -30,6 +30,7 @@ struct ProjectScreen: View {
                 isEmpty: count == 0 && sections.isEmpty && !showCompleted,
                 emptyTitle: "No tasks yet",
                 emptyHint: Browse.projectEmptyHint(project.name),
+                projectIcon: project.icon,
                 open: count
             ) {
                 ForEach(groups.first?.tasks ?? []) { TaskRow(task: $0) }
@@ -63,6 +64,8 @@ struct ProjectScreen: View {
                 deletePrompt: Browse.deleteProjectPrompt(project.name, taskCount: count),
                 copy: { actions.copyAsMarkdown(project: project) },
                 rename: { store.renameProject(project.id, $0) },
+                icon: project.icon,
+                setIcon: { store.setProjectIcon(project.id, $0) },
                 delete: { store.deleteProject(project.id) },
                 addSection: { _ = store.addSection(project.id, $0) },
                 showCompleted: $showCompleted

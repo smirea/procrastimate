@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { dictationChoiceSchema } from '../dictation.ts';
 import { labelColorSchema } from '../label-colors.ts';
+import { projectIconSchema } from '../project-icons.ts';
 import { quickAddButtonSchema } from '../quick-add-buttons.ts';
 import { scheduledNotificationSchema } from '../notifications.ts';
 import { pushSubscriptionSchema } from '../push.ts';
@@ -35,6 +36,7 @@ export const COLUMN_VALUES = {
 		event: taskEventSchema,
 		images: z.array(imageRefSchema),
 	},
+	projects: { icon: projectIconSchema },
 	labels: { color: labelColorSchema, place: savedPlaceSchema },
 	settings: { dictation: dictationChoiceSchema, quickAddButtons: z.array(quickAddButtonSchema) },
 	access: { role: roleSchema },

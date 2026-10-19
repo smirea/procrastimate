@@ -181,11 +181,15 @@ export type NewProject = z.infer<typeof newProjectSchema>;
 export const projectEditSchema = z
 	.object({
 		name: projectSchema.shape.name.optional(),
+		icon: projectSchema.shape.icon
+			.optional()
+			.meta({ description: 'Its icon from the fixed set, or null for the plain `#`.' }),
 		index: z.number().int().nonnegative().optional().meta({ description: 'Its new place among the projects, from 0.' }),
 	})
 	.meta({
 		id: 'ProjectEdit',
-		description: 'Renames a project, moves it among the projects, or both. A blank name is refused.',
+		description:
+			'Renames a project, sets its icon, moves it among the projects, or any of these. A blank name is refused.',
 	});
 export type ProjectEdit = z.infer<typeof projectEditSchema>;
 

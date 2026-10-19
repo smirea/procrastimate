@@ -4,7 +4,7 @@
 	import { flip } from 'svelte/animate';
 	import { cubicOut } from 'svelte/easing';
 	import MagnifyingGlass from 'phosphor-svelte/lib/MagnifyingGlass';
-	import Hash from 'phosphor-svelte/lib/Hash';
+	import ProjectGlyph from './ProjectGlyph.svelte';
 	import Tray from 'phosphor-svelte/lib/Tray';
 	import Check from 'phosphor-svelte/lib/Check';
 	import X from 'phosphor-svelte/lib/X';
@@ -198,7 +198,7 @@
 							{@attach row.kind === 'task' && taskMenu(() => ({ task: row.hit.task }))}
 						>
 							{#if row.kind === 'project'}
-								<Hash size={18} class="mt-px shrink-0 text-muted" />
+								<ProjectGlyph project={row.hit.item} size={18} class="mt-px shrink-0 text-muted" />
 								<span class="min-w-0 flex-1 truncate text-[14px] leading-5 touch:text-[15px]">
 									<Highlighted highlight={row.hit.name} />
 								</span>
@@ -252,7 +252,7 @@
 								</span>
 								<span class="mt-0.5 flex max-w-[40%] shrink-0 items-center gap-1 text-[12px] leading-4 text-muted">
 									{#if project}
-										<Hash size={12} class="shrink-0" />
+										<ProjectGlyph {project} size={12} class="shrink-0" />
 										<span class="truncate"><Highlighted highlight={row.hit.matches.project?.[0] ?? { text: project.name, ranges: [] }} /></span>
 									{:else}
 										<Tray size={12} class="shrink-0" />Inbox

@@ -1,5 +1,6 @@
 import agentOpenApi from '../../shared/api/generated/agent-openapi.json';
 import { LABEL_COLORS } from '../../shared/label-colors';
+import { PROJECT_ICONS } from '../../shared/project-icons';
 
 /**
  * The docs an AI agent reads. `/api/docs` is public so an agent that only knows the host finds its way in;
@@ -93,6 +94,13 @@ export const agentExamples: readonly Example[] = [
 		path: '/api/projects',
 		query: { id: PROJECT_ID },
 		body: { name: 'Home repairs' },
+	},
+	{
+		title: 'Set a project icon',
+		method: 'PATCH',
+		path: '/api/projects',
+		query: { id: PROJECT_ID },
+		body: { icon: 'repairs' },
 	},
 	{
 		title: 'Move a project first',
@@ -239,7 +247,7 @@ ${routeTable()}
 
 Read them from \`GET /api/view\`. Put a task in one with \`#Project\`, \`/section\`, or \`@label\` in \`text\`, or with \`projectId\`, \`sectionId\`, and \`labelIds\`. A \`#name\` or \`@name\` that matches nothing stays in the task's title, so make the project or label first.
 
-- A project is a list of tasks. Its name is unique, ignoring case. The apps list projects by \`order\`, then \`createdAt\`, and \`index\` moves one to that place from 0. Deleting it deletes its sections and every task in it.
+- A project is a list of tasks. Its name is unique, ignoring case. The apps list projects by \`order\`, then \`createdAt\`, and \`index\` moves one to that place from 0. Its \`icon\` is null for the plain \`#\`, or one of \`${PROJECT_ICONS.join('`, `')}\`. Deleting it deletes its sections and every task in it.
 - A section is a heading inside one project. Its name is unique in the project, ignoring case, and \`index\` orders the sections from 0. Deleting it deletes its tasks.
 - A label tags tasks across projects. Its name is unique, ignoring case, and its \`color\` is one of \`${LABEL_COLORS.join('`, `')}\`. Deleting it only takes it off its tasks.
 - A saved place is a label with a \`place\`: its \`address\`, \`latitude\`, \`longitude\`, and \`radius\` in meters. \`@name\` in \`text\`, or its id in \`labelIds\`, sets the task's \`location\` to it instead of tagging the task. Its tasks are the open tasks at that spot. \`PATCH\` with \`radius\` resizes it, and its open tasks take the new radius. Renaming it renames the place on them. Deleting it leaves the place on its tasks.

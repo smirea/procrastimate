@@ -57,11 +57,11 @@ export type RambleCase = {
 };
 
 export const PROJECTS: Project[] = [
-	{ id: 'p-home', name: 'Home', order: 0, createdAt: 0 },
-	{ id: 'p-work', name: 'Work', order: 0, createdAt: 0 },
-	{ id: 'p-side', name: 'Side Project', order: 0, createdAt: 0 },
-	{ id: 'p-indonesia', name: 'Indonesia', order: 0, createdAt: 0 },
-	{ id: 'p-finance', name: 'Finance', order: 0, createdAt: 0 },
+	{ id: 'p-home', name: 'Home', order: 0, icon: null, createdAt: 0 },
+	{ id: 'p-work', name: 'Work', order: 0, icon: null, createdAt: 0 },
+	{ id: 'p-side', name: 'Side Project', order: 0, icon: null, createdAt: 0 },
+	{ id: 'p-indonesia', name: 'Indonesia', order: 0, icon: null, createdAt: 0 },
+	{ id: 'p-finance', name: 'Finance', order: 0, icon: null, createdAt: 0 },
 ];
 
 export const LABELS: Label[] = [

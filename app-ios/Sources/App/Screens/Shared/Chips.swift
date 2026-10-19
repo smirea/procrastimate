@@ -147,14 +147,14 @@ struct PlaceMenuContent: View {
         Picker("Project", selection: selection) {
             SwiftUI.Label("Inbox", systemImage: "tray").tag(Place())
             ForEach(projects.filter { !sectioned($0) }) { project in
-                SwiftUI.Label(project.name, systemImage: "number").tag(Place(projectId: project.id))
+                SwiftUI.Label(project.name, systemImage: project.systemImage).tag(Place(projectId: project.id))
             }
         }
         .pickerStyle(.inline)
         ForEach(projects.filter(sectioned)) { project in
             Menu {
                 Picker(project.name, selection: selection) {
-                    SwiftUI.Label("No section", systemImage: "number").tag(Place(projectId: project.id))
+                    SwiftUI.Label("No section", systemImage: project.systemImage).tag(Place(projectId: project.id))
                     ForEach(StoreRules.sectionsOf(sections, project.id)) { section in
                         SwiftUI.Label(section.name, systemImage: "rectangle.split.1x2")
                             .tag(Place(projectId: project.id, sectionId: section.id))
@@ -162,7 +162,7 @@ struct PlaceMenuContent: View {
                 }
                 .pickerStyle(.inline)
             } label: {
-                SwiftUI.Label(project.name, systemImage: selection.wrappedValue.projectId == project.id ? "checkmark" : "number")
+                SwiftUI.Label(project.name, systemImage: selection.wrappedValue.projectId == project.id ? "checkmark" : project.systemImage)
             }
         }
         if space == .own { Button("New project…", systemImage: "plus") { creating = true } }
@@ -190,7 +190,7 @@ struct ProjectChip: View {
                 showsSections: showsSections
             )
         } label: {
-            Chip(systemImage: projectId == nil ? "tray" : "number", text: name, tone: projectId == nil ? .muted : .ink)
+            Chip(systemImage: projectId == nil ? "tray" : store.project(projectId)?.systemImage ?? "number", text: name, tone: projectId == nil ? .muted : .ink)
                 .contentShape(.rect.inset(by: -6))
         }
         .accessibilityLabel("Project \(name)")

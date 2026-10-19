@@ -4,7 +4,7 @@
 	import { flip } from 'svelte/animate';
 	import { slide } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
-	import Hash from 'phosphor-svelte/lib/Hash';
+	import ProjectGlyph from './ProjectGlyph.svelte';
 	import { openCounts } from 'shared/views.ts';
 	import { store } from '../store.svelte.ts';
 	import { motion } from '../ui.svelte.ts';
@@ -57,7 +57,7 @@
 					if (reorder.busy) e.preventDefault();
 				}}
 			>
-				<Hash size={18} />
+				<ProjectGlyph {project} size={18} weight={active ? 'fill' : 'regular'} />
 				<span class="flex-1 truncate">{project.name}</span>
 				{#if count}<span class="text-[12px] text-faint">{count}</span>{/if}
 			</a>

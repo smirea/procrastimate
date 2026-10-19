@@ -27,12 +27,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -230,12 +232,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -464,12 +468,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -667,12 +673,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -901,12 +909,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -1104,12 +1114,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -1338,12 +1350,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -1563,12 +1577,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -1819,12 +1835,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -1896,12 +1914,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -2147,12 +2167,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -2337,12 +2359,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -2526,12 +2550,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -2715,12 +2741,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -2904,12 +2932,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -3101,12 +3131,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -3292,12 +3324,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -3502,12 +3536,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -3692,12 +3728,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -3895,12 +3933,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -4084,12 +4124,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -4299,12 +4341,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -4489,12 +4533,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -4693,12 +4739,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -4882,12 +4930,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -5076,12 +5126,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -5286,12 +5338,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -5476,12 +5530,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -5665,12 +5721,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -5854,12 +5912,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -6057,12 +6117,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -6246,12 +6308,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -6456,12 +6520,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -6646,12 +6712,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -6833,12 +6901,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -7033,12 +7103,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -7220,12 +7292,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -7409,12 +7483,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -7596,12 +7672,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -7788,12 +7866,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -7975,12 +8055,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -8164,12 +8246,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -8417,12 +8501,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -8606,12 +8692,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -8793,12 +8881,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -11918,12 +12008,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -12109,18 +12201,21 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
 						},
 						{
 							"createdAt": 1000,
+							"icon": null,
 							"id": "errands",
 							"name": "Errands",
 							"order": 1
@@ -12280,6 +12375,7 @@
 				},
 				"project": {
 					"createdAt": 1000,
+					"icon": null,
 					"id": "errands",
 					"name": "Errands",
 					"order": 1
@@ -12311,12 +12407,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -12498,12 +12596,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "House",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -12687,12 +12787,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -12874,12 +12976,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -13063,12 +13167,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -13254,12 +13360,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -13419,6 +13527,7 @@
 				},
 				"project": {
 					"createdAt": 2,
+					"icon": null,
 					"id": "work",
 					"name": "Work",
 					"order": 0
@@ -13450,12 +13559,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -13636,6 +13747,7 @@
 				"projects": [
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -13715,18 +13827,780 @@
 			}
 		},
 		{
-			"fn": "projectsInOrder",
-			"test": "projects › projects at the same order keep their creation order",
+			"fn": "setProjectIcon",
+			"test": "projects › setting a project icon changes only that project, and null clears it",
 			"input": [
-				[
+				{
+					"comments": [],
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 1,
+							"id": "calls",
+							"name": "calls",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 2,
+							"id": "phone",
+							"name": "Phone",
+							"place": null
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 1,
+							"icon": null,
+							"id": "home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 2,
+							"icon": null,
+							"id": "work",
+							"name": "Work",
+							"order": 0
+						}
+					],
+					"reads": [],
+					"sections": [
+						{
+							"createdAt": 1,
+							"id": "later",
+							"name": "Later",
+							"order": 1,
+							"projectId": "home"
+						},
+						{
+							"createdAt": 2,
+							"id": "next",
+							"name": "Next",
+							"order": 0,
+							"projectId": "home"
+						},
+						{
+							"createdAt": 3,
+							"id": "someday",
+							"name": "Someday",
+							"order": 0,
+							"projectId": "work"
+						}
+					],
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "trip",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "trip"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 2,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "passport",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "passport"
+						},
+						{
+							"completedAt": 50,
+							"completedBy": null,
+							"createdAt": 3,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "charger",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 1,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "charger"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 4,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-14",
+								"time": "09:00"
+							},
+							"event": null,
+							"id": "standup",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": {
+								"interval": 1,
+								"unit": "day"
+							},
+							"reminders": [
+								{
+									"date": "2026-10-14",
+									"kind": "at",
+									"time": "08:00"
+								}
+							],
+							"sectionId": null,
+							"title": "standup"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 5,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "call",
+							"images": [],
+							"labelIds": [
+								"calls",
+								"phone"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "call"
+						}
+					]
+				},
+				"home",
+				"home"
+			],
+			"output": {
+				"comments": [],
+				"labels": [
+					{
+						"color": "gray",
+						"createdAt": 1,
+						"id": "calls",
+						"name": "calls",
+						"place": null
+					},
+					{
+						"color": "gray",
+						"createdAt": 2,
+						"id": "phone",
+						"name": "Phone",
+						"place": null
+					}
+				],
+				"projects": [
 					{
 						"createdAt": 1,
+						"icon": "home",
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
+						"id": "work",
+						"name": "Work",
+						"order": 0
+					}
+				],
+				"reads": [],
+				"sections": [
+					{
+						"createdAt": 1,
+						"id": "later",
+						"name": "Later",
+						"order": 1,
+						"projectId": "home"
+					},
+					{
+						"createdAt": 2,
+						"id": "next",
+						"name": "Next",
+						"order": 0,
+						"projectId": "home"
+					},
+					{
+						"createdAt": 3,
+						"id": "someday",
+						"name": "Someday",
+						"order": 0,
+						"projectId": "work"
+					}
+				],
+				"tasks": [
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "trip",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "trip"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 2,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "passport",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "passport"
+					},
+					{
+						"completedAt": 50,
+						"completedBy": null,
+						"createdAt": 3,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "charger",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 1,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "charger"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 4,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": "09:00"
+						},
+						"event": null,
+						"id": "standup",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": {
+							"interval": 1,
+							"unit": "day"
+						},
+						"reminders": [
+							{
+								"date": "2026-10-14",
+								"kind": "at",
+								"time": "08:00"
+							}
+						],
+						"sectionId": null,
+						"title": "standup"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 5,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "call",
+						"images": [],
+						"labelIds": [
+							"calls",
+							"phone"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "call"
+					}
+				]
+			}
+		},
+		{
+			"fn": "setProjectIcon",
+			"test": "projects › setting a project icon changes only that project, and null clears it",
+			"input": [
+				{
+					"comments": [],
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 1,
+							"id": "calls",
+							"name": "calls",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 2,
+							"id": "phone",
+							"name": "Phone",
+							"place": null
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 1,
+							"icon": "home",
+							"id": "home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 2,
+							"icon": null,
+							"id": "work",
+							"name": "Work",
+							"order": 0
+						}
+					],
+					"reads": [],
+					"sections": [
+						{
+							"createdAt": 1,
+							"id": "later",
+							"name": "Later",
+							"order": 1,
+							"projectId": "home"
+						},
+						{
+							"createdAt": 2,
+							"id": "next",
+							"name": "Next",
+							"order": 0,
+							"projectId": "home"
+						},
+						{
+							"createdAt": 3,
+							"id": "someday",
+							"name": "Someday",
+							"order": 0,
+							"projectId": "work"
+						}
+					],
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "trip",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "trip"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 2,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "passport",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "passport"
+						},
+						{
+							"completedAt": 50,
+							"completedBy": null,
+							"createdAt": 3,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "charger",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 1,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "charger"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 4,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-14",
+								"time": "09:00"
+							},
+							"event": null,
+							"id": "standup",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": {
+								"interval": 1,
+								"unit": "day"
+							},
+							"reminders": [
+								{
+									"date": "2026-10-14",
+									"kind": "at",
+									"time": "08:00"
+								}
+							],
+							"sectionId": null,
+							"title": "standup"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 5,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "call",
+							"images": [],
+							"labelIds": [
+								"calls",
+								"phone"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "call"
+						}
+					]
+				},
+				"home",
+				null
+			],
+			"output": {
+				"comments": [],
+				"labels": [
+					{
+						"color": "gray",
+						"createdAt": 1,
+						"id": "calls",
+						"name": "calls",
+						"place": null
+					},
+					{
+						"color": "gray",
+						"createdAt": 2,
+						"id": "phone",
+						"name": "Phone",
+						"place": null
+					}
+				],
+				"projects": [
+					{
+						"createdAt": 1,
+						"icon": null,
+						"id": "home",
+						"name": "Home",
+						"order": 0
+					},
+					{
+						"createdAt": 2,
+						"icon": null,
+						"id": "work",
+						"name": "Work",
+						"order": 0
+					}
+				],
+				"reads": [],
+				"sections": [
+					{
+						"createdAt": 1,
+						"id": "later",
+						"name": "Later",
+						"order": 1,
+						"projectId": "home"
+					},
+					{
+						"createdAt": 2,
+						"id": "next",
+						"name": "Next",
+						"order": 0,
+						"projectId": "home"
+					},
+					{
+						"createdAt": 3,
+						"id": "someday",
+						"name": "Someday",
+						"order": 0,
+						"projectId": "work"
+					}
+				],
+				"tasks": [
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "trip",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "trip"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 2,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "passport",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "passport"
+					},
+					{
+						"completedAt": 50,
+						"completedBy": null,
+						"createdAt": 3,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "charger",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 1,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "charger"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 4,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": "09:00"
+						},
+						"event": null,
+						"id": "standup",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": {
+							"interval": 1,
+							"unit": "day"
+						},
+						"reminders": [
+							{
+								"date": "2026-10-14",
+								"kind": "at",
+								"time": "08:00"
+							}
+						],
+						"sectionId": null,
+						"title": "standup"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 5,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "call",
+						"images": [],
+						"labelIds": [
+							"calls",
+							"phone"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "call"
+					}
+				]
+			}
+		},
+		{
+			"fn": "projectsInOrder",
+			"test": "projects › projects at the same order keep their creation order",
+			"input": [
+				[
+					{
+						"createdAt": 1,
+						"icon": null,
+						"id": "home",
+						"name": "Home",
+						"order": 0
+					},
+					{
+						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -13736,12 +14610,14 @@
 			"output": [
 				{
 					"createdAt": 1,
+					"icon": null,
 					"id": "home",
 					"name": "Home",
 					"order": 0
 				},
 				{
 					"createdAt": 2,
+					"icon": null,
 					"id": "work",
 					"name": "Work",
 					"order": 0
@@ -13773,12 +14649,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -13960,12 +14838,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": -1
@@ -14149,12 +15029,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": -1
@@ -14340,18 +15222,21 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": -1
 						},
 						{
 							"createdAt": 1000,
+							"icon": null,
 							"id": "errands",
 							"name": "Errands",
 							"order": 1
@@ -14511,6 +15396,7 @@
 				},
 				"project": {
 					"createdAt": 1000,
+					"icon": null,
 					"id": "errands",
 					"name": "Errands",
 					"order": 1
@@ -14542,18 +15428,21 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": -1
 						},
 						{
 							"createdAt": 1000,
+							"icon": null,
 							"id": "errands",
 							"name": "Errands",
 							"order": 1
@@ -14735,18 +15624,21 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": -1
 					},
 					{
 						"createdAt": 1000,
+						"icon": null,
 						"id": "errands",
 						"name": "Errands",
 						"order": -0.5
@@ -14912,18 +15804,21 @@
 				[
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": -1
 					},
 					{
 						"createdAt": 1000,
+						"icon": null,
 						"id": "errands",
 						"name": "Errands",
 						"order": -0.5
@@ -14933,18 +15828,21 @@
 			"output": [
 				{
 					"createdAt": 2,
+					"icon": null,
 					"id": "work",
 					"name": "Work",
 					"order": -1
 				},
 				{
 					"createdAt": 1000,
+					"icon": null,
 					"id": "errands",
 					"name": "Errands",
 					"order": -0.5
 				},
 				{
 					"createdAt": 1,
+					"icon": null,
 					"id": "home",
 					"name": "Home",
 					"order": 0
@@ -14976,12 +15874,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": -1
@@ -15163,12 +16063,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": -1
@@ -15352,12 +16254,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": -1
@@ -15539,12 +16443,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": -1
@@ -15774,12 +16680,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -15966,12 +16874,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -16230,12 +17140,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -16422,12 +17334,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -16619,12 +17533,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -16811,12 +17727,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -17015,12 +17933,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -17202,12 +18122,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -17391,12 +18313,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -17578,12 +18502,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -17767,12 +18693,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -17954,12 +18882,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -18143,12 +19073,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -18330,12 +19262,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -18565,12 +19499,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -18752,12 +19688,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -18941,12 +19879,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -19130,12 +20070,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -19521,12 +20463,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -19710,12 +20654,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -19899,12 +20845,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -20085,12 +21033,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -20201,12 +21151,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -20387,12 +21339,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -20569,12 +21523,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -20758,12 +21714,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -20947,12 +21905,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -21136,12 +22096,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -21325,12 +22287,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -21511,6 +22475,7 @@
 				"projects": [
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -21614,12 +22579,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -21798,6 +22765,7 @@
 					"projects": [
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -21882,6 +22850,7 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
@@ -21998,12 +22967,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -22187,12 +23158,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -22376,12 +23349,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -22562,6 +23537,7 @@
 				"projects": [
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -22665,6 +23641,7 @@
 					"projects": [
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -22748,6 +23725,7 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
@@ -22860,12 +23838,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -23049,12 +24029,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -23238,12 +24220,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -23427,12 +24411,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -23616,12 +24602,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -23805,12 +24793,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -23991,12 +24981,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -24107,12 +25099,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -24296,12 +25290,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -24485,12 +25481,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -24669,12 +25667,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -24868,12 +25868,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -25062,12 +26064,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -25251,12 +26255,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -25440,12 +26446,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -25629,12 +26637,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -25818,12 +26828,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -26007,12 +27019,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -26193,12 +27207,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -26309,12 +27325,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -26498,12 +27516,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -26687,12 +27707,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -26871,12 +27893,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -27070,12 +28094,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -27183,6 +28209,7 @@
 				"projects": [
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -27286,6 +28313,7 @@
 					"projects": [
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -27467,6 +28495,7 @@
 				"projects": [
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -27570,12 +28599,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -27759,12 +28790,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -27948,12 +28981,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -28137,12 +29172,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -28326,12 +29363,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -28515,12 +29554,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -28704,12 +29745,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -28893,12 +29936,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -29082,12 +30127,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -29271,12 +30318,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -29460,12 +30509,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -29649,12 +30700,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -29838,12 +30891,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -30027,12 +31082,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -30216,12 +31273,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -30405,12 +31464,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -30594,12 +31655,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -30783,12 +31846,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -30972,12 +32037,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -31176,12 +32243,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -31410,12 +32479,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -31614,12 +32685,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -31848,12 +32921,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -32052,12 +33127,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -32286,12 +33363,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -32490,12 +33569,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -32724,12 +33805,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -32913,12 +33996,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -33102,12 +34187,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -33292,12 +34379,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -33481,12 +34570,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -33670,12 +34761,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -33859,12 +34952,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -34048,12 +35143,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -34237,12 +35334,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -34424,12 +35523,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -34613,12 +35714,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -34811,12 +35914,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -35008,12 +36113,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -35195,12 +36302,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -35384,12 +36493,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -35571,12 +36682,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -35760,12 +36873,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -35951,12 +37066,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -36148,12 +37265,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -36327,12 +37446,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -36515,12 +37636,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -36716,12 +37839,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -36910,12 +38035,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -37099,12 +38226,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -37282,12 +38411,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -37483,12 +38614,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -37689,12 +38822,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -37880,12 +39015,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -38073,12 +39210,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -38264,12 +39403,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -38457,12 +39598,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -38648,12 +39791,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -38829,12 +39974,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -39030,12 +40177,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -39236,12 +40385,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -39431,12 +40582,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -39626,12 +40779,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -39806,12 +40961,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -39999,12 +41156,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -40177,12 +41336,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -40385,12 +41546,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -40600,12 +41763,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -40783,12 +41948,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -40975,12 +42142,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -41164,12 +42333,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -41343,12 +42514,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -41531,12 +42704,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -41708,12 +42883,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -41911,12 +43088,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -42116,12 +43295,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -42298,12 +43479,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -42480,12 +43663,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0
@@ -42659,12 +43844,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "Home",
 							"order": 0
 						},
 						{
 							"createdAt": 2,
+							"icon": null,
 							"id": "work",
 							"name": "Work",
 							"order": 0
@@ -42862,12 +44049,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "Home",
 						"order": 0
 					},
 					{
 						"createdAt": 2,
+						"icon": null,
 						"id": "work",
 						"name": "Work",
 						"order": 0

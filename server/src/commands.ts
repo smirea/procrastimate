@@ -48,6 +48,7 @@ import {
 	reopenTask,
 	savePlace,
 	setLabelColor,
+	setProjectIcon,
 	setPlaceRadius,
 	updateTask,
 	type Creation,
@@ -414,6 +415,7 @@ export async function editProject(command: Command, id: string, edit: ProjectEdi
 			if (next === data && visibleIn(data.projects, id, 'project').name !== title)
 				throw new ORPCError('BAD_REQUEST', { message: 'Another project has that name' });
 		}
+		if (edit.icon !== undefined) next = setProjectIcon(next, id, edit.icon);
 		return edit.index === undefined ? next : moveProject(next, id, edit.index);
 	});
 	return visibleIn(snapshot.projects, id, 'project');

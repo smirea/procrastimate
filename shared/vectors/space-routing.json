@@ -137,6 +137,7 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "work",
 							"name": "work",
 							"order": 0
@@ -188,6 +189,7 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "work",
 							"name": "work",
 							"order": 0
@@ -234,6 +236,7 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "work",
 							"name": "work",
 							"order": 0
@@ -283,6 +286,7 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "work",
 							"name": "work",
 							"order": 0
@@ -325,6 +329,7 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "work",
 							"name": "work",
 							"order": 0
@@ -414,12 +419,14 @@
 							"projects": [
 								{
 									"createdAt": 1,
+									"icon": null,
 									"id": "second",
 									"name": "Second",
 									"order": 2
 								},
 								{
 									"createdAt": 1,
+									"icon": null,
 									"id": "first",
 									"name": "First",
 									"order": 1

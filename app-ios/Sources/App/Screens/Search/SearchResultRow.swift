@@ -64,7 +64,7 @@ struct SearchResultRow: View {
     @ViewBuilder private var content: some View {
         switch row {
         case let .project(hit):
-            NameResult(systemImage: "number", tone: .muted, name: hit.name)
+            NameResult(systemImage: hit.item.systemImage, tone: .muted, name: hit.name)
         case let .label(hit):
             NameResult(systemImage: hit.item.systemImage(), tone: hit.item.color.tone, name: hit.name)
         case let .task(hit):
@@ -163,7 +163,7 @@ private struct TaskResult: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.trailing, 8)
             HStack(spacing: 3) {
-                Image(systemName: project == nil ? "tray" : "number").imageScale(.small)
+                Image(systemName: project?.systemImage ?? "tray").imageScale(.small)
                 if let project {
                     Text((hit.matches[.project]?.first ?? Search.Highlight(text: project.name, ranges: [])).attributed)
                 } else {

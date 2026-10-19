@@ -27,6 +27,7 @@ const renameSection = recorded('store', store.renameSection);
 const projectsInOrder = recorded('store', store.projectsInOrder);
 const reopenTask = recorded('store', store.reopenTask);
 const setLabelColor = recorded('store', store.setLabelColor);
+const setProjectIcon = recorded('store', store.setProjectIcon);
 const restoreCompletion = recorded('store', store.restoreCompletion);
 const restoreExploded = recorded('store', store.restoreExploded);
 const sectionsOf = recorded('store', store.sectionsOf);
@@ -54,8 +55,8 @@ const data = (): StoreData => ({
 		task('call', 5, { labelIds: ['calls', 'phone'] }),
 	],
 	projects: [
-		{ id: 'home', name: 'Home', order: 0, createdAt: 1 },
-		{ id: 'work', name: 'Work', order: 0, createdAt: 2 },
+		{ id: 'home', name: 'Home', order: 0, icon: null, createdAt: 1 },
+		{ id: 'work', name: 'Work', order: 0, icon: null, createdAt: 2 },
 	],
 	sections: [
 		{ id: 'later', projectId: 'home', name: 'Later', order: 1, createdAt: 1 },
@@ -357,7 +358,7 @@ describe('exploding subtasks', () => {
 describe('projects', () => {
 	test('adding, renaming, and deleting a project, which deletes its tasks', () => {
 		const { data: added, project } = addProject(data(), 'Errands', { id: 'errands', now: NOW });
-		expect(project).toEqual({ id: 'errands', name: 'Errands', order: 1, createdAt: NOW });
+		expect(project).toEqual({ id: 'errands', name: 'Errands', order: 1, icon: null, createdAt: NOW });
 		expect(added.projects.map(p => p.name)).toEqual(['Home', 'Work', 'Errands']);
 		expect(renameProject(data(), 'home', 'House').projects[0]!.name).toBe('House');
 		expect(renameProject(data(), 'home', 'WORK')).toEqual(data());
@@ -369,6 +370,15 @@ describe('projects', () => {
 		expect(deleted.projects.map(p => p.id)).toEqual(['work']);
 		expect(ids(deleted.tasks)).toEqual(['standup', 'call']);
 		expect(deleted.sections.map(s => s.id)).toEqual(['someday']);
+	});
+
+	test('setting a project icon changes only that project, and null clears it', () => {
+		const withIcon = setProjectIcon(data(), 'home', 'home');
+		expect(withIcon.projects.map(p => [p.id, p.icon])).toEqual([
+			['home', 'home'],
+			['work', null],
+		]);
+		expect(setProjectIcon(withIcon, 'home', null)).toEqual(data());
 	});
 
 	test('projects at the same order keep their creation order', () => {

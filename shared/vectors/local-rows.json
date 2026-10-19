@@ -35,6 +35,7 @@
 							"rows": [
 								{
 									"createdAt": 1,
+									"icon": null,
 									"id": "groceries",
 									"name": "groceries",
 									"order": 0,
@@ -227,6 +228,7 @@
 								"projects": [
 									{
 										"createdAt": 1,
+										"icon": null,
 										"id": "groceries",
 										"name": "groceries",
 										"order": 0
@@ -1187,6 +1189,7 @@
 							"rows": [
 								{
 									"createdAt": 1,
+									"icon": null,
 									"id": "work",
 									"name": "work",
 									"order": 0,
@@ -1263,6 +1266,7 @@
 							"rows": [
 								{
 									"createdAt": 1,
+									"icon": null,
 									"id": "work",
 									"name": "work",
 									"order": 0,
@@ -1282,6 +1286,7 @@
 						"projects": [
 							{
 								"createdAt": 1,
+								"icon": null,
 								"id": "work",
 								"name": "work",
 								"order": 0
@@ -1373,6 +1378,7 @@
 						"projects": [
 							{
 								"createdAt": 1,
+								"icon": null,
 								"id": "work",
 								"name": "work",
 								"order": 0

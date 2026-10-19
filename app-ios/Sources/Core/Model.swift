@@ -17,6 +17,7 @@ public typealias Recurrence = API.Recurrence
 public typealias NthWeekday = API.NthWeekday
 public typealias TaskItem = API.Task
 public typealias Project = API.Project
+public typealias ProjectIcon = API.ProjectIcon
 /// SwiftUI has its own `Section`, so a project's section is a `ProjectSection`.
 public typealias ProjectSection = API.ProjectSection
 public typealias Label = API.Label

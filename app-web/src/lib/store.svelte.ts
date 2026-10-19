@@ -1,5 +1,6 @@
 import type { DictationChoice } from 'shared/dictation.ts';
 import type { LabelColor } from 'shared/label-colors.ts';
+import type { ProjectIcon } from 'shared/project-icons.ts';
 import type { QuickAddButton } from 'shared/quick-add-buttons.ts';
 import type { DateKey, Label, Project, Section, Task } from 'shared/task.ts';
 import type { SavedPlace } from 'shared/values.ts';
@@ -529,6 +530,10 @@ class Store {
 
 	renameProject(id: string, name: string) {
 		if (this.homeOf(id) === null) this.#apply(rules.renameProject(this.own, id, name));
+	}
+
+	setProjectIcon(id: string, icon: ProjectIcon | null) {
+		if (this.homeOf(id) === null) this.#apply(rules.setProjectIcon(this.own, id, icon));
 	}
 
 	deleteProject(id: string): rules.Deleted | undefined {
