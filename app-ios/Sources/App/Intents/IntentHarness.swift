@@ -83,7 +83,7 @@ enum IntentHarness {
                 IntentEffects.note("missing-project \(fields[1])")
                 return
             }
-            intent.project = ProjectEntity(id: project.id, name: project.name)
+            intent.project = ProjectEntity(project)
         }
         if fields.count > 2, !fields[2].isEmpty {
             var labels: [LabelEntity] = []

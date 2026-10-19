@@ -30,18 +30,18 @@ enum IntentEffects {
     static func projects(ids: [String]) -> [ProjectEntity] {
         let (snapshot, _) = snapshot()
         return ids.compactMap { id in
-            snapshot.projects.first { $0.id == id }.map { ProjectEntity(id: $0.id, name: $0.name) }
+            snapshot.projects.first { $0.id == id }.map { ProjectEntity($0) }
         }
     }
 
     static func projects(matching query: String) -> [ProjectEntity] {
         let (snapshot, _) = snapshot()
-        return IntentRules.rankedNames(orderedProjects(snapshot), query, name: \.name).map { ProjectEntity(id: $0.id, name: $0.name) }
+        return IntentRules.rankedNames(orderedProjects(snapshot), query, name: \.name).map { ProjectEntity($0) }
     }
 
     static func suggestedProjects() -> [ProjectEntity] {
         let (snapshot, _) = snapshot()
-        return orderedProjects(snapshot).map { ProjectEntity(id: $0.id, name: $0.name) }
+        return orderedProjects(snapshot).map { ProjectEntity($0) }
     }
 
     static func labels(ids: [String]) -> [LabelEntity] {
