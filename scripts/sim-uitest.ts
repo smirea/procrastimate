@@ -21,6 +21,7 @@ import { homedir, tmpdir } from 'node:os';
 import { basename, join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { type Device, devices, shutdown } from './simulators';
+import { run as runCommand } from './lib';
 
 const bundle = 'com.stefan.procrastimate';
 
@@ -32,12 +33,8 @@ function xcodegen(): string {
 	if (existsSync(binary)) return binary;
 	console.log('Downloading XcodeGen (Homebrew is blocked here)…');
 	const download = join(tmpdir(), `xcodegen-${process.pid}`);
-	const run = (cmd: string[]) => {
-		const result = spawnSync(cmd[0]!, cmd.slice(1), { encoding: 'utf8' });
-		if (result.status !== 0) throw new Error(`\`${cmd.join(' ')}\` failed\n${result.stderr}`);
-	};
-	run(['gh', 'release', 'download', '--repo', 'yonaskolb/XcodeGen', '-p', 'xcodegen.zip', '-D', download]);
-	run(['unzip', '-q', '-o', join(download, 'xcodegen.zip'), '-d', download]);
+	runCommand(['gh', 'release', 'download', '--repo', 'yonaskolb/XcodeGen', '-p', 'xcodegen.zip', '-D', download]);
+	runCommand(['unzip', '-q', '-o', join(download, 'xcodegen.zip'), '-d', download]);
 	mkdirSync(cache, { recursive: true });
 	try {
 		renameSync(join(download, 'xcodegen'), join(cache, 'xcodegen'));

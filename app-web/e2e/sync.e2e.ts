@@ -1,15 +1,15 @@
-import type { Browser, BrowserContext, Page } from '@playwright/test';
 import { strToU8, zipSync } from 'fflate';
 import {
 	App,
+	type Device,
 	deviceContext,
+	signInAccount,
 	E2E_PASSWORD,
 	e2eEmail,
 	expect,
 	goOffline as cut,
 	goOnline as restore,
 	NOW,
-	signInAccount,
 	test,
 	unique,
 } from './fixtures.ts';
@@ -19,28 +19,12 @@ import {
  * agents.
  */
 
-type Device = { app: App; page: Page; context: BrowserContext };
-
 test.describe.configure({ mode: 'serial' });
-
-async function device(browser: Browser, options?: { timezoneId?: string }): Promise<Device> {
-	const context = await deviceContext(browser, options);
-	await signInAccount(context);
-	const page = await context.newPage();
-	await page.clock.setFixedTime(NOW);
-	await page.goto('/no-date');
-	await expect(page.getByRole('heading', { name: 'No date' })).toBeVisible({ timeout: 30_000 });
-	return { app: new App(page), page, context };
-}
 
 const goOffline = ({ context }: Device) => cut(context);
 const goOnline = ({ context }: Device) => restore(context);
 
 const settled = ({ app }: Device) => expect.poll(() => app.pending(), { timeout: 15_000 }).toBe(0);
-
-async function devices(browser: Browser): Promise<[Device, Device]> {
-	return [await device(browser), await device(browser)];
-}
 
 async function signOutOf({ app, page }: Device) {
 	await app.openSettings();
@@ -67,12 +51,8 @@ async function rename(app: App, from: string, to: string) {
 	await app.details().getByRole('button', { name: 'Close' }).click();
 }
 
-test.afterEach(async ({ browser }) => {
-	for (const context of browser.contexts()) await context.close();
-});
-
-test('a change on one device shows on the other at once, both ways', async ({ browser }) => {
-	const [a, b] = await devices(browser);
+test('a change on one device shows on the other at once, both ways', async ({ devices }) => {
+	const [a, b] = [await devices.open(), await devices.open()];
 	const title = unique('Synced task');
 	await a.app.add(title);
 	await expect(b.app.row(title)).toBeVisible({ timeout: 10_000 });
@@ -85,8 +65,8 @@ test('a change on one device shows on the other at once, both ways', async ({ br
 	await expect(a.app.row(title)).toHaveCount(0, { timeout: 10_000 });
 });
 
-test('two tabs of one browser share one database, and both upload', async ({ browser }) => {
-	const [a, b] = await devices(browser);
+test('two tabs of one browser share one database, and both upload', async ({ devices }) => {
+	const [a, b] = [await devices.open(), await devices.open()];
 	const other = await a.context.newPage();
 	await other.clock.setFixedTime(NOW);
 	await other.goto('/no-date');
@@ -103,9 +83,9 @@ test('two tabs of one browser share one database, and both upload', async ({ bro
 });
 
 test('changes made offline apply at once, survive a reload, and upload when the network returns', async ({
-	browser,
+	devices,
 }) => {
-	const [a, b] = await devices(browser);
+	const [a, b] = [await devices.open(), await devices.open()];
 	const kept = unique('Kept offline');
 	const later = unique('Added offline');
 	await a.app.add(kept);
@@ -129,8 +109,8 @@ test('changes made offline apply at once, survive a reload, and upload when the 
 	await expect(b.app.row(`${kept} renamed`)).toBeVisible();
 });
 
-test('a task added the moment before the page goes away is there after the reload', async ({ browser }) => {
-	const [a, b] = await devices(browser);
+test('a task added the moment before the page goes away is there after the reload', async ({ devices }) => {
+	const [a, b] = [await devices.open(), await devices.open()];
 	const title = unique('Saved in time');
 	await a.app.openQuickAdd();
 	await a.app.taskInput().fill(title);
@@ -146,9 +126,9 @@ test('a task added the moment before the page goes away is there after the reloa
 });
 
 test('an edit the server rejects goes back to the server value with a notice, and the device keeps syncing', async ({
-	browser,
+	devices,
 }) => {
-	const [a, b] = await devices(browser);
+	const [a, b] = [await devices.open(), await devices.open()];
 	const title = unique('Guarded');
 	await a.app.add(title);
 	await expect(b.app.row(title)).toBeVisible({ timeout: 10_000 });
@@ -175,8 +155,8 @@ test('an edit the server rejects goes back to the server value with a notice, an
 	await expect(b.app.row(refused)).toHaveCount(0);
 });
 
-test('typing notes shows each keystroke at once and uploads one write with the last value', async ({ browser }) => {
-	const [a, b] = await devices(browser);
+test('typing notes shows each keystroke at once and uploads one write with the last value', async ({ devices }) => {
+	const [a, b] = [await devices.open(), await devices.open()];
 	const title = unique('Typed');
 	await a.app.add(title);
 	await settled(a);
@@ -210,8 +190,8 @@ test('typing notes shows each keystroke at once and uploads one write with the l
 	});
 });
 
-test('both devices editing the same task offline converge, each field to the last write', async ({ browser }) => {
-	const [a, b] = await devices(browser);
+test('both devices editing the same task offline converge, each field to the last write', async ({ devices }) => {
+	const [a, b] = [await devices.open(), await devices.open()];
 	const title = unique('Shared');
 	await a.app.add(title);
 	await expect(b.app.row(title)).toBeVisible({ timeout: 10_000 });
@@ -241,8 +221,8 @@ test('both devices editing the same task offline converge, each field to the las
 	await expect(b.app.row(`${title} from B`)).toBeVisible();
 });
 
-test('a delete beats an edit that reaches the server after it', async ({ browser }) => {
-	const [a, b] = await devices(browser);
+test('a delete beats an edit that reaches the server after it', async ({ devices }) => {
+	const [a, b] = [await devices.open(), await devices.open()];
 	const title = unique('Doomed');
 	await a.app.add(title);
 	await expect(b.app.row(title)).toBeVisible({ timeout: 10_000 });
@@ -263,8 +243,8 @@ test('a delete beats an edit that reaches the server after it', async ({ browser
 	await expect(a.app.row(`${title} edited late`)).toHaveCount(0);
 });
 
-test('delete all data clears this device and the other', async ({ browser }) => {
-	const [a, b] = await devices(browser);
+test('delete all data clears this device and the other', async ({ devices }) => {
+	const [a, b] = [await devices.open(), await devices.open()];
 	const title = unique('Before delete');
 	await b.app.add(title);
 	await expect(a.app.row(title)).toBeVisible({ timeout: 10_000 });
@@ -278,8 +258,8 @@ test('delete all data clears this device and the other', async ({ browser }) => 
 	expect(await a.page.evaluate(() => localStorage.getItem('procrastimate-user'))).toBeTruthy();
 });
 
-test('subtasks turned into tasks show as tasks on the other device, and undo nests them again', async ({ browser }) => {
-	const [a, b] = await devices(browser);
+test('subtasks turned into tasks show as tasks on the other device, and undo nests them again', async ({ devices }) => {
+	const [a, b] = [await devices.open(), await devices.open()];
 	const parent = unique('Pack');
 	await a.app.add(parent);
 	await a.app
@@ -314,9 +294,9 @@ test('subtasks turned into tasks show as tasks on the other device, and undo nes
 });
 
 test('signing out keeps this device’s data, and signing in as someone else starts from an empty list', async ({
-	browser,
+	devices,
 }) => {
-	const [a, b] = await devices(browser);
+	const [a, b] = [await devices.open(), await devices.open()];
 	const title = unique('Mine only');
 	await a.app.add(title);
 	await settled(a);
@@ -350,8 +330,8 @@ test('signing out keeps this device’s data, and signing in as someone else sta
 	await expect(a.app.row(other)).toHaveCount(0);
 });
 
-test('another tab follows when this browser switches to another account', async ({ browser }) => {
-	const [a] = await devices(browser);
+test('another tab follows when this browser switches to another account', async ({ devices }) => {
+	const a = await devices.open();
 	const mine = unique('Before the switch');
 	await a.app.add(mine);
 	await settled(a);
@@ -373,8 +353,9 @@ test('another tab follows when this browser switches to another account', async 
 
 test('a new device holds its settings changes until the account’s settings arrive, then writes only those', async ({
 	browser,
+	devices,
 }) => {
-	const a = await device(browser);
+	const a = await devices.open();
 	await a.app.openSettings();
 	await a.app.dictationOption('ElevenLabs').click();
 	await expect(a.app.dictationOption('ElevenLabs')).toHaveAttribute('aria-checked', 'true');
@@ -390,7 +371,7 @@ test('a new device holds its settings changes until the account’s settings arr
 	await page.clock.setFixedTime(NOW);
 	await page.goto('/no-date');
 	await expect(page.getByRole('heading', { name: 'No date' })).toBeVisible({ timeout: 30_000 });
-	const b: Device = { app: new App(page), page, context };
+	const b: Device = { app: new App(page), page, context, email: '', name: 'E2E' };
 	await b.app.openSettings();
 	const labels = (app: App) =>
 		app.settings().getByRole('group', { name: 'Quick add buttons' }).getByRole('button').filter({ hasText: 'Labels' });
@@ -420,9 +401,9 @@ function refuseClears() {
 }
 
 test('this browser belongs to a new account only once the previous one’s rows are gone, and a refused clear is tried again', async ({
-	browser,
+	devices,
 }) => {
-	const a = await device(browser);
+	const a = await devices.open();
 	const title = unique('First account’s');
 	await a.app.add(title);
 	await settled(a);
@@ -452,8 +433,11 @@ test('this browser belongs to a new account only once the previous one’s rows 
 	await expect(a.app.row(title)).toHaveCount(0);
 });
 
-test('a switch whose clear the browser lost still clears before the next account reads', async ({ browser }) => {
-	const a = await device(browser);
+test('a switch whose clear the browser lost still clears before the next account reads', async ({
+	browser,
+	devices,
+}) => {
+	const a = await devices.open();
 	const title = unique('Previous account’s');
 	await a.app.add(title);
 	await settled(a);
@@ -490,9 +474,9 @@ function refuseDatabase() {
 }
 
 test('a database that cannot open says so, and an edit it could not write is written at the next launch', async ({
-	browser,
+	devices,
 }) => {
-	const [a, b] = await devices(browser);
+	const [a, b] = [await devices.open(), await devices.open()];
 	await a.context.addInitScript(refuseDatabase);
 	const title = unique('Kept for later');
 	await a.app.openQuickAdd();
@@ -525,8 +509,8 @@ function backupOf(count: number) {
 	};
 }
 
-test('one command’s writes upload in one request, however many rows it changes', async ({ browser }) => {
-	const a = await device(browser);
+test('one command’s writes upload in one request, however many rows it changes', async ({ devices }) => {
+	const a = await devices.open();
 	await settled(a);
 	await goOffline(a);
 	await a.app.openSettings();
@@ -545,8 +529,8 @@ test('one command’s writes upload in one request, however many rows it changes
 	expect(new Set(uploads)).toEqual(new Set([151]));
 });
 
-test('an edit reads back only the row it changed, on this device and the other', async ({ browser }) => {
-	const [a, b] = await devices(browser);
+test('an edit reads back only the row it changed, on this device and the other', async ({ devices }) => {
+	const [a, b] = [await devices.open(), await devices.open()];
 	await a.app.openSettings();
 	const chooser = a.page.waitForEvent('filechooser');
 	await a.app.settings().getByRole('button', { name: 'Import from Todoist' }).click();

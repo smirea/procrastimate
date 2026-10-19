@@ -6,14 +6,11 @@
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { run } from './lib';
 
 export type Device = { name: string; udid: string; state: string; dataPath: string };
 
-export function simctl(...args: string[]): string {
-	const result = spawnSync('xcrun', ['simctl', ...args], { encoding: 'utf8' });
-	if (result.status !== 0) throw new Error(`xcrun simctl ${args.join(' ')} failed\n${result.stderr}`);
-	return result.stdout;
-}
+export const simctl = (...args: string[]) => run(['xcrun', 'simctl', ...args]);
 
 export function devices(): Device[] {
 	const { devices } = JSON.parse(simctl('list', 'devices', '--json')) as { devices: Record<string, Device[]> };

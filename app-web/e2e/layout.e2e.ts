@@ -1,5 +1,7 @@
 import type { Page } from '@playwright/test';
-import { App, expect, test } from './fixtures.ts';
+import type { Task } from '../../shared/task.ts';
+import { project, task } from '../../shared/testing.ts';
+import { App, expect, NOW, test } from './fixtures.ts';
 
 /**
  * Every view, sheet, and dialog at desktop and phone widths, with the phone's on-screen keyboard emulated through the
@@ -78,7 +80,8 @@ function audit(page: Page, keyboard: number) {
 			return (style.overflowY === 'auto' || style.overflowY === 'scroll') && el.scrollHeight > el.clientHeight + 1;
 		});
 		for (const scroller of scrollers) {
-			scroller.scrollTop = scroller.scrollHeight;
+			// Instant, since a smooth scroll would still be on its way one frame later.
+			scroller.scrollTo({ top: scroller.scrollHeight, behavior: 'instant' });
 			await new Promise(requestAnimationFrame);
 			const items = [
 				...scroller.querySelectorAll<HTMLElement>('button, a, input, textarea, [data-task], p, li'),
@@ -127,13 +130,23 @@ const LONG_NOTES = Array.from(
 	(_, i) => `Line ${i + 1} of the notes, long enough to wrap on a phone.`,
 ).join('\n');
 
+/** Seeded through the API rather than typed, since the audit is about the screens and 47 quick adds took a minute. */
 async function seed(app: App) {
-	await app.createProject('Trip to Lisbon');
-	for (let i = 1; i <= 22; i++) await app.add(`Lisbon step ${i} with a longer title so rows wrap on phones`);
-	await app.go('Inbox');
-	for (let i = 1; i <= 14; i++) await app.add(`Inbox chore ${i} today`);
-	for (let i = 1; i <= 10; i++) await app.add(`Someday idea ${i}`);
-	await app.add('Write the long notes task tomorrow');
+	const lisbon = crypto.randomUUID();
+	let createdAt = NOW.getTime();
+	const row = (title: string, fields: Partial<Task> = {}) => ({
+		kind: 'task' as const,
+		fields: task(crypto.randomUUID(), { title, createdAt: createdAt++, ...fields }),
+	});
+	await app.seed(
+		{ kind: 'project', fields: project(lisbon, { name: 'Trip to Lisbon', createdAt: createdAt++ }) },
+		...Array.from({ length: 22 }, (_, i) =>
+			row(`Lisbon step ${i + 1} with a longer title so rows wrap on phones`, { projectId: lisbon }),
+		),
+		...Array.from({ length: 14 }, (_, i) => row(`Inbox chore ${i + 1}`, { due: { date: '2026-10-14', time: null } })),
+		...Array.from({ length: 10 }, (_, i) => row(`Someday idea ${i + 1}`)),
+		row('Write the long notes task', { due: { date: '2026-10-15', time: null } }),
+	);
 }
 
 for (const [width, height] of [
@@ -148,11 +161,13 @@ for (const [width, height] of [
 		await seed(app);
 		await page.setViewportSize({ width, height });
 		const open = async (view: string) => {
-			if (phone) {
-				await page.getByRole('button', { name: 'Open navigation' }).click();
+			const heading = page.getByRole('heading', { level: 1, name: view });
+			// Clicking the link of the view already showing would leave a phone's drawer open over it.
+			if (!(await heading.isVisible())) {
+				if (phone) await page.getByRole('button', { name: 'Open navigation' }).click();
+				await app.nav(view).click();
 			}
-			await app.nav(view).click();
-			await expect(page.getByRole('heading', { level: 1, name: view })).toBeVisible();
+			await expect(heading).toBeVisible();
 			await app.settle();
 		};
 

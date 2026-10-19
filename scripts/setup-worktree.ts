@@ -3,14 +3,12 @@
  * `branch` renames the worktree's branch first, so the simulator, the database, the PR, and teardown all share the
  * final name. `--reset-db` drops and recreates the worktree's databases. Safe to rerun. Never touches AWS.
  */
-import { spawnSync } from 'node:child_process';
 import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { basename, join } from 'node:path';
 import {
 	databaseName,
 	databaseOf,
-	readOverride,
 	databaseUrl,
 	ensureDatabases,
 	ensurePostgres,
@@ -18,19 +16,10 @@ import {
 	startPowerSync,
 	stopPowerSync,
 } from './local-stack';
+import { parseDotenv, readOverride, run as runCommand, worktrees } from './lib';
 
-function run(cmd: string[], opts: { quiet?: boolean } = {}): string {
-	const result = spawnSync(cmd[0]!, cmd.slice(1), {
-		encoding: 'utf8',
-		stdio: opts.quiet ? 'pipe' : ['ignore', 'pipe', 'inherit'],
-	});
-	if (result.status !== 0) throw new Error(`\`${cmd.join(' ')}\` failed\n${result.stderr ?? ''}${result.stdout ?? ''}`);
-	return result.stdout.trim();
-}
-
-function git(...args: string[]): string {
-	return run(['git', ...args], { quiet: true });
-}
+const run = (cmd: string[]) => runCommand(cmd, { stdio: 'inherit-stderr' });
+const git = (...args: string[]) => runCommand(['git', ...args]);
 
 const root = git('rev-parse', '--show-toplevel');
 process.chdir(root);
@@ -55,9 +44,7 @@ const FIRST_BLOCK = 6200;
 const LAST_BLOCK = 6980;
 
 function readPort(worktree: string): number | undefined {
-	const file = join(worktree, '.env.override');
-	if (!existsSync(file)) return undefined;
-	const port = Number(readFileSync(file, 'utf8').match(/^CLIENT_PORT=(\d+)/m)?.[1]);
+	const port = Number(readOverride(worktree)?.CLIENT_PORT);
 	return port >= FIRST_BLOCK ? port : undefined;
 }
 
@@ -75,12 +62,7 @@ const OFFSETS = [0, 1, 2, 10, 11];
 async function pickBlock(): Promise<number> {
 	const previous = readPort(root);
 	if (previous) return previous;
-	const claimed = new Set(
-		git('worktree', 'list', '--porcelain')
-			.split('\n')
-			.filter(line => line.startsWith('worktree '))
-			.map(line => readPort(line.slice('worktree '.length))),
-	);
+	const claimed = new Set(worktrees(root).map(entry => readPort(entry.path)));
 	for (let base = FIRST_BLOCK; base <= LAST_BLOCK; base += 20) {
 		if (claimed.has(base)) continue;
 		const free = await Promise.all(OFFSETS.map(offset => portFree(base + offset)));
@@ -130,8 +112,7 @@ const apiUrl = `http://127.0.0.1:${base + 1}`;
 // Never `env-manager down`: the dev environment holds cloud credentials, and a worktree runs on Docker alone.
 run(['env-manager', 'gen', '--local']);
 
-const serverEnv = readFileSync(join(root, 'server/.env.local'), 'utf8');
-const serverDatabase = serverEnv.match(/^DATABASE_URL='?([^'\s#]+)/m)?.[1];
+const serverDatabase = parseDotenv(readFileSync(join(root, 'server/.env.local'), 'utf8')).DATABASE_URL;
 if (!serverDatabase || !/^postgres:\/\/[^@]*@(127\.0\.0\.1|localhost):/.test(serverDatabase)) {
 	throw new Error(`server/.env.local must point DATABASE_URL at the local Docker Postgres, not ${serverDatabase}.`);
 }

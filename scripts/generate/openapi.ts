@@ -11,6 +11,7 @@ import '../../shared/markdown';
 import '../../shared/quick-add-buttons';
 import '../../shared/name-search';
 import '../../shared/quick-add';
+import '../../shared/ramble';
 import '../../shared/ramble/protocol';
 import '../../shared/search';
 import '../../shared/snapshot';

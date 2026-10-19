@@ -1,8 +1,9 @@
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 // Loaded where it connects: `setup-worktree.ts` imports this file before its `bun install` has run in a new worktree.
 import type postgres from 'postgres';
+import { run as runCommand } from './lib';
 
 const connectTo = async (url: string) => (await import('postgres')).default(url, { max: 1, onnotice: () => {} });
 
@@ -43,15 +44,7 @@ export const worktreeKey = (worktree: string) => basename(worktree).replaceAll(/
 /** One stack per worktree serves `bun run start` and the API server Playwright starts alike. */
 const containerName = (worktree: string) => `procrastimate-powersync-${worktreeKey(worktree)}`;
 
-function run(cmd: string[], env: Record<string, string> = {}): string {
-	const result = spawnSync(cmd[0]!, cmd.slice(1), {
-		encoding: 'utf8',
-		env: { ...process.env, ...env },
-		stdio: ['ignore', 'pipe', 'pipe'],
-	});
-	if (result.status !== 0) throw new Error(`\`${cmd.join(' ')}\` failed\n${result.stderr}${result.stdout}`);
-	return result.stdout.trim();
-}
+const run = (cmd: string[], env?: Record<string, string>) => runCommand(cmd, { env });
 
 export function dockerRunning(): boolean {
 	return spawnSync('docker', ['info'], { stdio: 'ignore' }).status === 0;
@@ -197,14 +190,4 @@ export function removeContainer(name: string): void {
 	run(['docker', 'rm', '-f', name]);
 }
 
-export function readOverride(worktree: string): Record<string, string> | null {
-	const file = join(worktree, '.env.override');
-	if (!existsSync(file)) return null;
-	return Object.fromEntries(
-		readFileSync(file, 'utf8')
-			.split('\n')
-			.map(line => line.match(/^([A-Z0-9_]+)=(.*)$/))
-			.filter((match): match is RegExpMatchArray => match !== null)
-			.map(match => [match[1]!, match[2]!]),
-	);
-}
+export { readOverride } from './lib';

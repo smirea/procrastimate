@@ -7,40 +7,25 @@
  *   - removes PowerSync containers and drops databases of worktrees that no longer exist
  *   - lists worktrees whose PR merged, for teardown-worktree.ts
  */
-import { spawnSync } from 'node:child_process';
 import { existsSync, readdirSync, rmSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
+import { run, worktrees } from './lib';
 import { dockerRunning, dropDatabases, powerSyncContainers, removeContainer, worktreeDatabases } from './local-stack';
 import { devices, owner, remove, shutdown } from './simulators';
 
 const dryRun = process.argv.includes('--dry-run');
 const IDLE_MS = 15 * 60_000;
 
-function tryRun(cmd: string[]): string {
-	const result = spawnSync(cmd[0]!, cmd.slice(1), { encoding: 'utf8' });
-	return result.status === 0 ? result.stdout.trim() : '';
-}
-
-function worktreeList(): string {
-	const result = spawnSync('git', ['-C', import.meta.dir, 'worktree', 'list', '--porcelain'], { encoding: 'utf8' });
-	if (result.status !== 0) throw new Error(`git worktree list failed\n${result.stderr}`);
-	return result.stdout.trim();
-}
+const tryRun = (cmd: string[]) => run(cmd, { allowFail: true });
 
 async function act(message: string, action: () => unknown) {
 	console.log(`${dryRun ? '[dry run] ' : ''}${message}`);
 	if (!dryRun) await action();
 }
 
-const worktrees = worktreeList()
-	.split('\n\n')
-	.map(block => ({
-		path: block.match(/^worktree (.+)$/m)?.[1],
-		branch: block.match(/^branch refs\/heads\/(.+)$/m)?.[1],
-	}))
-	.filter((entry): entry is { path: string; branch: string | undefined } => Boolean(entry.path));
-const live = new Set(worktrees.map(entry => entry.path));
+const known = worktrees(import.meta.dir);
+const live = new Set(known.map(entry => entry.path));
 // A booted simulator's own processes carry its UDID in their paths, so only processes outside CoreSimulator count.
 const processes = tryRun(['ps', '-axww', '-o', 'command='])
 	.split('\n')
@@ -82,7 +67,7 @@ if (dockerRunning()) {
 	}
 }
 
-for (const { path, branch } of worktrees.slice(1)) {
+for (const { path, branch } of known.slice(1)) {
 	if (!branch) continue;
 	const state = tryRun(['gh', 'pr', 'view', branch, '--json', 'state', '-q', '.state']);
 	if (state === 'MERGED') console.log(`Merged, ready for teardown: bun scripts/teardown-worktree.ts ${path}`);

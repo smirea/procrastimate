@@ -1,35 +1,5 @@
 import { expect, test } from 'bun:test';
-import {
-	GITHUB_SECRETS,
-	appIosKeys,
-	iosXcconfig,
-	parseDotenv,
-	PROD_API_URL,
-	WORKER_SECRETS,
-	workerSecrets,
-} from './secrets';
-
-test('parseDotenv reads plain, quoted, and commented values and drops empty ones', () => {
-	const text = [
-		'# env-manager: procrastimate',
-		'PLAIN=abc',
-		"SINGLE='a # b'",
-		'DOUBLE="c d"',
-		'COMMENTED=xyz # {optional string}',
-		'EMPTY= # {optional string}',
-		'BARE=',
-		'EMPTY_QUOTED=""',
-		'HASH_IN_VALUE=a#b',
-		'',
-	].join('\n');
-	expect(parseDotenv(text)).toEqual({
-		PLAIN: 'abc',
-		SINGLE: 'a # b',
-		DOUBLE: 'c d',
-		COMMENTED: 'xyz',
-		HASH_IN_VALUE: 'a#b',
-	});
-});
+import { GITHUB_SECRETS, appIosKeys, iosXcconfig, PROD_API_URL, WORKER_SECRETS, workerSecrets } from './secrets';
 
 test('workerSecrets keeps only set Worker secrets', () => {
 	expect(

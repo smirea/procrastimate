@@ -39,7 +39,7 @@ jobs:
           if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then
             echo "app=true" >> "$GITHUB_OUTPUT"
           elif [ "$GITHUB_EVENT_NAME" = pull_request ]; then
-            touched=$(git diff --name-only "$BASE" HEAD | grep -e '^app-ios/' -e '^shared/' -e '^scripts/generate/' -e '^scripts/app-version\.mts$' -e '^app-web/src/index\.css$' -e '^package\.json$' -e '^bun\.lock$' -e '^\.github/workflows/ios\.yml$' || true)
+            touched=$(git diff --name-only "$BASE" HEAD | grep -f scripts/app-paths.txt -e '^\.github/workflows/ios\.yml$' || true)
             printf '%s\n' "$touched"
             echo "app=$([ -n "$touched" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
           else
