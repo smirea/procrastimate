@@ -8,7 +8,8 @@ import { signJwt } from './jwt';
  */
 
 export const TOKEN_AUDIENCE = 'powersync';
-export const TOKEN_SECONDS = 5 * 60;
+/** A revoked session keeps reading the stream until its token expires; uploads still check the session. */
+export const TOKEN_SECONDS = 60 * 60;
 export const POWERSYNC_PATH = '/api/powersync';
 
 const imported = new WeakMap<SigningKey, Promise<CryptoKey>>();
@@ -21,7 +22,7 @@ function cryptoKey(key: SigningKey): Promise<CryptoKey> {
 	return created;
 }
 
-/** `{ "alg": "EdDSA", "kid" }` over `{ sub, aud: 'powersync', iat, exp }`, five minutes long. */
+/** `{ "alg": "EdDSA", "kid" }` over `{ sub, aud: 'powersync', iat, exp }`, an hour long. */
 export async function signSyncToken(key: SigningKey, userId: string, now = Date.now()): Promise<string> {
 	const iat = Math.floor(now / 1000);
 	const claims = { sub: userId, aud: TOKEN_AUDIENCE, iat, exp: iat + TOKEN_SECONDS };

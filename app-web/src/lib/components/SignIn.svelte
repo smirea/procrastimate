@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { session } from '../session.svelte.ts';
 
 	let email = $state('');
@@ -6,6 +7,8 @@
 	let creating = $state(false);
 	let busy = $state(false);
 	let opening = $state<'google' | 'apple' | null>(null);
+
+	$effect(() => untrack(() => void session.loadMethods()));
 
 	const submitLabel = $derived(
 		busy ? (creating ? 'Creating account…' : 'Signing in…') : creating ? 'Create account' : 'Sign in',

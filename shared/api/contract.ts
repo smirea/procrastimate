@@ -80,9 +80,15 @@ const taskQuery = spaceQuery.extend(byId.shape);
 
 export const peopleSchema = z.object({ people: z.array(personSchema) }).meta({ id: 'People' });
 export const aiAccountsSchema = z.object({ accounts: z.array(personSchema) }).meta({ id: 'AiAccounts' });
-export const syncTokenSchema = z
-	.object({ token: z.string(), endpoint: z.string() })
-	.meta({ id: 'SyncToken', description: 'A PowerSync token and the URL the client connects to with it.' });
+export const sessionUserSchema = z
+	.object({ id: z.string(), name: z.string(), email: z.string() })
+	.meta({ id: 'SessionUser', description: 'The signed-in human.' });
+export const syncTokenSchema = z.object({ token: z.string(), endpoint: z.string(), user: sessionUserSchema }).meta({
+	id: 'SyncToken',
+	description:
+		'A PowerSync token, the URL the client connects to with it, and whom the session belongs to. Clients read it as their session check.',
+});
+export type SyncToken = z.infer<typeof syncTokenSchema>;
 
 /** One row write from a client's PowerSync queue, as PowerSync reports it: snake_case columns, JSON as text. */
 export const uploadWriteSchema = z
@@ -525,7 +531,7 @@ export const contract = {
 			.output(z.file().mime(JSON_UTF8)),
 	},
 	sync: {
-		/** Short-lived. Human users only. */
+		/** An hour long. Human users only. */
 		token: signedIn.meta(openapi({ method: 'GET', path: '/api/sync/token' })).output(syncTokenSchema),
 		/**
 		 * The client's queued PowerSync writes. Each is checked and applied on its own: one the server refuses is listed in

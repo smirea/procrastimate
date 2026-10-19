@@ -37,36 +37,27 @@ final class Session {
         // At launch too, so the shared item names the server this build talks to.
         if let token = SessionToken.read() { SharedSession.write(token: token) }
         await refresh()
-        await loadMethods()
     }
 
+    /// The sync token route is the session check: a 401 signs out, and any other failure, offline above all, keeps the
+    /// Keychain token.
     func refresh() async {
         guard let token = SessionToken.read() else {
             signedIn = Launch.signedIn
             return
         }
         signedIn = true
-        var request = URLRequest(url: AppEnvironment.apiURL.appending(path: "api/auth/get-session"))
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        let data: Data
-        let response: URLResponse
+        let response: API.SyncToken
         do {
-            (data, response) = try await APIClient.session.data(for: request)
+            response = try await APIClient.send(API.Endpoints.SyncToken.self, NoInput(), token: token)
+        } catch let failure as APIFailure where failure.isUnauthorized {
+            end()
+            return
         } catch {
             return
         }
-        guard let http = response as? HTTPURLResponse else { return }
-        if http.statusCode == 401 {
-            end()
-            return
-        }
-        guard http.statusCode == 200,
-              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return }
-        guard let user = object["user"] as? [String: Any], let id = user["id"] as? String else {
-            end()
-            return
-        }
-        await adopt(id, email: user["email"] as? String, name: user["name"] as? String)
+        sync.prefetch(response)
+        await adopt(response.user.id, email: response.user.email, name: response.user.name)
     }
 
     func end() {
@@ -88,6 +79,7 @@ final class Session {
         error = nil
     }
 
+    /// Only the sign-in screen shows them, so a signed-in launch never asks.
     func loadMethods() async {
         do {
             methods = try await APIClient.send(API.Endpoints.AuthMethods.self, NoInput(), token: nil)

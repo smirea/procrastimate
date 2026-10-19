@@ -231,6 +231,7 @@ export const router = os.router({
 				token: await signSyncToken(context.app.config.powersync.key, actor.id),
 				// The request's own origin, not the Origin header: a same-origin GET sends none, and iOS calls the API directly.
 				endpoint: `${new URL(context.request.url).origin}${POWERSYNC_PATH}`,
+				user: { id: actor.id, name: actor.name, email: actor.email ?? '' },
 			};
 		}),
 		upload: os.sync.upload.handler(async ({ input, context }) => {
