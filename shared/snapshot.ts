@@ -1,15 +1,5 @@
 import { compareIds } from './order.ts';
-import type { Label, Project, Section, Task } from './task.ts';
-import {
-	DEFAULT_SETTINGS,
-	type Comment,
-	type CommentRead,
-	FIELDS_SCHEMAS,
-	SETTINGS_ID,
-	type Kind,
-	type Settings,
-	type Snapshot,
-} from './model.ts';
+import { DEFAULT_SETTINGS, FIELDS_SCHEMAS, SETTINGS_ID, type Kind, type Settings, type Snapshot } from './model.ts';
 
 export type Fields = Record<string, unknown>;
 

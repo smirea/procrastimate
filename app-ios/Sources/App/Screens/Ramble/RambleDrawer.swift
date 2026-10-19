@@ -244,7 +244,7 @@ struct RambleDrawer: View {
             let start = max(token.start, cursor)
             if start > cursor { out += AttributedString(text.substring(with: NSRange(location: cursor, length: start - cursor))) }
             var piece = AttributedString(text.substring(with: NSRange(location: start, length: token.end - start)))
-            if let kind = QuickAdd.TokenKind(rawValue: token.kind) {
+            if let kind = QuickAdd.TokenKind(rawValue: token.kind.rawValue) {
                 piece.backgroundColor = kind.tint
                 piece.foregroundColor = .ink
             } else {

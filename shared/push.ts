@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { scheduledNotificationSchema, type ScheduledNotification } from './notifications.ts';
+import type { ScheduledNotification } from './notifications.ts';
 
 export const MAX_SCHEDULED = 500;
 

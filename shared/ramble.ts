@@ -1,13 +1,26 @@
+import { z } from 'zod';
 import { ordinal } from './format.ts';
-import { escapeRegExp, ORDINAL_WORDS, parseQuickAdd, type TokenKind } from './quick-add.ts';
+import { escapeRegExp, ORDINAL_WORDS, parseQuickAdd, tokenKindSchema, type TokenKind } from './quick-add.ts';
 import type { Due, Label, Priority, Project, Recurrence, Reminder } from './task.ts';
+import { dueSchema, prioritySchema, recurrenceSchema, reminderSchema } from './values.ts';
 
-export type RambleTokenKind = TokenKind | 'separator' | 'subtask' | 'note' | 'correction' | 'end';
+export const rambleTokenKindSchema = z
+	.enum([...tokenKindSchema.options, 'separator', 'subtask', 'note', 'correction', 'end'])
+	.meta({ id: 'RambleTokenKind', description: 'A quick add token kind, or one of the spoken commands.' });
+export type RambleTokenKind = z.infer<typeof rambleTokenKindSchema>;
 
-/** A recognized phrase, with UTF-16 offsets into the transcript, for tinting and provenance. */
-export type RambleToken = { kind: RambleTokenKind; start: number; end: number; text: string };
+export const rambleTokenSchema = z
+	.object({ kind: rambleTokenKindSchema, start: z.number().int(), end: z.number().int(), text: z.string() })
+	.meta({
+		id: 'RambleToken',
+		description: 'A recognized phrase, with UTF-16 offsets into the transcript, for tinting and provenance.',
+	});
+export type RambleToken = z.infer<typeof rambleTokenSchema>;
 
-export type RambleSpan = { start: number; end: number };
+export const rambleSpanSchema = z
+	.object({ start: z.number().int(), end: z.number().int() })
+	.meta({ id: 'RambleSpan', description: 'A UTF-16 span of the transcript.' });
+export type RambleSpan = z.infer<typeof rambleSpanSchema>;
 
 export type RambleTask = {
 	segment: RambleSpan;
@@ -23,12 +36,39 @@ export type RambleTask = {
 	subtasks: RambleTask[];
 };
 
-export type RambleDraft = {
-	tasks: RambleTask[];
-	tokens: RambleToken[];
-	/** Stefan said `that's all` or `that's it` at the end, so listening stops. It never saves. */
-	ended: boolean;
-};
+export const rambleTaskSchema: z.ZodType<RambleTask> = z
+	.object({
+		segment: rambleSpanSchema,
+		title: z.string(),
+		notes: z.string(),
+		due: dueSchema.nullable(),
+		recurrence: recurrenceSchema.nullable(),
+		priority: prioritySchema.nullable(),
+		reminders: z.array(reminderSchema),
+		projectId: z.string().nullable(),
+		labelIds: z.array(z.string()),
+		get subtasks(): z.ZodArray<z.ZodType<RambleTask>> {
+			return z.array(rambleTaskSchema);
+		},
+	})
+	.meta({
+		id: 'RambleTask',
+		description:
+			'One drafted task from a ramble. Fields stay empty unless a spoken phrase set them; `projectId` is always null on a subtask.',
+	});
+
+export const rambleDraftSchema = z
+	.object({
+		tasks: z.array(rambleTaskSchema),
+		tokens: z.array(rambleTokenSchema),
+		ended: z.boolean(),
+	})
+	.meta({
+		id: 'RambleDraft',
+		description:
+			'`ended` means Stefan said `that’s all` or `that’s it` at the end, so listening stops. It never saves.',
+	});
+export type RambleDraft = z.infer<typeof rambleDraftSchema>;
 
 export type RambleOptions = { now: Date; projects?: readonly Project[]; labels?: readonly Label[] };
 

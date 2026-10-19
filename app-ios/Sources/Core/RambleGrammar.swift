@@ -1,7 +1,7 @@
 import Foundation
 
 struct FieldToken {
-    var kind: String
+    var kind: RambleTokenKind
     var start: Int
     var end: Int
 }
@@ -105,7 +105,7 @@ private enum RambleFields {
             let js = JSString(work)
             work = js.slice(0, start) + String(repeating: " ", count: end - start) + js.slice(end, js.count)
         }
-        func add(_ kind: String, _ start: Int, _ end: Int) {
+        func add(_ kind: RambleTokenKind, _ start: Int, _ end: Int) {
             tokens.append(FieldToken(kind: kind, start: base + start, end: base + end))
         }
 
@@ -115,7 +115,7 @@ private enum RambleFields {
             if let last = found.last {
                 let raw = last.named("a") ?? last.named("b") ?? last.named("c") ?? ""
                 projectId = projects.ids[RambleNames.key(raw)]
-                add("project", last.start, last.end)
+                add(.project, last.start, last.end)
             }
             for match in found { claim(match.start, match.end) }
         }
@@ -125,7 +125,7 @@ private enum RambleFields {
             func take(_ match: JSRegex.Found, _ start: Int, _ end: Int) {
                 guard let name = match.named("name"), let id = labels.ids[RambleNames.key(name)] else { return }
                 labelHits.append((start, id))
-                add("label", start, end)
+                add(.label, start, end)
                 claim(start, end)
             }
             let leads = labels.lead.matches(in: work)
@@ -142,7 +142,7 @@ private enum RambleFields {
 
         let parsed = QuickAdd.parse(work, QuickAdd.Options(now: now, spoken: true), in: zone)
         for token in parsed.tokens {
-            add(token.kind.rawValue, token.start, token.end)
+            add(RambleTokenKind(rawValue: token.kind.rawValue)!, token.start, token.end)
         }
         let ordered = labelHits.sorted { $0.at < $1.at }
         var seen: Set<String> = []
@@ -213,7 +213,7 @@ private enum RambleTitles {
             var cursor = piece.start
             var inside: [(start: Int, end: Int, beforeDate: Bool)] = tokens
                 .filter { $0.start >= piece.start && $0.end <= piece.end }
-                .map { ($0.start, $0.end, ["due", "recurrence", "reminder"].contains($0.kind)) }
+                .map { ($0.start, $0.end, [.due, .recurrence, .reminder].contains($0.kind)) }
             inside += omit.filter { $0.end > piece.start && $0.start < piece.end }.map { ($0.start, $0.end, false) }
             inside.sort { $0.start == $1.start ? $0.end < $1.end : $0.start < $1.start }
             var gaps: [(start: Int, end: Int, beforeDate: Bool)] = []
@@ -265,7 +265,7 @@ struct RambleGrammar {
     let zone: TimeZone
     let projects: NamedPattern?
     let labels: LabelPatterns?
-    var structural: [(kind: String, start: Int, end: Int)] = []
+    var structural: [(kind: RambleTokenKind, start: Int, end: Int)] = []
     var tasks: [RambleItem] = []
     var current: RambleItem?
 
@@ -493,7 +493,7 @@ struct RambleGrammar {
         if let current, !forceNew, let note = Self.noteAtStart.first(in: sentence) {
             current.cues.append(RambleSpan(start: range.start, end: range.start + note.end))
             current.notes.append(RambleSpan(start: range.start + note.end, end: range.end))
-            structural.append((kind: "note", start: range.start, end: range.start + note.end))
+            structural.append((kind: .note, start: range.start, end: range.start + note.end))
             return
         }
         let markers: [(kind: String, start: Int, end: Int)] = Self.structure.matches(in: sentence).map { match in
@@ -513,10 +513,10 @@ struct RambleGrammar {
                 }
                 target.cues.append(cue)
                 target.notes.append(content)
-                structural.append((kind: "note", start: cue.start, end: cue.end))
+                structural.append((kind: .note, start: cue.start, end: cue.end))
                 return
             }
-            structural.append((kind: "subtask", start: cue.start, end: cue.end))
+            structural.append((kind: .subtask, start: cue.start, end: cue.end))
             guard let root = rootOf(current) else {
                 if marker.kind == "one" { startTask(content).cues.append(cue) }
                 else { for part in listParts(content) { startTask(part).cues.append(cue) } }
@@ -559,7 +559,7 @@ struct RambleGrammar {
         var ended = false
         if let match = Self.ending.first(in: text) {
             let start = match.start + (Self.leadingPunct.test(match.value) ? 1 : 0)
-            structural.append((kind: "end", start: start, end: JSString(text).count))
+            structural.append((kind: .end, start: start, end: JSString(text).count))
             text = JSString(text).slice(0, start)
             ended = true
         }
@@ -574,17 +574,17 @@ struct RambleGrammar {
             }
             cursor = boundary.end
             if boundary.kind == "separator" {
-                structural.append((kind: "separator", start: boundary.start, end: boundary.end))
+                structural.append((kind: .separator, start: boundary.start, end: boundary.end))
                 forceNew = true
             } else if boundary.kind == "correction" {
-                structural.append((kind: "correction", start: boundary.start, end: boundary.end))
+                structural.append((kind: .correction, start: boundary.start, end: boundary.end))
                 dropCurrent()
                 forceNew = true
             }
         }
 
         var tokens: [RambleToken] = []
-        func push(_ kind: String, _ range: RambleSpan) {
+        func push(_ kind: RambleTokenKind, _ range: RambleSpan) {
             var span = original(range)
             let source = JSString(transcript)
             while span.start < span.end, UTF16Text.isWhitespace(source.unit(span.start)) { span.start += 1 }

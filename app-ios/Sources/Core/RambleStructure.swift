@@ -30,7 +30,7 @@ extension Ramble {
     /// Spoken commands (`next task`, `subtask`, `note`, `scratch that`) are the grammar's to read, so a draft that
     /// uses one skips the model.
     public static func usesCommands(_ draft: RambleDraft) -> Bool {
-        draft.tokens.contains { ["separator", "subtask", "note", "correction"].contains($0.kind) }
+        draft.tokens.contains { [.separator, .subtask, .note, .correction].contains($0.kind) }
     }
 
     /// The model's split turned into tasks, or nil when the transcript does not back it up and the grammar's draft

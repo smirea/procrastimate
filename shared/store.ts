@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { defaultLabelColor, type LabelColor } from './label-colors.ts';
 import * as subtasks from './subtasks.ts';
-import { bySiblingOrder, compareIds, moveOrders } from './order.ts';
+import { bySiblingOrder, moveOrders } from './order.ts';
 import { labelSchema, projectSchema, sectionSchema, snapshotSchema, taskSchema } from './model.ts';
 import { DEFAULT_PRIORITY, type DateKey, type Label, type Project, type Section, type Task } from './task.ts';
 import { byCreation } from './snapshot.ts';
