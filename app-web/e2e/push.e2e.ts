@@ -35,6 +35,10 @@ test('a push service that refuses to subscribe is asked again a day later, not o
 
 	const dayAgo = NOW.getTime() - 25 * 60 * 60 * 1000;
 	await page.evaluate(at => localStorage.setItem('procrastimate-push-refused-at', String(at)), dayAgo);
-	await page.reload();
+	await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
 	await expect.poll(attempts).toBe(2);
+	await page.reload();
+	await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
+	await expect(page.getByRole('heading', { name: 'Inbox' })).toBeVisible();
+	expect(await attempts()).toBe(2);
 });

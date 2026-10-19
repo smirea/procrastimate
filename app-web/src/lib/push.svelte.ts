@@ -160,7 +160,8 @@ class Push {
 	}
 
 	#retry() {
-		if (this.state.kind === 'unavailable' || this.state.kind === 'error') void this.detect();
+		const refusalOver = this.state.kind === 'off' && localStorage.getItem(REFUSED_KEY) !== null && !refusedRecently();
+		if (this.state.kind === 'unavailable' || this.state.kind === 'error' || refusalOver) void this.detect();
 		else if (this.state.kind === 'on') void this.#register(this.state.subscription);
 	}
 }
