@@ -28,7 +28,6 @@ final class LocalNotifications: NSObject {
     nonisolated static let refreshTaskID = "com.stefan.procrastimate.refresh"
 
     private(set) var status: NotificationStatus = .checking
-    private(set) var pending: [String] = []
 
     @ObservationIgnored private let store: Store
     @ObservationIgnored private let navigator: Navigator
@@ -133,7 +132,6 @@ final class LocalNotifications: NSObject {
             return
         case .off, .denied:
             center.removeAllPendingNotificationRequests()
-            pending = []
             return
         case .on:
             break
@@ -150,23 +148,7 @@ final class LocalNotifications: NSObject {
         for item in change.add {
             try? await center.add(Self.makeRequest(item, now: now))
         }
-        await readPending()
         scheduleRefresh(schedule)
-    }
-
-    private func readPending() async {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        let requests = await center.pendingNotificationRequests()
-        pending = requests
-            .map { request -> (Int, String) in
-                let id = request.identifier
-                let at = Notifications.isTaskTag(id) ? Int(id[id.index(after: id.lastIndex(of: ":")!)...]) ?? 0 : Int.max
-                let time = at == Int.max ? id : formatter.string(from: Date(epochMilliseconds: at))
-                return (at, "\(request.content.title)@\(time): \(request.content.body)")
-            }
-            .sorted { $0 < $1 }
-            .map(\.1)
     }
 
     /// A full window refills from a background refresh before it runs dry, in case the app stays closed.
