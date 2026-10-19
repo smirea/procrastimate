@@ -7,8 +7,19 @@ services:
   postgres:
     image: postgres:17
     container_name: procrastimate-postgres
-    # Logical replication for PowerSync; one slot and sender per worktree.
-    command: ['postgres', '-c', 'wal_level=logical', '-c', 'max_replication_slots=32', '-c', 'max_wal_senders=32']
+    # Logical replication for PowerSync, one slot and sender per worktree. Each worktree holds ~8 connections from
+    # PowerSync plus up to 5 per API server (dev and e2e), so 1000 keeps 40+ worktrees clear of "too many clients".
+    command:
+      - postgres
+      - -c
+      - wal_level=logical
+      - -c
+      - max_replication_slots=64
+      - -c
+      - max_wal_senders=64
+      - -c
+      - max_connections=1000
+    restart: unless-stopped
     environment:
       POSTGRES_PASSWORD: postgres
     ports: ['127.0.0.1:5440:5432']
@@ -26,6 +37,8 @@ services:
     labels:
       procrastimate.worktree: ${WORKTREE_PATH:-unset}
     command: ['start', '-r', 'unified']
+    # PowerSync exits when Postgres restarts and never reconnects on its own.
+    restart: unless-stopped
     ports: ['127.0.0.1:${POWERSYNC_PORT:-0}:8080']
     environment:
       POWERSYNC_CONFIG_PATH: /config/service.yaml

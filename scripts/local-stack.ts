@@ -55,8 +55,12 @@ export function requireDocker(): void {
 	throw new Error('Docker is not running. Start Docker Desktop (or `colima start`), then rerun this script.');
 }
 
+/**
+ * `--no-recreate` because every worktree shares this container: a compose change would otherwise make the next
+ * worktree setup recreate it under every other worktree's running servers.
+ */
 export function ensurePostgres(): void {
-	run(['docker', 'compose', '-f', compose, '-p', 'procrastimate', 'up', '-d', '--wait', 'postgres']);
+	run(['docker', 'compose', '-f', compose, '-p', 'procrastimate', 'up', '-d', '--wait', '--no-recreate', 'postgres']);
 }
 
 async function withAdmin<T>(use: (sql: postgres.Sql) => Promise<T>): Promise<T> {
