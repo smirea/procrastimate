@@ -30,6 +30,7 @@ struct InboxScreen: View {
             if !due.today.isEmpty {
                 Section {
                     ForEach(due.today) { TaskRow(task: $0, showProject: $0.projectId != nil, timeOnly: true) }
+                    GroupAddRow(group: "Today", addTo: .inbox(date: today))
                 } header: {
                     ListHeading(text: "Today", tasks: due.today, addTo: .inbox(date: today))
                 }
@@ -37,6 +38,7 @@ struct InboxScreen: View {
             ForEach(days, id: \.date) { group in
                 Section {
                     ForEach(group.tasks) { TaskRow(task: $0, showProject: $0.projectId != nil) }
+                    GroupAddRow(group: Format.dayHeading(group.date, today), addTo: .inbox(date: group.date))
                 } header: {
                     ListHeading(text: Format.dayHeading(group.date, today), tasks: group.tasks, addTo: .inbox(date: group.date))
                 }
@@ -71,6 +73,7 @@ struct NoDateScreen: View {
             ForEach(view.places, id: \.key) { place in
                 Section {
                     ForEach(place.tasks) { row($0) }
+                    GroupAddRow(group: place.name, addTo: .place(key: place.key))
                 } header: {
                     ListHeading(text: place.name, tasks: place.tasks, addTo: .place(key: place.key))
                 }

@@ -201,6 +201,36 @@ struct ListHeading: View {
     }
 }
 
+/// The quiet row at the end of a group, such as a section or an Inbox day, that opens quick add on that group. The tab
+/// bar's `+` adds to the screen; this adds to the group, so its name says which.
+struct GroupAddRow: View {
+    @Environment(Store.self) private var store
+    @Environment(Navigator.self) private var navigator
+
+    let group: String
+    let addTo: ListScreen
+
+    var body: some View {
+        Button { navigator.sheet = .quickAdd(store.quickAddDefaults(addTo)) } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "plus")
+                    .font(.footnote.weight(.bold))
+                    .foregroundStyle(.accent)
+                    .frame(width: 22)
+                Text("Add task")
+                    .font(.subheadline)
+                    .foregroundStyle(.muted)
+                Spacer(minLength: 0)
+            }
+            .frame(minHeight: 44)
+            .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Add task to \(group)")
+        .accessibilityIdentifier("add-task-\(group)")
+    }
+}
+
 struct CopyMarkdownButton: View {
     @Environment(TaskActions.self) private var actions
     let document: Markdown.Document
