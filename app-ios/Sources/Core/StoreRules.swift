@@ -2,6 +2,7 @@ import Foundation
 
 public typealias StoreData = API.StoreData
 public typealias Creation = API.Creation
+public typealias ReopenedTask = API.ReopenedTask
 public typealias NewTask = API.NewTask
 public typealias TaskPatch = API.TaskEdit
 public typealias CompletionState = API.CompletionState
@@ -77,6 +78,10 @@ public enum StoreRules {
         guard let original = data.tasks.first(where: { $0.id == id }) else { return data }
         var task = original
         patch.apply(to: &task)
+        if case let .some(event)? = patch.event, event != nil {
+            task.due = nil
+            task.recurrence = nil
+        }
         let movesProject = patch.projectId.map { $0 != original.projectId } ?? false
         if patch.sectionId != nil || movesProject {
             let section = patch.sectionId.flatMap { $0 }.flatMap { id in data.sections.first { $0.id == id } }
@@ -122,10 +127,13 @@ public enum StoreRules {
         return (updated, Completion(kind: next == nil ? .done : .rolled, previous: previous, next: next))
     }
 
-    public static func reopenTask(_ data: StoreData, _ id: String) -> StoreData {
+    /// `reopened` is each task that was completed, with its `completedAt`, so undo can put the completions back.
+    public static func reopenTask(_ data: StoreData, _ id: String) -> (data: StoreData, reopened: [ReopenedTask]) {
+        let changed = Subtasks.reopenTask(data.tasks, id)
+        let before = Dictionary(data.tasks.map { ($0.id, $0.completedAt) }, uniquingKeysWith: { _, last in last })
         var next = data
-        next.tasks = put(data.tasks, Subtasks.reopenTask(data.tasks, id))
-        return next
+        next.tasks = put(data.tasks, changed)
+        return (next, changed.map { ReopenedTask(id: $0.id, completedAt: before[$0.id] ?? nil) })
     }
 
     /// Puts back what a completion changed, as its undo captured it.
@@ -239,7 +247,9 @@ public enum StoreRules {
         return next
     }
 
+    /// A taken name, ignoring case, returns the project that has it, since `#name` must resolve to one project.
     public static func addProject(_ data: StoreData, _ name: String, _ creation: Creation) -> (data: StoreData, project: Project) {
+        if let existing = data.projects.first(where: { sameName($0.name, name) }) { return (data, existing) }
         let project = Project(
             id: creation.id,
             name: name,
@@ -251,7 +261,9 @@ public enum StoreRules {
         return (next, project)
     }
 
+    /// A rename to another project's name, ignoring case, changes nothing.
     public static func renameProject(_ data: StoreData, _ id: String, _ name: String) -> StoreData {
+        if data.projects.contains(where: { $0.id != id && sameName($0.name, name) }) { return data }
         var next = data
         next.projects = data.projects.updating(id) { $0.name = name }
         return next
@@ -344,7 +356,9 @@ public enum StoreRules {
         return next
     }
 
+    /// A taken name, ignoring case, returns the label that has it, since `@name` must resolve to one label.
     public static func addLabel(_ data: StoreData, _ name: String, _ creation: Creation) -> (data: StoreData, label: Label) {
+        if let existing = data.labels.first(where: { sameName($0.name, name) }) { return (data, existing) }
         let label = Label(id: creation.id, name: name, color: LabelColors.defaultLabelColor(name), createdAt: creation.now)
         var next = data
         next.labels.append(label)
@@ -371,7 +385,7 @@ public enum StoreRules {
         _ place: SavedPlace,
         _ creation: Creation
     ) -> (data: StoreData, label: Label?) {
-        if data.labels.contains(where: { $0.name.lowercased() == name.lowercased() }) { return (data, nil) }
+        if data.labels.contains(where: { sameName($0.name, name) }) { return (data, nil) }
         let label = Label(
             id: creation.id,
             name: name,
@@ -414,7 +428,7 @@ public enum StoreRules {
     /// Names stay unique ignoring case, since `@name` must resolve to one label. Renaming a saved place renames it on
     /// the open tasks at it.
     public static func renameLabel(_ data: StoreData, _ id: String, _ name: String) -> StoreData {
-        if data.labels.contains(where: { $0.id != id && $0.name.lowercased() == name.lowercased() }) { return data }
+        if data.labels.contains(where: { $0.id != id && sameName($0.name, name) }) { return data }
         guard let label = data.labels.first(where: { $0.id == id }) else { return data }
         var next = data
         next.labels = data.labels.updating(id) { $0.name = name }

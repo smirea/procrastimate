@@ -2,7 +2,8 @@ import { z } from 'zod';
 import { sectionsOf } from './store.ts';
 import { sectionSchema, taskSchema } from './model.ts';
 import { addDays, toDateKey, type DateKey, type Due, type Label, type Section, type Task } from './task.ts';
-import { occurrenceDue, placeKey, scheduledDue } from './triggers.ts';
+import { compareIds } from './order.ts';
+import { occurrenceDue, openTasks, placeKey, scheduledDue } from './triggers.ts';
 import { dateKeySchema } from './values.ts';
 
 export const dayGroupSchema = z.object({ date: dateKeySchema, tasks: z.array(taskSchema) }).meta({ id: 'DayGroup' });
@@ -51,7 +52,7 @@ function compareTasks(a: Task, b: Task, today?: DateKey) {
 	return a.priority - b.priority || a.createdAt - b.createdAt;
 }
 
-const open = (tasks: readonly Task[]) => tasks.filter(t => t.completedAt === null);
+const open = openTasks;
 
 /** Inbox and projects list top-level tasks, and a subtask shows as progress on its parent. Dated views list subtasks too. */
 const topLevel = (tasks: readonly Task[]) => open(tasks).filter(t => t.parentId === null);
@@ -78,8 +79,7 @@ export function inboxTasks(tasks: readonly Task[], today: DateKey) {
  */
 export function noDateTasks(tasks: readonly Task[], today: DateKey, newestFirst: boolean): NoDate {
 	const list = inboxTasks(tasks, today).toSorted(
-		(a, b) =>
-			(newestFirst ? b.createdAt - a.createdAt : a.createdAt - b.createdAt) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0),
+		(a, b) => (newestFirst ? b.createdAt - a.createdAt : a.createdAt - b.createdAt) || compareIds(a.id, b.id),
 	);
 	const byPlace = new Map<string, Task[]>();
 	for (const task of list) {

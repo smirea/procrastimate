@@ -1,4 +1,5 @@
-import { parseQuickAdd, type TokenKind } from './quick-add.ts';
+import { ordinal } from './format.ts';
+import { escapeRegExp, ORDINAL_WORDS, parseQuickAdd, type TokenKind } from './quick-add.ts';
 import type { Due, Label, Priority, Project, Recurrence, Reminder } from './task.ts';
 
 export type RambleTokenKind = TokenKind | 'separator' | 'subtask' | 'note' | 'correction' | 'end';
@@ -105,42 +106,17 @@ function numberValue(text: string): number {
 	return words.reduce((sum, word) => sum + (TENS[word] ?? SMALL_NUMBERS.indexOf(word)), 0);
 }
 
-const ORDINAL_WORDS: Record<string, number> = {
-	first: 1,
-	second: 2,
-	third: 3,
-	fourth: 4,
-	fifth: 5,
-	sixth: 6,
-	seventh: 7,
-	eighth: 8,
-	ninth: 9,
-	tenth: 10,
-	eleventh: 11,
-	twelfth: 12,
-	thirteenth: 13,
-	fourteenth: 14,
-	fifteenth: 15,
-	sixteenth: 16,
-	seventeenth: 17,
-	eighteenth: 18,
-	nineteenth: 19,
-	twentieth: 20,
+const ORDINAL_VALUES: Record<string, number> = {
+	...Object.fromEntries(ORDINAL_WORDS.map((word, index) => [word, index + 1])),
 	thirtieth: 30,
 };
-const ORDINAL_WORD = String.raw`(?:(?:twenty|thirty)[\s-](?:first|second|third|fourth|fifth|sixth|seventh|eighth|ninth)|${Object.keys(ORDINAL_WORDS).join('|')})`;
+const ORDINAL_WORD = String.raw`(?:(?:twenty|thirty)[\s-](?:first|second|third|fourth|fifth|sixth|seventh|eighth|ninth)|${Object.keys(ORDINAL_VALUES).join('|')})`;
 
 function ordinalValue(text: string): number {
 	const t = text.toLowerCase();
 	if (/^\d/.test(t)) return Number.parseInt(t, 10);
 	const words = t.split(/[\s-]+/);
-	return words.length === 2 ? TENS[words[0]!]! + ORDINAL_WORDS[words[1]!]! : ORDINAL_WORDS[t]!;
-}
-
-function ordinal(n: number): string {
-	const suffix =
-		n % 10 === 1 && n !== 11 ? 'st' : n % 10 === 2 && n !== 12 ? 'nd' : n % 10 === 3 && n !== 13 ? 'rd' : 'th';
-	return `${n}${suffix}`;
+	return words.length === 2 ? TENS[words[0]!]! + ORDINAL_VALUES[words[1]!]! : ORDINAL_VALUES[t]!;
 }
 
 const DAY_NAME = '(?:mon|tues|wednes|thurs|fri|satur|sun)day';
@@ -267,8 +243,6 @@ type Attributes = {
 	recurrence: Recurrence | null;
 	reminders: Reminder[];
 };
-
-const escapeRegExp = (text: string) => text.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 
 /** Case-insensitive, ignoring punctuation and a trailing plural or possessive `s`. */
 const nameKey = (name: string) =>
@@ -562,7 +536,6 @@ const VERBS = [
 	'list',
 	'clear',
 	'empty',
-	'take',
 	'put',
 	'collect',
 	'deposit',
@@ -571,7 +544,6 @@ const VERBS = [
 	'backup',
 	'back',
 	'upgrade',
-	'download',
 	'see',
 	'watch',
 	'listen',
@@ -607,7 +579,6 @@ const VERBS = [
 	'arrange',
 	'assemble',
 	'build',
-	'cook',
 	'fetch',
 	'measure',
 	'prune',
@@ -617,16 +588,12 @@ const VERBS = [
 	'rsvp',
 	'scan',
 	'shred',
-	'sweep',
 	'tune',
 	'wipe',
-	'pay',
 	'notify',
 	'warn',
 	'remember',
-	'apply',
 	'enroll',
-	'sign',
 	'share',
 	'archive',
 ];

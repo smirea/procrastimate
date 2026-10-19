@@ -294,7 +294,6 @@ export const apiTokens = pgTable(
 		name: text('name').notNull(),
 		tokenHash: text('token_hash').notNull().unique(),
 		createdAt: millis('created_at').notNull(),
-		lastUsedAt: millis('last_used_at'),
 	},
 	table => [primaryKey({ columns: [table.userId, table.id] })],
 ).enableRLS();

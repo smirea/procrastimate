@@ -1,3 +1,4 @@
+import { compareIds } from './order.ts';
 import type { Label, Project, Section, Task } from './task.ts';
 import {
 	DEFAULT_SETTINGS,
@@ -24,11 +25,11 @@ export const emptySnapshot = (): Snapshot => ({
 	settings: { ...DEFAULT_SETTINGS },
 });
 
-/** Oldest first, then by id, so every replica lists the same entities in the same order. */
+/** Oldest first, then by id. */
 export const byCreation = (a: { createdAt: number; id: string }, b: { createdAt: number; id: string }) =>
-	a.createdAt - b.createdAt || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+	a.createdAt - b.createdAt || compareIds(a.id, b.id);
 
-export const byId = (a: { id: string }, b: { id: string }) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+export const byId = (a: { id: string }, b: { id: string }) => compareIds(a.id, b.id);
 
 export function sortSnapshot(snapshot: Snapshot): Snapshot {
 	return {
@@ -42,52 +43,27 @@ export function sortSnapshot(snapshot: Snapshot): Snapshot {
 	};
 }
 
+/** The list each kind of entity lives in; settings are the one row that is not a list. */
+const LIST_OF = {
+	task: 'tasks',
+	project: 'projects',
+	section: 'sections',
+	label: 'labels',
+	comment: 'comments',
+	read: 'reads',
+} as const satisfies Record<Exclude<Kind, 'settings'>, keyof Snapshot>;
+
 export function entitiesOf(snapshot: Snapshot, kind: Kind): readonly Entity[] {
-	switch (kind) {
-		case 'task':
-			return snapshot.tasks;
-		case 'project':
-			return snapshot.projects;
-		case 'section':
-			return snapshot.sections;
-		case 'label':
-			return snapshot.labels;
-		case 'comment':
-			return snapshot.comments;
-		case 'read':
-			return snapshot.reads;
-		case 'settings':
-			return [{ id: SETTINGS_ID, ...snapshot.settings }];
-		default: {
-			const never: never = kind;
-			return never;
-		}
-	}
+	if (kind === 'settings') return [{ id: SETTINGS_ID, ...snapshot.settings }];
+	return snapshot[LIST_OF[kind]];
 }
 
 export function withEntities(snapshot: Snapshot, kind: Kind, entities: readonly Entity[]): Snapshot {
-	switch (kind) {
-		case 'task':
-			return { ...snapshot, tasks: entities as unknown as Task[] };
-		case 'project':
-			return { ...snapshot, projects: entities as unknown as Project[] };
-		case 'section':
-			return { ...snapshot, sections: entities as unknown as Section[] };
-		case 'label':
-			return { ...snapshot, labels: entities as unknown as Label[] };
-		case 'comment':
-			return { ...snapshot, comments: entities as unknown as Comment[] };
-		case 'read':
-			return { ...snapshot, reads: entities as unknown as CommentRead[] };
-		case 'settings': {
-			const { id: _, ...settings } = entities[0] ?? { id: SETTINGS_ID, ...DEFAULT_SETTINGS };
-			return { ...snapshot, settings: settings as Settings };
-		}
-		default: {
-			const never: never = kind;
-			return never;
-		}
+	if (kind === 'settings') {
+		const { id: _, ...settings } = entities[0] ?? { id: SETTINGS_ID, ...DEFAULT_SETTINGS };
+		return { ...snapshot, settings: settings as Settings };
 	}
+	return { ...snapshot, [LIST_OF[kind]]: entities };
 }
 
 /** Every synced field of an entity, with an absent `sourceKey` as `null`. */

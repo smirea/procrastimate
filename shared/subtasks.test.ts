@@ -39,6 +39,28 @@ describe('completing on an event series in a zone', () => {
 	});
 });
 
+describe('an event task with a repeat', () => {
+	test('completing follows the event, as the lists show it, not the repeat', () => {
+		const occurrences = [19, 20].map(d => ({
+			start: Date.UTC(2026, 9, d, 9),
+			end: Date.UTC(2026, 9, d, 10),
+			original: Date.UTC(2026, 9, d, 9),
+		}));
+		const event = { id: 'standup', title: 'Standup', allDay: false, series: true, edge: 'start' as const, minutes: 0 };
+		const tasks = [
+			task('notes', {
+				due: { date: '2026-10-14', time: null },
+				recurrence: { interval: 1, unit: 'day' },
+				event: { ...event, occurrences },
+			}),
+		];
+		const completion = completeTask(tasks, 'notes', '2026-10-19', NOW, 'UTC')!;
+		expect(completion.kind === 'rolled' && completion.next).toEqual({ date: '2026-10-20', time: '09:00' });
+		expect(completion.changed[0]!.event!.occurrences).toEqual(occurrences.slice(1));
+		expect(completion.changed[0]!.due).toEqual({ date: '2026-10-14', time: null });
+	});
+});
+
 describe('subtask tree', () => {
 	test('children come in sibling order and descendants reach every level', () => {
 		expect(ids(groupChildren(trip()).get('trip')!)).toEqual(['passport', 'charger', 'socks']);

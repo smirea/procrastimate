@@ -4,7 +4,7 @@ import { createApp } from './app';
 import type { Env } from './bindings';
 import { config } from './config';
 import type { Db } from './db/postgres';
-import { ramble, rambleConfig, rambleRoute, upstreamUrl, type ConnectUpstream } from './ramble';
+import { rambleRoute, upstreamOf, upstreamUrl, type ConnectUpstream } from './ramble';
 import type { Socket, StreamEvents, StreamHost } from './sockets';
 
 type SocketData = { start: (socket: Socket) => StreamEvents; events?: StreamEvents };
@@ -42,7 +42,7 @@ export async function serveDev(port: number, env: Env, db: Db): Promise<Server<S
 		upgraded.add(marker);
 		return marker;
 	};
-	const app = await createApp(env, db, rambleRoute(db, ramble(stream, rambleConfig(config(env).ramble, bunUpstream))));
+	const app = await createApp(env, db, rambleRoute(db, stream, upstreamOf(config(env).ramble, bunUpstream)));
 	server = Bun.serve<SocketData>({
 		development: true,
 		idleTimeout: 0,

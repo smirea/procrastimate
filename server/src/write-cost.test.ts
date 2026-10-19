@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
-import { json, type Session, shareWith, signUp, taskRow, testApp, type TestApp, upload } from './test-app';
+import { json, named, type Session, shareWith, signUp, taskRow, testApp, type TestApp, upload } from './test-app';
 
 /**
  * What one upload costs in SQL statements, counted by the test app's Drizzle logger. Sessions are warmed first, so
@@ -25,14 +25,11 @@ beforeAll(async () => {
 });
 afterAll(() => app.close());
 
-/** The statements an upload ran, as their first word or `lock` for an advisory lock, so a failure names what ran. */
+/** The statements an upload ran, each as its verb and table, so a failure names what ran. */
 async function statementsOf(session: Session, writes: unknown[]): Promise<string[]> {
 	app.statements.length = 0;
 	expect(await upload(app, session, writes)).toEqual([]);
-	return app.statements.map(statement => {
-		if (statement.startsWith('SELECT pg_advisory_xact_lock')) return 'lock';
-		return statement.trim().split(/\s+/)[0]!.toLowerCase();
-	});
+	return app.statements.map(named);
 }
 
 const patch = (values: Record<string, unknown>, opId = crypto.randomUUID()) => [
@@ -41,12 +38,12 @@ const patch = (values: Record<string, unknown>, opId = crypto.randomUUID()) => [
 
 describe('statements per upload', () => {
 	test('an owner’s title edit is the update and the log row', async () => {
-		expect(await statementsOf(owner, patch({ title: 'Renamed' }))).toEqual(['update', 'insert']);
+		expect(await statementsOf(owner, patch({ title: 'Renamed' }))).toEqual(['update tasks', 'insert log']);
 	});
 
 	test('an owner’s due date change also asks for a push subscription, and plans only when there is one', async () => {
 		const due = (date: string) => patch({ due: JSON.stringify({ date, time: '09:00' }) });
-		expect(await statementsOf(owner, due('2026-10-20'))).toEqual(['update', 'insert', 'select']);
+		expect(await statementsOf(owner, due('2026-10-20'))).toEqual(['update tasks', 'insert log', 'select push']);
 		await json(
 			app.fetch('/api/push/subscription', {
 				method: 'PUT',
@@ -57,33 +54,37 @@ describe('statements per upload', () => {
 			}),
 		);
 		expect(await statementsOf(owner, due('2026-10-21'))).toEqual([
-			'update',
-			'insert',
-			'select',
-			'select',
-			'select',
-			'update',
+			'update tasks',
+			'insert log',
+			'select push',
+			'select settings',
+			'select tasks',
+			'update push',
 		]);
 		await app.fetch('/api/push/subscription', { method: 'DELETE', headers: owner.headers });
 	});
 
 	test('a settings change replans only when the time zone moved', async () => {
 		const settings = (values: Record<string, unknown>) => [{ op: 'patch', table: 'settings', id: 'settings', values }];
-		expect(await statementsOf(owner, settings({ dictation: 'elevenlabs' }))).toEqual(['update', 'insert']);
-		expect(await statementsOf(owner, settings({ time_zone: 'Europe/Madrid' }))).toEqual(['update', 'insert', 'select']);
+		expect(await statementsOf(owner, settings({ dictation: 'elevenlabs' }))).toEqual(['update settings', 'insert log']);
+		expect(await statementsOf(owner, settings({ time_zone: 'Europe/Madrid' }))).toEqual([
+			'update settings',
+			'insert log',
+			'select push',
+		]);
 	});
 
 	test('a guest’s edit tries the own space, looks the row up, locks the space shared, reads the guest’s access rows, writes in a savepoint, and logs', async () => {
 		await shareWith(app, owner, { kind: 'task', id }, guest.person.id, 'edit');
 		expect(await statementsOf(guest, patch({ title: 'By the guest' }))).toEqual([
-			'update',
-			'select',
+			'update tasks',
+			'select tasks',
 			'lock',
-			'select',
+			'select access',
 			'savepoint',
-			'update',
+			'update tasks',
 			'release',
-			'insert',
+			'insert log',
 		]);
 	});
 
@@ -99,17 +100,17 @@ describe('statements per upload', () => {
 		]);
 		// The pre-check, the lock, the shares to humans and the stored rows, then the tree, then the changed rows.
 		expect(await statementsOf(owner, patch({ project_id: projectId }))).toEqual([
-			'update',
-			'insert',
-			'select',
+			'update tasks',
+			'insert log',
+			'select shares',
 			'lock',
-			'select',
-			'select',
-			'select',
-			'select',
-			'select',
-			'select',
-			'insert',
+			'select shares',
+			'select access',
+			'select tasks',
+			'select projects',
+			'select sections',
+			'select labels',
+			'insert access',
 		]);
 	});
 
@@ -121,7 +122,7 @@ describe('statements per upload', () => {
 		];
 		const first = await statementsOf(owner, batch);
 		const again = await statementsOf(owner, batch);
-		expect(first.slice(0, 3).toSorted()).toEqual(['insert', 'insert', 'update']);
+		expect(first.slice(0, 3).toSorted()).toEqual(['insert log', 'insert tasks', 'update tasks']);
 		expect(again).toEqual(first);
 	});
 });

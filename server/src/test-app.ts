@@ -10,7 +10,7 @@ import { createApp, type App } from './app';
 import type { Env } from './bindings';
 import { migrate } from './db/migrate';
 import type { Db } from './db/postgres';
-import { ramble, rambleRoute, type RambleConfig } from './ramble';
+import { rambleRoute, type ConnectUpstream } from './ramble';
 import { generateVapidKeys } from './web-push';
 
 /**
@@ -55,14 +55,14 @@ async function migrated(): Promise<PGlite> {
 }
 
 /** A fresh PGlite database, migrated, with the app on top. Sockets are refused; Ramble tests pass their own config. */
-export async function testApp(options: { env?: Partial<Env>; ramble?: RambleConfig } = {}): Promise<TestApp> {
+export async function testApp(options: { env?: Partial<Env>; connect?: ConnectUpstream } = {}): Promise<TestApp> {
 	template ??= migrated();
 	const client = (await (await template).clone()) as PGlite;
 	const statements: string[] = [];
 	const db: Db = drizzle(client, { logger: { logQuery: query => void statements.push(query) } });
 	const env = await testEnv(options.env);
 	const stream = () => Response.json({ ok: false, error: 'No sockets in tests' }, { status: 501 });
-	const app = await createApp(env, db, rambleRoute(db, ramble(stream, options.ramble ?? { connect: null })));
+	const app = await createApp(env, db, rambleRoute(db, stream, options.connect ?? null));
 	return {
 		...app,
 		fetch: (path, init) => handle(new Request(`${ORIGIN}${path}`, init), app),
@@ -107,6 +107,16 @@ export const tokenHeaders = (token: string): Record<string, string> => ({
 	origin: ORIGIN,
 	'content-type': 'application/json',
 });
+
+/** `select tasks`, `insert log`, `lock`: the verb and the first table each statement names, then any lateral read's. */
+export function named(statement: string): string {
+	if (statement.startsWith('SELECT pg_advisory_xact_lock')) return 'lock';
+	if (/^(savepoint|release)/i.test(statement)) return statement.split(' ')[0]!.toLowerCase();
+	const verb = /^\(*(select|insert|update|delete)\b/.exec(statement)?.[1];
+	const table = /\b(?:from|into|update)\s+"(\w+)"/.exec(statement)?.[1];
+	const lateral = [...statement.matchAll(/join lateral \(select .*? from "(\w+)"/g)].map(match => match[1]);
+	return [`${verb} ${table}`, ...lateral].join(' + ');
+}
 
 export async function json<T>(pending: Response | Promise<Response>): Promise<T> {
 	const response = await pending;

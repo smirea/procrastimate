@@ -5,7 +5,7 @@ import postgres from 'postgres';
 import { access, log, settings, shares, tasks } from '../../shared/db/schema';
 import { handle } from './api';
 import { createApp } from './app';
-import { ramble, rambleRoute } from './ramble';
+import { rambleRoute } from './ramble';
 import { ORIGIN, shareWith, signUp, taskRow, type TestApp, testEnv, upload } from './test-app';
 
 /**
@@ -26,10 +26,7 @@ async function postgresApp() {
 	const base = await createApp(
 		await testEnv(),
 		db,
-		rambleRoute(
-			db,
-			ramble(() => new Response(null), { connect: null }),
-		),
+		rambleRoute(db, () => new Response(null), null),
 	);
 	const app: TestApp = {
 		...base,

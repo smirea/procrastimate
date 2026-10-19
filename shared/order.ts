@@ -8,9 +8,12 @@ type Sibling = { id: string; order: number; createdAt: number };
 /** Below this gap a move renumbers its siblings instead of splitting it further. */
 export const MIN_ORDER_GAP = 1e-9;
 
+/** Ids are compared as code units, as Swift's `utf16` does, so every replica lists the same entities in the same order. */
+export const compareIds = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
+
 /** By `order`, then `createdAt`, then `id`, so a tie from two concurrent moves settles the same everywhere. */
 export const bySiblingOrder = (a: Sibling, b: Sibling) =>
-	a.order - b.order || a.createdAt - b.createdAt || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+	a.order - b.order || a.createdAt - b.createdAt || compareIds(a.id, b.id);
 
 export function orderBetween(previous: number | null, next: number | null): number {
 	if (previous === null) return next === null ? 0 : next - 1;

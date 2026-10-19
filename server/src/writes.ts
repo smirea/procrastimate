@@ -2,10 +2,17 @@ import { and, desc, eq, getTableColumns, inArray, sql, type SQL } from 'drizzle-
 import type { PgColumn, PgTable } from 'drizzle-orm/pg-core';
 import type { Actor } from '../../shared/auth';
 import { access, comments, ENTITY_TABLES, log, tasks } from '../../shared/db/schema';
-import type { FieldsByKind, Kind } from '../../shared/model';
+import type { Kind } from '../../shared/model';
 import { coalesce, TABLE_OF, type RowWrite } from '../../shared/rows';
 import type { Fields } from '../../shared/snapshot';
-import { guestRefusal, type GuestRows, type StoredRow } from '../../shared/scope';
+import {
+	authorOnly,
+	guestRefusal,
+	type CommentFields,
+	type GuestRows,
+	type StoredRow,
+	type TaskFields,
+} from '../../shared/scope';
 import type { Client } from '../../shared/values';
 import { asGuest, recomputeAccess, touchesAccess } from './access';
 import type { Db } from './db/postgres';
@@ -39,8 +46,6 @@ export type Authority =
 
 const OTHER_SPACE = 'Belongs to another space';
 const DB_REFUSED = 'The database refused the write';
-const authorOnly = (op: RowWrite['op']) =>
-	op === 'delete' ? 'Only the author can delete a comment' : 'Only the author can edit a comment';
 
 /** The tables whose rows are keyed by `(user_id, id)` and always the actor's own; the rest are keyed by `id` alone. */
 const PER_USER: ReadonlySet<Kind> = new Set<Kind>(['read', 'settings']);
@@ -61,9 +66,6 @@ function excluded(columns: Record<string, PgColumn>, names: readonly string[]): 
 	);
 }
 
-type TaskFields = Partial<FieldsByKind['task']>;
-type CommentFields = Partial<FieldsByKind['comment']>;
-
 /**
  * `completed_by` follows `completed_at`, a recurring roll included through `last_completed_at`: the actor when either
  * moves, null when `completed_at` clears, and otherwise what the row holds. `completedAt` and `lastCompletedAt` are
@@ -82,6 +84,85 @@ function completedBy(actor: string, completedAt: { value: SQL; cleared: SQL } | 
 
 /** What a write's results are filed into, for the log and derived work or for the client's notice. */
 type Results = { landed: Landed[]; rejected: Rejected[] };
+
+/** The kinds whose own-space puts go in one statement per batch. Comments stamp their author and settings never update. */
+const BATCHED: ReadonlySet<Kind> = new Set<Kind>(['task', 'project', 'section', 'label']);
+
+/**
+ * One upsert for every put of one kind with the same columns, as `statement` would run them one by one: a large
+ * upload or a long offline stretch lands in a few statements instead of one per row. Answers the ids that changed; a
+ * put that changed nothing met a row in another space. A refused statement refuses the whole group, so the caller
+ * retries the rows one at a time to find the one at fault.
+ */
+async function upsertMany(
+	db: Db,
+	owner: string,
+	actor: string,
+	kind: Kind,
+	writes: readonly Write[],
+): Promise<Set<string>> {
+	const columns = columnsOf(kind);
+	const names = Object.keys(writes[0]!.values ?? {}).filter(name => name !== 'createdBy' && name !== 'completedBy');
+	const returning = { id: columns.id! };
+	if (kind === 'task') {
+		const rows = writes.map(write => {
+			const { createdBy: _, completedBy: __, ...fields } = write.values as TaskFields;
+			const completed = (fields.completedAt ?? null) !== null || (fields.lastCompletedAt ?? null) !== null;
+			return {
+				...(fields as typeof tasks.$inferInsert),
+				id: write.id,
+				userId: owner,
+				createdBy: actor,
+				completedBy: completed ? actor : null,
+			};
+		});
+		const landed = await db
+			.insert(tasks)
+			.values(rows)
+			.onConflictDoUpdate({
+				target: tasks.id,
+				set: {
+					...excluded(columns, names),
+					completedBy: completedBy(
+						actor,
+						{ value: sql`excluded.completed_at`, cleared: sql`excluded.completed_at IS NULL` },
+						sql`excluded.last_completed_at`,
+					),
+				},
+				setWhere: eq(tasks.userId, sql`excluded.user_id`),
+			})
+			.returning({ id: tasks.id });
+		return new Set(landed.map(row => row.id));
+	}
+	const landed = await db
+		.insert(ENTITY_TABLES[kind] as PgTable)
+		.values(writes.map(write => ({ ...write.values, id: write.id, userId: owner })))
+		.onConflictDoUpdate({
+			target: columns.id!,
+			set: excluded(columns, names),
+			setWhere: eq(columns.userId!, sql`excluded.user_id`),
+		})
+		.returning(returning);
+	return new Set(landed.map(row => String(row.id)));
+}
+
+/** Lands a group of same-kind puts in one statement, or one by one when the database refuses the group. */
+async function landMany(db: Db, actor: string, writes: readonly Write[], results: Results): Promise<void> {
+	let landed: Set<string>;
+	try {
+		landed = await upsertMany(db, actor, actor, writes[0]!.kind, writes);
+	} catch (error) {
+		if (!refusedByDatabase(error)) throw error;
+		for (const write of writes) {
+			if (await land(db, actor, actor, write, results)) results.rejected.push(reject(write, OTHER_SPACE));
+		}
+		return;
+	}
+	for (const write of writes) {
+		if (landed.has(write.id)) results.landed.push({ owner: actor, write });
+		else results.rejected.push(reject(write, OTHER_SPACE));
+	}
+}
 
 /**
  * Runs one write in `owner`'s space, files a change in `landed` and a data or integrity error (SQLSTATE 22xxx or
@@ -314,16 +395,27 @@ export async function applyWrites(db: Db, ctx: WriteContext, writes: readonly Ow
 		else own.push(write);
 	}
 
-	const failure = await firstRejection(
-		own.map(write =>
-			land(db, actor, actor, write, results).then(missed => {
-				if (!missed) return;
-				// A settings put that found the row changed nothing on purpose; a comment put may have met another's row.
-				if (write.op !== 'put' || write.kind === 'comment') unresolved.push(write);
-				else if (!PER_USER.has(write.kind)) rejected.push(reject(write, OTHER_SPACE));
-			}),
-		),
+	const groups = Map.groupBy(
+		own.filter(write => write.op === 'put' && BATCHED.has(write.kind)),
+		write =>
+			`${write.kind}:${Object.keys(write.values ?? {})
+				.toSorted()
+				.join(',')}`,
 	);
+	const batched = new Set([...groups.values()].filter(group => group.length > 1).flat());
+	const failure = await firstRejection([
+		...[...groups.values()].filter(group => group.length > 1).map(group => landMany(db, actor, group, results)),
+		...own
+			.filter(write => !batched.has(write))
+			.map(write =>
+				land(db, actor, actor, write, results).then(missed => {
+					if (!missed) return;
+					// A settings put that found the row changed nothing on purpose; a comment put may have met another's row.
+					if (write.op !== 'put' || write.kind === 'comment') unresolved.push(write);
+					else if (!PER_USER.has(write.kind)) rejected.push(reject(write, OTHER_SPACE));
+				}),
+			),
+	]);
 
 	const stored = await storedRows(db, [...puts, ...unresolved.filter(write => !PER_USER.has(write.kind))]);
 	const gone = unresolved.filter(write => write.op === 'delete' && !stored.has(rowKey(write)));

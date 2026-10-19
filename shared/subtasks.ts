@@ -106,9 +106,9 @@ export function completeTask(
 	const task = tasks.find(t => t.id === id);
 	if (!task) return null;
 	const descendants = descendantsOf(tasks, id);
-	const occurrence = nextOccurrence(task, today);
-	const series = nextEventOccurrence(task, today, zone);
-	const next = occurrence ? { next: occurrence.due, fields: occurrence } : series;
+	// An event stands in for the date and the repeat, as `scheduledDue` reads it.
+	const occurrence = task.event ? null : nextOccurrence(task, today);
+	const next = occurrence ? { next: occurrence.due, fields: occurrence } : nextEventOccurrence(task, today, zone);
 	if (!next) {
 		const changed = [task, ...descendants]
 			.filter(t => t.completedAt === null)

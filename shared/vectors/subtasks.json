@@ -111,6 +111,116 @@
 			}
 		},
 		{
+			"fn": "completeTask",
+			"test": "an event task with a repeat › completing follows the event, as the lists show it, not the repeat",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": {
+							"allDay": false,
+							"edge": "start",
+							"id": "standup",
+							"minutes": 0,
+							"occurrences": [
+								{
+									"end": 1792404000000,
+									"original": 1792400400000,
+									"start": 1792400400000
+								},
+								{
+									"end": 1792490400000,
+									"original": 1792486800000,
+									"start": 1792486800000
+								}
+							],
+							"series": true,
+							"title": "Standup"
+						},
+						"id": "notes",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": {
+							"interval": 1,
+							"unit": "day"
+						},
+						"reminders": [],
+						"sectionId": null,
+						"title": "notes"
+					}
+				],
+				"notes",
+				"2026-10-19",
+				1000,
+				"UTC"
+			],
+			"output": {
+				"changed": [
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": {
+							"allDay": false,
+							"edge": "start",
+							"id": "standup",
+							"minutes": 0,
+							"occurrences": [
+								{
+									"end": 1792490400000,
+									"original": 1792486800000,
+									"start": 1792486800000
+								}
+							],
+							"series": true,
+							"title": "Standup"
+						},
+						"id": "notes",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": 1000,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": {
+							"interval": 1,
+							"unit": "day"
+						},
+						"reminders": [],
+						"sectionId": null,
+						"title": "notes"
+					}
+				],
+				"kind": "rolled",
+				"next": {
+					"date": "2026-10-20",
+					"time": "09:00"
+				}
+			}
+		},
+		{
 			"fn": "groupChildren",
 			"test": "subtask tree › children come in sibling order and descendants reach every level",
 			"input": [

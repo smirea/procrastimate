@@ -2,20 +2,20 @@ import { ORPCError } from '@orpc/server';
 import { and, eq, isNull, type SQL } from 'drizzle-orm';
 import { apiTokens, labels, projects, shares, tasks, type ShareRow } from '../../shared/db/schema';
 import { newId } from '../../shared/id';
-import { filterTree, scopeOf } from '../../shared/scope';
+import { scopeOf } from '../../shared/scope';
 import type { ApiToken, CreatedApiToken, Person, ShareTarget, ShareView, SharedView } from '../../shared/sharing';
 import type { Role } from '../../shared/values';
 import { syncAccess } from './access';
 import type { App } from './app';
-import { sha256 } from './auth';
+import { sha256 } from './actor';
 import { user } from './db/auth-schema';
 import type { Db } from './db/postgres';
 import { requireManager } from './commands';
 import { agentPrompt } from './docs';
 import { peopleById, personById, unknownPerson } from './people';
-import { entity, loadTree, withSpaceLocked } from './space';
-import type { Access } from './auth';
-import { base64urlEncode } from './web-push';
+import { entity, loadLinks, loadScope, withSpaceLocked } from './space';
+import type { Access } from './space';
+import { base64urlEncode } from './jwt';
 
 /**
  * Shares, public links, and API tokens, all rows in the owner's space. Every share change recomputes the owner's
@@ -158,22 +158,40 @@ export async function deleteLink(db: Db, owner: string, access: Access, id: stri
 	if (!deleted.length) throw new ORPCError('NOT_FOUND', { message: 'No such link' });
 }
 
-/** Read by anyone holding the link: the share is checked before anything else of the space is read. */
+/**
+ * Read by anyone holding the link: the share is checked before anything else of the space is read, then only the rows
+ * the link reaches are loaded. Who made or finished a task, its import key, its images, and every place stay with
+ * the owner: a link shows what the task is, not where the owner goes.
+ */
 export async function sharedView(app: App, ownerId: string, id: string): Promise<SharedView> {
 	const [share] = await sharesOf(app.db, ownerId, and(eq(shares.id, id), isNull(shares.grantee)));
 	if (!share) throw new ORPCError('NOT_FOUND', { message: 'No such link' });
-	const [owner, tree] = await Promise.all([personById(app.db, ownerId), loadTree(app.db, ownerId)]);
+	const [owner, links] = await Promise.all([personById(app.db, ownerId), loadLinks(app.db, ownerId)]);
 	if (!owner) throw new ORPCError('NOT_FOUND', { message: 'No such link' });
-	const { tasks, projects, sections, labels } = filterTree(tree, scopeOf(tree, [share]));
-	return { target: { kind: share.targetKind, id: share.targetId }, owner, tasks, projects, sections, labels };
+	const { tasks, projects, sections, labels } = await loadScope(app.db, ownerId, scopeOf(links, [share]));
+	return {
+		target: { kind: share.targetKind, id: share.targetId },
+		owner,
+		tasks: tasks.map(task => ({
+			...task,
+			createdBy: null,
+			completedBy: null,
+			lastCompletedAt: null,
+			sourceKey: undefined,
+			images: [],
+			location: null,
+		})),
+		projects,
+		sections,
+		labels: labels.map(label => ({ ...label, place: null })),
+	};
 }
 
-const tokenView = ({ id, aiUserId, name, createdAt, lastUsedAt }: ApiToken): ApiToken => ({
+const tokenView = ({ id, aiUserId, name, createdAt }: ApiToken): ApiToken => ({
 	id,
 	aiUserId,
 	name,
 	createdAt,
-	lastUsedAt,
 });
 
 export async function listTokens(db: Db, owner: string): Promise<ApiToken[]> {
@@ -209,7 +227,6 @@ export async function createToken(
 		name,
 		tokenHash: await sha256(secret),
 		createdAt: now,
-		lastUsedAt: null,
 	});
 	const token = `pm.${owner}.${secret}`;
 	return { id, token, prompt: agentPrompt(origin, token) };

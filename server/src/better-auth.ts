@@ -11,7 +11,7 @@ import { authSchema } from './db/auth-schema';
 import type { Db } from './db/postgres';
 import type { AppleSecret, Config } from './config';
 import { reportError } from './sentry';
-import { base64urlEncode } from './web-push';
+import { base64Decode, signJwt } from './jwt';
 
 /** A year. Days offline must not sign the account out; a day online extends the session. */
 const SESSION_SECONDS = 60 * 60 * 24 * 365;
@@ -59,11 +59,7 @@ export type Auth = {
 			findOne: <T>(data: { model: string; where: Where[] }) => Promise<T | null>;
 			findMany: <T>(data: { model: string; where?: Where[] }) => Promise<T[]>;
 		};
-		internalAdapter: {
-			deleteUser: (userId: string) => Promise<void>;
-			deleteUserSessions: (userId: string) => Promise<void>;
-			deleteAccounts: (userId: string) => Promise<void>;
-		};
+		internalAdapter: { deleteUser: (userId: string) => Promise<void> };
 	}>;
 };
 
@@ -87,26 +83,22 @@ export async function appleClientSecret(secret: AppleSecret, servicesId: string 
 		.replace(/-----BEGIN PRIVATE KEY-----/, '')
 		.replace(/-----END PRIVATE KEY-----/, '')
 		.replace(/\s/g, '');
-	const der = Uint8Array.from(atob(body), char => char.charCodeAt(0));
-	const key = await crypto.subtle.importKey('pkcs8', der, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign']);
+	const key = await crypto.subtle.importKey(
+		'pkcs8',
+		base64Decode(body),
+		{ name: 'ECDSA', namedCurve: 'P-256' },
+		false,
+		['sign'],
+	);
 	const now = Math.floor(Date.now() / 1000);
-	const header = base64urlEncode(new TextEncoder().encode(JSON.stringify({ alg: 'ES256', kid: keyId, typ: 'JWT' })));
-	const payload = base64urlEncode(
-		new TextEncoder().encode(
-			JSON.stringify({
-				iss: teamId,
-				iat: now,
-				exp: now + 60 * 60 * 24 * 150,
-				aud: 'https://appleid.apple.com',
-				sub: subject,
-			}),
-		),
-	);
-	const signingInput = `${header}.${payload}`;
-	const signature = new Uint8Array(
-		await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, key, new TextEncoder().encode(signingInput)),
-	);
-	return `${signingInput}.${base64urlEncode(signature)}`;
+	const claims = {
+		iss: teamId,
+		iat: now,
+		exp: now + 60 * 60 * 24 * 150,
+		aud: 'https://appleid.apple.com',
+		sub: subject,
+	};
+	return signJwt({ alg: 'ES256', kid: keyId, typ: 'JWT' }, claims, key, { name: 'ECDSA', hash: 'SHA-256' });
 }
 
 async function socialProviders({ google, apple }: Config) {
@@ -248,8 +240,6 @@ export async function createAiUser(app: App, ownerId: string, name: string): Pro
 }
 
 export async function deleteUser({ auth }: App, userId: string): Promise<void> {
-	const context = await auth.$context;
-	await context.internalAdapter.deleteUser(userId);
-	await context.internalAdapter.deleteUserSessions(userId);
-	await context.internalAdapter.deleteAccounts(userId);
+	// Sessions and accounts reference the user with `ON DELETE CASCADE`.
+	await (await auth.$context).internalAdapter.deleteUser(userId);
 }

@@ -587,6 +587,37 @@ describe('AI accounts', () => {
 		expect(task.location?.name).toBe('office');
 	});
 
+	test('the agent API refuses a date or a repeat beside an event, which stands in for both', async () => {
+		const { token } = await aiAccount(app, owner, 'Planner');
+		const headers = tokenHeaders(token);
+		const asAi = (method: string, path: string, body?: unknown) =>
+			app.fetch(path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
+		const task = await json<{ id: string }>(asAi('POST', '/api/tasks', { text: 'Prepare the standup notes' }));
+		const occurrence = {
+			start: Date.UTC(2026, 9, 20, 9),
+			end: Date.UTC(2026, 9, 20, 10),
+			original: Date.UTC(2026, 9, 20, 9),
+		};
+		const event = {
+			id: 'standup',
+			title: 'Standup',
+			allDay: false,
+			series: false,
+			edge: 'start',
+			minutes: 0,
+			occurrences: [occurrence],
+		};
+		const together = await asAi('PATCH', `/api/tasks?id=${task.id}`, {
+			event,
+			recurrence: { interval: 1, unit: 'day' },
+		});
+		expect(together.status).toBe(400);
+		const linked = await json<{ event: { id: string } | null }>(asAi('PATCH', `/api/tasks?id=${task.id}`, { event }));
+		expect(linked.event?.id).toBe('standup');
+		const dated = await asAi('PATCH', `/api/tasks?id=${task.id}`, { due: { date: '2026-10-20', time: null } });
+		expect(await dated.json()).toMatchObject({ message: 'An event stands in for the date and the repeat' });
+	});
+
 	test('the agent API reports which app created each task and which wrote to it last', async () => {
 		const id = await newTask('Clients');
 		const { token } = await aiAccount(app, owner, 'Editor');

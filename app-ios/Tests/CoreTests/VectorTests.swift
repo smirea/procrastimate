@@ -344,7 +344,9 @@ private func completion(_ completion: Completion) throws -> JSONValue {
             return .null
         }
         return object(["data": try json(result.data), "completion": try completion(result.completion)])
-    case "reopenTask": return try json(StoreRules.reopenTask(data(), a(1)))
+    case "reopenTask":
+        let result = StoreRules.reopenTask(try data(), try a(1))
+        return object(["data": try json(result.data), "reopened": try json(result.reopened)])
     case "restoreCompletion": return try json(StoreRules.restoreCompletion(data(), a(1)))
     case "moveSubtask": return try json(StoreRules.moveSubtask(data(), a(1), a(2)))
     case "deleteTask":

@@ -1,4 +1,4 @@
-import { and, eq, exists, sql, type SQL } from 'drizzle-orm';
+import { and, eq, exists, inArray, sql, type SQL } from 'drizzle-orm';
 import type { PgColumn } from 'drizzle-orm/pg-core';
 import type { Actor } from '../../shared/auth';
 import { resolveDangling, type Entities, type Links } from '../../shared/dangling';
@@ -13,10 +13,10 @@ import {
 	type AccessRow,
 } from '../../shared/db/schema';
 import { SETTINGS_ID } from '../../shared/model';
-import { managesSpace } from '../../shared/scope';
+import { managesSpace, type Scope } from '../../shared/scope';
 import { byCreation } from '../../shared/snapshot';
 import { isTimeZone } from '../../shared/zoned-time';
-import type { Access } from './auth';
+import type { ShareRow } from '../../shared/db/schema';
 import type { Db } from './db/postgres';
 
 /** A row without its owner column, and without a `null` `sourceKey`, which the entity schemas leave out. */
@@ -36,6 +36,43 @@ export async function loadTree(db: Db, owner: string): Promise<Entities> {
 		db.select().from(projects).where(eq(projects.userId, owner)),
 		db.select().from(sections).where(eq(sections.userId, owner)),
 		db.select().from(labels).where(eq(labels.userId, owner)),
+	]);
+	return resolveDangling({
+		tasks: (taskRows.map(entity) as Entities['tasks']).toSorted(byCreation),
+		projects: (projectRows.map(entity) as Entities['projects']).toSorted(byCreation),
+		sections: (sectionRows.map(entity) as Entities['sections']).toSorted(byCreation),
+		labels: (labelRows.map(entity) as Entities['labels']).toSorted(byCreation),
+	});
+}
+
+/** The rows a scope names, resolved like `loadTree`: four selects by id, which postgres.js pipelines. */
+export async function loadScope(db: Db, owner: string, scope: Scope): Promise<Entities> {
+	const ids = (set: ReadonlySet<string>) => [...set];
+	const [taskRows, projectRows, sectionRows, labelRows] = await Promise.all([
+		scope.tasks.size
+			? db
+					.select()
+					.from(tasks)
+					.where(and(eq(tasks.userId, owner), inArray(tasks.id, ids(scope.tasks))))
+			: [],
+		scope.projects.size
+			? db
+					.select()
+					.from(projects)
+					.where(and(eq(projects.userId, owner), inArray(projects.id, ids(scope.projects))))
+			: [],
+		scope.sections.size
+			? db
+					.select()
+					.from(sections)
+					.where(and(eq(sections.userId, owner), inArray(sections.id, ids(scope.sections))))
+			: [],
+		scope.labels.size
+			? db
+					.select()
+					.from(labels)
+					.where(and(eq(labels.userId, owner), inArray(labels.id, ids(scope.labels))))
+			: [],
 	]);
 	return resolveDangling({
 		tasks: (taskRows.map(entity) as Entities['tasks']).toSorted(byCreation),
@@ -98,15 +135,12 @@ export async function accessIn(db: Db, owner: string, actor: Actor): Promise<Acc
 	return granted.length ? { role: 'guest', shares: granted.map(entity) } : null;
 }
 
-/**
- * What of the space the caller sees. The owner and an AI manager see every row. A human guest sees what its `access`
- * rows name, which the server keeps equal to `scopeOf`. Any other AI account has no `access` rows, so its scope is
- * worked out from the tree.
- */
+export type Access = { role: 'owner' } | { role: 'guest'; shares: ShareRow[] };
+
 /** What a caller sees: everything (the owner, or a manager of the whole space), or what its `access` rows name. */
 export type Sight = { kind: 'all' } | { kind: 'rows'; grantee: string };
 
-export async function sightOf(db: Db, owner: string, actor: Actor, access: Access): Promise<Sight> {
+export function sightOf(actor: Actor, access: Access): Sight {
 	if (access.role === 'owner' || managesSpace(access.shares)) return { kind: 'all' };
 	return { kind: 'rows', grantee: actor.id };
 }

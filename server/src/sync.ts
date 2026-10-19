@@ -1,5 +1,5 @@
 import type { SigningKey } from './config';
-import { base64urlEncode } from './web-push';
+import { signJwt } from './jwt';
 
 /**
  * PowerSync's two server halves. The token tells PowerSync which user a device is: an EdDSA JWT the Worker signs
@@ -10,9 +10,6 @@ import { base64urlEncode } from './web-push';
 export const TOKEN_AUDIENCE = 'powersync';
 export const TOKEN_SECONDS = 5 * 60;
 export const POWERSYNC_PATH = '/api/powersync';
-
-const encoder = new TextEncoder();
-const encodeJson = (value: unknown) => base64urlEncode(encoder.encode(JSON.stringify(value)));
 
 const imported = new WeakMap<SigningKey, Promise<CryptoKey>>();
 function cryptoKey(key: SigningKey): Promise<CryptoKey> {
@@ -27,11 +24,8 @@ function cryptoKey(key: SigningKey): Promise<CryptoKey> {
 /** `{ "alg": "EdDSA", "kid" }` over `{ sub, aud: 'powersync', iat, exp }`, five minutes long. */
 export async function signSyncToken(key: SigningKey, userId: string, now = Date.now()): Promise<string> {
 	const iat = Math.floor(now / 1000);
-	const header = encodeJson({ alg: 'EdDSA', typ: 'JWT', kid: key.kid });
-	const payload = encodeJson({ sub: userId, aud: TOKEN_AUDIENCE, iat, exp: iat + TOKEN_SECONDS });
-	const input = `${header}.${payload}`;
-	const signature = await crypto.subtle.sign('Ed25519', await cryptoKey(key), encoder.encode(input));
-	return `${input}.${base64urlEncode(new Uint8Array(signature))}`;
+	const claims = { sub: userId, aud: TOKEN_AUDIENCE, iat, exp: iat + TOKEN_SECONDS };
+	return signJwt({ alg: 'EdDSA', typ: 'JWT', kid: key.kid }, claims, await cryptoKey(key), 'Ed25519');
 }
 
 /**

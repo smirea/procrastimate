@@ -32,8 +32,7 @@ final class TaskActions {
     /// Reopening a subtask reopens its completed ancestors too, so undo puts back each one's `completedAt`. Undo reads the
     /// other fields when it runs, so an edit made in between survives it.
     func reopen(_ task: TaskItem) {
-        let reopened = (Subtasks.ancestorsOf(store.allTasks, task.id) + [task]).filter { $0.completedAt != nil }
-        withAnimation(.snappy) { store.reopenTask(task.id) }
+        let reopened = withAnimation(.snappy) { store.reopenTask(task.id) }
         toasts.show(
             Format.reopenedToast(task.title),
             action: .init(label: "Undo") { [store] in

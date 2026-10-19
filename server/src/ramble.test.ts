@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import { RAMBLE_BYTES_PER_SECOND, RAMBLE_DAILY_SECONDS, RAMBLE_SESSION_SECONDS } from '../../shared/ramble/protocol';
-import { ramble, rambleRoute, type ConnectUpstream, type RambleRoute } from './ramble';
+import { rambleRoute, type ConnectUpstream, type RambleRoute } from './ramble';
 import type { Socket, StreamEvents } from './sockets';
 import { signUp, testApp, type Session, type TestApp } from './test-app';
 
@@ -26,14 +26,14 @@ let pending: ((socket: Socket) => StreamEvents) | null = null;
 beforeAll(async () => {
 	app = await testApp();
 	me = await signUp(app, 'Rambler');
-	const host = ramble(
+	route = rambleRoute(
+		app.db,
 		(_request, _protocol, start) => {
 			pending = start;
 			return new Response(null);
 		},
-		{ connect: upstream },
+		upstream,
 	);
-	route = rambleRoute(app.db, host);
 });
 afterAll(() => app.close());
 

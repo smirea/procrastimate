@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { MAX_SCHEDULED } from '../../shared/push';
-import { classifyDelivery, nextAlarm, planSchedule, splitDue } from './push-schedule';
+import { classifyDelivery, nextAlarm, planSchedule } from './push-schedule';
 
 const NOW = 1_000_000_000;
 const push = (taskId: string, at: number) => ({ taskId, at, title: taskId, body: '' });
@@ -49,12 +49,6 @@ describe('planSchedule', () => {
 		expect(plan[0]?.at).toBe(NOW + 1);
 		expect(plan.at(-1)?.at).toBe(NOW + 500);
 	});
-});
-
-test('splitDue treats now as due', () => {
-	const { due, pending } = splitDue([push('past', NOW - 1), push('now', NOW), push('later', NOW + 1)], NOW);
-	expect(due.map(p => p.taskId)).toEqual(['past', 'now']);
-	expect(pending.map(p => p.taskId)).toEqual(['later']);
 });
 
 test('nextAlarm wakes for the earliest push, fires an untried due one now, retries a minute after a try, and stops when empty', () => {

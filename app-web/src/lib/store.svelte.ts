@@ -459,8 +459,14 @@ class Store {
 		return completion;
 	}
 
-	reopenTask(id: string) {
-		this.#onTask(id, data => rules.reopenTask(data, id));
+	reopenTask(id: string): rules.ReopenedTask[] {
+		let reopened: rules.ReopenedTask[] = [];
+		this.#onTask(id, data => {
+			const result = rules.reopenTask(data, id);
+			reopened = result.reopened;
+			return result.data;
+		});
+		return reopened;
 	}
 
 	restoreCompletion(previous: readonly rules.CompletionState[]) {

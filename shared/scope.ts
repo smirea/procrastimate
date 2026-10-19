@@ -33,26 +33,18 @@ export type Scope = {
 	sections: ReadonlySet<string>;
 };
 
+/**
+ * `snapshot` is read as `resolveDangling` leaves it, which every loader applies: a subtask carries its root's
+ * project, so a project share reaches it by its own `projectId`.
+ */
 export function scopeOf(snapshot: Links, grants: readonly Grant[]): Scope {
-	const byId = new Map(snapshot.tasks.map(task => [task.id, task]));
 	const children = Map.groupBy(snapshot.tasks, task => task.parentId);
-	const rootProject = (task: LinkedTask): string | null => {
-		let current = task;
-		const seen = new Set<string>();
-		while (current.parentId && !seen.has(current.id)) {
-			seen.add(current.id);
-			const parent = byId.get(current.parentId);
-			if (!parent) break;
-			current = parent;
-		}
-		return current.projectId;
-	};
 	const reaches = ({ targetKind, targetId }: Grant, task: LinkedTask) => {
 		switch (targetKind) {
 			case 'space':
 				return true;
 			case 'project':
-				return rootProject(task) === targetId;
+				return task.projectId === targetId;
 			case 'label':
 				return task.labelIds.includes(targetId);
 			case 'task':
@@ -82,8 +74,8 @@ export function scopeOf(snapshot: Links, grants: readonly Grant[]): Scope {
 			for (const { id } of snapshot.labels) labels.add(id);
 		}
 	}
-	for (const id of tasks) {
-		const task = byId.get(id)!;
+	for (const task of snapshot.tasks) {
+		if (!tasks.has(task.id)) continue;
 		if (task.projectId) projects.add(task.projectId);
 		for (const labelId of task.labelIds) labels.add(labelId);
 	}
@@ -104,8 +96,12 @@ export function filterTree(tree: Entities, scope: Scope): Entities {
 /** The guest's `access` rows in one space, as `guestRefusal` reads them. */
 export type GuestRows = readonly Pick<AccessRow, 'kind' | 'entityId' | 'role'>[];
 
-type TaskFields = Partial<FieldsByKind['task']>;
-type CommentFields = Partial<FieldsByKind['comment']>;
+export type TaskFields = Partial<FieldsByKind['task']>;
+export type CommentFields = Partial<FieldsByKind['comment']>;
+
+/** Why someone else's comment is refused: only its author edits or deletes it. */
+export const authorOnly = (op: RowWrite['op']) =>
+	op === 'delete' ? 'Only the author can delete a comment' : 'Only the author can edit a comment';
 
 const roleOf = (rows: GuestRows, kind: AccessRow['kind'], id: string) =>
 	rows.find(row => row.kind === kind && row.entityId === id)?.role;
@@ -175,9 +171,7 @@ export function guestRefusal(rows: GuestRows, write: RowWrite, actor: string, st
 			if (write.op !== 'put' || !taskId) return NOT_EDITABLE;
 			return roleOf(rows, 'task', taskId) === 'edit' ? null : NOT_EDITABLE;
 		}
-		if (stored.authorId !== actor) {
-			return write.op === 'delete' ? 'Only the author can delete a comment' : 'Only the author can edit a comment';
-		}
+		if (stored.authorId !== actor) return authorOnly(write.op);
 		if (roleOf(rows, 'task', stored.taskId) !== 'edit') return NOT_EDITABLE;
 		return taskId === undefined || taskId === stored.taskId ? null : NOT_EDITABLE;
 	}

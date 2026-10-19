@@ -20,8 +20,7 @@ export function completeTask(task: Task) {
  * other fields when it runs, so an edit made in between survives it.
  */
 export function reopenTask(task: Task) {
-	const reopened = [task, ...ancestorsOf(store.tasks, task.id)].filter(t => t.completedAt !== null);
-	store.reopenTask(task.id);
+	const reopened = store.reopenTask(task.id);
 	toasts.show(reopenedToast(task.title), {
 		label: 'Undo',
 		run: () =>

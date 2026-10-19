@@ -16,7 +16,7 @@ import {
 } from '../../shared/model';
 import { parseQuickAdd } from '../../shared/quick-add';
 import { rowWrites } from '../../shared/rows';
-import { filterTree, managesSpace, scopeOf } from '../../shared/scope';
+import { authorOnly, filterTree, managesSpace, scopeOf } from '../../shared/scope';
 import type {
 	AgentNewTask,
 	AgentTask,
@@ -53,11 +53,12 @@ import {
 	type Creation,
 	type StoreData,
 	type TaskPatch,
+	sameName,
 } from '../../shared/store';
 import { applyPickedLabels, isSavedPlace } from '../../shared/triggers';
 import type { Client, ClientStamp } from '../../shared/values';
 import { wallDate, zonedDateKey } from '../../shared/zoned-time';
-import type { Access } from './auth';
+import type { Access } from './space';
 import type { Db } from './db/postgres';
 import { peopleById, personOf, unknownPerson } from './people';
 import { accessIn, entity, loadTree, seesTask, sightOf, storedZone } from './space';
@@ -254,6 +255,9 @@ export async function editTask(command: Command, id: string, patch: TaskPatch): 
 		if (task.parentId && patch.projectId !== undefined) {
 			throw new ORPCError('BAD_REQUEST', { message: 'A subtask follows its parent’s project' });
 		}
+		if ((patch.due || patch.recurrence) && (patch.event ?? task.event)) {
+			throw new ORPCError('BAD_REQUEST', { message: 'An event stands in for the date and the repeat' });
+		}
 		const ids = patch.labelIds ?? [];
 		const placed = visible.labels.some(l => isSavedPlace(l) && ids.includes(l.id))
 			? applyPickedLabels(visible.labels, ids, patch.location ?? task.location)
@@ -274,7 +278,7 @@ export async function finishTask(command: Command, id: string): Promise<AgentTas
 export async function reopen(command: Command, id: string): Promise<AgentTask> {
 	await run(command, (data, visible) => {
 		visibleTask(visible, id);
-		return reopenTask(data, id);
+		return reopenTask(data, id).data;
 	});
 	return taskAfter(command, id);
 }
@@ -288,7 +292,7 @@ export async function removeTask(command: Command, id: string): Promise<void> {
 
 export async function listComments({ db, owner, actor }: Command, taskId: string): Promise<TaskComment[]> {
 	const access = await requireAccess(db, owner, actor);
-	const sight = await sightOf(db, owner, actor, access);
+	const sight = sightOf(actor, access);
 	const [seen, rows] = await Promise.all([
 		seesTask(db, owner, sight, taskId),
 		db
@@ -315,12 +319,12 @@ async function commentAfter({ db }: Command, snapshot: Snapshot, id: string): Pr
 }
 
 /** The caller's own comment on a task it can see. Someone else's is refused; a hidden one is not found. */
-function ownComment(data: StoreData, visible: Visible, id: string, actor: string): Comment {
+function ownComment(data: StoreData, visible: Visible, id: string, actor: string, op: 'patch' | 'delete'): Comment {
 	const comment = data.comments.find(comment => comment.id === id);
 	if (!comment || !visible.tasks.some(task => task.id === comment.taskId)) {
 		throw new ORPCError('NOT_FOUND', { message: 'No such comment' });
 	}
-	if (comment.authorId !== actor) throw new ORPCError('FORBIDDEN', { message: 'Only the author can change it' });
+	if (comment.authorId !== actor) throw new ORPCError('FORBIDDEN', { message: authorOnly(op) });
 	return comment;
 }
 
@@ -340,7 +344,7 @@ export async function updateComment(command: Command, id: string, body: string):
 	const snapshot = await run(
 		command,
 		(data, visible) => {
-			ownComment(data, visible, id, command.actor.id);
+			ownComment(data, visible, id, command.actor.id, 'patch');
 			return editComment(data, id, body, command.actor.id, command.now);
 		},
 		id,
@@ -352,7 +356,7 @@ export async function removeComment(command: Command, id: string): Promise<void>
 	await run(
 		command,
 		(data, visible) => {
-			ownComment(data, visible, id, command.actor.id);
+			ownComment(data, visible, id, command.actor.id, 'delete');
 			return deleteComment(data, id, command.actor.id);
 		},
 		id,
@@ -387,20 +391,14 @@ function visibleIn<T extends { id: string }>(list: readonly T[], id: string, wha
 	return found;
 }
 
-const sameName = <T extends { id: string; name: string }>(list: readonly T[], name: string, except?: string) =>
-	list.find(item => item.id !== except && item.name.toLowerCase() === name.toLowerCase());
-
 export async function createProject(command: Command, name: string): Promise<Project> {
 	const title = named(name, 'project');
 	let id = newId();
 	const snapshot = await run(command, (data, _visible, _zone, access) => {
 		requireManager(access);
-		const existing = sameName(data.projects, title);
-		if (existing) {
-			id = existing.id;
-			return data;
-		}
-		return addProject(data, title, { id, now: command.now }).data;
+		const added = addProject(data, title, { id, now: command.now });
+		id = added.project.id;
+		return added.data;
 	});
 	return visibleIn(snapshot.projects, id, 'project');
 }
@@ -412,9 +410,9 @@ export async function editProject(command: Command, id: string, edit: ProjectEdi
 		visibleIn(visible.projects, id, 'project');
 		let next = data;
 		if (title !== undefined) {
-			if (sameName(data.projects, title, id))
-				throw new ORPCError('BAD_REQUEST', { message: 'Another project has that name' });
 			next = renameProject(next, id, title);
+			if (next === data && visibleIn(data.projects, id, 'project').name !== title)
+				throw new ORPCError('BAD_REQUEST', { message: 'Another project has that name' });
 		}
 		return edit.index === undefined ? next : moveProject(next, id, edit.index);
 	});
@@ -471,7 +469,7 @@ export async function createLabel(command: Command, input: NewLabel): Promise<La
 	let id = newId();
 	const snapshot = await run(command, (data, _visible, _zone, access) => {
 		requireManager(access);
-		const existing = sameName(data.labels, name);
+		const existing = data.labels.find(label => sameName(label.name, name));
 		if (existing && input.place && !existing.place)
 			throw new ORPCError('BAD_REQUEST', { message: 'A label that is not a place has that name' });
 		if (existing) id = existing.id;

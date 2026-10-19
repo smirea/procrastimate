@@ -1,11 +1,10 @@
 import { ORPCError } from '@orpc/server';
 import { and, eq } from 'drizzle-orm';
-import { appClientSchema, CLIENT_HEADER, type Actor } from '../../shared/auth';
+import { appClientSchema, CLIENT_HEADER, DEVICE_HEADER, DEVICE_PROTOCOL_PREFIX, type Actor } from '../../shared/auth';
 import { apiTokens } from '../../shared/db/schema';
 import { user } from './db/auth-schema';
 import type { Client } from '../../shared/values';
 import type { App } from './app';
-import { sha256 } from './auth';
 import { readSession } from './better-auth';
 import { identify } from './sentry';
 
@@ -109,4 +108,22 @@ export function clientOf(request: Request): Client | null {
 	} catch {
 		return null;
 	}
+}
+
+const encoder = new TextEncoder();
+const DEVICE_ID = /^[A-Za-z0-9_-]{8,80}$/;
+
+export async function sha256(value: string): Promise<string> {
+	const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', encoder.encode(value)));
+	return Array.from(digest, byte => byte.toString(16).padStart(2, '0')).join('');
+}
+
+/** The install id a push route or a socket upgrade names, from its header or its subprotocol. */
+export function deviceIdFrom(request: Request): string | null {
+	const header = request.headers.get(DEVICE_HEADER);
+	if (header && DEVICE_ID.test(header)) return header;
+	const protocols = (request.headers.get('Sec-WebSocket-Protocol') ?? '').split(',').map(value => value.trim());
+	const protocol = protocols.find(value => value.startsWith(DEVICE_PROTOCOL_PREFIX));
+	const id = protocol ? protocol.slice(DEVICE_PROTOCOL_PREFIX.length) : '';
+	return DEVICE_ID.test(id) ? id : null;
 }

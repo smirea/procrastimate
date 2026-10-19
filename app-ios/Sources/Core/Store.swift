@@ -329,8 +329,15 @@ public final class Store {
         return result.completion
     }
 
-    public func reopenTask(_ id: String) {
-        edit(id) { StoreRules.reopenTask($0, id) }
+    @discardableResult
+    public func reopenTask(_ id: String) -> [ReopenedTask] {
+        var reopened: [ReopenedTask] = []
+        edit(id) { data in
+            let result = StoreRules.reopenTask(data, id)
+            reopened = result.reopened
+            return result.data
+        }
+        return reopened
     }
 
     public func restoreCompletion(_ previous: [CompletionState]) {

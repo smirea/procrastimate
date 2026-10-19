@@ -85,14 +85,15 @@ public enum Subtasks {
         let descendants = descendantsOf(tasks, id)
         var rolled = task
         let nextDue: Due
-        if let next = Dates.nextOccurrence(
+        // An event stands in for the date and the repeat, as `scheduledDue` reads it.
+        if let next = nextEventOccurrence(task, today: today, in: zone) {
+            rolled.event = next.event
+            nextDue = next.due
+        } else if task.event == nil, let next = Dates.nextOccurrence(
             due: task.due, recurrence: task.recurrence, reminders: task.reminders, today: today
         ) {
             rolled.due = next.due
             rolled.reminders = next.reminders
-            nextDue = next.due
-        } else if let next = nextEventOccurrence(task, today: today, in: zone) {
-            rolled.event = next.event
             nextDue = next.due
         } else {
             let changed = ([task] + descendants).filter { $0.completedAt == nil }.map { t in

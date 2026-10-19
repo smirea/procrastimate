@@ -1,4 +1,5 @@
 import type { PushMessage, PushSubscriptionInfo } from '../../shared/push';
+import { base64urlDecode, base64urlEncode, signJwt, utf8 } from './jwt';
 
 /** VAPID keys are base64url: the uncompressed P-256 public point (65 bytes) and the private scalar `d` (32 bytes). */
 export type Vapid = { publicKey: string; privateKey: string; subject: string };
@@ -11,20 +12,6 @@ const JWT_LIFETIME_SECONDS = 12 * 60 * 60;
 export const PUSH_TIMEOUT_MS = 10_000;
 
 type Bytes = Uint8Array<ArrayBuffer>;
-
-const encoder = new TextEncoder();
-export const utf8 = (text: string): Bytes => encoder.encode(text);
-
-export function base64urlEncode(bytes: Uint8Array): string {
-	let binary = '';
-	for (const byte of bytes) binary += String.fromCharCode(byte);
-	return btoa(binary).replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/, '');
-}
-
-export function base64urlDecode(text: string): Bytes {
-	const binary = atob(text.replaceAll('-', '+').replaceAll('_', '/'));
-	return Uint8Array.from(binary, char => char.charCodeAt(0));
-}
 
 export function concat(...parts: Uint8Array[]): Bytes {
 	const out = new Uint8Array(parts.reduce((length, part) => length + part.length, 0));
@@ -108,9 +95,8 @@ async function vapidAuthorization(endpoint: string, vapid: Vapid): Promise<strin
 		exp: Math.floor(Date.now() / 1000) + JWT_LIFETIME_SECONDS,
 		sub: vapid.subject,
 	};
-	const unsigned = `${base64urlEncode(utf8(JSON.stringify({ typ: 'JWT', alg: 'ES256' })))}.${base64urlEncode(utf8(JSON.stringify(claims)))}`;
-	const signature = await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, key, utf8(unsigned));
-	return `vapid t=${unsigned}.${base64urlEncode(new Uint8Array(signature))}, k=${vapid.publicKey}`;
+	const token = await signJwt({ typ: 'JWT', alg: 'ES256' }, claims, key, { name: 'ECDSA', hash: 'SHA-256' });
+	return `vapid t=${token}, k=${vapid.publicKey}`;
 }
 
 export async function sendPush(

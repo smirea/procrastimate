@@ -1,4 +1,5 @@
 import { and, eq, sql } from 'drizzle-orm';
+import { base64Encode } from './jwt';
 import type { Actor } from '../../shared/auth';
 import { labels, projects, rambleUsage, tasks } from '../../shared/db/schema';
 import { labelIdsOf, lastUsed, projectIdsOf, type Named } from '../../shared/name-search';
@@ -132,17 +133,17 @@ export function workerUpstream(apiKey: string): ConnectUpstream {
 }
 
 /** How the server reaches ElevenLabs: null without a key, which turns Ramble off. */
-export type RambleConfig = { connect: ConnectUpstream | null };
-
-/** The configured upstream. */
-export function rambleConfig(settings: Config['ramble'], upstream: (apiKey: string) => ConnectUpstream): RambleConfig {
+export function upstreamOf(
+	settings: Config['ramble'],
+	upstream: (apiKey: string) => ConnectUpstream,
+): ConnectUpstream | null {
 	switch (settings?.kind) {
 		case 'elevenlabs':
-			return { connect: upstream(settings.apiKey) };
+			return upstream(settings.apiKey);
 		case 'cassette':
-			return { connect: cassetteUpstream() };
+			return cassetteUpstream();
 		default:
-			return { connect: null };
+			return null;
 	}
 }
 
@@ -150,20 +151,11 @@ type Tally = { seconds: number };
 
 type Day = { key: DateKey; stored: number; live: Set<Tally>; loaded: Promise<void> };
 
-export type Ramble = {
+type Ramble = {
 	stream: StreamHost;
-	connect: ConnectUpstream | null;
 	/** The days with sessions, keyed `${userId}:${day}`. */
 	days: Map<string, Day>;
 };
-
-export function ramble(stream: StreamHost, config: RambleConfig): Ramble {
-	return {
-		stream,
-		connect: config.connect,
-		days: new Map(),
-	};
-}
 
 function dayOf(ramble: Ramble, usage: RambleUsage, userId: string, key: DateKey): Day {
 	const id = `${userId}:${key}`;
@@ -245,16 +237,10 @@ const UPSTREAM_ERRORS = new Set([
 
 type UpstreamMessage = { message_type?: string; text?: string; error?: string };
 
-function toBase64(bytes: Uint8Array): string {
-	let binary = '';
-	for (let i = 0; i < bytes.length; i += 0x8000) binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
-	return btoa(binary);
-}
-
 const audioChunk = (bytes: Uint8Array, commit: boolean) =>
 	JSON.stringify({
 		message_type: 'input_audio_chunk',
-		audio_base_64: toBase64(bytes),
+		audio_base_64: base64Encode(bytes),
 		commit,
 		sample_rate: RAMBLE_SAMPLE_RATE,
 	});
@@ -453,7 +439,7 @@ function session({
 	};
 }
 
-const fail = (status: number, error: string) => Response.json({ ok: false, error }, { status });
+const refuse = (status: number, error: string) => Response.json({ ok: false, error }, { status });
 
 /** A browser cannot read a refused upgrade, so a used-up day still opens and then closes with this error. */
 function refuseDaily(ramble: Ramble, request: Request, resetsAt: number) {
@@ -472,12 +458,15 @@ function refuseDaily(ramble: Ramble, request: Request, resetsAt: number) {
 
 export type RambleRoute = (request: Request, actor: Actor) => Promise<Response>;
 
-/** The upgrade for one signed-in human's session, after the caller authenticated the request, over one database. */
-export function rambleRoute(db: Db, ramble: Ramble): RambleRoute {
+/**
+ * The upgrade for one signed-in human's session, after the caller authenticated the request, over one database. The
+ * route holds the users' days, so one route serves every session of a host.
+ */
+export function rambleRoute(db: Db, stream: StreamHost, connect: ConnectUpstream | null): RambleRoute {
+	const ramble: Ramble = { stream, days: new Map() };
 	return async (request, actor) => {
-		if (request.headers.get('Upgrade')?.toLowerCase() !== 'websocket') return fail(426, 'Expected a WebSocket');
-		const { connect } = ramble;
-		if (!connect) return fail(503, 'Ramble is not configured');
+		if (request.headers.get('Upgrade')?.toLowerCase() !== 'websocket') return refuse(426, 'Expected a WebSocket');
+		if (!connect) return refuse(503, 'Ramble is not configured');
 		const now = Date.now();
 		const usage = pgRambleUsage(db, actor.id);
 		const zone = await storedZone(db, actor.id);
