@@ -13,6 +13,7 @@
 	import ImageSquare from 'phosphor-svelte/lib/ImageSquare';
 	import ArrowElbowDownRight from 'phosphor-svelte/lib/ArrowElbowDownRight';
 	import CalendarPlus from 'phosphor-svelte/lib/CalendarPlus';
+	import CloudArrowUp from 'phosphor-svelte/lib/CloudArrowUp';
 	import type { Snippet } from 'svelte';
 	import type { Task } from 'shared/task.ts';
 	import Checkbox from './Checkbox.svelte';
@@ -66,6 +67,7 @@
 	const event = $derived(task.event ? eventLabel(task.event, clock.today) : null);
 	const fromMemo = $derived(parseMemoSource(task.sourceKey) !== null);
 	const commentBadge = $derived(lookup.commentBadge(task.id));
+	const unsynced = $derived(lookup.unsynced(task.id));
 
 	const revealed = $derived(reveal.id === task.id);
 	let row: HTMLElement;
@@ -205,6 +207,17 @@
 			{/if}
 		</div>
 	</div>
+	{#if unsynced}
+		<span
+			class="shrink-0 pt-3 text-faint touch:pt-3.5"
+			role="img"
+			aria-label="Not synced yet"
+			data-unsynced
+			transition:scale={motion({ start: 0.6, duration: 180, easing: cubicOut })}
+		>
+			<CloudArrowUp size={14} />
+		</span>
+	{/if}
 	{#if showAdded}
 		<span class="shrink-0 pt-3 text-[12px] leading-5 text-faint touch:pt-3.5">{addedAgo(toDateKey(new Date(task.createdAt)), clock.today)}</span>
 	{/if}

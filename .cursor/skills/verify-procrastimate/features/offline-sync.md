@@ -1,6 +1,6 @@
 # Offline and sync
 
-ProcrastiMate works fully without a network. Every change applies locally at once and syncs in the background. Sync is always on and live. Nothing in the UI mentions sync, except a toast when the server rejects a change and pull to refresh on iOS.
+ProcrastiMate works fully without a network. Every change applies locally at once and syncs in the background. Sync is always on and live. The UI mentions sync only in a cloud on a task still waiting to upload, a notice in its details, a toast when the server rejects a change, and pull to refresh on iOS.
 
 ## Sub-features
 
@@ -12,6 +12,7 @@ ProcrastiMate works fully without a network. Every change applies locally at onc
 - `sync-delete-wins` keeps a deleted task deleted when an edit made before the delete reaches the server after it.
 - `sync-rejected` handles a write the server refuses: the rest of the upload still applies, the row goes back to the server's value at the next checkpoint, and a toast says "Couldn’t save a change to “Title”". The device keeps syncing.
 - `sync-refresh` on iOS: pulling down any task list (Inbox, No date, a project, label, place, or event, Completed) or Browse reconnects PowerSync if its stream dropped, reloads the people cache, and the spinner stays until the stream is idle, at most five seconds.
+- `sync-unsynced` marks a task whose write waits in the upload queue: a cloud with an up arrow at the end of its row (`Not synced yet`), and `Not saved yet. Will sync when online.` floating above the title in its details. Offline it shows at once; online only after its oldest queued write waited 3 seconds, so a normal upload, or notes typed while each keystroke uploads, never flashes it. It leaves once the upload lands. Tests: `a change waiting to upload shows a cloud on its row and a notice in its details, at once offline and after a grace online`, `typing notes online for longer than the grace never marks the task unsynced`.
 - `sync-delete` wipes tasks, projects, and labels on this device and the server from Settings, `Delete all data`.
 
 ## How to get to it (user POV)
@@ -42,6 +43,7 @@ Preconditions:
 - **Big command.** Import a Todoist backup of 150 tasks offline, then reconnect: the project and its 150 tasks upload in one request. Test: `one command’s writes upload in one request, however many rows it changes`.
 - **Reads only what changed.** With 150 tasks on both devices, rename one on A. A reads back at most 2 rows from its local database (its own write, then the server's copy of it) and B reads 1, where a reload used to read every row of every table. `window.procrastimate.reads()` counts them. Test: `an edit reads back only the row it changed, on this device and the other`.
 - **Delete all.** On A, `Settings`, `Delete all data`, confirm. A's tasks are gone and stay gone after a reload. B's are gone at once. Both stay signed in. Test: `delete all data clears this device and the other`.
+- **Unsynced.** Hold A's `/api/upload` and rename a task: its row gains the cloud only after about 3 seconds, and loses it once the upload is released. Take A offline and rename it again: the cloud shows at once, and its details show `Not saved yet. Will sync when online.` above the title. Back online, the cloud leaves. Same test. iOS: launch with `PROCRASTIMATE_OFFLINE=1` and `PROCRASTIMATE_DEMO=rows`; every seeded row shows the cloud (`Not synced yet`), and `Buy milk`'s details show the notice (`unsynced-notice`). Without the offline flag the DEBUG session's rows never sync and show no cloud.
 - **Pull to refresh (iOS).** Drag any task list or Browse down past the top. A spinner shows under the bar and stays until the stream is idle; a change made on the web shows without it, about 0.1 s after the server takes it. Without a session (the DEBUG `PROCRASTIMATE_SIGNED_IN` launch) it ends at once.
 - **iOS.** Each command hands its row writes to one serial writer into the PowerSync database, and every database change reads back only the rows it changed from the change log (`StoreTests`, `SpaceTests`, and the `rows` and `local-rows` vectors in `swift test`). `PROCRASTIMATE_OFFLINE=1` keeps sync disconnected for a launch: add a task, relaunch without it, and the task reaches the server. After a reinstall that kept the Keychain token, or `PROCRASTIMATE_RESET=1` with a session, the app opens signed in as the Keychain's owner with an empty database that sync fills: the user's own tasks land in Inbox (never under `Shared with me`), and what is added offline uploads as theirs.
 

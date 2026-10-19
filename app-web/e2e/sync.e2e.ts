@@ -109,6 +109,74 @@ test('changes made offline apply at once, survive a reload, and upload when the 
 	await expect(b.app.row(`${kept} renamed`)).toBeVisible();
 });
 
+test('a change waiting to upload shows a cloud on its row and a notice in its details, at once offline and after a grace online', async ({
+	devices,
+}) => {
+	const a = await devices.open();
+	const title = unique('Waiting');
+	const unsynced = (name: string) => a.app.row(name).getByRole('img', { name: 'Not synced yet' });
+	await a.app.add(title);
+	await settled(a);
+	await expect(unsynced(title)).toHaveCount(0);
+
+	let release = () => {};
+	const held = new Promise<void>(resolve => (release = resolve));
+	await a.context.route('**/api/upload', async route => {
+		await held;
+		await route.continue();
+	});
+	const renamed = Date.now();
+	await rename(a.app, title, `${title} slow`);
+	await expect(unsynced(`${title} slow`)).toBeVisible({ timeout: 10_000 });
+	expect(Date.now() - renamed).toBeGreaterThanOrEqual(2900);
+	release();
+	await expect(unsynced(`${title} slow`)).toHaveCount(0, { timeout: 10_000 });
+	await a.context.unroute('**/api/upload');
+
+	await goOffline(a);
+	await rename(a.app, `${title} slow`, `${title} offline`);
+	await expect(unsynced(`${title} offline`)).toBeVisible({ timeout: 1000 });
+	await a.app
+		.row(`${title} offline`)
+		.getByRole('button', { name: new RegExp(`^${title} offline`) })
+		.click();
+	await expect(
+		a.app.details().getByRole('status').filter({ hasText: 'Not saved yet. Will sync when online.' }),
+	).toBeVisible();
+	await a.app.details().getByRole('button', { name: 'Close' }).click();
+
+	await goOnline(a);
+	await expect(unsynced(`${title} offline`)).toHaveCount(0, { timeout: 15_000 });
+});
+
+test('typing notes online for longer than the grace never marks the task unsynced', async ({ devices }) => {
+	const a = await devices.open();
+	const title = unique('Typed online');
+	await a.app.add(title);
+	await settled(a);
+	await a.page.evaluate(() => {
+		const seen = { unsynced: false };
+		Object.assign(window, { seen });
+		new MutationObserver(() => {
+			if (document.querySelector('[data-unsynced]')) seen.unsynced = true;
+		}).observe(document.body, { subtree: true, childList: true });
+	});
+	// A real network's round trip, so each keystroke is queued before the previous upload lands.
+	await a.context.route('**/api/upload', async route => {
+		await new Promise(resolve => setTimeout(resolve, 400));
+		await route.continue();
+	});
+	await a.app
+		.row(title)
+		.getByRole('button', { name: new RegExp(`^${title}`) })
+		.click();
+	const notes = a.app.details().getByRole('textbox', { name: 'Notes' });
+	await notes.pressSequentially('Each keystroke uploads before the next one lands', { delay: 100 });
+	await settled(a);
+	await a.context.unroute('**/api/upload');
+	expect(await a.page.evaluate(() => (window as unknown as { seen: { unsynced: boolean } }).seen.unsynced)).toBe(false);
+});
+
 test('a task added the moment before the page goes away is there after the reload', async ({ devices }) => {
 	const [a, b] = [await devices.open(), await devices.open()];
 	const title = unique('Saved in time');

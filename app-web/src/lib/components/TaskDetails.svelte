@@ -13,6 +13,7 @@
 	import ShareNetwork from 'phosphor-svelte/lib/ShareNetwork';
 	import ProjectGlyph from './ProjectGlyph.svelte';
 	import Tray from 'phosphor-svelte/lib/Tray';
+	import CloudArrowUp from 'phosphor-svelte/lib/CloudArrowUp';
 	import { formatDue } from 'shared/format.ts';
 	import { applyPickedLabels, formatEvent, formatLocation, formatRadius, pickedLabels, scheduledDue } from 'shared/triggers.ts';
 	import { parseMemoSource } from 'shared/memo-tasks.ts';
@@ -38,6 +39,7 @@
 	import { clock, sheets, motion, type Arrival } from '../ui.svelte.ts';
 	import { completeTask, deleteTask } from '../completion.ts';
 	import { images } from '../images/images.svelte.ts';
+	import { unsynced } from '../unsynced.svelte.ts';
 
 	let { task, arrival }: { task: Task; arrival: Arrival } = $props();
 	// TaskSheet keys details by task id, so it never changes. While the sheet animates out after closing, `task` already
@@ -210,7 +212,12 @@
 			</button>
 		</div>
 	</header>
-	<div class="px-4 pt-4">
+	<div class="relative px-4 pt-4">
+		{#if unsynced.has(id)}
+			<p class="absolute top-0 left-5 flex items-center gap-1 text-[11px] leading-4 text-muted" role="status" data-unsynced transition:fade={motion({ duration: 150 })}>
+				<CloudArrowUp size={12} />Not saved yet. Will sync when online.
+			</p>
+		{/if}
 		{#if owner}
 			<p class="mb-1 flex items-center gap-1 text-[12px] text-faint">Shared by <PersonName person={owner} /></p>
 		{/if}
