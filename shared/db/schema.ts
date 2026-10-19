@@ -324,12 +324,6 @@ export const images = pgTable(
 	table => [primaryKey({ columns: [table.userId, table.id, table.size] })],
 ).enableRLS();
 
-/** Ramble audio seconds reserved across every account on one UTC day. */
-export const rambleBudget = pgTable('ramble_budget', {
-	day: text('day').primaryKey(),
-	seconds: doublePrecision('seconds').notNull(),
-}).enableRLS();
-
 type Row<T extends { $inferSelect: object }> = Omit<T['$inferSelect'], 'userId'>;
 
 export type LogRow = Row<typeof log>;

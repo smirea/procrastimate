@@ -32,10 +32,7 @@ export class Ramble {
 		if (!this.ctx.id.name || !actor) return errorResponse('UNAUTHORIZED', 'Not signed in');
 		this.route ??= rambleRoute(
 			this.open().db,
-			ramble(
-				workerStream(),
-				rambleConfig(config(this.env).ramble, () => this.open().db, workerUpstream),
-			),
+			ramble(workerStream(), rambleConfig(config(this.env).ramble, workerUpstream)),
 		);
 		return this.route(request, JSON.parse(actor));
 	}

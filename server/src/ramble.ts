@@ -16,7 +16,6 @@ import {
 import { addDays, type DateKey } from '../../shared/task';
 import { zonedDateKey, zonedTime } from '../../shared/zoned-time';
 import type { Db } from './db/postgres';
-import { pgRambleBudget, RAMBLE_GLOBAL_DAILY_SECONDS, type RambleBudget } from './ramble-budget';
 import { cassetteUpstream } from './ramble-cassette';
 import type { Config } from './config';
 import { reportError } from './sentry';
@@ -133,25 +132,19 @@ export function workerUpstream(apiKey: string): ConnectUpstream {
 }
 
 /** How the server reaches ElevenLabs: null without a key, which turns Ramble off. */
-export type RambleConfig = { connect: ConnectUpstream | null; budget?: RambleBudget };
+export type RambleConfig = { connect: ConnectUpstream | null };
 
-/** The configured upstream, with the deployment's shared budget for the real one. */
-export function rambleConfig(
-	settings: Config['ramble'],
-	db: () => Db,
-	upstream: (apiKey: string) => ConnectUpstream,
-): RambleConfig {
+/** The configured upstream. */
+export function rambleConfig(settings: Config['ramble'], upstream: (apiKey: string) => ConnectUpstream): RambleConfig {
 	switch (settings?.kind) {
 		case 'elevenlabs':
-			return { connect: upstream(settings.apiKey), budget: pgRambleBudget(db(), RAMBLE_GLOBAL_DAILY_SECONDS) };
+			return { connect: upstream(settings.apiKey) };
 		case 'cassette':
 			return { connect: cassetteUpstream() };
 		default:
 			return { connect: null };
 	}
 }
-
-type RambleGrant = { day: string; seconds: number };
 
 type Tally = { seconds: number };
 
@@ -162,7 +155,6 @@ export type Ramble = {
 	connect: ConnectUpstream | null;
 	/** The days with sessions, keyed `${userId}:${day}`. */
 	days: Map<string, Day>;
-	budget: RambleBudget | null;
 };
 
 export function ramble(stream: StreamHost, config: RambleConfig): Ramble {
@@ -170,7 +162,6 @@ export function ramble(stream: StreamHost, config: RambleConfig): Ramble {
 		stream,
 		connect: config.connect,
 		days: new Map(),
-		budget: config.budget ?? null,
 	};
 }
 
@@ -278,7 +269,6 @@ type SessionOptions = {
 	zone: string;
 	keyterms: string[];
 	cassette: string | null;
-	grant: RambleGrant | null;
 };
 
 /**
@@ -286,7 +276,7 @@ type SessionOptions = {
  * daily caps, and the frame that reaches one is cut at the cap and ends the session. A frame after midnight in the
  * account's time zone is charged to the new day, and the seconds before it are stored on the old one. Ending sends
  * a final commit when audio went out since the last committed text, waits for that text, then records the seconds,
- * returns any reserved budget it did not stream, sends `ended`, and closes both sockets. A socket that sends
+ * sends `ended`, and closes both sockets. A socket that sends
  * nothing for a minute ends on its own.
  */
 function session({
@@ -299,12 +289,10 @@ function session({
 	zone,
 	keyterms,
 	cassette,
-	grant,
 }: SessionOptions): StreamEvents {
 	let day = first;
 	const tally: Tally = { seconds: 0 };
 	let sessionSeconds = 0;
-	let budgetLeft: number | null = grant ? grant.seconds : null;
 	day.live.add(tally);
 	const buffered: Uint8Array[] = [];
 	let upstream: Upstream | null = null;
@@ -322,15 +310,6 @@ function session({
 		for (const timer of timers) clearTimeout(timer);
 		day.live.delete(tally);
 		charge(usage, day, tally.seconds);
-		const unused = budgetLeft;
-		budgetLeft = null;
-		if (grant && unused !== null && unused > 0 && ramble.budget) {
-			try {
-				await ramble.budget.release(grant.day, unused);
-			} catch (error) {
-				reportError(error);
-			}
-		}
 		attempt(() => upstream?.close());
 		if (!reason) return;
 		send({ type: 'ended', seconds: Math.round(sessionSeconds * 10) / 10, reason });
@@ -408,23 +387,20 @@ function session({
 		roll();
 		const sessionLeft = RAMBLE_SESSION_SECONDS - sessionSeconds;
 		const dailyLeft = RAMBLE_DAILY_SECONDS - day.stored - liveSeconds(day);
-		const budgetCap = budgetLeft ?? Number.POSITIVE_INFINITY;
 		const allowed = Math.max(
 			0,
-			Math.floor(Math.round(Math.min(sessionLeft, dailyLeft, budgetCap) * RAMBLE_BYTES_PER_SECOND) / 2) * 2,
+			Math.floor(Math.round(Math.min(sessionLeft, dailyLeft) * RAMBLE_BYTES_PER_SECOND) / 2) * 2,
 		);
 		const chunk = bytes.byteLength > allowed ? bytes.subarray(0, allowed) : bytes;
 		const streamed = chunk.byteLength / RAMBLE_BYTES_PER_SECOND;
 		sessionSeconds += streamed;
 		tally.seconds += streamed;
-		if (budgetLeft !== null) budgetLeft = Math.max(0, budgetLeft - streamed);
 		if (chunk.byteLength) {
 			if (started && upstream) forward(chunk);
 			else buffered.push(chunk.slice());
 		}
 		if (chunk.byteLength === allowed) {
-			const cappedBySession = sessionLeft <= dailyLeft && sessionLeft <= budgetCap;
-			finish(cappedBySession ? 'session-limit' : 'daily-limit');
+			finish(sessionLeft <= dailyLeft ? 'session-limit' : 'daily-limit');
 		}
 	}
 
@@ -509,24 +485,10 @@ export function rambleRoute(db: Db, ramble: Ramble): RambleRoute {
 		await day.loaded;
 		const remaining = RAMBLE_DAILY_SECONDS - day.stored - liveSeconds(day);
 		if (remaining <= 0) return refuseDaily(ramble, request, zonedTime(addDays(day.key, 1), '00:00', zone));
-		let grant: RambleGrant | null = null;
-		if (ramble.budget) {
-			const utcDay = zonedDateKey(now, 'UTC');
-			const want = Math.min(RAMBLE_SESSION_SECONDS, remaining);
-			let granted = 0;
-			try {
-				granted = await ramble.budget.reserve(utcDay, want);
-			} catch (error) {
-				reportError(error);
-				return fail(503, 'Ramble is unavailable');
-			}
-			if (granted <= 0) return refuseDaily(ramble, request, zonedTime(addDays(utcDay, 1), '00:00', 'UTC'));
-			grant = { day: utcDay, seconds: granted };
-		}
 		const keyterms = rambleKeyterms(await loadKeytermSource(db, actor.id));
 		const cassette = new URL(request.url).searchParams.get('cassette');
 		return ramble.stream(request, RAMBLE_SOCKET_PROTOCOL, client =>
-			session({ client, connect, ramble, usage, userId: actor.id, day, zone, keyterms, cassette, grant }),
+			session({ client, connect, ramble, usage, userId: actor.id, day, zone, keyterms, cassette }),
 		);
 	};
 }
