@@ -10,6 +10,7 @@ struct TaskDetailsSheet: View {
     @Environment(TaskImages.self) private var images
     @State private var root: String
     @State private var path: [String] = []
+    @Namespace private var zoom
 
     /// From the top-level task down to the one to show.
     init(stack: [String]) {
@@ -39,7 +40,10 @@ struct TaskDetailsSheet: View {
             ToastStack().padding(.bottom, 76)
         }
         // Once for the whole stack: a cover on each pushed page would have every page try to present it.
-        .fullScreenCover(item: Bindable(images).viewing) { ImageViewer(start: $0) }
+        .fullScreenCover(item: Bindable(images).viewing) {
+            ImageViewer(start: $0).navigationTransition(.zoom(sourceID: $0.imageID, in: zoom))
+        }
+        .environment(\.imageZoom, zoom)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("Task details")
     }

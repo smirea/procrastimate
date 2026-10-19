@@ -91,6 +91,7 @@ describe('rowButtons', () => {
 			'reminders',
 			'repeat',
 			'subtasks',
+			'images',
 		]);
 	});
 

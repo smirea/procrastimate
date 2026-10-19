@@ -3,6 +3,7 @@ import type { IconComponentProps } from 'phosphor-svelte';
 import Bell from 'phosphor-svelte/lib/Bell';
 import CalendarBlank from 'phosphor-svelte/lib/CalendarBlank';
 import Flag from 'phosphor-svelte/lib/Flag';
+import ImageSquare from 'phosphor-svelte/lib/ImageSquare';
 import ListChecks from 'phosphor-svelte/lib/ListChecks';
 import Repeat from 'phosphor-svelte/lib/Repeat';
 import Tag from 'phosphor-svelte/lib/Tag';
@@ -21,4 +22,5 @@ export const BUTTON_INFO: Record<WebButton, { name: string; icon: Component<Icon
 	repeat: { name: 'Repeat', icon: Repeat },
 	labels: { name: 'Labels', icon: Tag },
 	subtasks: { name: 'Subtasks', icon: ListChecks },
+	images: { name: 'Images', icon: ImageSquare },
 };

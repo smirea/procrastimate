@@ -10,6 +10,7 @@ extension QuickAddButton {
         case .repeat: "Repeat"
         case .labels: "Labels"
         case .subtasks: "Subtasks"
+        case .images: "Images"
         case .location: "Location"
         case .event: "Event"
         }
@@ -23,6 +24,7 @@ extension QuickAddButton {
         case .repeat: "repeat"
         case .labels: "tag"
         case .subtasks: "checklist"
+        case .images: "photo"
         case .location: "mappin"
         case .event: "calendar.badge.plus"
         }
@@ -37,6 +39,7 @@ struct QuickAddMenu: View {
     let buttons: [QuickAddButton]
     let priority: Priority
     let onPriority: @MainActor (Priority) -> Void
+    let onImage: @MainActor (ImageSource) -> Void
     let run: @MainActor (QuickAddButton) -> Void
 
     var body: some View {
@@ -55,6 +58,12 @@ struct QuickAddMenu: View {
                             SwiftUI.Label(button.name, systemImage: button.systemImage)
                         }
                         .menuOrder(.fixed)
+                    } else if button == .images {
+                        Menu {
+                            ImageSourceButtons { onImage($0) }
+                        } label: {
+                            SwiftUI.Label(button.name, systemImage: button.systemImage)
+                        }
                     } else {
                         Button(button.name, systemImage: button.systemImage) { run(button) }
                     }

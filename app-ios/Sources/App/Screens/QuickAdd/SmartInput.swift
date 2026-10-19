@@ -21,6 +21,8 @@ struct SmartInput: View {
     /// The height it grows to before it scrolls: about eight lines of body text.
     var maxHeight: CGFloat = 200
     var focused: FocusState<Bool>.Binding
+    /// Images pasted into the text. Without it a pasted image is dropped, since a title holds only text.
+    var onPasteImages: (([Data]) -> Void)?
     let onSubmit: () -> Void
 
 
@@ -166,7 +168,9 @@ struct SmartInput: View {
 
     private func typed() {
         let plain = String(attributed.characters)
-        if plain.contains("\n"), pasted(plain) {
+        if plain.contains(Self.attachment) {
+            takeImages(plain)
+        } else if plain.contains("\n"), pasted(plain) {
             // The field is one line of text that wraps, so a pasted line break becomes a space instead of saving.
             let joined = plain.replacingOccurrences(of: "\r\n", with: " ").replacingOccurrences(of: "\n", with: " ")
             write(joined)
@@ -184,6 +188,24 @@ struct SmartInput: View {
             Task { focused.wrappedValue = true }
         } else if plain != text {
             write(plain)
+        }
+    }
+
+    private static let attachment: Character = "\u{FFFC}"
+
+    /// A pasted image reaches the editor as a bare U+FFFC: the text view keeps the character and drops the image. The
+    /// character and the space the paste put before it leave the text, and the image is read from the pasteboard the
+    /// paste came from.
+    private func takeImages(_ plain: String) {
+        var stripped = plain.filter { $0 != Self.attachment }
+        if stripped.trimmingCharacters(in: .whitespaces) == written.trimmingCharacters(in: .whitespaces) { stripped = written }
+        let caret = max(0, caret - (plain.utf16.count - stripped.utf16.count))
+        write(stripped)
+        replace(with: stripped, caret: caret)
+        guard let onPasteImages else { return }
+        Task {
+            let sources = await PastedImages.fromPasteboard()
+            if !sources.isEmpty { onPasteImages(sources) }
         }
     }
 

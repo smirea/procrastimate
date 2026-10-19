@@ -131,3 +131,38 @@ test('an image added offline uploads when the network returns and shows on the o
 		);
 	expect(size).toBe(320);
 });
+
+test('images pasted or picked in quick add attach to the new task', async ({ app, page }) => {
+	const title = unique('Paint swatches');
+	await app.openQuickAdd();
+	await app.taskInput().pressSequentially(title);
+	const base64 = (await png(page, 400, 300)).buffer.toString('base64');
+	await app.taskInput().evaluate((input, data) => {
+		const bytes = Uint8Array.from(atob(data), c => c.charCodeAt(0));
+		const transfer = new DataTransfer();
+		transfer.items.add(new File([bytes], 'shot.png', { type: 'image/png' }));
+		input.dispatchEvent(new ClipboardEvent('paste', { clipboardData: transfer, bubbles: true, cancelable: true }));
+	}, base64);
+	await app.quickAdd().getByRole('button', { name: 'More quick add actions' }).click();
+	const chooser = page.waitForEvent('filechooser');
+	await page.getByRole('menuitem', { name: 'Images' }).click();
+	await (await chooser).setFiles([await png(page, 3000, 2000), await png(page, 600, 600)]);
+	const drafted = app.quickAdd().getByRole('list', { name: 'Images to attach' }).locator('img');
+	await expect(drafted).toHaveCount(3);
+	await expect(app.taskInput()).toHaveValue(title);
+	await expect(app.quickAdd().getByRole('button', { name: 'Add image, 3 added' })).toBeVisible();
+	await app.quickAdd().getByRole('button', { name: 'Remove image 3' }).click();
+	await expect(drafted).toHaveCount(2);
+
+	await app.taskInput().press('Enter');
+	await expect(app.quickAdd()).toBeHidden();
+	await expect(app.row(title).getByRole('img', { name: '2 images' })).toBeVisible();
+	const id = await app.taskId(title);
+	const stored = await page.evaluate(id => window.procrastimate.entity('task', id)?.images, id);
+	expect(stored).toEqual([
+		{ id: expect.any(String), width: 400, height: 300 },
+		{ id: expect.any(String), width: 2048, height: 1365 },
+	]);
+	await openDetails(app, title);
+	await expect(thumbnails(app)).toHaveCount(2);
+});

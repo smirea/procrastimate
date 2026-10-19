@@ -1,7 +1,25 @@
 import Core
 import SwiftUI
 
-/// A task's images full screen, swiped through like Photos, pinched to zoom, with delete on an editable task.
+extension EnvironmentValues {
+    /// The namespace the viewer zooms out of and back into, set by the details sheet that presents it.
+    @Entry var imageZoom: Namespace.ID?
+}
+
+extension View {
+    /// A thumbnail the viewer zooms out of. The zoom transition is also what lets a swipe down close the viewer.
+    @ViewBuilder
+    func zoomSource(_ imageID: String, in zoom: Namespace.ID?) -> some View {
+        if let zoom {
+            matchedTransitionSource(id: imageID, in: zoom) { $0.clipShape(.rect(cornerRadius: 16)) }
+        } else {
+            self
+        }
+    }
+}
+
+/// A task's images full screen, swiped through like Photos, pinched to zoom, swiped down to close, with delete on an
+/// editable task.
 struct ImageViewer: View {
     @Environment(TaskImages.self) private var images
     @Environment(Store.self) private var store

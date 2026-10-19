@@ -17,6 +17,9 @@ const RETRY_MISSING = 30_000;
 const MAX_RETRIES = 20;
 const PERMANENT = new Set([400, 403, 404, 413, 415]);
 
+export const imageFiles = (data: DataTransfer | null) =>
+	[...(data?.files ?? [])].filter(file => file.type.startsWith('image/'));
+
 class Images {
 	#urls = $state<Record<string, string>>({});
 	#misses = new Map<string, number>();
