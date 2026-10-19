@@ -239,6 +239,14 @@ async function storedRows(db: Db, writes: readonly Write[]): Promise<Map<string,
 				for (const { id, ...rest } of rows) found.set(`${kind}:${id}`, rest);
 				return;
 			}
+			if (kind === 'task') {
+				const rows = await db
+					.select({ id: tasks.id, userId: tasks.userId, projectId: tasks.projectId, parentId: tasks.parentId })
+					.from(tasks)
+					.where(inArray(tasks.id, ids));
+				for (const { id, ...rest } of rows) found.set(`${kind}:${id}`, rest);
+				return;
+			}
 			const columns = columnsOf(kind);
 			const rows = await db
 				.select({ id: columns.id!, userId: columns.userId! })

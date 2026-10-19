@@ -132,17 +132,26 @@ function mayAdd(fields: TaskFields, rows: GuestRows): boolean {
 }
 
 /**
- * What the server holds for the row a guest writes to, read with the row's owner: a task's presence, or a comment's
+ * What the server holds for the row a guest writes to, read with the row's owner: a task's place, or a comment's
  * task and author. Undefined for a row the server does not hold.
  */
-export type StoredRow = Partial<Pick<FieldsByKind['comment'], 'taskId' | 'authorId'>>;
+export type StoredRow = Partial<
+	Pick<FieldsByKind['comment'], 'taskId' | 'authorId'> & Pick<FieldsByKind['task'], 'projectId' | 'parentId'>
+>;
 
 const NOT_EDITABLE = 'Not editable in this share';
+const NOT_REMOVABLE = 'A guest cannot take a task out of its project or parent';
+
+/** A guest clearing the project or parent of the owner's task would move it to the owner's Inbox, out of the share. */
+function clearsPlace(fields: TaskFields, stored: StoredRow | undefined): boolean {
+	return (fields.projectId === null && !!stored?.projectId) || (fields.parentId === null && !!stored?.parentId);
+}
 
 /**
  * Why a guest's write is refused, or null when it may run. The rows are the guest's `access` rows in the space the
- * write names, and they decide everything: a task the space holds needs an `edit` row, whatever the op, a new task a
- * place the guest may add to, and every project, section, label, and parent the write names must be among the rows.
+ * write names, and they decide everything: a task the space holds needs an `edit` row, whatever the op, and keeps its
+ * project and parent, a new task a place the guest may add to, and every project, section, label, and parent the
+ * write names must be among the rows.
  * A comment needs an editable task, and only its author edits or deletes it. Projects, sections, labels, read
  * markers, and settings are never a guest's to write: managers are AI accounts, which act through the agent API with
  * the owner's own rights.
@@ -154,6 +163,7 @@ export function guestRefusal(rows: GuestRows, write: RowWrite, actor: string, st
 		const fields = (write.values ?? {}) as TaskFields;
 		if (role !== undefined) {
 			if (role !== 'edit') return NOT_EDITABLE;
+			if (clearsPlace(fields, stored)) return NOT_REMOVABLE;
 		} else if (write.op === 'patch' || stored || !mayAdd(fields, rows)) {
 			return NOT_EDITABLE;
 		}

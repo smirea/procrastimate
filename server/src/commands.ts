@@ -143,7 +143,10 @@ function authorityOf(access: Access, snapshot: Snapshot): Authority {
 	return {
 		role: 'guest',
 		stored: ({ kind, id }) => {
-			if (kind === 'task') return snapshot.tasks.some(task => task.id === id) ? {} : undefined;
+			if (kind === 'task') {
+				const task = snapshot.tasks.find(task => task.id === id);
+				return task && { projectId: task.projectId, parentId: task.parentId };
+			}
 			if (kind === 'comment') return snapshot.comments.find(comment => comment.id === id);
 			return undefined;
 		},

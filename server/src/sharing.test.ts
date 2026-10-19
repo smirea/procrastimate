@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { access, comments, log, tasks } from '../../shared/db/schema';
 import type { Person, ShareView, SpaceView } from '../../shared/sharing';
 import {
@@ -129,6 +129,42 @@ describe('sharing a task', () => {
 		]);
 		expect(refused.map(entry => entry.reason)).toEqual(['Not editable in this share', 'Not editable in this share']);
 		expect((await app.db.select().from(tasks).where(eq(tasks.id, hidden))).length).toBe(1);
+	});
+
+	test('a guest cannot clear the project or parent of the owner’s task', async () => {
+		const project = crypto.randomUUID();
+		await upload(app, owner, [
+			{
+				op: 'put',
+				table: 'projects',
+				id: project,
+				values: { id: project, user_id: owner.person.id, name: 'Yard', order: 0, created_at: 1 },
+			},
+		]);
+		const parent = await newTask('Mow', { projectId: project });
+		const child = await newTask('Fuel', { projectId: project, parentId: parent });
+		await share({ kind: 'project', id: project }, guest, 'edit');
+		const reason = 'A guest cannot take a task out of its project or parent';
+		expect(
+			await upload(app, guest, [
+				{ op: 'patch', table: 'tasks', id: parent, values: { project_id: null } },
+				{ op: 'patch', table: 'tasks', id: child, values: { parent_id: null } },
+			]),
+		).toEqual([
+			{ table: 'tasks', id: parent, reason },
+			{ table: 'tasks', id: child, reason },
+		]);
+		expect(await upload(app, guest, [{ op: 'patch', table: 'tasks', id: child, values: { title: 'Petrol' } }])).toEqual(
+			[],
+		);
+		const rows = await app.db
+			.select()
+			.from(tasks)
+			.where(inArray(tasks.id, [parent, child]));
+		expect(rows.map(row => [row.title, row.projectId, row.parentId]).toSorted()).toEqual([
+			['Mow', project, null],
+			['Petrol', project, parent],
+		]);
 	});
 
 	test('a guest cannot rewrite or move a task it holds no edit row for, whatever id it knows', async () => {

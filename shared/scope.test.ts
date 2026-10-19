@@ -50,6 +50,16 @@ describe('guestRefusal', () => {
 		expect(guestRefusal(rows, put('new', { parentId: 'editable', projectId: 'hidden' }), 'me')).toBe(REFUSED);
 	});
 
+	test('a guest keeps the owner’s task in its project and under its parent', () => {
+		const placed = { projectId: 'addable', parentId: 'editable' };
+		const kept = 'A guest cannot take a task out of its project or parent';
+		expect(guestRefusal(rows, patch('editable', { projectId: null }), 'me', placed)).toBe(kept);
+		expect(guestRefusal(rows, patch('editable', { parentId: null }), 'me', placed)).toBe(kept);
+		expect(guestRefusal(rows, put('editable', { projectId: null, parentId: null }), 'me', placed)).toBe(kept);
+		expect(guestRefusal(rows, patch('editable', { projectId: null }), 'me', { projectId: null })).toBeNull();
+		expect(guestRefusal(rows, patch('editable', { title: 'renamed' }), 'me', placed)).toBeNull();
+	});
+
 	test('a task the space holds needs an edit row, whatever the op, and a patch never creates one', () => {
 		expect(guestRefusal(rows, patch('unknown', { projectId: 'addable' }), 'me')).toBe(REFUSED);
 		expect(guestRefusal(rows, put('unknown', { projectId: 'addable' }), 'me', {})).toBe(REFUSED);
