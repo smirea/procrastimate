@@ -78,6 +78,6 @@
 		<CompletedList tasks={done} label={`Completed ${section.name} tasks`} />
 	{/if}
 	{#if canAdd}
-		<AddTaskButton {section} />
+		<AddTaskButton to={{ kind: 'project', id: section.projectId, sectionId: section.id }} group={section.name} />
 	{/if}
 </section>

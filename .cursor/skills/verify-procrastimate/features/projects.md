@@ -31,8 +31,8 @@ Projects let Stefan group tasks, open a project to see its tasks, and move a tas
 - iOS: long-press a project in Browse and drag it.
 - iOS: open the Browse tab. `Add project` in the Projects header creates one.
 - iOS: use `Project actions` in a project's toolbar to rename or delete it, or its `Icon` submenu to pick an icon.
-- Web: `Add section` at the end of a project. Each section heading has `<name> actions` (Rename, Move up, Move down, Delete section) and its own `Add task`.
-- iOS: `Add section` in `Project actions`. Long-press a section header for Add task, Copy as Markdown, Rename, Move up, Move down, and Delete section.
+- Web: `Add section` at the end of a project. Each section heading has `<name> actions` (Rename, Move up, Move down, Delete section), and each section ends in `Add task to <name>`.
+- iOS: `Add section` in `Project actions`. Each section ends in `Add task` (`add-task-<name>`, labeled `Add task to <name>`). Tap or long-press a section header, `…` included, for Add task, Copy as Markdown, Rename, Move up, Move down, and Delete section. In an XCUITest, launch with `PROCRASTIMATE_DEMO=sections` and tap `app.buttons["heading-Later"]`.
 
 ## Driving it with control-ui and the simulator
 

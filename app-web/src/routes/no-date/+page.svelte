@@ -4,6 +4,7 @@
 	import View from '#lib/components/View.svelte';
 	import TaskList from '#lib/components/TaskList.svelte';
 	import SectionHeading from '#lib/components/SectionHeading.svelte';
+	import AddTaskButton from '#lib/components/AddTaskButton.svelte';
 	import { store } from '#lib/store.svelte.ts';
 	import { clock, mobile } from '#lib/ui.svelte.ts';
 	import { noDateTasks } from 'shared/views.ts';
@@ -28,6 +29,7 @@
 	empty={view.loose.length + view.places.length === 0}
 	emptyTitle="Inbox zero"
 	emptyHint={mobile.current ? 'Tap + to capture a task.' : 'Press Q to capture a task.'}
+	canAdd={false}
 	markdown={() => ({
 		title: 'No date',
 		sections: [{ heading: null, tasks: view.loose }, ...view.places.map(place => ({ heading: place.name, tasks: place.tasks }))],
@@ -39,10 +41,12 @@
 		</button>
 	{/snippet}
 	<TaskList tasks={view.loose} label="Tasks without a date" showAdded />
+	<AddTaskButton />
 	{#each view.places as place (place.key)}
 		<section class="mt-6" aria-label={place.name}>
 			<SectionHeading heading={place.name} tasks={place.tasks} />
 			<TaskList tasks={place.tasks} label={`Tasks at ${place.name}`} showAdded />
+			<AddTaskButton to={{ kind: 'place', key: place.key }} group={place.name} />
 		</section>
 	{/each}
 </View>

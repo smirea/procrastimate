@@ -39,6 +39,12 @@ struct ProjectScreen: View {
                     Section {
                         ForEach(entry.tasks) { TaskRow(task: $0) }
                         ForEach(doneIn(entry.section.id)) { CompletedRow(task: $0) }
+                        if canAdd {
+                            GroupAddRow(
+                                group: entry.section.name,
+                                addTo: .project(id: entry.section.projectId, sectionId: entry.section.id)
+                            )
+                        }
                     } header: {
                         SectionHeading(
                             section: entry.section,
@@ -76,8 +82,8 @@ struct ProjectScreen: View {
     }
 }
 
-/// A section's heading in its project. A long press opens its menu: add a task to it, copy it, and in the user's own
-/// project rename, move, and delete it.
+/// A section's heading in its project. A tap or a long press anywhere on it opens its menu: add a task to it, copy it,
+/// and in the user's own project rename, move, and delete it.
 private struct SectionHeading: View {
     @Environment(Store.self) private var store
     @Environment(Navigator.self) private var navigator
@@ -96,7 +102,8 @@ private struct SectionHeading: View {
     @State private var confirmingDelete = false
 
     var body: some View {
-        // A plain List never shows a header's `.contextMenu`, so a long press opens this menu and a tap does nothing.
+        // A plain List never shows a header's `.contextMenu`, so the whole heading is the menu's label. It showed an
+        // ellipsis but ignored taps, which read as a broken button.
         Menu {
             if canAdd {
                 Button("Add task", systemImage: "plus") {
@@ -136,8 +143,9 @@ private struct SectionHeading: View {
             }
             .textCase(nil)
             .padding(.top, 14)
+            .frame(minHeight: 44, alignment: .bottom)
             .contentShape(.rect)
-        } primaryAction: {}
+        }
         .buttonStyle(.plain)
         .accessibilityAddTraits(.isHeader)
         .accessibilityIdentifier("heading-\(section.name)")
