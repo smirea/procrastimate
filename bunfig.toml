@@ -1,2 +1,2 @@
 [test]
-preload = ["./scripts/test-guard.ts", "./scripts/generate/preload.ts"]
+preload = ["./scripts/test-guard.ts", "./scripts/generate/preload.ts", "./scripts/pglite-snapshot.ts"]

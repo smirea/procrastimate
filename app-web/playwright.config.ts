@@ -79,11 +79,12 @@ export default defineConfig({
 						},
 					},
 					// A prebuilt bundle, not the dev server: each fresh browser context made Vite serve ~600 modules, and
-					// eight cold contexts at once on a busy machine took past the 5 s assertion timeout to render. The
+					// eight cold contexts at once on a busy machine took past the 5 s assertion timeout to render.
+					// `scripts/e2e-build.ts` builds it before Playwright starts, outside this server's start-up limit. The
 					// preview runs on Node: under Bun its proxy crashed the server with ERR_STREAM_WRITE_AFTER_END when a
 					// browser dropped a streaming PowerSync response.
 					{
-						command: `bun --bun run vite build && bun run vite preview --host 127.0.0.1 --port ${PORT} --strictPort`,
+						command: `bun run vite preview --host 127.0.0.1 --port ${PORT} --strictPort`,
 						url: `http://127.0.0.1:${PORT}/inbox`,
 						reuseExistingServer: false,
 						env: { API_URL: `http://127.0.0.1:${API_PORT}`, CLIENT_PORT: String(PORT), ...NO_SENTRY },

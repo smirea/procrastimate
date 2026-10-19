@@ -23,11 +23,10 @@ test('parseDotenv reads plain, quoted, and commented values and drops empty ones
 	});
 });
 
-// Bun itself, since another test file may have narrowed `PATH` by the time this one runs.
-const bun = process.execPath;
-
+// `/bin/sh`, not a second Bun: a spawned `bun -e` exited non-zero in agent worktrees while CI passed, and `run` only
+// needs some process that prints and exits.
 test('run answers trimmed output, and a failure names the command unless allowed', () => {
-	expect(run([bun, '-e', "console.log(' hi ')"])).toBe('hi');
-	expect(() => run([bun, '-e', 'process.exit(1)'])).toThrow('failed');
-	expect(run([bun, '-e', 'process.exit(1)'], { allowFail: true })).toBe('');
+	expect(run(['/bin/sh', '-c', "echo ' hi '"])).toBe('hi');
+	expect(() => run(['/bin/sh', '-c', 'exit 1'])).toThrow('`/bin/sh -c exit 1` failed');
+	expect(run(['/bin/sh', '-c', 'exit 1'], { allowFail: true })).toBe('');
 });

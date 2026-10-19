@@ -8,14 +8,15 @@ import type { Person, ShareView } from '../../shared/sharing';
 import { handle } from './api';
 import { createApp, type App } from './app';
 import type { Env } from './bindings';
-import { migrate } from './db/migrate';
+import { migratedSnapshot } from './db/pglite-snapshot';
 import type { Db } from './db/postgres';
 import { rambleRoute, type ConnectUpstream } from './ramble';
 import { generateVapidKeys } from './web-push';
 
 /**
  * The server under test: Postgres compiled to WebAssembly (PGlite) in the test process, migrated with the real
- * migrations, behind the same `handle` the Worker serves. Each `testApp()` is a fresh database. Tests call routes the
+ * migrations, behind the same `handle` the Worker serves. Each `testApp()` is a fresh database loaded from one migrated
+ * snapshot (`db/pglite-snapshot.ts`). Tests call routes the
  * way clients do; nothing here reaches into the store.
  */
 
@@ -46,18 +47,11 @@ export type TestApp = App & {
 	statements: string[];
 };
 
-let template: Promise<PGlite> | undefined;
-
-async function migrated(): Promise<PGlite> {
-	const client = new PGlite();
-	await migrate(drizzle(client));
-	return client;
-}
-
 /** A fresh PGlite database, migrated, with the app on top. Sockets are refused; Ramble tests pass their own config. */
 export async function testApp(options: { env?: Partial<Env>; connect?: ConnectUpstream } = {}): Promise<TestApp> {
-	template ??= migrated();
-	const client = (await (await template).clone()) as PGlite;
+	const client = new PGlite({ loadDataDir: migratedSnapshot() });
+	// `close()` before PGlite has started never settles.
+	await client.waitReady;
 	const statements: string[] = [];
 	const db: Db = drizzle(client, { logger: { logQuery: query => void statements.push(query) } });
 	const env = await testEnv(options.env);
