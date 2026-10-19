@@ -56,7 +56,11 @@ file)
 		case $1 in
 		--section) section=$2 && shift 2 ;;
 		--parent) parent=$2 && shift 2 ;;
-		*) notes=$1 && shift ;;
+		--*) echo "pm file: unknown flag '$1'" >&2 && exit 1 ;;
+		*)
+			[[ -z $notes ]] || { echo "pm file: notes given twice: '$notes' and '$1'" >&2; exit 1; }
+			notes=$1 && shift
+			;;
 		esac
 	done
 	find() {
