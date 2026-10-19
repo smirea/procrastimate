@@ -114,3 +114,12 @@ export function loadRemindersCheckedAt(now: number): number {
 export function saveRemindersCheckedAt(at: number) {
 	localStorage.setItem(REMINDERS_KEY, String(at));
 }
+
+/**
+ * Asks the browser to keep this origin's storage, which holds the local database and its unsent writes. Without it
+ * Chromium may evict the database when the disk runs low, and Safari outside a Home Screen app after seven days unvisited.
+ */
+export async function keepStorage() {
+	if (!navigator.storage?.persist || (await navigator.storage.persisted())) return;
+	await navigator.storage.persist();
+}

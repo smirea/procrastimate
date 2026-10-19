@@ -1,4 +1,5 @@
 import { reminderToast } from 'shared/format.ts';
+import { pushTag } from 'shared/push.ts';
 import { toDateKey } from 'shared/task.ts';
 import { taskNotificationTimes } from 'shared/triggers.ts';
 import { push } from './push.svelte.ts';
@@ -11,12 +12,17 @@ export function fireDueReminders(now: number) {
 	const today = toDateKey(new Date(now));
 	for (const task of store.own.tasks) {
 		if (task.completedAt !== null) continue;
-		const due = taskNotificationTimes(task, today).some(t => t.getTime() > since && t.getTime() <= now);
+		const due = taskNotificationTimes(task, today).find(t => t.getTime() > since && t.getTime() <= now);
 		if (!due) continue;
 		toasts.show(reminderToast(task.title), { label: 'Open', run: () => sheets.openTask(task.id) }, 12_000);
-		// With push on, the pushed notification is the system one, so a local one would show it twice.
-		if (push.state.kind !== 'on' && typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-			new Notification(task.title, { body: 'ProcrastiMate reminder', tag: task.id });
+		// With push on, the pushed notification is the system one, so a local one would show it twice. Offline no push
+		// can arrive, so this one shows under the push's tag, and a push delivered on reconnect replaces it.
+		const pushed = push.state.kind === 'on' && navigator.onLine;
+		if (!pushed && typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+			new Notification(task.title, {
+				body: 'ProcrastiMate reminder',
+				tag: pushTag({ taskId: task.id, at: due.getTime() }),
+			});
 		}
 	}
 	store.markRemindersChecked(now);

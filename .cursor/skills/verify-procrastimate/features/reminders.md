@@ -8,7 +8,7 @@ Reminders let Stefan get nudged about a task, either a set time before it is due
 - `reminders-picker` adds a relative reminder (at due time, 10m, 30m, 1h, or 1d before) or a custom date and time, and removes reminders.
 - `reminders-fire` shows a `Reminder: <title>` toast with `Open` when a reminder comes due.
 - `reminders-due-time` notifies at a task's due time with no reminder set. Reminders add to it, a date with no time never notifies, and a reminder at the due time notifies once.
-- `reminders-notify` delivers each moment as a system notification through Web Push once notifications are on. See [Push notifications](./push-notifications.md).
+- `reminders-notify` delivers each moment as a system notification through Web Push once notifications are on. While the web app is open and offline, it shows that notification itself, under the push's tag so a late push replaces it. See [Push notifications](./push-notifications.md).
 
 ## How to get to it (user POV)
 
