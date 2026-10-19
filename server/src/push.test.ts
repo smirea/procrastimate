@@ -2,7 +2,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, setSystem
 import { and, eq } from 'drizzle-orm';
 import { log, push, tasks } from '../../shared/db/schema';
 import type { PushMessage } from '../../shared/push';
-import { deliverDue } from './push';
+import { deliverDue, isAllowedEndpoint } from './push';
 import { json, signUp, taskRow, testApp, upload, type Session, type TestApp } from './test-app';
 
 const NOW = Date.UTC(2026, 9, 14, 18, 0);
@@ -157,5 +157,19 @@ describe('push', () => {
 		expect(stored.map(row => row.deviceId)).toEqual(['install-c-0000000']);
 		expect((await app.fetch('/api/push/subscription', { method: 'DELETE', headers: second.headers })).status).toBe(200);
 		expect(await app.db.select().from(push).where(eq(push.userId, again.person.id))).toEqual([]);
+	});
+});
+
+describe('isAllowedEndpoint', () => {
+	test('only https on a browser push host', () => {
+		expect(isAllowedEndpoint('https://fcm.googleapis.com/fcm/send/abc')).toBe(true);
+		expect(isAllowedEndpoint('https://web.push.apple.com/QW')).toBe(true);
+		expect(isAllowedEndpoint('https://updates.push.services.mozilla.com/wpush/v2/x')).toBe(true);
+		expect(isAllowedEndpoint('https://wns2-par02p.notify.windows.com/w/?token=x')).toBe(true);
+		expect(isAllowedEndpoint('https://push.example/a')).toBe(true);
+		expect(isAllowedEndpoint('https://internal.example.net/admin')).toBe(false);
+		expect(isAllowedEndpoint('https://evilpush.apple.com.attacker.io/x')).toBe(false);
+		expect(isAllowedEndpoint('http://fcm.googleapis.com/fcm/send/abc')).toBe(false);
+		expect(isAllowedEndpoint('http://127.0.0.1:9/send')).toBe(false);
 	});
 });

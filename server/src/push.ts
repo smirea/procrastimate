@@ -74,10 +74,16 @@ export async function replan(db: Db, owner: string, now: number): Promise<void> 
 	);
 }
 
-/** Push services are https. Loopback http is the end to end suite's fake push service. */
+/**
+ * The browsers' push services, so a subscription cannot point the Worker at any other host: Chrome and Edge, Apple,
+ * Firefox, and Windows. Tests use a `push.example` host, which no browser hands out.
+ */
+const PUSH_HOSTS =
+	/(^|\.)(fcm\.googleapis\.com|push\.apple\.com|push\.services\.mozilla\.com|notify\.windows\.com|push\.example)$/;
+
 export function isAllowedEndpoint(endpoint: string) {
 	const url = new URL(endpoint);
-	return url.protocol === 'https:' || url.hostname === '127.0.0.1' || url.hostname === 'localhost';
+	return url.protocol === 'https:' && PUSH_HOSTS.test(url.hostname);
 }
 
 async function send(subscription: PushSubscriptionInfo, message: PushMessage, vapid: Vapid, ttl?: number) {

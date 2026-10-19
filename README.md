@@ -29,7 +29,7 @@ Without them CI still passes and skips the deploy with a warning. Deploys never 
 
 ## Secrets
 
-Every secret lives in env-manager project `procrastinate` in AWS Secrets Manager. Two environments, and no `local` environment or local mode: `prod` for the Worker (`BETTER_AUTH_SECRET`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`, all required, and the optional `ELEVENLABS_API_KEY` and sign-in providers), the deploy credentials, the Turso platform token `TURSO_API_TOKEN`, and Release iOS; `dev` for local development and Debug iOS. Worker secrets are optional fields in the root `.env` schema's `server` scope, and `server/src/config.ts` enforces the required ones. The other credentials sit in the `scripts` scope. Never run `wrangler secret put` or `gh secret set` by hand; `server/scripts/secrets.ts` is the one bridge, and it prints key names only.
+Every secret lives in env-manager project `procrastinate` in AWS Secrets Manager. Two environments, and no `local` environment or local mode: `prod` for the Worker (`BETTER_AUTH_SECRET`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `DATABASE_URL`, all required, and the optional `ELEVENLABS_API_KEY` and sign-in providers), the deploy credentials, and Release iOS; `dev` for local development and Debug iOS. Worker secrets are optional fields in the root `.env` schema's `server` scope, and `server/src/config.ts` enforces the required ones. The other credentials sit in the `scripts` scope. Never run `wrangler secret put` or `gh secret set` by hand; `server/scripts/secrets.ts` is the one bridge, and it prints key names only.
 
 ```sh
 bun run secrets:push     # set prod Worker secrets with wrangler secret bulk; unset keys are left alone
