@@ -28,7 +28,7 @@
 	empty={due.overdue.length + due.today.length + days.length === 0}
 	emptyTitle="Nothing scheduled"
 	emptyHint="Tasks with a date show up here by day."
-	canAdd={due.today.length + days.length === 0}
+	canAdd={due.overdue.length + due.today.length + days.length === 0}
 	markdown={() => ({ title: 'Inbox', sections })}
 >
 	{#if due.overdue.length}
