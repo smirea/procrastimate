@@ -1,6 +1,6 @@
 {
 	"module": "quick-add-buttons",
-	"timeZone": "UTC",
+	"timeZone": "America/New_York",
 	"cases": [
 		{
 			"fn": "toggleButton",
