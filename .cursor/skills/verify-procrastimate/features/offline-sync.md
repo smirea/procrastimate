@@ -4,7 +4,7 @@ ProcrastiMate works fully without a network. Every change applies locally at onc
 
 ## Sub-features
 
-- `sync-offline` keeps every feature working with no network. Changes wait in PowerSync's upload queue in the local database until the network returns, and the data survives a reload. On the web a reload or cold launch with no network opens from the cached shell. Test: `a cold launch offline opens the app from the cached shell`.
+- `sync-offline` keeps every feature working with no network. Changes wait in PowerSync's upload queue in the local database until the network returns, and the data survives a reload. On the web a reload or cold launch with no network opens from the cached shell, the database worker and its wasm included, even with the HTTP cache empty, and a connection that barely answers opens it within 1.5 s. Tests: `a cold launch offline opens the app from the cached shell`, `a launch on a connection that barely answers opens from the shell without waiting for it`.
 - `sync-propagate` shows a change from one client on the other.
 - `sync-realtime` brings that change over at once while both clients are open: PowerSync streams it, with no focus, timer, or reload.
 - `sync-reconnect` uploads offline changes after the network returns.
@@ -48,6 +48,7 @@ Preconditions:
 ## Gotchas
 
 - Playwright's `context.route` never sees PowerSync's stream in Chromium, which runs it in a shared worker, so offline also uses `context.setOffline(true)`. A page cannot reload while the context is offline, so a reload test turns the network back on and keeps refusing the sync routes.
+- `e2e/offline-shell.e2e.ts` allows the service worker, and runs only in Chromium: it empties the HTTP cache and slows the service worker's own requests through DevTools, since Playwright's routes never see them.
 - Playwright contexts get `serviceWorkers: 'block'`: WebKit sends the page's requests through the push service worker, where `context.route` does not see them.
 - The local database belongs to one account. Signing in as someone else clears it; signing out keeps it.
 - The copy that saves an edit across a reload is per tab (`sessionStorage`), so closing the tab a moment after an edit can lose it.

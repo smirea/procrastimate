@@ -25,6 +25,7 @@
 	import { runSentrySmoke } from '#lib/sentry.ts';
 	import SignIn from '#lib/components/SignIn.svelte';
 	import { startSync } from '#lib/powersync.svelte.ts';
+	import { keepStorage } from '#lib/device.ts';
 	import { applyTheme, theme } from '#lib/theme.svelte.ts';
 
 	let { children }: { children: Snippet } = $props();
@@ -86,6 +87,7 @@
 	$effect(() => {
 		const userId = session.userId;
 		if (session.state !== 'in' || !session.confirmed || !userId) return;
+		void keepStorage().catch(() => {});
 		const stopPush = untrack(() => push.start());
 		const stopSync = untrack(() => startSync(userId));
 		return () => {

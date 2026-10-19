@@ -4,19 +4,30 @@ import { self } from '$app/service-worker';
 import { DEVICE_HEADER } from 'shared/auth.ts';
 import type { PushMessage } from 'shared/push.ts';
 import { cachedInstallId } from '../lib/install-cache.ts';
+import databaseWorker from 'virtual:database-worker';
 
 /**
  * The app shell, so a cold launch offline opens the local tasks: the one HTML (`/`, since the host redirects
- * `/index.html`), the built scripts without the wasm variants, which are large and cached on first use instead,
- * and the static files. A new deploy takes over at once (`skipWaiting` and `claim`) and drops the old shells.
+ * `/index.html`), the built scripts, the database worker with the SQLite wasm it runs, and the static files. A new
+ * deploy takes over at once (`skipWaiting` and `claim`) and drops the old shells.
  */
 const SHELL = `shell-${version}`;
+/**
+ * PowerSync's default IndexedDB VFS without encryption loads only `wa-sqlite-async`, and only in its worker; the build
+ * also emits the sync and encrypted variants and a copy for the page, about 12 MB never used. A worker file cached on
+ * first use instead was lost with the old shell at every deploy, so the first launch offline after one could not open
+ * the database.
+ */
+const DATABASE_WASM = /\/wa-sqlite-async-[\w-]+\.wasm$/;
+/** Past this a navigation answers from the shell, so a connection that is up but barely moving still opens at once. */
+const NAVIGATION_DEADLINE_MS = 1500;
 // The manifest's paths have no leading slash. `_headers` and `.well-known` are the host's, not served as files.
-const PRECACHED = [
+const PRECACHED = new Set([
 	'/',
 	...immutable.map(file => `/${file.path}`).filter(path => !path.endsWith('.wasm')),
+	...databaseWorker.filter(path => !path.endsWith('.wasm') || DATABASE_WASM.test(path)),
 	...assets.map(file => `/${file.path}`).filter(path => !path.startsWith('/.well-known/') && path !== '/_headers'),
-];
+]);
 
 /**
  * The host sends the shell compressed, with `Vary: Accept-Encoding`, and the Cache API keeps those headers on a body
@@ -39,7 +50,7 @@ async function decoded(response: Response): Promise<Response> {
 async function precache(): Promise<void> {
 	const cache = await caches.open(SHELL);
 	await Promise.all(
-		PRECACHED.map(async path => {
+		[...PRECACHED].map(async path => {
 			const response = await fetch(path);
 			if (!response.ok) throw new Error(`${path} answered ${response.status}`);
 			await cache.put(path, await decoded(response));
@@ -68,13 +79,11 @@ self.addEventListener('fetch', event => {
 	const url = new URL(request.url);
 	if (url.origin !== self.location.origin || url.pathname.startsWith('/api/')) return;
 	if (request.mode === 'navigate') {
-		event.respondWith(
-			fetch(request).catch(() => caches.match('/', { ignoreVary: true }).then(shell => shell ?? Response.error())),
-		);
+		event.respondWith(navigate(request));
 		return;
 	}
 	const immutable = url.pathname.startsWith('/_app/immutable/');
-	if (!immutable && !PRECACHED.includes(url.pathname)) return;
+	if (!immutable && !PRECACHED.has(url.pathname)) return;
 	event.respondWith(
 		caches.match(request, { ignoreVary: true }).then(
 			cached =>
@@ -86,6 +95,17 @@ self.addEventListener('fetch', event => {
 		),
 	);
 });
+
+/** The network's page while it answers in time, else the cached shell, else whatever the network ends up answering. */
+async function navigate(request: Request): Promise<Response> {
+	const network = fetch(request);
+	const deadline = new Promise<'late'>(resolve => setTimeout(() => resolve('late'), NAVIGATION_DEADLINE_MS));
+	const first = await Promise.race([network.catch(() => 'failed' as const), deadline]);
+	if (first instanceof Response) return first;
+	const shell = await caches.match('/', { ignoreVary: true });
+	if (shell) return shell;
+	return first === 'failed' ? Response.error() : network.catch(() => Response.error());
+}
 
 /** The browser rotated the subscription while the app was closed, so the server learns the new one here. */
 self.addEventListener('pushsubscriptionchange', event => {

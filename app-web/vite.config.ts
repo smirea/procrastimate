@@ -1,4 +1,5 @@
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
+import { join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 import { sveltekit } from '@sveltejs/kit/vite';
@@ -16,6 +17,9 @@ const sentry = parseSentryTarget(SENTRY_DSN.web, {
 	release: sentryRelease(env.SENTRY_ENVIRONMENT, env.SENTRY_RELEASE),
 });
 if (sentry.problem) throw new Error(`Invalid web Sentry configuration: ${sentry.problem}`);
+
+const DATABASE_WORKER = 'virtual:database-worker';
+const WORKERS_DIR = '_app/immutable/workers';
 
 export default defineConfig({
 	resolve: {
@@ -49,6 +53,29 @@ export default defineConfig({
 			buildStart() {
 				mkdirSync('.svelte-kit', { recursive: true });
 				writeFileSync('.svelte-kit/sentry-target.json', JSON.stringify(sentry.target));
+			},
+		},
+		{
+			// `$app/manifest` names the database worker's entry but not the chunks and wasm it loads, and the service
+			// worker must precache them to open the database offline. Its build runs after the client's has been written
+			// to the same `outDir`, so it lists them from there.
+			name: 'database-worker-files',
+			resolveId: id => (id === DATABASE_WORKER ? `\0${DATABASE_WORKER}` : undefined),
+			load(id) {
+				if (id !== `\0${DATABASE_WORKER}`) return;
+				if (this.environment.name !== 'serviceWorker') return 'export default [];';
+				const { root, build } = this.environment.config;
+				const out = resolve(root, build.outDir);
+				const dir = join(out, WORKERS_DIR);
+				if (!existsSync(dir)) throw new Error(`No database worker build in ${dir}`);
+				const files = readdirSync(dir, { recursive: true, withFileTypes: true })
+					.filter(entry => entry.isFile())
+					.map(entry => `/${relative(out, join(entry.parentPath, entry.name))}`);
+				// The service worker precaches only this variant, so a PowerSync upgrade that renames it fails here.
+				if (!files.some(file => /\/wa-sqlite-async-[\w-]+\.wasm$/.test(file))) {
+					throw new Error(`No wa-sqlite-async wasm in ${dir}`);
+				}
+				return `export default ${JSON.stringify(files)};`;
 			},
 		},
 		// Only for the SvelteKit 3 navigation spans. The deploy uploads source maps with sentry-cli, and there is no
