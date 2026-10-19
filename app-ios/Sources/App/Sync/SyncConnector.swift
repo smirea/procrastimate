@@ -4,20 +4,24 @@ import PowerSync
 
 /// PowerSync's two calls into the app's server: a token for the sync stream, and the upload of local writes.
 final class SyncConnector: PowerSyncBackendConnectorProtocol {
+    private let prefetched: @Sendable () async -> PowerSyncCredentials?
     /// The server refused a write; the next checkpoint puts its row back.
     private let rejected: @Sendable ([(kind: EntityKind, id: String)]) async -> Void
     private let signedOut: @Sendable () async -> Void
 
     init(
+        prefetched: @escaping @Sendable () async -> PowerSyncCredentials?,
         rejected: @escaping @Sendable ([(kind: EntityKind, id: String)]) async -> Void,
         signedOut: @escaping @Sendable () async -> Void
     ) {
+        self.prefetched = prefetched
         self.rejected = rejected
         self.signedOut = signedOut
     }
 
     func fetchCredentials() async throws -> PowerSyncCredentials? {
         guard let token = SessionToken.read() else { return nil }
+        if let credentials = await prefetched() { return credentials }
         do {
             let sync = try await APIClient.send(API.Endpoints.SyncToken.self, NoInput(), token: token)
             return PowerSyncCredentials(endpoint: sync.endpoint, token: sync.token)

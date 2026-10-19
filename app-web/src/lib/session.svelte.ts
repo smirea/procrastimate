@@ -1,6 +1,6 @@
-import type { AuthMethods } from 'shared/api/contract.ts';
+import type { AuthMethods, SyncToken } from 'shared/api/contract.ts';
 import { DEVICE_KEYS } from './device.ts';
-import { api } from './api.ts';
+import { api, isUnauthorized } from './api.ts';
 import { identify, type SentryUser } from './sentry.ts';
 import { store } from './store.svelte.ts';
 import { toasts } from './ui.svelte.ts';
@@ -10,6 +10,7 @@ import { toasts } from './ui.svelte.ts';
 const USER_KEY = DEVICE_KEYS.user;
 
 type State = 'checking' | 'in' | 'out';
+type Credentials = Omit<SyncToken, 'user'>;
 
 const cachedUser = () => (typeof localStorage === 'undefined' ? null : localStorage.getItem(USER_KEY));
 
@@ -33,35 +34,34 @@ class Session {
 		if (this.userId) void store.open(this.userId);
 	}
 
+	/** The session check fetches a sync token anyway, so the first connect uses it instead of asking again. */
+	#credentials: Credentials | null = null;
+
 	async start() {
 		identify(this.userId ? { id: this.userId } : null);
 		await this.refresh();
 		this.confirmed = true;
-		void this.loadMethods();
 	}
 
+	/**
+	 * The sync token route is the session check: a 401 signs out, and any other failure, offline above all, keeps the
+	 * cached user.
+	 */
 	async refresh() {
-		let response: Response;
 		try {
-			response = await fetch('/api/auth/get-session', { credentials: 'include' });
-		} catch {
-			if (!cachedUser()) this.state = 'out';
-			return;
+			const { user, ...credentials } = await api.sync.token();
+			this.#credentials = credentials;
+			this.adopt(user);
+		} catch (error) {
+			if (isUnauthorized(error)) this.clear();
+			else if (!cachedUser()) this.state = 'out';
 		}
-		if (response.status === 401) {
-			this.clear();
-			return;
-		}
-		if (!response.ok) {
-			if (!cachedUser()) this.state = 'out';
-			return;
-		}
-		const body = (await response.json().catch(() => null)) as { user?: Partial<SentryUser> } | null;
-		if (!body?.user?.id) {
-			this.clear();
-			return;
-		}
-		this.adopt({ ...body.user, id: body.user.id });
+	}
+
+	takeCredentials(): Credentials | null {
+		const credentials = this.#credentials;
+		this.#credentials = null;
+		return credentials;
 	}
 
 	adopt(user: SentryUser) {
@@ -76,6 +76,7 @@ class Session {
 
 	/** The local database stays, with its owner. */
 	clear() {
+		this.#credentials = null;
 		localStorage.removeItem(USER_KEY);
 		this.userId = null;
 		identify(null);
@@ -146,7 +147,9 @@ class Session {
 		else await this.refresh();
 	}
 
+	/** Only the sign-in screen shows them, so a signed-in launch never asks. */
 	async loadMethods() {
+		if (this.methods.email) return;
 		const methods = await api.auth.methods().catch(() => null);
 		if (methods) this.methods = methods;
 	}

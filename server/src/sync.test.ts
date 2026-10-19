@@ -29,6 +29,18 @@ describe('GET /api/sync/token', () => {
 		expect(Number(payload!.exp) - Number(payload!.iat)).toBe(TOKEN_SECONDS);
 	});
 
+	test('names the signed-in user, also when the session comes from the cache, so clients need no separate session check', async () => {
+		const expected = {
+			id: owner.person.id,
+			name: 'Owner',
+			email: expect.stringMatching(/^owner-.+@procrastimate\.test$/),
+		};
+		for (const _ of [1, 2]) {
+			const { user } = await json<{ user: unknown }>(app.fetch('/api/sync/token', { headers: owner.headers }));
+			expect(user).toEqual(expected);
+		}
+	});
+
 	test('the proxy only ever reaches the configured PowerSync origin, whatever the path says', async () => {
 		const hits: string[] = [];
 		const upstream = Bun.serve({

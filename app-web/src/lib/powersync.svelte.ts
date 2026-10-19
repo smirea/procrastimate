@@ -49,7 +49,7 @@ const connector: PowerSyncBackendConnector = {
 	/** Null signs the user out, which stops sync; a thrown error is a network failure PowerSync retries. */
 	async fetchCredentials() {
 		try {
-			const { token, endpoint } = await api.sync.token();
+			const { token, endpoint } = session.takeCredentials() ?? (await api.sync.token());
 			// The server names the endpoint from the request, which behind a proxy can be its own origin. The browser only
 			// ever talks to the page's.
 			return { token, endpoint: new URL(new URL(endpoint).pathname, location.origin).href };

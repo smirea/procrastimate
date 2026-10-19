@@ -7,6 +7,7 @@ Signed out, both clients open on the sign-in screen: the ProcrastiMate sloth, wi
 - `signin-logo` shows the bare sloth logo above the card.
 - `signin-email` signs in or creates an account with email and password and opens the Inbox.
 - `signin-pending` relabels the submit button `Signing in…` or `Creating account…` while the server checks, on both clients. The web Google and Apple buttons read `Opening Google…` or `Opening Apple…` until the redirect.
+- `signin-methods` loads which providers the server enables (`GET /api/auth/methods`) only when the sign-in screen shows. A signed-in launch asks only `GET /api/sync/token`, which is also the session check.
 - `signin-error` shows why sign-in failed. iOS DEBUG builds print the full detail (request, status, response body, or the underlying error) in small monospaced text under the message, and every iOS error goes to the unified log under category `errors`.
 
 ## How to get to it (user POV)
@@ -16,5 +17,5 @@ Signed out, both clients open on the sign-in screen: the ProcrastiMate sloth, wi
 
 ## Driving it
 
-- Web: `e2e/auth.e2e.ts` waits for the `ProcrastiMate` heading, signs up, and lands on the Inbox.
+- Web: `e2e/auth.e2e.ts` waits for the `ProcrastiMate` heading, signs up, and lands on the Inbox. It also reloads signed in and expects `/api/sync/token` as the only auth or sync request.
 - iOS: `SIMCTL_CHILD_PROCRASTIMATE_RESET=1 xcrun simctl launch <udid> com.stefan.procrastimate`, then take a screenshot. To see `signin-error`, build Debug with `API_URL=http:/$()/127.0.0.1:1`: the card shows `Could not reach the server` and the `NSURLErrorDomain Code=-1004` detail under it. Watch the log with `xcrun simctl spawn <udid> log stream --level error --predicate 'category == "errors"'`.

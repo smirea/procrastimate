@@ -35,6 +35,8 @@ final class SyncClient {
     /// covers every change that asks for another.
     @ObservationIgnored private var lastRead: Task<Void, Never>?
     @ObservationIgnored private var readQueued = false
+    /// The session check fetches a sync token anyway, so the first connect uses it instead of asking again.
+    @ObservationIgnored private var prefetched: PowerSyncCredentials?
     /// True while the local database cannot be read and no read for the current user ever worked, so the screen says so
     /// instead of showing an empty list nothing could be saved to.
     private(set) var unreadable = false
@@ -171,9 +173,19 @@ final class SyncClient {
 
     private var connector: SyncConnector {
         SyncConnector(
+            prefetched: { [weak self] in await self?.takePrefetched() },
             rejected: { [weak self] rows in await self?.rejected(rows) },
             signedOut: { [weak self] in await self?.reject() }
         )
+    }
+
+    func prefetch(_ sync: API.SyncToken) {
+        prefetched = PowerSyncCredentials(endpoint: sync.endpoint, token: sync.token)
+    }
+
+    private func takePrefetched() -> PowerSyncCredentials? {
+        defer { prefetched = nil }
+        return prefetched
     }
 
     /// Connects while a real session token is in the Keychain. The DEBUG launch flag is not a token. Until PowerSync
@@ -243,6 +255,7 @@ final class SyncClient {
     }
 
     func disconnect() {
+        prefetched = nil
         Task { try? await database.powerSync.disconnect() }
     }
 

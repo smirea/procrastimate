@@ -362,11 +362,12 @@ test('a new device holds its settings changes until the account’s settings arr
 	await settled(a);
 
 	// A fresh browser profile in another zone, whose first read finds no settings row because sync cannot reach the
-	// server yet. It notes its zone and pins a button before the row arrives.
+	// server yet. It notes its zone and pins a button before the row arrives. The token route stays open, since it is
+	// also the session check that opens the app.
 	const context = await deviceContext(browser, { timezoneId: 'Europe/Berlin' });
 	await signInAccount(context);
-	await cut(context);
-	await context.setOffline(false);
+	const stream = /\/api\/(powersync\/|upload)/;
+	await context.route(stream, route => route.abort('internetdisconnected'));
 	const page = await context.newPage();
 	await page.clock.setFixedTime(NOW);
 	await page.goto('/no-date');
@@ -378,7 +379,7 @@ test('a new device holds its settings changes until the account’s settings arr
 	await labels(b.app).click();
 	await expect(labels(b.app)).toHaveAttribute('aria-pressed', 'true');
 
-	await restore(context);
+	await context.unroute(stream);
 	await expect(b.app.dictationOption('ElevenLabs')).toHaveAttribute('aria-checked', 'true', { timeout: 10_000 });
 	await expect(labels(b.app)).toHaveAttribute('aria-pressed', 'true');
 	await settled(b);
