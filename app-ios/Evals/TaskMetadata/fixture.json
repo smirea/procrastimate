@@ -1,0 +1,6013 @@
+{
+	"projects": [
+		{
+			"name": "Home",
+			"sections": ["Kitchen", "Garden", "Repairs"]
+		},
+		{
+			"name": "Work",
+			"sections": ["Meetings", "Admin", "Hiring"]
+		},
+		{
+			"name": "ProcrastiMate",
+			"sections": ["iOS", "Web", "Bugs"]
+		},
+		{
+			"name": "Finance",
+			"sections": ["Taxes", "Bills"]
+		},
+		{
+			"name": "Health",
+			"sections": ["Fitness", "Doctors"]
+		},
+		{
+			"name": "Groceries",
+			"sections": []
+		},
+		{
+			"name": "Social",
+			"sections": []
+		},
+		{
+			"name": "Lisbon move",
+			"sections": ["Paperwork", "Packing"]
+		}
+	],
+	"labels": ["calls", "errands", "waiting", "email", "quick", "deep work", "computer", "reading"],
+	"places": ["Home", "Office", "Supermarket", "Gym", "Pharmacy", "Hardware store"],
+	"history": [
+		{
+			"title": "bananas",
+			"day": 0,
+			"project": null,
+			"section": null,
+			"labels": ["errands"],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "phone Tom back",
+			"day": 1,
+			"project": "Social",
+			"section": null,
+			"labels": ["calls"],
+			"place": null,
+			"time": "18:30"
+		},
+		{
+			"title": "pay electricity",
+			"day": 1,
+			"project": "Finance",
+			"section": "Bills",
+			"labels": ["quick"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "dinner with Ana",
+			"day": 2,
+			"project": "Social",
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "call mom",
+			"day": 2,
+			"project": "Social",
+			"section": null,
+			"labels": ["calls"],
+			"place": null,
+			"time": "18:00"
+		},
+		{
+			"title": "get a bulb for the door hinge",
+			"day": 3,
+			"project": "Home",
+			"section": "Repairs",
+			"labels": ["errands"],
+			"place": "Hardware store",
+			"time": null
+		},
+		{
+			"title": "GP appointment",
+			"day": 3,
+			"project": "Health",
+			"section": "Doctors",
+			"labels": ["calls"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "dinner with dad",
+			"day": 3,
+			"project": "Social",
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "review iOS candidate CV",
+			"day": 4,
+			"project": "Work",
+			"section": "Hiring",
+			"labels": [],
+			"place": null,
+			"time": "16:00"
+		},
+		{
+			"title": "waiting on the landlord for approval",
+			"day": 4,
+			"project": null,
+			"section": null,
+			"labels": ["waiting"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "phone mom back",
+			"day": 4,
+			"project": "Social",
+			"section": null,
+			"labels": ["calls"],
+			"place": null,
+			"time": "18:30"
+		},
+		{
+			"title": "ring dad",
+			"day": 5,
+			"project": "Social",
+			"section": null,
+			"labels": ["calls"],
+			"place": null,
+			"time": "19:00"
+		},
+		{
+			"title": "prep 1:1 Lena",
+			"day": 6,
+			"project": "Work",
+			"section": "Meetings",
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "call the landlord",
+			"day": 7,
+			"project": "Social",
+			"section": null,
+			"labels": ["calls"],
+			"place": null,
+			"time": "18:30"
+		},
+		{
+			"title": "write design doc for billing",
+			"day": 7,
+			"project": "Work",
+			"section": null,
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "call mom",
+			"day": 8,
+			"project": "Social",
+			"section": null,
+			"labels": ["calls"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "read the Rust book",
+			"day": 8,
+			"project": null,
+			"section": null,
+			"labels": ["reading"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "review design candidate CV",
+			"day": 8,
+			"project": "Work",
+			"section": "Hiring",
+			"labels": [],
+			"place": null,
+			"time": "16:00"
+		},
+		{
+			"title": "svelte sync transition",
+			"day": 9,
+			"project": "ProcrastiMate",
+			"section": "Web",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "waiting on the bank for the invoice",
+			"day": 9,
+			"project": null,
+			"section": null,
+			"labels": ["waiting"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "get yogurt",
+			"day": 9,
+			"project": "Groceries",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "push day",
+			"day": 10,
+			"project": "Health",
+			"section": "Fitness",
+			"labels": [],
+			"place": "Gym",
+			"time": "07:00"
+		},
+		{
+			"title": "reply to the recruiter",
+			"day": 10,
+			"project": null,
+			"section": null,
+			"labels": ["email"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "pay council tax",
+			"day": 10,
+			"project": "Finance",
+			"section": "Bills",
+			"labels": ["quick"],
+			"place": null,
+			"time": "09:00"
+		},
+		{
+			"title": "out of onions",
+			"day": 11,
+			"project": "Groceries",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "web images empty state",
+			"day": 11,
+			"project": "ProcrastiMate",
+			"section": "Web",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "svelte sync transition",
+			"day": 12,
+			"project": null,
+			"section": null,
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "subtasks crashes on launch",
+			"day": 13,
+			"project": null,
+			"section": null,
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "interview backend candidate",
+			"day": 13,
+			"project": "Work",
+			"section": "Hiring",
+			"labels": [],
+			"place": null,
+			"time": "13:00"
+		},
+		{
+			"title": "svelte images transition",
+			"day": 13,
+			"project": "ProcrastiMate",
+			"section": "Web",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "leg day",
+			"day": 14,
+			"project": "Health",
+			"section": "Fitness",
+			"labels": [],
+			"place": "Gym",
+			"time": "07:30"
+		},
+		{
+			"title": "buy vitamin D",
+			"day": 14,
+			"project": "Health",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Pharmacy",
+			"time": null
+		},
+		{
+			"title": "reply to the recruiter",
+			"day": 15,
+			"project": "Work",
+			"section": "Admin",
+			"labels": ["email"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "run 5k",
+			"day": 16,
+			"project": "Health",
+			"section": "Fitness",
+			"labels": [],
+			"place": "Gym",
+			"time": "18:30"
+		},
+		{
+			"title": "weekly planning",
+			"day": 17,
+			"project": "Work",
+			"section": "Meetings",
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "call mom",
+			"day": 17,
+			"project": "Social",
+			"section": null,
+			"labels": ["calls"],
+			"place": null,
+			"time": "18:00"
+		},
+		{
+			"title": "out of bananas",
+			"day": 17,
+			"project": "Groceries",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "pay water",
+			"day": 18,
+			"project": "Finance",
+			"section": "Bills",
+			"labels": ["quick"],
+			"place": null,
+			"time": "09:00"
+		},
+		{
+			"title": "trim the hedge",
+			"day": 18,
+			"project": "Home",
+			"section": "Garden",
+			"labels": [],
+			"place": "Home",
+			"time": null
+		},
+		{
+			"title": "prep 1:1 Lena",
+			"day": 18,
+			"project": "Work",
+			"section": "Meetings",
+			"labels": [],
+			"place": null,
+			"time": "14:00"
+		},
+		{
+			"title": "find bank statements",
+			"day": 19,
+			"project": "Finance",
+			"section": "Taxes",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "bug: sync loses edits",
+			"day": 19,
+			"project": "ProcrastiMate",
+			"section": "Bugs",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "1:1 with Priya",
+			"day": 19,
+			"project": "Work",
+			"section": "Meetings",
+			"labels": [],
+			"place": null,
+			"time": "10:00"
+		},
+		{
+			"title": "buy apples and rice",
+			"day": 20,
+			"project": "Groceries",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "fix the door hinge",
+			"day": 21,
+			"project": "Home",
+			"section": "Repairs",
+			"labels": ["errands"],
+			"place": "Hardware store",
+			"time": null
+		},
+		{
+			"title": "email Lena about the contract",
+			"day": 22,
+			"project": "Work",
+			"section": "Admin",
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "birthday present for Ana",
+			"day": 22,
+			"project": "Social",
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "fix sharing bug",
+			"day": 22,
+			"project": "ProcrastiMate",
+			"section": "Bugs",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "gym",
+			"day": 23,
+			"project": "Health",
+			"section": "Fitness",
+			"labels": [],
+			"place": "Gym",
+			"time": "18:30"
+		},
+		{
+			"title": "out of bread",
+			"day": 24,
+			"project": "Groceries",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "call mom",
+			"day": 24,
+			"project": "Social",
+			"section": null,
+			"labels": ["calls"],
+			"place": null,
+			"time": "18:00"
+		},
+		{
+			"title": "book dentist appointment",
+			"day": 24,
+			"project": "Health",
+			"section": "Doctors",
+			"labels": ["calls"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "sync with Lena",
+			"day": 25,
+			"project": "Work",
+			"section": "Meetings",
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "chase Lena about the invoice",
+			"day": 25,
+			"project": null,
+			"section": null,
+			"labels": ["waiting"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "buy ibuprofen",
+			"day": 25,
+			"project": "Health",
+			"section": null,
+			"labels": [],
+			"place": "Pharmacy",
+			"time": null
+		},
+		{
+			"title": "file the tax return",
+			"day": 26,
+			"project": "Finance",
+			"section": "Taxes",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "ring the landlord",
+			"day": 26,
+			"project": "Social",
+			"section": null,
+			"labels": ["calls"],
+			"place": null,
+			"time": "18:00"
+		},
+		{
+			"title": "buy antihistamines",
+			"day": 26,
+			"project": "Health",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Pharmacy",
+			"time": null
+		},
+		{
+			"title": "web sync empty state",
+			"day": 27,
+			"project": "ProcrastiMate",
+			"section": "Web",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "ios: reminders polish",
+			"day": 27,
+			"project": "ProcrastiMate",
+			"section": "iOS",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "tidy oven",
+			"day": 28,
+			"project": "Home",
+			"section": "Kitchen",
+			"labels": [],
+			"place": "Home",
+			"time": null
+		},
+		{
+			"title": "write feedback for design candidate",
+			"day": 28,
+			"project": "Work",
+			"section": "Hiring",
+			"labels": [],
+			"place": null,
+			"time": "16:00"
+		},
+		{
+			"title": "phone the plumber back",
+			"day": 29,
+			"project": "Social",
+			"section": null,
+			"labels": ["calls"],
+			"place": null,
+			"time": "18:00"
+		},
+		{
+			"title": "repot tomatoes",
+			"day": 29,
+			"project": "Home",
+			"section": "Garden",
+			"labels": [],
+			"place": "Home",
+			"time": null
+		},
+		{
+			"title": "prepare standup",
+			"day": 30,
+			"project": "Work",
+			"section": "Meetings",
+			"labels": [],
+			"place": null,
+			"time": "09:30"
+		},
+		{
+			"title": "reply to the landlord about the weekend",
+			"day": 30,
+			"project": "Social",
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "call Mihai",
+			"day": 30,
+			"project": "Social",
+			"section": null,
+			"labels": ["calls"],
+			"place": null,
+			"time": "19:00"
+		},
+		{
+			"title": "weekly planning",
+			"day": 31,
+			"project": "Work",
+			"section": "Meetings",
+			"labels": [],
+			"place": null,
+			"time": "09:30"
+		},
+		{
+			"title": "weekly planning",
+			"day": 31,
+			"project": "Work",
+			"section": "Meetings",
+			"labels": [],
+			"place": null,
+			"time": "09:30"
+		},
+		{
+			"title": "buy spinach",
+			"day": 31,
+			"project": "Groceries",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "write feedback for backend candidate",
+			"day": 32,
+			"project": "Work",
+			"section": "Hiring",
+			"labels": [],
+			"place": null,
+			"time": "16:00"
+		},
+		{
+			"title": "follow up with Priya on budget",
+			"day": 32,
+			"project": "Work",
+			"section": "Admin",
+			"labels": ["email"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "clean the living room",
+			"day": 32,
+			"project": "Home",
+			"section": "Kitchen",
+			"labels": [],
+			"place": "Home",
+			"time": null
+		},
+		{
+			"title": "1:1 with Dev",
+			"day": 33,
+			"project": "Work",
+			"section": "Meetings",
+			"labels": [],
+			"place": null,
+			"time": "10:00"
+		},
+		{
+			"title": "svelte labels transition",
+			"day": 33,
+			"project": "ProcrastiMate",
+			"section": "Web",
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "research an e-bike",
+			"day": 34,
+			"project": null,
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "ring Mihai",
+			"day": 35,
+			"project": "Social",
+			"section": null,
+			"labels": ["calls"],
+			"place": null,
+			"time": "19:00"
+		},
+		{
+			"title": "check credit card statement",
+			"day": 35,
+			"project": "Finance",
+			"section": "Bills",
+			"labels": ["quick"],
+			"place": null,
+			"time": "09:00"
+		},
+		{
+			"title": "find receipts",
+			"day": 36,
+			"project": "Finance",
+			"section": "Taxes",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "tidy fridge",
+			"day": 36,
+			"project": "Home",
+			"section": "Kitchen",
+			"labels": [],
+			"place": "Home",
+			"time": null
+		},
+		{
+			"title": "book travel for the offsite",
+			"day": 36,
+			"project": "Work",
+			"section": "Admin",
+			"labels": ["quick"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "reply to Priya",
+			"day": 37,
+			"project": "Work",
+			"section": "Admin",
+			"labels": ["email"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "fill in timesheet",
+			"day": 37,
+			"project": "Work",
+			"section": "Admin",
+			"labels": ["quick"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "ios: sync polish",
+			"day": 38,
+			"project": "ProcrastiMate",
+			"section": "iOS",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "call mom",
+			"day": 38,
+			"project": "Social",
+			"section": null,
+			"labels": ["calls"],
+			"place": null,
+			"time": "18:00"
+		},
+		{
+			"title": "buy vitamin D",
+			"day": 39,
+			"project": "Health",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Pharmacy",
+			"time": null
+		},
+		{
+			"title": "pick up eggs",
+			"day": 39,
+			"project": "Groceries",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "read that HN post",
+			"day": 40,
+			"project": null,
+			"section": null,
+			"labels": ["reading"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "1:1 with the recruiter",
+			"day": 40,
+			"project": "Work",
+			"section": "Meetings",
+			"labels": [],
+			"place": null,
+			"time": "15:30"
+		},
+		{
+			"title": "call Elena",
+			"day": 40,
+			"project": "Social",
+			"section": null,
+			"labels": ["calls"],
+			"place": null,
+			"time": "18:30"
+		},
+		{
+			"title": "check credit card statement",
+			"day": 41,
+			"project": "Finance",
+			"section": "Bills",
+			"labels": ["quick"],
+			"place": null,
+			"time": "09:00"
+		},
+		{
+			"title": "prep 1:1 Sarah",
+			"day": 41,
+			"project": "Work",
+			"section": "Meetings",
+			"labels": [],
+			"place": null,
+			"time": "14:00"
+		},
+		{
+			"title": "bug: reminders loses edits",
+			"day": 42,
+			"project": "ProcrastiMate",
+			"section": "Bugs",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "prep 1:1 the recruiter",
+			"day": 42,
+			"project": "Work",
+			"section": "Meetings",
+			"labels": [],
+			"place": null,
+			"time": "14:00"
+		},
+		{
+			"title": "swiftui labels animation",
+			"day": 42,
+			"project": "ProcrastiMate",
+			"section": "iOS",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "idea: solar panels",
+			"day": 43,
+			"project": null,
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "fix the bathroom light",
+			"day": 44,
+			"project": "Home",
+			"section": "Repairs",
+			"labels": ["errands"],
+			"place": "Hardware store",
+			"time": null
+		},
+		{
+			"title": "svelte sharing transition",
+			"day": 44,
+			"project": "ProcrastiMate",
+			"section": "Web",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "write feedback for iOS candidate",
+			"day": 45,
+			"project": "Work",
+			"section": "Hiring",
+			"labels": [],
+			"place": null,
+			"time": "16:00"
+		},
+		{
+			"title": "think through search architecture",
+			"day": 45,
+			"project": "Work",
+			"section": null,
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "call mom",
+			"day": 46,
+			"project": "Social",
+			"section": null,
+			"labels": ["calls"],
+			"place": null,
+			"time": "18:00"
+		},
+		{
+			"title": "write design doc for billing",
+			"day": 47,
+			"project": "Work",
+			"section": null,
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "pull day",
+			"day": 48,
+			"project": "Health",
+			"section": "Fitness",
+			"labels": [],
+			"place": "Gym",
+			"time": "18:30"
+		},
+		{
+			"title": "look into solar panels",
+			"day": 49,
+			"project": null,
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "swiftui subtasks animation",
+			"day": 49,
+			"project": "ProcrastiMate",
+			"section": "iOS",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "pick up antihistamines from pharmacy",
+			"day": 49,
+			"project": "Health",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Pharmacy",
+			"time": null
+		},
+		{
+			"title": "send receipts to accountant",
+			"day": 50,
+			"project": "Finance",
+			"section": "Taxes",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "GP appointment",
+			"day": 50,
+			"project": "Health",
+			"section": "Doctors",
+			"labels": ["calls"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "call mom",
+			"day": 51,
+			"project": "Social",
+			"section": null,
+			"labels": ["calls"],
+			"place": null,
+			"time": "18:00"
+		},
+		{
+			"title": "read that HN post",
+			"day": 51,
+			"project": null,
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "phone bill",
+			"day": 52,
+			"project": "Finance",
+			"section": "Bills",
+			"labels": ["quick"],
+			"place": null,
+			"time": "09:00"
+		},
+		{
+			"title": "look into an e-bike",
+			"day": 53,
+			"project": null,
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "clean the living room",
+			"day": 53,
+			"project": "Home",
+			"section": "Kitchen",
+			"labels": [],
+			"place": "Home",
+			"time": null
+		},
+		{
+			"title": "finish Atomic Habits",
+			"day": 54,
+			"project": null,
+			"section": null,
+			"labels": ["reading"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "follow up with Dev on Q4 goals",
+			"day": 54,
+			"project": "Work",
+			"section": "Admin",
+			"labels": ["email"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "book optician appointment",
+			"day": 54,
+			"project": "Health",
+			"section": "Doctors",
+			"labels": ["calls"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "book physio appointment",
+			"day": 55,
+			"project": "Health",
+			"section": "Doctors",
+			"labels": ["calls"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "pick up plasters from pharmacy",
+			"day": 56,
+			"project": "Health",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Pharmacy",
+			"time": null
+		},
+		{
+			"title": "call Tom",
+			"day": 56,
+			"project": "Social",
+			"section": null,
+			"labels": ["calls"],
+			"place": null,
+			"time": "18:30"
+		},
+		{
+			"title": "buy vitamin D",
+			"day": 57,
+			"project": "Health",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Pharmacy",
+			"time": null
+		},
+		{
+			"title": "look into a standing desk",
+			"day": 57,
+			"project": null,
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "waiting on Marco for the contract",
+			"day": 57,
+			"project": null,
+			"section": null,
+			"labels": ["waiting"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "write feedback for iOS candidate",
+			"day": 58,
+			"project": "Work",
+			"section": "Hiring",
+			"labels": [],
+			"place": null,
+			"time": "13:00"
+		},
+		{
+			"title": "leg day",
+			"day": 58,
+			"project": "Health",
+			"section": "Fitness",
+			"labels": [],
+			"place": "Gym",
+			"time": "07:00"
+		},
+		{
+			"title": "pay council tax",
+			"day": 58,
+			"project": "Finance",
+			"section": "Bills",
+			"labels": ["quick"],
+			"place": null,
+			"time": "09:00"
+		},
+		{
+			"title": "run 5k",
+			"day": 59,
+			"project": "Health",
+			"section": "Fitness",
+			"labels": [],
+			"place": "Gym",
+			"time": "18:30"
+		},
+		{
+			"title": "ios: images polish",
+			"day": 60,
+			"project": null,
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "fill in timesheet",
+			"day": 61,
+			"project": "Work",
+			"section": "Admin",
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "change the bed sheets",
+			"day": 62,
+			"project": "Home",
+			"section": null,
+			"labels": ["quick"],
+			"place": "Home",
+			"time": "20:00"
+		},
+		{
+			"title": "call mom",
+			"day": 63,
+			"project": "Social",
+			"section": null,
+			"labels": ["calls"],
+			"place": null,
+			"time": "18:00"
+		},
+		{
+			"title": "clean the kitchen",
+			"day": 63,
+			"project": "Home",
+			"section": "Kitchen",
+			"labels": [],
+			"place": "Home",
+			"time": null
+		},
+		{
+			"title": "idea: a standing desk",
+			"day": 63,
+			"project": null,
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "1:1 with Priya",
+			"day": 64,
+			"project": "Work",
+			"section": "Meetings",
+			"labels": [],
+			"place": null,
+			"time": "10:00"
+		},
+		{
+			"title": "iOS search haptics",
+			"day": 64,
+			"project": "ProcrastiMate",
+			"section": "iOS",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "phone Tom back",
+			"day": 64,
+			"project": "Social",
+			"section": null,
+			"labels": ["calls"],
+			"place": null,
+			"time": "19:00"
+		},
+		{
+			"title": "subtasks crashes on launch",
+			"day": 65,
+			"project": "ProcrastiMate",
+			"section": "Bugs",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "1:1 with the recruiter",
+			"day": 65,
+			"project": "Work",
+			"section": "Meetings",
+			"labels": [],
+			"place": null,
+			"time": "10:00"
+		},
+		{
+			"title": "gym",
+			"day": 66,
+			"project": "Health",
+			"section": "Fitness",
+			"labels": [],
+			"place": "Gym",
+			"time": "07:30"
+		},
+		{
+			"title": "svelte labels transition",
+			"day": 66,
+			"project": "ProcrastiMate",
+			"section": "Web",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "buy chicken",
+			"day": 66,
+			"project": "Groceries",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "chase the bank about the contract",
+			"day": 67,
+			"project": null,
+			"section": null,
+			"labels": ["waiting"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "book travel for the offsite",
+			"day": 67,
+			"project": "Work",
+			"section": "Admin",
+			"labels": ["quick"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "repot basil",
+			"day": 68,
+			"project": null,
+			"section": null,
+			"labels": [],
+			"place": "Home",
+			"time": null
+		},
+		{
+			"title": "finish the SwiftUI article",
+			"day": 68,
+			"project": null,
+			"section": null,
+			"labels": ["reading"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "sharing crashes on launch",
+			"day": 68,
+			"project": "ProcrastiMate",
+			"section": "Bugs",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "book optician appointment",
+			"day": 69,
+			"project": "Health",
+			"section": "Doctors",
+			"labels": ["calls"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "write design doc for the API",
+			"day": 69,
+			"project": "Work",
+			"section": null,
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "svelte labels transition",
+			"day": 69,
+			"project": "ProcrastiMate",
+			"section": "Web",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "check council tax statement",
+			"day": 70,
+			"project": "Finance",
+			"section": "Bills",
+			"labels": ["quick"],
+			"place": null,
+			"time": "09:00"
+		},
+		{
+			"title": "leg day",
+			"day": 70,
+			"project": "Health",
+			"section": "Fitness",
+			"labels": [],
+			"place": "Gym",
+			"time": "07:30"
+		},
+		{
+			"title": "pay internet",
+			"day": 71,
+			"project": "Finance",
+			"section": "Bills",
+			"labels": ["quick"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "run 5k",
+			"day": 72,
+			"project": "Health",
+			"section": "Fitness",
+			"labels": [],
+			"place": "Gym",
+			"time": "18:30"
+		},
+		{
+			"title": "chicken",
+			"day": 73,
+			"project": null,
+			"section": null,
+			"labels": ["errands"],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "1:1 with Lena",
+			"day": 73,
+			"project": "Work",
+			"section": "Meetings",
+			"labels": [],
+			"place": null,
+			"time": "11:00"
+		},
+		{
+			"title": "1:1 with Priya",
+			"day": 73,
+			"project": "Work",
+			"section": "Meetings",
+			"labels": [],
+			"place": null,
+			"time": "11:00"
+		},
+		{
+			"title": "chase the landlord about approval",
+			"day": 74,
+			"project": null,
+			"section": null,
+			"labels": ["waiting"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "pick up eye drops from pharmacy",
+			"day": 75,
+			"project": "Health",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Pharmacy",
+			"time": null
+		},
+		{
+			"title": "birthday present for Ana",
+			"day": 76,
+			"project": "Social",
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "change the bed sheets",
+			"day": 76,
+			"project": "Home",
+			"section": null,
+			"labels": ["quick"],
+			"place": "Home",
+			"time": null
+		},
+		{
+			"title": "fill in timesheet",
+			"day": 77,
+			"project": "Work",
+			"section": "Admin",
+			"labels": ["quick"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "idea: learning Portuguese",
+			"day": 77,
+			"project": null,
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "idea: an e-bike",
+			"day": 77,
+			"project": null,
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "dinner with Elena",
+			"day": 78,
+			"project": "Social",
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "trim the hedge",
+			"day": 79,
+			"project": "Home",
+			"section": "Garden",
+			"labels": [],
+			"place": "Home",
+			"time": null
+		},
+		{
+			"title": "change the bed sheets",
+			"day": 79,
+			"project": "Home",
+			"section": null,
+			"labels": ["quick"],
+			"place": "Home",
+			"time": "20:00"
+		},
+		{
+			"title": "call mom",
+			"day": 80,
+			"project": "Social",
+			"section": null,
+			"labels": ["calls"],
+			"place": null,
+			"time": "18:00"
+		},
+		{
+			"title": "swim",
+			"day": 80,
+			"project": "Health",
+			"section": "Fitness",
+			"labels": [],
+			"place": "Gym",
+			"time": "07:30"
+		},
+		{
+			"title": "pasta",
+			"day": 81,
+			"project": "Groceries",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "phone Elena back",
+			"day": 82,
+			"project": null,
+			"section": null,
+			"labels": ["calls"],
+			"place": null,
+			"time": "19:00"
+		},
+		{
+			"title": "svelte ramble transition",
+			"day": 83,
+			"project": "ProcrastiMate",
+			"section": "Web",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "mow the lawn",
+			"day": 83,
+			"project": "Home",
+			"section": "Garden",
+			"labels": [],
+			"place": "Home",
+			"time": null
+		},
+		{
+			"title": "birthday present for dad",
+			"day": 83,
+			"project": "Social",
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "web: subtasks keyboard shortcuts",
+			"day": 84,
+			"project": "ProcrastiMate",
+			"section": "Web",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "buy olive oil and onions",
+			"day": 84,
+			"project": "Groceries",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "clean the living room",
+			"day": 84,
+			"project": "Home",
+			"section": "Kitchen",
+			"labels": [],
+			"place": "Home",
+			"time": null
+		},
+		{
+			"title": "pick up plasters from pharmacy",
+			"day": 85,
+			"project": "Health",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Pharmacy",
+			"time": null
+		},
+		{
+			"title": "dinner with the landlord",
+			"day": 85,
+			"project": "Social",
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "sharing is slow",
+			"day": 86,
+			"project": "ProcrastiMate",
+			"section": "Bugs",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "run 5k",
+			"day": 86,
+			"project": "Health",
+			"section": "Fitness",
+			"labels": [],
+			"place": "Gym",
+			"time": "07:00"
+		},
+		{
+			"title": "reply to Dev",
+			"day": 87,
+			"project": "Work",
+			"section": "Admin",
+			"labels": ["email"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "interview design candidate",
+			"day": 88,
+			"project": "Work",
+			"section": "Hiring",
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "laundry",
+			"day": 88,
+			"project": "Home",
+			"section": null,
+			"labels": ["quick"],
+			"place": "Home",
+			"time": "20:00"
+		},
+		{
+			"title": "sync with Lena",
+			"day": 88,
+			"project": "Work",
+			"section": "Meetings",
+			"labels": [],
+			"place": null,
+			"time": "14:00"
+		},
+		{
+			"title": "laundry",
+			"day": 89,
+			"project": "Home",
+			"section": null,
+			"labels": ["quick"],
+			"place": "Home",
+			"time": "21:00"
+		},
+		{
+			"title": "write design doc for search",
+			"day": 89,
+			"project": "Work",
+			"section": null,
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "out of spinach",
+			"day": 89,
+			"project": "Groceries",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "buy ibuprofen",
+			"day": 90,
+			"project": "Health",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Pharmacy",
+			"time": null
+		},
+		{
+			"title": "email Marco about Q4 goals",
+			"day": 91,
+			"project": "Work",
+			"section": "Admin",
+			"labels": ["email"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "ios: sync polish",
+			"day": 91,
+			"project": "ProcrastiMate",
+			"section": "iOS",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "waiting on Sarah for approval",
+			"day": 91,
+			"project": null,
+			"section": null,
+			"labels": ["waiting"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "credit card bill",
+			"day": 92,
+			"project": "Finance",
+			"section": "Bills",
+			"labels": ["quick"],
+			"place": null,
+			"time": "09:00"
+		},
+		{
+			"title": "pick up bananas",
+			"day": 92,
+			"project": "Groceries",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "iOS search haptics",
+			"day": 92,
+			"project": "ProcrastiMate",
+			"section": "iOS",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "pick up chicken",
+			"day": 93,
+			"project": "Groceries",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "ios: the inbox polish",
+			"day": 93,
+			"project": null,
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "deep clean oven",
+			"day": 93,
+			"project": "Home",
+			"section": "Kitchen",
+			"labels": [],
+			"place": "Home",
+			"time": null
+		},
+		{
+			"title": "1:1 with the recruiter",
+			"day": 94,
+			"project": "Work",
+			"section": "Meetings",
+			"labels": [],
+			"place": null,
+			"time": "11:00"
+		},
+		{
+			"title": "call mom",
+			"day": 94,
+			"project": "Social",
+			"section": null,
+			"labels": ["calls"],
+			"place": null,
+			"time": "18:00"
+		},
+		{
+			"title": "follow up with Sarah on budget",
+			"day": 95,
+			"project": "Work",
+			"section": "Admin",
+			"labels": ["email"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "dinner with Tom",
+			"day": 95,
+			"project": "Social",
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "buy plasters",
+			"day": 96,
+			"project": "Health",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Pharmacy",
+			"time": null
+		},
+		{
+			"title": "reply to the plumber about the weekend",
+			"day": 96,
+			"project": "Social",
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "get asthma prescription",
+			"day": 97,
+			"project": "Health",
+			"section": "Doctors",
+			"labels": ["calls"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "interview backend candidate",
+			"day": 98,
+			"project": "Work",
+			"section": "Hiring",
+			"labels": [],
+			"place": null,
+			"time": "16:00"
+		},
+		{
+			"title": "prep 1:1 Dev",
+			"day": 99,
+			"project": "Work",
+			"section": "Meetings",
+			"labels": [],
+			"place": null,
+			"time": "15:30"
+		},
+		{
+			"title": "book dentist appointment",
+			"day": 100,
+			"project": "Health",
+			"section": "Doctors",
+			"labels": ["calls"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "file receipts",
+			"day": 100,
+			"project": "Finance",
+			"section": "Taxes",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "clean the living room",
+			"day": 101,
+			"project": "Home",
+			"section": "Kitchen",
+			"labels": [],
+			"place": "Home",
+			"time": null
+		},
+		{
+			"title": "phone Mihai back",
+			"day": 102,
+			"project": "Social",
+			"section": null,
+			"labels": ["calls"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "council tax bill",
+			"day": 102,
+			"project": "Finance",
+			"section": "Bills",
+			"labels": ["quick"],
+			"place": null,
+			"time": "09:00"
+		},
+		{
+			"title": "pull day",
+			"day": 103,
+			"project": "Health",
+			"section": "Fitness",
+			"labels": [],
+			"place": "Gym",
+			"time": "07:30"
+		},
+		{
+			"title": "pick up bananas",
+			"day": 103,
+			"project": "Groceries",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "idea: home NAS",
+			"day": 103,
+			"project": null,
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "phone dad back",
+			"day": 104,
+			"project": "Social",
+			"section": null,
+			"labels": ["calls"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "ios: reminders polish",
+			"day": 104,
+			"project": "ProcrastiMate",
+			"section": "iOS",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "renew laptop insurance",
+			"day": 105,
+			"project": "Work",
+			"section": "Admin",
+			"labels": ["quick"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "get screws for the door hinge",
+			"day": 105,
+			"project": "Home",
+			"section": "Repairs",
+			"labels": ["errands"],
+			"place": "Hardware store",
+			"time": null
+		},
+		{
+			"title": "svelte images transition",
+			"day": 105,
+			"project": null,
+			"section": null,
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "fill in timesheet",
+			"day": 106,
+			"project": "Work",
+			"section": "Admin",
+			"labels": ["quick"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "phone the landlord back",
+			"day": 107,
+			"project": "Social",
+			"section": null,
+			"labels": ["calls"],
+			"place": null,
+			"time": "18:00"
+		},
+		{
+			"title": "book GP appointment",
+			"day": 107,
+			"project": "Health",
+			"section": "Doctors",
+			"labels": ["calls"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "chase the landlord about the invoice",
+			"day": 108,
+			"project": null,
+			"section": null,
+			"labels": ["waiting"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "follow up with Priya on the launch",
+			"day": 108,
+			"project": "Work",
+			"section": "Admin",
+			"labels": ["email"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "ios: sharing polish",
+			"day": 108,
+			"project": "ProcrastiMate",
+			"section": "iOS",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "get cheese",
+			"day": 109,
+			"project": "Groceries",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "email Sarah about the offsite",
+			"day": 109,
+			"project": "Work",
+			"section": "Admin",
+			"labels": ["email"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "images is slow",
+			"day": 110,
+			"project": "ProcrastiMate",
+			"section": "Bugs",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "leg day",
+			"day": 111,
+			"project": "Health",
+			"section": "Fitness",
+			"labels": [],
+			"place": "Gym",
+			"time": "07:00"
+		},
+		{
+			"title": "fix images bug",
+			"day": 111,
+			"project": "ProcrastiMate",
+			"section": "Bugs",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "buy antihistamines",
+			"day": 111,
+			"project": "Health",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Pharmacy",
+			"time": null
+		},
+		{
+			"title": "weekly planning",
+			"day": 112,
+			"project": "Work",
+			"section": "Meetings",
+			"labels": [],
+			"place": null,
+			"time": "09:30"
+		},
+		{
+			"title": "svelte search transition",
+			"day": 112,
+			"project": "ProcrastiMate",
+			"section": "Web",
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "subtasks crashes on launch",
+			"day": 113,
+			"project": "ProcrastiMate",
+			"section": "Bugs",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "swim",
+			"day": 113,
+			"project": "Health",
+			"section": "Fitness",
+			"labels": [],
+			"place": "Gym",
+			"time": "18:30"
+		},
+		{
+			"title": "email Lena about the roadmap",
+			"day": 113,
+			"project": "Work",
+			"section": "Admin",
+			"labels": ["email"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "check phone statement",
+			"day": 114,
+			"project": "Finance",
+			"section": "Bills",
+			"labels": ["quick"],
+			"place": null,
+			"time": "09:00"
+		},
+		{
+			"title": "prepare standup",
+			"day": 114,
+			"project": "Work",
+			"section": "Meetings",
+			"labels": [],
+			"place": null,
+			"time": "09:30"
+		},
+		{
+			"title": "run the dishwasher",
+			"day": 115,
+			"project": "Home",
+			"section": null,
+			"labels": ["quick"],
+			"place": "Home",
+			"time": null
+		},
+		{
+			"title": "fix the bathroom light",
+			"day": 115,
+			"project": "Home",
+			"section": "Repairs",
+			"labels": ["errands"],
+			"place": "Hardware store",
+			"time": null
+		},
+		{
+			"title": "bug: reminders loses edits",
+			"day": 115,
+			"project": "ProcrastiMate",
+			"section": "Bugs",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "yoga class",
+			"day": 116,
+			"project": "Health",
+			"section": "Fitness",
+			"labels": [],
+			"place": "Gym",
+			"time": "18:30"
+		},
+		{
+			"title": "out of coffee beans",
+			"day": 116,
+			"project": "Groceries",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "pick up onions",
+			"day": 116,
+			"project": "Groceries",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "write feedback for data candidate",
+			"day": 117,
+			"project": "Work",
+			"section": "Hiring",
+			"labels": [],
+			"place": null,
+			"time": "13:00"
+		},
+		{
+			"title": "1:1 with the recruiter",
+			"day": 117,
+			"project": "Work",
+			"section": "Meetings",
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "sync with the recruiter",
+			"day": 117,
+			"project": "Work",
+			"section": "Meetings",
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "get screws for the leaky tap",
+			"day": 118,
+			"project": "Home",
+			"section": "Repairs",
+			"labels": ["errands"],
+			"place": "Hardware store",
+			"time": null
+		},
+		{
+			"title": "yoga class",
+			"day": 118,
+			"project": "Health",
+			"section": "Fitness",
+			"labels": [],
+			"place": "Gym",
+			"time": null
+		},
+		{
+			"title": "think through the API architecture",
+			"day": 118,
+			"project": "Work",
+			"section": null,
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "gym",
+			"day": 119,
+			"project": "Health",
+			"section": "Fitness",
+			"labels": [],
+			"place": "Gym",
+			"time": "07:30"
+		},
+		{
+			"title": "call mom",
+			"day": 120,
+			"project": "Social",
+			"section": null,
+			"labels": ["calls"],
+			"place": null,
+			"time": "18:00"
+		},
+		{
+			"title": "swiftui ramble animation",
+			"day": 120,
+			"project": "ProcrastiMate",
+			"section": "iOS",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "gym",
+			"day": 121,
+			"project": "Health",
+			"section": "Fitness",
+			"labels": [],
+			"place": "Gym",
+			"time": "18:30"
+		},
+		{
+			"title": "swim",
+			"day": 122,
+			"project": "Health",
+			"section": "Fitness",
+			"labels": [],
+			"place": "Gym",
+			"time": "07:30"
+		},
+		{
+			"title": "get pasta",
+			"day": 123,
+			"project": "Groceries",
+			"section": null,
+			"labels": [],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "sync with Lena",
+			"day": 124,
+			"project": "Work",
+			"section": "Meetings",
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "onions",
+			"day": 124,
+			"project": "Groceries",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "out of rice",
+			"day": 124,
+			"project": "Groceries",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "prep 1:1 Marco",
+			"day": 125,
+			"project": "Work",
+			"section": "Meetings",
+			"labels": [],
+			"place": null,
+			"time": "14:00"
+		},
+		{
+			"title": "file P60",
+			"day": 125,
+			"project": "Finance",
+			"section": "Taxes",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "fix the fence",
+			"day": 126,
+			"project": "Home",
+			"section": "Repairs",
+			"labels": ["errands"],
+			"place": "Hardware store",
+			"time": null
+		},
+		{
+			"title": "gym",
+			"day": 126,
+			"project": "Health",
+			"section": "Fitness",
+			"labels": [],
+			"place": "Gym",
+			"time": "18:30"
+		},
+		{
+			"title": "push day",
+			"day": 126,
+			"project": "Health",
+			"section": "Fitness",
+			"labels": [],
+			"place": "Gym",
+			"time": "07:00"
+		},
+		{
+			"title": "research an e-bike",
+			"day": 127,
+			"project": null,
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "reply to Ana about the weekend",
+			"day": 127,
+			"project": "Social",
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "weekly planning",
+			"day": 127,
+			"project": "Work",
+			"section": "Meetings",
+			"labels": [],
+			"place": null,
+			"time": "09:30"
+		},
+		{
+			"title": "check internet statement",
+			"day": 128,
+			"project": "Finance",
+			"section": "Bills",
+			"labels": ["quick"],
+			"place": null,
+			"time": "09:00"
+		},
+		{
+			"title": "file bank statements",
+			"day": 128,
+			"project": "Finance",
+			"section": "Taxes",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "buy pasta and milk",
+			"day": 128,
+			"project": "Groceries",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "get screws for the fence",
+			"day": 129,
+			"project": "Home",
+			"section": "Repairs",
+			"labels": ["errands"],
+			"place": "Hardware store",
+			"time": null
+		},
+		{
+			"title": "look into an e-bike",
+			"day": 129,
+			"project": null,
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "fix sharing bug",
+			"day": 130,
+			"project": "ProcrastiMate",
+			"section": "Bugs",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "write feedback for data candidate",
+			"day": 131,
+			"project": "Work",
+			"section": "Hiring",
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "write feedback for design candidate",
+			"day": 132,
+			"project": "Work",
+			"section": "Hiring",
+			"labels": [],
+			"place": null,
+			"time": "13:00"
+		},
+		{
+			"title": "dinner with Ana",
+			"day": 132,
+			"project": "Social",
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "credit card bill",
+			"day": 133,
+			"project": "Finance",
+			"section": "Bills",
+			"labels": ["quick"],
+			"place": null,
+			"time": "09:00"
+		},
+		{
+			"title": "replace the leaky tap",
+			"day": 133,
+			"project": "Home",
+			"section": "Repairs",
+			"labels": ["errands"],
+			"place": "Hardware store",
+			"time": null
+		},
+		{
+			"title": "sync with Priya",
+			"day": 133,
+			"project": "Work",
+			"section": "Meetings",
+			"labels": [],
+			"place": null,
+			"time": "14:00"
+		},
+		{
+			"title": "get bread",
+			"day": 134,
+			"project": "Groceries",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "prep 1:1 Sarah",
+			"day": 134,
+			"project": "Work",
+			"section": "Meetings",
+			"labels": [],
+			"place": null,
+			"time": "14:00"
+		},
+		{
+			"title": "find P60",
+			"day": 134,
+			"project": "Finance",
+			"section": "Taxes",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "think through the API architecture",
+			"day": 135,
+			"project": "Work",
+			"section": null,
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "call mom",
+			"day": 135,
+			"project": "Social",
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": "18:00"
+		},
+		{
+			"title": "run 5k",
+			"day": 135,
+			"project": "Health",
+			"section": "Fitness",
+			"labels": [],
+			"place": "Gym",
+			"time": "07:30"
+		},
+		{
+			"title": "review design candidate CV",
+			"day": 136,
+			"project": "Work",
+			"section": "Hiring",
+			"labels": [],
+			"place": null,
+			"time": "16:00"
+		},
+		{
+			"title": "refill antihistamines",
+			"day": 136,
+			"project": "Health",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Pharmacy",
+			"time": null
+		},
+		{
+			"title": "file invoices",
+			"day": 137,
+			"project": "Finance",
+			"section": "Taxes",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "tidy kitchen",
+			"day": 137,
+			"project": "Home",
+			"section": "Kitchen",
+			"labels": [],
+			"place": "Home",
+			"time": null
+		},
+		{
+			"title": "laundry",
+			"day": 137,
+			"project": "Home",
+			"section": null,
+			"labels": ["quick"],
+			"place": "Home",
+			"time": "20:00"
+		},
+		{
+			"title": "sync with Sarah",
+			"day": 138,
+			"project": "Work",
+			"section": "Meetings",
+			"labels": [],
+			"place": null,
+			"time": "10:00"
+		},
+		{
+			"title": "birthday present for dad",
+			"day": 138,
+			"project": "Social",
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "ring Ana",
+			"day": 138,
+			"project": "Social",
+			"section": null,
+			"labels": ["calls"],
+			"place": null,
+			"time": "18:00"
+		},
+		{
+			"title": "reply to mom about the weekend",
+			"day": 139,
+			"project": "Social",
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "web: ramble keyboard shortcuts",
+			"day": 139,
+			"project": "ProcrastiMate",
+			"section": "Web",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "email Priya about budget",
+			"day": 140,
+			"project": "Work",
+			"section": "Admin",
+			"labels": ["email"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "write feedback for data candidate",
+			"day": 140,
+			"project": null,
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": "16:00"
+		},
+		{
+			"title": "get sealant for the leaky tap",
+			"day": 140,
+			"project": "Home",
+			"section": "Repairs",
+			"labels": ["errands"],
+			"place": "Hardware store",
+			"time": null
+		},
+		{
+			"title": "olive oil",
+			"day": 141,
+			"project": "Groceries",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "ramble crashes on launch",
+			"day": 142,
+			"project": null,
+			"section": null,
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "quick add crashes on launch",
+			"day": 142,
+			"project": "ProcrastiMate",
+			"section": "Bugs",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "phone the plumber back",
+			"day": 143,
+			"project": "Social",
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": "18:30"
+		},
+		{
+			"title": "submit expenses",
+			"day": 143,
+			"project": "Work",
+			"section": "Admin",
+			"labels": ["quick"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "pull day",
+			"day": 144,
+			"project": "Health",
+			"section": "Fitness",
+			"labels": [],
+			"place": "Gym",
+			"time": "18:30"
+		},
+		{
+			"title": "write feedback for design candidate",
+			"day": 144,
+			"project": "Work",
+			"section": "Hiring",
+			"labels": [],
+			"place": null,
+			"time": "16:00"
+		},
+		{
+			"title": "birthday present for Tom",
+			"day": 144,
+			"project": "Social",
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "follow up with Marco on the launch",
+			"day": 145,
+			"project": "Work",
+			"section": "Admin",
+			"labels": ["email"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "deep clean oven",
+			"day": 145,
+			"project": "Home",
+			"section": "Kitchen",
+			"labels": [],
+			"place": "Home",
+			"time": null
+		},
+		{
+			"title": "check phone statement",
+			"day": 145,
+			"project": "Finance",
+			"section": "Bills",
+			"labels": ["quick"],
+			"place": null,
+			"time": "09:00"
+		},
+		{
+			"title": "phone Elena back",
+			"day": 146,
+			"project": "Social",
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": "18:30"
+		},
+		{
+			"title": "web search empty state",
+			"day": 146,
+			"project": null,
+			"section": null,
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "phone the plumber back",
+			"day": 146,
+			"project": "Social",
+			"section": null,
+			"labels": ["calls"],
+			"place": null,
+			"time": "18:00"
+		},
+		{
+			"title": "get bananas",
+			"day": 147,
+			"project": "Groceries",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "web reminders empty state",
+			"day": 147,
+			"project": "ProcrastiMate",
+			"section": "Web",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "follow up with Marco on the contract",
+			"day": 147,
+			"project": "Work",
+			"section": "Admin",
+			"labels": ["email"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "email the recruiter about budget",
+			"day": 148,
+			"project": "Work",
+			"section": "Admin",
+			"labels": ["email"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "internet bill",
+			"day": 148,
+			"project": null,
+			"section": null,
+			"labels": ["quick"],
+			"place": null,
+			"time": "09:00"
+		},
+		{
+			"title": "get apples",
+			"day": 148,
+			"project": "Groceries",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "pay water",
+			"day": 149,
+			"project": "Finance",
+			"section": "Bills",
+			"labels": [],
+			"place": null,
+			"time": "09:00"
+		},
+		{
+			"title": "svelte search transition",
+			"day": 150,
+			"project": "ProcrastiMate",
+			"section": "Web",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "gym",
+			"day": 151,
+			"project": "Health",
+			"section": "Fitness",
+			"labels": [],
+			"place": "Gym",
+			"time": "18:30"
+		},
+		{
+			"title": "call mom",
+			"day": 152,
+			"project": "Social",
+			"section": null,
+			"labels": ["calls"],
+			"place": null,
+			"time": "18:00"
+		},
+		{
+			"title": "call mom",
+			"day": 152,
+			"project": "Social",
+			"section": null,
+			"labels": ["calls"],
+			"place": null,
+			"time": "18:00"
+		},
+		{
+			"title": "reply to Priya",
+			"day": 152,
+			"project": "Work",
+			"section": "Admin",
+			"labels": ["email"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "notes on that HN post",
+			"day": 153,
+			"project": null,
+			"section": null,
+			"labels": ["reading"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "call dad",
+			"day": 153,
+			"project": "Social",
+			"section": null,
+			"labels": ["calls"],
+			"place": null,
+			"time": "19:00"
+		},
+		{
+			"title": "dinner with the landlord",
+			"day": 154,
+			"project": "Social",
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "file bank statements",
+			"day": 154,
+			"project": "Finance",
+			"section": "Taxes",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "trim the hedge",
+			"day": 155,
+			"project": "Home",
+			"section": "Garden",
+			"labels": [],
+			"place": "Home",
+			"time": null
+		},
+		{
+			"title": "chase Dev about the invoice",
+			"day": 155,
+			"project": null,
+			"section": null,
+			"labels": ["waiting"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "deep clean oven",
+			"day": 156,
+			"project": "Home",
+			"section": "Kitchen",
+			"labels": [],
+			"place": "Home",
+			"time": null
+		},
+		{
+			"title": "renew laptop insurance",
+			"day": 156,
+			"project": "Work",
+			"section": "Admin",
+			"labels": ["quick"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "research a new camera",
+			"day": 156,
+			"project": null,
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "standup notes",
+			"day": 157,
+			"project": "Work",
+			"section": "Meetings",
+			"labels": [],
+			"place": null,
+			"time": "09:30"
+		},
+		{
+			"title": "dinner with Ana",
+			"day": 157,
+			"project": "Social",
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "prep 1:1 the recruiter",
+			"day": 158,
+			"project": "Work",
+			"section": "Meetings",
+			"labels": [],
+			"place": null,
+			"time": "15:30"
+		},
+		{
+			"title": "get onions",
+			"day": 158,
+			"project": "Groceries",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "pull day",
+			"day": 159,
+			"project": "Health",
+			"section": "Fitness",
+			"labels": [],
+			"place": "Gym",
+			"time": "18:30"
+		},
+		{
+			"title": "run 5k",
+			"day": 159,
+			"project": "Health",
+			"section": "Fitness",
+			"labels": [],
+			"place": "Gym",
+			"time": "18:30"
+		},
+		{
+			"title": "buy eye drops",
+			"day": 159,
+			"project": "Health",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Pharmacy",
+			"time": null
+		},
+		{
+			"title": "sync is slow",
+			"day": 160,
+			"project": "ProcrastiMate",
+			"section": "Bugs",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "waiting on the recruiter for approval",
+			"day": 161,
+			"project": null,
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "web: reminders keyboard shortcuts",
+			"day": 161,
+			"project": "ProcrastiMate",
+			"section": "Web",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "interview data candidate",
+			"day": 162,
+			"project": "Work",
+			"section": "Hiring",
+			"labels": [],
+			"place": null,
+			"time": "13:00"
+		},
+		{
+			"title": "notes on that HN post",
+			"day": 163,
+			"project": null,
+			"section": null,
+			"labels": ["reading"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "fill in timesheet",
+			"day": 163,
+			"project": "Work",
+			"section": "Admin",
+			"labels": ["quick"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "trim the hedge",
+			"day": 164,
+			"project": "Home",
+			"section": "Garden",
+			"labels": [],
+			"place": "Home",
+			"time": null
+		},
+		{
+			"title": "review data candidate CV",
+			"day": 164,
+			"project": "Work",
+			"section": "Hiring",
+			"labels": [],
+			"place": null,
+			"time": "16:00"
+		},
+		{
+			"title": "bug: ramble loses edits",
+			"day": 165,
+			"project": "ProcrastiMate",
+			"section": "Bugs",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "get coffee beans",
+			"day": 165,
+			"project": "Groceries",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "ring mom",
+			"day": 166,
+			"project": "Social",
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": "19:00"
+		},
+		{
+			"title": "web labels empty state",
+			"day": 166,
+			"project": "ProcrastiMate",
+			"section": "Web",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "get milk",
+			"day": 166,
+			"project": "Groceries",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "gym",
+			"day": 167,
+			"project": "Health",
+			"section": "Fitness",
+			"labels": [],
+			"place": "Gym",
+			"time": "07:00"
+		},
+		{
+			"title": "images crashes on launch",
+			"day": 167,
+			"project": "ProcrastiMate",
+			"section": "Bugs",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "call mom",
+			"day": 167,
+			"project": "Social",
+			"section": null,
+			"labels": ["calls"],
+			"place": null,
+			"time": "18:00"
+		},
+		{
+			"title": "phone Mihai back",
+			"day": 168,
+			"project": "Social",
+			"section": null,
+			"labels": ["calls"],
+			"place": null,
+			"time": "18:00"
+		},
+		{
+			"title": "quick add crashes on launch",
+			"day": 169,
+			"project": "ProcrastiMate",
+			"section": "Bugs",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "send invoices to accountant",
+			"day": 169,
+			"project": "Finance",
+			"section": "Taxes",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "finish that HN post",
+			"day": 169,
+			"project": null,
+			"section": null,
+			"labels": ["reading"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "ring mom",
+			"day": 170,
+			"project": "Social",
+			"section": null,
+			"labels": ["calls"],
+			"place": null,
+			"time": "19:00"
+		},
+		{
+			"title": "write feedback for data candidate",
+			"day": 171,
+			"project": "Work",
+			"section": "Hiring",
+			"labels": [],
+			"place": null,
+			"time": "16:00"
+		},
+		{
+			"title": "laundry",
+			"day": 171,
+			"project": "Home",
+			"section": null,
+			"labels": ["quick"],
+			"place": "Home",
+			"time": "20:00"
+		},
+		{
+			"title": "fix the inbox bug",
+			"day": 172,
+			"project": "ProcrastiMate",
+			"section": "Bugs",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "yoga class",
+			"day": 172,
+			"project": "Health",
+			"section": "Fitness",
+			"labels": [],
+			"place": "Gym",
+			"time": null
+		},
+		{
+			"title": "get a washer for the shower head",
+			"day": 172,
+			"project": "Home",
+			"section": "Repairs",
+			"labels": ["errands"],
+			"place": "Hardware store",
+			"time": null
+		},
+		{
+			"title": "birthday present for dad",
+			"day": 173,
+			"project": "Social",
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "1:1 with Lena",
+			"day": 173,
+			"project": "Work",
+			"section": "Meetings",
+			"labels": [],
+			"place": null,
+			"time": "15:30"
+		},
+		{
+			"title": "reply to Ana about the weekend",
+			"day": 173,
+			"project": "Social",
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "standup notes",
+			"day": 174,
+			"project": "Work",
+			"section": "Meetings",
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "phone Radu back",
+			"day": 175,
+			"project": "Social",
+			"section": null,
+			"labels": ["calls"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "fix subtasks bug",
+			"day": 175,
+			"project": "ProcrastiMate",
+			"section": "Bugs",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "ring Elena",
+			"day": 176,
+			"project": "Social",
+			"section": null,
+			"labels": ["calls"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "web: the inbox keyboard shortcuts",
+			"day": 176,
+			"project": "ProcrastiMate",
+			"section": "Web",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "book travel for the offsite",
+			"day": 176,
+			"project": null,
+			"section": null,
+			"labels": ["quick"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "water the tomatoes",
+			"day": 177,
+			"project": "Home",
+			"section": "Garden",
+			"labels": [],
+			"place": "Home",
+			"time": null
+		},
+		{
+			"title": "bug: images loses edits",
+			"day": 177,
+			"project": "ProcrastiMate",
+			"section": "Bugs",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "email the recruiter about the roadmap",
+			"day": 177,
+			"project": "Work",
+			"section": "Admin",
+			"labels": ["email"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "clean the kitchen",
+			"day": 178,
+			"project": "Home",
+			"section": "Kitchen",
+			"labels": [],
+			"place": "Home",
+			"time": null
+		},
+		{
+			"title": "leg day",
+			"day": 178,
+			"project": "Health",
+			"section": "Fitness",
+			"labels": [],
+			"place": "Gym",
+			"time": null
+		},
+		{
+			"title": "water the plants",
+			"day": 178,
+			"project": "Home",
+			"section": "Garden",
+			"labels": [],
+			"place": "Home",
+			"time": null
+		},
+		{
+			"title": "pick up bread",
+			"day": 179,
+			"project": "Groceries",
+			"section": null,
+			"labels": [],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "out of yogurt",
+			"day": 179,
+			"project": "Groceries",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "idea: an e-bike",
+			"day": 179,
+			"project": null,
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "pick up chicken",
+			"day": 180,
+			"project": "Groceries",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "reply to Elena about the weekend",
+			"day": 180,
+			"project": "Social",
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "interview data candidate",
+			"day": 180,
+			"project": "Work",
+			"section": "Hiring",
+			"labels": [],
+			"place": null,
+			"time": "13:00"
+		},
+		{
+			"title": "take out the bins",
+			"day": 181,
+			"project": "Home",
+			"section": null,
+			"labels": ["quick"],
+			"place": "Home",
+			"time": "21:00"
+		},
+		{
+			"title": "read that HN post",
+			"day": 181,
+			"project": null,
+			"section": null,
+			"labels": ["reading"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "take out the bins",
+			"day": 182,
+			"project": "Home",
+			"section": null,
+			"labels": ["quick"],
+			"place": "Home",
+			"time": null
+		},
+		{
+			"title": "phone Elena back",
+			"day": 182,
+			"project": "Social",
+			"section": null,
+			"labels": ["calls"],
+			"place": null,
+			"time": "19:00"
+		},
+		{
+			"title": "sync with Sarah",
+			"day": 183,
+			"project": "Work",
+			"section": "Meetings",
+			"labels": [],
+			"place": null,
+			"time": "14:00"
+		},
+		{
+			"title": "web: quick add keyboard shortcuts",
+			"day": 184,
+			"project": "ProcrastiMate",
+			"section": "Web",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "replace the shower head",
+			"day": 184,
+			"project": "Home",
+			"section": "Repairs",
+			"labels": ["errands"],
+			"place": "Hardware store",
+			"time": null
+		},
+		{
+			"title": "repot plants",
+			"day": 185,
+			"project": "Home",
+			"section": "Garden",
+			"labels": [],
+			"place": "Home",
+			"time": null
+		},
+		{
+			"title": "yoga class",
+			"day": 185,
+			"project": "Health",
+			"section": "Fitness",
+			"labels": [],
+			"place": "Gym",
+			"time": "07:00"
+		},
+		{
+			"title": "notes on Atomic Habits",
+			"day": 185,
+			"project": null,
+			"section": null,
+			"labels": ["reading"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "swim",
+			"day": 186,
+			"project": "Health",
+			"section": "Fitness",
+			"labels": [],
+			"place": "Gym",
+			"time": null
+		},
+		{
+			"title": "research a new camera",
+			"day": 187,
+			"project": null,
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "buy spinach",
+			"day": 188,
+			"project": "Groceries",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "yoga class",
+			"day": 188,
+			"project": "Health",
+			"section": "Fitness",
+			"labels": [],
+			"place": "Gym",
+			"time": "07:30"
+		},
+		{
+			"title": "draft permissions proposal",
+			"day": 188,
+			"project": "Work",
+			"section": null,
+			"labels": ["deep work", "computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "follow up with Priya on the offsite",
+			"day": 189,
+			"project": "Work",
+			"section": "Admin",
+			"labels": ["email"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "dinner with dad",
+			"day": 190,
+			"project": "Social",
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "fix ramble bug",
+			"day": 190,
+			"project": "ProcrastiMate",
+			"section": "Bugs",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "sharing is slow",
+			"day": 190,
+			"project": "ProcrastiMate",
+			"section": "Bugs",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "push day",
+			"day": 191,
+			"project": null,
+			"section": null,
+			"labels": [],
+			"place": "Gym",
+			"time": "07:00"
+		},
+		{
+			"title": "1:1 with the recruiter",
+			"day": 191,
+			"project": "Work",
+			"section": "Meetings",
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "finish Atomic Habits",
+			"day": 191,
+			"project": null,
+			"section": null,
+			"labels": ["reading"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "svelte labels transition",
+			"day": 192,
+			"project": "ProcrastiMate",
+			"section": "Web",
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "birthday present for Radu",
+			"day": 192,
+			"project": "Social",
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "idea: learning Portuguese",
+			"day": 193,
+			"project": null,
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "standup notes",
+			"day": 193,
+			"project": "Work",
+			"section": "Meetings",
+			"labels": [],
+			"place": null,
+			"time": "09:30"
+		},
+		{
+			"title": "fix search bug",
+			"day": 194,
+			"project": "ProcrastiMate",
+			"section": "Bugs",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "water the monstera",
+			"day": 194,
+			"project": "Home",
+			"section": "Garden",
+			"labels": [],
+			"place": "Home",
+			"time": null
+		},
+		{
+			"title": "interview backend candidate",
+			"day": 195,
+			"project": "Work",
+			"section": "Hiring",
+			"labels": [],
+			"place": null,
+			"time": "13:00"
+		},
+		{
+			"title": "clean the fridge",
+			"day": 196,
+			"project": "Home",
+			"section": "Kitchen",
+			"labels": [],
+			"place": "Home",
+			"time": null
+		},
+		{
+			"title": "write design doc for the API",
+			"day": 197,
+			"project": "Work",
+			"section": null,
+			"labels": ["deep work", "computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "sync with Sarah",
+			"day": 197,
+			"project": "Work",
+			"section": "Meetings",
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "mow the lawn",
+			"day": 197,
+			"project": "Home",
+			"section": "Garden",
+			"labels": [],
+			"place": "Home",
+			"time": null
+		},
+		{
+			"title": "iOS quick add haptics",
+			"day": 198,
+			"project": "ProcrastiMate",
+			"section": "iOS",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "swiftui reminders animation",
+			"day": 198,
+			"project": "ProcrastiMate",
+			"section": "iOS",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "pull day",
+			"day": 198,
+			"project": "Health",
+			"section": "Fitness",
+			"labels": [],
+			"place": "Gym",
+			"time": "18:30"
+		},
+		{
+			"title": "out of chicken",
+			"day": 199,
+			"project": "Groceries",
+			"section": null,
+			"labels": [],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "chase the landlord about the contract",
+			"day": 199,
+			"project": null,
+			"section": null,
+			"labels": ["waiting"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "book travel for the offsite",
+			"day": 199,
+			"project": "Work",
+			"section": "Admin",
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "svelte quick add transition",
+			"day": 200,
+			"project": "ProcrastiMate",
+			"section": "Web",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "deep clean fridge",
+			"day": 200,
+			"project": "Home",
+			"section": "Kitchen",
+			"labels": [],
+			"place": "Home",
+			"time": null
+		},
+		{
+			"title": "take out the bins",
+			"day": 201,
+			"project": "Home",
+			"section": null,
+			"labels": ["quick"],
+			"place": "Home",
+			"time": "21:00"
+		},
+		{
+			"title": "standup notes",
+			"day": 201,
+			"project": null,
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": "09:30"
+		},
+		{
+			"title": "svelte labels transition",
+			"day": 201,
+			"project": "ProcrastiMate",
+			"section": "Web",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "buy eggs",
+			"day": 202,
+			"project": "Groceries",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "deep clean kitchen",
+			"day": 202,
+			"project": "Home",
+			"section": "Kitchen",
+			"labels": [],
+			"place": "Home",
+			"time": null
+		},
+		{
+			"title": "replace the fence",
+			"day": 202,
+			"project": "Home",
+			"section": "Repairs",
+			"labels": ["errands"],
+			"place": "Hardware store",
+			"time": null
+		},
+		{
+			"title": "get asthma prescription",
+			"day": 203,
+			"project": "Health",
+			"section": "Doctors",
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "buy bread",
+			"day": 204,
+			"project": "Groceries",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "get rice",
+			"day": 205,
+			"project": "Groceries",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "interview iOS candidate",
+			"day": 205,
+			"project": "Work",
+			"section": "Hiring",
+			"labels": [],
+			"place": null,
+			"time": "13:00"
+		},
+		{
+			"title": "bananas",
+			"day": 206,
+			"project": "Groceries",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "check phone statement",
+			"day": 206,
+			"project": "Finance",
+			"section": "Bills",
+			"labels": ["quick"],
+			"place": null,
+			"time": "09:00"
+		},
+		{
+			"title": "out of bananas",
+			"day": 207,
+			"project": "Groceries",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "find P60",
+			"day": 208,
+			"project": "Finance",
+			"section": "Taxes",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "yogurt",
+			"day": 209,
+			"project": "Groceries",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "prep 1:1 Dev",
+			"day": 209,
+			"project": "Work",
+			"section": "Meetings",
+			"labels": [],
+			"place": null,
+			"time": "11:00"
+		},
+		{
+			"title": "quick add is slow",
+			"day": 210,
+			"project": "ProcrastiMate",
+			"section": "Bugs",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "book travel for the offsite",
+			"day": 210,
+			"project": "Work",
+			"section": "Admin",
+			"labels": ["quick"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "bug: reminders loses edits",
+			"day": 210,
+			"project": "ProcrastiMate",
+			"section": "Bugs",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "svelte images transition",
+			"day": 211,
+			"project": "ProcrastiMate",
+			"section": "Web",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "run 5k",
+			"day": 211,
+			"project": "Health",
+			"section": "Fitness",
+			"labels": [],
+			"place": "Gym",
+			"time": "07:00"
+		},
+		{
+			"title": "pick up vitamin D from pharmacy",
+			"day": 212,
+			"project": "Health",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Pharmacy",
+			"time": null
+		},
+		{
+			"title": "find P60",
+			"day": 213,
+			"project": "Finance",
+			"section": "Taxes",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "write design doc for billing",
+			"day": 213,
+			"project": "Work",
+			"section": null,
+			"labels": ["deep work", "computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "swiftui quick add animation",
+			"day": 213,
+			"project": "ProcrastiMate",
+			"section": "iOS",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "replace the leaky tap",
+			"day": 214,
+			"project": "Home",
+			"section": "Repairs",
+			"labels": ["errands"],
+			"place": "Hardware store",
+			"time": null
+		},
+		{
+			"title": "ios: quick add polish",
+			"day": 215,
+			"project": "ProcrastiMate",
+			"section": "iOS",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "finish that HN post",
+			"day": 215,
+			"project": null,
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "research learning Portuguese",
+			"day": 216,
+			"project": null,
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "take out the bins",
+			"day": 217,
+			"project": "Home",
+			"section": null,
+			"labels": ["quick"],
+			"place": "Home",
+			"time": null
+		},
+		{
+			"title": "follow up with Lena on the contract",
+			"day": 217,
+			"project": null,
+			"section": null,
+			"labels": ["email"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "waiting on Priya for the deposit",
+			"day": 217,
+			"project": null,
+			"section": null,
+			"labels": ["waiting"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "dinner with mom",
+			"day": 218,
+			"project": "Social",
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "buy spinach and yogurt",
+			"day": 219,
+			"project": "Groceries",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "svelte ramble transition",
+			"day": 219,
+			"project": "ProcrastiMate",
+			"section": "Web",
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "write design doc for billing",
+			"day": 220,
+			"project": "Work",
+			"section": null,
+			"labels": ["deep work", "computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "call dad",
+			"day": 221,
+			"project": "Social",
+			"section": null,
+			"labels": ["calls"],
+			"place": null,
+			"time": "19:00"
+		},
+		{
+			"title": "fix the bathroom light",
+			"day": 222,
+			"project": null,
+			"section": null,
+			"labels": ["errands"],
+			"place": "Hardware store",
+			"time": null
+		},
+		{
+			"title": "reply to Dev",
+			"day": 222,
+			"project": "Work",
+			"section": "Admin",
+			"labels": ["email"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "fix sync bug",
+			"day": 223,
+			"project": "ProcrastiMate",
+			"section": "Bugs",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "ios: sharing polish",
+			"day": 223,
+			"project": "ProcrastiMate",
+			"section": "iOS",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "write feedback for iOS candidate",
+			"day": 223,
+			"project": "Work",
+			"section": "Hiring",
+			"labels": [],
+			"place": null,
+			"time": "13:00"
+		},
+		{
+			"title": "idea: an e-bike",
+			"day": 224,
+			"project": null,
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "call mom",
+			"day": 224,
+			"project": "Social",
+			"section": null,
+			"labels": ["calls"],
+			"place": null,
+			"time": "18:00"
+		},
+		{
+			"title": "think through billing architecture",
+			"day": 224,
+			"project": "Work",
+			"section": null,
+			"labels": ["deep work", "computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "svelte sharing transition",
+			"day": 225,
+			"project": "ProcrastiMate",
+			"section": "Web",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "prep 1:1 Sarah",
+			"day": 225,
+			"project": "Work",
+			"section": "Meetings",
+			"labels": [],
+			"place": null,
+			"time": "15:30"
+		},
+		{
+			"title": "ios: search polish",
+			"day": 225,
+			"project": "ProcrastiMate",
+			"section": "iOS",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "get apples",
+			"day": 226,
+			"project": "Groceries",
+			"section": null,
+			"labels": [],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "email Priya about the offsite",
+			"day": 226,
+			"project": "Work",
+			"section": "Admin",
+			"labels": ["email"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "run 5k",
+			"day": 226,
+			"project": "Health",
+			"section": "Fitness",
+			"labels": [],
+			"place": "Gym",
+			"time": "07:00"
+		},
+		{
+			"title": "pick up chicken",
+			"day": 227,
+			"project": "Groceries",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "prep 1:1 Lena",
+			"day": 227,
+			"project": "Work",
+			"section": "Meetings",
+			"labels": [],
+			"place": null,
+			"time": "11:00"
+		},
+		{
+			"title": "call mom",
+			"day": 227,
+			"project": null,
+			"section": null,
+			"labels": ["calls"],
+			"place": null,
+			"time": "18:00"
+		},
+		{
+			"title": "leg day",
+			"day": 228,
+			"project": "Health",
+			"section": "Fitness",
+			"labels": [],
+			"place": "Gym",
+			"time": null
+		},
+		{
+			"title": "standup notes",
+			"day": 229,
+			"project": "Work",
+			"section": "Meetings",
+			"labels": [],
+			"place": null,
+			"time": "09:30"
+		},
+		{
+			"title": "fix the inbox bug",
+			"day": 230,
+			"project": "ProcrastiMate",
+			"section": "Bugs",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "send bank statements to accountant",
+			"day": 230,
+			"project": "Finance",
+			"section": "Taxes",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "take out the bins",
+			"day": 231,
+			"project": "Home",
+			"section": null,
+			"labels": ["quick"],
+			"place": "Home",
+			"time": null
+		},
+		{
+			"title": "interview design candidate",
+			"day": 231,
+			"project": "Work",
+			"section": "Hiring",
+			"labels": [],
+			"place": null,
+			"time": "16:00"
+		},
+		{
+			"title": "1:1 with the recruiter",
+			"day": 232,
+			"project": "Work",
+			"section": "Meetings",
+			"labels": [],
+			"place": null,
+			"time": "11:00"
+		},
+		{
+			"title": "sync with Marco",
+			"day": 232,
+			"project": "Work",
+			"section": "Meetings",
+			"labels": [],
+			"place": null,
+			"time": "14:00"
+		},
+		{
+			"title": "review iOS candidate CV",
+			"day": 232,
+			"project": "Work",
+			"section": "Hiring",
+			"labels": [],
+			"place": null,
+			"time": "13:00"
+		},
+		{
+			"title": "spinach",
+			"day": 233,
+			"project": "Groceries",
+			"section": null,
+			"labels": [],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "swiftui sharing animation",
+			"day": 233,
+			"project": "ProcrastiMate",
+			"section": "iOS",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "web quick add empty state",
+			"day": 233,
+			"project": "ProcrastiMate",
+			"section": "Web",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "standup notes",
+			"day": 234,
+			"project": "Work",
+			"section": "Meetings",
+			"labels": [],
+			"place": null,
+			"time": "09:30"
+		},
+		{
+			"title": "out of rice",
+			"day": 234,
+			"project": null,
+			"section": null,
+			"labels": ["errands"],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "take out the bins",
+			"day": 234,
+			"project": "Home",
+			"section": null,
+			"labels": ["quick"],
+			"place": "Home",
+			"time": "21:00"
+		},
+		{
+			"title": "buy spinach",
+			"day": 235,
+			"project": "Groceries",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "reminders is slow",
+			"day": 236,
+			"project": "ProcrastiMate",
+			"section": "Bugs",
+			"labels": ["computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "call mom",
+			"day": 236,
+			"project": "Social",
+			"section": null,
+			"labels": ["calls"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "leg day",
+			"day": 237,
+			"project": "Health",
+			"section": "Fitness",
+			"labels": [],
+			"place": "Gym",
+			"time": "07:00"
+		},
+		{
+			"title": "get coffee beans",
+			"day": 237,
+			"project": "Groceries",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "dinner with mom",
+			"day": 237,
+			"project": "Social",
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "pick up bananas",
+			"day": 238,
+			"project": "Groceries",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "check internet statement",
+			"day": 238,
+			"project": "Finance",
+			"section": "Bills",
+			"labels": ["quick"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "pay electricity",
+			"day": 239,
+			"project": "Finance",
+			"section": "Bills",
+			"labels": ["quick"],
+			"place": null,
+			"time": "09:00"
+		},
+		{
+			"title": "prep 1:1 Marco",
+			"day": 239,
+			"project": "Work",
+			"section": "Meetings",
+			"labels": [],
+			"place": null,
+			"time": "11:00"
+		},
+		{
+			"title": "apply for residency permit",
+			"day": 240,
+			"project": "Lisbon move",
+			"section": "Paperwork",
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "get a bulb for the bathroom light",
+			"day": 240,
+			"project": "Home",
+			"section": "Repairs",
+			"labels": [],
+			"place": "Hardware store",
+			"time": null
+		},
+		{
+			"title": "ring mom",
+			"day": 240,
+			"project": "Social",
+			"section": null,
+			"labels": ["calls"],
+			"place": null,
+			"time": "19:00"
+		},
+		{
+			"title": "call mom",
+			"day": 241,
+			"project": "Social",
+			"section": null,
+			"labels": ["calls"],
+			"place": null,
+			"time": "18:00"
+		},
+		{
+			"title": "read Designing Data-Intensive Applications",
+			"day": 242,
+			"project": null,
+			"section": null,
+			"labels": ["reading"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "pull day",
+			"day": 243,
+			"project": "Health",
+			"section": "Fitness",
+			"labels": [],
+			"place": "Gym",
+			"time": "07:30"
+		},
+		{
+			"title": "finish the Rust book",
+			"day": 243,
+			"project": null,
+			"section": null,
+			"labels": ["reading"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "buy pasta and bread",
+			"day": 244,
+			"project": "Groceries",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "yoga class",
+			"day": 244,
+			"project": "Health",
+			"section": "Fitness",
+			"labels": [],
+			"place": "Gym",
+			"time": "07:30"
+		},
+		{
+			"title": "finish the SwiftUI article",
+			"day": 244,
+			"project": null,
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "swim",
+			"day": 245,
+			"project": "Health",
+			"section": "Fitness",
+			"labels": [],
+			"place": "Gym",
+			"time": "07:30"
+		},
+		{
+			"title": "book travel for the offsite",
+			"day": 245,
+			"project": null,
+			"section": null,
+			"labels": ["quick"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "sync with Lena",
+			"day": 245,
+			"project": "Work",
+			"section": "Meetings",
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "check internet statement",
+			"day": 246,
+			"project": "Finance",
+			"section": "Bills",
+			"labels": ["quick"],
+			"place": null,
+			"time": "09:00"
+		},
+		{
+			"title": "pick up olive oil",
+			"day": 247,
+			"project": "Groceries",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "draft search proposal",
+			"day": 248,
+			"project": "Work",
+			"section": null,
+			"labels": ["deep work", "computer"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "check electricity statement",
+			"day": 248,
+			"project": "Finance",
+			"section": "Bills",
+			"labels": ["quick"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "out of apples",
+			"day": 249,
+			"project": "Groceries",
+			"section": null,
+			"labels": ["errands"],
+			"place": "Supermarket",
+			"time": null
+		},
+		{
+			"title": "leg day",
+			"day": 250,
+			"project": "Health",
+			"section": "Fitness",
+			"labels": [],
+			"place": "Gym",
+			"time": "07:00"
+		},
+		{
+			"title": "translate residency permit",
+			"day": 251,
+			"project": null,
+			"section": null,
+			"labels": [],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "tidy living room",
+			"day": 251,
+			"project": "Home",
+			"section": "Kitchen",
+			"labels": [],
+			"place": "Home",
+			"time": null
+		},
+		{
+			"title": "read that HN post",
+			"day": 251,
+			"project": null,
+			"section": null,
+			"labels": ["reading"],
+			"place": null,
+			"time": null
+		},
+		{
+			"title": "get sealant for the leaky tap",
+			"day": 252,
+			"project": "Home",
+			"section": "Repairs",
+			"labels": ["errands"],
+			"place": "Hardware store",
+			"time": null
+		}
+	],
+	"sets": {
+		"recent": [
+			{
+				"title": "phone bill",
+				"day": 252,
+				"project": "Finance",
+				"section": "Bills",
+				"labels": ["quick"],
+				"place": null,
+				"time": "09:00"
+			},
+			{
+				"title": "pay water",
+				"day": 252,
+				"project": "Finance",
+				"section": "Bills",
+				"labels": ["quick"],
+				"place": null,
+				"time": "09:00"
+			},
+			{
+				"title": "clean the fridge",
+				"day": 253,
+				"project": "Home",
+				"section": "Kitchen",
+				"labels": [],
+				"place": "Home",
+				"time": null
+			},
+			{
+				"title": "replace the bathroom light",
+				"day": 253,
+				"project": "Home",
+				"section": "Repairs",
+				"labels": ["errands"],
+				"place": "Hardware store",
+				"time": null
+			},
+			{
+				"title": "look into solar panels",
+				"day": 254,
+				"project": null,
+				"section": null,
+				"labels": [],
+				"place": null,
+				"time": null
+			},
+			{
+				"title": "web: sharing keyboard shortcuts",
+				"day": 254,
+				"project": "ProcrastiMate",
+				"section": "Web",
+				"labels": ["computer"],
+				"place": null,
+				"time": null
+			},
+			{
+				"title": "pick up vitamin D from pharmacy",
+				"day": 254,
+				"project": "Health",
+				"section": null,
+				"labels": [],
+				"place": "Pharmacy",
+				"time": null
+			},
+			{
+				"title": "pick up pasta",
+				"day": 255,
+				"project": "Groceries",
+				"section": null,
+				"labels": ["errands"],
+				"place": "Supermarket",
+				"time": null
+			},
+			{
+				"title": "file receipts",
+				"day": 255,
+				"project": "Finance",
+				"section": "Taxes",
+				"labels": ["computer"],
+				"place": null,
+				"time": null
+			},
+			{
+				"title": "email Dev about the contract",
+				"day": 256,
+				"project": "Work",
+				"section": "Admin",
+				"labels": ["email"],
+				"place": null,
+				"time": null
+			},
+			{
+				"title": "boxes for desk",
+				"day": 256,
+				"project": "Lisbon move",
+				"section": "Packing",
+				"labels": [],
+				"place": "Home",
+				"time": null
+			},
+			{
+				"title": "pull day",
+				"day": 257,
+				"project": "Health",
+				"section": "Fitness",
+				"labels": [],
+				"place": "Gym",
+				"time": null
+			},
+			{
+				"title": "buy spinach and cheese",
+				"day": 258,
+				"project": "Groceries",
+				"section": null,
+				"labels": ["errands"],
+				"place": "Supermarket",
+				"time": null
+			},
+			{
+				"title": "email Lena about the offsite",
+				"day": 258,
+				"project": "Work",
+				"section": "Admin",
+				"labels": ["email"],
+				"place": null,
+				"time": null
+			},
+			{
+				"title": "replace the fence",
+				"day": 258,
+				"project": "Home",
+				"section": "Repairs",
+				"labels": ["errands"],
+				"place": "Hardware store",
+				"time": null
+			},
+			{
+				"title": "change the bed sheets",
+				"day": 259,
+				"project": "Home",
+				"section": null,
+				"labels": ["quick"],
+				"place": "Home",
+				"time": "20:00"
+			},
+			{
+				"title": "deep clean oven",
+				"day": 259,
+				"project": "Home",
+				"section": "Kitchen",
+				"labels": [],
+				"place": "Home",
+				"time": null
+			},
+			{
+				"title": "write feedback for design candidate",
+				"day": 260,
+				"project": "Work",
+				"section": "Hiring",
+				"labels": [],
+				"place": null,
+				"time": "16:00"
+			},
+			{
+				"title": "mow the lawn",
+				"day": 260,
+				"project": "Home",
+				"section": "Garden",
+				"labels": [],
+				"place": "Home",
+				"time": null
+			},
+			{
+				"title": "fix the leaky tap",
+				"day": 261,
+				"project": "Home",
+				"section": "Repairs",
+				"labels": ["errands"],
+				"place": "Hardware store",
+				"time": null
+			},
+			{
+				"title": "fix the leaky tap",
+				"day": 262,
+				"project": "Home",
+				"section": "Repairs",
+				"labels": ["errands"],
+				"place": "Hardware store",
+				"time": null
+			},
+			{
+				"title": "ios: quick add polish",
+				"day": 263,
+				"project": "ProcrastiMate",
+				"section": "iOS",
+				"labels": ["computer"],
+				"place": null,
+				"time": null
+			},
+			{
+				"title": "get allergy prescription",
+				"day": 263,
+				"project": "Health",
+				"section": "Doctors",
+				"labels": ["calls"],
+				"place": null,
+				"time": null
+			},
+			{
+				"title": "web ramble empty state",
+				"day": 263,
+				"project": "ProcrastiMate",
+				"section": "Web",
+				"labels": ["computer"],
+				"place": null,
+				"time": null
+			},
+			{
+				"title": "weekly planning",
+				"day": 264,
+				"project": "Work",
+				"section": "Meetings",
+				"labels": [],
+				"place": null,
+				"time": "09:30"
+			},
+			{
+				"title": "idea: solar panels",
+				"day": 265,
+				"project": null,
+				"section": null,
+				"labels": [],
+				"place": null,
+				"time": null
+			},
+			{
+				"title": "notes on Designing Data-Intensive Applications",
+				"day": 266,
+				"project": null,
+				"section": null,
+				"labels": ["reading"],
+				"place": null,
+				"time": null
+			},
+			{
+				"title": "sync with Sarah",
+				"day": 266,
+				"project": "Work",
+				"section": "Meetings",
+				"labels": [],
+				"place": null,
+				"time": "15:30"
+			},
+			{
+				"title": "ios: sharing polish",
+				"day": 267,
+				"project": "ProcrastiMate",
+				"section": "iOS",
+				"labels": ["computer"],
+				"place": null,
+				"time": null
+			},
+			{
+				"title": "take out the bins",
+				"day": 267,
+				"project": "Home",
+				"section": null,
+				"labels": ["quick"],
+				"place": "Home",
+				"time": null
+			},
+			{
+				"title": "interview data candidate",
+				"day": 268,
+				"project": "Work",
+				"section": "Hiring",
+				"labels": [],
+				"place": null,
+				"time": "16:00"
+			},
+			{
+				"title": "buy bread and bread",
+				"day": 268,
+				"project": "Groceries",
+				"section": null,
+				"labels": ["errands"],
+				"place": "Supermarket",
+				"time": null
+			},
+			{
+				"title": "write design doc for search",
+				"day": 268,
+				"project": "Work",
+				"section": null,
+				"labels": ["deep work", "computer"],
+				"place": null,
+				"time": null
+			},
+			{
+				"title": "sync crashes on launch",
+				"day": 269,
+				"project": "ProcrastiMate",
+				"section": "Bugs",
+				"labels": ["computer"],
+				"place": null,
+				"time": null
+			},
+			{
+				"title": "research learning Portuguese",
+				"day": 269,
+				"project": null,
+				"section": null,
+				"labels": [],
+				"place": null,
+				"time": null
+			},
+			{
+				"title": "interview backend candidate",
+				"day": 270,
+				"project": "Work",
+				"section": "Hiring",
+				"labels": [],
+				"place": null,
+				"time": "16:00"
+			},
+			{
+				"title": "web subtasks empty state",
+				"day": 270,
+				"project": "ProcrastiMate",
+				"section": "Web",
+				"labels": ["computer"],
+				"place": null,
+				"time": null
+			},
+			{
+				"title": "web: search keyboard shortcuts",
+				"day": 270,
+				"project": "ProcrastiMate",
+				"section": "Web",
+				"labels": ["computer"],
+				"place": null,
+				"time": null
+			},
+			{
+				"title": "buy cheese",
+				"day": 271,
+				"project": "Groceries",
+				"section": null,
+				"labels": ["errands"],
+				"place": "Supermarket",
+				"time": null
+			},
+			{
+				"title": "finish Atomic Habits",
+				"day": 271,
+				"project": null,
+				"section": null,
+				"labels": [],
+				"place": null,
+				"time": null
+			},
+			{
+				"title": "waiting on the bank for the deposit",
+				"day": 272,
+				"project": null,
+				"section": null,
+				"labels": ["waiting"],
+				"place": null,
+				"time": null
+			},
+			{
+				"title": "interview design candidate",
+				"day": 272,
+				"project": "Work",
+				"section": "Hiring",
+				"labels": [],
+				"place": null,
+				"time": "16:00"
+			},
+			{
+				"title": "follow up with Priya on the contract",
+				"day": 273,
+				"project": "Work",
+				"section": "Admin",
+				"labels": ["email"],
+				"place": null,
+				"time": null
+			},
+			{
+				"title": "fix the inbox bug",
+				"day": 273,
+				"project": "ProcrastiMate",
+				"section": "Bugs",
+				"labels": ["computer"],
+				"place": null,
+				"time": null
+			},
+			{
+				"title": "follow up with Lena on the contract",
+				"day": 273,
+				"project": "Work",
+				"section": "Admin",
+				"labels": ["email"],
+				"place": null,
+				"time": null
+			},
+			{
+				"title": "book physio appointment",
+				"day": 274,
+				"project": "Health",
+				"section": "Doctors",
+				"labels": ["calls"],
+				"place": null,
+				"time": null
+			},
+			{
+				"title": "follow up with the recruiter on Q4 goals",
+				"day": 274,
+				"project": "Work",
+				"section": "Admin",
+				"labels": ["email"],
+				"place": null,
+				"time": null
+			},
+			{
+				"title": "bug: ramble loses edits",
+				"day": 274,
+				"project": "ProcrastiMate",
+				"section": "Bugs",
+				"labels": ["computer"],
+				"place": null,
+				"time": null
+			},
+			{
+				"title": "swiftui sharing animation",
+				"day": 275,
+				"project": "ProcrastiMate",
+				"section": "iOS",
+				"labels": ["computer"],
+				"place": null,
+				"time": null
+			},
+			{
+				"title": "buy apples and cheese",
+				"day": 275,
+				"project": "Groceries",
+				"section": null,
+				"labels": ["errands"],
+				"place": "Supermarket",
+				"time": null
+			},
+			{
+				"title": "tomatoes",
+				"day": 276,
+				"project": "Groceries",
+				"section": null,
+				"labels": ["errands"],
+				"place": "Supermarket",
+				"time": null
+			},
+			{
+				"title": "bug: sync loses edits",
+				"day": 276,
+				"project": "ProcrastiMate",
+				"section": "Bugs",
+				"labels": ["computer"],
+				"place": null,
+				"time": null
+			},
+			{
+				"title": "out of apples",
+				"day": 276,
+				"project": "Groceries",
+				"section": null,
+				"labels": ["errands"],
+				"place": "Supermarket",
+				"time": null
+			},
+			{
+				"title": "search crashes on launch",
+				"day": 277,
+				"project": "ProcrastiMate",
+				"section": "Bugs",
+				"labels": ["computer"],
+				"place": null,
+				"time": null
+			},
+			{
+				"title": "find invoices",
+				"day": 278,
+				"project": "Finance",
+				"section": "Taxes",
+				"labels": ["computer"],
+				"place": null,
+				"time": null
+			},
+			{
+				"title": "take out the bins",
+				"day": 279,
+				"project": "Home",
+				"section": null,
+				"labels": ["quick"],
+				"place": "Home",
+				"time": "20:00"
+			},
+			{
+				"title": "get residency permit certified",
+				"day": 279,
+				"project": "Lisbon move",
+				"section": "Paperwork",
+				"labels": [],
+				"place": null,
+				"time": null
+			},
+			{
+				"title": "phone Tom back",
+				"day": 280,
+				"project": "Social",
+				"section": null,
+				"labels": ["calls"],
+				"place": null,
+				"time": "18:00"
+			},
+			{
+				"title": "file invoices",
+				"day": 280,
+				"project": "Finance",
+				"section": "Taxes",
+				"labels": ["computer"],
+				"place": null,
+				"time": null
+			},
+			{
+				"title": "web: sync keyboard shortcuts",
+				"day": 281,
+				"project": "ProcrastiMate",
+				"section": "Web",
+				"labels": ["computer"],
+				"place": null,
+				"time": null
+			},
+			{
+				"title": "svelte ramble transition",
+				"day": 281,
+				"project": "ProcrastiMate",
+				"section": "Web",
+				"labels": ["computer"],
+				"place": null,
+				"time": null
+			},
+			{
+				"title": "chase the bank about the deposit",
+				"day": 282,
+				"project": null,
+				"section": null,
+				"labels": ["waiting"],
+				"place": null,
+				"time": null
+			},
+			{
+				"title": "call Radu",
+				"day": 282,
+				"project": "Social",
+				"section": null,
+				"labels": ["calls"],
+				"place": null,
+				"time": "19:00"
+			},
+			{
+				"title": "apply for the lease",
+				"day": 282,
+				"project": "Lisbon move",
+				"section": "Paperwork",
+				"labels": [],
+				"place": null,
+				"time": null
+			},
+			{
+				"title": "swim",
+				"day": 283,
+				"project": "Health",
+				"section": "Fitness",
+				"labels": [],
+				"place": "Gym",
+				"time": "07:00"
+			},
+			{
+				"title": "dinner with Tom",
+				"day": 283,
+				"project": "Social",
+				"section": null,
+				"labels": [],
+				"place": null,
+				"time": null
+			},
+			{
+				"title": "run 5k",
+				"day": 283,
+				"project": "Health",
+				"section": "Fitness",
+				"labels": [],
+				"place": "Gym",
+				"time": "18:30"
+			},
+			{
+				"title": "book travel for the offsite",
+				"day": 284,
+				"project": "Work",
+				"section": "Admin",
+				"labels": ["quick"],
+				"place": null,
+				"time": null
+			},
+			{
+				"title": "pull day",
+				"day": 284,
+				"project": "Health",
+				"section": "Fitness",
+				"labels": [],
+				"place": "Gym",
+				"time": "07:00"
+			},
+			{
+				"title": "standup notes",
+				"day": 285,
+				"project": "Work",
+				"section": "Meetings",
+				"labels": [],
+				"place": null,
+				"time": "09:30"
+			},
+			{
+				"title": "out of milk",
+				"day": 285,
+				"project": "Groceries",
+				"section": null,
+				"labels": ["errands"],
+				"place": "Supermarket",
+				"time": null
+			},
+			{
+				"title": "prep 1:1 Sarah",
+				"day": 286,
+				"project": "Work",
+				"section": "Meetings",
+				"labels": [],
+				"place": null,
+				"time": null
+			},
+			{
+				"title": "call mom",
+				"day": 286,
+				"project": "Social",
+				"section": null,
+				"labels": ["calls"],
+				"place": null,
+				"time": "18:00"
+			},
+			{
+				"title": "fill in timesheet",
+				"day": 286,
+				"project": "Work",
+				"section": "Admin",
+				"labels": ["quick"],
+				"place": null,
+				"time": null
+			},
+			{
+				"title": "email Lena about budget",
+				"day": 287,
+				"project": "Work",
+				"section": "Admin",
+				"labels": ["email"],
+				"place": null,
+				"time": null
+			},
+			{
+				"title": "pack the winter clothes",
+				"day": 288,
+				"project": "Lisbon move",
+				"section": "Packing",
+				"labels": [],
+				"place": "Home",
+				"time": null
+			},
+			{
+				"title": "pay credit card",
+				"day": 288,
+				"project": "Finance",
+				"section": "Bills",
+				"labels": ["quick"],
+				"place": null,
+				"time": "09:00"
+			},
+			{
+				"title": "prep 1:1 Lena",
+				"day": 289,
+				"project": "Work",
+				"section": "Meetings",
+				"labels": [],
+				"place": null,
+				"time": "14:00"
+			},
+			{
+				"title": "out of spinach",
+				"day": 290,
+				"project": "Groceries",
+				"section": null,
+				"labels": ["errands"],
+				"place": "Supermarket",
+				"time": null
+			},
+			{
+				"title": "notes on the SwiftUI article",
+				"day": 291,
+				"project": null,
+				"section": null,
+				"labels": ["reading"],
+				"place": null,
+				"time": null
+			},
+			{
+				"title": "file invoices",
+				"day": 292,
+				"project": "Finance",
+				"section": "Taxes",
+				"labels": ["computer"],
+				"place": null,
+				"time": null
+			},
+			{
+				"title": "book physio appointment",
+				"day": 293,
+				"project": "Health",
+				"section": "Doctors",
+				"labels": ["calls"],
+				"place": null,
+				"time": null
+			},
+			{
+				"title": "write feedback for design candidate",
+				"day": 293,
+				"project": "Work",
+				"section": "Hiring",
+				"labels": [],
+				"place": null,
+				"time": "16:00"
+			},
+			{
+				"title": "images crashes on launch",
+				"day": 294,
+				"project": "ProcrastiMate",
+				"section": "Bugs",
+				"labels": ["computer"],
+				"place": null,
+				"time": null
+			},
+			{
+				"title": "prepare standup",
+				"day": 294,
+				"project": "Work",
+				"section": "Meetings",
+				"labels": [],
+				"place": null,
+				"time": "09:30"
+			},
+			{
+				"title": "pay credit card",
+				"day": 295,
+				"project": "Finance",
+				"section": "Bills",
+				"labels": ["quick"],
+				"place": null,
+				"time": null
+			},
+			{
+				"title": "follow up with the recruiter on the offsite",
+				"day": 295,
+				"project": "Work",
+				"section": "Admin",
+				"labels": ["email"],
+				"place": null,
+				"time": null
+			},
+			{
+				"title": "swiftui search animation",
+				"day": 296,
+				"project": "ProcrastiMate",
+				"section": "iOS",
+				"labels": ["computer"],
+				"place": null,
+				"time": null
+			},
+			{
+				"title": "fix the leaky tap",
+				"day": 296,
+				"project": null,
+				"section": null,
+				"labels": ["errands"],
+				"place": "Hardware store",
+				"time": null
+			},
+			{
+				"title": "buy rice",
+				"day": 297,
+				"project": "Groceries",
+				"section": null,
+				"labels": [],
+				"place": "Supermarket",
+				"time": null
+			},
+			{
+				"title": "pick up eggs",
+				"day": 298,
+				"project": "Groceries",
+				"section": null,
+				"labels": ["errands"],
+				"place": "Supermarket",
+				"time": null
+			},
+			{
+				"title": "reply to dad about the weekend",
+				"day": 299,
+				"project": "Social",
+				"section": null,
+				"labels": [],
+				"place": null,
+				"time": null
+			},
+			{
+				"title": "fix ramble bug",
+				"day": 299,
+				"project": "ProcrastiMate",
+				"section": "Bugs",
+				"labels": ["computer"],
+				"place": null,
+				"time": null
+			},
+			{
+				"title": "prep 1:1 Dev",
+				"day": 299,
+				"project": "Work",
+				"section": "Meetings",
+				"labels": [],
+				"place": null,
+				"time": "15:30"
+			}
+		],
+		"novel": [
+			{
+				"title": "grab oat milk",
+				"project": "Groceries",
+				"section": null,
+				"labels": ["errands"],
+				"place": "Supermarket",
+				"time": null,
+				"day": 300
+			},
+			{
+				"title": "avocados",
+				"project": "Groceries",
+				"section": null,
+				"labels": ["errands"],
+				"place": "Supermarket",
+				"time": null,
+				"day": 300
+			},
+			{
+				"title": "restock dishwasher tablets",
+				"project": "Groceries",
+				"section": null,
+				"labels": ["errands"],
+				"place": "Supermarket",
+				"time": null,
+				"day": 300
+			},
+			{
+				"title": "FaceTime grandma",
+				"project": "Social",
+				"section": null,
+				"labels": ["calls"],
+				"place": null,
+				"time": "18:00",
+				"day": 300
+			},
+			{
+				"title": "call Ana about the trip",
+				"project": "Social",
+				"section": null,
+				"labels": ["calls"],
+				"place": null,
+				"time": "18:00",
+				"day": 300
+			},
+			{
+				"title": "housewarming gift for Elena",
+				"project": "Social",
+				"section": null,
+				"labels": [],
+				"place": null,
+				"time": null,
+				"day": 300
+			},
+			{
+				"title": "retro with Priya",
+				"project": "Work",
+				"section": "Meetings",
+				"labels": [],
+				"place": null,
+				"time": "14:00",
+				"day": 300
+			},
+			{
+				"title": "quarterly review with Marco",
+				"project": "Work",
+				"section": "Meetings",
+				"labels": [],
+				"place": null,
+				"time": "11:00",
+				"day": 300
+			},
+			{
+				"title": "email legal about the NDA",
+				"project": "Work",
+				"section": "Admin",
+				"labels": ["email"],
+				"place": null,
+				"time": null,
+				"day": 300
+			},
+			{
+				"title": "answer Lena re: hiring plan",
+				"project": "Work",
+				"section": "Admin",
+				"labels": ["email"],
+				"place": null,
+				"time": null,
+				"day": 300
+			},
+			{
+				"title": "phone screen for the backend role",
+				"project": "Work",
+				"section": "Hiring",
+				"labels": [],
+				"place": null,
+				"time": "16:00",
+				"day": 300
+			},
+			{
+				"title": "scorecard for Tuesday interview",
+				"project": "Work",
+				"section": "Hiring",
+				"labels": [],
+				"place": null,
+				"time": null,
+				"day": 300
+			},
+			{
+				"title": "spec out the notifications rewrite",
+				"project": "Work",
+				"section": null,
+				"labels": ["deep work", "computer"],
+				"place": null,
+				"time": null,
+				"day": 300
+			},
+			{
+				"title": "dark mode flickers on iPad",
+				"project": "ProcrastiMate",
+				"section": "Bugs",
+				"labels": ["computer"],
+				"place": null,
+				"time": null,
+				"day": 300
+			},
+			{
+				"title": "drag and drop reorder broken in safari",
+				"project": "ProcrastiMate",
+				"section": "Bugs",
+				"labels": ["computer"],
+				"place": null,
+				"time": null,
+				"day": 300
+			},
+			{
+				"title": "widget for the lock screen",
+				"project": "ProcrastiMate",
+				"section": "iOS",
+				"labels": ["computer"],
+				"place": null,
+				"time": null,
+				"day": 300
+			},
+			{
+				"title": "keyboard nav in the sidebar",
+				"project": "ProcrastiMate",
+				"section": "Web",
+				"labels": ["computer"],
+				"place": null,
+				"time": null,
+				"day": 300
+			},
+			{
+				"title": "pay the gas bill",
+				"project": "Finance",
+				"section": "Bills",
+				"labels": ["quick"],
+				"place": null,
+				"time": "09:00",
+				"day": 300
+			},
+			{
+				"title": "cancel netflix",
+				"project": "Finance",
+				"section": "Bills",
+				"labels": ["quick"],
+				"place": null,
+				"time": null,
+				"day": 300
+			},
+			{
+				"title": "self assessment deadline",
+				"project": "Finance",
+				"section": "Taxes",
+				"labels": ["computer"],
+				"place": null,
+				"time": null,
+				"day": 300
+			},
+			{
+				"title": "upload payslips for the accountant",
+				"project": "Finance",
+				"section": "Taxes",
+				"labels": ["computer"],
+				"place": null,
+				"time": null,
+				"day": 300
+			},
+			{
+				"title": "morning run",
+				"project": "Health",
+				"section": "Fitness",
+				"labels": [],
+				"place": "Gym",
+				"time": "07:00",
+				"day": 300
+			},
+			{
+				"title": "spin class",
+				"project": "Health",
+				"section": "Fitness",
+				"labels": [],
+				"place": "Gym",
+				"time": "18:30",
+				"day": 300
+			},
+			{
+				"title": "blood test results",
+				"project": "Health",
+				"section": "Doctors",
+				"labels": ["calls"],
+				"place": null,
+				"time": null,
+				"day": 300
+			},
+			{
+				"title": "sunscreen",
+				"project": "Health",
+				"section": null,
+				"labels": ["errands"],
+				"place": "Pharmacy",
+				"time": null,
+				"day": 300
+			},
+			{
+				"title": "descale the kettle",
+				"project": "Home",
+				"section": "Kitchen",
+				"labels": [],
+				"place": "Home",
+				"time": null,
+				"day": 300
+			},
+			{
+				"title": "defrost the freezer",
+				"project": "Home",
+				"section": "Kitchen",
+				"labels": [],
+				"place": "Home",
+				"time": null,
+				"day": 300
+			},
+			{
+				"title": "plant the tulip bulbs",
+				"project": "Home",
+				"section": "Garden",
+				"labels": [],
+				"place": "Home",
+				"time": null,
+				"day": 300
+			},
+			{
+				"title": "patch the hole in the wall",
+				"project": "Home",
+				"section": "Repairs",
+				"labels": ["errands"],
+				"place": "Hardware store",
+				"time": null,
+				"day": 300
+			},
+			{
+				"title": "vacuum",
+				"project": "Home",
+				"section": null,
+				"labels": ["quick"],
+				"place": "Home",
+				"time": "20:00",
+				"day": 300
+			},
+			{
+				"title": "ironing",
+				"project": "Home",
+				"section": null,
+				"labels": ["quick"],
+				"place": "Home",
+				"time": "20:00",
+				"day": 300
+			},
+			{
+				"title": "read the Postgres internals chapter",
+				"project": null,
+				"section": null,
+				"labels": ["reading"],
+				"place": null,
+				"time": null,
+				"day": 300
+			},
+			{
+				"title": "finish Project Hail Mary",
+				"project": null,
+				"section": null,
+				"labels": ["reading"],
+				"place": null,
+				"time": null,
+				"day": 300
+			},
+			{
+				"title": "waiting for the bank to confirm the transfer",
+				"project": null,
+				"section": null,
+				"labels": ["waiting"],
+				"place": null,
+				"time": null,
+				"day": 300
+			},
+			{
+				"title": "chase the movers for a quote",
+				"project": "Lisbon move",
+				"section": null,
+				"labels": ["waiting"],
+				"place": null,
+				"time": null,
+				"day": 300
+			},
+			{
+				"title": "open a Portuguese bank account",
+				"project": "Lisbon move",
+				"section": "Paperwork",
+				"labels": [],
+				"place": null,
+				"time": null,
+				"day": 300
+			},
+			{
+				"title": "register at the junta de freguesia",
+				"project": "Lisbon move",
+				"section": "Paperwork",
+				"labels": [],
+				"place": null,
+				"time": null,
+				"day": 300
+			},
+			{
+				"title": "wrap the plates",
+				"project": "Lisbon move",
+				"section": "Packing",
+				"labels": [],
+				"place": "Home",
+				"time": null,
+				"day": 300
+			},
+			{
+				"title": "give away the plants",
+				"project": "Lisbon move",
+				"section": "Packing",
+				"labels": [],
+				"place": "Home",
+				"time": null,
+				"day": 300
+			},
+			{
+				"title": "look into a 3d printer",
+				"project": null,
+				"section": null,
+				"labels": [],
+				"place": null,
+				"time": null,
+				"day": 300
+			}
+		]
+	}
+}
