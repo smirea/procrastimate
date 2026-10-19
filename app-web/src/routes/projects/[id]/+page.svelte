@@ -12,12 +12,15 @@
 	import ProjectSection from '#lib/components/ProjectSection.svelte';
 	import EntityActions from '#lib/components/EntityActions.svelte';
 	import InlineEdit from '#lib/components/InlineEdit.svelte';
+	import ProjectGlyph from '#lib/components/ProjectGlyph.svelte';
 	import CompletedSection from '#lib/components/CompletedSection.svelte';
 	import CompletedToggle from '#lib/components/CompletedToggle.svelte';
 	import { store } from '#lib/store.svelte.ts';
 	import { toastDeleted } from '#lib/completion.ts';
 	import { leaving, motion, sheets } from '#lib/ui.svelte.ts';
 	import { projectDocument } from 'shared/markdown.ts';
+	import { PROJECT_ICONS } from 'shared/project-icons.ts';
+	import { projectIconGlyph, projectIconName } from '#lib/project-icon.ts';
 	import { completed } from '#lib/completed.svelte.ts';
 	import { canAddHere } from '#lib/screen.ts';
 	import { projectCompleted, projectGroups } from 'shared/views.ts';
@@ -69,7 +72,9 @@
 					onclose={() => (renaming = false)}
 				/>
 			{:else}
-				<h1 class="truncate text-[26px] font-semibold tracking-tight">{project.name}</h1>
+				<h1 class="truncate text-[26px] font-semibold tracking-tight">
+					{#if project.icon}<ProjectGlyph {project} size={24} class="mr-2 inline-block align-[-0.15em] text-muted" />{/if}{project.name}
+				</h1>
 			{/if}
 		{/snippet}
 		{#snippet actions()}
@@ -80,6 +85,25 @@
 						<ShareNetwork size={19} />
 					</button>
 					<EntityActions label="Project actions" triggerLabel="Project actions" deleteLabel="Delete project" ondelete={remove} onrename={() => (renaming = true)}>
+						{#snippet before()}
+							<div role="radiogroup" aria-label="Project icon" class="grid w-max grid-cols-7 gap-0.5 p-1">
+								{#each [null, ...PROJECT_ICONS] as icon (icon)}
+									{@const Icon = projectIconGlyph(icon)}
+									{@const checked = project.icon === icon}
+									<button
+										type="button"
+										role="radio"
+										aria-checked={checked}
+										aria-label={icon ? projectIconName(icon) : 'No icon'}
+										title={icon ? projectIconName(icon) : 'No icon'}
+										class="glyph press"
+										onclick={() => store.setProjectIcon(project.id, icon)}
+									>
+										<Icon size={18} weight={checked ? 'fill' : 'regular'} />
+									</button>
+								{/each}
+							</div>
+						{/snippet}
 						{#snippet confirm()}
 							Delete <strong>{project.name}</strong> and its {tasks.length} task{tasks.length === 1 ? '' : 's'}?
 						{/snippet}
@@ -128,3 +152,31 @@
 {:else}
 	<p class="mt-16 text-center text-muted">This project no longer exists.</p>
 {/if}
+
+<style>
+	.glyph {
+		display: grid;
+		place-items: center;
+		width: 2.25rem;
+		height: 2.25rem;
+		border-radius: 9999px;
+		color: var(--color-muted);
+		transition: background-color 120ms, color 120ms;
+	}
+
+	.glyph:hover {
+		background: color-mix(in srgb, var(--color-ink) 6%, transparent);
+	}
+
+	.glyph[aria-checked='true'] {
+		color: var(--color-accent);
+		background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+	}
+
+	@media (max-width: 767px), (pointer: coarse) {
+		.glyph {
+			width: 2.75rem;
+			height: 2.75rem;
+		}
+	}
+</style>

@@ -15,6 +15,9 @@ struct NameActions: ViewModifier {
     let rename: (String) -> Void
     var color: LabelColor?
     var recolor: ((LabelColor) -> Void)?
+    var icon: ProjectIcon?
+    /// Set for a project, whose menu picks its icon.
+    var setIcon: ((ProjectIcon?) -> Void)?
     let delete: () -> Deleted?
     /// A project's screen adds sections from its menu.
     var addSection: ((String) -> Void)?
@@ -51,6 +54,17 @@ struct NameActions: ViewModifier {
                                 })) {
                                     ForEach(LabelColor.allCases) { option in
                                         SwiftUI.Label { Text(option.name) } icon: { option.swatch }.tag(option)
+                                    }
+                                }
+                                .pickerStyle(.menu)
+                            }
+                            if let setIcon {
+                                Picker("Icon", systemImage: icon?.systemImage ?? "number", selection: Binding(get: { icon }, set: { next in
+                                    withAnimation(.snappy) { setIcon(next) }
+                                })) {
+                                    SwiftUI.Label("No icon", systemImage: "number").tag(ProjectIcon?.none)
+                                    ForEach(ProjectIcon.allCases) { option in
+                                        SwiftUI.Label(option.title, systemImage: option.systemImage).tag(Optional(option))
                                     }
                                 }
                                 .pickerStyle(.menu)
@@ -127,6 +141,8 @@ extension View {
         rename: @escaping (String) -> Void,
         color: LabelColor? = nil,
         recolor: ((LabelColor) -> Void)? = nil,
+        icon: ProjectIcon? = nil,
+        setIcon: ((ProjectIcon?) -> Void)? = nil,
         delete: @escaping () -> Deleted?,
         addSection: ((String) -> Void)? = nil,
         showCompleted: Binding<Bool>
@@ -142,6 +158,8 @@ extension View {
             rename: rename,
             color: color,
             recolor: recolor,
+            icon: icon,
+            setIcon: setIcon,
             delete: delete,
             addSection: addSection,
             showCompleted: showCompleted

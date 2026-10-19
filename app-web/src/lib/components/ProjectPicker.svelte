@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Tray from 'phosphor-svelte/lib/Tray';
-	import Hash from 'phosphor-svelte/lib/Hash';
+	import ProjectGlyph from './ProjectGlyph.svelte';
 	import Rows from 'phosphor-svelte/lib/Rows';
 	import Check from 'phosphor-svelte/lib/Check';
 	import Plus from 'phosphor-svelte/lib/Plus';
@@ -34,10 +34,10 @@
 	const section = $derived(store.section(sectionId));
 	const allSections = $derived(sections ?? store.sections);
 	const options = $derived([
-		{ place: { projectId: null, sectionId: null }, name: 'Inbox', nested: false },
+		{ place: { projectId: null, sectionId: null }, name: 'Inbox', nested: false, project: null },
 		...(projects ? projectsInOrder(projects) : store.projects).flatMap((p) => [
-			{ place: { projectId: p.id, sectionId: null }, name: p.name, nested: false },
-			...sectionsOf(allSections, p.id).map((s) => ({ place: { projectId: p.id, sectionId: s.id }, name: s.name, nested: true })),
+			{ place: { projectId: p.id, sectionId: null }, name: p.name, nested: false, project: p },
+			...sectionsOf(allSections, p.id).map((s) => ({ place: { projectId: p.id, sectionId: s.id }, name: s.name, nested: true, project: null })),
 		]),
 	]);
 	const label = $derived(project ? (section ? `${project.name} / ${section.name}` : project.name) : 'Inbox');
@@ -59,7 +59,7 @@
 	<Popover label="Project" {align}>
 		{#snippet trigger({ toggle })}
 			<button type="button" class="chip max-w-full" data-active={!!project} aria-label={`Project ${label}`} onclick={toggle}>
-				{#if project}<Hash size={15} class="shrink-0" />{:else}<Tray size={15} class="shrink-0" />{/if}
+				{#if project}<ProjectGlyph {project} size={15} class="shrink-0" />{:else}<Tray size={15} class="shrink-0" />{/if}
 				<span class="truncate">{label}</span>
 			</button>
 		{/snippet}
@@ -74,7 +74,7 @@
 							close();
 						}}
 					>
-						{#if option.nested}<Rows size={14} class="text-faint" />{:else if option.place.projectId}<Hash size={15} class="text-muted" />{:else}<Tray size={15} class="text-muted" />{/if}
+						{#if option.nested}<Rows size={14} class="text-faint" />{:else if option.project}<ProjectGlyph project={option.project} size={15} class="text-muted" />{:else}<Tray size={15} class="text-muted" />{/if}
 						<span class="flex-1 truncate">{option.name}</span>
 						{#if option.place.projectId === projectId && option.place.sectionId === (sectionId ?? null)}<Check size={14} class="text-accent" />{/if}
 					</button>

@@ -406,7 +406,7 @@ struct RambleDrawer: View {
                     Token(systemImage: "flag.fill", text: "P\(priority.rawValue)", tone: priority.tone).id("priority-\(priority.rawValue)")
                 }
                 if let project {
-                    Token(systemImage: "number", text: project.name, tone: .ink)
+                    Token(systemImage: project.systemImage, text: project.name, tone: .ink)
                 }
                 ForEach(labels) { label in
                     Token(systemImage: label.systemImage(filled: true), text: label.name, tone: .ink, iconTone: label.color.tone)

@@ -43,7 +43,7 @@ describe('rowWrites', () => {
 
 	test('writes a missing sourceKey as null', () => {
 		const [write] = rowWrites(snapshotOf(), snapshotOf({ projects: [project('p')] }));
-		expect(write?.values).toEqual({ name: 'p', order: 0, createdAt: 1, sourceKey: null });
+		expect(write?.values).toEqual({ name: 'p', order: 0, icon: null, createdAt: 1, sourceKey: null });
 	});
 
 	test('patches only the fields that changed', () => {

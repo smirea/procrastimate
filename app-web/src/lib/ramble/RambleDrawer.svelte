@@ -6,7 +6,7 @@
 	import Bell from 'phosphor-svelte/lib/Bell';
 	import CalendarBlank from 'phosphor-svelte/lib/CalendarBlank';
 	import Flag from 'phosphor-svelte/lib/Flag';
-	import Hash from 'phosphor-svelte/lib/Hash';
+	import ProjectGlyph from '../components/ProjectGlyph.svelte';
 	import Microphone from 'phosphor-svelte/lib/Microphone';
 	import Repeat from 'phosphor-svelte/lib/Repeat';
 	import X from 'phosphor-svelte/lib/X';
@@ -487,7 +487,7 @@
 				{/key}
 			{/if}
 			{#if project}
-				<span class="token" in:pop><Hash size={13} weight="bold" />{project.name}</span>
+				<span class="token" in:pop><ProjectGlyph {project} size={13} weight="bold" />{project.name}</span>
 			{/if}
 			{#each labels as label (label.id)}
 				{@const Icon = labelIcon(label)}

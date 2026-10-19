@@ -19,6 +19,7 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "p",
 							"name": "p",
 							"order": 0
@@ -96,6 +97,7 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "p",
 						"name": "p",
 						"order": 0
@@ -385,12 +387,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "work",
 							"name": "work",
 							"order": 0
 						},
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "home",
 							"name": "home",
 							"order": 0
@@ -472,12 +476,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "work",
 						"name": "work",
 						"order": 0
 					},
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "home",
 						"name": "home",
 						"order": 0
@@ -563,6 +569,7 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "p",
 							"name": "p",
 							"order": 0
@@ -637,6 +644,7 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "p",
 						"name": "p",
 						"order": 0
@@ -708,12 +716,14 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "p",
 							"name": "p",
 							"order": 0
 						},
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "q",
 							"name": "q",
 							"order": 0
@@ -825,12 +835,14 @@
 				"projects": [
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "p",
 						"name": "p",
 						"order": 0
 					},
 					{
 						"createdAt": 1,
+						"icon": null,
 						"id": "q",
 						"name": "q",
 						"order": 0

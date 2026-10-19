@@ -361,6 +361,7 @@ private func completion(_ completion: Completion) throws -> JSONValue {
         let result = StoreRules.addProject(try data(), try a(1), try a(2, as: CreationInput.self).creation)
         return object(["data": try json(result.data), "project": try json(result.project)])
     case "renameProject": return try json(StoreRules.renameProject(data(), a(1), a(2)))
+    case "setProjectIcon": return try json(StoreRules.setProjectIcon(data(), a(1), a(2)))
     case "deleteProject": return try json(StoreRules.deleteProject(data(), a(1)))
     case "addLabel":
         let result = StoreRules.addLabel(try data(), try a(1), try a(2, as: CreationInput.self).creation)

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { defaultLabelColor, type LabelColor } from './label-colors.ts';
+import type { ProjectIcon } from './project-icons.ts';
 import * as subtasks from './subtasks.ts';
 import { bySiblingOrder, moveOrders } from './order.ts';
 import { labelSchema, projectSchema, sectionSchema, snapshotSchema, taskSchema } from './model.ts';
@@ -338,7 +339,7 @@ export function addProject(
 	const existing = data.projects.find(p => sameName(p.name, name));
 	if (existing) return { data, project: existing };
 	const last = projectsInOrder(data.projects).at(-1);
-	const project: Project = { id, name, order: last ? last.order + 1 : 0, createdAt: now };
+	const project: Project = { id, name, order: last ? last.order + 1 : 0, icon: null, createdAt: now };
 	return { data: { ...data, projects: [...data.projects, project] }, project };
 }
 
@@ -355,6 +356,10 @@ export function moveProject(data: StoreData, id: string, index: number): StoreDa
 export function renameProject(data: StoreData, id: string, name: string): StoreData {
 	if (data.projects.some(p => p.id !== id && sameName(p.name, name))) return data;
 	return { ...data, projects: data.projects.map(p => (p.id === id ? { ...p, name } : p)) };
+}
+
+export function setProjectIcon(data: StoreData, id: string, icon: ProjectIcon | null): StoreData {
+	return { ...data, projects: data.projects.map(p => (p.id === id ? { ...p, icon } : p)) };
 }
 
 /** Deleting a project deletes its sections and tasks, subtasks included, since they share their root's project. */

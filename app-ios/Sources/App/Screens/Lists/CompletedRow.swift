@@ -97,7 +97,7 @@ struct CompletedRow: View {
             if showProject {
                 Spacer(minLength: 0)
                 HStack(spacing: 3) {
-                    Image(systemName: project == nil ? "tray" : "number").imageScale(.small)
+                    Image(systemName: project?.systemImage ?? "tray").imageScale(.small)
                     Text(project?.name ?? "Inbox")
                 }
             }

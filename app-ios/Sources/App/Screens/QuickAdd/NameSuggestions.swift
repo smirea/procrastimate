@@ -166,7 +166,11 @@ struct NameSuggestionList: View {
     }
 
     private func systemImage(_ id: String) -> String {
-        match.kind == .label ? store.label(id)?.systemImage() ?? match.kind.systemImage : match.kind.systemImage
+        switch match.kind {
+        case .label: store.label(id)?.systemImage() ?? match.kind.systemImage
+        case .project: store.project(id)?.systemImage ?? match.kind.systemImage
+        case .section: match.kind.systemImage
+        }
     }
 
     private func highlighted(_ name: String) -> Text {

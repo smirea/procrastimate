@@ -33,7 +33,7 @@ const defaults = { projectId: 'home', sectionId: 'next', labelId: null, location
 const parse = (text: string, picked = initialPicked(defaults)) =>
 	parseQuickAdd(text, {
 		now,
-		projects: [{ id: 'home', name: 'Home', order: 0, createdAt: 1 }],
+		projects: [{ id: 'home', name: 'Home', order: 0, icon: null, createdAt: 1 }],
 		labels,
 		projectId: picked.projectId,
 		due: picked.due,

@@ -17,6 +17,7 @@ import { DICTATION_CHOICES } from '../dictation.ts';
 import { DEFAULT_QUICK_ADD_BUTTONS } from '../quick-add-buttons.ts';
 import { KINDS } from '../kinds.ts';
 import { LABEL_COLORS } from '../label-colors.ts';
+import { PROJECT_ICONS } from '../project-icons.ts';
 import { DEFAULT_PRIORITY, ROLES, SERVER_ACTOR, SHARE_TARGET_KINDS } from '../values.ts';
 import type { ColumnValue } from './json.ts';
 
@@ -80,6 +81,8 @@ export const projects = pgTable(
 		name: text('name').notNull(),
 		/** Fractional, like sections. Ties sort by `createdAt`. */
 		order: doublePrecision('order').notNull().default(0),
+		/** Null shows the plain `#`. */
+		icon: text('icon', { enum: PROJECT_ICONS }).$type<ColumnValue<'projects', 'icon'>>(),
 		createdAt: millis('created_at').notNull(),
 		sourceKey: text('source_key'),
 	},

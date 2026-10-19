@@ -125,6 +125,7 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "p",
 							"name": "p",
 							"order": 0
@@ -152,6 +153,7 @@
 					"op": "put",
 					"values": {
 						"createdAt": 1,
+						"icon": null,
 						"name": "p",
 						"order": 0,
 						"sourceKey": null
@@ -735,6 +737,7 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "p",
 							"name": "p",
 							"order": 0
@@ -787,6 +790,7 @@
 					"op": "put",
 					"values": {
 						"createdAt": 1,
+						"icon": null,
 						"name": "p",
 						"order": 0,
 						"sourceKey": null
@@ -1056,6 +1060,7 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "p",
 							"name": "Home",
 							"order": 0
@@ -1112,6 +1117,7 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "p",
 							"name": "Home",
 							"order": 0
@@ -1173,6 +1179,7 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "p",
 							"name": "Home",
 							"order": 0
@@ -1234,6 +1241,7 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "p",
 							"name": "Home",
 							"order": 0
@@ -1299,6 +1307,7 @@
 					"projects": [
 						{
 							"createdAt": 1,
+							"icon": null,
 							"id": "p",
 							"name": "Home",
 							"order": 0

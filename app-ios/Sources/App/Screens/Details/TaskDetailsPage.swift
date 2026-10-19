@@ -363,7 +363,7 @@ private struct ProjectMenu: View {
         } label: {
             // Only the share and close buttons share the bar, so the name gets most of the width and truncates.
             HStack(spacing: 6) {
-                Image(systemName: projectId == nil ? "tray" : "number")
+                Image(systemName: projectId == nil ? "tray" : store.project(projectId)?.systemImage ?? "number")
                 Text(name).lineLimit(1).truncationMode(.tail)
             }
             .frame(maxWidth: 240, alignment: .leading)
