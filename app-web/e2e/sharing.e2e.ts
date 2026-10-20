@@ -1,5 +1,15 @@
 import type { Page } from '@playwright/test';
-import { type Device, type Devices, deviceContext, expect, goOffline, goOnline, test, unique } from './fixtures.ts';
+import {
+	type Device,
+	deviceContext,
+	expect,
+	goOffline,
+	goOnline,
+	ownerWithProject,
+	shareWith,
+	test,
+	unique,
+} from './fixtures.ts';
 
 test.describe.configure({ mode: 'serial' });
 
@@ -9,31 +19,6 @@ const shareSheet = (page: Page) => page.getByRole('dialog', { name: 'Share' });
 async function sharedWithMe({ app, page }: Device) {
 	if (page.viewportSize()!.width < 768) await app.openNavigation();
 	return sidebar(page).getByRole('region', { name: 'Shared with me' });
-}
-
-async function shareWith(owner: Device, guest: Device, role: 'Can edit' | 'Can view' = 'Can edit') {
-	await (await owner.app.listMenu()).getByRole('button', { name: 'Share' }).click();
-	const sheet = shareSheet(owner.page);
-	await sheet.getByRole('textbox', { name: 'Email or name' }).fill(guest.email);
-	await sheet.getByRole('radiogroup', { name: 'Access' }).getByRole('radio', { name: role }).click();
-	const created = owner.page.waitForResponse(r => r.url().includes('/api/shares') && r.request().method() === 'POST');
-	await sheet
-		.getByRole('list', { name: 'People found' })
-		.getByRole('button', { name: new RegExp(guest.name) })
-		.click();
-	await expect(sheet.getByRole('region', { name: 'People with access' })).toContainText(guest.name);
-	expect((await created).ok()).toBe(true);
-	await sheet.getByRole('button', { name: 'Close share' }).click();
-}
-
-async function ownerWithProject(devices: Devices) {
-	const owner = await devices.open({ person: 'Olive', path: '/inbox', heading: 'Inbox' });
-	const project = unique('Groceries');
-	const task = unique('Buy milk');
-	await owner.app.createProject(project);
-	await owner.app.add(task);
-	await expect(owner.app.row(task)).toBeVisible();
-	return { owner, project, task };
 }
 
 test('a guest completes a task in a project shared with them, and the owner sees who did it', async ({ devices }) => {

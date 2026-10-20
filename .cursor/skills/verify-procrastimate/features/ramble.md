@@ -27,6 +27,7 @@ Ramble lets Stefan talk his tasks in. An empty quick add textbox shows a mic on 
 
 - On a paired device, open the drawer and say "Call mom tomorrow at 5pm priority one." The bars move with your voice, `Call mom` arrives with `Tomorrow 5pm` and `P1` chips. Stop, then `Add task` saves that one task.
 - Say "Finish the project report" with no project named `report`. The task keeps that title and no extra chips.
+- Every space's names, as in quick add. On iOS, launch with `PROCRASTIMATE_DEMO=sharing`, `PROCRASTIMATE_INTENTS=ramble`, and the script `Water the tulips in project Garden. Next task, try the soup in project Recipes.`: `Water the tulips` gets `Garden` (Ann's, shared to edit), while `Recipes` (view only) stays in the second title. The second task's project picker lists `Garden` and not `Recipes`; picking `Garden` and `Add 2 tasks` puts both in Ann's Garden. On the web, `ramble.e2e.ts` shares one project to edit and another to view, and the rambled task picked into the first shows up on the owner's device.
 - With Dictation set to ElevenLabs and no key, or a refused socket, the drawer says Ramble needs a connection. Offline, or Dictation set to Native, uses the platform recognizer and does not open the socket.
 - In Brave online with Dictation set to Native, tap the mic. Recognition fails at once and capture moves to the ElevenLabs socket, so the mic keeps listening.
 - On iOS, tap just beside the mic glyph. The mic's whole rectangle is its hit area and the card has a content shape, so the tap opens the drawer instead of reaching the scrim.

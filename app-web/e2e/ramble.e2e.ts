@@ -1,4 +1,4 @@
-import { expect, test } from './fixtures';
+import { e2eEmail, expect, ownerWithProject, shareWith, test } from './fixtures';
 
 test.use({
 	permissions: ['microphone'],
@@ -77,4 +77,42 @@ test('Escape stops listening first, and closing discards the ramble', async ({ a
 	await page.keyboard.press('Escape');
 	await expect(drawer).toBeHidden();
 	await expect(app.row('Buy groceries for the party')).toHaveCount(0);
+});
+
+test('Ramble offers projects shared to edit but not to view, and a task picked into one lands in its space', async ({
+	app,
+	page,
+	context,
+	devices,
+}) => {
+	const { owner, project } = await ownerWithProject(devices);
+	const guest = { app, page, context, email: e2eEmail(), name: 'E2E' };
+	await shareWith(owner, guest);
+	const { owner: viewer, project: viewOnly } = await ownerWithProject(devices);
+	await shareWith(viewer, guest, 'Can view');
+	const shared = page.getByRole('navigation', { name: 'Main' }).getByRole('region', { name: 'Shared with me' });
+	await expect(shared.getByRole('link', { name: new RegExp(viewOnly) })).toBeVisible({ timeout: 15_000 });
+
+	await app.openSettings();
+	await app.dictationOption('ElevenLabs').click();
+	await page.keyboard.press('Escape');
+	await app.openQuickAdd();
+	await app.quickAdd().getByRole('button', { name: 'Ramble' }).click();
+	const drawer = page.getByRole('dialog', { name: 'Ramble' });
+	await expect(drawer.getByRole('list', { name: 'Spoken tasks' }).getByText('Renew the passport')).toBeVisible({
+		timeout: 15_000,
+	});
+	await drawer.getByRole('button', { name: 'Stop listening' }).click();
+
+	await drawer.getByRole('textbox', { name: 'Task title', exact: true }).nth(1).focus();
+	await drawer.getByRole('button', { name: 'Project Inbox' }).click();
+	const picker = page.getByRole('dialog', { name: 'Project' });
+	await expect(picker.getByRole('button', { name: project })).toBeVisible({ timeout: 15_000 });
+	await expect(picker.getByRole('button', { name: viewOnly })).toHaveCount(0);
+	await picker.getByRole('button', { name: project }).click();
+	await expect(drawer.getByRole('button', { name: `Project ${project}` })).toBeVisible();
+	await drawer.getByRole('button', { name: 'Add 3 tasks' }).click();
+	await expect(drawer).toBeHidden();
+
+	await expect(owner.app.row('Call mom')).toBeVisible({ timeout: 15_000 });
 });

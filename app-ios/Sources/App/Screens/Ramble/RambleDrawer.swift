@@ -9,7 +9,6 @@ struct RambleDrawer: View {
     @Environment(Navigator.self) private var navigator
     @Environment(Toasts.self) private var toasts
     @Environment(\.clock) private var clock
-    @Environment(\.space) private var space
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     let defaults: QuickAddDefaults
@@ -19,8 +18,10 @@ struct RambleDrawer: View {
     @State private var saved = 0
     @FocusState private var focusedTitle: String?
 
-    private var spaceProjects: [Project] { store.projects(in: space) }
-    private var spaceLabels: [Core.Label] { store.labels(in: space) }
+    /// Ramble names every space's projects and labels a task may land on, as quick add does, and saving moves each
+    /// task into the space its project or labels belong to.
+    private var spaceProjects: [Project] { store.everySpace.projects }
+    private var spaceLabels: [Core.Label] { store.everySpace.labels }
     private var items: [RambleEntry] { capture.items }
     private var saving: [RambleEntry] { capture.saving }
     private var phase: RambleCapture.Phase { capture.phase }
@@ -73,6 +74,7 @@ struct RambleDrawer: View {
         .animation(.snappy(duration: 0.22), value: focusedTitle)
         .sensoryFeedback(.impact(weight: .light, intensity: 0.6), trigger: items.count)
         .sensoryFeedback(.success, trigger: saved)
+        .environment(\.namesFromEverySpace, true)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("Ramble")
         .accessibilityAddTraits(.isModal)
@@ -382,7 +384,14 @@ struct RambleDrawer: View {
                 .accessibilityLabel("Remove reminder")
             }
         }
+        // The labels picker lists, and creates in, the space the task will land in, as quick add's does.
+        .environment(\.space, landing(entry.task))
         .transition(.opacity)
+    }
+
+    private func landing(_ task: RambleTask) -> SpaceKey {
+        let new = Ramble.newTask(task, defaults: defaults, labels: spaceLabels)
+        return store.creationSpace(projectId: new.projectId, labelIds: new.labelIds)
     }
 
     @ViewBuilder
@@ -425,9 +434,10 @@ struct RambleDrawer: View {
     private func start() {
         open = nil
         focusedTitle = nil
-        let clock = clock, store = store, space = space
+        let clock = clock, store = store
         capture.start(choice: store.dictation, deviceId: DeviceDefaults.installID) {
-            RambleCapture.Context(now: clock.now, projects: store.projects(in: space), labels: store.labels(in: space), zone: clock.timeZone)
+            let names = store.everySpace
+            return RambleCapture.Context(now: clock.now, projects: names.projects, labels: names.labels, zone: clock.timeZone)
         }
     }
 

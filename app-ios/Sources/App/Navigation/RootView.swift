@@ -313,24 +313,15 @@ private struct QuickAddOverlay: View {
 
 private struct RambleOverlay: View {
     @Environment(Navigator.self) private var navigator
-    @Environment(Store.self) private var store
 
     var body: some View {
         ZStack {
             if let defaults = navigator.ramble {
                 RambleDrawer(defaults: defaults)
-                    .environment(\.space, store.space(of: defaults))
                     .transition(.move(edge: .bottom))
             }
         }
         .animation(.spring(duration: 0.45, bounce: 0.12), value: navigator.ramble)
-    }
-}
-
-extension Store {
-    /// The space quick add or Ramble saves into: the shared project's or label's, else the user's own.
-    func space(of defaults: QuickAddDefaults) -> SpaceKey {
-        defaults.projectId.flatMap(space(ofProject:)) ?? defaults.labelIds.first.flatMap(space(ofLabel:)) ?? .own
     }
 }
 

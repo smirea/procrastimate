@@ -12,6 +12,7 @@
 	import X from 'phosphor-svelte/lib/X';
 	import { parseRamble, type RambleToken } from 'shared/ramble.ts';
 	import { rambleNewTask } from 'shared/ramble-fill.ts';
+	import { creationHome } from 'shared/space-routing.ts';
 	import { DEFAULT_PRIORITY } from 'shared/task.ts';
 	import { dueTone, formatDue, formatRecurrence, formatReminder } from 'shared/format.ts';
 	import DuePicker from '../components/DuePicker.svelte';
@@ -25,6 +26,7 @@
 	import type { ListDefaults } from 'shared/screens.ts';
 	import { PRIORITIES } from '../priorities.ts';
 	import { showAdded } from '../show-added.ts';
+	import { addableLabels, addableProjects } from '../screen.ts';
 	import { listenRamble, type CaptureStop, type RambleListen } from './capture.ts';
 	import { caption, keyed, type RambleEntry } from './entries.ts';
 	import Waveform, { type LevelMeter } from './Waveform.svelte';
@@ -68,7 +70,12 @@
 	const captionParts = $derived(caption(transcript, tokens));
 	const listening = $derived(phase !== 'review');
 
-	const options = () => ({ now: new Date(clock.now), projects: store.projects, labels: store.labels });
+	/** Ramble names every space's projects and labels a task may land on, as quick add does. */
+	const names = $derived({ projects: addableProjects(), labels: addableLabels() });
+	const options = () => ({ now: new Date(clock.now), ...names });
+
+	/** The space an entry will land in, whose labels its picker lists and creates in. */
+	const landing = (entry: RambleEntry) => creationHome(store.homes, rambleNewTask(entry, defaults, store.labels), null);
 
 	function start() {
 		const token = ++generation;
@@ -373,11 +380,12 @@
 					</p>
 				{/if}
 				{#if expanded}
+					{@const home = landing(entry)}
 					<div class="mt-2 flex flex-wrap items-center gap-1.5" in:fade={motion({ duration: 160 })}>
 						<DuePicker due={entry.due} onchange={(due) => (entry.due = due)} />
 						<PriorityPicker priority={entry.priority ?? DEFAULT_PRIORITY} onchange={(priority) => (entry.priority = priority)} />
-						<LabelPicker labelIds={entry.labelIds} onchange={(labelIds) => (entry.labelIds = labelIds)} />
-						<ProjectPicker projectId={entry.projectId} sections={[]} onchange={(place) => (entry.projectId = place.projectId)} />
+						<LabelPicker labelIds={entry.labelIds} labels={store.dataOf(home).labels} canCreate={home === null} onchange={(labelIds) => (entry.labelIds = labelIds)} />
+						<ProjectPicker projectId={entry.projectId} projects={names.projects} sections={[]} onchange={(place) => (entry.projectId = place.projectId)} />
 						{#if entry.recurrence}
 							<button type="button" class="chip" data-active="true" style="color: var(--tone-repeat)" aria-label="Remove repeat" onclick={() => (entry.recurrence = null)}>
 								<Repeat size={15} weight="bold" />{formatRecurrence(entry.recurrence, entry.due)}<X size={11} weight="bold" />
